@@ -107,7 +107,7 @@ int WINAPI WinMain(
   RECT wndrect = {0, 0, 640, 480};
   AdjustWindowRect(&wndrect, dwStyle, false);
 
-  HWND wnd = CreateWindow(CLASS_NAME, TEXT("Reburn 3: Takedown"), dwStyle,
+  HWND wnd = CreateWindow(CLASS_NAME, TEXT("NightfiRE"), dwStyle,
                           CW_USEDEFAULT, CW_USEDEFAULT,
                           wndrect.right - wndrect.left, wndrect.bottom - wndrect.top,
                           NULL, NULL, hInstance, NULL);

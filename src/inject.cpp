@@ -2,6 +2,8 @@
 
 #include "cxbx/cxbxbinding.h"
 
+int __cdecl psiFileOpen(int param_1);
+
 void WriteMemory(size_t offset, void *data, size_t size)
 {
   memcpy((void *) offset, data, size);
@@ -19,6 +21,14 @@ void WriteBytes(size_t offset, unsigned char byte, size_t count)
   }
 }
 
+void WriteJmpRet(size_t from, size_t to)
+{
+  size_t relative = to - (from + 5);
+
+  WriteByte(from, 0xE9);
+  WriteMemory(from + 1, &relative, sizeof(relative));
+}
+
 void Inject()
 {
   // Novelty hack to replace the loading screen text
@@ -27,16 +37,19 @@ void Inject()
   WriteMemory(0x2f87A, &msg, sizeof(const wchar_t *));*/
 
   // Fix initial graphics and crashes
-  WriteByte(0x3366D, 0x90);
-  WriteBytes(0x33675, 0x90, 5);
-  WriteBytes(0x44A0F, 0x90, 5);
-  WriteByte(0x1AE38A, 0x90);
-  WriteBytes(0x1AE391, 0x90, 11);
-  WriteBytes(0x1AE731, 0x90, 11);
+  // WriteByte(0x3366D, 0x90);
+  // WriteBytes(0x33675, 0x90, 5);
+  // WriteBytes(0x44A0F, 0x90, 5);
+  // WriteByte(0x1AE38A, 0x90);
+  // WriteBytes(0x1AE391, 0x90, 11);
+  // WriteBytes(0x1AE731, 0x90, 11);
 
   // Inject 1920 display width
   //WriteMemory(0x1dd670, "\xba\x80\x07\x00\x00\x90", 6);
 
   // Inject 1080 display height
   //WriteMemory(0x1dd6b8, "\xba\x38\x04\x00\x00\x90", 6);
+
+  
+  WriteJmpRet(0x000e04a0, (size_t)&psiFileOpen);
 }

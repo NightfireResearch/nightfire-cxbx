@@ -45,6 +45,7 @@ add_library(reburn3inject SHARED
   src/dllmain.cpp
   src/inject.cpp
   src/inject.h
+  src/game/psiFile.cpp
 )
 
 if (REBURN_UNICODE)
