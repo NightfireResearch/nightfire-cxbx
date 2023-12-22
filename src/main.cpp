@@ -8,7 +8,7 @@
 #include "wndproc.h"
 
 #if defined(_WIN64)
-#error Reburn 3 must be compiled in 32-bit mode
+#error NightfiRE must be compiled in 32-bit mode
 #endif
 
 int WINAPI WinMain(
@@ -30,7 +30,7 @@ int WINAPI WinMain(
   cxbxPath[0] = 0;
 
   const HKEY rootKey = HKEY_CURRENT_USER;
-  const TCHAR *regKey = TEXT("Software\\Reburn\\Reburn 3");
+  const TCHAR *regKey = TEXT("Software\\NightfiRE\\NightfiRE");
   const TCHAR *xbeKey = TEXT("xbepath");
   const TCHAR *cxbxKey = TEXT("cxbxpath");
 
@@ -56,7 +56,7 @@ int WINAPI WinMain(
   if (xbePath[0] == 0 || GetFileAttributes(xbePath) == INVALID_FILE_ATTRIBUTES) {
     ofn.lpstrFilter = TEXT("default.xbe\0default.xbe\0");
     ofn.lpstrFile = xbePath;
-    ofn.lpstrTitle = TEXT("Where is Burnout 3 located?");
+    ofn.lpstrTitle = TEXT("Where is Nightfire default.xbe located?");
 
     if (!GetOpenFileName(&ofn)) {
       return 0;
