@@ -3,10 +3,9 @@
 #include <windows.h>
 
 #define DAT(x) (*((int*)x))
-typedef int (*FunctionPtr)(int a, int b, int c);
 
 int FUN_000dc990(int a, int b, int c) {
-	FunctionPtr funcPtr = (FunctionPtr)0x000dc990;
+	int (*funcPtr)(int, int, int) = (int (*)(int, int, int))(0x000dc990);
 	return funcPtr(a, b, c);
 }
 
