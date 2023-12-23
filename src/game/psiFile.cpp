@@ -63,14 +63,16 @@ int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOu
 {
   int **ppiVar1;
 
-  printf("psiFileLoad: %s - 0x%04x\n", filename, allocType);
+  //printf("psiFileLoad: %s - 0x%04x\n", filename, allocType);
 
   if (SingleFileMode == '\0') {
     ppiVar1 = (int **)allocateAndLoadFileWithinArchive(filename,allocType,sizeOut);
+    printf("psiFileLoad in multi-file mode: %s is 0x%08x bytes starting at 0x%08x, type %04x\n", filename, *sizeOut, ppiVar1, allocType);
     return ppiVar1;
   }
   if (sizeOut != (int *)0x0) {
     *sizeOut = DirFileLen;
   }
+  printf("psiFileLoad in single-file mode: %s is 0x%08x bytes at dirFileBuf(0x00279168), type %04x\n", filename, *sizeOut, allocType);
   return (int**)dirFileBuf;
 }
