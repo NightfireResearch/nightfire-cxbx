@@ -3,6 +3,7 @@
 #include "cxbx/cxbxbinding.h"
 
 int __cdecl psiFileOpen(int param_1);
+int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOut);
 
 void WriteMemory(size_t offset, void *data, size_t size)
 {
@@ -52,4 +53,5 @@ void Inject()
 
   
   WriteJmpRet(0x000e04a0, (size_t)&psiFileOpen);
+  WriteJmpRet(0x000dca30, (size_t)&psiFileLoad);
 }
