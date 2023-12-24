@@ -32,26 +32,27 @@ void WriteJmpRet(size_t from, size_t to)
 
 void Inject()
 {
-  // Novelty hack to replace the loading screen text
-  /*const wchar_t *msg = L"WELCOME TO REBURN";
-  WriteMemory(0x2f845, &msg, sizeof(const wchar_t *));
-  WriteMemory(0x2f87A, &msg, sizeof(const wchar_t *));*/
 
-  // Fix initial graphics and crashes
-  // WriteByte(0x3366D, 0x90);
-  // WriteBytes(0x33675, 0x90, 5);
-  // WriteBytes(0x44A0F, 0x90, 5);
-  // WriteByte(0x1AE38A, 0x90);
-  // WriteBytes(0x1AE391, 0x90, 11);
-  // WriteBytes(0x1AE731, 0x90, 11);
-
-  // Inject 1920 display width
-  //WriteMemory(0x1dd670, "\xba\x80\x07\x00\x00\x90", 6);
-
-  // Inject 1080 display height
-  //WriteMemory(0x1dd6b8, "\xba\x38\x04\x00\x00\x90", 6);
-
+  // Experiments with increasing resolution beyond original limits
   
+  // 640x480: Default
+  // 800x600: Stable but does not fill screen
+  // 1024x768: Various graphics are broken entirely, videos fail to play
+  // 1280x720: crashes at Mem_Init
+  // 1920x1080: crashes at Mem_Init
+  int width = 640;
+  int height = 480;
+
+  // This is in the params to D3DCreateDevice
+  WriteMemory(0x000e6efc, &width, 4);
+  WriteMemory(0x000e6f04, &height, 4);
+
+  // This is D3DDevice_SetViewport(&local_98), and a global, slightly later on
+  WriteMemory(0x000e6ceb, &width, 4);
+  WriteMemory(0x000e6cd7, &height, 4);
+
+
+  // Patch filesystem handling, to enable studying / extraction / patching of assets  
   WriteJmpRet(0x000e04a0, (size_t)&psiFileOpen);
   WriteJmpRet(0x000dca30, (size_t)&psiFileLoad);
 }
