@@ -88,7 +88,10 @@ void dumpToFile(char* gamefile, void* data, size_t len) {
 #define DirFileLen U32_AT(0x00279174)
 #define dirFileBuf U32_AT(0x00279168)
 
-int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOut)
+
+
+
+int ** __cdecl psiFileLoadOrig(char *filename, unsigned short allocType, int *sizeOut)
 {
   int **ppiVar1;
 
@@ -106,4 +109,44 @@ int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOu
   printf("psiFileLoad in single-file mode: %s is 0x%08x bytes at the location pointed to by dirFileBuf(0x00279168), type %04x\n", filename, *sizeOut, allocType);
   dumpToFile(filename, *(void**)0x00279168, *sizeOut);
   return (int**)dirFileBuf;
+}
+
+int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOut)
+{
+    // Construct the path to the "patch" directory
+    char patchPath[256];
+    snprintf(patchPath, sizeof(patchPath), "patch/%s", filename);
+
+    // Open the file
+    FILE* file = fopen(patchPath, "rb");
+    if (file == NULL) {
+        // File not found in "patch", call getFile function
+        return psiFileLoadOrig(filename, allocType, sizeOut);
+    }
+
+    printf("Loading patched file %s\n", patchPath);
+
+    // Get the length of the file
+    fseek(file, 0, SEEK_END);
+    int length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    // Allocate memory to store the file content
+    char* fileContent = (char*)malloc(length);
+    if (fileContent == NULL) {
+        // Handle memory allocation failure
+        fclose(file);
+        return NULL;
+    }
+
+    // Read the file content into memory
+    fread(fileContent, 1, length, file);
+
+    // Close the file
+    fclose(file);
+
+    // Return a pointer to the file content, and return the size
+    // We never free this mem, YOLO
+    *sizeOut = length;
+    return (int**)fileContent;
 }
