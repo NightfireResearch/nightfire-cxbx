@@ -55,6 +55,35 @@ int __cdecl psiFileOpen(int param_1)
   return (((uint32_t)U32_AT(0x002adf74) >> 8) << 8 | 1);
 }
 
+void dumpToFile(char* gamefile, void* data, size_t len) {
+    // Open the file in binary write mode
+
+	char filename[256];
+
+	snprintf(filename, sizeof(filename), "dump/%s", gamefile);
+
+    FILE* file = fopen(filename, "wb");
+
+    if (file == NULL) {
+        // Handle error if the file couldn't be opened
+        perror("Error opening file");
+        return;
+    }
+
+    // Write the data to the file
+    size_t written = fwrite(data, 1, len, file);
+
+    if (written != len) {
+        // Handle error if not all data could be written
+        perror("Error writing to file");
+    } else {
+        printf("Data written to %s successfully\n", filename);
+    }
+
+    // Close the file
+    fclose(file);
+}
+
 #define SingleFileMode U8_AT(0x002adf70)
 #define DirFileLen U32_AT(0x00279174)
 #define dirFileBuf U32_AT(0x00279168)
@@ -68,11 +97,13 @@ int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOu
   if (SingleFileMode == '\0') {
     ppiVar1 = (int **)allocateAndLoadFileWithinArchive(filename,allocType,sizeOut);
     printf("psiFileLoad in multi-file mode: %s is 0x%08x bytes starting at 0x%08x, type %04x\n", filename, *sizeOut, ppiVar1, allocType);
+    dumpToFile(filename, (void*)ppiVar1, *sizeOut);
     return ppiVar1;
   }
   if (sizeOut != (int *)0x0) {
     *sizeOut = DirFileLen;
   }
-  printf("psiFileLoad in single-file mode: %s is 0x%08x bytes at dirFileBuf(0x00279168), type %04x\n", filename, *sizeOut, allocType);
+  printf("psiFileLoad in single-file mode: %s is 0x%08x bytes at the location pointed to by dirFileBuf(0x00279168), type %04x\n", filename, *sizeOut, allocType);
+  dumpToFile(filename, *(void**)0x00279168, *sizeOut);
   return (int**)dirFileBuf;
 }
