@@ -1,5 +1,7 @@
 #include "inject.h"
 
+#include "game/util.h"
+
 #include "cxbx/cxbxbinding.h"
 
 int __cdecl psiFileOpen(int param_1);
@@ -106,4 +108,5 @@ void Inject()
   // Patch filesystem handling, to enable studying / extraction / patching of assets  
   WriteJmpRet(0x000e04a0, (size_t)&psiFileOpen);
   WriteJmpRet(0x000dca30, (size_t)&psiFileLoad);
+  WriteJmpRet(0x000e8f90, (size_t)&crc32);
 }
