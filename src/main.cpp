@@ -104,7 +104,7 @@ int WINAPI WinMain(
     nShowCmd = SW_SHOWMAXIMIZED;
   }
 
-  RECT wndrect = {0, 0, 640, 480};
+  RECT wndrect = {0, 0, 1024, 768};
   AdjustWindowRect(&wndrect, dwStyle, false);
 
   HWND wnd = CreateWindow(CLASS_NAME, TEXT("NightfiRE"), dwStyle,
