@@ -8,6 +8,12 @@
 
 HWND childHwnd = NULL;
 
+#if IS_ACTION
+#define DLLNAME "\\actioninject.dll"
+#else
+#define DLLNAME "\\drivinginject.dll"
+#endif
+
 void toggleFullScreen(HWND hWnd)
 {
   static RECT storedRect;
@@ -51,7 +57,7 @@ LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         TCHAR dllName[MAX_PATH];
         GetModuleFileName(GetModuleHandle(nullptr), dllName, MAX_PATH);
         PathRemoveFileSpec(dllName);
-        PathAppend(dllName, TEXT("\\reburn3inject.dll"));
+        PathAppend(dllName, TEXT(DLLNAME));
 
         size_t dllNameSz = (wcslen(dllName) + 1) * sizeof(wchar_t);
         LPVOID loadLibraryFunc = (LPVOID) GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "LoadLibraryW");

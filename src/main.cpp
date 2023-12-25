@@ -11,6 +11,19 @@
 #error NightfiRE must be compiled in 32-bit mode
 #endif
 
+#if IS_ACTION
+#define XBEPATH "xbepath"
+#define XBEFILTER "default.xbe\0default.xbe\0"
+#define XBEPROMPT "Where is Nightfire default.xbe located?"
+#define TITLE "NightfiRE (Action)"
+#else
+#define XBEPATH "xbepathdriving"
+#define XBEFILTER "Driving.xbe\0Driving.xbe\0"
+#define XBEPROMPT "Where is Nightfire Driving.xbe located?"
+#define TITLE "NightfiRE (Driving)"
+#endif
+
+
 int WINAPI WinMain(
   HINSTANCE hInstance,
   HINSTANCE hPrevInstance,
@@ -31,7 +44,7 @@ int WINAPI WinMain(
 
   const HKEY rootKey = HKEY_CURRENT_USER;
   const TCHAR *regKey = TEXT("Software\\NightfiRE\\NightfiRE");
-  const TCHAR *xbeKey = TEXT("xbepath");
+  const TCHAR *xbeKey = TEXT(XBEPATH);
   const TCHAR *cxbxKey = TEXT("cxbxpath");
 
   HKEY hKey;
@@ -54,9 +67,9 @@ int WINAPI WinMain(
   ofn.nMaxFile = MAX_PATH;
 
   if (xbePath[0] == 0 || GetFileAttributes(xbePath) == INVALID_FILE_ATTRIBUTES) {
-    ofn.lpstrFilter = TEXT("default.xbe\0default.xbe\0");
+    ofn.lpstrFilter = TEXT(XBEFILTER);
     ofn.lpstrFile = xbePath;
-    ofn.lpstrTitle = TEXT("Where is Nightfire default.xbe located?");
+    ofn.lpstrTitle = TEXT(XBEPROMPT);
 
     if (!GetOpenFileName(&ofn)) {
       return 0;
@@ -107,7 +120,7 @@ int WINAPI WinMain(
   RECT wndrect = {0, 0, 640, 480};
   AdjustWindowRect(&wndrect, dwStyle, false);
 
-  HWND wnd = CreateWindow(CLASS_NAME, TEXT("NightfiRE"), dwStyle,
+  HWND wnd = CreateWindow(CLASS_NAME, TEXT(TITLE), dwStyle,
                           CW_USEDEFAULT, CW_USEDEFAULT,
                           wndrect.right - wndrect.left, wndrect.bottom - wndrect.top,
                           NULL, NULL, hInstance, NULL);

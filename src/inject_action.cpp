@@ -1,8 +1,8 @@
 #include "inject.h"
 
-#include "game/util.h"
-#include "game/memory.h"
-#include "game/psiFile.h"
+#include "action/util.h"
+#include "action/memory.h"
+#include "action/psiFile.h"
 
 #include "cxbx/cxbxbinding.h"
 
