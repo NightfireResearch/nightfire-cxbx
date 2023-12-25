@@ -36,12 +36,12 @@ void Inject()
   // Experiments with increasing resolution beyond original limits
   
   // 640x480: Default
-  // 800x600: Stable but does not fill screen
+  // 800x600: Stable, UI elements misaligned
   // 1024x768: Various graphics are broken entirely, videos fail to play, will crash if cameras are scaled
   // 1280x720: crashes at Mem_Init
   // 1920x1080: crashes at Mem_Init
-  int width = 1024;
-  int height = 768;
+  int width = 640;
+  int height = 480;
   float fWidth = (float)width;
   float fHeight = (float)height;
 
