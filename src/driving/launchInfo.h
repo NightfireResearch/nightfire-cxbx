@@ -1,0 +1,1 @@
+int __stdcall getLaunchInfo(int *someIdentifier, void* data);
