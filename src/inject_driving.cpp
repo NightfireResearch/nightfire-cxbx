@@ -51,6 +51,17 @@ void Inject()
  
   WriteBytes(0x0005ad78, NOP, 5); // Bypass intro cutscene
 
+  int musicVol = 100;
+  int effVol = 100;
+  int audioMode = 1;
+
+  // Music volume
+  WriteMemory(0x002444f8, &musicVol, 4);
+  // Effect volume
+  WriteMemory(0x002444f4, &effVol, 4);
+  // Mode
+  WriteMemory(0x002445b8, &audioMode, 4);
+
   WriteJmpRet(0x000e2e30, (size_t)&dbg_printf);
   WriteJmpRet(0x0010e75f, (size_t)&preMain);
   //WriteJmpRet(0x0010f0db, (size_t)&getLaunchInfo);
