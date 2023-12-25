@@ -2,11 +2,9 @@
 
 #include "game/util.h"
 #include "game/memory.h"
+#include "game/psiFile.h"
 
 #include "cxbx/cxbxbinding.h"
-
-int __cdecl psiFileOpen(int param_1);
-int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOut);
 
 void WriteMemory(size_t offset, void *data, size_t size)
 {
