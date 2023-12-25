@@ -46,6 +46,7 @@ add_library(reburn3inject SHARED
   src/inject.cpp
   src/inject.h
   src/game/psiFile.cpp
+  src/game/memory.cpp
   src/game/util.cpp
 )
 

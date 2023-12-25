@@ -1,31 +1,7 @@
 #include <stdio.h>
-#include <stdint.h>
 #include <windows.h>
+#include "helpers.h"
 
-#define I32_AT(x) (*((int*)x))
-#define I16_AT(x) (*((short*)x))
-#define I8_AT(x) (*((char*)x))
-#define U32_AT(x) (*((unsigned int*)x))
-#define U16_AT(x) (*((unsigned short*)x))
-#define U8_AT(x) (*((unsigned char*)x))
-
-typedef unsigned char   undefined;
-
-typedef unsigned char    byte;
-typedef unsigned int    dword;
-
-typedef long long    longlong;
-typedef unsigned int    uint;
-typedef unsigned long    ulong;
-typedef unsigned long long    ulonglong;
-typedef unsigned char    undefined1;
-typedef unsigned short    undefined2;
-typedef unsigned int    undefined4;
-typedef unsigned long long    undefined6;
-typedef unsigned long long    undefined8;
-typedef unsigned short    ushort;
-
-typedef unsigned short    word;
 
 
 int FUN_000dc990(int a, int b, int c) {

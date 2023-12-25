@@ -1,6 +1,7 @@
 #include "inject.h"
 
 #include "game/util.h"
+#include "game/memory.h"
 
 #include "cxbx/cxbxbinding.h"
 
@@ -109,4 +110,5 @@ void Inject()
   WriteJmpRet(0x000e04a0, (size_t)&psiFileOpen);
   WriteJmpRet(0x000dca30, (size_t)&psiFileLoad);
   WriteJmpRet(0x000e8f90, (size_t)&crc32);
+  WriteJmpRet(0x00070a40, (size_t)&Mem_Init);
 }
