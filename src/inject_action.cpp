@@ -4,7 +4,7 @@
 #include "action/util.h"
 #include "action/memory.h"
 #include "action/psiFile.h"
-#include "action/psiLaunch.h"
+#include "common/launchInfo.h"
 
 #include "cxbx/cxbxbinding.h"
 
@@ -109,8 +109,11 @@ void Inject()
   // Patch filesystem handling, to enable studying / extraction / patching of assets  
   WriteJmpRet(0x000e04a0, (size_t)&psiFileOpen);
   WriteJmpRet(0x000dca30, (size_t)&psiFileLoad);
-  WriteJmpRet(0x000dfb50, (size_t)&psiLaunchDriving);
+  // WriteJmpRet(0x000dfb50, (size_t)&psiLaunchDriving);    // Superseded by hook directly into the XLaunchNewImageA / XGetLaunchInfo functions
   WriteJmpRet(0x000e8f90, (size_t)&crc32);
   WriteJmpRet(0x00070a40, (size_t)&Mem_Init);
   WriteJmpRet(0x0006aa90, (size_t)&Game_Run);
+
+  WriteJmpRet(0x000eb0fb, (size_t)&XLaunchNewImageA);
+  WriteJmpRet(0x000eb050, (size_t)&XGetLaunchInfo);
 }

@@ -1,7 +1,7 @@
 #include "inject.h"
 
 #include "driving/logging.h"
-#include "driving/launchInfo.h"
+#include "common/launchInfo.h"
 
 #include "cxbx/cxbxbinding.h"
 
@@ -68,7 +68,8 @@ void Inject()
   /*
    * Option 2: Use launch options from file
    */
-  WriteJmpRet(0x0010f0db, (size_t)&getLaunchInfo);
+  WriteJmpRet(0x0010f0db, (size_t)&XGetLaunchInfo);
+  WriteJmpRet(0x0010f186, (size_t)&XLaunchNewImageA);
 
   // Logging goes thrugh some weird paths... 001d1bac is a table of possible outputs - console, debugger, and file
   WriteJmpRet(0x000e2e30, (size_t)&dbg_printf);

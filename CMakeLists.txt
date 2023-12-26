@@ -52,7 +52,7 @@ add_library(actioninject SHARED
   src/inject.h
   src/action/game.cpp
   src/action/psiFile.cpp
-  src/action/psiLaunch.cpp
+  src/common/launchInfo.cpp
   src/action/memory.cpp
   src/action/util.cpp
 )
@@ -62,7 +62,7 @@ add_library(drivinginject SHARED
   src/inject_driving.cpp
   src/inject.h
   src/driving/logging.cpp
-  src/driving/launchInfo.cpp
+  src/common/launchInfo.cpp
   src/driving/memory.cpp
 )
 
