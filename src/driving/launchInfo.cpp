@@ -1,8 +1,6 @@
 #include <stdio.h>
 
-
-// We replace XAPILIB::XGetLaunchInfo with this
-// Currently DOES NOT WORK - either I've misunderstood something, or some other flag must be set for this change to take effect.
+// Replaces XAPILIB::XGetLaunchInfo
 int __stdcall getLaunchInfo(int *someIdentifier, void* data) {
 
 	printf("We are asked to put launch data at 0x%08x and some identifier at 0x%08x\n", (int) data, (int) someIdentifier);
@@ -28,8 +26,7 @@ int __stdcall getLaunchInfo(int *someIdentifier, void* data) {
     // Close the file
     fclose(file);
 
-
-    *someIdentifier = 3;
+    *someIdentifier = 0; // Unclear what these values are. Set at boot by XBox kernel, values 2 and 3 cause some extra checks (launch title), Action checks if this is non-zero and fails out if it is. So 0 is the best result?
     return 0;
 
 	// Returns 0 (success) or 0x490 (LaunchDataPage pointer was 0)
