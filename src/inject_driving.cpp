@@ -33,8 +33,7 @@ void WriteJmpRet(size_t from, size_t to)
 }
 
 int preMain(int argc, char* argv[]);
-
-char mission[] = "mis01\0";
+void* ea_malloc(int amt, char* name);
 
 void Inject()
 {
@@ -49,7 +48,7 @@ void Inject()
 
   WriteBytes(0x00244790, 1, 4); // Prevent the XGetLaunchInfo in 001306d0 from overwriting the above
  
-  WriteBytes(0x0005ad78, NOP, 5); // Bypass intro cutscene
+  WriteBytes(0x0005ad78, NOP, 5); // Bypass intro cutscene, not sure why this is required - movie name not set correctly?
 
   int musicVol = 100;
   int effVol = 100;
@@ -62,7 +61,18 @@ void Inject()
   // Mode
   WriteMemory(0x002445b8, &audioMode, 4);
 
+  // Logging goes thrugh some weird paths... 001d1bac is a table of possible outputs - console, debugger, and file
   WriteJmpRet(0x000e2e30, (size_t)&dbg_printf);
+  //WriteJmpRet(0x0010e832, (size_t)&xapiDebugStringA); // UNTESTED
   WriteJmpRet(0x0010e75f, (size_t)&preMain);
   //WriteJmpRet(0x0010f0db, (size_t)&getLaunchInfo);
+
+
+  // Most of the code follows a weird indirection: At 001caf68 is a pointer to a function (at 034f50) which takes a number and a string pointer
+  // This appears to be memory allocation. This indirection makes it easy to profile? but also for us to hack!
+  int addr_of_eamalloc = (int)&ea_malloc;
+  WriteMemory(0x001caf68, &addr_of_eamalloc, 4);
+
+  // Some more similar stuff happens with operator_new, which goes via some pointers to another allocator, which calls another...
+
 }

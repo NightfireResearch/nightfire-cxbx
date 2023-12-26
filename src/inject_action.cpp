@@ -1,5 +1,6 @@
 #include "inject.h"
 
+#include "action/game.h"
 #include "action/util.h"
 #include "action/memory.h"
 #include "action/psiFile.h"
@@ -111,4 +112,5 @@ void Inject()
   WriteJmpRet(0x000dfb50, (size_t)&psiLaunchDriving);
   WriteJmpRet(0x000e8f90, (size_t)&crc32);
   WriteJmpRet(0x00070a40, (size_t)&Mem_Init);
+  WriteJmpRet(0x0006aa90, (size_t)&Game_Run);
 }

@@ -15,6 +15,11 @@ void dbg_printf(char* format, ...)
     va_end(args);
 }
 
+void xapiDebugStringA(char* text) {
+
+	printf("XAPIDebug: %s", text);
+}
+
 
 int game_main(int argc, char** argv) {
 	int (*funcPtr)(int, char**) = (int (*)(int, char**))(0x0005a1b0);
