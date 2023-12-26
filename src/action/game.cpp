@@ -88,18 +88,26 @@ bool GS_IsPaused(ushort a) {
 #define FreezeGame U8_AT(0x001fec48)
 #define sloflag U16_AT(0x001fec64)
 #define ScriptCam U32_AT(0x001f6678)
-#define DAT_0025d79c U32_AT(0x0025d79c)
+#define switch_allowFreeze U32_AT(0x0025d79c)
 
+
+void psiPreGame_Run(void) {} // No effect on XBox, does some PS2-specific stuff on PS2
+void psiPostGame_Run(void) {} // No effect on XBox, does some PS2-specific stuff on PS2
+
+
+// Process the gameplay / update the state of the world and UI 
 void Game_Run(void) {
   
+  psiPreGame_Run();
   Input_Update();
 
-  if ((FreezeGame != '\0') && (DAT_0025d79c != '\0')) return;
+  if ((FreezeGame != '\0') && (switch_allowFreeze != '\0')) return;
 
   Sound_UpdateListeners();
 
   if (sloflag) {
     Camera_UpdateAll();
+    psiPostGame_Run();
     return;
   }
 
@@ -139,6 +147,8 @@ LAB_0006aafe:
   psiDecompressWoman();
 
   Camera_UpdateAll();
+  psiPostGame_Run();
+  return;
 
 }
 
