@@ -72,12 +72,16 @@ void Inject_KeyboardInput(void) {
 }
 
 void Input_Update(void) {
+
+    // Game functions - poll, compensate stick, map from keys to actions
     void (*funcPtr)(void) = (void (*)(void))(0x0006cf50);
     funcPtr();
+
+    // Our added function - keyboard input
     Inject_KeyboardInput();
 }
 
-unsigned short __cdecl Input_Action(short playerNum,unsigned int action,unsigned short flags) {
+unsigned short __cdecl Input_Action(short playerNum,unsigned int action,unsigned char flags) {
   
     // Any player (specified with a negative value)
     if (playerNum < 0) {
@@ -92,11 +96,72 @@ unsigned short __cdecl Input_Action(short playerNum,unsigned int action,unsigned
     // Pointer arithmetic gets us:
     // - PlayerInputs.player[playerNum].actions[action]
     // - PlayerInputs.player[playerNum].fChannels[action]
+    // We can replace that once we have reimplemented all functions that touch PlayerInputs
 
-    if ((playerNum < 4) && ((*(char*)(0x001fe6d0 + 1376*playerNum + 0x104 + action) & flags) != 0)) {
+    if ((playerNum < 4) && ((*(unsigned char*)(0x001fe6d0 + 1376*playerNum + 0x104 + action) & flags) != 0)) {
       return (unsigned short)(int)(*(float*)(0x001fe6d0 + 1376*playerNum + 0x14 + 4*action) * 100.0);
     }
 
     // Invalid player number
     return 0;
+}
+
+
+float __cdecl Input_Actionf(short playerNum,unsigned int action, unsigned char flags) {
+  
+  // Any player
+  if (playerNum < 0) {
+    float max = 0.0;
+    
+    for(int i = 0; i < 4; i++) {
+      float current = Input_Actionf(i,action,flags);
+      if (max <= current) {
+        max = current;
+      }
+    }
+    return max;
+    }
+
+  // A specific player
+  if ((playerNum < 4) && ((*(unsigned char*)(0x001fe6d0 + 1376*playerNum + 0x104 + action) & flags) != 0)) {
+      return *(float*)(0x001fe6d0 + 1376*playerNum + 0x14 + 4*action);
+  }
+
+  // Invalid player number
+  return 0.0f;
+}
+
+void __cdecl Input_ClearAction(short playerNum,unsigned int action) {
+  
+  // All players
+  if (playerNum < 0) {
+    for(int i = 0; i < 4; i++) {
+      Input_ClearAction(i, action);
+    }
+    return;
+  } 
+
+  if (playerNum < 4) {
+    *(float*)(0x001fe6d0 + 1376*playerNum + 0x14 + 4*action) = 0.0;
+    *(unsigned char*)(0x001fe6d0 + 1376*playerNum + 0x104 + action) = 0;
+  }
+  return;
+}
+
+void __cdecl Input_SetAction(short playerNum,unsigned int action,unsigned char val) {
+
+  // All players
+  if (playerNum < 0) {
+    for(int i = 0; i < 4; i++) {
+      Input_SetAction(i,action,val);
+    }
+    return;
+  }
+
+  if (playerNum < 4) {
+    *(float*)(0x001fe6d0 + 1376*playerNum + 0x14 + 4*action) = 1.0;
+    *(unsigned char*)(0x001fe6d0 + 1376*playerNum + 0x104 + action) = val;
+  }
+
+  return;
 }
