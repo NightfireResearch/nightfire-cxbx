@@ -53,6 +53,7 @@ add_library(actioninject SHARED
   src/action/game.cpp
   src/action/psiFile.cpp
   src/common/launchInfo.cpp
+  src/action/input.cpp
   src/action/memory.cpp
   src/action/util.cpp
 )
