@@ -1,5 +1,7 @@
 #include "helpers.h"
 
+#include <stdio.h>
+#include <windows.h>
 
 void Input_Update(void) {
     void (*funcPtr)(void) = (void (*)(void))(0x0006cf50);
@@ -94,12 +96,74 @@ bool GS_IsPaused(ushort a) {
 void psiPreGame_Run(void) {} // No effect on XBox, does some PS2-specific stuff on PS2
 void psiPostGame_Run(void) {} // No effect on XBox, does some PS2-specific stuff on PS2
 
+void Inject_KeyboardInput(void) {
+
+    // Inject WASD control into controller 1 for now
+
+    void* ps = (void*)0x001fe6d0;
+    float* fChannels = (float*)((int)ps + 0x14);
+    char* actions = (char*)((int)ps + 0x104);
+
+    // if(GetKeyState(VK_UP) & 0x8000) {
+    //     printf("Has UP\n");
+    // }
+    // if(GetKeyState(VK_DOWN) & 0x8000) {
+    //     printf("Has DOWN\n");
+    // }
+
+    static int CH = 0;
+    static bool debounce = false;
+
+    bool doA = GetKeyState('A');
+    if(doA && !debounce) {
+        CH++;
+        CH%=40;
+        printf("Ch: %i\n", CH);
+        debounce = true;
+    }
+    if(!doA && debounce)
+        debounce = false;
+
+    if(GetKeyState('W') & 0x8000) {
+        fChannels[2] = 1.0f;
+        actions[2] = 1;
+    }
+    if(GetKeyState('S') & 0x8000) {
+        fChannels[2] = -1.0f;
+        actions[2] = 1;
+    }
+    if(GetKeyState('A') & 0x8000) {
+        fChannels[1] = 1.0f;
+        actions[1] = 1;
+    }
+    if(GetKeyState('D') & 0x8000) {
+        fChannels[1] = -1.0f;
+        actions[1] = 1;
+    }
+    // The above works for continously-held actions (eg move, scope zoom)
+    // ??? for discrete actions (eg trigger)
+
+    // Channel 0: Aim left/right (+: Right)
+    // Channel 1: Move left/right (+: Left)
+    // Channel 2: Move forward/backward (+: Forward)
+    // Channel 3: ???
+    // Channel 4: ???
+    // Channel 5: Aim up/down (+: Up)
+    // Channel 6: ???
+    // 7: In space move Up/Down (+: Up)
+    // 8: 
+    // 19: Zoom
+    // 20: 
+
+}
 
 // Process the gameplay / update the state of the world and UI 
 void Game_Run(void) {
   
   psiPreGame_Run();
   Input_Update();
+
+  Inject_KeyboardInput();
 
   if ((FreezeGame != '\0') && (switch_allowFreeze != '\0')) return;
 
