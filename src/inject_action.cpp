@@ -117,6 +117,7 @@ void Inject()
   WriteJmpRet(0x000e8f90, (size_t)&crc32);
   WriteJmpRet(0x00070a40, (size_t)&Mem_Init);
   WriteJmpRet(0x0006aa90, (size_t)&Game_Run);
+  WriteJmpRet(0x0006aca0, (size_t)&GameFlow_Main);
   WriteJmpRet(0x0006c9a0, (size_t)&Input_Action);
   WriteJmpRet(0x0006ca20, (size_t)&Input_Actionf);
   WriteJmpRet(0x0006cab0, (size_t)&Input_ClearAction);
