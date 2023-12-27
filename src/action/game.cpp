@@ -111,19 +111,6 @@ void Inject_KeyboardInput(void) {
     //     printf("Has DOWN\n");
     // }
 
-    static int CH = 0;
-    static bool debounce = false;
-
-    bool doA = GetKeyState('A');
-    if(doA && !debounce) {
-        CH++;
-        CH%=40;
-        printf("Ch: %i\n", CH);
-        debounce = true;
-    }
-    if(!doA && debounce)
-        debounce = false;
-
     if(GetKeyState('W') & 0x8000) {
         fChannels[2] = 1.0f;
         actions[2] = 1;
@@ -140,8 +127,24 @@ void Inject_KeyboardInput(void) {
         fChannels[1] = -1.0f;
         actions[1] = 1;
     }
-    // The above works for continously-held actions (eg move, scope zoom)
-    // ??? for discrete actions (eg trigger)
+    if(GetKeyState('E') & 0x8000) { // Action / stabilize space suit?
+        fChannels[14] = 1.0f;
+        actions[14] = 4;
+    }
+    if(GetKeyState('Q') & 0x8000) { // Trigger
+        fChannels[9] = 1.0f;
+        actions[9] = 4;
+    }
+    if(GetKeyState('1') & 0x8000) { // Alt fire switch
+        fChannels[12] = 1.0f;
+        actions[12] = 4;
+    }
+    if(GetKeyState('P') & 0x8000) { // Pause / Start
+        fChannels[30] = 1.0f;
+        actions[30] = 4;
+    }
+    // 1 for continously-held actions (eg move, scope zoom)?
+    // 4 for discrete actions (eg trigger, stabilize spacesuit) - should be true for 1 frame only to avoid repeatedly performing action
 
     // Channel 0: Aim left/right (+: Right)
     // Channel 1: Move left/right (+: Left)
@@ -150,10 +153,16 @@ void Inject_KeyboardInput(void) {
     // Channel 4: ???
     // Channel 5: Aim up/down (+: Up)
     // Channel 6: ???
-    // 7: In space move Up/Down (+: Up)
-    // 8: 
-    // 19: Zoom
-    // 20: 
+    // Channel 7: In space move Up/Down (+: Up)
+    // Channel 8-18: ??? 
+    // Channel 9: Fire
+    // Channel 10-11: ???
+    // Channel 12: Alt fire
+    // Channel 12-18: ???
+    // Channel 19: Zoom
+    // Channel 20-29: ???
+    // Channel 30: Pause/start
+    // Channel 31-39: ??? 
 
 }
 
