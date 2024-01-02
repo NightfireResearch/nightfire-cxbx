@@ -103,8 +103,8 @@ void Inject()
   WriteMemory(0x000e7213, &height, 4);
   WriteMemory(0x000e7306, &fWidth, 4);
   WriteMemory(0x000e7301, &fHeight, 4);
-  WriteMemory(0x000e730d, &fWidth, 4);
-  WriteMemory(0x000e7312, &fHeight, 4);
+  WriteMemory(0x000e7312, &fWidth, 4);
+  WriteMemory(0x000e730d, &fHeight, 4);
 
   // Around FUN_000e8a90 - FMV related?
   // Early bit - set up?
