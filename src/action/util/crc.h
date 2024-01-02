@@ -1,5 +1,5 @@
-#ifndef UTIL_H_
-#define UTIL_H_
+#ifndef CRC_H_
+#define CRC_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -8,4 +8,4 @@ uint32_t crc32(const uint8_t *data, size_t length);
 
 
 
-#endif // UTIL_H_
+#endif // CRC_H_

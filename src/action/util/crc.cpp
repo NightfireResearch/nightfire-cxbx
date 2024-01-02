@@ -1,5 +1,5 @@
 // crc32-adler
-#include "util.h"
+#include "crc.h"
 
 static const uint32_t crc32_table[256] =
 {

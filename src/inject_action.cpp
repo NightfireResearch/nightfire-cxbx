@@ -3,7 +3,7 @@
 #include "action/math/math.h"
 #include "action/game.h"
 #include "action/input.h"
-#include "action/util.h"
+#include "action/util/crc.h"
 #include "action/memory.h"
 #include "action/psiFile.h"
 #include "common/launchInfo.h"

@@ -7,7 +7,9 @@ typedef struct {
 } _MATRIX;
 
 typedef struct {
-	float v[3];
+	float x;
+	float y;
+	float z;
 } _VECTOR;
 
 void Quat_Copy(quaternion_tag *target,const quaternion_tag *from);
@@ -17,4 +19,8 @@ void Mat_Copy(const _MATRIX *source, _MATRIX *target);
 void Mat_CopyRot(const _MATRIX *source, _MATRIX *target);
 void Mat_IdentityT(_MATRIX *mtx);
 void Mat_Identity(_MATRIX *mtx);
+void Vec_Normalise(_VECTOR *vOut,_VECTOR *vIn);
+void Vec_Subtract(const _VECTOR *a, const _VECTOR *b, _VECTOR *v_out);
+void Vec_Zero(_VECTOR *v);
+void Vec_Negate(const _VECTOR *vIn,_VECTOR *vOut);
 

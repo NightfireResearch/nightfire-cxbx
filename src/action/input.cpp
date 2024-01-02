@@ -71,6 +71,7 @@ void Inject_KeyboardInput(void) {
 
 }
 
+// Not injected, it's only called from the game loop which we've replaced
 void Input_Update(void) {
 
     // Game functions - poll, compensate stick, map from keys to actions
