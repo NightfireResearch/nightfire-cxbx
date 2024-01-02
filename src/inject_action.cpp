@@ -61,6 +61,10 @@ void Inject()
   WriteMemory(0x000dd8e6, &width, 4);
   WriteMemory(0x000dd8e1, &height, 4);
 
+  // psiFadeView - full screen sprite for fade-out
+  WriteMemory(0x000de594, &fWidth, 4);
+  WriteMemory(0x000de59c, &fHeight, 4);
+
   // Camera_CreateCameras has multiple, covering camera dimensions and positioning of MP windows
   WriteMemory(0x0025d23, &width, 4); // Camera 0 create
   WriteMemory(0x0025d1c, &height, 4);
@@ -96,6 +100,10 @@ void Inject()
   // Around 000e7212 in FUN_000e7130 - call to XGSetTextureHeader - buffer for full-screen blur effect?
   WriteMemory(0x000e7218, &width, 4);
   WriteMemory(0x000e7213, &height, 4);
+  WriteMemory(0x000e7306, &fWidth, 4);
+  WriteMemory(0x000e7301, &fHeight, 4);
+  WriteMemory(0x000e730d, &fWidth, 4);
+  WriteMemory(0x000e7312, &fHeight, 4);
 
   // Around FUN_000e8a90 - FMV related?
   // Early bit - set up?
