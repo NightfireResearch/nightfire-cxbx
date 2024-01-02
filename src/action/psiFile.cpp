@@ -19,6 +19,7 @@ int __cdecl FUN_000eed6b(int param_1) {
 	return funcPtr(param_1);
 }
 
+// FUNC_AT(000e04a0)
 int __cdecl psiFileOpen(int param_1)
 {
   printf("hooked psiFileOpen: %s\n", (char*)param_1);
@@ -87,6 +88,7 @@ int ** __cdecl psiFileLoadOrig(char *filename, unsigned short allocType, int *si
   return (int**)dirFileBuf;
 }
 
+// FUNC_AT(000dca30)
 int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOut)
 {
     // Construct the path to the "patch" directory

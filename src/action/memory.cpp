@@ -19,6 +19,7 @@ void* allocateAligned0x1000(int a) {
     return funcPtr(a);
 }
 
+// Only called from Mem_Init, no need to inject
 void psiMem_Init(uint *param_1, uint *param_2) {
     void *pvVar1;
     
@@ -28,6 +29,7 @@ void psiMem_Init(uint *param_1, uint *param_2) {
     return;
 }
 
+// FUNC_AT(00070a40)
 void Mem_Init(void) {
 
     printf("Mem_Init\n");

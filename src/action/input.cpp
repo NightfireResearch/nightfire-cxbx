@@ -81,6 +81,7 @@ void Input_Update(void) {
     Inject_KeyboardInput();
 }
 
+// FUNC_AT(0006c9a0)
 unsigned short __cdecl Input_Action(short playerNum,unsigned int action,unsigned char flags) {
   
     // Any player (specified with a negative value)
@@ -106,7 +107,7 @@ unsigned short __cdecl Input_Action(short playerNum,unsigned int action,unsigned
     return 0;
 }
 
-
+// FUNC_AT(0006ca20)
 float __cdecl Input_Actionf(short playerNum,unsigned int action, unsigned char flags) {
   
   // Any player
@@ -131,6 +132,7 @@ float __cdecl Input_Actionf(short playerNum,unsigned int action, unsigned char f
   return 0.0f;
 }
 
+// FUNC_AT(0006cab0)
 void __cdecl Input_ClearAction(short playerNum,unsigned int action) {
   
   // All players
@@ -148,6 +150,7 @@ void __cdecl Input_ClearAction(short playerNum,unsigned int action) {
   return;
 }
 
+// FUNC_AT(0006cb10)
 void __cdecl Input_SetAction(short playerNum,unsigned int action,unsigned char val) {
 
   // All players
