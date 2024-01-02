@@ -14,7 +14,7 @@ void Quat_Copy(quaternion_tag *target, const quaternion_tag *from) {
 	target->q[3] = from->q[3];
 }
 
-// Location not yet identified!
+// FUNC_AT(000d5560)
 bool Quat_IsEqual(const quaternion_tag *a, const quaternion_tag *b, float threshold) {
   if (	(ABS(a->q[0] - b->q[0]) > threshold) ||
 		(ABS(a->q[1] - b->q[1]) > threshold) ||
