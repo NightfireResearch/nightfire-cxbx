@@ -12,7 +12,7 @@ typedef struct {
 
 void Quat_Copy(quaternion_tag *target,const quaternion_tag *from);
 bool Quat_IsEqual(const quaternion_tag *a, const quaternion_tag *b, float threshold);
-void Quat_QuaternionMultiply(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *target);
+void Quat_Mul(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *target);
 void Mat_Copy(const _MATRIX *source, _MATRIX *target);
 void Mat_CopyRot(const _MATRIX *source, _MATRIX *target);
 void Mat_IdentityT(_MATRIX *mtx);

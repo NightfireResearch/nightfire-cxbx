@@ -1,5 +1,6 @@
 #include "inject.h"
 
+#include "action/math/math.h"
 #include "action/game.h"
 #include "action/input.h"
 #include "action/util.h"

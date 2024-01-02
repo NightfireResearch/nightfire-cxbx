@@ -1,3 +1,5 @@
+#include "math.h"
+
 inline float ABS(float n) {
 	if(n < 0)
 		return -n;
@@ -23,24 +25,25 @@ bool Quat_IsEqual(const quaternion_tag *a, const quaternion_tag *b, float thresh
 }
 
 // FUNC_AT(000d7470)
-void Quat_QuaternionMultiply(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *target) {
-	target->q[0] = ((a->q[0] * b->q[0] - a->q[1] * b->q[1]) - a->q[2] * b->q[2]) - a->q[3] * b->q[3];
-	target->q[1] = (a->q[2] * b->q[3] - a->q[3] * b->q[2]) + a->q[0] * b->q[1] + a->q[1] * b->q[0];
-	target->q[2] = (a->q[3] * b->q[1] - a->q[1] * b->q[3]) + a->q[0] * b->q[2] + a->q[2] * b->q[0];
-	target->q[3] = (a->q[1] * b->q[2] - a->q[2] * b->q[1]) + a->q[0] * b->q[3] + a->q[3] * b->q[0];
+void Quat_Mul(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *qOut) {
+  qOut->q[0] = (a->q[3] * b->q[0] + b->q[2] * a->q[1] + b->q[3] * a->q[0]) - b->q[1] * a->q[2];
+  qOut->q[1] = (a->q[3] * b->q[1] + b->q[3] * a->q[1] + a->q[2] * b->q[0]) - a->q[0] * b->q[2];
+  qOut->q[2] = (a->q[3] * b->q[2] + b->q[1] * a->q[0] + b->q[3] * a->q[2]) - b->q[0] * a->q[1];
+  qOut->q[3] = ((b->q[3] * a->q[3] - a->q[0] * b->q[0]) - b->q[1] * a->q[1]) - a->q[2] * b->q[2];
+  return;
 }
 
 // FUNC_AT(000d4ff0)
 void Mat_Copy(const _MATRIX *source, _MATRIX *target) {
 	for (int i = 0; i < 15; i++) {
-		target.m[i] = source.m[i];
+		target->m[i] = source->m[i];
 	}
 }
 
 // FUNC_AT(000d5010)
 void Mat_CopyRot(const _MATRIX *source, _MATRIX *target) {
 	for (int i = 0; i < 12; i++) {
-		target.m[i] = source.m[i];
+		target->m[i] = source->m[i];
 	}
 }
 

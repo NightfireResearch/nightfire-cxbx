@@ -53,6 +53,7 @@ add_library(actioninject SHARED
   src/action/game.cpp
   src/action/psiFile.cpp
   src/common/launchInfo.cpp
+  src/action/math/math.cpp
   src/action/input.cpp
   src/action/memory.cpp
   src/action/util.cpp
@@ -73,3 +74,13 @@ target_compile_definitions(driving PRIVATE UNICODE _UNICODE IS_DRIVING)
 target_compile_definitions(actioninject PRIVATE UNICODE _UNICODE)
 target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)
 
+
+# Run preprocess.py before building actioninject and drivinginject
+add_custom_command(TARGET actioninject PRE_BUILD
+                   COMMAND python tools/preprocess.py
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_custom_command(TARGET drivinginject PRE_BUILD
+                   COMMAND python tools/preprocess.py
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)
