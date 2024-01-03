@@ -15,10 +15,12 @@ typedef struct {
 void Quat_Copy(quaternion_tag *target,const quaternion_tag *from);
 bool Quat_IsEqual(const quaternion_tag *a, const quaternion_tag *b, float threshold);
 void Quat_Mul(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *target);
+void Quat_QuatTransToMat(quaternion_tag *quatIn,float *vecIn,_MATRIX *mOut);
 void Mat_Copy(const _MATRIX *source, _MATRIX *target);
 void Mat_CopyRot(const _MATRIX *source, _MATRIX *target);
 void Mat_IdentityT(_MATRIX *mtx);
 void Mat_Identity(_MATRIX *mtx);
+void RotTransMat(_MATRIX *param_1,_MATRIX *param_2);
 void Vec_Normalise(_VECTOR *vOut,_VECTOR *vIn);
 void Vec_Subtract(const _VECTOR *a, const _VECTOR *b, _VECTOR *v_out);
 void Vec_Zero(_VECTOR *v);

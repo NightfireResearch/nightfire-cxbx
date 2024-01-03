@@ -42,6 +42,45 @@ void Quat_Mul(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *
   return;
 }
 
+// FUNC_AT(000d59e0)
+void Quat_QuatTransToMat(quaternion_tag *quatIn,float *vecIn,_MATRIX *mOut) {
+  float fVar1;
+  float fVar2;
+  float fVar3;
+  float fVar4;
+  float fVar5;
+  float fVar6;
+  float fVar7;
+  float fVar8;
+  float fVar9;
+  
+  fVar1 = quatIn->q[0] + quatIn->q[0];
+  fVar3 = quatIn->q[1] + quatIn->q[1];
+  fVar6 = quatIn->q[2] + quatIn->q[2];
+  fVar2 = fVar1 * quatIn->q[0];
+  fVar5 = fVar3 * quatIn->q[0];
+  fVar7 = fVar6 * quatIn->q[0];
+  fVar4 = fVar3 * quatIn->q[1];
+  fVar8 = fVar6 * quatIn->q[1];
+  fVar9 = fVar6 * quatIn->q[2];
+  fVar1 = fVar1 * quatIn->q[3];
+  fVar3 = fVar3 * quatIn->q[3];
+  fVar6 = fVar6 * quatIn->q[3];
+  mOut->m[0] = 1.0f - (fVar9 + fVar4);
+  mOut->m[1] = fVar5 + fVar6;
+  mOut->m[2] = fVar7 - fVar3;
+  mOut->m[4] = fVar5 - fVar6;
+  mOut->m[5] = 1.0f - (fVar9 + fVar2);
+  mOut->m[6] = fVar1 + fVar8;
+  mOut->m[8] = fVar3 + fVar7;
+  mOut->m[9] = fVar8 - fVar1;
+  mOut->m[10] = 1.0f - (fVar4 + fVar2);
+  mOut->m[0xc] = *vecIn;
+  mOut->m[0xd] = vecIn[1];
+  mOut->m[0xe] = vecIn[2];
+  return;
+}
+
 // FUNC_AT(000d4ff0)
 void Mat_Copy(const _MATRIX *source, _MATRIX *target) {
 	for (int i = 0; i < 15; i++) {
