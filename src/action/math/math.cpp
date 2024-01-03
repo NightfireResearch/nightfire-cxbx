@@ -79,13 +79,49 @@ void Mat_Identity(_MATRIX *mtx) {
 	mtx->m[10] = 1.0;
 }
 
+// FUNC_AT(000d6b80)
+void RotTransMat(_MATRIX *param_1,_MATRIX *param_2) {
+  float fVar1;
+  float fVar2;
+  float fVar3;
+  float fVar4;
+  float fVar5;
+  float fVar6;
+  float fVar7;
+  float fVar8;
+  float fVar9;
+  
+  fVar5 = param_2->m[8];
+  fVar1 = param_2->m[0];
+  fVar2 = param_2->m[4];
+  fVar6 = param_2->m[9];
+  fVar3 = param_2->m[1];
+  fVar4 = param_2->m[2];
+  fVar7 = param_2->m[10];
+  fVar8 = param_2->m[5];
+  fVar9 = param_2->m[6];
+  param_2->m[0] = fVar1 * param_1->m[0] + fVar4 * param_1->m[8] + fVar3 * param_1->m[4];
+  param_2->m[1] = fVar1 * param_1->m[1] + fVar4 * param_1->m[9] + fVar3 * param_1->m[5];
+  param_2->m[2] = fVar3 * param_1->m[6] + fVar1 * param_1->m[2] + fVar4 * param_1->m[10];
+  param_2->m[4] = fVar2 * param_1->m[0] + fVar9 * param_1->m[8] + fVar8 * param_1->m[4];
+  param_2->m[5] = fVar2 * param_1->m[1] + fVar9 * param_1->m[9] + fVar8 * param_1->m[5];
+  param_2->m[6] = fVar8 * param_1->m[6] + fVar2 * param_1->m[2] + fVar9 * param_1->m[10];
+  param_2->m[8] = fVar5 * param_1->m[0] + fVar7 * param_1->m[8] + fVar6 * param_1->m[4];
+  param_2->m[9] = fVar5 * param_1->m[1] + fVar7 * param_1->m[9] + fVar6 * param_1->m[5];
+  param_2->m[10] = fVar6 * param_1->m[6] + fVar5 * param_1->m[2] + fVar7 * param_1->m[10];
+  param_2->m[0xc] = param_1->m[0xc] + param_2->m[0xc];
+  param_2->m[0xd] = param_1->m[0xd] + param_2->m[0xd];
+  param_2->m[0xe] = param_1->m[0xe] + param_2->m[0xe];
+  return;
+}
+
 // FUNC_AT(000d76d0)
 void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
   
   float magnitude = SQRT(vIn->z * vIn->z + vIn->y * vIn->y + vIn->x * vIn->x);
   
   if (!ISNAN(magnitude) && (magnitude != 0.0)) {
-    float rcpMag = 1.0 / magnitude;
+    float rcpMag = 1.0f / magnitude;
     vOut->x = rcpMag * vIn->x;
     vOut->y = rcpMag * vIn->y;
     vOut->z = rcpMag * vIn->z;

@@ -83,7 +83,7 @@ void Input_Update(void) {
 }
 
 // FUNC_AT(0006c9a0)
-unsigned short __cdecl Input_Action(short playerNum,unsigned int action,unsigned char flags) {
+unsigned short Input_Action(short playerNum,unsigned int action,unsigned char flags) {
   
     // Any player (specified with a negative value)
     if (playerNum < 0) {
@@ -109,7 +109,7 @@ unsigned short __cdecl Input_Action(short playerNum,unsigned int action,unsigned
 }
 
 // FUNC_AT(0006ca20)
-float __cdecl Input_Actionf(short playerNum,unsigned int action, unsigned char flags) {
+float Input_Actionf(short playerNum,unsigned int action, unsigned char flags) {
   
   // Any player
   if (playerNum < 0) {
@@ -134,7 +134,7 @@ float __cdecl Input_Actionf(short playerNum,unsigned int action, unsigned char f
 }
 
 // FUNC_AT(0006cab0)
-void __cdecl Input_ClearAction(short playerNum,unsigned int action) {
+void Input_ClearAction(short playerNum,unsigned int action) {
   
   // All players
   if (playerNum < 0) {
@@ -152,7 +152,7 @@ void __cdecl Input_ClearAction(short playerNum,unsigned int action) {
 }
 
 // FUNC_AT(0006cb10)
-void __cdecl Input_SetAction(short playerNum,unsigned int action,unsigned char val) {
+void Input_SetAction(short playerNum,unsigned int action,unsigned char val) {
 
   // All players
   if (playerNum < 0) {
