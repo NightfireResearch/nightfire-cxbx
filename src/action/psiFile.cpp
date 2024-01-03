@@ -3,31 +3,23 @@
 #include "helpers.h"
 
 
-
-int FUN_000dc990(int a, int b, int c) {
-	int (*funcPtr)(int, int, int) = (int (*)(int, int, int))(0x000dc990);
-	return funcPtr(a, b, c);
-}
-
 int allocateAndLoadFileWithinArchive(char* a, unsigned short b, int* c) {
 	int (*funcPtr)(char*, unsigned short, int*) = (int (*)(char*, unsigned short, int*))(0x000dc990);
 	return funcPtr(a, b, c);
 }
 
-int __cdecl FUN_000eed6b(int param_1) {
-	int (*funcPtr)(int) = (int (*)(int))(0x000eed6b);
-	return funcPtr(param_1);
-}
+// AUTOGEN
+int __cdecl FUN_000eed6b(int param_1);
 
 // FUNC_AT(000e04a0)
-int __cdecl psiFileOpen(int param_1)
+int __cdecl psiFileOpen(char* param_1)
 {
-  printf("hooked psiFileOpen: %s\n", (char*)param_1);
+  printf("hooked psiFileOpen: %s\n", param_1);
 
   U32_AT(0x002adf74) = 0;
   U32_AT(0x002adf78) = 0;
   U32_AT(0x002adf7c) = 0;
-  U32_AT(0x002adf74) = FUN_000dc990(param_1,0x1204,0x002adf78);
+  U32_AT(0x002adf74) = allocateAndLoadFileWithinArchive(param_1,0x1204,(int*)0x002adf78);
   U32_AT(0x002adf7c) = 0;
   return (((uint32_t)U32_AT(0x002adf74) >> 8) << 8 | 1);
 }
