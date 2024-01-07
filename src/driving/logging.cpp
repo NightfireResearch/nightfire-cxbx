@@ -11,6 +11,21 @@ void dbg_printf(char* format, ...)
 	snprintf(fmt2, sizeof(fmt2), "%s\n", format);
 
     vprintf(fmt2, args);
+	*(char*)(0x001e4761) = 1;
+
+    va_end(args);
+}
+
+void dbg_wprintf(char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+	char fmt2[256];
+	snprintf(fmt2, sizeof(fmt2), "%s", format);
+
+    vprintf(fmt2, args);
+	*(char*)(0x001e4761) = 1;
 
     va_end(args);
 }

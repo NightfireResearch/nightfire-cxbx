@@ -73,7 +73,8 @@ void Inject()
 
   // Logging goes thrugh some weird paths... 001d1bac is a table of possible outputs - console, debugger, and file
   WriteJmpRet(0x000e2e30, (size_t)&dbg_printf);
-  //WriteJmpRet(0x0010e832, (size_t)&xapiDebugStringA); // UNTESTED
+  WriteJmpRet(0x00132192, (size_t)&dbg_wprintf);
+  WriteJmpRet(0x0010e832, (size_t)&xapiDebugStringA); // UNTESTED
   WriteJmpRet(0x0010e75f, (size_t)&preMain);
 
 
