@@ -9,6 +9,8 @@
 #include <cstring>
 #include <cstdio>
 
+#include <stdio.h>
+
 // Functions taking void and returning through registers are fine in either __cdecl or __stdcall
 // It's only when they take arguments that the calling convention matters
 // AUTOGEN
@@ -170,16 +172,12 @@ void __stdcall Game_Draw(void);
 // AUTOGEN
 void __stdcall Boot_LoadPTPData(void);
 // AUTOGEN
-int __stdcall Rand_Random();
+uint __stdcall Rand_Random();
 
 // No need to inject, only called from function below
-uint __stdcall Locks_Init(void) {
+void __stdcall Locks_Init(void) {
   uint uVar1;
-  char *puVar2;
-  int iVar3;
-  char *pcVar4;
   uint uVar5;
-  int iVar6;
   
   // Seed the random number generator
   uVar1 = gs_NumFramesUnpaused * 5 & 0xff;
@@ -191,23 +189,17 @@ uint __stdcall Locks_Init(void) {
     } while ((uVar5 & 0xffff) < uVar1 << 1);
   }
 
-  // Fill out the keycode table
-  puVar2 = (char*)0x0029aafc;
-  iVar3 = 0x33;
-  do {
-    pcVar4 = puVar2 + -4;
-    iVar6 = 4;
-    do {
-      uVar1 = Rand_Random();
-      *pcVar4 = (char)((ulonglong)uVar1 % 9) + '0'; // Bug: '9' will never be generated
-      pcVar4 = pcVar4 + 1;
-      iVar6 = iVar6 + -1;
-    } while (iVar6 != 0);
-    *puVar2 = 0;
-    puVar2 = puVar2 + 5;
-    iVar3 = iVar3 + -1;
-  } while (iVar3 != 0);
-  return uVar1 / 9;
+  // Fill out the keycode table. This is an array of 51 ASCII strings, each of the form "1234\0"
+  char* KeyCodes = (char*)0x0029aaf8;
+  for(int i = 0; i < 51; i++) {
+
+    for (int digit = 0; digit < 4; digit++) {
+      KeyCodes[i*5+digit] = '0' + (char)(Rand_Random() % 10); // Original Game Bug: Previously was % 9, so '9' would never be in a keycode
+    }
+    KeyCodes[i*5 + 4] = 0; // Null-terminator
+    //printf("Keycode %d: %s at addr 0x%08x\n", i, KeyCodes + i*5, (int)(KeyCodes + i*5));
+  }
+
 }
 
 
