@@ -170,7 +170,48 @@ void __stdcall Game_Draw(void);
 // AUTOGEN
 void __stdcall Boot_LoadPTPData(void);
 // AUTOGEN
-uint __stdcall Locks_Init(void);
+int __stdcall Rand_Random();
+
+// No need to inject, only called from function below
+uint __stdcall Locks_Init(void) {
+  uint uVar1;
+  char *puVar2;
+  int iVar3;
+  char *pcVar4;
+  uint uVar5;
+  int iVar6;
+  
+  // Seed the random number generator
+  uVar1 = gs_NumFramesUnpaused * 5 & 0xff;
+  uVar5 = 0;
+  if (uVar1 != 0) {
+    do {
+      Rand_Random();
+      uVar5 = uVar5 + 1;
+    } while ((uVar5 & 0xffff) < uVar1 << 1);
+  }
+
+  // Fill out the keycode table
+  puVar2 = (char*)0x0029aafc;
+  iVar3 = 0x33;
+  do {
+    pcVar4 = puVar2 + -4;
+    iVar6 = 4;
+    do {
+      uVar1 = Rand_Random();
+      *pcVar4 = (char)((ulonglong)uVar1 % 9) + '0'; // Bug: '9' will never be generated
+      pcVar4 = pcVar4 + 1;
+      iVar6 = iVar6 + -1;
+    } while (iVar6 != 0);
+    *puVar2 = 0;
+    puVar2 = puVar2 + 5;
+    iVar3 = iVar3 + -1;
+  } while (iVar3 != 0);
+  return uVar1 / 9;
+}
+
+
+
 // AUTOGEN
 void __stdcall ResetMap_Load(void);
 // AUTOGEN
