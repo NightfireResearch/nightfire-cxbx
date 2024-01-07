@@ -13,11 +13,8 @@
 #define QuickBlock U32_AT(0x002237d8)
 #define MallocSize U32_AT(0x00223a8c)
 
-
-void* allocateAligned0x1000(int a) {
-    void* (*funcPtr)(int) = (void* (*)(int))(0x000e89d0);
-    return funcPtr(a);
-}
+// AUTOGEN
+void* allocateAligned0x1000(int a);
 
 // Only called from Mem_Init, no need to inject
 void psiMem_Init(uint *param_1, uint *param_2) {

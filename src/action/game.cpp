@@ -2,86 +2,48 @@
 #include "input.h"
 #include "memory.h"
 
+// Functions taking void and returning through registers are fine in either __cdecl or __stdcall
+// It's only when they take arguments that the calling convention matters
+// AUTOGEN
+void __stdcall Sound_UpdateListeners(void);
+// AUTOGEN
+void __stdcall Camera_UpdateAll(void);
+// AUTOGEN
+int** __stdcall MenuManager_Update(void);
+// AUTOGEN
+void __stdcall MenuManager_Monitor(void);
+// AUTOGEN
+void __stdcall Mission_Update(void);
+// AUTOGEN
+void __stdcall MP_Update(void);
+// AUTOGEN
+void __stdcall Text_Update2Line(void);
+// AUTOGEN
+void __stdcall Text_Update(void);
+// AUTOGEN
+void __stdcall UpdateAllShards(void);
+// AUTOGEN
+void __stdcall Env_Update(void);
+// AUTOGEN
+void __stdcall SSys_Monitor(void);
+// AUTOGEN
+void __stdcall Light_Update(void);
+// AUTOGEN
+void __stdcall control_movement_object_handler(void);
+// AUTOGEN
+void __stdcall psiDecompressWoman(void);
+// AUTOGEN
+uint GS_IsPaused(ushort a);
 
 
-void Sound_UpdateListeners(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x000cc1c0);
-    return funcPtr();
-}
 
-void Camera_UpdateAll(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x000260c0);
-    return funcPtr();
-}
+#define BackgroundMovieHashcode U32_AT(0x002ae288)
 
-void MenuManager_Update(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x00094370);
-    return funcPtr();
-}
-
-void MenuManager_Monitor(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x00094720);
-    return funcPtr();
-}
-
-void Mission_Update(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x0009c280);
-    return funcPtr();
-}
-
-void MP_Update(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x000a2b80);
-    return funcPtr();
-}
-
-void Text_Update2Line(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x000d2400);
-    return funcPtr();
-}
-void Text_Update(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x000d2360);
-    return funcPtr();
-}
-
-void UpdateAllShards(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x0001fd60);
-    return funcPtr();
-}
-
-void Env_Update(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x00068bf0);
-    return funcPtr();
-}
-
-void SSys_Monitor(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x000cf8d0);
-    return funcPtr();
-}
-
-void Light_Update(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x0006d660);
-    return funcPtr();
-}
-
-void control_movement_object_handler(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x0002dd00);
-    return funcPtr();
-}
-
-void psiDecompressWoman(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x000e0020);
-    return funcPtr();
-}
-
+// FUNC_AT(000dcd90)
 bool movieFinished(void) {
-    bool (*funcPtr)(void) = (bool (*)(void))(0x000dcd90);
-    return funcPtr();
+  return BackgroundMovieHashcode == 0;
 }
 
-bool GS_IsPaused(ushort a) {
-    bool (*funcPtr)(ushort) = (bool (*)(ushort))(0x0006afb0);
-    return funcPtr(a);
-}
 
 #define FreezeGame U8_AT(0x001fec48)
 #define sloflag U16_AT(0x001fec64)
@@ -169,46 +131,28 @@ uint *GameStateStack = (uint*)0x0017bff0; // Not zero-initialised - first entry 
 #define LoadTimeStart U32_AT(0x001f65cc)
 #define DAT_001f65ec U32_AT(0x001f65ec)
 
-void bootup_bootup(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x000197d0);
-    return funcPtr();
-}
-void psiLaunchDriving(void* a, uint b) {
-    void (*funcPtr)(void*, uint) = (void (*)(void*, uint))(0x000dfb50);
-    return funcPtr(a, b);
-}
-void Game_Draw(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x000dac20);
-    return funcPtr();
-}
-void Boot_LoadPTPData(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x00019db0);
-    return funcPtr();
-}
-void Reset_MapLoadSettings(void) { // easy to port
-    void (*funcPtr)(void) = (void (*)(void))(0x000be080);
-    return funcPtr();
-}
-void Locks_Init(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x000d01c0);
-    return funcPtr();
-}
-void ResetMap_Load(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x000bfb60);
-    return funcPtr();
-}
-void psiStopBackgroundMovie(void) {
-    void (*funcPtr)(void) = (void (*)(void))(0x000dccc0);
-    return funcPtr();
-}
-ulonglong psiGetTimeIn100ths(void) {
-    ulonglong (*funcPtr)(void) = (ulonglong (*)(void))(0x000dffb0);
-    return funcPtr();
-}
-void Boot_GetPTPData(void **param_1,uint *param_2) {
-    void (*funcPtr)(void**, uint*) = (void (*)(void**, uint*))(0x00019a10);
-    return funcPtr(param_1, param_2);
-}
+// AUTOGEN
+void __stdcall bootup_bootup(void);
+// AUTOGEN
+void __cdecl psiLaunchDriving(void* a, uint b);
+// AUTOGEN
+void __stdcall Game_Draw(void);
+// AUTOGEN
+void __stdcall Boot_LoadPTPData(void);
+// easy to port
+// AUTOGEN 
+void __stdcall Reset_MapLoadSettings(void);
+// AUTOGEN
+uint __stdcall Locks_Init(void);
+// AUTOGEN
+void __stdcall ResetMap_Load(void);
+// AUTOGEN
+void __stdcall psiStopBackgroundMovie(void);
+// AUTOGEN
+ulonglong __stdcall psiGetTimeIn100ths(void);
+// AUTOGEN
+void Boot_GetPTPData(void **param_1,uint *param_2);
+
 
 uint GameFlow_GetState(void) {
   if (StackIndex == 0) {
