@@ -82,7 +82,7 @@ void Input_Update(void) {
     Inject_KeyboardInput();
 }
 
-// FUNC_AT(0006c9a0)
+// AUTOINJECT
 unsigned short Input_Action(short playerNum,unsigned int action,unsigned char flags) {
   
     // Any player (specified with a negative value)
@@ -108,7 +108,7 @@ unsigned short Input_Action(short playerNum,unsigned int action,unsigned char fl
     return 0;
 }
 
-// FUNC_AT(0006ca20)
+// AUTOINJECT
 float Input_Actionf(short playerNum,unsigned int action, unsigned char flags) {
   
   // Any player
@@ -133,7 +133,7 @@ float Input_Actionf(short playerNum,unsigned int action, unsigned char flags) {
   return 0.0f;
 }
 
-// FUNC_AT(0006cab0)
+// AUTOINJECT
 void Input_ClearAction(short playerNum,unsigned int action) {
   
   // All players
@@ -151,7 +151,7 @@ void Input_ClearAction(short playerNum,unsigned int action) {
   return;
 }
 
-// FUNC_AT(0006cb10)
+// AUTOINJECT
 void Input_SetAction(short playerNum,unsigned int action,unsigned char val) {
 
   // All players

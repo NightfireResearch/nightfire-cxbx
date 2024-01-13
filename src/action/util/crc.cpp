@@ -70,7 +70,7 @@ static const uint32_t crc32_table[256] =
 };
 
 // FUNC_AT(000e8f90)
-uint32_t crc32(const uint8_t *data, size_t length) {
+uint32_t crc32buf(const uint8_t *data, size_t length) {
     uint32_t crc = 0xffffffff;
     
     while (length--)

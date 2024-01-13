@@ -57,7 +57,7 @@ void psiPostGame_Run(void) {} // No effect on XBox, does some PS2-specific stuff
 
 
 // Process the gameplay / update the state of the world and UI
-// FUNC_AT(0006aa90)
+// AUTOINJECT
 void Game_Run(void) {
   
   psiPreGame_Run();
@@ -201,7 +201,7 @@ void GameFlow_QuickPushState(uint state) {
     set_InhibitGameDrawIfRequired();
 }
 
-// FUNC_AT(0006aca0)
+// AUTOINJECT
 void GameFlow_Main(void) {
   byte bVar2;
   uint local_8;

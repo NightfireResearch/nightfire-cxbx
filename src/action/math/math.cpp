@@ -15,7 +15,7 @@ inline float SQRT(float n) {
 	return sqrtf(n);
 }
 
-// FUNC_AT(000d55f0)
+// AUTOINJECT
 void Quat_Copy(quaternion_tag *target, const quaternion_tag *from) {
 	target->q[0] = from->q[0];
 	target->q[1] = from->q[1];
@@ -23,7 +23,7 @@ void Quat_Copy(quaternion_tag *target, const quaternion_tag *from) {
 	target->q[3] = from->q[3];
 }
 
-// FUNC_AT(000d5560)
+// AUTOINJECT
 bool Quat_IsEqual(const quaternion_tag *a, const quaternion_tag *b, float threshold) {
   if (	(ABS(a->q[0] - b->q[0]) > threshold) ||
 		(ABS(a->q[1] - b->q[1]) > threshold) ||
@@ -33,7 +33,7 @@ bool Quat_IsEqual(const quaternion_tag *a, const quaternion_tag *b, float thresh
 	return true;
 }
 
-// FUNC_AT(000d7470)
+// AUTOINJECT
 void Quat_Mul(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *qOut) {
   qOut->q[0] = (a->q[3] * b->q[0] + b->q[2] * a->q[1] + b->q[3] * a->q[0]) - b->q[1] * a->q[2];
   qOut->q[1] = (a->q[3] * b->q[1] + b->q[3] * a->q[1] + a->q[2] * b->q[0]) - a->q[0] * b->q[2];
@@ -42,7 +42,7 @@ void Quat_Mul(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *
   return;
 }
 
-// FUNC_AT(000d59e0)
+// AUTOINJECT
 void Quat_QuatTransToMat(quaternion_tag *quatIn,float *vecIn,_MATRIX *mOut) {
   float fVar1;
   float fVar2;
@@ -81,21 +81,21 @@ void Quat_QuatTransToMat(quaternion_tag *quatIn,float *vecIn,_MATRIX *mOut) {
   return;
 }
 
-// FUNC_AT(000d4ff0)
+// AUTOINJECT
 void Mat_Copy(const _MATRIX *source, _MATRIX *target) {
 	for (int i = 0; i < 15; i++) {
 		target->m[i] = source->m[i];
 	}
 }
 
-// FUNC_AT(000d5010)
+// AUTOINJECT
 void Mat_CopyRot(const _MATRIX *source, _MATRIX *target) {
 	for (int i = 0; i < 12; i++) {
 		target->m[i] = source->m[i];
 	}
 }
 
-// FUNC_AT(000d5160)
+// AUTOINJECT
 void Mat_IdentityT(_MATRIX *mtx) {
 	for(int i = 0; i < 15; i++) {
 		mtx->m[i] = 0.0f;
@@ -105,7 +105,7 @@ void Mat_IdentityT(_MATRIX *mtx) {
 	mtx->m[10] = 1.0;
 }
 
-// FUNC_AT(000d5130)
+// AUTOINJECT
 void Mat_Identity(_MATRIX *mtx) {
 	mtx->m[0] = 1.0;
 	mtx->m[1] = 0.0;
@@ -118,7 +118,7 @@ void Mat_Identity(_MATRIX *mtx) {
 	mtx->m[10] = 1.0;
 }
 
-// FUNC_AT(000d6b80)
+// AUTOINJECT
 void RotTransMat(_MATRIX *param_1,_MATRIX *param_2) {
   float fVar1;
   float fVar2;
@@ -154,7 +154,7 @@ void RotTransMat(_MATRIX *param_1,_MATRIX *param_2) {
   return;
 }
 
-// FUNC_AT(000d76d0)
+// AUTOINJECT
 void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
   
   float magnitude = SQRT(vIn->z * vIn->z + vIn->y * vIn->y + vIn->x * vIn->x);
@@ -172,21 +172,21 @@ void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
   vOut->x = 0.0;
 }
 
-// FUNC_AT(000d7370)
+// AUTOINJECT
 void Vec_Subtract(const _VECTOR *a, const _VECTOR *b, _VECTOR *vOut) {
   vOut->x = a->x - b->x;
   vOut->y = a->y - b->y;
   vOut->z = a->z - b->z;
 }
 
-// FUNC_AT(000d4dc0)
+// AUTOINJECT
 void Vec_Zero(_VECTOR *v) {
   v->x = 0.0;
   v->y = 0.0;
   v->z = 0.0;
 }
 
-// FUNC_AT(000d7280)
+// AUTOINJECT
 void Vec_Negate(const _VECTOR *vIn,_VECTOR *vOut) {
   vOut->x = -vIn->x;
   vOut->y = -vIn->y;
