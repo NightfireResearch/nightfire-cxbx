@@ -11,7 +11,6 @@ void dbg_printf(char* format, ...)
 	snprintf(fmt2, sizeof(fmt2), "%s\n", format);
 
     vprintf(fmt2, args);
-	*(char*)(0x001e4761) = 1;
 
     va_end(args);
 }
@@ -35,19 +34,3 @@ void xapiDebugStringA(char* text) {
 	printf("XAPIDebug: %s", text);
 }
 
-
-int game_main(int argc, char** argv) {
-	int (*funcPtr)(int, char**) = (int (*)(int, char**))(0x0005a1b0);
-	return funcPtr(argc, argv);
-}
-
-int preMain(int argc, char *argv[]) {
-
-	printf("main launching with %i args: ", argc);
-	for(int i = 0; i < argc; i++) {
-		printf("%i: %s, ", i, argv[i]);
-	}
-	printf("\n");
-
-	return game_main(argc, argv);
-}

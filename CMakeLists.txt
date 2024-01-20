@@ -66,6 +66,7 @@ add_library(drivinginject SHARED
   src/inject.h
   src/driving/logging.cpp
   src/common/launchInfo.cpp
+  src/driving/main.cpp
   src/driving/memory.cpp
 )
 

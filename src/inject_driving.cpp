@@ -1,6 +1,7 @@
 #include "inject.h"
 
 #include "driving/logging.h"
+#include "driving/main.h"
 #include "common/launchInfo.h"
 
 #include "cxbx/cxbxbinding.h"
@@ -24,6 +25,9 @@ void WriteBytes(size_t offset, unsigned char byte, size_t count)
   }
 }
 
+// Inject a new function over the top of an existing one
+// This replaces the behaviour of the function, regardless of where it was called from
+// This can be used on top of any function which is at least 5 bytes long
 void WriteJmpRet(size_t from, size_t to)
 {
   size_t relative = to - (from + 5);
@@ -32,7 +36,20 @@ void WriteJmpRet(size_t from, size_t to)
   WriteMemory(from + 1, &relative, sizeof(relative));
 }
 
-int preMain(int argc, char* argv[]);
+// Redirect a single call to a function
+// This results in a single call being rewritten as if it were to the new function
+// The original function is left intact, other calls are unaffected
+// This can be used on any function call which is 5 bytes long - ie any?
+void WriteCall(size_t from, size_t to)
+{
+  size_t relative = to - (from + 5);
+
+  WriteByte(from, 0xE8);
+  WriteMemory(from + 1, &relative, sizeof(relative));
+}
+
+
+
 void* ea_malloc(int amt, char* name);
 
 void Inject()
@@ -74,14 +91,21 @@ void Inject()
   // Logging goes thrugh some weird paths... 001d1bac is a table of possible outputs - console, debugger, and file
   WriteJmpRet(0x000e2e30, (size_t)&dbg_printf);
   WriteJmpRet(0x00132192, (size_t)&dbg_wprintf);
-  WriteJmpRet(0x0010e832, (size_t)&xapiDebugStringA); // UNTESTED
+  // WriteJmpRet(0x0010e832, (size_t)&xapiDebugStringA); // UNTESTED
   WriteJmpRet(0x0010e75f, (size_t)&preMain);
 
 
   // Most of the code follows a weird indirection: At 001caf68 is a pointer to a function (at 034f50) which takes a number and a string pointer
   // This appears to be memory allocation. This indirection makes it easy to profile? but also for us to hack!
-  int addr_of_eamalloc = (int)&ea_malloc;
-  WriteMemory(0x001caf68, &addr_of_eamalloc, 4);
+  // int addr_of_eamalloc = (int)&ea_malloc;
+  // WriteMemory(0x001caf68, &addr_of_eamalloc, 4);
+
+  // Audio debug
+	*(char*)(0x001e4760) = 1; // Mixer
+	// *(char*)(0x001e4761) = 1; // Info
+
+  // Resolution of RRenderer
+  // Function 0007cfb0 sets a default 640x480
 
   // Some more similar stuff happens with operator_new, which goes via some pointers to another allocator, which calls another...
 
