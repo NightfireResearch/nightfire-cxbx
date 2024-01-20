@@ -26,7 +26,7 @@ void psiMem_Init(uint *param_1, uint *param_2) {
     return;
 }
 
-// FUNC_AT(00070a40)
+// AUTOINJECT
 void Mem_Init(void) {
 
     printf("Mem_Init\n");
