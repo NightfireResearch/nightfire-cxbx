@@ -3,6 +3,10 @@ import re
 import datetime
 import json
 
+# Sub-tasks defined in other files for readability
+from uihandler import generate_handler_switch
+generate_handler_switch()
+
 def gather_functions_with_tag(TAG_NAME=None, HAS_PARAMS=False):
     functions = []
     for root, dirs, files in os.walk("src"):
