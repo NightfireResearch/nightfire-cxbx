@@ -24,7 +24,6 @@ void dbg_wprintf(char* format, ...)
 	snprintf(fmt2, sizeof(fmt2), "%s", format);
 
     vprintf(fmt2, args);
-	*(char*)(0x001e4761) = 1;
 
     va_end(args);
 }
