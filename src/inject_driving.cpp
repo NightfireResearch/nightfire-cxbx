@@ -113,8 +113,26 @@ void Inject()
   // Some more similar stuff happens with operator_new, which goes via some pointers to another allocator, which calls another...
 
 
+  //WriteJmpRet(0x005b9f0, (size_t)&RealClock_InterruptHandler);
+  //WriteCall(0x0005c77b, (size_t)&Scheduler_Constructor_Hook);
+  //WriteJmpRet(0x0005ba80, (size_t)&Scheduler__Run);
+
+  // WriteByte(0x0005bb5e, 0x6); // See what that weird 12 is doing in scheduler
+  //WriteBytes(0x0005ae98, 0x90, 5); // Disable whatever else runs in the hot inner loop
+  // WriteBytes(0x0005aea8, 0x90, 5); // Disable scheduler run
+
+
   WriteJmpRet(0x0005a600, (size_t)&EventManager__RunEvents);
   WriteJmpRet(0x0005a550, (size_t)&EventManager__Init);
 
   WriteJmpRet(0x00117610, (size_t)&UFileLoader__FileLoad);
+
+  // Binary patch - badly hack around a bug in the scheduler that causes the game to stall out.
+  // this fix is terrible, vibration goes weird and animation in pause menu is bad, but it works
+  // better than the stuttery lockups that happen otherwise
+  WriteByte(0x05bb48, 0xb8);
+  WriteByte(0x05bb49, 0x01);
+  WriteByte(0x05bb4a, 0x00);
+  WriteByte(0x05bb4b, 0x00);
+  WriteByte(0x05bb4c, 0x00);
 }
