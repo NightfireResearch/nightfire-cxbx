@@ -1,6 +1,7 @@
 #include "inject.h"
 
 #include "driving/logging.h"
+#include "driving/UFileLoader.h"
 #include "driving/main.h"
 #include "common/launchInfo.h"
 
@@ -114,4 +115,6 @@ void Inject()
 
   WriteJmpRet(0x0005a600, (size_t)&EventManager__RunEvents);
   WriteJmpRet(0x0005a550, (size_t)&EventManager__Init);
+
+  WriteJmpRet(0x00117610, (size_t)&UFileLoader__FileLoad);
 }

@@ -69,6 +69,7 @@ add_library(drivinginject SHARED
   src/driving/main.cpp
   src/driving/memory.cpp
   src/driving/EventManager.cpp
+  src/driving/UFileLoader.cpp
 )
 
 
