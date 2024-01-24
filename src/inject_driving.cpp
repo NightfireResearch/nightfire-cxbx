@@ -51,6 +51,8 @@ void WriteCall(size_t from, size_t to)
 
 
 void* ea_malloc(int amt, char* name);
+void EventManager__RunEvents(void);
+void EventManager__Init(void);
 
 void Inject()
 {
@@ -109,4 +111,7 @@ void Inject()
 
   // Some more similar stuff happens with operator_new, which goes via some pointers to another allocator, which calls another...
 
+
+  WriteJmpRet(0x0005a600, (size_t)&EventManager__RunEvents);
+  WriteJmpRet(0x0005a550, (size_t)&EventManager__Init);
 }
