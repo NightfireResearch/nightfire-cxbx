@@ -5,10 +5,14 @@
 #define eventCurrent U32_AT(0x001e47e0)
 #define eventBuffer U32_AT(0x001e47d4)
 
+// On XBox this is just the destructor
+// On PS2 this also has type_info
 typedef struct {
-    void (__thiscall *dtor) (void*, bool);
+    void (__thiscall *dtor) (void*, bool); // thiscall - takes an Event*
 } vtable_Event;
 
+// There's a variable-length amount of data after this
+// the destructor will take care of this by incrementing "eventBytesConsumed" accordingly
 typedef struct {
     vtable_Event* vtable;
 } Event;
@@ -34,7 +38,7 @@ void EventManager__RunEvents(void)
     do {
       if (puVar1 != (Event *)0x0) {
         eventCurrent = (int)puVar1;
-        (*puVar1->vtable->dtor)(puVar1, true);
+        (*puVar1->vtable->dtor)(puVar1, true); // Processes event and advances eventBytesConsumed by the size of the event
         puVar1 = (Event*)eventBytesConsumed;
       }
       eventCurrent = 0;
@@ -47,10 +51,10 @@ void EventManager__RunEvents(void)
 
 
 Event* Event__operator_new(size_t param_1) {
-  eventHead += (param_1 + 0xfU & 0xfffffff0);
+  eventHead += (param_1 + 0xfU & 0xfffffff0); // Align to 0x10 bytes
   return (Event*)eventHead;
 }
 
 void Event__operator_delete(undefined4 param_1, size_t param_2) {
-  eventBytesConsumed += (param_2 + 0xfU & 0xfffffff0);
+  eventBytesConsumed += (param_2 + 0xfU & 0xfffffff0); // Align to 0x10 bytes
 }

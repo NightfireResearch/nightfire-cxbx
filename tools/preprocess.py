@@ -35,7 +35,7 @@ def generate_injections(function_names):
     for address, function_name in function_names:
         if not address.startswith("0x"):
             address = f"0x{address}"
-        injection = f"WriteJmpRet({address}, (size_t)&{function_name});" if address else f"CreateWrapperFunction(&{function_name});"
+        injection = f"WriteJmpTo({address}, (size_t)&{function_name});" if address else f"CreateWrapperFunction(&{function_name});"
         injections.append(injection)
     return header + "\n".join(injections)
 

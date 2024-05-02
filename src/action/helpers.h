@@ -4,6 +4,7 @@
 #define U32_AT(x) (*((uint32_t*)x))
 #define U16_AT(x) (*((uint16_t*)x))
 #define U8_AT(x) (*((uint8_t*)x))
+#define FLOAT_AT(x) (*((float*)x))
 
 typedef unsigned char   undefined;
 

@@ -47,7 +47,7 @@ int UFileLoader__FileLoad(char *param_1,unsigned int param_2,bool param_3) {
   char *pcVar4;
   char local_100 [256];
 
-  printf("-------- Loading file %s\n", param_1);
+  printf("-------- Loading file %s, %i, %s\n", param_1, param_2, param_3 ? "true" : "false");
   
   pcVar4 = local_100;
   

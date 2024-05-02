@@ -6,6 +6,7 @@
 #include "common/launchInfo.h"
 
 #include "cxbx/cxbxbinding.h"
+#include <stdio.h>
 
 #define NOP 0x90
 
@@ -19,17 +20,15 @@ void WriteByte(size_t offset, unsigned char byte)
   WriteMemory(offset, &byte, 1);
 }
 
-void WriteBytes(size_t offset, unsigned char byte, size_t count)
+void FillBytes(size_t offset, unsigned char byte, size_t count)
 {
-  for (size_t i = 0; i < count; i++) {
-  	WriteByte(offset + i, byte);
-  }
+  memset((void*)offset, byte, count);
 }
 
 // Inject a new function over the top of an existing one
 // This replaces the behaviour of the function, regardless of where it was called from
 // This can be used on top of any function which is at least 5 bytes long
-void WriteJmpRet(size_t from, size_t to)
+void WriteJmpTo(size_t from, size_t to)
 {
   size_t relative = to - (from + 5);
 
@@ -52,6 +51,9 @@ void WriteCall(size_t from, size_t to)
 
 
 void* ea_malloc(int amt, char* name);
+void RealClock_InterruptHandler(void);
+unsigned int Scheduler_Constructor_Hook(void);
+void Scheduler__Run(int i);
 void EventManager__RunEvents(void);
 void EventManager__Init(void);
 
@@ -88,14 +90,14 @@ void Inject()
   /*
    * Option 2: Use launch options from file
    */
-  WriteJmpRet(0x0010f0db, (size_t)&XGetLaunchInfo);
-  WriteJmpRet(0x0010f186, (size_t)&XLaunchNewImageA);
+  WriteJmpTo(0x0010f0db, (size_t)&XGetLaunchInfo);
+  WriteJmpTo(0x0010f186, (size_t)&XLaunchNewImageA);
 
   // Logging goes thrugh some weird paths... 001d1bac is a table of possible outputs - console, debugger, and file
-  WriteJmpRet(0x000e2e30, (size_t)&dbg_printf);
-  WriteJmpRet(0x00132192, (size_t)&dbg_wprintf);
+  WriteJmpTo(0x000e2e30, (size_t)&dbg_printf);
+  WriteJmpTo(0x00132192, (size_t)&dbg_wprintf);
   // WriteJmpRet(0x0010e832, (size_t)&xapiDebugStringA); // UNTESTED
-  WriteJmpRet(0x0010e75f, (size_t)&preMain);
+  WriteJmpTo(0x0010e75f, (size_t)&preMain);
 
 
   // Most of the code follows a weird indirection: At 001caf68 is a pointer to a function (at 034f50) which takes a number and a string pointer
@@ -104,7 +106,7 @@ void Inject()
   // WriteMemory(0x001caf68, &addr_of_eamalloc, 4);
 
   // Audio debug
-	*(char*)(0x001e4760) = 1; // Mixer
+	//*(char*)(0x001e4760) = 1; // Mixer
 	// *(char*)(0x001e4761) = 1; // Info
 
   // Resolution of RRenderer
@@ -122,10 +124,10 @@ void Inject()
   // WriteBytes(0x0005aea8, 0x90, 5); // Disable scheduler run
 
 
-  WriteJmpRet(0x0005a600, (size_t)&EventManager__RunEvents);
-  WriteJmpRet(0x0005a550, (size_t)&EventManager__Init);
+  WriteJmpTo(0x0005a600, (size_t)&EventManager__RunEvents);
+  WriteJmpTo(0x0005a550, (size_t)&EventManager__Init);
 
-  WriteJmpRet(0x00117610, (size_t)&UFileLoader__FileLoad);
+  WriteJmpTo(0x00117610, (size_t)&UFileLoader__FileLoad);
 
   // Binary patch - badly hack around a bug in the scheduler that causes the game to stall out.
   // this fix is terrible, vibration goes weird and animation in pause menu is bad, but it works

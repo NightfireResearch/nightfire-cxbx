@@ -20,14 +20,12 @@ void WriteByte(size_t offset, unsigned char byte)
   WriteMemory(offset, &byte, 1);
 }
 
-void WriteBytes(size_t offset, unsigned char byte, size_t count)
+void FillBytes(size_t offset, unsigned char byte, size_t count)
 {
-  for (size_t i = 0; i < count; i++) {
-  	WriteByte(offset + i, byte);
-  }
+  memset((void*)offset, byte, count);
 }
 
-void WriteJmpRet(size_t from, size_t to)
+void WriteJmpTo(size_t from, size_t to)
 {
   size_t relative = to - (from + 5);
 
@@ -88,6 +86,9 @@ void Inject()
   WriteMemory(0x0025e87, &fWidth, 4); // Camera to screen pixel bounds (single player only)
   WriteMemory(0x0025e82, &fHeight, 4);
   // TODO: Multiplayer scaling
+  // TODO: Label_Init
+  // TODO: Page_Init
+  // TODO: HUD_CreateRadar
 
 
   //  FUN_0008fdd0 - Sprite related?
@@ -122,6 +123,6 @@ void Inject()
 
   // Patched to enable Action and Driving to pass messages
   // These are common to both, so we can't use autogeneration
-  WriteJmpRet(0x000eb0fb, (size_t)&XLaunchNewImageA);
-  WriteJmpRet(0x000eb050, (size_t)&XGetLaunchInfo);
+  WriteJmpTo(0x000eb0fb, (size_t)&XLaunchNewImageA);
+  WriteJmpTo(0x000eb050, (size_t)&XGetLaunchInfo);
 }

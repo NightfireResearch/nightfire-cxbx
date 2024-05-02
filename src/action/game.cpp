@@ -119,14 +119,18 @@ LAB_0006aafe:
 #define glb_viewer_6 U32_AT(0x001f6634)
 #define SkipCodeFrame U8_AT(0x001f6564)
 #define gs_NumFramesUnpaused U32_AT(0x001f65b4)
+#define VIDEO_FRAME_RATE U32_AT(0x0017c0f0)
 #define FRAME_RATE_INT U32_AT(0x0017c0f4)
+#define _FRAME_RATE FLOAT_AT(0x0017c0f8)
+#define FRAME_RATE_DIV FLOAT_AT(0x0017c0fc)
+#define FRAME_RATE_MUL FLOAT_AT(0x0017c100)
+#define REC_FRAME_RATE FLOAT_AT(0x0017c104)
 #define inhibitGameDraw U8_AT(0x001f65c0)
 #define maybe_gs_LoadingBlobs U32_AT(0x001f65b0)
 #define gameState_ReloadGame U32_AT(0x001f6598)
 uint *GameStateStack = (uint*)0x0017bff0; // Not zero-initialised - first entry must be 1
 #define MainLoopCycles U32_AT(0x001f65bc)
 #define VideoFrames U32_AT(0x001f65b8)
-#define VIDEO_FRAME_RATE U32_AT(0x0017c0f0)
 #define DAT_001f65ac U8_AT(0x001f65ac)
 #define LoadTimeStart U32_AT(0x001f65cc)
 #define DAT_001f65ec U32_AT(0x001f65ec)
@@ -301,4 +305,31 @@ void GameFlow_Main(void) {
   }
   inhibitGameDraw = 0;
   return;
+}
+
+// No need for autoinjection, only called once from the function immediately below
+void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate) {
+
+  VIDEO_FRAME_RATE = videoFrameRate;
+
+  _FRAME_RATE = (float) gameFrameRate;
+  FRAME_RATE_INT = gameFrameRate;
+  FRAME_RATE_DIV = _FRAME_RATE * 0.016666667f;
+  FRAME_RATE_MUL = (1.0f / _FRAME_RATE) * 60.0f;
+  REC_FRAME_RATE = 1.0f / _FRAME_RATE;
+
+}
+
+#define IsPalI U8_AT(0x002c5760)
+
+// FUNC_AT(000e5fb0)
+bool Graphics_IsPalI(void) {
+  return IsPalI;
+}
+
+// FUNC_AT(000dd1d0)
+void mainloop(void) {
+  int refreshRate = Graphics_IsPalI() ? 50 : 60;
+  GS_SetRefreshRate(refreshRate, refreshRate);
+  GameFlow_Main();
 }
