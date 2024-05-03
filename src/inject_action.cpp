@@ -5,6 +5,7 @@
 #include "action/input.h"
 #include "action/util/crc.h"
 #include "action/memory.h"
+#include "action/music.h"
 #include "action/psiFile.h"
 #include "common/launchInfo.h"
 
