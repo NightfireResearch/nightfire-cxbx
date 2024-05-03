@@ -29,7 +29,7 @@ void __stdcall SSys_Monitor(void);
 // AUTOGEN
 void __stdcall Light_Update(void);
 // AUTOGEN
-void __stdcall control_movement_object_handler(void);
+void __cdecl control_movement_object_handler(char);
 // AUTOGEN
 void __stdcall psiDecompressWoman(void);
 // AUTOGEN
@@ -98,7 +98,7 @@ LAB_0006aafe:
   if (!GS_IsPaused(0xffff)) {
     SSys_Monitor();
     Light_Update();
-    control_movement_object_handler();
+    control_movement_object_handler(0);
     Camera_UpdateAll();
     return;
   }
