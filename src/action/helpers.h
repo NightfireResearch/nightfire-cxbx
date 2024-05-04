@@ -1,3 +1,6 @@
+#ifndef __HELPERS_H__
+#define __HELPERS_H__
+
 #define I32_AT(x) (*((int32_t*)x))
 #define I16_AT(x) (*((int16_t*)x))
 #define I8_AT(x) (*((int8_t*)x))
@@ -9,6 +12,7 @@
 typedef unsigned char   undefined;
 
 typedef unsigned char    byte;
+typedef unsigned char    uchar;
 typedef unsigned int    dword;
 
 typedef long long    longlong;
@@ -24,5 +28,14 @@ typedef unsigned short    ushort;
 
 typedef unsigned short    word;
 
+
+typedef struct {
+    char pad[0x18];
+    uint hashcode;
+} M_CONTROL;
+
 #include <stdint.h>
 #include <stdbool.h>
+
+
+#endif // __HELPERS_H__

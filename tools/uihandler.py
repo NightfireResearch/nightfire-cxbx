@@ -113,13 +113,6 @@ def generate_handler_switch():
 #include "../helpers.h"
 #include <stdio.h>
 
-typedef unsigned char uchar;
-
-typedef struct {
-    char pad[0x18];
-    uint hashcode;
-} M_CONTROL;
-
 """
 
     for _, name in mapping.items():
