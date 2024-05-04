@@ -106,6 +106,9 @@ for f in autofuncs:
     an = ", ".join(argNames)
     cc = "" if gf['calling_convention'] == "default" else gf['calling_convention']
 
+    if "_Handler" in gf['name']:
+        cc = "__cdecl" # HACKHACKHACK not sure if these are all cdecl or stdcall
+
     output_file += f"""
 {gf['return_type']} {cc} {gf['name']}({al}) {{
     return reinterpret_cast<{gf['return_type']} (*)({paramTypes})>({addr})({an});

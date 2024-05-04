@@ -10,7 +10,11 @@ mapping = {
     0x40000019: "P_MPJOIN_Handler",
     0x4000001a: "P_MPSCENARIO_Handler",
     0x4000001b: "P_CNSELECT_Handler",
+<<<<<<< HEAD
     0x4000001c: "P_NFMAP_Handler",
+=======
+  #  0x4000001c: "FUN_000864f0",
+>>>>>>> 9fbdba2 (HACK: Make it build with some functions disabled)
     0x4000001d: "P_CNMENU_Handler",
     0x40000020: "P_CNNAME_Handler",
     0x40000022: "P_CNCONTROLS_Handler",
