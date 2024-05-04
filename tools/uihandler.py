@@ -117,7 +117,7 @@ def generate_handler_switch():
 """
 
     for _, name in mapping.items():
-        output += f"// AUTOGEN\nuint32_t {name}(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3);\n"
+        output += f"// AUTOGEN\nuint32_t {name}(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);\n"
 
 
     output += """
@@ -128,7 +128,7 @@ long Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int 
 """
 
     for addr, name in mapping.items():
-        output += f"        case 0x{addr:08x}: return {name}(param_1, param_2, hashcode, param_3);\n"
+        output += f"        case 0x{addr:08x}: return {name}(param_1, param_2, hashcode, param_3, param_4, param_5);\n"
     
     output += """
         default: {printf(\"UNHANDLED MESSAGE HANDLER FOR TYPE: 0x%08x\\n\",hashcode);}
