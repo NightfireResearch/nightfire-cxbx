@@ -153,7 +153,7 @@ typedef enum {
 
 
 
-    FORCE_UINT32 = 0x7FFFFFFF
+    HASHCODE_FORCE_UINT32 = 0x7FFFFFFF
 } HASHCODE;
 
 typedef enum {
@@ -169,11 +169,11 @@ typedef enum {
     DOSSIER_GADGETS_DESC = 0x0100000c,
     DOSSIER_WEAPONS_DESC = 0x0100000d,
 
-    FORCE_UINT32 = 0x7FFFFFFF
+    Nightfire_TranslatedText_FORCE_UINT32 = 0x7FFFFFFF
 } Nightfire_TranslatedText;
 
 typedef enum {
 
-    FORCE_UINT32 = 0x7FFFFFFF
+    Nightfire_SFX_FORCE_UINT32 = 0x7FFFFFFF
 } Nightfire_SFX;
 
