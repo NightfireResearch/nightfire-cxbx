@@ -79,7 +79,7 @@ mapping = {
     0x100000c7: "C_CHCHALLOWFREEZE_Handler",
     0x100000e5: "C_SBNFCN_Handler",
     # TODO: Default case - CHCHWEAP?
-    0x10000173: "C_SBDSWPSCROLL_Handler",
+    0x10000173: "C_SBDSWPSCROLL_Handler", # Dossier Weapon Scroll?
     0x10000174: "C_RBDSRECORDS_Handler",
     # TODO: Non-contiguous block of crap
     0x1000017a: "C_RBDSREWARDS_Handler",
@@ -99,14 +99,14 @@ mapping = {
     0x100000fc: "C_LBERROPTIONS_Handler",
     0x10000100: "C_SBCNOPTIONS_Handler",
     0x10000101: "C_CHCHDRAWALL_Handler",
-    0x1000010c: "C_SBDOSSIER_Handler",
+    0x1000010c: "C_SBDOSSIER_Handler", # TODO: What does C_SBDOSSIER_Handler do when sending 0x1000010a/0x1000010d/...? Subpages?
     0x10000114: "C_SBBOTS_Handler",
     0x10000120: "C_LBMSGOPTIONS_Handler",
     0x1000015d: "C_MPDBG_Handler",
     0x1000015e: "C_LANGUAGE_Handler",
     0x10000169: "C_CHCHLOCKUP_Handler",
-    # TODO: Default case - SBDSGTSCROLL?
-    0x0000016f: "C_SBDSGTSCROLL_Handler", # assumed
+    # Default case - SBDSGTSCROLL. Confirmed against PS2.
+    0x0000016f: "C_SBDSGTSCROLL_Handler", # Dossier Gadgets Scroll?
 }
 
 def generate_handler_switch():
@@ -137,6 +137,7 @@ long Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int 
     return (hashcode & 0xffffff00);
 }
 """
-    
+
+    # Must be a CPP file because of the autogen/autoinject comments
     with open("src/action/ui/ui.cpp", 'w') as file:
         file.write(output)
