@@ -33,7 +33,6 @@ typedef unsigned short    ushort;
 
 typedef unsigned short    word;
 
-typedef uint32_t Nightfire_TranslatedText;
 
 // TODO: Unfinished
 typedef struct {
