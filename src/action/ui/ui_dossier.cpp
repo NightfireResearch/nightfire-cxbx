@@ -73,9 +73,15 @@ typedef struct {
 
 #define manager ((M_MANAGER *)0x0025f1d0)
 
+#include <stdio.h>
+
 // AUTOINJECT
 undefined4 C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint param_4, int param_5, int param_6) {
-  
+
+  printf("In C_SBDOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, param_4, param_5, param_6);
+  return 1;
+
+  /*
   switch (param_4) {
     case 0x4b: {
       
@@ -110,5 +116,5 @@ undefined4 C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, 
   default:
       return 1;
   }
-  
+  */
 }

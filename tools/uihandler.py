@@ -109,15 +109,20 @@ mapping = {
     0x0000016f: "C_SBDSGTSCROLL_Handler", # Dossier Gadgets Scroll?
 }
 
+implemented = ["C_SBDOSSIER_Handler"]
+
 def generate_handler_switch():
     output = """
 #include "../helpers.h"
+#include "ui.h"
+
 #include <stdio.h>
 
 """
 
     for _, name in mapping.items():
-        output += f"// AUTOGEN\nuint32_t {name}(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);\n"
+        if not name in implemented:
+            output += f"// AUTOGEN\nuint32_t {name}(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);\n"
 
 
     output += """

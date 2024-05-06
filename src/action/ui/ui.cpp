@@ -1,5 +1,7 @@
 
 #include "../helpers.h"
+#include "ui.h"
+
 #include <stdio.h>
 
 // AUTOGEN
@@ -184,8 +186,6 @@ uint32_t C_LBERROPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode
 uint32_t C_SBCNOPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 uint32_t C_CHCHDRAWALL_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-uint32_t C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 uint32_t C_SBBOTS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
