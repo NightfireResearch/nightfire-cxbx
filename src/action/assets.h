@@ -1,3 +1,6 @@
+#ifndef _ASSETS_H
+#define _ASSETS_H
+
 // TODO: Might these be better auto-generated from spreadsheets?
 
 typedef enum {
@@ -177,3 +180,5 @@ typedef enum {
     Nightfire_SFX_FORCE_UINT32 = 0x7FFFFFFF
 } Nightfire_SFX;
 
+
+#endif // _ASSETS_H

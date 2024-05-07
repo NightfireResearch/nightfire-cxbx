@@ -67,10 +67,6 @@ const M_ITEM ds_options[4] = {
     }
 };
 
-typedef struct {
-  char unknown[0x76];
-} M_MANAGER;
-
 #define manager ((M_MANAGER *)0x0025f1d0)
 
 #include <stdio.h>

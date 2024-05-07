@@ -33,6 +33,10 @@ typedef unsigned short    ushort;
 
 typedef unsigned short    word;
 
+// TODO: Unfinished
+typedef struct {
+    char pad[0x76];
+} M_MANAGER;
 
 // TODO: Unfinished
 typedef struct {
