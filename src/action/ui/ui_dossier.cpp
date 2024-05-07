@@ -74,43 +74,40 @@ const M_ITEM ds_options[4] = {
 // AUTOINJECT
 undefined4 C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint param_4, int param_5, int param_6) {
 
-  printf("In C_SBDOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, param_4, param_5, param_6);
-  return 1;
+    printf("In C_SBDOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, param_4, param_5, param_6);
+    /*
+    switch (param_4) {
+        case 0x4b: {
+            
+            int lVar1 = __Menu_SendMessage(param_2, 0x40, 0, 0);
 
-  /*
-  switch (param_4) {
-    case 0x4b: {
-      
-      int lVar1 = __Menu_SendMessage(param_2, 0x40, 0, 0);
+            switch(lVar1) {
+                case 0:
+                    Manager_SendMessage(manager[param_1], 0x44, 0x4000003a, 0);
+                    return 1;
+                case 1:
+                    Manager_SendMessage(manager[param_1], 0x44, 0x4000003b, 0);
+                    return 1;
+                case 2:
+                    Menu_ChangePageCloseIris(MENU_DSGADGETS, param_1, 0x1000010b);
+                    return 1;
+                case 3:
+                    Menu_ChangePageCloseIris(MENU_DSWEAPONS, param_1, 0x1000010b);
+                    return 1;
+            }
+        }
 
-      switch(lVar1) {
-        case 0:
-          Manager_SendMessage(manager[param_1], 0x44, 0x4000003a, 0);
-          return 1;
-        case 1:
-          Manager_SendMessage(manager[param_1], 0x44, 0x4000003b, 0);
-          return 1;
-        case 2:
-          Menu_ChangePageCloseIris(MENU_DSGADGETS, param_1, 0x1000010b);
-          return 1;
-        case 3:
-          Menu_ChangePageCloseIris(MENU_DSWEAPONS, param_1, 0x1000010b);
-          return 1;
-      }
-      
+    case 0x49:
+    case 0x54:
+        Menu_UpdateWheel(param_1, param_2, ds_options, 0x1000010d, 0x1000010a, 0x100001ed, 0x1000010b, param_4 == 0x49);
+        return 1;
+
+    case 0x51:
+        __Menu_SendMessage(param_2, 0x27, 0, 3);
+        return 1;
+
+    default:
+        return 1;
     }
-
-  case 0x49:
-  case 0x54:
-    Menu_UpdateWheel(param_1, param_2, ds_options, 0x1000010d, 0x1000010a, 0x100001ed, 0x1000010b, param_4 == 0x49);
-    return 1;
-
-  case 0x51:
-      __Menu_SendMessage(param_2, 0x27, 0, 3);
-      return 1;
-
-  default:
-      return 1;
-  }
-  */
+    */
 }
