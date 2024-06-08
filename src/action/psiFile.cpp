@@ -117,6 +117,7 @@ int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOu
 
     // Return a pointer to the file content, and return the size
     // We never free this mem, YOLO
-    *sizeOut = length;
+    if(sizeOut != NULL)
+      *sizeOut = length;
     return (int**)fileContent;
 }
