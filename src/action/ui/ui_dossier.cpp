@@ -75,7 +75,7 @@ const M_ITEM ds_options[4] = {
 undefined4 C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint param_4, int param_5, int param_6) {
 
     printf("In C_SBDOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, param_4, param_5, param_6);
-    /*
+
     switch (param_4) {
         case 0x4b: {
             
@@ -83,10 +83,10 @@ undefined4 C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, 
 
             switch(lVar1) {
                 case 0:
-                    Manager_SendMessage(manager[param_1], 0x44, 0x4000003a, 0);
+                    Manager_SendMessage(&manager[param_1], 0x44, 0x4000003a, 0);
                     return 1;
                 case 1:
-                    Manager_SendMessage(manager[param_1], 0x44, 0x4000003b, 0);
+                    Manager_SendMessage(&manager[param_1], 0x44, 0x4000003b, 0);
                     return 1;
                 case 2:
                     Menu_ChangePageCloseIris(MENU_DSGADGETS, param_1, 0x1000010b);
@@ -109,5 +109,5 @@ undefined4 C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, 
     default:
         return 1;
     }
-    */
+    
 }
