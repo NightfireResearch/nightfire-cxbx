@@ -94,30 +94,67 @@ int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOu
         return psiFileLoadOrig(filename, allocType, sizeOut);
     }
 
-    printf("Loading patched file %s\n", patchPath);
+    printf("Loading patched file %s in mode %s\n", patchPath, SingleFileMode ? "single" : "multi");
 
     // Get the length of the file
     fseek(file, 0, SEEK_END);
     int length = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    // Allocate memory to store the file content
-    char* fileContent = (char*)malloc(length);
-    if (fileContent == NULL) {
-        // Handle memory allocation failure
+    // If we're patching, and in single-file mode, we need to write the patched data over the original "dirFileBuf" buffer
+    if(SingleFileMode) {
+        // Allocate memory to store the file content
+        char* fileContent = (char*)malloc(length);
+        if (fileContent == NULL) {
+            // Handle memory allocation failure
+            fclose(file);
+            return NULL;
+        }
+
+        // Read the file content into memory
+        fread(fileContent, 1, length, file);
+
+        // Close the file
         fclose(file);
-        return NULL;
+
+        // Write the patched data over the original "dirFileBuf" buffer
+        // DANGER: What if the patch overflows the original buffer?
+        memcpy((void*)dirFileBuf, fileContent, length);
+
+        // We can now free the memory used to store the file content
+        free(fileContent);
+
+        // Set the sizeOut parameter if it's not NULL
+        if(sizeOut != NULL)
+          *sizeOut = length;
+
+        // Return a pointer to the original "dirFileBuf" buffer
+        return (int**)dirFileBuf;
+
+    } else {
+      
+      // In multi-file mode, we allocate memory for the file content, and return a pointer to it
+
+      // Allocate memory to store the file content
+      char* fileContent = (char*)malloc(length);
+      if (fileContent == NULL) {
+          // Handle memory allocation failure
+          fclose(file);
+          return NULL;
+      }
+
+      // Read the file content into memory
+      fread(fileContent, 1, length, file);
+
+      // Close the file
+      fclose(file);
+
+      // Return a pointer to the file content, and return the size
+      // We never free this mem, YOLO
+      if(sizeOut != NULL)
+        *sizeOut = length;
+      return (int**)fileContent;
+    
     }
 
-    // Read the file content into memory
-    fread(fileContent, 1, length, file);
-
-    // Close the file
-    fclose(file);
-
-    // Return a pointer to the file content, and return the size
-    // We never free this mem, YOLO
-    if(sizeOut != NULL)
-      *sizeOut = length;
-    return (int**)fileContent;
 }
