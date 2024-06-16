@@ -301,7 +301,7 @@ long Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int 
         case 0x1000015d: return C_MPDBG_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
         case 0x1000015e: return C_LANGUAGE_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
         case 0x10000169: return C_CHCHLOCKUP_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
-        case 0x0000016f: return C_SBDSGTSCROLL_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
+        case 0x1000016f: return C_SBDSGTSCROLL_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
 
         default: {printf("UNHANDLED MESSAGE HANDLER FOR TYPE: 0x%08x\n",hashcode);}
     }

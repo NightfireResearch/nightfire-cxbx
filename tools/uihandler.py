@@ -106,7 +106,7 @@ mapping = {
     0x1000015e: "C_LANGUAGE_Handler",
     0x10000169: "C_CHCHLOCKUP_Handler",
     # Default case - SBDSGTSCROLL. Confirmed against PS2.
-    0x0000016f: "C_SBDSGTSCROLL_Handler", # Dossier Gadgets Scroll?
+    0x1000016f: "C_SBDSGTSCROLL_Handler", # Submenu Dossier Gadgets Scroll?
 }
 
 implemented = ["C_SBDOSSIER_Handler"]
