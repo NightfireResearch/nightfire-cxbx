@@ -58,6 +58,8 @@
 // This doesn't cause a crash in the original game because the Xbox lacks any memory protection and the game just reads whatever is there
 // but in our case, it crashes because we're trying to read memory that isn't allocated?
 
+// This could also lead to weird behaviour that changes depending on where the ds_options array is located in memory and what is in the memory after it
+
 const M_ITEM ds_options[4] = {
     {
         .iconHashcode = ICON_DOSSIER_RECORDS,
@@ -93,7 +95,7 @@ const M_ITEM ds_options[4] = {
     }
 };
 // Guard against the game trying to read past the end of the array by allocating a bunch of extra space
-// This is a hacky workaround
+// This is a hacky workaround but seems to work just fine
 M_ITEM dummy[999];
 
 // This should produce an array of 4 0x18-byte structs, representing the menu layout for the Dossier screen
