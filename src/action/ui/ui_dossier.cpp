@@ -125,28 +125,34 @@ undefined4 C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, 
     printf("In C_SBDOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, param_4, param_5, param_6);
 
     switch (param_4) {
-        case 0x4b: {
+        case 0x4b: { // Selecting an item - fired by A or Start button
+
             
-            int lVar1 = __Menu_SendMessage(param_2, 0x40, 0, 0);
+            int lVar1 = __Menu_SendMessage(param_2, 0x40, 0, 0); // Get the item number
+
 
             switch(lVar1) {
                 case 0:
+                    // Option 0: Records
                     Manager_SendMessage(&manager[param_1], 0x44, 0x4000003a, 0);
                     return 1;
                 case 1:
+                    // Option 1: Rewards
                     Manager_SendMessage(&manager[param_1], 0x44, 0x4000003b, 0);
                     return 1;
                 case 2:
+                    // Option 2: Dossier - Gadgets submenu
                     Menu_ChangePageCloseIris(MENU_DSGADGETS, param_1, 0x1000010b);
                     return 1;
                 case 3:
+                    // Option 3: Dossier - Weapons submenu
                     Menu_ChangePageCloseIris(MENU_DSWEAPONS, param_1, 0x1000010b);
                     return 1;
             }
         }
 
-    case 0x49:
-    case 0x54:
+    case 0x49: // Scroll (vertical?) event - fired by both d-pad and left analog stick
+    case 0x54: // Entering / Loading the menu page?
         // Note - there is a bug in Menu_UpdateWheel that causes a crash if the M_ITEM array has fewer than 999 elements
         // We can work around this by allocating a dummy array immediately after the ds_options array
         Menu_UpdateWheel(param_1, param_2, (M_ITEM*)ds_options, 0x1000010d, 0x1000010a, 0x100001ed, 0x1000010b, param_4 == 0x49);
@@ -157,6 +163,9 @@ undefined4 C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, 
         return 1;
 
     default:
+        // X button on Xbox controller fires 0x5e
+        // Y button on Xbox controller fires 0x5d
+        // Right analog, trigger buttons have no effect that I can see
         return 1;
     }
     
