@@ -1,6 +1,7 @@
 #include "inject.h"
 
 #include "action/math/math.h"
+#include "action/animation.h"
 #include "action/game.h"
 #include "action/input.h"
 #include "action/util/crc.h"

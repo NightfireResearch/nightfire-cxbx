@@ -54,6 +54,7 @@ add_library(actioninject SHARED
   src/action/psiFile.cpp
   src/common/launchInfo.cpp
   src/action/math/math.cpp
+  src/action/animation.cpp
   src/action/input.cpp
   src/action/memory.cpp
   src/action/music.cpp

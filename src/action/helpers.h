@@ -1,3 +1,6 @@
+#ifndef HELPERS_H
+#define HELPERS_H
+
 #define I32_AT(x) (*((int32_t*)x))
 #define I16_AT(x) (*((int16_t*)x))
 #define I8_AT(x) (*((int8_t*)x))
@@ -24,5 +27,9 @@ typedef unsigned short    ushort;
 
 typedef unsigned short    word;
 
+
 #include <stdint.h>
 #include <stdbool.h>
+
+#include "math/math.h"
+#endif // HELPERS_H
