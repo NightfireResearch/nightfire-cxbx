@@ -5,3 +5,6 @@ build/
 CMakeCache.txt
 CMakeFiles/
 *.dir/
+Release/
+Debug/
+cmake_install.cmake
