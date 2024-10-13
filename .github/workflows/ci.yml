@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: 'true'
 
@@ -35,7 +35,7 @@ jobs:
           cmake --build . --config Release
 
       - name: Upload Installer Artifact to GitHub
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           #name: ${{ env.PKGNAME }}-Installer
           path: ${{ runner.workspace }}/build/Release
