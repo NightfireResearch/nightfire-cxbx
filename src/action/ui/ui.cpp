@@ -39,8 +39,6 @@ uint32_t P_MPBOTS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint
 // AUTOGEN
 uint32_t P_MPENVIROMODS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-uint32_t P_DOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 uint32_t P_MPBOTSETUP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 uint32_t P_CNOPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);

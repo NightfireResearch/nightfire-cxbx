@@ -109,7 +109,7 @@ mapping = {
     0x1000016f: "C_SBDSGTSCROLL_Handler", # Submenu Dossier Gadgets Scroll?
 }
 
-implemented = ["C_SBDOSSIER_Handler"]
+implemented = ["C_SBDOSSIER_Handler", "P_DOSSIER_Handler"]
 
 def generate_handler_switch():
     output = """

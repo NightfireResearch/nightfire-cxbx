@@ -1,5 +1,7 @@
 #include "../helpers.h"
 
+#include "ui.h"
+
 // const M_ITEM ds_gadgets[14] = {
 
 //     {
@@ -124,12 +126,11 @@ undefined4 C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, 
 
     printf("In C_SBDOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, param_4, param_5, param_6);
 
-    switch (param_4) {
-        case 0x4b: { // Selecting an item - fired by A or Start button
-
+    switch ((UIEvent)param_4) {
+    
+    case UIEvent_Select: {
             
             int lVar1 = __Menu_SendMessage(param_2, 0x40, 0, 0); // Get the item number
-
 
             switch(lVar1) {
                 case 0:
@@ -151,22 +152,60 @@ undefined4 C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, 
             }
         }
 
-    case 0x49: // Scroll (vertical?) event - fired by both d-pad and left analog stick
-    case 0x54: // Entering / Loading the menu page?
-        // Note - there is a bug in Menu_UpdateWheel that causes a crash if the M_ITEM array has fewer than 999 elements
-        // We can work around this by allocating a dummy array immediately after the ds_options array
-        Menu_UpdateWheel(param_1, param_2, (M_ITEM*)ds_options, 0x1000010d, 0x1000010a, 0x100001ed, 0x1000010b, param_4 == 0x49);
-        return 1;
+        case UIEvent_Scroll:
+        case UIEvent_Enter:
+            // Note - there is a bug in Menu_UpdateWheel that causes a crash if the M_ITEM array has fewer than 999 elements
+            // We can work around this by allocating a dummy array immediately after the ds_options array
+            Menu_UpdateWheel(param_1, param_2, (M_ITEM*)ds_options, 0x1000010d, 0x1000010a, 0x100001ed, 0x1000010b, param_4 == 0x49);
+            return 1;
 
-    case 0x51:
-        __Menu_SendMessage(param_2, 0x27, 0, 3);
-        return 1;
+        case 0x51:
+            __Menu_SendMessage(param_2, 0x27, 0, 3);
+            return 1;
 
-    default:
-        // X button on Xbox controller fires 0x5e
-        // Y button on Xbox controller fires 0x5d
-        // Right analog, trigger buttons have no effect that I can see
-        return 1;
-    }
+        default:
+            // X button on Xbox controller fires 0x5e
+            // Y button on Xbox controller fires 0x5d
+            // Right analog, trigger buttons have no effect that I can see
+            return 1;
+        }
     
+}
+
+
+typedef uint MENU_IRISOPS;
+
+// AUTOGEN
+void Menu_StartIris(MENU_IRISOPS param_1, uchar param_2, uint param_3);
+
+// AUTOGEN
+void Menu_PlayIris(char param_1, uchar param_2, uint param_3);
+
+// AUTOGEN
+uint __Menu_Send(uchar param_1, HASHCODE param_2, uint param_3, int param_4, int param_5);
+
+// AUTOINJECT
+undefined4 __cdecl P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint param_4, int param_5, int param_6) {
+
+    //printf("In P_DOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, param_4, param_5, param_6);
+
+    switch (param_4) {
+        case 0x4c:
+            if (param_6 != 0x4000001c && param_6 != 0x40000036 && param_6 != 0x40000038) {
+                Menu_StartIris(4, param_1, 0x1000010b);
+                return true;
+            }
+            Menu_StartIris(0, param_1, 0x1000010b);
+            __Menu_Send(param_1, (HASHCODE)0x1000010c, 0x2e, 0x0, 0x0); // Hashcode corresponds to C_SBDOSSIER_Handler?
+            break;
+
+        case 0x50: // Every frame
+            Menu_PlayIris(1, param_1, 0x1000010b);
+            return true;
+
+        default:
+            return true;
+    }
+
+    return true;
 }
