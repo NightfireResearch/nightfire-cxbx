@@ -9,7 +9,7 @@ typedef struct {
     char _pad_1[0x1e0]; // TODO: Fill this out
     bool isMultiplayer;
     char _pad_2[0x4b];
-    bool miniVehiclesEnabled; // bool, or enum/flags?
+    char miniVehiclesEnabled; // 0: None, 1: Tanks, 2: Helicopters, 3: Both
 } MPSettings_struct;
 
 #define MPSettings (*(MPSettings_struct*)0x0025fe38) // FIXME: Do this properly

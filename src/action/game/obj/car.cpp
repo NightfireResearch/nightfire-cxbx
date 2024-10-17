@@ -40,6 +40,10 @@ static_assert(offsetof(CAR_INFO, isHeli) == 0xf2, "Offset of isHeli not correct"
 obj_tag * Control_CreateObjEx(unsigned short, _VECTOR *, _VECTOR *, _MATRIX *, celglist_tag *, obj_tag *,char,unsigned short,float,unsigned short,unsigned char,unsigned char,unsigned char);
 // AUTOGEN
 celglist_tag * hashtable_hashcode_to_celglist(HASHCODE hashcode);
+// AUTOGEN
+void hashtable_set_object_to_entity_gfx(obj_tag *obj, HASHCODE hashcode);
+// AUTOGEN
+uint Rand_Rand(int max);
 
 // WIP
 void Car_Activate(obj_tag *me, obj_tag *owner) {
@@ -94,6 +98,7 @@ void Car_InitBits(CAR_INFO *tankInfo, obj_tag *baseObj) {
 }
 
 // WIP
+// AUTOINJECT
 obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *level) {
 
     printf("Car_Create: Spawning at %f %f %f\n", pos->x, pos->y, pos->z);
@@ -117,6 +122,24 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
     CAR_INFO *tankInfo = (CAR_INFO*)baseObj->extraObjectData;
 
     // TODO: Some params set up here, choose if tank or helicopter, etc
+    switch(MPSettings.miniVehiclesEnabled) {
+        default:
+        case 1: // Tanks only
+            tankInfo->isHeli = 0;
+            break;
+        case 2: // Helicopters only
+            tankInfo->isHeli = 1;
+            break;
+        case 3: // Both
+            tankInfo->isHeli = (Rand_Rand(100) <= 50) ? 1 : 0;
+            break;
+    }
+
+    if(tankInfo->isHeli) {
+        baseObj->transformMatrix.m[0xd] += 1.5f;
+        baseObj->position.y += 1.5f;
+        hashtable_set_object_to_entity_gfx(baseObj, (HASHCODE)0x2000194); // LittleNellie body
+    }
 
     Car_InitBits(tankInfo, baseObj);
 
@@ -126,6 +149,9 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
     View_SetDrawInAllViews(tankInfo->bodyGeom);
 
     // TODO: Implement stuff here
+
+
+    baseObj->someFlags_0xcc |= 0x40;
 
     // Take a copy of our initial position and orientation, so that we can respawn the tank at the right location
     // Could just as easily been stored in the CAR_INFO struct, but this is how the original code does it so we'll stick with that
