@@ -64,6 +64,7 @@ add_library(actioninject SHARED
   src/action/ui/ui.cpp
   src/action/ui/ui_dossier.cpp
   src/action/autofunc.cpp
+  src/action/game/view.cpp
 )
 
 add_library(drivinginject SHARED

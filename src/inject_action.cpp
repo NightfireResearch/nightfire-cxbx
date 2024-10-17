@@ -8,6 +8,8 @@
 #include "action/music.h"
 #include "action/ui/ui.h"
 #include "action/psiFile.h"
+#include "action/game/view.h"
+
 #include "common/launchInfo.h"
 
 #include "cxbx/cxbxbinding.h"

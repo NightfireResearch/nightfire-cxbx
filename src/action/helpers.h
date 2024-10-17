@@ -6,6 +6,8 @@
 
 #include "assets.h"
 
+#include "game/obj/object.h" // for obj_tag needed by some autogen functions
+
 #define I32_AT(x) (*((int32_t*)x))
 #define I16_AT(x) (*((int16_t*)x))
 #define I8_AT(x) (*((int8_t*)x))

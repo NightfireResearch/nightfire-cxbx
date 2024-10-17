@@ -59,7 +59,7 @@ autoinjects = gather_functions_with_tag("AUTOINJECT")
 # Look up addresses
 for f in autoinjects:
     matching_func = [x for x in ghidrafuncs if x['name'] == f[1]]
-    assert len(matching_func) == 1,f"Function {f[1]} duplicated or not found"
+    assert len(matching_func) == 1,f"Function {f[1]} duplicated or not found, qty is {len(matching_func)}"
     gf = matching_func[0]
     addr = gf['address']
     injections.append((addr, f[1],))
