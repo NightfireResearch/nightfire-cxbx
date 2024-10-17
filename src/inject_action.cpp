@@ -9,6 +9,7 @@
 #include "action/ui/ui.h"
 #include "action/psiFile.h"
 #include "action/game/view.h"
+#include "action/game/obj/car.h"
 
 #include "common/launchInfo.h"
 

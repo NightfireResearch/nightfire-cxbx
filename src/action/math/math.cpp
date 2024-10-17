@@ -193,3 +193,10 @@ void Vec_Negate(const _VECTOR *vIn,_VECTOR *vOut) {
   vOut->z = -vIn->z;
   return;
 }
+
+// AUTOINJECT
+void Vec_Copy(_VECTOR *src, _VECTOR *dst) {
+  dst->x = src->x;
+  dst->y = src->y;
+  dst->z = src->z;
+}

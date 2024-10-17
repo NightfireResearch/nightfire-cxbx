@@ -56,5 +56,14 @@ typedef struct {
     Nightfire_TranslatedText descriptionWhenDisabled;
 } M_ITEM;
 
+// TODO: Unfinished
+typedef struct {
+    char unknown;
+} celglist_tag;
+
+// TODO: Unfinished
+typedef struct {
+    char unknown;
+} level_tag;
 
 #endif // __HELPERS_H__

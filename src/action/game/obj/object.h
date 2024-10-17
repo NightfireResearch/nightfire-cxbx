@@ -17,6 +17,7 @@ typedef struct {
     _MATRIX transformMatrix;
     ObjectType objectType;
     void* extraObjectData;
+    int someFlags_0xcc; // 0xCC, unclear what the meaning is but sometimes relevant for rendering or object state or straddle tests?
 } obj_tag;
 
 
