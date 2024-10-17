@@ -17,8 +17,8 @@ typedef struct {
     vtable_Event* vtable;
 } Event;
 
-void* FUN_00114470(size_t sz, uint param_2,char* param_3) {
-    return reinterpret_cast<void* (*)(size_t, uint, char*)>(0x00114470)(sz, param_2, param_3);
+void* FUN_00114470(size_t sz, uint param_2,const char* param_3) {
+    return reinterpret_cast<void* (*)(size_t, uint,const char*)>(0x00114470)(sz, param_2, param_3);
 }
 
 void EventManager__Init(void)
@@ -42,7 +42,7 @@ void EventManager__RunEvents(void)
         puVar1 = (Event*)eventBytesConsumed;
       }
       eventCurrent = 0;
-    } while ((int)puVar1 < eventHead);
+    } while ((uint32_t)puVar1 < eventHead);
   }
   eventHead = eventBuffer;
   eventBytesConsumed = eventBuffer;

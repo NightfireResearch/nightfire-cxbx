@@ -32,8 +32,6 @@ void Mem_Init(void) {
     printf("Mem_Init\n");
 
     void *puVar1;
-    int iVar2;
-    uint uVar3;
 
     memset((void*)Addr_MemStats,0,0x1c);
 

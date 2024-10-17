@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.5)
 
 project(nightfiRE LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # On MinGW, "lib" will get prepended to libraries which will break out ability
 # to inject our DLL.
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
@@ -58,7 +61,11 @@ add_library(actioninject SHARED
   src/action/memory.cpp
   src/action/music.cpp
   src/action/util/crc.cpp
+  src/action/ui/ui.cpp
+  src/action/ui/ui_dossier.cpp
   src/action/autofunc.cpp
+  src/action/game/view.cpp
+  src/action/game/obj/car.cpp
 )
 
 add_library(drivinginject SHARED

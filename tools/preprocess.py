@@ -3,6 +3,10 @@ import re
 import datetime
 import json
 
+# Sub-tasks defined in other files for readability
+from uihandler import generate_handler_switch
+generate_handler_switch()
+
 def gather_functions_with_tag(TAG_NAME=None, HAS_PARAMS=False):
     functions = []
     for root, dirs, files in os.walk("src"):
@@ -55,7 +59,7 @@ autoinjects = gather_functions_with_tag("AUTOINJECT")
 # Look up addresses
 for f in autoinjects:
     matching_func = [x for x in ghidrafuncs if x['name'] == f[1]]
-    assert len(matching_func) == 1,f"Function {f[1]} duplicated or not found"
+    assert len(matching_func) == 1,f"Function {f[1]} duplicated or not found, qty is {len(matching_func)}"
     gf = matching_func[0]
     addr = gf['address']
     injections.append((addr, f[1],))
@@ -101,6 +105,9 @@ for f in autofuncs:
     al = ", ".join(argList)
     an = ", ".join(argNames)
     cc = "" if gf['calling_convention'] == "default" else gf['calling_convention']
+
+    if "_Handler" in gf['name']:
+        cc = "__cdecl" # HACKHACKHACK not sure if these are all cdecl or stdcall
 
     output_file += f"""
 {gf['return_type']} {cc} {gf['name']}({al}) {{
