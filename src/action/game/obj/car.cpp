@@ -23,7 +23,7 @@ typedef struct {
     char _pad_2[34];
     short tankNum; // 0xEE
     char _pad_3[2];
-    char turretVariant; // 0xF2 - this could be Tank vs Helicopter? Would make sense as the behaviour changes depending on multiple options for "miniVehiclesEnabled" - could be None, Tanks, Helicopters, Both
+    char isHeli; // 0xF2 - this could be Tank vs Helicopter? Would make sense as the behaviour changes depending on multiple options for "miniVehiclesEnabled" - could be None, Tanks, Helicopters, Both
     char _pad_4[0x5];
 } CAR_INFO;
 
@@ -34,7 +34,7 @@ typedef struct {
 static_assert(sizeof(CAR_INFO) == 0xf8, "Size of CAR_INFO not correct");
 static_assert(offsetof(CAR_INFO, turretGeom) == 0xc0, "Offset of turretGeom not correct");
 static_assert(offsetof(CAR_INFO, tankNum) == 0xee, "Offset of tankNum not correct");
-static_assert(offsetof(CAR_INFO, turretVariant) == 0xf2, "Offset of turretVariant not correct");
+static_assert(offsetof(CAR_INFO, isHeli) == 0xf2, "Offset of isHeli not correct");
 
 // AUTOGEN
 obj_tag * Control_CreateObjEx(unsigned short, _VECTOR *, _VECTOR *, _MATRIX *, celglist_tag *, obj_tag *,char,unsigned short,float,unsigned short,unsigned char,unsigned char,unsigned char);
@@ -69,7 +69,7 @@ void Car_InitBits(CAR_INFO *tankInfo, obj_tag *baseObj) {
     HASHCODE turretHashcode;
     HASHCODE barrelHashcode;
 
-    if(tankInfo->turretVariant == 0) {
+    if(tankInfo->isHeli == 0) {
         turretHashcode = (HASHCODE)0x2000502; // tank / RCCar
         barrelHashcode = (HASHCODE)0x2000505;
     } else {
@@ -94,16 +94,16 @@ void Car_InitBits(CAR_INFO *tankInfo, obj_tag *baseObj) {
 }
 
 // WIP
+// AUTOINJECT
 obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *level) {
 
     printf("Car_Create: Spawning at %f %f %f\n", pos->x, pos->y, pos->z);
-    printf("WARNING: DISABLED SOME SAFETY CHECKS\n");
 
-    // if(MPSettings.isMultiplayer && !MPSettings.miniVehiclesEnabled)
-    //     return NULL;
+    if(MPSettings.isMultiplayer && !MPSettings.miniVehiclesEnabled)
+        return NULL;
     
-    // if(GameState.currentLevelHashcode == HT_Level_Ravine)
-    //     return NULL;
+    if(GameState.currentLevelHashcode == HT_Level_Ravine)
+        return NULL;
 
     if(NumTanks >= MAX_TANKS)
         return NULL;
