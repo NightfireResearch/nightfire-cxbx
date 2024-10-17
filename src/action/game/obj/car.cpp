@@ -94,7 +94,6 @@ void Car_InitBits(CAR_INFO *tankInfo, obj_tag *baseObj) {
 }
 
 // WIP
-// AUTOINJECT
 obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *level) {
 
     printf("Car_Create: Spawning at %f %f %f\n", pos->x, pos->y, pos->z);
