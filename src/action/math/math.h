@@ -1,6 +1,7 @@
 #ifndef MATH_H
 #define MATH_H
 
+#pragma pack(push, 1)
 typedef struct {
 	float q[4];
 } quaternion_tag;
@@ -14,6 +15,8 @@ typedef struct {
 	float y;
 	float z;
 } _VECTOR;
+
+#pragma pack(pop)
 
 void Quat_Copy(quaternion_tag *target,const quaternion_tag *from);
 bool Quat_IsEqual(const quaternion_tag *a, const quaternion_tag *b, float threshold);

@@ -91,6 +91,13 @@ typedef enum {
     FMV_IDENT_EAGAMES_ES = 0x73E0048,
     FMV_BTS_DOCUMENTARY = 0x73F0048,
 
+    // TODO: Names could be better? GameCube version has?
+    GFX_LittleNellie_Body = 0x2000194,
+    GFX_LittleNellie_Prop = 0x2000b4e,
+    GFX_LittleNellie_Blades = 0x2000b4d,
+    GFX_RCCar_Turret = 0x2000502,
+    GFX_RCCar_Barrel = 0x2000505,
+    
     HT_Level_Driving_Paris = 0x9000001,
     HT_Level_Driving_Underwater = 0x9000002,
     HT_Level_Driving_JungleA = 0x9000003,
