@@ -88,8 +88,6 @@ void Car_CollisionHandler(obj_tag* me) {
 
 }
 
-// TODO: Test that this is correct - it should return the position portion of the matrix
-#define Mat_Position(mat) ((_VECTOR *)((mat.m + 0xc)))
 
 // baseObj is const? or it's a pointer to a const obj_tag?
 // Only used in here, no need to inject once we've reimplemented Car_Create
@@ -178,7 +176,7 @@ void __cdecl Car_Activate(obj_tag* carObj, obj_tag* playerObj) {
 
     Player_WeaponNone(playerObj);
 
-    Camera_CalcViewAngles(carObj->playerNum, 1.0471976f); // FIXME hardcoded aspect ratio?
+    Camera_CalcViewAngles(carObj->playerNum, DEG2RAD(60.0f)); // FIXME: Hardcoded FOV?
 
 }
 
