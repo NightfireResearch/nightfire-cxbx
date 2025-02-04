@@ -18,6 +18,8 @@ typedef struct {
 
 #pragma pack(pop)
 
+#define Mat_Position(mat) ((_VECTOR *)((mat.m + 0xc)))
+
 void Quat_Copy(quaternion_tag *target,const quaternion_tag *from);
 bool Quat_IsEqual(const quaternion_tag *a, const quaternion_tag *b, float threshold);
 void Quat_Mul(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *target);

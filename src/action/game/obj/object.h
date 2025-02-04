@@ -32,7 +32,9 @@ typedef struct obj_tag {
     void* extraObjectData; // 0xBC
     char _pad_4[0xc];
     int someFlags_0xcc; // 0xCC, unclear what the meaning is but sometimes relevant for rendering or object state or straddle tests?
-    char _pad_5[0x8];
+    unsigned short curState; // 0xD0
+    unsigned short playerNum; // 0xD2
+    char _pad_5[0x4];
     char _pad_6[0x3];
     ObjectType objectType;
 } obj_tag;

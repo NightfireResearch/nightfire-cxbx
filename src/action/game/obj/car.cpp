@@ -2,6 +2,7 @@
 #include "../gamestate.h"
 #include "../mp/multiplayer.h"
 #include "object.h"
+#include "player.h"
 #include "../../math/math.h"
 #include "../view.h"
 
@@ -65,14 +66,18 @@ void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *matIn);
 obj_tag * control_first_object(void);
 // AUTOGEN
 void Car_Deactivate(obj_tag *object);
-
-// WIP
-void Car_Activate(obj_tag *me, obj_tag *owner) {
-
-    // TODO: Implement
-
-    return;
-}
+// AUTOGEN
+unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState);
+// AUTOGEN
+void Player_SetCamMode(BLData *param_1,unsigned short param_2);
+// AUTOGEN
+void Player_Disable(obj_tag *param_1,char param_2);
+// AUTOGEN
+void Player_WeaponNone(obj_tag *param_1);
+// AUTOGEN
+void __cdecl Camera_CalcViewAngles(ushort playerNum,float param_2);
+// AUTOGEN
+uint __cdecl Sound_Play3D(Nightfire_SFX param_1,_VECTOR *position,float param_3,float param_4,float param_5, undefined2 param_6,undefined4 param_7,int param_8);
 
 // WIP
 void Car_CollisionHandler(obj_tag* me) {
@@ -138,18 +143,16 @@ void Car_PlayerHasDied(obj_tag *player) {
 
 }
 
-#if 0
-// WIP
-// WILL_AUTOINJECT at 000268e0
-void Car_Activate(obj_tag* carObj, obj_tag* playerObj) {
+// AUTOINJECT at 000268e0
+void __cdecl Car_Activate(obj_tag* carObj, obj_tag* playerObj) {
 
     if(carObj->curState != 0)
         return;
 
-    BLData* playerData = playerObj->extraObjectData;
-    CAR_INFO* carData = carObj->extraObjectData;
+    BLData* playerData = (BLData*)(playerObj->extraObjectData);
+    CAR_INFO* carData = (CAR_INFO*)(carObj->extraObjectData);
 
-    playerData->previousSubstate = Player_ChangeSubState(playerObj, 0x0b);
+    playerData->previousSubState = Player_ChangeSubState(playerObj, 0x0b);
 
     // If it's a helicopter, control its body, otherwise control the barrel
     playerData->remoteControlDevice = carData->isHeli ? carObj : carData->barrelGeom;
@@ -161,22 +164,24 @@ void Car_Activate(obj_tag* carObj, obj_tag* playerObj) {
     carData->playerController = playerObj;
     carData->tankMachinegunTemperature = 0.0f;
     carData->machineGunOverheated = 0;
-
+    
+    // For some reason, calling Sound_Play3D results in a (later) crash
+    // Potentially, I've got calling convention wrong, or it's because it calls something else with non-standard convention later?
+    // But the crash isn't immediate - so maybe a bad pointer instead?
     if(carData->isHeli) {
-        carData->soundHandle = Sound_Play3D(SFX_VEH_BELL_HELICOPTER_LOOP,&carObj->position,25.0,-1.0,-1.0,0,0,0);
+        //carData->soundHandle = Sound_Play3D(SFX_VEH_BELL_HELICOPTER_LOOP,&(carObj->position),25.0,-1.0,-1.0,0,0,0);
         carData->mainAmmo = 4;
     } else {
-        carData->soundHandle = Sound_Play3D(SFX_VEH_MP_TANK_ENGINE_LOOP,&carObj->position,100.0,-1.0,-1.0,0,0,0);
+        //carData->soundHandle = Sound_Play3D(SFX_VEH_MP_TANK_ENGINE_LOOP,&(carObj->position),100.0,-1.0,-1.0,0,0,0);
         carData->mainAmmo = 10;
     }
 
     Player_WeaponNone(playerObj);
-    Camera_CalcViewAngles(carObj->playerNum, 1.047198f); // FIXME hardcoded aspect ratio?
+
+    Camera_CalcViewAngles(carObj->playerNum, 1.0471976f); // FIXME hardcoded aspect ratio?
 
 }
-#endif
 
-// WIP
 // AUTOINJECT
 obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *level) {
 
