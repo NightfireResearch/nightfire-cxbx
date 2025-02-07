@@ -20,6 +20,14 @@ This project consists of:
 * Run the executable
 * First time setup - select the locations of `cxbx-reloaded` and `default.xbe`
 
+## Ghidra Script
+
+Various bits of information are automatically generated from the Ghidra project. To create or update these:
+* Install the latest release of Ghidra (11.3)
+* Launch the PyGhidra variant (eg, MacOS: `/opt/homebrew/Caskroom/ghidra/11.3-20250205/ghidra_11.3_PUBLIC/support/pyghidraRun`)
+* Add the `ghidra` subfolder as a Script Directory using the Script Manager within the Code Browser tool
+* Run the `NightfireSync` script
+
 ## Project goals
 
 ### Action engine
