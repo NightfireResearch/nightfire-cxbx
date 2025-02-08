@@ -55,7 +55,6 @@ for f in funcs:
         "return_type": return_type,
         "param_types": param_types,
         "prototype_string": prototype_string,
-        "calling_convention": f.getCallingConventionName()
     }
     function_list.append(function_dict)
 
