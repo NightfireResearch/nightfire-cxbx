@@ -31,8 +31,8 @@ typedef struct {
     float _unknown_0xdc;
     float _unknown_0xe0;
     float tankMachinegunTemperature; // 0xE4
-    short soundHandle; // 0xE8
-    char _pad_3[4];
+    uint soundHandle; // 0xE8
+    char _pad_3[2];
     short tankNum; // 0xEE
     short mainAmmo; // 0xF0
     char isHeli; // 0xF2 - this could be Tank vs Helicopter? Would make sense as the behaviour changes depending on multiple options for "miniVehiclesEnabled" - could be None, Tanks, Helicopters, Both
@@ -167,14 +167,11 @@ void __cdecl Car_Activate(obj_tag* carObj, obj_tag* playerObj) {
     carData->tankMachinegunTemperature = 0.0f;
     carData->machineGunOverheated = 0;
     
-    // For some reason, calling Sound_Play3D results in a (later) crash
-    // Potentially, I've got calling convention wrong, or it's because it calls something else with non-standard convention later?
-    // But the crash isn't immediate - so maybe a bad pointer instead?
     if(carData->isHeli) {
-        //carData->soundHandle = Sound_Play3D(SFX_VEH_BELL_HELICOPTER_LOOP,&(carObj->position),25.0,-1.0,-1.0,0,0,0);
+        carData->soundHandle = Sound_Play3D(SFX_VEH_BELL_HELICOPTER_LOOP,&(carObj->position),25.0,-1.0,-1.0,0,0,0);
         carData->mainAmmo = 4;
     } else {
-        //carData->soundHandle = Sound_Play3D(SFX_VEH_MP_TANK_ENGINE_LOOP,&(carObj->position),100.0,-1.0,-1.0,0,0,0);
+        carData->soundHandle = Sound_Play3D(SFX_VEH_MP_TANK_ENGINE_LOOP,&(carObj->position),100.0,-1.0,-1.0,0,0,0);
         carData->mainAmmo = 10;
     }
 
