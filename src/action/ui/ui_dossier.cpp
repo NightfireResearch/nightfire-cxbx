@@ -115,10 +115,10 @@ int __cdecl __Menu_SendMessage(M_CONTROL *param_1, uint param_2, int param_3, in
 int __cdecl Manager_SendMessage(M_MANAGER *param_1, uint msgType, int param_3, int param_4);
 
 // AUTOGEN
-void __cdecl Menu_ChangePageCloseIris(uint param_1, uchar param_2, uint param_3);
+void __cdecl Menu_ChangePageCloseIris(HASHCODE param_1, uchar param_2, uint param_3);
 
 // AUTOGEN
-void __cdecl Menu_UpdateWheel(uchar param_1, M_CONTROL *param_2, M_ITEM *param_3, uint param_4, uint param_5, uint param_6, uint param_7, char param_8);
+void __cdecl Menu_UpdateWheel(uchar param_1, M_CONTROL *param_2, M_ITEM *param_3, uint param_4, uint param_5, HASHCODE param_6, uint param_7, char param_8);
 
 
 // AUTOINJECT
@@ -156,7 +156,7 @@ undefined4 C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, 
         case UIEvent_Enter:
             // Note - there is a bug in Menu_UpdateWheel that causes a crash if the M_ITEM array has fewer than 999 elements
             // We can work around this by allocating a dummy array immediately after the ds_options array
-            Menu_UpdateWheel(param_1, param_2, (M_ITEM*)ds_options, 0x1000010d, 0x1000010a, 0x100001ed, 0x1000010b, param_4 == 0x49);
+            Menu_UpdateWheel(param_1, param_2, (M_ITEM*)ds_options, 0x1000010d, 0x1000010a, (HASHCODE)0x100001ed, 0x1000010b, param_4 == 0x49);
             return 1;
 
         case 0x51:

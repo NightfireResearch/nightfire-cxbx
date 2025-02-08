@@ -1578,7 +1578,7 @@ typedef enum {
     SFX_CHR_BOND_GULP = 1547,
     SFX_CHR_BOND_AIR_GASP = 1548,
     Nightfire_SFX_FORCE_UINT32 = 0x7FFFFFFF
-} Nightfire_SFX;
+} Action_SFX;
 
 
 #endif // _ASSETS_H

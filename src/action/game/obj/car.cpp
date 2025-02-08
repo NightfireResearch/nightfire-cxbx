@@ -64,8 +64,12 @@ uint Rand_Rand(int max);
 void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *matIn);
 // AUTOGEN
 obj_tag * control_first_object(void);
-// AUTOGEN
-void Car_Deactivate(obj_tag *object);
+
+// Ghidra detects this as a thunked function, so we can't AUTOGEN it due to duplicate function names
+void Car_Deactivate(obj_tag *object) {
+    reinterpret_cast<void (*)(obj_tag *)>(0x00026a00)(object);
+}
+
 // AUTOGEN
 unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState);
 // AUTOGEN
@@ -77,7 +81,7 @@ void Player_WeaponNone(obj_tag *param_1);
 // AUTOGEN
 void __cdecl Camera_CalcViewAngles(ushort playerNum,float param_2);
 // AUTOGEN
-uint __cdecl Sound_Play3D(Nightfire_SFX param_1,_VECTOR *position,float param_3,float param_4,float param_5, undefined2 param_6,undefined4 param_7,int param_8);
+uint __cdecl Sound_Play3D(Action_SFX param_1,_VECTOR *position,float param_3,float param_4,float param_5, undefined2 param_6,undefined4 param_7,int param_8);
 
 // WIP
 void Car_CollisionHandler(obj_tag* me) {
