@@ -145,7 +145,7 @@ void Car_PlayerHasDied(obj_tag *player) {
 
 }
 
-// AUTOINJECT at 000268e0
+// AUTOINJECT
 void __cdecl Car_Activate(obj_tag* carObj, obj_tag* playerObj) {
 
     if(carObj->curState != 0)

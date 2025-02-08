@@ -2728,12 +2728,13 @@
     {
         "name": "FUN_00026880",
         "address": "0x00026880",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__cdecl",
+        "return_type": "bool",
         "param_types": [
-            "undefined4"
+            "obj_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined FUN_00026880(undefined4 param_1)"
+        "prototype_string": "bool __cdecl FUN_00026880(obj_tag * param_1, obj_tag * param_2)"
     },
     {
         "name": "Car_Activate",
@@ -2820,14 +2821,14 @@
         "prototype_string": "undefined Car_Update(undefined4 param_1)"
     },
     {
-        "name": "FUN_00027ca0",
+        "name": "Car_MaybeHandleDamage",
         "address": "0x00027ca0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_00027ca0(obj_tag * param_1)"
+        "prototype_string": "void __cdecl Car_MaybeHandleDamage(obj_tag * param_1)"
     },
     {
         "name": "Car_CollisionHandler",
@@ -3477,15 +3478,16 @@
         "prototype_string": "void __stdcall maybeSwitches_Calc(void)"
     },
     {
-        "name": "FUN_0002d6a0",
+        "name": "Control_InheritVelocity",
         "address": "0x0002d6a0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
+            "obj_tag *",
             "int",
-            "int"
+            "float"
         ],
-        "prototype_string": "void __cdecl FUN_0002d6a0(int param_1, int param_2)"
+        "prototype_string": "void __cdecl Control_InheritVelocity(obj_tag * param_1, int param_2, float param_3)"
     },
     {
         "name": "Control_Plr2Ind",
@@ -24859,7 +24861,7 @@
         "prototype_string": "void __cdecl Sound_StopAllWithId(Action_SFX param_1)"
     },
     {
-        "name": "Sound_SetLocation",
+        "name": "Sound_SetPosition",
         "address": "0x000cb9e0",
         "calling_convention": "__cdecl",
         "return_type": "int",
@@ -24867,7 +24869,7 @@
             "DYNAMICSOUNDS *",
             "undefined4 *"
         ],
-        "prototype_string": "int __cdecl Sound_SetLocation(DYNAMICSOUNDS * param_1, undefined4 * param_2)"
+        "prototype_string": "int __cdecl Sound_SetPosition(DYNAMICSOUNDS * param_1, undefined4 * param_2)"
     },
     {
         "name": "Sound_SetVolume",
@@ -26465,15 +26467,15 @@
         "prototype_string": "undefined __cdecl Matrix_GetNorm(_VECTOR * to, _MATRIX * from)"
     },
     {
-        "name": "FUN_000d5090",
+        "name": "Mat_GetPosition",
         "address": "0x000d5090",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "undefined4 *",
-            "int"
+            "_VECTOR *",
+            "_MATRIX *"
         ],
-        "prototype_string": "void __cdecl FUN_000d5090(undefined4 * param_1, int param_2)"
+        "prototype_string": "void __cdecl Mat_GetPosition(_VECTOR * param_1, _MATRIX * param_2)"
     },
     {
         "name": "Mat_SetDir",
@@ -27395,7 +27397,7 @@
         "prototype_string": "void __cdecl Mat_Align2Dir(float * param_1, _VECTOR * param_2, float * param_3, float * param_4)"
     },
     {
-        "name": "FUN_000d7b00",
+        "name": "Mat_Align2Up",
         "address": "0x000d7b00",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -27404,7 +27406,7 @@
             "float *",
             "float *"
         ],
-        "prototype_string": "void __cdecl FUN_000d7b00(float * param_1, float * param_2, float * param_3)"
+        "prototype_string": "void __cdecl Mat_Align2Up(float * param_1, float * param_2, float * param_3)"
     },
     {
         "name": "Mat_Normalize",
@@ -27911,9 +27913,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl View_SetDrawInNoViews(int param_1)"
+        "prototype_string": "void __cdecl View_SetDrawInNoViews(obj_tag * param_1)"
     },
     {
         "name": "OneSided_Create",
