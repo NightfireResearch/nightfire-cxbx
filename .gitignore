@@ -9,3 +9,7 @@ Release/
 Debug/
 cmake_install.cmake
 **/.DS_Store
+.cmake
+.vscode
+__pycache__
+Testing/
