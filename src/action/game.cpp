@@ -128,12 +128,8 @@ LAB_0006aafe:
 #define FRAME_RATE_DIV FLOAT_AT(0x0017c0fc)
 #define FRAME_RATE_MUL FLOAT_AT(0x0017c100)
 #define REC_FRAME_RATE FLOAT_AT(0x0017c104)
-#define inhibitGameDraw U8_AT(0x001f65c0)
 uint *GameStateStack = (uint*)0x0017bff0; // Not zero-initialised - first entry must be 1
-#define MainLoopCycles U32_AT(0x001f65bc)
-#define VideoFrames U32_AT(0x001f65b8)
 #define DAT_001f65ac U8_AT(0x001f65ac)
-#define LoadTimeStart U32_AT(0x001f65cc)
 
 #define GameState (*((GameState_t*)0x001f6580))
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
@@ -188,7 +184,7 @@ void set_InhibitGameDrawIfRequired(void) {
     case 4:
     case 5:
     case 9:
-      inhibitGameDraw = 1;
+      GameState.InhibitGameDraw = 1;
       break;
     case 2:
     case 6:
@@ -198,7 +194,7 @@ void set_InhibitGameDrawIfRequired(void) {
     case 0xc:
     case 0xd:
     case 0xe:
-      inhibitGameDraw = 0;
+    GameState.InhibitGameDraw = 0;
       break;
     }
 }
@@ -259,7 +255,7 @@ ulonglong psiGetTimeIn100ths(void) {
 }
 
 
-// AUTOINJECT
+// Only used in GameFlow_Main, so no need to inject
 void bootup_bootup(void) {
 
   char *pcVar1;
@@ -360,13 +356,13 @@ void GameFlow_Main(void) {
   uint local_8;
   void *local_4;
   
-  MainLoopCycles++;
+  GameState.NumFrames++;
 
   if ((sloflag == 0) && !GS_IsPaused(0xffff)) {
     GameState.NumFramesUnpaused = GameState.NumFramesUnpaused + 1;
-    VideoFrames += VIDEO_FRAME_RATE / FRAME_RATE_INT;
+    GameState.VideoFrames += VIDEO_FRAME_RATE / FRAME_RATE_INT;
   }
-  bVar2 = (byte)MainLoopCycles & 0x3f;
+  bVar2 = (byte)GameState.NumFrames & 0x3f;
   if (0x1f < bVar2) {
     bVar2 = 0x3f - bVar2;
   }
@@ -374,10 +370,10 @@ void GameFlow_Main(void) {
 
   switch(GameFlow_GetState()) {
   case 1:
-    inhibitGameDraw = 0;
+    GameState.InhibitGameDraw = 0;
     GameState.NumFramesUnpaused = 1;
-    MainLoopCycles = 1;
-    VideoFrames = 1;
+    GameState.NumFrames = 1;
+    GameState.VideoFrames = 1;
     GameState.maybeLoadingBlobs = 0;
     Mem_Init();
     bootup_bootup();
@@ -386,7 +382,7 @@ void GameFlow_Main(void) {
     Reset_MapLoadSettings();
     return;
   case 2:
-    LoadTimeStart = psiGetTimeIn100ths();
+    GameState.LoadTimeStart = psiGetTimeIn100ths();
     if (GameState.ReloadGame != 0) {
       GameFlow_QuickPushState(3);
       return;
@@ -449,10 +445,10 @@ void GameFlow_Main(void) {
     Game_Run();
   }
 
-  if ((inhibitGameDraw == '\0') && (sloflag == 0)) {
+  if ((GameState.InhibitGameDraw == '\0') && (sloflag == 0)) {
     Game_Draw();
   }
-  inhibitGameDraw = 0;
+  GameState.InhibitGameDraw = 0;
   return;
 }
 

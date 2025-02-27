@@ -13,6 +13,7 @@ unsigned long long psiGetTimeIn100ths(void);
 typedef unsigned int undefined4;
 typedef unsigned char undefined;
 
+#pragma pack(push, 1)
 typedef struct {
     undefined4 field0_0x0;
     undefined4 field1_0x4;
@@ -43,7 +44,9 @@ typedef struct {
     undefined field26_0x53;
     undefined4 maybeIsMultiplayerMapLoading;
 } GameState_t;
+#pragma pack(pop)
 
+static_assert(sizeof(GameState_t) == 0x58, "Bad size for GameState");
 
 struct CheatInfo_t {
     undefined4 Immortal;
