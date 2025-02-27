@@ -99,7 +99,7 @@ unsigned short Input_Action(short playerNum,unsigned int action,unsigned char fl
     // - PlayerInputs.player[playerNum].fChannels[action]
     // We can replace that once we have reimplemented all functions that touch PlayerInputs
 
-    if ((playerNum < 4) && (PlayerInputs[playerNum].actions[action] != 0)) {
+    if ((playerNum < 4) && (PlayerInputs[playerNum].actions[action] & flags)) {
       return (unsigned short)(int)(PlayerInputs[playerNum].fChannels[action] * 100.0);
     }
 
@@ -124,7 +124,7 @@ float Input_Actionf(short playerNum,unsigned int action, unsigned char flags) {
     }
 
   // A specific player and the action is pressed
-  if ((playerNum < 4) && ((PlayerInputs[playerNum].actions[action] & flags) != 0)) {
+  if ((playerNum < 4) && (PlayerInputs[playerNum].actions[action] & flags)) {
       return PlayerInputs[playerNum].fChannels[action];
   }
 
