@@ -1,5 +1,5 @@
-#include <stdarg.h>
-#include <stdio.h>
+#include <cstdarg>
+#include <cstdio>
 
 void dbg_printf(char* format, ...)
 {

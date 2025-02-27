@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 
 int game_main(int argc, char** argv) {
 	int (*funcPtr)(int, char**) = (int (*)(int, char**))(0x0005a1b0);

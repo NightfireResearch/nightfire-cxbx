@@ -1036,12 +1036,12 @@
         "prototype_string": "void __cdecl FUN_0001a660(obj_tag * * param_1)"
     },
     {
-        "name": "dummyFunctionDoesNothing",
+        "name": "__profiling_or_debugging_hook_point",
         "address": "0x0001a980",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall dummyFunctionDoesNothing(void)"
+        "prototype_string": "void __stdcall __profiling_or_debugging_hook_point(void)"
     },
     {
         "name": "BOT_handleOpponentHistory",
@@ -1057,12 +1057,12 @@
     {
         "name": "BOT_getAggressionMul",
         "address": "0x0001ab70",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "Drone_tag *"
         ],
-        "prototype_string": "undefined BOT_getAggressionMul(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl BOT_getAggressionMul(Drone_tag * param_1)"
     },
     {
         "name": "BOT_getMovementSpeedMul",
@@ -1158,11 +1158,11 @@
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
-            "int",
+            "obj_tag *",
             "int",
             "char"
         ],
-        "prototype_string": "undefined4 __cdecl BOT_respawn(int param_1, int param_2, char param_3)"
+        "prototype_string": "undefined4 __cdecl BOT_respawn(obj_tag * gameObj, int playerNum, char param_3)"
     },
     {
         "name": "BOT_setDroneStats",
@@ -1418,10 +1418,10 @@
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
-            "Drone *",
+            "Drone_tag *",
             "obj_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl BOTSTATE_opponentIsMissile(Drone * param_1, obj_tag * param_2)"
+        "prototype_string": "undefined4 __cdecl BOTSTATE_opponentIsMissile(Drone_tag * param_1, obj_tag * param_2)"
     },
     {
         "name": "BOTSTATE_reallyCloseCombatRange",
@@ -1429,9 +1429,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "void __cdecl BOTSTATE_reallyCloseCombatRange(Drone * param_1)"
+        "prototype_string": "void __cdecl BOTSTATE_reallyCloseCombatRange(Drone_tag * param_1)"
     },
     {
         "name": "BOTSTATE_defaultCombatRange",
@@ -1439,9 +1439,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "void __cdecl BOTSTATE_defaultCombatRange(Drone * param_1)"
+        "prototype_string": "void __cdecl BOTSTATE_defaultCombatRange(Drone_tag * param_1)"
     },
     {
         "name": "BOTSTATE_increaseDistraction",
@@ -1571,12 +1571,12 @@
         "calling_convention": "__cdecl",
         "return_type": "ushort",
         "param_types": [
-            "Drone *",
+            "Drone_tag *",
             "short",
             "char",
             "char"
         ],
-        "prototype_string": "ushort __cdecl BOTSTATE_pickupWeaponChangeChoice(Drone * param_1, short param_2, char param_3, char param_4)"
+        "prototype_string": "ushort __cdecl BOTSTATE_pickupWeaponChangeChoice(Drone_tag * param_1, short param_2, char param_3, char param_4)"
     },
     {
         "name": "BOTWEAP_AmmoInGun",
@@ -1616,11 +1616,11 @@
         "calling_convention": "__cdecl",
         "return_type": "bool",
         "param_types": [
-            "Drone *",
+            "Drone_tag *",
             "short",
             "short"
         ],
-        "prototype_string": "bool __cdecl BOTWEAP_EquipWeapon(Drone * param_1, short param_2, short param_3)"
+        "prototype_string": "bool __cdecl BOTWEAP_EquipWeapon(Drone_tag * param_1, short param_2, short param_3)"
     },
     {
         "name": "FUN_0001e820",
@@ -1649,10 +1649,10 @@
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
-            "Drone *",
+            "Drone_tag *",
             "short"
         ],
-        "prototype_string": "undefined4 __cdecl BOTWEAP_hasWeapon(Drone * param_1, short param_2)"
+        "prototype_string": "undefined4 __cdecl BOTWEAP_hasWeapon(Drone_tag * param_1, short param_2)"
     },
     {
         "name": "BOTWEAP_decrRounds",
@@ -1660,10 +1660,10 @@
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
-            "Drone *",
+            "Drone_tag *",
             "short"
         ],
-        "prototype_string": "undefined4 __cdecl BOTWEAP_decrRounds(Drone * param_1, short param_2)"
+        "prototype_string": "undefined4 __cdecl BOTWEAP_decrRounds(Drone_tag * param_1, short param_2)"
     },
     {
         "name": "BOTWEAP_getWeaponAmmoAmount",
@@ -1754,9 +1754,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "void __cdecl BOTWEAP_InitWeapon(Drone * param_1)"
+        "prototype_string": "void __cdecl BOTWEAP_InitWeapon(Drone_tag * param_1)"
     },
     {
         "name": "BOTWEAP_changeWeapon",
@@ -1775,10 +1775,10 @@
         "calling_convention": "__cdecl",
         "return_type": "bool",
         "param_types": [
-            "Drone *",
+            "Drone_tag *",
             "short"
         ],
-        "prototype_string": "bool __cdecl BOTWEAP_hasLoadedWeapon(Drone * param_1, short param_2)"
+        "prototype_string": "bool __cdecl BOTWEAP_hasLoadedWeapon(Drone_tag * param_1, short param_2)"
     },
     {
         "name": "FUN_0001f450",
@@ -3558,10 +3558,10 @@
         "calling_convention": "__cdecl",
         "return_type": "int",
         "param_types": [
-            "char",
+            "ObjectType",
             "int"
         ],
-        "prototype_string": "int __cdecl Control_ReturnNextObjectOfType(char param_1, int param_2)"
+        "prototype_string": "int __cdecl Control_ReturnNextObjectOfType(ObjectType param_1, int param_2)"
     },
     {
         "name": "Control_ObjectReferenced",
@@ -4059,9 +4059,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl DroneSpawner_Init(int param_1)"
+        "prototype_string": "void __cdecl DroneSpawner_Init(obj_tag * param_1)"
     },
     {
         "name": "DroneSpawner_Delete",
@@ -4198,10 +4198,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "Drone *",
+            "Drone_tag *",
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Drone_GetOpponentInfo(Drone * param_1, obj_tag * param_2)"
+        "prototype_string": "void __cdecl Drone_GetOpponentInfo(Drone_tag * param_1, obj_tag * param_2)"
     },
     {
         "name": "FUN_000313e0",
@@ -4472,9 +4472,9 @@
         "calling_convention": "__stdcall",
         "return_type": "uint",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "uint __stdcall DroneAnim_CanSetAnimCall(Drone * param_1)"
+        "prototype_string": "uint __stdcall DroneAnim_CanSetAnimCall(Drone_tag * param_1)"
     },
     {
         "name": "DroneAnim_SetEndAIState",
@@ -4482,11 +4482,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "Drone *",
+            "Drone_tag *",
             "short",
             "int"
         ],
-        "prototype_string": "void __cdecl DroneAnim_SetEndAIState(Drone * param_1, short newState, int msgType)"
+        "prototype_string": "void __cdecl DroneAnim_SetEndAIState(Drone_tag * param_1, short newState, int msgType)"
     },
     {
         "name": "FUN_00032ed0",
@@ -4748,9 +4748,9 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "void __stdcall DroneAnim_CallFullyComplete(Drone * param_1)"
+        "prototype_string": "void __stdcall DroneAnim_CallFullyComplete(Drone_tag * param_1)"
     },
     {
         "name": "FUN_00033ea0",
@@ -4998,10 +4998,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "Drone_tag *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl DroneFunc_SetMissionFailReason(int param_1, undefined4 param_2)"
+        "prototype_string": "void __cdecl DroneFunc_SetMissionFailReason(Drone_tag * param_1, undefined4 param_2)"
     },
     {
         "name": "DroneFunc_SetDeathChannel",
@@ -5009,9 +5009,9 @@
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl DroneFunc_SetDeathChannel(Drone * param_1)"
+        "prototype_string": "undefined4 __cdecl DroneFunc_SetDeathChannel(Drone_tag * param_1)"
     },
     {
         "name": "FUN_00036190",
@@ -5029,9 +5029,9 @@
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl Drone_IsTalking(Drone * param_1)"
+        "prototype_string": "undefined4 __cdecl Drone_IsTalking(Drone_tag * param_1)"
     },
     {
         "name": "FUN_00036230",
@@ -5276,9 +5276,9 @@
         "return_type": "void",
         "param_types": [
             "char",
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "void __cdecl NDrone2_Enable(char param_1, Drone * param_2)"
+        "prototype_string": "void __cdecl NDrone2_Enable(char param_1, Drone_tag * param_2)"
     },
     {
         "name": "NDrone2_DoAnimation",
@@ -5363,9 +5363,9 @@
         "calling_convention": "__cdecl",
         "return_type": "int",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "int __cdecl NDrone2_FindOpponent(Drone * param_1)"
+        "prototype_string": "int __cdecl NDrone2_FindOpponent(Drone_tag * param_1)"
     },
     {
         "name": "DroneFunc_ConsiderExplosive",
@@ -5530,9 +5530,9 @@
         "calling_convention": "__cdecl",
         "return_type": "short",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "short __cdecl NDrone2_ChangeToAttackMode(Drone * param_1)"
+        "prototype_string": "short __cdecl NDrone2_ChangeToAttackMode(Drone_tag * param_1)"
     },
     {
         "name": "NDrone2_DroneNearPos",
@@ -6470,9 +6470,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "void __cdecl NDrone2_init_DMODE_Defaults(Drone * param_1)"
+        "prototype_string": "void __cdecl NDrone2_init_DMODE_Defaults(Drone_tag * param_1)"
     },
     {
         "name": "NDrone2_init_DMODE_Defaults",
@@ -6480,9 +6480,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "void __cdecl NDrone2_init_DMODE_Defaults(Drone * param_1)"
+        "prototype_string": "void __cdecl NDrone2_init_DMODE_Defaults(Drone_tag * param_1)"
     },
     {
         "name": "FUN_000408b0",
@@ -6668,9 +6668,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "void __cdecl NDrone2_init_DMODE_CastleChatGuard1(Drone * param_1)"
+        "prototype_string": "void __cdecl NDrone2_init_DMODE_CastleChatGuard1(Drone_tag * param_1)"
     },
     {
         "name": "NDrone2_init_DMODE_CastleChatGuard2",
@@ -6718,9 +6718,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "void __cdecl NDrone2_initDTYPE_SniperAlert(Drone * param_1)"
+        "prototype_string": "void __cdecl NDrone2_initDTYPE_SniperAlert(Drone_tag * param_1)"
     },
     {
         "name": "NDrone2_DoModeSettingsNEW",
@@ -6728,12 +6728,12 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "Drone *",
+            "Drone_tag *",
             "undefined4",
             "uint *",
             "DIVars *"
         ],
-        "prototype_string": "void __cdecl NDrone2_DoModeSettingsNEW(Drone * param_1, undefined4 param_2, uint * param_3, DIVars * param_4)"
+        "prototype_string": "void __cdecl NDrone2_DoModeSettingsNEW(Drone_tag * param_1, undefined4 param_2, uint * param_3, DIVars * param_4)"
     },
     {
         "name": "NDrone2_DoModeSettingsOLD",
@@ -6741,12 +6741,12 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "Drone *",
+            "Drone_tag *",
             "uint",
             "uint *",
             "int"
         ],
-        "prototype_string": "void __cdecl NDrone2_DoModeSettingsOLD(Drone * param_1, uint param_2, uint * param_3, int param_4)"
+        "prototype_string": "void __cdecl NDrone2_DoModeSettingsOLD(Drone_tag * param_1, uint param_2, uint * param_3, int param_4)"
     },
     {
         "name": "NDrone2_DefaultInit",
@@ -9325,24 +9325,24 @@
         "return_type": "undefined4",
         "param_types": [
             "DCVars_tag *",
-            "Drone *",
-            "undefined",
+            "Drone_tag *",
+            "obj_tag *",
             "MsgObject *"
         ],
-        "prototype_string": "undefined4 __stdcall NDrone2_DSTATE_Global(DCVars_tag * param_1, Drone * param_2, undefined param_3, MsgObject * param_4)"
+        "prototype_string": "undefined4 __stdcall NDrone2_DSTATE_Global(DCVars_tag * param_1, Drone_tag * param_2, obj_tag * param_3, MsgObject * param_4)"
     },
     {
         "name": "NDrone2_DSTATE_WaitSwitch",
         "address": "0x0004eaa0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined",
-            "undefined",
-            "undefined4"
+            "DCVars_tag *",
+            "Drone_tag *",
+            "obj_tag *",
+            "MsgObject *"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_WaitSwitch(undefined4 param_1, undefined param_2, undefined param_3, undefined4 param_4)"
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_WaitSwitch(DCVars_tag * param_1, Drone_tag * param_2, obj_tag * param_3, MsgObject * param_4)"
     },
     {
         "name": "NDrone2_DSTATE_Disabled",
@@ -11943,14 +11943,14 @@
         "calling_convention": "__cdecl",
         "return_type": "bool",
         "param_types": [
-            "Drone *",
+            "Drone_tag *",
             "obj_tag *",
             "uint",
             "_VECTOR *",
             "cel_tag *",
             "ushort"
         ],
-        "prototype_string": "bool __cdecl DroneVision_CanSeeObjectFrom(Drone * param_1, obj_tag * param_2, uint param_3, _VECTOR * param_4, cel_tag * param_5, ushort param_6)"
+        "prototype_string": "bool __cdecl DroneVision_CanSeeObjectFrom(Drone_tag * param_1, obj_tag * param_2, uint param_3, _VECTOR * param_4, cel_tag * param_5, ushort param_6)"
     },
     {
         "name": "NDrone2_CanSeeObject",
@@ -12113,9 +12113,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "Drone *"
+            "Drone_tag *"
         ],
-        "prototype_string": "void __cdecl DroneVision_LogSeenOpponent(Drone * param_1)"
+        "prototype_string": "void __cdecl DroneVision_LogSeenOpponent(Drone_tag * param_1)"
     },
     {
         "name": "FUN_00065510",
@@ -13945,7 +13945,7 @@
         "prototype_string": "int * __cdecl FUN_0006eb30(undefined2 * param_1)"
     },
     {
-        "name": "FUN_0006ebb0",
+        "name": "LS_LoadFromBuffer",
         "address": "0x0006ebb0",
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
@@ -13953,7 +13953,7 @@
             "int *",
             "uint"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0006ebb0(int * param_1, uint param_2)"
+        "prototype_string": "undefined4 __cdecl LS_LoadFromBuffer(int * param_1, uint param_2)"
     },
     {
         "name": "FUN_0006ec10",
@@ -15068,7 +15068,7 @@
         "prototype_string": "ulonglong __cdecl FUN_000759d0(int * * param_1, int param_2, ushort param_3, int param_4)"
     },
     {
-        "name": "FUN_00075a60",
+        "name": "Menu_UpdateMPControllers",
         "address": "0x00075a60",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -15077,7 +15077,7 @@
             "byte",
             "char"
         ],
-        "prototype_string": "void __cdecl FUN_00075a60(byte param_1, byte param_2, char param_3)"
+        "prototype_string": "void __cdecl Menu_UpdateMPControllers(byte param_1, byte param_2, char param_3)"
     },
     {
         "name": "Menu_PlayIris",
@@ -15092,12 +15092,12 @@
         "prototype_string": "void __cdecl Menu_PlayIris(char param_1, byte param_2, uint param_3)"
     },
     {
-        "name": "FUN_00075dd0",
+        "name": "Menu_PrepareBots",
         "address": "0x00075dd0",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_00075dd0(void)"
+        "prototype_string": "void __stdcall Menu_PrepareBots(void)"
     },
     {
         "name": "FUN_00075f40",
@@ -23908,9 +23908,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "undefined4"
+            "tLanguage"
         ],
-        "prototype_string": "void __cdecl SFXSetLanguage(undefined4 param_1)"
+        "prototype_string": "void __cdecl SFXSetLanguage(tLanguage param_1)"
     },
     {
         "name": "SFXSetMode",
@@ -29176,12 +29176,12 @@
         "prototype_string": "void __cdecl FUN_000e0e10(uint * param_1)"
     },
     {
-        "name": "dummyFunctionDoesNothing",
+        "name": "__profiling_or_debugging_hook_point",
         "address": "0x000e0ec0",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall dummyFunctionDoesNothing(void)"
+        "prototype_string": "void __stdcall __profiling_or_debugging_hook_point(void)"
     },
     {
         "name": "FUN_000e0ed0",
