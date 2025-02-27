@@ -92,18 +92,12 @@ unsigned short Input_Action(short playerNum,unsigned int action,unsigned char fl
         return uVar2;
     }
 
-    // One specific player
-
-    // Pointer arithmetic gets us:
-    // - PlayerInputs.player[playerNum].actions[action]
-    // - PlayerInputs.player[playerNum].fChannels[action]
-    // We can replace that once we have reimplemented all functions that touch PlayerInputs
-
+    // One specific player and the action is pressed
     if ((playerNum < 4) && (PlayerInputs[playerNum].actions[action] & flags)) {
       return (unsigned short)(int)(PlayerInputs[playerNum].fChannels[action] * 100.0);
     }
 
-    // Invalid player number
+    // Invalid player number or no action pressed
     return 0;
 }
 
@@ -143,6 +137,7 @@ void Input_ClearAction(short playerNum,unsigned int action) {
     return;
   } 
 
+  // A specific player
   if (playerNum < 4) {
     PlayerInputs[playerNum].fChannels[action] = 0.0;
     PlayerInputs[playerNum].actions[action] = 0;
@@ -161,6 +156,7 @@ void Input_SetAction(short playerNum,unsigned int action,unsigned char val) {
     return;
   }
 
+  // A specific player
   if (playerNum < 4) {
     PlayerInputs[playerNum].fChannels[action] = 1.0;
     PlayerInputs[playerNum].actions[action] = val;
