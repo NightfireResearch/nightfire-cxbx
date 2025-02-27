@@ -99,8 +99,8 @@ unsigned short Input_Action(short playerNum,unsigned int action,unsigned char fl
     // - PlayerInputs.player[playerNum].fChannels[action]
     // We can replace that once we have reimplemented all functions that touch PlayerInputs
 
-    if ((playerNum < 4) && ((*(unsigned char*)(0x001fe6d0 + 1376*playerNum + 0x104 + action) & flags) != 0)) {
-      return (unsigned short)(int)(*(float*)(0x001fe6d0 + 1376*playerNum + 0x14 + 4*action) * 100.0);
+    if ((playerNum < 4) && (PlayerInputs[playerNum].actions[action] != 0)) {
+      return (unsigned short)(int)(PlayerInputs[playerNum].fChannels[action] * 100.0);
     }
 
     // Invalid player number
@@ -123,12 +123,12 @@ float Input_Actionf(short playerNum,unsigned int action, unsigned char flags) {
     return max;
     }
 
-  // A specific player
-  if ((playerNum < 4) && ((*(unsigned char*)(0x001fe6d0 + 1376*playerNum + 0x104 + action) & flags) != 0)) {
-      return *(float*)(0x001fe6d0 + 1376*playerNum + 0x14 + 4*action);
+  // A specific player and the action is pressed
+  if ((playerNum < 4) && ((PlayerInputs[playerNum].actions[action] & flags) != 0)) {
+      return PlayerInputs[playerNum].fChannels[action];
   }
 
-  // Invalid player number
+  // Invalid player number or the action is not pressed
   return 0.0f;
 }
 
@@ -144,8 +144,8 @@ void Input_ClearAction(short playerNum,unsigned int action) {
   } 
 
   if (playerNum < 4) {
-    *(float*)(0x001fe6d0 + 1376*playerNum + 0x14 + 4*action) = 0.0;
-    *(unsigned char*)(0x001fe6d0 + 1376*playerNum + 0x104 + action) = 0;
+    PlayerInputs[playerNum].fChannels[action] = 0.0;
+    PlayerInputs[playerNum].actions[action] = 0;
   }
   return;
 }
@@ -162,8 +162,8 @@ void Input_SetAction(short playerNum,unsigned int action,unsigned char val) {
   }
 
   if (playerNum < 4) {
-    *(float*)(0x001fe6d0 + 1376*playerNum + 0x14 + 4*action) = 1.0;
-    *(unsigned char*)(0x001fe6d0 + 1376*playerNum + 0x104 + action) = val;
+    PlayerInputs[playerNum].fChannels[action] = 1.0;
+    PlayerInputs[playerNum].actions[action] = val;
   }
 
   return;
