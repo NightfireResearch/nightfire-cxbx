@@ -1,6 +1,7 @@
 #ifndef MATH_H
 #define MATH_H
 
+#pragma pack(push, 1)
 typedef struct {
 	float q[4];
 } quaternion_tag;
@@ -14,6 +15,10 @@ typedef struct {
 	float y;
 	float z;
 } _VECTOR;
+
+#pragma pack(pop)
+
+#define Mat_Position(mat) ((_VECTOR *)((mat.m + 0xc)))
 
 void Quat_Copy(quaternion_tag *target,const quaternion_tag *from);
 bool Quat_IsEqual(const quaternion_tag *a, const quaternion_tag *b, float threshold);
@@ -29,5 +34,8 @@ void Vec_Subtract(const _VECTOR *a, const _VECTOR *b, _VECTOR *v_out);
 void Vec_Zero(_VECTOR *v);
 void Vec_Negate(const _VECTOR *vIn,_VECTOR *vOut);
 void Vec_Copy(_VECTOR *src, _VECTOR *dst);
+
+#define M_PI 3.14159265358979323846
+#define DEG2RAD(x) ((x) * (M_PI / 180.0f))
 
 #endif // MATH_H

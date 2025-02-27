@@ -7,6 +7,7 @@
 #include "assets.h"
 
 #include "game/obj/object.h" // for obj_tag needed by some autogen functions
+#include "game/obj/player.h" // for BLData
 
 #define I32_AT(x) (*((int32_t*)x))
 #define I16_AT(x) (*((int16_t*)x))
