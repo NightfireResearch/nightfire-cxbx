@@ -129,7 +129,6 @@ LAB_0006aafe:
 #define FRAME_RATE_MUL FLOAT_AT(0x0017c100)
 #define REC_FRAME_RATE FLOAT_AT(0x0017c104)
 uint *GameStateStack = (uint*)0x0017bff0; // Not zero-initialised - first entry must be 1
-#define DAT_001f65ac U8_AT(0x001f65ac)
 
 #define GameState (*((GameState_t*)0x001f6580))
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
@@ -366,7 +365,7 @@ void GameFlow_Main(void) {
   if (0x1f < bVar2) {
     bVar2 = 0x3f - bVar2;
   }
-  DAT_001f65ac = bVar2 << 1;
+  GameState.field11_0x2c = bVar2 << 1;
 
   switch(GameFlow_GetState()) {
   case 1:
