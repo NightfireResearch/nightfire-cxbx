@@ -26,7 +26,7 @@ typedef struct {
     undefined4 field8_0x20;
     undefined4 maybePaused;
     undefined4 difficultyModifier;
-    undefined field11_0x2c;
+    undefined maybeUnused; // no apparent sites where this is used
     undefined field12_0x2d;
     undefined field13_0x2e;
     undefined field14_0x2f;

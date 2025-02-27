@@ -361,11 +361,13 @@ void GameFlow_Main(void) {
     GameState.NumFramesUnpaused = GameState.NumFramesUnpaused + 1;
     GameState.VideoFrames += VIDEO_FRAME_RATE / FRAME_RATE_INT;
   }
+
+  // vestigial logic, value never read?
   bVar2 = (byte)GameState.NumFrames & 0x3f;
   if (0x1f < bVar2) {
     bVar2 = 0x3f - bVar2;
   }
-  GameState.field11_0x2c = bVar2 << 1;
+  GameState.maybeUnused = bVar2 << 1;
 
   switch(GameFlow_GetState()) {
   case 1:
