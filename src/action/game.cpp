@@ -216,7 +216,9 @@ void GameFlow_QuickPushState(uint state) {
 // AUTOGEN
 double timestamp(void);
 
-#define INITIALISATION_TIME (*((double*)0x002adf48))
+// Only used in these two functions, so no need to use the original location
+// #define INITIALISATION_TIME (*((double*)0x002adf48))
+double INITIALISATION_TIME;
 
 // AUTOINJECT
 void psiInitTimeIn100ths(void) {
