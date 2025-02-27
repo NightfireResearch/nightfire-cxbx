@@ -2,6 +2,7 @@
 #include "input.h"
 #include "memory.h"
 #include "game.h"
+#include "game/mp/multiplayer.h" // for MPSettings
 
 #include <cstring>
 #include <cstdio>
@@ -132,7 +133,6 @@ uint *GameStateStack = (uint*)0x0017bff0; // Not zero-initialised - first entry 
 
 #define GameState (*((GameState_t*)0x001f6580))
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
-#define MPSettings (*((MPSettings_t*)0x0025fe38))
 #define MPGame (*((MPGame_t*)0x00262738))
 #define GlobalVars (*((GlobalVars_t*)0x001f6568))
 #define PTPDATA (*((sNightFireShared_tag*)0x001d7e90))
