@@ -7,9 +7,6 @@ void Inject_KeyboardInput(void) {
 
     // Inject WASD control into controller 1 for now
 
-    void* ps = (void*)0x001fe6d0;
-    float* fChannels = (float*)((int)ps + 0x14);
-    char* actions = (char*)((int)ps + 0x104);
 
     // if(GetKeyState(VK_UP) & 0x8000) {
     //     printf("Has UP\n");
@@ -19,36 +16,36 @@ void Inject_KeyboardInput(void) {
     // }
 
     if(GetKeyState('W') & 0x8000) {
-        fChannels[2] = 1.0f;
-        actions[2] = 1;
+        PlayerInputs[0].fChannels[2] = 1.0f;
+        PlayerInputs[0].actions[2] = 1;
     }
     if(GetKeyState('S') & 0x8000) {
-        fChannels[2] = -1.0f;
-        actions[2] = 1;
+        PlayerInputs[0].fChannels[2] = -1.0f;
+        PlayerInputs[0].actions[2] = 1;
     }
     if(GetKeyState('A') & 0x8000) {
-        fChannels[1] = 1.0f;
-        actions[1] = 1;
+        PlayerInputs[0].fChannels[1] = 1.0f;
+        PlayerInputs[0].actions[1] = 1;
     }
     if(GetKeyState('D') & 0x8000) {
-        fChannels[1] = -1.0f;
-        actions[1] = 1;
+        PlayerInputs[0].fChannels[1] = -1.0f;
+        PlayerInputs[0].actions[1] = 1;
     }
-    if(GetKeyState('E') & 0x8000) { // Action / stabilize space suit?
-        fChannels[14] = 1.0f;
-        actions[14] = 4;
+    if(GetKeyState('E') & 0x8000) { // Action / stabilize space suit? Channel 14
+        PlayerInputs[0].fChannels[14] = 1.0f;
+        PlayerInputs[0].actions[14] = 4;
     }
-    if(GetKeyState('Q') & 0x8000) { // Trigger
-        fChannels[9] = 1.0f;
-        actions[9] = 4;
+    if(GetKeyState('Q') & 0x8000) { // Trigger - channel 9
+        PlayerInputs[0].fChannels[9] = 1.0f;
+        PlayerInputs[0].actions[9] = 4;
     }
-    if(GetKeyState('1') & 0x8000) { // Alt fire switch
-        fChannels[12] = 1.0f;
-        actions[12] = 4;
+    if(GetKeyState('1') & 0x8000) { // Alt fire switch - channel 12
+        PlayerInputs[0].fChannels[12] = 1.0f;
+        PlayerInputs[0].actions[12] = 4;
     }
-    if(GetKeyState('P') & 0x8000) { // Pause / Start
-        fChannels[30] = 1.0f;
-        actions[30] = 4;
+    if(GetKeyState('P') & 0x8000) { // Pause / Start - channel 30
+        PlayerInputs[0].fChannels[30] = 1.0f;
+        PlayerInputs[0].actions[30] = 4;
     }
     // 1 for continously-held actions (eg move, scope zoom)?
     // 4 for discrete actions (eg trigger, stabilize spacesuit) - should be true for 1 frame only to avoid repeatedly performing action
