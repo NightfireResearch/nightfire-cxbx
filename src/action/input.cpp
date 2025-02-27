@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <windows.h>
 
+#include "input.h"
+
 void Inject_KeyboardInput(void) {
 
     // Inject WASD control into controller 1 for now

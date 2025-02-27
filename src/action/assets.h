@@ -169,6 +169,8 @@ typedef enum {
 typedef enum {
     TXT_NULL = 0,
 
+    PLAYER = 0x1c3,
+
     DOSSIER_RECORDS_NAME = 0x00000280,
     DOSSIER_REWARDS_NAME = 0x00000281,
     DOSSIER_GADGETS_NAME = 0x00000282,
@@ -181,6 +183,8 @@ typedef enum {
 
     Nightfire_TranslatedText_FORCE_UINT32 = 0x7FFFFFFF
 } Nightfire_TranslatedText;
+
+typedef Nightfire_TranslatedText Action_TranslatedText;
 
 typedef enum {
     SFX_WEAPON_P99_SHOT = 1,

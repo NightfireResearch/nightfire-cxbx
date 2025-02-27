@@ -4,6 +4,7 @@
 #include "game.h"
 
 #include <cstring>
+#include <cstdio>
 
 // Functions taking void and returning through registers are fine in either __cdecl or __stdcall
 // It's only when they take arguments that the calling convention matters
@@ -147,6 +148,13 @@ uint *GameStateStack = (uint*)0x0017bff0; // Not zero-initialised - first entry 
 #define MAYBE_CONST_FORWARD_VECTOR (*((_VECTOR*)0x0029d6d4))
 #define MAT_IDENTITY (*((_MATRIX*)0x0029d6e0))
 
+#define NewScoresRef PTR_AT(0x002790a0)
+
+#define HintsEnabled U32_AT(0x001f6618)
+#define SubtitlesEnabled U32_AT(0x001f6614)
+
+#define SoundInfo U32_AT(0x001f65d8)
+
 // AUTOGEN
 void __cdecl psiLaunchDriving(void* a, uint b);
 // AUTOGEN
@@ -216,6 +224,26 @@ void GameFlow_QuickPushState(uint state) {
 // AUTOGEN
 double timestamp(void);
 
+// AUTOGEN
+void __stdcall Input_Init(void);
+
+// AUTOGEN
+void __stdcall Input_Ready(void);
+
+// AUTOGEN
+void __stdcall PlrStat_Init(void);
+
+// AUTOGEN
+void SFXSetMode(unsigned int mode);
+
+// AUTOGEN
+char* Txt_BindLabel(Action_TranslatedText a, unsigned int b);
+
+// Used to insert a CALL location within a larger function that a debugger or profiler can hook into
+void __profiling_or_debugging_hook_point(void) {
+  return;
+}
+
 // Only used in these two functions, so no need to use the original location
 // #define INITIALISATION_TIME (*((double*)0x002adf48))
 double INITIALISATION_TIME;
@@ -230,100 +258,101 @@ ulonglong psiGetTimeIn100ths(void) {
   return ((timestamp() - (float)INITIALISATION_TIME) * 0.1f);
 }
 
-// AUTOGEN
-void __stdcall bootup_bootup(void);
 
-// // NOAUTOINJECT
-// void bootup_bootup(void) {
+// AUTOINJECT
+void bootup_bootup(void) {
 
-//   char *pcVar1;
-//   int iVar2;
-//   uint *puVar3;
-//   ushort i;
-//   undefined4 *puVar5;
-//   int local_4;
+  char *pcVar1;
+  int iVar2;
+  uint *puVar3;
+  ushort i;
+  undefined4 *puVar5;
+  int local_4;
 
-//   memset(&GameState, 0, sizeof(GameState));
-//   memset(&CheatInfo, 0, sizeof(CheatInfo));
-//   memset(&MPSettings, 0, sizeof(MPSettings));
-//   memset(&MPGame, 0, sizeof(MPGame));
-//   memset(&GlobalVars, 0, sizeof(GlobalVars));
-//   _SoundInfo = 0;
-//   memset(&PTPDATA, 0, sizeof(sNightFireShared_tag));
+  memset(&GameState, 0, sizeof(GameState));
+  memset(&CheatInfo, 0, sizeof(CheatInfo));
+  memset(&MPSettings, 0, sizeof(MPSettings));
+  memset(&MPGame, 0, sizeof(MPGame));
+  memset(&GlobalVars, 0, sizeof(GlobalVars));
+  memset(&PTPDATA, 0, sizeof(sNightFireShared_tag));
   
-//   psiInitTimeIn100ths();
-//   GameState.difficultyModifier = 2;
-//   PlayerInputs[2].controllerPort = 2;
-//   MPSettings_respawnSelectionMode = 2;
-//   DAT_001f65a0 = 0x80000002;
-//   GameState.ReloadMenupage = 0x40000034;
-//   MPSettings_numPlayers = 1;
-//   _SoundInfo = 0x640064;
-//   SubtitlesEnabled = 0;
-//   DAT_001f6618 = 1;
-//   PlayerInputs[0].controllerPort = 0;
-//   PlayerInputs[1].controllerPort = 1;
-//   PlayerInputs[3].controllerPort = 3;
-//   DAT_00260050 = 0;
-//   MPSettings_weaponSet = WEAPSET_NORMAL;
-//   MPSettings_MaxDuration = 10;
-//   MPSettings_MaxPoints = 10;
-//   MPSettings_friendlyFire = 0;
-//   MPSettings_MiniVehiclesEnabled = 0;
-//   DAT_00260068 = 0;
-//   DAT_0026006c = 0;
-//   DAT_00260060 = 1;
-//   MPSettings_ProfessionalModeTripleDamage = 0;
-//   DAT_0026005c = 1;
-//   MPSettings_GameMode = GM_ARENA;
-//   i = 0;
-//   iVar2 = 1;
-//   puVar3 = &MPSettings_botsAndPlayers_teamId;
-//   do {
-//     puVar3[2] = 1;
-//     *puVar3 = iVar2 - 1U & 1;
-//     puVar3[3] = 0;
-//     puVar3[1] = 0;
-//     if (i < 4) {
-//       pcVar1 = Txt_BindLabel(PLAYER,0);
-//       local_4 = iVar2;
-//     }
-//     else {
-//       pcVar1 = "Bot";
-//       local_4 = iVar2 + -4;
-//     }
-//     sprintf((char *)(puVar3 + -8),"%s %d",pcVar1,local_4);
-//     i = i + 1;
-//     iVar2 = iVar2 + 1;
-//     puVar3 = puVar3 + 0xc;
-//   } while (i < 10);
-//   GameState.ReloadGame = 1;
+  SoundInfo = 0;
 
-//   CONST_ZERO_VECTOR.x = 0.0f;
-//   CONST_ZERO_VECTOR.y = 0.0f;
-//   CONST_ZERO_VECTOR.z = 0.0f;
+  psiInitTimeIn100ths();
 
-//   GRAVITY_VECTOR.x = 0.0f;
-//   GRAVITY_VECTOR.y = -9.8f;
-//   GRAVITY_VECTOR.z = 0.0f;
+  PlayerInputs[0].controllerPort = 0;
+  PlayerInputs[1].controllerPort = 1;
+  PlayerInputs[2].controllerPort = 2;
+  PlayerInputs[3].controllerPort = 3;
 
-//   CONST_UP_VECTOR.x = 0.0f;
-//   CONST_UP_VECTOR.y = 1.0f;
-//   CONST_UP_VECTOR.z = 0.0f;
+  GameState.difficultyModifier = 2;
+  MPSettings.RespawnSelectionMode = 2;
+  GameState.field8_0x20 = 0x80000002;
+  GameState.ReloadMenupage = 0x40000034;
+  MPSettings.numPlayers = 1;
+  SoundInfo = 0x640064;
+  SubtitlesEnabled = 0;
+  HintsEnabled = 1;
+  MPSettings.GunEmplacementsEnabled = 0;
+  MPSettings.weaponSet = WEAPSET_NORMAL;
+  MPSettings.MaxDuration = 10;
+  MPSettings.MaxPoints = 10;
+  MPSettings.FriendlyFire = 0;
+  MPSettings.MiniVehiclesEnabled = 0;
+  MPSettings.GrappleEnabled = 0;
+  MPSettings.ExplosiveSceneryEnabled = 0;
+  MPSettings.LocationDamageEnabled = 1;
+  MPSettings.TripleDamageModifierProfessionalMode = 0;
+  MPSettings.ShowTeamAndNameOverhead = 1;
+  MPSettings.GameMode = GM_ARENA;
+  i = 0;
+  iVar2 = 1;
+  puVar3 = (uint*)(&MPSettings + 0x20); // FIXME: This is within the unknown region of MPSettings struct
+  do {
+    puVar3[2] = 1;
+    *puVar3 = iVar2 - 1U & 1;
+    puVar3[3] = 0;
+    puVar3[1] = 0;
+    if (i < 4) {
+      pcVar1 = Txt_BindLabel(PLAYER,0);
+      local_4 = iVar2;
+    }
+    else {
+      pcVar1 = (char*)"Bot";
+      local_4 = iVar2 + -4;
+    }
+    sprintf((char *)(puVar3 + -8),"%s %d",pcVar1,local_4);
+    i = i + 1;
+    iVar2 = iVar2 + 1;
+    puVar3 = puVar3 + 0xc;
+  } while (i < 10);
+  GameState.ReloadGame = 1;
+
+  CONST_ZERO_VECTOR.x = 0.0f;
+  CONST_ZERO_VECTOR.y = 0.0f;
+  CONST_ZERO_VECTOR.z = 0.0f;
+
+  GRAVITY_VECTOR.x = 0.0f;
+  GRAVITY_VECTOR.y = -9.8f;
+  GRAVITY_VECTOR.z = 0.0f;
+
+  CONST_UP_VECTOR.x = 0.0f;
+  CONST_UP_VECTOR.y = 1.0f;
+  CONST_UP_VECTOR.z = 0.0f;
                           
-//   MAYBE_CONST_FORWARD_VECTOR.x = 1.0;
-//   MAYBE_CONST_FORWARD_VECTOR.y = 0.0;
-//   MAYBE_CONST_FORWARD_VECTOR.z = 0.0;
+  MAYBE_CONST_FORWARD_VECTOR.x = 1.0;
+  MAYBE_CONST_FORWARD_VECTOR.y = 0.0;
+  MAYBE_CONST_FORWARD_VECTOR.z = 0.0;
 
-//   Mat_IdentityT(&MAT_IDENTITY);
+  Mat_IdentityT(&MAT_IDENTITY);
 
-//   Input_Init();
-//   PlrStat_Init();
-//   __profiling_or_debugging_hook_point();
-//   Input_Ready();
-//   SFXSetMode(1);
-//   NewScoresRef = 0x1d8838;
-// }
+  Input_Init();
+  PlrStat_Init();
+  __profiling_or_debugging_hook_point();
+  Input_Ready();
+  SFXSetMode(1);
+  NewScoresRef = &(PTPDATA.Scoring);
+}
 
 // AUTOINJECT
 void GameFlow_Main(void) {

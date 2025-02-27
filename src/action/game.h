@@ -6,7 +6,7 @@ void GameFlow_Main(void);
 bool movieFinished(void);
 bool Graphics_IsPalI(void);
 void mainloop(void);
-// void bootup_bootup(void);
+void bootup_bootup(void);
 void psiInitTimeIn100ths(void);
 unsigned long long psiGetTimeIn100ths(void);
 
@@ -84,9 +84,6 @@ struct CheatInfo_t {
     undefined field38_0x2f;
 };
 
-typedef struct {
-    char unknown[572]; // PS2 is smaller - 476 bytes
-} MPSettings_t;
 
 typedef struct {
     char unknown[560]; // 464 bytes on PS2
@@ -200,5 +197,77 @@ typedef struct {
 
 
 static_assert(sizeof(sNightFireShared_tag) == 2640, "Size of sNightFireShared not correct");
+
+typedef enum MultiplayerGameMode {
+    GM_QUICK=0,
+    GM_ARENA=1,
+    GM_TOPAGENT=16,
+    GM_UNK3=32,
+    GM_ASSASSIN=1024,
+    TEAMGAME=536870912,
+    GM_TEAMARENA=536870914,
+    GM_CTF=536870916,
+    GM_DEMOLITION=536870976,
+    GM_PROTECTION=536871040,
+    GM_BLUEPRINT=536871168,
+    GM_GOLDENEYE=536871424,
+    GM_KOTH=1073743872,
+    GM_UPLINK=1610612744,
+    GM_TEAMKOTH=1610616832,
+    GM_FORCE_UINT32 = 0x7fffffff
+} MultiplayerGameMode;
+
+typedef enum WeaponSet {
+    WEAPSET_NORMAL=0,
+    WEAPSET_PISTOLS=1,
+    WEAPSET_AUTOMATIC=2,
+    WEAPSET_SNIPERS=3,
+    WEAPSET_EXPLOSIVES=4,
+    WEAPSET_EXPLOSIVES2=5,
+    WEAPSET_MI6=6,
+    WEAPSET_PHOENIX=7,
+    WEAPSET_MODERN=8,
+    WEAPSET_STEALTHY=9,
+    WEAPSET_RANDOM=10,
+    WEAPSET_FORCE_UINT32 = 0x7fffffff
+} WeaponSet;
+
+
+#pragma pack(push, 1)
+typedef struct { // on Xbox, starts at 0025fe38
+
+    char _unkno[0x1E0]; // Different on PS2 and Xbox.  1E0: Xbox
+
+    undefined4 isMultiplayer; // on Xbox, at 00260018
+    undefined4 field50_0x184;
+    undefined4 Started;
+    undefined4 field52_0x18c;
+    undefined4 field53_0x190;
+    undefined4 numPlayersAndBots;
+    undefined4 FriendlyFire;
+    undefined4 MaxPoints;
+    undefined4 MaxDuration;
+    enum MultiplayerGameMode GameMode;
+    undefined4 multiplayerLevelHashcode;
+    undefined4 numPlayers;
+    undefined4 numBots;
+    enum WeaponSet weaponSet;
+    undefined4 GunEmplacementsEnabled;
+    undefined4 TripleDamageModifierProfessionalMode;
+    undefined4 RespawnSelectionMode;
+    undefined4 ShowTeamAndNameOverhead;
+    undefined4 LocationDamageEnabled;
+    undefined4 MiniVehiclesEnabled;
+    undefined4 GrappleEnabled;
+    undefined4 ExplosiveSceneryEnabled;
+    short numActivePickups;
+    undefined field72_0x1da;
+    undefined field73_0x1db;
+} MPSettings_t;
+#pragma pack(pop)
+
+static_assert(sizeof(MPSettings_t) == 572, "MPSettings_t is wrong size");
+
+//char (*__kaboom)[sizeof(MPSettings_t)] = 1;
 
 #endif // GAME_H
