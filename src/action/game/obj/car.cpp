@@ -8,6 +8,7 @@
 
 #include <stddef.h> // for offsetof?
 #include <stdio.h>
+#include "../../actionhelpers.h"
 
 // Until we implement fully, use the in-game memory addresses
 #define Tanks ((obj_tag**)0x001dc980) // MAX_TANKS? entries

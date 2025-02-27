@@ -1,3 +1,5 @@
+# Credits: Nightfire Research Team - (2024 - 2025)
+
 ## ###
 # IP: GHIDRA
 #
@@ -17,9 +19,37 @@
 # @category: Nightfire
 # @runtime PyGhidra
 import os
-import pathlib
+
+
+def export_json(side):
+    function_list = []
+    for f in funcs:
+        name = f.getName()
+        address = f.getEntryPoint()
+        calling_convention = f.getCallingConventionName()
+        return_type = f.getReturnType().getName()
+        param_types = [str(x.getDataType()) for x in f.getParameters()]
+        prototype_string = f.getPrototypeString(True, True)
+        function_dict = {
+            "name": name,
+            "address": "0x" + str(address),
+            "calling_convention": calling_convention, # TODO: Address issues with unknown cc's
+            "return_type": return_type,
+            "param_types": param_types,
+            "prototype_string": prototype_string,
+        }
+        function_list.append(function_dict)
+
+    function_list.sort(key=lambda x: x["address"])
+
+    import json
+
+    with open(f"{json_loc}_{side}.json", "w") as outfile:
+        # We want to make each entry human-readable so that diffs look nice
+        json.dump(function_list, outfile, indent=4)
+
 print("Current file: " + __file__)
-json_loc = os.path.join(os.path.dirname(__file__), "../tools/functions.json")
+json_loc = os.path.join(os.path.dirname(__file__), "../tools/functions")
 print("Location of JSON: " + json_loc)
 
 # Our goal is to produce a list of all functions, sorted by address, as a JSON file, with each entry having:
@@ -27,12 +57,13 @@ print("Location of JSON: " + json_loc)
 
 
 print("Name: " + currentProgram.name)
-
+side = "none"
 if currentProgram.name == "default.xbe": # Xbox Action engine
     print("Xbox Action engine")
+    side = "action"
 elif currentProgram.name == "Driving.xbe": # Xbox Driving engine
-    print("Xbox Driving engine - WIP")
-    exit(1)
+    print("Xbox Driving engine")
+    side = "driving"
 else:
     print("Unknown program - designed for Xbox Action and Driving only")
     exit(1)
@@ -40,27 +71,4 @@ else:
 fm = currentProgram.getFunctionManager()
 funcs = fm.getFunctions(True)
 
-function_list = []
-for f in funcs:
-    name = f.getName()
-    address = f.getEntryPoint()
-    calling_convention = f.getCallingConventionName()
-    return_type = f.getReturnType().getName()
-    param_types = [str(x.getDataType()) for x in f.getParameters()]
-    prototype_string = f.getPrototypeString(True, True)
-    function_dict = {
-        "name": name,
-        "address": "0x" + str(address),
-        "calling_convention": calling_convention,
-        "return_type": return_type,
-        "param_types": param_types,
-        "prototype_string": prototype_string,
-    }
-    function_list.append(function_dict)
-
-function_list.sort(key=lambda x: x["address"])
-
-import json
-with open(json_loc, "w") as outfile:
-    # We want to make each entry human-readable so that diffs look nice
-    json.dump(function_list, outfile, indent=4)
+export_json(side)

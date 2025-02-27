@@ -1,4 +1,4 @@
-#include "helpers.h"
+#include "actionhelpers.h"
 
 void Input_Update(void);
 unsigned short Input_Action(short player,unsigned int action,unsigned char flags);

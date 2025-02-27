@@ -70,6 +70,7 @@ add_library(actioninject SHARED
 
 add_library(drivinginject SHARED
   src/dllmain.cpp
+  src/driving/autofunc.cpp
   src/inject_driving.cpp
   src/inject.h
   src/driving/logging.cpp

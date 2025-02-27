@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <windows.h>
-#include "helpers.h"
+#include "actionhelpers.h"
 
 
 int allocateAndLoadFileWithinArchive(char* a, unsigned short b, int* c) {

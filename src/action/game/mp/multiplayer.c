@@ -1,5 +1,6 @@
 #include "multiplayer.h"
-#include "../game.h"
+#include "../../game.h"
+#include "../gamestate.h"
 
 #include <string.h> // for memset
 
