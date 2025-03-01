@@ -2,6 +2,7 @@
 #include <windows.h>
 
 #include "input.h"
+#include "game/mp/multiplayer.h"
 
 void Inject_KeyboardInput(void) {
 
@@ -46,6 +47,13 @@ void Inject_KeyboardInput(void) {
     if(GetKeyState('P') & 0x8000) { // Pause / Start - channel 30
         PlayerInputs[0].fChannels[30] = 1.0f;
         PlayerInputs[0].actions[30] = 4;
+    }
+
+    if(GetKeyState(VK_SPACE) & 0x8000) { // Debug input
+      printf("MP settings:\n");
+      for(int i = 0; i < 10; i++) {
+        printf("Index %i: %-16s\t%-10s\t%i\t%i\t%i\n", i, MPSettings.Player[i].Name, TEAM_GET_NAME(MPSettings.Player[i].TeamId), MPSettings.Player[i].SkinNum, MPSettings.Player[i].SomeField2, MPSettings.Player[i].HealthModifier); 
+      }
     }
     // 1 for continously-held actions (eg move, scope zoom)?
     // 4 for discrete actions (eg trigger, stabilize spacesuit) - should be true for 1 frame only to avoid repeatedly performing action

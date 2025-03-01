@@ -1,5 +1,5 @@
 #include <stddef.h>
-
+#include "../../actionhelpers.h"
 #include "../../math/math.h"
 
 
@@ -40,13 +40,22 @@ typedef enum WeaponSet {
     WEAPSET_FORCE_UINT32 = 0x7fffffff
 } WeaponSet;
 
+typedef enum MPTeam {
+    PHOENIX = 0,
+    MI6 = 1,
+    NO_TEAM = 2,
+    TEAM_FORCE_UINT32 = 0x7fffffff
+};
+
+#define TEAM_GET_NAME(team) ((team == PHOENIX) ? "PHOENIX" : ((team == MI6) ? "MI6" : ((team == NO_TEAM) ? "NO_TEAM" : "UNKNOWN")))
+
 
 #pragma pack(push, 1)
 
 // Should contain team, character ID, health bonus etc for each of 10 agents in the multiplayer game
 typedef struct {
     char Name[32];
-    undefined4 SomeField0;
+    MPTeam TeamId;
     undefined4 SkinNum; // Only set when the game actually launches, not set in menu
     undefined4 SomeField2;
     undefined4 HealthModifier; // Handicaps are -ve, boosts are +ve. Only applies to players. 
@@ -58,7 +67,7 @@ typedef struct { // on Xbox, starts at 0025fe38
     MPSettings_PerPlayer Player[10]; // Different on PS2 and Xbox.  1E0: Xbox
 
     undefined4 isMultiplayer; // on Xbox, at 00260018
-    undefined4 field50_0x184;
+    undefined4 relatedToTeamIdentitySomehow;
     undefined4 Started;
     undefined4 field52_0x18c;
     undefined4 field53_0x190;
@@ -101,3 +110,9 @@ typedef struct {
 
 // True on Xbox, PS2 is larger due to padding of _VECTOR
 static_assert(sizeof(MPSpawnPoint) == 0x1c, "Size of MPSpawnPoint not correct");
+
+
+
+bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b);
+
+

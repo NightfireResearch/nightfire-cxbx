@@ -300,7 +300,7 @@ void bootup_bootup(void) {
   
   for(int i = 0; i < 10; i++) {
 
-    MPSettings.Player[i].SomeField0 = (i & 1);
+    MPSettings.Player[i].TeamId = (i & 1) ? MI6 : PHOENIX;
     MPSettings.Player[i].SkinNum = 0;
     MPSettings.Player[i].SomeField2 = 1;
     MPSettings.Player[i].HealthModifier = 0;
