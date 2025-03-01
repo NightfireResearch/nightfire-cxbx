@@ -49,7 +49,7 @@ typedef struct {
     undefined4 SomeField0;
     undefined4 SomeField1;
     undefined4 SomeField2;
-    undefined4 SomeField3;
+    undefined4 HealthModifier; // Handicaps are -ve, boosts are +ve
 } MPSettings_PerPlayer;
 static_assert(sizeof(MPSettings_PerPlayer) == 0x30, "MPSettings_PerPlayer is wrong size");
 

@@ -303,7 +303,7 @@ void bootup_bootup(void) {
     MPSettings.Player[i].SomeField0 = (i & 1);
     MPSettings.Player[i].SomeField1 = 0;
     MPSettings.Player[i].SomeField2 = 1;
-    MPSettings.Player[i].SomeField3 = 0;
+    MPSettings.Player[i].HealthModifier = 0;
   
     if(i < 4) {
       sprintf(MPSettings.Player[i].Name, "%s %d", Txt_BindLabel(PLAYER, 0), i + 1);
