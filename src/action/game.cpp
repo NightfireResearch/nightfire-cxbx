@@ -257,10 +257,7 @@ ulonglong psiGetTimeIn100ths(void) {
 // Only used in GameFlow_Main, so no need to inject
 void bootup_bootup(void) {
 
-  char *pcVar1;
-  int iVar2;
   uint *puVar3;
-  ushort i;
   undefined4 *puVar5;
   int local_4;
 
@@ -300,27 +297,22 @@ void bootup_bootup(void) {
   MPSettings.TripleDamageModifierProfessionalMode = 0;
   MPSettings.ShowTeamAndNameOverhead = 1;
   MPSettings.GameMode = GM_ARENA;
-  i = 0;
-  iVar2 = 1;
-  puVar3 = (uint*)(&MPSettings + 0x20); // FIXME: This is within the unknown region of MPSettings struct
-  do {
-    puVar3[2] = 1;
-    *puVar3 = iVar2 - 1U & 1;
-    puVar3[3] = 0;
-    puVar3[1] = 0;
-    if (i < 4) {
-      pcVar1 = Txt_BindLabel(PLAYER,0);
-      local_4 = iVar2;
+  
+  for(int i = 0; i < 10; i++) {
+
+    MPSettings.Player[i].SomeField0 = (i & 1);
+    MPSettings.Player[i].SomeField1 = 0;
+    MPSettings.Player[i].SomeField2 = 1;
+    MPSettings.Player[i].SomeField3 = 0;
+  
+    if(i < 4) {
+      sprintf(MPSettings.Player[i].Name, "%s %d", Txt_BindLabel(PLAYER, 0), i);
+    } else {
+      sprintf(MPSettings.Player[i].Name, "%s %d", "Bot", i-4);
     }
-    else {
-      pcVar1 = (char*)"Bot";
-      local_4 = iVar2 + -4;
-    }
-    sprintf((char *)(puVar3 + -8),"%s %d",pcVar1,local_4);
-    i = i + 1;
-    iVar2 = iVar2 + 1;
-    puVar3 = puVar3 + 0xc;
-  } while (i < 10);
+     
+  }
+
   GameState.ReloadGame = 1;
 
   CONST_ZERO_VECTOR.x = 0.0f;

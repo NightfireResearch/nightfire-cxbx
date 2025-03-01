@@ -42,9 +42,20 @@ typedef enum WeaponSet {
 
 
 #pragma pack(push, 1)
+
+// Should contain team, character ID, health bonus etc for each of 10 agents in the multiplayer game
+typedef struct {
+    char Name[32];
+    undefined4 SomeField0;
+    undefined4 SomeField1;
+    undefined4 SomeField2;
+    undefined4 SomeField3;
+} MPSettings_PerPlayer;
+static_assert(sizeof(MPSettings_PerPlayer) == 0x30, "MPSettings_PerPlayer is wrong size");
+
 typedef struct { // on Xbox, starts at 0025fe38
 
-    char _unkno[0x1E0]; // Different on PS2 and Xbox.  1E0: Xbox
+    MPSettings_PerPlayer Player[10]; // Different on PS2 and Xbox.  1E0: Xbox
 
     undefined4 isMultiplayer; // on Xbox, at 00260018
     undefined4 field50_0x184;
