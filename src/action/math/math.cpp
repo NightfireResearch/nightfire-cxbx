@@ -187,6 +187,13 @@ void Vec_MulR32(_VECTOR *outVec, _VECTOR *inVec, float scale) {
   outVec->z = scale * inVec->z;
 }
 
+// AUTOINJECT
+void Vec_Cross(_VECTOR *a,_VECTOR *b,_VECTOR *vecOut) {
+  vecOut->x = b->z * a->y - b->y * a->z;
+  vecOut->y = b->x * a->z - a->x * b->z;
+  vecOut->z = a->x * b->y - b->x * a->y;
+}
+
 // Set up a matrix with the given Euler rotations
 // AUTOINJECT
 void RotMatrixZYX(_VECTOR *angles, _MATRIX *mtx) {
