@@ -17,10 +17,10 @@ bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b) {
 
     if ((idx_a > -1) && (idx_b > -1)) {
         
-        int team_a = MPSettings.Player[idx_a].TeamId;
-        int team_b = MPSettings.Player[idx_b].TeamId;
+        MPTeam team_a = MPSettings.Player[idx_a].TeamId;
+        MPTeam team_b = MPSettings.Player[idx_b].TeamId;
         
-        if ((team_a != 2) && (team_b != 2))
+        if ((team_a != NO_TEAM) && (team_b != NO_TEAM))
             return team_a == team_b;
         
     }
