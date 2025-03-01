@@ -306,11 +306,11 @@ void bootup_bootup(void) {
     MPSettings.Player[i].SomeField3 = 0;
   
     if(i < 4) {
-      sprintf(MPSettings.Player[i].Name, "%s %d", Txt_BindLabel(PLAYER, 0), i);
+      sprintf(MPSettings.Player[i].Name, "%s %d", Txt_BindLabel(PLAYER, 0), i + 1);
     } else {
-      sprintf(MPSettings.Player[i].Name, "%s %d", "Bot", i-4);
+      sprintf(MPSettings.Player[i].Name, "%s %d", "Bot", i - 3);
     }
-     
+
   }
 
   GameState.ReloadGame = 1;
