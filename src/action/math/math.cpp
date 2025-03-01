@@ -39,46 +39,35 @@ void Quat_Mul(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *
   qOut->q[1] = (a->q[3] * b->q[1] + b->q[3] * a->q[1] + a->q[2] * b->q[0]) - a->q[0] * b->q[2];
   qOut->q[2] = (a->q[3] * b->q[2] + b->q[1] * a->q[0] + b->q[3] * a->q[2]) - b->q[0] * a->q[1];
   qOut->q[3] = ((b->q[3] * a->q[3] - a->q[0] * b->q[0]) - b->q[1] * a->q[1]) - a->q[2] * b->q[2];
-  return;
 }
 
 // AUTOINJECT
-void Quat_QuatTransToMat(quaternion_tag *quatIn,float *vecIn,_MATRIX *mOut) {
-  float fVar1;
-  float fVar2;
-  float fVar3;
-  float fVar4;
-  float fVar5;
-  float fVar6;
-  float fVar7;
-  float fVar8;
-  float fVar9;
-  
-  fVar1 = quatIn->q[0] + quatIn->q[0];
-  fVar3 = quatIn->q[1] + quatIn->q[1];
-  fVar6 = quatIn->q[2] + quatIn->q[2];
-  fVar2 = fVar1 * quatIn->q[0];
-  fVar5 = fVar3 * quatIn->q[0];
-  fVar7 = fVar6 * quatIn->q[0];
-  fVar4 = fVar3 * quatIn->q[1];
-  fVar8 = fVar6 * quatIn->q[1];
-  fVar9 = fVar6 * quatIn->q[2];
-  fVar1 = fVar1 * quatIn->q[3];
-  fVar3 = fVar3 * quatIn->q[3];
-  fVar6 = fVar6 * quatIn->q[3];
-  mOut->m[0] = 1.0f - (fVar9 + fVar4);
-  mOut->m[1] = fVar5 + fVar6;
-  mOut->m[2] = fVar7 - fVar3;
-  mOut->m[4] = fVar5 - fVar6;
-  mOut->m[5] = 1.0f - (fVar9 + fVar2);
-  mOut->m[6] = fVar1 + fVar8;
-  mOut->m[8] = fVar3 + fVar7;
-  mOut->m[9] = fVar8 - fVar1;
-  mOut->m[10] = 1.0f - (fVar4 + fVar2);
-  mOut->m[0xc] = *vecIn;
-  mOut->m[0xd] = vecIn[1];
-  mOut->m[0xe] = vecIn[2];
-  return;
+void Quat_QuatTransToMat(quaternion_tag *quatIn, float *vecIn, _MATRIX *mOut) {
+  float q0_2 = quatIn->q[0] + quatIn->q[0];
+  float q1_2 = quatIn->q[1] + quatIn->q[1];
+  float q2_2 = quatIn->q[2] + quatIn->q[2];
+  float q0_q0 = q0_2 * quatIn->q[0];
+  float q0_q1 = q1_2 * quatIn->q[0];
+  float q0_q2 = q2_2 * quatIn->q[0];
+  float q1_q1 = q1_2 * quatIn->q[1];
+  float q1_q2 = q2_2 * quatIn->q[1];
+  float q2_q2 = q2_2 * quatIn->q[2];
+  float q0_q3 = q0_2 * quatIn->q[3];
+  float q1_q3 = q1_2 * quatIn->q[3];
+  float q2_q3 = q2_2 * quatIn->q[3];
+
+  mOut->m[0] = 1.0f - (q2_q2 + q1_q1);
+  mOut->m[1] = q0_q1 + q2_q3;
+  mOut->m[2] = q0_q2 - q1_q3;
+  mOut->m[4] = q0_q1 - q2_q3;
+  mOut->m[5] = 1.0f - (q2_q2 + q0_q0);
+  mOut->m[6] = q0_q3 + q1_q2;
+  mOut->m[8] = q1_q3 + q0_q2;
+  mOut->m[9] = q1_q2 - q0_q3;
+  mOut->m[10] = 1.0f - (q1_q1 + q0_q0);
+  mOut->m[12] = vecIn[0];
+  mOut->m[13] = vecIn[1];
+  mOut->m[14] = vecIn[2];
 }
 
 // AUTOINJECT
@@ -118,40 +107,31 @@ void Mat_Identity(_MATRIX *mtx) {
 	mtx->m[10] = 1.0;
 }
 
+// Combine the rotation and translation of two matrices
 // AUTOINJECT
-void RotTransMat(_MATRIX *param_1,_MATRIX *param_2) {
-  float fVar1;
-  float fVar2;
-  float fVar3;
-  float fVar4;
-  float fVar5;
-  float fVar6;
-  float fVar7;
-  float fVar8;
-  float fVar9;
-  
-  fVar5 = param_2->m[8];
-  fVar1 = param_2->m[0];
-  fVar2 = param_2->m[4];
-  fVar6 = param_2->m[9];
-  fVar3 = param_2->m[1];
-  fVar4 = param_2->m[2];
-  fVar7 = param_2->m[10];
-  fVar8 = param_2->m[5];
-  fVar9 = param_2->m[6];
-  param_2->m[0] = fVar1 * param_1->m[0] + fVar4 * param_1->m[8] + fVar3 * param_1->m[4];
-  param_2->m[1] = fVar1 * param_1->m[1] + fVar4 * param_1->m[9] + fVar3 * param_1->m[5];
-  param_2->m[2] = fVar3 * param_1->m[6] + fVar1 * param_1->m[2] + fVar4 * param_1->m[10];
-  param_2->m[4] = fVar2 * param_1->m[0] + fVar9 * param_1->m[8] + fVar8 * param_1->m[4];
-  param_2->m[5] = fVar2 * param_1->m[1] + fVar9 * param_1->m[9] + fVar8 * param_1->m[5];
-  param_2->m[6] = fVar8 * param_1->m[6] + fVar2 * param_1->m[2] + fVar9 * param_1->m[10];
-  param_2->m[8] = fVar5 * param_1->m[0] + fVar7 * param_1->m[8] + fVar6 * param_1->m[4];
-  param_2->m[9] = fVar5 * param_1->m[1] + fVar7 * param_1->m[9] + fVar6 * param_1->m[5];
-  param_2->m[10] = fVar6 * param_1->m[6] + fVar5 * param_1->m[2] + fVar7 * param_1->m[10];
-  param_2->m[0xc] = param_1->m[0xc] + param_2->m[0xc];
-  param_2->m[0xd] = param_1->m[0xd] + param_2->m[0xd];
-  param_2->m[0xe] = param_1->m[0xe] + param_2->m[0xe];
-  return;
+void RotTransMat(_MATRIX *mat1, _MATRIX *mat2) {
+  float m2_00 = mat2->m[0];
+  float m2_01 = mat2->m[1];
+  float m2_02 = mat2->m[2];
+  float m2_10 = mat2->m[4];
+  float m2_11 = mat2->m[5];
+  float m2_12 = mat2->m[6];
+  float m2_20 = mat2->m[8];
+  float m2_21 = mat2->m[9];
+  float m2_22 = mat2->m[10];
+
+  mat2->m[0] = m2_00 * mat1->m[0] + m2_02 * mat1->m[8] + m2_01 * mat1->m[4];
+  mat2->m[1] = m2_00 * mat1->m[1] + m2_02 * mat1->m[9] + m2_01 * mat1->m[5];
+  mat2->m[2] = m2_01 * mat1->m[6] + m2_00 * mat1->m[2] + m2_02 * mat1->m[10];
+  mat2->m[4] = m2_10 * mat1->m[0] + m2_12 * mat1->m[8] + m2_11 * mat1->m[4];
+  mat2->m[5] = m2_10 * mat1->m[1] + m2_12 * mat1->m[9] + m2_11 * mat1->m[5];
+  mat2->m[6] = m2_11 * mat1->m[6] + m2_10 * mat1->m[2] + m2_12 * mat1->m[10];
+  mat2->m[8] = m2_20 * mat1->m[0] + m2_22 * mat1->m[8] + m2_21 * mat1->m[4];
+  mat2->m[9] = m2_20 * mat1->m[1] + m2_22 * mat1->m[9] + m2_21 * mat1->m[5];
+  mat2->m[10] = m2_21 * mat1->m[6] + m2_20 * mat1->m[2] + m2_22 * mat1->m[10];
+  mat2->m[12] = mat1->m[12] + mat2->m[12];
+  mat2->m[13] = mat1->m[13] + mat2->m[13];
+  mat2->m[14] = mat1->m[14] + mat2->m[14];
 }
 
 // AUTOINJECT
@@ -191,7 +171,6 @@ void Vec_Negate(const _VECTOR *vIn,_VECTOR *vOut) {
   vOut->x = -vIn->x;
   vOut->y = -vIn->y;
   vOut->z = -vIn->z;
-  return;
 }
 
 // AUTOINJECT
@@ -201,6 +180,7 @@ void Vec_Copy(_VECTOR *src, _VECTOR *dst) {
   dst->z = src->z;
 }
 
+// Set up a matrix with the given Euler rotations
 // AUTOINJECT
 void RotMatrixZYX(_VECTOR *angles, _MATRIX *mtx) {
   
@@ -221,5 +201,30 @@ void RotMatrixZYX(_VECTOR *angles, _MATRIX *mtx) {
   mtx->m[6] = cosY * sinX;
   mtx->m[10] = cosY * cosX;
 
-  return;
+}
+
+// Set up a matrix with the given Euler rotations and translation
+// AUTOINJECT
+void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx) {
+
+  float cosX = cosf(rot->x);
+  float sinX = sinf(rot->x);
+  float cosY = cosf(rot->y);
+  float sinY = sinf(rot->y);
+  float cosZ = cosf(rot->z);
+  float sinZ = sinf(rot->z);
+
+  mtx->m[0] = cosZ * cosY;
+  mtx->m[4] = -sinZ * cosY;
+  mtx->m[8] = sinY;
+  mtx->m[1] = sinZ * cosX + cosZ * sinY * sinX;
+  mtx->m[5] = cosZ * cosX - sinZ * sinY * sinX;
+  mtx->m[9] = -cosY * sinX;
+  mtx->m[2] = sinZ * sinX - cosZ * sinY * cosX;
+  mtx->m[6] = cosZ * sinX + sinZ * sinY * cosX;
+  mtx->m[10] = cosY * cosX;
+  mtx->m[12] = trans->x;
+  mtx->m[13] = trans->y;
+  mtx->m[14] = trans->z;
+
 }

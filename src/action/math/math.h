@@ -35,6 +35,7 @@ void Vec_Zero(_VECTOR *v);
 void Vec_Negate(const _VECTOR *vIn,_VECTOR *vOut);
 void Vec_Copy(_VECTOR *src, _VECTOR *dst);
 void RotMatrixZYX(_VECTOR *param_1,_MATRIX *mtx);
+void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);
 
 #define M_PI 3.14159265358979323846
 #define DEG2RAD(x) ((x) * (M_PI / 180.0f))
