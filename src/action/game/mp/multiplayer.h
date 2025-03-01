@@ -47,9 +47,9 @@ typedef enum WeaponSet {
 typedef struct {
     char Name[32];
     undefined4 SomeField0;
-    undefined4 SomeField1;
+    undefined4 SkinNum; // Only set when the game actually launches, not set in menu
     undefined4 SomeField2;
-    undefined4 HealthModifier; // Handicaps are -ve, boosts are +ve
+    undefined4 HealthModifier; // Handicaps are -ve, boosts are +ve. Only applies to players. 
 } MPSettings_PerPlayer;
 static_assert(sizeof(MPSettings_PerPlayer) == 0x30, "MPSettings_PerPlayer is wrong size");
 
