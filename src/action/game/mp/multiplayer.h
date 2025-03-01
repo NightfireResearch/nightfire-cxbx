@@ -114,5 +114,5 @@ static_assert(sizeof(MPSpawnPoint) == 0x1c, "Size of MPSpawnPoint not correct");
 
 
 bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b);
-
+MPTeam MP_getObjectTeam(obj_tag* param_1);
 
