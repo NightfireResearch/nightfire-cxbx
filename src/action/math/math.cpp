@@ -200,3 +200,26 @@ void Vec_Copy(_VECTOR *src, _VECTOR *dst) {
   dst->y = src->y;
   dst->z = src->z;
 }
+
+// AUTOINJECT
+void RotMatrixZYX(_VECTOR *angles, _MATRIX *mtx) {
+  
+  float cosX = cosf(angles->x);
+  float sinX = sinf(angles->x);
+  float cosY = cosf(angles->y);
+  float sinY = sinf(angles->y);
+  float cosZ = cosf(angles->z);
+  float sinZ = sinf(angles->z);
+
+  mtx->m[0] = cosZ * cosY;
+  mtx->m[4] = cosZ * sinY * sinX - sinZ * cosX;
+  mtx->m[8] = cosZ * sinY * cosX + sinZ * sinX;
+  mtx->m[1] = sinZ * cosY;
+  mtx->m[5] = cosZ * cosX + sinZ * sinY * sinX;
+  mtx->m[9] = sinZ * sinY * cosX - cosZ * sinX;
+  mtx->m[2] = -sinY;
+  mtx->m[6] = cosY * sinX;
+  mtx->m[10] = cosY * cosX;
+
+  return;
+}
