@@ -34,6 +34,7 @@ void Vec_Subtract(const _VECTOR *a, const _VECTOR *b, _VECTOR *v_out);
 void Vec_Zero(_VECTOR *v);
 void Vec_Negate(const _VECTOR *vIn,_VECTOR *vOut);
 void Vec_Copy(_VECTOR *src, _VECTOR *dst);
+void Vec_MulR32(_VECTOR *outVec, _VECTOR *inVec, float scale);
 void RotMatrixZYX(_VECTOR *param_1,_MATRIX *mtx);
 void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);
 

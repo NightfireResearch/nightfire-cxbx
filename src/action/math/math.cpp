@@ -180,6 +180,13 @@ void Vec_Copy(_VECTOR *src, _VECTOR *dst) {
   dst->z = src->z;
 }
 
+// AUTOINJECT
+void Vec_MulR32(_VECTOR *outVec, _VECTOR *inVec, float scale) {
+  outVec->x = scale * inVec->x;
+  outVec->y = scale * inVec->y;
+  outVec->z = scale * inVec->z;
+}
+
 // Set up a matrix with the given Euler rotations
 // AUTOINJECT
 void RotMatrixZYX(_VECTOR *angles, _MATRIX *mtx) {
