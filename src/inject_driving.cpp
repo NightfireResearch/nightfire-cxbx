@@ -120,8 +120,8 @@ void Inject()
   // WriteMemory(0x001caf68, &addr_of_eamalloc, 4);
 
   // Audio debug
-	*(char*)(0x001e4760) = 1; // Mixer
-	*(char*)(0x001e4761) = 1; // Info
+	*(char*)(0x001e4760) = 0; // Mixer
+	*(char*)(0x001e4761) = 0; // Info
 
   // Resolution of RRenderer
   // Function 0007cfb0 sets a default 640x480
