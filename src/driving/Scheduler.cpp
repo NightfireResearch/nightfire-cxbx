@@ -20,10 +20,10 @@ void Scheduler::Run(int i) {
   printf("Running scheduler, time is %i, schedule list is %08x\n", now, this->listOfSchedules);
 
   // If we're on the same tick, early return
-  if(this->lastTickCount == now) {
-    printf("Already ran this tick\n");
-    return;
-  }
+//   if(this->lastTickCount == now) {
+//     printf("Already ran this tick\n");
+//     return;
+//   }
 
   // TODO: Process schedules
   // TODO: Handle cinematic mode
