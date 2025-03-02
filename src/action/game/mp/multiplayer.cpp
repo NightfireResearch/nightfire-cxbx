@@ -2,6 +2,8 @@
 #include "../../game.h"
 #include "../gamestate.h"
 
+#define CurrentAssassinObjId (((obj_tag *)0x0026178c))
+#define AssassinTarget (((obj_tag *)0x00261788))
 // AUTOGEN
 unsigned int Control_Plr2Ind(obj_tag* a);
 
@@ -37,4 +39,14 @@ MPTeam MP_getObjectTeam(obj_tag* param_1) {
 
   short idx = Control_Plr2Ind(param_1);
   return MPSettings.Player[idx].TeamId;
+}
+
+// AUTOINJECT
+bool MP_IsAssasin(obj_tag *param_1) {
+  return ((CurrentAssassinObjId != NULL) && (CurrentAssassinObjId == param_1));
+}
+
+// AUTOINJECT
+bool MP_IsTarget(obj_tag *param_1) {
+  return ((AssassinTarget != NULL) && (AssassinTarget == param_1));
 }
