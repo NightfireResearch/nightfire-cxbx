@@ -3,6 +3,7 @@
 #include "driving/logging.h"
 #include "driving/UFileLoader.h"
 #include "driving/main.h"
+#include "driving/Scheduler.hpp"
 #include "common/launchInfo.h"
 
 #include "cxbx/cxbxbinding.h"
@@ -59,6 +60,16 @@ unsigned int Scheduler_Constructor_Hook(void);
 void Scheduler__Run(int i);
 void EventManager__RunEvents(void);
 void EventManager__Init(void);
+
+
+// Wrapper to extract function pointer
+template<typename T, typename U>
+inline size_t GetFunctionAddress(U T::*func) {
+    union { U T::*mfp; size_t addr; } u;
+    u.mfp = func;
+    return u.addr;
+}
+
 
 void Inject()
 {
@@ -140,6 +151,10 @@ void Inject()
   WriteByte(0x05bb4a, 0x00);
   WriteByte(0x05bb4b, 0x00);
   WriteByte(0x05bb4c, 0x00);
+
+  // Instead of the binary patch, inject a whole new working version of the scheduler
+  WriteJmpTo(0x0005ba80, GetFunctionAddress(&Scheduler::Run));
+
   /*
    * Function Patching
    */
