@@ -1,6 +1,11 @@
 #include "actionhelpers.h"
 #include "input.h"
 #include "memory.h"
+#include "game.h"
+#include "game/mp/multiplayer.h" // for MPSettings
+
+#include <cstring>
+#include <cstdio>
 
 // Functions taking void and returning through registers are fine in either __cdecl or __stdcall
 // It's only when they take arguments that the calling convention matters
@@ -118,25 +123,33 @@ LAB_0006aafe:
 #define StackIndex U16_AT(0x0017bfe8)
 #define glb_viewer_6 U32_AT(0x001f6634)
 #define SkipCodeFrame U8_AT(0x001f6564)
-#define gs_NumFramesUnpaused U32_AT(0x001f65b4)
 #define VIDEO_FRAME_RATE U32_AT(0x0017c0f0)
 #define FRAME_RATE_INT U32_AT(0x0017c0f4)
 #define _FRAME_RATE FLOAT_AT(0x0017c0f8)
 #define FRAME_RATE_DIV FLOAT_AT(0x0017c0fc)
 #define FRAME_RATE_MUL FLOAT_AT(0x0017c100)
 #define REC_FRAME_RATE FLOAT_AT(0x0017c104)
-#define inhibitGameDraw U8_AT(0x001f65c0)
-#define maybe_gs_LoadingBlobs U32_AT(0x001f65b0)
-#define gameState_ReloadGame U32_AT(0x001f6598)
 uint *GameStateStack = (uint*)0x0017bff0; // Not zero-initialised - first entry must be 1
-#define MainLoopCycles U32_AT(0x001f65bc)
-#define VideoFrames U32_AT(0x001f65b8)
-#define DAT_001f65ac U8_AT(0x001f65ac)
-#define LoadTimeStart U32_AT(0x001f65cc)
-#define DAT_001f65ec U32_AT(0x001f65ec)
 
-// AUTOGEN
-void __stdcall bootup_bootup(void);
+#define GameState (*((GameState_t*)0x001f6580))
+#define CheatInfo (*((CheatInfo_t*)0x001f65dc))
+#define MPGame (*((MPGame_t*)0x00262738))
+#define GlobalVars (*((GlobalVars_t*)0x001f6568))
+#define PTPDATA (*((sNightFireShared_tag*)0x001d7e90))
+
+#define CONST_ZERO_VECTOR (*((_VECTOR*)0x0029d728))
+#define GRAVITY_VECTOR (*((_VECTOR*)0x001f6648))
+#define CONST_UP_VECTOR (*((_VECTOR*)0x0029d71c))
+#define MAYBE_CONST_FORWARD_VECTOR (*((_VECTOR*)0x0029d6d4))
+#define MAT_IDENTITY (*((_MATRIX*)0x0029d6e0))
+
+#define NewScoresRef PTR_AT(0x002790a0)
+
+#define HintsEnabled U32_AT(0x001f6618)
+#define SubtitlesEnabled U32_AT(0x001f6614)
+
+#define SoundInfo U32_AT(0x001f65d8)
+
 // AUTOGEN
 void __cdecl psiLaunchDriving(void* a, uint b);
 // AUTOGEN
@@ -152,8 +165,6 @@ uint __stdcall Locks_Init(void);
 void __stdcall ResetMap_Load(void);
 // AUTOGEN
 void __stdcall psiStopBackgroundMovie(void);
-// AUTOGEN
-ulonglong __stdcall psiGetTimeIn100ths(void);
 // AUTOGEN
 void Boot_GetPTPData(void **param_1,uint *param_2);
 
@@ -172,7 +183,7 @@ void set_InhibitGameDrawIfRequired(void) {
     case 4:
     case 5:
     case 9:
-      inhibitGameDraw = 1;
+      GameState.InhibitGameDraw = 1;
       break;
     case 2:
     case 6:
@@ -182,7 +193,7 @@ void set_InhibitGameDrawIfRequired(void) {
     case 0xc:
     case 0xd:
     case 0xe:
-      inhibitGameDraw = 0;
+    GameState.InhibitGameDraw = 0;
       break;
     }
 }
@@ -205,31 +216,158 @@ void GameFlow_QuickPushState(uint state) {
     set_InhibitGameDrawIfRequired();
 }
 
+// AUTOGEN
+double timestamp(void);
+
+// AUTOGEN
+void __stdcall Input_Init(void);
+
+// AUTOGEN
+void __stdcall Input_Ready(void);
+
+// AUTOGEN
+void __stdcall PlrStat_Init(void);
+
+// AUTOGEN
+void SFXSetMode(unsigned int mode);
+
+// AUTOGEN
+char* Txt_BindLabel(Action_TranslatedText a, unsigned int b);
+
+// Used to insert a CALL location within a larger function that a debugger or profiler can hook into
+void __profiling_or_debugging_hook_point(void) {
+  return;
+}
+
+// Only used in these two functions, so no need to use the original location
+// #define INITIALISATION_TIME (*((double*)0x002adf48))
+double INITIALISATION_TIME;
+
+// AUTOINJECT
+void psiInitTimeIn100ths(void) {
+  INITIALISATION_TIME = timestamp();
+}
+
+// AUTOINJECT
+ulonglong psiGetTimeIn100ths(void) {
+  return ((timestamp() - (float)INITIALISATION_TIME) * 0.1f);
+}
+
+
+// Only used in GameFlow_Main, so no need to inject
+void bootup_bootup(void) {
+
+  uint *puVar3;
+  undefined4 *puVar5;
+  int local_4;
+
+  memset(&GameState, 0, sizeof(GameState));
+  memset(&CheatInfo, 0, sizeof(CheatInfo));
+  memset(&MPSettings, 0, sizeof(MPSettings));
+  memset(&MPGame, 0, sizeof(MPGame));
+  memset(&GlobalVars, 0, sizeof(GlobalVars));
+  memset(&PTPDATA, 0, sizeof(sNightFireShared_tag));
+  
+  SoundInfo = 0;
+
+  psiInitTimeIn100ths();
+
+  PlayerInputs[0].controllerPort = 0;
+  PlayerInputs[1].controllerPort = 1;
+  PlayerInputs[2].controllerPort = 2;
+  PlayerInputs[3].controllerPort = 3;
+
+  GameState.difficultyModifier = 2;
+  MPSettings.RespawnSelectionMode = 2;
+  GameState.field8_0x20 = 0x80000002;
+  GameState.ReloadMenupage = 0x40000034;
+  MPSettings.numPlayers = 1;
+  SoundInfo = 0x640064;
+  SubtitlesEnabled = 0;
+  HintsEnabled = 1;
+  MPSettings.GunEmplacementsEnabled = 0;
+  MPSettings.weaponSet = WEAPSET_NORMAL;
+  MPSettings.MaxDuration = 10;
+  MPSettings.MaxPoints = 10;
+  MPSettings.FriendlyFire = 0;
+  MPSettings.MiniVehiclesEnabled = 0;
+  MPSettings.GrappleEnabled = 0;
+  MPSettings.ExplosiveSceneryEnabled = 0;
+  MPSettings.LocationDamageEnabled = 1;
+  MPSettings.TripleDamageModifierProfessionalMode = 0;
+  MPSettings.ShowTeamAndNameOverhead = 1;
+  MPSettings.GameMode = GM_ARENA;
+  
+  for(int i = 0; i < 10; i++) {
+
+    MPSettings.Player[i].TeamId = (i & 1) ? MI6 : PHOENIX;
+    MPSettings.Player[i].SkinNum = 0;
+    MPSettings.Player[i].SomeField2 = 1;
+    MPSettings.Player[i].HealthModifier = 0;
+  
+    if(i < 4) {
+      sprintf(MPSettings.Player[i].Name, "%s %d", Txt_BindLabel(PLAYER, 0), i + 1);
+    } else {
+      sprintf(MPSettings.Player[i].Name, "%s %d", "Bot", i - 3);
+    }
+
+  }
+
+  GameState.ReloadGame = 1;
+
+  CONST_ZERO_VECTOR.x = 0.0f;
+  CONST_ZERO_VECTOR.y = 0.0f;
+  CONST_ZERO_VECTOR.z = 0.0f;
+
+  GRAVITY_VECTOR.x = 0.0f;
+  GRAVITY_VECTOR.y = -9.8f;
+  GRAVITY_VECTOR.z = 0.0f;
+
+  CONST_UP_VECTOR.x = 0.0f;
+  CONST_UP_VECTOR.y = 1.0f;
+  CONST_UP_VECTOR.z = 0.0f;
+                          
+  MAYBE_CONST_FORWARD_VECTOR.x = 1.0;
+  MAYBE_CONST_FORWARD_VECTOR.y = 0.0;
+  MAYBE_CONST_FORWARD_VECTOR.z = 0.0;
+
+  Mat_IdentityT(&MAT_IDENTITY);
+
+  Input_Init();
+  PlrStat_Init();
+  __profiling_or_debugging_hook_point();
+  Input_Ready();
+  SFXSetMode(1);
+  NewScoresRef = &(PTPDATA.Scoring);
+}
+
 // AUTOINJECT
 void GameFlow_Main(void) {
   byte bVar2;
   uint local_8;
   void *local_4;
   
-  MainLoopCycles++;
+  GameState.NumFrames++;
 
   if ((sloflag == 0) && !GS_IsPaused(0xffff)) {
-    gs_NumFramesUnpaused = gs_NumFramesUnpaused + 1;
-    VideoFrames += VIDEO_FRAME_RATE / FRAME_RATE_INT;
+    GameState.NumFramesUnpaused = GameState.NumFramesUnpaused + 1;
+    GameState.VideoFrames += VIDEO_FRAME_RATE / FRAME_RATE_INT;
   }
-  bVar2 = (byte)MainLoopCycles & 0x3f;
+
+  // vestigial logic, value never read?
+  bVar2 = (byte)GameState.NumFrames & 0x3f;
   if (0x1f < bVar2) {
     bVar2 = 0x3f - bVar2;
   }
-  DAT_001f65ac = bVar2 << 1;
+  GameState.maybeUnused = bVar2 << 1;
 
   switch(GameFlow_GetState()) {
   case 1:
-    inhibitGameDraw = 0;
-    gs_NumFramesUnpaused = 1;
-    MainLoopCycles = 1;
-    VideoFrames = 1;
-    maybe_gs_LoadingBlobs = 0;
+    GameState.InhibitGameDraw = 0;
+    GameState.NumFramesUnpaused = 1;
+    GameState.NumFrames = 1;
+    GameState.VideoFrames = 1;
+    GameState.maybeLoadingBlobs = 0;
     Mem_Init();
     bootup_bootup();
     GameFlow_QuickPushState(2);
@@ -237,8 +375,8 @@ void GameFlow_Main(void) {
     Reset_MapLoadSettings();
     return;
   case 2:
-    LoadTimeStart = psiGetTimeIn100ths();
-    if (gameState_ReloadGame != 0) {
+    GameState.LoadTimeStart = psiGetTimeIn100ths();
+    if (GameState.ReloadGame != 0) {
       GameFlow_QuickPushState(3);
       return;
     }
@@ -270,7 +408,7 @@ void GameFlow_Main(void) {
     break;
   case 10:
     Input_Update();
-    if (DAT_001f65ec != 0) {
+    if (CheatInfo.someThing != 0) {
       GameFlow_PopState();
     }
     Game_Draw();
@@ -300,10 +438,10 @@ void GameFlow_Main(void) {
     Game_Run();
   }
 
-  if ((inhibitGameDraw == '\0') && (sloflag == 0)) {
+  if ((GameState.InhibitGameDraw == '\0') && (sloflag == 0)) {
     Game_Draw();
   }
-  inhibitGameDraw = 0;
+  GameState.InhibitGameDraw = 0;
   return;
 }
 

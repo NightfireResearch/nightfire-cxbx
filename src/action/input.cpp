@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <windows.h>
 
+#include "input.h"
+#include "game/mp/multiplayer.h"
+
 void Inject_KeyboardInput(void) {
 
     // Inject WASD control into controller 1 for now
 
-    void* ps = (void*)0x001fe6d0;
-    float* fChannels = (float*)((int)ps + 0x14);
-    char* actions = (char*)((int)ps + 0x104);
 
     // if(GetKeyState(VK_UP) & 0x8000) {
     //     printf("Has UP\n");
@@ -17,36 +17,43 @@ void Inject_KeyboardInput(void) {
     // }
 
     if(GetKeyState('W') & 0x8000) {
-        fChannels[2] = 1.0f;
-        actions[2] = 1;
+        PlayerInputs[0].fChannels[2] = 1.0f;
+        PlayerInputs[0].actions[2] = 1;
     }
     if(GetKeyState('S') & 0x8000) {
-        fChannels[2] = -1.0f;
-        actions[2] = 1;
+        PlayerInputs[0].fChannels[2] = -1.0f;
+        PlayerInputs[0].actions[2] = 1;
     }
     if(GetKeyState('A') & 0x8000) {
-        fChannels[1] = 1.0f;
-        actions[1] = 1;
+        PlayerInputs[0].fChannels[1] = 1.0f;
+        PlayerInputs[0].actions[1] = 1;
     }
     if(GetKeyState('D') & 0x8000) {
-        fChannels[1] = -1.0f;
-        actions[1] = 1;
+        PlayerInputs[0].fChannels[1] = -1.0f;
+        PlayerInputs[0].actions[1] = 1;
     }
-    if(GetKeyState('E') & 0x8000) { // Action / stabilize space suit?
-        fChannels[14] = 1.0f;
-        actions[14] = 4;
+    if(GetKeyState('E') & 0x8000) { // Action / stabilize space suit? Channel 14
+        PlayerInputs[0].fChannels[14] = 1.0f;
+        PlayerInputs[0].actions[14] = 4;
     }
-    if(GetKeyState('Q') & 0x8000) { // Trigger
-        fChannels[9] = 1.0f;
-        actions[9] = 4;
+    if(GetKeyState('Q') & 0x8000) { // Trigger - channel 9
+        PlayerInputs[0].fChannels[9] = 1.0f;
+        PlayerInputs[0].actions[9] = 4;
     }
-    if(GetKeyState('1') & 0x8000) { // Alt fire switch
-        fChannels[12] = 1.0f;
-        actions[12] = 4;
+    if(GetKeyState('1') & 0x8000) { // Alt fire switch - channel 12
+        PlayerInputs[0].fChannels[12] = 1.0f;
+        PlayerInputs[0].actions[12] = 4;
     }
-    if(GetKeyState('P') & 0x8000) { // Pause / Start
-        fChannels[30] = 1.0f;
-        actions[30] = 4;
+    if(GetKeyState('P') & 0x8000) { // Pause / Start - channel 30
+        PlayerInputs[0].fChannels[30] = 1.0f;
+        PlayerInputs[0].actions[30] = 4;
+    }
+
+    if(GetKeyState(VK_SPACE) & 0x8000) { // Debug input
+      printf("MP settings:\n");
+      for(int i = 0; i < 10; i++) {
+        printf("Index %i: %-16s\t%-10s\t%i\t%i\t%i\n", i, MPSettings.Player[i].Name, TEAM_GET_NAME(MPSettings.Player[i].TeamId), MPSettings.Player[i].SkinNum, MPSettings.Player[i].SomeField2, MPSettings.Player[i].HealthModifier); 
+      }
     }
     // 1 for continously-held actions (eg move, scope zoom)?
     // 4 for discrete actions (eg trigger, stabilize spacesuit) - should be true for 1 frame only to avoid repeatedly performing action
@@ -93,18 +100,12 @@ unsigned short Input_Action(short playerNum,unsigned int action,unsigned char fl
         return uVar2;
     }
 
-    // One specific player
-
-    // Pointer arithmetic gets us:
-    // - PlayerInputs.player[playerNum].actions[action]
-    // - PlayerInputs.player[playerNum].fChannels[action]
-    // We can replace that once we have reimplemented all functions that touch PlayerInputs
-
-    if ((playerNum < 4) && ((*(unsigned char*)(0x001fe6d0 + 1376*playerNum + 0x104 + action) & flags) != 0)) {
-      return (unsigned short)(int)(*(float*)(0x001fe6d0 + 1376*playerNum + 0x14 + 4*action) * 100.0);
+    // One specific player and the action is pressed
+    if ((playerNum < 4) && (PlayerInputs[playerNum].actions[action] & flags)) {
+      return (unsigned short)(int)(PlayerInputs[playerNum].fChannels[action] * 100.0);
     }
 
-    // Invalid player number
+    // Invalid player number or no action pressed
     return 0;
 }
 
@@ -124,12 +125,12 @@ float Input_Actionf(short playerNum,unsigned int action, unsigned char flags) {
     return max;
     }
 
-  // A specific player
-  if ((playerNum < 4) && ((*(unsigned char*)(0x001fe6d0 + 1376*playerNum + 0x104 + action) & flags) != 0)) {
-      return *(float*)(0x001fe6d0 + 1376*playerNum + 0x14 + 4*action);
+  // A specific player and the action is pressed
+  if ((playerNum < 4) && (PlayerInputs[playerNum].actions[action] & flags)) {
+      return PlayerInputs[playerNum].fChannels[action];
   }
 
-  // Invalid player number
+  // Invalid player number or the action is not pressed
   return 0.0f;
 }
 
@@ -144,9 +145,10 @@ void Input_ClearAction(short playerNum,unsigned int action) {
     return;
   } 
 
+  // A specific player
   if (playerNum < 4) {
-    *(float*)(0x001fe6d0 + 1376*playerNum + 0x14 + 4*action) = 0.0;
-    *(unsigned char*)(0x001fe6d0 + 1376*playerNum + 0x104 + action) = 0;
+    PlayerInputs[playerNum].fChannels[action] = 0.0;
+    PlayerInputs[playerNum].actions[action] = 0;
   }
   return;
 }
@@ -162,9 +164,10 @@ void Input_SetAction(short playerNum,unsigned int action,unsigned char val) {
     return;
   }
 
+  // A specific player
   if (playerNum < 4) {
-    *(float*)(0x001fe6d0 + 1376*playerNum + 0x14 + 4*action) = 1.0;
-    *(unsigned char*)(0x001fe6d0 + 1376*playerNum + 0x104 + action) = val;
+    PlayerInputs[playerNum].fChannels[action] = 1.0;
+    PlayerInputs[playerNum].actions[action] = val;
   }
 
   return;

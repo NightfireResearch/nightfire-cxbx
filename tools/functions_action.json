@@ -1041,7 +1041,7 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall __profiling_or_debugging_hook_point(void)"
+        "prototype_string": "void __stdcall __profiling_or_debugging_hook_point(...)"
     },
     {
         "name": "BOT_handleOpponentHistory",
@@ -1914,12 +1914,12 @@
     {
         "name": "Destroy_Update",
         "address": "0x00020290",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Destroy_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Destroy_Update(obj_tag * param_1)"
     },
     {
         "name": "Destroy_CollisionHandler",
@@ -1934,12 +1934,12 @@
     {
         "name": "Break_Update",
         "address": "0x00020460",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Break_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Break_Update(obj_tag * param_1)"
     },
     {
         "name": "Break_ApplyDamage",
@@ -2290,11 +2290,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "viewer_tag *",
             "_VECTOR *",
             "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl Camera_Set(int param_1, _VECTOR * param_2, _VECTOR * param_3)"
+        "prototype_string": "void __cdecl Camera_Set(viewer_tag * viewer, _VECTOR * transform, _VECTOR * rotation)"
     },
     {
         "name": "Camera_PushStates",
@@ -3710,12 +3710,12 @@
     {
         "name": "Creature_Update",
         "address": "0x0002eb40",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Creature_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Creature_Update(obj_tag * param_1)"
     },
     {
         "name": "FUN_0002eb80",
@@ -3879,9 +3879,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Door_Update(int param_1)"
+        "prototype_string": "void __cdecl Door_Update(obj_tag * param_1)"
     },
     {
         "name": "FUN_0002faa0",
@@ -4426,12 +4426,12 @@
     {
         "name": "DroneSpawner_Control",
         "address": "0x000324d0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined DroneSpawner_Control(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl DroneSpawner_Control(obj_tag * param_1)"
     },
     {
         "name": "Drone_EnableAll",
@@ -12539,12 +12539,12 @@
     {
         "name": "Emitter_Update",
         "address": "0x00068510",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Emitter_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Emitter_Update(obj_tag * param_1)"
     },
     {
         "name": "Emitter_Draw",
@@ -12664,12 +12664,12 @@
     {
         "name": "Explode_Update",
         "address": "0x00069230",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Explode_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Explode_Update(obj_tag * param_1)"
     },
     {
         "name": "Explode_Delete",
@@ -13364,12 +13364,12 @@
     {
         "name": "Hurt_Update",
         "address": "0x0006c6b0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Hurt_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Hurt_Update(obj_tag * param_1)"
     },
     {
         "name": "Hurt_GetDamage",
@@ -13406,12 +13406,12 @@
     {
         "name": "Occlude_Update",
         "address": "0x0006c910",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Occlude_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Occlude_Update(obj_tag * param_1)"
     },
     {
         "name": "Input_Init",
@@ -13512,10 +13512,13 @@
     {
         "name": "StickCompensation3",
         "address": "0x0006cc70",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined StickCompensation3()"
+        "calling_convention": "__fastcall",
+        "return_type": "void",
+        "param_types": [
+            "float *",
+            "float *"
+        ],
+        "prototype_string": "void __fastcall StickCompensation3(float * param_1, float * param_2)"
     },
     {
         "name": "Input_Ready",
@@ -13528,10 +13531,13 @@
     {
         "name": "StickCompensation2",
         "address": "0x0006cec0",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined StickCompensation2()"
+        "calling_convention": "__stdcall",
+        "return_type": "void",
+        "param_types": [
+            "float",
+            "float"
+        ],
+        "prototype_string": "void __stdcall StickCompensation2(float a, float b)"
     },
     {
         "name": "Input_Update",
@@ -14157,12 +14163,12 @@
     {
         "name": "Particles_Update",
         "address": "0x0006ff40",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Particles_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Particles_Update(obj_tag * param_1)"
     },
     {
         "name": "FUN_0006ff70",
@@ -14216,9 +14222,9 @@
         "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "void *"
+            "void * *"
         ],
-        "prototype_string": "undefined __cdecl Mem_Free(void * param_1)"
+        "prototype_string": "undefined __cdecl Mem_Free(void * * param_1)"
     },
     {
         "name": "Mem_SetMallocMethod",
@@ -19375,25 +19381,25 @@
         "prototype_string": "int __cdecl FUN_0009d980(int param_1, ushort param_2)"
     },
     {
-        "name": "FUN_0009d9b0",
+        "name": "MP_IsBluePrintParent",
         "address": "0x0009d9b0",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "uint"
+            "obj_tag *"
         ],
-        "prototype_string": "uint __cdecl FUN_0009d9b0(uint param_1)"
+        "prototype_string": "bool __cdecl MP_IsBluePrintParent(obj_tag * param_1)"
     },
     {
         "name": "MP_ObjTeamHasGEObj",
         "address": "0x0009d9d0",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int",
+            "obj_tag *",
             "int"
         ],
-        "prototype_string": "uint __cdecl MP_ObjTeamHasGEObj(int param_1, int param_2)"
+        "prototype_string": "bool __cdecl MP_ObjTeamHasGEObj(obj_tag * param_1, int param_2)"
     },
     {
         "name": "MP_IsAssasin",
@@ -19401,9 +19407,9 @@
         "calling_convention": "__cdecl",
         "return_type": "bool",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "bool __cdecl MP_IsAssasin(int param_1)"
+        "prototype_string": "bool __cdecl MP_IsAssasin(obj_tag * param_1)"
     },
     {
         "name": "MP_IsTarget",
@@ -19477,15 +19483,15 @@
         "prototype_string": "undefined4 __cdecl MP_getObjectTeam(int param_1)"
     },
     {
-        "name": "FUN_0009dfd0",
+        "name": "MP_isObjectOnTeam",
         "address": "0x0009dfd0",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int",
+            "obj_tag *",
             "uint"
         ],
-        "prototype_string": "uint __cdecl FUN_0009dfd0(int param_1, uint param_2)"
+        "prototype_string": "bool __cdecl MP_isObjectOnTeam(obj_tag * param_1, uint teamId)"
     },
     {
         "name": "MP_PostLoadInitObjExt",
@@ -19502,8 +19508,10 @@
         "address": "0x0009e050",
         "calling_convention": "__stdcall",
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall FUN_0009e050(void)"
+        "param_types": [
+            "void *"
+        ],
+        "prototype_string": "void __stdcall FUN_0009e050(void * someThing)"
     },
     {
         "name": "FUN_0009e080",
@@ -19721,12 +19729,12 @@
     {
         "name": "FUN_0009e870",
         "address": "0x0009e870",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "undefined4 *",
         "param_types": [
-            "undefined4"
+            "int"
         ],
-        "prototype_string": "undefined FUN_0009e870(undefined4 param_1)"
+        "prototype_string": "undefined4 * __stdcall FUN_0009e870(int param_1)"
     },
     {
         "name": "MP_objectBeingDeleted",
@@ -20045,12 +20053,12 @@
     {
         "name": "cloud_update",
         "address": "0x000a37a0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined cloud_update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl cloud_update(obj_tag * param_1)"
     },
     {
         "name": "Lightning_Create",
@@ -20153,12 +20161,12 @@
     {
         "name": "Sunreflection_Update",
         "address": "0x000a3f60",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Sunreflection_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Sunreflection_Update(obj_tag * param_1)"
     },
     {
         "name": "DynamicObject_Create",
@@ -20476,13 +20484,14 @@
     {
         "name": "FUN_000a7710",
         "address": "0x000a7710",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "int",
+            "obj_tag *",
+            "int"
         ],
-        "prototype_string": "undefined FUN_000a7710(undefined4 param_1, undefined4 param_2)"
+        "prototype_string": "void __stdcall FUN_000a7710(int param_1, obj_tag * param_2, int param_3)"
     },
     {
         "name": "Pickup_CreateSimple",
@@ -20520,12 +20529,12 @@
     {
         "name": "Pickup_Update",
         "address": "0x000a84d0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Pickup_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Pickup_Update(obj_tag * param_1)"
     },
     {
         "name": "rotor_init",
@@ -20545,12 +20554,12 @@
     {
         "name": "rotor_update",
         "address": "0x000a8940",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined rotor_update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl rotor_update(obj_tag * param_1)"
     },
     {
         "name": "Player_ResetWalkAnim",
@@ -20954,13 +20963,15 @@
     {
         "name": "Player_HandlePain",
         "address": "0x000ac0a0",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "int",
+            "float",
+            "char",
+            "char"
         ],
-        "prototype_string": "undefined Player_HandlePain(undefined4 param_1, undefined4 param_2)"
+        "prototype_string": "void __stdcall Player_HandlePain(int param_1, float param_2, char location, char unknown)"
     },
     {
         "name": "Player_CheckForDeath",
@@ -21671,6 +21682,14 @@
         "prototype_string": "void __cdecl HUD_FixMP(int param_1, short param_2)"
     },
     {
+        "name": "FUN_000b2870",
+        "address": "0x000b2870",
+        "calling_convention": "unknown",
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_000b2870()"
+    },
+    {
         "name": "FUN_000b2b50",
         "address": "0x000b2b50",
         "calling_convention": "unknown",
@@ -22264,10 +22283,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
             "int"
         ],
-        "prototype_string": "void __cdecl Player_PositionGun(int param_1, int param_2)"
+        "prototype_string": "void __cdecl Player_PositionGun(obj_tag * param_1, int param_2)"
     },
     {
         "name": "Player_SetFiringAnim",
@@ -22304,9 +22323,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Draw_MuzzleFlash(int param_1)"
+        "prototype_string": "void __cdecl Draw_MuzzleFlash(obj_tag * param_1)"
     },
     {
         "name": "PositionBeam",
@@ -22384,9 +22403,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Player_LaserPointer(int param_1)"
+        "prototype_string": "void __cdecl Player_LaserPointer(obj_tag * param_1)"
     },
     {
         "name": "Player_SetWatch",
@@ -23017,12 +23036,12 @@
     {
         "name": "RB_Update",
         "address": "0x000c0da0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined RB_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl RB_Update(obj_tag * param_1)"
     },
     {
         "name": "RB_CollisionHandler",
@@ -23695,9 +23714,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float10 *"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl SP_Update(float10 * param_1)"
+        "prototype_string": "void __cdecl SP_Update(obj_tag * param_1)"
     },
     {
         "name": "FUN_000c4b70",
@@ -23799,20 +23818,20 @@
         "prototype_string": "void __cdecl SFXSetEnvironment(int param_1, int param_2)"
     },
     {
-        "name": "FUN_000c4f20",
+        "name": "SFXUpdateEnvironment",
         "address": "0x000c4f20",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000c4f20(void)"
+        "prototype_string": "void __stdcall SFXUpdateEnvironment(void)"
     },
     {
-        "name": "FUN_000c4f90",
+        "name": "SFXFadeUpdate",
         "address": "0x000c4f90",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000c4f90(void)"
+        "prototype_string": "void __stdcall SFXFadeUpdate(void)"
     },
     {
         "name": "SFXFadeDown",
@@ -23843,25 +23862,25 @@
         "prototype_string": "undefined4 __stdcall SFXGetVolume(void)"
     },
     {
-        "name": "FUN_000c50a0",
+        "name": "IsUnderWaterSFX",
         "address": "0x000c50a0",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "int",
         "param_types": [
-            "int"
+            "SFXItem *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000c50a0(int param_1)"
+        "prototype_string": "int __cdecl IsUnderWaterSFX(SFXItem * Sfx)"
     },
     {
-        "name": "FUN_000c50d0",
+        "name": "ES_CombineVolumes",
         "address": "0x000c50d0",
         "calling_convention": "__cdecl",
         "return_type": "int",
         "param_types": [
             "int",
-            "int"
+            "SFXItem *"
         ],
-        "prototype_string": "int __cdecl FUN_000c50d0(int param_1, int param_2)"
+        "prototype_string": "int __cdecl ES_CombineVolumes(int MyVolume, SFXItem * Sfx)"
     },
     {
         "name": "SFXSetPositionAndVelocity",
@@ -23908,9 +23927,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "tLanguage"
+            "tLANGUAGE"
         ],
-        "prototype_string": "void __cdecl SFXSetLanguage(tLanguage param_1)"
+        "prototype_string": "void __cdecl SFXSetLanguage(tLANGUAGE param_1)"
     },
     {
         "name": "SFXSetMode",
@@ -23923,12 +23942,12 @@
         "prototype_string": "void __cdecl SFXSetMode(undefined4 param_1)"
     },
     {
-        "name": "FUN_000c5430",
+        "name": "SFXGetMode",
         "address": "0x000c5430",
         "calling_convention": "__stdcall",
         "return_type": "undefined4",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall FUN_000c5430(void)"
+        "prototype_string": "undefined4 __stdcall SFXGetMode(void)"
     },
     {
         "name": "LoadSoundBank",
@@ -23969,14 +23988,14 @@
         "prototype_string": "int __cdecl FUN_000c5700(int * param_1)"
     },
     {
-        "name": "FUN_000c5760",
+        "name": "ES_GetMyPos",
         "address": "0x000c5760",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float"
+            "SFXItem *"
         ],
-        "prototype_string": "void __cdecl FUN_000c5760(float param_1)"
+        "prototype_string": "void __cdecl ES_GetMyPos(SFXItem * Sfx)"
     },
     {
         "name": "FUN_000c5a90",
@@ -23992,7 +24011,7 @@
         "name": "SFXSetupListener",
         "address": "0x000c5cd0",
         "calling_convention": "__cdecl",
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
@@ -24001,27 +24020,27 @@
             "_VECTOR *",
             "int"
         ],
-        "prototype_string": "undefined __cdecl SFXSetupListener(_VECTOR * pos, _VECTOR * param_2, _VECTOR * front, _VECTOR * top, _VECTOR * param_5, int listenerNum)"
+        "prototype_string": "void __cdecl SFXSetupListener(_VECTOR * pos, _VECTOR * vel, _VECTOR * dir, _VECTOR * up, _VECTOR * norm, int ListenerNumber)"
     },
     {
-        "name": "FUN_000c5e30",
+        "name": "SFXSetNumberOfListeners",
         "address": "0x000c5e30",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c5e30(int numPlayers)"
+        "prototype_string": "void __cdecl SFXSetNumberOfListeners(int ListenerCount)"
     },
     {
-        "name": "FUN_000c5e70",
+        "name": "FindMusicTrackNumber",
         "address": "0x000c5e70",
         "calling_convention": "__cdecl",
         "return_type": "int",
         "param_types": [
             "int"
         ],
-        "prototype_string": "int __cdecl FUN_000c5e70(int param_1)"
+        "prototype_string": "int __cdecl FindMusicTrackNumber(int MusicHashCode)"
     },
     {
         "name": "FUN_000c5ea0",
@@ -24032,20 +24051,20 @@
         "prototype_string": "void __stdcall FUN_000c5ea0(void)"
     },
     {
-        "name": "FUN_000c5f10",
+        "name": "SFXInitialiseAudioStreamSystem",
         "address": "0x000c5f10",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000c5f10(void)"
+        "prototype_string": "void __stdcall SFXInitialiseAudioStreamSystem(void)"
     },
     {
-        "name": "FUN_000c5fb0",
+        "name": "ES_InitialStreamBuffer",
         "address": "0x000c5fb0",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000c5fb0(void)"
+        "prototype_string": "void __stdcall ES_InitialStreamBuffer(void)"
     },
     {
         "name": "FUN_000c6080",
@@ -24072,35 +24091,35 @@
         "prototype_string": "void __cdecl FUN_000c60c0(int param_1, int param_2, int param_3, void * param_4, int param_5)"
     },
     {
-        "name": "FUN_000c6110",
+        "name": "ES_GetStreamStates",
         "address": "0x000c6110",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "StreamData *"
         ],
-        "prototype_string": "void __cdecl FUN_000c6110(int param_1)"
+        "prototype_string": "void __cdecl ES_GetStreamStates(StreamData * Stream)"
     },
     {
-        "name": "FUN_000c6160",
+        "name": "ES_SetStreamStates",
         "address": "0x000c6160",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c6160(int param_1)"
+        "prototype_string": "void __cdecl ES_SetStreamStates(int param_1)"
     },
     {
-        "name": "FUN_000c61b0",
+        "name": "ES_StreamKeyOn",
         "address": "0x000c61b0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "int",
-            "undefined4"
+            "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c61b0(int param_1, undefined4 param_2)"
+        "prototype_string": "void __cdecl ES_StreamKeyOn(int Handle, int ReverbDepth)"
     },
     {
         "name": "SFXPauseAllStreams",
@@ -24119,12 +24138,12 @@
         "prototype_string": "void __stdcall SFXUnPauseAllStreams(void)"
     },
     {
-        "name": "FUN_000c62a0",
+        "name": "ES_MusicSetVolume",
         "address": "0x000c62a0",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000c62a0(void)"
+        "prototype_string": "void __stdcall ES_MusicSetVolume(void)"
     },
     {
         "name": "SFXMusicSetVolume",
@@ -24132,9 +24151,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "undefined4"
+            "int"
         ],
-        "prototype_string": "void __cdecl SFXMusicSetVolume(undefined4 param_1)"
+        "prototype_string": "void __cdecl SFXMusicSetVolume(int Volume)"
     },
     {
         "name": "SFXMusicGetVolume",
@@ -24159,12 +24178,12 @@
         "prototype_string": "void __cdecl FUN_000c6370(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, int * param_5)"
     },
     {
-        "name": "FUN_000c63c0",
+        "name": "SFXInitialiseStreamUpdate",
         "address": "0x000c63c0",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000c63c0(void)"
+        "prototype_string": "void __stdcall SFXInitialiseStreamUpdate(void)"
     },
     {
         "name": "FUN_000c6890",
@@ -24186,14 +24205,14 @@
         "prototype_string": "void __stdcall SFXUnSuspendFileAccess(void)"
     },
     {
-        "name": "FUN_000c6910",
+        "name": "ES_HandleStreamBufferLoaded",
         "address": "0x000c6910",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "StreamData *"
         ],
-        "prototype_string": "void __cdecl FUN_000c6910(int param_1)"
+        "prototype_string": "void __cdecl ES_HandleStreamBufferLoaded(StreamData * Stream)"
     },
     {
         "name": "FUN_000c6970",
@@ -24207,14 +24226,14 @@
         "prototype_string": "void __cdecl FUN_000c6970(int param_1, int param_2)"
     },
     {
-        "name": "FUN_000c6db0",
+        "name": "ES_CheckFileBuffersForJumpMarkers",
         "address": "0x000c6db0",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "int",
         "param_types": [
-            "int"
+            "StreamData *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000c6db0(int param_1)"
+        "prototype_string": "int __cdecl ES_CheckFileBuffersForJumpMarkers(StreamData * Stream)"
     },
     {
         "name": "FUN_000c6f10",
@@ -24463,12 +24482,12 @@
         "prototype_string": "void __cdecl FUN_000c89e0(int param_1, int param_2)"
     },
     {
-        "name": "FUN_000c8b40",
+        "name": "SFXJumpToMusicMarkerUpdate",
         "address": "0x000c8b40",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000c8b40(void)"
+        "prototype_string": "void __stdcall SFXJumpToMusicMarkerUpdate(void)"
     },
     {
         "name": "FUN_000c8c40",
@@ -24497,23 +24516,23 @@
         "prototype_string": "void __stdcall FUN_000c8d00(void)"
     },
     {
-        "name": "FUN_000c8fa0",
+        "name": "SFXInitialiseStream",
         "address": "0x000c8fa0",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "int",
         "param_types": [
             "int",
-            "undefined4"
+            "int"
         ],
-        "prototype_string": "uint __cdecl FUN_000c8fa0(int param_1, undefined4 param_2)"
+        "prototype_string": "int __cdecl SFXInitialiseStream(int HashCode, int Is3d)"
     },
     {
-        "name": "FUN_000c9030",
+        "name": "SFXUpdateStreams",
         "address": "0x000c9030",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000c9030(void)"
+        "prototype_string": "void __stdcall SFXUpdateStreams(void)"
     },
     {
         "name": "FUN_000c97f0",
@@ -24679,17 +24698,17 @@
         "name": "SFXStart3D",
         "address": "0x000caa90",
         "calling_convention": "__cdecl",
-        "return_type": "undefined",
+        "return_type": "uint",
         "param_types": [
-            "int *",
-            "int * *",
-            "int * *",
-            "int *",
-            "undefined4",
-            "int *",
-            "int *"
+            "HASHCODE",
+            "SFXPoint3 *",
+            "SFXPoint3 *",
+            "void *",
+            "int",
+            "int",
+            "int"
         ],
-        "prototype_string": "undefined __cdecl SFXStart3D(int * param_1, int * * param_2, int * * param_3, int * param_4, undefined4 param_5, int * param_6, int * param_7)"
+        "prototype_string": "uint __cdecl SFXStart3D(HASHCODE HashCode, SFXPoint3 * pos, SFXPoint3 * vel, void * Handle, int VolumeOverRide, int InnerRadius, int OuterRadius)"
     },
     {
         "name": "SFXUpdate",
@@ -24752,12 +24771,12 @@
     {
         "name": "SS_Update",
         "address": "0x000cb340",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined SS_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl SS_Update(obj_tag * param_1)"
     },
     {
         "name": "Sound_ReqestPlaySfx",
@@ -25122,9 +25141,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Debris_Update(int param_1)"
+        "prototype_string": "void __cdecl Debris_Update(obj_tag * param_1)"
     },
     {
         "name": "Bubble_Update",
@@ -25132,9 +25151,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Bubble_Update(int param_1)"
+        "prototype_string": "void __cdecl Bubble_Update(obj_tag * param_1)"
     },
     {
         "name": "Gas_Init",
@@ -25159,12 +25178,12 @@
     {
         "name": "gases_smoke",
         "address": "0x000cd560",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined gases_smoke(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl gases_smoke(obj_tag * param_1)"
     },
     {
         "name": "Flicker_Create",
@@ -25182,12 +25201,12 @@
     {
         "name": "Flicker_Update",
         "address": "0x000cdae0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Flicker_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Flicker_Update(obj_tag * param_1)"
     },
     {
         "name": "FUN_000cdef0",
@@ -25203,12 +25222,12 @@
     {
         "name": "Leaf_Update",
         "address": "0x000ce0a0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Leaf_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Leaf_Update(obj_tag * param_1)"
     },
     {
         "name": "LeafGen_Create",
@@ -25226,12 +25245,12 @@
     {
         "name": "LeafGen_Update",
         "address": "0x000ce1d0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined LeafGen_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl LeafGen_Update(obj_tag * param_1)"
     },
     {
         "name": "Ripples_Create",
@@ -26185,9 +26204,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Trigger_Update(int param_1)"
+        "prototype_string": "void __cdecl Trigger_Update(obj_tag * param_1)"
     },
     {
         "name": "Trigger_Calc",
@@ -26437,34 +26456,34 @@
         "name": "Mat_GetDir",
         "address": "0x000d5030",
         "calling_convention": "__cdecl",
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "_VECTOR *",
             "_MATRIX *"
         ],
-        "prototype_string": "undefined __cdecl Mat_GetDir(_VECTOR * param_1, _MATRIX * param_2)"
+        "prototype_string": "void __cdecl Mat_GetDir(_VECTOR * vOut, _MATRIX * mIn)"
     },
     {
-        "name": "Matrix_GetUp",
+        "name": "Mat_GetUp",
         "address": "0x000d5050",
         "calling_convention": "__cdecl",
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "_VECTOR *",
             "_MATRIX *"
         ],
-        "prototype_string": "undefined __cdecl Matrix_GetUp(_VECTOR * param_1, _MATRIX * param_2)"
+        "prototype_string": "void __cdecl Mat_GetUp(_VECTOR * vOut, _MATRIX * mIn)"
     },
     {
-        "name": "Matrix_GetNorm",
+        "name": "Mat_GetNorm",
         "address": "0x000d5070",
         "calling_convention": "__cdecl",
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "_VECTOR *",
             "_MATRIX *"
         ],
-        "prototype_string": "undefined __cdecl Matrix_GetNorm(_VECTOR * to, _MATRIX * from)"
+        "prototype_string": "void __cdecl Mat_GetNorm(_VECTOR * vOut, _MATRIX * mIn)"
     },
     {
         "name": "Mat_GetPosition",
@@ -26918,10 +26937,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *"
+            "_VECTOR *",
+            "_MATRIX *"
         ],
-        "prototype_string": "void __cdecl RotMatrix(float * param_1, float * param_2)"
+        "prototype_string": "void __cdecl RotMatrix(_VECTOR * param_1, _MATRIX * param_2)"
     },
     {
         "name": "RotTransMatrix",
@@ -26929,11 +26948,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *",
-            "float *"
+            "_VECTOR *",
+            "_VECTOR *",
+            "_MATRIX *"
         ],
-        "prototype_string": "void __cdecl RotTransMatrix(float * param_1, float * param_2, float * param_3)"
+        "prototype_string": "void __cdecl RotTransMatrix(_VECTOR * rot, _VECTOR * trans, _MATRIX * mtx)"
     },
     {
         "name": "RotMatrixZYX",
@@ -26941,10 +26960,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *"
+            "_VECTOR *",
+            "_MATRIX *"
         ],
-        "prototype_string": "void __cdecl RotMatrixZYX(float * param_1, float * mtx)"
+        "prototype_string": "void __cdecl RotMatrixZYX(_VECTOR * param_1, _MATRIX * mtx)"
     },
     {
         "name": "RotMatrixX",
@@ -27150,28 +27169,28 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "/Demangler/_VECTOR\npack(disabled)\nStructure _VECTOR {\n   0   float   4   x   \"\"\n   4   float   4   y   \"\"\n   8   float   4   z   \"\"\n}\nLength: 12 Alignment: 1\n",
-            "/Demangler/_VECTOR\npack(disabled)\nStructure _VECTOR {\n   0   float   4   x   \"\"\n   4   float   4   y   \"\"\n   8   float   4   z   \"\"\n}\nLength: 12 Alignment: 1\n",
+            "_VECTOR *",
+            "_VECTOR *",
             "float"
         ],
-        "prototype_string": "void __cdecl Vec_MulR32(_VECTOR outVec, _VECTOR inVec, float scale)"
+        "prototype_string": "void __cdecl Vec_MulR32(_VECTOR * outVec, _VECTOR * inVec, float scale)"
     },
     {
-        "name": "FUN_000d72d0",
+        "name": "Vec_Mul_F3",
         "address": "0x000d72d0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *",
+            "_VECTOR *",
+            "_VECTOR *",
             "float",
             "float",
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_000d72d0(float * param_1, float * param_2, float param_3, float param_4, float param_5)"
+        "prototype_string": "void __cdecl Vec_Mul_F3(_VECTOR * vecOut, _VECTOR * vecIn, float scaleX, float scaleY, float scaleZ)"
     },
     {
-        "name": "FUN_000d7300",
+        "name": "Vec4_MulAdd",
         "address": "0x000d7300",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -27180,7 +27199,7 @@
             "float *",
             "float *"
         ],
-        "prototype_string": "void __cdecl FUN_000d7300(float param_1, float * param_2, float * param_3)"
+        "prototype_string": "void __cdecl Vec4_MulAdd(float scale, float * vecIn, float * vecOut)"
     },
     {
         "name": "Vec_Add2",
@@ -27207,16 +27226,16 @@
         "prototype_string": "undefined __cdecl Vec_Subtract(_VECTOR * a, _VECTOR * b, _VECTOR * v_out)"
     },
     {
-        "name": "FUN_000d73a0",
+        "name": "Vec_Cross",
         "address": "0x000d73a0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *",
-            "float *"
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl FUN_000d73a0(float * param_1, float * param_2, float * param_3)"
+        "prototype_string": "void __cdecl Vec_Cross(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3)"
     },
     {
         "name": "FUN_000d73e0",
@@ -27856,13 +27875,13 @@
         "name": "View_3DPoint2Screen",
         "address": "0x000db230",
         "calling_convention": "__cdecl",
-        "return_type": "undefined2",
+        "return_type": "short",
         "param_types": [
             "_VECTOR *",
-            "float *",
+            "_VECTOR *",
             "ushort"
         ],
-        "prototype_string": "undefined2 __cdecl View_3DPoint2Screen(_VECTOR * param_1, float * param_2, ushort param_3)"
+        "prototype_string": "short __cdecl View_3DPoint2Screen(_VECTOR * vIn, _VECTOR * vOut, ushort ViewerNumber)"
     },
     {
         "name": "View_SetDrawInViews",
@@ -28114,12 +28133,12 @@
         "prototype_string": "undefined4 __stdcall Language_Get(void)"
     },
     {
-        "name": "FUN_000dc0d0",
+        "name": "Graphics_Init_LowLevel",
         "address": "0x000dc0d0",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000dc0d0(void)"
+        "prototype_string": "void __stdcall Graphics_Init_LowLevel(void)"
     },
     {
         "name": "LoadWoman",
@@ -28849,7 +28868,7 @@
         "prototype_string": "undefined4 __cdecl psiFileOpen(char * param_1)"
     },
     {
-        "name": "FUN_000e04e0",
+        "name": "maybe_psiDrawShadow",
         "address": "0x000e04e0",
         "calling_convention": "unknown",
         "return_type": "undefined",
@@ -28878,7 +28897,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000e04e0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7, undefined4 param_8, undefined4 param_9, undefined4 param_10, undefined4 param_11, undefined4 param_12, undefined4 param_13, undefined1 param_14, undefined1 param_15, undefined1 param_16, undefined4 param_17, undefined4 param_18, undefined4 param_19, undefined4 param_20, undefined4 param_21, undefined4 param_22, undefined4 param_23)"
+        "prototype_string": "undefined maybe_psiDrawShadow(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7, undefined4 param_8, undefined4 param_9, undefined4 param_10, undefined4 param_11, undefined4 param_12, undefined4 param_13, undefined1 param_14, undefined1 param_15, undefined1 param_16, undefined4 param_17, undefined4 param_18, undefined4 param_19, undefined4 param_20, undefined4 param_21, undefined4 param_22, undefined4 param_23)"
     },
     {
         "name": "psiDrawSkinObjectMatrix",
@@ -28904,14 +28923,14 @@
         "prototype_string": "undefined4 __cdecl FUN_000e09c0(uint param_1)"
     },
     {
-        "name": "maybeUnloadMusicInfoFile",
+        "name": "psiSFXFreeFileMem",
         "address": "0x000e09e0",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "undefined1"
+            "void *"
         ],
-        "prototype_string": "void __stdcall maybeUnloadMusicInfoFile(undefined1 param_1)"
+        "prototype_string": "void __stdcall psiSFXFreeFileMem(void * param_1)"
     },
     {
         "name": "FUN_000e09f0",
@@ -28953,35 +28972,35 @@
         "prototype_string": "void __cdecl thunk_FUN_000e13d0(uint param_1)"
     },
     {
-        "name": "FUN_000e0a80",
+        "name": "psiSFXGetTimer",
         "address": "0x000e0a80",
         "calling_convention": "__stdcall",
         "return_type": "ulonglong",
         "param_types": [],
-        "prototype_string": "ulonglong __stdcall FUN_000e0a80(void)"
+        "prototype_string": "ulonglong __stdcall psiSFXGetTimer(void)"
     },
     {
-        "name": "LoadMusicInfoFile",
+        "name": "psiSFXLoadFile",
         "address": "0x000e0a90",
         "calling_convention": "__cdecl",
         "return_type": "void *",
         "param_types": [
             "char *"
         ],
-        "prototype_string": "void * __cdecl LoadMusicInfoFile(char * filename)"
+        "prototype_string": "void * __cdecl psiSFXLoadFile(char * FileName)"
     },
     {
-        "name": "FUN_000e0ab0",
+        "name": "psiSetReverb",
         "address": "0x000e0ab0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e0ab0(int param_1)"
+        "prototype_string": "void __cdecl psiSetReverb(int param_1)"
     },
     {
-        "name": "FUN_000e0b00",
+        "name": "psiSampleKeyOn",
         "address": "0x000e0b00",
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
@@ -28989,20 +29008,21 @@
             "uint",
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000e0b00(uint param_1, int param_2)"
+        "prototype_string": "undefined4 __cdecl psiSampleKeyOn(uint param_1, int param_2)"
     },
     {
-        "name": "ConfigureListener",
+        "name": "psiSFXSetupListener",
         "address": "0x000e0b50",
         "calling_convention": "__cdecl",
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "_VECTOR *",
-            "undefined4",
+            "_VECTOR *",
+            "_VECTOR *",
             "_VECTOR *",
             "_VECTOR *"
         ],
-        "prototype_string": "undefined __cdecl ConfigureListener(_VECTOR * pos, undefined4 param_2, _VECTOR * front, _VECTOR * top)"
+        "prototype_string": "void __cdecl psiSFXSetupListener(_VECTOR * pos, _VECTOR * vel, _VECTOR * dir, _VECTOR * up, _VECTOR * norm)"
     },
     {
         "name": "FUN_000e0bc0",
@@ -29015,69 +29035,69 @@
         "prototype_string": "bool __cdecl FUN_000e0bc0(uint param_1)"
     },
     {
-        "name": "FUN_000e0be0",
+        "name": "psiAsyncOpenFile",
         "address": "0x000e0be0",
         "calling_convention": "__cdecl",
         "return_type": "int",
         "param_types": [
-            "int"
+            "char *"
         ],
-        "prototype_string": "int __cdecl FUN_000e0be0(int param_1)"
+        "prototype_string": "int __cdecl psiAsyncOpenFile(char * FileName)"
     },
     {
-        "name": "FUN_000e0c00",
+        "name": "psiAsyncCloseFile",
         "address": "0x000e0c00",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e0c00(int param_1)"
+        "prototype_string": "void __cdecl psiAsyncCloseFile(int param_1)"
     },
     {
-        "name": "FUN_000e0c20",
+        "name": "psiAsyncReadFile",
         "address": "0x000e0c20",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "int",
-            "uint",
+            "int",
             "int",
             "void *"
         ],
-        "prototype_string": "void __cdecl FUN_000e0c20(int param_1, uint param_2, int param_3, void * data)"
+        "prototype_string": "void __cdecl psiAsyncReadFile(int FileHandle, int ByteOffset, int ByteSize, void * DestBuffer)"
     },
     {
-        "name": "FUN_000e0c90",
+        "name": "psiAsyncHasReadFinished",
         "address": "0x000e0c90",
         "calling_convention": "__cdecl",
-        "return_type": "bool",
+        "return_type": "int",
         "param_types": [
             "int"
         ],
-        "prototype_string": "bool __cdecl FUN_000e0c90(int param_1)"
+        "prototype_string": "int __cdecl psiAsyncHasReadFinished(int FileHandle)"
     },
     {
-        "name": "FUN_000e0cb0",
+        "name": "psiAsyncCreateBuffer",
         "address": "0x000e0cb0",
         "calling_convention": "__cdecl",
         "return_type": "int",
         "param_types": [
             "int"
         ],
-        "prototype_string": "int __cdecl FUN_000e0cb0(int param_1)"
+        "prototype_string": "int __cdecl psiAsyncCreateBuffer(int param_1)"
     },
     {
-        "name": "FUN_000e0cd0",
+        "name": "psiStreamCreatePlaybackBuffer",
         "address": "0x000e0cd0",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "int",
         "param_types": [
-            "undefined4",
+            "int",
             "int",
             "int"
         ],
-        "prototype_string": "uint __cdecl FUN_000e0cd0(undefined4 param_1, int param_2, int param_3)"
+        "prototype_string": "int __cdecl psiStreamCreatePlaybackBuffer(int Frequency, int Channels, int ByteSize)"
     },
     {
         "name": "FUN_000e0d30",
@@ -29181,7 +29201,7 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall __profiling_or_debugging_hook_point(void)"
+        "prototype_string": "void __stdcall __profiling_or_debugging_hook_point(...)"
     },
     {
         "name": "FUN_000e0ed0",
@@ -29232,19 +29252,19 @@
             "float",
             "float",
             "float",
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "float",
+            "float",
+            "float"
         ],
-        "prototype_string": "void __cdecl SetListenerOrientation(float xFront, float yFront, float param_3, undefined4 xTop, undefined4 yTop, undefined4 zTop)"
+        "prototype_string": "void __cdecl SetListenerOrientation(float xDir, float yDir, float zDir, float xUp, float yUp, float zUp)"
     },
     {
-        "name": "FUN_000e10c0",
+        "name": "xboxCreateSoundBuffers",
         "address": "0x000e10c0",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e10c0(void)"
+        "prototype_string": "void __stdcall xboxCreateSoundBuffers(void)"
     },
     {
         "name": "FUN_000e1370",
@@ -29355,7 +29375,7 @@
         "prototype_string": "void __cdecl dsndSetFrequency(uint param_1, int param_2)"
     },
     {
-        "name": "FUN_000e15e0",
+        "name": "dsndSetI3DL2Source",
         "address": "0x000e15e0",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -29363,7 +29383,7 @@
             "uint",
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_000e15e0(uint param_1, float param_2)"
+        "prototype_string": "void __cdecl dsndSetI3DL2Source(uint param_1, float param_2)"
     },
     {
         "name": "FUN_000e1630",
@@ -30499,20 +30519,20 @@
         "prototype_string": "undefined __stdcall IsNotPalI(void)"
     },
     {
-        "name": "FUN_000e5f80",
+        "name": "Graphics_IsSomeGraphicsRegion",
         "address": "0x000e5f80",
         "calling_convention": "__stdcall",
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined __stdcall FUN_000e5f80(void)"
+        "prototype_string": "undefined __stdcall Graphics_IsSomeGraphicsRegion(void)"
     },
     {
-        "name": "FUN_000e5f90",
+        "name": "Graphics_IsWidescreen",
         "address": "0x000e5f90",
         "calling_convention": "__stdcall",
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined __stdcall FUN_000e5f90(void)"
+        "prototype_string": "undefined __stdcall Graphics_IsWidescreen(void)"
     },
     {
         "name": "Graphics_IsSomeRegionBasedThing",
@@ -30617,12 +30637,12 @@
         "prototype_string": "void __cdecl FUN_000e7130(int param_1)"
     },
     {
-        "name": "FUN_000e7370",
+        "name": "maybeD3dShutdown",
         "address": "0x000e7370",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e7370(void)"
+        "prototype_string": "void __stdcall maybeD3dShutdown(void)"
     },
     {
         "name": "FUN_000e7460",
@@ -30963,10 +30983,10 @@
     {
         "name": "timestamp",
         "address": "0x000e8f20",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__cdecl",
+        "return_type": "double",
         "param_types": [],
-        "prototype_string": "undefined timestamp()"
+        "prototype_string": "double __cdecl timestamp(void)"
     },
     {
         "name": "__WBINVD",
@@ -30988,12 +31008,12 @@
         "prototype_string": "uint __cdecl crc32buf(byte * data, int length)"
     },
     {
-        "name": "FUN_000e8fc0",
+        "name": "maybeCleanupSystem",
         "address": "0x000e8fc0",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e8fc0(void)"
+        "prototype_string": "void __stdcall maybeCleanupSystem(void)"
     },
     {
         "name": "SetLaunchInfoAndLaunch",
@@ -31008,12 +31028,20 @@
         "prototype_string": "undefined __cdecl SetLaunchInfoAndLaunch(char * executableName, void * data, uint len)"
     },
     {
-        "name": "FUN_000e90f0",
+        "name": "FUN_000e90d0",
+        "address": "0x000e90d0",
+        "calling_convention": "unknown",
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_000e90d0()"
+    },
+    {
+        "name": "GetPTPData",
         "address": "0x000e90f0",
         "calling_convention": "__stdcall",
         "return_type": "uint",
         "param_types": [],
-        "prototype_string": "uint __stdcall FUN_000e90f0(void)"
+        "prototype_string": "uint __stdcall GetPTPData(void)"
     },
     {
         "name": "maybeFatalErrorHandler",
@@ -31032,12 +31060,12 @@
         "prototype_string": "void __stdcall FUN_000e92a0(void)"
     },
     {
-        "name": "thunk_FUN_000e90f0",
+        "name": "GetPTPData",
         "address": "0x000e9340",
         "calling_convention": "__stdcall",
         "return_type": "uint",
         "param_types": [],
-        "prototype_string": "uint __stdcall thunk_FUN_000e90f0(void)"
+        "prototype_string": "uint __stdcall GetPTPData(void)"
     },
     {
         "name": "WriteStateFileAndLaunch",
@@ -37443,12 +37471,12 @@
         "name": "CDirectSoundBuffer_SetVolume",
         "address": "0x001131af",
         "calling_convention": "__stdcall",
-        "return_type": "uint",
+        "return_type": "HRESULT",
         "param_types": [
             "int",
             "int"
         ],
-        "prototype_string": "uint __stdcall CDirectSoundBuffer_SetVolume(int param_1, int param_2)"
+        "prototype_string": "HRESULT __stdcall CDirectSoundBuffer_SetVolume(int param_1, int param_2)"
     },
     {
         "name": "CDirectSoundBuffer_SetHeadroom",
@@ -37533,12 +37561,12 @@
         "name": "IDirectSoundBuffer_SetVolume",
         "address": "0x001133ca",
         "calling_convention": "__stdcall",
-        "return_type": "void",
+        "return_type": "HRESULT",
         "param_types": [
-            "int",
-            "int"
+            "void *",
+            "long"
         ],
-        "prototype_string": "void __stdcall IDirectSoundBuffer_SetVolume(int param_1, int param_2)"
+        "prototype_string": "HRESULT __stdcall IDirectSoundBuffer_SetVolume(void * thisPtr, long lVolume)"
     },
     {
         "name": "IDirectSoundBuffer_SetHeadroom",
@@ -37546,10 +37574,10 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "void *",
+            "typedef DWORD uint"
         ],
-        "prototype_string": "void __stdcall IDirectSoundBuffer_SetHeadroom(int param_1, int param_2)"
+        "prototype_string": "void __stdcall IDirectSoundBuffer_SetHeadroom(void * thisPtr, DWORD dwHeadroom)"
     },
     {
         "name": "IDirectSoundBuffer_SetMixBins",
@@ -37557,10 +37585,10 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "int",
-            "byte *"
+            "void *",
+            "DSMIXBINS *"
         ],
-        "prototype_string": "void __stdcall IDirectSoundBuffer_SetMixBins(int param_1, byte * param_2)"
+        "prototype_string": "void __stdcall IDirectSoundBuffer_SetMixBins(void * thisPtr, DSMIXBINS * pMixBins)"
     },
     {
         "name": "IDirectSoundBuffer_SetMixBinVolumes_8",
@@ -37697,11 +37725,11 @@
         "name": "CDirectSound_CommitDeferredSettings",
         "address": "0x00113541",
         "calling_convention": "__stdcall",
-        "return_type": "undefined4",
+        "return_type": "HRESULT",
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 __stdcall CDirectSound_CommitDeferredSettings(int param_1)"
+        "prototype_string": "HRESULT __stdcall CDirectSound_CommitDeferredSettings(int param_1)"
     },
     {
         "name": "FUN_001135bd",
@@ -37924,7 +37952,7 @@
         "name": "CDirectSoundBuffer_SetPosition",
         "address": "0x00113a9d",
         "calling_convention": "__stdcall",
-        "return_type": "undefined4",
+        "return_type": "HRESULT",
         "param_types": [
             "int",
             "undefined4",
@@ -37932,7 +37960,7 @@
             "undefined4",
             "byte"
         ],
-        "prototype_string": "undefined4 __stdcall CDirectSoundBuffer_SetPosition(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, byte param_5)"
+        "prototype_string": "HRESULT __stdcall CDirectSoundBuffer_SetPosition(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, byte param_5)"
     },
     {
         "name": "CDirectSoundBuffer_SetVelocity",
@@ -37965,23 +37993,23 @@
         "name": "CDirectSoundBuffer_SetI3DL2Source",
         "address": "0x00113bc1",
         "calling_convention": "__stdcall",
-        "return_type": "undefined4",
+        "return_type": "HRESULT",
         "param_types": [
             "int",
             "undefined4 *",
             "byte"
         ],
-        "prototype_string": "undefined4 __stdcall CDirectSoundBuffer_SetI3DL2Source(int param_1, undefined4 * param_2, byte param_3)"
+        "prototype_string": "HRESULT __stdcall CDirectSoundBuffer_SetI3DL2Source(int param_1, undefined4 * param_2, byte param_3)"
     },
     {
         "name": "IDirectSound_CommitDeferredSettings",
         "address": "0x00113c13",
         "calling_convention": "__stdcall",
-        "return_type": "void",
+        "return_type": "HRESULT",
         "param_types": [
-            "int"
+            "void *"
         ],
-        "prototype_string": "void __stdcall IDirectSound_CommitDeferredSettings(int param_1)"
+        "prototype_string": "HRESULT __stdcall IDirectSound_CommitDeferredSettings(void * thisPtr)"
     },
     {
         "name": "IDirectSoundBuffer_SetFrequency",
@@ -38022,15 +38050,15 @@
         "name": "IDirectSoundBuffer_SetPosition",
         "address": "0x00113c8f",
         "calling_convention": "__stdcall",
-        "return_type": "void",
+        "return_type": "HRESULT",
         "param_types": [
+            "void *",
             "int",
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "byte"
+            "int",
+            "int",
+            "DS3D_APPLY"
         ],
-        "prototype_string": "void __stdcall IDirectSoundBuffer_SetPosition(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, byte param_5)"
+        "prototype_string": "HRESULT __stdcall IDirectSoundBuffer_SetPosition(void * thisPtr, int x, int y, int z, DS3D_APPLY dwApply)"
     },
     {
         "name": "IDirectSoundBuffer_SetVelocity",
@@ -38052,24 +38080,24 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "int",
-            "undefined4",
-            "undefined4",
-            "byte"
+            "void *",
+            "float *",
+            "typedef DWORD uint",
+            "DS3D_APPLY"
         ],
-        "prototype_string": "void __stdcall IDirectSoundBuffer_SetRolloffCurve(int param_1, undefined4 param_2, undefined4 param_3, byte param_4)"
+        "prototype_string": "void __stdcall IDirectSoundBuffer_SetRolloffCurve(void * thisPtr, float * pflPoints, DWORD dwPointCount, DS3D_APPLY dwApply)"
     },
     {
         "name": "IDirectSoundBuffer_SetI3DL2Source",
         "address": "0x00113d1d",
         "calling_convention": "__stdcall",
-        "return_type": "void",
+        "return_type": "HRESULT",
         "param_types": [
-            "int",
-            "undefined4 *",
-            "byte"
+            "void *",
+            "DSI3DL2BUFFER *",
+            "DS3D_APPLY"
         ],
-        "prototype_string": "void __stdcall IDirectSoundBuffer_SetI3DL2Source(int param_1, undefined4 * param_2, byte param_3)"
+        "prototype_string": "HRESULT __stdcall IDirectSoundBuffer_SetI3DL2Source(void * thisPtr, DSI3DL2BUFFER * pds3db, DS3D_APPLY dwApply)"
     },
     {
         "name": "FUN_00113d3d",
@@ -38214,16 +38242,16 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "int",
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4",
+            "void *",
+            "float",
+            "float",
+            "float",
+            "float",
+            "float",
+            "float",
             "byte"
         ],
-        "prototype_string": "void __stdcall IDirectSound_SetOrientation(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7, byte param_8)"
+        "prototype_string": "void __stdcall IDirectSound_SetOrientation(void * thisPtr, float xFront, float yFront, float zFront, float xTop, float yTop, float zTop, byte dwApply)"
     },
     {
         "name": "IDirectSound_SetPosition",
@@ -38231,13 +38259,13 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "int",
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "byte"
+            "void *",
+            "float",
+            "float",
+            "float",
+            "DS3D_APPLY"
         ],
-        "prototype_string": "void __stdcall IDirectSound_SetPosition(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, byte param_5)"
+        "prototype_string": "void __stdcall IDirectSound_SetPosition(void * thisPtr, float x, float y, float z, DS3D_APPLY dwApply)"
     },
     {
         "name": "IDirectSound_SetVelocity",
@@ -38245,13 +38273,13 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "int",
-            "undefined4",
-            "undefined4",
-            "undefined4",
+            "void *",
+            "float",
+            "float",
+            "float",
             "byte"
         ],
-        "prototype_string": "void __stdcall IDirectSound_SetVelocity(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, byte param_5)"
+        "prototype_string": "void __stdcall IDirectSound_SetVelocity(void * thisPtr, float x, float y, float z, byte dwApply)"
     },
     {
         "name": "IDirectSoundBuffer_SetBufferData",
@@ -38259,11 +38287,11 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "int",
-            "int",
-            "uint"
+            "void *",
+            "void *",
+            "typedef DWORD uint"
         ],
-        "prototype_string": "void __stdcall IDirectSoundBuffer_SetBufferData(int param_1, int param_2, uint param_3)"
+        "prototype_string": "void __stdcall IDirectSoundBuffer_SetBufferData(void * thisPtr, void * pvBufferData, DWORD dwBufferBytes)"
     },
     {
         "name": "CDirectSound_CreateSoundStream",
@@ -38351,15 +38379,15 @@
     {
         "name": "IDirectSound_CreateSoundBuffer",
         "address": "0x001146fe",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "void *",
+            "DSBUFFERDESC *",
+            "uint *",
+            "uint *"
         ],
-        "prototype_string": "undefined IDirectSound_CreateSoundBuffer(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
+        "prototype_string": "void __stdcall IDirectSound_CreateSoundBuffer(void * thisPtr, DSBUFFERDESC * pdsbd, uint * ppBuffer, uint * ppUnknown)"
     },
     {
         "name": "FUN_00114722",

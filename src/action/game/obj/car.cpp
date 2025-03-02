@@ -185,9 +185,9 @@ void __cdecl Car_Activate(obj_tag* carObj, obj_tag* playerObj) {
 // AUTOINJECT
 obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *level) {
 
-    printf("Car_Create: Spawning at %f %f %f, miniVehiclesEnabled %i\n", pos->x, pos->y, pos->z, MPSettings.miniVehiclesEnabled);
+    printf("Car_Create: Spawning at %f %f %f, miniVehiclesEnabled %i\n", pos->x, pos->y, pos->z, MPSettings.MiniVehiclesEnabled);
 
-    if(MPSettings.isMultiplayer && !MPSettings.miniVehiclesEnabled)
+    if(MPSettings.isMultiplayer && !MPSettings.MiniVehiclesEnabled)
         return NULL;
     
     if(GameState.currentLevelHashcode == HT_Level_Ravine)
@@ -207,7 +207,7 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
     baseObj->maybeCollision = tankInfo;
     Quat_MatToQuat(&tankInfo->orientation, &baseObj->transformMatrix);
 
-    switch(MPSettings.miniVehiclesEnabled) {
+    switch(MPSettings.MiniVehiclesEnabled) {
         default:
         case 1: // Tanks only
             tankInfo->isHeli = 0;

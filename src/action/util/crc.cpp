@@ -69,7 +69,7 @@ static const uint32_t crc32_table[256] =
     0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-// FUNC_AT(000e8f90)
+// AUTOINJECT
 uint32_t crc32buf(const uint8_t *data, size_t length) {
     uint32_t crc = 0xffffffff;
     
