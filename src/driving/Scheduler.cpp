@@ -17,7 +17,7 @@ void Scheduler::Run(int i) {
 
   unsigned int now = Clock;
 
-  printf("Running scheduler, time is %i, schedule list is %08x\n", now, this->listOfSchedules);
+  //printf("Running scheduler, time is %i, schedule list is %08x\n", now, this->listOfSchedules);
 
   // If we're on the same tick, early return
 //   if(this->lastTickCount == now) {

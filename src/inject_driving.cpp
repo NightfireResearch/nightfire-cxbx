@@ -143,16 +143,8 @@ void Inject()
 
   WriteJmpTo(0x00117610, (size_t)&UFileLoader__FileLoad);
 
-  // Binary patch - badly hack around a bug in the scheduler that causes the game to stall out.
-  // this fix is terrible, vibration goes weird and animation in pause menu is bad, but it works
-  // better than the stuttery lockups that happen otherwise
-  WriteByte(0x05bb48, 0xb8);
-  WriteByte(0x05bb49, 0x01);
-  WriteByte(0x05bb4a, 0x00);
-  WriteByte(0x05bb4b, 0x00);
-  WriteByte(0x05bb4c, 0x00);
 
-  // Instead of the binary patch, inject a whole new working version of the scheduler
+  // Inject a whole new working version of the scheduler
   WriteJmpTo(0x0005ba80, GetFunctionAddress(&Scheduler::Run));
 
   /*
