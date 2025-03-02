@@ -31,6 +31,21 @@ bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b) {
 }
 
 // AUTOINJECT
+bool MP_isObjectOnTeam(obj_tag *param_1,uint teamId) {
+  
+  if ((MPSettings.relatedToTeamIdentitySomehow != 0) || (MPSettings.GameMode == GM_ASSASSIN)) {
+    short idx = Control_Plr2Ind(param_1);
+    MPTeam uVar1 = MPSettings.Player[idx].TeamId;
+    if (uVar1 != NO_TEAM) {
+      return uVar1 == teamId;
+    }
+  }
+  
+  return false;
+}
+
+
+// AUTOINJECT
 MPTeam MP_getObjectTeam(obj_tag* param_1) {
   
   if ((MPSettings.relatedToTeamIdentitySomehow == 0) && (MPSettings.GameMode != GM_ASSASSIN)) {
