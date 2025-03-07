@@ -147,6 +147,9 @@ void Inject()
   // Inject a whole new working version of the scheduler
   WriteJmpTo(0x0005ba80, GetFunctionAddress(&Scheduler::Run));
 
+  // Lens flare is bugged. This just replaces the call to DrawFlares with a NOP
+  FillBytes(0x0009e6c9, NOP, 13);
+
   /*
    * Function Patching
    */
