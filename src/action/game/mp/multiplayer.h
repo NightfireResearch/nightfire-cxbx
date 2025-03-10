@@ -6,7 +6,7 @@
 #define MAX_MP_AGENTS 8 // = 4 bots + 4 players? Or is it 7??
 
 
-typedef enum MultiplayerGameMode {
+typedef enum {
     GM_QUICK=0,
     GM_ARENA=1,
     GM_TOPAGENT=16,
@@ -25,7 +25,7 @@ typedef enum MultiplayerGameMode {
     GM_FORCE_UINT32 = 0x7fffffff
 } MultiplayerGameMode;
 
-typedef enum WeaponSet {
+typedef enum {
     WEAPSET_NORMAL=0,
     WEAPSET_PISTOLS=1,
     WEAPSET_AUTOMATIC=2,
@@ -40,12 +40,12 @@ typedef enum WeaponSet {
     WEAPSET_FORCE_UINT32 = 0x7fffffff
 } WeaponSet;
 
-typedef enum MPTeam {
+typedef enum  {
     PHOENIX = 0,
     MI6 = 1,
     NO_TEAM = 2,
     TEAM_FORCE_UINT32 = 0x7fffffff
-};
+} MPTeam;
 
 #define TEAM_GET_NAME(team) ((team == PHOENIX) ? "PHOENIX" : ((team == MI6) ? "MI6" : ((team == NO_TEAM) ? "NO_TEAM" : "UNKNOWN")))
 
@@ -75,11 +75,11 @@ typedef struct { // on Xbox, starts at 0025fe38
     undefined4 FriendlyFire;
     undefined4 MaxPoints;
     undefined4 MaxDuration;
-    enum MultiplayerGameMode GameMode;
+    MultiplayerGameMode GameMode;
     undefined4 multiplayerLevelHashcode;
     undefined4 numPlayers;
     undefined4 numBots;
-    enum WeaponSet weaponSet;
+    WeaponSet weaponSet;
     undefined4 GunEmplacementsEnabled;
     undefined4 TripleDamageModifierProfessionalMode;
     undefined4 RespawnSelectionMode;

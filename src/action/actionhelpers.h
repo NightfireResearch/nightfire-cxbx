@@ -5,6 +5,7 @@
 #include "../helpers.h"
 
 #include "game/obj/object.h" // for obj_tag needed by some autogen functions
+#include "game/obj/control.h" // for Control_X functions
 #include "game/obj/player.h" // for BLData
 #include "ui/ui.h"
 
