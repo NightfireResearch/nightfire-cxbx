@@ -411,3 +411,16 @@ float Vec_Dist3D(_VECTOR a, _VECTOR b) {
     return SQRT(dx*dx + dy*dy + dz*dz);
     
 }
+
+// AUTOINJECT
+void Vec_Swap(_VECTOR a, _VECTOR b) {
+  float tmp_x = a.x;
+  float tmp_y = a.y;
+  float tmp_z = a.z;
+  a.x = b.x;
+  a.y = b.y;
+  a.z = b.z;
+  b.x = tmp_x;
+  b.y = tmp_y;
+  b.z = tmp_z;
+}
