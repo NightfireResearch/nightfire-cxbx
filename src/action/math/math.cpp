@@ -388,3 +388,14 @@ bool vecutil_point_on_poly(_VECTOR *point, _VECTOR *vtx1, _VECTOR *vtx2, _VECTOR
   // If on the correct side of all three line segments, we're inside the polygon
   return true;
 }
+
+// AUTOINJECT
+float Vec_Dist3D(_VECTOR a, _VECTOR b) {
+
+    float dx = (a.x-b.x);
+    float dy = (a.y-b.y);
+    float dz = (a.z-b.z);
+
+    return SQRT(dx*dx + dy*dy + dz*dz);
+    
+}
