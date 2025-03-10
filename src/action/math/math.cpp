@@ -196,6 +196,13 @@ void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
 }
 
 // AUTOINJECT
+float Vec_NormaliseLen(_VECTOR *output, _VECTOR *input) {
+  float len = SQRT(input->x * input->x + input->y * input->y + input->z * input->z);
+  Vec_Normalise(output,input);
+  return len;
+}
+
+// AUTOINJECT
 void Vec_Subtract(const _VECTOR *a, const _VECTOR *b, _VECTOR *vOut) {
   vOut->x = a->x - b->x;
   vOut->y = a->y - b->y;
