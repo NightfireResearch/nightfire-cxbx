@@ -98,8 +98,14 @@ typedef struct obj_tag {
     unsigned short curState; // 0xD0
     unsigned short playerNum; // 0xD2
     char _pad_5[0x4];
-    char _pad_6[0x3];
-    ObjectType objectType;
+    char _pad_6[0x2];
+    char flags; // (1 == Marked for deletion)
+    char objectType; // Actually ObjectType but can't tell the compiler to make it just one byte
+    char _pad_7[0x3]; // Related to lighting
+    char tweakR;
+    char tweakG;
+    char tweakB;
+    char _pad_8[2];
 } obj_tag;
 #pragma pack(pop)
 
@@ -110,5 +116,9 @@ static_assert(offsetof(obj_tag, maybeCollision) == 0xb0, "Offset of maybeCollisi
 static_assert(offsetof(obj_tag, extraObjectData) == 0xbc, "Offset of extraObjectData not correct");
 static_assert(offsetof(obj_tag, someFlags_0xcc) == 0xcc, "Offset of someFlags_0xcc not correct");
 static_assert(offsetof(obj_tag, objectType) == 0xdb, "Offset of objectType not correct");
+static_assert(offsetof(obj_tag, flags) == 0xda, "Offset of flags not correct");
+static_assert(offsetof(obj_tag, tweakB) == 0xe1, "Offset of tweakB not correct");
+
+static_assert(sizeof(obj_tag) == 0xe4, "Size of obj_tag wrong");
 
 #endif // OBJECT_H_

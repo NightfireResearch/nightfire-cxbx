@@ -63,8 +63,6 @@ void hashtable_set_object_to_entity_gfx(obj_tag *obj, HASHCODE hashcode);
 uint Rand_Rand(int max);
 // AUTOGEN
 void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *matIn);
-// AUTOGEN
-obj_tag * control_first_object(void);
 
 // Ghidra detects this as a thunked function, so we can't AUTOGEN it due to duplicate function names
 void Car_Deactivate(obj_tag *object) {

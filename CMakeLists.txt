@@ -70,6 +70,7 @@ add_library(actioninject SHARED
   src/action/game/view.cpp
   src/action/game/mp/multiplayer.cpp
   src/action/game/obj/car.cpp
+  src/action/game/obj/control.cpp
 )
 
 add_library(drivinginject SHARED
