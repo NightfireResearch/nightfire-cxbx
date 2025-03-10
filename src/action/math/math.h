@@ -51,6 +51,7 @@ void Vec_Negate(const _VECTOR *vIn,_VECTOR *vOut);
 void Vec_Copy(_VECTOR *src, _VECTOR *dst);
 void Vec_Cross(_VECTOR *a,_VECTOR *b,_VECTOR *vecOut);
 void Vec_Copy2(_VECTOR* src, _VECTOR *dst1, _VECTOR *dst2);
+void Vec_CrossNormalise(_VECTOR *a,_VECTOR *b,_VECTOR *vecOut);
 void Vec_MulR32(_VECTOR *outVec, _VECTOR *inVec, float scale);
 bool Vec_IsEqual(_VECTOR *param_1,_VECTOR *param_2,float epsilon);
 float Vec_Dist3D(_VECTOR a, _VECTOR b);
