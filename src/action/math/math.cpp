@@ -265,6 +265,11 @@ bool Vec_IsEqual(_VECTOR *param_1,_VECTOR *param_2,float epsilon) {
 }
 
 
+void Vec_CrossNormalise(_VECTOR *a,_VECTOR *b,_VECTOR *vecOut) {
+  Vec_Cross(a,b,vecOut);
+  Vec_Normalise(vecOut,vecOut);
+}
+
 // Set up a matrix with the given Euler rotations
 // AUTOINJECT
 void RotMatrixZYX(_VECTOR *angles, _MATRIX *mtx) {
