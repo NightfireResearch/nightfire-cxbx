@@ -44,6 +44,7 @@ void Mat_Identity(_MATRIX *mtx);
 void Matrix_SetTrans(_VECTOR *vec, _MATRIX *mtx);
 void RotTransMat(_MATRIX *param_1,_MATRIX *param_2);
 void Vec_Normalise(_VECTOR *vOut,_VECTOR *vIn);
+float Vec_NormaliseLen(_VECTOR *output, _VECTOR *input);
 void Vec_Subtract(const _VECTOR *a, const _VECTOR *b, _VECTOR *v_out);
 void Vec_Zero(_VECTOR *v);
 void Vec_Negate(const _VECTOR *vIn,_VECTOR *vOut);
