@@ -38,7 +38,7 @@ void HUD_Reset(BLData *param_1) {
 // AUTOINJECT
 void HUD_DisableAll(BLData *param_1) {
 	for(int i = 0; i < NUM_PANES; i++) {
-	  param_1->hudInfo->pane[i].enabled = 0;
+	  	param_1->hudInfo->pane[i].enabled = 0;
 	}
 }
 

@@ -57,7 +57,13 @@ typedef struct HUDPANECREATE_tag {
 
 typedef struct HUDPANE_tag {
     HUDPANECREATE_tag *base;
-    char pad1[22];
+    char unknown[4];
+    sprite** spriteList;
+    void* updateFunction;
+    short unknown2[2];
+    short width;
+    short height;
+    short unknown3;
     ushort state;
     bool enabled;
     char pad2[2];
