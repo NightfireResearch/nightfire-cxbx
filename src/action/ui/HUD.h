@@ -58,15 +58,15 @@ typedef struct HUDPANECREATE_tag {
 typedef struct HUDPANE_tag {
     HUDPANECREATE_tag *base;
     char pad1[22];
-    ushort maybeEnable1;
-    char maybeEnable2;
+    ushort state;
+    bool enabled;
     char pad2[2];
     char maybeCanBeEnabled;
 } HUDPANE_tag;
 
 static_assert(sizeof(HUDPANE_tag) == 0x20, "Size of HUDPANE_tag is incorrect");
-static_assert(offsetof(HUDPANE_tag, maybeEnable1) == 0x1a, "Offset of maybeEnable1 is incorrect");
-static_assert(offsetof(HUDPANE_tag, maybeEnable2) == 0x1c, "Offset of maybeEnable2 is incorrect");
+static_assert(offsetof(HUDPANE_tag, state) == 0x1a, "Offset of state is incorrect");
+static_assert(offsetof(HUDPANE_tag, enabled) == 0x1c, "Offset of enabled is incorrect");
 static_assert(offsetof(HUDPANE_tag, maybeCanBeEnabled) == 0x1f, "Offset of maybeCanBeEnabled is incorrect");
 
 typedef struct HUDINFO_tag {
@@ -82,8 +82,10 @@ static_assert(offsetof(HUDINFO_tag, pane) == 0x8, "Offset of pane is incorrect")
 #pragma pack(pop)
 
 
-void HUD_Enable(HUDINFO_tag *param_1, HUD_PANE_IND idx, char param_3, ushort param_4);
+void HUD_Enable(HUDINFO_tag *param_1, HUD_PANE_IND idx, char enable, ushort state);
 void HUD_Reset(BLData *param_1);
+void HUD_DisableAll(BLData *param_1);
+ushort HUD_State(HUDINFO_tag *param_1, HUD_PANE_IND idx);
 
 
 #endif // HUD_H
