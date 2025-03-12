@@ -5,9 +5,15 @@
 
 #pragma pack(push, 1)
 
+// To avoid circular dependencies
+struct HUDINFO_tag;
+typedef struct HUDINFO_tag HUDINFO_tag;
+
 // WIP
 typedef struct {
-    char _pad_1[0x808];
+    char _pad_1[0x770];
+    HUDINFO_tag* hudInfo;
+    char _pad_111[0x808-4-0x770];
     obj_tag* remoteControlDevice; // 0x808
     char _pad_2[0xc6];
     short previousSubState; //0x8d2
@@ -15,6 +21,8 @@ typedef struct {
     char playerNum; // 0x8de
     // ...
 } BLData;
+
+static_assert(offsetof(BLData, hudInfo) == 0x770, "Offset of hudInfo not correct");
 
 
 //char (*__kaboom)[offsetof(BLData,playerNum)] = 1;

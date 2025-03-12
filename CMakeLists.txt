@@ -61,6 +61,7 @@ add_library(actioninject SHARED
   src/action/memory.cpp
   src/action/music.cpp
   src/action/util/crc.cpp
+  src/action/ui/HUD.cpp
   src/action/ui/ui.cpp
   src/action/ui/ui_dossier.cpp
   src/action/autofunc.cpp

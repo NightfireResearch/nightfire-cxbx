@@ -7,6 +7,7 @@
 #include "game/obj/object.h" // for obj_tag needed by some autogen functions
 #include "game/obj/player.h" // for BLData
 #include "ui/ui.h"
+#include "ui/HUD.h"
 
 // TODO: Unfinished
 typedef struct {
