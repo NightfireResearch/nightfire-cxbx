@@ -2112,37 +2112,43 @@
         "param_types": [
             "undefined4",
             "obj_tag *",
-            "float",
+            "obj_tag *",
             "weapon_definition_tag *",
             "_VECTOR *",
             "_VECTOR *",
             "ushort"
         ],
-        "prototype_string": "obj_tag * __cdecl Bullet_init(undefined4 playerNum, obj_tag * playerObj, float param_3, weapon_definition_tag * bulletStats, _VECTOR * pos, _VECTOR * direction, ushort weaponSound)"
+        "prototype_string": "obj_tag * __cdecl Bullet_init(undefined4 playerNum, obj_tag * playerObj, obj_tag * param_3, weapon_definition_tag * weaponDef, _VECTOR * pos, _VECTOR * direction, ushort weaponSound)"
     },
     {
-        "name": "FUN_00021680",
+        "name": "Bullet_trail_effect_smoke",
         "address": "0x00021680",
         "calling_convention": "__stdcall",
         "return_type": "obj_tag *",
-        "param_types": [],
-        "prototype_string": "obj_tag * __stdcall FUN_00021680(void)"
+        "param_types": [
+            "obj_tag *"
+        ],
+        "prototype_string": "obj_tag * __stdcall Bullet_trail_effect_smoke(obj_tag * gameObj)"
     },
     {
-        "name": "FUN_000217f0",
+        "name": "Bullet_SpawnSmokeDust_SomeOtherProbability",
         "address": "0x000217f0",
         "calling_convention": "__stdcall",
         "return_type": "obj_tag *",
-        "param_types": [],
-        "prototype_string": "obj_tag * __stdcall FUN_000217f0(void)"
+        "param_types": [
+            "obj_tag *"
+        ],
+        "prototype_string": "obj_tag * __stdcall Bullet_SpawnSmokeDust_SomeOtherProbability(obj_tag * gameObj)"
     },
     {
-        "name": "FUN_00021870",
+        "name": "Bullet_SpawnSmokeDust_SomeProbability",
         "address": "0x00021870",
         "calling_convention": "__stdcall",
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall FUN_00021870(void)"
+        "param_types": [
+            "obj_tag *"
+        ],
+        "prototype_string": "void __stdcall Bullet_SpawnSmokeDust_SomeProbability(obj_tag * gameObj)"
     },
     {
         "name": "Bullet_handle_object_destruction",
@@ -2168,12 +2174,15 @@
     {
         "name": "Bullet_DoTrails",
         "address": "0x00022210",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__cdecl",
+        "return_type": "void",
         "param_types": [
-            "undefined4"
+            "obj_tag *",
+            "BU_tag *",
+            "_VECTOR *",
+            "float"
         ],
-        "prototype_string": "undefined Bullet_DoTrails(undefined4 param_1)"
+        "prototype_string": "void __cdecl Bullet_DoTrails(obj_tag * gameObj, BU_tag * bullet, _VECTOR * param_3, float param_4)"
     },
     {
         "name": "Bullet_Delete",
@@ -3424,9 +3433,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int * *"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl control_delete_object(int * * param_1)"
+        "prototype_string": "void __cdecl control_delete_object(obj_tag * param_1)"
     },
     {
         "name": "control_init_object",
@@ -3516,10 +3525,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
             "uint"
         ],
-        "prototype_string": "void __cdecl Control_SetEffectType(int param_1, uint param_2)"
+        "prototype_string": "void __cdecl Control_SetEffectType(obj_tag * param_1, uint param_2)"
     },
     {
         "name": "Control_SetGList",
@@ -3527,10 +3536,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
             "int"
         ],
-        "prototype_string": "void __cdecl Control_SetGList(int param_1, int param_2)"
+        "prototype_string": "void __cdecl Control_SetGList(obj_tag * param_1, int param_2)"
     },
     {
         "name": "Control_NextLOD",
@@ -3556,12 +3565,12 @@
         "name": "Control_ReturnNextObjectOfType",
         "address": "0x0002dac0",
         "calling_convention": "__cdecl",
-        "return_type": "int",
+        "return_type": "obj_tag *",
         "param_types": [
             "ObjectType",
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "int __cdecl Control_ReturnNextObjectOfType(ObjectType param_1, int param_2)"
+        "prototype_string": "obj_tag * __cdecl Control_ReturnNextObjectOfType(ObjectType param_1, obj_tag * param_2)"
     },
     {
         "name": "Control_ObjectReferenced",
@@ -12578,7 +12587,7 @@
         "prototype_string": "void __stdcall Env_Update(void)"
     },
     {
-        "name": "FUN_00068cf0",
+        "name": "Env_GetWindVel",
         "address": "0x00068cf0",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -12587,7 +12596,7 @@
             "_VECTOR *",
             "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl FUN_00068cf0(int param_1, _VECTOR * param_2, _VECTOR * param_3)"
+        "prototype_string": "void __cdecl Env_GetWindVel(int param_1, _VECTOR * param_2, _VECTOR * param_3)"
     },
     {
         "name": "Env_Breath",
@@ -13747,12 +13756,12 @@
         "name": "LList_Add",
         "address": "0x0006e4d0",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "undefined4 *",
-            "undefined4 *"
+            "LLISTINFO_tag *",
+            "LLNODE_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl LList_Add(undefined4 * param_1, undefined4 * param_2)"
+        "prototype_string": "bool __cdecl LList_Add(LLISTINFO_tag * param_1, LLNODE_tag * param_2)"
     },
     {
         "name": "FUN_0006e520",
@@ -13781,11 +13790,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int * *",
-            "int",
-            "int *"
+            "LLISTINFO_tag *",
+            "LLNODE_tag *",
+            "LLNODE_tag *"
         ],
-        "prototype_string": "void __cdecl LList_Insert(int * * param_1, int param_2, int * param_3)"
+        "prototype_string": "void __cdecl LList_Insert(LLISTINFO_tag * param_1, LLNODE_tag * param_2, LLNODE_tag * param_3)"
     },
     {
         "name": "LList_InsertAt",
@@ -13924,13 +13933,13 @@
         "name": "DList_Init",
         "address": "0x0006ead0",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "undefined4 *",
             "ushort",
             "ushort"
         ],
-        "prototype_string": "uint __cdecl DList_Init(undefined4 * param_1, ushort param_2, ushort param_3)"
+        "prototype_string": "bool __cdecl DList_Init(undefined4 * param_1, ushort entrySize, ushort numEntries)"
     },
     {
         "name": "LS_FlushStates",
@@ -19422,7 +19431,7 @@
         "prototype_string": "bool __cdecl MP_IsTarget(obj_tag * param_1)"
     },
     {
-        "name": "FUN_0009da80",
+        "name": "MP_GetRadarObjects",
         "address": "0x0009da80",
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
@@ -19430,7 +19439,7 @@
             "int",
             "undefined4 *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0009da80(int param_1, undefined4 * param_2)"
+        "prototype_string": "undefined4 __cdecl MP_GetRadarObjects(int param_1, undefined4 * param_2)"
     },
     {
         "name": "FUN_0009daae",
@@ -19528,8 +19537,10 @@
         "address": "0x0009e130",
         "calling_convention": "__stdcall",
         "return_type": "undefined4 *",
-        "param_types": [],
-        "prototype_string": "undefined4 * __stdcall MP_getObjExtFromMPOBJECT(void)"
+        "param_types": [
+            "MPOBJECT *"
+        ],
+        "prototype_string": "undefined4 * __stdcall MP_getObjExtFromMPOBJECT(MPOBJECT * mpObj)"
     },
     {
         "name": "FUN_0009e1f0",
@@ -19811,29 +19822,31 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl MP_KOHUpdate(int param_1)"
+        "prototype_string": "void __cdecl MP_KOHUpdate(obj_tag * param_1)"
     },
     {
         "name": "MP_UplinkUpdate",
         "address": "0x0009fb80",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__cdecl",
+        "return_type": "void",
         "param_types": [
-            "undefined4"
+            "MPOBJECT *",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined MP_UplinkUpdate(undefined4 param_1)"
+        "prototype_string": "void __cdecl MP_UplinkUpdate(MPOBJECT * mpObj, obj_tag * gameObj)"
     },
     {
         "name": "MP_DemolitionProtectionUpdate",
         "address": "0x0009ff70",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__cdecl",
+        "return_type": "void",
         "param_types": [
-            "undefined4"
+            "MPOBJECT *",
+            "ushort"
         ],
-        "prototype_string": "undefined MP_DemolitionProtectionUpdate(undefined4 param_1)"
+        "prototype_string": "void __cdecl MP_DemolitionProtectionUpdate(MPOBJECT * mpObj, ushort maybeTeamId)"
     },
     {
         "name": "FUN_000a0310",
@@ -19854,10 +19867,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "short *",
-            "char"
+            "MPOBJECT *",
+            "char",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl MP_GoldenEyeUpdate(short * param_1, char param_2)"
+        "prototype_string": "void __cdecl MP_GoldenEyeUpdate(MPOBJECT * param_1, char param_2, obj_tag * gameObj)"
     },
     {
         "name": "MP_BluePrintReachedBase",
@@ -19895,18 +19909,21 @@
     {
         "name": "FUN_000a1560",
         "address": "0x000a1560",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_000a1560()"
+        "calling_convention": "__fastcall",
+        "return_type": "void",
+        "param_types": [
+            "int *",
+            "obj_tag *"
+        ],
+        "prototype_string": "void __fastcall FUN_000a1560(int * param_1, obj_tag * gameObj)"
     },
     {
         "name": "MP_getProtectionObj_NotExt",
         "address": "0x000a1600",
         "calling_convention": "__stdcall",
-        "return_type": "void",
+        "return_type": "void *",
         "param_types": [],
-        "prototype_string": "void __stdcall MP_getProtectionObj_NotExt(void)"
+        "prototype_string": "void * __stdcall MP_getProtectionObj_NotExt(void)"
     },
     {
         "name": "MP_getDemolitionObj_NotExt",
@@ -19941,23 +19958,23 @@
     {
         "name": "MP_BluePrintUpdate",
         "address": "0x000a19f0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
+            "MPOBJECT *",
             "undefined1"
         ],
-        "prototype_string": "undefined MP_BluePrintUpdate(undefined4 param_1, undefined1 param_2)"
+        "prototype_string": "undefined __cdecl MP_BluePrintUpdate(MPOBJECT * param_1, undefined1 param_2)"
     },
     {
         "name": "MP_ObjectUpdate",
         "address": "0x000a1ee0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined MP_ObjectUpdate(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl MP_ObjectUpdate(obj_tag * param_1)"
     },
     {
         "name": "MP_PlayerKilled",
@@ -20816,10 +20833,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "BLData *",
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Player_InShadow(int param_1, obj_tag * param_2)"
+        "prototype_string": "void __cdecl Player_InShadow(BLData * param_1, obj_tag * gameObj)"
     },
     {
         "name": "Player_UpdateBlurAndFade",
@@ -20922,11 +20939,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "BLData *",
             "undefined4",
             "undefined1"
         ],
-        "prototype_string": "void __cdecl Player_SetFlashBang(int param_1, undefined4 param_2, undefined1 param_3)"
+        "prototype_string": "void __cdecl Player_SetFlashBang(BLData * param_1, undefined4 param_2, undefined1 param_3)"
     },
     {
         "name": "Player_RamSave",
@@ -21603,9 +21620,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "BLData *"
         ],
-        "prototype_string": "void __cdecl HUD_DisableAll(int param_1)"
+        "prototype_string": "void __cdecl HUD_DisableAll(BLData * param_1)"
     },
     {
         "name": "HUD_Enable",
@@ -21613,26 +21630,26 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
-            "int",
+            "HUDINFO_tag *",
+            "HUD_PANE_IND",
             "undefined1",
-            "undefined2"
+            "ushort"
         ],
-        "prototype_string": "void __cdecl HUD_Enable(int param_1, int param_2, undefined1 param_3, undefined2 param_4)"
+        "prototype_string": "void __cdecl HUD_Enable(HUDINFO_tag * param_1, HUD_PANE_IND idx, undefined1 enable, ushort state)"
     },
     {
         "name": "HUD_State",
         "address": "0x000b1a90",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "ushort",
         "param_types": [
-            "int",
-            "uint"
+            "HUDINFO_tag *",
+            "int"
         ],
-        "prototype_string": "uint __cdecl HUD_State(int param_1, uint param_2)"
+        "prototype_string": "ushort __cdecl HUD_State(HUDINFO_tag * param_1, int idx)"
     },
     {
-        "name": "FUN_000b1ab0",
+        "name": "HUD_ValidateXY",
         "address": "0x000b1ab0",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -21644,7 +21661,7 @@
             "ushort",
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000b1ab0(short * param_1, short * param_2, ushort param_3, ushort param_4, ushort param_5, uint param_6)"
+        "prototype_string": "void __cdecl HUD_ValidateXY(short * param_1, short * param_2, ushort param_3, ushort param_4, ushort param_5, uint param_6)"
     },
     {
         "name": "HUD_CalcWidthHeight",
@@ -21652,23 +21669,31 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "HUDPANECREATE_tag *",
             "short *",
             "short *"
         ],
-        "prototype_string": "void __cdecl HUD_CalcWidthHeight(int param_1, short * param_2, short * param_3)"
+        "prototype_string": "void __cdecl HUD_CalcWidthHeight(HUDPANECREATE_tag * param_1, short * param_2, short * param_3)"
+    },
+    {
+        "name": "HUD_UpdateBloodPane",
+        "address": "0x000b1e50",
+        "calling_convention": "unknown",
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined HUD_UpdateBloodPane()"
     },
     {
         "name": "HUD_UpdateAmmoPane",
         "address": "0x000b1f90",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "BLData *",
+            "HUDPANE_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined HUD_UpdateAmmoPane(undefined4 param_1, undefined4 param_2, undefined4 param_3)"
+        "prototype_string": "undefined __cdecl HUD_UpdateAmmoPane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * param_3)"
     },
     {
         "name": "HUD_FixMP",
@@ -21676,10 +21701,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "sprite *",
             "short"
         ],
-        "prototype_string": "void __cdecl HUD_FixMP(int param_1, short param_2)"
+        "prototype_string": "void __cdecl HUD_FixMP(sprite * param_1, short playerNum)"
     },
     {
         "name": "FUN_000b2870",
@@ -21713,7 +21738,7 @@
         "prototype_string": "undefined HUD_UpdateStatusPane(undefined4 param_1, undefined4 param_2)"
     },
     {
-        "name": "FUN_000b3890",
+        "name": "HUD_MPUpdateStatusPane",
         "address": "0x000b3890",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -21721,7 +21746,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000b3890(int param_1, int param_2)"
+        "prototype_string": "void __cdecl HUD_MPUpdateStatusPane(int param_1, int param_2)"
     },
     {
         "name": "HUD_UpdateAirPane",
@@ -21809,7 +21834,7 @@
         "prototype_string": "void __cdecl FUN_000b42b0(float param_1, float param_2, undefined4 param_3, float param_4, float param_5, float param_6, float param_7, byte param_8)"
     },
     {
-        "name": "FUN_000b4330",
+        "name": "HUD_UpdateLensFlarePane",
         "address": "0x000b4330",
         "calling_convention": "unknown",
         "return_type": "undefined",
@@ -21818,47 +21843,49 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000b4330(undefined4 param_1, undefined4 param_2, undefined4 param_3)"
+        "prototype_string": "undefined HUD_UpdateLensFlarePane(undefined4 param_1, undefined4 param_2, undefined4 param_3)"
     },
     {
-        "name": "FUN_000b4b60",
+        "name": "HUD_UpdateCrossHair",
         "address": "0x000b4b60",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000b4b60(void)"
+        "prototype_string": "void __stdcall HUD_UpdateCrossHair(void)"
     },
     {
-        "name": "FUN_000b4ec0",
+        "name": "HUD_MonitorNightSight",
         "address": "0x000b4ec0",
         "calling_convention": "__stdcall",
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall FUN_000b4ec0(void)"
+        "param_types": [
+            "BLData *"
+        ],
+        "prototype_string": "void __stdcall HUD_MonitorNightSight(BLData * blData)"
     },
     {
-        "name": "FUN_000b5190",
+        "name": "HUD_MPUpdatePane",
         "address": "0x000b5190",
         "calling_convention": "unknown",
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
+            "BLData *",
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000b5190(undefined4 param_1, undefined4 param_2, undefined4 param_3)"
+        "prototype_string": "undefined HUD_MPUpdatePane(BLData * param_1, undefined4 param_2, undefined4 param_3)"
     },
     {
-        "name": "FUN_000b54d0",
+        "name": "HUD_RadarUpdate",
         "address": "0x000b54d0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
+            "BLData *",
             "undefined4",
-            "undefined4",
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined FUN_000b54d0(undefined4 param_1, undefined4 param_2, undefined4 param_3)"
+        "prototype_string": "undefined __cdecl HUD_RadarUpdate(BLData * param_1, undefined4 hudPane, obj_tag * param_3)"
     },
     {
         "name": "HUD_CreateDefault",
@@ -21866,11 +21893,12 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
-            "int",
-            "undefined2 *"
+            "BLData *",
+            "HUDPANE_tag *",
+            "HUDPANECREATE_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl HUD_CreateDefault(int param_1, int param_2, undefined2 * param_3)"
+        "prototype_string": "void __cdecl HUD_CreateDefault(BLData * blData, HUDPANE_tag * hudPane, HUDPANECREATE_tag * hudPaneCreate, obj_tag * unused)"
     },
     {
         "name": "HUD_CreateShrink",
@@ -21888,12 +21916,14 @@
     {
         "name": "FUN_000b5f40",
         "address": "0x000b5f40",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "void",
         "param_types": [
-            "undefined4"
+            "HUDPANECREATE_tag *",
+            "HUDPANE_tag *",
+            "BLData *"
         ],
-        "prototype_string": "undefined FUN_000b5f40(undefined4 param_1)"
+        "prototype_string": "void __stdcall FUN_000b5f40(HUDPANECREATE_tag * hudPaneCreate, HUDPANE_tag * hudPane, BLData * blData)"
     },
     {
         "name": "HUD_Reset",
@@ -21901,9 +21931,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "BLData *"
         ],
-        "prototype_string": "void __cdecl HUD_Reset(int param_1)"
+        "prototype_string": "void __cdecl HUD_Reset(BLData * param_1)"
     },
     {
         "name": "HUD_Update",
@@ -21911,23 +21941,23 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "BLData *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl HUD_Update(int param_1, int param_2)"
+        "prototype_string": "void __cdecl HUD_Update(BLData * param_1, obj_tag * param_2)"
     },
     {
         "name": "HUD_CreateAmmoPane",
         "address": "0x000b6270",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "void",
         "param_types": [
+            "BLData *",
             "undefined4",
             "undefined4",
-            "undefined4",
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined HUD_CreateAmmoPane(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
+        "prototype_string": "void __stdcall HUD_CreateAmmoPane(BLData * param_1, undefined4 param_2, undefined4 param_3, obj_tag * gameObj)"
     },
     {
         "name": "HUD_CreateHealthPane",
@@ -21990,7 +22020,7 @@
         "prototype_string": "undefined FUN_000b6490(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
     },
     {
-        "name": "FUN_000b64d0",
+        "name": "HUD_CreateInfoStatusPane",
         "address": "0x000b64d0",
         "calling_convention": "unknown",
         "return_type": "undefined",
@@ -22000,7 +22030,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000b64d0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
+        "prototype_string": "undefined HUD_CreateInfoStatusPane(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
     },
     {
         "name": "FUN_000b6540",
@@ -22016,7 +22046,7 @@
         "prototype_string": "undefined FUN_000b6540(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
     },
     {
-        "name": "FUN_000b65b0",
+        "name": "HUD_CreateOICWPane",
         "address": "0x000b65b0",
         "calling_convention": "unknown",
         "return_type": "undefined",
@@ -22026,33 +22056,33 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000b65b0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
+        "prototype_string": "undefined HUD_CreateOICWPane(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
     },
     {
-        "name": "FUN_000b66c0",
+        "name": "HUD_CreateRedeemer",
         "address": "0x000b66c0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "BLData *",
+            "HUDPANE_tag *",
+            "HUDPANECREATE_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined FUN_000b66c0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
+        "prototype_string": "undefined __cdecl HUD_CreateRedeemer(BLData * param_1, HUDPANE_tag * param_2, HUDPANECREATE_tag * param_3, obj_tag * param_4)"
     },
     {
         "name": "HUD_CreateMPScorePane",
         "address": "0x000b67d0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "BLData *",
+            "HUDPANE_tag *",
+            "HUDPANECREATE_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined HUD_CreateMPScorePane(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
+        "prototype_string": "undefined __cdecl HUD_CreateMPScorePane(BLData * blData, HUDPANE_tag * hudPane, HUDPANECREATE_tag * hudPaneCreate, obj_tag * gameObj)"
     },
     {
         "name": "HUD_CreateRadar",
@@ -22073,10 +22103,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "BLData *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl HUD_Init(int param_1, int param_2)"
+        "prototype_string": "void __cdecl HUD_Init(BLData * blData, obj_tag * gameObj)"
     },
     {
         "name": "FUN_000b6c20",
@@ -22089,14 +22119,14 @@
         "prototype_string": "obj_tag * __cdecl FUN_000b6c20(int * param_1)"
     },
     {
-        "name": "FUN_000b6ca0",
+        "name": "Player_AmmoIndex",
         "address": "0x000b6ca0",
         "calling_convention": "__cdecl",
         "return_type": "short",
         "param_types": [
             "short"
         ],
-        "prototype_string": "short __cdecl FUN_000b6ca0(short param_1)"
+        "prototype_string": "short __cdecl Player_AmmoIndex(short param_1)"
     },
     {
         "name": "Player_AmmoInGun",
@@ -22875,12 +22905,15 @@
         "prototype_string": "undefined __stdcall FUN_000bff80(void)"
     },
     {
-        "name": "FUN_000bff90",
+        "name": "LoadableLoad",
         "address": "0x000bff90",
         "calling_convention": "__stdcall",
         "return_type": "undefined4",
-        "param_types": [],
-        "prototype_string": "undefined4 __stdcall FUN_000bff90(void)"
+        "param_types": [
+            "uint",
+            "uint"
+        ],
+        "prototype_string": "undefined4 __stdcall LoadableLoad(uint param_1, uint param_2)"
     },
     {
         "name": "LoadableReload",
@@ -23238,9 +23271,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "SCRIPTINFO *"
         ],
-        "prototype_string": "void __cdecl Script_Set2Start(int param_1)"
+        "prototype_string": "void __cdecl Script_Set2Start(SCRIPTINFO * param_1)"
     },
     {
         "name": "Script_CreateEntity",
@@ -23339,10 +23372,10 @@
         "calling_convention": "__cdecl",
         "return_type": "uint",
         "param_types": [
-            "uint",
+            "SCRIPTINFO *",
             "char"
         ],
-        "prototype_string": "uint __cdecl Script_Play(uint param_1, char param_2)"
+        "prototype_string": "uint __cdecl Script_Play(SCRIPTINFO * param_1, char param_2)"
     },
     {
         "name": "Script_IsPlaying",
@@ -23376,17 +23409,17 @@
         "prototype_string": "undefined4 __cdecl Script_GetObj(int param_1, ushort param_2)"
     },
     {
-        "name": "FUN_000c2740",
+        "name": "Script_SetColour",
         "address": "0x000c2740",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "SCRIPTINFO *",
             "undefined1",
             "undefined1",
             "undefined1"
         ],
-        "prototype_string": "void __cdecl FUN_000c2740(int param_1, undefined1 param_2, undefined1 param_3, undefined1 param_4)"
+        "prototype_string": "void __cdecl Script_SetColour(SCRIPTINFO * param_1, undefined1 param_2, undefined1 param_3, undefined1 param_4)"
     },
     {
         "name": "Script_SoundStart",
@@ -23495,12 +23528,12 @@
     {
         "name": "Script_Update",
         "address": "0x000c36d0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "SCRIPTINFO *"
         ],
-        "prototype_string": "undefined Script_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Script_Update(SCRIPTINFO * param_1)"
     },
     {
         "name": "Script_Interp",
@@ -23527,12 +23560,13 @@
     {
         "name": "SP_LoadScript",
         "address": "0x000c3e20",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "void",
         "param_types": [
-            "undefined4"
+            "int",
+            "SCRIPTPLAYER *"
         ],
-        "prototype_string": "undefined SP_LoadScript(undefined4 param_1)"
+        "prototype_string": "void __stdcall SP_LoadScript(int param_1, SCRIPTPLAYER * scriptPlayer)"
     },
     {
         "name": "SP_Delete",
@@ -23619,12 +23653,15 @@
     {
         "name": "SP_SetColour",
         "address": "0x000c42a0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *",
+            "undefined1",
+            "undefined1",
+            "undefined1"
         ],
-        "prototype_string": "undefined SP_SetColour(undefined4 param_1)"
+        "prototype_string": "undefined __stdcall SP_SetColour(obj_tag * param_1, undefined1 param_2, undefined1 param_3, undefined1 param_4)"
     },
     {
         "name": "SP_SwitchToScript",
@@ -23632,11 +23669,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
             "undefined2",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl SP_SwitchToScript(int param_1, undefined2 param_2, undefined4 param_3)"
+        "prototype_string": "void __cdecl SP_SwitchToScript(obj_tag * param_1, undefined2 param_2, undefined4 param_3)"
     },
     {
         "name": "SP_GetHitDamage",
@@ -25167,13 +25204,13 @@
             "float *",
             "float",
             "float",
-            "float",
+            "HASHCODE",
             "uint",
-            "float",
-            "float",
+            "uint",
+            "uint",
             "ushort"
         ],
-        "prototype_string": "obj_tag * __cdecl Gas_Init(int * param_1, _VECTOR * param_2, _VECTOR * param_3, float * param_4, float param_5, float param_6, float param_7, uint param_8, float param_9, float param_10, ushort param_11)"
+        "prototype_string": "obj_tag * __cdecl Gas_Init(int * param_1, _VECTOR * pos, _VECTOR * rot, float * param_4, float param_5, float param_6, HASHCODE param_7, uint param_8, uint param_9, uint param_10, ushort param_11)"
     },
     {
         "name": "gases_smoke",
@@ -25314,15 +25351,15 @@
         "prototype_string": "void __stdcall Sprite_InitLists(void)"
     },
     {
-        "name": "FUN_000ceb50",
+        "name": "Sprite_SetFmt",
         "address": "0x000ceb50",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "sprite *",
             "char *"
         ],
-        "prototype_string": "void __cdecl FUN_000ceb50(int param_1, char * param_2)"
+        "prototype_string": "void __cdecl Sprite_SetFmt(sprite * param_1, char * param_2)"
     },
     {
         "name": "Sprite_SetText",
@@ -25330,10 +25367,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "sprite *",
             "char *"
         ],
-        "prototype_string": "void __cdecl Sprite_SetText(int param_1, char * param_2)"
+        "prototype_string": "void __cdecl Sprite_SetText(sprite * param_1, char * param_2)"
     },
     {
         "name": "Sprite_SetTextNFmt",
@@ -25341,11 +25378,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "sprite *",
             "char *",
             "char *"
         ],
-        "prototype_string": "void __cdecl Sprite_SetTextNFmt(int param_1, char * param_2, char * param_3)"
+        "prototype_string": "void __cdecl Sprite_SetTextNFmt(sprite * param_1, char * param_2, char * param_3)"
     },
     {
         "name": "Sprite_SetParams",
@@ -25353,22 +25390,22 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "sprite *",
             "undefined1",
             "undefined2",
             "undefined2",
-            "int",
+            "HASHCODE",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Sprite_SetParams(int param_1, undefined1 param_2, undefined2 param_3, undefined2 param_4, int param_5, undefined4 param_6)"
+        "prototype_string": "void __cdecl Sprite_SetParams(sprite * curSprite, undefined1 param_2, undefined2 param_3, undefined2 param_4, HASHCODE hashCode, undefined4 param_6)"
     },
     {
         "name": "Sprite_Create",
         "address": "0x000cec90",
         "calling_convention": "__stdcall",
-        "return_type": "void",
+        "return_type": "sprite *",
         "param_types": [],
-        "prototype_string": "void __stdcall Sprite_Create(void)"
+        "prototype_string": "sprite * __stdcall Sprite_Create(void)"
     },
     {
         "name": "Sprite_Link2Viewer",
@@ -25376,10 +25413,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "sprite *",
             "undefined1"
         ],
-        "prototype_string": "void __cdecl Sprite_Link2Viewer(int param_1, undefined1 param_2)"
+        "prototype_string": "void __cdecl Sprite_Link2Viewer(sprite * spr, undefined1 playerNum)"
     },
     {
         "name": "Sprite_Delete",
@@ -25408,21 +25445,21 @@
         "name": "Sprite_CreateAndLink2Viewer",
         "address": "0x000cedd0",
         "calling_convention": "__cdecl",
-        "return_type": "void",
+        "return_type": "sprite *",
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "void __cdecl Sprite_CreateAndLink2Viewer(undefined1 param_1)"
+        "prototype_string": "sprite * __cdecl Sprite_CreateAndLink2Viewer(undefined1 viewer)"
     },
     {
         "name": "Sprite_Create2",
         "address": "0x000cedf0",
         "calling_convention": "__cdecl",
-        "return_type": "int",
+        "return_type": "sprite *",
         "param_types": [
             "undefined4 *"
         ],
-        "prototype_string": "int __cdecl Sprite_Create2(undefined4 * param_1)"
+        "prototype_string": "sprite * __cdecl Sprite_Create2(undefined4 * param_1)"
     },
     {
         "name": "Sub_Create",
@@ -25543,20 +25580,20 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Switch_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int param_4)"
+        "prototype_string": "obj_tag * __cdecl Switch_Create(_VECTOR * pos, _VECTOR * rot, level_tag * lvl, celglist_tag * celgl)"
     },
     {
         "name": "Switch_Update",
         "address": "0x000cfd30",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Switch_Update(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Switch_Update(obj_tag * param_1)"
     },
     {
         "name": "Switch_Activate",
@@ -25585,9 +25622,9 @@
         "calling_convention": "__cdecl",
         "return_type": "undefined2",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined2 __cdecl Switch_GetSwitchChannel(int param_1)"
+        "prototype_string": "undefined2 __cdecl Switch_GetSwitchChannel(obj_tag * param_1)"
     },
     {
         "name": "FUN_000cff50",
@@ -27346,12 +27383,12 @@
         "name": "Vec_NormaliseLen",
         "address": "0x000d7670",
         "calling_convention": "__cdecl",
-        "return_type": "void",
+        "return_type": "float",
         "param_types": [
             "_VECTOR *",
             "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl Vec_NormaliseLen(_VECTOR * output, _VECTOR * input)"
+        "prototype_string": "float __cdecl Vec_NormaliseLen(_VECTOR * output, _VECTOR * input)"
     },
     {
         "name": "Vec_Normalise",
@@ -27362,7 +27399,7 @@
             "_VECTOR *",
             "_VECTOR *"
         ],
-        "prototype_string": "undefined __cdecl Vec_Normalise(_VECTOR * vOut, _VECTOR * vIn)"
+        "prototype_string": "undefined __cdecl Vec_Normalise(_VECTOR * output, _VECTOR * input)"
     },
     {
         "name": "Vec_CrossNormalise",
@@ -27370,11 +27407,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *",
+            "_VECTOR *",
+            "_VECTOR *",
             "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl Vec_CrossNormalise(float * param_1, float * param_2, _VECTOR * param_3)"
+        "prototype_string": "void __cdecl Vec_CrossNormalise(_VECTOR * a, _VECTOR * b, _VECTOR * vecOut)"
     },
     {
         "name": "Vec_ScalarTripleProduct",
