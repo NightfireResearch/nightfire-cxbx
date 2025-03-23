@@ -92,7 +92,6 @@ typedef struct { // on Xbox, starts at 0025fe38
     undefined field72_0x1da;
     undefined field73_0x1db;
 } MPSettings_t;
-#pragma pack(pop)
 
 static_assert(sizeof(MPSettings_t) == 572, "MPSettings_t is wrong size");
 
@@ -111,8 +110,35 @@ typedef struct {
 // True on Xbox, PS2 is larger due to padding of _VECTOR
 static_assert(sizeof(MPSpawnPoint) == 0x1c, "Size of MPSpawnPoint not correct");
 
+typedef struct {
+  HASHCODE skinHashcode; // ?
+  HASHCODE meshHashcode; // ?
+  int handType;
+  bool isInThisMpGame;
+  char unknown2[3];
+} MP_skin;
+
+static_assert(sizeof(MP_skin) == 0x10, "MP_skin is wrong size");
 
 
+typedef struct {
+    char unknown[16];
+    char SkinNum;
+    char unknown2;
+} MPBOT;
+
+static_assert(sizeof(MPBOT) == 18, "MPBOT is wrong size");
+
+typedef struct {
+    char Enabled;
+    char NumBots;
+    MPBOT bot[6]; // FIXME: How many bots are there? Platform-specific? Enough memory for 10 on Xbox
+} MPBOTS;
+
+#pragma pack(pop)
+
+
+void MP_setLoadingSkins(void);
 bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b);
 bool MP_isObjectOnTeam(obj_tag *param_1,uint teamId);
 MPTeam MP_getObjectTeam(obj_tag* param_1);

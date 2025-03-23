@@ -1,6 +1,8 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "actionhelpers.h"
+
 void Game_Run(void);
 void GameFlow_Main(void);
 bool movieFinished(void);
@@ -9,15 +11,16 @@ void mainloop(void);
 void bootup_bootup(void);
 void psiInitTimeIn100ths(void);
 unsigned long long psiGetTimeIn100ths(void);
-
-typedef unsigned int undefined4;
-typedef unsigned char undefined;
+void Reset_MapLoadSettings(void);
+uint GameFlow_GetState(void);
+void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv);
+bool Menu_IsDrivingLevel(HASHCODE level);
 
 #pragma pack(push, 1)
 typedef struct {
     undefined4 field0_0x0;
     undefined4 field1_0x4;
-    undefined4 NextLevelHashcode;
+    HASHCODE NextLevelHashcode;
     undefined4 CurrentLevelHashcode;
     undefined4 MovieHashcode;
     undefined4 field5_0x14;

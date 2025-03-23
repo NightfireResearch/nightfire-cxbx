@@ -1,11 +1,41 @@
 #include "multiplayer.h"
 #include "../../game.h"
 #include "../gamestate.h"
+#include <stdio.h>
 
 #define CurrentAssassinObjId (((obj_tag *)0x0026178c))
 #define AssassinTarget (((obj_tag *)0x00261788))
 // AUTOGEN
 unsigned int Control_Plr2Ind(obj_tag* a);
+
+#define NUM_SKINS 29 // unique characters
+#define MP_skins ((MP_skin*)0x001637c0)
+
+#define mpbots (*(MPBOTS*)0x00245280)
+
+// AUTOINJECT
+void MP_setLoadingSkins(void) {
+
+  // Set default value to unused
+  for(int  i = 0; i < NUM_SKINS; i++) {
+    MP_skins[i].isInThisMpGame = false;
+  }
+
+  // Discover player skins
+  for(int i = 0; i < MPSettings.numPlayers; i++) {
+    int skinNum = MPSettings.Player[i].SkinNum;
+    MP_skins[skinNum].isInThisMpGame = true;
+    printf("Player %i uses skin %i\n", i, skinNum);
+  }
+
+  // Discover bot skins
+  for(int i = 0; i < mpbots.NumBots; i++) {
+    int skinNum = mpbots.bot[i].SkinNum;
+    MP_skins[skinNum].isInThisMpGame = true;
+    printf("Bot %i uses skin %i\n", i, skinNum);
+  }
+
+}
 
 
 // AUTOINJECT
