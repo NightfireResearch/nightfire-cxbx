@@ -156,9 +156,6 @@ void __cdecl psiLaunchDriving(void* a, uint b);
 void __stdcall Game_Draw(void);
 // AUTOGEN
 void __stdcall Boot_LoadPTPData(void);
-// easy to port
-// AUTOGEN 
-void __stdcall Reset_MapLoadSettings(void);
 // AUTOGEN
 uint __stdcall Locks_Init(void);
 // AUTOGEN
@@ -168,6 +165,158 @@ void __stdcall psiStopBackgroundMovie(void);
 // AUTOGEN
 void Boot_GetPTPData(void **param_1,uint *param_2);
 
+// AUTOINJECT
+bool Menu_IsDrivingLevel(HASHCODE level) {
+    switch(level) {
+        case HT_Level_Driving_Paris:
+        case HT_Level_Driving_Underwater:
+        case HT_Level_Driving_JungleA:
+        case HT_Level_Driving_SnowMobile:
+        case HT_Level_Driving_Alps:
+            return true;
+    }
+    return false;
+}
+
+bool IsMultiplayerMission(HASHCODE level) {
+    switch(level) {
+        case HT_Level_SpaceStation: // FIXME: This is weird to see here?
+        case HT_Level_Facility:
+        case HT_Level_Atlantis:
+        case HT_Level_SkyRail:
+        case HT_Level_SubPen:
+        case HT_Level_StealthShip:
+        case HT_Level_FortKnox:
+        case HT_Level_MissileSilo:
+        case HT_Level_SnowBlind:
+        case HT_Level_Ravine:
+        case 0x700004c:
+            return true;
+      }
+      return false;
+}
+
+HASHCODE GetFmvForLevel(HASHCODE level) {
+  int param_1 = 0;
+  switch(level) {
+    case HT_Level_HendersonA:
+      param_1 = FMV_INTRO_MAYHEW_ENTRY;
+      break;
+    case HT_Level_HendersonB:
+      param_1 = 0x7100002;
+      break;
+    case HT_Level_HendersonC:
+      param_1 = 0x7100003;
+      break;
+    case HT_Level_HendersonD:
+      param_1 = 0x7100004;
+      break;
+    case HT_Level_CastleExterior:
+      param_1 = FMV_INTRO_STOLEN_HARDWARE;
+      break;
+    case HT_Level_CastleCourtyard:
+      param_1 = 0x7100006;
+      break;
+    case HT_Level_CastleIndoors1:
+      param_1 = 0x7100007;
+      break;
+    case HT_Level_CastleIndoors2:
+      param_1 = 0x7100008;
+      break;
+    case HT_Level_TowerA:
+      param_1 = FMV_INTRO_PHOENIX_TOWER;
+      break;
+    case HT_Level_TowerB:
+      param_1 = 0x710000a;
+      break;
+    case HT_Level_TowerC:
+      param_1 = 0x710000b;
+      break;
+    case HT_Level_PowerStationA1:
+      param_1 = FMV_INTRO_POWERPLANT;
+      break;
+    case HT_Level_PowerStationA2:
+      param_1 = 0x710000d;
+      break;
+    case 0x700000e:
+      param_1 = 0x710000e;
+      break;
+    case 0x700000f:
+      param_1 = 0x710000f;
+      break;
+    case 0x7000010:
+      param_1 = 0x7100010;
+      break;
+    case HT_Level_Tower2A:
+      param_1 = FMV_INTRO_PHOENIX_TOWER_2;
+      break;
+    case HT_Level_Tower2B:
+      param_1 = 0x7100012;
+      break;
+    case HT_Level_Tower2C:
+      param_1 = 0x7100013;
+      break;
+    case HT_Level_EvilBase:
+      param_1 = FMV_INTRO_ISLAND_RADIOTOWER;
+      break;
+    case HT_Level_EvilSilo:
+      param_1 = 0x7100015;
+      break;
+    case HT_Level_EvilBaseC:
+      param_1 = 0x7100016;
+      break;
+    case HT_Level_SpaceStationD:
+      param_1 = FMV_INTRO_SPACE_STATION;
+      break;
+    case HT_Level_Tower2Elevator:
+      param_1 = 0x710004a;
+    }
+    return (HASHCODE)param_1;
+}
+
+#define IsWarmReset U8_AT(0x00279250)
+
+// AUTOGEN
+void __cdecl GameFlow_PushState(int state, float param_2, uint param_3);
+
+// AUTOINJECT
+void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
+
+  if(level == 0xFFFFFFFF)
+    return;
+
+  IsWarmReset = warmReset;
+  switch(GameFlow_GetState()) {
+    case 2:
+    case 7:
+    case 8:
+    case 0xd:
+    case 0xe:
+
+      GameState.InhibitGameDraw = 1;
+      GameState.maybeIsMultiplayerMapLoading = 0;
+
+      if(Menu_IsDrivingLevel(level)) {
+
+        GameFlow_PushState(9, 0.0, 0xff);
+        GameState.NextLevelHashcode = level;
+
+      } else {
+
+        if(IsMultiplayerMission(level)) {
+          GameState.maybeIsMultiplayerMapLoading = 1;
+          MP_setLoadingSkins();
+        }
+
+        if(!skipFmv) {
+          HASHCODE fmv = GetFmvForLevel(level);
+          GameState.NextLevelHashcode = (fmv ? fmv : level);
+          GameFlow_PushState(3, 0.0, 0xff);
+        }
+
+      }
+    }
+}
 
 uint GameFlow_GetState(void) {
   if (StackIndex == 0) {
@@ -342,6 +491,14 @@ void bootup_bootup(void) {
 }
 
 // AUTOINJECT
+void Reset_MapLoadSettings(void) {
+  if(GameState.NextLevelHashcode == 0) {
+    GameState.NextLevelHashcode = HT_Level_Menu_Pre;
+  }
+  ResetMap_LevelToLoad(GameState.NextLevelHashcode, false, false);
+}
+
+// AUTOINJECT
 void GameFlow_Main(void) {
   byte bVar2;
   uint local_8;
@@ -460,12 +617,12 @@ void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate) {
 
 #define IsPalI U8_AT(0x002c5760)
 
-// FUNC_AT(000e5fb0)
+// AUTOINJECT
 bool Graphics_IsPalI(void) {
   return IsPalI;
 }
 
-// FUNC_AT(000dd1d0)
+// AUTOINJECT
 void mainloop(void) {
   int refreshRate = Graphics_IsPalI() ? 50 : 60;
   GS_SetRefreshRate(refreshRate, refreshRate);

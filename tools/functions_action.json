@@ -16219,14 +16219,14 @@
         "prototype_string": "undefined8 __cdecl Menu_SpecialCodenameCheck(byte * param_1)"
     },
     {
-        "name": "FUN_0007eaa0",
+        "name": "Menu_IsDrivingLevel",
         "address": "0x0007eaa0",
         "calling_convention": "__cdecl",
         "return_type": "uint",
         "param_types": [
             "int"
         ],
-        "prototype_string": "uint __cdecl FUN_0007eaa0(int param_1)"
+        "prototype_string": "uint __cdecl Menu_IsDrivingLevel(int param_1)"
     },
     {
         "name": "Menu_IsBotGood",
