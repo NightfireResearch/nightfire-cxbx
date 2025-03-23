@@ -72,7 +72,7 @@ int ** __cdecl psiFileLoadOrig(char *filename, unsigned short allocType, int *si
     dumpToFile(filename, (void*)ppiVar1, *sizeOut);
     return ppiVar1;
   }
-  if (sizeOut != (int *)0x0) {
+  if (sizeOut != NULL) {
     *sizeOut = DirFileLen;
   }
   printf("psiFileLoad in single-file mode: %s is 0x%08x bytes at the location pointed to by dirFileBuf(0x00279168), type %04x\n", filename, *sizeOut, allocType);
