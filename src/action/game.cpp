@@ -306,14 +306,8 @@ void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
           GameState.isMultiplayerLevel = 1;
           MP_setLoadingSkins();
         }
-
-        HASHCODE fmv = (HASHCODE)0;
-
-        if(!skipFmv) {
-          fmv = GetFmvForLevel(level);
-        }
         
-        GameState.NextLevelHashcode = (fmv ? fmv : level);
+        GameState.NextLevelHashcode = (skipFmv ? level : GetFmvForLevel(level));
         GameFlow_PushState(3, 0.0, 0xff);
 
       }
