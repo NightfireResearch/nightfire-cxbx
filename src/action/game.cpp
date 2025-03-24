@@ -195,7 +195,7 @@ bool IsMultiplayerMission(HASHCODE level) {
       return false;
 }
 
-HASHCODE GetFmvForLevel(HASHCODE level) {
+HASHCODE GetLevelWithFmv(HASHCODE level) {
   int param_1 = 0;
   switch(level) {
     case HT_Level_HendersonA:
@@ -269,6 +269,10 @@ HASHCODE GetFmvForLevel(HASHCODE level) {
       break;
     case HT_Level_Tower2Elevator:
       param_1 = 0x710004a;
+      break;
+    default: // No FMV, just load the level
+      param_1 = level;
+      break;
     }
     return (HASHCODE)param_1;
 }
@@ -278,8 +282,7 @@ HASHCODE GetFmvForLevel(HASHCODE level) {
 // AUTOGEN
 void __cdecl GameFlow_PushState(int state, float param_2, uint param_3);
 
-// BROKEN: Causes issues when loading MP levels - missing file?
-// NOAUTOINJECT
+// AUTOINJECT
 void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
 
   if(level == 0xFFFFFFFF)
@@ -308,7 +311,7 @@ void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
           MP_setLoadingSkins();
         }
         
-        GameState.NextLevelHashcode = (skipFmv ? level : GetFmvForLevel(level));
+        GameState.NextLevelHashcode = (skipFmv ? level : GetLevelWithFmv(level));
         GameFlow_PushState(3, 0.0, 0xff);
 
       }
