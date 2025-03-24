@@ -135,7 +135,7 @@ void Car_PlayerHasDied(obj_tag *player) {
         
         CAR_INFO* car = (CAR_INFO*)(objAt->extraObjectData);
         
-        if(objAt->objectType == CAR && car->playerController == player) {
+        if(objAt->objectType == OBJECTTYPE_CAR && car->playerController == player) {
             // We've found the car which is being remote controlled by the player
             Car_Deactivate(objAt);
             break;
@@ -203,7 +203,7 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
 
     CAR_INFO *tankInfo = (CAR_INFO*)baseObj->extraObjectData;
 
-    baseObj->objectType = CAR;
+    baseObj->objectType = OBJECTTYPE_CAR;
     baseObj->maybeCollision = tankInfo;
     Quat_MatToQuat(&tankInfo->orientation, &baseObj->transformMatrix);
 
