@@ -278,7 +278,8 @@ HASHCODE GetFmvForLevel(HASHCODE level) {
 // AUTOGEN
 void __cdecl GameFlow_PushState(int state, float param_2, uint param_3);
 
-// AUTOINJECT
+// BROKEN: Causes issues when loading MP levels - missing file?
+// NOAUTOINJECT
 void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
 
   if(level == 0xFFFFFFFF)

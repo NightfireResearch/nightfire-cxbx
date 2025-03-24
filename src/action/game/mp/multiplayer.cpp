@@ -118,7 +118,7 @@ cel_tag* build_FindCel(_VECTOR *position, world_tag *world);
 // AUTOGEN
 bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection);
 
-
+// BROKEN: Crashes at level load, perhaps due to the floating-point function call?
 // NOAUTOINJECT
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId) {
 
