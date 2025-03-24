@@ -107,3 +107,64 @@ bool MP_IsAssasin(obj_tag *param_1) {
 bool MP_IsTarget(obj_tag *param_1) {
   return ((AssassinTarget != NULL) && (AssassinTarget == param_1));
 }
+
+#define SpawnPntCount U32_AT(0x00262f38)
+#define SpawnPntTeamCount (*(uint32_t**)0x00262968)
+#define glb_world ((world_tag*)0x001f6674)
+
+// AUTOGEN
+cel_tag* build_FindCel(_VECTOR *position, world_tag *world);
+// AUTOGEN
+bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection);
+
+
+// NOAUTOINJECT
+void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId) {
+
+  if(teamId == MPTeam::NO_TEAM)
+    return;
+
+  int startIdx = 0;
+  int endIdx = 64;
+
+  if ((MPSettings.maybeIsTeamGame) || (MPSettings.GameMode == GM_ASSASSIN)) {
+    // Spawn points are arranged in a list but for convenience (?) we don't interleave by team.
+    // Values 0-31 are for team PHOENIX, values 32-63 are for MI6 
+    switch(teamId) {
+      case MPTeam::PHOENIX:
+        startIdx = 0;
+        endIdx = 32;
+        break;
+      case MPTeam::MI6:
+        startIdx = 32;
+        endIdx = 64;
+        break;
+    }
+  }
+
+  for(int i = startIdx; i < endIdx; i++) {
+
+    // Find the first uninitialised spawn point
+    if(SpawnPoints[i].initialised)
+      continue;
+    
+    // Locate the point on the floor
+    _VECTOR spawnPos;
+    Vec_Copy(position, &spawnPos);
+    cel_tag* cel = build_FindCel(position, glb_world);
+    _VECTOR searchDirection = {.x=0.0, .y=0.0, .z=1.0};
+    build_PointOnFloor(cel, NULL, &spawnPos, 3.0f, NULL);
+    spawnPos.y += 1.6f;
+
+    // Set up the spawn point
+    Vec_Copy(&spawnPos, &SpawnPoints[i].spawnPos);
+    Vec_Copy(facingDirection, &SpawnPoints[i].facingDir);
+    SpawnPoints[i].initialised = true;
+
+    // Maintain counts
+    SpawnPntTeamCount[teamId]++;
+    SpawnPntCount++;
+  }
+
+}
+  

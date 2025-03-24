@@ -22,4 +22,14 @@ typedef struct {
     char unknown;
 } level_tag;
 
+// TODO: Unfinished
+typedef struct {
+    char unknown;
+} world_tag;
+
+// TODO: Unfinished
+typedef struct {
+    char unknown;
+} cel_tag;
+
 #endif //ACTIONHELPERS_H

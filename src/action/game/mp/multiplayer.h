@@ -69,7 +69,7 @@ typedef struct { // on Xbox, starts at 0025fe38
     undefined4 isMultiplayer; // on Xbox, at 00260018
     undefined4 relatedToTeamIdentitySomehow;
     undefined4 Started;
-    undefined4 field52_0x18c;
+    undefined4 maybeIsTeamGame;
     undefined4 field53_0x190;
     undefined4 numPlayersAndBots;
     undefined4 FriendlyFire;
@@ -110,6 +110,8 @@ typedef struct {
 // True on Xbox, PS2 is larger due to padding of _VECTOR
 static_assert(sizeof(MPSpawnPoint) == 0x1c, "Size of MPSpawnPoint not correct");
 
+#define SpawnPoints ((MPSpawnPoint*)0x00261d58)
+
 typedef struct {
   HASHCODE skinHashcode; // ?
   HASHCODE fileHashcode; // ?
@@ -144,3 +146,4 @@ bool MP_isObjectOnTeam(obj_tag *param_1,uint teamId);
 MPTeam MP_getObjectTeam(obj_tag* param_1);
 bool MP_IsAssasin(obj_tag *param_1);
 bool MP_IsTarget(obj_tag *param_1);
+void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId);

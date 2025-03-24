@@ -2061,26 +2061,26 @@
         "name": "build_FindCel",
         "address": "0x00020c30",
         "calling_convention": "__cdecl",
-        "return_type": "int",
+        "return_type": "cel_tag *",
         "param_types": [
-            "float *",
-            "int * *"
+            "_VECTOR *",
+            "world_tag *"
         ],
-        "prototype_string": "int __cdecl build_FindCel(float * param_1, int * * param_2)"
+        "prototype_string": "cel_tag * __cdecl build_FindCel(_VECTOR * location, world_tag * world)"
     },
     {
         "name": "build_PointOnFloor",
         "address": "0x00020eb0",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "float *",
+            "cel_tag *",
+            "obj_tag *",
+            "_VECTOR *",
             "float",
-            "float *"
+            "_VECTOR *"
         ],
-        "prototype_string": "undefined4 __cdecl build_PointOnFloor(undefined4 param_1, undefined4 param_2, float * param_3, float param_4, float * param_5)"
+        "prototype_string": "bool __cdecl build_PointOnFloor(cel_tag * cel, obj_tag * obj, _VECTOR * position, float maxDistance, _VECTOR * searchDirection)"
     },
     {
         "name": "build_link_objects_to_rooms",
@@ -16222,11 +16222,11 @@
         "name": "Menu_IsDrivingLevel",
         "address": "0x0007eaa0",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int"
+            "HASHCODE"
         ],
-        "prototype_string": "uint __cdecl Menu_IsDrivingLevel(int param_1)"
+        "prototype_string": "bool __cdecl Menu_IsDrivingLevel(HASHCODE param_1)"
     },
     {
         "name": "Menu_IsBotGood",
@@ -19768,14 +19768,14 @@
         "prototype_string": "undefined __cdecl MPSound_Play(Action_SFX param_1)"
     },
     {
-        "name": "FUN_0009ec80",
+        "name": "MP_PlayerOrBotInd",
         "address": "0x0009ec80",
         "calling_convention": "__cdecl",
         "return_type": "short",
         "param_types": [
             "int"
         ],
-        "prototype_string": "short __cdecl FUN_0009ec80(int param_1)"
+        "prototype_string": "short __cdecl MP_PlayerOrBotInd(int param_1)"
     },
     {
         "name": "FUN_0009ecb0",
@@ -19890,11 +19890,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
             "float",
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl MP_ApplyDamage(int param_1, float param_2, int param_3)"
+        "prototype_string": "void __cdecl MP_ApplyDamage(obj_tag * param_1, float damageAmt, obj_tag * param_3)"
     },
     {
         "name": "MP_RegisterPickup",
@@ -19907,7 +19907,7 @@
         "prototype_string": "int __cdecl MP_RegisterPickup(int param_1)"
     },
     {
-        "name": "FUN_000a1560",
+        "name": "MP_initObjExt",
         "address": "0x000a1560",
         "calling_convention": "__fastcall",
         "return_type": "void",
@@ -19915,7 +19915,7 @@
             "int *",
             "obj_tag *"
         ],
-        "prototype_string": "void __fastcall FUN_000a1560(int * param_1, obj_tag * gameObj)"
+        "prototype_string": "void __fastcall MP_initObjExt(int * param_1, obj_tag * gameObj)"
     },
     {
         "name": "MP_getProtectionObj_NotExt",
@@ -19951,9 +19951,9 @@
         "param_types": [
             "_MATRIX *",
             "undefined2 *",
-            "int *"
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl MP_CreateObject(_MATRIX * param_1, undefined2 * param_2, int * param_3)"
+        "prototype_string": "obj_tag * __cdecl MP_CreateObject(_MATRIX * param_1, undefined2 * param_2, celglist_tag * param_3)"
     },
     {
         "name": "MP_BluePrintUpdate",
@@ -21111,12 +21111,12 @@
         "name": "Player_Hurt",
         "address": "0x000ae690",
         "calling_convention": "default",
-        "return_type": "void",
+        "return_type": "float",
         "param_types": [
             "obj_tag *",
             "float"
         ],
-        "prototype_string": "void Player_Hurt(obj_tag * param_1, float dmg)"
+        "prototype_string": "float Player_Hurt(obj_tag * param_1, float dmg)"
     },
     {
         "name": "FUN_000ae6c0",
