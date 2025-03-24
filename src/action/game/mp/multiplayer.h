@@ -112,7 +112,7 @@ static_assert(sizeof(MPSpawnPoint) == 0x1c, "Size of MPSpawnPoint not correct");
 
 typedef struct {
   HASHCODE skinHashcode; // ?
-  HASHCODE meshHashcode; // ?
+  HASHCODE fileHashcode; // ?
   int handType;
   bool isInThisMpGame;
   char unknown2[3];

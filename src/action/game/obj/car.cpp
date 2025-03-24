@@ -1,5 +1,5 @@
 // Multiplayer, remote-controlled tank / helicopter
-#include "../gamestate.h"
+#include "../../game.h"
 #include "../mp/multiplayer.h"
 #include "object.h"
 #include "player.h"
@@ -190,7 +190,7 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
     if(MPSettings.isMultiplayer && !MPSettings.MiniVehiclesEnabled)
         return NULL;
     
-    if(GameState.currentLevelHashcode == HT_Level_Ravine)
+    if(GameState.CurrentLevelHashcode == HT_Level_Ravine)
         return NULL;
 
     if(NumTanks >= MAX_TANKS)

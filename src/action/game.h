@@ -45,11 +45,13 @@ typedef struct {
     char VibrationEnabled;
     undefined field25_0x52;
     undefined field26_0x53;
-    undefined4 maybeIsMultiplayerMapLoading;
+    undefined4 isMultiplayerLevel;
 } GameState_t;
 #pragma pack(pop)
 
 static_assert(sizeof(GameState_t) == 0x58, "Bad size for GameState");
+
+#define GameState (*((GameState_t*)0x001f6580))
 
 struct CheatInfo_t {
     undefined4 Immortal;

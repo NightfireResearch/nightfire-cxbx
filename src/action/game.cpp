@@ -131,7 +131,6 @@ LAB_0006aafe:
 #define REC_FRAME_RATE FLOAT_AT(0x0017c104)
 uint *GameStateStack = (uint*)0x0017bff0; // Not zero-initialised - first entry must be 1
 
-#define GameState (*((GameState_t*)0x001f6580))
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
 #define MPGame (*((MPGame_t*)0x00262738))
 #define GlobalVars (*((GlobalVars_t*)0x001f6568))
@@ -294,7 +293,7 @@ void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
     case 0xe:
 
       GameState.InhibitGameDraw = 1;
-      GameState.maybeIsMultiplayerMapLoading = 0;
+      GameState.isMultiplayerLevel = 0;
 
       if(Menu_IsDrivingLevel(level)) {
 
@@ -304,7 +303,7 @@ void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
       } else {
 
         if(IsMultiplayerMission(level)) {
-          GameState.maybeIsMultiplayerMapLoading = 1;
+          GameState.isMultiplayerLevel = 1;
           MP_setLoadingSkins();
         }
 
