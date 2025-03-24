@@ -36,6 +36,9 @@ void MP_setLoadingSkins(void) {
 
 }
 
+// Used on PS2 as part of AnimLoadFile, but seems not to be used on Xbox.
+// This would also be the only usage of "isInThisMpGame".
+// Included here anyway for reference.
 bool MP_NeedSkin(HASHCODE hc) {
   if(!GameState.isMultiplayerLevel)
     return true;
@@ -48,7 +51,6 @@ bool MP_NeedSkin(HASHCODE hc) {
 
   return true;
 }
-
 
 // AUTOINJECT
 bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b) {
@@ -85,7 +87,6 @@ bool MP_isObjectOnTeam(obj_tag *param_1,uint teamId) {
   
   return false;
 }
-
 
 // AUTOINJECT
 MPTeam MP_getObjectTeam(obj_tag* param_1) {
