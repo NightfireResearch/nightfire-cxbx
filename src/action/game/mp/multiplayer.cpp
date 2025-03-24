@@ -1,6 +1,5 @@
 #include "multiplayer.h"
 #include "../../game.h"
-#include "../gamestate.h"
 #include <stdio.h>
 
 #define CurrentAssassinObjId (((obj_tag *)0x0026178c))
@@ -35,6 +34,19 @@ void MP_setLoadingSkins(void) {
     printf("Bot %i uses skin %i\n", i, skinNum);
   }
 
+}
+
+bool MP_NeedSkin(HASHCODE hc) {
+  if(!GameState.isMultiplayerLevel)
+    return true;
+
+  for(int i = 0; i < NUM_SKINS; i++) {
+    if(MP_skins[i].skinHashcode == hc) {
+      return MP_skins[i].isInThisMpGame;
+    }
+  }
+
+  return true;
 }
 
 
