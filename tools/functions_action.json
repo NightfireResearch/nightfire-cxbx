@@ -2071,7 +2071,7 @@
     {
         "name": "build_PointOnFloor",
         "address": "0x00020eb0",
-        "calling_convention": "__cdecl",
+        "calling_convention": "default",
         "return_type": "bool",
         "param_types": [
             "cel_tag *",
@@ -2096,13 +2096,13 @@
         "name": "build_LinkToRoom",
         "address": "0x00021110",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "obj_tag *",
             "char",
             "int * *"
         ],
-        "prototype_string": "undefined4 __cdecl build_LinkToRoom(obj_tag * param_1, char control_straddle_test, int * * world)"
+        "prototype_string": "bool __cdecl build_LinkToRoom(obj_tag * param_1, char control_straddle_test, int * * world)"
     },
     {
         "name": "Bullet_init",
@@ -3051,9 +3051,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "LLISTINFO_tag *"
+            "HITDATA_tag * *"
         ],
-        "prototype_string": "void __cdecl Collide_FreeHitList(LLISTINFO_tag * param_1)"
+        "prototype_string": "void __cdecl Collide_FreeHitList(HITDATA_tag * * param_1)"
     },
     {
         "name": "FUN_00029500",
@@ -3077,12 +3077,14 @@
         "prototype_string": "void __cdecl Coll_AddHitToList(int * * param_1, int param_2, int param_3, int param_4)"
     },
     {
-        "name": "FUN_000295a0",
+        "name": "Collide_Sort",
         "address": "0x000295a0",
         "calling_convention": "__stdcall",
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall FUN_000295a0(void)"
+        "param_types": [
+            "void *"
+        ],
+        "prototype_string": "void __stdcall Collide_Sort(void * aaa)"
     },
     {
         "name": "Intersect_PointGeom",
@@ -3091,9 +3093,9 @@
         "return_type": "undefined",
         "param_types": [
             "HITTEST_tag *",
-            "HITDATA *"
+            "HITDATA_tag *"
         ],
-        "prototype_string": "undefined __cdecl Intersect_PointGeom(HITTEST_tag * test, HITDATA * hitData)"
+        "prototype_string": "undefined __cdecl Intersect_PointGeom(HITTEST_tag * test, HITDATA_tag * hitData)"
     },
     {
         "name": "Intersect_RayGeom",
@@ -3142,12 +3144,13 @@
     {
         "name": "Collide_Jointy",
         "address": "0x0002acd0",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "bool",
         "param_types": [
-            "undefined4"
+            "HITTEST_tag *",
+            "HITDATA_tag *"
         ],
-        "prototype_string": "undefined Collide_Jointy(undefined4 param_1)"
+        "prototype_string": "bool __stdcall Collide_Jointy(HITTEST_tag * param_1, HITDATA_tag * param_2)"
     },
     {
         "name": "Collide_RayTriangle",
@@ -3249,13 +3252,14 @@
     {
         "name": "Collide_Intersect",
         "address": "0x0002be10",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "undefined4",
         "param_types": [
-            "undefined4",
-            "undefined1"
+            "HITTEST_tag *",
+            "HITDATA_tag *",
+            "ushort"
         ],
-        "prototype_string": "undefined Collide_Intersect(undefined4 param_1, undefined1 param_2)"
+        "prototype_string": "undefined4 __stdcall Collide_Intersect(HITTEST_tag * test, HITDATA_tag * hitData, ushort param_3)"
     },
     {
         "name": "Collide_CylinderIntersect",
@@ -3263,9 +3267,12 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "char"
+            "HITTEST_tag *",
+            "HITDATA_tag * *",
+            "int",
+            "ushort"
         ],
-        "prototype_string": "void __cdecl Collide_CylinderIntersect(char param_1)"
+        "prototype_string": "void __cdecl Collide_CylinderIntersect(HITTEST_tag * test, HITDATA_tag * * hitList, int param_3, ushort param_4)"
     },
     {
         "name": "Collide_RayIntersect",
@@ -3278,11 +3285,12 @@
             "cel_tag *",
             "obj_tag *",
             "obj_tag *",
-            "HITLIST *",
+            "HITDATA_tag * *",
             "char",
+            "uint",
             "undefined2"
         ],
-        "prototype_string": "bool __cdecl Collide_RayIntersect(_VECTOR * startPos, _VECTOR * endPos, cel_tag * cel, obj_tag * param_4, obj_tag * param_5, HITLIST * param_6, char param_7, undefined2 param_8)"
+        "prototype_string": "bool __cdecl Collide_RayIntersect(_VECTOR * startPos, _VECTOR * endPos, cel_tag * cel, obj_tag * param_4, obj_tag * param_5, HITDATA_tag * * hitList, char param_7, uint param_8, undefined2 param_9)"
     },
     {
         "name": "Collide_LineOfSight",
@@ -3453,9 +3461,9 @@
         "return_type": "void",
         "param_types": [
             "obj_tag *",
-            "int *"
+            "cel_tag *"
         ],
-        "prototype_string": "void __cdecl control_link_object_to_cel(obj_tag * param_1, int * param_2)"
+        "prototype_string": "void __cdecl control_link_object_to_cel(obj_tag * obj, cel_tag * cel)"
     },
     {
         "name": "Controls_StraddleTest",
@@ -4376,9 +4384,9 @@
         "return_type": "undefined4",
         "param_types": [
             "obj_tag *",
-            "HITDATA *"
+            "HITDATA_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl Drone_ModPlayerHitDamage(obj_tag * param_1, HITDATA * param_2)"
+        "prototype_string": "undefined4 __cdecl Drone_ModPlayerHitDamage(obj_tag * param_1, HITDATA_tag * param_2)"
     },
     {
         "name": "FUN_00031f20",
@@ -12616,9 +12624,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "HITDATA_tag *"
         ],
-        "prototype_string": "void __cdecl Env_WaterRipple(int param_1)"
+        "prototype_string": "void __cdecl Env_WaterRipple(HITDATA_tag * param_1)"
     },
     {
         "name": "Env_Reset",
@@ -14203,13 +14211,13 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "HITDATA *",
+            "HITDATA_tag *",
             "obj_tag *",
             "cel_tag *",
             "ushort",
             "float"
         ],
-        "prototype_string": "void __cdecl Effect_Player(HITDATA * param_1, obj_tag * param_2, cel_tag * param_3, ushort param_4, float param_5)"
+        "prototype_string": "void __cdecl Effect_Player(HITDATA_tag * param_1, obj_tag * param_2, cel_tag * param_3, ushort param_4, float param_5)"
     },
     {
         "name": "Effect_Create",
@@ -20028,22 +20036,22 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "char"
+            "uchar"
         ],
-        "prototype_string": "void __cdecl InitDrops(char param_1)"
+        "prototype_string": "void __cdecl InitDrops(uchar param_1)"
     },
     {
-        "name": "FUN_000a3350",
+        "name": "AddDrop",
         "address": "0x000a3350",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "short",
             "int",
-            "int",
-            "int"
+            "uchar *",
+            "void *"
         ],
-        "prototype_string": "void __cdecl FUN_000a3350(short param_1, int param_2, int param_3, int param_4)"
+        "prototype_string": "void __cdecl AddDrop(short param_1, int param_2, uchar * param_3, void * param_4)"
     },
     {
         "name": "DrawDrops",
@@ -27274,27 +27282,27 @@
         "prototype_string": "void __cdecl Vec_Cross(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3)"
     },
     {
-        "name": "FUN_000d73e0",
+        "name": "Vec_Scalef",
         "address": "0x000d73e0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float *",
+            "_VECTOR *",
             "float",
-            "float *"
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl FUN_000d73e0(float * param_1, float param_2, float * param_3)"
+        "prototype_string": "void __cdecl Vec_Scalef(_VECTOR * vec_in, float scale, _VECTOR * vec_out)"
     },
     {
-        "name": "FUN_000d7410",
+        "name": "DistancePointToPlane",
         "address": "0x000d7410",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
+            "_VECTOR *",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000d7410(undefined4 param_1, undefined4 param_2)"
+        "prototype_string": "undefined __cdecl DistancePointToPlane(_VECTOR * point, undefined4 plane)"
     },
     {
         "name": "auxVec_AddMulR32",
@@ -27351,21 +27359,21 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "undefined4 *",
-            "undefined4 *"
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl Vec_Swap(undefined4 * param_1, undefined4 * param_2)"
+        "prototype_string": "void __cdecl Vec_Swap(_VECTOR * param_1, _VECTOR * param_2)"
     },
     {
         "name": "Vec_Dist3D",
         "address": "0x000d7600",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "undefined Vec_Dist3D(undefined4 param_1, undefined4 param_2)"
+        "prototype_string": "undefined __cdecl Vec_Dist3D(_VECTOR * param_1, _VECTOR * param_2)"
     },
     {
         "name": "Vec_SqDist3D",
@@ -27415,14 +27423,14 @@
     {
         "name": "Vec_ScalarTripleProduct",
         "address": "0x000d7780",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "undefined Vec_ScalarTripleProduct(undefined4 param_1, undefined4 param_2, undefined4 param_3)"
+        "prototype_string": "undefined __cdecl Vec_ScalarTripleProduct(_VECTOR * a, _VECTOR * b, _VECTOR * c)"
     },
     {
         "name": "FUN_000d77f0",
@@ -27444,12 +27452,12 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float *",
+            "_MATRIX *",
             "_VECTOR *",
-            "float *",
-            "float *"
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl Mat_Align2Dir(float * param_1, _VECTOR * param_2, float * param_3, float * param_4)"
+        "prototype_string": "void __cdecl Mat_Align2Dir(_MATRIX * param_1, _VECTOR * param_2, _VECTOR * param_3, _VECTOR * param_4)"
     },
     {
         "name": "Mat_Align2Up",
@@ -27469,22 +27477,23 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "_MATRIX *",
+            "_MATRIX *"
         ],
-        "prototype_string": "void __cdecl Mat_Normalize(int param_1)"
+        "prototype_string": "void __cdecl Mat_Normalize(_MATRIX * mtxIn, _MATRIX * mtxOut)"
     },
     {
         "name": "vecutil_calculate_closest_point_on_line",
         "address": "0x000d7d00",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "undefined vecutil_calculate_closest_point_on_line(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
+        "prototype_string": "undefined __cdecl vecutil_calculate_closest_point_on_line(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3, _VECTOR * param_4)"
     },
     {
         "name": "Plane_PlaneEq",
@@ -27818,12 +27827,15 @@
         "prototype_string": "undefined __cdecl View_DrawSky(viewer_tag * param_1, char param_2)"
     },
     {
-        "name": "View_CaptureScene",
+        "name": "View_CaptureSceneSub",
         "address": "0x000da130",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined View_CaptureScene()"
+        "calling_convention": "__cdecl",
+        "return_type": "void",
+        "param_types": [
+            "byte",
+            "viewer_tag *"
+        ],
+        "prototype_string": "void __cdecl View_CaptureSceneSub(byte mask, viewer_tag * viewer)"
     },
     {
         "name": "FUN_000da1d0",
@@ -27834,24 +27846,25 @@
         "prototype_string": "undefined FUN_000da1d0()"
     },
     {
-        "name": "FUN_000da250",
+        "name": "View_AddForcedObjects",
         "address": "0x000da250",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_000da250(int param_1)"
+        "prototype_string": "void __cdecl View_AddForcedObjects(viewer_tag * param_1)"
     },
     {
-        "name": "FUN_000da490",
+        "name": "View_AddObjects",
         "address": "0x000da490",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "viewer_tag *",
+            "cel_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_000da490(int param_1)"
+        "prototype_string": "void __cdecl View_AddObjects(viewer_tag * viewer, cel_tag * cel)"
     },
     {
         "name": "View_DrawCelGlist",
@@ -27884,20 +27897,24 @@
         "prototype_string": "undefined View_DrawObjList(undefined4 param_1, undefined2 param_2)"
     },
     {
-        "name": "FUN_000daa00",
+        "name": "View_AddCels",
         "address": "0x000daa00",
         "calling_convention": "__stdcall",
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall FUN_000daa00(void)"
+        "param_types": [
+            "viewer_tag *"
+        ],
+        "prototype_string": "void __stdcall View_AddCels(viewer_tag * viewer)"
     },
     {
         "name": "View_CaptureScene",
         "address": "0x000dabb0",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined View_CaptureScene()"
+        "calling_convention": "__stdcall",
+        "return_type": "void",
+        "param_types": [
+            "viewer_tag *"
+        ],
+        "prototype_string": "void __stdcall View_CaptureScene(viewer_tag * viewer)"
     },
     {
         "name": "Game_Draw",
@@ -28000,9 +28017,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl vision_generate_display_list(int param_1)"
+        "prototype_string": "void __cdecl vision_generate_display_list(viewer_tag * param_1)"
     },
     {
         "name": "Vision_AddCelToDraw",
@@ -28104,16 +28121,16 @@
         "prototype_string": "void __cdecl Vision_Portal_Recurse(int param_1)"
     },
     {
-        "name": "FUN_000dbc80",
+        "name": "Vision_InView",
         "address": "0x000dbc80",
         "calling_convention": "__cdecl",
-        "return_type": "int",
+        "return_type": "bool",
         "param_types": [
-            "float10 *",
+            "_VECTOR *",
             "float",
-            "int"
+            "viewer_tag *"
         ],
-        "prototype_string": "int __cdecl FUN_000dbc80(float10 * param_1, float param_2, int param_3)"
+        "prototype_string": "bool __cdecl Vision_InView(_VECTOR * point, float radius, viewer_tag * viewer)"
     },
     {
         "name": "FUN_000dbcd0",
@@ -28659,14 +28676,14 @@
         "prototype_string": "void __stdcall psiClearZ(void)"
     },
     {
-        "name": "FUN_000dfb40",
+        "name": "psiCopyToSP",
         "address": "0x000dfb40",
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000dfb40(undefined4 param_1)"
+        "prototype_string": "undefined4 __cdecl psiCopyToSP(undefined4 param_1)"
     },
     {
         "name": "psiLaunchDriving",

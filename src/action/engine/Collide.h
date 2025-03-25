@@ -13,9 +13,10 @@ typedef struct HITDATA_tag {
   HITDATA_tag* prev; // Conforms to LLNODE_tag
   HITDATA_tag* next;
   float dmgAmt;
-  float unknown1;
+  float unknown1f;
   _VECTOR unknown0;
   _VECTOR unknown1;
+  char undef[4];
   _VECTOR unknown2;
   _VECTOR maybeHitStartPos;
   char materialType;

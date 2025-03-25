@@ -134,18 +134,18 @@ bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float dis
 
   HITDATA_tag* hitList = NULL;
 
-  bool intersects = Collide_RayIntersect(position, &endPosition, cel, obj, 0, &hitList, 0, 0x70c, 0);
+  bool intersects = Collide_RayIntersect(position, &endPosition, cel, obj, NULL, &hitList, 0, 0x70c, 0);
 
   if(intersects) {
-    Vec_Copy(&(hitList[0].maybeHitStartPos), position);
-    Collide_FreeHitList((LLISTINFO_tag*)&hitList);
+    Vec_Copy(&(hitList->maybeHitStartPos), position);
+    Collide_FreeHitList(&hitList);
   }
 
   return intersects;
 }
 
 // BROKEN: Crashes at level load, perhaps due to the floating-point function call?
-// AUTOINJECT
+// NOAUTOINJECT
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId) {
 
   if(teamId == MPTeam::NO_TEAM)
