@@ -1,5 +1,6 @@
 #include "multiplayer.h"
 #include "../../game.h"
+#include "../../engine/Collide.h"
 #include <stdio.h>
 
 #define CurrentAssassinObjId (((obj_tag *)0x0026178c))
@@ -115,11 +116,36 @@ bool MP_IsTarget(obj_tag *param_1) {
 
 // AUTOGEN
 cel_tag* build_FindCel(_VECTOR *position, world_tag *world);
-// AUTOGEN
-bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection);
+
+
+
+// AUTOINJECT
+bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection) {
+  
+  _VECTOR defaultDirection = {0.0f, -1.0f, 0.0f};
+  if(searchDirection == NULL)
+    searchDirection = &defaultDirection;
+
+  _VECTOR endPosition = {
+    .x = position->x + searchDirection->x * distance,
+    .y = position->y + searchDirection->y * distance,
+    .z = position->z + searchDirection->z * distance,
+  };
+
+  HITDATA_tag* hitList = NULL;
+
+  bool intersects = Collide_RayIntersect(position, &endPosition, cel, obj, 0, &hitList, 0, 0x70c, 0);
+
+  if(intersects) {
+    Vec_Copy(&(hitList[0].maybeHitStartPos), position);
+    Collide_FreeHitList((LLISTINFO_tag*)&hitList);
+  }
+
+  return intersects;
+}
 
 // BROKEN: Crashes at level load, perhaps due to the floating-point function call?
-// NOAUTOINJECT
+// AUTOINJECT
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId) {
 
   if(teamId == MPTeam::NO_TEAM)

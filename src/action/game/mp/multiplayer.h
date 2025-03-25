@@ -147,3 +147,7 @@ MPTeam MP_getObjectTeam(obj_tag* param_1);
 bool MP_IsAssasin(obj_tag *param_1);
 bool MP_IsTarget(obj_tag *param_1);
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId);
+
+
+// FIXME move to a separate file
+bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection);
