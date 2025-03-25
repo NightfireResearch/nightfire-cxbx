@@ -55,6 +55,7 @@ void Vec_CrossNormalise(_VECTOR *a,_VECTOR *b,_VECTOR *vecOut);
 void Vec_MulR32(_VECTOR *outVec, _VECTOR *inVec, float scale);
 bool Vec_IsEqual(_VECTOR *param_1,_VECTOR *param_2,float epsilon);
 float Vec_Dist3D(_VECTOR *a, _VECTOR *b);
+float Vec_SqDist3D(_VECTOR *a, _VECTOR *b);
 void Vec_Swap(_VECTOR *a, _VECTOR *b);
 void RotMatrixZYX(_VECTOR *param_1,_MATRIX *mtx);
 void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);

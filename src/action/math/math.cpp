@@ -409,7 +409,16 @@ float Vec_Dist3D(_VECTOR *a, _VECTOR *b) {
     float dz = (a->z-b->z);
 
     return SQRT(dx*dx + dy*dy + dz*dz);
-    
+}
+
+// AUTOINJECT
+float Vec_SqDist3D(_VECTOR *a, _VECTOR *b) {
+
+  float dx = (a->x-b->x);
+  float dy = (a->y-b->y);
+  float dz = (a->z-b->z);
+
+  return dx*dx + dy*dy + dz*dz;
 }
 
 // AUTOINJECT
