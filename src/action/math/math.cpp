@@ -447,4 +447,11 @@ void ApplyMatrixLV(_MATRIX *mtx, _VECTOR *vIn, _VECTOR *vOut) {
   vOut->y = mtx->m[5] * vIn->y + mtx->m[1] * vIn->x + mtx->m[9] * vIn->z;
   vOut->z = mtx->m[6] * vIn->y + mtx->m[2] * vIn->x + mtx->m[10] * vIn->z;
 }
-  
+
+// AUTOINJECT
+float Vec_ScalarTripleProduct(_VECTOR *a, _VECTOR *b, _VECTOR *c) {
+  _VECTOR v1;
+  Vec_Cross(b, c, &v1);
+  Vec_Normalise(&v1, &v1);
+  return (a->x * v1.x + a->y * v1.y + a->z * v1.z);
+}

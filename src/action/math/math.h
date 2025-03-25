@@ -67,6 +67,7 @@ void RotMatrixZYX(_VECTOR *param_1,_MATRIX *mtx);
 void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);
 void MatrixMultiplyVector(_MATRIX *mtx,_VECTOR *vecIn,_VECTOR *vecOut);
 void ApplyMatrixLV(_MATRIX *mtx,_VECTOR *vIn,_VECTOR *vOut);
+float Vec_ScalarTripleProduct(_VECTOR *a,_VECTOR *b,_VECTOR *c);
 
 #define M_PI 3.14159265358979323846
 #define DEG2RAD(x) ((x) * (M_PI / 180.0f))
