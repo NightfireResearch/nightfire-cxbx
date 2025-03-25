@@ -424,3 +424,10 @@ void Vec_Swap(_VECTOR *a, _VECTOR *b) {
   b->y = tmp_y;
   b->z = tmp_z;
 }
+
+// AUTOINJECT
+void MatrixMultiplyVector(_MATRIX *mtx, _VECTOR *vecIn, _VECTOR *vecOut) {
+  vecOut->x = mtx->m[0] * vecIn->x + mtx->m[4] * vecIn->y + mtx->m[8] * vecIn->z + mtx->m[0xc];
+  vecOut->y = mtx->m[5] * vecIn->y + mtx->m[1] * vecIn->x + mtx->m[9] * vecIn->z + mtx->m[0xd];
+  vecOut->z = mtx->m[6] * vecIn->y + mtx->m[2] * vecIn->x + mtx->m[10] * vecIn->z + mtx->m[0xe];
+}
