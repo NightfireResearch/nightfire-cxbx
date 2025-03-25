@@ -402,25 +402,25 @@ bool vecutil_point_on_poly(_VECTOR *point, _VECTOR *vtx1, _VECTOR *vtx2, _VECTOR
 }
 
 // AUTOINJECT
-float Vec_Dist3D(_VECTOR a, _VECTOR b) {
+float Vec_Dist3D(_VECTOR *a, _VECTOR *b) {
 
-    float dx = (a.x-b.x);
-    float dy = (a.y-b.y);
-    float dz = (a.z-b.z);
+    float dx = (a->x-b->x);
+    float dy = (a->y-b->y);
+    float dz = (a->z-b->z);
 
     return SQRT(dx*dx + dy*dy + dz*dz);
     
 }
 
 // AUTOINJECT
-void Vec_Swap(_VECTOR a, _VECTOR b) {
-  float tmp_x = a.x;
-  float tmp_y = a.y;
-  float tmp_z = a.z;
-  a.x = b.x;
-  a.y = b.y;
-  a.z = b.z;
-  b.x = tmp_x;
-  b.y = tmp_y;
-  b.z = tmp_z;
+void Vec_Swap(_VECTOR *a, _VECTOR *b) {
+  float tmp_x = a->x;
+  float tmp_y = a->y;
+  float tmp_z = a->z;
+  a->x = b->x;
+  a->y = b->y;
+  a->z = b->z;
+  b->x = tmp_x;
+  b->y = tmp_y;
+  b->z = tmp_z;
 }

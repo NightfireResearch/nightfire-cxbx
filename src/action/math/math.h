@@ -54,14 +54,16 @@ void Vec_Copy2(_VECTOR* src, _VECTOR *dst1, _VECTOR *dst2);
 void Vec_CrossNormalise(_VECTOR *a,_VECTOR *b,_VECTOR *vecOut);
 void Vec_MulR32(_VECTOR *outVec, _VECTOR *inVec, float scale);
 bool Vec_IsEqual(_VECTOR *param_1,_VECTOR *param_2,float epsilon);
-float Vec_Dist3D(_VECTOR a, _VECTOR b);
-void Vec_Swap(_VECTOR a, _VECTOR b);
+float Vec_Dist3D(_VECTOR *a, _VECTOR *b);
+void Vec_Swap(_VECTOR *a, _VECTOR *b);
 void RotMatrixZYX(_VECTOR *param_1,_MATRIX *mtx);
 void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);
 bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3);
 float DistancePointToPlane(_VECTOR *point, plane_equ_tag *plane);
 void auxVec_AddMulR32(_VECTOR *add, _VECTOR *vIn, float multiply, _VECTOR *vOut);
 bool vecutil_point_on_poly(_VECTOR *point, _VECTOR *vtx1, _VECTOR *vtx2, _VECTOR *vtx3, plane_equ_tag *plane);
+void RotMatrixZYX(_VECTOR *param_1,_MATRIX *mtx);
+void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);
 
 #define M_PI 3.14159265358979323846
 #define DEG2RAD(x) ((x) * (M_PI / 180.0f))
