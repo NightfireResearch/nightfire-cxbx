@@ -65,6 +65,7 @@ bool vecutil_point_on_poly(_VECTOR *point, _VECTOR *vtx1, _VECTOR *vtx2, _VECTOR
 void RotMatrixZYX(_VECTOR *param_1,_MATRIX *mtx);
 void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);
 void MatrixMultiplyVector(_MATRIX *mtx,_VECTOR *vecIn,_VECTOR *vecOut);
+void ApplyMatrixLV(_MATRIX *mtx,_VECTOR *vIn,_VECTOR *vOut);
 
 #define M_PI 3.14159265358979323846
 #define DEG2RAD(x) ((x) * (M_PI / 180.0f))
