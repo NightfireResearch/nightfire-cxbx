@@ -24,8 +24,9 @@ typedef struct HITDATA_tag {
   short hitBoneIdx;
   cel_tag* hitCel;
   obj_tag* hitObj;
-  char unknown4[4];
 } HITDATA_tag;
+
+static_assert(sizeof(HITDATA_tag) == 0x50, "HITDATA_tag is not the expected size");
 
 #pragma pack(pop)
 

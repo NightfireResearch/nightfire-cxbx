@@ -57,3 +57,6 @@ void Mem_Init(void) {
     MallocSize = 0;
 
 }
+
+// AUTOGEN
+void* Mem_Malloc(size_t size, uint32_t flags, uint32_t unknownMaybeAlignment);
