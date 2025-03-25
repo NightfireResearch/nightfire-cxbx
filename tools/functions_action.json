@@ -3056,12 +3056,12 @@
         "prototype_string": "void __cdecl Collide_FreeHitList(HITDATA_tag * * param_1)"
     },
     {
-        "name": "FUN_00029500",
+        "name": "Coll_GetFreeHit",
         "address": "0x00029500",
         "calling_convention": "__stdcall",
-        "return_type": "int *",
+        "return_type": "HITDATA_tag *",
         "param_types": [],
-        "prototype_string": "int * __stdcall FUN_00029500(void)"
+        "prototype_string": "HITDATA_tag * __stdcall Coll_GetFreeHit(void)"
     },
     {
         "name": "Coll_AddHitToList",
@@ -3069,12 +3069,12 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int * *",
-            "int",
-            "int",
-            "int"
+            "HITDATA_tag * *",
+            "float",
+            "cel_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Coll_AddHitToList(int * * param_1, int param_2, int param_3, int param_4)"
+        "prototype_string": "void __cdecl Coll_AddHitToList(HITDATA_tag * * param_1, float param_2, cel_tag * param_3, obj_tag * param_4)"
     },
     {
         "name": "Collide_Sort",
@@ -5134,7 +5134,7 @@
         "prototype_string": "void __cdecl NDrone2_DealWithObjHit(int param_1, float param_2)"
     },
     {
-        "name": "FUN_000369d0",
+        "name": "Drone_FeetOnPoint",
         "address": "0x000369d0",
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
@@ -5145,7 +5145,7 @@
             "undefined4",
             "float *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000369d0(undefined4 * param_1, int param_2, undefined4 * param_3, undefined4 param_4, float * param_5)"
+        "prototype_string": "undefined4 __cdecl Drone_FeetOnPoint(undefined4 * param_1, int param_2, undefined4 * param_3, undefined4 param_4, float * param_5)"
     },
     {
         "name": "NDrone2_FindCel",
@@ -5173,13 +5173,13 @@
         "name": "FUN_00036c80",
         "address": "0x00036c80",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "obj_tag *",
             "_VECTOR *",
             "float *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_00036c80(obj_tag * param_1, _VECTOR * param_2, float * param_3)"
+        "prototype_string": "bool __cdecl FUN_00036c80(obj_tag * param_1, _VECTOR * param_2, float * param_3)"
     },
     {
         "name": "NDrone2_FeetPos",
@@ -13771,14 +13771,14 @@
         "prototype_string": "bool __cdecl LList_Add(LLISTINFO_tag * param_1, LLNODE_tag * param_2)"
     },
     {
-        "name": "FUN_0006e520",
+        "name": "LList_Cut",
         "address": "0x0006e520",
         "calling_convention": "__cdecl",
-        "return_type": "int *",
+        "return_type": "LLNODE_tag *",
         "param_types": [
-            "undefined4 *"
+            "LLISTINFO_tag *"
         ],
-        "prototype_string": "int * __cdecl FUN_0006e520(undefined4 * param_1)"
+        "prototype_string": "LLNODE_tag * __cdecl LList_Cut(LLISTINFO_tag * param_1)"
     },
     {
         "name": "LList_Remove",
@@ -13838,15 +13838,15 @@
         "prototype_string": "undefined4 __cdecl DList_RemoveFromInUse2Free(int * * param_1, int * * param_2)"
     },
     {
-        "name": "FUN_0006e790",
+        "name": "LList_AllocnNodes",
         "address": "0x0006e790",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "undefined4 *",
+            "LLISTINFO_tag *",
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_0006e790(undefined4 * param_1, uint param_2)"
+        "prototype_string": "void __cdecl LList_AllocnNodes(LLISTINFO_tag * list, uint num)"
     },
     {
         "name": "Stack_Init",
@@ -14315,13 +14315,13 @@
         "name": "Mem_Malloc",
         "address": "0x00070ae0",
         "calling_convention": "__cdecl",
-        "return_type": "int * *",
+        "return_type": "void *",
         "param_types": [
-            "int",
+            "uint",
             "MallocFlags",
             "uint"
         ],
-        "prototype_string": "int * * __cdecl Mem_Malloc(int sizeBytes, MallocFlags FlagsOrType, uint param_3)"
+        "prototype_string": "void * __cdecl Mem_Malloc(uint sizeBytes, MallocFlags FlagsOrType, uint param_3)"
     },
     {
         "name": "Button_Init",
@@ -20888,15 +20888,15 @@
         "prototype_string": "bool __stdcall Player_InWater(BLData * blData, obj_tag * player)"
     },
     {
-        "name": "FUN_000ab390",
+        "name": "PlayerOrDrone_FeetOnPoint_DoCollision",
         "address": "0x000ab390",
         "calling_convention": "unknown",
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000ab390()"
+        "prototype_string": "undefined PlayerOrDrone_FeetOnPoint_DoCollision()"
     },
     {
-        "name": "FUN_000ab450",
+        "name": "PlayerNotDrone_FeetOnPoint",
         "address": "0x000ab450",
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
@@ -20905,7 +20905,7 @@
             "int",
             "undefined4 *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000ab450(int param_1, int param_2, undefined4 * param_3)"
+        "prototype_string": "undefined4 __cdecl PlayerNotDrone_FeetOnPoint(int param_1, int param_2, undefined4 * param_3)"
     },
     {
         "name": "Player_Collision",

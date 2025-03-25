@@ -1,5 +1,7 @@
 #include "Collide.h"
 
+#include <string.h>
+
 #define HitHeap (*(LLISTINFO_tag*)0x001ddc60)
 
 // AUTOGEN
@@ -25,4 +27,26 @@ void Collide_FreeHitList(HITDATA_tag **hitList) {
 
     // ?? don't update the count?!
 
+}
+
+#define HitAllocCnt U32_AT(0x001dec24)
+
+HITDATA_tag* Coll_GetFreeHitData(void) {
+
+    // Try to obtain from the heap
+    HITDATA_tag* node = (HITDATA_tag*)LList_Cut(&HitHeap);
+    if(node == NULL) {
+
+        // Heap is empty and the maximum number of allocations has been reached  
+        if(HitAllocCnt > 1000)
+            return NULL;
+
+        // Heap is empty but we haven't reached the maximum number of allocations yet
+        HitAllocCnt += 0x40;
+        LList_AllocnNodes(&HitHeap, 0x40);
+        node = (HITDATA_tag*)LList_Cut(&HitHeap);
+    }
+
+    memset(node, 0, sizeof(HITDATA_tag)); 
+    return node;
 }

@@ -14,6 +14,8 @@ typedef struct obj_tag obj_tag;
 // Ghidra types
 #include "../helpers.h"
 
+typedef short MallocFlags;
+
 #include "util/LList.h"
 #include "math/math.h"
 #include "engine/Collide.h"

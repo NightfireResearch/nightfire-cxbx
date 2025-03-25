@@ -4,7 +4,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void Mem_Init(void);
+#include "actionhelpers.h"
 
+void Mem_Init(void);
+void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t unknownMaybeAlignment);
 
 #endif // MEMORY_H_

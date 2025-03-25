@@ -26,5 +26,7 @@ typedef struct LLISTINFO_tag {
 
 bool LList_Add(LLISTINFO_tag *list, LLNODE_tag *newElement);
 void LList_Insert(LLISTINFO_tag *list, LLNODE_tag *insertionPoint, LLNODE_tag *newElement);
+LLNODE_tag* LList_Cut(LLISTINFO_tag *list);
+void LList_AllocnNodes(LLISTINFO_tag *list, int n);
 
 #endif
