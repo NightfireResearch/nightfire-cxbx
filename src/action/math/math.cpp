@@ -431,3 +431,11 @@ void MatrixMultiplyVector(_MATRIX *mtx, _VECTOR *vecIn, _VECTOR *vecOut) {
   vecOut->y = mtx->m[5] * vecIn->y + mtx->m[1] * vecIn->x + mtx->m[9] * vecIn->z + mtx->m[0xd];
   vecOut->z = mtx->m[6] * vecIn->y + mtx->m[2] * vecIn->x + mtx->m[10] * vecIn->z + mtx->m[0xe];
 }
+
+// AUTOINJECT
+void ApplyMatrixLV(_MATRIX *mtx, _VECTOR *vIn, _VECTOR *vOut) {
+  vOut->x = mtx->m[0] * vIn->x + mtx->m[4] * vIn->y + mtx->m[8] * vIn->z;
+  vOut->y = mtx->m[5] * vIn->y + mtx->m[1] * vIn->x + mtx->m[9] * vIn->z;
+  vOut->z = mtx->m[6] * vIn->y + mtx->m[2] * vIn->x + mtx->m[10] * vIn->z;
+}
+  
