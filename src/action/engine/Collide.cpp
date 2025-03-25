@@ -31,7 +31,8 @@ void Collide_FreeHitList(HITDATA_tag **hitList) {
 
 #define HitAllocCnt U32_AT(0x001dec24)
 
-HITDATA_tag* Coll_GetFreeHitData(void) {
+// AUTOINJECT
+HITDATA_tag* Coll_GetFreeHit(void) {
 
     // Try to obtain from the heap
     HITDATA_tag* node = (HITDATA_tag*)LList_Cut(&HitHeap);
