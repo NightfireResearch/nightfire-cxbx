@@ -51,3 +51,15 @@ HITDATA_tag* Coll_GetFreeHit(void) {
     memset(node, 0, sizeof(HITDATA_tag)); 
     return node;
 }
+
+
+// AUTOINJECT
+bool Collide_LineOfSight(_VECTOR *param_1, _VECTOR *param_2, cel_tag *param_3, obj_tag *param_4, obj_tag *param_5, uint param_6) {
+  HITDATA_tag *hitData = NULL;
+  bool intersects = Collide_RayIntersect(param_1, param_2, param_3, param_4, param_5, &hitData, 0, param_6 | 4, 0x10);
+  if (intersects) {
+    // Discard the results, we only care whether an intersection occurred
+    Collide_FreeHitList(&hitData);
+  }
+  return !intersects;
+}

@@ -33,5 +33,6 @@ static_assert(sizeof(HITDATA_tag) == 0x50, "HITDATA_tag is not the expected size
 bool Collide_RayIntersect(_VECTOR *startPosition,_VECTOR *endPosition,cel_tag *cel,obj_tag *obj,obj_tag *param_5,HITDATA_tag **hitDataOut,char param_7,uint param_8,ushort param_9);
 void Collide_FreeHitList(HITDATA_tag **param_1);
 HITDATA_tag* Coll_GetFreeHit(void);
+bool Collide_LineOfSight(_VECTOR *param_1,_VECTOR *param_2,cel_tag *param_3,obj_tag *param_4,obj_tag *param_5,uint param_6);
 
 #endif // COLLIDE_H
