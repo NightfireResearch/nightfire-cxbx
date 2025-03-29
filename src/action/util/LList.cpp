@@ -107,3 +107,6 @@ void LList_AllocnNodes(LLISTINFO_tag *list, int n) {
         LList_Add(list, node);
     }
 }
+
+// AUTOGEN
+LLNODE_tag* LList_Remove(LLISTINFO_tag *list, LLNODE_tag *element);

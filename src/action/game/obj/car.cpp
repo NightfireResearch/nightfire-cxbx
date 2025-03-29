@@ -115,8 +115,8 @@ void Car_InitBits(CAR_INFO *tankInfo, obj_tag *baseObj) {
     tankInfo->barrelGeom = Control_CreateObjEx(0, Mat_Position(baseObj->transformMatrix), NULL, NULL, barrelCelgl, baseObj, 0, 4, 1.0, 0x20, 0xff, 0xff, 0xff);
 
     // Meaning currently unknown - render mode?
-    tankInfo->turretGeom->someFlags_0xcc |= 0x40;
-    tankInfo->barrelGeom->someFlags_0xcc |= 0x40;
+    tankInfo->turretGeom->specialFlags |= ObjectSpecialFlags::FLAG_UNKNOWN_40;
+    tankInfo->barrelGeom->specialFlags |= ObjectSpecialFlags::FLAG_UNKNOWN_40;
 
     Mat_Copy(&baseObj->transformMatrix, &tankInfo->turretGeom->transformMatrix);
     Vec_Copy(Mat_Position(baseObj->transformMatrix), Mat_Position(tankInfo->turretGeom->transformMatrix)); // This is pointless, it's the same matrix, but the game code does this?
@@ -130,6 +130,8 @@ void Car_PlayerHasDied(obj_tag *player) {
     obj_tag* objAt = control_first_object();
 
     while(objAt != NULL) {
+
+        // TODO: Tidier to implement with Control_ReturnNextObjectOfType and just do the playerController check here
         
         CAR_INFO* car = (CAR_INFO*)(objAt->extraObjectData);
         
@@ -234,7 +236,7 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
 
     Vec_Zero(&tankInfo->someVector);
 
-    baseObj->someFlags_0xcc |= 0x40;
+    baseObj->specialFlags |= ObjectSpecialFlags::FLAG_UNKNOWN_40;
 
     // Take a copy of our initial position and orientation, so that we can respawn the tank at the right location
     // Could just as easily been stored in the CAR_INFO struct, but this is how the original code does it so we'll stick with that

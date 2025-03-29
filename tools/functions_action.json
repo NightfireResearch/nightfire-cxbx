@@ -2284,14 +2284,14 @@
         "prototype_string": "undefined FUN_00024000(undefined4 param_1, undefined4 param_2, undefined4 param_3)"
     },
     {
-        "name": "FUN_00024050",
+        "name": "normaliseToPlusMinusPi",
         "address": "0x00024050",
         "calling_convention": "unknown",
         "return_type": "undefined",
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00024050(undefined4 param_1)"
+        "prototype_string": "undefined normaliseToPlusMinusPi(undefined4 param_1)"
     },
     {
         "name": "Camera_Set",
@@ -3156,7 +3156,7 @@
         "name": "Collide_RayTriangle",
         "address": "0x0002b1b0",
         "calling_convention": "__cdecl",
-        "return_type": "ushort",
+        "return_type": "bool",
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
@@ -3165,7 +3165,7 @@
             "_VECTOR *",
             "float *"
         ],
-        "prototype_string": "ushort __cdecl Collide_RayTriangle(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3, _VECTOR * param_4, _VECTOR * param_5, float * param_6)"
+        "prototype_string": "bool __cdecl Collide_RayTriangle(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * vtx1, _VECTOR * vtx2, _VECTOR * vtx3, float * param_6)"
     },
     {
         "name": "FUN_0002b260",
@@ -3200,10 +3200,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int *",
+            "HITDATA_tag * *",
             "ushort"
         ],
-        "prototype_string": "void __cdecl Collide_FilterBullets(int * param_1, ushort param_2)"
+        "prototype_string": "void __cdecl Collide_FilterBullets(HITDATA_tag * * param_1, ushort param_2)"
     },
     {
         "name": "Debris_Create_Loop",
@@ -3296,16 +3296,16 @@
         "name": "Collide_LineOfSight",
         "address": "0x0002c5b0",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "undefined4 *",
-            "undefined4 *",
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "ushort"
+            "_VECTOR *",
+            "_VECTOR *",
+            "cel_tag *",
+            "obj_tag *",
+            "obj_tag *",
+            "uint"
         ],
-        "prototype_string": "undefined4 __cdecl Collide_LineOfSight(undefined4 * param_1, undefined4 * param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, ushort param_6)"
+        "prototype_string": "bool __cdecl Collide_LineOfSight(_VECTOR * param_1, _VECTOR * param_2, cel_tag * param_3, obj_tag * param_4, obj_tag * param_5, uint param_6)"
     },
     {
         "name": "Collide_SphereIntersect",
@@ -3442,7 +3442,7 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl control_delete_object(obj_tag * param_1)"
+        "prototype_string": "void __cdecl control_delete_object(obj_tag * obj)"
     },
     {
         "name": "control_init_object",
@@ -3656,12 +3656,12 @@
     {
         "name": "Creature_Delete",
         "address": "0x0002e410",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Creature_Delete(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl Creature_Delete(obj_tag * param_1)"
     },
     {
         "name": "FUN_0002e440",
@@ -3938,14 +3938,14 @@
         "prototype_string": "void __stdcall DroneSpawner_Create(void)"
     },
     {
-        "name": "FUN_0002fc50",
+        "name": "NDrone2_MaybeCreateFromSpawner",
         "address": "0x0002fc50",
         "calling_convention": "__cdecl",
         "return_type": "obj_tag *",
         "param_types": [
             "obj_tag * *"
         ],
-        "prototype_string": "obj_tag * __cdecl FUN_0002fc50(obj_tag * * param_1)"
+        "prototype_string": "obj_tag * __cdecl NDrone2_MaybeCreateFromSpawner(obj_tag * * param_1)"
     },
     {
         "name": "Drone_Create",
@@ -4280,15 +4280,15 @@
         "prototype_string": "undefined4 __cdecl Drone_Message(int param_1, int param_2, undefined4 param_3, int param_4)"
     },
     {
-        "name": "FUN_000318c0",
+        "name": "Drone_PositionVisible",
         "address": "0x000318c0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
             "undefined4",
-            "undefined4"
+            "cel_tag *"
         ],
-        "prototype_string": "undefined FUN_000318c0(undefined4 param_1, undefined4 param_2)"
+        "prototype_string": "undefined __cdecl Drone_PositionVisible(undefined4 param_1, cel_tag * param_2)"
     },
     {
         "name": "Drone_FellOutMap",
@@ -4430,14 +4430,14 @@
         "prototype_string": "void __cdecl Drone_Delete(int param_1)"
     },
     {
-        "name": "FUN_000323e0",
+        "name": "DroneSpawner_SpawnDrone",
         "address": "0x000323e0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined FUN_000323e0(undefined4 param_1)"
+        "prototype_string": "undefined __cdecl DroneSpawner_SpawnDrone(obj_tag * param_1)"
     },
     {
         "name": "DroneSpawner_Control",
@@ -6417,9 +6417,9 @@
         "calling_convention": "__cdecl",
         "return_type": "obj_tag *",
         "param_types": [
-            "int"
+            "DIVars_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl NDrone2_CreateObj(int param_1)"
+        "prototype_string": "obj_tag * __cdecl NDrone2_CreateObj(DIVars_tag * param_1)"
     },
     {
         "name": "DroneInit_Collision",
@@ -6747,9 +6747,9 @@
             "Drone_tag *",
             "undefined4",
             "uint *",
-            "DIVars *"
+            "DIVars_tag *"
         ],
-        "prototype_string": "void __cdecl NDrone2_DoModeSettingsNEW(Drone_tag * param_1, undefined4 param_2, uint * param_3, DIVars * param_4)"
+        "prototype_string": "void __cdecl NDrone2_DoModeSettingsNEW(Drone_tag * param_1, undefined4 param_2, uint * param_3, DIVars_tag * param_4)"
     },
     {
         "name": "NDrone2_DoModeSettingsOLD",
@@ -6770,9 +6770,9 @@
         "calling_convention": "__cdecl",
         "return_type": "obj_tag *",
         "param_types": [
-            "DIVars *"
+            "DIVars_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl NDrone2_DefaultInit(DIVars * param_1)"
+        "prototype_string": "obj_tag * __cdecl NDrone2_DefaultInit(DIVars_tag * param_1)"
     },
     {
         "name": "NDrone2_PostLoad_Init",
@@ -9258,11 +9258,11 @@
         "name": "Drone_SM_InitObject",
         "address": "0x0004e2a0",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl Drone_SM_InitObject(obj_tag * param_1)"
+        "prototype_string": "bool __cdecl Drone_SM_InitObject(obj_tag * param_1)"
     },
     {
         "name": "Drone_SM_SetState",
@@ -11911,7 +11911,7 @@
         "prototype_string": "undefined FUN_000645c0()"
     },
     {
-        "name": "FUN_00064600",
+        "name": "DroneVision_LineOfSightToObject",
         "address": "0x00064600",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -11923,7 +11923,7 @@
             "undefined4",
             "ushort"
         ],
-        "prototype_string": "void __cdecl FUN_00064600(float10 * param_1, float * param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, ushort param_6)"
+        "prototype_string": "void __cdecl DroneVision_LineOfSightToObject(float10 * param_1, float * param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, ushort param_6)"
     },
     {
         "name": "FUN_00064660",
@@ -13784,12 +13784,12 @@
         "name": "LList_Remove",
         "address": "0x0006e550",
         "calling_convention": "__cdecl",
-        "return_type": "int * *",
+        "return_type": "LLNODE_tag *",
         "param_types": [
-            "int * *",
-            "int * *"
+            "LLISTINFO_tag *",
+            "LLNODE_tag *"
         ],
-        "prototype_string": "int * * __cdecl LList_Remove(int * * listInfo, int * * param_2)"
+        "prototype_string": "LLNODE_tag * __cdecl LList_Remove(LLISTINFO_tag * listInfo, LLNODE_tag * param_2)"
     },
     {
         "name": "LList_Insert",
@@ -13812,9 +13812,9 @@
             "int * *",
             "int *",
             "char",
-            "undefined *"
+            "void *"
         ],
-        "prototype_string": "int * * __cdecl LList_InsertAt(int * * param_1, int * param_2, char param_3, undefined * param_4)"
+        "prototype_string": "int * * __cdecl LList_InsertAt(int * * param_1, int * param_2, char param_3, void * compareFunc)"
     },
     {
         "name": "DList_MoveFomFree2InUse",
@@ -14236,11 +14236,11 @@
         "name": "Mem_Free",
         "address": "0x000705f0",
         "calling_convention": "__cdecl",
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "void * *"
         ],
-        "prototype_string": "undefined __cdecl Mem_Free(void * * param_1)"
+        "prototype_string": "void __cdecl Mem_Free(void * * param_1)"
     },
     {
         "name": "Mem_SetMallocMethod",
@@ -22757,6 +22757,14 @@
         "prototype_string": "undefined4 __cdecl FUN_000bd8a0(int * param_1, int * param_2)"
     },
     {
+        "name": "CompMsgTxt",
+        "address": "0x000bd910",
+        "calling_convention": "unknown",
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined CompMsgTxt()"
+    },
+    {
         "name": "QuickSort",
         "address": "0x000bda60",
         "calling_convention": "__cdecl",
@@ -27300,9 +27308,9 @@
         "return_type": "undefined",
         "param_types": [
             "_VECTOR *",
-            "undefined4"
+            "plane_equ_tag *"
         ],
-        "prototype_string": "undefined __cdecl DistancePointToPlane(_VECTOR * point, undefined4 plane)"
+        "prototype_string": "undefined __cdecl DistancePointToPlane(_VECTOR * point, plane_equ_tag * plane)"
     },
     {
         "name": "auxVec_AddMulR32",
@@ -27313,9 +27321,9 @@
             "_VECTOR *",
             "_VECTOR *",
             "float",
-            "float *"
+            "_VECTOR *"
         ],
-        "prototype_string": "undefined __cdecl auxVec_AddMulR32(_VECTOR * add, _VECTOR * vIn, float multiply, float * vOut)"
+        "prototype_string": "undefined __cdecl auxVec_AddMulR32(_VECTOR * add, _VECTOR * vIn, float multiply, _VECTOR * vOut)"
     },
     {
         "name": "Quat_Mul",
@@ -27499,14 +27507,14 @@
         "name": "Plane_PlaneEq",
         "address": "0x000d7e40",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "float *",
-            "float *",
-            "float *",
-            "float *"
+            "plane_equ_tag *",
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "undefined4 __cdecl Plane_PlaneEq(float * param_1, float * param_2, float * param_3, float * param_4)"
+        "prototype_string": "bool __cdecl Plane_PlaneEq(plane_equ_tag * plane, _VECTOR * vtx1, _VECTOR * vtx2, _VECTOR * vtx3)"
     },
     {
         "name": "Plane_PutPntOnPlane",
@@ -27524,15 +27532,15 @@
         "name": "vecutil_point_on_poly",
         "address": "0x000d7f80",
         "calling_convention": "__cdecl",
-        "return_type": "ushort",
+        "return_type": "bool",
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
             "_VECTOR *",
             "_VECTOR *",
-            "float *"
+            "plane_equ_tag *"
         ],
-        "prototype_string": "ushort __cdecl vecutil_point_on_poly(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3, _VECTOR * param_4, float * param_5)"
+        "prototype_string": "bool __cdecl vecutil_point_on_poly(_VECTOR * point, _VECTOR * vtx1, _VECTOR * vtx2, _VECTOR * vtx3, plane_equ_tag * plane)"
     },
     {
         "name": "vecutil_Dist2Tri_PointGeom",
@@ -32418,12 +32426,15 @@
         "prototype_string": "undefined start(undefined4 param_1, undefined4 param_2)"
     },
     {
-        "name": "FUN_000ee36a",
+        "name": "fmodf",
         "address": "0x000ee36a",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_000ee36a()"
+        "calling_convention": "default",
+        "return_type": "float",
+        "param_types": [
+            "float",
+            "float"
+        ],
+        "prototype_string": "float fmodf(float num, float modulo)"
     },
     {
         "name": "sprintf",
@@ -33122,10 +33133,13 @@
     {
         "name": "__cintrindisp2",
         "address": "0x000efe84",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined __cintrindisp2()"
+        "calling_convention": "default",
+        "return_type": "float",
+        "param_types": [
+            "float",
+            "float"
+        ],
+        "prototype_string": "float __cintrindisp2(float a, float b)"
     },
     {
         "name": "__cintrindisp1",

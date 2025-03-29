@@ -77,6 +77,79 @@ typedef enum {
     OBJECTTYPE_APOCALYPSE=84
 } ObjectType;
 
+inline const char* Object_GetName(ObjectType type) {
+    switch (type) {
+        case OBJECTTYPE_DELETED: return "Deleted";
+        case OBJECTTYPE_DRONE: return "Drone";
+        case OBJECTTYPE_PLAYER: return "Player";
+        case OBJECTTYPE_BULLET: return "Bullet";
+        case OBJECTTYPE_ROTOR_HELI_MAYBE: return "Rotor Heli Maybe";
+        case OBJECTTYPE_PARTICLES: return "Particles";
+        case OBJECTTYPE_CASING: return "Casing";
+        case OBJECTTYPE_GAS: return "Gas";
+        case OBJECTTYPE_MINE1: return "Mine1";
+        case OBJECTTYPE_EFFECT: return "Effect";
+        case OBJECTTYPE_DEAD_DRONE: return "Dead Drone";
+        case OBJECTTYPE_DEAD_PLAYER: return "Dead Player";
+        case OBJECTTYPE_ANIMDEBUGHANDLER: return "Anim Debug Handler";
+        case OBJECTTYPE_RIGIDBODY: return "RigidBody";
+        case OBJECTTYPE_SCRIPTPLAYER: return "Script Player";
+        case OBJECTTYPE_DOOR: return "Door";
+        case OBJECTTYPE_TRIGGER: return "Trigger";
+        case OBJECTTYPE_BREAK: return "Break";
+        case OBJECTTYPE_DESTROY: return "Destroy";
+        case OBJECTTYPE_SPOTLIGHT: return "Spotlight";
+        case OBJECTTYPE_CLOUD: return "Cloud";
+        case OBJECTTYPE_SIMPLESCRIPT: return "Simple Script";
+        case OBJECTTYPE_FLICKER: return "Flicker";
+        case OBJECTTYPE_HURT: return "Hurt";
+        case OBJECTTYPE_CAR: return "Car";
+        case OBJECTTYPE_OCCLUDE: return "Occlude";
+        case OBJECTTYPE_CREEPWALL: return "Creep Wall";
+        case OBJECTTYPE_THIRDCAM_OR_WIRE: return "Third Cam or Wire";
+        case OBJECTTYPE_LADDER: return "Ladder";
+        case OBJECTTYPE_LEAF: return "Leaf";
+        case OBJECTTYPE_MP_PICKUP: return "MP Pickup";
+        case OBJECTTYPE_DRONE_SPAWNER: return "Drone Spawner";
+        case OBJECTTYPE_LEAFGEN: return "Leaf Generator";
+        case OBJECTTYPE_EMITTER: return "Emitter";
+        case OBJECTTYPE_LIGHTNING: return "Lightning";
+        case OBJECTTYPE_RIPPLES: return "Ripples";
+        case OBJECTTYPE_MPOBJECT: return "MP Object";
+        case OBJECTTYPE_GUNTURRET: return "Gun Turret";
+        case OBJECTTYPE_SENSOR: return "Sensor";
+        case OBJECTTYPE_MONITOR: return "Monitor";
+        case OBJECTTYPE_SWITCH: return "Switch";
+        case OBJECTTYPE_LOCK: return "Lock";
+        case OBJECTTYPE_COPTER: return "Copter";
+        case OBJECTTYPE_FUSEBOX: return "Fuse Box";
+        case OBJECTTYPE_ANIMOBJECT: return "Anim Object";
+        case OBJECTTYPE_DRONE_AIVOLUME: return "Drone AI Volume";
+        case OBJECTTYPE_TREE: return "Tree";
+        case OBJECTTYPE_SOUNDTRIGGER: return "Sound Trigger";
+        case OBJECTTYPE_SWOOSH: return "Swoosh";
+        case OBJECTTYPE_THIRDICON: return "Third Icon";
+        case OBJECTTYPE_HINT: return "Hint";
+        case OBJECTTYPE_MUSIC_TRIGGER: return "Music Trigger";
+        case OBJECTTYPE_CORONA: return "Corona";
+        case OBJECTTYPE_BODYGLOW: return "Body Glow";
+        case OBJECTTYPE_GUNTURRET2: return "Gun Turret 2";
+        case OBJECTTYPE_CAMSUBJECT: return "Cam Subject";
+        case OBJECTTYPE_QWORM: return "Q Worm";
+        case OBJECTTYPE_SUB: return "Sub";
+        case OBJECTTYPE_MINE: return "Mine";
+        case OBJECTTYPE_ONESIDED: return "One-Sided";
+        case OBJECTTYPE_MINISUB: return "Mini Sub";
+        case OBJECTTYPE_SHOOTER: return "Shooter";
+        case OBJECTTYPE_SPACELASER: return "Space Laser";
+        case OBJECTTYPE_GRAPPLE: return "Grapple";
+        case OBJECTTYPE_DYNAMICOBJECT: return "Dynamic Object";
+        case OBJECTTYPE_INVERTER_TRIGGER: return "Inverter Trigger";
+        case OBJECTTYPE_APOCALYPSE: return "Apocalypse";
+        default: return "Unknown";
+    }
+}
+
 // A base object consists of the minimum functionality required to be updated, rendered, collided with, destroyed, etc.
 // All specific object types will consist of this, plus additional data specific to that object type (pointed to by extraObjectData)
 #pragma pack(push, 1)
@@ -86,18 +159,26 @@ struct obj_tag;
 
 typedef struct obj_tag {
     // TODO: Complete this
-    char _pad_1[0x14];
-    obj_tag *nextObject;
-    char _pad_11111[0xc];
-    _VECTOR position;
+    char _pad_1[0x8];
+    obj_tag* prevInCel; // 0x8 -- doubly-linked list
+    obj_tag *nextInCel; // 0xC
+    char pad_0000[4];
+    obj_tag *nextObject; // 0x14 - doubly-linked list
+    obj_tag* prevObject; // 0x18
+    obj_tag* maybeParent; // 0x1c
+    void* inCel; // 0x20 - cel_tag
+    _VECTOR position; // 0x24
     char _pad_2[0x40];
-    _MATRIX transformMatrix; // 0x70 - 0xAC
-    char _pad_9999[4];
+    _MATRIX transformMatrix; // 0x70
+    HITDATA_tag* hitList; // 0xAC - HITLIST_tag
     void* maybeCollision; // 0xB0
-    char _pad_3[0x8];
+    char _pad_3[0x4];
+    void* animState; // 0xB8
     void* extraObjectData; // 0xBC
-    char _pad_4[0xc];
-    int someFlags_0xcc; // 0xCC, unclear what the meaning is but sometimes relevant for rendering or object state or straddle tests?
+    void* scriptPlayer;
+    float scale;
+    int creationTimeFrames;
+    int specialFlags; // 0xCC, unclear what the meaning is but sometimes relevant for rendering or object state or straddle tests?
     unsigned short curState; // 0xD0
     unsigned short playerNum; // 0xD2
     char _pad_5[0x4];
@@ -112,12 +193,16 @@ typedef struct obj_tag {
 } obj_tag;
 #pragma pack(pop)
 
+typedef enum{
+    FLAG_UNKNOWN_40 = 0x40,
+    FLAG_IN_FORCEDLIST = 0x30000000,
+} ObjectSpecialFlags;
+
 //char (*__kaboom)[offsetof(obj_tag,objectType)] = 1;
 static_assert(offsetof(obj_tag, position) == 0x24, "Offset of position not correct");
 static_assert(offsetof(obj_tag, transformMatrix) == 0x70, "Offset of transformMatrix not correct");
-static_assert(offsetof(obj_tag, maybeCollision) == 0xb0, "Offset of maybeCollision not correct");
 static_assert(offsetof(obj_tag, extraObjectData) == 0xbc, "Offset of extraObjectData not correct");
-static_assert(offsetof(obj_tag, someFlags_0xcc) == 0xcc, "Offset of someFlags_0xcc not correct");
+static_assert(offsetof(obj_tag, specialFlags) == 0xcc, "Offset of specialFlags not correct");
 static_assert(offsetof(obj_tag, objectType) == 0xdb, "Offset of objectType not correct");
 static_assert(offsetof(obj_tag, flags) == 0xda, "Offset of flags not correct");
 static_assert(offsetof(obj_tag, tweakB) == 0xe1, "Offset of tweakB not correct");
