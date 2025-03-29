@@ -1,4 +1,4 @@
-#include "object.h"
+#include "../../actionhelpers.h"
 
 obj_tag* Control_ReturnNextObjectOfType(ObjectType type, obj_tag* from);
 void Control_DeleteAllObjectsOfType(ObjectType type);

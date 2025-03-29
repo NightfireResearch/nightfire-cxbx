@@ -67,7 +67,7 @@ typedef struct { // on Xbox, starts at 0025fe38
     MPSettings_PerPlayer Player[10]; // Different on PS2 and Xbox.  1E0: Xbox
 
     undefined4 isMultiplayer; // on Xbox, at 00260018
-    undefined4 relatedToTeamIdentitySomehow;
+    undefined4 maybeDroneAIEnabled;
     undefined4 Started;
     undefined4 maybeIsTeamGame;
     undefined4 field53_0x190;
