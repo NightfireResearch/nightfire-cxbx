@@ -1,6 +1,8 @@
 #ifndef OBJECT_H_
 #define OBJECT_H_
 
+#include "../../actionhelpers.h"
+
 #include "../../math/math.h"
 
 #include <stddef.h>

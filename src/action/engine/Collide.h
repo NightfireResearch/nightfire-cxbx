@@ -7,8 +7,6 @@
 
 #pragma pack(push, 1)
 
-struct HITDATA_tag;
-
 typedef struct HITDATA_tag {
   HITDATA_tag* prev; // Conforms to LLNODE_tag
   HITDATA_tag* next;
