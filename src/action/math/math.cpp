@@ -248,6 +248,10 @@ float Vec_Dot(_VECTOR *a, _VECTOR *b) {
   return a->x * b->x + a->y * b->y + a->z * b->z;
 }
 
+float Vec_Magnitude(_VECTOR *a) {
+  return SQRT(a->x * a->x + a->y * a->y + a->z * a->z);
+}
+
 // Find the equation of the plane defined by the three given points
 // AUTOINJECT
 bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3) {
@@ -260,8 +264,9 @@ bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3
   // Find the normal from the two edges
   Vec_Cross(&v1v2, &v2v3, (_VECTOR*)planeEq); // Only works because the plane normal is the first 3 components of a plane_equ_tag
 
-  // Handle the degenerate case where the points are collinear
-  if(Vec_Dot((_VECTOR*)planeEq, (_VECTOR*)planeEq) == 0) {
+  // Handle the degenerate case where the points are collinear or coincident
+  float mag = Vec_Magnitude((_VECTOR*)planeEq);
+  if(mag == 0.0f) {
     planeEq->a = 0;
     planeEq->b = 0;
     planeEq->c = 0;
@@ -270,7 +275,10 @@ bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3
   }
 
   // Otherwise, normalise and calculate the distance component
-  Vec_Normalise((_VECTOR*)planeEq, (_VECTOR*)planeEq);
+  float rcpMag = 1.0f / mag;
+  planeEq->a = planeEq->a * rcpMag;
+  planeEq->b = planeEq->b * rcpMag;
+  planeEq->c = planeEq->c * rcpMag;
   planeEq->d = -Vec_Dot((_VECTOR*)planeEq, v1);
   return true;
 }
