@@ -1,5 +1,5 @@
-#ifndef ACTIONHELPERS_H
-#define ACTIONHELPERS_H
+#ifndef ACTIONHELPERS_H_
+#define ACTIONHELPERS_H_
 
 // Foward declarations prevent circular dependencies
 typedef struct celglist_tag celglist_tag;
@@ -26,4 +26,4 @@ typedef short MallocFlags;
 #include "ui/ui.h"
 #include "ui/HUD.h"
 
-#endif //ACTIONHELPERS_H
+#endif //ACTIONHELPERS_H_
