@@ -16,6 +16,13 @@ typedef struct {
 	float z;
 } _VECTOR;
 
+typedef struct {
+	float a;
+	float b;
+	float c;
+	float d;
+} plane_equ_tag;
+
 #pragma pack(pop)
 
 #define Mat_Position(mat) ((_VECTOR *)((mat.m + 0xc)))
@@ -38,6 +45,7 @@ void Vec_Cross(_VECTOR *a,_VECTOR *b,_VECTOR *vecOut);
 void Vec_MulR32(_VECTOR *outVec, _VECTOR *inVec, float scale);
 void RotMatrixZYX(_VECTOR *param_1,_MATRIX *mtx);
 void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);
+bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3);
 
 #define M_PI 3.14159265358979323846
 #define DEG2RAD(x) ((x) * (M_PI / 180.0f))
