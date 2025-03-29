@@ -60,3 +60,6 @@ void Mem_Init(void) {
 
 // AUTOGEN
 void* Mem_Malloc(size_t size, uint32_t flags, uint32_t unknownMaybeAlignment);
+
+// AUTOGEN
+void Mem_Free(void **ptr);
