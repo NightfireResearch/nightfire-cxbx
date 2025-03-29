@@ -16,7 +16,7 @@ typedef enum {
     OBJECTTYPE_PARTICLES=12,
     OBJECTTYPE_CASING=13,
     OBJECTTYPE_GAS=14,
-    OBJECTTYPE_MINE1=15,
+    OBJECTTYPE_EXPLODE=15,
     OBJECTTYPE_EFFECT=16,
     OBJECTTYPE_DEAD_DRONE=17,
     OBJECTTYPE_DEAD_PLAYER=18,
@@ -28,6 +28,7 @@ typedef enum {
     OBJECTTYPE_BREAK=32,
     OBJECTTYPE_DESTROY=33,
     OBJECTTYPE_SPOTLIGHT=34,
+    OBJECTTYPE_CREATURE=35,
     OBJECTTYPE_CLOUD=36,
     OBJECTTYPE_SIMPLESCRIPT=37,
     OBJECTTYPE_FLICKER=38,
@@ -87,7 +88,7 @@ inline const char* Object_GetName(ObjectType type) {
         case OBJECTTYPE_PARTICLES: return "Particles";
         case OBJECTTYPE_CASING: return "Casing";
         case OBJECTTYPE_GAS: return "Gas";
-        case OBJECTTYPE_MINE1: return "Mine1";
+        case OBJECTTYPE_EXPLODE: return "Explode";
         case OBJECTTYPE_EFFECT: return "Effect";
         case OBJECTTYPE_DEAD_DRONE: return "Dead Drone";
         case OBJECTTYPE_DEAD_PLAYER: return "Dead Player";
@@ -99,6 +100,7 @@ inline const char* Object_GetName(ObjectType type) {
         case OBJECTTYPE_BREAK: return "Break";
         case OBJECTTYPE_DESTROY: return "Destroy";
         case OBJECTTYPE_SPOTLIGHT: return "Spotlight";
+        case OBJECTTYPE_CREATURE: return "Creature";
         case OBJECTTYPE_CLOUD: return "Cloud";
         case OBJECTTYPE_SIMPLESCRIPT: return "Simple Script";
         case OBJECTTYPE_FLICKER: return "Flicker";
