@@ -242,3 +242,35 @@ void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx) {
   mtx->m[14] = trans->z;
 
 }
+
+// Helper function which either didn't exist or was inlined on original code
+float Vec_Dot(_VECTOR *a, _VECTOR *b) {
+  return a->x * b->x + a->y * b->y + a->z * b->z;
+}
+
+// Find the equation of the plane defined by the three given points
+// AUTOINJECT
+bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3) {
+  
+  _VECTOR v1v2, v2v3;
+  // Find two edges
+  Vec_Subtract(v2, v1, &v1v2);
+  Vec_Subtract(v3, v2, &v2v3);
+
+  // Find the normal from the two edges
+  Vec_Cross(&v1v2, &v2v3, (_VECTOR*)planeEq); // Only works because the plane normal is the first 3 components of a plane_equ_tag
+
+  // Handle the degenerate case where the points are collinear
+  if(Vec_Dot((_VECTOR*)planeEq, (_VECTOR*)planeEq) == 0) {
+    planeEq->a = 0;
+    planeEq->b = 0;
+    planeEq->c = 0;
+    planeEq->d = 0;
+    return false;
+  }
+
+  // Otherwise, normalise and calculate the distance component
+  Vec_Normalise((_VECTOR*)planeEq, (_VECTOR*)planeEq);
+  planeEq->d = -Vec_Dot((_VECTOR*)planeEq, v1);
+  return true;
+}
