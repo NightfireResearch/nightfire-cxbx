@@ -1,8 +1,7 @@
 #ifndef VIEW_H_
 #define VIEW_H_
 
-
-#include "obj/object.h"
+#include "../actionhelpers.h"
 
 void View_SetDrawInAllViews(obj_tag* o);
 void View_SetDrawInNoViews(obj_tag* o);

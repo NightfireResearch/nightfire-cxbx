@@ -5,10 +5,6 @@
 
 #pragma pack(push, 1)
 
-// To avoid circular dependencies
-struct HUDINFO_tag;
-typedef struct HUDINFO_tag HUDINFO_tag;
-
 // WIP
 typedef struct {
     char _pad_1[0x770];
