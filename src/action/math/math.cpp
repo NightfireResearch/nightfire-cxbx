@@ -243,7 +243,6 @@ void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx) {
 
 }
 
-// Helper function which either didn't exist or was inlined on original code
 float Vec_Dot(_VECTOR *a, _VECTOR *b) {
   return a->x * b->x + a->y * b->y + a->z * b->z;
 }
@@ -262,10 +261,10 @@ bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3
   Vec_Subtract(v3, v2, &v2v3);
 
   // Find the normal from the two edges
-  Vec_Cross(&v1v2, &v2v3, (_VECTOR*)planeEq); // Only works because the plane normal is the first 3 components of a plane_equ_tag
+  Vec_Cross(&v1v2, &v2v3, &planeEq->normal); // Only works because the plane normal is the first 3 components of a plane_equ_tag
 
   // Handle the degenerate case where the points are collinear or coincident
-  float mag = Vec_Magnitude((_VECTOR*)planeEq);
+  float mag = Vec_Magnitude(&planeEq->normal);
   if(mag == 0.0f) {
     planeEq->a = 0;
     planeEq->b = 0;
@@ -276,9 +275,52 @@ bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3
 
   // Otherwise, normalise and calculate the distance component
   float rcpMag = 1.0f / mag;
-  planeEq->a = planeEq->a * rcpMag;
-  planeEq->b = planeEq->b * rcpMag;
-  planeEq->c = planeEq->c * rcpMag;
-  planeEq->d = -Vec_Dot((_VECTOR*)planeEq, v1);
+  Vec_MulR32(&planeEq->normal, &planeEq->normal, rcpMag);
+  planeEq->d = -Vec_Dot(&planeEq->normal, v1);
+  return true;
+}
+
+// AUTOINJECT
+float DistancePointToPlane(_VECTOR *point, plane_equ_tag *plane) {
+  return point->x * plane->a + point->y * plane->b + point->z * plane->c + plane->d;
+}
+
+// AUTOINJECT
+void auxVec_AddMulR32(_VECTOR *add, _VECTOR *vIn, float multiply, _VECTOR *vOut) {
+  vOut->x = multiply * vIn->x + add->x;
+  vOut->y = multiply * vIn->y + add->y;
+  vOut->z = multiply * vIn->z + add->z;
+}
+
+// AUTOINJECT
+bool vecutil_point_on_poly(_VECTOR *point, _VECTOR *vtx1, _VECTOR *vtx2, _VECTOR *vtx3, plane_equ_tag *plane) {
+
+  // Vectors between the vertices
+  _VECTOR v1v3 = {vtx1->x - vtx3->x, vtx1->y - vtx3->y, vtx1->z - vtx3->z};
+  _VECTOR v2v1 = {vtx2->x - vtx1->x, vtx2->y - vtx1->y, vtx2->z - vtx1->z};
+  _VECTOR v3v2 = {vtx3->x - vtx2->x, vtx3->y - vtx2->y, vtx3->z - vtx2->z};
+
+  // Vectors between the point and the vertices
+  _VECTOR pv1 = {point->x - vtx1->x, point->y - vtx1->y, point->z - vtx1->z};
+  _VECTOR pv2 = {point->x - vtx2->x, point->y - vtx2->y, point->z - vtx2->z};
+  _VECTOR pv3 = {point->x - vtx3->x, point->y - vtx3->y, point->z - vtx3->z};
+
+  // Check against line segment v3v1 using the cross product on the plane
+  _VECTOR tmp;
+  Vec_Cross(&v1v3, &plane->normal, &tmp);
+  if(Vec_Dot(&tmp, &pv1) > 0.0f)
+      return false;
+
+  // Check against line segment v2v1 using the cross product on the plane
+  Vec_Cross(&v2v1, &plane->normal, &tmp);
+  if(Vec_Dot(&tmp, &pv2) > 0.0f)
+      return false;
+
+  // Check against line segment v3v2 using the cross product on the plane
+  Vec_Cross(&v3v2, &plane->normal, &tmp);
+  if(Vec_Dot(&tmp, &pv3) > 0.0f)
+      return false;
+
+  // If on the correct side of all three line segments, we're inside the polygon
   return true;
 }

@@ -17,9 +17,14 @@ typedef struct {
 } _VECTOR;
 
 typedef struct {
-	float a;
-	float b;
-	float c;
+	union {
+		struct {
+			float a;
+			float b;
+			float c;
+		};
+		_VECTOR normal;
+	};
 	float d;
 } plane_equ_tag;
 
@@ -46,8 +51,16 @@ void Vec_MulR32(_VECTOR *outVec, _VECTOR *inVec, float scale);
 void RotMatrixZYX(_VECTOR *param_1,_MATRIX *mtx);
 void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);
 bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3);
+float DistancePointToPlane(_VECTOR *point, plane_equ_tag *plane);
+void auxVec_AddMulR32(_VECTOR *add, _VECTOR *vIn, float multiply, _VECTOR *vOut);
+bool vecutil_point_on_poly(_VECTOR *point, _VECTOR *vtx1, _VECTOR *vtx2, _VECTOR *vtx3, plane_equ_tag *plane);
+
 
 #define M_PI 3.14159265358979323846
 #define DEG2RAD(x) ((x) * (M_PI / 180.0f))
+
+// Helper functions which either didn't exist or were inlined on original code
+float Vec_Dot(_VECTOR *a, _VECTOR *b);
+float Vec_Magnitude(_VECTOR *a);
 
 #endif // MATH_H
