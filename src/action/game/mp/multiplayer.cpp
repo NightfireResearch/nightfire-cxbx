@@ -194,4 +194,7 @@ void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort t
   }
 
 }
+
+// AUTOGEN
+void MP_objectBeingDeleted(obj_tag* obj);
   
