@@ -63,3 +63,21 @@ bool Collide_LineOfSight(_VECTOR *param_1, _VECTOR *param_2, cel_tag *param_3, o
   }
   return !intersects;
 }
+
+// Are the points on opposite sides of the plane, and does their line segment intersect the region bounded?
+// AUTOINJECT
+bool Collide_RayTriangle(_VECTOR *ptStart,_VECTOR *ptEnd,_VECTOR *vtx1,_VECTOR *vtx2,_VECTOR *vtx3, float *distanceOut) {
+  _VECTOR intersectPt;
+  plane_equ_tag planeEq;
+  
+  Plane_PlaneEq(&planeEq, vtx1, vtx2, vtx3);
+  float dist = Vec_Dot(ptEnd, &planeEq.normal);
+  if (dist != 0.0f) {
+    float vDist = -(DistancePointToPlane(ptStart, &planeEq) / dist);
+    *distanceOut = vDist;
+    auxVec_AddMulR32(ptStart, ptEnd, vDist, &intersectPt);
+    return vecutil_point_on_poly(&intersectPt, vtx1, vtx2, vtx3, &planeEq);
+  }
+
+  return false;
+}

@@ -34,5 +34,6 @@ bool Collide_RayIntersect(_VECTOR *startPosition,_VECTOR *endPosition,cel_tag *c
 void Collide_FreeHitList(HITDATA_tag **param_1);
 HITDATA_tag* Coll_GetFreeHit(void);
 bool Collide_LineOfSight(_VECTOR *param_1,_VECTOR *param_2,cel_tag *param_3,obj_tag *param_4,obj_tag *param_5,uint param_6);
+bool Collide_RayTriangle(_VECTOR *ptStart,_VECTOR *ptEnd,_VECTOR *vtx1,_VECTOR *vtx2,_VECTOR *vtx3, float *distanceOut);
 
 #endif // COLLIDE_H
