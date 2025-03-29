@@ -58,6 +58,8 @@ add_library(actioninject SHARED
   src/common/launchInfo.cpp
   src/action/gfx/Sprite.cpp
   src/action/engine/Collide.cpp
+  src/action/gfx/Animation.cpp
+  src/action/game/scriptplayer.cpp
   src/action/math/math.cpp
   src/action/input.cpp
   src/action/memory.cpp
