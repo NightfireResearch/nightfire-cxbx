@@ -247,6 +247,17 @@ void Vec_Copy2(_VECTOR* src, _VECTOR *dst1, _VECTOR *dst2) {
   dst2->z = src->z;
 }
 
+// AUTOINJECT
+bool Vec_IsEqual(_VECTOR *param_1,_VECTOR *param_2,float epsilon) {
+  
+  float dx = ABS(param_2->x - param_1->x);
+  float dy = ABS(param_2->y - param_1->y);
+  float dz = ABS(param_2->z - param_1->z);
+
+  return (dx < epsilon && dy < epsilon && dz < epsilon);
+}
+
+
 // Set up a matrix with the given Euler rotations
 // AUTOINJECT
 void RotMatrixZYX(_VECTOR *angles, _MATRIX *mtx) {

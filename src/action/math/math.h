@@ -51,6 +51,7 @@ void Vec_Copy(_VECTOR *src, _VECTOR *dst);
 void Vec_Cross(_VECTOR *a,_VECTOR *b,_VECTOR *vecOut);
 void Vec_Copy2(_VECTOR* src, _VECTOR *dst1, _VECTOR *dst2);
 void Vec_MulR32(_VECTOR *outVec, _VECTOR *inVec, float scale);
+bool Vec_IsEqual(_VECTOR *param_1,_VECTOR *param_2,float epsilon);
 void RotMatrixZYX(_VECTOR *param_1,_MATRIX *mtx);
 void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);
 bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3);
