@@ -7,10 +7,16 @@
 #include "../scriptplayer.h"
 #include "../../memory.h"
 #include "../mp/multiplayer.h"
+#include "../../math/math.h"
+#include "../view.h"
+#include "../../game.h"
+
 #include <stdio.h>
+#include <string.h>
 
 // Pointer to first game object
-#define DynamicObjList (*(obj_tag**)0x001df34c)
+#define DynamicObjList_FirstObj (*(obj_tag**)0x001df34c)
+#define DynamicObjList (*(obj_tag**)0x001df338)
 
 // Number of game objects
 #define DynamicObjCount U32_AT(0x001df828)
@@ -21,7 +27,7 @@
 // AUTOINJECT
 obj_tag* Control_ReturnNextObjectOfType(ObjectType type, obj_tag* from) {
 
-    obj_tag* at = ((from == NULL) ? DynamicObjList : from);
+    obj_tag* at = ((from == NULL) ? DynamicObjList_FirstObj : from);
 
     while(at != NULL) {
 
@@ -38,7 +44,7 @@ obj_tag* Control_ReturnNextObjectOfType(ObjectType type, obj_tag* from) {
 // AUTOINJECT
 void Control_DeleteAllObjectsOfType(ObjectType type) {
 
-    obj_tag *at = DynamicObjList;
+    obj_tag *at = DynamicObjList_FirstObj;
 
     while (at != NULL) {
 
@@ -53,7 +59,7 @@ void Control_DeleteAllObjectsOfType(ObjectType type) {
 // AUTOINJECT
 obj_tag* control_first_object(void) {
 
-    return DynamicObjList;
+    return DynamicObjList_FirstObj;
 
 }
 
@@ -116,4 +122,76 @@ void control_delete_object(obj_tag* obj) {
   Mem_Free((void**)&obj);
   return;
 
+}
+
+// AUTOINJECT
+void control_init_object(obj_tag* obj) {
+
+    if(obj == NULL)
+        return;
+    
+    obj->unknown_0xd4 = 0x001f;
+    obj->flags |= 2;
+    obj->unknown_0xd8 = 2;
+    obj->creationTimeFrames = GameState.NumFramesUnpaused;
+    obj->scale = 1.0;
+    obj->tweakR = 0xff;
+    obj->tweakG = 0xff;
+    obj->tweakB = 0xff;
+    obj->unknown1234 = 0xff;
+    obj->light_related1 = 0xff;
+    obj->light_related2 = 0xff;
+    obj->light_related3 = 0xff;
+
+}
+
+void control_add_object_to_list(obj_tag *list,obj_tag *obj) {
+  obj_tag *tmp = list->nextObject;
+  obj->prevObject = list;
+  obj->nextObject = tmp;
+  list->nextObject = obj;
+  if (tmp != NULL)
+    tmp->prevObject = obj;
+}
+
+// AUTOINJECT
+obj_tag* control_create_object(int sizeBytes,_VECTOR *pos,_VECTOR *rot,quaternion_tag *quat) {
+
+    int totalSize = sizeBytes + sizeof(obj_tag);
+    obj_tag* obj = (obj_tag*)Mem_Malloc(totalSize, 0x0404, 0);
+    
+    if(obj == NULL) {
+        printf("Failed to allocate object of size %d bytes\n", sizeBytes);
+        return NULL;
+    }
+
+    memset(obj, 0, totalSize);
+
+    control_init_object(obj);
+
+    if(pos != NULL) {
+        Vec_Copy2(pos, &obj->position, &obj->lastPosition);
+    }
+
+    if(rot != NULL) {
+        Vec_Copy2(rot, &obj->rotation, &obj->lastRotation);
+    }
+
+    if(quat == NULL) {
+      View_RotTransMatrix(&obj->rotation, &obj->position, &obj->transformMatrix);
+    }
+    else {
+      Quat_QuatToMat(quat, &obj->transformMatrix);
+      Matrix_SetTrans(&obj->position, &obj->transformMatrix);
+    }
+
+    obj->extraObjectData = (void*)(obj + 1);
+    
+    control_add_object_to_list((obj_tag*)&DynamicObjList, obj);
+    DynamicObjCount++;
+
+    obj->llPrev = NULL;
+    obj->llNext = NULL;
+    
+    return obj;
 }

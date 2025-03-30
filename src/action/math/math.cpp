@@ -71,6 +71,42 @@ void Quat_QuatTransToMat(quaternion_tag *quatIn, float *vecIn, _MATRIX *mOut) {
 }
 
 // AUTOINJECT
+void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
+  float fVar1;
+  float fVar2;
+  float fVar3;
+  float fVar4;
+  float fVar5;
+  float fVar6;
+  float fVar7;
+  float fVar8;
+  float fVar9;
+  
+  fVar1 = param_1->q[0] + param_1->q[0];
+  fVar3 = param_1->q[1] + param_1->q[1];
+  fVar6 = param_1->q[2] + param_1->q[2];
+  fVar2 = fVar1 * param_1->q[0];
+  fVar5 = fVar3 * param_1->q[0];
+  fVar7 = fVar6 * param_1->q[0];
+  fVar4 = fVar3 * param_1->q[1];
+  fVar8 = fVar6 * param_1->q[1];
+  fVar9 = fVar6 * param_1->q[2];
+  fVar1 = fVar1 * param_1->q[3];
+  fVar3 = fVar3 * param_1->q[3];
+  fVar6 = fVar6 * param_1->q[3];
+  param_2->m[0] = 1.0 - (fVar9 + fVar4);
+  param_2->m[1] = fVar5 + fVar6;
+  param_2->m[2] = fVar7 - fVar3;
+  param_2->m[4] = fVar5 - fVar6;
+  param_2->m[5] = 1.0 - (fVar9 + fVar2);
+  param_2->m[6] = fVar1 + fVar8;
+  param_2->m[8] = fVar3 + fVar7;
+  param_2->m[9] = fVar8 - fVar1;
+  param_2->m[10] = 1.0 - (fVar4 + fVar2);
+}
+
+
+// AUTOINJECT
 void Mat_Copy(const _MATRIX *source, _MATRIX *target) {
 	for (int i = 0; i < 15; i++) {
 		target->m[i] = source->m[i];
@@ -135,6 +171,13 @@ void RotTransMat(_MATRIX *mat1, _MATRIX *mat2) {
 }
 
 // AUTOINJECT
+void Matrix_SetTrans(_VECTOR *vec, _MATRIX *mtx) {
+  mtx->m[0xc] = vec->x;
+  mtx->m[0xd] = vec->y;
+  mtx->m[0xe] = vec->z;
+}
+
+// AUTOINJECT
 void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
   
   float magnitude = SQRT(vIn->z * vIn->z + vIn->y * vIn->y + vIn->x * vIn->x);
@@ -192,6 +235,16 @@ void Vec_Cross(_VECTOR *a,_VECTOR *b,_VECTOR *vecOut) {
   vecOut->x = b->z * a->y - b->y * a->z;
   vecOut->y = b->x * a->z - a->x * b->z;
   vecOut->z = a->x * b->y - b->x * a->y;
+}
+
+// AUTOINJECT
+void Vec_Copy2(_VECTOR* src, _VECTOR *dst1, _VECTOR *dst2) {
+  dst1->x = src->x;
+  dst1->y = src->y;
+  dst1->z = src->z;
+  dst2->x = src->x;
+  dst2->y = src->y;
+  dst2->z = src->z;
 }
 
 // Set up a matrix with the given Euler rotations

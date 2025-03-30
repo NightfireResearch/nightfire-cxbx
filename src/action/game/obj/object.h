@@ -161,7 +161,8 @@ struct obj_tag;
 
 typedef struct obj_tag {
     // TODO: Complete this
-    char _pad_1[0x8];
+    LLNODE_tag* llPrev; // Required at the start of the struct for insertion into eg ForcedList
+    LLNODE_tag* llNext;
     obj_tag* prevInCel; // 0x8 -- doubly-linked list
     obj_tag *nextInCel; // 0xC
     char pad_0000[4];
@@ -170,7 +171,10 @@ typedef struct obj_tag {
     obj_tag* maybeParent; // 0x1c
     void* inCel; // 0x20 - cel_tag
     _VECTOR position; // 0x24
-    char _pad_2[0x40];
+    _VECTOR lastPosition; // 0x28
+    _VECTOR rotation; // 0x2C
+    _VECTOR lastRotation; // 0x30
+    char _pad_2[28];
     _MATRIX transformMatrix; // 0x70
     HITDATA_tag* hitList; // 0xAC - HITLIST_tag
     void* maybeCollision; // 0xB0
@@ -183,15 +187,20 @@ typedef struct obj_tag {
     int specialFlags; // 0xCC, unclear what the meaning is but sometimes relevant for rendering or object state or straddle tests?
     unsigned short curState; // 0xD0
     unsigned short playerNum; // 0xD2
-    char _pad_5[0x4];
-    char _pad_6[0x2];
+    ushort unknown_0xd4;
+    ushort renderType;
+    char unknown_0xd8;
+    char _pad_6;
     char flags; // (1 == Marked for deletion)
     char objectType; // Actually ObjectType but can't tell the compiler to make it just one byte
-    char _pad_7[0x3]; // Related to lighting
+    char light_related1;
+    char light_related2;
+    char light_related3;
     char tweakR;
     char tweakG;
     char tweakB;
-    char _pad_8[2];
+    char unknown1234; // Maybe glow intensity?
+    char _pad_8;
 } obj_tag;
 #pragma pack(pop)
 
