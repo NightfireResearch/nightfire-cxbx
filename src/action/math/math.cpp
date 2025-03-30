@@ -254,7 +254,7 @@ bool Vec_IsEqual(_VECTOR *param_1,_VECTOR *param_2,float epsilon) {
   float dy = ABS(param_2->y - param_1->y);
   float dz = ABS(param_2->z - param_1->z);
 
-  return (dx < epsilon && dy < epsilon && dz < epsilon);
+  return (dx <= epsilon && dy <= epsilon && dz <= epsilon);
 }
 
 
