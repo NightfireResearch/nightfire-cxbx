@@ -3,6 +3,8 @@
 #include "memory.h"
 #include "game.h"
 #include "game/mp/multiplayer.h" // for MPSettings
+#include "ui/MenuManager.h"
+#include "gfx/Text.h"
 
 #include <cstring>
 #include <cstdio>
@@ -14,17 +16,7 @@ void __stdcall Sound_UpdateListeners(void);
 // AUTOGEN
 void __stdcall Camera_UpdateAll(void);
 // AUTOGEN
-int** __stdcall MenuManager_Update(void);
-// AUTOGEN
-void __stdcall MenuManager_Monitor(void);
-// AUTOGEN
 void __stdcall Mission_Update(void);
-// AUTOGEN
-void __stdcall MP_Update(void);
-// AUTOGEN
-void __stdcall Text_Update2Line(void);
-// AUTOGEN
-void __stdcall Text_Update(void);
 // AUTOGEN
 void __stdcall UpdateAllShards(void);
 // AUTOGEN
@@ -33,8 +25,6 @@ void __stdcall Env_Update(void);
 void __stdcall SSys_Monitor(void);
 // AUTOGEN
 void __stdcall Light_Update(void);
-// AUTOGEN
-void __cdecl control_movement_object_handler(char);
 // AUTOGEN
 void __stdcall psiDecompressWoman(void);
 // AUTOGEN
@@ -369,19 +359,10 @@ void GameFlow_QuickPushState(uint state) {
 double timestamp(void);
 
 // AUTOGEN
-void __stdcall Input_Init(void);
-
-// AUTOGEN
-void __stdcall Input_Ready(void);
-
-// AUTOGEN
 void __stdcall PlrStat_Init(void);
 
 // AUTOGEN
 void SFXSetMode(unsigned int mode);
-
-// AUTOGEN
-char* Txt_BindLabel(Action_TranslatedText a, unsigned int b);
 
 // Used to insert a CALL location within a larger function that a debugger or profiler can hook into
 void __profiling_or_debugging_hook_point(void) {

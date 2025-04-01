@@ -195,3 +195,6 @@ obj_tag* control_create_object(int sizeBytes,_VECTOR *pos,_VECTOR *rot,quaternio
     
     return obj;
 }
+
+// AUTOGEN
+void control_movement_object_handler(char);

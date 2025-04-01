@@ -11,6 +11,7 @@ obj_tag* control_first_object(void);
 void control_delete_object(obj_tag* obj);
 void control_init_object(obj_tag* obj);
 obj_tag* control_create_object(int sizeBytes,_VECTOR *pos,_VECTOR *rot,quaternion_tag *quat);
+void control_movement_object_handler(char);
 
 // Each object type has 3 optional functions which are called by the control system
 // These are Update, Collide and Delete.

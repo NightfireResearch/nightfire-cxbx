@@ -3448,11 +3448,11 @@
         "name": "control_init_object",
         "address": "0x0002d190",
         "calling_convention": "__cdecl",
-        "return_type": "void",
+        "return_type": "undefined",
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl control_init_object(obj_tag * param_1)"
+        "prototype_string": "undefined __cdecl control_init_object(obj_tag * param_1)"
     },
     {
         "name": "control_link_object_to_cel",
@@ -3500,10 +3500,10 @@
         "return_type": "void",
         "param_types": [
             "obj_tag *",
-            "int",
+            "obj_tag *",
             "float"
         ],
-        "prototype_string": "void __cdecl Control_InheritVelocity(obj_tag * param_1, int param_2, float param_3)"
+        "prototype_string": "void __cdecl Control_InheritVelocity(obj_tag * param_1, obj_tag * param_2, float param_3)"
     },
     {
         "name": "Control_Plr2Ind",
@@ -3524,7 +3524,7 @@
             "_VECTOR *",
             "_VECTOR *"
         ],
-        "prototype_string": "float __cdecl control_ClosestPlayerPnt(_VECTOR * param_1, _VECTOR * param_2)"
+        "prototype_string": "float __cdecl control_ClosestPlayerPnt(_VECTOR * testPoint, _VECTOR * playerPntOut)"
     },
     {
         "name": "Control_SetEffectType",
@@ -3544,19 +3544,19 @@
         "return_type": "void",
         "param_types": [
             "obj_tag *",
-            "int"
+            "celglist_tag *"
         ],
-        "prototype_string": "void __cdecl Control_SetGList(obj_tag * param_1, int param_2)"
+        "prototype_string": "void __cdecl Control_SetGList(obj_tag * obj, celglist_tag * celgl)"
     },
     {
         "name": "Control_NextLOD",
         "address": "0x0002da50",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "uint __cdecl Control_NextLOD(int param_1)"
+        "prototype_string": "bool __cdecl Control_NextLOD(obj_tag * param_1)"
     },
     {
         "name": "Control_DeleteAllObjectsOfType",
@@ -12662,20 +12662,20 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "undefined",
+            "obj_tag *",
+            "undefined4",
             "_VECTOR *",
-            "_VECTOR *",
-            "float",
-            "float",
+            "undefined4",
+            "undefined4",
             "HASHCODE",
-            "float",
+            "undefined4",
             "uchar",
             "uchar",
             "uchar",
-            "undefined",
+            "obj_tag *",
             "ushort"
         ],
-        "prototype_string": "void __cdecl Explode_Create(undefined bulletObj, _VECTOR * pos, _VECTOR * maybeDirectionUp, float scale, float shakeIntensity, HASHCODE scriptHashcode, float g, uchar h, uchar i, uchar j, undefined playerShooter, ushort maybeMaterial)"
+        "prototype_string": "void __cdecl Explode_Create(obj_tag * obj, undefined4 pos, _VECTOR * maybeUpVector, undefined4 scale, undefined4 shakeIntensity, HASHCODE scriptHashcode, undefined4 maybeExplodeStrength, uchar h, uchar i, uchar j, obj_tag * shooter, ushort maybeMaterial)"
     },
     {
         "name": "Explode_Update",
@@ -13432,10 +13432,10 @@
     {
         "name": "Input_Init",
         "address": "0x0006c940",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall Input_Init(void)"
+        "prototype_string": "void __cdecl Input_Init(void)"
     },
     {
         "name": "Input_Action",
@@ -13539,10 +13539,10 @@
     {
         "name": "Input_Ready",
         "address": "0x0006ce90",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall Input_Ready(void)"
+        "prototype_string": "void __cdecl Input_Ready(void)"
     },
     {
         "name": "StickCompensation2",
@@ -18398,10 +18398,10 @@
     {
         "name": "MenuManager_Monitor",
         "address": "0x00094720",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall MenuManager_Monitor(void)"
+        "prototype_string": "void MenuManager_Monitor(void)"
     },
     {
         "name": "Memo_Init",
@@ -20012,10 +20012,10 @@
     {
         "name": "MP_Update",
         "address": "0x000a2b80",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall MP_Update(void)"
+        "prototype_string": "void MP_Update(void)"
     },
     {
         "name": "MP_RegisterMPObject",
@@ -20539,7 +20539,7 @@
         "prototype_string": "void __stdcall Pickup_MakeRandomWeaponSet(void)"
     },
     {
-        "name": "FUN_000a80b0",
+        "name": "Pickup_CreateFromSet",
         "address": "0x000a80b0",
         "calling_convention": "__cdecl",
         "return_type": "obj_tag *",
@@ -20548,7 +20548,7 @@
             "_VECTOR *",
             "_VECTOR *"
         ],
-        "prototype_string": "obj_tag * __cdecl FUN_000a80b0(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3)"
+        "prototype_string": "obj_tag * __cdecl Pickup_CreateFromSet(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3)"
     },
     {
         "name": "Pickup_Update",
@@ -23244,12 +23244,18 @@
     {
         "name": "Script_Load",
         "address": "0x000c1550",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "SCRIPTINFO *",
         "param_types": [
-            "undefined4"
+            "HASHCODE",
+            "_VECTOR *",
+            "_VECTOR *",
+            "uint *",
+            "float",
+            "float",
+            "float"
         ],
-        "prototype_string": "undefined Script_Load(undefined4 param_1)"
+        "prototype_string": "SCRIPTINFO * __stdcall Script_Load(HASHCODE param_1, _VECTOR * transform, _VECTOR * rotation, uint * fileBuf, float param_5, float param_6, float param_7)"
     },
     {
         "name": "Script_Load",
@@ -26587,10 +26593,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "undefined4 *",
-            "int"
+            "_VECTOR *",
+            "_MATRIX *"
         ],
-        "prototype_string": "void __cdecl Matrix_SetTrans(undefined4 * param_1, int param_2)"
+        "prototype_string": "void __cdecl Matrix_SetTrans(_VECTOR * param_1, _MATRIX * param_2)"
     },
     {
         "name": "Mat_Identity",
@@ -27259,11 +27265,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *",
-            "float *"
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl Vec_Add2(float * a, float * b, float * dest)"
+        "prototype_string": "void __cdecl Vec_Add2(_VECTOR * a, _VECTOR * b, _VECTOR * dest)"
     },
     {
         "name": "Vec_Subtract",
@@ -27645,13 +27651,13 @@
         "name": "Vec_IsEqual",
         "address": "0x000d8a00",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "float *",
-            "float *",
+            "_VECTOR *",
+            "_VECTOR *",
             "float"
         ],
-        "prototype_string": "uint __cdecl Vec_IsEqual(float * param_1, float * param_2, float param_3)"
+        "prototype_string": "bool __cdecl Vec_IsEqual(_VECTOR * param_1, _VECTOR * param_2, float epsilon)"
     },
     {
         "name": "Vec_UnitVector",

@@ -172,3 +172,9 @@ void Input_SetAction(short playerNum,unsigned int action,unsigned char val) {
 
   return;
 }
+
+// AUTOGEN
+void Input_Init(void);
+
+// AUTOGEN
+void Input_Ready(void);

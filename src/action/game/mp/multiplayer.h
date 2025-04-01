@@ -148,6 +148,7 @@ bool MP_IsAssasin(obj_tag *param_1);
 bool MP_IsTarget(obj_tag *param_1);
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId);
 void MP_objectBeingDeleted(obj_tag* obj);
+void MP_Update(void);
 
 
 // FIXME move to a separate file
