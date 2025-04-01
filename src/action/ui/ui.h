@@ -15,11 +15,11 @@ typedef struct {
 // Common between PS2 and Xbox
 typedef struct {
     HASHCODE iconHashcode;
-    Nightfire_TranslatedText title;
-    Nightfire_TranslatedText description;
+    Action_TranslatedText title;
+    Action_TranslatedText description;
     uint identifier; // Identifier or index
     uint enabled; // 4-byte bool? Upper 3 bits seem unused
-    Nightfire_TranslatedText descriptionWhenDisabled;
+    Action_TranslatedText descriptionWhenDisabled;
 } M_ITEM;
 
 long Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int param_4, int param_5);

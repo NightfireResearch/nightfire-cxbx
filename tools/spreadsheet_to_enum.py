@@ -54,7 +54,7 @@ if len(set([x[1] for x in filtered_entries])) != len(filtered_entries):
 enum_code = "typedef enum {\n"
 for value, name in filtered_entries:
     enum_code += f"    {name} = 0x{value},\n"
-enum_code += "} Nightfire_TranslatedText;"
+enum_code += "} Action_TranslatedText;"
 
 # Save enum_code to "Nightfire_Text.h"
 with open("Nightfire_Text.h", "w") as f:

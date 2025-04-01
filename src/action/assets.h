@@ -181,10 +181,8 @@ typedef enum {
     DOSSIER_GADGETS_DESC = 0x0100000c,
     DOSSIER_WEAPONS_DESC = 0x0100000d,
 
-    Nightfire_TranslatedText_FORCE_UINT32 = 0x7FFFFFFF
-} Nightfire_TranslatedText;
-
-typedef Nightfire_TranslatedText Action_TranslatedText;
+    Action_TranslatedText_FORCE_UINT32 = 0x7FFFFFFF
+} Action_TranslatedText;
 
 typedef enum {
     SFX_WEAPON_P99_SHOT = 1,
