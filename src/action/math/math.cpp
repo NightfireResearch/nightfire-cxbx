@@ -180,7 +180,7 @@ void Matrix_SetTrans(_VECTOR *vec, _MATRIX *mtx) {
 // AUTOINJECT
 void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
   
-  float magnitude = SQRT(vIn->z * vIn->z + vIn->y * vIn->y + vIn->x * vIn->x);
+  float magnitude = Vec_Magnitude(vIn);
   
   if (!ISNAN(magnitude) && (magnitude != 0.0)) {
     float rcpMag = 1.0f / magnitude;
@@ -197,7 +197,7 @@ void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
 
 // AUTOINJECT
 float Vec_NormaliseLen(_VECTOR *output, _VECTOR *input) {
-  float len = SQRT(input->x * input->x + input->y * input->y + input->z * input->z);
+  float len = Vec_Magnitude(input);
   Vec_Normalise(output,input);
   return len;
 }
@@ -264,7 +264,7 @@ bool Vec_IsEqual(_VECTOR *param_1,_VECTOR *param_2,float epsilon) {
   return (dx <= epsilon && dy <= epsilon && dz <= epsilon);
 }
 
-
+// AUTOINJECT
 void Vec_CrossNormalise(_VECTOR *a,_VECTOR *b,_VECTOR *vecOut) {
   Vec_Cross(a,b,vecOut);
   Vec_Normalise(vecOut,vecOut);
@@ -323,6 +323,7 @@ float Vec_Dot(_VECTOR *a, _VECTOR *b) {
   return a->x * b->x + a->y * b->y + a->z * b->z;
 }
 
+// AUTOINJECT
 float Vec_Magnitude(_VECTOR *a) {
   return SQRT(a->x * a->x + a->y * a->y + a->z * a->z);
 }
