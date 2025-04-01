@@ -9,6 +9,8 @@
 #include <cstring>
 #include <cstdio>
 
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
 // Functions taking void and returning through registers are fine in either __cdecl or __stdcall
 // It's only when they take arguments that the calling convention matters
 // AUTOGEN
@@ -119,7 +121,7 @@ LAB_0006aafe:
 #define FRAME_RATE_DIV FLOAT_AT(0x0017c0fc)
 #define FRAME_RATE_MUL FLOAT_AT(0x0017c100)
 #define REC_FRAME_RATE FLOAT_AT(0x0017c104)
-uint *GameStateStack = (uint*)0x0017bff0; // Not zero-initialised - first entry must be 1
+#define GameStateStack (*(uint (*)[64])0x0017bff0) // Not zero-initialised - first entry must be 1
 
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
 #define MPGame (*((MPGame_t*)0x00262738))
@@ -347,9 +349,8 @@ uint GameFlow_PopState(void)
 }
 
 void GameFlow_QuickPushState(uint state) {
-    StackIndex++;
-    GameStateStack[StackIndex-1] = state;
-    if (0x3f < StackIndex) {
+    GameStateStack[StackIndex++] = state;
+    if (StackIndex >= ARRAY_SIZE(GameStateStack)) {
       StackIndex = 0;
     }
     set_InhibitGameDrawIfRequired();
