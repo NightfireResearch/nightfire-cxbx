@@ -131,4 +131,11 @@ void Inject()
   // These are common to both, so we can't use autogeneration
   WriteJmpTo(0x000eb0fb, (size_t)&XLaunchNewImageA);
   WriteJmpTo(0x000eb050, (size_t)&XGetLaunchInfo);
+
+
+  // Special case for weapon stats
+  // This has the limitation that the DLL must be injected before the constructor is called otherwise it will have no effect
+  void *ptrCtorWeaponDefinitionTable = &ctor_WeaponDefinitionTable;
+  WriteMemory(0x0016313c, &ptrCtorWeaponDefinitionTable, 4);
+
 }

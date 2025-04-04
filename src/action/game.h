@@ -47,7 +47,6 @@ typedef struct {
     undefined field26_0x53;
     undefined4 isMultiplayerLevel;
 } GameState_t;
-#pragma pack(pop)
 
 static_assert(sizeof(GameState_t) == 0x58, "Bad size for GameState");
 
@@ -206,5 +205,129 @@ typedef struct {
 
 static_assert(sizeof(sNightFireShared_tag) == 2640, "Size of sNightFireShared not correct");
 
+typedef enum WeaponBaseNum {
+    Weap_None=0,
+    Weap_SubTorpedo=48,
+    Weap_LaserBeamFromSamurai=51,
+    Weap_RemoteMine=55,
+    Weap_Satchel=59,
+    Weap_OddjobHat=69,
+    Weap_Ronin=82,
+    Weap_Camera=84,
+    Weap_CopterGunCastle=97,
+    Weap_CopterMissileCastle=98,
+    Weap_Laser=103,
+    Weap_SubLaser=104,
+    Weap_SmokeGrenade=105,
+    Weap_LaserBurst1=106,
+    Weap_SpaceLaser=107,
+    Weap_CopterMissile1=109,
+    Weap_LaserBurst2=110,
+    Weap_Samurai=111,
+    Weap_CopterGun1=113,
+    NUM_WEAPONS=115,
+} WeaponBaseNum;
+
+typedef struct {
+    short weaponVariantNum; /* Unique index into this array */
+    char weaponBaseNum; /* WeaponBaseNum: Upgrades/variants will have the same base number */
+    undefined field2_0x3;
+    bool isBaseWeapon;
+    uchar offsetToNextAltFireVariant;
+    undefined1 maybeFlags;
+    undefined field6_0x7;
+    float maybeExplodeRange;
+    float damage;
+    ushort field9_0x10;
+    undefined field10_0x12;
+    undefined field11_0x13;
+    float autoaimRelated;
+    undefined1 numBulletsPerShot;
+    undefined field14_0x19;
+    undefined field15_0x1a;
+    undefined field16_0x1b;
+    float someDistance;
+    float unknownPurposeMaybeFloat;
+    float maybeAccuracyRelated;
+    short indexIntoSomePlayerAmmoArray;
+    short maybeUnused;
+    short droneBulletBurstTimeRelated;
+    short unk15;
+    Action_TranslatedText fireModePrimary;
+    Action_TranslatedText fireModeSecondary;
+    Action_TranslatedText weaponNameLongSp;
+    Action_TranslatedText weaponNameShortMp;
+    int unk16;
+    uint unk17;
+    HASHCODE muzzleFlash1stPerson;
+    HASHCODE muzzleFlash3rdPerson;
+    byte animDatumRelated3;
+    undefined field33_0x51;
+    undefined field34_0x52;
+    undefined field35_0x53;
+    undefined1 muzzleFlash_b; /* Created by retype action */
+    undefined1 muzzleFlash_g; /* Created by retype action */
+    undefined1 muzzleFlash_r; /* Created by retype action */
+    undefined field39_0x57;
+    float muzzleFlashBrightness; /* Created by retype action */
+    HASHCODE projectileGfx;
+    ushort animDatumRelated2;
+    undefined field43_0x62;
+    undefined field44_0x63;
+    undefined field45_0x64;
+    undefined field46_0x65;
+    undefined field47_0x66;
+    undefined field48_0x67;
+    uint someFlags; /* Created by retype action */
+    uint flagsForSwooshAndCasing; /* Created by retype action */
+    uint someFlagsRelatedToExplosiveTimer;
+    short unk18;
+    short swooshRelated;
+    short casingDelayFrames; /* Created by retype action, size unclear */
+    short unk19;
+    HASHCODE suppressorGfx;
+    HASHCODE wpn3rdPersonGfx; /* Created by retype action */
+    uint weaponAnimationSet; /* Created by retype action */
+    float maybeCameraRelated;
+    float cameraSwingAmt; /* Created by retype action */
+    uchar ammoType; /* Created by retype action */
+    uint8_t cooldownTimerIncreaseAmount;
+    short clipSizeOrCooldown; /* Created by retype action */
+    uint8_t rumble; /* Created by retype action */
+    uint8_t _pad1;
+    uint8_t _pad2;
+    uint8_t _pad3;
+    float accuracyModifierSomehow;
+    float unk22;
+    HASHCODE animScriptTag; /* Created by retype action */
+    HASHCODE someAnimhc3;
+    HASHCODE someAnimHsh;
+    HASHCODE maybeAnAnimScript;
+    HASHCODE maybeWeaponFireAnimHashcode2;
+    HASHCODE maybeWeaponFireAnimHashcode;
+    HASHCODE someAnimHC2;
+    HASHCODE someAnimHC;
+    HASHCODE animationHashcode;
+    HASHCODE animSpeedRelated; /* Could also be a hashcode? */
+    HASHCODE field80_0xc8;
+    HASHCODE anotherAnimScriptTag; /* Created by retype action */
+    HASHCODE field82_0xd0;
+    HASHCODE field83_0xd4;
+    HASHCODE animationScript;
+    HASHCODE weaponModelHashcode;
+    float animRelated1[3];
+    float animRelated2[3];
+    float casingSpawnPos[3];
+    undefined4 multiplayerWeaponFiredCallback; /* Created by retype action */
+    undefined field90_0x108;
+    undefined field91_0x109;
+    undefined field92_0x10a;
+    undefined field93_0x10b;
+} weapon_definition_tag;
+
+static_assert(sizeof(weapon_definition_tag) == 0x10c, "Size of weapon_definition_tag not correct");
+static_assert(offsetof(weapon_definition_tag,someDistance) == 0x1c, "someDistance is in the wrong place");
+
+#pragma pack(pop)
 
 #endif // GAME_H
