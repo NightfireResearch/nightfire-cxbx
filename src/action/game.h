@@ -288,7 +288,7 @@ typedef struct {
     HASHCODE suppressorGfx;
     HASHCODE wpn3rdPersonGfx; /* Created by retype action */
     uint weaponAnimationSet; /* Created by retype action */
-    float maybeCameraRelated;
+    float maxZoom;
     float cameraSwingAmt; /* Created by retype action */
     uchar ammoType; /* Created by retype action */
     uint8_t cooldownTimerIncreaseAmount;
