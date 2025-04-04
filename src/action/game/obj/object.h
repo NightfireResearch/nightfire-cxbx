@@ -174,7 +174,9 @@ typedef struct obj_tag {
     _VECTOR lastPosition; // 0x28
     _VECTOR rotation; // 0x2C
     _VECTOR lastRotation; // 0x30
-    char _pad_2[28];
+    char _pad_2[12];
+    _VECTOR centrePoint; // 0x60
+    float radius; // 0x6C
     _MATRIX transformMatrix; // 0x70
     HITDATA_tag* hitList; // 0xAC - HITLIST_tag
     void* maybeCollision; // 0xB0

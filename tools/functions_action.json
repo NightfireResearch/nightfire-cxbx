@@ -93,15 +93,15 @@
         "prototype_string": "void __cdecl AnimObjectSetSleeveType(int param_1, int sleeveNum)"
     },
     {
-        "name": "FUN_00011920",
+        "name": "AnimGetNDiscreteObj",
         "address": "0x00011920",
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
-            "int",
+            "obj_tag *",
             "uint"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_00011920(int param_1, uint param_2)"
+        "prototype_string": "undefined4 __cdecl AnimGetNDiscreteObj(obj_tag * param_1, uint param_2)"
     },
     {
         "name": "AnimObjectIsClose",
@@ -131,14 +131,14 @@
         "prototype_string": "void __cdecl AnimObjectSetHeadTracking(int param_1, int param_2, float param_3, undefined4 param_4, char param_5, char param_6, undefined1 param_7)"
     },
     {
-        "name": "FUN_00011a80",
+        "name": "AnimObjectIsHeadTracking",
         "address": "0x00011a80",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "uint"
+            "obj_tag *"
         ],
-        "prototype_string": "uint __cdecl FUN_00011a80(uint param_1)"
+        "prototype_string": "bool __cdecl AnimObjectIsHeadTracking(obj_tag * param_1)"
     },
     {
         "name": "AnimObjectHeadTrack",
@@ -226,15 +226,15 @@
         "prototype_string": "bool __cdecl AnimScriptIsStopped(obj_tag * param_1)"
     },
     {
-        "name": "FUN_000127d0",
+        "name": "AnimScriptSetPlayDirection",
         "address": "0x000127d0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000127d0(int param_1, int param_2)"
+        "prototype_string": "void __cdecl AnimScriptSetPlayDirection(obj_tag * param_1, int param_2)"
     },
     {
         "name": "AnimScriptCallOnStop",
@@ -273,10 +273,16 @@
     {
         "name": "FUN_00012a20",
         "address": "0x00012a20",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_00012a20()"
+        "calling_convention": "__fastcall",
+        "return_type": "bool",
+        "param_types": [
+            "int",
+            "int",
+            "int",
+            "int",
+            "int"
+        ],
+        "prototype_string": "bool __fastcall FUN_00012a20(int param_1, int param_2, int param_3, int param_4, int param_5)"
     },
     {
         "name": "AnimScriptSetAnimRotation",
@@ -352,12 +358,16 @@
         "prototype_string": "undefined AnimGetBoneWorldTrans2(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined1 param_5, undefined param_6, undefined param_7, undefined param_8, undefined param_9, undefined param_10, undefined1 param_11, undefined4 param_12, undefined4 param_13, undefined4 param_14, undefined1 param_15)"
     },
     {
-        "name": "FUN_00013420",
+        "name": "AnimDistanceTableDistanceToFrame2",
         "address": "0x00013420",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_00013420()"
+        "calling_convention": "__fastcall",
+        "return_type": "float10",
+        "param_types": [
+            "obj_tag *",
+            "sAnimObject_tag *",
+            "sAnimScript_tag *"
+        ],
+        "prototype_string": "float10 __fastcall AnimDistanceTableDistanceToFrame2(obj_tag * param_1, sAnimObject_tag * param_2, sAnimScript_tag * param_3)"
     },
     {
         "name": "AnimDatumGetIndex",
@@ -449,11 +459,11 @@
         "return_type": "void",
         "param_types": [
             "_VECTOR *",
-            "int",
-            "int",
+            "sAnimSeq_tag *",
+            "sAnimSkin_tag *",
             "float"
         ],
-        "prototype_string": "void __cdecl AnimFrameCopy(_VECTOR * param_1, int param_2, int param_3, float param_4)"
+        "prototype_string": "void __cdecl AnimFrameCopy(_VECTOR * param_1, sAnimSeq_tag * aSeq, sAnimSkin_tag * param_3, float param_4)"
     },
     {
         "name": "FUN_00014420",
@@ -1839,15 +1849,15 @@
         "prototype_string": "void __cdecl ShatterPolyRecurse(int param_1, int * * param_2, int param_3, int param_4, int * param_5)"
     },
     {
-        "name": "FUN_0001fc90",
+        "name": "Break_ShatterWindow",
         "address": "0x0001fc90",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "uint",
-            "int"
+            "obj_tag *",
+            "HITDATA_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_0001fc90(uint param_1, int param_2)"
+        "prototype_string": "void __cdecl Break_ShatterWindow(obj_tag * param_1, HITDATA_tag * param_2)"
     },
     {
         "name": "UpdateAllShards",
@@ -1870,8 +1880,11 @@
         "address": "0x0001fee0",
         "calling_convention": "__stdcall",
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall Break_Kill(void)"
+        "param_types": [
+            "obj_tag *",
+            "HITDATA_tag *"
+        ],
+        "prototype_string": "void __stdcall Break_Kill(obj_tag * obj, HITDATA_tag * hitData)"
     },
     {
         "name": "Break_Create",
@@ -1882,9 +1895,9 @@
             "_VECTOR *",
             "_VECTOR *",
             "int",
-            "int"
+            "void *"
         ],
-        "prototype_string": "obj_tag * __cdecl Break_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int param_4)"
+        "prototype_string": "obj_tag * __cdecl Break_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, void * param_4)"
     },
     {
         "name": "Destroy_Create",
@@ -1947,10 +1960,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "obj_tag *",
+            "HITDATA_tag *"
         ],
-        "prototype_string": "void __cdecl Break_ApplyDamage(int param_1, int param_2)"
+        "prototype_string": "void __cdecl Break_ApplyDamage(obj_tag * param_1, HITDATA_tag * param_2)"
     },
     {
         "name": "Break_DoBreak",
@@ -2100,9 +2113,9 @@
         "param_types": [
             "obj_tag *",
             "char",
-            "int * *"
+            "level_tag *"
         ],
-        "prototype_string": "bool __cdecl build_LinkToRoom(obj_tag * param_1, char control_straddle_test, int * * world)"
+        "prototype_string": "bool __cdecl build_LinkToRoom(obj_tag * param_1, char control_straddle_test, level_tag * world)"
     },
     {
         "name": "Bullet_init",
@@ -3211,11 +3224,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int *",
-            "int",
-            "int"
+            "COLLDATA_tag *",
+            "HITDATA_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Debris_Create_Loop(int * param_1, int param_2, int param_3)"
+        "prototype_string": "void __cdecl Debris_Create_Loop(COLLDATA_tag * param_1, HITDATA_tag * param_2, obj_tag * param_3)"
     },
     {
         "name": "Intersect_Portal",
@@ -26667,9 +26680,9 @@
         "calling_convention": "__cdecl",
         "return_type": "uint",
         "param_types": [
-            "int"
+            "uint"
         ],
-        "prototype_string": "uint __cdecl Rand_Rand(int param_1)"
+        "prototype_string": "uint __cdecl Rand_Rand(uint param_1)"
     },
     {
         "name": "Float_FRand",

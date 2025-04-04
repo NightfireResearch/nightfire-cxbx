@@ -12,11 +12,11 @@ typedef struct HITDATA_tag {
   HITDATA_tag* next;
   float dmgAmt;
   float unknown1f;
-  _VECTOR unknown0;
+  _VECTOR someDirection; // 0x10
   _VECTOR unknown1;
   char undef[4];
-  _VECTOR unknown2;
-  _VECTOR maybeHitStartPos;
+  _VECTOR maybehitDirection; // 0x2C
+  _VECTOR hitPosition;
   char materialType;
   char unknown3;
   short hitBoneIdx;
@@ -33,5 +33,6 @@ void Collide_FreeHitList(HITDATA_tag **param_1);
 HITDATA_tag* Coll_GetFreeHit(void);
 bool Collide_LineOfSight(_VECTOR *param_1,_VECTOR *param_2,cel_tag *param_3,obj_tag *param_4,obj_tag *param_5,uint param_6);
 bool Collide_RayTriangle(_VECTOR *ptStart,_VECTOR *ptEnd,_VECTOR *vtx1,_VECTOR *vtx2,_VECTOR *vtx3, float *distanceOut);
+void Collide_FilterBullets(HITDATA_tag **hitData, ushort flags);
 
 #endif // COLLIDE_H

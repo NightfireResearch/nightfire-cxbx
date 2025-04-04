@@ -81,3 +81,43 @@ bool Collide_RayTriangle(_VECTOR *ptStart,_VECTOR *ptEnd,_VECTOR *vtx1,_VECTOR *
 
   return false;
 }
+
+// AUTOGEN
+void Collide_FilterBullets(HITDATA_tag **hitList, ushort flags);
+
+// {
+
+//   HITDATA_tag *hitData = *hitList;
+
+//   if(hitData == NULL)
+//     return;
+
+//   bool needsSort = false;
+
+//   for(; hitData != NULL; hitData = hitData->next) {
+    
+//     obj_tag *hitter = hitData->hitter;
+
+//     if(hitter == NULL)
+//         continue;
+    
+//     if(hitter->objectType == OBJECTTYPE_BULLET) {
+//       // TODO: Some extra condition based on the flags
+//       BU_tag* bullet = (BU_tag*)hitter->extraObjectData;
+
+//       if(bullet->wpnDef->someFlags & flags) {
+//         hitData->someSortField = 1e+08;
+//         needsSort = true;  
+//       }
+
+//     }
+    
+//   }
+
+
+
+
+//   if(needsSort)
+//     Collide_Sort(hitData);
+
+// }

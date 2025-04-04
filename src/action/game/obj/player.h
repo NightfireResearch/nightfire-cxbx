@@ -28,4 +28,10 @@ static_assert(offsetof(BLData, playerNum) == 0x8de, "Offset of playerNum not cor
 #pragma pack(pop)
 
 
+unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState);
+void Player_SetCamMode(BLData *param_1,unsigned short param_2);
+void Player_Disable(obj_tag *param_1,char param_2);
+void Player_WeaponNone(obj_tag *param_1);
+
+
 #endif // PLAYER_H_

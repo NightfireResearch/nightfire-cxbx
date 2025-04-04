@@ -1,0 +1,7 @@
+#ifndef RANDOM_H
+#define RANDOM_H
+
+unsigned int Rand_Rand(unsigned int max);
+
+#endif // RANDOM_H
+

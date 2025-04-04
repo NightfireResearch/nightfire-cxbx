@@ -137,7 +137,7 @@ bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float dis
   bool intersects = Collide_RayIntersect(position, &endPosition, cel, obj, NULL, &hitList, 0, 0x70c, 0);
 
   if(intersects) {
-    Vec_Copy(&(hitList->maybeHitStartPos), position);
+    Vec_Copy(&(hitList->hitPosition), position);
     Collide_FreeHitList(&hitList);
   }
 

@@ -12,6 +12,8 @@ void control_delete_object(obj_tag* obj);
 void control_init_object(obj_tag* obj);
 obj_tag* control_create_object(int sizeBytes,_VECTOR *pos,_VECTOR *rot,quaternion_tag *quat);
 void control_movement_object_handler(char);
+obj_tag * Control_CreateObjEx(unsigned short, _VECTOR *, _VECTOR *, _MATRIX *, celglist_tag *, obj_tag *,char,unsigned short,float,unsigned short,unsigned char,unsigned char,unsigned char);
+void Control_SetGList(obj_tag *obj, celglist_tag *celgl);;
 
 // Each object type has 3 optional functions which are called by the control system
 // These are Update, Collide and Delete.

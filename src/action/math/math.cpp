@@ -108,6 +108,9 @@ void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
 // AUTOGEN
 void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *mtxIn);
 
+// AUTOGEN
+void RotMatrix(_VECTOR *vIn,_MATRIX *mtxOut);
+
 // AUTOINJECT
 void Mat_GetDir(_VECTOR *dirOut, _MATRIX *mtxIn) {
   dirOut->x = mtxIn->m[0x8];

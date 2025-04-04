@@ -1,10 +1,14 @@
 // Multiplayer, remote-controlled tank / helicopter
 #include "../../game.h"
+#include "../../engine/Camera.h"
 #include "../mp/multiplayer.h"
 #include "object.h"
 #include "player.h"
 #include "../../math/math.h"
 #include "../view.h"
+#include "../../sound/Sound.h"
+#include "../../util/hashtable.h"
+#include "../../util/Random.h"
 
 #include <stddef.h> // for offsetof?
 #include <stdio.h>
@@ -53,34 +57,11 @@ static_assert(offsetof(CAR_INFO, tankMachinegunTemperature) == 0xe4, "Offset of 
 static_assert(offsetof(CAR_INFO, tankNum) == 0xee, "Offset of tankNum not correct");
 static_assert(offsetof(CAR_INFO, isHeli) == 0xf2, "Offset of isHeli not correct");
 
-// AUTOGEN
-obj_tag * Control_CreateObjEx(unsigned short, _VECTOR *, _VECTOR *, _MATRIX *, celglist_tag *, obj_tag *,char,unsigned short,float,unsigned short,unsigned char,unsigned char,unsigned char);
-// AUTOGEN
-celglist_tag * hashtable_hashcode_to_celglist(HASHCODE hashcode);
-// AUTOGEN
-void hashtable_set_object_to_entity_gfx(obj_tag *obj, HASHCODE hashcode);
-// AUTOGEN
-uint Rand_Rand(int max);
-// AUTOGEN
-void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *matIn);
 
 // Ghidra detects this as a thunked function, so we can't AUTOGEN it due to duplicate function names
 void Car_Deactivate(obj_tag *object) {
     reinterpret_cast<void (*)(obj_tag *)>(0x00026a00)(object);
 }
-
-// AUTOGEN
-unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState);
-// AUTOGEN
-void Player_SetCamMode(BLData *param_1,unsigned short param_2);
-// AUTOGEN
-void Player_Disable(obj_tag *param_1,char param_2);
-// AUTOGEN
-void Player_WeaponNone(obj_tag *param_1);
-// AUTOGEN
-void __cdecl Camera_CalcViewAngles(ushort playerNum,float param_2);
-// AUTOGEN
-uint __cdecl Sound_Play3D(Action_SFX param_1,_VECTOR *position,float param_3,float param_4,float param_5, undefined2 param_6,undefined4 param_7,int param_8);
 
 // WIP
 void Car_CollisionHandler(obj_tag* me) {
