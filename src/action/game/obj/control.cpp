@@ -94,21 +94,11 @@ void control_delete_object(obj_tag* obj) {
   DynamicObjCount--;
 
   // Remove from cel (doubly-linked)
-  obj_tag* next = obj->nextInCel;
-  obj_tag* prev = obj->prevInCel;
-  if (next != NULL) {
-    next->prevInCel = prev;
-  }
-  if (prev != NULL) {
-    prev->nextInCel = next;
-  }
-  obj->inCel = NULL;
-  obj->nextInCel = NULL;
-  obj->prevInCel = NULL;
+  control_unlink_object(obj);
 
   // Remove from object list (doubly-linked)
-  prev = obj->prevObject;
-  next = obj->nextObject;
+  obj_tag* prev = obj->prevObject;
+  obj_tag* next = obj->nextObject;
   if (next != NULL) {
     next->prevObject = prev;
   }
@@ -122,6 +112,21 @@ void control_delete_object(obj_tag* obj) {
   Mem_Free((void**)&obj);
   return;
 
+}
+
+// AUTOINJECT
+void control_unlink_object(obj_tag* obj) {
+  obj_tag* next = obj->nextInCel;
+  obj_tag* prev = obj->prevInCel;
+  if (next != NULL) {
+    next->prevInCel = prev;
+  }
+  if (prev != NULL) {
+    prev->nextInCel = next;
+  }
+  obj->inCel = NULL;
+  obj->nextInCel = NULL;
+  obj->prevInCel = NULL;
 }
 
 // AUTOINJECT
