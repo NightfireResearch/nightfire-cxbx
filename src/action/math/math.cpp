@@ -105,6 +105,15 @@ void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
   param_2->m[10] = 1.0 - (fVar4 + fVar2);
 }
 
+// AUTOGEN
+void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *mtxIn);
+
+// AUTOINJECT
+void Mat_GetDir(_VECTOR *dirOut, _MATRIX *mtxIn) {
+  dirOut->x = mtxIn->m[0x8];
+  dirOut->y = mtxIn->m[0x9];
+  dirOut->z = mtxIn->m[0xA];
+}
 
 // AUTOINJECT
 void Mat_Copy(const _MATRIX *source, _MATRIX *target) {

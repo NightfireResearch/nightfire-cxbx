@@ -37,6 +37,8 @@ bool Quat_IsEqual(const quaternion_tag *a, const quaternion_tag *b, float thresh
 void Quat_Mul(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *target);
 void Quat_QuatToMat(quaternion_tag *param_1,_MATRIX *param_2);
 void Quat_QuatTransToMat(quaternion_tag *quatIn,float *vecIn,_MATRIX *mOut);
+void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *mtxIn);
+void Mat_GetDir(_VECTOR *dirOut, _MATRIX *mtxIn);
 void Mat_Copy(const _MATRIX *source, _MATRIX *target);
 void Mat_CopyRot(const _MATRIX *source, _MATRIX *target);
 void Mat_IdentityT(_MATRIX *mtx);
