@@ -68,6 +68,7 @@ add_library(actioninject SHARED
   src/action/music.cpp
   src/action/util/crc.cpp
   src/action/util/LList.cpp
+  src/action/util/Stack.cpp
   src/action/ui/HUD.cpp
   src/action/ui/ui.cpp
   src/action/ui/ui_dossier.cpp

@@ -22,6 +22,7 @@ typedef struct HUDPANECREATE_tag HUDPANECREATE_tag;
 typedef short MallocFlags;
 
 #include "util/LList.h"
+#include "util/Stack.h"
 #include "math/math.h"
 #include "engine/Camera.h"
 #include "engine/Collide.h"
