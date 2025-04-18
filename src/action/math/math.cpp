@@ -15,6 +15,26 @@ inline float SQRT(float n) {
 	return sqrtf(n);
 }
 
+inline float MAX(float a, float b) {
+	if(a > b)
+		return a;
+	return b;
+}
+
+inline float MIN(float a, float b) {
+	if(a < b)
+		return a;
+	return b;
+}
+
+inline float MAX3(float a, float b, float c) {
+	return MAX(MAX(a, b), c);
+}
+
+inline float MIN3(float a, float b, float c) {
+	return MIN(MIN(a, b), c);
+}
+
 // AUTOINJECT
 void Quat_Copy(quaternion_tag *target, const quaternion_tag *from) {
 	target->q[0] = from->q[0];
@@ -338,6 +358,40 @@ float Vec_Dot(_VECTOR *a, _VECTOR *b) {
 // AUTOINJECT
 float Vec_Magnitude(_VECTOR *a) {
   return SQRT(a->x * a->x + a->y * a->y + a->z * a->z);
+}
+
+// AUTOINJECT
+void Vec_Max(_VECTOR *a, _VECTOR *b, _VECTOR *vecOut) {
+  vecOut->x = MAX(a->x, b->x);
+  vecOut->y = MAX(a->y, b->y);
+  vecOut->z = MAX(a->z, b->z);
+}
+
+// AUTOINJECT
+void Vec_Min(_VECTOR *a, _VECTOR *b, _VECTOR *vecOut) {
+  vecOut->x = MIN(a->x, b->x);
+  vecOut->y = MIN(a->y, b->y);
+  vecOut->z = MIN(a->z, b->z);
+}
+
+// AUTOINJECT
+void Vec_MinMax(_VECTOR *a, _VECTOR *b, _VECTOR *minimums, _VECTOR *maximums) {
+  maximums->x = MAX(a->x, b->x);
+  maximums->y = MAX(a->y, b->y);
+  maximums->z = MAX(a->z, b->z);
+  minimums->x = MIN(a->x, b->x);
+  minimums->y = MIN(a->y, b->y);
+  minimums->z = MIN(a->z, b->z);
+}
+
+// AUTOINJECT
+void Vec_MinMax3(_VECTOR *a, _VECTOR *b, _VECTOR *c, _VECTOR *minimums, _VECTOR *maximums) {
+  maximums->x = MAX3(a->x, b->x, c->x);
+  maximums->y = MAX3(a->y, b->y, c->y);
+  maximums->z = MAX3(a->z, b->z, c->z);
+  minimums->x = MIN3(a->x, b->x, c->x);
+  minimums->y = MIN3(a->y, b->y, c->y);
+  minimums->z = MIN3(a->z, b->z, c->z);
 }
 
 // Find the equation of the plane defined by the three given points

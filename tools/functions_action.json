@@ -1894,10 +1894,10 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
+            "celglist_tag *",
             "void *"
         ],
-        "prototype_string": "obj_tag * __cdecl Break_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, void * param_4)"
+        "prototype_string": "obj_tag * __cdecl Break_Create(_VECTOR * param_1, _VECTOR * param_2, celglist_tag * param_3, void * param_4)"
     },
     {
         "name": "Destroy_Create",
@@ -2015,17 +2015,17 @@
         "prototype_string": "cel_tag * __cdecl build_alloc_cel(cel_tag * parent_or_sibling)"
     },
     {
-        "name": "maybe_build_alloc_portal",
+        "name": "build_alloc_portal",
         "address": "0x00020730",
         "calling_convention": "__cdecl",
-        "return_type": "int * *",
+        "return_type": "portal_tag *",
         "param_types": [
-            "int",
-            "int *",
-            "int *",
-            "undefined4"
+            "portal_tag *",
+            "portal_tag *",
+            "cel_tag *",
+            "char"
         ],
-        "prototype_string": "int * * __cdecl maybe_build_alloc_portal(int param_1, int * param_2, int * param_3, undefined4 param_4)"
+        "prototype_string": "portal_tag * __cdecl build_alloc_portal(portal_tag * param_1, portal_tag * param_2, cel_tag * param_3, char param_4)"
     },
     {
         "name": "build_link_world_to_viewer",
@@ -2166,13 +2166,12 @@
     {
         "name": "Bullet_handle_object_destruction",
         "address": "0x000218f0",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "bool",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Bullet_handle_object_destruction(undefined4 param_1, undefined4 param_2)"
+        "prototype_string": "bool __stdcall Bullet_handle_object_destruction(obj_tag * param_1)"
     },
     {
         "name": "Bullet_CollisionHandler",
@@ -2662,14 +2661,14 @@
         "return_type": "undefined",
         "param_types": [
             "int",
-            "World *",
+            "world_tag *",
             "char",
             "ushort",
             "ushort",
             "ushort",
             "ushort"
         ],
-        "prototype_string": "undefined __cdecl Camera_Create(int idx, World * param_2, char param_3, ushort posX, ushort posY, ushort width, ushort height)"
+        "prototype_string": "undefined __cdecl Camera_Create(int idx, world_tag * param_2, char param_3, ushort posX, ushort posY, ushort width, ushort height)"
     },
     {
         "name": "Camera_CreateCameras",
@@ -2936,17 +2935,17 @@
         "prototype_string": "bool __cdecl Intersect_SphereBox(_VECTOR * spherePosition, float radius, _VECTOR * bboxMin, _VECTOR * bboxMax)"
     },
     {
-        "name": "FUN_00028b60",
+        "name": "Intersect_BoxBox",
         "address": "0x00028b60",
         "calling_convention": "__cdecl",
-        "return_type": "ushort",
+        "return_type": "bool",
         "param_types": [
-            "float *",
-            "float *",
-            "float *",
-            "float *"
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "ushort __cdecl FUN_00028b60(float * param_1, float * param_2, float * param_3, float * param_4)"
+        "prototype_string": "bool __cdecl Intersect_BoxBox(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3, _VECTOR * param_4)"
     },
     {
         "name": "Intersect_PointOOBox",
@@ -3234,12 +3233,12 @@
         "name": "Intersect_Portal",
         "address": "0x0002b5c0",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "HITTEST_tag *",
-            "portal_tag.conflict *"
+            "portal_tag *"
         ],
-        "prototype_string": "uint __cdecl Intersect_Portal(HITTEST_tag * param_1, portal_tag.conflict * param_2)"
+        "prototype_string": "bool __cdecl Intersect_Portal(HITTEST_tag * param_1, portal_tag * param_2)"
     },
     {
         "name": "Collide_StraddleCels",
@@ -13865,13 +13864,13 @@
         "name": "Stack_Init",
         "address": "0x0006e820",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int *",
+            "STACKINFO *",
             "ushort",
-            "int"
+            "int *"
         ],
-        "prototype_string": "uint __cdecl Stack_Init(int * param_1, ushort param_2, int param_3)"
+        "prototype_string": "bool __cdecl Stack_Init(STACKINFO * stackInfo, ushort size, int * mem)"
     },
     {
         "name": "Stack_IsEmpty",
@@ -16871,7 +16870,7 @@
         "name": "P_NIS_Handler",
         "address": "0x00082120",
         "calling_convention": "__stdcall",
-        "return_type": "undefined4",
+        "return_type": "uint",
         "param_types": [
             "uchar",
             "M_CONTROL *",
@@ -16880,7 +16879,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "undefined4 __stdcall P_NIS_Handler(uchar param_1, M_CONTROL * param_2, uint param_3, uint param_4, int param_5, int param_6)"
+        "prototype_string": "uint __stdcall P_NIS_Handler(uchar param_1, M_CONTROL * param_2, uint param_3, uint param_4, int param_5, int param_6)"
     },
     {
         "name": "C_NIS_Handler",
@@ -20287,15 +20286,15 @@
         "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "int",
-            "undefined4 *",
+            "TARGET_PLACEMENT *",
+            "level_tag *",
             "ObjectPlacementType",
-            "int *",
+            "celglist_tag *",
             "undefined4",
             "int",
             "char"
         ],
-        "prototype_string": "undefined __cdecl parsemap_create_dynamic_objects(int param_1, undefined4 * param_2, ObjectPlacementType param_3, int * param_4, undefined4 param_5, int param_6, char param_7)"
+        "prototype_string": "undefined __cdecl parsemap_create_dynamic_objects(TARGET_PLACEMENT * placement, level_tag * lvl, ObjectPlacementType typeId, celglist_tag * celglist, undefined4 param_5, int param_6, char doCreation)"
     },
     {
         "name": "psiFileLoadForParse",
@@ -27173,44 +27172,44 @@
         "prototype_string": "void __cdecl Vec_MakeOrthonormalBasis(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3)"
     },
     {
-        "name": "FUN_000d6fa0",
+        "name": "Vec_Max",
         "address": "0x000d6fa0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *",
-            "float *"
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl FUN_000d6fa0(float * param_1, float * param_2, float * param_3)"
+        "prototype_string": "void __cdecl Vec_Max(_VECTOR * a, _VECTOR * param_2, _VECTOR * output)"
     },
     {
-        "name": "FUN_000d7000",
+        "name": "Vec_Min",
         "address": "0x000d7000",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *",
-            "float *"
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl FUN_000d7000(float * param_1, float * param_2, float * param_3)"
+        "prototype_string": "void __cdecl Vec_Min(_VECTOR * a, _VECTOR * b, _VECTOR * output)"
     },
     {
-        "name": "FUN_000d7060",
+        "name": "Vec_MinMax",
         "address": "0x000d7060",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *",
-            "float *",
-            "float *"
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl FUN_000d7060(float * param_1, float * param_2, float * param_3, float * param_4)"
+        "prototype_string": "void __cdecl Vec_MinMax(_VECTOR * a, _VECTOR * b, _VECTOR * minimums, _VECTOR * maximums)"
     },
     {
-        "name": "FUN_000d7100",
+        "name": "Vec_MinMax3",
         "address": "0x000d7100",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -27221,7 +27220,7 @@
             "float *",
             "float *"
         ],
-        "prototype_string": "void __cdecl FUN_000d7100(float * param_1, float * param_2, float * param_3, float * param_4, float * param_5)"
+        "prototype_string": "void __cdecl Vec_MinMax3(float * a, float * b, float * c, float * minimums, float * maximums)"
     },
     {
         "name": "Vec_Negate",
@@ -27638,13 +27637,13 @@
         "name": "Cel_ObjectLeftCel",
         "address": "0x000d8810",
         "calling_convention": "__cdecl",
-        "return_type": "float",
+        "return_type": "cel_tag *",
         "param_types": [
-            "float",
+            "cel_tag *",
             "_VECTOR *",
-            "float *"
+            "_VECTOR *"
         ],
-        "prototype_string": "float __cdecl Cel_ObjectLeftCel(float param_1, _VECTOR * param_2, float * param_3)"
+        "prototype_string": "cel_tag * __cdecl Cel_ObjectLeftCel(cel_tag * param_1, _VECTOR * param_2, _VECTOR * param_3)"
     },
     {
         "name": "Vec_Track",
@@ -29593,12 +29592,12 @@
         "prototype_string": "void __stdcall maybeSoundShutdown(void)"
     },
     {
-        "name": "FUN_000e1e70",
+        "name": "xboxInitTextures",
         "address": "0x000e1e70",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e1e70(void)"
+        "prototype_string": "void __stdcall xboxInitTextures(void)"
     },
     {
         "name": "logError",
@@ -31055,10 +31054,13 @@
     {
         "name": "main",
         "address": "0x000e8e90",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined main()"
+        "calling_convention": "__stdcall",
+        "return_type": "void",
+        "param_types": [
+            "int",
+            "char * *"
+        ],
+        "prototype_string": "void __stdcall main(int argc, char * * argv)"
     },
     {
         "name": "timestamp",
@@ -31821,6 +31823,14 @@
             "void *"
         ],
         "prototype_string": "undefined4 __stdcall XLaunchNewImageA(char * executableName, void * launchInfo)"
+    },
+    {
+        "name": "mainXapiStartup",
+        "address": "0x000eb238",
+        "calling_convention": "unknown",
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined mainXapiStartup()"
     },
     {
         "name": "entry",
@@ -32752,6 +32762,14 @@
         "return_type": "void",
         "param_types": [],
         "prototype_string": "void __stdcall FUN_000ef17a(void)"
+    },
+    {
+        "name": "FUN_000ef19c",
+        "address": "0x000ef19c",
+        "calling_convention": "unknown",
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_000ef19c()"
     },
     {
         "name": "__seh_longjmp_unwind@4",
