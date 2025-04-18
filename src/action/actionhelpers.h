@@ -7,6 +7,7 @@ typedef struct level_tag level_tag;
 typedef struct world_tag world_tag;
 typedef struct cel_tag cel_tag;
 typedef struct obj_tag obj_tag;
+typedef struct viewer_tag viewer_tag;
 typedef struct HITDATA_tag HITDATA_tag;
 typedef struct HUDINFO_tag HUDINFO_tag;
 typedef struct HUDPANE_tag HUDPANE_tag;
@@ -22,6 +23,7 @@ typedef short MallocFlags;
 
 #include "util/LList.h"
 #include "math/math.h"
+#include "engine/Camera.h"
 #include "engine/Collide.h"
 #include "game/obj/Break.h"
 #include "game/obj/object.h" // for obj_tag needed by some autogen functions

@@ -57,6 +57,7 @@ add_library(actioninject SHARED
   src/action/psiFile.cpp
   src/common/launchInfo.cpp
   src/action/gfx/Sprite.cpp
+  src/action/engine/Camera.cpp
   src/action/engine/Collide.cpp
   src/action/gfx/Animation.cpp
   src/action/game/scriptplayer.cpp
