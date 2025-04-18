@@ -165,13 +165,13 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     float xMax;
     float yMin;
     float yMax;
-    float field159_0xec;
-    float field160_0xf0;
-    float field161_0xf4;
+    float projectionScaleX;
+    float projectionScaleY;
+    float projectionScaleZ;
     float width;
     float height;
     float AspectRatio;
-    float field165_0x104;
+    float fovRadians;
     _MATRIX viewMatrix;
     undefined field167_0x144;
     undefined field168_0x145;
