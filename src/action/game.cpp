@@ -16,8 +16,6 @@
 // AUTOGEN
 void __stdcall Sound_UpdateListeners(void);
 // AUTOGEN
-void __stdcall Camera_UpdateAll(void);
-// AUTOGEN
 void __stdcall Mission_Update(void);
 // AUTOGEN
 void __stdcall UpdateAllShards(void);

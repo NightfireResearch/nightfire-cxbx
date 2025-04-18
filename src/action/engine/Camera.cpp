@@ -196,3 +196,13 @@ void Camera_UpdateAll(void) {
         }
     }
 }
+
+// AUTOINJECT
+void Camera_SetUpdator(ushort num, obj_tag *gameObj, cameraUpdateFunc func) {
+
+    if(glb_viewer[num] == NULL)
+        return;
+    
+    glb_viewer[num]->cameraUpdateCallback = func;
+    glb_viewer[num]->cameraUpdateObj = gameObj;
+}

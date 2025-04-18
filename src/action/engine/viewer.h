@@ -81,7 +81,7 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     undefined field72_0x62;
     undefined field73_0x63;
     obj_tag *cameraUpdateObj;
-    undefined4 cameraUpdateCallback;
+    cameraUpdateFunc cameraUpdateCallback;
     undefined1 frustumPlanes; /* Created by retype action */
     undefined field77_0x6d;
     undefined field78_0x6e;
