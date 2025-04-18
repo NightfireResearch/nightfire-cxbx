@@ -1988,10 +1988,10 @@
     {
         "name": "build_alloc_world",
         "address": "0x00020640",
-        "calling_convention": "__stdcall",
-        "return_type": "World *",
+        "calling_convention": "__cdecl",
+        "return_type": "world_tag *",
         "param_types": [],
-        "prototype_string": "World * __stdcall build_alloc_world(void)"
+        "prototype_string": "world_tag * __cdecl build_alloc_world(void)"
     },
     {
         "name": "init_cel",

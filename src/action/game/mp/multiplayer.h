@@ -96,6 +96,7 @@ typedef struct { // on Xbox, starts at 0025fe38
 static_assert(sizeof(MPSettings_t) == 572, "MPSettings_t is wrong size");
 
 #define MPSettings (*((MPSettings_t*)0x0025fe38))
+#define MultiplayerLayout_LeftRightOrTopBtm U32_AT(0x001f660c) // Part of a DrawInfo struct which also contains IsWidescreen?
 
 //char (*__kaboom)[sizeof(MPSettings_t)] = 1;
 
