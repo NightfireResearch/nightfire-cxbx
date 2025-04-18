@@ -178,3 +178,21 @@ void Camera_CreateCameras(void) {
             break;
     }
 }
+
+// AUTOGEN
+void Camera_Update(uint idx);
+// AUTOGEN
+void Camera_CheckLocation(ushort idx);
+// AUTOGEN
+void Camera_UpdateGlbVars(ushort idx);
+
+// AUTOINJECT
+void Camera_UpdateAll(void) {
+    for(int i = 0; i < 11; i++) {
+        if(glb_viewer[i] != NULL) {
+            Camera_Update(i);
+            Camera_CheckLocation(i);
+            Camera_UpdateGlbVars(i);
+        }
+    }
+}
