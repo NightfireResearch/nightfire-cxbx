@@ -157,21 +157,6 @@ inline const char* Object_GetName(ObjectType type) {
 // All specific object types will consist of this, plus additional data specific to that object type (pointed to by extraObjectData)
 #pragma pack(push, 1)
 
-typedef enum {
-    MovementType_Stand = 0,
-    MovementType_Climb = 1, // Ladder
-    MovementType_Grapple = 2,
-    MovementType_Swim = 3,
-    MovementType_Crouch = 4,
-    MovementType_Decoding = 5, // Scanning with decoder
-    MovementType_Wire = 6,
-    MovementType_Creep = 7,
-    MovementType_ZeroG = 8,
-    MovementType_FlyingRocket = 10, // Experimentally, seems to be if firing Sentinel? Had previously been called Jump
-    MovementType_Zipline = 15,
-    MovementType_Ronin = 16,
-} MovementType;
-
 // Forward declaration of obj_tag so that it can be used within the struct
 struct obj_tag;
 

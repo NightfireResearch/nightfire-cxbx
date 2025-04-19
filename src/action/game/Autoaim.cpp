@@ -23,7 +23,7 @@ void Check_Target(obj_tag* obj) {
         case MovementType_Grapple:
         case MovementType_Wire:
         case MovementType_Creep:
-        case MovementType_FlyingRocket:
+        case MovementType_RemoteControl:
         case 11:
         case 12:
         case 13:
