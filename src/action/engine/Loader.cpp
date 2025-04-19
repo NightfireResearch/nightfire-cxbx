@@ -22,10 +22,13 @@ SCRIPTINFO* Script_Load(HASHCODE param_1,_VECTOR *transform,_VECTOR *rotation,ui
 // AUTOGEN
 void __cdecl MenuManager_Load(undefined4 param_1,unsigned int* param_2);
 
+#pragma pack(push, 1)
 typedef struct {
   uint maybeHashcode;
   char someChar;
+  char _pad[3];
 } LoadableFile;
+#pragma pack(pop)
 
 #define LoadableFiles (*(LoadableFile(*)[16])(0x002791d0))
 
