@@ -1,5 +1,8 @@
 #include "Stack.h"
 
+#include "../memory.h"
+#include <string.h>
+
 // AUTOINJECT
 void* Stack_Top(STACKINFO* stack) {
 
@@ -45,4 +48,22 @@ bool Stack_IsEmpty(STACKINFO* stack) {
         return false;
 
     return stack->fillLevel == 0;
+}
+
+// AUTOINJECT
+bool Stack_Init(STACKINFO* stack, ushort size, int *mem) {
+
+    if(stack == NULL)
+        return false;
+
+    stack->items = (void**)mem;
+    stack->size = size;
+    stack->fillLevel = 0;
+
+    if(mem == NULL && size > 0) {
+        stack->items = (void**)Mem_Malloc(size * sizeof(void*), 0x1B04, 0);
+        memset(stack->items, 0, size * sizeof(void*));
+    }
+
+    return true;
 }
