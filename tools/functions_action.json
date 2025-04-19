@@ -13109,14 +13109,14 @@
         "prototype_string": "void __cdecl FUN_0006b340(int param_1, uint * param_2, undefined2 * param_3, byte param_4)"
     },
     {
-        "name": "hashtable_getitem",
+        "name": "hashtable_getentry",
         "address": "0x0006b370",
         "calling_convention": "__stdcall",
-        "return_type": "undefined *",
+        "return_type": "hashtable_entry *",
         "param_types": [
             "HASHCODE"
         ],
-        "prototype_string": "undefined * __stdcall hashtable_getitem(HASHCODE param_1)"
+        "prototype_string": "hashtable_entry * __stdcall hashtable_getentry(HASHCODE param_1)"
     },
     {
         "name": "hashtable_initialise",

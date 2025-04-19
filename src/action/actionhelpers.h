@@ -23,6 +23,7 @@ typedef struct map_tag map_tag;
 
 typedef short MallocFlags;
 
+#include "util/hashtable.h"
 #include "util/LList.h"
 #include "util/Stack.h"
 #include "math/math.h"
