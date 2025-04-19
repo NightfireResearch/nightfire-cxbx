@@ -40,6 +40,7 @@ typedef short MallocFlags;
 #include "gfx/Sprite.h"
 #include "ui/ui.h"
 #include "ui/HUD.h"
+#include "engine/Woman.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 

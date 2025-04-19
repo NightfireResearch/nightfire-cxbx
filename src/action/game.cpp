@@ -24,8 +24,6 @@ void __stdcall SSys_Monitor(void);
 // AUTOGEN
 void __stdcall Light_Update(void);
 // AUTOGEN
-void __stdcall psiDecompressWoman(void);
-// AUTOGEN
 uint GS_IsPaused(ushort a);
 
 
