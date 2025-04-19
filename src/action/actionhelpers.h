@@ -14,6 +14,7 @@ typedef struct HUDPANE_tag HUDPANE_tag;
 typedef struct HUDPANECREATE_tag HUDPANECREATE_tag;
 typedef struct SCRIPTINFO SCRIPTINFO;
 typedef struct map_tag map_tag;
+typedef struct BLData BLData;
 
 // Hashcode, SFX and translated text names
 #include "assets.h"
