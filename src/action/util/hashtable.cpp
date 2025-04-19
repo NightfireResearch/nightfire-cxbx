@@ -15,6 +15,7 @@ typedef struct{
 #define HashTypeRanges (*(HashTypeRange(*)[8])0x001fe688)
 #define t_hashtable (*(hashtable_entry(*)[1000])0x001f6680)
 #define ht_insert_ind U32_AT(0x001fe680)
+#define m_nhti U32_AT(0x001fe684)
 
 // Cannot auto-generate because it uses custom calling convention
 hashtable_entry* hashtable_getentry(HASHCODE hashcode) {
@@ -54,4 +55,15 @@ celglist_tag * hashtable_hashcode_to_celglist(HASHCODE hashcode) {
         return NULL;
 
     return (celglist_tag*)(hashtable_getitem(hashcode));
+}
+
+// AUTOINJECT
+int hashtable_get_hashtype_count(uint hashtype) {
+
+    int count = 0;
+    for(int i = 1; i < (m_nhti-1); i++) {
+        if((t_hashtable[i].key & 0xFF000000) == (hashtype & 0xFF000000))
+            count++;
+    }
+    return count;
 }
