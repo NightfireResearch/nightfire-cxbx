@@ -2378,10 +2378,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "obj_tag *",
+            "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl Camera_SetToPlayer(int param_1, int param_2)"
+        "prototype_string": "void __cdecl Camera_SetToPlayer(obj_tag * param_1, viewer_tag * param_2)"
     },
     {
         "name": "FUN_000245a0",
@@ -2548,10 +2548,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float10 *",
+            "_VECTOR *",
             "float"
         ],
-        "prototype_string": "void __cdecl Camera_Shake(float10 * param_1, float param_2)"
+        "prototype_string": "void __cdecl Camera_Shake(_VECTOR * param_1, float param_2)"
     },
     {
         "name": "ThirdCam_Create",
@@ -2589,14 +2589,14 @@
         "prototype_string": "void __cdecl FUN_00025450(int param_1, float * param_2)"
     },
     {
-        "name": "FUN_00025610",
+        "name": "Camera_Shear",
         "address": "0x00025610",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_00025610(int param_1)"
+        "prototype_string": "void __cdecl Camera_Shear(viewer_tag * param_1)"
     },
     {
         "name": "CamSubject_Create",
@@ -13878,9 +13878,9 @@
         "calling_convention": "__cdecl",
         "return_type": "bool",
         "param_types": [
-            "int"
+            "STACKINFO *"
         ],
-        "prototype_string": "bool __cdecl Stack_IsEmpty(int param_1)"
+        "prototype_string": "bool __cdecl Stack_IsEmpty(STACKINFO * param_1)"
     },
     {
         "name": "Stack_Top",
@@ -13888,9 +13888,9 @@
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
-            "int *"
+            "STACKINFO *"
         ],
-        "prototype_string": "undefined4 __cdecl Stack_Top(int * param_1)"
+        "prototype_string": "undefined4 __cdecl Stack_Top(STACKINFO * param_1)"
     },
     {
         "name": "Stack_Push",
@@ -13898,10 +13898,10 @@
         "calling_convention": "__cdecl",
         "return_type": "bool",
         "param_types": [
-            "int *",
-            "undefined4"
+            "STACKINFO *",
+            "void *"
         ],
-        "prototype_string": "bool __cdecl Stack_Push(int * param_1, undefined4 param_2)"
+        "prototype_string": "bool __cdecl Stack_Push(STACKINFO * param_1, void * param_2)"
     },
     {
         "name": "Stack_Pop",
@@ -13909,9 +13909,9 @@
         "calling_convention": "__cdecl",
         "return_type": "int *",
         "param_types": [
-            "int *"
+            "STACKINFO *"
         ],
-        "prototype_string": "int * __cdecl Stack_Pop(int * param_1)"
+        "prototype_string": "int * __cdecl Stack_Pop(STACKINFO * param_1)"
     },
     {
         "name": "FUN_0006e930",
@@ -22493,21 +22493,21 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float",
+            "obj_tag *",
             "obj_tag *",
             "float *"
         ],
-        "prototype_string": "void __cdecl Check_AutoAim(float param_1, obj_tag * param_2, float * param_3)"
+        "prototype_string": "void __cdecl Check_AutoAim(obj_tag * player, obj_tag * target, float * param_3)"
     },
     {
-        "name": "ThirdIcon_Update",
+        "name": "Check_Target",
         "address": "0x000b9580",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl ThirdIcon_Update(int param_1)"
+        "prototype_string": "void __cdecl Check_Target(obj_tag * param_1)"
     },
     {
         "name": "Player_AutoAim",
@@ -25596,14 +25596,14 @@
         "prototype_string": "void __stdcall SSys_Monitor(void)"
     },
     {
-        "name": "FUN_000cfb40",
+        "name": "SSys_RamLoad",
         "address": "0x000cfb40",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "SSYS *"
         ],
-        "prototype_string": "void __cdecl FUN_000cfb40(int param_1)"
+        "prototype_string": "void __cdecl SSys_RamLoad(SSYS * param_1)"
     },
     {
         "name": "Switch_Create",
