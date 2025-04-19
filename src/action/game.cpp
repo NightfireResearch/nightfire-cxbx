@@ -9,8 +9,6 @@
 #include <cstring>
 #include <cstdio>
 
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-
 // Functions taking void and returning through registers are fine in either __cdecl or __stdcall
 // It's only when they take arguments that the calling convention matters
 // AUTOGEN

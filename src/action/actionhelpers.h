@@ -38,4 +38,6 @@ typedef short MallocFlags;
 #include "ui/ui.h"
 #include "ui/HUD.h"
 
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
 #endif //ACTIONHELPERS_H_
