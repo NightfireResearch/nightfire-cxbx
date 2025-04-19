@@ -60,6 +60,7 @@ add_library(actioninject SHARED
   src/action/engine/Camera.cpp
   src/action/engine/Collide.cpp
   src/action/gfx/Animation.cpp
+  src/action/game/Autoaim.cpp
   src/action/game/scriptplayer.cpp
   src/action/game/weapon_stats.cpp
   src/action/math/math.cpp

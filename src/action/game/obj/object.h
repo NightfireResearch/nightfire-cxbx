@@ -152,9 +152,25 @@ inline const char* Object_GetName(ObjectType type) {
     }
 }
 
+
 // A base object consists of the minimum functionality required to be updated, rendered, collided with, destroyed, etc.
 // All specific object types will consist of this, plus additional data specific to that object type (pointed to by extraObjectData)
 #pragma pack(push, 1)
+
+typedef enum {
+    MovementType_Stand = 0,
+    MovementType_Climb = 1, // Ladder
+    MovementType_Grapple = 2,
+    MovementType_Swim = 3,
+    MovementType_Crouch = 4,
+    // 5: SCAN? Unclear. Maybe decoder? But adding the logging code prevents the decoder from working.
+    MovementType_Wire = 6,
+    MovementType_Creep = 7,
+    MovementType_ZeroG = 8,
+    MovementType_FlyingRocket = 10, // Experimentally, seems to be if firing Sentinel? Had previously been called Jump
+    MovementType_Zipline = 15,
+    MovementType_Ronin = 16,
+} MovementType;
 
 // Forward declaration of obj_tag so that it can be used within the struct
 struct obj_tag;
@@ -188,7 +204,7 @@ typedef struct obj_tag {
     int creationTimeFrames;
     int specialFlags; // 0xCC, unclear what the meaning is but sometimes relevant for rendering or object state or straddle tests?
     unsigned short curState; // 0xD0
-    unsigned short playerNum; // 0xD2
+    unsigned short subState; // MovementType (Player), PlayerNum (Car)
     ushort unknown_0xd4;
     ushort renderType;
     char unknown_0xd8;
@@ -216,8 +232,8 @@ static_assert(offsetof(obj_tag, position) == 0x24, "Offset of position not corre
 static_assert(offsetof(obj_tag, transformMatrix) == 0x70, "Offset of transformMatrix not correct");
 static_assert(offsetof(obj_tag, extraObjectData) == 0xbc, "Offset of extraObjectData not correct");
 static_assert(offsetof(obj_tag, specialFlags) == 0xcc, "Offset of specialFlags not correct");
-static_assert(offsetof(obj_tag, objectType) == 0xdb, "Offset of objectType not correct");
 static_assert(offsetof(obj_tag, flags) == 0xda, "Offset of flags not correct");
+static_assert(offsetof(obj_tag, objectType) == 0xdb, "Offset of objectType not correct");
 static_assert(offsetof(obj_tag, tweakB) == 0xe1, "Offset of tweakB not correct");
 
 static_assert(sizeof(obj_tag) == 0xe4, "Size of obj_tag wrong");

@@ -143,7 +143,7 @@ void __cdecl Car_Activate(obj_tag* carObj, obj_tag* playerObj) {
     
     Player_SetCamMode(playerData, 0xd);
     carObj->curState = 5;
-    carObj->playerNum = playerData->playerNum;
+    carObj->subState = playerData->playerNum;
     Player_Disable(playerObj, 1);
     carData->playerController = playerObj;
     carData->tankMachinegunTemperature = 0.0f;
@@ -159,7 +159,7 @@ void __cdecl Car_Activate(obj_tag* carObj, obj_tag* playerObj) {
 
     Player_WeaponNone(playerObj);
 
-    Camera_CalcViewAngles(carObj->playerNum, DEG2RAD(60.0f)); // FIXME: Hardcoded FOV?
+    Camera_CalcViewAngles(carObj->subState, DEG2RAD(60.0f)); // FIXME: Hardcoded FOV?
 
 }
 

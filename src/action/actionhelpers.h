@@ -26,6 +26,7 @@ typedef short MallocFlags;
 #include "math/math.h"
 #include "engine/Camera.h"
 #include "engine/Collide.h"
+#include "game/Autoaim.h"
 #include "game/obj/Break.h"
 #include "game/obj/object.h" // for obj_tag needed by some autogen functions
 #include "game/obj/control.h" // for Control_X functions
