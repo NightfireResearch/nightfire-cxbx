@@ -11,11 +11,11 @@
         "name": "AnimSkeletonProcess",
         "address": "0x00011050",
         "calling_convention": "__cdecl",
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "char *"
         ],
-        "prototype_string": "undefined __cdecl AnimSkeletonProcess(char * param_1)"
+        "prototype_string": "void __cdecl AnimSkeletonProcess(char * param_1)"
     },
     {
         "name": "AnimProcessScriptData",
@@ -39,10 +39,10 @@
     {
         "name": "AnimPostLoadInit",
         "address": "0x00011200",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall AnimPostLoadInit(void)"
+        "prototype_string": "void __cdecl AnimPostLoadInit(void)"
     },
     {
         "name": "Discrete_Delete",
@@ -486,13 +486,13 @@
     {
         "name": "AnimLoadFile",
         "address": "0x00014a20",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__cdecl",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined1"
+            "HASHCODE",
+            "char"
         ],
-        "prototype_string": "undefined AnimLoadFile(undefined4 param_1, undefined1 param_2)"
+        "prototype_string": "void __cdecl AnimLoadFile(HASHCODE param_1, char param_2)"
     },
     {
         "name": "AnimPreLoadInit",
@@ -3845,14 +3845,14 @@
         "prototype_string": "undefined4 __cdecl Trigger_Locked(obj_tag * param_1)"
     },
     {
-        "name": "FUN_0002f5b0",
+        "name": "Door_DoMsg",
         "address": "0x0002f5b0",
         "calling_convention": "__cdecl",
         "return_type": "char *",
         "param_types": [
             "int"
         ],
-        "prototype_string": "char * __cdecl FUN_0002f5b0(int param_1)"
+        "prototype_string": "char * __cdecl Door_DoMsg(int param_1)"
     },
     {
         "name": "Door_Init",
@@ -18309,9 +18309,9 @@
         "return_type": "void",
         "param_types": [
             "undefined4",
-            "undefined4"
+            "uint *"
         ],
-        "prototype_string": "void __cdecl MenuManager_Load(undefined4 param_1, undefined4 param_2)"
+        "prototype_string": "void __cdecl MenuManager_Load(undefined4 param_1, uint * param_2)"
     },
     {
         "name": "MenuManager_Exists",
@@ -20707,10 +20707,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
             "undefined2"
         ],
-        "prototype_string": "void __cdecl Player_ChangeState(int param_1, undefined2 param_2)"
+        "prototype_string": "void __cdecl Player_ChangeState(obj_tag * param_1, undefined2 param_2)"
     },
     {
         "name": "Player_ChangeSubState",
@@ -20721,7 +20721,7 @@
             "obj_tag *",
             "ushort"
         ],
-        "prototype_string": "ushort __cdecl Player_ChangeSubState(obj_tag * playerObj, ushort newState)"
+        "prototype_string": "ushort __cdecl Player_ChangeSubState(obj_tag * playerObj, ushort newSubState)"
     },
     {
         "name": "Player_ResetStartPos",
@@ -20800,11 +20800,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "bldata_offset_by_0x60 *",
+            "BLData *",
             "_VECTOR *",
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Player_SetGrapplePoint(bldata_offset_by_0x60 * param_1, _VECTOR * param_2, obj_tag * param_3)"
+        "prototype_string": "void __cdecl Player_SetGrapplePoint(BLData * param_1, _VECTOR * param_2, obj_tag * param_3)"
     },
     {
         "name": "Player_SSGrapple",
@@ -20970,9 +20970,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "bldata_offset_by_0x60 *"
+            "BLData *"
         ],
-        "prototype_string": "void __cdecl Player_RamSave(bldata_offset_by_0x60 * param_1)"
+        "prototype_string": "void __cdecl Player_RamSave(BLData * param_1)"
     },
     {
         "name": "Player_SetCamMode",
@@ -20991,10 +20991,10 @@
         "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "bldata_offset_by_0x60 *",
+            "BLData *",
             "float"
         ],
-        "prototype_string": "undefined __cdecl Player_SetHealth(bldata_offset_by_0x60 * param_1, float health)"
+        "prototype_string": "undefined __cdecl Player_SetHealth(BLData * param_1, float health)"
     },
     {
         "name": "Player_HandlePain",
@@ -21153,10 +21153,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "bldata_offset_by_0x60 *",
+            "BLData *",
             "char"
         ],
-        "prototype_string": "void __cdecl Player_RamLoad(bldata_offset_by_0x60 * param_1, char param_2)"
+        "prototype_string": "void __cdecl Player_RamLoad(BLData * param_1, char param_2)"
     },
     {
         "name": "Player_Start",
@@ -22153,10 +22153,10 @@
         "calling_convention": "__cdecl",
         "return_type": "ushort",
         "param_types": [
-            "bldata_offset_by_0x60 *",
+            "BLData *",
             "short"
         ],
-        "prototype_string": "ushort __cdecl Player_AmmoInGun(bldata_offset_by_0x60 * param_1, short param_2)"
+        "prototype_string": "ushort __cdecl Player_AmmoInGun(BLData * param_1, short param_2)"
     },
     {
         "name": "Player_InitAmmoWeapons",
@@ -22731,10 +22731,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "bldata_offset_by_0x60 *",
+            "BLData *",
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Player_InitWeapon(bldata_offset_by_0x60 * param_1, obj_tag * param_2)"
+        "prototype_string": "void __cdecl Player_InitWeapon(BLData * param_1, obj_tag * param_2)"
     },
     {
         "name": "Player_SetWeaponAnimObj",
@@ -22854,10 +22854,10 @@
     {
         "name": "LoaderProcess",
         "address": "0x000be7b0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "return_type": "bool",
         "param_types": [],
-        "prototype_string": "bool __stdcall LoaderProcess(void)"
+        "prototype_string": "bool __cdecl LoaderProcess(void)"
     },
     {
         "name": "LoaderLoad",
@@ -23256,21 +23256,21 @@
     {
         "name": "Script_Load",
         "address": "0x000c1550",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "return_type": "SCRIPTINFO *",
         "param_types": [
             "HASHCODE",
             "_VECTOR *",
             "_VECTOR *",
             "uint *",
-            "float",
-            "float",
-            "float"
+            "void *",
+            "void *",
+            "void *"
         ],
-        "prototype_string": "SCRIPTINFO * __stdcall Script_Load(HASHCODE param_1, _VECTOR * transform, _VECTOR * rotation, uint * fileBuf, float param_5, float param_6, float param_7)"
+        "prototype_string": "SCRIPTINFO * __cdecl Script_Load(HASHCODE param_1, _VECTOR * transform, _VECTOR * rotation, uint * fileBuf, void * param_5, void * param_6, void * param_7)"
     },
     {
-        "name": "Script_Load",
+        "name": "Script_Load2",
         "address": "0x000c1569",
         "calling_convention": "__cdecl",
         "return_type": "_MATRIX *",
@@ -23286,7 +23286,7 @@
             "float",
             "HASHCODE"
         ],
-        "prototype_string": "_MATRIX * __cdecl Script_Load(uint param_1, undefined4 param_2, uint * param_3, _VECTOR * param_4, _VECTOR * param_5, uint * param_6, float param_7, float param_8, float param_9, HASHCODE param_10)"
+        "prototype_string": "_MATRIX * __cdecl Script_Load2(uint param_1, undefined4 param_2, uint * param_3, _VECTOR * param_4, _VECTOR * param_5, uint * param_6, float param_7, float param_8, float param_9, HASHCODE param_10)"
     },
     {
         "name": "Script_FreeFromHashTable",
@@ -26061,24 +26061,24 @@
         "prototype_string": "void __cdecl Trigger_Activate(obj_tag * param_1, obj_tag * param_2)"
     },
     {
-        "name": "FUN_000d2ce0",
+        "name": "Trigger_Type",
         "address": "0x000d2ce0",
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000d2ce0(int param_1)"
+        "prototype_string": "undefined4 __cdecl Trigger_Type(int param_1)"
     },
     {
-        "name": "FUN_000d2d00",
+        "name": "Trigger_Locked",
         "address": "0x000d2d00",
         "calling_convention": "__cdecl",
         "return_type": "uint",
         "param_types": [
             "uint"
         ],
-        "prototype_string": "uint __cdecl FUN_000d2d00(uint param_1)"
+        "prototype_string": "uint __cdecl Trigger_Locked(uint param_1)"
     },
     {
         "name": "InverterTrigger_Create",

@@ -12,6 +12,7 @@ typedef struct HITDATA_tag HITDATA_tag;
 typedef struct HUDINFO_tag HUDINFO_tag;
 typedef struct HUDPANE_tag HUDPANE_tag;
 typedef struct HUDPANECREATE_tag HUDPANECREATE_tag;
+typedef struct SCRIPTINFO SCRIPTINFO;
 
 // Hashcode, SFX and translated text names
 #include "assets.h"
@@ -26,6 +27,7 @@ typedef short MallocFlags;
 #include "math/math.h"
 #include "engine/Camera.h"
 #include "engine/Collide.h"
+#include "engine/Loader.h"
 #include "game/Autoaim.h"
 #include "game/obj/Break.h"
 #include "game/obj/object.h" // for obj_tag needed by some autogen functions
