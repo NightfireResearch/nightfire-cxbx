@@ -27,7 +27,7 @@ static_assert(offsetof(BLData, playerNum) == 0x8de, "Offset of playerNum not cor
 
 
 typedef enum {
-    MovementType_Stand = 0,
+    MovementType_Walk = 0,
     MovementType_Climb = 1, // Ladder
     MovementType_Grapple = 2,
     MovementType_Swim = 3,
