@@ -13132,10 +13132,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "HASHCODE",
+            "void *"
         ],
-        "prototype_string": "void __cdecl hashtable_additem(undefined4 param_1, undefined4 param_2)"
+        "prototype_string": "void __cdecl hashtable_additem(HASHCODE param_1, void * param_2)"
     },
     {
         "name": "hashtable_deleteitem",
@@ -28239,12 +28239,12 @@
         "prototype_string": "void __cdecl psiMem_Init(uint * param_1, undefined4 * param_2)"
     },
     {
-        "name": "FUN_000dc8a0",
+        "name": "ShowLoadProgressScreen",
         "address": "0x000dc8a0",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000dc8a0(void)"
+        "prototype_string": "void __stdcall ShowLoadProgressScreen(void)"
     },
     {
         "name": "allocateAndLoadFileWithinArchive",
@@ -28527,19 +28527,21 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "map_tag *"
         ],
-        "prototype_string": "void __cdecl psiCreateMapTextures(int mapptr)"
+        "prototype_string": "void __cdecl psiCreateMapTextures(map_tag * mapptr)"
     },
     {
         "name": "psiCreateEntityGfx",
         "address": "0x000de220",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "void",
         "param_types": [
-            "int"
+            "celglist_tag *",
+            "map_tag *",
+            "uint"
         ],
-        "prototype_string": "undefined4 __cdecl psiCreateEntityGfx(int param_1)"
+        "prototype_string": "void __cdecl psiCreateEntityGfx(celglist_tag * param_1, map_tag * param_2, uint param_3)"
     },
     {
         "name": "psiDrawSprites",
@@ -28672,10 +28674,10 @@
         "return_type": "void",
         "param_types": [
             "void *",
-            "float *",
+            "_MATRIX *",
             "int"
         ],
-        "prototype_string": "void __cdecl psiDrawShard(void * vtxData, float * matrix, int texture)"
+        "prototype_string": "void __cdecl psiDrawShard(void * vtxData, _MATRIX * matrix, int texture)"
     },
     {
         "name": "psiSetShardRenderStates",
@@ -29611,14 +29613,14 @@
         "prototype_string": "undefined logError(undefined4 param_1, undefined1 param_2)"
     },
     {
-        "name": "FUN_000e2390",
+        "name": "ShowFatalErrorScreen",
         "address": "0x000e2390",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "bool"
         ],
-        "prototype_string": "void __cdecl FUN_000e2390(bool doSwap)"
+        "prototype_string": "void __cdecl ShowFatalErrorScreen(bool doSwap)"
     },
     {
         "name": "openOrCreateFile",
@@ -30196,14 +30198,14 @@
         "prototype_string": "int __cdecl RegisterTexture(uint width, uint height, int param_3, uint levels, uint param_5, int param_6)"
     },
     {
-        "name": "FUN_000e4660",
+        "name": "Texture_GetRawDataPtr",
         "address": "0x000e4660",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "void *",
         "param_types": [
             "int"
         ],
-        "prototype_string": "uint __cdecl FUN_000e4660(int param_1)"
+        "prototype_string": "void * __cdecl Texture_GetRawDataPtr(int param_1)"
     },
     {
         "name": "FUN_000e4680",
@@ -30294,9 +30296,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "float *"
+            "D3DMATRIX *"
         ],
-        "prototype_string": "void __cdecl d3dSetMatrix(float * param_1)"
+        "prototype_string": "void __cdecl d3dSetMatrix(D3DMATRIX * d3dMtx)"
     },
     {
         "name": "FUN_000e4d50",
@@ -30678,7 +30680,7 @@
         "return_type": "undefined",
         "param_types": [
             "undefined4",
-            "undefined4",
+            "float",
             "float",
             "float",
             "undefined4",
@@ -30687,7 +30689,7 @@
             "float",
             "undefined4"
         ],
-        "prototype_string": "undefined __cdecl maybeRegisterTemporaryTexture(undefined4 param_1, undefined4 param_2, float param_3, float param_4, undefined4 param_5, undefined4 param_6, float param_7, float param_8, undefined4 param_9)"
+        "prototype_string": "undefined __cdecl maybeRegisterTemporaryTexture(undefined4 param_1, float param_2, float param_3, float param_4, undefined4 param_5, undefined4 param_6, float param_7, float param_8, undefined4 param_9)"
     },
     {
         "name": "d3dSetup",

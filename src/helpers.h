@@ -10,6 +10,7 @@
 #define U32_AT(x) (*((uint32_t*)x))
 #define U16_AT(x) (*((uint16_t*)x))
 #define U8_AT(x) (*((uint8_t*)x))
+#define BOOL8_AT(x) (*((uint8_t*)x))
 #define U4_AT(x) (*((uint*)x))
 #define FLOAT_AT(x) (*((float*)x))
 #define PTR_AT(x) (*((void**)x))
