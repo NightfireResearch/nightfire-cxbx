@@ -163,7 +163,7 @@ typedef enum {
     MovementType_Grapple = 2,
     MovementType_Swim = 3,
     MovementType_Crouch = 4,
-    // 5: SCAN? Unclear. Maybe decoder? But adding the logging code prevents the decoder from working.
+    MovementType_Decoding = 5, // Scanning with decoder
     MovementType_Wire = 6,
     MovementType_Creep = 7,
     MovementType_ZeroG = 8,
