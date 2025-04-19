@@ -1,8 +1,6 @@
 #include "hashtable.h"
 
 // AUTOGEN
-celglist_tag * hashtable_hashcode_to_celglist(HASHCODE hashcode);
-// AUTOGEN
 void hashtable_set_object_to_entity_gfx(obj_tag *obj, HASHCODE hashcode);
 // AUTOGEN
 void hashtable_additem(HASHCODE hashcode, void* data);
@@ -47,4 +45,13 @@ hashtable_entry* hashtable_getentry(HASHCODE hashcode) {
 void* hashtable_getitem(HASHCODE hashcode) {
     hashtable_entry *entry = hashtable_getentry(hashcode);
     return entry ? entry->data : NULL;
+}
+
+// AUTOINJECT
+celglist_tag * hashtable_hashcode_to_celglist(HASHCODE hashcode) {
+    
+    if(hashcode == 0xFFFFFFFF)
+        return NULL;
+
+    return (celglist_tag*)(hashtable_getitem(hashcode));
 }
