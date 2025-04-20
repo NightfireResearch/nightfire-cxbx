@@ -9,10 +9,17 @@
 #include "../../sound/Sound.h"
 #include "../../util/hashtable.h"
 #include "../../util/Random.h"
+#include "../../input.h"
+#include "../../Sound/Sound.h"
+
+#include "build.h"
+#include "Explode.h"
 
 #include <stddef.h> // for offsetof?
 #include <stdio.h>
 #include "../../actionhelpers.h"
+
+#include "car.h"
 
 // Until we implement fully, use the in-game memory addresses
 #define Tanks ((obj_tag**)0x001dc980) // MAX_TANKS? entries
@@ -20,48 +27,6 @@
 #define TankSpawns (*(_MATRIX(*)[8])0x001dc7a0)
 
 #define MAX_TANKS 8 // Locations defined on the map
-
-
-#pragma pack(push, 1)
-
-typedef struct {
-    char _pad_1[0xa4];
-    quaternion_tag orientation; // 0xA4
-    _VECTOR someVector; // 0xB4
-    obj_tag *turretGeom; // 0xC0
-    obj_tag *barrelGeom; // 0xC4
-    obj_tag *bodyGeom;   // 0xC8 -- Possibly redundant? Or is this the main tank body? Or special destroyed variant?
-    obj_tag* playerController; // 0xCC (see Car_PlayerHasDied)
-    char _pad_2[12];
-    float _unknown_0xdc;
-    float _unknown_0xe0;
-    float tankMachinegunTemperature; // 0xE4
-    uint soundHandle; // 0xE8
-    char _pad_3[2];
-    short tankNum; // 0xEE
-    short mainAmmo; // 0xF0
-    char isHeli; // 0xF2 - this could be Tank vs Helicopter? Would make sense as the behaviour changes depending on multiple options for "miniVehiclesEnabled" - could be None, Tanks, Helicopters, Both
-    char machineGunOverheated;
-    char _pad_5[0x4];
-} CAR_INFO;
-
-#pragma pack(pop)
-
-// Way to see the size or offset of a struct at compile time (will error out, and reveal the size of kaboom - which is our size/offset)
-//char (*__kaboom)[offsetof(CAR_INFO,tankMachinegunTemperature)] = 1;
-
-// Test against Xbox compiled code; other platforms may differ
-static_assert(sizeof(CAR_INFO) == 0xf8, "Size of CAR_INFO not correct");
-static_assert(offsetof(CAR_INFO, turretGeom) == 0xc0, "Offset of turretGeom not correct");
-static_assert(offsetof(CAR_INFO, tankMachinegunTemperature) == 0xe4, "Offset of tankMachinegunTemperature not correct");
-static_assert(offsetof(CAR_INFO, tankNum) == 0xee, "Offset of tankNum not correct");
-static_assert(offsetof(CAR_INFO, isHeli) == 0xf2, "Offset of isHeli not correct");
-
-
-// Ghidra detects this as a thunked function, so we can't AUTOGEN it due to duplicate function names
-void Car_Deactivate(obj_tag *object) {
-    reinterpret_cast<void (*)(obj_tag *)>(0x00026a00)(object);
-}
 
 // WIP
 void Car_CollisionHandler(obj_tag* me) {
@@ -215,7 +180,7 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
     View_SetDrawInAllViews(tankInfo->barrelGeom);
     View_SetDrawInAllViews(tankInfo->bodyGeom);
 
-    Vec_Zero(&tankInfo->someVector);
+    Vec_Zero(&tankInfo->someVector_b4);
 
     baseObj->specialFlags |= ObjectSpecialFlags::FLAG_UNKNOWN_40;
 
@@ -243,3 +208,128 @@ void Car_Init(void) {
     NumTanks = 0;
 
 }
+
+#define glb_blokes (*(BLData*(*)[4])(0x002774b8))
+#define glb_players (*(obj_tag*(*)[4])(0x001f6654))
+#define CONST_UP_VECTOR (*(_VECTOR*)0x0029d71c)
+
+// AUTOINJECT
+void Car_Deactivate(obj_tag *carObj) {
+
+    if(carObj->curState == 99)
+        return;
+
+    printf("Car_Deactivate\n");
+
+    if(carObj->curState == 1) {
+
+        BLData* playerData = glb_blokes[carObj->subState];
+        obj_tag* playerObj = glb_players[carObj->subState];
+
+        playerData->remoteControlDevice = NULL;
+        Player_SetCamMode(playerData, 0);
+        Player_ChangeSubState(playerObj, playerData->previousSubState);
+        Player_Enable(playerObj, NULL, 0);
+        playerObj->animState->some_0x53 = playerObj->animState->some_0x54;
+
+    }
+
+    carObj->curState = 99;
+
+    CAR_INFO* carInfo = (CAR_INFO*)(carObj->extraObjectData);
+
+    carInfo->lastController = carInfo->playerController;
+    carInfo->playerController = NULL;
+    carInfo->damageAmt = 0;
+
+    if (carInfo->soundHandle != NULL) {
+      Sound_Stop((DYNAMICSOUNDS*)carInfo->soundHandle); // FIXME change the type to avoid the cast
+      carInfo->soundHandle = NULL;
+    }
+
+    Explode_Create(carObj, &carObj->position, &CONST_UP_VECTOR, 10.0, 10.0, (HASHCODE)0x6000052, 50.0, 0xff, 0xff, 100, carObj, 6);
+    Vec_Zero(&carInfo->someVector_b4);
+    Vec_Zero(&carInfo->someVector_98);
+    Vec_Zero(&carInfo->someVector_8c);
+    Mat_Copy(&TankSpawns[carInfo->tankNum], &carObj->transformMatrix);
+    build_LinkToRoom(carObj, 0, (level_tag *)glb_world);
+
+    
+    carObj->subState = 1800; // Respawn timer
+
+}
+
+// NOAUTOINJECT
+// void Car_Update(obj_tag *obj) {
+
+//     CAR_INFO *carInfo = (CAR_INFO*)obj->extraObjectData;
+
+//     // Handle respawn countdown if we've been killed
+//     if(obj->curState == 99) { // Awaiting respawn
+
+//         // Set some state - unknown purpose
+//         carInfo->field108_0x80 = 0;
+//         carInfo->field139_0xd8 = 0;
+
+//         // Hide the components
+//         View_SetDrawInNoViews(obj);
+//         View_SetDrawInNoViews(carInfo->turretGeom);
+//         View_SetDrawInNoViews(carInfo->barrelGeom);
+//         View_SetDrawInNoViews(carInfo->bodyGeom);
+
+//         // Check countdown timer (stored in obj->subState)
+//         // I think the rounding here could result in differences in respawn times between PAL and NTSC but this is an original game bug
+//         obj->subState -= FRAME_RATE_MUL; 
+//         if(obj->subState < 1) {
+//             obj->curState = 0; // Trigger respawn next frame
+//         }
+
+//         return;
+//     }
+
+//     // Handle weapon cooldown
+//     if(carInfo->tankMachinegunTemperature <= 0.0f) {
+//         carInfo->machineGunOverheated = 0;
+//         carInfo->tankMachinegunTemperature = 0.0f;
+//     } else {
+//         carInfo->tankMachinegunTemperature -= FRAME_RATE_MUL;
+//     }
+
+//     // Ensure components are visible
+//     View_SetDrawInAllViews(obj);
+//     View_SetDrawInAllViews(carInfo->turretGeom);
+//     View_SetDrawInAllViews(carInfo->barrelGeom);
+//     View_SetDrawInAllViews(carInfo->bodyGeom);
+
+//     // ??
+//     if(obj->curState == 2)
+//         return;
+
+//     if(obj->curState == 1) {
+//         // Handle player pressing button to end control of the RC vehicle
+//         if(Input_Action(obj->subState, ALTFIRE_ACTIVATE_EXITTANK, 4)) {
+//             Car_Deactivate(obj);
+//             return;
+//         }
+//     }
+
+//     // Update position of the sound
+//     if(carInfo->soundHandle) {
+//         Sound_SetPosition(carInfo->soundHandle, Mat_Position(obj->transformMatrix));
+//     }
+
+//     if(!carInfo->isHeli) { // Is tank
+
+//         // Process movement
+//         if(obj->curState == 1) {
+//             // TODO: This
+//         }
+
+
+//     } else { // Is helicopter
+
+//     }
+
+
+// }
+

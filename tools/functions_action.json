@@ -2286,14 +2286,14 @@
     {
         "name": "FUN_00024000",
         "address": "0x00024000",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "float10",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "float",
+            "float",
+            "float"
         ],
-        "prototype_string": "undefined FUN_00024000(undefined4 param_1, undefined4 param_2, undefined4 param_3)"
+        "prototype_string": "float10 __stdcall FUN_00024000(float param_1, float param_2, float param_3)"
     },
     {
         "name": "normaliseToPlusMinusPi",
@@ -12675,19 +12675,19 @@
         "return_type": "void",
         "param_types": [
             "obj_tag *",
-            "undefined4",
             "_VECTOR *",
-            "undefined4",
-            "undefined4",
+            "_VECTOR *",
+            "float",
+            "float",
             "HASHCODE",
-            "undefined4",
+            "float",
             "uchar",
             "uchar",
             "uchar",
             "obj_tag *",
             "ushort"
         ],
-        "prototype_string": "void __cdecl Explode_Create(obj_tag * obj, undefined4 pos, _VECTOR * maybeUpVector, undefined4 scale, undefined4 shakeIntensity, HASHCODE scriptHashcode, undefined4 maybeExplodeStrength, uchar h, uchar i, uchar j, obj_tag * shooter, ushort maybeMaterial)"
+        "prototype_string": "void __cdecl Explode_Create(obj_tag * obj, _VECTOR * pos, _VECTOR * maybeUpVector, float scale, float maybeRange, HASHCODE scriptHashcode, float maybeExplodeStrength, uchar h, uchar i, uchar j, obj_tag * shooter, ushort maybeMaterial)"
     },
     {
         "name": "Explode_Update",

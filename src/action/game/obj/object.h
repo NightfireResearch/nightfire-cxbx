@@ -5,6 +5,8 @@
 
 #include "../../math/math.h"
 
+#include "../../gfx/Animation.h"
+
 #include <stddef.h>
 
 typedef enum {
@@ -182,7 +184,7 @@ typedef struct obj_tag {
     HITDATA_tag* hitList; // 0xAC - HITLIST_tag
     void* maybeCollision; // 0xB0
     char _pad_3[0x4];
-    void* animState; // 0xB8
+    AnimState* animState; // 0xB8
     void* extraObjectData; // 0xBC
     void* scriptPlayer;
     float scale;

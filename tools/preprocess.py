@@ -18,10 +18,12 @@ def generate_auto_inject(side, ghidra_funcs):
     # Look up addresses
     for f in autoinjects:
         matching_func = [x for x in ghidra_funcs if x['name'] == f[1]]
-        assert len(matching_func) == 1,f"Function {f[1]} duplicated or not found, qty is {len(matching_func)}"
-        gf = matching_func[0]
-        addr = gf['address']
-        injections.append((addr, f[1],))
+        assert len(matching_func) >= 1,f"Function {f[1]} not found, qty is {len(matching_func)}"
+        
+        # Thunked functions can appear multiple times, so we need to inject them in all places
+        for mf in matching_func:
+            addr = mf['address']
+            injections.append((addr, f[1],))
 
     # FUNC_AT(x) with a given address
     injections.extend(gather_functions_with_tag("FUNC_AT", True, side))

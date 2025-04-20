@@ -4,6 +4,8 @@
 #include "../../util/Random.h"
 #include "../../sound/Sound.h"
 
+#include "build.h"
+
 #include <stdio.h>
 
 // NOAUTOINJECT
@@ -144,10 +146,6 @@ typedef struct {
 #pragma pack(pop)
 
 
-// AUTOGEN
-bool build_LinkToRoom(obj_tag *obj, char flags, level_tag *level);
-
-#define glb_world ((level_tag*)0x001f6674)
 
 // Some bug - this ends up with no breakable objects being created (Fort Knox ends up with no windows)
 // NOAUTOINJECT
