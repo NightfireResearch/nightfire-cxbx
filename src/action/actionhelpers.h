@@ -43,6 +43,8 @@ typedef short MallocFlags;
 #include "ui/ui.h"
 #include "ui/HUD.h"
 #include "engine/Woman.h"
+#include "sound/Sound.h"
+
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 

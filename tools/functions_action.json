@@ -23815,12 +23815,12 @@
         "name": "SFXIsSFXPlaying",
         "address": "0x000c4c40",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int",
+            "DYNAMICSOUNDS *",
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl SFXIsSFXPlaying(int param_1, int param_2)"
+        "prototype_string": "bool __cdecl SFXIsSFXPlaying(DYNAMICSOUNDS * param_1, int param_2)"
     },
     {
         "name": "FUN_000c4cd0",
@@ -24957,12 +24957,12 @@
         "name": "Sound_SetPosition",
         "address": "0x000cb9e0",
         "calling_convention": "__cdecl",
-        "return_type": "int",
+        "return_type": "bool",
         "param_types": [
             "DYNAMICSOUNDS *",
-            "undefined4 *"
+            "_VECTOR *"
         ],
-        "prototype_string": "int __cdecl Sound_SetPosition(DYNAMICSOUNDS * param_1, undefined4 * param_2)"
+        "prototype_string": "bool __cdecl Sound_SetPosition(DYNAMICSOUNDS * param_1, _VECTOR * param_2)"
     },
     {
         "name": "Sound_SetVolume",

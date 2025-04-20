@@ -83,6 +83,7 @@ add_library(actioninject SHARED
   src/action/game/obj/car.cpp
   src/action/game/obj/control.cpp
   src/action/game/obj/Player.cpp
+  src/action/sound/Sound.cpp
 )
 
 add_library(drivinginject SHARED
