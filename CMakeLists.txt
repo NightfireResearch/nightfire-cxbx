@@ -60,6 +60,7 @@ add_library(actioninject SHARED
   src/action/engine/Camera.cpp
   src/action/engine/Collide.cpp
   src/action/engine/Loader.cpp
+  src/action/engine/Text.cpp
   src/action/engine/Woman.cpp
   src/action/gfx/Animation.cpp
   src/action/game/Autoaim.cpp
@@ -68,6 +69,7 @@ add_library(actioninject SHARED
   src/action/math/math.cpp
   src/action/input.cpp
   src/action/memory.cpp
+  src/action/util/bin.cpp
   src/action/util/crc.cpp
   src/action/util/hashtable.cpp
   src/action/util/LList.cpp

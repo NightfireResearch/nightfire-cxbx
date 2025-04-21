@@ -26,6 +26,7 @@ typedef struct AnimState AnimState;
 
 typedef short MallocFlags;
 
+#include "util/bin.h"
 #include "util/hashtable.h"
 #include "util/LList.h"
 #include "util/Stack.h"
@@ -33,6 +34,8 @@ typedef short MallocFlags;
 #include "engine/Camera.h"
 #include "engine/Collide.h"
 #include "engine/Loader.h"
+#include "engine/Text.h"
+#include "engine/Woman.h"
 #include "game/Autoaim.h"
 #include "game/obj/Break.h"
 #include "game/obj/build.h"
@@ -43,7 +46,6 @@ typedef short MallocFlags;
 #include "gfx/Sprite.h"
 #include "ui/ui.h"
 #include "ui/HUD.h"
-#include "engine/Woman.h"
 #include "sound/Sound.h"
 
 
