@@ -5,6 +5,7 @@
 
 
 bool build_LinkToRoom(obj_tag *obj, char flags, level_tag *level);
+void build_link_world_to_viewer(viewer_tag *viewer, world_tag *world);
 
 #define glb_world ((level_tag*)0x001f6674)
 

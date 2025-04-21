@@ -79,6 +79,7 @@ add_library(actioninject SHARED
   src/action/game/view.cpp
   src/action/game/mp/multiplayer.cpp
   src/action/game/obj/Break.cpp
+  src/action/game/obj/build.cpp
   src/action/game/obj/car.cpp
   src/action/game/obj/control.cpp
   src/action/game/obj/Player.cpp
