@@ -17,7 +17,7 @@ bool Sound_SetPosition(DYNAMICSOUNDS *handle, _VECTOR *position) {
     Vec_Copy(position, &handle->location);
     handle->needsUpdate = true;
 
-    if((handle->sfxId < 0x60d) && SFXOutputData[handle->sfxId].loopAlways)
+    if((handle->sfxId < ARRAY_SIZE(SFXOutputData)) && SFXOutputData[handle->sfxId].loopAlways)
         return handle->playbackState == 1;
 
     return SFXIsSFXPlaying(handle, -1);
@@ -32,7 +32,7 @@ bool Sound_SetVolume(DYNAMICSOUNDS *handle, float volume) {
     handle->volume = volume;
     handle->needsUpdate = true;
 
-    if((handle->sfxId < 0x60d) && SFXOutputData[handle->sfxId].loopAlways)
+    if((handle->sfxId < ARRAY_SIZE(SFXOutputData)) && SFXOutputData[handle->sfxId].loopAlways)
         return handle->playbackState == 1;
 
     return SFXIsSFXPlaying(handle, -1);
@@ -64,5 +64,18 @@ void Sound_ModAlertness(DYNAMICSOUNDS *handle, float multiplier) {
         return;
 
     handle->alertness *= multiplier;
+
+}
+
+// AUTOINJECT
+bool Sound_IsLooping(DYNAMICSOUNDS *handle) {
+
+    if (handle == NULL)
+        return true;
+
+    if(handle->sfxId >= ARRAY_SIZE(SFXOutputData))
+        return false;
+    
+    return SFXOutputData[handle->sfxId].loopAlways;
 
 }
