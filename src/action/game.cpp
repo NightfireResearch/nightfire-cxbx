@@ -4,7 +4,7 @@
 #include "game.h"
 #include "game/mp/multiplayer.h" // for MPSettings
 #include "ui/MenuManager.h"
-#include "gfx/Text.h"
+#include "engine/Text.h"
 
 #include <cstring>
 #include <cstdio>

@@ -12994,14 +12994,14 @@
     {
         "name": "ClrStep",
         "address": "0x0006b0a0",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "float10",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "float",
+            "float",
+            "float"
         ],
-        "prototype_string": "undefined ClrStep(undefined4 param_1, undefined4 param_2, undefined4 param_3)"
+        "prototype_string": "float10 __stdcall ClrStep(float param_1, float param_2, float param_3)"
     },
     {
         "name": "BIN_GetByte",
@@ -13616,10 +13616,10 @@
     {
         "name": "Txt_LoadLanguage",
         "address": "0x0006d250",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall Txt_LoadLanguage(void)"
+        "prototype_string": "void __cdecl Txt_LoadLanguage(void)"
     },
     {
         "name": "Txt_LanguageInit",
@@ -13712,9 +13712,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Lights_CalcAmbientLight(int param_1)"
+        "prototype_string": "void __cdecl Lights_CalcAmbientLight(obj_tag * param_1)"
     },
     {
         "name": "Lights_CalcClosestLights",
@@ -26005,18 +26005,18 @@
     {
         "name": "Text_Update",
         "address": "0x000d2360",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall Text_Update(void)"
+        "prototype_string": "void __cdecl Text_Update(void)"
     },
     {
         "name": "Text_Update2Line",
         "address": "0x000d2400",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall Text_Update2Line(void)"
+        "prototype_string": "void __cdecl Text_Update2Line(void)"
     },
     {
         "name": "Timer_Seconds2String",
