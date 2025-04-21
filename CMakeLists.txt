@@ -68,7 +68,6 @@ add_library(actioninject SHARED
   src/action/math/math.cpp
   src/action/input.cpp
   src/action/memory.cpp
-  src/action/music.cpp
   src/action/util/crc.cpp
   src/action/util/hashtable.cpp
   src/action/util/LList.cpp
@@ -83,6 +82,7 @@ add_library(actioninject SHARED
   src/action/game/obj/car.cpp
   src/action/game/obj/control.cpp
   src/action/game/obj/Player.cpp
+  src/action/sound/music.cpp
   src/action/sound/SFX.cpp
   src/action/sound/Sound.cpp
 )
