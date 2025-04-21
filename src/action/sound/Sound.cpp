@@ -24,6 +24,22 @@ bool Sound_SetPosition(DYNAMICSOUNDS *handle, _VECTOR *position) {
 }
 
 // AUTOINJECT
+bool Sound_SetVolume(DYNAMICSOUNDS *handle, float volume) {
+
+    if (handle == NULL)
+        return false;
+
+    handle->volume = volume;
+    handle->needsUpdate = true;
+
+    if((handle->sfxId < 0x60d) && SFXOutputData[handle->sfxId].loopAlways)
+        return handle->playbackState == 1;
+
+    return SFXIsSFXPlaying(handle, -1);
+
+}
+
+// AUTOINJECT
 void Sound_Stop(DYNAMICSOUNDS *handle) {
     if(handle == NULL)
         return;
