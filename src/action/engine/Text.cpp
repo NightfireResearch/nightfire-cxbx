@@ -46,7 +46,7 @@ void Txt_LoadLanguage(void) {
 
     char filename[1024];
     sprintf(filename, "%s%s", "", LanguageFileNames[CurrentLanguage]);
-    printf("Loading language %i, from file %s\n", CurrentLanguage, filename);
+    printf("Loading language %i from file %s\n", CurrentLanguage, filename);
 
     int size = 0;
     void* dataFile = psiFileLoad(filename, 0x3604, &size);
@@ -57,7 +57,7 @@ void Txt_LoadLanguage(void) {
 
     uint bankSize = BIN_GetDWord((uint**)&fileAt); // Also increments fileAt
 
-    printf("Loaded %i bytes of data file, of which %i is bank info\n", size, bankSize);
+    //printf("Loaded %i bytes of data file, of which %i is bank info\n", size, bankSize);
 
     // Allocate and copy bank data to RAM - this is the raw ASCII or UTF-16 buffer
     BankData = Mem_Malloc(bankSize, 0x3604, 0);
@@ -68,7 +68,7 @@ void Txt_LoadLanguage(void) {
     fileAt = (void*)(((int)fileAt + bankSize + 3) & ~3);
 
     NumEntries = BIN_GetDWord((uint**)&fileAt); // 2801 strings
-    printf("Num entries: %i\n", NumEntries);
+    //printf("Num entries: %i\n", NumEntries);
 
     Bank = (const char**)Mem_Malloc(NumEntries * 4, 0x3604, 0); // 4 bytes of offset (into the ASCII data array) per string
     
@@ -79,12 +79,12 @@ void Txt_LoadLanguage(void) {
     for(int i = 1; i < NumEntries; i++) {
         uint32_t offset = BIN_GetDWord((uint**)&fileAt);
         Bank[i] = (const char*)((uint)BankData + offset);
-        printf("String %i: %s\n", i, Bank[i]);
+        //printf("String %i: %s\n", i, Bank[i]);
     }
     
     // Fixup table has 7 entries
     NumFixups = BIN_GetDWord((uint**)&fileAt);
-    printf("Num fixups: %i\n", NumFixups);
+    //printf("Num fixups: %i\n", NumFixups);
     
     FixupTable = (uint**) Mem_Malloc((NumFixups+1) * 4, 0x3604, 0);
 
