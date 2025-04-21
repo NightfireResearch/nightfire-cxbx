@@ -43,7 +43,7 @@ static_assert(sizeof(SFXOutputDataEntry) == 0x18, "Size of SFXOutputDataEntry no
 #pragma pack(pop)
 
 uint Sound_Play3D(Action_SFX param_1,_VECTOR *position,float param_3,float param_4,float param_5, undefined2 param_6,undefined4 param_7,int param_8);
-unsigned int Sound_Stop(DYNAMICSOUNDS *handle);
+void Sound_Stop(DYNAMICSOUNDS *handle);
 bool Sound_SetPosition(DYNAMICSOUNDS *handle, _VECTOR *position);
 
 #define SFXOutputData (*(SFXOutputDataEntry(*)[0x60d])0x00182b80)
