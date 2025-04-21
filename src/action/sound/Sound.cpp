@@ -56,3 +56,13 @@ void Sound_SetAlertness(DYNAMICSOUNDS *handle, float alert) {
     handle->alertness = alert;
 
 }
+
+// AUTOINJECT
+void Sound_ModAlertness(DYNAMICSOUNDS *handle, float multiplier) {
+
+    if (handle == NULL)
+        return;
+
+    handle->alertness *= multiplier;
+
+}

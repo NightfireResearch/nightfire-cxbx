@@ -47,6 +47,7 @@ void Sound_Stop(DYNAMICSOUNDS *handle);
 bool Sound_SetPosition(DYNAMICSOUNDS *handle, _VECTOR *position);
 bool Sound_SetVolume(DYNAMICSOUNDS *handle, float volume);
 void Sound_SetAlertness(DYNAMICSOUNDS *handle, float alert);
+void Sound_ModAlertness(DYNAMICSOUNDS *handle, float multiplier);
 
 #define SFXOutputData (*(SFXOutputDataEntry(*)[0x60d])0x00182b80)
 
