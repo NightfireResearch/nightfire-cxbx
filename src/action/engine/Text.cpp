@@ -25,7 +25,17 @@ void Txt_SetLanguage(uint languageId) {
     Txt_LoadLanguage();
 }
 
-
+typedef enum {
+    Lang_UK = 0,
+    Lang_FR = 1,
+    Lang_GR = 2,
+    Lang_SP = 3,
+    Lang_IT = 4,
+    Lang_DU = 5,
+    Lang_USA = 6,
+    Lang_JAP = 7,
+    Lang_SW = 8
+} Lang;
 
 const char* LanguageFileNames[] = {
     "UKTxt.dat",
