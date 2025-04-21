@@ -11,8 +11,6 @@
 void Text_Update2Line(void);
 // AUTOGEN
 void Text_Update(void);
-// AUTOGEN
-char* Txt_BindLabel(Action_TranslatedText a, unsigned int b);
 
 #define Bank (*(const char***)0x00215588)
 #define BankData (*(void**)0x0021558c)
@@ -95,5 +93,33 @@ void Txt_LoadLanguage(void) {
 
     Mem_Free(&dataFile);
 
+}
+
+uint Txt_GetIndex(Action_TranslatedText tt) {
+    return (int)FixupTable[(tt >> 24)] + (tt & 0xFFFFFF);
+}
+
+// AUTOGEN
+unsigned char* Txt_GetStringFromHeap(uchar index);
+
+// AUTOINJECT
+const char* Txt_BindLabel(Action_TranslatedText a, unsigned int b) {
+
+    if(a == 0xFFFFFFFF || FixupTable == NULL)
+        return NULL;
+
+    uint index = Txt_GetIndex(a);
+    
+    if(index >= NumEntries)
+        return "Invalid Text Label";
+
+    if(index == 0) {
+        return (const char*)Txt_GetStringFromHeap(b);
+    }
+
+    if(Bank != NULL)
+        return Bank[index];
+    
+    return "Not Loaded";
 }
 
