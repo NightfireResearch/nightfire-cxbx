@@ -19,7 +19,7 @@ char* Txt_BindLabel(Action_TranslatedText a, unsigned int b);
 #define NumEntries U32_AT(0x00215590)
 #define CurrentLanguage U32_AT(0x00215594)
 #define NumFixups U32_AT(0x00215580)
-#define FixupTable (*(uint***)0x001fec78)
+#define FixupTable (*(uint**)0x001fec78)
 
 // AUTOINJECT
 void Txt_SetLanguage(uint languageId) {
@@ -86,11 +86,11 @@ void Txt_LoadLanguage(void) {
     NumFixups = BIN_GetDWord((uint**)&fileAt);
     //printf("Num fixups: %i\n", NumFixups);
     
-    FixupTable = (uint**) Mem_Malloc((NumFixups+1) * 4, 0x3604, 0);
+    FixupTable = (uint*) Mem_Malloc((NumFixups+1) * 4, 0x3604, 0);
 
     for(int i = 0; i < NumFixups; i++) {
         uint offset = BIN_GetDWord((uint**)&fileAt);
-        FixupTable[i] = (uint*)offset;
+        FixupTable[i] = offset;
     }
 
     Mem_Free(&dataFile);
