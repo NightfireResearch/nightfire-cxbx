@@ -61,8 +61,11 @@ void Txt_LoadLanguage(void) {
     BankData = Mem_Malloc(bankSize, 0x3604, 0);
     memcpy(BankData, fileAt, bankSize);
     
+    // Add 4 bytes even if the string ends on a word boundary already. Unclear why.
+    if(bankSize % 4 == 0)
+        fileAt = (void*)(((int)fileAt + 4));
+
     // The file is padded to a multiple of 4 bytes
-    // TODO: The Python script adds 4 bytes even if the string ends on a word boundary already. Why?
     fileAt = (void*)(((int)fileAt + bankSize + 3) & ~3);
 
     NumEntries = BIN_GetDWord((uint**)&fileAt); // 2801 strings
