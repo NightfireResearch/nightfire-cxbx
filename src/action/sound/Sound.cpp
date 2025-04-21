@@ -30,3 +30,13 @@ void Sound_Stop(DYNAMICSOUNDS *handle) {
 
     handle->playbackState = 2;
 }
+
+// AUTOINJECT
+void Sound_SetAlertness(DYNAMICSOUNDS *handle, float alert) {
+
+    if (handle == NULL)
+        return;
+
+    handle->alertness = alert;
+
+}
