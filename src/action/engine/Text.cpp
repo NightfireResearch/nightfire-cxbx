@@ -18,25 +18,17 @@ void Text_Update(void);
 #define CurrentLanguage U32_AT(0x00215594)
 #define NumFixups U32_AT(0x00215580)
 #define FixupTable (*(uint**)0x001fec78)
+#define StringHeapLock (*(char**)0x001fec80)
+#define StringHeapCnt U32_AT(0x00215584)
+
 
 // AUTOINJECT
-void Txt_SetLanguage(uint languageId) {
+void Txt_SetLanguage(tLanguage languageId) {
     CurrentLanguage = languageId;
     Txt_LoadLanguage();
 }
 
-typedef enum {
-    Lang_UK = 0,
-    Lang_FR = 1,
-    Lang_GR = 2,
-    Lang_SP = 3,
-    Lang_IT = 4,
-    Lang_DU = 5,
-    Lang_USA = 6,
-    Lang_JAP = 7,
-    Lang_SW = 8
-} Lang;
-
+// Order must match the order in the enum
 const char* LanguageFileNames[] = {
     "UKTxt.dat",
     "FRTxt.dat",
@@ -136,3 +128,12 @@ const char* Txt_BindLabel(Action_TranslatedText a, unsigned int b) {
     return "Not Loaded";
 }
 
+
+// AUTOINJECT
+void Txt_LanguageInit(void) {
+    memset(&StringHeapLock,0,0x100);
+    StringHeapCnt = 0;
+    BankData = NULL;
+    Bank = NULL;
+    Txt_LoadLanguage();
+}
