@@ -161,7 +161,7 @@ void psiStopBackgroundMovie(void) {
 }
 
 // AUTOGEN
-tLANGUAGE Language_Get(void);
+int Language_Get(void);
 
 // AUTOGEN
 bool IsNotPalI(void);

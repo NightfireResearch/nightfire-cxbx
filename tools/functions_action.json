@@ -28211,9 +28211,9 @@
         "name": "Language_Get",
         "address": "0x000dbe10",
         "calling_convention": "__cdecl",
-        "return_type": "tLANGUAGE",
+        "return_type": "int",
         "param_types": [],
-        "prototype_string": "tLANGUAGE __cdecl Language_Get(void)"
+        "prototype_string": "int __cdecl Language_Get(void)"
     },
     {
         "name": "Graphics_Init_LowLevel",
@@ -30683,7 +30683,7 @@
         "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
+            "float",
             "float",
             "float",
             "float",
@@ -30693,7 +30693,7 @@
             "float",
             "undefined4"
         ],
-        "prototype_string": "undefined __cdecl maybeRegisterTemporaryTexture(undefined4 param_1, float param_2, float param_3, float param_4, undefined4 param_5, undefined4 param_6, float param_7, float param_8, undefined4 param_9)"
+        "prototype_string": "undefined __cdecl maybeRegisterTemporaryTexture(float param_1, float param_2, float param_3, float param_4, undefined4 param_5, undefined4 param_6, float param_7, float param_8, undefined4 param_9)"
     },
     {
         "name": "d3dSetup",
