@@ -135,6 +135,10 @@ LAB_0006aafe:
 
 #define SoundInfo U32_AT(0x001f65d8)
 
+// Maybe hashcode of playing FMV
+#define BGFMVPlaying U32_AT(0x002ae288)
+
+
 // AUTOGEN
 void __cdecl psiLaunchDriving(void* a, uint b);
 // AUTOGEN
@@ -146,9 +150,15 @@ uint __stdcall Locks_Init(void);
 // AUTOGEN
 void __stdcall ResetMap_Load(void);
 // AUTOGEN
-void __stdcall psiStopBackgroundMovie(void);
-// AUTOGEN
 void Boot_GetPTPData(void **param_1,uint *param_2);
+// AUTOGEN
+void maybeBackgroundMovieCleanup(void);
+
+// AUTOINJECT
+void psiStopBackgroundMovie(void) { 
+    maybeBackgroundMovieCleanup();
+    BGFMVPlaying = 0;
+}
 
 // AUTOINJECT
 bool Menu_IsDrivingLevel(HASHCODE level) {

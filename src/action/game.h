@@ -15,6 +15,7 @@ void Reset_MapLoadSettings(void);
 uint GameFlow_GetState(void);
 void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv);
 bool Menu_IsDrivingLevel(HASHCODE level);
+void psiStopBackgroundMovie(void);
 
 #pragma pack(push, 1)
 typedef struct {

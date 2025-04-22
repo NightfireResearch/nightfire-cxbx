@@ -18367,11 +18367,11 @@
         "return_type": "int",
         "param_types": [
             "M_MANAGER *",
-            "uint",
+            "MessageType",
             "int",
             "int"
         ],
-        "prototype_string": "int __cdecl Manager_SendMessage(M_MANAGER * mmgr, uint msgType, int param_3, int param_4)"
+        "prototype_string": "int __cdecl Manager_SendMessage(M_MANAGER * mmgr, MessageType msgType, int param_3, int param_4)"
     },
     {
         "name": "MenuManager_Create",
@@ -18379,15 +18379,15 @@
         "calling_convention": "__cdecl",
         "return_type": "uint",
         "param_types": [
-            "int * *",
-            "int * *",
+            "uint",
+            "uint",
             "short",
             "byte",
             "undefined4",
             "char",
-            "undefined4"
+            "uint"
         ],
-        "prototype_string": "uint __cdecl MenuManager_Create(int * * param_1, int * * param_2, short param_3, byte param_4, undefined4 actions, char pauseAudio, undefined4 status)"
+        "prototype_string": "uint __cdecl MenuManager_Create(uint param_1, uint param_2, short param_3, byte playerNum, undefined4 actions, char pauseAudio, uint status)"
     },
     {
         "name": "MenuManager_Delete",
@@ -18557,11 +18557,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "M_RADIO *",
             "undefined4 *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Radio_Init(int param_1, undefined4 * param_2, undefined4 param_3)"
+        "prototype_string": "void __cdecl Radio_Init(M_RADIO * param_1, undefined4 * param_2, undefined4 param_3)"
     },
     {
         "name": "Radio_Update",
@@ -18792,11 +18792,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "M_SCROLL *",
             "undefined4 *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Scroll_Init(int param_1, undefined4 * param_2, undefined4 param_3)"
+        "prototype_string": "void __cdecl Scroll_Init(M_SCROLL * param_1, undefined4 * param_2, undefined4 param_3)"
     },
     {
         "name": "Scroll_SendMessage",
@@ -18829,11 +18829,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "M_SPIN *",
             "undefined4 *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Spin_Init(int param_1, undefined4 * param_2, undefined4 param_3)"
+        "prototype_string": "void __cdecl Spin_Init(M_SPIN * param_1, undefined4 * param_2, undefined4 param_3)"
     },
     {
         "name": "Spin_SendMessage",
@@ -18905,11 +18905,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
-            "undefined4 *",
+            "M_TEXTBOX *",
+            "NEW_CONTROL *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Text_Init(int param_1, undefined4 * param_2, undefined4 param_3)"
+        "prototype_string": "void __cdecl Text_Init(M_TEXTBOX * textbox, NEW_CONTROL * newControl, undefined4 param_3)"
     },
     {
         "name": "Window_Init",
@@ -28266,13 +28266,13 @@
         "name": "psiFileLoad",
         "address": "0x000dca30",
         "calling_convention": "__cdecl",
-        "return_type": "int * *",
+        "return_type": "void *",
         "param_types": [
             "char *",
             "MallocFlags",
             "int *"
         ],
-        "prototype_string": "int * * __cdecl psiFileLoad(char * filename, MallocFlags allocType, int * sizeOut)"
+        "prototype_string": "void * __cdecl psiFileLoad(char * filename, MallocFlags allocType, int * sizeOut)"
     },
     {
         "name": "psiFileSetSingleFileMode",
@@ -28329,10 +28329,10 @@
     {
         "name": "psiStopBackgroundMovie",
         "address": "0x000dccc0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall psiStopBackgroundMovie(void)"
+        "prototype_string": "void __cdecl psiStopBackgroundMovie(void)"
     },
     {
         "name": "psiStartBackgroundMovie",
@@ -31005,10 +31005,10 @@
     {
         "name": "maybeBackgroundMovieCleanup",
         "address": "0x000e8a00",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall maybeBackgroundMovieCleanup(void)"
+        "prototype_string": "void __cdecl maybeBackgroundMovieCleanup(void)"
     },
     {
         "name": "BackgroundMovieSetVolume",

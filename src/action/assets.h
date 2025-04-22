@@ -1582,5 +1582,9 @@ typedef enum {
     Nightfire_SFX_FORCE_UINT32 = 0x7FFFFFFF
 } Action_SFX;
 
+typedef enum {
+
+    MESSAGETYPE_FORCE_UINT32 = 0x7FFFFFFF
+} MessageType;
 
 #endif // _ASSETS_H

@@ -112,7 +112,7 @@ static_assert(sizeof(ds_options) == 0x18 * 4, "Size of ds_options is not as expe
 int __cdecl __Menu_SendMessage(M_CONTROL *param_1, uint param_2, int param_3, int param_4);
 
 // AUTOGEN
-int __cdecl Manager_SendMessage(M_MANAGER *param_1, uint msgType, int param_3, int param_4);
+int __cdecl Manager_SendMessage(M_MANAGER *param_1, MessageType msgType, int param_3, int param_4);
 
 // AUTOGEN
 void __cdecl Menu_ChangePageCloseIris(HASHCODE param_1, uchar param_2, uint param_3);
@@ -135,11 +135,11 @@ undefined4 C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, 
             switch(lVar1) {
                 case 0:
                     // Option 0: Records
-                    Manager_SendMessage(&manager[param_1], 0x44, 0x4000003a, 0);
+                    Manager_SendMessage(&manager[param_1], (MessageType)0x44, 0x4000003a, 0);
                     return 1;
                 case 1:
                     // Option 1: Rewards
-                    Manager_SendMessage(&manager[param_1], 0x44, 0x4000003b, 0);
+                    Manager_SendMessage(&manager[param_1], (MessageType)0x44, 0x4000003b, 0);
                     return 1;
                 case 2:
                     // Option 2: Dossier - Gadgets submenu
