@@ -160,6 +160,62 @@ void psiStopBackgroundMovie(void) {
     BGFMVPlaying = 0;
 }
 
+// AUTOGEN
+tLANGUAGE Language_Get(void);
+
+// AUTOGEN
+bool IsNotPalI(void);
+
+// AUTOGEN
+void BackgroundMovieSetVolume(int param_1);
+// AUTOGEN
+void BackgroundMoviePlayFile(char *filename);
+
+
+#define BackgroundMovieFilename ((char*)(0x002ae3f0))
+#define LoopingMovie U8_AT(0x002ae28c)
+#define BackgroundMovieVolume U32_AT(0x00194818)
+
+// AUTOINJECT
+void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume) {
+  int scaledVolume = (volume * 90) / 100;
+
+  if(scaledVolume > 100)
+    scaledVolume = 100;
+
+  if(hashcode == FMV_IDENT_EAGAMES_EN) {
+    if(!IsNotPalI()) {
+      switch(Language_Get()) {
+        case 2:
+          hashcode = FMV_IDENT_EAGAMES_FR;
+          break;
+        case 3:
+          hashcode = FMV_IDENT_EAGAMES_DE;
+          break;
+        case 6:
+          hashcode = FMV_IDENT_EAGAMES_ES;
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  maybeBackgroundMovieCleanup();
+  BGFMVPlaying = 0;
+
+  if (hashcode != 0x4e504c59) {
+    LoopingMovie = (looping != 0);
+    sprintf(BackgroundMovieFilename,"%08x.xmv",hashcode);
+  }
+  BackgroundMovieVolume = scaledVolume;
+  BGFMVPlaying = hashcode;
+  BackgroundMovieSetVolume(scaledVolume);
+  printf("Playing background movie %s\n", BackgroundMovieFilename);
+  BackgroundMoviePlayFile(BackgroundMovieFilename);
+
+}
+
 // AUTOINJECT
 bool Menu_IsDrivingLevel(HASHCODE level) {
     switch(level) {

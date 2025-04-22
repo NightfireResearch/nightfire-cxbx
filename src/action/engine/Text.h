@@ -13,12 +13,12 @@ typedef enum {
     Lang_USA = 6,
     Lang_JAP = 7,
     Lang_SW = 8
-} tLanguage;
+} tLANGUAGE;
 
 void Text_Update2Line(void);
 void Text_Update(void);
 const char * Txt_BindLabel(Action_TranslatedText param_1,undefined4 param_2);
-void Txt_SetLanguage(tLanguage languageId);
+void Txt_SetLanguage(tLANGUAGE languageId);
 void Txt_LoadLanguage(void);
 void Txt_LanguageInit(void);
 

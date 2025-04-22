@@ -28210,10 +28210,10 @@
     {
         "name": "Language_Get",
         "address": "0x000dbe10",
-        "calling_convention": "__stdcall",
-        "return_type": "undefined4",
+        "calling_convention": "__cdecl",
+        "return_type": "tLANGUAGE",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall Language_Get(void)"
+        "prototype_string": "tLANGUAGE __cdecl Language_Get(void)"
     },
     {
         "name": "Graphics_Init_LowLevel",
@@ -28344,7 +28344,7 @@
             "char",
             "int"
         ],
-        "prototype_string": "undefined __cdecl psiStartBackgroundMovie(HASHCODE hashcode, char param_2, int volume)"
+        "prototype_string": "undefined __cdecl psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume)"
     },
     {
         "name": "psiMovieFinished",
@@ -30598,10 +30598,10 @@
     {
         "name": "IsNotPalI",
         "address": "0x000e5f70",
-        "calling_convention": "__stdcall",
-        "return_type": "undefined",
+        "calling_convention": "__cdecl",
+        "return_type": "bool",
         "param_types": [],
-        "prototype_string": "undefined __stdcall IsNotPalI(void)"
+        "prototype_string": "bool __cdecl IsNotPalI(void)"
     },
     {
         "name": "Graphics_IsSomeGraphicsRegion",
@@ -31024,11 +31024,11 @@
         "name": "BackgroundMoviePlayFile",
         "address": "0x000e8a90",
         "calling_convention": "__cdecl",
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "char *"
         ],
-        "prototype_string": "undefined __cdecl BackgroundMoviePlayFile(char * filename)"
+        "prototype_string": "void __cdecl BackgroundMoviePlayFile(char * filename)"
     },
     {
         "name": "maybeBackgroundMovieIsPlaying",

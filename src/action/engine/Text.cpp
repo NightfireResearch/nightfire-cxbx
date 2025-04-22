@@ -23,7 +23,7 @@ void Text_Update(void);
 
 
 // AUTOINJECT
-void Txt_SetLanguage(tLanguage languageId) {
+void Txt_SetLanguage(tLANGUAGE languageId) {
     CurrentLanguage = languageId;
     Txt_LoadLanguage();
 }
