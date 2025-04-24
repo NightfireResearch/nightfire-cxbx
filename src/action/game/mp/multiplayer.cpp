@@ -179,13 +179,13 @@ void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort t
     _VECTOR spawnPos;
     Vec_Copy(position, &spawnPos);
     cel_tag* cel = build_FindCel(position, glb_world);
-    _VECTOR searchDirection = {.x=0.0, .y=0.0, .z=1.0};
     build_PointOnFloor(cel, NULL, &spawnPos, 3.0f, NULL);
     spawnPos.y += 1.6f;
 
     // Set up the spawn point
     Vec_Copy(&spawnPos, &SpawnPoints[i].spawnPos);
     Vec_Copy(facingDirection, &SpawnPoints[i].facingDir);
+
     SpawnPoints[i].initialised = true;
 
     // Maintain counts
