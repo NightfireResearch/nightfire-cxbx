@@ -144,8 +144,7 @@ bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float dis
   return intersects;
 }
 
-// BROKEN: Everyone seems to spawn at the same location all the time?
-// NOAUTOINJECT
+// AUTOINJECT
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId) {
 
   if(teamId == MPTeam::NO_TEAM)
@@ -191,6 +190,10 @@ void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort t
     // Maintain counts
     SpawnPntTeamCount[teamId]++;
     SpawnPntCount++;
+    
+    // We've found a spawn point and initialised it, so stop searching
+    break;
+
   }
 
 }
