@@ -111,7 +111,7 @@ bool MP_IsTarget(obj_tag *param_1) {
 }
 
 #define SpawnPntCount U32_AT(0x00262f38)
-#define SpawnPntTeamCount (*(uint32_t**)0x00262968)
+#define SpawnPntTeamCount (*(uint32_t(*)[3])0x00262968)
 #define glb_world ((world_tag*)0x001f6674)
 
 // AUTOGEN
@@ -144,7 +144,7 @@ bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float dis
   return intersects;
 }
 
-// BROKEN: Crashes at level load, perhaps due to the floating-point function call?
+// BROKEN: Everyone seems to spawn at the same location all the time?
 // NOAUTOINJECT
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId) {
 

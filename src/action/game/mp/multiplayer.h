@@ -111,7 +111,7 @@ typedef struct {
 // True on Xbox, PS2 is larger due to padding of _VECTOR
 static_assert(sizeof(MPSpawnPoint) == 0x1c, "Size of MPSpawnPoint not correct");
 
-#define SpawnPoints ((MPSpawnPoint*)0x00261d58)
+#define SpawnPoints (*(MPSpawnPoint(*)[64])0x00261d58)
 
 typedef struct {
   HASHCODE skinHashcode; // ?
