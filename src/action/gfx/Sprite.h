@@ -8,8 +8,9 @@ struct sprite;
 typedef struct sprite {
     char unknown[8];
     unsigned int createdOnFrame;
-    unsigned int unknown2[2];
-    char unknown3[4];
+    unsigned int unknown2;
+    unsigned int colourTint;
+    unsigned int unknown3;
     char *text;
     char *maybeClippedString;
     short length;
@@ -17,7 +18,7 @@ typedef struct sprite {
     short someWidth;
     short someHeight;
     short unknown5[4];
-    char unknown6;
+    char maybeEnabled; // 0x27 results in it being visible, 0xff results in it being invisible? Unclear.
     char linkedViewer;
     char unknown7[2];
     float unknown8[2];

@@ -51,3 +51,32 @@ ushort HUD_State(HUDINFO_tag *param_1, HUD_PANE_IND idx) {
 	return param_1->pane[idx].state;
 
 }
+
+
+// AUTOINJECT
+void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
+
+	if(!pane->enabled)
+		return;
+	
+	if(playerInfo->remoteControlDevice == NULL)
+		return;
+
+	if(playerInfo->remoteControlDevice->objGraphics == hashtable_hashcode_to_celglist(GFX_LittleNellie_Body)) {
+		// Helicopter overlay
+		pane->spriteList[0]->colourTint = 0x000020ff; // Blue tint
+		pane->spriteList[1]->maybeEnabled = 0xff;
+		pane->spriteList[2]->maybeEnabled = 0xff;
+		pane->spriteList[3]->maybeEnabled = 0x27;
+		pane->spriteList[4]->maybeEnabled = 0x27;
+		pane->spriteList[5]->maybeEnabled = 0x27;
+	} else {
+		// Tank overlay
+		pane->spriteList[0]->colourTint = 0x002000ff; // Green tint
+		pane->spriteList[1]->maybeEnabled = 0x27;
+		pane->spriteList[2]->maybeEnabled = 0x27;
+		pane->spriteList[3]->maybeEnabled = 0xff;
+		pane->spriteList[4]->maybeEnabled =	0xff;
+		pane->spriteList[5]->maybeEnabled = 0xff;
+	}
+}

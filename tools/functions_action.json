@@ -21823,10 +21823,11 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "BLData *",
+            "HUDPANE_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl HUD_UpdateCarPane(int param_1, int param_2)"
+        "prototype_string": "void __cdecl HUD_UpdateCarPane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * punused)"
     },
     {
         "name": "HUD_UpdateSpacePane",
@@ -22898,18 +22899,22 @@
     {
         "name": "ResetMap_LevelCode2Img",
         "address": "0x000bedf0",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined ResetMap_LevelCode2Img()"
+        "calling_convention": "__cdecl",
+        "return_type": "undefined4",
+        "param_types": [
+            "uint",
+            "char * *",
+            "char * *"
+        ],
+        "prototype_string": "undefined4 __cdecl ResetMap_LevelCode2Img(uint hashcode, char * * randomHintOut, char * * objectiveTextOut)"
     },
     {
-        "name": "FUN_000bf9f0",
+        "name": "LoadScreen_Draw",
         "address": "0x000bf9f0",
         "calling_convention": "unknown",
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000bf9f0()"
+        "prototype_string": "undefined LoadScreen_Draw()"
     },
     {
         "name": "ResetMap_GenLoadScreen",
@@ -23873,12 +23878,12 @@
         "prototype_string": "undefined4 __stdcall FUN_000c4e60(void)"
     },
     {
-        "name": "FUN_000c4ea0",
+        "name": "ES_FindFreeVoiceHandle",
         "address": "0x000c4ea0",
         "calling_convention": "__stdcall",
         "return_type": "int",
         "param_types": [],
-        "prototype_string": "int __stdcall FUN_000c4ea0(void)"
+        "prototype_string": "int __stdcall ES_FindFreeVoiceHandle(void)"
     },
     {
         "name": "SFXSetEnvironment",
@@ -24042,14 +24047,14 @@
         "prototype_string": "void __stdcall FUN_000c5650(void)"
     },
     {
-        "name": "FUN_000c56b0",
+        "name": "SetCueTimer",
         "address": "0x000c56b0",
         "calling_convention": "__cdecl",
         "return_type": "int",
         "param_types": [
             "int"
         ],
-        "prototype_string": "int __cdecl FUN_000c56b0(int param_1)"
+        "prototype_string": "int __cdecl SetCueTimer(int param_1)"
     },
     {
         "name": "FUN_000c5700",
@@ -24151,7 +24156,7 @@
         "prototype_string": "void __cdecl FUN_000c6080(int param_1)"
     },
     {
-        "name": "FUN_000c60c0",
+        "name": "ES_StreamAsyncReadFile",
         "address": "0x000c60c0",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -24159,10 +24164,10 @@
             "int",
             "int",
             "int",
-            "void *",
-            "int"
+            "char *",
+            "StreamData *"
         ],
-        "prototype_string": "void __cdecl FUN_000c60c0(int param_1, int param_2, int param_3, void * param_4, int param_5)"
+        "prototype_string": "void __cdecl ES_StreamAsyncReadFile(int param_1, int param_2, int param_3, char * param_4, StreamData * param_5)"
     },
     {
         "name": "ES_GetStreamStates",
@@ -24238,7 +24243,7 @@
         "prototype_string": "undefined4 __stdcall SFXMusicGetVolume(void)"
     },
     {
-        "name": "FUN_000c6370",
+        "name": "ES_StartStreamMemCpy",
         "address": "0x000c6370",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -24247,9 +24252,9 @@
             "undefined4",
             "undefined4",
             "undefined4",
-            "int *"
+            "StreamData *"
         ],
-        "prototype_string": "void __cdecl FUN_000c6370(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, int * param_5)"
+        "prototype_string": "void __cdecl ES_StartStreamMemCpy(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, StreamData * param_5)"
     },
     {
         "name": "SFXInitialiseStreamUpdate",
@@ -24260,7 +24265,7 @@
         "prototype_string": "void __stdcall SFXInitialiseStreamUpdate(void)"
     },
     {
-        "name": "FUN_000c6890",
+        "name": "ES_CheckEndMarker",
         "address": "0x000c6890",
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
@@ -24268,7 +24273,7 @@
             "int",
             "undefined4 *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000c6890(int param_1, undefined4 * param_2)"
+        "prototype_string": "undefined4 __cdecl ES_CheckEndMarker(int param_1, undefined4 * param_2)"
     },
     {
         "name": "SFXUnSuspendFileAccess",
@@ -24289,15 +24294,15 @@
         "prototype_string": "void __cdecl ES_HandleStreamBufferLoaded(StreamData * Stream)"
     },
     {
-        "name": "FUN_000c6970",
+        "name": "UpdateMusicMarkers",
         "address": "0x000c6970",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "StreamData *",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c6970(int param_1, int param_2)"
+        "prototype_string": "void __cdecl UpdateMusicMarkers(StreamData * stream, int param_2)"
     },
     {
         "name": "ES_CheckFileBuffersForJumpMarkers",
@@ -24512,37 +24517,37 @@
         "prototype_string": "void __stdcall UpdateMFX_HT_Level_SpaceStationD(void)"
     },
     {
-        "name": "FUN_000c8810",
+        "name": "ES_UnlockVoiceHandle",
         "address": "0x000c8810",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c8810(int param_1)"
+        "prototype_string": "void __cdecl ES_UnlockVoiceHandle(int param_1)"
     },
     {
-        "name": "FUN_000c8870",
+        "name": "HasSampleEnded",
         "address": "0x000c8870",
         "calling_convention": "__cdecl",
         "return_type": "bool",
         "param_types": [
             "int",
-            "int"
+            "SFXItem *"
         ],
-        "prototype_string": "bool __cdecl FUN_000c8870(int param_1, int param_2)"
+        "prototype_string": "bool __cdecl HasSampleEnded(int param_1, SFXItem * param_2)"
     },
     {
-        "name": "FUN_000c88d0",
+        "name": "ES_FillpsiSFXData",
         "address": "0x000c88d0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "undefined4 *",
-            "int",
+            "psiSFX *",
+            "SFXItem *",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c88d0(undefined4 * param_1, int param_2, int param_3)"
+        "prototype_string": "void __cdecl ES_FillpsiSFXData(psiSFX * SfxData, SFXItem * param_2, int WhichVoice)"
     },
     {
         "name": "FUN_000c89e0",
@@ -24564,14 +24569,14 @@
         "prototype_string": "void __stdcall SFXJumpToMusicMarkerUpdate(void)"
     },
     {
-        "name": "FUN_000c8c40",
+        "name": "SFXStopStream",
         "address": "0x000c8c40",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "int *"
         ],
-        "prototype_string": "void __cdecl FUN_000c8c40(int * param_1)"
+        "prototype_string": "void __cdecl SFXStopStream(int * param_1)"
     },
     {
         "name": "FUN_000c8ce0",
@@ -24582,12 +24587,12 @@
         "prototype_string": "void __stdcall FUN_000c8ce0(void)"
     },
     {
-        "name": "maybeES_UpdateDucker",
+        "name": "ES_UpdateDucker",
         "address": "0x000c8d00",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall maybeES_UpdateDucker(void)"
+        "prototype_string": "void __stdcall ES_UpdateDucker(void)"
     },
     {
         "name": "SFXInitialiseStream",
@@ -24609,16 +24614,17 @@
         "prototype_string": "void __stdcall SFXUpdateStreams(void)"
     },
     {
-        "name": "FUN_000c97f0",
+        "name": "ES_RequestVoiceHandle",
         "address": "0x000c97f0",
         "calling_convention": "__cdecl",
         "return_type": "int",
         "param_types": [
+            "SampleHeaderData *",
             "int",
             "int",
             "int"
         ],
-        "prototype_string": "int __cdecl FUN_000c97f0(int param_1, int param_2, int param_3)"
+        "prototype_string": "int __cdecl ES_RequestVoiceHandle(SampleHeaderData * param_1, int param_2, int param_3, int param_4)"
     },
     {
         "name": "FUN_000c9880",
@@ -24631,14 +24637,14 @@
         "prototype_string": "bool __cdecl FUN_000c9880(int param_1)"
     },
     {
-        "name": "FUN_000c98e0",
+        "name": "ES_PauseSfx",
         "address": "0x000c98e0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "SFXItem *"
         ],
-        "prototype_string": "void __cdecl FUN_000c98e0(int param_1)"
+        "prototype_string": "void __cdecl ES_PauseSfx(SFXItem * param_1)"
     },
     {
         "name": "SFXPause",
@@ -24649,14 +24655,14 @@
         "prototype_string": "void __stdcall SFXPause(void)"
     },
     {
-        "name": "FUN_000c9990",
+        "name": "ES_UnPauseSfx",
         "address": "0x000c9990",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "SFXItem *"
         ],
-        "prototype_string": "void __cdecl FUN_000c9990(int param_1)"
+        "prototype_string": "void __cdecl ES_UnPauseSfx(SFXItem * param_1)"
     },
     {
         "name": "SFXUnPause",
@@ -24667,14 +24673,14 @@
         "prototype_string": "void __stdcall SFXUnPause(void)"
     },
     {
-        "name": "FUN_000c9a40",
+        "name": "KillSFX",
         "address": "0x000c9a40",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "int *"
         ],
-        "prototype_string": "void __cdecl FUN_000c9a40(int * param_1)"
+        "prototype_string": "void __cdecl KillSFX(int * param_1)"
     },
     {
         "name": "SFXRemove",
@@ -24716,17 +24722,17 @@
         "prototype_string": "void __cdecl SFXInitialise(char * param_1)"
     },
     {
-        "name": "FUN_000c9e20",
+        "name": "StartSample",
         "address": "0x000c9e20",
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
-            "int *",
+            "SFXSamplePoolFiles *",
             "int",
-            "float",
+            "SFXItem *",
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000c9e20(int * param_1, int param_2, float param_3, int param_4)"
+        "prototype_string": "undefined4 __cdecl StartSample(SFXSamplePoolFiles * sfxNum, int SoundBankSlot, SFXItem * param_3, int param_4)"
     },
     {
         "name": "maybeDXSoundPlay",
@@ -24739,7 +24745,7 @@
         "prototype_string": "undefined4 __cdecl maybeDXSoundPlay(int * * param_1)"
     },
     {
-        "name": "FUN_000ca590",
+        "name": "SFXUpdateEnding",
         "address": "0x000ca590",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -24747,7 +24753,7 @@
             "int * *",
             "undefined4 *"
         ],
-        "prototype_string": "void __cdecl FUN_000ca590(int * * param_1, undefined4 * param_2)"
+        "prototype_string": "void __cdecl SFXUpdateEnding(int * * param_1, undefined4 * param_2)"
     },
     {
         "name": "FUN_000ca5e0",
@@ -29026,7 +29032,7 @@
         "prototype_string": "undefined4 __stdcall FUN_000e09f0(void)"
     },
     {
-        "name": "FUN_000e0a00",
+        "name": "psiRequestVoiceHandle",
         "address": "0x000e0a00",
         "calling_convention": "__cdecl",
         "return_type": "uint",
@@ -29034,7 +29040,7 @@
             "byte *",
             "int"
         ],
-        "prototype_string": "uint __cdecl FUN_000e0a00(byte * param_1, int param_2)"
+        "prototype_string": "uint __cdecl psiRequestVoiceHandle(byte * param_1, int param_2)"
     },
     {
         "name": "thunk_FUN_000e13b0",
@@ -29047,14 +29053,14 @@
         "prototype_string": "void __cdecl thunk_FUN_000e13b0(uint param_1)"
     },
     {
-        "name": "thunk_FUN_000e13d0",
+        "name": "psiSampleUnPause",
         "address": "0x000e0a70",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "uint"
         ],
-        "prototype_string": "void __cdecl thunk_FUN_000e13d0(uint param_1)"
+        "prototype_string": "void __cdecl psiSampleUnPause(uint param_1)"
     },
     {
         "name": "psiSFXGetTimer",
@@ -29110,14 +29116,14 @@
         "prototype_string": "void __cdecl psiSFXSetupListener(_VECTOR * pos, _VECTOR * vel, _VECTOR * dir, _VECTOR * up, _VECTOR * norm)"
     },
     {
-        "name": "FUN_000e0bc0",
+        "name": "psiIsSamplePlaying",
         "address": "0x000e0bc0",
         "calling_convention": "__cdecl",
         "return_type": "bool",
         "param_types": [
             "uint"
         ],
-        "prototype_string": "bool __cdecl FUN_000e0bc0(uint param_1)"
+        "prototype_string": "bool __cdecl psiIsSamplePlaying(uint param_1)"
     },
     {
         "name": "psiAsyncOpenFile",
@@ -29195,7 +29201,7 @@
         "prototype_string": "void __cdecl FUN_000e0d30(uint param_1)"
     },
     {
-        "name": "FUN_000e0d60",
+        "name": "maybePsiStreamPlay",
         "address": "0x000e0d60",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -29203,7 +29209,7 @@
             "uint",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e0d60(uint param_1, int param_2)"
+        "prototype_string": "void __cdecl maybePsiStreamPlay(uint StreamHandle, int ReverbDepth)"
     },
     {
         "name": "FUN_000e0da0",
@@ -29216,14 +29222,14 @@
         "prototype_string": "void __cdecl FUN_000e0da0(uint param_1)"
     },
     {
-        "name": "FUN_000e0db0",
+        "name": "psiSamplePause",
         "address": "0x000e0db0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000e0db0(uint param_1)"
+        "prototype_string": "void __cdecl psiSamplePause(uint param_1)"
     },
     {
         "name": "dsndBufferSetVolume",
@@ -29250,14 +29256,14 @@
         "prototype_string": "void __cdecl thunk_FUN_000e18a0(uint param_1, int param_2, undefined4 * param_3, uint param_4)"
     },
     {
-        "name": "dsndGetCurrentPosition",
+        "name": "psiStreamGetPlayPos",
         "address": "0x000e0de0",
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
             "uint"
         ],
-        "prototype_string": "undefined4 __cdecl dsndGetCurrentPosition(uint param_1)"
+        "prototype_string": "undefined4 __cdecl psiStreamGetPlayPos(uint param_1)"
     },
     {
         "name": "FUN_000e0df0",
@@ -29271,14 +29277,14 @@
         "prototype_string": "void __cdecl FUN_000e0df0(uint param_1, undefined4 * param_2)"
     },
     {
-        "name": "FUN_000e0e10",
+        "name": "psiUpdateSound",
         "address": "0x000e0e10",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "uint *"
+            "psiSFX *"
         ],
-        "prototype_string": "void __cdecl FUN_000e0e10(uint * param_1)"
+        "prototype_string": "void __cdecl psiUpdateSound(psiSFX * param_1)"
     },
     {
         "name": "__profiling_or_debugging_hook_point",
@@ -29289,14 +29295,14 @@
         "prototype_string": "void __stdcall __profiling_or_debugging_hook_point(...)"
     },
     {
-        "name": "FUN_000e0ed0",
+        "name": "psiInitialiseSound",
         "address": "0x000e0ed0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "uint *"
+            "psiSFX *"
         ],
-        "prototype_string": "void __cdecl FUN_000e0ed0(uint * param_1)"
+        "prototype_string": "void __cdecl psiInitialiseSound(psiSFX * param_1)"
     },
     {
         "name": "FUN_000e0f00",
@@ -29355,11 +29361,11 @@
         "name": "FUN_000e1370",
         "address": "0x000e1370",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "uint"
         ],
-        "prototype_string": "uint __cdecl FUN_000e1370(uint param_1)"
+        "prototype_string": "bool __cdecl FUN_000e1370(uint param_1)"
     },
     {
         "name": "FUN_000e1390",
@@ -29382,14 +29388,14 @@
         "prototype_string": "void __cdecl FUN_000e13b0(uint param_1)"
     },
     {
-        "name": "FUN_000e13d0",
+        "name": "psiSampleUnPause",
         "address": "0x000e13d0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000e13d0(uint param_1)"
+        "prototype_string": "void __cdecl psiSampleUnPause(uint param_1)"
     },
     {
         "name": "FUN_000e1400",
@@ -29471,7 +29477,7 @@
         "prototype_string": "void __cdecl dsndSetI3DL2Source(uint param_1, float param_2)"
     },
     {
-        "name": "FUN_000e1630",
+        "name": "maybeXboxSFXCalculate3D",
         "address": "0x000e1630",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -29479,10 +29485,10 @@
             "uint",
             "undefined1"
         ],
-        "prototype_string": "void __cdecl FUN_000e1630(uint param_1, undefined1 param_2)"
+        "prototype_string": "void __cdecl maybeXboxSFXCalculate3D(uint param_1, undefined1 param_2)"
     },
     {
-        "name": "FUN_000e1660",
+        "name": "dsndSetLoopRegion",
         "address": "0x000e1660",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -29490,10 +29496,10 @@
             "uint",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e1660(uint param_1, int param_2)"
+        "prototype_string": "void __cdecl dsndSetLoopRegion(uint param_1, int param_2)"
     },
     {
-        "name": "FUN_000e16c0",
+        "name": "dsndSetPan",
         "address": "0x000e16c0",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -29502,17 +29508,17 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e16c0(uint param_1, int param_2, int param_3)"
+        "prototype_string": "void __cdecl dsndSetPan(uint param_1, int param_2, int param_3)"
     },
     {
-        "name": "dsndGetCurrentPosition",
+        "name": "psiStreamGetPlayPos",
         "address": "0x000e1860",
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
             "uint"
         ],
-        "prototype_string": "undefined4 __cdecl dsndGetCurrentPosition(uint param_1)"
+        "prototype_string": "undefined4 __cdecl psiStreamGetPlayPos(uint param_1)"
     },
     {
         "name": "FUN_000e18a0",
@@ -29538,25 +29544,25 @@
         "prototype_string": "undefined4 __cdecl FUN_000e18f0(uint param_1)"
     },
     {
-        "name": "FUN_000e1910",
+        "name": "BackgroundMovieSetupMix",
         "address": "0x000e1910",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "DIRECTSOUNDSTREAM *"
         ],
-        "prototype_string": "void __cdecl FUN_000e1910(int param_1)"
+        "prototype_string": "void __cdecl BackgroundMovieSetupMix(DIRECTSOUNDSTREAM * param_1)"
     },
     {
-        "name": "FUN_000e1990",
+        "name": "dsndStreamSetVolume",
         "address": "0x000e1990",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "DIRECTSOUNDSTREAM *",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e1990(int param_1, int param_2)"
+        "prototype_string": "void __cdecl dsndStreamSetVolume(DIRECTSOUNDSTREAM * param_1, int volume)"
     },
     {
         "name": "SFXUpdate",
@@ -30712,14 +30718,14 @@
         "prototype_string": "void __stdcall xboxInitGraphics(void)"
     },
     {
-        "name": "FUN_000e7130",
+        "name": "psiBlurScreen",
         "address": "0x000e7130",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e7130(int param_1)"
+        "prototype_string": "void __cdecl psiBlurScreen(int blurIntensity)"
     },
     {
         "name": "maybeD3dShutdown",
@@ -31018,7 +31024,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl BackgroundMovieSetVolume(int param_1)"
+        "prototype_string": "void __cdecl BackgroundMovieSetVolume(int volume)"
     },
     {
         "name": "BackgroundMoviePlayFile",
@@ -37404,9 +37410,9 @@
         "return_type": "void",
         "param_types": [
             "int",
-            "byte *"
+            "DSMIXBINS *"
         ],
-        "prototype_string": "void __stdcall CDirectSoundVoice_SetMixBins(int param_1, byte * param_2)"
+        "prototype_string": "void __stdcall CDirectSoundVoice_SetMixBins(int param_1, DSMIXBINS * param_2)"
     },
     {
         "name": "CDirectSoundVoice_SetMixBinVolumes",
@@ -37627,10 +37633,10 @@
         "calling_convention": "__stdcall",
         "return_type": "int",
         "param_types": [
-            "int",
+            "DIRECTSOUNDSTREAM *",
             "int"
         ],
-        "prototype_string": "int __stdcall CDirectSoundStream_SetVolume(int param_1, int param_2)"
+        "prototype_string": "int __stdcall CDirectSoundStream_SetVolume(DIRECTSOUNDSTREAM * pStream, int lVolume)"
     },
     {
         "name": "CDirectSoundStream_SetMixBins",
@@ -37638,10 +37644,10 @@
         "calling_convention": "__stdcall",
         "return_type": "int",
         "param_types": [
-            "int",
-            "byte *"
+            "DIRECTSOUNDSTREAM *",
+            "DSMIXBINS *"
         ],
-        "prototype_string": "int __stdcall CDirectSoundStream_SetMixBins(int param_1, byte * param_2)"
+        "prototype_string": "int __stdcall CDirectSoundStream_SetMixBins(DIRECTSOUNDSTREAM * pStream, DSMIXBINS * pMixBins)"
     },
     {
         "name": "IDirectSound_DownloadEffectsImage",
@@ -37673,10 +37679,10 @@
         "calling_convention": "__stdcall",
         "return_type": "HRESULT",
         "param_types": [
-            "void *",
+            "DIRECTSOUNDBUFFER *",
             "long"
         ],
-        "prototype_string": "HRESULT __stdcall IDirectSoundBuffer_SetVolume(void * thisPtr, long lVolume)"
+        "prototype_string": "HRESULT __stdcall IDirectSoundBuffer_SetVolume(DIRECTSOUNDBUFFER * thisPtr, long lVolume)"
     },
     {
         "name": "IDirectSoundBuffer_SetHeadroom",
@@ -37740,11 +37746,11 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "int",
+            "DIRECTSOUNDBUFFER *",
             "int",
             "int"
         ],
-        "prototype_string": "void __stdcall IDirectSoundBuffer_SetLoopRegion(int param_1, int param_2, int param_3)"
+        "prototype_string": "void __stdcall IDirectSoundBuffer_SetLoopRegion(DIRECTSOUNDBUFFER * param_1, int param_2, int param_3)"
     },
     {
         "name": "IDirectSoundBuffer_GetStatus",
@@ -37763,11 +37769,11 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "int",
+            "DIRECTSOUNDBUFFER *",
             "uint *",
             "uint *"
         ],
-        "prototype_string": "void __stdcall IDirectSoundBuffer_GetCurrentPosition(int param_1, uint * param_2, uint * param_3)"
+        "prototype_string": "void __stdcall IDirectSoundBuffer_GetCurrentPosition(DIRECTSOUNDBUFFER * param_1, uint * param_2, uint * param_3)"
     },
     {
         "name": "IDirectSoundBuffer_SetCurrentPosition",
@@ -37786,10 +37792,10 @@
         "calling_convention": "__stdcall",
         "return_type": "int",
         "param_types": [
-            "int",
+            "DIRECTSOUNDSTREAM *",
             "int"
         ],
-        "prototype_string": "int __stdcall IDirectSoundStream_SetVolume(int param_1, int param_2)"
+        "prototype_string": "int __stdcall IDirectSoundStream_SetVolume(DIRECTSOUNDSTREAM * pStream, int lVolume)"
     },
     {
         "name": "IDirectSoundStream_SetMixBins",
@@ -37797,10 +37803,10 @@
         "calling_convention": "__stdcall",
         "return_type": "int",
         "param_types": [
-            "int",
-            "byte *"
+            "DIRECTSOUNDSTREAM *",
+            "DSMIXBINS *"
         ],
-        "prototype_string": "int __stdcall IDirectSoundStream_SetMixBins(int param_1, byte * param_2)"
+        "prototype_string": "int __stdcall IDirectSoundStream_SetMixBins(DIRECTSOUNDSTREAM * pStream, DSMIXBINS * pMixBins)"
     },
     {
         "name": "IDirectSoundStream_Pause",
@@ -38138,11 +38144,11 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "int",
-            "undefined4",
+            "DIRECTSOUNDBUFFER *",
+            "float",
             "byte"
         ],
-        "prototype_string": "void __stdcall IDirectSoundBuffer_SetMaxDistance(int param_1, undefined4 param_2, byte param_3)"
+        "prototype_string": "void __stdcall IDirectSoundBuffer_SetMaxDistance(DIRECTSOUNDBUFFER * param_1, float param_2, byte param_3)"
     },
     {
         "name": "IDirectSoundBuffer_SetMinDistance",
@@ -38150,11 +38156,11 @@
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "int",
-            "undefined4",
+            "DIRECTSOUNDBUFFER *",
+            "float",
             "byte"
         ],
-        "prototype_string": "void __stdcall IDirectSoundBuffer_SetMinDistance(int param_1, undefined4 param_2, byte param_3)"
+        "prototype_string": "void __stdcall IDirectSoundBuffer_SetMinDistance(DIRECTSOUNDBUFFER * param_1, float param_2, byte param_3)"
     },
     {
         "name": "IDirectSoundBuffer_SetPosition",
@@ -38536,10 +38542,10 @@
         "calling_convention": "__stdcall",
         "return_type": "int *",
         "param_types": [
-            "uint *",
-            "int * *"
+            "DSSTREAMDESC *",
+            "DIRECTSOUNDSTREAM * *"
         ],
-        "prototype_string": "int * __stdcall DirectSoundCreateStream(uint * param_1, int * * param_2)"
+        "prototype_string": "int * __stdcall DirectSoundCreateStream(DSSTREAMDESC * param_1, DIRECTSOUNDSTREAM * * param_2)"
     },
     {
         "name": "DSound_CMemoryManager_PoolAlloc",
@@ -41199,7 +41205,7 @@
         "prototype_string": "uint __stdcall FUN_0012fd60(int param_1, undefined4 * param_2, int * param_3)"
     },
     {
-        "name": "FUN_0012fe5f",
+        "name": "maybeCreateVideoDecoder",
         "address": "0x0012fe5f",
         "calling_convention": "__stdcall",
         "return_type": "uint",
@@ -41208,7 +41214,7 @@
             "char *",
             "int *"
         ],
-        "prototype_string": "uint __stdcall FUN_0012fe5f(undefined4 param_1, char * param_2, int * param_3)"
+        "prototype_string": "uint __stdcall maybeCreateVideoDecoder(undefined4 param_1, char * param_2, int * param_3)"
     },
     {
         "name": "FUN_001300b8",
@@ -41236,18 +41242,18 @@
         "prototype_string": "void __stdcall FUN_00130393(int param_1)"
     },
     {
-        "name": "FUN_0013041b",
+        "name": "maybeVideoDecoderGetSpecs",
         "address": "0x0013041b",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
-            "int",
+            "maybeVideoDecoder *",
             "undefined4 *"
         ],
-        "prototype_string": "void __stdcall FUN_0013041b(int param_1, undefined4 * param_2)"
+        "prototype_string": "void __stdcall maybeVideoDecoderGetSpecs(maybeVideoDecoder * param_1, undefined4 * pDimensionsOut)"
     },
     {
-        "name": "FUN_00130437",
+        "name": "maybeSFXStreamCallback",
         "address": "0x00130437",
         "calling_convention": "__stdcall",
         "return_type": "void",
@@ -41256,33 +41262,33 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __stdcall FUN_00130437(int param_1, int param_2, int param_3)"
+        "prototype_string": "void __stdcall maybeSFXStreamCallback(int param_1, int param_2, int param_3)"
     },
     {
-        "name": "FUN_00130488",
+        "name": "maybeSFXCreateStreamForVideo",
         "address": "0x00130488",
         "calling_convention": "__stdcall",
         "return_type": "int *",
         "param_types": [
-            "int",
+            "maybeVideoDecoder *",
             "uint",
             "uint",
-            "undefined *",
+            "DSMIXBINS *",
             "undefined4 *"
         ],
-        "prototype_string": "int * __stdcall FUN_00130488(int param_1, uint param_2, uint param_3, undefined * param_4, undefined4 * param_5)"
+        "prototype_string": "int * __stdcall maybeSFXCreateStreamForVideo(maybeVideoDecoder * param_1, uint param_2, uint flags, DSMIXBINS * mixBins, undefined4 * param_5)"
     },
     {
-        "name": "FUN_00130605",
+        "name": "maybeGetAudioStreamFromVideo",
         "address": "0x00130605",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [
+            "maybeVideoDecoder *",
             "int",
-            "int",
-            "undefined4 *"
+            "DIRECTSOUNDSTREAM * *"
         ],
-        "prototype_string": "void __stdcall FUN_00130605(int param_1, int param_2, undefined4 * param_3)"
+        "prototype_string": "void __stdcall maybeGetAudioStreamFromVideo(maybeVideoDecoder * videoDecoder, int index, DIRECTSOUNDSTREAM * * streamOut)"
     },
     {
         "name": "FUN_00130624",
@@ -41290,12 +41296,12 @@
         "calling_convention": "__stdcall",
         "return_type": "int *",
         "param_types": [
-            "ulonglong *",
+            "maybeVideoDecoder *",
             "uint *",
             "int *",
             "uint *"
         ],
-        "prototype_string": "int * __stdcall FUN_00130624(ulonglong * param_1, uint * param_2, int * param_3, uint * param_4)"
+        "prototype_string": "int * __stdcall FUN_00130624(maybeVideoDecoder * param_1, uint * param_2, int * param_3, uint * param_4)"
     },
     {
         "name": "FUN_00130c51",

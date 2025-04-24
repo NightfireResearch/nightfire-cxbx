@@ -183,7 +183,7 @@ typedef struct obj_tag {
     _MATRIX transformMatrix; // 0x70
     HITDATA_tag* hitList; // 0xAC - HITLIST_tag
     void* maybeCollision; // 0xB0
-    char _pad_3[0x4];
+    celglist_tag* objGraphics; // 0xB4
     AnimState* animState; // 0xB8
     void* extraObjectData; // 0xBC
     void* scriptPlayer;

@@ -85,5 +85,8 @@ void HUD_Reset(BLData *param_1);
 void HUD_DisableAll(BLData *param_1);
 ushort HUD_State(HUDINFO_tag *param_1, HUD_PANE_IND idx);
 
+// Implementations of individual HUD panes
+void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj);
+
 
 #endif // HUD_H
