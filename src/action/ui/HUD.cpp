@@ -91,7 +91,7 @@ void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *
 
 }
 
-// NOAUTOINJECT
+// AUTOINJECT
 void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 
 	// Fancy animation only in singleplayer
@@ -119,21 +119,24 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 
 			// Enable the relevant lines
 			int numVisibleLines = 5 - (OICW_timer / 30);
-			int someVariableWithTime = 472.0f - (numVisibleLines * 17);
+			int linePositionY = 472.0f - (numVisibleLines * 17);
 			for(int i = 0; i < numVisibleLines; i++) {
 				// TODO: Enable the relevant lines
 				pane->spriteList[i+2]->positionX = 0x32;
-				pane->spriteList[i+2]->positionY = someVariableWithTime;
+				pane->spriteList[i+2]->positionY = linePositionY;
+				linePositionY += 17;
 				pane->spriteList[i+2]->maybeEnabled = 0x1c;
 
-				// TODO: Some extra hacky logic to make 2nd line flicker?
+				// 2nd line flickers slowly
 				if(i == 1 && numVisibleLines == 2) {
-
+					if(OICW_timer % 8 < 4) {
+						pane->spriteList[i+2]->maybeEnabled = 0xff;
+					}
 				}
 			}
 
 			if(OICW_timer <= 0) {
-				// Advance to phase 2
+				// Advance to phase 2 - all entries flicker fast
 				OICW_mode = 1;
 				OICW_timer = 30;
 			}
@@ -142,10 +145,12 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 		}
 		case 1:
 		{
-			// Phase 2: ???
+			// Phase 2: All entries flicker
 			OICW_timer--;
-
-			// TODO: Dismiss the things?
+			int value = (OICW_timer % 4 < 2) ? 0xff: 0x1c;
+			for(int i = 0; i < 5; i++) {
+				pane->spriteList[i+2]->maybeEnabled = value;
+			}
 
 			if(OICW_timer <= 0) {
 				// Advance to phase 3
