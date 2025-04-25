@@ -1,4 +1,5 @@
 #include "HUD.h"
+#include "../game/mp/multiplayer.h"
 #include <stdio.h>
 
 
@@ -49,6 +50,43 @@ ushort HUD_State(HUDINFO_tag *param_1, HUD_PANE_IND idx) {
 		return 0;
 
 	return param_1->pane[idx].state;
+
+}
+
+// AUTOGEN
+void HUD_CreateShrink(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *param_3,obj_tag *param_4);
+
+#define OICW_timer I16_AT(0x002790b4)
+#define OICW_mode U8_AT(0x002790ae)
+
+// AUTOINJECT
+void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *param_3,obj_tag *param_4) {
+  
+  HUD_CreateShrink(playerInfo,pane,param_3,param_4);
+
+  if (MPSettings.isMultiplayer) {
+    OICW_timer = -555; // 555 timer mentioned - this code was written by an electronics geek?
+    OICW_mode = 2;
+    return;
+  }
+
+  OICW_timer = 150;
+  OICW_mode = 0;
+
+  sprintf(pane->spriteList[2]->text,"COMMAND.COM\n");
+  Sprite_SetText(pane->spriteList[2], pane->spriteList[2]->text);
+
+  sprintf(pane->spriteList[3]->text,"LOAD BIOS\n");
+  Sprite_SetText(pane->spriteList[3], pane->spriteList[3]->text);
+
+  sprintf(pane->spriteList[4]->text,"MEMORY SET\n");
+  Sprite_SetText(pane->spriteList[4], pane->spriteList[4]->text);
+  
+  sprintf(pane->spriteList[5]->text,"SYSTEM STATUS\n");
+  Sprite_SetText(pane->spriteList[5],pane->spriteList[5]->text);
+
+  sprintf(pane->spriteList[6]->text,"OK\n");
+  Sprite_SetText(pane->spriteList[6],pane->spriteList[6]->text);
 
 }
 
