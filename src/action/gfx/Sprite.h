@@ -13,8 +13,11 @@ typedef struct sprite {
     unsigned int unknown3;
     char *text;
     char *maybeClippedString;
-    short length;
-    short unknown4[5];
+    short length; // at 0x20
+    short unknown4;
+    short positionX;
+    short positionY;
+    short unknown44[2];
     short someWidth;
     short someHeight;
     short unknown5[4];

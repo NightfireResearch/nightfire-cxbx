@@ -1,5 +1,6 @@
 #include "HUD.h"
 #include "../game/mp/multiplayer.h"
+#include "../engine/viewer.h"
 #include <stdio.h>
 
 
@@ -88,6 +89,82 @@ void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *
   sprintf(pane->spriteList[6]->text,"OK\n");
   Sprite_SetText(pane->spriteList[6],pane->spriteList[6]->text);
 
+}
+
+// NOAUTOINJECT
+void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
+
+	// Fancy animation only in singleplayer
+	if(MPSettings.isMultiplayer)
+		return;
+
+	if(!pane->enabled) { // Pane closed?
+		// Reset the "startup" sequence, unless we fully booted
+		if(OICW_mode != 2) {
+			OICW_mode = 0;
+			OICW_timer = 150;
+		}
+		// No need to update anything else
+		return;
+	}
+
+	glb_viewer[playerInfo->playerNum]->nightVisionRelated = 0;
+
+	// Process the "startup" sequence
+	switch(OICW_mode) {
+		case 0:
+		{
+			// Phase 1: Make a new line visible every 30 frames
+			OICW_timer--;
+
+			// Enable the relevant lines
+			int numVisibleLines = 5 - (OICW_timer / 30);
+			int someVariableWithTime = 472.0f - (numVisibleLines * 17);
+			for(int i = 0; i < numVisibleLines; i++) {
+				// TODO: Enable the relevant lines
+				pane->spriteList[i+2]->positionX = 0x32;
+				pane->spriteList[i+2]->positionY = someVariableWithTime;
+				pane->spriteList[i+2]->maybeEnabled = 0x1c;
+
+				// TODO: Some extra hacky logic to make 2nd line flicker?
+				if(i == 1 && numVisibleLines == 2) {
+
+				}
+			}
+
+			if(OICW_timer <= 0) {
+				// Advance to phase 2
+				OICW_mode = 1;
+				OICW_timer = 30;
+			}
+
+			break;
+		}
+		case 1:
+		{
+			// Phase 2: ???
+			OICW_timer--;
+
+			// TODO: Dismiss the things?
+
+			if(OICW_timer <= 0) {
+				// Advance to phase 3
+				OICW_mode = 2;
+			}
+
+			break;
+		}
+		case 2:
+		{
+			// Fully booted - hide all the labels
+			pane->spriteList[2]->maybeEnabled = 0xff;
+			pane->spriteList[3]->maybeEnabled = 0xff;
+			pane->spriteList[4]->maybeEnabled = 0xff;
+			pane->spriteList[5]->maybeEnabled = 0xff;
+			pane->spriteList[6]->maybeEnabled = 0xff;
+			break;
+		}
+	}
 }
 
 

@@ -21784,6 +21784,17 @@
         "prototype_string": "undefined HUD_UpdateAirPane(undefined4 param_1, undefined4 param_2, undefined4 param_3)"
     },
     {
+        "name": "HUD_UpdateOICWPane",
+        "address": "0x000b3ae0",
+        "calling_convention": "__stdcall",
+        "return_type": "undefined",
+        "param_types": [
+            "BLData *",
+            "HUDPANE_tag *"
+        ],
+        "prototype_string": "undefined __stdcall HUD_UpdateOICWPane(BLData * param_1, HUDPANE_tag * param_2)"
+    },
+    {
         "name": "HUD_UpdateCameraPane",
         "address": "0x000b3cc0",
         "calling_convention": "unknown",

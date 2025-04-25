@@ -87,6 +87,7 @@ ushort HUD_State(HUDINFO_tag *param_1, HUD_PANE_IND idx);
 
 // Implementations of individual HUD panes
 void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *param_3,obj_tag *param_4);
+void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj);
 
 

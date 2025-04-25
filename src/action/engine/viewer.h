@@ -266,7 +266,7 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     undefined1 field257_0x203;
     undefined1 field258_0x204;
     undefined1 field259_0x205;
-    undefined2 field260_0x206;
+    undefined2 nightVisionRelated;
 };
 
 
@@ -395,6 +395,10 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined1 someSwitchChannel; /* Created by retype action */
     undefined field122_0x93;
 };
+
+
+#define glb_viewer (*(viewer_tag*(*)[10])0x001f661c)
+
 
 #pragma pack(pop)
 

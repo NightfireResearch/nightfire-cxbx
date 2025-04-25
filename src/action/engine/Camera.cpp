@@ -8,7 +8,6 @@
 
 #define ScreenBlankerState U32_AT(0x001dc740)
 #define glb_world (*(world_tag**)0x001f6674)
-#define glb_viewer (*(viewer_tag*(*)[10])0x001f661c)
 #define IsWidescreen U32_AT(0x001f6610)
 
 // This doesn't seem to be written to anywhere - a constant that was incorrectly not marked as such?
