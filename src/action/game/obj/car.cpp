@@ -228,7 +228,7 @@ void Car_Deactivate(obj_tag *carObj) {
         Player_SetCamMode(playerData, 0);
         Player_ChangeSubState(playerObj, playerData->previousSubState);
         Player_Enable(playerObj, NULL, 0);
-        playerObj->animState->some_0x53 = playerObj->animState->some_0x54;
+        playerObj->animState->otherWeaponId = playerObj->animState->currentWeaponId;
 
     }
 

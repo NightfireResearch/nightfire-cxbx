@@ -61,7 +61,7 @@ typedef struct {
 	ushort spritesheetY;
 	short width;
 	short height;
-	char padding[10];
+	char padding[10]; // 0 in all instances, and can't see this ever being referenced
 } CrosshairInfo;
 #pragma pack(pop)
 static_assert(sizeof(CrosshairInfo) == 18, "CrosshairInfo size wrong");
@@ -92,10 +92,53 @@ void HUD_UpdateCrossHair(BLData *player,sprite *spr) {
 
 	viewer_tag *v = glb_viewer[player->playerNum];
 
-	int weaponId = glb_players[player->playerNum]->animState->currentWeaponId;
+	// Turn off the special weapon/gadget sight panes
+	HUD_Enable(player->hudInfo, Sight, 0, 0);
+	HUD_Enable(player->hudInfo, Camera, 0, 0);
+	HUD_Enable(player->hudInfo, OICW, 0, 0);
+	HUD_Enable(player->hudInfo, Laser, 0, 0);
+	
 
-	// 0: none (punch), 1: standard, ...?
-	CrosshairInfo *curCrosshair = &HUDCrossCoords[1]; // FIXME this is determined by the weapon type and some animation state info
+	int crosshairIdx = player->crosshairType;
+
+	// Turn on if we're using the specific weapons
+	bool weaponZoomedIn = (glb_players[player->playerNum]->animState->field_0x50 & 1);
+	if(weaponZoomedIn) {
+		int weaponId = glb_players[player->playerNum]->animState->currentWeaponId;
+		if(weapon_data[weaponId].someFlags & 0x40) { // Custom crosshair pane?
+			switch(weaponId) {
+				case 0x1a:
+				case 0x1b:
+					// OICW
+					HUD_Enable(player->hudInfo, OICW, 1, 0);
+					spr->maybeEnabled = 0xff;
+					return;
+				case 0x32:
+				case 0x33:
+					// Laser
+					HUD_Enable(player->hudInfo, Laser, 1, 0);
+					spr->maybeEnabled = 0xff;
+					return;
+				case 0x55:
+					// Camera (upgraded)
+					glb_players[player->playerNum]->animState->currentWeaponId = 0x54;
+					glb_players[player->playerNum]->animState->otherWeaponId = 0x54;
+					// Intentional fallthrough
+				case 0x54:
+					// Camera
+					HUD_Enable(player->hudInfo, Camera, 1, 0);
+					spr->maybeEnabled = 0xff;
+					return;
+				default:
+					HUD_Enable(player->hudInfo, Sight, 1, 0);
+					spr->maybeEnabled = 0xff;
+					return;
+			}
+		}
+		crosshairIdx = 1; // Zoomed-in but no custom pane; use the standard zoomed crosshair
+	}
+
+	CrosshairInfo *curCrosshair = &HUDCrossCoords[crosshairIdx];
 	spr->spritesheetX = curCrosshair->spritesheetX;
 	spr->spritesheetY = curCrosshair->spritesheetY;
 	spr->onscreenWidth = curCrosshair->width;
@@ -124,7 +167,91 @@ void HUD_UpdateCrossHair(BLData *player,sprite *spr) {
 
 // UNINJECTABLE - custom calling convention
 void HUD_MonitorNightSight(BLData *player) {
-	// TODO: This
+
+	if(player == NULL)
+		return;
+
+	viewer_tag* vwr = glb_viewer[player->playerNum];
+	obj_tag* obj = glb_players[player->playerNum];
+
+	if(player->someNightVisionThing == NULL)
+		return;
+
+	if(obj->curState != 1)
+		return;
+
+	if(MPSettings.isMultiplayer)
+		return;
+
+	if(obj->objectType == OBJECTTYPE_DEAD_PLAYER)
+		return;
+
+	switch(obj->subState) {
+		case MovementType_Walk: 	// == 0
+		case MovementType_Swim: 	// == 3
+		case MovementType_Crouch: 	// == 4
+		case MovementType_Decoding: // == 5
+			break;
+		default: // Everything else (not 0, and either < 3 or > 5)
+			return;
+	}
+
+	if(vwr == NULL)
+		return;
+
+	if( (obj->animState->currentWeaponId == 0x5d) && (player->weaponObject->curState == 0) ) {	
+		
+		vwr->nightVisionRelated = 1;
+		HUD_Enable(player->hudInfo, NightSight, 1, 0);
+		obj->animState->otherWeaponId = obj->animState->thirdWeaponId;
+		player->nightVisionActive = 1;
+
+		int otherId = obj->animState->otherWeaponId;
+		if((otherId == 0x47) || ((0x5c < otherId) && (otherId < 0x5f))) {
+			obj->animState->otherWeaponId = 1;
+			return;
+		}
+	
+
+	} else {
+	
+		if(Input_Action(player->playerNum, 0xd, 4) && !(obj->animState->field_0x50 & 1)) { // Activate night sight button pressed - cycle modes
+
+			if(!player->nightVisionActive) {
+				obj->animState->otherWeaponId = 0x5d;
+			} else {
+
+				switch(vwr->nightVisionRelated) {
+					case 0:
+						vwr->nightVisionRelated = 1;
+						HUD_Enable(player->hudInfo, NightSight, 1, 0);
+						break;
+					case 1:
+						vwr->nightVisionRelated = 2;
+						HUD_Enable(player->hudInfo, NightSight, 0, 0);
+						HUD_Enable(player->hudInfo, Xray, 1, 0);
+						break;
+					case 2:
+						vwr->nightVisionRelated = 0;
+						HUD_Enable(player->hudInfo, NightSight, 0, 0);
+						HUD_Enable(player->hudInfo, Xray, 0, 0);
+						break;
+				}
+
+			}
+
+		}
+
+		// Now check state?
+		if(vwr->nightVisionRelated == 0) {
+			// Calculate some time / battery of the goggles?
+		}
+ 
+		// TODO: If out of battery, turn off night sight and xray, and recharge
+
+
+	}
+
 }
 
 // NOAUTOINJECT
@@ -147,8 +274,8 @@ void HUD_Update(BLData *playerInfo, obj_tag *obj) {
 			}
 		} else {
 			// Copy the sprite enablement state from the base pane
-			for(int j = 0; j < pane->numSprites; j++) {
-				//pane->spriteList[j]->maybeEnabled = pane->base->spriteInfo[j]->maybeEnabled;
+			for(int j = 0; j < pane->base->numSprites; j++) {
+				pane->spriteList[j]->maybeEnabled = pane->base->spriteInfo[j].maybeEnabled;
 			}
 		}
 		// Run the update function (regardless of whether it's enabled)

@@ -25,12 +25,9 @@ typedef enum {
     Ronin,
     Laser,
     Space,
-    MsgPickupStatus
+    MsgPickupStatus,
+    NUM_PANES
   } HUD_PANE_IND;
-
-  
-#define NUM_PANES 22
-
 
 #pragma pack(push, 1)
 
@@ -39,12 +36,22 @@ typedef enum {
 typedef void (*HUDPANE_createFunc)(BLData*, HUDPANE_tag*, HUDPANECREATE_tag*, obj_tag*);
 typedef void (*HUDPANE_updateFunc)(BLData*, HUDPANE_tag*, obj_tag*);
 
+typedef struct HUDSPRITEINFO {
+    char pad[0x8];
+    char maybeEnabled;
+    char pad2[0x2c - 0x8 - 1];
+} HUDSPRITEINFO;
+
+static_assert(sizeof(HUDSPRITEINFO) == 0x2c, "Size of HUDSPRITEINFO is incorrect");
+static_assert(offsetof(HUDSPRITEINFO, maybeEnabled) == 0x8, "Offset of maybeEnabled is incorrect");
+
 typedef struct HUDPANECREATE_tag {
     char pad[8];
     HUDPANE_createFunc createFunc;
     HUDPANE_updateFunc updateFunc;
-    void* spriteInfo; // FIXME
-    char pad2[8];
+    HUDSPRITEINFO *spriteInfo;
+    ushort numSprites;
+    char pad2[6];
 } HUDPANECREATE_tag;
 
 typedef struct HUDPANE_tag {
