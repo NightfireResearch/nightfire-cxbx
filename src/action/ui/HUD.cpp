@@ -66,8 +66,17 @@ typedef struct {
 #pragma pack(pop)
 static_assert(sizeof(CrosshairInfo) == 18, "CrosshairInfo size wrong");
 
-// FIXME: Confirm size of array
-#define HUDCrossCoords (*(CrosshairInfo(*)[100])(0x00181348))
+// Several unused crosshairs in the array...
+// 0: none (punch)
+// 1: zoomed
+// 2: standard
+// 3: civilian (disallowed target)
+// 4: door
+// 5: disallowed door?
+// 6: rectangle with arrow up through it
+// 7: 6 but with disallowed circle/strikethrough
+// 8: camera
+#define HUDCrossCoords (*(CrosshairInfo(*)[9])(0x00181348))
 
 // UNINJECTABLE - custom calling convention
 void HUD_UpdateCrossHair(BLData *player,sprite *spr) {
