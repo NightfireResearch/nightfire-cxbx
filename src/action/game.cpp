@@ -109,12 +109,6 @@ LAB_0006aafe:
 #define StackIndex U16_AT(0x0017bfe8)
 #define glb_viewer_6 U32_AT(0x001f6634)
 #define SkipCodeFrame U8_AT(0x001f6564)
-#define VIDEO_FRAME_RATE U32_AT(0x0017c0f0)
-#define FRAME_RATE_INT U32_AT(0x0017c0f4)
-#define _FRAME_RATE FLOAT_AT(0x0017c0f8)
-#define FRAME_RATE_DIV FLOAT_AT(0x0017c0fc)
-#define FRAME_RATE_MUL FLOAT_AT(0x0017c100)
-#define REC_FRAME_RATE FLOAT_AT(0x0017c104)
 #define GameStateStack (*(uint (*)[64])0x0017bff0) // Not zero-initialised - first entry must be 1
 
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))

@@ -242,19 +242,30 @@ void HUD_MonitorNightSight(BLData *player) {
 
 		}
 
-		// Now check state?
+		// Recharge if the goggles are off
 		if(vwr->nightVisionRelated == 0) {
-			// Calculate some time / battery of the goggles?
+			// Recharge to a maximum of 1800 frames (30 seconds)
+			player->nightVisionTimer += FRAME_RATE_MUL * 3;
+			if(player->nightVisionTimer > 1800) 
+				player->nightVisionTimer = 1800;
+		} else {
+			// Drain the battery if the goggles are on
+			player->nightVisionTimer -= FRAME_RATE_MUL;
 		}
  
-		// TODO: If out of battery, turn off night sight and xray, and recharge
-
+		// If the battery is depleted, turn off night sight and xray and enter recharge state
+		if(player->nightVisionTimer <= 0) {
+			player->nightVisionTimer = 0;
+			vwr->nightVisionRelated = 0;
+			HUD_Enable(player->hudInfo, NightSight, 0, 0);
+			HUD_Enable(player->hudInfo, Xray, 0, 0);
+		}
 
 	}
 
 }
 
-// NOAUTOINJECT
+// AUTOINJECT
 void HUD_Update(BLData *playerInfo, obj_tag *obj) {
 
 	if(playerInfo == NULL || obj == NULL || playerInfo->hudInfo == NULL)
@@ -281,8 +292,6 @@ void HUD_Update(BLData *playerInfo, obj_tag *obj) {
 		// Run the update function (regardless of whether it's enabled)
 		if((*pane->updateFunction) != NULL)
 			(*pane->updateFunction)(playerInfo, pane, obj);
-
-		// TODO: Some small timer stuff?
 
 	}
 }

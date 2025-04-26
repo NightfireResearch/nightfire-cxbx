@@ -18,7 +18,9 @@ typedef struct BLData {
     obj_tag* weaponObject;
     char _pad_111[0x808-4-8-0x770];
     obj_tag* remoteControlDevice; // 0x808
-    char _pad_2[0xc6];
+    char _pad_2[0x8b0-0x808-4];
+    float nightVisionTimer; // 0x8b0
+    char _pad_22[0x8d2-0x8b0-4];
     short previousSubState; //0x8d2
     char _pad_3[6];
     char someNightVisionThing;
@@ -34,6 +36,7 @@ typedef struct BLData {
 static_assert(offsetof(BLData, hudInfo) == 0x770, "Offset of hudInfo not correct");
 static_assert(offsetof(BLData, crosshairOffsetX) == 0xe0, "Offset of crosshairOffsetX not correct");
 static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisionActive not correct");
+static_assert(offsetof(BLData, nightVisionTimer) == 0x8b0, "Offset of nightVisionTimer not correct");
 
 
 //char (*__kaboom)[offsetof(BLData,playerNum)] = 1;
