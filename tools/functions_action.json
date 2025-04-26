@@ -21189,9 +21189,9 @@
         "return_type": "void",
         "param_types": [
             "obj_tag *",
-            "int"
+            "BLData *"
         ],
-        "prototype_string": "void __cdecl FUN_000aeac0(obj_tag * param_1, int param_2)"
+        "prototype_string": "void __cdecl FUN_000aeac0(obj_tag * param_1, BLData * param_2)"
     },
     {
         "name": "Player_Climb",
@@ -21730,15 +21730,19 @@
         "prototype_string": "void __cdecl HUD_FixMP(sprite * param_1, short playerNum)"
     },
     {
-        "name": "FUN_000b2870",
+        "name": "HUD_UpdateMPHealthPane",
         "address": "0x000b2870",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_000b2870()"
+        "param_types": [
+            "BLData *",
+            "HUDPANE_tag *",
+            "obj_tag *"
+        ],
+        "prototype_string": "undefined __stdcall HUD_UpdateMPHealthPane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * param_3)"
     },
     {
-        "name": "FUN_000b2b50",
+        "name": "HUD_UpdateHealthPane",
         "address": "0x000b2b50",
         "calling_convention": "unknown",
         "return_type": "undefined",
@@ -21747,7 +21751,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000b2b50(undefined4 param_1, undefined4 param_2, undefined4 param_3)"
+        "prototype_string": "undefined HUD_UpdateHealthPane(undefined4 param_1, undefined4 param_2, undefined4 param_3)"
     },
     {
         "name": "HUD_UpdateStatusPane",
@@ -22020,7 +22024,7 @@
         "prototype_string": "undefined FUN_000b62e0()"
     },
     {
-        "name": "FUN_000b6330",
+        "name": "HUD_CreateMPHealthPane",
         "address": "0x000b6330",
         "calling_convention": "unknown",
         "return_type": "undefined",
@@ -22030,7 +22034,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000b6330(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
+        "prototype_string": "undefined HUD_CreateMPHealthPane(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
     },
     {
         "name": "HUD_CreateMissionStatusPane",
@@ -22046,7 +22050,7 @@
         "prototype_string": "undefined HUD_CreateMissionStatusPane(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
     },
     {
-        "name": "FUN_000b6490",
+        "name": "HUD_CreateObjectiveStatusPane",
         "address": "0x000b6490",
         "calling_convention": "unknown",
         "return_type": "undefined",
@@ -22056,7 +22060,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000b6490(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
+        "prototype_string": "undefined HUD_CreateObjectiveStatusPane(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
     },
     {
         "name": "HUD_CreateInfoStatusPane",
@@ -22072,7 +22076,7 @@
         "prototype_string": "undefined HUD_CreateInfoStatusPane(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
     },
     {
-        "name": "FUN_000b6540",
+        "name": "HUD_CreatePickupStatusPane",
         "address": "0x000b6540",
         "calling_convention": "unknown",
         "return_type": "undefined",
@@ -22082,7 +22086,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000b6540(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
+        "prototype_string": "undefined HUD_CreatePickupStatusPane(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)"
     },
     {
         "name": "HUD_CreateOICWPane",

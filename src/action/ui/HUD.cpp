@@ -1,4 +1,5 @@
 #include "HUD.h"
+#include "../input.h"
 #include "../game/mp/multiplayer.h"
 #include "../engine/viewer.h"
 #include <stdio.h>
@@ -52,6 +53,102 @@ ushort HUD_State(HUDINFO_tag *param_1, HUD_PANE_IND idx) {
 
 	return param_1->pane[idx].state;
 
+}
+
+#pragma pack(push, 1)
+typedef struct {
+	ushort spritesheetX; // position in a sprite sheet?
+	ushort spritesheetY;
+	short width;
+	short height;
+	char padding[10];
+} CrosshairInfo;
+#pragma pack(pop)
+static_assert(sizeof(CrosshairInfo) == 18, "CrosshairInfo size wrong");
+
+// FIXME: Confirm size of array
+#define HUDCrossCoords (*(CrosshairInfo(*)[100])(0x00181348))
+
+// UNINJECTABLE - custom calling convention
+void HUD_UpdateCrossHair(BLData *player,sprite *spr) {
+	
+	if(spr == NULL)
+		return;
+	
+	if(player->hudInfo->pane[Blood].enabled || player->hudInfo->pane[SecCam].enabled) {
+		// Hide the crosshair when player is dead or watching a security camera feed
+		spr->maybeEnabled = 0xff;
+		return;
+	}
+
+	viewer_tag *v = glb_viewer[player->playerNum];
+
+	int weaponId = glb_players[player->playerNum]->animState->currentWeaponId;
+
+	// 0: none (punch), 1: standard, ...?
+	CrosshairInfo *curCrosshair = &HUDCrossCoords[1]; // FIXME this is determined by the weapon type and some animation state info
+	spr->spritesheetX = curCrosshair->spritesheetX;
+	spr->spritesheetY = curCrosshair->spritesheetY;
+	spr->onscreenWidth = curCrosshair->width;
+	spr->onscreenHeight = curCrosshair->height;
+	spr->spritesheetWidth = curCrosshair->width;
+	spr->spritesheetHeight = curCrosshair->height;
+	
+	float posX = player->crosshairOffsetX * v->width * 0.5 + v->width * 0.5;
+	float posY = -player->crosshairOffsetY * v->height * 0.5 + v->height * 0.5;
+	spr->positionX = (short)posX;
+	spr->positionY = (short)posY;
+
+	spr->colourTint =  (v->nightVisionRelated == 1 ? 0x208020ff : 0xff0000ff);
+
+	spr->maybeEnabled = 0x31;
+
+	// Override if the player has configured to hide the crosshair
+	if(!PlayerInputs[player->playerNum].crosshairsEnabled)
+		spr->maybeEnabled = 0xff;
+	
+	// Override in some cam mode?
+	if(player->camMode)
+		spr->maybeEnabled = 0xff;
+	
+}
+
+// UNINJECTABLE - custom calling convention
+void HUD_MonitorNightSight(BLData *player) {
+	// TODO: This
+}
+
+// NOAUTOINJECT
+void HUD_Update(BLData *playerInfo, obj_tag *obj) {
+
+	if(playerInfo == NULL || obj == NULL || playerInfo->hudInfo == NULL)
+		return;
+
+	HUD_UpdateCrossHair(playerInfo, playerInfo->hudInfo->crosshairSprite);
+	HUD_MonitorNightSight(playerInfo);
+
+	for(int i = 0; i < NUM_PANES; i++) {
+	
+		HUDPANE_tag *pane = &(playerInfo->hudInfo->pane[i]);
+
+		if(!pane->enabled) {
+			// Hide all sprites on this pane
+			for(int j = 0; j < pane->numSprites; j++) {
+				pane->spriteList[j]->maybeEnabled = 0xff;
+			}
+		} else {
+			// Copy the sprite enablement state from the base pane
+			for(int j = 0; j < pane->numSprites; j++) {
+				//pane->spriteList[j]->maybeEnabled = pane->base->spriteInfo[j]->maybeEnabled;
+			}
+		}
+		// Run the update function (regardless of whether it's enabled)
+		if((*pane->updateFunction) != NULL)
+			(*pane->updateFunction)(playerInfo, pane, obj);
+
+		// TODO: Some small timer stuff?
+
+	}
 }
 
 // AUTOGEN

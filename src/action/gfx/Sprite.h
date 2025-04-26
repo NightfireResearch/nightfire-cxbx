@@ -18,9 +18,12 @@ typedef struct sprite {
     short positionX;
     short positionY;
     short unknown44[2];
-    short someWidth;
-    short someHeight;
-    short unknown5[4];
+    short onscreenWidth;
+    short onscreenHeight;
+    short spritesheetX;
+    short spritesheetY;
+    short spritesheetWidth;
+    short spritesheetHeight;
     char maybeEnabled; // 0x27 results in it being visible, 0xff results in it being invisible? Unclear.
     char linkedViewer;
     char unknown7[2];

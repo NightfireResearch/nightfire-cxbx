@@ -51,11 +51,11 @@ typedef struct HUDPANE_tag {
     HUDPANECREATE_tag *base;
     char unknown[4];
     sprite** spriteList;
-    void* updateFunction;
+    HUDPANE_updateFunc updateFunction;
     short unknown2[2];
     short width;
     short height;
-    short unknown3;
+    short numSprites;
     ushort state;
     bool enabled;
     char pad2[2];
@@ -68,7 +68,7 @@ static_assert(offsetof(HUDPANE_tag, enabled) == 0x1c, "Offset of enabled is inco
 static_assert(offsetof(HUDPANE_tag, maybeCanBeEnabled) == 0x1f, "Offset of maybeCanBeEnabled is incorrect");
 
 typedef struct HUDINFO_tag {
-    void* crosshairSprite; // FIXME sprite*
+    sprite* crosshairSprite;
     int maybeUnused;
     HUDPANE_tag pane[NUM_PANES];
 } HUDINFO_tag;
@@ -84,6 +84,7 @@ void HUD_Enable(HUDINFO_tag *param_1, HUD_PANE_IND idx, char enable, ushort stat
 void HUD_Reset(BLData *param_1);
 void HUD_DisableAll(BLData *param_1);
 ushort HUD_State(HUDINFO_tag *param_1, HUD_PANE_IND idx);
+void HUD_Update(BLData *playerInfo, obj_tag *obj);
 
 // Implementations of individual HUD panes
 void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *param_3,obj_tag *param_4);

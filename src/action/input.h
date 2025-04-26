@@ -17,7 +17,7 @@ typedef struct {
     undefined field5_0x5;
     undefined field6_0x6;
     undefined field7_0x7;
-    undefined field8_0x8;
+    undefined crosshairsEnabled;
     undefined1 vibrationEnabled; /* Created by retype action */
     undefined1 autoSwitchBetterWeapon; /* Created by retype action */
     undefined field11_0xb;
