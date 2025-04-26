@@ -162,7 +162,7 @@ obj_tag* Break_Create(_VECTOR *position, _VECTOR *rotation, celglist_tag* celgl,
   ObjData_Break *objBreak = (ObjData_Break *)obj->extraObjectData;
   obj->objectType = OBJECTTYPE_BREAK;
   Control_SetGList(obj, celgl);
-  build_LinkToRoom(obj, '\0', glb_world);
+  build_LinkToRoom(obj, '\0', (level_tag*)glb_world);
   objBreak->breakType = (BreakType)params->breakType;
   
   float health = params->health;

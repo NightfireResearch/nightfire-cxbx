@@ -122,12 +122,6 @@ LAB_0006aafe:
 #define GlobalVars (*((GlobalVars_t*)0x001f6568))
 #define PTPDATA (*((sNightFireShared_tag*)0x001d7e90))
 
-#define CONST_ZERO_VECTOR (*((_VECTOR*)0x0029d728))
-#define GRAVITY_VECTOR (*((_VECTOR*)0x001f6648))
-#define CONST_UP_VECTOR (*((_VECTOR*)0x0029d71c))
-#define MAYBE_CONST_FORWARD_VECTOR (*((_VECTOR*)0x0029d6d4))
-#define MAT_IDENTITY (*((_MATRIX*)0x0029d6e0))
-
 #define NewScoresRef PTR_AT(0x002790a0)
 
 #define HintsEnabled U32_AT(0x001f6618)

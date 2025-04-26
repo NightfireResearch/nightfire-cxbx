@@ -209,9 +209,6 @@ void Car_Init(void) {
 
 }
 
-#define glb_blokes (*(BLData*(*)[4])(0x002774b8))
-#define glb_players (*(obj_tag*(*)[4])(0x001f6654))
-#define CONST_UP_VECTOR (*(_VECTOR*)0x0029d71c)
 
 // AUTOINJECT
 void Car_Deactivate(obj_tag *carObj) {

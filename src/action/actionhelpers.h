@@ -51,4 +51,16 @@ typedef short MallocFlags;
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
+// globals and constants
+#define glb_viewer (*(viewer_tag*(*)[10])0x001f661c)
+#define glb_world (*(world_tag**)0x001f6674)
+#define glb_blokes (*(BLData*(*)[4])(0x002774b8))
+#define glb_players (*(obj_tag*(*)[4])(0x001f6654))
+
+#define CONST_UP_VECTOR (*(_VECTOR*)0x0029d71c)
+#define CONST_ZERO_VECTOR (*((_VECTOR*)0x0029d728))
+#define GRAVITY_VECTOR (*((_VECTOR*)0x001f6648))
+#define MAYBE_CONST_FORWARD_VECTOR (*((_VECTOR*)0x0029d6d4))
+#define MAT_IDENTITY (*((_MATRIX*)0x0029d6e0))
+
 #endif //ACTIONHELPERS_H_

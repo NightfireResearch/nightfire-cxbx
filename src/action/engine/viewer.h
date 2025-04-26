@@ -397,8 +397,6 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
 };
 
 
-#define glb_viewer (*(viewer_tag*(*)[10])0x001f661c)
-
 
 #pragma pack(pop)
 

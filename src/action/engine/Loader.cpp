@@ -11,7 +11,6 @@
 #define DirFileHash ((HASHCODE)U32_AT(0x002791c8))
 #define dirFileBuf (*(uint**)(0x00279168))
 #define LoadableIndex U8_AT(0x00279180)
-#define CONST_ZERO_VECTOR (*(_VECTOR *)0x0029d728)
 
 // AUTOGEN
 void AnimPostLoadInit(void);
