@@ -119,7 +119,7 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 
 			// Enable the relevant lines
 			int numVisibleLines = 5 - (OICW_timer / 30);
-			int linePositionY = 472.0f - (numVisibleLines * 17);
+			int linePositionY = 440.0f - (numVisibleLines * 17); // FIXME: Depends on screen resolution vertically. PS2 uses 472, Xbox uses 440 (512x512 vs 640x480)
 			for(int i = 0; i < numVisibleLines; i++) {
 				// TODO: Enable the relevant lines
 				pane->spriteList[i+2]->positionX = 0x32;
