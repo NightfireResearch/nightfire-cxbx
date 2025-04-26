@@ -85,13 +85,15 @@ def generate(side):
     # Generate an injection entry
 
     injections = generate_auto_inject(side, ghidra_funcs)
+    uninjectable = gather_functions_with_tag("UNINJECTABLE", side=side)
 
     # Print statistics
     num_injecions = len(injections)
+    num_uninjectable = len(uninjectable)
     total_funcs = len(ghidra_funcs)
-    ratio_injected = num_injecions / total_funcs
+    ratio_complete = (num_injecions + num_uninjectable) / total_funcs
 
-    print(f"Found {num_injecions} injections for {total_funcs} known functions ({ratio_injected*100:.2f}%)")
+    print(f"Found {num_injecions} injections, {num_uninjectable} uninjectable but implemented, of {total_funcs} known functions ({ratio_complete*100:.2f}%)")
 
     auto_funcs = generate_auto_funcs(side, ghidra_funcs)
     auto_func_count = len(auto_funcs)

@@ -41,6 +41,7 @@ void Car_CollisionHandler(obj_tag* me) {
 // baseObj is const? or it's a pointer to a const obj_tag?
 // Only used in here, no need to inject once we've reimplemented Car_Create
 // + we cannot inject, LTCG has used special registers
+// UNINJECTABLE - custom calling convention
 void Car_InitBits(CAR_INFO *tankInfo, obj_tag *baseObj) {
 
     HASHCODE turretHashcode;
