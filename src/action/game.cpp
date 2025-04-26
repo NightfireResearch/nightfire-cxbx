@@ -439,7 +439,8 @@ ulonglong psiGetTimeIn100ths(void) {
 }
 
 
-// Only used in GameFlow_Main, so no need to inject
+// Only used in GameFlow_Main, so technically no need to inject, but helps us track project completion
+// AUTOINJECT
 void bootup_bootup(void) {
 
   uint *puVar3;
@@ -638,7 +639,8 @@ void GameFlow_Main(void) {
   return;
 }
 
-// No need for autoinjection, only called once from the function immediately below
+// No need for autoinjection, only called once from the function immediately below. Do it anyway to track project completion
+// AUTOINJECT
 void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate) {
 
   VIDEO_FRAME_RATE = videoFrameRate;
