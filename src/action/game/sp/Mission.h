@@ -5,7 +5,7 @@
 
 
 void Mission_SetFailLabel(Action_TranslatedText text);
-
+void Mission_SetMapHCode(undefined4 param_1);
 
 
 
