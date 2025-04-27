@@ -24,7 +24,7 @@ typedef struct {
     undefined4 field0_0x0;
     undefined4 field1_0x4;
     HASHCODE NextLevelHashcode;
-    undefined4 CurrentLevelHashcode;
+    HASHCODE CurrentLevelHashcode;
     undefined4 MovieHashcode;
     undefined4 field5_0x14;
     undefined4 ReloadGame;
