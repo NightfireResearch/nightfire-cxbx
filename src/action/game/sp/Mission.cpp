@@ -60,3 +60,41 @@ int Mission_NumVisObjectives(void) {
 
     return count;
 }
+
+
+// AUTOINJECT
+void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum) {
+
+    int objWithinLevel = 0;
+
+    for(int i = 0; i < ARRAY_SIZE(MissionData); i++) {
+
+        if(MissionData[i].baseLevel != BaseMap)
+            continue;
+
+        if(ThisOrderNum < MissionData[i].idxInOrder) // The missions are sorted, if we haven't found it then the index is bad somehow
+            return;
+
+        for(int j = 0; j < MissionData[i].numObjectives; j++) {
+            Objective *o = &MissionData[i].objectives[j];
+
+            if(o->status != 0 && o->status != 1) {
+                if(objWithinLevel == objectiveNum) {
+                    state->statusText = (
+                        (o->status == 2) ? 0x2000001 :
+                        (o->status == 3) ? 0x2000000 :
+                        (o->status == 4) ? 0x16f :
+                        0x170 );
+                    state->name = o->name;
+                    state->description = o->description;
+                    state->status = o->status;
+                    return;
+                }
+                objWithinLevel++;
+            }
+        }
+
+
+    }
+
+}
