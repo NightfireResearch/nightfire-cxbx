@@ -20,7 +20,7 @@ void Mission_SetMapHCode(HASHCODE param_1) {
 
 // AUTOINJECT
 HASHCODE Mission_BaseMapHCode(void) {
-  if(MPSettings.isMultiplayer) {
+  if(!MPSettings.isMultiplayer) {
     return (HASHCODE)BaseMap;
   }
   return GameState.CurrentLevelHashcode;
