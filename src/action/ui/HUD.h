@@ -56,7 +56,8 @@ typedef struct HUDPANE_tag {
     short numSprites;
     ushort state;
     bool enabled;
-    char pad2[2];
+    char field_0x1d;
+    char field_0x1e;
     char maybeCanBeEnabled;
 } HUDPANE_tag;
 
@@ -77,7 +78,7 @@ static_assert(offsetof(HUDINFO_tag, pane) == 0x8, "Offset of pane is incorrect")
 
 #pragma pack(pop)
 
-
+void HUD_Init(BLData *player, obj_tag *obj);
 void HUD_Enable(HUDINFO_tag *param_1, HUD_PANE_IND idx, char enable, ushort state);
 void HUD_Reset(BLData *param_1);
 void HUD_DisableAll(BLData *param_1);

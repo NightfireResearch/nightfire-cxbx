@@ -2,7 +2,9 @@
 #include "../input.h"
 #include "../game/mp/multiplayer.h"
 #include "../engine/viewer.h"
+#include "../memory.h"
 #include <stdio.h>
+#include <string.h>
 
 
 // AUTOINJECT
@@ -298,6 +300,72 @@ void HUD_Update(BLData *playerInfo, obj_tag *obj) {
 
 // AUTOGEN
 void HUD_CreateShrink(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *param_3,obj_tag *param_4);
+
+#define CrossHair (*(SpriteInfo*)0x0017f778)
+#define ttimer I16_AT(0x002790b8)
+#define ctimer I16_AT(0x002790bc)
+
+// MPPaneList: List of 22 pointers to HUDPANECREATE_tag structures at memory address 0x001812f0
+#define MPPaneList (*(HUDPANECREATE_tag *(*)[NUM_PANES])0x001812f0)
+#define PaneList (*(HUDPANECREATE_tag *(*)[NUM_PANES])0x00180ee0)
+
+// AUTOINJECT
+void HUD_Init(BLData *player, obj_tag *obj) {
+	
+	if((obj != NULL) && (obj->objectType == OBJECTTYPE_DRONE || obj->objectType == OBJECTTYPE_DEAD_DRONE))
+		return;
+
+	player->hudInfo = (HUDINFO_tag*)Mem_Malloc(sizeof(HUDINFO_tag), 0x2704, 0);
+
+	if(player->hudInfo == NULL)
+		return;
+
+	memset(player->hudInfo->pane, 0, sizeof(HUDPANE_tag) * NUM_PANES);
+
+	// These 4 lines are probably not needed?!
+	player->hudInfo->maybeUnused = 0;
+	ttimer = 0;
+	ctimer = 0;
+	player->hudInfo->crosshairSprite = NULL;
+
+
+	player->hudInfo->crosshairSprite = Sprite_Create2(&CrossHair);
+	if(player->hudInfo->crosshairSprite != NULL)
+		Sprite_Link2Viewer(player->hudInfo->crosshairSprite, player->playerNum);
+
+	
+	for(int i = 0; i < NUM_PANES; i++) {
+		
+		HUDPANECREATE_tag *paneCreate = (MPSettings.isMultiplayer ? MPPaneList[i] : PaneList[i]);
+
+		if((paneCreate == NULL) || (paneCreate->createFunc == NULL)) {
+			player->hudInfo->pane[i].enabled = 0;
+			player->hudInfo->pane[i].maybeCanBeEnabled = 0;
+			continue;
+		}
+
+		//printf("Processing pane %i, paneCreate = %p, createFunc = %p\n", i, paneCreate, paneCreate->createFunc);
+
+		player->hudInfo->pane[i].enabled = 1;
+		player->hudInfo->pane[i].maybeCanBeEnabled = 1;
+		player->hudInfo->pane[i].field_0x1d = 0;
+		player->hudInfo->pane[i].field_0x1e = 0;
+		player->hudInfo->pane[i].base = paneCreate;
+
+		// Call the create function
+		(*paneCreate->createFunc)(player, &(player->hudInfo->pane[i]), paneCreate, obj);
+
+		// If possible, also call the update function
+		if((*paneCreate->updateFunc) != NULL)
+			(*paneCreate->updateFunc)(player, &(player->hudInfo->pane[i]), obj);
+
+
+	}
+
+	HUD_Reset(player);
+	
+	
+}
 
 #define OICW_timer I16_AT(0x002790b4)
 #define OICW_mode U8_AT(0x002790ae)
