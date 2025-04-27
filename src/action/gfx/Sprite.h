@@ -1,7 +1,8 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
-struct sprite;
+#include "../actionhelpers.h"
+
 
 #pragma pack(push, 1)
 
@@ -32,10 +33,20 @@ typedef struct sprite {
 
 static_assert(sizeof(sprite) == 0x44, "Wrong size for sprite");
 
+typedef struct SpriteInfo {
+    char pad[0x8];
+    char maybeEnabled;
+    char pad2[0x2c - 0x8 - 1];
+} SpriteInfo;
+
+static_assert(sizeof(SpriteInfo) == 0x2c, "Size of SpriteInfo is incorrect");
+static_assert(offsetof(SpriteInfo, maybeEnabled) == 0x8, "Offset of maybeEnabled is incorrect");
 
 #pragma pack(pop)
 
 
 void Sprite_SetText(sprite *param_1,char *param_2);
+sprite* Sprite_Create2(SpriteInfo *param_1);
+void Sprite_Link2Viewer(sprite *spr,ushort playerNum);
 
 #endif // SPRITE_H

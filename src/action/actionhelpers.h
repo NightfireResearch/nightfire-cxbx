@@ -17,6 +17,8 @@ typedef struct map_tag map_tag;
 typedef struct BLData BLData;
 typedef struct DYNAMICSOUNDS DYNAMICSOUNDS;
 typedef struct AnimState AnimState;
+typedef struct sprite sprite;
+typedef struct SpriteInfo SpriteInfo;
 
 // Hashcode, SFX and translated text names
 #include "assets.h"

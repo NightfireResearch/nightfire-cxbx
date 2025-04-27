@@ -21,3 +21,13 @@ void Sprite_SetText(sprite *spr, char *text) {
     Sprite_SetFmt(spr, spr->maybeClippedString);
 
 }
+
+// AUTOGEN
+sprite* Sprite_Create2(SpriteInfo *param_1);
+
+// AUTOINJECT
+void Sprite_Link2Viewer(sprite *spr,ushort playerNum) {
+    if(spr == NULL)
+        return;
+    spr->linkedViewer = playerNum;
+}
