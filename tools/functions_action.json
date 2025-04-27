@@ -19233,10 +19233,10 @@
     {
         "name": "Mission_NumVisObjectives",
         "address": "0x0009be20",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "return_type": "int",
         "param_types": [],
-        "prototype_string": "int __stdcall Mission_NumVisObjectives(void)"
+        "prototype_string": "int Mission_NumVisObjectives(void)"
     },
     {
         "name": "Mission_ObjectiveState",
