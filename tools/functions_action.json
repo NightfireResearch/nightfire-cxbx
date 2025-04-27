@@ -13210,13 +13210,13 @@
     {
         "name": "hashtable_set_sprite",
         "address": "0x0006b670",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "bool",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "sprite *",
+            "HASHCODE"
         ],
-        "prototype_string": "undefined hashtable_set_sprite(undefined4 param_1, undefined4 param_2)"
+        "prototype_string": "bool __stdcall hashtable_set_sprite(sprite * param_1, HASHCODE param_2)"
     },
     {
         "name": "FUN_0006b6d0",
@@ -19231,12 +19231,12 @@
         "prototype_string": "void __cdecl Mission_SetStatus(undefined4 param_1)"
     },
     {
-        "name": "FUN_0009be20",
+        "name": "Mission_NumVisObjectives",
         "address": "0x0009be20",
         "calling_convention": "__stdcall",
         "return_type": "int",
         "param_types": [],
-        "prototype_string": "int __stdcall FUN_0009be20(void)"
+        "prototype_string": "int __stdcall Mission_NumVisObjectives(void)"
     },
     {
         "name": "Mission_ObjectiveState",
@@ -21748,14 +21748,14 @@
     {
         "name": "HUD_UpdateHealthPane",
         "address": "0x000b2b50",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "BLData *",
+            "HUDPANE_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined HUD_UpdateHealthPane(undefined4 param_1, undefined4 param_2, undefined4 param_3)"
+        "prototype_string": "undefined __cdecl HUD_UpdateHealthPane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * param_3)"
     },
     {
         "name": "HUD_UpdateStatusPane",
@@ -24357,12 +24357,12 @@
         "prototype_string": "void __cdecl FUN_000c6fa0(undefined4 param_1)"
     },
     {
-        "name": "FUN_000c7020",
+        "name": "MusicFadeDown",
         "address": "0x000c7020",
         "calling_convention": "__stdcall",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000c7020(void)"
+        "prototype_string": "void __stdcall MusicFadeDown(void)"
     },
     {
         "name": "FUN_000c70a0",
@@ -24780,7 +24780,7 @@
         "prototype_string": "void __cdecl SFXUpdateEnding(int * * param_1, undefined4 * param_2)"
     },
     {
-        "name": "FUN_000ca5e0",
+        "name": "SFXStartMusic",
         "address": "0x000ca5e0",
         "calling_convention": "__cdecl",
         "return_type": "void",
@@ -24788,7 +24788,7 @@
             "int",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl FUN_000ca5e0(int param_1, undefined4 param_2)"
+        "prototype_string": "void __cdecl SFXStartMusic(int param_1, undefined4 param_2)"
     },
     {
         "name": "UpdateMusicalEvents",
