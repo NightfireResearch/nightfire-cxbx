@@ -1,7 +1,7 @@
 #ifndef MENU_H
 #define MENU_H
 
-#include "../../actionhelpers.h"
+#include "../actionhelpers.h"
 
 int Menu_GetLevelIndex(HASHCODE level);
 

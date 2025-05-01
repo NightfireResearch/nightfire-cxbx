@@ -49,6 +49,7 @@ typedef short MallocFlags;
 #include "gfx/Sprite.h"
 #include "ui/ui.h"
 #include "ui/HUD.h"
+#include "ui/Menu.h"
 #include "sound/Sound.h"
 
 
