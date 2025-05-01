@@ -140,10 +140,10 @@ void Mission_MonitorObjectives(void) {
             switch(o->status) {
                 case 0:
                     // On entering a new level, show ones from the previous hashcode? Mayhew part 1->2 reveals that escorting is complete?
-                    if(fromPreviousPart) { //??? Guessing at intent
+                    if(MissionData[i].level <= GameState.CurrentLevelHashcode) { //??? Guessing at intent
                         sprintf(str,"%s",Txt_BindLabel(o->name,0));
                         Text_AddMsg(0, fromPreviousPart, 2, str, 0, 300);
-                        o->status = ((byte)~o->someFlags & 2 | 4) >> 1;
+                        o->status = (o->someFlags & 2) ? 2 : 3;
                     }
                     break;
                 
@@ -152,24 +152,26 @@ void Mission_MonitorObjectives(void) {
                     if (((o->revealedChannel != 0) && (o->revealedChannel != 0xff)) && (switch_channels[o->revealedChannel] != '\0')) {
                         sprintf(str,"%s",Txt_BindLabel(o->name,0));
                         Text_AddMsg(0, fromPreviousPart, 2, str, 0, 300);
-                        o->status = ~(uint)((byte)o->someFlags >> 1) & 1 | 2; //?!
+                        o->status = (o->someFlags & 2) ? 2 : 3;
                     }
                     break;
-                case 2: 
+                case 2:
+                    // Triggered a failure
                     if (!thisObjectiveMet) {
                         MissionFailConditionHit = true;
                         MissionFailTime = GameState.NumFramesUnpaused;
                         sprintf(str,"%s: %s",Txt_BindLabel((Action_TranslatedText)0x170, 0), Txt_BindLabel(o->name, 0));
-                        Text_AddMsg(0, fromPreviousPart, 2, str, 0, 0xb4);
+                        Text_AddMsg(0, fromPreviousPart, 2, str, 0, 180);
                         o->status = 5;
                     }
                     break;
 
 
                 case 3:
+                    // Completed objective within this level of the mission
                     if(thisObjectiveMet) {
                         sprintf(str, "%s", Txt_BindLabel(TXT_NOTIF_OBJECTIVE_COMPLETE, 0));
-                        Text_AddMsg(0, fromPreviousPart, 2, str, 0, 300);
+                        Text_AddMsg(0, fromPreviousPart, 2, str, 0, 180);
                         o->status = 4;
                     }
                     break;
