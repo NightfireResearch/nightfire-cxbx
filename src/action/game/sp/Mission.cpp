@@ -11,7 +11,8 @@
 #define ThisOrderNum U32_AT(0x0025fe24)
 #define MissionState U32_AT(0x0017e544)
 
-#define MissionData (*(MissionData(*)[24])0x0017e180)
+#define MissionData (*(Mission(*)[24])0x0017e180)
+
 
 // AUTOINJECT
 void Mission_SetFailLabel(Action_TranslatedText text) {
