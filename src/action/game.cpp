@@ -14,8 +14,6 @@
 // AUTOGEN
 void __stdcall Sound_UpdateListeners(void);
 // AUTOGEN
-void __stdcall Mission_Update(void);
-// AUTOGEN
 void __stdcall UpdateAllShards(void);
 // AUTOGEN
 void __stdcall Env_Update(void);
@@ -321,6 +319,9 @@ HASHCODE GetLevelWithFmv(HASHCODE level) {
 
 // AUTOGEN
 void __cdecl GameFlow_PushState(int state, float param_2, uint param_3);
+
+// AUTOGEN
+void GS_PauseGame(bool param_1);
 
 // AUTOINJECT
 void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {

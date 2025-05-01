@@ -1,6 +1,8 @@
 #include "Mission.h"
 #include "../mp/multiplayer.h"
 #include "../../sound/music.h"
+#include "../../ui/Menu.h"
+#include "../../ui/MenuManager.h"
 
 #include <stdio.h>
 
@@ -231,6 +233,155 @@ void Mission_MonitorObjectives(void) {
         Music_Event(8,1);
         printf("--- Completed mission 0x%08x in %i frames\n", GameState.CurrentLevelHashcode, GameState.NumFramesUnpaused);
         return;
+    }
+
+}
+
+// Helper function, inlined or didn't exist in the original code but definitely more readable with this pulled out
+HASHCODE Mission_GetEndTo(HASHCODE level) {
+    switch(level) {
+        default:
+            return HT_Level_Menu_Pre;
+
+        case HT_Level_HendersonD:
+            return FMV_OUTRO_MAYHEW_DEAD;
+
+        case HT_Level_CastleIndoors2:
+            return FMV_OUTRO_HELICOPTER_CRASH;
+
+        case HT_Level_TowerC:
+            return FMV_OUTRO_PARACHUTE_OFF_TOWER;
+
+        case HT_Level_PowerStationA2:
+            return FMV_OUTRO_THROUGH_VENT_KIKO;
+
+        case HT_Level_Tower2C:
+            return FMV_OUTRO_LOBBY_ESCAPE;
+        
+        case HT_Level_EvilBaseC:
+            return FMV_OUTRO_KIKO_ROCKETLAUNCH;
+
+        case HT_Level_SpaceStationD:
+            return FMV_OUTRO_ESCAPE_POD_END_GAME;
+
+        case 0x700000f: // Removed level?
+            return (HASHCODE)0x730000f;
+    }
+}
+
+#define InternalState U32_AT(0x0017e540)
+#define FadeClr_147 U32_AT(0x0017e550)
+#define TimeOut_148 FLOAT_AT(0x0025fe28)
+#define PlayerHasFinishedDying U8_AT(0x001df19a)
+#define LevelToEndTo U32_AT(0x0017e54c)
+
+// AUTOINJECT
+void Mission_Update(void) {
+    
+    if(GameState.CurrentLevelHashcode == HT_Level_Menu_Pre)
+        return;
+
+    if(MPSettings.isMultiplayer)
+        return;
+
+    switch(InternalState) {
+        case 1: // Normal running
+
+            if(PlayerHasFinishedDying) {
+
+                // Stop music and show fail screen
+                Music_Event(6,1);
+                InternalState = 3;
+                FadeClr_147 = 0xff0000ff;
+
+                if (glb_players[0] != NULL)
+                    Player_SetHealth((BLData*)glb_players[0]->extraObjectData, 0.0f);
+
+                return;
+
+            } else {
+
+                // Check for mission failure or success
+                Mission_MonitorObjectives();
+
+                if (MissionFailConditionHit) {
+                    Music_Event(7,1);
+                    InternalState = 2;
+                    return;
+                }
+                
+                if (MissionWinConditionHit) {
+                    Music_Event(8,1);
+                    InternalState = 6;
+                    FadeClr_147 = 0xff;
+                    return;
+                }
+                
+
+            }
+
+            break;
+
+        case 2: // Fail screen
+            GameState.maybePaused = true;
+            MissionState = 2;
+            LevelToEndTo = HT_Level_Menu_Pre;
+            InternalState = 7;
+            Text_AddMsg(0, 0, 3, (char*)Txt_BindLabel(TXT_MISSION_FAIL, 0), 0, 4 * VIDEO_FRAME_RATE); // 4 seconds
+            TimeOut_148 = 5 * VIDEO_FRAME_RATE; // ?
+
+            break;
+
+        case 3: // Quit mission
+            TimeOut_148 = 1.0f;
+            GameState.maybePaused = true;
+            MissionState = 3;
+            InternalState = 7;
+            LevelToEndTo = HT_Level_Menu_Pre;
+            break;
+
+        case 4: // TimeOut expired - either quit to main menu, show results screen, or the "try/quit" screens?
+            if(MissionState == 6) {
+                int lVar3 = Menu_GetLevelIndex((HASHCODE)BaseMap);
+                int lVar4 = Menu_GetLevelIndex((HASHCODE)GameState.BaseMapHashCode);
+                if ((lVar4 < lVar3) && (GameState.BaseMapHashCode = BaseMap, MPSettings.isMultiplayer != 0)) {
+                  GameState.BaseMapHashCode = GameState.CurrentLevelHashcode;
+                }
+                GameState.ReloadMenupage = MENU_NFRESULTS;
+                ResetMap_LevelToLoad((HASHCODE)LevelToEndTo, 0, 0);
+                GameFlow_PushState(7, 60.0, FadeClr_147);
+                InternalState = 5;
+            } else { // Show retry/quit menu
+                MenuManager_Create(0x80000004, 0x40000042, 0, '\0', 40, 0, 4);
+                GS_PauseGame(true);
+                InternalState = 5;
+            }
+
+        break;
+
+        case 5: // Awaiting game flow to change state / menu actions, don't need to do anything
+            break;
+
+        case 6: // Mission complete, exit to FMV / main menu
+            MissionState = 6;
+            InternalState = 7;
+            GameState.maybePaused = true;
+            LevelToEndTo = Mission_GetEndTo(GameState.CurrentLevelHashcode);
+            Text_AddMsg(0, 0, 3, (char*)Txt_BindLabel(TXT_MISSION_COMPLETE, 0), 0, 4 * (short)VIDEO_FRAME_RATE); // 4 seconds
+            TimeOut_148 = 4 * VIDEO_FRAME_RATE;
+            break;
+        
+        case 7: // Await timeout
+            TimeOut_148 -= FRAME_RATE_MUL;
+            if (TimeOut_148 <= 0) {
+                GS_PauseGame(true);
+                InternalState = 4;
+            }
+            break;
+
+        default:
+            InternalState = 1;
+            break;
     }
 
 

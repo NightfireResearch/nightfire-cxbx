@@ -49,6 +49,6 @@ undefined4 Mission_Status(void);
 int Mission_NumVisObjectives(void);
 void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum);
 void Mission_MonitorObjectives(void);
-
+void Mission_Update(void);
 
 #endif // MISSION_H

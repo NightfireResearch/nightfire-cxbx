@@ -13,11 +13,13 @@ void psiInitTimeIn100ths(void);
 unsigned long long psiGetTimeIn100ths(void);
 void Reset_MapLoadSettings(void);
 uint GameFlow_GetState(void);
+void GameFlow_PushState(int state, float param_2, uint param_3);
 void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv);
 bool Menu_IsDrivingLevel(HASHCODE level);
 void psiStopBackgroundMovie(void);
 void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume);
 void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate);
+void GS_PauseGame(bool pause);
 
 #pragma pack(push, 1)
 typedef struct {

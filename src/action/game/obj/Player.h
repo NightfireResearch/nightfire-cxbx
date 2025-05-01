@@ -68,5 +68,6 @@ void Player_SetCamMode(BLData *param_1,unsigned short param_2);
 void Player_Disable(obj_tag *param_1,char param_2);
 void Player_WeaponNone(obj_tag *param_1);
 void Player_Enable(obj_tag *param_1, _MATRIX *mtx, int param_3);
+void Player_SetHealth(BLData *obj, float health);
 
 #endif // PLAYER_H_

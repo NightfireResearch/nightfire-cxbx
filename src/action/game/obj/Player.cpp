@@ -10,6 +10,8 @@ void Player_Disable(obj_tag *param_1,char param_2);
 void Player_WeaponNone(obj_tag *param_1);
 // AUTOGEN
 void Player_Enable(obj_tag *param_1, _MATRIX *mtx, int param_3);
+// AUTOGEN
+void Player_SetHealth(BLData *obj, float health);
 
 // AUTOINJECT
 void Player_ChangeState(obj_tag* obj, unsigned short newState) { 
