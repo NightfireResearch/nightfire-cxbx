@@ -7,11 +7,11 @@
 
 typedef struct {
     Action_TranslatedText name;
-    uint unknown;
+    Action_TranslatedText failLabel;
     Action_TranslatedText description;
-    char someSwitchChannel;
+    char completedChannel;
     char unknown1[2];
-    char someOtherSwitchChannel;
+    char revealedChannel;
     char someFlags; // ??
     char unknown2[3];
     int status;
@@ -48,6 +48,7 @@ void Mission_SetStatus(undefined4 param_1);
 undefined4 Mission_Status(void);
 int Mission_NumVisObjectives(void);
 void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum);
+void Mission_MonitorObjectives(void);
 
 
 #endif // MISSION_H

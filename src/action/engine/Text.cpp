@@ -105,7 +105,7 @@ uint Txt_GetIndex(Action_TranslatedText tt) {
 }
 
 // AUTOGEN
-unsigned char* Txt_GetStringFromHeap(uchar index);
+char* Txt_GetStringFromHeap(uchar index);
 
 // AUTOINJECT
 const char* Txt_BindLabel(Action_TranslatedText a, unsigned int b) {
@@ -119,7 +119,7 @@ const char* Txt_BindLabel(Action_TranslatedText a, unsigned int b) {
         return "Invalid Text Label";
 
     if(index == 0) {
-        return (const char*)Txt_GetStringFromHeap(b);
+        return (const char*)Txt_GetStringFromHeap((uchar)b);
     }
 
     if(Bank != NULL)
@@ -137,3 +137,6 @@ void Txt_LanguageInit(void) {
     Bank = NULL;
     Txt_LoadLanguage();
 }
+
+// AUTOGEN
+void Text_AddMsg(char param_1,char param_2,int param_3,char *str,int param_5,short maybeDurationFrames);

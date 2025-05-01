@@ -13587,11 +13587,11 @@
         "name": "Txt_GetStringFromHeap",
         "address": "0x0006d140",
         "calling_convention": "__cdecl",
-        "return_type": "undefined *",
+        "return_type": "char *",
         "param_types": [
-            "undefined1"
+            "uchar"
         ],
-        "prototype_string": "undefined * __cdecl Txt_GetStringFromHeap(undefined1 param_1)"
+        "prototype_string": "char * __cdecl Txt_GetStringFromHeap(uchar param_1)"
     },
     {
         "name": "Txt_UnlockString",
@@ -21667,9 +21667,9 @@
         "return_type": "ushort",
         "param_types": [
             "HUDINFO_tag *",
-            "int"
+            "HUD_PANE_IND"
         ],
-        "prototype_string": "ushort __cdecl HUD_State(HUDINFO_tag * param_1, int idx)"
+        "prototype_string": "ushort __cdecl HUD_State(HUDINFO_tag * param_1, HUD_PANE_IND idx)"
     },
     {
         "name": "HUD_ValidateXY",
@@ -25987,12 +25987,12 @@
         "param_types": [
             "char",
             "char",
-            "int *",
+            "int",
             "char *",
             "int",
             "short"
         ],
-        "prototype_string": "void __cdecl Text_AddMsg(char param_1, char param_2, int * param_3, char * str, int param_5, short maybeDurationFrames)"
+        "prototype_string": "void __cdecl Text_AddMsg(char param_1, char param_2, int param_3, char * str, int param_5, short maybeDurationFrames)"
     },
     {
         "name": "Text_DelMsg",

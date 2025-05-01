@@ -21,5 +21,7 @@ const char * Txt_BindLabel(Action_TranslatedText param_1,undefined4 param_2);
 void Txt_SetLanguage(tLANGUAGE languageId);
 void Txt_LoadLanguage(void);
 void Txt_LanguageInit(void);
+char* Txt_GetStringFromHeap(uchar param_1);
+void Text_AddMsg(char param_1,char param_2,int param_3,char *str,int param_5,short maybeDurationFrames);
 
 #endif // TEXT_H_
