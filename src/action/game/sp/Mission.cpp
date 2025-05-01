@@ -143,16 +143,15 @@ void Mission_MonitorObjectives(void) {
                     if(MissionData[i].level <= GameState.CurrentLevelHashcode) { //??? Guessing at intent
                         sprintf(str,"%s",Txt_BindLabel(o->name,0));
                         Text_AddMsg(0, fromPreviousPart, 2, str, 0, 300);
-                        o->status = (o->someFlags & 2) ? 2 : 3;
+                        o->status = isFailCondition ? 2 : 3;
                     }
                     break;
-                
                 case 1:
                     // New objective revealed 
                     if (((o->revealedChannel != 0) && (o->revealedChannel != 0xff)) && (switch_channels[o->revealedChannel] != '\0')) {
                         sprintf(str,"%s",Txt_BindLabel(o->name,0));
                         Text_AddMsg(0, fromPreviousPart, 2, str, 0, 300);
-                        o->status = (o->someFlags & 2) ? 2 : 3;
+                        o->status = isFailCondition ? 2 : 3;
                     }
                     break;
                 case 2:
@@ -165,8 +164,6 @@ void Mission_MonitorObjectives(void) {
                         o->status = 5;
                     }
                     break;
-
-
                 case 3:
                     // Completed objective within this level of the mission
                     if(thisObjectiveMet) {
@@ -232,6 +229,7 @@ void Mission_MonitorObjectives(void) {
         MissionWinConditionHit = 1;
         MissionWinTime = GameState.NumFramesUnpaused;
         Music_Event(8,1);
+        printf("--- Completed mission 0x%08x in %i frames\n", GameState.CurrentLevelHashcode, GameState.NumFramesUnpaused);
         return;
     }
 
