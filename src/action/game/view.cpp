@@ -1,6 +1,8 @@
 #include "view.h"
-
+#include "../engine/viewer.h"
 #include <math.h>
+
+#include <stdio.h>
 
 // AUTOGEN
 void View_SetDrawInViews(obj_tag* o, short views);
@@ -54,4 +56,95 @@ void View_RotTransMatrix(_VECTOR *rotation, _VECTOR *position, _MATRIX *matrix) 
   matrix->m[0xd] = position->y;
   matrix->m[0xe] = position->z;
   return;
+}
+
+#define object_display_mask U32_AT(0x0029e80c)
+#define GfxList U32_AT(0x0029d79c)
+#define switch_ForceDrawAll U32_AT(0x001dfa18)
+
+// AUTOGEN
+void Vision_Init_Portal_Recurse(viewer_tag* viewer);
+// AUTOGEN
+void Vision_AddCelToDraw(cel_tag* cel, ushort param_2);
+// AUTOGEN
+void vision_generate_display_list(viewer_tag* viewer);
+// AUTOGEN
+void vision_GetCamPos(_VECTOR* camPos);
+// AUTOGEN
+void Vision_Portal_Recurse(viewer_tag* viewer);
+
+
+#define CamPos (*(_VECTOR*)(0x0029dbf0))
+
+// Cannot autoinject - custom calling convention
+// UNINJECTABLE
+void View_CaptureSceneSub(byte mask, viewer_tag* viewer) {
+    if(viewer == NULL)
+        return;
+
+    object_display_mask = (1 << (mask & 0x1f));
+    GfxList = NULL;
+
+    for(cel_tag* cel = viewer->world->firstCel; cel != NULL; cel = cel->nextCel) {
+        cel->addedToDraw = 0;
+    }
+    
+    Vision_Init_Portal_Recurse(viewer);
+
+    if(!switch_ForceDrawAll) {
+        Vision_Portal_Recurse(viewer);
+        vision_GetCamPos(&CamPos);
+        return;
+    }
+
+    for(cel_tag* cel = viewer->world->firstCel; cel != NULL; cel = cel->nextCel) {
+        Vision_AddCelToDraw(cel, 0);
+    }
+
+    vision_generate_display_list(viewer);
+    vision_GetCamPos(&CamPos);
+}
+
+// Can't inject - custom calling convention
+void __declspec(naked) View_AddCels(viewer_tag* viewer) {
+    // Custom wrapper - viewer pointer is expected in ESI by the original function, which is located at 0x000daa00
+    _asm {
+        mov esi, [esp + 4]
+        mov eax, 0x000DAA00         ; load address into EAX
+        jmp eax                     ; jump to original function
+    }
+}
+
+// AUTOGEN
+void View_AddForcedObjects(viewer_tag* viewer);
+
+
+void View_CaptureScene_actual(viewer_tag *viewer) {
+    viewer->field11_0x14 = 0;
+    viewer->field12_0x16 = 0;
+    viewer->field13_0x18 = 0;
+    if ((viewer->field25_0x29 != '\0') && (viewer->field2_0x8 != 0)) {
+
+        View_CaptureSceneSub(viewer->idx,viewer);
+        View_AddCels(viewer);
+        View_AddForcedObjects(viewer);
+
+        // Log statistics
+        // Tots = Tots + (uint)viewer->field11_0x14;
+        // DAT_0029e804 = DAT_0029e804 + (uint)viewer->field12_0x16;
+        // DAT_0029e808 = DAT_0029e808 + (uint)viewer->field13_0x18;
+    }
+}
+
+// AUTOINJECT
+void __declspec(naked) View_CaptureScene(viewer_tag* viewer) {
+    // The original function is provided with its parameter in EAX, but we need to call our reimplementation
+    // which doesn't have custom calling convention
+    _asm {
+        push eax
+        call View_CaptureScene_actual
+        add esp, 4
+        ret
+    }
+
 }

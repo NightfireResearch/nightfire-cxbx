@@ -9,5 +9,5 @@ void build_link_world_to_viewer(viewer_tag *viewer, world_tag *world) {
     if (viewer == NULL)
         return;
         
-    viewer->world = (cel_tag *)world;
+    viewer->world = world;
 }

@@ -125,9 +125,12 @@ def gather_functions_with_tag(tag_name=None, has_params=False, side="action"):
                         next_line = lines[i+1].strip()
 
                         # We expect a function declaration, eg "void func_name(int a, int b) {"
-                        # We want to extract the function name, eg "func_name" - ie the token preceding the first "(" character
+                        # We want to extract the function name, eg "func_name" - ie the token preceding the last "(" character
+                        # It must specifically be the last "(" character, as we may have other "(" characters in the function signature (eg "declspec(naked)")
 
-                        function_name = re.search(r'(\w+)\s*\(', next_line).group(1)
+                        chunks = next_line.split(" ")
+                        chunks_with_brackets = [x for x in chunks if "(" in x]
+                        function_name = chunks_with_brackets[-1].split("(")[0]
                         functions.append((address, function_name))
     return functions
 

@@ -6,7 +6,7 @@
 
 #pragma pack(push, 1)
 struct viewer_tag { /* Size confirmed in build_alloc_viewer */
-    struct cel_tag *world;
+    struct world_tag *world;
     undefined4 isRemoteControlling;
     undefined4 field2_0x8;
     undefined field3_0xc;
@@ -269,6 +269,10 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     undefined2 nightVisionRelated;
 };
 
+struct world_tag {
+    cel_tag* firstCel;
+    // ?
+};
 
 struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field0_0x0;
@@ -291,10 +295,7 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field17_0x11;
     undefined field18_0x12;
     undefined field19_0x13;
-    undefined field20_0x14;
-    undefined field21_0x15;
-    undefined field22_0x16;
-    undefined field23_0x17;
+    cel_tag *nextCel;
     undefined field24_0x18;
     undefined field25_0x19;
     undefined field26_0x1a;
@@ -390,7 +391,7 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field116_0x8d;
     undefined field117_0x8e;
     undefined field118_0x8f;
-    undefined field119_0x90;
+    undefined addedToDraw;
     undefined field120_0x91;
     undefined1 someSwitchChannel; /* Created by retype action */
     undefined field122_0x93;

@@ -3818,11 +3818,11 @@
         "name": "FUN_0002f4e0",
         "address": "0x0002f4e0",
         "calling_convention": "__cdecl",
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "uint __cdecl FUN_0002f4e0(int param_1)"
+        "prototype_string": "bool __cdecl FUN_0002f4e0(obj_tag * param_1)"
     },
     {
         "name": "Door_IsClosed",
@@ -3830,9 +3830,9 @@
         "calling_convention": "__cdecl",
         "return_type": "bool",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "bool __cdecl Door_IsClosed(int param_1)"
+        "prototype_string": "bool __cdecl Door_IsClosed(obj_tag * param_1)"
     },
     {
         "name": "Door_IsLocked",
@@ -3850,9 +3850,9 @@
         "calling_convention": "__cdecl",
         "return_type": "char *",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "char * __cdecl Door_DoMsg(int param_1)"
+        "prototype_string": "char * __cdecl Door_DoMsg(obj_tag * param_1)"
     },
     {
         "name": "Door_Init",
@@ -3888,10 +3888,12 @@
     {
         "name": "FUN_0002f850",
         "address": "0x0002f850",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall FUN_0002f850(void)"
+        "param_types": [
+            "obj_tag *"
+        ],
+        "prototype_string": "void FUN_0002f850(obj_tag * gameObj)"
     },
     {
         "name": "Doors_Calc",
@@ -27968,22 +27970,22 @@
     {
         "name": "View_AddCels",
         "address": "0x000daa00",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "return_type": "void",
         "param_types": [
             "viewer_tag *"
         ],
-        "prototype_string": "void __stdcall View_AddCels(viewer_tag * viewer)"
+        "prototype_string": "void View_AddCels(viewer_tag * viewer)"
     },
     {
         "name": "View_CaptureScene",
         "address": "0x000dabb0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "return_type": "void",
         "param_types": [
             "viewer_tag *"
         ],
-        "prototype_string": "void __stdcall View_CaptureScene(viewer_tag * viewer)"
+        "prototype_string": "void View_CaptureScene(viewer_tag * viewer)"
     },
     {
         "name": "Game_Draw",
@@ -28096,10 +28098,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "cel_tag *",
             "undefined2"
         ],
-        "prototype_string": "void __cdecl Vision_AddCelToDraw(int param_1, undefined2 param_2)"
+        "prototype_string": "void __cdecl Vision_AddCelToDraw(cel_tag * param_1, undefined2 param_2)"
     },
     {
         "name": "vision_GetCamPos",
@@ -28107,9 +28109,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "undefined4 *"
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl vision_GetCamPos(undefined4 * param_1)"
+        "prototype_string": "void __cdecl vision_GetCamPos(_VECTOR * param_1)"
     },
     {
         "name": "Vision_Calculate_View_Fustrum",
@@ -28117,9 +28119,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl Vision_Calculate_View_Fustrum(int param_1)"
+        "prototype_string": "void __cdecl Vision_Calculate_View_Fustrum(viewer_tag * param_1)"
     },
     {
         "name": "FUN_000db730",
@@ -28135,16 +28137,16 @@
         "prototype_string": "void __cdecl FUN_000db730(float * param_1, _VECTOR * param_2, _VECTOR * param_3, _VECTOR * param_4)"
     },
     {
-        "name": "FUN_000db7c0",
+        "name": "ClipPortalWithPlane",
         "address": "0x000db7c0",
         "calling_convention": "__cdecl",
-        "return_type": "int",
+        "return_type": "bool",
         "param_types": [
-            "float *",
+            "plane_equ_tag *",
             "char *",
             "char *"
         ],
-        "prototype_string": "int __cdecl FUN_000db7c0(float * param_1, char * param_2, char * param_3)"
+        "prototype_string": "bool __cdecl ClipPortalWithPlane(plane_equ_tag * param_1, char * param_2, char * param_3)"
     },
     {
         "name": "Vision_Init_Portal_Recurse",
@@ -28152,9 +28154,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl Vision_Init_Portal_Recurse(int param_1)"
+        "prototype_string": "void __cdecl Vision_Init_Portal_Recurse(viewer_tag * param_1)"
     },
     {
         "name": "FUN_000db970",
@@ -28174,10 +28176,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "cel_tag *",
             "int"
         ],
-        "prototype_string": "void __cdecl Vision_Recurse(int param_1, int param_2)"
+        "prototype_string": "void __cdecl Vision_Recurse(cel_tag * cel, int planeGroup)"
     },
     {
         "name": "Vision_Portal_Recurse",
@@ -28185,9 +28187,9 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int"
+            "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl Vision_Portal_Recurse(int param_1)"
+        "prototype_string": "void __cdecl Vision_Portal_Recurse(viewer_tag * param_1)"
     },
     {
         "name": "Vision_InView",
