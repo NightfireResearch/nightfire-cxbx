@@ -3,6 +3,7 @@
 #include "../../sound/music.h"
 #include "../../ui/Menu.h"
 #include "../../ui/MenuManager.h"
+#include "../../game/sp/PlayerStats.h"
 
 #include <stdio.h>
 
@@ -111,6 +112,7 @@ void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum) {
 #define MissionWinTime U32_AT(0x001df5b8)
 
 #define switch_channels ((char*)0x001df138)
+#define switch_channels_time ((char*)0x001df428)
 
 #define FailedDueToAlarm U8_AT(0x001df199)
 #define FailedDueToKilledCivilian U8_AT(0x001df198)
@@ -384,6 +386,86 @@ void Mission_Update(void) {
             InternalState = 1;
             break;
     }
+
+
+}
+
+
+
+// AUTOINJECT
+void Mission_Init(HASHCODE hashcode, short warmReset) {
+
+    LevelToEndTo = HT_Level_Menu_Pre;
+
+    if(hashcode == HT_Level_Menu_Pre)
+        return;
+
+    if(!warmReset)
+        BaseMap = 0xFFFFFFFF;
+    
+    FailLabel = 0xFFFFFFFF;
+    ThisOrderNum = 0xFFFFFFFF;
+    InternalState = 1;
+    Mission_SetStatus(1);
+    GS_PauseGame(false);
+
+    for(int i = 0; i < ARRAY_SIZE(MissionData); i++) {
+        if(MissionData[i].level == hashcode) {
+            BaseMap = MissionData[i].baseLevel;
+            ThisOrderNum = MissionData[i].idxInOrder;
+            break;
+        }
+    }
+
+    if(BaseMap == 0xFFFFFFFF) {
+        InternalState = 5;
+        Mission_SetStatus(5);
+        return;
+    }
+
+    for(int i = 0; i < ARRAY_SIZE(MissionData); i++) {
+        if(MissionData[i].level == BaseMap) {
+            if(MissionData[i].level == hashcode) { // If we're (re)starting from the start of the mission, reset all objectives
+                PlrStat_ResetForMission();
+            }
+            break; // Otherwise, we don't need to do anything
+        }
+    }
+
+
+    for(int i = 0; i < ARRAY_SIZE(MissionData); i++) {
+        if(MissionData[i].baseLevel == BaseMap) {
+
+            int someStateThing;
+            if(MissionData[i].idxInOrder < ThisOrderNum) {
+                someStateThing = warmReset ? 4 : 1;
+            } else if (MissionData[i].idxInOrder == ThisOrderNum) {
+                someStateThing = 1;
+            } else {
+                someStateThing = 0;
+            }
+
+            for(int j = 0; j < MissionData[i].numObjectives; j++) {
+                Objective* o = &MissionData[i].objectives[j];
+                if((someStateThing == 0) || (someStateThing == 2)) {
+                    
+                    o->status = (o->revealedChannel ? 1 : 0);
+
+                    if(o->completedChannel) {
+                        switch_channels[o->completedChannel] = o->markCompletionTimeAtInit;
+
+                        if(o->markCompletionTimeAtInit) {
+                            switch_channels_time[o->completedChannel] = GameState.NumFramesUnpaused;
+                        }
+                    }
+
+                }
+            }
+
+
+        }
+    }
+    
 
 
 }

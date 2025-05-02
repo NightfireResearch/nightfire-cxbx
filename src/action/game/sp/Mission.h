@@ -10,7 +10,8 @@ typedef struct {
     Action_TranslatedText failLabel;
     Action_TranslatedText description;
     char completedChannel;
-    char unknown1[2];
+    char markCompletionTimeAtInit;
+    char unknown1; // ??
     char revealedChannel;
     char someFlags; // ??
     char unknown2[3];
@@ -50,5 +51,6 @@ int Mission_NumVisObjectives(void);
 void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum);
 void Mission_MonitorObjectives(void);
 void Mission_Update(void);
+void Mission_Init(HASHCODE hashcode, short warmReset);
 
 #endif // MISSION_H

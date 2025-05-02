@@ -21359,10 +21359,10 @@
     {
         "name": "PlrStat_ResetForMission",
         "address": "0x000b04a0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall PlrStat_ResetForMission(void)"
+        "prototype_string": "void PlrStat_ResetForMission(void)"
     },
     {
         "name": "PlrStat_OkToUpdate",
