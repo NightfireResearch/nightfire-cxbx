@@ -61,6 +61,7 @@ add_library(actioninject SHARED
   src/action/engine/Collide.cpp
   src/action/engine/Loader.cpp
   src/action/engine/Text.cpp
+  src/action/engine/Vision.cpp
   src/action/engine/Woman.cpp
   src/action/gfx/Animation.cpp
   src/action/game/Autoaim.cpp

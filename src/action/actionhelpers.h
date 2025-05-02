@@ -37,6 +37,7 @@ typedef short MallocFlags;
 #include "engine/Collide.h"
 #include "engine/Loader.h"
 #include "engine/Text.h"
+#include "engine/Vision.h"
 #include "engine/Woman.h"
 #include "game/Autoaim.h"
 #include "game/obj/Break.h"
