@@ -22,7 +22,7 @@ def generate_auto_inject(side, ghidra_funcs):
         
         # Thunked functions can appear multiple times, so we need to inject them in all places
         for mf in matching_func:
-            assert mf['has_custom_variable_storage'] == False, f"Function {f[1]} has custom variable storage, cannot be injected"
+            assert mf['has_custom_variable_storage'] == False, f"Function {f[1]} has custom variable storage, to inject this you need to write an assembly wrapper. See View_CaptureScene for an example."
             addr = mf['address']
             injections.append((addr, f[1],))
 
