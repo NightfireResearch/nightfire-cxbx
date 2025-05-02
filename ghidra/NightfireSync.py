@@ -33,10 +33,12 @@ def export_json(side):
         function_dict = {
             "name": name,
             "address": "0x" + str(address),
-            "calling_convention": calling_convention, # TODO: Address issues with unknown cc's
+            "calling_convention": calling_convention,
+            "has_custom_variable_storage": f.hasCustomVariableStorage(),
             "return_type": return_type,
             "param_types": param_types,
             "prototype_string": prototype_string,
+            "parameters": [str(x) for x in f.getParameters()],
         }
         function_list.append(function_dict)
 
