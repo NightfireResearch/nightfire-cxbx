@@ -118,6 +118,9 @@ void __declspec(naked) View_AddCels(viewer_tag* viewer) {
 // AUTOGEN
 void View_AddForcedObjects(viewer_tag* viewer);
 
+#define Tots U32_AT(0x0029e800)
+#define DAT_0029e804 U32_AT(0x0029e804)
+#define DAT_0029e808 U32_AT(0x0029e808)
 
 void View_CaptureScene_actual(viewer_tag *viewer) {
     viewer->field11_0x14 = 0;
@@ -130,9 +133,9 @@ void View_CaptureScene_actual(viewer_tag *viewer) {
         View_AddForcedObjects(viewer);
 
         // Log statistics
-        // Tots = Tots + (uint)viewer->field11_0x14;
-        // DAT_0029e804 = DAT_0029e804 + (uint)viewer->field12_0x16;
-        // DAT_0029e808 = DAT_0029e808 + (uint)viewer->field13_0x18;
+        Tots = Tots + (uint)viewer->field11_0x14;
+        DAT_0029e804 = DAT_0029e804 + (uint)viewer->field12_0x16;
+        DAT_0029e808 = DAT_0029e808 + (uint)viewer->field13_0x18; // This handles first-person weapon models intersecting level geometry. Non-zero value causes camera 5 to be drawn in Game_Draw
     }
 }
 
