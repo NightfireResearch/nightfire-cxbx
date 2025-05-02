@@ -13,17 +13,31 @@ generate_handler_switch()
 def generate_auto_inject(side, ghidra_funcs):
     injections = []
 
-    autoinjects = gather_functions_with_tag("AUTOINJECT", side=side)
+    # Look up addresses and append to injections list
 
-    # Look up addresses
+    autoinjects = gather_functions_with_tag("AUTOINJECT", side=side)
     for f in autoinjects:
         matching_func = [x for x in ghidra_funcs if x['name'] == f[1]]
         assert len(matching_func) >= 1,f"Function {f[1]} not found, qty is {len(matching_func)}"
         
         # Thunked functions can appear multiple times, so we need to inject them in all places
         for mf in matching_func:
+            assert mf['has_custom_variable_storage'] == False, f"Function {f[1]} has custom variable storage, cannot be injected"
             addr = mf['address']
             injections.append((addr, f[1],))
+
+    autoltcg = gather_functions_with_tag("AUTOLTCG", side=side)
+    for f in autoltcg:
+        matching_func = [x for x in ghidra_funcs if x['name'] == f[1]]
+        assert len(matching_func) >= 1,f"Function {f[1]} not found, qty is {len(matching_func)}"
+        
+        # Thunked functions can appear multiple times, so we need to inject them in all places
+        for mf in matching_func:
+            # "AUTOLTCG" is an acknowledgement that the function is aware of and correctly handles the custom variable storage, so no need to check for it
+            # Eventually, we could fix this preprocess script to generate a wrapper automatically, but for now that's up to the code
+            addr = mf['address']
+            injections.append((addr, f[1],))
+    
 
     # FUNC_AT(x) with a given address
     injections.extend(gather_functions_with_tag("FUNC_AT", True, side))

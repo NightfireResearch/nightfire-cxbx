@@ -77,6 +77,7 @@ void Vision_Portal_Recurse(viewer_tag* viewer);
 #define CamPos (*(_VECTOR*)(0x0029dbf0))
 
 // Cannot autoinject - custom calling convention
+// Only used from within View_CaptureScene, so not a problem
 // UNINJECTABLE
 void View_CaptureSceneSub(byte mask, viewer_tag* viewer) {
     if(viewer == NULL)
@@ -105,7 +106,7 @@ void View_CaptureSceneSub(byte mask, viewer_tag* viewer) {
     vision_GetCamPos(&CamPos);
 }
 
-// Can't inject - custom calling convention
+// Can't generate automatically - custom calling convention
 void __declspec(naked) View_AddCels(viewer_tag* viewer) {
     // Custom wrapper - viewer pointer is expected in ESI by the original function, which is located at 0x000daa00
     _asm {
@@ -122,7 +123,7 @@ void View_AddForcedObjects(viewer_tag* viewer);
 #define DAT_0029e804 U32_AT(0x0029e804)
 #define DAT_0029e808 U32_AT(0x0029e808)
 
-void View_CaptureScene_actual(viewer_tag *viewer) {
+void _View_CaptureScene(viewer_tag *viewer) {
     viewer->field11_0x14 = 0;
     viewer->field12_0x16 = 0;
     viewer->field13_0x18 = 0;
@@ -139,13 +140,13 @@ void View_CaptureScene_actual(viewer_tag *viewer) {
     }
 }
 
-// AUTOINJECT
+// AUTOLTCG
 void __declspec(naked) View_CaptureScene(viewer_tag* viewer) {
     // The original function is provided with its parameter in EAX, but we need to call our reimplementation
     // which doesn't have custom calling convention
     _asm {
         push eax
-        call View_CaptureScene_actual
+        call _View_CaptureScene
         add esp, 4
         ret
     }
