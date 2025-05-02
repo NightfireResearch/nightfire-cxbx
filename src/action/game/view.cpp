@@ -126,16 +126,16 @@ void View_CaptureScene_actual(viewer_tag *viewer) {
     viewer->field11_0x14 = 0;
     viewer->field12_0x16 = 0;
     viewer->field13_0x18 = 0;
-    if ((viewer->field25_0x29 != '\0') && (viewer->field2_0x8 != 0)) {
+    if (viewer->field25_0x29 && viewer->field2_0x8) {
 
-        View_CaptureSceneSub(viewer->idx,viewer);
+        View_CaptureSceneSub(viewer->idx, viewer);
         View_AddCels(viewer);
         View_AddForcedObjects(viewer);
 
         // Log statistics
-        Tots = Tots + (uint)viewer->field11_0x14;
-        DAT_0029e804 = DAT_0029e804 + (uint)viewer->field12_0x16;
-        DAT_0029e808 = DAT_0029e808 + (uint)viewer->field13_0x18; // This handles first-person weapon models intersecting level geometry. Non-zero value causes camera 5 to be drawn in Game_Draw
+        Tots += viewer->field11_0x14;
+        DAT_0029e804 += viewer->field12_0x16;
+        DAT_0029e808 += viewer->field13_0x18; // This handles first-person weapon models intersecting level geometry. Non-zero value causes camera 5 to be drawn in Game_Draw
     }
 }
 
