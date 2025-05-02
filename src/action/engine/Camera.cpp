@@ -97,9 +97,9 @@ void Camera_Create(int idx, world_tag *param_2, char param_3, ushort posX, ushor
   }
   if (param_3 != 0) {
                     /* Linked list insert at front? */
-    pcVar1 = build_alloc_cel(*(cel_tag **)glb_viewer[idx]->world);
-    *(cel_tag **)glb_viewer[idx]->world = pcVar1;
-    iVar1 = *(cel_tag **)glb_viewer[idx]->world;
+    pcVar1 = build_alloc_cel(glb_viewer[idx]->world->firstCel);
+    glb_viewer[idx]->world->firstCel = pcVar1;
+    iVar1 = glb_viewer[idx]->world->firstCel;
     iVar1->bitsFromPlacementTag |= 0x10040000;
     (iVar1->someMin).z = -1000.0;
     (iVar1->someMin).y = -1000.0;
@@ -108,7 +108,7 @@ void Camera_Create(int idx, world_tag *param_2, char param_3, ushort posX, ushor
     (iVar1->someMax).y = 1000.0;
     (iVar1->someMax).x = 1000.0;
   }
-  glb_viewer[idx]->world = (cel_tag *)param_2;
+  glb_viewer[idx]->world = param_2;
   glb_viewer[idx]->field25_0x29 = param_3;
   glb_viewer[idx]->field26_0x2a = 1;
   glb_viewer[idx]->cameraUpdateObj = NULL;
