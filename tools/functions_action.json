@@ -988,11 +988,11 @@
         "name": "FUN_0001a190",
         "address": "0x0001a190",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0001a190(int param_1)"
+        "prototype_string": "bool __cdecl FUN_0001a190(int param_1)"
     },
     {
         "name": "MP_setLoadingSkins",
@@ -3835,14 +3835,14 @@
         "prototype_string": "bool __cdecl Door_IsClosed(int param_1)"
     },
     {
-        "name": "Trigger_Locked",
+        "name": "Door_IsLocked",
         "address": "0x0002f570",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl Trigger_Locked(obj_tag * param_1)"
+        "prototype_string": "bool __cdecl Door_IsLocked(obj_tag * param_1)"
     },
     {
         "name": "Door_DoMsg",
@@ -8049,11 +8049,11 @@
         "name": "AINetwork_NodeSearch",
         "address": "0x00048610",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "int *"
         ],
-        "prototype_string": "undefined4 __cdecl AINetwork_NodeSearch(int * param_1)"
+        "prototype_string": "bool __cdecl AINetwork_NodeSearch(int * param_1)"
     },
     {
         "name": "AINetwork_DoAStarPath",
@@ -8292,10 +8292,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
+            "AIEmitter_tag *",
             "uint"
         ],
-        "prototype_string": "void __cdecl AINetwork_AllocEmitter(int param_1, uint param_2)"
+        "prototype_string": "void __cdecl AINetwork_AllocEmitter(AIEmitter_tag * param_1, uint size)"
     },
     {
         "name": "AINetwork_FreeEmitter",
@@ -8313,10 +8313,10 @@
         "calling_convention": "__cdecl",
         "return_type": "undefined4",
         "param_types": [
-            "undefined4 *",
+            "AIEmitter_tag *",
             "float"
         ],
-        "prototype_string": "undefined4 __cdecl AINetwork_EmitPath(undefined4 * param_1, float param_2)"
+        "prototype_string": "undefined4 __cdecl AINetwork_EmitPath(AIEmitter_tag * param_1, float param_2)"
     },
     {
         "name": "FUN_0004a070",
@@ -8450,18 +8450,18 @@
         "prototype_string": "undefined __cdecl AINetwork_FurthestPosition(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3)"
     },
     {
-        "name": "FUN_0004a870",
+        "name": "AINetwork_InitEmitter",
         "address": "0x0004a870",
         "calling_convention": "__cdecl",
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "undefined4",
-            "float *",
-            "float",
-            "undefined4 *",
-            "undefined *"
+            "obj_tag *",
+            "_VECTOR *",
+            "cel_tag *",
+            "AIEmitter_tag *",
+            "AIPath_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0004a870(undefined4 param_1, float * param_2, float param_3, undefined4 * param_4, undefined * param_5)"
+        "prototype_string": "bool __cdecl AINetwork_InitEmitter(obj_tag * param_1, _VECTOR * position, cel_tag * cel, AIEmitter_tag * emitter, AIPath_tag * path)"
     },
     {
         "name": "FUN_0004a900",
@@ -19277,14 +19277,17 @@
         "prototype_string": "void __cdecl Mission_Init(int hashcode, short warmReset)"
     },
     {
-        "name": "FUN_0009c7e0",
+        "name": "MP_SetUpPlayerSomehow",
         "address": "0x0009c7e0",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
+            "obj_tag *",
+            "obj_tag *",
+            "obj_tag *",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_0009c7e0(int param_1)"
+        "prototype_string": "void __cdecl MP_SetUpPlayerSomehow(obj_tag * param_1, obj_tag * mpObjSomeChild, obj_tag * obj, int eax)"
     },
     {
         "name": "MP_HitBy",
@@ -19542,14 +19545,15 @@
         "prototype_string": "void __stdcall FUN_0009e050(void * someThing)"
     },
     {
-        "name": "FUN_0009e080",
+        "name": "MP_recalcObjExtPaths",
         "address": "0x0009e080",
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
+            "MP_OBJ_EXT *",
             "char"
         ],
-        "prototype_string": "void __cdecl FUN_0009e080(char param_1)"
+        "prototype_string": "void __cdecl MP_recalcObjExtPaths(MP_OBJ_EXT * a, char param_2)"
     },
     {
         "name": "MP_getObjExtFromMPOBJECT",
@@ -19799,12 +19803,15 @@
     {
         "name": "FUN_0009ecb0",
         "address": "0x0009ecb0",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "default",
+        "return_type": "void",
         "param_types": [
-            "undefined4"
+            "MPOBJECT *",
+            "ushort",
+            "obj_tag *",
+            "bool"
         ],
-        "prototype_string": "undefined FUN_0009ecb0(undefined4 param_1)"
+        "prototype_string": "void FUN_0009ecb0(MPOBJECT * mpObject, ushort state, obj_tag * gameObj, bool al)"
     },
     {
         "name": "MP_PostLoad_Init",
@@ -19828,12 +19835,14 @@
     {
         "name": "MP_FlagUpdate",
         "address": "0x0009f2c0",
-        "calling_convention": "unknown",
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "return_type": "void",
         "param_types": [
-            "undefined1"
+            "obj_tag *",
+            "MPOBJECT *",
+            "char"
         ],
-        "prototype_string": "undefined MP_FlagUpdate(undefined1 param_1)"
+        "prototype_string": "void __stdcall MP_FlagUpdate(obj_tag * gameObj, MPOBJECT * mpObj, char param_3)"
     },
     {
         "name": "MP_KOHUpdate",
@@ -28024,10 +28033,10 @@
         "calling_convention": "__cdecl",
         "return_type": "void",
         "param_types": [
-            "int",
-            "byte"
+            "obj_tag *",
+            "uint"
         ],
-        "prototype_string": "void __cdecl View_SetDrawInOtherViewsOnly(int param_1, byte param_2)"
+        "prototype_string": "void __cdecl View_SetDrawInOtherViewsOnly(obj_tag * param_1, uint param_2)"
     },
     {
         "name": "View_SetDrawInAllViews",

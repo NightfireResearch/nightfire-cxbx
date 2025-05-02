@@ -41,6 +41,7 @@ typedef short MallocFlags;
 #include "game/Autoaim.h"
 #include "game/obj/Break.h"
 #include "game/obj/build.h"
+#include "game/obj/Door.h"
 #include "game/obj/object.h" // for obj_tag needed by some autogen functions
 #include "game/obj/control.h" // for Control_X functions
 #include "game/obj/player.h" // for BLData
@@ -73,5 +74,8 @@ typedef short MallocFlags;
 #define FRAME_RATE_DIV FLOAT_AT(0x0017c0fc)
 #define FRAME_RATE_MUL FLOAT_AT(0x0017c100)
 #define REC_FRAME_RATE FLOAT_AT(0x0017c104)
+
+#define switch_channels ((char*)0x001df138)
+#define switch_channels_time ((char*)0x001df428)
 
 #endif //ACTIONHELPERS_H_

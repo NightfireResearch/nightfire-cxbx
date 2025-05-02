@@ -111,9 +111,6 @@ void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum) {
 #define MissionFailTime U32_AT(0x001df5b4)
 #define MissionWinTime U32_AT(0x001df5b8)
 
-#define switch_channels ((char*)0x001df138)
-#define switch_channels_time ((char*)0x001df428)
-
 #define FailedDueToAlarm U8_AT(0x001df199)
 #define FailedDueToKilledCivilian U8_AT(0x001df198)
 #define FailedDueToKikoEscape U8_AT(0x001df1b3)
