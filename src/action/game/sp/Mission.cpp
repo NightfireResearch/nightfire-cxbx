@@ -434,35 +434,34 @@ void Mission_Init(HASHCODE hashcode, short warmReset) {
 
 
     for(int i = 0; i < ARRAY_SIZE(MissionData); i++) {
-        if(MissionData[i].baseLevel == BaseMap) {
 
-            int someStateThing;
-            if(MissionData[i].idxInOrder < ThisOrderNum) {
-                someStateThing = warmReset ? 4 : 1;
-            } else if (MissionData[i].idxInOrder == ThisOrderNum) {
-                someStateThing = 1;
-            } else {
-                someStateThing = 0;
-            }
+        if(MissionData[i].baseLevel != BaseMap)
+            continue;
 
-            for(int j = 0; j < MissionData[i].numObjectives; j++) {
-                Objective* o = &MissionData[i].objectives[j];
-                if((someStateThing == 0) || (someStateThing == 2)) {
-                    
-                    o->status = (o->revealedChannel ? 1 : 0);
+        int someStateThing;
+        if(MissionData[i].idxInOrder < ThisOrderNum) {
+            someStateThing = warmReset ? 4 : 1;
+        } else if (MissionData[i].idxInOrder == ThisOrderNum) {
+            someStateThing = 1;
+        } else {
+            someStateThing = 0;
+        }
 
-                    if(o->completedChannel) {
-                        switch_channels[o->completedChannel] = o->markCompletionTimeAtInit;
+        for(int j = 0; j < MissionData[i].numObjectives; j++) {
+            Objective* o = &MissionData[i].objectives[j];
+            if((someStateThing == 0) || (someStateThing == 2)) {
+                
+                o->status = (o->revealedChannel ? 1 : 0);
 
-                        if(o->markCompletionTimeAtInit) {
-                            switch_channels_time[o->completedChannel] = GameState.NumFramesUnpaused;
-                        }
+                if(o->completedChannel) {
+                    switch_channels[o->completedChannel] = o->markCompletionTimeAtInit;
+
+                    if(o->markCompletionTimeAtInit) {
+                        switch_channels_time[o->completedChannel] = GameState.NumFramesUnpaused;
                     }
-
                 }
+
             }
-
-
         }
     }
     
