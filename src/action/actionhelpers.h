@@ -19,6 +19,7 @@ typedef struct DYNAMICSOUNDS DYNAMICSOUNDS;
 typedef struct AnimState AnimState;
 typedef struct sprite sprite;
 typedef struct SpriteInfo SpriteInfo;
+typedef struct _D3DMATRIX D3DMATRIX;
 
 // Hashcode, SFX and translated text names
 #include "assets.h"
@@ -38,6 +39,7 @@ typedef short MallocFlags;
 #include "engine/Loader.h"
 #include "engine/Text.h"
 #include "engine/Vision.h"
+#include "engine/psiGraphics.h"
 #include "engine/Woman.h"
 #include "game/Autoaim.h"
 #include "game/obj/Break.h"

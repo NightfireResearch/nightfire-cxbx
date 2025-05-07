@@ -14,7 +14,7 @@ typedef struct {
 
 typedef struct celglist_tag {
     char* name;
-    void* gfx_struct;
+    int geom_idx;
     void* colldata;
     sphere_equ_tag boundSphere;
     _VECTOR extentMin;

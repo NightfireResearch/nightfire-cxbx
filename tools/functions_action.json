@@ -26,24 +26,28 @@
     {
         "name": "AnimProcessScriptData",
         "address": "0x000110c0",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined AnimProcessScriptData()",
-        "parameters": []
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
+        "param_types": [
+            "HASHCODE"
+        ],
+        "prototype_string": "void AnimProcessScriptData(HASHCODE eax)",
+        "parameters": [
+            "[HASHCODE eax@EAX:4]"
+        ]
     },
     {
         "name": "loadAnimFileCapturingSize",
         "address": "0x00011160",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
             "HASHCODE",
             "MallocFlags"
         ],
-        "prototype_string": "void __stdcall loadAnimFileCapturingSize(HASHCODE hc, MallocFlags mf)",
+        "prototype_string": "void loadAnimFileCapturingSize(HASHCODE hc, MallocFlags mf)",
         "parameters": [
             "[HASHCODE hc@ESI:4]",
             "[MallocFlags mf@AX:2]"
@@ -301,13 +305,13 @@
         "return_type": "void",
         "param_types": [
             "obj_tag *",
-            "void *",
+            "sAnimScript_tag *",
             "HASHCODE"
         ],
-        "prototype_string": "void __stdcall AnimScriptInit(obj_tag * gameObj, void * animScriptHandle, HASHCODE hashcode)",
+        "prototype_string": "void __stdcall AnimScriptInit(obj_tag * gameObj, sAnimScript_tag * animScriptHandle, HASHCODE hashcode)",
         "parameters": [
             "[obj_tag * gameObj@EAX:4]",
-            "[void * animScriptHandle@ESI:4]",
+            "[sAnimScript_tag * animScriptHandle@ESI:4]",
             "[HASHCODE hashcode@EDI:4]"
         ]
     },
@@ -644,11 +648,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "uint"
+            "HASHCODE"
         ],
-        "prototype_string": "void __cdecl AnimProcessSeqData(uint param_1)",
+        "prototype_string": "void __cdecl AnimProcessSeqData(HASHCODE param_1)",
         "parameters": [
-            "[uint param_1@Stack[0x4]:4]"
+            "[HASHCODE param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -1145,14 +1149,16 @@
         "name": "AnimFacialUpdate",
         "address": "0x00017510",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *",
+            "sAnimObject_tag *"
         ],
-        "prototype_string": "void __cdecl AnimFacialUpdate(int param_1)",
+        "prototype_string": "void __cdecl AnimFacialUpdate(obj_tag * param_1, sAnimObject_tag * animObj)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[sAnimObject_tag * animObj@ESI:4]"
         ]
     },
     {
@@ -6354,11 +6360,11 @@
         "has_custom_variable_storage": false,
         "return_type": "int",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "int __cdecl Drone_AlertStatus(int param_1)",
+        "prototype_string": "int __cdecl Drone_AlertStatus(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -41120,15 +41126,21 @@
     {
         "name": "FUN_000d91d0",
         "address": "0x000d91d0",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
         "param_types": [
-            "undefined4"
+            "viewer_tag *",
+            "int",
+            "undefined4",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined FUN_000d91d0(undefined4 param_1)",
+        "prototype_string": "void FUN_000d91d0(viewer_tag * param_1_00, int param_2, undefined4 param_3, obj_tag * param_4)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[viewer_tag * param_1_00@ECX:4]",
+            "[int param_2@EDX:4]",
+            "[undefined4 param_3@Stack[0x4]:4]",
+            "[obj_tag * param_4@EDI:4]"
         ]
     },
     {
