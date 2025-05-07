@@ -58,6 +58,27 @@ void View_RotTransMatrix(_VECTOR *rotation, _VECTOR *position, _MATRIX *matrix) 
   return;
 }
 
+// AUTOINJECT
+void View_RotTransScaleMatrix(_VECTOR *rotation, _VECTOR *position, _VECTOR* scale, _MATRIX *matrix) {
+    View_RotTransMatrix(rotation, position, matrix);
+    matrix->m[0] *= scale->x;
+    matrix->m[1] *= scale->x;
+    matrix->m[2] *= scale->x;
+    matrix->m[4] *= scale->y;
+    matrix->m[5] *= scale->y;
+    matrix->m[6] *= scale->y;
+    matrix->m[8] *= scale->z;
+    matrix->m[9] *= scale->z;
+    matrix->m[10] *= scale->z;
+}
+
+// AUTOINJECT
+void View_DrawGlist(celglist_tag* celglist, _VECTOR *translation, _VECTOR *rotation, _VECTOR* scale) {
+    _MATRIX mtx;
+    View_RotTransScaleMatrix(rotation, translation, scale, &mtx);
+    psiDrawObjectMatrix(celglist, &mtx);
+}
+
 #define object_display_mask U32_AT(0x0029e80c)
 #define GfxList U32_AT(0x0029d79c)
 #define switch_ForceDrawAll U32_AT(0x001dfa18)
