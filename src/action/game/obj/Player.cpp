@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "../mp/multiplayer.h"
 #include "../view.h"
+#include "../../engine/Anim.h"
 
 // AUTOGEN
 unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState);
@@ -116,11 +117,6 @@ void PositionBeam(obj_tag *param_1, _VECTOR *param_2, _VECTOR *param_3) {
     param_1->rotation.z = 0.0f;
 
 }
-
-
-// AUTOGEN
-uchar AnimGetBoneWorldTrans(obj_tag *param_1,uint whichBoneMatrix,int param_3,_VECTOR *param_4,_MATRIX *param_5);
-
 
 // AUTOINJECT
 void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos) {
