@@ -5,14 +5,24 @@
 
 #pragma pack(push, 1)
 
+typedef struct WeaponStatus {
+    short clipOrCooldown;
+    char enabled;
+    char pad[0xc-3];
+} WeaponStatus;
+
+static_assert(sizeof(WeaponStatus) == 0xc, "WeaponStatus size wrong");
+
 // WIP
 typedef struct BLData {
     char _pad_0[0xe0];
     float crosshairOffsetX; // 0xe0
     float crosshairOffsetY; // 0xe4
-    char _pad_1[0xf3-8-0xe0];
+    char _pad_1[0xf3-0xe8]; // next entry offset - (first byte above previous)
     char crosshairType; // 0xf3
-    char _pad_222[0x770-0xf4];
+    char _pad_11[0x15c-0xf4];
+    WeaponStatus weaponStats[114]; // 0x15c-0x6b3 inclusive
+    char _pad_222[0x770-0x6b4];
     HUDINFO_tag* hudInfo; // 0x770
     char _pad_2222[4];
     obj_tag* weaponObject;
@@ -69,5 +79,8 @@ void Player_Disable(obj_tag *param_1,char param_2);
 void Player_WeaponNone(obj_tag *param_1);
 void Player_Enable(obj_tag *param_1, _MATRIX *mtx, int param_3);
 void Player_SetHealth(BLData *obj, float health);
+void Player_CheckWeaponsLoaded(BLData *blData);
+short Player_AmmoIndex(short weaponIndex);
+ushort Player_AmmoInGun(BLData *playerInfo, ushort weaponIndex);
 
 #endif // PLAYER_H_

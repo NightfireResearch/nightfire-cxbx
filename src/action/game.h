@@ -230,7 +230,7 @@ typedef enum WeaponBaseNum {
     Weap_LaserBurst2=110,
     Weap_Samurai=111,
     Weap_CopterGun1=113,
-    NUM_WEAPONS=115,
+    NUM_WEAPONS=114,
 } WeaponBaseNum;
 
 typedef struct {
