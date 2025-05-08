@@ -75,6 +75,7 @@ void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);
 void MatrixMultiplyVector(_MATRIX *mtx,_VECTOR *vecIn,_VECTOR *vecOut);
 void ApplyMatrixLV(_MATRIX *mtx,_VECTOR *vIn,_VECTOR *vOut);
 float Vec_ScalarTripleProduct(_VECTOR *a,_VECTOR *b,_VECTOR *c);
+void vecutil_cartesian_to_spherical_acc(_VECTOR *vec, float v_x, float v_y, float v_z);
 
 #define M_PI 3.14159265358979323846
 #define DEG2RAD(x) ((x) * (M_PI / 180.0f))

@@ -92,4 +92,6 @@ void Player_CreateSight(obj_tag *playerObj, byte viewerNum);
 void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum);
 void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos);
 
+void PositionBeam(obj_tag *param_1, _VECTOR *param_2, _VECTOR *param_3);
+
 #endif // PLAYER_H_

@@ -522,3 +522,10 @@ float Vec_ScalarTripleProduct(_VECTOR *a, _VECTOR *b, _VECTOR *c) {
   Vec_Normalise(&v1, &v1);
   return (a->x * v1.x + a->y * v1.y + a->z * v1.z);
 }
+
+// AUTOINJECT
+void vecutil_cartesian_to_spherical_acc(_VECTOR *vec, float v_x, float v_y, float v_z) {
+  vec->x = atan2f(v_y, SQRT(v_z * v_z + v_x * v_x));
+  vec->y = atan2f(v_x, v_z);
+  vec->z = 0.0f;
+}

@@ -90,9 +90,34 @@ void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum) {
     blData->muzzleFlashRelated = 0;
 }
 
+// Only used for laser and taser beams
+// AUTOINJECT
+void PositionBeam(obj_tag *param_1, _VECTOR *param_2, _VECTOR *param_3) {
 
-// AUTOGEN
-void PositionBeam(obj_tag *param_1, _VECTOR *param_2, _VECTOR *param_3);
+    Vec_Copy(param_2, &param_1->position);
+
+    float distance = Vec_Dist3D(param_2, param_3);
+
+    param_1->renderType &= 0xdf;
+    param_1->renderType |= 1;
+    param_1->renderType |= 0x20;
+
+    param_1->scale = distance;
+
+    param_1->radius = 2.0f * distance;
+
+    float dx = param_2->x - param_3->x;
+    float dy = param_2->y - param_3->y;
+    float dz = param_2->z - param_3->z;
+
+    vecutil_cartesian_to_spherical_acc(&param_1->rotation, dx, dy, dz);
+
+    param_1->rotation.x *= -1;
+    param_1->rotation.z = 0.0f;
+
+}
+
+
 // AUTOGEN
 uchar AnimGetBoneWorldTrans(obj_tag *param_1,uint whichBoneMatrix,int param_3,_VECTOR *param_4,_MATRIX *param_5);
 
