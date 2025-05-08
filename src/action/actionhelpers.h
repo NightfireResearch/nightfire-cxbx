@@ -4,6 +4,7 @@
 // Foward declarations prevent circular dependencies
 typedef struct celglist_tag celglist_tag;
 typedef struct level_tag level_tag;
+typedef struct light_tag light_tag;
 typedef struct world_tag world_tag;
 typedef struct cel_tag cel_tag;
 typedef struct obj_tag obj_tag;

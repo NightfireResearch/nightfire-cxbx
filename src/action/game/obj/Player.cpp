@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "../mp/multiplayer.h"
+#include "../view.h"
 
 // AUTOGEN
 unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState);
@@ -50,3 +51,41 @@ ushort Player_AmmoInGun(BLData *playerInfo, ushort weaponIndex) {
     return playerInfo->weaponStats[Player_AmmoIndex(weaponIndex)].clipOrCooldown;
 }
 
+// AUTOINJECT
+void Player_CreateSight(obj_tag *playerObj, byte viewerNum) {
+
+    obj_tag* sightObj = control_create_object(0,NULL, NULL, NULL);
+    BLData *blData = (BLData *)playerObj->extraObjectData;
+
+    if (sightObj == NULL) 
+        return;
+    
+    sightObj->renderType |= 2;
+    sightObj->objectType = OBJECTTYPE_DELETED;
+    sightObj->specialFlags |= 0x20;
+    sightObj->maybeParent = playerObj;
+    sightObj->tweakR = 0x7f;
+    sightObj->tweakG = 0;
+    sightObj->tweakB = 0;
+    hashtable_set_object_to_entity_gfx(sightObj, (HASHCODE)0x2000132);
+    View_SetDrawInThisViewOnly(sightObj, viewerNum);
+    blData->sightObj = sightObj;
+  
+}
+
+// AUTOINJECT
+void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum) {
+  
+    obj_tag* muzzleFlashObj = control_create_object(0,NULL, NULL, NULL);
+    BLData *blData = (BLData *)playerObj->extraObjectData;
+    
+    if (muzzleFlashObj == NULL) 
+        return;
+    
+    muzzleFlashObj->maybeParent = playerObj;
+    muzzleFlashObj->objectType = OBJECTTYPE_DELETED;
+    muzzleFlashObj->specialFlags = muzzleFlashObj->specialFlags | 0x8221;
+    View_SetDrawInThisViewOnly(muzzleFlashObj,viewerNum);
+    blData->muzzleFlashObj = muzzleFlashObj;
+    blData->muzzleFlashRelated = 0;
+}

@@ -1020,17 +1020,17 @@
     {
         "name": "AnimObjectDraw",
         "address": "0x00016c20",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
-            "undefined4"
+            "viewer_tag *"
         ],
-        "prototype_string": "undefined AnimObjectDraw(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined __cdecl AnimObjectDraw(undefined4 param_1, viewer_tag * param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[viewer_tag * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -4423,42 +4423,52 @@
         "name": "FUN_00029370",
         "address": "0x00029370",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
-        "return_type": "int",
+        "has_custom_variable_storage": true,
+        "return_type": "bool",
         "param_types": [
-            "float *"
+            "float *",
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "int __cdecl FUN_00029370(float * param_1)",
+        "prototype_string": "bool __cdecl FUN_00029370(float * param_1, _VECTOR * EBX, _VECTOR * EDI, _VECTOR * ESI)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]"
+            "[float * param_1@Stack[0x4]:4]",
+            "[_VECTOR * EBX@EBX:4]",
+            "[_VECTOR * EDI@EDI:4]",
+            "[_VECTOR * ESI@ESI:4]"
         ]
     },
     {
         "name": "FUN_000293b0",
         "address": "0x000293b0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
-        "return_type": "int",
+        "has_custom_variable_storage": true,
+        "return_type": "bool",
         "param_types": [
-            "float *"
+            "float *",
+            "undefined4"
         ],
-        "prototype_string": "int __cdecl FUN_000293b0(float * param_1)",
+        "prototype_string": "bool __cdecl FUN_000293b0(float * param_1, undefined4 ESI)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]"
+            "[float * param_1@Stack[0x4]:4]",
+            "[undefined4 ESI@ESI:4]"
         ]
     },
     {
         "name": "FUN_00029410",
         "address": "0x00029410",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
-        "return_type": "int",
+        "has_custom_variable_storage": true,
+        "return_type": "bool",
         "param_types": [
-            "float *"
+            "float *",
+            "undefined4"
         ],
-        "prototype_string": "int __cdecl FUN_00029410(float * param_1)",
+        "prototype_string": "bool __cdecl FUN_00029410(float * param_1, undefined4 ESI)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]"
+            "[float * param_1@Stack[0x4]:4]",
+            "[undefined4 ESI@ESI:4]"
         ]
     },
     {
@@ -4507,12 +4517,12 @@
             "cel_tag *",
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Coll_AddHitToList(HITDATA_tag * * param_1, float param_2, cel_tag * param_3, obj_tag * param_4)",
+        "prototype_string": "void __cdecl Coll_AddHitToList(HITDATA_tag * * pHitList, float dist, cel_tag * hitCel, obj_tag * hitObj)",
         "parameters": [
-            "[HITDATA_tag * * param_1@Stack[0x4]:4]",
-            "[float param_2@Stack[0x8]:4]",
-            "[cel_tag * param_3@Stack[0xc]:4]",
-            "[obj_tag * param_4@Stack[0x10]:4]"
+            "[HITDATA_tag * * pHitList@Stack[0x4]:4]",
+            "[float dist@Stack[0x8]:4]",
+            "[cel_tag * hitCel@Stack[0xc]:4]",
+            "[obj_tag * hitObj@Stack[0x10]:4]"
         ]
     },
     {
@@ -4597,16 +4607,18 @@
         "name": "FUN_0002aa80",
         "address": "0x0002aa80",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
             "float",
-            "float"
+            "float",
+            "undefined4"
         ],
-        "prototype_string": "void __cdecl FUN_0002aa80(float param_1, float param_2)",
+        "prototype_string": "void __cdecl FUN_0002aa80(float param_1, float param_2, undefined4 EAX)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]",
-            "[float param_2@Stack[0x8]:4]"
+            "[float param_2@Stack[0x8]:4]",
+            "[undefined4 EAX@EAX:4]"
         ]
     },
     {
@@ -4916,24 +4928,24 @@
         ]
     },
     {
-        "name": "FUN_0002c760",
+        "name": "Collide_unknown",
         "address": "0x0002c760",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "float *",
-            "undefined4 *",
+            "_VECTOR *",
+            "_VECTOR *",
             "float",
             "int",
             "uint *",
             "undefined2",
             "undefined4"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0002c760(float * param_1, undefined4 * param_2, float param_3, int param_4, uint * param_5, undefined2 param_6, undefined4 param_7)",
+        "prototype_string": "undefined4 __cdecl Collide_unknown(_VECTOR * param_1, _VECTOR * param_2, float param_3, int param_4, uint * param_5, undefined2 param_6, undefined4 param_7)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
             "[float param_3@Stack[0xc]:4]",
             "[int param_4@Stack[0x10]:4]",
             "[uint * param_5@Stack[0x14]:4]",
@@ -18518,11 +18530,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Emitter_Draw(int param_1)",
+        "prototype_string": "void __cdecl Emitter_Draw(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -20158,13 +20170,13 @@
         "address": "0x0006d8f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4 *",
+        "return_type": "light_tag * *",
         "param_types": [
             "float *",
             "uint",
             "ushort *"
         ],
-        "prototype_string": "undefined4 * __cdecl Lights_CalcClosestLights(float * param_1, uint param_2, ushort * param_3)",
+        "prototype_string": "light_tag * * __cdecl Lights_CalcClosestLights(float * param_1, uint param_2, ushort * param_3)",
         "parameters": [
             "[float * param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]",
@@ -21664,13 +21676,13 @@
         "address": "0x00072d70",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": true,
-        "return_type": "uint",
+        "return_type": "ushort",
         "param_types": [
             "short",
             "GameActions_tag",
             "undefined4"
         ],
-        "prototype_string": "uint __cdecl Menu_GetAction(short idx, GameActions_tag param_2, undefined4 param_3)",
+        "prototype_string": "ushort __cdecl Menu_GetAction(short idx, GameActions_tag param_2, undefined4 param_3)",
         "parameters": [
             "[short idx@AX:2]",
             "[GameActions_tag param_2@Stack[0x4]:4]",
@@ -21682,17 +21694,17 @@
         "address": "0x00072e20",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "ushort",
         "param_types": [
-            "undefined4",
+            "short",
             "GameActions_tag",
-            "undefined4"
+            "ushort"
         ],
-        "prototype_string": "uint __cdecl Menu_InputAction(undefined4 param_1, GameActions_tag param_2, undefined4 param_3)",
+        "prototype_string": "ushort __cdecl Menu_InputAction(short param_1, GameActions_tag param_2, ushort param_3)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
+            "[short param_1@Stack[0x4]:2]",
             "[GameActions_tag param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[ushort param_3@Stack[0xc]:2]"
         ]
     },
     {
@@ -29046,11 +29058,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl MP_EquipPlayer(int param_1)",
+        "prototype_string": "void __cdecl MP_EquipPlayer(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -29178,12 +29190,12 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int",
+            "obj_tag *",
             "undefined4 *"
         ],
-        "prototype_string": "undefined4 __cdecl MP_GetRadarObjects(int param_1, undefined4 * param_2)",
+        "prototype_string": "undefined4 __cdecl MP_GetRadarObjects(obj_tag * param_1, undefined4 * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[undefined4 * param_2@Stack[0x8]:4]"
         ]
     },
@@ -29332,7 +29344,7 @@
         ]
     },
     {
-        "name": "FUN_0009e1f0",
+        "name": "MP_getFlagObj",
         "address": "0x0009e1f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -29340,13 +29352,13 @@
         "param_types": [
             "uint"
         ],
-        "prototype_string": "undefined4 * __cdecl FUN_0009e1f0(uint param_1)",
+        "prototype_string": "undefined4 * __cdecl MP_getFlagObj(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ]
     },
     {
-        "name": "FUN_0009e210",
+        "name": "MP_getBaseObj",
         "address": "0x0009e210",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -29354,13 +29366,13 @@
         "param_types": [
             "uint"
         ],
-        "prototype_string": "undefined4 * __cdecl FUN_0009e210(uint param_1)",
+        "prototype_string": "undefined4 * __cdecl MP_getBaseObj(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ]
     },
     {
-        "name": "FUN_0009e230",
+        "name": "MP_getUplinkObj",
         "address": "0x0009e230",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -29369,7 +29381,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "int * __cdecl FUN_0009e230(int param_1, int param_2)",
+        "prototype_string": "int * __cdecl MP_getUplinkObj(int param_1, int param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"
@@ -29380,11 +29392,11 @@
         "address": "0x0009e2a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "undefined2",
         "param_types": [
             "short"
         ],
-        "prototype_string": "undefined4 __cdecl MP_getUplinkStatus(short param_1)",
+        "prototype_string": "undefined2 __cdecl MP_getUplinkStatus(short param_1)",
         "parameters": [
             "[short param_1@Stack[0x4]:2]"
         ]
@@ -29568,13 +29580,13 @@
         ]
     },
     {
-        "name": "FUN_0009e7b0",
+        "name": "MP_getAssassinTarget",
         "address": "0x0009e7b0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall FUN_0009e7b0(void)",
+        "prototype_string": "undefined4 __stdcall MP_getAssassinTarget(void)",
         "parameters": []
     },
     {
@@ -29582,15 +29594,15 @@
         "address": "0x0009e7c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int",
-            "int"
+            "obj_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl MP_changeAssassinOrTarget(int param_1, int param_2)",
+        "prototype_string": "bool __cdecl MP_changeAssassinOrTarget(obj_tag * oldObj, obj_tag * newObj)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[obj_tag * oldObj@Stack[0x4]:4]",
+            "[obj_tag * newObj@Stack[0x8]:4]"
         ]
     },
     {
@@ -29608,7 +29620,7 @@
         ]
     },
     {
-        "name": "FUN_0009e870",
+        "name": "MP_getMPpickup",
         "address": "0x0009e870",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -29616,7 +29628,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 * __stdcall FUN_0009e870(int param_1)",
+        "prototype_string": "undefined4 * __stdcall MP_getMPpickup(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ]
@@ -29698,12 +29710,12 @@
         "address": "0x0009f0b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "obj_tag *",
             "ushort"
         ],
-        "prototype_string": "undefined4 __cdecl MP_ReSpawn(obj_tag * param_1, ushort param_2)",
+        "prototype_string": "bool __cdecl MP_ReSpawn(obj_tag * param_1, ushort param_2)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
             "[ushort param_2@Stack[0x8]:2]"
@@ -32496,31 +32508,33 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "BLData *",
+            "HUDPANE_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl HUD_MPUpdateStatusPane(int param_1, int param_2)",
+        "prototype_string": "void __cdecl HUD_MPUpdateStatusPane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * obj)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[BLData * param_1@Stack[0x4]:4]",
+            "[HUDPANE_tag * param_2@Stack[0x8]:4]",
+            "[obj_tag * obj@Stack[0xc]:4]"
         ]
     },
     {
         "name": "HUD_UpdateAirPane",
         "address": "0x000b3a10",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "BLData *",
+            "HUDPANE_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined HUD_UpdateAirPane(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined __cdecl HUD_UpdateAirPane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * param_3)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[BLData * param_1@Stack[0x4]:4]",
+            "[HUDPANE_tag * param_2@Stack[0x8]:4]",
+            "[obj_tag * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -32528,32 +32542,34 @@
         "address": "0x000b3ae0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "BLData *",
-            "HUDPANE_tag *"
+            "HUDPANE_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined __stdcall HUD_UpdateOICWPane(BLData * param_1, HUDPANE_tag * param_2)",
+        "prototype_string": "void __stdcall HUD_UpdateOICWPane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * obj)",
         "parameters": [
             "[BLData * param_1@Stack[0x4]:4]",
-            "[HUDPANE_tag * param_2@Stack[0x8]:4]"
+            "[HUDPANE_tag * param_2@Stack[0x8]:4]",
+            "[obj_tag * obj@Stack[0xc]:4]"
         ]
     },
     {
         "name": "HUD_UpdateCameraPane",
         "address": "0x000b3cc0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
+            "BLData *",
+            "HUDPANE_tag *",
             "undefined4"
         ],
-        "prototype_string": "undefined HUD_UpdateCameraPane(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined __cdecl HUD_UpdateCameraPane(BLData * param_1, HUDPANE_tag * param_2, undefined4 param_3)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
+            "[BLData * param_1@Stack[0x4]:4]",
+            "[HUDPANE_tag * param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ]
     },
@@ -32564,13 +32580,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "BLData *",
+            "HUDPANE_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl HUD_UpdateNightSightPane(int param_1, int param_2)",
+        "prototype_string": "void __cdecl HUD_UpdateNightSightPane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[BLData * param_1@Stack[0x4]:4]",
+            "[HUDPANE_tag * param_2@Stack[0x8]:4]",
+            "[obj_tag * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -32589,6 +32607,24 @@
             "[BLData * param_1@Stack[0x4]:4]",
             "[HUDPANE_tag * param_2@Stack[0x8]:4]",
             "[obj_tag * obj@Stack[0xc]:4]"
+        ]
+    },
+    {
+        "name": "HUD_UpdateSecCamPane",
+        "address": "0x000b3fa0",
+        "calling_convention": "__cdecl",
+        "has_custom_variable_storage": false,
+        "return_type": "void",
+        "param_types": [
+            "BLData *",
+            "HUDPANE_tag *",
+            "obj_tag *"
+        ],
+        "prototype_string": "void __cdecl HUD_UpdateSecCamPane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * param_3)",
+        "parameters": [
+            "[BLData * param_1@Stack[0x4]:4]",
+            "[HUDPANE_tag * param_2@Stack[0x8]:4]",
+            "[obj_tag * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -32674,6 +32710,24 @@
         ]
     },
     {
+        "name": "HUD_UpdateRedeemerPane",
+        "address": "0x000b4760",
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [
+            "undefined4",
+            "HUDPANE_tag *",
+            "obj_tag *"
+        ],
+        "prototype_string": "undefined __stdcall HUD_UpdateRedeemerPane(undefined4 param_1, HUDPANE_tag * param_2, obj_tag * param_3)",
+        "parameters": [
+            "[undefined4 param_1@Stack[0x4]:4]",
+            "[HUDPANE_tag * param_2@Stack[0x8]:4]",
+            "[obj_tag * param_3@Stack[0xc]:4]"
+        ]
+    },
+    {
         "name": "HUD_UpdateCrossHair",
         "address": "0x000b4b60",
         "calling_convention": "__stdcall",
@@ -32706,19 +32760,19 @@
     {
         "name": "HUD_MPUpdatePane",
         "address": "0x000b5190",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "BLData *",
-            "undefined4",
-            "undefined4"
+            "HUDPANE_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined HUD_MPUpdatePane(BLData * param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined __cdecl HUD_MPUpdatePane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * param_3)",
         "parameters": [
             "[BLData * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[HUDPANE_tag * param_2@Stack[0x8]:4]",
+            "[obj_tag * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -32729,13 +32783,13 @@
         "return_type": "undefined",
         "param_types": [
             "BLData *",
-            "undefined4",
+            "HUDPANE_tag *",
             "obj_tag *"
         ],
-        "prototype_string": "undefined __cdecl HUD_RadarUpdate(BLData * param_1, undefined4 hudPane, obj_tag * param_3)",
+        "prototype_string": "undefined __cdecl HUD_RadarUpdate(BLData * param_1, HUDPANE_tag * hudPane, obj_tag * param_3)",
         "parameters": [
             "[BLData * param_1@Stack[0x4]:4]",
-            "[undefined4 hudPane@Stack[0x8]:4]",
+            "[HUDPANE_tag * hudPane@Stack[0x8]:4]",
             "[obj_tag * param_3@Stack[0xc]:4]"
         ]
     },
@@ -33074,7 +33128,7 @@
         ]
     },
     {
-        "name": "FUN_000b6c20",
+        "name": "WatchOrHands_Create",
         "address": "0x000b6c20",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -33082,7 +33136,7 @@
         "param_types": [
             "int *"
         ],
-        "prototype_string": "obj_tag * __cdecl FUN_000b6c20(int * param_1)",
+        "prototype_string": "obj_tag * __cdecl WatchOrHands_Create(int * param_1)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]"
         ]
@@ -33138,44 +33192,44 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int *",
+            "obj_tag *",
             "byte"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000b6dd0(int * param_1, byte param_2)",
+        "prototype_string": "undefined4 __cdecl FUN_000b6dd0(obj_tag * param_1, byte param_2)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[byte param_2@Stack[0x8]:1]"
         ]
     },
     {
-        "name": "FUN_000b6e60",
+        "name": "Player_CreateSight",
         "address": "0x000b6e60",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int *",
+            "obj_tag *",
             "byte"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000b6e60(int * param_1, byte param_2)",
+        "prototype_string": "undefined4 __cdecl Player_CreateSight(obj_tag * param_1, byte param_2)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[byte param_2@Stack[0x8]:1]"
         ]
     },
     {
-        "name": "FUN_000b6ee0",
+        "name": "Player_CreateMuzzleFlash",
         "address": "0x000b6ee0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int *",
+            "obj_tag *",
             "byte"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000b6ee0(int * param_1, byte param_2)",
+        "prototype_string": "undefined4 __cdecl Player_CreateMuzzleFlash(obj_tag * param_1, byte param_2)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[byte param_2@Stack[0x8]:1]"
         ]
     },
@@ -33410,14 +33464,18 @@
         ]
     },
     {
-        "name": "FUN_000b7eb0",
+        "name": "Player_TiltWeaponTowardsCrosshairs",
         "address": "0x000b7eb0",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall FUN_000b7eb0(void)",
-        "parameters": []
+        "param_types": [
+            "obj_tag *"
+        ],
+        "prototype_string": "void __stdcall Player_TiltWeaponTowardsCrosshairs(obj_tag * obj)",
+        "parameters": [
+            "[obj_tag * obj@EAX:4]"
+        ]
     },
     {
         "name": "Draw_MuzzleFlash",
@@ -33458,12 +33516,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "BLData *",
             "float *"
         ],
-        "prototype_string": "void __cdecl FUN_000b8260(int param_1, float * param_2)",
+        "prototype_string": "void __cdecl FUN_000b8260(BLData * param_1, float * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[BLData * param_1@Stack[0x4]:4]",
             "[float * param_2@Stack[0x8]:4]"
         ]
     },
@@ -33477,17 +33535,17 @@
             "int",
             "undefined4",
             "undefined4",
-            "float10 *",
-            "float *",
+            "_VECTOR *",
+            "_VECTOR *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl FUN_000b82e0(int param_1, undefined4 param_2, undefined4 param_3, float10 * param_4, float * param_5, undefined4 param_6)",
+        "prototype_string": "void __cdecl FUN_000b82e0(int param_1, undefined4 param_2, undefined4 param_3, _VECTOR * param_4, _VECTOR * param_5, undefined4 param_6)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]",
-            "[float10 * param_4@Stack[0x10]:4]",
-            "[float * param_5@Stack[0x14]:4]",
+            "[_VECTOR * param_4@Stack[0x10]:4]",
+            "[_VECTOR * param_5@Stack[0x14]:4]",
             "[undefined4 param_6@Stack[0x18]:4]"
         ]
     },
@@ -33498,12 +33556,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "BLData *",
             "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl FUN_000b8400(int param_1, _VECTOR * param_2)",
+        "prototype_string": "void __cdecl FUN_000b8400(BLData * param_1, _VECTOR * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[BLData * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]"
         ]
     },
@@ -33680,11 +33738,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "BLData *"
         ],
-        "prototype_string": "void __cdecl Player_CheckWeaponsLoaded(int param_1)",
+        "prototype_string": "void __cdecl Player_CheckWeaponsLoaded(BLData * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[BLData * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -33770,12 +33828,12 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "int",
+            "BLData *",
             "short"
         ],
-        "prototype_string": "bool __cdecl Player_WeaponHasAmmo(int param_1, short param_2)",
+        "prototype_string": "bool __cdecl Player_WeaponHasAmmo(BLData * param_1, short param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[BLData * param_1@Stack[0x4]:4]",
             "[short param_2@Stack[0x8]:2]"
         ]
     },
@@ -33850,13 +33908,13 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int",
+            "BLData *",
             "short",
             "short"
         ],
-        "prototype_string": "undefined4 __cdecl Player_EquipWeapon(int param_1, short weaponNum, short param_3)",
+        "prototype_string": "undefined4 __cdecl Player_EquipWeapon(BLData * param_1, short weaponNum, short param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[BLData * param_1@Stack[0x4]:4]",
             "[short weaponNum@Stack[0x8]:2]",
             "[short param_3@Stack[0xc]:2]"
         ]
@@ -33868,13 +33926,13 @@
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "int",
+            "BLData *",
             "short",
             "short"
         ],
-        "prototype_string": "uint __cdecl Player_EquipAmmo(int param_1, short param_2, short param_3)",
+        "prototype_string": "uint __cdecl Player_EquipAmmo(BLData * param_1, short param_2, short param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[BLData * param_1@Stack[0x4]:4]",
             "[short param_2@Stack[0x8]:2]",
             "[short param_3@Stack[0xc]:2]"
         ]
@@ -37830,14 +37888,14 @@
         "address": "0x000ced20",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4 *",
+        "return_type": "sprite * *",
         "param_types": [
             "ushort",
             "undefined4 *",
             "uint *",
             "uint *"
         ],
-        "prototype_string": "undefined4 * __cdecl Sprite_BuildList(ushort param_1, undefined4 * param_2, uint * param_3, uint * param_4)",
+        "prototype_string": "sprite * * __cdecl Sprite_BuildList(ushort param_1, undefined4 * param_2, uint * param_3, uint * param_4)",
         "parameters": [
             "[ushort param_1@Stack[0x4]:2]",
             "[undefined4 * param_2@Stack[0x8]:4]",
@@ -40038,12 +40096,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "MATRIX *",
+            "_MATRIX *",
             "float"
         ],
-        "prototype_string": "void __cdecl MatrixScale(MATRIX * param_1, float param_2)",
+        "prototype_string": "void __cdecl MatrixScale(_MATRIX * param_1, float param_2)",
         "parameters": [
-            "[MATRIX * param_1@Stack[0x4]:4]",
+            "[_MATRIX * param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]"
         ]
     },
@@ -41184,23 +41242,21 @@
     {
         "name": "View_DrawGlist",
         "address": "0x000d9390",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
+            "celglist_tag *",
             "undefined4",
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined View_DrawGlist(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
+        "prototype_string": "undefined __stdcall View_DrawGlist(celglist_tag * param_1, undefined4 trans, undefined4 rot, undefined4 scale)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined4 param_5@Stack[0x14]:4]"
+            "[celglist_tag * param_1@Stack[0x4]:4]",
+            "[undefined4 trans@Stack[0x8]:4]",
+            "[undefined4 rot@Stack[0xc]:4]",
+            "[undefined4 scale@Stack[0x10]:4]"
         ]
     },
     {
@@ -41220,15 +41276,21 @@
     {
         "name": "View_DrawSprites",
         "address": "0x000d9410",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
+            "viewer_tag *",
+            "sprite * *",
+            "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined View_DrawSprites(undefined4 param_1)",
+        "prototype_string": "undefined __stdcall View_DrawSprites(viewer_tag * param_1, sprite * * param_2, undefined4 startNum, undefined4 endNum)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[viewer_tag * param_1@Stack[0x4]:4]",
+            "[sprite * * param_2@Stack[0x8]:4]",
+            "[undefined4 startNum@Stack[0xc]:4]",
+            "[undefined4 endNum@Stack[0x10]:4]"
         ]
     },
     {
@@ -41238,13 +41300,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "viewer_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl View_SetupRenderModes(int param_1, int param_2)",
+        "prototype_string": "void __cdecl View_SetupRenderModes(viewer_tag * param_1, obj_tag * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[viewer_tag * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -41354,12 +41416,18 @@
     {
         "name": "FUN_000da1d0",
         "address": "0x000da1d0",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_000da1d0()",
-        "parameters": []
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
+        "param_types": [
+            "undefined4",
+            "undefined4"
+        ],
+        "prototype_string": "void __stdcall FUN_000da1d0(undefined4 eax, undefined4 esi)",
+        "parameters": [
+            "[undefined4 eax@EAX:4]",
+            "[undefined4 esi@ESI:4]"
+        ]
     },
     {
         "name": "View_AddForcedObjects",
@@ -41394,12 +41462,18 @@
     {
         "name": "View_DrawCelGlist",
         "address": "0x000da670",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined View_DrawCelGlist()",
-        "parameters": []
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
+        "param_types": [
+            "cel_tag *",
+            "viewer_tag *"
+        ],
+        "prototype_string": "void __stdcall View_DrawCelGlist(cel_tag * cel, viewer_tag * viewer)",
+        "parameters": [
+            "[cel_tag * cel@ESI:4]",
+            "[viewer_tag * viewer@EAX:4]"
+        ]
     },
     {
         "name": "View_DrawObjectGlist",
@@ -41408,28 +41482,28 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "obj_tag *",
+            "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl View_DrawObjectGlist(int param_1, int param_2)",
+        "prototype_string": "void __cdecl View_DrawObjectGlist(obj_tag * param_1, viewer_tag * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[viewer_tag * param_2@Stack[0x8]:4]"
         ]
     },
     {
         "name": "View_DrawObjList",
         "address": "0x000da890",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "undefined4",
             "undefined2"
         ],
-        "prototype_string": "undefined View_DrawObjList(undefined4 param_1, undefined2 param_2)",
+        "prototype_string": "void __stdcall View_DrawObjList(undefined4 vwr, undefined2 param_2)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
+            "[undefined4 vwr@Stack[0x4]:4]",
             "[undefined2 param_2@Stack[0x8]:2]"
         ]
     },
@@ -41529,12 +41603,12 @@
         "return_type": "void",
         "param_types": [
             "obj_tag *",
-            "uint"
+            "ushort"
         ],
-        "prototype_string": "void __cdecl View_SetDrawInOtherViewsOnly(obj_tag * param_1, uint param_2)",
+        "prototype_string": "void __cdecl View_SetDrawInOtherViewsOnly(obj_tag * param_1, ushort param_2)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]"
+            "[ushort param_2@Stack[0x8]:2]"
         ]
     },
     {
@@ -42182,11 +42256,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl psiUseCamera(int param_1)",
+        "prototype_string": "void __cdecl psiUseCamera(viewer_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[viewer_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -42234,12 +42308,12 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "int",
+            "celglist_tag *",
             "_MATRIX *"
         ],
-        "prototype_string": "undefined __cdecl psiDrawObjectMatrix(int celglist, _MATRIX * mtx)",
+        "prototype_string": "undefined __cdecl psiDrawObjectMatrix(celglist_tag * celglist, _MATRIX * mtx)",
         "parameters": [
-            "[int celglist@Stack[0x4]:4]",
+            "[celglist_tag * celglist@Stack[0x4]:4]",
             "[_MATRIX * mtx@Stack[0x8]:4]"
         ]
     },
@@ -42396,16 +42470,16 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "light_tag * *",
             "ushort",
             "float",
             "float",
             "float"
         ],
-        "prototype_string": "void __cdecl psiLight_SetLights(int param_1, ushort param_2, float param_3, float param_4, float param_5)",
+        "prototype_string": "void __cdecl psiLight_SetLights(light_tag * * lightList, ushort numLights, float param_3, float param_4, float param_5)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[ushort param_2@Stack[0x8]:2]",
+            "[light_tag * * lightList@Stack[0x4]:4]",
+            "[ushort numLights@Stack[0x8]:2]",
             "[float param_3@Stack[0xc]:4]",
             "[float param_4@Stack[0x10]:4]",
             "[float param_5@Stack[0x14]:4]"
@@ -44818,12 +44892,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "undefined8 *",
+            "D3DMATRIX *",
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000e4e40(undefined8 * param_1, uint param_2)",
+        "prototype_string": "void __cdecl FUN_000e4e40(D3DMATRIX * param_1, uint param_2)",
         "parameters": [
-            "[undefined8 * param_1@Stack[0x4]:4]",
+            "[D3DMATRIX * param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]"
         ]
     },
@@ -45558,7 +45632,7 @@
         "parameters": []
     },
     {
-        "name": "FUN_000e81a0",
+        "name": "maybeD3DMATRIXcopy",
         "address": "0x000e81a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -45567,7 +45641,7 @@
             "undefined4 *",
             "undefined4 *"
         ],
-        "prototype_string": "void __cdecl FUN_000e81a0(undefined4 * param_1, undefined4 * param_2)",
+        "prototype_string": "void __cdecl maybeD3DMATRIXcopy(undefined4 * param_1, undefined4 * param_2)",
         "parameters": [
             "[undefined4 * param_1@Stack[0x4]:4]",
             "[undefined4 * param_2@Stack[0x8]:4]"
@@ -46120,15 +46194,15 @@
         ]
     },
     {
-        "name": "FUN_000e97f9",
+        "name": "file_flush",
         "address": "0x000e97f9",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "bool",
+        "return_type": "int",
         "param_types": [
             "typedef PVOID void *"
         ],
-        "prototype_string": "bool __stdcall FUN_000e97f9(PVOID param_1)",
+        "prototype_string": "int __stdcall file_flush(PVOID param_1)",
         "parameters": [
             "[PVOID param_1@Stack[0x4]:4]"
         ]
@@ -47928,15 +48002,15 @@
     {
         "name": "FUN_000ee460",
         "address": "0x000ee460",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
         "param_types": [
-            "undefined1"
+            "undefined4"
         ],
-        "prototype_string": "undefined FUN_000ee460(undefined1 param_1)",
+        "prototype_string": "void __stdcall FUN_000ee460(undefined4 in_EAX)",
         "parameters": [
-            "[undefined1 param_1@Stack[0x4]:1]"
+            "[undefined4 in_EAX@EAX:4]"
         ]
     },
     {
@@ -51156,11 +51230,11 @@
     {
         "name": "FUN_000f5490",
         "address": "0x000f5490",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f5490()",
+        "prototype_string": "void __stdcall FUN_000f5490(void)",
         "parameters": []
     },
     {

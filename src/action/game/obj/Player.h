@@ -26,11 +26,16 @@ typedef struct BLData {
     HUDINFO_tag* hudInfo; // 0x770
     char _pad_2222[4];
     obj_tag* weaponObject;
-    char _pad_111[0x808-4-8-0x770];
+    obj_tag* weaponRelatedObjs[32]; // Maybe the attachement points for weapons? Unclear, but set up in Player_InitWeapon
+    obj_tag* sightObj; // 0x7fc
+    char _unknown[4];
+    obj_tag* muzzleFlashObj; // 0x804
     obj_tag* remoteControlDevice; // 0x808
     char _pad_2[0x8b0-0x808-4];
     float nightVisionTimer; // 0x8b0
-    char _pad_22[0x8d2-0x8b0-4];
+    char _pad_22[0x8c8-0x8b0-4];
+    short muzzleFlashRelated; // 0x8c8
+    char _pad_23[0x8d2-0x8c8-2];
     short previousSubState; //0x8d2
     char _pad_3[6];
     char someNightVisionThing;
@@ -47,6 +52,7 @@ static_assert(offsetof(BLData, hudInfo) == 0x770, "Offset of hudInfo not correct
 static_assert(offsetof(BLData, crosshairOffsetX) == 0xe0, "Offset of crosshairOffsetX not correct");
 static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisionActive not correct");
 static_assert(offsetof(BLData, nightVisionTimer) == 0x8b0, "Offset of nightVisionTimer not correct");
+static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisionActive not correct");
 
 
 //char (*__kaboom)[offsetof(BLData,playerNum)] = 1;
@@ -82,5 +88,7 @@ void Player_SetHealth(BLData *obj, float health);
 void Player_CheckWeaponsLoaded(BLData *blData);
 short Player_AmmoIndex(short weaponIndex);
 ushort Player_AmmoInGun(BLData *playerInfo, ushort weaponIndex);
+void Player_CreateSight(obj_tag *playerObj, byte viewerNum);
+void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum);
 
 #endif // PLAYER_H_
