@@ -204,7 +204,7 @@ typedef struct obj_tag {
     char tweakR;
     char tweakG;
     char tweakB;
-    char unknown1234; // Maybe glow intensity?
+    char maybeBrightness; // Maybe glow intensity?
     char _pad_8;
 } obj_tag;
 #pragma pack(pop)

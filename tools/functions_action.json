@@ -33222,12 +33222,12 @@
         "address": "0x000b6ee0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "void",
         "param_types": [
             "obj_tag *",
             "byte"
         ],
-        "prototype_string": "undefined4 __cdecl Player_CreateMuzzleFlash(obj_tag * param_1, byte param_2)",
+        "prototype_string": "void __cdecl Player_CreateMuzzleFlash(obj_tag * param_1, byte param_2)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
             "[byte param_2@Stack[0x8]:1]"
@@ -33498,31 +33498,31 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "float10 *",
-            "float *"
+            "obj_tag *",
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl PositionBeam(int param_1, float10 * param_2, float * param_3)",
+        "prototype_string": "void __cdecl PositionBeam(obj_tag * param_1, _VECTOR * param_2, _VECTOR * param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[float10 * param_2@Stack[0x8]:4]",
-            "[float * param_3@Stack[0xc]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[_VECTOR * param_3@Stack[0xc]:4]"
         ]
     },
     {
-        "name": "FUN_000b8260",
+        "name": "Player_SetupLaser",
         "address": "0x000b8260",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
             "BLData *",
-            "float *"
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl FUN_000b8260(BLData * param_1, float * param_2)",
+        "prototype_string": "void __cdecl Player_SetupLaser(BLData * param_1, _VECTOR * param_2)",
         "parameters": [
             "[BLData * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]"
+            "[_VECTOR * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -33550,7 +33550,7 @@
         ]
     },
     {
-        "name": "FUN_000b8400",
+        "name": "Player_SetupTaser",
         "address": "0x000b8400",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -33559,7 +33559,7 @@
             "BLData *",
             "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl FUN_000b8400(BLData * param_1, _VECTOR * param_2)",
+        "prototype_string": "void __cdecl Player_SetupTaser(BLData * param_1, _VECTOR * param_2)",
         "parameters": [
             "[BLData * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]"

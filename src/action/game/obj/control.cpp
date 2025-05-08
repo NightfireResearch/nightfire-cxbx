@@ -143,7 +143,7 @@ void control_init_object(obj_tag* obj) {
     obj->tweakR = 0xff;
     obj->tweakG = 0xff;
     obj->tweakB = 0xff;
-    obj->unknown1234 = 0xff;
+    obj->maybeBrightness = 0xff;
     obj->light_related1 = 0xff;
     obj->light_related2 = 0xff;
     obj->light_related3 = 0xff;

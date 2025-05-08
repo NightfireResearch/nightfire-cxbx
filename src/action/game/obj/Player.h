@@ -90,5 +90,6 @@ short Player_AmmoIndex(short weaponIndex);
 ushort Player_AmmoInGun(BLData *playerInfo, ushort weaponIndex);
 void Player_CreateSight(obj_tag *playerObj, byte viewerNum);
 void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum);
+void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos);
 
 #endif // PLAYER_H_

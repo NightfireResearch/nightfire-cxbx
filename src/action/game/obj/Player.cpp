@@ -89,3 +89,30 @@ void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum) {
     blData->muzzleFlashObj = muzzleFlashObj;
     blData->muzzleFlashRelated = 0;
 }
+
+
+// AUTOGEN
+void PositionBeam(obj_tag *param_1, _VECTOR *param_2, _VECTOR *param_3);
+// AUTOGEN
+uchar AnimGetBoneWorldTrans(obj_tag *param_1,uint whichBoneMatrix,int param_3,_VECTOR *param_4,_MATRIX *param_5);
+
+
+// AUTOINJECT
+void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos) {
+  
+    _VECTOR sourcePos;
+
+    AnimGetBoneWorldTrans(param_1->weaponObject, 0, 0, &sourcePos, (_MATRIX *)0x0);
+    
+    obj_tag* poVar1 = param_1->weaponRelatedObjs[0];
+
+    poVar1->maybeBrightness = 0xff;
+    
+    // Strong or weak beam ("lazer" 0x2000131 or "uv_lazer" 0x20006c1)
+    HASHCODE hc = (glb_players[param_1->playerNum]->animState->currentWeaponId == 0x4e) ? (HASHCODE)0x2000131 : (HASHCODE)0x20006c1;
+
+    hashtable_set_object_to_entity_gfx(poVar1, hc);
+    View_SetDrawInAllViews(poVar1);
+    PositionBeam(poVar1, &sourcePos, targetPos);
+
+}
