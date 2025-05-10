@@ -27,20 +27,52 @@ static_assert(sizeof(PlayerMissionStats) == 0x38, "PlayerMissionStats size misma
 // AUTOGEN
 void PlrStat_ResetForMission(void);
 
+// Likely a helper function which was inlined?
+bool PlrStat_OkToUpdate(uint playerNum) {
+  if(playerNum >= 10)
+    return false;
+
+  if(!MPSettings.isMultiplayer) {
+    int missionStatus = Mission_Status();
+    if (missionStatus > 1 || missionStatus < 0)
+      return false;
+  }
+
+  return true;
+}
 
 // AUTOINJECT
 void PlrStat_LogEnemySurrender(uint playerNum) {
-  bool bVar1;
-  long lVar2;
 
-  if(playerNum >= 10)
-    return;
+    if(!PlrStat_OkToUpdate(playerNum))
+        return;
 
-  if (!MPSettings.isMultiplayer) {
-    int missionStatus = Mission_Status();
-    if (missionStatus > 1 || missionStatus < 0)
-      return;
-  }
+    PlrMissionStats[playerNum].enemiesSurrendered++;
+}
 
-  PlrMissionStats[playerNum].enemiesSurrendered++;
+// AUTOINJECT
+void PlrStat_LogEnemyDispatched(uint playerNum) {
+
+    if(!PlrStat_OkToUpdate(playerNum))
+        return;
+
+    PlrMissionStats[playerNum].enemiesDispatched++;
+}
+
+// AUTOINJECT
+void PlrStat_LogEnemyDisabled(uint playerNum) {
+
+    if(!PlrStat_OkToUpdate(playerNum))
+        return;
+
+    PlrMissionStats[playerNum].enemiesDisabled++;
+}
+
+// AUTOINJECT
+void PlrStat_LogEnemySpawned(void) {
+
+    // Original game code does not check PlrStat_OkToUpdate, we replicate that behaviour here
+    // Also does not apply to a playerNum, it's a global count
+
+    PlrMissionStats[0].enemiesSpawned++;
 }

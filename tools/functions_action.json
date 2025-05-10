@@ -19094,13 +19094,13 @@
         "address": "0x0006afb0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "ushort"
         ],
-        "prototype_string": "uint __cdecl GS_IsPaused(ushort param_1)",
+        "prototype_string": "bool __cdecl GS_IsPaused(ushort playerNum)",
         "parameters": [
-            "[ushort param_1@Stack[0x4]:2]"
+            "[ushort playerNum@Stack[0x4]:2]"
         ]
     },
     {
@@ -19113,10 +19113,10 @@
             "char",
             "ushort"
         ],
-        "prototype_string": "void __cdecl GS_PausePlayer(char param_1, ushort param_2)",
+        "prototype_string": "void __cdecl GS_PausePlayer(char isPaused, ushort playerNum)",
         "parameters": [
-            "[char param_1@Stack[0x4]:1]",
-            "[ushort param_2@Stack[0x8]:2]"
+            "[char isPaused@Stack[0x4]:1]",
+            "[ushort playerNum@Stack[0x8]:2]"
         ]
     },
     {
@@ -19129,10 +19129,10 @@
             "int",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl GS_SetRefreshRate(int param_1, undefined4 param_2)",
+        "prototype_string": "void __cdecl GS_SetRefreshRate(int gameFrameRate, undefined4 videoFrameRate)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[int gameFrameRate@Stack[0x4]:4]",
+            "[undefined4 videoFrameRate@Stack[0x8]:4]"
         ]
     },
     {
@@ -32126,7 +32126,7 @@
         ]
     },
     {
-        "name": "FUN_000b0670",
+        "name": "PlrStat_LogEnemyDisabled",
         "address": "0x000b0670",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -32134,7 +32134,7 @@
         "param_types": [
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000b0670(uint param_1)",
+        "prototype_string": "void __cdecl PlrStat_LogEnemyDisabled(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ]
@@ -32182,7 +32182,7 @@
         ]
     },
     {
-        "name": "FUN_000b07a0",
+        "name": "PlrStat_LogShotFired",
         "address": "0x000b07a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -32190,7 +32190,7 @@
         "param_types": [
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000b07a0(uint param_1)",
+        "prototype_string": "void __cdecl PlrStat_LogShotFired(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ]
