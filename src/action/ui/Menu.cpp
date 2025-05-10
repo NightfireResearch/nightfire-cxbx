@@ -185,12 +185,19 @@ LAB_0007f83e:
   const int maybeColourDisabled = 0x48484880;
   const int maybeColourEnabled = 0x7d6d5aff;
 
-  // BUG HERE ON NEXT 5 LINES - if on 999th item, we're reading past the end of the array 
-  __Menu_SendEx(managerNum, param_4, 0, MessageType_SetColour, itemList[idxUp2].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);      
-  __Menu_SendEx(managerNum, param_4, 1, MessageType_SetColour, itemList[idxUp1].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);
+  // Previously, the game wouldn't check for 999 resulting in an out-of-bounds read. Now fixed.
+  if(idxUp2 != 999)
+    __Menu_SendEx(managerNum, param_4, 0, MessageType_SetColour, itemList[idxUp2].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);      
+  if(idxUp1 != 999)
+    __Menu_SendEx(managerNum, param_4, 1, MessageType_SetColour, itemList[idxUp1].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);
+  if(idxDown1 != 999)
+    __Menu_SendEx(managerNum, param_4, 3, MessageType_SetColour, itemList[idxDown1].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);
+  if(idxDown2 != 999)
+    __Menu_SendEx(managerNum, param_4, 4, MessageType_SetColour, itemList[idxDown2].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);
+
+  // The middle item can't be offscreen, no need to check
   __Menu_SendEx(managerNum, param_4, 2, MessageType_SetColour, itemList[idxMid].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);
-  __Menu_SendEx(managerNum, param_4, 3, MessageType_SetColour, itemList[idxDown1].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);
-  __Menu_SendEx(managerNum, param_4, 4, MessageType_SetColour, itemList[idxDown2].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);
+
 
   if (maybeDoAnimation) {
     // Inlined Menu_StartIris(2, param_1, param_7)

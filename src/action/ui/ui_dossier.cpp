@@ -70,9 +70,6 @@ const M_ITEM ds_options[4] = {
         .descriptionWhenDisabled = TXT_NULL
     }
 };
-// Guard against the game trying to read past the end of the array by allocating a bunch of extra space
-// This is a hacky workaround but seems to work just fine
-M_ITEM dummy[999];
 
 // This should produce an array of 4 0x18-byte structs, representing the menu layout for the Dossier screen
 static_assert(sizeof(ds_options) == 0x18 * 4, "Size of ds_options is not as expected");

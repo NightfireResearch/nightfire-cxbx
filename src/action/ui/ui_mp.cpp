@@ -35,8 +35,6 @@ M_ITEM mp_scenario[13] = {
     {ICON_MPSCENARIO_TEAMKOTH,      MPSCENARIO_TEAMKOTH_NAME,   MPSCENARIO_TEAMKOTH_DESC,   0x60001000, true,   MP_SCENARIO_LOCKED}
 };
 
-M_ITEM dummy1[999]; // Dummy array to prevent crash in Menu_UpdateWheel
-
 // AUTOINJECT
 bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6) {
 
