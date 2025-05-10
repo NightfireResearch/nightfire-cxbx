@@ -13,7 +13,9 @@ void Menu_UpdateWheel(uchar param_1, M_CONTROL *param_2, M_ITEM *param_3, HASHCO
 bool Menu_SelectItemInControl(M_CONTROL* control, M_ITEM *list, ushort size, int idx);
 void Menu_UnlockMPSettings(void);
 
+int __Menu_SendEx(byte param_1,HASHCODE param_2,uint itemNum,uint param_4, int param_5, int param_6);
 int __Menu_SendMessage(M_CONTROL *param_1, uint param_2, int param_3, int param_4);
 uint __Menu_Send(uchar param_1, HASHCODE param_2, uint param_3, int param_4, int param_5);
+void __Menu_SendDelayed(int param_1,byte param_2,HASHCODE param_3,undefined4 param_4,undefined4 param_5,undefined4 param_6);
 
 #endif // MENU_H

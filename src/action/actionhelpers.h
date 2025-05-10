@@ -23,6 +23,7 @@ typedef struct SpriteInfo SpriteInfo;
 typedef struct _D3DMATRIX D3DMATRIX;
 typedef struct M_CONTROL M_CONTROL;
 typedef struct M_ITEM M_ITEM;
+typedef struct BOT_stats_t BOT_stats_t;
 
 // Hashcode, SFX and translated text names
 #include "assets.h"

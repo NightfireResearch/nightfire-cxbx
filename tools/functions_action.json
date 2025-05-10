@@ -1496,11 +1496,11 @@
         "has_custom_variable_storage": false,
         "return_type": "BOT_stats_t *",
         "param_types": [
-            "int"
+            "uint"
         ],
-        "prototype_string": "BOT_stats_t * __cdecl BOT_getDefaultStats(int param_1)",
+        "prototype_string": "BOT_stats_t * __cdecl BOT_getDefaultStats(uint param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[uint param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -21580,7 +21580,7 @@
         ]
     },
     {
-        "name": "Menu_SendEx",
+        "name": "__Menu_SendEx",
         "address": "0x000728f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -21588,19 +21588,19 @@
         "param_types": [
             "byte",
             "HASHCODE",
+            "uint",
+            "uint",
             "int",
-            "MessageType",
-            "int * *",
-            "int * *"
+            "int"
         ],
-        "prototype_string": "int __cdecl Menu_SendEx(byte param_1, HASHCODE param_2, int itemNum, MessageType param_4, int * * param_5, int * * param_6)",
+        "prototype_string": "int __cdecl __Menu_SendEx(byte param_1, HASHCODE param_2, uint itemNum, uint param_4, int param_5, int param_6)",
         "parameters": [
             "[byte param_1@Stack[0x4]:1]",
             "[HASHCODE param_2@Stack[0x8]:4]",
-            "[int itemNum@Stack[0xc]:4]",
-            "[MessageType param_4@Stack[0x10]:4]",
-            "[int * * param_5@Stack[0x14]:4]",
-            "[int * * param_6@Stack[0x18]:4]"
+            "[uint itemNum@Stack[0xc]:4]",
+            "[uint param_4@Stack[0x10]:4]",
+            "[int param_5@Stack[0x14]:4]",
+            "[int param_6@Stack[0x18]:4]"
         ]
     },
     {
@@ -21962,7 +21962,7 @@
         ]
     },
     {
-        "name": "FUN_000732b0",
+        "name": "__Menu_SendDelayed",
         "address": "0x000732b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -21970,16 +21970,16 @@
         "param_types": [
             "int",
             "byte",
-            "int *",
+            "HASHCODE",
             "undefined4",
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl FUN_000732b0(int param_1, byte param_2, int * param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6)",
+        "prototype_string": "void __cdecl __Menu_SendDelayed(int param_1, byte param_2, HASHCODE param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[byte param_2@Stack[0x8]:1]",
-            "[int * param_3@Stack[0xc]:4]",
+            "[HASHCODE param_3@Stack[0xc]:4]",
             "[undefined4 param_4@Stack[0x10]:4]",
             "[undefined4 param_5@Stack[0x14]:4]",
             "[undefined4 param_6@Stack[0x18]:4]"

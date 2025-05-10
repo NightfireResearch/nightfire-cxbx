@@ -4,6 +4,8 @@
 #include "../actionhelpers.h"
 
 typedef enum {
+    MessageType_SetText = 0x18,
+    MessageType_SetColour = 0x1a,
     MessageType_GetValue = 0x40, // Get the value of the current item (eg the index of the selected item)
     MessageType_GoPage = 0x44, // Go to a new page
     MessageType_Scroll = 0x49, // Scroll (vertical?) event - fired by both d-pad and left analog stick
@@ -11,15 +13,26 @@ typedef enum {
     MessageType_Enter = 0x54, // Entering / Loading the menu page?
 } MessageType;
 
+typedef enum {
+    ControlType_Scroll = 0x0a
+} ControlType;
+
+#pragma pack(push, 1)
+
 // TODO: Unfinished
 typedef struct M_MANAGER {
-    char pad[0x76];
+    char pad[0x1bc];
+    uint field158_0x1bc;
 } M_MANAGER;
 
 // TODO: Unfinished
 typedef struct M_CONTROL {
     char pad[0x18];
-    uint hashcode;
+    uint hashcode; // 0x18
+    char pad2[0x7b-0x18-4];
+    char type; // 0x7b
+    char pad3[0x144-0x7b-1]; 
+    char field_0x144; // 0x144 - purpose unknown   
 } M_CONTROL;
 
 // Common between PS2 and Xbox
@@ -31,6 +44,8 @@ typedef struct M_ITEM {
     uint enabled; // 4-byte bool? Upper 3 bits seem unused
     Action_TranslatedText descriptionWhenDisabled;
 } M_ITEM;
+
+#pragma pack(pop)
 
 bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int param_4, int param_5);
 

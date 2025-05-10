@@ -237,7 +237,12 @@ typedef enum {
 typedef enum {
     TXT_NULL = 0,
 
+    MP_TEAM = 0x1b8,
+
     PLAYER = 0x1c3,
+
+    MP_TEAM_PHOENIX = 0x1c7,
+    MP_TEAM_MI6 = 0x1c8,
 
     DOSSIER_RECORDS_NAME = 0x00000280,
     DOSSIER_REWARDS_NAME = 0x00000281,
