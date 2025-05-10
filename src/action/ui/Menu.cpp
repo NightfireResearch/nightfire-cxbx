@@ -35,6 +35,11 @@ void __Menu_SendDelayed(int param_1,byte param_2,HASHCODE param_3,undefined4 par
 // AUTOGEN
 int __Menu_SendEx(byte param_1,HASHCODE param_2,uint itemNum, uint param_4,int **param_5,int **param_6);
 
+// Exists on PS2 at 00202fd8, inlined on Xbox
+bool Menu_IsBotGood(uint idx) {
+    BOT_stats_t *stats = BOT_getDefaultStats(idx);
+    return stats->isBad == 0;
+}
 
 // Size unclear
 #define buf_171 (*(char*)0x002250b8)
@@ -96,8 +101,7 @@ LAB_0007f83e:
       pcVar4 = Txt_BindLabel(AVar7,0);
     }
     else {
-      BOT_stats_t *stats = BOT_getDefaultStats(itemList[idxMid].identifier);
-      pcVar4 = Txt_BindLabel(stats->isBad ? MP_TEAM_PHOENIX : MP_TEAM_MI6, 0);
+      pcVar4 = Txt_BindLabel(Menu_IsBotGood(itemList[idxMid].identifier) ? MP_TEAM_MI6 : MP_TEAM_PHOENIX, 0);
       pcVar5 = Txt_BindLabel(MP_TEAM, 0);
       pcVar6 = Txt_BindLabel(itemList[idxMid].description, 0);
       sprintf(&buf_171, "%s\n%s : %s", pcVar6, pcVar5, pcVar4);
