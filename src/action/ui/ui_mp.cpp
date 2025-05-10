@@ -44,25 +44,29 @@ bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint messa
 #define menu_unlock_everything U8_AT(0x0025d79e)
 
 // AUTOINJECT
-bool C_SBMPMAP_Handler(uchar param_1,M_CONTROL *param_2,uint param_3,uint param_4,int param_5,int param_6) {
-  uint uVar1;
+bool C_SBMPMAP_Handler(uchar param_1,M_CONTROL *param_2,uint param_3,uint message,int param_5,int param_6) {
   
-  switch(param_4) {
-  case 0x49:
-  case 0x54:
-    Menu_UpdateWheel(param_1,param_2,mp_level,(HASHCODE)0x100000e9,(HASHCODE)0x1000000a,(HASHCODE)0x1000000b,(HASHCODE)0x10000105,param_4 == 0x49);
-    return true;
-  case 0x4b:
-    uVar1 = __Menu_SendMessage(param_2,0x40,0,0);
-    if ((menu_unlock_everything != '\0') || (mp_level[uVar1 & 0xff].enabled != false)) {
-      GameState.NextLevelHashcode = (HASHCODE)mp_level[uVar1 & 0xff].identifier;
-      MPSettings.multiplayerLevelHashcode = GameState.NextLevelHashcode;
-      Menu_ChangePageCloseIris(P_MPSETUP,param_1,0x10000105);
+    uint idx;
+
+    MessageType event = (MessageType)message;
+
+    switch(event) {
+    case MessageType_Scroll:
+    case MessageType_Enter:
+        Menu_UpdateWheel(param_1, param_2, mp_level, (HASHCODE)0x100000e9, (HASHCODE)0x1000000a, (HASHCODE)0x1000000b, (HASHCODE)0x10000105, event == MessageType_Scroll);
+        return true;
+    case MessageType_Select:
+        idx = __Menu_SendMessage(param_2, MessageType_GetValue, 0, 0) & 0xff;
+        if (menu_unlock_everything || mp_level[idx].enabled) {
+            GameState.NextLevelHashcode = (HASHCODE)mp_level[idx].identifier;
+            MPSettings.multiplayerLevelHashcode = GameState.NextLevelHashcode;
+            Menu_ChangePageCloseIris(P_MPSETUP, param_1, 0x10000105);
+        }
+        break;
+    case 0x51:
+        __Menu_SendMessage(param_2, 0x27, 0, 7);
+        return true;
     }
-    break;
-  case 0x51:
-    __Menu_SendMessage(param_2,0x27,0,7);
+
     return true;
-  }
-  return true;
 }
