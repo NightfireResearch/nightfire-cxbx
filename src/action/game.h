@@ -21,6 +21,7 @@ void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume);
 void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate);
 void GS_PauseGame(bool pause);
 void GS_PausePlayer(char pause, ushort playerNum);
+bool GS_IsPaused(ushort playerNum);
 
 #pragma pack(push, 1)
 typedef struct {
@@ -47,7 +48,7 @@ typedef struct {
     undefined4 field20_0x44;
     undefined4 BaseMapHashCode;
     undefined4 LoadTimeStart;
-    undefined field23_0x50;
+    undefined SomeAlternatePauseState;
     char VibrationEnabled;
     undefined field25_0x52;
     undefined field26_0x53;

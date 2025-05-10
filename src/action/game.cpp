@@ -21,10 +21,47 @@ void __stdcall Env_Update(void);
 void __stdcall SSys_Monitor(void);
 // AUTOGEN
 void __stdcall Light_Update(void);
-// AUTOGEN
-uint GS_IsPaused(ushort a);
-// AUTOGEN
-void GS_PausePlayer(char pause, ushort playerNum);
+
+#pragma pack(push, 1)
+typedef struct {
+    uint paused;
+    char unknown_pad[0x2c];
+} MPGameStruct;
+static_assert(sizeof(MPGameStruct) == 0x30, "MPGameStruct is wrong size");
+#pragma pack(pop)
+
+// Note that PS2 and Xbox have different number of entries in MPGame! PS2 has 8, Xbox has 10
+// The struct itself appears to be the same size though (confirmed by stride length of various usages of MPGame)
+#define MPGame (*(MPGameStruct(*)[10])0x00262738)
+
+
+// AUTOINJECT
+bool GS_IsPaused(ushort playerNum) {
+
+  // A specific player?
+  if(playerNum != 0xffff)
+    return MPGame[playerNum].paused;
+  
+  // Any player?
+  if(MPSettings.isMultiplayer) {
+    for(int i = 0; i < MPSettings.numPlayers; i++) {
+      if(MPGame[i].paused)
+        return true;
+    }
+    return false;
+  }
+
+  // Single player, use GameState
+  return GameState.SomeAlternatePauseState;
+}
+
+// AUTOINJECT
+void GS_PausePlayer(char pause, ushort playerNum) {
+  if(playerNum < 4)
+    MPGame[playerNum].paused = pause;
+}
+
+
 
 
 
@@ -112,7 +149,6 @@ LAB_0006aafe:
 #define GameStateStack (*(uint (*)[64])0x0017bff0) // Not zero-initialised - first entry must be 1
 
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
-#define MPGame (*((MPGame_t*)0x00262738))
 #define GlobalVars (*((GlobalVars_t*)0x001f6568))
 #define PTPDATA (*((sNightFireShared_tag*)0x001d7e90))
 
