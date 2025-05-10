@@ -273,7 +273,7 @@ HASHCODE Mission_GetEndTo(HASHCODE level) {
 #define FadeClr_147 U32_AT(0x0017e550)
 #define TimeOut_148 FLOAT_AT(0x0025fe28)
 #define PlayerHasFinishedDying U8_AT(0x001df19a)
-#define LevelToEndTo U32_AT(0x0017e54c)
+#define LevelToEndTo (*(HASHCODE*)0x0017e54c)
 
 // AUTOINJECT
 void Mission_Update(void) {
@@ -348,7 +348,7 @@ void Mission_Update(void) {
                   GameState.BaseMapHashCode = GameState.CurrentLevelHashcode;
                 }
                 GameState.ReloadMenupage = P_NFRESULTS;
-                ResetMap_LevelToLoad((HASHCODE)LevelToEndTo, 0, 0);
+                ResetMap_LevelToLoad(LevelToEndTo, 0, 0);
                 GameFlow_PushState(7, 60.0, FadeClr_147);
                 InternalState = 5;
             } else { // Show retry/quit menu
