@@ -36,33 +36,6 @@
 
 // ds_options: 002e0af8 (PS2 EU), 0017cf70 (Xbox)
 
-// If we reconstruct ds_options in code ourselves, we get a crash!
-// The crash occurs at 0x7fa01 which is the Menu_UpdateWheel function - error code 0xC0000005: Access violation
-// The offending code looks like (param_3[local_28].enabled != false)
-
-// At the time of crash:
-// ds_options located at: 0x6bf95830
-// [0x1F38] MAIN: Received Exception (Code := 0xC0000005)
-//  EIP := 0x0007FA01(=D3DDevice__m_VerticalBlankEvent_OFFSET+0x7d4ad)
-//  EFL := 0x00010246
-//  EAX := 0x00000300 EBX := 0x00000000 ECX := 0x00000000 EDX := 0x00000BB5
-//  ESI := 0x1000010D EDI := 0x6BF95830 ESP := 0x0D94F9CC EBP := 0x00000000
-//  CR2 := 0x00000000
-
-// The assembly is: AL,byte ptr [EDI + EDX*0x8 + 0x10]
-
-// EDI contains the address of ds_options as expected
-// EDX should contain the offset (in units of 0x8 bytes) into the ds_options array
-// 0x10 is the offset of the enabled field in the M_ITEM struct
-
-// EDX is actually 0x00000BB5, which is 2997 in decimal. 2997 * 8 = 23976. Divide by 0x18, this is the 999th element.
-
-// There is some logic in the Menu_UpdateWheel function that hardcodes 999 as a special value, but this is out of the bounds of the ds_options array!
-// This doesn't cause a crash in the original game because the Xbox lacks any memory protection and the game just reads whatever is there
-// but in our case, it crashes because we're trying to read memory that isn't allocated?
-
-// This could also lead to weird behaviour that changes depending on where the ds_options array is located in memory and what is in the memory after it
-
 const M_ITEM ds_options[4] = {
     {
         .iconHashcode = ICON_DOSSIER_RECORDS,
