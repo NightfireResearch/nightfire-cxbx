@@ -45,7 +45,7 @@ bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int 
 bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint param_4, int param_5, int param_6);
 bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint param_4, int param_5, int param_6);
 bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint event, int param_5, int param_6);
-
+bool C_SBMPMAP_Handler(uchar param_1,M_CONTROL *param_2,uint param_3,uint param_4,int param_5,int param_6);
 
 
 #endif // UI_H

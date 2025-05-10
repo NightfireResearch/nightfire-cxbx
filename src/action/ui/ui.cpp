@@ -107,8 +107,6 @@ bool C_GOMULTIPLAYER_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, u
 // AUTOGEN
 bool C_GOCODENAMES_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool C_SBMPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool C_SBNFMAP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_LBPMMAP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
