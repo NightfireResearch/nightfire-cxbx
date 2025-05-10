@@ -1,5 +1,6 @@
 #include "ui.h"
 
+#include "Manager.h"
 #include "Menu.h"
 #include "../game/mp/multiplayer.h"
 
@@ -84,4 +85,27 @@ bool C_SBMPMAP_Handler(uchar param_1,M_CONTROL *param_2,uint param_3,uint messag
     }
 
     return true;
+}
+
+// AUTOINJECT
+bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6) {
+  M_CONTROL *pMVar1;
+  
+  if (message == 0x4c) {
+    Menu_StartIris((param_6 == 0x40000002) ? 0 : 4, managerNum, 0x10000106);
+    Menu_UnlockMPSettings();
+    pMVar1 = (M_CONTROL *)__Menu_Send(managerNum, C_SBMPSCEN, 0x39, 0, 0);
+    Menu_SelectItemInControl(pMVar1, mp_scenario, 0xd, MPSettings.GameMode);
+  }
+  else {
+    if (message == 0x50) {
+      Menu_PlayIris(1, managerNum, 0x10000106);
+      return true;
+    }
+    if (message == 99) {
+      Manager_SendMessage(&manager[managerNum], MessageType_GoPage, 0x40000002, 0);
+      return true;
+    }
+  }
+  return true;
 }

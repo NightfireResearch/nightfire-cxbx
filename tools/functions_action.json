@@ -24222,11 +24222,11 @@
     {
         "name": "Menu_UnlockMPSettings",
         "address": "0x0007c9b0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall Menu_UnlockMPSettings(void)",
+        "prototype_string": "void Menu_UnlockMPSettings(void)",
         "parameters": []
     },
     {

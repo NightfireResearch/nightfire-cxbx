@@ -35,3 +35,6 @@ uint __Menu_Send(uchar param_1, HASHCODE param_2, uint param_3, int param_4, int
 
 // AUTOGEN
 bool Menu_SelectItemInControl(M_CONTROL* control, M_ITEM *list, ushort size, int idx);
+
+// AUTOGEN
+void Menu_UnlockMPSettings(void);

@@ -19,8 +19,6 @@ bool P_MPPLAYERMODS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, ui
 // AUTOGEN
 bool P_MPJOIN_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool P_MPSCENARIO_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool P_CNSELECT_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool P_NFMAP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
