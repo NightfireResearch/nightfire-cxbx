@@ -23,6 +23,8 @@ void __stdcall SSys_Monitor(void);
 void __stdcall Light_Update(void);
 // AUTOGEN
 uint GS_IsPaused(ushort a);
+// AUTOGEN
+void GS_PausePlayer(char pause, ushort playerNum);
 
 
 

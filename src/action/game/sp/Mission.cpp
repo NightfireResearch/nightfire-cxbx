@@ -372,6 +372,7 @@ void Mission_Update(void) {
             break;
         
         case 7: // Await timeout
+            GS_PausePlayer(1, 0);
             TimeOut_148 -= FRAME_RATE_MUL;
             if (TimeOut_148 <= 0) {
                 GS_PauseGame(true);
