@@ -32020,11 +32020,11 @@
     {
         "name": "PlrStat_OkToUpdate",
         "address": "0x000b04d0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall PlrStat_OkToUpdate(void)",
+        "prototype_string": "bool PlrStat_OkToUpdate(void)",
         "parameters": []
     },
     {

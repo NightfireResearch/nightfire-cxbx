@@ -27,7 +27,8 @@ static_assert(sizeof(PlayerMissionStats) == 0x38, "PlayerMissionStats size misma
 // AUTOGEN
 void PlrStat_ResetForMission(void);
 
-// Likely a helper function which was inlined?
+// Likely a helper function which was inlined into the below funcs
+// AUTOINJECT
 bool PlrStat_OkToUpdate(uint playerNum) {
   if(playerNum >= 10)
     return false;
