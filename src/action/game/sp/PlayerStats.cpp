@@ -68,6 +68,17 @@ void PlrStat_LogEnemyDisabled(uint playerNum) {
     PlrMissionStats[playerNum].enemiesDisabled++;
 }
 
+
+// AUTOINJECT
+void PlrStat_LogHealth(uint health, uint playerNum) {
+
+    if(!PlrStat_OkToUpdate(playerNum))
+        return;
+    
+    PlrMissionStats[playerNum].health = health;
+}
+
+
 // AUTOINJECT
 void PlrStat_LogEnemySpawned(void) {
 
