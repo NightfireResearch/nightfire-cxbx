@@ -143,11 +143,11 @@ bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint p
                     return 1;
                 case 2:
                     // Option 2: Dossier - Gadgets submenu
-                    Menu_ChangePageCloseIris(MENU_DSGADGETS, param_1, 0x1000010b);
+                    Menu_ChangePageCloseIris(P_DSGADGETS, param_1, 0x1000010b);
                     return 1;
                 case 3:
                     // Option 3: Dossier - Weapons submenu
-                    Menu_ChangePageCloseIris(MENU_DSWEAPONS, param_1, 0x1000010b);
+                    Menu_ChangePageCloseIris(P_DSWEAPONS, param_1, 0x1000010b);
                     return 1;
             }
         }

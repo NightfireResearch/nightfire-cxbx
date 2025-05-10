@@ -347,7 +347,7 @@ void Mission_Update(void) {
                 if ((lVar4 < lVar3) && (GameState.BaseMapHashCode = BaseMap, MPSettings.isMultiplayer != 0)) {
                   GameState.BaseMapHashCode = GameState.CurrentLevelHashcode;
                 }
-                GameState.ReloadMenupage = MENU_NFRESULTS;
+                GameState.ReloadMenupage = P_NFRESULTS;
                 ResetMap_LevelToLoad((HASHCODE)LevelToEndTo, 0, 0);
                 GameFlow_PushState(7, 60.0, FadeClr_147);
                 InternalState = 5;
