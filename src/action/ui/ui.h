@@ -22,9 +22,18 @@ typedef struct {
     Action_TranslatedText descriptionWhenDisabled;
 } M_ITEM;
 
-long Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int param_4, int param_5);
-undefined4 C_SBDOSSIER_Handler(uchar param_1,M_CONTROL *param_2,uint param_3,uint param_4,int param_5,int param_6);
-undefined4 __cdecl P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint param_4, int param_5, int param_6);
+bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int param_4, int param_5);
+
+// In general, a handler seems to have either C_ or P_ prefix
+// They all take (uchar, M_CONTROL*, uint, uint, int, int) as parameters
+// First indicates the manager number
+// Second is ??
+// Third is the hashcode representing some resource (eg a menu item, page)
+// Fourth: ??
+// Fifth: ??
+
+bool C_SBDOSSIER_Handler(uchar param_1,M_CONTROL *param_2,uint param_3,uint param_4,int param_5,int param_6);
+bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint param_4, int param_5, int param_6);
 
 typedef enum {
 

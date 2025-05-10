@@ -122,7 +122,7 @@ void __cdecl Menu_UpdateWheel(uchar param_1, M_CONTROL *param_2, M_ITEM *param_3
 
 
 // AUTOINJECT
-undefined4 C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint param_4, int param_5, int param_6) {
+bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint param_4, int param_5, int param_6) {
 
     printf("In C_SBDOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, param_4, param_5, param_6);
 
@@ -185,7 +185,7 @@ void Menu_PlayIris(char param_1, uchar param_2, uint param_3);
 uint __Menu_Send(uchar param_1, HASHCODE param_2, uint param_3, int param_4, int param_5);
 
 // AUTOINJECT
-undefined4 __cdecl P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint param_4, int param_5, int param_6) {
+bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint param_4, int param_5, int param_6) {
 
     //printf("In P_DOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, param_4, param_5, param_6);
 

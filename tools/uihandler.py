@@ -126,12 +126,12 @@ def generate_handler_switch():
 
     for _, name in mapping.items():
         if not name in implemented:
-            output += f"// AUTOGEN\nuint32_t {name}(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);\n"
+            output += f"// AUTOGEN\nbool {name}(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);\n"
 
 
     output += """
 // AUTOINJECT
-long Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int param_4, int param_5)
+bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int param_4, int param_5)
 {
     uint hashcode = param_2->hashcode;
     switch(hashcode) {
