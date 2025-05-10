@@ -122,24 +122,26 @@ void __cdecl Menu_UpdateWheel(uchar param_1, M_CONTROL *param_2, M_ITEM *param_3
 
 
 // AUTOINJECT
-bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint param_4, int param_5, int param_6) {
+bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, int param_5, int param_6) {
 
-    printf("In C_SBDOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, param_4, param_5, param_6);
+    MessageType event = (MessageType)eventType;
 
-    switch ((UIEvent)param_4) {
+    printf("In C_SBDOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, control, eventType, param_5, param_6);
+    // Seems that param 3 is always C_SBDOSSIER, 4 is the action/event type, 5 is some unknown value (pointer?), 6 is 0
+    switch (event) {
     
-    case UIEvent_Select: {
+    case MessageType_Select: {
             
-            int lVar1 = __Menu_SendMessage(param_2, 0x40, 0, 0); // Get the item number
+            int lVar1 = __Menu_SendMessage(param_2, MessageType_GetValue, 0, 0); // Get the item number
 
             switch(lVar1) {
                 case 0:
                     // Option 0: Records
-                    Manager_SendMessage(&manager[param_1], (MessageType)0x44, 0x4000003a, 0);
+                    Manager_SendMessage(&manager[param_1], MessageType_GoPage, P_DSRECORDS, 0);
                     return 1;
                 case 1:
                     // Option 1: Rewards
-                    Manager_SendMessage(&manager[param_1], (MessageType)0x44, 0x4000003b, 0);
+                    Manager_SendMessage(&manager[param_1], MessageType_GoPage, P_DSREWARDS, 0);
                     return 1;
                 case 2:
                     // Option 2: Dossier - Gadgets submenu
@@ -152,11 +154,11 @@ bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint p
             }
         }
 
-        case UIEvent_Scroll:
-        case UIEvent_Enter:
+        case MessageType_Scroll:
+        case MessageType_Enter:
             // Note - there is a bug in Menu_UpdateWheel that causes a crash if the M_ITEM array has fewer than 999 elements
             // We can work around this by allocating a dummy array immediately after the ds_options array
-            Menu_UpdateWheel(param_1, param_2, (M_ITEM*)ds_options, 0x1000010d, 0x1000010a, (HASHCODE)0x100001ed, 0x1000010b, param_4 == 0x49);
+            Menu_UpdateWheel(param_1, param_2, (M_ITEM*)ds_options, 0x1000010d, 0x1000010a, (HASHCODE)0x100001ed, 0x1000010b, event == MessageType_Scroll);
             return 1;
 
         case 0x51:
