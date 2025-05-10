@@ -21166,15 +21166,15 @@
         "has_custom_variable_storage": false,
         "return_type": "int * *",
         "param_types": [
-            "int * *",
-            "undefined4",
+            "M_BUTTON *",
+            "MessageType",
             "int *",
             "int *"
         ],
-        "prototype_string": "int * * __cdecl Button_SendMessage(int * * param_1, undefined4 param_2, int * param_3, int * param_4)",
+        "prototype_string": "int * * __cdecl Button_SendMessage(M_BUTTON * param_1, MessageType param_2, int * param_3, int * param_4)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
+            "[M_BUTTON * param_1@Stack[0x4]:4]",
+            "[MessageType param_2@Stack[0x8]:4]",
             "[int * param_3@Stack[0xc]:4]",
             "[int * param_4@Stack[0x10]:4]"
         ]
@@ -21222,15 +21222,15 @@
         "has_custom_variable_storage": false,
         "return_type": "int * *",
         "param_types": [
-            "int * *",
-            "undefined4",
+            "M_CHECKBOX *",
+            "MessageType",
             "int *",
             "int *"
         ],
-        "prototype_string": "int * * __cdecl Checkbox_SendMessage(int * * param_1, undefined4 param_2, int * param_3, int * param_4)",
+        "prototype_string": "int * * __cdecl Checkbox_SendMessage(M_CHECKBOX * param_1, MessageType param_2, int * param_3, int * param_4)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
+            "[M_CHECKBOX * param_1@Stack[0x4]:4]",
+            "[MessageType param_2@Stack[0x8]:4]",
             "[int * param_3@Stack[0xc]:4]",
             "[int * param_4@Stack[0x10]:4]"
         ]
@@ -21278,14 +21278,14 @@
         "has_custom_variable_storage": false,
         "return_type": "int * *",
         "param_types": [
-            "int * *",
+            "M_COMBO *",
             "undefined4",
             "int * *",
             "int * *"
         ],
-        "prototype_string": "int * * __cdecl Combo_SendMessage(int * * param_1, undefined4 param_2, int * * param_3, int * * param_4)",
+        "prototype_string": "int * * __cdecl Combo_SendMessage(M_COMBO * param_1, undefined4 param_2, int * * param_3, int * * param_4)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
+            "[M_COMBO * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
             "[int * * param_3@Stack[0xc]:4]",
             "[int * * param_4@Stack[0x10]:4]"
@@ -21444,11 +21444,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "M_CONTROL *"
         ],
-        "prototype_string": "void __cdecl Component_Free(int param_1)",
+        "prototype_string": "void __cdecl Component_Free(M_CONTROL * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[M_CONTROL * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -21587,18 +21587,18 @@
         "return_type": "int",
         "param_types": [
             "byte",
-            "int *",
-            "int *",
-            "int * *",
+            "HASHCODE",
+            "int",
+            "MessageType",
             "int * *",
             "int * *"
         ],
-        "prototype_string": "int __cdecl Menu_SendEx(byte param_1, int * param_2, int * param_3, int * * param_4, int * * param_5, int * * param_6)",
+        "prototype_string": "int __cdecl Menu_SendEx(byte param_1, HASHCODE param_2, int itemNum, MessageType param_4, int * * param_5, int * * param_6)",
         "parameters": [
             "[byte param_1@Stack[0x4]:1]",
-            "[int * param_2@Stack[0x8]:4]",
-            "[int * param_3@Stack[0xc]:4]",
-            "[int * * param_4@Stack[0x10]:4]",
+            "[HASHCODE param_2@Stack[0x8]:4]",
+            "[int itemNum@Stack[0xc]:4]",
+            "[MessageType param_4@Stack[0x10]:4]",
             "[int * * param_5@Stack[0x14]:4]",
             "[int * * param_6@Stack[0x18]:4]"
         ]
@@ -22258,21 +22258,21 @@
         ]
     },
     {
-        "name": "FUN_000759d0",
+        "name": "Menu_SelectItemInControl",
         "address": "0x000759d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "ulonglong",
+        "return_type": "bool",
         "param_types": [
-            "int * *",
-            "int",
+            "M_CONTROL *",
+            "M_ITEM *",
             "ushort",
             "int"
         ],
-        "prototype_string": "ulonglong __cdecl FUN_000759d0(int * * param_1, int param_2, ushort param_3, int param_4)",
+        "prototype_string": "bool __cdecl Menu_SelectItemInControl(M_CONTROL * param_1, M_ITEM * param_2, ushort param_3, int param_4)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[M_CONTROL * param_1@Stack[0x4]:4]",
+            "[M_ITEM * param_2@Stack[0x8]:4]",
             "[ushort param_3@Stack[0xc]:2]",
             "[int param_4@Stack[0x10]:4]"
         ]
@@ -24618,10 +24618,10 @@
             "uchar",
             "uint"
         ],
-        "prototype_string": "void __cdecl Menu_ChangePageCloseIris(HASHCODE param_1, uchar param_2, uint param_3)",
+        "prototype_string": "void __cdecl Menu_ChangePageCloseIris(HASHCODE newPage, uchar managerNum, uint param_3)",
         "parameters": [
-            "[HASHCODE param_1@Stack[0x4]:4]",
-            "[uchar param_2@Stack[0x8]:1]",
+            "[HASHCODE newPage@Stack[0x4]:4]",
+            "[uchar managerNum@Stack[0x8]:1]",
             "[uint param_3@Stack[0xc]:4]"
         ]
     },
@@ -24689,22 +24689,22 @@
             "uchar",
             "M_CONTROL *",
             "M_ITEM *",
-            "uint",
-            "uint",
             "HASHCODE",
-            "uint",
-            "char"
+            "HASHCODE",
+            "HASHCODE",
+            "HASHCODE",
+            "bool"
         ],
-        "prototype_string": "void __cdecl Menu_UpdateWheel(uchar param_1, M_CONTROL * param_2, M_ITEM * param_3, uint param_4, uint param_5, HASHCODE param_6, uint param_7, char param_8)",
+        "prototype_string": "void __cdecl Menu_UpdateWheel(uchar managerNum, M_CONTROL * param_2, M_ITEM * itemList, HASHCODE param_4, HASHCODE param_5, HASHCODE param_6, HASHCODE param_7, bool maybeDoAnimation)",
         "parameters": [
-            "[uchar param_1@Stack[0x4]:1]",
+            "[uchar managerNum@Stack[0x4]:1]",
             "[M_CONTROL * param_2@Stack[0x8]:4]",
-            "[M_ITEM * param_3@Stack[0xc]:4]",
-            "[uint param_4@Stack[0x10]:4]",
-            "[uint param_5@Stack[0x14]:4]",
+            "[M_ITEM * itemList@Stack[0xc]:4]",
+            "[HASHCODE param_4@Stack[0x10]:4]",
+            "[HASHCODE param_5@Stack[0x14]:4]",
             "[HASHCODE param_6@Stack[0x18]:4]",
-            "[uint param_7@Stack[0x1c]:4]",
-            "[char param_8@Stack[0x20]:1]"
+            "[HASHCODE param_7@Stack[0x1c]:4]",
+            "[bool maybeDoAnimation@Stack[0x20]:1]"
         ]
     },
     {
@@ -26115,16 +26115,16 @@
             "uchar",
             "M_CONTROL *",
             "uint",
-            "uint",
+            "MessageType",
             "int",
             "int"
         ],
-        "prototype_string": "bool __cdecl C_SBDOSSIER_Handler(uchar param_1, M_CONTROL * param_2, uint param_3, uint param_4, int param_5, int param_6)",
+        "prototype_string": "bool __cdecl C_SBDOSSIER_Handler(uchar managerNum, M_CONTROL * thisControl, uint param_3, MessageType event, int param_5, int param_6)",
         "parameters": [
-            "[uchar param_1@Stack[0x4]:1]",
-            "[M_CONTROL * param_2@Stack[0x8]:4]",
+            "[uchar managerNum@Stack[0x4]:1]",
+            "[M_CONTROL * thisControl@Stack[0x8]:4]",
             "[uint param_3@Stack[0xc]:4]",
-            "[uint param_4@Stack[0x10]:4]",
+            "[MessageType event@Stack[0x10]:4]",
             "[int param_5@Stack[0x14]:4]",
             "[int param_6@Stack[0x18]:4]"
         ]
@@ -26379,16 +26379,16 @@
             "uchar",
             "M_CONTROL *",
             "uint",
-            "uint",
+            "MessageType",
             "int",
             "int"
         ],
-        "prototype_string": "bool __cdecl P_MPMAP_Handler(uchar param_1, M_CONTROL * param_2, uint param_3, uint param_4, int param_5, int param_6)",
+        "prototype_string": "bool __cdecl P_MPMAP_Handler(uchar param_1, M_CONTROL * param_2, uint param_3, MessageType param_4, int param_5, int param_6)",
         "parameters": [
             "[uchar param_1@Stack[0x4]:1]",
             "[M_CONTROL * param_2@Stack[0x8]:4]",
             "[uint param_3@Stack[0xc]:4]",
-            "[uint param_4@Stack[0x10]:4]",
+            "[MessageType param_4@Stack[0x10]:4]",
             "[int param_5@Stack[0x14]:4]",
             "[int param_6@Stack[0x18]:4]"
         ]
@@ -26983,12 +26983,12 @@
             "int",
             "int"
         ],
-        "prototype_string": "bool __cdecl C_SBCNOPTIONS_Handler(uchar param_1, M_CONTROL * param_2, uint param_3, uint param_4, int param_5, int param_6)",
+        "prototype_string": "bool __cdecl C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL * thisControl, uint param_3, uint event, int param_5, int param_6)",
         "parameters": [
-            "[uchar param_1@Stack[0x4]:1]",
-            "[M_CONTROL * param_2@Stack[0x8]:4]",
+            "[uchar managerNum@Stack[0x4]:1]",
+            "[M_CONTROL * thisControl@Stack[0x8]:4]",
             "[uint param_3@Stack[0xc]:4]",
-            "[uint param_4@Stack[0x10]:4]",
+            "[uint event@Stack[0x10]:4]",
             "[int param_5@Stack[0x14]:4]",
             "[int param_6@Stack[0x18]:4]"
         ]
@@ -27366,15 +27366,15 @@
         "has_custom_variable_storage": false,
         "return_type": "int * *",
         "param_types": [
-            "int * *",
-            "undefined4",
+            "M_LABEL *",
+            "MessageType",
             "int *",
             "int *"
         ],
-        "prototype_string": "int * * __stdcall Label_SendMessage(int * * param_1, undefined4 param_2, int * param_3, int * param_4)",
+        "prototype_string": "int * * __stdcall Label_SendMessage(M_LABEL * param_1, MessageType param_2, int * param_3, int * param_4)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
+            "[M_LABEL * param_1@Stack[0x4]:4]",
+            "[MessageType param_2@Stack[0x8]:4]",
             "[int * param_3@Stack[0xc]:4]",
             "[int * param_4@Stack[0x10]:4]"
         ]
@@ -27592,17 +27592,17 @@
         "address": "0x00091b10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "ulonglong",
+        "return_type": "undefined4",
         "param_types": [
-            "int * *",
-            "int * *",
+            "M_LIST *",
+            "MessageType",
             "int * *",
             "int * *"
         ],
-        "prototype_string": "ulonglong __cdecl List_SendMessage(int * * param_1, int * * param_2, int * * param_3, int * * param_4)",
+        "prototype_string": "undefined4 __cdecl List_SendMessage(M_LIST * param_1, MessageType param_2, int * * param_3, int * * param_4)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
-            "[int * * param_2@Stack[0x8]:4]",
+            "[M_LIST * param_1@Stack[0x4]:4]",
+            "[MessageType param_2@Stack[0x8]:4]",
             "[int * * param_3@Stack[0xc]:4]",
             "[int * * param_4@Stack[0x10]:4]"
         ]
@@ -27820,15 +27820,15 @@
         "has_custom_variable_storage": false,
         "return_type": "ulonglong",
         "param_types": [
-            "int * *",
-            "int",
+            "M_MEMO *",
+            "MessageType",
             "int *",
             "int *"
         ],
-        "prototype_string": "ulonglong __cdecl Memo_SendMessage(int * * param_1, int param_2, int * param_3, int * param_4)",
+        "prototype_string": "ulonglong __cdecl Memo_SendMessage(M_MEMO * param_1, MessageType param_2, int * param_3, int * param_4)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[M_MEMO * param_1@Stack[0x4]:4]",
+            "[MessageType param_2@Stack[0x8]:4]",
             "[int * param_3@Stack[0xc]:4]",
             "[int * param_4@Stack[0x10]:4]"
         ]
@@ -27858,15 +27858,15 @@
         "has_custom_variable_storage": false,
         "return_type": "int",
         "param_types": [
-            "int",
-            "int",
+            "M_PAGE *",
+            "MessageType",
             "undefined4 *",
             "int"
         ],
-        "prototype_string": "int __cdecl Page_SendMessage(int param_1, int param_2, undefined4 * param_3, int param_4)",
+        "prototype_string": "int __cdecl Page_SendMessage(M_PAGE * param_1, MessageType param_2, undefined4 * param_3, int param_4)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[M_PAGE * param_1@Stack[0x4]:4]",
+            "[MessageType param_2@Stack[0x8]:4]",
             "[undefined4 * param_3@Stack[0xc]:4]",
             "[int param_4@Stack[0x10]:4]"
         ]
@@ -28048,15 +28048,15 @@
         "has_custom_variable_storage": false,
         "return_type": "int * *",
         "param_types": [
-            "int * *",
-            "int * *",
+            "M_RADIO *",
+            "MessageType",
             "int *",
             "int *"
         ],
-        "prototype_string": "int * * __cdecl Radio_SendMessage(int * * param_1, int * * param_2, int * param_3, int * param_4)",
+        "prototype_string": "int * * __cdecl Radio_SendMessage(M_RADIO * param_1, MessageType param_2, int * param_3, int * param_4)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
-            "[int * * param_2@Stack[0x8]:4]",
+            "[M_RADIO * param_1@Stack[0x4]:4]",
+            "[MessageType param_2@Stack[0x8]:4]",
             "[int * param_3@Stack[0xc]:4]",
             "[int * param_4@Stack[0x10]:4]"
         ]
@@ -28346,15 +28346,15 @@
         "has_custom_variable_storage": false,
         "return_type": "int * *",
         "param_types": [
-            "int * *",
-            "undefined4",
+            "M_SCROLL *",
+            "MessageType",
             "int *",
             "int *"
         ],
-        "prototype_string": "int * * __cdecl Scroll_SendMessage(int * * param_1, undefined4 param_2, int * param_3, int * param_4)",
+        "prototype_string": "int * * __cdecl Scroll_SendMessage(M_SCROLL * param_1, MessageType param_2, int * param_3, int * param_4)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
+            "[M_SCROLL * param_1@Stack[0x4]:4]",
+            "[MessageType param_2@Stack[0x8]:4]",
             "[int * param_3@Stack[0xc]:4]",
             "[int * param_4@Stack[0x10]:4]"
         ]
@@ -28402,14 +28402,14 @@
         "has_custom_variable_storage": false,
         "return_type": "int * *",
         "param_types": [
-            "int * *",
+            "M_SPIN *",
             "undefined4",
             "int *",
             "int *"
         ],
-        "prototype_string": "int * * __cdecl Spin_SendMessage(int * * param_1, undefined4 param_2, int * param_3, int * param_4)",
+        "prototype_string": "int * * __cdecl Spin_SendMessage(M_SPIN * param_1, undefined4 param_2, int * param_3, int * param_4)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
+            "[M_SPIN * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
             "[int * param_3@Stack[0xc]:4]",
             "[int * param_4@Stack[0x10]:4]"
@@ -28500,13 +28500,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "M_TEXTBOX *",
+            "M_TEXTBOX.conflict *",
             "NEW_CONTROL *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Text_Init(M_TEXTBOX * textbox, NEW_CONTROL * newControl, undefined4 param_3)",
+        "prototype_string": "void __cdecl Text_Init(M_TEXTBOX.conflict * textbox, NEW_CONTROL * newControl, undefined4 param_3)",
         "parameters": [
-            "[M_TEXTBOX * textbox@Stack[0x4]:4]",
+            "[M_TEXTBOX.conflict * textbox@Stack[0x4]:4]",
             "[NEW_CONTROL * newControl@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ]
@@ -28536,15 +28536,15 @@
         "has_custom_variable_storage": false,
         "return_type": "int * *",
         "param_types": [
-            "int * *",
-            "undefined4",
+            "M_WINDOW *",
+            "MessageType",
             "int",
             "int"
         ],
-        "prototype_string": "int * * __cdecl Window_SendMessage(int * * param_1, undefined4 param_2, int param_3, int param_4)",
+        "prototype_string": "int * * __cdecl Window_SendMessage(M_WINDOW * param_1, MessageType param_2, int param_3, int param_4)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
+            "[M_WINDOW * param_1@Stack[0x4]:4]",
+            "[MessageType param_2@Stack[0x8]:4]",
             "[int param_3@Stack[0xc]:4]",
             "[int param_4@Stack[0x10]:4]"
         ]

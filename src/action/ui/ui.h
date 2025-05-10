@@ -1,19 +1,29 @@
 #ifndef UI_H
 #define UI_H
 
+#include "../actionhelpers.h"
+
+typedef enum {
+    MessageType_GetValue = 0x40, // Get the value of the current item (eg the index of the selected item)
+    MessageType_GoPage = 0x44, // Go to a new page
+    MessageType_Scroll = 0x49, // Scroll (vertical?) event - fired by both d-pad and left analog stick
+    MessageType_Select = 0x4b, // Selecting an item - fired by A or Start button
+    MessageType_Enter = 0x54, // Entering / Loading the menu page?
+} MessageType;
+
 // TODO: Unfinished
-typedef struct {
+typedef struct M_MANAGER {
     char pad[0x76];
 } M_MANAGER;
 
 // TODO: Unfinished
-typedef struct {
+typedef struct M_CONTROL {
     char pad[0x18];
     uint hashcode;
 } M_CONTROL;
 
 // Common between PS2 and Xbox
-typedef struct {
+typedef struct M_ITEM {
     HASHCODE iconHashcode;
     Action_TranslatedText title;
     Action_TranslatedText description;
@@ -26,21 +36,16 @@ bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int 
 
 // In general, a handler seems to have either C_ or P_ prefix (PAGE and CONTROL?)
 // They all take (uchar, M_CONTROL*, uint, uint, int, int) as parameters
-// First indicates the manager number
-// Second is ??
+// First indicates the manager number (ie the index into manager array)
+// Second is the pointer to the M_CONTROL struct
 // Third is the hashcode representing some resource (eg a menu item, page)
 // Fourth: ??
 // Fifth: ??
 
 bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint param_4, int param_5, int param_6);
 bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint param_4, int param_5, int param_6);
+bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint event, int param_5, int param_6);
 
-typedef enum {
-    MessageType_GetValue = 0x40, // Get the value of the current item (eg the index of the selected item)
-    MessageType_GoPage = 0x44, // Go to a new page
-    MessageType_Scroll = 0x49, // Scroll (vertical?) event - fired by both d-pad and left analog stick
-    MessageType_Select = 0x4b, // Selecting an item - fired by A or Start button
-    MessageType_Enter = 0x54, // Entering / Loading the menu page?
-} MessageType;
+
 
 #endif // UI_H

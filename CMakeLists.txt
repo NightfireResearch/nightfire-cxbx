@@ -81,6 +81,7 @@ add_library(actioninject SHARED
   src/action/ui/HUD.cpp
   src/action/ui/ui.cpp
   src/action/ui/ui_dossier.cpp
+  src/action/ui/ui_mp.cpp
   src/action/ui/Menu.cpp
   src/action/autofunc.cpp
   src/action/game/view.cpp

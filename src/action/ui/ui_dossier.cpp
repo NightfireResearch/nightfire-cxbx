@@ -1,7 +1,8 @@
-#include "../actionhelpers.h"
+
 
 #include "ui.h"
-
+#include "Manager.h"
+#include <stdio.h>
 // const M_ITEM ds_gadgets[14] = {
 
 //     {
@@ -104,13 +105,8 @@ M_ITEM dummy[999];
 static_assert(sizeof(ds_options) == 0x18 * 4, "Size of ds_options is not as expected");
 
 
-#define manager ((M_MANAGER *)0x0025f1d0)
-
-#include <stdio.h>
 
 
-// AUTOGEN
-int __cdecl Manager_SendMessage(M_MANAGER *param_1, MessageType msgType, int param_3, int param_4);
 
 // AUTOINJECT
 bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, int param_5, int param_6) {
@@ -149,7 +145,7 @@ bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint e
         case MessageType_Enter:
             // Note - there is a bug in Menu_UpdateWheel that causes a crash if the M_ITEM array has fewer than 999 elements
             // We can work around this by allocating a dummy array immediately after the ds_options array
-            Menu_UpdateWheel(param_1, param_2, (M_ITEM*)ds_options, 0x1000010d, 0x1000010a, (HASHCODE)0x100001ed, 0x1000010b, event == MessageType_Scroll);
+            Menu_UpdateWheel(param_1, param_2, (M_ITEM*)ds_options, (HASHCODE)0x1000010d, (HASHCODE)0x1000010a, (HASHCODE)0x100001ed, (HASHCODE)0x1000010b, event == MessageType_Scroll);
             return 1;
 
         case 0x51:
