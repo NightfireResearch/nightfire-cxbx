@@ -342,9 +342,9 @@ void Mission_Update(void) {
 
         case 4: // TimeOut expired - either quit to main menu, show results screen, or the "try/quit" screens?
             if(MissionState == 6) {
-                int lVar3 = Menu_GetLevelIndex((HASHCODE)BaseMap);
+                int lVar3 = Menu_GetLevelIndex(Mission_BaseMapHCode());
                 int lVar4 = Menu_GetLevelIndex((HASHCODE)GameState.BaseMapHashCode);
-                if ((lVar4 < lVar3) && (GameState.BaseMapHashCode = BaseMap, MPSettings.isMultiplayer != 0)) {
+                if (lVar4 < lVar3) {
                   GameState.BaseMapHashCode = GameState.CurrentLevelHashcode;
                 }
                 GameState.ReloadMenupage = P_NFRESULTS;
