@@ -108,18 +108,9 @@ static_assert(sizeof(ds_options) == 0x18 * 4, "Size of ds_options is not as expe
 
 #include <stdio.h>
 
-// AUTOGEN
-int __cdecl __Menu_SendMessage(M_CONTROL *param_1, uint param_2, int param_3, int param_4);
 
 // AUTOGEN
 int __cdecl Manager_SendMessage(M_MANAGER *param_1, MessageType msgType, int param_3, int param_4);
-
-// AUTOGEN
-void __cdecl Menu_ChangePageCloseIris(HASHCODE param_1, uchar param_2, uint param_3);
-
-// AUTOGEN
-void __cdecl Menu_UpdateWheel(uchar param_1, M_CONTROL *param_2, M_ITEM *param_3, uint param_4, uint param_5, HASHCODE param_6, uint param_7, char param_8);
-
 
 // AUTOINJECT
 bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, int param_5, int param_6) {
@@ -174,17 +165,6 @@ bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint e
     
 }
 
-
-typedef uint MENU_IRISOPS;
-
-// AUTOGEN
-void Menu_StartIris(MENU_IRISOPS param_1, uchar param_2, uint param_3);
-
-// AUTOGEN
-void Menu_PlayIris(char param_1, uchar param_2, uint param_3);
-
-// AUTOGEN
-uint __Menu_Send(uchar param_1, HASHCODE param_2, uint param_3, int param_4, int param_5);
 
 // AUTOINJECT
 bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint param_4, int param_5, int param_6) {
