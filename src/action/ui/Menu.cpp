@@ -45,7 +45,7 @@ bool Menu_IsBotGood(uint idx) {
 #define buf_171 (*(char*)0x002250b8)
 
 // AUTOINJECT
-void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHCODE param_4, HASHCODE param_5, HASHCODE param_6, HASHCODE param_7, bool maybeDoAnimation) {
+void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHCODE param_4, HASHCODE param_5, HASHCODE use_description, HASHCODE param_7, bool maybeDoAnimation) {
 
   int iVar2;
   const char *pcVar4;
@@ -90,39 +90,34 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
   }
 
 
-  if (param_6 == 0) goto LAB_0007f86e;
+  if (use_description != 0) { 
 
+    if (*(HASHCODE *)(manager[managerNum].field158_0x1bc + 0x18) == P_MPBOTCHOOSE) {
 
-  if (*(HASHCODE *)(manager[managerNum].field158_0x1bc + 0x18) == P_MPBOTCHOOSE) {
-    if (itemList[idxMid].enabled == false) {
-      AVar7 = itemList[idxMid].descriptionWhenDisabled;
-LAB_0007f83e:
-      idxDown1 = 0;
-      pcVar4 = Txt_BindLabel(AVar7,0);
+      // Special case when on the MP bot selection menu
+
+      if (!itemList[idxMid].enabled) {
+        // Use the disabled description
+        pcVar4 = Txt_BindLabel(itemList[idxMid].descriptionWhenDisabled,0);
+      }
+      else {
+        // Merge their team name into the description
+        pcVar4 = Txt_BindLabel(Menu_IsBotGood(itemList[idxMid].identifier) ? MP_TEAM_MI6 : MP_TEAM_PHOENIX, 0);
+        pcVar5 = Txt_BindLabel(MP_TEAM, 0);
+        pcVar6 = Txt_BindLabel(itemList[idxMid].description, 0);
+        sprintf(&buf_171, "%s\n%s : %s", pcVar6, pcVar5, pcVar4);
+        pcVar4 = &buf_171;
+      }
     }
+
+    // Every other menu uses the item list directly - either the normal or disabled description
     else {
-      pcVar4 = Txt_BindLabel(Menu_IsBotGood(itemList[idxMid].identifier) ? MP_TEAM_MI6 : MP_TEAM_PHOENIX, 0);
-      pcVar5 = Txt_BindLabel(MP_TEAM, 0);
-      pcVar6 = Txt_BindLabel(itemList[idxMid].description, 0);
-      sprintf(&buf_171, "%s\n%s : %s", pcVar6, pcVar5, pcVar4);
-      idxDown1 = 0;
-      pcVar4 = &buf_171;
+      pcVar4 = Txt_BindLabel(itemList[idxMid].enabled ? itemList[idxMid].description : itemList[idxMid].descriptionWhenDisabled, 0);
     }
+
+    __Menu_Send(managerNum, use_description, MessageType_SetText, (int)pcVar4, 0);
+
   }
-  else {
-    idxDown1 = 0;
-    if (itemList[idxMid].enabled != false) {
-      AVar7 = itemList[idxMid].description;
-      goto LAB_0007f83e;
-    }
-    pcVar4 = Txt_BindLabel(itemList[idxMid].descriptionWhenDisabled,0);
-  }
-
-
-  __Menu_Send(managerNum, param_6, MessageType_SetText, (int)pcVar4, idxDown1);
-
-
-  LAB_0007f86e:
 
   // Work out the indices of the items to display in the wheel, managing the ends of the array appropriately
   idxUp1 = idxMid - 1;
