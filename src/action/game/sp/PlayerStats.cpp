@@ -98,3 +98,16 @@ void PlrStat_LogEnemySpawned(void) {
 
     PlrMissionStats[0].enemiesSpawned++;
 }
+
+#define ScoringTable (*(SCORETABLE(*)[12])0x0017f198)
+
+// AUTOINJECT
+SCORETABLE * PlrStats_GetLevelTotals(HASHCODE hashcode) {
+
+    for(int i = 0; i < ARRAY_SIZE(ScoringTable); i++) {
+        if(ScoringTable[i].levelHashcode == hashcode) {
+            return &ScoringTable[i];
+        }
+    }
+    return NULL;
+}
