@@ -150,22 +150,22 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
   __Menu_SendEx(managerNum, param_4, 3, MessageType_SetText, (int)strDown1, NULL);
   __Menu_SendEx(managerNum, param_4, 4, MessageType_SetText, (int)strDown2, NULL);
   
-  // Handle greyed-out disabled items
-  const int maybeColourDisabled = 0x48484880;
-  const int maybeColourEnabled = 0x7d6d5aff;
+  // Handle greyed-out disabled items. 3 entries representing the distance from the middle (greys out gradually to the edge)
+  const int colourDisabled[3] = {0x48484880, 0x48484840, 0x48484820};
+  const int colourEnabled[3] = {0x7d6d5aff, 0x7d6d5a80, 0x7d6d5a40};
 
   // Previously, the game wouldn't check for 999 resulting in an out-of-bounds read. Now fixed.
   if(idxUp2 != 999)
-    __Menu_SendEx(managerNum, param_4, 0, MessageType_SetColour, itemList[idxUp2].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);      
+    __Menu_SendEx(managerNum, param_4, 0, MessageType_SetColour, itemList[idxUp2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
   if(idxUp1 != 999)
-    __Menu_SendEx(managerNum, param_4, 1, MessageType_SetColour, itemList[idxUp1].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);
+    __Menu_SendEx(managerNum, param_4, 1, MessageType_SetColour, itemList[idxUp1].enabled ? colourEnabled[1] : colourDisabled[1], NULL);
   if(idxDown1 != 999)
-    __Menu_SendEx(managerNum, param_4, 3, MessageType_SetColour, itemList[idxDown1].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);
+    __Menu_SendEx(managerNum, param_4, 3, MessageType_SetColour, itemList[idxDown1].enabled ? colourEnabled[1] : colourDisabled[1], NULL);
   if(idxDown2 != 999)
-    __Menu_SendEx(managerNum, param_4, 4, MessageType_SetColour, itemList[idxDown2].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);
+    __Menu_SendEx(managerNum, param_4, 4, MessageType_SetColour, itemList[idxDown2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
 
   // The middle item can't be offscreen, no need to check
-  __Menu_SendEx(managerNum, param_4, 2, MessageType_SetColour, itemList[idxMid].enabled ? maybeColourEnabled : maybeColourDisabled, NULL);
+  __Menu_SendEx(managerNum, param_4, 2, MessageType_SetColour, itemList[idxMid].enabled ? colourEnabled[0] : colourDisabled[0], NULL);
 
 
   if (maybeDoAnimation) {
