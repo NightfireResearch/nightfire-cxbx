@@ -38,6 +38,7 @@ typedef short MallocFlags;
 #include "util/LList.h"
 #include "util/Stack.h"
 #include "math/math.h"
+#include "util/Random.h"
 #include "engine/Camera.h"
 #include "engine/Collide.h"
 #include "engine/Loader.h"

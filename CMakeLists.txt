@@ -77,6 +77,7 @@ add_library(actioninject SHARED
   src/action/util/crc.cpp
   src/action/util/hashtable.cpp
   src/action/util/LList.cpp
+  src/action/util/Random.cpp
   src/action/util/Stack.cpp
   src/action/ui/HUD.cpp
   src/action/ui/ui.cpp
