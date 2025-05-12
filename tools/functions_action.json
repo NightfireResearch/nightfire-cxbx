@@ -20889,34 +20889,40 @@
         "name": "Effect_Body",
         "address": "0x0006fc10",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
             "undefined4",
             "undefined4",
-            "byte"
+            "byte",
+            "void *"
         ],
-        "prototype_string": "void __cdecl Effect_Body(undefined4 param_1, undefined4 param_2, byte param_3)",
+        "prototype_string": "void __cdecl Effect_Body(undefined4 param_1, undefined4 param_2, byte param_3, void * eax)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[byte param_3@Stack[0xc]:1]"
+            "[byte param_3@Stack[0xc]:1]",
+            "[void * eax@EAX:4]"
         ]
     },
     {
         "name": "Effect_Laser",
         "address": "0x0006fc60",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
+            "HITDATA_tag *",
             "undefined4",
+            "cel_tag *",
             "byte"
         ],
-        "prototype_string": "void __cdecl Effect_Laser(undefined4 param_1, byte param_2)",
+        "prototype_string": "void __cdecl Effect_Laser(HITDATA_tag * eax, undefined4 param_2, cel_tag * ebx, byte param_4)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[byte param_2@Stack[0x8]:1]"
+            "[HITDATA_tag * eax@EAX:4]",
+            "[undefined4 param_2@Stack[0x4]:4]",
+            "[cel_tag * ebx@EBX:4]",
+            "[byte param_4@Stack[0x8]:1]"
         ]
     },
     {
@@ -27638,11 +27644,11 @@
         "address": "0x00092b60",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "byte"
         ],
-        "prototype_string": "undefined4 __cdecl MenuManager_Exists(byte param_1)",
+        "prototype_string": "bool __cdecl MenuManager_Exists(byte param_1)",
         "parameters": [
             "[byte param_1@Stack[0x4]:1]"
         ]
@@ -32276,13 +32282,13 @@
         "address": "0x000b1200",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4 *",
+        "return_type": "SCORETABLE *",
         "param_types": [
-            "int"
+            "HASHCODE"
         ],
-        "prototype_string": "undefined4 * __cdecl PlrStats_GetLevelTotals(int param_1)",
+        "prototype_string": "SCORETABLE * __cdecl PlrStats_GetLevelTotals(HASHCODE param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[HASHCODE param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -37644,7 +37650,7 @@
         "has_custom_variable_storage": false,
         "return_type": "obj_tag *",
         "param_types": [
-            "int *",
+            "cel_tag *",
             "_VECTOR *",
             "_VECTOR *",
             "float *",
@@ -37656,9 +37662,9 @@
             "uint",
             "ushort"
         ],
-        "prototype_string": "obj_tag * __cdecl Gas_Init(int * param_1, _VECTOR * pos, _VECTOR * rot, float * param_4, float param_5, float param_6, HASHCODE param_7, uint param_8, uint param_9, uint param_10, ushort param_11)",
+        "prototype_string": "obj_tag * __cdecl Gas_Init(cel_tag * param_1, _VECTOR * pos, _VECTOR * rot, float * param_4, float param_5, float param_6, HASHCODE param_7, uint param_8, uint param_9, uint param_10, ushort param_11)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
+            "[cel_tag * param_1@Stack[0x4]:4]",
             "[_VECTOR * pos@Stack[0x8]:4]",
             "[_VECTOR * rot@Stack[0xc]:4]",
             "[float * param_4@Stack[0x10]:4]",
@@ -39760,19 +39766,19 @@
         ]
     },
     {
-        "name": "FUN_000d5450",
+        "name": "Rand_FRandHalf_Vec",
         "address": "0x000d5450",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float10 *"
+            "_VECTOR *",
+            "float"
         ],
-        "prototype_string": "void __cdecl FUN_000d5450(float * param_1, float10 * param_2)",
+        "prototype_string": "void __cdecl Rand_FRandHalf_Vec(_VECTOR * param_1, float param_2)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[float10 * param_2@Stack[0x8]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[float param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -39798,14 +39804,14 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float10 *",
+            "_VECTOR *",
+            "float",
             "float"
         ],
-        "prototype_string": "void __cdecl Rand_FRand_MVar2_Vec(float * param_1, float10 * param_2, float param_3)",
+        "prototype_string": "void __cdecl Rand_FRand_MVar2_Vec(_VECTOR * param_1, float range, float param_3)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[float10 * param_2@Stack[0x8]:4]",
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[float range@Stack[0x8]:4]",
             "[float param_3@Stack[0xc]:4]"
         ]
     },
@@ -39854,13 +39860,13 @@
         "address": "0x000d5560",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "ushort",
+        "return_type": "bool",
         "param_types": [
             "quaternion_tag *",
             "quaternion_tag *",
             "quaternion_tag *"
         ],
-        "prototype_string": "ushort __cdecl Quat_IsEqual(quaternion_tag * param_1, quaternion_tag * param_2, quaternion_tag * param_3)",
+        "prototype_string": "bool __cdecl Quat_IsEqual(quaternion_tag * param_1, quaternion_tag * param_2, quaternion_tag * param_3)",
         "parameters": [
             "[quaternion_tag * param_1@Stack[0x4]:4]",
             "[quaternion_tag * param_2@Stack[0x8]:4]",
@@ -39884,21 +39890,21 @@
         ]
     },
     {
-        "name": "FUN_000d5610",
+        "name": "Quat_QuaternionMultiply",
         "address": "0x000d5610",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "quaternion_tag *",
+            "quaternion_tag *",
+            "quaternion_tag *"
         ],
-        "prototype_string": "undefined FUN_000d5610(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined __cdecl Quat_QuaternionMultiply(quaternion_tag * a, quaternion_tag * b, quaternion_tag * qOut)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[quaternion_tag * a@Stack[0x4]:4]",
+            "[quaternion_tag * b@Stack[0x8]:4]",
+            "[quaternion_tag * qOut@Stack[0xc]:4]"
         ]
     },
     {
@@ -39908,15 +39914,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *",
-            "float *"
+            "quaternion_tag *",
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl Quat_Rot_Vec(float * param_1, float * param_2, float * param_3)",
+        "prototype_string": "void __cdecl Quat_Rot_Vec(quaternion_tag * q, _VECTOR * vIn, _VECTOR * vOut)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]",
-            "[float * param_3@Stack[0xc]:4]"
+            "[quaternion_tag * q@Stack[0x4]:4]",
+            "[_VECTOR * vIn@Stack[0x8]:4]",
+            "[_VECTOR * vOut@Stack[0xc]:4]"
         ]
     },
     {
@@ -40048,23 +40054,23 @@
         ]
     },
     {
-        "name": "FUN_000d5e40",
+        "name": "Quat_Slerp",
         "address": "0x000d5e40",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
             "float",
-            "undefined4 *",
-            "undefined4 *",
-            "undefined4 *"
+            "quaternion_tag *",
+            "quaternion_tag *",
+            "quaternion_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_000d5e40(float param_1, undefined4 * param_2, undefined4 * param_3, undefined4 * param_4)",
+        "prototype_string": "void __cdecl Quat_Slerp(float progress, quaternion_tag * qStart, quaternion_tag * qEnd, quaternion_tag * qOut)",
         "parameters": [
-            "[float param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
-            "[undefined4 * param_3@Stack[0xc]:4]",
-            "[undefined4 * param_4@Stack[0x10]:4]"
+            "[float progress@Stack[0x4]:4]",
+            "[quaternion_tag * qStart@Stack[0x8]:4]",
+            "[quaternion_tag * qEnd@Stack[0xc]:4]",
+            "[quaternion_tag * qOut@Stack[0x10]:4]"
         ]
     },
     {
@@ -40716,7 +40722,7 @@
         ]
     },
     {
-        "name": "Quat_Mul",
+        "name": "MultiplyQuaternionAltOrder",
         "address": "0x000d7470",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -40726,7 +40732,7 @@
             "quaternion_tag *",
             "quaternion_tag *"
         ],
-        "prototype_string": "undefined __cdecl Quat_Mul(quaternion_tag * a, quaternion_tag * b, quaternion_tag * qOut)",
+        "prototype_string": "undefined __cdecl MultiplyQuaternionAltOrder(quaternion_tag * a, quaternion_tag * b, quaternion_tag * qOut)",
         "parameters": [
             "[quaternion_tag * a@Stack[0x4]:4]",
             "[quaternion_tag * b@Stack[0x8]:4]",

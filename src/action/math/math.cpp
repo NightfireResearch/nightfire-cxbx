@@ -53,12 +53,21 @@ bool Quat_IsEqual(const quaternion_tag *a, const quaternion_tag *b, float thresh
 	return true;
 }
 
+// Alternate order (xyzw) - used by DirectX?
 // AUTOINJECT
-void Quat_Mul(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *qOut) {
+void MultiplyQuaternionAltOrder(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *qOut) {
   qOut->q[0] = (a->q[3] * b->q[0] + b->q[2] * a->q[1] + b->q[3] * a->q[0]) - b->q[1] * a->q[2];
   qOut->q[1] = (a->q[3] * b->q[1] + b->q[3] * a->q[1] + a->q[2] * b->q[0]) - a->q[0] * b->q[2];
   qOut->q[2] = (a->q[3] * b->q[2] + b->q[1] * a->q[0] + b->q[3] * a->q[2]) - b->q[0] * a->q[1];
   qOut->q[3] = ((b->q[3] * a->q[3] - a->q[0] * b->q[0]) - b->q[1] * a->q[1]) - a->q[2] * b->q[2];
+}
+
+// AUTOINJECT
+void Quat_QuaternionMultiply(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *qOut) {
+  qOut->q[0] = ((a->q[0] * b->q[0] - b->q[1] * a->q[1]) - b->q[2] * a->q[2]) - b->q[3] * a->q[3];
+  qOut->q[1] = b->q[1] * a->q[0] + a->q[1] * b->q[0] + (b->q[3] * a->q[2] - b->q[2] * a->q[3]);
+  qOut->q[2] = b->q[2] * a->q[0] + a->q[2] * b->q[0] + (b->q[1] * a->q[3] - b->q[3] * a->q[1]);
+  qOut->q[3] = b->q[3] * a->q[0] + a->q[3] * b->q[0] + (b->q[2] * a->q[1] - b->q[1] * a->q[2]);
 }
 
 // AUTOINJECT
@@ -127,6 +136,22 @@ void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
 
 // AUTOGEN
 void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *mtxIn);
+
+// A fast approximation of slerp
+// AUTOINJECT
+void Quat_Slerp(float progress, quaternion_tag *qStart, quaternion_tag *qEnd, quaternion_tag *qOut) {
+  if (progress < 0.5f) {
+    qOut->q[0] = qStart->q[0];
+    qOut->q[1] = qStart->q[1];
+    qOut->q[2] = qStart->q[2];
+    qOut->q[3] = qStart->q[3];
+  } else {
+    qOut->q[0] = qEnd->q[0];
+    qOut->q[1] = qEnd->q[1];
+    qOut->q[2] = qEnd->q[2];
+    qOut->q[3] = qEnd->q[3];
+  }
+}
 
 // AUTOGEN
 void RotMatrix(_VECTOR *vIn,_MATRIX *mtxOut);

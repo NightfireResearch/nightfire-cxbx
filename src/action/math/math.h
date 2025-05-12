@@ -3,7 +3,7 @@
 
 #pragma pack(push, 1)
 typedef struct {
-	float q[4];
+	float q[4]; // wxyz order
 } quaternion_tag;
 
 typedef struct {
@@ -32,12 +32,14 @@ typedef struct {
 
 #define Mat_Position(mat) ((_VECTOR *)((mat.m + 0xc)))
 
+void MultiplyQuaternionAltOrder(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *target);
 void Quat_Copy(quaternion_tag *target,const quaternion_tag *from);
 bool Quat_IsEqual(const quaternion_tag *a, const quaternion_tag *b, float threshold);
-void Quat_Mul(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *target);
 void Quat_QuatToMat(quaternion_tag *param_1,_MATRIX *param_2);
 void Quat_QuatTransToMat(quaternion_tag *quatIn,float *vecIn,_MATRIX *mOut);
 void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *mtxIn);
+void Quat_QuaternionMultiply(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *qOut);
+void Quat_Slerp(float progress, quaternion_tag *qStart, quaternion_tag *qEnd, quaternion_tag *qOut);
 void Mat_GetDir(_VECTOR *dirOut, _MATRIX *mtxIn);
 void Mat_Copy(const _MATRIX *source, _MATRIX *target);
 void Mat_CopyRot(const _MATRIX *source, _MATRIX *target);
