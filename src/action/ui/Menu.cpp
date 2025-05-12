@@ -78,14 +78,12 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
 
   if (param_5 != 0) {
     if (maybeDoAnimation) {
-      __Menu_SendDelayed(10,managerNum, param_5, 0x24,itemList[idxMid].iconHashcode,0);
-      __Menu_SendDelayed(10,managerNum, param_5, 0x1a,
-                   (-(uint)(itemList[idxMid].enabled != false) & 0x2020209f) + 0x60606060,0);
+      __Menu_SendDelayed(10,managerNum, param_5, 0x24, itemList[idxMid].iconHashcode,0);
+      __Menu_SendDelayed(10,managerNum, param_5, 0x1a, itemList[idxMid].enabled ? 0x808080ff : 0x60606060,0);
     }
     else {
       __Menu_Send(managerNum, param_5, 0x24, itemList[idxMid].iconHashcode, 0);
-      __Menu_Send(managerNum, param_5, 0x1a,
-                  (-(uint)(itemList[idxMid].enabled != false) & 0x2020209f) + 0x60606060, 0);
+      __Menu_Send(managerNum, param_5, 0x1a, itemList[idxMid].enabled ? 0x808080ff : 0x60606060, 0);
     }
   }
 
