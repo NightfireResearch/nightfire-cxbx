@@ -29,9 +29,7 @@ void PlrStat_ResetForMission(void);
 
 // Likely a helper function which was inlined into the below funcs
 // AUTOINJECT
-bool PlrStat_OkToUpdate(uint playerNum) {
-  if(playerNum >= 10)
-    return false;
+bool PlrStat_OkToUpdate(void) {
 
   if(!MPSettings.isMultiplayer) {
     int missionStatus = Mission_Status();
@@ -45,7 +43,10 @@ bool PlrStat_OkToUpdate(uint playerNum) {
 // AUTOINJECT
 void PlrStat_LogEnemySurrender(uint playerNum) {
 
-    if(!PlrStat_OkToUpdate(playerNum))
+    if(playerNum >= 10)
+        return;
+
+    if(!PlrStat_OkToUpdate())
         return;
 
     PlrMissionStats[playerNum].enemiesSurrendered++;
@@ -54,7 +55,10 @@ void PlrStat_LogEnemySurrender(uint playerNum) {
 // AUTOINJECT
 void PlrStat_LogEnemyDispatched(uint playerNum) {
 
-    if(!PlrStat_OkToUpdate(playerNum))
+    if(playerNum >= 10)
+        return;
+    
+    if(!PlrStat_OkToUpdate())
         return;
 
     PlrMissionStats[playerNum].enemiesDispatched++;
@@ -63,7 +67,10 @@ void PlrStat_LogEnemyDispatched(uint playerNum) {
 // AUTOINJECT
 void PlrStat_LogEnemyDisabled(uint playerNum) {
 
-    if(!PlrStat_OkToUpdate(playerNum))
+    if(playerNum >= 10)
+        return;
+    
+    if(!PlrStat_OkToUpdate())
         return;
 
     PlrMissionStats[playerNum].enemiesDisabled++;
@@ -73,7 +80,10 @@ void PlrStat_LogEnemyDisabled(uint playerNum) {
 // AUTOINJECT
 void PlrStat_LogHealth(uint health, uint playerNum) {
 
-    if(!PlrStat_OkToUpdate(playerNum))
+    if(playerNum >= 10)
+        return;
+    
+    if(!PlrStat_OkToUpdate())
         return;
     
     PlrMissionStats[playerNum].health = health;

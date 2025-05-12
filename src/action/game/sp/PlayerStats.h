@@ -3,7 +3,7 @@
 
 #include "../../actionhelpers.h"
 
-bool PlrStat_OkToUpdate(uint playerNum);
+bool PlrStat_OkToUpdate(void);
 void PlrStat_ResetForMission(void);
 void PlrStat_LogEnemySurrender(uint playerNum);
 void PlrStat_LogEnemySpawned(void);
