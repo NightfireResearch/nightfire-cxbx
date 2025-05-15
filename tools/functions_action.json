@@ -7474,14 +7474,24 @@
         ]
     },
     {
-        "name": "FUN_00036430",
+        "name": "NDrone2_BodyHitEffect",
         "address": "0x00036430",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_00036430()",
-        "parameters": []
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
+        "param_types": [
+            "undefined4",
+            "HITDATA_tag *",
+            "BU_tag *",
+            "obj_tag *"
+        ],
+        "prototype_string": "void NDrone2_BodyHitEffect(undefined4 param_1, HITDATA_tag * param_2, BU_tag * eax, obj_tag * esi)",
+        "parameters": [
+            "[undefined4 param_1@ECX:4]",
+            "[HITDATA_tag * param_2@EDX:4]",
+            "[BU_tag * eax@EAX:4]",
+            "[obj_tag * esi@ESI:4]"
+        ]
     },
     {
         "name": "NDrone2_DealWithObjHit",
@@ -18574,13 +18584,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "cel_tag *",
             "_VECTOR *",
             "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl Env_GetWindVel(int param_1, _VECTOR * param_2, _VECTOR * param_3)",
+        "prototype_string": "void __cdecl Env_GetWindVel(cel_tag * param_1, _VECTOR * param_2, _VECTOR * param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[cel_tag * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
             "[_VECTOR * param_3@Stack[0xc]:4]"
         ]
@@ -18829,11 +18839,15 @@
         "name": "FUN_00069a40",
         "address": "0x00069a40",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "int",
-        "param_types": [],
-        "prototype_string": "int __stdcall FUN_00069a40(void)",
-        "parameters": []
+        "param_types": [
+            "uchar"
+        ],
+        "prototype_string": "int __stdcall FUN_00069a40(uchar al)",
+        "parameters": [
+            "[uchar al@AL:1]"
+        ]
     },
     {
         "name": "Font_GetKernAdjust",
@@ -18868,33 +18882,37 @@
     {
         "name": "__Font_DrawText",
         "address": "0x00069c50",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": true,
+        "return_type": "GPOINT *",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined",
-            "undefined",
-            "undefined4",
-            "undefined",
+            "float",
+            "float",
             "undefined4",
             "undefined4",
             "undefined4",
-            "undefined4"
+            "uchar *",
+            "undefined4",
+            "uint",
+            "float",
+            "float",
+            "int *",
+            "GPOINT *"
         ],
-        "prototype_string": "undefined __Font_DrawText(undefined4 param_1, undefined4 param_2, undefined param_3, undefined param_4, undefined4 param_5, undefined param_6, undefined4 param_7, undefined4 param_8, undefined4 param_9, undefined4 param_10)",
+        "prototype_string": "GPOINT * __stdcall __Font_DrawText(float param_1, float param_2, undefined4 param_3_00, undefined4 param_4, undefined4 param_5, uchar * param_6, undefined4 param_7, uint param_8, float param_9, float param_10, int * param_11, GPOINT * eax)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined param_4@<UNASSIGNED>]",
-            "[undefined4 param_5@<UNASSIGNED>]",
-            "[undefined param_6@<UNASSIGNED>]",
-            "[undefined4 param_7@<UNASSIGNED>]",
-            "[undefined4 param_8@<UNASSIGNED>]",
-            "[undefined4 param_9@<UNASSIGNED>]",
-            "[undefined4 param_10@<UNASSIGNED>]"
+            "[float param_1@Stack[0x4]:4]",
+            "[float param_2@Stack[0x8]:4]",
+            "[undefined4 param_3_00@ECX:4]",
+            "[undefined4 param_4@Stack[0xc]:4]",
+            "[undefined4 param_5@Stack[0x10]:4]",
+            "[uchar * param_6@Stack[0x14]:4]",
+            "[undefined4 param_7@Stack[0x18]:4]",
+            "[uint param_8@Stack[0x1c]:4]",
+            "[float param_9@Stack[0x20]:4]",
+            "[float param_10@Stack[0x24]:4]",
+            "[int * param_11@Stack[0x28]:4]",
+            "[GPOINT * eax@EAX:4]"
         ]
     },
     {
@@ -18902,7 +18920,7 @@
         "address": "0x0006a340",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined *",
+        "return_type": "GPOINT *",
         "param_types": [
             "float",
             "float",
@@ -18911,12 +18929,12 @@
             "void *",
             "char *",
             "char *",
-            "undefined4 *",
+            "GPOINT *",
             "uint",
             "float",
             "float"
         ],
-        "prototype_string": "undefined * __cdecl Font_DrawText(float param_1, float param_2, void * param_3, void * param_4, void * param_5, char * param_6, char * param_7, undefined4 * param_8, uint param_9, float param_10, float param_11)",
+        "prototype_string": "GPOINT * __cdecl Font_DrawText(float param_1, float param_2, void * param_3, void * param_4, void * param_5, char * param_6, char * param_7, GPOINT * scale, uint flags, float param_10, float param_11)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]",
@@ -18925,8 +18943,8 @@
             "[void * param_5@Stack[0x14]:4]",
             "[char * param_6@Stack[0x18]:4]",
             "[char * param_7@Stack[0x1c]:4]",
-            "[undefined4 * param_8@Stack[0x20]:4]",
-            "[uint param_9@Stack[0x24]:4]",
+            "[GPOINT * scale@Stack[0x20]:4]",
+            "[uint flags@Stack[0x24]:4]",
             "[float param_10@Stack[0x28]:4]",
             "[float param_11@Stack[0x2c]:4]"
         ]
@@ -18936,20 +18954,20 @@
         "address": "0x0006a5d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "char *",
             "char *",
-            "undefined4 *",
-            "undefined4",
+            "GPOINT *",
+            "GPOINT *",
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl Font_GetTextExtent(char * param_1, char * param_2, undefined4 * param_3, undefined4 param_4, int param_5)",
+        "prototype_string": "bool __cdecl Font_GetTextExtent(char * param_1, char * param_2, GPOINT * param_3, GPOINT * param_4, int param_5)",
         "parameters": [
             "[char * param_1@Stack[0x4]:4]",
             "[char * param_2@Stack[0x8]:4]",
-            "[undefined4 * param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
+            "[GPOINT * param_3@Stack[0xc]:4]",
+            "[GPOINT * param_4@Stack[0x10]:4]",
             "[int param_5@Stack[0x14]:4]"
         ]
     },
@@ -19530,11 +19548,11 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int"
+            "void *"
         ],
-        "prototype_string": "undefined4 __cdecl Copter_GetBody(int param_1)",
+        "prototype_string": "undefined4 __cdecl Copter_GetBody(void * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[void * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -19562,24 +19580,32 @@
         ]
     },
     {
-        "name": "FUN_0006b930",
+        "name": "Copter_CreatePath",
         "address": "0x0006b930",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "int * *",
-        "param_types": [],
-        "prototype_string": "int * * __stdcall FUN_0006b930(void)",
-        "parameters": []
+        "param_types": [
+            "undefined4"
+        ],
+        "prototype_string": "int * * __stdcall Copter_CreatePath(undefined4 ebx)",
+        "parameters": [
+            "[undefined4 ebx@EBX:4]"
+        ]
     },
     {
         "name": "FUN_0006b9f0",
         "address": "0x0006b9f0",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall FUN_0006b9f0(void)",
-        "parameters": []
+        "param_types": [
+            "COPTER *"
+        ],
+        "prototype_string": "void __stdcall FUN_0006b9f0(COPTER * esi)",
+        "parameters": [
+            "[COPTER * esi@ESI:4]"
+        ]
     },
     {
         "name": "Copter_Create",
@@ -19590,27 +19616,27 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int"
+            "level_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Copter_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3)",
+        "prototype_string": "obj_tag * __cdecl Copter_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]"
         ]
     },
     {
         "name": "Copter_Delete",
         "address": "0x0006bbf0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Copter_Delete(undefined4 param_1)",
+        "prototype_string": "undefined __cdecl Copter_Delete(obj_tag * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -19621,42 +19647,46 @@
         "return_type": "undefined",
         "param_types": [
             "obj_tag *",
-            "void *",
+            "COPTER *",
             "char"
         ],
-        "prototype_string": "undefined __cdecl Copter_Move(obj_tag * param_1, void * param_2, char param_3)",
+        "prototype_string": "undefined __cdecl Copter_Move(obj_tag * param_1, COPTER * param_2, char param_3)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
-            "[void * param_2@EAX:4]",
+            "[COPTER * param_2@EAX:4]",
             "[char param_3@Stack[0x8]:1]"
         ]
     },
     {
-        "name": "FUN_0006bcf0",
+        "name": "Copter_FireGun",
         "address": "0x0006bcf0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "has_custom_variable_storage": true,
+        "return_type": "bool",
         "param_types": [
-            "float"
+            "obj_tag *",
+            "COPTER *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0006bcf0(float param_1)",
+        "prototype_string": "bool __cdecl Copter_FireGun(obj_tag * param_1, COPTER * copter)",
         "parameters": [
-            "[float param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[COPTER * copter@EAX:4]"
         ]
     },
     {
-        "name": "FUN_0006be70",
+        "name": "Copter_FireMissile",
         "address": "0x0006be70",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "has_custom_variable_storage": true,
+        "return_type": "bool",
         "param_types": [
-            "float"
+            "obj_tag *",
+            "COPTER *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0006be70(float param_1)",
+        "prototype_string": "bool __cdecl Copter_FireMissile(obj_tag * param_1, COPTER * copter)",
         "parameters": [
-            "[float param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[COPTER * copter@EAX:4]"
         ]
     },
     {
@@ -21154,14 +21184,14 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "undefined4 *",
+            "M_BUTTON *",
+            "NEW_CONTROL *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Button_Init(int param_1, undefined4 * param_2, undefined4 param_3)",
+        "prototype_string": "void __cdecl Button_Init(M_BUTTON * button, NEW_CONTROL * param_2, undefined4 param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
+            "[M_BUTTON * button@Stack[0x4]:4]",
+            "[NEW_CONTROL * param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ]
     },
@@ -21266,14 +21296,14 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "undefined4 *",
+            "M_COMBO *",
+            "NEW_CONTROL *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Combo_Init(int param_1, undefined4 * param_2, undefined4 param_3)",
+        "prototype_string": "void __cdecl Combo_Init(M_COMBO * param_1, NEW_CONTROL * param_2, undefined4 param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
+            "[M_COMBO * param_1@Stack[0x4]:4]",
+            "[NEW_CONTROL * param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ]
     },
@@ -21412,11 +21442,11 @@
         "has_custom_variable_storage": false,
         "return_type": "int *",
         "param_types": [
-            "int"
+            "M_CONTROL *"
         ],
-        "prototype_string": "int * __cdecl Component_GetHandle(int param_1)",
+        "prototype_string": "int * __cdecl Component_GetHandle(M_CONTROL * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[M_CONTROL * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -21488,17 +21518,17 @@
         ]
     },
     {
-        "name": "FUN_000724b0",
+        "name": "Menu_GetFirstControl",
         "address": "0x000724b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined4 *",
         "param_types": [
-            "int"
+            "M_MANAGER *"
         ],
-        "prototype_string": "undefined4 * __cdecl FUN_000724b0(int param_1)",
+        "prototype_string": "undefined4 * __cdecl Menu_GetFirstControl(M_MANAGER * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[M_MANAGER * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -21922,13 +21952,13 @@
         ]
     },
     {
-        "name": "FUN_000731d0",
+        "name": "Menu_PulsingUpdate",
         "address": "0x000731d0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000731d0(void)",
+        "prototype_string": "void __stdcall Menu_PulsingUpdate(void)",
         "parameters": []
     },
     {
@@ -21938,11 +21968,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "M_LABEL *"
         ],
-        "prototype_string": "void __cdecl FUN_00073220(int param_1)",
+        "prototype_string": "void __cdecl FUN_00073220(M_LABEL * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[M_LABEL * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -22012,33 +22042,33 @@
         "parameters": []
     },
     {
-        "name": "FUN_00073370",
+        "name": "Menu_GetControl",
         "address": "0x00073370",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "int *",
         "param_types": [
-            "int"
+            "M_MANAGER *"
         ],
-        "prototype_string": "int * __cdecl FUN_00073370(int param_1)",
+        "prototype_string": "int * __cdecl Menu_GetControl(M_MANAGER * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[M_MANAGER * param_1@Stack[0x4]:4]"
         ]
     },
     {
-        "name": "FUN_000734d0",
+        "name": "Menu_FindControl",
         "address": "0x000734d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "int * *",
         "param_types": [
-            "int",
-            "undefined1"
+            "M_MANAGER *",
+            "uchar"
         ],
-        "prototype_string": "int * * __cdecl FUN_000734d0(int param_1, undefined1 param_2)",
+        "prototype_string": "int * * __cdecl Menu_FindControl(M_MANAGER * param_1, uchar param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[undefined1 param_2@Stack[0x8]:1]"
+            "[M_MANAGER * param_1@Stack[0x4]:4]",
+            "[uchar param_2@Stack[0x8]:1]"
         ]
     },
     {
@@ -22226,19 +22256,23 @@
     {
         "name": "Menu_UpdateMessageBox",
         "address": "0x000757d0",
-        "calling_convention": "unknown",
+        "calling_convention": "__fastcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "undefined4",
             "undefined4",
-            "undefined1"
+            "uint",
+            "ushort",
+            "byte"
         ],
-        "prototype_string": "undefined Menu_UpdateMessageBox(undefined4 param_1, undefined4 param_2, undefined1 param_3)",
+        "prototype_string": "void __fastcall Menu_UpdateMessageBox(undefined4 param_1_00, undefined4 param_2_00, uint param_3, ushort param_4, byte param_5)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined1 param_3@Stack[0xc]:1]"
+            "[undefined4 param_1_00@ECX:4]",
+            "[undefined4 param_2_00@EDX:4]",
+            "[uint param_3@Stack[0x4]:4]",
+            "[ushort param_4@Stack[0x8]:2]",
+            "[byte param_5@Stack[0xc]:1]"
         ]
     },
     {
@@ -24318,13 +24352,13 @@
         "address": "0x0007ce80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "int",
             "uint",
             "byte"
         ],
-        "prototype_string": "uint __cdecl Menu_HasMedal(int param_1, uint param_2, byte param_3)",
+        "prototype_string": "bool __cdecl Menu_HasMedal(int param_1, uint param_2, byte param_3)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]",
@@ -24390,11 +24424,11 @@
         "address": "0x0007d110",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined8",
+        "return_type": "bool",
         "param_types": [
             "byte *"
         ],
-        "prototype_string": "undefined8 __cdecl Menu_SpecialCodenameCheck(byte * param_1)",
+        "prototype_string": "bool __cdecl Menu_SpecialCodenameCheck(byte * param_1)",
         "parameters": [
             "[byte * param_1@Stack[0x4]:4]"
         ]
@@ -24714,24 +24748,24 @@
         ]
     },
     {
-        "name": "FUN_0007fb20",
+        "name": "Menu_UpdateCodenameWheel",
         "address": "0x0007fb20",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
             "byte",
-            "int * *",
+            "M_CONTROL *",
             "int *",
             "int *",
             "int *",
             "int *",
             "char"
         ],
-        "prototype_string": "void __cdecl FUN_0007fb20(byte param_1, int * * param_2, int * param_3, int * param_4, int * param_5, int * param_6, char param_7)",
+        "prototype_string": "void __cdecl Menu_UpdateCodenameWheel(byte param_1, M_CONTROL * param_2, int * param_3, int * param_4, int * param_5, int * param_6, char param_7)",
         "parameters": [
             "[byte param_1@Stack[0x4]:1]",
-            "[int * * param_2@Stack[0x8]:4]",
+            "[M_CONTROL * param_2@Stack[0x8]:4]",
             "[int * param_3@Stack[0xc]:4]",
             "[int * param_4@Stack[0x10]:4]",
             "[int * param_5@Stack[0x14]:4]",
@@ -27308,11 +27342,11 @@
         "address": "0x0008fcc0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "uint"
         ],
-        "prototype_string": "uint __cdecl FUN_0008fcc0(uint param_1)",
+        "prototype_string": "bool __cdecl FUN_0008fcc0(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ]
@@ -27334,14 +27368,14 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "undefined4 *",
+            "M_LABEL *",
+            "NEW_CONTROL *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Label_Init(int param_1, undefined4 * param_2, undefined4 param_3)",
+        "prototype_string": "void __cdecl Label_Init(M_LABEL * label, NEW_CONTROL * param_2, undefined4 param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
+            "[M_LABEL * label@Stack[0x4]:4]",
+            "[NEW_CONTROL * param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ]
     },
@@ -27352,16 +27386,16 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int",
-            "int *",
+            "M_MANAGER *",
+            "M_PAGE *",
+            "M_LABEL *",
             "char"
         ],
-        "prototype_string": "void __cdecl Label_Update(int param_1, int param_2, int * param_3, char param_4)",
+        "prototype_string": "void __cdecl Label_Update(M_MANAGER * param_1, M_PAGE * param_2, M_LABEL * param_3, char param_4)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[int * param_3@Stack[0xc]:4]",
+            "[M_MANAGER * param_1@Stack[0x4]:4]",
+            "[M_PAGE * param_2@Stack[0x8]:4]",
+            "[M_LABEL * param_3@Stack[0xc]:4]",
             "[char param_4@Stack[0x10]:1]"
         ]
     },
@@ -27392,12 +27426,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "undefined4 *",
+            "LINKEDLIST *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl LinkedList_Init(undefined4 * param_1, undefined4 param_2)",
+        "prototype_string": "void __cdecl LinkedList_Init(LINKEDLIST * param_1, undefined4 param_2)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]",
+            "[LINKEDLIST * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ]
     },
@@ -27420,17 +27454,17 @@
         "address": "0x00090ab0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "undefined4 *",
-            "undefined4 *",
-            "undefined4 *"
+            "LINKEDLIST *",
+            "void *",
+            "void *"
         ],
-        "prototype_string": "undefined4 __cdecl LinkedList_Add(undefined4 * param_1, undefined4 * param_2, undefined4 * param_3)",
+        "prototype_string": "bool __cdecl LinkedList_Add(LINKEDLIST * param_1, void * param_2, void * param_3)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
-            "[undefined4 * param_3@Stack[0xc]:4]"
+            "[LINKEDLIST * param_1@Stack[0x4]:4]",
+            "[void * param_2@Stack[0x8]:4]",
+            "[void * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -27494,13 +27528,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "M_LISTBOX *",
             "undefined4 *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl List_Init(int param_1, undefined4 * param_2, undefined4 param_3)",
+        "prototype_string": "void __cdecl List_Init(M_LISTBOX * param_1, undefined4 * param_2, undefined4 param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[M_LISTBOX * param_1@Stack[0x4]:4]",
             "[undefined4 * param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ]
@@ -27790,14 +27824,14 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "undefined4 *",
+            "M_MEMOBOX *",
+            "NEW_CONTROL *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Memo_Init(int param_1, undefined4 * param_2, undefined4 param_3)",
+        "prototype_string": "void __cdecl Memo_Init(M_MEMOBOX * param_1, NEW_CONTROL * param_2, undefined4 param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
+            "[M_MEMOBOX * param_1@Stack[0x4]:4]",
+            "[NEW_CONTROL * param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ]
     },
@@ -27808,15 +27842,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int",
-            "int *"
+            "M_MANAGER *",
+            "M_PAGE *",
+            "M_MEMOBOX *"
         ],
-        "prototype_string": "void __cdecl Memo_Update(int param_1, int param_2, int * param_3)",
+        "prototype_string": "void __cdecl Memo_Update(M_MANAGER * param_1, M_PAGE * param_2, M_MEMOBOX * param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[int * param_3@Stack[0xc]:4]"
+            "[M_MANAGER * param_1@Stack[0x4]:4]",
+            "[M_PAGE * param_2@Stack[0x8]:4]",
+            "[M_MEMOBOX * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -27826,14 +27860,14 @@
         "has_custom_variable_storage": false,
         "return_type": "ulonglong",
         "param_types": [
-            "M_MEMO *",
+            "M_MEMOBOX *",
             "MessageType",
             "int *",
             "int *"
         ],
-        "prototype_string": "ulonglong __cdecl Memo_SendMessage(M_MEMO * param_1, MessageType param_2, int * param_3, int * param_4)",
+        "prototype_string": "ulonglong __cdecl Memo_SendMessage(M_MEMOBOX * param_1, MessageType param_2, int * param_3, int * param_4)",
         "parameters": [
-            "[M_MEMO * param_1@Stack[0x4]:4]",
+            "[M_MEMOBOX * param_1@Stack[0x4]:4]",
             "[MessageType param_2@Stack[0x8]:4]",
             "[int * param_3@Stack[0xc]:4]",
             "[int * param_4@Stack[0x10]:4]"
@@ -27846,13 +27880,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "M_PAGE *",
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Page_Init(int param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "void __cdecl Page_Init(M_PAGE * param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[M_PAGE * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ]
@@ -27884,11 +27918,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "M_PAGE *"
         ],
-        "prototype_string": "void __cdecl Page_FindHelpControl(int param_1)",
+        "prototype_string": "void __cdecl Page_FindHelpControl(M_PAGE * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[M_PAGE * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -27898,11 +27932,11 @@
         "has_custom_variable_storage": false,
         "return_type": "ulonglong",
         "param_types": [
-            "int"
+            "M_PAGE *"
         ],
-        "prototype_string": "ulonglong __cdecl Page_SetHelpText(int param_1)",
+        "prototype_string": "ulonglong __cdecl Page_SetHelpText(M_PAGE * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[M_PAGE * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -27912,15 +27946,15 @@
         "has_custom_variable_storage": false,
         "return_type": "ulonglong",
         "param_types": [
-            "int * *",
-            "int * *",
-            "undefined1"
+            "M_MANAGER *",
+            "M_PAGE *",
+            "uint"
         ],
-        "prototype_string": "ulonglong __cdecl Page_Update(int * * param_1, int * * param_2, undefined1 param_3)",
+        "prototype_string": "ulonglong __cdecl Page_Update(M_MANAGER * param_1, M_PAGE * param_2, uint param_3)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
-            "[int * * param_2@Stack[0x8]:4]",
-            "[undefined1 param_3@Stack[0xc]:1]"
+            "[M_MANAGER * param_1@Stack[0x4]:4]",
+            "[M_PAGE * param_2@Stack[0x8]:4]",
+            "[uint param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -27930,11 +27964,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "M_CONTROL *"
         ],
-        "prototype_string": "void __cdecl Process_Init(int param_1)",
+        "prototype_string": "void __cdecl Process_Init(M_CONTROL * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[M_CONTROL * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -27991,13 +28025,13 @@
         "return_type": "void",
         "param_types": [
             "M_RADIO *",
-            "undefined4 *",
+            "NEW_CONTROL *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Radio_Init(M_RADIO * param_1, undefined4 * param_2, undefined4 param_3)",
+        "prototype_string": "void __cdecl Radio_Init(M_RADIO * param_1, NEW_CONTROL * param_2, undefined4 param_3)",
         "parameters": [
             "[M_RADIO * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
+            "[NEW_CONTROL * param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ]
     },
@@ -28074,11 +28108,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "M_CONTROL *"
         ],
-        "prototype_string": "void __cdecl Script_PrepareScripting(int param_1)",
+        "prototype_string": "void __cdecl Script_PrepareScripting(M_CONTROL * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[M_CONTROL * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -28136,12 +28170,12 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4 *",
         "param_types": [
-            "int",
+            "M_CONTROL *",
             "int"
         ],
-        "prototype_string": "undefined4 * __cdecl Script_Select(int param_1, int param_2)",
+        "prototype_string": "undefined4 * __cdecl Script_Select(M_CONTROL * param_1, int param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[M_CONTROL * param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"
         ]
     },
@@ -28150,15 +28184,15 @@
         "address": "0x00096ba0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int",
+            "M_CONTROL *",
             "int",
             "char"
         ],
-        "prototype_string": "uint __cdecl Script_Play(int param_1, int param_2, char param_3)",
+        "prototype_string": "bool __cdecl Script_Play(M_CONTROL * param_1, int param_2, char param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[M_CONTROL * param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
             "[char param_3@Stack[0xc]:1]"
         ]
@@ -28184,13 +28218,13 @@
         "address": "0x00096d50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int"
+            "M_CONTROL *"
         ],
-        "prototype_string": "undefined4 __cdecl Script_ExitLoop(int param_1)",
+        "prototype_string": "bool __cdecl Script_ExitLoop(M_CONTROL * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[M_CONTROL * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -28320,11 +28354,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int * *"
+            "M_CONTROL *"
         ],
-        "prototype_string": "void __cdecl Script_DelAllScripts(int * * param_1)",
+        "prototype_string": "void __cdecl Script_DelAllScripts(M_CONTROL * param_1)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]"
+            "[M_CONTROL * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -28391,14 +28425,14 @@
         "return_type": "void",
         "param_types": [
             "M_SPIN *",
-            "undefined4 *",
-            "undefined4"
+            "NEW_CONTROL *",
+            "M_CONTROL *"
         ],
-        "prototype_string": "void __cdecl Spin_Init(M_SPIN * param_1, undefined4 * param_2, undefined4 param_3)",
+        "prototype_string": "void __cdecl Spin_Init(M_SPIN * param_1, NEW_CONTROL * param_2, M_CONTROL * param_3)",
         "parameters": [
             "[M_SPIN * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[NEW_CONTROL * param_2@Stack[0x8]:4]",
+            "[M_CONTROL * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -28442,23 +28476,27 @@
     {
         "name": "Text_SetupChar",
         "address": "0x00098b50",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
         "param_types": [
+            "M_TEXTBOX *",
+            "uchar",
             "undefined4",
             "undefined4",
             "undefined4",
             "undefined4",
             "undefined1"
         ],
-        "prototype_string": "undefined Text_SetupChar(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined1 param_5)",
+        "prototype_string": "void Text_SetupChar(M_TEXTBOX * param_1, uchar characterAscii, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined1 param_7)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined1 param_5@Stack[0x14]:1]"
+            "[M_TEXTBOX * param_1@EAX:4]",
+            "[uchar characterAscii@DL:1]",
+            "[undefined4 param_3@Stack[0x4]:4]",
+            "[undefined4 param_4@Stack[0x8]:4]",
+            "[undefined4 param_5@Stack[0xc]:4]",
+            "[undefined4 param_6@Stack[0x10]:4]",
+            "[undefined1 param_7@Stack[0x14]:1]"
         ]
     },
     {
@@ -28468,14 +28506,14 @@
         "has_custom_variable_storage": false,
         "return_type": "int * *",
         "param_types": [
-            "int * *",
+            "M_TEXTBOX *",
             "undefined4",
             "int *",
             "int *"
         ],
-        "prototype_string": "int * * __cdecl Text_SendMessage(int * * param_1, undefined4 param_2, int * param_3, int * param_4)",
+        "prototype_string": "int * * __cdecl Text_SendMessage(M_TEXTBOX * param_1, undefined4 param_2, int * param_3, int * param_4)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
+            "[M_TEXTBOX * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
             "[int * param_3@Stack[0xc]:4]",
             "[int * param_4@Stack[0x10]:4]"
@@ -28488,15 +28526,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int",
-            "int * *"
+            "M_MANAGER *",
+            "M_PAGE *",
+            "M_TEXTBOX *"
         ],
-        "prototype_string": "void __cdecl TextBox_Update(int param_1, int param_2, int * * param_3)",
+        "prototype_string": "void __cdecl TextBox_Update(M_MANAGER * param_1, M_PAGE * param_2, M_TEXTBOX * param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[int * * param_3@Stack[0xc]:4]"
+            "[M_MANAGER * param_1@Stack[0x4]:4]",
+            "[M_PAGE * param_2@Stack[0x8]:4]",
+            "[M_TEXTBOX * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -28506,13 +28544,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "M_TEXTBOX.conflict *",
+            "M_TEXTBOX *",
             "NEW_CONTROL *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Text_Init(M_TEXTBOX.conflict * textbox, NEW_CONTROL * newControl, undefined4 param_3)",
+        "prototype_string": "void __cdecl Text_Init(M_TEXTBOX * textbox, NEW_CONTROL * newControl, undefined4 param_3)",
         "parameters": [
-            "[M_TEXTBOX.conflict * textbox@Stack[0x4]:4]",
+            "[M_TEXTBOX * textbox@Stack[0x4]:4]",
             "[NEW_CONTROL * newControl@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ]
@@ -32376,19 +32414,19 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "uint *",
+            "ulong *",
             "HASHCODE",
             "uint",
             "char",
-            "MedalAndRewards *"
+            "REWARDINFO_tag *"
         ],
-        "prototype_string": "void __cdecl PlrStarts_ProcessRewardCounter(uint * param_1, HASHCODE hashcode, uint upgradeLevel, char param_4, MedalAndRewards * op)",
+        "prototype_string": "void __cdecl PlrStarts_ProcessRewardCounter(ulong * param_1, HASHCODE hashcode, uint upgradeLevel, char param_4, REWARDINFO_tag * op)",
         "parameters": [
-            "[uint * param_1@Stack[0x4]:4]",
+            "[ulong * param_1@Stack[0x4]:4]",
             "[HASHCODE hashcode@Stack[0x8]:4]",
             "[uint upgradeLevel@Stack[0xc]:4]",
             "[char param_4@Stack[0x10]:1]",
-            "[MedalAndRewards * op@Stack[0x14]:4]"
+            "[REWARDINFO_tag * op@Stack[0x14]:4]"
         ]
     },
     {
@@ -35380,15 +35418,15 @@
     {
         "name": "SP_Delete",
         "address": "0x000c3f40",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined SP_Delete(undefined4 param_1)",
+        "prototype_string": "void __cdecl SP_Delete(obj_tag * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -35562,12 +35600,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
             "char"
         ],
-        "prototype_string": "void __cdecl SP_HideObj(int param_1, char param_2)",
+        "prototype_string": "void __cdecl SP_HideObj(obj_tag * param_1, char param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[char param_2@Stack[0x8]:1]"
         ]
     },
@@ -35614,7 +35652,7 @@
         "address": "0x000c4650",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "obj_tag *",
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
@@ -35627,7 +35665,7 @@
             "int",
             "undefined4"
         ],
-        "prototype_string": "undefined __cdecl SP_Create(_VECTOR * param_1, _VECTOR * param_2, HASHCODE scriptPlayerHashcode, undefined4 param_4, undefined4 param_5, undefined4 param_6, int param_7, int param_8, int param_9, undefined4 param_10)",
+        "prototype_string": "obj_tag * __cdecl SP_Create(_VECTOR * param_1, _VECTOR * param_2, HASHCODE scriptPlayerHashcode, undefined4 param_4, undefined4 param_5, undefined4 param_6, int param_7, int param_8, int param_9, undefined4 param_10)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
@@ -37653,7 +37691,7 @@
             "cel_tag *",
             "_VECTOR *",
             "_VECTOR *",
-            "float *",
+            "_VECTOR *",
             "float",
             "float",
             "HASHCODE",
@@ -37662,19 +37700,19 @@
             "uint",
             "ushort"
         ],
-        "prototype_string": "obj_tag * __cdecl Gas_Init(cel_tag * param_1, _VECTOR * pos, _VECTOR * rot, float * param_4, float param_5, float param_6, HASHCODE param_7, uint param_8, uint param_9, uint param_10, ushort param_11)",
+        "prototype_string": "obj_tag * __cdecl Gas_Init(cel_tag * curCel, _VECTOR * pos, _VECTOR * rot, _VECTOR * windVec, float param_5, float param_6, HASHCODE hashcode, uint gasType, uint colourStart, uint colourEnd, ushort lifetime)",
         "parameters": [
-            "[cel_tag * param_1@Stack[0x4]:4]",
+            "[cel_tag * curCel@Stack[0x4]:4]",
             "[_VECTOR * pos@Stack[0x8]:4]",
             "[_VECTOR * rot@Stack[0xc]:4]",
-            "[float * param_4@Stack[0x10]:4]",
+            "[_VECTOR * windVec@Stack[0x10]:4]",
             "[float param_5@Stack[0x14]:4]",
             "[float param_6@Stack[0x18]:4]",
-            "[HASHCODE param_7@Stack[0x1c]:4]",
-            "[uint param_8@Stack[0x20]:4]",
-            "[uint param_9@Stack[0x24]:4]",
-            "[uint param_10@Stack[0x28]:4]",
-            "[ushort param_11@Stack[0x2c]:2]"
+            "[HASHCODE hashcode@Stack[0x1c]:4]",
+            "[uint gasType@Stack[0x20]:4]",
+            "[uint colourStart@Stack[0x24]:4]",
+            "[uint colourEnd@Stack[0x28]:4]",
+            "[ushort lifetime@Stack[0x2c]:2]"
         ]
     },
     {
@@ -40892,7 +40930,7 @@
         ]
     },
     {
-        "name": "FUN_000d77f0",
+        "name": "Mat_LookAt",
         "address": "0x000d77f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -40904,7 +40942,7 @@
             "float *",
             "float *"
         ],
-        "prototype_string": "void __cdecl FUN_000d77f0(_MATRIX * param_1, _VECTOR * param_2, _VECTOR * param_3, float * param_4, float * param_5)",
+        "prototype_string": "void __cdecl Mat_LookAt(_MATRIX * param_1, _VECTOR * param_2, _VECTOR * param_3, float * param_4, float * param_5)",
         "parameters": [
             "[_MATRIX * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",

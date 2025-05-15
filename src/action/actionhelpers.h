@@ -1,6 +1,8 @@
 #ifndef ACTIONHELPERS_H_
 #define ACTIONHELPERS_H_
 
+#include <stddef.h> // for offsetof
+
 // Foward declarations prevent circular dependencies
 typedef struct celglist_tag celglist_tag;
 typedef struct level_tag level_tag;
@@ -49,6 +51,7 @@ typedef short MallocFlags;
 #include "game/Autoaim.h"
 #include "game/obj/Break.h"
 #include "game/obj/build.h"
+#include "game/obj/Copter.h"
 #include "game/obj/Door.h"
 #include "game/obj/object.h" // for obj_tag needed by some autogen functions
 #include "game/obj/control.h" // for Control_X functions
