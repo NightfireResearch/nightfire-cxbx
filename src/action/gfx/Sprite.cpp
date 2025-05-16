@@ -31,3 +31,15 @@ void Sprite_Link2Viewer(sprite *spr,ushort playerNum) {
         return;
     spr->linkedViewer = playerNum;
 }
+
+#define SpriteList (*(DList*)0x0029aa98)
+
+// AUTOINJECT
+void Sprite_Delete(sprite* sprite) {
+
+    if(sprite == NULL)
+        return;
+
+    Txt_UnlockString(sprite->text);
+    DList_MoveFromInUse2Free(&SpriteList, sprite);
+}

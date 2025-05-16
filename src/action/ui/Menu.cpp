@@ -179,6 +179,15 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
 
 }
 
+// AUTOINJECT
+void Menu_DeleteSprite(sprite* spr) {
+    if(spr == NULL)
+        return;
+
+    Sprite_Delete(spr);
+    
+}
+
 // AUTOGEN
 int __Menu_SendMessage(M_CONTROL *param_1, uint param_2, int param_3, int param_4);
 

@@ -48,5 +48,6 @@ static_assert(offsetof(SpriteInfo, maybeEnabled) == 0x8, "Offset of maybeEnabled
 void Sprite_SetText(sprite *param_1,char *param_2);
 sprite* Sprite_Create2(SpriteInfo *param_1);
 void Sprite_Link2Viewer(sprite *spr,ushort playerNum);
+void Sprite_Delete(sprite* sprite);
 
 #endif // SPRITE_H
