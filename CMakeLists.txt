@@ -40,6 +40,10 @@ target_link_libraries(driving PRIVATE
   shlwapi
 )
 
+# The Xbox / PS2 implementations were of another era, one where memory safety was apparently a foreign concept to game developers
+# We'll use the original unsafe versions, and tell the compiler to stop nagging us, because YOLO
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
 # We aren't currently loading the XBE on our end, so this is unnecessary
 #target_link_options(action PRIVATE
 #  /INCREMENTAL:NO
