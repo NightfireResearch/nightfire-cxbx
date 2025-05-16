@@ -3238,43 +3238,49 @@
         ]
     },
     {
-        "name": "FUN_00022cc0",
+        "name": "Bullet_heatseekable",
         "address": "0x00022cc0",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "bool",
-        "param_types": [],
-        "prototype_string": "bool __stdcall FUN_00022cc0(void)",
-        "parameters": []
+        "param_types": [
+            "obj_tag *"
+        ],
+        "prototype_string": "bool __stdcall Bullet_heatseekable(obj_tag * gameObj)",
+        "parameters": [
+            "[obj_tag * gameObj@EDI:4]"
+        ]
     },
     {
-        "name": "FUN_00022db0",
+        "name": "Bullet_acquiretarget",
         "address": "0x00022db0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "BU_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_00022db0(int param_1, int param_2)",
+        "prototype_string": "void __cdecl Bullet_acquiretarget(BU_tag * bullet, obj_tag * shooter)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[BU_tag * bullet@Stack[0x4]:4]",
+            "[obj_tag * shooter@Stack[0x8]:4]"
         ]
     },
     {
-        "name": "FUN_00022eb0",
+        "name": "Bullet_homing",
         "address": "0x00022eb0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "int"
+            "BU_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_00022eb0(int param_1)",
+        "prototype_string": "void __cdecl Bullet_homing(BU_tag * bullet, obj_tag * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[BU_tag * bullet@ESI:4]",
+            "[obj_tag * param_2@Stack[0x4]:4]"
         ]
     },
     {
@@ -3332,7 +3338,7 @@
     {
         "name": "Bullet_Update",
         "address": "0x00023670",
-        "calling_convention": "unknown",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
@@ -4882,28 +4888,28 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "float *",
-            "undefined4",
-            "undefined4",
-            "undefined4",
+            "_VECTOR *",
+            "float",
+            "cel_tag *",
+            "obj_tag *",
             "undefined4",
             "int *",
             "char",
             "char",
-            "undefined2",
+            "ushort",
             "undefined4"
         ],
-        "prototype_string": "bool __cdecl Collide_SphereIntersect(float * param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, int * param_6, char param_7, char param_8, undefined2 param_9, undefined4 param_10)",
+        "prototype_string": "bool __cdecl Collide_SphereIntersect(_VECTOR * param_1, float param_2, cel_tag * param_3, obj_tag * param_4, undefined4 param_5, int * param_6, char param_7, char param_8, ushort param_9, undefined4 param_10)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[float param_2@Stack[0x8]:4]",
+            "[cel_tag * param_3@Stack[0xc]:4]",
+            "[obj_tag * param_4@Stack[0x10]:4]",
             "[undefined4 param_5@Stack[0x14]:4]",
             "[int * param_6@Stack[0x18]:4]",
             "[char param_7@Stack[0x1c]:1]",
             "[char param_8@Stack[0x20]:1]",
-            "[undefined2 param_9@Stack[0x24]:2]",
+            "[ushort param_9@Stack[0x24]:2]",
             "[undefined4 param_10@Stack[0x28]:4]"
         ]
     },
@@ -19548,11 +19554,11 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "void *"
+            "COPTER *"
         ],
-        "prototype_string": "undefined4 __cdecl Copter_GetBody(void * param_1)",
+        "prototype_string": "undefined4 __cdecl Copter_GetBody(COPTER * param_1)",
         "parameters": [
-            "[void * param_1@Stack[0x4]:4]"
+            "[COPTER * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -20852,7 +20858,7 @@
         "parameters": []
     },
     {
-        "name": "FUN_0006fa50",
+        "name": "Effect_RicochetProb",
         "address": "0x0006fa50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -20861,7 +20867,7 @@
             "byte",
             "uint"
         ],
-        "prototype_string": "uint __cdecl FUN_0006fa50(byte param_1, uint param_2)",
+        "prototype_string": "uint __cdecl Effect_RicochetProb(byte param_1, uint param_2)",
         "parameters": [
             "[byte param_1@Stack[0x4]:1]",
             "[uint param_2@Stack[0x8]:4]"
@@ -37560,15 +37566,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "undefined4 *",
-            "undefined4 *",
-            "int"
+            "_VECTOR *",
+            "_VECTOR *",
+            "level_tag *"
         ],
-        "prototype_string": "void __cdecl Create_SpaceLaser(undefined4 * param_1, undefined4 * param_2, int param_3)",
+        "prototype_string": "void __cdecl Create_SpaceLaser(_VECTOR * pos, _VECTOR * rot, level_tag * param_3)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[_VECTOR * pos@Stack[0x4]:4]",
+            "[_VECTOR * rot@Stack[0x8]:4]",
+            "[level_tag * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -37592,7 +37598,7 @@
     {
         "name": "SpaceLaser_Update",
         "address": "0x000cc930",
-        "calling_convention": "unknown",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [

@@ -56,6 +56,7 @@ typedef short MallocFlags;
 #include "game/obj/object.h" // for obj_tag needed by some autogen functions
 #include "game/obj/control.h" // for Control_X functions
 #include "game/obj/player.h" // for BLData
+#include "game/obj/SpaceLaser.h"
 #include "game/weapon_stats.h"
 #include "game/sp/Mission.h"
 #include "game/sp/PlayerStats.h"
