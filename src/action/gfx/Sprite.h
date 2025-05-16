@@ -7,7 +7,7 @@
 #pragma pack(push, 1)
 
 typedef struct sprite {
-    char unknown[8];
+    LLNODE_tag node;
     unsigned int createdOnFrame;
     unsigned int unknown2;
     unsigned int colourTint;

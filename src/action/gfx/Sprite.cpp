@@ -41,5 +41,5 @@ void Sprite_Delete(sprite* sprite) {
         return;
 
     Txt_UnlockString(sprite->text);
-    DList_RemoveFromInUse2Free(&SpriteList, sprite);
+    DList_RemoveFromInUse2Free(&SpriteList, (LLNODE_tag*)sprite);
 }
