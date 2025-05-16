@@ -38,6 +38,7 @@ typedef short MallocFlags;
 #include "util/bin.h"
 #include "util/hashtable.h"
 #include "util/LList.h"
+#include "util/DList.h"
 #include "util/Stack.h"
 #include "math/math.h"
 #include "util/Random.h"
