@@ -1,13 +1,20 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include "../actionhelpers.h"
+#include <stddef.h> // for offsetof
+#include "../../helpers.h"
+
+#pragma pack(push, 1)
 
 typedef struct {
     void** items;
     ushort fillLevel;
     ushort size;
 } STACKINFO;
+
+static_assert(sizeof(STACKINFO) == 0x8, "STACKINFO size incorrect");
+
+#pragma pack(pop)
 
 void* Stack_Top(STACKINFO* stack);
 void* Stack_Pop(STACKINFO* stack);

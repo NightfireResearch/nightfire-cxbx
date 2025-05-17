@@ -21792,11 +21792,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "void *"
+            "void * *",
+            "undefined4"
         ],
-        "prototype_string": "void __cdecl Menu_Free(void * param_1)",
+        "prototype_string": "void __cdecl Menu_Free(void * * param_1, undefined4 menuMallocType)",
         "parameters": [
-            "[void * param_1@Stack[0x4]:4]"
+            "[void * * param_1@Stack[0x4]:4]",
+            "[undefined4 menuMallocType@Stack[0x8]:4]"
         ]
     },
     {
@@ -27712,9 +27714,9 @@
         "param_types": [
             "M_MANAGER *"
         ],
-        "prototype_string": "void __cdecl Menu_ClearStack(M_MANAGER * param_1)",
+        "prototype_string": "void __cdecl Menu_ClearStack(M_MANAGER * manager)",
         "parameters": [
-            "[M_MANAGER * param_1@Stack[0x4]:4]"
+            "[M_MANAGER * manager@Stack[0x4]:4]"
         ]
     },
     {

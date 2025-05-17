@@ -3,6 +3,8 @@
 
 #include "../actionhelpers.h"
 
+#include "../util/Stack.h"
+
 typedef enum {
     MessageType_SetText = 0x18,
     MessageType_SetColour = 0x1a,
@@ -21,9 +23,15 @@ typedef enum {
 
 // TODO: Unfinished
 typedef struct M_MANAGER {
-    char pad[0x1bc];
+    char pad[0xa8];
+    STACKINFO stack; // 0xa8
+    int stackMem[64];
+    char pad2[12]; // 0xb0 to 0x1bc
     uint field158_0x1bc;
 } M_MANAGER;
+
+static_assert(offsetof(M_MANAGER, stack) == 0xa8, "M_MANAGER stack offset incorrect");
+static_assert(offsetof(M_MANAGER, field158_0x1bc) == 0x1bc, "M_MANAGER field158_0x1bc offset incorrect");
 
 // TODO: Unfinished
 typedef struct M_CONTROL {

@@ -199,3 +199,18 @@ bool Menu_SelectItemInControl(M_CONTROL* control, M_ITEM *list, ushort size, int
 
 // AUTOGEN
 void Menu_UnlockMPSettings(void);
+
+// AUTOGEN
+void Menu_Free(void **data, undefined4 mallocFlags);
+
+// AUTOINJECT
+void Menu_ClearStack(M_MANAGER *mgr) {
+
+    while (!Stack_IsEmpty(&mgr->stack)) {
+        // The Xbox code takes Stack_Top, then calls Stack_Pop and discards the return value.
+        // No need to do that here, we can just pop it which should have the same end result
+        // but does so in a much more idiomatic way.
+        Menu_Free((void **)Stack_Pop(&mgr->stack), 8);
+    }
+
+}
