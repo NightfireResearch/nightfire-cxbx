@@ -6,6 +6,7 @@
 typedef uint MENU_IRISOPS;
 
 int Menu_GetLevelIndex(HASHCODE level);
+bool Menu_IsDrivingLevel(HASHCODE level);
 void Menu_StartIris(MENU_IRISOPS param_1, uchar param_2, uint param_3);
 void Menu_PlayIris(char param_1, uchar param_2, uint param_3);
 void Menu_ChangePageCloseIris(HASHCODE param_1, uchar param_2, uint param_3);

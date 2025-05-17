@@ -240,19 +240,6 @@ void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume) {
 
 }
 
-// AUTOINJECT
-bool Menu_IsDrivingLevel(HASHCODE level) {
-    switch(level) {
-        case HT_Level_Driving_Paris:
-        case HT_Level_Driving_Underwater:
-        case HT_Level_Driving_JungleA:
-        case HT_Level_Driving_SnowMobile:
-        case HT_Level_Driving_Alps:
-            return true;
-    }
-    return false;
-}
-
 bool IsMultiplayerMission(HASHCODE level) {
     switch(level) {
         case HT_Level_SpaceStation: // FIXME: This is weird to see here?
