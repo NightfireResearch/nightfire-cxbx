@@ -2,6 +2,7 @@
 #include "Manager.h"
 
 #include "../game/drone/BOT.h"
+#include "../input.h"
 
 
 #include <stdio.h>
@@ -213,4 +214,16 @@ void Menu_ClearStack(M_MANAGER *mgr) {
         Menu_Free((void **)Stack_Pop(&mgr->stack), 8);
     }
 
+}
+
+// AUTOINJECT
+void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle) {
+  if (playerNum == 0xffff) {
+    Input_ChangeControllerStyle(0, controllerStyle);
+    Input_ChangeControllerStyle(1, controllerStyle);
+    Input_ChangeControllerStyle(2, controllerStyle);
+    Input_ChangeControllerStyle(3, controllerStyle);
+  } else {
+    Input_ChangeControllerStyle(playerNum, controllerStyle);
+  }
 }

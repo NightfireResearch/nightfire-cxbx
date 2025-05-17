@@ -79,6 +79,8 @@ void Inject_KeyboardInput(void) {
 }
 
 // Does not need to be injected, it's only called from the game loop which we've replaced
+// However no harm in injecting it anyway
+// AUTOINJECT
 void Input_Update(void) {
 
     // Game functions - poll, compensate stick, map from keys to actions
@@ -171,6 +173,23 @@ void Input_SetAction(short playerNum,unsigned int action,unsigned char val) {
   }
 
   return;
+}
+
+// AUTOGEN
+void Input_ClearAllActions(short playerNum);
+
+// AUTOINJECT
+bool Input_ChangeControllerStyle(ushort playerNum, int controllerStyle) {
+
+  if(playerNum >= 4)
+    return false;
+
+  if(PlayerInputs[playerNum].controlStyle != controllerStyle) {
+    PlayerInputs[playerNum].controlStyle = controllerStyle;
+    Input_ClearAllActions(playerNum);
+  }
+
+  return true;
 }
 
 // AUTOGEN
