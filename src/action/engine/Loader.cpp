@@ -78,7 +78,7 @@ bool LoaderProcess(void) {
         case 0xc:
           uVar1 = dirFileBuf[1];
           if (LoadableIndex < ARRAY_SIZE(LoadableFiles)) {
-            LoadableFiles[LoadableIndex].hashcode = *dirFileBuf;
+            LoadableFiles[LoadableIndex].hashcode = (HASHCODE) *dirFileBuf;
             LoadableFiles[LoadableIndex].loadableIdx = (char)uVar1;
             LoadableIndex++;
           }
