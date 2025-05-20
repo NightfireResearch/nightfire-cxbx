@@ -3,5 +3,6 @@
 
 bool LoaderProcess(void);
 void parsemap_block_entity_params(void);
+bool isLoadable(HASHCODE param_1);
 
 #endif // LOADER_H

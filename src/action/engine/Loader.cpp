@@ -27,8 +27,8 @@ void __cdecl MenuManager_Load(undefined4 param_1,unsigned int* param_2);
 
 #pragma pack(push, 1)
 typedef struct {
-  uint maybeHashcode;
-  char someChar;
+  HASHCODE hashcode;
+  char loadableIdx;
   char _pad[3];
 } LoadableFile;
 #pragma pack(pop)
@@ -78,8 +78,8 @@ bool LoaderProcess(void) {
         case 0xc:
           uVar1 = dirFileBuf[1];
           if (LoadableIndex < ARRAY_SIZE(LoadableFiles)) {
-            LoadableFiles[LoadableIndex].maybeHashcode = *dirFileBuf;
-            LoadableFiles[LoadableIndex].someChar = (char)uVar1;
+            LoadableFiles[LoadableIndex].hashcode = *dirFileBuf;
+            LoadableFiles[LoadableIndex].loadableIdx = (char)uVar1;
             LoadableIndex++;
           }
         }
@@ -145,4 +145,14 @@ void parsemap_block_entity_params(void) {
 
     pCurrCelList++;
 
+}
+
+
+// AUTOINJECT
+bool isLoadable(HASHCODE param_1) {
+  for (int i = 0; i < LoadableIndex; i++) {
+    if (LoadableFiles[i].hashcode == param_1)
+      return LoadableFiles[i].loadableIdx != 0;
+  }
+  return false;
 }
