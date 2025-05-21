@@ -722,3 +722,244 @@ void mainloop(void) {
   GS_SetRefreshRate(refreshRate, refreshRate);
   GameFlow_Main();
 }
+
+Action_TranslatedText MPHints[] = {
+  0x100013e, 0x100013f, 0x1000140, 0x1000141, 0x1000142, 0x1000143, 0x1000144, 0x1000145,
+  0x1000146, 0x1000147, 0x1000148, 0x1000149, 0x100014a, 0x100014b, 0x100014c, 0x100014d,
+  0x100014e, 0x100014f, 0x1000150, 0x1000151, 0x1000152, 0x1000153, 0x1000154, 0x1000155,
+  0x1000156, 0x1000157, 0x1000158, 0x1000159, 0x100015a, 0x100015b, 0x100015c, 0x100015d,
+  0x100015e, 0x100015f, 0x1000160, 0x1000161, 0x1000162, 0x1000163, 0x1000164, 0x1000165
+};
+
+Action_TranslatedText GeneralHints[] = {
+  0x1000111, 0x1000112, 0x1000113, 0x1000114, 0x1000115, 0x1000116, 0x1000117, 0x1000118,
+  0x1000119, 0x100011a, 0x100011b, 0x100011c, 0x100011d, 0x100011e, 0x100011f, 0x1000120,
+  0x1000121, 0x1000122, 0x1000123, 0x1000124, 0x1000125, 0x1000126, 0x1000127, 0x1000128,
+  0x100012a, 0x100012b, 0x100012c, 0x100012d, 0x100012e, 0x100012f, 0x1000130, 0x1000131,
+  0x1000132, 0x1000133, 0x1000134, 0x1000135, 0x1000136, 0x1000137, 0x1000138, 0x1000139,
+  0x100013a, 0x100013b, 0x100013c
+};
+
+void _LoadText(Action_TranslatedText text, char** str) {
+  if (str != NULL)
+    *str = Txt_BindLabel(refs[idx], 0);
+}
+
+void _LoadRandomFromSelection(Action_TranslatedText* refs, int numRefs, char** str) {
+  int idx = Rand_Rand() % numRefs;
+  _LoadText(refs[idx], str);
+}
+
+void _RandomiseMissionHints(char** str) {
+  
+  // If blank, or otherwise with 50% chance, replace a level-specific hint with a more general gameplay tip
+  bool isBlank = (str != NULL && *str == NULL);
+  bool randomiseHint = (Rand_Rand() & 1) == 0;
+
+  if(isBlank || randomiseHint) {
+    // Pick an alternate hint and use that instead of the previously chosen one
+    _LoadRandomHint(GeneralHints, ARRAY_SIZE(GeneralHints), str);
+  }
+}
+
+// Return the hashcode of the level loading image, and give a random hint and/or objective text if required
+// AUTOINJECT
+HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintTextOut, char **objectiveTextOut) {
+
+  switch(level) {
+    default:
+      if (hintTextOut != NULL)
+        *hintTextOut = NULL;
+      if (objectiveTextOut != NULL)
+        *objectiveTextOut = NULL;
+      return LOADSCREEN_UNKNOWN;
+
+    /*
+     * Multiplayer
+     */
+    case HT_Level_SpaceStation:
+    case HT_Level_Facility:
+    case HT_Level_Atlantis:
+    case HT_Level_SkyRail:
+    case HT_Level_SubPen:
+    case HT_Level_StealthShip:
+    case HT_Level_FortKnox:
+    case HT_Level_MissileSilo:
+    case HT_Level_SnowBlind:
+    case HT_Level_Ravine:
+    case 0x700004c:
+      // No objective text for MP maps (taken from the scenario, or not present? can't recall)
+      _LoadRandomFromSelection(MPHints, ARRAY_SIZE(MPHints), hintTextOut);
+      return LOADSCREEN_MULTIPLAYER;
+
+    /*
+     * Castle
+     */
+
+    case HT_Level_CastleExterior:
+      _LoadText(0x1000126, hintTextOut); // Only one level-specific hint
+      _LoadText(OBJ_MIS2_BREACH_CASTLE, objectiveTextOut);
+      // No randomly-selected general tips in the first part
+      return LOADSCREEN_CASTLE;
+
+    case HT_Level_CastleCourtyard:
+      Action_TranslatedText castleCourtyard[] = {0x10000c0, 0x10000c1};
+      _LoadRandomFromSelection(castleCourtyard, ARRAY_SIZE(castleCourtyard), hintTextOut);
+      _LoadText(OBJ_MIS2_ENTER_PARTY, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_CASTLE;
+
+    case HT_Level_CastleIndoors1:
+      _LoadText(0x10000c2, hintTextOut); // Only one level-specific hint
+      _LoadText(OBJ_MIS2_RENDEZVOUS_WITH_AGENTS, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_CASTLE;
+    
+    case HT_Level_CastleIndoors2:
+      Action_TranslatedText castleIndoors2[] = {0x10000c3, 0x10000c4, 0x10000c5, 0x10000c6};
+      _LoadRandomFromSelection(castleIndoors2, ARRAY_SIZE(castleIndoors2), hintTextOut);
+      _LoadText(OBJ_MIS2_SPY_ON_MEETING, objectiveTextOut;
+      _RandomiseMissionHints();
+      return LOADSCREEN_CASTLE;
+
+    /*
+     * Henderson (Mayhew)
+     */    
+
+    case HT_Level_HendersonA:
+      Action_TranslatedText hendersonA[] = {0x10000d3, 0x10000d4};
+      _LoadRandomFromSelection(hendersonA, ARRAY_SIZE(hendersonA), hintTextOut);
+      _LoadText(OBJ_MIS5_ESCORT_MAYHEW, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_HENDERSON;
+
+    case HT_Level_HendersonB:
+      Action_TranslatedText hendersonB[] = {0x10000c7, 0x10000c8, 0x10000cb, 0x10000d1};
+      _LoadRandomFromSelection(hendersonB, ARRAY_SIZE(hendersonB), hintTextOut);
+      _LoadText(OBJ_MIS5_RESCUE_HOSTAGE_GIRLS, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_HENDERSON;
+    
+    case HT_Level_HendersonC:
+      Action_TranslatedText hendersonC[] = {0x10000ca, 0x10000cd, 0x10000ce, 0x10000c9, 0x10000d2};
+      _LoadRandomFromSelection(hendersonC, ARRAY_SIZE(hendersonC), hintTextOut);
+      _LoadText(OBJ_MIS5_FIND_DRAGON_SAFE, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_HENDERSON;
+
+    case HT_Level_HendersonD:
+      Action_TranslatedText hendersonD[] = {0x10000cf, 0x10000d0};
+      _LoadRandomFromSelection(hendersonD, ARRAY_SIZE(hendersonD), hintTextOut);
+      _LoadText(OBJ_MIS5_DEFEAT_ASSASSIN, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_HENDERSON;
+    
+    /*
+     * Tower
+     */
+
+    case HT_Level_TowerA:
+      Action_TranslatedText towerA[] = {0x10000d5, 0x10000d8, 0x10000df, 0x10000e2};
+      _LoadRandomFromSelection(towerA, ARRAY_SIZE(towerA), hintTextOut);
+      _LoadText(0x4000016, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_TOWER;
+
+    case HT_Level_TowerB:
+      Action_TranslatedText towerB[] = {0x10000d7, 0x10000d9, 0x10000db, 0x10000e0, 0x10000e3, 0x10000e4, 0x10000e6};
+      _LoadRandomFromSelection(towerB, ARRAY_SIZE(towerB), hintTextOut);
+      _LoadText(0x4000019, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_TOWER;
+
+    case HT_Level_TowerC:
+      Action_TranslatedText towerC[] = {0x10000dc, 0x10000da, 0x10000dd, 0x10000de, 0x10000e1, 0x10000e5};
+      _LoadRandomFromSelection(towerC, ARRAY_SIZE(towerC), hintTextOut);
+      _LoadText(0x400001d, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_TOWER;
+
+    /*
+    * Power Station
+    */
+    
+    case HT_Level_PowerStationA1:
+      Action_TranslatedText powerStationA1[] = {0x10000e7, 0x10000e9, 0x10000eb, 0x10000ed, 0x10000ef, 0x10000f1, 0x10000f4};
+      _LoadRandomFromSelection(powerStationA1, ARRAY_SIZE(powerStationA1), hintTextOut);
+      _LoadText(0x400002c, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_POWERSTATION;
+    
+    case HT_Level_PowerStationA2:
+      Action_TranslatedText powerStationA2[] = {0x10000e8, 0x10000ea, 0x10000ec, 0x10000ee, 0x10000f0, 0x10000f2, 0x10000f3, 0x10000f5};
+      _LoadRandomFromSelection(powerStationA2, ARRAY_SIZE(powerStationA2), hintTextOut);
+      _LoadText(0x400002f, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_POWERSTATION;
+    
+    /*
+     * Tower 2
+     */
+
+    case HT_Level_Tower2A:
+      // Intentional repetition to bias towards this message? Or just a typo?
+      Action_TranslatedText tower2A[] = {0x10000f6, 0x10000f8, 0x10000f8};
+      _LoadRandomFromSelection(tower2A, ARRAY_SIZE(tower2A), hintTextOut);
+      _LoadText(0x4000036, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_TOWER2;
+    
+    case HT_Level_Tower2B:
+      Action_TranslatedText tower2B[] = {0x10000fe, 0x10000f9, 0x10000fa, 0x10000fc, 0x10000fd};
+      _LoadRandomFromSelection(tower2B, ARRAY_SIZE(tower2B), hintTextOut);
+      _LoadText(0x4000037, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_TOWER2;
+
+    case HT_Level_Tower2C:
+      // No hints specified for Tower2C
+      if(hintTextOut != NULL)
+        *hintTextOut = NULL;
+      _LoadText(0x400003a, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_TOWER2;
+
+    /*
+     * Evil Base / Silo
+     */
+
+    case HT_Level_EvilBase:
+      Action_TranslatedText evilBase[] = {0x1000103, 0x1000104, 0x1000105, 0x1000106};
+      _LoadRandomFromSelection(evilBase, ARRAY_SIZE(evilBase), hintTextOut);
+      _LoadText(0x4000049, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_EVILBASE;
+    
+    case HT_Level_EvilSilo:
+      _LoadText(0x10000ff, hintTextOut); // Only one option
+      _LoadText(0x400004d, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_EVILBASE;
+
+    case HT_Level_EvilBaseC:
+      Action_TranslatedText evilBaseC[] = {0x1000100, 0x1000101 ,0x1000102};
+      _LoadRandomFromSelection(evilBaseC, ARRAY_SIZE(evilBaseC), hintTextOut);
+      _LoadText(0x400004f, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_EVILBASE;
+    
+    /*
+     * Space Station
+     */
+    case HT_Level_SpaceStationD:
+      Action_TranslatedText spaceStationD[] = {0x1000108, 0x1000109, 0x100010a, 0x100010b, 0x100010c, 0x100010d, 0x100010e, 0x100010f, 0x1000110};
+      _LoadRandomFromSelection(spaceStationD, ARRAY_SIZE(spaceStationD), hintTextOut);
+      _LoadText(0x400005a, objectiveTextOut);
+      _RandomiseMissionHints();
+      return LOADSCREEN_SPACESTATION;
+
+  }
+
+  // Default case returns; no way to reach here
+  
+}
