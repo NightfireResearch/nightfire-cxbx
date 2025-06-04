@@ -45,20 +45,21 @@ typedef struct BLData {
     char camMode; // 0x8e0
     char pad_5[16];
     char nightVisionActive; // 0x8f1
-    // ...
+    char pad_6[3];
+    char sleeveType;
+    char pad_7[6];
 } BLData;
 
+static_assert(sizeof(BLData) == 0x8fc, "Size of BLData wrong");
 static_assert(offsetof(BLData, hudInfo) == 0x770, "Offset of hudInfo not correct");
 static_assert(offsetof(BLData, crosshairOffsetX) == 0xe0, "Offset of crosshairOffsetX not correct");
 static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisionActive not correct");
 static_assert(offsetof(BLData, nightVisionTimer) == 0x8b0, "Offset of nightVisionTimer not correct");
 static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisionActive not correct");
-
-
-//char (*__kaboom)[offsetof(BLData,playerNum)] = 1;
 static_assert(offsetof(BLData, remoteControlDevice) == 0x808, "Offset of remoteControlDevice not correct");
 static_assert(offsetof(BLData, playerNum) == 0x8de, "Offset of playerNum not correct");
 
+//char (*__kaboom)[offsetof(BLData,playerNum)] = 1;
 
 typedef enum {
     MovementType_Walk = 0,
