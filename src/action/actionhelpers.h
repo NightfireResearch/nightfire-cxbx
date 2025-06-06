@@ -61,6 +61,7 @@ typedef short MallocFlags;
 #include "game/obj/player.h" // for BLData
 #include "game/obj/SpaceLaser.h"
 #include "game/weapon_stats.h"
+#include "game/sp/Locks.h"
 #include "game/sp/Mission.h"
 #include "game/sp/PlayerStats.h"
 #include "gfx/Sprite.h"

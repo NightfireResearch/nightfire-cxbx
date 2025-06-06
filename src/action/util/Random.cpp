@@ -21,3 +21,8 @@ void Rand_FRandHalf_Vec(_VECTOR *vecOut, float range) {
     vecOut->y = Rand_FRandHalf(range);
     vecOut->z = Rand_FRandHalf(range);
 }
+
+
+// AUTOGEN
+uint __stdcall Rand_Random(void);
+

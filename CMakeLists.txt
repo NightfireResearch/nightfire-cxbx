@@ -99,6 +99,7 @@ add_library(actioninject SHARED
   src/action/game/obj/Copter.cpp
   src/action/game/obj/Player.cpp
   src/action/game/obj/SpaceLaser.cpp
+  src/action/game/sp/Locks.cpp
   src/action/game/sp/Mission.cpp
   src/action/game/sp/PlayerStats.cpp
   src/action/sound/music.cpp
