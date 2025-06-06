@@ -174,13 +174,19 @@ void __stdcall Boot_LoadPTPData(void);
 // AUTOGEN
 uint __stdcall Rand_Random();
 
+typedef struct {
+  char asciiDigit[4];
+  bool discovered;
+} KeyCodeEntry;
+#define KeyCodes (*(KeyCodeEntry (*)[51])0x0029aaf8)
+
 // No need to inject, only called from function below
 void __stdcall Locks_Init(void) {
   uint uVar1;
   uint uVar5;
   
   // Seed the random number generator
-  uVar1 = gs_NumFramesUnpaused * 5 & 0xff;
+  uVar1 = GameState.NumFramesUnpaused * 5 & 0xff;
   uVar5 = 0;
   if (uVar1 != 0) {
     do {
@@ -189,15 +195,12 @@ void __stdcall Locks_Init(void) {
     } while ((uVar5 & 0xffff) < uVar1 << 1);
   }
 
-  // Fill out the keycode table. This is an array of 51 ASCII strings, each of the form "1234\0"
-  char* KeyCodes = (char*)0x0029aaf8;
-  for(int i = 0; i < 51; i++) {
+  for(int i = 0; i < ARRAY_SIZE(KeyCodes); i++) {
 
     for (int digit = 0; digit < 4; digit++) {
-      KeyCodes[i*5+digit] = '0' + (char)(Rand_Random() % 10); // Original Game Bug: Previously was % 9, so '9' would never be in a keycode
+      KeyCodes[i].asciiDigit[digit] = '0' + (char)(Rand_Random() % 10); // Original Game Bug: Previously was % 9, so '9' would never be in a keycode
     }
-    KeyCodes[i*5 + 4] = 0; // Null-terminator
-    //printf("Keycode %d: %s at addr 0x%08x\n", i, KeyCodes + i*5, (int)(KeyCodes + i*5));
+    KeyCodes[i].discovered = false;
   }
 
 }
