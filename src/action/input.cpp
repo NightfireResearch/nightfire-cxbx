@@ -79,8 +79,8 @@ void Inject_KeyboardInput(void) {
 }
 
 // Does not need to be injected, it's only called from the game loop which we've replaced
-// However no harm in injecting it anyway
-// AUTOINJECT
+// Weirdly, injecting this causes problems though - maybe some custom registers not identified?
+// UNINJECTABLE
 void Input_Update(void) {
 
     // Game functions - poll, compensate stick, map from keys to actions
