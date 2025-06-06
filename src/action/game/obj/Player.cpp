@@ -137,3 +137,301 @@ void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos) {
     PositionBeam(poVar1, &sourcePos, targetPos);
 
 }
+
+HASHCODE AnimSet_Rifle_SP[9] = {
+    (HASHCODE) 0x06000a00,
+    (HASHCODE) 0x06000a00,
+    (HASHCODE) 0x06000a00,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x06000a00,
+    (HASHCODE) 0x06000a00,
+    (HASHCODE) 0x06000a00,
+    (HASHCODE) 0x06000a00,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_RifleCrouch_SP[9] = {
+    (HASHCODE) 0x060009ff,
+    (HASHCODE) 0x060009ff,
+    (HASHCODE) 0x060009ff,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x060009ff,
+    (HASHCODE) 0x060009ff,
+    (HASHCODE) 0x060009ff,
+    (HASHCODE) 0x060009ff,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_Handgun[9] = {
+    (HASHCODE) 0x060009dc,
+    (HASHCODE) 0x060009de,
+    (HASHCODE) 0x060009db,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x060009d7,
+    (HASHCODE) 0x060009d7,
+    (HASHCODE) 0x060009d8,
+    (HASHCODE) 0x060009d8,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_HandgunCrouch[9] = {
+    (HASHCODE) 0x060009d9,
+    (HASHCODE) 0x060009f5,
+    (HASHCODE) 0x060009f5,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x060009f3,
+    (HASHCODE) 0x060009f3,
+    (HASHCODE) 0x060009f4,
+    (HASHCODE) 0x060009f4,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_SMG[9] = {
+    (HASHCODE) 0x060009b0,
+    (HASHCODE) 0x060009b2,
+    (HASHCODE) 0x060009af,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x060009b3,
+    (HASHCODE) 0x060009b3,
+    (HASHCODE) 0x060009b4,
+    (HASHCODE) 0x060009b4,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_SMGCrouch[9] = {
+    (HASHCODE) 0x060009ad,
+    (HASHCODE) 0x060009aa,
+    (HASHCODE) 0x060009aa,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x060009ab,
+    (HASHCODE) 0x060009ab,
+    (HASHCODE) 0x060009ac,
+    (HASHCODE) 0x060009ac,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_Rifle[9] = {
+    (HASHCODE) 0x060001d4,
+    (HASHCODE) 0x060001db,
+    (HASHCODE) 0x060001d9,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x0600097c,
+    (HASHCODE) 0x0600097c,
+    (HASHCODE) 0x0600097d,
+    (HASHCODE) 0x0600097d,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_RifleCrouch[9] = {
+    (HASHCODE) 0x060001d7,
+    (HASHCODE) 0x060008f9,
+    (HASHCODE) 0x060008f9,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x06000914,
+    (HASHCODE) 0x06000914,
+    (HASHCODE) 0x06000915,
+    (HASHCODE) 0x06000915,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_Handgun2H[9] = {
+    (HASHCODE) 0x060001ce,
+    (HASHCODE) 0x060001cf,
+    (HASHCODE) 0x060001cd,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x060009fc,
+    (HASHCODE) 0x060009fc,
+    (HASHCODE) 0x060009fd,
+    (HASHCODE) 0x060009fd,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_Handgun2HCrouch[9] = {
+    (HASHCODE) 0x060001cb,
+    (HASHCODE) 0x060009d2,
+    (HASHCODE) 0x060009d2,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x060009d1,
+    (HASHCODE) 0x060009d1,
+    (HASHCODE) 0x060009d0,
+    (HASHCODE) 0x060009d0,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_Launcher[9] = {
+    (HASHCODE) 0x060001e6,
+    (HASHCODE) 0x060001e7,
+    (HASHCODE) 0x060001e5,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x060009df,
+    (HASHCODE) 0x060009df,
+    (HASHCODE) 0x060009e0,
+    (HASHCODE) 0x060009e0,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_LauncherCrouch[9] = {
+    (HASHCODE) 0x060001e3,
+    (HASHCODE) 0x0600091f,
+    (HASHCODE) 0x0600091f,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x0600091e,
+    (HASHCODE) 0x0600091e,
+    (HASHCODE) 0x0600091d,
+    (HASHCODE) 0x0600091d,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_TwinHandguns[9] = {
+    (HASHCODE) 0x060009fe,
+    (HASHCODE) 0x060009b5,
+    (HASHCODE) 0x060009b7,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x060009ba,
+    (HASHCODE) 0x060009ba,
+    (HASHCODE) 0x060009bb,
+    (HASHCODE) 0x060009bb,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_TwinHandgunsCrouch[9] = {
+    (HASHCODE) 0x060009bc,
+    (HASHCODE) 0x060009d3,
+    (HASHCODE) 0x060009d3,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x060009d4,
+    (HASHCODE) 0x060009d4,
+    (HASHCODE) 0x060009d5,
+    (HASHCODE) 0x060009d5,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_Unarmed[9] = {
+    (HASHCODE) 0x060001f1,
+    (HASHCODE) 0x060001f2,
+    (HASHCODE) 0x060001f0,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x060009e4,
+    (HASHCODE) 0x060009e4,
+    (HASHCODE) 0x060009e5,
+    (HASHCODE) 0x060009e5,
+    (HASHCODE) 0x0
+};
+
+HASHCODE AnimSet_UnarmedCrouch[9] = {
+    (HASHCODE) 0x060001ee,
+    (HASHCODE) 0x06000931,
+    (HASHCODE) 0x06000931,
+    (HASHCODE) 0x0,
+    (HASHCODE) 0x06000930,
+    (HASHCODE) 0x06000930,
+    (HASHCODE) 0x0600092f,
+    (HASHCODE) 0x0600092f,
+    (HASHCODE) 0x0
+};
+
+
+// AUTOGEN
+int** AnimSetAppend(obj_tag* gameObj, HASHCODE *list, float a, float b);
+// AUTOGEN
+void AnimSetDeleteAll(obj_tag *param_1);
+
+// AUTOINJECT
+void PlayerAnimSetInitCrouch(obj_tag *gameObj) {
+
+    int wpnSet = weapon_data[gameObj->animState->currentWeaponId].weaponAnimationSet & 0xFF;
+
+    HASHCODE* animSet = NULL;
+
+    if (!MPSettings.isMultiplayer) {
+        wpnSet = 999;
+    }
+
+    switch(wpnSet) {
+        case 1:
+            animSet = AnimSet_HandgunCrouch;
+            break;
+        case 2:
+            animSet = AnimSet_SMGCrouch;
+            break;
+        case 3:
+            animSet = AnimSet_RifleCrouch;
+            break;
+        case 4:
+            animSet = AnimSet_Handgun2HCrouch;
+            break;
+        case 5:
+            animSet = AnimSet_LauncherCrouch;
+            break;
+        case 6:
+            animSet = AnimSet_TwinHandgunsCrouch;
+            break;
+        case 999:
+            animSet = AnimSet_RifleCrouch_SP;
+            break;
+        default: 
+            animSet = AnimSet_UnarmedCrouch;
+            break;
+    }
+
+    BLData *blData = (BLData *)gameObj->extraObjectData;
+    blData->animSet = AnimSetAppend(gameObj, animSet, 0.37f, 0.5f);
+
+}
+
+// AUTOINJECT
+void PlayerAnimSetInitNormal(obj_tag *gameObj) {
+  
+    int wpnSet = weapon_data[gameObj->animState->currentWeaponId].weaponAnimationSet & 0xFF;
+
+    HASHCODE* animSet = NULL;
+
+    if (!MPSettings.isMultiplayer) {
+        wpnSet = 999;
+    }
+    
+    switch(wpnSet) {
+        case 1:
+            animSet = AnimSet_Handgun;
+            break;
+        case 2:
+            animSet = AnimSet_SMG;
+            break;
+        case 3:
+            animSet = AnimSet_Rifle;
+            break;
+        case 4:
+            animSet = AnimSet_Handgun2H;
+            break;
+        case 5:
+            animSet = AnimSet_Launcher;
+            break;
+        case 6:
+            animSet = AnimSet_TwinHandguns;
+            break;
+        case 999:
+            animSet = AnimSet_Rifle_SP;
+            break;
+        default: 
+            animSet = AnimSet_Unarmed;
+            break;
+    }
+    
+    BLData *blData = (BLData *)gameObj->extraObjectData;
+    blData->animSet = AnimSetAppend(gameObj, animSet, 0.37f, 0.5f);
+
+}
+
+// AUTOINJECT
+void PlayerAnimSetInit(obj_tag *gameObj) {
+
+    BLData *blData = (BLData*)gameObj->extraObjectData;
+    blData->animSet = NULL;
+    AnimSetDeleteAll(gameObj);
+
+    if (gameObj->subState == MovementType_Crouch) {
+        PlayerAnimSetInitCrouch(gameObj);
+    } else {
+        PlayerAnimSetInitNormal(gameObj);
+    }
+}

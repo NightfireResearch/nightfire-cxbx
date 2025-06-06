@@ -31,7 +31,9 @@ typedef struct BLData {
     char _unknown[4];
     obj_tag* muzzleFlashObj; // 0x804
     obj_tag* remoteControlDevice; // 0x808
-    char _pad_2[0x8b0-0x808-4];
+    char _pad_2[20];
+    void* animSet; // 0x820
+    char _pad_2222222[0x8b0-0x820-4];
     float nightVisionTimer; // 0x8b0
     char _pad_22[0x8c8-0x8b0-4];
     short muzzleFlashRelated; // 0x8c8
@@ -94,5 +96,9 @@ void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum);
 void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos);
 
 void PositionBeam(obj_tag *param_1, _VECTOR *param_2, _VECTOR *param_3);
+
+void PlayerAnimSetInitNormal(obj_tag *gameObj);
+void PlayerAnimSetInitCrouch(obj_tag *gameObj);
+void PlayerAnimSetInit(obj_tag *param_1);
 
 #endif // PLAYER_H_
