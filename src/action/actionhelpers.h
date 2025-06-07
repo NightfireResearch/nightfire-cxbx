@@ -30,6 +30,7 @@ typedef struct BOT_stats_t BOT_stats_t;
 typedef struct DLISTINFO_tag DLISTINFO_tag;
 typedef struct Drone_tag Drone_tag;
 typedef struct DIVars_tag DIVars_tag;
+typedef struct AnimObj AnimObj;
 
 // Hashcode, SFX and translated text names
 #include "assets.h"

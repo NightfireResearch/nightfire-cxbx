@@ -3,7 +3,6 @@
 #include "../../actionhelpers.h"
 
 #include "../../util/LList.h"
-#include "../../gfx/Animation.h"
 #include "../scriptplayer.h"
 #include "../../memory.h"
 #include "../mp/multiplayer.h"

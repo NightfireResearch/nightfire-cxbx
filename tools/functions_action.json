@@ -150,12 +150,12 @@
         "address": "0x00011950",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "obj_tag *",
             "uint"
         ],
-        "prototype_string": "uint __cdecl AnimObjectIsClose(obj_tag * param_1, uint param_2)",
+        "prototype_string": "bool __cdecl AnimObjectIsClose(obj_tag * param_1, uint param_2)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]"
@@ -5800,9 +5800,9 @@
         "param_types": [
             "DIVars_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl NDrone2_CreateFromDIVars(DIVars_tag * param_1)",
+        "prototype_string": "obj_tag * __cdecl NDrone2_CreateFromDIVars(DIVars_tag * diVars)",
         "parameters": [
-            "[DIVars_tag * param_1@Stack[0x4]:4]"
+            "[DIVars_tag * diVars@Stack[0x4]:4]"
         ]
     },
     {

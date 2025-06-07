@@ -5,8 +5,6 @@
 
 #include "../../math/math.h"
 
-#include "../../gfx/Animation.h"
-
 
 typedef enum {
     OBJECTTYPE_DELETED=1,
