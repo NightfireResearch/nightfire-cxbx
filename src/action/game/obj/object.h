@@ -171,7 +171,7 @@ typedef struct obj_tag {
     obj_tag *nextObject; // 0x14 - doubly-linked list
     obj_tag* prevObject; // 0x18
     obj_tag* maybeParent; // 0x1c
-    void* inCel; // 0x20 - cel_tag
+    cel_tag* inCel; // 0x20 - cel_tag
     _VECTOR position; // 0x24
     _VECTOR lastPosition; // 0x28
     _VECTOR rotation; // 0x2C

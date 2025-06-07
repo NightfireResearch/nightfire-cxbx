@@ -28,6 +28,7 @@ typedef struct M_ITEM M_ITEM;
 typedef struct M_MANAGER M_MANAGER;
 typedef struct BOT_stats_t BOT_stats_t;
 typedef struct DLISTINFO_tag DLISTINFO_tag;
+typedef struct Drone_tag Drone_tag;
 
 // Hashcode, SFX and translated text names
 #include "assets.h"
@@ -52,6 +53,7 @@ typedef short MallocFlags;
 #include "engine/psiGraphics.h"
 #include "engine/Woman.h"
 #include "game/Autoaim.h"
+#include "game/drone/Drone.h"
 #include "game/obj/Break.h"
 #include "game/obj/build.h"
 #include "game/obj/Copter.h"
