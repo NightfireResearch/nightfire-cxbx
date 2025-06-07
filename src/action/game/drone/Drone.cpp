@@ -1,4 +1,5 @@
 #include "Drone.h"
+#include "NDrone2.h"
 
 #include "string.h"
 
@@ -30,8 +31,6 @@ typedef struct {
     maybeSAnimSkin skinInfo;
 } DroneCreationData;
 
-// AUTOGEN
-obj_tag* NDrone2_CreateFromDIVars(DIVars_tag *diVars);
 
 // AUTOINJECT
 obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {

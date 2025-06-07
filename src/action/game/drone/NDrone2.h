@@ -1,6 +1,8 @@
 #ifndef NDRONE2_H
 #define NDRONE2_H
 
+#include "../../actionhelpers.h"
+
 // From PS2, we can see a table of function pointers with this name, and NDrone2_ProcessStateMachine just runs one according to the drone's current state
 typedef enum {
     DSTATE_Global = 0,
@@ -255,6 +257,8 @@ typedef enum {
     DSTATE_BotIdle,
 } DSTATE;
 
+
+obj_tag* NDrone2_CreateFromDIVars(DIVars_tag *diVars);
 
 
 #endif // NDRONE2_H
