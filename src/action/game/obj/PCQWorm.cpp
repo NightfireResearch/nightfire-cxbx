@@ -2,6 +2,8 @@
 
 #include <cstdio>
 
+#include "bullet.h"
+
 // For KeyCodes
 #include "../sp/Locks.h"
 
@@ -46,26 +48,29 @@ obj_tag * PCQWorm_Create(_VECTOR *pos,_VECTOR *rot,level_tag *lvl,celglist_tag *
 // AUTOINJECT
 void PCQWorm_Update(obj_tag *gameObj) {
 
-  obj_tag *poVar2;
-  HITDATA_tag *pHVar6;
-  
   ObjData_PCQWorm *qWorm = (ObjData_PCQWorm *)gameObj->extraObjectData;
   
-  if (gameObj->curState == 0) {
-    if ((qWorm->processHits) && (pHVar6 = gameObj->hitList, pHVar6 != NULL)) {
-      while ((poVar2 = pHVar6->hitObj, poVar2 == NULL ||
-             ((poVar2->objectType != OBJECTTYPE_BULLET ||
-              (**(short **)((int)poVar2->extraObjectData + 0x38) != 0x58))))) {
-        pHVar6 = (HITDATA_tag *)pHVar6->next;
-        if (pHVar6 == NULL) {
-          return;
+  if (gameObj->curState == 0) { // Awaiting trigger
+    if (qWorm->processHits) {
+        for(HITDATA_tag *hit = gameObj->hitList; hit != NULL; hit = hit->next) {
+            
+            if(hit->hitObj == NULL) // Linked to a game object?
+                continue;
+                
+            if(hit->hitObj->objectType != OBJECTTYPE_BULLET) // Right hit type?
+                continue;
+
+            BU_tag *bullet = (BU_tag*)hit->hitObj->extraObjectData;
+            if(bullet->wpnDef->weaponVariantNum != 0x58) // Right weapon ID?
+                continue;
+            
+            // We've been QWormed
+            gameObj->curState = 1;
         }
-      }
-      gameObj->curState = 1;
     }
   }
 
-  else if (gameObj->curState == 1) {
+  else if (gameObj->curState == 1) { // Triggered
 
     if (qWorm->keyCodeNum != 0) {
       char* str = Txt_GetStringFromHeap('\0');

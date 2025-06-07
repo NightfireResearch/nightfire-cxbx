@@ -4,8 +4,8 @@
 #include "../../actionhelpers.h"
 
 typedef struct {
-    char unknown0[0x44];
-    weapon_definition_tag *wpnDef;
+    char unknown0[0x38];
+    weapon_definition_tag *wpnDef; // 0x38
     char unknown1[0x1234]; // no idea
 } BU_tag;
 
