@@ -18,9 +18,9 @@
         "param_types": [
             "char *"
         ],
-        "prototype_string": "void __cdecl AnimSkeletonProcess(char * param_1)",
+        "prototype_string": "void __cdecl AnimSkeletonProcess(char * skeletonNum)",
         "parameters": [
-            "[char * param_1@Stack[0x4]:4]"
+            "[char * skeletonNum@Stack[0x4]:4]"
         ]
     },
     {
@@ -380,19 +380,21 @@
     {
         "name": "AnimScriptEnd",
         "address": "0x00012880",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": true,
+        "return_type": "float10",
         "param_types": [
             "undefined4",
             "undefined4",
+            "float",
             "undefined4"
         ],
-        "prototype_string": "undefined AnimScriptEnd(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "float10 __stdcall AnimScriptEnd(undefined4 param_1, undefined4 param_2, float param_3, undefined4 param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[float param_3@Stack[0xc]:4]",
+            "[undefined4 param_4@ESI:4]"
         ]
     },
     {
@@ -792,12 +794,16 @@
     {
         "name": "AnimTagAllocAndGetUnique",
         "address": "0x00015970",
-        "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
         "return_type": "int * *",
-        "param_types": [],
-        "prototype_string": "int * * __stdcall AnimTagAllocAndGetUnique(void)",
-        "parameters": []
+        "param_types": [
+            "void *"
+        ],
+        "prototype_string": "int * * AnimTagAllocAndGetUnique(void * animSet)",
+        "parameters": [
+            "[void * animSet@ESI:4]"
+        ]
     },
     {
         "name": "AnimScriptNew",
@@ -1086,12 +1092,12 @@
         "address": "0x00017220",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "int * *",
+        "return_type": "sAnimScript_tag *",
         "param_types": [
             "obj_tag *",
             "HASHCODE"
         ],
-        "prototype_string": "int * * __stdcall AnimScriptAdd(obj_tag * param_1, HASHCODE param_2)",
+        "prototype_string": "sAnimScript_tag * __stdcall AnimScriptAdd(obj_tag * param_1, HASHCODE param_2)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
             "[HASHCODE param_2@Stack[0x8]:4]"
@@ -1308,11 +1314,11 @@
         "address": "0x00018690",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl AnimObjectUpdate(obj_tag * param_1)",
+        "prototype_string": "bool __cdecl AnimObjectUpdate(obj_tag * param_1)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]"
         ]
@@ -1822,13 +1828,13 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined2",
         "param_types": [
-            "int *",
-            "undefined4"
+            "DCVars_tag *",
+            "DSTATE"
         ],
-        "prototype_string": "undefined2 __cdecl BOTSTATE_checkAttackMove(int * param_1, undefined4 param_2)",
+        "prototype_string": "undefined2 __cdecl BOTSTATE_checkAttackMove(DCVars_tag * param_1, DSTATE param_2)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
+            "[DSTATE param_2@Stack[0x8]:2]"
         ]
     },
     {
@@ -2198,11 +2204,11 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined2",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined2 __cdecl BOTSTATE_chooseCombatMove(int * param_1)",
+        "prototype_string": "undefined2 __cdecl BOTSTATE_chooseCombatMove(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -3350,7 +3356,7 @@
         ]
     },
     {
-        "name": "FUN_00024000",
+        "name": "moveTowardsValue",
         "address": "0x00024000",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": true,
@@ -3360,11 +3366,11 @@
             "float",
             "float"
         ],
-        "prototype_string": "float10 __stdcall FUN_00024000(float param_1, float param_2, float param_3)",
+        "prototype_string": "float10 __stdcall moveTowardsValue(float current, float target, float speed)",
         "parameters": [
-            "[float param_1@Stack[0x4]:4]",
-            "[float param_2@Stack[0x8]:4]",
-            "[float param_3@Stack[0xc]:4]"
+            "[float current@Stack[0x4]:4]",
+            "[float target@Stack[0x8]:4]",
+            "[float speed@Stack[0xc]:4]"
         ]
     },
     {
@@ -3503,13 +3509,13 @@
         "return_type": "void",
         "param_types": [
             "float *",
-            "int",
+            "viewer_tag *",
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_000245a0(float * param_1, int param_2, float param_3)",
+        "prototype_string": "void __cdecl FUN_000245a0(float * param_1, viewer_tag * param_2, float param_3)",
         "parameters": [
             "[float * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[viewer_tag * param_2@Stack[0x8]:4]",
             "[float param_3@Stack[0xc]:4]"
         ]
     },
@@ -3521,13 +3527,13 @@
         "return_type": "void",
         "param_types": [
             "float *",
-            "int",
+            "viewer_tag *",
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_00024610(float * param_1, int param_2, float param_3)",
+        "prototype_string": "void __cdecl FUN_00024610(float * param_1, viewer_tag * param_2, float param_3)",
         "parameters": [
             "[float * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[viewer_tag * param_2@Stack[0x8]:4]",
             "[float param_3@Stack[0xc]:4]"
         ]
     },
@@ -3538,15 +3544,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int",
+            "obj_tag *",
+            "viewer_tag *",
             "float",
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_000246a0(int param_1, int param_2, float param_3, float param_4)",
+        "prototype_string": "void __cdecl FUN_000246a0(obj_tag * param_1, viewer_tag * param_2, float param_3, float param_4)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[viewer_tag * param_2@Stack[0x8]:4]",
             "[float param_3@Stack[0xc]:4]",
             "[float param_4@Stack[0x10]:4]"
         ]
@@ -3601,12 +3607,12 @@
         "return_type": "void",
         "param_types": [
             "float10 *",
-            "int"
+            "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_00024880(float10 * param_1, int param_2)",
+        "prototype_string": "void __cdecl FUN_00024880(float10 * param_1, viewer_tag * param_2)",
         "parameters": [
             "[float10 * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[viewer_tag * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -5000,11 +5006,11 @@
         "address": "0x0002cf00",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl AnimObjectUpdate(obj_tag * param_1)",
+        "prototype_string": "bool __cdecl AnimObjectUpdate(obj_tag * param_1)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]"
         ]
@@ -5792,11 +5798,11 @@
         "has_custom_variable_storage": false,
         "return_type": "obj_tag *",
         "param_types": [
-            "obj_tag * *"
+            "DIVars_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl NDrone2_MaybeCreateFromSpawner(obj_tag * * param_1)",
+        "prototype_string": "obj_tag * __cdecl NDrone2_MaybeCreateFromSpawner(DIVars_tag * param_1)",
         "parameters": [
-            "[obj_tag * * param_1@Stack[0x4]:4]"
+            "[DIVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -5806,15 +5812,15 @@
         "has_custom_variable_storage": false,
         "return_type": "obj_tag *",
         "param_types": [
-            "undefined4 *",
-            "undefined4 *",
-            "int"
+            "_VECTOR *",
+            "_VECTOR *",
+            "level_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Drone_Create(undefined4 * param_1, undefined4 * param_2, int param_3)",
+        "prototype_string": "obj_tag * __cdecl Drone_Create(_VECTOR * position, _VECTOR * rotation, level_tag * param_3)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[_VECTOR * position@Stack[0x4]:4]",
+            "[_VECTOR * rotation@Stack[0x8]:4]",
+            "[level_tag * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -5868,15 +5874,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
-            "undefined4 *",
-            "int"
+            "_VECTOR *",
+            "_VECTOR *",
+            "level_tag *"
         ],
-        "prototype_string": "void __cdecl Drone_CoverLowNode(float * param_1, undefined4 * param_2, int param_3)",
+        "prototype_string": "void __cdecl Drone_CoverLowNode(_VECTOR * pos, _VECTOR * rot, level_tag * extraData)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[_VECTOR * pos@Stack[0x4]:4]",
+            "[_VECTOR * rot@Stack[0x8]:4]",
+            "[level_tag * extraData@Stack[0xc]:4]"
         ]
     },
     {
@@ -6386,31 +6392,35 @@
         ]
     },
     {
-        "name": "FUN_00031da0",
+        "name": "Drone_MayDealBackshotDamage",
         "address": "0x00031da0",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_00031da0()",
-        "parameters": []
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": true,
+        "return_type": "bool",
+        "param_types": [
+            "Drone_tag *"
+        ],
+        "prototype_string": "bool __stdcall Drone_MayDealBackshotDamage(Drone_tag * param_1)",
+        "parameters": [
+            "[Drone_tag * param_1@ECX:4]"
+        ]
     },
     {
         "name": "Drone_ModBulletDamage",
         "address": "0x00031de0",
-        "calling_convention": "unknown",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "float",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "Drone_tag *",
+            "obj_tag *",
+            "HITDATA_tag *"
         ],
-        "prototype_string": "undefined Drone_ModBulletDamage(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "float Drone_ModBulletDamage(Drone_tag * drone, obj_tag * param_2, HITDATA_tag * param_3)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[Drone_tag * drone@Stack[0x4]:4]",
+            "[obj_tag * param_2@Stack[0x8]:4]",
+            "[HITDATA_tag * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -6650,13 +6660,13 @@
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "int",
+            "DCVars_tag *",
             "short",
             "short"
         ],
-        "prototype_string": "uint __cdecl DroneAnim_GetSomethingFromStatesAndTables(int param_1, short param_2, short param_3)",
+        "prototype_string": "uint __cdecl DroneAnim_GetSomethingFromStatesAndTables(DCVars_tag * param_1, short param_2, short param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
             "[short param_2@Stack[0x8]:2]",
             "[short param_3@Stack[0xc]:2]"
         ]
@@ -6676,17 +6686,17 @@
         ]
     },
     {
-        "name": "FUN_00033150",
+        "name": "DroneAnim_SnapRotate",
         "address": "0x00033150",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "void *"
+            "Drone_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_00033150(void * param_1)",
+        "prototype_string": "void __cdecl DroneAnim_SnapRotate(Drone_tag * param_1)",
         "parameters": [
-            "[void * param_1@Stack[0x4]:4]"
+            "[Drone_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -6978,12 +6988,12 @@
         "address": "0x00033ea0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "int",
             "undefined4"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_00033ea0(int param_1, undefined4 param_2)",
+        "prototype_string": "bool __cdecl FUN_00033ea0(int param_1, undefined4 param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -7194,17 +7204,17 @@
         ]
     },
     {
-        "name": "FUN_00035cb0",
+        "name": "DroneAnim_CallHandler",
         "address": "0x00035cb0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "uint"
+            "DCVars_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_00035cb0(uint param_1)",
+        "prototype_string": "void __cdecl DroneAnim_CallHandler(DCVars_tag * param_1)",
         "parameters": [
-            "[uint param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -7322,9 +7332,9 @@
         "address": "0x00035f90",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "obj_tag *",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall NDrone2_Player(void)",
+        "prototype_string": "obj_tag * __stdcall NDrone2_Player(void)",
         "parameters": []
     },
     {
@@ -7542,13 +7552,13 @@
         "address": "0x00036b80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "void",
+        "return_type": "cel_tag *",
         "param_types": [
-            "float *"
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl NDrone2_FindCel(float * param_1)",
+        "prototype_string": "cel_tag * __cdecl NDrone2_FindCel(_VECTOR * param_1)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -7890,14 +7900,14 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int",
+            "DCVars_tag *",
+            "obj_tag *",
             "short"
         ],
-        "prototype_string": "void __cdecl DroneFunc_ConsiderExplosive(int param_1, int param_2, short param_3)",
+        "prototype_string": "void __cdecl DroneFunc_ConsiderExplosive(DCVars_tag * param_1, obj_tag * param_2, short param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_2@Stack[0x8]:4]",
             "[short param_3@Stack[0xc]:2]"
         ]
     },
@@ -8428,11 +8438,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "DCVars_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_0003a410(int param_1)",
+        "prototype_string": "void __cdecl FUN_0003a410(DCVars_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -8678,15 +8688,15 @@
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "uint __cdecl DroneFunc_DoForcedAttack(int * param_1)",
+        "prototype_string": "uint __cdecl DroneFunc_DoForcedAttack(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
-        "name": "FUN_0003b670",
+        "name": "NDrone2_PostDroneControl",
         "address": "0x0003b670",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -8694,7 +8704,7 @@
         "param_types": [
             "uint *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0003b670(uint * param_1)",
+        "prototype_string": "undefined4 __cdecl NDrone2_PostDroneControl(uint * param_1)",
         "parameters": [
             "[uint * param_1@Stack[0x4]:4]"
         ]
@@ -9100,11 +9110,11 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "uint *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_BondTalk(uint * param_1)",
+        "prototype_string": "undefined4 __cdecl NDrone2_BondTalk(DCVars_tag * param_1)",
         "parameters": [
-            "[uint * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -9242,17 +9252,17 @@
         "address": "0x0003e6a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int *",
-            "undefined4 *",
+            "DCVars_tag *",
+            "MsgObject *",
             "uint",
             "char"
         ],
-        "prototype_string": "undefined4 __cdecl DroneFunc_HandleImpact(int * param_1, undefined4 * param_2, uint param_3, char param_4)",
+        "prototype_string": "bool __cdecl DroneFunc_HandleImpact(DCVars_tag * param_1, MsgObject * param_2, uint param_3, char param_4)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
+            "[MsgObject * param_2@Stack[0x8]:4]",
             "[uint param_3@Stack[0xc]:4]",
             "[char param_4@Stack[0x10]:1]"
         ]
@@ -9397,11 +9407,15 @@
         "name": "FUN_0003fd20",
         "address": "0x0003fd20",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
-        "return_type": "int",
-        "param_types": [],
-        "prototype_string": "int __stdcall FUN_0003fd20(void)",
-        "parameters": []
+        "has_custom_variable_storage": true,
+        "return_type": "ushort",
+        "param_types": [
+            "Drone_tag *"
+        ],
+        "prototype_string": "ushort __stdcall FUN_0003fd20(Drone_tag * param_1)",
+        "parameters": [
+            "[Drone_tag * param_1@EAX:4]"
+        ]
     },
     {
         "name": "FUN_0003fe30",
@@ -10364,33 +10378,31 @@
         ]
     },
     {
-        "name": "FUN_00044030",
+        "name": "NDrone2_MoveTestToNode",
         "address": "0x00044030",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
+            "CelPos_tag *",
             "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined",
-            "undefined",
+            "obj_tag *",
+            "obj_tag *",
+            "_VECTOR *",
             "undefined4",
             "undefined4",
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_00044030(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined param_5, undefined param_6, undefined4 param_7, undefined4 param_8, undefined1 param_9)",
+        "prototype_string": "undefined __stdcall NDrone2_MoveTestToNode(CelPos_tag * param_1, undefined4 param_2, obj_tag * param_3, obj_tag * param_4, _VECTOR * param_5, undefined4 param_6, undefined4 param_7, undefined1 param_8)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
+            "[CelPos_tag * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined param_5@<UNASSIGNED>]",
-            "[undefined param_6@<UNASSIGNED>]",
-            "[undefined4 param_7@<UNASSIGNED>]",
-            "[undefined4 param_8@<UNASSIGNED>]",
-            "[undefined1 param_9@<UNASSIGNED>]"
+            "[obj_tag * param_3@Stack[0xc]:4]",
+            "[obj_tag * param_4@Stack[0x10]:4]",
+            "[_VECTOR * param_5@Stack[0x14]:4]",
+            "[undefined4 param_6@Stack[0x18]:4]",
+            "[undefined4 param_7@Stack[0x1c]:4]",
+            "[undefined1 param_8@Stack[0x20]:1]"
         ]
     },
     {
@@ -10612,15 +10624,15 @@
         "address": "0x000446b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int",
-            "int"
+            "AIRoute_tag *",
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_ReachedDestNode(int param_1, int param_2)",
+        "prototype_string": "bool __cdecl NDrone2_ReachedDestNode(AIRoute_tag * param_1, DCVars_tag * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[AIRoute_tag * param_1@Stack[0x4]:4]",
+            "[DCVars_tag * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -10782,42 +10794,42 @@
     {
         "name": "FUN_00045340",
         "address": "0x00045340",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "bool",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4",
+            "Drone_tag *",
+            "obj_tag *",
+            "float *",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00045340(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
+        "prototype_string": "bool __stdcall FUN_00045340(Drone_tag * param_1, obj_tag * param_2, float * param_3, undefined4 param_4)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
+            "[Drone_tag * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_2@Stack[0x8]:4]",
+            "[float * param_3@Stack[0xc]:4]",
             "[undefined4 param_4@Stack[0x10]:4]"
         ]
     },
     {
         "name": "FUN_000453e0",
         "address": "0x000453e0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "bool",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined1",
+            "_VECTOR *",
+            "int",
+            "obj_tag *",
+            "char",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000453e0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined1 param_4, undefined4 param_5)",
+        "prototype_string": "bool __stdcall FUN_000453e0(_VECTOR * param_1, int param_2, obj_tag * param_3, char param_4, undefined4 param_5)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined1 param_4@Stack[0x10]:1]",
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[int param_2@Stack[0x8]:4]",
+            "[obj_tag * param_3@Stack[0xc]:4]",
+            "[char param_4@Stack[0x10]:1]",
             "[undefined4 param_5@Stack[0x14]:4]"
         ]
     },
@@ -10864,11 +10876,11 @@
         "has_custom_variable_storage": false,
         "return_type": "char",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "char __cdecl NDrone2_CanStepLeft(int * param_1)",
+        "prototype_string": "char __cdecl NDrone2_CanStepLeft(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -10878,11 +10890,11 @@
         "has_custom_variable_storage": false,
         "return_type": "char",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "char __cdecl NDrone2_CanStepRight(int * param_1)",
+        "prototype_string": "char __cdecl NDrone2_CanStepRight(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -10892,11 +10904,11 @@
         "has_custom_variable_storage": false,
         "return_type": "char",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "char __cdecl NDrone2_CanStrafeLeft(int * param_1)",
+        "prototype_string": "char __cdecl NDrone2_CanStrafeLeft(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -10906,11 +10918,11 @@
         "has_custom_variable_storage": false,
         "return_type": "char",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "char __cdecl NDrone2_CanStrafeRight(int * param_1)",
+        "prototype_string": "char __cdecl NDrone2_CanStrafeRight(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -10948,11 +10960,11 @@
         "has_custom_variable_storage": false,
         "return_type": "char",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "char __cdecl NDrone2_CanBackoff(int * param_1)",
+        "prototype_string": "char __cdecl NDrone2_CanBackoff(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -10962,11 +10974,11 @@
         "has_custom_variable_storage": false,
         "return_type": "char",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "char __cdecl NDrone2_CanRollLeft(int * param_1)",
+        "prototype_string": "char __cdecl NDrone2_CanRollLeft(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -10976,11 +10988,11 @@
         "has_custom_variable_storage": false,
         "return_type": "char",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "char __cdecl NDrone2_CanRollRight(int * param_1)",
+        "prototype_string": "char __cdecl NDrone2_CanRollRight(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -11068,19 +11080,19 @@
         ]
     },
     {
-        "name": "FUN_00046080",
+        "name": "NDrone2_maybeCalcDistanceAndDirToTarget",
         "address": "0x00046080",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float * *",
-            "float *"
+            "DCVars_tag *",
+            "CelPos_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_00046080(float * * param_1, float * param_2)",
+        "prototype_string": "void __cdecl NDrone2_maybeCalcDistanceAndDirToTarget(DCVars_tag * param_1, CelPos_tag * param_2)",
         "parameters": [
-            "[float * * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
+            "[CelPos_tag * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -11406,13 +11418,13 @@
         "address": "0x00047290",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "float * *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_ReFindMissionPath(float * * param_1)",
+        "prototype_string": "bool __cdecl NDrone2_ReFindMissionPath(DCVars_tag * param_1)",
         "parameters": [
-            "[float * * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -11642,19 +11654,19 @@
         ]
     },
     {
-        "name": "FUN_000482c0",
+        "name": "AINetwork_DoSomethingToRoute",
         "address": "0x000482c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "byte *",
+            "AIRoute_tag *",
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl FUN_000482c0(byte * param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "void __cdecl AINetwork_DoSomethingToRoute(AIRoute_tag * param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
-            "[byte * param_1@Stack[0x4]:4]",
+            "[AIRoute_tag * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ]
@@ -11680,14 +11692,18 @@
         "parameters": []
     },
     {
-        "name": "FUN_00048390",
+        "name": "AINetwork_NodeSearchCel",
         "address": "0x00048390",
-        "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined4",
-        "param_types": [],
-        "prototype_string": "undefined4 __stdcall FUN_00048390(void)",
-        "parameters": []
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
+        "return_type": "bool",
+        "param_types": [
+            "AINodeSearch_tag *"
+        ],
+        "prototype_string": "bool AINetwork_NodeSearchCel(AINodeSearch_tag * param_1)",
+        "parameters": [
+            "[AINodeSearch_tag * param_1@ESI:4]"
+        ]
     },
     {
         "name": "AINetwork_NodeSearch",
@@ -11696,11 +11712,11 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "int *"
+            "AINodeSearch_tag *"
         ],
-        "prototype_string": "bool __cdecl AINetwork_NodeSearch(int * param_1)",
+        "prototype_string": "bool __cdecl AINetwork_NodeSearch(AINodeSearch_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[AINodeSearch_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -11728,14 +11744,14 @@
         "address": "0x00048ac0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "float10 *",
             "int",
             "float *",
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl AINetwork_TestRayCels(float10 * param_1, int param_2, float * param_3, int param_4)",
+        "prototype_string": "bool __cdecl AINetwork_TestRayCels(float10 * param_1, int param_2, float * param_3, int param_4)",
         "parameters": [
             "[float10 * param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
@@ -11744,11 +11760,11 @@
         ]
     },
     {
-        "name": "FUN_00048b70",
+        "name": "AINetwork_FUN_00048b70",
         "address": "0x00048b70",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "float *",
             "float",
@@ -11757,7 +11773,7 @@
             "float *",
             "uint"
         ],
-        "prototype_string": "uint __cdecl FUN_00048b70(float * param_1, float param_2, _VECTOR * param_3, float param_4, float * param_5, uint param_6)",
+        "prototype_string": "bool __cdecl AINetwork_FUN_00048b70(float * param_1, float param_2, _VECTOR * param_3, float param_4, float * param_5, uint param_6)",
         "parameters": [
             "[float * param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]",
@@ -11772,7 +11788,7 @@
         "address": "0x00048d10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "int",
             "_VECTOR *",
@@ -11781,7 +11797,7 @@
             "float *",
             "char"
         ],
-        "prototype_string": "undefined4 __cdecl AINetwork_LineIntersectsBoundry(int param_1, _VECTOR * param_2, float * param_3, undefined4 * param_4, float * param_5, char param_6)",
+        "prototype_string": "bool __cdecl AINetwork_LineIntersectsBoundry(int param_1, _VECTOR * param_2, float * param_3, undefined4 * param_4, float * param_5, char param_6)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
@@ -11821,19 +11837,19 @@
         "return_type": "undefined",
         "param_types": [
             "_VECTOR *",
-            "int",
-            "float *",
-            "int",
-            "undefined4 *",
+            "cel_tag *",
+            "_VECTOR *",
+            "cel_tag *",
+            "_VECTOR *",
             "char"
         ],
-        "prototype_string": "undefined __cdecl AINetwork_BoundsTest(_VECTOR * param_1, int param_2, float * param_3, int param_4, undefined4 * param_5, char param_6)",
+        "prototype_string": "undefined __cdecl AINetwork_BoundsTest(_VECTOR * param_1, cel_tag * param_2, _VECTOR * param_3, cel_tag * param_4, _VECTOR * param_5, char param_6)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[float * param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]",
-            "[undefined4 * param_5@Stack[0x14]:4]",
+            "[cel_tag * param_2@Stack[0x8]:4]",
+            "[_VECTOR * param_3@Stack[0xc]:4]",
+            "[cel_tag * param_4@Stack[0x10]:4]",
+            "[_VECTOR * param_5@Stack[0x14]:4]",
             "[char param_6@Stack[0x18]:1]"
         ]
     },
@@ -11842,7 +11858,7 @@
         "address": "0x00049370",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "float10 *",
             "int",
@@ -11850,7 +11866,7 @@
             "int",
             "float"
         ],
-        "prototype_string": "undefined4 __cdecl AINetwork_BoundsNodeTest(float10 * param_1, int param_2, float * param_3, int param_4, float param_5)",
+        "prototype_string": "bool __cdecl AINetwork_BoundsNodeTest(float10 * param_1, int param_2, float * param_3, int param_4, float param_5)",
         "parameters": [
             "[float10 * param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
@@ -11884,16 +11900,16 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "uint *",
-            "int",
-            "undefined4",
+            "AITarget_tag *",
+            "CelPos_tag *",
+            "obj_tag *",
             "float"
         ],
-        "prototype_string": "void __cdecl AINetwork_NodesForPosition(uint * param_1, int param_2, undefined4 param_3, float param_4)",
+        "prototype_string": "void __cdecl AINetwork_NodesForPosition(AITarget_tag * param_1, CelPos_tag * param_2, obj_tag * param_3, float param_4)",
         "parameters": [
-            "[uint * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
+            "[AITarget_tag * param_1@Stack[0x4]:4]",
+            "[CelPos_tag * param_2@Stack[0x8]:4]",
+            "[obj_tag * param_3@Stack[0xc]:4]",
             "[float param_4@Stack[0x10]:4]"
         ]
     },
@@ -11922,16 +11938,16 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "uint *",
-            "int",
-            "float *",
+            "AITarget_tag *",
+            "AIPoint_tag *",
+            "CelPos_tag *",
             "float"
         ],
-        "prototype_string": "void __cdecl AINetwork_SetupGoalPosition(uint * param_1, int param_2, float * param_3, float param_4)",
+        "prototype_string": "void __cdecl AINetwork_SetupGoalPosition(AITarget_tag * param_1, AIPoint_tag * param_2, CelPos_tag * pos, float param_4)",
         "parameters": [
-            "[uint * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[float * param_3@Stack[0xc]:4]",
+            "[AITarget_tag * param_1@Stack[0x4]:4]",
+            "[AIPoint_tag * param_2@Stack[0x8]:4]",
+            "[CelPos_tag * pos@Stack[0xc]:4]",
             "[float param_4@Stack[0x10]:4]"
         ]
     },
@@ -12114,14 +12130,14 @@
         "address": "0x0004a070",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "short",
             "float",
             "undefined4 *",
             "undefined4 *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0004a070(short param_1, float param_2, undefined4 * param_3, undefined4 * param_4)",
+        "prototype_string": "bool __cdecl FUN_0004a070(short param_1, float param_2, undefined4 * param_3, undefined4 * param_4)",
         "parameters": [
             "[short param_1@Stack[0x4]:2]",
             "[float param_2@Stack[0x8]:4]",
@@ -12134,17 +12150,17 @@
         "address": "0x0004a2e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "int",
             "short",
-            "float *"
+            "CelPos_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl LinkCreep_Dest(int param_1, short param_2, float * param_3)",
+        "prototype_string": "bool __cdecl LinkCreep_Dest(int param_1, short param_2, CelPos_tag * param_3)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[short param_2@Stack[0x8]:2]",
-            "[float * param_3@Stack[0xc]:4]"
+            "[CelPos_tag * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -12152,13 +12168,13 @@
         "address": "0x0004a330",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "byte *"
+            "AIRoute_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl LinkCreep_AtSpecialNode(byte * param_1)",
+        "prototype_string": "bool __cdecl LinkCreep_AtSpecialNode(AIRoute_tag * param_1)",
         "parameters": [
-            "[byte * param_1@Stack[0x4]:4]"
+            "[AIRoute_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -12502,7 +12518,7 @@
         ]
     },
     {
-        "name": "FUN_0004b010",
+        "name": "LinkCreep_Increment",
         "address": "0x0004b010",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -12510,7 +12526,7 @@
         "param_types": [
             "float *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0004b010(float * param_1)",
+        "prototype_string": "undefined4 __cdecl LinkCreep_Increment(float * param_1)",
         "parameters": [
             "[float * param_1@Stack[0x4]:4]"
         ]
@@ -13514,19 +13530,19 @@
     {
         "name": "NDrone2_ProcessStateMachine",
         "address": "0x0004e180",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "bool",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "DCVars_tag *",
+            "uint",
+            "MsgObject *"
         ],
-        "prototype_string": "undefined NDrone2_ProcessStateMachine(undefined4 param_1, undefined4 currentState, undefined4 param_3)",
+        "prototype_string": "bool __stdcall NDrone2_ProcessStateMachine(DCVars_tag * param_1, uint currentState, MsgObject * param_3)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 currentState@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
+            "[uint currentState@Stack[0x8]:4]",
+            "[MsgObject * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -13571,13 +13587,13 @@
         "return_type": "undefined4",
         "param_types": [
             "int *",
-            "uint",
+            "DSTATE",
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl Drone_SM_SetState(int * param_1, uint param_2, int param_3)",
+        "prototype_string": "undefined4 __cdecl Drone_SM_SetState(int * param_1, DSTATE param_2, int param_3)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]",
+            "[DSTATE param_2@Stack[0x8]:2]",
             "[int param_3@Stack[0xc]:4]"
         ]
     },
@@ -13750,21 +13766,21 @@
     {
         "name": "NDrone2_DSTATE_Idle",
         "address": "0x0004f100",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined",
-            "undefined",
-            "undefined4"
+            "DCVars_tag *",
+            "Drone_tag *",
+            "obj_tag *",
+            "MsgObject *"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_Idle(undefined4 param_1, undefined param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_Idle(DCVars_tag * param_1, Drone_tag * param_2, obj_tag * param_3, MsgObject * param_4)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined param_2@<UNASSIGNED>]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
+            "[Drone_tag * param_2@Stack[0x8]:4]",
+            "[obj_tag * param_3@Stack[0xc]:4]",
+            "[MsgObject * param_4@Stack[0x10]:4]"
         ]
     },
     {
@@ -17910,13 +17926,13 @@
         "address": "0x00065360",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "ushort",
         "param_types": [
-            "int"
+            "DCVars_tag *"
         ],
-        "prototype_string": "uint __cdecl DroneVision_EnemyLookForOpponent(int param_1)",
+        "prototype_string": "ushort __cdecl DroneVision_EnemyLookForOpponent(DCVars_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -21512,15 +21528,15 @@
         "address": "0x000723c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int",
-            "int *"
+            "M_MANAGER *",
+            "M_CONTROL *"
         ],
-        "prototype_string": "uint __cdecl Menu_CursorOverMe(int param_1, int * param_2)",
+        "prototype_string": "bool __cdecl Menu_CursorOverMe(M_MANAGER * param_1, M_CONTROL * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int * param_2@Stack[0x8]:4]"
+            "[M_MANAGER * param_1@Stack[0x4]:4]",
+            "[M_CONTROL * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -21895,10 +21911,10 @@
             "ushort",
             "int"
         ],
-        "prototype_string": "void __cdecl Menu_ChangeControllerStyle(ushort param_1, int param_2)",
+        "prototype_string": "void __cdecl Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle)",
         "parameters": [
-            "[ushort param_1@Stack[0x4]:2]",
-            "[int param_2@Stack[0x8]:4]"
+            "[ushort playerNum@Stack[0x4]:2]",
+            "[int controllerStyle@Stack[0x8]:4]"
         ]
     },
     {
@@ -27502,15 +27518,15 @@
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "int *",
-            "int * *",
-            "int *"
+            "LINKEDLIST *",
+            "void *",
+            "void *"
         ],
-        "prototype_string": "uint __cdecl LinkedList_Remove(int * param_1, int * * param_2, int * param_3)",
+        "prototype_string": "uint __cdecl LinkedList_Remove(LINKEDLIST * param_1, void * param_2, void * param_3)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
-            "[int * * param_2@Stack[0x8]:4]",
-            "[int * param_3@Stack[0xc]:4]"
+            "[LINKEDLIST * param_1@Stack[0x4]:4]",
+            "[void * param_2@Stack[0x8]:4]",
+            "[void * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -27986,29 +28002,29 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int",
+            "M_CONTROL *",
+            "M_MESSAGE *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Process_Create(int param_1, int param_2, undefined4 param_3)",
+        "prototype_string": "void __cdecl Process_Create(M_CONTROL * param_1, M_MESSAGE * msg, undefined4 maybeDelay)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[M_CONTROL * param_1@Stack[0x4]:4]",
+            "[M_MESSAGE * msg@Stack[0x8]:4]",
+            "[undefined4 maybeDelay@Stack[0xc]:4]"
         ]
     },
     {
-        "name": "FUN_00095e60",
+        "name": "Process_RunFrame",
         "address": "0x00095e60",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int * *"
+            "M_CONTROL *"
         ],
-        "prototype_string": "void __cdecl FUN_00095e60(int * * param_1)",
+        "prototype_string": "void __cdecl Process_RunFrame(M_CONTROL * param_1)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]"
+            "[M_CONTROL * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -28018,11 +28034,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int * *"
+            "M_CONTROL *"
         ],
-        "prototype_string": "void __cdecl Process_Destroy(int * * param_1)",
+        "prototype_string": "void __cdecl Process_Destroy(M_CONTROL * param_1)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]"
+            "[M_CONTROL * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -28340,19 +28356,19 @@
         ]
     },
     {
-        "name": "FUN_00097370",
+        "name": "Script_RunFrame",
         "address": "0x00097370",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int * *",
-            "int * *"
+            "M_MANAGER *",
+            "M_CONTROL *"
         ],
-        "prototype_string": "void __cdecl FUN_00097370(int * * param_1, int * * param_2)",
+        "prototype_string": "void __cdecl Script_RunFrame(M_MANAGER * param_1, M_CONTROL * param_2)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
-            "[int * * param_2@Stack[0x8]:4]"
+            "[M_MANAGER * param_1@Stack[0x4]:4]",
+            "[M_CONTROL * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -28740,11 +28756,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl GT_Activate(int param_1)",
+        "prototype_string": "void __cdecl GT_Activate(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -31217,14 +31233,16 @@
         "name": "Player_InitGrapple",
         "address": "0x000aa130",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "int *"
+            "obj_tag *",
+            "BLData *"
         ],
-        "prototype_string": "void __cdecl Player_InitGrapple(int * param_1)",
+        "prototype_string": "void __cdecl Player_InitGrapple(obj_tag * param_1, BLData * param_2)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[BLData * param_2@ESI:4]"
         ]
     },
     {
@@ -31282,12 +31300,12 @@
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "void *",
+            "BLData *",
             "obj_tag *"
         ],
-        "prototype_string": "void __stdcall Player_Swim(void * b, obj_tag * a)",
+        "prototype_string": "void __stdcall Player_Swim(BLData * b, obj_tag * a)",
         "parameters": [
-            "[void * b@EAX:4]",
+            "[BLData * b@EAX:4]",
             "[obj_tag * a@ESI:4]"
         ]
     },
@@ -31878,13 +31896,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int *"
+            "BLData *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Player_Creep(int param_1, int * param_2)",
+        "prototype_string": "void __cdecl Player_Creep(BLData * param_1, obj_tag * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int * param_2@Stack[0x8]:4]"
+            "[BLData * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -32142,9 +32160,9 @@
         "param_types": [
             "uint"
         ],
-        "prototype_string": "void __cdecl PlarStat_LogUpdateElapsedTime(uint param_1)",
+        "prototype_string": "void __cdecl PlarStat_LogUpdateElapsedTime(uint playerNum)",
         "parameters": [
-            "[uint param_1@Stack[0x4]:4]"
+            "[uint playerNum@Stack[0x4]:4]"
         ]
     },
     {
@@ -33330,11 +33348,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Player_InitAmmoWeapons(int param_1)",
+        "prototype_string": "void __cdecl Player_InitAmmoWeapons(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -33858,13 +33876,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "BLData *",
             "ushort"
         ],
-        "prototype_string": "void __cdecl Player_EquipKey(int param_1, ushort param_2)",
+        "prototype_string": "void __cdecl Player_EquipKey(BLData * param_1, ushort keyIdx)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[ushort param_2@Stack[0x8]:2]"
+            "[BLData * param_1@Stack[0x4]:4]",
+            "[ushort keyIdx@Stack[0x8]:2]"
         ]
     },
     {
@@ -33874,13 +33892,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "BLData *",
             "ushort"
         ],
-        "prototype_string": "void __cdecl Player_UnEquipKey(int param_1, ushort param_2)",
+        "prototype_string": "void __cdecl Player_UnEquipKey(BLData * param_1, ushort keyIdx)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[ushort param_2@Stack[0x8]:2]"
+            "[BLData * param_1@Stack[0x4]:4]",
+            "[ushort keyIdx@Stack[0x8]:2]"
         ]
     },
     {
@@ -34392,13 +34410,13 @@
         "has_custom_variable_storage": true,
         "return_type": "undefined4",
         "param_types": [
-            "uint",
+            "HASHCODE",
             "char * *",
             "char * *"
         ],
-        "prototype_string": "undefined4 __cdecl ResetMap_LevelCode2Img(uint hashcode, char * * randomHintOut, char * * objectiveTextOut)",
+        "prototype_string": "undefined4 __cdecl ResetMap_LevelCode2Img(HASHCODE hashcode, char * * randomHintOut, char * * objectiveTextOut)",
         "parameters": [
-            "[uint hashcode@EAX:4]",
+            "[HASHCODE hashcode@EAX:4]",
             "[char * * randomHintOut@ESI:4]",
             "[char * * objectiveTextOut@ECX:4]"
         ]
@@ -34434,13 +34452,13 @@
         "parameters": []
     },
     {
-        "name": "FUN_000bff80",
+        "name": "IsLevelLoaded",
         "address": "0x000bff80",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "bool",
         "param_types": [],
-        "prototype_string": "undefined __stdcall FUN_000bff80(void)",
+        "prototype_string": "bool __stdcall IsLevelLoaded(void)",
         "parameters": []
     },
     {
@@ -34448,12 +34466,12 @@
         "address": "0x000bff90",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "uint",
             "uint"
         ],
-        "prototype_string": "undefined4 __stdcall LoadableLoad(uint param_1, uint param_2)",
+        "prototype_string": "bool __stdcall LoadableLoad(uint param_1, uint param_2)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]"
@@ -35414,12 +35432,12 @@
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
             "SCRIPTPLAYER *"
         ],
-        "prototype_string": "void __stdcall SP_LoadScript(int param_1, SCRIPTPLAYER * scriptPlayer)",
+        "prototype_string": "void __stdcall SP_LoadScript(obj_tag * param_1, SCRIPTPLAYER * scriptPlayer)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[SCRIPTPLAYER * scriptPlayer@ESI:4]"
         ]
     },
@@ -37124,11 +37142,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl SS_Activate(int param_1)",
+        "prototype_string": "void __cdecl SS_Activate(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -38589,12 +38607,12 @@
         "return_type": "void",
         "param_types": [
             "obj_tag *",
-            "viewer_tag *"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Monitor_Activate(obj_tag * param_1, viewer_tag * param_2)",
+        "prototype_string": "void __cdecl Monitor_Activate(obj_tag * param_1, obj_tag * param_2)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
-            "[viewer_tag * param_2@Stack[0x8]:4]"
+            "[obj_tag * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -48821,6 +48839,30 @@
         "prototype_string": "void __cdecl __forcdecpt(char * param_1)",
         "parameters": [
             "[char * param_1@Stack[0x4]:4]"
+        ]
+    },
+    {
+        "name": "__cropzeros",
+        "address": "0x000ef71e",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined __cropzeros()",
+        "parameters": []
+    },
+    {
+        "name": "is_not_negative",
+        "address": "0x000ef769",
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": false,
+        "return_type": "bool",
+        "param_types": [
+            "double *"
+        ],
+        "prototype_string": "bool __stdcall is_not_negative(double * param_1)",
+        "parameters": [
+            "[double * param_1@Stack[0x4]:4]"
         ]
     },
     {
