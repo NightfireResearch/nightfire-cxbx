@@ -31,7 +31,7 @@ typedef struct {
 } DroneCreationData;
 
 // AUTOGEN
-obj_tag* NDrone2_MaybeCreateFromSpawner(DIVars_tag *diVars);
+obj_tag* NDrone2_CreateFromDIVars(DIVars_tag *diVars);
 
 // AUTOINJECT
 obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
@@ -41,7 +41,6 @@ obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     if(Drone_bDisableSystem)
         return NULL;
 
-    // Bit of a weird place to put it, but I'm pretty sure I've understood this correctly?
     if(create->skinInfo.minDifficultyLevelForDrone > GameState.difficultyModifier)
         return NULL;
 
@@ -57,5 +56,5 @@ obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     diVars.gameObj = NULL; 
     diVars.someOtherThing = 0x0;
     
-    return NDrone2_MaybeCreateFromSpawner(&diVars);
+    return NDrone2_CreateFromDIVars(&diVars);
 }

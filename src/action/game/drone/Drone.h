@@ -9,7 +9,7 @@
 typedef struct {
     HASHCODE skinHashcode;
     char unknown1[4];
-    int minDifficultyLevelForDrone;
+    int minDifficultyLevelForDrone; // Bit of a weird place to put it, but I'm pretty sure I've understood this correctly?
     char unknown2[0x21*4-12];
 } maybeSAnimSkin;
 

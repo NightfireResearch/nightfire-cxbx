@@ -5792,7 +5792,7 @@
         "parameters": []
     },
     {
-        "name": "NDrone2_MaybeCreateFromSpawner",
+        "name": "NDrone2_CreateFromDIVars",
         "address": "0x0002fc50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -5800,7 +5800,7 @@
         "param_types": [
             "DIVars_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl NDrone2_MaybeCreateFromSpawner(DIVars_tag * param_1)",
+        "prototype_string": "obj_tag * __cdecl NDrone2_CreateFromDIVars(DIVars_tag * param_1)",
         "parameters": [
             "[DIVars_tag * param_1@Stack[0x4]:4]"
         ]
