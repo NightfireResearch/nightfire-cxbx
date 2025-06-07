@@ -14,7 +14,7 @@ bool Drone_DCVfromOBJ(obj_tag* gameObj, DCVars_tag* dcVars) {
 
     dcVars->drone = drone;
     dcVars->gameObj = gameObj;
-    dcVars->aiStateMachine = drone->aiStateMachine;
+    dcVars->aiStateMachine = &drone->aiStateMachine;
     dcVars->cel = gameObj->inCel;
 
     return true;

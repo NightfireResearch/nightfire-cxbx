@@ -14,7 +14,7 @@ typedef struct DCVars_tag {
 
 typedef struct Drone_tag {
     char unknown[0xec];
-    void* aiStateMachine;
+    uint aiStateMachine; // a struct, NOT a pointer
     char unknown2[0x1000]; //?
 } Drone_tag;
 
