@@ -6,6 +6,7 @@
 #pragma pack(push, 1)
 
 // This is plausibly a skin - had previously been IDd as "skinHashcode" in DIVars
+// It's also the same on Xbox and PS2, according to the size
 typedef struct {
     HASHCODE skinHashcode;
     char unknown1[4];
@@ -21,7 +22,7 @@ typedef struct DCVars_tag {
     void* aiStateMachine;
 } DCVars_tag;
 
-typedef struct {
+typedef struct DIVars_tag {
     obj_tag* gameObj;
     _VECTOR position;
     _VECTOR rotation;

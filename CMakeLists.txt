@@ -91,6 +91,7 @@ add_library(actioninject SHARED
   src/action/autofunc.cpp
   src/action/game/view.cpp
   src/action/game/drone/Drone.cpp
+  src/action/game/drone/NDrone2.cpp
   src/action/game/mp/multiplayer.cpp
   src/action/game/obj/Break.cpp
   src/action/game/obj/Door.cpp
