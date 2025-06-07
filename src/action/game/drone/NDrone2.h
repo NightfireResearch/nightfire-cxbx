@@ -44,7 +44,7 @@ typedef enum {
     DSTATE_AllyFollowInit,
     DSTATE_AllyFollow,
     DSTATE_AllyFollowWait,
-    DSTATE_AllyFollowDone,
+    DSTATE_UNKNOWN1, // AllyFollowDone duplicated?
     DSTATE_AllyGoToGoalPosition, // 40
     DSTATE_SniperIdle,
     DSTATE_SniperAim,
