@@ -209,3 +209,6 @@ void Control_SetGList(obj_tag *obj, celglist_tag *celgl);
 
 // AUTOGEN
 obj_tag * Control_CreateObjEx(unsigned short, _VECTOR *, _VECTOR *, _MATRIX *, celglist_tag *, obj_tag *,char,unsigned short,float,unsigned short,unsigned char,unsigned char,unsigned char);
+
+// AUTOGEN
+bool Control_NextLOD(obj_tag *);

@@ -2,11 +2,6 @@
 
 #include "../../util/Random.h"
 
-typedef struct {
-    char asciiDigit[4];
-    bool discovered;
-  } KeyCodeEntry;
-  #define KeyCodes (*(KeyCodeEntry (*)[51])0x0029aaf8)
   
   // No need to inject, only called from function below
   void Locks_Init(void) {
