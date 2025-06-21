@@ -123,15 +123,15 @@ void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
   fVar1 = fVar1 * param_1->q[3];
   fVar3 = fVar3 * param_1->q[3];
   fVar6 = fVar6 * param_1->q[3];
-  param_2->m[0] = 1.0 - (fVar9 + fVar4);
+  param_2->m[0] = 1.0f - (fVar9 + fVar4);
   param_2->m[1] = fVar5 + fVar6;
   param_2->m[2] = fVar7 - fVar3;
   param_2->m[4] = fVar5 - fVar6;
-  param_2->m[5] = 1.0 - (fVar9 + fVar2);
+  param_2->m[5] = 1.0f - (fVar9 + fVar2);
   param_2->m[6] = fVar1 + fVar8;
   param_2->m[8] = fVar3 + fVar7;
   param_2->m[9] = fVar8 - fVar1;
-  param_2->m[10] = 1.0 - (fVar4 + fVar2);
+  param_2->m[10] = 1.0f - (fVar4 + fVar2);
 }
 
 // AUTOGEN
