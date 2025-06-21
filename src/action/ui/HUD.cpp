@@ -148,8 +148,8 @@ void HUD_UpdateCrossHair(BLData *player,sprite *spr) {
 	spr->spritesheetWidth = curCrosshair->width;
 	spr->spritesheetHeight = curCrosshair->height;
 	
-	float posX = player->crosshairOffsetX * v->width * 0.5 + v->width * 0.5;
-	float posY = -player->crosshairOffsetY * v->height * 0.5 + v->height * 0.5;
+	float posX = player->crosshairOffsetX * v->width * 0.5f + v->width * 0.5f;
+	float posY = -player->crosshairOffsetY * v->height * 0.5f + v->height * 0.5f;
 	spr->positionX = (short)posX;
 	spr->positionY = (short)posY;
 

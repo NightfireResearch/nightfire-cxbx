@@ -195,13 +195,13 @@ typedef struct obj_tag {
     char _pad_6;
     char flags; // (1 == Marked for deletion)
     char objectType; // Actually ObjectType but can't tell the compiler to make it just one byte
-    char light_related1;
-    char light_related2;
-    char light_related3;
-    char tweakR;
-    char tweakG;
-    char tweakB;
-    char maybeBrightness; // Maybe glow intensity?
+    uchar light_related1;
+    uchar light_related2;
+    uchar light_related3;
+    uchar tweakR;
+    uchar tweakG;
+    uchar tweakB;
+    uchar maybeBrightness; // Maybe glow intensity?
     char _pad_8;
 } obj_tag;
 #pragma pack(pop)

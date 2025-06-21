@@ -48,14 +48,14 @@ int Mission_NumVisObjectives(void) {
 
     int count = 0;
 
-    for(int i = 0; i < ARRAY_SIZE(MissionData); i++) {
+    for(uint i = 0; i < ARRAY_SIZE(MissionData); i++) {
         if(MissionData[i].baseLevel != BaseMap)
             continue;
 
         if(ThisOrderNum < MissionData[i].idxInOrder) // The missions are sorted, if we reach a later mission then we are done
             return count;
 
-        for(int j = 0; j < MissionData[i].numObjectives; j++) {
+        for(uint j = 0; j < MissionData[i].numObjectives; j++) {
             int objState = MissionData[i].objectives[j].status;
 
             if(objState != 0 && objState != 1)
@@ -74,7 +74,7 @@ void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum) {
 
     int objWithinLevel = 0;
 
-    for(int i = 0; i < ARRAY_SIZE(MissionData); i++) {
+    for(uint i = 0; i < ARRAY_SIZE(MissionData); i++) {
 
         if(MissionData[i].baseLevel != BaseMap)
             continue;
@@ -82,7 +82,7 @@ void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum) {
         if(ThisOrderNum < MissionData[i].idxInOrder) // The missions are sorted, if we haven't found it then the index is bad somehow
             return;
 
-        for(int j = 0; j < MissionData[i].numObjectives; j++) {
+        for(uint j = 0; j < MissionData[i].numObjectives; j++) {
             Objective *o = &MissionData[i].objectives[j];
 
             if(o->status != 0 && o->status != 1) {
@@ -129,7 +129,7 @@ void Mission_MonitorObjectives(void) {
 
         bool fromPreviousPart = (ThisOrderNum <= MissionData[i].idxInOrder);
 
-        for(int j = 0; j < MissionData[i].numObjectives; j++) {
+        for(uint j = 0; j < MissionData[i].numObjectives; j++) {
 
             Objective *o = &MissionData[i].objectives[j];
             char* str = Txt_GetStringFromHeap(0);
@@ -407,7 +407,7 @@ void Mission_Init(HASHCODE hashcode, short warmReset) {
     Mission_SetStatus(1);
     GS_PauseGame(false);
 
-    for(int i = 0; i < ARRAY_SIZE(MissionData); i++) {
+    for(uint i = 0; i < ARRAY_SIZE(MissionData); i++) {
         if(MissionData[i].level == hashcode) {
             BaseMap = MissionData[i].baseLevel;
             ThisOrderNum = MissionData[i].idxInOrder;
@@ -421,7 +421,7 @@ void Mission_Init(HASHCODE hashcode, short warmReset) {
         return;
     }
 
-    for(int i = 0; i < ARRAY_SIZE(MissionData); i++) {
+    for(uint i = 0; i < ARRAY_SIZE(MissionData); i++) {
         if(MissionData[i].level == BaseMap) {
             if(MissionData[i].level == hashcode) { // If we're (re)starting from the start of the mission, reset all objectives
                 PlrStat_ResetForMission();
@@ -431,7 +431,7 @@ void Mission_Init(HASHCODE hashcode, short warmReset) {
     }
 
 
-    for(int i = 0; i < ARRAY_SIZE(MissionData); i++) {
+    for(uint i = 0; i < ARRAY_SIZE(MissionData); i++) {
 
         if(MissionData[i].baseLevel != BaseMap)
             continue;
@@ -445,7 +445,7 @@ void Mission_Init(HASHCODE hashcode, short warmReset) {
             someStateThing = 0;
         }
 
-        for(int j = 0; j < MissionData[i].numObjectives; j++) {
+        for(uint j = 0; j < MissionData[i].numObjectives; j++) {
             Objective* o = &MissionData[i].objectives[j];
             if((someStateThing == 0) || (someStateThing == 2)) {
                 
