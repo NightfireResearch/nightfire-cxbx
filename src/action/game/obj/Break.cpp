@@ -140,22 +140,19 @@ void Break_Kill(obj_tag *gameObject, HITDATA_tag *hitData) {
 typedef struct {
     char unknown[0x2c];
     int breakType;
-    float health;
+    int health;
     int flags;
 } Create_Break_Params;
 #pragma pack(pop)
 
 
 
-// Some bug - this ends up with no breakable objects being created (Fort Knox ends up with no windows)
-// NOAUTOINJECT
+// AUTOINJECT
 obj_tag* Break_Create(_VECTOR *position, _VECTOR *rotation, celglist_tag* celgl, void *pData) {
-  float fVar1;
-  obj_tag *obj;
 
   Create_Break_Params *params = (Create_Break_Params*)pData;
     
-  obj = control_create_object(sizeof(ObjData_Break), position, rotation, NULL);
+  obj_tag *obj = control_create_object(sizeof(ObjData_Break), position, rotation, NULL);
   if (obj == NULL)
     return NULL;
 
@@ -164,12 +161,7 @@ obj_tag* Break_Create(_VECTOR *position, _VECTOR *rotation, celglist_tag* celgl,
   Control_SetGList(obj, celgl);
   build_LinkToRoom(obj, '\0', (level_tag*)glb_world);
   objBreak->breakType = (BreakType)params->breakType;
-  
-  float health = params->health;
-  if (params->health < 0.0f) { // Objects with negative health are invincible?
-    health = health + 4.2949673e+09;
-  }
-  objBreak->health = health;
+  objBreak->health = (float)params->health;
 
   objBreak->flags = 0;
   if (params->flags) {
@@ -177,6 +169,6 @@ obj_tag* Break_Create(_VECTOR *position, _VECTOR *rotation, celglist_tag* celgl,
 
   }
 
-  printf("Created breakable object at %f, %f, %f, with flags %i and health %f\n", position->x, position->y, position->z, params->flags, health);
+  printf("Created breakable object at %f, %f, %f, with flags %i and health %d\n", position->x, position->y, position->z, params->flags, params->health);
   return obj;
 }

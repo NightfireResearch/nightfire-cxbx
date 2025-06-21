@@ -112,7 +112,6 @@ bool MP_IsTarget(obj_tag *param_1) {
 
 #define SpawnPntCount U32_AT(0x00262f38)
 #define SpawnPntTeamCount (*(uint32_t(*)[3])0x00262968)
-#define glb_world ((world_tag*)0x001f6674)
 
 // AUTOGEN
 cel_tag* build_FindCel(_VECTOR *position, world_tag *world);
