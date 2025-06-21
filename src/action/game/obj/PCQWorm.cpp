@@ -7,6 +7,9 @@
 // For KeyCodes
 #include "../sp/Locks.h"
 
+// For switch channels
+#include "../sp/SwitchChannels.h"
+
 typedef struct {
     char defaultCreation[0x2c];
     uint extraData[4];

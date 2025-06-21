@@ -1,5 +1,7 @@
 #include "Door.h"
 
+// For switch channels
+#include "../sp/SwitchChannels.h"
 
 // Only used for drone navigation - the player's interaction with locked doors is independent of this?
 // AUTOINJECT

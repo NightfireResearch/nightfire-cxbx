@@ -1,4 +1,5 @@
 #include "Mission.h"
+#include "SwitchChannels.h"
 #include "../mp/multiplayer.h"
 #include "../../sound/music.h"
 #include "../../ui/Menu.h"
