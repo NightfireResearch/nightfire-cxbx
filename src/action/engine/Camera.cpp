@@ -46,10 +46,10 @@ void Camera_CalcViewAngles(ushort playerNum,float param_2) {
 
     // Calculate the projection scale factors
     float tanHalfFov = tanf(vwr->fovRadians * 0.5f);
-    float scale = -(MAX_VIEW_CONE + 0.2) / (0.2 - MAX_VIEW_CONE);
+    float scale = -(MAX_VIEW_CONE + 0.2f) / (0.2f - MAX_VIEW_CONE);
     vwr->projectionScaleZ = 1.0f;
-    vwr->projectionScaleY = scale * vwr->height * 0.5 * (1.0 / tanHalfFov);
-    vwr->projectionScaleX = (scale * vwr->width * 0.5 * (1.0 / tanHalfFov)) / vwr->AspectRatio;
+    vwr->projectionScaleY = scale * vwr->height * 0.5f * (1.0f / tanHalfFov);
+    vwr->projectionScaleX = (scale * vwr->width * 0.5f * (1.0f / tanHalfFov)) / vwr->AspectRatio;
 
 
 

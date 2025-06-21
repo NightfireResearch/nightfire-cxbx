@@ -61,7 +61,7 @@ celglist_tag * hashtable_hashcode_to_celglist(HASHCODE hashcode) {
 int hashtable_get_hashtype_count(uint hashtype) {
 
     int count = 0;
-    for(int i = 1; i < (m_nhti-1); i++) {
+    for(uint i = 1; i < (m_nhti-1); i++) {
         if((t_hashtable[i].key & 0xFF000000) == (hashtype & 0xFF000000))
             count++;
     }

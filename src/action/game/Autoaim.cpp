@@ -34,8 +34,8 @@ void Check_Target(obj_tag* obj) {
     }
 
     // Flashbang modifier?! No clue.
-    float someNum = cosf(GameState.LoadTimeStart * 0.01 * 6.2831855f);
-    FlashMod = ((someNum + 1.0) * 0.5 + 1.0) * 0.5;
+    float someNum = cosf(GameState.LoadTimeStart * 0.01f * 6.2831855f);
+    FlashMod = ((someNum + 1.0f) * 0.5f + 1.0f) * 0.5f;
 
     // Only process the main part of this every 6 frames
     if(GameState.NumFramesUnpaused %6 != 0)

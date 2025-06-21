@@ -79,7 +79,7 @@ void Txt_LoadLanguage(void) {
     Bank[0] = "";
 
     // "relocate", ie map from offset to memory address (ie so that we can access as char*)
-    for(int i = 1; i < NumEntries; i++) {
+    for(uint i = 1; i < NumEntries; i++) {
         uint32_t offset = BIN_GetDWord((uint**)&fileAt);
         Bank[i] = (const char*)((uint)BankData + offset);
         //printf("String %i: %s\n", i, Bank[i]);
@@ -91,7 +91,7 @@ void Txt_LoadLanguage(void) {
     
     FixupTable = (uint*) Mem_Malloc((NumFixups+1) * 4, 0x3604, 0);
 
-    for(int i = 0; i < NumFixups; i++) {
+    for(uint i = 0; i < NumFixups; i++) {
         uint offset = BIN_GetDWord((uint**)&fileAt);
         FixupTable[i] = offset;
     }
