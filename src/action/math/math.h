@@ -80,7 +80,7 @@ float Vec_ScalarTripleProduct(_VECTOR *a,_VECTOR *b,_VECTOR *c);
 void vecutil_cartesian_to_spherical_acc(_VECTOR *vec, float v_x, float v_y, float v_z);
 
 #define M_PI 3.14159265358979323846
-#define DEG2RAD(x) ((x) * (M_PI / 180.0f))
+#define DEG2RAD(x) ((x) * ((float)M_PI / 180.0f))
 
 // Helper functions which either didn't exist or were inlined on original code
 float Vec_Dot(_VECTOR *a, _VECTOR *b);

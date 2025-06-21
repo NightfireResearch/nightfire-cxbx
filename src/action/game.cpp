@@ -46,7 +46,7 @@ bool GS_IsPaused(ushort playerNum) {
   
   // Any player?
   if(MPSettings.isMultiplayer) {
-    for(int i = 0; i < MPSettings.numPlayers; i++) {
+    for(uint i = 0; i < MPSettings.numPlayers; i++) {
       if(MPGame[i].paused)
         return true;
     }
@@ -462,10 +462,6 @@ ulonglong psiGetTimeIn100ths(void) {
 // Only used in GameFlow_Main, so technically no need to inject, but helps us track project completion
 // AUTOINJECT
 void bootup_bootup(void) {
-
-  uint *puVar3;
-  undefined4 *puVar5;
-  int local_4;
 
   memset(&GameState, 0, sizeof(GameState));
   memset(&CheatInfo, 0, sizeof(CheatInfo));
