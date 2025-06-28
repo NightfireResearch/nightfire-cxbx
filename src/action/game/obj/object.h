@@ -38,7 +38,7 @@ typedef enum {
     OBJECTTYPE_THIRDCAM_OR_WIRE=44,
     OBJECTTYPE_LADDER=45,
     OBJECTTYPE_LEAF=46,
-    OBJECTTYPE_MP_PICKUP=47,
+    OBJECTTYPE_PICKUP=47,
     OBJECTTYPE_DRONE_SPAWNER=48,
     OBJECTTYPE_LEAFGEN=49,
     OBJECTTYPE_EMITTER=50,
@@ -110,7 +110,7 @@ inline const char* Object_GetName(ObjectType type) {
         case OBJECTTYPE_THIRDCAM_OR_WIRE: return "Third Cam or Wire";
         case OBJECTTYPE_LADDER: return "Ladder";
         case OBJECTTYPE_LEAF: return "Leaf";
-        case OBJECTTYPE_MP_PICKUP: return "MP Pickup";
+        case OBJECTTYPE_PICKUP: return "Pickup";
         case OBJECTTYPE_DRONE_SPAWNER: return "Drone Spawner";
         case OBJECTTYPE_LEAFGEN: return "Leaf Generator";
         case OBJECTTYPE_EMITTER: return "Emitter";
