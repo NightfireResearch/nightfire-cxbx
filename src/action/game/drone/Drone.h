@@ -32,12 +32,15 @@ typedef struct DIVars_tag {
 
 typedef struct Drone_tag {
     char unknown[0xec];
-    uint aiStateMachine; // a struct, NOT a pointer
+    uint aiStateMachine; // a struct, NOT a pointer. FIXME when size of AI State Machine known
+    char pad[0x119-4-0xec];
+    char associatedSwitchChannel; // At 0x119
     char unknown2[0x1000]; //?
 } Drone_tag;
 
 #pragma pack(pop)
 
+static_assert(offsetof(Drone_tag, associatedSwitchChannel) == 0x119, "Wrong offset for associatedSwitchChannel");
 
 static_assert(sizeof(maybeSAnimSkin) == (0x84), "Wrong size for sAnimSkin or similar");
 static_assert(sizeof(DIVars_tag) == 0xa4, "DIVars is wrong size");

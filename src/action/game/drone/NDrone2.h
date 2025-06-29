@@ -267,5 +267,6 @@ typedef struct {
 
 
 bool NDrone2_DSTATE_HostageDead(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+void DroneFunc_HostageSaved(DCVars_tag *dcVars);
 
 #endif // NDRONE2_H
