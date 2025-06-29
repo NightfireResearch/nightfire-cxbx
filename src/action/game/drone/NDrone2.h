@@ -260,5 +260,12 @@ typedef enum {
 
 obj_tag* NDrone2_CreateFromDIVars(DIVars_tag *diVars);
 
+// FIXME: Placeholder
+typedef struct {
+    uint msgType;
+} MsgObject;
+
+
+bool NDrone2_DSTATE_HostageDead(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 
 #endif // NDRONE2_H
