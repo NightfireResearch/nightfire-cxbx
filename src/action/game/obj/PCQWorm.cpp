@@ -64,7 +64,7 @@ void PCQWorm_Update(obj_tag *gameObj) {
                 continue;
 
             BU_tag *bullet = (BU_tag*)hit->hitObj->extraObjectData;
-            if(bullet->wpnDef->weaponVariantNum != 0x58) // Right weapon ID?
+            if(bullet->wpnDef->weaponVariantNum != Weap_QWorm) // Right weapon ID?
                 continue;
             
             // We've been QWormed

@@ -220,6 +220,7 @@ typedef enum WeaponBaseNum {
     Weap_OddjobHat=69,
     Weap_Ronin=82,
     Weap_Camera=84,
+    Weap_QWorm = 88,
     Weap_CopterGunCastle=97,
     Weap_CopterMissileCastle=98,
     Weap_Laser=103,
