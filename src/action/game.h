@@ -21,6 +21,7 @@ void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate);
 void GS_PauseGame(bool pause);
 void GS_PausePlayer(char pause, ushort playerNum);
 bool GS_IsPaused(ushort playerNum);
+HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **randomHintOut, char **objectiveTextOut);
 
 #pragma pack(push, 1)
 typedef struct {
