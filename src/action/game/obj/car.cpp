@@ -37,6 +37,28 @@ void Car_CollisionHandler(obj_tag* me) {
 
 }
 
+// AUTOINJECT
+void Car_Reset(void) {
+
+    for(int i = 0; i < NumTanks; i++) {
+        
+        obj_tag *gameObj = Tanks[i];
+        if(gameObj == NULL)
+            continue;
+        
+        CAR_INFO *carObj = (CAR_INFO*)gameObj->extraObjectData;
+
+        gameObj->curState = 0;
+        gameObj->subState = 0;
+        carObj->playerController = NULL;
+        carObj->damageAmt = 0;
+        Vec_Zero(&carObj->someVector_b4);
+        Mat_Copy(&TankSpawns[i], &gameObj->transformMatrix);
+        build_LinkToRoom(gameObj, 0, (level_tag*)glb_world);
+    }
+    
+}
+
 
 // baseObj is const? or it's a pointer to a const obj_tag?
 // Only used in here, no need to inject once we've reimplemented Car_Create
