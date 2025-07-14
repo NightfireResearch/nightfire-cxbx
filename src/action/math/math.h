@@ -45,6 +45,8 @@ void Mat_Copy(const _MATRIX *source, _MATRIX *target);
 void Mat_CopyRot(const _MATRIX *source, _MATRIX *target);
 void Mat_IdentityT(_MATRIX *mtx);
 void Mat_Identity(_MATRIX *mtx);
+void Mat_World2ViewMat(_MATRIX *viewMtx, _MATRIX *worldMtx);
+void Mat_Scale3f(_MATRIX *m_out,_MATRIX *m_in,float scale_x,float scale_y,float scale_z);
 void Matrix_SetTrans(_VECTOR *vec, _MATRIX *mtx);
 void RotTransMat(_MATRIX *param_1,_MATRIX *param_2);
 void Vec_Normalise(_VECTOR *vOut,_VECTOR *vIn);

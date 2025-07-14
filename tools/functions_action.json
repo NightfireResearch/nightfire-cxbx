@@ -168,20 +168,20 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int",
+            "obj_tag *",
+            "obj_tag *",
             "float",
-            "undefined4",
+            "float",
             "char",
             "char",
             "undefined1"
         ],
-        "prototype_string": "void __cdecl AnimObjectSetHeadTracking(int param_1, int param_2, float param_3, undefined4 param_4, char param_5, char param_6, undefined1 param_7)",
+        "prototype_string": "void __cdecl AnimObjectSetHeadTracking(obj_tag * param_1, obj_tag * param_2, float param_3, float param_4, char param_5, char param_6, undefined1 param_7)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_2@Stack[0x8]:4]",
             "[float param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
+            "[float param_4@Stack[0x10]:4]",
             "[char param_5@Stack[0x14]:1]",
             "[char param_6@Stack[0x18]:1]",
             "[undefined1 param_7@Stack[0x1c]:1]"
@@ -346,8 +346,24 @@
         ]
     },
     {
-        "name": "AnimScriptCallOnStop",
+        "name": "AnimScriptCallOnEvent",
         "address": "0x00012860",
+        "calling_convention": "__cdecl",
+        "has_custom_variable_storage": false,
+        "return_type": "void",
+        "param_types": [
+            "sAnimScript_tag_xbox *",
+            "undefined4"
+        ],
+        "prototype_string": "void __cdecl AnimScriptCallOnEvent(sAnimScript_tag_xbox * param_1, undefined4 param_2)",
+        "parameters": [
+            "[sAnimScript_tag_xbox * param_1@Stack[0x4]:4]",
+            "[undefined4 param_2@Stack[0x8]:4]"
+        ]
+    },
+    {
+        "name": "AnimScriptCallOnStop",
+        "address": "0x00012870",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
@@ -358,22 +374,6 @@
         "prototype_string": "void __cdecl AnimScriptCallOnStop(sAnimScript_tag_xbox * param_1, undefined4 param_2)",
         "parameters": [
             "[sAnimScript_tag_xbox * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
-        ]
-    },
-    {
-        "name": "AnimScriptCallOnEvent",
-        "address": "0x00012870",
-        "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
-        "return_type": "void",
-        "param_types": [
-            "int",
-            "undefined4"
-        ],
-        "prototype_string": "void __cdecl AnimScriptCallOnEvent(int param_1, undefined4 param_2)",
-        "parameters": [
-            "[int param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ]
     },
@@ -576,16 +576,16 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
+            "obj_tag *",
             "int",
-            "int",
-            "int",
+            "HASHCODE",
             "undefined1"
         ],
-        "prototype_string": "void __cdecl AnimDatumSetEntity(int param_1, int param_2, int param_3, undefined1 param_4)",
+        "prototype_string": "void __cdecl AnimDatumSetEntity(obj_tag * param_1, int param_2, HASHCODE param_3, undefined1 param_4)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
+            "[HASHCODE param_3@Stack[0xc]:4]",
             "[undefined1 param_4@Stack[0x10]:1]"
         ]
     },
@@ -874,15 +874,15 @@
         "address": "0x00015d30",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int",
-            "float *"
+            "sAnimScript_tag *",
+            "_VECTOR *"
         ],
-        "prototype_string": "undefined4 __cdecl AnimGetFirstTrans(int param_1, float * param_2)",
+        "prototype_string": "bool __cdecl AnimGetFirstTrans(sAnimScript_tag * param_1, _VECTOR * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]"
+            "[sAnimScript_tag * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -1730,13 +1730,13 @@
         "address": "0x0001b4f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "obj_tag *",
             "int",
             "char"
         ],
-        "prototype_string": "undefined4 __cdecl BOT_respawn(obj_tag * gameObj, int playerNum, char param_3)",
+        "prototype_string": "bool __cdecl BOT_respawn(obj_tag * gameObj, int playerNum, char param_3)",
         "parameters": [
             "[obj_tag * gameObj@Stack[0x4]:4]",
             "[int playerNum@Stack[0x8]:4]",
@@ -3454,14 +3454,14 @@
         "address": "0x000243b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "ushort",
             "float",
             "uint",
             "undefined1"
         ],
-        "prototype_string": "undefined4 __cdecl Camera_SetFade(ushort param_1, float param_2, uint param_3, undefined1 param_4)",
+        "prototype_string": "bool __cdecl Camera_SetFade(ushort param_1, float param_2, uint param_3, undefined1 param_4)",
         "parameters": [
             "[ushort param_1@Stack[0x4]:2]",
             "[float param_2@Stack[0x8]:4]",
@@ -3476,12 +3476,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "viewer_tag *",
             "float"
         ],
-        "prototype_string": "void __cdecl Camera_ApplySwing(int param_1, float param_2)",
+        "prototype_string": "void __cdecl Camera_ApplySwing(viewer_tag * param_1, float param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[viewer_tag * param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]"
         ]
     },
@@ -3840,15 +3840,15 @@
     {
         "name": "CamSubject_Update",
         "address": "0x00025760",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined CamSubject_Update(undefined4 param_1)",
+        "prototype_string": "undefined __cdecl CamSubject_Update(obj_tag * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -6255,9 +6255,9 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl Drone_SM_SendMsg(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
+        "prototype_string": "void __cdecl Drone_SM_SendMsg(int msgType, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[int msgType@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]",
             "[undefined4 param_4@Stack[0x10]:4]"
@@ -6268,14 +6268,14 @@
         "address": "0x00031830",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "int",
             "int",
             "undefined4",
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl Drone_Message(int param_1, int param_2, undefined4 param_3, int param_4)",
+        "prototype_string": "bool __cdecl Drone_Message(int param_1, int param_2, undefined4 param_3, int param_4)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
@@ -6616,7 +6616,7 @@
         "parameters": []
     },
     {
-        "name": "FUN_00032f30",
+        "name": "DroneAnim_SetDAnimVeryInternal",
         "address": "0x00032f30",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -6624,7 +6624,7 @@
         "param_types": [
             "undefined2"
         ],
-        "prototype_string": "undefined FUN_00032f30(undefined2 param_1)",
+        "prototype_string": "undefined DroneAnim_SetDAnimVeryInternal(undefined2 param_1)",
         "parameters": [
             "[undefined2 param_1@Stack[0x4]:2]"
         ]
@@ -6654,7 +6654,7 @@
         ]
     },
     {
-        "name": "DroneAnim_GetSomethingFromStatesAndTables",
+        "name": "DroneAnim_CanDoAnimState",
         "address": "0x000330c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -6664,7 +6664,7 @@
             "short",
             "short"
         ],
-        "prototype_string": "uint __cdecl DroneAnim_GetSomethingFromStatesAndTables(DCVars_tag * param_1, short param_2, short param_3)",
+        "prototype_string": "uint __cdecl DroneAnim_CanDoAnimState(DCVars_tag * param_1, short param_2, short param_3)",
         "parameters": [
             "[DCVars_tag * param_1@Stack[0x4]:4]",
             "[short param_2@Stack[0x8]:2]",
@@ -6732,13 +6732,13 @@
         "address": "0x000332b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "char",
         "param_types": [
-            "uint"
+            "Drone_tag *"
         ],
-        "prototype_string": "uint __cdecl FUN_000332b0(uint param_1)",
+        "prototype_string": "char __cdecl FUN_000332b0(Drone_tag * param_1)",
         "parameters": [
-            "[uint param_1@Stack[0x4]:4]"
+            "[Drone_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -6753,6 +6753,20 @@
         "prototype_string": "undefined4 __cdecl FUN_000332e0(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
+        ]
+    },
+    {
+        "name": "DroneAnim_AnimEndCallback",
+        "address": "0x00033300",
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [
+            "obj_tag *"
+        ],
+        "prototype_string": "undefined __stdcall DroneAnim_AnimEndCallback(obj_tag * param_1)",
+        "parameters": [
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -6774,23 +6788,23 @@
         ]
     },
     {
-        "name": "FUN_00033590",
+        "name": "DroneAnim_EventFunc",
         "address": "0x00033590",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
-            "undefined",
+            "sAnimObject_tag *",
             "undefined4",
             "undefined2"
         ],
-        "prototype_string": "undefined FUN_00033590(undefined4 param_1, undefined param_2, undefined4 param_3, undefined2 param_4)",
+        "prototype_string": "undefined __stdcall DroneAnim_EventFunc(undefined4 param_1, sAnimObject_tag * param_2, undefined4 param_3, undefined2 param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined param_2@<UNASSIGNED>]",
-            "[undefined4 param_3@<UNASSIGNED>]",
-            "[undefined2 param_4@<UNASSIGNED>]"
+            "[sAnimObject_tag * param_2@Stack[0x8]:4]",
+            "[undefined4 param_3@Stack[0xc]:4]",
+            "[undefined2 param_4@Stack[0x10]:2]"
         ]
     },
     {
@@ -7006,19 +7020,19 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "HASHCODE",
             "byte",
             "ushort",
-            "int",
+            "Drone_tag *",
             "ushort",
             "float"
         ],
-        "prototype_string": "void __cdecl DroneAnim_SetHTAnim(int param_1, byte param_2, ushort param_3, int param_4, ushort param_5, float param_6)",
+        "prototype_string": "void __cdecl DroneAnim_SetHTAnim(HASHCODE animHashcode, byte param_2, ushort param_3, Drone_tag * param_4, ushort param_5, float param_6)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[HASHCODE animHashcode@Stack[0x4]:4]",
             "[byte param_2@Stack[0x8]:1]",
             "[ushort param_3@Stack[0xc]:2]",
-            "[int param_4@Stack[0x10]:4]",
+            "[Drone_tag * param_4@Stack[0x10]:4]",
             "[ushort param_5@Stack[0x14]:2]",
             "[float param_6@Stack[0x18]:4]"
         ]
@@ -7036,9 +7050,9 @@
             "int",
             "float",
             "undefined4",
-            "int"
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl DroneAnim_CallAnim(uint param_1, uint param_2, short param_3, int param_4, float param_5, undefined4 param_6, int param_7)",
+        "prototype_string": "undefined4 __cdecl DroneAnim_CallAnim(uint param_1, uint param_2, short param_3, int param_4, float param_5, undefined4 param_6, DCVars_tag * param_7)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]",
@@ -7046,7 +7060,7 @@
             "[int param_4@Stack[0x10]:4]",
             "[float param_5@Stack[0x14]:4]",
             "[undefined4 param_6@Stack[0x18]:4]",
-            "[int param_7@Stack[0x1c]:4]"
+            "[DCVars_tag * param_7@Stack[0x1c]:4]"
         ]
     },
     {
@@ -7270,6 +7284,16 @@
         ]
     },
     {
+        "name": "FUN_00035ec0",
+        "address": "0x00035ec0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00035ec0()",
+        "parameters": []
+    },
+    {
         "name": "FUN_00035ef0",
         "address": "0x00035ef0",
         "calling_convention": "__cdecl",
@@ -7298,19 +7322,19 @@
         ]
     },
     {
-        "name": "FUN_00035f50",
+        "name": "DroneFunc_InRangeOfTarget",
         "address": "0x00035f50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "int",
+        "return_type": "bool",
         "param_types": [
-            "int",
+            "DCVars_tag *",
             "float"
         ],
-        "prototype_string": "int __cdecl FUN_00035f50(int param_1, float param_2)",
+        "prototype_string": "bool __cdecl DroneFunc_InRangeOfTarget(DCVars_tag * param_1, float range)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[float param_2@Stack[0x8]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
+            "[float range@Stack[0x8]:4]"
         ]
     },
     {
@@ -7318,11 +7342,11 @@
         "address": "0x00035f70",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "uint *"
         ],
-        "prototype_string": "uint __cdecl FUN_00035f70(uint * param_1)",
+        "prototype_string": "bool __cdecl FUN_00035f70(uint * param_1)",
         "parameters": [
             "[uint * param_1@Stack[0x4]:4]"
         ]
@@ -7452,12 +7476,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
             "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl DroneFunc_ClampPosToCollisionCylinder(int param_1, _VECTOR * param_2)",
+        "prototype_string": "void __cdecl DroneFunc_ClampPosToCollisionCylinder(obj_tag * param_1, _VECTOR * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]"
         ]
     },
@@ -7513,16 +7537,18 @@
         "name": "NDrone2_DealWithObjHit",
         "address": "0x000364f0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
             "int",
-            "float"
+            "float",
+            "undefined4"
         ],
-        "prototype_string": "void __cdecl NDrone2_DealWithObjHit(int param_1, float param_2)",
+        "prototype_string": "void __cdecl NDrone2_DealWithObjHit(int param_1, float param_2, undefined4 param_3)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
-            "[float param_2@Stack[0x8]:4]"
+            "[float param_2@Stack[0x8]:4]",
+            "[undefined4 param_3@EAX:4]"
         ]
     },
     {
@@ -7566,16 +7592,16 @@
         "address": "0x00036ba0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int",
-            "undefined4 *",
+            "obj_tag *",
+            "_VECTOR *",
             "undefined4 *"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_GetHeadPos(int param_1, undefined4 * param_2, undefined4 * param_3)",
+        "prototype_string": "bool __cdecl NDrone2_GetHeadPos(obj_tag * param_1, _VECTOR * param_2, undefined4 * param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
             "[undefined4 * param_3@Stack[0xc]:4]"
         ]
     },
@@ -7618,13 +7644,13 @@
         "address": "0x00036e00",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "obj_tag *",
             "uint",
             "_VECTOR *"
         ],
-        "prototype_string": "undefined4 __cdecl DroneFunc_GetBonePos(obj_tag * param_1, uint param_2, _VECTOR * param_3)",
+        "prototype_string": "bool __cdecl DroneFunc_GetBonePos(obj_tag * param_1, uint param_2, _VECTOR * param_3)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]",
@@ -7694,39 +7720,43 @@
     {
         "name": "NDrone2_PlaySFX",
         "address": "0x00037340",
-        "calling_convention": "unknown",
+        "calling_convention": "__fastcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "longlong",
         "param_types": [
             "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined4"
+            "uint",
+            "int *",
+            "uint",
+            "_VECTOR *",
+            "char",
+            "float"
         ],
-        "prototype_string": "undefined NDrone2_PlaySFX(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined1 param_4, undefined4 param_5)",
+        "prototype_string": "longlong __fastcall NDrone2_PlaySFX(undefined4 param_1_00, uint param_2_00, int * param_3, uint param_4, _VECTOR * param_5, char param_6, float param_7)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined1 param_4@Stack[0x10]:1]",
-            "[undefined4 param_5@Stack[0x14]:4]"
+            "[undefined4 param_1_00@ECX:4]",
+            "[uint param_2_00@EDX:4]",
+            "[int * param_3@Stack[0x4]:4]",
+            "[uint param_4@Stack[0x8]:4]",
+            "[_VECTOR * param_5@Stack[0xc]:4]",
+            "[char param_6@Stack[0x10]:1]",
+            "[float param_7@Stack[0x14]:4]"
         ]
     },
     {
         "name": "FUN_000374e0",
         "address": "0x000374e0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "DCVars_tag *",
+            "HASHCODE"
         ],
-        "prototype_string": "undefined FUN_000374e0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined __cdecl FUN_000374e0(DCVars_tag * param_1, HASHCODE param_2)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
+            "[HASHCODE param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -7736,16 +7766,16 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int *",
+            "DCVars_tag *",
             "uint",
             "char",
             "char",
             "char"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_SpeechSFX(int * param_1, uint param_2, char param_3, char param_4, char param_5)",
+        "prototype_string": "undefined4 __cdecl NDrone2_SpeechSFX(DCVars_tag * dcVars, uint sfxNum, char param_3, char param_4, char param_5)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]",
+            "[DCVars_tag * dcVars@Stack[0x4]:4]",
+            "[uint sfxNum@Stack[0x8]:4]",
             "[char param_3@Stack[0xc]:1]",
             "[char param_4@Stack[0x10]:1]",
             "[char param_5@Stack[0x14]:1]"
@@ -7804,12 +7834,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "Drone_tag *",
             "undefined4 *"
         ],
-        "prototype_string": "void __cdecl DroneFunc_TargetSeen(int param_1, undefined4 * param_2)",
+        "prototype_string": "void __cdecl DroneFunc_TargetSeen(Drone_tag * param_1, undefined4 * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[Drone_tag * param_1@Stack[0x4]:4]",
             "[undefined4 * param_2@Stack[0x8]:4]"
         ]
     },
@@ -7918,11 +7948,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "void __cdecl DroneFunc_HandleExplosives(int * param_1)",
+        "prototype_string": "void __cdecl DroneFunc_HandleExplosives(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -8172,31 +8202,31 @@
         ]
     },
     {
-        "name": "FUN_00039a30",
+        "name": "NDrone2_SetupHostageExecute",
         "address": "0x00039a30",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_00039a30(int * param_1)",
+        "prototype_string": "void __cdecl NDrone2_SetupHostageExecute(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
-        "name": "FUN_00039b10",
+        "name": "NDrone2_SetupHostageKiller",
         "address": "0x00039b10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_00039b10(int * param_1)",
+        "prototype_string": "bool __cdecl NDrone2_SetupHostageKiller(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -8332,11 +8362,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "DCVars_tag *"
         ],
-        "prototype_string": "void __cdecl NDrone2_SeenAndAttacking(int param_1)",
+        "prototype_string": "void __cdecl NDrone2_SeenAndAttacking(DCVars_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -8414,11 +8444,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "void __cdecl DroneFunc_SendHurtMessage(int * param_1)",
+        "prototype_string": "void __cdecl DroneFunc_SendHurtMessage(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -8508,19 +8538,19 @@
         "address": "0x0003a6c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int",
+            "obj_tag *",
             "int",
             "float",
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_HeadTrackObj(int param_1, int param_2, float param_3, int * param_4)",
+        "prototype_string": "bool __cdecl NDrone2_HeadTrackObj(obj_tag * param_1, int maybeDuration, float param_3, DCVars_tag * param_4)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[int maybeDuration@Stack[0x8]:4]",
             "[float param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[DCVars_tag * param_4@Stack[0x10]:4]"
         ]
     },
     {
@@ -8622,11 +8652,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "Drone_tag *"
         ],
-        "prototype_string": "void __cdecl DroneFunc_SetAsAttacking(int param_1)",
+        "prototype_string": "void __cdecl DroneFunc_SetAsAttacking(Drone_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[Drone_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -8732,13 +8762,13 @@
         "address": "0x0003b7f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "ushort",
+        "return_type": "bool",
         "param_types": [
-            "int"
+            "Drone_tag *"
         ],
-        "prototype_string": "ushort __cdecl FUN_0003b7f0(int param_1)",
+        "prototype_string": "bool __cdecl FUN_0003b7f0(Drone_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[Drone_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -8746,12 +8776,12 @@
         "address": "0x0003b830",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "int *",
             "uint"
         ],
-        "prototype_string": "uint __cdecl FUN_0003b830(int * param_1, uint param_2)",
+        "prototype_string": "bool __cdecl FUN_0003b830(int * param_1, uint param_2)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]"
@@ -8790,13 +8820,13 @@
         "address": "0x0003ba80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_AttackTalk(int * param_1)",
+        "prototype_string": "bool __cdecl NDrone2_AttackTalk(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -8818,13 +8848,13 @@
         "address": "0x0003bd80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_PainTalk(int * param_1)",
+        "prototype_string": "bool __cdecl NDrone2_PainTalk(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -8860,13 +8890,13 @@
         "address": "0x0003c1e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl DroneFunc_NewSightTalk(int * param_1)",
+        "prototype_string": "bool __cdecl DroneFunc_NewSightTalk(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -8874,13 +8904,13 @@
         "address": "0x0003c2b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl DroneFunc_LostSightTalk(int * param_1)",
+        "prototype_string": "bool __cdecl DroneFunc_LostSightTalk(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -8914,11 +8944,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "void __cdecl NDrone2_CivilianScaredTalk(int * param_1)",
+        "prototype_string": "void __cdecl NDrone2_CivilianScaredTalk(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -9032,13 +9062,13 @@
         "address": "0x0003cce0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "uint *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "uint __cdecl FUN_0003cce0(uint * param_1)",
+        "prototype_string": "bool __cdecl FUN_0003cce0(DCVars_tag * param_1)",
         "parameters": [
-            "[uint * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -9090,17 +9120,17 @@
         "address": "0x0003ce10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int *",
+            "DCVars_tag *",
             "uint",
             "int",
             "int",
             "char"
         ],
-        "prototype_string": "undefined4 __cdecl DroneFunc_DoBondTalk(int * param_1, uint param_2, int param_3, int param_4, char param_5)",
+        "prototype_string": "bool __cdecl DroneFunc_DoBondTalk(DCVars_tag * param_1, uint param_2, int param_3, int param_4, char param_5)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]",
             "[int param_3@Stack[0xc]:4]",
             "[int param_4@Stack[0x10]:4]",
@@ -9150,13 +9180,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int *",
+            "DCVars_tag *",
             "int",
             "float"
         ],
-        "prototype_string": "void __cdecl NDrone2_DoHitEffects(int * param_1, int param_2, float param_3)",
+        "prototype_string": "void __cdecl NDrone2_DoHitEffects(DCVars_tag * param_1, int param_2, float param_3)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
             "[float param_3@Stack[0xc]:4]"
         ]
@@ -9184,11 +9214,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "void __cdecl DroneFunc_OnInitDeath(int * param_1)",
+        "prototype_string": "void __cdecl DroneFunc_OnInitDeath(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -9238,14 +9268,14 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int *",
+            "DCVars_tag *",
             "float *",
             "uint",
             "char"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_ExplosiveImpact(int * param_1, float * param_2, uint param_3, char param_4)",
+        "prototype_string": "undefined4 __cdecl NDrone2_ExplosiveImpact(DCVars_tag * param_1, float * param_2, uint param_3, char param_4)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
             "[float * param_2@Stack[0x8]:4]",
             "[uint param_3@Stack[0xc]:4]",
             "[char param_4@Stack[0x10]:1]"
@@ -9288,11 +9318,11 @@
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "uint __cdecl DroneFunc_FirstAttack(int * param_1)",
+        "prototype_string": "uint __cdecl DroneFunc_FirstAttack(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -9300,13 +9330,13 @@
         "address": "0x0003ed20",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "obj_tag * *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_PreDroneControl(obj_tag * * param_1)",
+        "prototype_string": "bool __cdecl NDrone2_PreDroneControl(DCVars_tag * param_1)",
         "parameters": [
-            "[obj_tag * * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -9358,11 +9388,11 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "float10 *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_ControlSTANDARD(float10 * param_1)",
+        "prototype_string": "undefined4 __cdecl NDrone2_ControlSTANDARD(DCVars_tag * param_1)",
         "parameters": [
-            "[float10 * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -10248,15 +10278,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int *",
-            "int",
+            "DCVars_tag *",
+            "obj_tag *",
             "float",
             "char"
         ],
-        "prototype_string": "void __cdecl NDrone2_SetAngleToObj(int * param_1, int param_2, float param_3, char param_4)",
+        "prototype_string": "void __cdecl NDrone2_SetAngleToObj(DCVars_tag * param_1, obj_tag * param_2, float param_3, char param_4)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_2@Stack[0x8]:4]",
             "[float param_3@Stack[0xc]:4]",
             "[char param_4@Stack[0x10]:1]"
         ]
@@ -10386,23 +10416,23 @@
         "address": "0x00044030",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "undefined2",
         "param_types": [
+            "MAPNODE_tag *",
             "CelPos_tag *",
-            "undefined4",
             "obj_tag *",
-            "obj_tag *",
+            "cel_tag *",
             "_VECTOR *",
             "undefined4",
             "undefined4",
             "undefined1"
         ],
-        "prototype_string": "undefined __stdcall NDrone2_MoveTestToNode(CelPos_tag * param_1, undefined4 param_2, obj_tag * param_3, obj_tag * param_4, _VECTOR * param_5, undefined4 param_6, undefined4 param_7, undefined1 param_8)",
+        "prototype_string": "undefined2 __stdcall NDrone2_MoveTestToNode(MAPNODE_tag * param_1, CelPos_tag * param_2, obj_tag * param_3, cel_tag * param_4, _VECTOR * param_5, undefined4 param_6, undefined4 param_7, undefined1 param_8)",
         "parameters": [
-            "[CelPos_tag * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
+            "[MAPNODE_tag * param_1@Stack[0x4]:4]",
+            "[CelPos_tag * param_2@Stack[0x8]:4]",
             "[obj_tag * param_3@Stack[0xc]:4]",
-            "[obj_tag * param_4@Stack[0x10]:4]",
+            "[cel_tag * param_4@Stack[0x10]:4]",
             "[_VECTOR * param_5@Stack[0x14]:4]",
             "[undefined4 param_6@Stack[0x18]:4]",
             "[undefined4 param_7@Stack[0x1c]:4]",
@@ -10436,50 +10466,48 @@
         ]
     },
     {
-        "name": "FUN_00044190",
+        "name": "NDrone2_MoveTestFromNode",
         "address": "0x00044190",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
+            "MAPNODE_tag *",
+            "CelPos_tag *",
             "undefined4",
             "undefined4",
             "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "undefined1"
         ],
-        "prototype_string": "undefined FUN_00044190(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7)",
+        "prototype_string": "undefined __stdcall NDrone2_MoveTestFromNode(MAPNODE_tag * param_1, CelPos_tag * param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined1 param_6)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
+            "[MAPNODE_tag * param_1@Stack[0x4]:4]",
+            "[CelPos_tag * param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]",
             "[undefined4 param_4@Stack[0x10]:4]",
             "[undefined4 param_5@Stack[0x14]:4]",
-            "[undefined4 param_6@Stack[0x18]:4]",
-            "[undefined4 param_7@Stack[0x1c]:4]"
+            "[undefined1 param_6@Stack[0x18]:1]"
         ]
     },
     {
-        "name": "FUN_000441d0",
+        "name": "NDrone2_MoveTestToNode",
         "address": "0x000441d0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
-            "undefined4",
+            "MAPNODE_tag *",
             "undefined4",
             "undefined4",
             "undefined4",
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000441d0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7)",
+        "prototype_string": "undefined __cdecl NDrone2_MoveTestToNode(undefined4 param_1, MAPNODE_tag * param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
+            "[MAPNODE_tag * param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]",
             "[undefined4 param_4@Stack[0x10]:4]",
             "[undefined4 param_5@Stack[0x14]:4]",
@@ -10804,14 +10832,14 @@
         "param_types": [
             "Drone_tag *",
             "obj_tag *",
-            "float *",
+            "CelPos_tag *",
             "undefined4"
         ],
-        "prototype_string": "bool __stdcall FUN_00045340(Drone_tag * param_1, obj_tag * param_2, float * param_3, undefined4 param_4)",
+        "prototype_string": "bool __stdcall FUN_00045340(Drone_tag * param_1, obj_tag * param_2, CelPos_tag * param_3, undefined4 param_4)",
         "parameters": [
             "[Drone_tag * param_1@Stack[0x4]:4]",
             "[obj_tag * param_2@Stack[0x8]:4]",
-            "[float * param_3@Stack[0xc]:4]",
+            "[CelPos_tag * param_3@Stack[0xc]:4]",
             "[undefined4 param_4@Stack[0x10]:4]"
         ]
     },
@@ -10823,15 +10851,15 @@
         "return_type": "bool",
         "param_types": [
             "_VECTOR *",
-            "int",
+            "Drone_tag *",
             "obj_tag *",
             "char",
             "undefined4"
         ],
-        "prototype_string": "bool __stdcall FUN_000453e0(_VECTOR * param_1, int param_2, obj_tag * param_3, char param_4, undefined4 param_5)",
+        "prototype_string": "bool __stdcall FUN_000453e0(_VECTOR * param_1, Drone_tag * param_2, obj_tag * param_3, char param_4, undefined4 param_5)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[Drone_tag * param_2@Stack[0x8]:4]",
             "[obj_tag * param_3@Stack[0xc]:4]",
             "[char param_4@Stack[0x10]:1]",
             "[undefined4 param_5@Stack[0x14]:4]"
@@ -10844,19 +10872,19 @@
         "has_custom_variable_storage": false,
         "return_type": "char",
         "param_types": [
-            "float10 *",
-            "int",
+            "Drone_tag *",
+            "obj_tag *",
             "float",
-            "undefined4",
-            "undefined4"
+            "float",
+            "float"
         ],
-        "prototype_string": "char __cdecl FUN_00045490(float10 * param_1, int param_2, float param_3, undefined4 param_4, undefined4 param_5)",
+        "prototype_string": "char __cdecl FUN_00045490(Drone_tag * param_1, obj_tag * param_2, float param_3, float param_4, float param_5)",
         "parameters": [
-            "[float10 * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[Drone_tag * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_2@Stack[0x8]:4]",
             "[float param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined4 param_5@Stack[0x14]:4]"
+            "[float param_4@Stack[0x10]:4]",
+            "[float param_5@Stack[0x14]:4]"
         ]
     },
     {
@@ -11310,14 +11338,14 @@
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "float * *",
+            "DCVars_tag *",
             "int",
             "float",
             "char"
         ],
-        "prototype_string": "uint __cdecl FUN_00046d90(float * * param_1, int param_2, float param_3, char param_4)",
+        "prototype_string": "uint __cdecl FUN_00046d90(DCVars_tag * param_1, int param_2, float param_3, char param_4)",
         "parameters": [
-            "[float * * param_1@Stack[0x4]:4]",
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
             "[float param_3@Stack[0xc]:4]",
             "[char param_4@Stack[0x10]:1]"
@@ -11730,16 +11758,16 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int",
+            "AIRoute_tag *",
             "obj_tag *",
-            "undefined4",
+            "obj_tag *",
             "ushort"
         ],
-        "prototype_string": "undefined4 __cdecl AINetwork_DoAStarPath(int param_1, obj_tag * param_2, undefined4 param_3, ushort param_4)",
+        "prototype_string": "undefined4 __cdecl AINetwork_DoAStarPath(AIRoute_tag * param_1, obj_tag * param_2, obj_tag * param_3, ushort param_4)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[AIRoute_tag * param_1@Stack[0x4]:4]",
             "[obj_tag * param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
+            "[obj_tag * param_3@Stack[0xc]:4]",
             "[ushort param_4@Stack[0x10]:2]"
         ]
     },
@@ -13638,11 +13666,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int *"
+            "MsgObject *"
         ],
-        "prototype_string": "void __cdecl Drone_SM_RouteMsg(int * param_1)",
+        "prototype_string": "void __cdecl Drone_SM_RouteMsg(MsgObject * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[MsgObject * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -13656,15 +13684,15 @@
             "undefined4",
             "int",
             "undefined4",
-            "int"
+            "DCVars_tag *"
         ],
-        "prototype_string": "void __cdecl Drone_SM_SendMsgSelf(int param_1, undefined4 param_2, int param_3, undefined4 param_4, int param_5)",
+        "prototype_string": "void __cdecl Drone_SM_SendMsgSelf(int param_1, undefined4 param_2, int param_3, undefined4 param_4, DCVars_tag * param_5)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
             "[int param_3@Stack[0xc]:4]",
             "[undefined4 param_4@Stack[0x10]:4]",
-            "[int param_5@Stack[0x14]:4]"
+            "[DCVars_tag * param_5@Stack[0x14]:4]"
         ]
     },
     {
@@ -13940,21 +13968,21 @@
     {
         "name": "NDrone2_DSTATE_HostageHide",
         "address": "0x000502e0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
-            "undefined4",
-            "undefined",
+            "Drone_tag *",
+            "obj_tag *",
             "undefined4"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_HostageHide(undefined4 param_1, undefined4 param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_HostageHide(undefined4 dcVars, Drone_tag * drone, obj_tag * param_3, undefined4 msg)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[undefined4 dcVars@Stack[0x4]:4]",
+            "[Drone_tag * drone@Stack[0x8]:4]",
+            "[obj_tag * param_3@Stack[0xc]:4]",
+            "[undefined4 msg@Stack[0x10]:4]"
         ]
     },
     {
@@ -16320,41 +16348,41 @@
     {
         "name": "NDrone2_DSTATE_NinjaStand",
         "address": "0x0005dc10",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
             "undefined4",
-            "undefined",
-            "undefined4"
+            "undefined4",
+            "MsgObject *"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_NinjaStand(undefined4 param_1, undefined4 param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_NinjaStand(undefined4 param_1, undefined4 param_2, undefined4 param_3, MsgObject * param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[undefined4 param_3@Stack[0xc]:4]",
+            "[MsgObject * param_4@Stack[0x10]:4]"
         ]
     },
     {
         "name": "NDrone2_DSTATE_NinjaAttack",
         "address": "0x0005ddc0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
             "undefined4",
-            "undefined",
-            "undefined4"
+            "undefined4",
+            "MsgObject *"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_NinjaAttack(undefined4 param_1, undefined4 param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_NinjaAttack(undefined4 param_1, undefined4 param_2, undefined4 param_3, MsgObject * param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[undefined4 param_3@Stack[0xc]:4]",
+            "[MsgObject * param_4@Stack[0x10]:4]"
         ]
     },
     {
@@ -16420,81 +16448,81 @@
     {
         "name": "NDrone2_DSTATE_NinjaGetCloseToPlayer",
         "address": "0x0005ecb0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
             "undefined4",
-            "undefined",
-            "undefined4"
+            "undefined4",
+            "MsgObject *"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_NinjaGetCloseToPlayer(undefined4 param_1, undefined4 param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_NinjaGetCloseToPlayer(undefined4 param_1, undefined4 param_2, undefined4 param_3, MsgObject * param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[undefined4 param_3@Stack[0xc]:4]",
+            "[MsgObject * param_4@Stack[0x10]:4]"
         ]
     },
     {
         "name": "NDrone2_DSTATE_NinjaSideflip",
         "address": "0x0005eee0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
+            "DCVars_tag *",
             "undefined4",
-            "undefined",
-            "undefined",
-            "undefined4"
+            "undefined4",
+            "MsgObject *"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_NinjaSideflip(undefined4 param_1, undefined param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_NinjaSideflip(DCVars_tag * param_1, undefined4 param_2, undefined4 param_3, MsgObject * param_4)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined param_2@<UNASSIGNED>]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
+            "[undefined4 param_2@Stack[0x8]:4]",
+            "[undefined4 param_3@Stack[0xc]:4]",
+            "[MsgObject * param_4@Stack[0x10]:4]"
         ]
     },
     {
         "name": "NDrone2_DSTATE_NinjaSideflipLeft",
         "address": "0x0005efc0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
             "undefined4",
-            "undefined",
-            "undefined4"
+            "undefined4",
+            "MsgObject *"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_NinjaSideflipLeft(undefined4 param_1, undefined4 param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_NinjaSideflipLeft(undefined4 param_1, undefined4 param_2, undefined4 param_3, MsgObject * param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[undefined4 param_3@Stack[0xc]:4]",
+            "[MsgObject * param_4@Stack[0x10]:4]"
         ]
     },
     {
         "name": "NDrone2_DSTATE_NinjaSideflipRight",
         "address": "0x0005f140",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
             "undefined4",
-            "undefined",
-            "undefined4"
+            "undefined4",
+            "MsgObject *"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_NinjaSideflipRight(undefined4 param_1, undefined4 param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_NinjaSideflipRight(undefined4 param_1, undefined4 param_2, undefined4 param_3, MsgObject * param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[undefined4 param_3@Stack[0xc]:4]",
+            "[MsgObject * param_4@Stack[0x10]:4]"
         ]
     },
     {
@@ -16520,81 +16548,81 @@
     {
         "name": "NDrone2_DSTATE_NinjaSomersault",
         "address": "0x0005f440",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
             "undefined4",
-            "undefined",
-            "undefined4"
+            "undefined4",
+            "MsgObject *"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_NinjaSomersault(undefined4 param_1, undefined4 param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_NinjaSomersault(undefined4 param_1, undefined4 param_2, undefined4 param_3, MsgObject * param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[undefined4 param_3@Stack[0xc]:4]",
+            "[MsgObject * param_4@Stack[0x10]:4]"
         ]
     },
     {
         "name": "NDrone2_DSTATE_NinjaBackflip",
         "address": "0x0005f5c0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
             "undefined4",
-            "undefined",
-            "undefined4"
+            "undefined4",
+            "MsgObject *"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_NinjaBackflip(undefined4 param_1, undefined4 param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_NinjaBackflip(undefined4 param_1, undefined4 param_2, undefined4 param_3, MsgObject * param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[undefined4 param_3@Stack[0xc]:4]",
+            "[MsgObject * param_4@Stack[0x10]:4]"
         ]
     },
     {
         "name": "NDrone2_DSTATE_NinjaStandFire",
         "address": "0x0005f730",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
             "undefined4",
-            "undefined",
-            "undefined4"
+            "undefined4",
+            "MsgObject *"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_NinjaStandFire(undefined4 param_1, undefined4 param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_NinjaStandFire(undefined4 param_1, undefined4 param_2, undefined4 param_3, MsgObject * param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[undefined4 param_3@Stack[0xc]:4]",
+            "[MsgObject * param_4@Stack[0x10]:4]"
         ]
     },
     {
         "name": "NDrone2_DSTATE_NinjaNoRoute",
         "address": "0x0005f9c0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
             "undefined4",
-            "undefined",
-            "undefined4"
+            "undefined4",
+            "MsgObject *"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_NinjaNoRoute(undefined4 param_1, undefined4 param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_NinjaNoRoute(undefined4 param_1, undefined4 param_2, undefined4 param_3, MsgObject * param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[undefined4 param_3@Stack[0xc]:4]",
+            "[MsgObject * param_4@Stack[0x10]:4]"
         ]
     },
     {
@@ -17732,14 +17760,14 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "int",
+            "Drone_tag *",
             "obj_tag *",
             "uint",
             "ushort"
         ],
-        "prototype_string": "bool __cdecl NDrone2_CanSeeObject(int param_1, obj_tag * param_2, uint param_3, ushort param_4)",
+        "prototype_string": "bool __cdecl NDrone2_CanSeeObject(Drone_tag * param_1, obj_tag * param_2, uint param_3, ushort param_4)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[Drone_tag * param_1@Stack[0x4]:4]",
             "[obj_tag * param_2@Stack[0x8]:4]",
             "[uint param_3@Stack[0xc]:4]",
             "[ushort param_4@Stack[0x10]:2]"
@@ -17792,13 +17820,13 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int *",
+            "DCVars_tag *",
             "float",
             "char"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_NearArmedDrone(int * param_1, float param_2, char param_3)",
+        "prototype_string": "undefined4 __cdecl NDrone2_NearArmedDrone(DCVars_tag * param_1, float param_2, char param_3)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]",
             "[char param_3@Stack[0xc]:1]"
         ]
@@ -17914,15 +17942,15 @@
         "address": "0x00065220",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "ushort",
         "param_types": [
-            "int *",
-            "int *"
+            "DCVars_tag *",
+            "MsgObject *"
         ],
-        "prototype_string": "uint __cdecl DroneVision_EnemyAlerts(int * param_1, int * param_2)",
+        "prototype_string": "ushort __cdecl DroneVision_EnemyAlerts(DCVars_tag * param_1, MsgObject * param_2)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
-            "[int * param_2@Stack[0x8]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
+            "[MsgObject * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -18100,18 +18128,18 @@
         "parameters": []
     },
     {
-        "name": "FUN_00066500",
+        "name": "DroneWeap_CloseCombatImpact",
         "address": "0x00066500",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
+            "obj_tag * *",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_00066500(float * param_1, int param_2)",
+        "prototype_string": "void __cdecl DroneWeap_CloseCombatImpact(obj_tag * * param_1, int param_2)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
+            "[obj_tag * * param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"
         ]
     },
@@ -18222,12 +18250,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int *",
+            "DCVars_tag *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl DroneWeap_ChangeWeapon(int * param_1, undefined4 param_2)",
+        "prototype_string": "void __cdecl DroneWeap_ChangeWeapon(DCVars_tag * param_1, undefined4 param_2)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ]
     },
@@ -18359,12 +18387,12 @@
         "return_type": "void",
         "param_types": [
             "char",
-            "int"
+            "DCVars_tag *"
         ],
-        "prototype_string": "void __cdecl DroneWeap_Fire(char param_1, int param_2)",
+        "prototype_string": "void __cdecl DroneWeap_Fire(char param_1, DCVars_tag * param_2)",
         "parameters": [
             "[char param_1@Stack[0x4]:1]",
-            "[int param_2@Stack[0x8]:4]"
+            "[DCVars_tag * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -19218,11 +19246,11 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined2",
         "param_types": [
-            "int *"
+            "uchar * *"
         ],
-        "prototype_string": "undefined2 __cdecl BIN_GetWord(int * param_1)",
+        "prototype_string": "undefined2 __cdecl BIN_GetWord(uchar * * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[uchar * * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -19232,11 +19260,11 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "uint * *"
+            "uchar * *"
         ],
-        "prototype_string": "undefined4 __cdecl BIN_GetDWord(uint * * param_1)",
+        "prototype_string": "undefined4 __cdecl BIN_GetDWord(uchar * * param_1)",
         "parameters": [
-            "[uint * * param_1@Stack[0x4]:4]"
+            "[uchar * * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -22530,1733 +22558,15 @@
     {
         "name": "Menu_SetupCredits",
         "address": "0x00076470",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": true,
-        "return_type": "undefined",
+        "calling_convention": "default",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined4 *",
         "param_types": [
-            "undefined4",
-            "undefined1",
-            "undefined",
-            "undefined",
-            "undefined",
-            "undefined",
-            "undefined",
-            "undefined",
-            "undefined",
-            "undefined",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined1",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined1"
+            "uint *"
         ],
-        "prototype_string": "undefined Menu_SetupCredits(undefined4 param_1, undefined1 param_2, undefined param_3, undefined param_4, undefined param_5, undefined param_6, undefined param_7, undefined param_8, undefined param_9, undefined param_10, undefined1 param_11, undefined1 param_12, undefined4 param_13, undefined4 param_14, undefined1 param_15, undefined1 param_16, undefined1 param_17, undefined4 param_18, undefined4 param_19, undefined1 param_20, undefined1 param_21, undefined1 param_22, undefined4 param_23, undefined4 param_24, undefined1 param_25, undefined1 param_26, undefined1 param_27, undefined4 param_28, undefined4 param_29, undefined1 param_30, undefined1 param_31, undefined1 param_32, undefined4 param_33, undefined4 param_34, undefined1 param_35, undefined1 param_36, undefined1 param_37, undefined4 param_38, undefined4 param_39, undefined1 param_40, undefined1 param_41, undefined1 param_42, undefined4 param_43, undefined4 param_44, undefined1 param_45, undefined1 param_46, undefined1 param_47, undefined4 param_48, undefined4 param_49, undefined1 param_50, undefined1 param_51, undefined1 param_52, undefined4 param_53, undefined4 param_54, undefined1 param_55, undefined1 param_56, undefined1 param_57, undefined4 param_58, undefined4 param_59, undefined1 param_60, undefined1 param_61, undefined1 param_62, undefined4 param_63, undefined4 param_64, undefined1 param_65, undefined1 param_66, undefined1 param_67, undefined4 param_68, undefined4 param_69, undefined1 param_70, undefined1 param_71, undefined1 param_72, undefined4 param_73, undefined4 param_74, undefined1 param_75, undefined1 param_76, undefined1 param_77, undefined4 param_78, undefined4 param_79, undefined1 param_80, undefined1 param_81, undefined1 param_82, undefined4 param_83, undefined4 param_84, undefined1 param_85, undefined1 param_86, undefined1 param_87, undefined4 param_88, undefined4 param_89, undefined1 param_90, undefined1 param_91, undefined1 param_92, undefined4 param_93, undefined4 param_94, undefined1 param_95, undefined1 param_96, undefined1 param_97, undefined4 param_98, undefined4 param_99, undefined1 param_100, undefined1 param_101, undefined1 param_102, undefined4 param_103, undefined4 param_104, undefined1 param_105, undefined1 param_106, undefined1 param_107, undefined4 param_108, undefined4 param_109, undefined1 param_110, undefined1 param_111, undefined1 param_112, undefined4 param_113, undefined4 param_114, undefined1 param_115, undefined1 param_116, undefined1 param_117, undefined4 param_118, undefined4 param_119, undefined1 param_120, undefined1 param_121, undefined1 param_122, undefined4 param_123, undefined4 param_124, undefined1 param_125, undefined1 param_126, undefined1 param_127, undefined4 param_128, undefined4 param_129, undefined1 param_130, undefined1 param_131, undefined1 param_132, undefined4 param_133, undefined4 param_134, undefined1 param_135, undefined1 param_136, undefined1 param_137, undefined4 param_138, undefined4 param_139, undefined1 param_140, undefined1 param_141, undefined1 param_142, undefined4 param_143, undefined4 param_144, undefined1 param_145, undefined1 param_146, undefined1 param_147, undefined4 param_148, undefined4 param_149, undefined1 param_150, undefined1 param_151, undefined1 param_152, undefined4 param_153, undefined4 param_154, undefined1 param_155, undefined1 param_156, undefined1 param_157, undefined4 param_158, undefined4 param_159, undefined1 param_160, undefined1 param_161, undefined1 param_162, undefined4 param_163, undefined4 param_164, undefined1 param_165, undefined1 param_166, undefined1 param_167, undefined4 param_168, undefined4 param_169, undefined1 param_170, undefined1 param_171, undefined1 param_172, undefined4 param_173, undefined4 param_174, undefined1 param_175, undefined1 param_176, undefined1 param_177, undefined4 param_178, undefined4 param_179, undefined1 param_180, undefined1 param_181, undefined1 param_182, undefined4 param_183, undefined4 param_184, undefined1 param_185, undefined1 param_186, undefined1 param_187, undefined4 param_188, undefined4 param_189, undefined1 param_190, undefined1 param_191, undefined1 param_192, undefined4 param_193, undefined4 param_194, undefined1 param_195, undefined1 param_196, undefined1 param_197, undefined4 param_198, undefined4 param_199, undefined1 param_200, undefined1 param_201, undefined1 param_202, undefined4 param_203, undefined4 param_204, undefined1 param_205, undefined1 param_206, undefined1 param_207, undefined4 param_208, undefined4 param_209, undefined1 param_210, undefined1 param_211, undefined1 param_212, undefined4 param_213, undefined4 param_214, undefined1 param_215, undefined1 param_216, undefined1 param_217, undefined4 param_218, undefined4 param_219, undefined1 param_220, undefined1 param_221, undefined1 param_222, undefined4 param_223, undefined4 param_224, undefined1 param_225, undefined1 param_226, undefined1 param_227, undefined4 param_228, undefined4 param_229, undefined1 param_230, undefined1 param_231, undefined1 param_232, undefined4 param_233, undefined4 param_234, undefined1 param_235, undefined1 param_236, undefined1 param_237, undefined4 param_238, undefined4 param_239, undefined1 param_240, undefined1 param_241, undefined1 param_242, undefined4 param_243, undefined4 param_244, undefined1 param_245, undefined1 param_246, undefined1 param_247, undefined4 param_248, undefined4 param_249, undefined1 param_250, undefined1 param_251, undefined1 param_252, undefined4 param_253, undefined4 param_254, undefined1 param_255, undefined1 param_256, undefined1 param_257, undefined4 param_258, undefined4 param_259, undefined1 param_260, undefined1 param_261, undefined1 param_262, undefined4 param_263, undefined4 param_264, undefined1 param_265, undefined1 param_266, undefined1 param_267, undefined4 param_268, undefined4 param_269, undefined1 param_270, undefined1 param_271, undefined1 param_272, undefined4 param_273, undefined4 param_274, undefined1 param_275, undefined1 param_276, undefined1 param_277, undefined4 param_278, undefined4 param_279, undefined1 param_280, undefined1 param_281, undefined1 param_282, undefined4 param_283, undefined4 param_284, undefined1 param_285, undefined1 param_286, undefined1 param_287, undefined4 param_288, undefined4 param_289, undefined1 param_290, undefined1 param_291, undefined1 param_292, undefined4 param_293, undefined4 param_294, undefined1 param_295, undefined1 param_296, undefined1 param_297, undefined4 param_298, undefined4 param_299, undefined1 param_300, undefined1 param_301, undefined1 param_302, undefined4 param_303, undefined4 param_304, undefined1 param_305, undefined1 param_306, undefined1 param_307, undefined4 param_308, undefined4 param_309, undefined1 param_310, undefined1 param_311, undefined1 param_312, undefined4 param_313, undefined4 param_314, undefined1 param_315, undefined1 param_316, undefined1 param_317, undefined4 param_318, undefined4 param_319, undefined1 param_320, undefined1 param_321, undefined1 param_322, undefined4 param_323, undefined4 param_324, undefined1 param_325, undefined1 param_326, undefined1 param_327, undefined4 param_328, undefined4 param_329, undefined1 param_330, undefined1 param_331, undefined1 param_332, undefined4 param_333, undefined4 param_334, undefined1 param_335, undefined1 param_336, undefined1 param_337, undefined4 param_338, undefined4 param_339, undefined1 param_340, undefined1 param_341, undefined1 param_342, undefined4 param_343, undefined4 param_344, undefined1 param_345, undefined1 param_346, undefined1 param_347, undefined4 param_348, undefined4 param_349, undefined1 param_350, undefined1 param_351, undefined1 param_352, undefined4 param_353, undefined4 param_354, undefined1 param_355, undefined1 param_356, undefined1 param_357, undefined4 param_358, undefined4 param_359, undefined1 param_360, undefined1 param_361, undefined1 param_362, undefined4 param_363, undefined4 param_364, undefined1 param_365, undefined1 param_366, undefined1 param_367, undefined4 param_368, undefined4 param_369, undefined1 param_370, undefined1 param_371, undefined1 param_372, undefined4 param_373, undefined4 param_374, undefined1 param_375, undefined1 param_376, undefined1 param_377, undefined4 param_378, undefined4 param_379, undefined1 param_380, undefined1 param_381, undefined1 param_382, undefined4 param_383, undefined4 param_384, undefined1 param_385, undefined1 param_386, undefined1 param_387, undefined4 param_388, undefined4 param_389, undefined1 param_390, undefined1 param_391, undefined1 param_392, undefined4 param_393, undefined4 param_394, undefined1 param_395, undefined1 param_396, undefined1 param_397, undefined4 param_398, undefined4 param_399, undefined1 param_400, undefined1 param_401, undefined1 param_402, undefined4 param_403, undefined4 param_404, undefined1 param_405, undefined1 param_406, undefined1 param_407, undefined4 param_408, undefined4 param_409, undefined1 param_410, undefined1 param_411, undefined1 param_412, undefined4 param_413, undefined4 param_414, undefined1 param_415, undefined1 param_416, undefined1 param_417, undefined4 param_418, undefined4 param_419, undefined1 param_420, undefined1 param_421, undefined1 param_422, undefined4 param_423, undefined4 param_424, undefined1 param_425, undefined1 param_426, undefined1 param_427, undefined4 param_428, undefined4 param_429, undefined1 param_430, undefined1 param_431, undefined1 param_432, undefined4 param_433, undefined4 param_434, undefined1 param_435, undefined1 param_436, undefined1 param_437, undefined4 param_438, undefined4 param_439, undefined1 param_440, undefined1 param_441, undefined1 param_442, undefined4 param_443, undefined4 param_444, undefined1 param_445, undefined1 param_446, undefined1 param_447, undefined4 param_448, undefined4 param_449, undefined1 param_450, undefined1 param_451, undefined1 param_452, undefined4 param_453, undefined4 param_454, undefined1 param_455, undefined1 param_456, undefined1 param_457, undefined4 param_458, undefined4 param_459, undefined1 param_460, undefined1 param_461, undefined1 param_462, undefined4 param_463, undefined4 param_464, undefined1 param_465, undefined1 param_466, undefined1 param_467, undefined4 param_468, undefined4 param_469, undefined1 param_470, undefined1 param_471, undefined1 param_472, undefined4 param_473, undefined4 param_474, undefined1 param_475, undefined1 param_476, undefined1 param_477, undefined4 param_478, undefined4 param_479, undefined1 param_480, undefined1 param_481, undefined1 param_482, undefined4 param_483, undefined4 param_484, undefined1 param_485, undefined1 param_486, undefined1 param_487, undefined4 param_488, undefined4 param_489, undefined1 param_490, undefined1 param_491, undefined1 param_492, undefined4 param_493, undefined4 param_494, undefined1 param_495, undefined1 param_496, undefined1 param_497, undefined4 param_498, undefined4 param_499, undefined1 param_500, undefined1 param_501, undefined1 param_502, undefined4 param_503, undefined4 param_504, undefined1 param_505, undefined1 param_506, undefined1 param_507, undefined4 param_508, undefined4 param_509, undefined1 param_510, undefined1 param_511, undefined1 param_512, undefined4 param_513, undefined4 param_514, undefined1 param_515, undefined1 param_516, undefined1 param_517, undefined4 param_518, undefined4 param_519, undefined1 param_520, undefined1 param_521, undefined1 param_522, undefined4 param_523, undefined4 param_524, undefined1 param_525, undefined1 param_526, undefined1 param_527, undefined4 param_528, undefined4 param_529, undefined1 param_530, undefined1 param_531, undefined1 param_532, undefined4 param_533, undefined4 param_534, undefined1 param_535, undefined1 param_536, undefined1 param_537, undefined4 param_538, undefined4 param_539, undefined1 param_540, undefined1 param_541, undefined1 param_542, undefined4 param_543, undefined4 param_544, undefined1 param_545, undefined1 param_546, undefined1 param_547, undefined4 param_548, undefined4 param_549, undefined1 param_550, undefined1 param_551, undefined1 param_552, undefined4 param_553, undefined4 param_554, undefined1 param_555, undefined1 param_556, undefined1 param_557, undefined4 param_558, undefined4 param_559, undefined1 param_560, undefined1 param_561, undefined1 param_562, undefined4 param_563, undefined4 param_564, undefined1 param_565, undefined1 param_566, undefined1 param_567, undefined4 param_568, undefined4 param_569, undefined1 param_570, undefined1 param_571, undefined1 param_572, undefined4 param_573, undefined4 param_574, undefined1 param_575, undefined1 param_576, undefined1 param_577, undefined4 param_578, undefined4 param_579, undefined1 param_580, undefined1 param_581, undefined1 param_582, undefined4 param_583, undefined4 param_584, undefined1 param_585, undefined1 param_586, undefined1 param_587, undefined4 param_588, undefined4 param_589, undefined1 param_590, undefined1 param_591, undefined1 param_592, undefined4 param_593, undefined4 param_594, undefined1 param_595, undefined1 param_596, undefined1 param_597, undefined4 param_598, undefined4 param_599, undefined1 param_600, undefined1 param_601, undefined1 param_602, undefined4 param_603, undefined4 param_604, undefined1 param_605, undefined1 param_606, undefined1 param_607, undefined4 param_608, undefined4 param_609, undefined1 param_610, undefined1 param_611, undefined1 param_612, undefined4 param_613, undefined4 param_614, undefined1 param_615, undefined1 param_616, undefined1 param_617, undefined4 param_618, undefined4 param_619, undefined1 param_620, undefined1 param_621, undefined1 param_622, undefined4 param_623, undefined4 param_624, undefined1 param_625, undefined1 param_626, undefined1 param_627, undefined4 param_628, undefined4 param_629, undefined1 param_630, undefined1 param_631, undefined1 param_632, undefined4 param_633, undefined4 param_634, undefined1 param_635, undefined1 param_636, undefined1 param_637, undefined4 param_638, undefined4 param_639, undefined1 param_640, undefined1 param_641, undefined1 param_642, undefined4 param_643, undefined4 param_644, undefined1 param_645, undefined1 param_646, undefined1 param_647, undefined4 param_648, undefined4 param_649, undefined1 param_650, undefined1 param_651, undefined1 param_652, undefined4 param_653, undefined4 param_654, undefined1 param_655, undefined1 param_656, undefined1 param_657, undefined4 param_658, undefined4 param_659, undefined1 param_660, undefined1 param_661, undefined1 param_662, undefined4 param_663, undefined4 param_664, undefined1 param_665, undefined1 param_666, undefined1 param_667, undefined4 param_668, undefined4 param_669, undefined1 param_670, undefined1 param_671, undefined1 param_672, undefined4 param_673, undefined4 param_674, undefined1 param_675, undefined1 param_676, undefined1 param_677, undefined4 param_678, undefined4 param_679, undefined1 param_680, undefined1 param_681, undefined1 param_682, undefined4 param_683, undefined4 param_684, undefined1 param_685, undefined1 param_686, undefined1 param_687, undefined4 param_688, undefined4 param_689, undefined1 param_690, undefined1 param_691, undefined1 param_692, undefined4 param_693, undefined4 param_694, undefined1 param_695, undefined1 param_696, undefined1 param_697, undefined4 param_698, undefined4 param_699, undefined1 param_700, undefined1 param_701, undefined1 param_702, undefined4 param_703, undefined4 param_704, undefined1 param_705, undefined1 param_706, undefined1 param_707, undefined4 param_708, undefined4 param_709, undefined1 param_710, undefined1 param_711, undefined1 param_712, undefined4 param_713, undefined4 param_714, undefined1 param_715, undefined1 param_716, undefined1 param_717, undefined4 param_718, undefined4 param_719, undefined1 param_720, undefined1 param_721, undefined1 param_722, undefined4 param_723, undefined4 param_724, undefined1 param_725, undefined1 param_726, undefined1 param_727, undefined4 param_728, undefined4 param_729, undefined1 param_730, undefined1 param_731, undefined1 param_732, undefined4 param_733, undefined4 param_734, undefined1 param_735, undefined1 param_736, undefined1 param_737, undefined4 param_738, undefined4 param_739, undefined1 param_740, undefined1 param_741, undefined1 param_742, undefined4 param_743, undefined4 param_744, undefined1 param_745, undefined1 param_746, undefined1 param_747, undefined4 param_748, undefined4 param_749, undefined1 param_750, undefined1 param_751, undefined1 param_752, undefined4 param_753, undefined4 param_754, undefined1 param_755, undefined1 param_756, undefined1 param_757, undefined4 param_758, undefined4 param_759, undefined1 param_760, undefined1 param_761, undefined1 param_762, undefined4 param_763, undefined4 param_764, undefined1 param_765, undefined1 param_766, undefined1 param_767, undefined4 param_768, undefined4 param_769, undefined1 param_770, undefined1 param_771, undefined1 param_772, undefined4 param_773, undefined4 param_774, undefined1 param_775, undefined1 param_776, undefined1 param_777, undefined4 param_778, undefined4 param_779, undefined1 param_780, undefined1 param_781, undefined1 param_782, undefined4 param_783, undefined4 param_784, undefined1 param_785, undefined1 param_786, undefined1 param_787, undefined4 param_788, undefined4 param_789, undefined1 param_790, undefined1 param_791, undefined1 param_792, undefined4 param_793, undefined4 param_794, undefined1 param_795, undefined1 param_796, undefined1 param_797, undefined4 param_798, undefined4 param_799, undefined1 param_800, undefined1 param_801, undefined1 param_802, undefined4 param_803, undefined4 param_804, undefined1 param_805, undefined1 param_806, undefined1 param_807, undefined4 param_808, undefined4 param_809, undefined1 param_810, undefined1 param_811, undefined1 param_812, undefined4 param_813, undefined4 param_814, undefined1 param_815, undefined1 param_816, undefined1 param_817, undefined4 param_818, undefined4 param_819, undefined1 param_820, undefined1 param_821, undefined1 param_822, undefined4 param_823, undefined4 param_824, undefined1 param_825, undefined1 param_826, undefined1 param_827, undefined4 param_828, undefined4 param_829, undefined1 param_830, undefined1 param_831, undefined1 param_832, undefined4 param_833, undefined4 param_834, undefined1 param_835, undefined1 param_836, undefined1 param_837, undefined4 param_838, undefined4 param_839, undefined1 param_840, undefined1 param_841, undefined1 param_842, undefined4 param_843, undefined4 param_844, undefined1 param_845, undefined1 param_846, undefined1 param_847, undefined4 param_848, undefined4 param_849, undefined1 param_850, undefined1 param_851, undefined1 param_852, undefined4 param_853, undefined4 param_854, undefined1 param_855, undefined1 param_856, undefined1 param_857, undefined4 param_858, undefined4 param_859, undefined1 param_860)",
+        "prototype_string": "undefined4 * Menu_SetupCredits(uint * numLines_out)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined1 param_2@Stack[0x8]:1]",
-            "[undefined param_3@Stack[0xc]:1]",
-            "[undefined param_4@Stack[0x10]:1]",
-            "[undefined param_5@Stack[0x14]:1]",
-            "[undefined param_6@Stack[0x18]:1]",
-            "[undefined param_7@Stack[0x1c]:1]",
-            "[undefined param_8@Stack[0x20]:1]",
-            "[undefined param_9@Stack[0x24]:1]",
-            "[undefined param_10@Stack[0x28]:1]",
-            "[undefined1 param_11@Stack[0x2c]:1]",
-            "[undefined1 param_12@Stack[0x30]:1]",
-            "[undefined4 param_13@Stack[0x34]:4]",
-            "[undefined4 param_14@Stack[0x38]:4]",
-            "[undefined1 param_15@Stack[0x3c]:1]",
-            "[undefined1 param_16@Stack[0x40]:1]",
-            "[undefined1 param_17@Stack[0x44]:1]",
-            "[undefined4 param_18@Stack[0x48]:4]",
-            "[undefined4 param_19@Stack[0x4c]:4]",
-            "[undefined1 param_20@Stack[0x50]:1]",
-            "[undefined1 param_21@Stack[0x54]:1]",
-            "[undefined1 param_22@Stack[0x58]:1]",
-            "[undefined4 param_23@Stack[0x5c]:4]",
-            "[undefined4 param_24@Stack[0x60]:4]",
-            "[undefined1 param_25@Stack[0x64]:1]",
-            "[undefined1 param_26@Stack[0x68]:1]",
-            "[undefined1 param_27@Stack[0x6c]:1]",
-            "[undefined4 param_28@Stack[0x70]:4]",
-            "[undefined4 param_29@Stack[0x74]:4]",
-            "[undefined1 param_30@Stack[0x78]:1]",
-            "[undefined1 param_31@Stack[0x7c]:1]",
-            "[undefined1 param_32@Stack[0x80]:1]",
-            "[undefined4 param_33@Stack[0x84]:4]",
-            "[undefined4 param_34@Stack[0x88]:4]",
-            "[undefined1 param_35@Stack[0x8c]:1]",
-            "[undefined1 param_36@Stack[0x90]:1]",
-            "[undefined1 param_37@Stack[0x94]:1]",
-            "[undefined4 param_38@Stack[0x98]:4]",
-            "[undefined4 param_39@Stack[0x9c]:4]",
-            "[undefined1 param_40@Stack[0xa0]:1]",
-            "[undefined1 param_41@Stack[0xa4]:1]",
-            "[undefined1 param_42@Stack[0xa8]:1]",
-            "[undefined4 param_43@Stack[0xac]:4]",
-            "[undefined4 param_44@Stack[0xb0]:4]",
-            "[undefined1 param_45@Stack[0xb4]:1]",
-            "[undefined1 param_46@Stack[0xb8]:1]",
-            "[undefined1 param_47@Stack[0xbc]:1]",
-            "[undefined4 param_48@Stack[0xc0]:4]",
-            "[undefined4 param_49@Stack[0xc4]:4]",
-            "[undefined1 param_50@Stack[0xc8]:1]",
-            "[undefined1 param_51@Stack[0xcc]:1]",
-            "[undefined1 param_52@Stack[0xd0]:1]",
-            "[undefined4 param_53@Stack[0xd4]:4]",
-            "[undefined4 param_54@Stack[0xd8]:4]",
-            "[undefined1 param_55@Stack[0xdc]:1]",
-            "[undefined1 param_56@Stack[0xe0]:1]",
-            "[undefined1 param_57@Stack[0xe4]:1]",
-            "[undefined4 param_58@Stack[0xe8]:4]",
-            "[undefined4 param_59@Stack[0xec]:4]",
-            "[undefined1 param_60@Stack[0xf0]:1]",
-            "[undefined1 param_61@Stack[0xf4]:1]",
-            "[undefined1 param_62@Stack[0xf8]:1]",
-            "[undefined4 param_63@Stack[0xfc]:4]",
-            "[undefined4 param_64@Stack[0x100]:4]",
-            "[undefined1 param_65@Stack[0x104]:1]",
-            "[undefined1 param_66@Stack[0x108]:1]",
-            "[undefined1 param_67@Stack[0x10c]:1]",
-            "[undefined4 param_68@Stack[0x110]:4]",
-            "[undefined4 param_69@Stack[0x114]:4]",
-            "[undefined1 param_70@Stack[0x118]:1]",
-            "[undefined1 param_71@Stack[0x11c]:1]",
-            "[undefined1 param_72@Stack[0x120]:1]",
-            "[undefined4 param_73@Stack[0x124]:4]",
-            "[undefined4 param_74@Stack[0x128]:4]",
-            "[undefined1 param_75@Stack[0x12c]:1]",
-            "[undefined1 param_76@Stack[0x130]:1]",
-            "[undefined1 param_77@Stack[0x134]:1]",
-            "[undefined4 param_78@Stack[0x138]:4]",
-            "[undefined4 param_79@Stack[0x13c]:4]",
-            "[undefined1 param_80@Stack[0x140]:1]",
-            "[undefined1 param_81@Stack[0x144]:1]",
-            "[undefined1 param_82@Stack[0x148]:1]",
-            "[undefined4 param_83@Stack[0x14c]:4]",
-            "[undefined4 param_84@Stack[0x150]:4]",
-            "[undefined1 param_85@Stack[0x154]:1]",
-            "[undefined1 param_86@Stack[0x158]:1]",
-            "[undefined1 param_87@Stack[0x15c]:1]",
-            "[undefined4 param_88@Stack[0x160]:4]",
-            "[undefined4 param_89@Stack[0x164]:4]",
-            "[undefined1 param_90@Stack[0x168]:1]",
-            "[undefined1 param_91@Stack[0x16c]:1]",
-            "[undefined1 param_92@Stack[0x170]:1]",
-            "[undefined4 param_93@Stack[0x174]:4]",
-            "[undefined4 param_94@Stack[0x178]:4]",
-            "[undefined1 param_95@Stack[0x17c]:1]",
-            "[undefined1 param_96@Stack[0x180]:1]",
-            "[undefined1 param_97@Stack[0x184]:1]",
-            "[undefined4 param_98@Stack[0x188]:4]",
-            "[undefined4 param_99@Stack[0x18c]:4]",
-            "[undefined1 param_100@Stack[0x190]:1]",
-            "[undefined1 param_101@Stack[0x194]:1]",
-            "[undefined1 param_102@Stack[0x198]:1]",
-            "[undefined4 param_103@Stack[0x19c]:4]",
-            "[undefined4 param_104@Stack[0x1a0]:4]",
-            "[undefined1 param_105@Stack[0x1a4]:1]",
-            "[undefined1 param_106@Stack[0x1a8]:1]",
-            "[undefined1 param_107@Stack[0x1ac]:1]",
-            "[undefined4 param_108@Stack[0x1b0]:4]",
-            "[undefined4 param_109@Stack[0x1b4]:4]",
-            "[undefined1 param_110@Stack[0x1b8]:1]",
-            "[undefined1 param_111@Stack[0x1bc]:1]",
-            "[undefined1 param_112@Stack[0x1c0]:1]",
-            "[undefined4 param_113@Stack[0x1c4]:4]",
-            "[undefined4 param_114@Stack[0x1c8]:4]",
-            "[undefined1 param_115@Stack[0x1cc]:1]",
-            "[undefined1 param_116@Stack[0x1d0]:1]",
-            "[undefined1 param_117@Stack[0x1d4]:1]",
-            "[undefined4 param_118@Stack[0x1d8]:4]",
-            "[undefined4 param_119@Stack[0x1dc]:4]",
-            "[undefined1 param_120@Stack[0x1e0]:1]",
-            "[undefined1 param_121@Stack[0x1e4]:1]",
-            "[undefined1 param_122@Stack[0x1e8]:1]",
-            "[undefined4 param_123@Stack[0x1ec]:4]",
-            "[undefined4 param_124@Stack[0x1f0]:4]",
-            "[undefined1 param_125@Stack[0x1f4]:1]",
-            "[undefined1 param_126@<UNASSIGNED>]",
-            "[undefined1 param_127@<UNASSIGNED>]",
-            "[undefined4 param_128@<UNASSIGNED>]",
-            "[undefined4 param_129@<UNASSIGNED>]",
-            "[undefined1 param_130@<UNASSIGNED>]",
-            "[undefined1 param_131@<UNASSIGNED>]",
-            "[undefined1 param_132@<UNASSIGNED>]",
-            "[undefined4 param_133@<UNASSIGNED>]",
-            "[undefined4 param_134@<UNASSIGNED>]",
-            "[undefined1 param_135@<UNASSIGNED>]",
-            "[undefined1 param_136@<UNASSIGNED>]",
-            "[undefined1 param_137@<UNASSIGNED>]",
-            "[undefined4 param_138@<UNASSIGNED>]",
-            "[undefined4 param_139@<UNASSIGNED>]",
-            "[undefined1 param_140@<UNASSIGNED>]",
-            "[undefined1 param_141@<UNASSIGNED>]",
-            "[undefined1 param_142@<UNASSIGNED>]",
-            "[undefined4 param_143@<UNASSIGNED>]",
-            "[undefined4 param_144@<UNASSIGNED>]",
-            "[undefined1 param_145@<UNASSIGNED>]",
-            "[undefined1 param_146@<UNASSIGNED>]",
-            "[undefined1 param_147@<UNASSIGNED>]",
-            "[undefined4 param_148@<UNASSIGNED>]",
-            "[undefined4 param_149@<UNASSIGNED>]",
-            "[undefined1 param_150@<UNASSIGNED>]",
-            "[undefined1 param_151@<UNASSIGNED>]",
-            "[undefined1 param_152@<UNASSIGNED>]",
-            "[undefined4 param_153@<UNASSIGNED>]",
-            "[undefined4 param_154@<UNASSIGNED>]",
-            "[undefined1 param_155@<UNASSIGNED>]",
-            "[undefined1 param_156@<UNASSIGNED>]",
-            "[undefined1 param_157@<UNASSIGNED>]",
-            "[undefined4 param_158@<UNASSIGNED>]",
-            "[undefined4 param_159@<UNASSIGNED>]",
-            "[undefined1 param_160@<UNASSIGNED>]",
-            "[undefined1 param_161@<UNASSIGNED>]",
-            "[undefined1 param_162@<UNASSIGNED>]",
-            "[undefined4 param_163@<UNASSIGNED>]",
-            "[undefined4 param_164@<UNASSIGNED>]",
-            "[undefined1 param_165@<UNASSIGNED>]",
-            "[undefined1 param_166@<UNASSIGNED>]",
-            "[undefined1 param_167@<UNASSIGNED>]",
-            "[undefined4 param_168@<UNASSIGNED>]",
-            "[undefined4 param_169@<UNASSIGNED>]",
-            "[undefined1 param_170@<UNASSIGNED>]",
-            "[undefined1 param_171@<UNASSIGNED>]",
-            "[undefined1 param_172@<UNASSIGNED>]",
-            "[undefined4 param_173@<UNASSIGNED>]",
-            "[undefined4 param_174@<UNASSIGNED>]",
-            "[undefined1 param_175@<UNASSIGNED>]",
-            "[undefined1 param_176@<UNASSIGNED>]",
-            "[undefined1 param_177@<UNASSIGNED>]",
-            "[undefined4 param_178@<UNASSIGNED>]",
-            "[undefined4 param_179@<UNASSIGNED>]",
-            "[undefined1 param_180@<UNASSIGNED>]",
-            "[undefined1 param_181@<UNASSIGNED>]",
-            "[undefined1 param_182@<UNASSIGNED>]",
-            "[undefined4 param_183@<UNASSIGNED>]",
-            "[undefined4 param_184@<UNASSIGNED>]",
-            "[undefined1 param_185@<UNASSIGNED>]",
-            "[undefined1 param_186@<UNASSIGNED>]",
-            "[undefined1 param_187@<UNASSIGNED>]",
-            "[undefined4 param_188@<UNASSIGNED>]",
-            "[undefined4 param_189@<UNASSIGNED>]",
-            "[undefined1 param_190@<UNASSIGNED>]",
-            "[undefined1 param_191@<UNASSIGNED>]",
-            "[undefined1 param_192@<UNASSIGNED>]",
-            "[undefined4 param_193@<UNASSIGNED>]",
-            "[undefined4 param_194@<UNASSIGNED>]",
-            "[undefined1 param_195@<UNASSIGNED>]",
-            "[undefined1 param_196@<UNASSIGNED>]",
-            "[undefined1 param_197@<UNASSIGNED>]",
-            "[undefined4 param_198@<UNASSIGNED>]",
-            "[undefined4 param_199@<UNASSIGNED>]",
-            "[undefined1 param_200@<UNASSIGNED>]",
-            "[undefined1 param_201@<UNASSIGNED>]",
-            "[undefined1 param_202@<UNASSIGNED>]",
-            "[undefined4 param_203@<UNASSIGNED>]",
-            "[undefined4 param_204@<UNASSIGNED>]",
-            "[undefined1 param_205@<UNASSIGNED>]",
-            "[undefined1 param_206@<UNASSIGNED>]",
-            "[undefined1 param_207@<UNASSIGNED>]",
-            "[undefined4 param_208@<UNASSIGNED>]",
-            "[undefined4 param_209@<UNASSIGNED>]",
-            "[undefined1 param_210@<UNASSIGNED>]",
-            "[undefined1 param_211@<UNASSIGNED>]",
-            "[undefined1 param_212@<UNASSIGNED>]",
-            "[undefined4 param_213@<UNASSIGNED>]",
-            "[undefined4 param_214@<UNASSIGNED>]",
-            "[undefined1 param_215@<UNASSIGNED>]",
-            "[undefined1 param_216@<UNASSIGNED>]",
-            "[undefined1 param_217@<UNASSIGNED>]",
-            "[undefined4 param_218@<UNASSIGNED>]",
-            "[undefined4 param_219@<UNASSIGNED>]",
-            "[undefined1 param_220@<UNASSIGNED>]",
-            "[undefined1 param_221@<UNASSIGNED>]",
-            "[undefined1 param_222@<UNASSIGNED>]",
-            "[undefined4 param_223@<UNASSIGNED>]",
-            "[undefined4 param_224@<UNASSIGNED>]",
-            "[undefined1 param_225@<UNASSIGNED>]",
-            "[undefined1 param_226@<UNASSIGNED>]",
-            "[undefined1 param_227@<UNASSIGNED>]",
-            "[undefined4 param_228@<UNASSIGNED>]",
-            "[undefined4 param_229@<UNASSIGNED>]",
-            "[undefined1 param_230@<UNASSIGNED>]",
-            "[undefined1 param_231@<UNASSIGNED>]",
-            "[undefined1 param_232@<UNASSIGNED>]",
-            "[undefined4 param_233@<UNASSIGNED>]",
-            "[undefined4 param_234@<UNASSIGNED>]",
-            "[undefined1 param_235@<UNASSIGNED>]",
-            "[undefined1 param_236@<UNASSIGNED>]",
-            "[undefined1 param_237@<UNASSIGNED>]",
-            "[undefined4 param_238@<UNASSIGNED>]",
-            "[undefined4 param_239@<UNASSIGNED>]",
-            "[undefined1 param_240@<UNASSIGNED>]",
-            "[undefined1 param_241@<UNASSIGNED>]",
-            "[undefined1 param_242@<UNASSIGNED>]",
-            "[undefined4 param_243@<UNASSIGNED>]",
-            "[undefined4 param_244@<UNASSIGNED>]",
-            "[undefined1 param_245@<UNASSIGNED>]",
-            "[undefined1 param_246@<UNASSIGNED>]",
-            "[undefined1 param_247@<UNASSIGNED>]",
-            "[undefined4 param_248@<UNASSIGNED>]",
-            "[undefined4 param_249@<UNASSIGNED>]",
-            "[undefined1 param_250@<UNASSIGNED>]",
-            "[undefined1 param_251@<UNASSIGNED>]",
-            "[undefined1 param_252@<UNASSIGNED>]",
-            "[undefined4 param_253@<UNASSIGNED>]",
-            "[undefined4 param_254@<UNASSIGNED>]",
-            "[undefined1 param_255@<UNASSIGNED>]",
-            "[undefined1 param_256@<UNASSIGNED>]",
-            "[undefined1 param_257@<UNASSIGNED>]",
-            "[undefined4 param_258@<UNASSIGNED>]",
-            "[undefined4 param_259@<UNASSIGNED>]",
-            "[undefined1 param_260@<UNASSIGNED>]",
-            "[undefined1 param_261@<UNASSIGNED>]",
-            "[undefined1 param_262@<UNASSIGNED>]",
-            "[undefined4 param_263@<UNASSIGNED>]",
-            "[undefined4 param_264@<UNASSIGNED>]",
-            "[undefined1 param_265@<UNASSIGNED>]",
-            "[undefined1 param_266@<UNASSIGNED>]",
-            "[undefined1 param_267@<UNASSIGNED>]",
-            "[undefined4 param_268@<UNASSIGNED>]",
-            "[undefined4 param_269@<UNASSIGNED>]",
-            "[undefined1 param_270@<UNASSIGNED>]",
-            "[undefined1 param_271@<UNASSIGNED>]",
-            "[undefined1 param_272@<UNASSIGNED>]",
-            "[undefined4 param_273@<UNASSIGNED>]",
-            "[undefined4 param_274@<UNASSIGNED>]",
-            "[undefined1 param_275@<UNASSIGNED>]",
-            "[undefined1 param_276@<UNASSIGNED>]",
-            "[undefined1 param_277@<UNASSIGNED>]",
-            "[undefined4 param_278@<UNASSIGNED>]",
-            "[undefined4 param_279@<UNASSIGNED>]",
-            "[undefined1 param_280@<UNASSIGNED>]",
-            "[undefined1 param_281@<UNASSIGNED>]",
-            "[undefined1 param_282@<UNASSIGNED>]",
-            "[undefined4 param_283@<UNASSIGNED>]",
-            "[undefined4 param_284@<UNASSIGNED>]",
-            "[undefined1 param_285@<UNASSIGNED>]",
-            "[undefined1 param_286@<UNASSIGNED>]",
-            "[undefined1 param_287@<UNASSIGNED>]",
-            "[undefined4 param_288@<UNASSIGNED>]",
-            "[undefined4 param_289@<UNASSIGNED>]",
-            "[undefined1 param_290@<UNASSIGNED>]",
-            "[undefined1 param_291@<UNASSIGNED>]",
-            "[undefined1 param_292@<UNASSIGNED>]",
-            "[undefined4 param_293@<UNASSIGNED>]",
-            "[undefined4 param_294@<UNASSIGNED>]",
-            "[undefined1 param_295@<UNASSIGNED>]",
-            "[undefined1 param_296@<UNASSIGNED>]",
-            "[undefined1 param_297@<UNASSIGNED>]",
-            "[undefined4 param_298@<UNASSIGNED>]",
-            "[undefined4 param_299@<UNASSIGNED>]",
-            "[undefined1 param_300@<UNASSIGNED>]",
-            "[undefined1 param_301@<UNASSIGNED>]",
-            "[undefined1 param_302@<UNASSIGNED>]",
-            "[undefined4 param_303@<UNASSIGNED>]",
-            "[undefined4 param_304@<UNASSIGNED>]",
-            "[undefined1 param_305@<UNASSIGNED>]",
-            "[undefined1 param_306@<UNASSIGNED>]",
-            "[undefined1 param_307@<UNASSIGNED>]",
-            "[undefined4 param_308@<UNASSIGNED>]",
-            "[undefined4 param_309@<UNASSIGNED>]",
-            "[undefined1 param_310@<UNASSIGNED>]",
-            "[undefined1 param_311@<UNASSIGNED>]",
-            "[undefined1 param_312@<UNASSIGNED>]",
-            "[undefined4 param_313@<UNASSIGNED>]",
-            "[undefined4 param_314@<UNASSIGNED>]",
-            "[undefined1 param_315@<UNASSIGNED>]",
-            "[undefined1 param_316@<UNASSIGNED>]",
-            "[undefined1 param_317@<UNASSIGNED>]",
-            "[undefined4 param_318@<UNASSIGNED>]",
-            "[undefined4 param_319@<UNASSIGNED>]",
-            "[undefined1 param_320@<UNASSIGNED>]",
-            "[undefined1 param_321@<UNASSIGNED>]",
-            "[undefined1 param_322@<UNASSIGNED>]",
-            "[undefined4 param_323@<UNASSIGNED>]",
-            "[undefined4 param_324@<UNASSIGNED>]",
-            "[undefined1 param_325@<UNASSIGNED>]",
-            "[undefined1 param_326@<UNASSIGNED>]",
-            "[undefined1 param_327@<UNASSIGNED>]",
-            "[undefined4 param_328@<UNASSIGNED>]",
-            "[undefined4 param_329@<UNASSIGNED>]",
-            "[undefined1 param_330@<UNASSIGNED>]",
-            "[undefined1 param_331@<UNASSIGNED>]",
-            "[undefined1 param_332@<UNASSIGNED>]",
-            "[undefined4 param_333@<UNASSIGNED>]",
-            "[undefined4 param_334@<UNASSIGNED>]",
-            "[undefined1 param_335@<UNASSIGNED>]",
-            "[undefined1 param_336@<UNASSIGNED>]",
-            "[undefined1 param_337@<UNASSIGNED>]",
-            "[undefined4 param_338@<UNASSIGNED>]",
-            "[undefined4 param_339@<UNASSIGNED>]",
-            "[undefined1 param_340@<UNASSIGNED>]",
-            "[undefined1 param_341@<UNASSIGNED>]",
-            "[undefined1 param_342@<UNASSIGNED>]",
-            "[undefined4 param_343@<UNASSIGNED>]",
-            "[undefined4 param_344@<UNASSIGNED>]",
-            "[undefined1 param_345@<UNASSIGNED>]",
-            "[undefined1 param_346@<UNASSIGNED>]",
-            "[undefined1 param_347@<UNASSIGNED>]",
-            "[undefined4 param_348@<UNASSIGNED>]",
-            "[undefined4 param_349@<UNASSIGNED>]",
-            "[undefined1 param_350@<UNASSIGNED>]",
-            "[undefined1 param_351@<UNASSIGNED>]",
-            "[undefined1 param_352@<UNASSIGNED>]",
-            "[undefined4 param_353@<UNASSIGNED>]",
-            "[undefined4 param_354@<UNASSIGNED>]",
-            "[undefined1 param_355@<UNASSIGNED>]",
-            "[undefined1 param_356@<UNASSIGNED>]",
-            "[undefined1 param_357@<UNASSIGNED>]",
-            "[undefined4 param_358@<UNASSIGNED>]",
-            "[undefined4 param_359@<UNASSIGNED>]",
-            "[undefined1 param_360@<UNASSIGNED>]",
-            "[undefined1 param_361@<UNASSIGNED>]",
-            "[undefined1 param_362@<UNASSIGNED>]",
-            "[undefined4 param_363@<UNASSIGNED>]",
-            "[undefined4 param_364@<UNASSIGNED>]",
-            "[undefined1 param_365@<UNASSIGNED>]",
-            "[undefined1 param_366@<UNASSIGNED>]",
-            "[undefined1 param_367@<UNASSIGNED>]",
-            "[undefined4 param_368@<UNASSIGNED>]",
-            "[undefined4 param_369@<UNASSIGNED>]",
-            "[undefined1 param_370@<UNASSIGNED>]",
-            "[undefined1 param_371@<UNASSIGNED>]",
-            "[undefined1 param_372@<UNASSIGNED>]",
-            "[undefined4 param_373@<UNASSIGNED>]",
-            "[undefined4 param_374@<UNASSIGNED>]",
-            "[undefined1 param_375@<UNASSIGNED>]",
-            "[undefined1 param_376@<UNASSIGNED>]",
-            "[undefined1 param_377@<UNASSIGNED>]",
-            "[undefined4 param_378@<UNASSIGNED>]",
-            "[undefined4 param_379@<UNASSIGNED>]",
-            "[undefined1 param_380@<UNASSIGNED>]",
-            "[undefined1 param_381@<UNASSIGNED>]",
-            "[undefined1 param_382@<UNASSIGNED>]",
-            "[undefined4 param_383@<UNASSIGNED>]",
-            "[undefined4 param_384@<UNASSIGNED>]",
-            "[undefined1 param_385@<UNASSIGNED>]",
-            "[undefined1 param_386@<UNASSIGNED>]",
-            "[undefined1 param_387@<UNASSIGNED>]",
-            "[undefined4 param_388@<UNASSIGNED>]",
-            "[undefined4 param_389@<UNASSIGNED>]",
-            "[undefined1 param_390@<UNASSIGNED>]",
-            "[undefined1 param_391@<UNASSIGNED>]",
-            "[undefined1 param_392@<UNASSIGNED>]",
-            "[undefined4 param_393@<UNASSIGNED>]",
-            "[undefined4 param_394@<UNASSIGNED>]",
-            "[undefined1 param_395@<UNASSIGNED>]",
-            "[undefined1 param_396@<UNASSIGNED>]",
-            "[undefined1 param_397@<UNASSIGNED>]",
-            "[undefined4 param_398@<UNASSIGNED>]",
-            "[undefined4 param_399@<UNASSIGNED>]",
-            "[undefined1 param_400@<UNASSIGNED>]",
-            "[undefined1 param_401@<UNASSIGNED>]",
-            "[undefined1 param_402@<UNASSIGNED>]",
-            "[undefined4 param_403@<UNASSIGNED>]",
-            "[undefined4 param_404@<UNASSIGNED>]",
-            "[undefined1 param_405@<UNASSIGNED>]",
-            "[undefined1 param_406@<UNASSIGNED>]",
-            "[undefined1 param_407@<UNASSIGNED>]",
-            "[undefined4 param_408@<UNASSIGNED>]",
-            "[undefined4 param_409@<UNASSIGNED>]",
-            "[undefined1 param_410@<UNASSIGNED>]",
-            "[undefined1 param_411@<UNASSIGNED>]",
-            "[undefined1 param_412@<UNASSIGNED>]",
-            "[undefined4 param_413@<UNASSIGNED>]",
-            "[undefined4 param_414@<UNASSIGNED>]",
-            "[undefined1 param_415@<UNASSIGNED>]",
-            "[undefined1 param_416@<UNASSIGNED>]",
-            "[undefined1 param_417@<UNASSIGNED>]",
-            "[undefined4 param_418@<UNASSIGNED>]",
-            "[undefined4 param_419@<UNASSIGNED>]",
-            "[undefined1 param_420@<UNASSIGNED>]",
-            "[undefined1 param_421@<UNASSIGNED>]",
-            "[undefined1 param_422@<UNASSIGNED>]",
-            "[undefined4 param_423@<UNASSIGNED>]",
-            "[undefined4 param_424@<UNASSIGNED>]",
-            "[undefined1 param_425@<UNASSIGNED>]",
-            "[undefined1 param_426@<UNASSIGNED>]",
-            "[undefined1 param_427@<UNASSIGNED>]",
-            "[undefined4 param_428@<UNASSIGNED>]",
-            "[undefined4 param_429@<UNASSIGNED>]",
-            "[undefined1 param_430@<UNASSIGNED>]",
-            "[undefined1 param_431@<UNASSIGNED>]",
-            "[undefined1 param_432@<UNASSIGNED>]",
-            "[undefined4 param_433@<UNASSIGNED>]",
-            "[undefined4 param_434@<UNASSIGNED>]",
-            "[undefined1 param_435@<UNASSIGNED>]",
-            "[undefined1 param_436@<UNASSIGNED>]",
-            "[undefined1 param_437@<UNASSIGNED>]",
-            "[undefined4 param_438@<UNASSIGNED>]",
-            "[undefined4 param_439@<UNASSIGNED>]",
-            "[undefined1 param_440@<UNASSIGNED>]",
-            "[undefined1 param_441@<UNASSIGNED>]",
-            "[undefined1 param_442@<UNASSIGNED>]",
-            "[undefined4 param_443@<UNASSIGNED>]",
-            "[undefined4 param_444@<UNASSIGNED>]",
-            "[undefined1 param_445@<UNASSIGNED>]",
-            "[undefined1 param_446@<UNASSIGNED>]",
-            "[undefined1 param_447@<UNASSIGNED>]",
-            "[undefined4 param_448@<UNASSIGNED>]",
-            "[undefined4 param_449@<UNASSIGNED>]",
-            "[undefined1 param_450@<UNASSIGNED>]",
-            "[undefined1 param_451@<UNASSIGNED>]",
-            "[undefined1 param_452@<UNASSIGNED>]",
-            "[undefined4 param_453@<UNASSIGNED>]",
-            "[undefined4 param_454@<UNASSIGNED>]",
-            "[undefined1 param_455@<UNASSIGNED>]",
-            "[undefined1 param_456@<UNASSIGNED>]",
-            "[undefined1 param_457@<UNASSIGNED>]",
-            "[undefined4 param_458@<UNASSIGNED>]",
-            "[undefined4 param_459@<UNASSIGNED>]",
-            "[undefined1 param_460@<UNASSIGNED>]",
-            "[undefined1 param_461@<UNASSIGNED>]",
-            "[undefined1 param_462@<UNASSIGNED>]",
-            "[undefined4 param_463@<UNASSIGNED>]",
-            "[undefined4 param_464@<UNASSIGNED>]",
-            "[undefined1 param_465@<UNASSIGNED>]",
-            "[undefined1 param_466@<UNASSIGNED>]",
-            "[undefined1 param_467@<UNASSIGNED>]",
-            "[undefined4 param_468@<UNASSIGNED>]",
-            "[undefined4 param_469@<UNASSIGNED>]",
-            "[undefined1 param_470@<UNASSIGNED>]",
-            "[undefined1 param_471@<UNASSIGNED>]",
-            "[undefined1 param_472@<UNASSIGNED>]",
-            "[undefined4 param_473@<UNASSIGNED>]",
-            "[undefined4 param_474@<UNASSIGNED>]",
-            "[undefined1 param_475@<UNASSIGNED>]",
-            "[undefined1 param_476@<UNASSIGNED>]",
-            "[undefined1 param_477@<UNASSIGNED>]",
-            "[undefined4 param_478@<UNASSIGNED>]",
-            "[undefined4 param_479@<UNASSIGNED>]",
-            "[undefined1 param_480@<UNASSIGNED>]",
-            "[undefined1 param_481@<UNASSIGNED>]",
-            "[undefined1 param_482@<UNASSIGNED>]",
-            "[undefined4 param_483@<UNASSIGNED>]",
-            "[undefined4 param_484@<UNASSIGNED>]",
-            "[undefined1 param_485@<UNASSIGNED>]",
-            "[undefined1 param_486@<UNASSIGNED>]",
-            "[undefined1 param_487@<UNASSIGNED>]",
-            "[undefined4 param_488@<UNASSIGNED>]",
-            "[undefined4 param_489@<UNASSIGNED>]",
-            "[undefined1 param_490@<UNASSIGNED>]",
-            "[undefined1 param_491@<UNASSIGNED>]",
-            "[undefined1 param_492@<UNASSIGNED>]",
-            "[undefined4 param_493@<UNASSIGNED>]",
-            "[undefined4 param_494@<UNASSIGNED>]",
-            "[undefined1 param_495@<UNASSIGNED>]",
-            "[undefined1 param_496@<UNASSIGNED>]",
-            "[undefined1 param_497@<UNASSIGNED>]",
-            "[undefined4 param_498@<UNASSIGNED>]",
-            "[undefined4 param_499@<UNASSIGNED>]",
-            "[undefined1 param_500@<UNASSIGNED>]",
-            "[undefined1 param_501@<UNASSIGNED>]",
-            "[undefined1 param_502@<UNASSIGNED>]",
-            "[undefined4 param_503@<UNASSIGNED>]",
-            "[undefined4 param_504@<UNASSIGNED>]",
-            "[undefined1 param_505@<UNASSIGNED>]",
-            "[undefined1 param_506@<UNASSIGNED>]",
-            "[undefined1 param_507@<UNASSIGNED>]",
-            "[undefined4 param_508@<UNASSIGNED>]",
-            "[undefined4 param_509@<UNASSIGNED>]",
-            "[undefined1 param_510@<UNASSIGNED>]",
-            "[undefined1 param_511@<UNASSIGNED>]",
-            "[undefined1 param_512@<UNASSIGNED>]",
-            "[undefined4 param_513@<UNASSIGNED>]",
-            "[undefined4 param_514@<UNASSIGNED>]",
-            "[undefined1 param_515@<UNASSIGNED>]",
-            "[undefined1 param_516@<UNASSIGNED>]",
-            "[undefined1 param_517@<UNASSIGNED>]",
-            "[undefined4 param_518@<UNASSIGNED>]",
-            "[undefined4 param_519@<UNASSIGNED>]",
-            "[undefined1 param_520@<UNASSIGNED>]",
-            "[undefined1 param_521@<UNASSIGNED>]",
-            "[undefined1 param_522@<UNASSIGNED>]",
-            "[undefined4 param_523@<UNASSIGNED>]",
-            "[undefined4 param_524@<UNASSIGNED>]",
-            "[undefined1 param_525@<UNASSIGNED>]",
-            "[undefined1 param_526@<UNASSIGNED>]",
-            "[undefined1 param_527@<UNASSIGNED>]",
-            "[undefined4 param_528@<UNASSIGNED>]",
-            "[undefined4 param_529@<UNASSIGNED>]",
-            "[undefined1 param_530@<UNASSIGNED>]",
-            "[undefined1 param_531@<UNASSIGNED>]",
-            "[undefined1 param_532@<UNASSIGNED>]",
-            "[undefined4 param_533@<UNASSIGNED>]",
-            "[undefined4 param_534@<UNASSIGNED>]",
-            "[undefined1 param_535@<UNASSIGNED>]",
-            "[undefined1 param_536@<UNASSIGNED>]",
-            "[undefined1 param_537@<UNASSIGNED>]",
-            "[undefined4 param_538@<UNASSIGNED>]",
-            "[undefined4 param_539@<UNASSIGNED>]",
-            "[undefined1 param_540@<UNASSIGNED>]",
-            "[undefined1 param_541@<UNASSIGNED>]",
-            "[undefined1 param_542@<UNASSIGNED>]",
-            "[undefined4 param_543@<UNASSIGNED>]",
-            "[undefined4 param_544@<UNASSIGNED>]",
-            "[undefined1 param_545@<UNASSIGNED>]",
-            "[undefined1 param_546@<UNASSIGNED>]",
-            "[undefined1 param_547@<UNASSIGNED>]",
-            "[undefined4 param_548@<UNASSIGNED>]",
-            "[undefined4 param_549@<UNASSIGNED>]",
-            "[undefined1 param_550@<UNASSIGNED>]",
-            "[undefined1 param_551@<UNASSIGNED>]",
-            "[undefined1 param_552@<UNASSIGNED>]",
-            "[undefined4 param_553@<UNASSIGNED>]",
-            "[undefined4 param_554@<UNASSIGNED>]",
-            "[undefined1 param_555@<UNASSIGNED>]",
-            "[undefined1 param_556@<UNASSIGNED>]",
-            "[undefined1 param_557@<UNASSIGNED>]",
-            "[undefined4 param_558@<UNASSIGNED>]",
-            "[undefined4 param_559@<UNASSIGNED>]",
-            "[undefined1 param_560@<UNASSIGNED>]",
-            "[undefined1 param_561@<UNASSIGNED>]",
-            "[undefined1 param_562@<UNASSIGNED>]",
-            "[undefined4 param_563@<UNASSIGNED>]",
-            "[undefined4 param_564@<UNASSIGNED>]",
-            "[undefined1 param_565@<UNASSIGNED>]",
-            "[undefined1 param_566@<UNASSIGNED>]",
-            "[undefined1 param_567@<UNASSIGNED>]",
-            "[undefined4 param_568@<UNASSIGNED>]",
-            "[undefined4 param_569@<UNASSIGNED>]",
-            "[undefined1 param_570@<UNASSIGNED>]",
-            "[undefined1 param_571@<UNASSIGNED>]",
-            "[undefined1 param_572@<UNASSIGNED>]",
-            "[undefined4 param_573@<UNASSIGNED>]",
-            "[undefined4 param_574@<UNASSIGNED>]",
-            "[undefined1 param_575@<UNASSIGNED>]",
-            "[undefined1 param_576@<UNASSIGNED>]",
-            "[undefined1 param_577@<UNASSIGNED>]",
-            "[undefined4 param_578@<UNASSIGNED>]",
-            "[undefined4 param_579@<UNASSIGNED>]",
-            "[undefined1 param_580@<UNASSIGNED>]",
-            "[undefined1 param_581@<UNASSIGNED>]",
-            "[undefined1 param_582@<UNASSIGNED>]",
-            "[undefined4 param_583@<UNASSIGNED>]",
-            "[undefined4 param_584@<UNASSIGNED>]",
-            "[undefined1 param_585@<UNASSIGNED>]",
-            "[undefined1 param_586@<UNASSIGNED>]",
-            "[undefined1 param_587@<UNASSIGNED>]",
-            "[undefined4 param_588@<UNASSIGNED>]",
-            "[undefined4 param_589@<UNASSIGNED>]",
-            "[undefined1 param_590@<UNASSIGNED>]",
-            "[undefined1 param_591@<UNASSIGNED>]",
-            "[undefined1 param_592@<UNASSIGNED>]",
-            "[undefined4 param_593@<UNASSIGNED>]",
-            "[undefined4 param_594@<UNASSIGNED>]",
-            "[undefined1 param_595@<UNASSIGNED>]",
-            "[undefined1 param_596@<UNASSIGNED>]",
-            "[undefined1 param_597@<UNASSIGNED>]",
-            "[undefined4 param_598@<UNASSIGNED>]",
-            "[undefined4 param_599@<UNASSIGNED>]",
-            "[undefined1 param_600@<UNASSIGNED>]",
-            "[undefined1 param_601@<UNASSIGNED>]",
-            "[undefined1 param_602@<UNASSIGNED>]",
-            "[undefined4 param_603@<UNASSIGNED>]",
-            "[undefined4 param_604@<UNASSIGNED>]",
-            "[undefined1 param_605@<UNASSIGNED>]",
-            "[undefined1 param_606@<UNASSIGNED>]",
-            "[undefined1 param_607@<UNASSIGNED>]",
-            "[undefined4 param_608@<UNASSIGNED>]",
-            "[undefined4 param_609@<UNASSIGNED>]",
-            "[undefined1 param_610@<UNASSIGNED>]",
-            "[undefined1 param_611@<UNASSIGNED>]",
-            "[undefined1 param_612@<UNASSIGNED>]",
-            "[undefined4 param_613@<UNASSIGNED>]",
-            "[undefined4 param_614@<UNASSIGNED>]",
-            "[undefined1 param_615@<UNASSIGNED>]",
-            "[undefined1 param_616@<UNASSIGNED>]",
-            "[undefined1 param_617@<UNASSIGNED>]",
-            "[undefined4 param_618@<UNASSIGNED>]",
-            "[undefined4 param_619@<UNASSIGNED>]",
-            "[undefined1 param_620@<UNASSIGNED>]",
-            "[undefined1 param_621@<UNASSIGNED>]",
-            "[undefined1 param_622@<UNASSIGNED>]",
-            "[undefined4 param_623@<UNASSIGNED>]",
-            "[undefined4 param_624@<UNASSIGNED>]",
-            "[undefined1 param_625@<UNASSIGNED>]",
-            "[undefined1 param_626@<UNASSIGNED>]",
-            "[undefined1 param_627@<UNASSIGNED>]",
-            "[undefined4 param_628@<UNASSIGNED>]",
-            "[undefined4 param_629@<UNASSIGNED>]",
-            "[undefined1 param_630@<UNASSIGNED>]",
-            "[undefined1 param_631@<UNASSIGNED>]",
-            "[undefined1 param_632@<UNASSIGNED>]",
-            "[undefined4 param_633@<UNASSIGNED>]",
-            "[undefined4 param_634@<UNASSIGNED>]",
-            "[undefined1 param_635@<UNASSIGNED>]",
-            "[undefined1 param_636@<UNASSIGNED>]",
-            "[undefined1 param_637@<UNASSIGNED>]",
-            "[undefined4 param_638@<UNASSIGNED>]",
-            "[undefined4 param_639@<UNASSIGNED>]",
-            "[undefined1 param_640@<UNASSIGNED>]",
-            "[undefined1 param_641@<UNASSIGNED>]",
-            "[undefined1 param_642@<UNASSIGNED>]",
-            "[undefined4 param_643@<UNASSIGNED>]",
-            "[undefined4 param_644@<UNASSIGNED>]",
-            "[undefined1 param_645@<UNASSIGNED>]",
-            "[undefined1 param_646@<UNASSIGNED>]",
-            "[undefined1 param_647@<UNASSIGNED>]",
-            "[undefined4 param_648@<UNASSIGNED>]",
-            "[undefined4 param_649@<UNASSIGNED>]",
-            "[undefined1 param_650@<UNASSIGNED>]",
-            "[undefined1 param_651@<UNASSIGNED>]",
-            "[undefined1 param_652@<UNASSIGNED>]",
-            "[undefined4 param_653@<UNASSIGNED>]",
-            "[undefined4 param_654@<UNASSIGNED>]",
-            "[undefined1 param_655@<UNASSIGNED>]",
-            "[undefined1 param_656@<UNASSIGNED>]",
-            "[undefined1 param_657@<UNASSIGNED>]",
-            "[undefined4 param_658@<UNASSIGNED>]",
-            "[undefined4 param_659@<UNASSIGNED>]",
-            "[undefined1 param_660@<UNASSIGNED>]",
-            "[undefined1 param_661@<UNASSIGNED>]",
-            "[undefined1 param_662@<UNASSIGNED>]",
-            "[undefined4 param_663@<UNASSIGNED>]",
-            "[undefined4 param_664@<UNASSIGNED>]",
-            "[undefined1 param_665@<UNASSIGNED>]",
-            "[undefined1 param_666@<UNASSIGNED>]",
-            "[undefined1 param_667@<UNASSIGNED>]",
-            "[undefined4 param_668@<UNASSIGNED>]",
-            "[undefined4 param_669@<UNASSIGNED>]",
-            "[undefined1 param_670@<UNASSIGNED>]",
-            "[undefined1 param_671@<UNASSIGNED>]",
-            "[undefined1 param_672@<UNASSIGNED>]",
-            "[undefined4 param_673@<UNASSIGNED>]",
-            "[undefined4 param_674@<UNASSIGNED>]",
-            "[undefined1 param_675@<UNASSIGNED>]",
-            "[undefined1 param_676@<UNASSIGNED>]",
-            "[undefined1 param_677@<UNASSIGNED>]",
-            "[undefined4 param_678@<UNASSIGNED>]",
-            "[undefined4 param_679@<UNASSIGNED>]",
-            "[undefined1 param_680@<UNASSIGNED>]",
-            "[undefined1 param_681@<UNASSIGNED>]",
-            "[undefined1 param_682@<UNASSIGNED>]",
-            "[undefined4 param_683@<UNASSIGNED>]",
-            "[undefined4 param_684@<UNASSIGNED>]",
-            "[undefined1 param_685@<UNASSIGNED>]",
-            "[undefined1 param_686@<UNASSIGNED>]",
-            "[undefined1 param_687@<UNASSIGNED>]",
-            "[undefined4 param_688@<UNASSIGNED>]",
-            "[undefined4 param_689@<UNASSIGNED>]",
-            "[undefined1 param_690@<UNASSIGNED>]",
-            "[undefined1 param_691@<UNASSIGNED>]",
-            "[undefined1 param_692@<UNASSIGNED>]",
-            "[undefined4 param_693@<UNASSIGNED>]",
-            "[undefined4 param_694@<UNASSIGNED>]",
-            "[undefined1 param_695@<UNASSIGNED>]",
-            "[undefined1 param_696@<UNASSIGNED>]",
-            "[undefined1 param_697@<UNASSIGNED>]",
-            "[undefined4 param_698@<UNASSIGNED>]",
-            "[undefined4 param_699@<UNASSIGNED>]",
-            "[undefined1 param_700@<UNASSIGNED>]",
-            "[undefined1 param_701@<UNASSIGNED>]",
-            "[undefined1 param_702@<UNASSIGNED>]",
-            "[undefined4 param_703@<UNASSIGNED>]",
-            "[undefined4 param_704@<UNASSIGNED>]",
-            "[undefined1 param_705@<UNASSIGNED>]",
-            "[undefined1 param_706@<UNASSIGNED>]",
-            "[undefined1 param_707@<UNASSIGNED>]",
-            "[undefined4 param_708@<UNASSIGNED>]",
-            "[undefined4 param_709@<UNASSIGNED>]",
-            "[undefined1 param_710@<UNASSIGNED>]",
-            "[undefined1 param_711@<UNASSIGNED>]",
-            "[undefined1 param_712@<UNASSIGNED>]",
-            "[undefined4 param_713@<UNASSIGNED>]",
-            "[undefined4 param_714@<UNASSIGNED>]",
-            "[undefined1 param_715@<UNASSIGNED>]",
-            "[undefined1 param_716@<UNASSIGNED>]",
-            "[undefined1 param_717@<UNASSIGNED>]",
-            "[undefined4 param_718@<UNASSIGNED>]",
-            "[undefined4 param_719@<UNASSIGNED>]",
-            "[undefined1 param_720@<UNASSIGNED>]",
-            "[undefined1 param_721@<UNASSIGNED>]",
-            "[undefined1 param_722@<UNASSIGNED>]",
-            "[undefined4 param_723@<UNASSIGNED>]",
-            "[undefined4 param_724@<UNASSIGNED>]",
-            "[undefined1 param_725@<UNASSIGNED>]",
-            "[undefined1 param_726@<UNASSIGNED>]",
-            "[undefined1 param_727@<UNASSIGNED>]",
-            "[undefined4 param_728@<UNASSIGNED>]",
-            "[undefined4 param_729@<UNASSIGNED>]",
-            "[undefined1 param_730@<UNASSIGNED>]",
-            "[undefined1 param_731@<UNASSIGNED>]",
-            "[undefined1 param_732@<UNASSIGNED>]",
-            "[undefined4 param_733@<UNASSIGNED>]",
-            "[undefined4 param_734@<UNASSIGNED>]",
-            "[undefined1 param_735@<UNASSIGNED>]",
-            "[undefined1 param_736@<UNASSIGNED>]",
-            "[undefined1 param_737@<UNASSIGNED>]",
-            "[undefined4 param_738@<UNASSIGNED>]",
-            "[undefined4 param_739@<UNASSIGNED>]",
-            "[undefined1 param_740@<UNASSIGNED>]",
-            "[undefined1 param_741@<UNASSIGNED>]",
-            "[undefined1 param_742@<UNASSIGNED>]",
-            "[undefined4 param_743@<UNASSIGNED>]",
-            "[undefined4 param_744@<UNASSIGNED>]",
-            "[undefined1 param_745@<UNASSIGNED>]",
-            "[undefined1 param_746@<UNASSIGNED>]",
-            "[undefined1 param_747@<UNASSIGNED>]",
-            "[undefined4 param_748@<UNASSIGNED>]",
-            "[undefined4 param_749@<UNASSIGNED>]",
-            "[undefined1 param_750@<UNASSIGNED>]",
-            "[undefined1 param_751@<UNASSIGNED>]",
-            "[undefined1 param_752@<UNASSIGNED>]",
-            "[undefined4 param_753@<UNASSIGNED>]",
-            "[undefined4 param_754@<UNASSIGNED>]",
-            "[undefined1 param_755@<UNASSIGNED>]",
-            "[undefined1 param_756@<UNASSIGNED>]",
-            "[undefined1 param_757@<UNASSIGNED>]",
-            "[undefined4 param_758@<UNASSIGNED>]",
-            "[undefined4 param_759@<UNASSIGNED>]",
-            "[undefined1 param_760@<UNASSIGNED>]",
-            "[undefined1 param_761@<UNASSIGNED>]",
-            "[undefined1 param_762@<UNASSIGNED>]",
-            "[undefined4 param_763@<UNASSIGNED>]",
-            "[undefined4 param_764@<UNASSIGNED>]",
-            "[undefined1 param_765@<UNASSIGNED>]",
-            "[undefined1 param_766@<UNASSIGNED>]",
-            "[undefined1 param_767@<UNASSIGNED>]",
-            "[undefined4 param_768@<UNASSIGNED>]",
-            "[undefined4 param_769@<UNASSIGNED>]",
-            "[undefined1 param_770@<UNASSIGNED>]",
-            "[undefined1 param_771@<UNASSIGNED>]",
-            "[undefined1 param_772@<UNASSIGNED>]",
-            "[undefined4 param_773@<UNASSIGNED>]",
-            "[undefined4 param_774@<UNASSIGNED>]",
-            "[undefined1 param_775@<UNASSIGNED>]",
-            "[undefined1 param_776@<UNASSIGNED>]",
-            "[undefined1 param_777@<UNASSIGNED>]",
-            "[undefined4 param_778@<UNASSIGNED>]",
-            "[undefined4 param_779@<UNASSIGNED>]",
-            "[undefined1 param_780@<UNASSIGNED>]",
-            "[undefined1 param_781@<UNASSIGNED>]",
-            "[undefined1 param_782@<UNASSIGNED>]",
-            "[undefined4 param_783@<UNASSIGNED>]",
-            "[undefined4 param_784@<UNASSIGNED>]",
-            "[undefined1 param_785@<UNASSIGNED>]",
-            "[undefined1 param_786@<UNASSIGNED>]",
-            "[undefined1 param_787@<UNASSIGNED>]",
-            "[undefined4 param_788@<UNASSIGNED>]",
-            "[undefined4 param_789@<UNASSIGNED>]",
-            "[undefined1 param_790@<UNASSIGNED>]",
-            "[undefined1 param_791@<UNASSIGNED>]",
-            "[undefined1 param_792@<UNASSIGNED>]",
-            "[undefined4 param_793@<UNASSIGNED>]",
-            "[undefined4 param_794@<UNASSIGNED>]",
-            "[undefined1 param_795@<UNASSIGNED>]",
-            "[undefined1 param_796@<UNASSIGNED>]",
-            "[undefined1 param_797@<UNASSIGNED>]",
-            "[undefined4 param_798@<UNASSIGNED>]",
-            "[undefined4 param_799@<UNASSIGNED>]",
-            "[undefined1 param_800@<UNASSIGNED>]",
-            "[undefined1 param_801@<UNASSIGNED>]",
-            "[undefined1 param_802@<UNASSIGNED>]",
-            "[undefined4 param_803@<UNASSIGNED>]",
-            "[undefined4 param_804@<UNASSIGNED>]",
-            "[undefined1 param_805@<UNASSIGNED>]",
-            "[undefined1 param_806@<UNASSIGNED>]",
-            "[undefined1 param_807@<UNASSIGNED>]",
-            "[undefined4 param_808@<UNASSIGNED>]",
-            "[undefined4 param_809@<UNASSIGNED>]",
-            "[undefined1 param_810@<UNASSIGNED>]",
-            "[undefined1 param_811@<UNASSIGNED>]",
-            "[undefined1 param_812@<UNASSIGNED>]",
-            "[undefined4 param_813@<UNASSIGNED>]",
-            "[undefined4 param_814@<UNASSIGNED>]",
-            "[undefined1 param_815@<UNASSIGNED>]",
-            "[undefined1 param_816@<UNASSIGNED>]",
-            "[undefined1 param_817@<UNASSIGNED>]",
-            "[undefined4 param_818@<UNASSIGNED>]",
-            "[undefined4 param_819@<UNASSIGNED>]",
-            "[undefined1 param_820@<UNASSIGNED>]",
-            "[undefined1 param_821@<UNASSIGNED>]",
-            "[undefined1 param_822@<UNASSIGNED>]",
-            "[undefined4 param_823@<UNASSIGNED>]",
-            "[undefined4 param_824@<UNASSIGNED>]",
-            "[undefined1 param_825@<UNASSIGNED>]",
-            "[undefined1 param_826@<UNASSIGNED>]",
-            "[undefined1 param_827@<UNASSIGNED>]",
-            "[undefined4 param_828@<UNASSIGNED>]",
-            "[undefined4 param_829@<UNASSIGNED>]",
-            "[undefined1 param_830@<UNASSIGNED>]",
-            "[undefined1 param_831@<UNASSIGNED>]",
-            "[undefined1 param_832@<UNASSIGNED>]",
-            "[undefined4 param_833@<UNASSIGNED>]",
-            "[undefined4 param_834@<UNASSIGNED>]",
-            "[undefined1 param_835@<UNASSIGNED>]",
-            "[undefined1 param_836@<UNASSIGNED>]",
-            "[undefined1 param_837@<UNASSIGNED>]",
-            "[undefined4 param_838@<UNASSIGNED>]",
-            "[undefined4 param_839@<UNASSIGNED>]",
-            "[undefined1 param_840@<UNASSIGNED>]",
-            "[undefined1 param_841@<UNASSIGNED>]",
-            "[undefined1 param_842@<UNASSIGNED>]",
-            "[undefined4 param_843@<UNASSIGNED>]",
-            "[undefined4 param_844@<UNASSIGNED>]",
-            "[undefined1 param_845@<UNASSIGNED>]",
-            "[undefined1 param_846@<UNASSIGNED>]",
-            "[undefined1 param_847@<UNASSIGNED>]",
-            "[undefined4 param_848@<UNASSIGNED>]",
-            "[undefined4 param_849@<UNASSIGNED>]",
-            "[undefined1 param_850@<UNASSIGNED>]",
-            "[undefined1 param_851@<UNASSIGNED>]",
-            "[undefined1 param_852@<UNASSIGNED>]",
-            "[undefined4 param_853@<UNASSIGNED>]",
-            "[undefined4 param_854@<UNASSIGNED>]",
-            "[undefined1 param_855@<UNASSIGNED>]",
-            "[undefined1 param_856@<UNASSIGNED>]",
-            "[undefined1 param_857@<UNASSIGNED>]",
-            "[undefined4 param_858@<UNASSIGNED>]",
-            "[undefined4 param_859@<UNASSIGNED>]",
-            "[undefined1 param_860@<UNASSIGNED>]"
+            "[uint * numLines_out@Stack[0x4]:4]"
         ]
     },
     {
@@ -24350,11 +22660,11 @@
         "address": "0x0007cd50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "uint"
         ],
-        "prototype_string": "undefined4 __cdecl Menu_RunMiniMission(uint param_1)",
+        "prototype_string": "bool __cdecl Menu_RunMiniMission(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ]
@@ -24420,10 +22730,10 @@
             "int",
             "uint"
         ],
-        "prototype_string": "M_ITEM * __cdecl Menu_GetItemFromHash(M_ITEM * param_1, int param_2, uint numItems)",
+        "prototype_string": "M_ITEM * __cdecl Menu_GetItemFromHash(M_ITEM * list, int hashcodeToMatch, uint numItems)",
         "parameters": [
-            "[M_ITEM * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[M_ITEM * list@Stack[0x4]:4]",
+            "[int hashcodeToMatch@Stack[0x8]:4]",
             "[uint numItems@Stack[0xc]:4]"
         ]
     },
@@ -28292,23 +26602,23 @@
         ]
     },
     {
-        "name": "FUN_00096e00",
+        "name": "Script_DelKeyFrame",
         "address": "0x00096e00",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int * *",
-            "int *"
+            "M_SCRIPT *",
+            "M_KEYFRAME *"
         ],
-        "prototype_string": "void __cdecl FUN_00096e00(int * * param_1, int * param_2)",
+        "prototype_string": "void __cdecl Script_DelKeyFrame(M_SCRIPT * param_1, M_KEYFRAME * param_2)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
-            "[int * param_2@Stack[0x8]:4]"
+            "[M_SCRIPT * param_1@Stack[0x4]:4]",
+            "[M_KEYFRAME * param_2@Stack[0x8]:4]"
         ]
     },
     {
-        "name": "FUN_00096e80",
+        "name": "Script_InterpolateSpline",
         "address": "0x00096e80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -28318,7 +26628,7 @@
             "int",
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_00096e80(int param_1, int param_2, float param_3)",
+        "prototype_string": "void __cdecl Script_InterpolateSpline(int param_1, int param_2, float param_3)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
@@ -28326,7 +26636,7 @@
         ]
     },
     {
-        "name": "FUN_000970d0",
+        "name": "Script_InterpolateLine",
         "address": "0x000970d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -28336,7 +26646,7 @@
             "int",
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_000970d0(int param_1, int param_2, float param_3)",
+        "prototype_string": "void __cdecl Script_InterpolateLine(int param_1, int param_2, float param_3)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
@@ -28344,7 +26654,7 @@
         ]
     },
     {
-        "name": "FUN_00097310",
+        "name": "Script_DelScript",
         "address": "0x00097310",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -28353,7 +26663,7 @@
             "int",
             "int * *"
         ],
-        "prototype_string": "void __cdecl FUN_00097310(int param_1, int * * param_2)",
+        "prototype_string": "void __cdecl Script_DelScript(int param_1, int * * param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int * * param_2@Stack[0x8]:4]"
@@ -30036,12 +28346,12 @@
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "int *",
+            "MP_OBJ_EXT *",
             "obj_tag *"
         ],
-        "prototype_string": "void __fastcall MP_initObjExt(int * param_1, obj_tag * gameObj)",
+        "prototype_string": "void __fastcall MP_initObjExt(MP_OBJ_EXT * param_1, obj_tag * gameObj)",
         "parameters": [
-            "[int * param_1@ECX:4]",
+            "[MP_OBJ_EXT * param_1@ECX:4]",
             "[obj_tag * gameObj@EAX:4]"
         ]
     },
@@ -30486,11 +28796,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Apocalypse_Update(int param_1)",
+        "prototype_string": "void __cdecl Apocalypse_Update(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -31640,14 +29950,14 @@
         "param_types": [
             "ushort",
             "_VECTOR *",
-            "int",
+            "_VECTOR *",
             "int"
         ],
-        "prototype_string": "obj_tag * __cdecl Player_Init(ushort playerNum, _VECTOR * position, int param_3, int param_4)",
+        "prototype_string": "obj_tag * __cdecl Player_Init(ushort playerNum, _VECTOR * position, _VECTOR * param_3, int param_4)",
         "parameters": [
             "[ushort playerNum@Stack[0x4]:2]",
             "[_VECTOR * position@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
+            "[_VECTOR * param_3@Stack[0xc]:4]",
             "[int param_4@Stack[0x10]:4]"
         ]
     },
@@ -34962,14 +33272,14 @@
             "void *",
             "void *"
         ],
-        "prototype_string": "SCRIPTINFO * __cdecl Script_Load(HASHCODE param_1, _VECTOR * transform, _VECTOR * rotation, uint * fileBuf, void * param_5, void * param_6, void * param_7)",
+        "prototype_string": "SCRIPTINFO * __cdecl Script_Load(HASHCODE hashcode, _VECTOR * transform, _VECTOR * rotation, uint * fileBuf, void * maybeScriptPlayer, void * someCallback, void * param_7)",
         "parameters": [
-            "[HASHCODE param_1@Stack[0x4]:4]",
+            "[HASHCODE hashcode@Stack[0x4]:4]",
             "[_VECTOR * transform@Stack[0x8]:4]",
             "[_VECTOR * rotation@Stack[0xc]:4]",
             "[uint * fileBuf@Stack[0x10]:4]",
-            "[void * param_5@Stack[0x14]:4]",
-            "[void * param_6@Stack[0x18]:4]",
+            "[void * maybeScriptPlayer@Stack[0x14]:4]",
+            "[void * someCallback@Stack[0x18]:4]",
             "[void * param_7@Stack[0x1c]:4]"
         ]
     },
@@ -34978,7 +33288,7 @@
         "address": "0x000c1569",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": true,
-        "return_type": "_MATRIX *",
+        "return_type": "SCRIPTINFO *",
         "param_types": [
             "uint",
             "undefined4",
@@ -34991,7 +33301,7 @@
             "float",
             "HASHCODE"
         ],
-        "prototype_string": "_MATRIX * __cdecl Script_Load2(uint param_1, undefined4 param_2, uint * param_3, _VECTOR * param_4, _VECTOR * param_5, uint * param_6, float param_7, float param_8, float param_9, HASHCODE param_10)",
+        "prototype_string": "SCRIPTINFO * __cdecl Script_Load2(uint param_1, undefined4 param_2, uint * param_3, _VECTOR * param_4, _VECTOR * param_5, uint * param_6, float param_7, float param_8, float param_9, HASHCODE param_10)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -35087,11 +33397,17 @@
         "name": "Script_CameraStart",
         "address": "0x000c1f00",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall Script_CameraStart(void)",
-        "parameters": []
+        "param_types": [
+            "SCRIPTINFO *",
+            "SSTREAM *"
+        ],
+        "prototype_string": "void __stdcall Script_CameraStart(SCRIPTINFO * param_1, SSTREAM * param_2)",
+        "parameters": [
+            "[SCRIPTINFO * param_1@ESI:4]",
+            "[SSTREAM * param_2@EAX:4]"
+        ]
     },
     {
         "name": "Script_SpriteStart",
@@ -35100,22 +33416,28 @@
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "void *"
+            "SSTREAM *"
         ],
-        "prototype_string": "void __stdcall Script_SpriteStart(void * sStream)",
+        "prototype_string": "void __stdcall Script_SpriteStart(SSTREAM * sStream)",
         "parameters": [
-            "[void * sStream@EDI:4]"
+            "[SSTREAM * sStream@EDI:4]"
         ]
     },
     {
         "name": "Script_StreamEnd",
         "address": "0x000c2110",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall Script_StreamEnd(void)",
-        "parameters": []
+        "param_types": [
+            "SCRIPTINFO *",
+            "SSTREAM *"
+        ],
+        "prototype_string": "void __stdcall Script_StreamEnd(SCRIPTINFO * param_1, SSTREAM * param_2)",
+        "parameters": [
+            "[SCRIPTINFO * param_1@EDI:4]",
+            "[SSTREAM * param_2@ESI:4]"
+        ]
     },
     {
         "name": "Script_GetInterp",
@@ -35204,11 +33526,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "SCRIPTINFO *"
         ],
-        "prototype_string": "void __cdecl Script_Stop(int param_1)",
+        "prototype_string": "void __cdecl Script_Stop(SCRIPTINFO * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[SCRIPTINFO * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -35239,26 +33561,28 @@
             "undefined1",
             "undefined1"
         ],
-        "prototype_string": "void __cdecl Script_SetColour(SCRIPTINFO * param_1, undefined1 param_2, undefined1 param_3, undefined1 param_4)",
+        "prototype_string": "void __cdecl Script_SetColour(SCRIPTINFO * param_1, undefined1 clr_r, undefined1 clr_g, undefined1 clr_b)",
         "parameters": [
             "[SCRIPTINFO * param_1@Stack[0x4]:4]",
-            "[undefined1 param_2@Stack[0x8]:1]",
-            "[undefined1 param_3@Stack[0xc]:1]",
-            "[undefined1 param_4@Stack[0x10]:1]"
+            "[undefined1 clr_r@Stack[0x8]:1]",
+            "[undefined1 clr_g@Stack[0xc]:1]",
+            "[undefined1 clr_b@Stack[0x10]:1]"
         ]
     },
     {
         "name": "Script_SoundStart",
         "address": "0x000c27b0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "int"
+            "SCRIPTINFO *",
+            "SSTREAM *"
         ],
-        "prototype_string": "void __cdecl Script_SoundStart(int param_1)",
+        "prototype_string": "void __cdecl Script_SoundStart(SCRIPTINFO * param_1, SSTREAM * sstream)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[SCRIPTINFO * param_1@Stack[0x4]:4]",
+            "[SSTREAM * sstream@EDI:4]"
         ]
     },
     {
@@ -35269,12 +33593,12 @@
         "return_type": "void",
         "param_types": [
             "SCRIPTINFO *",
-            "undefined4"
+            "SSTREAM *"
         ],
-        "prototype_string": "void __cdecl Script_SubScriptStart(SCRIPTINFO * scriptInfo, undefined4 scriptStream)",
+        "prototype_string": "void __cdecl Script_SubScriptStart(SCRIPTINFO * scriptInfo, SSTREAM * scriptStream)",
         "parameters": [
             "[SCRIPTINFO * scriptInfo@Stack[0x4]:4]",
-            "[undefined4 scriptStream@ESI:4]"
+            "[SSTREAM * scriptStream@ESI:4]"
         ]
     },
     {
@@ -35344,13 +33668,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "obj_tag *",
+            "SCRIPTINFO *"
         ],
-        "prototype_string": "void __cdecl Script_RemoveObj(int param_1, int param_2)",
+        "prototype_string": "void __cdecl Script_RemoveObj(obj_tag * param_1, SCRIPTINFO * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[SCRIPTINFO * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -35377,12 +33701,12 @@
         "return_type": "void",
         "param_types": [
             "SCRIPTINFO *",
-            "void *"
+            "SSTREAM *"
         ],
-        "prototype_string": "void __cdecl Script_AnimStart(SCRIPTINFO * scriptInfo, void * scriptStream)",
+        "prototype_string": "void __cdecl Script_AnimStart(SCRIPTINFO * scriptInfo, SSTREAM * scriptStream)",
         "parameters": [
             "[SCRIPTINFO * scriptInfo@Stack[0x4]:4]",
-            "[void * scriptStream@EDI:4]"
+            "[SSTREAM * scriptStream@EDI:4]"
         ]
     },
     {
@@ -35436,12 +33760,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "_MATRIX *",
+            "SCRIPTINFO *",
             "_MATRIX *"
         ],
-        "prototype_string": "void __cdecl Script_SetPosRot(_MATRIX * param_1, _MATRIX * param_2)",
+        "prototype_string": "void __cdecl Script_SetPosRot(SCRIPTINFO * param_1, _MATRIX * param_2)",
         "parameters": [
-            "[_MATRIX * param_1@Stack[0x4]:4]",
+            "[SCRIPTINFO * param_1@Stack[0x4]:4]",
             "[_MATRIX * param_2@Stack[0x8]:4]"
         ]
     },
@@ -35570,11 +33894,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl SP_UnPause(int param_1)",
+        "prototype_string": "void __cdecl SP_UnPause(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -35589,12 +33913,12 @@
             "undefined1",
             "undefined1"
         ],
-        "prototype_string": "undefined __stdcall SP_SetColour(obj_tag * param_1, undefined1 param_2, undefined1 param_3, undefined1 param_4)",
+        "prototype_string": "undefined __stdcall SP_SetColour(obj_tag * param_1, undefined1 clr_r, undefined1 clr_g, undefined1 clr_b)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
-            "[undefined1 param_2@Stack[0x8]:1]",
-            "[undefined1 param_3@Stack[0xc]:1]",
-            "[undefined1 param_4@Stack[0x10]:1]"
+            "[undefined1 clr_r@Stack[0x8]:1]",
+            "[undefined1 clr_g@Stack[0xc]:1]",
+            "[undefined1 clr_b@Stack[0x10]:1]"
         ]
     },
     {
@@ -39456,13 +37780,13 @@
         "has_custom_variable_storage": false,
         "return_type": "float",
         "param_types": [
-            "vec3unpadded *",
-            "vec3unpadded *"
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "float __cdecl Vec_Dist2D(vec3unpadded * param_1, vec3unpadded * param_2)",
+        "prototype_string": "float __cdecl Vec_Dist2D(_VECTOR * param_1, _VECTOR * param_2)",
         "parameters": [
-            "[vec3unpadded * param_1@Stack[0x4]:4]",
-            "[vec3unpadded * param_2@Stack[0x8]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -39548,13 +37872,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *"
+            "_MATRIX *",
+            "_MATRIX *"
         ],
-        "prototype_string": "void __cdecl Mat_World2ViewMat(float * param_1, float * param_2)",
+        "prototype_string": "void __cdecl Mat_World2ViewMat(_MATRIX * param_1, _MATRIX * param_2)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]"
+            "[_MATRIX * param_1@Stack[0x4]:4]",
+            "[_MATRIX * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -39782,19 +38106,19 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *",
+            "_MATRIX *",
+            "_MATRIX *",
             "float",
             "float",
             "float"
         ],
-        "prototype_string": "void __cdecl Mat_Scale3f(float * param_1, float * param_2, float param_3, float param_4, float param_5)",
+        "prototype_string": "void __cdecl Mat_Scale3f(_MATRIX * m_out, _MATRIX * m_in, float scale_x, float scale_y, float scale_z)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]",
-            "[float param_3@Stack[0xc]:4]",
-            "[float param_4@Stack[0x10]:4]",
-            "[float param_5@Stack[0x14]:4]"
+            "[_MATRIX * m_out@Stack[0x4]:4]",
+            "[_MATRIX * m_in@Stack[0x8]:4]",
+            "[float scale_x@Stack[0xc]:4]",
+            "[float scale_y@Stack[0x10]:4]",
+            "[float scale_z@Stack[0x14]:4]"
         ]
     },
     {
@@ -48194,17 +46518,17 @@
         ]
     },
     {
-        "name": "FUN_000ee460",
+        "name": "alloca_probe",
         "address": "0x000ee460",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": true,
-        "return_type": "void",
+        "return_type": "void *",
         "param_types": [
-            "undefined4"
+            "typedef size_t ulong"
         ],
-        "prototype_string": "void __stdcall FUN_000ee460(undefined4 in_EAX)",
+        "prototype_string": "void * alloca_probe(size_t size)",
         "parameters": [
-            "[undefined4 in_EAX@EAX:4]"
+            "[size_t size@EAX:4]"
         ]
     },
     {

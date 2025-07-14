@@ -174,12 +174,46 @@ void Camera_CreateCameras(void) {
     }
 }
 
-// AUTOGEN
-void Camera_Update(uint idx);
+
 // AUTOGEN
 void Camera_CheckLocation(ushort idx);
 // AUTOGEN
 void Camera_UpdateGlbVars(ushort idx);
+// AUTOGEN
+void Camera_Shear(viewer_tag *vwr);
+
+// AUTOINJECT
+void Camera_Update(uint idx) { 
+    viewer_tag * viewer = glb_viewer[idx];
+    if(viewer == NULL)
+        return;
+
+    if(viewer->cameraUpdateCallback != NULL && viewer->cameraUpdateObj != NULL) {
+        viewer->cameraUpdateCallback(viewer->cameraUpdateObj, viewer->cameraUpdateObj->extraObjectData);
+    }
+
+    if(viewer->someCel != NULL && (viewer->pos).y < (viewer->someCel)->shearHeight) {
+        // Not sure when this is used - perhaps some tilt effect when you fall to your death?
+        Camera_Shear(viewer);
+    }
+
+    if(viewer->apocalypseEffect > 0.0f) {
+        // Apocalypse camera shake effect
+        float a = REC_FRAME_RATE * viewer->apocalypseEffect;
+        Rand_FRand_MVar2_Vec(Mat_Position(viewer->viewMatrix), a, a);
+        float b = Float_FRand(viewer->apocalypseEffect * 0.25f);
+        viewer->apocalypseEffect -= b;
+        if(viewer->apocalypseEffect < 0.0f)
+            viewer->apocalypseEffect = 0.0f;
+    }
+
+    Mat_World2ViewMat(&viewer->viewMatrix, &viewer->worldMatrix);
+    Vec_Copy(Mat_Position(viewer->viewMatrix), &viewer->pos);
+    Mat_Copy(&viewer->viewMatrix, &viewer->mtx);
+    Mat_Scale3f(&viewer->mtx, &viewer->mtx, -1.0f, 1.0f, 1.0f);
+    viewer->cameraUpdated = true;
+
+}
 
 // AUTOINJECT
 void Camera_UpdateAll(void) {

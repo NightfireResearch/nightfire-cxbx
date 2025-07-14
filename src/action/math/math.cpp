@@ -155,6 +155,10 @@ void Quat_Slerp(float progress, quaternion_tag *qStart, quaternion_tag *qEnd, qu
 
 // AUTOGEN
 void RotMatrix(_VECTOR *vIn,_MATRIX *mtxOut);
+// AUTOGEN
+void Mat_World2ViewMat(_MATRIX *viewMtx, _MATRIX *worldMtx);
+// AUTOGEN
+void Mat_Scale3f(_MATRIX *m_out,_MATRIX *m_in,float scale_x,float scale_y,float scale_z);
 
 // AUTOINJECT
 void Mat_GetDir(_VECTOR *dirOut, _MATRIX *mtxIn) {
