@@ -38163,12 +38163,12 @@
         "name": "Rand_FRandHalf",
         "address": "0x000d53d0",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": true,
-        "return_type": "float10",
+        "has_custom_variable_storage": false,
+        "return_type": "float",
         "param_types": [
             "float"
         ],
-        "prototype_string": "float10 __stdcall Rand_FRandHalf(float param_1)",
+        "prototype_string": "float __stdcall Rand_FRandHalf(float param_1)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]"
         ]
