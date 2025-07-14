@@ -1,5 +1,7 @@
 #include "Random.h"
 
+#include <math.h>
+
 // AUTOGEN
 unsigned int Rand_Rand(unsigned int max);
 
@@ -26,8 +28,12 @@ void Rand_FRandHalf_Vec(_VECTOR *vecOut, float range) {
 // AUTOGEN
 uint __stdcall Rand_Random(void);
 
-// AUTOGEN
-float __stdcall Float_FRand(float param_1);
+// AUTOINJECT
+float Float_FRand(float range) {
+    uint rand_u32 = Rand_Random();
+    float rand_01 = rand_u32 * powf(2, -32); // Scale from range of uint32 to range 0, 1
+    return rand_01 * range;
+}
 
 // AUTOGEN
 void Rand_FRand_MVar2_Vec(_VECTOR *param_1,float range,float param_3);

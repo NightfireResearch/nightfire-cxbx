@@ -7,7 +7,7 @@ unsigned int Rand_Rand(unsigned int max);
 float Rand_FRandHalf(float range);
 void Rand_FRandHalf_Vec(_VECTOR *param_1, float param_2);
 uint __stdcall Rand_Random(void);
-float __stdcall Float_FRand(float param_1);
+float Float_FRand(float param_1);
 void Rand_FRand_MVar2_Vec(_VECTOR *param_1,float range,float param_3);
 
 #endif // RANDOM_H
