@@ -29,5 +29,14 @@ float Float_FRand(float range) {
     return rand_01 * range; // Output is in [0, range]
 }
 
-// AUTOGEN
-void Rand_FRand_MVar2_Vec(_VECTOR *param_1,float range,float param_3);
+// AUTOINJECT
+float Rand_FRand_MVar2(float range, float offset) {
+    return Float_FRand(range) - offset;
+}
+
+// AUTOINJECT
+void Rand_FRand_MVar2_Vec(_VECTOR *vec, float range, float offset) {
+    vec->x += (Float_FRand(range) - offset);
+    vec->y += (Float_FRand(range) - offset);
+    vec->z += (Float_FRand(range) - offset);
+}

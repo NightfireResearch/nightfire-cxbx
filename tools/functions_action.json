@@ -38193,16 +38193,16 @@
         "name": "Rand_FRand_MVar2",
         "address": "0x000d5480",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": true,
-        "return_type": "float10",
+        "has_custom_variable_storage": false,
+        "return_type": "float",
         "param_types": [
             "float",
             "float"
         ],
-        "prototype_string": "float10 __stdcall Rand_FRand_MVar2(float param_1, float param_2)",
+        "prototype_string": "float __stdcall Rand_FRand_MVar2(float range, float offset)",
         "parameters": [
-            "[float param_1@Stack[0x4]:4]",
-            "[float param_2@Stack[0x8]:4]"
+            "[float range@Stack[0x4]:4]",
+            "[float offset@Stack[0x8]:4]"
         ]
     },
     {
@@ -38216,11 +38216,11 @@
             "float",
             "float"
         ],
-        "prototype_string": "void __cdecl Rand_FRand_MVar2_Vec(_VECTOR * param_1, float range, float param_3)",
+        "prototype_string": "void __cdecl Rand_FRand_MVar2_Vec(_VECTOR * param_1, float range, float offset)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[float range@Stack[0x8]:4]",
-            "[float param_3@Stack[0xc]:4]"
+            "[float offset@Stack[0xc]:4]"
         ]
     },
     {
