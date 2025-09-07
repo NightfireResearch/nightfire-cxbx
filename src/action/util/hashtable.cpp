@@ -76,6 +76,22 @@ int hashtable_get_hashtype_count(uint hashtype) {
     return count;
 }
 
+// AUTOINJECT
+HASHCODE hashtable_celglist_to_hashcode(celglist_tag *celgl) {
+
+    if(celgl == NULL)
+        return HASHCODE_NONE;
+
+    // Unclear why, but the original code starts at 1 not 0
+    for(uint i = 1; i < (m_nhti - 1); i++) {
+        if (t_hashtable[i].data == (void*)celgl) {
+            return t_hashtable[i].key;
+        }
+    }
+
+    return HASHCODE_NONE;
+}
+
 // WIP
 bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc) {
 
