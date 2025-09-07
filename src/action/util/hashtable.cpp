@@ -43,6 +43,14 @@ hashtable_entry* hashtable_getentry(HASHCODE hashcode) {
 }
 
 // AUTOINJECT
+void hashtable_modify(HASHCODE hashcode, void* newData) {
+    hashtable_entry *entry = hashtable_getentry(hashcode);
+    if(entry != NULL) {
+        entry->data = newData;
+    }
+}
+
+// AUTOINJECT
 void* hashtable_getitem(HASHCODE hashcode) {
     hashtable_entry *entry = hashtable_getentry(hashcode);
     return entry ? entry->data : NULL;
