@@ -318,7 +318,7 @@ void MP_objectBeingDeleted(obj_tag* obj) {
   // Search through general MPObjects list too
   for(int i = 0; i < ARRAY_SIZE(MPObjects); i++) {
     if(MPObjects[i] == obj) {
-      MPObjects[i] == NULL;
+      MPObjects[i] = NULL;
       dispatchBotMessage = false;
     }
   }
