@@ -398,6 +398,23 @@ MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj) {
   return NULL;
 }
 
+// AUTOINJECT
+short MP_PlayerOrBotInd(obj_tag *obj) {
+  
+  if(obj == NULL)
+    return -1;
+
+  if(!MPSettings.maybeDroneAIEnabled) // Unclear why this is needed
+    return -1; 
+
+  // Search through MPGame player list
+  for(int i = 0; i < 10; i++) {
+    if(MPGame.players[i].playerObj == obj)
+      return i;
+  }
+
+  return -1;
+}
 
 
 // AUTOGEN
