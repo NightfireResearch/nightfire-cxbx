@@ -337,5 +337,21 @@ void MP_objectBeingDeleted(obj_tag* obj) {
   }
 }
 
+// AUTOINJECT
+obj_tag* MP_getFlagObj(uint i) {
+  if(i >= ARRAY_SIZE(Flags))
+    return NULL;
+  return Flags[i].gameObj;
+}
+
+// AUTOINJECT
+obj_tag* MP_getBaseObj(uint i) {
+  if(i >= ARRAY_SIZE(Bases))
+    return NULL;
+  return Bases[i].gameObj;
+}
+
+
+
 // AUTOGEN
 void MP_Update(void);
