@@ -335,6 +335,41 @@ typedef struct {
 static_assert(sizeof(weapon_definition_tag) == 0x10c, "Size of weapon_definition_tag not correct");
 static_assert(offsetof(weapon_definition_tag,someDistance) == 0x1c, "someDistance is in the wrong place");
 
+typedef struct {
+    uint paused;
+    char unknown_pad[0x1c-4];
+    void* playerObj;
+    char unknown_pad2[0x30-0x20];
+} MPGamePlayer;
+
+static_assert(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // Determined from stride length in various funcs
+
+typedef struct {
+  // Note that PS2 and Xbox have different number of entries in MPGame! PS2 has 8, Xbox has 10
+  MPGamePlayer players[10];
+  // Immediately following is more state related to MP game
+  uint unknown_1; // end conditions / debriefing / objective related
+  uint unknown_2; // end conditions / debriefing
+  uint EndGameFlowState;
+  uint unknown_3; // end conditions
+  uint TimeUnpaused;
+  float TimeLimit;
+  uint unknown_4; // bot traits?
+  uint TimeIncPaused; // pickups, opponent selection, visit times?? possibly misidentified?
+  uint unknown_5; // MP init and update
+  float unknown_6; // end conditions
+  short unknown_7; // player status / goals
+  short unknown_8; // restart
+  short unknown_9; // uplink, goldeneye, blueprint timers?
+  short maybe_pad;
+  sprite* radar_related[2 * 4]; // One pair per human participant
+} MPGameStruct;
+
+static_assert(sizeof(MPGameStruct) == 0x230, "MPGameStruct is wrong size"); // Determined from MP_Init
+
 #pragma pack(pop)
+
+
+#define MPGame (*(MPGameStruct(*))0x00262738)
 
 #endif // GAME_H

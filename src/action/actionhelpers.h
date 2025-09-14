@@ -31,6 +31,7 @@ typedef struct DLISTINFO_tag DLISTINFO_tag;
 typedef struct Drone_tag Drone_tag;
 typedef struct DIVars_tag DIVars_tag;
 typedef struct DCVars_tag DCVars_tag;
+typedef struct MsgObject MsgObject;
 typedef struct AnimObj AnimObj;
 
 // Hashcode, SFX and translated text names
@@ -48,6 +49,7 @@ typedef short MallocFlags;
 #include "util/Stack.h"
 #include "math/math.h"
 #include "util/Random.h"
+#include "engine/AINetwork.h"
 #include "engine/Anim.h"
 #include "engine/Camera.h"
 #include "engine/Collide.h"

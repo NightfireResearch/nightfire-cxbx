@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include "../../actionhelpers.h"
 #include "../../math/math.h"
+#include "../../engine/AINetwork.h"
 
 
 #define MAX_MP_AGENTS 8 // = 4 bots + 4 players? Or is it 7??
@@ -137,6 +138,16 @@ typedef struct {
     char NumBots;
     MPBOT bot[6]; // FIXME: How many bots are there? Platform-specific? Enough memory for 10 on Xbox
 } MPBOTS;
+
+
+typedef struct {
+    obj_tag* gameObj;
+    char unknown[16];
+    AIEmitter_tag aiEmitter;
+    char unknown2[8];
+} MP_OBJ_EXT;
+
+static_assert(sizeof(MP_OBJ_EXT) == 0x44, "MP_OBJ_EXT is wrong size");
 
 #pragma pack(pop)
 

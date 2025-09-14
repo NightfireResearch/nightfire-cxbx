@@ -2,6 +2,7 @@
 #include "../../game.h"
 #include "../../engine/Collide.h"
 #include <stdio.h>
+#include <string.h>
 
 #define CurrentAssassinObjId (((obj_tag *)0x0026178c))
 #define AssassinTarget (((obj_tag *)0x00261788))
@@ -197,8 +198,144 @@ void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort t
 
 }
 
-// AUTOGEN
-void MP_objectBeingDeleted(obj_tag* obj);
+void MP_CleanupMPObjExt(MP_OBJ_EXT *mp_obj) {
+  if(mp_obj == NULL)
+    return;
+    
+  if(mpbots.NumBots && (mp_obj->aiEmitter).someDataPtr != NULL) {
+    AINetwork_FreeEmitter(&mp_obj->aiEmitter);
+  }
+
+  memset(mp_obj, 0, sizeof(MP_OBJ_EXT));
+
+}
+
+#define UplinkCount U16_AT(0x002637c8)
+#define Bases (*(MP_OBJ_EXT(*)[2])0x00261bd0)
+#define Uplinks (*(MP_OBJ_EXT(*)[8])0x002633d8)
+#define Flags (*(MP_OBJ_EXT(*)[2])0x00263740)
+#define Hill (*(MP_OBJ_EXT*)0x00261b88)
+#define EsponageBase (*(MP_OBJ_EXT(*)[2])0x00261a70)
+#define GoldenEye (*(MP_OBJ_EXT*)0x00261678)
+#define GoldenEye_Crystal (*(MP_OBJ_EXT*)0x002616bc)
+#define Demolition (*(MP_OBJ_EXT*)0x00261af8)
+#define Protection (*(MP_OBJ_EXT*)0x00261b40)
+#define BluePrint (*(MP_OBJ_EXT*)0x002635f8)
+
+#define MPObjects (*(obj_tag*(*)[64])0x00263640)
+
+// AUTOINJECT
+void MP_objectBeingDeleted(obj_tag* obj) {
+
+  if(!MPSettings.maybeDroneAIEnabled)
+    return;
+
+  if(obj == NULL)
+    return;
+  
+  bool dispatchBotMessage = false;
+
+  for(int i = 0; i < ARRAY_SIZE(MPGame.players); i++) {
+    if(MPGame.players[i].playerObj == obj) {
+      MPGame.players[i].playerObj = NULL;
+    }
+  }
+
+  // Search through the special gamemode specific lists
+  switch(MPSettings.GameMode) {
+    case GM_UPLINK:
+      for(int i = 0; i < UplinkCount; i++) {
+        if(Uplinks[i].gameObj == obj) {
+          MP_CleanupMPObjExt(&Uplinks[i]);
+          dispatchBotMessage = true;
+        }
+      }
+      break;
+
+    case GM_KOTH:
+    case GM_TEAMKOTH:
+      if(Hill.gameObj == obj) {
+        MP_CleanupMPObjExt(&Hill);
+        dispatchBotMessage = true;
+      }
+      break;
+
+    case GM_GOLDENEYE:
+      if(GoldenEye.gameObj == obj) {
+        MP_CleanupMPObjExt(&GoldenEye);
+        dispatchBotMessage = true;
+      }
+      if(GoldenEye_Crystal.gameObj == obj) {
+        MP_CleanupMPObjExt(&GoldenEye_Crystal);
+        dispatchBotMessage = true;
+      }
+      break;
+
+    case GM_CTF:
+      for(int i = 0; i < ARRAY_SIZE(Flags); i++) {
+        if(Flags[i].gameObj == obj) {
+          MP_CleanupMPObjExt(&Flags[i]);
+          dispatchBotMessage = true;
+        }
+      }
+      for(int i = 0; i < ARRAY_SIZE(Bases); i++) {
+        if(Bases[i].gameObj == obj) {
+          MP_CleanupMPObjExt(&Bases[i]);
+          dispatchBotMessage = true;
+        }
+      }
+      break;
+    
+    case GM_DEMOLITION:
+      if(Demolition.gameObj != NULL && Demolition.gameObj == obj) {
+        MP_CleanupMPObjExt(&Demolition);
+        dispatchBotMessage = true;
+      }
+      break;
+
+    case GM_PROTECTION:
+      if(Protection.gameObj != NULL && Protection.gameObj == obj) {
+        MP_CleanupMPObjExt(&Protection);
+        dispatchBotMessage = true;
+      }
+      break;
+
+    case GM_BLUEPRINT:
+      if(BluePrint.gameObj == obj) {
+        MP_CleanupMPObjExt(&BluePrint);
+        dispatchBotMessage = true;
+      }
+      for(int i = 0; i < ARRAY_SIZE(EsponageBase); i++) {
+        if(EsponageBase[i].gameObj == obj) {
+          MP_CleanupMPObjExt(&EsponageBase[i]);
+          dispatchBotMessage = true;
+        }
+      }
+      break;
+        
+  }
+
+  // Search through general MPObjects list too
+  for(int i = 0; i < ARRAY_SIZE(MPObjects); i++) {
+    if(MPObjects[i] == obj) {
+      MPObjects[i] == NULL;
+      dispatchBotMessage = false;
+    }
+  }
+
+  // If required, dispatch a bot message to inform them of the deletion
+  if(dispatchBotMessage) {
+    MsgObject msg;
+    msg.createdFrame = GameState.NumFramesUnpaused;
+    msg.handleOnFrame = GameState.NumFramesUnpaused;
+    msg.msgType = 0x3d;
+    msg.param_a = 0xc5;
+    msg.param_b = 0;
+    msg.param_c = 0;
+    msg.extraData = obj;
+    Drone_SM_RouteMsg(&msg);
+  }
+}
 
 // AUTOGEN
 void MP_Update(void);

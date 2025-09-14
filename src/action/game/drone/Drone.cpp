@@ -57,3 +57,6 @@ obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     
     return NDrone2_CreateFromDIVars(&diVars);
 }
+
+// AUTOGEN
+void Drone_SM_RouteMsg(MsgObject *msg);

@@ -2,6 +2,7 @@
 #define NDRONE2_H
 
 #include "../../actionhelpers.h"
+#include "Drone.h"
 
 // From PS2, we can see a table of function pointers with this name, and NDrone2_ProcessStateMachine just runs one according to the drone's current state
 typedef enum {
@@ -259,12 +260,6 @@ typedef enum {
 
 
 obj_tag* NDrone2_CreateFromDIVars(DIVars_tag *diVars);
-
-// FIXME: Placeholder
-typedef struct {
-    uint msgType;
-} MsgObject;
-
 
 bool NDrone2_DSTATE_HostageDead(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 void DroneFunc_HostageSaved(DCVars_tag *dcVars);

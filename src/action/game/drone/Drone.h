@@ -38,6 +38,16 @@ typedef struct Drone_tag {
     char unknown2[0x1000]; //?
 } Drone_tag;
 
+typedef struct MsgObject {
+    uint msgType;
+    uint param_a;
+    uint param_b;
+    uint param_c;
+    uint createdFrame;
+    uint handleOnFrame;
+    void* extraData;
+} MsgObject;
+
 #pragma pack(pop)
 
 static_assert(offsetof(Drone_tag, associatedSwitchChannel) == 0x119, "Wrong offset for associatedSwitchChannel");
@@ -48,6 +58,6 @@ static_assert(sizeof(DCVars_tag) == 0x10, "DCVars is wrong size");
 
 bool Drone_DCVfromOBJ(obj_tag* obj, DCVars_tag *dcVars);
 obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
-
+void Drone_SM_RouteMsg(MsgObject *msg);
 
 #endif // DRONE_H_

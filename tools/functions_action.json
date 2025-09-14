@@ -2356,12 +2356,12 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined2",
         "param_types": [
-            "int",
+            "Drone_tag *",
             "short"
         ],
-        "prototype_string": "undefined2 __cdecl BOTWEAP_AmmoInGun(int param_1, short param_2)",
+        "prototype_string": "undefined2 __cdecl BOTWEAP_AmmoInGun(Drone_tag * param_1, short param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[Drone_tag * param_1@Stack[0x4]:4]",
             "[short param_2@Stack[0x8]:2]"
         ]
     },
@@ -2680,15 +2680,15 @@
         "address": "0x0001f740",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int",
+            "Drone_tag *",
             "short",
             "float"
         ],
-        "prototype_string": "uint __cdecl BOTWEAP_tooCloseForWeapon(int param_1, short param_2, float param_3)",
+        "prototype_string": "bool __cdecl BOTWEAP_tooCloseForWeapon(Drone_tag * param_1, short param_2, float param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[Drone_tag * param_1@Stack[0x4]:4]",
             "[short param_2@Stack[0x8]:2]",
             "[float param_3@Stack[0xc]:4]"
         ]
@@ -12134,11 +12134,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "undefined4 *"
+            "AIEmitter_tag *"
         ],
-        "prototype_string": "void __cdecl AINetwork_FreeEmitter(undefined4 * param_1)",
+        "prototype_string": "void __cdecl AINetwork_FreeEmitter(AIEmitter_tag * param_1)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]"
+            "[AIEmitter_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -18294,11 +18294,11 @@
         "has_custom_variable_storage": false,
         "return_type": "ulonglong",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "ulonglong __cdecl FUN_00066e90(int * param_1)",
+        "prototype_string": "ulonglong __cdecl FUN_00066e90(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -18373,11 +18373,15 @@
         "name": "FUN_00067590",
         "address": "0x00067590",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
-        "return_type": "uint",
-        "param_types": [],
-        "prototype_string": "uint __stdcall FUN_00067590(void)",
-        "parameters": []
+        "has_custom_variable_storage": true,
+        "return_type": "bool",
+        "param_types": [
+            "DCVars_tag *"
+        ],
+        "prototype_string": "bool __stdcall FUN_00067590(DCVars_tag * param_1)",
+        "parameters": [
+            "[DCVars_tag * param_1@EAX:4]"
+        ]
     },
     {
         "name": "DroneWeap_Fire",
@@ -18432,11 +18436,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "void __cdecl DroneWeap_FireWeapon(float * param_1)",
+        "prototype_string": "void __cdecl DroneWeap_FireWeapon(DCVars_tag * param_1)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -19510,13 +19514,13 @@
         "address": "0x0006b630",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "HASHCODE",
         "param_types": [
-            "int"
+            "celglist_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl hashtable_celglist_to_hashcode(int param_1)",
+        "prototype_string": "HASHCODE __cdecl hashtable_celglist_to_hashcode(celglist_tag * celgl)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[celglist_tag * celgl@Stack[0x4]:4]"
         ]
     },
     {
@@ -22038,19 +22042,19 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
+            "uint",
+            "M_CONTROL *",
+            "uint",
             "int",
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "int"
         ],
-        "prototype_string": "undefined4 __cdecl __Menu_SendDelayedMessage(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
+        "prototype_string": "undefined4 __cdecl __Menu_SendDelayedMessage(uint param_1, M_CONTROL * param_2, uint param_3, int param_4, int param_5)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined4 param_5@Stack[0x14]:4]"
+            "[uint param_1@Stack[0x4]:4]",
+            "[M_CONTROL * param_2@Stack[0x8]:4]",
+            "[uint param_3@Stack[0xc]:4]",
+            "[int param_4@Stack[0x10]:4]",
+            "[int param_5@Stack[0x14]:4]"
         ]
     },
     {
@@ -26796,19 +26800,19 @@
     {
         "name": "Spin_Update",
         "address": "0x000989c0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
             "undefined4",
-            "undefined4"
+            "M_SPIN *"
         ],
-        "prototype_string": "undefined Spin_Update(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined __cdecl Spin_Update(undefined4 param_1, undefined4 param_2, M_SPIN * param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[M_SPIN * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -26901,14 +26905,14 @@
         "return_type": "void",
         "param_types": [
             "M_WINDOW *",
-            "undefined4 *",
-            "int"
+            "NEW_CONTROL *",
+            "M_CONTROL *"
         ],
-        "prototype_string": "void __cdecl Window_Init(M_WINDOW * param_1, undefined4 * param_2, int param_3)",
+        "prototype_string": "void __cdecl Window_Init(M_WINDOW * param_1, NEW_CONTROL * param_2, M_CONTROL * param_3)",
         "parameters": [
             "[M_WINDOW * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[NEW_CONTROL * param_2@Stack[0x8]:4]",
+            "[M_CONTROL * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -26938,11 +26942,29 @@
         "has_custom_variable_storage": false,
         "return_type": "int",
         "param_types": [
-            "int"
+            "M_PAGE *"
         ],
-        "prototype_string": "int __cdecl Window_Get(int param_1)",
+        "prototype_string": "int __cdecl Window_Get(M_PAGE * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[M_PAGE * param_1@Stack[0x4]:4]"
+        ]
+    },
+    {
+        "name": "GT_Register",
+        "address": "0x00099d70",
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [
+            "obj_tag *",
+            "undefined2",
+            "void *"
+        ],
+        "prototype_string": "undefined __stdcall GT_Register(obj_tag * param_1, undefined2 param_2, void * param_3)",
+        "parameters": [
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[undefined2 param_2@Stack[0x8]:2]",
+            "[void * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -26952,13 +26974,13 @@
         "has_custom_variable_storage": false,
         "return_type": "int",
         "param_types": [
-            "int",
-            "int"
+            "GUNTURRET *",
+            "obj_tag *"
         ],
-        "prototype_string": "int __cdecl GT_Track(int param_1, int param_2)",
+        "prototype_string": "int __cdecl GT_Track(GUNTURRET * param_1, obj_tag * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[GUNTURRET * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -26986,52 +27008,64 @@
         ]
     },
     {
-        "name": "FUN_0009a530",
+        "name": "GT_maybeInterpolateAimDir",
         "address": "0x0009a530",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_0009a530()",
-        "parameters": []
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
+        "return_type": "bool",
+        "param_types": [
+            "_MATRIX *",
+            "undefined4"
+        ],
+        "prototype_string": "bool GT_maybeInterpolateAimDir(_MATRIX * src, undefined4 dst)",
+        "parameters": [
+            "[_MATRIX * src@ECX:4]",
+            "[undefined4 dst@EAX:4]"
+        ]
     },
     {
         "name": "FUN_0009a5b0",
         "address": "0x0009a5b0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "float *"
+            "_VECTOR *",
+            "GUNTURRET *"
         ],
-        "prototype_string": "void __cdecl FUN_0009a5b0(float * param_1)",
+        "prototype_string": "void __cdecl FUN_0009a5b0(_VECTOR * param_1, GUNTURRET * param_2)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[GUNTURRET * param_2@EAX:4]"
         ]
     },
     {
         "name": "GT_Delete",
         "address": "0x0009a650",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined GT_Delete(undefined4 param_1)",
+        "prototype_string": "undefined __cdecl GT_Delete(obj_tag * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
-        "name": "FUN_0009a680",
+        "name": "GT_RandMove",
         "address": "0x0009a680",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall FUN_0009a680(void)",
-        "parameters": []
+        "param_types": [
+            "GUNTURRET *"
+        ],
+        "prototype_string": "void __stdcall GT_RandMove(GUNTURRET * param_1)",
+        "parameters": [
+            "[GUNTURRET * param_1@ESI:4]"
+        ]
     },
     {
         "name": "GT_Disable",
@@ -27040,11 +27074,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl GT_Disable(int param_1)",
+        "prototype_string": "void __cdecl GT_Disable(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -27082,15 +27116,15 @@
         "address": "0x0009a790",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int",
-            "int *"
+            "obj_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl GT_TakeControl(int param_1, int * param_2)",
+        "prototype_string": "bool __cdecl GT_TakeControl(obj_tag * objTurret, obj_tag * objPlayer)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int * param_2@Stack[0x8]:4]"
+            "[obj_tag * objTurret@Stack[0x4]:4]",
+            "[obj_tag * objPlayer@Stack[0x8]:4]"
         ]
     },
     {
@@ -27100,11 +27134,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl GT_LoseControl(int param_1)",
+        "prototype_string": "void __cdecl GT_LoseControl(obj_tag * gtObj)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * gtObj@Stack[0x4]:4]"
         ]
     },
     {
@@ -27114,11 +27148,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl GT_PlayerHasDied(int param_1)",
+        "prototype_string": "void __cdecl GT_PlayerHasDied(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -27768,17 +27802,17 @@
         ]
     },
     {
-        "name": "FUN_0009e050",
+        "name": "MP_CleanupMPObjExt",
         "address": "0x0009e050",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "void *"
+            "MP_OBJ_EXT *"
         ],
-        "prototype_string": "void __stdcall FUN_0009e050(void * someThing)",
+        "prototype_string": "void __stdcall MP_CleanupMPObjExt(MP_OBJ_EXT * someThing)",
         "parameters": [
-            "[void * someThing@EAX:4]"
+            "[MP_OBJ_EXT * someThing@EAX:4]"
         ]
     },
     {
@@ -28600,15 +28634,15 @@
     {
         "name": "Lightning_Update",
         "address": "0x000a3950",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Lightning_Update(undefined4 param_1)",
+        "prototype_string": "undefined __cdecl Lightning_Update(obj_tag * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -31724,37 +31758,37 @@
         ]
     },
     {
-        "name": "FUN_000b6f40",
+        "name": "Player_RoundToFire",
         "address": "0x000b6f40",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int",
+            "obj_tag *",
             "byte",
             "byte"
         ],
-        "prototype_string": "uint __cdecl FUN_000b6f40(int param_1, byte param_2, byte param_3)",
+        "prototype_string": "bool __cdecl Player_RoundToFire(obj_tag * param_1, byte param_2, byte param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[byte param_2@Stack[0x8]:1]",
             "[byte param_3@Stack[0xc]:1]"
         ]
     },
     {
-        "name": "FUN_000b6fe0",
+        "name": "Player_ReloadAmmoType",
         "address": "0x000b6fe0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int",
-            "char"
+            "obj_tag *",
+            "bool"
         ],
-        "prototype_string": "uint __cdecl FUN_000b6fe0(int param_1, char param_2)",
+        "prototype_string": "bool __cdecl Player_ReloadAmmoType(obj_tag * param_1, bool param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[char param_2@Stack[0x8]:1]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[bool param_2@Stack[0x8]:1]"
         ]
     },
     {
@@ -31764,11 +31798,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_000b70b0(int param_1)",
+        "prototype_string": "void __cdecl FUN_000b70b0(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -31778,11 +31812,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_000b7100(int param_1)",
+        "prototype_string": "void __cdecl FUN_000b7100(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -31927,16 +31961,18 @@
         "name": "Player_SetFiringAnim",
         "address": "0x000b7cf0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
-        "return_type": "int * *",
+        "has_custom_variable_storage": true,
+        "return_type": "sAnimScript_tag *",
         "param_types": [
-            "int",
-            "int"
+            "BLData *",
+            "obj_tag *",
+            "weapon_definition_tag *"
         ],
-        "prototype_string": "int * * __cdecl Player_SetFiringAnim(int param_1, int param_2)",
+        "prototype_string": "sAnimScript_tag * __cdecl Player_SetFiringAnim(BLData * param_1, obj_tag * param_2, weapon_definition_tag * param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[BLData * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_2@Stack[0x8]:4]",
+            "[weapon_definition_tag * param_3@EDI:4]"
         ]
     },
     {
@@ -32056,19 +32092,19 @@
         ]
     },
     {
-        "name": "FUN_000b85a0",
+        "name": "Player_GetAimingPoint",
         "address": "0x000b85a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "float *"
+            "obj_tag *",
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl FUN_000b85a0(int param_1, float * param_2)",
+        "prototype_string": "void __cdecl Player_GetAimingPoint(obj_tag * param_1, _VECTOR * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -32366,11 +32402,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Player_GetBestWeapon(int param_1)",
+        "prototype_string": "void __cdecl Player_GetBestWeapon(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -32442,17 +32478,17 @@
         ]
     },
     {
-        "name": "FUN_000bad40",
+        "name": "Player_HandleHasNoAmmo",
         "address": "0x000bad40",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_000bad40(int param_1)",
+        "prototype_string": "void __cdecl Player_HandleHasNoAmmo(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -32534,20 +32570,50 @@
         ]
     },
     {
-        "name": "FUN_000bd8a0",
+        "name": "CompSpr",
+        "address": "0x000bd830",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined CompSpr()",
+        "parameters": []
+    },
+    {
+        "name": "CompLight",
+        "address": "0x000bd860",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined CompLight()",
+        "parameters": []
+    },
+    {
+        "name": "CompBoxList",
         "address": "0x000bd8a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int *",
-            "int *"
+            "void *",
+            "void *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000bd8a0(int * param_1, int * param_2)",
+        "prototype_string": "undefined4 __cdecl CompBoxList(void * param_1, void * param_2)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
-            "[int * param_2@Stack[0x8]:4]"
+            "[void * param_1@Stack[0x4]:4]",
+            "[void * param_2@Stack[0x8]:4]"
         ]
+    },
+    {
+        "name": "CompHitData",
+        "address": "0x000bd8d0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined CompHitData()",
+        "parameters": []
     },
     {
         "name": "CompMsgTxt",
@@ -32560,25 +32626,81 @@
         "parameters": []
     },
     {
+        "name": "CompDrawCels",
+        "address": "0x000bd940",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined CompDrawCels()",
+        "parameters": []
+    },
+    {
+        "name": "CompAlphaObj",
+        "address": "0x000bd960",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined CompAlphaObj()",
+        "parameters": []
+    },
+    {
+        "name": "CompTargetObj",
+        "address": "0x000bd990",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined CompTargetObj()",
+        "parameters": []
+    },
+    {
+        "name": "CompMenuCtrl",
+        "address": "0x000bd9d0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined CompMenuCtrl()",
+        "parameters": []
+    },
+    {
+        "name": "CompStrings",
+        "address": "0x000bda00",
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": false,
+        "return_type": "int",
+        "param_types": [
+            "byte *",
+            "byte *"
+        ],
+        "prototype_string": "int __stdcall CompStrings(byte * param_1, byte * param_2)",
+        "parameters": [
+            "[byte * param_1@Stack[0x4]:4]",
+            "[byte * param_2@Stack[0x8]:4]"
+        ]
+    },
+    {
         "name": "QuickSort",
         "address": "0x000bda60",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "undefined *",
+            "void *",
             "uint",
             "uint",
-            "undefined4",
+            "COMP_FUNC",
             "undefined *"
         ],
-        "prototype_string": "void __cdecl QuickSort(undefined * param_1, uint param_2, uint param_3, undefined4 param_4, undefined * param_5)",
+        "prototype_string": "void __cdecl QuickSort(void * list, uint maybeSize, uint param_3, COMP_FUNC compareType, undefined * customComparisonFunc)",
         "parameters": [
-            "[undefined * param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]",
+            "[void * list@Stack[0x4]:4]",
+            "[uint maybeSize@Stack[0x8]:4]",
             "[uint param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined * param_5@Stack[0x14]:4]"
+            "[COMP_FUNC compareType@Stack[0x10]:4]",
+            "[undefined * customComparisonFunc@Stack[0x14]:4]"
         ]
     },
     {
@@ -33482,11 +33604,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "SCRIPTINFO *"
         ],
-        "prototype_string": "void __cdecl Script_Free(int param_1)",
+        "prototype_string": "void __cdecl Script_Free(SCRIPTINFO * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[SCRIPTINFO * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -33540,12 +33662,12 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int",
+            "SCRIPTINFO *",
             "ushort"
         ],
-        "prototype_string": "undefined4 __cdecl Script_GetObj(int param_1, ushort param_2)",
+        "prototype_string": "undefined4 __cdecl Script_GetObj(SCRIPTINFO * param_1, ushort param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[SCRIPTINFO * param_1@Stack[0x4]:4]",
             "[ushort param_2@Stack[0x8]:2]"
         ]
     },
