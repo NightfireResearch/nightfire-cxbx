@@ -170,6 +170,14 @@ typedef struct {
 
 static_assert(sizeof(MPOBJECT) == 0x50, "MPOBJECT is wrong size");
 
+
+typedef struct {
+    MP_OBJ_EXT keys[2];
+    char unknown_state[0x110-0x88];
+} GoldenEyeStruct;
+
+static_assert(sizeof(GoldenEyeStruct) == 0x110, "GoldenEyeStruct is wrong size"); // Known from MP_Init
+
 #pragma pack(pop)
 
 

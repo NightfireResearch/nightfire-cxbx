@@ -216,8 +216,7 @@ void MP_CleanupMPObjExt(MP_OBJ_EXT *mp_obj) {
 #define Flags (*(MP_OBJ_EXT(*)[2])0x00263740)
 #define Hill (*(MP_OBJ_EXT*)0x00261b88)
 #define EsponageBase (*(MP_OBJ_EXT(*)[2])0x00261a70)
-#define GoldenEye (*(MP_OBJ_EXT*)0x00261678)
-#define GoldenEye_Crystal (*(MP_OBJ_EXT*)0x002616bc) // Might just be an array of 2 objects called GoldenEye?
+#define GoldenEye (*(GoldenEyeStruct(*))0x00261678)
 #define Demolition (*(MP_OBJ_EXT*)0x00261af8)
 #define Protection (*(MP_OBJ_EXT*)0x00261b40)
 #define BluePrint (*(MP_OBJ_EXT*)0x002635f8)
@@ -261,12 +260,12 @@ void MP_objectBeingDeleted(obj_tag* obj) {
       break;
 
     case GM_GOLDENEYE:
-      if(GoldenEye.gameObj == obj) {
-        MP_CleanupMPObjExt(&GoldenEye);
+      if(GoldenEye.keys[0].gameObj == obj) {
+        MP_CleanupMPObjExt(&GoldenEye.keys[0]);
         dispatchBotMessage = true;
       }
-      if(GoldenEye_Crystal.gameObj == obj) {
-        MP_CleanupMPObjExt(&GoldenEye_Crystal);
+      if(GoldenEye.keys[1].gameObj == obj) {
+        MP_CleanupMPObjExt(&GoldenEye.keys[1]);
         dispatchBotMessage = true;
       }
       break;
@@ -387,9 +386,9 @@ MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj) {
     case BLUEPRINT:
       return &BluePrint;
     case GOLDENEYE_KEY:
-      return &GoldenEye;
+      return &GoldenEye.keys[0];
     case GOLDENEYE_CRYSTAL:
-      return &GoldenEye_Crystal;
+      return &GoldenEye.keys[1];
     case PROTECTION:
       return &Protection;
     case KOH:
