@@ -361,6 +361,11 @@ obj_tag* MP_getProtectionObj(void) {
   return Protection.gameObj;
 }
 
+// AUTOINJECT
+obj_tag* MP_getHillObj(void) {
+  return Hill.gameObj;
+}
+
 
 
 
