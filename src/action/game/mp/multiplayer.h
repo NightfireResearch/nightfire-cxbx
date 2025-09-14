@@ -173,7 +173,10 @@ static_assert(sizeof(MPOBJECT) == 0x50, "MPOBJECT is wrong size");
 
 typedef struct {
     MP_OBJ_EXT keys[2];
-    char unknown_state[0x110-0x88];
+    obj_tag *deathRay;
+    char unused1[64]; // Seems unused
+    obj_tag *targetedPlayer;
+    char unused2[64]; // Also seems unused
 } GoldenEyeStruct;
 
 static_assert(sizeof(GoldenEyeStruct) == 0x110, "GoldenEyeStruct is wrong size"); // Known from MP_Init
