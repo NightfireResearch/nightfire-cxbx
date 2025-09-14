@@ -27,14 +27,38 @@ void __stdcall Light_Update(void);
 #pragma pack(push, 1)
 typedef struct {
     uint paused;
-    char unknown_pad[0x2c];
+    char unknown_pad[0x1c-4];
+    void* playerObj;
+    char unknown_pad2[0x30-0x20];
+} MPGamePlayer;
+static_assert(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // Determined from stride length in various funcs
+
+typedef struct {
+  // Note that PS2 and Xbox have different number of entries in MPGame! PS2 has 8, Xbox has 10
+  MPGamePlayer players[10];
+  // Immediately following is more state related to MP game
+  uint unknown_1; // end conditions / debriefing / objective related
+  uint unknown_2; // end conditions / debriefing
+  uint EndGameFlowState;
+  uint unknown_3; // end conditions
+  uint TimeUnpaused;
+  float TimeLimit;
+  uint unknown_4; // bot traits?
+  uint TimeIncPaused; // pickups, opponent selection, visit times?? possibly misidentified?
+  uint unknown_5; // MP init and update
+  float unknown_6; // end conditions
+  short unknown_7; // player status / goals
+  short unknown_8; // restart
+  short unknown_9; // uplink, goldeneye, blueprint timers?
+  short maybe_pad;
+  sprite* radar_related[2 * 4]; // One pair per human participant
 } MPGameStruct;
-static_assert(sizeof(MPGameStruct) == 0x30, "MPGameStruct is wrong size");
+
+static_assert(sizeof(MPGameStruct) == 0x230, "MPGameStruct is wrong size"); // Determined from MP_Init
+
 #pragma pack(pop)
 
-// Note that PS2 and Xbox have different number of entries in MPGame! PS2 has 8, Xbox has 10
-// The struct itself appears to be the same size though (confirmed by stride length of various usages of MPGame)
-#define MPGame (*(MPGameStruct(*)[10])0x00262738)
+#define MPGame (*(MPGameStruct(*))0x00262738)
 
 
 // AUTOINJECT
@@ -42,12 +66,12 @@ bool GS_IsPaused(ushort playerNum) {
 
   // A specific player?
   if(playerNum != 0xffff)
-    return MPGame[playerNum].paused;
+    return MPGame.players[playerNum].paused;
   
   // Any player?
   if(MPSettings.isMultiplayer) {
     for(uint i = 0; i < MPSettings.numPlayers; i++) {
-      if(MPGame[i].paused)
+      if(MPGame.players[i].paused)
         return true;
     }
     return false;
@@ -60,7 +84,7 @@ bool GS_IsPaused(ushort playerNum) {
 // AUTOINJECT
 void GS_PausePlayer(char pause, ushort playerNum) {
   if(playerNum < 4)
-    MPGame[playerNum].paused = pause;
+    MPGame.players[playerNum].paused = pause;
 }
 
 
