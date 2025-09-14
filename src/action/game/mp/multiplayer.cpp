@@ -217,7 +217,7 @@ void MP_CleanupMPObjExt(MP_OBJ_EXT *mp_obj) {
 #define Hill (*(MP_OBJ_EXT*)0x00261b88)
 #define EsponageBase (*(MP_OBJ_EXT(*)[2])0x00261a70)
 #define GoldenEye (*(MP_OBJ_EXT*)0x00261678)
-#define GoldenEye_Crystal (*(MP_OBJ_EXT*)0x002616bc)
+#define GoldenEye_Crystal (*(MP_OBJ_EXT*)0x002616bc) // Might just be an array of 2 objects called GoldenEye?
 #define Demolition (*(MP_OBJ_EXT*)0x00261af8)
 #define Protection (*(MP_OBJ_EXT*)0x00261b40)
 #define BluePrint (*(MP_OBJ_EXT*)0x002635f8)
@@ -366,7 +366,38 @@ obj_tag* MP_getHillObj(void) {
   return Hill.gameObj;
 }
 
+// UNINJECTABLE - custom calling convention
+MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj) {
 
+  switch(mpObj->type) {
+    case CTF_FLAG:
+      return &Flags[mpObj->num];
+    case CTF_BASE:
+      return &Bases[mpObj->num];
+    case UPLINK:
+      for(int i = 0; i < ARRAY_SIZE(Uplinks); i++) {
+        if(Uplinks[i].gameObj != NULL && Uplinks[i].gameObj->extraObjectData == mpObj)
+          return &Uplinks[i];
+      }
+      return NULL;
+    case DEMOLITION:
+      return &Demolition;
+    case ESPIONAGEBASE:
+      return &EsponageBase[mpObj->num];
+    case BLUEPRINT:
+      return &BluePrint;
+    case GOLDENEYE_KEY:
+      return &GoldenEye;
+    case GOLDENEYE_CRYSTAL:
+      return &GoldenEye_Crystal;
+    case PROTECTION:
+      return &Protection;
+    case KOH:
+      return &Hill;
+  }
+
+  return NULL;
+}
 
 
 

@@ -149,6 +149,27 @@ typedef struct {
 
 static_assert(sizeof(MP_OBJ_EXT) == 0x44, "MP_OBJ_EXT is wrong size");
 
+typedef enum {
+    CTF_FLAG = 0,
+    CTF_BASE,
+    UPLINK,
+    DEMOLITION,
+    ESPIONAGEBASE,
+    BLUEPRINT,
+    GOLDENEYE_KEY,
+    GOLDENEYE_CRYSTAL,
+    PROTECTION,
+    KOH,
+} MPOBJECTTYPE;
+
+typedef struct {
+    ushort type; // MPOBJECTTYPE
+    ushort num;
+    char _pad[0x50-4];
+} MPOBJECT;
+
+static_assert(sizeof(MPOBJECT) == 0x50, "MPOBJECT is wrong size");
+
 #pragma pack(pop)
 
 
@@ -166,6 +187,7 @@ obj_tag* MP_getBaseObj(uint i);
 obj_tag* MP_getDemolitionObj(void);
 obj_tag* MP_getProtectionObj(void);
 obj_tag* MP_getHillObj(void);
+MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj);
 
 // FIXME move to a separate file
 bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection);
