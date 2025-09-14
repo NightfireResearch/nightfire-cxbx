@@ -163,7 +163,8 @@ void MP_objectBeingDeleted(obj_tag* obj);
 void MP_Update(void);
 obj_tag* MP_getFlagObj(uint i);
 obj_tag* MP_getBaseObj(uint i);
-
+obj_tag* MP_getDemolitionObj(void);
+obj_tag* MP_getProtectionObj(void);
 
 // FIXME move to a separate file
 bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection);

@@ -351,6 +351,18 @@ obj_tag* MP_getBaseObj(uint i) {
   return Bases[i].gameObj;
 }
 
+// AUTOINJECT
+obj_tag* MP_getDemolitionObj(void) {
+  return Demolition.gameObj;
+}
+
+// AUTOINJECT
+obj_tag* MP_getProtectionObj(void) {
+  return Protection.gameObj;
+}
+
+
+
 
 
 // AUTOGEN
