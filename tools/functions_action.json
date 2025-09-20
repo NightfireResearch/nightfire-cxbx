@@ -27502,21 +27502,21 @@
     {
         "name": "MP_CheckForEndCondition",
         "address": "0x0009cc50",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall MP_CheckForEndCondition(void)",
+        "prototype_string": "void MP_CheckForEndCondition(void)",
         "parameters": []
     },
     {
         "name": "MP_SortOutWhoWon",
         "address": "0x0009d020",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall MP_SortOutWhoWon(void)",
+        "prototype_string": "void MP_SortOutWhoWon(void)",
         "parameters": []
     },
     {
@@ -27572,12 +27572,12 @@
         "address": "0x0009d700",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "uint",
             "obj_tag *"
         ],
-        "prototype_string": "uint __cdecl MP_RegisterBulletHit(uint param_1, obj_tag * param_2)",
+        "prototype_string": "bool __cdecl MP_RegisterBulletHit(uint param_1, obj_tag * param_2)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]",
             "[obj_tag * param_2@Stack[0x8]:4]"
@@ -27734,11 +27734,11 @@
     {
         "name": "MP_Pickup_Process",
         "address": "0x0009dec0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall MP_Pickup_Process(void)",
+        "prototype_string": "void MP_Pickup_Process(void)",
         "parameters": []
     },
     {
@@ -27794,11 +27794,11 @@
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "void *"
+            "MP_OBJ_EXT *"
         ],
-        "prototype_string": "void __stdcall MP_PostLoadInitObjExt(void * aaaa)",
+        "prototype_string": "void __stdcall MP_PostLoadInitObjExt(MP_OBJ_EXT * objExt)",
         "parameters": [
-            "[void * aaaa@EAX:4]"
+            "[MP_OBJ_EXT * objExt@EAX:4]"
         ]
     },
     {
@@ -27825,9 +27825,9 @@
             "MP_OBJ_EXT *",
             "char"
         ],
-        "prototype_string": "void __cdecl MP_recalcObjExtPaths(MP_OBJ_EXT * a, char param_2)",
+        "prototype_string": "void __cdecl MP_recalcObjExtPaths(MP_OBJ_EXT * objExt, char param_2)",
         "parameters": [
-            "[MP_OBJ_EXT * a@ESI:4]",
+            "[MP_OBJ_EXT * objExt@ESI:4]",
             "[char param_2@Stack[0x4]:1]"
         ]
     },
@@ -27836,11 +27836,11 @@
         "address": "0x0009e130",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": true,
-        "return_type": "undefined4 *",
+        "return_type": "MP_OBJ_EXT *",
         "param_types": [
             "MPOBJECT *"
         ],
-        "prototype_string": "undefined4 * __stdcall MP_getObjExtFromMPOBJECT(MPOBJECT * mpObj)",
+        "prototype_string": "MP_OBJ_EXT * __stdcall MP_getObjExtFromMPOBJECT(MPOBJECT * mpObj)",
         "parameters": [
             "[MPOBJECT * mpObj@EDI:4]"
         ]
@@ -27850,11 +27850,11 @@
         "address": "0x0009e1f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4 *",
+        "return_type": "obj_tag *",
         "param_types": [
             "uint"
         ],
-        "prototype_string": "undefined4 * __cdecl MP_getFlagObj(uint param_1)",
+        "prototype_string": "obj_tag * __cdecl MP_getFlagObj(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ]
@@ -27864,11 +27864,11 @@
         "address": "0x0009e210",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4 *",
+        "return_type": "obj_tag *",
         "param_types": [
             "uint"
         ],
-        "prototype_string": "undefined4 * __cdecl MP_getBaseObj(uint param_1)",
+        "prototype_string": "obj_tag * __cdecl MP_getBaseObj(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ]
@@ -27883,10 +27883,10 @@
             "int",
             "int"
         ],
-        "prototype_string": "int * __cdecl MP_getUplinkObj(int param_1, int param_2)",
+        "prototype_string": "int * __cdecl MP_getUplinkObj(int idx, int filterState)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[int idx@Stack[0x4]:4]",
+            "[int filterState@Stack[0x8]:4]"
         ]
     },
     {
@@ -27943,10 +27943,10 @@
             "uint",
             "int"
         ],
-        "prototype_string": "int * __cdecl MP_getEsponageBaseObj(uint param_1, int param_2)",
+        "prototype_string": "int * __cdecl MP_getEsponageBaseObj(uint param_1, int approachQuadrant)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[int approachQuadrant@Stack[0x8]:4]"
         ]
     },
     {
@@ -28058,13 +28058,13 @@
         "address": "0x0009e6a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "uint __cdecl MP_playerIsDead(int param_1)",
+        "prototype_string": "bool __cdecl MP_playerIsDead(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -28170,11 +28170,11 @@
         "has_custom_variable_storage": false,
         "return_type": "short",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "short __cdecl MP_PlayerOrBotInd(int param_1)",
+        "prototype_string": "short __cdecl MP_PlayerOrBotInd(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -28498,11 +28498,11 @@
     {
         "name": "MP_RestartScenario",
         "address": "0x000a2990",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall MP_RestartScenario(void)",
+        "prototype_string": "void MP_RestartScenario(void)",
         "parameters": []
     },
     {
@@ -30116,17 +30116,17 @@
         ]
     },
     {
-        "name": "FUN_000ae6c0",
+        "name": "Player_Kill",
         "address": "0x000ae6c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_000ae6c0(int param_1)",
+        "prototype_string": "void __cdecl Player_Kill(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -33984,13 +33984,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "undefined4 *"
+            "obj_tag *",
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl SP_SetPos(int param_1, undefined4 * param_2)",
+        "prototype_string": "void __cdecl SP_SetPos(obj_tag * param_1, _VECTOR * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -34106,13 +34106,13 @@
         "address": "0x000c44e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "SCRIPTINFO *",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl SP_getScriptInfo(int param_1)",
+        "prototype_string": "SCRIPTINFO * __cdecl SP_getScriptInfo(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {

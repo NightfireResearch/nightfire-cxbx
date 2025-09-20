@@ -338,8 +338,11 @@ static_assert(offsetof(weapon_definition_tag,someDistance) == 0x1c, "someDistanc
 typedef struct {
     uint paused;
     char unknown_pad[0x1c-4];
-    void* playerObj;
-    char unknown_pad2[0x30-0x20];
+    obj_tag* playerObj;
+    char unknown_pad1[2];
+    short friendlyFireLabelTimer;
+    short friendlyFireProtectionLabelTimer;
+    char unknown_pad2[0x30-0x26];
 } MPGamePlayer;
 
 static_assert(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // Determined from stride length in various funcs
@@ -354,10 +357,10 @@ typedef struct {
   uint unknown_3; // end conditions
   uint TimeUnpaused;
   float TimeLimit;
-  uint unknown_4; // bot traits?
+  float restartScenarioTimeout;
   uint TimeIncPaused; // pickups, opponent selection, visit times?? possibly misidentified?
-  uint unknown_5; // MP init and update
-  float unknown_6; // end conditions
+  float winStateTimeout; // MP init and update
+  float lastTimePaused; // end conditions
   short unknown_7; // player status / goals
   short unknown_8; // restart
   short unknown_9; // uplink, goldeneye, blueprint timers?
@@ -366,6 +369,8 @@ typedef struct {
 } MPGameStruct;
 
 static_assert(sizeof(MPGameStruct) == 0x230, "MPGameStruct is wrong size"); // Determined from MP_Init
+
+static_assert(offsetof(MPGameStruct, lastTimePaused) == 0x204, "Offset of lastTimePaused wrong");
 
 #pragma pack(pop)
 

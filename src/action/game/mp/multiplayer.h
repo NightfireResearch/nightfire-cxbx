@@ -200,6 +200,9 @@ obj_tag* MP_getProtectionObj(void);
 obj_tag* MP_getHillObj(void);
 MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj);
 short MP_PlayerOrBotInd(obj_tag *obj);
+void MP_SortOutWhoWon(void);
+void MP_Pickup_Process(void);
+void MP_CheckForEndCondition(void);
 
 // FIXME move to a separate file
 bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection);

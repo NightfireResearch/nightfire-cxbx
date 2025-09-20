@@ -416,6 +416,110 @@ short MP_PlayerOrBotInd(obj_tag *obj) {
   return -1;
 }
 
-
 // AUTOGEN
-void MP_Update(void);
+void MP_SortOutWhoWon(void);
+// AUTOGEN
+void MP_Pickup_Process(void);
+// AUTOGEN
+void MP_CheckForEndCondition(void);
+// AUTOGEN
+void MP_RestartScenario(void);
+
+#define StatusSpr ((sprite*)(0x002637dc))
+
+// AUTOINJECT
+void MP_Update(void) {
+
+  if(GameState.CurrentLevelHashcode == HT_Level_Menu_Pre)
+    return;
+  
+  if(!MPSettings.isMultiplayer)
+    return;
+
+  if(GameFlow_GetState() != 2)
+    return;
+
+  // Handle paused state
+  if(GS_IsPaused(-1)) {
+    MPGame.lastTimePaused = (float)(int)psiGetTimeIn100ths();
+    return;
+  }
+
+  // Countdown on friendly-fire warning popups
+  for(int i = 0; i < ARRAY_SIZE(MPGame.players); i++) {
+    if(MPGame.players[i].friendlyFireLabelTimer != 0) {
+      MPGame.players[i].friendlyFireLabelTimer--;
+    }
+    if(MPGame.players[i].friendlyFireProtectionLabelTimer != 0) {
+      MPGame.players[i].friendlyFireProtectionLabelTimer--;
+    }
+  }
+
+  switch(MPGame.EndGameFlowState) {
+    case 0:
+      MP_Pickup_Process(); 
+      MP_CheckForEndCondition();
+      // some thing which got optimised out?
+      break;
+
+    case 1:
+      MP_SortOutWhoWon();
+      break;
+
+    case 2:
+      if(MPSettings.GameMode != GM_TOPAGENT) {
+        // TODO: The function also seems to call Txt_BindLabel(PRESS_START, 0) but never uses the result?
+        sprintf(StatusSpr->text, "%s", Txt_BindLabel(MP_TIME_UP, 0));
+        Sprite_SetText(StatusSpr, StatusSpr->text);
+        MPGame.EndGameFlowState = 3;
+      } else {
+        // In the Xbox code this happens due to fallthrough
+        MP_SortOutWhoWon();
+      }
+      break;
+
+    case 3: // Some kind of temporary delay state, showing the winners?
+
+      if(MPSettings.GameMode == GM_TOPAGENT)
+        break;
+      
+      MPGame.winStateTimeout += REC_FRAME_RATE;
+      
+      if(MPGame.winStateTimeout >= 5.0f) {
+        MPGame.EndGameFlowState = 4;
+        GameState.maybePaused = true;
+      }
+
+      break;
+
+    case 4:
+      MPGame.EndGameFlowState = 5;
+      GameState.ReloadMenupage = P_MPDEBRIEFING;
+      ResetMap_LevelToLoad(HT_Level_Menu_Pre, false, false);
+      GameFlow_PushState(7, 60.0f, 0xFF);
+      for(int i = 0; i < 4; i++) { // TODO: make a define for the number of human players?
+        obj_tag* plyObj = MPGame.players[i].playerObj;
+        if(plyObj != NULL) {
+          Player_SetCamMode((BLData*)plyObj->extraObjectData, 1);
+          GS_PausePlayer(1, i);
+        }
+      }
+      break;
+
+    case 6:
+      MPGame.restartScenarioTimeout += REC_FRAME_RATE;
+      if(MPGame.restartScenarioTimeout >= 2.5f) {
+        Sprite_SetText(StatusSpr, (char*)Txt_BindLabel(NOTIF_RESTARTING, 0));
+      }
+      if(MPGame.restartScenarioTimeout > 5.0f) {
+        MPGame.EndGameFlowState = 0;
+        MP_RestartScenario();
+        sprintf(StatusSpr->text, "");
+        Sprite_SetText(StatusSpr, StatusSpr->text);
+      }
+      break;
+
+  }
+
+
+}
