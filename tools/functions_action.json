@@ -19172,11 +19172,11 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "ushort"
+            "short"
         ],
-        "prototype_string": "bool __cdecl GS_IsPaused(ushort playerNum)",
+        "prototype_string": "bool __cdecl GS_IsPaused(short playerNum)",
         "parameters": [
-            "[ushort playerNum@Stack[0x4]:2]"
+            "[short playerNum@Stack[0x4]:2]"
         ]
     },
     {

@@ -20,7 +20,7 @@ void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume);
 void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate);
 void GS_PauseGame(bool pause);
 void GS_PausePlayer(char pause, ushort playerNum);
-bool GS_IsPaused(ushort playerNum);
+bool GS_IsPaused(short playerNum);
 
 #pragma pack(push, 1)
 typedef struct {

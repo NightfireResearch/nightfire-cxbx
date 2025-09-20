@@ -27,10 +27,10 @@ void __stdcall Light_Update(void);
 
 
 // AUTOINJECT
-bool GS_IsPaused(ushort playerNum) {
+bool GS_IsPaused(short playerNum) {
 
   // A specific player?
-  if(playerNum != 0xffff)
+  if(playerNum != -1)
     return MPGame.players[playerNum].paused;
   
   // Any player?
@@ -102,7 +102,7 @@ void Game_Run(void) {
     if (!movieFinished()) 
       goto LAB_0006aafe;
 
-    if (!GS_IsPaused(0xffff))
+    if (!GS_IsPaused(-1))
       Text_Update2Line();
 
   }
@@ -114,7 +114,7 @@ LAB_0006aafe:
   UpdateAllShards();
   Env_Update();
 
-  if (!GS_IsPaused(0xffff)) {
+  if (!GS_IsPaused(-1)) {
     SSys_Monitor();
     Light_Update();
     control_movement_object_handler(0);
@@ -548,7 +548,7 @@ void GameFlow_Main(void) {
   
   GameState.NumFrames++;
 
-  if ((sloflag == 0) && !GS_IsPaused(0xffff)) {
+  if ((sloflag == 0) && !GS_IsPaused(-1)) {
     GameState.NumFramesUnpaused = GameState.NumFramesUnpaused + 1;
     GameState.VideoFrames += VIDEO_FRAME_RATE / FRAME_RATE_INT;
   }
