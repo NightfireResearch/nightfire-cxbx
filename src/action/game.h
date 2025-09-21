@@ -339,10 +339,12 @@ typedef struct {
     uint paused;
     char unknown_pad[0x1c-4];
     obj_tag* playerObj;
-    char unknown_pad1[2];
+    short maybeIdxOfLastInjurer; // Index of who or what last dealt me damage? -2 = environment?
     short friendlyFireLabelTimer;
     short friendlyFireProtectionLabelTimer;
-    char unknown_pad2[0x30-0x26];
+    char unknown_pad1[2];
+    short maybeIdxOfMyAssassin;
+    char unknown_pad2[0x30-0x2a];
 } MPGamePlayer;
 
 static_assert(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // Determined from stride length in various funcs
@@ -361,8 +363,8 @@ typedef struct {
   uint TimeIncPaused; // pickups, opponent selection, visit times?? possibly misidentified?
   float winStateTimeout; // MP init and update
   float lastTimePaused; // end conditions
-  short unknown_7; // player status / goals
-  short unknown_8; // restart
+  short unknown_maybe_capture_state; // player status / goals
+  short unknown_maybe_unused; // restart
   short unknown_9; // uplink, goldeneye, blueprint timers?
   short maybe_pad;
   sprite* radar_related[2 * 4]; // One pair per human participant

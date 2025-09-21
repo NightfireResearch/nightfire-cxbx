@@ -4130,11 +4130,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl GunImp_Deactivate(int param_1)",
+        "prototype_string": "void __cdecl GunImp_Deactivate(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -28431,13 +28431,13 @@
         "return_type": "obj_tag *",
         "param_types": [
             "_MATRIX *",
-            "undefined2 *",
+            "uint *",
             "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl MP_CreateObject(_MATRIX * param_1, undefined2 * param_2, celglist_tag * param_3)",
+        "prototype_string": "obj_tag * __cdecl MP_CreateObject(_MATRIX * param_1, uint * param_2, celglist_tag * param_3)",
         "parameters": [
             "[_MATRIX * param_1@Stack[0x4]:4]",
-            "[undefined2 * param_2@Stack[0x8]:4]",
+            "[uint * param_2@Stack[0x8]:4]",
             "[celglist_tag * param_3@Stack[0xc]:4]"
         ]
     },
@@ -28522,17 +28522,17 @@
         "has_custom_variable_storage": false,
         "return_type": "obj_tag *",
         "param_types": [
-            "undefined4 *",
-            "float *",
-            "int",
-            "int *"
+            "_VECTOR *",
+            "_VECTOR *",
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl MP_RegisterMPObject(undefined4 * param_1, float * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl MP_RegisterMPObject(_VECTOR * pos, _VECTOR * rot, level_tag * lvl, celglist_tag * celgl)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[_VECTOR * pos@Stack[0x4]:4]",
+            "[_VECTOR * rot@Stack[0x8]:4]",
+            "[level_tag * lvl@Stack[0xc]:4]",
+            "[celglist_tag * celgl@Stack[0x10]:4]"
         ]
     },
     {

@@ -20,5 +20,6 @@ static_assert(offsetof(BOT_stats_t, isBad) == 0x9, "BOT_stats_t isBad offset mis
 #pragma pack(pop)
 
 BOT_stats_t* BOT_getDefaultStats(uint identifier);
+bool BOT_respawn(obj_tag* gameObj, int playerNum, char param_3);
 
 #endif

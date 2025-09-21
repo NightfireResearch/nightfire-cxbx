@@ -165,7 +165,9 @@ typedef enum {
 typedef struct {
     ushort type; // MPOBJECTTYPE
     ushort num;
-    char _pad[0x50-4];
+    char unknown_pad_1[8];
+    obj_tag *scriptPlayer;
+    char _pad[0x50-16];
 } MPOBJECT;
 
 static_assert(sizeof(MPOBJECT) == 0x50, "MPOBJECT is wrong size");
@@ -180,6 +182,15 @@ typedef struct {
 } GoldenEyeStruct;
 
 static_assert(sizeof(GoldenEyeStruct) == 0x110, "GoldenEyeStruct is wrong size"); // Known from MP_Init
+
+typedef struct {
+  _MATRIX mtx;
+  uint maybePlacementData;
+  char unknown[24];
+  celglist_tag *celgl;
+} SpawnPlace;
+
+static_assert(sizeof(SpawnPlace) == 0x5c, "Bad size for SpawnPlace"); // Known from MP_Init via size of DemolitionPlaces array
 
 #pragma pack(pop)
 
@@ -203,6 +214,9 @@ short MP_PlayerOrBotInd(obj_tag *obj);
 void MP_SortOutWhoWon(void);
 void MP_Pickup_Process(void);
 void MP_CheckForEndCondition(void);
+void MP_RestartScenario(void);
+obj_tag* MP_CreateObject(_MATRIX *mtx, unsigned short* data, celglist_tag *celgl);
+bool MP_ReSpawn(obj_tag* obj, ushort idx);
 
 // FIXME move to a separate file
 bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection);

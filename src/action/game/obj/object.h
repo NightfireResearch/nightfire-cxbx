@@ -193,7 +193,7 @@ typedef struct obj_tag {
     ushort renderType;
     char unknown_0xd8;
     char _pad_6;
-    char flags; // (1 == Marked for deletion)
+    char flags; // (1 == Marked for deletion or resetting)
     char objectType; // Actually ObjectType but can't tell the compiler to make it just one byte
     uchar light_related1;
     uchar light_related2;

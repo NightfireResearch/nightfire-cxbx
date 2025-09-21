@@ -1,6 +1,10 @@
 #include "multiplayer.h"
 #include "../../game.h"
 #include "../../engine/Collide.h"
+#include "../obj/car.h"
+#include "../obj/GT.h"
+#include "../obj/GunImp.h"
+#include "../drone/BOT.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -423,7 +427,81 @@ void MP_Pickup_Process(void);
 // AUTOGEN
 void MP_CheckForEndCondition(void);
 // AUTOGEN
-void MP_RestartScenario(void);
+obj_tag* MP_CreateObject(_MATRIX *mtx, uint* data, celglist_tag *celgl);
+// AUTOGEN
+bool MP_ReSpawn(obj_tag* obj, ushort idx);
+
+#define DemolitionPlaces (*(SpawnPlace(*)[8])(0x00262f40))
+#define DemolitionCount U16_AT(0x002637cc)
+#define ProtectionPlaces (*(SpawnPlace(*)[8])(0x00261790))
+#define ProtectionCount U16_AT(0x002637d0)
+
+// AUTOINJECT
+void MP_RestartScenario(void) { 
+
+  MPGame.restartScenarioTimeout = 0.0f;
+  MPGame.TimeIncPaused = 0;
+
+  Car_Reset();
+  Control_DeleteAllObjectsOfType(OBJECTTYPE_BULLET);
+  Control_DeleteAllObjectsOfType(OBJECTTYPE_MPOBJECT);
+  Control_DeleteAllObjectsOfType(OBJECTTYPE_EFFECT);
+  Control_DeleteAllObjectsOfType(OBJECTTYPE_GAS);
+
+  for(obj_tag* o = Control_ReturnNextObjectOfType(OBJECTTYPE_GUNTURRET2, NULL); o != NULL; o = Control_ReturnNextObjectOfType(OBJECTTYPE_GUNTURRET2, o)) {
+    if(o->curState == 1) {
+      GunImp_Deactivate(o);
+    }
+  }
+
+  for(obj_tag* o = Control_ReturnNextObjectOfType(OBJECTTYPE_GUNTURRET, NULL); o != NULL; o = Control_ReturnNextObjectOfType(OBJECTTYPE_GUNTURRET, o)) {
+    if(o->curState == 7) {
+      GT_LoseControl(o);
+    }
+  }
+
+  for(int i = 0; i < ARRAY_SIZE(MPObjects); i++) {
+    if(MPObjects[i] == NULL || MPObjects[i]->extraObjectData == NULL)
+      continue;
+    MPOBJECT *mpObj = (MPOBJECT*)MPObjects[i]->extraObjectData;
+    if(mpObj->scriptPlayer == NULL)
+      continue;
+    mpObj->scriptPlayer->flags |= 1; 
+  }
+
+  if(MPSettings.GameMode == GM_DEMOLITION) {
+    int idx = Rand_Rand(DemolitionCount);
+    MP_CreateObject(&DemolitionPlaces[idx].mtx, &DemolitionPlaces[idx].maybePlacementData, DemolitionPlaces[idx].celgl);
+    MPGame.TimeUnpaused = 0;
+  }
+
+  if(MPSettings.GameMode == GM_PROTECTION) {
+    int idx = Rand_Rand(ProtectionCount);
+    MP_CreateObject(&ProtectionPlaces[idx].mtx, &ProtectionPlaces[idx].maybePlacementData, ProtectionPlaces[idx].celgl);
+    MPGame.TimeUnpaused = 0;
+  }
+
+  for(int i = 0; i < MPSettings.numPlayers; i++) {
+    obj_tag* plyObj = MPGame.players[i].playerObj;
+    if(plyObj != NULL)
+      MP_ReSpawn(plyObj, i);
+  }
+
+  for(int i = 4; i < 10; i++) { // TODO: Hardcoded bounds
+    obj_tag *botObj = MPGame.players[i].playerObj;
+    if(botObj != NULL)
+      BOT_respawn(botObj, i, false);
+  }
+  
+  MPGame.unknown_maybe_capture_state = 0;
+  MPGame.unknown_maybe_unused = 0;
+  
+  for(int i = 0; i < 10; i++) {
+    MPGame.players[i].maybeIdxOfLastInjurer = -1;
+    MPGame.players[i].maybeIdxOfMyAssassin = -1;
+  }
+
+}
 
 #define StatusSpr ((sprite*)(0x002637dc))
 
