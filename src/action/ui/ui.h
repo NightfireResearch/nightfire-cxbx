@@ -6,10 +6,14 @@
 #include "../util/Stack.h"
 
 typedef enum {
+    MessageType_ScriptExitLoop = 0x14, // Calls "Script_ExitLoop" - Unknown what it does
+    MessageType_ScriptPlay = 0x16, // Calls "Script_Play" - Unknown what it does
     MessageType_SetText = 0x18,
     MessageType_SetColour = 0x1a,
+    MessageType_SetValue = 0x2e,
     MessageType_GetValue = 0x40, // Get the value of the current item (eg the index of the selected item)
     MessageType_GoPage = 0x44, // Go to a new page
+    MessageType_Destroy = 0x47, // Delete/destroy this item
     MessageType_Scroll = 0x49, // Scroll (vertical?) event - fired by both d-pad and left analog stick
     MessageType_Select = 0x4b, // Selecting an item - fired by A or Start button
     MessageType_Enter = 0x54, // Entering / Loading the menu page?
@@ -39,8 +43,8 @@ typedef struct M_CONTROL {
     uint hashcode; // 0x18
     char pad2[0x7b-0x18-4];
     char type; // 0x7b
-    char pad3[0x144-0x7b-1]; 
-    char field_0x144; // 0x144 - purpose unknown   
+    char pad3[0x144-0x7b-1];
+    char field_0x144; // 0x144 - purpose unknown
 } M_CONTROL;
 
 // Common between PS2 and Xbox
