@@ -2,13 +2,85 @@
 #include <assert.h>
 #include "../actionhelpers.h"
 
-// AUTOGEN
-void psiInput_ResetInputState(unsigned int i);
-// AUTOGEN
-void psiInput_RumbleSetIntensity(unsigned int i, unsigned short a, unsigned short b);
-
 // Array of 4 uint32_t entries, all initialised to 0xFFFFFFFF
 #define controller_maybeRumbleTimeout ((unsigned int*)0x0019481c)
+
+// AUTOINJECT
+float psiInput_GetJoystickRX(uint i) {
+
+    // FIXME: It's unclear what the original logic was for.
+    // It should only ever be called with an input in the range 0-3
+    assert(i <= 3);
+
+    return XboxInputs.Controllers[i].Joystick_RX;
+}
+
+// AUTOINJECT
+float psiInput_GetJoystickLX(uint i) {
+
+    // FIXME: It's unclear what the original logic was for.
+    // It should only ever be called with an input in the range 0-3
+    assert(i <= 3);
+
+    return XboxInputs.Controllers[i].Joystick_LX;
+}
+// AUTOINJECT
+float psiInput_GetJoystickLY(uint i) {
+
+    // FIXME: It's unclear what the original logic was for.
+    // It should only ever be called with an input in the range 0-3
+    assert(i <= 3);
+
+    return XboxInputs.Controllers[i].Joystick_LY;
+}
+
+// AUTOINJECT
+float psiInput_GetJoystickRY(uint i) {
+
+    // FIXME: It's unclear what the original logic was for.
+    // It should only ever be called with an input in the range 0-3
+    assert(i <= 3);
+
+    return XboxInputs.Controllers[i].Joystick_RY;
+}
+
+// AUTOINJECT
+uint psiInput_GetButtons(uint i) {
+    
+    // FIXME: It's unclear what the original logic was for.
+    // It should only ever be called with an input in the range 0-3
+    assert(i <= 3);
+
+    return XboxInputs.Controllers[i].buttons;
+}
+
+// AUTOINJECT
+void psiInput_RumbleSetIntensity(unsigned int i, unsigned short a, unsigned short b) {
+
+    // FIXME: It's unclear what the original logic was for.
+    // It should only ever be called with an input in the range 0-3
+    assert(i <= 3);
+
+    XboxInputs.Controllers[i].rumbleA = a;
+    XboxInputs.Controllers[i].rumbleB = b;
+    
+}
+
+// AUTOINJECT
+void psiInput_ResetInputState(uint i) {
+    
+    // FIXME: It's unclear what the original logic was for.
+    // It should only ever be called with an input in the range 0-3
+    assert(i <= 3);
+
+    XboxInputs.Controllers[i].Joystick_LX = 0.0f;
+    XboxInputs.Controllers[i].Joystick_LY = 0.0f;
+    XboxInputs.Controllers[i].Joystick_RX = 0.0f;
+    XboxInputs.Controllers[i].Joystick_RY = 0.0f;
+    XboxInputs.Controllers[i].buttons = 0;
+    XboxInputs.Controllers[i].prevButtons = 0xffffffff;
+    
+}
 
 // AUTOINJECT
 void psiInput_ResetRumble(unsigned int i) {
