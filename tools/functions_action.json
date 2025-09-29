@@ -40788,7 +40788,7 @@
         "parameters": []
     },
     {
-        "name": "FUN_000dd1f0",
+        "name": "psiInput_ResetRumble",
         "address": "0x000dd1f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -40796,7 +40796,7 @@
         "param_types": [
             "ushort"
         ],
-        "prototype_string": "void __cdecl FUN_000dd1f0(ushort param_1)",
+        "prototype_string": "void __cdecl psiInput_ResetRumble(ushort param_1)",
         "parameters": [
             "[ushort param_1@Stack[0x4]:2]"
         ]
@@ -40820,13 +40820,13 @@
         ]
     },
     {
-        "name": "FUN_000dd260",
+        "name": "psiInput_RumbleUpdate",
         "address": "0x000dd260",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000dd260(void)",
+        "prototype_string": "void __stdcall psiInput_RumbleUpdate(void)",
         "parameters": []
     },
     {
@@ -41129,12 +41129,12 @@
         "return_type": "undefined",
         "param_types": [
             "PlayerInput_tag *",
-            "ushort"
+            "uint"
         ],
-        "prototype_string": "undefined __cdecl psiInput_MapInputs(PlayerInput_tag * playerInput, ushort numPlayers)",
+        "prototype_string": "undefined __cdecl psiInput_MapInputs(PlayerInput_tag * param_1, uint param_2)",
         "parameters": [
-            "[PlayerInput_tag * playerInput@Stack[0x4]:4]",
-            "[ushort numPlayers@Stack[0x8]:2]"
+            "[PlayerInput_tag * param_1@Stack[0x4]:4]",
+            "[uint param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -41456,13 +41456,13 @@
         ]
     },
     {
-        "name": "FUN_000dfee0",
+        "name": "psiInputReset",
         "address": "0x000dfee0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000dfee0(void)",
+        "prototype_string": "void __stdcall psiInputReset(void)",
         "parameters": []
     },
     {
@@ -43574,9 +43574,9 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e4f00(int param_1)",
+        "prototype_string": "void __cdecl FUN_000e4f00(int texIdx)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[int texIdx@Stack[0x4]:4]"
         ]
     },
     {
@@ -44156,7 +44156,7 @@
         ]
     },
     {
-        "name": "FUN_000e7f10",
+        "name": "psiInput_GetJoystickLX",
         "address": "0x000e7f10",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -44164,13 +44164,13 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000e7f10(undefined4 param_1)",
+        "prototype_string": "undefined psiInput_GetJoystickLX(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ]
     },
     {
-        "name": "FUN_000e7f30",
+        "name": "psiInput_GetJoystickLY",
         "address": "0x000e7f30",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -44178,13 +44178,13 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000e7f30(undefined4 param_1)",
+        "prototype_string": "undefined psiInput_GetJoystickLY(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ]
     },
     {
-        "name": "FUN_000e7f50",
+        "name": "psiInput_GetJoystickRX",
         "address": "0x000e7f50",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -44192,13 +44192,13 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000e7f50(undefined4 param_1)",
+        "prototype_string": "undefined psiInput_GetJoystickRX(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ]
     },
     {
-        "name": "FUN_000e7f70",
+        "name": "psiInput_GetJoystickRY",
         "address": "0x000e7f70",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -44206,13 +44206,13 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000e7f70(undefined4 param_1)",
+        "prototype_string": "undefined psiInput_GetJoystickRY(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ]
     },
     {
-        "name": "FUN_000e7f90",
+        "name": "psiInput_GetButtons",
         "address": "0x000e7f90",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -44220,13 +44220,13 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000e7f90(int param_1)",
+        "prototype_string": "undefined4 __cdecl psiInput_GetButtons(int controllerNum)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[int controllerNum@Stack[0x4]:4]"
         ]
     },
     {
-        "name": "FUN_000e7fb0",
+        "name": "psiInput_RumbleSetIntensity",
         "address": "0x000e7fb0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -44236,15 +44236,15 @@
             "undefined2",
             "undefined2"
         ],
-        "prototype_string": "void __cdecl FUN_000e7fb0(uint param_1, undefined2 param_2, undefined2 param_3)",
+        "prototype_string": "void __cdecl psiInput_RumbleSetIntensity(uint playerNum, undefined2 a, undefined2 b)",
         "parameters": [
-            "[uint param_1@Stack[0x4]:4]",
-            "[undefined2 param_2@Stack[0x8]:2]",
-            "[undefined2 param_3@Stack[0xc]:2]"
+            "[uint playerNum@Stack[0x4]:4]",
+            "[undefined2 a@Stack[0x8]:2]",
+            "[undefined2 b@Stack[0xc]:2]"
         ]
     },
     {
-        "name": "FUN_000e7fe0",
+        "name": "psiInput_ResetInputState",
         "address": "0x000e7fe0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -44252,7 +44252,7 @@
         "param_types": [
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000e7fe0(uint param_1)",
+        "prototype_string": "void __cdecl psiInput_ResetInputState(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ]
@@ -60668,12 +60668,18 @@
     {
         "name": "XInputGetState",
         "address": "0x00158071",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined XInputGetState()",
-        "parameters": []
+        "param_types": [
+            "dword",
+            "XINPUT_STATE *"
+        ],
+        "prototype_string": "undefined __stdcall XInputGetState(dword dwUserIndex, XINPUT_STATE * pState)",
+        "parameters": [
+            "[dword dwUserIndex@Stack[0x4]:4]",
+            "[XINPUT_STATE * pState@Stack[0x8]:4]"
+        ]
     },
     {
         "name": "XInputSetState",
@@ -60682,13 +60688,13 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int *",
-            "undefined4 *"
+            "typedef DWORD uint",
+            "XINPUT_VIBRATION *"
         ],
-        "prototype_string": "undefined4 __stdcall XInputSetState(int * param_1, undefined4 * param_2)",
+        "prototype_string": "undefined4 __stdcall XInputSetState(DWORD dwUserIndex, XINPUT_VIBRATION * pVibration)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]"
+            "[DWORD dwUserIndex@Stack[0x4]:4]",
+            "[XINPUT_VIBRATION * pVibration@Stack[0x8]:4]"
         ]
     },
     {

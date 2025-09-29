@@ -57,6 +57,7 @@ typedef short MallocFlags;
 #include "engine/Text.h"
 #include "engine/Vision.h"
 #include "engine/psiGraphics.h"
+#include "engine/psiInput.h"
 #include "engine/Woman.h"
 #include "game/Autoaim.h"
 #include "game/drone/Drone.h"
