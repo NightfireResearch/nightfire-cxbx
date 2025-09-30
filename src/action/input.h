@@ -8,6 +8,7 @@ void __cdecl Input_SetAction(short playerNum,unsigned int action,unsigned char v
 bool Input_ChangeControllerStyle(ushort playerNum, int controllerStyle);
 void Input_Ready(void);
 void Input_Init(void);
+void Input_RumbleStart(ushort playerNum, int time, int intensity);
 
 typedef struct {
     byte inverted; /* Inverts fChannel[4,5] */

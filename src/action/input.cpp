@@ -192,6 +192,17 @@ bool Input_ChangeControllerStyle(ushort playerNum, int controllerStyle) {
   return true;
 }
 
+// AUTOINJECT
+void Input_RumbleStart(ushort playerNum, int time, int intensity) {
+  if(!PlayerInputs[playerNum].vibrationEnabled)
+    return;
+  if(!GameState.VibrationEnabled)
+    return;
+  if(PlayerInputs[playerNum].controllerPort >= 4)
+    return;
+  psiInput_RumbleStart(PlayerInputs[playerNum].controllerPort, time, intensity);
+}
+
 // AUTOGEN
 void Input_Init(void);
 
