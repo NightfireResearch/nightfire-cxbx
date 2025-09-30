@@ -86,6 +86,22 @@ void psiInput_RumbleStart(ushort controllerNum, int time, int intensity) {
 }
 
 // AUTOINJECT
+void psiInput_RumbleUpdate(void) {
+
+    for(int i = 0; i < 4; i++) {
+
+        // Skip if timeout has already been hit
+        if(controller_maybeRumbleTimeout[i] <= -1)
+            continue;
+
+        // Decrement then check if timeout has been hit
+        if(--controller_maybeRumbleTimeout[i] < 0)
+            psiInput_RumbleSetIntensity(i, 0, 0);
+    }
+    
+}
+
+// AUTOINJECT
 void psiInput_ResetInputState(uint i) {
     
     // FIXME: It's unclear what the original logic was for.
