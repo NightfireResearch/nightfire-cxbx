@@ -3,7 +3,7 @@
 #include "../actionhelpers.h"
 
 // Array of 4 uint32_t entries, all initialised to 0xFFFFFFFF
-#define controller_maybeRumbleTimeout ((unsigned int*)0x0019481c)
+#define controller_maybeRumbleTimeout ((int*)0x0019481c)
 
 // AUTOINJECT
 float psiInput_GetJoystickRX(uint i) {
@@ -63,6 +63,25 @@ void psiInput_RumbleSetIntensity(unsigned int i, unsigned short a, unsigned shor
 
     XboxInputs.Controllers[i].rumbleA = a;
     XboxInputs.Controllers[i].rumbleB = b;
+    
+}
+
+// AUTOINJECT
+void psiInput_RumbleStart(ushort controllerNum, int time, int intensity) {
+    
+    // Motor has a minimum
+    if((intensity > 0) && (intensity <= 30))
+        intensity = 30;
+    
+    if(time >= 0)
+        time = time + 3;
+    
+    psiInput_RumbleSetIntensity(controllerNum, intensity, intensity);
+    
+    if(controller_maybeRumbleTimeout[controllerNum] < time)
+        controller_maybeRumbleTimeout[controllerNum] = time;
+
+    // Weird self-assignment - ternary operator of some sort?
     
 }
 

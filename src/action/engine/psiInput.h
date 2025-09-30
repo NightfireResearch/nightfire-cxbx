@@ -54,6 +54,7 @@ float psiInput_GetJoystickRY(uint i);
 uint psiInput_GetButtons(uint i);
 
 void psiInput_ResetInputState(unsigned int i);
+void psiInput_RumbleStart(ushort controllerNum, int time, int intensity);
 void psiInput_RumbleSetIntensity(unsigned int i, unsigned short a, unsigned short b);
 void psiInputReset(void);
 void psiInput_ResetRumble(unsigned int i);
