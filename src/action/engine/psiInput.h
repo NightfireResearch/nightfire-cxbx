@@ -90,8 +90,8 @@ typedef enum {
     ACTION_4, // Maybe turret aiming
     ACTION_AIM_U_D,
     ACTION_SCOPE_ZOOM,
-    ACTION_7, // Maybe spacesuit up or crouch
-    ACTION_8, // Maybe spacesuit down or jump 
+    ACTION_JUMP, // Maybe spacesuit up or crouch
+    ACTION_CROUCH, // Maybe spacesuit down or jump 
     ACTION_FIRE,
     ACTION_GADGET_PREV,
     ACTION_GADGET_NEXT,

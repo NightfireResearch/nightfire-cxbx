@@ -203,11 +203,11 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
                     // Dpad Down for zoom?
                     playerInputs[i].fChannels[ACTION_TMP_ZOOMOUT] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_DOWN ? 1.0f : 0.0f);
 
-                    // Crouch / Spacesuit move upwards?
-                    playerInputs[i].fChannels[ACTION_7] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_Y ? 1.0f : 0.0f);
+                    // Jump / Spacesuit move upwards
+                    playerInputs[i].fChannels[ACTION_JUMP] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_Y ? 1.0f : 0.0f);
                     
-                    // Jump / Spacesuit move downwards?
-                    playerInputs[i].fChannels[ACTION_8] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_A ? 1.0f : 0.0f);
+                    // Crouch / Spacesuit move downwards
+                    playerInputs[i].fChannels[ACTION_CROUCH] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_A ? 1.0f : 0.0f);
 
                     // Fire
                     playerInputs[i].fChannels[ACTION_FIRE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_RIGHT_TRIGGER ? 1.0f : 0.0f);
