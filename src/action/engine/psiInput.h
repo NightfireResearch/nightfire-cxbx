@@ -43,6 +43,54 @@ typedef struct {
 
 static_assert(sizeof(XboxInputs_struct) == 0x2a4, "Bad size for XboxInputs struct");
 
+typedef enum {
+    // TODO: Inferred from P_PAUSE_HANDLER / P_CNCONTROLS_Handler but needs checking
+    CONTROLSTYLE_NIGHTFIRE,
+    CONTROLSTYLE_MOONRAKER,
+    CONTROLSTYLE_OCTOPUSSY,
+    CONTROLSTYLE_GOLDFINGER,
+    CONTROLSTYLE_DRNO,
+    CONTROLSTYLE_THUNDERBALL,
+    CONTROLSTYLE_GOLDENEYE,
+    CONTROLSTYLE_CLASSICBOND,
+
+    CONTROLSTYLE_FORCE_U16 = 0x7fff
+} GameContStyle_tag;
+
+
+typedef struct {
+    bool inverted;
+    char unknown0[7];
+    bool maybeCrosshairEnable;
+    bool vibrationEnabled;
+    bool autoSwitchBetterWeapon;
+    char unknown00[3];
+    short controlStyle; // GameContStyle_tag
+    char unknown[4];
+    float fChannels[60]; // Unclear if this is the right number of items but it seems OK from a cross-reference perspective
+    unsigned char actions[80]; // Unclear if this is the right number of items but it seems OK from a cross-reference perspective
+    char unknown3;
+    bool controllerIsActive;
+    char controllerPort;
+    char unknown4;
+} PlayerInput_tag;
+
+static_assert(offsetof(PlayerInput_tag, controlStyle) == 0xe, "Bad offset of controlStyle in PlayerInput_tag");
+static_assert(offsetof(PlayerInput_tag, fChannels) == 0x14, "Bad offset of fChannels in PlayerInput_tag");
+static_assert(offsetof(PlayerInput_tag, actions) == 0x104, "Bad offset of actions in PlayerInput_tag");
+static_assert(offsetof(PlayerInput_tag, controllerPort) == 0x156, "Bad offset of controllerPort in PlayerInput_tag");
+
+static_assert(sizeof(PlayerInput_tag) == 0x158, "Bad size for PlayerInput_tag");
+
+typedef enum { // FIXME: Order these
+    ACTION_AIM_L_R,
+    ACTION_WALK_L_R,
+    ACTION_WALK_F_B,
+    fil1,
+    fil2,
+    ACTION_AIM_U_D,
+} ActionAxes_t;
+
 #pragma pack(pop)
 
 #define XboxInputs (*(XboxInputs_struct*)(0x002ff498))
@@ -59,6 +107,8 @@ void psiInput_RumbleUpdate(void);
 void psiInput_RumbleSetIntensity(unsigned int i, unsigned short a, unsigned short b);
 void psiInputReset(void);
 void psiInput_ResetRumble(unsigned int i);
+bool psiInput_ControllerIsActive(unsigned int i);
+void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers);
 
 
 #endif // PSIINPUT_H_
