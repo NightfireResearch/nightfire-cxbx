@@ -67,7 +67,7 @@ typedef struct {
     char unknown00[3];
     short controlStyle; // GameContStyle_tag
     char unknown[4];
-    float fChannels[60]; // Index is ActionAxes_t, unclear if this is the right number of items but it seems OK from a cross-reference perspective
+    float fChannels[60]; // Index is GameActions_tag, unclear if this is the right number of items but it seems OK from a cross-reference perspective
     unsigned char actions[80]; // Unclear if this is the right number of items but it seems OK from a cross-reference perspective
     char unknown3;
     bool controllerIsActive;
@@ -86,17 +86,17 @@ typedef enum {
     ACTION_AIM_L_R,
     ACTION_WALK_L_R,
     ACTION_WALK_F_B,
-    ACTION_3,
-    ACTION_4,
+    ACTION_3, // Maybe turret aiming
+    ACTION_4, // Maybe turret aiming
     ACTION_AIM_U_D,
     ACTION_SCOPE_ZOOM,
-    ACTION_7,
-    ACTION_8,
+    ACTION_7, // Maybe spacesuit up or crouch
+    ACTION_8, // Maybe spacesuit down or jump 
     ACTION_FIRE,
     ACTION_GADGET_PREV,
     ACTION_GADGET_NEXT,
     ACTION_ALTFIRE,
-    ACTION_13,
+    ACTION_NIGHTVISION,
     ACTION_RELOAD,
     ACTION_WEAPON_PREV,
     ACTION_WEAPON_NEXT,
@@ -119,7 +119,7 @@ typedef enum {
     ACTION_33,
     ACTION_MENU_BACK,
 
-} ActionAxes_t;
+} GameActions_tag;
 
 #pragma pack(pop)
 

@@ -217,7 +217,7 @@ void HUD_MonitorNightSight(BLData *player) {
 
 	} else {
 	
-		if(Input_Action(player->playerNum, 0xd, 4) && !(obj->animState->field_0x50 & 1)) { // Activate night sight button pressed - cycle modes
+		if(Input_Action(player->playerNum, ACTION_NIGHTVISION, 4) && !(obj->animState->field_0x50 & 1)) { // Activate night sight button pressed - cycle modes
 
 			if(!player->nightVisionActive) {
 				obj->animState->otherWeaponId = 0x5d;

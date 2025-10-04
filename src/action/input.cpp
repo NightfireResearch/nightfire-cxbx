@@ -92,7 +92,7 @@ void Input_Update(void) {
 }
 
 // AUTOINJECT
-unsigned short Input_Action(short playerNum,unsigned int action,unsigned char flags) {
+unsigned short Input_Action(short playerNum, GameActions_tag action,unsigned char flags) {
   
     // Any player (specified with a negative value)
     if (playerNum < 0) {
@@ -112,7 +112,7 @@ unsigned short Input_Action(short playerNum,unsigned int action,unsigned char fl
 }
 
 // AUTOINJECT
-float Input_Actionf(short playerNum,unsigned int action, unsigned char flags) {
+float Input_Actionf(short playerNum, GameActions_tag action, unsigned char flags) {
   
   // Any player
   if (playerNum < 0) {
@@ -137,7 +137,7 @@ float Input_Actionf(short playerNum,unsigned int action, unsigned char flags) {
 }
 
 // AUTOINJECT
-void Input_ClearAction(short playerNum,unsigned int action) {
+void Input_ClearAction(short playerNum, GameActions_tag action) {
   
   // All players
   if (playerNum < 0) {
@@ -156,7 +156,7 @@ void Input_ClearAction(short playerNum,unsigned int action) {
 }
 
 // AUTOINJECT
-void Input_SetAction(short playerNum,unsigned int action,unsigned char val) {
+void Input_SetAction(short playerNum, GameActions_tag action,unsigned char val) {
 
   // All players
   if (playerNum < 0) {
