@@ -60,14 +60,21 @@ typedef enum {
 
 typedef struct {
     bool inverted;
-    char unknown0[7];
+    bool autoaimSp;
+    bool autoaimMp;
+    bool manualAimToggle;
+    bool crouchToggleOrHold;
+    char _unknown000[3];
     bool maybeCrosshairEnable;
     bool vibrationEnabled;
     bool autoSwitchBetterWeapon;
-    char unknown00[3];
+    bool hudVisibility;
+    bool flashingObjects;
+    char _unknown0000;
     short controlStyle; // GameContStyle_tag
-    char unknown[4];
-    float fChannels[60]; // Index is GameActions_tag, unclear if this is the right number of items but it seems OK from a cross-reference perspective
+    short controlStyleDriving;
+    char unknown[2];
+    float fChannels[60]; // Index is GameActions_tag, Input_ClearAllActions implies there are 40 actions but there's extra memory?
     unsigned char actions[80]; // Unclear if this is the right number of items but it seems OK from a cross-reference perspective
     char unknown3;
     bool controllerIsActive;
