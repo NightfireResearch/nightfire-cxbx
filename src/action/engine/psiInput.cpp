@@ -154,14 +154,27 @@ void psiInputReset(void) {
 
 }
 
+#define bSkipAttract U8_AT(0x0025d79d)
+
+// Array of 4x bool32
+#define controllerIsPresent ((unsigned int*)(0x0019482c))
+
 // AUTOINJECT
 void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
     // Only ever called from Input_Update, with:
     // psiInput_MapInputs(PlayerInputs, (GameState.CurrentLevelHashcode==HT_Level_Menu_Pre ? 4 : MPSettings.NumPlayers))
 
-    // Some initial stuff, only ever used by P_ATTRACT_HANDLER?
-    // TODO: This
+    // Detect controller being connected, break out of the Attract movie if so.
+    bSkipAttract = false;
+    for(int i = 0; i < 4; i++) {
+        bool isPresent = psiInput_ControllerIsActive(i);
+        if(isPresent && !controllerIsPresent[i]) {
+            bSkipAttract = true;
+        }
+        controllerIsPresent[i] = isPresent;
+    }
 
+    // Clear out state from the previous frame
     for(int i = 0; i < 4; i++) {
 
         // Default is that all axes are 0
