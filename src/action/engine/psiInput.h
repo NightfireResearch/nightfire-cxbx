@@ -67,7 +67,7 @@ typedef struct {
     char unknown00[3];
     short controlStyle; // GameContStyle_tag
     char unknown[4];
-    float fChannels[60]; // Unclear if this is the right number of items but it seems OK from a cross-reference perspective
+    float fChannels[60]; // Index is ActionAxes_t, unclear if this is the right number of items but it seems OK from a cross-reference perspective
     unsigned char actions[80]; // Unclear if this is the right number of items but it seems OK from a cross-reference perspective
     char unknown3;
     bool controllerIsActive;
@@ -82,13 +82,43 @@ static_assert(offsetof(PlayerInput_tag, controllerPort) == 0x156, "Bad offset of
 
 static_assert(sizeof(PlayerInput_tag) == 0x158, "Bad size for PlayerInput_tag");
 
-typedef enum { // FIXME: Order these
+typedef enum {
     ACTION_AIM_L_R,
     ACTION_WALK_L_R,
     ACTION_WALK_F_B,
-    fil1,
-    fil2,
+    ACTION_3,
+    ACTION_4,
     ACTION_AIM_U_D,
+    ACTION_SCOPE_ZOOM,
+    ACTION_7,
+    ACTION_8,
+    ACTION_FIRE,
+    ACTION_GADGET_PREV,
+    ACTION_GADGET_NEXT,
+    ACTION_ALTFIRE,
+    ACTION_13,
+    ACTION_RELOAD,
+    ACTION_WEAPON_PREV,
+    ACTION_WEAPON_NEXT,
+    ACTION_17,
+    ACTION_18,
+    ACTION_AIM_ZOOM_SCOPE,
+    ACTION_TMP_ZOOMOUT,
+    ACTION_TMP_ZOOMIN,
+    ACTION_22,
+    ACTION_23,
+    ACTION_24,
+    ACTION_SKIP_CUTSCENE,
+    ACTION_MENU_DIR_UP,
+    ACTION_MENU_DIR_DOWN,
+    ACTION_MENU_DIR_LEFT,
+    ACTION_MENU_DIR_RIGHT,
+    ACTION_PAUSE,
+    ACTION_MENU_SELECT,
+    ACTION_32,
+    ACTION_33,
+    ACTION_MENU_BACK,
+
 } ActionAxes_t;
 
 #pragma pack(pop)
