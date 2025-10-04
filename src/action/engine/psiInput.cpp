@@ -203,10 +203,10 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
                     // Dpad Down for zoom?
                     playerInputs[i].fChannels[ACTION_TMP_ZOOMOUT] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_DOWN ? 1.0f : 0.0f);
 
-                    // Spacesuit move upwards?
+                    // Crouch / Spacesuit move upwards?
                     playerInputs[i].fChannels[ACTION_7] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_Y ? 1.0f : 0.0f);
                     
-                    // Spacesuit move downwards?
+                    // Jump / Spacesuit move downwards?
                     playerInputs[i].fChannels[ACTION_8] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_A ? 1.0f : 0.0f);
 
                     // Fire
@@ -231,7 +231,7 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
                     playerInputs[i].fChannels[ACTION_GADGET_PREV] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_DOWN ? 1.0f : 0.0f);
 
                     // Note this is split by the break statement in the code, I think this is a compiler optimisation realising that the same instruction (store in entry 13) is common.
-                    playerInputs[i].fChannels[ACTION_13] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_BACK ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_NIGHTVISION] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_BACK ? 1.0f : 0.0f);
                     
                     break;
 

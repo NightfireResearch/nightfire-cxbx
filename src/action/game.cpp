@@ -601,7 +601,7 @@ void GameFlow_Main(void) {
     GameFlow_PopState();
     break;
   case 6:
-    if (movieFinished() || Input_Action(-1,0x19,1)) {
+    if (movieFinished() || Input_Action(-1, ACTION_SKIP_CUTSCENE, 1)) {
       psiStopBackgroundMovie();
       GameFlow_PopState();
     }

@@ -1,10 +1,10 @@
 #include "actionhelpers.h"
 
 void Input_Update(void);
-unsigned short Input_Action(short player,unsigned int action,unsigned char flags);
-float __cdecl Input_Actionf(short playerNum,unsigned int action,unsigned char flags);
-void __cdecl Input_ClearAction(short playerNum,unsigned int action);
-void __cdecl Input_SetAction(short playerNum,unsigned int action,unsigned char val);
+unsigned short Input_Action(short player, GameActions_tag action,unsigned char flags);
+float __cdecl Input_Actionf(short playerNum, GameActions_tag action,unsigned char flags);
+void __cdecl Input_ClearAction(short playerNum, GameActions_tag action);
+void __cdecl Input_SetAction(short playerNum, GameActions_tag action,unsigned char val);
 bool Input_ChangeControllerStyle(ushort playerNum, int controllerStyle);
 void Input_Ready(void);
 void Input_Init(void);
