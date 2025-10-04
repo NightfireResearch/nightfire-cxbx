@@ -86,8 +86,8 @@ typedef enum {
     ACTION_AIM_L_R,
     ACTION_WALK_L_R,
     ACTION_WALK_F_B,
-    ACTION_3, // Maybe turret aiming
-    ACTION_4, // Maybe turret aiming
+    ACTION_TURRET_AIM_X, // Maybe turret aiming
+    ACTION_TURRET_AIM_Y, // Maybe turret aiming
     ACTION_AIM_U_D,
     ACTION_SCOPE_ZOOM,
     ACTION_JUMP, // Maybe spacesuit up or crouch
@@ -107,7 +107,7 @@ typedef enum {
     ACTION_TMP_ZOOMIN,
     ACTION_22,
     ACTION_23,
-    ACTION_24,
+    ACTION_UNUSED_24,
     ACTION_SKIP_CUTSCENE,
     ACTION_MENU_DIR_UP,
     ACTION_MENU_DIR_DOWN,
@@ -115,8 +115,8 @@ typedef enum {
     ACTION_MENU_DIR_RIGHT,
     ACTION_PAUSE,
     ACTION_MENU_SELECT,
-    ACTION_32,
-    ACTION_33,
+    ACTION_MENU_ALTSELECT_1,
+    ACTION_MENU_ALTSELECT_2,
     ACTION_MENU_BACK,
 
 } GameActions_tag;
