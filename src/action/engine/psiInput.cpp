@@ -196,7 +196,6 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
         if(playerInputs[i].controllerIsActive) {
      
             switch(playerInputs[i].controlStyle) {
-                default:
                 case CONTROLSTYLE_NIGHTFIRE:
                     playerInputs[i].fChannels[ACTION_WALK_F_B] = psiInput_GetJoystickLY(controllerIdx);
                     playerInputs[i].fChannels[ACTION_WALK_L_R] = psiInput_GetJoystickLX(controllerIdx);
@@ -224,7 +223,7 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
                     playerInputs[i].fChannels[ACTION_WALK_L_R] = psiInput_GetJoystickLX(controllerIdx);
                     playerInputs[i].fChannels[ACTION_AIM_U_D] = psiInput_GetJoystickRY(controllerIdx);
                     playerInputs[i].fChannels[ACTION_AIM_L_R] = psiInput_GetJoystickRX(controllerIdx);
-                    playerInputs[i].fChannels[ACTION_AIM_ZOOM_SCOPE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_A ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_AIM_ZOOM_SCOPE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_LEFT_TRIGGER ? 1.0f : 0.0f);
                     playerInputs[i].fChannels[ACTION_TURRET_AIM_Y] = psiInput_GetJoystickRY(controllerIdx);
                     playerInputs[i].fChannels[ACTION_TURRET_AIM_X] = psiInput_GetJoystickRX(controllerIdx);
                     playerInputs[i].fChannels[ACTION_TMP_ZOOMIN] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_UP ? 1.0f : 0.0f);
@@ -246,7 +245,7 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
                     playerInputs[i].fChannels[ACTION_WALK_L_R] = psiInput_GetJoystickRX(controllerIdx);
                     playerInputs[i].fChannels[ACTION_AIM_U_D] = psiInput_GetJoystickRY(controllerIdx);
                     playerInputs[i].fChannels[ACTION_AIM_L_R] = psiInput_GetJoystickLX(controllerIdx);
-                    playerInputs[i].fChannels[ACTION_AIM_ZOOM_SCOPE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_A ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_AIM_ZOOM_SCOPE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_LEFT_TRIGGER ? 1.0f : 0.0f);
                     playerInputs[i].fChannels[ACTION_TURRET_AIM_Y] = psiInput_GetJoystickRY(controllerIdx);
                     playerInputs[i].fChannels[ACTION_TURRET_AIM_X] = psiInput_GetJoystickRX(controllerIdx);
                     playerInputs[i].fChannels[ACTION_TMP_ZOOMIN] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_UP ? 1.0f : 0.0f);
@@ -264,25 +263,121 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
                     if(playerInputs[i].fChannels[ACTION_AIM_ZOOM_SCOPE] != 0.0f) {
                         playerInputs[i].fChannels[ACTION_WALK_L_R] = psiInput_GetJoystickRX(controllerIdx);
                     }
-
                     break;
 
-                // case CONTROLSTYLE_GOLDFINGER:
-                //     break;
+                case CONTROLSTYLE_GOLDFINGER:
+                    playerInputs[i].fChannels[ACTION_WALK_F_B] = psiInput_GetJoystickLY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_WALK_L_R] = psiInput_GetJoystickLX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_U_D] = psiInput_GetJoystickRY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_L_R] = psiInput_GetJoystickRX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_ZOOM_SCOPE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_LEFT_TRIGGER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_TURRET_AIM_Y] = psiInput_GetJoystickRY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_TURRET_AIM_X] = psiInput_GetJoystickRX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_TMP_ZOOMIN] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_UP ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_TMP_ZOOMOUT] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_DOWN ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_JUMP] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_Y ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_CROUCH] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_X ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_FIRE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_RIGHT_TRIGGER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_RELOAD] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_A ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_ALTFIRE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_B ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_WEAPON_NEXT] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_RIGHT ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_WEAPON_PREV] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_LEFT ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_GADGET_NEXT] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_UP ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_GADGET_PREV] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_DOWN ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_NIGHTVISION] = (psiInput_GetButtons(controllerIdx) & (XBOXINPUT_GAMEPAD_RIGHT_SHOULDER | XBOXINPUT_GAMEPAD_LEFT_SHOULDER) ? 1.0f : 0.0f);
+                    break;
 
-                // case CONTROLSTYLE_DRNO:
-                //     break;
+                case CONTROLSTYLE_DRNO:
+                    playerInputs[i].fChannels[ACTION_WALK_F_B] = psiInput_GetJoystickRY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_WALK_L_R] = psiInput_GetJoystickRX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_U_D] = psiInput_GetJoystickLY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_L_R] = psiInput_GetJoystickLX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_ZOOM_SCOPE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_LEFT_TRIGGER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_TURRET_AIM_Y] = psiInput_GetJoystickLY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_TURRET_AIM_X] = psiInput_GetJoystickLX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_TMP_ZOOMIN] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_Y ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_TMP_ZOOMOUT] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_X ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_JUMP] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_UP ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_CROUCH] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_DOWN ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_FIRE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_RIGHT_TRIGGER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_RELOAD] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_A ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_ALTFIRE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_B ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_WEAPON_NEXT] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_RIGHT_SHOULDER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_WEAPON_PREV] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_LEFT_SHOULDER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_GADGET_NEXT] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_Y ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_GADGET_PREV] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_X ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_NIGHTVISION] = (psiInput_GetButtons(controllerIdx) & (XINPUT_GAMEPAD_DPAD_LEFT | XINPUT_GAMEPAD_DPAD_RIGHT) ? 1.0f : 0.0f);
+                    break;
 
-                // case CONTROLSTYLE_THUNDERBALL:
-                //     break;
+                case CONTROLSTYLE_THUNDERBALL:
+                    playerInputs[i].fChannels[ACTION_WALK_F_B] = psiInput_GetJoystickLY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_WALK_L_R] = psiInput_GetJoystickRX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_U_D] = psiInput_GetJoystickRY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_L_R] = psiInput_GetJoystickLX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_ZOOM_SCOPE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_LEFT_TRIGGER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_TURRET_AIM_Y] = psiInput_GetJoystickLY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_TURRET_AIM_X] = psiInput_GetJoystickLX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_TMP_ZOOMIN] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_UP ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_TMP_ZOOMOUT] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_DOWN ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_JUMP] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_Y ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_CROUCH] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_X ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_FIRE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_RIGHT_TRIGGER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_RELOAD] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_A ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_ALTFIRE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_B ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_WEAPON_NEXT] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_RIGHT ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_WEAPON_PREV] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_LEFT ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_GADGET_NEXT] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_UP ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_GADGET_PREV] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_DOWN ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_NIGHTVISION] = (psiInput_GetButtons(controllerIdx) & (XBOXINPUT_GAMEPAD_RIGHT_SHOULDER | XBOXINPUT_GAMEPAD_LEFT_SHOULDER) ? 1.0f : 0.0f);
+                    break;
 
-                // case CONTROLSTYLE_GOLDENEYE:
-                //     break;
+                case CONTROLSTYLE_GOLDENEYE:
+                    playerInputs[i].fChannels[ACTION_WALK_F_B] = psiInput_GetJoystickLY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_WALK_L_R] = psiInput_GetJoystickLX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_U_D] = psiInput_GetJoystickRY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_L_R] = psiInput_GetJoystickRX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_ZOOM_SCOPE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_LEFT_TRIGGER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_TURRET_AIM_Y] = psiInput_GetJoystickRY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_TURRET_AIM_X] = psiInput_GetJoystickRX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_TMP_ZOOMIN] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_UP ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_TMP_ZOOMOUT] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_DOWN ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_JUMP] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_Y ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_CROUCH] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_X ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_FIRE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_RIGHT_TRIGGER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_RELOAD] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_A ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_ALTFIRE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_RIGHT_SHOULDER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_WEAPON_NEXT] = (psiInput_GetButtons(controllerIdx) & (XINPUT_GAMEPAD_DPAD_DOWN | XBOXINPUT_GAMEPAD_B) ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_WEAPON_PREV] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_UP ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_GADGET_NEXT] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_RIGHT ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_GADGET_PREV] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_LEFT ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_NIGHTVISION] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_LEFT_SHOULDER ? 1.0f : 0.0f);
+                    break;
 
-                // case CONTROLSTYLE_CLASSICBOND:
-                // break;
+                case CONTROLSTYLE_CLASSICBOND:
+                    playerInputs[i].fChannels[ACTION_WALK_F_B] = psiInput_GetJoystickLY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_WALK_L_R] = psiInput_GetJoystickRX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_U_D] = psiInput_GetJoystickRY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_L_R] = psiInput_GetJoystickLX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_AIM_ZOOM_SCOPE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_LEFT_TRIGGER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_TURRET_AIM_Y] = psiInput_GetJoystickLY(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_TURRET_AIM_X] = psiInput_GetJoystickLX(controllerIdx);
+                    playerInputs[i].fChannels[ACTION_TMP_ZOOMIN] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_UP ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_TMP_ZOOMOUT] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_DOWN ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_JUMP] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_Y ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_CROUCH] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_X ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_FIRE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_RIGHT_TRIGGER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_RELOAD] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_A ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_ALTFIRE] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_RIGHT_SHOULDER ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_WEAPON_NEXT] = (psiInput_GetButtons(controllerIdx) & (XINPUT_GAMEPAD_DPAD_DOWN | XBOXINPUT_GAMEPAD_B) ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_WEAPON_PREV] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_UP ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_GADGET_NEXT] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_RIGHT ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_GADGET_PREV] = (psiInput_GetButtons(controllerIdx) & XINPUT_GAMEPAD_DPAD_LEFT ? 1.0f : 0.0f);
+                    playerInputs[i].fChannels[ACTION_NIGHTVISION] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_LEFT_SHOULDER ? 1.0f : 0.0f);
+                    break;
 
-                // TODO: Other schemes / default case should not be there...
+                // There's a default case fully implemented, but all the control schemes have already been covered. Unclear what this is here for.
+                default:
+                    assert(false);
             }
 
             // Common to all control schemes
