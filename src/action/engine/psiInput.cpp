@@ -401,7 +401,7 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
             playerInputs[i].fChannels[ACTION_MENU_ALTSELECT_1] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_Y ? 1.0f : 0.0f);
 
             // ??
-            playerInputs[i].fChannels[ACTION_MENU_ALTSELECT_2] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_B ? 1.0f : 0.0f);
+            playerInputs[i].fChannels[ACTION_MENU_ALTSELECT_2] = (psiInput_GetButtons(controllerIdx) & XBOXINPUT_GAMEPAD_X ? 1.0f : 0.0f);
 
             // Skip cutscene
             playerInputs[i].fChannels[ACTION_SKIP_CUTSCENE] = (psiInput_GetButtons(controllerIdx) & (XINPUT_GAMEPAD_START | XBOXINPUT_GAMEPAD_A | XBOXINPUT_GAMEPAD_B) ? 1.0f : 0.0f);
