@@ -75,4 +75,7 @@ bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint event
 bool C_SBMPMAP_Handler(uchar param_1,M_CONTROL *param_2,uint param_3,uint param_4,int param_5,int param_6);
 bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6);
 
+// ui_score
+void SeparateNumber(uint score, char* scoreText);
+
 #endif // UI_H
