@@ -13,8 +13,7 @@
 
 // Functions taking void and returning through registers are fine in either __cdecl or __stdcall
 // It's only when they take arguments that the calling convention matters
-// AUTOGEN
-void __stdcall Sound_UpdateListeners(void);
+
 // AUTOGEN
 void __stdcall UpdateAllShards(void);
 // AUTOGEN

@@ -78,3 +78,6 @@ bool Sound_IsLooping(DYNAMICSOUNDS *handle) {
     return SFXOutputData[handle->sfxId].loopAlways;
 
 }
+
+// AUTOGEN
+void Sound_UpdateListeners(void);

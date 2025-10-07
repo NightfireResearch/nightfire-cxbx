@@ -36006,11 +36006,11 @@
     {
         "name": "Sound_UpdateListeners",
         "address": "0x000cc1c0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall Sound_UpdateListeners(void)",
+        "prototype_string": "void Sound_UpdateListeners(void)",
         "parameters": []
     },
     {
