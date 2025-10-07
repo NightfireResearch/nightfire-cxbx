@@ -76,6 +76,23 @@ typedef enum {
 } MovementType;
 
 
+typedef struct {
+    char unknown[0x2c];
+    short requiredSwitch;
+    char unknown2[0xb0-2-0x2c];
+} level_tag_PlayerStartPosition;
+
+typedef struct {
+    _VECTOR pos;
+    _VECTOR rot;
+    char unknown[2];
+    short isEnabled;
+    level_tag_PlayerStartPosition levelData;
+} PlayerStartPosition;
+
+static_assert(sizeof(PlayerStartPosition) == 0xcc, "Bad size for PlayerStartPosition");
+
+
 #pragma pack(pop)
 
 void Player_ChangeState(obj_tag* obj, unsigned short newState);
@@ -91,6 +108,7 @@ ushort Player_AmmoInGun(BLData *playerInfo, ushort weaponIndex);
 void Player_CreateSight(obj_tag *playerObj, byte viewerNum);
 void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum);
 void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos);
+void Player_Start(void);
 
 void PositionBeam(obj_tag *param_1, _VECTOR *param_2, _VECTOR *param_3);
 

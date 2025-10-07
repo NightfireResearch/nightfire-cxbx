@@ -137,3 +137,40 @@ void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos) {
     PositionBeam(poVar1, &sourcePos, targetPos);
 
 }
+
+
+#define player_start_positions_index U32_AT(0x002774c8)
+
+#define player_start ((PlayerStartPosition*)(0x002774d0))
+
+// AUTOGEN
+obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *spawnPointData);
+
+// AUTOINJECT
+void Player_Start(void) {
+
+    // Find the first locaton which is both enabled, and either it doesn't require a switch, or its corresponding switch channel is active
+    for(int i = 0; i < player_start_positions_index; i++) {
+
+        if(player_start[i].isEnabled && ((player_start[i].levelData.requiredSwitch == 0) || (switch_channels[player_start[i].levelData.requiredSwitch] != 0))) {
+            Player_Init(0, &player_start[i].pos, &player_start[i].rot, (level_tag*)&player_start[i].levelData);
+            return;
+        }
+
+    }
+
+    // No ideal spawn was found. Less ideally, spawn in the first enabled position, ignoring the switches
+    for(int i = 0; i < player_start_positions_index; i++) {
+
+        if(player_start[i].isEnabled) {
+            player_start[i].levelData.requiredSwitch = 0; // Remove the spawn point's requirement for this switch channel - unclear what this does
+            Player_Init(0, &player_start[i].pos, &player_start[i].rot, (level_tag*)&player_start[i].levelData);
+            return;
+        }
+
+    }
+
+    // No spawn point was active, return without spawning anything
+    return;
+
+}
