@@ -84,6 +84,7 @@ typedef short MallocFlags;
 #include "engine/XboxSettings.h"
 #include "game/Autoaim.h"
 #include "game/Upgrade.h"
+#include "game/LS.h"
 #include "game/drone/Drone.h"
 #include "game/drone/NDrone2.h"
 #include "game/obj/Apocalypse.h"
