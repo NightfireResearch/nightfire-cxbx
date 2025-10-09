@@ -131,7 +131,7 @@ bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, 
             SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_PHOENIX, WEAPSET_PHOENIX);
             SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_MODERN, WEAPSET_MODERN);
             SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_STEALTHY, WEAPSET_STEALTHY);
-            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_RANDOM, WEAPSET_RANDOM);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_RANDOM, WEAPSET_RANDOM);
             SCROLL_SELECT_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MPSettings.weaponSet);
             
             SCROLL_INIT(managerNum, SUB_C_MPPLAYERMODS_PROFESSIONALMODE);
@@ -161,7 +161,68 @@ bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, 
             MPSettings.ShowTeamAndNameOverhead = SCROLL_GET_VALUE(managerNum, SUB_C_MPPLAYERMODS_TEAMID);
             
             // Notify manager of a change to settings? / Page change in general?
-            Manager_SendMessage(&manager[managerNum], MessageType_Unknown_0x5f, 0, 0); 
+            Manager_SendMessage(&manager[managerNum], MessageType_MaybeReturnPrevPage, 0, 0); 
+            break;
+        }
+    }
+
+  return true;
+}
+
+// FIXME: this might be part of mp_stuff?
+#define enviromods_explosive_scenery_unlocked U8_AT(0x002456a8)
+
+// AUTOINJECT
+bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6) {
+  
+    switch(message) {
+        case MessageType_MaybeEnterPage: {
+            
+            SCROLL_INIT(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE, MP_RESPAWN_NEAR, 0);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE, MP_RESPAWN_FAR, 1);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE, MP_RANDOM, 2);
+            SCROLL_SELECT_ITEM(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE, MPSettings.RespawnSelectionMode);
+            
+            SCROLL_INIT(managerNum, SUB_C_MPENVIROMODS_GUNEMPLACEMENTS);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_GUNEMPLACEMENTS, MP_ON, 1);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_GUNEMPLACEMENTS, MP_OFF, 0);
+            SCROLL_SELECT_ITEM(managerNum, SUB_C_MPENVIROMODS_GUNEMPLACEMENTS, MPSettings.GunEmplacementsEnabled);
+            
+            SCROLL_INIT(managerNum, SUB_C_MPENVIROMODS_EXPLOSIVESCENERY);
+            if(enviromods_explosive_scenery_unlocked) {
+                SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_EXPLOSIVESCENERY, MP_ON, 1);
+                SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_EXPLOSIVESCENERY, MP_OFF, 0);
+            } else {
+                SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_EXPLOSIVESCENERY, LOCKED, 0x10);
+            }
+            SCROLL_SELECT_ITEM(managerNum, SUB_C_MPENVIROMODS_EXPLOSIVESCENERY, MPSettings.ExplosiveSceneryEnabled);
+            
+            SCROLL_INIT(managerNum, SUB_C_MPENVIROMODS_GRAPPLE);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_GRAPPLE, MP_ON, 1);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_GRAPPLE, MP_OFF, 0);
+            SCROLL_SELECT_ITEM(managerNum, SUB_C_MPENVIROMODS_GRAPPLE, MPSettings.GrappleEnabled);
+
+            SCROLL_INIT(managerNum, SUB_C_MPENVIROMODS_MINIVEHICLES);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_MINIVEHICLES, MP_OFF, 0);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_MINIVEHICLES, MP_RC_TANK, 1);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_MINIVEHICLES, MP_RC_HELI, 2);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_MINIVEHICLES, MP_RANDOM, 3);
+            SCROLL_SELECT_ITEM(managerNum, SUB_C_MPENVIROMODS_MINIVEHICLES, MPSettings.MiniVehiclesEnabled);
+
+            break;
+        }
+        case MessageType_Select: {
+
+            // Commit the settings
+            MPSettings.RespawnSelectionMode = SCROLL_GET_VALUE(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE);
+            MPSettings.GunEmplacementsEnabled = (WeaponSet) SCROLL_GET_VALUE(managerNum, SUB_C_MPENVIROMODS_GUNEMPLACEMENTS);
+            MPSettings.ExplosiveSceneryEnabled = SCROLL_GET_VALUE(managerNum, SUB_C_MPENVIROMODS_EXPLOSIVESCENERY);
+            MPSettings.GrappleEnabled = SCROLL_GET_VALUE(managerNum, SUB_C_MPENVIROMODS_GRAPPLE);
+            MPSettings.MiniVehiclesEnabled = SCROLL_GET_VALUE(managerNum, SUB_C_MPENVIROMODS_MINIVEHICLES);
+            
+            // Notify manager of a change to settings? / Page change in general?
+            Manager_SendMessage(&manager[managerNum], MessageType_MaybeReturnPrevPage, 0, 0); 
             break;
         }
     }
