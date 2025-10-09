@@ -15,8 +15,6 @@ bool P_MPOPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint 
 // AUTOGEN
 bool P_MPRULES_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool P_MPPLAYERMODS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool P_MPJOIN_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool P_CNSELECT_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
@@ -297,7 +295,7 @@ bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int 
         case C_CHCHLOCKUP: return C_CHCHLOCKUP_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
         case C_SBDSGTSCROLL: return C_SBDSGTSCROLL_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
 
-        default: {printf("UNHANDLED MESSAGE HANDLER FOR TYPE: 0x%08x\n",hashcode);}
+        default: {printf("UNHANDLED MESSAGE HANDLER FOR TYPE: 0x%08x, args: 0x%08x,  0x%08x,  0x%08x,  0x%08x,  0x%08x\n", hashcode, param_1, param_2, param_3, param_4, param_5);}
     }
     return (hashcode & 0xffffff00);
 }
