@@ -39,7 +39,7 @@ M_ITEM mp_scenario[13] = {
 bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6) {
 
     switch((MessageType)message) {
-        case 0x4c: {
+        case MessageType_MaybeEnterPage: {
             Menu_StartIris(((param_6 == P_MPSCENARIO) ? 0 : 4), param_1, SUB_C_MP_IRIS);
             M_CONTROL* ctrl = (M_CONTROL*)__Menu_Send(param_1, C_SBMPMAP, 0x39, 0, 0);
             Menu_SelectItemInControl(ctrl, mp_level, 8, MPSettings.multiplayerLevelHashcode);
@@ -88,11 +88,11 @@ bool C_SBMPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint mes
 bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6) {
   
     switch(message) {
-        case 0x4c: {
+        case MessageType_MaybeEnterPage: {
             Menu_StartIris((param_6 == P_MAIN) ? 0 : 4, managerNum, SUB_C_MPSCENARIO_IRIS);
             Menu_UnlockMPSettings();
             M_CONTROL *pMVar1 = (M_CONTROL *)__Menu_Send(managerNum, C_SBMPSCEN, 0x39, 0, 0);
-            Menu_SelectItemInControl(pMVar1, mp_scenario, 0xd, MPSettings.GameMode);
+            Menu_SelectItemInControl(pMVar1, mp_scenario, ARRAY_SIZE(mp_scenario), MPSettings.GameMode); // Start on the previously chosen game mode
             break;
         }
         case 0x50: {
@@ -101,6 +101,67 @@ bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, ui
         }
         case 0x63: {
             Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_MAIN, 0);
+            break;
+        }
+    }
+
+  return true;
+}
+
+
+// AUTOINJECT
+bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6) {
+  
+    switch(message) {
+        case MessageType_MaybeEnterPage: {
+            
+            SCROLL_INIT(managerNum, SUB_C_MPPLAYERMODS_FRIENDLYFIRE);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_FRIENDLYFIRE, MP_ON, 1);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_FRIENDLYFIRE, MP_OFF, 0);
+            SCROLL_SELECT_ITEM(managerNum, SUB_C_MPPLAYERMODS_FRIENDLYFIRE, MPSettings.FriendlyFire);
+            
+            SCROLL_INIT(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_NORMAL, WEAPSET_NORMAL);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_PISTOLS, WEAPSET_PISTOLS);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_AUTOMATIC, WEAPSET_AUTOMATIC);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_SNIPERS, WEAPSET_SNIPERS);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_EXPLOSIVES, WEAPSET_EXPLOSIVES);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_EXPLOSIVES2, WEAPSET_EXPLOSIVES2);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_MI6, WEAPSET_MI6);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_PHOENIX, WEAPSET_PHOENIX);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_MODERN, WEAPSET_MODERN);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_STEALTHY, WEAPSET_STEALTHY);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MP_WEAPSET_RANDOM, WEAPSET_RANDOM);
+            SCROLL_SELECT_ITEM(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET, MPSettings.weaponSet);
+            
+            SCROLL_INIT(managerNum, SUB_C_MPPLAYERMODS_PROFESSIONALMODE);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_PROFESSIONALMODE, MP_ON, 1);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_PROFESSIONALMODE, MP_OFF, 0);
+            SCROLL_SELECT_ITEM(managerNum, SUB_C_MPPLAYERMODS_PROFESSIONALMODE, MPSettings.TripleDamageModifierProfessionalMode);
+            
+            SCROLL_INIT(managerNum, SUB_C_MPPLAYERMODS_LOCATIONDAMAGE);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_LOCATIONDAMAGE, MP_ON, 1);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_LOCATIONDAMAGE, MP_OFF, 0);
+            SCROLL_SELECT_ITEM(managerNum, SUB_C_MPPLAYERMODS_LOCATIONDAMAGE, MPSettings.LocationDamageEnabled);
+
+            SCROLL_INIT(managerNum, SUB_C_MPPLAYERMODS_TEAMID);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_TEAMID, MP_ON, 1);
+            SCROLL_ADD_ITEM(managerNum, SUB_C_MPPLAYERMODS_TEAMID, MP_OFF, 0);
+            SCROLL_SELECT_ITEM(managerNum, SUB_C_MPPLAYERMODS_TEAMID, MPSettings.ShowTeamAndNameOverhead);
+
+            break;
+        }
+        case MessageType_Select: {
+
+            // Commit the settings
+            MPSettings.FriendlyFire = SCROLL_GET_VALUE(managerNum, SUB_C_MPPLAYERMODS_FRIENDLYFIRE);
+            MPSettings.weaponSet = (WeaponSet) SCROLL_GET_VALUE(managerNum, SUB_C_MPPLAYERMODS_WEAPONSET);
+            MPSettings.TripleDamageModifierProfessionalMode = SCROLL_GET_VALUE(managerNum, SUB_C_MPPLAYERMODS_PROFESSIONALMODE);
+            MPSettings.LocationDamageEnabled = SCROLL_GET_VALUE(managerNum, SUB_C_MPPLAYERMODS_LOCATIONDAMAGE);
+            MPSettings.ShowTeamAndNameOverhead = SCROLL_GET_VALUE(managerNum, SUB_C_MPPLAYERMODS_TEAMID);
+            
+            // Notify manager of a change to settings? / Page change in general?
+            Manager_SendMessage(&manager[managerNum], MessageType_Unknown_0x5f, 0, 0); 
             break;
         }
     }

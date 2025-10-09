@@ -219,7 +219,7 @@ bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint par
     //printf("In P_DOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, param_4, param_5, param_6);
 
     switch (param_4) {
-        case 0x4c:
+        case MessageType_MaybeEnterPage:
             if (param_6 != P_NFMAP && param_6 != P_NFRESULTS && param_6 != P_NFBONUS) {
                 Menu_StartIris(4, param_1, SUB_C_SBDOSSIER_IRIS);
                 return true;
