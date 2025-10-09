@@ -185,20 +185,18 @@ bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint e
                     return 1;
                 case 2:
                     // Option 2: Dossier - Gadgets submenu
-                    Menu_ChangePageCloseIris(P_DSGADGETS, param_1, 0x1000010b);
+                    Menu_ChangePageCloseIris(P_DSGADGETS, param_1, SUB_C_SBDOSSIER_IRIS);
                     return 1;
                 case 3:
                     // Option 3: Dossier - Weapons submenu
-                    Menu_ChangePageCloseIris(P_DSWEAPONS, param_1, 0x1000010b);
+                    Menu_ChangePageCloseIris(P_DSWEAPONS, param_1, SUB_C_SBDOSSIER_IRIS);
                     return 1;
             }
         }
 
         case MessageType_Scroll:
         case MessageType_Enter:
-            // Note - there is a bug in Menu_UpdateWheel that causes a crash if the M_ITEM array has fewer than 999 elements
-            // We can work around this by allocating a dummy array immediately after the ds_options array
-            Menu_UpdateWheel(param_1, param_2, (M_ITEM*)ds_options, (HASHCODE)0x1000010d, (HASHCODE)0x1000010a, (HASHCODE)0x100001ed, (HASHCODE)0x1000010b, event == MessageType_Scroll);
+            Menu_UpdateWheel(param_1, param_2, (M_ITEM*)ds_options, (HASHCODE)0x1000010d, (HASHCODE)0x1000010a, (HASHCODE)0x100001ed, SUB_C_SBDOSSIER_IRIS, event == MessageType_Scroll);
             return 1;
 
         case 0x51:
@@ -222,16 +220,16 @@ bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint par
 
     switch (param_4) {
         case 0x4c:
-            if (param_6 != 0x4000001c && param_6 != 0x40000036 && param_6 != 0x40000038) {
-                Menu_StartIris(4, param_1, 0x1000010b);
+            if (param_6 != P_NFMAP && param_6 != P_NFRESULTS && param_6 != P_NFBONUS) {
+                Menu_StartIris(4, param_1, SUB_C_SBDOSSIER_IRIS);
                 return true;
             }
-            Menu_StartIris(0, param_1, 0x1000010b);
-            __Menu_Send(param_1, (HASHCODE)0x1000010c, 0x2e, 0x0, 0x0); // Hashcode corresponds to C_SBDOSSIER_Handler?
+            Menu_StartIris(0, param_1, SUB_C_SBDOSSIER_IRIS);
+            __Menu_Send(param_1, C_SBDOSSIER, MessageType_SetValue, 0x0, 0x0);
             break;
 
         case 0x50: // Every frame
-            Menu_PlayIris(1, param_1, 0x1000010b);
+            Menu_PlayIris(1, param_1, SUB_C_SBDOSSIER_IRIS);
             return true;
 
         default:
