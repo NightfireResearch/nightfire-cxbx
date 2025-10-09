@@ -1,41 +1,124 @@
-
-
 #include "ui.h"
 #include "Manager.h"
 #include <stdio.h>
-// const M_ITEM ds_gadgets[14] = {
 
-//     {
-//         .iconHashcode = ICON_DS_GADGET_TASER,
-//         .title = GADGET_TASER_NAME,
-//         .description = GADGET_TASER_DESC,
-//         .identifier = 0x12,
-//         .enabled = 1,
-//         .descriptionWhenDisabled = TXT_NULL
-//     },
-//     {
-//         .iconHashcode = ICON_DS_GADGET_LASER,
-//         .title = GADGET_LASER_NAME,
-//         .description = GADGET_LASER_DESC,
-//         .identifier = 0x15,
-//         .enabled = 1,
-//         .descriptionWhenDisabled = TXT_NULL
-//     },
-//     {
-//         .iconHashcode = ICON_DS_GADGET_GRAPPLE,
-//         .title = GADGET_TASER_NAME,
-//         .description = GADGET_GRAPPLE_DESC,   
-//         .identifier = 0x03,
-//         .enabled = 1,
-//         .descriptionWhenDisabled = TXT_NULL 
-//     },
 
-//     // TODO: Finish me
-
-// };
+const M_ITEM ds_gadgets[14] = {
+    {
+        .iconHashcode = ICON_DS_GADGET_TASER,
+        .title = GADGET_TASER_NAME,
+        .description = GADGET_TASER_DESC,
+        .identifier = 0x12,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL
+    },
+    {
+        .iconHashcode = ICON_DS_GADGET_LASER,
+        .title = GADGET_LASER_NAME,
+        .description = GADGET_LASER_DESC,
+        .identifier = 0x15,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL
+    },
+    {
+        .iconHashcode = ICON_DS_GADGET_GRAPPLE,
+        .title = GADGET_GRAPPLE_NAME,
+        .description = GADGET_GRAPPLE_DESC,   
+        .identifier = 0x03,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL 
+    },
+    {
+        .iconHashcode = ICON_DS_GADGET_CAMERA,
+        .title = GADGET_CAMERA_NAME,
+        .description = GADGET_CAMERA_DESC,   
+        .identifier = 0x06,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL 
+    },
+    {
+        .iconHashcode = ICON_DS_GADGET_DECODER,
+        .title = GADGET_DECODER_NAME,
+        .description = GADGET_DECODER_DESC,   
+        .identifier = 0x0F,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL 
+    },
+    {
+        .iconHashcode = ICON_DS_GADGET_QWORM,
+        .title = GADGET_QWORM_NAME,
+        .description = GADGET_QWORM_DESC,   
+        .identifier = 0x3F,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL 
+    },
+    {
+        .iconHashcode = ICON_DS_GADGET_SHAVER,
+        .title = GADGET_SHAVER_NAME,
+        .description = GADGET_SHAVER_DESC,   
+        .identifier = 0x3F,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL 
+    },
+    {
+        .iconHashcode = ICON_DS_GADGET_SENTRY,
+        .title = GADGET_SENTRY_NAME,
+        .description = GADGET_SENTRY_DESC,   
+        .identifier = 0x3F,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL 
+    },
+    {
+        .iconHashcode = ICON_DS_GADGET_DARTGUN,
+        .title = GADGET_DARTGUN_NAME,
+        .description = GADGET_DARTGUN_DESC,   
+        .identifier = 0x0C,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL 
+    },
+    {
+        .iconHashcode = ICON_DS_GADGET_NIGHTVISION,
+        .title = GADGET_NIGHTVISION_NAME,
+        .description = GADGET_NIGHTVISION_DESC,   
+        .identifier = 0x3F,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL 
+    },
+    {
+        .iconHashcode = ICON_DS_GADGET_SMOKESCREEN,
+        .title = GADGET_SMOKESCREEN_NAME,
+        .description = GADGET_SMOKESCREEN_DESC,   
+        .identifier = 0x3F,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL 
+    },
+    {
+        .iconHashcode = ICON_DS_GADGET_TURBO,
+        .title = GADGET_TURBO_NAME,
+        .description = GADGET_TURBO_DESC,   
+        .identifier = 0x3F,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL 
+    },
+    {
+        .iconHashcode = ICON_DS_GADGET_QWEDGE,
+        .title = GADGET_QWEDGE_NAME,
+        .description = GADGET_QWEDGE_DESC,   
+        .identifier = 0x3F,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL 
+    },
+    {
+        .iconHashcode = ICON_DS_GADGET_EMP,
+        .title = GADGET_EMP_NAME,
+        .description = GADGET_EMP_DESC,   
+        .identifier = 0x3F,
+        .enabled = 1,
+        .descriptionWhenDisabled = TXT_NULL 
+    }
+};
 
 // ds_options: 002e0af8 (PS2 EU), 0017cf70 (Xbox)
-
 const M_ITEM ds_options[4] = {
     {
         .iconHashcode = ICON_DOSSIER_RECORDS,
