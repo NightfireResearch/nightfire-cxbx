@@ -138,7 +138,7 @@ bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int 
 """
 
     for addr, name in ui_hashcodes.items():
-        output += f"        case 0x{addr:08x}: return {name}_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);\n"
+        output += f"        case {name}: return {name}_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);\n"
 
     output += """
         default: {printf(\"UNHANDLED MESSAGE HANDLER FOR TYPE: 0x%08x\\n\",hashcode);}
