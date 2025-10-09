@@ -16,6 +16,7 @@ typedef enum {
     MessageType_SetValue = 0x2e,
     MessageType_GetScrollValue = 0x35,
     MessageType_GetValue = 0x40, // Get the value of the current item (eg the index of the selected item)
+    MessageType_CreateObject = 0x42,
     MessageType_GoPage = 0x44, // Go to a new page
     MessageType_Destroy = 0x47, // Delete/destroy this item
     MessageType_Scroll = 0x49, // Scroll event - fired by both d-pad and left analog stick. Can be vertical (iris menu) or horizontal (eg selecting Max Points in MP)
@@ -24,7 +25,7 @@ typedef enum {
     MessageType_MaybeGainFocus = 0x4e,
     MessageType_MaybeLoseFocus = 0x4f,
     MessageType_Enter = 0x54, // Entering / Loading the menu page?
-    MessageType_Unknown_0x5f = 0x5f,
+    MessageType_MaybeReturnPrevPage = 0x5f,
 } MessageType;
 
 typedef enum {
@@ -89,6 +90,7 @@ bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint event
 bool C_SBMPMAP_Handler(uchar param_1,M_CONTROL *param_2,uint param_3,uint param_4,int param_5,int param_6);
 bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6);
 bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6);
+bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6);
 
 // ui_score
 void SeparateNumber(uint score, char* scoreText);
