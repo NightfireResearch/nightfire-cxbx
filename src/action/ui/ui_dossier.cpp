@@ -172,7 +172,7 @@ bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint e
     
     case MessageType_Select: {
             
-            int lVar1 = __Menu_SendMessage(param_2, MessageType_GetValue, 0, 0); // Get the item number
+            int lVar1 = __Menu_SendMessage(param_2, MessageType_GetWheelValue, 0, 0); // Get the item number
 
             switch(lVar1) {
                 case 0:

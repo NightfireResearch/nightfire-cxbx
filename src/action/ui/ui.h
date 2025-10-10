@@ -14,8 +14,8 @@ typedef enum {
     MessageType_SetColour = 0x1a,
     MessageType_SelectScrollItem = 0x1e,
     MessageType_SetValue = 0x2e,
-    MessageType_GetScrollValue = 0x35,
-    MessageType_GetValue = 0x40, // Get the value of the current item (eg the index of the selected item)
+    MessageType_GetScrollValue = 0x35, // Get the value of the current item in a scroller
+    MessageType_GetWheelValue = 0x40, // Get the value of the current item in an iris wheel
     MessageType_CreateObject = 0x42,
     MessageType_GoPage = 0x44, // Go to a new page
     MessageType_Destroy = 0x47, // Delete/destroy this item
