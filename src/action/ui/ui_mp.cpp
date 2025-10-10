@@ -42,11 +42,11 @@ bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint messa
         case MessageType_MaybeEnterPage: {
             Menu_StartIris(((param_6 == P_MPSCENARIO) ? 0 : 4), param_1, SUB_C_MP_IRIS);
             M_CONTROL* ctrl = (M_CONTROL*)__Menu_Send(param_1, C_SBMPMAP, 0x39, 0, 0);
-            Menu_SelectItemInControl(ctrl, mp_level, 8, MPSettings.multiplayerLevelHashcode);
+            Menu_SelectItemInControl(ctrl, mp_level, ARRAY_SIZE(mp_level), MPSettings.multiplayerLevelHashcode);
             break;
         }
         case 0x50: {
-            Menu_PlayIris(1,param_1,SUB_C_MP_IRIS);
+            Menu_PlayIris(1, param_1, SUB_C_MP_IRIS);
             break;
         }
     }
@@ -67,7 +67,7 @@ bool C_SBMPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint mes
             break;
         }
         case MessageType_Select: {
-            uchar idx = __Menu_SendMessage(param_2, MessageType_GetValue, 0, 0);
+            uchar idx = __Menu_SendMessage(param_2, MessageType_GetWheelValue, 0, 0);
             if (menu_unlock_everything || mp_level[idx].enabled) {
                 GameState.NextLevelHashcode = (HASHCODE)mp_level[idx].identifier;
                 MPSettings.multiplayerLevelHashcode = GameState.NextLevelHashcode;
