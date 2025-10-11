@@ -24,7 +24,7 @@ typedef enum {
     MessageType_MaybeEnterPage = 0x4c,
     MessageType_MaybeGainFocus = 0x4e,
     MessageType_MaybeLoseFocus = 0x4f,
-    MessageType_Unknown_0x51 = 0x51,
+    MessageType_MaybeGetWheelNumItems = 0x51,
     MessageType_Enter = 0x54, // Entering / Loading the menu page?
     MessageType_MaybeReturnPrevPage = 0x5f,
 } MessageType;
@@ -40,7 +40,10 @@ typedef enum {
 #define SCROLL_GET_VALUE(manager, scroll) __Menu_Send(manager, scroll, MessageType_GetScrollValue, 0, 0)
 
 // Wheel (vertical options menu with iris)
-#define WHEEL_GET_VALUE(control) __Menu_SendMessage(control, MessageType_GetWheelValue, 0, 0); 
+#define WHEEL_GET_VALUE(control) __Menu_SendMessage(control, MessageType_GetWheelValue, 0, 0)
+
+// Label
+#define LABEL_UPDATE(mgrNum, label, text) __Menu_Send(mgrNum, label, MessageType_SetText, (int)text, 0)
 
 #pragma pack(push, 1)
 
@@ -97,6 +100,8 @@ bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, 
 bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6);
 bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint messageType, int param_5, int param_6);
 bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, int param_5, int param_6);
+bool P_DSWEAPONS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint param_4, int param_5, int param_6);
+bool C_SBDSWPSCROLL_Handler(uchar param_1,M_CONTROL *param_2,uint param_3,uint param_4,int param_5,int param_6);
 
 // ui_score
 void SeparateNumber(uint score, char* scoreText);

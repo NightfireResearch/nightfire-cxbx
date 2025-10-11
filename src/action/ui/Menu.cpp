@@ -59,7 +59,7 @@ bool Menu_IsBotGood(uint idx) {
 #define buf_171 (*(char*)0x002250b8)
 
 // AUTOINJECT
-void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHCODE param_4, HASHCODE param_5, HASHCODE use_description, HASHCODE param_7, bool maybeDoAnimation) {
+void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHCODE param_4, HASHCODE param_5, HASHCODE descriptionLabel, HASHCODE param_7, bool maybeDoAnimation) {
 
   int iVar2;
   const char *pcVar4;
@@ -102,7 +102,7 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
   }
 
 
-  if (use_description != 0) { 
+  if (descriptionLabel != 0) { 
 
     if (*(HASHCODE *)(manager[managerNum].field158_0x1bc + 0x18) == P_MPBOTCHOOSE) {
 
@@ -127,7 +127,7 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
       pcVar4 = Txt_BindLabel(itemList[idxMid].enabled ? itemList[idxMid].description : itemList[idxMid].descriptionWhenDisabled, 0);
     }
 
-    __Menu_Send(managerNum, use_description, MessageType_SetText, (int)pcVar4, 0);
+    __Menu_Send(managerNum, descriptionLabel, MessageType_SetText, (int)pcVar4, 0);
 
   }
 
