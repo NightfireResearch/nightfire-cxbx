@@ -13,6 +13,7 @@ typedef enum {
     MessageType_SetText = 0x18,
     MessageType_SetColour = 0x1a,
     MessageType_SelectScrollItem = 0x1e,
+    MessageType_SetIcon = 0x24,
     MessageType_SetValue = 0x2e,
     MessageType_GetScrollValue = 0x35, // Get the value of the current item in a scroller
     MessageType_GetWheelValue = 0x40, // Get the value of the current item in an iris wheel
