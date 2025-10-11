@@ -97,7 +97,7 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
     }
     else {
       __Menu_Send(managerNum, param_5, 0x24, itemList[idxMid].iconHashcode, 0);
-      __Menu_Send(managerNum, param_5, 0x1a, itemList[idxMid].enabled ? 0x808080ff : 0x60606060, 0);
+      LABEL_SET_COLOUR(managerNum, param_5, itemList[idxMid].enabled ? 0x808080ff : 0x60606060);
     }
   }
 
@@ -127,7 +127,7 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
       pcVar4 = Txt_BindLabel(itemList[idxMid].enabled ? itemList[idxMid].description : itemList[idxMid].descriptionWhenDisabled, 0);
     }
 
-    __Menu_Send(managerNum, descriptionLabel, MessageType_SetText, (int)pcVar4, 0);
+    LABEL_SET_TEXT(managerNum, descriptionLabel, pcVar4);
 
   }
 

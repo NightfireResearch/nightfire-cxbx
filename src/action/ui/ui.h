@@ -43,7 +43,8 @@ typedef enum {
 #define WHEEL_GET_VALUE(control) __Menu_SendMessage(control, MessageType_GetWheelValue, 0, 0)
 
 // Label
-#define LABEL_UPDATE(mgrNum, label, text) __Menu_Send(mgrNum, label, MessageType_SetText, (int)text, 0)
+#define LABEL_SET_TEXT(manager, label, text) __Menu_Send(manager, label, MessageType_SetText, (int)text, 0)
+#define LABEL_SET_COLOUR(manager, label, colour) __Menu_Send(manager, label, MessageType_SetColour, colour, 0)
 
 #pragma pack(push, 1)
 
