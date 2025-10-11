@@ -554,7 +554,7 @@ bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
             }
 
             // Update the description
-            LABEL_UPDATE(param_1, SUB_C_SBDSGTSCROLL_DESCRIPTION_TEXT, ug_buf);
+            LABEL_SET_TEXT(param_1, SUB_C_SBDSGTSCROLL_DESCRIPTION_TEXT, ug_buf);
 
             break;
         }
@@ -656,7 +656,7 @@ bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
             }
 
             // Update the description
-            LABEL_UPDATE(param_1, SUB_C_SBDSWPSCROLL_DESCRIPTION_TEXT, wpn_upg_buf);
+            LABEL_SET_TEXT(param_1, SUB_C_SBDSWPSCROLL_DESCRIPTION_TEXT, wpn_upg_buf);
 
             break;
         }
