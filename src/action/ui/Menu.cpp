@@ -217,6 +217,9 @@ void Menu_UnlockMPSettings(void);
 // AUTOGEN
 void Menu_Free(void **data, undefined4 mallocFlags);
 
+// AUTOGEN
+undefined4 Menu_GetObjectUpgradeLevel(uint param_1,byte param_2);
+
 // AUTOINJECT
 void Menu_ClearStack(M_MANAGER *mgr) {
 
