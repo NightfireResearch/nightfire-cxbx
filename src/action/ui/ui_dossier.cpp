@@ -489,12 +489,6 @@ bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uin
     return true;
 }
 
-#define SUB_C_SBDSGTSCROLL_DESCRIPTION_TEXT ((HASHCODE)0x1000016b)
-
-
-// AUTOGEN
-undefined4 __cdecl Menu_GetObjectUpgradeLevel(uint param_1,byte param_2);
-
 // AUTOINJECT
 bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, int param_5, int param_6) {
 
@@ -608,8 +602,6 @@ bool P_DSWEAPONS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint p
 
   return true;
 }
-
-#define SUB_C_SBDSWPSCROLL_DESCRIPTION_TEXT ((HASHCODE)0x10000172)
 
 // AUTOINJECT
 bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, int param_5, int param_6) {
