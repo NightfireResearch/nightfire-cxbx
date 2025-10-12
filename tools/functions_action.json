@@ -19306,83 +19306,83 @@
         ]
     },
     {
-        "name": "FUN_0006b250",
+        "name": "BIN_PullBits",
         "address": "0x0006b250",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "uchar *",
             "uint *",
             "uint *",
-            "byte"
+            "uchar"
         ],
-        "prototype_string": "void __cdecl FUN_0006b250(int param_1, uint * param_2, uint * param_3, byte param_4)",
+        "prototype_string": "void __cdecl BIN_PullBits(uchar * dataPtr, uint * bitOffset, uint * dataAndSignOut, uchar numBits)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[uint * param_2@Stack[0x8]:4]",
-            "[uint * param_3@Stack[0xc]:4]",
-            "[byte param_4@Stack[0x10]:1]"
+            "[uchar * dataPtr@Stack[0x4]:4]",
+            "[uint * bitOffset@Stack[0x8]:4]",
+            "[uint * dataAndSignOut@Stack[0xc]:4]",
+            "[uchar numBits@Stack[0x10]:1]"
         ]
     },
     {
-        "name": "BIN_PullBits",
+        "name": "BIN_PullBits_U32",
         "address": "0x0006b2e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "uchar *",
             "uint *",
             "uint *",
             "byte"
         ],
-        "prototype_string": "void __cdecl BIN_PullBits(int param_1, uint * param_2, uint * param_3, byte param_4)",
+        "prototype_string": "void __cdecl BIN_PullBits_U32(uchar * dataPtr, uint * bitOffset, uint * dataOut, byte numBits)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[uint * param_2@Stack[0x8]:4]",
-            "[uint * param_3@Stack[0xc]:4]",
-            "[byte param_4@Stack[0x10]:1]"
+            "[uchar * dataPtr@Stack[0x4]:4]",
+            "[uint * bitOffset@Stack[0x8]:4]",
+            "[uint * dataOut@Stack[0xc]:4]",
+            "[byte numBits@Stack[0x10]:1]"
         ]
     },
     {
-        "name": "maybeBIN_PullBits2",
+        "name": "BIN_PullBits_U8",
         "address": "0x0006b310",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "uchar *",
             "uint *",
-            "undefined *",
-            "byte"
+            "uchar *",
+            "uchar"
         ],
-        "prototype_string": "void __cdecl maybeBIN_PullBits2(int param_1, uint * param_2, undefined * param_3, byte param_4)",
+        "prototype_string": "void __cdecl BIN_PullBits_U8(uchar * dataPtr, uint * bitOffset, uchar * dataOut, uchar numBits)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[uint * param_2@Stack[0x8]:4]",
-            "[undefined * param_3@Stack[0xc]:4]",
-            "[byte param_4@Stack[0x10]:1]"
+            "[uchar * dataPtr@Stack[0x4]:4]",
+            "[uint * bitOffset@Stack[0x8]:4]",
+            "[uchar * dataOut@Stack[0xc]:4]",
+            "[uchar numBits@Stack[0x10]:1]"
         ]
     },
     {
-        "name": "FUN_0006b340",
+        "name": "BIN_PullBits_U16",
         "address": "0x0006b340",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "uchar *",
             "uint *",
-            "undefined2 *",
-            "byte"
+            "short *",
+            "uchar"
         ],
-        "prototype_string": "void __cdecl FUN_0006b340(int param_1, uint * param_2, undefined2 * param_3, byte param_4)",
+        "prototype_string": "void __cdecl BIN_PullBits_U16(uchar * dataPtr, uint * bitOffset, short * dataOut, uchar numBits)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[uint * param_2@Stack[0x8]:4]",
-            "[undefined2 * param_3@Stack[0xc]:4]",
-            "[byte param_4@Stack[0x10]:1]"
+            "[uchar * dataPtr@Stack[0x4]:4]",
+            "[uint * bitOffset@Stack[0x8]:4]",
+            "[short * dataOut@Stack[0xc]:4]",
+            "[uchar numBits@Stack[0x10]:1]"
         ]
     },
     {
@@ -19978,15 +19978,19 @@
     {
         "name": "Input_RumbleStart",
         "address": "0x0006cc00",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4"
+            "ushort",
+            "int",
+            "int"
         ],
-        "prototype_string": "undefined Input_RumbleStart(undefined4 param_1)",
+        "prototype_string": "void __stdcall Input_RumbleStart(ushort playerNum, int time, int intensity)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[ushort playerNum@Stack[0x4]:2]",
+            "[int time@Stack[0x8]:4]",
+            "[int intensity@Stack[0xc]:4]"
         ]
     },
     {
@@ -20036,13 +20040,13 @@
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "float",
-            "float"
+            "float *",
+            "float *"
         ],
-        "prototype_string": "void __stdcall StickCompensation2(float a, float b)",
+        "prototype_string": "void __stdcall StickCompensation2(float * a, float * b)",
         "parameters": [
-            "[float a@ESI:4]",
-            "[float b@EDI:4]"
+            "[float * a@ESI:4]",
+            "[float * b@EDI:4]"
         ]
     },
     {
@@ -20654,7 +20658,7 @@
         ]
     },
     {
-        "name": "FUN_0006ec10",
+        "name": "LS_GetSaveStuff",
         "address": "0x0006ec10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -20663,7 +20667,7 @@
             "ushort",
             "uint"
         ],
-        "prototype_string": "ushort __cdecl FUN_0006ec10(ushort param_1, uint param_2)",
+        "prototype_string": "ushort __cdecl LS_GetSaveStuff(ushort param_1, uint param_2)",
         "parameters": [
             "[ushort param_1@Stack[0x4]:2]",
             "[uint param_2@Stack[0x8]:4]"
@@ -20704,47 +20708,47 @@
         ]
     },
     {
-        "name": "FUN_0006eee0",
+        "name": "LS_LoadPlrSettings",
         "address": "0x0006eee0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "uchar *",
             "ushort"
         ],
-        "prototype_string": "void __cdecl FUN_0006eee0(int param_1, ushort param_2)",
+        "prototype_string": "void __cdecl LS_LoadPlrSettings(uchar * param_1, ushort playerNum)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[ushort param_2@Stack[0x8]:2]"
+            "[uchar * param_1@Stack[0x4]:4]",
+            "[ushort playerNum@Stack[0x8]:2]"
         ]
     },
     {
         "name": "LS_MakeCheats",
         "address": "0x0006f000",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
+            "uchar *",
             "undefined4",
-            "undefined",
             "undefined4"
         ],
-        "prototype_string": "undefined LS_MakeCheats(undefined4 param_1, undefined param_2, undefined4 param_3)",
+        "prototype_string": "undefined __stdcall LS_MakeCheats(uchar * param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined param_2@<UNASSIGNED>]",
-            "[undefined4 param_3@<UNASSIGNED>]"
+            "[uchar * param_1@Stack[0x4]:4]",
+            "[undefined4 param_2@Stack[0x8]:4]",
+            "[undefined4 param_3@Stack[0xc]:4]"
         ]
     },
     {
-        "name": "FUN_0006f0c0",
+        "name": "LS_LoadCheats",
         "address": "0x0006f0c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0006f0c0()",
+        "prototype_string": "undefined LS_LoadCheats()",
         "parameters": []
     },
     {
@@ -20760,97 +20764,83 @@
     {
         "name": "LS_LoadMission",
         "address": "0x0006f230",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": true,
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined",
-            "undefined",
-            "undefined",
-            "undefined",
-            "undefined",
-            "undefined4",
-            "undefined",
-            "undefined1",
-            "undefined1"
+            "undefined4"
         ],
-        "prototype_string": "undefined LS_LoadMission(undefined4 param_1, undefined4 param_2, undefined1 param_3, undefined param_4, undefined param_5, undefined param_6, undefined param_7, undefined param_8, undefined4 param_9, undefined param_10, undefined1 param_11, undefined1 param_12)",
+        "prototype_string": "undefined __stdcall LS_LoadMission(undefined4 dataPtr)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined1 param_3@Stack[0xc]:1]",
-            "[undefined param_4@Stack[0x10]:1]",
-            "[undefined param_5@Stack[0x14]:1]",
-            "[undefined param_6@Stack[0x18]:1]",
-            "[undefined param_7@Stack[0x1c]:1]",
-            "[undefined param_8@Stack[0x20]:1]",
-            "[undefined4 param_9@Stack[0x24]:4]",
-            "[undefined param_10@Stack[0x28]:1]",
-            "[undefined1 param_11@Stack[0x3c]:1]",
-            "[undefined1 param_12@Stack[0x4bc]:1]"
+            "[undefined4 dataPtr@Stack[0x4]:4]"
         ]
     },
     {
-        "name": "FUN_0006f340",
+        "name": "LS_MakeBonus",
         "address": "0x0006f340",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0006f340()",
+        "prototype_string": "undefined LS_MakeBonus()",
         "parameters": []
     },
     {
-        "name": "FUN_0006f3f0",
+        "name": "LS_LoadBonus",
         "address": "0x0006f3f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0006f3f0()",
+        "prototype_string": "undefined LS_LoadBonus()",
         "parameters": []
     },
     {
-        "name": "FUN_0006f450",
+        "name": "LS_MakeMPSettings",
         "address": "0x0006f450",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0006f450()",
+        "prototype_string": "undefined LS_MakeMPSettings()",
         "parameters": []
     },
     {
-        "name": "FUN_0006f500",
+        "name": "LS_LoadMPSettings",
         "address": "0x0006f500",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0006f500()",
+        "prototype_string": "undefined LS_LoadMPSettings()",
         "parameters": []
     },
     {
-        "name": "FUN_0006f550",
+        "name": "LS_MakeGlobalSettings",
         "address": "0x0006f550",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_0006f550()",
-        "parameters": []
+        "param_types": [
+            "uchar *",
+            "undefined4",
+            "undefined4"
+        ],
+        "prototype_string": "undefined __stdcall LS_MakeGlobalSettings(uchar * param_1, undefined4 param_2, undefined4 param_3)",
+        "parameters": [
+            "[uchar * param_1@Stack[0x4]:4]",
+            "[undefined4 param_2@Stack[0x8]:4]",
+            "[undefined4 param_3@Stack[0xc]:4]"
+        ]
     },
     {
-        "name": "FUN_0006f720",
+        "name": "LS_LoadGlobalSettings",
         "address": "0x0006f720",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0006f720()",
+        "prototype_string": "undefined LS_LoadGlobalSettings()",
         "parameters": []
     },
     {
@@ -22336,25 +22326,25 @@
         ]
     },
     {
-        "name": "FUN_00075950",
+        "name": "Menu_AddItemsToControl",
         "address": "0x00075950",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int * *",
-            "int",
+            "M_CONTROL *",
+            "M_ITEM *",
             "ushort",
             "ushort",
-            "char"
+            "uchar"
         ],
-        "prototype_string": "void __cdecl FUN_00075950(int * * param_1, int param_2, ushort param_3, ushort param_4, char param_5)",
+        "prototype_string": "void __cdecl Menu_AddItemsToControl(M_CONTROL * param_1, M_ITEM * param_2, ushort param_3, ushort param_4, uchar param_5)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[M_CONTROL * param_1@Stack[0x4]:4]",
+            "[M_ITEM * param_2@Stack[0x8]:4]",
             "[ushort param_3@Stack[0xc]:2]",
             "[ushort param_4@Stack[0x10]:2]",
-            "[char param_5@Stack[0x14]:1]"
+            "[uchar param_5@Stack[0x14]:1]"
         ]
     },
     {
@@ -26748,15 +26738,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int",
-            "int"
+            "M_MANAGER *",
+            "M_PAGE *",
+            "M_SCROLL *"
         ],
-        "prototype_string": "void __cdecl Scroll_Update(int param_1, int param_2, int param_3)",
+        "prototype_string": "void __cdecl Scroll_Update(M_MANAGER * param_1, M_PAGE * param_2, M_SCROLL * param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[M_MANAGER * param_1@Stack[0x4]:4]",
+            "[M_PAGE * param_2@Stack[0x8]:4]",
+            "[M_SCROLL * param_3@Stack[0xc]:4]"
         ]
     },
     {
@@ -29176,11 +29166,11 @@
             "undefined2",
             "float"
         ],
-        "prototype_string": "obj_tag * __cdecl Pickup_Create(_VECTOR * param_1, _VECTOR * param_2, _MATRIX * param_3, int * param_4, _VECTOR * param_5, short param_6, undefined4 param_7, undefined2 param_8, int param_9, char param_10, undefined2 param_11, undefined2 param_12, float param_13)",
+        "prototype_string": "obj_tag * __cdecl Pickup_Create(_VECTOR * pos, _VECTOR * rot, _MATRIX * mtx, int * param_4, _VECTOR * param_5, short param_6, undefined4 param_7, undefined2 param_8, int param_9, char param_10, undefined2 param_11, undefined2 param_12, float param_13)",
         "parameters": [
-            "[_VECTOR * param_1@Stack[0x4]:4]",
-            "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[_MATRIX * param_3@Stack[0xc]:4]",
+            "[_VECTOR * pos@Stack[0x4]:4]",
+            "[_VECTOR * rot@Stack[0x8]:4]",
+            "[_MATRIX * mtx@Stack[0xc]:4]",
             "[int * param_4@Stack[0x10]:4]",
             "[_VECTOR * param_5@Stack[0x14]:4]",
             "[short param_6@Stack[0x18]:2]",
@@ -29239,10 +29229,10 @@
             "short",
             "_VECTOR *"
         ],
-        "prototype_string": "obj_tag * __cdecl Pickup_CreateSimple(_MATRIX * param_1, short param_2, short param_3, _VECTOR * param_4)",
+        "prototype_string": "obj_tag * __cdecl Pickup_CreateSimple(_MATRIX * param_1, short maybeWeaponNum, short param_3, _VECTOR * param_4)",
         "parameters": [
             "[_MATRIX * param_1@Stack[0x4]:4]",
-            "[short param_2@Stack[0x8]:2]",
+            "[short maybeWeaponNum@Stack[0x8]:2]",
             "[short param_3@Stack[0xc]:2]",
             "[_VECTOR * param_4@Stack[0x10]:4]"
         ]
@@ -30471,10 +30461,10 @@
             "uint",
             "ushort"
         ],
-        "prototype_string": "void __cdecl PlrStat_DoneBondMoment(uint param_1, ushort param_2)",
+        "prototype_string": "void __cdecl PlrStat_DoneBondMoment(uint playerNum, ushort momentIndex)",
         "parameters": [
-            "[uint param_1@Stack[0x4]:4]",
-            "[ushort param_2@Stack[0x8]:2]"
+            "[uint playerNum@Stack[0x4]:4]",
+            "[ushort momentIndex@Stack[0x8]:2]"
         ]
     },
     {
@@ -40812,11 +40802,11 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __cdecl psiInput_RumbleStart(ushort controllerNum, int param_2, int param_3)",
+        "prototype_string": "void __cdecl psiInput_RumbleStart(ushort controllerNum, int time, int intensity)",
         "parameters": [
             "[ushort controllerNum@Stack[0x4]:2]",
-            "[int param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[int time@Stack[0x8]:4]",
+            "[int intensity@Stack[0xc]:4]"
         ]
     },
     {
@@ -41131,10 +41121,10 @@
             "PlayerInput_tag *",
             "uint"
         ],
-        "prototype_string": "undefined __cdecl psiInput_MapInputs(PlayerInput_tag * param_1, uint param_2)",
+        "prototype_string": "undefined __cdecl psiInput_MapInputs(PlayerInput_tag * playerInputs, uint maxPlayers)",
         "parameters": [
-            "[PlayerInput_tag * param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]"
+            "[PlayerInput_tag * playerInputs@Stack[0x4]:4]",
+            "[uint maxPlayers@Stack[0x8]:4]"
         ]
     },
     {
@@ -43442,42 +43432,6 @@
         ]
     },
     {
-        "name": "d3dsetVertexShaderConstant",
-        "address": "0x000e4a50",
-        "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
-        "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall d3dsetVertexShaderConstant(void)",
-        "parameters": []
-    },
-    {
-        "name": "d3dsetVertexShader",
-        "address": "0x000e4b30",
-        "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
-        "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall d3dsetVertexShader(void)",
-        "parameters": []
-    },
-    {
-        "name": "d3dDrawIndexedVertices",
-        "address": "0x000e4b80",
-        "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
-        "return_type": "void",
-        "param_types": [
-            "int",
-            "int"
-        ],
-        "prototype_string": "void __cdecl d3dDrawIndexedVertices(int param_1, int param_2)",
-        "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
-        ]
-    },
-    {
         "name": "drawShard",
         "address": "0x000e4be0",
         "calling_convention": "__cdecl",
@@ -43519,22 +43473,6 @@
         "prototype_string": "void __cdecl FUN_000e4d50(undefined4 * param_1)",
         "parameters": [
             "[undefined4 * param_1@Stack[0x4]:4]"
-        ]
-    },
-    {
-        "name": "FUN_000e4e40",
-        "address": "0x000e4e40",
-        "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
-        "return_type": "void",
-        "param_types": [
-            "D3DMATRIX *",
-            "uint"
-        ],
-        "prototype_string": "void __cdecl FUN_000e4e40(D3DMATRIX * param_1, uint param_2)",
-        "parameters": [
-            "[D3DMATRIX * param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -43984,6 +43922,16 @@
         "parameters": []
     },
     {
+        "name": "FUN_000e5fc0",
+        "address": "0x000e5fc0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_000e5fc0()",
+        "parameters": []
+    },
+    {
         "name": "maybeDrawSomeVertices",
         "address": "0x000e6030",
         "calling_convention": "__stdcall",
@@ -44021,6 +43969,16 @@
         "return_type": "void",
         "param_types": [],
         "prototype_string": "void __stdcall FUN_000e6430(void)",
+        "parameters": []
+    },
+    {
+        "name": "FUN_000e64c0",
+        "address": "0x000e64c0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_000e64c0()",
         "parameters": []
     },
     {
@@ -44142,15 +44100,15 @@
         "parameters": []
     },
     {
-        "name": "FUN_000e7ee0",
+        "name": "psiInput_ControllerIsActive",
         "address": "0x000e7ee0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "bool",
+        "return_type": "uint",
         "param_types": [
             "uint"
         ],
-        "prototype_string": "bool __cdecl FUN_000e7ee0(uint param_1)",
+        "prototype_string": "uint __cdecl psiInput_ControllerIsActive(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ]
@@ -44290,11 +44248,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "undefined4 *"
+            "D3DMATRIX *"
         ],
-        "prototype_string": "void __cdecl FUN_000e81c0(undefined4 * param_1)",
+        "prototype_string": "void __cdecl FUN_000e81c0(D3DMATRIX * param_1)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]"
+            "[D3DMATRIX * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -44426,22 +44384,12 @@
     {
         "name": "FUN_000e86c0",
         "address": "0x000e86c0",
-        "calling_convention": "__cdecl",
+        "calling_convention": "unknown",
         "has_custom_variable_storage": false,
-        "return_type": "void",
-        "param_types": [
-            "float *",
-            "float *",
-            "float *",
-            "char"
-        ],
-        "prototype_string": "void __cdecl FUN_000e86c0(float * param_1, float * param_2, float * param_3, char param_4)",
-        "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]",
-            "[float * param_3@Stack[0xc]:4]",
-            "[char param_4@Stack[0x10]:1]"
-        ]
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_000e86c0()",
+        "parameters": []
     },
     {
         "name": "FUN_000e8740",
@@ -51317,24 +51265,6 @@
             "[undefined4 param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]",
             "[uint param_3@Stack[0xc]:4]"
-        ]
-    },
-    {
-        "name": "D3DDevice_DrawIndexedVertices",
-        "address": "0x00104a60",
-        "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
-        "return_type": "void",
-        "param_types": [
-            "undefined8 *",
-            "uint",
-            "undefined4 *"
-        ],
-        "prototype_string": "void __stdcall D3DDevice_DrawIndexedVertices(undefined8 * param_1, uint param_2, undefined4 * param_3)",
-        "parameters": [
-            "[undefined8 * param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]",
-            "[undefined4 * param_3@Stack[0xc]:4]"
         ]
     },
     {
