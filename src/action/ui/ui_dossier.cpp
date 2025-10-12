@@ -441,11 +441,10 @@ bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint e
     
 }
 
-
 // AUTOINJECT
 bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint messageType, int param_5, int param_6) {
 
-    //printf("In P_DOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, param_4, param_5, param_6);
+    //printf("In P_DOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, eventType, param_5, param_6);
 
     switch (messageType) {
         case MessageType_MaybeEnterPage:
@@ -563,11 +562,10 @@ bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
 
 }
 
-
 // AUTOINJECT
-bool P_DSWEAPONS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint param_4, int param_5, int param_6) {
+bool P_DSWEAPONS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, int param_5, int param_6) {
   
-  switch((MessageType)param_4) {
+  switch((MessageType)eventType) {
     case MessageType_MaybeEnterPage: {
         switch(Menu_GetObjectUpgradeLevel(0, 0)) {
         case 0:
@@ -655,6 +653,43 @@ bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
         case MessageType_MaybeGetWheelNumItems: {
             __Menu_SendMessage(param_2, 0x27, 0, ARRAY_SIZE(ds_weapons) - 1);
             __Menu_SendMessage(param_2, 0x2e, 0, 0);
+            break;
+        }
+    }
+
+    return true;
+}
+
+// AUTOGEN
+void Menu_AddItemsToControl(M_CONTROL *param_1,M_ITEM *param_2,ushort param_3,ushort eventType,uchar param_5);
+
+// AUTOINJECT
+bool P_DSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, int param_5, int param_6) {
+  
+    switch((MessageType)eventType) {
+        case MessageType_MaybeEnterPage: {
+            M_CONTROL* rewardsControl = CONTROL_GET(param_1, C_RBDSREWARDS);
+            Menu_AddItemsToControl(rewardsControl, sp_level, ARRAY_SIZE(sp_level), 0, 1);
+
+            // Unclear why we use __Menu_SendMessage here rather than SCROLL_SELECT_ITEM / __Menu_Send. Immediate dispatch vs next frame vs delayed?
+            __Menu_SendMessage(rewardsControl, MessageType_SelectScrollItem, GameState.BaseMapHashCode, 0);
+            break;
+        }
+    }
+
+    return true;
+}
+
+// AUTOINJECT
+bool P_DSRECORDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, int param_5, int param_6) {
+  
+    switch((MessageType)eventType) {
+        case MessageType_MaybeEnterPage: {
+            M_CONTROL* rewardsControl = CONTROL_GET(param_1, C_RBDSRECORDS);
+            Menu_AddItemsToControl(rewardsControl, sp_level, ARRAY_SIZE(sp_level), 0, 1);
+
+            // Unclear why we use __Menu_SendMessage here rather than SCROLL_SELECT_ITEM / __Menu_Send. Immediate dispatch vs next frame vs delayed?
+            __Menu_SendMessage(rewardsControl, MessageType_SelectScrollItem, GameState.BaseMapHashCode, 0);
             break;
         }
     }

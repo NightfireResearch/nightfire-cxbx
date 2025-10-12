@@ -16,6 +16,7 @@ typedef enum {
     MessageType_SetIcon = 0x24,
     MessageType_SetValue = 0x2e,
     MessageType_GetScrollValue = 0x35, // Get the value of the current item in a scroller
+    MessageType_GetControl = 0x39,
     MessageType_GetWheelValue = 0x40, // Get the value of the current item in an iris wheel
     MessageType_CreateObject = 0x42,
     MessageType_GoPage = 0x44, // Go to a new page
@@ -46,6 +47,9 @@ typedef enum {
 // Label
 #define LABEL_SET_TEXT(manager, label, text) __Menu_Send(manager, label, MessageType_SetText, (int)text, 0)
 #define LABEL_SET_COLOUR(manager, label, colour) __Menu_Send(manager, label, MessageType_SetColour, colour, 0)
+
+// Controls
+#define CONTROL_GET(manager, control) (M_CONTROL*)__Menu_Send(manager, control, MessageType_GetControl, 0, 0)
 
 #pragma pack(push, 1)
 
@@ -104,6 +108,8 @@ bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uin
 bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, int param_5, int param_6);
 bool P_DSWEAPONS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint param_4, int param_5, int param_6);
 bool C_SBDSWPSCROLL_Handler(uchar param_1,M_CONTROL *param_2,uint param_3,uint param_4,int param_5,int param_6);
+bool P_DSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, int param_5, int param_6);
+bool P_DSRECORDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, int param_5, int param_6);
 
 // ui_score
 void SeparateNumber(uint score, char* scoreText);

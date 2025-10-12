@@ -24,4 +24,6 @@ int __Menu_SendMessage(M_CONTROL *param_1, uint param_2, int param_3, int param_
 uint __Menu_Send(uchar param_1, HASHCODE param_2, uint param_3, int param_4, int param_5);
 void __Menu_SendDelayed(int param_1,byte param_2,HASHCODE param_3,undefined4 param_4,undefined4 param_5,undefined4 param_6);
 
+#define sp_level (*(M_ITEM(*)[12])0x0017c580)
+
 #endif // MENU_H
