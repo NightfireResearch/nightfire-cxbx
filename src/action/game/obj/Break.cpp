@@ -147,7 +147,8 @@ typedef struct {
 
 
 
-// AUTOINJECT
+// FIXME: Not implemented properly. Causes a crash in 3rd part of The Exchange right now...
+// NOINJECT
 obj_tag* Break_Create(_VECTOR *position, _VECTOR *rotation, celglist_tag* celgl, void *pData) {
 
   Create_Break_Params *params = (Create_Break_Params*)pData;
