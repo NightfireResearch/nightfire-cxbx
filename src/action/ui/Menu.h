@@ -23,7 +23,7 @@ void Menu_AddItemsToControl(M_CONTROL *control, M_ITEM *itemList, ushort numItem
 int __Menu_SendEx(byte param_1,HASHCODE param_2,uint itemNum,uint param_4, int param_5, int param_6);
 int __Menu_SendMessage(M_CONTROL *param_1, uint param_2, int param_3, int param_4);
 uint __Menu_Send(uchar param_1, HASHCODE param_2, uint param_3, int param_4, int param_5);
-void __Menu_SendDelayed(int param_1,byte param_2,HASHCODE param_3,undefined4 param_4,undefined4 param_5,undefined4 param_6);
+void __Menu_SendDelayed(int delayDuration, byte managerNum, HASHCODE controlHashcode, undefined4 arg1, undefined4 arg2, undefined4 arg3);
 
 #define sp_level (*(M_ITEM(*)[12])0x0017c580)
 

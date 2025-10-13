@@ -43,7 +43,19 @@ void Menu_PlayIris(char param_1, uchar param_2, uint param_3);
 void Menu_ChangePageCloseIris(HASHCODE param_1, uchar param_2, uint param_3);
 
 // AUTOGEN
-void __Menu_SendDelayed(int param_1,byte param_2,HASHCODE param_3,undefined4 param_4,undefined4 param_5,undefined4 param_6);
+undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,int arg2,int arg3);
+
+// AUTOINJECT
+void __Menu_SendDelayed(int delayDuration, byte managerNum, HASHCODE controlHashcode, undefined4 arg1, undefined4 arg2, undefined4 arg3) {
+
+  M_CONTROL* control = CONTROL_GET(managerNum, controlHashcode);
+  
+  if(control == NULL)
+    return;
+
+  __Menu_SendDelayedMessage(delayDuration, control, arg1, arg2, arg3);
+
+}
 
 // AUTOGEN
 int __Menu_SendEx(byte param_1,HASHCODE param_2,uint itemNum, uint param_4,int **param_5,int **param_6);
