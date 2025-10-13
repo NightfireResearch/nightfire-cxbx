@@ -219,6 +219,9 @@ void Menu_Free(void **data, undefined4 mallocFlags);
 // AUTOGEN
 undefined4 Menu_GetObjectUpgradeLevel(uint param_1,byte param_2);
 
+// AUTOGEN
+void Menu_AddItemsToControl(M_CONTROL *param_1,M_ITEM *param_2,ushort param_3,ushort eventType,uchar param_5);
+
 // AUTOINJECT
 void Menu_ClearStack(M_MANAGER *mgr) {
 
