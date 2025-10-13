@@ -219,8 +219,24 @@ void Menu_Free(void **data, undefined4 mallocFlags);
 // AUTOGEN
 undefined4 Menu_GetObjectUpgradeLevel(uint param_1,byte param_2);
 
-// AUTOGEN
-void Menu_AddItemsToControl(M_CONTROL *param_1,M_ITEM *param_2,ushort param_3,ushort eventType,uchar param_5);
+#define menu_unlock_everything U8_AT(0x0025d79e)
+
+// AUTOINJECT
+void Menu_AddItemsToControl(M_CONTROL *control, M_ITEM *itemList, ushort numItems, ushort firstItemIdx, uchar unlockEverything) { 
+
+  if(itemList == NULL)
+    return;
+
+  __Menu_SendMessage(control, MessageType_MaybeInitScroll, 0, 0);
+
+  for(int i = firstItemIdx; i < numItems; i++) {
+    M_ITEM* item = &itemList[i];
+    if(unlockEverything || menu_unlock_everything || item->enabled) {
+      __Menu_SendMessage(control, MessageType_AddTextToScroll, (int)Txt_BindLabel(item->title, 0), (int)item->identifier);
+    }
+  }
+
+}
 
 // AUTOINJECT
 void Menu_ClearStack(M_MANAGER *mgr) {

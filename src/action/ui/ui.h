@@ -9,7 +9,7 @@ typedef enum {
     MessageType_AddTextToScroll = 0x10,
     MessageType_ScriptExitLoop = 0x14, // Calls "Script_ExitLoop" - Unknown what it does
     MessageType_ScriptPlay = 0x16, // Calls "Script_Play" - Unknown what it does
-    MessageType_Unknown_0x17,
+    MessageType_MaybeInitScroll = 0x17,
     MessageType_SetText = 0x18,
     MessageType_SetColour = 0x1a,
     MessageType_SelectScrollItem = 0x1e,
@@ -37,7 +37,7 @@ typedef enum {
 
 // Scrollers (horizontal options menu)
 #define SCROLL_ADD_ITEM(manager, scroll, label, value) __Menu_Send(manager, scroll, MessageType_AddTextToScroll, (int)Txt_BindLabel(label, 0), value)
-#define SCROLL_INIT(manager, scroll) __Menu_Send(manager, scroll, MessageType_Unknown_0x17, 0, 0);
+#define SCROLL_INIT(manager, scroll) __Menu_Send(manager, scroll, MessageType_MaybeInitScroll, 0, 0);
 #define SCROLL_SELECT_ITEM(manager, scroll, value) __Menu_Send(manager, scroll, MessageType_SelectScrollItem, value, 0);
 #define SCROLL_GET_VALUE(manager, scroll) __Menu_Send(manager, scroll, MessageType_GetScrollValue, 0, 0)
 
