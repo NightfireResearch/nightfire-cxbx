@@ -42,8 +42,40 @@ void Menu_PlayIris(char param_1, uchar param_2, uint param_3);
 // AUTOGEN
 void Menu_ChangePageCloseIris(HASHCODE param_1, uchar param_2, uint param_3);
 
-// AUTOGEN
-undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,int arg2,int arg3);
+typedef struct {
+  M_CONTROL* control;
+  uint dispatchOnFrameNum;
+  uint param1;
+  uint param2;
+  uint param3;
+} DelayedMessage;
+
+#define menu_delay_frame U32_AT(0x00224540)
+#define menu_delay_msg (*(DelayedMessage(*)[128])(0x00223b40))
+
+// AUTOINJECT
+undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,int arg2,int arg3) {
+
+  for(int i = 0; i < ARRAY_SIZE(menu_delay_msg); i++) {
+
+    // Is the item at this index expired?
+    if(menu_delay_msg[i].dispatchOnFrameNum < menu_delay_frame) {
+
+      // Insert this item and return
+      menu_delay_msg[i].control = control;
+      menu_delay_msg[i].dispatchOnFrameNum = menu_delay_frame + duration;
+      menu_delay_msg[i].param1 = arg1;
+      menu_delay_msg[i].param2 = arg2;
+      menu_delay_msg[i].param3 = arg3;
+
+      return true;
+
+    }
+
+  }
+
+  return false;
+}
 
 // AUTOINJECT
 void __Menu_SendDelayed(int delayDuration, byte managerNum, HASHCODE controlHashcode, undefined4 arg1, undefined4 arg2, undefined4 arg3) {
