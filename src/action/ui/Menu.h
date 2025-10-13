@@ -18,6 +18,7 @@ void Menu_ClearStack(M_MANAGER *mgr);
 void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle);
 undefined4 Menu_GetObjectUpgradeLevel(uint param_1,byte param_2);
 void Menu_AddItemsToControl(M_CONTROL *control, M_ITEM *itemList, ushort numItems, ushort firstItemIdx, uchar unlockEverything);
+void Menu_ProcessDelayedMessages(void);
 
 int __Menu_SendEx(byte param_1,HASHCODE param_2,uint itemNum,uint param_4, int param_5, int param_6);
 int __Menu_SendMessage(M_CONTROL *param_1, uint param_2, int param_3, int param_4);

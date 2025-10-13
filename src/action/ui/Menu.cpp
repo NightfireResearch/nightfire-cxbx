@@ -89,6 +89,20 @@ void __Menu_SendDelayed(int delayDuration, byte managerNum, HASHCODE controlHash
 
 }
 
+// AUTOINJECT
+void Menu_ProcessDelayedMessages(void) {
+
+  menu_delay_frame++;
+
+  for(int i = 0; i < ARRAY_SIZE(menu_delay_msg); i++) {
+    DelayedMessage msg = menu_delay_msg[i];
+    if(msg.dispatchOnFrameNum == menu_delay_frame) {
+      __Menu_SendMessage(msg.control, msg.param1, msg.param2, msg.param3);
+    }
+  }
+
+}
+
 // AUTOGEN
 int __Menu_SendEx(byte param_1,HASHCODE param_2,uint itemNum, uint param_4,int **param_5,int **param_6);
 
