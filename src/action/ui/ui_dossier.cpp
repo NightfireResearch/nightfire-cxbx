@@ -660,9 +660,6 @@ bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
     return true;
 }
 
-// AUTOGEN
-void Menu_AddItemsToControl(M_CONTROL *param_1,M_ITEM *param_2,ushort param_3,ushort eventType,uchar param_5);
-
 // AUTOINJECT
 bool P_DSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, int param_5, int param_6) {
   

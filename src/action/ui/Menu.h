@@ -17,6 +17,7 @@ void Menu_DeleteSprite(sprite* spr);
 void Menu_ClearStack(M_MANAGER *mgr);
 void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle);
 undefined4 Menu_GetObjectUpgradeLevel(uint param_1,byte param_2);
+void Menu_AddItemsToControl(M_CONTROL *param_1,M_ITEM *param_2,ushort param_3,ushort eventType,uchar param_5);
 
 
 int __Menu_SendEx(byte param_1,HASHCODE param_2,uint itemNum,uint param_4, int param_5, int param_6);
