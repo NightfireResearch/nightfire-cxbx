@@ -28,6 +28,20 @@ void SP_Update(obj_tag* obj) {
 }
 
 // AUTOINJECT
+void SP_SetColour(obj_tag *gameObj, undefined1 clr_r, undefined1 clr_g, undefined1 clr_b) {
+  
+  if (gameObj == NULL)
+    return;
+
+  SCRIPTPLAYER* scriptPlayer = (SCRIPTPLAYER *)gameObj->extraObjectData;
+
+  if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] == NULL)
+    return;
+
+  Script_SetColour(scriptPlayer->scriptInfos[scriptPlayer->nthScript], clr_r, clr_g, clr_b);
+    
+}
+// AUTOINJECT
 void SP_SetPos(obj_tag *gameObj, _VECTOR *newPos) {
   
   if (gameObj == NULL)

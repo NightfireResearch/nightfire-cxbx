@@ -48,3 +48,6 @@ void Script_Run(SCRIPTINFO *scriptInfo) {
 
 // AUTOGEN
 void Script_SetPosRot(SCRIPTINFO *param_1, _MATRIX *param_2);
+
+// AUTOGEN
+void Script_SetColour(SCRIPTINFO *param_1, undefined1 clr_r, undefined1 clr_g, undefined1 clr_b);

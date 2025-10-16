@@ -23,4 +23,5 @@ static_assert(offsetof(SCRIPTINFO, streamNum) == 0xaab, "Offset of streamNum is 
 
 void Script_Run(SCRIPTINFO *);
 void Script_SetPosRot(SCRIPTINFO *param_1, _MATRIX *param_2);
+void Script_SetColour(SCRIPTINFO *param_1, undefined1 clr_r, undefined1 clr_g, undefined1 clr_b);
 
