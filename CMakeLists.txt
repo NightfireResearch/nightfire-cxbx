@@ -106,6 +106,7 @@ add_library(actioninject SHARED
   src/action/game/obj/GunImp.cpp
   src/action/game/obj/PCQWorm.cpp
   src/action/game/obj/Player.cpp
+  src/action/game/obj/ScriptPlayer.cpp
   src/action/game/obj/SpaceLaser.cpp
   src/action/game/sp/Locks.cpp
   src/action/game/sp/Mission.cpp

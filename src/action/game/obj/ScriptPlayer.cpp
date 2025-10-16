@@ -1,0 +1,45 @@
+#include "ScriptPlayer.h"
+#include "../../math/math.h"
+#include "../../engine/Script.h"
+
+#pragma pack(push, 1)
+
+typedef struct SCRIPTPLAYER {
+    char unknown1[0xc];
+    SCRIPTINFO* scriptInfos[4];
+    HASHCODE someHashcode;
+    char unknown2[10];
+    ushort nthScript;
+} SCRIPTPLAYER;
+
+static_assert(offsetof(SCRIPTPLAYER, scriptInfos) == 0xc, "Bad offset of scriptInfos");
+static_assert(offsetof(SCRIPTPLAYER, nthScript) == 0x2a, "Bad offset of nthScript");
+
+#pragma pack(pop)
+
+// NOINJECT
+void SP_Update(obj_tag* obj) {
+
+    // printf("Object at 0x%08x is a SCRIPTPLAYER\n");
+    SCRIPTPLAYER* sp = (SCRIPTPLAYER*)obj->extraObjectData;
+
+
+
+}
+
+// AUTOINJECT
+void SP_SetPos(obj_tag *gameObj, _VECTOR *newPos) {
+  
+  if (gameObj == NULL)
+    return;
+
+  SCRIPTPLAYER* scriptPlayer = (SCRIPTPLAYER *)gameObj->extraObjectData;
+
+  if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] == NULL)
+    return;
+
+  Vec_Copy(newPos, Mat_Position(scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeMatrix));
+
+  Script_SetPosRot(scriptPlayer->scriptInfos[scriptPlayer->nthScript], &scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeMatrix);
+    
+}
