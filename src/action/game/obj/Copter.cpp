@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-#include "../scriptplayer.h"
+#include "ScriptPlayer.h"
 
 #define CopterList (*(LLISTINFO_tag*)0x001fe6a8)
 

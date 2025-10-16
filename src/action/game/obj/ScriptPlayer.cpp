@@ -17,6 +17,9 @@ static_assert(offsetof(SCRIPTPLAYER, nthScript) == 0x2a, "Bad offset of nthScrip
 
 #pragma pack(pop)
 
+// AUTOGEN
+void SP_RemoveObj(obj_tag* obj, void* scriptPlayer);
+
 // NOINJECT
 void SP_Update(obj_tag* obj) {
 
@@ -25,6 +28,16 @@ void SP_Update(obj_tag* obj) {
 
 
 
+}
+
+// AUTOINJECT
+void SP_Delete(obj_tag *obj) {
+    SCRIPTPLAYER *sp = (SCRIPTPLAYER*)obj->extraObjectData;
+    Script_Free(sp->scriptInfos[0]);
+    sp->scriptInfos[0] = NULL;
+    Script_Free(sp->scriptInfos[1]);
+    sp->scriptInfos[1] = NULL;
+    obj->flags |= 1;
 }
 
 // AUTOINJECT

@@ -47,6 +47,9 @@ void Script_Run(SCRIPTINFO *scriptInfo) {
 }
 
 // AUTOGEN
+void Script_Free(SCRIPTINFO *param_1);
+
+// AUTOGEN
 void Script_SetPosRot(SCRIPTINFO *param_1, _MATRIX *param_2);
 
 // AUTOGEN
