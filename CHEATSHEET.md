@@ -1,4 +1,6 @@
-# Cheatsheet for defining in-memory addresses
+# Cheatsheet
+
+## Defining in-memory addresses
 
 Whilst developing an injected function which refers to some global state/data, you will need to access complex data structures in the game's existing memory rather than creating it in C.
 
@@ -21,3 +23,25 @@ For more complex things, you might need to write your own. Eg:
 // This definition behaves identically to a real array, ie sizeof(GameStateStack) == 64 * sizeof(uint) and accessing GameStateStack[1] reads from 0x0x0017bff4
 #define GameStateStack (*(uint (*)[64])0x0017bff0)
 ```
+
+
+## Injection
+
+To mark a function as injectable, prefix the function declaration with `// AUTOINJECT` - this will add an entry to the injection list. The function must have a prototype in a header that autofunc.cpp can see.
+
+
+## Common mistakes
+
+* Using PS2 memory addresses by mistake - make sure you're using the Xbox as primary reference, only go to PS2 when the logic has really been mangled.
+* Only replace "in-memory" stuff with local variables when you're sure it's completely replaced and you know (have confirmed) the sizes of arrays. Otherwise, subtle bugs can come up. Eg if you identify some multiplayer-related stuff and reimplement it, but it actually turns out to be a sub-element of a larger array and so is no longer cleared as part of MP_Init.
+
+
+
+
+
+## Common patterns
+
+* Developers seemed to use shorts a bunch, which results in a bunch of useless `& 0xffff` in loops. Ignore that and use ints.
+* Certain constants/checks show up when doing long->int
+* Sometimes Xbox code will take pointers to an element/member within an array, which mangles the meaning somewhat. It's annoying and needs fixing manually.
+* memcpy, strcpy etc always get inlined on Xbox. Check PS2 or recognise the patterns.
