@@ -43,3 +43,20 @@ void SP_SetPos(obj_tag *gameObj, _VECTOR *newPos) {
   Script_SetPosRot(scriptPlayer->scriptInfos[scriptPlayer->nthScript], &scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeMatrix);
     
 }
+
+// AUTOINJECT
+void SP_SetPosRot(obj_tag *gameObj, _MATRIX *newMtx) {
+  
+  if (gameObj == NULL)
+    return;
+
+  SCRIPTPLAYER* scriptPlayer = (SCRIPTPLAYER *)gameObj->extraObjectData;
+
+  if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] == NULL)
+    return;
+
+  Mat_Copy(newMtx, &scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeMatrix);
+
+  Script_SetPosRot(scriptPlayer->scriptInfos[scriptPlayer->nthScript], &scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeMatrix);
+    
+}
