@@ -5,6 +5,12 @@
 
 #pragma pack(push, 1)
 
+typedef struct AnimObj {
+    char pad[0x30];
+    celglist_tag *maybeSleeveGlist;
+    // ...
+} AnimObj;
+
 typedef struct AnimState {
     char _pad_1[0x50];
     char field_0x50; // bit one when weapon is zoomed in
@@ -13,8 +19,9 @@ typedef struct AnimState {
     char otherWeaponId; // 0x53
     char thirdWeaponId; // 0x54
     char _pad_3[3]; // 55-57
-    AnimObj* animObj; // 0x58
+    AnimObj animObj; // 0x58 - ???? - size not known
 } AnimState;
+
 
 #pragma pack(pop)
 
@@ -29,5 +36,6 @@ void AnimObjectDraw(obj_tag *obj, viewer_tag *viewer);
 void psiBuildMatrixPalette(obj_tag *gameObj, AnimObj *animObj, char param_3);
 void AnimObjectHeadTrack(obj_tag* gameObj, AnimObj* animObj, quaternion_tag *q, _MATRIX *m, int param_5);
 void AnimObjectAimAt(obj_tag* gameObj, AnimObj* animObj, quaternion_tag *q, _MATRIX *m, int param_5);
+void AnimObjectSetSleeveType(obj_tag *param_1, int sleeveNum);
 
 #endif // ANIM_H
