@@ -18,9 +18,9 @@
         "param_types": [
             "char *"
         ],
-        "prototype_string": "void __cdecl AnimSkeletonProcess(char * skeletonNum)",
+        "prototype_string": "void __cdecl AnimSkeletonProcess(char * data)",
         "parameters": [
-            "[char * skeletonNum@Stack[0x4]:4]"
+            "[char * data@Stack[0x4]:4]"
         ]
     },
     {
@@ -66,26 +66,30 @@
     {
         "name": "Discrete_Delete",
         "address": "0x00011340",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Discrete_Delete(undefined4 param_1)",
+        "prototype_string": "undefined __cdecl Discrete_Delete(obj_tag * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
         "name": "maybeFixupSkinHashcode",
         "address": "0x00011350",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined maybeFixupSkinHashcode()",
-        "parameters": []
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": true,
+        "return_type": "int",
+        "param_types": [
+            "HASHCODE"
+        ],
+        "prototype_string": "int __stdcall maybeFixupSkinHashcode(HASHCODE inHc)",
+        "parameters": [
+            "[HASHCODE inHc@EAX:4]"
+        ]
     },
     {
         "name": "AnimObjectNew",
@@ -106,12 +110,16 @@
     {
         "name": "AnimSleeveGetEntity",
         "address": "0x000118b0",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined AnimSleeveGetEntity()",
-        "parameters": []
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": true,
+        "return_type": "HASHCODE",
+        "param_types": [
+            "int"
+        ],
+        "prototype_string": "HASHCODE __stdcall AnimSleeveGetEntity(int idx)",
+        "parameters": [
+            "[int idx@EAX:4]"
+        ]
     },
     {
         "name": "AnimObjectSetSleeveType",
@@ -120,12 +128,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
             "int"
         ],
-        "prototype_string": "void __cdecl AnimObjectSetSleeveType(int param_1, int sleeveNum)",
+        "prototype_string": "void __cdecl AnimObjectSetSleeveType(obj_tag * param_1, int sleeveNum)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[int sleeveNum@Stack[0x8]:4]"
         ]
     },
@@ -563,10 +571,10 @@
             "obj_tag *",
             "int"
         ],
-        "prototype_string": "int __cdecl AnimDatumGetIndex(obj_tag * param_1, int param_2)",
+        "prototype_string": "int __cdecl AnimDatumGetIndex(obj_tag * param_1, int datumNum)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[int datumNum@Stack[0x8]:4]"
         ]
     },
     {
@@ -581,10 +589,10 @@
             "HASHCODE",
             "undefined1"
         ],
-        "prototype_string": "void __cdecl AnimDatumSetEntity(obj_tag * param_1, int param_2, HASHCODE param_3, undefined1 param_4)",
+        "prototype_string": "void __cdecl AnimDatumSetEntity(obj_tag * param_1, int datumNum, HASHCODE param_3, undefined1 param_4)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[int datumNum@Stack[0x8]:4]",
             "[HASHCODE param_3@Stack[0xc]:4]",
             "[undefined1 param_4@Stack[0x10]:1]"
         ]
@@ -597,16 +605,16 @@
         "return_type": "uint",
         "param_types": [
             "obj_tag *",
-            "undefined4 *",
-            "undefined4 *",
-            "undefined2 *"
+            "HASHCODE",
+            "HASHCODE",
+            "ushort *"
         ],
-        "prototype_string": "uint __cdecl AnimDatumGetWeaponInfo(obj_tag * param_1, undefined4 * wpn3rdPersonGfx, undefined4 * muzzleFlash3rdPerson, undefined2 * param_4)",
+        "prototype_string": "uint __cdecl AnimDatumGetWeaponInfo(obj_tag * param_1, HASHCODE wpn3rdPersonGfx, HASHCODE muzzleFlash3rdPerson, ushort * param_4)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
-            "[undefined4 * wpn3rdPersonGfx@Stack[0x8]:4]",
-            "[undefined4 * muzzleFlash3rdPerson@Stack[0xc]:4]",
-            "[undefined2 * param_4@Stack[0x10]:4]"
+            "[HASHCODE wpn3rdPersonGfx@Stack[0x8]:4]",
+            "[HASHCODE muzzleFlash3rdPerson@Stack[0xc]:4]",
+            "[ushort * param_4@Stack[0x10]:4]"
         ]
     },
     {
@@ -716,9 +724,9 @@
         "param_types": [
             "HASHCODE"
         ],
-        "prototype_string": "void __stdcall AnimProcessSkinData(HASHCODE param_1)",
+        "prototype_string": "void __stdcall AnimProcessSkinData(HASHCODE hashcode)",
         "parameters": [
-            "[HASHCODE param_1@EAX:4]"
+            "[HASHCODE hashcode@EAX:4]"
         ]
     },
     {
@@ -810,14 +818,14 @@
         "address": "0x000159d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": true,
-        "return_type": "int * *",
+        "return_type": "sAnimScript_tag *",
         "param_types": [
-            "int *",
+            "sAnimScript_tag *",
             "obj_tag *"
         ],
-        "prototype_string": "int * * __cdecl AnimScriptNew(int * param_1, obj_tag * gameObj)",
+        "prototype_string": "sAnimScript_tag * __cdecl AnimScriptNew(sAnimScript_tag * aScript, obj_tag * gameObj)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
+            "[sAnimScript_tag * aScript@Stack[0x4]:4]",
             "[obj_tag * gameObj@EAX:4]"
         ]
     },
@@ -840,17 +848,17 @@
     {
         "name": "AnimScriptAppend",
         "address": "0x00015c30",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "sAnimScript_tag *",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "obj_tag *",
+            "HASHCODE"
         ],
-        "prototype_string": "undefined AnimScriptAppend(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "sAnimScript_tag * __stdcall AnimScriptAppend(obj_tag * param_1, HASHCODE param_2)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[HASHCODE param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -1044,15 +1052,15 @@
         "address": "0x00017160",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "obj_tag *",
-            "undefined4"
+            "HASHCODE"
         ],
-        "prototype_string": "undefined __cdecl AnimFacialAppend(obj_tag * param_1, undefined4 param_2)",
+        "prototype_string": "void __cdecl AnimFacialAppend(obj_tag * param_1, HASHCODE animHashcode)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[HASHCODE animHashcode@Stack[0x8]:4]"
         ]
     },
     {
@@ -6369,12 +6377,12 @@
         "return_type": "void",
         "param_types": [
             "char",
-            "int"
+            "DCVars_tag *"
         ],
-        "prototype_string": "void __cdecl Drone_AlertStatusSet(char param_1, int param_2)",
+        "prototype_string": "void __cdecl Drone_AlertStatusSet(char newStatus, DCVars_tag * param_2)",
         "parameters": [
-            "[char param_1@Stack[0x4]:1]",
-            "[int param_2@Stack[0x8]:4]"
+            "[char newStatus@Stack[0x4]:1]",
+            "[DCVars_tag * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -7744,19 +7752,19 @@
         ]
     },
     {
-        "name": "FUN_000374e0",
+        "name": "NDrone2_PlayFacialAnim",
         "address": "0x000374e0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
         "param_types": [
             "DCVars_tag *",
             "HASHCODE"
         ],
-        "prototype_string": "undefined __cdecl FUN_000374e0(DCVars_tag * param_1, HASHCODE param_2)",
+        "prototype_string": "void __cdecl NDrone2_PlayFacialAnim(DCVars_tag * drone, HASHCODE animationHc)",
         "parameters": [
-            "[DCVars_tag * param_1@Stack[0x4]:4]",
-            "[HASHCODE param_2@Stack[0x8]:4]"
+            "[DCVars_tag * drone@Stack[0x4]:4]",
+            "[HASHCODE animationHc@Stack[0x8]:4]"
         ]
     },
     {
@@ -8480,57 +8488,57 @@
         ]
     },
     {
-        "name": "FUN_0003a4d0",
+        "name": "DroneFunc_RecoverTime",
         "address": "0x0003a4d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "ulonglong",
         "param_types": [
-            "int",
-            "int"
+            "DCVars_tag *",
+            "HITDATA_tag *"
         ],
-        "prototype_string": "ulonglong __cdecl FUN_0003a4d0(int param_1, int param_2)",
+        "prototype_string": "ulonglong __cdecl DroneFunc_RecoverTime(DCVars_tag * param_1, HITDATA_tag * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
+            "[HITDATA_tag * param_2@Stack[0x8]:4]"
         ]
     },
     {
         "name": "DroneFunc_ReactionTime",
         "address": "0x0003a5d0",
-        "calling_convention": "unknown",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "uint",
         "param_types": [
-            "undefined4"
+            "Drone_tag *"
         ],
-        "prototype_string": "undefined DroneFunc_ReactionTime(undefined4 param_1)",
+        "prototype_string": "uint DroneFunc_ReactionTime(Drone_tag * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[Drone_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
-        "name": "FUN_0003a680",
+        "name": "NDrone2_ObstructedPatrolPath",
         "address": "0x0003a680",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0003a680()",
+        "prototype_string": "undefined NDrone2_ObstructedPatrolPath()",
         "parameters": []
     },
     {
-        "name": "FUN_0003a690",
+        "name": "NDrone2_HasOpponent",
         "address": "0x0003a690",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int"
+            "DCVars_tag *"
         ],
-        "prototype_string": "uint __cdecl FUN_0003a690(int param_1)",
+        "prototype_string": "bool __cdecl NDrone2_HasOpponent(DCVars_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -9226,19 +9234,19 @@
         "address": "0x0003e010",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int *",
-            "int",
+            "/auto_structs/DCVars_tag\npack(disabled)\nStructure DCVars_tag {\n   0   obj_tag *   4   gameObj   \"\"\n   4   Drone_tag *   4   drone   \"\"\n   8   cel_tag *   4   cel   \"\"\n   12   StateMachineInfo_tag *   4   aiStateMachine   \"\"\n}\nLength: 16 Alignment: 1\n",
+            "HITDATA_tag *",
             "uint",
             "char"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_PunchImpact(int * param_1, int param_2, uint param_3, char param_4)",
+        "prototype_string": "bool __cdecl NDrone2_PunchImpact(DCVars_tag param_1, HITDATA_tag * param_2, uint param_3, char param_4)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[uint param_3@Stack[0xc]:4]",
-            "[char param_4@Stack[0x10]:1]"
+            "[DCVars_tag param_1@Stack[0x4]:16]",
+            "[HITDATA_tag * param_2@Stack[0x14]:4]",
+            "[uint param_3@Stack[0x18]:4]",
+            "[char param_4@Stack[0x1c]:1]"
         ]
     },
     {
@@ -9266,17 +9274,17 @@
         "address": "0x0003e3f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "DCVars_tag *",
-            "float *",
+            "DroneImpact_tag *",
             "uint",
             "char"
         ],
-        "prototype_string": "undefined4 __cdecl NDrone2_ExplosiveImpact(DCVars_tag * param_1, float * param_2, uint param_3, char param_4)",
+        "prototype_string": "bool __cdecl NDrone2_ExplosiveImpact(DCVars_tag * dcVars, DroneImpact_tag * impactInfo, uint param_3, char param_4)",
         "parameters": [
-            "[DCVars_tag * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]",
+            "[DCVars_tag * dcVars@Stack[0x4]:4]",
+            "[DroneImpact_tag * impactInfo@Stack[0x8]:4]",
             "[uint param_3@Stack[0xc]:4]",
             "[char param_4@Stack[0x10]:1]"
         ]
@@ -10252,7 +10260,7 @@
         ]
     },
     {
-        "name": "FUN_00043ba0",
+        "name": "DroneMove_TurnToObj",
         "address": "0x00043ba0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -10263,7 +10271,7 @@
             "float",
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_00043ba0(int * param_1, int param_2, float param_3, float param_4)",
+        "prototype_string": "void __cdecl DroneMove_TurnToObj(int * param_1, int param_2, float param_3, float param_4)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
@@ -15228,21 +15236,21 @@
     {
         "name": "NDrone2_DSTATE_CombatNoMove",
         "address": "0x000573f0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
-            "undefined4",
-            "undefined",
+            "Drone_tag *",
+            "obj_tag *",
             "undefined4"
         ],
-        "prototype_string": "undefined NDrone2_DSTATE_CombatNoMove(undefined4 param_1, undefined4 param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall NDrone2_DSTATE_CombatNoMove(undefined4 param_1, Drone_tag * param_2, obj_tag * param_3, undefined4 param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[Drone_tag * param_2@Stack[0x8]:4]",
+            "[obj_tag * param_3@Stack[0xc]:4]",
+            "[undefined4 param_4@Stack[0x10]:4]"
         ]
     },
     {
@@ -18212,19 +18220,19 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "int",
+            "Drone_tag *",
+            "int *",
             "uint *",
-            "undefined4 *",
-            "short *",
+            "ushort *",
             "_VECTOR *",
             "_VECTOR *"
         ],
-        "prototype_string": "undefined4 __cdecl DroneWeap_GetWeaponInfo(int param_1, uint * param_2, undefined4 * param_3, short * param_4, _VECTOR * param_5, _VECTOR * param_6)",
+        "prototype_string": "undefined4 __cdecl DroneWeap_GetWeaponInfo(Drone_tag * param_1, int * param_2, uint * param_3, ushort * param_4, _VECTOR * param_5, _VECTOR * param_6)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[uint * param_2@Stack[0x8]:4]",
-            "[undefined4 * param_3@Stack[0xc]:4]",
-            "[short * param_4@Stack[0x10]:4]",
+            "[Drone_tag * param_1@Stack[0x4]:4]",
+            "[int * param_2@Stack[0x8]:4]",
+            "[uint * param_3@Stack[0xc]:4]",
+            "[ushort * param_4@Stack[0x10]:4]",
             "[_VECTOR * param_5@Stack[0x14]:4]",
             "[_VECTOR * param_6@Stack[0x18]:4]"
         ]
@@ -22038,13 +22046,13 @@
             "int",
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl __Menu_SendDelayedMessage(uint param_1, M_CONTROL * param_2, uint param_3, int param_4, int param_5)",
+        "prototype_string": "undefined4 __cdecl __Menu_SendDelayedMessage(uint duration, M_CONTROL * control, uint arg1, int arg2, int arg3)",
         "parameters": [
-            "[uint param_1@Stack[0x4]:4]",
-            "[M_CONTROL * param_2@Stack[0x8]:4]",
-            "[uint param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]",
-            "[int param_5@Stack[0x14]:4]"
+            "[uint duration@Stack[0x4]:4]",
+            "[M_CONTROL * control@Stack[0x8]:4]",
+            "[uint arg1@Stack[0xc]:4]",
+            "[int arg2@Stack[0x10]:4]",
+            "[int arg3@Stack[0x14]:4]"
         ]
     },
     {
@@ -22076,9 +22084,9 @@
         "address": "0x000732f0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "int",
+        "return_type": "void",
         "param_types": [],
-        "prototype_string": "int __stdcall Menu_ProcessDelayedMessages(void)",
+        "prototype_string": "void __stdcall Menu_ProcessDelayedMessages(void)",
         "parameters": []
     },
     {
@@ -22338,12 +22346,12 @@
             "ushort",
             "uchar"
         ],
-        "prototype_string": "void __cdecl Menu_AddItemsToControl(M_CONTROL * param_1, M_ITEM * param_2, ushort param_3, ushort param_4, uchar param_5)",
+        "prototype_string": "void __cdecl Menu_AddItemsToControl(M_CONTROL * control, M_ITEM * itemList, ushort numItems, ushort firstItem, uchar param_5)",
         "parameters": [
-            "[M_CONTROL * param_1@Stack[0x4]:4]",
-            "[M_ITEM * param_2@Stack[0x8]:4]",
-            "[ushort param_3@Stack[0xc]:2]",
-            "[ushort param_4@Stack[0x10]:2]",
+            "[M_CONTROL * control@Stack[0x4]:4]",
+            "[M_ITEM * itemList@Stack[0x8]:4]",
+            "[ushort numItems@Stack[0xc]:2]",
+            "[ushort firstItem@Stack[0x10]:2]",
             "[uchar param_5@Stack[0x14]:1]"
         ]
     },
@@ -30568,7 +30576,7 @@
         ]
     },
     {
-        "name": "FUN_000b06f0",
+        "name": "PlrStat_LogShotHitEnemy",
         "address": "0x000b06f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -30576,7 +30584,7 @@
         "param_types": [
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000b06f0(uint param_1)",
+        "prototype_string": "void __cdecl PlrStat_LogShotHitEnemy(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ]
@@ -30624,13 +30632,13 @@
         ]
     },
     {
-        "name": "FUN_000b0820",
+        "name": "PlrStat_LogBondBonus",
         "address": "0x000b0820",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000b0820(void)",
+        "prototype_string": "void __stdcall PlrStat_LogBondBonus(void)",
         "parameters": []
     },
     {
@@ -33796,12 +33804,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "SCRIPTINFO *",
             "char"
         ],
-        "prototype_string": "void __cdecl Script_HideObj(int param_1, char param_2)",
+        "prototype_string": "void __cdecl Script_HideObj(SCRIPTINFO * param_1, char param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[SCRIPTINFO * param_1@Stack[0x4]:4]",
             "[char param_2@Stack[0x8]:1]"
         ]
     },
@@ -33916,11 +33924,11 @@
         "address": "0x000c3f80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "ushort",
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "uint __cdecl SP_GetState(obj_tag * param_1)",
+        "prototype_string": "ushort __cdecl SP_GetState(obj_tag * param_1)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]"
         ]
@@ -33961,11 +33969,15 @@
         "name": "SP_Hit",
         "address": "0x000c4100",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined4",
-        "param_types": [],
-        "prototype_string": "undefined4 __stdcall SP_Hit(void)",
-        "parameters": []
+        "has_custom_variable_storage": true,
+        "return_type": "ushort",
+        "param_types": [
+            "SCRIPTPLAYER *"
+        ],
+        "prototype_string": "ushort __stdcall SP_Hit(SCRIPTPLAYER * param_1)",
+        "parameters": [
+            "[SCRIPTPLAYER * param_1@EBX:4]"
+        ]
     },
     {
         "name": "SP_SetPos",
@@ -33990,12 +34002,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
             "_MATRIX *"
         ],
-        "prototype_string": "void __cdecl SP_SetPosRot(int param_1, _MATRIX * param_2)",
+        "prototype_string": "void __cdecl SP_SetPosRot(obj_tag * param_1, _MATRIX * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[_MATRIX * param_2@Stack[0x8]:4]"
         ]
     },
@@ -34058,17 +34070,17 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
+            "obj_tag *",
+            "obj_tag * *",
             "undefined2",
             "undefined4",
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined SP_GetHitDamage(undefined4 param_1, undefined4 param_2, undefined2 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6)",
+        "prototype_string": "undefined SP_GetHitDamage(obj_tag * param_1, obj_tag * * param_2, undefined2 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[obj_tag * * param_2@Stack[0x8]:4]",
             "[undefined2 param_3@Stack[0xc]:2]",
             "[undefined4 param_4@Stack[0x10]:4]",
             "[undefined4 param_5@Stack[0x14]:4]",
@@ -34116,16 +34128,16 @@
             "_VECTOR *",
             "level_tag *",
             "obj_tag *",
-            "int",
+            "ScriptPlayerCallback *",
             "void *"
         ],
-        "prototype_string": "obj_tag * __cdecl SP_CreateScriptPlayer(_VECTOR * pos, _VECTOR * rot, level_tag * param_3, obj_tag * param_4, int funcPtr, void * param_6)",
+        "prototype_string": "obj_tag * __cdecl SP_CreateScriptPlayer(_VECTOR * pos, _VECTOR * rot, level_tag * param_3, obj_tag * param_4, ScriptPlayerCallback * funcPtr, void * param_6)",
         "parameters": [
             "[_VECTOR * pos@Stack[0x4]:4]",
             "[_VECTOR * rot@Stack[0x8]:4]",
             "[level_tag * param_3@Stack[0xc]:4]",
             "[obj_tag * param_4@Stack[0x10]:4]",
-            "[int funcPtr@Stack[0x14]:4]",
+            "[ScriptPlayerCallback * funcPtr@Stack[0x14]:4]",
             "[void * param_6@Stack[0x18]:4]"
         ]
     },
@@ -34142,22 +34154,22 @@
             "undefined4",
             "undefined4",
             "undefined4",
-            "int",
-            "int",
-            "int",
+            "obj_tag *",
+            "ScriptPlayerCallback *",
+            "void *",
             "undefined4"
         ],
-        "prototype_string": "obj_tag * __cdecl SP_Create(_VECTOR * param_1, _VECTOR * param_2, HASHCODE scriptPlayerHashcode, undefined4 param_4, undefined4 param_5, undefined4 param_6, int param_7, int param_8, int param_9, undefined4 param_10)",
+        "prototype_string": "obj_tag * __cdecl SP_Create(_VECTOR * pos, _VECTOR * rot, HASHCODE scriptPlayerHashcode, undefined4 param_4, undefined4 param_5, undefined4 param_6, obj_tag * param_7, ScriptPlayerCallback * param_8, void * param_9, undefined4 param_10)",
         "parameters": [
-            "[_VECTOR * param_1@Stack[0x4]:4]",
-            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[_VECTOR * pos@Stack[0x4]:4]",
+            "[_VECTOR * rot@Stack[0x8]:4]",
             "[HASHCODE scriptPlayerHashcode@Stack[0xc]:4]",
             "[undefined4 param_4@Stack[0x10]:4]",
             "[undefined4 param_5@Stack[0x14]:4]",
             "[undefined4 param_6@Stack[0x18]:4]",
-            "[int param_7@Stack[0x1c]:4]",
-            "[int param_8@Stack[0x20]:4]",
-            "[int param_9@Stack[0x24]:4]",
+            "[obj_tag * param_7@Stack[0x1c]:4]",
+            "[ScriptPlayerCallback * param_8@Stack[0x20]:4]",
+            "[void * param_9@Stack[0x24]:4]",
             "[undefined4 param_10@Stack[0x28]:4]"
         ]
     },
@@ -38517,13 +38529,13 @@
         "return_type": "undefined",
         "param_types": [
             "quaternion_tag *",
-            "float *",
+            "_VECTOR *",
             "_MATRIX *"
         ],
-        "prototype_string": "undefined __cdecl Quat_QuatTransToMat(quaternion_tag * quatIn, float * vecIn, _MATRIX * mOut)",
+        "prototype_string": "undefined __cdecl Quat_QuatTransToMat(quaternion_tag * quatIn, _VECTOR * vecIn, _MATRIX * mOut)",
         "parameters": [
             "[quaternion_tag * quatIn@Stack[0x4]:4]",
-            "[float * vecIn@Stack[0x8]:4]",
+            "[_VECTOR * vecIn@Stack[0x8]:4]",
             "[_MATRIX * mOut@Stack[0xc]:4]"
         ]
     },
