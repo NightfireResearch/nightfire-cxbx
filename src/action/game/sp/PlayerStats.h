@@ -35,5 +35,6 @@ void PlrStat_LogHealth(uint health, uint playerNum);
 SCORETABLE * PlrStats_GetLevelTotals(HASHCODE hashcode);
 void PlarStat_LogTimerPause(uint playerNum);
 void PlarStat_LogTimerUnpause(uint playerNum);
+bool PlrStats_HasGoldMedal(void);
 
 #endif // PLAYERSTATS_H

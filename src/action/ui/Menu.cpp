@@ -319,3 +319,6 @@ void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle) {
     Input_ChangeControllerStyle(playerNum, controllerStyle);
   }
 }
+
+// AUTOGEN
+bool Menu_HasMedal(HASHCODE hc, uint level, uchar maybePlayerNum);

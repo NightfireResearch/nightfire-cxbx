@@ -26,6 +26,8 @@ uint __Menu_Send(uchar param_1, HASHCODE param_2, uint param_3, int param_4, int
 void __Menu_SendDelayed(int delayDuration, byte managerNum, HASHCODE controlHashcode, undefined4 arg1, undefined4 arg2, undefined4 arg3);
 undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,int arg2,int arg3);
 
+bool Menu_HasMedal(HASHCODE hc, uint level, uchar maybePlayerNum);
+
 #define sp_level (*(M_ITEM(*)[12])0x0017c580)
 
 #endif // MENU_H

@@ -22694,14 +22694,14 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "int",
+            "HASHCODE",
             "uint",
             "byte"
         ],
-        "prototype_string": "bool __cdecl Menu_HasMedal(int param_1, uint param_2, byte param_3)",
+        "prototype_string": "bool __cdecl Menu_HasMedal(HASHCODE baseMap, uint upgradeLevel, byte param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]",
+            "[HASHCODE baseMap@Stack[0x4]:4]",
+            "[uint upgradeLevel@Stack[0x8]:4]",
             "[byte param_3@Stack[0xc]:1]"
         ]
     },
