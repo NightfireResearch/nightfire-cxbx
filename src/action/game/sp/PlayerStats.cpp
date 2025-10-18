@@ -43,7 +43,7 @@ bool PlrStat_OkToUpdate(void) {
 // AUTOINJECT
 void PlrStat_LogEnemySurrender(uint playerNum) {
 
-    if(playerNum >= 10)
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats))
         return;
 
     if(!PlrStat_OkToUpdate())
@@ -55,7 +55,7 @@ void PlrStat_LogEnemySurrender(uint playerNum) {
 // AUTOINJECT
 void PlrStat_LogEnemyDispatched(uint playerNum) {
 
-    if(playerNum >= 10)
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats))
         return;
     
     if(!PlrStat_OkToUpdate())
@@ -67,7 +67,7 @@ void PlrStat_LogEnemyDispatched(uint playerNum) {
 // AUTOINJECT
 void PlrStat_LogEnemyDisabled(uint playerNum) {
 
-    if(playerNum >= 10)
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats))
         return;
     
     if(!PlrStat_OkToUpdate())
@@ -80,7 +80,7 @@ void PlrStat_LogEnemyDisabled(uint playerNum) {
 // AUTOINJECT
 void PlrStat_LogHealth(uint health, uint playerNum) {
 
-    if(playerNum >= 10)
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats))
         return;
     
     if(!PlrStat_OkToUpdate())
@@ -88,6 +88,25 @@ void PlrStat_LogHealth(uint health, uint playerNum) {
     
     PlrMissionStats[playerNum].health = health;
 }
+
+// AUTOINJECT
+void PlarStat_LogTimerPause(uint playerNum) {
+    
+    if (playerNum >= ARRAY_SIZE(PlrMissionStats))
+        return;
+
+    PlrMissionStats[playerNum].timerPaused = 1;
+}
+
+// AUTOINJECT
+void PlarStat_LogTimerUnpause(uint playerNum) {
+    
+    if (playerNum >= ARRAY_SIZE(PlrMissionStats))
+        return;
+
+    PlrMissionStats[playerNum].timerPaused = 0;
+}
+
 
 
 // AUTOINJECT

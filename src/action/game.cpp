@@ -333,8 +333,22 @@ HASHCODE GetLevelWithFmv(HASHCODE level) {
 // AUTOGEN
 void __cdecl GameFlow_PushState(int state, float param_2, uint param_3);
 
-// AUTOGEN
-void GS_PauseGame(bool param_1);
+// AUTOINJECT
+void GS_PauseGame(bool param_1) { 
+
+    GameState.SomeAlternatePauseState = param_1;
+    
+    for(int i = 0; i < ARRAY_SIZE(MPGame.players); i++) {
+        MPGame.players[i].paused = param_1;
+    }
+
+    if (param_1) {
+        PlarStat_LogTimerPause(0);
+    } else {
+        PlarStat_LogTimerUnpause(0);
+    }
+
+}
 
 // AUTOINJECT
 void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
