@@ -26,6 +26,7 @@ static_assert(sizeof(PlayerMissionStats) == 0x38, "PlayerMissionStats size misma
 
 #define PlrMissionStats (*(PlayerMissionStats(*)[10])0x00278e70)
 #define BondMoments (*(short(*)[113])0x00278d8e)
+#define DoneBetter BOOL8_AT(0x002790a4)
 
 // AUTOINJECT
 void PlrStat_ResetForMission(void) {
@@ -171,4 +172,9 @@ bool PlrStats_HasGoldMedal(void) {
 SCORETABLE * PlrStats_GetScoreTable(undefined4 *numItems) {
   *numItems = ARRAY_SIZE(ScoringTable);
   return ScoringTable;
+}
+
+// AUTOINJECT
+bool PlrStats_DoneBetter(void) {
+    return DoneBetter;
 }

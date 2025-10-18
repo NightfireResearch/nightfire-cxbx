@@ -37,5 +37,6 @@ void PlarStat_LogTimerPause(uint playerNum);
 void PlarStat_LogTimerUnpause(uint playerNum);
 bool PlrStats_HasGoldMedal(void);
 SCORETABLE * PlrStats_GetScoreTable(undefined4 *numItems);
+bool PlrStats_DoneBetter(void);
 
 #endif // PLAYERSTATS_H

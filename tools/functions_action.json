@@ -29174,13 +29174,13 @@
             "undefined2",
             "float"
         ],
-        "prototype_string": "obj_tag * __cdecl Pickup_Create(_VECTOR * pos, _VECTOR * rot, _MATRIX * mtx, int * param_4, _VECTOR * param_5, short param_6, undefined4 param_7, undefined2 param_8, int param_9, char param_10, undefined2 param_11, undefined2 param_12, float param_13)",
+        "prototype_string": "obj_tag * __cdecl Pickup_Create(_VECTOR * pos, _VECTOR * rot, _MATRIX * mtx, int * param_4, _VECTOR * maybePickupType, short param_6, undefined4 param_7, undefined2 param_8, int param_9, char param_10, undefined2 param_11, undefined2 param_12, float param_13)",
         "parameters": [
             "[_VECTOR * pos@Stack[0x4]:4]",
             "[_VECTOR * rot@Stack[0x8]:4]",
             "[_MATRIX * mtx@Stack[0xc]:4]",
             "[int * param_4@Stack[0x10]:4]",
-            "[_VECTOR * param_5@Stack[0x14]:4]",
+            "[_VECTOR * maybePickupType@Stack[0x14]:4]",
             "[short param_6@Stack[0x18]:2]",
             "[undefined4 param_7@Stack[0x1c]:4]",
             "[undefined2 param_8@Stack[0x20]:2]",
@@ -30708,14 +30708,18 @@
         ]
     },
     {
-        "name": "FUN_000b1230",
+        "name": "PlrStats_GetScoreTable",
         "address": "0x000b1230",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_000b1230()",
-        "parameters": []
+        "param_types": [
+            "undefined4"
+        ],
+        "prototype_string": "undefined __stdcall PlrStats_GetScoreTable(undefined4 sizeOut)",
+        "parameters": [
+            "[undefined4 sizeOut@Stack[0x4]:4]"
+        ]
     },
     {
         "name": "PlrStats_DoneBetter",
