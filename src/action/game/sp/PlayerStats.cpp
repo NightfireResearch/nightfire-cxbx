@@ -7,7 +7,7 @@
 typedef struct {
     uint timesDetected;
     uint shotsFired;
-    uint unknown1;
+    uint shotsHitEnemy;
     uint enemiesDispatched;
     uint enemiesDisabled;
     uint enemiesSurrendered;
