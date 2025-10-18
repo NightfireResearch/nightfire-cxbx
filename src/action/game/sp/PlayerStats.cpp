@@ -52,6 +52,15 @@ bool PlrStat_OkToUpdate(void) {
 }
 
 // AUTOINJECT
+void PlrStat_LogBondBonus(uint playerNum) {
+
+    if(!PlrStat_OkToUpdate())
+        return;
+
+    PlrMissionStats[0].bondBonuses++;
+}
+
+// AUTOINJECT
 void PlrStat_LogEnemySurrender(uint playerNum) {
 
     if(playerNum >= ARRAY_SIZE(PlrMissionStats))

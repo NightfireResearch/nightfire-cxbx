@@ -24,6 +24,7 @@ static_assert(sizeof(SCORETABLE) == 0x3c, "SCORETABLE size mismatch");
 #pragma pack(pop)
 
 bool PlrStat_OkToUpdate(void);
+void PlrStat_LogBondBonus(uint playerNum);
 void PlrStat_ResetForMission(void);
 void PlrStat_LogEnemySurrender(uint playerNum);
 void PlrStat_LogEnemySpawned(void);
