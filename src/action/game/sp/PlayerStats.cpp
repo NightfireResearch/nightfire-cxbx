@@ -1,6 +1,8 @@
 #include "PlayerStats.h"
 #include "../mp/multiplayer.h"
 
+#include "string.h"
+
 #pragma pack(push, 1)
 typedef struct {
     uint timesDetected;
@@ -23,9 +25,18 @@ static_assert(sizeof(PlayerMissionStats) == 0x38, "PlayerMissionStats size misma
 #pragma pack(pop)
 
 #define PlrMissionStats (*(PlayerMissionStats(*)[10])0x00278e70)
+#define BondMoments (*(short(*)[113])0x00278d8e)
 
-// AUTOGEN
-void PlrStat_ResetForMission(void);
+// AUTOINJECT
+void PlrStat_ResetForMission(void) {
+
+    memset(PlrMissionStats, 0, sizeof(PlrMissionStats));
+
+    // 0x65 to 0x6e inclusive, maybe got unrolled in Xbox code
+    for(int i = 0x65; i <= 0x6e; i++) {
+        BondMoments[i] = 0;
+    }
+}
 
 // Likely a helper function which was inlined into the below funcs
 // AUTOINJECT
