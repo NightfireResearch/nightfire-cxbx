@@ -150,3 +150,6 @@ void AnimSkeletonProcess(char *data) {
     // This is simplified vs the original code, which iterated over each one?
     pAnimData = (char *)data + 0x10 + skel->numBones * 12;
 }
+
+// AUTOGEN
+void AnimPostLoadInit(void);
