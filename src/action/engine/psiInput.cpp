@@ -1,5 +1,4 @@
 #include "psiInput.h"
-#include <assert.h>
 #include "../actionhelpers.h"
 
 // Array of 4 uint32_t entries, all initialised to 0xFFFFFFFF
@@ -10,7 +9,7 @@ float psiInput_GetJoystickRX(uint i) {
 
     // FIXME: It's unclear what the original logic was for.
     // It should only ever be called with an input in the range 0-3
-    assert(i <= 3);
+    NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     return XboxInputs.Controllers[i].Joystick_RX;
 }
@@ -20,7 +19,7 @@ float psiInput_GetJoystickLX(uint i) {
 
     // FIXME: It's unclear what the original logic was for.
     // It should only ever be called with an input in the range 0-3
-    assert(i <= 3);
+    NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     return XboxInputs.Controllers[i].Joystick_LX;
 }
@@ -29,7 +28,7 @@ float psiInput_GetJoystickLY(uint i) {
 
     // FIXME: It's unclear what the original logic was for.
     // It should only ever be called with an input in the range 0-3
-    assert(i <= 3);
+    NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     return XboxInputs.Controllers[i].Joystick_LY;
 }
@@ -39,7 +38,7 @@ float psiInput_GetJoystickRY(uint i) {
 
     // FIXME: It's unclear what the original logic was for.
     // It should only ever be called with an input in the range 0-3
-    assert(i <= 3);
+    NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     return XboxInputs.Controllers[i].Joystick_RY;
 }
@@ -49,7 +48,7 @@ uint psiInput_GetButtons(uint i) {
     
     // FIXME: It's unclear what the original logic was for.
     // It should only ever be called with an input in the range 0-3
-    assert(i <= 3);
+    NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     return XboxInputs.Controllers[i].buttons;
 }
@@ -59,7 +58,7 @@ void psiInput_RumbleSetIntensity(unsigned int i, unsigned short a, unsigned shor
 
     // FIXME: It's unclear what the original logic was for.
     // It should only ever be called with an input in the range 0-3
-    assert(i <= 3);
+    NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     XboxInputs.Controllers[i].rumbleA = a;
     XboxInputs.Controllers[i].rumbleB = b;
@@ -106,7 +105,7 @@ void psiInput_ResetInputState(uint i) {
     
     // FIXME: It's unclear what the original logic was for.
     // It should only ever be called with an input in the range 0-3
-    assert(i <= 3);
+    NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     XboxInputs.Controllers[i].Joystick_LX = 0.0f;
     XboxInputs.Controllers[i].Joystick_LY = 0.0f;
@@ -122,7 +121,7 @@ void psiInput_ResetRumble(unsigned int i) {
 
     // FIXME: It's unclear what the original logic was for.
     // It should only ever be called with an input in the range 0-3
-    assert(i <= 3);
+    NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     psiInput_RumbleSetIntensity(i, 0, 0);
     controller_maybeRumbleTimeout[i] = 0xffffffff;

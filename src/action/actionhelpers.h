@@ -105,4 +105,16 @@ typedef short MallocFlags;
 #define FRAME_RATE_MUL FLOAT_AT(0x0017c100)
 #define REC_FRAME_RATE FLOAT_AT(0x0017c104)
 
+#include <stdio.h>
+
+#define NF_ASSERT(expr, msg)                                                \
+    do {                                                                    \
+        if (!(expr)) {                                                      \
+            printf("Assertion failed: %s (%s)\nFile: %s\nLine: %d\n",       \
+                #expr, #msg, __FILE__, __LINE__);                           \
+            __debugbreak();                                                 \
+            while(1);                                                       \
+        }                                                                   \
+    } while (0)
+
 #endif //ACTIONHELPERS_H_
