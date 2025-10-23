@@ -22,6 +22,20 @@ typedef struct AnimState {
     AnimObj animObj; // 0x58 - ???? - size not known
 } AnimState;
 
+// these constants seem to be the same on both PS2 and Xbox
+typedef enum {
+    ANIM_SCRIPT_STATE_MAYBE_INITIALISED = 0x159f5ab2,
+    ANIM_SCRIPT_STATE_MAYBE_DELETED = 0x983c4837,
+} AnimScriptStateMagicNumbers;
+static_assert(sizeof(AnimScriptStateMagicNumbers) == 4, "Compiler doing something weird with AnimScriptStateMagicNumbers");
+
+typedef struct sAnimScript_tag {
+    char unknown[0x3c];
+    AnimScriptStateMagicNumbers magicStateIndicator;
+    char unknown2[0xb4-4-0x3c];
+} sAnimScript_tag;
+
+static_assert(sizeof(sAnimScript_tag) == 0xb4, "Bad size for sAnimScript_tag");
 
 #pragma pack(pop)
 
@@ -37,5 +51,9 @@ void psiBuildMatrixPalette(obj_tag *gameObj, AnimObj *animObj, char param_3);
 void AnimObjectHeadTrack(obj_tag* gameObj, AnimObj* animObj, quaternion_tag *q, _MATRIX *m, int param_5);
 void AnimObjectAimAt(obj_tag* gameObj, AnimObj* animObj, quaternion_tag *q, _MATRIX *m, int param_5);
 void AnimObjectSetSleeveType(obj_tag *param_1, int sleeveNum);
+sAnimScript_tag * AnimScriptNew(obj_tag *gameObj, sAnimScript_tag *existingScriptList);
+void AnimSkeletonProcess(char *data);
+void AnimPostLoadInit(void);
+
 
 #endif // ANIM_H

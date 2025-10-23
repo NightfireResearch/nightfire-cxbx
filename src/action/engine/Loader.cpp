@@ -13,10 +13,6 @@
 #define LoadableIndex U8_AT(0x00279180)
 
 // AUTOGEN
-void AnimPostLoadInit(void);
-// AUTOGEN
-void AnimSkeletonProcess(char *);
-// AUTOGEN
 uint __cdecl parsemap_parsemap(uint hashcode,char param_2);
 // AUTOGEN
 void AnimLoadFile(HASHCODE hashcode,char param_2);

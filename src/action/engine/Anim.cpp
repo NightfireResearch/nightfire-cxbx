@@ -114,3 +114,39 @@ void psiBuildMatrixPalette(obj_tag *gameObj, AnimObj *animObj, char param_3) {
 //     psiBuildMatrixPalette(obj, animObj, 1);
 
 // }
+
+#pragma pack(push, 1)
+
+typedef struct SkeletonInfo {
+    short skeletonIdx; // According to AnimSkeletonProcess, this is the index into the SkeletonTable array
+    byte numBones;
+    byte maybeTypeOrFlags;
+    // Following this is a variable amount of extra data:
+    //  numBones x float[3]
+    // ...?
+} SkeletonInfo;
+
+#pragma pack(pop)
+
+// At address 0x001d7578 we should find a table of pointers, 128 entries long, pointing to the skeleton data (top of the header)
+#define SkeletonTable (*(SkeletonInfo*(*)[128])0x001d7578)
+
+// At address 0x001d6ac8 we should find a single pointer to the skeleton data currently being loaded (post the header / bone displacements)
+#define pAnimData (*(char**)0x001d6ac8)
+
+// AUTOINJECT
+void AnimSkeletonProcess(char *data) {
+
+    SkeletonInfo *skel = (SkeletonInfo*)data;
+
+    printf("Processing a skeleton, idx: %i, num bones: %i, unknown data 0x%02x\n", skel->skeletonIdx, skel->numBones, skel->maybeTypeOrFlags);
+    
+    // Confirmed that maybeTypeOrFlags is not always zero - 1 seen
+
+    // Copy to SkeletonTable
+    SkeletonTable[skel->skeletonIdx] = skel;
+
+    // Consume some (variable-length) header based on the number of bones - bone displacement data?
+    // This is simplified vs the original code, which iterated over each one?
+    pAnimData = (char *)data + 0x10 + skel->numBones * 12;
+}
