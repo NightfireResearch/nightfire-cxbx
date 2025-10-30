@@ -448,12 +448,12 @@
         "address": "0x00012ac0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": true,
-        "return_type": "int * *",
+        "return_type": "sAnimSeq_tag *",
         "param_types": [
             "typedef size_t ulong",
             "MallocFlags"
         ],
-        "prototype_string": "int * * __cdecl AnimSeqNew(size_t sizeBytes, MallocFlags param_2)",
+        "prototype_string": "sAnimSeq_tag * __cdecl AnimSeqNew(size_t sizeBytes, MallocFlags param_2)",
         "parameters": [
             "[size_t sizeBytes@ESI:4]",
             "[MallocFlags param_2@Stack[0x4]:2]"
@@ -820,13 +820,13 @@
         "has_custom_variable_storage": true,
         "return_type": "sAnimScript_tag *",
         "param_types": [
-            "sAnimScript_tag *",
-            "obj_tag *"
+            "obj_tag *",
+            "sAnimScript_tag *"
         ],
-        "prototype_string": "sAnimScript_tag * __cdecl AnimScriptNew(sAnimScript_tag * aScript, obj_tag * gameObj)",
+        "prototype_string": "sAnimScript_tag * __cdecl AnimScriptNew(obj_tag * gameObj, sAnimScript_tag * aScript)",
         "parameters": [
-            "[sAnimScript_tag * aScript@Stack[0x4]:4]",
-            "[obj_tag * gameObj@EAX:4]"
+            "[obj_tag * gameObj@EAX:4]",
+            "[sAnimScript_tag * aScript@Stack[0x4]:4]"
         ]
     },
     {

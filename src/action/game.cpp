@@ -65,7 +65,6 @@ bool movieFinished(void) {
 
 #define FreezeGame U8_AT(0x001fec48)
 #define sloflag U16_AT(0x001fec64)
-#define ScriptCam U32_AT(0x001f6678)
 #define switch_allowFreeze U32_AT(0x0025d79c)
 
 
@@ -543,6 +542,7 @@ void bootup_bootup(void) {
   Input_Ready();
   SFXSetMode(1);
   NewScoresRef = &(PTPDATA.Scoring);
+  
 }
 
 // AUTOINJECT

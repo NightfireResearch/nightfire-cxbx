@@ -5,9 +5,33 @@
 
 #pragma pack(push, 1)
 
+typedef struct sAnimScript_tag sAnimScript_tag;
+
+typedef struct AnimSkin {
+    //?
+    char unknown[0x10];
+    _VECTOR skinScale;
+    void* animDatums;
+    void* boneHierarchy;
+    void* matrixList;
+    char unknown2;
+    uchar someNumBones;
+    uchar maybeNumMorphs;
+    uchar numDatums;
+    uchar skeletonNum;
+} AnimSkin;
+
+static_assert(sizeof(AnimSkin) == 0x2d, "Size of AnimSkin is not as expected");
+
 typedef struct AnimObj {
-    char pad[0x30];
-    celglist_tag *maybeSleeveGlist;
+    char pad[0x1c];
+    AnimSkin *skinPtr; // 0x1c-0x20 - pointer to AnimSkin
+    char pad2[4];
+    sAnimScript_tag *firstScript; // 0x24-0x28 - pointer to first sAnimScript_tag in linked list
+    char pad22[4];
+    uchar skeletonNum; // 0x2c
+    char pad3[0x3];
+    celglist_tag *maybeSleeveGlist; // 0x30-0x34 - pointer to celglist for sleeve?
     // ...
 } AnimObj;
 
@@ -29,13 +53,52 @@ typedef enum {
 } AnimScriptStateMagicNumbers;
 static_assert(sizeof(AnimScriptStateMagicNumbers) == 4, "Compiler doing something weird with AnimScriptStateMagicNumbers");
 
+typedef struct sAnimSeq_tag {
+    char unknown[0x68];
+    void* rawData; // 0x68-0x6c - pointer to raw sequence data
+    void* seqUnpakOpt; // 0x6c-0x70 - pointer to some extra thing
+    char unknown2[0x90-0x68-8];
+} sAnimSeq_tag;
+
+static_assert(sizeof(sAnimSeq_tag) == 0x90, "Size of sAnimSeq_tag is not as expected");
+
+
 typedef struct sAnimScript_tag {
     char unknown[0x3c];
-    AnimScriptStateMagicNumbers magicStateIndicator;
-    char unknown2[0xb4-4-0x3c];
+    AnimScriptStateMagicNumbers magicStateIndicator; // 0x3C-0x40
+    sAnimScript_tag *prevScript; // Doubly linked list - NOT compatible with LLNODE_tag - it's in the wrong place to be compatible
+    sAnimScript_tag *nextScript;
+    char junk[4];
+    sAnimSeq_tag *boneAnimSeq; // 0x4C-0x50
+    sAnimSeq_tag *morphAnimSeq; // 0x50-0x54
+    char unknown1[4];
+    void* animScriptData; // 0x58-0x5c - pointer to raw animation script data
+    uint unknown3[2];
+    void* onDeletionCallback;
+    void* onStopCallback;
+    void* onEventCallback;
+    HASHCODE hashcode; // 0x70-0x74
+    uint field74_0x74;
+    uint unknown4;
+    uint field76_0x7c;
+    uint timestamp;
+    uint unknown5[2];
+    float maybeAnimationSpeed2;
+    float maybeAnimationSpeed3;
+    float maybeAnimationSpeed; // 0x94-0x98
+    char unknown2[0xa4-0x98];
+    float someThing1; // 0xa4-0xa8
+    float someThing2; // 0xa8-0xac
+    short field97_0xac; // 0xac-0xae
+    char field98_0xae; // 0xae-0xaf
+    byte field99_0xaf; // 0xaf-0xb0
+    uchar maybeSpeedControlRelated;
+    uchar unknown1234;
+    uchar someThing3; // 0xb2-0xb3
+    char pad_fill[0xc0 - 0xb3];
 } sAnimScript_tag;
 
-static_assert(sizeof(sAnimScript_tag) == 0xb4, "Bad size for sAnimScript_tag");
+static_assert(sizeof(sAnimScript_tag) == 0xc0, "Bad size for sAnimScript_tag");
 
 #pragma pack(pop)
 
@@ -54,6 +117,12 @@ void AnimObjectSetSleeveType(obj_tag *param_1, int sleeveNum);
 sAnimScript_tag * AnimScriptNew(obj_tag *gameObj, sAnimScript_tag *existingScriptList);
 void AnimSkeletonProcess(char *data);
 void AnimPostLoadInit(void);
+sAnimSeq_tag * AnimSeqNew(size_t size, MallocFlags allocType);
+sAnimScript_tag * AnimScriptAdd(obj_tag *gameObj, HASHCODE animScriptHashcode);
 
+
+#define ScriptCam U32_AT(0x001f6678)
+#define AnimScriptTimeStamp U32_AT(0x001d7570)
+#define ReverseFlag BOOL8_AT(0x001d7828)
 
 #endif // ANIM_H
