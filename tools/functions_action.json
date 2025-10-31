@@ -316,10 +316,10 @@
             "sAnimScript_tag *",
             "HASHCODE"
         ],
-        "prototype_string": "void __stdcall AnimScriptInit(obj_tag * gameObj, sAnimScript_tag * animScriptHandle, HASHCODE hashcode)",
+        "prototype_string": "void __stdcall AnimScriptInit(obj_tag * gameObj, sAnimScript_tag * script, HASHCODE hashcode)",
         "parameters": [
             "[obj_tag * gameObj@EAX:4]",
-            "[sAnimScript_tag * animScriptHandle@ESI:4]",
+            "[sAnimScript_tag * script@ESI:4]",
             "[HASHCODE hashcode@EDI:4]"
         ]
     },
@@ -360,12 +360,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "sAnimScript_tag_xbox *",
+            "sAnimScript_tag *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl AnimScriptCallOnEvent(sAnimScript_tag_xbox * param_1, undefined4 param_2)",
+        "prototype_string": "void __cdecl AnimScriptCallOnEvent(sAnimScript_tag * param_1, undefined4 param_2)",
         "parameters": [
-            "[sAnimScript_tag_xbox * param_1@Stack[0x4]:4]",
+            "[sAnimScript_tag * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ]
     },
@@ -376,12 +376,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "sAnimScript_tag_xbox *",
+            "sAnimScript_tag *",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl AnimScriptCallOnStop(sAnimScript_tag_xbox * param_1, undefined4 param_2)",
+        "prototype_string": "void __cdecl AnimScriptCallOnStop(sAnimScript_tag * param_1, undefined4 param_2)",
         "parameters": [
-            "[sAnimScript_tag_xbox * param_1@Stack[0x4]:4]",
+            "[sAnimScript_tag * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ]
     },
@@ -392,17 +392,17 @@
         "has_custom_variable_storage": true,
         "return_type": "float10",
         "param_types": [
-            "undefined4",
-            "undefined4",
+            "obj_tag *",
+            "sAnimObject_tag *",
             "float",
-            "undefined4"
+            "sAnimScript_tag *"
         ],
-        "prototype_string": "float10 __stdcall AnimScriptEnd(undefined4 param_1, undefined4 param_2, float param_3, undefined4 param_4)",
+        "prototype_string": "float10 __stdcall AnimScriptEnd(obj_tag * param_1, sAnimObject_tag * param_2, float param_3, sAnimScript_tag * param_4)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[sAnimObject_tag * param_2@Stack[0x8]:4]",
             "[float param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@ESI:4]"
+            "[sAnimScript_tag * param_4@ESI:4]"
         ]
     },
     {
@@ -837,12 +837,12 @@
         "return_type": "void",
         "param_types": [
             "obj_tag *",
-            "sAnimScript_tag_xbox * *"
+            "sAnimScript_tag * *"
         ],
-        "prototype_string": "void __cdecl AnimScriptDelete(obj_tag * param_1, sAnimScript_tag_xbox * * param_2)",
+        "prototype_string": "void __cdecl AnimScriptDelete(obj_tag * param_1, sAnimScript_tag * * param_2)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
-            "[sAnimScript_tag_xbox * * param_2@Stack[0x8]:4]"
+            "[sAnimScript_tag * * param_2@Stack[0x8]:4]"
         ]
     },
     {
@@ -7428,19 +7428,19 @@
         ]
     },
     {
-        "name": "FUN_00036230",
+        "name": "Drone_maybeDisallowedFromSayingThisSfx",
         "address": "0x00036230",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int",
+            "DCVars_tag *",
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_00036230(int param_1, int param_2)",
+        "prototype_string": "bool __cdecl Drone_maybeDisallowedFromSayingThisSfx(DCVars_tag * param_1, int sfxNum)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]",
+            "[int sfxNum@Stack[0x8]:4]"
         ]
     },
     {
@@ -8866,17 +8866,17 @@
         ]
     },
     {
-        "name": "FUN_0003be90",
+        "name": "NDrone2_DeathTalk",
         "address": "0x0003be90",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0003be90(int * param_1)",
+        "prototype_string": "bool __cdecl NDrone2_DeathTalk(DCVars_tag * param_1)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -20430,17 +20430,17 @@
         ]
     },
     {
-        "name": "DList_MoveFomFree2InUse",
+        "name": "DList_MoveFromFree2InUse",
         "address": "0x0006e6f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "void *",
         "param_types": [
-            "undefined4 *"
+            "DLISTINFO_tag *"
         ],
-        "prototype_string": "uint __cdecl DList_MoveFomFree2InUse(undefined4 * param_1)",
+        "prototype_string": "void * __cdecl DList_MoveFromFree2InUse(DLISTINFO_tag * param_1)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]"
+            "[DLISTINFO_tag * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -35681,13 +35681,13 @@
             "undefined4",
             "_VECTOR *"
         ],
-        "prototype_string": "DYNAMICSOUNDS * __stdcall Sound_Play(Action_SFX sfxId, float vol, float radiusOuter, float radiusInner, undefined2 param_5, char is3d, undefined4 param_7, _VECTOR * param_8)",
+        "prototype_string": "DYNAMICSOUNDS * __stdcall Sound_Play(Action_SFX sfxId, float vol, float radiusOuter, float radiusInner, undefined2 maybePitchBend, char is3d, undefined4 param_7, _VECTOR * param_8)",
         "parameters": [
             "[Action_SFX sfxId@EAX:4]",
             "[float vol@Stack[0x8]:4]",
             "[float radiusOuter@Stack[0xc]:4]",
             "[float radiusInner@Stack[0x10]:4]",
-            "[undefined2 param_5@Stack[0x14]:2]",
+            "[undefined2 maybePitchBend@Stack[0x14]:2]",
             "[char is3d@Stack[0x18]:1]",
             "[undefined4 param_7@Stack[0x1c]:4]",
             "[_VECTOR * param_8@Stack[0x4]:4]"
@@ -35723,14 +35723,14 @@
             "undefined4",
             "int"
         ],
-        "prototype_string": "uint __cdecl Sound_Play3D(Action_SFX param_1, _VECTOR * position, float volume, float radiusOuter, float radiusInner, undefined2 param_6, undefined4 param_7, int param_8)",
+        "prototype_string": "uint __cdecl Sound_Play3D(Action_SFX param_1, _VECTOR * position, float volume, float radiusOuter, float radiusInner, undefined2 maybePitchBend, undefined4 param_7, int param_8)",
         "parameters": [
             "[Action_SFX param_1@Stack[0x4]:4]",
             "[_VECTOR * position@Stack[0x8]:4]",
             "[float volume@Stack[0xc]:4]",
             "[float radiusOuter@Stack[0x10]:4]",
             "[float radiusInner@Stack[0x14]:4]",
-            "[undefined2 param_6@Stack[0x18]:2]",
+            "[undefined2 maybePitchBend@Stack[0x18]:2]",
             "[undefined4 param_7@Stack[0x1c]:4]",
             "[int param_8@Stack[0x20]:4]"
         ]

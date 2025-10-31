@@ -20,7 +20,7 @@ typedef struct {
     float _unknown_0xdc;
     float _unknown_0xe0;
     float tankMachinegunTemperature; // 0xE4
-    uint soundHandle; // 0xE8
+    DYNAMICSOUNDS* soundHandle; // 0xE8
     char _pad_3[2];
     short tankNum; // 0xEE
     short mainAmmo; // 0xF0

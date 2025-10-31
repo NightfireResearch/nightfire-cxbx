@@ -12,16 +12,21 @@ typedef struct DYNAMICSOUNDS {
     _VECTOR velocity;
     unsigned int limitedDistance;
     unsigned int sfxId;
-    char _pad_2[0x4];
+    undefined4 unknownParam;
     float volume;
     float radiusInner;
     float radiusOuter;
     float alertness;
-    char _pad_3[0x2];
+    short maybePitchBend;
     char is3d;
     char needsUpdate;
     char playbackState;
-    char _pad_4[0x7];
+    char unknown0;
+    char unknown1;
+    char isLimitedRadius;
+    char unknown2;
+    undefined1 frameDelay;
+    char _pad_6[0x2];
 } DYNAMICSOUNDS;
 
 static_assert(sizeof(DYNAMICSOUNDS) == 0x48, "Size of DYNAMICSOUNDS not correct");
@@ -42,7 +47,7 @@ static_assert(sizeof(SFXOutputDataEntry) == 0x18, "Size of SFXOutputDataEntry no
 
 #pragma pack(pop)
 
-uint Sound_Play3D(Action_SFX param_1,_VECTOR *position,float param_3,float param_4,float param_5, undefined2 param_6,undefined4 param_7,int param_8);
+DYNAMICSOUNDS* Sound_Play3D(Action_SFX param_1,_VECTOR *position,float volume,float radiusOuter,float radiusInner, undefined2 maybePitchBend,undefined4 param_7,int isLimitedRadius);
 void Sound_Stop(DYNAMICSOUNDS *handle);
 bool Sound_SetPosition(DYNAMICSOUNDS *handle, _VECTOR *position);
 bool Sound_SetVolume(DYNAMICSOUNDS *handle, float volume);
