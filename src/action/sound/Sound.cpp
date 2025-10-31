@@ -148,11 +148,8 @@ DYNAMICSOUNDS* Sound_Play(Action_SFX sfxId, float volume, float radiusOuter, flo
 
 // AUTOINJECT
 DYNAMICSOUNDS* Sound_Play3D(Action_SFX param_1,_VECTOR *position,float volume,float radiusOuter,float radiusInner, undefined2 maybePitchBend,undefined4 param_7,int isLimitedRadius) {
-    
-    undefined1 tmpFrameDelay;
-    DYNAMICSOUNDS *snd;
   
-    tmpFrameDelay = (undefined1)Sound_FrameDelay;
+    undefined1 tmpFrameDelay = (undefined1)Sound_FrameDelay;
     Sound_FrameDelay = 0;
     
     if ((param_1 & 0xfffff) == 0xffff)
@@ -162,9 +159,26 @@ DYNAMICSOUNDS* Sound_Play3D(Action_SFX param_1,_VECTOR *position,float volume,fl
         radiusInner = -1.0;
         radiusOuter = -1.0;
     }
-    snd = Sound_Play(param_1,volume,radiusOuter,radiusInner,maybePitchBend,'\x01',param_7,position);
+    DYNAMICSOUNDS *snd = Sound_Play(param_1,volume,radiusOuter,radiusInner,maybePitchBend,'\x01',param_7,position);
     if (snd != NULL) {
         snd->isLimitedRadius = (char)isLimitedRadius;
+        snd->frameDelay = tmpFrameDelay;
+    }
+    
+    return snd;
+}
+
+// AUTOINJECT
+DYNAMICSOUNDS* Sound_PlayExt(Action_SFX param_1, float volume, undefined2 maybePitchBend, undefined4 param_4) {
+      
+    undefined1 tmpFrameDelay = (undefined1)Sound_FrameDelay;
+    Sound_FrameDelay = 0;
+    
+    if ((param_1 & 0xfffff) == 0xffff)
+        return NULL;
+
+    DYNAMICSOUNDS *snd = Sound_Play(param_1,volume,-1.0,-1.0,maybePitchBend,'\0',param_4,&CONST_ZERO_VECTOR);
+    if (snd != NULL) {
         snd->frameDelay = tmpFrameDelay;
     }
     
