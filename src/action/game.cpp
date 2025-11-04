@@ -483,7 +483,7 @@ void bootup_bootup(void) {
 
   GameState.difficultyModifier = 2;
   MPSettings.RespawnSelectionMode = 2;
-  GameState.field8_0x20 = 0x80000002;
+  GameState.ReloadMainMenu = 0x80000002;
   GameState.ReloadMenupage = 0x40000034;
   MPSettings.numPlayers = 1;
   SoundInfo = 0x640064;

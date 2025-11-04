@@ -32,7 +32,7 @@ typedef struct {
     undefined4 field5_0x14;
     undefined4 ReloadGame;
     undefined4 ReloadMenupage;
-    undefined4 field8_0x20;
+    undefined4 ReloadMainMenu;
     undefined4 maybePaused;
     undefined4 difficultyModifier;
     undefined maybeUnused; // no apparent sites where this is used
