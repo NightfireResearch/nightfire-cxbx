@@ -8,9 +8,7 @@
 // AUTOINJECT
 bool psiInput_ControllerIsActive(uint i) {
 
-    // FIXME: It's unclear what the original logic was for.
-    // It should only ever be called with an input in the range 0-3
-    assert(i <= 3);
+    NF_ASSERT(i <= 3, "Assumed that controller index alwas in range 0-3");
 
     return XboxInputs.Controllers[i].controllerIndex != 0;
 }
@@ -18,8 +16,6 @@ bool psiInput_ControllerIsActive(uint i) {
 // AUTOINJECT
 float psiInput_GetJoystickRX(uint i) {
 
-    // FIXME: It's unclear what the original logic was for.
-    // It should only ever be called with an input in the range 0-3
     NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     return XboxInputs.Controllers[i].Joystick_RX;
@@ -28,8 +24,6 @@ float psiInput_GetJoystickRX(uint i) {
 // AUTOINJECT
 float psiInput_GetJoystickLX(uint i) {
 
-    // FIXME: It's unclear what the original logic was for.
-    // It should only ever be called with an input in the range 0-3
     NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     return XboxInputs.Controllers[i].Joystick_LX;
@@ -37,8 +31,6 @@ float psiInput_GetJoystickLX(uint i) {
 // AUTOINJECT
 float psiInput_GetJoystickLY(uint i) {
 
-    // FIXME: It's unclear what the original logic was for.
-    // It should only ever be called with an input in the range 0-3
     NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     return XboxInputs.Controllers[i].Joystick_LY;
@@ -47,8 +39,6 @@ float psiInput_GetJoystickLY(uint i) {
 // AUTOINJECT
 float psiInput_GetJoystickRY(uint i) {
 
-    // FIXME: It's unclear what the original logic was for.
-    // It should only ever be called with an input in the range 0-3
     NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     return XboxInputs.Controllers[i].Joystick_RY;
@@ -57,8 +47,6 @@ float psiInput_GetJoystickRY(uint i) {
 // AUTOINJECT
 uint psiInput_GetButtons(uint i) {
     
-    // FIXME: It's unclear what the original logic was for.
-    // It should only ever be called with an input in the range 0-3
     NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     return XboxInputs.Controllers[i].buttons;
@@ -67,8 +55,6 @@ uint psiInput_GetButtons(uint i) {
 // AUTOINJECT
 void psiInput_RumbleSetIntensity(unsigned int i, unsigned short a, unsigned short b) {
 
-    // FIXME: It's unclear what the original logic was for.
-    // It should only ever be called with an input in the range 0-3
     NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     XboxInputs.Controllers[i].rumbleA = a;
@@ -114,8 +100,6 @@ void psiInput_RumbleUpdate(void) {
 // AUTOINJECT
 void psiInput_ResetInputState(uint i) {
     
-    // FIXME: It's unclear what the original logic was for.
-    // It should only ever be called with an input in the range 0-3
     NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     XboxInputs.Controllers[i].Joystick_LX = 0.0f;
@@ -130,8 +114,6 @@ void psiInput_ResetInputState(uint i) {
 // AUTOINJECT
 void psiInput_ResetRumble(unsigned int i) {
 
-    // FIXME: It's unclear what the original logic was for.
-    // It should only ever be called with an input in the range 0-3
     NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     psiInput_RumbleSetIntensity(i, 0, 0);
@@ -377,7 +359,7 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
 
                 // There's a default case fully implemented, but all the control schemes have already been covered. Unclear what this is here for.
                 default:
-                    assert(false);
+                    NF_ASSERT(false, "Assumed that the default case was never used in psiInput_MapInputs, but it is!");
             }
 
             // Common to all control schemes
