@@ -33,17 +33,12 @@ typedef struct {
 // AUTOINJECT
 bool LoaderProcess(void) {
 
-    uint uVar1;
-    undefined4 uVar2;
-    uint uVar3;
-
     MemType = 0;
 
     switch(DirFileType) {
         case 1:
           AnimPostLoadInit();
-          uVar2 = parsemap_parsemap(DirFileHash,'\x01');
-          if ((char)uVar2 != '\0') {
+          if (parsemap_parsemap(DirFileHash,'\x01')) {
             return false;
           }
           break;
@@ -65,16 +60,14 @@ bool LoaderProcess(void) {
           MemType = 1;
         case 0:
         case 2:
-          uVar2 = parsemap_parsemap(DirFileHash,'\0');
-          if ((char)uVar2 != '\0') {
+          if (parsemap_parsemap(DirFileHash,'\0')) { // Returns fasle on completion, true if there's more to parse
             return false;
           }
           break;
         case 0xc:
-          uVar1 = dirFileBuf[1];
           if (LoadableIndex < ARRAY_SIZE(LoadableFiles)) {
             LoadableFiles[LoadableIndex].hashcode = (HASHCODE) *dirFileBuf;
-            LoadableFiles[LoadableIndex].loadableIdx = (char)uVar1;
+            LoadableFiles[LoadableIndex].loadableIdx = (char)dirFileBuf[1];
             LoadableIndex++;
           }
         }
