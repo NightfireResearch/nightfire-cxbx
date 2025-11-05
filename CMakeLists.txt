@@ -91,6 +91,7 @@ add_library(actioninject SHARED
   src/action/ui/ui_score.cpp
   src/action/ui/Menu.cpp
   src/action/autofunc.cpp
+  src/action/game/Upgrade.cpp
   src/action/game/view.cpp
   src/action/game/drone/Drone.cpp
   src/action/game/drone/NDrone2.cpp

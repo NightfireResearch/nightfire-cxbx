@@ -49,7 +49,7 @@ typedef struct {
     undefined4 LoadTimeStart;
     undefined SomeAlternatePauseState;
     char VibrationEnabled;
-    undefined field25_0x52;
+    undefined1 WeaponUpgradeRelated; // upgrades Kowloon to automatic
     undefined field26_0x53;
     undefined4 isMultiplayerLevel;
 } GameState_t;
@@ -220,6 +220,9 @@ typedef enum WeaponBaseNum {
     Weap_OddjobHat=69,
     Weap_Ronin=82,
     Weap_Camera=84,
+    Weap_Camera2=85,
+    Weap_Decryptor=86,
+    Weap_Decryptor_Upgraded=87,
     Weap_QWorm = 88,
     Weap_CopterGunCastle=97,
     Weap_CopterMissileCastle=98,
