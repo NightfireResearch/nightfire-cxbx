@@ -1,8 +1,6 @@
 #include "hashtable.h"
 
 // AUTOGEN
-void hashtable_set_object_to_entity_gfx(obj_tag *obj, HASHCODE hashcode);
-// AUTOGEN
 void hashtable_additem(HASHCODE hashcode, void* data);
 
 #pragma pack(push, 1)
@@ -121,4 +119,19 @@ bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc) {
 
     return true;
 
+}
+
+// AUTOINJECT
+void hashtable_set_object_to_entity_gfx(obj_tag *obj, HASHCODE hc) {
+
+    if(hc == 0xFFFFFFFF)
+        return;
+
+    hashtable_entry *entry = hashtable_getentry(hc);
+
+    if((entry == NULL) || (entry->data == NULL))
+        return;
+    
+    Control_SetGList(obj, (celglist_tag*) entry->data);
+    
 }
