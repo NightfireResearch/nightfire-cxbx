@@ -14,7 +14,7 @@ typedef struct {
 typedef struct sprite {
     LLNODE_tag node;
     unsigned int createdOnFrame;
-    unsigned int unknown2;
+    unsigned int unknownDataMaybeTexPtr;
     unsigned int colourTint;
     unsigned int unknown1;
     char *text;

@@ -92,29 +92,33 @@ HASHCODE hashtable_celglist_to_hashcode(celglist_tag *celgl) {
     return HASHCODE_NONE;
 }
 
-// AUTOGEN
-bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc);
+typedef struct {
+    uint unknownDataMaybeTexPtr;
+    short defaultWidth;
+    short defaultHeight;
+} SpriteInfoFromHashmap;
 
-// WIP
-// bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc) {
+// AUTOINJECT
+bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc) {
 
-//     hashtable_entry* entry = hashtable_getentry(hc);
+    hashtable_entry* entry = hashtable_getentry(hc);
 
-//     if(entry == NULL)
-//         return false;
+    if(entry == NULL)
+        return false;
 
-//     // Not clear what this structure is / should be? Maybe SpriteInfo?
-//     SpriteInfo sprInfo = *(SpriteInfo*)(entry->data);
+    SpriteInfoFromHashmap sprInfo = *(SpriteInfoFromHashmap*)(entry->data);
 
-//     if(&sprInfo == NULL)
-//         return false;
+    if(&sprInfo == NULL)
+        return false;
 
-//     // Copy all relevant fields
-//     // TODO: This
-//     //sprOut->unknown_0xc = 
-//     //sprOut->backupOnscreenWidth = sprInfo.someThing1;
-//     //sprOut->backupOnscreenHeight = sprInfo.someThing2;
+    sprOut->unknownDataMaybeTexPtr = sprInfo.unknownDataMaybeTexPtr;                                               
+    sprOut->backupOnscreenWidth = sprInfo.defaultWidth;
+    sprOut->backupOnscreenHeight = sprInfo.defaultHeight;
+    sprOut->onscreenWidth = sprInfo.defaultWidth;
+    sprOut->onscreenHeight = sprInfo.defaultHeight;
+    sprOut->spritesheetWidth = sprInfo.defaultWidth;
+    sprOut->spritesheetHeight = sprInfo.defaultHeight;
 
-//     return true;
+    return true;
 
-// }
+}
