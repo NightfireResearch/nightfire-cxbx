@@ -68,6 +68,7 @@ typedef short MallocFlags;
 #include "game/obj/build.h"
 #include "game/obj/Copter.h"
 #include "game/obj/Door.h"
+#include "game/obj/Ladder.h"
 #include "game/obj/object.h" // for obj_tag needed by some autogen functions
 #include "game/obj/control.h" // for Control_X functions
 #include "game/obj/PCQWorm.h"

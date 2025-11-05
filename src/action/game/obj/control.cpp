@@ -211,3 +211,6 @@ obj_tag * Control_CreateObjEx(unsigned short, _VECTOR *, _VECTOR *, _MATRIX *, c
 
 // AUTOGEN
 bool Control_NextLOD(obj_tag *);
+
+// AUTOGEN
+bool Controls_StraddleTest(obj_tag *param_1);

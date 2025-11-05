@@ -5454,11 +5454,11 @@
         "address": "0x0002d2a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "uint __cdecl Controls_StraddleTest(obj_tag * param_1)",
+        "prototype_string": "bool __cdecl Controls_StraddleTest(obj_tag * param_1)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]"
         ],
@@ -32027,15 +32027,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Ladder_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Ladder_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
