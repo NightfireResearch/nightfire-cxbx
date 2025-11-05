@@ -66,6 +66,7 @@ add_library(actioninject SHARED
   src/action/engine/Camera.cpp
   src/action/engine/Collide.cpp
   src/action/engine/Loader.cpp
+  src/action/engine/parsemap.cpp
   src/action/engine/psiGraphics.cpp
   src/action/engine/psiInput.cpp
   src/action/engine/Text.cpp

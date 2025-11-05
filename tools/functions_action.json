@@ -29060,11 +29060,11 @@
         "address": "0x000a6820",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "char"
         ],
-        "prototype_string": "uint __cdecl parsemap_handle_block_id(char param_1)",
+        "prototype_string": "bool __cdecl parsemap_handle_block_id(char param_1)",
         "parameters": [
             "[char param_1@Stack[0x4]:1]"
         ]
@@ -29088,12 +29088,12 @@
         "address": "0x000a6b20",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "uint",
             "char"
         ],
-        "prototype_string": "undefined4 __cdecl parsemap_parsemap(uint hashcode, char param_2)",
+        "prototype_string": "bool __cdecl parsemap_parsemap(uint hashcode, char param_2)",
         "parameters": [
             "[uint hashcode@Stack[0x4]:4]",
             "[char param_2@Stack[0x8]:1]"
