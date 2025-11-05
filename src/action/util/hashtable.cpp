@@ -15,7 +15,7 @@ typedef struct{
 #define ht_insert_ind U32_AT(0x001fe680)
 #define m_nhti U32_AT(0x001fe684)
 
-// Cannot auto-generate because it uses custom calling convention
+// UNINJECTABLE - custom calling convention
 hashtable_entry* hashtable_getentry(HASHCODE hashcode) {
 
     uint32_t type = (hashcode >> 18);
