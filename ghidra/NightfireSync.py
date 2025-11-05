@@ -24,21 +24,17 @@ import os
 def export_json(side):
     function_list = []
     for f in funcs:
-        name = f.getName()
-        address = f.getEntryPoint()
-        calling_convention = f.getCallingConventionName()
-        return_type = f.getReturnType().getName()
         param_types = [str(x.getDataType()) for x in f.getParameters()]
-        prototype_string = f.getPrototypeString(True, True)
         function_dict = {
-            "name": name,
-            "address": "0x" + str(address),
-            "calling_convention": calling_convention,
+            "name": f.getName(),
+            "address": "0x" + str(f.getEntryPoint()),
+            "calling_convention": f.getCallingConventionName(),
             "has_custom_variable_storage": f.hasCustomVariableStorage(),
-            "return_type": return_type,
+            "return_type": f.getReturnType().getName(),
             "param_types": param_types,
-            "prototype_string": prototype_string,
+            "prototype_string": f.getPrototypeString(True, True),
             "parameters": [str(x) for x in f.getParameters()],
+            "is_thunk": f.isThunk()
         }
         function_list.append(function_dict)
 

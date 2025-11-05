@@ -1,6 +1,6 @@
 #include "Text.h"
 
-#include "../psiFile.h"
+#include "psiFile.h"
 #include "../memory.h"
 #include "../util/bin.h"
 

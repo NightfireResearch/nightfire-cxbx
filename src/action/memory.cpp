@@ -63,3 +63,6 @@ void* Mem_Malloc(size_t size, uint32_t flags, uint32_t unknownMaybeAlignment);
 
 // AUTOGEN
 void Mem_Free(void **ptr);
+
+// AUTOGEN
+void Mem_Shrink(void **param_1,uint param_2);

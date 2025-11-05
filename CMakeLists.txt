@@ -58,7 +58,6 @@ add_library(actioninject SHARED
   src/inject_action.cpp
   src/inject.h
   src/action/game.cpp
-  src/action/psiFile.cpp
   src/common/launchInfo.cpp
   src/action/gfx/Sprite.cpp
   src/action/engine/AINetwork.cpp
@@ -67,6 +66,7 @@ add_library(actioninject SHARED
   src/action/engine/Collide.cpp
   src/action/engine/Loader.cpp
   src/action/engine/parsemap.cpp
+  src/action/engine/psiFile.cpp
   src/action/engine/psiGraphics.cpp
   src/action/engine/psiInput.cpp
   src/action/engine/Text.cpp

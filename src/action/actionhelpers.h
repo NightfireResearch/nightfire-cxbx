@@ -33,6 +33,7 @@ typedef struct DIVars_tag DIVars_tag;
 typedef struct DCVars_tag DCVars_tag;
 typedef struct MsgObject MsgObject;
 typedef struct AnimObj AnimObj;
+typedef struct block_header_tag block_header_tag;
 
 // Hashcode, SFX and translated text names
 #include "assets.h"
@@ -56,6 +57,7 @@ typedef short MallocFlags;
 #include "engine/Loader.h"
 #include "engine/Text.h"
 #include "engine/Vision.h"
+#include "engine/parsemap.h"
 #include "engine/psiGraphics.h"
 #include "engine/psiInput.h"
 #include "engine/Woman.h"
