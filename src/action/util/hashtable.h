@@ -17,5 +17,6 @@ void* hashtable_getitem(HASHCODE hashcode);
 void hashtable_modify(HASHCODE hashcode, void* newData);
 int hashtable_get_hashtype_count(uint hashtype);
 HASHCODE hashtable_celglist_to_hashcode(celglist_tag *celgl);
+bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc);
 
 #endif // HASHTABLE_H

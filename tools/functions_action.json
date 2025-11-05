@@ -10,6 +10,16 @@
         "parameters": []
     },
     {
+        "name": "FUN_00011006",
+        "address": "0x00011006",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00011006()",
+        "parameters": []
+    },
+    {
         "name": "AnimSkeletonProcess",
         "address": "0x00011050",
         "calling_convention": "__cdecl",
@@ -448,12 +458,12 @@
         "address": "0x00012ac0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": true,
-        "return_type": "int * *",
+        "return_type": "sAnimSeq_tag *",
         "param_types": [
             "typedef size_t ulong",
             "MallocFlags"
         ],
-        "prototype_string": "int * * __cdecl AnimSeqNew(size_t sizeBytes, MallocFlags param_2)",
+        "prototype_string": "sAnimSeq_tag * __cdecl AnimSeqNew(size_t sizeBytes, MallocFlags param_2)",
         "parameters": [
             "[size_t sizeBytes@ESI:4]",
             "[MallocFlags param_2@Stack[0x4]:2]"
@@ -820,13 +830,13 @@
         "has_custom_variable_storage": true,
         "return_type": "sAnimScript_tag *",
         "param_types": [
-            "sAnimScript_tag *",
-            "obj_tag *"
+            "obj_tag *",
+            "sAnimScript_tag *"
         ],
-        "prototype_string": "sAnimScript_tag * __cdecl AnimScriptNew(sAnimScript_tag * aScript, obj_tag * gameObj)",
+        "prototype_string": "sAnimScript_tag * __cdecl AnimScriptNew(obj_tag * gameObj, sAnimScript_tag * aScript)",
         "parameters": [
-            "[sAnimScript_tag * aScript@Stack[0x4]:4]",
-            "[obj_tag * gameObj@EAX:4]"
+            "[obj_tag * gameObj@EAX:4]",
+            "[sAnimScript_tag * aScript@Stack[0x4]:4]"
         ]
     },
     {
@@ -18965,11 +18975,11 @@
             "int *",
             "GPOINT *"
         ],
-        "prototype_string": "GPOINT * __stdcall __Font_DrawText(float param_1, float param_2, undefined4 param_3_00, undefined4 param_4, undefined4 param_5, uchar * param_6, undefined4 param_7, uint param_8, float param_9, float param_10, int * param_11, GPOINT * eax)",
+        "prototype_string": "GPOINT * __stdcall __Font_DrawText(float param_1, float param_2, undefined4 colour, undefined4 param_4, undefined4 param_5, uchar * param_6, undefined4 param_7, uint param_8, float param_9, float param_10, int * param_11, GPOINT * scale)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]",
-            "[undefined4 param_3_00@ECX:4]",
+            "[undefined4 colour@ECX:4]",
             "[undefined4 param_4@Stack[0xc]:4]",
             "[undefined4 param_5@Stack[0x10]:4]",
             "[uchar * param_6@Stack[0x14]:4]",
@@ -18978,7 +18988,7 @@
             "[float param_9@Stack[0x20]:4]",
             "[float param_10@Stack[0x24]:4]",
             "[int * param_11@Stack[0x28]:4]",
-            "[GPOINT * eax@EAX:4]"
+            "[GPOINT * scale@EAX:4]"
         ]
     },
     {
@@ -18990,7 +19000,7 @@
         "param_types": [
             "float",
             "float",
-            "void *",
+            "uint",
             "void *",
             "void *",
             "char *",
@@ -19000,11 +19010,11 @@
             "float",
             "float"
         ],
-        "prototype_string": "GPOINT * __cdecl Font_DrawText(float param_1, float param_2, void * param_3, void * param_4, void * param_5, char * param_6, char * param_7, GPOINT * scale, uint flags, float param_10, float param_11)",
+        "prototype_string": "GPOINT * __cdecl Font_DrawText(float param_1, float param_2, uint colour, void * param_4, void * param_5, char * param_6, char * param_7, GPOINT * scale, uint flags, float param_10, float param_11)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]",
-            "[void * param_3@Stack[0xc]:4]",
+            "[uint colour@Stack[0xc]:4]",
             "[void * param_4@Stack[0x10]:4]",
             "[void * param_5@Stack[0x14]:4]",
             "[char * param_6@Stack[0x18]:4]",
@@ -19069,12 +19079,12 @@
             "char *",
             "int"
         ],
-        "prototype_string": "undefined4 * __cdecl Font_WordWrapString(char * * param_1, undefined4 param_2, char * param_3, int param_4)",
+        "prototype_string": "undefined4 * __cdecl Font_WordWrapString(char * * param_1, undefined4 param_2, char * param_3, int maybeMaxWidth)",
         "parameters": [
             "[char * * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
             "[char * param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]"
+            "[int maybeMaxWidth@Stack[0x10]:4]"
         ]
     },
     {
@@ -19534,14 +19544,14 @@
     {
         "name": "hashtable_set_sprite",
         "address": "0x0006b670",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
             "sprite *",
             "HASHCODE"
         ],
-        "prototype_string": "bool __stdcall hashtable_set_sprite(sprite * param_1, HASHCODE param_2)",
+        "prototype_string": "bool hashtable_set_sprite(sprite * param_1, HASHCODE param_2)",
         "parameters": [
             "[sprite * param_1@Stack[0x4]:4]",
             "[HASHCODE param_2@Stack[0x8]:4]"
@@ -20112,11 +20122,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "char *"
         ],
-        "prototype_string": "void __cdecl Txt_LockString(int param_1)",
+        "prototype_string": "void __cdecl Txt_LockString(char * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[char * param_1@Stack[0x4]:4]"
         ]
     },
     {
@@ -22010,13 +22020,13 @@
         ]
     },
     {
-        "name": "Menu_PulsingUpdate",
+        "name": "Menu_UpdateTextFmt",
         "address": "0x000731d0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall Menu_PulsingUpdate(void)",
+        "prototype_string": "void __stdcall Menu_UpdateTextFmt(void)",
         "parameters": []
     },
     {
@@ -26140,11 +26150,11 @@
     {
         "name": "MenuManager_Update",
         "address": "0x00094370",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
-        "return_type": "int * *",
+        "return_type": "void",
         "param_types": [],
-        "prototype_string": "int * * __stdcall MenuManager_Update(void)",
+        "prototype_string": "void MenuManager_Update(void)",
         "parameters": []
     },
     {
@@ -35712,7 +35722,7 @@
         "address": "0x000cb8c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "DYNAMICSOUNDS *",
         "param_types": [
             "Action_SFX",
             "_VECTOR *",
@@ -35723,7 +35733,7 @@
             "undefined4",
             "int"
         ],
-        "prototype_string": "uint __cdecl Sound_Play3D(Action_SFX param_1, _VECTOR * position, float volume, float radiusOuter, float radiusInner, undefined2 maybePitchBend, undefined4 param_7, int param_8)",
+        "prototype_string": "DYNAMICSOUNDS * __cdecl Sound_Play3D(Action_SFX param_1, _VECTOR * position, float volume, float radiusOuter, float radiusInner, undefined2 maybePitchBend, undefined4 param_7, int param_8)",
         "parameters": [
             "[Action_SFX param_1@Stack[0x4]:4]",
             "[_VECTOR * position@Stack[0x8]:4]",
@@ -36689,14 +36699,16 @@
         "name": "SSys_Msg",
         "address": "0x000cf7f0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
+            "undefined2",
             "undefined2"
         ],
-        "prototype_string": "void __cdecl SSys_Msg(undefined2 param_1)",
+        "prototype_string": "void __cdecl SSys_Msg(undefined2 param_1, undefined2 param_2)",
         "parameters": [
-            "[undefined2 param_1@Stack[0x4]:2]"
+            "[undefined2 param_1@Stack[0x4]:2]",
+            "[undefined2 param_2@SI:2]"
         ]
     },
     {
@@ -39906,11 +39918,11 @@
         "address": "0x000d93d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4 *",
+        "return_type": "undefined",
         "param_types": [
             "ushort"
         ],
-        "prototype_string": "undefined4 * __cdecl View_AddSprite(ushort param_1)",
+        "prototype_string": "undefined __cdecl View_AddSprite(ushort param_1)",
         "parameters": [
             "[ushort param_1@Stack[0x4]:2]"
         ]
@@ -41028,12 +41040,20 @@
     {
         "name": "psiDrawSprites",
         "address": "0x000de3d0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined psiDrawSprites()",
-        "parameters": []
+        "return_type": "void",
+        "param_types": [
+            "undefined4",
+            "int",
+            "short"
+        ],
+        "prototype_string": "void __stdcall psiDrawSprites(undefined4 param_1, int param_2, short param_3)",
+        "parameters": [
+            "[undefined4 param_1@Stack[0x4]:4]",
+            "[int param_2@Stack[0x8]:4]",
+            "[short param_3@Stack[0xc]:2]"
+        ]
     },
     {
         "name": "psiFadeView",
@@ -41482,23 +41502,23 @@
         "parameters": []
     },
     {
-        "name": "FUN_000dff70",
+        "name": "LoadingScreenMakeVisible",
         "address": "0x000dff70",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000dff70(void)",
+        "prototype_string": "void __stdcall LoadingScreenMakeVisible(void)",
         "parameters": []
     },
     {
-        "name": "FUN_000dff90",
+        "name": "LoadingScreenMakeInvisible",
         "address": "0x000dff90",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000dff90(void)",
+        "prototype_string": "void __stdcall LoadingScreenMakeInvisible(void)",
         "parameters": []
     },
     {

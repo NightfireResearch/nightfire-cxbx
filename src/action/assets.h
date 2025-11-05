@@ -520,7 +520,8 @@ typedef enum {
     TXT_MISSION_FAIL_ALARM_TRIGGERED = 0x04000032,
     TXT_MISSION_FAIL_KILLED_CIVILIAN = 0x04000034,
 
-    Action_TranslatedText_FORCE_UINT32 = 0x7FFFFFFF
+    Action_TranslatedText_FORCE_UINT32 = 0x7FFFFFFF,
+    Action_TranslatedText_NULLVALUE = 0xFFFFFFFF
 } Action_TranslatedText;
 
 typedef enum {

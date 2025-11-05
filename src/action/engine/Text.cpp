@@ -143,3 +143,6 @@ void Text_AddMsg(char param_1,char param_2,int param_3,const char *str,int param
 
 // AUTOGEN
 void Txt_UnlockString(char* text);
+
+// AUTOGEN
+void Txt_LockString(char* text);

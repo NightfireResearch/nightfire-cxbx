@@ -1,7 +1,7 @@
 #include "MenuManager.h"
 
 // AUTOGEN
-int** __stdcall MenuManager_Update(void);
+void MenuManager_Update(void);
 // AUTOGEN
 void MenuManager_Monitor(void);
 // AUTOGEN

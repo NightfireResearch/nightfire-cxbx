@@ -92,26 +92,29 @@ HASHCODE hashtable_celglist_to_hashcode(celglist_tag *celgl) {
     return HASHCODE_NONE;
 }
 
+// AUTOGEN
+bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc);
+
 // WIP
-bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc) {
+// bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc) {
 
-    hashtable_entry* entry = hashtable_getentry(hc);
+//     hashtable_entry* entry = hashtable_getentry(hc);
 
-    if(entry == NULL)
-        return false;
+//     if(entry == NULL)
+//         return false;
 
-    // Not clear what this structure is / should be? Maybe SpriteInfo?
-    SpriteInfo sprInfo = *(SpriteInfo*)(entry->data);
+//     // Not clear what this structure is / should be? Maybe SpriteInfo?
+//     SpriteInfo sprInfo = *(SpriteInfo*)(entry->data);
 
-    if(&sprInfo == NULL)
-        return false;
+//     if(&sprInfo == NULL)
+//         return false;
 
-    // Copy all relevant fields
-    // TODO: This
-    //sprOut->unknown_0xc = 
-    //sprOut->backupOnscreenWidth = sprInfo.someThing1;
-    //sprOut->backupOnscreenHeight = sprInfo.someThing2;
+//     // Copy all relevant fields
+//     // TODO: This
+//     //sprOut->unknown_0xc = 
+//     //sprOut->backupOnscreenWidth = sprInfo.someThing1;
+//     //sprOut->backupOnscreenHeight = sprInfo.someThing2;
 
-    return true;
+//     return true;
 
-}
+// }
