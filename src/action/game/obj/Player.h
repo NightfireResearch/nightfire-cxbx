@@ -31,7 +31,9 @@ typedef struct BLData {
     char _unknown[4];
     obj_tag* muzzleFlashObj; // 0x804
     obj_tag* remoteControlDevice; // 0x808
-    char _pad_2[0x8b0-0x808-4];
+    char _pad_2[0x860-0x808-4];
+    float lensFlareRelated; // 0x860
+    char _pad_222222[0x8b0-0x860-4];
     float nightVisionTimer; // 0x8b0
     char _pad_22[0x8c8-0x8b0-4];
     short muzzleFlashRelated; // 0x8c8

@@ -10,8 +10,6 @@ void Player_SetCamMode(BLData *param_1,unsigned short param_2);
 // AUTOGEN
 void Player_Disable(obj_tag *param_1,char param_2);
 // AUTOGEN
-void Player_WeaponNone(obj_tag *param_1);
-// AUTOGEN
 void Player_Enable(obj_tag *param_1, _MATRIX *mtx, int param_3);
 // AUTOGEN
 void Player_SetHealth(BLData *obj, float health);
@@ -172,5 +170,22 @@ void Player_Start(void) {
 
     // No spawn point was active, return without spawning anything
     return;
+
+}
+
+// AUTOINJECT
+void Player_WeaponNone(obj_tag* obj) {
+
+    BLData* blData = (BLData*)obj->extraObjectData;
+    
+    obj->animState->prevHeldWeaponId = obj->animState->currentWeaponId;
+    obj->animState->switchingToWeaponId = Weap_MaybeHandsOnlyOrLadder;
+    obj->animState->currentWeaponId = Weap_MaybeHandsOnlyOrLadder;
+    
+    blData->weaponObject->curState = 0;
+    blData->muzzleFlashRelated = 0;
+    blData->lensFlareRelated = 1.0f;
+
+    obj->animState->animFlags &= 0xfe;
 
 }

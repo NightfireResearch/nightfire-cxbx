@@ -13,11 +13,11 @@ typedef struct AnimObj {
 
 typedef struct AnimState {
     char _pad_1[0x50];
-    char field_0x50; // bit one when weapon is zoomed in
+    char animFlags; // bit one when weapon is zoomed in
     char _pad_2;
     char currentWeaponId; // 0x52
-    char otherWeaponId; // 0x53
-    char thirdWeaponId; // 0x54
+    char switchingToWeaponId; // 0x53
+    char prevHeldWeaponId; // 0x54
     char _pad_3[3]; // 55-57
     AnimObj animObj; // 0x58 - ???? - size not known
 } AnimState;

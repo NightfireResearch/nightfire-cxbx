@@ -96,7 +96,7 @@ uint Upgrade_Weapon(uint id_base) {
         case Weap_Camera: {
             float maxZoom = (Upgrades[playerId][WUG_Camera] > 0 ? 16.0f : 8.0f);
             weapon_data[Weap_Camera].maxZoom = maxZoom;
-            weapon_data[Weap_Camera2].maxZoom = maxZoom;
+            weapon_data[Weap_Camera_Upgraded].maxZoom = maxZoom;
             return id_base;
         }
 

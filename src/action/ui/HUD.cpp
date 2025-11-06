@@ -104,7 +104,7 @@ void HUD_UpdateCrossHair(BLData *player,sprite *spr) {
 	int crosshairIdx = player->crosshairType;
 
 	// Turn on if we're using the specific weapons
-	bool weaponZoomedIn = (glb_players[player->playerNum]->animState->field_0x50 & 1);
+	bool weaponZoomedIn = (glb_players[player->playerNum]->animState->animFlags & 1);
 	if(weaponZoomedIn) {
 		int weaponId = glb_players[player->playerNum]->animState->currentWeaponId;
 		if(weapon_data[weaponId].someFlags & 0x40) { // Custom crosshair pane?
@@ -121,13 +121,11 @@ void HUD_UpdateCrossHair(BLData *player,sprite *spr) {
 					HUD_Enable(player->hudInfo, Laser, 1, 0);
 					spr->maybeEnabled = 0xff;
 					return;
-				case 0x55:
-					// Camera (upgraded)
+				case Weap_Camera_Upgraded:
 					glb_players[player->playerNum]->animState->currentWeaponId = 0x54;
-					glb_players[player->playerNum]->animState->otherWeaponId = 0x54;
+					glb_players[player->playerNum]->animState->switchingToWeaponId = 0x54;
 					// Intentional fallthrough
-				case 0x54:
-					// Camera
+				case Weap_Camera:
 					HUD_Enable(player->hudInfo, Camera, 1, 0);
 					spr->maybeEnabled = 0xff;
 					return;
@@ -201,26 +199,26 @@ void HUD_MonitorNightSight(BLData *player) {
 	if(vwr == NULL)
 		return;
 
-	if( (obj->animState->currentWeaponId == 0x5d) && (player->weaponObject->curState == 0) ) {	
+	if( (obj->animState->currentWeaponId == Weap_MaybeNightvision) && (player->weaponObject->curState == 0) ) {	
 		
 		vwr->nightVisionRelated = 1;
 		HUD_Enable(player->hudInfo, NightSight, 1, 0);
-		obj->animState->otherWeaponId = obj->animState->thirdWeaponId;
+		obj->animState->switchingToWeaponId = obj->animState->prevHeldWeaponId;
 		player->nightVisionActive = 1;
 
-		int otherId = obj->animState->otherWeaponId;
+		int otherId = obj->animState->switchingToWeaponId;
 		if((otherId == 0x47) || ((0x5c < otherId) && (otherId < 0x5f))) {
-			obj->animState->otherWeaponId = 1;
+			obj->animState->switchingToWeaponId = 1;
 			return;
 		}
 	
 
 	} else {
 	
-		if(Input_Action(player->playerNum, ACTION_NIGHTVISION, 4) && !(obj->animState->field_0x50 & 1)) { // Activate night sight button pressed - cycle modes
+		if(Input_Action(player->playerNum, ACTION_NIGHTVISION, 4) && !(obj->animState->animFlags & 1)) { // Activate night sight button pressed - cycle modes
 
 			if(!player->nightVisionActive) {
-				obj->animState->otherWeaponId = 0x5d;
+				obj->animState->switchingToWeaponId = 0x5d;
 			} else {
 
 				switch(vwr->nightVisionRelated) {
