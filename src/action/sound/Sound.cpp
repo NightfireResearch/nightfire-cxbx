@@ -184,3 +184,18 @@ DYNAMICSOUNDS* Sound_PlayExt(Action_SFX param_1, float volume, undefined2 maybeP
     
     return snd;
 }
+
+#define SoundPlaybackList ((DLISTINFO_tag*)0x0029a134)
+
+// AUTOINJECT
+void Sound_StopAllWithId(Action_SFX sfx) {
+
+    // Iterate over the playback list
+    for(DYNAMICSOUNDS* ds = (DYNAMICSOUNDS*)SoundPlaybackList->first; ds != NULL; ds = ds->next) {
+        // If it matches, set its status to 2
+        if(ds->sfxId == sfx)
+            ds->playbackState = 2;
+    }
+
+
+}
