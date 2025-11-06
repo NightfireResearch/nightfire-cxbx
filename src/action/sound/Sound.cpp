@@ -4,6 +4,9 @@
 #include "../util/DList.h"
 #include "../math/math.h"
 
+#define DynamicSoundList ((DLISTINFO_tag*)(0x0029a128))
+#define SoundPlaybackList ((DLISTINFO_tag*)0x0029a134)
+
 // AUTOINJECT
 bool Sound_SetPosition(DYNAMICSOUNDS *handle, _VECTOR *position) {
 
@@ -79,13 +82,10 @@ bool Sound_IsLooping(DYNAMICSOUNDS *handle) {
 // AUTOGEN
 void Sound_UpdateListeners(void);
 
-// DLISTINFO_tag object stored at 0x0029a128
-#define DynamicSoundList (*(DLISTINFO_tag*)(0x0029a128))
-
 // UNINJECTABLE - custom calling convention
 DYNAMICSOUNDS* Sound_Play(Action_SFX sfxId, float volume, float radiusOuter, float radiusInner, undefined2 maybePitchBend, char is3d, undefined4 param_7, _VECTOR *position) {
 
-    DYNAMICSOUNDS* snd = (DYNAMICSOUNDS *)DList_MoveFromFree2InUse(&DynamicSoundList);
+    DYNAMICSOUNDS* snd = (DYNAMICSOUNDS *)DList_MoveFromFree2InUse(DynamicSoundList);
 
     if (snd == NULL)
         return NULL;
@@ -184,8 +184,6 @@ DYNAMICSOUNDS* Sound_PlayExt(Action_SFX param_1, float volume, undefined2 maybeP
     
     return snd;
 }
-
-#define SoundPlaybackList ((DLISTINFO_tag*)0x0029a134)
 
 // AUTOINJECT
 void Sound_StopAllWithId(Action_SFX sfx) {
