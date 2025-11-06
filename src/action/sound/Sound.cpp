@@ -195,5 +195,17 @@ void Sound_StopAllWithId(Action_SFX sfx) {
             ds->playbackState = 2;
     }
 
+}
 
+// AUTOINJECT
+void Sound_ZeroAlertness(void) {
+
+    for(DYNAMICSOUNDS* ds = (DYNAMICSOUNDS*)SoundPlaybackList->first; ds != NULL; ds = ds->next) {
+        if ((ds->playbackState != 2) && // Not stopped
+            (ds->playbackState != 3) && // Not in some other state
+            ( (ds->sfxId >= ARRAY_SIZE(SFXOutputData)) || (!SFXOutputData[ds->sfxId].loopAlways) ) ) // Either an invalid SFX ID, or a non-loopAlways SFX
+        {
+            ds->alertness = 0.0f;
+        }
+    }
 }

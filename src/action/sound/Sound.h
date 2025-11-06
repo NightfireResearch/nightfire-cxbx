@@ -57,6 +57,7 @@ void Sound_ModAlertness(DYNAMICSOUNDS *handle, float multiplier);
 bool Sound_IsLooping(DYNAMICSOUNDS *handle);
 void Sound_UpdateListeners(void);
 void Sound_StopAllWithId(Action_SFX sfx);
+void Sound_ZeroAlertness(void);
 
 #define SFXOutputData (*(SFXOutputDataEntry(*)[0x60d])0x00182b80)
 
