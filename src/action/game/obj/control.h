@@ -17,6 +17,7 @@ void Control_SetGList(obj_tag *obj, celglist_tag *celgl);;
 void control_unlink_object(obj_tag* obj);
 bool Control_NextLOD(obj_tag *);
 bool Controls_StraddleTest(obj_tag *param_1);
+void Control_SetEffectType(obj_tag *obj, uint effectType);
 
 // Each object type has 3 optional functions which are called by the control system
 // These are Update, Collide and Delete.

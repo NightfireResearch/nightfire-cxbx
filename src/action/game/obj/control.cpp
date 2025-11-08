@@ -204,13 +204,18 @@ obj_tag* control_create_object(int sizeBytes,_VECTOR *pos,_VECTOR *rot,quaternio
 void control_movement_object_handler(char);
 
 // AUTOINJECT
+void Control_SetEffectType(obj_tag *obj, uint effectType) {
+  obj->effectFlags = (obj->effectFlags & 0x30008000) | effectType;
+}
+
+// AUTOINJECT
 void Control_SetGList(obj_tag *obj, celglist_tag *celgl) {
 
   if((obj == NULL) || (celgl == NULL))
     return;
 
   obj->objGraphics = celgl;
-  obj->effectFlags = (obj->effectFlags & 0x30008000) | celgl->applyFlagsToObject;
+  Control_SetEffectType(obj, celgl->applyFlagsToObject);
 
   if(celgl->applyFlagsToObject & 0x40000)
     obj->displayMask &= 0xffef; // Confirmed against PS2 code (Xbox code does this as a single-byte operation)
