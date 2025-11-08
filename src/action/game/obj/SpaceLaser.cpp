@@ -4,7 +4,7 @@
 void SpaceLaser_Update(obj_tag *obj);
 
 typedef struct {
-    char pad[0x2c];
+    ObjectCreationData_Basic baseData;
     HASHCODE someScript0;
     HASHCODE someScript1;
     HASHCODE someScript;

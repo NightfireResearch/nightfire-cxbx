@@ -121,4 +121,10 @@ typedef short MallocFlags;
         }                                                                   \
     } while (0)
 
+
+
+typedef struct {
+    char tbc[0x2c];
+} ObjectCreationData_Basic; // This might be related to TARGET_PLACEMENT but not exactly the same?
+
 #endif //ACTIONHELPERS_H_

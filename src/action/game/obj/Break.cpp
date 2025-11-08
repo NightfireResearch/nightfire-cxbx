@@ -138,7 +138,7 @@ void Break_Kill(obj_tag *gameObject, HITDATA_tag *hitData) {
 
 #pragma pack(push, 1)
 typedef struct {
-    char unknown[0x2c];
+    ObjectCreationData_Basic baseData;
     int breakType;
     int health;
     int flags;

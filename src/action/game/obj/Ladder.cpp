@@ -11,7 +11,8 @@ typedef struct {
 static_assert(sizeof(ObjData_Ladder) == 0x4, "Wrong size for ladder info");
 
 typedef struct {
-    char unknown[0x30];
+    ObjectCreationData_Basic baseData;
+    char unknown[4];
     short b;
 } Create_Ladder_Params;
 
