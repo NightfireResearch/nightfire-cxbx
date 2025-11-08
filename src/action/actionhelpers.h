@@ -75,6 +75,7 @@ typedef short MallocFlags;
 #include "game/obj/PCQWorm.h"
 #include "game/obj/player.h" // for BLData
 #include "game/obj/ScriptPlayer.h"
+#include "game/obj/Sensor.h"
 #include "game/obj/SpaceLaser.h"
 #include "game/weapon_stats.h"
 #include "game/sp/Locks.h"
