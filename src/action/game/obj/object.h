@@ -186,10 +186,10 @@ typedef struct obj_tag {
     void* scriptPlayer;
     float scale;
     int creationTimeFrames;
-    int specialFlags; // 0xCC, unclear what the meaning is but sometimes relevant for rendering or object state or straddle tests?
+    int effectFlags; // 0xCC, unclear what the meaning is but sometimes relevant for rendering or object state or straddle tests?
     unsigned short curState; // 0xD0
     unsigned short subState; // MovementType (Player), PlayerNum (Car)
-    ushort unknown_0xd4;
+    ushort displayMask;
     ushort renderType;
     char unknown_0xd8;
     char _pad_6;
@@ -209,13 +209,13 @@ typedef struct obj_tag {
 typedef enum{
     FLAG_UNKNOWN_40 = 0x40,
     FLAG_IN_FORCEDLIST = 0x30000000,
-} ObjectSpecialFlags;
+} ObjectEffectFlags;
 
 //char (*__kaboom)[offsetof(obj_tag,objectType)] = 1;
 static_assert(offsetof(obj_tag, position) == 0x24, "Offset of position not correct");
 static_assert(offsetof(obj_tag, transformMatrix) == 0x70, "Offset of transformMatrix not correct");
 static_assert(offsetof(obj_tag, extraObjectData) == 0xbc, "Offset of extraObjectData not correct");
-static_assert(offsetof(obj_tag, specialFlags) == 0xcc, "Offset of specialFlags not correct");
+static_assert(offsetof(obj_tag, effectFlags) == 0xcc, "Offset of effectFlags not correct");
 static_assert(offsetof(obj_tag, flags) == 0xda, "Offset of flags not correct");
 static_assert(offsetof(obj_tag, objectType) == 0xdb, "Offset of objectType not correct");
 static_assert(offsetof(obj_tag, tweakB) == 0xe1, "Offset of tweakB not correct");

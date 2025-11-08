@@ -82,7 +82,7 @@ void control_delete_object(obj_tag* obj) {
   obj->objectType = OBJECTTYPE_DELETED;
 
   // Remove from forced list (objects straddling cels)
-  if (obj->specialFlags & FLAG_IN_FORCEDLIST) {
+  if (obj->effectFlags & FLAG_IN_FORCEDLIST) {
     LList_Remove(&ForcedList, (LLNODE_tag*)obj);
   }
 
@@ -134,7 +134,7 @@ void control_init_object(obj_tag* obj) {
     if(obj == NULL)
         return;
     
-    obj->unknown_0xd4 = 0x001f;
+    obj->displayMask = 0x001f;
     obj->flags |= 2;
     obj->unknown_0xd8 = 2;
     obj->creationTimeFrames = GameState.NumFramesUnpaused;
@@ -203,8 +203,19 @@ obj_tag* control_create_object(int sizeBytes,_VECTOR *pos,_VECTOR *rot,quaternio
 // AUTOGEN
 void control_movement_object_handler(char);
 
-// AUTOGEN
-void Control_SetGList(obj_tag *obj, celglist_tag *celgl);
+// AUTOINJECT
+void Control_SetGList(obj_tag *obj, celglist_tag *celgl) {
+
+  if((obj == NULL) || (celgl == NULL))
+    return;
+
+  obj->objGraphics = celgl;
+  obj->effectFlags = (obj->effectFlags & 0x30008000) | celgl->applyFlagsToObject;
+
+  if(celgl->applyFlagsToObject & 0x40000)
+    obj->displayMask &= 0xffef; // Confirmed against PS2 code (Xbox code does this as a single-byte operation)
+  
+}
 
 // AUTOGEN
 obj_tag * Control_CreateObjEx(unsigned short, _VECTOR *, _VECTOR *, _MATRIX *, celglist_tag *, obj_tag *,char,unsigned short,float,unsigned short,unsigned char,unsigned char,unsigned char);

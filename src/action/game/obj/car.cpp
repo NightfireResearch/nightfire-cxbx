@@ -84,8 +84,8 @@ void Car_InitBits(CAR_INFO *tankInfo, obj_tag *baseObj) {
     tankInfo->barrelGeom = Control_CreateObjEx(0, Mat_Position(baseObj->transformMatrix), NULL, NULL, barrelCelgl, baseObj, 0, 4, 1.0, 0x20, 0xff, 0xff, 0xff);
 
     // Meaning currently unknown - render mode?
-    tankInfo->turretGeom->specialFlags |= ObjectSpecialFlags::FLAG_UNKNOWN_40;
-    tankInfo->barrelGeom->specialFlags |= ObjectSpecialFlags::FLAG_UNKNOWN_40;
+    tankInfo->turretGeom->effectFlags |= ObjectEffectFlags::FLAG_UNKNOWN_40;
+    tankInfo->barrelGeom->effectFlags |= ObjectEffectFlags::FLAG_UNKNOWN_40;
 
     Mat_Copy(&baseObj->transformMatrix, &tankInfo->turretGeom->transformMatrix);
     Vec_Copy(Mat_Position(baseObj->transformMatrix), Mat_Position(tankInfo->turretGeom->transformMatrix)); // This is pointless, it's the same matrix, but the game code does this?
@@ -205,7 +205,7 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
 
     Vec_Zero(&tankInfo->someVector_b4);
 
-    baseObj->specialFlags |= ObjectSpecialFlags::FLAG_UNKNOWN_40;
+    baseObj->effectFlags |= ObjectEffectFlags::FLAG_UNKNOWN_40;
 
     // Take a copy of our initial position and orientation, so that we can respawn the tank at the right location
     // Could just as easily been stored in the CAR_INFO struct, but this is how the original code does it so we'll stick with that

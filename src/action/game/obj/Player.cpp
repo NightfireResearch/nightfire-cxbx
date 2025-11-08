@@ -61,7 +61,7 @@ void Player_CreateSight(obj_tag *playerObj, byte viewerNum) {
     
     sightObj->renderType |= 2;
     sightObj->objectType = OBJECTTYPE_DELETED;
-    sightObj->specialFlags |= 0x20;
+    sightObj->effectFlags |= 0x20;
     sightObj->maybeParent = playerObj;
     sightObj->tweakR = 0x7f;
     sightObj->tweakG = 0;
@@ -83,7 +83,7 @@ void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum) {
     
     muzzleFlashObj->maybeParent = playerObj;
     muzzleFlashObj->objectType = OBJECTTYPE_DELETED;
-    muzzleFlashObj->specialFlags = muzzleFlashObj->specialFlags | 0x8221;
+    muzzleFlashObj->effectFlags |= 0x8221;
     View_SetDrawInThisViewOnly(muzzleFlashObj,viewerNum);
     blData->muzzleFlashObj = muzzleFlashObj;
     blData->muzzleFlashRelated = 0;
