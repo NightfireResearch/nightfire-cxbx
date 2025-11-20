@@ -173,6 +173,16 @@ obj_tag* LeafGen_Create(_VECTOR *pos, _VECTOR *rot, level_tag* lvl, celglist_tag
 obj_tag * rotor_init(_VECTOR *param_1,_VECTOR *param_2,celglist_tag *param_3,ushort param_4,uchar param_5,uchar param_6);
 // AUTOGEN
 bool InverterTrigger_Create(level_tag *lvl);
+// AUTOGEN
+obj_tag * GunImp_Create(_VECTOR *pos, quaternion_tag *quat, celglist_tag *celgl);
+// AUTOGEN
+light_tag * Light_Create(_VECTOR *pos,undefined1 clr_r,undefined1 clr_g,undefined1 clr_b,float maybeBrightness,undefined2 param_6,short param_7,undefined1 param_8,float param_9,undefined2 param_10,ushort param_11,undefined2 param_12,int param_13);
+// AUTOGEN
+void Emitter_CreatePlist(_MATRIX *param_1,level_tag *param_2);
+// AUTOGEN
+obj_tag * Drone_AIVolume_Create(_VECTOR *param_1,_VECTOR *param_2,_VECTOR *param_3,level_tag *param_4,celglist_tag *param_5);
+// AUTOGEN
+obj_tag * Pickup_Create(_VECTOR *pos,_VECTOR *rot,_MATRIX *mtx,celglist_tag *param_4,ushort maybePickupType,ushort param_6,uint param_7,uint param_8,uint param_9,char param_10,ushort param_11,ushort param_12,uint param_13);
 
 #pragma pack(push, 1)
 
@@ -204,7 +214,16 @@ typedef struct {
 
 typedef struct {
     ObjectCreationData_Basic basicCreation;
-    // ...
+    ushort unknown_2c;
+    char pad_1[2];
+    ushort unknown_30;
+    char pad_2[2];
+    uint unknown_34;
+    uint unknown_38;
+    uint unknown_3c;
+    ushort unknown_40;
+    char pad_3[2];
+    uint unknown_44;
 } Create_Pickup_Params;
 
 typedef struct {
@@ -358,10 +377,10 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
                 Hint_Create(&pos, &rot, lvl, celglist);
             return;
 
-        // case Place_GunImp:
-        //     if(doCreation)
-        //         GunImp_Create(&pos, thingyyyy, celglist);
-        //     return;
+        case Place_GunImp:
+            if(doCreation)
+                GunImp_Create(&pos, &quat, celglist);
+            return;
 
         case Place_PCQWorm:
             if(doCreation)
@@ -418,15 +437,15 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
                 Apocalypse_Create(&pos, &rot, lvl, celglist);
             return;
 
-        // case Place_Light:
-        //     if(doCreation) {
-        //         Create_Light_Params * lightParams = (Create_Light_Params*)(lvl);
-        //         Light_Create(&pos, lightParams->r, lightParams->g, lightParams->b, 
-        //                     (float)lightParams->maybeBrightness,
-        //                     lightParams->unknown1, -1, 0, 1.0f, 
-        //                     lightParams->unknown2, lightParams->unknown3, lightParams->unknown4, lightParams->unknown5);
-        //     }
-        //     return;
+        case Place_Light:
+            if(doCreation) {
+                Create_Light_Params * lightParams = (Create_Light_Params*)(lvl);
+                Light_Create(&pos, lightParams->r, lightParams->g, lightParams->b, 
+                            (float)lightParams->maybeBrightness,
+                            lightParams->unknown1, -1, 0, 1.0f, 
+                            lightParams->unknown2, lightParams->unknown3, lightParams->unknown4, lightParams->unknown5);
+            }
+            return;
 
         case Place_Rotor:
             if(doCreation) {
@@ -565,25 +584,25 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
                 Trigger_MultiplexOrIn(&pos, &rot, lvl, celglist);
             return;
 
-        // case Place_Pickup:
-        //     if(doCreation) {
-        //         Create_Pickup_Params *pickupParams = (Create_Pickup_Params*)(lvl);
-        //         Pickup_Create(&pos, &rot, NULL, celglist, .......);
-        //     }
-        //     return;
+        case Place_Pickup:
+            if(doCreation) {
+                Create_Pickup_Params *pickupParams = (Create_Pickup_Params*)(lvl);
+                Pickup_Create(&pos, &rot, NULL, celglist, pickupParams->unknown_2c, pickupParams->unknown_30, pickupParams->unknown_34, pickupParams->unknown_38, pickupParams->unknown_3c, 1,  pickupParams->unknown_40, 0,  pickupParams->unknown_44);
+            }
+            return;
 
         case Place_DroneSpawner:
             if(doCreation)
                 DroneSpawner_Create(&pos, &rot, lvl);
             return;
 
-        // case Place_Emitter:
-        //     if(doCreation) {
-        //         Quat_QuatToMat(&quat, &mtx);
-        //         Vec_Copy(&pos, Mat_Position(mtx));
-        //         Emitter_CreatePlist(&mtx, lvl);
-        //     }
-        //     return;
+        case Place_Emitter:
+            if(doCreation) {
+                Quat_QuatToMat(&quat, &mtx);
+                Vec_Copy(&pos, Mat_Position(mtx));
+                Emitter_CreatePlist(&mtx, lvl);
+            }
+            return;
 
         case Place_EnvTree:
             if(doCreation)
@@ -595,11 +614,11 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
                 Trigger_MoviePlayer(&pos, &rot, lvl, celglist);
             return;
 
-        // case Place_DroneAIVolume1:
-        // case Place_DroneAIVolume2:
-        //     if(doCreation)
-        //         Drone_AIVolume_Create(&pos, &rot, maybeTmpVec, lvl, celglist);
-        //     return;
+        case Place_DroneAIVolume1:
+        case Place_DroneAIVolume2:
+            if(doCreation)
+                Drone_AIVolume_Create(&pos, &rot, &unknown, lvl, celglist);
+            return;
 
         case Place_SoundTrigger:
             if(doCreation)
