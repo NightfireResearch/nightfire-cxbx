@@ -202,6 +202,9 @@ void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort t
 
 }
 
+// AUTOGEN
+obj_tag* MP_RegisterMPObject(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
+
 void MP_CleanupMPObjExt(MP_OBJ_EXT *mp_obj) {
   if(mp_obj == NULL)
     return;

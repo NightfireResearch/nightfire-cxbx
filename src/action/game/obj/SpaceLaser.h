@@ -26,6 +26,6 @@ static_assert(sizeof(ObjData_SpaceLaser) == 0x40, "ObjData_SpaceLaser size incor
 #pragma pack(pop)
 
 void SpaceLaser_Update(obj_tag *obj);
-void Create_SpaceLaser(_VECTOR* pos, _VECTOR* rot, level_tag* level);
+obj_tag * Create_SpaceLaser(_VECTOR* pos, _VECTOR* rot, level_tag* level);
 
 #endif // SPACELASER_H_

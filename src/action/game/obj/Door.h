@@ -19,4 +19,6 @@ static_assert(sizeof(DOORINFO) == 0x74, "Size of DOOR_INFO not correct");
 
 bool Door_IsLocked(obj_tag* obj);
 
+obj_tag * Door_Create(_VECTOR *pos, _VECTOR *rot, level_tag *level, celglist_tag *celgl);
+
 #endif // DOOR_H

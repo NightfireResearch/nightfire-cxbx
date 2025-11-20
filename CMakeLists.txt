@@ -103,6 +103,7 @@ add_library(actioninject SHARED
   src/action/game/obj/car.cpp
   src/action/game/obj/control.cpp
   src/action/game/obj/Copter.cpp
+  src/action/game/obj/Grapple.cpp
   src/action/game/obj/GT.cpp
   src/action/game/obj/GunImp.cpp
   src/action/game/obj/Ladder.cpp
@@ -111,6 +112,7 @@ add_library(actioninject SHARED
   src/action/game/obj/ScriptPlayer.cpp
   src/action/game/obj/Sensor.cpp
   src/action/game/obj/SpaceLaser.cpp
+  src/action/game/obj/SpaceMissile.cpp
   src/action/game/sp/Locks.cpp
   src/action/game/sp/Mission.cpp
   src/action/game/sp/PlayerStats.cpp

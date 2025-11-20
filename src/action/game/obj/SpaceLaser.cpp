@@ -17,7 +17,7 @@ typedef struct {
 
 
 // AUTOINJECT
-void __cdecl Create_SpaceLaser(_VECTOR *pos,_VECTOR *rot, level_tag* lvl) {
+obj_tag * Create_SpaceLaser(_VECTOR *pos,_VECTOR *rot, level_tag* lvl) {
     
     SpaceLaserCreationData *creationData = (SpaceLaserCreationData*)lvl;
 
@@ -36,4 +36,5 @@ void __cdecl Create_SpaceLaser(_VECTOR *pos,_VECTOR *rot, level_tag* lvl) {
     spaceLaserInfo->someTimerBeforeRunningScript = 10.0;
     gameObj->curState = 0;
 
+    return gameObj;
 }
