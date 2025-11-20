@@ -34,6 +34,10 @@ typedef struct DCVars_tag DCVars_tag;
 typedef struct MsgObject MsgObject;
 typedef struct AnimObj AnimObj;
 typedef struct block_header_tag block_header_tag;
+typedef struct TARGET_PLACEMENT TARGET_PLACEMENT;
+
+
+typedef void* ScriptPlayerCallback; // FIXME: Function pointer signature
 
 // Hashcode, SFX and translated text names
 #include "assets.h"
@@ -65,18 +69,50 @@ typedef short MallocFlags;
 #include "game/Upgrade.h"
 #include "game/drone/Drone.h"
 #include "game/drone/NDrone2.h"
+#include "game/obj/Apocalypse.h"
 #include "game/obj/Break.h"
 #include "game/obj/build.h"
+#include "game/obj/CamSubject.h"
+#include "game/obj/Cloud.h"
 #include "game/obj/Copter.h"
-#include "game/obj/Door.h"
-#include "game/obj/Ladder.h"
-#include "game/obj/object.h" // for obj_tag needed by some autogen functions
 #include "game/obj/control.h" // for Control_X functions
+#include "game/obj/Corona.h"
+#include "game/obj/Creature.h"
+#include "game/obj/CreepWall.h"
+#include "game/obj/Destroy.h"
+#include "game/obj/Door.h"
+#include "game/obj/Drone_AIHints.h"
+#include "game/obj/DroneSpawner.h"
+#include "game/obj/Env.h"
+#include "game/obj/Flicker.h"
+#include "game/obj/FuseBox.h"
+#include "game/obj/Grapple.h"
+#include "game/obj/GT.h"
+#include "game/obj/Hint.h"
+#include "game/obj/Hurt.h"
+#include "game/obj/Ladder.h"
+#include "game/obj/Lightning.h"
+#include "game/obj/Lock.h"
+#include "game/obj/Mine.h"
+#include "game/obj/MiniSub.h"
+#include "game/obj/Monitor.h"
+#include "game/obj/object.h" // for obj_tag needed by some autogen functions
+#include "game/obj/OneSided.h"
 #include "game/obj/PCQWorm.h"
 #include "game/obj/player.h" // for BLData
+#include "game/obj/RainBox.h"
 #include "game/obj/ScriptPlayer.h"
+#include "game/obj/Searchlight.h"
 #include "game/obj/Sensor.h"
+#include "game/obj/Shooter.h"
 #include "game/obj/SpaceLaser.h"
+#include "game/obj/SpaceMissile.h"
+#include "game/obj/SS.h"
+#include "game/obj/Sub.h"
+#include "game/obj/ThirdCam.h"
+#include "game/obj/ThirdIcon.h"
+#include "game/obj/Trigger.h"
+#include "game/obj/Wire.h"
 #include "game/weapon_stats.h"
 #include "game/sp/Locks.h"
 #include "game/sp/Mission.h"

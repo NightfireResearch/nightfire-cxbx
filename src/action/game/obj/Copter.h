@@ -20,5 +20,6 @@ static_assert(offsetof(COPTER, scriptPlayerObj) == 0x2c, "Script player object o
 
 void Copter_Delete(obj_tag *obj);
 
+obj_tag * Copter_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 
 #endif // COPTER_H_

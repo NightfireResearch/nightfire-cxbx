@@ -2994,17 +2994,17 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int",
-            "int"
+            "level_tag *",
+            "celglist_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Destroy_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int param_4, int param_5)",
+        "prototype_string": "obj_tag * __cdecl Destroy_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4, celglist_tag * param_5)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]",
-            "[int param_5@Stack[0x14]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]",
+            "[celglist_tag * param_5@Stack[0x14]:4]"
         ],
         "is_thunk": false
     },
@@ -4004,17 +4004,19 @@
         "address": "0x000253c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "void",
+        "return_type": "obj_tag *",
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "void __cdecl ThirdCam_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3)",
+        "prototype_string": "obj_tag * __cdecl ThirdCam_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * unused)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * unused@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -4078,15 +4080,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl CamSubject_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl CamSubject_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -4979,11 +4981,11 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_0002b260",
+        "name": "Intersect_ConeSphere",
         "address": "0x0002b260",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "_VECTOR *",
             "float *",
@@ -4991,7 +4993,7 @@
             "float",
             "_VECTOR *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0002b260(_VECTOR * param_1, float * param_2, float param_3, float param_4, _VECTOR * param_5)",
+        "prototype_string": "bool __cdecl Intersect_ConeSphere(_VECTOR * param_1, float * param_2, float param_3, float param_4, _VECTOR * param_5)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[float * param_2@Stack[0x8]:4]",
@@ -5480,13 +5482,13 @@
         "is_thunk": false
     },
     {
-        "name": "maybeSwitches_Calc",
+        "name": "maybeControl_Switches_Update",
         "address": "0x0002d640",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall maybeSwitches_Calc(void)",
+        "prototype_string": "void __stdcall maybeControl_Switches_Update(void)",
         "parameters": [],
         "is_thunk": false
     },
@@ -5788,12 +5790,20 @@
     {
         "name": "FUN_0002e580",
         "address": "0x0002e580",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_0002e580()",
-        "parameters": [],
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
+        "return_type": "bool",
+        "param_types": [
+            "CREATURE *",
+            "obj_tag *",
+            "_VECTOR *"
+        ],
+        "prototype_string": "bool FUN_0002e580(CREATURE * param_1, obj_tag * param_2, _VECTOR * param_3)",
+        "parameters": [
+            "[CREATURE * param_1@EAX:4]",
+            "[obj_tag * param_2@EDX:4]",
+            "[_VECTOR * param_3@EDI:4]"
+        ],
         "is_thunk": false
     },
     {
@@ -5803,13 +5813,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "obj_tag *",
+            "CREATURE *"
         ],
-        "prototype_string": "void __cdecl Creature_CalcWaypoints(int param_1, int param_2)",
+        "prototype_string": "void __cdecl Creature_CalcWaypoints(obj_tag * param_1, CREATURE * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[CREATURE * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
@@ -5820,17 +5830,17 @@
         "has_custom_variable_storage": false,
         "return_type": "obj_tag *",
         "param_types": [
-            "undefined4 *",
-            "float *",
-            "int *",
-            "int"
+            "_VECTOR *",
+            "_VECTOR *",
+            "celglist_tag *",
+            "level_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Creature_Create(undefined4 * param_1, float * param_2, int * param_3, int param_4)",
+        "prototype_string": "obj_tag * __cdecl Creature_Create(_VECTOR * param_1, _VECTOR * param_2, celglist_tag * param_3, level_tag * param_4)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]",
-            "[int * param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[celglist_tag * param_3@Stack[0xc]:4]",
+            "[level_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -6043,15 +6053,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Door_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int param_4)",
+        "prototype_string": "obj_tag * __cdecl Door_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -6157,13 +6167,13 @@
         "is_thunk": false
     },
     {
-        "name": "DroneSpawner_Create",
+        "name": "DroneSpawner_CreateBlank",
         "address": "0x0002fb90",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall DroneSpawner_Create(void)",
+        "prototype_string": "void __stdcall DroneSpawner_CreateBlank(void)",
         "parameters": [],
         "is_thunk": false
     },
@@ -6235,15 +6245,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
-            "undefined4 *",
-            "int"
+            "_VECTOR *",
+            "_VECTOR *",
+            "level_tag *"
         ],
-        "prototype_string": "void __cdecl Drone_CoverCornerNode(float * param_1, undefined4 * param_2, int param_3)",
+        "prototype_string": "void __cdecl Drone_CoverCornerNode(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[level_tag * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -6273,15 +6283,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
-            "undefined4 *",
-            "int"
+            "_VECTOR *",
+            "_VECTOR *",
+            "level_tag *"
         ],
-        "prototype_string": "void __cdecl Drone_AIPoint(float * param_1, undefined4 * param_2, int param_3)",
+        "prototype_string": "void __cdecl Drone_AIPoint(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[level_tag * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -6366,13 +6376,13 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int"
+            "level_tag *"
         ],
-        "prototype_string": "void __cdecl DroneSpawner_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3)",
+        "prototype_string": "void __cdecl DroneSpawner_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -9272,11 +9282,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "uint *"
+            "DCVars_tag *"
         ],
-        "prototype_string": "void __cdecl DroneFunc_HandleSoundAlerts(uint * param_1)",
+        "prototype_string": "void __cdecl DroneFunc_HandleSoundAlerts(DCVars_tag * param_1)",
         "parameters": [
-            "[uint * param_1@Stack[0x4]:4]"
+            "[DCVars_tag * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -11894,7 +11904,7 @@
         "address": "0x00046260",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "int",
             "int",
@@ -11903,14 +11913,14 @@
             "undefined4",
             "float *"
         ],
-        "prototype_string": "uint __cdecl NDrone2_DistanceToEmitter(int param_1, int param_2, ushort * param_3, int param_4, undefined4 param_5, float * param_6)",
+        "prototype_string": "bool __cdecl NDrone2_DistanceToEmitter(int param_1, int param_2, ushort * nearestNodeIdx, int param_4, undefined4 param_5, float * distOut)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
-            "[ushort * param_3@Stack[0xc]:4]",
+            "[ushort * nearestNodeIdx@Stack[0xc]:4]",
             "[int param_4@Stack[0x10]:4]",
             "[undefined4 param_5@Stack[0x14]:4]",
-            "[float * param_6@Stack[0x18]:4]"
+            "[float * distOut@Stack[0x18]:4]"
         ],
         "is_thunk": false
     },
@@ -19742,17 +19752,17 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *",
-            "undefined4",
-            "int"
+            "_VECTOR *",
+            "_VECTOR *",
+            "celglist_tag *",
+            "level_tag *"
         ],
-        "prototype_string": "void __cdecl Env_Create(float * param_1, float * param_2, undefined4 param_3, int param_4)",
+        "prototype_string": "void __cdecl Env_Create(_VECTOR * param_1, _VECTOR * param_2, celglist_tag * param_3, level_tag * param_4)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[celglist_tag * param_3@Stack[0xc]:4]",
+            "[level_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -19842,13 +19852,13 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int"
+            "level_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Env_Tree_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3)",
+        "prototype_string": "obj_tag * __cdecl Env_Tree_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -19962,15 +19972,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Mine_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Mine_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -19998,15 +20008,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Shooter_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Shooter_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -20972,15 +20982,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Hurt_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int param_4)",
+        "prototype_string": "obj_tag * __cdecl Hurt_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -21030,11 +21040,11 @@
         "address": "0x0006c850",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "ushort",
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "uint __cdecl Hurt_GetType(obj_tag * param_1)",
+        "prototype_string": "ushort __cdecl Hurt_GetType(obj_tag * param_1)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]"
         ],
@@ -21521,15 +21531,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Searchlight_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Searchlight_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -28586,18 +28596,18 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "undefined4",
-            "int",
-            "int *",
+            "quaternion_tag *",
+            "level_tag *",
+            "celglist_tag *",
             "obj_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl GT_Create(_VECTOR * param_1, _VECTOR * param_2, undefined4 param_3, int param_4, int * param_5, obj_tag * param_6)",
+        "prototype_string": "obj_tag * __cdecl GT_Create(_VECTOR * pos, _VECTOR * rot, quaternion_tag * quat, level_tag * lvl, celglist_tag * celgl, obj_tag * param_6)",
         "parameters": [
-            "[_VECTOR * param_1@Stack[0x4]:4]",
-            "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]",
-            "[int * param_5@Stack[0x14]:4]",
+            "[_VECTOR * pos@Stack[0x4]:4]",
+            "[_VECTOR * rot@Stack[0x8]:4]",
+            "[quaternion_tag * quat@Stack[0xc]:4]",
+            "[level_tag * lvl@Stack[0x10]:4]",
+            "[celglist_tag * celgl@Stack[0x14]:4]",
             "[obj_tag * param_6@Stack[0x18]:4]"
         ],
         "is_thunk": false
@@ -28903,17 +28913,17 @@
         "has_custom_variable_storage": false,
         "return_type": "obj_tag *",
         "param_types": [
-            "undefined4 *",
-            "undefined4 *",
-            "undefined4",
-            "int"
+            "_VECTOR *",
+            "_VECTOR *",
+            "celglist_tag *",
+            "level_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl MiniSub_Create(undefined4 * param_1, undefined4 * param_2, undefined4 param_3, int param_4)",
+        "prototype_string": "obj_tag * __cdecl MiniSub_Create(_VECTOR * param_1, _VECTOR * param_2, celglist_tag * param_3, level_tag * param_4)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[celglist_tag * param_3@Stack[0xc]:4]",
+            "[level_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -30293,15 +30303,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Cloud_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Cloud_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -30329,13 +30339,13 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int"
+            "level_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Lightning_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3)",
+        "prototype_string": "obj_tag * __cdecl Lightning_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -30370,19 +30380,19 @@
         "address": "0x000a3a40",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "void",
+        "return_type": "obj_tag *",
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "undefined4",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "void __cdecl RainBox_Create(_VECTOR * param_1, _VECTOR * param_2, undefined4 param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl RainBox_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -30444,15 +30454,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "undefined4",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Corona_Create(_VECTOR * param_1, _VECTOR * param_2, undefined4 param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Corona_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -30495,15 +30505,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl DynamicObject_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl DynamicObject_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -30527,19 +30537,19 @@
         "address": "0x000a4180",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "void",
+        "return_type": "obj_tag *",
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "void __cdecl Apocalypse_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Apocalypse_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -30614,18 +30624,18 @@
             "level_tag *",
             "ObjectPlacementType",
             "celglist_tag *",
-            "undefined4",
-            "int",
+            "void *",
+            "void *",
             "char"
         ],
-        "prototype_string": "undefined __cdecl parsemap_create_dynamic_objects(TARGET_PLACEMENT * placement, level_tag * lvl, ObjectPlacementType typeId, celglist_tag * celglist, undefined4 param_5, int param_6, char doCreation)",
+        "prototype_string": "undefined __cdecl parsemap_create_dynamic_objects(TARGET_PLACEMENT * placement, level_tag * lvl, ObjectPlacementType typeId, celglist_tag * celglist, void * param_5, void * param_6, char doCreation)",
         "parameters": [
             "[TARGET_PLACEMENT * placement@Stack[0x4]:4]",
             "[level_tag * lvl@Stack[0x8]:4]",
             "[ObjectPlacementType typeId@Stack[0xc]:4]",
             "[celglist_tag * celglist@Stack[0x10]:4]",
-            "[undefined4 param_5@Stack[0x14]:4]",
-            "[int param_6@Stack[0x18]:4]",
+            "[void * param_5@Stack[0x14]:4]",
+            "[void * param_6@Stack[0x18]:4]",
             "[char doCreation@Stack[0x1c]:1]"
         ],
         "is_thunk": false
@@ -31052,19 +31062,19 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int *",
-            "undefined4",
-            "undefined4",
-            "undefined1"
+            "celglist_tag *",
+            "ushort",
+            "uchar",
+            "uchar"
         ],
-        "prototype_string": "obj_tag * __cdecl rotor_init(_VECTOR * param_1, _VECTOR * param_2, int * param_3, undefined4 param_4, undefined4 param_5, undefined1 param_6)",
+        "prototype_string": "obj_tag * __cdecl rotor_init(_VECTOR * param_1, _VECTOR * param_2, celglist_tag * param_3, ushort param_4, uchar param_5, uchar param_6)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int * param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined4 param_5@Stack[0x14]:4]",
-            "[undefined1 param_6@Stack[0x18]:1]"
+            "[celglist_tag * param_3@Stack[0xc]:4]",
+            "[ushort param_4@Stack[0x10]:2]",
+            "[uchar param_5@Stack[0x14]:1]",
+            "[uchar param_6@Stack[0x18]:1]"
         ],
         "is_thunk": false
     },
@@ -31710,17 +31720,19 @@
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
+            "BLData *",
             "float",
-            "char",
-            "char"
+            "ushort",
+            "short"
         ],
-        "prototype_string": "void __stdcall Player_HandlePain(int param_1, float param_2, char location, char unknown)",
+        "prototype_string": "void __stdcall Player_HandlePain(obj_tag * player, BLData * blData, float dmg, ushort hurtType, short boneIdx)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[float param_2@Stack[0x8]:4]",
-            "[char location@DI:1]",
-            "[char unknown@BL:1]"
+            "[obj_tag * player@Stack[0x4]:4]",
+            "[BLData * blData@ESI:4]",
+            "[float dmg@Stack[0x8]:4]",
+            "[ushort hurtType@DI:2]",
+            "[short boneIdx@BX:2]"
         ],
         "is_thunk": false
     },
@@ -31857,19 +31869,23 @@
     {
         "name": "Player_DealWithObjHit",
         "address": "0x000add00",
-        "calling_convention": "unknown",
+        "calling_convention": "__fastcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
             "undefined4",
+            "undefined4",
+            "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined Player_DealWithObjHit(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined __fastcall Player_DealWithObjHit(undefined4 param_1_00, undefined4 param_2_00, undefined4 plyObj, undefined4 blData, undefined4 param_5)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[undefined4 param_1_00@ECX:4]",
+            "[undefined4 param_2_00@EDX:4]",
+            "[undefined4 plyObj@Stack[0x4]:4]",
+            "[undefined4 blData@Stack[0x8]:4]",
+            "[undefined4 param_5@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -31972,15 +31988,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int *",
-            "int",
-            "int"
+            "obj_tag *",
+            "BLData *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl PlayerCollLadder(int * param_1, int param_2, int param_3)",
+        "prototype_string": "void __cdecl PlayerCollLadder(obj_tag * player, BLData * blData, obj_tag * ladder)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[obj_tag * player@Stack[0x4]:4]",
+            "[BLData * blData@Stack[0x8]:4]",
+            "[obj_tag * ladder@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -32084,15 +32100,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl CreepWall_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl CreepWall_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -32105,15 +32121,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl ThirdIcon_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl ThirdIcon_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -32139,15 +32155,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int *",
-            "void *",
-            "int"
+            "obj_tag *",
+            "BLData *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Player_CollWire(int * param_1, void * param_2, int param_3)",
+        "prototype_string": "void __cdecl Player_CollWire(obj_tag * param_1, BLData * param_2, obj_tag * param_3)",
         "parameters": [
-            "[int * param_1@Stack[0x4]:4]",
-            "[void * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[BLData * param_2@Stack[0x8]:4]",
+            "[obj_tag * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -32224,15 +32240,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Wire_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Wire_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -32245,15 +32261,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "undefined4",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Grapple_Create(_VECTOR * param_1, _VECTOR * param_2, undefined4 param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Grapple_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -33841,11 +33857,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Player_WeaponSelect(int param_1)",
+        "prototype_string": "void __cdecl Player_WeaponSelect(obj_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -34255,9 +34271,9 @@
             "short",
             "undefined4"
         ],
-        "prototype_string": "undefined4 __cdecl Upgrade_MPWeapon(short param_1, undefined4 param_2)",
+        "prototype_string": "undefined4 __cdecl Upgrade_MPWeapon(short playerNum, undefined4 param_2)",
         "parameters": [
-            "[short param_1@Stack[0x4]:2]",
+            "[short playerNum@Stack[0x4]:2]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
@@ -34369,13 +34385,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "obj_tag *",
             "char",
             "char"
         ],
-        "prototype_string": "void __cdecl Player_WeaponChange(int param_1, char param_2, char param_3)",
+        "prototype_string": "void __cdecl Player_WeaponChange(obj_tag * param_1, char param_2, char param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[char param_2@Stack[0x8]:1]",
             "[char param_3@Stack[0xc]:1]"
         ],
@@ -35098,15 +35114,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int *",
-            "int"
+            "celglist_tag *",
+            "level_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl RB_Create(_VECTOR * param_1, _VECTOR * param_2, int * param_3, int param_4)",
+        "prototype_string": "obj_tag * __cdecl RB_Create(_VECTOR * param_1, _VECTOR * param_2, celglist_tag * param_3, level_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int * param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]"
+            "[celglist_tag * param_3@Stack[0xc]:4]",
+            "[level_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -35646,12 +35662,12 @@
         "address": "0x000c2660",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "SCRIPTINFO *",
             "char"
         ],
-        "prototype_string": "uint __cdecl Script_Play(SCRIPTINFO * param_1, char param_2)",
+        "prototype_string": "bool __cdecl Script_Play(SCRIPTINFO * param_1, char param_2)",
         "parameters": [
             "[SCRIPTINFO * param_1@Stack[0x4]:4]",
             "[char param_2@Stack[0x8]:1]"
@@ -37030,17 +37046,17 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000c6fa0",
+        "name": "maybePickRandomCombat",
         "address": "0x000c6fa0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "undefined4"
+            "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c6fa0(undefined4 param_1)",
+        "prototype_string": "void __cdecl maybePickRandomCombat(int param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[int param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -37758,15 +37774,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl SS_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int param_4)",
+        "prototype_string": "obj_tag * __cdecl SS_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -38069,19 +38085,19 @@
     {
         "name": "Sound_Alertness",
         "address": "0x000cbb10",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
             "undefined4",
-            "undefined4"
+            "DYNAMICSOUNDS * *"
         ],
-        "prototype_string": "undefined Sound_Alertness(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined __cdecl Sound_Alertness(undefined4 param_1, undefined4 param_2, DYNAMICSOUNDS * * param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[DYNAMICSOUNDS * * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -38230,28 +38246,28 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int"
+            "level_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Create_SpaceMissile(_VECTOR * param_1, _VECTOR * param_2, int param_3)",
+        "prototype_string": "obj_tag * __cdecl Create_SpaceMissile(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
     {
         "name": "SpaceMissile_Update",
         "address": "0x000cc630",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined SpaceMissile_Update(undefined4 param_1)",
+        "prototype_string": "void __cdecl SpaceMissile_Update(obj_tag * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -38260,13 +38276,13 @@
         "address": "0x000cc860",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "void",
+        "return_type": "obj_tag *",
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
             "level_tag *"
         ],
-        "prototype_string": "void __cdecl Create_SpaceLaser(_VECTOR * pos, _VECTOR * rot, level_tag * param_3)",
+        "prototype_string": "obj_tag * __cdecl Create_SpaceLaser(_VECTOR * pos, _VECTOR * rot, level_tag * param_3)",
         "parameters": [
             "[_VECTOR * pos@Stack[0x4]:4]",
             "[_VECTOR * rot@Stack[0x8]:4]",
@@ -38449,15 +38465,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Flicker_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Flicker_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -38517,15 +38533,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "undefined4",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl LeafGen_Create(_VECTOR * param_1, _VECTOR * param_2, undefined4 param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl LeafGen_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -38553,15 +38569,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Ripples_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Ripples_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -38815,15 +38831,15 @@
         "has_custom_variable_storage": false,
         "return_type": "obj_tag *",
         "param_types": [
-            "undefined4 *",
-            "undefined4 *",
-            "int"
+            "_VECTOR *",
+            "_VECTOR *",
+            "level_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Sub_Create(undefined4 * param_1, undefined4 * param_2, int param_3)",
+        "prototype_string": "obj_tag * __cdecl Sub_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[level_tag * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -39083,15 +39099,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl FuseBox_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int param_4)",
+        "prototype_string": "obj_tag * __cdecl FuseBox_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -39181,17 +39197,17 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "undefined4 *",
-            "undefined4 *",
-            "int",
-            "int *"
+            "_VECTOR *",
+            "_VECTOR *",
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "void __cdecl PCQWorm_Create(undefined4 * param_1, undefined4 * param_2, int param_3, int * param_4)",
+        "prototype_string": "void __cdecl PCQWorm_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -39245,15 +39261,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Sensor_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Sensor_Create(_VECTOR * pos, _VECTOR * rot, level_tag * lvl, celglist_tag * celgl)",
         "parameters": [
-            "[_VECTOR * param_1@Stack[0x4]:4]",
-            "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[_VECTOR * pos@Stack[0x4]:4]",
+            "[_VECTOR * rot@Stack[0x8]:4]",
+            "[level_tag * lvl@Stack[0xc]:4]",
+            "[celglist_tag * celgl@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -39261,14 +39277,18 @@
         "name": "Sensor_SetBeam",
         "address": "0x000d0860",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "has_custom_variable_storage": true,
+        "return_type": "ushort",
         "param_types": [
-            "int"
+            "obj_tag *",
+            "obj_tag *",
+            "SENSOR *"
         ],
-        "prototype_string": "uint __cdecl Sensor_SetBeam(int param_1)",
+        "prototype_string": "ushort __cdecl Sensor_SetBeam(obj_tag * param_1, obj_tag * param_2, SENSOR * param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_2@EDI:4]",
+            "[SENSOR * param_3@ESI:4]"
         ],
         "is_thunk": false
     },
@@ -39277,17 +39297,17 @@
         "address": "0x000d0970",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int",
-            "int",
-            "int"
+            "obj_tag *",
+            "obj_tag *",
+            "SENSOR *"
         ],
-        "prototype_string": "uint __cdecl Sensor_InCone(int param_1, int param_2, int param_3)",
+        "prototype_string": "bool __cdecl Sensor_InCone(obj_tag * param_1, obj_tag * param_2, SENSOR * param_3)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_2@Stack[0x8]:4]",
+            "[SENSOR * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -39315,15 +39335,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Monitor_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int param_4)",
+        "prototype_string": "obj_tag * __cdecl Monitor_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -39368,15 +39388,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Lock_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Lock_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -39616,15 +39636,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Trigger_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Trigger_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -39697,13 +39717,13 @@
         "address": "0x000d2d50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int"
+            "level_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl InverterTrigger_Create(int param_1)",
+        "prototype_string": "bool __cdecl InverterTrigger_Create(level_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[level_tag * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -39731,15 +39751,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl SoundTrigger_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl SoundTrigger_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -39767,15 +39787,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl MusicTrigger_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl MusicTrigger_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -39803,15 +39823,15 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl Hint_Create(_VECTOR * param_1, _VECTOR * param_2, int param_3, int param_4)",
+        "prototype_string": "obj_tag * __cdecl Hint_Create(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -39833,76 +39853,84 @@
     {
         "name": "Trigger_LoadLevelCreate",
         "address": "0x000d3260",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "obj_tag *",
         "param_types": [
-            "undefined",
-            "undefined",
-            "undefined4"
+            "_VECTOR *",
+            "_VECTOR *",
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "undefined Trigger_LoadLevelCreate(undefined param_1, undefined param_2, undefined4 param_3)",
+        "prototype_string": "obj_tag * __cdecl Trigger_LoadLevelCreate(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
-            "[undefined param_1@<UNASSIGNED>]",
-            "[undefined param_2@<UNASSIGNED>]",
-            "[undefined4 param_3@<UNASSIGNED>]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
     {
         "name": "Trigger_MoviePlayer",
         "address": "0x000d32c0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "obj_tag *",
         "param_types": [
-            "undefined",
-            "undefined",
-            "undefined4"
+            "_VECTOR *",
+            "_VECTOR *",
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "undefined Trigger_MoviePlayer(undefined param_1, undefined param_2, undefined4 param_3)",
+        "prototype_string": "obj_tag * __cdecl Trigger_MoviePlayer(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
-            "[undefined param_1@<UNASSIGNED>]",
-            "[undefined param_2@<UNASSIGNED>]",
-            "[undefined4 param_3@<UNASSIGNED>]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
     {
         "name": "Trigger_Touch",
         "address": "0x000d3310",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "obj_tag *",
         "param_types": [
-            "undefined",
-            "undefined",
-            "undefined4"
+            "_VECTOR *",
+            "_VECTOR *",
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "undefined Trigger_Touch(undefined param_1, undefined param_2, undefined4 param_3)",
+        "prototype_string": "obj_tag * __cdecl Trigger_Touch(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
-            "[undefined param_1@<UNASSIGNED>]",
-            "[undefined param_2@<UNASSIGNED>]",
-            "[undefined4 param_3@<UNASSIGNED>]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
     {
         "name": "Trigger_TouchOnce",
         "address": "0x000d3380",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "obj_tag *",
         "param_types": [
-            "undefined",
-            "undefined",
-            "undefined4"
+            "_VECTOR *",
+            "_VECTOR *",
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "undefined Trigger_TouchOnce(undefined param_1, undefined param_2, undefined4 param_3)",
+        "prototype_string": "obj_tag * __cdecl Trigger_TouchOnce(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
-            "[undefined param_1@<UNASSIGNED>]",
-            "[undefined param_2@<UNASSIGNED>]",
-            "[undefined4 param_3@<UNASSIGNED>]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -39911,19 +39939,19 @@
         "address": "0x000d33f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "void",
+        "return_type": "obj_tag *",
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "void __cdecl Trigger_MultiplexIn(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Trigger_MultiplexIn(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -39932,38 +39960,40 @@
         "address": "0x000d3450",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "void",
+        "return_type": "obj_tag *",
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "void __cdecl Trigger_MultiplexOrIn(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Trigger_MultiplexOrIn(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
     {
         "name": "Trigger_MultiplexSIn",
         "address": "0x000d34b0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "obj_tag *",
         "param_types": [
-            "undefined",
-            "undefined",
-            "undefined4"
+            "_VECTOR *",
+            "_VECTOR *",
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "undefined Trigger_MultiplexSIn(undefined param_1, undefined param_2, undefined4 param_3)",
+        "prototype_string": "obj_tag * __cdecl Trigger_MultiplexSIn(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
-            "[undefined param_1@<UNASSIGNED>]",
-            "[undefined param_2@<UNASSIGNED>]",
-            "[undefined4 param_3@<UNASSIGNED>]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -39972,19 +40002,19 @@
         "address": "0x000d3500",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "void",
+        "return_type": "obj_tag *",
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int",
-            "int *"
+            "level_tag *",
+            "celglist_tag *"
         ],
-        "prototype_string": "void __cdecl Trigger_MultiplexOut(_VECTOR * param_1, _VECTOR * param_2, int param_3, int * param_4)",
+        "prototype_string": "obj_tag * __cdecl Trigger_MultiplexOut(_VECTOR * param_1, _VECTOR * param_2, level_tag * param_3, celglist_tag * param_4)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[int * param_4@Stack[0x10]:4]"
+            "[level_tag * param_3@Stack[0xc]:4]",
+            "[celglist_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
@@ -40829,12 +40859,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "vec3unpadded *",
+            "_VECTOR *",
             "quaternion_tag *"
         ],
-        "prototype_string": "void __cdecl Quat_EulerToQuat(vec3unpadded * param_1, quaternion_tag * param_2)",
+        "prototype_string": "void __cdecl Quat_EulerToQuat(_VECTOR * param_1, quaternion_tag * param_2)",
         "parameters": [
-            "[vec3unpadded * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_1@Stack[0x4]:4]",
             "[quaternion_tag * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
@@ -42446,26 +42476,26 @@
         "return_type": "void",
         "param_types": [
             "ushort",
-            "undefined4",
-            "undefined4 *",
-            "undefined4 *",
-            "int",
+            "celglist_tag *",
+            "_VECTOR *",
+            "_VECTOR *",
+            "obj_tag *",
             "char",
             "ushort",
-            "undefined2",
-            "undefined1"
+            "ushort",
+            "char"
         ],
-        "prototype_string": "void __cdecl View_AddSkyObj(ushort param_1, undefined4 param_2, undefined4 * param_3, undefined4 * param_4, int param_5, char param_6, ushort param_7, undefined2 param_8, undefined1 param_9)",
+        "prototype_string": "void __cdecl View_AddSkyObj(ushort param_1, celglist_tag * param_2, _VECTOR * param_3, _VECTOR * param_4, obj_tag * param_5, char param_6, ushort param_7, ushort param_8, char param_9)",
         "parameters": [
             "[ushort param_1@Stack[0x4]:2]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 * param_3@Stack[0xc]:4]",
-            "[undefined4 * param_4@Stack[0x10]:4]",
-            "[int param_5@Stack[0x14]:4]",
+            "[celglist_tag * param_2@Stack[0x8]:4]",
+            "[_VECTOR * param_3@Stack[0xc]:4]",
+            "[_VECTOR * param_4@Stack[0x10]:4]",
+            "[obj_tag * param_5@Stack[0x14]:4]",
             "[char param_6@Stack[0x18]:1]",
             "[ushort param_7@Stack[0x1c]:2]",
-            "[undefined2 param_8@Stack[0x20]:2]",
-            "[undefined1 param_9@Stack[0x24]:1]"
+            "[ushort param_8@Stack[0x20]:2]",
+            "[char param_9@Stack[0x24]:1]"
         ],
         "is_thunk": false
     },
@@ -42753,13 +42783,13 @@
         "param_types": [
             "_VECTOR *",
             "_VECTOR *",
-            "int *"
+            "celglist_tag *"
         ],
-        "prototype_string": "obj_tag * __cdecl OneSided_Create(_VECTOR * param_1, _VECTOR * param_2, int * param_3)",
+        "prototype_string": "obj_tag * __cdecl OneSided_Create(_VECTOR * param_1, _VECTOR * param_2, celglist_tag * param_3)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[int * param_3@Stack[0xc]:4]"
+            "[celglist_tag * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },

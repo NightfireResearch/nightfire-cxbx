@@ -21,3 +21,6 @@ bool Door_IsLocked(obj_tag* obj) {
     return !switch_channels[swChannel];
     
 }
+
+// AUTOGEN
+obj_tag * Door_Create(_VECTOR *pos, _VECTOR *rot, level_tag *level, celglist_tag *celgl);

@@ -19,3 +19,6 @@ void Copter_Delete(obj_tag *obj) {
     
     // We don't free the object?
 }
+
+// AUTOGEN
+obj_tag * Copter_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
