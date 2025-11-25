@@ -5,7 +5,6 @@
 #include "../math/math.h"
 
 #define DynamicSoundList ((DLISTINFO_tag*)(0x0029a128))
-#define SoundPlaybackList ((DLISTINFO_tag*)0x0029a134)
 
 // AUTOINJECT
 bool Sound_SetPosition(DYNAMICSOUNDS *handle, _VECTOR *position) {
@@ -189,7 +188,7 @@ DYNAMICSOUNDS* Sound_PlayExt(Action_SFX param_1, float volume, undefined2 maybeP
 void Sound_StopAllWithId(Action_SFX sfx) {
 
     // Iterate over the playback list
-    for(DYNAMICSOUNDS* ds = (DYNAMICSOUNDS*)SoundPlaybackList->first; ds != NULL; ds = ds->next) {
+    for(DYNAMICSOUNDS* ds = (DYNAMICSOUNDS*)DynamicSoundList->activeList.head; ds != NULL; ds = ds->next) {
         // If it matches, set its status to 2
         if(ds->sfxId == sfx)
             ds->playbackState = 2;
@@ -200,7 +199,7 @@ void Sound_StopAllWithId(Action_SFX sfx) {
 // AUTOINJECT
 void Sound_ZeroAlertness(void) {
 
-    for(DYNAMICSOUNDS* ds = (DYNAMICSOUNDS*)SoundPlaybackList->first; ds != NULL; ds = ds->next) {
+    for(DYNAMICSOUNDS* ds = (DYNAMICSOUNDS*)DynamicSoundList->activeList.head; ds != NULL; ds = ds->next) {
         if ((ds->playbackState != 2) && // Not stopped
             (ds->playbackState != 3) && // Not in some other state
             ( (ds->sfxId >= ARRAY_SIZE(SFXOutputData)) || (!SFXOutputData[ds->sfxId].loopAlways) ) ) // Either an invalid SFX ID, or a non-loopAlways SFX
