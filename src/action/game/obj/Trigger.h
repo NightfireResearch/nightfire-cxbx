@@ -16,4 +16,6 @@ obj_tag * Trigger_MultiplexOut(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celgl
 obj_tag * Trigger_MultiplexOrIn(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 obj_tag * Trigger_MoviePlayer(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 
+bool InverterTrigger_Create(level_tag *lvl);
+
 #endif // TRIGGER_H_
