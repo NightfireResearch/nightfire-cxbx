@@ -5,6 +5,12 @@
 #include "../memory.h"
 #include "../game/mp/multiplayer.h"
 #include "../game/obj/car.h"
+#include "../game/obj/Emitter.h"
+#include "../game/obj/GunImp.h"
+#include "../game/obj/LeafGen.h"
+#include "../game/obj/Pickup.h"
+#include "../game/obj/Ripples.h"
+#include "../game/obj/Switch.h"
 #include "../game/view.h"
 
 #define pCurrCelList (*(celglist_tag**)(0x00274c80))
@@ -158,31 +164,16 @@ static_assert(offsetof(TARGET_PLACEMENT, pos) == 0xc, "Bad offset of pos");
 // FIXME: Break these out into their own files where needed
 
 // AUTOGEN
-obj_tag * Ripples_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
-// AUTOGEN
-obj_tag* Switch_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
-// AUTOGEN
 obj_tag* RB_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl);
 // AUTOGEN
 obj_tag * DynamicObject_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *param_4);
 // AUTOGEN
 obj_tag* Env_Tree_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 // AUTOGEN
-obj_tag* LeafGen_Create(_VECTOR *pos, _VECTOR *rot, level_tag* lvl, celglist_tag *celgl);
-// AUTOGEN
 obj_tag * rotor_init(_VECTOR *param_1,_VECTOR *param_2,celglist_tag *param_3,ushort param_4,uchar param_5,uchar param_6);
 // AUTOGEN
-bool InverterTrigger_Create(level_tag *lvl);
-// AUTOGEN
-obj_tag * GunImp_Create(_VECTOR *pos, quaternion_tag *quat, celglist_tag *celgl);
-// AUTOGEN
 light_tag * Light_Create(_VECTOR *pos,undefined1 clr_r,undefined1 clr_g,undefined1 clr_b,float maybeBrightness,undefined2 param_6,short param_7,undefined1 param_8,float param_9,undefined2 param_10,ushort param_11,undefined2 param_12,int param_13);
-// AUTOGEN
-void Emitter_CreatePlist(_MATRIX *param_1,level_tag *param_2);
-// AUTOGEN
-obj_tag * Drone_AIVolume_Create(_VECTOR *param_1,_VECTOR *param_2,_VECTOR *param_3,level_tag *param_4,celglist_tag *param_5);
-// AUTOGEN
-obj_tag * Pickup_Create(_VECTOR *pos,_VECTOR *rot,_MATRIX *mtx,celglist_tag *param_4,ushort maybePickupType,ushort param_6,uint param_7,uint param_8,uint param_9,char param_10,ushort param_11,ushort param_12,uint param_13);
+
 
 #pragma pack(push, 1)
 

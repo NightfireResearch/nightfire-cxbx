@@ -32,3 +32,6 @@ obj_tag * Trigger_MultiplexOrIn(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celg
 
 // AUTOGEN
 obj_tag * Trigger_MoviePlayer(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
+
+// AUTOGEN
+bool InverterTrigger_Create(level_tag *lvl);
