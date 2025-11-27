@@ -5,6 +5,7 @@
 #include "../memory.h"
 #include "../game/mp/multiplayer.h"
 #include "../game/obj/car.h"
+#include "../game/obj/DynamicObject.h"
 #include "../game/obj/Emitter.h"
 #include "../game/obj/GunImp.h"
 #include "../game/obj/LeafGen.h"
@@ -222,13 +223,6 @@ typedef struct {
 } Create_Rotor_Params;
 
 #pragma pack(pop)
-
-// FIXME: Break these out into their own files where needed
-
-// AUTOGEN
-obj_tag * DynamicObject_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *param_4);
-// AUTOGEN
-obj_tag* Env_Tree_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 
 
 // AUTOINJECT
