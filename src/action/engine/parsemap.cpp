@@ -217,9 +217,9 @@ typedef struct {
 
 typedef struct {
     ObjectCreationData_Basic basicCreation;
-    uchar unknown_2c;
-    uchar pad[3];
-    uint unknown_30;
+    uchar unknown_2c; // Unused? Switch polarity?
+    uchar _pad_1[3];
+    uchar switchChannel;
 } Create_Rotor_Params;
 
 #pragma pack(pop)
@@ -427,7 +427,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
         case Place_Rotor:
             if(doCreation) {
                 Create_Rotor_Params * rotorInfo = (Create_Rotor_Params*) lvl;
-                rotor_init(&pos, &rot, celglist, 0,rotorInfo->unknown_2c, rotorInfo->unknown_30);
+                rotor_init(&pos, &rot, celglist, 0,rotorInfo->unknown_2c, rotorInfo->switchChannel);
             }
             return;
 
