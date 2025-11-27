@@ -129,7 +129,7 @@ typedef short MallocFlags;
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 // globals and constants
-#define glb_viewer (*(viewer_tag*(*)[10])0x001f661c)
+#define glb_viewer (*(viewer_tag*(*)[11])0x001f661c)
 #define glb_world (*(world_tag**)0x001f6674)
 #define glb_blokes (*(BLData*(*)[4])(0x002774b8))
 #define glb_players (*(obj_tag*(*)[4])(0x001f6654))
