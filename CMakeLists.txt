@@ -109,6 +109,7 @@ add_library(actioninject SHARED
   src/action/game/obj/Ladder.cpp
   src/action/game/obj/PCQWorm.cpp
   src/action/game/obj/Player.cpp
+  src/action/game/obj/Rotor.cpp
   src/action/game/obj/ScriptPlayer.cpp
   src/action/game/obj/Sensor.cpp
   src/action/game/obj/SpaceLaser.cpp

@@ -8,8 +8,11 @@
 #include "../game/obj/Emitter.h"
 #include "../game/obj/GunImp.h"
 #include "../game/obj/LeafGen.h"
+#include "../game/obj/Light.h"
 #include "../game/obj/Pickup.h"
+#include "../game/obj/RigidBody.h"
 #include "../game/obj/Ripples.h"
+#include "../game/obj/Rotor.h"
 #include "../game/obj/Switch.h"
 #include "../game/view.h"
 
@@ -158,25 +161,6 @@ typedef struct TARGET_PLACEMENT {
 static_assert(offsetof(TARGET_PLACEMENT, placementType) == 0x8, "Bad offset of placementType");
 static_assert(offsetof(TARGET_PLACEMENT, pos) == 0xc, "Bad offset of pos");
 
-#pragma pack(pop)
-
-
-// FIXME: Break these out into their own files where needed
-
-// AUTOGEN
-obj_tag* RB_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl);
-// AUTOGEN
-obj_tag * DynamicObject_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *param_4);
-// AUTOGEN
-obj_tag* Env_Tree_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
-// AUTOGEN
-obj_tag * rotor_init(_VECTOR *param_1,_VECTOR *param_2,celglist_tag *param_3,ushort param_4,uchar param_5,uchar param_6);
-// AUTOGEN
-light_tag * Light_Create(_VECTOR *pos,undefined1 clr_r,undefined1 clr_g,undefined1 clr_b,float maybeBrightness,undefined2 param_6,short param_7,undefined1 param_8,float param_9,undefined2 param_10,ushort param_11,undefined2 param_12,int param_13);
-
-
-#pragma pack(push, 1)
-
 typedef struct {
     ObjectCreationData_Basic basicCreation;
     ushort teamId;
@@ -238,6 +222,14 @@ typedef struct {
 } Create_Rotor_Params;
 
 #pragma pack(pop)
+
+// FIXME: Break these out into their own files where needed
+
+// AUTOGEN
+obj_tag * DynamicObject_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *param_4);
+// AUTOGEN
+obj_tag* Env_Tree_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
+
 
 // AUTOINJECT
 void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl, ObjectPlacementType type, celglist_tag* celglist, void* param_5, void* param_6, char doCreation) {
