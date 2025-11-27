@@ -35,7 +35,7 @@ obj_tag * Ladder_Create(_VECTOR *param_1,_VECTOR *param_2,level_tag *param_3,cel
     obj->objGraphics = param_4;
     obj->objectType = OBJECTTYPE_LADDER;
     
-    build_LinkToRoom(obj, '\0', (level_tag *)glb_world);
+    build_LinkToRoom(obj, '\0', glb_world);
     
     Controls_StraddleTest(obj);
     

@@ -101,6 +101,7 @@ typedef short MallocFlags;
 #include "game/obj/PCQWorm.h"
 #include "game/obj/player.h" // for BLData
 #include "game/obj/RainBox.h"
+#include "game/obj/Rotor.h"
 #include "game/obj/ScriptPlayer.h"
 #include "game/obj/Searchlight.h"
 #include "game/obj/Sensor.h"

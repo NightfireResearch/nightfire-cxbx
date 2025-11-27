@@ -54,7 +54,7 @@ void Car_Reset(void) {
         carObj->damageAmt = 0;
         Vec_Zero(&carObj->someVector_b4);
         Mat_Copy(&TankSpawns[i], &gameObj->transformMatrix);
-        build_LinkToRoom(gameObj, 0, (level_tag*)glb_world);
+        build_LinkToRoom(gameObj, 0, glb_world);
     }
     
 }
@@ -272,7 +272,7 @@ void Car_Deactivate(obj_tag *carObj) {
     Vec_Zero(&carInfo->someVector_98);
     Vec_Zero(&carInfo->someVector_8c);
     Mat_Copy(&TankSpawns[carInfo->tankNum], &carObj->transformMatrix);
-    build_LinkToRoom(carObj, 0, (level_tag *)glb_world);
+    build_LinkToRoom(carObj, 0, glb_world);
 
     
     carObj->subState = 1800; // Respawn timer

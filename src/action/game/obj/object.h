@@ -11,7 +11,7 @@ typedef enum {
     OBJECTTYPE_DRONE=2,
     OBJECTTYPE_PLAYER=3,
     OBJECTTYPE_BULLET=5,
-    OBJECTTYPE_ROTOR_HELI_MAYBE=7,
+    OBJECTTYPE_ROTOR=7,
     OBJECTTYPE_PARTICLES=12,
     OBJECTTYPE_CASING=13,
     OBJECTTYPE_GAS=14,
@@ -84,7 +84,7 @@ inline const char* Object_GetName(ObjectType type) {
         case OBJECTTYPE_DRONE: return "Drone";
         case OBJECTTYPE_PLAYER: return "Player";
         case OBJECTTYPE_BULLET: return "Bullet";
-        case OBJECTTYPE_ROTOR_HELI_MAYBE: return "Rotor Heli Maybe";
+        case OBJECTTYPE_ROTOR: return "Rotor";
         case OBJECTTYPE_PARTICLES: return "Particles";
         case OBJECTTYPE_CASING: return "Casing";
         case OBJECTTYPE_GAS: return "Gas";

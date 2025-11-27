@@ -3311,13 +3311,13 @@
         "param_types": [
             "obj_tag *",
             "char",
-            "level_tag *"
+            "world_tag *"
         ],
-        "prototype_string": "bool __cdecl build_LinkToRoom(obj_tag * param_1, char control_straddle_test, level_tag * world)",
+        "prototype_string": "bool __cdecl build_LinkToRoom(obj_tag * param_1, char control_straddle_test, world_tag * world)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
             "[char control_straddle_test@Stack[0x8]:1]",
-            "[level_tag * world@Stack[0xc]:4]"
+            "[world_tag * world@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -21869,13 +21869,13 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "undefined4 *",
+            "DLISTINFO_tag *",
             "ushort",
             "ushort"
         ],
-        "prototype_string": "bool __cdecl DList_Init(undefined4 * param_1, ushort entrySize, ushort numEntries)",
+        "prototype_string": "bool __cdecl DList_Init(DLISTINFO_tag * param_1, ushort entrySize, ushort numEntries)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]",
+            "[DLISTINFO_tag * param_1@Stack[0x4]:4]",
             "[ushort entrySize@Stack[0x8]:2]",
             "[ushort numEntries@Stack[0xc]:2]"
         ],
@@ -31067,14 +31067,14 @@
             "uchar",
             "uchar"
         ],
-        "prototype_string": "obj_tag * __cdecl rotor_init(_VECTOR * param_1, _VECTOR * param_2, celglist_tag * param_3, ushort param_4, uchar param_5, uchar param_6)",
+        "prototype_string": "obj_tag * __cdecl rotor_init(_VECTOR * param_1, _VECTOR * axis, celglist_tag * param_3, ushort param_4, uchar param_5, uchar switchChannel)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
-            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[_VECTOR * axis@Stack[0x8]:4]",
             "[celglist_tag * param_3@Stack[0xc]:4]",
             "[ushort param_4@Stack[0x10]:2]",
             "[uchar param_5@Stack[0x14]:1]",
-            "[uchar param_6@Stack[0x18]:1]"
+            "[uchar switchChannel@Stack[0x18]:1]"
         ],
         "is_thunk": false
     },
@@ -31083,11 +31083,11 @@
         "address": "0x000a8940",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "undefined __cdecl rotor_update(obj_tag * param_1)",
+        "prototype_string": "void __cdecl rotor_update(obj_tag * param_1)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]"
         ],
@@ -34947,12 +34947,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "undefined4 *",
+            "RIGIDBODY *",
             "short"
         ],
-        "prototype_string": "void __cdecl RB_Init(undefined4 * param_1, short param_2)",
+        "prototype_string": "void __cdecl RB_Init(RIGIDBODY * param_1, short param_2)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]",
+            "[RIGIDBODY * param_1@Stack[0x4]:4]",
             "[short param_2@Stack[0x8]:2]"
         ],
         "is_thunk": false

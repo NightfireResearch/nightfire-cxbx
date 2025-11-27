@@ -4,7 +4,7 @@
 #include "../../actionhelpers.h"
 
 
-bool build_LinkToRoom(obj_tag *obj, char flags, level_tag *level);
+bool build_LinkToRoom(obj_tag *obj, char flags, world_tag *world);
 void build_link_world_to_viewer(viewer_tag *viewer, world_tag *world);
 
 
