@@ -230,3 +230,6 @@ bool Control_NextLOD(obj_tag *);
 
 // AUTOGEN
 bool Controls_StraddleTest(obj_tag *param_1);
+
+// AUTOGEN
+void control_link_object_to_cel(obj_tag *obj, cel_tag *cel);

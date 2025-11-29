@@ -45,8 +45,15 @@ void SwitchChannel_SetActive(int ch) {
 }
 
 bool SwitchChannel_IsActive(int ch) {
-
-    // Game code does not check channel is valid
-    return switch_channels[ch];
     
+    // CH0 means "no channel" - always active
+    if(ch == 0)
+        return true;
+
+    // Bounds checking - not implemented in original code
+    if(ch < 0 || ch >= ARRAY_SIZE(switch_channels))
+        return false;
+
+    return switch_channels[ch];
+
 }
