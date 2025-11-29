@@ -532,13 +532,13 @@
             "_VECTOR *",
             "_MATRIX *"
         ],
-        "prototype_string": "undefined __cdecl AnimGetBoneWorldTrans(obj_tag * param_1, uint whichBoneMatrix, int param_3, _VECTOR * param_4, _MATRIX * param_5)",
+        "prototype_string": "undefined __cdecl AnimGetBoneWorldTrans(obj_tag * param_1, uint whichBoneMatrix, int maybeWhichDatum, _VECTOR * posOut, _MATRIX * mtxOut)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
             "[uint whichBoneMatrix@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[_VECTOR * param_4@Stack[0x10]:4]",
-            "[_MATRIX * param_5@Stack[0x14]:4]"
+            "[int maybeWhichDatum@Stack[0xc]:4]",
+            "[_VECTOR * posOut@Stack[0x10]:4]",
+            "[_MATRIX * mtxOut@Stack[0x14]:4]"
         ],
         "is_thunk": false
     },
@@ -28100,7 +28100,7 @@
         "is_thunk": false
     },
     {
-        "name": "Script_Play",
+        "name": "Script_Play_UISTUFF",
         "address": "0x00096ba0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -28110,7 +28110,7 @@
             "int",
             "char"
         ],
-        "prototype_string": "bool __cdecl Script_Play(M_CONTROL * param_1, int param_2, char param_3)",
+        "prototype_string": "bool __cdecl Script_Play_UISTUFF(M_CONTROL * param_1, int param_2, char param_3)",
         "parameters": [
             "[M_CONTROL * param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
@@ -30150,16 +30150,18 @@
         "name": "MP_BluePrintUpdate",
         "address": "0x000a19f0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
         "param_types": [
             "MPOBJECT *",
-            "undefined1"
+            "undefined1",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined __cdecl MP_BluePrintUpdate(MPOBJECT * param_1, undefined1 param_2)",
+        "prototype_string": "void __cdecl MP_BluePrintUpdate(MPOBJECT * param_1, undefined1 param_2, obj_tag * eax)",
         "parameters": [
             "[MPOBJECT * param_1@Stack[0x4]:4]",
-            "[undefined1 param_2@Stack[0x8]:1]"
+            "[undefined1 param_2@Stack[0x8]:1]",
+            "[obj_tag * eax@EAX:4]"
         ],
         "is_thunk": false
     },
@@ -35911,11 +35913,11 @@
         "address": "0x000c36d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "SCRIPTINFO *"
         ],
-        "prototype_string": "undefined __cdecl Script_Update(SCRIPTINFO * param_1)",
+        "prototype_string": "void __cdecl Script_Update(SCRIPTINFO * param_1)",
         "parameters": [
             "[SCRIPTINFO * param_1@Stack[0x4]:4]"
         ],
@@ -38873,11 +38875,17 @@
         "name": "Sub_Laser",
         "address": "0x000cf190",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall Sub_Laser(void)",
-        "parameters": [],
+        "param_types": [
+            "obj_tag *",
+            "SUBINFO *"
+        ],
+        "prototype_string": "void __stdcall Sub_Laser(obj_tag * param_1, SUBINFO * param_2)",
+        "parameters": [
+            "[obj_tag * param_1@EBX:4]",
+            "[SUBINFO * param_2@ESI:4]"
+        ],
         "is_thunk": false
     },
     {
@@ -38895,11 +38903,17 @@
         "name": "Sub_DeployTorpedoes",
         "address": "0x000cf3c0",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
-        "param_types": [],
-        "prototype_string": "void __stdcall Sub_DeployTorpedoes(void)",
-        "parameters": [],
+        "param_types": [
+            "obj_tag *",
+            "SUBINFO *"
+        ],
+        "prototype_string": "void __stdcall Sub_DeployTorpedoes(obj_tag * param_1, SUBINFO * param_2)",
+        "parameters": [
+            "[obj_tag * param_1@EAX:4]",
+            "[SUBINFO * param_2@EDI:4]"
+        ],
         "is_thunk": false
     },
     {
@@ -42534,19 +42548,19 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000da1d0",
+        "name": "View_maybeDrawNightVisionExtras",
         "address": "0x000da1d0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "obj_tag *",
+            "viewer_tag *"
         ],
-        "prototype_string": "void __stdcall FUN_000da1d0(undefined4 eax, undefined4 esi)",
+        "prototype_string": "void __stdcall View_maybeDrawNightVisionExtras(obj_tag * eax, viewer_tag * edi)",
         "parameters": [
-            "[undefined4 eax@EAX:4]",
-            "[undefined4 esi@ESI:4]"
+            "[obj_tag * eax@EAX:4]",
+            "[viewer_tag * edi@EDI:4]"
         ],
         "is_thunk": false
     },
@@ -43573,19 +43587,17 @@
     {
         "name": "psiDrawSprites",
         "address": "0x000de3d0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "undefined4",
-            "int",
-            "short"
+            "SPRITE_DRAW *",
+            "int"
         ],
-        "prototype_string": "void __stdcall psiDrawSprites(undefined4 param_1, int param_2, short param_3)",
+        "prototype_string": "void __cdecl psiDrawSprites(SPRITE_DRAW * param_1, int param_2)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[short param_3@Stack[0xc]:2]"
+            "[SPRITE_DRAW * param_1@Stack[0x4]:4]",
+            "[int param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
@@ -46070,11 +46082,11 @@
             "uint",
             "int"
         ],
-        "prototype_string": "int __cdecl RegisterTexture(uint width, uint height, int param_3, uint levels, uint param_5, int param_6)",
+        "prototype_string": "int __cdecl RegisterTexture(uint width, uint height, int formatType, uint levels, uint param_5, int param_6)",
         "parameters": [
             "[uint width@Stack[0x4]:4]",
             "[uint height@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
+            "[int formatType@Stack[0xc]:4]",
             "[uint levels@Stack[0x10]:4]",
             "[uint param_5@Stack[0x14]:4]",
             "[int param_6@Stack[0x18]:4]"
@@ -46150,7 +46162,7 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000e4990",
+        "name": "d3dBindBuffers",
         "address": "0x000e4990",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -46159,9 +46171,9 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e4990(int param_1, int indexBufferHandle)",
+        "prototype_string": "void __cdecl d3dBindBuffers(int streamBufferHandle, int indexBufferHandle)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[int streamBufferHandle@Stack[0x4]:4]",
             "[int indexBufferHandle@Stack[0x8]:4]"
         ],
         "is_thunk": false
@@ -46440,7 +46452,7 @@
         "is_thunk": false
     },
     {
-        "name": "d3dGetSomeThingMaybeVertex",
+        "name": "d3dGetStreamBuffer",
         "address": "0x000e5690",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -46452,9 +46464,9 @@
             "undefined4 *",
             "undefined4 *"
         ],
-        "prototype_string": "void __cdecl d3dGetSomeThingMaybeVertex(int objectIdx, int vtxNum, undefined4 * maybePosOut, undefined4 * maybeUvOut, undefined4 * someU16Idx)",
+        "prototype_string": "void __cdecl d3dGetStreamBuffer(int streamIdx, int vtxNum, undefined4 * maybePosOut, undefined4 * maybeUvOut, undefined4 * someU16Idx)",
         "parameters": [
-            "[int objectIdx@Stack[0x4]:4]",
+            "[int streamIdx@Stack[0x4]:4]",
             "[int vtxNum@Stack[0x8]:4]",
             "[undefined4 * maybePosOut@Stack[0xc]:4]",
             "[undefined4 * maybeUvOut@Stack[0x10]:4]",
@@ -46700,13 +46712,13 @@
         "is_thunk": false
     },
     {
-        "name": "maybeDrawSomeVertices",
+        "name": "maybeImmediateModeFlush",
         "address": "0x000e6030",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall maybeDrawSomeVertices(void)",
+        "prototype_string": "void __stdcall maybeImmediateModeFlush(void)",
         "parameters": [],
         "is_thunk": false
     },
@@ -46755,7 +46767,7 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000e6550",
+        "name": "maybeResetRenderState",
         "address": "0x000e6550",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -46763,14 +46775,14 @@
         "param_types": [
             "char"
         ],
-        "prototype_string": "void __stdcall FUN_000e6550(char param_1)",
+        "prototype_string": "void __stdcall maybeResetRenderState(char param_1)",
         "parameters": [
             "[char param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false
     },
     {
-        "name": "maybeRegisterTemporaryTexture",
+        "name": "maybeImmediateModePushItem",
         "address": "0x000e6790",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -46786,7 +46798,7 @@
             "float",
             "undefined4"
         ],
-        "prototype_string": "undefined __cdecl maybeRegisterTemporaryTexture(float param_1, float param_2, float param_3, float param_4, undefined4 param_5, undefined4 param_6, float param_7, float param_8, undefined4 param_9)",
+        "prototype_string": "undefined __cdecl maybeImmediateModePushItem(float param_1, float param_2, float param_3, float param_4, undefined4 param_5, undefined4 param_6, float param_7, float param_8, undefined4 param_9)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]",
@@ -47026,10 +47038,10 @@
             "undefined4 *",
             "undefined4 *"
         ],
-        "prototype_string": "void __cdecl maybeD3DMATRIXcopy(undefined4 * param_1, undefined4 * param_2)",
+        "prototype_string": "void __cdecl maybeD3DMATRIXcopy(undefined4 * dest, undefined4 * src)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]",
-            "[undefined4 * param_2@Stack[0x8]:4]"
+            "[undefined4 * dest@Stack[0x4]:4]",
+            "[undefined4 * src@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
@@ -47192,25 +47204,21 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000e8740",
+        "name": "maybeMultiplyMatrixChain",
         "address": "0x000e8740",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
+            "D3DMATRIX *",
             "float *",
-            "float *",
-            "float *",
-            "undefined4",
-            "undefined4"
+            "float *"
         ],
-        "prototype_string": "void __cdecl FUN_000e8740(float * param_1, float * param_2, float * param_3, undefined4 param_4, undefined4 param_5)",
+        "prototype_string": "void __cdecl maybeMultiplyMatrixChain(D3DMATRIX * mtxOut, float * param_2, float * mtxChain)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
+            "[D3DMATRIX * mtxOut@Stack[0x4]:4]",
             "[float * param_2@Stack[0x8]:4]",
-            "[float * param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined4 param_5@Stack[0x14]:4]"
+            "[float * mtxChain@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -47316,9 +47324,9 @@
         "address": "0x000e8cf0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall maybeDecodeMpgAudio(void)",
+        "prototype_string": "bool __stdcall maybeDecodeMpgAudio(void)",
         "parameters": [],
         "is_thunk": false
     },
@@ -53877,12 +53885,18 @@
     {
         "name": "D3DDevice_SetVertexShaderConstant4",
         "address": "0x001025d0",
-        "calling_convention": "unknown",
+        "calling_convention": "__fastcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined D3DDevice_SetVertexShaderConstant4()",
-        "parameters": [],
+        "return_type": "void",
+        "param_types": [
+            "int",
+            "undefined8 *"
+        ],
+        "prototype_string": "void __fastcall D3DDevice_SetVertexShaderConstant4(int param_1, undefined8 * param_2)",
+        "parameters": [
+            "[int param_1@ECX:4]",
+            "[undefined8 * param_2@EDX:4]"
+        ],
         "is_thunk": false
     },
     {
@@ -53930,11 +53944,11 @@
             "void *",
             "int"
         ],
-        "prototype_string": "undefined __stdcall D3DDevice_SetStreamSource(int StreamNumber, void * VertexBuffer, int param_3)",
+        "prototype_string": "undefined __stdcall D3DDevice_SetStreamSource(int StreamNumber, void * VertexBuffer, int stride)",
         "parameters": [
             "[int StreamNumber@Stack[0x4]:4]",
             "[void * VertexBuffer@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[int stride@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -54468,19 +54482,23 @@
     {
         "name": "D3DDevice_Clear",
         "address": "0x001043e0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined",
-            "undefined",
-            "undefined4"
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "float",
+            "float"
         ],
-        "prototype_string": "undefined D3DDevice_Clear(undefined param_1, undefined param_2, undefined4 param_3)",
+        "prototype_string": "undefined __stdcall D3DDevice_Clear(undefined4 param_1, undefined4 param_2, undefined4 param_3, float param_4, float param_5)",
         "parameters": [
-            "[undefined param_1@<UNASSIGNED>]",
-            "[undefined param_2@<UNASSIGNED>]",
-            "[undefined4 param_3@<UNASSIGNED>]"
+            "[undefined4 param_1@Stack[0x4]:4]",
+            "[undefined4 param_2@Stack[0x8]:4]",
+            "[undefined4 param_3@Stack[0xc]:4]",
+            "[float param_4@Stack[0x10]:4]",
+            "[float param_5@Stack[0x14]:4]"
         ],
         "is_thunk": false
     },

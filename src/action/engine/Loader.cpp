@@ -14,11 +14,6 @@
 #define dirFileBuf (*(uint**)(0x00279168))
 #define LoadableIndex U8_AT(0x00279180)
 
-// AUTOGEN
-void AnimLoadFile(HASHCODE hashcode,char param_2);
-// AUTOGEN
-SCRIPTINFO* Script_Load(HASHCODE param_1,_VECTOR *transform,_VECTOR *rotation,uint *fileBuf,void*, void*, void*);
-
 
 #pragma pack(push, 1)
 typedef struct {
