@@ -35,6 +35,7 @@ typedef struct MsgObject MsgObject;
 typedef struct AnimObj AnimObj;
 typedef struct block_header_tag block_header_tag;
 typedef struct TARGET_PLACEMENT TARGET_PLACEMENT;
+typedef struct SPRITE_DRAW SPRITE_DRAW;
 
 
 typedef void* ScriptPlayerCallback; // FIXME: Function pointer signature

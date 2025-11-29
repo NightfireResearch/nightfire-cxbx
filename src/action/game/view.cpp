@@ -1,4 +1,5 @@
 #include "view.h"
+#include "../engine/psiSprite.h"
 #include "../engine/viewer.h"
 #include <math.h>
 
@@ -176,3 +177,30 @@ void __declspec(naked) View_CaptureScene(viewer_tag* viewer) {
 
 // AUTOGEN
 void View_AddSkyObj(ushort param_1,celglist_tag *param_2,_VECTOR *param_3,_VECTOR *param_4,obj_tag *param_5,char param_6,ushort param_7,ushort param_8,char param_9);
+
+
+#define SprCnt U32_AT(0x0029e810)
+
+// A pointer to memory address 0x0029dc00 which contains 64 SPRITE_DRAW instances (not pointers)
+// We must preserve the original type for correct code generation
+#define SprBuffList (*(SPRITE_DRAW(*)[64])0x0029dc00)
+
+static_assert(ARRAY_SIZE(SprBuffList) == 64, "Sprite buffer number of entries incorrect");
+static_assert(sizeof(SPRITE_DRAW) == 0x30, "Sprite size incorrect");
+
+// AUTOINJECT
+SPRITE_DRAW * View_AddSprite(ushort someNum) {
+
+    // Only ever appears to be called with someNum == 0.
+    // Potentially intended to allocate multiple at the same time, but not correctly implemented (would need to increment SprCnt by a variable amount rather than just 1)?
+    NF_ASSERT(someNum == 0, "Assumed View_AddSprite parameter always 0");
+
+    // If the buffer is too full to allow us to release this many sprites, flush it first
+    if((SprCnt + someNum) >= (ARRAY_SIZE(SprBuffList)-1)) { // TODO: Check for off by one errors here?
+        psiDrawSprites(SprBuffList, SprCnt);
+        SprCnt = 0;
+    }
+
+    // Return the buffer, starting at the number of sprites already buffered
+    return &SprBuffList[SprCnt++];
+}

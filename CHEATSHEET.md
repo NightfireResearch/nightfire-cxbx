@@ -24,6 +24,13 @@ For more complex things, you might need to write your own. Eg:
 #define GameStateStack (*(uint (*)[64])0x0017bff0)
 ```
 
+or
+
+```
+// A pointer to memory address 0x0029dc00 which contains 64 SPRITE_DRAW instances (not pointers)
+#define SprBuffList (*(SPRITE_DRAW(*)[64])0x0029dc00)
+```
+
 
 ## Injection
 
