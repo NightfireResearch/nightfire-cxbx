@@ -53,10 +53,7 @@ void DroneFunc_HostageSaved(DCVars_tag *dcVars) {
 
     NUM_HOSTAGES_SAVED++;
     
-    if(switchChannel) {
-        switch_channels[switchChannel] = true;
-        switch_channels_time[switchChannel] = GameState.NumFramesUnpaused;
-    }
+    SwitchChannel_SetActive(switchChannel);
 
     if(GameState.CurrentLevelHashcode == HT_Level_HendersonB || GameState.CurrentLevelHashcode == HT_Level_HendersonC) {
         DroneFunc_NotifyHostageSaved(NUM_HOSTAGES_SAVED);

@@ -88,10 +88,7 @@ void PCQWorm_Update(obj_tag *gameObj) {
       KeyCodes[qWorm->keyCodeNum].discovered = true;
     }
     
-    if (qWorm->switchChannel != 0) {
-      switch_channels[qWorm->switchChannel] = 1;
-      switch_channels_time[qWorm->switchChannel] = GameState.NumFramesUnpaused;
-    }
+    SwitchChannel_SetActive(qWorm->switchChannel);
 
     gameObj->curState = 2;
 

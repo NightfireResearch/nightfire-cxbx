@@ -11,4 +11,6 @@
 
 void Init_SwitchChannels(void);
 
+void SwitchChannel_SetActive(int ch);
+
 #endif // SWITCHCHANNELS_H_

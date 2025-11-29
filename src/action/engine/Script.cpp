@@ -54,3 +54,15 @@ void Script_SetPosRot(SCRIPTINFO *param_1, _MATRIX *param_2);
 
 // AUTOGEN
 void Script_SetColour(SCRIPTINFO *param_1, undefined1 clr_r, undefined1 clr_g, undefined1 clr_b);
+
+// AUTOGEN
+SCRIPTINFO* Script_Load(HASHCODE param_1,_VECTOR *transform,_VECTOR *rotation,uint *fileBuf,void*, void*, void*);
+
+// AUTOGEN
+void Script_Update(SCRIPTINFO *param_1);
+
+// AUTOGEN
+bool Script_Play(SCRIPTINFO *param_1, char param_2);
+
+// AUTOGEN
+bool Script_IsPlaying(SCRIPTINFO* param_1);

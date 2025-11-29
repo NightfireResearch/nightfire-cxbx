@@ -155,9 +155,3 @@ void AnimSkeletonProcess(char *data) {
 void AnimPostLoadInit(void);
 // AUTOGEN
 void AnimLoadFile(HASHCODE hashcode,char param_2);
-// AUTOGEN
-SCRIPTINFO* Script_Load(HASHCODE param_1,_VECTOR *transform,_VECTOR *rotation,uint *fileBuf,void*, void*, void*);
-// AUTOGEN
-void Script_Update(SCRIPTINFO *param_1);
-// AUTOGEN
-bool Script_Play(SCRIPTINFO *param_1, char param_2);

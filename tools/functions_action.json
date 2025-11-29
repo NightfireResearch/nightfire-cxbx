@@ -35681,11 +35681,11 @@
         "address": "0x000c26d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "SCRIPTINFO *"
         ],
-        "prototype_string": "uint __cdecl Script_IsPlaying(SCRIPTINFO * param_1)",
+        "prototype_string": "bool __cdecl Script_IsPlaying(SCRIPTINFO * param_1)",
         "parameters": [
             "[SCRIPTINFO * param_1@Stack[0x4]:4]"
         ],

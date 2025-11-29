@@ -26,3 +26,20 @@ void Init_SwitchChannels(void) {
     }
 
 }
+
+// Lots of places in the code follow a similar pattern: 
+// if (ch != 0) {
+//     switch_channels[ch] = 1;
+//     switch_channels_time[ch] = GameState.NumFramesUnpaused;
+// }
+// I assume that these are all some helper function/macro which got inlined.
+void SwitchChannel_SetActive(int ch) {
+
+    // 0 is usually a special case for "no channel specified"
+    // Inlined, original code doesn't usually check for in-bounds but we can.
+    if(ch <= 0 || ch >= ARRAY_SIZE(switch_channels))
+        return;
+
+    switch_channels[ch] = 1;
+    switch_channels_time[ch] = GameState.NumFramesUnpaused;
+}

@@ -55,8 +55,6 @@ sAnimScript_tag * AnimScriptNew(obj_tag *gameObj, sAnimScript_tag *existingScrip
 void AnimSkeletonProcess(char *data);
 void AnimPostLoadInit(void);
 void AnimLoadFile(HASHCODE hashcode,char param_2);
-SCRIPTINFO* Script_Load(HASHCODE param_1,_VECTOR *transform,_VECTOR *rotation,uint *fileBuf,void*, void*, void*);
-void Script_Update(SCRIPTINFO *param_1);
-bool Script_Play(SCRIPTINFO *param_1, char param_2);
+
 
 #endif // ANIM_H

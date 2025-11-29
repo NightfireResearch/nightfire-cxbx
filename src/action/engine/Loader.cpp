@@ -5,6 +5,7 @@
 #include "celglist.h"
 #include "../util/hashtable.h"
 #include "../ui/MenuManager.h"
+#include "Script.h"
 
 #include <stdio.h>
 
