@@ -118,36 +118,6 @@ bool MP_IsTarget(obj_tag *param_1) {
 #define SpawnPntCount U32_AT(0x00262f38)
 #define SpawnPntTeamCount (*(uint32_t(*)[3])0x00262968)
 
-// AUTOGEN
-cel_tag* build_FindCel(_VECTOR *position, world_tag *world);
-
-
-
-// AUTOINJECT
-bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection) {
-  
-  _VECTOR defaultDirection = {0.0f, -1.0f, 0.0f};
-  if(searchDirection == NULL)
-    searchDirection = &defaultDirection;
-
-  _VECTOR endPosition = {
-    .x = position->x + searchDirection->x * distance,
-    .y = position->y + searchDirection->y * distance,
-    .z = position->z + searchDirection->z * distance,
-  };
-
-  HITDATA_tag* hitList = NULL;
-
-  bool intersects = Collide_RayIntersect(position, &endPosition, cel, obj, NULL, &hitList, 0, 0x70c, 0);
-
-  if(intersects) {
-    Vec_Copy(&(hitList->hitPosition), position);
-    Collide_FreeHitList(&hitList);
-  }
-
-  return intersects;
-}
-
 // AUTOINJECT
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId) {
 
