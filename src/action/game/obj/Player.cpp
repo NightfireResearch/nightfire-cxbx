@@ -17,8 +17,14 @@ void Player_SetHealth(BLData *obj, float health);
 
 
 #define player_start_positions_index U32_AT(0x002774c8)
+#define player_start_position U32_AT(0x002774cc) // Unused - only ever written?
 #define player_start ((PlayerStartPosition*)(0x002774d0))
 
+// AUTOINJECT
+void Player_ResetStartPos(void) {
+    player_start_positions_index = 0;
+    player_start_position = 0;
+}
 
 
 // AUTOINJECT

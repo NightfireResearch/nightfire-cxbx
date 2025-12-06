@@ -103,6 +103,7 @@ static_assert(sizeof(PlayerStartPosition) == 0xcc, "Bad size for PlayerStartPosi
 
 #pragma pack(pop)
 
+void Player_ResetStartPos(void);
 void Player_ChangeState(obj_tag* obj, unsigned short newState);
 unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState); // Return the previous substate
 void Player_SetCamMode(BLData *param_1,unsigned short param_2);
