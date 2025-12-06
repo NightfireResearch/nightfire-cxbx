@@ -15,7 +15,12 @@ static_assert(sizeof(WeaponStatus) == 0xc, "WeaponStatus size wrong");
 
 // WIP
 typedef struct BLData {
-    char _pad_0[0xe0];
+    char _pad_0[0xbc];
+    float someMPCameraThing1; // 0xbc
+    float someMPCameraThing2; // 0xc0
+    float someMPCameraThing3; // 0xc4
+    undefined4 someMPCameraThing4; // 0xc8
+    char _pad_11111[0xe0 - 0xcc];
     float crosshairOffsetX; // 0xe0
     float crosshairOffsetY; // 0xe4
     char _pad_1[0xf3-0xe8]; // next entry offset - (first byte above previous)
@@ -50,8 +55,9 @@ typedef struct BLData {
     // ...
 } BLData;
 
-static_assert(offsetof(BLData, hudInfo) == 0x770, "Offset of hudInfo not correct");
+static_assert(offsetof(BLData, someMPCameraThing1) == 0xbc, "Offset of someMPCameraThing1 not correct");
 static_assert(offsetof(BLData, crosshairOffsetX) == 0xe0, "Offset of crosshairOffsetX not correct");
+static_assert(offsetof(BLData, hudInfo) == 0x770, "Offset of hudInfo not correct");
 static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisionActive not correct");
 static_assert(offsetof(BLData, nightVisionTimer) == 0x8b0, "Offset of nightVisionTimer not correct");
 static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisionActive not correct");

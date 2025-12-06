@@ -13,7 +13,7 @@ typedef enum {
     Sight,
     NightSight,
     LensFlare,
-    Redeemer,
+    Redeemer, // Sentinel Missile?
     RCCar,
     Camera,
     Blood, 

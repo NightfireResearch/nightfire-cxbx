@@ -1,12 +1,11 @@
 #include "Player.h"
 #include "../mp/multiplayer.h"
 #include "../view.h"
+#include "../../engine/viewer.h"
 #include "../../engine/Anim.h"
 
 // AUTOGEN
 unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState);
-// AUTOGEN
-void Player_SetCamMode(BLData *param_1,unsigned short param_2);
 // AUTOGEN
 void Player_Disable(obj_tag *param_1,char param_2);
 // AUTOGEN
@@ -15,6 +14,61 @@ void Player_Enable(obj_tag *param_1, _MATRIX *mtx, int param_3);
 void Player_SetHealth(BLData *obj, float health);
 // AUTOGEN
 void Player_AddNewStartPos(_VECTOR *pos, _VECTOR *rot, ushort maybeEnabled, level_tag *lvl);
+
+typedef enum {
+    CamMode_Default = 0x00,
+    CamMode_PostMPGameThirdPerson = 0x01,
+    CamMode_Redeemer = 0x0c, // Redeemer = Sentinel Missile?
+    CamMode_RCCar = 0x0d,
+    CamMode_Ronin = 0x0f,
+} CamMode;
+
+// AUTOINJECT
+void Player_SetCamMode(BLData *player, unsigned short newMode) {
+
+    // Passed as ushort, stored as (u?)char
+    player->camMode = (char)newMode;
+
+    switch((CamMode)player->camMode) {
+        case CamMode_Default: // 0x00
+            HUD_Reset(player);
+            glb_viewer[player->playerNum]->nightVisionRelated = 0;
+            break;
+
+        case CamMode_PostMPGameThirdPerson:
+
+            // Ghidra can't identify where these are read, but done
+            // for completeness anyway
+            player->someMPCameraThing1 = 1.5f;
+            player->someMPCameraThing2 = 0.15f;
+            player->someMPCameraThing3 = 1.5f;
+            player->someMPCameraThing4 = 0;
+
+            HUD_Reset(player);
+            glb_viewer[player->playerNum]->nightVisionRelated = 0;
+            break;
+        
+        case CamMode_Redeemer:
+            HUD_Reset(player);
+            glb_viewer[player->playerNum]->nightVisionRelated = 0;
+            HUD_Enable(player->hudInfo, Redeemer, 1, 0);
+            break;
+        
+        case CamMode_RCCar:
+            HUD_Reset(player);
+            glb_viewer[player->playerNum]->nightVisionRelated = 0;
+            HUD_Enable(player->hudInfo, RCCar, 1, 0);
+            break;
+
+        case CamMode_Ronin:
+            HUD_Reset(player);
+            glb_viewer[player->playerNum]->nightVisionRelated = 0;
+            HUD_Enable(player->hudInfo, Ronin, 1, 0);
+            break;
+
+    }
+
+}
 
 // AUTOINJECT
 void Player_ChangeState(obj_tag* obj, unsigned short newState) { 
