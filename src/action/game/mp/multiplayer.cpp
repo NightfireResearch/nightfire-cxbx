@@ -11,7 +11,7 @@
 #define CurrentAssassinObjId (((obj_tag *)0x0026178c))
 #define AssassinTarget (((obj_tag *)0x00261788))
 // AUTOGEN
-unsigned int Control_Plr2Ind(obj_tag* a);
+short Control_Plr2Ind(obj_tag* a);
 
 #define NUM_SKINS 29 // unique characters
 #define MP_skins ((MP_skin*)0x001637c0)

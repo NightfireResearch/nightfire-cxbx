@@ -3328,7 +3328,7 @@
         "has_custom_variable_storage": false,
         "return_type": "obj_tag *",
         "param_types": [
-            "undefined4",
+            "short",
             "obj_tag *",
             "obj_tag *",
             "weapon_definition_tag *",
@@ -3336,9 +3336,9 @@
             "_VECTOR *",
             "ushort"
         ],
-        "prototype_string": "obj_tag * __cdecl Bullet_init(undefined4 playerNum, obj_tag * playerObj, obj_tag * param_3, weapon_definition_tag * weaponDef, _VECTOR * pos, _VECTOR * direction, ushort weaponSound)",
+        "prototype_string": "obj_tag * __cdecl Bullet_init(short playerNum, obj_tag * playerObj, obj_tag * param_3, weapon_definition_tag * weaponDef, _VECTOR * pos, _VECTOR * direction, ushort weaponSound)",
         "parameters": [
-            "[undefined4 playerNum@Stack[0x4]:4]",
+            "[short playerNum@Stack[0x4]:2]",
             "[obj_tag * playerObj@Stack[0x8]:4]",
             "[obj_tag * param_3@Stack[0xc]:4]",
             "[weapon_definition_tag * weaponDef@Stack[0x10]:4]",
@@ -3844,12 +3844,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float10 *",
+            "obj_tag *",
             "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_00024880(float10 * param_1, viewer_tag * param_2)",
+        "prototype_string": "void __cdecl FUN_00024880(obj_tag * param_1, viewer_tag * param_2)",
         "parameters": [
-            "[float10 * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[viewer_tag * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
@@ -3861,13 +3861,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "obj_tag *",
+            "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_00024b10(int param_1, int param_2)",
+        "prototype_string": "void __cdecl FUN_00024b10(obj_tag * param_1, viewer_tag * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[viewer_tag * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
@@ -3878,13 +3878,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "obj_tag *",
+            "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_00024d40(int param_1, int param_2)",
+        "prototype_string": "void __cdecl FUN_00024d40(obj_tag * param_1, viewer_tag * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[viewer_tag * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
@@ -3895,13 +3895,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int"
+            "obj_tag *",
+            "viewer_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_00024d70(int param_1, int param_2)",
+        "prototype_string": "void __cdecl FUN_00024d70(obj_tag * param_1, viewer_tag * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[viewer_tag * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
@@ -4046,12 +4046,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "viewer_tag *",
             "float *"
         ],
-        "prototype_string": "void __cdecl FUN_00025450(int param_1, float * param_2)",
+        "prototype_string": "void __cdecl FUN_00025450(viewer_tag * param_1, float * param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[viewer_tag * param_1@Stack[0x4]:4]",
             "[float * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
@@ -5114,13 +5114,13 @@
         "address": "0x0002be10",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": true,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "HITTEST_tag *",
             "HITDATA_tag *",
             "ushort"
         ],
-        "prototype_string": "undefined4 __stdcall Collide_Intersect(HITTEST_tag * test, HITDATA_tag * hitData, ushort param_3)",
+        "prototype_string": "bool __stdcall Collide_Intersect(HITTEST_tag * test, HITDATA_tag * hitData, ushort param_3)",
         "parameters": [
             "[HITTEST_tag * test@Stack[0x4]:4]",
             "[HITDATA_tag * hitData@EAX:4]",
@@ -5516,11 +5516,11 @@
         "address": "0x0002d8a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "short",
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "undefined4 __cdecl Control_Plr2Ind(obj_tag * param_1)",
+        "prototype_string": "short __cdecl Control_Plr2Ind(obj_tag * param_1)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]"
         ],
@@ -10037,11 +10037,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int"
+            "Drone_tag *"
         ],
-        "prototype_string": "void __cdecl DroneInit_Collision(int param_1)",
+        "prototype_string": "void __cdecl DroneInit_Collision(Drone_tag * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[Drone_tag * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -31290,11 +31290,11 @@
     {
         "name": "Player_ResetStartPos",
         "address": "0x000a98b0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall Player_ResetStartPos(void)",
+        "prototype_string": "void Player_ResetStartPos(void)",
         "parameters": [],
         "is_thunk": false
     },
@@ -31689,12 +31689,12 @@
         "return_type": "void",
         "param_types": [
             "BLData *",
-            "undefined2"
+            "ushort"
         ],
-        "prototype_string": "void __cdecl Player_SetCamMode(BLData * param_1, undefined2 mode)",
+        "prototype_string": "void __cdecl Player_SetCamMode(BLData * param_1, ushort mode)",
         "parameters": [
             "[BLData * param_1@Stack[0x4]:4]",
-            "[undefined2 mode@Stack[0x8]:2]"
+            "[ushort mode@Stack[0x8]:2]"
         ],
         "is_thunk": false
     },
