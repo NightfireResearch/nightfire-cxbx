@@ -4,6 +4,8 @@
 #include "../../engine/viewer.h"
 #include "../../engine/Anim.h"
 
+#include <string.h>
+
 // AUTOGEN
 unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState);
 // AUTOGEN
@@ -12,8 +14,21 @@ void Player_Disable(obj_tag *param_1,char param_2);
 void Player_Enable(obj_tag *param_1, _MATRIX *mtx, int param_3);
 // AUTOGEN
 void Player_SetHealth(BLData *obj, float health);
-// AUTOGEN
-void Player_AddNewStartPos(_VECTOR *pos, _VECTOR *rot, ushort maybeEnabled, level_tag *lvl);
+
+
+#define player_start_positions_index U32_AT(0x002774c8)
+#define player_start ((PlayerStartPosition*)(0x002774d0))
+
+
+
+// AUTOINJECT
+void Player_AddNewStartPos(_VECTOR *pos, _VECTOR *rot, ushort maybeEnabled, level_tag *lvl) {
+    Vec_Copy(pos, &player_start[player_start_positions_index].pos);
+    Vec_Copy(rot, &player_start[player_start_positions_index].rot);
+    player_start[player_start_positions_index].isEnabled = maybeEnabled;
+    memcpy(&player_start[player_start_positions_index].levelData, lvl, sizeof(level_tag_PlayerStartPosition));
+    player_start_positions_index++;
+}
 
 typedef enum {
     CamMode_Default = 0x00,
@@ -191,11 +206,6 @@ void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos) {
     PositionBeam(poVar1, &sourcePos, targetPos);
 
 }
-
-
-#define player_start_positions_index U32_AT(0x002774c8)
-
-#define player_start ((PlayerStartPosition*)(0x002774d0))
 
 // AUTOGEN
 obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *spawnPointData);
