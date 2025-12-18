@@ -522,88 +522,51 @@ void HUD_UpdateSpacePane(BLData *param_1, HUDPANE_tag *pane, obj_tag *unused) {
 	}
 
 	pane->enabled = true;
+	bool blink_state = (GameState.NumFramesUnpaused % (FRAME_RATE_INT >> 1) < FRAME_RATE_INT >> 2);
 
-	// Deploying - solid dot sprite, flashing green/white
 	for(int i = 0; i < 8; i++) {
 		
 		uchar deployState = MissileDeploy[i];
 		sprite* spr = pane->spriteList[i+1];
-
-		if(deployState == 1) {
-
-			hashtable_set_sprite(spr, (HASHCODE)0x3000177);
-
-			bool blink_state = (GameState.NumFramesUnpaused % (FRAME_RATE_INT >> 1) < FRAME_RATE_INT >> 2);
-			if(blink_state) {
-				// Green
-				spr->colourTint = 0x00ff00ff;
-			} else {
-				// White
-				spr->colourTint = 0xffffffff;
-			}
-		}
-	}
-
-	// Destroyed - cross sprite, solid red
-	for(int i = 0; i < 8; i++) {
-
-		uchar deployState = MissileDeploy[i];
-		sprite* spr = pane->spriteList[i+1];
 		bool switchActive = switch_channels[i+1];
+		
+		// Deploying - solid dot sprite, flashing green/white
+		if(deployState == 1) {
+			hashtable_set_sprite(spr, (HASHCODE)0x3000177);
+			spr->colourTint = blink_state ? 0x00ff00ff : 0xffffffff;
+		}
 
+		// Destroyed - cross sprite, solid red
 		if (switchActive && deployState != 3) {
 			hashtable_set_sprite(spr, (HASHCODE)0x300017a);
-			if (deployState == 2) {
-				spr->colourTint = 0xff000080;
-			}
-			else {
-				spr->colourTint = 0xff0000ff;
-			}
+			// Bright red when not yet fired, dimmer red once fired
+			spr->colourTint = (deployState == 2) ? 0xff000080: 0xff0000ff;
 		}
 
-	}
-
-	// Failed to disrupt the launch - solid green, faded a bit
-	for(int i = 0; i < 8; i++) {
-
-		uchar deployState = MissileDeploy[i];
-		sprite* spr = pane->spriteList[i+1];
-
+		// Failed to disrupt the launch - solid green, faded a bit
 		if (deployState == 3) {
 			hashtable_set_sprite(spr, (HASHCODE)0x3000177);
 			spr->colourTint = 0x00ff0080;
 		}
 	}
 
-
 	// Game won - space station flashes red/white
-	if (switch_channels[9]) {
-		if (GameState.NumFramesUnpaused % (FRAME_RATE_INT >> 1) < FRAME_RATE_INT >> 2) {
-			// Red part of flash
-			pane->spriteList[0]->colourTint = 0xff000080;
-		}
-		else {
-			// White part of flash
-			pane->spriteList[0]->colourTint = 0x7f7f7f7f;
-		}
+	if(switch_channels[9]) {
+		pane->spriteList[0]->colourTint = blink_state ? 0xff000080 : 0x7f7f7f7f;
 	}
 
-	// Left spawner door
-	if (!switch_channels[24]) {
-		pane->spriteList[9]->colourTint = 0x7f7f7f7f;
-	} else if (GameState.NumFramesUnpaused % (FRAME_RATE_INT >> 1) < FRAME_RATE_INT >> 2) {
-		pane->spriteList[9]->colourTint = 0xff000080;
+	// Left spawner door - flash red when active
+	if(switch_channels[24]) {
+		pane->spriteList[9]->colourTint = blink_state ? 0xff000080: 0x7f7f7f7f;
 	} else {
 		pane->spriteList[9]->colourTint = 0x7f7f7f7f;
 	}
 
-	// Right spawner door
-	if (!switch_channels[28]) {
-		pane->spriteList[10]->colourTint = 0x7f7f7f7f;
-	} else if (FRAME_RATE_INT >> 2 <= GameState.NumFramesUnpaused % (FRAME_RATE_INT >> 1)) {
-		pane->spriteList[10]->colourTint = 0x7f7f7f7f;
+	// Right spawner door - flash red when active
+	if(switch_channels[28]) {
+		pane->spriteList[10]->colourTint = blink_state ? 0xff000080 : 0x7f7f7f7f;
 	} else {
-		pane->spriteList[10]->colourTint = 0xff000080;
+		pane->spriteList[10]->colourTint = 0x7f7f7f7f;
 	}
 
 	
