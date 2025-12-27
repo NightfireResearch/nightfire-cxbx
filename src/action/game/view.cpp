@@ -204,3 +204,38 @@ SPRITE_DRAW * View_AddSprite(ushort someNum) {
     // Return the buffer, starting at the number of sprites already buffered
     return &SprBuffList[SprCnt++];
 }
+
+// AUTOINJECT
+short View_3DPoint2Screen(_VECTOR *vecIn, _VECTOR *vecOut, ushort viewerNum) {
+
+    viewer_tag *viewer = glb_viewer[viewerNum];
+
+    if(vecIn == NULL)
+        return 0;
+
+    if(vecOut == NULL)
+        return 0;
+
+    if(viewer == NULL)
+        return 0;
+
+    _VECTOR direction;
+    _VECTOR tmp;
+
+    Vec_Subtract(vecIn, &viewer->pos, &direction);
+
+    ApplyMatrixLV(&viewer->worldMatrix, &direction, &tmp);
+
+    // Our return value will be negative if the point is behind the viewer, positive if it is in front (ie z component is negative)
+    short returnValue = 1;
+    if(tmp.z < 0.0f) {
+        returnValue = -1;
+        tmp.z = -tmp.z;
+    }
+
+    vecOut->x = viewer->width -  (viewer->width * 0.5f + (1.0f / tmp.z) * tmp.x * viewer->projectionScaleX);
+    vecOut->y =                   viewer->height * 0.5f + (1.0f / tmp.z) * tmp.y * viewer->projectionScaleY;
+    vecOut->z = tmp.z;
+
+    return returnValue;
+}
