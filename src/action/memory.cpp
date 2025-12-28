@@ -27,11 +27,7 @@ void psiMem_Init(uint *pMem_out, uint *size_out) {
     *size_out = HEAP_SIZE;
     void *mem = allocateAligned0x1000(HEAP_SIZE + 0x1000);
 
-    if(mem == NULL) {
-        printf("FATAL: Could not allocate heap!\n");
-        while(1)
-            ;
-    }
+    NF_ASSERT(mem != NULL, "Could not allocate heap memory");
 
     // Align to 4KB boundary
     *pMem_out = (int)mem + 0xfffU & 0xfffff000;
