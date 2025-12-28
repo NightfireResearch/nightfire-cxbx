@@ -16,12 +16,23 @@
 // AUTOGEN
 void* allocateAligned0x1000(int a);
 
+// 49MB of heap allocation from the Xbox kernel, then using an internal allocator
+// This is very similar to what Halo does
+#define HEAP_SIZE (49 * 1024 * 1024)
+
 // Only called from Mem_Init, no need to inject
 void psiMem_Init(uint *param_1, uint *param_2) {
     void *pvVar1;
     
-    *param_2 = 0x3100000;
-    pvVar1 = allocateAligned0x1000(0x3101000);
+    *param_2 = HEAP_SIZE;
+    pvVar1 = allocateAligned0x1000(HEAP_SIZE + 0x1000);
+
+    if(pvVar1 == NULL) {
+        printf("FATAL: Could not allocate heap!\n");
+        while(1)
+            ;
+    }
+
     *param_1 = (int)pvVar1 + 0xfffU & 0xfffff000;
     return;
 }
