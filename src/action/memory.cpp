@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "actionhelpers.h"
+#include <stdlib.h>
 
 #define Addr_MemStats 0x00223a60
 #define Addr_PtrHeap 0x00223a80
@@ -18,7 +19,7 @@ void* allocateAligned0x1000(int a);
 
 // 49MB of heap allocation from the Xbox kernel, then using an internal allocator
 // This is very similar to what Halo does
-#define HEAP_SIZE (49 * 1024 * 1024)
+#define HEAP_SIZE (40 * 1024 * 1024)
 
 // Only called from Mem_Init, no need to inject
 void psiMem_Init(uint *pMem_out, uint *size_out) {
@@ -69,8 +70,21 @@ void Mem_Init(void) {
 
 }
 
-// AUTOGEN
-void* Mem_Malloc(size_t size, uint32_t flags, uint32_t unknownMaybeAlignment);
+// Not auto generated or injected - we call the original allocator in some cases, but if we inject, we end up calling ourself
+void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t unknownMaybeAlignment) {
+
+    printf("Allocating %i bytes of type %02x\n", size, flags);
+
+    // If it's type Xbox, must be allocated in the first 64MB - video memory must be in this region
+
+    // TODO: The game does NOT free this memory, it just assumes the entire heap is wiped. So this results in a memory leak
+    if(flags & 0xFF00 == 0x1200) { // Xbox memory type
+        return reinterpret_cast<void * (*)(uint, MallocFlags, uint)>(0x00070ae0)(size, flags, unknownMaybeAlignment);
+    }
+
+    return malloc(size);
+    
+}
 
 // AUTOGEN
 void Mem_Free(void **ptr);
