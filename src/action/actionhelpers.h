@@ -2,7 +2,7 @@
 #define ACTIONHELPERS_H_
 
 #define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 720
+#define SCREEN_HEIGHT 1024
 
 #include <stddef.h> // for offsetof
 
