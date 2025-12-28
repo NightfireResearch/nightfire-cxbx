@@ -19788,11 +19788,11 @@
             "_VECTOR *",
             "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl Env_GetWindVel(cel_tag * param_1, _VECTOR * param_2, _VECTOR * param_3)",
+        "prototype_string": "void __cdecl Env_GetWindVel(cel_tag * cel, _VECTOR * pos, _VECTOR * vecOut)",
         "parameters": [
-            "[cel_tag * param_1@Stack[0x4]:4]",
-            "[_VECTOR * param_2@Stack[0x8]:4]",
-            "[_VECTOR * param_3@Stack[0xc]:4]"
+            "[cel_tag * cel@Stack[0x4]:4]",
+            "[_VECTOR * pos@Stack[0x8]:4]",
+            "[_VECTOR * vecOut@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -20805,11 +20805,11 @@
         "address": "0x0006b7e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "obj_tag *",
         "param_types": [
             "COPTER *"
         ],
-        "prototype_string": "undefined4 __cdecl Copter_GetBody(COPTER * param_1)",
+        "prototype_string": "obj_tag * __cdecl Copter_GetBody(COPTER * param_1)",
         "parameters": [
             "[COPTER * param_1@Stack[0x4]:4]"
         ],
@@ -22682,14 +22682,14 @@
         "return_type": "int * *",
         "param_types": [
             "M_COMBO *",
-            "undefined4",
+            "MessageType",
             "int * *",
             "int * *"
         ],
-        "prototype_string": "int * * __cdecl Combo_SendMessage(M_COMBO * param_1, undefined4 param_2, int * * param_3, int * * param_4)",
+        "prototype_string": "int * * __cdecl Combo_SendMessage(M_COMBO * param_1, MessageType param_2, int * * param_3, int * * param_4)",
         "parameters": [
             "[M_COMBO * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
+            "[MessageType param_2@Stack[0x8]:4]",
             "[int * * param_3@Stack[0xc]:4]",
             "[int * * param_4@Stack[0x10]:4]"
         ],
@@ -23109,19 +23109,23 @@
     {
         "name": "Menu_ClipString",
         "address": "0x00072c90",
-        "calling_convention": "unknown",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "undefined4",
         "param_types": [
             "undefined4",
-            "undefined4",
-            "undefined4"
+            "uint",
+            "int",
+            "int",
+            "char *"
         ],
-        "prototype_string": "undefined Menu_ClipString(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined4 Menu_ClipString(undefined4 param_1_00, uint param_2_00, int param_3, int param_4, char * param_5)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[undefined4 param_1_00@Stack[0x4]:4]",
+            "[uint param_2_00@Stack[0x8]:4]",
+            "[int param_3@Stack[0xc]:4]",
+            "[int param_4@Stack[0x10]:4]",
+            "[char * param_5@Stack[0x14]:4]"
         ],
         "is_thunk": false
     },
@@ -23557,15 +23561,15 @@
         "address": "0x00073d10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "ulonglong",
+        "return_type": "undefined4",
         "param_types": [
             "byte",
             "undefined4"
         ],
-        "prototype_string": "ulonglong __cdecl Menu_DisplayControllerStyle(byte param_1, undefined4 param_2)",
+        "prototype_string": "undefined4 __cdecl Menu_DisplayControllerStyle(byte param_1, undefined4 style)",
         "parameters": [
             "[byte param_1@Stack[0x4]:1]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[undefined4 style@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
@@ -23640,11 +23644,11 @@
         "address": "0x000754c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "ulonglong",
+        "return_type": "undefined4",
         "param_types": [
             "int * *"
         ],
-        "prototype_string": "ulonglong __cdecl Menu_PutCodenamesIntoControl(int * * param_1)",
+        "prototype_string": "undefined4 __cdecl Menu_PutCodenamesIntoControl(int * * param_1)",
         "parameters": [
             "[int * * param_1@Stack[0x4]:4]"
         ],
@@ -23822,9 +23826,9 @@
             "char",
             "char"
         ],
-        "prototype_string": "void __cdecl Menu_CreateOptionBox(byte param_1, int * * param_2, undefined4 param_3, char param_4, char param_5)",
+        "prototype_string": "void __cdecl Menu_CreateOptionBox(byte managerNum, int * * param_2, undefined4 param_3, char param_4, char param_5)",
         "parameters": [
-            "[byte param_1@Stack[0x4]:1]",
+            "[byte managerNum@Stack[0x4]:1]",
             "[int * * param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]",
             "[char param_4@Stack[0x10]:1]",
@@ -24588,13 +24592,13 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_0007fe70",
+        "name": "psiMovieLoop",
         "address": "0x0007fe70",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall FUN_0007fe70(void)",
+        "prototype_string": "bool __stdcall psiMovieLoop(void)",
         "parameters": [],
         "is_thunk": false
     },
@@ -27968,7 +27972,7 @@
     {
         "name": "Radio_GetIndex",
         "address": "0x00096320",
-        "calling_convention": "__fastcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": true,
         "return_type": "int",
         "param_types": [
@@ -27976,7 +27980,7 @@
             "undefined4",
             "undefined4 *"
         ],
-        "prototype_string": "int __fastcall Radio_GetIndex(undefined4 param_1, undefined4 param_2, undefined4 * param_3)",
+        "prototype_string": "int Radio_GetIndex(undefined4 param_1, undefined4 param_2, undefined4 * param_3)",
         "parameters": [
             "[undefined4 param_1@EAX:4]",
             "[undefined4 param_2@ECX:4]",
@@ -27987,12 +27991,20 @@
     {
         "name": "Radio_SetIndex",
         "address": "0x00096350",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined Radio_SetIndex()",
-        "parameters": [],
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
+        "param_types": [
+            "M_RADIO *",
+            "LINKEDLIST *",
+            "undefined4"
+        ],
+        "prototype_string": "void Radio_SetIndex(M_RADIO * param_1, LINKEDLIST * param_2, undefined4 idx)",
+        "parameters": [
+            "[M_RADIO * param_1@ECX:4]",
+            "[LINKEDLIST * param_2@EDI:4]",
+            "[undefined4 idx@ESI:4]"
+        ],
         "is_thunk": false
     },
     {
@@ -31758,12 +31770,16 @@
     {
         "name": "Player_HandleDeath",
         "address": "0x000ac690",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined Player_HandleDeath()",
-        "parameters": [],
+        "calling_convention": "__stdcall",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
+        "param_types": [
+            "undefined4"
+        ],
+        "prototype_string": "void __stdcall Player_HandleDeath(undefined4 param_1)",
+        "parameters": [
+            "[undefined4 param_1@EAX:4]"
+        ],
         "is_thunk": false
     },
     {
@@ -33144,11 +33160,11 @@
             "HUDPANE_tag *",
             "obj_tag *"
         ],
-        "prototype_string": "undefined __stdcall HUD_UpdateRedeemerPane(undefined4 param_1, HUDPANE_tag * param_2, obj_tag * param_3)",
+        "prototype_string": "undefined __stdcall HUD_UpdateRedeemerPane(undefined4 blData, HUDPANE_tag * hudPane, obj_tag * gameObj)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[HUDPANE_tag * param_2@Stack[0x8]:4]",
-            "[obj_tag * param_3@Stack[0xc]:4]"
+            "[undefined4 blData@Stack[0x4]:4]",
+            "[HUDPANE_tag * hudPane@Stack[0x8]:4]",
+            "[obj_tag * gameObj@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -34932,11 +34948,11 @@
         "address": "0x000bffd0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "typedef uint32_t uint"
         ],
-        "prototype_string": "undefined4 __cdecl LoadableReload(uint32_t param_1)",
+        "prototype_string": "bool __cdecl LoadableReload(uint32_t param_1)",
         "parameters": [
             "[uint32_t param_1@Stack[0x4]:4]"
         ],
@@ -34960,148 +34976,148 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000c00a0",
+        "name": "RB_Build",
         "address": "0x000c00a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
-            "int",
-            "undefined4",
-            "float *",
+            "RIGIDBODY *",
+            "_VECTOR *",
+            "_VECTOR *",
             "float"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000c00a0(int param_1, undefined4 param_2, float * param_3, float param_4)",
+        "prototype_string": "bool __cdecl RB_Build(RIGIDBODY * rb, _VECTOR * gravDir, _VECTOR * momentOfInertia, float mass)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[float * param_3@Stack[0xc]:4]",
-            "[float param_4@Stack[0x10]:4]"
+            "[RIGIDBODY * rb@Stack[0x4]:4]",
+            "[_VECTOR * gravDir@Stack[0x8]:4]",
+            "[_VECTOR * momentOfInertia@Stack[0xc]:4]",
+            "[float mass@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000c0170",
+        "name": "RB_AddImpulsiveForceAtPoint",
         "address": "0x000c0170",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
+            "RIGIDBODY *",
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000c0170(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined __cdecl RB_AddImpulsiveForceAtPoint(RIGIDBODY * param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
+            "[RIGIDBODY * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000c01d0",
+        "name": "RB_unknownHelperFunc2",
         "address": "0x000c01d0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
+            "RIGIDBODY *",
             "undefined4",
             "undefined4",
-            "undefined",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000c01d0(undefined4 param_1, undefined4 param_2, undefined param_3, undefined4 param_4)",
+        "prototype_string": "undefined __stdcall RB_unknownHelperFunc2(RIGIDBODY * param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
+            "[RIGIDBODY * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[undefined4 param_3@Stack[0xc]:4]",
+            "[undefined4 param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000c02d0",
+        "name": "RB_unknownHelperFunc",
         "address": "0x000c02d0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
+            "RIGIDBODY *",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000c02d0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined __cdecl RB_unknownHelperFunc(RIGIDBODY * param_1, undefined4 param_2)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
+            "[RIGIDBODY * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000c0330",
+        "name": "RB_ApplyImpulses",
         "address": "0x000c0330",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "RIGIDBODY *"
         ],
-        "prototype_string": "undefined FUN_000c0330(undefined4 param_1)",
+        "prototype_string": "undefined __cdecl RB_ApplyImpulses(RIGIDBODY * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[RIGIDBODY * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000c0470",
+        "name": "RB_RestingContactRot",
         "address": "0x000c0470",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "obj_tag *",
+            "RIGIDBODY *",
+            "HITDATA_tag *"
         ],
-        "prototype_string": "undefined FUN_000c0470(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined __cdecl RB_RestingContactRot(obj_tag * param_1, RIGIDBODY * param_2, HITDATA_tag * param_3)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[RIGIDBODY * param_2@Stack[0x8]:4]",
+            "[HITDATA_tag * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000c06e0",
+        "name": "RB_CalcTorque",
         "address": "0x000c06e0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "RIGIDBODY *",
+            "HITDATA_tag *"
         ],
-        "prototype_string": "undefined FUN_000c06e0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined __cdecl RB_CalcTorque(RIGIDBODY * param_1, HITDATA_tag * param_2)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[RIGIDBODY * param_1@Stack[0x4]:4]",
+            "[HITDATA_tag * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000c0890",
+        "name": "RB_EulerEvolve",
         "address": "0x000c0890",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
+            "RIGIDBODY *",
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000c0890(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined __cdecl RB_EulerEvolve(RIGIDBODY * param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
+            "[RIGIDBODY * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ],
@@ -35129,38 +35145,38 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000c0b80",
+        "name": "RB_ApplyWind",
         "address": "0x000c0b80",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "RIGIDBODY *",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined FUN_000c0b80(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined __cdecl RB_ApplyWind(RIGIDBODY * param_1, obj_tag * param_2)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[RIGIDBODY * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000c0c30",
+        "name": "RB_RestingContact",
         "address": "0x000c0c30",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
+            "obj_tag *",
             "undefined4",
-            "undefined4",
-            "undefined4"
+            "HITDATA_tag *"
         ],
-        "prototype_string": "undefined FUN_000c0c30(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined __cdecl RB_RestingContact(obj_tag * param_1, undefined4 param_2, HITDATA_tag * param_3)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
+            "[obj_tag * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[HITDATA_tag * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -35182,15 +35198,15 @@
     {
         "name": "RB_CollisionHandler",
         "address": "0x000c0f60",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined RB_CollisionHandler(undefined4 param_1)",
+        "prototype_string": "undefined __cdecl RB_CollisionHandler(obj_tag * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -35201,62 +35217,62 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
+            "_VECTOR *",
             "float",
             "float",
             "float",
             "float"
         ],
-        "prototype_string": "void __cdecl RB_CuboidMomentsOfInertia(float * param_1, float param_2, float param_3, float param_4, float param_5)",
+        "prototype_string": "void __cdecl RB_CuboidMomentsOfInertia(_VECTOR * momentsOfInertia, float mass, float sizeX, float sizeY, float sizeZ)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[float param_2@Stack[0x8]:4]",
-            "[float param_3@Stack[0xc]:4]",
-            "[float param_4@Stack[0x10]:4]",
-            "[float param_5@Stack[0x14]:4]"
+            "[_VECTOR * momentsOfInertia@Stack[0x4]:4]",
+            "[float mass@Stack[0x8]:4]",
+            "[float sizeX@Stack[0xc]:4]",
+            "[float sizeY@Stack[0x10]:4]",
+            "[float sizeZ@Stack[0x14]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000c1010",
+        "name": "RB_ToWorld",
         "address": "0x000c1010",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *",
-            "float *"
+            "_VECTOR *",
+            "_VECTOR *",
+            "_MATRIX *"
         ],
-        "prototype_string": "void __cdecl FUN_000c1010(float * param_1, float * param_2, float * param_3)",
+        "prototype_string": "void __cdecl RB_ToWorld(_VECTOR * vecOut, _VECTOR * param_2, _MATRIX * param_3)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]",
-            "[float * param_3@Stack[0xc]:4]"
+            "[_VECTOR * vecOut@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[_MATRIX * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000c1070",
+        "name": "RB_ToBody",
         "address": "0x000c1070",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "_VECTOR *",
+            "_VECTOR *",
+            "_MATRIX *"
         ],
-        "prototype_string": "undefined FUN_000c1070(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined __cdecl RB_ToBody(_VECTOR * param_1, _VECTOR * param_2, _MATRIX * param_3)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[_MATRIX * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000c10d0",
+        "name": "RB_apply_omega",
         "address": "0x000c10d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -35266,7 +35282,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000c10d0(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined RB_apply_omega(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -35275,38 +35291,38 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000c1150",
+        "name": "RB_VecSpecial",
         "address": "0x000c1150",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
+            "_VECTOR *",
             "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4",
+            "_VECTOR *",
+            "_VECTOR *",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000c1150(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
+        "prototype_string": "undefined __cdecl RB_VecSpecial(_VECTOR * param_1, undefined4 scaleOuter, _VECTOR * vecB, _VECTOR * vecA, undefined4 scaleA)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined4 param_5@Stack[0x14]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[undefined4 scaleOuter@Stack[0x8]:4]",
+            "[_VECTOR * vecB@Stack[0xc]:4]",
+            "[_VECTOR * vecA@Stack[0x10]:4]",
+            "[undefined4 scaleA@Stack[0x14]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000c1190",
+        "name": "Script_IsDeathNIS",
         "address": "0x000c1190",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
             "int"
         ],
-        "prototype_string": "uint __cdecl FUN_000c1190(int param_1)",
+        "prototype_string": "bool __cdecl Script_IsDeathNIS(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -35316,14 +35332,16 @@
         "name": "FUN_000c11b0",
         "address": "0x000c11b0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "int",
         "param_types": [
-            "float"
+            "float",
+            "undefined4"
         ],
-        "prototype_string": "int __cdecl FUN_000c11b0(float param_1)",
+        "prototype_string": "int __cdecl FUN_000c11b0(float param_1, undefined4 param_2)",
         "parameters": [
-            "[float param_1@Stack[0x4]:4]"
+            "[float param_1@Stack[0x4]:4]",
+            "[undefined4 param_2@EAX:4]"
         ],
         "is_thunk": false
     },
@@ -35376,15 +35394,21 @@
     {
         "name": "FUN_000c13f0",
         "address": "0x000c13f0",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
         "param_types": [
+            "int *",
+            "int",
+            "_VECTOR *",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000c13f0(undefined4 param_1)",
+        "prototype_string": "void FUN_000c13f0(int * param_1_00, int param_2, _VECTOR * param_3, undefined4 param_4)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[int * param_1_00@ECX:4]",
+            "[int param_2@EDX:4]",
+            "[_VECTOR * param_3@Stack[0x4]:4]",
+            "[undefined4 param_4@EBX:4]"
         ],
         "is_thunk": false
     },
@@ -35609,27 +35633,31 @@
     {
         "name": "Script_GetInterp",
         "address": "0x000c21b0",
-        "calling_convention": "unknown",
+        "calling_convention": "__fastcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
             "undefined4",
             "undefined4",
             "undefined4",
+            "SSTREAM *",
+            "undefined4",
             "undefined4",
             "undefined4",
             "undefined1",
             "undefined4"
         ],
-        "prototype_string": "undefined Script_GetInterp(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined1 param_6, undefined4 param_7)",
+        "prototype_string": "undefined __fastcall Script_GetInterp(undefined4 param_1_00, undefined4 param_2_00, undefined4 param_3, SSTREAM * param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7, undefined1 param_8, undefined4 scale)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined4 param_5@Stack[0x14]:4]",
-            "[undefined1 param_6@Stack[0x18]:1]",
-            "[undefined4 param_7@Stack[0x1c]:4]"
+            "[undefined4 param_1_00@ECX:4]",
+            "[undefined4 param_2_00@EDX:4]",
+            "[undefined4 param_3@Stack[0x4]:4]",
+            "[SSTREAM * param_4@Stack[0x8]:4]",
+            "[undefined4 param_5@Stack[0xc]:4]",
+            "[undefined4 param_6@Stack[0x10]:4]",
+            "[undefined4 param_7@Stack[0x14]:4]",
+            "[undefined1 param_8@Stack[0x18]:1]",
+            "[undefined4 scale@Stack[0x1c]:4]"
         ],
         "is_thunk": false
     },
@@ -38586,15 +38614,15 @@
     {
         "name": "Ripples_Update",
         "address": "0x000ce280",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "obj_tag *"
         ],
-        "prototype_string": "undefined Ripples_Update(undefined4 param_1)",
+        "prototype_string": "undefined __cdecl Ripples_Update(obj_tag * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[obj_tag * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -39588,17 +39616,17 @@
         "address": "0x000d22b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "char",
-            "uint",
-            "int * *"
+            "TXTMSG_TYPE",
+            "TXT_MSG * *"
         ],
-        "prototype_string": "undefined4 __cdecl Text_UpdateMsg(char param_1, uint param_2, int * * param_3)",
+        "prototype_string": "bool __cdecl Text_UpdateMsg(char param_1, TXTMSG_TYPE txtmsg_type, TXT_MSG * * param_3)",
         "parameters": [
             "[char param_1@Stack[0x4]:1]",
-            "[uint param_2@Stack[0x8]:4]",
-            "[int * * param_3@Stack[0xc]:4]"
+            "[TXTMSG_TYPE txtmsg_type@Stack[0x8]:4]",
+            "[TXT_MSG * * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -40308,15 +40336,15 @@
     {
         "name": "Vec_Magnitude",
         "address": "0x000d4e80",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "undefined4"
+            "_VECTOR *"
         ],
-        "prototype_string": "undefined Vec_Magnitude(undefined4 param_1)",
+        "prototype_string": "undefined __cdecl Vec_Magnitude(_VECTOR * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[_VECTOR * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -40907,13 +40935,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *"
+            "_MATRIX *",
+            "quaternion_tag *"
         ],
-        "prototype_string": "void __cdecl Quat_QuaternionToMatrix(float * param_1, float * param_2)",
+        "prototype_string": "void __cdecl Quat_QuaternionToMatrix(_MATRIX * mtx, quaternion_tag * param_2)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]"
+            "[_MATRIX * mtx@Stack[0x4]:4]",
+            "[quaternion_tag * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
@@ -44014,35 +44042,35 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000dfe30",
+        "name": "psiStartSaveEnum",
         "address": "0x000dfe30",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000dfe30(void)",
+        "prototype_string": "void __stdcall psiStartSaveEnum(void)",
         "parameters": [],
         "is_thunk": false
     },
     {
-        "name": "FUN_000dfe60",
+        "name": "psiGetNextSave",
         "address": "0x000dfe60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000dfe60()",
+        "prototype_string": "undefined psiGetNextSave()",
         "parameters": [],
         "is_thunk": false
     },
     {
-        "name": "FUN_000dfe90",
+        "name": "psiEndSaveEnum",
         "address": "0x000dfe90",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000dfe90(void)",
+        "prototype_string": "void __stdcall psiEndSaveEnum(void)",
         "parameters": [],
         "is_thunk": false
     },
@@ -64416,6 +64444,17 @@
         "is_thunk": false
     },
     {
+        "name": "FUN_00157c64",
+        "address": "0x00157c64",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00157c64()",
+        "parameters": [],
+        "is_thunk": false
+    },
+    {
         "name": "FUN_00157ccc",
         "address": "0x00157ccc",
         "calling_convention": "unknown",
@@ -64757,6 +64796,17 @@
         "is_thunk": false
     },
     {
+        "name": "FUN_001588a0",
+        "address": "0x001588a0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_001588a0()",
+        "parameters": [],
+        "is_thunk": false
+    },
+    {
         "name": "XID_fCloseDevice",
         "address": "0x001588db",
         "calling_convention": "unknown",
@@ -64824,6 +64874,17 @@
         "is_thunk": false
     },
     {
+        "name": "FUN_00158e8e",
+        "address": "0x00158e8e",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00158e8e()",
+        "parameters": [],
+        "is_thunk": false
+    },
+    {
         "name": "FUN_00158fe2",
         "address": "0x00158fe2",
         "calling_convention": "unknown",
@@ -64874,12 +64935,16 @@
     {
         "name": "FUN_0015904b",
         "address": "0x0015904b",
-        "calling_convention": "unknown",
+        "calling_convention": "__fastcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_0015904b()",
-        "parameters": [],
+        "return_type": "undefined4",
+        "param_types": [
+            "int"
+        ],
+        "prototype_string": "undefined4 __fastcall FUN_0015904b(int param_1)",
+        "parameters": [
+            "[int param_1@ECX:4]"
+        ],
         "is_thunk": false
     },
     {
@@ -66066,6 +66131,17 @@
             "[undefined * param_1@Stack[0x4]:4]",
             "[void * param_2@Stack[0x8]:4]"
         ],
+        "is_thunk": false
+    },
+    {
+        "name": "FUN_0015b5d5",
+        "address": "0x0015b5d5",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_0015b5d5()",
+        "parameters": [],
         "is_thunk": false
     },
     {

@@ -628,13 +628,19 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 	}
 
 	// Put targeting element over a copter if one exists
-	for(COPTER *c = (COPTER*)CopterList.head; c != NULL; c = (COPTER*)c->node.next) {
+	hudPane->spriteList[10]->maybeEnabled = 0xff; // Target marker overlay, shown on copter body
+	for(COPTER *c = (COPTER*)(CopterList.head); c != NULL; c = (COPTER*)c->node.next) {
+
 		
 		obj_tag *body = Copter_GetBody(c);
+
+		// Not spawned, no action
+		if(body == NULL)
+			continue;
+
+		// If it's behind us or offscreen, no action
 		_VECTOR tmp;
-		int result = View_3DPoint2Screen(&body->position, &tmp, glb_viewer[blData->playerNum]->idx);
-		
-		if(body == NULL || result <= 0)
+		if(View_3DPoint2Screen(&body->position, &tmp, glb_viewer[blData->playerNum]->idx) <= 0)
 			continue;
 
 		const float SCREEN_WIDTH = 640.0f; // FIXME: Hardcoded screen dimensions
@@ -651,8 +657,10 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 
 		sprite *s = hudPane->spriteList[10];
 		s->positionX = tmp.x - s->backupOnscreenWidth;
-		s->positionY = glb_viewer[blData->playerNum]->height -tmp.y - s->backupOnscreenHeight;
+		s->positionY = glb_viewer[blData->playerNum]->height - tmp.y - s->backupOnscreenHeight;
 		s->maybeEnabled = 0x27;
+
+		printf("Copter sprite is visible at %i, %i\n", s->positionX, s->positionY);
 
 		// If target reticle is nearly centred in both X and Y (by 32px in both axes), blink it?
 		float dx = tmp.x - (SCREEN_WIDTH / 2.0f);
@@ -660,10 +668,10 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 			dx = -dx;
 		
 		float dy = tmp.y - (SCREEN_HEIGHT / 2.0f);
-		if(dy < 0.0f);
+		if(dy < 0.0f)
 			dy = -dy;
 
-		if(dx < 32.0f && dy < 32.0f && (GameState.NumFramesUnpaused & 8 != 0))
+		if(dx < 32.0f && dy < 32.0f && (GameState.NumFramesUnpaused & 8))
 			hudPane->spriteList[10]->maybeEnabled = 0xff;
 	
 	}
@@ -728,11 +736,12 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 	hudPane->spriteList[1]->colourTint = tintModifier | 0x7f000000;
 	
 	static uint8_t Scrl = 0;
-	Scrl++;
 
 	if(Scrl & 1) {
 		// Some additional modulation (scrolling of the scanlines?)
 		hudPane->spriteList[1]->spritesheetY = Rand_Rand(hudPane->spriteList[1]->backupOnscreenHeight - 1);
 	}
+
+	Scrl++;
 
 }
