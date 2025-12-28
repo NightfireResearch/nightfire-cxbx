@@ -1,6 +1,9 @@
 #ifndef ACTIONHELPERS_H_
 #define ACTIONHELPERS_H_
 
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
+
 #include <stddef.h> // for offsetof
 
 // Foward declarations prevent circular dependencies

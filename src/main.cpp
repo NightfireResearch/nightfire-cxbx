@@ -12,15 +12,20 @@
 #endif
 
 #if IS_ACTION
-#define XBEPATH "xbepath"
-#define XBEFILTER "default.xbe\0default.xbe\0"
-#define XBEPROMPT "Where is Nightfire default.xbe located?"
-#define TITLE "NightfiRE (Action)"
+  #define XBEPATH "xbepath"
+  #define XBEFILTER "default.xbe\0default.xbe\0"
+  #define XBEPROMPT "Where is Nightfire default.xbe located?"
+  #define TITLE "NightfiRE (Action)"
+  #include "action/actionhelpers.h"
+  #define WINDOW_WIDTH SCREEN_WIDTH
+  #define WINDOW_HEIGHT SCREEN_HEIGHT
 #else
-#define XBEPATH "xbepathdriving"
-#define XBEFILTER "Driving.xbe\0Driving.xbe\0"
-#define XBEPROMPT "Where is Nightfire Driving.xbe located?"
-#define TITLE "NightfiRE (Driving)"
+  #define XBEPATH "xbepathdriving"
+  #define XBEFILTER "Driving.xbe\0Driving.xbe\0"
+  #define XBEPROMPT "Where is Nightfire Driving.xbe located?"
+  #define TITLE "NightfiRE (Driving)"
+  #define WINDOW_WIDTH 640
+  #define WINDOW_HEIGHT 480
 #endif
 
 
@@ -117,7 +122,7 @@ int WINAPI WinMain(
     nShowCmd = SW_SHOWMAXIMIZED;
   }
 
-  RECT wndrect = {0, 0, 640, 480};
+  RECT wndrect = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
   AdjustWindowRect(&wndrect, dwStyle, false);
 
   HWND wnd = CreateWindow(CLASS_NAME, TEXT(TITLE), dwStyle,

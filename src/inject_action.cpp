@@ -49,8 +49,8 @@ void Inject()
   // 1024x768: Various graphics are broken entirely, videos fail to play, will crash if cameras are scaled
   // 1280x720: crashes at Mem_Init
   // 1920x1080: crashes at Mem_Init
-  int width = 640;
-  int height = 480;
+  int width = SCREEN_WIDTH;
+  int height = SCREEN_HEIGHT;
   float fWidth = (float)width;
   float fHeight = (float)height;
 

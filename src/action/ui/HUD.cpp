@@ -643,9 +643,6 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 		if(View_3DPoint2Screen(&body->position, &tmp, glb_viewer[blData->playerNum]->idx) <= 0)
 			continue;
 
-		const float SCREEN_WIDTH = 640.0f; // FIXME: Hardcoded screen dimensions
-		const float SCREEN_HEIGHT = 480.0f;
-
 		if(tmp.x > SCREEN_WIDTH)
 			tmp.x = SCREEN_WIDTH;
 		if(tmp.x < 0.0f)

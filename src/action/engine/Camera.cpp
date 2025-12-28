@@ -128,48 +128,48 @@ void Camera_CreateCameras(void) {
 
     ScreenBlankerState = 0;
 
-    Camera_Create(0, glb_world, 0, 0, 0, 640, 480);
+    Camera_Create(0, glb_world, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    Camera_Create(5, build_alloc_world(), 1, 0, 0, 640, 480);
-    Camera_Create(7, build_alloc_world(), 1, 0, 0, 640, 480);
+    Camera_Create(5, build_alloc_world(), 1, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    Camera_Create(7, build_alloc_world(), 1, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    Camera_Create(4, glb_world, 0, 0, 0, 640, 480);
+    Camera_Create(4, glb_world, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    Camera_Create(6, NULL, 0, 0, 0, 640, 480);
-    Camera_Create(8, NULL, 0, 0, 0, 640, 480);
-    Camera_Create(10, NULL, 0, 0, 0, 640, 480);
+    Camera_Create(6, NULL, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    Camera_Create(8, NULL, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    Camera_Create(10, NULL, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     // Inlined and optimised for the fact that param_2==0
     Camera_Enable(8, 0, 0, NULL);
 
-    Camera_Create(9, glb_world, 0, 0, 0, 640, 480); // Specific to Xbox?
+    Camera_Create(9, glb_world, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // Specific to Xbox?
 
     int numPlayers = (MPSettings.isMultiplayer) ? MPSettings.numPlayers : 1;
 
     for (int i = 0; i < numPlayers; i++) {
         if(glb_viewer[i] == NULL)
-            Camera_Create(i, glb_world, 0, 0, 0, 640, 480);
+            Camera_Create(i, glb_world, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     }
 
     switch(numPlayers) {
         case 1:
-            Camera_ScreenCoords(0, 0, 0, 640, 480);
+            Camera_ScreenCoords(0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
             break;
         case 2:
             if(MultiplayerLayout_LeftRightOrTopBtm == 1) {
-                Camera_ScreenCoords(0, 0, 0, 320, 480);
-                Camera_ScreenCoords(1, 320, 0, 320, 480);
+                Camera_ScreenCoords(0, 0, 0, SCREEN_WIDTH/2, SCREEN_HEIGHT);
+                Camera_ScreenCoords(1, SCREEN_WIDTH/2, 0, SCREEN_WIDTH/2, SCREEN_HEIGHT);
             } else {
-                Camera_ScreenCoords(0, 0, 0, 640, 240);
-                Camera_ScreenCoords(1, 0, 240, 640, 240);
+                Camera_ScreenCoords(0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT/2);
+                Camera_ScreenCoords(1, 0, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT/2);
             }
             break;
         case 3:
         case 4:
-            Camera_ScreenCoords(0, 0, 0, 320, 240);
-            Camera_ScreenCoords(1, 320, 0, 320, 240);
-            Camera_ScreenCoords(2, 0, 240, 320, 240);
-            Camera_ScreenCoords(3, 320, 240, 320, 240);
+            Camera_ScreenCoords(0, 0, 0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+            Camera_ScreenCoords(1, SCREEN_WIDTH/2, 0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+            Camera_ScreenCoords(2, 0, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+            Camera_ScreenCoords(3, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
             break;
     }
 }
