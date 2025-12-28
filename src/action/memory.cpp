@@ -21,20 +21,20 @@ void* allocateAligned0x1000(int a);
 #define HEAP_SIZE (49 * 1024 * 1024)
 
 // Only called from Mem_Init, no need to inject
-void psiMem_Init(uint *param_1, uint *param_2) {
-    void *pvVar1;
+void psiMem_Init(uint *pMem_out, uint *size_out) {
     
-    *param_2 = HEAP_SIZE;
-    pvVar1 = allocateAligned0x1000(HEAP_SIZE + 0x1000);
+    *size_out = HEAP_SIZE;
+    void *mem = allocateAligned0x1000(HEAP_SIZE + 0x1000);
 
-    if(pvVar1 == NULL) {
+    if(mem == NULL) {
         printf("FATAL: Could not allocate heap!\n");
         while(1)
             ;
     }
 
-    *param_1 = (int)pvVar1 + 0xfffU & 0xfffff000;
-    return;
+    // Align to 4KB boundary
+    *pMem_out = (int)mem + 0xfffU & 0xfffff000;
+
 }
 
 // AUTOINJECT
@@ -44,11 +44,11 @@ void Mem_Init(void) {
 
     void *puVar1;
 
-    memset((void*)Addr_MemStats,0,0x1c);
+    memset((void*)Addr_MemStats, 0, 0x1c);
 
     MallocMethod = 1;
 
-    if (PtrHeap == 0) {
+    if (PtrHeap == NULL) {
         printf("No heap yet, getting config...\n");
         psiMem_Init((uint *)Addr_PtrHeap, (uint*)Addr_HeapByteSize);
     }
@@ -57,7 +57,7 @@ void Mem_Init(void) {
 
     PtrHeapEnd = (HeapByteSize + PtrHeap);
 
-    memset((void*)PtrHeap,0x98,HeapByteSize);
+    memset((void*)PtrHeap, 0x98, HeapByteSize);
 
     puVar1 = (void*)PtrHeap;
     *(uint32_t *)((int)PtrHeap + 4) = HeapByteSize - 0xc;
