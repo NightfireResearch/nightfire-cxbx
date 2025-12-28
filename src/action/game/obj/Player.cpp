@@ -36,14 +36,6 @@ void Player_AddNewStartPos(_VECTOR *pos, _VECTOR *rot, ushort maybeEnabled, leve
     player_start_positions_index++;
 }
 
-typedef enum {
-    CamMode_Default = 0x00,
-    CamMode_PostMPGameThirdPerson = 0x01,
-    CamMode_Redeemer = 0x0c, // Redeemer = Sentinel Missile?
-    CamMode_RCCar = 0x0d,
-    CamMode_Ronin = 0x0f,
-} CamMode;
-
 // AUTOINJECT
 void Player_SetCamMode(BLData *player, unsigned short newMode) {
 

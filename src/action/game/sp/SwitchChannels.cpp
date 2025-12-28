@@ -43,3 +43,12 @@ void SwitchChannel_SetActive(int ch) {
     switch_channels[ch] = 1;
     switch_channels_time[ch] = GameState.NumFramesUnpaused;
 }
+
+bool SwitchChannel_IsActive(int ch) {
+
+    if(ch <= 0 || ch >= ARRAY_SIZE(switch_channels))
+        return false;
+
+    return switch_channels[ch];
+    
+}

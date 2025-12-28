@@ -4,7 +4,6 @@
 
 #include "ScriptPlayer.h"
 
-#define CopterList (*(LLISTINFO_tag*)0x001fe6a8)
 
 // AUTOINJECT
 void Copter_Delete(obj_tag *obj) {
@@ -22,3 +21,12 @@ void Copter_Delete(obj_tag *obj) {
 
 // AUTOGEN
 obj_tag * Copter_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
+
+// AUTOINJECT
+obj_tag* Copter_GetBody(COPTER* copter) { 
+
+    if(!SwitchChannel_IsActive(copter->switchChannelToShowCopterBody))
+        return NULL;
+
+    return copter->body;
+}

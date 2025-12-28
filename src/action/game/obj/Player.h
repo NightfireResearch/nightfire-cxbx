@@ -3,6 +3,14 @@
 
 #include "../../actionhelpers.h"
 
+typedef enum {
+    CamMode_Default = 0x00,
+    CamMode_PostMPGameThirdPerson = 0x01,
+    CamMode_Redeemer = 0x0c, // Redeemer = Sentinel Missile?
+    CamMode_RCCar = 0x0d,
+    CamMode_Ronin = 0x0f,
+} CamMode;
+
 #pragma pack(push, 1)
 
 typedef struct WeaponStatus {
@@ -49,7 +57,7 @@ typedef struct BLData {
     char _pad_33[3];
     char playerNum; // 0x8de
     char pad_4;
-    char camMode; // 0x8e0
+    char camMode; // 0x8e0 - CamMode
     char pad_5[16];
     char nightVisionActive; // 0x8f1
     // ...

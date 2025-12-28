@@ -47,7 +47,7 @@ typedef struct HUDPANECREATE_tag {
 
 typedef struct HUDPANE_tag {
     HUDPANECREATE_tag *base;
-    char unknown[4];
+    void** extraItems; // Pointer to an array of pointers
     sprite** spriteList;
     HUDPANE_updateFunc updateFunction;
     short unknown2[2];
@@ -69,7 +69,7 @@ static_assert(offsetof(HUDPANE_tag, maybeCanBeEnabled) == 0x1f, "Offset of maybe
 typedef struct HUDINFO_tag {
     sprite* crosshairSprite;
     int maybeUnused;
-    HUDPANE_tag pane[NUM_PANES];
+    HUDPANE_tag pane[NUM_PANES]; // Index is HUD_PANE_IND::...
 } HUDINFO_tag;
 
 static_assert(sizeof(HUDINFO_tag) == 0x2c8, "Size of HUDINFO_tag is incorrect");
@@ -90,5 +90,6 @@ void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *
 void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateSpacePane(BLData *param_1, HUDPANE_tag *pane, obj_tag *obj);
+void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
 
 #endif // HUD_H
