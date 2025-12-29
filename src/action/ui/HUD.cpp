@@ -306,9 +306,89 @@ void HUD_CreateShrink(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *pa
 #define ttimer I16_AT(0x002790b8)
 #define ctimer I16_AT(0x002790bc)
 
-// MPPaneList: List of 22 pointers to HUDPANECREATE_tag structures at memory address 0x001812f0
-#define MPPaneList (*(HUDPANECREATE_tag *(*)[NUM_PANES])0x001812f0)
-#define PaneList (*(HUDPANECREATE_tag *(*)[NUM_PANES])0x00180ee0)
+
+#define AmmoPane ((HUDPANECREATE_tag*)(0x0017f930))
+#define HealthPane ((HUDPANECREATE_tag*)(0x0017fde8))
+#define MsgMissionStatusPane ((HUDPANECREATE_tag*)(0x0017fea8))
+#define MsgObjectiveStatusPane ((HUDPANECREATE_tag*)(0x001813ec))
+#define MsgInfoStatusPane ((HUDPANECREATE_tag*)(0x00181598))
+#define AirPane ((HUDPANECREATE_tag*)(0x0017fe8c))
+#define SightPane ((HUDPANECREATE_tag*)(0x0017ff4c))
+#define NightSightPane ((HUDPANECREATE_tag*)(0x00180218))
+#define LensFlarePane ((HUDPANECREATE_tag*)(0x0018036c))
+#define RedeemerPane ((HUDPANECREATE_tag*)(0x0018056c))
+#define RCCarPane ((HUDPANECREATE_tag*)(0x00180690))
+#define CameraPane ((HUDPANECREATE_tag*)(0x001800f4))
+#define BloodPane ((HUDPANECREATE_tag*)(0x0017f9a8))
+#define XrayPane ((HUDPANECREATE_tag*)(0x001807d4))
+#define SecCamPane ((HUDPANECREATE_tag*)(0x00180924))
+#define OICWPane ((HUDPANECREATE_tag*)(0x00180a74))
+#define RoninPane ((HUDPANECREATE_tag*)(0x00180b98))
+#define LaserPane ((HUDPANECREATE_tag*)(0x00180cc0))
+#define SpacePane ((HUDPANECREATE_tag*)(0x00180ec4))
+#define MsgPickupStatusPane ((HUDPANECREATE_tag*)(0x00181774))
+
+HUDPANECREATE_tag* PaneList[] = {
+	AmmoPane,
+	HealthPane,
+	MsgMissionStatusPane,
+	MsgObjectiveStatusPane,
+	MsgInfoStatusPane,
+	AirPane,
+	SightPane,
+	NightSightPane,
+	LensFlarePane,
+	RedeemerPane,
+	RCCarPane,
+	CameraPane,
+	BloodPane,
+	NULL,
+	NULL,
+	XrayPane,
+	SecCamPane,
+	OICWPane,
+	RoninPane,
+	LaserPane,
+	SpacePane,
+	MsgPickupStatusPane
+};
+
+static_assert(ARRAY_SIZE(PaneList) == NUM_PANES, "Bad size of pane list");
+
+
+#define MPAmmoPane ((HUDPANECREATE_tag*)(0x00180fbc))
+#define MPHealthPane ((HUDPANECREATE_tag*)(0x00181138))
+#define MPMsgInfoStatusPane ((HUDPANECREATE_tag*)(0x00181180))
+#define MPScorePane ((HUDPANECREATE_tag*)(0x001812d4))
+#define RadarPane ((HUDPANECREATE_tag*)(0x001806d8))
+
+HUDPANECREATE_tag * MPPaneList[] = {
+	MPAmmoPane,
+	MPHealthPane,
+	NULL,
+	NULL,
+	MPMsgInfoStatusPane,
+	NULL,
+	SightPane,
+	NULL,
+	NULL,
+	RedeemerPane,
+	RCCarPane,
+	NULL,
+	BloodPane,
+	MPScorePane,
+	RadarPane,
+	NULL,
+	NULL,
+	OICWPane,
+	RoninPane,
+	LaserPane,
+	NULL,
+	NULL
+};
+
+static_assert(ARRAY_SIZE(MPPaneList) == NUM_PANES, "Bad size of pane list");
+
 
 // AUTOINJECT
 void HUD_Init(BLData *player, obj_tag *obj) {
