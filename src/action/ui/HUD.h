@@ -37,12 +37,18 @@ typedef void (*HUDPANE_createFunc)(BLData*, HUDPANE_tag*, HUDPANECREATE_tag*, ob
 typedef void (*HUDPANE_updateFunc)(BLData*, HUDPANE_tag*, obj_tag*);
 
 typedef struct HUDPANECREATE_tag {
-    char pad[8];
+    short maybePosX;
+    short maybePosY;
+    short maybeWidth;
+    short maybeHeight;
     HUDPANE_createFunc createFunc;
     HUDPANE_updateFunc updateFunc;
     SpriteInfo *spriteInfo;
     ushort numSprites;
-    char pad2[6];
+    ushort numExtraItems;
+    ushort unknown_thing;
+    char pad1;
+    char pad2;
 } HUDPANECREATE_tag;
 
 typedef struct HUDPANE_tag {

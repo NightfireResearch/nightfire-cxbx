@@ -44,8 +44,7 @@ static_assert(offsetof(sprite, linkedViewer) == 0x39, "Wrong offset for linkedVi
 typedef struct SpriteInfo {
     uint colour;
     uint unknown1;
-    uchar maybeEnabled;
-    undefined1 unknown2;
+    ushort maybeEnabled;
     short maybeFlags;
     short posX;
     short posY;
@@ -59,7 +58,7 @@ typedef struct SpriteInfo {
     char* maybeClippedText;
     HASHCODE textureHashcode;
     char linkedViewer;
-    char pad[3];
+    char pad[3]; // Unclear if this is a single u32, padding, or not needed?
 } SpriteInfo;
 
 static_assert(sizeof(SpriteInfo) == 0x2c, "Size of SpriteInfo is incorrect");

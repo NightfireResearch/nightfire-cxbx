@@ -316,7 +316,7 @@ void HUD_CreateShrink(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *pa
 #define SightPane ((HUDPANECREATE_tag*)(0x0017ff4c))
 #define NightSightPane ((HUDPANECREATE_tag*)(0x00180218))
 #define LensFlarePane ((HUDPANECREATE_tag*)(0x0018036c))
-#define RedeemerPane ((HUDPANECREATE_tag*)(0x0018056c))
+//#define RedeemerPane ((HUDPANECREATE_tag*)(0x0018056c))
 #define RCCarPane ((HUDPANECREATE_tag*)(0x00180690))
 #define CameraPane ((HUDPANECREATE_tag*)(0x001800f4))
 #define BloodPane ((HUDPANECREATE_tag*)(0x0017f9a8))
@@ -328,6 +328,40 @@ void HUD_CreateShrink(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *pa
 #define SpacePane ((HUDPANECREATE_tag*)(0x00180ec4))
 #define MsgPickupStatusPane ((HUDPANECREATE_tag*)(0x00181774))
 
+// AUTOGEN
+void HUD_CreateRedeemer(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj);
+// AUTOGEN
+void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
+
+SpriteInfo RedeemerSpriteInfo[] = {
+	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0500, 256, 	176, 	128, 			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5E, 5, 0, 0, 0},
+	{0xffffff40, 0x7f7f7fff, 0x2200, 0x0100, 0,		0,		SCREEN_WIDTH, 	SCREEN_HEIGHT,	0, 	0, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_4A, 5, 0, 0, 0},
+	{0x7f7f7fff, 0x7f7f7fff, 0xffff, 0x0200, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0, 	0, 	0, 		0,		Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x03000002, 5, 0, 0, 0},
+	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0100, 0,		144, 	0,				0,				0, 	0, 	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5F, 5, 0, 0, 0},
+	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0140, 384, 	144,	0,				0,				0, 	0, 	0,		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5F, 5, 0, 0, 0}, // Flags mean mirrored?
+	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0100, 0, 	336, 	0, 				0, 				0, 	0, 	0,		0,		Action_TranslatedText_NULLVALUE, NULL, TEX_SENTINEL_OVERLAY1, 5, 0, 0, 0},
+	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0140, 384, 	336, 	0, 				0, 				0, 	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, TEX_SENTINEL_OVERLAY1, 5, 0, 0, 0},
+	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0100, 174, 	282, 	0,				0,				0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5D, 5, 0, 0, 0},
+	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0140, 402,	282,	0,				0,				0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5D, 5, 0, 0, 0},
+	{0x300000ff, 0x7f7f7fff, 0x2300, 0x0100, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x03000002, 5, 0, 0, 0},
+	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0500, 256, 	176, 	128,			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_59, 5, 0, 0, 0}
+};
+
+HUDPANECREATE_tag RedeemerPane = {
+	0,
+	0,
+	SCREEN_WIDTH,
+	SCREEN_HEIGHT,
+	HUD_CreateRedeemer,
+	HUD_UpdateRedeemerPane,
+	RedeemerSpriteInfo,
+	ARRAY_SIZE(RedeemerSpriteInfo),
+	4,
+	0x180,
+	0, // Unused?
+	0 // Unused?
+};
+
 HUDPANECREATE_tag* PaneList[] = {
 	AmmoPane,
 	HealthPane,
@@ -338,7 +372,7 @@ HUDPANECREATE_tag* PaneList[] = {
 	SightPane,
 	NightSightPane,
 	LensFlarePane,
-	RedeemerPane,
+	&RedeemerPane,
 	RCCarPane,
 	CameraPane,
 	BloodPane,
@@ -372,7 +406,7 @@ HUDPANECREATE_tag * MPPaneList[] = {
 	SightPane,
 	NULL,
 	NULL,
-	RedeemerPane,
+	&RedeemerPane,
 	RCCarPane,
 	NULL,
 	BloodPane,

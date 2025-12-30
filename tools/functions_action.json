@@ -32790,14 +32790,14 @@
             "ushort",
             "uint"
         ],
-        "prototype_string": "void __cdecl HUD_ValidateXY(short * param_1, short * param_2, ushort param_3, ushort param_4, ushort param_5, uint param_6)",
+        "prototype_string": "void __cdecl HUD_ValidateXY(short * maybePosX, short * maybePosY, ushort maybeWidth, ushort maybeHeight, ushort playerNum, uint maybeFlags)",
         "parameters": [
-            "[short * param_1@Stack[0x4]:4]",
-            "[short * param_2@Stack[0x8]:4]",
-            "[ushort param_3@Stack[0xc]:2]",
-            "[ushort param_4@Stack[0x10]:2]",
-            "[ushort param_5@Stack[0x14]:2]",
-            "[uint param_6@Stack[0x18]:4]"
+            "[short * maybePosX@Stack[0x4]:4]",
+            "[short * maybePosY@Stack[0x8]:4]",
+            "[ushort maybeWidth@Stack[0xc]:2]",
+            "[ushort maybeHeight@Stack[0x10]:2]",
+            "[ushort playerNum@Stack[0x14]:2]",
+            "[uint maybeFlags@Stack[0x18]:4]"
         ],
         "is_thunk": false
     },
@@ -33515,14 +33515,14 @@
         "address": "0x000b66c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "BLData *",
             "HUDPANE_tag *",
             "HUDPANECREATE_tag *",
             "obj_tag *"
         ],
-        "prototype_string": "undefined __cdecl HUD_CreateRedeemer(BLData * param_1, HUDPANE_tag * param_2, HUDPANECREATE_tag * param_3, obj_tag * param_4)",
+        "prototype_string": "void __cdecl HUD_CreateRedeemer(BLData * param_1, HUDPANE_tag * param_2, HUDPANECREATE_tag * param_3, obj_tag * param_4)",
         "parameters": [
             "[BLData * param_1@Stack[0x4]:4]",
             "[HUDPANE_tag * param_2@Stack[0x8]:4]",
@@ -43038,7 +43038,7 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000dbcd0",
+        "name": "allocateXboxSpecialMemory",
         "address": "0x000dbcd0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -43047,7 +43047,7 @@
             "int",
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000dbcd0(int param_1, uint param_2)",
+        "prototype_string": "void __cdecl allocateXboxSpecialMemory(int param_1, uint param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]"
