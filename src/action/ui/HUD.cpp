@@ -319,7 +319,7 @@ void HUD_CreateShrink(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *pa
 //#define RedeemerPane ((HUDPANECREATE_tag*)(0x0018056c))
 #define RCCarPane ((HUDPANECREATE_tag*)(0x00180690))
 #define CameraPane ((HUDPANECREATE_tag*)(0x001800f4))
-#define BloodPane ((HUDPANECREATE_tag*)(0x0017f9a8))
+//#define BloodPane ((HUDPANECREATE_tag*)(0x0017f9a8))
 #define XrayPane ((HUDPANECREATE_tag*)(0x001807d4))
 #define SecCamPane ((HUDPANECREATE_tag*)(0x00180924))
 #define OICWPane ((HUDPANECREATE_tag*)(0x00180a74))
@@ -357,7 +357,33 @@ HUDPANECREATE_tag RedeemerPane = {
 	RedeemerSpriteInfo,
 	ARRAY_SIZE(RedeemerSpriteInfo),
 	4,
-	0x180,
+	0x180, // 384
+	0, // Unused?
+	0 // Unused?
+};
+
+
+
+SpriteInfo BloodSprInfo[] = {
+	{0x007f7fff, 0x7f7f7fff, 0x0900, 0x0200, 0, 	0, 		SCREEN_WIDTH, 	32,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x0300005A, 5, 0, 0, 0},
+	{0x007f7fff, 0x7f7f7fff, 0x0900, 0x0200, 0,		0,		SCREEN_WIDTH, 	64,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x03000002, 5, 0, 0, 0},
+};
+
+// AUTOGEN
+void HUD_UpdateBloodPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
+
+
+HUDPANECREATE_tag BloodPane = {
+	0,
+	0,
+	SCREEN_WIDTH,
+	SCREEN_HEIGHT,
+	HUD_CreateShrink,
+	HUD_UpdateBloodPane,
+	BloodSprInfo,
+	ARRAY_SIZE(BloodSprInfo),
+	0,
+	0x180, // 384
 	0, // Unused?
 	0 // Unused?
 };
@@ -375,7 +401,7 @@ HUDPANECREATE_tag* PaneList[] = {
 	&RedeemerPane,
 	RCCarPane,
 	CameraPane,
-	BloodPane,
+	&BloodPane,
 	NULL,
 	NULL,
 	XrayPane,
@@ -409,7 +435,7 @@ HUDPANECREATE_tag * MPPaneList[] = {
 	&RedeemerPane,
 	RCCarPane,
 	NULL,
-	BloodPane,
+	&BloodPane,
 	MPScorePane,
 	RadarPane,
 	NULL,

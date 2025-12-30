@@ -32823,15 +32823,15 @@
     {
         "name": "HUD_UpdateBloodPane",
         "address": "0x000b1e50",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "BLData *",
             "HUDPANE_tag *",
             "obj_tag *"
         ],
-        "prototype_string": "undefined __stdcall HUD_UpdateBloodPane(BLData * player, HUDPANE_tag * pane, obj_tag * obj)",
+        "prototype_string": "void __cdecl HUD_UpdateBloodPane(BLData * player, HUDPANE_tag * pane, obj_tag * obj)",
         "parameters": [
             "[BLData * player@Stack[0x4]:4]",
             "[HUDPANE_tag * pane@Stack[0x8]:4]",
