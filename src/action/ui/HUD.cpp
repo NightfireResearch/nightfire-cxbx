@@ -316,10 +316,8 @@ void HUD_CreateShrink(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *pa
 #define SightPane ((HUDPANECREATE_tag*)(0x0017ff4c))
 #define NightSightPane ((HUDPANECREATE_tag*)(0x00180218))
 #define LensFlarePane ((HUDPANECREATE_tag*)(0x0018036c))
-//#define RedeemerPane ((HUDPANECREATE_tag*)(0x0018056c))
 #define RCCarPane ((HUDPANECREATE_tag*)(0x00180690))
 #define CameraPane ((HUDPANECREATE_tag*)(0x001800f4))
-//#define BloodPane ((HUDPANECREATE_tag*)(0x0017f9a8))
 #define XrayPane ((HUDPANECREATE_tag*)(0x001807d4))
 #define SecCamPane ((HUDPANECREATE_tag*)(0x00180924))
 #define OICWPane ((HUDPANECREATE_tag*)(0x00180a74))
@@ -394,7 +392,7 @@ HUDPANECREATE_tag* PaneList[] = {
 	MsgMissionStatusPane,
 	MsgObjectiveStatusPane,
 	MsgInfoStatusPane,
-	AirPane,
+	AirPane, // Oxygen/Swimming indicator?
 	SightPane,
 	NightSightPane,
 	LensFlarePane,
