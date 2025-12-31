@@ -475,8 +475,30 @@ HUDPANECREATE_tag AmmoPane = {
 	0
 };
 
-// AUTOGEN
-void HUD_CreateHealthPane(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj);
+#define ThirdIconTimer U16_AT(0x002790b0)
+#define CrouchIconTimer U16_AT(0x002790ac)
+
+// AUTOINJECT
+void HUD_CreateHealthPane(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj) { 
+
+	HUD_CalcWidthHeight(paneCreate, &paneCreate->width, &paneCreate->height);
+	HUD_CreateDefault(blData, hudPane, paneCreate, obj);
+
+	
+	// Resize fullscreen effects (inc blood vignette effect) to fit screen
+	// The original game does this, it's unclear why they wouldn't just bake this into the HUDPANECREATE
+	// but this works in our favour for non-default resolutions anyway!
+	for(int i = 20; i < 24; i++) {
+		hudPane->spriteList[i]->positionX = 0;
+		hudPane->spriteList[i]->positionY = 0;
+		hudPane->spriteList[i]->onscreenWidth = SCREEN_WIDTH;
+		hudPane->spriteList[i]->onscreenHeight = SCREEN_HEIGHT;
+	}
+	
+	ThirdIconTimer = 0;
+	CrouchIconTimer = 0;
+
+}
 
 // AUTOGEN
 void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
