@@ -300,15 +300,44 @@ void HUD_Update(BLData *playerInfo, obj_tag *obj) {
 }
 
 // AUTOGEN
-void HUD_CreateShrink(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *param_3,obj_tag *param_4);
+void HUD_CalcWidthHeight(HUDPANECREATE_tag *param_1, short *param_2, short *param_3);
+
+// AUTOGEN
+void HUD_CreateDefault(BLData *blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *hudPaneCreate, obj_tag *unused);
+
+// AUTOINJECT
+void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *param_3, obj_tag *param_4) {
+	  
+	HUD_CalcWidthHeight(param_3, &param_3->width, &param_3->height);
+	HUD_CreateDefault(playerInfo, pane, param_3, param_4);
+	viewer_tag *vwr = glb_viewer[playerInfo->playerNum];
+
+	for(int i = 0; i < pane->numSprites; i++) {
+
+		sprite* s = pane->spriteList[i];
+
+		// If player's view is compressed horizontally (MP view), shrink width and move it horizontally
+		// Division by 2 is just an assumption from the fact that MP is restricted to a 2x2 grid of views
+		if (vwr->width < (float)SCREEN_WIDTH) {
+			s->onscreenWidth = s->onscreenWidth / 2;
+			s->positionX -= param_3->spriteInfo[i].posX / 2;
+		}
+
+		// If player's view is less than fullscreen vertically (MP view), shrink height and move it vertically
+		// Division by 2 is just an assumption from the fact that MP is restricted to a 2x2 grid of views
+		if (vwr->height < (float)SCREEN_HEIGHT) {
+			s->onscreenHeight = s->onscreenHeight / 2;
+			s->positionY -= param_3->spriteInfo[i].posY / 2;
+		}
+	}
+	
+}
 
 #define CrossHair (*(SpriteInfo*)0x0017f778)
 #define ttimer I16_AT(0x002790b8)
 #define ctimer I16_AT(0x002790bc)
 
 
-#define AmmoPane ((HUDPANECREATE_tag*)(0x0017f930))
-#define HealthPane ((HUDPANECREATE_tag*)(0x0017fde8))
 #define MsgMissionStatusPane ((HUDPANECREATE_tag*)(0x0017fea8))
 #define MsgObjectiveStatusPane ((HUDPANECREATE_tag*)(0x001813ec))
 #define MsgInfoStatusPane ((HUDPANECREATE_tag*)(0x00181598))
@@ -329,18 +358,19 @@ void HUD_CreateShrink(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *pa
 // AUTOGEN
 void HUD_CreateRedeemer(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj);
 
+// TODO: Change from 640x480 to generic
 SpriteInfo RedeemerSpriteInfo[] = {
-	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0500, 256, 	176, 	128, 			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5E, 5, 0, 0, 0}, // 0: Central reticle. The image is only 1/4 of the whole - repeats mirrored in H and V?
-	{0xffffff40, 0x7f7f7fff, 0x2200, 0x0100, 0,		0,		SCREEN_WIDTH, 	SCREEN_HEIGHT,	0, 	0, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_4A, 5, 0, 0, 0}, // 1: Static lines
+	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0500, 256, 	176, 	128, 			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5E, 5, 0, 0, 0}, // 0: Central reticle. The image is only 1/4 of the whole - repeats mirrored in H and V?
+	{0xffffff40, 0x7f7f7fff, 0x0022, 0x0100, 0,		0,		SCREEN_WIDTH, 	SCREEN_HEIGHT,	0, 	0, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_4A, 5, 0, 0, 0}, // 1: Static lines
 	{0x7f7f7fff, 0x7f7f7fff, 0xffff, 0x0200, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0, 	0, 	0, 		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // 2: Blackout on missile destroyed
-	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0100, 0,		144, 	0,				0,				0, 	0, 	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5F, 5, 0, 0, 0},
-	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0140, 384, 	144,	0,				0,				0, 	0, 	0,		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5F, 5, 0, 0, 0}, // Flags mean just mirrored?
-	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0100, 0, 	336, 	0, 				0, 				0, 	0, 	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5C, 5, 0, 0, 0},
-	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0140, 384, 	336, 	0, 				0, 				0, 	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5C, 5, 0, 0, 0},
-	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0100, 174, 	282, 	0,				0,				0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5D, 5, 0, 0, 0},
-	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0140, 402,	282,	0,				0,				0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5D, 5, 0, 0, 0},
-	{0x300000ff, 0x7f7f7fff, 0x2300, 0x0100, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // 9: Red colour tint?
-	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0500, 256, 	176, 	128,			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_59, 5, 0, 0, 0} // 10: Target designator on chopper. The image is only 1/4 of the whole - repeats mirrored in H and V?
+	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0100, 0,		144, 	0,				0,				0, 	0, 	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5F, 5, 0, 0, 0},
+	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0140, 384, 	144,	0,				0,				0, 	0, 	0,		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5F, 5, 0, 0, 0}, // Flags mean just mirrored?
+	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0100, 0, 	336, 	0, 				0, 				0, 	0, 	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5C, 5, 0, 0, 0},
+	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0140, 384, 	336, 	0, 				0, 				0, 	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5C, 5, 0, 0, 0},
+	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0100, 174, 	282, 	0,				0,				0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5D, 5, 0, 0, 0},
+	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0140, 402,	282,	0,				0,				0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5D, 5, 0, 0, 0},
+	{0x300000ff, 0x7f7f7fff, 0x0023, 0x0100, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // 9: Red colour tint?
+	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0500, 256, 	176, 	128,			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_59, 5, 0, 0, 0} // 10: Target designator on chopper. The image is only 1/4 of the whole - repeats mirrored in H and V?
 };
 
 HUDPANECREATE_tag RedeemerPane = {
@@ -361,8 +391,8 @@ HUDPANECREATE_tag RedeemerPane = {
 
 
 SpriteInfo BloodSprInfo[] = {
-	{0x007f7fff, 0x7f7f7fff, 0x0900, 0x0200, 0, 	0, 		SCREEN_WIDTH, 	32,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_BLOOD_DRIP, 5, 0, 0, 0}, // Drippy edge
-	{0x007f7fff, 0x7f7f7fff, 0x0900, 0x0200, 0,		0,		SCREEN_WIDTH, 	64,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Colour fill
+	{0x007f7fff, 0x7f7f7fff, 0x0009, 0x0200, 0, 	0, 		SCREEN_WIDTH, 	32,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_BLOOD_DRIP, 5, 0, 0, 0}, // Drippy edge
+	{0x007f7fff, 0x7f7f7fff, 0x0009, 0x0200, 0,		0,		SCREEN_WIDTH, 	64,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Colour fill
 };
 
 // AUTOGEN
@@ -385,9 +415,9 @@ HUDPANECREATE_tag BloodPane = {
 
 
 SpriteInfo SightSprInfo[] = { // Left bar, Scope (square fitted to SCREEN_HEIGHT), Right bar
-	{0x7f7f7fff, 0x7f7f7fff, 0x2700, 0x0600, (SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	0, 		SCREEN_HEIGHT, 						SCREEN_HEIGHT,	0, 	0, 	0x1FF,	0x1FF, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_SNIPER_SCOPE, 5, 0, 0, 0}, // Scope graphic centre
-	{0x7f7f7fff, 0x7f7f7fff, 0x2700, 0x0200, 0,									0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill left
-	{0x7f7f7fff, 0x7f7f7fff, 0x2700, 0x0200, (SCREEN_WIDTH+SCREEN_HEIGHT)/2,	0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill right
+	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0600, (SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	0, 		SCREEN_HEIGHT, 						SCREEN_HEIGHT,	0, 	0, 	0x1FF,	0x1FF, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_SNIPER_SCOPE, 5, 0, 0, 0}, // Scope graphic centre
+	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, 0,									0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill left
+	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, (SCREEN_WIDTH+SCREEN_HEIGHT)/2,	0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill right
 };
 
 HUDPANECREATE_tag SightPane = {
@@ -405,11 +435,74 @@ HUDPANECREATE_tag SightPane = {
 	0
 };
 
+// AUTOINJECT
+void HUD_CreateAmmoPane(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj) {
+	HUD_CalcWidthHeight(paneCreate, &paneCreate->width, &paneCreate->height);
+	HUD_CreateDefault(blData, hudPane, paneCreate, obj);
+}
+
+// AUTOGEN
+void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
+
+// Anchor point is bottom-right, hence negative coordinates
+// Also, all un-tested
+// SpriteInfo AmmoSprInfo[] = {
+// 	{0x7d6d59ff, 0x000000ff, 0x001c, 0x1020, 0, 	18, 	0, 	0,	0, 	0, 	0,	0, 	Action_TranslatedText_NULLVALUE, (char*)0x161a88, (HASHCODE)0, 5, 0, 0, 0},
+// 	{0x7d6d59ff, 0x000000ff, 0x001c, 0x0020, 0, 	38, 	0, 	0,	0, 	0, 	0,	0, 	Action_TranslatedText_NULLVALUE, (char*)0x161a88, (HASHCODE)0, 5, 0, 0, 0},
+// 	{0x7d6d59ff, 0x000000ff, 0x001c, 0x1020, 0, 	38, 	0, 	0,	0, 	0, 	0,	0, 	Action_TranslatedText_NULLVALUE, (char*)0x161a88, (HASHCODE)0, 5, 0, 0, 0},
+// 	{0x7d6d59ff, 0x000000ff, 0xffff, 0x1020, -44, 	0, 		0, 	0,	0, 	0, 	0,	0, 	Action_TranslatedText_NULLVALUE, (char*)0x161a84, (HASHCODE)0, 5, 0, 0, 0},
+// 	{0x14507fff, 0x7f7f7fff, 0xffff, 0x1000, -62, 	-20,	68,	22,	0, 	0, 	0,	0, 	Action_TranslatedText_NULLVALUE, NULL, 			   SPRITE_COLOUR_FILL, 5, 0, 0, 0},
+// 	{0x7f7f7fff, 0x7f7f7fff, 0x001c, 0x1000, -25,	-64, 	25, 64, 230,0, 	25, 64, Action_TranslatedText_NULLVALUE, NULL, 			  (HASHCODE)0x03000128, 5, 0, 0, 0},
+// 	{0x4040407f, 0x7f7f7f7f, 0x001d, 0x1000, -25, 	-64, 	25, 64, 230,0,	25, 64, Action_TranslatedText_NULLVALUE, NULL, 			  (HASHCODE)0x03000128, 5, 0, 0, 0},
+// 	{0xffffffff, 0x7f7f7fff, 0x001f, 0x0900, 0,		0,		0,	0,	0,  0,	0,	0,	Action_TranslatedText_NULLVALUE, NULL, 			  TEX_CROSSHAIR_SAMURAI, 5, 0, 0, 0}
+// };
+
+HUDPANECREATE_tag AmmoPane = {
+	SCREEN_WIDTH, // Anchor point in the bottom-right
+	SCREEN_HEIGHT,
+	0,
+	0,
+	HUD_CreateAmmoPane,
+	HUD_UpdateAmmoPane,
+	// Injecting seems to break stuff? Something about text injection / we need to implement HUD_UpdateAmmoPane too?
+	//AmmoSprInfo,
+	//ARRAY_SIZE(AmmoSprInfo),
+	(SpriteInfo*)0x0017f7d0,
+	8,
+	4,
+	0x18,
+	0,
+	0
+};
+
+// AUTOGEN
+void HUD_CreateHealthPane(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj);
+
+// AUTOGEN
+void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
+
+HUDPANECREATE_tag HealthPane = {
+	50,
+	SCREEN_HEIGHT - 135,//345,
+	0,
+	0,
+	HUD_CreateHealthPane,
+	HUD_UpdateHealthPane,
+	// Injecting seems to break stuff? Something about text injection / we need to implement HUD_UpdateAmmoPane too?
+	//AmmoSprInfo,
+	//ARRAY_SIZE(AmmoSprInfo),
+	(SpriteInfo*)0x0017f9c8,
+	24,
+	0,
+	0,
+	0,
+	0
+};
 
 
 HUDPANECREATE_tag* PaneList[] = {
-	AmmoPane,
-	HealthPane,
+	&AmmoPane,
+	&HealthPane,
 	MsgMissionStatusPane,
 	MsgObjectiveStatusPane,
 	MsgInfoStatusPane,

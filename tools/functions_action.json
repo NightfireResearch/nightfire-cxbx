@@ -32844,13 +32844,13 @@
         "address": "0x000b1f90",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "BLData *",
             "HUDPANE_tag *",
             "obj_tag *"
         ],
-        "prototype_string": "undefined __cdecl HUD_UpdateAmmoPane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * param_3)",
+        "prototype_string": "void __cdecl HUD_UpdateAmmoPane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * param_3)",
         "parameters": [
             "[BLData * param_1@Stack[0x4]:4]",
             "[HUDPANE_tag * param_2@Stack[0x8]:4]",
@@ -32899,13 +32899,13 @@
         "address": "0x000b2b50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "BLData *",
             "HUDPANE_tag *",
             "obj_tag *"
         ],
-        "prototype_string": "undefined __cdecl HUD_UpdateHealthPane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * param_3)",
+        "prototype_string": "void __cdecl HUD_UpdateHealthPane(BLData * param_1, HUDPANE_tag * param_2, obj_tag * param_3)",
         "parameters": [
             "[BLData * param_1@Stack[0x4]:4]",
             "[HUDPANE_tag * param_2@Stack[0x8]:4]",
@@ -33334,7 +33334,7 @@
     {
         "name": "HUD_CreateAmmoPane",
         "address": "0x000b6270",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
@@ -33343,7 +33343,7 @@
             "undefined4",
             "obj_tag *"
         ],
-        "prototype_string": "void __stdcall HUD_CreateAmmoPane(BLData * param_1, undefined4 param_2, undefined4 param_3, obj_tag * gameObj)",
+        "prototype_string": "void HUD_CreateAmmoPane(BLData * param_1, undefined4 param_2, undefined4 param_3, obj_tag * gameObj)",
         "parameters": [
             "[BLData * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -33355,33 +33355,43 @@
     {
         "name": "HUD_CreateHealthPane",
         "address": "0x000b62a0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "BLData *",
+            "HUDPANE_tag *",
+            "HUDPANECREATE_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "undefined HUD_CreateHealthPane(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
+        "prototype_string": "void __cdecl HUD_CreateHealthPane(BLData * param_1, HUDPANE_tag * param_2, HUDPANECREATE_tag * param_3, obj_tag * param_4)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]"
+            "[BLData * param_1@Stack[0x4]:4]",
+            "[HUDPANE_tag * param_2@Stack[0x8]:4]",
+            "[HUDPANECREATE_tag * param_3@Stack[0xc]:4]",
+            "[obj_tag * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
     },
     {
         "name": "FUN_000b62e0",
         "address": "0x000b62e0",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_000b62e0()",
-        "parameters": [],
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
+        "param_types": [
+            "int",
+            "undefined2",
+            "undefined4",
+            "HUDPANE_tag *"
+        ],
+        "prototype_string": "void FUN_000b62e0(int i, undefined2 timerValue, undefined4 param_3, HUDPANE_tag * param_4)",
+        "parameters": [
+            "[int i@ECX:4]",
+            "[undefined2 timerValue@DX:2]",
+            "[undefined4 param_3@EAX:4]",
+            "[HUDPANE_tag * param_4@ESI:4]"
+        ],
         "is_thunk": false
     },
     {

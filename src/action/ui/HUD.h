@@ -37,10 +37,10 @@ typedef void (*HUDPANE_createFunc)(BLData*, HUDPANE_tag*, HUDPANECREATE_tag*, ob
 typedef void (*HUDPANE_updateFunc)(BLData*, HUDPANE_tag*, obj_tag*);
 
 typedef struct HUDPANECREATE_tag {
-    short maybePosX;
-    short maybePosY;
-    short maybeWidth;
-    short maybeHeight;
+    short posX;
+    short posY;
+    short width;
+    short height;
     HUDPANE_createFunc createFunc;
     HUDPANE_updateFunc updateFunc;
     SpriteInfo *spriteInfo;
@@ -90,8 +90,10 @@ void HUD_Reset(BLData *param_1);
 void HUD_DisableAll(BLData *param_1);
 ushort HUD_State(HUDINFO_tag *param_1, HUD_PANE_IND idx);
 void HUD_Update(BLData *playerInfo, obj_tag *obj);
+void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *param_3, obj_tag *param_4);
 
 // Implementations of individual HUD panes
+void HUD_CreateAmmoPane(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj);
 void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *param_3,obj_tag *param_4);
 void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj);
