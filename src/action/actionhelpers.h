@@ -1,8 +1,9 @@
 #ifndef ACTIONHELPERS_H_
 #define ACTIONHELPERS_H_
 
+// Original is 640x480, this is a clean 2x scaling
 #define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 1024
+#define SCREEN_HEIGHT 960
 
 #include <stddef.h> // for offsetof
 
