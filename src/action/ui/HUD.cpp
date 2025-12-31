@@ -313,7 +313,6 @@ void HUD_CreateShrink(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *pa
 #define MsgObjectiveStatusPane ((HUDPANECREATE_tag*)(0x001813ec))
 #define MsgInfoStatusPane ((HUDPANECREATE_tag*)(0x00181598))
 #define AirPane ((HUDPANECREATE_tag*)(0x0017fe8c))
-#define SightPane ((HUDPANECREATE_tag*)(0x0017ff4c))
 #define NightSightPane ((HUDPANECREATE_tag*)(0x00180218))
 #define LensFlarePane ((HUDPANECREATE_tag*)(0x0018036c))
 #define RCCarPane ((HUDPANECREATE_tag*)(0x00180690))
@@ -384,6 +383,32 @@ HUDPANECREATE_tag BloodPane = {
 	0 // Unused?
 };
 
+
+
+SpriteInfo SightSprInfo[] = { // Left bar, Scope (square fitted to SCREEN_HEIGHT), Right bar
+	{0x7f7f7fff, 0x7f7f7fff, 0x2700, 0x0600, (SCREEN_WIDTH-SCREEN_HEIGHT)/2, 				0, 		SCREEN_HEIGHT, 						SCREEN_HEIGHT,	0, 	0, 	0x1FF,	0x1FF, 	Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x03000034, 5, 0, 0, 0}, // Scope graphic centre
+	{0x7f7f7fff, 0x7f7f7fff, 0x2700, 0x0200, 0,												0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x03000002, 5, 0, 0, 0}, // Fill left
+	{0x7f7f7fff, 0x7f7f7fff, 0x2700, 0x0200, SCREEN_WIDTH-((SCREEN_WIDTH-SCREEN_HEIGHT)/2),	0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x03000002, 5, 0, 0, 0}, // Fill right
+};
+
+
+HUDPANECREATE_tag SightPane = {
+	0,
+	0,
+	SCREEN_WIDTH,
+	SCREEN_HEIGHT,
+	HUD_CreateShrink,
+	NULL, // TODO: Dummy func needed rather than null?
+	SightSprInfo,
+	ARRAY_SIZE(SightSprInfo),
+	0,
+	0x180,
+	0,
+	0
+};
+
+
+
 HUDPANECREATE_tag* PaneList[] = {
 	AmmoPane,
 	HealthPane,
@@ -391,7 +416,7 @@ HUDPANECREATE_tag* PaneList[] = {
 	MsgObjectiveStatusPane,
 	MsgInfoStatusPane,
 	AirPane, // Oxygen/Swimming indicator?
-	SightPane,
+	&SightPane,
 	NightSightPane,
 	LensFlarePane,
 	&RedeemerPane,
@@ -425,7 +450,7 @@ HUDPANECREATE_tag * MPPaneList[] = {
 	NULL,
 	MPMsgInfoStatusPane,
 	NULL,
-	SightPane,
+	&SightPane,
 	NULL,
 	NULL,
 	&RedeemerPane,
