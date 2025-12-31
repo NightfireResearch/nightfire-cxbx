@@ -325,20 +325,21 @@ void HUD_CreateShrink(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *pa
 #define SpacePane ((HUDPANECREATE_tag*)(0x00180ec4))
 #define MsgPickupStatusPane ((HUDPANECREATE_tag*)(0x00181774))
 
+
 // AUTOGEN
 void HUD_CreateRedeemer(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj);
 
 SpriteInfo RedeemerSpriteInfo[] = {
 	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0500, 256, 	176, 	128, 			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5E, 5, 0, 0, 0}, // 0: Central reticle. The image is only 1/4 of the whole - repeats mirrored in H and V?
 	{0xffffff40, 0x7f7f7fff, 0x2200, 0x0100, 0,		0,		SCREEN_WIDTH, 	SCREEN_HEIGHT,	0, 	0, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_4A, 5, 0, 0, 0}, // 1: Static lines
-	{0x7f7f7fff, 0x7f7f7fff, 0xffff, 0x0200, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0, 	0, 	0, 		0,		Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x03000002, 5, 0, 0, 0}, // 2: Blackout on missile destroyed
+	{0x7f7f7fff, 0x7f7f7fff, 0xffff, 0x0200, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0, 	0, 	0, 		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // 2: Blackout on missile destroyed
 	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0100, 0,		144, 	0,				0,				0, 	0, 	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5F, 5, 0, 0, 0},
 	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0140, 384, 	144,	0,				0,				0, 	0, 	0,		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5F, 5, 0, 0, 0}, // Flags mean just mirrored?
 	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0100, 0, 	336, 	0, 				0, 				0, 	0, 	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5C, 5, 0, 0, 0},
 	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0140, 384, 	336, 	0, 				0, 				0, 	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5C, 5, 0, 0, 0},
 	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0100, 174, 	282, 	0,				0,				0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5D, 5, 0, 0, 0},
 	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0140, 402,	282,	0,				0,				0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5D, 5, 0, 0, 0},
-	{0x300000ff, 0x7f7f7fff, 0x2300, 0x0100, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x03000002, 5, 0, 0, 0}, // 9: Red colour tint?
+	{0x300000ff, 0x7f7f7fff, 0x2300, 0x0100, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // 9: Red colour tint?
 	{0x7f7f7f78, 0x7f7f7fff, 0x2200, 0x0500, 256, 	176, 	128,			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_59, 5, 0, 0, 0} // 10: Target designator on chopper. The image is only 1/4 of the whole - repeats mirrored in H and V?
 };
 
@@ -360,13 +361,12 @@ HUDPANECREATE_tag RedeemerPane = {
 
 
 SpriteInfo BloodSprInfo[] = {
-	{0x007f7fff, 0x7f7f7fff, 0x0900, 0x0200, 0, 	0, 		SCREEN_WIDTH, 	32,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x0300005A, 5, 0, 0, 0}, // Drippy edge
-	{0x007f7fff, 0x7f7f7fff, 0x0900, 0x0200, 0,		0,		SCREEN_WIDTH, 	64,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x03000002, 5, 0, 0, 0}, // Colour fill
+	{0x007f7fff, 0x7f7f7fff, 0x0900, 0x0200, 0, 	0, 		SCREEN_WIDTH, 	32,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_BLOOD_DRIP, 5, 0, 0, 0}, // Drippy edge
+	{0x007f7fff, 0x7f7f7fff, 0x0900, 0x0200, 0,		0,		SCREEN_WIDTH, 	64,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Colour fill
 };
 
 // AUTOGEN
 void HUD_UpdateBloodPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
-
 
 HUDPANECREATE_tag BloodPane = {
 	0,
@@ -384,13 +384,11 @@ HUDPANECREATE_tag BloodPane = {
 };
 
 
-
 SpriteInfo SightSprInfo[] = { // Left bar, Scope (square fitted to SCREEN_HEIGHT), Right bar
-	{0x7f7f7fff, 0x7f7f7fff, 0x2700, 0x0600, (SCREEN_WIDTH-SCREEN_HEIGHT)/2, 				0, 		SCREEN_HEIGHT, 						SCREEN_HEIGHT,	0, 	0, 	0x1FF,	0x1FF, 	Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x03000034, 5, 0, 0, 0}, // Scope graphic centre
-	{0x7f7f7fff, 0x7f7f7fff, 0x2700, 0x0200, 0,												0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x03000002, 5, 0, 0, 0}, // Fill left
-	{0x7f7f7fff, 0x7f7f7fff, 0x2700, 0x0200, SCREEN_WIDTH-((SCREEN_WIDTH-SCREEN_HEIGHT)/2),	0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, (HASHCODE)0x03000002, 5, 0, 0, 0}, // Fill right
+	{0x7f7f7fff, 0x7f7f7fff, 0x2700, 0x0600, (SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	0, 		SCREEN_HEIGHT, 						SCREEN_HEIGHT,	0, 	0, 	0x1FF,	0x1FF, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_SNIPER_SCOPE, 5, 0, 0, 0}, // Scope graphic centre
+	{0x7f7f7fff, 0x7f7f7fff, 0x2700, 0x0200, 0,									0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill left
+	{0x7f7f7fff, 0x7f7f7fff, 0x2700, 0x0200, (SCREEN_WIDTH+SCREEN_HEIGHT)/2,	0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill right
 };
-
 
 HUDPANECREATE_tag SightPane = {
 	0,
@@ -398,7 +396,7 @@ HUDPANECREATE_tag SightPane = {
 	SCREEN_WIDTH,
 	SCREEN_HEIGHT,
 	HUD_CreateShrink,
-	NULL, // TODO: Dummy func needed rather than null?
+	NULL, // Game uses a dummy function here but NULL is valid too
 	SightSprInfo,
 	ARRAY_SIZE(SightSprInfo),
 	0,
