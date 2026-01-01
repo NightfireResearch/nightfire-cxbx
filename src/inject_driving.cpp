@@ -3,6 +3,7 @@
 #include "driving/logging.h"
 #include "driving/UFileLoader.h"
 #include "driving/main.h"
+#include "driving/Scheduler.hpp"
 #include "common/launchInfo.h"
 
 #include "cxbx/cxbxbinding.h"
@@ -60,6 +61,16 @@ void Scheduler__Run(int i);
 void EventManager__RunEvents(void);
 void EventManager__Init(void);
 
+
+// Wrapper to extract function pointer
+template<typename T, typename U>
+inline size_t GetFunctionAddress(U T::*func) {
+    union { U T::*mfp; size_t addr; } u;
+    u.mfp = func;
+    return u.addr;
+}
+
+
 void Inject()
 {
 
@@ -109,8 +120,8 @@ void Inject()
   // WriteMemory(0x001caf68, &addr_of_eamalloc, 4);
 
   // Audio debug
-	*(char*)(0x001e4760) = 1; // Mixer
-	*(char*)(0x001e4761) = 1; // Info
+	*(char*)(0x001e4760) = 0; // Mixer
+	*(char*)(0x001e4761) = 0; // Info
 
   // Resolution of RRenderer
   // Function 0007cfb0 sets a default 640x480
@@ -132,14 +143,13 @@ void Inject()
 
   WriteJmpTo(0x00117610, (size_t)&UFileLoader__FileLoad);
 
-  // Binary patch - badly hack around a bug in the scheduler that causes the game to stall out.
-  // this fix is terrible, vibration goes weird and animation in pause menu is bad, but it works
-  // better than the stuttery lockups that happen otherwise
-  WriteByte(0x05bb48, 0xb8);
-  WriteByte(0x05bb49, 0x01);
-  WriteByte(0x05bb4a, 0x00);
-  WriteByte(0x05bb4b, 0x00);
-  WriteByte(0x05bb4c, 0x00);
+
+  // Inject a whole new working version of the scheduler
+  WriteJmpTo(0x0005ba80, GetFunctionAddress(&Scheduler::Run));
+
+  // Lens flare is bugged. This just replaces the call to DrawFlares with a NOP
+  FillBytes(0x0009e6c9, NOP, 13);
+
   /*
    * Function Patching
    */
