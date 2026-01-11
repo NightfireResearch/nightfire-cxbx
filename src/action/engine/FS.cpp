@@ -274,7 +274,7 @@ void maybeEDL_DecompressSection(int numBlocks, uint32_t *param_2);
 bool FS_OpInProgressWithCleanup(void);
 
 // AUTOGEN
-void maybeFatalErrorHandler(void);
+void FS_FatalErrorHandler(void);
 
 // Not autoinjected - calling convention is mangled in real code
 void FS_ReadFromActualFile(undefined4 len, void *fileOut, undefined4 offsetLow, undefined4 offsetHigh, uint idx) {
@@ -310,7 +310,7 @@ bool FS_StateMachineIterate(void) {
                 crc = crc32buf((uint8_t*)FileSystem.someDataPtr, FileSystem.someDataLen);
                 if (FileSystem.maybeFileHeader[FileSystem.maybeActiveArchiveNum].dataCrc != crc) {
                     NF_ASSERT(false, "CRC mismatch found in file loader state machine");
-                    maybeFatalErrorHandler();
+                    FS_FatalErrorHandler();
                 }
                 FileSystem.maybeFileLoadState = FileSystem.maybeNoMorePending ? FLSM_MAYBE_CACHE_FILE_WRITE : FLSM_LOAD_FROM_DISC;
                 return true;
@@ -336,3 +336,16 @@ bool FS_StateMachineIterate(void) {
 
     }
 }
+
+// AUTOINJECT
+int FS_GetFileSize(char *filename) {
+
+    int idx = _FS_MatchFilenameToHeader(filename);
+    if (idx == -1) {
+        FS_FatalErrorHandler();
+    }
+
+    return (FileSystem.maybeFileHeader[idx].maybeSizeLow + (FileSystem.maybeFileHeader[idx].maybeFlags & FLAG_IS_EDL_COMPRESSED ? 0x800 : 0));
+}
+
+

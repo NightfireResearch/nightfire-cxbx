@@ -6,5 +6,7 @@
 int FS_MatchFilenameToHeader(char* filename);
 void FS_Init(void);
 bool FS_StateMachineIterate(void);
+int FS_GetFileSize(char *filename);
+
 
 #endif // FS_H_
