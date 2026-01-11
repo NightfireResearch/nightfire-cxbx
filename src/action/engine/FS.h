@@ -5,5 +5,6 @@
 
 int FS_MatchFilenameToHeader(char* filename);
 void FS_Init(void);
+bool FS_StateMachineIterate(void);
 
 #endif // FS_H_

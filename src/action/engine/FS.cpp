@@ -7,6 +7,8 @@
 
 #define SOME_BUFFER_SIZE 0x13800
 
+#define FLAG_IS_EDL_COMPRESSED (1 << 1)
+
 #pragma pack(push, 1)
 
 typedef struct {
@@ -19,8 +21,14 @@ typedef struct {
 typedef struct {
     uint32_t nameCrc;
     uint32_t dataCrc;
-    //...
-    char unknown[0x26-8];
+    uint32_t unknown1;
+    uint32_t offsetLow;
+    uint32_t offsetHigh;
+    uint32_t len;
+    uint32_t maybeSizeLow;
+    uint8_t maybeFlags; // size high?
+    uint8_t unknown2;
+    char unknown3[8];
 } MaybeFileHeader;
 
 static_assert(sizeof(MaybeArchiveHeader) == 0x28, "Bad size for MaybeArchiveHeader");
@@ -33,15 +41,18 @@ typedef struct {
     MaybeFileHeader *maybeFileHeader;
     int filesysHandles[64];
     int CacheFileHandleIdx;
-    char unknown[4];
+    char maybeNoMorePending;
+    char unknown[3];
     int maybeActiveWritingFile;
     int maybeFileLoadState;
     int maybeActiveArchiveNum;
-    char unknown2[4];
+    int maybeNumCompressedBlocks;
     void* someDataPtr;
     char unknown3[12];
     int someDataLen;
-    char unknown4[12];
+    int filesysIdx;
+    int someOffset;
+    char unknown4[4];
 } FileSystem_t;
 
 static_assert(sizeof(FileSystem_t) == 0x13a40, "Bad size for FileSystem_t");
@@ -149,14 +160,7 @@ int openOrCreateFile(char *nameRelated,char shareAccess); // "shareAccess" might
 // AUTOGEN
 int readFromFileBlocking(HANDLE fileHandle, void* buffer, ULONG len, undefined4 *error_code, IO_STATUS_BLOCK *param_5);
 
-void call_maybeReadFile(
-    void *fileOut,
-    undefined4 param_2,
-    undefined4 param_3,
-    undefined4 param_4,
-    undefined4 idx
-)
-{
+void call_maybeReadFile(void *fileOut, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 idx) {
     __asm {
         // Move idx into EDI as required
         mov     edi, idx
@@ -202,6 +206,7 @@ void FS_Init(void) {
     memset(&FileSystem, 0, sizeof(FileSystem));
 
     // Set up the path normalisation table
+    // This lookup converts to lowercase, and uses backslash for separators
     for(int i = 0; i < 256; i++) {
         FileSystem.PathNormalisationTable[i] = i < 128 ? maybeToLower(i) : i;
     }
@@ -218,7 +223,7 @@ void FS_Init(void) {
         char filename[256];
         snprintf(filename, sizeof(filename), "d:\\eurocom\\filesys.d%02d", filesysAt);
         
-        printf("Opening  %s\n", filename);                                            
+        printf("Opening %s\n", filename);                                            
         FileSystem.filesysHandles[filesysAt] = openOrCreateFile(filename, 0);
         
         // The first filesys file contains the metadata - load it
@@ -244,4 +249,90 @@ void FS_Init(void) {
     // Irrelevant in the modern context where the "DVD" is an ISO sitting on an SSD.
     FileSystem.CacheFileHandleIdx = 0;
 
+}
+
+typedef enum {
+    FLSM_FINISHED = 0,
+    FLSM_BEGIN_LOADING = 1,
+    FLSM_DECOMPRESS_IF_REQD = 2,
+    FLSM_LOAD_FROM_DISC = 3,
+    FLSM_CHECK_CRC = 4,
+    FLSM_MAYBE_CACHE_FILE_WRITE = 5,
+    FLSM_MAYBE_CACHE_HEADER_WRITE = 6,
+    FLSM_CACHE_FILE = 7,
+    FLSM_CACHED_FILE = 8,
+    FLSM_LOAD_FROM_CACHE = 9,
+    FLSM_A,
+    FLSM_B,
+    FLSM_C
+} FileSystemStateMachine;
+
+// AUTOGEN
+void maybeEDL_DecompressSection(int numBlocks, uint32_t *param_2);
+
+// AUTOGEN
+bool FS_OpInProgressWithCleanup(void);
+
+// AUTOGEN
+void maybeFatalErrorHandler(void);
+
+// Not autoinjected - calling convention is mangled in real code
+void FS_ReadFromActualFile(undefined4 len, void *fileOut, undefined4 offsetLow, undefined4 offsetHigh, uint idx) {
+    FileSystem.maybeActiveWritingFile = idx;
+    call_maybeReadFile(fileOut,len,offsetLow,offsetHigh,idx);
+}
+
+// AUTOINJECT
+bool FS_StateMachineIterate(void) {
+
+    if(FileSystem.maybeFileLoadState == FLSM_FINISHED)
+        return false;
+
+    // If no operation is in progress, but we're not in the FINISHED state, we need to set up
+    // the next operation.
+    if((FileSystem.maybeFileLoadState == FLSM_BEGIN_LOADING) || !FS_OpInProgressWithCleanup()) {
+
+        uint32_t crc;
+
+        switch(FileSystem.maybeFileLoadState) {
+
+            case FLSM_BEGIN_LOADING:
+                // TODO: Cache checks would go here if we cared about caching
+                FileSystem.maybeFileLoadState = FLSM_LOAD_FROM_DISC;
+                return true;
+
+            case FLSM_LOAD_FROM_DISC:
+                FS_ReadFromActualFile(FileSystem.someDataLen, FileSystem.someDataPtr, FileSystem.someOffset, 0, FileSystem.filesysHandles[FileSystem.filesysIdx]);
+                FileSystem.maybeFileLoadState = FLSM_CHECK_CRC;
+                return true;
+            
+            case FLSM_CHECK_CRC:
+                crc = crc32buf((uint8_t*)FileSystem.someDataPtr, FileSystem.someDataLen);
+                if (FileSystem.maybeFileHeader[FileSystem.maybeActiveArchiveNum].dataCrc != crc) {
+                    NF_ASSERT(false, "CRC mismatch found in file loader state machine");
+                    maybeFatalErrorHandler();
+                }
+                FileSystem.maybeFileLoadState = FileSystem.maybeNoMorePending ? FLSM_MAYBE_CACHE_FILE_WRITE : FLSM_LOAD_FROM_DISC;
+                return true;
+
+            case FLSM_MAYBE_CACHE_FILE_WRITE:
+            case FLSM_MAYBE_CACHE_HEADER_WRITE: // Intentional fallthrough
+                // TODO: These cases need to be split and additional logic added if caching
+                FileSystem.maybeFileLoadState = FLSM_DECOMPRESS_IF_REQD;
+                return true;
+
+            case FLSM_DECOMPRESS_IF_REQD:
+                if ((FileSystem.maybeFileHeader[FileSystem.maybeActiveArchiveNum].maybeFlags & FLAG_IS_EDL_COMPRESSED)) {
+                    maybeEDL_DecompressSection(FileSystem.maybeNumCompressedBlocks, (uint32_t*)FileSystem.someDataPtr);
+                }
+                FileSystem.maybeFileLoadState = FLSM_FINISHED;
+                return true;
+                            
+
+
+        }        
+
+        return true;
+
+    }
 }
