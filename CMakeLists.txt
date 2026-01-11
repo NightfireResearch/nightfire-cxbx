@@ -58,6 +58,7 @@ add_library(actioninject SHARED
   src/inject_action.cpp
   src/inject.h
   src/action/game.cpp
+  src/action/main.cpp
   src/common/launchInfo.cpp
   src/action/gfx/Sprite.cpp
   src/action/engine/AINetwork.cpp

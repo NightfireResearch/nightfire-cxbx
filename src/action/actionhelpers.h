@@ -54,6 +54,7 @@ typedef void* ScriptPlayerCallback; // FIXME: Function pointer signature
 
 typedef short MallocFlags;
 
+#include "main.h"
 #include "util/bin.h"
 #include "util/hashtable.h"
 #include "util/LList.h"
