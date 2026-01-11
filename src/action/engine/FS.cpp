@@ -43,7 +43,7 @@ typedef struct {
     int CacheFileHandleIdx;
     char maybeNoMorePending;
     char unknown[3];
-    int maybeActiveWritingFile;
+    int maybeActiveFile;
     int maybeFileLoadState;
     int maybeActiveArchiveNum;
     int maybeNumCompressedBlocks;
@@ -278,8 +278,8 @@ void maybeFatalErrorHandler(void);
 
 // Not autoinjected - calling convention is mangled in real code
 void FS_ReadFromActualFile(undefined4 len, void *fileOut, undefined4 offsetLow, undefined4 offsetHigh, uint idx) {
-    FileSystem.maybeActiveWritingFile = idx;
-    call_maybeReadFile(fileOut,len,offsetLow,offsetHigh,idx);
+    FileSystem.maybeActiveFile = idx;
+    call_maybeReadFile(fileOut, len, offsetLow, offsetHigh, idx);
 }
 
 // AUTOINJECT
