@@ -9,9 +9,6 @@ int allocateAndLoadFileWithinArchive(char* a, unsigned short b, int* c) {
 }
 
 // AUTOGEN
-int FUN_000eed6b(int param_1);
-
-// AUTOGEN
 void psiFileLoadForParse(char *param_1);
 
 // AUTOINJECT

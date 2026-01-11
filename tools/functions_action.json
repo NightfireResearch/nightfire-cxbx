@@ -34798,20 +34798,22 @@
         "name": "FUN_000be630",
         "address": "0x000be630",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
             "undefined4 *",
             "uint *",
             "uint *",
-            "char *"
+            "char *",
+            "undefined4"
         ],
-        "prototype_string": "void __cdecl FUN_000be630(undefined4 * len, uint * type, uint * hash, char * maybeHcAsStr)",
+        "prototype_string": "void __cdecl FUN_000be630(undefined4 * len, uint * type, uint * hash, char * maybeHcAsStr, undefined4 param_5)",
         "parameters": [
             "[undefined4 * len@Stack[0x4]:4]",
             "[uint * type@Stack[0x8]:4]",
             "[uint * hash@Stack[0xc]:4]",
-            "[char * maybeHcAsStr@Stack[0x10]:4]"
+            "[char * maybeHcAsStr@Stack[0x10]:4]",
+            "[undefined4 param_5@EAX:4]"
         ],
         "is_thunk": false
     },
@@ -45275,55 +45277,63 @@
         "is_thunk": false
     },
     {
-        "name": "maybeAwaitCompletion",
+        "name": "FileOperationStillInProgress",
         "address": "0x000e2650",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined maybeAwaitCompletion()",
-        "parameters": [],
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
+        "return_type": "bool",
+        "param_types": [
+            "undefined4"
+        ],
+        "prototype_string": "bool FileOperationStillInProgress(undefined4 whichFileHandleIdx)",
+        "parameters": [
+            "[undefined4 whichFileHandleIdx@EAX:4]"
+        ],
         "is_thunk": false
     },
     {
         "name": "maybeReadFile",
         "address": "0x000e26e0",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "calling_convention": "__cdecl",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
         "param_types": [
+            "void *",
             "undefined4",
             "undefined4",
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined maybeReadFile(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
+        "prototype_string": "void __cdecl maybeReadFile(void * fileOut, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 idx)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
+            "[void * fileOut@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]"
+            "[undefined4 param_4@Stack[0x10]:4]",
+            "[undefined4 idx@EDI:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000e2790",
+        "name": "maybeWriteFile",
         "address": "0x000e2790",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
             "typedef PVOID void *",
             "typedef ULONG ulong",
             "undefined4",
+            "undefined4",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl FUN_000e2790(PVOID param_1, ULONG param_2, undefined4 param_3, undefined4 param_4)",
+        "prototype_string": "void __cdecl maybeWriteFile(PVOID param_1, ULONG param_2, undefined4 param_3, undefined4 param_4, undefined4 idx)",
         "parameters": [
             "[PVOID param_1@Stack[0x4]:4]",
             "[ULONG param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]"
+            "[undefined4 param_4@Stack[0x10]:4]",
+            "[undefined4 idx@EDI:4]"
         ],
         "is_thunk": false
     },
@@ -45404,28 +45414,28 @@
         "is_thunk": false
     },
     {
-        "name": "findCrcIndexWithinTable",
+        "name": "FS_MatchFilenameToHeader",
         "address": "0x000e2960",
         "calling_convention": "unknown",
         "has_custom_variable_storage": true,
         "return_type": "int",
         "param_types": [
-            "uint"
+            "char *"
         ],
-        "prototype_string": "int findCrcIndexWithinTable(uint aaa)",
+        "prototype_string": "int FS_MatchFilenameToHeader(char * maybeFname)",
         "parameters": [
-            "[uint aaa@EAX:4]"
+            "[char * maybeFname@EAX:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000e29f0",
+        "name": "calcCrcAndWriteCacheToFile",
         "address": "0x000e29f0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e29f0(void)",
+        "prototype_string": "void __stdcall calcCrcAndWriteCacheToFile(void)",
         "parameters": [],
         "is_thunk": false
     },
@@ -47556,7 +47566,7 @@
         "address": "0x000e93f0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "bool",
+        "return_type": "int",
         "param_types": [
             "typedef HANDLE PVOID",
             "typedef PVOID void *",
@@ -47564,7 +47574,7 @@
             "undefined4 *",
             "astruct_1 *"
         ],
-        "prototype_string": "bool __stdcall readFromFileBlocking(HANDLE fileHandle, PVOID buffer, ULONG len, undefined4 * error_code, astruct_1 * param_5)",
+        "prototype_string": "int __stdcall readFromFileBlocking(HANDLE fileHandle, PVOID buffer, ULONG len, undefined4 * error_code, astruct_1 * param_5)",
         "parameters": [
             "[HANDLE fileHandle@Stack[0x4]:4]",
             "[PVOID buffer@Stack[0x8]:4]",
@@ -49676,7 +49686,7 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000ee96b",
+        "name": "maybeToUpper",
         "address": "0x000ee96b",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49684,7 +49694,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "int __cdecl FUN_000ee96b(int param_1)",
+        "prototype_string": "int __cdecl maybeToUpper(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -49851,7 +49861,7 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000eed6b",
+        "name": "maybeToLower",
         "address": "0x000eed6b",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49859,7 +49869,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "int __cdecl FUN_000eed6b(int param_1)",
+        "prototype_string": "int __cdecl maybeToLower(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -50848,7 +50858,7 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000f0b0e",
+        "name": "maybeNarrowToAscii",
         "address": "0x000f0b0e",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -50857,7 +50867,7 @@
             "int",
             "ushort"
         ],
-        "prototype_string": "ushort __cdecl FUN_000f0b0e(int param_1, ushort param_2)",
+        "prototype_string": "ushort __cdecl maybeNarrowToAscii(int param_1, ushort param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[ushort param_2@Stack[0x8]:2]"

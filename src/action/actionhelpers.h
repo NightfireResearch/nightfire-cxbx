@@ -66,6 +66,7 @@ typedef short MallocFlags;
 #include "engine/Anim.h"
 #include "engine/Camera.h"
 #include "engine/Collide.h"
+#include "engine/FS.h"
 #include "engine/Loader.h"
 #include "engine/Text.h"
 #include "engine/Vision.h"
