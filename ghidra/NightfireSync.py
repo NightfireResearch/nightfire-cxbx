@@ -20,11 +20,19 @@
 # @runtime PyGhidra
 import os
 
+def paramToStr(x):
+    raw = str(x.getDataType())
+    result = raw
+    chunks = raw.split(" ")
+    if len(chunks) > 0 and chunks[0] == "typedef":
+        result = chunks[1]
+    return result    
+
 
 def export_json(side):
     function_list = []
     for f in funcs:
-        param_types = [str(x.getDataType()) for x in f.getParameters()]
+        param_types = [paramToStr(x) for x in f.getParameters()]
         function_dict = {
             "name": f.getName(),
             "address": "0x" + str(f.getEntryPoint()),
