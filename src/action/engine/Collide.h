@@ -30,7 +30,7 @@ static_assert(offsetof(HITDATA_tag, hitPosition) == 0x38, "Bad offset of hitPosi
 
 #pragma pack(pop)
 
-bool Collide_RayIntersect(_VECTOR *startPosition,_VECTOR *endPosition,cel_tag *cel,obj_tag *obj,obj_tag *param_5,HITDATA_tag **hitDataOut,char param_7,uint param_8,ushort param_9);
+bool Collide_RayIntersect(_VECTOR *startPosition,_VECTOR *endPosition,cel_tag *cel,obj_tag *obj,obj_tag *param_5,HITDATA_tag **hitDataOut,char param_7,uint maybeFlags,ushort param_9);
 void Collide_FreeHitList(HITDATA_tag **param_1);
 HITDATA_tag* Coll_GetFreeHit(void);
 bool Collide_LineOfSight(_VECTOR *param_1,_VECTOR *param_2,cel_tag *param_3,obj_tag *param_4,obj_tag *param_5,uint param_6);

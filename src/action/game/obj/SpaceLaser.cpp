@@ -133,8 +133,12 @@ void SpaceLaser_Update(obj_tag *obj) {
             Vec_Normalise(&beamDir, &beamDir); // Direction of the shot
             auxVec_AddMulR32(&spaceLaser->emitterPnt, &beamDir, 1000.0f, &beamEnd); // End = (Start + 1000 * direction)
 
-            // If the ray hits something, update the end point?
-            // TODO: What is going on here? Bug in Xbox decompilation due to register reuse? PS2 code looks sane (allocates a list of 8 HITINFOs)
+            // Cast a ray. If the ray hits something, update the end point accordingly?
+            HITDATA_tag *hitList = NULL;
+            if(Collide_RayIntersect(&spaceLaser->emitterPnt, &beamEnd, obj->inCel, obj, NULL, &hitList, 0, 0x0008, 0)) {
+                Vec_Copy(&(hitList[0].hitPosition), &spaceLaser->targetPnt);
+            }
+            Collide_FreeHitList(&hitList);
                                                               
             // Play the SFX
             Sound_Play3D(SFX_ENV_SPACE_LASER_FIRE_01, &spaceLaser->emitterPnt, 100.0f, -1.0f, -1.0f, 0, 0, 0);
