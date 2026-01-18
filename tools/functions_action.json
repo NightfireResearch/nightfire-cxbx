@@ -22135,13 +22135,13 @@
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "undefined4",
+            "char *",
             "uint",
             "ushort"
         ],
-        "prototype_string": "uint __cdecl LS_Save(undefined4 param_1, uint param_2, ushort param_3)",
+        "prototype_string": "uint __cdecl LS_Save(char * param_1, uint param_2, ushort param_3)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
+            "[char * param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]",
             "[ushort param_3@Stack[0xc]:2]"
         ],
@@ -23695,11 +23695,11 @@
             "ushort",
             "byte"
         ],
-        "prototype_string": "void __fastcall Menu_UpdateMessageBox(undefined4 param_1_00, undefined4 param_2_00, uint param_3, ushort param_4, byte param_5)",
+        "prototype_string": "void __fastcall Menu_UpdateMessageBox(undefined4 param_1_00, undefined4 param_2_00, uint managerNum, ushort param_4, byte param_5)",
         "parameters": [
             "[undefined4 param_1_00@ECX:4]",
             "[undefined4 param_2_00@EDX:4]",
-            "[uint param_3@Stack[0x4]:4]",
+            "[uint managerNum@Stack[0x4]:4]",
             "[ushort param_4@Stack[0x8]:2]",
             "[byte param_5@Stack[0xc]:1]"
         ],
@@ -24620,29 +24620,35 @@
     {
         "name": "FUN_0007fef0",
         "address": "0x0007fef0",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
         "param_types": [
+            "int",
+            "byte",
+            "undefined4",
+            "byte",
             "undefined4",
             "undefined4",
+            "HASHCODE",
             "undefined4",
             "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined1"
+            "undefined1",
+            "undefined4"
         ],
-        "prototype_string": "undefined FUN_0007fef0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7, undefined1 param_8)",
+        "prototype_string": "void FUN_0007fef0(int param_1_00, byte param_2_00, undefined4 param_3, byte param_4, undefined4 param_5, undefined4 param_6, HASHCODE param_7, undefined4 param_8, undefined4 param_9, undefined1 param_10, undefined4 param_11)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined4 param_5@Stack[0x14]:4]",
-            "[undefined4 param_6@Stack[0x18]:4]",
-            "[undefined4 param_7@Stack[0x1c]:4]",
-            "[undefined1 param_8@Stack[0x20]:1]"
+            "[int param_1_00@ECX:4]",
+            "[byte param_2_00@DL:1]",
+            "[undefined4 param_3@Stack[0x4]:4]",
+            "[byte param_4@Stack[0x8]:1]",
+            "[undefined4 param_5@Stack[0xc]:4]",
+            "[undefined4 param_6@Stack[0x10]:4]",
+            "[HASHCODE param_7@Stack[0x14]:4]",
+            "[undefined4 param_8@Stack[0x18]:4]",
+            "[undefined4 param_9@Stack[0x1c]:4]",
+            "[undefined1 param_10@Stack[0x20]:1]",
+            "[undefined4 param_11@EAX:4]"
         ],
         "is_thunk": false
     },
@@ -27171,15 +27177,15 @@
         "has_custom_variable_storage": false,
         "return_type": "ulonglong",
         "param_types": [
-            "int * *",
+            "M_MANAGER *",
             "undefined4",
-            "undefined4 *"
+            "MENU_LS *"
         ],
-        "prototype_string": "ulonglong __cdecl XBox_DoSaveFlow(int * * param_1, undefined4 param_2, undefined4 * param_3)",
+        "prototype_string": "ulonglong __cdecl XBox_DoSaveFlow(M_MANAGER * param_1, undefined4 param_2, MENU_LS * param_3)",
         "parameters": [
-            "[int * * param_1@Stack[0x4]:4]",
+            "[M_MANAGER * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 * param_3@Stack[0xc]:4]"
+            "[MENU_LS * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -31469,14 +31475,16 @@
         "name": "Player_ZeroG",
         "address": "0x000aa6f0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
+            "BLData *",
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Player_ZeroG(obj_tag * param_1)",
+        "prototype_string": "void __cdecl Player_ZeroG(BLData * param_1, obj_tag * param_2)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]"
+            "[BLData * param_1@ESI:4]",
+            "[obj_tag * param_2@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -43169,16 +43177,16 @@
     {
         "name": "ShowLoadProgressScreen",
         "address": "0x000dc8a0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall ShowLoadProgressScreen(void)",
+        "prototype_string": "void ShowLoadProgressScreen(void)",
         "parameters": [],
         "is_thunk": false
     },
     {
-        "name": "allocateAndLoadFileWithinArchive",
+        "name": "FS_AllocateAndLoadBlocking",
         "address": "0x000dc990",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -43188,7 +43196,7 @@
             "MallocFlags",
             "int *"
         ],
-        "prototype_string": "void * __cdecl allocateAndLoadFileWithinArchive(char * filename, MallocFlags allocType, int * param_3)",
+        "prototype_string": "void * __cdecl FS_AllocateAndLoadBlocking(char * filename, MallocFlags allocType, int * param_3)",
         "parameters": [
             "[char * filename@Stack[0x4]:4]",
             "[MallocFlags allocType@Stack[0x8]:2]",
@@ -44037,7 +44045,7 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000dfe10",
+        "name": "psiSaveData",
         "address": "0x000dfe10",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -44047,7 +44055,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000dfe10(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined psiSaveData(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -45277,7 +45285,7 @@
         "is_thunk": false
     },
     {
-        "name": "FileOperationStillInProgress",
+        "name": "FS_OperationInProgress",
         "address": "0x000e2650",
         "calling_convention": "default",
         "has_custom_variable_storage": true,
@@ -45285,9 +45293,9 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "bool FileOperationStillInProgress(undefined4 whichFileHandleIdx)",
+        "prototype_string": "bool FS_OperationInProgress(undefined4 whichFileOperationIdx)",
         "parameters": [
-            "[undefined4 whichFileHandleIdx@EAX:4]"
+            "[undefined4 whichFileOperationIdx@EAX:4]"
         ],
         "is_thunk": false
     },
@@ -45304,12 +45312,12 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl maybeReadFile(void * fileOut, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 idx)",
+        "prototype_string": "void __cdecl maybeReadFile(void * fileOut, undefined4 len, undefined4 offsetLow, undefined4 offsetHigh, undefined4 idx)",
         "parameters": [
             "[void * fileOut@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
+            "[undefined4 len@Stack[0x8]:4]",
+            "[undefined4 offsetLow@Stack[0xc]:4]",
+            "[undefined4 offsetHigh@Stack[0x10]:4]",
             "[undefined4 idx@EDI:4]"
         ],
         "is_thunk": false
@@ -45327,12 +45335,12 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl maybeWriteFile(PVOID param_1, ULONG param_2, undefined4 param_3, undefined4 param_4, undefined4 idx)",
+        "prototype_string": "void __cdecl maybeWriteFile(PVOID buf, ULONG len, undefined4 offsetLow, undefined4 offsetHigh, undefined4 idx)",
         "parameters": [
-            "[PVOID param_1@Stack[0x4]:4]",
-            "[ULONG param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
+            "[PVOID buf@Stack[0x4]:4]",
+            "[ULONG len@Stack[0x8]:4]",
+            "[undefined4 offsetLow@Stack[0xc]:4]",
+            "[undefined4 offsetHigh@Stack[0x10]:4]",
             "[undefined4 idx@EDI:4]"
         ],
         "is_thunk": false
@@ -45353,18 +45361,18 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000e28a0",
+        "name": "FS_OpInProgressWithCleanup",
         "address": "0x000e28a0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall FUN_000e28a0(void)",
+        "prototype_string": "bool FS_OpInProgressWithCleanup(void)",
         "parameters": [],
         "is_thunk": false
     },
     {
-        "name": "ReadFromSpecialFile",
+        "name": "FS_ReadFromActualFile",
         "address": "0x000e2900",
         "calling_convention": "__fastcall",
         "has_custom_variable_storage": true,
@@ -45374,42 +45382,38 @@
             "undefined4",
             "undefined4",
             "undefined4",
-            "undefined4",
             "uint"
         ],
-        "prototype_string": "void __fastcall ReadFromSpecialFile(undefined4 param_1_00, undefined4 param_2_00, undefined4 param_3, undefined4 param_4, undefined4 param_5, uint param_6)",
+        "prototype_string": "void __fastcall FS_ReadFromActualFile(undefined4 len, undefined4 fileOut, undefined4 offsetLow, undefined4 offsetHigh, uint idx)",
         "parameters": [
-            "[undefined4 param_1_00@ECX:4]",
-            "[undefined4 param_2_00@EDX:4]",
-            "[undefined4 param_3@Stack[0x4]:4]",
-            "[undefined4 param_4@Stack[0x8]:4]",
-            "[undefined4 param_5@Stack[0xc]:4]",
-            "[uint param_6@EAX:4]"
+            "[undefined4 len@EDX:4]",
+            "[undefined4 fileOut@Stack[0x4]:4]",
+            "[undefined4 offsetLow@Stack[0x8]:4]",
+            "[undefined4 offsetHigh@Stack[0xc]:4]",
+            "[uint idx@EAX:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000e2930",
+        "name": "FS_WriteToActualFile",
         "address": "0x000e2930",
-        "calling_convention": "__fastcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "undefined4",
             "typedef ULONG ulong",
             "typedef PVOID void *",
             "undefined4",
             "undefined4",
             "uint"
         ],
-        "prototype_string": "void __fastcall FUN_000e2930(undefined4 param_1_00, ULONG param_2_00, PVOID param_3, undefined4 param_4, undefined4 param_5, uint param_6)",
+        "prototype_string": "void FS_WriteToActualFile(ULONG len, PVOID buf, undefined4 offsetLow, undefined4 offsetHigh, uint idx)",
         "parameters": [
-            "[undefined4 param_1_00@ECX:4]",
-            "[ULONG param_2_00@EDX:4]",
-            "[PVOID param_3@Stack[0x4]:4]",
-            "[undefined4 param_4@Stack[0x8]:4]",
-            "[undefined4 param_5@Stack[0xc]:4]",
-            "[uint param_6@EAX:4]"
+            "[ULONG len@EDX:4]",
+            "[PVOID buf@Stack[0x4]:4]",
+            "[undefined4 offsetLow@Stack[0x8]:4]",
+            "[undefined4 offsetHigh@Stack[0xc]:4]",
+            "[uint idx@EAX:4]"
         ],
         "is_thunk": false
     },
@@ -45451,28 +45455,28 @@
         "is_thunk": false
     },
     {
-        "name": "fileGetSize",
+        "name": "FS_GetFileSize",
         "address": "0x000e2d50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "int",
         "param_types": [
-            "int"
+            "char *"
         ],
-        "prototype_string": "int __cdecl fileGetSize(int param_1)",
+        "prototype_string": "int __cdecl FS_GetFileSize(char * param_1)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[char * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FileLoaderStateMachineIterate",
+        "name": "FS_StateMachineIterate",
         "address": "0x000e2d90",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall FileLoaderStateMachineIterate(void)",
+        "prototype_string": "bool FS_StateMachineIterate(void)",
         "parameters": [],
         "is_thunk": false
     },
@@ -45560,16 +45564,16 @@
         "is_thunk": false
     },
     {
-        "name": "LoadFromFileWithinArchive",
+        "name": "FS_LoadFileIfReady",
         "address": "0x000e3280",
-        "calling_convention": "__cdecl",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "char *",
             "void *"
         ],
-        "prototype_string": "undefined __cdecl LoadFromFileWithinArchive(char * fileName, void * buffer)",
+        "prototype_string": "void FS_LoadFileIfReady(char * fileName, void * buffer)",
         "parameters": [
             "[char * fileName@Stack[0x4]:4]",
             "[void * buffer@Stack[0x8]:4]"
@@ -45579,12 +45583,20 @@
     {
         "name": "FUN_000e3320",
         "address": "0x000e3320",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_000e3320()",
-        "parameters": [],
+        "calling_convention": "default",
+        "has_custom_variable_storage": true,
+        "return_type": "void",
+        "param_types": [
+            "byte",
+            "undefined4",
+            "undefined4"
+        ],
+        "prototype_string": "void FUN_000e3320(byte param_1, undefined4 param_2, undefined4 param_3)",
+        "parameters": [
+            "[byte param_1@CL:1]",
+            "[undefined4 param_2@ESI:4]",
+            "[undefined4 param_3@EDI:4]"
+        ],
         "is_thunk": false
     },
     {
@@ -47391,13 +47403,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "char *",
-            "int *"
+            "int",
+            "uint32_t *"
         ],
-        "prototype_string": "void __cdecl maybeEDL_DecompressSection(char * numBlocks, int * param_2)",
+        "prototype_string": "void __cdecl maybeEDL_DecompressSection(int numBlocks, uint32_t * param_2)",
         "parameters": [
-            "[char * numBlocks@Stack[0x4]:4]",
-            "[int * param_2@Stack[0x8]:4]"
+            "[int numBlocks@Stack[0x4]:4]",
+            "[uint32_t * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
@@ -47510,13 +47522,13 @@
         "is_thunk": false
     },
     {
-        "name": "maybeFatalErrorHandler",
+        "name": "FS_FatalErrorHandler",
         "address": "0x000e9190",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall maybeFatalErrorHandler(void)",
+        "prototype_string": "void FS_FatalErrorHandler(void)",
         "parameters": [],
         "is_thunk": false
     },
@@ -47564,7 +47576,7 @@
     {
         "name": "readFromFileBlocking",
         "address": "0x000e93f0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "int",
         "param_types": [
@@ -47572,15 +47584,15 @@
             "typedef PVOID void *",
             "typedef ULONG ulong",
             "undefined4 *",
-            "astruct_1 *"
+            "IO_STATUS_BLOCK *"
         ],
-        "prototype_string": "int __stdcall readFromFileBlocking(HANDLE fileHandle, PVOID buffer, ULONG len, undefined4 * error_code, astruct_1 * param_5)",
+        "prototype_string": "int readFromFileBlocking(HANDLE fileHandle, PVOID buffer, ULONG len, undefined4 * error_code, IO_STATUS_BLOCK * param_5)",
         "parameters": [
             "[HANDLE fileHandle@Stack[0x4]:4]",
             "[PVOID buffer@Stack[0x8]:4]",
             "[ULONG len@Stack[0xc]:4]",
             "[undefined4 * error_code@Stack[0x10]:4]",
-            "[astruct_1 * param_5@Stack[0x14]:4]"
+            "[IO_STATUS_BLOCK * param_5@Stack[0x14]:4]"
         ],
         "is_thunk": false
     },
@@ -47595,15 +47607,15 @@
             "typedef PVOID void *",
             "typedef ULONG ulong",
             "undefined4 *",
-            "undefined4 *"
+            "IO_STATUS_BLOCK *"
         ],
-        "prototype_string": "undefined4 __stdcall FileWrite(HANDLE param_1, PVOID param_2, ULONG param_3, undefined4 * param_4, undefined4 * param_5)",
+        "prototype_string": "undefined4 __stdcall FileWrite(HANDLE param_1, PVOID buf, ULONG len, undefined4 * param_4, IO_STATUS_BLOCK * param_5)",
         "parameters": [
             "[HANDLE param_1@Stack[0x4]:4]",
-            "[PVOID param_2@Stack[0x8]:4]",
-            "[ULONG param_3@Stack[0xc]:4]",
+            "[PVOID buf@Stack[0x8]:4]",
+            "[ULONG len@Stack[0xc]:4]",
             "[undefined4 * param_4@Stack[0x10]:4]",
-            "[undefined4 * param_5@Stack[0x14]:4]"
+            "[IO_STATUS_BLOCK * param_5@Stack[0x14]:4]"
         ],
         "is_thunk": false
     },
@@ -47743,11 +47755,11 @@
     {
         "name": "GetLastError",
         "address": "0x000e9a24",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall GetLastError(void)",
+        "prototype_string": "undefined4 GetLastError(void)",
         "parameters": [],
         "is_thunk": false
     },
@@ -47784,21 +47796,21 @@
     {
         "name": "GetOverlappedResult",
         "address": "0x000e9a91",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "typedef HANDLE PVOID",
+            "IO_STATUS_BLOCK *",
             "int *",
-            "int *",
-            "int"
+            "bool"
         ],
-        "prototype_string": "undefined4 __stdcall GetOverlappedResult(HANDLE param_1, int * param_2, int * param_3, int param_4)",
+        "prototype_string": "bool GetOverlappedResult(HANDLE param_1, IO_STATUS_BLOCK * param_2, int * numBytesTransferred, bool wait)",
         "parameters": [
             "[HANDLE param_1@Stack[0x4]:4]",
-            "[int * param_2@Stack[0x8]:4]",
-            "[int * param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]"
+            "[IO_STATUS_BLOCK * param_2@Stack[0x8]:4]",
+            "[int * numBytesTransferred@Stack[0xc]:4]",
+            "[bool wait@Stack[0x10]:1]"
         ],
         "is_thunk": false
     },
@@ -48362,11 +48374,11 @@
     {
         "name": "GetParentalControlSettings",
         "address": "0x000eade1",
-        "calling_convention": "__stdcall",
+        "calling_convention": "default",
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall GetParentalControlSettings(void)",
+        "prototype_string": "undefined4 GetParentalControlSettings(void)",
         "parameters": [],
         "is_thunk": false
     },
@@ -48453,10 +48465,10 @@
             "uint",
             "int"
         ],
-        "prototype_string": "NTSTATUS __stdcall FUN_000eaeb9(HANDLE param_1, uint param_2, int param_3)",
+        "prototype_string": "NTSTATUS __stdcall FUN_000eaeb9(HANDLE handle, uint maybeTimeout, int param_3)",
         "parameters": [
-            "[HANDLE param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]",
+            "[HANDLE handle@Stack[0x4]:4]",
+            "[uint maybeTimeout@Stack[0x8]:4]",
             "[int param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false
@@ -48479,7 +48491,7 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000eaf4f",
+        "name": "AwaitResult",
         "address": "0x000eaf4f",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -48488,10 +48500,10 @@
             "typedef HANDLE PVOID",
             "uint"
         ],
-        "prototype_string": "void __stdcall FUN_000eaf4f(HANDLE param_1, uint param_2)",
+        "prototype_string": "void __stdcall AwaitResult(HANDLE handle, uint maybeTimeout)",
         "parameters": [
-            "[HANDLE param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]"
+            "[HANDLE handle@Stack[0x4]:4]",
+            "[uint maybeTimeout@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },

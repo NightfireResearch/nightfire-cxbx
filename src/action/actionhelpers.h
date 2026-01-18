@@ -74,6 +74,7 @@ typedef short MallocFlags;
 #include "engine/psiGraphics.h"
 #include "engine/psiInput.h"
 #include "engine/Woman.h"
+#include "engine/XboxSettings.h"
 #include "game/Autoaim.h"
 #include "game/Upgrade.h"
 #include "game/drone/Drone.h"
