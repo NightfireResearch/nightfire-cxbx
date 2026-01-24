@@ -226,10 +226,9 @@ void FS_Init(void) {
         printf("Opening %s\n", filename);                                            
         FileSystem.filesysHandles[filesysAt] = openOrCreateFile(filename, 0);
         
-        // The first filesys file contains the metadata - load it
         if(filesysAt == 0) {
             do {
-                /* This corresponds with the number of 0 bytes in filesys.dxx */
+                // Load the KXF header / metadata (only found in the first of the files)
                 call_maybeReadFile(FileSystem.ramCache, 0x13800, 0, 0, FileSystem.filesysHandles[0]);
                 
                 // Await completion of the file operation
