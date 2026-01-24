@@ -327,7 +327,7 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "typedef uint32_t uint"
+            "uint32_t"
         ],
         "prototype_string": "undefined4 __cdecl AnimScriptPeekSeq(uint32_t param_1)",
         "parameters": [
@@ -488,7 +488,7 @@
         "has_custom_variable_storage": true,
         "return_type": "sAnimSeq_tag *",
         "param_types": [
-            "typedef size_t ulong",
+            "size_t",
             "MallocFlags"
         ],
         "prototype_string": "sAnimSeq_tag * __cdecl AnimSeqNew(size_t sizeBytes, MallocFlags param_2)",
@@ -2203,17 +2203,17 @@
         "address": "0x0001c320",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "bool",
         "param_types": [
-            "int",
-            "int",
+            "Drone_tag *",
+            "obj_tag *",
             "float",
             "int"
         ],
-        "prototype_string": "uint __cdecl BOTSTATE_isPathWithinObjectRange(int param_1, int param_2, float param_3, int param_4)",
+        "prototype_string": "bool __cdecl BOTSTATE_isPathWithinObjectRange(Drone_tag * param_1, obj_tag * param_2, float param_3, int param_4)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
+            "[Drone_tag * param_1@Stack[0x4]:4]",
+            "[obj_tag * param_2@Stack[0x8]:4]",
             "[float param_3@Stack[0xc]:4]",
             "[int param_4@Stack[0x10]:4]"
         ],
@@ -4635,18 +4635,18 @@
         "address": "0x00028cf0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined2",
+        "return_type": "bool",
         "param_types": [
-            "int",
-            "float *",
-            "float *",
+            "HITTEST_tag *",
+            "_VECTOR *",
+            "_VECTOR *",
             "float *"
         ],
-        "prototype_string": "undefined2 __cdecl Intersect_RayBox(int param_1, float * param_2, float * param_3, float * param_4)",
+        "prototype_string": "bool __cdecl Intersect_RayBox(HITTEST_tag * hitTest, _VECTOR * someMin, _VECTOR * someMax, float * param_4)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]",
-            "[float * param_3@Stack[0xc]:4]",
+            "[HITTEST_tag * hitTest@Stack[0x4]:4]",
+            "[_VECTOR * someMin@Stack[0x8]:4]",
+            "[_VECTOR * someMax@Stack[0xc]:4]",
             "[float * param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false
@@ -4910,31 +4910,31 @@
         "return_type": "void",
         "param_types": [
             "_VECTOR *",
-            "int"
+            "HITDATA_tag *"
         ],
-        "prototype_string": "void __cdecl Intersect_CylGeom(_VECTOR * param_1, int param_2)",
+        "prototype_string": "void __cdecl Intersect_CylGeom(_VECTOR * param_1, HITDATA_tag * param_2)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[HITDATA_tag * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_0002aa80",
+        "name": "Collide_PickObj",
         "address": "0x0002aa80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "float",
-            "float",
-            "undefined4"
+            "HITTEST_tag *",
+            "obj_tag *",
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_0002aa80(float param_1, float param_2, undefined4 EAX)",
+        "prototype_string": "void __cdecl Collide_PickObj(HITTEST_tag * param_1, obj_tag * param_2, obj_tag * param_3)",
         "parameters": [
-            "[float param_1@Stack[0x4]:4]",
-            "[float param_2@Stack[0x8]:4]",
-            "[undefined4 EAX@EAX:4]"
+            "[HITTEST_tag * param_1@EAX:4]",
+            "[obj_tag * param_2@Stack[0x4]:4]",
+            "[obj_tag * param_3@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
@@ -5006,21 +5006,21 @@
     {
         "name": "Collide_GetDamageNObjects",
         "address": "0x0002b350",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "float",
         "param_types": [
-            "undefined4",
-            "undefined4",
+            "HITDATA_tag *",
+            "obj_tag * *",
             "undefined4",
             "undefined2"
         ],
-        "prototype_string": "undefined Collide_GetDamageNObjects(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined2 param_4)",
+        "prototype_string": "float __cdecl Collide_GetDamageNObjects(HITDATA_tag * hitDatas, obj_tag * * objectList, undefined4 objectListIndices, undefined2 numObjectsInList)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined2 param_4@Stack[0x10]:2]"
+            "[HITDATA_tag * hitDatas@Stack[0x4]:4]",
+            "[obj_tag * * objectList@Stack[0x8]:4]",
+            "[undefined4 objectListIndices@Stack[0xc]:4]",
+            "[undefined2 numObjectsInList@Stack[0x10]:2]"
         ],
         "is_thunk": false
     },
@@ -5103,9 +5103,9 @@
         "param_types": [
             "HITTEST_tag *"
         ],
-        "prototype_string": "void __cdecl Collide_Pick(HITTEST_tag * param_1)",
+        "prototype_string": "void __cdecl Collide_Pick(HITTEST_tag * hitTest)",
         "parameters": [
-            "[HITTEST_tag * param_1@Stack[0x4]:4]"
+            "[HITTEST_tag * hitTest@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -5137,15 +5137,13 @@
         "param_types": [
             "HITTEST_tag *",
             "HITDATA_tag * *",
-            "int",
             "ushort"
         ],
-        "prototype_string": "void __cdecl Collide_CylinderIntersect(HITTEST_tag * test, HITDATA_tag * * hitList, int param_3, ushort param_4)",
+        "prototype_string": "void __cdecl Collide_CylinderIntersect(HITTEST_tag * test, HITDATA_tag * * hitList, ushort param_3)",
         "parameters": [
             "[HITTEST_tag * test@EDI:4]",
             "[HITDATA_tag * * hitList@Stack[0x4]:4]",
-            "[int param_3@Stack[0x8]:4]",
-            "[ushort param_4@AX:2]"
+            "[ushort param_3@AX:2]"
         ],
         "is_thunk": false
     },
@@ -5166,7 +5164,7 @@
             "uint",
             "undefined2"
         ],
-        "prototype_string": "bool __cdecl Collide_RayIntersect(_VECTOR * startPos, _VECTOR * endPos, cel_tag * cel, obj_tag * param_4, obj_tag * param_5, HITDATA_tag * * hitList, char param_7, uint param_8, undefined2 param_9)",
+        "prototype_string": "bool __cdecl Collide_RayIntersect(_VECTOR * startPos, _VECTOR * endPos, cel_tag * cel, obj_tag * param_4, obj_tag * param_5, HITDATA_tag * * hitList, char param_7, uint collisionMaskTypes, undefined2 param_9)",
         "parameters": [
             "[_VECTOR * startPos@Stack[0x4]:4]",
             "[_VECTOR * endPos@Stack[0x8]:4]",
@@ -5175,7 +5173,7 @@
             "[obj_tag * param_5@Stack[0x14]:4]",
             "[HITDATA_tag * * hitList@Stack[0x18]:4]",
             "[char param_7@Stack[0x1c]:1]",
-            "[uint param_8@Stack[0x20]:4]",
+            "[uint collisionMaskTypes@Stack[0x20]:4]",
             "[undefined2 param_9@Stack[0x24]:2]"
         ],
         "is_thunk": false
@@ -34972,7 +34970,7 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "typedef uint32_t uint"
+            "uint32_t"
         ],
         "prototype_string": "bool __cdecl LoadableReload(uint32_t param_1)",
         "parameters": [
@@ -35527,7 +35525,7 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "typedef uint32_t uint"
+            "uint32_t"
         ],
         "prototype_string": "void __cdecl Script_FreeFromHashTable(uint32_t param_1)",
         "parameters": [
@@ -35761,12 +35759,12 @@
         "address": "0x000c2700",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "obj_tag *",
         "param_types": [
             "SCRIPTINFO *",
             "ushort"
         ],
-        "prototype_string": "undefined4 __cdecl Script_GetObj(SCRIPTINFO * param_1, ushort param_2)",
+        "prototype_string": "obj_tag * __cdecl Script_GetObj(SCRIPTINFO * param_1, ushort param_2)",
         "parameters": [
             "[SCRIPTINFO * param_1@Stack[0x4]:4]",
             "[ushort param_2@Stack[0x8]:2]"
@@ -36195,9 +36193,9 @@
     {
         "name": "SP_GetHitDamage",
         "address": "0x000c4370",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "float",
         "param_types": [
             "obj_tag *",
             "obj_tag * *",
@@ -36206,12 +36204,12 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined SP_GetHitDamage(obj_tag * param_1, obj_tag * * param_2, undefined2 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6)",
+        "prototype_string": "float __cdecl SP_GetHitDamage(obj_tag * param_1, obj_tag * * param_2, undefined2 param_3, undefined4 indexList, undefined4 param_5, undefined4 param_6)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
             "[obj_tag * * param_2@Stack[0x8]:4]",
             "[undefined2 param_3@Stack[0xc]:2]",
-            "[undefined4 param_4@Stack[0x10]:4]",
+            "[undefined4 indexList@Stack[0x10]:4]",
             "[undefined4 param_5@Stack[0x14]:4]",
             "[undefined4 param_6@Stack[0x18]:4]"
         ],
@@ -41418,15 +41416,15 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float *",
-            "float *",
-            "float *"
+            "_MATRIX *",
+            "_VECTOR *",
+            "_VECTOR *"
         ],
-        "prototype_string": "void __cdecl RotPreTransVec(float * param_1, float * param_2, float * param_3)",
+        "prototype_string": "void __cdecl RotPreTransVec(_MATRIX * mtx, _VECTOR * translation, _VECTOR * posOut)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]",
-            "[float * param_3@Stack[0xc]:4]"
+            "[_MATRIX * mtx@Stack[0x4]:4]",
+            "[_VECTOR * translation@Stack[0x8]:4]",
+            "[_VECTOR * posOut@Stack[0xc]:4]"
         ],
         "is_thunk": false
     },
@@ -42206,19 +42204,19 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "float *",
-            "float *",
-            "float *",
+            "_VECTOR *",
+            "_VECTOR *",
+            "_VECTOR *",
             "float",
-            "float *"
+            "_VECTOR *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000d8690(float * param_1, float * param_2, float * param_3, float param_4, float * param_5)",
+        "prototype_string": "undefined4 __cdecl FUN_000d8690(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3, float param_4, _VECTOR * param_5)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[float * param_2@Stack[0x8]:4]",
-            "[float * param_3@Stack[0xc]:4]",
+            "[_VECTOR * param_1@Stack[0x4]:4]",
+            "[_VECTOR * param_2@Stack[0x8]:4]",
+            "[_VECTOR * param_3@Stack[0xc]:4]",
             "[float param_4@Stack[0x10]:4]",
-            "[float * param_5@Stack[0x14]:4]"
+            "[_VECTOR * param_5@Stack[0x14]:4]"
         ],
         "is_thunk": false
     },
@@ -45329,8 +45327,8 @@
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "typedef PVOID void *",
-            "typedef ULONG ulong",
+            "PVOID",
+            "ULONG",
             "undefined4",
             "undefined4",
             "undefined4"
@@ -45401,8 +45399,8 @@
         "has_custom_variable_storage": true,
         "return_type": "void",
         "param_types": [
-            "typedef ULONG ulong",
-            "typedef PVOID void *",
+            "ULONG",
+            "PVOID",
             "undefined4",
             "undefined4",
             "uint"
@@ -45504,7 +45502,7 @@
         "param_types": [
             "int",
             "void *",
-            "typedef ULONG ulong",
+            "ULONG",
             "uint",
             "int"
         ],
@@ -47325,7 +47323,7 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "typedef PVOID void *"
+            "PVOID"
         ],
         "prototype_string": "void __cdecl freeContiguous(PVOID param_1)",
         "parameters": [
@@ -47580,9 +47578,9 @@
         "has_custom_variable_storage": false,
         "return_type": "int",
         "param_types": [
-            "typedef HANDLE PVOID",
-            "typedef PVOID void *",
-            "typedef ULONG ulong",
+            "HANDLE",
+            "PVOID",
+            "ULONG",
             "undefined4 *",
             "IO_STATUS_BLOCK *"
         ],
@@ -47603,9 +47601,9 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "typedef HANDLE PVOID",
-            "typedef PVOID void *",
-            "typedef ULONG ulong",
+            "HANDLE",
+            "PVOID",
+            "ULONG",
             "undefined4 *",
             "IO_STATUS_BLOCK *"
         ],
@@ -47626,7 +47624,7 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "typedef HANDLE PVOID"
+            "HANDLE"
         ],
         "prototype_string": "undefined4 __stdcall setSomeInfo(HANDLE param_1)",
         "parameters": [
@@ -47641,7 +47639,7 @@
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "typedef HANDLE PVOID",
+            "HANDLE",
             "uint",
             "uint *",
             "int"
@@ -47662,7 +47660,7 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "typedef HANDLE PVOID",
+            "HANDLE",
             "uint",
             "uint",
             "uint *",
@@ -47685,7 +47683,7 @@
         "has_custom_variable_storage": false,
         "return_type": "int",
         "param_types": [
-            "typedef PVOID void *"
+            "PVOID"
         ],
         "prototype_string": "int __stdcall file_flush(PVOID param_1)",
         "parameters": [
@@ -47700,7 +47698,7 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "typedef HANDLE PVOID",
+            "HANDLE",
             "LARGE_INTEGER *"
         ],
         "prototype_string": "bool __stdcall getFileSize_LargeInteger(HANDLE fileHandle, LARGE_INTEGER * fileSize)",
@@ -47717,7 +47715,7 @@
         "has_custom_variable_storage": false,
         "return_type": "long",
         "param_types": [
-            "typedef HANDLE PVOID",
+            "HANDLE",
             "long *"
         ],
         "prototype_string": "long __stdcall getFileSize_loHi(HANDLE handle, long * size_high)",
@@ -47736,7 +47734,7 @@
         "param_types": [
             "char *",
             "uint",
-            "typedef ULONG ulong",
+            "ULONG",
             "undefined4",
             "int",
             "uint"
@@ -47800,7 +47798,7 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "typedef HANDLE PVOID",
+            "HANDLE",
             "IO_STATUS_BLOCK *",
             "int *",
             "bool"
@@ -47853,7 +47851,7 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "typedef HANDLE PVOID",
+            "HANDLE",
             "int"
         ],
         "prototype_string": "undefined4 __stdcall FUN_000e9b9c(HANDLE param_1, int param_2)",
@@ -47870,7 +47868,7 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "typedef HANDLE PVOID",
+            "HANDLE",
             "wchar_t *",
             "wchar_t *",
             "int"
@@ -48033,7 +48031,7 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "typedef HANDLE PVOID"
+            "HANDLE"
         ],
         "prototype_string": "bool __stdcall DoNtClose(HANDLE param_1)",
         "parameters": [
@@ -48126,7 +48124,7 @@
         "param_types": [
             "int",
             "UCHAR *",
-            "typedef ULONG ulong"
+            "ULONG"
         ],
         "prototype_string": "undefined4 __stdcall FUN_000ea5fe(int param_1, UCHAR * param_2, ULONG param_3)",
         "parameters": [
@@ -48311,11 +48309,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "typedef DWORD uint",
+            "DWORD",
             "DWORD *",
-            "typedef PUCHAR UCHAR *",
-            "typedef SIZE_T uint",
-            "typedef PSIZE_T uint *"
+            "PUCHAR",
+            "SIZE_T",
+            "PSIZE_T"
         ],
         "prototype_string": "void __stdcall FUN_000eace4(DWORD param_1, DWORD * param_2, PUCHAR param_3, SIZE_T param_4, PSIZE_T param_5)",
         "parameters": [
@@ -48421,10 +48419,10 @@
         "has_custom_variable_storage": false,
         "return_type": "PVOID",
         "param_types": [
-            "typedef PVOID void *",
+            "PVOID",
             "undefined1",
-            "typedef DWORD uint",
-            "typedef DWORD uint"
+            "DWORD",
+            "DWORD"
         ],
         "prototype_string": "PVOID __stdcall FUN_000eae4f(PVOID param_1, undefined1 param_2, DWORD param_3, DWORD param_4)",
         "parameters": [
@@ -48461,7 +48459,7 @@
         "has_custom_variable_storage": false,
         "return_type": "NTSTATUS",
         "param_types": [
-            "typedef HANDLE PVOID",
+            "HANDLE",
             "uint",
             "int"
         ],
@@ -48497,7 +48495,7 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "typedef HANDLE PVOID",
+            "HANDLE",
             "uint"
         ],
         "prototype_string": "void __stdcall AwaitResult(HANDLE handle, uint maybeTimeout)",
@@ -48680,8 +48678,8 @@
         "has_custom_variable_storage": false,
         "return_type": "NTSTATUS",
         "param_types": [
-            "typedef HANDLE PVOID",
-            "typedef PVOID void *"
+            "HANDLE",
+            "PVOID"
         ],
         "prototype_string": "NTSTATUS __stdcall FUN_000eb446(HANDLE param_1, PVOID param_2)",
         "parameters": [
@@ -48698,7 +48696,7 @@
         "return_type": "NTSTATUS",
         "param_types": [
             "char *",
-            "typedef HANDLE PVOID"
+            "HANDLE"
         ],
         "prototype_string": "NTSTATUS __stdcall FUN_000eb5c3(char * param_1, HANDLE param_2)",
         "parameters": [
@@ -48810,7 +48808,7 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "typedef HANDLE PVOID",
+            "HANDLE",
             "undefined4 *"
         ],
         "prototype_string": "bool __stdcall FUN_000eb803(HANDLE param_1, undefined4 * param_2)",
@@ -49087,7 +49085,7 @@
         "has_custom_variable_storage": false,
         "return_type": "NTSTATUS",
         "param_types": [
-            "typedef PANSI_STRING _ANSI_STRING *",
+            "PANSI_STRING",
             "int"
         ],
         "prototype_string": "NTSTATUS __stdcall FUN_000ed270(PANSI_STRING param_1, int param_2)",
@@ -49125,10 +49123,10 @@
         "has_custom_variable_storage": false,
         "return_type": "NTSTATUS",
         "param_types": [
-            "typedef PSTRING _ANSI_STRING *",
-            "typedef PANSI_STRING _ANSI_STRING *",
+            "PSTRING",
+            "PANSI_STRING",
             "char *",
-            "typedef HANDLE PVOID",
+            "HANDLE",
             "short *",
             "XBE_SECTION_HEADER *"
         ],
@@ -49197,7 +49195,7 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "typedef PANSI_STRING _ANSI_STRING *"
+            "PANSI_STRING"
         ],
         "prototype_string": "void __stdcall FUN_000ed89b(PANSI_STRING param_1)",
         "parameters": [
@@ -49223,7 +49221,7 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "typedef PANSI_STRING _ANSI_STRING *",
+            "PANSI_STRING",
             "uint"
         ],
         "prototype_string": "undefined4 __stdcall FUN_000eda65(PANSI_STRING param_1, uint param_2)",
@@ -49614,7 +49612,7 @@
         "has_custom_variable_storage": true,
         "return_type": "void *",
         "param_types": [
-            "typedef size_t ulong"
+            "size_t"
         ],
         "prototype_string": "void * alloca_probe(size_t size)",
         "parameters": [
@@ -49631,7 +49629,7 @@
         "param_types": [
             "void *",
             "void *",
-            "typedef size_t ulong"
+            "size_t"
         ],
         "prototype_string": "void * __cdecl FID_conflict:_memcpy(void * __dest, void * __src, size_t __n)",
         "parameters": [
@@ -49782,8 +49780,8 @@
         "return_type": "size_t",
         "param_types": [
             "void *",
-            "typedef size_t ulong",
-            "typedef size_t ulong",
+            "size_t",
+            "size_t",
             "FILE *"
         ],
         "prototype_string": "size_t __cdecl FID_conflict:_fread(void * __ptr, size_t __size, size_t __n, FILE * __s)",
@@ -49862,7 +49860,7 @@
         "param_types": [
             "char *",
             "char *",
-            "typedef __gnuc_va_list void *"
+            "__gnuc_va_list"
         ],
         "prototype_string": "int __cdecl FUN_000eed14(char * param_1, char * param_2, __gnuc_va_list param_3)",
         "parameters": [
@@ -50093,7 +50091,7 @@
         "param_types": [
             "wchar_t *",
             "wchar_t *",
-            "typedef size_t ulong"
+            "size_t"
         ],
         "prototype_string": "wchar_t * __cdecl _wcsncpy(wchar_t * __dest, wchar_t * __src, size_t __n)",
         "parameters": [
@@ -50247,7 +50245,7 @@
         "return_type": "int",
         "param_types": [
             "char *",
-            "typedef size_t ulong",
+            "size_t",
             "char *"
         ],
         "prototype_string": "int __cdecl snprintf(char * __s, size_t __maxlen, char * __format, ...)",
@@ -50844,7 +50842,7 @@
         "param_types": [
             "FILE *",
             "char *",
-            "typedef __gnuc_va_list void *"
+            "__gnuc_va_list"
         ],
         "prototype_string": "int __cdecl vfprintf(FILE * __s, char * __format, __gnuc_va_list __arg)",
         "parameters": [
@@ -52118,7 +52116,7 @@
         "has_custom_variable_storage": false,
         "return_type": "void *",
         "param_types": [
-            "typedef size_t ulong"
+            "size_t"
         ],
         "prototype_string": "void * __cdecl _malloc(size_t __size)",
         "parameters": [
@@ -54342,7 +54340,7 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "typedef ULONG ulong"
+            "ULONG"
         ],
         "prototype_string": "void __stdcall D3DDevice_SetFlickerFilter(ULONG param_1)",
         "parameters": [
@@ -54357,7 +54355,7 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "typedef ULONG ulong"
+            "ULONG"
         ],
         "prototype_string": "void __stdcall D3DDevice_SetSoftDisplayFilter(ULONG param_1)",
         "parameters": [
@@ -57694,7 +57692,7 @@
         "return_type": "void",
         "param_types": [
             "void *",
-            "typedef DWORD uint"
+            "DWORD"
         ],
         "prototype_string": "void __stdcall IDirectSoundBuffer_SetHeadroom(void * thisPtr, DWORD dwHeadroom)",
         "parameters": [
@@ -58487,7 +58485,7 @@
         "param_types": [
             "void *",
             "float *",
-            "typedef DWORD uint",
+            "DWORD",
             "DS3D_APPLY"
         ],
         "prototype_string": "void __stdcall IDirectSoundBuffer_SetRolloffCurve(void * thisPtr, float * pflPoints, DWORD dwPointCount, DS3D_APPLY dwApply)",
@@ -58816,7 +58814,7 @@
         "param_types": [
             "void *",
             "void *",
-            "typedef DWORD uint"
+            "DWORD"
         ],
         "prototype_string": "void __stdcall IDirectSoundBuffer_SetBufferData(void * thisPtr, void * pvBufferData, DWORD dwBufferBytes)",
         "parameters": [
@@ -59095,7 +59093,7 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "typedef PVOID void *"
+            "PVOID"
         ],
         "prototype_string": "void __stdcall FUN_00114a04(PVOID param_1)",
         "parameters": [
@@ -61559,7 +61557,7 @@
         "return_type": "void",
         "param_types": [
             "int",
-            "typedef PVOID void *",
+            "PVOID",
             "int"
         ],
         "prototype_string": "void __stdcall FUN_00119da1(int param_1, PVOID param_2, int param_3)",
@@ -61577,7 +61575,7 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "typedef PHYSICAL_ADDRESS ULONG",
+            "PHYSICAL_ADDRESS",
             "int"
         ],
         "prototype_string": "void __stdcall FUN_00119e0e(PHYSICAL_ADDRESS param_1, int param_2)",
@@ -62373,8 +62371,8 @@
         "return_type": "int",
         "param_types": [
             "undefined4 *",
-            "typedef ULONG ulong",
-            "typedef ULONG ulong"
+            "ULONG",
+            "ULONG"
         ],
         "prototype_string": "int __stdcall FUN_0011b692(undefined4 * param_1, ULONG param_2, ULONG param_3)",
         "parameters": [
@@ -64615,7 +64613,7 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "typedef DWORD uint",
+            "DWORD",
             "XINPUT_VIBRATION *"
         ],
         "prototype_string": "undefined4 __stdcall XInputSetState(DWORD dwUserIndex, XINPUT_VIBRATION * pVibration)",

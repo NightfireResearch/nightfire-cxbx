@@ -9,6 +9,13 @@
 
 #include <stddef.h> // for offsetof
 
+// Windows likes naming shit like this
+typedef void* HANDLE;
+typedef void* PVOID;
+typedef unsigned long ULONG;
+
+typedef struct IO_STATUS_BLOCK IO_STATUS_BLOCK;
+
 // Foward declarations prevent circular dependencies
 typedef struct celglist_tag celglist_tag;
 typedef struct level_tag level_tag;

@@ -5,8 +5,6 @@ void xboxInitInputDevices(void);
 // AUTOGEN
 void xboxInitGraphics(void);
 // AUTOGEN
-void FS_Init(void);
-// AUTOGEN
 void xboxInitTextures(void);
 // AUTOGEN
 void xboxInitSound(void);
