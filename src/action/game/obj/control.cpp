@@ -65,7 +65,7 @@ obj_tag* control_first_object(void) {
 // AUTOINJECT
 void control_delete_object(obj_tag* obj) {
 
-  printf("Deleting object of type 0x%02x (%s)\n", obj->objectType, Object_GetName((ObjectType)obj->objectType));
+  //printf("Deleting object of type 0x%02x (%s)\n", obj->objectType, Object_GetName((ObjectType)obj->objectType));
 
   // First, call the object's delete function if it exists
   if(control_funcs[obj->objectType].deleteFunc != NULL)

@@ -69,15 +69,15 @@ void Mem_Init(void) {
 // Not auto generated or injected - we call the original allocator in some cases, but if we inject, we end up calling ourself
 void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t unknownMaybeAlignment) {
 
-    printf("Allocating %i bytes of type %02x\n", size, flags);
+    //printf("Allocating %i bytes of type %02x\n", size, flags);
 
     // If it's type Xbox, must be allocated in the first 64MB - video memory must be in this region
 
-    // TODO: The game does NOT free this memory, it just assumes the entire heap is wiped. So this results in a memory leak
     if(flags & 0xFF00 == 0x1200) { // Xbox memory type
         return reinterpret_cast<void * (*)(uint, MallocFlags, uint)>(0x00070ae0)(size, flags, unknownMaybeAlignment);
     }
 
+    // TODO: The game does NOT free this memory, it just assumes the entire heap is wiped. So this results in a memory leak
     return malloc(size);
     
 }
