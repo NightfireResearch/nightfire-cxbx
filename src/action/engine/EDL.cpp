@@ -1,9 +1,42 @@
 #include "EDL.h"
 
+
 // AUTOGEN
-uint32_t maybeEDL_GetCompressedSize(char* data);
-// AUTOGEN
-uint32_t maybeEDL_GetDecompressedSize(char* data);
+void EDL_Header_Parse(maybeEDLDecompressorState *state);
+
+// AUTOINJECT
+uint32_t maybeEDL_GetCompressedSize(char* data) {
+    
+    maybeEDLDecompressorState decompressor;
+    
+    decompressor.ourEndianness = 0;
+    decompressor.srcData = data;
+
+    EDL_Header_Parse(&decompressor);
+
+    if(decompressor.errNum)
+        return 0;
+
+    return decompressor.offsetAt;
+
+}
+
+// AUTOINJECT
+uint32_t maybeEDL_GetDecompressedSize(char* data) {
+    maybeEDLDecompressorState decompressor;
+    
+    decompressor.ourEndianness = 0;
+    decompressor.srcData = data;
+
+    EDL_Header_Parse(&decompressor);
+
+    if(decompressor.errNum)
+        return 0;
+
+    return decompressor.decompressedSize;
+}
+
+
 // AUTOGEN
 bool maybeEDL_DecompressBlock(char* src, char* dest);
 
