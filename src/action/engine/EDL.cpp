@@ -1,8 +1,49 @@
 #include "EDL.h"
 
+#pragma pack(push, 1)
+typedef struct {
+    char magicBytes[3];
+    uint8_t algorithmAndEndianness;
+    uint32_t decompressedSize;
+    uint32_t compressedSize;
+} EDLHeader;
+#pragma pack(pop)
 
-// AUTOGEN
-void EDL_Header_Parse(maybeEDLDecompressorState *state);
+// AUTOINJECT
+uint32_t fix_endianness32(maybeEDLDecompressorState *state, uint32_t dataIn) {
+    if(state->ourEndianness == state->fileEndianness)
+        return dataIn;
+    return ((dataIn & 0xff00) + dataIn * 0x10000) * 0x100 + (dataIn >> 0x10 & 0xff) * 0x100 + (dataIn >> 0x18);
+}
+
+// AUTOINJECT
+void EDL_Header_Parse(maybeEDLDecompressorState *state) {
+   
+    EDLHeader* header = (EDLHeader *)state->srcData;
+
+    if ((   (header->magicBytes[0] != 'E') 
+        ||  (header->magicBytes[1] != 'D')) 
+        ||  (header->magicBytes[2] != 'L')) {
+        state->errNum = -3;
+        return;
+    }
+        
+    state->fileEndianness = (header->algorithmAndEndianness >> 7);
+    uint8_t algorithm = (header->algorithmAndEndianness & 0x7f);
+    state->blockCompressionAlgorithm = algorithm;
+    
+    if (algorithm > 2) {
+        state->errNum = -4;
+        return;
+    }
+
+    state->decompressedSize = fix_endianness32(state, header->decompressedSize);
+    state->compressedSize = fix_endianness32(state, header->compressedSize);
+    
+    state->errNum = 0;
+    return;
+    
+}
 
 // AUTOINJECT
 uint32_t maybeEDL_GetCompressedSize(char* data) {
@@ -17,14 +58,14 @@ uint32_t maybeEDL_GetCompressedSize(char* data) {
     if(decompressor.errNum)
         return 0;
 
-    return decompressor.offsetAt;
+    return decompressor.compressedSize;
 
 }
 
 // AUTOINJECT
 uint32_t maybeEDL_GetDecompressedSize(char* data) {
     maybeEDLDecompressorState decompressor;
-    
+
     decompressor.ourEndianness = 0;
     decompressor.srcData = data;
 
