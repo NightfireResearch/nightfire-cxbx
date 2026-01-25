@@ -8,6 +8,15 @@ typedef struct {
     uint32_t numBlocks;
 } edl_section_t;
 
+#pragma pack(push, 1)
+typedef struct {
+    char magicBytes[3];
+    uint8_t algorithmAndEndianness;
+    uint32_t decompressedSize;
+    uint32_t compressedSize;
+} EDLHeader;
+#pragma pack(pop)
+
 
 typedef struct {
     char* dst;

@@ -1,5 +1,5 @@
 #include "EDL.h"
-#include <string.h>
+#include "Inflate.h"
 
 typedef enum {
     DIRECT_COPY = 0,
@@ -8,14 +8,7 @@ typedef enum {
     NUM_ALGORITHMS
 } algorithm_t;
 
-#pragma pack(push, 1)
-typedef struct {
-    char magicBytes[3];
-    uint8_t algorithmAndEndianness;
-    uint32_t decompressedSize;
-    uint32_t compressedSize;
-} EDLHeader;
-#pragma pack(pop)
+
 
 // AUTOINJECT
 uint32_t fix_endianness32(maybeEDLDecompressorState *state, uint32_t dataIn) {
@@ -83,18 +76,6 @@ uint32_t maybeEDL_GetDecompressedSize(char* data) {
         return 0;
 
     return decompressor.decompressedSize;
-}
-
-// AUTOGEN
-void Inflate_huffman(maybeEDLDecompressorState *state);
-// AUTOGEN
-void Inflate_bitwise(maybeEDLDecompressorState *state);
-
-// AUTOINJECT
-void Inflate_directcopy(maybeEDLDecompressorState *state) {
-
-    // The source and destination may overlap - this must be done with memmove for safety
-    memmove(state->dst, state->srcData + sizeof(EDLHeader), state->compressedSize);
 }
 
 // AUTOINJECT
