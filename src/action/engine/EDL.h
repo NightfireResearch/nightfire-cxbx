@@ -27,4 +27,8 @@ uint32_t maybeEDL_GetDecompressedSize(char* data);
 void EDL_Header_Parse(maybeEDLDecompressorState *state);
 bool maybeEDL_DecompressBlock(char* src, char* dest);
 
+// The decompression algorithms
+void Inflate_directcopy(maybeEDLDecompressorState *state);
+
+
 #endif // EDL_H_

@@ -1,4 +1,5 @@
 #include "EDL.h"
+#include <string.h>
 
 typedef enum {
     DIRECT_COPY = 0,
@@ -88,8 +89,14 @@ uint32_t maybeEDL_GetDecompressedSize(char* data) {
 void Inflate_huffman(maybeEDLDecompressorState *state);
 // AUTOGEN
 void Inflate_bitwise(maybeEDLDecompressorState *state);
-// AUTOGEN
-void Inflate_directcopy(maybeEDLDecompressorState *state);
+
+// AUTOINJECT
+void Inflate_directcopy(maybeEDLDecompressorState *state) {
+
+    // The source and destination may overlap - this must be done with memmove for safety
+    memmove(state->dst, state->srcData + 12, state->compressedSize);
+
+}
 
 // AUTOINJECT
 bool maybeEDL_DecompressBlock(char* dst, char* src) {
