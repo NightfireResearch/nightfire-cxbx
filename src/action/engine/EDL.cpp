@@ -40,7 +40,7 @@ void EDL_Header_Parse(maybeEDLDecompressorState *state) {
     uint8_t algorithm = (header->algorithmAndEndianness & 0x7f);
     state->blockCompressionAlgorithm = algorithm;
     
-    if (algorithm > NUM_ALGORITHMS) {
+    if (algorithm >= NUM_ALGORITHMS) {
         state->errNum = -4;
         return;
     }
