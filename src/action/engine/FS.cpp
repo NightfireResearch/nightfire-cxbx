@@ -47,7 +47,7 @@ typedef struct {
     int maybeActiveFile;
     int maybeFileLoadState;
     int maybeActiveArchiveNum;
-    int maybeNumCompressedBlocks;
+    void* compressedDataPtr;
     void* someDataPtr;
     char unknown3[12];
     int someDataLen;
@@ -268,9 +268,6 @@ typedef enum {
 } FileSystemStateMachine;
 
 // AUTOGEN
-void maybeEDL_DecompressSection(int numBlocks, uint32_t *param_2);
-
-// AUTOGEN
 bool FS_OpInProgressWithCleanup(void);
 
 // AUTOGEN
@@ -323,7 +320,7 @@ bool FS_StateMachineIterate(void) {
 
             case FLSM_DECOMPRESS_IF_REQD:
                 if ((FileSystem.maybeFileHeader[FileSystem.maybeActiveArchiveNum].maybeFlags & FLAG_IS_EDL_COMPRESSED)) {
-                    maybeEDL_DecompressSection(FileSystem.maybeNumCompressedBlocks, (uint32_t*)FileSystem.someDataPtr);
+                    maybeEDL_DecompressSection((char*)FileSystem.compressedDataPtr, (edl_section_t*)FileSystem.someDataPtr);
                 }
                 FileSystem.maybeFileLoadState = FLSM_FINISHED;
                 return true;

@@ -49,6 +49,7 @@ typedef struct AnimObj AnimObj;
 typedef struct block_header_tag block_header_tag;
 typedef struct TARGET_PLACEMENT TARGET_PLACEMENT;
 typedef struct SPRITE_DRAW SPRITE_DRAW;
+typedef struct edl_header_t edl_header_t;
 
 
 typedef void* ScriptPlayerCallback; // FIXME: Function pointer signature
@@ -73,6 +74,7 @@ typedef short MallocFlags;
 #include "engine/Anim.h"
 #include "engine/Camera.h"
 #include "engine/Collide.h"
+#include "engine/EDL.h"
 #include "engine/FS.h"
 #include "engine/Loader.h"
 #include "engine/Text.h"

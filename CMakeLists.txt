@@ -65,6 +65,7 @@ add_library(actioninject SHARED
   src/action/engine/Anim.cpp
   src/action/engine/Camera.cpp
   src/action/engine/Collide.cpp
+  src/action/engine/EDL.cpp
   src/action/engine/FS.cpp
   src/action/engine/Loader.cpp
   src/action/engine/parsemap.cpp

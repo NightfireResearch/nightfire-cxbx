@@ -40190,11 +40190,11 @@
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "undefined4"
+            "char *"
         ],
-        "prototype_string": "uint __cdecl maybeEDL_GetCompressedSize(undefined4 param_1)",
+        "prototype_string": "uint __cdecl maybeEDL_GetCompressedSize(char * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[char * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -40205,11 +40205,11 @@
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "undefined4"
+            "char *"
         ],
-        "prototype_string": "uint __cdecl maybeEDL_GetDecompressedSize(undefined4 param_1)",
+        "prototype_string": "uint __cdecl maybeEDL_GetDecompressedSize(char * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[char * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -40221,12 +40221,12 @@
         "return_type": "bool",
         "param_types": [
             "char *",
-            "undefined4"
+            "char *"
         ],
-        "prototype_string": "bool __cdecl maybeEDL_DecompressBlock(char * dst, undefined4 src)",
+        "prototype_string": "bool __cdecl maybeEDL_DecompressBlock(char * dst, char * src)",
         "parameters": [
             "[char * dst@Stack[0x4]:4]",
-            "[undefined4 src@Stack[0x8]:4]"
+            "[char * src@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
@@ -47401,13 +47401,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "uint32_t *"
+            "char *",
+            "edl_section_t *"
         ],
-        "prototype_string": "void __cdecl maybeEDL_DecompressSection(int numBlocks, uint32_t * param_2)",
+        "prototype_string": "void __cdecl maybeEDL_DecompressSection(char * src, edl_section_t * param_2)",
         "parameters": [
-            "[int numBlocks@Stack[0x4]:4]",
-            "[uint32_t * param_2@Stack[0x8]:4]"
+            "[char * src@Stack[0x4]:4]",
+            "[edl_section_t * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
