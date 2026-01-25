@@ -40107,64 +40107,64 @@
         "is_thunk": false
     },
     {
-        "name": "FUN_000d3a30",
+        "name": "Inflate_directcopy",
         "address": "0x000d3a30",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "undefined4 *"
+            "maybeEDLDecompressorState *"
         ],
-        "prototype_string": "void __cdecl FUN_000d3a30(undefined4 * param_1)",
+        "prototype_string": "void __cdecl Inflate_directcopy(maybeEDLDecompressorState * param_1)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]"
+            "[maybeEDLDecompressorState * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000d3a80",
+        "name": "Inflate_huffman",
         "address": "0x000d3a80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "undefined4 *"
+            "maybeEDLDecompressorState *"
         ],
-        "prototype_string": "void __cdecl FUN_000d3a80(undefined4 * param_1)",
+        "prototype_string": "void __cdecl Inflate_huffman(maybeEDLDecompressorState * param_1)",
         "parameters": [
-            "[undefined4 * param_1@Stack[0x4]:4]"
+            "[maybeEDLDecompressorState * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000d4350",
+        "name": "Inflate_bitwise",
         "address": "0x000d4350",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "char * *"
+            "maybeEDLDecompressorState *"
         ],
-        "prototype_string": "void __cdecl FUN_000d4350(char * * param_1)",
+        "prototype_string": "void __cdecl Inflate_bitwise(maybeEDLDecompressorState * param_1)",
         "parameters": [
-            "[char * * param_1@Stack[0x4]:4]"
+            "[maybeEDLDecompressorState * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "FUN_000d4a80",
+        "name": "fix_endianness32",
         "address": "0x000d4a80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "int",
+            "maybeEDLDecompressorState *",
             "uint"
         ],
-        "prototype_string": "uint __cdecl FUN_000d4a80(int param_1, uint param_2)",
+        "prototype_string": "uint __cdecl fix_endianness32(maybeEDLDecompressorState * state, uint dataIn)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]"
+            "[maybeEDLDecompressorState * state@Stack[0x4]:4]",
+            "[uint dataIn@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
@@ -40173,13 +40173,13 @@
         "address": "0x000d4ac0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "uint",
+        "return_type": "void",
         "param_types": [
-            "char *"
+            "maybeEDLDecompressorState *"
         ],
-        "prototype_string": "uint __cdecl EDL_Header_Parse(char * data)",
+        "prototype_string": "void __cdecl EDL_Header_Parse(maybeEDLDecompressorState * decompressorState)",
         "parameters": [
-            "[char * data@Stack[0x4]:4]"
+            "[maybeEDLDecompressorState * decompressorState@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -40190,11 +40190,11 @@
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "undefined4"
+            "char *"
         ],
-        "prototype_string": "uint __cdecl maybeEDL_GetCompressedSize(undefined4 param_1)",
+        "prototype_string": "uint __cdecl maybeEDL_GetCompressedSize(char * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[char * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -40205,11 +40205,11 @@
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "undefined4"
+            "char *"
         ],
-        "prototype_string": "uint __cdecl maybeEDL_GetDecompressedSize(undefined4 param_1)",
+        "prototype_string": "uint __cdecl maybeEDL_GetDecompressedSize(char * param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[char * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
@@ -40221,12 +40221,12 @@
         "return_type": "bool",
         "param_types": [
             "char *",
-            "undefined4"
+            "char *"
         ],
-        "prototype_string": "bool __cdecl maybeEDL_DecompressBlock(char * param_1, undefined4 param_2)",
+        "prototype_string": "bool __cdecl maybeEDL_DecompressBlock(char * dst, char * src)",
         "parameters": [
-            "[char * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[char * dst@Stack[0x4]:4]",
+            "[char * src@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
@@ -44213,11 +44213,11 @@
         "address": "0x000e04a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "bool",
         "param_types": [
             "char *"
         ],
-        "prototype_string": "undefined4 __cdecl psiFileOpen(char * param_1)",
+        "prototype_string": "bool __cdecl psiFileOpen(char * param_1)",
         "parameters": [
             "[char * param_1@Stack[0x4]:4]"
         ],
@@ -47401,13 +47401,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "uint32_t *"
+            "char *",
+            "edl_section_t *"
         ],
-        "prototype_string": "void __cdecl maybeEDL_DecompressSection(int numBlocks, uint32_t * param_2)",
+        "prototype_string": "void __cdecl maybeEDL_DecompressSection(char * src, edl_section_t * param_2)",
         "parameters": [
-            "[int numBlocks@Stack[0x4]:4]",
-            "[uint32_t * param_2@Stack[0x8]:4]"
+            "[char * src@Stack[0x4]:4]",
+            "[edl_section_t * param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
