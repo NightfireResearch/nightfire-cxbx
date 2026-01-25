@@ -24,11 +24,12 @@ typedef struct {
     uint32_t unknown1;
     uint32_t offsetLow;
     uint32_t offsetHigh;
-    uint32_t len;
-    uint32_t maybeSizeLow;
+    uint32_t compressedLen;
+    uint32_t uncompressedLen;
     uint8_t maybeFlags; // size high?
     uint8_t unknown2;
-    char unknown3[8];
+    uint32_t filesysIdx; // The filesys.dxx archive which contains this file
+    uint32_t offsetOfFileWithinArchive;
 } MaybeFileHeader;
 
 static_assert(sizeof(MaybeArchiveHeader) == 0x28, "Bad size for MaybeArchiveHeader");
@@ -51,7 +52,7 @@ typedef struct {
     char unknown3[12];
     int someDataLen;
     int filesysIdx;
-    int someOffset;
+    int offsetOfFileWithinArchive;
     char unknown4[4];
 } FileSystem_t;
 
@@ -214,7 +215,7 @@ void FS_Init(void) {
 
     // ??
     FileSystem.maybeArchiveHeader = (MaybeArchiveHeader*)FileSystem.ramCache;
-    FileSystem.maybeFileHeader = (MaybeFileHeader*)(FileSystem.ramCache+0x20);
+    FileSystem.maybeFileHeader = (MaybeFileHeader*)(FileSystem.ramCache+0x20); // File list starts 32 bytes into the file 
     FileSystem.maybeFileLoadState = 0;
 
     // Open all the on-disc files
@@ -301,7 +302,7 @@ bool FS_StateMachineIterate(void) {
                 return true;
 
             case FLSM_LOAD_FROM_DISC:
-                FS_ReadFromActualFile(FileSystem.someDataLen, FileSystem.someDataPtr, FileSystem.someOffset, 0, FileSystem.filesysHandles[FileSystem.filesysIdx]);
+                FS_ReadFromActualFile(FileSystem.someDataLen, FileSystem.someDataPtr, FileSystem.offsetOfFileWithinArchive, 0, FileSystem.filesysHandles[FileSystem.filesysIdx]);
                 FileSystem.maybeFileLoadState = FLSM_CHECK_CRC;
                 return true;
             
@@ -344,7 +345,7 @@ int FS_GetFileSize(char *filename) {
         FS_FatalErrorHandler();
     }
 
-    return (FileSystem.maybeFileHeader[idx].maybeSizeLow + (FileSystem.maybeFileHeader[idx].maybeFlags & FLAG_IS_EDL_COMPRESSED ? 0x800 : 0));
+    return (FileSystem.maybeFileHeader[idx].uncompressedLen + (FileSystem.maybeFileHeader[idx].maybeFlags & FLAG_IS_EDL_COMPRESSED ? 0x800 : 0));
 }
 
 
