@@ -20,7 +20,7 @@ typedef struct {
 
 typedef struct {
     char* dst;
-    char* srcData;
+    char* src;
     uint32_t decompressedSize;
     uint32_t compressedSize;
     uint32_t blockCompressionAlgorithm; // ?

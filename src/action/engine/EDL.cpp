@@ -20,7 +20,7 @@ uint32_t fix_endianness32(maybeEDLDecompressorState *state, uint32_t dataIn) {
 // AUTOINJECT
 void EDL_Header_Parse(maybeEDLDecompressorState *state) {
    
-    EDLHeader* header = (EDLHeader *)state->srcData;
+    EDLHeader* header = (EDLHeader *)state->src;
 
     if ((   (header->magicBytes[0] != 'E') 
         ||  (header->magicBytes[1] != 'D')) 
@@ -52,7 +52,7 @@ uint32_t maybeEDL_GetCompressedSize(char* data) {
     maybeEDLDecompressorState decompressor;
     
     decompressor.ourEndianness = 0;
-    decompressor.srcData = data;
+    decompressor.src = data;
 
     EDL_Header_Parse(&decompressor);
 
@@ -68,7 +68,7 @@ uint32_t maybeEDL_GetDecompressedSize(char* data) {
     maybeEDLDecompressorState decompressor;
 
     decompressor.ourEndianness = 0;
-    decompressor.srcData = data;
+    decompressor.src = data;
 
     EDL_Header_Parse(&decompressor);
 
@@ -83,7 +83,7 @@ bool maybeEDL_DecompressBlock(char* dst, char* src) {
 
     maybeEDLDecompressorState state;
     state.ourEndianness = 0;
-    state.srcData = src;
+    state.src = src;
     state.dst = dst;
     EDL_Header_Parse(&state);
 
