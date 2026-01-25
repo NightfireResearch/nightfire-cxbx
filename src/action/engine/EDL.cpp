@@ -94,8 +94,7 @@ void Inflate_bitwise(maybeEDLDecompressorState *state);
 void Inflate_directcopy(maybeEDLDecompressorState *state) {
 
     // The source and destination may overlap - this must be done with memmove for safety
-    memmove(state->dst, state->srcData + 12, state->compressedSize);
-
+    memmove(state->dst, state->srcData + sizeof(EDLHeader), state->compressedSize);
 }
 
 // AUTOINJECT
