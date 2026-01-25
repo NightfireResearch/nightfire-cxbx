@@ -25,5 +25,6 @@ void maybeEDL_DecompressSection(char* compressedData, edl_section_t* decompresse
 uint32_t maybeEDL_GetCompressedSize(char* data);
 uint32_t maybeEDL_GetDecompressedSize(char* data);
 void EDL_Header_Parse(maybeEDLDecompressorState *state);
+bool maybeEDL_DecompressBlock(char* src, char* dest);
 
 #endif // EDL_H_

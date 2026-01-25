@@ -1,5 +1,12 @@
 #include "EDL.h"
 
+typedef enum {
+    DIRECT_COPY = 0,
+    HUFFMAN = 1,
+    BITWISE = 2,
+    NUM_ALGORITHMS
+} algorithm_t;
+
 #pragma pack(push, 1)
 typedef struct {
     char magicBytes[3];
@@ -32,7 +39,7 @@ void EDL_Header_Parse(maybeEDLDecompressorState *state) {
     uint8_t algorithm = (header->algorithmAndEndianness & 0x7f);
     state->blockCompressionAlgorithm = algorithm;
     
-    if (algorithm > 2) {
+    if (algorithm > NUM_ALGORITHMS) {
         state->errNum = -4;
         return;
     }
@@ -77,9 +84,40 @@ uint32_t maybeEDL_GetDecompressedSize(char* data) {
     return decompressor.decompressedSize;
 }
 
-
 // AUTOGEN
-bool maybeEDL_DecompressBlock(char* src, char* dest);
+void Inflate_huffman(maybeEDLDecompressorState *state);
+// AUTOGEN
+void Inflate_bitwise(maybeEDLDecompressorState *state);
+// AUTOGEN
+void Inflate_directcopy(maybeEDLDecompressorState *state);
+
+// AUTOINJECT
+bool maybeEDL_DecompressBlock(char* dst, char* src) {
+
+    maybeEDLDecompressorState state;
+    state.ourEndianness = 0;
+    state.srcData = src;
+    state.dst = dst;
+    EDL_Header_Parse(&state);
+
+    if(state.errNum)
+        return false;
+
+    switch((algorithm_t)state.blockCompressionAlgorithm) {
+        case HUFFMAN:
+            Inflate_huffman(&state);
+            return (state.errNum == 0);
+        case BITWISE:
+            Inflate_bitwise(&state);
+            return true;
+        case DIRECT_COPY:
+            Inflate_directcopy(&state);
+            return true;
+        default:
+            return true;
+    }
+
+}
 
 // AUTOINJECT
 void maybeEDL_DecompressSection(char* compressedData, edl_section_t *section) {

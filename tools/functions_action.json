@@ -40107,7 +40107,7 @@
         "is_thunk": false
     },
     {
-        "name": "maybeEDL_memmove_overlap_safe",
+        "name": "Inflate_directcopy",
         "address": "0x000d3a30",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -40115,14 +40115,14 @@
         "param_types": [
             "maybeEDLDecompressorState *"
         ],
-        "prototype_string": "void __cdecl maybeEDL_memmove_overlap_safe(maybeEDLDecompressorState * param_1)",
+        "prototype_string": "void __cdecl Inflate_directcopy(maybeEDLDecompressorState * param_1)",
         "parameters": [
             "[maybeEDLDecompressorState * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "maybeInflate_huffman",
+        "name": "Inflate_huffman",
         "address": "0x000d3a80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -40130,14 +40130,14 @@
         "param_types": [
             "maybeEDLDecompressorState *"
         ],
-        "prototype_string": "void __cdecl maybeInflate_huffman(maybeEDLDecompressorState * param_1)",
+        "prototype_string": "void __cdecl Inflate_huffman(maybeEDLDecompressorState * param_1)",
         "parameters": [
             "[maybeEDLDecompressorState * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false
     },
     {
-        "name": "maybeInflate_bitwise",
+        "name": "Inflate_bitwise",
         "address": "0x000d4350",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -40145,7 +40145,7 @@
         "param_types": [
             "maybeEDLDecompressorState *"
         ],
-        "prototype_string": "void __cdecl maybeInflate_bitwise(maybeEDLDecompressorState * param_1)",
+        "prototype_string": "void __cdecl Inflate_bitwise(maybeEDLDecompressorState * param_1)",
         "parameters": [
             "[maybeEDLDecompressorState * param_1@Stack[0x4]:4]"
         ],
@@ -40161,10 +40161,10 @@
             "maybeEDLDecompressorState *",
             "uint"
         ],
-        "prototype_string": "uint __cdecl fix_endianness32(maybeEDLDecompressorState * param_1, uint param_2)",
+        "prototype_string": "uint __cdecl fix_endianness32(maybeEDLDecompressorState * state, uint dataIn)",
         "parameters": [
-            "[maybeEDLDecompressorState * param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]"
+            "[maybeEDLDecompressorState * state@Stack[0x4]:4]",
+            "[uint dataIn@Stack[0x8]:4]"
         ],
         "is_thunk": false
     },
