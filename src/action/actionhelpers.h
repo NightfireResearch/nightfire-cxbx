@@ -138,6 +138,7 @@ typedef short MallocFlags;
 #include "game/sp/Locks.h"
 #include "game/sp/Mission.h"
 #include "game/sp/PlayerStats.h"
+#include "game/sp/SSys.h"
 #include "game/sp/SwitchChannels.h"
 #include "gfx/Sprite.h"
 #include "ui/ui.h"
