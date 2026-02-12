@@ -3,4 +3,6 @@
 
 #include "../helpers.h"
 
+#include "platform/FILE.h"
+
 #endif //DRIVINGHELPERS_H
