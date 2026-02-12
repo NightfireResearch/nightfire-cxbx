@@ -141,6 +141,7 @@ add_library(drivinginject SHARED
   src/driving/Scheduler.cpp
   src/driving/engine/FileNameList.cpp
   src/driving/engine/UFileLoader.cpp
+  src/driving/platform/SND.cpp
 )
 
 

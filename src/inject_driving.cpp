@@ -1,5 +1,6 @@
 #include "inject.h"
 
+#include "driving/drivinghelpers.h"
 #include "driving/logging.h"
 #include "driving/engine/UFileLoader.h"
 #include "driving/main.h"
