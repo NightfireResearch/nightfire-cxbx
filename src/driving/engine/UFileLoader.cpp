@@ -157,3 +157,8 @@ void* UFileLoader::FileLoad(char *rawPath, int param_2, bool param_3) {
 
     return loadedFile;
 }
+
+// AUTOINJECT
+void* UFileLoader::FileLoadz(char * fname, int flags) {
+    return FileLoad(fname, flags, false);
+}

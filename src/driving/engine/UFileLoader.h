@@ -8,7 +8,8 @@ public:
     static void* FileLoadDirectFromDisk(char* param_1, int param_2, bool z_variant);
     static void* AttemptBigFileLoad(char *param_1, undefined4 param_2);
     static void AddFileToRequestList(char* fname);
-    static void* FileLoad(char *rawPath, int param_2, bool param_3);
+    static void* FileLoad(char *rawPath, int flags, bool param_3);
+    static void* FileLoadz(char *rawPath, int flags);
 };
 
 
