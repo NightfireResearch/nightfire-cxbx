@@ -55,6 +55,16 @@ Various bits of information are automatically generated from the Ghidra project.
 - [ ] Understand what messages are passed between the two engines and how this works
 
 
+### C++
+
+The Driving engine makes extensive use of C++. Lower-level functions like file operations, sound drivers etc are pure C, wrapped in C++ abstractions.
+
+It has exception / frame handlers. This is a bunch of functions in the approximate range 001503e0 to 00156bf0, which are set up in potentially exception-generating functions like initialisation of objects. These reference tables approximately from 001a87c8 to 001b3d7c which supply rollback steps to undo partial initialisation (stopped by an exception).
+
+These functions do NOT need to be reimplemented, however they do reveal some details about the composition of classes.
+
+The PS2 code doesn't really seem to do this - exceptions just assert / crash?
+
 ## Special Thanks
 
 Based on [Reburn3](https://github.com/reburndev/reburn3) - a proof of concept by MattKC targeting Burnout 3: Takedown.
