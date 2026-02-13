@@ -34,7 +34,7 @@ def export_json(side):
     for f in funcs:
         param_types = [paramToStr(x) for x in f.getParameters()]
         function_dict = {
-            "name": f.getName(),
+            "name": f.getName() if f.getParentNamespace().getName() == "Global" else f.getParentNamespace().getName() + "::" + f.getName(),
             "address": "0x" + str(f.getEntryPoint()),
             "calling_convention": f.getCallingConventionName(),
             "has_custom_variable_storage": f.hasCustomVariableStorage(),
@@ -42,7 +42,8 @@ def export_json(side):
             "param_types": param_types,
             "prototype_string": f.getPrototypeString(True, True),
             "parameters": [str(x) for x in f.getParameters()],
-            "is_thunk": f.isThunk()
+            "is_thunk": f.isThunk(),
+            "namespace": f.getParentNamespace().getName()
         }
         function_list.append(function_dict)
 

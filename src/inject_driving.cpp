@@ -1,7 +1,7 @@
 #include "inject.h"
 
 #include "driving/logging.h"
-#include "driving/UFileLoader.h"
+#include "driving/engine/UFileLoader.h"
 #include "driving/main.h"
 #include "driving/Scheduler.hpp"
 #include "common/launchInfo.h"
@@ -141,7 +141,7 @@ void Inject()
   WriteJmpTo(0x0005a600, (size_t)&EventManager__RunEvents);
   WriteJmpTo(0x0005a550, (size_t)&EventManager__Init);
 
-  WriteJmpTo(0x00117610, (size_t)&UFileLoader__FileLoad);
+  //WriteJmpTo(0x00117610, (size_t)&UFileLoader__FileLoad);
 
 
   // Inject a whole new working version of the scheduler

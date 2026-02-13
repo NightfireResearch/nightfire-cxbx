@@ -5,4 +5,6 @@
 
 #include "platform/FILE.h"
 
+#include "engine/UFileLoader.h"
+
 #endif //DRIVINGHELPERS_H
