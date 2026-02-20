@@ -12,9 +12,22 @@ void SNDI_mutexunlock(void);
 void SleepMilliseconds(int millis);
 
 
-// AUTOINJECT
+// Unknown for now
+// AUTOGEN
+void SNDSYSI_100hzserver(void);
+// AUTOGEN
+void FUN_0013d820(void);
+// AUTOGEN
+void FUN_0013efd0(void);
+
+// AUTOGEN
+int getTickCount(void);
+
+#define DAT_00244c38 U32_AT(0x00244c38)
+
+// NOINJECT
 undefined4 SNDDRV_thread(void) {
-  int iVar1;
+  int iVar1 = 0;
   
   if (SNDDRV_shouldContinueRunning) {
     do {
@@ -22,19 +35,19 @@ undefined4 SNDDRV_thread(void) {
     //   if (DAT_00244fb8 != (code *)0x0) {
     //     (*DAT_00244fb8)();
     //   }
-    //   FUN_0013b7b0();
-    //   FUN_0013d820();
-    //   FUN_0013efd0();
+      // SNDSYSI_100hzserver();
+      // FUN_0013d820();
+      // FUN_0013efd0();
     //   if (DAT_00244fbc != (code *)0x0) {
     //     (*DAT_00244fbc)();
     //   }
       SNDI_mutexunlock();
-    //   iVar1 = FUN_0010e1e0();
-    //   iVar1 = DAT_00244c38 - iVar1;
-    //   DAT_00244c38 = DAT_00244c38 + 10;
-    //   if (iVar1 < 0) {
-    //     iVar1 = 1;
-    //   }
+      // iVar1 = getTickCount();
+      // iVar1 = DAT_00244c38 - iVar1;
+      // DAT_00244c38 = DAT_00244c38 + 10;
+      // if (iVar1 < 0) {
+      //   iVar1 = 1;
+      // }
       SleepMilliseconds(iVar1);
     } while (SNDDRV_shouldContinueRunning != false);
   }

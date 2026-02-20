@@ -6,6 +6,7 @@
 #include "platform/FILE.h"
 
 #include "engine/UFileLoader.h"
+#include "engine/UMemory.h"
 #include "platform/SND.h"
 
 #endif //DRIVINGHELPERS_H
