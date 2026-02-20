@@ -94,6 +94,8 @@ static void ensureDirs(const char *path)
 
 void dumpToFile(char* gamefile, void* data, size_t len) {
 
+  return; // ONLY ENABLE FOR DEBUG
+
     // Open the file in binary write mode
 
 	char filename[256];
