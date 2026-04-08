@@ -816,7 +816,7 @@
         "namespace": "ActActorDatabase"
     },
     {
-        "name": "FUN_00012fd0",
+        "name": "RRenderWorldCamera::DrawActors",
         "address": "0x00012fd0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -826,17 +826,17 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00012fd0(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined DrawActors(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
             "[undefined4 param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RRenderWorldCamera"
     },
     {
-        "name": "FUN_00013020",
+        "name": "RRenderWorldCamera::DrawActorWeapons",
         "address": "0x00013020",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -845,13 +845,13 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00013020(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined DrawActorWeapons(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RRenderWorldCamera"
     },
     {
         "name": "FUN_00013060",
@@ -866,7 +866,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000130a0",
+        "name": "ActActorDatabase::SetupFOVConversions",
         "address": "0x000130a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -874,12 +874,12 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000130a0(undefined4 param_1)",
+        "prototype_string": "undefined SetupFOVConversions(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ActActorDatabase"
     },
     {
         "name": "FUN_000130e0",
@@ -3786,16 +3786,16 @@
         "namespace": "ActSkeletonDatabase"
     },
     {
-        "name": "FUN_00019c60",
+        "name": "ActSkeleton::~ActSkeleton",
         "address": "0x00019c60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00019c60()",
+        "prototype_string": "undefined ~ActSkeleton()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ActSkeleton"
     },
     {
         "name": "ActSkeletonDatabase::~ActSkeletonDatabase",
@@ -4366,16 +4366,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001ae70",
+        "name": "ActWeapon::ManualRender",
         "address": "0x0001ae70",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0001ae70()",
+        "prototype_string": "undefined ManualRender()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ActWeapon"
     },
     {
         "name": "ActWeapon::RenderShellCasings",
@@ -22832,7 +22832,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00050140",
+        "name": "InputConfigManager::SetInverted",
         "address": "0x00050140",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -22840,24 +22840,24 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_00050140(undefined1 param_1)",
+        "prototype_string": "undefined SetInverted(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "InputConfigManager"
     },
     {
-        "name": "FUN_00050160",
+        "name": "InputConfigManager::IsInverted",
         "address": "0x00050160",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00050160()",
+        "prototype_string": "undefined IsInverted()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "InputConfigManager"
     },
     {
         "name": "InputConfigManager::GetNumConfigs",
@@ -23110,28 +23110,28 @@
         "namespace": "DeviceScalar"
     },
     {
-        "name": "FUN_00050be0",
+        "name": "DeviceScalar::isDown",
         "address": "0x00050be0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00050be0()",
+        "prototype_string": "undefined isDown()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "DeviceScalar"
     },
     {
-        "name": "FUN_00050c20",
+        "name": "DeviceScalar::isUp",
         "address": "0x00050c20",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00050c20()",
+        "prototype_string": "undefined isUp()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "DeviceScalar"
     },
     {
         "name": "FUN_00050c70",
@@ -27888,7 +27888,7 @@
         "namespace": "Human"
     },
     {
-        "name": "FUN_0005dfa0",
+        "name": "Human::ApplyDamage",
         "address": "0x0005dfa0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -27901,7 +27901,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0005dfa0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined param_4, undefined4 param_5, undefined4 param_6)",
+        "prototype_string": "undefined ApplyDamage(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined param_4, undefined4 param_5, undefined4 param_6)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -27911,7 +27911,7 @@
             "[undefined4 param_6@<UNASSIGNED>]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Human"
     },
     {
         "name": "FUN_0005e180",
@@ -28124,40 +28124,40 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0005f6d0",
+        "name": "Missile::CheckForCollision",
         "address": "0x0005f6d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0005f6d0()",
+        "prototype_string": "undefined CheckForCollision()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Missile"
     },
     {
-        "name": "FUN_00060110",
+        "name": "Missile::SteerMissile",
         "address": "0x00060110",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00060110()",
+        "prototype_string": "undefined SteerMissile()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Missile"
     },
     {
-        "name": "FUN_00060a30",
+        "name": "Missile::Simulate",
         "address": "0x00060a30",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00060a30()",
+        "prototype_string": "undefined Simulate()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Missile"
     },
     {
         "name": "FUN_00060b60",
@@ -39036,16 +39036,16 @@
         "namespace": "RSceneObj"
     },
     {
-        "name": "FUN_0008db40",
+        "name": "RSceneObj::Show",
         "address": "0x0008db40",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0008db40()",
+        "prototype_string": "undefined Show()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSceneObj"
     },
     {
         "name": "FUN_0008db50",
@@ -39722,16 +39722,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0008f9f0",
+        "name": "RSceneObj::Render",
         "address": "0x0008f9f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0008f9f0()",
+        "prototype_string": "undefined Render()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSceneObj"
     },
     {
         "name": "RSceneObj::InitializeSceneObjectListLighting",
@@ -41956,16 +41956,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00096eb0",
+        "name": "RViewCamera::SetWorldTransformMode",
         "address": "0x00096eb0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00096eb0()",
+        "prototype_string": "undefined SetWorldTransformMode()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RViewCamera"
     },
     {
         "name": "RViewCamera::SetRenderCamera",
@@ -43820,7 +43820,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0009dec0",
+        "name": "RGain::Draw",
         "address": "0x0009dec0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -43828,12 +43828,12 @@
         "param_types": [
             "void *"
         ],
-        "prototype_string": "undefined __thiscall FUN_0009dec0()",
+        "prototype_string": "undefined __thiscall Draw()",
         "parameters": [
             "[void * this@ECX:4 (auto)]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RGain"
     },
     {
         "name": "RGain::RGain",
@@ -43916,16 +43916,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0009e200",
+        "name": "RLensFlareManager::EndFrame",
         "address": "0x0009e200",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0009e200()",
+        "prototype_string": "undefined EndFrame()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RLensFlareManager"
     },
     {
         "name": "FUN_0009e250",
@@ -45388,7 +45388,7 @@
         "namespace": "RPostProcessing"
     },
     {
-        "name": "FUN_000a4ed0",
+        "name": "RPostProcessing::Draw",
         "address": "0x000a4ed0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -45396,12 +45396,12 @@
         "param_types": [
             "void *"
         ],
-        "prototype_string": "undefined __thiscall FUN_000a4ed0()",
+        "prototype_string": "undefined __thiscall Draw()",
         "parameters": [
             "[void * this@ECX:4 (auto)]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RPostProcessing"
     },
     {
         "name": "FUN_000a4ee0",
@@ -45820,7 +45820,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000a6bc0",
+        "name": "RSniperZoom::Draw",
         "address": "0x000a6bc0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -45828,12 +45828,12 @@
         "param_types": [
             "void *"
         ],
-        "prototype_string": "undefined __thiscall FUN_000a6bc0()",
+        "prototype_string": "undefined __thiscall Draw()",
         "parameters": [
             "[void * this@ECX:4 (auto)]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSniperZoom"
     },
     {
         "name": "FUN_000a6cd0",
@@ -48222,7 +48222,7 @@
         "namespace": "Simulation"
     },
     {
-        "name": "FUN_000b2c40",
+        "name": "Simulation::CanSpawnRigidBody",
         "address": "0x000b2c40",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -48231,13 +48231,13 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000b2c40(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined CanSpawnRigidBody(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Simulation"
     },
     {
         "name": "Simulation::GetPlayerObject",
@@ -48672,36 +48672,40 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000b4250",
+        "name": "Simulation::DeleteSomeObject",
         "address": "0x000b4250",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
+            "Simulation *",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000b4250(undefined4 param_1)",
+        "prototype_string": "undefined __thiscall DeleteSomeObject(undefined4 param_1)",
         "parameters": [
+            "[Simulation * this@ECX:4 (auto)]",
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Simulation"
     },
     {
-        "name": "thunk_FUN_000b4250",
+        "name": "Simulation::DeleteSomeObject",
         "address": "0x000b4740",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
+            "Simulation *",
             "undefined4"
         ],
-        "prototype_string": "undefined thunk_FUN_000b4250(undefined4 param_1)",
+        "prototype_string": "undefined __thiscall DeleteSomeObject(undefined4 param_1)",
         "parameters": [
+            "[Simulation * this@ECX:4 (auto)]",
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": true,
-        "namespace": "Global"
+        "namespace": "Simulation"
     },
     {
         "name": "Simulation::CleanUpObjects",
@@ -48910,7 +48914,7 @@
         "namespace": "Simulation"
     },
     {
-        "name": "FUN_000b57b0",
+        "name": "Simulation::SpawnSmackableObject",
         "address": "0x000b57b0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -48921,7 +48925,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000b57b0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
+        "prototype_string": "undefined SpawnSmackableObject(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -48929,7 +48933,7 @@
             "[undefined4 param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Simulation"
     },
     {
         "name": "Simulation::SpawnHumanObject",
@@ -49440,20 +49444,22 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000b6720",
+        "name": "SMissionManager::IncShotsHit",
         "address": "0x000b6720",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
+            "SMissionManager *",
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000b6720(undefined1 param_1)",
+        "prototype_string": "undefined __thiscall IncShotsHit(undefined1 param_1)",
         "parameters": [
+            "[SMissionManager * this@ECX:4 (auto)]",
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "SMissionManager"
     },
     {
         "name": "FUN_000b6770",
@@ -49472,20 +49478,22 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000b67a0",
+        "name": "SMissionManager::GetMagicCounter",
         "address": "0x000b67a0",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "undefined4",
         "param_types": [
-            "undefined4"
+            "SMissionManager *",
+            "int"
         ],
-        "prototype_string": "undefined FUN_000b67a0(undefined4 param_1)",
+        "prototype_string": "undefined4 __thiscall GetMagicCounter(int param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[SMissionManager * this@ECX:4 (auto)]",
+            "[int param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "SMissionManager"
     },
     {
         "name": "FUN_000b67b0",
@@ -49882,38 +49890,42 @@
         "namespace": "SMissionManager"
     },
     {
-        "name": "FUN_000b7a40",
+        "name": "SMissionManager::IncMagicCounter",
         "address": "0x000b7a40",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4"
+            "SMissionManager *",
+            "int"
         ],
-        "prototype_string": "undefined FUN_000b7a40(undefined4 param_1)",
+        "prototype_string": "void __thiscall IncMagicCounter(int idx)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[SMissionManager * this@ECX:4 (auto)]",
+            "[int idx@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "SMissionManager"
     },
     {
-        "name": "FUN_000b7ac0",
+        "name": "SMissionManager::SetMagicCounter",
         "address": "0x000b7ac0",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "SMissionManager *",
+            "int",
+            "int"
         ],
-        "prototype_string": "undefined FUN_000b7ac0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "void __thiscall SetMagicCounter(int idx, int countValue)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[SMissionManager * this@ECX:4 (auto)]",
+            "[int idx@Stack[0x4]:4]",
+            "[int countValue@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "SMissionManager"
     },
     {
         "name": "SMissionManager::UpdateAutoDriveMissile",
@@ -50038,7 +50050,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000b8160",
+        "name": "SMissionManager::SetCinematicMode",
         "address": "0x000b8160",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -50046,24 +50058,24 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000b8160(undefined4 param_1)",
+        "prototype_string": "undefined SetCinematicMode(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "SMissionManager"
     },
     {
-        "name": "FUN_000b81a0",
+        "name": "SMissionManager::UpdateObjectiveSpecial",
         "address": "0x000b81a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000b81a0()",
+        "prototype_string": "undefined UpdateObjectiveSpecial()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "SMissionManager"
     },
     {
         "name": "FUN_000b8460",
@@ -50140,16 +50152,20 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000b8610",
+        "name": "SMissionManager::ProcessRules",
         "address": "0x000b8610",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_000b8610()",
-        "parameters": [],
+        "return_type": "void",
+        "param_types": [
+            "SMissionManager *"
+        ],
+        "prototype_string": "void __thiscall ProcessRules(void)",
+        "parameters": [
+            "[SMissionManager * this@ECX:4 (auto)]"
+        ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "SMissionManager"
     },
     {
         "name": "SMissionManager::Update",
@@ -50460,16 +50476,20 @@
         "namespace": "SMissionRule"
     },
     {
-        "name": "FUN_000b9590",
+        "name": "SMissionRule::DoRule",
         "address": "0x000b9590",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_000b9590()",
-        "parameters": [],
+        "return_type": "void",
+        "param_types": [
+            "SMissionRule *"
+        ],
+        "prototype_string": "void __thiscall DoRule(void)",
+        "parameters": [
+            "[SMissionRule * this@ECX:4 (auto)]"
+        ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "SMissionRule"
     },
     {
         "name": "SMissionTimer::Reset",
@@ -52392,7 +52412,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000bedd0",
+        "name": "WCollisionMgr::SurfaceBumpHeight",
         "address": "0x000bedd0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -52401,13 +52421,13 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000bedd0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SurfaceBumpHeight(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "WCollisionMgr"
     },
     {
         "name": "FUN_000beeb0",
@@ -54120,16 +54140,16 @@
         "namespace": "WCollisionMgr"
     },
     {
-        "name": "FUN_000c56d0",
+        "name": "WCollisionMgr::Shutdown",
         "address": "0x000c56d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000c56d0()",
+        "prototype_string": "undefined Shutdown()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "WCollisionMgr"
     },
     {
         "name": "EAGL_deallocator",
@@ -54304,16 +54324,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c59f0",
+        "name": "WGrid::Shutdown",
         "address": "0x000c59f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000c59f0()",
+        "prototype_string": "undefined Shutdown()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "WGrid"
     },
     {
         "name": "FUN_000c5a80",
@@ -54418,16 +54438,16 @@
         "namespace": "WGrid"
     },
     {
-        "name": "FUN_000c6290",
+        "name": "WGrid::Restart",
         "address": "0x000c6290",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000c6290()",
+        "prototype_string": "undefined Restart()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "WGrid"
     },
     {
         "name": "WGrid::FindNodesBox",
@@ -55984,7 +56004,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000cd370",
+        "name": "WSoundGroup::Add",
         "address": "0x000cd370",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": true,
@@ -55995,7 +56015,7 @@
             "undefined4",
             "int"
         ],
-        "prototype_string": "undefined8 * __thiscall FUN_000cd370(int param_1_00, undefined8 * param_2, undefined4 param_3, int param_4)",
+        "prototype_string": "undefined8 * __thiscall Add(int param_1_00, undefined8 * param_2, undefined4 param_3, int param_4)",
         "parameters": [
             "[int param_1_00@ECX:4]",
             "[undefined8 * param_2@Stack[0x4]:4]",
@@ -56003,7 +56023,7 @@
             "[int param_4@Stack[0xc]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "WSoundGroup"
     },
     {
         "name": "WSoundGroup::Add",
@@ -57384,16 +57404,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000d1b30",
+        "name": "WWorld::Close",
         "address": "0x000d1b30",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000d1b30()",
+        "prototype_string": "undefined Close()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "WWorld"
     },
     {
         "name": "FUN_000d1ba0",
@@ -59378,12 +59398,16 @@
     {
         "name": "FUN_000d7d60",
         "address": "0x000d7d60",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_000d7d60()",
-        "parameters": [],
+        "param_types": [
+            "void *"
+        ],
+        "prototype_string": "undefined __thiscall FUN_000d7d60()",
+        "parameters": [
+            "[void * this@ECX:4 (auto)]"
+        ],
         "is_thunk": false,
         "namespace": "Global"
     },
@@ -61844,7 +61868,7 @@
         "namespace": "DynamicLoader"
     },
     {
-        "name": "FUN_000e5ce0",
+        "name": "DynamicLoader::UnRegisterVar",
         "address": "0x000e5ce0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -61852,12 +61876,12 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000e5ce0(undefined4 param_1)",
+        "prototype_string": "undefined UnRegisterVar(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "DynamicLoader"
     },
     {
         "name": "FUN_000e5cf0",
@@ -72550,6 +72574,18 @@
         "namespace": "Global"
     },
     {
+        "name": "FUN_0010a730",
+        "address": "0x0010a730",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_0010a730()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
         "name": "THREAD_init",
         "address": "0x0010a780",
         "calling_convention": "unknown",
@@ -72610,7 +72646,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0010a830",
+        "name": "THREAD_setprio",
         "address": "0x0010a830",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -72619,7 +72655,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0010a830(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined THREAD_setprio(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -72680,7 +72716,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0010a9c0",
+        "name": "THREAD_create",
         "address": "0x0010a9c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -72693,7 +72729,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0010a9c0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined param_4, undefined4 param_5, undefined4 param_6)",
+        "prototype_string": "undefined THREAD_create(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined param_4, undefined4 param_5, undefined4 param_6)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -73052,7 +73088,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0010b380",
+        "name": "MEM_clear",
         "address": "0x0010b380",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -73061,7 +73097,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0010b380(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined MEM_clear(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -73118,7 +73154,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0010b690",
+        "name": "FILESYS_opensync",
         "address": "0x0010b690",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -73129,7 +73165,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0010b690(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
+        "prototype_string": "undefined FILESYS_opensync(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -73188,7 +73224,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0010b750",
+        "name": "FILESYS_closesync",
         "address": "0x0010b750",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -73197,7 +73233,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0010b750(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined FILESYS_closesync(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -73422,7 +73458,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0010bd00",
+        "name": "ASYNCFILE_release",
         "address": "0x0010bd00",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -73432,7 +73468,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0010bd00(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined ASYNCFILE_release(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -73502,6 +73538,18 @@
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_0010c110",
+        "address": "0x0010c110",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_0010c110()",
+        "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
@@ -73846,7 +73894,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0010d160",
+        "name": "FILESYS_priorityop",
         "address": "0x0010d160",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -73857,7 +73905,7 @@
             "int",
             "undefined4"
         ],
-        "prototype_string": "undefined4 __stdcall FUN_0010d160(undefined * maybeAllocator, int param_2, int param_3, undefined4 param_4)",
+        "prototype_string": "undefined4 __stdcall FILESYS_priorityop(undefined * maybeAllocator, int param_2, int param_3, undefined4 param_4)",
         "parameters": [
             "[undefined * maybeAllocator@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
@@ -74078,7 +74126,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0010d8c0",
+        "name": "FILE_sizez",
         "address": "0x0010d8c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -74086,7 +74134,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0010d8c0(undefined4 param_1)",
+        "prototype_string": "undefined FILE_sizez(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -74162,7 +74210,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0010dae0",
+        "name": "FILE_loadat_internal",
         "address": "0x0010dae0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -74171,7 +74219,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0010dae0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined FILE_loadat_internal(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -74200,7 +74248,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0010db90",
+        "name": "FILE_loadatz",
         "address": "0x0010db90",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -74210,7 +74258,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0010db90(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined FILE_loadatz(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -74828,7 +74876,7 @@
         "namespace": "XAPILIB"
     },
     {
-        "name": "FUN_0010ea61",
+        "name": "THREAD_resume",
         "address": "0x0010ea61",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -74836,7 +74884,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0010ea61(undefined4 param_1)",
+        "prototype_string": "undefined THREAD_resume(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -79110,7 +79158,7 @@
         "namespace": "Global"
     },
     {
-        "name": "CARP::EventListResolver",
+        "name": "CARP::ResolveSomething",
         "address": "0x00117df0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -79120,7 +79168,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined EventListResolver(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined ResolveSomething(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -81076,16 +81124,20 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0011ca10",
+        "name": "AMix::GetVolume",
         "address": "0x0011ca10",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_0011ca10()",
-        "parameters": [],
+        "param_types": [
+            "void *"
+        ],
+        "prototype_string": "undefined __thiscall GetVolume()",
+        "parameters": [
+            "[void * this@ECX:4 (auto)]"
+        ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AMix"
     },
     {
         "name": "FUN_0011ca90",
@@ -81128,7 +81180,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0011cb80",
+        "name": "AMix::Reset",
         "address": "0x0011cb80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -81136,12 +81188,12 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0011cb80(undefined4 param_1)",
+        "prototype_string": "undefined Reset(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AMix"
     },
     {
         "name": "FUN_0011cc10",
@@ -81884,16 +81936,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00120d80",
+        "name": "ASoundManager::SetMissionOver",
         "address": "0x00120d80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00120d80()",
+        "prototype_string": "undefined SetMissionOver()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ASoundManager"
     },
     {
         "name": "FUN_00120db0",
@@ -81992,16 +82044,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00121320",
+        "name": "ASoundManager::Restart",
         "address": "0x00121320",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00121320()",
+        "prototype_string": "undefined Restart()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ASoundManager"
     },
     {
         "name": "ASoundManager::Init",
@@ -83660,20 +83712,22 @@
         "namespace": "ABank"
     },
     {
-        "name": "FUN_00125ec0",
+        "name": "ABank::IsPatchPresent",
         "address": "0x00125ec0",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "bool",
         "param_types": [
-            "undefined4"
+            "ABank *",
+            "int"
         ],
-        "prototype_string": "undefined FUN_00125ec0(undefined4 param_1)",
+        "prototype_string": "bool __thiscall IsPatchPresent(int param_1)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[ABank * this@ECX:4 (auto)]",
+            "[int param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ABank"
     },
     {
         "name": "FUN_00125ef0",
@@ -83852,7 +83906,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00126910",
+        "name": "ABank::Begin",
         "address": "0x00126910",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -83860,15 +83914,15 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00126910(undefined4 param_1)",
+        "prototype_string": "undefined Begin(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ABank"
     },
     {
-        "name": "FUN_00126930",
+        "name": "ABank::End",
         "address": "0x00126930",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -83876,12 +83930,12 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00126930(undefined4 param_1)",
+        "prototype_string": "undefined End(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ABank"
     },
     {
         "name": "FUN_00126940",
@@ -85220,7 +85274,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0012dda0",
+        "name": "AWorldSound::Play",
         "address": "0x0012dda0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -85228,12 +85282,12 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0012dda0(undefined4 param_1)",
+        "prototype_string": "undefined Play(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AWorldSound"
     },
     {
         "name": "FUN_0012e090",
@@ -85928,7 +85982,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_001308a0",
+        "name": "PlayMPC::Play",
         "address": "0x001308a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -85937,25 +85991,25 @@
             "undefined4",
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_001308a0(undefined4 param_1, undefined1 param_2)",
+        "prototype_string": "undefined Play(undefined4 param_1, undefined1 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined1 param_2@Stack[0x8]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "PlayMPC"
     },
     {
-        "name": "FUN_00130b50",
+        "name": "PlayMPC::~PlayMPC",
         "address": "0x00130b50",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00130b50()",
+        "prototype_string": "undefined ~PlayMPC()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "PlayMPC"
     },
     {
         "name": "FUN_00130b80",
@@ -92022,7 +92076,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013b990",
+        "name": "SNDSTRM_autovol",
         "address": "0x0013b990",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92032,7 +92086,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013b990(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined SNDSTRM_autovol(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -92106,7 +92160,31 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013bc20",
+        "name": "SNDSTRMI_releasecallback",
+        "address": "0x0013bb20",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined SNDSTRMI_releasecallback()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "SNDSTRMI_framescallback",
+        "address": "0x0013bb50",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined SNDSTRMI_framescallback()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "SNDSTRMI_parseheader",
         "address": "0x0013bc20",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92115,7 +92193,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013bc20(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDSTRMI_parseheader(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -92124,7 +92202,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013bdb0",
+        "name": "SNDSTRMI_parsedata",
         "address": "0x0013bdb0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92133,7 +92211,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013bdb0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDSTRMI_parsedata(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -92158,19 +92236,19 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013bf10",
+        "name": "SNDSTRMI_service",
         "address": "0x0013bf10",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0013bf10()",
+        "prototype_string": "undefined SNDSTRMI_service()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013c060",
+        "name": "SNDSTRMI_queue",
         "address": "0x0013c060",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92182,7 +92260,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013c060(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
+        "prototype_string": "undefined SNDSTRMI_queue(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -92194,7 +92272,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013c160",
+        "name": "SNDSTRM_queuefile",
         "address": "0x0013c160",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92205,7 +92283,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013c160(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
+        "prototype_string": "undefined SNDSTRM_queuefile(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -92232,7 +92310,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013c280",
+        "name": "SNDSTRM_destroy",
         "address": "0x0013c280",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92240,7 +92318,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013c280(undefined4 param_1)",
+        "prototype_string": "undefined SNDSTRM_destroy(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -92248,7 +92326,19 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013c350",
+        "name": "SNDSTRMI_destroyall",
+        "address": "0x0013c320",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined SNDSTRMI_destroyall()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "SNDSTRMI_create",
         "address": "0x0013c350",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92262,7 +92352,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013c350(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7)",
+        "prototype_string": "undefined SNDSTRMI_create(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -92276,7 +92366,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013c560",
+        "name": "SNDSTRM_create",
         "address": "0x0013c560",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92288,7 +92378,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013c560(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
+        "prototype_string": "undefined SNDSTRM_create(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -92300,7 +92390,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013c590",
+        "name": "SNDSTRM_modifyhold",
         "address": "0x0013c590",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92309,7 +92399,7 @@
             "undefined4",
             "undefined2"
         ],
-        "prototype_string": "undefined FUN_0013c590(undefined4 param_1, undefined2 param_2)",
+        "prototype_string": "undefined SNDSTRM_modifyhold(undefined4 param_1, undefined2 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined2 param_2@Stack[0x8]:2]"
@@ -92334,7 +92424,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013c610",
+        "name": "SNDSTRM_overheadtap",
         "address": "0x0013c610",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92343,7 +92433,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013c610(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDSTRM_overheadtap(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -92352,7 +92442,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013c630",
+        "name": "SNDSTRM_overhead",
         "address": "0x0013c630",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92361,7 +92451,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013c630(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDSTRM_overhead(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -92370,7 +92460,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013c660",
+        "name": "SNDSTRM_requeststatus",
         "address": "0x0013c660",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92379,7 +92469,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013c660(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDSTRM_requeststatus(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -92406,7 +92496,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013c800",
+        "name": "SNDSTRM_3dpos",
         "address": "0x0013c800",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92416,7 +92506,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013c800(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined SNDSTRM_3dpos(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -92444,7 +92534,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013c880",
+        "name": "SNDSTRM_pitchmult",
         "address": "0x0013c880",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92453,7 +92543,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013c880(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDSTRM_pitchmult(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -92462,7 +92552,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013c8c0",
+        "name": "SNDSTRM_vol",
         "address": "0x0013c8c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92471,7 +92561,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013c8c0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDSTRM_vol(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -92608,7 +92698,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013cc80",
+        "name": "SNDCTRLI_getfxbus",
         "address": "0x0013cc80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92617,7 +92707,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013cc80(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDCTRLI_getfxbus(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -92626,7 +92716,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013ccc0",
+        "name": "SNDfxmasterlevel",
         "address": "0x0013ccc0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92635,7 +92725,7 @@
             "undefined4",
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0013ccc0(undefined4 param_1, undefined1 param_2)",
+        "prototype_string": "undefined SNDfxmasterlevel(undefined4 param_1, undefined1 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined1 param_2@Stack[0x8]:1]"
@@ -92644,7 +92734,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013cd50",
+        "name": "SNDfxinitbus",
         "address": "0x0013cd50",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -92656,7 +92746,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013cd50(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
+        "prototype_string": "undefined SNDfxinitbus(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -92822,49 +92912,49 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013d310",
+        "name": "SNDSYS_inited",
         "address": "0x0013d310",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0013d310()",
+        "prototype_string": "undefined SNDSYS_inited()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "~ASystem",
+        "name": "SNDSYS_restore",
         "address": "0x0013d320",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "int",
         "param_types": [],
-        "prototype_string": "undefined ~ASystem()",
+        "prototype_string": "int __stdcall SNDSYS_restore(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013d3e0",
+        "name": "SNDREAL_systemtasak",
         "address": "0x0013d3e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0013d3e0()",
+        "prototype_string": "undefined SNDREAL_systemtasak()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013d3f0",
+        "name": "SNDSYS_vectortoreal",
         "address": "0x0013d3f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0013d3f0()",
+        "prototype_string": "undefined SNDSYS_vectortoreal()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -93018,13 +93108,13 @@
         "namespace": "Global"
     },
     {
-        "name": "DirectSound_ReleaseResources",
+        "name": "SNDPLATFORM_restore",
         "address": "0x0013ddc0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined DirectSound_ReleaseResources()",
+        "prototype_string": "undefined SNDPLATFORM_restore()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -93190,7 +93280,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013e7d0",
+        "name": "SNDautovol",
         "address": "0x0013e7d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93200,7 +93290,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013e7d0(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined SNDautovol(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -93210,7 +93300,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013e860",
+        "name": "SNDCTRL_filteradd",
         "address": "0x0013e860",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93219,7 +93309,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013e860(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDCTRL_filteradd(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -93228,7 +93318,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013e8c0",
+        "name": "SNDPKTPLAY_overhead",
         "address": "0x0013e8c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93236,7 +93326,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013e8c0(undefined4 param_1)",
+        "prototype_string": "undefined SNDPKTPLAY_overhead(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -93244,7 +93334,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013e8e0",
+        "name": "SNDPKTPLAY_create",
         "address": "0x0013e8e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93256,7 +93346,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013e8e0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
+        "prototype_string": "undefined SNDPKTPLAY_create(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -93290,7 +93380,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013ecc0",
+        "name": "SNDPKTPLAY_submit",
         "address": "0x0013ecc0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93299,7 +93389,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013ecc0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDPKTPLAY_submit(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -93308,7 +93398,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013eda0",
+        "name": "SNDPKTPLAY_submitspace",
         "address": "0x0013eda0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93316,7 +93406,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013eda0(undefined4 param_1)",
+        "prototype_string": "undefined SNDPKTPLAY_submitspace(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -93324,7 +93414,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013edc0",
+        "name": "SNDPKTPLAY_framesoutstanding",
         "address": "0x0013edc0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93332,7 +93422,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013edc0(undefined4 param_1)",
+        "prototype_string": "undefined SNDPKTPLAY_framesoutstanding(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -93340,7 +93430,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013ede0",
+        "name": "SNDPKTPLAY_destroy",
         "address": "0x0013ede0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93348,7 +93438,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013ede0(undefined4 param_1)",
+        "prototype_string": "undefined SNDPKTPLAY_destroy(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -93410,7 +93500,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013f040",
+        "name": "SNDPKTPLAY_stop",
         "address": "0x0013f040",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93418,7 +93508,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013f040(undefined4 param_1)",
+        "prototype_string": "undefined SNDPKTPLAY_stop(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -93528,7 +93618,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013f1c0",
+        "name": "SNDI_patchtohdr",
         "address": "0x0013f1c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93540,7 +93630,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013f1c0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
+        "prototype_string": "undefined SNDI_patchtohdr(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -93588,13 +93678,13 @@
         "namespace": "Global"
     },
     {
-        "name": "thunk_FUN_001429d0",
+        "name": "SNDMEMI_restore",
         "address": "0x0013f770",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined thunk_FUN_001429d0()",
+        "prototype_string": "undefined SNDMEMI_restore()",
         "parameters": [],
         "is_thunk": true,
         "namespace": "Global"
@@ -93616,7 +93706,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013f880",
+        "name": "SNDMEMI_free",
         "address": "0x0013f880",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93624,7 +93714,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013f880(undefined4 param_1)",
+        "prototype_string": "undefined SNDMEMI_free(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -93632,7 +93722,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013f900",
+        "name": "iSNDserveraddclient",
         "address": "0x0013f900",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93640,7 +93730,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013f900(undefined4 param_1)",
+        "prototype_string": "undefined iSNDserveraddclient(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -93648,7 +93738,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013f920",
+        "name": "iSNDserverremoveclient",
         "address": "0x0013f920",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93656,7 +93746,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013f920(undefined4 param_1)",
+        "prototype_string": "undefined iSNDserverremoveclient(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -93664,19 +93754,19 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013f980",
+        "name": "SNDSYS_service",
         "address": "0x0013f980",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0013f980()",
+        "prototype_string": "undefined SNDSYS_service()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013f9b0",
+        "name": "SNDSTRM_setgreedylevel",
         "address": "0x0013f9b0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93685,7 +93775,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013f9b0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDSTRM_setgreedylevel(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -93694,7 +93784,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013f9e0",
+        "name": "iSNDmulu64",
         "address": "0x0013f9e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93703,7 +93793,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013f9e0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined iSNDmulu64(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -93712,7 +93802,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0013fa50",
+        "name": "iSNDdivu64",
         "address": "0x0013fa50",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93722,7 +93812,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0013fa50(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined iSNDdivu64(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -93984,7 +94074,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00140a10",
+        "name": "SNDDRV_setfx",
         "address": "0x00140a10",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -93992,7 +94082,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00140a10(undefined4 param_1)",
+        "prototype_string": "undefined SNDDRV_setfx(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -94000,7 +94090,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00140a80",
+        "name": "SNDPLATFORM_fxinit",
         "address": "0x00140a80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -94009,7 +94099,7 @@
             "undefined",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00140a80(undefined param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDPLATFORM_fxinit(undefined param_1, undefined4 param_2)",
         "parameters": [
             "[undefined param_1@<UNASSIGNED>]",
             "[undefined4 param_2@<UNASSIGNED>]"
@@ -94048,7 +94138,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00141230",
+        "name": "SNDI_aztospkrvol",
         "address": "0x00141230",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -94057,7 +94147,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00141230(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDI_aztospkrvol(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -94094,13 +94184,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00141390",
+        "name": "SNDstopall",
         "address": "0x00141390",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00141390()",
+        "prototype_string": "undefined SNDstopall()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -94108,11 +94198,11 @@
     {
         "name": "~ASystem",
         "address": "0x001413d0",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "int",
         "param_types": [],
-        "prototype_string": "undefined ~ASystem()",
+        "prototype_string": "int __stdcall ~ASystem(void)",
         "parameters": [],
         "is_thunk": true,
         "namespace": "Global"
@@ -94190,6 +94280,38 @@
         "namespace": "Global"
     },
     {
+        "name": "SNDMEMI_alloc",
+        "address": "0x00141860",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [
+            "undefined4"
+        ],
+        "prototype_string": "undefined SNDMEMI_alloc(undefined4 param_1)",
+        "parameters": [
+            "[undefined4 param_1@Stack[0x4]:4]"
+        ],
+        "is_thunk": true,
+        "namespace": "Global"
+    },
+    {
+        "name": "SNDMEMI_free",
+        "address": "0x00141870",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [
+            "undefined4"
+        ],
+        "prototype_string": "undefined SNDMEMI_free(undefined4 param_1)",
+        "parameters": [
+            "[undefined4 param_1@Stack[0x4]:4]"
+        ],
+        "is_thunk": true,
+        "namespace": "Global"
+    },
+    {
         "name": "FUN_00141880",
         "address": "0x00141880",
         "calling_convention": "unknown",
@@ -94254,7 +94376,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00141b20",
+        "name": "MIX_stop",
         "address": "0x00141b20",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -94262,7 +94384,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00141b20(undefined4 param_1)",
+        "prototype_string": "undefined MIX_stop(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -94290,7 +94412,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00141be0",
+        "name": "MIX_setfxlevel",
         "address": "0x00141be0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -94300,7 +94422,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00141be0(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined MIX_setfxlevel(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -94310,7 +94432,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00141c20",
+        "name": "MIX_create",
         "address": "0x00141c20",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -94318,7 +94440,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00141c20(undefined4 param_1)",
+        "prototype_string": "undefined MIX_create(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -94396,7 +94518,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00142420",
+        "name": "SNDDRV_getmastervoice",
         "address": "0x00142420",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -94404,7 +94526,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00142420(undefined4 param_1)",
+        "prototype_string": "undefined SNDDRV_getmastervoice(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -94412,7 +94534,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00142460",
+        "name": "SNDDRV_getsamplechan",
         "address": "0x00142460",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -94420,7 +94542,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00142460(undefined4 param_1)",
+        "prototype_string": "undefined SNDDRV_getsamplechan(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -94428,7 +94550,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_001424c0",
+        "name": "SNDPLATFORM_packetplay",
         "address": "0x001424c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -94443,7 +94565,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_001424c0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7, undefined4 param_8)",
+        "prototype_string": "undefined SNDPLATFORM_packetplay(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7, undefined4 param_8)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -94494,7 +94616,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_001428d0",
+        "name": "SNDI_gettag",
         "address": "0x001428d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -94502,7 +94624,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_001428d0(undefined4 param_1)",
+        "prototype_string": "undefined SNDI_gettag(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -94510,7 +94632,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00142970",
+        "name": "SND_attrsetdef",
         "address": "0x00142970",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -94518,7 +94640,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00142970(undefined4 param_1)",
+        "prototype_string": "undefined SND_attrsetdef(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -94526,13 +94648,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_001429d0",
+        "name": "SNDMEMI_restore",
         "address": "0x001429d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_001429d0()",
+        "prototype_string": "undefined SNDMEMI_restore()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -94662,19 +94784,19 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_001434b0",
+        "name": "MIX_restorereverb",
         "address": "0x001434b0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_001434b0()",
+        "prototype_string": "undefined MIX_restorereverb()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_00143510",
+        "name": "MIX_initreverb",
         "address": "0x00143510",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -94683,7 +94805,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00143510(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined MIX_initreverb(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -94748,7 +94870,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00143780",
+        "name": "SNDMIXI_fxinit",
         "address": "0x00143780",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -94756,7 +94878,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00143780(undefined4 param_1)",
+        "prototype_string": "undefined SNDMIXI_fxinit(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -95020,7 +95142,19 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00144610",
+        "name": "SFILTER_ft24_32",
+        "address": "0x00144590",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined SFILTER_ft24_32()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "SFILTER_ft24_32init",
         "address": "0x00144610",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -95028,7 +95162,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00144610(undefined4 param_1)",
+        "prototype_string": "undefined SFILTER_ft24_32init(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -95104,7 +95238,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00144700",
+        "name": "SFILTER_rsfsetpitch",
         "address": "0x00144700",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -95113,7 +95247,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00144700(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SFILTER_rsfsetpitch(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -95144,7 +95278,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00144920",
+        "name": "SFILTER_rsfinit",
         "address": "0x00144920",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -95154,7 +95288,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined __stdcall FUN_00144920(SFILTER * param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined __stdcall SFILTER_rsfinit(SFILTER * param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[SFILTER * param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -95200,7 +95334,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00144a30",
+        "name": "SFILTER_add",
         "address": "0x00144a30",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -95210,7 +95344,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00144a30(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined SFILTER_add(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -95220,7 +95354,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00144a90",
+        "name": "SNDI_getb",
         "address": "0x00144a90",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -95229,7 +95363,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00144a90(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined SNDI_getb(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -95238,7 +95372,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00144af0",
+        "name": "MIX_setlowpass",
         "address": "0x00144af0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -95247,7 +95381,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00144af0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined MIX_setlowpass(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -95746,7 +95880,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_001457e0",
+        "name": "SNDPKTPLAYI_voicetopackethandle",
         "address": "0x001457e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -95754,10 +95888,22 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_001457e0(undefined4 param_1)",
+        "prototype_string": "undefined SNDPKTPLAYI_voicetopackethandle(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_00145830",
+        "address": "0x00145830",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00145830()",
+        "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
@@ -95776,6 +95922,114 @@
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_001459c0",
+        "address": "0x001459c0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_001459c0()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_00145a70",
+        "address": "0x00145a70",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00145a70()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_00145ab0",
+        "address": "0x00145ab0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00145ab0()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_00145bf0",
+        "address": "0x00145bf0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00145bf0()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_00145c10",
+        "address": "0x00145c10",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00145c10()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_00145cc0",
+        "address": "0x00145cc0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00145cc0()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_00145e40",
+        "address": "0x00145e40",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00145e40()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_00145ed0",
+        "address": "0x00145ed0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00145ed0()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_00145f50",
+        "address": "0x00145f50",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00145f50()",
+        "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
@@ -95842,6 +96096,54 @@
         "namespace": "Global"
     },
     {
+        "name": "FUN_001461a0",
+        "address": "0x001461a0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_001461a0()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_001461e0",
+        "address": "0x001461e0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_001461e0()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_001461f0",
+        "address": "0x001461f0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_001461f0()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_00146280",
+        "address": "0x00146280",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00146280()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
         "name": "FUN_001462b0",
         "address": "0x001462b0",
         "calling_convention": "unknown",
@@ -95888,7 +96190,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00146570",
+        "name": "MIX_settimemult",
         "address": "0x00146570",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -95896,7 +96198,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00146570(undefined4 param_1)",
+        "prototype_string": "undefined MIX_settimemult(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -96238,7 +96540,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0014a260",
+        "name": "findprime",
         "address": "0x0014a260",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -96247,7 +96549,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0014a260(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined findprime(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -96388,7 +96690,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0014a530",
+        "name": "MUTEX_unlock",
         "address": "0x0014a530",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -96396,7 +96698,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0014a530(undefined4 param_1)",
+        "prototype_string": "undefined MUTEX_unlock(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -96694,7 +96996,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0014aa50",
+        "name": "MEM_move",
         "address": "0x0014aa50",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -96704,7 +97006,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0014aa50(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined MEM_move(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -96714,7 +97016,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0014aa90",
+        "name": "FILE_unpacksizez",
         "address": "0x0014aa90",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -96722,7 +97024,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0014aa90(undefined4 param_1)",
+        "prototype_string": "undefined FILE_unpacksizez(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -96868,7 +97170,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0014b090",
+        "name": "STREAM_overhead",
         "address": "0x0014b090",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -96878,7 +97180,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0014b090(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined STREAM_overhead(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -96888,7 +97190,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0014b0c0",
+        "name": "STREAM_create",
         "address": "0x0014b0c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -96900,7 +97202,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0014b0c0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
+        "prototype_string": "undefined STREAM_create(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -97052,7 +97354,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0014b5d0",
+        "name": "STREAM_gettable",
         "address": "0x0014b5d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -97060,7 +97362,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0014b5d0(undefined4 param_1)",
+        "prototype_string": "undefined STREAM_gettable(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -97068,7 +97370,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0014b5f0",
+        "name": "STREAM_state",
         "address": "0x0014b5f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -97076,7 +97378,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0014b5f0(undefined4 param_1)",
+        "prototype_string": "undefined STREAM_state(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -97100,7 +97402,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0014b640",
+        "name": "STREAM_buffersize",
         "address": "0x0014b640",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -97108,7 +97410,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0014b640(undefined4 param_1)",
+        "prototype_string": "undefined STREAM_buffersize(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -97224,7 +97526,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0014be60",
+        "name": "STREAM_destroy",
         "address": "0x0014be60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -97232,7 +97534,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0014be60(undefined4 param_1)",
+        "prototype_string": "undefined STREAM_destroy(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -97490,6 +97792,18 @@
         "namespace": "Global"
     },
     {
+        "name": "FUN_0014c8d0",
+        "address": "0x0014c8d0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_0014c8d0()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
         "name": "FUN_0014c8f0",
         "address": "0x0014c8f0",
         "calling_convention": "unknown",
@@ -97512,16 +97826,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0014c930",
+        "name": "AV_PLAYER::~AV_PLAYER",
         "address": "0x0014c930",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0014c930()",
+        "prototype_string": "undefined ~AV_PLAYER()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AV_PLAYER"
     },
     {
         "name": "FUN_0014c9f0",
@@ -97536,16 +97850,28 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0014cb00",
+        "name": "FUN_0014cad0",
+        "address": "0x0014cad0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_0014cad0()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "AV_PLAYER::GetFirstFrame",
         "address": "0x0014cb00",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0014cb00()",
+        "prototype_string": "undefined GetFirstFrame()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AV_PLAYER"
     },
     {
         "name": "FUN_0014cd00",
@@ -97560,31 +97886,31 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0014cd70",
+        "name": "AUDIO_PLAYER::AUDIO_PLAYER",
         "address": "0x0014cd70",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0014cd70()",
+        "prototype_string": "undefined AUDIO_PLAYER()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AUDIO_PLAYER"
     },
     {
-        "name": "FUN_0014ce10",
+        "name": "AUDIO_PLAYER::~AUDIO_PLAYER",
         "address": "0x0014ce10",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0014ce10()",
+        "prototype_string": "undefined ~AUDIO_PLAYER()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AUDIO_PLAYER"
     },
     {
-        "name": "FUN_0014ce40",
+        "name": "AUDIO_PLAYER::SetSpeed",
         "address": "0x0014ce40",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -97592,27 +97918,27 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0014ce40(undefined4 param_1)",
+        "prototype_string": "undefined SetSpeed(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AUDIO_PLAYER"
     },
     {
-        "name": "FUN_0014ce80",
+        "name": "AUDIO_PLAYER::StartSound",
         "address": "0x0014ce80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0014ce80()",
+        "prototype_string": "undefined StartSound()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AUDIO_PLAYER"
     },
     {
-        "name": "FUN_0014ceb0",
+        "name": "AUDIO_PLAYER::SetVol",
         "address": "0x0014ceb0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -97620,12 +97946,12 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0014ceb0(undefined4 param_1)",
+        "prototype_string": "undefined SetVol(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AUDIO_PLAYER"
     },
     {
         "name": "FUN_0014cf10",
@@ -98580,7 +98906,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00150360",
+        "name": "SNDSTRM_queuerequestid",
         "address": "0x00150360",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -98590,7 +98916,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00150360(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined SNDSTRM_queuerequestid(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -98600,7 +98926,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00150380",
+        "name": "SNDSTRM_createtap",
         "address": "0x00150380",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -98613,7 +98939,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00150380(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6)",
+        "prototype_string": "undefined SNDSTRM_createtap(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -102422,6 +102748,30 @@
         "namespace": "Global"
     },
     {
+        "name": "FUN_001522a0",
+        "address": "0x001522a0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_001522a0()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_001522a8",
+        "address": "0x001522a8",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_001522a8()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
         "name": "FUN_001522b6",
         "address": "0x001522b6",
         "calling_convention": "unknown",
@@ -102429,6 +102779,66 @@
         "return_type": "undefined",
         "param_types": [],
         "prototype_string": "undefined FUN_001522b6()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_001522c0",
+        "address": "0x001522c0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_001522c0()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_001522d5",
+        "address": "0x001522d5",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_001522d5()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_001522ea",
+        "address": "0x001522ea",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_001522ea()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_001522f5",
+        "address": "0x001522f5",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_001522f5()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "FUN_00152300",
+        "address": "0x00152300",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined FUN_00152300()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"

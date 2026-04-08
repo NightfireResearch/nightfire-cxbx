@@ -1,0 +1,22 @@
+// IMHEX
+
+struct BnkHead {
+    u32 magic;
+    u16 someNum;
+    u16 numPatches;
+    u32 maybeHeaderSize;
+    u32 maybeSampleSize;
+    u8 unknown[4];
+    u32 Offsets[numPatches];
+};
+
+BnkHead header @ 0x0;
+
+// Possibly corrupt / uninitialised memory in this gap
+
+// Start of samples
+u8 thingy1 @ header.maybeHeaderSize;
+
+// End of file
+u8 thingy2 @ header.maybeHeaderSize + header.maybeSampleSize;
+
