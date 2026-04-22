@@ -79,6 +79,7 @@ add_library(actioninject SHARED
   src/action/engine/XboxSettings.cpp
   src/action/engine/Direct3D/d3dhelpers.cpp
   src/action/game/Autoaim.cpp
+  src/action/game/LS.cpp
   src/action/game/weapon_stats.cpp
   src/action/math/math.cpp
   src/action/input.cpp
