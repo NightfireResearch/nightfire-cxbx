@@ -1,4 +1,5 @@
 #include "math.h"
+#include "../actionhelpers.h"
 #include <cmath>
 
 inline float ABS(float n) {
@@ -134,12 +135,101 @@ void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
   param_2->m[10] = 1.0f - (fVar4 + fVar2);
 }
 
-// AUTOGEN
-void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *mtxIn);
-// AUTOGEN
-void Quat_Slerp_Acc(float blendFactor, float *quatStart, float *quatEnd, float *quatOut);
-// AUTOGEN
-void Vec_Track(float blendFactor, float *targetPos, float *currentPos, _MATRIX *matrix, quaternion_tag *quatOut);
+// Convert a rotation matrix to a quaternion (Shepperd's method)
+// AUTOINJECT
+void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *mtxIn) {
+  float trace = mtxIn->m[0] + mtxIn->m[5] + mtxIn->m[10];
+
+  if (trace >= 0.0f) {
+    float s = SQRT(trace + 1.0f);
+    quatOut->q[3] = s * 0.5f;
+    s = 0.5f / s;
+    quatOut->q[0] = (mtxIn->m[6] - mtxIn->m[9]) * s;
+    quatOut->q[1] = (mtxIn->m[8] - mtxIn->m[2]) * s;
+    quatOut->q[2] = (mtxIn->m[1] - mtxIn->m[4]) * s;
+    return;
+  }
+
+  // Diagonal indices in the 4-wide-stride matrix are i*5 (0, 5, 10)
+  static const int next[3] = {1, 2, 0};
+  int i = (mtxIn->m[0] < mtxIn->m[5]) ? 1 : 0;
+  if (mtxIn->m[i * 5] < mtxIn->m[10]) {
+    i = 2;
+  }
+  int j = next[i];
+  int k = next[j];
+
+  float s = SQRT((mtxIn->m[i * 5] - (mtxIn->m[j * 5] + mtxIn->m[k * 5])) + 1.0f);
+
+  float q[4];
+  q[i] = s * 0.5f;
+  if (s != 0.0f) {
+    s = 0.5f / s;
+  }
+  q[3] = (mtxIn->m[j * 4 + k] - mtxIn->m[k * 4 + j]) * s;
+  q[j] = (mtxIn->m[i * 4 + j] + mtxIn->m[j * 4 + i]) * s;
+  q[k] = (mtxIn->m[i * 4 + k] + mtxIn->m[k * 4 + i]) * s;
+
+  quatOut->q[0] = q[0];
+  quatOut->q[1] = q[1];
+  quatOut->q[2] = q[2];
+  quatOut->q[3] = q[3];
+}
+
+// Accurate (as opposed to Quat_Slerp's fast approximation) spherical interpolation between two quaternions
+// AUTOINJECT
+void Quat_Slerp_Acc(float blendFactor, float *quatStart, float *quatEnd, float *quatOut) {
+  float cosOmega = quatStart[0] * quatEnd[0] + quatStart[1] * quatEnd[1] +
+                    quatStart[2] * quatEnd[2] + quatStart[3] * quatEnd[3];
+
+  bool negate = cosOmega < 0.0f;
+  if (negate) {
+    cosOmega = -cosOmega;
+  }
+
+  float scaleEnd, scaleStart;
+  if (1.0f - cosOmega <= 0.01f) {
+    // Quaternions are nearly coincident - fall back to linear interpolation
+    scaleEnd = blendFactor;
+    scaleStart = 1.0f - blendFactor;
+  } else {
+    double omega = acos((double)cosOmega);
+    double sinOmega = sin(omega);
+    scaleEnd = (float)(sin(omega * blendFactor) / sinOmega);
+    scaleStart = (float)(sin(omega - omega * blendFactor) / sinOmega);
+  }
+
+  if (negate) {
+    scaleStart = -scaleStart;
+  }
+
+  quatOut[0] = scaleEnd * quatEnd[0] + scaleStart * quatStart[0];
+  quatOut[1] = scaleEnd * quatEnd[1] + scaleStart * quatStart[1];
+  quatOut[2] = scaleEnd * quatEnd[2] + scaleStart * quatStart[2];
+  quatOut[3] = scaleEnd * quatEnd[3] + scaleStart * quatStart[3];
+}
+
+// Smoothly rotate a matrix so it tracks/faces from currentPos towards targetPos
+// AUTOINJECT
+void Vec_Track(float blendFactor, float *targetPos, float *currentPos, _MATRIX *matrix, quaternion_tag *quatOut) {
+  _VECTOR dir;
+  dir.x = targetPos[0] - currentPos[0];
+  dir.y = targetPos[1] - currentPos[1];
+  dir.z = targetPos[2] - currentPos[2];
+  Vec_Normalise(&dir, &dir);
+
+  _MATRIX targetMtx;
+  Mat_Align2Dir(&targetMtx, &dir, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+
+  quaternion_tag currentQuat, targetQuat;
+  Quat_MatToQuat(&currentQuat, matrix);
+  Quat_MatToQuat(&targetQuat, &targetMtx);
+
+  Quat_Slerp_Acc(blendFactor, currentQuat.q, targetQuat.q, quatOut->q);
+
+  Quat_QuatToMat(quatOut, matrix);
+  Mat_Normalize(matrix);
+}
 
 // A fast approximation of slerp
 // AUTOINJECT
@@ -157,12 +247,66 @@ void Quat_Slerp(float progress, quaternion_tag *qStart, quaternion_tag *qEnd, qu
   }
 }
 
-// AUTOGEN
-void RotMatrix(_VECTOR *vIn,_MATRIX *mtxOut);
-// AUTOGEN
-void Mat_World2ViewMat(_MATRIX *viewMtx, _MATRIX *worldMtx);
-// AUTOGEN
-void Mat_Scale3f(_MATRIX *m_out,_MATRIX *m_in,float scale_x,float scale_y,float scale_z);
+// Set up a matrix with the given Euler rotations (same rotation part as RotTransMatrix, without the translation)
+// AUTOINJECT
+void RotMatrix(_VECTOR *vIn,_MATRIX *mtxOut) {
+
+  float cosX = cosf(vIn->x);
+  float sinX = sinf(vIn->x);
+  float cosY = cosf(vIn->y);
+  float sinY = sinf(vIn->y);
+  float cosZ = cosf(vIn->z);
+  float sinZ = sinf(vIn->z);
+
+  mtxOut->m[0] = cosZ * cosY;
+  mtxOut->m[4] = -sinZ * cosY;
+  mtxOut->m[8] = sinY;
+  mtxOut->m[1] = sinZ * cosX + cosZ * sinY * sinX;
+  mtxOut->m[5] = cosZ * cosX - sinZ * sinY * sinX;
+  mtxOut->m[9] = -cosY * sinX;
+  mtxOut->m[2] = sinZ * sinX - cosZ * sinY * cosX;
+  mtxOut->m[6] = cosZ * sinX + sinZ * sinY * cosX;
+  mtxOut->m[10] = cosY * cosX;
+
+}
+
+// Despite the parameter names, this reads from viewMtx and writes the inverted (transposed rotation,
+// re-derived translation) result into worldMtx - see the callers for confirmation of this direction
+// AUTOINJECT
+void Mat_World2ViewMat(_MATRIX *viewMtx, _MATRIX *worldMtx) {
+  worldMtx->m[0] = viewMtx->m[0];
+  worldMtx->m[4] = viewMtx->m[1];
+  worldMtx->m[8] = viewMtx->m[2];
+  worldMtx->m[1] = viewMtx->m[4];
+  worldMtx->m[5] = viewMtx->m[5];
+  worldMtx->m[9] = viewMtx->m[6];
+  worldMtx->m[2] = viewMtx->m[8];
+  worldMtx->m[6] = viewMtx->m[9];
+  worldMtx->m[10] = viewMtx->m[10];
+
+  worldMtx->m[0xc] = -(worldMtx->m[1] * viewMtx->m[0xd] +
+                       worldMtx->m[0] * viewMtx->m[0xc] + viewMtx->m[0xe] * worldMtx->m[2]);
+  worldMtx->m[0xd] = -(viewMtx->m[0xc] * worldMtx->m[4] +
+                       worldMtx->m[5] * viewMtx->m[0xd] + viewMtx->m[0xe] * worldMtx->m[6]);
+  worldMtx->m[0xe] = -(worldMtx->m[8] * viewMtx->m[0xc] +
+                       viewMtx->m[0xd] * worldMtx->m[9] + viewMtx->m[0xe] * worldMtx->m[10]);
+}
+
+// AUTOINJECT
+void Mat_Scale3f(_MATRIX *m_out,_MATRIX *m_in,float scale_x,float scale_y,float scale_z) {
+  m_out->m[0] = scale_x * m_in->m[0];
+  m_out->m[4] = scale_y * m_in->m[4];
+  m_out->m[8] = scale_z * m_in->m[8];
+  m_out->m[1] = scale_x * m_in->m[1];
+  m_out->m[5] = scale_y * m_in->m[5];
+  m_out->m[9] = scale_z * m_in->m[9];
+  m_out->m[2] = scale_x * m_in->m[2];
+  m_out->m[6] = scale_y * m_in->m[6];
+  m_out->m[10] = scale_z * m_in->m[10];
+  m_out->m[0xc] = m_in->m[0xc];
+  m_out->m[0xd] = m_in->m[0xd];
+  m_out->m[0xe] = m_in->m[0xe];
+}
 
 // AUTOINJECT
 void Mat_GetDir(_VECTOR *dirOut, _MATRIX *mtxIn) {
@@ -185,8 +329,34 @@ void Mat_CopyRot(const _MATRIX *source, _MATRIX *target) {
 	}
 }
 
-// AUTOGEN
-void Mat_Align2Up(float *matrix, float *up, float *direction);
+// Build a matrix that keeps "up" as the exact up vector, deriving a level "forward" from direction and a "right"
+// orthogonal to both (eg. used to keep a turret/sensor upright while aiming roughly towards a target)
+// AUTOINJECT
+void Mat_Align2Up(float *matrix, float *up, float *direction) {
+  _VECTOR right;
+  right.x = direction[2] * up[1] - direction[1] * up[2];
+  right.y = direction[0] * up[2] - direction[2] * up[0];
+  right.z = direction[1] * up[0] - direction[0] * up[1];
+  Vec_Normalise(&right, &right);
+
+  _VECTOR forward;
+  forward.x = right.y * up[2] - right.z * up[1];
+  forward.y = right.z * up[0] - right.x * up[2];
+  forward.z = right.x * up[1] - right.y * up[0];
+  Vec_Normalise(&forward, &forward);
+
+  matrix[8] = forward.x;
+  matrix[9] = forward.y;
+  matrix[10] = forward.z;
+
+  matrix[4] = up[0];
+  matrix[5] = up[1];
+  matrix[6] = up[2];
+
+  matrix[0] = right.x;
+  matrix[1] = right.y;
+  matrix[2] = right.z;
+}
 
 // AUTOINJECT
 void Mat_IdentityT(_MATRIX *mtx) {
@@ -566,17 +736,148 @@ void vecutil_cartesian_to_spherical_acc(_VECTOR *vec, float v_x, float v_y, floa
   vec->z = 0.0f;
 }
 
-// AUTOGEN
-float Vec_AngleDifference(float angle1, float angle2);
+// Shortest signed angular difference (angle2 - angle1), wrapped into (-pi, pi]. Both inputs are normalised into
+// [0, 2pi) first.
+// AUTOINJECT
+float Vec_AngleDifference(float angle1, float angle2) {
+  if (angle2 < 0.0f || angle2 >= (float)M_2PI) {
+    angle2 = fmodf(angle2, (float)M_2PI);
+    if (angle2 < 0.0f) {
+      angle2 += (float)M_2PI;
+    }
+  }
+  if (angle1 < 0.0f || angle1 >= (float)M_2PI) {
+    angle1 = fmodf(angle1, (float)M_2PI);
+    if (angle1 < 0.0f) {
+      angle1 += (float)M_2PI;
+    }
+  }
 
-// AUTOGEN
-void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch);
+  float diff = angle2 - angle1;
+  float absDiff = ABS(diff);
+  if (absDiff >= (float)M_PI) {
+    if (diff < 0.0f) {
+      return diff + (float)M_2PI;
+    }
+    diff -= (float)M_2PI;
+  }
+  return diff;
+}
 
-// AUTOGEN
-float maybeAtan2(float y, float x);
+// AUTOINJECT
+void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch) {
+  float cosPitch = cosf(pitch);
+  float sinYaw = sinf(yaw);
+  out[0] = sinYaw * cosPitch * radius;
+  float cosYaw = cosf(yaw);
+  out[2] = cosYaw * cosPitch * radius;
+  float sinPitch = sinf(pitch);
+  out[1] = sinPitch * radius;
+}
 
-// AUTOGEN
-void Mat_Align2Dir(_MATRIX *mtxOut, _VECTOR *direction, _VECTOR *param_3, _VECTOR *param_4);
+// Fast rational atan2 approximation (max error ~0.28 degrees)
+// AUTOINJECT
+float maybeAtan2(float y, float x) {
+  float result;
 
-// AUTOGEN
-void Vec_Add2(_VECTOR *a, _VECTOR *b, _VECTOR *out);
+  if (x == y) {
+    result = (x == 0.0f) ? 0.0f : 0.7853982f; // pi/4
+  } else {
+    float absX = ABS(x);
+    float absY = ABS(y);
+    if (absX <= absY) {
+      float ratio = absX / absY;
+      result = (float)M_PI_2 - (1.0596788f - ratio * 0.27131295f) * ratio;
+    } else {
+      float ratio = absY / absX;
+      result = (1.0596788f - ratio * 0.27131295f) * ratio;
+    }
+  }
+
+  if (x < 0.0f) {
+    result = (float)M_PI - result;
+  }
+  if (y < 0.0f) {
+    result = -result;
+  }
+  return result;
+}
+
+// Align a matrix so its forward row faces "direction", with "param_3" as the preferred up hint (falling back to
+// "param_4" when direction is nearly parallel to param_3)
+// AUTOINJECT
+void Mat_Align2Dir(_MATRIX *mtxOut, _VECTOR *direction, _VECTOR *param_3, _VECTOR *param_4) {
+  _VECTOR dir;
+  Vec_Normalise(&dir, direction);
+
+  float dot = dir.x * param_3->x + dir.y * param_3->y + dir.z * param_3->z;
+  if (dot < 0.0f) {
+    dot = -dot;
+  }
+
+  _VECTOR right;
+  if (dot <= 0.999f) {
+    right.x = dir.z * param_3->y - dir.y * param_3->z;
+    right.y = dir.x * param_3->z - dir.z * param_3->x;
+    right.z = dir.y * param_3->x - dir.x * param_3->y;
+  } else {
+    right.x = dir.z * param_4->y - dir.y * param_4->z;
+    right.y = dir.x * param_4->z - dir.z * param_4->x;
+    right.z = dir.y * param_4->x - dir.x * param_4->y;
+  }
+  Vec_Normalise(&right, &right);
+
+  _VECTOR up;
+  up.x = right.z * dir.y - right.y * dir.z;
+  up.y = right.x * dir.z - right.z * dir.x;
+  up.z = right.y * dir.x - right.x * dir.y;
+  Vec_Normalise(&up, &up);
+
+  mtxOut->m[8] = dir.x;
+  mtxOut->m[9] = dir.y;
+  mtxOut->m[10] = dir.z;
+  mtxOut->m[4] = up.x;
+  mtxOut->m[5] = up.y;
+  mtxOut->m[6] = up.z;
+  mtxOut->m[0] = right.x;
+  mtxOut->m[1] = right.y;
+  mtxOut->m[2] = right.z;
+}
+
+// AUTOINJECT
+void Vec_Add2(_VECTOR *a, _VECTOR *b, _VECTOR *out) {
+  out->x = a->x + b->x;
+  out->y = a->y + b->y;
+  out->z = a->z + b->z;
+}
+
+// Re-orthonormalise a rotation matrix in place: the forward row is trusted as-is (just normalised), "up" is
+// normalised then used to derive "right", and "up" is finally recomputed as right x forward so all three rows
+// end up orthogonal
+// AUTOINJECT
+void Mat_Normalize(_MATRIX *mtx) {
+  _VECTOR up, forward, right;
+  up.x = mtx->m[4];
+  up.y = mtx->m[5];
+  up.z = mtx->m[6];
+  forward.x = mtx->m[8];
+  forward.y = mtx->m[9];
+  forward.z = mtx->m[10];
+  Vec_Normalise(&forward, &forward);
+  Vec_Normalise(&up, &up);
+
+  right.x = forward.z * up.y - forward.y * up.z;
+  right.y = forward.x * up.z - forward.z * up.x;
+  right.z = forward.y * up.x - forward.x * up.y;
+  Vec_Normalise(&right, &right);
+
+  mtx->m[8] = forward.x;
+  mtx->m[9] = forward.y;
+  mtx->m[10] = forward.z;
+  mtx->m[4] = right.z * forward.y - right.y * forward.z;
+  mtx->m[6] = right.y * forward.x - right.x * forward.y;
+  mtx->m[5] = right.x * forward.z - right.z * forward.x;
+  mtx->m[0] = right.x;
+  mtx->m[1] = right.y;
+  mtx->m[2] = right.z;
+}
