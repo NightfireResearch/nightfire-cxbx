@@ -136,6 +136,10 @@ void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
 
 // AUTOGEN
 void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *mtxIn);
+// AUTOGEN
+void Quat_Slerp_Acc(float blendFactor, float *quatStart, float *quatEnd, float *quatOut);
+// AUTOGEN
+void Vec_Track(float blendFactor, float *targetPos, float *currentPos, _MATRIX *matrix, quaternion_tag *quatOut);
 
 // A fast approximation of slerp
 // AUTOINJECT
@@ -180,6 +184,9 @@ void Mat_CopyRot(const _MATRIX *source, _MATRIX *target) {
 		target->m[i] = source->m[i];
 	}
 }
+
+// AUTOGEN
+void Mat_Align2Up(float *matrix, float *up, float *direction);
 
 // AUTOINJECT
 void Mat_IdentityT(_MATRIX *mtx) {
