@@ -33,9 +33,15 @@ def export_json(side):
     function_list = []
     for f in funcs:
         param_types = [paramToStr(x) for x in f.getParameters()]
+
+        # Get function body size (number of bytes in the function)
+        body = f.getBody()
+        size = body.getNumAddresses() if body else 0
+
         function_dict = {
             "name": f.getName() if f.getParentNamespace().getName() == "Global" else f.getParentNamespace().getName() + "::" + f.getName(),
             "address": "0x" + str(f.getEntryPoint()),
+            "size": size,
             "calling_convention": f.getCallingConventionName(),
             "has_custom_variable_storage": f.hasCustomVariableStorage(),
             "return_type": f.getReturnType().getName(),

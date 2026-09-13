@@ -49,9 +49,8 @@ def map_functions_to_units(ghidra_funcs, injections, uninjectable, side):
         # Calculate match ratio
         ratio = get_function_match_ratio(func['name'], injections, uninjectable)
 
-        # Estimate size (we don't have exact size, so use 0x10 as placeholder)
-        # In a real scenario, you'd extract this from the binary or symbols
-        size = 0x10  # Placeholder
+        # Get function size from Ghidra data
+        size = func['size']
 
         units[source_file].append({
             "name": func['name'],
