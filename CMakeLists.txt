@@ -113,6 +113,7 @@ add_library(actioninject SHARED
   src/action/game/obj/GT.cpp
   src/action/game/obj/GunImp.cpp
   src/action/game/obj/Ladder.cpp
+  src/action/game/obj/Light.cpp
   src/action/game/obj/PCQWorm.cpp
   src/action/game/obj/Player.cpp
   src/action/game/obj/Rotor.cpp

@@ -6,6 +6,8 @@
 #include <string.h>
 #include "../memory.h"
 
+// AUTOGEN
+bool LList_Init(LLISTINFO_tag *list, unsigned short entrySize, unsigned short numEntries);
 
 // AUTOINJECT
 bool LList_Add(LLISTINFO_tag *list, LLNODE_tag *newElement) {
