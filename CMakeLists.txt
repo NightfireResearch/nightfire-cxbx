@@ -73,6 +73,7 @@ add_library(actioninject SHARED
   src/action/engine/psiFile.cpp
   src/action/engine/psiGraphics.cpp
   src/action/engine/psiInput.cpp
+  src/action/engine/psiLight.cpp
   src/action/engine/Text.cpp
   src/action/engine/Vision.cpp
   src/action/engine/Woman.cpp
