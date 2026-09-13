@@ -109,6 +109,7 @@ add_library(actioninject SHARED
   src/action/game/obj/car.cpp
   src/action/game/obj/control.cpp
   src/action/game/obj/Copter.cpp
+  src/action/game/obj/Gas.cpp
   src/action/game/obj/Grapple.cpp
   src/action/game/obj/GT.cpp
   src/action/game/obj/GunImp.cpp

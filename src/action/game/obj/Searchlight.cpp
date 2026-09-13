@@ -16,21 +16,7 @@
 #include "control.h"
 #include "Light.h"
 #include "Player.h"
-
-// AUTOGEN
-obj_tag* Gas_Init(cel_tag *param_1,_VECTOR *param_2,_VECTOR *param_3,_VECTOR *param_4,float param_5,float param_6,HASHCODE param_7,uint param_8,uint param_9,uint param_10,ushort param_11);
-// AUTOGEN
-float Vec_AngleDifference(float angle1, float angle2);
-// AUTOGEN
-void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch);
-// AUTOGEN
-float maybeAtan2(float y, float x);
-// AUTOGEN
-void Mat_Align2Dir(_MATRIX *mtxOut, _VECTOR *direction, _VECTOR *param_3, _VECTOR *param_4);
-// AUTOGEN
-void Player_GetHeadPos(_VECTOR *headPosOut, obj_tag *player, _MATRIX *param_3);
-// AUTOGEN
-void Vec_Add2(_VECTOR *a, _VECTOR *b, _VECTOR *out);
+#include "Gas.h"
 
 // Searchlight sweep timing constants
 // Phase increments by FRAME_RATE_MUL each frame, completing one full cycle after SWEEP_PERIOD_FRAMES

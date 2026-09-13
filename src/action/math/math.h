@@ -93,4 +93,10 @@ void vecutil_cartesian_to_spherical_acc(_VECTOR *vec, float v_x, float v_y, floa
 float Vec_Dot(_VECTOR *a, _VECTOR *b);
 float Vec_Magnitude(_VECTOR *a);
 
+float Vec_AngleDifference(float angle1, float angle2);
+void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch);
+float maybeAtan2(float y, float x);
+void Mat_Align2Dir(_MATRIX *mtxOut, _VECTOR *direction, _VECTOR *param_3, _VECTOR *param_4);
+void Vec_Add2(_VECTOR *a, _VECTOR *b, _VECTOR *out);
+
 #endif // MATH_H

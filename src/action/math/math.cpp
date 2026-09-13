@@ -565,3 +565,18 @@ void vecutil_cartesian_to_spherical_acc(_VECTOR *vec, float v_x, float v_y, floa
   vec->y = atan2f(v_x, v_z);
   vec->z = 0.0f;
 }
+
+// AUTOGEN
+float Vec_AngleDifference(float angle1, float angle2);
+
+// AUTOGEN
+void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch);
+
+// AUTOGEN
+float maybeAtan2(float y, float x);
+
+// AUTOGEN
+void Mat_Align2Dir(_MATRIX *mtxOut, _VECTOR *direction, _VECTOR *param_3, _VECTOR *param_4);
+
+// AUTOGEN
+void Vec_Add2(_VECTOR *a, _VECTOR *b, _VECTOR *out);

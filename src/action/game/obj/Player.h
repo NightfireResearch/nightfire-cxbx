@@ -127,6 +127,7 @@ void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum);
 void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos);
 void Player_Start(void);
 void Player_AddNewStartPos(_VECTOR *pos, _VECTOR *rot, ushort maybeEnabled, level_tag *lvl);
+void Player_GetHeadPos(_VECTOR *headPosOut, obj_tag *player, _MATRIX *param_3);
 
 void PositionBeam(obj_tag *param_1, _VECTOR *param_2, _VECTOR *param_3);
 
