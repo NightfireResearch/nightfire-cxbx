@@ -159,8 +159,8 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
 }
 
 // Internal implementation with standard calling convention
-ushort _Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
-    ushort returnValue = 0;
+short _Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
+    short returnValue = 0;
     HITDATA_tag *hitData;
     _VECTOR direction;
     _VECTOR endPosition;
@@ -204,11 +204,11 @@ ushort _Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
         return returnValue;
     }
 
-    return 0xffff;
+    return -1;  // Error: missing beam or target
 }
 
 // AUTOLTCG
-ushort __declspec(naked) Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
+short __declspec(naked) Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
     // Assembly wrapper for custom calling convention
     // Original game code calls with: param_1 (targetObj) on stack, param_2 (sensorObj) in EDI, param_3 (sensor) in ESI
     _asm {
@@ -225,7 +225,7 @@ ushort __declspec(naked) Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, 
 bool Sensor_InCone(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
 
     // First check if the target is directly hit by the beam
-    ushort beamResult = _Sensor_SetBeam(targetObj, sensorObj, sensor);
+    short beamResult = _Sensor_SetBeam(targetObj, sensorObj, sensor);
     if (beamResult == 1)
         return true;
 
