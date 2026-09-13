@@ -62,7 +62,9 @@ void SpaceLaser_Update(obj_tag *obj) {
         spaceLaser->someCountdown -= REC_FRAME_RATE;
     }
 
-    if(obj->curState != 4 && SwitchChannel_IsActive(spaceLaser->laserShutoffSwitchChannel)) {
+    // Only check shutoff channel if it's non-zero (0 means "no shutoff")
+    if(obj->curState != 4 && spaceLaser->laserShutoffSwitchChannel != 0 &&
+       SwitchChannel_IsActive(spaceLaser->laserShutoffSwitchChannel)) {
         obj->curState = 4;
     }
 
