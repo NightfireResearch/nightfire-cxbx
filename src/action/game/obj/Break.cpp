@@ -89,7 +89,7 @@ void Break_DoBreak(_VECTOR* position) {
         HITDATA_tag hit;
 
         RotMatrix(&obj->rotation, &mtx);
-        Mat_GetDir(&hit.someDirection, &mtx);
+        Mat_GetDir(&hit.surfaceNormal.normal, &mtx);
         Vec_Copy(&obj->centrePoint, &hit.hitPosition);
         hit.maybehitDirection.x = 0.0f;
         hit.maybehitDirection.y = 0.0f;

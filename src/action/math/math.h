@@ -40,9 +40,12 @@ void Quat_QuatTransToMat(quaternion_tag *quatIn,float *vecIn,_MATRIX *mOut);
 void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *mtxIn);
 void Quat_QuaternionMultiply(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *qOut);
 void Quat_Slerp(float progress, quaternion_tag *qStart, quaternion_tag *qEnd, quaternion_tag *qOut);
+void Quat_Slerp_Acc(float blendFactor, float *quatStart, float *quatEnd, float *quatOut);
+void Vec_Track(float blendFactor, float *targetPos, float *currentPos, _MATRIX *matrix, quaternion_tag *quatOut);
 void Mat_GetDir(_VECTOR *dirOut, _MATRIX *mtxIn);
 void Mat_Copy(const _MATRIX *source, _MATRIX *target);
 void Mat_CopyRot(const _MATRIX *source, _MATRIX *target);
+void Mat_Align2Up(float *matrix, float *up, float *direction);
 void Mat_IdentityT(_MATRIX *mtx);
 void Mat_Identity(_MATRIX *mtx);
 void Mat_World2ViewMat(_MATRIX *viewMtx, _MATRIX *worldMtx);
@@ -82,10 +85,20 @@ float Vec_ScalarTripleProduct(_VECTOR *a,_VECTOR *b,_VECTOR *c);
 void vecutil_cartesian_to_spherical_acc(_VECTOR *vec, float v_x, float v_y, float v_z);
 
 #define M_PI 3.14159265358979323846
+#define M_PI_2 1.5707963267948966  // π/2
+#define M_PI_4 0.7853981633974483  // π/4
+#define M_2PI 6.283185307179586    // 2π
 #define DEG2RAD(x) ((x) * ((float)M_PI / 180.0f))
 
 // Helper functions which either didn't exist or were inlined on original code
 float Vec_Dot(_VECTOR *a, _VECTOR *b);
 float Vec_Magnitude(_VECTOR *a);
+
+float Vec_AngleDifference(float angle1, float angle2);
+void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch);
+float maybeAtan2(float y, float x);
+void Mat_Align2Dir(_MATRIX *mtxOut, _VECTOR *direction, _VECTOR *param_3, _VECTOR *param_4);
+void Vec_Add2(_VECTOR *a, _VECTOR *b, _VECTOR *out);
+void Mat_Normalize(_MATRIX *mtx);
 
 #endif // MATH_H

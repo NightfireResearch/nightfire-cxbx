@@ -12,11 +12,10 @@ typedef struct HITDATA_tag {
   HITDATA_tag* next;
   float dmgAmt;
   float unknown1f;
-  _VECTOR someDirection; // 0x10
-  _VECTOR unknown1;
-  char undef[4];
-  _VECTOR maybehitDirection; // 0x2C
-  _VECTOR hitPosition;
+  plane_equ_tag surfaceNormal;
+  _VECTOR unknown1;      // 0x20
+  _VECTOR maybehitDirection; // 0x2C - ray direction
+  _VECTOR hitPosition;   // 0x38
   char materialType;
   char unknown3;
   short hitBoneIdx;
@@ -25,14 +24,18 @@ typedef struct HITDATA_tag {
 } HITDATA_tag;
 
 static_assert(sizeof(HITDATA_tag) == 0x50, "HITDATA_tag is not the expected size");
+static_assert(offsetof(HITDATA_tag, surfaceNormal) == 0x10, "Bad offset of surfaceNormal");
+static_assert(offsetof(HITDATA_tag, maybehitDirection) == 0x2c, "Bad offset of maybehitDirection");
+static_assert(offsetof(HITDATA_tag, hitPosition) == 0x38, "Bad offset of hitPosition");
 
 #pragma pack(pop)
 
-bool Collide_RayIntersect(_VECTOR *startPosition,_VECTOR *endPosition,cel_tag *cel,obj_tag *obj,obj_tag *param_5,HITDATA_tag **hitDataOut,char param_7,uint param_8,ushort param_9);
+bool Collide_RayIntersect(_VECTOR *startPosition,_VECTOR *endPosition,cel_tag *cel,obj_tag *obj,obj_tag *param_5,HITDATA_tag **hitDataOut,char param_7,uint maybeFlags,ushort param_9);
 void Collide_FreeHitList(HITDATA_tag **param_1);
 HITDATA_tag* Coll_GetFreeHit(void);
 bool Collide_LineOfSight(_VECTOR *param_1,_VECTOR *param_2,cel_tag *param_3,obj_tag *param_4,obj_tag *param_5,uint param_6);
 bool Collide_RayTriangle(_VECTOR *ptStart,_VECTOR *ptEnd,_VECTOR *vtx1,_VECTOR *vtx2,_VECTOR *vtx3, float *distanceOut);
 void Collide_FilterBullets(HITDATA_tag **hitData, ushort flags);
+bool Intersect_ConeSphere(_VECTOR *coneApex, float *coneDirection, float coneCos, float coneSin, _VECTOR *sphereCenter);
 
 #endif // COLLIDE_H

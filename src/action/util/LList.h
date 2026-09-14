@@ -24,6 +24,7 @@ typedef struct LLISTINFO_tag {
 
 #pragma pack(pop)
 
+bool LList_Init(LLISTINFO_tag *list, unsigned short entrySize, unsigned short numEntries);
 bool LList_Add(LLISTINFO_tag *list, LLNODE_tag *newElement);
 void LList_Insert(LLISTINFO_tag *list, LLNODE_tag *insertionPoint, LLNODE_tag *newElement);
 LLNODE_tag* LList_Cut(LLISTINFO_tag *list);

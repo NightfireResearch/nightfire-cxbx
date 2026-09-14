@@ -161,18 +161,15 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field5_0x5;
     undefined field6_0x6;
     undefined field7_0x7;
-    undefined field8_0x8;
-    undefined field9_0x9;
-    undefined field10_0xa;
-    undefined field11_0xb;
-    undefined field12_0xc;
-    undefined field13_0xd;
-    undefined field14_0xe;
-    undefined field15_0xf;
-    undefined field16_0x10;
-    undefined field17_0x11;
-    undefined field18_0x12;
-    undefined field19_0x13;
+    obj_tag *firstObject;      // 0x08 - first object in this cel
+    undefined field9_0xc;
+    undefined field10_0xd;
+    undefined field11_0xe;
+    undefined field12_0xf;
+    undefined field13_0x10;
+    undefined field14_0x11;
+    undefined field15_0x12;
+    undefined field16_0x13;
     cel_tag *nextCel;
     undefined field24_0x18;
     undefined field25_0x19;

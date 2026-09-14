@@ -5,7 +5,9 @@
 #define HitHeap (*(LLISTINFO_tag*)0x001ddc60)
 
 // AUTOGEN
-bool Collide_RayIntersect(_VECTOR *position, _VECTOR *endPosition, cel_tag *cel, obj_tag* obj, obj_tag* param_5, HITDATA_tag** hitList, char param_7, uint param_8, ushort param_9);
+bool Collide_RayIntersect(_VECTOR *position, _VECTOR *endPosition, cel_tag *cel, obj_tag* obj, obj_tag* param_5, HITDATA_tag** hitList, char param_7, uint maybeFlags, ushort param_9);
+// AUTOGEN
+bool Intersect_ConeSphere(_VECTOR *coneApex, float *coneDirection, float coneCos, float coneSin, _VECTOR *sphereCenter);
 
 // AUTOINJECT
 void Collide_FreeHitList(HITDATA_tag **hitList) {

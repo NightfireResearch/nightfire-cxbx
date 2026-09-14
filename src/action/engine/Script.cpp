@@ -56,7 +56,7 @@ void Script_SetPosRot(SCRIPTINFO *param_1, _MATRIX *param_2);
 void Script_SetColour(SCRIPTINFO *param_1, undefined1 clr_r, undefined1 clr_g, undefined1 clr_b);
 
 // AUTOGEN
-SCRIPTINFO* Script_Load(HASHCODE param_1,_VECTOR *transform,_VECTOR *rotation,uint *fileBuf,void*, void*, void*);
+SCRIPTINFO* Script_Load(HASHCODE param_1,_VECTOR *transform,_VECTOR *rotation,uint *fileBuf,void*, void* callback, void* maybeCallbackContext);
 
 // AUTOGEN
 void Script_Update(SCRIPTINFO *param_1);

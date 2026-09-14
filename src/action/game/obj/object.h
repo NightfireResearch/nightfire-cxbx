@@ -7,7 +7,10 @@
 
 
 typedef enum {
-    OBJECTTYPE_DELETED=1,
+    // The original uses value 1 both for graphics-only child objects and for
+    // objects after their delete path has completed.
+    OBJECTTYPE_GFX=1,
+    OBJECTTYPE_DELETED=OBJECTTYPE_GFX,
     OBJECTTYPE_DRONE=2,
     OBJECTTYPE_PLAYER=3,
     OBJECTTYPE_BULLET=5,

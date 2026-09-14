@@ -18,6 +18,7 @@ void control_unlink_object(obj_tag* obj);
 bool Control_NextLOD(obj_tag *);
 bool Controls_StraddleTest(obj_tag *param_1);
 void Control_SetEffectType(obj_tag *obj, uint effectType);
+void control_link_object_to_cel(obj_tag *obj, cel_tag *cel);
 
 // Each object type has 3 optional functions which are called by the control system
 // These are Update, Collide and Delete.

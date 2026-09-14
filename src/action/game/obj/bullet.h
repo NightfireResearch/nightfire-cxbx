@@ -17,5 +17,6 @@ static_assert(sizeof(BU_tag) == 0xe0, "Bad size for BU_tag");
 
 #pragma pack(pop)
 
+obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *param_3, weapon_definition_tag *weaponDef, _VECTOR *pos, _VECTOR *direction, ushort weaponSound);
 
 #endif // BULLET_H

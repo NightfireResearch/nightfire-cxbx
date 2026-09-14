@@ -208,6 +208,9 @@ void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos) {
 // AUTOGEN
 obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *spawnPointData);
 
+// AUTOGEN
+void Player_GetHeadPos(_VECTOR *headPosOut, obj_tag *player, _MATRIX *param_3);
+
 // AUTOINJECT
 void Player_Start(void) {
 
