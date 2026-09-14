@@ -34,8 +34,16 @@ jobs:
         run: |
           cmake --build . --config Release
 
-      - name: Upload Installer Artifact to GitHub
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          #name: ${{ env.PKGNAME }}-Installer
+          name: build-artifacts
           path: ${{ runner.workspace }}/build/Release
+
+      - name: Upload Decomp Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: decomp-reports
+          path: |
+            ${{ github.workspace }}/report_action.json
+            ${{ github.workspace }}/report_driving.json
