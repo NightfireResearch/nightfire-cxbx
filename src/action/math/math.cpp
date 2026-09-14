@@ -775,22 +775,26 @@ void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch)
   out[1] = sinPitch * radius;
 }
 
+// Coefficients for maybeAtan2's polynomial approximation of atan(ratio) over ratio in [0,1]
+#define MAYBE_ATAN2_COEFF_A 1.0596788f
+#define MAYBE_ATAN2_COEFF_B 0.27131295f
+
 // Fast rational atan2 approximation (max error ~0.28 degrees)
 // AUTOINJECT
 float maybeAtan2(float y, float x) {
   float result;
 
   if (x == y) {
-    result = (x == 0.0f) ? 0.0f : 0.7853982f; // pi/4
+    result = (x == 0.0f) ? 0.0f : (float)M_PI_4;
   } else {
     float absX = ABS(x);
     float absY = ABS(y);
     if (absX <= absY) {
       float ratio = absX / absY;
-      result = (float)M_PI_2 - (1.0596788f - ratio * 0.27131295f) * ratio;
+      result = (float)M_PI_2 - (MAYBE_ATAN2_COEFF_A - ratio * MAYBE_ATAN2_COEFF_B) * ratio;
     } else {
       float ratio = absY / absX;
-      result = (1.0596788f - ratio * 0.27131295f) * ratio;
+      result = (MAYBE_ATAN2_COEFF_A - ratio * MAYBE_ATAN2_COEFF_B) * ratio;
     }
   }
 

@@ -86,6 +86,7 @@ void vecutil_cartesian_to_spherical_acc(_VECTOR *vec, float v_x, float v_y, floa
 
 #define M_PI 3.14159265358979323846
 #define M_PI_2 1.5707963267948966  // π/2
+#define M_PI_4 0.7853981633974483  // π/4
 #define M_2PI 6.283185307179586    // 2π
 #define DEG2RAD(x) ((x) * ((float)M_PI / 180.0f))
 
