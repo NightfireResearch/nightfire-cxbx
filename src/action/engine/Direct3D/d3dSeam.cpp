@@ -45,6 +45,7 @@
 #define D3DDevice_SetIndices_ADDR               0x00104060u
 #define D3DDevice_SetVertexShader_ADDR          0x00102b50u
 #define D3DDevice_DrawVerticesUP_ADDR            0x00104860u
+#define D3DResource_BlockUntilNotBusy_ADDR      0x001050b0u
 
 #define Gfx_D3DLastError          U32_AT(0x002C5750) // Gfx.D3DLastError
 #define Gfx_TotalTextureBytesUsed U32_AT(0x002C6FE0) // Gfx.field6075_0x1890 - running total, informational only
@@ -147,6 +148,10 @@ typedef void(__stdcall *D3DDevice_SetVertexShaderFn)(void *handle);
 typedef void(__stdcall *D3DDevice_DrawVerticesUPFn)(uint32_t primitiveType, uint32_t vertexCount, void *pVertexData, uint32_t stride);
 #define D3DDevice_DrawVerticesUP ((D3DDevice_DrawVerticesUPFn)D3DDevice_DrawVerticesUP_ADDR)
 
+// A thunk (plain JMP) to the real implementation - confirmed RET 0x4, plain __stdcall, 1 param.
+typedef void(__stdcall *D3DResource_BlockUntilNotBusyFn)(void *pResource);
+#define D3DResource_BlockUntilNotBusy ((D3DResource_BlockUntilNotBusyFn)D3DResource_BlockUntilNotBusy_ADDR)
+
 // ---------------------------------------------------------------------------------------------------------------
 // Pure-math Eurocom matrix helpers (Global namespace, not D3D8::) - never previously declared/called from any
 // reimplemented code in this project, so first-time AUTOGEN forward declarations rather than plain ones (see
@@ -189,7 +194,9 @@ struct D3DTextureSlotRaw {
     void    *baseTexture;   // +0x14 - set to point at this same slot once registered (Xbox convention)
     uint16_t width;         // +0x18
     uint16_t height;        // +0x1a
-    uint16_t unused1c;      // +0x1c - written 0; nothing else reads it as far as we've traced
+    uint16_t refCount;      // +0x1c - written 0 by RegisterTexture; FUN_000e4f00 (the slot-release function) tests it
+                             // == 0 before freeing, confirming it really is a refcount despite RegisterTexture
+                             // never incrementing it - nothing traced so far increments it either
     uint16_t nonSwizzled;   // +0x1e - the "param_6 != 0" flag from the caller
     uint32_t mipChainBytes; // +0x20 - total byte size of every mip level, written just below
 };
@@ -294,7 +301,7 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
         texSlot->width = (uint16_t)width;
         texSlot->baseTexture = texSlot;
         texSlot->height = (uint16_t)height;
-        texSlot->unused1c = 0;
+        texSlot->refCount = 0;
         texSlot->nonSwizzled = (uint16_t)(param_6 != 0);
         Gfx_TotalTextureBytesUsed += mipChainBytes;
 
@@ -624,6 +631,33 @@ void d3dSetTextureStage1(int textureSlot, int param2) {
         D3DDevice_SetTexture(1, baseTexture); // always stage 1, in both branches - matches the original exactly
     }
     Gfx_D3DLastError = 0;
+}
+
+// Frees a texture slot registered by RegisterTexture, no-opping if refCount is still nonzero. Also unbinds
+// stage 0 first if this was the currently-loaded texture there (rebinding it to slot 0's own baseTexture,
+// matching the original exactly), and stage 1 unconditionally via d3dSetTextureStage1 just above.
+//
+// AUTOINJECT
+void ReleaseTexture(int textureSlot) {
+    D3DTextureSlotRaw *texSlot = D3DTextureSlot(textureSlot);
+    if (texSlot->refCount != 0)
+        return;
+
+    if (Gfx_CurrentlyLoadedTexture != 0) {
+        Gfx_CurrentlyLoadedTexture = 0;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetTexture(0, D3DTextureSlot(0)->baseTexture);
+        Gfx_D3DLastError = 0;
+    }
+
+    d3dSetTextureStage1(0, 0);
+
+    if (texSlot->baseTexture != NULL)
+        D3DResource_BlockUntilNotBusy(texSlot->baseTexture);
+
+    Gfx_TotalTextureBytesUsed -= texSlot->mipChainBytes;
+    texSlot->baseTexture = NULL;
+    texSlot->mipChainBytes = 0;
 }
 
 // AUTOINJECT

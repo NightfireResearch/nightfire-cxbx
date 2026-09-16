@@ -16,6 +16,9 @@
 // Graphics_Init_LowLevel for an example - it passes a freshly-allocated buffer, not existing pixel data).
 int RegisterTexture(unsigned int width, unsigned int height, int formatType, unsigned int levels, void *data, int param_6);
 
+// Frees a texture slot returned by RegisterTexture (no-ops if its refcount is still nonzero).
+void ReleaseTexture(int textureSlot);
+
 // These three all hardcode one specific NV2A render state apiece and share a dirty-flag cache + "is the
 // device ready yet" guard, funnelled through D3D8's generic (and, unusually, custom-register-convention -
 // see D3D_SetRenderStateSimple in the .cpp) D3DDevice_SetRenderState_Simple.

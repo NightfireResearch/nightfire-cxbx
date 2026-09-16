@@ -49012,7 +49012,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e4f00",
+        "name": "ReleaseTexture",
         "address": "0x000e4f00",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49020,7 +49020,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e4f00(int texIdx)",
+        "prototype_string": "void __cdecl ReleaseTexture(int texIdx)",
         "parameters": [
             "[int texIdx@Stack[0x4]:4]"
         ],
