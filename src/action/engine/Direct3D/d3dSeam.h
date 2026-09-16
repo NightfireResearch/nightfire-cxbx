@@ -26,4 +26,20 @@ void d3dSetRenderState2(int zWriteEnable);     // NV097_SET_DEPTH_MASK
 // flag cache unlike the three above).
 void d3dSetCullMode(int cullEnabled);
 
+// Builds a gamma-ramp table from a brightness/gamma/contrast-style triplet and uploads it via D3D8's own
+// D3DDevice_SetGammaRamp (no-op if the device isn't ready yet).
+void ConfigureGammaRamp(float gamma, float brightness, float contrast);
+
+// Releases a D3D8 resource (texture, vertex buffer, etc.) via D3D8's own D3DResource_Release. NULL-safe,
+// matching the original.
+void D3DResourceRelease(void *resource);
+
+// Sets up the render viewport (clamping width/height to a minimum of 2, matching the original) and uploads
+// it via D3D8's own D3DDevice_SetViewport if the device is ready.
+void d3dSetupViewportDimensions(unsigned int viewportX, unsigned int viewportY, unsigned int viewportWidth, unsigned int viewportHeight);
+
+// Clears the target and/or Z/stencil buffer via D3D8's own D3DDevice_Clear. colour is a raw 0xRRGGBB value
+// (alpha byte masked off); z is always cleared to 1.0f and stencil to 0, matching the original exactly.
+void d3dClear(unsigned int colour, bool clearTarget, bool clearZStencil);
+
 #endif // D3DSEAM_H_

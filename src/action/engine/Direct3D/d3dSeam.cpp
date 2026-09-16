@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <math.h>
 
 // ---------------------------------------------------------------------------------------------------------------
 // "Thin seam" reimplementation. These are Eurocom's own small wrapper functions that sit directly on top of
@@ -28,6 +29,10 @@
 #define D3DDevice_SetRenderState_CullMode_ADDR 0x001009b0u
 #define D3DResource_Register_ADDR              0x00105080u
 #define XGSetTextureHeader_ADDR                0x00112586u
+#define D3DDevice_SetGammaRamp_ADDR             0x001038f0u
+#define D3DDevice_SetViewport_ADDR              0x00103d50u
+#define D3DDevice_Clear_ADDR                    0x001043e0u
+#define D3DResource_Release_ADDR                0x00104fa0u
 
 #define Gfx_D3DLastError          U32_AT(0x002C5750) // Gfx.D3DLastError
 #define Gfx_TotalTextureBytesUsed U32_AT(0x002C6FE0) // Gfx.field6075_0x1890 - running total, informational only
@@ -44,6 +49,30 @@ typedef void(__stdcall *D3DResource_RegisterFn)(void *pTexture, uint32_t data);
 typedef void(__stdcall *XGSetTextureHeaderFn)(uint32_t width, uint32_t height, uint32_t levels, uint32_t usage,
                                                int format, uint32_t pool, void *pTexture, uint32_t data, uint32_t pitch);
 #define XGSetTextureHeader ((XGSetTextureHeaderFn)XGSetTextureHeader_ADDR)
+
+// D3DDevice_SetGammaRamp(flags, pRamp) and D3DResource_Release(pResource) - both confirmed plain __stdcall
+// via raw disassembly (RET 0x8 / RET 0x4 respectively, matching their param counts exactly).
+typedef void(__stdcall *D3DDevice_SetGammaRampFn)(uint32_t flags, void *pRamp);
+#define D3DDevice_SetGammaRamp ((D3DDevice_SetGammaRampFn)D3DDevice_SetGammaRamp_ADDR)
+
+typedef void(__stdcall *D3DResource_ReleaseFn)(void *pResource);
+#define D3DResource_Release ((D3DResource_ReleaseFn)D3DResource_Release_ADDR)
+
+// D3DDevice_SetViewport(pViewport) - confirmed plain __stdcall (RET 0x4). D3DVIEWPORT here is the standard
+// D3D8 viewport struct (X, Y, Width, Height, MinZ, MaxZ), not something Eurocom-specific.
+struct D3DVIEWPORT {
+    uint32_t X, Y, Width, Height;
+    float MinZ, MaxZ;
+};
+typedef void(__stdcall *D3DDevice_SetViewportFn)(D3DVIEWPORT *pViewport);
+#define D3DDevice_SetViewport ((D3DDevice_SetViewportFn)D3DDevice_SetViewport_ADDR)
+
+// D3DDevice_Clear(rectCount, pRects, flags, colour, z, stencil) - Ghidra's own prototype only reports 5
+// params (20 bytes), but the function's own RET 0x18 cleans up 24 bytes, and the d3dClear call site (see
+// below) pushes exactly 6 dwords. It's a completely standard D3D8 Clear() signature - Ghidra just missed the
+// trailing stencil parameter (always 0 at this call site, which is likely why its analysis folded it away).
+typedef void(__stdcall *D3DDevice_ClearFn)(uint32_t rectCount, void *pRects, uint32_t flags, uint32_t colour, float z, uint32_t stencil);
+#define D3DDevice_Clear ((D3DDevice_ClearFn)D3DDevice_Clear_ADDR)
 
 // D3DDevice_SetRenderState_Simple(NV2A method header word in ECX, value in EDX) - the generic, runtime-method
 // render-state setter. Everything else in the D3DDevice_SetRenderState_XXX family takes its single value on
@@ -200,9 +229,15 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 #define D3D_DepthMaskLastValue  U32_AT(0x00111AD0)
 #define D3D_CullModeLastValue   U32_AT(0x00111C4C)
 
-// Nonzero once the device's initial vertex-shader-creation bring-up (in xboxInitGraphics) has succeeded -
-// these render-state setters no-op the actual D3D8 call (but still update their cache) until then.
+// Gfx.D3DDevice (confirmed via get_struct_layout: GraphicsSystem+28) - the actual D3D8 device handle/pointer,
+// null until xboxInitGraphics has created it. Every function below that touches D3D8 guards on this exactly
+// like the original did, and no-ops (while still updating any cache) if it's not ready yet.
 #define D3D_DeviceReady U32_AT(0x002C576C)
+
+#define Gfx_ViewportX U32_AT(0x002C6F74) // Gfx.viewportX
+#define Gfx_ViewportY U32_AT(0x002C6F78) // Gfx.viewportY
+#define Gfx_ViewportWidth U32_AT(0x002C6F7C) // Gfx.viewportWidth
+#define Gfx_ViewportHeight U32_AT(0x002C6F80) // Gfx.viewportHeight
 
 // AUTOINJECT
 void d3dSetRenderState(int enableDepthTest) {
@@ -253,4 +288,74 @@ void d3dSetCullMode(int cullEnabled) {
     uint32_t value = (cullEnabled != 0) ? 0x901u : 0u;
     D3DDevice_SetRenderState_CullMode((int)value);
     D3D_CullModeLastValue = (uint32_t)cullEnabled; // stores the raw input, not the transformed value
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Gamma ramp, viewport, clear, resource release
+// ---------------------------------------------------------------------------------------------------------------
+
+// AUTOINJECT
+void ConfigureGammaRamp(float gamma, float brightness, float contrast) {
+    // Builds a 256-entry-per-channel gamma ramp from a gamma/brightness/contrast-style triplet. Xbox's
+    // D3DDevice_SetGammaRamp here expects a packed 768-byte buffer (256 bytes red, then 256 green, then 256
+    // blue, one byte per entry) - confirmed by the original's byte-sized writes into three stack buffers that
+    // sit contiguously in that exact order; NOT the 16-bit-per-entry D3DGAMMARAMP PC D3D8/D3D9 normally uses.
+    // All three channels get the identical value per index (r/g/b here are single global adjustment knobs,
+    // not per-channel curves), so building one array and copying it three times is simplest and byte-for-byte
+    // equivalent to relying on stack layout the way the original did.
+    uint8_t gammaRamp[768];
+    for (int i = 0; i < 256; i++) {
+        double gammaCorrected = pow((double)gamma, (double)i * (1.0 / 255.0));
+        double value = (gammaCorrected * 255.0 - 128.0) * brightness + 128.0 + (contrast - 1.0);
+        if (value < 0.0) value = 0.0;
+        else if (value > 255.0) value = 255.0;
+        uint8_t byteValue = (uint8_t)(value + 0.5); // round to nearest, matching the original's __ftol2(x+0.5)
+
+        gammaRamp[i] = byteValue;
+        gammaRamp[256 + i] = byteValue;
+        gammaRamp[512 + i] = byteValue;
+    }
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetGammaRamp(0, gammaRamp);
+}
+
+// AUTOINJECT
+void D3DResourceRelease(void *resource) {
+    if (resource != NULL)
+        D3DResource_Release(resource);
+}
+
+// AUTOINJECT
+void d3dSetupViewportDimensions(unsigned int viewportX, unsigned int viewportY, unsigned int viewportWidth, unsigned int viewportHeight) {
+    if ((int)viewportWidth < 2) viewportWidth = 2;
+    if ((int)viewportHeight < 2) viewportHeight = 2;
+
+    Gfx_ViewportX = viewportX;
+    Gfx_ViewportY = viewportY;
+    Gfx_ViewportWidth = viewportWidth;
+    Gfx_ViewportHeight = viewportHeight;
+
+    if (D3D_DeviceReady != 0) {
+        D3DVIEWPORT viewport;
+        viewport.X = viewportX;
+        viewport.Y = viewportY;
+        viewport.Width = viewportWidth;
+        viewport.Height = viewportHeight;
+        viewport.MinZ = 0.0f;
+        viewport.MaxZ = 1.0f;
+        D3DDevice_SetViewport(&viewport);
+    }
+    Gfx_D3DLastError = 0;
+}
+
+// AUTOINJECT
+void d3dClear(unsigned int colour, bool clearTarget, bool clearZStencil) {
+    uint32_t flags = 0;
+    if (clearTarget) flags = 0xf0;
+    if (clearZStencil) flags |= 3;
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_Clear(0, NULL, flags, colour & 0xffffffu, 1.0f, 0);
+    Gfx_D3DLastError = 0;
 }
