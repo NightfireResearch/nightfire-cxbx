@@ -48548,7 +48548,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3b80",
+        "name": "d3dSetColorConstant67",
         "address": "0x000e3b80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48556,7 +48556,7 @@
         "param_types": [
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000e3b80(uint param_1)",
+        "prototype_string": "void __cdecl d3dSetColorConstant67(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ],
@@ -48620,7 +48620,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3e60",
+        "name": "d3dSetFogNear",
         "address": "0x000e3e60",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48628,7 +48628,7 @@
         "param_types": [
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_000e3e60(float param_1)",
+        "prototype_string": "void __cdecl d3dSetFogNear(float param_1)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]"
         ],
@@ -48636,7 +48636,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3f00",
+        "name": "d3dSetFogFar",
         "address": "0x000e3f00",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48644,7 +48644,7 @@
         "param_types": [
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_000e3f00(float param_1)",
+        "prototype_string": "void __cdecl d3dSetFogFar(float param_1)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]"
         ],
@@ -48734,13 +48734,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e41e0",
+        "name": "d3dBeginFrame",
         "address": "0x000e41e0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e41e0(void)",
+        "prototype_string": "void __stdcall d3dBeginFrame(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"

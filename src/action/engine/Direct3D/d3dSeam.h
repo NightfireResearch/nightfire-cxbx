@@ -63,4 +63,13 @@ void d3dSwap(void);
 void d3dSetTextureStage0(int textureSlot);
 void d3dSetTextureStage1(int textureSlot, int param2);
 
+// Shader constants. colour is a packed 0xAARRGGBB value; near_/far_ feed a shared fog {1/(far-near),
+// near/(far-near)} constant; intensity drives a character-lighting blend factor. d3dBeginFrame is the
+// per-frame counterpart to d3dSwap - resets a few per-frame caches and no-ops if a frame is already pending.
+void d3dSetColorConstant67(unsigned int colour);
+void d3dSetFogNear(float near_);
+void d3dSetFogFar(float far_);
+void gfxSetCharacterLightIntensity(float intensity);
+void d3dBeginFrame(void);
+
 #endif // D3DSEAM_H_

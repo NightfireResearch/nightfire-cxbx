@@ -38,6 +38,7 @@
 #define D3DDevice_SetRenderState_YuvEnable_ADDR 0x00101c20u
 #define D3DDevice_Swap_ADDR                     0x00103730u
 #define D3DDevice_SetTexture_ADDR               0x00103eb0u
+#define D3DDevice_SetVertexShaderConstant1_ADDR 0x00102570u
 
 #define Gfx_D3DLastError          U32_AT(0x002C5750) // Gfx.D3DLastError
 #define Gfx_TotalTextureBytesUsed U32_AT(0x002C6FE0) // Gfx.field6075_0x1890 - running total, informational only
@@ -99,6 +100,14 @@ typedef void(__stdcall *D3DDevice_SetTextureFn)(uint32_t stage, void *pTexture);
 // body generated) via game.cpp; just a plain forward declaration here so d3dSwap can call it too, without
 // asking preprocess.py to generate a second, colliding body for it.
 double timestamp(void);
+
+// D3DDevice_SetVertexShaderConstant1(constant index in ECX, pointer to 4 floats in EDX) - confirmed via raw
+// disassembly to take exactly two register arguments and no stack arguments (plain RET, no immediate). Unlike
+// D3D_SetRenderStateSimple above, this exactly matches MSVC's own __fastcall ABI for a 2-argument function
+// (first two register-sized args in ECX/EDX, callee-cleans-up-nothing since nothing was pushed), so a plain
+// __fastcall function pointer works here without needing a hand-written asm trampoline.
+typedef void(__fastcall *D3DDevice_SetVertexShaderConstant1Fn)(uint32_t constantIndex, float *pConstants);
+#define D3DDevice_SetVertexShaderConstant1 ((D3DDevice_SetVertexShaderConstant1Fn)D3DDevice_SetVertexShaderConstant1_ADDR)
 
 // D3DDevice_SetRenderState_Simple(NV2A method header word in ECX, value in EDX) - the generic, runtime-method
 // render-state setter. Everything else in the D3DDevice_SetRenderState_XXX family takes its single value on
@@ -297,6 +306,50 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 #define Gfx_SwapPending           U8_AT(0x002C5754)     // Gfx.field1_0x4
 #define Gfx_LastSwapTimestamp     DOUBLE_AT(0x002FF438) // not in the Gfx struct - a separate global
 #define Gfx_AccumulatedSwapTime   DOUBLE_AT(0x002FF440) // not in the Gfx struct - a separate global
+#define Gfx_AccumulatedSwapTimeReport DOUBLE_AT(0x002FF448) // not in the Gfx struct - the accumulator's value just before each reset, for reporting
+
+// Shader constant 0x67: a packed 0xAARRGGBB colour, unpacked byte-by-byte through Gfx.u8tofloat01 (a 256-entry
+// byte-to-[0,1]-float lookup table) into 4 shader-constant floats. Exact use (tint/ambient colour) untraced.
+#define Gfx_ColorConstant67Cache U32_AT(0x002C6FD4) // Gfx.field6072_0x1884
+#define D3D8_ForceColorConstant67Update U8_AT(0x001B52DC) // not in the Gfx struct - forces a re-send even if the cache matches (e.g. after a device reset)
+#define Gfx_U8ToFloat01(byteValue) (((float*)0x002FECEC)[(uint8_t)(byteValue)]) // Gfx.u8tofloat01[256]
+
+// Shader constant 0x66: a fog {1/(far-near), near/(far-near)} pair, shared between the near and far setters -
+// whichever is called, both cached scaled values get re-read and the pair recomputed the same way.
+#define Gfx_FogScale       FLOAT_AT(0x002FF26C) // not in the Gfx struct - a separate global, set elsewhere
+#define Gfx_FogScaledNear  FLOAT_AT(0x002FF34C)
+#define Gfx_FogScaledFar   FLOAT_AT(0x002FF350)
+#define Gfx_FogNearFarDelta FLOAT_AT(0x002FF354)
+#define Gfx_FogConstant66  ((float*)0x002FF33C) // [0] = 1/delta (or a sentinel if delta is ~0), [1] = [0]*scaledNear
+
+// Shader constant 0x75: {0, 0, characterLightIntensity, 1-characterLightIntensity}. The first two floats are
+// zeroed once per frame by d3dBeginFrame; gfxSetCharacterLightIntensity only ever touches the last two.
+#define Gfx_ShaderConstant75 ((float*)0x002FF378)
+#define Gfx_MiscModeFlags U32_AT(0x002FF3A4) // not in the Gfx struct - shared small state-flags word (also used by d3dSetTextureStage1's 0x20 bit; this function uses bit 0x10)
+
+// d3dBeginFrame-only globals - none of these are really part of the Gfx struct despite how Ghidra's own
+// decompile of this particular function mis-labelled a couple of them (it even flags the mismatch itself:
+// "WARNING: Globals starting with '_' overlap smaller symbols at the same address"). Verified via raw
+// disassembly instead of trusting that decompile's variable-to-field mapping here.
+#define Gfx_FrameCounter U32_AT(0x002C5758)          // Gfx.field5_0x8
+#define Gfx_MiscResetFlag U32_AT(0x002FF3A8)         // not in the Gfx struct - untraced meaning, always set to -1 here
+#define Gfx_CurrentStreamBuffer U32_AT(0x002C6F88)   // Gfx.currentStreamBuffer
+#define Gfx_CurrentIndexBuffer U32_AT(0x002C6F8C)    // Gfx.currentIndexBuffer
+
+// Bit pattern for the fog constant's "avoid divide-by-zero" sentinel value - written as a raw uint32_t by the
+// original rather than a float literal, so reproduced bit-for-bit rather than approximated with a decimal one.
+static inline float BitsToFloat(uint32_t bits) {
+    float f;
+    memcpy(&f, &bits, sizeof(f));
+    return f;
+}
+
+static void RecomputeFogConstant66() {
+    float delta = Gfx_FogNearFarDelta;
+    float invDelta = (delta <= -0.001f || delta >= 0.001f) ? (1.0f / delta) : BitsToFloat(0x4479ffff);
+    Gfx_FogConstant66[0] = invDelta;
+    Gfx_FogConstant66[1] = invDelta * Gfx_FogScaledNear;
+}
 
 // AUTOINJECT
 void d3dSetRenderState(int enableDepthTest) {
@@ -543,4 +596,98 @@ void d3dSwap(void) {
     Gfx_D3DLastError = 0;
 
     Gfx_LastSwapTimestamp = timestamp(); // called again, unconditionally, matching the original exactly
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Shader constants (all via the __fastcall D3DDevice_SetVertexShaderConstant1 above)
+// ---------------------------------------------------------------------------------------------------------------
+
+// AUTOINJECT
+void d3dSetColorConstant67(unsigned int packedColour) {
+    if (D3D8_ForceColorConstant67Update == 0 && Gfx_ColorConstant67Cache == packedColour)
+        return;
+    Gfx_ColorConstant67Cache = packedColour;
+    D3D8_ForceColorConstant67Update = 0;
+
+    float constants[4];
+    constants[0] = Gfx_U8ToFloat01((packedColour >> 16) & 0xFF); // R
+    constants[1] = Gfx_U8ToFloat01((packedColour >> 8) & 0xFF);  // G
+    constants[2] = Gfx_U8ToFloat01(packedColour & 0xFF);         // B
+    constants[3] = Gfx_U8ToFloat01((packedColour >> 24) & 0xFF); // A
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShaderConstant1(0x67, constants);
+    Gfx_D3DLastError = 0;
+}
+
+// AUTOINJECT
+void d3dSetFogNear(float near_) {
+    Gfx_FogScaledNear = Gfx_FogScale * near_;
+    Gfx_FogNearFarDelta = Gfx_FogScaledFar - Gfx_FogScaledNear;
+    RecomputeFogConstant66();
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShaderConstant1(0x66, Gfx_FogConstant66);
+    Gfx_D3DLastError = 0;
+}
+
+// AUTOINJECT
+void d3dSetFogFar(float far_) {
+    Gfx_FogScaledFar = Gfx_FogScale * far_;
+    Gfx_FogNearFarDelta = Gfx_FogScaledFar - Gfx_FogScaledNear;
+    RecomputeFogConstant66();
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShaderConstant1(0x66, Gfx_FogConstant66);
+    Gfx_D3DLastError = 0;
+}
+
+// AUTOINJECT
+void gfxSetCharacterLightIntensity(float intensity) {
+    // Translated literally from the original's own comparison (matches its plate comment: sets the flag for
+    // positive values or NaN, clears/clamps-to-zero for negative values or exact zero).
+    if ((intensity < 0.0f) == (intensity == 0.0f)) {
+        Gfx_MiscModeFlags |= 0x10;
+    } else {
+        intensity = 0.0f;
+        Gfx_MiscModeFlags &= ~0x10u;
+    }
+    Gfx_ShaderConstant75[2] = intensity;
+    Gfx_ShaderConstant75[3] = 1.0f - intensity;
+
+    if ((Gfx_MiscModeFlags & 0x10) != 0) {
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetVertexShaderConstant1(0x75, Gfx_ShaderConstant75);
+        Gfx_D3DLastError = 0;
+    }
+}
+
+// Per-frame reset, paired with d3dSwap (which clears Gfx_SwapPending; this sets it, and no-ops if a frame is
+// already pending). Resets stream/index-buffer caches, the frame counter, and the first two floats of shader
+// constant 0x75 (gfxSetCharacterLightIntensity owns the other two).
+//
+// AUTOINJECT
+void d3dBeginFrame(void) {
+    if (Gfx_SwapPending != 0)
+        return;
+    Gfx_SwapPending = 1;
+
+    double now = timestamp();
+    Gfx_D3DLastError = 0;
+    Gfx_AccumulatedSwapTimeReport = (now - Gfx_LastSwapTimestamp) + Gfx_AccumulatedSwapTime;
+    Gfx_AccumulatedSwapTime = 0.0;
+    Gfx_LastSwapTimestamp = now;
+
+    Gfx_LastSwapTimestamp = timestamp(); // called again, unconditionally, matching d3dSwap's own pattern
+
+    Gfx_MiscResetFlag = 0xFFFFFFFFu;
+    Gfx_CurrentStreamBuffer = 0xFFFFFFFFu;
+    Gfx_CurrentIndexBuffer = 0xFFFFFFFFu;
+    Gfx_FrameCounter = Gfx_FrameCounter + 1;
+    Gfx_ShaderConstant75[0] = 0.0f;
+    Gfx_ShaderConstant75[1] = 0.0f;
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShaderConstant1(0x75, Gfx_ShaderConstant75);
+    Gfx_D3DLastError = 0;
 }
