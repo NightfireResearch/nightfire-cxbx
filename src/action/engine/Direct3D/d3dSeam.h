@@ -115,4 +115,12 @@ int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzl
 // already know to set ESI. Do NOT call this directly from new C++ code with a normal argument - it won't work.
 void d3dRenderTargetSetup(void);
 
+// Allocates a slot (0 on failure) in a small, separate 256-slot table used for reticle/crosshair-style
+// textured-quad drawing (FUN_000e5350, not yet reimplemented).
+int d3dRegisterOverlayBuffer(void *data, unsigned int vertexCount);
+
+// Draws a small textured overlay quad (reticle/crosshair-style) previously registered via
+// d3dRegisterOverlayBuffer, bound to texture stage 3.
+void d3dDrawOverlayQuad(int overlaySlot, float sizeParam, int textureSlot, float param4, int param5);
+
 #endif // D3DSEAM_H_

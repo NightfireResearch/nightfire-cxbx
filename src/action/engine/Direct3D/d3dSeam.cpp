@@ -50,6 +50,7 @@
 #define D3DDevice_GetRenderTarget2_ADDR          0x00103d10u
 #define D3DDevice_GetDepthStencilSurface2_ADDR   0x00103d30u
 #define D3DDevice_SetRenderTarget_ADDR            0x001038d0u
+#define D3DDevice_DrawVertices_ADDR                0x001049c0u
 
 #define Gfx_D3DLastError          U32_AT(0x002C5750) // Gfx.D3DLastError
 #define Gfx_TotalTextureBytesUsed U32_AT(0x002C6FE0) // Gfx.field6075_0x1890 - running total, informational only
@@ -172,6 +173,10 @@ typedef void *(__stdcall *D3DDevice_GetDepthStencilSurface2Fn)(void);
 
 typedef void(__stdcall *D3DDevice_SetRenderTargetFn)(void *pRenderTarget, void *pDepthStencil);
 #define D3DDevice_SetRenderTarget ((D3DDevice_SetRenderTargetFn)D3DDevice_SetRenderTarget_ADDR)
+
+// D3DDevice_DrawVertices(primitiveType, startVertex, vertexCount) - confirmed plain __stdcall (RET 0xc).
+typedef void(__stdcall *D3DDevice_DrawVerticesFn)(uint32_t primitiveType, uint32_t startVertex, uint32_t vertexCount);
+#define D3DDevice_DrawVertices ((D3DDevice_DrawVerticesFn)D3DDevice_DrawVertices_ADDR)
 
 // ---------------------------------------------------------------------------------------------------------------
 // Pure-math Eurocom matrix helpers (Global namespace, not D3D8::) - never previously declared/called from any
@@ -1384,4 +1389,144 @@ int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzl
 
     Gfx_VertexBufferBytesUsed += totalBytes;
     return slot;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// d3dRegisterOverlayBuffer
+// ---------------------------------------------------------------------------------------------------------------
+
+// A separate, smaller (256-slot, 20-byte-per-slot) table from the texture/vertex/index-buffer ones above -
+// used later by FUN_000e5350 (a reticle/crosshair-style textured-quad draw, not yet reimplemented) to look up
+// a small vertex buffer by slot and draw it. The "is this slot free" test is at +0xc, not +0x00, matching the
+// same "check the self/data-pointer field, not the header" pattern already seen on the other tables - +0xc
+// here holds a copy of the caller's own data pointer (confirmed via raw disassembly: written directly from
+// the same value passed to D3DResource_Register as its data argument, not computed).
+#define D3D_OVERLAY_QUAD_TABLE_BASE  0x002CAFE8u
+#define D3D_OVERLAY_QUAD_TABLE_COUNT 256
+
+struct D3DOverlayQuadSlotRaw {
+    uint32_t header;     // +0x00 - 1 once allocated. header&0x70000 never equals 0x20000 for this value, so
+                          // D3DResource_Register never takes its pointer-masking branch here either.
+    void    *dataPtr;    // +0x04 - Data; set BY D3DResource_Register itself (we zero it first, it adds data to that)
+    uint32_t reserved08; // +0x08 - always 0; nothing else reads it as far as we've traced
+    void    *dataPtrCopy; // +0x0c - a copy of the caller's own data pointer; doubles as the "is this slot free" test
+    uint32_t vertexCount; // +0x10 - consumed later by FUN_000e5350's D3DDevice_DrawVertices call
+};
+static_assert(sizeof(D3DOverlayQuadSlotRaw) == 20, "Bad size for D3DOverlayQuadSlotRaw");
+
+static D3DOverlayQuadSlotRaw *D3DOverlayQuadSlot(int index) {
+    return (D3DOverlayQuadSlotRaw*)(D3D_OVERLAY_QUAD_TABLE_BASE + (unsigned)index * sizeof(D3DOverlayQuadSlotRaw));
+}
+
+// AUTOINJECT
+int d3dRegisterOverlayBuffer(void *data, unsigned int vertexCount) {
+    for (int slot = 1; slot < D3D_OVERLAY_QUAD_TABLE_COUNT; slot++) {
+        D3DOverlayQuadSlotRaw *slotPtr = D3DOverlayQuadSlot(slot);
+        if (slotPtr->dataPtrCopy != NULL)
+            continue;
+
+        slotPtr->dataPtrCopy = data;
+        slotPtr->vertexCount = vertexCount;
+
+        slotPtr->header = 1;
+        slotPtr->dataPtr = NULL;
+        slotPtr->reserved08 = 0;
+        D3DResource_Register(slotPtr, (uint32_t)(uintptr_t)data);
+
+        return slot;
+    }
+
+    D3DSeamTableExhaustedWarning("overlay quad buffer");
+    return 0;
+}
+
+// Draws a small textured quad (reticle/crosshair-style overlay, per the earlier audit's read of this
+// function) previously registered via d3dRegisterOverlayBuffer, bound to texture stage 3. sizeParam gets
+// scaled by the viewport's aspect-ratio-correction factor and clamped to [10,500]; the other two float/int
+// params feed shader constant 0x68 directly (their exact visual role wasn't traced further). Opaque
+// texture-stage-3 configuration registers below mirror d3dSetTextureStage1's own pattern, just for stage 3.
+#define Gfx_FallbackOverlayTexture U32_AT(0x002CC3E8) // Gfx.field27554_0x6c98 - used when textureSlot==0
+#define Gfx_OverlayVertexShaderHandle U32_AT(0x002C5748) // not in the Gfx struct - a dedicated single handle, not part of VtxShaderHandles[]
+
+#define D3D8_TexStage3_0x80 U32_AT(0x00111980)
+#define D3D8_TexStage3_0x88 U32_AT(0x00111988)
+#define D3D8_TexStage3_0x8c U32_AT(0x0011198C)
+#define D3D8_TexStage3_0x90 U32_AT(0x00111990)
+#define D3D8_TexStage3_0x98 U32_AT(0x00111998)
+#define D3D8_TexStage3_0x9c U32_AT(0x0011199C)
+#define D3D8_TexStage3_0xba8 U32_AT(0x00111BA8)
+#define D3D8_TexStage3_0xbac U32_AT(0x00111BAC)
+
+// AUTOINJECT
+void d3dDrawOverlayQuad(int overlaySlot, float sizeParam, int textureSlot, float param4, int param5) {
+    if (overlaySlot == 0)
+        return;
+
+    float aspectScale = 640.0f / (float)Gfx_ViewportWidth;
+    if (aspectScale <= 480.0f / (float)Gfx_ViewportHeight)
+        aspectScale = 480.0f / (float)Gfx_ViewportHeight;
+    sizeParam = (sizeParam / aspectScale) * 5.0f;
+    if (sizeParam < 10.0f) sizeParam = 10.0f;
+    else if (sizeParam > 500.0f) sizeParam = 500.0f;
+
+    if (textureSlot == 0)
+        textureSlot = (int)Gfx_FallbackOverlayTexture;
+
+    if (D3D_DeviceReady != 0) {
+        D3DDevice_SetTexture(3, D3DTextureSlot(textureSlot)->baseTexture);
+        if (D3D_DeviceReady != 0) {
+            D3D8_PushBufferDirtyFlags |= 0x900;
+            D3D8_TexStage3_0x88 = 0;
+            D3D8_TexStage3_0x80 = 5;
+            D3D8_TexStage3_0x8c = 2;
+            D3D8_TexStage3_0x98 = 0;
+            D3D8_TexStage3_0x90 = 4;
+            D3D8_TexStage3_0x9c = 2;
+            D3D8_TexStage3_0xba8 = 1;
+            D3D8_TexStage3_0xbac = 1;
+        }
+    }
+
+    float constants[4];
+    constants[0] = Gfx_FogScale * sizeParam;
+    constants[1] = param4 * 0.5f;
+    constants[2] = (float)param5;
+    constants[3] = (float)(param5 * param5) * param4 * 0.5f;
+    Gfx_D3DLastError = 0;
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShaderConstant1(0x68, constants);
+    Gfx_D3DLastError = 0;
+
+    // These two share their cache fields with d3dSetRenderState/d3dSetRenderState2 (same addresses, confirmed
+    // via raw disassembly) - calling them directly reuses the already-verified cache-check-and-call logic
+    // rather than re-deriving the SetRenderState_Simple trampoline calls a second time.
+    d3dSetRenderState(1);   // D3D_ZFuncCache -> LEQUAL
+    d3dSetRenderState2(0);  // D3D_DepthMaskCache -> mask off
+
+    if (D3D_DeviceReady != 0) {
+        D3DDevice_SetStreamSource(0, D3DOverlayQuadSlot(overlaySlot), 0x24);
+        Gfx_D3DLastError = 0;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetVertexShader((void *)(uintptr_t)Gfx_OverlayVertexShaderHandle);
+    }
+    Gfx_D3DLastError = 0;
+
+    Gfx_MiscResetFlag = 0xFFFFFFFFu;
+    Gfx_CurrentStreamBuffer = 0xFFFFFFFFu;
+    Gfx_CurrentIndexBuffer = 0xFFFFFFFFu;
+
+    if (D3D_DeviceReady != 0) {
+        D3DDevice_DrawVertices(1, 0, D3DOverlayQuadSlot(overlaySlot)->vertexCount);
+        Gfx_D3DLastError = 0;
+        if (D3D_DeviceReady != 0) {
+            D3DDevice_SetTexture(3, NULL);
+            if (D3D_DeviceReady != 0) {
+                D3D8_PushBufferDirtyFlags |= 0x900;
+                D3D8_TexStage3_0x80 = 1;
+                D3D8_TexStage3_0xba8 = 0;
+                D3D8_TexStage3_0xbac = 0;
+            }
+        }
+    }
+    Gfx_D3DLastError = 0;
 }
