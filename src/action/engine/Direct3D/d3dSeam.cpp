@@ -251,6 +251,11 @@ static void D3D_SetRenderStateSimple(uint32_t method, uint32_t value) {
 // RegisterTexture
 // ---------------------------------------------------------------------------------------------------------------
 
+// Diagnostic helper for a full slot table - defined later in this file (near BitsToFloat/FloatToBits), forward
+// declared here so RegisterTexture's own table-full path (which had no diagnostic at all until now, unlike the
+// vertex/index/overlay buffer tables) can use it too.
+void D3DSeamTableExhaustedWarning(const char *tableName, const char *extraContext);
+
 #define D3D_TEXTURE_TABLE_BASE  0x002CC3ECu // Gfx + 27804 (0x6c9c) - see GraphicsSystem's D3DTexture[2048] field
 #define D3D_TEXTURE_TABLE_COUNT 2048
 
@@ -376,6 +381,9 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
         return slot;
     }
 
+    D3DSeamTableExhaustedWarning("texture", "Cause not yet confirmed - possibly per-level textures not being "
+        "released across mission/level transitions, or excessive churn from a frequent caller (e.g. a per-frame "
+        "screen effect). Check what RegisterTexture's callers were doing right before this.");
     return 0;
 }
 
@@ -520,13 +528,17 @@ static inline uint32_t FloatToBits(float f) {
 // object types created via parsemap.cpp's dispatcher. This prints clearly (rather than just returning 0 and
 // letting some unrelated caller crash on the failure later, which is what was happening) so the failure is
 // immediately attributable if hit again.
-static void D3DSeamTableExhaustedWarning(const char *tableName) {
-    printf("[d3dSeam] %s table is full (2047/2047 slots in use) - allocation failed. This is a KNOWN,\n"
-           "          pre-existing issue: vertex/index buffer slots are never released, and revisiting an\n"
-           "          already-played level segment re-creates its objects (breakables etc.) without freeing\n"
-           "          the previous visit's. See parsemap.cpp's Place_Breakable comment and Break.cpp's\n"
-           "          Break_Kill (an unfinished stub) for the confirmed contributor.\n", tableName);
+void D3DSeamTableExhaustedWarning(const char *tableName, const char *extraContext) {
+    printf("[d3dSeam] %s table is full - allocation failed.\n", tableName);
+    if (extraContext != NULL)
+        printf("          %s\n", extraContext);
 }
+
+#define D3DSEAM_VTX_IDX_LEAK_CONTEXT \
+    "This is a KNOWN, pre-existing issue: vertex/index buffer slots are never released, and revisiting an " \
+    "already-played level segment re-creates its objects (breakables etc.) without freeing the previous " \
+    "visit's. See parsemap.cpp's Place_Breakable comment and Break.cpp's Break_Kill (an unfinished stub) " \
+    "for the confirmed contributor."
 
 // Standard row-major 4x4 matrix product (out = base * chain), verified term-by-term against
 // maybeMultiplyMatrixChain's own decompiled single-link arithmetic. See d3dSetMatrix's comment for why this is
@@ -1303,7 +1315,7 @@ int d3dCreateIndexBuffer(int indexCount, unsigned int data) {
         return slot;
     }
 
-    D3DSeamTableExhaustedWarning("index buffer");
+    D3DSeamTableExhaustedWarning("index buffer", D3DSEAM_VTX_IDX_LEAK_CONTEXT);
     return 0;
 }
 
@@ -1367,7 +1379,7 @@ int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzl
                 break;
             runStart++;
             if (runStart >= D3D_VERTEX_BUFFER_TABLE_COUNT) {
-                D3DSeamTableExhaustedWarning("vertex buffer (multi-stream)");
+                D3DSeamTableExhaustedWarning("vertex buffer (multi-stream)", D3DSEAM_VTX_IDX_LEAK_CONTEXT);
                 return 0;
             }
         }
@@ -1408,7 +1420,7 @@ int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzl
             break;
     }
     if (slot >= D3D_VERTEX_BUFFER_TABLE_COUNT) {
-        D3DSeamTableExhaustedWarning("vertex buffer (single)");
+        D3DSeamTableExhaustedWarning("vertex buffer (single)", D3DSEAM_VTX_IDX_LEAK_CONTEXT);
         return 0;
     }
 
@@ -1484,7 +1496,7 @@ int d3dRegisterOverlayBuffer(void *data, unsigned int vertexCount) {
         return slot;
     }
 
-    D3DSeamTableExhaustedWarning("overlay quad buffer");
+    D3DSeamTableExhaustedWarning("overlay quad buffer", D3DSEAM_VTX_IDX_LEAK_CONTEXT);
     return 0;
 }
 
