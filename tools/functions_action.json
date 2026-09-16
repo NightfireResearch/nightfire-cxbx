@@ -48564,7 +48564,7 @@
         "namespace": "Global"
     },
     {
-        "name": "d3dSetTexture",
+        "name": "d3dSetTextureStage1",
         "address": "0x000e3c10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48573,7 +48573,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __cdecl d3dSetTexture(int param_1, int param_2)",
+        "prototype_string": "void __cdecl d3dSetTextureStage1(int param_1, int param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"
@@ -48604,7 +48604,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3df0",
+        "name": "d3dSetFogEnable",
         "address": "0x000e3df0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48612,7 +48612,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e3df0(int param_1)",
+        "prototype_string": "void __cdecl d3dSetFogEnable(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -48652,7 +48652,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3f90",
+        "name": "d3dSetFogColor",
         "address": "0x000e3f90",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48660,7 +48660,7 @@
         "param_types": [
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000e3f90(uint param_1)",
+        "prototype_string": "void __cdecl d3dSetFogColor(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ],
@@ -48896,7 +48896,7 @@
         "namespace": "Global"
     },
     {
-        "name": "d3dSetTexture",
+        "name": "d3dSetTextureStage0",
         "address": "0x000e4950",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48904,7 +48904,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl d3dSetTexture(int texNum)",
+        "prototype_string": "void __cdecl d3dSetTextureStage0(int texNum)",
         "parameters": [
             "[int texNum@Stack[0x4]:4]"
         ],
@@ -49376,7 +49376,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5f10",
+        "name": "d3dSetYuvEnable",
         "address": "0x000e5f10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49384,7 +49384,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e5f10(int param_1)",
+        "prototype_string": "void __cdecl d3dSetYuvEnable(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -49392,7 +49392,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5f40",
+        "name": "d3dGetTextureSurfaceLevel0",
         "address": "0x000e5f40",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49400,7 +49400,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e5f40(int param_1)",
+        "prototype_string": "void __cdecl d3dGetTextureSurfaceLevel0(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],

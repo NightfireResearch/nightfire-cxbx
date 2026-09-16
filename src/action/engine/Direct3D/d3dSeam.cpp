@@ -33,6 +33,11 @@
 #define D3DDevice_SetViewport_ADDR              0x00103d50u
 #define D3DDevice_Clear_ADDR                    0x001043e0u
 #define D3DResource_Release_ADDR                0x00104fa0u
+#define D3DTexture_GetSurfaceLevel2_ADDR        0x00105130u
+#define D3DDevice_SetRenderState_FogColor_ADDR  0x00100960u
+#define D3DDevice_SetRenderState_YuvEnable_ADDR 0x00101c20u
+#define D3DDevice_Swap_ADDR                     0x00103730u
+#define D3DDevice_SetTexture_ADDR               0x00103eb0u
 
 #define Gfx_D3DLastError          U32_AT(0x002C5750) // Gfx.D3DLastError
 #define Gfx_TotalTextureBytesUsed U32_AT(0x002C6FE0) // Gfx.field6075_0x1890 - running total, informational only
@@ -73,6 +78,27 @@ typedef void(__stdcall *D3DDevice_SetViewportFn)(D3DVIEWPORT *pViewport);
 // trailing stencil parameter (always 0 at this call site, which is likely why its analysis folded it away).
 typedef void(__stdcall *D3DDevice_ClearFn)(uint32_t rectCount, void *pRects, uint32_t flags, uint32_t colour, float z, uint32_t stencil);
 #define D3DDevice_Clear ((D3DDevice_ClearFn)D3DDevice_Clear_ADDR)
+
+// All four below confirmed plain __stdcall via raw disassembly (RET immediate matches param count exactly).
+typedef void(__stdcall *D3DTexture_GetSurfaceLevel2Fn)(void *pTexture, uint32_t level);
+#define D3DTexture_GetSurfaceLevel2 ((D3DTexture_GetSurfaceLevel2Fn)D3DTexture_GetSurfaceLevel2_ADDR)
+
+typedef void(__stdcall *D3DDevice_SetRenderState_FogColorFn)(uint32_t colour);
+#define D3DDevice_SetRenderState_FogColor ((D3DDevice_SetRenderState_FogColorFn)D3DDevice_SetRenderState_FogColor_ADDR)
+
+typedef void(__stdcall *D3DDevice_SetRenderState_YuvEnableFn)(uint32_t enable);
+#define D3DDevice_SetRenderState_YuvEnable ((D3DDevice_SetRenderState_YuvEnableFn)D3DDevice_SetRenderState_YuvEnable_ADDR)
+
+typedef void(__stdcall *D3DDevice_SwapFn)(uint32_t type);
+#define D3DDevice_Swap ((D3DDevice_SwapFn)D3DDevice_Swap_ADDR)
+
+typedef void(__stdcall *D3DDevice_SetTextureFn)(uint32_t stage, void *pTexture);
+#define D3DDevice_SetTexture ((D3DDevice_SetTextureFn)D3DDevice_SetTexture_ADDR)
+
+// Eurocom's own frame-timing helper (Global namespace, not D3D8::) - already AUTOGEN-declared (and its stub
+// body generated) via game.cpp; just a plain forward declaration here so d3dSwap can call it too, without
+// asking preprocess.py to generate a second, colliding body for it.
+double timestamp(void);
 
 // D3DDevice_SetRenderState_Simple(NV2A method header word in ECX, value in EDX) - the generic, runtime-method
 // render-state setter. Everything else in the D3DDevice_SetRenderState_XXX family takes its single value on
@@ -239,6 +265,39 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 #define Gfx_ViewportWidth U32_AT(0x002C6F7C) // Gfx.viewportWidth
 #define Gfx_ViewportHeight U32_AT(0x002C6F80) // Gfx.viewportHeight
 
+// D3D8's own internal pushbuffer-dirty-flags word, and its own cached fog-enable flag - both plain globals
+// living inside the D3D8 library's static data (not the Gfx struct), poked directly by the original rather
+// than through an API call. Confirmed via raw disassembly to be ordinary memory, safe to preserve verbatim.
+#define D3D8_PushBufferDirtyFlags U32_AT(0x001117CC)
+#define D3D8_RS_FogEnable         U32_AT(0x00111B40)
+
+#define Gfx_CurrentlyLoadedTexture U32_AT(0x002C6F84) // Gfx.currentlyLoadedTexture (stage 0)
+#define Gfx_TexStage1SlotCache     U32_AT(0x002C6F94) // Gfx.field6053_0x1844
+#define Gfx_TexStage1Param2Cache   U32_AT(0x002C6F98) // Gfx.field6054_0x1848
+#define Gfx_TexStage1ModeFlags     U32_AT(0x002FF3A4) // not in the Gfx struct - a separate global
+
+// Opaque D3D8-internal texture-stage-1 configuration registers, poked directly with fixed constants by the
+// original depending on whether a real texture or NULL is being bound to stage 1 - untraced meaning, ported
+// verbatim rather than guessed at.
+#define D3D8_TexStage1_0x00 U32_AT(0x00111800)
+#define D3D8_TexStage1_0x08 U32_AT(0x00111808)
+#define D3D8_TexStage1_0x10 U32_AT(0x00111810)
+#define D3D8_TexStage1_0x80 U32_AT(0x00111880)
+#define D3D8_TexStage1_0x88 U32_AT(0x00111888)
+#define D3D8_TexStage1_0x8c U32_AT(0x0011188C)
+#define D3D8_TexStage1_0x90 U32_AT(0x00111890)
+#define D3D8_TexStage1_0x98 U32_AT(0x00111898)
+#define D3D8_TexStage1_0x9c U32_AT(0x0011189C)
+
+#define Gfx_FogEnabledCache U32_AT(0x002C6FBC) // Gfx.field6063_0x186c
+#define Gfx_FogModeFlag     U32_AT(0x002C6F90) // Gfx.field6052_0x1840 - untraced meaning; see d3dSetFogEnable/Color
+#define Gfx_FogColorCache   U32_AT(0x002FF450) // not in the Gfx struct - a separate global
+#define Gfx_FogColorMasked  U32_AT(0x002C6FC0) // Gfx._6256_4_ - the colour D3D8 actually gets told about
+
+#define Gfx_SwapPending           U8_AT(0x002C5754)     // Gfx.field1_0x4
+#define Gfx_LastSwapTimestamp     DOUBLE_AT(0x002FF438) // not in the Gfx struct - a separate global
+#define Gfx_AccumulatedSwapTime   DOUBLE_AT(0x002FF440) // not in the Gfx struct - a separate global
+
 // AUTOINJECT
 void d3dSetRenderState(int enableDepthTest) {
     if ((uint32_t)enableDepthTest == D3D_ZFuncCache)
@@ -358,4 +417,130 @@ void d3dClear(unsigned int colour, bool clearTarget, bool clearZStencil) {
     if (D3D_DeviceReady != 0)
         D3DDevice_Clear(0, NULL, flags, colour & 0xffffffu, 1.0f, 0);
     Gfx_D3DLastError = 0;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Texture binding, fog, swap
+// ---------------------------------------------------------------------------------------------------------------
+
+// AUTOINJECT
+void d3dGetTextureSurfaceLevel0(int textureSlot) {
+    void *baseTexture = D3DTextureSlot(textureSlot)->baseTexture;
+    if (baseTexture != NULL)
+        D3DTexture_GetSurfaceLevel2(baseTexture, 0);
+}
+
+// AUTOINJECT
+void d3dSetTextureStage0(int textureSlot) {
+    if (Gfx_CurrentlyLoadedTexture == (uint32_t)textureSlot)
+        return;
+    Gfx_CurrentlyLoadedTexture = (uint32_t)textureSlot;
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetTexture(0, D3DTextureSlot(textureSlot)->baseTexture);
+    Gfx_D3DLastError = 0;
+}
+
+// AUTOINJECT
+void d3dSetTextureStage1(int textureSlot, int param2) {
+    if (Gfx_TexStage1SlotCache == (uint32_t)textureSlot && Gfx_TexStage1Param2Cache == (uint32_t)param2)
+        return;
+    Gfx_TexStage1Param2Cache = (uint32_t)param2;
+    Gfx_TexStage1SlotCache = (uint32_t)textureSlot;
+
+    bool deviceReady = (D3D_DeviceReady != 0);
+    void *baseTexture = NULL;
+
+    if (textureSlot != 0) {
+        Gfx_TexStage1ModeFlags |= 0x20;
+        if (deviceReady) {
+            D3D8_PushBufferDirtyFlags |= 0x800;
+            baseTexture = D3DTextureSlot(textureSlot)->baseTexture;
+            D3D8_TexStage1_0x00 = 3;
+            D3D8_TexStage1_0x88 = 2;
+            D3D8_TexStage1_0x80 = 5;
+            D3D8_TexStage1_0x8c = 1;
+            D3D8_TexStage1_0x98 = 2;
+            D3D8_TexStage1_0x90 = 4;
+            D3D8_TexStage1_0x9c = 1;
+        }
+    } else {
+        Gfx_TexStage1ModeFlags &= ~0x20u;
+        if (deviceReady) {
+            D3D8_PushBufferDirtyFlags |= 0x800;
+            D3D8_TexStage1_0x00 = 5;
+            D3D8_TexStage1_0x10 = 4;
+            D3D8_TexStage1_0x80 = 1;
+            D3D8_TexStage1_0x90 = 1;
+        }
+    }
+
+    if (deviceReady) {
+        D3D8_TexStage1_0x08 = 2;
+        D3DDevice_SetTexture(1, baseTexture); // always stage 1, in both branches - matches the original exactly
+    }
+    Gfx_D3DLastError = 0;
+}
+
+// AUTOINJECT
+void d3dSetFogEnable(int enable) {
+    bool enabled = (enable != 0);
+    bool deviceReady = (D3D_DeviceReady != 0);
+    Gfx_FogEnabledCache = enabled;
+
+    if (deviceReady) {
+        D3D8_PushBufferDirtyFlags |= 0x2000;
+        D3D8_RS_FogEnable = enabled;
+    }
+
+    if (enabled) {
+        // Gfx_FogModeFlag's exact meaning hasn't been traced - when set, it forces the fog colour actually
+        // sent to D3D8 to 0 rather than the real cached colour, matching the original's mask logic exactly.
+        uint32_t mask = (Gfx_FogModeFlag != 0) ? 0u : 0xFFFFFFFFu;
+        uint32_t maskedColor = Gfx_FogColorCache & mask;
+        Gfx_FogColorMasked = maskedColor;
+        if (deviceReady)
+            D3DDevice_SetRenderState_FogColor(maskedColor);
+    }
+    Gfx_D3DLastError = 0;
+}
+
+// AUTOINJECT
+void d3dSetFogColor(unsigned int colour) {
+    uint32_t maskedInput = colour & 0xffffffu;
+    Gfx_FogColorCache = maskedInput;
+
+    if (Gfx_FogEnabledCache == 1) {
+        uint32_t mask = (Gfx_FogModeFlag != 0) ? 0u : 0xFFFFFFFFu;
+        uint32_t maskedColor = maskedInput & mask;
+        Gfx_FogColorMasked = maskedColor;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetRenderState_FogColor(maskedColor);
+        Gfx_D3DLastError = 0;
+    }
+}
+
+// AUTOINJECT
+void d3dSetYuvEnable(int enable) {
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetRenderState_YuvEnable(enable != 0);
+    Gfx_D3DLastError = 0;
+}
+
+// AUTOINJECT
+void d3dSwap(void) {
+    if (Gfx_SwapPending == 0)
+        return;
+    Gfx_SwapPending = 0;
+
+    double now = timestamp();
+    Gfx_D3DLastError = 0;
+    Gfx_AccumulatedSwapTime += (now - Gfx_LastSwapTimestamp);
+    Gfx_LastSwapTimestamp = now;
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_Swap(0);
+    Gfx_D3DLastError = 0;
+
+    Gfx_LastSwapTimestamp = timestamp(); // called again, unconditionally, matching the original exactly
 }

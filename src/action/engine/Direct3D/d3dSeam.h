@@ -42,4 +42,25 @@ void d3dSetupViewportDimensions(unsigned int viewportX, unsigned int viewportY, 
 // (alpha byte masked off); z is always cleared to 1.0f and stencil to 0, matching the original exactly.
 void d3dClear(unsigned int colour, bool clearTarget, bool clearZStencil);
 
+// Forces surface level 0 of the given texture slot into existence via D3D8's own D3DTexture_GetSurfaceLevel2
+// (result discarded - called purely for the side effect of materializing the surface). No-ops on an empty slot.
+void d3dGetTextureSurfaceLevel0(int textureSlot);
+
+// Enables/disables fog and sets the fog colour. Both share a "fog enabled" cache and a colour cache, and
+// both mask the colour to 0 rather than the real cached value while a separate mode flag is set (preserved
+// exactly from the original; the mode flag's own meaning hasn't been traced).
+void d3dSetFogEnable(int enable);
+void d3dSetFogColor(unsigned int colour);
+
+// Thin wrapper around D3D8's own D3DDevice_SetRenderState_YuvEnable.
+void d3dSetYuvEnable(int enable);
+
+// Presents the frame via D3D8's own D3DDevice_Swap, and updates the frame-timing accumulator used elsewhere
+// for FPS-style bookkeeping. Only two of the setTexture family are declared here (see d3dSeam.cpp) - the two
+// distinctly-named, disambiguated d3dSetTextureStage0/1 (previously a single ambiguous "d3dSetTexture" name
+// shared by two different functions in Ghidra - renamed there first so AUTOINJECT could target them safely).
+void d3dSwap(void);
+void d3dSetTextureStage0(int textureSlot);
+void d3dSetTextureStage1(int textureSlot, int param2);
+
 #endif // D3DSEAM_H_
