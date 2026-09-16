@@ -680,7 +680,12 @@ bool Graphics_IsPalI(void) {
 
 // AUTOINJECT
 void mainloop(void) {
-  int refreshRate = Graphics_IsPalI() ? 50 : 60;
+  // Fixed: this was backwards (50 for PAL, 60 otherwise) relative to the original's own formula at this
+  // exact spot ("(-(uint)(cVar1 != 0) & 10) + 50", i.e. 60 when Graphics_IsPalI() is true, 50 otherwise) -
+  // confirmed against the raw disassembly of both this function and xboxInitGraphics's matching refresh-
+  // rate calculation, which agree with each other and disagree with the ternary this used to have here.
+  // Despite the name, Graphics_IsPalI() reads true for everywhere except the PAL-I region specifically.
+  int refreshRate = Graphics_IsPalI() ? 60 : 50;
   GS_SetRefreshRate(refreshRate, refreshRate);
   GameFlow_Main();
 }
