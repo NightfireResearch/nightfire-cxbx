@@ -204,4 +204,9 @@ void psiBlurScreen(int blurIntensity);
 // d3dSeam.cpp.
 void d3dInitShadowBlurTextures(void);
 
+// Sets a 3-float "level direction vector" plus a matrix-regen flag - only ever called from
+// maybePsiResetResources (not yet reimplemented) with a mission-specific hardcoded axis vector. Untraced
+// consumer - see its own comment in d3dSeam.cpp.
+void d3dSetLevelDirectionVector(float x, float y, float z);
+
 #endif // D3DSEAM_H_

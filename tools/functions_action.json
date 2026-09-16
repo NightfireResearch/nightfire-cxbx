@@ -48762,7 +48762,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e4320",
+        "name": "d3dSetLevelDirectionVector",
         "address": "0x000e4320",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48772,7 +48772,7 @@
             "float",
             "float"
         ],
-        "prototype_string": "undefined __cdecl FUN_000e4320(float param_1, float param_2, float param_3)",
+        "prototype_string": "undefined __cdecl d3dSetLevelDirectionVector(float param_1, float param_2, float param_3)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]",

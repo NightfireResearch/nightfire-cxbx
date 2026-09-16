@@ -523,6 +523,7 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 #define Gfx_MatrixGenFlag2 U32_AT(0x002FF278)        // ditto
 #define Gfx_ViewMatrixCache ((D3DMATRIX*)0x002FF1EC) // Gfx.field158568_0x39a9c - the "base" d3dSetMatrix combines the new matrix with
 #define Gfx_SecondaryBasisMatrix ((D3DMATRIX*)0x002FF16C) // Gfx.field158566_0x39a1c - feeds constant register 100's half-scaled 2x3 basis
+#define Gfx_LevelDirectionVector ((float*)0x002FF398u) // Gfx.field158786-788_0x39c48/4c/50 - {x,y,z}; untraced consumer (no reader found anywhere in the binary), written by both d3dSetup's own hardcoded (1,0,0) default and d3dSetLevelDirectionVector's mission-specific overrides
 
 #define Gfx_StreamStrideConstants ((float*)0x002FF358)  // Gfx.field_0x39c08 - 8 floats, shader constant 0x73
 #define Gfx_d3dstreamDataPtr ((void**)0x002DECF8)        // Gfx.d3dstreamDataPtr - array of stream-data pointers, stride 9 dwords per slot
@@ -2374,9 +2375,9 @@ void d3dSetup(void) {
 
     gfxSetCharacterLightIntensity(0.5f);
     Gfx_MatrixGenFlag2 = 1;
-    U32_AT(0x002FF398) = 0x3f800000u; // Gfx.field158786_0x39c48 = 1.0f
-    U32_AT(0x002FF39C) = 0;           // Gfx.field158787_0x39c4c = 0.0f
-    U32_AT(0x002FF3A0) = 0;           // Gfx.field158788_0x39c50 = 0.0f
+    Gfx_LevelDirectionVector[0] = 1.0f;
+    Gfx_LevelDirectionVector[1] = 0.0f;
+    Gfx_LevelDirectionVector[2] = 0.0f;
     U32_AT(0x002FF344) = 0x4b7fffffu; // not in the Gfx struct - untraced, a very large float sentinel
     d3dSetFogNear(10.0f);
     d3dSetFogFar(100.0f);
@@ -2629,4 +2630,23 @@ void d3dInitShadowBlurTextures(void) {
     data = allocateAligned0x1000(0x10000);
     Gfx_ShadowBlurTargetB = (uint32_t)RegisterTexture(0x80, 0x80, 2, 1, data, 0);
     d3dMarkTexturePermanent((int)Gfx_ShadowBlurTargetB);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// d3dSetLevelDirectionVector
+// ---------------------------------------------------------------------------------------------------------------
+
+// Sets Gfx_LevelDirectionVector plus the same "matrix needs regen" flag d3dSetMatrix/d3dSetViewMatrixFromRigid
+// Transform use (Gfx_MatrixGenFlag2, though those two always set it to -1, not 1 - a different value for a
+// different purpose reusing the same flag). Only ever called from maybePsiResetResources (not yet
+// reimplemented) with one of 4 hardcoded axis vectors selected by GameState.NextLevelHashcode - looks like a
+// per-mission override of some directional value (lighting? wind/particle direction?), but no reader of
+// Gfx_LevelDirectionVector was found anywhere in the binary to confirm which.
+//
+// AUTOINJECT
+void d3dSetLevelDirectionVector(float x, float y, float z) {
+    Gfx_MatrixGenFlag2 = 1;
+    Gfx_LevelDirectionVector[0] = x;
+    Gfx_LevelDirectionVector[1] = y;
+    Gfx_LevelDirectionVector[2] = z;
 }
