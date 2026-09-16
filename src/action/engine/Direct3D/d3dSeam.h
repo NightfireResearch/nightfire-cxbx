@@ -177,4 +177,9 @@ void d3dSetup(void);
 // in d3dSeam.cpp. Only ever called from maybe_psiDrawShadow (not yet reimplemented).
 void psiBlurCharacterShadow(void);
 
+// Captures the current backbuffer into a round-robin "history" texture (3 slots) and draws it back as a
+// blurIntensity-tinted screen-covering quad - a motion-blur/afterimage effect. See its own comment in
+// d3dSeam.cpp for the (non-obvious) details of how it reaches real backbuffer pixel data.
+void psiBlurScreen(int blurIntensity);
+
 #endif // D3DSEAM_H_

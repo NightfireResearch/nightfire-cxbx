@@ -58,6 +58,7 @@
 #define D3DDevice_SetRenderState_VertexBlend_ADDR          0x00100df0u
 #define D3DDevice_SetShaderConstantMode_ADDR               0x00102910u
 #define D3DDevice_SetVertexShaderConstantNotInline_ADDR    0x00102760u
+#define D3DDevice_GetBackBuffer2_ADDR                       0x00103c50u
 
 #define Gfx_D3DLastError          U32_AT(0x002C5750) // Gfx.D3DLastError
 #define Gfx_TotalTextureBytesUsed U32_AT(0x002C6FE0) // Gfx.field6075_0x1890 - running total, informational only
@@ -159,6 +160,12 @@ typedef void(__stdcall *D3DDevice_SetShaderConstantModeFn)(uint32_t value);
 // (first two register args, third stacked, callee cleans up RET 0x4) - another case needing no asm trampoline.
 typedef void(__fastcall *D3DDevice_SetVertexShaderConstantNotInlineFn)(uint32_t constantIndex, void *pData, uint32_t countDwords);
 #define D3DDevice_SetVertexShaderConstantNotInline ((D3DDevice_SetVertexShaderConstantNotInlineFn)0x00102760u)
+
+// D3DDevice_GetBackBuffer2(backBufferIndex) - confirmed plain __stdcall via functions_action.json (RET 0x4).
+// Returns a pointer to the backbuffer's own surface-header struct (not pixel data directly) - only its
+// second dword (an Xbox physical-memory byte offset, per psiBlurScreen's own use of it) is read here.
+typedef uint32_t*(__stdcall *D3DDevice_GetBackBuffer2Fn)(int32_t backBufferIndex);
+#define D3DDevice_GetBackBuffer2 ((D3DDevice_GetBackBuffer2Fn)D3DDevice_GetBackBuffer2_ADDR)
 
 // D3DDevice_SetDepthClipPlanes(uint, uint, uint) and D3DDevice_SetStreamSource(int streamNumber, void*
 // vertexBuffer, int stride) - both confirmed plain __stdcall via raw disassembly (RET 0xc, matching 3 params).
@@ -2431,5 +2438,117 @@ void psiBlurCharacterShadow(void) {
         if (D3D_DeviceReady != 0)
             D3DDevice_SetTexture(0, D3DTextureSlot(0)->baseTexture);
         Gfx_D3DLastError = 0;
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// psiBlurScreen
+// ---------------------------------------------------------------------------------------------------------------
+
+#define Gfx_BlurHistoryTextureSlots ((int32_t*)0x002FF468u) // not in the Gfx struct - a 3-entry round-robin of texture slots holding recent screen captures
+#define Gfx_BlurHistoryIndex U32_AT(0x002FF474u)             // current round-robin index into the above (0, 1 or 2)
+
+// Grabs the current backbuffer's pixel data (via its own known, fixed uncached-alias address - see below) into
+// a freshly (re)registered texture, replacing the oldest of 3 round-robin "history" slots, then draws it back
+// as a big blurIntensity-tinted screen-covering quad - the classic double-buffered "motion blur/afterimage"
+// trick. Ported verbatim from raw disassembly (not just decompile - this one genuinely warranted the extra
+// care): D3DDevice_GetBackBuffer2's second returned dword, OR'd with 0x80000000, is an Xbox physical-memory
+// byte offset converted to its uncached-alias VIRTUAL address (0x80000000 is the fixed base of the Xbox's
+// uncached view of physical RAM - a standard, documented Xbox systems-programming pattern, not something
+// invented here) - i.e. this reads real backbuffer pixels directly out of physical memory rather than doing a
+// GPU-side copy, which Xbox's unified memory architecture makes valid. The subsequent 128-byte-alignment shift
+// (needed before the data can be registered as a texture) always moves exactly 0x12C000 bytes (640*480*4 - a
+// fixed, generously-sized constant covering the largest supported backbuffer format, not a per-call computed
+// size) - confirmed by tracing the raw loop-counter register, which is set from a hardcoded constant rather
+// than from the pitch value itself. Uses memmove for that shift (same established idiom as RegisterTexture's
+// own near-identical alignment fixup) rather than hand-rolling the original's manual backward byte loop -
+// safe for the same reason: memmove handles the forward-overlapping-shift direction correctly on its own.
+//
+// AUTOINJECT
+void psiBlurScreen(int blurIntensity) {
+    if (blurIntensity < 1)
+        return;
+
+    Gfx_BlurHistoryIndex = (Gfx_BlurHistoryIndex + 1) % 3;
+    int32_t textureSlot = Gfx_BlurHistoryTextureSlots[Gfx_BlurHistoryIndex];
+    if (textureSlot != 0) {
+        ReleaseTexture(textureSlot);
+        Gfx_BlurHistoryTextureSlots[Gfx_BlurHistoryIndex] = 0;
+    }
+
+    uint32_t *backBuffer = D3DDevice_GetBackBuffer2(-1);
+    uint32_t backBufferAddr = backBuffer[1] | 0x80000000u; // uncached-alias address of the live backbuffer pixel data
+    D3DResource_Release(backBuffer);
+
+    // Find a free texture slot (address-range-bounded scan, matching the original exactly - not just a plain
+    // 0..2047 loop, though D3D_TEXTURE_TABLE_COUNT ends up being the same bound either way).
+    textureSlot = 1;
+    bool slotFound = false;
+    for (;;) {
+        if (D3DTextureSlot((int)textureSlot)->baseTexture == NULL) { slotFound = true; break; }
+        textureSlot++;
+        if ((uintptr_t)&D3DTextureSlot((int)textureSlot)->baseTexture >= 0x002DE400u)
+            break;
+    }
+    if (!slotFound || textureSlot >= D3D_TEXTURE_TABLE_COUNT)
+        textureSlot = 0;
+
+    if (textureSlot != 0) {
+        D3DTextureSlotRaw *texSlot = D3DTextureSlot((int)textureSlot);
+        texSlot->mipChainBytes = 0x0012C000u; // scratch pointer value passed through to XGSetTextureHeader/D3DResource_Register below, not a byte count here
+
+        uintptr_t alignedAddr = ((uintptr_t)backBufferAddr + 0x7Fu) & ~(uintptr_t)0x7Fu;
+        if (alignedAddr != (uintptr_t)backBufferAddr) {
+            memmove((void*)alignedAddr, (void*)(uintptr_t)backBufferAddr, 0x0012C000u);
+            backBufferAddr = (uint32_t)alignedAddr;
+        }
+
+        XGSetTextureHeader(640, 480, 1, 0, 0x1e /* D3DFMT_X4R4G4B4 */, 0, texSlot, 0, 0);
+        D3DResource_Register(texSlot, backBufferAddr);
+        // Same D3DResource_Register top-nibble-masking workaround as RegisterTexture - see its own comment.
+        *(uint32_t*)((char*)texSlot + 4) = backBufferAddr;
+
+        uint32_t registeredBytes = texSlot->mipChainBytes; // re-read - D3DResource_Register overwrites this field internally
+        texSlot->baseTexture = texSlot;
+        texSlot->width = 640;
+        texSlot->height = 480;
+        texSlot->refCount = 0;
+        texSlot->nonSwizzled = 1;
+        Gfx_TotalTextureBytesUsed += registeredBytes;
+    }
+
+    Gfx_BlurHistoryTextureSlots[Gfx_BlurHistoryIndex] = textureSlot;
+
+    if (Gfx_DeferredTexStateA != 0 || Gfx_DeferredTexStateB != 0) {
+        Gfx_DeferredTexStateA = 0;
+        Gfx_DeferredTexStateB = 0;
+        Gfx_D3DLastError = 0;
+        if (D3D_DeviceReady != 0) {
+            D3D8_PushBufferDirtyFlags |= 1;
+            D3D8_DeferredTextureState = 3;
+            D3D8_DeferredTextureStateB = 3;
+        }
+    }
+
+    if (Gfx_CurrentlyLoadedTexture != (uint32_t)textureSlot) {
+        Gfx_CurrentlyLoadedTexture = (uint32_t)textureSlot;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetTexture(0, D3DTextureSlot((int)textureSlot)->baseTexture);
+        Gfx_D3DLastError = 0;
+    }
+
+    uint32_t blurColour = ((uint32_t)blurIntensity << 24) | 0x808080u;
+    maybeImmediateModePushItem(0.0f, 0.0f, 640.0f, 480.0f, 0.0f, 0.0f, 640.0f, 480.0f, BitsToFloat(blurColour));
+    maybeImmediateModeFlush();
+
+    if (Gfx_DeferredTexStateA != 1 || Gfx_DeferredTexStateB != 1) {
+        Gfx_DeferredTexStateA = 1;
+        Gfx_DeferredTexStateB = 1;
+        Gfx_D3DLastError = 0;
+        if (D3D_DeviceReady != 0) {
+            D3D8_PushBufferDirtyFlags |= 1;
+            D3D8_DeferredTextureState = 1;
+            D3D8_DeferredTextureStateB = 1;
+        }
     }
 }
