@@ -148,4 +148,22 @@ void maybeResetRenderState(char param1);
 // Calls maybeResetRenderState(1) plus unbinds texture stage 0 and stream/index buffers.
 void maybeD3dShutdown(void);
 
+// Caches a pair of "deferred texture state" values, pushing them into two D3D8-internal globals once changed.
+void d3dSetDeferredTextureState(int param1, int param2);
+
+// Binds a texture (by slot, to stage 0) together with a clamp-to-border colour; textureSlot 0 unbinds and
+// restores the plain deferred-texture-state pair saved beforehand.
+void d3dSetTextureWithBorderColor(int textureSlot, int borderColour);
+
+// Rebuilds the cached view matrix (Gfx_ViewMatrixCache) from a rigid transform - see its own comment in
+// d3dSeam.cpp. Used directly by d3dBeginEndAuxRenderPass; not otherwise called from anywhere else (yet).
+void d3dSetViewMatrixFromRigidTransform(D3DMATRIX *rigidTransform);
+
+// A single-level "auxiliary render pass" push/pop (character-shadow rendering is the likely use, going by the
+// call pattern) - begin != 0 pushes (saves matrices, pushes the render target given by an externally-maintained
+// global, clears it, sets up rigidTransform/projMtx as the new view/projection); begin == 0 pops (restores the
+// saved matrices/render target/viewport). Returns an externally-maintained status value either way - see its
+// own comment in d3dSeam.cpp.
+unsigned int d3dBeginEndAuxRenderPass(char begin, D3DMATRIX *rigidTransform, D3DMATRIX *projMtx);
+
 #endif // D3DSEAM_H_

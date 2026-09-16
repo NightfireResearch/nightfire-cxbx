@@ -52,6 +52,7 @@
 #define D3DDevice_SetRenderTarget_ADDR            0x001038d0u
 #define D3DDevice_DrawVertices_ADDR                0x001049c0u
 #define D3DDevice_SetRenderState_ZBias_ADDR         0x00100bf0u
+#define D3DDevice_SetTextureState_BorderColor_ADDR  0x00100fc0u
 
 #define Gfx_D3DLastError          U32_AT(0x002C5750) // Gfx.D3DLastError
 #define Gfx_TotalTextureBytesUsed U32_AT(0x002C6FE0) // Gfx.field6075_0x1890 - running total, informational only
@@ -132,6 +133,10 @@ typedef void(__fastcall *D3DDevice_SetVertexShaderConstant1Fn)(uint32_t constant
 // Same genuine __fastcall match as SetVertexShaderConstant1 above.
 typedef void(__fastcall *D3DDevice_SetVertexShaderConstant4Fn)(uint32_t constantIndex, void *pMatrix);
 #define D3DDevice_SetVertexShaderConstant4 ((D3DDevice_SetVertexShaderConstant4Fn)0x001025d0u)
+
+// D3DDevice_SetTextureState_BorderColor(stage, colour) - confirmed plain __stdcall via raw disassembly (RET 0x8).
+typedef void(__stdcall *D3DDevice_SetTextureState_BorderColorFn)(uint32_t stage, uint32_t colour);
+#define D3DDevice_SetTextureState_BorderColor ((D3DDevice_SetTextureState_BorderColorFn)D3DDevice_SetTextureState_BorderColor_ADDR)
 
 // D3DDevice_SetVertexShaderConstantNotInline(constant index in ECX, pointer in EDX, count-in-dwords on the
 // stack) - confirmed via raw disassembly: exactly matches MSVC's own __fastcall ABI for a 3-argument function
@@ -1862,6 +1867,165 @@ void maybeResetRenderState(char param1) {
     }
 
     d3dBindBuffers(0, 0);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// d3dSetDeferredTextureState, d3dSetTextureWithBorderColor
+// ---------------------------------------------------------------------------------------------------------------
+
+#define Gfx_DeferredTexBorderColorCache U32_AT(0x002C6FB8) // Gfx.field6062_0x1868 - shares its "changed?" pair check with Gfx_ShardUseAltShader (field6061), which d3dSetTextureWithBorderColor also writes as a texture-slot cache
+
+// Caches a pair of "deferred texture state" values and, once changed, pushes them into the two D3D8-internal
+// globals as a {1 if nonzero, 3 if zero} encoding - untraced overall meaning, ported verbatim. Shares its cache
+// fields with maybeResetRenderState's own use of the same pair (which resets both to 1).
+//
+// AUTOINJECT
+void d3dSetDeferredTextureState(int param1, int param2) {
+    if (Gfx_DeferredTexStateA != (uint32_t)param1 || Gfx_DeferredTexStateB != (uint32_t)param2) {
+        Gfx_DeferredTexStateA = (uint32_t)param1;
+        Gfx_DeferredTexStateB = (uint32_t)param2;
+        Gfx_D3DLastError = 0;
+        if (D3D_DeviceReady != 0) {
+            D3D8_PushBufferDirtyFlags |= 1;
+            D3D8_DeferredTextureState = (param1 == 0) ? 3 : 1;
+            D3D8_DeferredTextureStateB = (param2 == 0) ? 3 : 1;
+        }
+    }
+}
+
+// Binds a texture (by slot, to stage 0) together with a border colour used for clamp-to-border wrapping - or,
+// with textureSlot 0, unbinds and restores the plain deferred-texture-state pair saved beforehand. Reuses
+// Gfx_ShardUseAltShader/Gfx_DeferredTexBorderColorCache as its own "did this change?" cache pair (same fields,
+// different call site - see their own comments).
+//
+// AUTOINJECT
+void d3dSetTextureWithBorderColor(int textureSlot, int borderColour) {
+    if (Gfx_ShardUseAltShader == (uint32_t)textureSlot && Gfx_DeferredTexBorderColorCache == (uint32_t)borderColour)
+        return;
+
+    Gfx_ShardUseAltShader = (uint32_t)textureSlot;
+    Gfx_DeferredTexBorderColorCache = (uint32_t)borderColour;
+
+    if (textureSlot == 0) {
+        Gfx_MiscModeFlags &= 0xFFFFFFBFu;
+
+        if (Gfx_CurrentlyLoadedTexture != 0) {
+            Gfx_CurrentlyLoadedTexture = 0;
+            if (D3D_DeviceReady != 0)
+                D3DDevice_SetTexture(0, D3DTextureSlot(0)->baseTexture);
+            Gfx_D3DLastError = 0;
+        }
+
+        uint32_t savedA = Gfx_DeferredTexStateA;
+        uint32_t savedB = Gfx_DeferredTexStateB;
+        Gfx_DeferredTexStateA = 0xFFFFFFFFu;
+        Gfx_DeferredTexStateB = 0xFFFFFFFFu;
+        d3dSetDeferredTextureState((int)savedA, (int)savedB);
+        return;
+    }
+
+    Gfx_MiscModeFlags |= 0x40;
+    Gfx_D3DLastError = 0;
+    if (D3D_DeviceReady != 0) {
+        D3D8_PushBufferDirtyFlags |= 1;
+        D3D8_DeferredTextureState = 4;
+        D3D8_DeferredTextureStateB = 4;
+        D3DDevice_SetTextureState_BorderColor(0, (uint32_t)borderColour);
+        Gfx_D3DLastError = 0; // confirmed via raw disasm: only cleared here if the device was actually ready
+    }
+
+    if (Gfx_CurrentlyLoadedTexture != (uint32_t)textureSlot) {
+        Gfx_CurrentlyLoadedTexture = (uint32_t)textureSlot;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetTexture(0, D3DTextureSlot(textureSlot)->baseTexture);
+        Gfx_D3DLastError = 0; // ditto - only cleared when this inner block actually ran (confirmed via raw disasm)
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// d3dSetViewMatrixFromRigidTransform, d3dBeginEndAuxRenderPass
+// ---------------------------------------------------------------------------------------------------------------
+
+// Rebuilds Gfx_ViewMatrixCache from a rigid transform: caches the transform itself (Gfx_SecondaryBasisMatrix),
+// inverts a copy of it, then combines that inverse with Gfx_ProjMatrixCacheB (the "not yet ported" reader this
+// cache's own comment anticipated - this is that reader) via Multiply4x4RowMajor rather than
+// maybeMultiplyMatrixChain (same alias-safety reasoning as d3dSetMatrix/maybeBuildAndSetModelViewProjectionMtx).
+//
+// AUTOINJECT
+void d3dSetViewMatrixFromRigidTransform(D3DMATRIX *rigidTransform) {
+    Gfx_MatrixGenFlag1 = 0xFFFFFFFFu;
+    Gfx_MatrixGenFlag2 = 0xFFFFFFFFu;
+
+    memcpy(Gfx_SecondaryBasisMatrix, rigidTransform, sizeof(D3DMATRIX));
+
+    D3DMATRIX inverted;
+    memcpy(&inverted, Gfx_SecondaryBasisMatrix, sizeof(D3DMATRIX));
+    maybeInvertRigidTransform(&inverted);
+
+    Multiply4x4RowMajor(Gfx_ProjMatrixCacheB, &inverted, Gfx_ViewMatrixCache);
+}
+
+#define Gfx_AuxSavedViewMatrix   ((D3DMATRIX*)0x002FF3B4) // not in the Gfx struct - saves Gfx_SecondaryBasisMatrix across a d3dBeginEndAuxRenderPass(1, ...)/(0, ...) pair
+#define Gfx_AuxSavedProjMatrix   ((D3DMATRIX*)0x002FF3F4) // not in the Gfx struct - saves Gfx_ProjMatrixCacheA across the same pair
+#define Gfx_AuxRenderPassResult  U32_AT(0x002FF3AC)       // not in the Gfx struct - written elsewhere (FUN_000e6430, not yet reimplemented), only read/returned here
+#define Gfx_AuxRenderPassActive  U8_AT(0x002FF495)        // not in the Gfx struct - a static "is a pass currently pushed?" latch, one byte past Gfx_RenderTargetPushed but a separate flag
+
+// A single-level "auxiliary render pass" push/pop, used for rendering something (character shadows are the
+// likely case, going by the call pattern) into whatever d3dRenderTargetSetup's own single-level stack has
+// pushed. begin != 0 pushes: saves the current view/projection matrices, zeroes shader constant 0x75's first
+// two floats (same fields d3dBeginFrame zeroes each frame), pushes the render target, clears it, then rebuilds
+// the view matrix from rigidTransform (rotation-only, via maybeTransposeRotationPart) combined with projMtx.
+// begin == 0 pops: restores the saved matrices and render target/viewport, but only if a pass is actually active
+// (matching the original's own latch check exactly). Returns Gfx_AuxRenderPassResult either way.
+//
+// AUTOINJECT
+uint32_t d3dBeginEndAuxRenderPass(char begin, D3DMATRIX *rigidTransform, D3DMATRIX *projMtx) {
+    if (begin != 0) {
+        Gfx_AuxRenderPassActive = 1;
+        Gfx_ShaderConstant75[0] = 0.0f;
+        Gfx_ShaderConstant75[1] = 0.0f;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetVertexShaderConstant1(0x75, Gfx_ShaderConstant75);
+        Gfx_D3DLastError = 0;
+
+        // Confirmed via raw disassembly: the original loads ESI from Gfx_AuxRenderPassResult (not a fixed 0/nonzero
+        // constant) before this particular push - calling the real implementation directly with that same value,
+        // per the naked-trampoline warning in d3dSeam.h (never call the public d3dRenderTargetSetup() from new code).
+        _d3dRenderTargetSetup((int)Gfx_AuxRenderPassResult);
+
+        if (D3D_DeviceReady != 0)
+            D3DDevice_Clear(0, NULL, 0xf3, 0, 1.0f, 0);
+        Gfx_D3DLastError = 0;
+
+        memcpy(Gfx_AuxSavedViewMatrix, Gfx_SecondaryBasisMatrix, sizeof(D3DMATRIX));
+        memcpy(Gfx_AuxSavedProjMatrix, Gfx_ProjMatrixCacheA, sizeof(D3DMATRIX));
+
+        d3dSetProjectionMatrix(projMtx);
+
+        D3DMATRIX rotationOnly;
+        memcpy(&rotationOnly, rigidTransform, sizeof(D3DMATRIX));
+        maybeTransposeRotationPart(&rotationOnly);
+        d3dSetViewMatrixFromRigidTransform(&rotationOnly);
+
+        d3dSetMatrix(Gfx_d3dActiveMatrix);
+        return Gfx_AuxRenderPassResult;
+    }
+
+    if (Gfx_AuxRenderPassActive != 0) {
+        Gfx_AuxRenderPassActive = 0;
+        Gfx_ShaderConstant75[0] = 0.0f;
+        Gfx_ShaderConstant75[1] = 0.0f;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetVertexShaderConstant1(0x75, Gfx_ShaderConstant75);
+        Gfx_D3DLastError = 0;
+
+        d3dSetProjectionMatrix(Gfx_AuxSavedProjMatrix);
+        d3dSetViewMatrixFromRigidTransform(Gfx_AuxSavedViewMatrix);
+
+        _d3dRenderTargetSetup(0); // pop back to the saved render target
+        d3dSetupViewportDimensions(Gfx_ViewportX, Gfx_ViewportY, Gfx_ViewportWidth, Gfx_ViewportHeight);
+    }
+    return Gfx_AuxRenderPassResult;
 }
 
 // AUTOINJECT

@@ -48980,7 +48980,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e4e80",
+        "name": "d3dSetViewMatrixFromRigidTransform",
         "address": "0x000e4e80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48988,7 +48988,7 @@
         "param_types": [
             "undefined4 *"
         ],
-        "prototype_string": "void __cdecl FUN_000e4e80(undefined4 * param_1)",
+        "prototype_string": "void __cdecl d3dSetViewMatrixFromRigidTransform(undefined4 * param_1)",
         "parameters": [
             "[undefined4 * param_1@Stack[0x4]:4]"
         ],
@@ -49308,7 +49308,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5a10",
+        "name": "d3dSetTextureWithBorderColor",
         "address": "0x000e5a10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49317,7 +49317,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e5a10(int param_1, int param_2)",
+        "prototype_string": "void __cdecl d3dSetTextureWithBorderColor(int param_1, int param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"
@@ -49356,7 +49356,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5db0",
+        "name": "d3dBeginEndAuxRenderPass",
         "address": "0x000e5db0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49366,7 +49366,7 @@
             "undefined4 *",
             "undefined4 *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000e5db0(char param_1, undefined4 * param_2, undefined4 * param_3)",
+        "prototype_string": "undefined4 __cdecl d3dBeginEndAuxRenderPass(char param_1, undefined4 * param_2, undefined4 * param_3)",
         "parameters": [
             "[char param_1@Stack[0x4]:1]",
             "[undefined4 * param_2@Stack[0x8]:4]",
