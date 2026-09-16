@@ -59,13 +59,12 @@ void Inject()
   float fWidth = (float)width;
   float fHeight = (float)height;
 
-  // This is in the params to D3DCreateDevice
-  WriteMemory(0x000e6efc, &width, 4);
-  WriteMemory(0x000e6f04, &height, 4);
+  // The D3DCreateDevice backbuffer size used to be patched into xboxInitGraphics's immediates here
+  // (0x000e6efc/0x000e6f04); that function is now reimplemented in d3dSeam.cpp and reads SCREEN_WIDTH/
+  // SCREEN_HEIGHT directly, so those two patches are gone.
 
-  // This is D3DDevice_SetViewport(&local_98), and a global, slightly later on
-  WriteMemory(0x000e6ceb, &width, 4);
-  WriteMemory(0x000e6cd7, &height, 4);
+  // Likewise d3dSetup's viewport size (0x000e6ceb/0x000e6cd7) - reimplemented in d3dSeam.cpp, reads
+  // SCREEN_WIDTH/SCREEN_HEIGHT directly.
 
   // This is psiPostDraw
   WriteMemory(0x000dd8e6, &width, 4);

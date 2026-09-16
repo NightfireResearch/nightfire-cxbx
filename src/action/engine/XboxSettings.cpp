@@ -25,7 +25,8 @@
 // regional product-tie-in joke baked into the original game, not a translation difference, so Region is
 // worth being able to flip even though it has no other gameplay effect.
 //
-// Default is PAL, not NTSC, for a reason worth being precise about: xboxInitGraphics (untouched) feeds
+// Default is PAL, not NTSC, for a reason worth being precise about: xboxInitGraphics (now reimplemented in
+// Direct3D/d3dSeam.cpp, same logic) feeds
 // XboxGetAVRegion()'s result into the D3D9 device's creation flags, including FullScreen_RefreshRateInHz
 // (60Hz for NTSC, 50Hz for PAL, via the confusingly-named Gfx.IsPalI - see mainloop's own comment on that).
 // On the machine this was diagnosed on, Region=NTSC left background-movie (FMV) playback permanently black
@@ -175,8 +176,8 @@ unsigned char XboxGetAVRegion(void) {
 // Real signature/behaviour: see the block comment above. Only bit 0 (widescreen) is driven by settings.ini
 // here - the original's other bits (720p/1080i/letterbox) are about physical AV-pack capability and TV
 // broadcast standard, neither of which has a PC equivalent worth emulating; this game runs at a fixed
-// internal resolution regardless (see xboxInitGraphics), with our own width/height patches in Inject()
-// handling anything beyond that.
+// internal resolution regardless (SCREEN_WIDTH/SCREEN_HEIGHT, used directly by the reimplemented
+// xboxInitGraphics and by the remaining width/height patches in Inject()).
 //
 // AUTOINJECT
 uint32_t GetVideoMode(void) {

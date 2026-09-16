@@ -1,6 +1,7 @@
 #include "d3dSeam.h"
 #include "d3dhelpers.h"
 #include "../../actionhelpers.h"
+#include "../XboxSettings.h" // GetVideoMode/XboxGetAVRegion, for xboxInitGraphics
 
 #include <stdint.h>
 #include <string.h>
@@ -2397,10 +2398,12 @@ void d3dSetup(void) {
         Gfx_D3DLastError = 0;
     }
 
-    Gfx_ViewportHeight = 0x1e0;
+    // The original hardcodes 480/640 here (the immediates Inject() used to patch at 0x000e6cd7/0x000e6ceb);
+    // now taken from SCREEN_HEIGHT/SCREEN_WIDTH directly, same as xboxInitGraphics' backbuffer size.
+    Gfx_ViewportHeight = SCREEN_HEIGHT;
     Gfx_ViewportX = 0;
     Gfx_ViewportY = 0;
-    Gfx_ViewportWidth = 0x280;
+    Gfx_ViewportWidth = SCREEN_WIDTH;
     if (D3D_DeviceReady != 0) {
         D3DVIEWPORT viewport;
         viewport.X = Gfx_ViewportX;
@@ -2702,7 +2705,7 @@ static void d3dReleaseLevelResources(void) {
 // d3dInitShadowBlurTextures
 // ---------------------------------------------------------------------------------------------------------------
 
-// One-time (called only from xboxInitGraphics, alongside d3dSetup/d3dInitBorderDitherTexture) setup of the two
+// One-time (called only from xboxInitGraphics, alongside d3dSetup/d3dInitFallbackOverlayTexture) setup of the two
 // permanent, never-released (refCount forced to 1 below) render-target textures psiBlurCharacterShadow and
 // d3dBeginEndAuxRenderPass consume as Gfx_AuxRenderPassResult (256x256) and Gfx_ShadowBlurTargetB (128x128).
 //
@@ -2734,4 +2737,347 @@ void d3dSetLevelDirectionVector(float x, float y, float z) {
     Gfx_LevelDirectionVector[0] = x;
     Gfx_LevelDirectionVector[1] = y;
     Gfx_LevelDirectionVector[2] = z;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Slot-table accessors: Texture_GetRawDataPtr, d3dGetVertexDataSize, d3dGetIndexDataSize, d3dGetStreamBuffer,
+// d3dGetIndexBufferData
+// ---------------------------------------------------------------------------------------------------------------
+
+// Returns the pixel-data pointer of a registered texture (its D3D header's Data field, +4) with 0x80000000
+// OR'd in - the Xbox's uncached-alias view of physical RAM (same trick psiBlurScreen relies on, see its
+// comment). Only caller is psiDecompressWoman, which writes decompressed frames straight into the texture.
+// NULL for an empty slot.
+//
+// AUTOINJECT
+void * Texture_GetRawDataPtr(int textureSlot) {
+    D3DTextureSlotRaw *texSlot = D3DTextureSlot(textureSlot);
+    if (texSlot->baseTexture == NULL)
+        return NULL;
+    uint32_t data = *(uint32_t*)((char*)texSlot->baseTexture + 4);
+    return (void*)(data | 0x80000000u);
+}
+
+// Byte size the level loader reserves for a vertex-buffer's data: stride * count, plus 3 bytes of slack for
+// d3dCreateVertexBuffers' 4-byte alignment shift. Stride is 0x1c (0x20 if skinned) for a single buffer and 6
+// for a multi-stream (streamCount > 0) set, matching the allocator's own two formulas exactly.
+//
+// AUTOINJECT
+int d3dGetVertexDataSize(int vtxCnt, char maybeSkinned, int streamCount) {
+    int stride = (maybeSkinned != 0) ? 0x20 : 0x1c;
+    if (streamCount > 0)
+        stride = 6;
+    return stride * vtxCnt + 3;
+}
+
+// Ditto for an index buffer: 16-bit indices plus the same 3 bytes of alignment slack.
+//
+// AUTOINJECT
+int d3dGetIndexDataSize(int indexCount) {
+    return indexCount * 2 + 3;
+}
+
+// Reads one vertex back out of a (single-buffer path) vertex-buffer slot: position (3 dwords at +0), the
+// dword at +0x10 and the UV pair (+0x14, +0x18), using the slot's own stride flag (0x20 skinned / 0x1c not)
+// and the aligned data pointer d3dCreateVertexBuffers stored at +0x20. Only caller is psiGetTriList (glass
+// shatter geometry). Outputs are copied as raw dwords, exactly as the original does.
+//
+// AUTOINJECT
+void d3dGetStreamBuffer(int streamSlot, int vtxNum, uint32_t *posOut, uint32_t *uvOut, uint32_t *dword10Out) {
+    D3DVertexBufferSlotRaw *slotPtr = D3DVertexBufferSlot(streamSlot);
+    uint32_t stride = (slotPtr->field18 != 0) ? 0x20u : 0x1Cu;
+    const uint32_t *vertex = (const uint32_t*)((const char*)slotPtr->alignedData + (uint32_t)vtxNum * stride);
+    posOut[0] = vertex[0];
+    posOut[1] = vertex[1];
+    posOut[2] = vertex[2];
+    uvOut[0] = vertex[5];
+    uvOut[1] = vertex[6];
+    *dword10Out = vertex[4];
+}
+
+// Returns an index-buffer slot's (aligned) index data pointer (+0x18). Only caller is psiGetTriList.
+//
+// AUTOINJECT
+void * d3dGetIndexBufferData(int indexSlot) {
+    return D3DIndexBufferSlot(indexSlot)->dataPtr2;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// d3dSetLight, d3dDisableLight
+// ---------------------------------------------------------------------------------------------------------------
+
+// Four directional-light slots, kept as cached shader-constant inputs. These are the same fields
+// d3dResetTransformCaches (which is really "disable all four lights", going by this) resets:
+// Gfx_TransformCacheBitmaskA/B are the enabled/dirty masks and Gfx_TransformCacheFloats the colours. Only
+// caller of both is psiLight_SetLights (not yet reimplemented). Whoever uploads these to the GPU hasn't been
+// traced - it isn't any function in this file.
+#define Gfx_LightEnabledMask Gfx_TransformCacheBitmaskA               // 0x002FF274 - bit i = light i enabled
+#define Gfx_LightDirtyMask   Gfx_TransformCacheBitmaskB               // 0x002FF270 - bit i = light i changed
+#define Gfx_LightColour(i)   (Gfx_TransformCacheFloats - 1 + (i) * 4) // 0x002FF2BC + 16*i: r, g, b (each /256)
+#define Gfx_LightInvRange    ((float*)0x002FF2FCu)                    // 4 floats: 1/range (1.0 if range <= 0)
+#define Gfx_LightDirection   ((uint32_t*)0x002FF30Cu)                 // 3 dwords per light, copied verbatim
+
+// AUTOINJECT
+void d3dDisableLight(int lightIndex) {
+    if (lightIndex >= 4)
+        return;
+    uint32_t bit = 1u << lightIndex;
+    Gfx_LightEnabledMask &= ~bit;
+    Gfx_LightDirtyMask |= bit;
+    float *colour = Gfx_LightColour(lightIndex);
+    colour[2] = 0.0f;
+    colour[1] = 0.0f;
+    colour[0] = 0.0f;
+    if (Gfx_LightEnabledMask == 0)
+        Gfx_MiscModeFlags &= ~0xCu;
+}
+
+// dirX/Y/Z are copied as raw dwords (floats, going by the consumers, but the original never interprets
+// them here). Sets Gfx_MiscModeFlags bit 0x4 for lights 0-1 and bit 0x8 for lights 2-3.
+//
+// AUTOINJECT
+void d3dSetLight(int lightIndex, uint32_t dirX, uint32_t dirY, uint32_t dirZ, float range, float r, float g, float b) {
+    if (lightIndex >= 4)
+        return;
+    uint32_t bit = 1u << lightIndex;
+    Gfx_LightEnabledMask |= bit;
+    Gfx_LightDirtyMask |= bit;
+
+    uint32_t *dir = Gfx_LightDirection + lightIndex * 3;
+    dir[0] = dirX;
+    dir[1] = dirY;
+    dir[2] = dirZ;
+
+    // FCOMP against 0.0 then TEST AH,0x41: the divide only happens when range is strictly greater than 0
+    // (a NaN range keeps 1.0 too).
+    float invRange = 1.0f;
+    if (range > 0.0f)
+        invRange = 1.0f / range;
+    Gfx_LightInvRange[lightIndex] = invRange;
+
+    float *colour = Gfx_LightColour(lightIndex);
+    colour[0] = r * 0.00390625f; // 1/256
+    colour[1] = g * 0.00390625f;
+    colour[2] = b * 0.00390625f;
+
+    Gfx_MiscModeFlags |= (lightIndex >= 2) ? 0x8u : 0x4u;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// d3dInitFallbackOverlayTexture
+// ---------------------------------------------------------------------------------------------------------------
+
+// The original's FUN_000e3a20 (now d3dComputeSwizzleMasks in Ghidra) - a __thiscall helper (ECX = the 9-dword
+// output block) with no other callers, so it's a plain static function here rather than an injection: builds
+// the per-axis bit masks for Xbox texture swizzling (Morton order) of a w x h x d texture - masks[3..5] are
+// the X/Y/Z masks, masks[6..8] the (zero) starting offsets. The classic "increment a swizzled coordinate"
+// idiom the caller uses is then off = (off - mask) & mask.
+static void d3dComputeSwizzleMasks(uint32_t *masks, uint32_t width, uint32_t height, uint32_t depth) {
+    masks[0] = width;
+    masks[1] = height;
+    masks[2] = depth;
+    for (int i = 3; i < 9; i++)
+        masks[i] = 0;
+
+    uint32_t bit = 1, size = 1, lastBit;
+    do {
+        lastBit = 0;
+        if (size < width)  { masks[3] |= bit; bit <<= 1; lastBit = bit; }
+        if (size < height) { masks[4] |= bit; bit <<= 1; lastBit = bit; }
+        if (size < depth)  { masks[5] |= bit; bit <<= 1; lastBit = bit; }
+        size <<= 1;
+    } while (lastBit != 0);
+}
+
+// One-time (xboxInitGraphics only) creation of the 8x8 swizzled A4R4G4B4 "soft dot" texture d3dDrawOverlayQuad
+// falls back to when given texture slot 0 (Gfx_FallbackOverlayTexture): white, with alpha = (1 - dist/sqrt(32))^3
+// from the centre, clamped to [0,1] - i.e. a round radial fade. Marked permanent so level resets never free it.
+// Ported from raw disassembly: the decompiler shows the pow() arguments the wrong way round (it's pow(v, 3.0),
+// not pow(3.0, v) - the exponent is pushed last), the constant is 1/sqrt(32.0), the alpha byte is a plain
+// __ftol truncation, and the clamp's parity-flag test treats a NaN like a negative (-> 0).
+//
+// AUTOINJECT
+void d3dInitFallbackOverlayTexture(void) {
+    uint16_t *pixels = (uint16_t*)allocateAligned0x1000(0x80);
+
+    uint32_t masks[9];
+    d3dComputeSwizzleMasks(masks, 8, 8, 1);
+    const float invSqrt32 = 1.0f / (float)sqrt(32.0);
+
+    uint32_t yOffset = 0;
+    for (int y = 0; y < 8; y++) {
+        float dy = (float)y - 4.0f;
+        float dy2 = dy * dy;
+        uint32_t xOffset = 0;
+        for (int x = 0; x < 8; x++) {
+            float dx = (float)x - 4.0f;
+            float v = 1.0f - (float)sqrt(dx * dx + dy2) * invSqrt32;
+            if (!(v >= 0.0f))
+                v = 0.0f;
+            else if (v > 1.0f)
+                v = 1.0f;
+            uint8_t alpha = (uint8_t)(int)(pow((double)v, 3.0) * 255.0f);
+            pixels[yOffset | xOffset] = (uint16_t)(((uint16_t)alpha << 8) | 0x0FFF);
+            xOffset = (xOffset - masks[3]) & masks[3];
+        }
+        yOffset = (yOffset - masks[4]) & masks[4];
+    }
+
+    Gfx_FallbackOverlayTexture = (uint32_t)RegisterTexture(8, 8, 1, 1, pixels, 0);
+    d3dMarkTexturePermanent((int)Gfx_FallbackOverlayTexture);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// xboxInitGraphics
+// ---------------------------------------------------------------------------------------------------------------
+
+// The last game-side function that talked to D3D8 directly. Called once from main(). All four D3D8 entry
+// points confirmed plain __stdcall via raw disassembly (RET 0x18 / 0x8 / 0x10 / 0x4; the "push buffers supported"
+// query ignores its one argument and just returns 1).
+#define Direct3D_CreateDevice_ADDR         0x001004a0u
+#define D3D_SetPushBufferSize_ADDR         0x00100480u
+#define D3DDevice_CreateVertexShader_ADDR  0x00102430u
+#define D3D_ArePushBuffersSupported_ADDR   0x00105180u // Ghidra: FUN_00105180, a D3D8-internal "return 1"
+
+typedef uint32_t(__stdcall *Direct3D_CreateDeviceFn)(uint32_t adapter, uint32_t deviceType, void *hFocusWindow,
+                                                     uint32_t behaviorFlags, void *pPresentationParameters, void **ppDevice);
+#define Direct3D_CreateDevice ((Direct3D_CreateDeviceFn)Direct3D_CreateDevice_ADDR)
+
+typedef void(__stdcall *D3D_SetPushBufferSizeFn)(uint32_t pushBufferSize, uint32_t kickOffSize);
+#define D3D_SetPushBufferSize ((D3D_SetPushBufferSizeFn)D3D_SetPushBufferSize_ADDR)
+
+typedef uint32_t(__stdcall *D3DDevice_CreateVertexShaderFn)(const void *pDeclaration, const void *pFunction, void **pHandle, uint32_t usage);
+#define D3DDevice_CreateVertexShader ((D3DDevice_CreateVertexShaderFn)D3DDevice_CreateVertexShader_ADDR)
+
+// RET 0x4 - takes one (ignored) dword argument, which the original passes as 0. Declaring it with the argument
+// matters: as __stdcall the callee pops those 4 bytes, so calling it with none would unbalance the stack.
+typedef uint32_t(__stdcall *D3D_ArePushBuffersSupportedFn)(uint32_t unused);
+#define D3D_ArePushBuffersSupported ((D3D_ArePushBuffersSupportedFn)D3D_ArePushBuffersSupported_ADDR)
+
+// Standard Xbox D3DPRESENT_PARAMETERS (17 dwords), zeroed and then only partially filled in by the original.
+struct D3DPRESENT_PARAMETERS_Xbox {
+    uint32_t BackBufferWidth, BackBufferHeight, BackBufferFormat, BackBufferCount;
+    uint32_t MultiSampleType, SwapEffect, hDeviceWindow, Windowed;
+    uint32_t EnableAutoDepthStencil, AutoDepthStencilFormat, Flags;
+    uint32_t FullScreen_RefreshRateInHz, FullScreen_PresentationInterval;
+    uint32_t BufferSurfaces[3], DepthStencilSurface;
+};
+static_assert(sizeof(D3DPRESENT_PARAMETERS_Xbox) == 17 * 4, "Bad size for D3DPRESENT_PARAMETERS_Xbox");
+
+#define GFX_STRUCT_BASE   0x002C5750u
+#define GFX_STRUCT_DWORDS 59193u // the original's REP STOSD count: 0x39CE4 bytes, up to (not including) 0x002FF434
+
+#define Gfx_PushBuffersEnabled U32_AT(0x002C5768) // Gfx.pushBuffersEnabled
+#define Gfx_IsPalI             U8_AT(0x002C5760)  // Gfx.IsPalI - misnamed: it's a copy of IsNotPalI (see below)
+#define Gfx_IsNotPalI          U8_AT(0x002C5761)  // Gfx.IsNotPalI - AV region != 3 (PAL-I)
+#define Gfx_IsSomeGfxRegion    U8_AT(0x002C5762)  // Gfx.IsSomeGfxRegion - AV region == 1 (NTSC-M)
+#define Gfx_IsWidescreen       U8_AT(0x002C5763)  // Gfx.IsWidescreen - video mode bit 0
+#define Gfx_VideoModeBit3      U8_AT(0x002C5764)  // Gfx.field14_0x14 - video mode bit 3, forced to 0 for PAL-I
+
+// Vertex shader source data (ROM, in the XBE's data section) - the 128 "main" shaders share one of four
+// declarations (selected by the shader index's low two bits) and each have their own function token array
+// (a 128-entry pointer table), plus the immediate-mode and overlay-quad shaders with dedicated handles.
+#define VtxShaderDeclTokens_Plain    ((const void*)0x001B50E4u)
+#define VtxShaderDeclTokens_Bit0     ((const void*)0x001B5100u)
+#define VtxShaderDeclTokens_Bit1     ((const void*)0x001B5158u)
+#define VtxShaderDeclTokens_Bit0And1 ((const void*)0x001B5178u)
+#define VtxShaderFunctionTokenTable  ((const void* const*)0x001B4D78u) // 128 pointers
+#define ImmediateModeVtxShaderDecl   ((const void*)0x001B51D4u)
+#define ImmediateModeVtxShaderFunc   ((const void*)0x001B4F78u)
+#define OverlayVtxShaderDecl         ((const void*)0x001B51E8u)
+#define OverlayVtxShaderFunc         ((const void*)0x001B4FD0u)
+#define ImmediateModeVtxShaderHandleAddr ((void**)0x002C574Cu) // = &Gfx_ImmediateModeVertexShader
+#define OverlayVtxShaderHandleAddr       ((void**)0x002C5748u) // = &Gfx_OverlayVertexShaderHandle
+#define Gfx_D3DDeviceAddr                ((void**)0x002C576Cu) // = &D3D_DeviceReady (Gfx.D3DDevice)
+
+// Boot-time D3D setup: zeroes the whole Gfx struct (the only thing that ever did before
+// d3dReleaseLevelResources existed), builds the 0..255 -> 0..1 float table, creates the device, the fallback
+// overlay texture, the baseline render state (d3dSetup), the shadow/aux render targets, all 130 vertex
+// shaders, a neutral gamma ramp, then clears and presents two frames so every buffer starts black.
+//
+// The backbuffer size used to be patched into this function's immediates by Inject() (0x000e6efc/0x000e6f04);
+// it now takes SCREEN_WIDTH/SCREEN_HEIGHT directly. Region/video-mode inputs come from GetVideoMode/
+// XboxGetAVRegion, both already reimplemented on top of settings.ini in XboxSettings.cpp. The refresh rate
+// picked for the device is 60Hz unless the AV region is PAL-I (3), in which case 50Hz - through the
+// confusingly-named Gfx.IsPalI, which is actually set to IsNotPalI (ported as-is).
+//
+// AUTOINJECT
+void xboxInitGraphics(void) {
+    memset((void*)GFX_STRUCT_BASE, 0, GFX_STRUCT_DWORDS * 4);
+
+    for (int i = 0; i < 256; i++)
+        Gfx_U8ToFloat01(i) = (float)i * (1.0f / 255.0f);
+
+    Gfx_PushBuffersEnabled = D3D_ArePushBuffersSupported(0);
+    if (Gfx_PushBuffersEnabled != 0)
+        D3D_SetPushBufferSize(0x200000, 0x80000);
+
+    D3DPRESENT_PARAMETERS_Xbox presentParams;
+    memset(&presentParams, 0, sizeof(presentParams));
+    Gfx_D3DLastError = 0;
+    presentParams.BackBufferCount = 1;
+    presentParams.BackBufferWidth = SCREEN_WIDTH;
+    presentParams.BackBufferHeight = SCREEN_HEIGHT;
+    presentParams.BackBufferFormat = 7;           // X_D3DFMT_X8R8G8B8
+    presentParams.SwapEffect = 1;                 // D3DSWAPEFFECT_DISCARD
+    presentParams.EnableAutoDepthStencil = 1;
+    presentParams.AutoDepthStencilFormat = 0x2A;  // X_D3DFMT_LIN_D24S8
+    presentParams.FullScreen_RefreshRateInHz = 0;
+    presentParams.FullScreen_PresentationInterval = 0;
+
+    uint32_t videoMode = GetVideoMode();
+    Gfx_IsNotPalI = (XboxGetAVRegion() != 3) ? 1 : 0;
+    Gfx_IsSomeGfxRegion = (XboxGetAVRegion() == 1) ? 1 : 0;
+    Gfx_IsWidescreen = (uint8_t)(videoMode & 1);
+    Gfx_VideoModeBit3 = (uint8_t)((videoMode >> 3) & 1);
+    Gfx_IsPalI = Gfx_IsNotPalI; // sic - see the comment above
+    if (Gfx_IsPalI == 0)
+        Gfx_VideoModeBit3 = 0;
+    presentParams.FullScreen_RefreshRateInHz = (Gfx_IsPalI != 0) ? 60 : 50;
+    if (Gfx_IsWidescreen != 0)
+        presentParams.Flags |= 0x10;
+    if (Gfx_VideoModeBit3 != 0)
+        presentParams.Flags |= 0x40;
+
+    if (Gfx_PushBuffersEnabled == 0)
+        Gfx_D3DLastError = 0;
+    else
+        Gfx_D3DLastError = Direct3D_CreateDevice(0, 1, NULL, 0x40, &presentParams, Gfx_D3DDeviceAddr);
+
+    d3dInitFallbackOverlayTexture();
+    d3dSetup();
+    d3dInitShadowBlurTextures();
+
+    for (int i = 0; i < 128; i++) {
+        const void *declaration;
+        if ((i & 2) == 0)
+            declaration = (i & 1) ? VtxShaderDeclTokens_Bit0 : VtxShaderDeclTokens_Plain;
+        else
+            declaration = (i & 1) ? VtxShaderDeclTokens_Bit0And1 : VtxShaderDeclTokens_Bit1;
+
+        if (D3D_DeviceReady == 0)
+            Gfx_D3DLastError = 0;
+        else
+            Gfx_D3DLastError = D3DDevice_CreateVertexShader(declaration, VtxShaderFunctionTokenTable[i], &VtxShaderHandles[i], 0);
+    }
+
+    if (D3D_DeviceReady == 0) {
+        Gfx_D3DLastError = 0;
+    } else {
+        Gfx_D3DLastError = D3DDevice_CreateVertexShader(ImmediateModeVtxShaderDecl, ImmediateModeVtxShaderFunc, ImmediateModeVtxShaderHandleAddr, 0);
+        if (D3D_DeviceReady == 0)
+            Gfx_D3DLastError = 0;
+        else
+            Gfx_D3DLastError = D3DDevice_CreateVertexShader(OverlayVtxShaderDecl, OverlayVtxShaderFunc, OverlayVtxShaderHandleAddr, 0);
+    }
+
+    ConfigureGammaRamp(1.0f, 1.0f, 1.0f);
+
+    for (int i = 0; i < 2; i++) {
+        d3dBeginFrame();
+        if (D3D_DeviceReady != 0)
+            D3DDevice_Clear(0, NULL, 0xF3, 0, 1.0f, 0);
+        Gfx_D3DLastError = 0;
+        d3dSwap(); // the original inlines exactly d3dSwap's body here
+    }
 }

@@ -207,4 +207,25 @@ void d3dInitShadowBlurTextures(void);
 // consumer - see its own comment in d3dSeam.cpp.
 void d3dSetLevelDirectionVector(float x, float y, float z);
 
+// Slot-table accessors used by the loader and the glass-shatter code (psiCreateEntityGfx, psiGetTriList,
+// psiDecompressWoman - none reimplemented yet). No D3D8 calls - pure reads of the same tables the allocators
+// above fill in.
+void *Texture_GetRawDataPtr(int textureSlot);
+int d3dGetVertexDataSize(int vtxCnt, char maybeSkinned, int streamCount);
+int d3dGetIndexDataSize(int indexCount);
+void d3dGetStreamBuffer(int streamSlot, int vtxNum, uint32_t *posOut, uint32_t *uvOut, uint32_t *dword10Out);
+void *d3dGetIndexBufferData(int indexSlot);
+
+// The four cached directional-light slots (only psiLight_SetLights calls these). d3dResetTransformCaches
+// above is the "disable all four" counterpart.
+void d3dDisableLight(int lightIndex);
+void d3dSetLight(int lightIndex, uint32_t dirX, uint32_t dirY, uint32_t dirZ, float range, float r, float g, float b);
+
+// One-time creation of the 8x8 radial "soft dot" texture d3dDrawOverlayQuad falls back to for slot 0.
+void d3dInitFallbackOverlayTexture(void);
+
+// Boot-time D3D setup (device creation, vertex shaders, baseline state) - the last game-side function that
+// called D3D8 directly. See its own comment in d3dSeam.cpp.
+void xboxInitGraphics(void);
+
 #endif // D3DSEAM_H_

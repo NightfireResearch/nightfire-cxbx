@@ -1,8 +1,7 @@
 #include "actionhelpers.h"
 #include "engine/psiInput.h" // xboxInitInputDevices is reimplemented there now, talking to real XInput directly
 
-// AUTOGEN
-void xboxInitGraphics(void);
+#include "engine/Direct3D/d3dSeam.h" // xboxInitGraphics is reimplemented there now
 // AUTOGEN
 void xboxInitTextures(void);
 // AUTOGEN

@@ -48512,7 +48512,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3a20",
+        "name": "d3dComputeSwizzleMasks",
         "address": "0x000e3a20",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -48668,7 +48668,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3fe0",
+        "name": "d3dDisableLight",
         "address": "0x000e3fe0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48684,7 +48684,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e4040",
+        "name": "d3dSetLight",
         "address": "0x000e4040",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49244,7 +49244,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e56f0",
+        "name": "d3dGetIndexBufferData",
         "address": "0x000e56f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49520,7 +49520,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e62d0",
+        "name": "d3dInitFallbackOverlayTexture",
         "address": "0x000e62d0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
