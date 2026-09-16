@@ -1,6 +1,247 @@
 #include "psiInput.h"
 #include "../actionhelpers.h"
 #include <string.h>
+#include <math.h>
+
+// ---------------------------------------------------------------------------------------------------------------
+// Real hardware polling - talks to the host's actual gamepads via Win32 XInput, instead of going through
+// CXBX's emulation of the original Xbox kernel's XAPILIB device layer (XInitDevices/XGetDevices/XInputOpen/
+// XGetDeviceChanges/XInputGetState/XInputSetState/XInputClose - on real hardware, all backed by IOCTLs
+// against the Xbox's USB gamepad driver). xboxInitInputDevices and psiInput_PollDevices below replace that
+// whole chain; everything else in this file (psiInput_GetJoystickLX and friends, psiInput_MapInputs, ...)
+// is unmodified and keeps reading/writing the same XboxInputs global exactly as before.
+//
+// We declare the real XInputGetState/XInputSetState ourselves against locally-named struct shapes rather
+// than including <xinput.h>, because the real Win32 XINPUT_STATE/XINPUT_GAMEPAD/XINPUT_VIBRATION names
+// collide with this codebase's Xbox-shaped versions of the same names (see xinput_xbox.h, included via
+// psiInput.h) - which differ in layout (the original Xbox pad exposed 6 analog buttons instead of 2 analog
+// triggers, among other things).
+// ---------------------------------------------------------------------------------------------------------------
+
+#pragma pack(push, 1)
+struct Win32_XINPUT_GAMEPAD {
+    unsigned short wButtons;
+    unsigned char  bLeftTrigger;
+    unsigned char  bRightTrigger;
+    short          sThumbLX;
+    short          sThumbLY;
+    short          sThumbRX;
+    short          sThumbRY;
+};
+
+struct Win32_XINPUT_STATE {
+    unsigned long        dwPacketNumber;
+    Win32_XINPUT_GAMEPAD Gamepad;
+};
+
+struct Win32_XINPUT_VIBRATION {
+    unsigned short wLeftMotorSpeed;
+    unsigned short wRightMotorSpeed;
+};
+#pragma pack(pop)
+
+#define WIN32_XINPUT_GAMEPAD_A              0x1000
+#define WIN32_XINPUT_GAMEPAD_B              0x2000
+#define WIN32_XINPUT_GAMEPAD_X              0x4000
+#define WIN32_XINPUT_GAMEPAD_Y              0x8000
+#define WIN32_XINPUT_GAMEPAD_LEFT_SHOULDER  0x0100
+#define WIN32_XINPUT_GAMEPAD_RIGHT_SHOULDER 0x0200
+
+extern "C" __declspec(dllimport) unsigned long __stdcall XInputGetState(unsigned long dwUserIndex, Win32_XINPUT_STATE *pState);
+extern "C" __declspec(dllimport) unsigned long __stdcall XInputSetState(unsigned long dwUserIndex, Win32_XINPUT_VIBRATION *pVibration);
+#pragma comment(lib, "xinput9_1_0.lib")
+
+#define WIN32_ERROR_SUCCESS 0
+
+// AUTOINJECT
+void xboxInitInputDevices(void) {
+    memset(&XboxInputs, 0, sizeof(XboxInputs));
+    XboxInputs.Initialised = true;
+}
+
+// Faithfully reproduces the original's per-axis "sticky" deadzone widening: once an axis saturates past
+// +-90 (out of the -100..100 range produced further down), a 5-frame countdown starts, and while it's
+// running the deadzone threshold used below widens from 30 to 60 - this makes it easier to stay pinned at
+// full deflection without a stick's natural jitter dipping back under the (otherwise much tighter)
+// deadzone. counterA's countdown restarts while axisValue is pinned to the negative extreme, counterB's
+// while it's pinned to the positive extreme (matching the original's two independent per-direction
+// countdowns per axis).
+static float UpdateAxisSnapThreshold(float axisValue, int *counterA, int *counterB) {
+    if (*counterA <= 0 && *counterB <= 0)
+        return 30.0f;
+
+    if (*counterA > 0) {
+        int c = *counterA - 1;
+        if (axisValue >= -90.0f) c = 5;
+        *counterA = c;
+    }
+    if (*counterB > 0) {
+        int c = *counterB - 1;
+        if (axisValue <= 90.0f) c = 5;
+        *counterB = c;
+    }
+    return 60.0f;
+}
+
+// Applies the deadzone (anything within +-threshold collapses to 0) then rescales the remaining range back
+// out to +-100 - exactly as the original does per-axis below.
+static float ApplyDeadzoneAndRescale(float raw, float threshold) {
+    float v;
+    if (raw >= -threshold && raw <= threshold)
+        v = 0.0f;
+    else if (raw > threshold)
+        v = raw - threshold;
+    else
+        v = raw + threshold;
+    return (v / (100.0f - threshold)) * 100.0f;
+}
+
+// Real signature/behaviour: see the block comment above. Called once per frame by the original (untouched)
+// Input_Update, and again in a drain loop by the original (untouched) maybeInputShutdown to let rumble
+// motors spin down before handing off to another engine.
+//
+// AUTOINJECT
+void psiInput_PollDevices(void) {
+    if (!XboxInputs.Initialised)
+        return;
+
+    for (int i = 0; i < 4; i++) {
+        ControllerStateStruct *c = &XboxInputs.Controllers[i];
+
+        Win32_XINPUT_STATE winState;
+        memset(&winState, 0, sizeof(winState));
+        bool connected = XInputGetState((unsigned long)i, &winState) == WIN32_ERROR_SUCCESS;
+
+        if (!connected) {
+            c->controllerIndex = 0;
+            c->controllerState.dwPacketNumber = 0;
+            memset(&c->controllerState.Gamepad, 0, sizeof(c->controllerState.Gamepad));
+        } else {
+            // Any nonzero value marks "connected" here - the original's real device handle is never
+            // otherwise inspected by anything reimplemented in this file, only ever compared against 0.
+            c->controllerIndex = (uint)(i + 1);
+            c->controllerState.dwPacketNumber = winState.dwPacketNumber;
+
+            // The low 8 bits (D-pad/start/back/thumbstick-click) sit at the same bit positions in both the
+            // real Win32 layout and the original Xbox one - see xinput_xbox.h.
+            c->controllerState.Gamepad.wButtons = winState.Gamepad.wButtons & 0x00FF;
+
+            // The original Xbox pad exposed A/B/X/Y/BLACK/WHITE/triggers as 6+2 analog bytes rather than
+            // digital bits (see xinput_xbox.h) - synthesize those from the real pad's digital face buttons
+            // (full-scale 0 or 255) and real analog triggers (already 0-255). Index 5 (WHITE/
+            // LEFT_SHOULDER) is deliberately left at 0 below and is never read back into the button mask
+            // further down either - the original genuinely never wires it up (its unrolled per-button code
+            // jumps straight from index 4 to a loop that only covers indices 6-7), not something we're
+            // introducing.
+            unsigned char *analog = (unsigned char*)c->controllerState.Gamepad.bAnalogButtons;
+            analog[0] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_A) ? 0xFF : 0;
+            analog[1] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_B) ? 0xFF : 0;
+            analog[2] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_X) ? 0xFF : 0;
+            analog[3] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_Y) ? 0xFF : 0;
+            analog[4] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_RIGHT_SHOULDER) ? 0xFF : 0;
+            analog[5] = 0;
+            analog[6] = winState.Gamepad.bLeftTrigger;
+            analog[7] = winState.Gamepad.bRightTrigger;
+
+            c->controllerState.Gamepad.sThumbLX = winState.Gamepad.sThumbLX;
+            c->controllerState.Gamepad.sThumbLY = winState.Gamepad.sThumbLY;
+            c->controllerState.Gamepad.sThumbRX = winState.Gamepad.sThumbRX;
+            c->controllerState.Gamepad.sThumbRY = winState.Gamepad.sThumbRY;
+        }
+
+        // --- from here down, faithfully transliterated from the original polling function (0x000e76a0) ---
+
+        float lx = (float)(int)c->controllerState.Gamepad.sThumbLX * 0.0030518044f + 0.0015259022f;
+        float ly = (float)(int)c->controllerState.Gamepad.sThumbLY * 0.0030518044f + 0.0015259022f;
+        float rx = (float)(int)c->controllerState.Gamepad.sThumbRX * 0.0030518044f + 0.0015259022f;
+        float ry = (float)(int)c->controllerState.Gamepad.sThumbRY * 0.0030518044f + 0.0015259022f;
+
+        // unknown[8] (offsets 0x88-0xa4, in pairs per axis) are the snap-to-edge countdowns above;
+        // pad_5[4] (offsets 0x84-0x87, one byte per axis in LX,LY,RX,RY order) are the "locked" flags
+        // handled further down.
+        float lxThreshold = UpdateAxisSnapThreshold(lx, &c->unknown[0], &c->unknown[1]);
+        float lyThreshold = UpdateAxisSnapThreshold(ly, &c->unknown[3], &c->unknown[2]);
+        float rxThreshold = UpdateAxisSnapThreshold(rx, &c->unknown[4], &c->unknown[5]);
+        float ryThreshold = UpdateAxisSnapThreshold(ry, &c->unknown[7], &c->unknown[6]);
+
+        lx = ApplyDeadzoneAndRescale(lx, lxThreshold);
+        ly = ApplyDeadzoneAndRescale(ly, lyThreshold);
+        rx = ApplyDeadzoneAndRescale(rx, rxThreshold);
+        ry = ApplyDeadzoneAndRescale(ry, ryThreshold);
+
+        // Extra gain, then clamp each stick's magnitude (not just its individual axes) to 100.
+        lx *= 1.2f;
+        ly *= 1.2f;
+        float lMag = sqrtf(lx * lx + ly * ly);
+        if (lMag > 100.0f) {
+            lx *= 100.0f / lMag;
+            ly *= 100.0f / lMag;
+        }
+
+        rx *= 1.2f;
+        ry *= 1.2f;
+        float rMag = sqrtf(rx * rx + ry * ry);
+        if (rMag > 100.0f) {
+            rx *= 100.0f / rMag;
+            ry *= 100.0f / rMag;
+        }
+
+        c->Joystick_LX = lx;
+        c->Joystick_LY = ly;
+        c->Joystick_RX = rx;
+        c->Joystick_RY = ry;
+
+        // Digital button mask: low 8 bits are D-pad/start/back/thumbclick (already copied above); the rest
+        // are synthesized from the analog bytes at a ~5.5% (buttons) / ~11% (triggers) threshold, exactly
+        // matching the original's fixed-point 0xe/0x1c comparisons against (byte*100)>>8.
+        unsigned char *analog = (unsigned char*)c->controllerState.Gamepad.bAnalogButtons;
+        unsigned int buttons = c->controllerState.Gamepad.wButtons;
+        buttons |= ((analog[0] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_A : 0;
+        buttons |= ((analog[1] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_B : 0;
+        buttons |= ((analog[2] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_X : 0;
+        buttons |= ((analog[3] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_Y : 0;
+        buttons |= ((analog[4] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_RIGHT_SHOULDER : 0;
+        // index 5 (WHITE/LEFT_SHOULDER) intentionally skipped - see the note above.
+        buttons |= ((analog[6] * 100) >> 8) > 0x1c ? XBOXINPUT_GAMEPAD_LEFT_TRIGGER : 0;
+        buttons |= ((analog[7] * 100) >> 8) > 0x1c ? XBOXINPUT_GAMEPAD_RIGHT_TRIGGER : 0;
+        c->buttons = buttons;
+
+        // Per-axis "locked" flag: once set, holds that axis at 0 until it drops back under 80 (of the
+        // -100..100 range above). We haven't found anything in this binary that ever sets pad_5[0..3]
+        // nonzero, so in practice this is inert - kept here for fidelity in case that's wrong.
+        if (c->pad_5[0] != 0) { if (fabsf(c->Joystick_LX) < 80.0f) c->pad_5[0] = 0; else c->Joystick_LX = 0.0f; }
+        if (c->pad_5[1] != 0) { if (fabsf(c->Joystick_LY) < 80.0f) c->pad_5[1] = 0; else c->Joystick_LY = 0.0f; }
+        if (c->pad_5[2] != 0) { if (fabsf(c->Joystick_RX) < 80.0f) c->pad_5[2] = 0; else c->Joystick_RX = 0.0f; }
+        if (c->pad_5[3] != 0) { if (fabsf(c->Joystick_RY) < 80.0f) c->pad_5[3] = 0; else c->Joystick_RY = 0.0f; }
+
+        // Edge-trigger: .buttons becomes "just pressed this frame" (prevButtons masks out anything that
+        // was already held last frame), and prevButtons is retained as "still held" for next frame.
+        unsigned int prevHeld = c->prevButtons;
+        unsigned int rawButtons = c->buttons;
+        c->prevButtons = prevHeld & rawButtons;
+        c->buttons = ~prevHeld & rawButtons;
+
+        // Rumble dispatch. The original's XInputSetState is asynchronous, taking a pointer to a real Xbox
+        // XINPUT_FEEDBACK (header + status/context fields, with the actual XINPUT_RUMBLE payload right at
+        // the end - which is exactly what "vibrationState"/pad_2/pad_3/scaledRumbleA/B here are: a 4-byte
+        // status word checked against 0x3e5 (997, ERROR_IO_PENDING) to skip re-issuing a call that's still
+        // in flight, followed by padding for the rest of the header, followed by the real rumble values -
+        // confirmed from the raw disassembly of 0x000e76a0, not just its decompile, since the decompile's
+        // own account of this part doesn't hold together on its own). Win32's XInputSetState is
+        // synchronous and takes only the plain 4-byte rumble struct, so none of that header/pending-check
+        // machinery applies here - we just send the new values directly whenever they've changed.
+        if (c->controllerIndex != 0 &&
+            (c->lastRumbleA != c->rumbleA || c->lastRumbleB != c->rumbleB)) {
+            Win32_XINPUT_VIBRATION vibration;
+            vibration.wLeftMotorSpeed = (unsigned short)(c->rumbleA * 655);
+            vibration.wRightMotorSpeed = (unsigned short)(c->rumbleB * 655);
+            XInputSetState((unsigned long)i, &vibration);
+
+            c->lastRumbleA = c->rumbleA;
+            c->lastRumbleB = c->rumbleB;
+        }
+    }
+}
 
 // Array of 4 uint32_t entries, all initialised to 0xFFFFFFFF
 #define controller_maybeRumbleTimeout ((int*)0x0019481c)

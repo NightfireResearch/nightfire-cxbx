@@ -1,7 +1,6 @@
 #include "actionhelpers.h"
+#include "engine/psiInput.h" // xboxInitInputDevices is reimplemented there now, talking to real XInput directly
 
-// AUTOGEN
-void xboxInitInputDevices(void);
 // AUTOGEN
 void xboxInitGraphics(void);
 // AUTOGEN
