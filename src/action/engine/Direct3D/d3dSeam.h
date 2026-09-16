@@ -127,9 +127,12 @@ void d3dDrawOverlayQuad(int overlaySlot, float sizeParam, int textureSlot, float
 // original binary - possibly dead code - but implemented anyway since it's simple and low-risk.
 void d3dResetRenderTargetAndBuffers(void);
 
+// Transforms up to 64 pending immediate-mode quads into a vertex buffer and draws them in one
+// D3DDevice_DrawVerticesUP call. See its own comment in d3dSeam.cpp.
+void maybeImmediateModeFlush(void);
+
 // Appends a 9-float item (position rect, UV rect, packed colour as the raw bits of param9) to the immediate-
-// mode buffer, flushing first if it's full. maybeImmediateModeFlush itself is not yet reimplemented (see its
-// own forward declaration in d3dSeam.cpp for why) - this calls the still-untouched original.
+// mode buffer, flushing first (via maybeImmediateModeFlush) if it's full.
 void maybeImmediateModePushItem(float param1, float param2, float param3, float param4, float param5,
                                  float param6, float param7, float param8, float param9);
 

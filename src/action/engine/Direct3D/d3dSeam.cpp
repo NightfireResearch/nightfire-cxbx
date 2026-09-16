@@ -1602,15 +1602,109 @@ void d3dResetRenderTargetAndBuffers(void) {
 // maybeImmediateModePushItem
 // ---------------------------------------------------------------------------------------------------------------
 
-// maybeImmediateModeFlush itself is NOT reimplemented yet (its own vertex-transform loop carries Ghidra's own
-// "type propagation not settling" warning - a genuine decompiler-confidence red flag independent of anything
-// else, so it's deliberately left for a dedicated future pass). Calling the still-untouched original here is
-// safe and normal - same pattern as every other not-yet-seamed function we call into elsewhere in this file.
-// AUTOGEN
-void __stdcall maybeImmediateModeFlush(void);
-
 #define Gfx_ImmediateModeItemCount U32_AT(0x002C6F70) // Gfx.maybeImmediateModeItemCount
 #define Gfx_ImmediateModeBuffer ((float*)0x002DE3ECu)  // Gfx.maybeImmediateModeBuffer[64][9], stride 9 floats
+#define Gfx_ImmediateModeVertexBuffer ((float*)0x002C5770u) // Gfx.field20_0x20 - the actual vertex-buffer base passed to DrawVerticesUP; the transform loop below writes starting 2 floats in (Gfx.field22_0x28)
+#define Gfx_ImmediateModeVertexShader ((void*)0x002C574Cu)  // untraced - read as a vertex-shader HANDLE value (not a pointer to this address), distinct from the VtxShaderHandles array drawShard/d3dDrawOverlayQuad use
+#define Gfx_ZBiasActive U32_AT(0x002C6FD0)  // Gfx.field6071_0x1880 - defined again, identically, down by maybeResetRenderState; needed here too since this function comes first in the file
+
+// Carries Ghidra's own "type propagation algorithm not settling" decompiler-confidence warning, tied to a
+// loop-invariant (the texture-height reciprocal) that the original keeps resident on the x87 FPU register
+// stack for the whole loop rather than spilling to memory - confirmed via raw disassembly that despite the
+// warning, decompile's actual data movements (which value goes to which output offset) are correct; every
+// offset below was cross-checked against the raw byte offsets in the compiled function, not just trusted from
+// decompile. Transforms up to 64 pending "immediate mode" quads (position rect + UV rect + packed colour, see
+// maybeImmediateModePushItem) into an axis-aligned textured-quad vertex buffer (4 vertices per item, 6 floats
+// per vertex - the 6th is left untouched/stale, matching the original exactly) and draws them in one
+// D3DDevice_DrawVerticesUP call. UVs are normalized by the currently-loaded texture's own width/height unless
+// its nonSwizzled flag is set, in which case they're used as-is (fWidth/fHeight forced to 1.0).
+//
+// AUTOINJECT
+void maybeImmediateModeFlush(void) {
+    if ((int32_t)Gfx_ImmediateModeItemCount < 1)
+        return;
+
+    D3DTextureSlotRaw *tex = D3DTextureSlot((int)Gfx_CurrentlyLoadedTexture);
+    float fWidth = (float)(int16_t)tex->width;
+    if (fWidth != 0.0f)
+        fWidth = 1.0f / fWidth;
+    float fHeight = (float)(int16_t)tex->height;
+    if (fHeight != 0.0f)
+        fHeight = 1.0f / fHeight;
+    if (tex->nonSwizzled != 0) {
+        fWidth = 1.0f;
+        fHeight = 1.0f;
+    }
+
+    float *src = Gfx_ImmediateModeBuffer + 1;       // matches the original's pfVar14 = maybeImmediateModeBuffer[0]+1
+    float *dst = Gfx_ImmediateModeVertexBuffer + 2;  // matches the original's pfVar13 = &Gfx.field22_0x28
+
+    for (uint32_t i = 0; i < Gfx_ImmediateModeItemCount; i++) {
+        float x0 = *(src - 1);
+        float y0 = src[0];
+        float xWidth = src[1];
+        float yHeight = src[2];
+        float u0 = src[3];
+        float v0 = src[4];
+        float uWidth = src[5];
+        float vHeight = src[6];
+        uint32_t colourBits = *(uint32_t*)&src[7];
+
+        float xLeft = x0 - 0.03125f;
+        float yTop = y0 - 0.03125f;
+        float xRight = (xWidth + x0) - 0.03125f;
+        float yBottom = (yHeight + y0) - 0.03125f;
+        float uLeft = u0 * fWidth;
+        float uRight = (uWidth + u0) * fWidth;
+        float vTop = v0 * fHeight;
+        float vBottom = (vHeight + v0) * fHeight;
+
+        dst[-2] = xLeft;
+        dst[-1] = yTop;
+        *(uint32_t*)&dst[0]    = colourBits;
+        *(uint32_t*)&dst[6]    = colourBits;
+        *(uint32_t*)&dst[0xc]  = colourBits;
+        *(uint32_t*)&dst[0x12] = colourBits;
+        dst[1] = uLeft;
+        dst[0x13] = uLeft;
+        dst[2] = vTop;
+        dst[4] = xRight;
+        dst[10] = xRight;
+        dst[5] = yTop;
+        dst[7] = uRight;
+        dst[0xd] = uRight;
+        dst[8] = vTop;
+        dst[0xb] = yBottom;
+        dst[0xe] = vBottom;
+        dst[0x14] = vBottom;
+        dst[0x10] = xLeft;
+        dst[0x11] = yBottom;
+
+        src += 9;
+        dst += 0x18;
+    }
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShader(Gfx_ImmediateModeVertexShader);
+
+    Gfx_MiscResetFlag = 0xFFFFFFFFu;
+    Gfx_CurrentStreamBuffer = 0xFFFFFFFFu;
+    Gfx_CurrentIndexBuffer = 0xFFFFFFFFu;
+    Gfx_D3DLastError = 0;
+
+    if (Gfx_ZBiasActive != 0) {
+        Gfx_ZBiasActive = 0;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetRenderState_ZBias(0);
+        Gfx_D3DLastError = 0;
+    }
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_DrawVerticesUP(8, Gfx_ImmediateModeItemCount * 4, Gfx_ImmediateModeVertexBuffer, 0x18);
+
+    Gfx_D3DLastError = 0;
+    Gfx_ImmediateModeItemCount = 0;
+}
 
 // AUTOINJECT
 void maybeImmediateModePushItem(float param1, float param2, float param3, float param4, float param5,
