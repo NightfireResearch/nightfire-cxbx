@@ -166,4 +166,8 @@ void d3dSetViewMatrixFromRigidTransform(D3DMATRIX *rigidTransform);
 // own comment in d3dSeam.cpp.
 unsigned int d3dBeginEndAuxRenderPass(char begin, D3DMATRIX *rigidTransform, D3DMATRIX *projMtx);
 
+// One-time-per-call D3D8 device setup - resets caches, establishes baseline render state, projection matrix,
+// viewport, and various opaque D3D8-internal registers. See its own comment in d3dSeam.cpp for the details.
+void d3dSetup(void);
+
 #endif // D3DSEAM_H_

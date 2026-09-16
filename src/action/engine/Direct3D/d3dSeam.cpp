@@ -53,6 +53,11 @@
 #define D3DDevice_DrawVertices_ADDR                0x001049c0u
 #define D3DDevice_SetRenderState_ZBias_ADDR         0x00100bf0u
 #define D3DDevice_SetTextureState_BorderColor_ADDR  0x00100fc0u
+#define D3DDevice_SetRenderState_ZEnable_ADDR              0x00101a90u
+#define D3DDevice_SetRenderState_NormalizeNormals_ADDR     0x00100a60u
+#define D3DDevice_SetRenderState_VertexBlend_ADDR          0x00100df0u
+#define D3DDevice_SetShaderConstantMode_ADDR               0x00102910u
+#define D3DDevice_SetVertexShaderConstantNotInline_ADDR    0x00102760u
 
 #define Gfx_D3DLastError          U32_AT(0x002C5750) // Gfx.D3DLastError
 #define Gfx_TotalTextureBytesUsed U32_AT(0x002C6FE0) // Gfx.field6075_0x1890 - running total, informational only
@@ -137,6 +142,17 @@ typedef void(__fastcall *D3DDevice_SetVertexShaderConstant4Fn)(uint32_t constant
 // D3DDevice_SetTextureState_BorderColor(stage, colour) - confirmed plain __stdcall via raw disassembly (RET 0x8).
 typedef void(__stdcall *D3DDevice_SetTextureState_BorderColorFn)(uint32_t stage, uint32_t colour);
 #define D3DDevice_SetTextureState_BorderColor ((D3DDevice_SetTextureState_BorderColorFn)D3DDevice_SetTextureState_BorderColor_ADDR)
+
+// Four more plain __stdcall D3D8 render-state setters, only ever called from d3dSetup - confirmed via
+// functions_action.json (has_custom_variable_storage false, RET immediate matches param count).
+typedef void(__stdcall *D3DDevice_SetRenderState_ZEnableFn)(uint32_t value);
+#define D3DDevice_SetRenderState_ZEnable ((D3DDevice_SetRenderState_ZEnableFn)D3DDevice_SetRenderState_ZEnable_ADDR)
+typedef void(__stdcall *D3DDevice_SetRenderState_NormalizeNormalsFn)(uint32_t value);
+#define D3DDevice_SetRenderState_NormalizeNormals ((D3DDevice_SetRenderState_NormalizeNormalsFn)D3DDevice_SetRenderState_NormalizeNormals_ADDR)
+typedef void(__stdcall *D3DDevice_SetRenderState_VertexBlendFn)(uint32_t value);
+#define D3DDevice_SetRenderState_VertexBlend ((D3DDevice_SetRenderState_VertexBlendFn)D3DDevice_SetRenderState_VertexBlend_ADDR)
+typedef void(__stdcall *D3DDevice_SetShaderConstantModeFn)(uint32_t value);
+#define D3DDevice_SetShaderConstantMode ((D3DDevice_SetShaderConstantModeFn)D3DDevice_SetShaderConstantMode_ADDR)
 
 // D3DDevice_SetVertexShaderConstantNotInline(constant index in ECX, pointer in EDX, count-in-dwords on the
 // stack) - confirmed via raw disassembly: exactly matches MSVC's own __fastcall ABI for a 3-argument function
@@ -2040,4 +2056,225 @@ void maybeD3dShutdown(void) {
     }
 
     d3dBindBuffers(0, 0);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// d3dSetup
+// ---------------------------------------------------------------------------------------------------------------
+
+#define D3D8_RS_0x4033c_LastValue U32_AT(0x00111AB8) // opaque, untraced; only ever written here
+#define D3D8_RS_ZBiasEnableFlag   U32_AT(0x00111ABC) // D3D8::D3DRS_ZBias - opaque, untraced; only ever written here
+#define D3D8_RS_0x40300_LastValue U32_AT(0x00111AC0) // opaque, untraced; only ever written here
+#define D3D8_RS_YuvEnableAltFlag  U32_AT(0x00111AD4) // D3D8::D3DRS_YuvEnable - opaque, untraced; a different register to D3DDevice_SetRenderState_YuvEnable's own (see d3dSetYuvEnable) - this one is poked directly via D3D_SetRenderStateSimple instead
+#define D3D8_ShaderConstantSubIndexTable ((int32_t*)0x001B5208) // untraced - ~53 ints, each added to 0x60 to form a shader-constant register index
+
+// Per-texture-stage-like opaque D3D8-internal registers, four groups spaced 0x80 apart, written unconditionally
+// (given device ready) every time d3dSetup runs. Untraced overall meaning - ported verbatim from decompile
+// (cross-checked against raw disassembly's own store addresses/values one by one, all confirmed to match).
+#define D3D8_Stage0_0x00 U32_AT(0x00111800)
+#define D3D8_Stage0_0x08 U32_AT(0x00111808)
+#define D3D8_Stage0_0x0c U32_AT(0x0011180C)
+#define D3D8_Stage0_0x10 U32_AT(0x00111810)
+#define D3D8_Stage0_0x18 U32_AT(0x00111818)
+#define D3D8_Stage0_0x1c U32_AT(0x0011181C)
+#define D3D8_PreStage_0x00 U32_AT(0x001117DC)
+#define D3D8_PreStage_0x04 U32_AT(0x001117E0)
+#define D3D8_PreStage_0x08 U32_AT(0x001117E4)
+#define D3D8_Stage1_0x5c U32_AT(0x0011185C)
+#define D3D8_Stage1_0x60 U32_AT(0x00111860)
+#define D3D8_Stage1_0x64 U32_AT(0x00111864)
+#define D3D8_Stage2_0x00 U32_AT(0x00111900)
+#define D3D8_Stage2_0x10 U32_AT(0x00111910)
+#define D3D8_Stage2_0xdc U32_AT(0x001118DC)
+#define D3D8_Stage2_0xe0 U32_AT(0x001118E0)
+#define D3D8_Stage2_0xe4 U32_AT(0x001118E4)
+#define D3D8_Stage2_0xe8 U32_AT(0x001118E8)
+#define D3D8_Stage3_0x00 U32_AT(0x00111980)
+#define D3D8_Stage3_0x10 U32_AT(0x00111990)
+#define D3D8_Stage3_0x5c U32_AT(0x0011195C)
+#define D3D8_Stage3_0x60 U32_AT(0x00111960)
+#define D3D8_Stage3_0x64 U32_AT(0x00111964)
+#define D3D8_Stage3_0x68 U32_AT(0x00111968)
+
+#define Gfx_BasisScaleDiag ((float*)0x002FF288) // Gfx.field158589_0x39b38 - untraced; 4 floats, stride 16 bytes, all reset to 1.0 by d3dSetup
+
+// One-time-per-call D3D8 device setup: resets the whole texture/stream/buffer cache block to -1, lazily enables
+// a handful of always-on render states (alpha-test/z-bias/misc/fog-mode/yuv-mode registers, Z-enable/normalize-
+// normals/vertex-blend), writes a large block of opaque per-texture-stage D3D8-internal registers to fixed
+// baseline values (untraced meaning, ported verbatim), sets up the projection matrix (75 degree FOV, 4:3,
+// 1.0-1000.0), shader constant 0x76 (a fixed {-96, 1, 256, 1/256} vector), an identity matrix broadcast across
+// a lookup-table-driven set of shader constant registers (DAT_001b5208), a basis-scale reset, default character
+// light intensity/fog/cull-mode/viewport, then finally reuses d3dResetTransformCaches/d3dSetupRenderStatesAndFog/
+// d3dSetRenderState[1/2]/d3dSetFogEnable/d3dSetColorConstant67/d3dSetTextureWithBorderColor/d3dSetTextureStage1/
+// d3dSetStreamSources exactly as the original calls them (not reimplemented separately here - see each of those
+// for what they do). The three d3dSetRenderState/1/2 calls reuse the EXACT SAME cache fields as this function's
+// own field6056/6057/6058 checks (D3D_AlphaRefCache/D3D_DepthMaskCache/D3D_ZFuncCache - confirmed via raw
+// disassembly, address-for-address), so calling them directly instead of hand-duplicating that logic is safe.
+//
+// AUTOINJECT
+void d3dSetup(void) {
+    for (int i = 0; i < 0x15; i++)
+        ((uint32_t*)0x002C6F84)[i] = 0xFFFFFFFFu; // Gfx.currentlyLoadedTexture and 20 more consecutive fields
+
+    d3dSetRenderState1(1); // field6056_0x1850 / D3D_AlphaRefCache - method 0x40340
+
+    if (D3D_DeviceReady != 0) {
+        D3D_SetRenderStateSimple(0x4033c, 0x206);
+        D3D8_RS_0x4033c_LastValue = 0x206;
+        Gfx_D3DLastError = 0;
+
+        D3D_SetRenderStateSimple(0x40304, 1);
+        D3D8_RS_ZBiasEnableFlag = 1;
+        Gfx_D3DLastError = 0;
+
+        D3D_SetRenderStateSimple(0x40300, 1);
+        D3D8_RS_0x40300_LastValue = 1;
+        Gfx_D3DLastError = 0;
+
+        D3D_SetRenderStateSimple(0x40350, 0x8006);
+        D3D8_FogState_LastValue = 0x8006;
+        Gfx_D3DLastError = 0;
+
+        D3D_SetRenderStateSimple(0x40310, 1);
+        D3D8_RS_YuvEnableAltFlag = 1;
+        Gfx_D3DLastError = 0;
+
+        D3DDevice_SetRenderState_ZEnable(2);
+        Gfx_D3DLastError = 0;
+
+        D3DDevice_SetRenderState_NormalizeNormals(1);
+        Gfx_D3DLastError = 0;
+
+        D3DDevice_SetRenderState_VertexBlend(0);
+        Gfx_D3DLastError = 0;
+
+        // Opaque per-stage D3D8-internal register baseline - untraced meaning, ported verbatim.
+        D3D8_Stage0_0x08 = 2;
+        D3D8_Stage0_0x00 = 5;
+        D3D8_Stage0_0x0c = 0;
+        D3D8_Stage0_0x18 = 2;
+        D3D8_Stage0_0x10 = 4;
+        D3D8_Stage0_0x1c = 0;
+        D3D8_PreStage_0x00 = 2;
+        D3D8_PreStage_0x04 = 2;
+        D3D8_PreStage_0x08 = 2;
+        D3D8_TexStage1_0x80 = 1;
+        D3D8_TexStage1_0x90 = 1;
+        D3D8_Stage1_0x5c = 2;
+        D3D8_Stage1_0x60 = 2;
+        D3D8_Stage1_0x64 = 2;
+        D3D8_Stage2_0x00 = 1;
+        D3D8_Stage2_0x10 = 1;
+        D3D8_Stage2_0xdc = 2;
+        D3D8_Stage2_0xe0 = 2;
+        D3D8_Stage2_0xe4 = 2;
+        D3D8_Stage2_0xe8 = 0xbf800000u; // -1.0f
+        D3D8_Stage3_0x00 = 1;
+        D3D8_Stage3_0x10 = 1;
+        D3D8_Stage3_0x5c = 2;
+        D3D8_Stage3_0x60 = 2;
+        D3D8_Stage3_0x64 = 2;
+        D3D8_Stage3_0x68 = 0xbf800000u; // -1.0f
+        D3D8_PushBufferDirtyFlags |= 0x280f;
+        U32_AT(0x00111B48) = 0;
+        U32_AT(0x00111B4C) = 0x3f800000u; // 1.0f
+        U32_AT(0x00111B50) = 0x3f800000u; // 1.0f
+        U32_AT(0x001117E8) = 0xbf800000u; // -1.0f
+        U32_AT(0x00111868) = 0xbf800000u; // -1.0f
+        U32_AT(0x00111B44) = 1;
+        U32_AT(0x00111B54) = 0;
+    }
+    Gfx_D3DLastError = 0;
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetShaderConstantMode(1);
+    Gfx_D3DLastError = 0;
+
+    D3DMATRIX projMtx;
+    createProjectionMatrix(&projMtx, 1.3333334f, 75.0f, 0.0f, 1.0f, 1000.0f);
+    d3dSetProjectionMatrix(&projMtx);
+
+    float shaderConstant76[4] = { -96.0f, 1.0f, 256.0f, 1.0f / 256.0f };
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShaderConstant1(0x76, shaderConstant76);
+    Gfx_D3DLastError = 0;
+
+    D3DMATRIX identity;
+    d3dMatrixIdentity(&identity);
+    for (int byteOffset = 0; byteOffset < 0xd4; byteOffset += 4) {
+        if (D3D_DeviceReady != 0) {
+            int constantIndex = *(int32_t*)((char*)D3D8_ShaderConstantSubIndexTable + byteOffset) + 0x60;
+            D3DDevice_SetVertexShaderConstantNotInline(constantIndex, &identity, 0xc);
+        }
+        Gfx_D3DLastError = 0;
+    }
+
+    for (float *p = Gfx_BasisScaleDiag; p < (float*)0x002FF2C8; p += 4)
+        *p = 1.0f;
+
+    gfxSetCharacterLightIntensity(0.5f);
+    Gfx_MatrixGenFlag2 = 1;
+    U32_AT(0x002FF398) = 0x3f800000u; // Gfx.field158786_0x39c48 = 1.0f
+    U32_AT(0x002FF39C) = 0;           // Gfx.field158787_0x39c4c = 0.0f
+    U32_AT(0x002FF3A0) = 0;           // Gfx.field158788_0x39c50 = 0.0f
+    U32_AT(0x002FF344) = 0x4b7fffffu; // not in the Gfx struct - untraced, a very large float sentinel
+    d3dSetFogNear(10.0f);
+    d3dSetFogFar(100.0f);
+
+    if (Gfx_CurrentCullMode != 1) {
+        Gfx_CurrentCullMode = 1;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetRenderState_CullMode(0x901);
+        Gfx_D3DLastError = 0;
+    }
+
+    Gfx_ViewportHeight = 0x1e0;
+    Gfx_ViewportX = 0;
+    Gfx_ViewportY = 0;
+    Gfx_ViewportWidth = 0x280;
+    if (D3D_DeviceReady != 0) {
+        D3DVIEWPORT viewport;
+        viewport.X = Gfx_ViewportX;
+        viewport.Y = Gfx_ViewportY;
+        viewport.Width = Gfx_ViewportWidth;
+        viewport.Height = Gfx_ViewportHeight;
+        viewport.MinZ = 0.0f;
+        viewport.MaxZ = 1.0f;
+        D3DDevice_SetViewport(&viewport);
+    }
+    Gfx_D3DLastError = 0;
+
+    d3dResetTransformCaches();
+
+    if (Gfx_DeferredTexStateA != 1 || Gfx_DeferredTexStateB != 1) {
+        Gfx_DeferredTexStateA = 1;
+        Gfx_DeferredTexStateB = 1;
+        Gfx_D3DLastError = 0;
+        if (D3D_DeviceReady != 0) {
+            D3D8_PushBufferDirtyFlags |= 1;
+            D3D8_DeferredTextureState = 1;
+            D3D8_DeferredTextureStateB = 1;
+        }
+    }
+
+    d3dSetupRenderStatesAndFog(0);
+    d3dSetRenderState2(1); // field6057_0x1854 / D3D_DepthMaskCache - method 0x4035c
+    d3dSetRenderState(1);  // field6058_0x1858 / D3D_ZFuncCache - method 0x40354
+
+    d3dSetFogEnable(0);
+    d3dSetColorConstant67(0xFFFFFFFFu);
+
+    if (Gfx_ExtraBlendA != 1 || Gfx_ExtraBlendB != 1 || Gfx_ExtraBlendC != 1) {
+        Gfx_ExtraBlendA = 1;
+        Gfx_ExtraBlendB = 1;
+        Gfx_ExtraBlendC = 1;
+        D3D8_State0x40358_LastValue = 0x1010101;
+        if (D3D_DeviceReady != 0)
+            D3D_SetRenderStateSimple(0x40358, 0x1010101);
+        Gfx_D3DLastError = 0;
+    }
+
+    d3dSetTextureWithBorderColor(0, 0);
+    d3dSetTextureStage1(0, 0);
+    d3dSetStreamSources(0, 0, 0.0f, 0, 0.0f, 0, 0.0f, 0, 0.0f, 0, 0.0f, 0, 0.0f, 0, 0.0f, 0, 0.0f);
 }
