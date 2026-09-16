@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 // ---------------------------------------------------------------------------------------------------------------
 // "Thin seam" reimplementation. These are Eurocom's own small wrapper functions that sit directly on top of
@@ -426,6 +427,24 @@ static inline uint32_t FloatToBits(float f) {
     uint32_t bits;
     memcpy(&bits, &f, sizeof(bits));
     return bits;
+}
+
+// KNOWN ISSUE (not something this seam work introduced): the vertex/index-buffer slot tables below have no
+// release path anywhere in the original binary - nothing ever marks a slot free again once allocated. The
+// original Break_Create/Break_Kill breakable-object system is also missing its cleanup half (Break_Kill is an
+// unfinished no-op stub in Break.cpp), so revisiting an already-played level segment re-creates its breakables
+// (and likely other placed-object types with the same gap) from scratch every time, leaking slots here until
+// the table fills up. parsemap.cpp's Place_Breakable case was pointed at the original, untouched Break_Create
+// to remove the ONE confirmed contributor, but the same underlying leak pattern may still apply to other
+// object types created via parsemap.cpp's dispatcher. This prints clearly (rather than just returning 0 and
+// letting some unrelated caller crash on the failure later, which is what was happening) so the failure is
+// immediately attributable if hit again.
+static void D3DSeamTableExhaustedWarning(const char *tableName) {
+    printf("[d3dSeam] %s table is full (2047/2047 slots in use) - allocation failed. This is a KNOWN,\n"
+           "          pre-existing issue: vertex/index buffer slots are never released, and revisiting an\n"
+           "          already-played level segment re-creates its objects (breakables etc.) without freeing\n"
+           "          the previous visit's. See parsemap.cpp's Place_Breakable comment and Break.cpp's\n"
+           "          Break_Kill (an unfinished stub) for the confirmed contributor.\n", tableName);
 }
 
 // Standard row-major 4x4 matrix product (out = base * chain), verified term-by-term against
@@ -1080,6 +1099,7 @@ int d3dCreateIndexBuffer(int indexCount, unsigned int data) {
         return slot;
     }
 
+    D3DSeamTableExhaustedWarning("index buffer");
     return 0;
 }
 
@@ -1142,8 +1162,10 @@ int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzl
             if (freeCount >= (int)streamCount)
                 break;
             runStart++;
-            if (runStart >= D3D_VERTEX_BUFFER_TABLE_COUNT)
+            if (runStart >= D3D_VERTEX_BUFFER_TABLE_COUNT) {
+                D3DSeamTableExhaustedWarning("vertex buffer (multi-stream)");
                 return 0;
+            }
         }
 
         uint32_t perStreamBytes = vtxCnt * 6;
@@ -1181,8 +1203,10 @@ int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzl
         if (D3DVertexBufferSlot(slot)->selfPtr == NULL)
             break;
     }
-    if (slot >= D3D_VERTEX_BUFFER_TABLE_COUNT)
+    if (slot >= D3D_VERTEX_BUFFER_TABLE_COUNT) {
+        D3DSeamTableExhaustedWarning("vertex buffer (single)");
         return 0;
+    }
 
     uint32_t stride = (nonSwizzled != 0) ? 0x20u : 0x1Cu;
     uint32_t totalBytes = vtxCnt * stride;
