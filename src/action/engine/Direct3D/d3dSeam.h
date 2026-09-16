@@ -173,4 +173,8 @@ unsigned int d3dBeginEndAuxRenderPass(char begin, D3DMATRIX *rigidTransform, D3D
 // viewport, and various opaque D3D8-internal registers. See its own comment in d3dSeam.cpp for the details.
 void d3dSetup(void);
 
+// Closes an aux render pass and runs a two-pass box blur on a character shadow texture. See its own comment
+// in d3dSeam.cpp. Only ever called from maybe_psiDrawShadow (not yet reimplemented).
+void psiBlurCharacterShadow(void);
+
 #endif // D3DSEAM_H_

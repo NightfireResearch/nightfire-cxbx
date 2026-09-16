@@ -2372,3 +2372,64 @@ void d3dSetup(void) {
     d3dSetTextureStage1(0, 0);
     d3dSetStreamSources(0, 0, 0.0f, 0, 0.0f, 0, 0.0f, 0, 0.0f, 0, 0.0f, 0, 0.0f, 0, 0.0f, 0, 0.0f);
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// psiBlurCharacterShadow
+// ---------------------------------------------------------------------------------------------------------------
+
+#define Gfx_ShadowBlurTargetB U32_AT(0x002FF3B0) // Gfx.field158792_0x39c60 - written elsewhere (FUN_000e6430, not yet reimplemented), only read here - the second of a texture-slot pair with Gfx_AuxRenderPassResult (the first)
+
+// Called (only ever from maybe_psiDrawShadow, not yet reimplemented) right after a shadow has been rendered
+// into the aux render target via d3dBeginEndAuxRenderPass(1, ...). First closes that render pass (begin=0,
+// NULL/NULL - restores the normal view/projection/viewport), then runs a two-pass box blur that ping-pongs
+// between two externally-chosen texture slots (Gfx_AuxRenderPassResult/Gfx_ShadowBlurTargetB, both maintained
+// by FUN_000e6430): pass 1 renders a half-size (128x128 from a 256x256 UV rect) downsample from
+// Gfx_AuxRenderPassResult into Gfx_ShadowBlurTargetB; pass 2 renders a double-size (256x256 from a 128x128 UV
+// rect) upsample from Gfx_ShadowBlurTargetB back into Gfx_AuxRenderPassResult - the combination softens the
+// shadow texture in place. Finally pops the render target back to the backbuffer and unbinds stage 0.
+//
+// AUTOINJECT
+void psiBlurCharacterShadow(void) {
+    d3dBeginEndAuxRenderPass(0, NULL, NULL);
+    d3dSetRenderState1(1); // field6056_0x1850 / D3D_AlphaRefCache - method 0x40340, same reuse as d3dSetup
+    d3dSetColorConstant67(0xFFFFFFFFu);
+
+    // Pass 1: downsample Gfx_AuxRenderPassResult -> Gfx_ShadowBlurTargetB.
+    _d3dRenderTargetSetup((int)Gfx_ShadowBlurTargetB);
+    if (Gfx_CurrentlyLoadedTexture != Gfx_AuxRenderPassResult) {
+        Gfx_CurrentlyLoadedTexture = Gfx_AuxRenderPassResult;
+        if (D3D_DeviceReady != 0) {
+            D3DDevice_SetTexture(0, D3DTextureSlot((int)Gfx_AuxRenderPassResult)->baseTexture);
+            Gfx_D3DLastError = 0;
+        }
+    }
+    if (D3D_DeviceReady != 0)
+        D3DDevice_Clear(0, NULL, 0xf3, 0, 1.0f, 0);
+    Gfx_D3DLastError = 0;
+    maybeImmediateModePushItem(0.0f, 0.0f, 128.0f, 128.0f, 0.0f, 0.0f, 256.0f, 256.0f, BitsToFloat(0xff808080u));
+    maybeImmediateModeFlush();
+
+    // Pass 2: upsample Gfx_ShadowBlurTargetB -> Gfx_AuxRenderPassResult.
+    _d3dRenderTargetSetup((int)Gfx_AuxRenderPassResult);
+    if (Gfx_CurrentlyLoadedTexture != Gfx_ShadowBlurTargetB) {
+        Gfx_CurrentlyLoadedTexture = Gfx_ShadowBlurTargetB;
+        if (D3D_DeviceReady != 0) {
+            D3DDevice_SetTexture(0, D3DTextureSlot((int)Gfx_ShadowBlurTargetB)->baseTexture);
+            Gfx_D3DLastError = 0;
+        }
+    }
+    if (D3D_DeviceReady != 0)
+        D3DDevice_Clear(0, NULL, 0xf3, 0, 1.0f, 0);
+    Gfx_D3DLastError = 0;
+    maybeImmediateModePushItem(0.0f, 0.0f, 256.0f, 256.0f, 0.0f, 0.0f, 128.0f, 128.0f, BitsToFloat(0xff808080u));
+    maybeImmediateModeFlush();
+
+    // Pop back to the backbuffer and unbind stage 0.
+    _d3dRenderTargetSetup(0);
+    if (Gfx_CurrentlyLoadedTexture != 0) {
+        Gfx_CurrentlyLoadedTexture = 0;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetTexture(0, D3DTextureSlot(0)->baseTexture);
+        Gfx_D3DLastError = 0;
+    }
+}

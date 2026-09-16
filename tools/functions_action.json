@@ -49656,13 +49656,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e7460",
+        "name": "psiBlurCharacterShadow",
         "address": "0x000e7460",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e7460(void)",
+        "prototype_string": "void __stdcall psiBlurCharacterShadow(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
