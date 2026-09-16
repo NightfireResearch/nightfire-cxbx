@@ -42,6 +42,9 @@
 #define D3DDevice_SetVertexShaderConstant1_ADDR 0x00102570u
 #define D3DDevice_SetDepthClipPlanes_ADDR       0x001019f0u
 #define D3DDevice_SetStreamSource_ADDR          0x001027a0u
+#define D3DDevice_SetIndices_ADDR               0x00104060u
+#define D3DDevice_SetVertexShader_ADDR          0x00102b50u
+#define D3DDevice_DrawVerticesUP_ADDR            0x00104860u
 
 #define Gfx_D3DLastError          U32_AT(0x002C5750) // Gfx.D3DLastError
 #define Gfx_TotalTextureBytesUsed U32_AT(0x002C6FE0) // Gfx.field6075_0x1890 - running total, informational only
@@ -131,6 +134,18 @@ typedef void(__stdcall *D3DDevice_SetDepthClipPlanesFn)(uint32_t param1, uint32_
 
 typedef void(__stdcall *D3DDevice_SetStreamSourceFn)(int streamNumber, void *vertexBuffer, int stride);
 #define D3DDevice_SetStreamSource ((D3DDevice_SetStreamSourceFn)D3DDevice_SetStreamSource_ADDR)
+
+// D3DDevice_SetIndices(pIndexBuffer, baseVertexIndex), D3DDevice_SetVertexShader(handle), and
+// D3DDevice_DrawVerticesUP(primitiveType, vertexCount, pVertexData, stride) - all confirmed plain __stdcall
+// via raw disassembly (RET 0x8 / RET 0x4 / RET 0x10 respectively, matching their param counts exactly).
+typedef void(__stdcall *D3DDevice_SetIndicesFn)(void *pIndexBuffer, uint32_t baseVertexIndex);
+#define D3DDevice_SetIndices ((D3DDevice_SetIndicesFn)D3DDevice_SetIndices_ADDR)
+
+typedef void(__stdcall *D3DDevice_SetVertexShaderFn)(void *handle);
+#define D3DDevice_SetVertexShader ((D3DDevice_SetVertexShaderFn)D3DDevice_SetVertexShader_ADDR)
+
+typedef void(__stdcall *D3DDevice_DrawVerticesUPFn)(uint32_t primitiveType, uint32_t vertexCount, void *pVertexData, uint32_t stride);
+#define D3DDevice_DrawVerticesUP ((D3DDevice_DrawVerticesUPFn)D3DDevice_DrawVerticesUP_ADDR)
 
 // ---------------------------------------------------------------------------------------------------------------
 // Pure-math Eurocom matrix helpers (Global namespace, not D3D8::) - never previously declared/called from any
@@ -387,6 +402,10 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 
 #define Gfx_StreamStrideConstants ((float*)0x002FF358)  // Gfx.field_0x39c08 - 8 floats, shader constant 0x73
 #define Gfx_d3dstreamDataPtr ((void**)0x002DECF8)        // Gfx.d3dstreamDataPtr - array of stream-data pointers, stride 9 dwords per slot
+#define Gfx_StreamStrideRelated ((uint8_t*)0x002DED04)   // Gfx.d3dstreamStrideRelated - a byte flag inside the same 36-byte-per-slot struct as Gfx_d3dstreamDataPtr (offset +12), indexed in raw bytes
+#define Gfx_d3dIndexBuffers ((void**)0x002F0CF8)         // Gfx.d3dIndexBuffers - array of index-buffer pointers, stride 7 dwords per slot
+#define Gfx_ShardUseAltShader U32_AT(0x002C6FB4)         // Gfx.field6061_0x1864
+#define VtxShaderHandles ((void**)0x002C5548)            // not in the Gfx struct - a fixed array of created vertex-shader handles
 
 // Bit pattern for the fog constant's "avoid divide-by-zero" sentinel value - written as a raw uint32_t by the
 // original rather than a float literal, so reproduced bit-for-bit rather than approximated with a decimal one.
@@ -905,5 +924,63 @@ void d3dSetStreamSources(int baseIndex, int stream1Offset, float stream1Stride, 
         D3DDevice_SetStreamSource(i + 1, dataPtr, 6);
         Gfx_D3DLastError = 0;
     }
+    Gfx_D3DLastError = 0;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Buffer binding, shards
+// ---------------------------------------------------------------------------------------------------------------
+
+// Binds a stream buffer (slot 0) and index buffer by handle, no-opping if both already match the cache.
+//
+// AUTOINJECT
+void d3dBindBuffers(int streamBufferHandle, int indexBufferHandle) {
+    if (Gfx_CurrentStreamBuffer == (uint32_t)streamBufferHandle && Gfx_CurrentIndexBuffer == (uint32_t)indexBufferHandle)
+        return;
+
+    Gfx_CurrentStreamBuffer = (uint32_t)streamBufferHandle;
+    Gfx_MiscResetFlag = 0xFFFFFFFFu;
+    Gfx_CurrentIndexBuffer = (uint32_t)indexBufferHandle;
+
+    uint8_t strideFlagByte = Gfx_StreamStrideRelated[(size_t)streamBufferHandle * 36];
+    if (strideFlagByte != 0)
+        Gfx_MiscModeFlags |= 0x2u;
+    else
+        Gfx_MiscModeFlags &= ~0x2u;
+
+    if (D3D_DeviceReady != 0) {
+        void *dataPtr = Gfx_d3dstreamDataPtr[(size_t)streamBufferHandle * 9];
+        uint32_t stride = (strideFlagByte != 0) ? 0x20u : 0x1Cu;
+        D3DDevice_SetStreamSource(0, dataPtr, stride);
+        Gfx_D3DLastError = 0;
+
+        if (D3D_DeviceReady != 0) {
+            void *indexBuffer = Gfx_d3dIndexBuffers[(size_t)indexBufferHandle * 7];
+            D3DDevice_SetIndices(indexBuffer, 0);
+        }
+    }
+    Gfx_D3DLastError = 0;
+}
+
+// Draws a "shard" - an ad-hoc, non-indexed triangle list built directly from a caller-supplied vertex buffer
+// (glass/debris fragments, going by the name) - resetting the stream/index-buffer cache since it bypasses the
+// normal binding path above.
+//
+// AUTOINJECT
+void drawShard(void *data, int countTris) {
+    if (countTris <= 0)
+        return;
+
+    if (D3D_DeviceReady != 0) {
+        void *shaderHandle = VtxShaderHandles[(Gfx_ShardUseAltShader != 0) ? 64 : 0];
+        D3DDevice_SetVertexShader(shaderHandle);
+    }
+    Gfx_MiscResetFlag = 0xFFFFFFFFu;
+    Gfx_CurrentStreamBuffer = 0xFFFFFFFFu;
+    Gfx_CurrentIndexBuffer = 0xFFFFFFFFu;
+    Gfx_D3DLastError = 0;
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_DrawVerticesUP(5, (uint32_t)countTris * 3, data, 0x1c);
     Gfx_D3DLastError = 0;
 }

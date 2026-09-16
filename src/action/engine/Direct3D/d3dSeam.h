@@ -90,4 +90,9 @@ void d3dSetStreamSources(int baseIndex, int stream1Offset, float stream1Stride, 
                           int stream5Offset, float stream5Stride, int stream6Offset, float stream6Stride,
                           int stream7Offset, float stream7Stride, int stream8Offset, float stream8Stride);
 
+// Binds a stream/index buffer pair by handle (no-ops if unchanged), and draws an ad-hoc non-indexed triangle
+// list ("shard" - glass/debris fragments) directly from a caller-supplied vertex buffer.
+void d3dBindBuffers(int streamBufferHandle, int indexBufferHandle);
+void drawShard(void *data, int countTris);
+
 #endif // D3DSEAM_H_
