@@ -782,6 +782,11 @@ void d3dSetMatrix(D3DMATRIX *d3dMtx) {
     Gfx_MatrixGenFlag1 = 0xFFFFFFFFu;
     Gfx_MatrixGenFlag2 = 0xFFFFFFFFu;
 
+    // d3dMtx is passed straight through, cast to MatrixChainNode* exactly like the original - if d3dMtx points
+    // into the original game's own memory (a still-untouched caller), whatever real "next chain link" data
+    // follows it is preserved unchanged. Any NEW caller we add here needs its own D3DMATRIX to be followed by
+    // an explicit NULL/real MatrixChainNode - see d3dSetWorldMatrix's own comment for why (a bare local
+    // D3DMATRIX with no trailing field caused real transform corruption for anything off-origin).
     D3DMATRIX combined;
     maybeMultiplyMatrixChain(&combined, Gfx_ViewMatrixCache, (MatrixChainNode *)d3dMtx);
 
@@ -813,12 +818,22 @@ void d3dSetMatrix(D3DMATRIX *d3dMtx) {
 //
 // AUTOINJECT
 void d3dSetWorldMatrix(D3DMATRIX *worldMtx) {
-    D3DMATRIX translationOnly;
-    d3dMatrixIdentity(&translationOnly);
-    translationOnly.f[3] = worldMtx->f[3];
-    translationOnly.f[7] = worldMtx->f[7];
-    translationOnly.f[11] = worldMtx->f[11];
-    d3dSetMatrix(&translationOnly);
+    // d3dSetMatrix internally casts whatever pointer it's given to MatrixChainNode* and passes it straight
+    // into maybeMultiplyMatrixChain, which reads a "next chain link" pointer from the 4 bytes immediately
+    // following the matrix. That's harmless when d3dSetMatrix is called with the original game's own pointers
+    // (their trailing memory has whatever layout the original compiler put there, unchanged) - but a bare
+    // local D3DMATRIX declared here has no such trailing field, so whatever garbage our own compiler happens
+    // to put after it gets misread as a pointer and walked. Confirmed via Ghidra's emulator: a real
+    // MatrixChainNode with an explicit NULL parent completes the multiply in a single iteration with no
+    // further reads past the matrix - so build one explicitly rather than passing a bare D3DMATRIX*. This bit
+    // us for real: objects away from the origin were transforming incorrectly until this was fixed.
+    struct { D3DMATRIX matrix; void *parent; } translationOnly;
+    d3dMatrixIdentity(&translationOnly.matrix);
+    translationOnly.matrix.f[3] = worldMtx->f[3];
+    translationOnly.matrix.f[7] = worldMtx->f[7];
+    translationOnly.matrix.f[11] = worldMtx->f[11];
+    translationOnly.parent = NULL;
+    d3dSetMatrix(&translationOnly.matrix);
 
     float constants[12];
     memcpy(constants, worldMtx, sizeof(constants));
