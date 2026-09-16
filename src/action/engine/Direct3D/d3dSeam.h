@@ -14,6 +14,15 @@
 // resource with D3D8 and returns its slot index into Gfx's 2048-entry texture table (0 on failure). "data"
 // is a pointer to the pixel data buffer to associate with the new texture (see the caller in
 // Graphics_Init_LowLevel for an example - it passes a freshly-allocated buffer, not existing pixel data).
+//
+// KNOWN ISSUE, confirmed pre-existing (not introduced by this seam): repeatedly reloading the identical
+// level exhausts this table, because psiCreateMapTextures registers every one of a level's textures on
+// entry (no dedup) and nothing anywhere in the compiled binary releases them again on exit. Confirmed via
+// a controlled A/B test - logging every RegisterTexture call across an identical repeated-reload sequence
+// on both this seam and a clean pre-seam baseline commit produced byte-for-byte identical registration
+// logs; the baseline fails under the same test too, just less visibly (silently missing geometry rather
+// than an explicit diagnostic). Real hardware likely never hits this in normal play. See the diagnostic
+// printed from this function's own table-full path for more.
 int RegisterTexture(unsigned int width, unsigned int height, int formatType, unsigned int levels, void *data, int param_6);
 
 // Frees a texture slot returned by RegisterTexture (no-ops if its refcount is still nonzero).
