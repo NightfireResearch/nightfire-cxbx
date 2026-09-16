@@ -1048,3 +1048,131 @@ int d3dCreateIndexBuffer(int indexCount, unsigned int data) {
 
     return 0;
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// d3dCreateVertexBuffers
+// ---------------------------------------------------------------------------------------------------------------
+
+// Shares the SAME 2048-slot, 36-byte-per-slot table as d3dSetStreamSources/d3dBindBuffers's
+// Gfx_d3dstreamDataPtr/Gfx_StreamStrideRelated (those are themselves individual fields within this same
+// struct - its base is 0xc bytes before Gfx_d3dstreamDataPtr's own base address, and the "is this slot free"
+// test both allocation paths use below is exactly the Gfx_d3dstreamDataPtr[slot] field being NULL).
+//
+// Allocates either ONE slot (single buffer, streamCount <= 0) or a run of `streamCount` CONSECUTIVE free
+// slots (a multi-stream vertex-buffer set). Confirmed via raw disassembly that the two paths populate
+// meaningfully DIFFERENT subsets of the struct with different values at some of the SAME offsets (notably
+// +0x10, +0x18, +0x1c) - they are deliberately kept as two separate blocks below rather than unified into one
+// parameterised helper, to avoid blurring that real difference.
+#define D3D_VERTEX_BUFFER_TABLE_BASE  0x002DECECu
+#define D3D_VERTEX_BUFFER_TABLE_COUNT 2048
+
+struct D3DVertexBufferSlotRaw {
+    uint32_t header;     // +0x00 - Common; 1 once allocated. header&0x70000 never equals 0x20000 for this value,
+                          // so D3DResource_Register below never takes its pointer-masking branch (unlike
+                          // RegisterTexture's texture headers) - no "force the pointer back" workaround needed.
+    void    *dataPtr;    // +0x04 - Data; set BY D3DResource_Register itself (we zero it first, it adds data to that)
+    uint32_t reserved08; // +0x08 - always 0; nothing else reads it as far as we've traced
+    void    *selfPtr;    // +0x0c - Gfx_d3dstreamDataPtr[slot] IS this field; 0 marks the slot free
+    uint32_t field10;     // +0x10 - single-path: the ORIGINAL, unaligned data pointer; multi-path: vtxCnt
+    uint32_t byteSize;    // +0x14 - total byte size (both paths, same role, different formula)
+    uint8_t  field18;      // +0x18 - single-path: (nonSwizzled != 0); multi-path: always 0. Aliases Gfx_StreamStrideRelated[slot]
+    uint8_t  pad19, pad1a, pad1b;
+    uint32_t field1c;     // +0x1c - single-path: always 0; multi-path: streamCount (same value in every slot of the run)
+    void    *alignedData; // +0x20 - single-path ONLY; never written by the multi-path
+};
+static_assert(sizeof(D3DVertexBufferSlotRaw) == 36, "Bad size for D3DVertexBufferSlotRaw");
+
+static D3DVertexBufferSlotRaw *D3DVertexBufferSlot(int index) {
+    return (D3DVertexBufferSlotRaw*)(D3D_VERTEX_BUFFER_TABLE_BASE + (unsigned)index * sizeof(D3DVertexBufferSlotRaw));
+}
+
+#define Gfx_VertexBufferBytesUsed U32_AT(0x002C6FDC) // Gfx.field6074_0x188c - running total, informational only
+
+// AUTOINJECT
+int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzled, unsigned int streamCount) {
+    if ((int)vtxCnt < 1)
+        return 0;
+
+    if ((int)streamCount > 0) {
+        // Multi-stream path: find the first run of `streamCount` CONSECUTIVE free slots, starting the search
+        // over from scratch (not resuming mid-run) whenever a run is broken by an occupied slot - matches the
+        // original's own re-scan behaviour exactly.
+        int runStart = 1;
+        for (;;) {
+            int freeCount = 0;
+            for (int slot = runStart; slot < D3D_VERTEX_BUFFER_TABLE_COUNT && freeCount < (int)streamCount; slot++) {
+                if (D3DVertexBufferSlot(slot)->selfPtr != NULL)
+                    break;
+                freeCount++;
+            }
+            if (freeCount >= (int)streamCount)
+                break;
+            runStart++;
+            if (runStart >= D3D_VERTEX_BUFFER_TABLE_COUNT)
+                return 0;
+        }
+
+        uint32_t perStreamBytes = vtxCnt * 6;
+        uint32_t totalBytes = perStreamBytes * streamCount;
+
+        uintptr_t dataAddr = (uintptr_t)data;
+        uintptr_t alignedAddr = (dataAddr + 3) & ~(uintptr_t)3;
+        if (alignedAddr != dataAddr) {
+            memmove((void*)alignedAddr, (void*)dataAddr, totalBytes);
+            data = (unsigned int)alignedAddr;
+        }
+
+        for (unsigned int i = 0; i < streamCount; i++) {
+            D3DVertexBufferSlotRaw *slotPtr = D3DVertexBufferSlot(runStart + i);
+            slotPtr->header = 1;
+            slotPtr->dataPtr = NULL;
+            slotPtr->reserved08 = 0;
+            D3DResource_Register(slotPtr, data);
+            slotPtr->field10 = vtxCnt;
+            slotPtr->selfPtr = slotPtr;
+            slotPtr->byteSize = perStreamBytes;
+            slotPtr->field18 = 0;
+            slotPtr->field1c = streamCount;
+
+            Gfx_VertexBufferBytesUsed += perStreamBytes;
+            data += perStreamBytes;
+        }
+
+        return runStart;
+    }
+
+    // Single-buffer path: one slot.
+    int slot = 1;
+    for (; slot < D3D_VERTEX_BUFFER_TABLE_COUNT; slot++) {
+        if (D3DVertexBufferSlot(slot)->selfPtr == NULL)
+            break;
+    }
+    if (slot >= D3D_VERTEX_BUFFER_TABLE_COUNT)
+        return 0;
+
+    uint32_t stride = (nonSwizzled != 0) ? 0x20u : 0x1Cu;
+    uint32_t totalBytes = vtxCnt * stride;
+
+    unsigned int originalData = data;
+    uintptr_t dataAddr = (uintptr_t)data;
+    uintptr_t alignedAddr = (dataAddr + 3) & ~(uintptr_t)3;
+    if (alignedAddr != dataAddr) {
+        memmove((void*)alignedAddr, (void*)dataAddr, totalBytes);
+        data = (unsigned int)alignedAddr;
+    }
+
+    D3DVertexBufferSlotRaw *slotPtr = D3DVertexBufferSlot(slot);
+    slotPtr->header = 1;
+    slotPtr->dataPtr = NULL;
+    slotPtr->reserved08 = 0;
+    D3DResource_Register(slotPtr, data);
+    slotPtr->field10 = originalData;
+    slotPtr->selfPtr = slotPtr;
+    slotPtr->byteSize = totalBytes;
+    slotPtr->field18 = (nonSwizzled != 0) ? 1 : 0;
+    slotPtr->field1c = 0;
+    slotPtr->alignedData = (void*)(uintptr_t)data;
+
+    Gfx_VertexBufferBytesUsed += totalBytes;
+    return slot;
+}

@@ -99,4 +99,9 @@ void drawShard(void *data, int countTris);
 // free-slot-scan pattern. No D3D8 calls involved - purely bookkeeping consumed later by d3dBindBuffers.
 int d3dCreateIndexBuffer(int indexCount, unsigned int data);
 
+// Allocates either one vertex-buffer slot (streamCount <= 0) or a run of `streamCount` consecutive slots (a
+// multi-stream set), returning the starting handle (0 on failure). Shares its slot table with
+// d3dSetStreamSources/d3dBindBuffers.
+int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzled, unsigned int streamCount);
+
 #endif // D3DSEAM_H_
