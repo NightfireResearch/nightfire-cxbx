@@ -47,6 +47,9 @@
 #define D3DDevice_SetVertexShader_ADDR          0x00102b50u
 #define D3DDevice_DrawVerticesUP_ADDR            0x00104860u
 #define D3DResource_BlockUntilNotBusy_ADDR      0x001050b0u
+#define D3DDevice_GetRenderTarget2_ADDR          0x00103d10u
+#define D3DDevice_GetDepthStencilSurface2_ADDR   0x00103d30u
+#define D3DDevice_SetRenderTarget_ADDR            0x001038d0u
 
 #define Gfx_D3DLastError          U32_AT(0x002C5750) // Gfx.D3DLastError
 #define Gfx_TotalTextureBytesUsed U32_AT(0x002C6FE0) // Gfx.field6075_0x1890 - running total, informational only
@@ -69,7 +72,10 @@ typedef void(__stdcall *XGSetTextureHeaderFn)(uint32_t width, uint32_t height, u
 typedef void(__stdcall *D3DDevice_SetGammaRampFn)(uint32_t flags, void *pRamp);
 #define D3DDevice_SetGammaRamp ((D3DDevice_SetGammaRampFn)D3DDevice_SetGammaRamp_ADDR)
 
-typedef void(__stdcall *D3DResource_ReleaseFn)(void *pResource);
+// Genuinely returns a value in EAX (a refcount-style result: either the resource's decremented reference
+// count, or 0 once it's fully destroyed) - confirmed via raw disassembly. Nothing called this before now, so
+// updating the typedef from void is safe (no existing callers relied on the wrong signature).
+typedef uint32_t(__stdcall *D3DResource_ReleaseFn)(void *pResource);
 #define D3DResource_Release ((D3DResource_ReleaseFn)D3DResource_Release_ADDR)
 
 // D3DDevice_SetViewport(pViewport) - confirmed plain __stdcall (RET 0x4). D3DVIEWPORT here is the standard
@@ -89,7 +95,9 @@ typedef void(__stdcall *D3DDevice_ClearFn)(uint32_t rectCount, void *pRects, uin
 #define D3DDevice_Clear ((D3DDevice_ClearFn)D3DDevice_Clear_ADDR)
 
 // All four below confirmed plain __stdcall via raw disassembly (RET immediate matches param count exactly).
-typedef void(__stdcall *D3DTexture_GetSurfaceLevel2Fn)(void *pTexture, uint32_t level);
+// Returns a surface pointer in EAX - the original d3dGetTextureSurfaceLevel0 caller discards it (called for
+// side effect only), but d3dRenderTargetSetup needs it, so the typedef reflects the real return value.
+typedef void *(__stdcall *D3DTexture_GetSurfaceLevel2Fn)(void *pTexture, uint32_t level);
 #define D3DTexture_GetSurfaceLevel2 ((D3DTexture_GetSurfaceLevel2Fn)D3DTexture_GetSurfaceLevel2_ADDR)
 
 typedef void(__stdcall *D3DDevice_SetRenderState_FogColorFn)(uint32_t colour);
@@ -152,6 +160,18 @@ typedef void(__stdcall *D3DDevice_DrawVerticesUPFn)(uint32_t primitiveType, uint
 // A thunk (plain JMP) to the real implementation - confirmed RET 0x4, plain __stdcall, 1 param.
 typedef void(__stdcall *D3DResource_BlockUntilNotBusyFn)(void *pResource);
 #define D3DResource_BlockUntilNotBusy ((D3DResource_BlockUntilNotBusyFn)D3DResource_BlockUntilNotBusy_ADDR)
+
+// D3DDevice_GetRenderTarget2()/GetDepthStencilSurface2() - niladic getters (plain RET, no immediate, no stack
+// args), confirmed via raw disassembly. D3DDevice_SetRenderTarget(pRenderTarget, pDepthStencil) - confirmed
+// plain __stdcall (RET 0x8).
+typedef void *(__stdcall *D3DDevice_GetRenderTarget2Fn)(void);
+#define D3DDevice_GetRenderTarget2 ((D3DDevice_GetRenderTarget2Fn)D3DDevice_GetRenderTarget2_ADDR)
+
+typedef void *(__stdcall *D3DDevice_GetDepthStencilSurface2Fn)(void);
+#define D3DDevice_GetDepthStencilSurface2 ((D3DDevice_GetDepthStencilSurface2Fn)D3DDevice_GetDepthStencilSurface2_ADDR)
+
+typedef void(__stdcall *D3DDevice_SetRenderTargetFn)(void *pRenderTarget, void *pDepthStencil);
+#define D3DDevice_SetRenderTarget ((D3DDevice_SetRenderTargetFn)D3DDevice_SetRenderTarget_ADDR)
 
 // ---------------------------------------------------------------------------------------------------------------
 // Pure-math Eurocom matrix helpers (Global namespace, not D3D8::) - never previously declared/called from any
@@ -590,6 +610,91 @@ void d3dSetupViewportDimensions(unsigned int viewportX, unsigned int viewportY, 
         D3DDevice_SetViewport(&viewport);
     }
     Gfx_D3DLastError = 0;
+}
+
+// A render-target push/pop "stack" (single level, not truly nested): a nonzero textureSlot pushes that
+// texture's surface as the new render target (saving the current viewport/render-target/depth-stencil the
+// FIRST time this is pushed, not on every call); textureSlot==0 pops back to whatever was saved.
+#define Gfx_RenderTargetPushed U8_AT(0x002FF494)
+#define Gfx_SavedViewportX     U32_AT(0x002FF490)
+#define Gfx_SavedViewportY     U32_AT(0x002FF48C)
+#define Gfx_SavedViewportWidth U32_AT(0x002FF488)
+#define Gfx_SavedViewportHeight U32_AT(0x002FF484)
+#define Gfx_SavedRenderTarget  PTR_AT(0x002FF480)
+#define Gfx_SavedDepthStencil  PTR_AT(0x002FF47C)
+#define Gfx_CustomRenderTargetSurface PTR_AT(0x002FF478)
+
+// Releases *slot if non-NULL (preserving D3DResource_Release's actual refcount-style return value in
+// Gfx_D3DLastError, matching the original exactly) or just zeroes Gfx_D3DLastError if it was already NULL,
+// then clears *slot.
+static void ReleaseSavedSurface(void **slot) {
+    if (*slot != NULL)
+        Gfx_D3DLastError = D3DResource_Release(*slot);
+    else
+        Gfx_D3DLastError = 0;
+    *slot = NULL;
+}
+
+static void _d3dRenderTargetSetup(int textureSlot) {
+    if (textureSlot != 0) {
+        if (Gfx_RenderTargetPushed == 0) {
+            Gfx_ShaderConstant75[0] = 0.0f;
+            Gfx_ShaderConstant75[1] = 0.0f;
+            if (D3D_DeviceReady != 0)
+                D3DDevice_SetVertexShaderConstant1(0x75, Gfx_ShaderConstant75);
+
+            Gfx_SavedViewportX = Gfx_ViewportX;
+            Gfx_D3DLastError = 0;
+            Gfx_SavedViewportY = Gfx_ViewportY;
+            Gfx_SavedViewportWidth = Gfx_ViewportWidth;
+            Gfx_SavedViewportHeight = Gfx_ViewportHeight;
+            Gfx_SavedRenderTarget = D3DDevice_GetRenderTarget2();
+            Gfx_SavedDepthStencil = D3DDevice_GetDepthStencilSurface2();
+        }
+
+        ReleaseSavedSurface(&Gfx_CustomRenderTargetSurface);
+
+        void *surface = D3DTexture_GetSurfaceLevel2(D3DTextureSlot(textureSlot)->baseTexture, 0);
+        Gfx_CustomRenderTargetSurface = surface;
+        D3DDevice_SetRenderTarget(surface, NULL);
+
+        Gfx_RenderTargetPushed = 1;
+        return;
+    }
+
+    if (Gfx_RenderTargetPushed == 0)
+        return;
+
+    Gfx_ShaderConstant75[0] = 0.0f;
+    Gfx_ShaderConstant75[1] = 0.0f;
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShaderConstant1(0x75, Gfx_ShaderConstant75);
+    Gfx_D3DLastError = 0;
+
+    D3DDevice_SetRenderTarget(Gfx_SavedRenderTarget, Gfx_SavedDepthStencil);
+    d3dSetupViewportDimensions(Gfx_SavedViewportX, Gfx_SavedViewportY, Gfx_SavedViewportWidth, Gfx_SavedViewportHeight);
+
+    ReleaseSavedSurface(&Gfx_CustomRenderTargetSurface);
+    ReleaseSavedSurface(&Gfx_SavedRenderTarget);
+    ReleaseSavedSurface(&Gfx_SavedDepthStencil);
+    Gfx_RenderTargetPushed = 0;
+}
+
+// The original takes its single parameter (a texture-slot index) in ESI, not on the stack - confirmed via raw
+// disassembly (its very first instruction reads ESI with no prologue setting it from the stack; Ghidra's own
+// decompile flags this exact gap with "unaff_ESI"/"extraout_EAX" warnings - the same class of hidden custom
+// calling convention as D3DDevice_SetRenderState_Simple at the top of this file, but on a function we're
+// REPLACING rather than one we call into, so it needs a callee-side entry trampoline instead of a caller-side
+// one. Matches the established View_CaptureScene/View_AddCels pattern (see view.cpp) for this exact situation.
+//
+// AUTOLTCG
+void __declspec(naked) d3dRenderTargetSetup(void) {
+    _asm {
+        push esi
+        call _d3dRenderTargetSetup
+        add esp, 4
+        ret
+    }
 }
 
 // AUTOINJECT

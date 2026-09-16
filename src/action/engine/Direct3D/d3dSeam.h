@@ -108,4 +108,11 @@ int d3dCreateIndexBuffer(int indexCount, unsigned int data);
 // d3dSetStreamSources/d3dBindBuffers.
 int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzled, unsigned int streamCount);
 
+// A render-target push/pop "stack" (single level): a nonzero textureSlot pushes that texture's surface as the
+// render target; 0 pops back to what was saved. NOTE: the original passes its parameter in ESI, not on the
+// stack (confirmed via raw disassembly) - this is a __declspec(naked) entry trampoline (see its own comment
+// in d3dSeam.cpp), so it must only ever be reached via the AUTOLTCG hook from the original's own callers, who
+// already know to set ESI. Do NOT call this directly from new C++ code with a normal argument - it won't work.
+void d3dRenderTargetSetup(void);
+
 #endif // D3DSEAM_H_
