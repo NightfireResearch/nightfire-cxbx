@@ -984,3 +984,67 @@ void drawShard(void *data, int countTris) {
         D3DDevice_DrawVerticesUP(5, (uint32_t)countTris * 3, data, 0x1c);
     Gfx_D3DLastError = 0;
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// d3dCreateIndexBuffer
+// ---------------------------------------------------------------------------------------------------------------
+
+// No D3D8 calls at all - purely a linear-scan slot allocator and bookkeeping struct, matching RegisterTexture's
+// own free-slot-scan/alignment-shift pattern. "selfPtr" (+0xc) is what Gfx_d3dIndexBuffers[slot] resolves to -
+// they're literally the same struct field, confirmed by both this function's own write and d3dBindBuffers'
+// read landing on the identical address (0x2F0CEC + slot*28 + 0xc), not two separate tables.
+#define D3D_INDEX_BUFFER_TABLE_BASE  0x002F0CECu
+#define D3D_INDEX_BUFFER_TABLE_COUNT 2048
+
+struct D3DIndexBufferSlotRaw {
+    uint32_t header;     // +0x00 - always 0x10001 once allocated; 0 marks the slot free
+    void    *dataPtr;    // +0x04
+    uint32_t reserved08; // +0x08 - always 0; nothing else reads it as far as we've traced
+    void    *selfPtr;    // +0x0c - points back to this same slot's own header (Xbox convention, same as RegisterTexture's baseTexture)
+    uint32_t indexCount; // +0x10
+    uint32_t byteSize;   // +0x14 - indexCount * 2 (16-bit indices)
+    void    *dataPtr2;   // +0x18 - same value as dataPtr
+};
+static_assert(sizeof(D3DIndexBufferSlotRaw) == 28, "Bad size for D3DIndexBufferSlotRaw");
+
+static D3DIndexBufferSlotRaw *D3DIndexBufferSlot(int index) {
+    return (D3DIndexBufferSlotRaw*)(D3D_INDEX_BUFFER_TABLE_BASE + (unsigned)index * sizeof(D3DIndexBufferSlotRaw));
+}
+
+#define Gfx_IndexBufferBytesUsed U32_AT(0x002C6FD8) // Gfx.field6073_0x1888 - running total, informational only
+
+// AUTOINJECT
+int d3dCreateIndexBuffer(int indexCount, unsigned int data) {
+    if (indexCount < 1)
+        return 0;
+
+    for (int slot = 1; slot < D3D_INDEX_BUFFER_TABLE_COUNT; slot++) {
+        D3DIndexBufferSlotRaw *slotPtr = D3DIndexBufferSlot(slot);
+        if (slotPtr->header != 0)
+            continue;
+
+        uint32_t byteSize = (uint32_t)indexCount * 2;
+
+        // 4-byte alignment shift, same reverse-safe-overlap idea as RegisterTexture's 128-byte one - memmove
+        // handles the direction correctly regardless of which way the shift goes.
+        uintptr_t dataAddr = (uintptr_t)data;
+        uintptr_t alignedAddr = (dataAddr + 3) & ~(uintptr_t)3;
+        if (alignedAddr != dataAddr) {
+            memmove((void*)alignedAddr, (void*)dataAddr, byteSize);
+            data = (unsigned int)alignedAddr;
+        }
+
+        slotPtr->header = 0x10001;
+        slotPtr->dataPtr = (void*)(uintptr_t)data;
+        slotPtr->reserved08 = 0;
+        slotPtr->selfPtr = slotPtr;
+        slotPtr->indexCount = (uint32_t)indexCount;
+        slotPtr->byteSize = byteSize;
+        slotPtr->dataPtr2 = (void*)(uintptr_t)data;
+
+        Gfx_IndexBufferBytesUsed += byteSize;
+        return slot;
+    }
+
+    return 0;
+}

@@ -95,4 +95,8 @@ void d3dSetStreamSources(int baseIndex, int stream1Offset, float stream1Stride, 
 void d3dBindBuffers(int streamBufferHandle, int indexBufferHandle);
 void drawShard(void *data, int countTris);
 
+// Allocates an index-buffer slot (0 on failure) and returns its handle, matching RegisterTexture's own
+// free-slot-scan pattern. No D3D8 calls involved - purely bookkeeping consumed later by d3dBindBuffers.
+int d3dCreateIndexBuffer(int indexCount, unsigned int data);
+
 #endif // D3DSEAM_H_
