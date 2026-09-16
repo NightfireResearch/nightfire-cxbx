@@ -75,6 +75,7 @@ add_library(actioninject SHARED
   src/action/engine/psiInput.cpp
   src/action/engine/psiLight.cpp
   src/action/engine/psiSave.cpp
+  src/action/engine/Script.cpp
   src/action/engine/Text.cpp
   src/action/engine/Vision.cpp
   src/action/engine/Woman.cpp
@@ -124,6 +125,7 @@ add_library(actioninject SHARED
   src/action/game/obj/Sensor.cpp
   src/action/game/obj/SpaceLaser.cpp
   src/action/game/obj/SpaceMissile.cpp
+  src/action/game/obj/Switch.cpp
   src/action/game/sp/Locks.cpp
   src/action/game/sp/Mission.cpp
   src/action/game/sp/PlayerStats.cpp

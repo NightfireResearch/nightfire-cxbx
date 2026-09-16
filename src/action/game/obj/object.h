@@ -175,9 +175,9 @@ typedef struct obj_tag {
     obj_tag* maybeParent; // 0x1c
     cel_tag* inCel; // 0x20 - cel_tag
     _VECTOR position; // 0x24
-    _VECTOR lastPosition; // 0x28
-    _VECTOR rotation; // 0x2C
-    _VECTOR lastRotation; // 0x30
+    _VECTOR lastPosition; // 0x30 - comment previously (incorrectly) said 0x28; confirmed via Ghidra's own struct
+    _VECTOR rotation; // 0x3C
+    _VECTOR lastRotation; // 0x48
     char _pad_2[12];
     _VECTOR centrePoint; // 0x60
     float radius; // 0x6C
@@ -187,14 +187,15 @@ typedef struct obj_tag {
     celglist_tag* objGraphics; // 0xB4
     AnimState* animState; // 0xB8
     void* extraObjectData; // 0xBC
-    void* scriptPlayer;
+    void* scriptPlayer; // 0xC0 - cleared by Script_KillStream when an entity/anim stream controlling this
+                         // object ends
     float scale;
     int creationTimeFrames;
     int effectFlags; // 0xCC, unclear what the meaning is but sometimes relevant for rendering or object state or straddle tests?
     unsigned short curState; // 0xD0
     unsigned short subState; // MovementType (Player), PlayerNum (Car)
     ushort displayMask;
-    ushort renderType;
+    ushort renderType; // bit 0x20 set by Script_KillStream when restoring an entity/anim stream's linked object
     char unknown_0xd8;
     char _pad_6;
     char flags; // (1 == Marked for deletion or resetting)
@@ -211,15 +212,21 @@ typedef struct obj_tag {
 #pragma pack(pop)
 
 typedef enum{
+    FLAG_HIDDEN = 0x10, // Set/cleared by Script_HideObj
     FLAG_UNKNOWN_40 = 0x40,
     FLAG_IN_FORCEDLIST = 0x30000000,
 } ObjectEffectFlags;
 
 //char (*__kaboom)[offsetof(obj_tag,objectType)] = 1;
 static_assert(offsetof(obj_tag, position) == 0x24, "Offset of position not correct");
+static_assert(offsetof(obj_tag, lastPosition) == 0x30, "Offset of lastPosition not correct");
+static_assert(offsetof(obj_tag, rotation) == 0x3c, "Offset of rotation not correct");
+static_assert(offsetof(obj_tag, lastRotation) == 0x48, "Offset of lastRotation not correct");
 static_assert(offsetof(obj_tag, transformMatrix) == 0x70, "Offset of transformMatrix not correct");
 static_assert(offsetof(obj_tag, extraObjectData) == 0xbc, "Offset of extraObjectData not correct");
+static_assert(offsetof(obj_tag, scriptPlayer) == 0xc0, "Offset of scriptPlayer not correct");
 static_assert(offsetof(obj_tag, effectFlags) == 0xcc, "Offset of effectFlags not correct");
+static_assert(offsetof(obj_tag, renderType) == 0xd6, "Offset of renderType not correct");
 static_assert(offsetof(obj_tag, flags) == 0xda, "Offset of flags not correct");
 static_assert(offsetof(obj_tag, objectType) == 0xdb, "Offset of objectType not correct");
 static_assert(offsetof(obj_tag, tweakB) == 0xe1, "Offset of tweakB not correct");

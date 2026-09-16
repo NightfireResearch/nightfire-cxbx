@@ -78,6 +78,7 @@ typedef short MallocFlags;
 #include "engine/FS.h"
 #include "engine/Inflate.h"
 #include "engine/Loader.h"
+#include "engine/Script.h"
 #include "engine/Text.h"
 #include "engine/Vision.h"
 #include "engine/parsemap.h"

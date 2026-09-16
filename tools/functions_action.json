@@ -5312,15 +5312,15 @@
         "param_types": [
             "HITDATA_tag *",
             "obj_tag * *",
-            "undefined4",
-            "undefined2"
+            "ushort *",
+            "ushort"
         ],
-        "prototype_string": "float __cdecl Collide_GetDamageNObjects(HITDATA_tag * hitDatas, obj_tag * * objectList, undefined4 objectListIndices, undefined2 numObjectsInList)",
+        "prototype_string": "float __cdecl Collide_GetDamageNObjects(HITDATA_tag * hitDatas, obj_tag * * objectList, ushort * objectListCountOut, ushort maxObjectsInList)",
         "parameters": [
             "[HITDATA_tag * hitDatas@Stack[0x4]:4]",
             "[obj_tag * * objectList@Stack[0x8]:4]",
-            "[undefined4 objectListIndices@Stack[0xc]:4]",
-            "[undefined2 numObjectsInList@Stack[0x10]:2]"
+            "[ushort * objectListCountOut@Stack[0xc]:4]",
+            "[ushort maxObjectsInList@Stack[0x10]:2]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -7385,12 +7385,12 @@
         "return_type": "void",
         "param_types": [
             "char",
-            "int"
+            "HASHCODE"
         ],
-        "prototype_string": "void __cdecl Drone_EnableAll(char param_1, int param_2)",
+        "prototype_string": "void __cdecl Drone_EnableAll(char enable, HASHCODE hashcode)",
         "parameters": [
-            "[char param_1@Stack[0x4]:1]",
-            "[int param_2@Stack[0x8]:4]"
+            "[char enable@Stack[0x4]:1]",
+            "[HASHCODE hashcode@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -36968,11 +36968,11 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "uint32_t"
+            "HASHCODE"
         ],
-        "prototype_string": "bool __cdecl LoadableReload(uint32_t param_1)",
+        "prototype_string": "bool __cdecl LoadableReload(HASHCODE hashcode)",
         "parameters": [
-            "[uint32_t param_1@Stack[0x4]:4]"
+            "[HASHCODE hashcode@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -37358,11 +37358,11 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "int"
+            "HASHCODE"
         ],
-        "prototype_string": "bool __cdecl Script_IsDeathNIS(int param_1)",
+        "prototype_string": "bool __cdecl Script_IsDeathNIS(HASHCODE hashcode)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[HASHCODE hashcode@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -37928,12 +37928,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "SCRIPTINFO *",
             "char"
         ],
-        "prototype_string": "void __cdecl Script_FFwd(int param_1, char param_2)",
+        "prototype_string": "void __cdecl Script_FFwd(SCRIPTINFO * scriptInfo, char param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[SCRIPTINFO * scriptInfo@Stack[0x4]:4]",
             "[char param_2@Stack[0x8]:1]"
         ],
         "is_thunk": false,
@@ -38028,17 +38028,17 @@
     {
         "name": "Script_Interp",
         "address": "0x000c3950",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "SCRIPTINFO *",
+            "SSTREAM *"
         ],
-        "prototype_string": "undefined Script_Interp(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "void __cdecl Script_Interp(SCRIPTINFO * scriptInfo, SSTREAM * stream)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[SCRIPTINFO * scriptInfo@Stack[0x4]:4]",
+            "[SSTREAM * stream@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -44428,13 +44428,13 @@
     {
         "name": "Mat_Normalize",
         "address": "0x000d7be0",
-        "calling_convention": "__cdecl",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
             "_MATRIX *"
         ],
-        "prototype_string": "void __cdecl Mat_Normalize(_MATRIX * mtx)",
+        "prototype_string": "void __stdcall Mat_Normalize(_MATRIX * mtx)",
         "parameters": [
             "[_MATRIX * mtx@Stack[0x4]:4]"
         ],

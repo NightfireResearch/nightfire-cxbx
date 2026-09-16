@@ -12,6 +12,8 @@
 #include "action/game/view.h"
 #include "action/game/obj/car.h"
 #include "action/game/obj/Light.h"
+#include "action/game/obj/Switch.h"
+#include "action/game/obj/ScriptPlayer.h"
 #include "action/game/mp/multiplayer.h"
 
 #include "common/launchInfo.h"

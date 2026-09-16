@@ -65,7 +65,7 @@ bool movieFinished(void) {
 
 #define FreezeGame U8_AT(0x001fec48)
 #define sloflag U16_AT(0x001fec64)
-#define ScriptCam U32_AT(0x001f6678)
+// ScriptCam is defined in engine/Script.h (same address, HASHCODE-typed)
 #define switch_allowFreeze U32_AT(0x0025d79c)
 
 
