@@ -28,6 +28,11 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 // Frees a texture slot returned by RegisterTexture (no-ops if its refcount is still nonzero).
 void ReleaseTexture(int textureSlot);
 
+// Forces refCount to 1 on an already-registered texture slot, so ReleaseTexture's own gate permanently
+// refuses to free it - used for critical/fallback textures (error-screen font, boot-time init) that must
+// never disappear.
+void d3dMarkTexturePermanent(int textureSlot);
+
 // These three all hardcode one specific NV2A render state apiece and share a dirty-flag cache + "is the
 // device ready yet" guard, funnelled through D3D8's generic (and, unusually, custom-register-convention -
 // see D3D_SetRenderStateSimple in the .cpp) D3DDevice_SetRenderState_Simple.
@@ -127,6 +132,9 @@ void d3dRenderTargetSetup(void);
 // Allocates a slot (0 on failure) in a small, separate 256-slot table used for reticle/crosshair-style
 // textured-quad drawing (FUN_000e5350, not yet reimplemented).
 int d3dRegisterOverlayBuffer(void *data, unsigned int vertexCount);
+
+// Frees a slot registered by d3dRegisterOverlayBuffer (no-op for slot 0).
+void d3dReleaseOverlayBuffer(int overlaySlot);
 
 // Draws a small textured overlay quad (reticle/crosshair-style) previously registered via
 // d3dRegisterOverlayBuffer, bound to texture stage 3.

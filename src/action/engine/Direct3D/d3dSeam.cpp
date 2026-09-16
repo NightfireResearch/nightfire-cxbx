@@ -890,6 +890,17 @@ void ReleaseTexture(int textureSlot) {
     texSlot->mipChainBytes = 0;
 }
 
+// Forces refCount to 1 on an already-registered texture slot (no-op if the slot is empty), which makes
+// ReleaseTexture's own gate permanently refuse to free it. Used by the engine's own critical/fallback
+// textures (error-screen font, boot-time init) that must never disappear.
+//
+// AUTOINJECT
+void d3dMarkTexturePermanent(int textureSlot) {
+    D3DTextureSlotRaw *texSlot = D3DTextureSlot(textureSlot);
+    if (texSlot->baseTexture != NULL)
+        texSlot->refCount = 1;
+}
+
 // AUTOINJECT
 void d3dSetFogEnable(int enable) {
     bool enabled = (enable != 0);
@@ -1483,8 +1494,8 @@ int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzl
 // ---------------------------------------------------------------------------------------------------------------
 
 // A separate, smaller (256-slot, 20-byte-per-slot) table from the texture/vertex/index-buffer ones above -
-// used later by FUN_000e5350 (a reticle/crosshair-style textured-quad draw, not yet reimplemented) to look up
-// a small vertex buffer by slot and draw it. The "is this slot free" test is at +0xc, not +0x00, matching the
+// used by d3dDrawOverlayQuad (a reticle/crosshair-style textured-quad draw) to look up a small vertex buffer
+// by slot and draw it. The "is this slot free" test is at +0xc, not +0x00, matching the
 // same "check the self/data-pointer field, not the header" pattern already seen on the other tables - +0xc
 // here holds a copy of the caller's own data pointer (confirmed via raw disassembly: written directly from
 // the same value passed to D3DResource_Register as its data argument, not computed).
@@ -1497,7 +1508,7 @@ struct D3DOverlayQuadSlotRaw {
     void    *dataPtr;    // +0x04 - Data; set BY D3DResource_Register itself (we zero it first, it adds data to that)
     uint32_t reserved08; // +0x08 - always 0; nothing else reads it as far as we've traced
     void    *dataPtrCopy; // +0x0c - a copy of the caller's own data pointer; doubles as the "is this slot free" test
-    uint32_t vertexCount; // +0x10 - consumed later by FUN_000e5350's D3DDevice_DrawVertices call
+    uint32_t vertexCount; // +0x10 - consumed by d3dDrawOverlayQuad's own D3DDevice_DrawVertices call
 };
 static_assert(sizeof(D3DOverlayQuadSlotRaw) == 20, "Bad size for D3DOverlayQuadSlotRaw");
 
@@ -1525,6 +1536,15 @@ int d3dRegisterOverlayBuffer(void *data, unsigned int vertexCount) {
 
     D3DSeamTableExhaustedWarning("overlay quad buffer", D3DSEAM_VTX_IDX_LEAK_CONTEXT);
     return 0;
+}
+
+// Frees a slot registered by d3dRegisterOverlayBuffer (no-op for slot 0) - just zeroes dataPtrCopy, the same
+// field the registration side tests for "is this slot free".
+//
+// AUTOINJECT
+void d3dReleaseOverlayBuffer(int overlaySlot) {
+    if (overlaySlot != 0)
+        D3DOverlayQuadSlot(overlaySlot)->dataPtrCopy = NULL;
 }
 
 // Draws a small textured quad (reticle/crosshair-style overlay, per the earlier audit's read of this
@@ -2604,11 +2624,9 @@ void psiBlurScreen(int blurIntensity) {
 void d3dInitShadowBlurTextures(void) {
     void *data = allocateAligned0x1000(0x40000);
     Gfx_AuxRenderPassResult = (uint32_t)RegisterTexture(0x100, 0x100, 2, 1, data, 0);
-    if (D3DTextureSlot((int)Gfx_AuxRenderPassResult)->baseTexture != NULL)
-        D3DTextureSlot((int)Gfx_AuxRenderPassResult)->refCount = 1;
+    d3dMarkTexturePermanent((int)Gfx_AuxRenderPassResult);
 
     data = allocateAligned0x1000(0x10000);
     Gfx_ShadowBlurTargetB = (uint32_t)RegisterTexture(0x80, 0x80, 2, 1, data, 0);
-    if (D3DTextureSlot((int)Gfx_ShadowBlurTargetB)->baseTexture != NULL)
-        D3DTextureSlot((int)Gfx_ShadowBlurTargetB)->refCount = 1;
+    d3dMarkTexturePermanent((int)Gfx_ShadowBlurTargetB);
 }

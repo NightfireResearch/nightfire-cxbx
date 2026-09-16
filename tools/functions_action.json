@@ -48996,7 +48996,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e4ee0",
+        "name": "d3dMarkTexturePermanent",
         "address": "0x000e4ee0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49004,7 +49004,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e4ee0(int param_1)",
+        "prototype_string": "void __cdecl d3dMarkTexturePermanent(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -49148,7 +49148,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5330",
+        "name": "d3dReleaseOverlayBuffer",
         "address": "0x000e5330",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49156,7 +49156,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e5330(int param_1)",
+        "prototype_string": "void __cdecl d3dReleaseOverlayBuffer(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
