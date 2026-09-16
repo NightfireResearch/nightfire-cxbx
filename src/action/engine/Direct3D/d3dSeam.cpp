@@ -396,6 +396,12 @@ static inline float BitsToFloat(uint32_t bits) {
     return f;
 }
 
+static inline uint32_t FloatToBits(float f) {
+    uint32_t bits;
+    memcpy(&bits, &f, sizeof(bits));
+    return bits;
+}
+
 static void RecomputeFogConstant66() {
     float delta = Gfx_FogNearFarDelta;
     float invDelta = (delta <= -0.001f || delta >= 0.001f) ? (1.0f / delta) : BitsToFloat(0x4479ffff);
@@ -766,8 +772,13 @@ void d3dSetProjectionMatrix(D3DMATRIX *projMtx) {
     for (int i = 0; i < 16; i++)
         cacheB->f[i] *= Gfx_FogScale;
 
-    uint32_t depthClipNear = (uint32_t)((-(projMtx->f[11] / projMtx->f[10]) * 16777215.0f) / -(projMtx->f[11] / (projMtx->f[10] - 1.0f)));
-    D3DDevice_SetDepthClipPlanes(depthClipNear, 0x4b7fffffu, 1);
+    // Ghidra's decompile shows this arg with a "(uint)" cast, but the actual instruction storing it (FSTP, not
+    // FISTP) confirms it's a raw float bit-pattern reinterpreted as a uint for the call - not a value-
+    // converting int cast. Confirmed this was wrong before the fix (real, observed bug: frustum culling was
+    // rejecting fully-visible objects and admitting partially-offscreen ones - a numerically-converted value
+    // here is wildly different from the real bit pattern the NV2A register actually wants).
+    float depthClipNear = (-(projMtx->f[11] / projMtx->f[10]) * 16777215.0f) / -(projMtx->f[11] / (projMtx->f[10] - 1.0f));
+    D3DDevice_SetDepthClipPlanes(FloatToBits(depthClipNear), 0x4b7fffffu, 1);
 }
 
 // Sets the active matrix (shader constant 0x60, combined with the cached "view" matrix via
