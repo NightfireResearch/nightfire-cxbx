@@ -1530,3 +1530,29 @@ void d3dDrawOverlayQuad(int overlaySlot, float sizeParam, int textureSlot, float
     }
     Gfx_D3DLastError = 0;
 }
+
+// Resets the render target/texture-stage-1/current-texture/stream-buffer bindings to a clean default state -
+// purely a composition of already-implemented functions, no new D3D8 calls. Has ZERO xrefs anywhere in the
+// binary (confirmed via get_xrefs_to) - either genuinely dead code (an unshipped debug path) or reached only
+// via an indirect/function-pointer call Ghidra hasn't resolved. Implemented anyway since it's simple and safe
+// (every call it makes is to functions we've already verified), even though its current runtime relevance is
+// unclear.
+//
+// Calls _d3dRenderTargetSetup(0) directly (the real implementation, same translation unit) rather than the
+// public d3dRenderTargetSetup() - that's a __declspec(naked) entry trampoline expecting its parameter in ESI
+// from the original's own callers, which a normal C++ call site can't set correctly.
+//
+// AUTOINJECT
+void d3dResetRenderTargetAndBuffers(void) {
+    _d3dRenderTargetSetup(0);
+    d3dSetTextureStage1(0, 0);
+
+    if (Gfx_CurrentlyLoadedTexture != 0) {
+        Gfx_CurrentlyLoadedTexture = 0;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetTexture(0, D3DTextureSlot(0)->baseTexture);
+        Gfx_D3DLastError = 0;
+    }
+
+    d3dBindBuffers(0, 0);
+}

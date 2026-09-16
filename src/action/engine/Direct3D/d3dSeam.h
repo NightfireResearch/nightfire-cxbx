@@ -123,4 +123,8 @@ int d3dRegisterOverlayBuffer(void *data, unsigned int vertexCount);
 // d3dRegisterOverlayBuffer, bound to texture stage 3.
 void d3dDrawOverlayQuad(int overlaySlot, float sizeParam, int textureSlot, float param4, int param5);
 
+// Resets render-target/texture/stream bindings to a clean default state. Has zero xrefs anywhere in the
+// original binary - possibly dead code - but implemented anyway since it's simple and low-risk.
+void d3dResetRenderTargetAndBuffers(void);
+
 #endif // D3DSEAM_H_
