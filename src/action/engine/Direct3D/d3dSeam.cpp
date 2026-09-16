@@ -381,9 +381,16 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
         return slot;
     }
 
-    D3DSeamTableExhaustedWarning("texture", "Cause not yet confirmed - possibly per-level textures not being "
-        "released across mission/level transitions, or excessive churn from a frequent caller (e.g. a per-frame "
-        "screen effect). Check what RegisterTexture's callers were doing right before this.");
+    // CONFIRMED (not a seam bug): psiCreateMapTextures registers every one of a level's textures on entry with
+    // no "already loaded" check, and nothing anywhere in the compiled binary releases them again on exit -
+    // exhaustively checked every caller of ReleaseTexture/D3DResource_Release and every map-unload/reset-style
+    // function findable by name; none of them touch the texture table. Same category of pre-existing,
+    // level-scoped-resource-never-freed gap as the known Break_Create/Break_Kill leak, just for textures
+    // instead of breakables - re-entering a level re-registers its whole texture set from scratch each time.
+    D3DSeamTableExhaustedWarning("texture", "This is a KNOWN, pre-existing issue: psiCreateMapTextures "
+        "registers every one of a level's textures on entry (no dedup) and nothing releases them on exit - "
+        "re-entering a level a few times exhausts this table. Same category as the known Break_Create/"
+        "Break_Kill breakable-object leak, just for level textures instead.");
     return 0;
 }
 
