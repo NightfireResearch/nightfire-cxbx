@@ -1586,7 +1586,7 @@ void d3dResetRenderTargetAndBuffers(void) {
 // else, so it's deliberately left for a dedicated future pass). Calling the still-untouched original here is
 // safe and normal - same pattern as every other not-yet-seamed function we call into elsewhere in this file.
 // AUTOGEN
-void maybeImmediateModeFlush(void);
+void __stdcall maybeImmediateModeFlush(void);
 
 #define Gfx_ImmediateModeItemCount U32_AT(0x002C6F70) // Gfx.maybeImmediateModeItemCount
 #define Gfx_ImmediateModeBuffer ((float*)0x002DE3ECu)  // Gfx.maybeImmediateModeBuffer[64][9], stride 9 floats

@@ -49130,7 +49130,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e52a0",
+        "name": "d3dRegisterOverlayBuffer",
         "address": "0x000e52a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49139,7 +49139,7 @@
             "int",
             "undefined4"
         ],
-        "prototype_string": "int __cdecl FUN_000e52a0(int param_1, undefined4 param_2)",
+        "prototype_string": "int __cdecl d3dRegisterOverlayBuffer(int param_1, undefined4 param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -49164,7 +49164,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5350",
+        "name": "d3dDrawOverlayQuad",
         "address": "0x000e5350",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49176,7 +49176,7 @@
             "float",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e5350(int param_1, float param_2, int param_3, float param_4, int param_5)",
+        "prototype_string": "void __cdecl d3dDrawOverlayQuad(int param_1, float param_2, int param_3, float param_4, int param_5)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]",
@@ -49484,13 +49484,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5fc0",
+        "name": "d3dResetRenderTargetAndBuffers",
         "address": "0x000e5fc0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000e5fc0()",
+        "prototype_string": "undefined d3dResetRenderTargetAndBuffers()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -49508,13 +49508,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e6260",
+        "name": "d3dResetTransformCaches",
         "address": "0x000e6260",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e6260(void)",
+        "prototype_string": "void __stdcall d3dResetTransformCaches(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
