@@ -1612,7 +1612,7 @@ void d3dResetRenderTargetAndBuffers(void) {
 #define Gfx_ImmediateModeItemCount U32_AT(0x002C6F70) // Gfx.maybeImmediateModeItemCount
 #define Gfx_ImmediateModeBuffer ((float*)0x002DE3ECu)  // Gfx.maybeImmediateModeBuffer[64][9], stride 9 floats
 #define Gfx_ImmediateModeVertexBuffer ((float*)0x002C5770u) // Gfx.field20_0x20 - the actual vertex-buffer base passed to DrawVerticesUP; the transform loop below writes starting 2 floats in (Gfx.field22_0x28)
-#define Gfx_ImmediateModeVertexShader ((void*)0x002C574Cu)  // untraced - read as a vertex-shader HANDLE value (not a pointer to this address), distinct from the VtxShaderHandles array drawShard/d3dDrawOverlayQuad use
+#define Gfx_ImmediateModeVertexShader PTR_AT(0x002C574Cu)  // untraced - a global holding a vertex-shader HANDLE value (must be dereferenced, not used as the handle itself), distinct from the VtxShaderHandles array drawShard/d3dDrawOverlayQuad use
 #define Gfx_ZBiasActive U32_AT(0x002C6FD0)  // Gfx.field6071_0x1880 - defined again, identically, down by maybeResetRenderState; needed here too since this function comes first in the file
 
 // Carries Ghidra's own "type propagation algorithm not settling" decompiler-confidence warning, tied to a
