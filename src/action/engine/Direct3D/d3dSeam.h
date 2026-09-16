@@ -127,4 +127,25 @@ void d3dDrawOverlayQuad(int overlaySlot, float sizeParam, int textureSlot, float
 // original binary - possibly dead code - but implemented anyway since it's simple and low-risk.
 void d3dResetRenderTargetAndBuffers(void);
 
+// Appends a 9-float item (position rect, UV rect, packed colour as the raw bits of param9) to the immediate-
+// mode buffer, flushing first if it's full. maybeImmediateModeFlush itself is not yet reimplemented (see its
+// own forward declaration in d3dSeam.cpp for why) - this calls the still-untouched original.
+void maybeImmediateModePushItem(float param1, float param2, float param3, float param4, float param5,
+                                 float param6, float param7, float param8, float param9);
+
+// Standard D3D-style perspective projection matrix builder.
+void createProjectionMatrix(D3DMATRIX *mtxOut, float aspect, float fov, float param4, float nearDist, float farDist);
+
+// Resets some per-slot transform-related cache state (4 fixed slots) - untraced overall purpose.
+void d3dResetTransformCaches(void);
+
+// A fog-mode state machine (param 0/1/2) that also re-sends the current fog colour.
+void d3dSetupRenderStatesAndFog(int param1);
+
+// Resets a batch of cached render state to known defaults (texture/transform/fog/depth/cull/alpha/blend).
+void maybeResetRenderState(char param1);
+
+// Calls maybeResetRenderState(1) plus unbinds texture stage 0 and stream/index buffers.
+void maybeD3dShutdown(void);
+
 #endif // D3DSEAM_H_

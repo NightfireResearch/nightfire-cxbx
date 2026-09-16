@@ -51,6 +51,7 @@
 #define D3DDevice_GetDepthStencilSurface2_ADDR   0x00103d30u
 #define D3DDevice_SetRenderTarget_ADDR            0x001038d0u
 #define D3DDevice_DrawVertices_ADDR                0x001049c0u
+#define D3DDevice_SetRenderState_ZBias_ADDR         0x00100bf0u
 
 #define Gfx_D3DLastError          U32_AT(0x002C5750) // Gfx.D3DLastError
 #define Gfx_TotalTextureBytesUsed U32_AT(0x002C6FE0) // Gfx.field6075_0x1890 - running total, informational only
@@ -177,6 +178,11 @@ typedef void(__stdcall *D3DDevice_SetRenderTargetFn)(void *pRenderTarget, void *
 // D3DDevice_DrawVertices(primitiveType, startVertex, vertexCount) - confirmed plain __stdcall (RET 0xc).
 typedef void(__stdcall *D3DDevice_DrawVerticesFn)(uint32_t primitiveType, uint32_t startVertex, uint32_t vertexCount);
 #define D3DDevice_DrawVertices ((D3DDevice_DrawVerticesFn)D3DDevice_DrawVertices_ADDR)
+
+// A normal D3D8 library function we call INTO - confirmed plain __stdcall (RET 0x4), 1 param. Its own
+// internals are irrelevant to us (it calls into further D3D8-internal functions, same as many others).
+typedef void(__stdcall *D3DDevice_SetRenderState_ZBiasFn)(int zBias);
+#define D3DDevice_SetRenderState_ZBias ((D3DDevice_SetRenderState_ZBiasFn)D3DDevice_SetRenderState_ZBias_ADDR)
 
 // ---------------------------------------------------------------------------------------------------------------
 // Pure-math Eurocom matrix helpers (Global namespace, not D3D8::) - never previously declared/called from any
@@ -356,6 +362,20 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 #define D3D_DepthMaskCache      U32_AT(0x002C6FA4)
 #define D3D_DepthMaskLastValue  U32_AT(0x00111AD0)
 #define D3D_CullModeLastValue   U32_AT(0x00111C4C)
+#define Gfx_CurrentCullMode     U32_AT(0x002C6F9C) // Gfx.currentCullMode - a separate "current mode" cache from D3D_CullModeLastValue above
+
+// Deferred-texture-state cache pair used by maybeResetRenderState/d3dSetup (matching field names) - and the
+// underlying D3D8-internal globals they drive once changed.
+#define Gfx_DeferredTexStateA U32_AT(0x002C6FAC) // Gfx.field6059_0x185c
+#define Gfx_DeferredTexStateB U32_AT(0x002C6FB0) // Gfx.field6060_0x1860
+#define D3D8_DeferredTextureState  U32_AT(0x001117D0) // D3D8::D3D_g_DeferredTextureState
+#define D3D8_DeferredTextureStateB U32_AT(0x001117D4) // not in the Gfx struct - a separate D3D8-internal global
+
+// A trio of cache fields (matching field names in d3dSetup too) all set together, driving one opaque D3D8
+// register write (method 0x40358) - untraced meaning beyond that.
+#define Gfx_ExtraBlendA U32_AT(0x002C6FC4) // Gfx.field6068_0x1874
+#define Gfx_ExtraBlendB U32_AT(0x002C6FC8) // Gfx.field6069_0x1878
+#define Gfx_ExtraBlendC U32_AT(0x002C6FCC) // Gfx.field6070_0x187c
 
 // Gfx.D3DDevice (confirmed via get_struct_layout: GraphicsSystem+28) - the actual D3D8 device handle/pointer,
 // null until xboxInitGraphics has created it. Every function below that touches D3D8 guards on this exactly
@@ -1546,6 +1566,307 @@ void d3dDrawOverlayQuad(int overlaySlot, float sizeParam, int textureSlot, float
 void d3dResetRenderTargetAndBuffers(void) {
     _d3dRenderTargetSetup(0);
     d3dSetTextureStage1(0, 0);
+
+    if (Gfx_CurrentlyLoadedTexture != 0) {
+        Gfx_CurrentlyLoadedTexture = 0;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetTexture(0, D3DTextureSlot(0)->baseTexture);
+        Gfx_D3DLastError = 0;
+    }
+
+    d3dBindBuffers(0, 0);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// maybeImmediateModePushItem
+// ---------------------------------------------------------------------------------------------------------------
+
+// maybeImmediateModeFlush itself is NOT reimplemented yet (its own vertex-transform loop carries Ghidra's own
+// "type propagation not settling" warning - a genuine decompiler-confidence red flag independent of anything
+// else, so it's deliberately left for a dedicated future pass). Calling the still-untouched original here is
+// safe and normal - same pattern as every other not-yet-seamed function we call into elsewhere in this file.
+// AUTOGEN
+void maybeImmediateModeFlush(void);
+
+#define Gfx_ImmediateModeItemCount U32_AT(0x002C6F70) // Gfx.maybeImmediateModeItemCount
+#define Gfx_ImmediateModeBuffer ((float*)0x002DE3ECu)  // Gfx.maybeImmediateModeBuffer[64][9], stride 9 floats
+
+// AUTOINJECT
+void maybeImmediateModePushItem(float param1, float param2, float param3, float param4, float param5,
+                                 float param6, float param7, float param8, float param9) {
+    if (Gfx_ImmediateModeItemCount > 63)
+        maybeImmediateModeFlush();
+
+    float *item = Gfx_ImmediateModeBuffer + (size_t)Gfx_ImmediateModeItemCount * 9;
+    item[0] = param1;
+    item[1] = param2;
+    item[2] = param3;
+    item[3] = param4;
+    item[4] = param5;
+    item[5] = param6;
+    item[6] = param7;
+    item[7] = param8;
+    item[8] = param9;
+
+    Gfx_ImmediateModeItemCount = Gfx_ImmediateModeItemCount + 1;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// createProjectionMatrix
+// ---------------------------------------------------------------------------------------------------------------
+
+// Standard D3D-style perspective projection matrix builder - pure arithmetic, no D3D8 calls, no aliasing risk.
+// 0.008726646 is exactly half the degrees-to-radians factor (pi/180/2), matching the standard
+// 1/tan(halfFovRadians) projection-scale formula. Ported directly from decompile (trusted for pure arithmetic
+// per this project's established policy - the raw disassembly is a long, branchy FPU comparison sequence that
+// would be far more error-prone to hand-transcribe than to verify decompile's already-correctly-reconstructed
+// branch structure against all 4 (fov==0?, param4==0?) combinations, which was done here).
+//
+// AUTOINJECT
+void createProjectionMatrix(D3DMATRIX *mtxOut, float aspect, float fov, float param4, float nearDist, float farDist) {
+    if (aspect == 0.0f) aspect = 1.0f;
+    if (nearDist == 0.0f) nearDist = 1.0f;
+    if (farDist == 0.0f) farDist = 1000.0f;
+
+    double fVar4 = (double)param4;
+
+    if (fov == 0.0f && param4 == 0.0f)
+        fov = 75.0f;
+
+    if (fov != 0.0f && param4 != 0.0f) {
+        // both FOV and the secondary angle explicitly given
+        if (fov < 1.0f) fov = 1.0f;
+        else if (fov > 179.0f) fov = 179.0f;
+        if (fVar4 < 1.0) fVar4 = 1.0;
+        else if (fVar4 > 179.0) fVar4 = 179.0;
+        fov = (float)(1.0 / tan(fov * 0.008726646));
+        fVar4 = 1.0 / tan(fVar4 * 0.008726646);
+    } else if (fov != 0.0f) {
+        // FOV only - aspect derives the secondary scale
+        fVar4 = (double)fov;
+        if (fVar4 < 1.0) fVar4 = 1.0;
+        else if (fVar4 > 179.0) fVar4 = 179.0;
+        double invTan = 1.0 / tan(fVar4 * 0.008726646);
+        fov = (float)invTan;
+        fVar4 = invTan * (double)aspect;
+    } else {
+        // secondary angle only - aspect derives FOV
+        if (fVar4 < 1.0) fVar4 = 1.0;
+        else if (fVar4 > 179.0) fVar4 = 179.0;
+        fVar4 = 1.0 / tan(fVar4 * 0.008726646);
+        fov = (float)(fVar4 / (double)aspect);
+    }
+
+    float zScale = farDist / (farDist - nearDist);
+    memset(mtxOut, 0, sizeof(D3DMATRIX));
+    mtxOut->f[0] = fov;
+    mtxOut->f[0xe] = 1.0f;
+    mtxOut->f[5] = (float)fVar4;
+    mtxOut->f[10] = zScale;
+    mtxOut->f[0xb] = -(zScale * nearDist);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// d3dResetTransformCaches (FUN_000e6260)
+// ---------------------------------------------------------------------------------------------------------------
+
+// A simple, fixed 4-iteration loop (confirmed via raw disassembly - initially looked more complex from the
+// decompile alone, but it's genuinely straightforward): for each of 4 "slots", clears bit N in one bitmask and
+// sets bit N in another, zeros a 3-float entry, and once the first bitmask reaches zero, clears bits 2-3 of
+// Gfx_MiscModeFlags. Untraced overall purpose beyond "resets some per-slot transform-related cache state."
+#define Gfx_TransformCacheBitmaskA U32_AT(0x002FF274)
+#define Gfx_TransformCacheBitmaskB U32_AT(0x002FF270)
+#define Gfx_TransformCacheFloats ((float*)0x002FF2C0u) // 4 entries, stride 4 floats (16 bytes); only offsets -1,0,+1 (relative to each entry's base) are touched
+
+// AUTOINJECT
+void d3dResetTransformCaches(void) {
+    gfxSetCharacterLightIntensity(0.0f);
+
+    for (int i = 0; i < 4; i++) {
+        uint32_t bit = 1u << i;
+        Gfx_TransformCacheBitmaskA &= ~bit;
+        Gfx_TransformCacheBitmaskB |= bit;
+
+        float *entry = Gfx_TransformCacheFloats + (size_t)i * 4;
+        entry[-1] = 0.0f;
+        entry[0] = 0.0f;
+        entry[1] = 0.0f;
+
+        if (Gfx_TransformCacheBitmaskA == 0)
+            Gfx_MiscModeFlags &= ~0xCu;
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// d3dSetupRenderStatesAndFog
+// ---------------------------------------------------------------------------------------------------------------
+
+// A fog-mode state machine (param 0/1/2, meaning untraced beyond the method/value pairs below) that also
+// re-sends the current fog colour (shared logic with d3dSetFogEnable/d3dSetFogColor's own masking formula -
+// confirmed identical via raw disassembly). All SetRenderState_Simple method/value pairs confirmed via raw
+// disassembly (decompile can't show them at all, since it doesn't understand that function's ECX/EDX
+// convention) - param_1==1 and param_1==2 share a tail (constant 0x40348 method gets value 1); any other
+// param_1 value takes a separate, early-returning path (same method gets value 0x303 instead).
+#define D3D8_FogState_LastValue U32_AT(0x00111AF8)
+
+// AUTOINJECT
+void d3dSetupRenderStatesAndFog(int param1) {
+    if (Gfx_FogModeFlag == (uint32_t)param1) {
+        if (Gfx_FogEnabledCache != 1)
+            return;
+        uint32_t maskedColor = ((Gfx_FogModeFlag != 0) ? 0u : 0xFFFFFFFFu) & Gfx_FogColorCache;
+        Gfx_FogColorMasked = maskedColor;
+        if (D3D_DeviceReady == 0) {
+            Gfx_D3DLastError = 0;
+            return;
+        }
+        D3DDevice_SetRenderState_FogColor(maskedColor);
+        Gfx_D3DLastError = 0;
+        return;
+    }
+
+    Gfx_FogModeFlag = (uint32_t)param1;
+    if (Gfx_FogEnabledCache == 1) {
+        uint32_t maskedColor = ((param1 != 0) ? 0u : 0xFFFFFFFFu) & Gfx_FogColorCache;
+        Gfx_FogColorMasked = maskedColor;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetRenderState_FogColor(maskedColor);
+        Gfx_D3DLastError = 0;
+    }
+
+    if (param1 == 1) {
+        if (D3D_DeviceReady == 0) {
+            Gfx_D3DLastError = 0;
+            return;
+        }
+        D3D_SetRenderStateSimple(0x40350, 0x8006);
+        D3D8_FogState_LastValue = 0x8006;
+    } else if (param1 != 2) {
+        if (D3D_DeviceReady == 0) {
+            Gfx_D3DLastError = 0;
+            return;
+        }
+        D3D_SetRenderStateSimple(0x40350, 0x8006);
+        D3D8_FogState_LastValue = 0x8006;
+        Gfx_D3DLastError = 0;
+        if (D3D_DeviceReady == 0) {
+            Gfx_D3DLastError = 0;
+            return;
+        }
+        D3D_SetRenderStateSimple(0x40344, 0x302);
+        Gfx_D3DLastError = 0;
+        if (D3D_DeviceReady == 0) {
+            Gfx_D3DLastError = 0;
+            return;
+        }
+        D3D_SetRenderStateSimple(0x40348, 0x303);
+        Gfx_D3DLastError = 0;
+        return;
+    } else {
+        // param1 == 2
+        if (D3D_DeviceReady == 0) {
+            Gfx_D3DLastError = 0;
+            return;
+        }
+        D3D_SetRenderStateSimple(0x40350, 0x800b);
+        D3D8_FogState_LastValue = 0x800b;
+    }
+
+    // Shared tail: only reached for param1==1 or param1==2.
+    Gfx_D3DLastError = 0;
+    if (D3D_DeviceReady != 0) {
+        D3D_SetRenderStateSimple(0x40344, 0x302);
+        Gfx_D3DLastError = 0;
+        if (D3D_DeviceReady != 0)
+            D3D_SetRenderStateSimple(0x40348, 1);
+    }
+    Gfx_D3DLastError = 0;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// maybeResetRenderState, maybeD3dShutdown
+// ---------------------------------------------------------------------------------------------------------------
+
+#define Gfx_ZBiasActive U32_AT(0x002C6FD0)  // Gfx.field6071_0x1880
+#define D3D8_State0x40358_LastValue U32_AT(0x002C575C) // Gfx+0xc (an untraced early-offset field) - shared with d3dSetup's own use of the same opaque method
+
+// Resets a batch of cached render state to known defaults - texture stage 0, the transform caches
+// (d3dResetTransformCaches), colour constant 0x67, fog, depth-test/depth-write (reusing our own
+// d3dSetRenderState/d3dSetRenderState2 directly - confirmed via raw disassembly that this function's own
+// field6057/field6058 cache checks and value formulas are IDENTICAL to those two functions', not just similar),
+// z-bias, fog render states (d3dSetupRenderStatesAndFog), texture stage 1, cull mode, alpha ref (reusing
+// d3dSetRenderState1 directly, same reasoning), and one more opaque D3D8 register (method 0x40358, shared with
+// d3dSetup's own use of it) before finally rebinding buffers.
+//
+// AUTOINJECT
+void maybeResetRenderState(char param1) {
+    if (Gfx_CurrentlyLoadedTexture != 0) {
+        Gfx_CurrentlyLoadedTexture = 0;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetTexture(0, D3DTextureSlot(0)->baseTexture);
+        Gfx_D3DLastError = 0;
+    }
+
+    d3dResetTransformCaches();
+    d3dSetColorConstant67(0xFFFFFFFFu);
+    Gfx_FogEnabledCache = 0;
+    Gfx_D3DLastError = 0;
+    if (D3D_DeviceReady != 0) {
+        D3D8_PushBufferDirtyFlags |= 0x2000;
+        D3D8_RS_FogEnable = 0;
+    }
+
+    int resetValue = (param1 == 0) ? 1 : 0;
+    d3dSetRenderState2(resetValue);
+    d3dSetRenderState(resetValue);
+
+    if (Gfx_ZBiasActive != 0) {
+        Gfx_ZBiasActive = 0;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetRenderState_ZBias(0);
+    }
+    Gfx_D3DLastError = 0;
+
+    d3dSetupRenderStatesAndFog(0);
+
+    if (Gfx_DeferredTexStateA != 1 || Gfx_DeferredTexStateB != 1) {
+        Gfx_DeferredTexStateA = 1;
+        Gfx_DeferredTexStateB = 1;
+        Gfx_D3DLastError = 0;
+        if (D3D_DeviceReady != 0) {
+            D3D8_PushBufferDirtyFlags |= 1;
+            D3D8_DeferredTextureState = 1;
+            D3D8_DeferredTextureStateB = 1;
+        }
+    }
+
+    d3dSetTextureStage1(0, 0);
+
+    if (Gfx_CurrentCullMode != 1) {
+        Gfx_CurrentCullMode = 1;
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetRenderState_CullMode(0x901);
+        Gfx_D3DLastError = 0;
+    }
+
+    d3dSetRenderState1(1);
+
+    if (Gfx_ExtraBlendA != 1 || Gfx_ExtraBlendB != 1 || Gfx_ExtraBlendC != 1) {
+        Gfx_ExtraBlendA = 1;
+        Gfx_ExtraBlendB = 1;
+        Gfx_ExtraBlendC = 1;
+        D3D8_State0x40358_LastValue = 0x1010101;
+        if (D3D_DeviceReady != 0)
+            D3D_SetRenderStateSimple(0x40358, 0x1010101);
+        Gfx_D3DLastError = 0;
+    }
+
+    d3dBindBuffers(0, 0);
+}
+
+// AUTOINJECT
+void maybeD3dShutdown(void) {
+    maybeResetRenderState(1);
 
     if (Gfx_CurrentlyLoadedTexture != 0) {
         Gfx_CurrentlyLoadedTexture = 0;
