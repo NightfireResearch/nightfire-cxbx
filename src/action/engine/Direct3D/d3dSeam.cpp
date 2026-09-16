@@ -25,6 +25,7 @@
 #define D3DSEAM_TRACE 1
 #endif
 #define D3DSEAM_TRACE_DETAIL_FRAMES 4
+#define D3DSEAM_TRACE_DETAIL_DELAY  600  // frames after a level reset before the detailed window opens (past the loading screen)
 #define D3DSEAM_TRACE_SUMMARY_EVERY 1000
 
 #if D3DSEAM_TRACE
@@ -40,6 +41,7 @@ static D3DSeamTraceEntry g_d3dTraceEntries[200];
 static int g_d3dTraceEntryCount = 0;
 static uint32_t g_d3dTraceFrame = 0;
 static int g_d3dTraceDetailFramesLeft = D3DSEAM_TRACE_DETAIL_FRAMES;
+static int g_d3dTraceDetailDelay = 0; // frames to wait before the next detailed window opens (see D3DSeamTraceLevelReset)
 static FILE *g_d3dTraceFile = NULL;
 
 static FILE *D3DSeamTraceFile(void) {
@@ -106,6 +108,13 @@ static bool D3DSeamTraceWantDetail(void) {
 // Called from d3dSwap (frame boundary) and maybeD3dShutdown (level reset).
 static void D3DSeamTraceEndFrame(void) {
     g_d3dTraceFrame++;
+    if (g_d3dTraceDetailDelay > 0) {
+        if (--g_d3dTraceDetailDelay == 0) {
+            g_d3dTraceDetailFramesLeft = D3DSEAM_TRACE_DETAIL_FRAMES;
+            if (g_d3dTraceFile != NULL)
+                fprintf(g_d3dTraceFile, "==== detailed listing window opens at frame %u ====\n", g_d3dTraceFrame);
+        }
+    }
     if (g_d3dTraceDetailFramesLeft > 0) {
         g_d3dTraceDetailFramesLeft--;
         if (g_d3dTraceFile != NULL)
@@ -118,8 +127,10 @@ static void D3DSeamTraceLevelReset(void) {
     D3DSeamTraceDumpSummary("level reset");
     FILE *f = D3DSeamTraceFile();
     if (f != NULL)
-        fprintf(f, "==== level reset at frame %u - detailed listing resumes ====\n", g_d3dTraceFrame);
-    g_d3dTraceDetailFramesLeft = D3DSEAM_TRACE_DETAIL_FRAMES;
+        fprintf(f, "==== level reset at frame %u - detailed listing window scheduled %d frames from now ====\n",
+                g_d3dTraceFrame, D3DSEAM_TRACE_DETAIL_DELAY);
+    // Not immediately: the frames right after a reset are the loading screen. Wait until the level is up.
+    g_d3dTraceDetailDelay = D3DSEAM_TRACE_DETAIL_DELAY;
 }
 
 // One argument, formatted by type: floats as floats, everything else (pointers, handles, enums, packed
@@ -1474,6 +1485,12 @@ void d3dSetStreamSources(int baseIndex, int stream1Offset, float stream1Stride, 
 
 // Binds a stream buffer (slot 0) and index buffer by handle, no-opping if both already match the cache.
 //
+// The bound index buffer's index data, kept by the seam itself. D3D8's SetIndices stores the same pointer
+// (the index-buffer header's Data word) in its own global at 0x001117c8, which is what the original
+// d3dDrawIndexedVertices reads back; keeping our own copy here means the draw path doesn't have to peek into
+// D3D8 internals for it.
+static const uint16_t *g_d3dBoundIndexData = NULL;
+
 // AUTOINJECT
 void d3dBindBuffers(int streamBufferHandle, int indexBufferHandle) {
     if (Gfx_CurrentStreamBuffer == (uint32_t)streamBufferHandle && Gfx_CurrentIndexBuffer == (uint32_t)indexBufferHandle)
@@ -1482,6 +1499,11 @@ void d3dBindBuffers(int streamBufferHandle, int indexBufferHandle) {
     Gfx_CurrentStreamBuffer = (uint32_t)streamBufferHandle;
     Gfx_MiscResetFlag = 0xFFFFFFFFu;
     Gfx_CurrentIndexBuffer = (uint32_t)indexBufferHandle;
+
+    {
+        const uint32_t *indexBufferHeader = (const uint32_t*)Gfx_d3dIndexBuffers[(size_t)indexBufferHandle * 7];
+        g_d3dBoundIndexData = (indexBufferHeader != NULL) ? (const uint16_t*)(uintptr_t)indexBufferHeader[1] : NULL;
+    }
 
     uint8_t strideFlagByte = Gfx_StreamStrideRelated[(size_t)streamBufferHandle * 36];
     if (strideFlagByte != 0)
@@ -3479,4 +3501,122 @@ void __stdcall d3dLockSurface(const uint32_t *surface, D3DLOCKED_RECT_Xbox *lock
     }
     locked->Pitch = pitch;
     locked->pBits = bits;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The mesh draw path: d3dsetVertexShaderConstant, d3dsetVertexShader, d3dSetSkinMatrix, d3dDrawIndexedVertices
+// ---------------------------------------------------------------------------------------------------------------
+
+// These four were the last game-side callers of D3D8 outside this file - found by sweeping the callers of every
+// one of the 283 D3D8/XGRAPHC-range entry points, after the call graph had missed them: Ghidra's body for
+// RecurseAndDrawBoxes stops at 0x000dd56c although the code runs on to 0x000dd8d2, and it's that untracked tail
+// (the per-primitive loop: set skin matrices, per-primitive render state, stream sources, texture, then draw)
+// that calls them. They're also newer than tools/functions_action.json, hence FUNC_AT rather than AUTOINJECT.
+//
+// Together they explain where the world geometry goes: every model primitive is a triangle strip drawn by
+// D3DDevice_DrawIndexedVertices straight from the bound index buffer's data, after the lazily-flushed
+// per-draw state (view-space light constants, the vertex shader permutation) has been brought up to date.
+
+#define D3DDevice_DrawIndexedVertices_ADDR 0x00104a60u // was undefined in Ghidra until now (hence invisible to the call graph); RET 0xc
+typedef void(__stdcall *D3DDevice_DrawIndexedVerticesFn)(uint32_t primitiveType, uint32_t vertexCount, const void *pIndexData);
+#define D3DDevice_DrawIndexedVertices (D3DSeamTraced("D3DDevice_DrawIndexedVertices", (D3DDevice_DrawIndexedVerticesFn)D3DDevice_DrawIndexedVertices_ADDR))
+
+#define Gfx_LightConstantBlock      ((float*)0x002FF27Cu) // 36 floats -> vertex shader constants 0x69..0x71: 4 x view-space light position (xyz, pad), then the 4 x colour and 4 x 1/range d3dSetLight fills in
+#define Gfx_LevelDirectionViewSpace ((float*)0x002FF388u) // 3 floats (+pad) -> vertex shader constant 0x7b
+#define Gfx_LevelDirectionDirty     Gfx_MatrixGenFlag2     // 0x002FF278 - set to 1 by d3dSetLevelDirectionVector, -1 by d3dSetMatrix
+
+// FUN_000e86c0 in the original: rotates a 3-vector by the upper-left 3x3 of a row-major 4x4 matrix, optionally
+// adding the translation column - i.e. a full point transform (translate != 0) or a direction transform.
+// Summation order matches the original's FPU sequence.
+static void TransformVector3(float *out, const float *m, const float *v, bool translate) {
+    out[0] = (m[2] * v[2] + m[1] * v[1]) + m[0] * v[0];
+    out[1] = (m[6] * v[2] + m[5] * v[1]) + m[4] * v[0];
+    out[2] = (m[10] * v[2] + m[9] * v[1]) + m[8] * v[0];
+    if (translate) {
+        out[0] += m[3];
+        out[1] += m[7];
+        out[2] += m[11];
+    }
+}
+
+// Flushes the lazily-updated per-draw vertex shader constants: every light whose dirty bit is set (d3dSetLight/
+// d3dDisableLight set individual bits, d3dSetMatrix sets them all) has its position re-transformed into view
+// space (through the inverse of the active matrix) and the whole 9-register light block re-sent; likewise the
+// level direction vector (as a direction, no translation) into constant 0x7b when its flag is set.
+//
+// FUNC_AT(000e4a50)
+void d3dsetVertexShaderConstant(void) {
+    D3DMATRIX inverseActive;
+    memcpy(&inverseActive, Gfx_d3dActiveMatrix, sizeof(D3DMATRIX));
+    maybeInvertRigidTransform(&inverseActive);
+    const float *m = (const float*)&inverseActive;
+
+    bool anyLight = false;
+    for (int i = 0; i < 4; i++) {
+        if ((Gfx_LightDirtyMask & (1u << i)) != 0) {
+            TransformVector3(Gfx_LightConstantBlock + i * 4, m, (const float*)(Gfx_LightDirection + i * 3), true);
+            anyLight = true;
+        }
+    }
+    if (anyLight) {
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetVertexShaderConstantNotInline(0x69, Gfx_LightConstantBlock, 0x24);
+        Gfx_D3DLastError = 0;
+    }
+
+    if (Gfx_LevelDirectionDirty != 0) {
+        TransformVector3(Gfx_LevelDirectionViewSpace, m, Gfx_LevelDirectionVector, false);
+        if (D3D_DeviceReady != 0)
+            D3DDevice_SetVertexShaderConstant1(0x7b, Gfx_LevelDirectionViewSpace);
+        Gfx_D3DLastError = 0;
+    }
+
+    Gfx_LightDirtyMask = 0;
+    Gfx_LevelDirectionDirty = 0;
+}
+
+// Selects the vertex shader permutation for the current mode flags (Gfx_MiscModeFlags is literally the index
+// into the 128 shaders xboxInitGraphics created - bit 0x2 = 0x20-byte vertex stride, 0x4/0x8 = two/four lights,
+// 0x10 and 0x20 set elsewhere in this file). The "four lights" bit subsumes "two lights", so 0x4 is dropped
+// when 0x8 is set. Gfx_MiscResetFlag caches the last-selected index; d3dBindBuffers/drawShard reset it to -1.
+//
+// FUNC_AT(000e4b30)
+void d3dsetVertexShader(void) {
+    uint32_t flags = Gfx_MiscModeFlags;
+    if ((flags & 0x8u) != 0) {
+        flags &= ~0x4u;
+        Gfx_MiscModeFlags = flags;
+    }
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShader(VtxShaderHandles[flags]);
+    Gfx_MiscResetFlag = Gfx_MiscModeFlags;
+    Gfx_D3DLastError = 0;
+}
+
+// Uploads one 3x4 skinning matrix (12 floats) to the constant register the 53-entry table at 0x001B5208 maps
+// the bone index to (plus the 0x60 base). Only caller is RecurseAndDrawBoxes' per-primitive loop.
+//
+// FUNC_AT(000e4e40)
+void d3dSetSkinMatrix(const void *matrix3x4, uint32_t boneIndex) {
+    if (boneIndex >= 0x35)
+        return;
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShaderConstantNotInline((uint32_t)(D3D8_ShaderConstantSubIndexTable[boneIndex] + 0x60), (void*)matrix3x4, 0xc);
+    Gfx_D3DLastError = 0;
+}
+
+// Draws one triangle strip of (indexCount + 2) vertices from the bound index buffer, starting at index
+// startIndex, after flushing any pending light/direction constants and shader selection. The original reads
+// the index data pointer back out of D3D8's own SetIndices global; g_d3dBoundIndexData (set by d3dBindBuffers)
+// is the seam's copy of the same value.
+//
+// FUNC_AT(000e4b80)
+void d3dDrawIndexedVertices(int startIndex, int indexCount) {
+    if (Gfx_LightDirtyMask != 0 || Gfx_LevelDirectionDirty != 0)
+        d3dsetVertexShaderConstant();
+    if (Gfx_MiscResetFlag != Gfx_MiscModeFlags)
+        d3dsetVertexShader();
+    if (D3D_DeviceReady != 0)
+        D3DDevice_DrawIndexedVertices(6 /* D3DPT_TRIANGLESTRIP */, (uint32_t)indexCount + 2, g_d3dBoundIndexData + startIndex);
+    Gfx_D3DLastError = 0;
 }

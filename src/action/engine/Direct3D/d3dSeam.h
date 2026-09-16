@@ -243,5 +243,13 @@ void __stdcall d3dGetRasterStatus(D3DRASTER_STATUS_Xbox *status);
 void __stdcall d3dGetSurfaceDesc(const uint32_t *surface, D3DSURFACE_DESC_Xbox *desc);
 void __stdcall d3dLockSurface(const uint32_t *surface, D3DLOCKED_RECT_Xbox *locked, const RECT_Xbox *rect, uint32_t flags);
 
+// The mesh draw path (FUNC_AT, since these postdate tools/functions_action.json): lazy flush of the view-space
+// light constants and the vertex shader permutation, the per-bone skin matrix upload, and the triangle-strip
+// draw every model primitive goes through. Called from RecurseAndDrawBoxes' per-primitive loop.
+void d3dsetVertexShaderConstant(void);
+void d3dsetVertexShader(void);
+void d3dSetSkinMatrix(const void *matrix3x4, uint32_t boneIndex);
+void d3dDrawIndexedVertices(int startIndex, int indexCount);
+
 
 #endif // D3DSEAM_H_
