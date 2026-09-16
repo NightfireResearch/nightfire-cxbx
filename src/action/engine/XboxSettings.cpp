@@ -24,6 +24,17 @@
 // rebranded as a Philips-brand electric shaver in every other English-speaking release. It's a genuine
 // regional product-tie-in joke baked into the original game, not a translation difference, so Region is
 // worth being able to flip even though it has no other gameplay effect.
+//
+// Default is PAL, not NTSC, for a reason worth being precise about: xboxInitGraphics (untouched) feeds
+// XboxGetAVRegion()'s result into the D3D9 device's creation flags, including FullScreen_RefreshRateInHz
+// (60Hz for NTSC, 50Hz for PAL, via the confusingly-named Gfx.IsPalI - see mainloop's own comment on that).
+// On the machine this was diagnosed on, Region=NTSC left background-movie (FMV) playback permanently black
+// (the video decoder never signalled "frame ready", no crash) while Region=PAL played correctly. That is
+// NOT evidence that NTSC/60Hz is broken in general - the actual requirement is almost certainly that this
+// setting has to agree with whatever CXBX itself is configured/emulating for video timing, and PAL simply
+// happened to match that machine's CXBX setup. If FMV breaks after switching a fresh setup to NTSC, try
+// PAL, or vice versa, and check CXBX's own video/region configuration rather than assuming one value is
+// universally correct. We haven't traced the exact mechanism inside CXBX's own FMV/timing code.
 // ---------------------------------------------------------------------------------------------------------------
 
 struct Settings {
@@ -51,8 +62,12 @@ static void WriteDefaultSettingsFile() {
         "Widescreen=0\n"
         "\n"
         "; NTSC or PAL - also picks which of two English text variants the game uses (a real regional\n"
-        "; product tie-in: the \"Stunner\" gadget is rebranded as a Philips-brand shaver outside NTSC/US)\n"
-        "Region=NTSC\n"
+        "; product tie-in: the \"Stunner\" gadget is rebranded as a Philips-brand shaver outside NTSC/US).\n"
+        "; This needs to agree with whatever CXBX itself is configured/emulating for video timing, or\n"
+        "; background-movie (FMV) playback can end up permanently black. Defaults to PAL because that's\n"
+        "; what matched this project's own CXBX setup during testing - if movies are black for you, try\n"
+        "; switching this (and check CXBX's own region/video settings too).\n"
+        "Region=PAL\n"
         "\n"
         "; English, Japanese, German, French, Spanish, or Italian\n"
         "Language=English\n"
@@ -81,7 +96,7 @@ static void TrimInPlace(char *s) {
 static void LoadSettingsFile() {
     // Defaults, used for anything the file doesn't mention (or if it can't be read/created at all)
     g_settings.widescreen = false;
-    g_settings.avRegion = 1; // NTSC-M
+    g_settings.avRegion = 3; // PAL-I - matched this project's own CXBX setup in testing; see block comment above
     g_settings.language = 1; // English
     g_settings.fpsOverride = 0;
 
@@ -112,7 +127,9 @@ static void LoadSettingsFile() {
         if (_stricmp(key, "Widescreen") == 0) {
             g_settings.widescreen = atoi(value) != 0;
         } else if (_stricmp(key, "Region") == 0) {
-            g_settings.avRegion = (_stricmp(value, "PAL") == 0) ? 3 : 1; // PAL-I : NTSC-M (also the fallback)
+            // Explicit "NTSC" is honoured; anything else (including a typo) falls back to PAL, matching
+            // this file's own default - see the block comment above for why that's PAL rather than NTSC.
+            g_settings.avRegion = (_stricmp(value, "NTSC") == 0) ? 1 : 3;
         } else if (_stricmp(key, "Language") == 0) {
             if (_stricmp(value, "Japanese") == 0) g_settings.language = 2;
             else if (_stricmp(value, "German") == 0) g_settings.language = 3;
