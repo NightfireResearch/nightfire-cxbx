@@ -233,6 +233,9 @@ void maybeInvertRigidTransform(D3DMATRIX *mtx);
 void maybeMtxApplyTransform(D3DMATRIX *mtx, float dx, float dy, float dz);
 // AUTOGEN
 void maybeMtxInverse(D3DMATRIX *mtx);
+// Already AUTOGEN-declared (and its stub body generated) elsewhere - plain forward declaration here, same
+// pattern as timestamp() above, so this file can call it too without a colliding second body.
+void* allocateAligned0x1000(int numBytes);
 
 // D3DDevice_SetRenderState_Simple(NV2A method header word in ECX, value in EDX) - the generic, runtime-method
 // render-state setter. Everything else in the D3DDevice_SetRenderState_XXX family takes its single value on
@@ -2120,7 +2123,7 @@ void d3dSetViewMatrixFromRigidTransform(D3DMATRIX *rigidTransform) {
 
 #define Gfx_AuxSavedViewMatrix   ((D3DMATRIX*)0x002FF3B4) // not in the Gfx struct - saves Gfx_SecondaryBasisMatrix across a d3dBeginEndAuxRenderPass(1, ...)/(0, ...) pair
 #define Gfx_AuxSavedProjMatrix   ((D3DMATRIX*)0x002FF3F4) // not in the Gfx struct - saves Gfx_ProjMatrixCacheA across the same pair
-#define Gfx_AuxRenderPassResult  U32_AT(0x002FF3AC)       // not in the Gfx struct - written elsewhere (FUN_000e6430, not yet reimplemented), only read/returned here
+#define Gfx_AuxRenderPassResult  U32_AT(0x002FF3AC)       // not in the Gfx struct - written by d3dInitShadowBlurTextures (once, at boot), only read/returned here
 #define Gfx_AuxRenderPassActive  U8_AT(0x002FF495)        // not in the Gfx struct - a static "is a pass currently pushed?" latch, one byte past Gfx_RenderTargetPushed but a separate flag
 
 // A single-level "auxiliary render pass" push/pop, used for rendering something (character shadows are the
@@ -2420,13 +2423,13 @@ void d3dSetup(void) {
 // psiBlurCharacterShadow
 // ---------------------------------------------------------------------------------------------------------------
 
-#define Gfx_ShadowBlurTargetB U32_AT(0x002FF3B0) // Gfx.field158792_0x39c60 - written elsewhere (FUN_000e6430, not yet reimplemented), only read here - the second of a texture-slot pair with Gfx_AuxRenderPassResult (the first)
+#define Gfx_ShadowBlurTargetB U32_AT(0x002FF3B0) // Gfx.field158792_0x39c60 - written by d3dInitShadowBlurTextures (once, at boot), only read here - the second of a texture-slot pair with Gfx_AuxRenderPassResult (the first)
 
 // Called (only ever from maybe_psiDrawShadow, not yet reimplemented) right after a shadow has been rendered
 // into the aux render target via d3dBeginEndAuxRenderPass(1, ...). First closes that render pass (begin=0,
 // NULL/NULL - restores the normal view/projection/viewport), then runs a two-pass box blur that ping-pongs
 // between two externally-chosen texture slots (Gfx_AuxRenderPassResult/Gfx_ShadowBlurTargetB, both maintained
-// by FUN_000e6430): pass 1 renders a half-size (128x128 from a 256x256 UV rect) downsample from
+// by d3dInitShadowBlurTextures): pass 1 renders a half-size (128x128 from a 256x256 UV rect) downsample from
 // Gfx_AuxRenderPassResult into Gfx_ShadowBlurTargetB; pass 2 renders a double-size (256x256 from a 128x128 UV
 // rect) upsample from Gfx_ShadowBlurTargetB back into Gfx_AuxRenderPassResult - the combination softens the
 // shadow texture in place. Finally pops the render target back to the backbuffer and unbinds stage 0.
@@ -2587,4 +2590,25 @@ void psiBlurScreen(int blurIntensity) {
             D3D8_DeferredTextureStateB = 1;
         }
     }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// d3dInitShadowBlurTextures
+// ---------------------------------------------------------------------------------------------------------------
+
+// One-time (called only from xboxInitGraphics, alongside d3dSetup/d3dInitBorderDitherTexture) setup of the two
+// permanent, never-released (refCount forced to 1 below) render-target textures psiBlurCharacterShadow and
+// d3dBeginEndAuxRenderPass consume as Gfx_AuxRenderPassResult (256x256) and Gfx_ShadowBlurTargetB (128x128).
+//
+// AUTOINJECT
+void d3dInitShadowBlurTextures(void) {
+    void *data = allocateAligned0x1000(0x40000);
+    Gfx_AuxRenderPassResult = (uint32_t)RegisterTexture(0x100, 0x100, 2, 1, data, 0);
+    if (D3DTextureSlot((int)Gfx_AuxRenderPassResult)->baseTexture != NULL)
+        D3DTextureSlot((int)Gfx_AuxRenderPassResult)->refCount = 1;
+
+    data = allocateAligned0x1000(0x10000);
+    Gfx_ShadowBlurTargetB = (uint32_t)RegisterTexture(0x80, 0x80, 2, 1, data, 0);
+    if (D3DTextureSlot((int)Gfx_ShadowBlurTargetB)->baseTexture != NULL)
+        D3DTextureSlot((int)Gfx_ShadowBlurTargetB)->refCount = 1;
 }

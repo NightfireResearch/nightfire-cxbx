@@ -191,4 +191,9 @@ void psiBlurCharacterShadow(void);
 // d3dSeam.cpp for the (non-obvious) details of how it reaches real backbuffer pixel data.
 void psiBlurScreen(int blurIntensity);
 
+// One-time setup (xboxInitGraphics only) of the two permanent render-target textures psiBlurCharacterShadow/
+// d3dBeginEndAuxRenderPass consume (Gfx_AuxRenderPassResult, Gfx_ShadowBlurTargetB). See its own comment in
+// d3dSeam.cpp.
+void d3dInitShadowBlurTextures(void);
+
 #endif // D3DSEAM_H_

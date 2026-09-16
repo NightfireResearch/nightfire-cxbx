@@ -49532,13 +49532,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e6430",
+        "name": "d3dInitShadowBlurTextures",
         "address": "0x000e6430",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e6430(void)",
+        "prototype_string": "void __stdcall d3dInitShadowBlurTextures(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
