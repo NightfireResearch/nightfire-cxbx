@@ -81,13 +81,14 @@ void d3dBeginFrame(void);
 // the fog Z-scale and depth-clip planes from the projection matrix; d3dSetWorldMatrix splits a world matrix
 // into translation (via d3dSetMatrix) and rotation-only (shader constant 0) parts.
 //
-// maybeBuildAndSetModelViewProjectionMtx (constant 0x77) is deliberately NOT here yet - it passes its own
-// local stack variable through maybeMultiplyMatrixChain's chain-node parameter, and that function's internal
-// chain-walk semantics haven't been fully verified; faithfully reproducing it needs matching the original
-// compiler's exact stack layout, which isn't reliable with plain C++ locals.
+// maybeBuildAndSetModelViewProjectionMtx (constant 0x77) builds an inverse-MVP-style matrix from a rigid
+// transform and a base matrix - like d3dSetMatrix, it computes its combine steps directly (Multiply4x4RowMajor)
+// rather than through maybeMultiplyMatrixChain, since the original's own call sequence aliases dest with base
+// and/or chain in all three of its multiply steps.
 void d3dSetProjectionMatrix(D3DMATRIX *projMtx);
 void d3dSetMatrix(D3DMATRIX *d3dMtx);
 void d3dSetWorldMatrix(D3DMATRIX *worldMtx);
+void maybeBuildAndSetModelViewProjectionMtx(D3DMATRIX *rigidTransform, D3DMATRIX *base);
 void d3dSetStreamSources(int baseIndex, int stream1Offset, float stream1Stride, int stream2Offset, float stream2Stride,
                           int stream3Offset, float stream3Stride, int stream4Offset, float stream4Stride,
                           int stream5Offset, float stream5Stride, int stream6Offset, float stream6Stride,

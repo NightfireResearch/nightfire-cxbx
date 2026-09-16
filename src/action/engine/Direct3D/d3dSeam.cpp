@@ -166,6 +166,14 @@ void maybeD3DMATRIXcopy(undefined4 *dest, undefined4 *src);
 void d3dMatrixIdentity(D3DMATRIX *mtx);
 // AUTOGEN
 void maybeMultiplyMatrixChain(D3DMATRIX *mtxOut, D3DMATRIX *base, MatrixChainNode *mtxChain);
+// AUTOGEN
+void maybeTransposeRotationPart(D3DMATRIX *mtx);
+// AUTOGEN
+void maybeInvertRigidTransform(D3DMATRIX *mtx);
+// AUTOGEN
+void maybeMtxApplyTransform(D3DMATRIX *mtx, float dx, float dy, float dz);
+// AUTOGEN
+void maybeMtxInverse(D3DMATRIX *mtx);
 
 // D3DDevice_SetRenderState_Simple(NV2A method header word in ECX, value in EDX) - the generic, runtime-method
 // render-state setter. Everything else in the D3DDevice_SetRenderState_XXX family takes its single value on
@@ -450,15 +458,21 @@ static void D3DSeamTableExhaustedWarning(const char *tableName) {
 // Standard row-major 4x4 matrix product (out = base * chain), verified term-by-term against
 // maybeMultiplyMatrixChain's own decompiled single-link arithmetic. See d3dSetMatrix's comment for why this is
 // implemented directly rather than calling that function.
+// Alias-safe: computes fully into a local temporary before copying to *out, since some callers pass the same
+// D3DMATRIX for out and base and/or out and chain (the original's own maybeMultiplyMatrixChain call sequence
+// in maybeBuildAndSetModelViewProjectionMtx does exactly this) - writing into *out mid-computation would read
+// back partially-overwritten data for later rows/columns.
 static void Multiply4x4RowMajor(const D3DMATRIX *base, const D3DMATRIX *chain, D3DMATRIX *out) {
+    D3DMATRIX result;
     for (int row = 0; row < 4; row++) {
         for (int col = 0; col < 4; col++) {
-            out->f[row * 4 + col] = base->f[row * 4 + 0] * chain->f[0 * 4 + col]
-                                   + base->f[row * 4 + 1] * chain->f[1 * 4 + col]
-                                   + base->f[row * 4 + 2] * chain->f[2 * 4 + col]
-                                   + base->f[row * 4 + 3] * chain->f[3 * 4 + col];
+            result.f[row * 4 + col] = base->f[row * 4 + 0] * chain->f[0 * 4 + col]
+                                     + base->f[row * 4 + 1] * chain->f[1 * 4 + col]
+                                     + base->f[row * 4 + 2] * chain->f[2 * 4 + col]
+                                     + base->f[row * 4 + 3] * chain->f[3 * 4 + col];
         }
     }
+    memcpy(out, &result, sizeof(D3DMATRIX));
 }
 
 static void RecomputeFogConstant66() {
@@ -936,6 +950,38 @@ void d3dSetWorldMatrix(D3DMATRIX *worldMtx) {
 
     if (D3D_DeviceReady != 0)
         D3DDevice_SetVertexShaderConstantNotInline(0, constants, 0xc);
+    Gfx_D3DLastError = 0;
+}
+
+// Builds an inverse-model-view-projection-style matrix (shader constant 0x77) from a rigid-transform matrix
+// and a base matrix. Like d3dSetMatrix, this deliberately does NOT call maybeMultiplyMatrixChain - the
+// original's own call sequence here aliases dest with base and/or chain in every one of its three multiply
+// steps (dest==chain twice, dest==base once), which is exactly the kind of construction that made verifying
+// maybeMultiplyMatrixChain's internals so unreliable in the first place. Multiply4x4RowMajor is alias-safe
+// (computes into a temporary before writing *out), so it sidesteps that risk entirely rather than needing to
+// reconstruct a real MatrixChainNode - this is the same fix that unblocked d3dSetMatrix, applied to the other
+// deferred caller.
+//
+// AUTOINJECT
+void maybeBuildAndSetModelViewProjectionMtx(D3DMATRIX *rigidTransform, D3DMATRIX *base) {
+    D3DMATRIX workingMatrix;
+    D3DMATRIX tempMatrix;
+
+    maybeD3DMATRIXcopy((undefined4 *)&workingMatrix, (undefined4 *)rigidTransform);
+    maybeTransposeRotationPart(&workingMatrix);
+    maybeInvertRigidTransform(&workingMatrix);
+    Multiply4x4RowMajor(base, &workingMatrix, &workingMatrix);
+
+    d3dMatrixIdentity(&tempMatrix);
+    maybeMtxApplyTransform(&tempMatrix, 0.5f, 0.5f, 0.0f);
+    Multiply4x4RowMajor(&tempMatrix, &workingMatrix, &workingMatrix);
+
+    maybeD3DMATRIXcopy((undefined4 *)&tempMatrix, (undefined4 *)Gfx_ViewMatrixCache);
+    maybeMtxInverse(&tempMatrix);
+    Multiply4x4RowMajor(&workingMatrix, &tempMatrix, &workingMatrix);
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShaderConstant4(0x77, &workingMatrix);
     Gfx_D3DLastError = 0;
 }
 
