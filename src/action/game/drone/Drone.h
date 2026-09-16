@@ -59,5 +59,6 @@ static_assert(sizeof(DCVars_tag) == 0x10, "DCVars is wrong size");
 bool Drone_DCVfromOBJ(obj_tag* obj, DCVars_tag *dcVars);
 obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 void Drone_SM_RouteMsg(MsgObject *msg);
+void Drone_EnableAll(char enable, HASHCODE hashcode);
 
 #endif // DRONE_H_

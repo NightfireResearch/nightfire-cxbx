@@ -11,6 +11,8 @@
 void Text_Update2Line(void);
 // AUTOGEN
 void Text_Update(void);
+// AUTOGEN
+void __stdcall Text_FlushAllSubtitles(void);
 
 #define Bank (*(const char***)0x00215588)
 #define BankData (*(void**)0x0021558c)

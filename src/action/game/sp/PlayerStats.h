@@ -32,6 +32,7 @@ void PlrStat_LogEnemyDispatched(uint playerNum);
 void PlrStat_LogEnemyDisabled(uint playerNum);
 void PlrStat_LogEnemyDetectedPlayer(uint playerNum);
 void PlrStat_LogHealth(uint health, uint playerNum);
+void PlrStat_LogShotHitScenery(uint playerNum);
 SCORETABLE * PlrStats_GetLevelTotals(HASHCODE hashcode);
 void PlarStat_LogTimerPause(uint playerNum);
 void PlarStat_LogTimerUnpause(uint playerNum);

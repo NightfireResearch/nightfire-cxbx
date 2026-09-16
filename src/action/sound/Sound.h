@@ -58,6 +58,8 @@ bool Sound_IsLooping(DYNAMICSOUNDS *handle);
 void Sound_UpdateListeners(void);
 void Sound_StopAllWithId(Action_SFX sfx);
 void Sound_ZeroAlertness(void);
+void __stdcall SFXSuspendFileAccess(void);
+void __stdcall SFXUnSuspendFileAccess(void);
 
 #define SFXOutputData (*(SFXOutputDataEntry(*)[0x60d])0x00182b80)
 

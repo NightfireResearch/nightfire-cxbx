@@ -79,3 +79,6 @@ bool isLoadable(HASHCODE param_1) {
   }
   return false;
 }
+
+// AUTOGEN
+bool LoadableReload(HASHCODE hashcode);

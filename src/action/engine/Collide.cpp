@@ -87,6 +87,9 @@ bool Collide_RayTriangle(_VECTOR *ptStart,_VECTOR *ptEnd,_VECTOR *vtx1,_VECTOR *
 // AUTOGEN
 void Collide_FilterBullets(HITDATA_tag **hitList, ushort flags);
 
+// AUTOGEN
+float Collide_GetDamageNObjects(HITDATA_tag *hitDatas, obj_tag **objectList, ushort *objectListCountOut, ushort maxObjectsInList);
+
 // {
 
 //   HITDATA_tag *hitData = *hitList;

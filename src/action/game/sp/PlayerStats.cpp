@@ -178,3 +178,6 @@ SCORETABLE * PlrStats_GetScoreTable(undefined4 *numItems) {
 bool PlrStats_DoneBetter(void) {
     return DoneBetter;
 }
+
+// AUTOGEN
+void PlrStat_LogShotHitScenery(uint playerNum);
