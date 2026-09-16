@@ -57620,7 +57620,7 @@
         "namespace": "D3D8"
     },
     {
-        "name": "FUN_00103ca0",
+        "name": "D3DDevice_GetRasterStatus",
         "address": "0x00103ca0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -66782,7 +66782,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_001300b8",
+        "name": "maybeXmvDecoderCreate",
         "address": "0x001300b8",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -66906,7 +66906,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00130624",
+        "name": "maybeXmvDecoderUpdate",
         "address": "0x00130624",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -67016,7 +67016,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00130eaf",
+        "name": "maybeXmvDecoderWriteFrame",
         "address": "0x00130eaf",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
