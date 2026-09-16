@@ -15,14 +15,10 @@
 // is a pointer to the pixel data buffer to associate with the new texture (see the caller in
 // Graphics_Init_LowLevel for an example - it passes a freshly-allocated buffer, not existing pixel data).
 //
-// KNOWN ISSUE, confirmed pre-existing (not introduced by this seam): repeatedly reloading the identical
-// level exhausts this table, because psiCreateMapTextures registers every one of a level's textures on
-// entry (no dedup) and nothing anywhere in the compiled binary releases them again on exit. Confirmed via
-// a controlled A/B test - logging every RegisterTexture call across an identical repeated-reload sequence
-// on both this seam and a clean pre-seam baseline commit produced byte-for-byte identical registration
-// logs; the baseline fails under the same test too, just less visibly (silently missing geometry rather
-// than an explicit diagnostic). Real hardware likely never hits this in normal play. See the diagnostic
-// printed from this function's own table-full path for more.
+// The original game never released level textures from this table (psiCreateMapTextures registers every one
+// of a level's ~500 textures on entry, and nothing in the compiled binary frees them on exit), so it filled
+// up after 4-5 level loads. maybeD3dShutdown (below) now frees every non-permanent slot on each level change
+// via d3dReleaseLevelResources - see that function's comment in d3dSeam.cpp for the full investigation.
 int RegisterTexture(unsigned int width, unsigned int height, int formatType, unsigned int levels, void *data, int param_6);
 
 // Frees a texture slot returned by RegisterTexture (no-ops if its refcount is still nonzero).
@@ -165,7 +161,9 @@ void d3dSetupRenderStatesAndFog(int param1);
 // Resets a batch of cached render state to known defaults (texture/transform/fog/depth/cull/alpha/blend).
 void maybeResetRenderState(char param1);
 
-// Calls maybeResetRenderState(1) plus unbinds texture stage 0 and stream/index buffers.
+// Calls maybeResetRenderState(1) plus unbinds texture stage 0 and stream/index buffers - then (our addition,
+// not in the original) frees every level-scoped texture/vertex-buffer/index-buffer slot, since this is only
+// ever called on a level change or an XLaunchNewImage relaunch. See d3dReleaseLevelResources in d3dSeam.cpp.
 void maybeD3dShutdown(void);
 
 // Caches a pair of "deferred texture state" values, pushing them into two D3D8-internal globals once changed.

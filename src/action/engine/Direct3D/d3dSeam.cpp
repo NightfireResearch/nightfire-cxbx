@@ -259,6 +259,14 @@ static void D3D_SetRenderStateSimple(uint32_t method, uint32_t value) {
 // vertex/index/overlay buffer tables) can use it too.
 void D3DSeamTableExhaustedWarning(const char *tableName, const char *extraContext);
 
+// The extra-context line every table-full diagnostic prints (defined up here since RegisterTexture is the
+// first user). See D3DSeamTableExhaustedWarning's own comment for the history.
+#define D3DSEAM_TABLE_LEAK_CONTEXT \
+    "Level-scoped slots are normally freed on every level change by d3dReleaseLevelResources " \
+    "(maybeD3dShutdown), so this means something is allocating outside a level's lifetime, or a new " \
+    "allocator caller has appeared - see D3DSeamTableExhaustedWarning's comment in d3dSeam.cpp."
+#define D3DSEAM_VTX_IDX_LEAK_CONTEXT D3DSEAM_TABLE_LEAK_CONTEXT
+
 #define D3D_TEXTURE_TABLE_BASE  0x002CC3ECu // Gfx + 27804 (0x6c9c) - see GraphicsSystem's D3DTexture[2048] field
 #define D3D_TEXTURE_TABLE_COUNT 2048
 
@@ -384,19 +392,12 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
         return slot;
     }
 
-    // CONFIRMED pre-existing (not a seam bug) - this time with real evidence, not just a plausibility
-    // argument: a controlled A/B test logged every single RegisterTexture call (size, running count) across
-    // an identical repeated-reload sequence on both the current seam and a clean baseline commit
-    // (967f98f, well before this seam's vertex-buffer/texture/render-target work). The two logs matched
-    // byte-for-byte - the exact same sequence of registration burst sizes (e.g. 292, 17, 279, 91, 420, 80,
-    // 15, repeating identically per reload) on both. The baseline commit fails under the same repeated-
-    // reload test too - it just manifests differently (silently missing geometry/hands around the 7th-10th
-    // reload) rather than the more obviously-attributable grey/missing textures seen on the current seam,
-    // which is presumably why it wasn't caught by a less exhaustive first test. psiCreateMapTextures
-    // registers every one of a level's textures on entry (no dedup) and nothing releases them on exit -
-    // repeatedly reloading the identical level exhausts this table on ANY version of this seam, including
-    // the original, untouched game code path. Real hardware likely never hits this in normal play (players
-    // don't reload the identical level many times back to back with no other transition in between).
+    // Should no longer be reachable in normal play: the original game never released level textures (every
+    // load registers ~500 of them, so the table filled on the 4th/5th load), but d3dReleaseLevelResources
+    // (called from maybeD3dShutdown on every level change) now frees all non-permanent slots. If this does
+    // fire, the occupied count below tells a real accumulation (near D3D_TEXTURE_TABLE_COUNT - something
+    // registering textures outside a level's lifetime, or a new allocator caller) apart from a corrupted
+    // free-slot scan (far lower).
     {
         int occupiedCount = 0;
         for (int i = 1; i < D3D_TEXTURE_TABLE_COUNT; i++) {
@@ -406,11 +407,7 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
         printf("[d3dSeam] texture table full - %d/%d slots actually occupied (requested %ux%u).\n",
                occupiedCount, D3D_TEXTURE_TABLE_COUNT - 1, width, height);
     }
-    D3DSeamTableExhaustedWarning("texture", "This is a KNOWN, pre-existing issue (confirmed via an A/B log "
-        "comparison against a clean pre-seam baseline, not just assumed): psiCreateMapTextures registers "
-        "every one of a level's textures on entry (no dedup) and nothing releases them on exit - repeatedly "
-        "reloading the identical level exhausts this table on any version of this codebase, including the "
-        "original game code. See RegisterTexture's own comment for the full investigation.");
+    D3DSeamTableExhaustedWarning("texture", D3DSEAM_TABLE_LEAK_CONTEXT);
     return 0;
 }
 
@@ -546,27 +543,24 @@ static inline uint32_t FloatToBits(float f) {
     return bits;
 }
 
-// KNOWN ISSUE (not something this seam work introduced): the vertex/index-buffer slot tables below have no
-// release path anywhere in the original binary - nothing ever marks a slot free again once allocated. The
-// original Break_Create/Break_Kill breakable-object system is also missing its cleanup half (Break_Kill is an
-// unfinished no-op stub in Break.cpp), so revisiting an already-played level segment re-creates its breakables
-// (and likely other placed-object types with the same gap) from scratch every time, leaking slots here until
-// the table fills up. parsemap.cpp's Place_Breakable case was pointed at the original, untouched Break_Create
-// to remove the ONE confirmed contributor, but the same underlying leak pattern may still apply to other
-// object types created via parsemap.cpp's dispatcher. This prints clearly (rather than just returning 0 and
-// letting some unrelated caller crash on the failure later, which is what was happening) so the failure is
-// immediately attributable if hit again.
+// Printed when one of the 2048-entry texture/vertex-buffer/index-buffer tables (or the 256-entry overlay quad
+// table) has no free slot. The original binary never released the first three at all - every level load
+// registered ~500 textures and one vertex + one index buffer per entity model into them and nothing ever
+// marked a slot free again, so they filled up after 4-5 level loads (grey/missing textures, missing geometry,
+// then a crash downstream of a 0 handle). d3dReleaseLevelResources (see its comment, near psiBlurScreen) now
+// frees every level-scoped slot on each level change, so this should no longer fire in normal play. It prints
+// clearly (rather than just returning 0 and letting some unrelated caller crash on the failure later) so any
+// remaining or new leak is immediately attributable.
+//
+// (The earlier theory recorded here - that Break.cpp's unfinished Break_Create/Break_Kill leaked vertex/index
+// buffer slots - was wrong: psiCreateEntityGfx is the only caller of either allocator. parsemap.cpp's
+// Place_Breakable case still routes to the original Break_Create because of that theory; it's harmless but
+// no longer needed for this issue.)
 void D3DSeamTableExhaustedWarning(const char *tableName, const char *extraContext) {
     printf("[d3dSeam] %s table is full - allocation failed.\n", tableName);
     if (extraContext != NULL)
         printf("          %s\n", extraContext);
 }
-
-#define D3DSEAM_VTX_IDX_LEAK_CONTEXT \
-    "This is a KNOWN, pre-existing issue: vertex/index buffer slots are never released, and revisiting an " \
-    "already-played level segment re-creates its objects (breakables etc.) without freeing the previous " \
-    "visit's. See parsemap.cpp's Place_Breakable comment and Break.cpp's Break_Kill (an unfinished stub) " \
-    "for the confirmed contributor."
 
 // Standard row-major 4x4 matrix product (out = base * chain), verified term-by-term against
 // maybeMultiplyMatrixChain's own decompiled single-link arithmetic. See d3dSetMatrix's comment for why this is
@@ -2205,6 +2199,18 @@ uint32_t d3dBeginEndAuxRenderPass(char begin, D3DMATRIX *rigidTransform, D3DMATR
     return Gfx_AuxRenderPassResult;
 }
 
+// Defined below psiBlurScreen (it needs that function's history-slot globals). Not an original function - see
+// its own comment for why it exists.
+static void d3dReleaseLevelResources(void);
+
+// The original is exactly the first three steps below. The trailing d3dReleaseLevelResources call is OUR
+// addition (see that function's comment): this function is only ever reached on a level change
+// (ResetMap_Load -> maybePsiResetResources -> maybeCleanupSystem -> here) or on the two XLaunchNewImage
+// relaunch paths (SetLaunchInfoAndLaunch / WriteStateFileAndLaunch), i.e. exactly the points where every
+// level-scoped D3D resource is dead, so it's the natural home for the bulk release the original never had.
+// The release runs last, after maybeResetRenderState/d3dBindBuffers have already unbound texture stages 0/1
+// and the stream/index buffers, so nothing freed here is still bound.
+//
 // AUTOINJECT
 void maybeD3dShutdown(void) {
     maybeResetRenderState(1);
@@ -2217,6 +2223,8 @@ void maybeD3dShutdown(void) {
     }
 
     d3dBindBuffers(0, 0);
+
+    d3dReleaseLevelResources();
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -2611,6 +2619,83 @@ void psiBlurScreen(int blurIntensity) {
             D3D8_DeferredTextureStateB = 1;
         }
     }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// d3dReleaseLevelResources (NOT an original function - our own addition, called from maybeD3dShutdown)
+// ---------------------------------------------------------------------------------------------------------------
+
+// Frees every level-scoped slot in the three 2048-entry D3D resource tables - textures whose refCount is 0
+// (i.e. everything except the handful d3dMarkTexturePermanent has pinned: the two fonts, the overlay fallback
+// texture and the two shadow/aux render targets), and ALL vertex and index buffers - plus psiBlurScreen's
+// three cached history-slot indices, which would otherwise be handed back to ReleaseTexture later and free a
+// slot the next level had since reused.
+//
+// WHY THIS EXISTS: the original binary has no release path for these tables at all. Exhaustively checked -
+// every function referencing any of the three table base addresses (by Ghidra xref, by immediate-operand
+// instruction search AND by raw byte-pattern search of the whole image), every caller of ReleaseTexture,
+// d3dCreateVertexBuffers and d3dCreateIndexBuffer, plus the whole level-change path (ResetMap_Load ->
+// maybePsiResetResources -> maybeCleanupSystem -> maybeD3dShutdown -> maybeResetRenderState). The only thing
+// that ever zeroes these tables is xboxInitGraphics' whole-Gfx memset at boot. maybePsiResetResources
+// resets every OTHER level-scoped mirror of them (the 2048-entry Tex[] and d3dGeometryObjs[] arrays,
+// NumXboxTexLoaded, NumXboxEntityGfxsCreated, ...) but not the D3D slot tables themselves.
+//
+// Meanwhile every level load registers ~500 textures (psiCreateMapTextures, one slot per sub-texture/animation
+// frame, no dedup across loads) and one vertex + one index buffer per entity model (psiCreateEntityGfx - the
+// ONLY caller of both allocators, so nothing in these two tables is anything but level data). Against 2047
+// slots that is exhaustion on the 4th or 5th load - exactly the observed "grey/missing textures after a few
+// reloads, then a crash downstream of a 0 handle" - and it reproduces identically with the original,
+// unpatched allocators (the registration sequence is byte-for-byte the same with and without this seam),
+// because the leak is in the game's own bookkeeping, not in the seam.
+//
+// Safe to do here because: maybeD3dShutdown has just unbound stages 0/1 and the stream/index buffers; the
+// heap holding all the freed resources' pixel/vertex data is about to be wiped by Mem_Init anyway; the
+// loading screen that stays up through the following level load draws only with DAT_002adf58 (permanent -
+// see ShowLoadProgressScreen), and the background-movie textures were already released by
+// maybeBackgroundMovieCleanup one call earlier. CXBX keys its host texture cache on (type, data address,
+// format, size) and periodically re-hashes contents, and it converts vertex/index buffers from Xbox memory
+// with content hashing at draw time - so reusing slot addresses can't hand back stale host resources.
+//
+// Per-slot bookkeeping mirrors ReleaseTexture exactly (BlockUntilNotBusy, running byte totals, pointer/size
+// zeroed) for textures; vertex/index slots are returned to their post-boot all-zero state, since the free-slot
+// test both allocators use is a NULL selfPtr/header.
+static void d3dReleaseLevelResources(void) {
+    int texturesFreed = 0;
+    for (int slot = 1; slot < D3D_TEXTURE_TABLE_COUNT; slot++) {
+        D3DTextureSlotRaw *texSlot = D3DTextureSlot(slot);
+        if (texSlot->baseTexture == NULL || texSlot->refCount != 0)
+            continue;
+        D3DResource_BlockUntilNotBusy(texSlot->baseTexture);
+        Gfx_TotalTextureBytesUsed -= texSlot->mipChainBytes;
+        texSlot->baseTexture = NULL;
+        texSlot->mipChainBytes = 0;
+        texturesFreed++;
+    }
+    for (int i = 0; i < 3; i++)
+        Gfx_BlurHistoryTextureSlots[i] = 0;
+
+    int vertexBuffersFreed = 0;
+    for (int slot = 1; slot < D3D_VERTEX_BUFFER_TABLE_COUNT; slot++) {
+        D3DVertexBufferSlotRaw *slotPtr = D3DVertexBufferSlot(slot);
+        if (slotPtr->selfPtr == NULL)
+            continue;
+        Gfx_VertexBufferBytesUsed -= slotPtr->byteSize;
+        memset(slotPtr, 0, sizeof(*slotPtr));
+        vertexBuffersFreed++;
+    }
+
+    int indexBuffersFreed = 0;
+    for (int slot = 1; slot < D3D_INDEX_BUFFER_TABLE_COUNT; slot++) {
+        D3DIndexBufferSlotRaw *slotPtr = D3DIndexBufferSlot(slot);
+        if (slotPtr->header == 0)
+            continue;
+        Gfx_IndexBufferBytesUsed -= slotPtr->byteSize;
+        memset(slotPtr, 0, sizeof(*slotPtr));
+        indexBuffersFreed++;
+    }
+
+    printf("[d3dSeam] level reset: released %d texture, %d vertex buffer and %d index buffer slots.\n",
+           texturesFreed, vertexBuffersFreed, indexBuffersFreed);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
