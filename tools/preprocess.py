@@ -76,7 +76,10 @@ def generate_auto_funcs(side, ghidra_funcs):
 
         al = ", ".join(arg_list)
         an = ", ".join(arg_names)
-        cc = "" if gf['calling_convention'] == "default" else gf['calling_convention']
+        # Ghidra sometimes reports "unknown" for functions it hasn't confidently analyzed a calling convention
+        # for (even when every parameter is plain stack storage) - treat that the same as "default" rather than
+        # emitting "unknown" as if it were a real keyword, which produces invalid C++.
+        cc = "" if gf['calling_convention'] in ("default", "unknown") else gf['calling_convention']
 
         if "_Handler" in gf['name']:
             cc = "__cdecl" # HACKHACKHACK not sure if these are all cdecl or stdcall
