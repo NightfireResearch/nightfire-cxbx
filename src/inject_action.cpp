@@ -8,6 +8,7 @@
 #include "action/sound/music.h"
 #include "action/ui/ui.h"
 #include "action/engine/psiFile.h"
+#include "action/engine/psiSave.h"
 #include "action/game/view.h"
 #include "action/game/obj/car.h"
 #include "action/game/obj/Light.h"

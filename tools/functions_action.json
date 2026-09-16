@@ -48480,13 +48480,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3880",
+        "name": "SaveEnum_GetNextEntry",
         "address": "0x000e3880",
-        "calling_convention": "unknown",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "char *",
         "param_types": [],
-        "prototype_string": "undefined FUN_000e3880()",
+        "prototype_string": "char * __stdcall SaveEnum_GetNextEntry(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
