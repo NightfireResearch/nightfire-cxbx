@@ -5,6 +5,7 @@
 #include "game/mp/multiplayer.h" // for MPSettings
 #include "ui/MenuManager.h"
 #include "engine/Text.h"
+#include "engine/XboxSettings.h"
 
 #include <cstring>
 #include <cstdio>
@@ -686,6 +687,11 @@ void mainloop(void) {
   // rate calculation, which agree with each other and disagree with the ternary this used to have here.
   // Despite the name, Graphics_IsPalI() reads true for everywhere except the PAL-I region specifically.
   int refreshRate = Graphics_IsPalI() ? 60 : 50;
+
+  int fpsOverride = Settings_GetFPSOverride();
+  if (fpsOverride > 0)
+    refreshRate = fpsOverride;
+
   GS_SetRefreshRate(refreshRate, refreshRate);
   GameFlow_Main();
 }

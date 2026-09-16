@@ -51142,13 +51142,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000ead06",
+        "name": "LanguageNVSetting",
         "address": "0x000ead06",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "uint32_t",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall FUN_000ead06(void)",
+        "prototype_string": "uint32_t __stdcall LanguageNVSetting(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
