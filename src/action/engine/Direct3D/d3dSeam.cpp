@@ -402,6 +402,20 @@ static inline uint32_t FloatToBits(float f) {
     return bits;
 }
 
+// Standard row-major 4x4 matrix product (out = base * chain), verified term-by-term against
+// maybeMultiplyMatrixChain's own decompiled single-link arithmetic. See d3dSetMatrix's comment for why this is
+// implemented directly rather than calling that function.
+static void Multiply4x4RowMajor(const D3DMATRIX *base, const D3DMATRIX *chain, D3DMATRIX *out) {
+    for (int row = 0; row < 4; row++) {
+        for (int col = 0; col < 4; col++) {
+            out->f[row * 4 + col] = base->f[row * 4 + 0] * chain->f[0 * 4 + col]
+                                   + base->f[row * 4 + 1] * chain->f[1 * 4 + col]
+                                   + base->f[row * 4 + 2] * chain->f[2 * 4 + col]
+                                   + base->f[row * 4 + 3] * chain->f[3 * 4 + col];
+        }
+    }
+}
+
 static void RecomputeFogConstant66() {
     float delta = Gfx_FogNearFarDelta;
     float invDelta = (delta <= -0.001f || delta >= 0.001f) ? (1.0f / delta) : BitsToFloat(0x4479ffff);
@@ -781,11 +795,20 @@ void d3dSetProjectionMatrix(D3DMATRIX *projMtx) {
     D3DDevice_SetDepthClipPlanes(FloatToBits(depthClipNear), 0x4b7fffffu, 1);
 }
 
-// Sets the active matrix (shader constant 0x60, combined with the cached "view" matrix via
-// maybeMultiplyMatrixChain), plus a secondary half-scaled 2x3 basis constant (register 100) derived from a
-// separately-cached matrix. d3dMtx is passed straight through to maybeMultiplyMatrixChain exactly as the
-// original did (including its cast to the chain-node type) - whatever that function does with memory past the
-// matrix is inherited unchanged from the original caller, not something introduced here.
+// Sets the active matrix (shader constant 0x60, combined with the cached "view" matrix), plus a secondary
+// half-scaled 2x3 basis constant (register 100) derived from a separately-cached matrix.
+//
+// The combine step deliberately does NOT call maybeMultiplyMatrixChain, despite that being what the original
+// decompile shows. That function casts its third argument to MatrixChainNode* and, for anything beyond a
+// single link, walks a "next chain link" pointer read from a local scratch/ping-pong buffer table whose exact
+// construction we were never able to fully verify from disassembly alone - and empirically, feeding it a
+// properly NULL-terminated single-link node (confirmed via Ghidra's emulator not to fault) still produced
+// wrong, non-crashing results here: a real, confirmed bug (off-origin/rotating objects transforming
+// incorrectly, wrong frustum culling) that survived two separate "pad the chain node" fixes at different call
+// sites (d3dSetWorldMatrix, and the pre-existing psiDrawObjectMatrix in psiGraphics.cpp). Rather than keep
+// guessing at that function's internals, the single-link multiply itself is plain, unambiguous arithmetic we
+// DID fully verify against the decompile (output = base * chain, standard row-major 4x4 product) - so it's
+// implemented directly below instead, sidestepping the chain-walk risk entirely.
 //
 // AUTOINJECT
 void d3dSetMatrix(D3DMATRIX *d3dMtx) {
@@ -793,13 +816,8 @@ void d3dSetMatrix(D3DMATRIX *d3dMtx) {
     Gfx_MatrixGenFlag1 = 0xFFFFFFFFu;
     Gfx_MatrixGenFlag2 = 0xFFFFFFFFu;
 
-    // d3dMtx is passed straight through, cast to MatrixChainNode* exactly like the original - if d3dMtx points
-    // into the original game's own memory (a still-untouched caller), whatever real "next chain link" data
-    // follows it is preserved unchanged. Any NEW caller we add here needs its own D3DMATRIX to be followed by
-    // an explicit NULL/real MatrixChainNode - see d3dSetWorldMatrix's own comment for why (a bare local
-    // D3DMATRIX with no trailing field caused real transform corruption for anything off-origin).
     D3DMATRIX combined;
-    maybeMultiplyMatrixChain(&combined, Gfx_ViewMatrixCache, (MatrixChainNode *)d3dMtx);
+    Multiply4x4RowMajor(Gfx_ViewMatrixCache, d3dMtx, &combined);
 
     if (D3D_DeviceReady != 0)
         D3DDevice_SetVertexShaderConstant4(0x60, &combined);
@@ -829,22 +847,14 @@ void d3dSetMatrix(D3DMATRIX *d3dMtx) {
 //
 // AUTOINJECT
 void d3dSetWorldMatrix(D3DMATRIX *worldMtx) {
-    // d3dSetMatrix internally casts whatever pointer it's given to MatrixChainNode* and passes it straight
-    // into maybeMultiplyMatrixChain, which reads a "next chain link" pointer from the 4 bytes immediately
-    // following the matrix. That's harmless when d3dSetMatrix is called with the original game's own pointers
-    // (their trailing memory has whatever layout the original compiler put there, unchanged) - but a bare
-    // local D3DMATRIX declared here has no such trailing field, so whatever garbage our own compiler happens
-    // to put after it gets misread as a pointer and walked. Confirmed via Ghidra's emulator: a real
-    // MatrixChainNode with an explicit NULL parent completes the multiply in a single iteration with no
-    // further reads past the matrix - so build one explicitly rather than passing a bare D3DMATRIX*. This bit
-    // us for real: objects away from the origin were transforming incorrectly until this was fixed.
-    struct { D3DMATRIX matrix; void *parent; } translationOnly;
-    d3dMatrixIdentity(&translationOnly.matrix);
-    translationOnly.matrix.f[3] = worldMtx->f[3];
-    translationOnly.matrix.f[7] = worldMtx->f[7];
-    translationOnly.matrix.f[11] = worldMtx->f[11];
-    translationOnly.parent = NULL;
-    d3dSetMatrix(&translationOnly.matrix);
+    // No MatrixChainNode padding needed here - d3dSetMatrix computes its combine step directly rather than
+    // going through maybeMultiplyMatrixChain (see its own comment for why), so a plain D3DMATRIX is safe.
+    D3DMATRIX translationOnly;
+    d3dMatrixIdentity(&translationOnly);
+    translationOnly.f[3] = worldMtx->f[3];
+    translationOnly.f[7] = worldMtx->f[7];
+    translationOnly.f[11] = worldMtx->f[11];
+    d3dSetMatrix(&translationOnly);
 
     float constants[12];
     memcpy(constants, worldMtx, sizeof(constants));
