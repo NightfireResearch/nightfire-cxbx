@@ -48532,7 +48532,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3aa0",
+        "name": "d3dSetProjectionMatrix",
         "address": "0x000e3aa0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48540,7 +48540,7 @@
         "param_types": [
             "D3DMATRIX *"
         ],
-        "prototype_string": "void __cdecl FUN_000e3aa0(D3DMATRIX * param_1)",
+        "prototype_string": "void __cdecl d3dSetProjectionMatrix(D3DMATRIX * param_1)",
         "parameters": [
             "[D3DMATRIX * param_1@Stack[0x4]:4]"
         ],
@@ -48964,7 +48964,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e4d50",
+        "name": "d3dSetWorldMatrix",
         "address": "0x000e4d50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48972,7 +48972,7 @@
         "param_types": [
             "undefined4 *"
         ],
-        "prototype_string": "void __cdecl FUN_000e4d50(undefined4 * param_1)",
+        "prototype_string": "void __cdecl d3dSetWorldMatrix(undefined4 * param_1)",
         "parameters": [
             "[undefined4 * param_1@Stack[0x4]:4]"
         ],

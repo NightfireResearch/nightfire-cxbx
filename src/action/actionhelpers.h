@@ -36,6 +36,7 @@ typedef struct AnimState AnimState;
 typedef struct sprite sprite;
 typedef struct SpriteInfo SpriteInfo;
 typedef struct _D3DMATRIX D3DMATRIX;
+typedef struct MatrixChainNode MatrixChainNode;
 typedef struct M_CONTROL M_CONTROL;
 typedef struct M_ITEM M_ITEM;
 typedef struct M_MANAGER M_MANAGER;

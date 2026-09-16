@@ -2,6 +2,7 @@
 #define D3DSEAM_H_
 
 #include "../../actionhelpers.h"
+#include "d3dhelpers.h"
 
 // "Thin seam" reimplementation of Eurocom's own small wrapper functions that sit directly on top of the
 // statically-linked D3D8 library CXBX still hooks via its own OOVPA pattern matching. See d3dSeam.cpp's
@@ -71,5 +72,22 @@ void d3dSetFogNear(float near_);
 void d3dSetFogFar(float far_);
 void gfxSetCharacterLightIntensity(float intensity);
 void d3dBeginFrame(void);
+
+// Matrices and stream sources. d3dSetMatrix combines the given matrix with a cached "view" matrix (shader
+// constant 0x60) plus a secondary basis constant (register 100); d3dSetProjectionMatrix additionally derives
+// the fog Z-scale and depth-clip planes from the projection matrix; d3dSetWorldMatrix splits a world matrix
+// into translation (via d3dSetMatrix) and rotation-only (shader constant 0) parts.
+//
+// maybeBuildAndSetModelViewProjectionMtx (constant 0x77) is deliberately NOT here yet - it passes its own
+// local stack variable through maybeMultiplyMatrixChain's chain-node parameter, and that function's internal
+// chain-walk semantics haven't been fully verified; faithfully reproducing it needs matching the original
+// compiler's exact stack layout, which isn't reliable with plain C++ locals.
+void d3dSetProjectionMatrix(D3DMATRIX *projMtx);
+void d3dSetMatrix(D3DMATRIX *d3dMtx);
+void d3dSetWorldMatrix(D3DMATRIX *worldMtx);
+void d3dSetStreamSources(int baseIndex, int stream1Offset, float stream1Stride, int stream2Offset, float stream2Stride,
+                          int stream3Offset, float stream3Stride, int stream4Offset, float stream4Stride,
+                          int stream5Offset, float stream5Stride, int stream6Offset, float stream6Stride,
+                          int stream7Offset, float stream7Stride, int stream8Offset, float stream8Stride);
 
 #endif // D3DSEAM_H_

@@ -1,4 +1,5 @@
 #include "d3dSeam.h"
+#include "d3dhelpers.h"
 #include "../../actionhelpers.h"
 
 #include <stdint.h>
@@ -39,6 +40,8 @@
 #define D3DDevice_Swap_ADDR                     0x00103730u
 #define D3DDevice_SetTexture_ADDR               0x00103eb0u
 #define D3DDevice_SetVertexShaderConstant1_ADDR 0x00102570u
+#define D3DDevice_SetDepthClipPlanes_ADDR       0x001019f0u
+#define D3DDevice_SetStreamSource_ADDR          0x001027a0u
 
 #define Gfx_D3DLastError          U32_AT(0x002C5750) // Gfx.D3DLastError
 #define Gfx_TotalTextureBytesUsed U32_AT(0x002C6FE0) // Gfx.field6075_0x1890 - running total, informational only
@@ -108,6 +111,40 @@ double timestamp(void);
 // __fastcall function pointer works here without needing a hand-written asm trampoline.
 typedef void(__fastcall *D3DDevice_SetVertexShaderConstant1Fn)(uint32_t constantIndex, float *pConstants);
 #define D3DDevice_SetVertexShaderConstant1 ((D3DDevice_SetVertexShaderConstant1Fn)D3DDevice_SetVertexShaderConstant1_ADDR)
+
+// D3DDevice_SetVertexShaderConstant4(constant index in ECX, pointer to one D3DMATRIX - 16 floats - in EDX) -
+// confirmed via raw disassembly: reads exactly one MMX-copied D3DMATRIX through EDX, no stack args, plain RET.
+// Same genuine __fastcall match as SetVertexShaderConstant1 above.
+typedef void(__fastcall *D3DDevice_SetVertexShaderConstant4Fn)(uint32_t constantIndex, void *pMatrix);
+#define D3DDevice_SetVertexShaderConstant4 ((D3DDevice_SetVertexShaderConstant4Fn)0x001025d0u)
+
+// D3DDevice_SetVertexShaderConstantNotInline(constant index in ECX, pointer in EDX, count-in-dwords on the
+// stack) - confirmed via raw disassembly: exactly matches MSVC's own __fastcall ABI for a 3-argument function
+// (first two register args, third stacked, callee cleans up RET 0x4) - another case needing no asm trampoline.
+typedef void(__fastcall *D3DDevice_SetVertexShaderConstantNotInlineFn)(uint32_t constantIndex, void *pData, uint32_t countDwords);
+#define D3DDevice_SetVertexShaderConstantNotInline ((D3DDevice_SetVertexShaderConstantNotInlineFn)0x00102760u)
+
+// D3DDevice_SetDepthClipPlanes(uint, uint, uint) and D3DDevice_SetStreamSource(int streamNumber, void*
+// vertexBuffer, int stride) - both confirmed plain __stdcall via raw disassembly (RET 0xc, matching 3 params).
+typedef void(__stdcall *D3DDevice_SetDepthClipPlanesFn)(uint32_t param1, uint32_t param2, uint32_t param3);
+#define D3DDevice_SetDepthClipPlanes ((D3DDevice_SetDepthClipPlanesFn)D3DDevice_SetDepthClipPlanes_ADDR)
+
+typedef void(__stdcall *D3DDevice_SetStreamSourceFn)(int streamNumber, void *vertexBuffer, int stride);
+#define D3DDevice_SetStreamSource ((D3DDevice_SetStreamSourceFn)D3DDevice_SetStreamSource_ADDR)
+
+// ---------------------------------------------------------------------------------------------------------------
+// Pure-math Eurocom matrix helpers (Global namespace, not D3D8::) - never previously declared/called from any
+// reimplemented code in this project, so first-time AUTOGEN forward declarations rather than plain ones (see
+// timestamp() above for the contrast - that one already had a body generated elsewhere). All confirmed via raw
+// disassembly to be plain __cdecl, stack-only arguments, no register-convention surprises. We call these but
+// deliberately don't reimplement or need to understand their internals - they remain completely untouched.
+// ---------------------------------------------------------------------------------------------------------------
+// AUTOGEN
+void maybeD3DMATRIXcopy(undefined4 *dest, undefined4 *src);
+// AUTOGEN
+void d3dMatrixIdentity(D3DMATRIX *mtx);
+// AUTOGEN
+void maybeMultiplyMatrixChain(D3DMATRIX *mtxOut, D3DMATRIX *base, MatrixChainNode *mtxChain);
 
 // D3DDevice_SetRenderState_Simple(NV2A method header word in ECX, value in EDX) - the generic, runtime-method
 // render-state setter. Everything else in the D3DDevice_SetRenderState_XXX family takes its single value on
@@ -335,6 +372,21 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 #define Gfx_MiscResetFlag U32_AT(0x002FF3A8)         // not in the Gfx struct - untraced meaning, always set to -1 here
 #define Gfx_CurrentStreamBuffer U32_AT(0x002C6F88)   // Gfx.currentStreamBuffer
 #define Gfx_CurrentIndexBuffer U32_AT(0x002C6F8C)    // Gfx.currentIndexBuffer
+
+// Projection matrix. Cache A is write-only from here (presumably read by a not-yet-ported function); cache B
+// is scaled in place by Gfx_FogScale and feeds the depth-clip-plane calculation - both confirmed via raw
+// disassembly, none of this is really "in" the Gfx struct despite how it reads in decompile.
+#define Gfx_ProjMatrixCacheA ((D3DMATRIX*)0x002FF0EC)
+#define Gfx_ProjMatrixCacheB ((D3DMATRIX*)0x002FF12C)
+
+#define Gfx_d3dActiveMatrix ((D3DMATRIX*)0x002FF22C) // Gfx.d3dActiveMatrix
+#define Gfx_MatrixGenFlag1 U32_AT(0x002FF270)        // untraced meaning - always set to -1 by d3dSetMatrix
+#define Gfx_MatrixGenFlag2 U32_AT(0x002FF278)        // ditto
+#define Gfx_ViewMatrixCache ((D3DMATRIX*)0x002FF1EC) // Gfx.field158568_0x39a9c - the "base" d3dSetMatrix combines the new matrix with
+#define Gfx_SecondaryBasisMatrix ((D3DMATRIX*)0x002FF16C) // Gfx.field158566_0x39a1c - feeds constant register 100's half-scaled 2x3 basis
+
+#define Gfx_StreamStrideConstants ((float*)0x002FF358)  // Gfx.field_0x39c08 - 8 floats, shader constant 0x73
+#define Gfx_d3dstreamDataPtr ((void**)0x002DECF8)        // Gfx.d3dstreamDataPtr - array of stream-data pointers, stride 9 dwords per slot
 
 // Bit pattern for the fog constant's "avoid divide-by-zero" sentinel value - written as a raw uint32_t by the
 // original rather than a float literal, so reproduced bit-for-bit rather than approximated with a decimal one.
@@ -689,5 +741,133 @@ void d3dBeginFrame(void) {
 
     if (D3D_DeviceReady != 0)
         D3DDevice_SetVertexShaderConstant1(0x75, Gfx_ShaderConstant75);
+    Gfx_D3DLastError = 0;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Matrices and stream sources
+// ---------------------------------------------------------------------------------------------------------------
+
+// Sets the projection matrix, caches two copies of it, and derives Gfx_FogScale (also used by d3dSetFogNear/
+// Far) plus the near/far depth-clip planes from it. Not yet named/traced beyond that - untraced why two
+// separate cached copies exist (cache A is never read again within this function).
+//
+// AUTOINJECT
+void d3dSetProjectionMatrix(D3DMATRIX *projMtx) {
+    memcpy(Gfx_ProjMatrixCacheA, projMtx, sizeof(D3DMATRIX));
+    memcpy(Gfx_ProjMatrixCacheB, projMtx, sizeof(D3DMATRIX));
+
+    D3DMATRIX *cacheB = Gfx_ProjMatrixCacheB;
+    float scaleBasis = (cacheB->f[14] + cacheB->f[15]) * ((cacheB->f[15] - cacheB->f[11]) / (cacheB->f[10] - cacheB->f[14]));
+    if (scaleBasis == 0.0f)
+        scaleBasis = 1.0f;
+    Gfx_FogScale = 16777215.0f / scaleBasis;
+
+    for (int i = 0; i < 16; i++)
+        cacheB->f[i] *= Gfx_FogScale;
+
+    uint32_t depthClipNear = (uint32_t)((-(projMtx->f[11] / projMtx->f[10]) * 16777215.0f) / -(projMtx->f[11] / (projMtx->f[10] - 1.0f)));
+    D3DDevice_SetDepthClipPlanes(depthClipNear, 0x4b7fffffu, 1);
+}
+
+// Sets the active matrix (shader constant 0x60, combined with the cached "view" matrix via
+// maybeMultiplyMatrixChain), plus a secondary half-scaled 2x3 basis constant (register 100) derived from a
+// separately-cached matrix. d3dMtx is passed straight through to maybeMultiplyMatrixChain exactly as the
+// original did (including its cast to the chain-node type) - whatever that function does with memory past the
+// matrix is inherited unchanged from the original caller, not something introduced here.
+//
+// AUTOINJECT
+void d3dSetMatrix(D3DMATRIX *d3dMtx) {
+    memcpy(Gfx_d3dActiveMatrix, d3dMtx, sizeof(D3DMATRIX));
+    Gfx_MatrixGenFlag1 = 0xFFFFFFFFu;
+    Gfx_MatrixGenFlag2 = 0xFFFFFFFFu;
+
+    D3DMATRIX combined;
+    maybeMultiplyMatrixChain(&combined, Gfx_ViewMatrixCache, (MatrixChainNode *)d3dMtx);
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShaderConstant4(0x60, &combined);
+    Gfx_D3DLastError = 0;
+
+    D3DMATRIX secondaryBasis;
+    maybeD3DMATRIXcopy((undefined4 *)&secondaryBasis, (undefined4 *)Gfx_SecondaryBasisMatrix);
+
+    float constants[8];
+    constants[0] = secondaryBasis.f[0] * 0.5f;
+    constants[1] = secondaryBasis.f[4] * 0.5f;
+    constants[2] = secondaryBasis.f[8] * 0.5f;
+    constants[3] = 0.5f;
+    constants[4] = secondaryBasis.f[1] * 0.5f;
+    constants[5] = secondaryBasis.f[5] * 0.5f;
+    constants[6] = secondaryBasis.f[9] * 0.5f;
+    constants[7] = 0.5f;
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShaderConstantNotInline(100, constants, 8);
+    Gfx_D3DLastError = 0;
+}
+
+// Splits a world matrix into a translation-only matrix (forwarded to d3dSetMatrix) and a rotation-only 3x4
+// block (translation column zeroed, sent directly as shader constant 0 - likely for transforming normals
+// without translation affecting them).
+//
+// AUTOINJECT
+void d3dSetWorldMatrix(D3DMATRIX *worldMtx) {
+    D3DMATRIX translationOnly;
+    d3dMatrixIdentity(&translationOnly);
+    translationOnly.f[3] = worldMtx->f[3];
+    translationOnly.f[7] = worldMtx->f[7];
+    translationOnly.f[11] = worldMtx->f[11];
+    d3dSetMatrix(&translationOnly);
+
+    float constants[12];
+    memcpy(constants, worldMtx, sizeof(constants));
+    constants[3] = 0.0f;
+    constants[7] = 0.0f;
+    constants[11] = 0.0f;
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShaderConstantNotInline(0, constants, 0xc);
+    Gfx_D3DLastError = 0;
+}
+
+// AUTOINJECT
+void d3dSetStreamSources(int baseIndex, int stream1Offset, float stream1Stride, int stream2Offset, float stream2Stride,
+                          int stream3Offset, float stream3Stride, int stream4Offset, float stream4Stride,
+                          int stream5Offset, float stream5Stride, int stream6Offset, float stream6Stride,
+                          int stream7Offset, float stream7Stride, int stream8Offset, float stream8Stride) {
+    if (baseIndex == 0) {
+        Gfx_MiscModeFlags &= ~0x1u;
+        for (int stream = 1; stream <= 8 && D3D_DeviceReady != 0; stream++) {
+            D3DDevice_SetStreamSource(stream, NULL, 6);
+            Gfx_D3DLastError = 0;
+        }
+        Gfx_D3DLastError = 0;
+        return;
+    }
+
+    // Strides are stored pre-scaled by a fixed 1/32768-ish constant, matching the original exactly.
+    Gfx_StreamStrideConstants[0] = stream1Stride * 3.051851e-05f;
+    Gfx_StreamStrideConstants[1] = stream2Stride * 3.051851e-05f;
+    Gfx_StreamStrideConstants[2] = stream3Stride * 3.051851e-05f;
+    Gfx_StreamStrideConstants[3] = stream4Stride * 3.051851e-05f;
+    Gfx_StreamStrideConstants[4] = stream5Stride * 3.051851e-05f;
+    Gfx_StreamStrideConstants[5] = stream6Stride * 3.051851e-05f;
+    Gfx_StreamStrideConstants[6] = stream7Stride * 3.051851e-05f;
+    Gfx_StreamStrideConstants[7] = stream8Stride * 3.051851e-05f;
+
+    if (D3D_DeviceReady != 0)
+        D3DDevice_SetVertexShaderConstantNotInline(0x73, Gfx_StreamStrideConstants, 8);
+
+    Gfx_MiscModeFlags |= 0x1;
+    Gfx_D3DLastError = 0;
+
+    int streamOffsets[8] = { stream1Offset, stream2Offset, stream3Offset, stream4Offset,
+                              stream5Offset, stream6Offset, stream7Offset, stream8Offset };
+    for (int i = 0; i < 8 && D3D_DeviceReady != 0; i++) {
+        void *dataPtr = Gfx_d3dstreamDataPtr[(streamOffsets[i] + baseIndex) * 9];
+        D3DDevice_SetStreamSource(i + 1, dataPtr, 6);
+        Gfx_D3DLastError = 0;
+    }
     Gfx_D3DLastError = 0;
 }
