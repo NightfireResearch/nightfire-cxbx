@@ -381,16 +381,24 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
         return slot;
     }
 
-    // CONFIRMED (not a seam bug): psiCreateMapTextures registers every one of a level's textures on entry with
-    // no "already loaded" check, and nothing anywhere in the compiled binary releases them again on exit -
-    // exhaustively checked every caller of ReleaseTexture/D3DResource_Release and every map-unload/reset-style
-    // function findable by name; none of them touch the texture table. Same category of pre-existing,
-    // level-scoped-resource-never-freed gap as the known Break_Create/Break_Kill leak, just for textures
-    // instead of breakables - re-entering a level re-registers its whole texture set from scratch each time.
-    D3DSeamTableExhaustedWarning("texture", "This is a KNOWN, pre-existing issue: psiCreateMapTextures "
-        "registers every one of a level's textures on entry (no dedup) and nothing releases them on exit - "
-        "re-entering a level a few times exhausts this table. Same category as the known Break_Create/"
-        "Break_Kill breakable-object leak, just for level textures instead.");
+    // RETRACTED the earlier "confirmed pre-existing, not a seam bug" claim here - user bisection proved a
+    // clean baseline (967f98f, well before this seam's vertex-buffer/texture/render-target work) survives
+    // 30+ level reloads with zero issue, while every commit since fails within 2-4 reloads. This IS a seam
+    // regression; root cause not yet found. This diagnostic now also counts genuinely-occupied slots to tell
+    // real accumulation (count near D3D_TEXTURE_TABLE_COUNT) apart from a free-slot-scan-corrupting bug
+    // (count far lower than the table appearing full would suggest).
+    {
+        int occupiedCount = 0;
+        for (int i = 1; i < D3D_TEXTURE_TABLE_COUNT; i++) {
+            if (D3DTextureSlot(i)->baseTexture != NULL)
+                occupiedCount++;
+        }
+        printf("[d3dSeam] texture table full - %d/%d slots actually occupied (requested %ux%u).\n",
+               occupiedCount, D3D_TEXTURE_TABLE_COUNT - 1, width, height);
+    }
+    D3DSeamTableExhaustedWarning("texture", "Root cause under investigation - see the occupied-slot count "
+        "just printed above: near-full means genuine accumulation (a leak), far lower means something is "
+        "corrupting the free-slot scan itself.");
     return 0;
 }
 
