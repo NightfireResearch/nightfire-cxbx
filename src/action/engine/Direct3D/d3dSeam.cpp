@@ -23,7 +23,7 @@
 //    after every level reset, so the log stays bounded no matter how long the game runs.
 // ---------------------------------------------------------------------------------------------------------------
 #ifndef D3DSEAM_TRACE
-#define D3DSEAM_TRACE 1
+#define D3DSEAM_TRACE 0
 #endif
 #define D3DSEAM_TRACE_DETAIL_FRAMES 4
 #define D3DSEAM_TRACE_DETAIL_DELAY  600  // frames after a level reset before the detailed window opens (past the loading screen)
@@ -704,8 +704,8 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 // underlying D3D8-internal globals they drive once changed.
 #define Gfx_DeferredTexStateA U32_AT(0x002C6FAC) // Gfx.field6059_0x185c
 #define Gfx_DeferredTexStateB U32_AT(0x002C6FB0) // Gfx.field6060_0x1860
-#define D3D8_DeferredTextureState D3D8_TRACED("D3D8_DeferredTextureState", 0x001117D0) // D3D8::D3D_g_DeferredTextureState
-#define D3D8_DeferredTextureStateB D3D8_TRACED("D3D8_DeferredTextureStateB", 0x001117D4) // not in the Gfx struct - a separate D3D8-internal global
+#define D3D8_Stage0_AddressU D3D8_TRACED("D3D8_Stage0_AddressU", 0x001117D0) // D3D8::D3D_g_DeferredTextureState
+#define D3D8_Stage0_AddressV D3D8_TRACED("D3D8_Stage0_AddressV", 0x001117D4) // not in the Gfx struct - a separate D3D8-internal global
 
 // A trio of cache fields (matching field names in d3dSetup too) all set together, driving one opaque D3D8
 // register write (method 0x40358) - untraced meaning beyond that.
@@ -2171,7 +2171,7 @@ void d3dResetTransformCaches(void) {
 // disassembly (decompile can't show them at all, since it doesn't understand that function's ECX/EDX
 // convention) - param_1==1 and param_1==2 share a tail (constant 0x40348 method gets value 1); any other
 // param_1 value takes a separate, early-returning path (same method gets value 0x303 instead).
-#define D3D8_FogState_LastValue D3D8_TRACED("D3D8_FogState_LastValue", 0x00111AF8)
+#define D3D8_RS_BlendOp D3D8_TRACED("D3D8_RS_BlendOp", 0x00111AF8)
 
 // AUTOINJECT
 void d3dSetupRenderStatesAndFog(int param1) {
@@ -2204,14 +2204,14 @@ void d3dSetupRenderStatesAndFog(int param1) {
             return;
         }
         D3D_SetRenderStateSimple(0x40350, 0x8006);
-        D3D8_FogState_LastValue = 0x8006;
+        D3D8_RS_BlendOp = 0x8006;
     } else if (param1 != 2) {
         if (D3D_DeviceReady == 0) {
             Gfx_D3DLastError = 0;
             return;
         }
         D3D_SetRenderStateSimple(0x40350, 0x8006);
-        D3D8_FogState_LastValue = 0x8006;
+        D3D8_RS_BlendOp = 0x8006;
         Gfx_D3DLastError = 0;
         if (D3D_DeviceReady == 0) {
             Gfx_D3DLastError = 0;
@@ -2233,7 +2233,7 @@ void d3dSetupRenderStatesAndFog(int param1) {
             return;
         }
         D3D_SetRenderStateSimple(0x40350, 0x800b);
-        D3D8_FogState_LastValue = 0x800b;
+        D3D8_RS_BlendOp = 0x800b;
     }
 
     // Shared tail: only reached for param1==1 or param1==2.
@@ -2299,8 +2299,8 @@ void maybeResetRenderState(char param1) {
         Gfx_D3DLastError = 0;
         if (D3D_DeviceReady != 0) {
             D3D8_PushBufferDirtyFlags |= 1;
-            D3D8_DeferredTextureState = 1;
-            D3D8_DeferredTextureStateB = 1;
+            D3D8_Stage0_AddressU = 1;
+            D3D8_Stage0_AddressV = 1;
         }
     }
 
@@ -2346,8 +2346,8 @@ void d3dSetDeferredTextureState(int param1, int param2) {
         Gfx_D3DLastError = 0;
         if (D3D_DeviceReady != 0) {
             D3D8_PushBufferDirtyFlags |= 1;
-            D3D8_DeferredTextureState = (param1 == 0) ? 3 : 1;
-            D3D8_DeferredTextureStateB = (param2 == 0) ? 3 : 1;
+            D3D8_Stage0_AddressU = (param1 == 0) ? 3 : 1;
+            D3D8_Stage0_AddressV = (param2 == 0) ? 3 : 1;
         }
     }
 }
@@ -2387,8 +2387,8 @@ void d3dSetTextureWithBorderColor(int textureSlot, int borderColour) {
     Gfx_D3DLastError = 0;
     if (D3D_DeviceReady != 0) {
         D3D8_PushBufferDirtyFlags |= 1;
-        D3D8_DeferredTextureState = 4;
-        D3D8_DeferredTextureStateB = 4;
+        D3D8_Stage0_AddressU = 4;
+        D3D8_Stage0_AddressV = 4;
         D3DDevice_SetTextureState_BorderColor(0, (uint32_t)borderColour);
         Gfx_D3DLastError = 0; // confirmed via raw disasm: only cleared here if the device was actually ready
     }
@@ -2521,9 +2521,9 @@ void maybeD3dShutdown(void) {
 // ---------------------------------------------------------------------------------------------------------------
 
 #define D3D8_RS_0x4033c_LastValue D3D8_TRACED("D3D8_RS_0x4033c_LastValue", 0x00111AB8) // opaque, untraced; only ever written here
-#define D3D8_RS_ZBiasEnableFlag D3D8_TRACED("D3D8_RS_ZBiasEnableFlag", 0x00111ABC) // D3D8::D3DRS_ZBias - opaque, untraced; only ever written here
+#define D3D8_RS_AlphaBlendEnable D3D8_TRACED("D3D8_RS_AlphaBlendEnable", 0x00111ABC) // X_D3DRS_ALPHABLENDENABLE (render-state index 59); only ever written here
 #define D3D8_RS_0x40300_LastValue D3D8_TRACED("D3D8_RS_0x40300_LastValue", 0x00111AC0) // opaque, untraced; only ever written here
-#define D3D8_RS_YuvEnableAltFlag D3D8_TRACED("D3D8_RS_YuvEnableAltFlag", 0x00111AD4) // D3D8::D3DRS_YuvEnable - opaque, untraced; a different register to D3DDevice_SetRenderState_YuvEnable's own (see d3dSetYuvEnable) - this one is poked directly via D3D_SetRenderStateSimple instead
+#define D3D8_RS_DitherEnable D3D8_TRACED("D3D8_RS_DitherEnable", 0x00111AD4) // X_D3DRS_DITHERENABLE (render-state index 65), poked directly via D3D_SetRenderStateSimple
 #define D3D8_ShaderConstantSubIndexTable ((int32_t*)0x001B5208) // untraced - ~53 ints, each added to 0x60 to form a shader-constant register index
 
 // Per-texture-stage-like opaque D3D8-internal registers, four groups spaced 0x80 apart, written unconditionally
@@ -2582,7 +2582,7 @@ void d3dSetup(void) {
         Gfx_D3DLastError = 0;
 
         D3D_SetRenderStateSimple(0x40304, 1);
-        D3D8_RS_ZBiasEnableFlag = 1;
+        D3D8_RS_AlphaBlendEnable = 1;
         Gfx_D3DLastError = 0;
 
         D3D_SetRenderStateSimple(0x40300, 1);
@@ -2590,11 +2590,11 @@ void d3dSetup(void) {
         Gfx_D3DLastError = 0;
 
         D3D_SetRenderStateSimple(0x40350, 0x8006);
-        D3D8_FogState_LastValue = 0x8006;
+        D3D8_RS_BlendOp = 0x8006;
         Gfx_D3DLastError = 0;
 
         D3D_SetRenderStateSimple(0x40310, 1);
-        D3D8_RS_YuvEnableAltFlag = 1;
+        D3D8_RS_DitherEnable = 1;
         Gfx_D3DLastError = 0;
 
         D3DDevice_SetRenderState_ZEnable(2);
@@ -2712,8 +2712,8 @@ void d3dSetup(void) {
         Gfx_D3DLastError = 0;
         if (D3D_DeviceReady != 0) {
             D3D8_PushBufferDirtyFlags |= 1;
-            D3D8_DeferredTextureState = 1;
-            D3D8_DeferredTextureStateB = 1;
+            D3D8_Stage0_AddressU = 1;
+            D3D8_Stage0_AddressV = 1;
         }
     }
 
@@ -2884,8 +2884,8 @@ void psiBlurScreen(int blurIntensity) {
         Gfx_D3DLastError = 0;
         if (D3D_DeviceReady != 0) {
             D3D8_PushBufferDirtyFlags |= 1;
-            D3D8_DeferredTextureState = 3;
-            D3D8_DeferredTextureStateB = 3;
+            D3D8_Stage0_AddressU = 3;
+            D3D8_Stage0_AddressV = 3;
         }
     }
 
@@ -2906,8 +2906,8 @@ void psiBlurScreen(int blurIntensity) {
         Gfx_D3DLastError = 0;
         if (D3D_DeviceReady != 0) {
             D3D8_PushBufferDirtyFlags |= 1;
-            D3D8_DeferredTextureState = 1;
-            D3D8_DeferredTextureStateB = 1;
+            D3D8_Stage0_AddressU = 1;
+            D3D8_Stage0_AddressV = 1;
         }
     }
 }
