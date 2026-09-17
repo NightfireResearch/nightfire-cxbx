@@ -138,7 +138,7 @@ add_library(actioninject SHARED
 )
 
 # The seam's native Direct3D 9 backend (Direct3D/d3d9Backend.cpp)
-target_link_libraries(actioninject PRIVATE d3d9)
+target_link_libraries(actioninject PRIVATE d3d9 d3dcompiler winmm)
 
 add_library(drivinginject SHARED
   src/dllmain.cpp

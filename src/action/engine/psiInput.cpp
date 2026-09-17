@@ -128,18 +128,17 @@ void psiInput_PollDevices(void) {
 
             // The original Xbox pad exposed A/B/X/Y/BLACK/WHITE/triggers as 6+2 analog bytes rather than
             // digital bits (see xinput_xbox.h) - synthesize those from the real pad's digital face buttons
-            // (full-scale 0 or 255) and real analog triggers (already 0-255). Index 5 (WHITE/
-            // LEFT_SHOULDER) is deliberately left at 0 below and is never read back into the button mask
-            // further down either - the original genuinely never wires it up (its unrolled per-button code
-            // jumps straight from index 4 to a loop that only covers indices 6-7), not something we're
-            // introducing.
+            // (full-scale 0 or 255) and real analog triggers (already 0-255). Index 5 (WHITE, i.e. the left
+            // shoulder on a modern pad) is wired like the others: leaving it out (an earlier reading of the
+            // original's unrolled per-button code) lost the alternate-fire button, which the game maps to
+            // XBOXINPUT_GAMEPAD_LEFT_SHOULDER further down in this file.
             unsigned char *analog = (unsigned char*)c->controllerState.Gamepad.bAnalogButtons;
             analog[0] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_A) ? 0xFF : 0;
             analog[1] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_B) ? 0xFF : 0;
             analog[2] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_X) ? 0xFF : 0;
             analog[3] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_Y) ? 0xFF : 0;
             analog[4] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_RIGHT_SHOULDER) ? 0xFF : 0;
-            analog[5] = 0;
+            analog[5] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_LEFT_SHOULDER) ? 0xFF : 0;
             analog[6] = winState.Gamepad.bLeftTrigger;
             analog[7] = winState.Gamepad.bRightTrigger;
 
@@ -201,7 +200,7 @@ void psiInput_PollDevices(void) {
         buttons |= ((analog[2] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_X : 0;
         buttons |= ((analog[3] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_Y : 0;
         buttons |= ((analog[4] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_RIGHT_SHOULDER : 0;
-        // index 5 (WHITE/LEFT_SHOULDER) intentionally skipped - see the note above.
+        buttons |= ((analog[5] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_LEFT_SHOULDER : 0;
         buttons |= ((analog[6] * 100) >> 8) > 0x1c ? XBOXINPUT_GAMEPAD_LEFT_TRIGGER : 0;
         buttons |= ((analog[7] * 100) >> 8) > 0x1c ? XBOXINPUT_GAMEPAD_RIGHT_TRIGGER : 0;
         c->buttons = buttons;

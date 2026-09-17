@@ -303,14 +303,14 @@ D3DSEAM_TRACED_CALL_TYPE(__fastcall, Fast)
 // functions taking their arguments on the stack in the normal way - confirmed via raw disassembly, unlike
 // D3DDevice_SetRenderState_Simple below.
 typedef void(__stdcall *D3DDevice_SetRenderState_CullModeFn)(int value);
-#define D3DDevice_SetRenderState_CullMode (D3DSeamTraced("D3DDevice_SetRenderState_CullMode", (D3DDevice_SetRenderState_CullModeFn)D3DDevice_SetRenderState_CullMode_ADDR))
+#define D3DDevice_SetRenderState_CullMode (D3DSeamTraced("D3DDevice_SetRenderState_CullMode", (D3DDevice_SetRenderState_CullModeFn)D3DDevice_SetRenderState_CullMode_ADDR, D3D9_SetCullMode))
 
 typedef void(__stdcall *D3DResource_RegisterFn)(void *pTexture, uint32_t data);
-#define D3DResource_Register (D3DSeamTraced("D3DResource_Register", (D3DResource_RegisterFn)D3DResource_Register_ADDR))
+#define D3DResource_Register (D3DSeamTraced("D3DResource_Register", (D3DResource_RegisterFn)D3DResource_Register_ADDR, D3D9_ResourceRegister))
 
 typedef void(__stdcall *XGSetTextureHeaderFn)(uint32_t width, uint32_t height, uint32_t levels, uint32_t usage,
                                                int format, uint32_t pool, void *pTexture, uint32_t data, uint32_t pitch);
-#define XGSetTextureHeader (D3DSeamTraced("XGSetTextureHeader", (XGSetTextureHeaderFn)XGSetTextureHeader_ADDR))
+#define XGSetTextureHeader (D3DSeamTraced("XGSetTextureHeader", (XGSetTextureHeaderFn)XGSetTextureHeader_ADDR, D3D9_XGSetTextureHeader))
 
 // D3DDevice_SetGammaRamp(flags, pRamp) and D3DResource_Release(pResource) - both confirmed plain __stdcall
 // via raw disassembly (RET 0x8 / RET 0x4 respectively, matching their param counts exactly).
@@ -349,16 +349,16 @@ typedef void *(__stdcall *D3DTexture_GetSurfaceLevel2Fn)(void *pTexture, uint32_
 #define D3DTexture_GetSurfaceLevel2 (D3DSeamTraced("D3DTexture_GetSurfaceLevel2", (D3DTexture_GetSurfaceLevel2Fn)D3DTexture_GetSurfaceLevel2_ADDR, D3D9_GetSurfaceLevel2))
 
 typedef void(__stdcall *D3DDevice_SetRenderState_FogColorFn)(uint32_t colour);
-#define D3DDevice_SetRenderState_FogColor (D3DSeamTraced("D3DDevice_SetRenderState_FogColor", (D3DDevice_SetRenderState_FogColorFn)D3DDevice_SetRenderState_FogColor_ADDR))
+#define D3DDevice_SetRenderState_FogColor (D3DSeamTraced("D3DDevice_SetRenderState_FogColor", (D3DDevice_SetRenderState_FogColorFn)D3DDevice_SetRenderState_FogColor_ADDR, D3D9_SetFogColor))
 
 typedef void(__stdcall *D3DDevice_SetRenderState_YuvEnableFn)(uint32_t enable);
-#define D3DDevice_SetRenderState_YuvEnable (D3DSeamTraced("D3DDevice_SetRenderState_YuvEnable", (D3DDevice_SetRenderState_YuvEnableFn)D3DDevice_SetRenderState_YuvEnable_ADDR))
+#define D3DDevice_SetRenderState_YuvEnable (D3DSeamTraced("D3DDevice_SetRenderState_YuvEnable", (D3DDevice_SetRenderState_YuvEnableFn)D3DDevice_SetRenderState_YuvEnable_ADDR, D3D9_SetYuvEnable))
 
 typedef void(__stdcall *D3DDevice_SwapFn)(uint32_t type);
 #define D3DDevice_Swap (D3DSeamTraced("D3DDevice_Swap", (D3DDevice_SwapFn)D3DDevice_Swap_ADDR, D3D9_Swap))
 
 typedef void(__stdcall *D3DDevice_SetTextureFn)(uint32_t stage, void *pTexture);
-#define D3DDevice_SetTexture (D3DSeamTraced("D3DDevice_SetTexture", (D3DDevice_SetTextureFn)D3DDevice_SetTexture_ADDR))
+#define D3DDevice_SetTexture (D3DSeamTraced("D3DDevice_SetTexture", (D3DDevice_SetTextureFn)D3DDevice_SetTexture_ADDR, D3D9_SetTexture))
 
 // Eurocom's own frame-timing helper (Global namespace, not D3D8::) - already AUTOGEN-declared (and its stub
 // body generated) via game.cpp; just a plain forward declaration here so d3dSwap can call it too, without
@@ -371,34 +371,34 @@ double timestamp(void);
 // (first two register-sized args in ECX/EDX, callee-cleans-up-nothing since nothing was pushed), so a plain
 // __fastcall function pointer works here without needing a hand-written asm trampoline.
 typedef void(__fastcall *D3DDevice_SetVertexShaderConstant1Fn)(uint32_t constantIndex, float *pConstants);
-#define D3DDevice_SetVertexShaderConstant1 (D3DSeamTraced("D3DDevice_SetVertexShaderConstant1", (D3DDevice_SetVertexShaderConstant1Fn)D3DDevice_SetVertexShaderConstant1_ADDR))
+#define D3DDevice_SetVertexShaderConstant1 (D3DSeamTraced("D3DDevice_SetVertexShaderConstant1", (D3DDevice_SetVertexShaderConstant1Fn)D3DDevice_SetVertexShaderConstant1_ADDR, D3D9_SetVertexShaderConstant1))
 
 // D3DDevice_SetVertexShaderConstant4(constant index in ECX, pointer to one D3DMATRIX - 16 floats - in EDX) -
 // confirmed via raw disassembly: reads exactly one MMX-copied D3DMATRIX through EDX, no stack args, plain RET.
 // Same genuine __fastcall match as SetVertexShaderConstant1 above.
 typedef void(__fastcall *D3DDevice_SetVertexShaderConstant4Fn)(uint32_t constantIndex, void *pMatrix);
-#define D3DDevice_SetVertexShaderConstant4 (D3DSeamTraced("D3DDevice_SetVertexShaderConstant4", (D3DDevice_SetVertexShaderConstant4Fn)0x001025d0u))
+#define D3DDevice_SetVertexShaderConstant4 (D3DSeamTraced("D3DDevice_SetVertexShaderConstant4", (D3DDevice_SetVertexShaderConstant4Fn)0x001025d0u, D3D9_SetVertexShaderConstant4))
 
 // D3DDevice_SetTextureState_BorderColor(stage, colour) - confirmed plain __stdcall via raw disassembly (RET 0x8).
 typedef void(__stdcall *D3DDevice_SetTextureState_BorderColorFn)(uint32_t stage, uint32_t colour);
-#define D3DDevice_SetTextureState_BorderColor (D3DSeamTraced("D3DDevice_SetTextureState_BorderColor", (D3DDevice_SetTextureState_BorderColorFn)D3DDevice_SetTextureState_BorderColor_ADDR))
+#define D3DDevice_SetTextureState_BorderColor (D3DSeamTraced("D3DDevice_SetTextureState_BorderColor", (D3DDevice_SetTextureState_BorderColorFn)D3DDevice_SetTextureState_BorderColor_ADDR, D3D9_SetTextureBorderColor))
 
 // Four more plain __stdcall D3D8 render-state setters, only ever called from d3dSetup - confirmed via
 // functions_action.json (has_custom_variable_storage false, RET immediate matches param count).
 typedef void(__stdcall *D3DDevice_SetRenderState_ZEnableFn)(uint32_t value);
-#define D3DDevice_SetRenderState_ZEnable (D3DSeamTraced("D3DDevice_SetRenderState_ZEnable", (D3DDevice_SetRenderState_ZEnableFn)D3DDevice_SetRenderState_ZEnable_ADDR))
+#define D3DDevice_SetRenderState_ZEnable (D3DSeamTraced("D3DDevice_SetRenderState_ZEnable", (D3DDevice_SetRenderState_ZEnableFn)D3DDevice_SetRenderState_ZEnable_ADDR, D3D9_SetZEnable))
 typedef void(__stdcall *D3DDevice_SetRenderState_NormalizeNormalsFn)(uint32_t value);
-#define D3DDevice_SetRenderState_NormalizeNormals (D3DSeamTraced("D3DDevice_SetRenderState_NormalizeNormals", (D3DDevice_SetRenderState_NormalizeNormalsFn)D3DDevice_SetRenderState_NormalizeNormals_ADDR))
+#define D3DDevice_SetRenderState_NormalizeNormals (D3DSeamTraced("D3DDevice_SetRenderState_NormalizeNormals", (D3DDevice_SetRenderState_NormalizeNormalsFn)D3DDevice_SetRenderState_NormalizeNormals_ADDR, D3D9_SetNormalizeNormals))
 typedef void(__stdcall *D3DDevice_SetRenderState_VertexBlendFn)(uint32_t value);
-#define D3DDevice_SetRenderState_VertexBlend (D3DSeamTraced("D3DDevice_SetRenderState_VertexBlend", (D3DDevice_SetRenderState_VertexBlendFn)D3DDevice_SetRenderState_VertexBlend_ADDR))
+#define D3DDevice_SetRenderState_VertexBlend (D3DSeamTraced("D3DDevice_SetRenderState_VertexBlend", (D3DDevice_SetRenderState_VertexBlendFn)D3DDevice_SetRenderState_VertexBlend_ADDR, D3D9_SetVertexBlend))
 typedef void(__stdcall *D3DDevice_SetShaderConstantModeFn)(uint32_t value);
-#define D3DDevice_SetShaderConstantMode (D3DSeamTraced("D3DDevice_SetShaderConstantMode", (D3DDevice_SetShaderConstantModeFn)D3DDevice_SetShaderConstantMode_ADDR))
+#define D3DDevice_SetShaderConstantMode (D3DSeamTraced("D3DDevice_SetShaderConstantMode", (D3DDevice_SetShaderConstantModeFn)D3DDevice_SetShaderConstantMode_ADDR, D3D9_SetShaderConstantMode))
 
 // D3DDevice_SetVertexShaderConstantNotInline(constant index in ECX, pointer in EDX, count-in-dwords on the
 // stack) - confirmed via raw disassembly: exactly matches MSVC's own __fastcall ABI for a 3-argument function
 // (first two register args, third stacked, callee cleans up RET 0x4) - another case needing no asm trampoline.
 typedef void(__fastcall *D3DDevice_SetVertexShaderConstantNotInlineFn)(uint32_t constantIndex, void *pData, uint32_t countDwords);
-#define D3DDevice_SetVertexShaderConstantNotInline (D3DSeamTraced("D3DDevice_SetVertexShaderConstantNotInline", (D3DDevice_SetVertexShaderConstantNotInlineFn)0x00102760u))
+#define D3DDevice_SetVertexShaderConstantNotInline (D3DSeamTraced("D3DDevice_SetVertexShaderConstantNotInline", (D3DDevice_SetVertexShaderConstantNotInlineFn)0x00102760u, D3D9_SetVertexShaderConstantNotInline))
 
 // D3DDevice_GetBackBuffer2(backBufferIndex) - confirmed plain __stdcall via functions_action.json (RET 0x4).
 // Returns a pointer to the backbuffer's own surface-header struct (not pixel data directly) - only its
@@ -409,22 +409,22 @@ typedef uint32_t*(__stdcall *D3DDevice_GetBackBuffer2Fn)(int32_t backBufferIndex
 // D3DDevice_SetDepthClipPlanes(uint, uint, uint) and D3DDevice_SetStreamSource(int streamNumber, void*
 // vertexBuffer, int stride) - both confirmed plain __stdcall via raw disassembly (RET 0xc, matching 3 params).
 typedef void(__stdcall *D3DDevice_SetDepthClipPlanesFn)(uint32_t param1, uint32_t param2, uint32_t param3);
-#define D3DDevice_SetDepthClipPlanes (D3DSeamTraced("D3DDevice_SetDepthClipPlanes", (D3DDevice_SetDepthClipPlanesFn)D3DDevice_SetDepthClipPlanes_ADDR))
+#define D3DDevice_SetDepthClipPlanes (D3DSeamTraced("D3DDevice_SetDepthClipPlanes", (D3DDevice_SetDepthClipPlanesFn)D3DDevice_SetDepthClipPlanes_ADDR, D3D9_SetDepthClipPlanes))
 
 typedef void(__stdcall *D3DDevice_SetStreamSourceFn)(int streamNumber, void *vertexBuffer, int stride);
-#define D3DDevice_SetStreamSource (D3DSeamTraced("D3DDevice_SetStreamSource", (D3DDevice_SetStreamSourceFn)D3DDevice_SetStreamSource_ADDR))
+#define D3DDevice_SetStreamSource (D3DSeamTraced("D3DDevice_SetStreamSource", (D3DDevice_SetStreamSourceFn)D3DDevice_SetStreamSource_ADDR, D3D9_SetStreamSource))
 
 // D3DDevice_SetIndices(pIndexBuffer, baseVertexIndex), D3DDevice_SetVertexShader(handle), and
 // D3DDevice_DrawVerticesUP(primitiveType, vertexCount, pVertexData, stride) - all confirmed plain __stdcall
 // via raw disassembly (RET 0x8 / RET 0x4 / RET 0x10 respectively, matching their param counts exactly).
 typedef void(__stdcall *D3DDevice_SetIndicesFn)(void *pIndexBuffer, uint32_t baseVertexIndex);
-#define D3DDevice_SetIndices (D3DSeamTraced("D3DDevice_SetIndices", (D3DDevice_SetIndicesFn)D3DDevice_SetIndices_ADDR))
+#define D3DDevice_SetIndices (D3DSeamTraced("D3DDevice_SetIndices", (D3DDevice_SetIndicesFn)D3DDevice_SetIndices_ADDR, D3D9_SetIndices))
 
 typedef void(__stdcall *D3DDevice_SetVertexShaderFn)(void *handle);
-#define D3DDevice_SetVertexShader (D3DSeamTraced("D3DDevice_SetVertexShader", (D3DDevice_SetVertexShaderFn)D3DDevice_SetVertexShader_ADDR))
+#define D3DDevice_SetVertexShader (D3DSeamTraced("D3DDevice_SetVertexShader", (D3DDevice_SetVertexShaderFn)D3DDevice_SetVertexShader_ADDR, D3D9_SetVertexShader))
 
 typedef void(__stdcall *D3DDevice_DrawVerticesUPFn)(uint32_t primitiveType, uint32_t vertexCount, void *pVertexData, uint32_t stride);
-#define D3DDevice_DrawVerticesUP (D3DSeamTraced("D3DDevice_DrawVerticesUP", (D3DDevice_DrawVerticesUPFn)D3DDevice_DrawVerticesUP_ADDR))
+#define D3DDevice_DrawVerticesUP (D3DSeamTraced("D3DDevice_DrawVerticesUP", (D3DDevice_DrawVerticesUPFn)D3DDevice_DrawVerticesUP_ADDR, D3D9_DrawVerticesUP))
 
 // A thunk (plain JMP) to the real implementation - confirmed RET 0x4, plain __stdcall, 1 param.
 typedef void(__stdcall *D3DResource_BlockUntilNotBusyFn)(void *pResource);
@@ -440,16 +440,16 @@ typedef void *(__stdcall *D3DDevice_GetDepthStencilSurface2Fn)(void);
 #define D3DDevice_GetDepthStencilSurface2 (D3DSeamTraced("D3DDevice_GetDepthStencilSurface2", (D3DDevice_GetDepthStencilSurface2Fn)D3DDevice_GetDepthStencilSurface2_ADDR, D3D9_GetDepthStencilSurface2))
 
 typedef void(__stdcall *D3DDevice_SetRenderTargetFn)(void *pRenderTarget, void *pDepthStencil);
-#define D3DDevice_SetRenderTarget (D3DSeamTraced("D3DDevice_SetRenderTarget", (D3DDevice_SetRenderTargetFn)D3DDevice_SetRenderTarget_ADDR))
+#define D3DDevice_SetRenderTarget (D3DSeamTraced("D3DDevice_SetRenderTarget", (D3DDevice_SetRenderTargetFn)D3DDevice_SetRenderTarget_ADDR, D3D9_SetRenderTarget))
 
 // D3DDevice_DrawVertices(primitiveType, startVertex, vertexCount) - confirmed plain __stdcall (RET 0xc).
 typedef void(__stdcall *D3DDevice_DrawVerticesFn)(uint32_t primitiveType, uint32_t startVertex, uint32_t vertexCount);
-#define D3DDevice_DrawVertices (D3DSeamTraced("D3DDevice_DrawVertices", (D3DDevice_DrawVerticesFn)D3DDevice_DrawVertices_ADDR))
+#define D3DDevice_DrawVertices (D3DSeamTraced("D3DDevice_DrawVertices", (D3DDevice_DrawVerticesFn)D3DDevice_DrawVertices_ADDR, D3D9_DrawVertices))
 
 // A normal D3D8 library function we call INTO - confirmed plain __stdcall (RET 0x4), 1 param. Its own
 // internals are irrelevant to us (it calls into further D3D8-internal functions, same as many others).
 typedef void(__stdcall *D3DDevice_SetRenderState_ZBiasFn)(int zBias);
-#define D3DDevice_SetRenderState_ZBias (D3DSeamTraced("D3DDevice_SetRenderState_ZBias", (D3DDevice_SetRenderState_ZBiasFn)D3DDevice_SetRenderState_ZBias_ADDR))
+#define D3DDevice_SetRenderState_ZBias (D3DSeamTraced("D3DDevice_SetRenderState_ZBias", (D3DDevice_SetRenderState_ZBiasFn)D3DDevice_SetRenderState_ZBias_ADDR, D3D9_SetZBias))
 
 // ---------------------------------------------------------------------------------------------------------------
 // Pure-math Eurocom matrix helpers (Global namespace, not D3D8::) - never previously declared/called from any
@@ -482,7 +482,7 @@ void* allocateAligned0x1000(int numBytes);
 // supplied runtime value rather than baked into its own bytecode, uses registers instead.
 static void D3D_SetRenderStateSimple(uint32_t method, uint32_t value) {
     if (g_gfxBackend == GFX_BACKEND_D3D9) {
-        D3D9_BackendMissing("D3DDevice_SetRenderState_Simple"); // hand-dispatched: the ECX/EDX convention keeps it off the wrapper
+        D3D9_SetRenderStateSimple(method, value); // hand-dispatched: the ECX/EDX convention keeps it off the wrapper
         return;
     }
 #if D3DSEAM_TRACE
@@ -3043,6 +3043,8 @@ void * Texture_GetRawDataPtr(int textureSlot) {
     if (texSlot->baseTexture == NULL)
         return NULL;
     uint32_t data = *(uint32_t*)((char*)texSlot->baseTexture + 4);
+    if (g_gfxBackend == GFX_BACKEND_D3D9)
+        D3D9_NotifyTextureModified(texSlot->baseTexture); // the caller is about to write pixels through this pointer
     return D3D_UncachedAliasOf(data);
 }
 
@@ -3531,6 +3533,8 @@ void __stdcall d3dLockSurface(const uint32_t *surface, D3DLOCKED_RECT_Xbox *lock
     }
     locked->Pitch = pitch;
     locked->pBits = bits;
+    if (g_gfxBackend == GFX_BACKEND_D3D9)
+        D3D9_NotifyTextureModified((void*)surface); // the decoder writes a frame through pBits next
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -3549,7 +3553,7 @@ void __stdcall d3dLockSurface(const uint32_t *surface, D3DLOCKED_RECT_Xbox *lock
 
 #define D3DDevice_DrawIndexedVertices_ADDR 0x00104a60u // was undefined in Ghidra until now (hence invisible to the call graph); RET 0xc
 typedef void(__stdcall *D3DDevice_DrawIndexedVerticesFn)(uint32_t primitiveType, uint32_t vertexCount, const void *pIndexData);
-#define D3DDevice_DrawIndexedVertices (D3DSeamTraced("D3DDevice_DrawIndexedVertices", (D3DDevice_DrawIndexedVerticesFn)D3DDevice_DrawIndexedVertices_ADDR))
+#define D3DDevice_DrawIndexedVertices (D3DSeamTraced("D3DDevice_DrawIndexedVertices", (D3DDevice_DrawIndexedVerticesFn)D3DDevice_DrawIndexedVertices_ADDR, D3D9_DrawIndexedVertices))
 
 #define Gfx_LightConstantBlock      ((float*)0x002FF27Cu) // 36 floats -> vertex shader constants 0x69..0x71: 4 x view-space light position (xyz, pad), then the 4 x colour and 4 x 1/range d3dSetLight fills in
 #define Gfx_LevelDirectionViewSpace ((float*)0x002FF388u) // 3 floats (+pad) -> vertex shader constant 0x7b
