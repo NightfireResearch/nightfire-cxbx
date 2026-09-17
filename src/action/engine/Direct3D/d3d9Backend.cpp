@@ -420,6 +420,8 @@ static HWND FindRenderWindow(void) {
 static void InitPinnedConstants(void);
 static void ReleaseIndexRing(void);
 static bool g_offscreenTarget = false; // an off-screen render target is selected (see D3D9_SetRenderTarget)
+static bool g_reversedDepth = false;   // 32-bit float depth buffer with reversed Z (see D3D9_CreateDevice)
+static bool g_hasStencil = true;
 static void BeginSceneIfNeeded(void) {
     if (g_device != NULL && !g_inScene) {
         g_device->BeginScene();
@@ -458,7 +460,18 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
     g_presentParams.BackBufferFormat = D3DFMT_X8R8G8B8;
     g_presentParams.BackBufferCount = 1;
     g_presentParams.EnableAutoDepthStencil = TRUE;
+    // Depth format. The game W-buffers with a near:far ratio around 1:300000, which a 24-bit fixed z-buffer
+    // would z-fight badly, so prefer a 32-bit float depth buffer and store reversed Z (1 at near, 0 at far),
+    // which keeps precision at all distances. No stencil: the game never sets a stencil state.
     g_presentParams.AutoDepthStencilFormat = D3DFMT_D24S8;
+    g_reversedDepth = false;
+    g_hasStencil = true;
+    if (SUCCEEDED(g_d3d->CheckDeviceFormat(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, D3DFMT_X8R8G8B8, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, D3DFMT_D32F_LOCKABLE)) &&
+        SUCCEEDED(g_d3d->CheckDepthStencilMatch(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, D3DFMT_X8R8G8B8, D3DFMT_X8R8G8B8, D3DFMT_D32F_LOCKABLE))) {
+        g_presentParams.AutoDepthStencilFormat = D3DFMT_D32F_LOCKABLE;
+        g_reversedDepth = true;
+        g_hasStencil = false;
+    }
     g_presentParams.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // paced by PaceFrame, not the host monitor
 
     DWORD flags = D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_FPU_PRESERVE;
@@ -476,8 +489,8 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
     timeBeginPeriod(1);
     int fpsOverride = Settings_GetFPSOverride(); // the same override mainloop applies to the game's own tick rate
     g_targetFrameRate = (fpsOverride > 0) ? fpsOverride : (int)xboxParams[11];
-    D3D9Log("[d3d9] device created on window %p (%ux%u backbuffer, paced to %d Hz).\n",
-           (void*)g_window, width, height, g_targetFrameRate);
+    D3D9Log("[d3d9] device created on window %p (%ux%u backbuffer, %s depth, paced to %d Hz).\n",
+           (void*)g_window, width, height, g_reversedDepth ? "32-bit float reversed" : "24-bit fixed", g_targetFrameRate);
     InitPinnedConstants();
     D3DCAPS9 caps;
     if (SUCCEEDED(g_device->GetDeviceCaps(&caps))) {
@@ -512,7 +525,8 @@ void D3D9_Clear(uint32_t rectCount, void *pRects, uint32_t flags, uint32_t colou
     DWORD d3dFlags = 0;
     if (flags & 0xF0) d3dFlags |= D3DCLEAR_TARGET;
     if (flags & 0x01) d3dFlags |= D3DCLEAR_ZBUFFER;
-    if (flags & 0x02) d3dFlags |= D3DCLEAR_STENCIL;
+    if ((flags & 0x02) && g_hasStencil) d3dFlags |= D3DCLEAR_STENCIL;
+    if (g_reversedDepth) z = 1.0f - z;
     if (d3dFlags != 0)
         g_device->Clear(0, NULL, d3dFlags, colour, z, stencil);
 }
@@ -572,6 +586,17 @@ static D3DCMPFUNC GlCompareToD3D(uint32_t gl) {           // NV097 0x200..0x207 
     if (gl >= 0x200 && gl <= 0x207) return (D3DCMPFUNC)(gl - 0x200 + 1);
     return D3DCMP_ALWAYS;
 }
+// With reversed Z, "nearer" is a larger depth value, so the ordering comparisons flip.
+static D3DCMPFUNC ReverseCompareIfNeeded(D3DCMPFUNC f) {
+    if (!g_reversedDepth) return f;
+    switch (f) {
+        case D3DCMP_LESS: return D3DCMP_GREATER;
+        case D3DCMP_LESSEQUAL: return D3DCMP_GREATEREQUAL;
+        case D3DCMP_GREATER: return D3DCMP_LESS;
+        case D3DCMP_GREATEREQUAL: return D3DCMP_LESSEQUAL;
+        default: return f;
+    }
+}
 static D3DBLEND GlBlendToD3D(uint32_t gl) {
     switch (gl) {
         case 0: return D3DBLEND_ZERO;
@@ -611,7 +636,7 @@ void D3D9_SetRenderStateSimple(uint32_t nv2aMethod, uint32_t value) {
         case 0x344: g_device->SetRenderState(D3DRS_SRCBLEND, GlBlendToD3D(value)); break;
         case 0x348: g_device->SetRenderState(D3DRS_DESTBLEND, GlBlendToD3D(value)); break;
         case 0x350: g_device->SetRenderState(D3DRS_BLENDOP, GlBlendOpToD3D(value)); break;
-        case 0x354: g_device->SetRenderState(D3DRS_ZFUNC, GlCompareToD3D(value)); break;
+        case 0x354: g_device->SetRenderState(D3DRS_ZFUNC, ReverseCompareIfNeeded(GlCompareToD3D(value))); break;
         case 0x358: { // NV097_SET_COLOR_MASK: one byte per channel, A R G B from the top
             DWORD mask = 0;
             if (value & 0x00FF0000) mask |= D3DCOLORWRITEENABLE_RED;
@@ -642,7 +667,7 @@ void D3D9_SetFogColor(uint32_t colour) {
 }
 void D3D9_SetZBias(int zBias) {
     if (g_device == NULL) return;
-    float bias = (float)zBias * -0.00001f; // Xbox ZBias (0..16 towards the viewer) -> D3D9 depth bias
+    float bias = (float)zBias * (g_reversedDepth ? 0.00001f : -0.00001f); // Xbox ZBias (0..16 towards the viewer) -> D3D9 depth bias
     g_device->SetRenderState(D3DRS_DEPTHBIAS, *(DWORD*)&bias);
 }
 void D3D9_SetZEnable(uint32_t value) {
@@ -932,7 +957,7 @@ static bool TranslateVshToHlsl(const uint8_t *function, const uint32_t *normPack
     HlslWriter h = { out, outSize / 2, 0, false };
     h.printf("float4 c[192] : register(c0);\n");
     h.printf("float4 hostAdjust : register(c200); // .xy = D3D9's half-pixel offset in NDC\n");
-    h.printf("float4 depthClip : register(c201);  // .x = near clip (in w units), .y = 1 / (far - near)\n");
+    h.printf("float4 depthClip : register(c201);  // z_clip = .x * (w - .y): the W-buffer depth in screen-affine form, see PrepareShaderDraw\n");
     h.printf("float4 fogParams : register(c202);  // .x = start, .y = end, .z = density, .w = table mode (0 none, 1 exp, 2 exp2, 3 linear)\n");
     h.printf("float4 texScale01 : register(c203); // 1/size for linear textures on coordinate sets 0 (.xy) and 1 (.zw), else 1\n");
     h.printf("float4 texScale23 : register(c204); // same for sets 2 and 3\n");
@@ -963,9 +988,10 @@ static bool TranslateVshToHlsl(const uint8_t *function, const uint32_t *normPack
     memmove(out + h.len, body, w.len);
     h.len += w.len;
     h.printf("    VS_OUT o;\n");
-    // Position: xy back to clip space; z from w (the W-buffer depth), mapped so the depth-clip planes land on
-    // D3D9's 0..1 z range - which both clips where the NV2A clipped and gives the same linear depth ordering.
-    h.printf("    o.oPos = float4((oPos.xy + hostAdjust.xy) * oPos.w, (oPos.w - depthClip.x) * depthClip.y * oPos.w, oPos.w);\n");
+    // Position: xy back to clip space; z from w (the W-buffer depth) in the a + b/w form the rasteriser
+    // interpolates exactly, mapped so the depth-clip planes land on D3D9's 0..1 z range (reversed when the
+    // float depth buffer is in use) - which both clips where the NV2A clipped and keeps the depth ordering.
+    h.printf("    o.oPos = float4((oPos.xy + hostAdjust.xy) * oPos.w, depthClip.x * (oPos.w - depthClip.y), oPos.w);\n");
     h.printf("    o.oD0 = oD0;\n    o.oD1 = oD1;\n");
     // Fog: on the Xbox the shader's oFog is the fog coordinate (the game emits its normalised near..far
     // distance) and the fog table mode turns it into the factor; D3D9 takes the factor straight from the
@@ -1263,11 +1289,18 @@ static bool PrepareShaderDraw(bool bindStreams) {
     ApplyTextureStageState(); // before the host constants: it computes the linear-texture coordinate scales
     float hostConstants[5][4] = {
         { -1.0f / (float)g_presentParams.BackBufferWidth, 1.0f / (float)g_presentParams.BackBufferHeight, 0, 0 },
-        { g_depthClipNear, 1.0f / ((g_depthClipFar - g_depthClipNear) != 0.0f ? (g_depthClipFar - g_depthClipNear) : 1.0f), 0, 0 },
+        { 0, 0, 0, 0 }, // depth mapping, filled in below
         { 0, 0, 0, 0 },
         { g_texCoordScale[0][0], g_texCoordScale[0][1], g_texCoordScale[1][0], g_texCoordScale[1][1] },
         { g_texCoordScale[2][0], g_texCoordScale[2][1], g_texCoordScale[3][0], g_texCoordScale[3][1] },
     };
+    {
+        // Depth from w, in the screen-affine a + b/w form a z-buffer interpolates exactly: z_ndc = scale * (w - ref) / w.
+        // Reversed: ref = far, scale = -near / (far - near) (1 at near, 0 at far); otherwise ref = near, scale = far / (far - near).
+        float range = (g_depthClipFar - g_depthClipNear) != 0.0f ? (g_depthClipFar - g_depthClipNear) : 1.0f;
+        if (g_reversedDepth) { hostConstants[1][0] = -g_depthClipNear / range; hostConstants[1][1] = g_depthClipFar; }
+        else                 { hostConstants[1][0] = g_depthClipFar / range;   hostConstants[1][1] = g_depthClipNear; }
+    }
     memcpy(&hostConstants[2][0], (const void*)(0x001119D0u + XRS_FOGSTART * 4), 4);   // the deferred fog render states hold raw floats
     memcpy(&hostConstants[2][1], (const void*)(0x001119D0u + XRS_FOGEND * 4), 4);
     memcpy(&hostConstants[2][2], (const void*)(0x001119D0u + XRS_FOGDENSITY * 4), 4);
@@ -1420,7 +1453,7 @@ static void DrawImmediateQuads(uint32_t vertexCount, const uint8_t *data, uint32
         RhwVertex *d = &g_rhwVertices[v];
         d->x = src[0] - 0.5f; // D3D9 samples pixel centres at +0.5; the game already biases by -1/32
         d->y = src[1] - 0.5f;
-        d->z = 1.0f;          // the shader writes constant 102's z (the far-plane sentinel) for z and w
+        d->z = g_reversedDepth ? 0.0f : 1.0f; // the shader writes constant 102's z (the far-plane sentinel) for z and w
         d->rhw = 1.0f;
         d->colour = ModulateColour(*(const uint32_t*)&src[2], k);
         d->u = src[3] * g_texCoordScale[0][0];
