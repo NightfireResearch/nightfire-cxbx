@@ -76,25 +76,75 @@ patch NOPs the `DrawFlares` call. Two fixes, in order of effort:
 Also note the spin-wait itself: with a slow emulated query it stalls the frame; that is one of the
 "performance" symptoms.
 
-## 4. Crashes and performance: how to find out
+## 4. The crash: DirectSound buffer pool exhaustion in the EA sound layer
 
-Nothing in the survey pinpoints the driving-level crashes; they need data, not theory.
+Earlier debugging traced the driving-level crash to a NULL pointer inside the audio system, and NULL checks
+added to a custom CXBX build did not help. The static reading explains both: the NULL is manufactured and
+dereferenced in the game's own EA `SND` layer, above anything CXBX can guard.
 
-- **Crash capture**: add a vectored exception handler to the injected DLL that logs EIP, registers, the
+How the layer works (`SNDPLATFORM_init`, `0x13dc50`):
+
+- At start-up it creates **180 DirectSound buffers** in two pools: 152 in pool 0 and 28 in pool 1
+  (`NUM_SND_BUFFERS1/2`, list heads `LList_maybeFreeDsndBuffers[2]`, active lists
+  `Llist_MaybeActiveDsndBuffers[2]`, each via `dsndCreateBufferAndMixBins`). Pool 1 is for looping/streamed
+  timbres (`patchHeader->field18_0x13 == 20` selects it in `SNDPLATFORM_playtimbre`).
+- A 100 Hz driver thread (`SNDDRV_thread`, `0x13d980`, paced with `getTickCount`/`SleepMilliseconds`
+  under `SNDI_mutex*`) runs `SNDSYSI_100hzserver` -> `iSNDserve` (`0x13e530`), the only place that polls
+  `IDirectSoundBuffer_GetStatus` and returns finished buffers to the free lists. `SNDPLATFORM_stop`
+  (`0x13de50`) returns them on explicit stops.
+- `SNDPLATFORM_playtimbre` (`0x142b10`) pops a buffer from the pool's free list for every platform voice
+  of the timbre. If that list is empty it first calls `FUN_0013d550`, which **borrows from the other pool**:
+  pops a node there, `Release`s its DirectSound buffer and creates a replacement of the wanted type.
+
+The two NULL paths, both reachable only when the pools run dry:
+
+1. If **both** free lists are empty, `FUN_0013d550` picks pool index `-1` and pops from memory in front of
+   the array; the returned "node" is garbage or NULL and `node->dsndBufferObj` is dereferenced. This is the
+   "all slots filled" case.
+2. If the replacement `IDirectSound_CreateSoundBuffer` inside the borrow fails (CXBX's HLE can fail where
+   the hardware never did), `node->dsndBufferObj` becomes NULL and the next `SetBufferData`/`Play` on it
+   crashes.
+
+Why the pools run dry under CXBX but not on hardware: buffers are only reclaimed when `GetStatus` reports
+them stopped, from the 100 Hz thread. CXBX's DirectSound emulation reports playback status from a host
+buffer whose position and completion do not track the Xbox's (the action engine's movie stutter had the
+same root: emulated status/timing), and CXBX's thread scheduling can starve the 10 ms driver loop. Either
+way finished one-shot sounds stay "playing", the free lists drain over minutes of play, and the crash
+lands when a busy moment needs more voices than are left. The fact that it triggers "eventually" on
+driving levels, not immediately, fits a leak rather than a hard limit.
+
+What to do, in order:
+
+1. **Instrument** (one afternoon): hook `SNDLINKI_pop` (`0x13f110`) / `SNDLINKI_push` (`0x13f0b0`) to log
+   both free-list lengths once a second and on every pop that returns NULL; hook `FUN_0013d550` to log
+   borrows and a NULL result from `dsndCreateBufferAndMixBins`; count `iSNDserve` iterations per
+   second to see whether the driver thread keeps its 100 Hz. Add the generic crash logger below so the
+   next crash names its function. If the free lists trend down over a level, the leak is confirmed.
+2. **Contain** (CXBX mode): make `FUN_0013d550` and the pop site in `SNDPLATFORM_playtimbre` fail soft -
+   when no buffer is available, steal the oldest active buffer of the pool (stop it and reuse it) instead
+   of borrowing from an empty neighbour, and treat a NULL from buffer creation as "voice unavailable"
+   (`SNDVOICEI_free` the voice and return). This turns the crash into a dropped sound.
+3. **Cure**: if instrumentation shows `GetStatus` never reporting completion for some buffers, patch the
+   reclamation in CXBX mode to also consider elapsed time versus buffer length (the layer knows both);
+   otherwise the real cure is the native audio backend (section 6.2), where buffer status is exact and
+   creation cannot fail. This is why audio moves ahead of graphics in the driving order of work.
+
+Performance and other crashes still need data:
+
+- **Crash capture**: a vectored exception handler in the injected DLL that logs EIP, registers, the
   faulting address and a stack walk, symbolised from `tools/functions_driving.json` (nearest function
-  below each return address). Write it to `driving_crash.log`. Every crash report then names the game
-  function, which is what makes the rest tractable.
+  below each return address), to `driving_crash.log`.
 - **Sampling profiler**: a thread in the DLL that every 1 ms suspends the game's main thread, reads EIP
   (`GetThreadContext`), resumes it and histograms by function (same symbolisation). Dump the top 50 at
-  level end. This answers "where does the time go" for free, without host tools that cannot see XBE symbols.
+  level end. This answers "where does the time go" without host tools that cannot see XBE symbols.
 - Candidate hot spots to expect: `D3DDevice_Begin`/`SetVertexData2f`/`4f`/`End` immediate-mode calls (per
   vertex HLE overhead), `D3DDevice_RunPushBuffer` (EAGL submits precompiled NV2A command streams - see 6.1),
   `BlockOnFence`/`IsBusy`/visibility-result spins, and the sound driver thread contending with CXBX's
   thread emulation.
-- Candidate crash sources: the 36 MB `UMemory` heap (`UMemory::Init(0x2400000)`) under a different memory
-  layout, async big-file streaming (`UFileLoader` request lists, `SYNCTASK`), and the `Event` buffer
+- Other candidate crash sources, lower priority: the 36 MB `UMemory` heap (`UMemory::Init(0x2400000)`),
+  async big-file streaming (`UFileLoader` request lists, `SYNCTASK`), and the `Event` buffer
   (`EventManager`, 32 KB ring at `0x1e47d4`) overflowing when the simulation catches up many ticks at once
-  (the timekeeping fix in section 2 may remove a class of crashes by itself).
+  (the timekeeping fix in section 2 may remove that class by itself).
 
 ## 5. Symbols: making the driving binary readable
 
@@ -196,11 +246,14 @@ The loader from the action plan should load either XBE; the action-to-driving ha
 
 ## 7. Suggested order of work
 
-1. Crash logger and sampling profiler in the DLL (section 4). Cheap, and every later step benefits.
+1. Audio pool instrumentation and the fail-soft containment for the crash (section 4, steps 1-2), plus
+   the crash logger and sampling profiler. Cheap, and every later step benefits.
 2. Timekeeping: native `Clock` source and the original scheduler semantics with a catch-up cap (section 2).
    Test: consistent game speed at any frame rate, no freezes after loads.
 3. Lens flares via the result-scaling hook (section 3, option 1).
 4. Symbol alignment tool and a first propagation pass (section 5). This is the enabler for everything in
    section 6 and can run in parallel with 1-3.
-5. Push-buffer investigation (section 6.1) to size the graphics work.
-6. D3D8 seam and D3D9 backend extension; DSOUND seam and XAudio2 backend; runtime/kernel; loader.
+5. DSOUND seam (`SNDPLATFORM_*` layer) and the XAudio2 backend shared with the action engine: it is the
+   cure for the crash, and the audio boundary here is smaller and cleaner than the graphics one.
+6. Push-buffer investigation (section 6.1) to size the graphics work, then the D3D8 seam and D3D9 backend
+   extension; runtime/kernel; loader.
