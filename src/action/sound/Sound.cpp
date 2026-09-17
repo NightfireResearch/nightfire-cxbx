@@ -81,6 +81,12 @@ bool Sound_IsLooping(DYNAMICSOUNDS *handle) {
 // AUTOGEN
 void Sound_UpdateListeners(void);
 
+// AUTOGEN
+void __stdcall SFXSuspendFileAccess(void);
+
+// AUTOGEN
+void __stdcall SFXUnSuspendFileAccess(void);
+
 // UNINJECTABLE - custom calling convention
 DYNAMICSOUNDS* Sound_Play(Action_SFX sfxId, float volume, float radiusOuter, float radiusInner, undefined2 maybePitchBend, char is3d, undefined4 param_7, _VECTOR *position) {
 

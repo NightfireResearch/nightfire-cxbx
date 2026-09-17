@@ -58,6 +58,12 @@ void Camera_CalcViewAngles(ushort playerNum,float param_2) {
 // AUTOGEN
 void Camera_Enable(ushort cameraNum,char param_2,undefined1 param_3,_VECTOR *param_4);
 
+// AUTOGEN
+void __stdcall Camera_PopStates(void);
+
+// AUTOGEN
+bool Camera_SetFade(ushort viewerNum, float durationFrames, uint colourAndAlpha, undefined1 fadeMode);
+
 // AUTOINJECT
 void Camera_ScreenCoords(ushort viewerNum,float PosX,float PosY,float Width,float Height) {
   

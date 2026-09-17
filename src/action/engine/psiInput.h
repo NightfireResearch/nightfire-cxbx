@@ -132,6 +132,18 @@ typedef enum {
 
 #define XboxInputs (*(XboxInputs_struct*)(0x002ff498))
 
+// Real signature: xboxInitInputDevices() - zeroes XboxInputs and marks it ready for polling. The original
+// also pre-opened every already-connected Xbox controller here via XAPILIB::XInputOpen; our replacement
+// psiInput_PollDevices below doesn't need that, since it re-derives "connected" fresh every frame straight
+// from Win32's XInputGetState instead of tracking Xbox-style insertion/removal events.
+void xboxInitInputDevices(void);
+
+// Real signature: psiInput_PollDevices() - called once per frame by the original (untouched) Input_Update,
+// and again in a drain loop by the original (untouched) maybeInputShutdown. Talks straight to the host's
+// real gamepads via Win32 XInputGetState/XInputSetState now, instead of going through CXBX's emulation of
+// the original Xbox kernel's XAPILIB device layer - see the block comment above its definition.
+void psiInput_PollDevices(void);
+
 float psiInput_GetJoystickLX(uint i);
 float psiInput_GetJoystickLY(uint i);
 float psiInput_GetJoystickRX(uint i);

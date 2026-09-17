@@ -29,8 +29,7 @@
 
 // }
 
-// AUTOGEN
-void* Texture_GetRawDataPtr(int texIdx);
+void* Texture_GetRawDataPtr(int texIdx); // reimplemented in Direct3D/d3dSeam.cpp
 
 typedef struct {
     char _pad_1[0x24];

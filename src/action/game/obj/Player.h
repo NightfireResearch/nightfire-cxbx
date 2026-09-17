@@ -44,7 +44,9 @@ typedef struct BLData {
     char _unknown[4];
     obj_tag* muzzleFlashObj; // 0x804
     obj_tag* remoteControlDevice; // 0x808
-    char _pad_2[0x860-0x808-4];
+    char _pad_2a[0x824-0x808-4];
+    float health; // 0x824 - used eg. by SP_Update to abort an in-progress NIS if the player has died
+    char _pad_2b[0x860-0x824-4];
     float lensFlareRelated; // 0x860
     char _pad_222222[0x8b0-0x860-4];
     float nightVisionTimer; // 0x8b0
@@ -73,6 +75,7 @@ static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisi
 
 //char (*__kaboom)[offsetof(BLData,playerNum)] = 1;
 static_assert(offsetof(BLData, remoteControlDevice) == 0x808, "Offset of remoteControlDevice not correct");
+static_assert(offsetof(BLData, health) == 0x824, "Offset of health not correct");
 static_assert(offsetof(BLData, playerNum) == 0x8de, "Offset of playerNum not correct");
 
 

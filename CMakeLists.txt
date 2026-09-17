@@ -74,11 +74,15 @@ add_library(actioninject SHARED
   src/action/engine/psiGraphics.cpp
   src/action/engine/psiInput.cpp
   src/action/engine/psiLight.cpp
+  src/action/engine/psiSave.cpp
+  src/action/engine/Script.cpp
   src/action/engine/Text.cpp
   src/action/engine/Vision.cpp
   src/action/engine/Woman.cpp
   src/action/engine/XboxSettings.cpp
   src/action/engine/Direct3D/d3dhelpers.cpp
+  src/action/engine/Direct3D/d3dSeam.cpp
+  src/action/engine/Direct3D/d3d9Backend.cpp
   src/action/game/Autoaim.cpp
   src/action/game/weapon_stats.cpp
   src/action/math/math.cpp
@@ -123,6 +127,7 @@ add_library(actioninject SHARED
   src/action/game/obj/Sensor.cpp
   src/action/game/obj/SpaceLaser.cpp
   src/action/game/obj/SpaceMissile.cpp
+  src/action/game/obj/Switch.cpp
   src/action/game/sp/Locks.cpp
   src/action/game/sp/Mission.cpp
   src/action/game/sp/PlayerStats.cpp
@@ -131,6 +136,9 @@ add_library(actioninject SHARED
   src/action/sound/SFX.cpp
   src/action/sound/Sound.cpp
 )
+
+# The seam's native Direct3D 9 backend (Direct3D/d3d9Backend.cpp)
+target_link_libraries(actioninject PRIVATE d3d9 d3dcompiler winmm)
 
 add_library(drivinginject SHARED
   src/dllmain.cpp

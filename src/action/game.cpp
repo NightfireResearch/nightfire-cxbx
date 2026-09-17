@@ -5,6 +5,7 @@
 #include "game/mp/multiplayer.h" // for MPSettings
 #include "ui/MenuManager.h"
 #include "engine/Text.h"
+#include "engine/XboxSettings.h"
 
 #include <cstring>
 #include <cstdio>
@@ -65,7 +66,7 @@ bool movieFinished(void) {
 
 #define FreezeGame U8_AT(0x001fec48)
 #define sloflag U16_AT(0x001fec64)
-#define ScriptCam U32_AT(0x001f6678)
+// ScriptCam is defined in engine/Script.h (same address, HASHCODE-typed)
 #define switch_allowFreeze U32_AT(0x0025d79c)
 
 
@@ -680,7 +681,17 @@ bool Graphics_IsPalI(void) {
 
 // AUTOINJECT
 void mainloop(void) {
-  int refreshRate = Graphics_IsPalI() ? 50 : 60;
+  // Fixed: this was backwards (50 for PAL, 60 otherwise) relative to the original's own formula at this
+  // exact spot ("(-(uint)(cVar1 != 0) & 10) + 50", i.e. 60 when Graphics_IsPalI() is true, 50 otherwise) -
+  // confirmed against the raw disassembly of both this function and xboxInitGraphics's matching refresh-
+  // rate calculation, which agree with each other and disagree with the ternary this used to have here.
+  // Despite the name, Graphics_IsPalI() reads true for everywhere except the PAL-I region specifically.
+  int refreshRate = Graphics_IsPalI() ? 60 : 50;
+
+  int fpsOverride = Settings_GetFPSOverride();
+  if (fpsOverride > 0)
+    refreshRate = fpsOverride;
+
   GS_SetRefreshRate(refreshRate, refreshRate);
   GameFlow_Main();
 }

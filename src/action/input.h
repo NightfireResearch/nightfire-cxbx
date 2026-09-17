@@ -6,6 +6,7 @@ float __cdecl Input_Actionf(short playerNum, GameActions_tag action,unsigned cha
 void __cdecl Input_ClearAction(short playerNum, GameActions_tag action);
 void __cdecl Input_SetAction(short playerNum, GameActions_tag action,unsigned char val);
 bool Input_ChangeControllerStyle(ushort playerNum, int controllerStyle);
+void Input_ClearAllActions(short playerNum);
 void Input_Ready(void);
 void Input_Init(void);
 void Input_RumbleStart(ushort playerNum, int time, int intensity);

@@ -60,3 +60,6 @@ obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
 
 // AUTOGEN
 void Drone_SM_RouteMsg(MsgObject *msg);
+
+// AUTOGEN
+void Drone_EnableAll(char enable, HASHCODE hashcode);

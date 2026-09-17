@@ -257,9 +257,17 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             return;
 
         case Place_Breakable:
-            // Some logging / blank function also if the type is 2? 
+            // Some logging / blank function also if the type is 2?
+            //
+            // Deliberately calling the ORIGINAL, untouched compiled Break_Create here instead of our own
+            // (Break.cpp's) - that reimplementation is known-incomplete (Break_Kill is an unfinished no-op
+            // stub) and was causing real breakable-object resource leaks (never releasing vertex/index buffer
+            // slots) that exhausted their shared 2048-slot table on revisiting an already-played segment,
+            // leading to a crash. Break_Create is called directly here (not via the AUTOINJECT hook), so it
+            // doesn't route through the original bytes on its own - this raw-address call bypasses our C++
+            // implementation entirely until Break_Kill/the rest of that system is completed.
             if(doCreation)
-                Break_Create(&pos, &rot, celglist, lvl);
+                ((obj_tag*(__cdecl*)(_VECTOR*, _VECTOR*, celglist_tag*, void*))0x0001ffb0)(&pos, &rot, celglist, lvl);
             return;
 
         case Place_Ripples:
