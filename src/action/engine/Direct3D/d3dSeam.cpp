@@ -2,6 +2,7 @@
 #include "d3dhelpers.h"
 #include "../../actionhelpers.h"
 #include "../XboxSettings.h" // GetVideoMode/XboxGetAVRegion, for xboxInitGraphics
+#include "d3d9Backend.h"      // the native D3D9 backend the entry-point wrappers can dispatch to
 
 #include <stdint.h>
 #include <string.h>
@@ -176,21 +177,6 @@ static void D3DSeamTraceCall(const char *name, A... args) {
     D3DSeamTraceRecord(name, key, detail);
 }
 
-// Wraps a D3D8 entry-point pointer so every call through the macro is recorded before being forwarded. One
-// struct per calling convention, since x86 MSVC makes the convention part of the pointer type.
-#define D3DSEAM_TRACED_CALL_TYPE(CONV, SUFFIX)                                                              \
-    template<typename R, typename... A> struct D3DSeamTracedCall##SUFFIX {                                  \
-        const char *name;                                                                                   \
-        R(CONV *fn)(A...);                                                                                  \
-        R operator()(A... args) const { D3DSeamTraceCall(name, args...); return fn(args...); }              \
-    };                                                                                                      \
-    template<typename R, typename... A>                                                                     \
-    static inline D3DSeamTracedCall##SUFFIX<R, A...> D3DSeamTraced(const char *name, R(CONV *fn)(A...)) {   \
-        return { name, fn };                                                                                \
-    }
-D3DSEAM_TRACED_CALL_TYPE(__stdcall, Std)
-D3DSEAM_TRACED_CALL_TYPE(__fastcall, Fast)
-
 // Wraps a D3D8-internal state slot (the deferred texture-stage arrays, dirty flags, last-value caches) so
 // every write through the macro is recorded. Reads are untouched.
 struct D3DSeamTracedU32 {
@@ -215,13 +201,47 @@ struct D3DSeamTracedU32 {
 
 #else // !D3DSEAM_TRACE
 
-#define D3DSeamTraced(name, fn) (fn)
 #define D3D8_TRACED(name, addr) U32_AT(addr)
 static inline void D3DSeamTraceEndFrame(void) {}
 static inline void D3DSeamTraceLevelReset(void) {}
 template<typename... A> static inline void D3DSeamTraceCall(const char *, A...) {}
 
 #endif // D3DSEAM_TRACE
+
+// ---------------------------------------------------------------------------------------------------------------
+// Entry-point dispatch. Every D3D8 entry point the seam calls goes through one of these wrappers (via the
+// D3DDevice_*/D3DResource_* macros below): it records the call when tracing is on, then either forwards to
+// the D3D8 library (CXBX mode) or to the attached D3D9 backend function (d3d9 mode - see d3d9Backend.h). An
+// entry point with no backend function attached is counted as missing in d3d9 mode and does nothing. One
+// struct per calling convention, since x86 MSVC makes the convention part of the pointer type.
+// ---------------------------------------------------------------------------------------------------------------
+#define D3DSEAM_TRACED_CALL_TYPE(CONV, SUFFIX)                                                              \
+    template<typename R, typename... A> struct D3DSeamTracedCall##SUFFIX {                                  \
+        const char *name;                                                                                   \
+        R(CONV *fn)(A...);                                                                                  \
+        R(*backend)(A...);                                                                                  \
+        R operator()(A... args) const {                                                                     \
+            D3DSeamTraceCall(name, args...);                                                                \
+            if (g_gfxBackend == GFX_BACKEND_D3D9) {                                                         \
+                if (backend != NULL)                                                                        \
+                    return backend(args...);                                                                \
+                D3D9_BackendMissing(name);                                                                  \
+                return R();                                                                                 \
+            }                                                                                               \
+            return fn(args...);                                                                             \
+        }                                                                                                   \
+    };                                                                                                      \
+    template<typename R, typename... A>                                                                     \
+    static inline D3DSeamTracedCall##SUFFIX<R, A...> D3DSeamTraced(const char *name, R(CONV *fn)(A...)) {   \
+        return { name, fn, NULL };                                                                          \
+    }                                                                                                       \
+    template<typename R, typename... A>                                                                     \
+    static inline D3DSeamTracedCall##SUFFIX<R, A...> D3DSeamTraced(const char *name, R(CONV *fn)(A...),     \
+                                                                   R(*backend)(A...)) {                     \
+        return { name, fn, backend };                                                                       \
+    }
+D3DSEAM_TRACED_CALL_TYPE(__stdcall, Std)
+D3DSEAM_TRACED_CALL_TYPE(__fastcall, Fast)
 
 // ---------------------------------------------------------------------------------------------------------------
 // "Thin seam" reimplementation. These are Eurocom's own small wrapper functions that sit directly on top of
@@ -295,13 +315,13 @@ typedef void(__stdcall *XGSetTextureHeaderFn)(uint32_t width, uint32_t height, u
 // D3DDevice_SetGammaRamp(flags, pRamp) and D3DResource_Release(pResource) - both confirmed plain __stdcall
 // via raw disassembly (RET 0x8 / RET 0x4 respectively, matching their param counts exactly).
 typedef void(__stdcall *D3DDevice_SetGammaRampFn)(uint32_t flags, void *pRamp);
-#define D3DDevice_SetGammaRamp (D3DSeamTraced("D3DDevice_SetGammaRamp", (D3DDevice_SetGammaRampFn)D3DDevice_SetGammaRamp_ADDR))
+#define D3DDevice_SetGammaRamp (D3DSeamTraced("D3DDevice_SetGammaRamp", (D3DDevice_SetGammaRampFn)D3DDevice_SetGammaRamp_ADDR, D3D9_SetGammaRamp))
 
 // Genuinely returns a value in EAX (a refcount-style result: either the resource's decremented reference
 // count, or 0 once it's fully destroyed) - confirmed via raw disassembly. Nothing called this before now, so
 // updating the typedef from void is safe (no existing callers relied on the wrong signature).
 typedef uint32_t(__stdcall *D3DResource_ReleaseFn)(void *pResource);
-#define D3DResource_Release (D3DSeamTraced("D3DResource_Release", (D3DResource_ReleaseFn)D3DResource_Release_ADDR))
+#define D3DResource_Release (D3DSeamTraced("D3DResource_Release", (D3DResource_ReleaseFn)D3DResource_Release_ADDR, D3D9_ResourceRelease))
 
 // D3DDevice_SetViewport(pViewport) - confirmed plain __stdcall (RET 0x4). D3DVIEWPORT here is the standard
 // D3D8 viewport struct (X, Y, Width, Height, MinZ, MaxZ), not something Eurocom-specific.
@@ -310,20 +330,23 @@ struct D3DVIEWPORT {
     float MinZ, MaxZ;
 };
 typedef void(__stdcall *D3DDevice_SetViewportFn)(D3DVIEWPORT *pViewport);
-#define D3DDevice_SetViewport (D3DSeamTraced("D3DDevice_SetViewport", (D3DDevice_SetViewportFn)D3DDevice_SetViewport_ADDR))
+static void D3D9Adapter_SetViewport(D3DVIEWPORT *pViewport) { // the backend takes plain fields, not this struct
+    D3D9_SetViewport(pViewport->X, pViewport->Y, pViewport->Width, pViewport->Height, pViewport->MinZ, pViewport->MaxZ);
+}
+#define D3DDevice_SetViewport (D3DSeamTraced("D3DDevice_SetViewport", (D3DDevice_SetViewportFn)D3DDevice_SetViewport_ADDR, D3D9Adapter_SetViewport))
 
 // D3DDevice_Clear(rectCount, pRects, flags, colour, z, stencil) - Ghidra's own prototype only reports 5
 // params (20 bytes), but the function's own RET 0x18 cleans up 24 bytes, and the d3dClear call site (see
 // below) pushes exactly 6 dwords. It's a completely standard D3D8 Clear() signature - Ghidra just missed the
 // trailing stencil parameter (always 0 at this call site, which is likely why its analysis folded it away).
 typedef void(__stdcall *D3DDevice_ClearFn)(uint32_t rectCount, void *pRects, uint32_t flags, uint32_t colour, float z, uint32_t stencil);
-#define D3DDevice_Clear (D3DSeamTraced("D3DDevice_Clear", (D3DDevice_ClearFn)D3DDevice_Clear_ADDR))
+#define D3DDevice_Clear (D3DSeamTraced("D3DDevice_Clear", (D3DDevice_ClearFn)D3DDevice_Clear_ADDR, D3D9_Clear))
 
 // All four below confirmed plain __stdcall via raw disassembly (RET immediate matches param count exactly).
 // Returns a surface pointer in EAX - the original d3dGetTextureSurfaceLevel0 caller discards it (called for
 // side effect only), but d3dRenderTargetSetup needs it, so the typedef reflects the real return value.
 typedef void *(__stdcall *D3DTexture_GetSurfaceLevel2Fn)(void *pTexture, uint32_t level);
-#define D3DTexture_GetSurfaceLevel2 (D3DSeamTraced("D3DTexture_GetSurfaceLevel2", (D3DTexture_GetSurfaceLevel2Fn)D3DTexture_GetSurfaceLevel2_ADDR))
+#define D3DTexture_GetSurfaceLevel2 (D3DSeamTraced("D3DTexture_GetSurfaceLevel2", (D3DTexture_GetSurfaceLevel2Fn)D3DTexture_GetSurfaceLevel2_ADDR, D3D9_GetSurfaceLevel2))
 
 typedef void(__stdcall *D3DDevice_SetRenderState_FogColorFn)(uint32_t colour);
 #define D3DDevice_SetRenderState_FogColor (D3DSeamTraced("D3DDevice_SetRenderState_FogColor", (D3DDevice_SetRenderState_FogColorFn)D3DDevice_SetRenderState_FogColor_ADDR))
@@ -332,7 +355,7 @@ typedef void(__stdcall *D3DDevice_SetRenderState_YuvEnableFn)(uint32_t enable);
 #define D3DDevice_SetRenderState_YuvEnable (D3DSeamTraced("D3DDevice_SetRenderState_YuvEnable", (D3DDevice_SetRenderState_YuvEnableFn)D3DDevice_SetRenderState_YuvEnable_ADDR))
 
 typedef void(__stdcall *D3DDevice_SwapFn)(uint32_t type);
-#define D3DDevice_Swap (D3DSeamTraced("D3DDevice_Swap", (D3DDevice_SwapFn)D3DDevice_Swap_ADDR))
+#define D3DDevice_Swap (D3DSeamTraced("D3DDevice_Swap", (D3DDevice_SwapFn)D3DDevice_Swap_ADDR, D3D9_Swap))
 
 typedef void(__stdcall *D3DDevice_SetTextureFn)(uint32_t stage, void *pTexture);
 #define D3DDevice_SetTexture (D3DSeamTraced("D3DDevice_SetTexture", (D3DDevice_SetTextureFn)D3DDevice_SetTexture_ADDR))
@@ -381,7 +404,7 @@ typedef void(__fastcall *D3DDevice_SetVertexShaderConstantNotInlineFn)(uint32_t 
 // Returns a pointer to the backbuffer's own surface-header struct (not pixel data directly) - only its
 // second dword (an Xbox physical-memory byte offset, per psiBlurScreen's own use of it) is read here.
 typedef uint32_t*(__stdcall *D3DDevice_GetBackBuffer2Fn)(int32_t backBufferIndex);
-#define D3DDevice_GetBackBuffer2 (D3DSeamTraced("D3DDevice_GetBackBuffer2", (D3DDevice_GetBackBuffer2Fn)D3DDevice_GetBackBuffer2_ADDR))
+#define D3DDevice_GetBackBuffer2 (D3DSeamTraced("D3DDevice_GetBackBuffer2", (D3DDevice_GetBackBuffer2Fn)D3DDevice_GetBackBuffer2_ADDR, D3D9_GetBackBuffer2))
 
 // D3DDevice_SetDepthClipPlanes(uint, uint, uint) and D3DDevice_SetStreamSource(int streamNumber, void*
 // vertexBuffer, int stride) - both confirmed plain __stdcall via raw disassembly (RET 0xc, matching 3 params).
@@ -405,16 +428,16 @@ typedef void(__stdcall *D3DDevice_DrawVerticesUPFn)(uint32_t primitiveType, uint
 
 // A thunk (plain JMP) to the real implementation - confirmed RET 0x4, plain __stdcall, 1 param.
 typedef void(__stdcall *D3DResource_BlockUntilNotBusyFn)(void *pResource);
-#define D3DResource_BlockUntilNotBusy (D3DSeamTraced("D3DResource_BlockUntilNotBusy", (D3DResource_BlockUntilNotBusyFn)D3DResource_BlockUntilNotBusy_ADDR))
+#define D3DResource_BlockUntilNotBusy (D3DSeamTraced("D3DResource_BlockUntilNotBusy", (D3DResource_BlockUntilNotBusyFn)D3DResource_BlockUntilNotBusy_ADDR, D3D9_BlockUntilNotBusy))
 
 // D3DDevice_GetRenderTarget2()/GetDepthStencilSurface2() - niladic getters (plain RET, no immediate, no stack
 // args), confirmed via raw disassembly. D3DDevice_SetRenderTarget(pRenderTarget, pDepthStencil) - confirmed
 // plain __stdcall (RET 0x8).
 typedef void *(__stdcall *D3DDevice_GetRenderTarget2Fn)(void);
-#define D3DDevice_GetRenderTarget2 (D3DSeamTraced("D3DDevice_GetRenderTarget2", (D3DDevice_GetRenderTarget2Fn)D3DDevice_GetRenderTarget2_ADDR))
+#define D3DDevice_GetRenderTarget2 (D3DSeamTraced("D3DDevice_GetRenderTarget2", (D3DDevice_GetRenderTarget2Fn)D3DDevice_GetRenderTarget2_ADDR, D3D9_GetRenderTarget2))
 
 typedef void *(__stdcall *D3DDevice_GetDepthStencilSurface2Fn)(void);
-#define D3DDevice_GetDepthStencilSurface2 (D3DSeamTraced("D3DDevice_GetDepthStencilSurface2", (D3DDevice_GetDepthStencilSurface2Fn)D3DDevice_GetDepthStencilSurface2_ADDR))
+#define D3DDevice_GetDepthStencilSurface2 (D3DSeamTraced("D3DDevice_GetDepthStencilSurface2", (D3DDevice_GetDepthStencilSurface2Fn)D3DDevice_GetDepthStencilSurface2_ADDR, D3D9_GetDepthStencilSurface2))
 
 typedef void(__stdcall *D3DDevice_SetRenderTargetFn)(void *pRenderTarget, void *pDepthStencil);
 #define D3DDevice_SetRenderTarget (D3DSeamTraced("D3DDevice_SetRenderTarget", (D3DDevice_SetRenderTargetFn)D3DDevice_SetRenderTarget_ADDR))
@@ -458,6 +481,10 @@ void* allocateAligned0x1000(int numBytes);
 // the stack like a normal __stdcall function; only this one, being the sole one whose method is a caller-
 // supplied runtime value rather than baked into its own bytecode, uses registers instead.
 static void D3D_SetRenderStateSimple(uint32_t method, uint32_t value) {
+    if (g_gfxBackend == GFX_BACKEND_D3D9) {
+        D3D9_BackendMissing("D3DDevice_SetRenderState_Simple"); // hand-dispatched: the ECX/EDX convention keeps it off the wrapper
+        return;
+    }
 #if D3DSEAM_TRACE
     // Traced by hand (the ECX/EDX convention keeps it off the D3DSeamTraced path): once under the shared entry
     // point name keyed by method, and once under a per-method name keyed by value, so the summary shows both
@@ -3202,18 +3229,18 @@ void d3dInitFallbackOverlayTexture(void) {
 
 typedef uint32_t(__stdcall *Direct3D_CreateDeviceFn)(uint32_t adapter, uint32_t deviceType, void *hFocusWindow,
                                                      uint32_t behaviorFlags, void *pPresentationParameters, void **ppDevice);
-#define Direct3D_CreateDevice (D3DSeamTraced("Direct3D_CreateDevice", (Direct3D_CreateDeviceFn)Direct3D_CreateDevice_ADDR))
+#define Direct3D_CreateDevice (D3DSeamTraced("Direct3D_CreateDevice", (Direct3D_CreateDeviceFn)Direct3D_CreateDevice_ADDR, D3D9_CreateDevice))
 
 typedef void(__stdcall *D3D_SetPushBufferSizeFn)(uint32_t pushBufferSize, uint32_t kickOffSize);
-#define D3D_SetPushBufferSize (D3DSeamTraced("D3D_SetPushBufferSize", (D3D_SetPushBufferSizeFn)D3D_SetPushBufferSize_ADDR))
+#define D3D_SetPushBufferSize (D3DSeamTraced("D3D_SetPushBufferSize", (D3D_SetPushBufferSizeFn)D3D_SetPushBufferSize_ADDR, D3D9_SetPushBufferSize))
 
 typedef uint32_t(__stdcall *D3DDevice_CreateVertexShaderFn)(const void *pDeclaration, const void *pFunction, void **pHandle, uint32_t usage);
-#define D3DDevice_CreateVertexShader (D3DSeamTraced("D3DDevice_CreateVertexShader", (D3DDevice_CreateVertexShaderFn)D3DDevice_CreateVertexShader_ADDR))
+#define D3DDevice_CreateVertexShader (D3DSeamTraced("D3DDevice_CreateVertexShader", (D3DDevice_CreateVertexShaderFn)D3DDevice_CreateVertexShader_ADDR, D3D9_CreateVertexShader))
 
 // RET 0x4 - takes one (ignored) dword argument, which the original passes as 0. Declaring it with the argument
 // matters: as __stdcall the callee pops those 4 bytes, so calling it with none would unbalance the stack.
 typedef uint32_t(__stdcall *D3D_ArePushBuffersSupportedFn)(uint32_t unused);
-#define D3D_ArePushBuffersSupported (D3DSeamTraced("D3D_ArePushBuffersSupported", (D3D_ArePushBuffersSupportedFn)D3D_ArePushBuffersSupported_ADDR))
+#define D3D_ArePushBuffersSupported (D3DSeamTraced("D3D_ArePushBuffersSupported", (D3D_ArePushBuffersSupportedFn)D3D_ArePushBuffersSupported_ADDR, D3D9_ArePushBuffersSupported))
 
 // Standard Xbox D3DPRESENT_PARAMETERS (17 dwords), zeroed and then only partially filled in by the original.
 struct D3DPRESENT_PARAMETERS_Xbox {
@@ -3269,6 +3296,9 @@ static uint32_t g_d3dDisplayFormat = 7;
 //
 // AUTOINJECT
 void xboxInitGraphics(void) {
+    g_gfxBackend = Settings_GetGraphicsBackend(); // decided once, before the first D3D8 entry point is touched
+    printf("[d3dSeam] graphics backend: %s\n", g_gfxBackend == GFX_BACKEND_D3D9 ? "d3d9 (native)" : "cxbx (D3D8 HLE)");
+
     memset((void*)GFX_STRUCT_BASE, 0, GFX_STRUCT_DWORDS * 4);
 
     for (int i = 0; i < 256; i++)

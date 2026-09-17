@@ -43,6 +43,7 @@ struct Settings {
     uint32_t avRegion; // raw XC_FACTORY_AV_REGION-style value: 1 = NTSC-M, 3 = PAL-I
     uint32_t language; // raw XC_LANGUAGE-style value: 1=English,2=Japanese,3=German,4=French,5=Spanish,6=Italian
     int fpsOverride;   // 0 = "unset" - callers fall back to their own region-based default
+    int graphicsBackend; // 0 = CXBX's D3D8 HLE (default), 1 = the seam's own D3D9 backend (see Direct3D/d3d9Backend.h)
 };
 
 static Settings g_settings;
@@ -75,6 +76,10 @@ static void WriteDefaultSettingsFile() {
         "\n"
         "; Target frame rate. 0 = use the region default (60 for NTSC, 50 for PAL)\n"
         "FPS=0\n"
+        "\n"
+        "; cxbx = render through CXBX's Direct3D 8 emulation (the default), d3d9 = the project's own native\n"
+        "; Direct3D 9 backend (work in progress - expect missing rendering while it's being brought up)\n"
+        "GraphicsBackend=cxbx\n"
     );
 
     fclose(file);
@@ -100,6 +105,7 @@ static void LoadSettingsFile() {
     g_settings.avRegion = 3; // PAL-I - matched this project's own CXBX setup in testing; see block comment above
     g_settings.language = 1; // English
     g_settings.fpsOverride = 0;
+    g_settings.graphicsBackend = 0;
 
     FILE *file = fopen(SETTINGS_FILE, "r");
     if (file == NULL) {
@@ -140,6 +146,8 @@ static void LoadSettingsFile() {
             else g_settings.language = 1; // English, also the fallback for anything unrecognised
         } else if (_stricmp(key, "FPS") == 0) {
             g_settings.fpsOverride = atoi(value);
+        } else if (_stricmp(key, "GraphicsBackend") == 0) {
+            g_settings.graphicsBackend = (_stricmp(value, "d3d9") == 0) ? 1 : 0;
         }
     }
 
@@ -194,4 +202,8 @@ uint32_t GetAudioMode(void) {
 
 int Settings_GetFPSOverride(void) {
     return GetSettings()->fpsOverride;
+}
+
+int Settings_GetGraphicsBackend(void) {
+    return GetSettings()->graphicsBackend;
 }

@@ -17,4 +17,8 @@ uint32_t GetAudioMode(void);
 // their own region-appropriate default (mainloop does: 60 for NTSC-ish regions, 50 for PAL-I).
 int Settings_GetFPSOverride(void);
 
+// settings.ini's [Settings] GraphicsBackend key: 0 = "cxbx" (D3D8 through CXBX's HLE, the default), 1 = "d3d9"
+// (the seam's own native Direct3D 9 backend, see Direct3D/d3d9Backend.h).
+int Settings_GetGraphicsBackend(void);
+
 #endif // XBOXSETTINGS_H_
