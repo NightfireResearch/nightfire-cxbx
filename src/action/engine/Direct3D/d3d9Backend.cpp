@@ -126,7 +126,10 @@ struct XboxSurface { uint32_t Common, Data, Lock, Format, Size, Parent; };
 #define XBOX_TEXTURE_COMMON 0x00040001u // D3DCOMMON_TYPE_TEXTURE, refcount 1
 // Stand-ins for the backbuffer / render target / depth surface objects the seam asks for (see the surface code
 // at the end of the file). There is no CPU-visible backbuffer here, so their Data words are 0.
-static XboxSurface g_dummyBackBuffer   = { XBOX_SURFACE_COMMON | 0x7FFE, 0, 0, 0, 0, 0 };
+// The dummy backbuffer's Data word is a sentinel physical address: psiBlurScreen registers a texture over
+// "the backbuffer's memory" (Data | 0x80000000), which the backend recognises and answers with a GPU copy.
+#define BACKBUFFER_DATA_SENTINEL 0x0BB00000u
+static XboxSurface g_dummyBackBuffer   = { XBOX_SURFACE_COMMON | 0x7FFE, BACKBUFFER_DATA_SENTINEL, 0, 0, 0, 0 };
 static XboxSurface g_dummyRenderTarget = { XBOX_SURFACE_COMMON | 0x7FFE, 0, 0, 0, 0, 0 };
 static XboxSurface g_dummyDepthStencil = { XBOX_SURFACE_COMMON | 0x7FFE, 0, 0, 0, 0, 0 };
 
@@ -187,6 +190,8 @@ struct HostTexture {
     uint32_t data, format, size; // the header words the host texture was built from - any change means rebuild
     IDirect3DTexture9 *texture;
     bool dirty;              // CPU wrote into the pixel data since the last upload
+    bool renderTarget;       // lives in D3DPOOL_DEFAULT with D3DUSAGE_RENDERTARGET; never uploaded from CPU memory
+    IDirect3DSurface9 *rtSurface; // level 0 of a render-target texture
 };
 static HostTexture g_textures[2200];
 static int g_textureCount = 0;
@@ -213,16 +218,29 @@ static HostTexture *FindOrAddHostTexture(const void *header) {
 
 static void MarkTextureDirty(const void *header) {
     HostTexture *t = FindHostTexture(header);
-    if (t != NULL)
+    if (t != NULL && !t->renderTarget)
         t->dirty = true;
 }
 
+static void ReleaseHostTexture(HostTexture *t) {
+    if (t->rtSurface != NULL) { t->rtSurface->Release(); t->rtSurface = NULL; }
+    if (t->texture != NULL) { t->texture->Release(); t->texture = NULL; }
+    t->renderTarget = false;
+    t->dirty = true;
+}
+
 static void InvalidateHostBuffers(const void *obj);
+static void CaptureBackBufferInto(void *header);
 void D3D9_ResourceRegister(void *pResource, uint32_t data) {
     XboxPixelContainer *h = (XboxPixelContainer*)pResource;
     h->Data = data;
+    HostTexture *t = FindHostTexture(pResource);
+    if (t != NULL && t->renderTarget)
+        ReleaseHostTexture(t); // the slot is being reused for something else (or re-captured)
     MarkTextureDirty(pResource);   // a slot being (re)registered with new data
     InvalidateHostBuffers(pResource);
+    if ((data | 0x80000000u) == (BACKBUFFER_DATA_SENTINEL | 0x80000000u))
+        CaptureBackBufferInto(pResource); // psiBlurScreen grabbing the backbuffer, see the sentinel's comment
 }
 
 void D3D9_NotifyTextureModified(void *pTextureOrSurface) {
@@ -313,6 +331,8 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
     HostTexture *t = FindOrAddHostTexture(headerPtr);
     if (t == NULL || g_device == NULL)
         return NULL;
+    if (t->renderTarget)
+        return t->texture; // drawn by the GPU, nothing to upload
 
     bool rebuild = (t->texture == NULL) || t->format != h->Format || t->size != h->Size || t->data != h->Data;
     if (!rebuild && !t->dirty)
@@ -419,7 +439,9 @@ static HWND FindRenderWindow(void) {
 
 static void InitPinnedConstants(void);
 static void ReleaseIndexRing(void);
-static bool g_offscreenTarget = false; // an off-screen render target is selected (see D3D9_SetRenderTarget)
+static IDirect3DSurface9 *g_backBufferSurface = NULL, *g_mainDepthSurface = NULL; // the device's own, held across the frame
+static uint32_t g_targetWidth = 640, g_targetHeight = 480; // size of the current render target (backbuffer or texture)
+static void ReleaseDefaultPoolResources(void);
 static bool g_reversedDepth = false;   // 32-bit float depth buffer with reversed Z (see D3D9_CreateDevice)
 static bool g_hasStencil = true;
 static void BeginSceneIfNeeded(void) {
@@ -492,6 +514,9 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
     D3D9Log("[d3d9] device created on window %p (%ux%u backbuffer, %s depth, paced to %d Hz).\n",
            (void*)g_window, width, height, g_reversedDepth ? "32-bit float reversed" : "24-bit fixed", g_targetFrameRate);
     InitPinnedConstants();
+    g_device->GetRenderTarget(0, &g_backBufferSurface);
+    g_device->GetDepthStencilSurface(&g_mainDepthSurface);
+    g_targetWidth = width; g_targetHeight = height;
     D3DCAPS9 caps;
     if (SUCCEEDED(g_device->GetDeviceCaps(&caps))) {
         // D3D9 clamps point sprites to D3DRS_POINTSIZE_MAX, which defaults to 64 pixels - far smaller than the
@@ -513,22 +538,89 @@ void D3D9_SetPushBufferSize(uint32_t pushBufferSize, uint32_t kickOffSize) {
     (void)pushBufferSize; (void)kickOffSize; // no push buffer here
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// Debug dumps: every D3D9_DUMP_EVERY frames the backbuffer and any render-target texture that gets sampled are
+// written as 24-bit BMP files (colour, and the alpha channel as grey) in the working directory, so the bring-up
+// can be looked at without a capture tool. 0 disables.
+// ---------------------------------------------------------------------------------------------------------------
+#define D3D9_DUMP_EVERY 0 // set to e.g. 300 to dump every 300 frames
+static uint32_t g_dumpFrame = 0;   // the frame currently being dumped (0 = none)
+static int g_dumpRtCount = 0;
+
+static void WriteBmp24(const char *path, uint32_t width, uint32_t height, const uint8_t *bgr, size_t rowBytes) {
+    FILE *f = fopen(path, "wb");
+    if (f == NULL)
+        return;
+    uint32_t stride = (width * 3 + 3) & ~3u;
+    uint32_t imageBytes = stride * height;
+    uint8_t header[54] = { 'B', 'M' };
+    uint32_t fileSize = 54 + imageBytes, dataOffset = 54, infoSize = 40, planesBpp = 1 | (24u << 16);
+    int32_t w = (int32_t)width, h = -(int32_t)height; // negative height: top-down rows
+    memcpy(header + 2, &fileSize, 4); memcpy(header + 10, &dataOffset, 4); memcpy(header + 14, &infoSize, 4);
+    memcpy(header + 18, &w, 4); memcpy(header + 22, &h, 4); memcpy(header + 26, &planesBpp, 4); memcpy(header + 34, &imageBytes, 4);
+    fwrite(header, 1, 54, f);
+    static uint8_t pad[4] = { 0, 0, 0, 0 };
+    for (uint32_t y = 0; y < height; y++) {
+        fwrite(bgr + (size_t)y * rowBytes, 1, width * 3, f);
+        fwrite(pad, 1, stride - width * 3, f);
+    }
+    fclose(f);
+}
+
+static void DumpSurface(IDirect3DSurface9 *surface, const char *name) {
+    D3DSURFACE_DESC desc;
+    if (surface == NULL || FAILED(surface->GetDesc(&desc)))
+        return;
+    IDirect3DSurface9 *sys = NULL;
+    if (FAILED(g_device->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format, D3DPOOL_SYSTEMMEM, &sys, NULL)))
+        return;
+    if (SUCCEEDED(g_device->GetRenderTargetData(surface, sys))) {
+        D3DLOCKED_RECT lr;
+        if (SUCCEEDED(sys->LockRect(&lr, NULL, D3DLOCK_READONLY))) {
+            size_t rowBytes = (size_t)desc.Width * 3;
+            uint8_t *colour = (uint8_t*)malloc(rowBytes * desc.Height), *alpha = (uint8_t*)malloc(rowBytes * desc.Height);
+            if (colour != NULL && alpha != NULL) {
+                for (UINT y = 0; y < desc.Height; y++) {
+                    const uint8_t *row = (const uint8_t*)lr.pBits + y * lr.Pitch;
+                    for (UINT x = 0; x < desc.Width; x++) {
+                        memcpy(colour + y * rowBytes + x * 3, row + x * 4, 3); // B, G, R as stored
+                        memset(alpha + y * rowBytes + x * 3, row[x * 4 + 3], 3);
+                    }
+                }
+                char path[128];
+                snprintf(path, sizeof(path), "%s.bmp", name);
+                WriteBmp24(path, desc.Width, desc.Height, colour, rowBytes);
+                snprintf(path, sizeof(path), "%s_alpha.bmp", name);
+                WriteBmp24(path, desc.Width, desc.Height, alpha, rowBytes);
+            }
+            free(colour); free(alpha);
+            sys->UnlockRect();
+        }
+    }
+    sys->Release();
+}
+
 // Xbox clear flags: bits 4..7 are the per-channel colour masks (0xF0 = all), bit 0 = Z, bit 1 = stencil.
 void D3D9_Clear(uint32_t rectCount, void *pRects, uint32_t flags, uint32_t colour, float z, uint32_t stencil) {
     (void)rectCount; (void)pRects;
     if (g_device == NULL)
         return;
-    if (g_offscreenTarget) { // the shadow pass clearing its texture - must not wipe the backbuffer mid-frame
-        D3D9_BackendMissing("D3DDevice_Clear(off-screen target - skipped)");
-        return;
-    }
     DWORD d3dFlags = 0;
     if (flags & 0xF0) d3dFlags |= D3DCLEAR_TARGET;
     if (flags & 0x01) d3dFlags |= D3DCLEAR_ZBUFFER;
     if ((flags & 0x02) && g_hasStencil) d3dFlags |= D3DCLEAR_STENCIL;
     if (g_reversedDepth) z = 1.0f - z;
-    if (d3dFlags != 0)
-        g_device->Clear(0, NULL, d3dFlags, colour, z, stencil);
+    IDirect3DSurface9 *depth = NULL;
+    if (FAILED(g_device->GetDepthStencilSurface(&depth)) || depth == NULL)
+        d3dFlags &= ~(D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL); // a Clear naming a depth buffer that isn't there fails outright
+    if (depth != NULL)
+        depth->Release();
+    if (d3dFlags != 0) {
+        HRESULT hr = g_device->Clear(0, NULL, d3dFlags, colour, z, stencil);
+        static int failures = 0;
+        if (FAILED(hr) && failures++ < 4)
+            D3D9Log("[d3d9] Clear(flags 0x%lx) failed: 0x%08lx" "\n", d3dFlags, hr);
+    }
 }
 
 void D3D9_Swap(uint32_t type) {
@@ -539,13 +631,24 @@ void D3D9_Swap(uint32_t type) {
         g_device->EndScene();
         g_inScene = false;
     }
+    if (g_dumpFrame != 0) {
+        DumpSurface(g_backBufferSurface, "d3d9_dump_frame");
+        g_dumpFrame = 0;
+    }
+    if (D3D9_DUMP_EVERY > 0 && (g_frameCount + 1) % D3D9_DUMP_EVERY == 0) {
+        g_dumpFrame = g_frameCount + 1; // the next frame gets dumped
+        g_dumpRtCount = 0;
+    }
     HRESULT hr = g_device->Present(NULL, NULL, NULL, NULL);
     PaceFrame();
     if (hr == D3DERR_DEVICELOST) {
         if (g_device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET) {
             D3D9Log("[d3d9] device lost - resetting (device state is not restored yet at this checkpoint).\n");
-            ReleaseIndexRing(); // D3DPOOL_DEFAULT: must not exist across Reset
-            g_device->Reset(&g_presentParams);
+            ReleaseDefaultPoolResources(); // D3DPOOL_DEFAULT: must not exist across Reset
+            if (SUCCEEDED(g_device->Reset(&g_presentParams))) {
+                g_device->GetRenderTarget(0, &g_backBufferSurface);
+                g_device->GetDepthStencilSurface(&g_mainDepthSurface);
+            }
         }
     }
     g_frameCount++;
@@ -555,7 +658,7 @@ void D3D9_Swap(uint32_t type) {
 }
 
 void D3D9_SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height, float minZ, float maxZ) {
-    if (g_device == NULL || g_offscreenTarget) // the pass's own viewport; the seam restores the saved one afterwards
+    if (g_device == NULL)
         return;
     D3DVIEWPORT9 vp = { x, y, width, height, minZ, maxZ };
     g_device->SetViewport(&vp);
@@ -714,7 +817,7 @@ static float g_texCoordScale[4][2] = { { 1, 1 }, { 1, 1 }, { 1, 1 }, { 1, 1 } };
 
 // Binds textures (re-uploading any the CPU wrote to since - movie frames, the intro effect - the seam only
 // calls SetTexture when the bound slot changes) and applies the stage state for the current draw.
-static void ApplyTextureStageState(void) {
+static void ApplyTextureStageState(bool shaderDraw) {
     static const uint32_t xboxStages[3] = { 0, 1, 3 };
     uint32_t host = 0;
     for (int t = 0; t < 4; t++) g_texCoordScale[t][0] = g_texCoordScale[t][1] = 1.0f;
@@ -724,6 +827,14 @@ static void ApplyTextureStageState(void) {
             continue;
         uint32_t h = host++;
         g_device->SetTexture(h, g_boundTexture[s] != NULL ? GetHostTexture(g_boundTexture[s]) : NULL);
+        if (g_dumpFrame != 0 && g_boundTexture[s] != NULL && g_dumpRtCount < 8) {
+            HostTexture *t = FindHostTexture(g_boundTexture[s]);
+            if (t != NULL && t->renderTarget && t->rtSurface != NULL) {
+                char name[64];
+                snprintf(name, sizeof(name), "d3d9_dump_rt_sampled_%d", g_dumpRtCount++);
+                DumpSurface(t->rtSurface, name);
+            }
+        }
         if (g_boundTexture[s] != NULL) {
             const XboxPixelContainer *header = (const XboxPixelContainer*)g_boundTexture[s];
             if (header->Size != 0) { // linear: texel coordinates on the NV2A
@@ -751,6 +862,9 @@ static void ApplyTextureStageState(void) {
         g_device->SetTextureStageState(h, D3DTSS_ALPHAARG2, XBOX_TEXTURE_STATE(s, XTSS_ALPHAARG2));
         uint32_t texCoordIndex = XBOX_TEXTURE_STATE(s, XTSS_TEXCOORDINDEX) & 0xFFFF;
         g_device->SetTextureStageState(h, D3DTSS_TEXCOORDINDEX, texCoordIndex < 4 ? texCoordIndex : s);
+        // Every NV2A 2D texture stage divides by q; the shaders leave q = 1 unless projecting (the character
+        // shadow). Pre-transformed quads carry 2D coordinates with no q.
+        g_device->SetTextureStageState(h, D3DTSS_TEXTURETRANSFORMFLAGS, shaderDraw ? (D3DTTFF_COUNT4 | D3DTTFF_PROJECTED) : D3DTTFF_DISABLE);
     }
     for (; host < 4; host++) {
         g_device->SetTexture(host, NULL);
@@ -982,7 +1096,9 @@ static bool TranslateVshToHlsl(const uint8_t *function, const uint32_t *normPack
         }
     }
     h.printf("    float4 R0 = 0, R1 = 0, R2 = 0, R3 = 0, R4 = 0, R5 = 0, R6 = 0, R7 = 0, R8 = 0, R9 = 0, R10 = 0, R11 = 0;\n");
-    h.printf("    float4 oPos = 0, oD0 = 0, oD1 = 0, oFog = 0, oPts = 0, oB0 = 0, oB1 = 0, oT0 = 0, oT1 = 0, oT2 = 0, oT3 = 0;\n");
+    // Output registers start as (0,0,0,1) on the hardware; the w matters because texture stages divide by q.
+    h.printf("    float4 oPos = 0, oD0 = 0, oD1 = 0, oFog = 0, oPts = 0, oB0 = 0, oB1 = 0;\n");
+    h.printf("    float4 oT0 = float4(0,0,0,1), oT1 = float4(0,0,0,1), oT2 = float4(0,0,0,1), oT3 = float4(0,0,0,1);\n");
     h.printf("    int a0 = 0;\n");
     if (h.overflow || h.len + w.len + 512 > outSize / 2) return false;
     memmove(out + h.len, body, w.len);
@@ -1256,20 +1372,117 @@ void D3D9_SetStreamSource(int streamNumber, void *vertexBuffer, int stride) {
 }
 void D3D9_SetIndices(void *pIndexBuffer, uint32_t baseVertexIndex) { (void)baseVertexIndex; g_indexBuffer = pIndexBuffer; }
 
-// Off-screen render targets (the character shadow pass, the aux pass) aren't implemented yet: draws issued
-// while one is selected are skipped rather than landing on the backbuffer.
+// ---------------------------------------------------------------------------------------------------------------
+// Render targets. The game renders character shadows into a 256x256 texture (the aux pass), box-blurs them via
+// a 128x128 texture with the immediate quad path, and projects the result onto the level; psiBlurScreen copies
+// the backbuffer into a texture. Render-target textures live in D3DPOOL_DEFAULT with their own depth surface.
+// ---------------------------------------------------------------------------------------------------------------
+
+struct DepthSurfaceForSize { uint32_t width, height; IDirect3DSurface9 *surface; };
+static DepthSurfaceForSize g_depthSurfaces[8];
+static int g_depthSurfaceCount = 0;
+
+static IDirect3DSurface9 *GetDepthSurfaceFor(uint32_t width, uint32_t height) {
+    for (int i = 0; i < g_depthSurfaceCount; i++)
+        if (g_depthSurfaces[i].width == width && g_depthSurfaces[i].height == height)
+            return g_depthSurfaces[i].surface;
+    if (g_depthSurfaceCount >= (int)(sizeof(g_depthSurfaces) / sizeof(g_depthSurfaces[0])))
+        return NULL;
+    IDirect3DSurface9 *surface = NULL;
+    // Discard must be FALSE: D3D9 refuses discardable depth surfaces in lockable formats (D3DFMT_D32F_LOCKABLE).
+    HRESULT hr = g_device->CreateDepthStencilSurface(width, height, g_presentParams.AutoDepthStencilFormat, D3DMULTISAMPLE_NONE, 0, FALSE, &surface, NULL);
+    if (FAILED(hr)) {
+        D3D9Log("[d3d9] depth surface %ux%u creation failed: 0x%08lx" "\n", width, height, hr);
+        return NULL;
+    }
+    DepthSurfaceForSize *d = &g_depthSurfaces[g_depthSurfaceCount++];
+    d->width = width; d->height = height; d->surface = surface;
+    return surface;
+}
+
+// Turns (or keeps) the host texture for an Xbox header as a render-target texture of the header's size.
+static HostTexture *EnsureRenderTargetTexture(const void *headerPtr) {
+    const XboxPixelContainer *h = (const XboxPixelContainer*)headerPtr;
+    HostTexture *t = FindOrAddHostTexture(headerPtr);
+    if (t == NULL || g_device == NULL)
+        return NULL;
+    if (t->renderTarget && t->texture != NULL && t->format == h->Format && t->size == h->Size)
+        return t;
+    ReleaseHostTexture(t);
+    uint32_t width, height;
+    if (h->Size != 0) { width = (h->Size & 0xFFF) + 1; height = ((h->Size >> 12) & 0xFFF) + 1; }
+    else { width = 1u << ((h->Format >> 20) & 0xF); height = 1u << ((h->Format >> 24) & 0xF); }
+    uint32_t xboxFormat = (h->Format >> 8) & 0xFF;
+    D3DFORMAT format = (xboxFormat == XFMT_X8R8G8B8 || xboxFormat == XFMT_LIN_X8R8G8B8) ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8;
+    if (FAILED(g_device->CreateTexture(width, height, 1, D3DUSAGE_RENDERTARGET, format, D3DPOOL_DEFAULT, &t->texture, NULL))) {
+        D3D9Log("[d3d9] render-target texture %ux%u creation failed\n", width, height);
+        t->texture = NULL;
+        return NULL;
+    }
+    t->texture->GetSurfaceLevel(0, &t->rtSurface);
+    t->renderTarget = true;
+    t->dirty = false;
+    t->format = h->Format; t->size = h->Size; t->data = h->Data;
+    return t;
+}
+
+static void CaptureBackBufferInto(void *header) {
+    HostTexture *t = EnsureRenderTargetTexture(header);
+    if (t == NULL || g_backBufferSurface == NULL)
+        return;
+    g_device->StretchRect(g_backBufferSurface, NULL, t->rtSurface, NULL, D3DTEXF_NONE);
+}
+
+static void ReleaseDefaultPoolResources(void) {
+    ReleaseIndexRing();
+    for (int i = 0; i < g_textureCount; i++)
+        if (g_textures[i].renderTarget)
+            ReleaseHostTexture(&g_textures[i]);
+    for (int i = 0; i < g_depthSurfaceCount; i++)
+        g_depthSurfaces[i].surface->Release();
+    g_depthSurfaceCount = 0;
+    if (g_backBufferSurface) { g_backBufferSurface->Release(); g_backBufferSurface = NULL; }
+    if (g_mainDepthSurface) { g_mainDepthSurface->Release(); g_mainDepthSurface = NULL; }
+}
+
+static IDirect3DSurface9 *g_currentRtSurface = NULL; // the render-target texture surface currently selected, if any
+static int g_dumpPassCount = 0;
 void D3D9_SetRenderTarget(void *pRenderTarget, void *pDepthStencil) {
     (void)pDepthStencil;
-    g_offscreenTarget = !(pRenderTarget == NULL || pRenderTarget == &g_dummyBackBuffer || pRenderTarget == &g_dummyRenderTarget);
-    if (g_offscreenTarget)
-        D3D9_BackendMissing("D3DDevice_SetRenderTarget(off-screen target - draws skipped)");
+    if (g_device == NULL)
+        return;
+    if (g_dumpFrame != 0 && g_currentRtSurface != NULL && g_dumpPassCount < 8) {
+        char name[64];
+        snprintf(name, sizeof(name), "d3d9_dump_rt_pass_%d", g_dumpPassCount++);
+        DumpSurface(g_currentRtSurface, name);
+    }
+    if (g_dumpFrame == 0) g_dumpPassCount = 0;
+    g_currentRtSurface = NULL;
+    for (DWORD i = 0; i < 4; i++)
+        g_device->SetTexture(i, NULL); // a texture must not be sampled while it is the target; re-bound at the next draw
+    bool toBackBuffer = (pRenderTarget == NULL || pRenderTarget == &g_dummyBackBuffer || pRenderTarget == &g_dummyRenderTarget);
+    if (!toBackBuffer) {
+        const XboxSurface *surface = (const XboxSurface*)pRenderTarget;
+        HostTexture *t = (surface->Parent != 0) ? EnsureRenderTargetTexture((const void*)(uintptr_t)surface->Parent) : NULL;
+        if (t != NULL) {
+            D3DSURFACE_DESC desc;
+            t->rtSurface->GetDesc(&desc);
+            g_device->SetRenderTarget(0, t->rtSurface);
+            g_device->SetDepthStencilSurface(GetDepthSurfaceFor(desc.Width, desc.Height));
+            g_currentRtSurface = t->rtSurface;
+            g_targetWidth = desc.Width; g_targetHeight = desc.Height;
+            return;
+        }
+        D3D9_BackendMissing("D3DDevice_SetRenderTarget(surface with no texture behind it)");
+    }
+    g_device->SetRenderTarget(0, g_backBufferSurface);
+    g_device->SetDepthStencilSurface(g_mainDepthSurface);
+    g_targetWidth = g_presentParams.BackBufferWidth; g_targetHeight = g_presentParams.BackBufferHeight;
 }
 
 // Everything a programmable draw needs: the translated shader and declaration, the constants, the bound
 // streams' host buffers, textures and stage state. Returns false (after counting why) if the draw can't happen.
 static bool PrepareShaderDraw(bool bindStreams) {
-    if (g_offscreenTarget)
-        return false;
     if (g_currentVertexShader < 0 || g_currentVertexShader >= g_vertexShaderCount) {
         D3D9_BackendMissing("draw with no vertex shader selected");
         return false;
@@ -1286,9 +1499,9 @@ static bool PrepareShaderDraw(bool bindStreams) {
         g_device->SetVertexShaderConstantF(0, &g_vertexConstants[0][0], 192);
         g_constantsDirty = false;
     }
-    ApplyTextureStageState(); // before the host constants: it computes the linear-texture coordinate scales
+    ApplyTextureStageState(true); // before the host constants: it computes the linear-texture coordinate scales
     float hostConstants[5][4] = {
-        { -1.0f / (float)g_presentParams.BackBufferWidth, 1.0f / (float)g_presentParams.BackBufferHeight, 0, 0 },
+        { -1.0f / (float)g_targetWidth, 1.0f / (float)g_targetHeight, 0, 0 },
         { 0, 0, 0, 0 }, // depth mapping, filled in below
         { 0, 0, 0, 0 },
         { g_texCoordScale[0][0], g_texCoordScale[0][1], g_texCoordScale[1][0], g_texCoordScale[1][1] },
@@ -1364,7 +1577,7 @@ static void ReleaseIndexRing(void) {
 }
 
 void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, const void *pIndexData) {
-    if (g_device == NULL || g_offscreenTarget)
+    if (g_device == NULL)
         return;
     D3DPRIMITIVETYPE type; UINT primCount;
     if (!XboxPrimitiveToD3D(primitiveType, vertexCount, &type, &primCount) || vertexCount > INDEX_RING_COUNT)
@@ -1397,7 +1610,7 @@ void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, cons
 
 // Non-indexed draws from a bound stream: the point-sprite overlay (reticle etc.) is the only user.
 void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t vertexCount) {
-    if (g_device == NULL || g_offscreenTarget)
+    if (g_device == NULL)
         return;
     D3DPRIMITIVETYPE type; UINT primCount;
     if (!XboxPrimitiveToD3D(primitiveType, vertexCount, &type, &primCount))
@@ -1446,7 +1659,7 @@ static void DrawImmediateQuads(uint32_t vertexCount, const uint8_t *data, uint32
     }
     if (vertexCount > 64 * 4) vertexCount = 64 * 4;
     BeginSceneIfNeeded();
-    ApplyTextureStageState(); // first: it also works out the linear-texture coordinate scale used below
+    ApplyTextureStageState(false); // first: it also works out the linear-texture coordinate scale used below
     const float *k = g_vertexConstants[103];
     for (uint32_t v = 0; v < vertexCount; v++) {
         const float *src = (const float*)(data + (size_t)v * stride);
@@ -1466,7 +1679,7 @@ static void DrawImmediateQuads(uint32_t vertexCount, const uint8_t *data, uint32
 }
 
 void D3D9_DrawVerticesUP(uint32_t primitiveType, uint32_t vertexCount, void *pVertexData, uint32_t stride) {
-    if (g_device == NULL || g_offscreenTarget)
+    if (g_device == NULL)
         return;
     if (primitiveType == 8 && stride == 0x18) { // X_D3DPT_QUADLIST from maybeImmediateModeFlush
         DrawImmediateQuads(vertexCount, (const uint8_t*)pVertexData, stride);
