@@ -83,7 +83,7 @@ static void WriteDefaultSettingsFile() {
         "GraphicsBackend=cxbx\n"
         "\n"
         "; cxbx = play audio through CXBX's DirectSound emulation (the default), xaudio2 = the project's own\n"
-        "; native audio backend (not implemented yet - selecting it currently means silence)\n"
+        "; native audio backend (work in progress - 2D sound works, no reverb and no FMV audio yet)\n"
         "AudioBackend=cxbx\n"
     );
 

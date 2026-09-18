@@ -86,7 +86,7 @@ backend has to sustain every frame.
    overwrite a buffer's sample data in place while it plays (the streaming path), so a cache keyed on
    (pointer, size) alone will go stale there. That path needs either invalidation or bypassing.
 
-## The gap: FMV stream audio
+## Streams belong to CXBX, not to the seam
 
 `DirectSoundCreateStream`, `IDirectSoundStream_Process`, `IDirectSoundStream_Pause`,
 `IDirectSound_SynchPlayback` and `IDirectSound_Release` **never appear in the trace**, even though two FMVs
@@ -95,10 +95,62 @@ rather than through any game function the seam has replaced. All the seam sees o
 `IDirectSoundStream_SetMixBins` and `SetVolume` calls that `BackgroundMovieSetupMix` and
 `dsndStreamSetVolume` make on a stream somebody else created (5 calls each, which is the FMVs played).
 
-So a native backend will be **silent for FMV audio** until those entry points are hooked at their own
-addresses, the way `d3dSeam.cpp` hooks the four D3D8 entry points whose callers live inside the video
-decoder. That cannot be done in cxbx mode - a `FUNC_AT` hook on a library entry point has nowhere to
-forward to - so it has to land together with the native backend, behind the `AudioBackend` switch.
+The consequence is **not** that FMV audio goes silent under a native backend, which is what an earlier
+version of this document claimed and testing disproved. CXBX's patches on the DSOUND entry points are
+installed regardless of what the seam does, so the decoder's calls still land in CXBX's HLE and CXBX still
+plays those streams. In native mode two audio systems therefore run side by side: ours for the game's
+voices, CXBX's for the decoder's streams. FMV audio is audible.
+
+What this does mean:
+
+- The **stream setters the game itself makes have to be passed through to the DSOUND library** even in
+  native mode, because the stream object they act on is CXBX's, not the backend's. Attaching them to a
+  native backend, or leaving them unattached, drops the game's own volume and mixbin routing and leaves the
+  stream playing at whatever CXBX defaulted to - which is what wrong music levels look like. See
+  `DSoundSeamPassThrough` in `dsndSeam.cpp`.
+- Streams only become the backend's problem when the stream entry points are hooked at their own addresses,
+  the way `d3dSeam.cpp` hooks the four D3D8 entry points whose callers live inside the video decoder. That
+  cannot be done in cxbx mode - a `FUNC_AT` hook on a library entry point has nowhere to forward to - so it
+  has to land behind the `AudioBackend` switch, and it is not needed at all until CXBX itself goes away.
+
+## Two long-standing bugs, and why they are the same bug
+
+Both of these were seen under CXBX long before any of this work, and are worth recording because the cause
+turned out to be a single line in CXBX rather than anything in the game.
+
+Reported symptoms:
+
+1. The music system would fairly often get stuck looping the first few hundred milliseconds of a track,
+   persisting until the game was restarted, with no obvious trigger.
+2. Pausing and resuming would restart a stream from its beginning rather than continuing - most visibly the
+   villain's speech in the final level.
+
+`CXBX-Reloaded`'s `IDirectSoundBuffer_Stop` rewinds the play cursor:
+
+```cpp
+// TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
+hRet = pThis->EmuDirectSoundBuffer8->Stop();
+pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+```
+
+That is symptom 2 on its own: every Stop/Play pair restarts from zero. The game expects DirectSound's actual
+behaviour, where Stop retains the position and Play resumes - and its own code proves that is the intent,
+because `dsndSamplePause` deliberately keeps the voice slot allocated (the paused flag exists for exactly
+that) so it can be resumed later.
+
+Symptom 1 then follows from symptom 2 through `SFXUpdateStreams`. When the streamer underruns, the data end
+marker check pauses the voice (`psiSamplePause`) and sets `ShutDown`; when more data has been transferred it
+resumes (`psiSampleUnPause`). With a rewinding Stop that resume replays the opening chunk, and since the next
+write offset is computed from the play position it is now out of step and underruns again almost immediately.
+Pause, rewind, replay, repeat. It presents as an unpredictable trigger because it is an underrun race, and it
+never recovers because the timeout that would otherwise stop a wedged stream is explicitly skipped for music
+streams (`if (200 < TimedOut && MusicStream == 0)`).
+
+The XAudio2 backend implements the retain-and-resume semantics, so neither symptom should occur in native
+mode. Note that this makes native mode *more* correct than the cxbx baseline rather than merely equal to it,
+which is worth remembering when A/B-ing the two: a difference is not automatically a regression. The cxbx
+path could be made to behave the same way by having the seam save the position before `Stop` and restore it
+after the following `Play`, at the cost of no longer having an unmodified baseline to bisect against.
 
 ## Also worth noting
 

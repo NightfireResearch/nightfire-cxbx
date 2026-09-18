@@ -1,5 +1,6 @@
 #include "dsndSeam.h"
 #include "../engine/XboxSettings.h" // Settings_GetAudioBackend
+#include "xaudio2Backend.h"          // the native backend the entry-point wrappers can dispatch to
 
 #include <stdint.h>
 #include <string.h>
@@ -269,6 +270,28 @@ static inline DSoundSeamTracedCall<R, A...> DSoundSeamTraced(const char *name, R
     return { name, fn, backend };
 }
 
+// A few entry points have to keep going to the DSOUND library even in native mode, because the objects they
+// act on are not ours to own. The XMV decoder creates its streams by calling DirectSoundCreateStream directly
+// rather than through anything this seam replaced, so CXBX's emulation both owns those stream objects and -
+// while CXBX is still hosting the process - still plays them. That is why FMV audio is audible in native mode
+// at all. Routing the stream setters to a native backend, or dropping them, would leave the stream playing at
+// whatever volume and mixbin routing CXBX happened to default to, with the game's own calls going nowhere.
+//
+// This is a bridge, not an end state: when the stream entry points are hooked at their own addresses the
+// streams become ours and these go back through the normal dispatch.
+template<typename R, typename... A> struct DSoundSeamPassThroughCall {
+    const char *name;
+    R(__stdcall *fn)(A...);
+    R operator()(A... args) const {
+        DSoundSeamTraceCall(name, args...);
+        return fn(args...);
+    }
+};
+template<typename R, typename... A>
+static inline DSoundSeamPassThroughCall<R, A...> DSoundSeamPassThrough(const char *name, R(__stdcall *fn)(A...)) {
+    return { name, fn };
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // The DSOUND entry points. These are the public (I)DirectSound* wrappers at the top of the library, not its
 // internals: everything they call at 0x00112xxx-0x00119xxx (the CDirectSound*/CMcpx* classes) is inside the
@@ -305,97 +328,97 @@ enum {
 // re-checked the same way (RET immediate read out of the image against the typedef's parameter count) and was
 // already right; do the same for anything added here later rather than trusting the reported prototype.
 typedef void(__stdcall *DirectSoundCreateFn)(void *lpGuid, DSoundObject **ppDS, void *pUnknown);
-#define DirectSoundCreate (DSoundSeamTraced("DirectSoundCreate", (DirectSoundCreateFn)0x001148b8u))
+#define DirectSoundCreate (DSoundSeamTraced("DirectSoundCreate", (DirectSoundCreateFn)0x001148b8u, XA2_DirectSoundCreate))
 
 typedef void(__stdcall *DirectSoundUseFullHRTFFn)(void);
-#define DirectSoundUseFullHRTF (DSoundSeamTraced("DirectSoundUseFullHRTF", (DirectSoundUseFullHRTFFn)0x0011275fu))
+#define DirectSoundUseFullHRTF (DSoundSeamTraced("DirectSoundUseFullHRTF", (DirectSoundUseFullHRTFFn)0x0011275fu, XA2_DirectSoundUseFullHRTF))
 
 typedef void(__stdcall *DirectSoundDoWorkFn)(void);
-#define DirectSoundDoWork (DSoundSeamTraced("DirectSoundDoWork", (DirectSoundDoWorkFn)0x001134fdu))
+#define DirectSoundDoWork (DSoundSeamTraced("DirectSoundDoWork", (DirectSoundDoWorkFn)0x001134fdu, XA2_DirectSoundDoWork))
 
 typedef void(__stdcall *IDirectSound_DownloadEffectsImageFn)(DSoundObject *thisPtr, const void *pvImageBuffer,
                                                              uint32_t dwImageSize, void *pImageLoc, void **ppImageDesc);
-#define IDirectSound_DownloadEffectsImage (DSoundSeamTraced("IDirectSound_DownloadEffectsImage", (IDirectSound_DownloadEffectsImageFn)0x0011338bu))
+#define IDirectSound_DownloadEffectsImage (DSoundSeamTraced("IDirectSound_DownloadEffectsImage", (IDirectSound_DownloadEffectsImageFn)0x0011338bu, XA2_IDirectSound_DownloadEffectsImage))
 
 typedef void(__stdcall *IDirectSound_CreateSoundBufferFn)(DSoundObject *thisPtr, DSBUFFERDESC_Xbox *pdsbd,
                                                           uint32_t *ppBuffer, uint32_t *ppUnknown);
-#define IDirectSound_CreateSoundBuffer (DSoundSeamTraced("IDirectSound_CreateSoundBuffer", (IDirectSound_CreateSoundBufferFn)0x001146feu))
+#define IDirectSound_CreateSoundBuffer (DSoundSeamTraced("IDirectSound_CreateSoundBuffer", (IDirectSound_CreateSoundBufferFn)0x001146feu, XA2_IDirectSound_CreateSoundBuffer))
 
 typedef void(__stdcall *IDirectSound_SetPositionFn)(DSoundObject *thisPtr, float x, float y, float z, uint32_t dwApply);
-#define IDirectSound_SetPosition (DSoundSeamTraced("IDirectSound_SetPosition", (IDirectSound_SetPositionFn)0x0011437eu))
+#define IDirectSound_SetPosition (DSoundSeamTraced("IDirectSound_SetPosition", (IDirectSound_SetPositionFn)0x0011437eu, XA2_IDirectSound_SetPosition))
 
 typedef void(__stdcall *IDirectSound_SetVelocityFn)(DSoundObject *thisPtr, float x, float y, float z, uint32_t dwApply);
-#define IDirectSound_SetVelocity (DSoundSeamTraced("IDirectSound_SetVelocity", (IDirectSound_SetVelocityFn)0x001143b3u))
+#define IDirectSound_SetVelocity (DSoundSeamTraced("IDirectSound_SetVelocity", (IDirectSound_SetVelocityFn)0x001143b3u, XA2_IDirectSound_SetVelocity))
 
 typedef void(__stdcall *IDirectSound_SetOrientationFn)(DSoundObject *thisPtr, float xFront, float yFront, float zFront,
                                                        float xTop, float yTop, float zTop, uint32_t dwApply);
-#define IDirectSound_SetOrientation (DSoundSeamTraced("IDirectSound_SetOrientation", (IDirectSound_SetOrientationFn)0x00114334u))
+#define IDirectSound_SetOrientation (DSoundSeamTraced("IDirectSound_SetOrientation", (IDirectSound_SetOrientationFn)0x00114334u, XA2_IDirectSound_SetOrientation))
 
 typedef void(__stdcall *IDirectSound_CommitDeferredSettingsFn)(DSoundObject *thisPtr);
-#define IDirectSound_CommitDeferredSettings (DSoundSeamTraced("IDirectSound_CommitDeferredSettings", (IDirectSound_CommitDeferredSettingsFn)0x00113c13u))
+#define IDirectSound_CommitDeferredSettings (DSoundSeamTraced("IDirectSound_CommitDeferredSettings", (IDirectSound_CommitDeferredSettingsFn)0x00113c13u, XA2_IDirectSound_CommitDeferredSettings))
 
 typedef void(__stdcall *IDirectSoundBuffer_SetBufferDataFn)(DSoundBuffer *thisPtr, void *pvBufferData, uint32_t dwBufferBytes);
-#define IDirectSoundBuffer_SetBufferData (DSoundSeamTraced("IDirectSoundBuffer_SetBufferData", (IDirectSoundBuffer_SetBufferDataFn)0x001143e8u))
+#define IDirectSoundBuffer_SetBufferData (DSoundSeamTraced("IDirectSoundBuffer_SetBufferData", (IDirectSoundBuffer_SetBufferDataFn)0x001143e8u, XA2_IDirectSoundBuffer_SetBufferData))
 
 typedef void(__stdcall *IDirectSoundBuffer_SetFrequencyFn)(DSoundBuffer *thisPtr, uint32_t dwFrequency);
-#define IDirectSoundBuffer_SetFrequency (DSoundSeamTraced("IDirectSoundBuffer_SetFrequency", (IDirectSoundBuffer_SetFrequencyFn)0x00113c2bu))
+#define IDirectSoundBuffer_SetFrequency (DSoundSeamTraced("IDirectSoundBuffer_SetFrequency", (IDirectSoundBuffer_SetFrequencyFn)0x00113c2bu, XA2_IDirectSoundBuffer_SetFrequency))
 
 typedef void(__stdcall *IDirectSoundBuffer_SetLoopRegionFn)(DSoundBuffer *thisPtr, uint32_t dwLoopStart, uint32_t dwLoopLength);
-#define IDirectSoundBuffer_SetLoopRegion (DSoundSeamTraced("IDirectSoundBuffer_SetLoopRegion", (IDirectSoundBuffer_SetLoopRegionFn)0x00113476u))
+#define IDirectSoundBuffer_SetLoopRegion (DSoundSeamTraced("IDirectSoundBuffer_SetLoopRegion", (IDirectSoundBuffer_SetLoopRegionFn)0x00113476u, XA2_IDirectSoundBuffer_SetLoopRegion))
 
 typedef void(__stdcall *IDirectSoundBuffer_SetCurrentPositionFn)(DSoundBuffer *thisPtr, uint32_t dwPlayCursor);
-#define IDirectSoundBuffer_SetCurrentPosition (DSoundSeamTraced("IDirectSoundBuffer_SetCurrentPosition", (IDirectSoundBuffer_SetCurrentPositionFn)0x001134d2u))
+#define IDirectSoundBuffer_SetCurrentPosition (DSoundSeamTraced("IDirectSoundBuffer_SetCurrentPosition", (IDirectSoundBuffer_SetCurrentPositionFn)0x001134d2u, XA2_IDirectSoundBuffer_SetCurrentPosition))
 
 typedef void(__stdcall *IDirectSoundBuffer_GetCurrentPositionFn)(DSoundBuffer *thisPtr, uint32_t *pdwPlayCursor, uint32_t *pdwWriteCursor);
-#define IDirectSoundBuffer_GetCurrentPosition (DSoundSeamTraced("IDirectSoundBuffer_GetCurrentPosition", (IDirectSoundBuffer_GetCurrentPositionFn)0x001134b2u))
+#define IDirectSoundBuffer_GetCurrentPosition (DSoundSeamTraced("IDirectSoundBuffer_GetCurrentPosition", (IDirectSoundBuffer_GetCurrentPositionFn)0x001134b2u, XA2_IDirectSoundBuffer_GetCurrentPosition))
 
 typedef void(__stdcall *IDirectSoundBuffer_GetStatusFn)(DSoundBuffer *thisPtr, uint32_t *pdwStatus);
-#define IDirectSoundBuffer_GetStatus (DSoundSeamTraced("IDirectSoundBuffer_GetStatus", (IDirectSoundBuffer_GetStatusFn)0x00113496u))
+#define IDirectSoundBuffer_GetStatus (DSoundSeamTraced("IDirectSoundBuffer_GetStatus", (IDirectSoundBuffer_GetStatusFn)0x00113496u, XA2_IDirectSoundBuffer_GetStatus))
 
 typedef void(__stdcall *IDirectSoundBuffer_PlayFn)(DSoundBuffer *thisPtr, uint32_t dwReserved1, uint32_t dwReserved2, uint32_t dwFlags);
-#define IDirectSoundBuffer_Play (DSoundSeamTraced("IDirectSoundBuffer_Play", (IDirectSoundBuffer_PlayFn)0x0011343au))
+#define IDirectSoundBuffer_Play (DSoundSeamTraced("IDirectSoundBuffer_Play", (IDirectSoundBuffer_PlayFn)0x0011343au, XA2_IDirectSoundBuffer_Play))
 
 typedef void(__stdcall *IDirectSoundBuffer_StopFn)(DSoundBuffer *thisPtr);
-#define IDirectSoundBuffer_Stop (DSoundSeamTraced("IDirectSoundBuffer_Stop", (IDirectSoundBuffer_StopFn)0x0011345eu))
+#define IDirectSoundBuffer_Stop (DSoundSeamTraced("IDirectSoundBuffer_Stop", (IDirectSoundBuffer_StopFn)0x0011345eu, XA2_IDirectSoundBuffer_Stop))
 
 typedef void(__stdcall *IDirectSoundBuffer_SetVolumeFn)(DSoundBuffer *thisPtr, int32_t lVolume);
-#define IDirectSoundBuffer_SetVolume (DSoundSeamTraced("IDirectSoundBuffer_SetVolume", (IDirectSoundBuffer_SetVolumeFn)0x001133cau))
+#define IDirectSoundBuffer_SetVolume (DSoundSeamTraced("IDirectSoundBuffer_SetVolume", (IDirectSoundBuffer_SetVolumeFn)0x001133cau, XA2_IDirectSoundBuffer_SetVolume))
 
 typedef void(__stdcall *IDirectSoundBuffer_SetHeadroomFn)(DSoundBuffer *thisPtr, uint32_t dwHeadroom);
-#define IDirectSoundBuffer_SetHeadroom (DSoundSeamTraced("IDirectSoundBuffer_SetHeadroom", (IDirectSoundBuffer_SetHeadroomFn)0x001133e6u))
+#define IDirectSoundBuffer_SetHeadroom (DSoundSeamTraced("IDirectSoundBuffer_SetHeadroom", (IDirectSoundBuffer_SetHeadroomFn)0x001133e6u, XA2_IDirectSoundBuffer_SetHeadroom))
 
 typedef void(__stdcall *IDirectSoundBuffer_SetMixBinsFn)(DSoundBuffer *thisPtr, DSMIXBINS_Xbox *pMixBins);
-#define IDirectSoundBuffer_SetMixBins (DSoundSeamTraced("IDirectSoundBuffer_SetMixBins", (IDirectSoundBuffer_SetMixBinsFn)0x00113402u))
+#define IDirectSoundBuffer_SetMixBins (DSoundSeamTraced("IDirectSoundBuffer_SetMixBins", (IDirectSoundBuffer_SetMixBinsFn)0x00113402u, XA2_IDirectSoundBuffer_SetMixBins))
 
 // The library exports two SetMixBinVolumes entry points; this is the 8-byte-argument one (a DSMIXBINS, same
 // shape as SetMixBins), which is the only one the game uses (from dsndSetPan).
 typedef void(__stdcall *IDirectSoundBuffer_SetMixBinVolumesFn)(DSoundBuffer *thisPtr, DSMIXBINS_Xbox *pMixBins);
-#define IDirectSoundBuffer_SetMixBinVolumes (DSoundSeamTraced("IDirectSoundBuffer_SetMixBinVolumes_8", (IDirectSoundBuffer_SetMixBinVolumesFn)0x0011341eu))
+#define IDirectSoundBuffer_SetMixBinVolumes (DSoundSeamTraced("IDirectSoundBuffer_SetMixBinVolumes_8", (IDirectSoundBuffer_SetMixBinVolumesFn)0x0011341eu, XA2_IDirectSoundBuffer_SetMixBinVolumes))
 
 typedef void(__stdcall *IDirectSoundBuffer_SetMinDistanceFn)(DSoundBuffer *thisPtr, float flMinDistance, uint32_t dwApply);
-#define IDirectSoundBuffer_SetMinDistance (DSoundSeamTraced("IDirectSoundBuffer_SetMinDistance", (IDirectSoundBuffer_SetMinDistanceFn)0x00113c6bu))
+#define IDirectSoundBuffer_SetMinDistance (DSoundSeamTraced("IDirectSoundBuffer_SetMinDistance", (IDirectSoundBuffer_SetMinDistanceFn)0x00113c6bu, XA2_IDirectSoundBuffer_SetMinDistance))
 
 typedef void(__stdcall *IDirectSoundBuffer_SetMaxDistanceFn)(DSoundBuffer *thisPtr, float flMaxDistance, uint32_t dwApply);
-#define IDirectSoundBuffer_SetMaxDistance (DSoundSeamTraced("IDirectSoundBuffer_SetMaxDistance", (IDirectSoundBuffer_SetMaxDistanceFn)0x00113c47u))
+#define IDirectSoundBuffer_SetMaxDistance (DSoundSeamTraced("IDirectSoundBuffer_SetMaxDistance", (IDirectSoundBuffer_SetMaxDistanceFn)0x00113c47u, XA2_IDirectSoundBuffer_SetMaxDistance))
 
 typedef void(__stdcall *IDirectSoundBuffer_SetPositionFn)(DSoundBuffer *thisPtr, float x, float y, float z, uint32_t dwApply);
-#define IDirectSoundBuffer_SetPosition (DSoundSeamTraced("IDirectSoundBuffer_SetPosition", (IDirectSoundBuffer_SetPositionFn)0x00113c8fu))
+#define IDirectSoundBuffer_SetPosition (DSoundSeamTraced("IDirectSoundBuffer_SetPosition", (IDirectSoundBuffer_SetPositionFn)0x00113c8fu, XA2_IDirectSoundBuffer_SetPosition))
 
 typedef void(__stdcall *IDirectSoundBuffer_SetVelocityFn)(DSoundBuffer *thisPtr, float x, float y, float z, uint32_t dwApply);
-#define IDirectSoundBuffer_SetVelocity (DSoundSeamTraced("IDirectSoundBuffer_SetVelocity", (IDirectSoundBuffer_SetVelocityFn)0x00113cc4u))
+#define IDirectSoundBuffer_SetVelocity (DSoundSeamTraced("IDirectSoundBuffer_SetVelocity", (IDirectSoundBuffer_SetVelocityFn)0x00113cc4u, XA2_IDirectSoundBuffer_SetVelocity))
 
 typedef void(__stdcall *IDirectSoundBuffer_SetRolloffCurveFn)(DSoundBuffer *thisPtr, const float *pflPoints,
                                                               uint32_t dwPointCount, uint32_t dwApply);
-#define IDirectSoundBuffer_SetRolloffCurve (DSoundSeamTraced("IDirectSoundBuffer_SetRolloffCurve", (IDirectSoundBuffer_SetRolloffCurveFn)0x00113cf9u))
+#define IDirectSoundBuffer_SetRolloffCurve (DSoundSeamTraced("IDirectSoundBuffer_SetRolloffCurve", (IDirectSoundBuffer_SetRolloffCurveFn)0x00113cf9u, XA2_IDirectSoundBuffer_SetRolloffCurve))
 
 typedef void(__stdcall *IDirectSoundBuffer_SetI3DL2SourceFn)(DSoundBuffer *thisPtr, DSI3DL2BUFFER_Xbox *pds3db, uint32_t dwApply);
-#define IDirectSoundBuffer_SetI3DL2Source (DSoundSeamTraced("IDirectSoundBuffer_SetI3DL2Source", (IDirectSoundBuffer_SetI3DL2SourceFn)0x00113d1du))
+#define IDirectSoundBuffer_SetI3DL2Source (DSoundSeamTraced("IDirectSoundBuffer_SetI3DL2Source", (IDirectSoundBuffer_SetI3DL2SourceFn)0x00113d1du, XA2_IDirectSoundBuffer_SetI3DL2Source))
 
 typedef void(__stdcall *IDirectSoundStream_SetVolumeFn)(DSoundStream *pStream, int32_t lVolume);
-#define IDirectSoundStream_SetVolume (DSoundSeamTraced("IDirectSoundStream_SetVolume", (IDirectSoundStream_SetVolumeFn)0x001134eeu))
+#define IDirectSoundStream_SetVolume (DSoundSeamPassThrough("IDirectSoundStream_SetVolume", (IDirectSoundStream_SetVolumeFn)0x001134eeu))
 
 typedef void(__stdcall *IDirectSoundStream_SetMixBinsFn)(DSoundStream *pStream, DSMIXBINS_Xbox *pMixBins);
-#define IDirectSoundStream_SetMixBins (DSoundSeamTraced("IDirectSoundStream_SetMixBins", (IDirectSoundStream_SetMixBinsFn)0x001134f3u))
+#define IDirectSoundStream_SetMixBins (DSoundSeamPassThrough("IDirectSoundStream_SetMixBins", (IDirectSoundStream_SetMixBinsFn)0x001134f3u))
 
 // ---------------------------------------------------------------------------------------------------------------
 // The game's own audio state, at its fixed address - "AudioSystem" in Ghidra, one 5312-byte struct. Mirrored
@@ -878,7 +901,15 @@ uint32_t __cdecl psiStreamGetPlayPos(uint32_t channel) {
 void __cdecl dsndWriteVoiceData(uint32_t channel, int offset, const void *src, uint32_t length) {
     if (!VoiceInUse(channel) || src == NULL || (int)length <= 0)
         return;
-    memcpy((char *)AudioSys.voices[channel].data + offset, src, length);
+    void *data = AudioSys.voices[channel].data;
+    memcpy((char *)data + offset, src, length);
+
+    // A native backend has already converted this buffer's sample data into something it can play, so it has
+    // to be told when the game edits the ADPCM underneath it. Nothing here goes through DirectSound, so this
+    // is the only point at which that is visible. In cxbx mode the DSOUND buffer references the game's memory
+    // directly and there is nothing to do.
+    if (g_audioBackend != AUDIO_BACKEND_CXBX)
+        XA2_NotifyBufferDataWritten(data, (uint32_t)offset, length);
 }
 
 // ---------------------------------------------------------------------------------------------------------------

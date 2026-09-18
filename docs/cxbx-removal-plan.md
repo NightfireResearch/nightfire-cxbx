@@ -138,8 +138,10 @@ From `xboxInitSound`/`xboxCreateSoundBuffers`/`dsndGetVoice` (Ghidra decompiles 
    never released; the game re-pushes every voice parameter every frame whether or not it changed, so the
    backend must diff; and `GetStatus` at 7.7 calls per frame is the hottest call in the seam and drives
    voice recycling. The one real gap: the XMV decoder calls the stream entry points directly, so none of
-   them appear, and FMV audio will be silent in native mode until they are hooked at their own addresses -
-   see that document for the detail.
+   them appear. FMV audio is *not* silent in native mode as a result - CXBX's patches on those entry points
+   are installed whatever the seam does, so it keeps servicing the decoder's streams - but the game's own
+   stream setters have to be passed through to DSOUND rather than handled by a backend, and streams only
+   become the backend's problem once those entry points are hooked. See that document for the detail.
 3. **Native backend** (`AudioBackend=xaudio2` in `settings.ini`, default `cxbx` - the setting, the
    `g_audioBackend` switch and the `DSound_BackendMissing` accounting already exist, there is just no
    backend behind them yet, so selecting `xaudio2` today means silence). Recommended

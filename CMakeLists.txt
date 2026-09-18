@@ -134,13 +134,14 @@ add_library(actioninject SHARED
   src/action/game/sp/SwitchChannels.cpp
   src/action/sound/dsndSeam.cpp
   src/action/sound/xadpcm.cpp
+  src/action/sound/xaudio2Backend.cpp
   src/action/sound/music.cpp
   src/action/sound/SFX.cpp
   src/action/sound/Sound.cpp
 )
 
-# The seam's native Direct3D 9 backend (Direct3D/d3d9Backend.cpp)
-target_link_libraries(actioninject PRIVATE d3d9 d3dcompiler winmm)
+# The seams' native backends (Direct3D/d3d9Backend.cpp, sound/xaudio2Backend.cpp)
+target_link_libraries(actioninject PRIVATE d3d9 d3dcompiler winmm xaudio2)
 
 add_library(drivinginject SHARED
   src/dllmain.cpp
