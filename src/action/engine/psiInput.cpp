@@ -53,6 +53,132 @@ extern "C" __declspec(dllimport) unsigned long __stdcall XInputSetState(unsigned
 
 #define WIN32_ERROR_SUCCESS 0
 
+// ---------------------------------------------------------------------------------------------------------------
+// Keyboard fallback - a virtual Xbox pad on port 0, used only when no real pad is plugged into port 0.
+//
+// This deliberately synthesizes a Win32_XINPUT_STATE and lets it fall through the rest of psiInput_PollDevices
+// untouched, rather than writing game action channels directly (which is what the older Inject_KeyboardInput in
+// input.cpp did). Everything downstream then behaves exactly as it does for a real pad: the deadzone and gain
+// curves, the analog-to-digital button thresholds, all four control styles, and - the part that matters most -
+// psiInput_MapInputs, which only maps anything at all for a player whose controllerIsActive is set, and which
+// derives the action flags the game reads. Pretending to be a pad at the lowest level is both less code and
+// less guesswork than reproducing that mapping.
+//
+// As a side effect this is also why the game no longer stops at "no controller present": port 0 now always has
+// something on it. A real pad appearing later takes over on the next poll.
+//
+// The bindings are a keyboard reading of the default NIGHTFIRE control style - see psiInput_MapInputs for what
+// each pad button actually does, and note that several are deliberately overloaded exactly as they are on the
+// pad (A is crouch in game and select in menus, START is pause and skip-cutscene, and so on).
+//
+//   W / A / S / D          left stick   - move and strafe
+//   arrow keys             right stick  - look (60% deflection, full with Shift held)
+//   Left Ctrl              right trigger - fire
+//   Z                      left shoulder - alternate fire
+//   X                      left trigger  - scope zoom
+//   Space                  Y  - jump                 (also menu alt-select 1)
+//   C  or  Return          A  - crouch               (also menu select)
+//   R                      X  - reload               (also menu alt-select 2)
+//   Backspace              B  - next weapon          (also menu back)
+//   N                      BACK - night vision       (also menu back)
+//   P  or  Escape          START - pause             (also skip cutscene)
+//   Q / E                  d-pad left/right - previous / next weapon
+//   1 / 2                  d-pad down/up    - previous / next gadget, and scope zoom out / in
+//
+// In menus the left stick doubles as the directional input (psiInput_MapInputs treats a stick deflection past
+// 33% the same as a d-pad press), so WASD navigates menus as well as walking.
+// ---------------------------------------------------------------------------------------------------------------
+
+extern "C" __declspec(dllimport) short __stdcall GetAsyncKeyState(int vKey);
+extern "C" __declspec(dllimport) void *__stdcall GetForegroundWindow(void);
+extern "C" __declspec(dllimport) void *__stdcall FindWindowA(const char *lpClassName, const char *lpWindowName);
+extern "C" __declspec(dllimport) void *__stdcall GetAncestor(void *hWnd, unsigned int gaFlags);
+#pragma comment(lib, "user32.lib")
+
+#define VK_BACKSPACE 0x08
+#define VK_RETURN_   0x0D
+#define VK_SHIFT_    0x10
+#define VK_ESCAPE_   0x1B
+#define VK_SPACE_    0x20
+#define VK_LEFT_     0x25
+#define VK_UP_       0x26
+#define VK_RIGHT_    0x27
+#define VK_DOWN_     0x28
+#define VK_LCONTROL_ 0xA2
+#define GA_ROOT_     2
+
+// GetAsyncKeyState rather than GetKeyState: the game loop thread does not pump a message queue of its own, and
+// GetKeyState reports the state as of the calling thread's last message - which on this thread never updates.
+static inline bool KeyDown(int vk) {
+    return (GetAsyncKeyState(vk) & 0x8000) != 0;
+}
+
+// Only feed the keyboard in when the game's own window is in front, so keys typed into another application do
+// not drive Bond around. The window belongs to the launcher process (and the render window is CXBX's child of
+// it), not to the process this DLL is injected into, so this goes via the window handle rather than the pid. If
+// the render window cannot be found at all, fail open - better to accept stray keystrokes than to leave someone
+// with no working input and no way to tell why.
+static bool KeyboardPadHasFocus(void) {
+    void *render = FindWindowA("CxbxRender", NULL);
+    if (render == NULL)
+        return true;
+    void *root = GetAncestor(render, GA_ROOT_);
+    void *foreground = GetForegroundWindow();
+    return foreground != NULL && (foreground == render || foreground == root);
+}
+
+// Fills in state as though a pad were connected, and returns whether any key is actually being held. The state
+// is always fully written, so a caller can use it regardless of the return value.
+static bool BuildKeyboardPadState(Win32_XINPUT_STATE *state) {
+    memset(state, 0, sizeof(*state));
+
+    if (!KeyboardPadHasFocus())
+        return false;
+
+    // A counter is enough for dwPacketNumber: the only thing that reads it is the original's own
+    // "has anything changed" bookkeeping, which just wants it to move when the state does.
+    static unsigned long packet = 0;
+    state->dwPacketNumber = ++packet;
+
+    const short kFull = 32767;
+    const short kLook = (short)(KeyDown(VK_SHIFT_) ? 32767 : 19660); // ~60% unless Shift is held
+
+    short moveX = 0, moveY = 0, lookX = 0, lookY = 0;
+    if (KeyDown('D')) moveX += kFull;
+    if (KeyDown('A')) moveX -= kFull;
+    if (KeyDown('W')) moveY += kFull;
+    if (KeyDown('S')) moveY -= kFull;
+    if (KeyDown(VK_RIGHT_)) lookX += kLook;
+    if (KeyDown(VK_LEFT_))  lookX -= kLook;
+    if (KeyDown(VK_UP_))    lookY += kLook;
+    if (KeyDown(VK_DOWN_))  lookY -= kLook;
+
+    state->Gamepad.sThumbLX = moveX;
+    state->Gamepad.sThumbLY = moveY;
+    state->Gamepad.sThumbRX = lookX;
+    state->Gamepad.sThumbRY = lookY;
+
+    unsigned short buttons = 0;
+    if (KeyDown('C') || KeyDown(VK_RETURN_)) buttons |= WIN32_XINPUT_GAMEPAD_A;
+    if (KeyDown(VK_BACKSPACE))               buttons |= WIN32_XINPUT_GAMEPAD_B;
+    if (KeyDown('R'))                        buttons |= WIN32_XINPUT_GAMEPAD_X;
+    if (KeyDown(VK_SPACE_))                  buttons |= WIN32_XINPUT_GAMEPAD_Y;
+    if (KeyDown('Z'))                        buttons |= WIN32_XINPUT_GAMEPAD_LEFT_SHOULDER;
+    if (KeyDown('P') || KeyDown(VK_ESCAPE_)) buttons |= XINPUT_GAMEPAD_START;
+    if (KeyDown('N'))                        buttons |= XINPUT_GAMEPAD_BACK;
+    if (KeyDown('E'))                        buttons |= XINPUT_GAMEPAD_DPAD_RIGHT;
+    if (KeyDown('Q'))                        buttons |= XINPUT_GAMEPAD_DPAD_LEFT;
+    if (KeyDown('2'))                        buttons |= XINPUT_GAMEPAD_DPAD_UP;
+    if (KeyDown('1'))                        buttons |= XINPUT_GAMEPAD_DPAD_DOWN;
+    state->Gamepad.wButtons = buttons;
+
+    state->Gamepad.bRightTrigger = KeyDown(VK_LCONTROL_) ? 0xFF : 0; // fire
+    state->Gamepad.bLeftTrigger  = KeyDown('X') ? 0xFF : 0;          // scope zoom
+
+    return buttons != 0 || moveX != 0 || moveY != 0 || lookX != 0 || lookY != 0 ||
+           state->Gamepad.bLeftTrigger != 0 || state->Gamepad.bRightTrigger != 0;
+}
+
 // AUTOINJECT
 void xboxInitInputDevices(void) {
     memset(&XboxInputs, 0, sizeof(XboxInputs));
@@ -111,6 +237,14 @@ void psiInput_PollDevices(void) {
         Win32_XINPUT_STATE winState;
         memset(&winState, 0, sizeof(winState));
         bool connected = XInputGetState((unsigned long)i, &winState) == WIN32_ERROR_SUCCESS;
+
+        // No real pad on port 0: present the keyboard as one instead (see BuildKeyboardPadState above). Note
+        // this claims "connected" whether or not a key is currently held - a pad that is plugged in but idle is
+        // still a connected pad, and the game needs port 0 occupied to let you past the front end.
+        if (!connected && i == 0) {
+            BuildKeyboardPadState(&winState);
+            connected = true;
+        }
 
         if (!connected) {
             c->controllerIndex = 0;
