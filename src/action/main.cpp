@@ -2,10 +2,9 @@
 #include "engine/psiInput.h" // xboxInitInputDevices is reimplemented there now, talking to real XInput directly
 
 #include "engine/Direct3D/d3dSeam.h" // xboxInitGraphics is reimplemented there now
+#include "sound/dsndSeam.h"            // xboxInitSound is reimplemented there now
 // AUTOGEN
 void xboxInitTextures(void);
-// AUTOGEN
-void xboxInitSound(void);
 // AUTOGEN
 void* GetPTPData(void);
 // AUTOGEN

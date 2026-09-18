@@ -21,4 +21,8 @@ int Settings_GetFPSOverride(void);
 // (the seam's own native Direct3D 9 backend, see Direct3D/d3d9Backend.h).
 int Settings_GetGraphicsBackend(void);
 
+// settings.ini's [Settings] AudioBackend key: 0 = "cxbx" (DSOUND through CXBX's HLE, the default), 1 = "xaudio2"
+// (the audio seam's own native backend - not written yet, see sound/dsndSeam.h).
+int Settings_GetAudioBackend(void);
+
 #endif // XBOXSETTINGS_H_

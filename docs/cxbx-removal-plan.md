@@ -102,17 +102,40 @@ From `xboxInitSound`/`xboxCreateSoundBuffers`/`dsndGetVoice` (Ghidra decompiles 
 
 ### 3.3 Plan
 
-1. **Seam the game side** (CXBX mode, no behaviour change). Reimplement the ~25 functions in
-   `0xe0f00`-`0xe1e40` and `dsndStreamSetVolume`, `maybeDecodeMpgAudio`, `maybeSFXCreateStreamForVideo`
-   with `AUTOINJECT`, calling the DSOUND entry points through `DSoundSeamTraced` macros modelled on
-   `D3DSeamTraced` (same `D3DSEAM_TRACED_CALL_TYPE` wrapper, own backend pointer table). Put them in
-   `src/action/sound/dsndSeam.cpp`. The `AudioSystem` struct is already typed in Ghidra
-   (`directSoundInst`, `dsndBuffers_mono2d/stereo2d/stereo3d`, `maybeVoices`, `VolumeLookupTable`,
-   `effectImageLocation`); mirror it with fixed-address macros like `Gfx_*` in the D3D seam.
+1. **Seam the game side** (CXBX mode, no behaviour change). **DONE** for the dsnd layer proper - all 28
+   functions in `0xe0f00`-`0xe1e40` are reimplemented in `src/action/sound/dsndSeam.cpp`, calling the
+   DSOUND entry points through a `DSoundSeamTraced` dispatch modelled on `D3DSeamTraced` (one wrapper
+   type, since every public DSOUND entry point is plain `__stdcall`). `AudioSystem` is mirrored as
+   `XboxAudioSystem` at `0x002ae598` with `static_assert`ed offsets, and its voice flag bits are named
+   (`VOICE_REQUEST_PLAY`/`_STOP`/`KEEP_ALIVE`/`PLAYING`/`STARTED`/`PAUSED`/`IN_USE`). Things worth
+   knowing before touching this again:
+   - `dsndCreateSoundBufferWithSomeDefaultSettings` (`0xe0f00`) takes its channel count in **EDX** and
+     its 3D flag on the stack, and still leaves stack cleanup to the caller (plain `RET`). Ghidra calls
+     it `__fastcall`, which as compiled would be a callee-cleans `RET 4` - so it needs the `AUTOLTCG`
+     naked entry trampoline it has, not a plain `AUTOINJECT`. Every other function in the range ends in
+     a bare `RET` (verified by an instruction search over the whole range), i.e. `__cdecl`, whatever
+     Ghidra's `calling_convention` field claims.
+   - Ghidra has **two** unrelated functions called `SFXUpdate`: the high-level SFX-system update at
+     `0xcad40` and the per-frame DirectSound voice update at `0xe19c0`. An `AUTOINJECT` by name patches
+     both, so the seam's version is called `dsndUpdateVoices` and injected with `FUNC_AT(000e19c0)`.
+     Worth disambiguating in Ghidra at some point (as `d3dSetTexture` was).
+   - The 3D setters really take `float`s; Ghidra infers `int` for `IDirectSoundBuffer_SetPosition` and
+     friends. Confirmed from the call site (`0xe19de`-`0xe1a16` `FSTP`s computed floats into the
+     argument slots).
+   - `FUN_000e1400` is a pause/stop request (`dsndSamplePause`) and `FUN_000e18a0` writes new sample
+     data into the memory a voice's buffer is already referencing (`dsndWriteVoiceData`); both are
+     injected with `FUNC_AT` rather than renamed in `functions_action.json`.
+   Still to seam on the game side: `maybeDecodeMpgAudio` (`0xe8cf0`) and `maybeSFXCreateStreamForVideo`
+   (`0x130488`). Both sit inside the FMV path rather than the dsnd layer - `maybeDecodeMpgAudio`'s
+   decompile has the decompiler confusing a local with the return address - and between them they only
+   add `DirectSoundDoWork` and `DirectSoundCreateStream` to the seam's surface, so they were left for
+   the stream work in step 3 rather than risking the video path now.
 2. **Inventory with tracing** through a whole mission plus menus and an FMV: which entry points, which
    argument patterns (formats, frequencies, loop regions, mixbin sets, 3D parameter ranges). Keep the
    log; it is the spec for the backend.
-3. **Native backend** (`AudioBackend=xaudio2` in `settings.ini`, default `cxbx`). Recommended
+3. **Native backend** (`AudioBackend=xaudio2` in `settings.ini`, default `cxbx` - the setting, the
+   `g_audioBackend` switch and the `DSound_BackendMissing` accounting already exist, there is just no
+   backend behind them yet, so selecting `xaudio2` today means silence). Recommended
    host API: **XAudio2** (ships with Windows 10+, `xaudio2.h`, no redistributable), with X3DAudio for
    the 3D voices and the built-in reverb XAPO standing in for I3DL2. Mapping:
    - Xbox ADPCM to 16-bit PCM on `SetBufferData` (it is IMA ADPCM with 64-sample blocks; CXBX's
@@ -214,6 +237,15 @@ standalone, and reuse the D3D9 and audio backends as libraries.
   `& "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\MSBuild\Current\Bin\MSBuild.exe" nightfiRE.sln /t:actioninject /p:Configuration=Release /p:Platform=Win32 /m /v:m`.
   `tools/preprocess.py` runs as a pre-build step and needs a function name in `tools/functions_action.json`
   for every `AUTOINJECT` (or use `FUNC_AT(<address>)`).
+- **Check the `RET` immediate of every library entry point you call**, against the parameter count of the
+  typedef you write for it. These are all callee-cleans `__stdcall`, so a typedef one parameter short
+  unbalances the stack by 4 bytes with no crash at the call itself - the *calling* function returns to
+  garbage. Ghidra had `DSOUND::DirectSoundCreate` down as 2 parameters when it is 3 (`RET 0xc`), which cost a
+  debugging cycle in stage A: the symptom was a black window and the engine wandering off into the
+  error/relaunch path several frames later, with nothing wrong at or near the actual call. Reading the last
+  bytes of each entry point out of the image (`read_memory`, look for `c2 imm16` / `c3`) checks all of them
+  cheaply, and cross-checking `Cxbx-Reloaded/src/core/hle/` - which is checked out in this tree - gives the
+  intended signature for free.
 - **Verify offline where possible**: `tools/vsh_translate_test.ps1` compiles all 130 shaders without
   the game; an ADPCM decoder should get the same treatment (decode a sound bank file and compare against
   a known-good decode).

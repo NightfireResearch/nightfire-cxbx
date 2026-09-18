@@ -132,6 +132,7 @@ add_library(actioninject SHARED
   src/action/game/sp/Mission.cpp
   src/action/game/sp/PlayerStats.cpp
   src/action/game/sp/SwitchChannels.cpp
+  src/action/sound/dsndSeam.cpp
   src/action/sound/music.cpp
   src/action/sound/SFX.cpp
   src/action/sound/Sound.cpp

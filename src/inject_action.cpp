@@ -10,6 +10,7 @@
 #include "action/engine/psiFile.h"
 #include "action/engine/psiSave.h"
 #include "action/engine/Direct3D/d3dSeam.h"
+#include "action/sound/dsndSeam.h"
 #include "action/game/view.h"
 #include "action/game/obj/car.h"
 #include "action/game/obj/Light.h"
