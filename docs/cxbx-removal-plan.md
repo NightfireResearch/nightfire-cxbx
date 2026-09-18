@@ -130,9 +130,16 @@ From `xboxInitSound`/`xboxCreateSoundBuffers`/`dsndGetVoice` (Ghidra decompiles 
    decompile has the decompiler confusing a local with the return address - and between them they only
    add `DirectSoundDoWork` and `DirectSoundCreateStream` to the seam's surface, so they were left for
    the stream work in step 3 rather than risking the video path now.
-2. **Inventory with tracing** through a whole mission plus menus and an FMV: which entry points, which
-   argument patterns (formats, frequencies, loop regions, mixbin sets, 3D parameter ranges). Keep the
-   log; it is the spec for the backend.
+2. **Inventory with tracing** through a whole mission plus menus and an FMV. **DONE** - written up in
+   `docs/audio-inventory.md`, from a 16,500-frame session with `DSNDSEAM_TRACE` set to 1. Headlines: the
+   29 entry points the seam routes are exactly the 29 the game uses, so the boundary is closed; frequencies
+   span 22,050-44,100 Hz (a ratio of 0.5-1.0 against the buffers own 44,032 Hz, so nothing exotic is needed
+   of XAudio2); velocity is always zero, i.e. no Doppler anywhere; the 192 buffers are created at boot and
+   never released; the game re-pushes every voice parameter every frame whether or not it changed, so the
+   backend must diff; and `GetStatus` at 7.7 calls per frame is the hottest call in the seam and drives
+   voice recycling. The one real gap: the XMV decoder calls the stream entry points directly, so none of
+   them appear, and FMV audio will be silent in native mode until they are hooked at their own addresses -
+   see that document for the detail.
 3. **Native backend** (`AudioBackend=xaudio2` in `settings.ini`, default `cxbx` - the setting, the
    `g_audioBackend` switch and the `DSound_BackendMissing` accounting already exist, there is just no
    backend behind them yet, so selecting `xaudio2` today means silence). Recommended
@@ -230,9 +237,10 @@ the same settings switches, so regressions can always be bisected against CXBX.
 
 ### 4.4 Remove the physical-memory alias
 
-CXBX maps Xbox physical memory at `0x80000000` and the seam still relies on it in two places
+CXBX maps Xbox physical memory at `0x80000000` and the seam still relies on it in three places
 (`D3D_UncachedAliasOf` in `d3dLockSurface`; the `Data | 0x80000000` sentinel convention in the D3D9
-backend for psiBlurScreen). Both become plain pointers once D3D8 is gone for good. Audit
+backend for psiBlurScreen; and sound bank data, which reaches `IDirectSoundBuffer_SetBufferData` as an
+alias pointer - see `docs/audio-inventory.md`). Both become plain pointers once D3D8 is gone for good. Audit
 `tools/functions_action.json` for other `0x8xxxxxxx`/`0xFxxxxxxx` constant users (the write-combined
 alias `0xF0000000` is the other one) before removing the mapping.
 
