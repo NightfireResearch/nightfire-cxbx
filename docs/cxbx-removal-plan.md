@@ -138,9 +138,20 @@ From `xboxInitSound`/`xboxCreateSoundBuffers`/`dsndGetVoice` (Ghidra decompiles 
    backend behind them yet, so selecting `xaudio2` today means silence). Recommended
    host API: **XAudio2** (ships with Windows 10+, `xaudio2.h`, no redistributable), with X3DAudio for
    the 3D voices and the built-in reverb XAPO standing in for I3DL2. Mapping:
-   - Xbox ADPCM to 16-bit PCM on `SetBufferData` (it is IMA ADPCM with 64-sample blocks; CXBX's
-     `XADPCM` decoder and xemu's are both small and reference-quality; write our own). Cache the
-     decoded PCM per (data pointer, size) since the same sound bank data is re-bound many times.
+   - Xbox ADPCM to 16-bit PCM on `SetBufferData`. **DONE**: `src/action/sound/xadpcm.cpp`, written from the
+     IMA algorithm rather than adapted from CXBX's `XADPCM.h` (which is GPLv2 - do not copy it into this
+     project; it is fine to read). `tools/xadpcm_test.ps1` is the offline check: hand-computed vectors for
+     nibble order, header endianness, sign and saturation, an encode/decode round-trip over a sine sweep
+     (22.5 dB SNR), and the byte-offset/sample-index arithmetic the backend needs for loop regions and play
+     cursors. It also has a mode that decodes a real blob to a .wav.
+     One thing no offline test can settle: a 36-byte block decodes to **64** samples here (the header
+     predictor seeds the state and is not emitted), because that is what the game's own wave format asserts -
+     `wSamplesPerBlock` is 64 and `nAvgBytesPerSec = nSamplesPerSec * 36 / 64` only balances at 64. Luigi
+     Auriemma's decoder and CXBX's use of it emit 65 (the MS IMA ADPCM reading, where the header predictor is
+     the block's first sample), which stretches every buffer by 1.6%. If pitch or FMV A/V sync looks off by
+     about that much, `XADPCM_SAMPLES_PER_BLOCK` is the single constant to question.
+     Still to do: cache the decoded PCM per (data pointer, size), since the same sound bank data is re-bound
+     many times, and watch for the game overwriting it in place through `dsndWriteVoiceData`.
    - One `IXAudio2SourceVoice` per Xbox buffer slot (192), created lazily with the slot's format
      (mono/stereo, decoded PCM at 44032 Hz; frequency changes via `SetFrequencyRatio`).
    - Loop regions to XAudio2 `LoopBegin/LoopLength`; `GetCurrentPosition`/`GetStatus` from
