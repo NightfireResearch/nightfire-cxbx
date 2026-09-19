@@ -191,11 +191,44 @@ Once graphics and audio are native, everything left is the process environment. 
 
 ### 4.1 Inventory the kernel and XAPI surface actually reached by game code
 
-The XBE imports 95 kernel functions (`list_imports` in Ghidra). Most are used only by the libraries
-we have replaced (D3D8: `MmAllocateContiguousMemoryEx`, `MmClaimGpuInstanceMemory`, `KeConnectInterrupt`,
-`Av*`, `HalReadWritePCISpace`; DSOUND: `KeInitializeDpc`, `MmLockUnlockBufferPages`). Sweep callers
-of each import and keep only those reached from game code (not from `0x0010xxxx`-`0x0011xxxx` library
-ranges or from XAPILIB internals). Known game-side users so far:
+**Measured** by `tools/kernel_imports.py`, which reads the kernel thunk table out of the XBE header, names
+the ordinals from Cxbx-Reloaded's `EXPORTNUM` annotations, finds call sites by scanning for the two encodings
+that can reach an import thunk (`FF 15` and `FF 25`), and attributes each to its containing function via
+`functions_action.json`. Rerun it after any Ghidra sync; it needs no Ghidra connection of its own.
+
+**96 imports.** Only **15** are called from a function anyone has named, and they fall into four groups:
+
+| group | imports |
+|---|---|
+| File I/O | `NtCreateFile`, `NtOpenFile`, `NtReadFile`, `NtWriteFile`, `NtClose`, `NtQueryInformationFile`, `NtSetInformationFile`, `NtFlushBuffersFile`, `NtWaitForSingleObject`, `RtlInitAnsiString` |
+| Memory | `MmAllocateContiguousMemoryEx` (`allocateContiguous`), `NtFreeVirtualMemory` (`DoNtFreeVirtualMemory`) |
+| Timing | `KeDelayExecutionThread` (`maybeSleepMillis`) |
+| CRT locking | `RtlEnterCriticalSection`, `RtlLeaveCriticalSection` |
+
+Two things that changes about the plan below. **The file path dominates**: ten of the fifteen are file I/O, so
+4.1 is mostly one job rather than a broad sweep. And `Rtl*CriticalSection` is not the streamer as assumed -
+its named callers are the statically linked CRT's own stdio locking (`__lock_file`, `__unlock_file`,
+`__getstream` at `0x000f0xxx`-`0x000f3xxx`), which puts the CRT at roughly `0xf0000`-`0xf5000` and makes it
+4.2's problem, not 4.1's.
+
+Also confirmed: the async file path the plan guesses at is real. `FUN_0010a6b0` and `FUN_0010a280` call
+`NtCreateFile`/`NtReadFile`/`NtWriteFile`/`NtSetInformationFile`/`NtClose` directly.
+
+Two caveats on the measurement. There is **no address at which game code stops and the libraries begin** -
+the linker interleaved them, and XAPILIB functions alone run from `0x000e9a24` to `0x001588db` - so the tool
+lists callers rather than classifying them, and "called from a named function" is a heuristic for ordering
+the reading, not a verdict. And the scan only finds *direct* indirect calls through the thunk table: it
+misses data imports (`LaunchDataPage`, `XboxHardwareInfo`, `XboxKrnlVersion`, `ExEventObjectType`) and
+anything called through a register loaded earlier, which is why `ExQueryNonVolatileSetting` - known to be
+used, since `XboxSettings.cpp` replaced it - shows no call site.
+
+The remaining 63 imports are reached only from unnamed or library-namespaced code: the `Av*` and
+`KeConnectInterrupt`/`KeInitializeInterrupt` display and interrupt plumbing, `Mm*` physical memory,
+`Ke*Dpc`/`Ke*Timer` deferred work, and the `Nt*` volume and directory calls. Those go with the libraries,
+but the list is worth re-reading once more functions are named, since "unnamed" is the only thing separating
+them from the fifteen above.
+
+The original sketch of this section follows, now largely confirmed:
 
 | Kernel / XAPI function | Game callers | What to do |
 |---|---|---|
