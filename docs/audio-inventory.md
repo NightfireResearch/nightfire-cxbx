@@ -194,6 +194,68 @@ backend are not a step backwards from the cxbx baseline. Implementing it would m
 faithful to real hardware than the baseline has ever been - which also means there is no local reference to
 check the result against.
 
+## The DSP effects image
+
+`xboxInitSound` downloads a 24,936-byte (`0x6168`) blob from VA `0x00194840` through
+`IDirectSound_DownloadEffectsImage`. It is a program for the Xbox's audio DSP, and it is what the game's
+`SetI3DL2Source` calls feed. Dumped and compared by `tools/dsp_image_dump.py`.
+
+    md5  173f099e6bf186f0902375da3f21e65d
+    sha1 dfb96766eefb6049305cc49c55060a062f944586
+
+### Container layout
+
+Confirmed against both XBEs, and the totals come out exact - for the action image the derived total is
+precisely the `0x6168` the game itself passes:
+
+| offset | contents |
+|---|---|
+| `0x000` | `0x800` bytes of zeroes |
+| `0x800` | header: `{ 0, seg1 length in dwords, seg2 file offset, seg2 length in dwords, 3, 0 }` |
+| `0x818` | segment 1 - DSP code |
+| *(header)* | segment 2 - always begins exactly where segment 1 ends |
+| | `0x170`-byte trailer |
+
+This **corrects the note in CXBX-Reloaded** (`CDirectSound_DownloadEffectsImage`, reversed from Otogi),
+which reads the dword at `0x808` as a second code-segment size. It is an offset: in both images it equals
+`0x818 + seg1 length` exactly, and reading it as a size makes the totals disagree with the real length.
+
+### It is toolchain output, not Eurocom's
+
+The decisive comparison is against `Driving.xbe`, a separately built engine with its own codebase:
+
+| | action | driving |
+|---|---:|---:|
+| segment 1 (code) | 12,424 B | 4,848 B |
+| segment 2 | 10,072 B | 6,184 B |
+| total | 24,936 B | 13,472 B |
+
+**Driving's entire code segment is byte-identical to the start of the action engine's**, for 4,844 of its
+4,848 bytes - differing only in the last four, where the shorter image ends. Segment 2 differs from its
+first byte and is sized independently.
+
+Two independently built engines carrying the same DSP code means that code came from the XDK's DSP image
+tooling, not from this game. The action engine's image simply includes more effects on top of the same
+shared core. So the reverb here is stock Microsoft code whose behaviour is the documented I3DL2 model - there
+is no bespoke algorithm hiding in it. (It has not been possible to confirm it is specifically the stock
+`dsstdfx.bin`, since no reference copy is available offline to hash against.)
+
+### What that means for the backend
+
+The practically important point is not in the image at all: **the game never calls
+`IDirectSound_SetI3DL2Listener`** - it is not among the 29 entry points in the trace. The only reverb input
+it ever provides is a per-voice `lRoom` send taken from the volume table, 5.6 times a frame.
+
+So whatever the DSP is doing, it does the same thing all the time: one fixed room, with per-voice send
+levels. At the interface the game uses, a fixed reverb preset plus the existing `lRoom` sends is
+behaviourally complete. The only unknown left is the room's *character* - decay time, density, HF damping -
+which is a tuning question rather than a correctness one.
+
+If that ever needs to be exact, the way to get it is not to disassemble the microcode (a 24-bit Motorola
+56300-family core, days of work for a result that is only the room character). It is to capture it: xemu
+emulates the APU DSP, so feeding the reverb an impulse there and recording the tail gives something to fit
+an XAudio2 reverb against, or to convolve with directly.
+
 ## Also worth noting
 
 `IDirectSoundBuffer_SetBufferData` is called with data pointers like `0x824b54f4`, `0x837796ac` and
