@@ -29,18 +29,18 @@ set(LAUNCHWRAPPER
   src/cxbx/cxbxbinding.h
 )
 
-# The CXBX-hosted launchers. action_cxbx runs the action engine inside cxbx-reloaded, which is what the
-# standalone loader below replaces; it is kept as the reference to bisect against until the standalone path
-# is trusted everywhere, and will go when CXBX does. driving has no standalone counterpart yet, so it keeps
-# its plain name - see docs/driving-engine-plan.md.
+# The CXBX-hosted launchers. Both carry the suffix, including driving_cxbx, which has no standalone
+# counterpart yet: the point of the name is to say that it still needs cxbx-reloaded, which a plain
+# "driving.exe" beside a standalone "action.exe" would quietly deny. action_cxbx is kept as the reference to
+# bisect the standalone path against; both go when CXBX does. See docs/driving-engine-plan.md.
 add_executable(action_cxbx WIN32 ${LAUNCHWRAPPER})
-add_executable(driving WIN32 ${LAUNCHWRAPPER})
+add_executable(driving_cxbx WIN32 ${LAUNCHWRAPPER})
 
 target_link_libraries(action_cxbx PRIVATE
   shlwapi
 )
 
-target_link_libraries(driving PRIVATE
+target_link_libraries(driving_cxbx PRIVATE
   shlwapi
 )
 
@@ -192,7 +192,7 @@ add_library(drivinginject SHARED
 
 
 target_compile_definitions(action_cxbx PRIVATE UNICODE _UNICODE IS_ACTION)
-target_compile_definitions(driving PRIVATE UNICODE _UNICODE IS_DRIVING)
+target_compile_definitions(driving_cxbx PRIVATE UNICODE _UNICODE IS_DRIVING)
 target_compile_definitions(actioninject PRIVATE UNICODE _UNICODE)
 target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)
 

@@ -79,6 +79,13 @@ and is reusable.
   funnels every use through one helper that decides once, by probing whether the alias is mapped, whether to
   apply it; do the same here rather than scattering the decision.
 
+**Naming.** The CXBX-hosted launchers are `action_cxbx.exe` and `driving_cxbx.exe`; the standalone loader is
+`action.exe`. `driving_cxbx.exe` carries the suffix even though its standalone sibling does not exist yet,
+because the suffix is what says it still needs an emulator - a plain `driving.exe` sitting beside a
+standalone `action.exe` would quietly imply otherwise. `driving.exe` is reserved for the standalone build
+when there is one. The injected DLLs keep their plain names (`actioninject`, `drivinginject`): they are not
+specific to a host, and `actioninject.dll` is already loaded unchanged by both.
+
 **And one correction to section 6.3 below:** the action-to-driving hand-off cannot become an in-process
 transition. Both XBEs are linked to base `0x10000`, and the loader gets that address by *being* the image
 there - so only one XBE can be mapped at a time, and that is not a limitation a cleverer loader removes. The
