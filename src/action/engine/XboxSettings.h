@@ -31,4 +31,9 @@ int Settings_GetAudioBackend(void);
 // there is nothing locally to check it against beyond listening with it on and off.
 bool Settings_GetReverbEnabled(void);
 
+// settings.ini's [Settings] DiscPath key: the host folder the Xbox D: drive resolves to, i.e. the one holding
+// eurocom\filesys.d00. Defaults to "../disc", relative to the working directory the executables run in. See
+// engine/XboxPaths.h for the drive-letter mapping this feeds.
+const char *Settings_GetDiscPath(void);
+
 #endif // XBOXSETTINGS_H_
