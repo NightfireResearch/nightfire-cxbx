@@ -68,6 +68,7 @@ Everything lands in `Release/`. `tools/preprocess.py` runs as a pre-build step a
 | `tools/drive_game.ps1` | Launches the game and presses keys at it, to reproduce something several menus in without a person at the keyboard. |
 | `tools/survey_xbe.py` | Prints an XBE's base, size, kernel imports and FS-segment usage - how much of the startup incompatibility applies to it. |
 | `tools/kernel_imports.py` | Which kernel imports live game code actually reaches. |
+| `tools/check_loader_image.ps1` | Verifies `action.exe` was linked at the XBE's base, big enough, with ASLR off. Run by CI, because losing any of those link options fails at runtime rather than at build time. |
 | `tools/preprocess.py` | Generates the injection table from the source tags. |
 | `ghidra/NightfireSync.py` | Exports names and signatures from Ghidra into `tools/functions_*.json`. |
 
