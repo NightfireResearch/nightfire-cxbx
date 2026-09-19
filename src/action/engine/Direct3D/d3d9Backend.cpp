@@ -1294,9 +1294,18 @@ static float g_vertexConstants[192][4];
 //
 // Uploading all 192 whenever any one of them changed is what this used to do, and it is 3 KB of constant
 // traffic per draw: the game writes a four-register object matrix before almost every draw, so "dirty" was
-// true essentially always and 188 of the 192 registers were re-sent unchanged. A native driver shrugs that
-// off - it cost about a tenth of a millisecond a frame here - but a translation layer turns each upload into
-// a uniform buffer update, and the game issues nearly two thousand draws in a mission.
+// true essentially always and 188 of the 192 registers were re-sent unchanged. This sends the changed span
+// instead - measured at 101 uploads of 3043 registers a frame against 19392 before, with about three
+// quarters of draws sending nothing at all.
+//
+// It has never been measured to make anything faster, and the reasoning that prompted it was wrong. It was
+// written expecting translation layers to care, where each upload becomes a uniform buffer update; they do
+// not. Windows is unchanged at 2.4 us per draw, WineD3D on Vulkan went 62.6 to 65.2 (noise, if not slightly
+// worse), and under DXVK on Metal the per-draw cost is 7.4 us with the uploads making no difference either.
+// In every case the time was going somewhere else entirely.
+//
+// Kept because it is strictly less work and correct, not because it solved anything. Do not reach for it as
+// an explanation for a slow frame.
 //
 // An empty range is lo >= hi. Everything starts dirty because the device has no constants yet.
 static uint32_t g_constantsDirtyLo = 0;

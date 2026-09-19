@@ -454,6 +454,11 @@ standalone, and reuse the D3D9 and audio backends as libraries.
   | Wine on macOS, WineD3D to OpenGL | 155.5 | 3.3 | NVIDIA GeForce 6800 |
   | Wine on macOS, WineD3D to Vulkan/MoltenVK | 62.6 | 8.2 | Apple M2 Max |
   | CrossOver 26, DXVK D3D9 | - | - | no device created |
+  | Wine on macOS, d9vk 1.10.3-macOS (DXVK D3D9) | 7.4 | 50 | Apple M2 Max |
+
+  **d9vk is the answer on macOS**: 21 times the baseline, within about 3x of native Windows, and the frame
+  cap rather than the CPU is then the limit. It is a DXVK fork with the two feature requirements below
+  patched out. `d3d9.dll` goes beside the executable with `WINEDLLOVERRIDES="d3d9=n"`.
 
   WineD3D's Vulkan renderer is a registry setting and worth 2.5x:
   `wine reg add 'HKCU\Software\Wine\Direct3D' /v renderer /t REG_SZ /d vulkan /f`. Check it engaged by the
@@ -465,6 +470,14 @@ standalone, and reuse the D3D9 and audio backends as libraries.
   fails with `VK_ERROR_FEATURE_NOT_PRESENT`. Forks exist that drop those requirements. A second trap on the
   way: CrossOver's `d3d9.dll` is stamped as a Wine builtin at offset 0x40, so `d3d9=n` refuses it and
   `d3d9=n,b` quietly loads Wine's own instead - the override appears to work and does nothing.
+
+  Two warnings DXVK prints against this backend are expected and neither is a defect. `Found attribute with
+  size (8) larger than its binding's stride (6)` is the Xbox SHORT3 vertex type, which has no D3D9
+  equivalent and is declared as SHORT4 with an unused `.w` and eight bytes of buffer slack; MoltenVK
+  downgrades it to `short3`, which drops exactly the component nothing reads and is safer than the over-read
+  it replaces. `validateGammaRamp: ramp inverted or flat` is the game fading by ramping gamma, which reaches
+  a flat ramp at the extremes - though note D3D9 only honours gamma ramps fullscreen, so those fades may look
+  different between hosts.
 
   Even at 62.6 us, 1948 draws is 122 ms, so the draw count matters as much as the stack. On the Windows
   evidence those draws average about 175 vertices and are nearly all indexed mesh submissions rather than HUD
