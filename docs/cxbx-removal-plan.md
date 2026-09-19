@@ -211,8 +211,39 @@ its named callers are the statically linked CRT's own stdio locking (`__lock_fil
 `__getstream` at `0x000f0xxx`-`0x000f3xxx`), which puts the CRT at roughly `0xf0000`-`0xf5000` and makes it
 4.2's problem, not 4.1's.
 
-Also confirmed: the async file path the plan guesses at is real. `FUN_0010a6b0` and `FUN_0010a280` call
-`NtCreateFile`/`NtReadFile`/`NtWriteFile`/`NtSetInformationFile`/`NtClose` directly.
+One correction to the sketch below: `FUN_0010a6b0` is **not** "async reads for the streamer/decoder". It is a
+screen-capture path inside the D3D8 library - it works off `D3D_g_pDevice`, calls `GetBackBuffer2` and
+`D3D_KickOffAndWaitForIdle`, and its strings are "Unable to re-open movie cache file" and "Wait for image
+write timed out". It writes captured frames to a cache file, and with `GraphicsBackend=d3d9` the D3D8 device
+is never created, so it does not run at all.
+
+**The file path is now done.** `src/action/engine/XboxFile.cpp` replaces eleven functions, all of which turned
+out to be Win32 calls under other names:
+
+| game function | Win32 |
+|---|---|
+| `createFile` | `CreateFileA` |
+| `readFromFileBlocking` | `ReadFile` |
+| `FileWrite` | `WriteFile` |
+| `GetOverlappedResult` | `GetOverlappedResult` |
+| `getFileSize_LargeInteger` | `GetFileSizeEx` |
+| `querySetSomeInfo` | `SetFilePointer` |
+| `FUN_000e9731` | `SetFilePointerEx` |
+| `setSomeInfo` | `SetEndOfFile` |
+| `file_flush` | `FlushFileBuffers` |
+| `MaybeFileCreateNew` | `DeleteFile` |
+| `DoNtClose` | `CloseHandle` |
+
+`tools/kernel_imports.py` now discounts call sites inside functions the project injects over, so it can be
+used as a progress meter. After this work it reports **5** imports still reached from live named code, down
+from 15, and none of them are file I/O:
+
+| import | live named caller | belongs to |
+|---|---|---|
+| `RtlEnterCriticalSection`, `RtlLeaveCriticalSection` | the CRT's stdio locking (`__lock_file`, `__getstream`) | 4.2 |
+| `KeDelayExecutionThread` | `maybeSleepMillis` | 4.2 |
+| `MmAllocateContiguousMemoryEx` | `allocateContiguous` | 4.4 |
+| `NtFreeVirtualMemory` | `DoNtFreeVirtualMemory` | 4.4 |
 
 Two caveats on the measurement. There is **no address at which game code stops and the libraries begin** -
 the linker interleaved them, and XAPILIB functions alone run from `0x000e9a24` to `0x001588db` - so the tool

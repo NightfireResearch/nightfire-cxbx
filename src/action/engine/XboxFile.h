@@ -30,4 +30,19 @@ int __stdcall getFileSize_LargeInteger(HANDLE fileHandle, LARGE_INTEGER *fileSiz
 
 int __stdcall DoNtClose(HANDLE handle);
 
+int __stdcall FileWrite(HANDLE fileHandle, void *buffer, uint32_t len,
+                        uint32_t *bytesWritten, OVERLAPPED *overlapped);
+
+int __stdcall file_flush(HANDLE fileHandle);
+
+int __stdcall setSomeInfo(HANDLE fileHandle);                 // SetEndOfFile
+
+uint32_t __stdcall querySetSomeInfo(HANDLE fileHandle, uint32_t distanceLow, uint32_t *distanceHigh,
+                                    uint32_t moveMethod);     // SetFilePointer
+
+int __stdcall Xbox_SetFilePointerEx(HANDLE fileHandle, uint32_t distanceLow, uint32_t distanceHigh,
+                                    uint32_t *newPosition, uint32_t moveMethod);
+
+int __stdcall MaybeFileCreateNew(const char *filename);       // DeleteFile
+
 #endif // XBOXFILE_H_

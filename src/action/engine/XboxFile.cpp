@@ -191,3 +191,123 @@ int __stdcall DoNtClose(HANDLE handle) {
     PublishLastError(GetLastError());
     return ok != FALSE ? 1 : 0;
 }
+
+// WriteFile. Mirrors readFromFileBlocking exactly, including the pending case - see there.
+//
+// AUTOINJECT
+int __stdcall FileWrite(HANDLE fileHandle, void *buffer, uint32_t len,
+                        uint32_t *bytesWritten, OVERLAPPED *overlapped) {
+    if (bytesWritten != NULL)
+        *bytesWritten = 0;
+
+    if (overlapped == NULL) {
+        DWORD written = 0;
+        SetLastError(0);
+        BOOL ok = WriteFile(fileHandle, buffer, len, &written, NULL);
+        DWORD err = GetLastError();
+        FILE_LOG("[file] write sync handle 0x%08x len %u -> %s written %lu err %lu\n",
+                 (unsigned)(uintptr_t)fileHandle, len, ok ? "ok" : "FAILED", written, err);
+        PublishLastError(err);
+        if (!ok)
+            return 0;
+        if (bytesWritten != NULL)
+            *bytesWritten = written;
+        return 1;
+    }
+
+    overlapped->Internal = (ULONG_PTR)STATUS_PENDING;
+    overlapped->InternalHigh = 0;
+
+    DWORD written = 0;
+    SetLastError(0);
+    BOOL ok = WriteFile(fileHandle, buffer, len, &written, overlapped);
+    DWORD err = GetLastError();
+    FILE_LOG("[file] write async handle 0x%08x len %u off %lu -> %s written %lu err %lu\n",
+             (unsigned)(uintptr_t)fileHandle, len, overlapped->Offset,
+             ok ? "ok" : (err == ERROR_IO_PENDING ? "pending" : "FAILED"), written, err);
+    PublishLastError(err);
+    if (!ok)
+        return 0;
+
+    if (bytesWritten != NULL)
+        *bytesWritten = (uint32_t)overlapped->InternalHigh;
+    return 1;
+}
+
+// FlushFileBuffers.
+//
+// AUTOINJECT
+int __stdcall file_flush(HANDLE fileHandle) {
+    SetLastError(0);
+    BOOL ok = FlushFileBuffers(fileHandle);
+    PublishLastError(GetLastError());
+    return ok != FALSE ? 1 : 0;
+}
+
+// SetEndOfFile. The original reads the current position (FilePositionInformation) and writes it to both
+// EndOfFileInformation and AllocationInformation, which is what SetEndOfFile does.
+//
+// AUTOINJECT
+int __stdcall setSomeInfo(HANDLE fileHandle) {
+    SetLastError(0);
+    BOOL ok = SetEndOfFile(fileHandle);
+    PublishLastError(GetLastError());
+    return ok != FALSE ? 1 : 0;
+}
+
+// SetFilePointer, including its awkward return convention: the new low word, or 0xFFFFFFFF for failure - so a
+// genuine position of 0xFFFFFFFF is distinguished by the last-error code being zero, which is why the success
+// path still publishes one.
+//
+// AUTOINJECT
+uint32_t __stdcall querySetSomeInfo(HANDLE fileHandle, uint32_t distanceLow, uint32_t *distanceHigh,
+                                    uint32_t moveMethod) {
+    SetLastError(0);
+    DWORD result = SetFilePointer(fileHandle, (LONG)distanceLow, (PLONG)distanceHigh, moveMethod);
+    PublishLastError(GetLastError());
+    return result;
+}
+
+// SetFilePointerEx. The out parameter is a 64-bit position written as two dwords.
+//
+// FUNC_AT(000e9731)
+int __stdcall Xbox_SetFilePointerEx(HANDLE fileHandle, uint32_t distanceLow, uint32_t distanceHigh,
+                                    uint32_t *newPosition, uint32_t moveMethod) {
+    LARGE_INTEGER distance;
+    distance.LowPart = distanceLow;
+    distance.HighPart = (LONG)distanceHigh;
+
+    LARGE_INTEGER newPos;
+    newPos.QuadPart = 0;
+
+    SetLastError(0);
+    BOOL ok = SetFilePointerEx(fileHandle, distance, &newPos, moveMethod);
+    PublishLastError(GetLastError());
+    if (!ok)
+        return 0;
+
+    if (newPosition != NULL) {
+        newPosition[0] = newPos.LowPart;
+        newPosition[1] = (uint32_t)newPos.HighPart;
+    }
+    return 1;
+}
+
+// DeleteFileA. The original opens with DELETE access, sets FileDispositionInformation and closes, which is
+// what DeleteFile does. Takes an Xbox path, so it resolves like createFile - GetPTPData and
+// WriteStateFileAndLaunch both use it on "z:\\state.bin".
+//
+// AUTOINJECT
+int __stdcall MaybeFileCreateNew(const char *filename) {
+    char hostPath[512];
+    if (!ResolveForOpen(filename, hostPath, sizeof(hostPath))) {
+        PublishLastError(ERROR_FILENAME_EXCED_RANGE);
+        return 0;
+    }
+    SetLastError(0);
+    BOOL ok = DeleteFileA(hostPath);
+    DWORD err = GetLastError();
+    FILE_LOG("[file] delete %s -> %s : %s err %lu\n", filename, hostPath, ok ? "ok" : "FAILED", err);
+    PublishLastError(err);
+    return ok != FALSE ? 1 : 0;
+}
