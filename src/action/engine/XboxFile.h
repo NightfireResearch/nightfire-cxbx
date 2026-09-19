@@ -45,4 +45,6 @@ int __stdcall Xbox_SetFilePointerEx(HANDLE fileHandle, uint32_t distanceLow, uin
 
 int __stdcall MaybeFileCreateNew(const char *filename);       // DeleteFile
 
+uint32_t __stdcall Xbox_GetFileAttributesA(const char *filename);   // GetFileAttributes
+
 #endif // XBOXFILE_H_

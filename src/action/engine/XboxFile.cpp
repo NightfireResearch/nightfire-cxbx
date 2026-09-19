@@ -311,3 +311,48 @@ int __stdcall MaybeFileCreateNew(const char *filename) {
     PublishLastError(err);
     return ok != FALSE ? 1 : 0;
 }
+
+// GetFileAttributesA. The original builds an Xbox object name with RtlInitAnsiString and asks the kernel
+// with NtQueryFullAttributesFile, returning the attributes word or 0xffffffff, so it needs replacing for the
+// same reason every other function here did: those take paths in the Xbox object namespace, which is not
+// something the standalone loader has.
+//
+// Its one caller is a file-existence helper at 0x000e36e0, used by the language scan in Language_Get that
+// looks for t:\lang<nn><nn>.dat.
+//
+// That scan is reached only on a first run. Language_Get returns immediately if GetPTPData() has data, so
+// once psiLaunch.bin exists the whole path is skipped - which is why this went unnoticed for so long on a
+// machine that had been running the game all day, and turned up on a fresh install. It was reported from
+// Wine on macOS and is nothing to do with either: deleting psiLaunch.bin reproduces it on Windows exactly,
+// and restoring this injection is what fixes it.
+//
+// Two further gates, worth knowing before concluding a run has tested this: the scan is also skipped if
+// config.txt supplies a language, and if the configured language resolves to American (English with an NTSC
+// region does, English with PAL does not).
+//
+// Other XAPI functions still build Xbox object names the same way and have not been replaced, because
+// nothing has reached them yet: 0x000e9f4d, 0x000ea821, 0x000eac45, 0x000eb34c, 0x000eb3b8, 0x000eb446,
+// 0x000eb5c3, 0x000eb6f6, 0x000ed2e8, 0x000ee0d4. Each will announce itself through the loader's kernel stub
+// rather than misbehaving quietly, and each is a few lines like this one.
+//
+// FUNC_AT(000ea689)
+uint32_t __stdcall Xbox_GetFileAttributesA(const char *filename) {
+    char hostPath[512];
+    if (!ResolveForOpen(filename, hostPath, sizeof(hostPath))) {
+        PublishLastError(ERROR_FILENAME_EXCED_RANGE);
+        return INVALID_FILE_ATTRIBUTES;
+    }
+
+    SetLastError(0);
+    DWORD attributes = GetFileAttributesA(hostPath);
+    DWORD err = GetLastError();
+    FILE_LOG("[file] attributes %s -> %s : 0x%08x err %lu\n", filename, hostPath, attributes, err);
+
+    // A missing file is the expected answer here, not a failure - the caller is asking whether it exists -
+    // but the error still has to be published, because that is how the game's own wrapper reports it.
+    if (attributes == INVALID_FILE_ATTRIBUTES)
+        PublishLastError(err != 0 ? err : ERROR_FILE_NOT_FOUND);
+    else
+        PublishLastError(0);
+    return attributes;
+}
