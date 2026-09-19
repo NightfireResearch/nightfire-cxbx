@@ -1,6 +1,11 @@
 name: CI
 
-on: push
+# Pushes to any branch, and pull requests - the latter so that a PR from a fork is built too, which a push
+# trigger alone never sees. A PR from a branch in this repository is therefore built twice; if that becomes
+# annoying, restrict the push trigger to the default branch rather than dropping either one.
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
