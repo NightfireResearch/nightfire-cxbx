@@ -1,8 +1,10 @@
 #include "xaudio2Backend.h"
 #include "xadpcm.h"
+#include "../engine/XboxSettings.h" // Settings_GetReverbEnabled
 
 #include <windows.h>
 #include <xaudio2.h>
+#include <xaudio2fx.h>
 #include <x3daudio.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,6 +54,32 @@ static void XA2Log(const char *fmt, ...) {
 static IXAudio2 *g_xaudio = NULL;
 static IXAudio2MasteringVoice *g_master = NULL;
 static bool g_initAttempted = false;
+
+// ---------------------------------------------------------------------------------------------------------------
+// Reverb
+//
+// The Xbox ran I3DL2 reverb on its audio DSP, from the effects image xboxInitSound downloads. That image is
+// stock XDK output rather than anything Eurocom wrote (see docs/audio-inventory.md and
+// tools/dsp_image_dump.py), so what it implements is the documented I3DL2 model - there is no bespoke
+// algorithm to reproduce.
+//
+// More usefully, the game never calls IDirectSound_SetI3DL2Listener: it is not among the entry points the
+// trace saw at all. So the DSP is running one fixed room for the whole game, and the only reverb input the
+// game ever supplies is a per-voice lRoom send through SetI3DL2Source, 5.6 times a frame. A fixed room plus
+// those sends is therefore complete at the interface the game actually uses.
+//
+// That leaves the room's character as the one genuine unknown - decay, density, HF damping - which is tuning
+// rather than correctness, and which nothing available locally can settle: CXBX never implemented reverb
+// either, so there is no baseline to compare against. The I3DL2 "generic" preset is the starting point; if it
+// ever needs to be exact, an impulse response captured under xemu (which does emulate the APU DSP) is the way
+// to get it.
+//
+// Structurally this is a send bus: 3D voices output to both the mastering voice (dry, carrying the X3DAudio
+// matrix) and this submix (wet, carrying the lRoom send). The submix is fully wet, since the dry path already
+// reaches the master directly. Note the wet send deliberately does not get the distance attenuation the dry
+// path does - a more distant sound having proportionally more reverb is the effect, not a bug.
+// ---------------------------------------------------------------------------------------------------------------
+static IXAudio2SubmixVoice *g_reverb = NULL;
 
 // ---------------------------------------------------------------------------------------------------------------
 // Decoded PCM cache
@@ -267,6 +295,9 @@ struct XA2Buffer {
     // 3D state
     float posX, posY, posZ;
     float minDistance, maxDistance;
+    int32_t i3dl2Room;        // hundredths of a dB, the reverb send level the game asks for
+    bool reverbSend;          // this voice outputs to the reverb submix as well as the master
+    float appliedWet;
     X3DAUDIO_DISTANCE_CURVE_POINT curvePoints[12];
     X3DAUDIO_DISTANCE_CURVE curve;
     bool  curveValid;
@@ -424,6 +455,40 @@ static bool EnsureDevice(void) {
     memset(&g_listener, 0, sizeof(g_listener));
     g_listener.OrientFront.z = 1.0f;
     g_listener.OrientTop.y = 1.0f;
+
+    if (Settings_GetReverbEnabled()) {
+        IUnknown *reverbApo = NULL;
+        hr = XAudio2CreateReverb(&reverbApo);
+        if (SUCCEEDED(hr)) {
+            XAUDIO2_EFFECT_DESCRIPTOR effect;
+            effect.pEffect = reverbApo;
+            effect.InitialState = TRUE;
+            effect.OutputChannels = OUTPUT_CHANNELS;
+            XAUDIO2_EFFECT_CHAIN chain;
+            chain.EffectCount = 1;
+            chain.pEffectDescriptors = &effect;
+
+            // The reverb requires its sample rate to be between 20 kHz and 48 kHz, which the mastering
+            // voice's 44.1 kHz satisfies.
+            hr = g_xaudio->CreateSubmixVoice(&g_reverb, OUTPUT_CHANNELS, 44100, 0, 0, NULL, &chain);
+            if (SUCCEEDED(hr)) {
+                XAUDIO2FX_REVERB_I3DL2_PARAMETERS i3dl2 = XAUDIO2FX_I3DL2_PRESET_GENERIC;
+                XAUDIO2FX_REVERB_PARAMETERS params;
+                ReverbConvertI3DL2ToNative(&i3dl2, &params, FALSE); // FALSE: this is a stereo bus, not 7.1
+                params.WetDryMix = 100.0f;                          // a send bus - the dry path bypasses it
+                g_reverb->SetEffectParameters(0, &params, sizeof(params));
+                XA2Log("[xa2] reverb submix created (I3DL2 generic preset)\n");
+            } else {
+                XA2Log("[xa2] CreateSubmixVoice for reverb failed: 0x%08lx - 3D voices will be dry\n", hr);
+                g_reverb = NULL;
+            }
+            reverbApo->Release();
+        } else {
+            XA2Log("[xa2] XAudio2CreateReverb failed: 0x%08lx - 3D voices will be dry\n", hr);
+        }
+    } else {
+        XA2Log("[xa2] reverb disabled by settings.ini\n");
+    }
     return true;
 }
 
@@ -554,6 +619,13 @@ static void ApplyAmplitude(XA2Buffer *b, float extraAttenuation);
 static void ApplyMixMatrix(XA2Buffer *b);
 static void ApplyFrequency(XA2Buffer *b);
 static void Apply3D(XA2Buffer *b);
+static void ApplyReverbSend(XA2Buffer *b);
+
+// Which output voice an ordinary SetOutputMatrix refers to. NULL means "the only one", which is right until a
+// voice acquires a second destination - after that XAudio2 needs to be told explicitly.
+static IXAudio2Voice *DryDestination(const XA2Buffer *b) {
+    return b->reverbSend ? (IXAudio2Voice *)g_master : NULL;
+}
 
 // Creates the source voice for a buffer once its format is known. The format rate is the Xbox rate, so
 // SetFrequency turns into a plain ratio against it.
@@ -585,10 +657,25 @@ static bool EnsureVoice(XA2Buffer *b) {
         return false;
     }
 
+    // A 3D voice feeds the reverb bus as well as the master. This has to happen before any output matrix is
+    // set, because SetOutputVoices resets them - and once there are two destinations every SetOutputMatrix
+    // has to name which one it means, hence DryDestination below.
+    if (b->is3d && g_reverb != NULL) {
+        XAUDIO2_SEND_DESCRIPTOR sends[2];
+        sends[0].Flags = 0; sends[0].pOutputVoice = g_master;
+        sends[1].Flags = 0; sends[1].pOutputVoice = g_reverb;
+        XAUDIO2_VOICE_SENDS sendList;
+        sendList.SendCount = 2;
+        sendList.pSends = sends;
+        if (SUCCEEDED(b->voice->SetOutputVoices(&sendList)))
+            b->reverbSend = true;
+    }
+
     // Nothing has been pushed to this voice yet, so invalidate the diff state and apply everything cached.
     b->appliedAmplitude = -1.0f;
     b->appliedFreqRatio = -1.0f;
     b->appliedMatrixValid = false;
+    b->appliedWet = -1.0f;
     ApplyFrequency(b);
     ApplyMixMatrix(b);   // no-op for 3D voices, whose matrix belongs to X3DAudio
     ApplyAmplitude(b, 1.0f);
@@ -598,7 +685,7 @@ static bool EnsureVoice(XA2Buffer *b) {
     // default matrix is the one thing keeping 3D sounds audible at all.
     if (b->is3d && g_x3dReady) {
         float silent[OUTPUT_CHANNELS] = { 0.0f, 0.0f };
-        b->voice->SetOutputMatrix(NULL, 1, OUTPUT_CHANNELS, silent);
+        b->voice->SetOutputMatrix(DryDestination(b), 1, OUTPUT_CHANNELS, silent);
         memcpy(b->appliedMatrix, silent, sizeof(silent));
         b->appliedMatrixValid = true;
     }
@@ -1057,12 +1144,29 @@ void XA2_IDirectSoundBuffer_SetRolloffCurve(DSoundBuffer *thisPtr, const float *
     g_rolloffPoints = count;
 }
 
+// Pushes the reverb send level if it has changed. The voice's own volume already scales everything it
+// outputs, so this matrix carries only the lRoom send - which matches the Xbox, where the true level of a
+// mixbin is the voice volume plus that bin's own volume.
+static void ApplyReverbSend(XA2Buffer *b) {
+    if (!b->reverbSend || b->voice == NULL)
+        return;
+    float wet = HundredthsDbToAmplitude((float)b->i3dl2Room);
+    if (fabsf(wet - b->appliedWet) < 0.0001f)
+        return;
+    b->appliedWet = wet;
+    float matrix[OUTPUT_CHANNELS] = { wet, wet };
+    b->voice->SetOutputMatrix(g_reverb, 1, OUTPUT_CHANNELS, matrix);
+}
+
+// The game's only reverb control: a per-voice send level, which dsndSetI3DL2Source fills in from the volume
+// lookup table. Everything else in the DSI3DL2BUFFER stays at the zero dsndGetVoice memsets it to.
 void XA2_IDirectSoundBuffer_SetI3DL2Source(DSoundBuffer *thisPtr, DSI3DL2BUFFER_Xbox *pds3db, uint32_t dwApply) {
-    (void)thisPtr;
-    (void)pds3db;
     (void)dwApply;
-    // The reverb send. Needs the reverb XAPO behind a submix voice; until then a 3D voice is dry.
-    DSound_BackendMissing("IDirectSoundBuffer_SetI3DL2Source (no reverb yet)");
+    XA2Buffer *b = AsBuffer(thisPtr);
+    if (b == NULL || pds3db == NULL)
+        return;
+    b->i3dl2Room = pds3db->lRoom;
+    ApplyReverbSend(b);
 }
 
 // Builds the X3DAudio volume curve for one voice out of the game's own rolloff curve and this voice's min/max
@@ -1164,9 +1268,10 @@ static void Apply3D(XA2Buffer *b) {
     if (!b->appliedMatrixValid || memcmp(matrix, b->appliedMatrix, sizeof(matrix)) != 0) {
         memcpy(b->appliedMatrix, matrix, sizeof(matrix));
         b->appliedMatrixValid = true;
-        b->voice->SetOutputMatrix(NULL, 1, OUTPUT_CHANNELS, matrix);
+        b->voice->SetOutputMatrix(DryDestination(b), 1, OUTPUT_CHANNELS, matrix);
     }
     ApplyAmplitude(b, 1.0f);
+    ApplyReverbSend(b);
 }
 
 // ---------------------------------------------------------------------------------------------------------------

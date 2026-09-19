@@ -25,4 +25,10 @@ int Settings_GetGraphicsBackend(void);
 // (the audio seam's own native backend - not written yet, see sound/dsndSeam.h).
 int Settings_GetAudioBackend(void);
 
+// settings.ini's [Settings] Reverb key, for the xaudio2 backend only: whether to run the I3DL2 reverb
+// send on 3D voices. On by default. Worth being able to turn off, because the room it uses is an
+// approximation - the game never sets the room parameters, and CXBX never implemented reverb at all, so
+// there is nothing locally to check it against beyond listening with it on and off.
+bool Settings_GetReverbEnabled(void);
+
 #endif // XBOXSETTINGS_H_

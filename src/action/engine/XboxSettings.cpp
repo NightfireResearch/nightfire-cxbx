@@ -45,6 +45,7 @@ struct Settings {
     int fpsOverride;   // 0 = "unset" - callers fall back to their own region-based default
     int graphicsBackend; // 0 = CXBX's D3D8 HLE (default), 1 = the seam's own D3D9 backend (see Direct3D/d3d9Backend.h)
     int audioBackend;    // 0 = CXBX's DSOUND HLE (default), 1 = the audio seam's own native backend (see sound/dsndSeam.h)
+    bool reverb;         // xaudio2 backend only: run the I3DL2 reverb send. On by default.
 };
 
 static Settings g_settings;
@@ -83,8 +84,12 @@ static void WriteDefaultSettingsFile() {
         "GraphicsBackend=cxbx\n"
         "\n"
         "; cxbx = play audio through CXBX's DirectSound emulation (the default), xaudio2 = the project's own\n"
-        "; native audio backend (work in progress - 2D sound works, no reverb and no FMV audio yet)\n"
+        "; native audio backend (work in progress - FMV audio is still played by CXBX either way)\n"
         "AudioBackend=cxbx\n"
+        "\n"
+        "; xaudio2 backend only: reverb on 3D sounds. The Xbox ran this on its audio DSP; the room here is an\n"
+        "; approximation, since the game never sets the room parameters and nothing local can reproduce them.\n"
+        "Reverb=on\n"
     );
 
     fclose(file);
@@ -112,6 +117,7 @@ static void LoadSettingsFile() {
     g_settings.fpsOverride = 0;
     g_settings.graphicsBackend = 0;
     g_settings.audioBackend = 0;
+    g_settings.reverb = true;
 
     FILE *file = fopen(SETTINGS_FILE, "r");
     if (file == NULL) {
@@ -156,6 +162,8 @@ static void LoadSettingsFile() {
             g_settings.graphicsBackend = (_stricmp(value, "d3d9") == 0) ? 1 : 0;
         } else if (_stricmp(key, "AudioBackend") == 0) {
             g_settings.audioBackend = (_stricmp(value, "xaudio2") == 0) ? 1 : 0;
+        } else if (_stricmp(key, "Reverb") == 0) {
+            g_settings.reverb = !(_stricmp(value, "off") == 0 || _stricmp(value, "0") == 0);
         }
     }
 
@@ -218,4 +226,8 @@ int Settings_GetGraphicsBackend(void) {
 
 int Settings_GetAudioBackend(void) {
     return GetSettings()->audioBackend;
+}
+
+bool Settings_GetReverbEnabled(void) {
+    return GetSettings()->reverb;
 }
