@@ -54,4 +54,6 @@ void XboxFile_ReportStreamingIfDue(void);
 uint32_t __stdcall Xbox_FindFirstFileA(const char *filename, WIN32_FIND_DATAA *findData);
 int __stdcall Xbox_FindNextFileA(HANDLE findHandle, WIN32_FIND_DATAA *findData);
 
+uint32_t __stdcall Xbox_GetVolumeClusterSize(const char *path);   // sectors-per-cluster * bytes-per-sector
+
 #endif // XBOXFILE_H_

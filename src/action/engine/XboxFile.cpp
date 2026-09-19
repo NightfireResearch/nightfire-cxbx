@@ -436,7 +436,8 @@ int __stdcall MaybeFileCreateNew(const char *filename) {
 //
 // Other XAPI functions still build Xbox object names the same way and have not been replaced, because
 // nothing has reached them yet: 0x000e9f4d, 0x000ea821, 0x000eac45, 0x000eb34c, 0x000eb3b8, 0x000eb446,
-// 0x000eb5c3, 0x000ed2e8, 0x000ee0d4. Each will announce itself through the loader's kernel stub rather than
+// 0x000eb5c3, 0x000ed2e8, 0x000ee0d4 - less 0x000eac45, which Linux reached. Each will announce itself
+// through the loader's kernel stub rather than
 // misbehaving quietly, and each is a few lines like this one. 0x000eb6f6 was on that list until the save
 // enumeration reached it; see Xbox_FindFirstFileA at the end of this file.
 //
@@ -578,4 +579,46 @@ void XboxFile_ReportStreamingIfDue(void) {
                "[perf]   drawing - it stalls for each one. That is a host behaviour, not the game's.\n");
     }
     fflush(stdout);
+}
+
+// The volume's allocation unit size, in bytes - what the original gets by opening the directory and asking
+// NtQueryVolumeInformationFile for FileFsSizeInformation, then multiplying sectors-per-cluster by
+// bytes-per-sector. Same Xbox object namespace problem as the rest of this file.
+//
+// Its one caller works out how many 16 KB blocks a save of a given size will occupy, which is the figure the
+// save screens show, so this is reached from the menus rather than from anything in a level. It turned up on
+// Linux at the main menu.
+//
+// GetDiskFreeSpaceA wants a root directory. A plain directory path works in practice, but not everywhere, so
+// a failure falls back to the current disk's root - the save directory lives beside the executable, so that
+// is the same volume either way.
+//
+// FUNC_AT(000eac45)
+uint32_t __stdcall Xbox_GetVolumeClusterSize(const char *path) {
+    char hostPath[512];
+    if (!ResolveForOpen(path, hostPath, sizeof(hostPath))) {
+        PublishLastError(ERROR_PATH_NOT_FOUND);
+        return 0;
+    }
+
+    DWORD sectorsPerCluster = 0, bytesPerSector = 0, freeClusters = 0, totalClusters = 0;
+    SetLastError(0);
+    BOOL ok = GetDiskFreeSpaceA(hostPath, &sectorsPerCluster, &bytesPerSector,
+                                &freeClusters, &totalClusters);
+    if (!ok)
+        ok = GetDiskFreeSpaceA(NULL, &sectorsPerCluster, &bytesPerSector, &freeClusters, &totalClusters);
+
+    if (!ok) {
+        DWORD err = GetLastError();
+        // The original turns "no such file" into "no such path" here, and its caller only checks for a
+        // non-positive result, so keep both behaviours.
+        PublishLastError(err == ERROR_FILE_NOT_FOUND ? ERROR_PATH_NOT_FOUND : err);
+        FILE_LOG("[file] cluster size %s -> %s : FAILED err %lu\n", path, hostPath, err);
+        return 0;
+    }
+
+    PublishLastError(0);
+    FILE_LOG("[file] cluster size %s -> %s : %lu bytes\n", path, hostPath,
+             sectorsPerCluster * bytesPerSector);
+    return (uint32_t)(sectorsPerCluster * bytesPerSector);
 }
