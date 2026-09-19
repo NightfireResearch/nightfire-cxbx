@@ -35,16 +35,39 @@ What replaces CXBX, each one a "seam" that replaces a library boundary with our 
 | Loader and memory map | `src/loader/` | Maps the XBE at `0x10000`, resolves the kernel thunks, creates the window, runs the message pump (4.3). |
 | Relaunch | `common/launchInfo.cpp` | `XLaunchNewImageA`/`XGetLaunchInfo` replaced (the driving engine is a second XBE, `inject_driving.cpp`). |
 
-Twelve of the XBE's 96 kernel imports are implemented in `src/loader/kernel.cpp`; the rest resolve to a stub
-that names itself and its caller and stops, which is how the twelve were found.
+19 of the XBE's 96 kernel import ordinals are implemented in `src/loader/kernel.cpp`; the rest resolve to a
+stub that names itself and its caller and stops, which is how those 19 were found.
 
-What is left:
+### Is stage B finished?
 
-- **The driving engine** (4.5), which has its own D3D8/DSOUND copies and has not been started.
-- **The physical-memory alias** (4.4) is gone from the graphics path but not audited everywhere - the
-  sound-bank path and any `0xF0000000` write-combined users still need checking.
-- Two DSOUND entry points the backend does not implement yet, both harmless so far: `DirectSoundUseFullHRTF`
-  and `IDirectSound_DownloadEffectsImage`.
+The engine runs without CXBX, which was the goal, and every numbered step of the plan below has been done.
+But **no**, not in the sense of "there is nothing left to find", and it is worth being precise about why,
+because the design deliberately trades completeness for a queue.
+
+*What has actually been exercised*: boot, the menus, the attract movies, audio, controller and keyboard
+input, loading into a mission. That is one path. A full mission played through, saves, multiplayer, the
+later levels, pause and resume - none of that has been run standalone even once.
+
+*What is known to be missing*, in rough order of how likely it is to matter:
+
+| Gap | Where | Consequence |
+| --- | --- | --- |
+| 77 of 96 kernel imports | `src/loader/kernel.cpp` | Any code path not yet walked may need one. It stops with the name and the caller, so each is minutes of work - but the list is not closed until the game has been played through. |
+| 12 of the 16 DirectSound stream vtable slots | `sound/dsndStream.cpp` | Same shape: the decoder only uses four. An unused slot reports itself and stops rather than corrupting the stack. |
+| `DirectSoundUseFullHRTF`, `IDirectSound_DownloadEffectsImage` | `sound/dsndSeam.cpp` | Counted and ignored. The second is the I3DL2 reverb image, whose effect nobody has yet confirmed is audible at all. |
+| The physical-memory alias outside graphics (4.4) | `sound/dsndSeam.cpp`, unaudited | Sound-bank data reaches `SetBufferData` as an alias pointer, and `0xF0000000` (write-combined) has not been swept for. |
+| Engine switching is a manual restart | `common/launchInfo.cpp` | Pre-existing, not a regression: `XLaunchNewImageA` has always written `psiLaunch.bin` and then stopped, on both hosts. Standalone it could be automated by the loader re-executing itself with the other XBE - but not by mapping both, since they share a base address. |
+| The driving engine (4.5) | - | Untouched. See `docs/driving-engine-plan.md`. |
+
+*Smaller things deliberately left*, each documented where it lives: `Xbox_freeptd` drops the CRT's
+per-thread block instead of unpicking it, leaking about 132 bytes per thread that exits (it is currently
+unreachable); pool allocations do not reproduce the Xbox's page alignment for blocks of a page or more;
+the ADPCM decode hitch on first play of a large sound; and the 3D-versus-2D gain balance, which was an open
+question in `docs/audio-inventory.md` before any of this and still is.
+
+The honest summary is that the hard, unbounded parts - the address range, the headers, the FS segment, the
+startup, the audio hardware - are done and understood, and what remains is a queue of small, self-announcing
+items that a playthrough will produce.
 
 ## 2. The method (unchanged from the graphics work)
 
@@ -345,8 +368,8 @@ Two consequences of being the image:
 Sections are mapped writable regardless of what the XBE says, because the whole decompilation works by
 patching game code in place.
 
-Twelve kernel imports are implemented, of 96: virtual memory (4), contiguous memory (4), critical sections
-(4 ordinals over 3 functions), and `PsCreateSystemThreadEx`. The rest resolve to a generated stub that names
+Nineteen kernel import ordinals are implemented, of 96: virtual memory (4), contiguous memory (4), pool
+memory (4), critical sections (6 ordinals over 4 functions), and `PsCreateSystemThreadEx`. The rest resolve to a generated stub that names
 the import and the address that called it, then stops. That stub table is what produced the list - run, read
 the name, implement it, run again - and it is worth keeping for the same reason.
 

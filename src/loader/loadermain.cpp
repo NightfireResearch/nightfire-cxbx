@@ -26,7 +26,7 @@
 // image. This executable is linked at that base with an array big enough to span the XBE, so the kernel maps
 // it there before the process exists and the XBE is copied over the top. See src/loader/reserve.cpp.
 //
-// KERNEL IMPORTS. The XBE imports 96 of them, of which a dozen are implemented (src/loader/kernel.cpp) and
+// KERNEL IMPORTS. The XBE imports 96 ordinals, of which 19 are implemented (src/loader/kernel.cpp) and
 // the rest resolve to a stub that names itself and stops. That was how the list was arrived at: run, see
 // which function the game reached, implement that one, run again. It is worth keeping the stubs rather than
 // stubbing the whole table out silently, because "the screen is black" is not a bug report and
