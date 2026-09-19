@@ -443,12 +443,33 @@ standalone, and reuse the D3D9 and audio backends as libraries.
   counters say on what.
 
   Cost per draw call is the number to compare between machines, because it is near-constant for a given
-  graphics stack. Native D3D9 on Windows measures about 2.5 us. Under Wine on macOS, with WineD3D translating
-  to OpenGL, it measured about 147 us - roughly 70 times worse - which makes a 2000-draw mission run at 3 fps
-  while an 85-draw multiplayer map is comfortably at 50. That was worth knowing because it looks like a
-  single-player bug and is not one: the per-draw cost is identical in both, and only the draw count differs.
-  The fix there is the graphics stack (DXVK, so D3D9 goes to Vulkan/MoltenVK rather than OpenGL), not this
-  repository - though fewer draw calls would help every host.
+  graphics stack. It looks like a single-player bug and is not one: the per-draw cost is the same in a
+  mission and in multiplayer, and only the draw count differs (about 1948 against 85).
+
+  Measured, on the same first mission:
+
+  | Configuration | us per draw | fps | adapter |
+  | --- | ---: | ---: | --- |
+  | Windows, native D3D9 | 2.5 | 50 | (the real GPU) |
+  | Wine on macOS, WineD3D to OpenGL | 155.5 | 3.3 | NVIDIA GeForce 6800 |
+  | Wine on macOS, WineD3D to Vulkan/MoltenVK | 62.6 | 8.2 | Apple M2 Max |
+  | CrossOver 26, DXVK D3D9 | - | - | no device created |
+
+  WineD3D's Vulkan renderer is a registry setting and worth 2.5x:
+  `wine reg add 'HKCU\Software\Wine\Direct3D' /v renderer /t REG_SZ /d vulkan /f`. Check it engaged by the
+  adapter name changing and the GLSL warnings stopping - it falls back to OpenGL silently.
+
+  **DXVK cannot currently work on Apple Silicon**, and the reason is worth recording because it is not the
+  one usually given. The D3D9 code is there and does enumerate the GPU; it then asks for the Vulkan features
+  `geometryShader` and `shaderCullDistance`, which Metal has not got, so MoltenVK refuses and `vkCreateDevice`
+  fails with `VK_ERROR_FEATURE_NOT_PRESENT`. Forks exist that drop those requirements. A second trap on the
+  way: CrossOver's `d3d9.dll` is stamped as a Wine builtin at offset 0x40, so `d3d9=n` refuses it and
+  `d3d9=n,b` quietly loads Wine's own instead - the override appears to work and does nothing.
+
+  Even at 62.6 us, 1948 draws is 122 ms, so the draw count matters as much as the stack. On the Windows
+  evidence those draws average about 175 vertices and are nearly all indexed mesh submissions rather than HUD
+  quads, so batching them would mean matching vertex formats and render state - not the easy win it would be
+  otherwise.
 - **Sizing up an XBE before touching it**: `python tools/survey_xbe.py disc/default.xbe` prints its base and
   size, its kernel import count, and its FS-segment accesses broken down by offset - which is the quickest
   way to see how much of the startup incompatibility applies. It decodes displacements rather than matching

@@ -60,6 +60,8 @@ static uint64_t g_statDrawsIndexed = 0;     // indexed geometry out of a vertex 
 static uint64_t g_statDrawsDirect = 0;      // non-indexed, still from a buffer
 static uint64_t g_statDrawsImmediate = 0;   // DrawPrimitiveUP - HUD and effects, the batchable kind
 static uint64_t g_statVertices = 0;
+static uint64_t g_statConstantUploads = 0;   // how many draws had to send constants at all
+static uint64_t g_statConstantRegisters = 0; // and how many registers those sent in total
 static uint64_t g_statTextureUploads = 0;
 static uint64_t g_statTextureLookups = 0;
 static uint64_t g_statTextureScanSteps = 0;
@@ -68,6 +70,7 @@ static uint64_t g_statRenderTargetCreates = 0;  // each one is a D3DPOOL_DEFAULT
 static uint64_t g_statBufferCreates = 0;        // vertex and index buffers created, not reused
 
 static int HostTextureCount(void);   // defined with the texture table further down
+static void MarkAllConstantsDirty(void);   // defined with the vertex constants further down
 
 // Where the frame time actually goes, printed every few seconds when PerfLog is on in settings.ini.
 //
@@ -116,6 +119,10 @@ static void ReportFrameTiming(double arrivedAtPacer, double leftPacer) {
     // effects and are the batchable kind; a scene made mostly of small indexed draws is the game's own
     // geometry submission and much harder to merge. Vertices per draw is the giveaway: a few hundred tiny
     // draws is a batching problem, a few hundred large ones is not.
+    printf("[perf]   constants: %llu uploads of %llu registers per frame (%llu per upload)\n",
+           (unsigned long long)(g_statConstantUploads / frames),
+           (unsigned long long)(g_statConstantRegisters / frames),
+           (unsigned long long)(g_statConstantUploads > 0 ? g_statConstantRegisters / g_statConstantUploads : 0));
     printf("[perf]   draw mix: %llu indexed, %llu direct, %llu immediate, %llu vertices each on average\n",
            (unsigned long long)(g_statDrawsIndexed / frames),
            (unsigned long long)(g_statDrawsDirect / frames),
@@ -142,6 +149,7 @@ static void ReportFrameTiming(double arrivedAtPacer, double leftPacer) {
     g_statDraws = g_statTextureUploads = g_statTextureLookups = g_statTextureScanSteps = 0;
     g_statBackBufferCaptures = g_statRenderTargetCreates = g_statBufferCreates = 0;
     g_statDrawsIndexed = g_statDrawsDirect = g_statDrawsImmediate = g_statVertices = 0;
+    g_statConstantUploads = g_statConstantRegisters = 0;
     fflush(stdout);
 
     windowStart = leftPacer;
@@ -768,6 +776,7 @@ void D3D9_Swap(uint32_t type) {
             if (SUCCEEDED(g_device->Reset(&g_presentParams))) {
                 g_device->GetRenderTarget(0, &g_backBufferSurface);
                 g_device->GetDepthStencilSurface(&g_mainDepthSurface);
+                MarkAllConstantsDirty();   // Reset drops whatever the device was holding
             }
         }
     }
@@ -1280,7 +1289,28 @@ static TranslatedVertexShader g_vertexShaders[160];
 static int g_vertexShaderCount = 0;
 static int g_currentVertexShader = -1;
 static float g_vertexConstants[192][4];
-static bool g_constantsDirty = true;
+
+// Which of the 192 constant registers have changed since the last draw uploaded them, as a half-open range.
+//
+// Uploading all 192 whenever any one of them changed is what this used to do, and it is 3 KB of constant
+// traffic per draw: the game writes a four-register object matrix before almost every draw, so "dirty" was
+// true essentially always and 188 of the 192 registers were re-sent unchanged. A native driver shrugs that
+// off - it cost about a tenth of a millisecond a frame here - but a translation layer turns each upload into
+// a uniform buffer update, and the game issues nearly two thousand draws in a mission.
+//
+// An empty range is lo >= hi. Everything starts dirty because the device has no constants yet.
+static uint32_t g_constantsDirtyLo = 0;
+static uint32_t g_constantsDirtyHi = 192;
+
+static void MarkConstantsDirty(uint32_t first, uint32_t count) {
+    if (first < g_constantsDirtyLo) g_constantsDirtyLo = first;
+    if (first + count > g_constantsDirtyHi) g_constantsDirtyHi = first + count;
+}
+
+static void MarkAllConstantsDirty(void) {
+    g_constantsDirtyLo = 0;
+    g_constantsDirtyHi = 192;
+}
 #define VS_HANDLE_TAG 0x56530000u
 
 static bool BuildVertexShader(TranslatedVertexShader *vs, int index) {
@@ -1363,12 +1393,16 @@ void D3D9_SetVertexShader(void *handle) {
 }
 
 static void StoreConstants(uint32_t index, const float *values, uint32_t count4) {
+    uint32_t lastWritten = index;
     for (uint32_t i = 0; i < count4; i++) {
         uint32_t k = index + i;
-        if (k < 192 && k != 58 && k != 59) // 58/59 are the pinned viewport constants, see the translation notes
+        if (k < 192 && k != 58 && k != 59) { // 58/59 are the pinned viewport constants, see the translation notes
             memcpy(g_vertexConstants[k], values + i * 4, 16);
+            lastWritten = k;
+        }
     }
-    g_constantsDirty = true;
+    if (index < 192)
+        MarkConstantsDirty(index, lastWritten + 1 - index);
 }
 void D3D9_SetVertexShaderConstant1(uint32_t constantIndex, float *pConstants) { StoreConstants(constantIndex, pConstants, 1); }
 void D3D9_SetVertexShaderConstant4(uint32_t constantIndex, void *pMatrix) { StoreConstants(constantIndex, (const float*)pMatrix, 4); }
@@ -1378,7 +1412,7 @@ static void InitPinnedConstants(void) {
     static const float scale[4] = { 1, 1, 1, 1 }, offset[4] = { 0, 0, 0, 0 };
     memcpy(g_vertexConstants[58], scale, 16);
     memcpy(g_vertexConstants[59], offset, 16);
-    g_constantsDirty = true;
+    MarkAllConstantsDirty();
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -1619,9 +1653,13 @@ static bool PrepareShaderDraw(bool bindStreams) {
     BeginSceneIfNeeded();
     g_device->SetVertexDeclaration(vs->decl);
     g_device->SetVertexShader(vs->shader);
-    if (g_constantsDirty) {
-        g_device->SetVertexShaderConstantF(0, &g_vertexConstants[0][0], 192);
-        g_constantsDirty = false;
+    if (g_constantsDirtyLo < g_constantsDirtyHi) {
+        uint32_t count = g_constantsDirtyHi - g_constantsDirtyLo;
+        g_device->SetVertexShaderConstantF(g_constantsDirtyLo, &g_vertexConstants[g_constantsDirtyLo][0], count);
+        g_statConstantRegisters += count;
+        g_statConstantUploads++;
+        g_constantsDirtyLo = 192;
+        g_constantsDirtyHi = 0;
     }
     ApplyTextureStageState(true); // before the host constants: it computes the linear-texture coordinate scales
     float hostConstants[5][4] = {
