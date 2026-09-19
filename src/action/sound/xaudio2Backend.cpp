@@ -425,7 +425,7 @@ static bool EnsureDevice(void) {
     g_initAttempted = true;
 
     // XAudio2 is COM underneath, and this thread has to have initialised COM before it will hand out a
-    // device. Under CXBX the host process had already done it; standalone under nfloader nobody has, and the
+    // device. Under CXBX the host process had already done it; standalone nobody has, and the
     // symptom is CreateMasteringVoice returning CO_E_NOTINITIALIZED (0x800401f0) with no audio at all.
     // RPC_E_CHANGED_MODE means COM is already up in the other threading model, which is fine for XAudio2 -
     // it only means this call did not do the initialising.

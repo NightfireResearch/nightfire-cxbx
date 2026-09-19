@@ -534,7 +534,7 @@ void D3DSeamTableExhaustedWarning(const char *tableName, const char *extraContex
 // allocations the data lives in (which themselves sit at 0x8xxxxxxx addresses), so it simply works. A
 // non-CXBX backend replaces these uses (a GPU readback for the backbuffer, the plain pointer plus a "contents
 // changed" notification for the textures) - which is why they're all funnelled through this helper.
-// Standalone under nfloader there is no alias to take. Resource memory comes from
+// Standalone there is no alias to take. Resource memory comes from
 // MmAllocateContiguousMemoryEx, which is a plain VirtualAlloc (see src/loader/kernel.cpp), so a resource's
 // Data word is already the address the CPU should use - Nightfire's land around 0x09000000-0x0c000000, well
 // inside the low half, so the top nibble the Xbox strips was never set. OR'ing 0x80000000 into one of those

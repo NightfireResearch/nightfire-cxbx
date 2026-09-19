@@ -424,7 +424,7 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
 // creates its "CxbxRender" child inside it. Prefer the child (it's the area CXBX itself would draw to and it
 // tracks the launcher's resizing); fall back to the parent, then to a standalone CxbxRender window.
 //
-// Under the standalone loader there is no launcher and no CXBX, so nfloader creates the window itself and
+// Under the standalone loader there is no launcher and no CXBX, so the loader creates the window itself and
 // pumps its messages - see CreateRenderWindow in src/loader/loadermain.cpp. It is looked for last, so that
 // nothing changes for a CXBX-hosted run.
 static HWND FindRenderWindow(void) {

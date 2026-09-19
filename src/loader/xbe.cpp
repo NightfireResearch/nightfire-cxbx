@@ -135,7 +135,7 @@ static bool RangeIsCommitted(uint32_t base, uint32_t size) {
 
 // Gets hold of the XBE's address range and makes it writable.
 //
-// The range is normally this executable's own image: nfloader is linked at the XBE's base with an array big
+// The range is normally this executable's own image: the loader is linked at the XBE's base with an array big
 // enough to span it (src/loader/reserve.cpp), because nothing else can claim 0x00010000 at runtime. The
 // kernel has already placed something there before the first instruction of the process runs, and reserving
 // it from outside a suspended child fails for the same reason - it is not a race that starting earlier wins.
@@ -159,7 +159,7 @@ static bool ClaimAddressRange(const XbeImage *image) {
             printf("[loader]   the reservation array is 0x%08x..0x%08x\n",
                    (unsigned)(uintptr_t)Loader_ReservationStart(),
                    (unsigned)((uintptr_t)Loader_ReservationStart() + Loader_ReservationSize()));
-            printf("[loader]   relink nfloader with /BASE:0x%x and an array of at least 0x%x bytes\n",
+            printf("[loader]   relink the loader with /BASE:0x%x and an array of at least 0x%x bytes\n",
                    base, size);
             ReportRegion(base);
             ReportRegion(end - 1);
@@ -174,7 +174,7 @@ static bool ClaimAddressRange(const XbeImage *image) {
         printf("[loader] the loader's own code is at 0x%08x, inside the XBE's range 0x%08x..0x%08x.\n",
                (unsigned)loaderCode, base, end);
         printf("[loader]   mapping would overwrite the loader itself. src/loader/reserve.cpp has to be the\n"
-               "[loader]   first source of the nfloader target so its array starts .text - see CMakeLists.txt.\n");
+               "[loader]   first source of the loader's target so its array starts .text - see CMakeLists.txt.\n");
         return false;
     }
 
@@ -214,7 +214,7 @@ static bool MapHeaders(const XbeImage *image) {
     // because nothing has been copied yet.
     const IMAGE_DOS_HEADER *dos = (const IMAGE_DOS_HEADER *)(uintptr_t)base;
     if (dos->e_magic != IMAGE_DOS_SIGNATURE) {
-        printf("[loader] no PE header at 0x%08x to preserve - is nfloader linked with /BASE:0x%x?\n",
+        printf("[loader] no PE header at 0x%08x to preserve - is the loader linked with /BASE:0x%x?\n",
                base, base);
         return false;
     }

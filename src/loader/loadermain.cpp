@@ -6,6 +6,7 @@
 #include "kernel.h"
 #include "../common/renderWindow.h"
 #include "../res/resource.h"
+#include "../common/console.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The standalone loader - stage B steps 4.2 and 4.3 of docs/cxbx-removal-plan.md, replacing cxbxr-ldr.exe.
@@ -198,6 +199,10 @@ static bool FindXbe(char *out, size_t outSize) {
 }
 
 int main(int argc, char **argv) {
+    // Usually a no-op: a console executable started from a terminal or from Explorer already has one. It
+    // matters when this is started detached, where stdout is a handle onto a console nobody can see.
+    EnsureConsoleOutput();
+
     printf("[loader] Nightfire standalone loader\n");
     AddVectoredExceptionHandler(1, ReportException);
 

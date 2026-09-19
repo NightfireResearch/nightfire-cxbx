@@ -29,10 +29,14 @@ set(LAUNCHWRAPPER
   src/cxbx/cxbxbinding.h
 )
 
-add_executable(action WIN32 ${LAUNCHWRAPPER})
+# The CXBX-hosted launchers. action_cxbx runs the action engine inside cxbx-reloaded, which is what the
+# standalone loader below replaces; it is kept as the reference to bisect against until the standalone path
+# is trusted everywhere, and will go when CXBX does. driving has no standalone counterpart yet, so it keeps
+# its plain name - see docs/driving-engine-plan.md.
+add_executable(action_cxbx WIN32 ${LAUNCHWRAPPER})
 add_executable(driving WIN32 ${LAUNCHWRAPPER})
 
-target_link_libraries(action PRIVATE
+target_link_libraries(action_cxbx PRIVATE
   shlwapi
 )
 
@@ -45,7 +49,7 @@ target_link_libraries(driving PRIVATE
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 # We aren't currently loading the XBE on our end, so this is unnecessary
-#target_link_options(action PRIVATE
+#target_link_options(action_cxbx PRIVATE
 #  /INCREMENTAL:NO
 #  /BASE:0x10000
 #  /FIXED
@@ -147,27 +151,28 @@ add_library(actioninject SHARED
 # The seams' native backends (Direct3D/d3d9Backend.cpp, sound/xaudio2Backend.cpp)
 target_link_libraries(actioninject PRIVATE d3d9 d3dcompiler winmm xaudio2)
 
-# The standalone loader (stage B 4.2/4.3): maps the XBE itself and runs it in-process, replacing
-# cxbxr-ldr.exe. Linked with /FIXED and no ASLR because the XBE is full of absolute addresses and has to land
-# at its own base; see src/loader/loadermain.cpp.
-add_executable(nfloader
+# The standalone loader (stage B 4.2/4.3): maps the XBE itself and runs it in-process, with no emulator in
+# the process at all. This is "action.exe" - the canonical way to run the action engine - and the CXBX
+# launcher above is the one that now carries a suffix. Linked with /FIXED and no ASLR because the XBE is full
+# of absolute addresses and has to land at its own base; see src/loader/loadermain.cpp.
+add_executable(action
   # reserve.cpp must stay first: its array has to be the first thing in .text so that the XBE, copied over
   # the start of the image, lands on the array rather than on the loader's own code. Xbe_Map checks this.
   src/loader/reserve.cpp
   src/loader/loadermain.cpp
   src/loader/xbe.cpp
   src/loader/kernel.cpp
-  # The same icon the launcher executables carry, so the standalone loader looks like the rest of the project
-  # in Explorer and on the taskbar. A .rc contributes nothing to .text, so it does not disturb the ordering.
+  # The same icon the other executables carry. A .rc contributes nothing to .text, so it does not disturb
+  # the ordering the reservation array depends on.
   src/res/res.rc
 )
 # /BASE plus /FIXED is how the loader gets the XBE's address range at all: the kernel maps the executable at
 # its preferred base before anything else exists in the process, which is the only way to be there first.
 # VirtualAlloc cannot do it, even into a suspended process - see src/loader/reserve.cpp.
 # /SAFESEH:NO because the mapped XBE ends up inside this image's address range, so every SEH handler the
-# game registers looks to Windows like a handler in nfloader - and would be rejected for not being in
-# nfloader's table of safe handlers.
-target_link_options(nfloader PRIVATE
+# game registers looks to Windows like one of this executable's - and would be rejected for not being in its
+# table of safe handlers.
+target_link_options(action PRIVATE
   /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /INCREMENTAL:NO)
 
 add_library(drivinginject SHARED
@@ -186,7 +191,7 @@ add_library(drivinginject SHARED
 )
 
 
-target_compile_definitions(action PRIVATE UNICODE _UNICODE IS_ACTION)
+target_compile_definitions(action_cxbx PRIVATE UNICODE _UNICODE IS_ACTION)
 target_compile_definitions(driving PRIVATE UNICODE _UNICODE IS_DRIVING)
 target_compile_definitions(actioninject PRIVATE UNICODE _UNICODE)
 target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)

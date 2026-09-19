@@ -12,7 +12,7 @@
 # GetAsyncKeyState - it asks the system what is physically held down, and a posted WM_KEYDOWN does not change
 # that. The window also has to be in the foreground first, or psiInput's focus check ignores the keys.
 #
-# USAGE (from the repository root, after building nfloader and actioninject):
+# USAGE (from the repository root, after building the action and actioninject targets):
 #
 #   tools/drive_game.ps1 -Keys enter,enter,enter
 #   tools/drive_game.ps1 -Keys enter,down,down,enter -BetweenKeysMs 2500 -TailWaitMs 30000
@@ -40,7 +40,7 @@ param(
     # How long to keep running after the last key, which is when a fault usually arrives.
     [int]$TailWaitMs = 30000,
 
-    [string]$Exe = "Release\nfloader.exe",
+    [string]$Exe = "Release\action.exe",
     [string]$WorkingDirectory = "Release",
     [string]$LogPath = "$env:TEMP\nightfire-drive.log"
 )
@@ -73,7 +73,7 @@ if ($proc.HasExited) {
 }
 
 # The process's own main window is more reliable than looking the class up by name, which depends on agreeing
-# with how the name is marshalled. The class name is the fallback; nfloader registers it, and the injected
+# with how the name is marshalled. The class name is the fallback; the loader registers it, and the injected
 # DLL finds the window the same way (see src/common/renderWindow.h).
 $proc.Refresh()
 $hwnd = $proc.MainWindowHandle

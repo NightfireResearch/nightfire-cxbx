@@ -6,12 +6,12 @@ the pattern every stage below repeats.
 
 ## 1. Where things stand
 
-**The action engine now runs without cxbx-reloaded.** `nfloader.exe` maps `default.xbe` itself, resolves its
+**The action engine now runs without cxbx-reloaded.** `action.exe` maps `default.xbe` itself, resolves its
 kernel imports, loads `actioninject.dll` and runs the game in its own process - no emulator anywhere in it.
 Tested as far as: boots, opens its window, reaches the main menu, plays video and audio, takes controller
 input, and loads into a mission.
 
-The CXBX path still works and is still the reference. `action.exe` launches the game under
+The CXBX path still works and is still the reference. `action_cxbx.exe` launches the game under
 `cxbxr-ldr.exe` exactly as before, and everything added for the standalone loader is conditional on CXBX not
 being in the process (`Xbox_RunningStandalone()`, which tests for `cxbxr-emu.dll`), so a regression can always
 be bisected against a hosted run. Nothing in this section's original arrangement has been removed.
@@ -315,21 +315,22 @@ flush, because the D3D9 backend copies rather than letting hardware read game me
 
 ### 4.3 Own loader - DONE
 
-`src/loader/`, built as `nfloader.exe`. It maps the XBE, resolves the kernel thunks, loads
+`src/loader/`, built as `action.exe` - the standalone loader is now the canonical way to run the game, and
+the CXBX launcher is the one carrying a suffix. It maps the XBE, resolves the kernel thunks, loads
 `actioninject.dll` unchanged, creates the render window and calls the entry point.
 
 **Getting the address range was the hard part, and the answer is not VirtualAlloc.** `0x00010000` is above
 the system minimum but is never free: the kernel has already put something there before the first instruction
 of the process runs, and reserving it from a parent into a `CREATE_SUSPENDED` child fails identically, because
-this is not a race that starting earlier wins. The answer is to *be* the image - `nfloader` is linked
+this is not a race that starting earlier wins. The answer is to *be* the image - the loader is linked
 `/BASE:0x10000 /FIXED /DYNAMICBASE:NO` with a 0x340000-byte array first in `.text` (`src/loader/reserve.cpp`),
 so the kernel maps it across the XBE's whole range before the process exists, and the XBE is copied over the
 top. This is what `cxbxr-ldr.exe` does too, which is worth knowing before trying anything cleverer.
 
 Two consequences of being the image:
 
-- **`/SAFESEH:NO` is required.** The mapped XBE ends up inside `nfloader`'s image range, so every SEH handler
-  the game registers looks to Windows like a handler in `nfloader` and would be rejected for not being in its
+- **`/SAFESEH:NO` is required.** The mapped XBE ends up inside the loader's image range, so every SEH handler
+  the game registers looks to Windows like one of the loader's own and would be rejected for not being in its
   table of safe handlers.
 - **Both sets of headers have to live at `0x10000` at once.** The game reads its own XBE header constantly
   (heap reserve/commit at `0x10134`/`0x10138`, thread stack size at `0x10130`, the certificate through
@@ -357,7 +358,7 @@ like a Win32 thread proc.
 
 `D3D_UncachedAliasOf` in `d3dSeam.cpp` now decides once, from the first address that passes through it,
 whether the `0x8xxxxxxx` alias is actually mapped, and returns the plain address when it is not. Under
-`nfloader` resource memory comes from `MmAllocateContiguousMemoryEx`, which is a plain `VirtualAlloc`, so a
+Standalone, resource memory comes from `MmAllocateContiguousMemoryEx`, which is a plain `VirtualAlloc`, so a
 resource's `Data` word is already the address the CPU should use. The symptom before this was the XMV decoder
 writing a frame to `0x8b042700` when the surface it had locked was at `0x0b042700`.
 
@@ -405,12 +406,17 @@ standalone, and reuse the D3D9 and audio backends as libraries.
   an `AUTOINJECT`/`FUNC_AT` comment and takes the token before the last `(` as the function name. A comment
   between the two makes it fail with `IndexError: list index out of range`, several frames from anything that
   names the file. Put the explanation above the tag, not below it.
-- **Running the standalone loader**: build the `nfloader` target too, then run `Release/nfloader.exe` with the
-  working directory set to `Release` (it looks for `../disc/default.xbe`). It writes everything to stdout, so
+- **Running the game**: build the `action` target, then run `Release/action.exe` with the working directory
+  set to `Release` (it looks for `../disc/default.xbe`). `action_cxbx.exe` is the old CXBX-hosted launcher,
+  kept as a reference to bisect against. It writes everything to stdout, so
   redirecting it to a file is the easiest way to read a whole boot. An unimplemented kernel import prints its
   name and the address that called it and then exits; a fault prints the faulting address, the address it
   touched, that page's state, and a call stack walked from the frame pointers - usually enough to name the
   cause in Ghidra without attaching a debugger.
+- **Sizing up an XBE before touching it**: `python tools/survey_xbe.py disc/default.xbe` prints its base and
+  size, its kernel import count, and its FS-segment accesses broken down by offset - which is the quickest
+  way to see how much of the startup incompatibility applies. It decodes displacements rather than matching
+  byte patterns, because the executable sections contain data and a bare two-byte match is mostly noise.
 - **Reproducing something that is several menus in**, without a person at the keyboard:
   `tools/drive_game.ps1 -Keys enter,enter,enter`. It launches the loader, brings its window to the front,
   presses keys at it and reports any fault. Both crashes found after the loader first booted - starting a
