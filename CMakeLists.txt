@@ -82,6 +82,7 @@ add_library(actioninject SHARED
   src/action/engine/XboxSettings.cpp
   src/action/engine/XboxPaths.cpp
   src/action/engine/XboxFile.cpp
+  src/action/engine/XboxStartup.cpp
   src/action/engine/Direct3D/d3dhelpers.cpp
   src/action/engine/Direct3D/d3dSeam.cpp
   src/action/engine/Direct3D/d3d9Backend.cpp
@@ -144,6 +145,26 @@ add_library(actioninject SHARED
 
 # The seams' native backends (Direct3D/d3d9Backend.cpp, sound/xaudio2Backend.cpp)
 target_link_libraries(actioninject PRIVATE d3d9 d3dcompiler winmm xaudio2)
+
+# The standalone loader (stage B 4.2/4.3): maps the XBE itself and runs it in-process, replacing
+# cxbxr-ldr.exe. Linked with /FIXED and no ASLR because the XBE is full of absolute addresses and has to land
+# at its own base; see src/loader/loadermain.cpp.
+add_executable(nfloader
+  # reserve.cpp must stay first: its array has to be the first thing in .text so that the XBE, copied over
+  # the start of the image, lands on the array rather than on the loader's own code. Xbe_Map checks this.
+  src/loader/reserve.cpp
+  src/loader/loadermain.cpp
+  src/loader/xbe.cpp
+  src/loader/kernel.cpp
+)
+# /BASE plus /FIXED is how the loader gets the XBE's address range at all: the kernel maps the executable at
+# its preferred base before anything else exists in the process, which is the only way to be there first.
+# VirtualAlloc cannot do it, even into a suspended process - see src/loader/reserve.cpp.
+# /SAFESEH:NO because the mapped XBE ends up inside this image's address range, so every SEH handler the
+# game registers looks to Windows like a handler in nfloader - and would be rejected for not being in
+# nfloader's table of safe handlers.
+target_link_options(nfloader PRIVATE
+  /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /INCREMENTAL:NO)
 
 add_library(drivinginject SHARED
   src/dllmain.cpp

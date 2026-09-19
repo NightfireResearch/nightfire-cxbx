@@ -273,42 +273,89 @@ The original sketch of this section follows, now largely confirmed:
 | `RtlEnterCriticalSection` etc., `KeDelayExecutionThread`, `NtSetEvent`, `KeWaitForSingleObject` | streamer / decoder | Win32 critical sections, `Sleep`, events. |
 | `XcSHA*`, `XboxHDKey`, `XboxSignatureKey` | save-game signing | Already irrelevant (saves are plain files); stub. |
 
-### 4.2 Replace the XAPI/CRT startup
+### 4.2 Replace the XAPI/CRT startup - DONE (needs testing)
 
-`entry` -> `mainXapiStartup` -> `XapiInitProcess` (heap, `XMountUtilityDrive`, TLS, `_cinit`, thread
-notify routines) -> the game's `main`. Reimplement `entry` as our own `DllMain`-driven start: run the
-CRT initialisers the XBE's `_cinit` table lists (they are plain function pointers in the image), set
-up the game's heap (`Mem_Init` is already understood), then call `main`. At this point nothing in
-XAPILIB runs.
+Implemented in `src/action/engine/XboxStartup.cpp`. `mainXapiStartup` is replaced wholesale: process
+initialisation cut down to the process heap and the XAPI initialiser table, then `_rtinit`, `_cinit`, `main`.
 
-### 4.3 Own loader
+What had to change, and the one thing that forced it: **game code reaches the Xbox KPCR through FS**, and a
+Win32 thread has a TEB there instead. Only 38 instructions in the whole image touch FS, and they fall into
+five groups:
 
-Replace `cxbxr-ldr.exe` with our own executable that:
+| Offset | Xbox meaning | Win32 meaning | What was done |
+| --- | --- | --- | --- |
+| `FS:[0x00]` | SEH exception list | the same | nothing - it already works, 7 sites |
+| `FS:[0x04]` | the TLS array | `StackBase` | replaced the 5 functions that use it (below) |
+| `FS:[0x20]` | `KPCR.Prcb` | process id | the allocation-notification hook, patched to `xor eax,eax` at 5 sites |
+| `FS:[0x24]` | current IRQL | thread id | only ever compared against 2; the functions reading it are replaced or dormant |
+| `FS:[0x28]` | current `KTHREAD` | `ActiveRpcHandle` | same functions as `FS:[0x04]` |
 
-1. Reserves the address range the XBE needs (`0x10000` base through the end of the last section; the
-   XBE header and section table are simple, `tools/vsh_dump.py` walks them in a dozen lines of Python) -
-   this needs a host executable whose own image and heap stay out of that range (link the loader high,
-   or make it a tiny stub that maps the XBE before the CRT allocates).
-2. Maps each section from `default.xbe` at its virtual address with the right protection, and zeroes
-   the `.bss`-style sections.
-3. Fills the kernel import thunk table (the XBE's `KernelThunk` array, resolved by ordinal) with our
-   implementations from 4.1, and patches the library entry points with the seam backends, exactly as
-   `Inject()` does today (`WriteJmpTo`, `WriteMemory`).
-4. Creates the window, runs the game's main loop on the main thread, and pumps messages
-   (`wndproc.cpp` already has the window side).
+`FS:[0x04]` cannot simply be repointed: Win32 keeps the stack base there and exception dispatch validates
+every SEH frame against it, so writing a TLS array pointer over it would break the SEH the game uses
+everywhere. The five functions that read it are replaced instead - `GetLastError` and `SetLastError` become
+the Win32 ones, and the CRT's `_getptd`/`_freeptd`/`_mtinit` keep their original behaviour but hold the
+`_ptiddata` block in a Win32 TLS slot. The block is still allocated with the *game's* `calloc`, because the
+game's `free` is what releases it.
 
-The injected DLL and the loader can share one codebase: today's `actioninject.dll` becomes a static
-part of the loader. Keep the DLL-into-CXBX path working until the standalone one is at parity, behind
-the same settings switches, so regressions can always be bisected against CXBX.
+Two things are deliberately not called: `FUN_000eddfc` patches the running kernel image, and there is no
+kernel image to patch; and the drive mounting in `XapiInitProcess` is redundant now that `XboxPaths.cpp` maps
+drive letters to host paths directly.
 
-### 4.4 Remove the physical-memory alias
+Also patched out: `WBINVD` at three sites. An Xbox title runs in ring 0 and flushes the cache itself before
+the GPU reads memory; the instruction is privileged on Windows and raises `0xc0000096`. There is nothing to
+flush, because the D3D9 backend copies rather than letting hardware read game memory.
 
-CXBX maps Xbox physical memory at `0x80000000` and the seam still relies on it in three places
-(`D3D_UncachedAliasOf` in `d3dLockSurface`; the `Data | 0x80000000` sentinel convention in the D3D9
-backend for psiBlurScreen; and sound bank data, which reaches `IDirectSoundBuffer_SetBufferData` as an
-alias pointer - see `docs/audio-inventory.md`). Both become plain pointers once D3D8 is gone for good. Audit
-`tools/functions_action.json` for other `0x8xxxxxxx`/`0xFxxxxxxx` constant users (the write-combined
-alias `0xF0000000` is the other one) before removing the mapping.
+### 4.3 Own loader - DONE (needs testing)
+
+`src/loader/`, built as `nfloader.exe`. It maps the XBE, resolves the kernel thunks, loads
+`actioninject.dll` unchanged, creates the render window and calls the entry point.
+
+**Getting the address range was the hard part, and the answer is not VirtualAlloc.** `0x00010000` is above
+the system minimum but is never free: the kernel has already put something there before the first instruction
+of the process runs, and reserving it from a parent into a `CREATE_SUSPENDED` child fails identically, because
+this is not a race that starting earlier wins. The answer is to *be* the image - `nfloader` is linked
+`/BASE:0x10000 /FIXED /DYNAMICBASE:NO` with a 0x340000-byte array first in `.text` (`src/loader/reserve.cpp`),
+so the kernel maps it across the XBE's whole range before the process exists, and the XBE is copied over the
+top. This is what `cxbxr-ldr.exe` does too, which is worth knowing before trying anything cleverer.
+
+Two consequences of being the image:
+
+- **`/SAFESEH:NO` is required.** The mapped XBE ends up inside `nfloader`'s image range, so every SEH handler
+  the game registers looks to Windows like a handler in `nfloader` and would be rejected for not being in its
+  table of safe handlers.
+- **Both sets of headers have to live at `0x10000` at once.** The game reads its own XBE header constantly
+  (heap reserve/commit at `0x10134`/`0x10138`, thread stack size at `0x10130`, the certificate through
+  `0x10118`, the section table through `0x10120` - 25 references in all), and Windows reads the main image's
+  PE headers through the PEB whenever a DLL initialises. With `MZ` gone, `RtlImageNtHeader` returns null and
+  `user32`, `d3d9` and `rpcrt4` all fault during init - which surfaces only as `LoadLibrary` failing with
+  error 1114. They coexist because each needs only a few bytes in a fixed place: the XBE headers go down
+  whole, `MZ` and `e_lfanew` are stamped back over the `XBEH` magic and the digital signature (neither of
+  which anything reads), and the PE headers proper are parked past the XBE's own - 0x62c spare bytes against
+  the 0x198 they need.
+
+Sections are mapped writable regardless of what the XBE says, because the whole decompilation works by
+patching game code in place.
+
+Twelve kernel imports are implemented, of 96: virtual memory (4), contiguous memory (4), critical sections
+(4 ordinals over 3 functions), and `PsCreateSystemThreadEx`. The rest resolve to a generated stub that names
+the import and the address that called it, then stops. That stub table is what produced the list - run, read
+the name, implement it, run again - and it is worth keeping for the same reason.
+
+`PsCreateSystemThreadEx` ignores the `SystemRoutine` it is given (`XapiThreadStartup`), which exists to build
+the Xbox TLS block through the KPCR; the thread starts directly at `StartRoutine`, which is shaped exactly
+like a Win32 thread proc.
+
+### 4.4 Remove the physical-memory alias - DONE for graphics (needs testing)
+
+`D3D_UncachedAliasOf` in `d3dSeam.cpp` now decides once, from the first address that passes through it,
+whether the `0x8xxxxxxx` alias is actually mapped, and returns the plain address when it is not. Under
+`nfloader` resource memory comes from `MmAllocateContiguousMemoryEx`, which is a plain `VirtualAlloc`, so a
+resource's `Data` word is already the address the CPU should use. The symptom before this was the XMV decoder
+writing a frame to `0x8b042700` when the surface it had locked was at `0x0b042700`.
+
+Probing beats a build-time switch or a "is CXBX loaded" test because it checks the thing that actually
+matters. Still outstanding: the sound-bank path (`IDirectSoundBuffer_SetBufferData` receives an alias
+pointer - see `docs/audio-inventory.md`), and an audit for `0xF0000000` write-combined alias users.
 
 ### 4.5 Driving engine
 
@@ -322,6 +369,15 @@ standalone, and reuse the D3D9 and audio backends as libraries.
   `& "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\MSBuild\Current\Bin\MSBuild.exe" nightfiRE.sln /t:actioninject /p:Configuration=Release /p:Platform=Win32 /m /v:m`.
   `tools/preprocess.py` runs as a pre-build step and needs a function name in `tools/functions_action.json`
   for every `AUTOINJECT` (or use `FUNC_AT(<address>)`).
+- **The tag must be the line immediately above the declaration.** `preprocess.py` reads the *next* line after
+  an `AUTOINJECT`/`FUNC_AT` comment and takes the token before the last `(` as the function name. A comment
+  between the two makes it fail with `IndexError: list index out of range`, several frames from anything that
+  names the file. Put the explanation above the tag, not below it.
+- **Running the standalone loader**: build the `nfloader` target too, then run `Release/nfloader.exe` with the
+  working directory set to `Release` (it looks for `../disc/default.xbe`). It writes everything to stdout, so
+  redirecting it to a file is the easiest way to read a whole boot. An unimplemented kernel import prints its
+  name and the address that called it and then exits; a fault prints the faulting address, the address it
+  touched and that page's state, which is usually enough to name the cause without a debugger.
 - **Check the `RET` immediate of every library entry point you call**, against the parameter count of the
   typedef you write for it. These are all callee-cleans `__stdcall`, so a typedef one parameter short
   unbalances the stack by 4 bytes with no crash at the call itself - the *calling* function returns to

@@ -1,4 +1,5 @@
 #include "d3d9Backend.h"
+#include "../../../common/renderWindow.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -422,6 +423,10 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
 // The launcher passes its own top-level window to CXBX as "/hwnd <decimal>" on the command line, and CXBX
 // creates its "CxbxRender" child inside it. Prefer the child (it's the area CXBX itself would draw to and it
 // tracks the launcher's resizing); fall back to the parent, then to a standalone CxbxRender window.
+//
+// Under the standalone loader there is no launcher and no CXBX, so nfloader creates the window itself and
+// pumps its messages - see CreateRenderWindow in src/loader/loadermain.cpp. It is looked for last, so that
+// nothing changes for a CXBX-hosted run.
 static HWND FindRenderWindow(void) {
     HWND parent = NULL;
     const char *cmd = GetCommandLineA();
@@ -434,7 +439,11 @@ static HWND FindRenderWindow(void) {
         return child;
     if (parent != NULL)
         return parent;
-    return FindWindowA("CxbxRender", NULL);
+
+    HWND cxbx = FindWindowA("CxbxRender", NULL);
+    if (cxbx != NULL)
+        return cxbx;
+    return FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
 }
 
 static void InitPinnedConstants(void);

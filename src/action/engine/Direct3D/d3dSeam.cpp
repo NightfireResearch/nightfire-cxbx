@@ -6,6 +6,9 @@
 
 #include <stdint.h>
 #include <string.h>
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>   // VirtualQuery, for the uncached-alias probe in D3D_UncachedAliasOf
 #include <math.h>
 #include <stdio.h>
 #include <type_traits>
@@ -531,8 +534,29 @@ void D3DSeamTableExhaustedWarning(const char *tableName, const char *extraContex
 // allocations the data lives in (which themselves sit at 0x8xxxxxxx addresses), so it simply works. A
 // non-CXBX backend replaces these uses (a GPU readback for the backbuffer, the plain pointer plus a "contents
 // changed" notification for the textures) - which is why they're all funnelled through this helper.
+// Standalone under nfloader there is no alias to take. Resource memory comes from
+// MmAllocateContiguousMemoryEx, which is a plain VirtualAlloc (see src/loader/kernel.cpp), so a resource's
+// Data word is already the address the CPU should use - Nightfire's land around 0x09000000-0x0c000000, well
+// inside the low half, so the top nibble the Xbox strips was never set. OR'ing 0x80000000 into one of those
+// produces an address belonging to nothing, and the first thing to find out was the XMV decoder writing a
+// frame to 0x8b042700 when the surface it locked was at 0x0b042700.
+//
+// Which host we are on is worked out once, from the first address that comes through here, by asking whether
+// its alias is actually mapped. That is better than a build-time switch or a "is CXBX loaded" test, because
+// it checks the thing that actually matters rather than a proxy for it.
 static inline void *D3D_UncachedAliasOf(uint32_t address) {
-    return (void*)(address | 0x80000000u);
+    static int aliasIsMapped = -1;
+    void *alias = (void*)(uintptr_t)(address | 0x80000000u);
+
+    if (aliasIsMapped < 0) {
+        MEMORY_BASIC_INFORMATION mbi;
+        memset(&mbi, 0, sizeof(mbi));
+        aliasIsMapped = (VirtualQuery(alias, &mbi, sizeof(mbi)) == sizeof(mbi) && mbi.State == MEM_COMMIT);
+        printf("[d3dSeam] uncached alias of resource memory: %s\n",
+               aliasIsMapped ? "mapped, using 0x8xxxxxxx as on the Xbox"
+                             : "not mapped, using resource addresses directly");
+    }
+    return aliasIsMapped ? alias : (void*)(uintptr_t)address;
 }
 
 // The extra-context line every table-full diagnostic prints (defined up here since RegisterTexture is the

@@ -1,5 +1,6 @@
 #include "psiInput.h"
 #include "../actionhelpers.h"
+#include "../../common/renderWindow.h"
 #include <string.h>
 #include <math.h>
 
@@ -119,7 +120,10 @@ static inline bool KeyDown(int vk) {
 // the render window cannot be found at all, fail open - better to accept stray keystrokes than to leave someone
 // with no working input and no way to tell why.
 static bool KeyboardPadHasFocus(void) {
+    // Either host's window: CXBX's, or the one nfloader creates when running standalone.
     void *render = FindWindowA("CxbxRender", NULL);
+    if (render == NULL)
+        render = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
     if (render == NULL)
         return true;
     void *root = GetAncestor(render, GA_ROOT_);

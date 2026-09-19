@@ -418,6 +418,15 @@ static bool EnsureDevice(void) {
         return g_xaudio != NULL && g_master != NULL;
     g_initAttempted = true;
 
+    // XAudio2 is COM underneath, and this thread has to have initialised COM before it will hand out a
+    // device. Under CXBX the host process had already done it; standalone under nfloader nobody has, and the
+    // symptom is CreateMasteringVoice returning CO_E_NOTINITIALIZED (0x800401f0) with no audio at all.
+    // RPC_E_CHANGED_MODE means COM is already up in the other threading model, which is fine for XAudio2 -
+    // it only means this call did not do the initialising.
+    HRESULT com = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    if (FAILED(com) && com != RPC_E_CHANGED_MODE)
+        XA2Log("[xa2] CoInitializeEx failed: 0x%08lx - audio may not start\n", com);
+
     HRESULT hr = XAudio2Create(&g_xaudio, 0, XAUDIO2_DEFAULT_PROCESSOR);
     if (FAILED(hr)) {
         XA2Log("[xa2] XAudio2Create failed: 0x%08lx - no audio\n", hr);

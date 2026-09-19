@@ -9,6 +9,7 @@
 #include "action/ui/ui.h"
 #include "action/engine/psiFile.h"
 #include "action/engine/XboxFile.h"
+#include "action/engine/XboxStartup.h"
 #include "action/engine/psiSave.h"
 #include "action/engine/Direct3D/d3dSeam.h"
 #include "action/sound/dsndSeam.h"
@@ -48,6 +49,10 @@ void WriteJmpTo(size_t from, size_t to)
 
 void Inject()
 {
+  // Instruction-level patches that are not whole-function replacements. Done first, so that nothing the rest
+  // of this function sets up can run against un-patched XAPI.
+  Inject_XboxStartup();
+
 
   // Experiments with increasing resolution beyond original limits
   
