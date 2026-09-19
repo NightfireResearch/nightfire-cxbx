@@ -152,6 +152,48 @@ which is worth remembering when A/B-ing the two: a difference is not automatical
 path could be made to behave the same way by having the seam save the position before `Stop` and restore it
 after the following `Play`, at the cost of no longer having an unmodified baseline to bisect against.
 
+## Open question: is the 3D path too hot relative to 2D?
+
+Reported while listening to the XAudio2 backend: close 3D sounds (shell casings, bodies hitting the floor)
+possibly louder than remembered, and the music track possibly slightly quieter. Both impressions are
+uncertain, and concentrated listening does surface roughness that was always there - but they are consistent
+with a single cause, which is why they are recorded together.
+
+The 3D and 2D paths do not have the same gain structure:
+
+- The game gives 3D buffers **0** headroom and 2D buffers **600** (6 dB), so 3D sits 6 dB hotter than 2D by
+  design. Music is a stereo 2D voice, so it is on the quiet side of that split.
+- The 3D sounds in question are *close*. Minimum distances in use are 2, 4, 10 and 20 units, and inside the
+  minimum distance the curve is flat at full volume - correct DirectSound semantics, but it means these
+  particular sounds play at maximum gain through a completely clean path.
+- On the Xbox the same voice was routed to six mixbins at once (four cross-talk bins, front centre, I3DL2)
+  and went through the cross-talk cancellation network, which has a gain structure the backend does not
+  reproduce at all - X3DAudio owns the matrix for 3D voices instead.
+
+Ruled out: headroom itself is not the difference between the two modes, because CXBX applies it the same way
+(`volume - headroom`). If the 3D/2D balance really does differ between `cxbx` and `xaudio2`, it has to come
+from the distance model - CXBX's DirectSound3D against X3DAudio plus our translated curve - and close range
+is exactly where those diverge most.
+
+How to settle it: find a spot with both casings and music, flip `AudioBackend`, and listen twice. Same
+relative balance in both modes means the effect is pre-existing. If 3D is hotter under `xaudio2`, the fix
+belongs in the distance curve, not in an unexplainable gain trim. Note also that CXBX is not a clean
+reference - its DirectSound has at least one outright bug (see the rewinding `Stop` above) - so "different
+from CXBX" does not by itself mean "wrong".
+
+## Reverb: CXBX never implemented it either
+
+Worth knowing before treating the missing I3DL2 reverb as a regression. In CXBX-Reloaded:
+
+- `IDirectSoundBuffer_SetI3DL2Source` is `LOG_NOT_SUPPORTED(); return DS_OK;` - a complete no-op.
+- `CDirectSound_DownloadEffectsImage` is `LOG_INCOMPLETE()`; it fabricates an ImageDesc structure for callers
+  that ask for one and does nothing with the image itself.
+
+So **no reverb has ever been heard in this project**, in either mode, and the dry 3D voices in the XAudio2
+backend are not a step backwards from the cxbx baseline. Implementing it would make native mode more
+faithful to real hardware than the baseline has ever been - which also means there is no local reference to
+check the result against.
+
 ## Also worth noting
 
 `IDirectSoundBuffer_SetBufferData` is called with data pointers like `0x824b54f4`, `0x837796ac` and

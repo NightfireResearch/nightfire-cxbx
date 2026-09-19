@@ -69,22 +69,94 @@ struct PcmCacheEntry {
     const void *adpcm;
     uint32_t adpcmBytes;
     int channels;
+    uint32_t fingerprint;   // see FingerprintAdpcm - guards against the address being reused
     int16_t *pcm;
-    size_t pcmValues;   // total int16 values, i.e. samples * channels
+    size_t pcmValues;       // total int16 values, i.e. samples * channels
+    uint64_t lastUsed;
 };
 
-static PcmCacheEntry g_pcmCache[256];
+#define PCM_CACHE_MAX_ENTRIES 512
+#define PCM_CACHE_MAX_BYTES   (96u * 1024u * 1024u)
+
+static PcmCacheEntry g_pcmCache[PCM_CACHE_MAX_ENTRIES];
 static int g_pcmCacheCount = 0;
 static size_t g_pcmCacheBytes = 0;
+static uint64_t g_pcmCacheClock = 0;
+
+static bool PcmInUse(const int16_t *pcm); // defined once the buffer list below exists
+
+// A cheap content fingerprint, because (pointer, size) alone is not a safe identity for this data. The game
+// loads sounds into a pool and reuses the same addresses for different samples, so the same key can name
+// completely different audio later in a session - which sounds like the wrong effect playing. Sampling a
+// couple of hundred bytes spread across the buffer distinguishes any two real samples; hashing all of a 3 MB
+// bank would cost as much as decoding it.
+static uint32_t FingerprintAdpcm(const void *data, uint32_t bytes) {
+    const uint8_t *p = (const uint8_t *)data;
+    uint32_t h = 2166136261u;
+    h ^= bytes;
+    h *= 16777619u;
+    const uint32_t chunks = 16, chunkBytes = 16;
+    for (uint32_t c = 0; c < chunks; c++) {
+        uint64_t start = ((uint64_t)bytes * c) / chunks;
+        for (uint32_t i = 0; i < chunkBytes && start + i < bytes; i++) {
+            h ^= p[start + i];
+            h *= 16777619u;
+        }
+    }
+    return h;
+}
+
+static void ReleaseCacheEntry(PcmCacheEntry *e) {
+    g_pcmCacheBytes -= e->pcmValues * sizeof(int16_t);
+    free(e->pcm);
+    memset(e, 0, sizeof(*e));
+}
+
+// Frees the least recently used entry that no live buffer is still playing from. Returns false if every entry
+// is in use, which would need more than 512 buffers bound at once and so should not happen.
+static bool EvictOneCacheEntry(void) {
+    int oldest = -1;
+    for (int i = 0; i < g_pcmCacheCount; i++) {
+        if (g_pcmCache[i].pcm == NULL || PcmInUse(g_pcmCache[i].pcm))
+            continue;
+        if (oldest < 0 || g_pcmCache[i].lastUsed < g_pcmCache[oldest].lastUsed)
+            oldest = i;
+    }
+    if (oldest < 0)
+        return false;
+    ReleaseCacheEntry(&g_pcmCache[oldest]);
+    g_pcmCache[oldest] = g_pcmCache[--g_pcmCacheCount];
+    memset(&g_pcmCache[g_pcmCacheCount], 0, sizeof(g_pcmCache[g_pcmCacheCount]));
+    return true;
+}
 
 static const PcmCacheEntry *DecodeAndCache(const void *adpcm, uint32_t adpcmBytes, int channels) {
+    uint32_t fingerprint = FingerprintAdpcm(adpcm, adpcmBytes);
     for (int i = 0; i < g_pcmCacheCount; i++) {
         if (g_pcmCache[i].adpcm == adpcm && g_pcmCache[i].adpcmBytes == adpcmBytes &&
-            g_pcmCache[i].channels == channels)
-            return &g_pcmCache[i];
+            g_pcmCache[i].channels == channels) {
+            if (g_pcmCache[i].fingerprint == fingerprint) {
+                g_pcmCache[i].lastUsed = ++g_pcmCacheClock;
+                return &g_pcmCache[i];
+            }
+            // Same address and size, different audio: the pool slot has been reused. Drop the stale decode
+            // (unless something is still playing it, in which case leave it be and decode a second copy).
+            if (!PcmInUse(g_pcmCache[i].pcm)) {
+                ReleaseCacheEntry(&g_pcmCache[i]);
+                g_pcmCache[i] = g_pcmCache[--g_pcmCacheCount];
+                memset(&g_pcmCache[g_pcmCacheCount], 0, sizeof(g_pcmCache[g_pcmCacheCount]));
+            }
+            break;
+        }
     }
-    if (g_pcmCacheCount >= (int)(sizeof(g_pcmCache) / sizeof(g_pcmCache[0]))) {
-        DSound_BackendMissing("decoded PCM cache full");
+
+    size_t wantBytes = XAdpcm_DecodedValueCount(adpcmBytes, channels) * sizeof(int16_t);
+    while ((g_pcmCacheCount >= PCM_CACHE_MAX_ENTRIES || g_pcmCacheBytes + wantBytes > PCM_CACHE_MAX_BYTES) &&
+           EvictOneCacheEntry()) {
+        // keep evicting until there is room
+    }
+    if (g_pcmCacheCount >= PCM_CACHE_MAX_ENTRIES) {
+        DSound_BackendMissing("decoded PCM cache full (every entry still in use)");
         return NULL;
     }
 
@@ -97,18 +169,29 @@ static const PcmCacheEntry *DecodeAndCache(const void *adpcm, uint32_t adpcmByte
         DSound_BackendMissing("out of memory decoding ADPCM");
         return NULL;
     }
+    LARGE_INTEGER before, after, freq;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&before);
     size_t got = XAdpcm_Decode(adpcm, adpcmBytes, channels, pcm, values);
+    QueryPerformanceCounter(&after);
     if (got == 0) {
         free(pcm);
         return NULL;
     }
+    // Decoding happens on the game thread, so a big bank stalls the frame. Timed because a stutter as a level
+    // loads is exactly what that would sound like, and guessing at it is worse than measuring it.
+    double decodeMs = 1000.0 * (double)(after.QuadPart - before.QuadPart) / (double)freq.QuadPart;
+    if (decodeMs > 2.0)
+        XA2Log("[xa2] SLOW decode: %.1f ms for %u bytes\n", decodeMs, adpcmBytes);
 
     PcmCacheEntry *e = &g_pcmCache[g_pcmCacheCount++];
     e->adpcm = adpcm;
     e->adpcmBytes = adpcmBytes;
     e->channels = channels;
+    e->fingerprint = fingerprint;
     e->pcm = pcm;
     e->pcmValues = got;
+    e->lastUsed = ++g_pcmCacheClock;
     g_pcmCacheBytes += got * sizeof(int16_t);
     XA2Log("[xa2] decoded %u bytes of %d-channel ADPCM at 0x%08x -> %u samples (cache now %u entries, %.1f MB)\n",
            adpcmBytes, channels, (unsigned)(uintptr_t)adpcm, (unsigned)(got / (size_t)channels),
@@ -199,6 +282,12 @@ struct XA2Buffer {
     bool playing;
     bool looping;
     uint64_t samplesPlayedAtStart;
+    // What the last submit asked for. SamplesPlayed counts from the start of playback, not from the start of
+    // the buffer, so the actual cursor is playBeginSample + SamplesPlayed folded back into the loop region.
+    size_t playBeginSample;
+    size_t firstSegmentSamples; // samples played before the looping region takes over
+    size_t loopBeginSample;
+    size_t loopLengthSamples;   // 0 when not looping
     // Where a Stop left the play cursor. DirectSound's Play resumes from there rather than restarting, which
     // is what psiSamplePause/psiSampleUnPause rely on to pause and resume streamed music.
     size_t resumeSample;
@@ -218,6 +307,18 @@ static XA2Buffer *AsBuffer(DSoundBuffer *p) {
 // references, in its own AudioSystem tables, and it creates exactly 192 of these once at boot.
 static XA2Buffer *g_buffers[256];
 static int g_bufferCount = 0;
+
+// Whether any buffer is currently bound to this decoded PCM, so the cache never frees memory XAudio2 could
+// still be reading from.
+static bool PcmInUse(const int16_t *pcm) {
+    if (pcm == NULL)
+        return false;
+    for (int i = 0; i < g_bufferCount; i++) {
+        if (g_buffers[i] != NULL && g_buffers[i]->pcm == pcm)
+            return true;
+    }
+    return false;
+}
 
 // A single object standing in for the one DirectSound instance the game creates.
 static uint32_t g_deviceObject = 0xD5000000u;
@@ -452,6 +553,7 @@ void XA2_IDirectSound_CreateSoundBuffer(DSoundObject *thisPtr, DSBUFFERDESC_Xbox
 static void ApplyAmplitude(XA2Buffer *b, float extraAttenuation);
 static void ApplyMixMatrix(XA2Buffer *b);
 static void ApplyFrequency(XA2Buffer *b);
+static void Apply3D(XA2Buffer *b);
 
 // Creates the source voice for a buffer once its format is known. The format rate is the Xbox rate, so
 // SetFrequency turns into a plain ratio against it.
@@ -488,8 +590,18 @@ static bool EnsureVoice(XA2Buffer *b) {
     b->appliedFreqRatio = -1.0f;
     b->appliedMatrixValid = false;
     ApplyFrequency(b);
-    ApplyMixMatrix(b);
+    ApplyMixMatrix(b);   // no-op for 3D voices, whose matrix belongs to X3DAudio
     ApplyAmplitude(b, 1.0f);
+
+    // Belt and braces for the same hazard: never leave a 3D voice sitting on XAudio2's default unity matrix
+    // between creation and its first Apply3D. Only when X3DAudio is actually available - if it is not, the
+    // default matrix is the one thing keeping 3D sounds audible at all.
+    if (b->is3d && g_x3dReady) {
+        float silent[OUTPUT_CHANNELS] = { 0.0f, 0.0f };
+        b->voice->SetOutputMatrix(NULL, 1, OUTPUT_CHANNELS, silent);
+        memcpy(b->appliedMatrix, silent, sizeof(silent));
+        b->appliedMatrixValid = true;
+    }
     return true;
 }
 
@@ -512,19 +624,28 @@ void XA2_IDirectSoundBuffer_SetBufferData(DSoundBuffer *thisPtr, void *pvBufferD
         return;
     }
 
-    const PcmCacheEntry *entry = DecodeAndCache(pvBufferData, dwBufferBytes, b->channels);
-    if (entry == NULL)
-        return;
-
+    // Whatever happens next, this buffer must not keep playing the sound it held before. Stopping and
+    // unbinding first means a failure below leaves it silent rather than playing the previous occupant of the
+    // slot - which is what "the watch laser sounds like clanging" looks like from here.
     if (b->voice != NULL) {
         b->voice->Stop(0);
         b->voice->FlushSourceBuffers();
         b->playing = false;
     }
+    b->pcm = NULL;
+    b->pcmSamples = 0;
+
+    const PcmCacheEntry *entry = DecodeAndCache(pvBufferData, dwBufferBytes, b->channels);
+    if (entry == NULL)
+        return;
     b->pcm = entry->pcm;
     b->pcmSamples = entry->pcmValues / (size_t)b->channels;
     b->adpcmBytes = dwBufferBytes;
     b->startPositionBytes = 0;
+    // New sample data: any cursor saved from the previous binding means nothing now. dsndGetVoice happens to
+    // call SetCurrentPosition(0) straight after this, which would also clear it, but a slot recycled without
+    // that would otherwise start a brand new sound part-way through.
+    b->hasResume = false;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -578,30 +699,69 @@ void XA2_IDirectSoundBuffer_Play(DSoundBuffer *thisPtr, uint32_t dwReserved1, ui
     }
     if (startSample >= b->pcmSamples)
         startSample = 0;
-    xb.PlayBegin = (UINT32)startSample;
-    xb.PlayLength = 0; // to the end of the buffer
+    b->playBeginSample = startSample;
+    b->loopBeginSample = 0;
+    b->loopLengthSamples = 0;
+    b->firstSegmentSamples = b->pcmSamples - startSample;
 
     b->looping = (dwFlags & 0x1u) != 0; // DSBPLAY_LOOPING
+    size_t loopBegin = 0, loopLength = 0;
     if (b->looping) {
-        size_t loopBegin = XAdpcm_ByteOffsetToSample(b->loopStartBytes, b->channels);
+        loopBegin = XAdpcm_ByteOffsetToSample(b->loopStartBytes, b->channels);
         if (loopBegin >= b->pcmSamples)
             loopBegin = 0;
-        // XAudio2 requires the loop region to sit inside the play region, and rejects the whole submit if it
-        // does not. In practice the start is always 0, but do not let an odd pair fail the call.
-        if (loopBegin < startSample)
-            loopBegin = startSample;
-        size_t loopLength = XAdpcm_ByteOffsetToSample(b->loopLengthBytes, b->channels);
+        loopLength = XAdpcm_ByteOffsetToSample(b->loopLengthBytes, b->channels);
         if (loopLength == 0 || loopBegin + loopLength > b->pcmSamples)
             loopLength = b->pcmSamples - loopBegin; // a zero length means "to the end", as it does on Xbox
-        // XAudio2 rejects a zero loop length outright, which would happen on a buffer shorter than one block.
-        if (loopLength > 0) {
+        if (loopLength == 0)
+            b->looping = false; // XAudio2 rejects a zero-length loop outright
+    }
+
+    // Resuming part-way into a loop cannot be expressed as one XAudio2 buffer: it insists the loop region sit
+    // inside the play region, so a buffer that starts at the resume point can only loop back to the resume
+    // point, not to the real loop start. Clamping the loop start up to meet it - which is what this used to do
+    // - shrinks the looped region on every resume until the music is repeating a fragment.
+    //
+    // Two queued buffers express it exactly. XAudio2 plays them in order: first the remainder of the ring from
+    // the resume point, once, then the real loop region for ever.
+    HRESULT hr;
+    if (b->looping && startSample != loopBegin) {
+        size_t loopEnd = loopBegin + loopLength;
+        if (startSample >= loopEnd)          // outside the loop region entirely; nothing sensible to resume to
+            startSample = loopBegin;
+        b->playBeginSample = startSample;
+        b->firstSegmentSamples = loopEnd - startSample;
+
+        XAUDIO2_BUFFER tail = xb;
+        tail.Flags = 0;                       // not the end of the stream - the looping buffer follows it
+        tail.PlayBegin = (UINT32)startSample;
+        tail.PlayLength = (UINT32)b->firstSegmentSamples;
+        hr = b->voice->SubmitSourceBuffer(&tail, NULL);
+        if (FAILED(hr)) {
+            XA2Log("[xa2] SubmitSourceBuffer (resume segment) failed: 0x%08lx\n", hr);
+            return;
+        }
+        xb.PlayBegin = (UINT32)loopBegin;
+        xb.PlayLength = (UINT32)loopLength;
+        xb.LoopBegin = (UINT32)loopBegin;
+        xb.LoopLength = (UINT32)loopLength;
+        xb.LoopCount = XAUDIO2_LOOP_INFINITE;
+    } else {
+        xb.PlayBegin = (UINT32)startSample;
+        xb.PlayLength = 0; // to the end of the buffer
+        if (b->looping) {
             xb.LoopBegin = (UINT32)loopBegin;
             xb.LoopLength = (UINT32)loopLength;
             xb.LoopCount = XAUDIO2_LOOP_INFINITE;
+            b->firstSegmentSamples = 0; // playback is inside the loop region from the very first sample
         }
     }
+    if (b->looping) {
+        b->loopBeginSample = loopBegin;
+        b->loopLengthSamples = loopLength;
+    }
 
-    HRESULT hr = b->voice->SubmitSourceBuffer(&xb, NULL);
+    hr = b->voice->SubmitSourceBuffer(&xb, NULL);
     if (FAILED(hr)) {
         XA2Log("[xa2] SubmitSourceBuffer failed: 0x%08lx (%u samples, loop %u..+%u)\n",
                hr, (unsigned)b->pcmSamples, xb.LoopBegin, xb.LoopLength);
@@ -616,8 +776,48 @@ void XA2_IDirectSoundBuffer_Play(DSoundBuffer *thisPtr, uint32_t dwReserved1, ui
     b->voice->GetState(&state, 0);
     b->samplesPlayedAtStart = state.SamplesPlayed;
 
+    // Position a 3D voice before it makes a sound, not on the next frame's DoWork. dsndUpdateVoices runs
+    // DoWork *before* its play/stop pass, so a voice starting this frame would otherwise be skipped by the 3D
+    // pass and begin with no output matrix at all - which XAudio2 takes to mean unity into both channels, i.e.
+    // full volume with no distance attenuation. One frame of that on every 3D sound is very audible when a
+    // level starts and a batch of distant ambience triggers at once.
+    if (b->is3d)
+        Apply3D(b);
+
     if (SUCCEEDED(b->voice->Start(0)))
         b->playing = true;
+}
+
+// Where the voice actually is in its buffer right now, in samples.
+//
+// XAudio2's SamplesPlayed counts source samples consumed since playback started, which is NOT the same as the
+// position in the buffer: a submit can begin part-way in (PlayBegin) and can wrap round a loop region. Getting
+// this wrong is not a cosmetic error - SFXUpdateStreams computes where to write the next chunk of streamed
+// music from the position psiStreamGetPlayPos reports, so an offset cursor makes the game overwrite the audio
+// about to be played and leave stale ring-buffer content elsewhere. That sounds like doubling or echo on
+// music, and like a glitch on a resumed speech stream.
+static size_t CurrentSample(const XA2Buffer *b) {
+    if (b->pcmSamples == 0)
+        return 0;
+
+    XAUDIO2_VOICE_STATE state;
+    memset(&state, 0, sizeof(state));
+    b->voice->GetState(&state, 0);
+
+    uint64_t played = state.SamplesPlayed - b->samplesPlayedAtStart;
+
+    // Up to firstSegmentSamples the voice is working through the one-shot segment that starts at
+    // playBeginSample; after that it is inside the looping region. When playback started inside the loop
+    // region already, firstSegmentSamples is 0 and the second branch applies from the first sample.
+    if (b->loopLengthSamples > 0 && played >= (uint64_t)b->firstSegmentSamples) {
+        uint64_t intoLoop = (played - (uint64_t)b->firstSegmentSamples) % (uint64_t)b->loopLengthSamples;
+        return (size_t)((uint64_t)b->loopBeginSample + intoLoop);
+    }
+
+    uint64_t position = (uint64_t)b->playBeginSample + played;
+    if (position >= (uint64_t)b->pcmSamples)
+        position = (uint64_t)b->pcmSamples - 1;
+    return (size_t)position;
 }
 
 void XA2_IDirectSoundBuffer_Stop(DSoundBuffer *thisPtr) {
@@ -627,11 +827,7 @@ void XA2_IDirectSoundBuffer_Stop(DSoundBuffer *thisPtr) {
     if (b->voice != NULL) {
         // Remember the cursor before flushing, so a following Play resumes rather than restarts.
         if (b->playing && b->pcmSamples > 0) {
-            XAUDIO2_VOICE_STATE state;
-            memset(&state, 0, sizeof(state));
-            b->voice->GetState(&state, 0);
-            uint64_t played = state.SamplesPlayed - b->samplesPlayedAtStart;
-            b->resumeSample = (size_t)(played % (uint64_t)b->pcmSamples);
+            b->resumeSample = CurrentSample(b);
             b->hasResume = true;
         }
         b->voice->Stop(0);
@@ -669,16 +865,10 @@ void XA2_IDirectSoundBuffer_GetCurrentPosition(DSoundBuffer *thisPtr, uint32_t *
     if (b == NULL || b->voice == NULL || b->pcmSamples == 0)
         return;
 
-    XAUDIO2_VOICE_STATE state;
-    memset(&state, 0, sizeof(state));
-    b->voice->GetState(&state, 0);
-    uint64_t played = state.SamplesPlayed - b->samplesPlayedAtStart;
-    size_t sample = (size_t)(played % (uint64_t)b->pcmSamples);
-
     // The game speaks ADPCM byte offsets on this interface - psiStreamGetPlayPos feeds the result straight
     // back into the same units it gave SetLoopRegion.
     if (pdwPlayCursor != NULL)
-        *pdwPlayCursor = (uint32_t)XAdpcm_SampleToByteOffset(sample, b->channels);
+        *pdwPlayCursor = (uint32_t)XAdpcm_SampleToByteOffset(CurrentSample(b), b->channels);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
