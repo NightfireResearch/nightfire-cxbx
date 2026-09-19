@@ -8,6 +8,7 @@
 #include "action/sound/music.h"
 #include "action/ui/ui.h"
 #include "action/engine/psiFile.h"
+#include "action/engine/XboxFile.h"
 #include "action/engine/psiSave.h"
 #include "action/engine/Direct3D/d3dSeam.h"
 #include "action/sound/dsndSeam.h"

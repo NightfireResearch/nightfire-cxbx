@@ -158,8 +158,8 @@ int maybeToLower(int characterIn);
 // AUTOGEN
 int openOrCreateFile(char *nameRelated,char shareAccess); // "shareAccess" might actually be "createIfNotExists"
 
-// AUTOGEN
-int readFromFileBlocking(HANDLE fileHandle, void* buffer, ULONG len, undefined4 *error_code, IO_STATUS_BLOCK *param_5);
+// readFromFileBlocking is now ours (engine/XboxFile.cpp, a plain ReadFile), so it is no longer AUTOGEN'd -
+// that would generate a second definition of a function we inject over.
 
 void call_maybeReadFile(void *fileOut, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 idx) {
     __asm {

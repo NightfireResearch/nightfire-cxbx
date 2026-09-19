@@ -81,6 +81,7 @@ add_library(actioninject SHARED
   src/action/engine/Woman.cpp
   src/action/engine/XboxSettings.cpp
   src/action/engine/XboxPaths.cpp
+  src/action/engine/XboxFile.cpp
   src/action/engine/Direct3D/d3dhelpers.cpp
   src/action/engine/Direct3D/d3dSeam.cpp
   src/action/engine/Direct3D/d3d9Backend.cpp

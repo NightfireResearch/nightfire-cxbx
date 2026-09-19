@@ -1,0 +1,33 @@
+#ifndef XBOXFILE_H_
+#define XBOXFILE_H_
+
+#include <windows.h>
+#include <stdint.h>
+
+// ---------------------------------------------------------------------------------------------------------------
+// The game's file I/O on Win32 - see XboxFile.cpp for why this is only five functions. The Xbox's XAPI is a
+// Win32 clone, so these are CreateFileA, ReadFile, GetFileSizeEx, GetOverlappedResult and CloseHandle under
+// other names, and everything the game layers on top of them (openOrCreateFile, maybeReadFile,
+// FS_OperationInProgress, the archive reader) is already correct Win32 logic and is left untouched.
+//
+// Declared here so the generated injection table can see them. Not meant to be called from new code - use the
+// Win32 functions directly.
+// ---------------------------------------------------------------------------------------------------------------
+
+HANDLE __stdcall createFile(const char *filename, uint32_t desiredAccess, uint32_t shareMode,
+                            void *securityAttributes, uint32_t creationDisposition,
+                            uint32_t flagsAndAttributes, HANDLE templateFile);
+
+int __stdcall readFromFileBlocking(HANDLE fileHandle, void *buffer, uint32_t len,
+                                   uint32_t *bytesRead, OVERLAPPED *overlapped);
+
+// These three return int rather than bool on purpose - their callers test the whole of EAX, and a C++ bool
+// return only sets AL. See XboxFile.cpp.
+int __stdcall Xbox_GetOverlappedResult(HANDLE fileHandle, OVERLAPPED *overlapped,
+                                       uint32_t *bytesTransferred, int wait);
+
+int __stdcall getFileSize_LargeInteger(HANDLE fileHandle, LARGE_INTEGER *fileSize);
+
+int __stdcall DoNtClose(HANDLE handle);
+
+#endif // XBOXFILE_H_

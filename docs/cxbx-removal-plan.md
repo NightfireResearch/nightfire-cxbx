@@ -300,6 +300,24 @@ standalone, and reuse the D3D9 and audio backends as libraries.
   bytes of each entry point out of the image (`read_memory`, look for `c2 imm16` / `c3`) checks all of them
   cheaply, and cross-checking `Cxbx-Reloaded/src/core/hle/` - which is checked out in this tree - gives the
   intended signature for free.
+- **XAPI looks like Win32, but its state lives in the XBE.** The Xbox's XAPI is a Win32 clone, and at the
+  call site the two are often identical - `createFile` *is* `CreateFileA`, `readFromFileBlocking` *is*
+  `ReadFile`, and the struct the game calls `IO_STATUS_BLOCK` *is* a Win32 `OVERLAPPED`. That makes replacing
+  it far easier than it looks, but two differences bite, and both cost a test cycle in stage B step 4.1:
+  - **The last-error value is separate storage.** `XAPILIB::SetLastError`/`GetLastError` read and write a slot
+    in the XBE's own TLS block (`*(TLS[_tls_index] + 4)`), not the TEB slot Win32's `SetLastError` writes. Any
+    replacement has to mirror its result into the XBE's slot, or code that distinguishes cases by error code
+    silently takes the wrong branch. `maybeReadFile` tells "the read is in flight" from "the read failed"
+    purely by testing for `ERROR_IO_PENDING`, so reading a stale zero sent it straight to
+    `FS_FatalErrorHandler` - the "disc may be dirty or damaged" screen, which never returns.
+  - **Return widths.** These functions return a full 32-bit `EAX` and their callers test all of it; a C++
+    `bool` return only sets `AL` under MSVC and leaves the top 24 bits as whatever was in the register. A
+    Ghidra decompile shows this as `CONCAT31(extraout_var, result) != 0` in the *caller* - worth reading the
+    caller, not just the callee, before picking a return type.
+- **Parameter counts come from the `RET` immediate, not the decompiled prototype.** Ghidra reported six
+  parameters for `createFile`; it is `RET 0x1c` and its call site pushes seven dwords with no caller cleanup.
+  The seventh is `hTemplateFile`, which is what makes it exactly `CreateFileA`. The same check caught
+  `DSOUND::DirectSoundCreate` being one short in stage A - see the note above.
 - **Verify offline where possible**: `tools/vsh_translate_test.ps1` compiles all 130 shaders without
   the game; an ADPCM decoder should get the same treatment (decode a sound bank file and compare against
   a known-good decode).
