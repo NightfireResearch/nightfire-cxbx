@@ -47,4 +47,7 @@ int __stdcall MaybeFileCreateNew(const char *filename);       // DeleteFile
 
 uint32_t __stdcall Xbox_GetFileAttributesA(const char *filename);   // GetFileAttributes
 
+uint32_t __stdcall Xbox_FindFirstFileA(const char *filename, WIN32_FIND_DATAA *findData);
+int __stdcall Xbox_FindNextFileA(HANDLE findHandle, WIN32_FIND_DATAA *findData);
+
 #endif // XBOXFILE_H_

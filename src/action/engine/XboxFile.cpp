@@ -115,6 +115,10 @@ static void ReportFatalFileError(const char *what, HANDLE handle, uint32_t offse
     fflush(stdout);
 }
 
+// Defined with the directory enumeration at the end of this file; DoNtClose needs it before then, because a
+// find handle arrives there looking like any other handle.
+static bool CloseIfFindHandle(HANDLE handle);
+
 // Resolves an Xbox path and reports failures once per distinct path, since a missing disc file otherwise shows
 // up only as the game's own fatal error handler with nothing to say which file was missing.
 static bool ResolveForOpen(const char *filename, char *out, size_t outSize) {
@@ -263,6 +267,14 @@ int __stdcall getFileSize_LargeInteger(HANDLE fileHandle, LARGE_INTEGER *fileSiz
 // AUTOINJECT
 int __stdcall DoNtClose(HANDLE handle) {
     ForgetHandle(handle);
+
+    // A directory enumeration handed out a Win32 find handle, which CloseHandle would reject - see
+    // Xbox_FindFirstFileA. Everything else is an ordinary file handle.
+    if (CloseIfFindHandle(handle)) {
+        PublishLastError(0);
+        return 1;
+    }
+
     SetLastError(0);
     BOOL ok = CloseHandle(handle);
     PublishLastError(GetLastError());
@@ -409,8 +421,9 @@ int __stdcall MaybeFileCreateNew(const char *filename) {
 //
 // Other XAPI functions still build Xbox object names the same way and have not been replaced, because
 // nothing has reached them yet: 0x000e9f4d, 0x000ea821, 0x000eac45, 0x000eb34c, 0x000eb3b8, 0x000eb446,
-// 0x000eb5c3, 0x000eb6f6, 0x000ed2e8, 0x000ee0d4. Each will announce itself through the loader's kernel stub
-// rather than misbehaving quietly, and each is a few lines like this one.
+// 0x000eb5c3, 0x000ed2e8, 0x000ee0d4. Each will announce itself through the loader's kernel stub rather than
+// misbehaving quietly, and each is a few lines like this one. 0x000eb6f6 was on that list until the save
+// enumeration reached it; see Xbox_FindFirstFileA at the end of this file.
 //
 // FUNC_AT(000ea689)
 uint32_t __stdcall Xbox_GetFileAttributesA(const char *filename) {
@@ -432,4 +445,82 @@ uint32_t __stdcall Xbox_GetFileAttributesA(const char *filename) {
     else
         PublishLastError(0);
     return attributes;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Directory enumeration: FindFirstFileA and FindNextFileA.
+//
+// The originals split the path at its last backslash, open the directory with NtOpenFile and walk it with
+// NtQueryDirectoryFile, so they take paths in the Xbox object namespace and have to be replaced like the
+// rest of this file. What makes them easy is that the structure they fill in is Win32's: the conversion at
+// 0x000eb68a writes attributes at 0, three FILETIMEs at 4, 0xc and 0x14, the size high and low words at 0x1c
+// and 0x20, the name at 0x2c and a terminator at 0x130 - which is WIN32_FIND_DATAA exactly, reserved fields
+// and alternate name included. So the data goes straight across with no translation at all.
+//
+// The one awkwardness is the handle. On the Xbox a find handle is an ordinary NT file handle, and the caller
+// closes it with NtClose - which arrives here as DoNtClose. A Win32 find handle is not a file handle and must
+// be closed with FindClose, so the ones handed out here are remembered and DoNtClose checks that list first.
+// ---------------------------------------------------------------------------------------------------------------
+
+#define TRACKED_FINDS 16
+
+static HANDLE g_findHandles[TRACKED_FINDS];
+
+static void RememberFind(HANDLE handle) {
+    for (int i = 0; i < TRACKED_FINDS; i++) {
+        if (g_findHandles[i] == NULL) { g_findHandles[i] = handle; return; }
+    }
+}
+
+// True if this was one of ours, in which case it has also been closed and forgotten.
+static bool CloseIfFindHandle(HANDLE handle) {
+    for (int i = 0; i < TRACKED_FINDS; i++) {
+        if (g_findHandles[i] == handle) {
+            g_findHandles[i] = NULL;
+            FindClose(handle);
+            return true;
+        }
+    }
+    return false;
+}
+
+// FUNC_AT(000eb6f6)
+uint32_t __stdcall Xbox_FindFirstFileA(const char *filename, WIN32_FIND_DATAA *findData) {
+    char hostPath[512];
+    if (!ResolveForOpen(filename, hostPath, sizeof(hostPath))) {
+        PublishLastError(ERROR_FILENAME_EXCED_RANGE);
+        return 0xFFFFFFFFu;
+    }
+
+    SetLastError(0);
+    HANDLE handle = FindFirstFileA(hostPath, findData);
+    DWORD err = GetLastError();
+    FILE_LOG("[file] find first %s -> %s : handle 0x%08x err %lu\n", filename, hostPath,
+             (unsigned)(uintptr_t)handle, err);
+
+    if (handle == INVALID_HANDLE_VALUE) {
+        // An empty directory is an ordinary answer here, not a failure - the caller is enumerating.
+        PublishLastError(err != 0 ? err : ERROR_FILE_NOT_FOUND);
+        return 0xFFFFFFFFu;
+    }
+
+    RememberFind(handle);
+    PublishLastError(0);
+    return (uint32_t)(uintptr_t)handle;
+}
+
+// Returns int rather than bool for the reason given above Xbox_GetOverlappedResult: the original ends in
+// "XOR EAX,EAX / INC EAX" or a bare "XOR EAX,EAX", and its caller tests the whole of EAX.
+//
+// FUNC_AT(000eb803)
+int __stdcall Xbox_FindNextFileA(HANDLE findHandle, WIN32_FIND_DATAA *findData) {
+    SetLastError(0);
+    BOOL ok = FindNextFileA(findHandle, findData);
+    DWORD err = GetLastError();
+    FILE_LOG("[file] find next handle 0x%08x -> %s err %lu\n",
+             (unsigned)(uintptr_t)findHandle, ok ? "ok" : "end", err);
+
+    // ERROR_NO_MORE_FILES is how the enumeration ends and is not a failure worth reporting.
+    PublishLastError(err);
+    return ok != FALSE ? 1 : 0;
 }
