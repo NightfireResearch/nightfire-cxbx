@@ -56,6 +56,10 @@ static double NowSeconds(void) {
 }
 
 static uint64_t g_statDraws = 0;
+static uint64_t g_statDrawsIndexed = 0;     // indexed geometry out of a vertex buffer
+static uint64_t g_statDrawsDirect = 0;      // non-indexed, still from a buffer
+static uint64_t g_statDrawsImmediate = 0;   // DrawPrimitiveUP - HUD and effects, the batchable kind
+static uint64_t g_statVertices = 0;
 static uint64_t g_statTextureUploads = 0;
 static uint64_t g_statTextureLookups = 0;
 static uint64_t g_statTextureScanSteps = 0;
@@ -108,6 +112,15 @@ static void ReportFrameTiming(double arrivedAtPacer, double leftPacer) {
     // about 150, which makes a 2000-draw scene hopeless and an 85-draw one fine.
     double usPerDraw = (g_statDraws > 0) ? (busySeconds * 1e6) / (double)g_statDraws : 0.0;
     printf("[perf]   %.1f us per draw call\n", usPerDraw);
+    // The mix says whether fewer draw calls is a realistic answer. Immediate-mode draws are the HUD and
+    // effects and are the batchable kind; a scene made mostly of small indexed draws is the game's own
+    // geometry submission and much harder to merge. Vertices per draw is the giveaway: a few hundred tiny
+    // draws is a batching problem, a few hundred large ones is not.
+    printf("[perf]   draw mix: %llu indexed, %llu direct, %llu immediate, %llu vertices each on average\n",
+           (unsigned long long)(g_statDrawsIndexed / frames),
+           (unsigned long long)(g_statDrawsDirect / frames),
+           (unsigned long long)(g_statDrawsImmediate / frames),
+           (unsigned long long)(g_statDraws > 0 ? g_statVertices / g_statDraws : 0));
     printf("[perf]   per frame: %llu draws, %llu texture uploads, %llu texture lookups costing %llu"
            " comparisons (%d registered)\n",
            (unsigned long long)(g_statDraws / frames),
@@ -128,6 +141,7 @@ static void ReportFrameTiming(double arrivedAtPacer, double leftPacer) {
     }
     g_statDraws = g_statTextureUploads = g_statTextureLookups = g_statTextureScanSteps = 0;
     g_statBackBufferCaptures = g_statRenderTargetCreates = g_statBufferCreates = 0;
+    g_statDrawsIndexed = g_statDrawsDirect = g_statDrawsImmediate = g_statVertices = 0;
     fflush(stdout);
 
     windowStart = leftPacer;
@@ -1687,7 +1701,7 @@ static void ReleaseIndexRing(void) {
 }
 
 void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, const void *pIndexData) {
-    g_statDraws++;
+    g_statDraws++; g_statDrawsIndexed++; g_statVertices += vertexCount;
     if (g_device == NULL)
         return;
     D3DPRIMITIVETYPE type; UINT primCount;
@@ -1721,7 +1735,7 @@ void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, cons
 
 // Non-indexed draws from a bound stream: the point-sprite overlay (reticle etc.) is the only user.
 void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t vertexCount) {
-    g_statDraws++;
+    g_statDraws++; g_statDrawsDirect++; g_statVertices += vertexCount;
     if (g_device == NULL)
         return;
     D3DPRIMITIVETYPE type; UINT primCount;
@@ -1791,7 +1805,7 @@ static void DrawImmediateQuads(uint32_t vertexCount, const uint8_t *data, uint32
 }
 
 void D3D9_DrawVerticesUP(uint32_t primitiveType, uint32_t vertexCount, void *pVertexData, uint32_t stride) {
-    g_statDraws++;
+    g_statDraws++; g_statDrawsImmediate++; g_statVertices += vertexCount;
     if (g_device == NULL)
         return;
     if (primitiveType == 8 && stride == 0x18) { // X_D3DPT_QUADLIST from maybeImmediateModeFlush
