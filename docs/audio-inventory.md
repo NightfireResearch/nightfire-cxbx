@@ -113,6 +113,19 @@ What this does mean:
   cannot be done in cxbx mode - a `FUNC_AT` hook on a library entry point has nowhere to forward to - so it
   has to land behind the `AudioBackend` switch, and it is not needed at all until CXBX itself goes away.
 
+**CXBX has now gone away, and this is done** - see `src/action/sound/dsndStream.cpp`. It was not optional in
+the end: standalone there is nothing behind those exports but the XBE's real DirectSound, which programs the
+MCPX mixer registers at `0xfe80xxxx` and spins on them. The first FMV with an audio track faulted there, which
+is what both crashes reported against the standalone loader turned out to be - starting a mission and opening
+the codename screen both play a movie.
+
+The hooks are installed by hand rather than through `FUNC_AT`, and only when `cxbxr-emu.dll` is not in the
+process, so a CXBX-hosted run is left exactly as it was. A stream is an XAudio2 source voice; packets are
+decoded (the ADPCM path reuses `xadpcm.cpp`) and completed on XAudio2's buffer-end callback rather than
+immediately, because the decoder times video against when audio packets finish - `maybeSFXStreamCallback`
+sets its A/V sync offset from exactly that. Completing packets on submission would run every movie at whatever
+speed the disc could feed it.
+
 ## Two long-standing bugs, and why they are the same bug
 
 Both of these were seen under CXBX long before any of this work, and are worth recording because the cause

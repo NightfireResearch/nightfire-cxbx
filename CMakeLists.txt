@@ -138,6 +138,7 @@ add_library(actioninject SHARED
   src/action/sound/dsndSeam.cpp
   src/action/sound/xadpcm.cpp
   src/action/sound/xaudio2Backend.cpp
+  src/action/sound/dsndStream.cpp
   src/action/sound/music.cpp
   src/action/sound/SFX.cpp
   src/action/sound/Sound.cpp
@@ -156,6 +157,9 @@ add_executable(nfloader
   src/loader/loadermain.cpp
   src/loader/xbe.cpp
   src/loader/kernel.cpp
+  # The same icon the launcher executables carry, so the standalone loader looks like the rest of the project
+  # in Explorer and on the taskbar. A .rc contributes nothing to .text, so it does not disturb the ordering.
+  src/res/res.rc
 )
 # /BASE plus /FIXED is how the loader gets the XBE's address range at all: the kernel maps the executable at
 # its preferred base before anything else exists in the process, which is the only way to be there first.

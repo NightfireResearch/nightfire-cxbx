@@ -6,37 +6,45 @@ the pattern every stage below repeats.
 
 ## 1. Where things stand
 
-The action engine (`default.xbe`) still runs *inside* cxbx-reloaded's process: the launcher starts
-`cxbxr-ldr.exe /load default.xbe /hwnd <our window>`, then injects `actioninject.dll`, which patches
-game functions at their fixed addresses (`tools/preprocess.py` turns the `AUTOINJECT`/`FUNC_AT` tags
-into the patch table). Roughly 10% of the game's functions are reimplemented; the rest is the original
-x86 code running natively. CXBX provides everything the XBE expects from the Xbox: the loader, the memory
-map, the kernel (files, threads, timers, memory), and the high-level emulation of the statically linked
-Microsoft libraries (D3D8, DSOUND, XAPILIB, XGRAPHC).
+**The action engine now runs without cxbx-reloaded.** `nfloader.exe` maps `default.xbe` itself, resolves its
+kernel imports, loads `actioninject.dll` and runs the game in its own process - no emulator anywhere in it.
+Tested as far as: boots, opens its window, reaches the main menu, plays video and audio, takes controller
+input, and loads into a mission.
 
-What already bypasses CXBX, each one a "seam" that replaces a library boundary with our own code:
+The CXBX path still works and is still the reference. `action.exe` launches the game under
+`cxbxr-ldr.exe` exactly as before, and everything added for the standalone loader is conditional on CXBX not
+being in the process (`Xbox_RunningStandalone()`, which tests for `cxbxr-emu.dll`), so a regression can always
+be bisected against a hosted run. Nothing in this section's original arrangement has been removed.
+
+Either way, the game is the original x86 code with roughly 10% of its functions reimplemented;
+`tools/preprocess.py` turns the `AUTOINJECT`/`FUNC_AT` tags into the patch table. What has changed is who
+provides the things underneath it.
+
+What replaces CXBX, each one a "seam" that replaces a library boundary with our own code:
 
 | Subsystem | Seam | Notes |
 |---|---|---|
 | Graphics | `Direct3D/d3dSeam.cpp` + `d3d9Backend.cpp` | Every D3D8/XGRAPHC entry point goes through `D3DSeamTraced` dispatch; with `GraphicsBackend=d3d9` nothing in the D3D8 library runs. NV2A vertex programs are translated to HLSL at runtime. |
+| Audio | `sound/dsndSeam.cpp` + `xaudio2Backend.cpp` | 2D and 3D voices, Xbox ADPCM, the mixbins collapsed onto stereo, X3DAudio with the game's own rolloff curve, I3DL2 reverb behind a submix. |
+| FMV audio | `sound/dsndStream.cpp` | The DirectSound stream path, which the video decoder calls directly rather than through any game function (4.4a). |
 | Input | `engine/psiInput.cpp` | Direct XInput; CXBX's controller emulation unused. |
 | Settings (EEPROM) | `engine/XboxSettings.cpp` | `settings.ini` replaces `ExQueryNonVolatileSetting`. |
 | Saves | `engine/psiSave.cpp` | Plain files under `saves/`. |
-| Files | `engine/psiFile.cpp`, `engine/FS.cpp` | `psiFileOpen` and friends read from the extracted disc; the XMV decoder's and the audio streamer's own file reads still go through XAPI/NT (see 3.3). |
+| Files | `engine/psiFile.cpp`, `engine/FS.cpp`, `engine/XboxFile.cpp`, `engine/XboxPaths.cpp` | Drive letters map to host paths; the XAPI file calls are a Win32 layer of our own. |
+| Startup | `engine/XboxStartup.cpp` | Process heap, the XAPI initialiser table, the CRT's per-thread data, and the last-error pair (4.2). |
+| Loader and memory map | `src/loader/` | Maps the XBE at `0x10000`, resolves the kernel thunks, creates the window, runs the message pump (4.3). |
 | Relaunch | `common/launchInfo.cpp` | `XLaunchNewImageA`/`XGetLaunchInfo` replaced (the driving engine is a second XBE, `inject_driving.cpp`). |
 
-Still supplied by CXBX, in dependency order (each later item needs the earlier ones gone first):
+Twelve of the XBE's 96 kernel imports are implemented in `src/loader/kernel.cpp`; the rest resolve to a stub
+that names itself and its caller and stops, which is how the twelve were found.
 
-1. **Audio**: the DSOUND library (110 functions in the XBE, `DSOUND::` in `tools/functions_action.json`),
-   HLE'd by CXBX onto host DirectSound.
-2. **XAPI runtime**: threads, `QueryPerformanceCounter`, overlapped file I/O, `XapiInitProcess`,
-   `mainXapiStartup`/`_cinit` (CRT init), thread-notify routines.
-3. **Kernel**: the ~95 `xboxkrnl.exe` imports (list below), of which the game itself reaches only a
-   handful directly; most are used by the libraries above.
-4. **Loader and memory map**: CXBX maps the XBE at its link address (`0x10000` base, sections at their
-   virtual addresses), reserves the Xbox physical-memory alias at `0x80000000`, and provides the
-   `MmAllocateContiguousMemory` pool the game's `allocateContiguous` draws GPU memory from.
-5. **Window and process**: the D3D9 device is created on CXBX's `CxbxRender` child window.
+What is left:
+
+- **The driving engine** (4.5), which has its own D3D8/DSOUND copies and has not been started.
+- **The physical-memory alias** (4.4) is gone from the graphics path but not audited everywhere - the
+  sound-bank path and any `0xF0000000` write-combined users still need checking.
+- Two DSOUND entry points the backend does not implement yet, both harmless so far: `DirectSoundUseFullHRTF`
+  and `IDirectSound_DownloadEffectsImage`.
 
 ## 2. The method (unchanged from the graphics work)
 
@@ -273,7 +281,7 @@ The original sketch of this section follows, now largely confirmed:
 | `RtlEnterCriticalSection` etc., `KeDelayExecutionThread`, `NtSetEvent`, `KeWaitForSingleObject` | streamer / decoder | Win32 critical sections, `Sleep`, events. |
 | `XcSHA*`, `XboxHDKey`, `XboxSignatureKey` | save-game signing | Already irrelevant (saves are plain files); stub. |
 
-### 4.2 Replace the XAPI/CRT startup - DONE (needs testing)
+### 4.2 Replace the XAPI/CRT startup - DONE
 
 Implemented in `src/action/engine/XboxStartup.cpp`. `mainXapiStartup` is replaced wholesale: process
 initialisation cut down to the process heap and the XAPI initialiser table, then `_rtinit`, `_cinit`, `main`.
@@ -305,7 +313,7 @@ Also patched out: `WBINVD` at three sites. An Xbox title runs in ring 0 and flus
 the GPU reads memory; the instruction is privileged on Windows and raises `0xc0000096`. There is nothing to
 flush, because the D3D9 backend copies rather than letting hardware read game memory.
 
-### 4.3 Own loader - DONE (needs testing)
+### 4.3 Own loader - DONE
 
 `src/loader/`, built as `nfloader.exe`. It maps the XBE, resolves the kernel thunks, loads
 `actioninject.dll` unchanged, creates the render window and calls the entry point.
@@ -345,7 +353,7 @@ the name, implement it, run again - and it is worth keeping for the same reason.
 the Xbox TLS block through the KPCR; the thread starts directly at `StartRoutine`, which is shaped exactly
 like a Win32 thread proc.
 
-### 4.4 Remove the physical-memory alias - DONE for graphics (needs testing)
+### 4.4 Remove the physical-memory alias - DONE for graphics
 
 `D3D_UncachedAliasOf` in `d3dSeam.cpp` now decides once, from the first address that passes through it,
 whether the `0x8xxxxxxx` alias is actually mapped, and returns the plain address when it is not. Under
@@ -356,6 +364,30 @@ writing a frame to `0x8b042700` when the surface it had locked was at `0x0b04270
 Probing beats a build-time switch or a "is CXBX loaded" test because it checks the thing that actually
 matters. Still outstanding: the sound-bank path (`IDirectSoundBuffer_SetBufferData` receives an alias
 pointer - see `docs/audio-inventory.md`), and an audit for `0xF0000000` write-combined alias users.
+
+### 4.4a The DirectSound stream path - DONE
+
+Not in the original plan, and forced by the rest of it. The XMV decoder does not reach DirectSound through
+any game function the audio seam replaces - it calls DSOUND's own exports - so under CXBX those calls landed
+in CXBX's HLE. Standalone they reach the XBE's real DirectSound, which drives the MCPX audio hardware
+directly: mixer registers at `0xfe80xxxx`, read in spin loops. That is unbacked memory here, so the first
+movie with an audio track faulted, and it is what both crashes reported against the first standalone build
+turned out to be.
+
+`src/action/sound/dsndStream.cpp` implements the stream on XAudio2 instead: `DirectSoundCreateStream` returns
+an object with our own vtable, so everything the decoder does goes to us. Packets complete on XAudio2's
+buffer-end callback rather than on submission, because the decoder paces video against audio completion.
+
+Two things worth keeping in mind for anything similar:
+
+- **The hooks are installed by hand, conditionally.** `AUTOINJECT` and `FUNC_AT` patch unconditionally, and
+  every one of these replacements would be wrong under CXBX. The same now goes for the startup work in 4.2:
+  it is all installed from `Inject_XboxStartup` behind `Xbox_RunningStandalone()`, which tests for
+  `cxbxr-emu.dll` in the process.
+- **Vtable slots need their `RET` immediates checked too.** `CDirectSoundStream_Process` ends `RET 0xc` - it
+  takes three parameters and reads two. Declaring it with two cost a debugging cycle, with the decoder
+  returning into a corrupted frame a long way from the call. The standing warning in section 5 is not only
+  about exported entry points.
 
 ### 4.5 Driving engine
 
@@ -377,7 +409,14 @@ standalone, and reuse the D3D9 and audio backends as libraries.
   working directory set to `Release` (it looks for `../disc/default.xbe`). It writes everything to stdout, so
   redirecting it to a file is the easiest way to read a whole boot. An unimplemented kernel import prints its
   name and the address that called it and then exits; a fault prints the faulting address, the address it
-  touched and that page's state, which is usually enough to name the cause without a debugger.
+  touched, that page's state, and a call stack walked from the frame pointers - usually enough to name the
+  cause in Ghidra without attaching a debugger.
+- **Reproducing something that is several menus in**, without a person at the keyboard:
+  `tools/drive_game.ps1 -Keys enter,enter,enter`. It launches the loader, brings its window to the front,
+  presses keys at it and reports any fault. Both crashes found after the loader first booted - starting a
+  mission, and opening the codename screen - needed this to reproduce and then to re-check after each fix.
+  Keys must go in with `keybd_event`, not posted messages, because the game reads input with
+  `GetAsyncKeyState`; the script's header explains the rest and lists the key names.
 - **Check the `RET` immediate of every library entry point you call**, against the parameter count of the
   typedef you write for it. These are all callee-cleans `__stdcall`, so a typedef one parameter short
   unbalances the stack by 4 bytes with no crash at the call itself - the *calling* function returns to

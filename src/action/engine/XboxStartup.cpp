@@ -1,3 +1,4 @@
+#include "XboxStartup.h"
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
@@ -31,7 +32,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // The originals, called by address rather than by Ghidra name: these are XAPI internals that
-// tools/functions_action.json does not carry, the same reason the injections below use FUNC_AT.
+// tools/functions_action.json does not carry.
 #define Xapi_rtinit     ((void (__cdecl *)(void))0x000eddd3u)
 #define Xapi_cinit      ((void (__cdecl *)(void))0x000edd7bu)
 
@@ -61,12 +62,10 @@
 // errors set by the game are finally the same value.
 // ---------------------------------------------------------------------------------------------------------------
 
-// FUNC_AT(000e9a24)
 DWORD __stdcall Xbox_GetLastError(void) {
     return GetLastError();
 }
 
-// FUNC_AT(000e9a4c)
 void __stdcall Xbox_SetLastError(DWORD error) {
     SetLastError(error);
 }
@@ -87,7 +86,6 @@ void __stdcall Xbox_SetLastError(DWORD error) {
 // and each of them ends in XapiBootToDash, which reboots.
 // ---------------------------------------------------------------------------------------------------------------
 
-// FUNC_AT(000ed8ac)
 void __stdcall Xbox_XapiInitProcess(void) {
     // RTL_HEAP_PARAMETERS, all defaults. Only the leading length field is set, exactly as the original does.
     unsigned parameters[12];
@@ -140,7 +138,6 @@ void __stdcall Xbox_XapiInitProcess(void) {
 
 static DWORD g_perThreadSlot = TLS_OUT_OF_INDEXES;
 
-// FUNC_AT(000f3ec7)
 void *__cdecl Xbox_getptd(void) {
     // TlsGetValue clears the last error on success, and this is reached from __dosmaperr, whose whole job is
     // to turn the last error into errno. Losing it there would turn a specific failure into a silent one.
@@ -176,7 +173,6 @@ void *__cdecl Xbox_getptd(void) {
 // teardown that nothing exercises. The cost if that ever changes is a leak of about 132 bytes per thread that
 // exits, which is the right way round for a mistake to go.
 //
-// FUNC_AT(000f3f49)
 void __cdecl Xbox_freeptd(void *ptd) {
     (void)ptd;
     if (g_perThreadSlot != TLS_OUT_OF_INDEXES)
@@ -185,7 +181,6 @@ void __cdecl Xbox_freeptd(void *ptd) {
 
 // Returns zero exactly as the original does - it is called from the _rtinit table, which ignores the result.
 //
-// FUNC_AT(000f405e)
 int __cdecl Xbox_mtinit(void) {
     g_perThreadSlot = TlsAlloc();
     if (g_perThreadSlot == TLS_OUT_OF_INDEXES) {
@@ -260,7 +255,45 @@ static const unsigned WBINVD_SITES[] = {
 
 static const unsigned char WBINVD_BYTES[2] = { 0x0f, 0x09 };
 
+// ---------------------------------------------------------------------------------------------------------------
+// Installing all of it
+//
+// Deliberately not AUTOINJECT or FUNC_AT. Those patch unconditionally, and every replacement in this file
+// would be wrong under CXBX: there the XBE's startup runs against CXBX's emulated kernel, which provides the
+// KPCR these functions were avoiding, does its own drive mounting, and expects the kernel-patching routine to
+// have run. Patching by hand here keeps a CXBX-hosted run byte for byte as it was.
+// ---------------------------------------------------------------------------------------------------------------
+
+bool Xbox_RunningStandalone(void) {
+    // CXBX's emulation lives in cxbxr-emu.dll. Asking whether it is in the process tests the thing that
+    // actually matters - whether anything else has already replaced the XBE's libraries - rather than a proxy
+    // for it such as a setting.
+    return GetModuleHandleA("cxbxr-emu.dll") == NULL;
+}
+
+static void WriteJump(unsigned address, void *target) {
+    unsigned char *site = (unsigned char *)address;
+    DWORD previous = 0;
+    if (!VirtualProtect(site, 5, PAGE_EXECUTE_READWRITE, &previous)) {
+        printf("[startup] could not make 0x%08x writable (error %lu)\n", address, GetLastError());
+        return;
+    }
+    site[0] = 0xE9;                                             // jmp rel32
+    *(int *)(site + 1) = (int)((unsigned char *)target - (site + 5));
+}
+
 void Inject_XboxStartup(void) {
+    if (!Xbox_RunningStandalone())
+        return;
+
+    WriteJump(0x000eb238, (void *)mainXapiStartup);          // the whole of process startup
+    WriteJump(0x000ed8ac, (void *)Xbox_XapiInitProcess);     // heap and the XAPI initialiser table
+    WriteJump(0x000e9a24, (void *)Xbox_GetLastError);
+    WriteJump(0x000e9a4c, (void *)Xbox_SetLastError);
+    WriteJump(0x000f3ec7, (void *)Xbox_getptd);              // the CRT's per-thread data
+    WriteJump(0x000f3f49, (void *)Xbox_freeptd);
+    WriteJump(0x000f405e, (void *)Xbox_mtinit);
+
     for (size_t i = 0; i < sizeof(WBINVD_SITES) / sizeof(WBINVD_SITES[0]); i++) {
         unsigned char *site = (unsigned char *)WBINVD_SITES[i];
         if (memcmp(site, WBINVD_BYTES, sizeof(WBINVD_BYTES)) != 0) {
@@ -286,7 +319,6 @@ void Inject_XboxStartup(void) {
     }
 }
 
-// FUNC_AT(000eb238)
 DWORD WINAPI mainXapiStartup(LPVOID unused) {
     (void)unused;
 

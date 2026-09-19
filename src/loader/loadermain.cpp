@@ -5,6 +5,7 @@
 #include "xbe.h"
 #include "kernel.h"
 #include "../common/renderWindow.h"
+#include "../res/resource.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The standalone loader - stage B steps 4.2 and 4.3 of docs/cxbx-removal-plan.md, replacing cxbxr-ldr.exe.
@@ -86,6 +87,32 @@ static LONG CALLBACK ReportException(EXCEPTION_POINTERS *info) {
             printf("[loader]   0x%08x is state 0x%x, protection 0x%x\n",
                    (unsigned)target, (unsigned)mbi.State, (unsigned)mbi.Protect);
     }
+
+    // Who called whom, which is usually the actual question. The XBE is built with frame pointers - almost
+    // every function starts "push ebp; mov ebp, esp" - so walking the EBP chain and printing the return
+    // address above each frame gives a usable call stack, and the addresses go straight into Ghidra. A frame
+    // that is not sensibly above the last one, or not readable, ends the walk rather than inventing frames.
+    printf("[loader]   called from:\n");
+    uintptr_t frame = info->ContextRecord->Ebp;
+    for (int depth = 0; depth < 16; depth++) {
+        if (frame == 0 || (frame & 3) != 0)
+            break;
+        if (IsBadReadPtr((const void *)frame, 8))
+            break;
+
+        uintptr_t returnAddress = ((const uintptr_t *)frame)[1];
+        uintptr_t nextFrame = ((const uintptr_t *)frame)[0];
+        if (returnAddress == 0)
+            break;
+
+        printf("[loader]     0x%08x  (%s)\n",
+               (unsigned)returnAddress, ModuleContaining(returnAddress, scratch, sizeof(scratch)));
+
+        if (nextFrame <= frame)
+            break;
+        frame = nextFrame;
+    }
+
     fflush(stdout);
     return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -121,6 +148,7 @@ static HWND CreateRenderWindow(int width, int height) {
     windowClass.lpfnWndProc = RenderWindowProc;
     windowClass.hInstance = GetModuleHandleA(NULL);
     windowClass.hCursor = LoadCursorA(NULL, IDC_ARROW);
+    windowClass.hIcon = LoadIconA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(IDI_ICON1));
     windowClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     windowClass.lpszClassName = RENDER_WINDOW_CLASS;
     if (RegisterClassExA(&windowClass) == 0) {

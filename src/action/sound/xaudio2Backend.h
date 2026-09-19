@@ -29,6 +29,12 @@
 // this backend's problem only once those entry points are hooked at their own addresses.
 // ---------------------------------------------------------------------------------------------------------------
 
+// The XAudio2 device itself, created on first use. The stream path (dsndStream.cpp) needs it to make its own
+// source voices, and asking here rather than making a second device keeps every voice on one mastering voice.
+// Null if audio could not start at all.
+struct IXAudio2;
+IXAudio2 *XA2_GetDevice(void);
+
 // Device and global state
 void XA2_DirectSoundCreate(void *lpGuid, DSoundObject **ppDS, void *pUnknown);
 void XA2_DirectSoundUseFullHRTF(void);

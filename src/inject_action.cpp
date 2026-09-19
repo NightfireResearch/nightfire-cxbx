@@ -13,6 +13,7 @@
 #include "action/engine/psiSave.h"
 #include "action/engine/Direct3D/d3dSeam.h"
 #include "action/sound/dsndSeam.h"
+#include "action/sound/dsndStream.h"
 #include "action/game/view.h"
 #include "action/game/obj/car.h"
 #include "action/game/obj/Light.h"
@@ -52,6 +53,10 @@ void Inject()
   // Instruction-level patches that are not whole-function replacements. Done first, so that nothing the rest
   // of this function sets up can run against un-patched XAPI.
   Inject_XboxStartup();
+
+  // The DirectSound stream entry points, but only when no emulator is hosting this process - see
+  // DSoundStream_InstallHooks. Under CXBX these addresses already carry CXBX's own patches.
+  DSoundStream_InstallHooks();
 
 
   // Experiments with increasing resolution beyond original limits

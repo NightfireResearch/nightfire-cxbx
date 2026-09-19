@@ -9,16 +9,13 @@
 // The xboxkrnl imports, as far as the loader provides them.
 //
 // The XBE reaches the kernel through a thunk table of ordinals, which the loader rewrites into function
-// pointers. Nothing here is implemented yet: every ordinal currently resolves to a generated stub that reports
-// which import was called and stops. That is deliberate for the first pass - the point of this stage is to
-// find out, in order, which kernel functions the game actually reaches once our own graphics, audio and file
-// layers are in place, rather than to guess from the static inventory and implement 95 functions on spec.
+// pointers. The XBE imports 96; the ones below are implemented and every other ordinal resolves to a
+// generated stub that reports which import was called, and by whom, and stops.
 //
-// Two things make that reconnaissance cheap. The static inventory (tools/kernel_imports.py) says only a
-// handful of imports are reached from live game code, because D3D8 and DSOUND are dormant when the native
-// backends are selected. And a stub that stops on the first call turns "the screen is black" into a line
-// naming the function - which is the whole reason this is a stub table rather than an attempt at the real
-// thing.
+// They were added one at a time, driven by what the stub reported, rather than written on spec - which is
+// cheap because the static inventory (tools/kernel_imports.py) is right that game code reaches very few of
+// them directly, and because a stub that stops on the first call turns "the screen went away" into a line
+// naming the function and the address that wanted it.
 //
 // Stopping rather than returning is on purpose. These are __stdcall functions with parameter counts this table
 // does not know, so a stub cannot clean up the caller's stack; returning would corrupt it and the crash would
@@ -208,6 +205,52 @@ static LONG __stdcall Xbox_NtQueryVirtualMemory(void *baseAddress, MEMORY_BASIC_
 }
 
 // ---------------------------------------------------------------------------------------------------------------
+// Pool memory.
+//
+// On the console this is the kernel's non-paged pool. Here it is an ordinary private heap - private rather
+// than the process default heap so that a mismatched free is caught by the heap that owns the block instead
+// of quietly damaging something else's.
+//
+// The Xbox's pool aligns allocations of a page or more to a page boundary, which this does not reproduce.
+// Nothing here needs it: the only caller so far is DirectSound's own memory manager, and its buffers are read
+// as plain memory by the XAudio2 backend rather than being handed to hardware that cares.
+// ---------------------------------------------------------------------------------------------------------------
+
+static HANDLE g_poolHeap = NULL;
+
+static void *__stdcall Xbox_ExAllocatePoolWithTag(ULONG numberOfBytes, ULONG tag) {
+    (void)tag;   // a debugging aid on the console; nothing reads it back
+
+    if (g_poolHeap == NULL) {
+        g_poolHeap = HeapCreate(0, 0, 0);
+        if (g_poolHeap == NULL) {
+            printf("[loader] ExAllocatePoolWithTag: no pool heap (error %lu)\n", GetLastError());
+            return NULL;
+        }
+    }
+    return HeapAlloc(g_poolHeap, 0, numberOfBytes);
+}
+
+static void *__stdcall Xbox_ExAllocatePool(ULONG numberOfBytes) {
+    return Xbox_ExAllocatePoolWithTag(numberOfBytes, 0);
+}
+
+static void __stdcall Xbox_ExFreePool(void *p) {
+    if (p != NULL && g_poolHeap != NULL)
+        HeapFree(g_poolHeap, 0, p);
+}
+
+// Ordinal 23. DirectSound's memory manager asks this immediately after allocating, so that it can use
+// whatever the pool rounded the request up to rather than only what it asked for. HeapSize answers exactly
+// that question, so the rounding stays truthful instead of the block being trusted for more than it has.
+static ULONG __stdcall Xbox_ExQueryPoolBlockSize(void *poolBlock) {
+    if (poolBlock == NULL || g_poolHeap == NULL)
+        return 0;
+    SIZE_T size = HeapSize(g_poolHeap, 0, poolBlock);
+    return (size == (SIZE_T)-1) ? 0 : (ULONG)size;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // Contiguous physical memory.
 //
 // On the console these hand back physically contiguous pages, because the GPU reads them directly - the push
@@ -303,6 +346,10 @@ static DWORD __stdcall Xbox_RtlTryEnterCriticalSection(CRITICAL_SECTION *section
 }
 
 static const struct { unsigned ordinal; void *implementation; } g_implemented[] = {
+    { 14,  (void *)Xbox_ExAllocatePool },
+    { 15,  (void *)Xbox_ExAllocatePoolWithTag },
+    { 17,  (void *)Xbox_ExFreePool },
+    { 23,  (void *)Xbox_ExQueryPoolBlockSize },
     { 166, (void *)Xbox_MmAllocateContiguousMemoryEx },
     { 171, (void *)Xbox_MmFreeContiguousMemory },
     { 178, (void *)Xbox_MmPersistContiguousMemory },

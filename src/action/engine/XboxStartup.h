@@ -20,8 +20,14 @@ void *__cdecl Xbox_getptd(void);
 void __cdecl Xbox_freeptd(void *ptd);
 int __cdecl Xbox_mtinit(void);
 
-// Patches out XAPI's allocation-notification hook, which reads the Xbox KPCR through FS:[0x20]. Called from
-// Inject(), because it rewrites instructions rather than replacing whole functions.
+// True when no emulator is hosting this process - that is, when the standalone loader is running the game and
+// the XBE's own libraries are the only implementation there is. Everything in this file is conditional on it,
+// because under CXBX the same code is already replaced by CXBX's patches and must be left exactly as it is.
+bool Xbox_RunningStandalone(void);
+
+// Installs everything above, and the instruction-level patches. Called from Inject(). None of it is done
+// through AUTOINJECT or FUNC_AT, because those patch unconditionally and these must not touch a CXBX-hosted
+// run at all.
 void Inject_XboxStartup(void);
 
 #endif // ACTION_ENGINE_XBOXSTARTUP_H_

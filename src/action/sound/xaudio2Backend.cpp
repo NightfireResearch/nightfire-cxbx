@@ -413,6 +413,12 @@ static void MixBinToStereo(uint32_t mixBin, float *outLeft, float *outRight) {
 // Device
 // ---------------------------------------------------------------------------------------------------------------
 
+static bool EnsureDevice(void);
+
+IXAudio2 *XA2_GetDevice(void) {
+    return EnsureDevice() ? g_xaudio : NULL;
+}
+
 static bool EnsureDevice(void) {
     if (g_initAttempted)
         return g_xaudio != NULL && g_master != NULL;
