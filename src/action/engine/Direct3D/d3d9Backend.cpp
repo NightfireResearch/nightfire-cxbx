@@ -55,6 +55,16 @@ static double NowSeconds(void) {
     return (double)t.QuadPart / (double)g_qpcFrequency.QuadPart;
 }
 
+static uint64_t g_statDraws = 0;
+static uint64_t g_statTextureUploads = 0;
+static uint64_t g_statTextureLookups = 0;
+static uint64_t g_statTextureScanSteps = 0;
+static uint64_t g_statBackBufferCaptures = 0;   // psiBlurScreen grabbing the frame
+static uint64_t g_statRenderTargetCreates = 0;  // each one is a D3DPOOL_DEFAULT allocation
+static uint64_t g_statBufferCreates = 0;        // vertex and index buffers created, not reused
+
+static int HostTextureCount(void);   // defined with the texture table further down
+
 // Where the frame time actually goes, printed every few seconds when PerfLog is on in settings.ini.
 //
 // Two numbers separate the two explanations for a low frame rate that people reach for. If the pacer is
@@ -92,9 +102,26 @@ static void ReportFrameTiming(double arrivedAtPacer, double leftPacer) {
     double pacedMs = (pacedSeconds / frames) * 1000.0;
     printf("[perf] %.1f fps (asked for %d), %.1f ms working + %.1f ms waiting per frame\n",
            fps, g_targetFrameRate, busyMs, pacedMs);
+    printf("[perf]   per frame: %llu draws, %llu texture uploads, %llu texture lookups costing %llu"
+           " comparisons (%d registered)\n",
+           (unsigned long long)(g_statDraws / frames),
+           (unsigned long long)(g_statTextureUploads / frames),
+           (unsigned long long)(g_statTextureLookups / frames),
+           (unsigned long long)(g_statTextureScanSteps / frames),
+           HostTextureCount());
+    // Allocations are separated out because they are the expensive kind of work: creating a
+    // D3DPOOL_DEFAULT render target or a vertex buffer costs far more than issuing a draw, and doing either
+    // every frame is the usual reason a scene is slow in a way that scales with nothing obvious.
+    printf("[perf]   per frame: %llu backbuffer captures, %llu render targets created,"
+           " %llu buffers created\n",
+           (unsigned long long)(g_statBackBufferCaptures / frames),
+           (unsigned long long)(g_statRenderTargetCreates / frames),
+           (unsigned long long)(g_statBufferCreates / frames));
     if (pacedMs < 0.5) {
         printf("[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.\n");
     }
+    g_statDraws = g_statTextureUploads = g_statTextureLookups = g_statTextureScanSteps = 0;
+    g_statBackBufferCaptures = g_statRenderTargetCreates = g_statBufferCreates = 0;
     fflush(stdout);
 
     windowStart = leftPacer;
@@ -249,10 +276,20 @@ struct HostTexture {
 static HostTexture g_textures[2200];
 static int g_textureCount = 0;
 
+// Counted so that PerfLog can say how much of a frame goes on finding textures rather than drawing them.
+// This is a linear scan over every texture the level has registered, run on every bind, so its cost is
+// (draws x texture stages x textures in the level) - invisible on a fast native machine, and capable of
+// dominating on a slower or translated one. The counters are what tell those two apart.
+
+static int HostTextureCount(void) { return g_textureCount; }
+
 static HostTexture *FindHostTexture(const void *header) {
-    for (int i = 0; i < g_textureCount; i++)
+    g_statTextureLookups++;
+    for (int i = 0; i < g_textureCount; i++) {
+        g_statTextureScanSteps++;
         if (g_textures[i].header == header)
             return &g_textures[i];
+    }
     return NULL;
 }
 
@@ -426,6 +463,8 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
         }
         t->format = h->Format; t->size = h->Size; t->data = h->Data;
     }
+
+    g_statTextureUploads++;
 
     // Upload every level. Xbox mip levels are stored back to back (swizzled or DXT); linear textures have one.
     const uint8_t *src = XboxDataPointer(h->Data);
@@ -1380,6 +1419,7 @@ static IDirect3DVertexBuffer9 *GetHostVertexBuffer(const void *obj, uint32_t *si
         return NULL;
     IDirect3DVertexBuffer9 *vb = NULL;
     // +8 bytes of slack: SHORT3 morph streams are declared as SHORT4, so the last vertex reads 2 bytes past the end.
+    g_statBufferCreates++;
     if (FAILED(g_device->CreateVertexBuffer(size + 8, D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED, &vb, NULL)))
         return NULL;
     void *dst = NULL;
@@ -1412,6 +1452,7 @@ static IDirect3DIndexBuffer9 *GetHostIndexBuffer(const void *obj, const void **d
     if (g_indexBufferCount >= (int)(sizeof(g_indexBuffers) / sizeof(g_indexBuffers[0])))
         return NULL;
     IDirect3DIndexBuffer9 *ib = NULL;
+    g_statBufferCreates++;
     if (FAILED(g_device->CreateIndexBuffer(size, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, &ib, NULL)))
         return NULL;
     void *dst = NULL;
@@ -1475,6 +1516,7 @@ static HostTexture *EnsureRenderTargetTexture(const void *headerPtr) {
     else { width = 1u << ((h->Format >> 20) & 0xF); height = 1u << ((h->Format >> 24) & 0xF); }
     uint32_t xboxFormat = (h->Format >> 8) & 0xFF;
     D3DFORMAT format = (xboxFormat == XFMT_X8R8G8B8 || xboxFormat == XFMT_LIN_X8R8G8B8) ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8;
+    g_statRenderTargetCreates++;
     if (FAILED(g_device->CreateTexture(width, height, 1, D3DUSAGE_RENDERTARGET, format, D3DPOOL_DEFAULT, &t->texture, NULL))) {
         D3D9Log("[d3d9] render-target texture %ux%u creation failed\n", width, height);
         t->texture = NULL;
@@ -1488,6 +1530,7 @@ static HostTexture *EnsureRenderTargetTexture(const void *headerPtr) {
 }
 
 static void CaptureBackBufferInto(void *header) {
+    g_statBackBufferCaptures++;
     HostTexture *t = EnsureRenderTargetTexture(header);
     if (t == NULL || g_backBufferSurface == NULL)
         return;
@@ -1638,6 +1681,7 @@ static void ReleaseIndexRing(void) {
 }
 
 void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, const void *pIndexData) {
+    g_statDraws++;
     if (g_device == NULL)
         return;
     D3DPRIMITIVETYPE type; UINT primCount;
@@ -1671,6 +1715,7 @@ void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, cons
 
 // Non-indexed draws from a bound stream: the point-sprite overlay (reticle etc.) is the only user.
 void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t vertexCount) {
+    g_statDraws++;
     if (g_device == NULL)
         return;
     D3DPRIMITIVETYPE type; UINT primCount;
@@ -1740,6 +1785,7 @@ static void DrawImmediateQuads(uint32_t vertexCount, const uint8_t *data, uint32
 }
 
 void D3D9_DrawVerticesUP(uint32_t primitiveType, uint32_t vertexCount, void *pVertexData, uint32_t stride) {
+    g_statDraws++;
     if (g_device == NULL)
         return;
     if (primitiveType == 8 && stride == 0x18) { // X_D3DPT_QUADLIST from maybeImmediateModeFlush
