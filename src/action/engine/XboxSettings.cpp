@@ -41,6 +41,7 @@
 struct Settings {
     bool widescreen;
     uint32_t avRegion; // raw XC_FACTORY_AV_REGION-style value: 1 = NTSC-M, 3 = PAL-I
+    bool perfLog;      // see PerfLog in the file this writes
     uint32_t language; // raw XC_LANGUAGE-style value: 1=English,2=Japanese,3=German,4=French,5=Spanish,6=Italian
     int fpsOverride;   // 0 = "unset" - callers fall back to their own region-based default
     int graphicsBackend; // 0 = CXBX's D3D8 HLE (default), 1 = the seam's own D3D9 backend (see Direct3D/d3d9Backend.h)
@@ -169,6 +170,8 @@ static void LoadSettingsFile() {
             g_settings.graphicsBackend = (_stricmp(value, "d3d9") == 0) ? 1 : 0;
         } else if (_stricmp(key, "AudioBackend") == 0) {
             g_settings.audioBackend = (_stricmp(value, "xaudio2") == 0) ? 1 : 0;
+        } else if (_stricmp(key, "PerfLog") == 0) {
+            g_settings.perfLog = (_stricmp(value, "on") == 0 || _stricmp(value, "1") == 0);
         } else if (_stricmp(key, "Reverb") == 0) {
             g_settings.reverb = !(_stricmp(value, "off") == 0 || _stricmp(value, "0") == 0);
         } else if (_stricmp(key, "DiscPath") == 0) {
@@ -242,6 +245,10 @@ int Settings_GetAudioBackend(void) {
 
 bool Settings_GetReverbEnabled(void) {
     return GetSettings()->reverb;
+}
+
+bool Settings_GetPerfLog(void) {
+    return GetSettings()->perfLog;
 }
 
 const char *Settings_GetDiscPath(void) {

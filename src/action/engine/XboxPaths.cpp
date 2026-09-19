@@ -12,9 +12,15 @@ const char *Xbox_GetDiscRoot(void) {
     return Settings_GetDiscPath();
 }
 
-// The fixed roots. Only D: is configurable - the other three are working directories this project creates
-// beside the executable, and there is no reason to let them wander.
+// The fixed roots. Only D: is configurable - the others are working directories this project creates beside
+// the executable, and there is no reason to let them wander.
+//
+// T: and U: are different drives on the Xbox and must not share a directory here. U: is the title's saved
+// games, which is what the game enumerates to build the list of player profiles; T: is its persistent data,
+// where it keeps things like the chosen language in t:\lang<nn><nn>.dat. Mapping both onto "saves" put that
+// language file among the profiles, and it duly appeared in the codename list as a player called "lang0100".
 #define SAVE_ROOT  "saves"
+#define TITLE_ROOT "tdata"
 #define CACHE_ROOT "cache"
 
 // The writable roots have to exist before anything can be created in them. On the Xbox that was the kernel's
@@ -53,7 +59,7 @@ bool Xbox_ResolvePath(const char *xboxPath, char *out, size_t outSize) {
     if (xboxPath[0] != '\0' && xboxPath[1] == ':') {
         switch (tolower((unsigned char)xboxPath[0])) {
             case 'd': root = discRootCache; break;
-            case 't': root = SAVE_ROOT;  break;
+            case 't': root = TITLE_ROOT; break;   // title persistent data, not saves - see above
             case 'u': root = SAVE_ROOT;  break;
             case 'z': root = CACHE_ROOT; break;
             default:  root = NULL;       break;

@@ -12,8 +12,8 @@
 // resolution ourselves, and this is the one place it happens.
 //
 //   d:\...   the game disc         -> the DiscPath setting, "../disc" by default
-//   t:\...   title save data       -> "saves/"
-//   u:\...   the save enumeration root, which psiSave already walks -> "saves/"
+//   t:\...   the title's persistent data - the chosen language and the like -> "tdata/"
+//   u:\...   the title's saved games, which is what the profile list enumerates -> "saves/"
 //   z:\...   the per-boot cache partition, scratch space the game expects to be able to write and re-read,
 //            and which it never expects to survive a restart -> "cache/"
 //

@@ -1,6 +1,7 @@
 #include <windows.h>
 
 #include "XboxPaths.h"
+#include "XboxSettings.h"
 #include "../actionhelpers.h"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -115,6 +116,13 @@ static void ReportFatalFileError(const char *what, HANDLE handle, uint32_t offse
     fflush(stdout);
 }
 
+// Streaming I/O accounting - see XboxFile_ReportStreamingIfDue at the end of this file for what these are
+// for. Declared here because the read path below is what increments them.
+static uint32_t g_readsPending = 0;      // deferred by the host, which is what the game is designed around
+static uint32_t g_readsSynchronous = 0;  // completed before ReadFile returned
+static uint32_t g_readsFailed = 0;
+static uint64_t g_readBytes = 0;
+
 // Defined with the directory enumeration at the end of this file; DoNtClose needs it before then, because a
 // find handle arrives there looking like any other handle.
 static bool CloseIfFindHandle(HANDLE handle);
@@ -203,10 +211,17 @@ int __stdcall readFromFileBlocking(HANDLE fileHandle, void *buffer, uint32_t len
              ok ? "ok" : (err == ERROR_IO_PENDING ? "pending" : "FAILED"), read, err);
     PublishLastError(err);   // the logging above must not disturb what the caller tests
     if (!ok) {
-        if (err != ERROR_IO_PENDING)   // pending is the normal answer and not a failure
+        if (err == ERROR_IO_PENDING) {
+            g_readsPending++;        // the host deferred it, which is what lets the game overlap
+            g_readBytes += len;      // requested rather than delivered: the count is not known yet
+        } else {
+            g_readsFailed++;
             ReportFatalFileError("an overlapped read", fileHandle, overlapped->Offset, len, err);
+        }
         return 0;            // including ERROR_IO_PENDING, which the caller checks for
     }
+    g_readsSynchronous++;
+    g_readBytes += read;     // known already, because it finished before returning
 
     // The read completed there and then rather than going pending. Windows has already filled these in; some
     // other host may not, and the caller reads the byte count out of this structure rather than from us, so
@@ -523,4 +538,44 @@ int __stdcall Xbox_FindNextFileA(HANDLE findHandle, WIN32_FIND_DATAA *findData) 
     // ERROR_NO_MORE_FILES is how the enumeration ends and is not a failure worth reporting.
     PublishLastError(err);
     return ok != FALSE ? 1 : 0;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Streaming I/O accounting, for "why is the frame rate like that".
+//
+// The game overlaps its disc reads with rendering: it issues an overlapped read, carries on drawing, and
+// polls with GetOverlappedResult until the data arrives. That only overlaps anything if the host actually
+// defers the read. Windows does. A host that completes every overlapped read synchronously is correct but
+// serialises the game - the main thread blocks for the whole read instead of rendering during it - and the
+// symptom is a frame rate that is low but perfectly steady, and only in the parts of the game that stream
+// continuously. A level that is entirely loaded, such as a multiplayer map with bots, looks fine.
+//
+// So the useful thing to know is the ratio, and it is two counters. Enabled by PerfLog in settings.ini.
+// ---------------------------------------------------------------------------------------------------------------
+
+
+void XboxFile_ReportStreamingIfDue(void) {
+    if (!Settings_GetPerfLog())
+        return;
+
+    static uint32_t lastTick = 0;
+    uint32_t now = GetTickCount();
+    if (lastTick == 0)
+        lastTick = now;
+    if (now - lastTick < 5000)
+        return;
+    lastTick = now;
+
+    uint32_t total = g_readsPending + g_readsSynchronous;
+    if (total == 0)
+        return;
+
+    printf("[perf] disc reads: %u deferred, %u completed synchronously (%u%%), %u failed, %llu KB\n",
+           g_readsPending, g_readsSynchronous, (unsigned)((g_readsSynchronous * 100ull) / total),
+           g_readsFailed, (unsigned long long)(g_readBytes / 1024));
+    if (g_readsSynchronous > g_readsPending) {
+        printf("[perf]   most reads are not being deferred, so the game is not overlapping them with\n"
+               "[perf]   drawing - it stalls for each one. That is a host behaviour, not the game's.\n");
+    }
+    fflush(stdout);
 }

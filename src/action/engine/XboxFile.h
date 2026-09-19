@@ -47,6 +47,10 @@ int __stdcall MaybeFileCreateNew(const char *filename);       // DeleteFile
 
 uint32_t __stdcall Xbox_GetFileAttributesA(const char *filename);   // GetFileAttributes
 
+// Prints the streaming-read summary if PerfLog is on and enough time has passed. Called once a frame from
+// the graphics backend's frame pacing, which is the only thing that reliably runs every frame.
+void XboxFile_ReportStreamingIfDue(void);
+
 uint32_t __stdcall Xbox_FindFirstFileA(const char *filename, WIN32_FIND_DATAA *findData);
 int __stdcall Xbox_FindNextFileA(HANDLE findHandle, WIN32_FIND_DATAA *findData);
 

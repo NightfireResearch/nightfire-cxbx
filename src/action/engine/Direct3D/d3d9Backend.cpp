@@ -25,6 +25,7 @@
 // Still missing: render targets (shadow blur, aux pass), the backbuffer readback in psiBlurScreen.
 
 #include "../XboxSettings.h"
+#include "../XboxFile.h"      // XboxFile_ReportStreamingIfDue, reported alongside the frame timing
 
 int g_gfxBackend = GFX_BACKEND_CXBX;
 
@@ -54,6 +55,55 @@ static double NowSeconds(void) {
     return (double)t.QuadPart / (double)g_qpcFrequency.QuadPart;
 }
 
+// Where the frame time actually goes, printed every few seconds when PerfLog is on in settings.ini.
+//
+// Two numbers separate the two explanations for a low frame rate that people reach for. If the pacer is
+// spending most of its time waiting, the game is comfortably inside its frame budget and the rate is simply
+// the rate it was asked for. If it is waiting for none of it, the frame took longer than the period and the
+// game is genuinely behind - and then the interesting question is what it spent the time on, which is what
+// the streaming-read counters next door are for.
+static void ReportFrameTiming(double arrivedAtPacer, double leftPacer) {
+    if (!Settings_GetPerfLog())
+        return;
+
+    static double windowStart = 0.0;
+    static double busySeconds = 0.0;
+    static double pacedSeconds = 0.0;
+    static double previousLeft = 0.0;
+    static int frames = 0;
+
+    if (windowStart == 0.0) {
+        windowStart = arrivedAtPacer;
+        previousLeft = leftPacer;
+        return;
+    }
+
+    busySeconds += arrivedAtPacer - previousLeft;   // drawing and everything else the game did
+    pacedSeconds += leftPacer - arrivedAtPacer;     // deliberately waiting to hold the frame rate
+    previousLeft = leftPacer;
+    frames++;
+
+    double elapsed = leftPacer - windowStart;
+    if (elapsed < 5.0)
+        return;
+
+    double fps = frames / elapsed;
+    double busyMs = (busySeconds / frames) * 1000.0;
+    double pacedMs = (pacedSeconds / frames) * 1000.0;
+    printf("[perf] %.1f fps (asked for %d), %.1f ms working + %.1f ms waiting per frame\n",
+           fps, g_targetFrameRate, busyMs, pacedMs);
+    if (pacedMs < 0.5) {
+        printf("[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.\n");
+    }
+    fflush(stdout);
+
+    windowStart = leftPacer;
+    busySeconds = pacedSeconds = 0.0;
+    frames = 0;
+
+    XboxFile_ReportStreamingIfDue();
+}
+
 // On the Xbox, D3DDevice_Swap waits for the next vertical blank, which is what held the game to its 50/60 Hz
 // frame rate (and what CXBX's HLE emulated). Windowed D3D9 Present on a fast monitor returns almost
 // immediately, so hold each frame to the period ourselves: sleep in 1 ms steps, then spin the last stretch.
@@ -62,6 +112,7 @@ static void PaceFrame(void) {
         return;
     double period = 1.0 / (double)g_targetFrameRate;
     double now = NowSeconds();
+    double arrived = now;
     if (g_nextFrameDeadline == 0 || now > g_nextFrameDeadline + 0.25) // first frame, or we fell far behind (a load)
         g_nextFrameDeadline = now;
     while (now < g_nextFrameDeadline) {
@@ -72,6 +123,7 @@ static void PaceFrame(void) {
         now = NowSeconds();
     }
     g_nextFrameDeadline += period;
+    ReportFrameTiming(arrived, now);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
