@@ -436,6 +436,19 @@ standalone, and reuse the D3D9 and audio backends as libraries.
   name and the address that called it and then exits; a fault prints the faulting address, the address it
   touched, that page's state, and a call stack walked from the frame pointers - usually enough to name the
   cause in Ghidra without attaching a debugger.
+- **Working out why the frame rate is what it is**: set `PerfLog=on` in `settings.ini`. Every few seconds it
+  prints the frame rate with the time split into working and waiting, the cost per draw call, the per-frame
+  draw/upload/allocation counts, and how the streaming reads completed. The split is the useful part: if the
+  pacer is waiting, the rate is simply the one it was asked for; if it never waits, the game is behind and the
+  counters say on what.
+
+  Cost per draw call is the number to compare between machines, because it is near-constant for a given
+  graphics stack. Native D3D9 on Windows measures about 2.5 us. Under Wine on macOS, with WineD3D translating
+  to OpenGL, it measured about 147 us - roughly 70 times worse - which makes a 2000-draw mission run at 3 fps
+  while an 85-draw multiplayer map is comfortably at 50. That was worth knowing because it looks like a
+  single-player bug and is not one: the per-draw cost is identical in both, and only the draw count differs.
+  The fix there is the graphics stack (DXVK, so D3D9 goes to Vulkan/MoltenVK rather than OpenGL), not this
+  repository - though fewer draw calls would help every host.
 - **Sizing up an XBE before touching it**: `python tools/survey_xbe.py disc/default.xbe` prints its base and
   size, its kernel import count, and its FS-segment accesses broken down by offset - which is the quickest
   way to see how much of the startup incompatibility applies. It decodes displacements rather than matching

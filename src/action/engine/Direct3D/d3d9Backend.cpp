@@ -102,6 +102,12 @@ static void ReportFrameTiming(double arrivedAtPacer, double leftPacer) {
     double pacedMs = (pacedSeconds / frames) * 1000.0;
     printf("[perf] %.1f fps (asked for %d), %.1f ms working + %.1f ms waiting per frame\n",
            fps, g_targetFrameRate, busyMs, pacedMs);
+    // Cost per draw is the number worth comparing between machines: it is nearly constant for a given
+    // graphics stack, so a scene being slow because it draws more is easy to tell from a stack that is slow
+    // per call. Native D3D9 is around 2 microseconds; WineD3D translating to OpenGL has been measured at
+    // about 150, which makes a 2000-draw scene hopeless and an 85-draw one fine.
+    double usPerDraw = (g_statDraws > 0) ? (busySeconds * 1e6) / (double)g_statDraws : 0.0;
+    printf("[perf]   %.1f us per draw call\n", usPerDraw);
     printf("[perf]   per frame: %llu draws, %llu texture uploads, %llu texture lookups costing %llu"
            " comparisons (%d registered)\n",
            (unsigned long long)(g_statDraws / frames),
