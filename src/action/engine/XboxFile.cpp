@@ -54,6 +54,67 @@ static void PublishLastError(DWORD err) {
     XapiSetLastError(err);   // and the one the game actually reads
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// Which file a handle belongs to, and saying so when a read fails.
+//
+// The game's response to a failed read is FS_FatalErrorHandler - the "there's a problem with the disc you're
+// using, it may be dirty or damaged" screen, which never returns and says nothing about what went wrong. That
+// has now cost time twice, so the two places that can lead to it report themselves on the way past, whatever
+// the verbose setting. The conditions are not guesses: maybeReadFile calls the fatal handler when a read
+// returns 0 with an error that is not ERROR_IO_PENDING, and FS_OperationInProgress does when
+// GetOverlappedResult fails with anything but ERROR_IO_INCOMPLETE or ERROR_IO_PENDING.
+//
+// The handle table exists so those messages can name a file. It is small and fixed because the game holds a
+// dozen or so handles at once - the filesys archives plus whatever is being streamed.
+// ---------------------------------------------------------------------------------------------------------------
+
+#define TRACKED_HANDLES 64
+
+static struct { HANDLE handle; char path[160]; } g_openFiles[TRACKED_HANDLES];
+
+static void RememberHandle(HANDLE handle, const char *xboxPath) {
+    if (handle == INVALID_HANDLE_VALUE)
+        return;
+    for (int i = 0; i < TRACKED_HANDLES; i++) {
+        if (g_openFiles[i].handle == NULL || g_openFiles[i].handle == handle) {
+            g_openFiles[i].handle = handle;
+            snprintf(g_openFiles[i].path, sizeof(g_openFiles[i].path), "%s", xboxPath ? xboxPath : "?");
+            return;
+        }
+    }
+}
+
+static void ForgetHandle(HANDLE handle) {
+    for (int i = 0; i < TRACKED_HANDLES; i++) {
+        if (g_openFiles[i].handle == handle) {
+            g_openFiles[i].handle = NULL;
+            return;
+        }
+    }
+}
+
+static const char *PathForHandle(HANDLE handle) {
+    for (int i = 0; i < TRACKED_HANDLES; i++) {
+        if (g_openFiles[i].handle == handle)
+            return g_openFiles[i].path;
+    }
+    return "(an untracked handle)";
+}
+
+// Printed whatever XBOXFILE_VERBOSE says, because the alternative is the disc-error screen with no
+// explanation at all.
+static void ReportFatalFileError(const char *what, HANDLE handle, uint32_t offset, uint32_t length,
+                                 DWORD err) {
+    printf("\n[file] ---------------------------------------------------------------\n");
+    printf("[file] %s failed on %s\n", what, PathForHandle(handle));
+    printf("[file]   handle 0x%08x, offset %u, length %u, error %lu\n",
+           (unsigned)(uintptr_t)handle, offset, length, err);
+    printf("[file] The game treats this as a damaged disc and shows its fatal error\n"
+           "[file] screen, which never returns. The error code above is the real cause.\n");
+    printf("[file] ---------------------------------------------------------------\n\n");
+    fflush(stdout);
+}
+
 // Resolves an Xbox path and reports failures once per distinct path, since a missing disc file otherwise shows
 // up only as the game's own fatal error handler with nothing to say which file was missing.
 static bool ResolveForOpen(const char *filename, char *out, size_t outSize) {
@@ -93,6 +154,7 @@ HANDLE __stdcall createFile(const char *filename, uint32_t desiredAccess, uint32
              filename, hostPath, (unsigned)(uintptr_t)handle, desiredAccess, shareMode,
              creationDisposition, flagsAndAttributes, openErr);
     PublishLastError(openErr);
+    RememberHandle(handle, filename);
     return handle;
 }
 
@@ -114,8 +176,10 @@ int __stdcall readFromFileBlocking(HANDLE fileHandle, void *buffer, uint32_t len
         FILE_LOG("[file] read sync handle 0x%08x len %u -> %s read %lu err %lu\n",
                  (unsigned)(uintptr_t)fileHandle, len, ok ? "ok" : "FAILED", read, err);
         PublishLastError(err);
-        if (!ok)
+        if (!ok) {
+            ReportFatalFileError("a synchronous read", fileHandle, 0, len, err);
             return 0;
+        }
         if (bytesRead != NULL)
             *bytesRead = read;
         return 1;
@@ -134,8 +198,18 @@ int __stdcall readFromFileBlocking(HANDLE fileHandle, void *buffer, uint32_t len
              (unsigned)(uintptr_t)fileHandle, len, overlapped->Offset,
              ok ? "ok" : (err == ERROR_IO_PENDING ? "pending" : "FAILED"), read, err);
     PublishLastError(err);   // the logging above must not disturb what the caller tests
-    if (!ok)
+    if (!ok) {
+        if (err != ERROR_IO_PENDING)   // pending is the normal answer and not a failure
+            ReportFatalFileError("an overlapped read", fileHandle, overlapped->Offset, len, err);
         return 0;            // including ERROR_IO_PENDING, which the caller checks for
+    }
+
+    // The read completed there and then rather than going pending. Windows has already filled these in; some
+    // other host may not, and the caller reads the byte count out of this structure rather than from us, so
+    // make sure it says what happened. Writing them after a *pending* read would be a bug, which is why this
+    // is only on the synchronous-success path.
+    overlapped->Internal = 0;                      // STATUS_SUCCESS
+    overlapped->InternalHigh = (ULONG_PTR)read;
 
     if (bytesRead != NULL)
         *bytesRead = (uint32_t)overlapped->InternalHigh;
@@ -169,6 +243,8 @@ int __stdcall Xbox_GetOverlappedResult(HANDLE fileHandle, OVERLAPPED *overlapped
     if (bytesTransferred != NULL)
         *bytesTransferred = transferred;
     PublishLastError(err);   // FS_OperationInProgress polls for ERROR_IO_INCOMPLETE here
+    if (!ok && err != ERROR_IO_INCOMPLETE && err != ERROR_IO_PENDING)
+        ReportFatalFileError("waiting for an overlapped read", fileHandle, overlapped->Offset, 0, err);
     return ok != FALSE ? 1 : 0;
 }
 
@@ -186,6 +262,7 @@ int __stdcall getFileSize_LargeInteger(HANDLE fileHandle, LARGE_INTEGER *fileSiz
 //
 // AUTOINJECT
 int __stdcall DoNtClose(HANDLE handle) {
+    ForgetHandle(handle);
     SetLastError(0);
     BOOL ok = CloseHandle(handle);
     PublishLastError(GetLastError());
