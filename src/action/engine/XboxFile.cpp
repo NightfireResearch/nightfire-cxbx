@@ -435,8 +435,9 @@ int __stdcall MaybeFileCreateNew(const char *filename) {
 // region does, English with PAL does not).
 //
 // Other XAPI functions still build Xbox object names the same way and have not been replaced, because
-// nothing has reached them yet: 0x000e9f4d, 0x000ea821, 0x000eac45, 0x000eb34c, 0x000eb3b8, 0x000eb446,
-// 0x000eb5c3, 0x000ed2e8, 0x000ee0d4 - less 0x000eac45, which Linux reached. Each will announce itself
+// nothing has reached them yet: 0x000e9f4d, 0x000eb34c, 0x000eb3b8, 0x000eb446,
+// 0x000eb5c3, 0x000ed2e8, 0x000ee0d4. Linux has since reached two of the original list, 0x000eac45 and
+// 0x000ea821, both implemented at the end of this file. Each remaining one will announce itself
 // through the loader's kernel stub rather than
 // misbehaving quietly, and each is a few lines like this one. 0x000eb6f6 was on that list until the save
 // enumeration reached it; see Xbox_FindFirstFileA at the end of this file.
@@ -621,4 +622,49 @@ uint32_t __stdcall Xbox_GetVolumeClusterSize(const char *path) {
     FILE_LOG("[file] cluster size %s -> %s : %lu bytes\n", path, hostPath,
              sectorsPerCluster * bytesPerSector);
     return (uint32_t)(sectorsPerCluster * bytesPerSector);
+}
+
+// GetDiskFreeSpaceExA. The original asks the same FileFsSizeInformation as the cluster-size query above and
+// multiplies out three figures: available units times cluster size for the free space, and total units times
+// cluster size for the capacity. Win32 computes exactly those, so this is a direct mapping.
+//
+// The three outputs are all optional and the Xbox writes the same free-space value to the first and third,
+// because a console has no per-user quotas to make them differ. Win32 can distinguish them; letting it is
+// harmless and more truthful.
+//
+// Returns int rather than bool: the original ends "XOR EAX,EAX / INC EAX", so its callers see a full-width
+// result - the same reason given above Xbox_GetOverlappedResult.
+//
+// FUNC_AT(000ea821)
+int __stdcall Xbox_GetDiskFreeSpaceExA(const char *path, ULARGE_INTEGER *freeBytesAvailable,
+                                       ULARGE_INTEGER *totalBytes, ULARGE_INTEGER *totalFreeBytes) {
+    char hostPath[512];
+    if (!ResolveForOpen(path, hostPath, sizeof(hostPath))) {
+        PublishLastError(ERROR_PATH_NOT_FOUND);
+        return 0;
+    }
+
+    ULARGE_INTEGER available, capacity, free;
+    available.QuadPart = capacity.QuadPart = free.QuadPart = 0;
+
+    SetLastError(0);
+    BOOL ok = GetDiskFreeSpaceExA(hostPath, &available, &capacity, &free);
+    if (!ok)
+        ok = GetDiskFreeSpaceExA(NULL, &available, &capacity, &free);   // as above: fall back to this volume
+
+    if (!ok) {
+        DWORD err = GetLastError();
+        PublishLastError(err == ERROR_FILE_NOT_FOUND ? ERROR_PATH_NOT_FOUND : err);
+        FILE_LOG("[file] free space %s -> %s : FAILED err %lu\n", path, hostPath, err);
+        return 0;
+    }
+
+    if (freeBytesAvailable != NULL) *freeBytesAvailable = available;
+    if (totalBytes != NULL)         *totalBytes = capacity;
+    if (totalFreeBytes != NULL)     *totalFreeBytes = free;
+
+    PublishLastError(0);
+    FILE_LOG("[file] free space %s -> %s : %llu free of %llu\n", path, hostPath,
+             (unsigned long long)available.QuadPart, (unsigned long long)capacity.QuadPart);
+    return 1;
 }

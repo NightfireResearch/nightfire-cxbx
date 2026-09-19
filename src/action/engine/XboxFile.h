@@ -56,4 +56,7 @@ int __stdcall Xbox_FindNextFileA(HANDLE findHandle, WIN32_FIND_DATAA *findData);
 
 uint32_t __stdcall Xbox_GetVolumeClusterSize(const char *path);   // sectors-per-cluster * bytes-per-sector
 
+int __stdcall Xbox_GetDiskFreeSpaceExA(const char *path, ULARGE_INTEGER *freeBytesAvailable,
+                                       ULARGE_INTEGER *totalBytes, ULARGE_INTEGER *totalFreeBytes);
+
 #endif // XBOXFILE_H_
