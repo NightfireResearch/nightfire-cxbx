@@ -28,6 +28,16 @@ void MouseLook_Update(void);
 bool MouseLook_FireHeld(void);
 bool MouseLook_ZoomHeld(void);
 
+// One notch of the wheel, reported as a single frame's worth of "the weapon d-pad is pressed" and then
+// forgotten - a wheel has no held state to report, and the game cycles weapons on a press rather than while
+// a direction is held. At most one notch is handed over per frame, so a fast scroll is spread across frames
+// rather than skipping several weapons in one. Both are false unless the pointer is captured.
+//
+// Wheel movement only arrives through raw input; there is nothing to fall back on if that is unavailable,
+// because the fallback reads the cursor's position, which a wheel does not move.
+bool MouseLook_NextWeapon(void);
+bool MouseLook_PrevWeapon(void);
+
 // Called from Player_ViewClamping, which the game runs once a frame for each player it is actively updating
 // in a level. That makes the call itself the "we are in a level" signal the capture logic needs: menus, the
 // pause screen, cutscenes and the front end all stop it by construction, with no game-state flag to consult.

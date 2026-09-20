@@ -80,12 +80,20 @@ extern "C" __declspec(dllimport) unsigned long __stdcall XInputSetState(unsigned
 //   X          or  mouse 2 left trigger  - scope zoom   (likewise)
 //   Space                  Y  - jump                 (also menu alt-select 1)
 //   C  or  Return          A  - crouch               (also menu select)
-//   R                      X  - reload               (also menu alt-select 2)
+//   R  or  E               X  - reload and interact   (also menu alt-select 2)
 //   Backspace              B  - next weapon          (also menu back)
 //   N                      BACK - night vision       (also menu back)
 //   P  or  Escape          START - pause             (also skip cutscene)
-//   Q / E                  d-pad left/right - previous / next weapon
+//   Q  or  wheel down      d-pad left  - previous weapon
+//   wheel up               d-pad right - next weapon
 //   1 / 2                  d-pad down/up    - previous / next gadget, and scope zoom out / in
+//
+// E is "interact" as much as "reload": Player_WeaponFiring calls Player_Activate - doors, triggers, cars,
+// turrets, monitors, locks - when ACTION_RELOAD has just been pressed and fire is not held. The game has no
+// separate use button, so a key that opens doors necessarily reloads as well, exactly as the pad's X does.
+//
+// The weapon d-pad used to be Q and E, and E was taken for the above once the wheel could do the same job.
+// Next weapon is still on Backspace (the B button) for anyone without a wheel.
 //
 // In menus the left stick doubles as the directional input (psiInput_MapInputs treats a stick deflection past
 // 33% the same as a d-pad press), so WASD navigates menus as well as walking.
@@ -166,13 +174,13 @@ static bool BuildKeyboardPadState(Win32_XINPUT_STATE *state) {
     unsigned short buttons = 0;
     if (KeyDown('C') || KeyDown(VK_RETURN_)) buttons |= WIN32_XINPUT_GAMEPAD_A;
     if (KeyDown(VK_BACKSPACE))               buttons |= WIN32_XINPUT_GAMEPAD_B;
-    if (KeyDown('R'))                        buttons |= WIN32_XINPUT_GAMEPAD_X;
+    if (KeyDown('R') || KeyDown('E'))        buttons |= WIN32_XINPUT_GAMEPAD_X;
     if (KeyDown(VK_SPACE_))                  buttons |= WIN32_XINPUT_GAMEPAD_Y;
     if (KeyDown('Z'))                        buttons |= WIN32_XINPUT_GAMEPAD_LEFT_SHOULDER;
     if (KeyDown('P') || KeyDown(VK_ESCAPE_)) buttons |= XINPUT_GAMEPAD_START;
     if (KeyDown('N'))                        buttons |= XINPUT_GAMEPAD_BACK;
-    if (KeyDown('E'))                        buttons |= XINPUT_GAMEPAD_DPAD_RIGHT;
-    if (KeyDown('Q'))                        buttons |= XINPUT_GAMEPAD_DPAD_LEFT;
+    if (MouseLook_NextWeapon())              buttons |= XINPUT_GAMEPAD_DPAD_RIGHT;
+    if (KeyDown('Q') || MouseLook_PrevWeapon()) buttons |= XINPUT_GAMEPAD_DPAD_LEFT;
     if (KeyDown('2'))                        buttons |= XINPUT_GAMEPAD_DPAD_UP;
     if (KeyDown('1'))                        buttons |= XINPUT_GAMEPAD_DPAD_DOWN;
     state->Gamepad.wButtons = buttons;

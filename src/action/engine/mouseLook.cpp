@@ -80,6 +80,8 @@ static unsigned g_lastAimFrame = 0;         // g_frame the last time the aim hoo
 static bool     g_prevButtonDown = false, g_prevEscapeDown = false;
 static bool     g_leftDown = false, g_rightDown = false; // as of the last MouseLook_Update
 static bool     g_swallowLeftUntilRelease = false;       // see Capture
+static int      g_wheelAccum = 0;                        // raw wheel movement not yet turned into notches
+static int      g_wheelStep = 0;                         // -1, 0 or +1, for this frame only
 
 // Either host's render window: CXBX's, or the one the loader creates when running standalone. Same order as
 // psiInput.cpp's own lookup, and for the same reason - nothing changes for a CXBX-hosted run.
@@ -167,6 +169,11 @@ static void PumpRawInput(void) {
                 // deal better than the view snapping to a corner.
                 g_accumX += raw.data.mouse.lLastX;
                 g_accumY += raw.data.mouse.lLastY;
+            }
+            if (size != (UINT)-1 && raw.header.dwType == RIM_TYPEMOUSE &&
+                (raw.data.mouse.usButtonFlags & RI_MOUSE_WHEEL) != 0) {
+                // usButtonData is a signed count in WHEEL_DELTA units, in a field declared unsigned.
+                g_wheelAccum += (int)(short)raw.data.mouse.usButtonData;
             }
         }
         DispatchMessageA(&message); // WM_INPUT has to reach DefWindowProc so the system can release it
@@ -289,6 +296,8 @@ static void Release(HWND window) {
 
     g_accumX = 0;
     g_accumY = 0;
+    g_wheelAccum = 0;
+    g_wheelStep = 0;
     g_captured = false;
     printf("[mouse] released\n");
 }
@@ -338,6 +347,8 @@ void MouseLook_Update(void) {
     if (!g_captured) {
         g_accumX = 0;
         g_accumY = 0;
+        g_wheelAccum = 0;
+        g_wheelStep = 0;
         if (buttonPressed && InLevel() && WindowHasFocus(window) && CursorIsInsideClient(window))
             Capture(window);
         return;
@@ -349,6 +360,19 @@ void MouseLook_Update(void) {
     if (escapePressed || !InLevel() || !WindowHasFocus(window)) {
         Release(window);
         return;
+    }
+
+    // One notch per frame, so that a flick of the wheel walks through the weapons one at a time instead of
+    // jumping several at once - the game changes weapon on a press, and several presses in one frame would
+    // be indistinguishable from one.
+    g_wheelStep = 0;
+    if (g_wheelAccum >= WHEEL_DELTA) {
+        g_wheelStep = 1;
+        g_wheelAccum -= WHEEL_DELTA;
+    }
+    else if (g_wheelAccum <= -WHEEL_DELTA) {
+        g_wheelStep = -1;
+        g_wheelAccum += WHEEL_DELTA;
     }
 
     ClipCursorToWindow(window);
@@ -374,6 +398,14 @@ bool MouseLook_FireHeld(void) {
 
 bool MouseLook_ZoomHeld(void) {
     return g_captured && g_rightDown;
+}
+
+bool MouseLook_NextWeapon(void) {
+    return g_captured && g_wheelStep > 0;
+}
+
+bool MouseLook_PrevWeapon(void) {
+    return g_captured && g_wheelStep < 0;
 }
 
 bool MouseLook_TakeAimDelta(float *yawRadians, float *pitchFraction) {
