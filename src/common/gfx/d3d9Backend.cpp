@@ -359,9 +359,16 @@ static void ReleaseHostTexture(HostTexture *t) {
 
 static void InvalidateHostBuffers(const void *obj);
 static void CaptureBackBufferInto(void *header);
+// The original (driving 0x001693a0, action 0x00105080) *adds* the base to the Data word rather than storing
+// it: a resource built inside a loaded file carries the offset of its data from the file's start, and
+// registering it against the file's address in memory turns that into a pointer. The action engine only ever
+// registers headers whose Data is zero, which is why replacing it looked right for as long as that was the
+// only engine - and why every one of EAGL's static vertex buffers read from the first byte of the level
+// file, whose header the level then drew as its geometry. The original also masks the result to 28 bits,
+// which a console address survives and a Win32 pointer need not; that part is left out.
 void D3D9_ResourceRegister(void *pResource, uint32_t data) {
     XboxPixelContainer *h = (XboxPixelContainer*)pResource;
-    h->Data = data;
+    h->Data = h->Data + data;
     HostTexture *t = FindHostTexture(pResource);
     if (t != NULL && t->renderTarget)
         ReleaseHostTexture(t); // the slot is being reused for something else (or re-captured)
@@ -761,11 +768,19 @@ void D3D9_SetPushBufferSize(uint32_t pushBufferSize, uint32_t kickOffSize) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Debug dumps: every D3D9_DUMP_EVERY frames the backbuffer and any render-target texture that gets sampled are
+// Debug dumps: every DumpEvery frames the backbuffer and any render-target texture that gets sampled are
 // written as 24-bit BMP files (colour, and the alpha channel as grey) in the working directory, so the bring-up
-// can be looked at without a capture tool. 0 disables.
+// can be looked at without a capture tool, and the frame's draws are traced to d3d9_trace_<frame>.log (see
+// TraceDraw). The interval is settings.ini's [Settings] DumpEvery, read once; 0 disables. It is a setting
+// rather than a compile-time constant because looking at a frame is the first thing every graphics
+// investigation does, and rebuilding to do it was costing a build each way.
 // ---------------------------------------------------------------------------------------------------------------
-#define D3D9_DUMP_EVERY 0 // set to e.g. 300 to dump every 300 frames
+static uint32_t DumpEvery(void) {
+    static int value = -1;
+    if (value < 0)
+        value = (int)GetPrivateProfileIntA("Settings", "DumpEvery", 0, ".\\settings.ini");
+    return (uint32_t)value;
+}
 static uint32_t g_dumpFrame = 0;   // the frame currently being dumped (0 = none)
 static int g_dumpRtCount = 0;
 
@@ -857,7 +872,7 @@ void D3D9_Swap(uint32_t type) {
         DumpSurface(g_backBufferSurface, "d3d9_dump_frame");
         g_dumpFrame = 0;
     }
-    if (D3D9_DUMP_EVERY > 0 && (g_frameCount + 1) % D3D9_DUMP_EVERY == 0) {
+    if (DumpEvery() > 0 && (g_frameCount + 1) % DumpEvery() == 0) {
         g_dumpFrame = g_frameCount + 1; // the next frame gets dumped
         g_dumpRtCount = 0;
     }
@@ -1477,6 +1492,38 @@ static void MarkAllConstantsDirty(void) {
 }
 #define VS_HANDLE_TAG 0x56530000u
 
+// Every translated shader is written to d3d9_shaders.log: the declaration tokens as the game gave them, the
+// D3D9 elements they became, and the HLSL. It is how a wrong vertex format or a program that does not end
+// the way the translator expects gets found - from the file, after the run, rather than by guessing.
+static void DumpTranslatedShader(int index, const TranslatedVertexShader *vs, const D3DVERTEXELEMENT9 *elements,
+                                 int elementCount, const char *hlsl) {
+    static FILE *f = NULL;
+    static bool opened = false;
+    if (!opened) { opened = true; f = fopen("d3d9_shaders.log", "w"); }
+    if (f == NULL)
+        return;
+    fprintf(f, "==== shader %d: declaration %p function %p\n", index, vs->declaration, vs->function);
+    fprintf(f, "decl:");
+    for (const uint32_t *tok = (const uint32_t*)vs->declaration; ; tok++) {
+        fprintf(f, " %08x", *tok);
+        if (*tok == 0xFFFFFFFFu) break;
+    }
+    fprintf(f, "\nelements:");
+    for (int i = 0; i < elementCount; i++)
+        fprintf(f, " [stream %u offset %u type %u usage %u.%u]", elements[i].Stream, elements[i].Offset,
+                elements[i].Type, elements[i].Usage, elements[i].UsageIndex);
+    fprintf(f, "\ninputs 0x%04x outputs 0x%04x streams 0x%03x\n", vs->inputsUsed, vs->outputsWritten, vs->streamsUsed);
+    const uint8_t *fn = (const uint8_t*)vs->function;
+    int count = fn[2];
+    const uint32_t *words = (const uint32_t*)(fn + 8);
+    fprintf(f, "microcode (%d instructions):\n", count);
+    for (int i = 0; i < count; i++)
+        fprintf(f, "  %2d: %08x %08x %08x\n", i, words[i * 4], words[i * 4 + 1], words[i * 4 + 2]);
+    fputs(hlsl, f);
+    fputs("\n", f);
+    fflush(f);
+}
+
 static bool BuildVertexShader(TranslatedVertexShader *vs, int index) {
     vs->attempted = true;
     vs->failed = true;
@@ -1517,8 +1564,10 @@ static bool BuildVertexShader(TranslatedVertexShader *vs, int index) {
     if (!TranslateVshToHlsl((const uint8_t*)vs->function, &normPacked, inputComponents, hlsl, sizeof(hlsl),
                             &vs->inputsUsed, &vs->outputsWritten, &instructionCount)) {
         D3D9Log("[d3d9] shader %d: translation failed\n", index);
+        DumpTranslatedShader(index, vs, elements, elementCount, "(translation failed)");
         return false;
     }
+    DumpTranslatedShader(index, vs, elements, elementCount, hlsl);
     ID3DBlob *code = NULL, *errors = NULL;
     HRESULT hr = D3DCompile(hlsl, strlen(hlsl), NULL, NULL, NULL, "main", "vs_2_0", D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &code, &errors);
     if (FAILED(hr)) {
@@ -1652,8 +1701,13 @@ static IDirect3DVertexBuffer9 *GetHostVertexBuffer(const void *obj, uint32_t nee
     } else if (neededBytes == 0) {
         size = slot[5];
     }
-    if (data == NULL || size == 0)
+    if (data == NULL || size == 0) {
+        static int said = 0;
+        if (said++ < 4)
+            D3D9Log("[d3d9] vertex buffer object %p cannot be uploaded: data %p, %u bytes wanted (words %08x %08x %08x)\n",
+                    obj, data, size, slot[0], slot[1], slot[2]);
         return NULL;
+    }
     for (int i = 0; i < g_vertexBufferCount; i++) {
         HostVertexBuffer *h = &g_vertexBuffers[i];
         if (h->obj == obj) {
@@ -1740,6 +1794,70 @@ static IDirect3DIndexBuffer9 *GetHostIndexBuffer(const void *obj, const void **d
 static const void *g_streams[16];
 static int g_streamStrides[16];
 static const void *g_indexBuffer = NULL;
+
+// ---------------------------------------------------------------------------------------------------------------
+// The vertex ring, for an engine whose vertex buffers cannot be cached.
+//
+// The cached host copies above assume a buffer's contents stay put between the moment it is uploaded and the
+// draws that read it. The action engine's do; the driving engine's do not. EAGL's dynamic vertex buffer
+// (FUN_000f6d00) is three Xbox buffers behind one object, rotated on each lock, and its stream-binding
+// routine (FUN_000f6890) copies each draw's CPU-side vertex array into the current one just before the draw -
+// so within a frame the same object can be rewritten many times with different geometry, and the console
+// never noticed because its GPU read the game's memory directly. A copy taken once a frame serves the first
+// draw and feeds every later one somebody else's vertices. (This was suspected of the driving engine's
+// exploded geometry and was not it - that was D3D9_ResourceRegister - but it is real, and it is cheap.)
+//
+// There is no event to hook - Lock2 is just "where is the memory", and nothing announces a write - so the
+// only correct moment to read a buffer is the draw itself. Each draw copies exactly the vertex range it will
+// read, per stream, into a dynamic ring (D3DLOCK_NOOVERWRITE appends, D3DLOCK_DISCARD on wrap), which is the
+// same arrangement the index ring uses and for the same reason. The cost is a memcpy of the vertices actually
+// drawn, about a megabyte a frame, against the whole level going wrong.
+//
+// Only the streams a draw reads are copied, from its lowest vertex, and the draw is issued with a base vertex
+// index of minus that lowest vertex so that the indices still land: D3D9 allows a negative base as long as
+// MinVertexIndex + BaseVertexIndex is not.
+// ---------------------------------------------------------------------------------------------------------------
+bool g_streamsVolatile = false;
+static IDirect3DVertexBuffer9 *g_vertexRing = NULL;
+static uint32_t g_vertexRingPos = 0;
+#define VERTEX_RING_BYTES (16u << 20)
+#define VERTEX_RING_SLACK 8u   // SHORT3 declared as SHORT4 reads two bytes past the last vertex
+
+static void ReleaseVertexRing(void) {
+    if (g_vertexRing != NULL) { g_vertexRing->Release(); g_vertexRing = NULL; }
+    g_vertexRingPos = 0;
+}
+
+// Copies bytes [firstByte, firstByte + bytes) of an Xbox vertex buffer's memory into the ring and returns the
+// ring, with the offset the stream should be bound at. NULL if the buffer has no memory or the range is
+// larger than the ring.
+static IDirect3DVertexBuffer9 *StreamThroughVertexRing(const void *obj, uint32_t firstByte, uint32_t bytes,
+                                                       uint32_t *offsetOut) {
+    const uint32_t *slot = (const uint32_t*)obj;
+    const uint8_t *data = (const uint8_t*)(uintptr_t)slot[1];
+    if (data == NULL || bytes == 0 || bytes + VERTEX_RING_SLACK > VERTEX_RING_BYTES)
+        return NULL;
+    if (g_vertexRing == NULL) {
+        if (FAILED(g_device->CreateVertexBuffer(VERTEX_RING_BYTES, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0,
+                                                D3DPOOL_DEFAULT, &g_vertexRing, NULL))) {
+            D3D9_BackendMissing("vertex ring buffer creation failed");
+            return NULL;
+        }
+        g_vertexRingPos = 0;
+    }
+    uint32_t span = (bytes + VERTEX_RING_SLACK + 15u) & ~15u;
+    DWORD lockFlags = D3DLOCK_NOOVERWRITE;
+    if (g_vertexRingPos + span > VERTEX_RING_BYTES) { g_vertexRingPos = 0; lockFlags = D3DLOCK_DISCARD; }
+    void *dst = NULL;
+    if (FAILED(g_vertexRing->Lock(g_vertexRingPos, span, &dst, lockFlags)))
+        return NULL;
+    memcpy(dst, data + firstByte, bytes);
+    memset((uint8_t*)dst + bytes, 0, VERTEX_RING_SLACK);
+    g_vertexRing->Unlock();
+    *offsetOut = g_vertexRingPos;
+    g_vertexRingPos += span;
+    return g_vertexRing;
+}
 void D3D9_SetStreamSource(int streamNumber, void *vertexBuffer, int stride) {
     if (streamNumber >= 0 && streamNumber < 16) { g_streams[streamNumber] = vertexBuffer; g_streamStrides[streamNumber] = stride; }
 }
@@ -1810,6 +1928,7 @@ static void CaptureBackBufferInto(void *header) {
 
 static void ReleaseDefaultPoolResources(void) {
     ReleaseIndexRing();
+    ReleaseVertexRing();
     for (int i = 0; i < g_textureCount; i++)
         if (g_textures[i].renderTarget)
             ReleaseHostTexture(&g_textures[i]);
@@ -1857,7 +1976,8 @@ void D3D9_SetRenderTarget(void *pRenderTarget, void *pDepthStencil) {
 
 // Everything a programmable draw needs: the translated shader and declaration, the constants, the bound
 // streams' host buffers, textures and stage state. Returns false (after counting why) if the draw can't happen.
-static bool PrepareShaderDraw(bool bindStreams, uint32_t vertexLimit) {
+static bool PrepareShaderDraw(bool bindStreams, uint32_t firstVertex, uint32_t vertexLimit, int *baseVertexOut) {
+    *baseVertexOut = 0;
     if (g_currentVertexShader < 0 || g_currentVertexShader >= g_vertexShaderCount) {
         D3D9_BackendMissing("draw with no vertex shader selected");
         return false;
@@ -1920,8 +2040,16 @@ static bool PrepareShaderDraw(bool bindStreams, uint32_t vertexLimit) {
                             g_currentVertexShader, s, vs->declaredStride[s], stride);
                 }
             }
-            IDirect3DVertexBuffer9 *vb = (g_streams[s] != NULL)
-                ? GetHostVertexBuffer(g_streams[s], vertexLimit * stride, &size) : NULL;
+            IDirect3DVertexBuffer9 *vb = NULL;
+            uint32_t offset = 0;
+            if (g_streams[s] != NULL) {
+                if (g_streamsVolatile && vertexLimit > firstVertex) {
+                    vb = StreamThroughVertexRing(g_streams[s], firstVertex * stride, (vertexLimit - firstVertex) * stride, &offset);
+                    if (vb != NULL) *baseVertexOut = -(int)firstVertex;
+                } else {
+                    vb = GetHostVertexBuffer(g_streams[s], vertexLimit * stride, &size);
+                }
+            }
             if (vb == NULL && s != 0) {
                 // A morph-capable shader selected with no morph streams bound (or a stream that couldn't be
                 // uploaded): the NV2A would read whatever was bound last, with zero weights. Feed zeros.
@@ -1931,6 +2059,7 @@ static bool PrepareShaderDraw(bool bindStreams, uint32_t vertexLimit) {
                     if (SUCCEEDED(zeroStream->Lock(0, 0, &p, 0))) { memset(p, 0, 65536); zeroStream->Unlock(); }
                 }
                 vb = zeroStream;
+                offset = 0;
                 if (g_streams[s] == NULL) D3D9_BackendMissing("draw with a declared morph stream unbound (zeros fed)");
                 else D3D9_BackendMissing("draw with a morph stream that couldn't be uploaded (zeros fed)");
             }
@@ -1938,12 +2067,65 @@ static bool PrepareShaderDraw(bool bindStreams, uint32_t vertexLimit) {
                 D3D9_BackendMissing(g_streams[s] == NULL ? "draw with stream 0 unbound" : "draw with a vertex buffer that couldn't be uploaded");
                 return false;
             }
-            g_device->SetStreamSource(s, vb, 0, stride);
+            g_device->SetStreamSource(s, vb, offset, stride);
         }
     }
     g_device->SetRenderState(D3DRS_FOGTABLEMODE, D3DFOG_NONE);   // the shader's oFog is the fog factor
     g_device->SetRenderState(D3DRS_FOGVERTEXMODE, D3DFOG_NONE);
     return true;
+}
+
+// A per-draw trace of the frame being dumped (see DumpEvery): which shader, which streams with which
+// strides, the vertex range, the extents of the positions the draw actually reads out of the game's memory,
+// and the first constants. It is what tells a wrong vertex layout from a wrong transform.
+static void TraceDraw(const char *kind, uint32_t primType, uint32_t count, uint32_t first, uint32_t limit) {
+    if (g_dumpFrame == 0)
+        return;
+    static FILE *f = NULL;
+    static uint32_t openedFor = 0;
+    if (f == NULL || openedFor != g_dumpFrame) {
+        if (f != NULL) fclose(f);
+        char name[64];
+        snprintf(name, sizeof(name), "d3d9_trace_%u.log", g_dumpFrame);
+        f = fopen(name, "w");
+        openedFor = g_dumpFrame;
+    }
+    if (f == NULL)
+        return;
+    fprintf(f, "%s prim %u count %u vertices [%u, %u) shader %d\n", kind, primType, count, first, limit, g_currentVertexShader);
+    if (g_currentVertexShader >= 0 && g_currentVertexShader < g_vertexShaderCount) {
+        const TranslatedVertexShader *vs = &g_vertexShaders[g_currentVertexShader];
+        for (int s = 0; s < 16; s++) {
+            if (!(vs->streamsUsed & (1u << s))) continue;
+            const uint32_t *slot = (const uint32_t*)g_streams[s];
+            fprintf(f, "  stream %d: obj %p data %p stride %d", s, g_streams[s], slot ? (void*)(uintptr_t)slot[1] : NULL, g_streamStrides[s]);
+            if (slot != NULL && slot[1] != 0 && limit > first) {
+                const uint8_t *data = (const uint8_t*)(uintptr_t)slot[1];
+                uint32_t stride = g_streamStrides[s] > 0 ? g_streamStrides[s] : 6;
+                if (s == 0 && stride >= 12) {
+                    float lo[3] = { 1e30f, 1e30f, 1e30f }, hi[3] = { -1e30f, -1e30f, -1e30f };
+                    for (uint32_t v = first; v < limit; v++) {
+                        const float *p = (const float*)(data + (size_t)v * stride);
+                        for (int k = 0; k < 3; k++) { if (p[k] < lo[k]) lo[k] = p[k]; if (p[k] > hi[k]) hi[k] = p[k]; }
+                    }
+                    const float *p0 = (const float*)(data + (size_t)first * stride);
+                    fprintf(f, " pos extents x[%g,%g] y[%g,%g] z[%g,%g] first (%g %g %g)", lo[0], hi[0], lo[1], hi[1], lo[2], hi[2], p0[0], p0[1], p0[2]);
+                } else {
+                    const uint8_t *p0 = data + (size_t)first * stride;
+                    fprintf(f, " first bytes");
+                    for (uint32_t k = 0; k < stride && k < 16; k++) fprintf(f, " %02x", p0[k]);
+                }
+            }
+            fprintf(f, "\n");
+        }
+    }
+    for (int c = 0; c < 12; c++)
+        fprintf(f, "  c[%d] = %g %g %g %g\n", c, g_vertexConstants[c][0], g_vertexConstants[c][1], g_vertexConstants[c][2], g_vertexConstants[c][3]);
+    fprintf(f, "  c[27] = %g %g %g %g  c[58] = %g %g %g %g  c[59] = %g %g %g %g\n",
+            g_vertexConstants[27][0], g_vertexConstants[27][1], g_vertexConstants[27][2], g_vertexConstants[27][3],
+            g_vertexConstants[58][0], g_vertexConstants[58][1], g_vertexConstants[58][2], g_vertexConstants[58][3],
+            g_vertexConstants[59][0], g_vertexConstants[59][1], g_vertexConstants[59][2], g_vertexConstants[59][3]);
+    fflush(f);
 }
 
 static bool XboxPrimitiveToD3D(uint32_t xboxType, uint32_t vertexCount, D3DPRIMITIVETYPE *type, UINT *primCount) {
@@ -2000,10 +2182,12 @@ void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, cons
     g_indexRing->Unlock();
     uint32_t start = g_indexRingPos;
     g_indexRingPos += vertexCount;
-    if (!PrepareShaderDraw(true, (uint32_t)maxIndex + 1))
+    int baseVertex = 0;
+    TraceDraw("indexed", primitiveType, vertexCount, minIndex, (uint32_t)maxIndex + 1);
+    if (!PrepareShaderDraw(true, minIndex, (uint32_t)maxIndex + 1, &baseVertex))
         return;
     g_device->SetIndices(g_indexRing);
-    g_device->DrawIndexedPrimitive(type, 0, minIndex, maxIndex - minIndex + 1, start, primCount);
+    g_device->DrawIndexedPrimitive(type, baseVertex, minIndex, maxIndex - minIndex + 1, start, primCount);
 }
 
 // Non-indexed draws from a bound stream: the point-sprite overlay (reticle etc.) is the only user.
@@ -2014,14 +2198,16 @@ void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t ve
     D3DPRIMITIVETYPE type; UINT primCount;
     if (!XboxPrimitiveToD3D(primitiveType, vertexCount, &type, &primCount))
         return;
-    if (!PrepareShaderDraw(true, startVertex + vertexCount))
+    int baseVertex = 0;
+    TraceDraw("direct", primitiveType, vertexCount, startVertex, startVertex + vertexCount);
+    if (!PrepareShaderDraw(true, startVertex, startVertex + vertexCount, &baseVertex))
         return;
     bool points = (type == D3DPT_POINTLIST);
     if (points) {
         g_device->SetRenderState(D3DRS_POINTSPRITEENABLE, TRUE);
         g_device->SetRenderState(D3DRS_POINTSCALEENABLE, FALSE);
     }
-    g_device->DrawPrimitive(type, startVertex, primCount);
+    g_device->DrawPrimitive(type, (UINT)((int)startVertex + baseVertex), primCount);
     if (points)
         g_device->SetRenderState(D3DRS_POINTSPRITEENABLE, FALSE);
 }
@@ -2204,7 +2390,8 @@ void D3D9_DrawVerticesUP(uint32_t primitiveType, uint32_t vertexCount, void *pVe
     D3DPRIMITIVETYPE type; UINT primCount;
     if (!XboxPrimitiveToD3D(primitiveType, vertexCount, &type, &primCount))
         return;
-    if (!PrepareShaderDraw(false, 0))
+    int baseVertex = 0;
+    if (!PrepareShaderDraw(false, 0, 0, &baseVertex))
         return;
     g_device->DrawPrimitiveUP(type, primCount, pVertexData, stride);
 }

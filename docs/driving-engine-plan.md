@@ -316,11 +316,56 @@ reasoning:
   The copy is refreshed on each buffer's first use in a frame. Textures have a real signal for this
   (`D3D9_NotifyTextureModified`, which the action engine's D3D8 calls); nothing calls anything here.
 
-**What is still wrong, and the thread to pull.** The world draws in flat washes of colour. It is not the
-fog and it is not the stage state: 115330 of 115330 world draws have `COLOROP = MODULATE` with
-`COLORARG1 = TEXTURE` and a texture bound at stage 0, which is exactly right. So the texture is being
-sampled at one point - the coordinates are the next thing to look at, and the candidate is the SHORT2
-(`0x25`) texture coordinate stream, whose scaling the combiner would have applied.
+After those four the world was still made of triangles that reached across the screen - "spiky", with the
+right objects moving in the right places. That was the next section's problem.
+
+### The level was drawing the level file's header
+
+Three tools before the finding, because guessing had stopped working:
+
+- **every translated shader is written to `d3d9_shaders.log`** - the declaration tokens as the game gave
+  them, the D3D9 elements they became, the raw microcode and the HLSL. It showed EAGL's vertex layout at
+  once: one stream per attribute (a FLOAT3 position stream, SHORT2 coordinate streams, a D3DCOLOR stream),
+  never interleaved, and every program ending in the XDK's standard viewport epilogue on `c[58]`/`c[59]`,
+  so the translator's assumptions all held;
+- **`DumpEvery=N` in `settings.ini`** dumps every Nth frame as before (it was a compile-time constant, and
+  a rebuild each way), and now also **traces that frame's draws** to `d3d9_trace_<frame>.log`: shader,
+  primitive, vertex range, each stream's buffer object and the memory it points at, the extents of the
+  positions the draw actually reads, and the first transform constants;
+- and the trace was decisive. Every stream of every world draw pointed at the same address, and the bytes
+  there were `7f 45 4c 46` - the ELF header of the render-method object file that begins the level pack.
+  The first "position" of the sunken tanker was `(13073.4, 9e-41, 0)`.
+
+**`D3DResource_Register` adds the base to the Data word; the backend was storing it.** A resource built
+inside a loaded file carries the *offset* of its data from the file's start in its Data word, and
+registering it against the file's address in memory turns that into a pointer - that is what the original
+does (`0x001693a0`: `Data += base`, then masked to 28 bits for anything but a push buffer). The action
+engine only ever registers headers it has just zeroed, so for it "store" and "add" are the same operation,
+and the shared backend had done the former for as long as it had one engine. EAGL registers every static
+vertex buffer in a level pack this way (`VertexBufferConstructor`, `0x000f0ee0`, is one of three callers),
+so all of them read from byte zero of the pack, and the level was that header drawn a few thousand times
+through the right object matrices. One line; the car, the seabed and the cliffs appeared.
+
+Two smaller things fell out of the same investigation:
+
+- **`XGSetVertexBufferHeader` is implemented** (it was the one dropped draw a frame). Its one caller,
+  `FUN_000f6d50`, passes its pointer *minus* `0x80000000` - which on the console strips the uncached alias
+  to reach the physical address, and on a Win32 pointer sets bit 31 instead. So the claim above that EAGL
+  never touches bit 31 was one site short; the seam masks it off, which is right either way;
+- **EAGL's dynamic vertex buffer is three Xbox buffers behind one object**, rotated on each lock
+  (`FUN_000f6d00`), and its stream-binding routine copies each draw's CPU-side array into the current one
+  just before the draw (`FUN_000f6890`). A host copy refreshed once a frame therefore serves the first draw
+  of a frame and feeds later ones stale vertices. That was suspected of the spikes first and was not them,
+  but it is real, so the driving engine's draws now copy exactly the range they read through a dynamic
+  vertex ring at the draw - the same arrangement the index ring already used (`g_streamsVolatile`, set by
+  the seam; the action engine keeps its cached copies). It costs about a megabyte of memcpy a frame.
+
+**What is still wrong.** The materials: the world is fogged washes and the car's rear panel is a rainbow,
+which is the untranslated register combiners (the pixel shaders below) drawn through the fixed-function
+fallback. The pause menu, checked after the fix, draws its text over the live scene with no backdrop
+behind it, and nothing in the log names a texture it could not build - so that is a draw that is issued and
+comes out invisible, which points at blend or alpha state rather than at a missing image. The loading-screen
+images have not been looked at since.
 
 ### What is left
 
@@ -330,14 +375,12 @@ In the order the frame counter puts them:
    register combiner programs, and section 6.1 is right that they need a translator to ps_1.x/ps_2_0 or to
    fixed-function stage states. Until then the world draws dark and flat. The seam accepts and ignores them
    for now, so that everything behind them can run.
-2. **A vertex buffer that will not upload**, once a frame, and `XGSetVertexBufferHeader` (twice a run)
-   unimplemented beside it.
-3. **Fog, stencil, bump environment and fill mode**, all accepted and dropped by the seam.
-4. **Sound.** The seam is silent: it creates buffers, times them and reports them finished, but plays
+2. **Fog, stencil, bump environment and fill mode**, all accepted and dropped by the seam.
+3. **Sound.** The seam is silent: it creates buffers, times them and reports them finished, but plays
    nothing. The action engine's XAudio2 backend is written and the formats here are ones it handles - 48 kHz
    mono, PCM or Xbox ADPCM - so this is wiring rather than invention. The timing model matters more than it
    looks: the movie above is paced by it.
-5. **The clock runs fast** (section 2.1): the game's own log timestamps advance about six times real time,
+4. **The clock runs fast** (section 2.1): the game's own log timestamps advance about six times real time,
    which is the 733 MHz constant baked into `timestamp()` and the `QueryPerformance*` pair. The action
    engine's fix transposes. Note this is a different clock from `KeTickCount` above - the game has both, and
    only the second one paced the movie.

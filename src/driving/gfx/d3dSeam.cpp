@@ -729,6 +729,24 @@ static void *__stdcall Seam_D3DVertexBuffer_Lock2(SeamVertexBuffer *buffer, uint
     return (buffer != NULL) ? (void *)(uintptr_t)buffer->Data : NULL;
 }
 
+// A vertex buffer header the game wraps around memory it already has, which the original writes as three
+// words: Common = 1 (a vertex buffer, one reference), Data, Lock = 0. The one caller (FUN_000f6d50) passes
+// its pointer minus 0x80000000 - on the console that turns the uncached alias of a block into the physical
+// address the GPU wants, and on a Win32 pointer, which has no bit 31 to take away, it *sets* the bit instead.
+// So the plan's "EAGL never touches bit 31" was one site short. The bit is masked off here, which is right
+// either way: a real alias loses it and a plain pointer gets it back. Note that the buffer this makes is
+// three words long - there is no word 5 for the backend to read a size from, and it does not need one, since
+// every draw here knows its own extent.
+static void __stdcall Seam_XGSetVertexBufferHeader(uint32_t length, uint32_t usage, uint32_t fvf, uint32_t pool,
+                                                   uint32_t *buffer, uint32_t data) {
+    (void)length; (void)usage; (void)fvf; (void)pool;
+    if (buffer == NULL)
+        return;
+    buffer[0] = XBOX_VERTEXBUFFER_COMMON;
+    buffer[1] = data & 0x7FFFFFFFu;
+    buffer[2] = 0;
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // Geometry submission and the rest of the state the renderer sets per draw.
 // ---------------------------------------------------------------------------------------------------------------
@@ -890,6 +908,7 @@ static const struct { const char *name; void *replacement; unsigned stackBytes; 
     { "D3DDevice_SetVertexShaderConstantNotInline", (void *)Seam_D3DDevice_SetVertexShaderConstantNotInline, 4 },
     { "D3DDevice_CreateVertexBuffer2",        (void *)Seam_D3DDevice_CreateVertexBuffer2, 4 },
     { "D3DVertexBuffer_Lock2",                (void *)Seam_D3DVertexBuffer_Lock2, 8 },
+    { "XGSetVertexBufferHeader",              (void *)Seam_XGSetVertexBufferHeader, 24 },
     { "D3DDevice_SetStreamSource",            (void *)Seam_D3DDevice_SetStreamSource, 12 },
     { "D3DDevice_DrawVertices",               (void *)Seam_D3DDevice_DrawVertices, 12 },
     { "D3DDevice_DrawIndexedVertices",        (void *)Seam_D3DDevice_DrawIndexedVertices, 12 },
@@ -950,6 +969,10 @@ void Inject_D3dSeam(void) {
     // (0x00167e40), which are the functions that write them.
     g_xboxTextureStateTable = 0x00175428u;
     g_xboxRenderStateTable = 0x00175628u;
+
+    // EAGL rewrites its vertex buffers between draws - its dynamic buffer is three Xbox buffers behind one
+    // object, refilled per draw - and nothing here is told. Every draw copies what it reads, at the draw.
+    g_streamsVolatile = true;
 
     // Every D3D8 entry point is ours now, so the backend is the only implementation there is.
     g_gfxBackend = GFX_BACKEND_D3D9;

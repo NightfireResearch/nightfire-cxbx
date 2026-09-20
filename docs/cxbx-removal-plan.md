@@ -436,6 +436,11 @@ standalone, and reuse the D3D9 and audio backends as libraries.
   name and the address that called it and then exits; a fault prints the faulting address, the address it
   touched, that page's state, and a call stack walked from the frame pointers - usually enough to name the
   cause in Ghidra without attaching a debugger.
+- **Looking at a frame without a capture tool**: set `DumpEvery=250` in `settings.ini`. Every 250th frame is
+  written as `d3d9_dump_frame.bmp` beside the executable (`tools/bmp2png.py` converts it), any render target
+  it sampled goes alongside, and the frame's draws are traced to `d3d9_trace_<frame>.log` with each draw's
+  shader, streams, vertex range, position extents and transform constants. Every translated vertex shader is
+  written to `d3d9_shaders.log` regardless.
 - **Working out why the frame rate is what it is**: set `PerfLog=on` in `settings.ini`. Every few seconds it
   prints the frame rate with the time split into working and waiting, the cost per draw call, the per-frame
   draw/upload/allocation counts, and how the streaming reads completed. The split is the useful part: if the

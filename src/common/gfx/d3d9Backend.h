@@ -33,6 +33,10 @@ extern uint32_t g_xboxRenderStateTable;
 // empty by an engine that has no such table.
 extern uint32_t g_overlayTableBase;
 extern uint32_t g_overlayTableEnd;
+// True when the game rewrites its vertex buffers between draws with no signal to the backend (EAGL does: its
+// dynamic vertex buffer is triple-buffered and refilled per draw), in which case every draw streams the
+// range it reads through a ring buffer instead of using a cached host copy. See PrepareShaderDraw.
+extern bool g_streamsVolatile;
 
 void D3D9_BackendMissing(const char *entryPoint);
 
