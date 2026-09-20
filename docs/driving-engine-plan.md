@@ -360,27 +360,62 @@ Two smaller things fell out of the same investigation:
   vertex ring at the draw - the same arrangement the index ring already used (`g_streamsVolatile`, set by
   the seam; the action engine keeps its cached copies). It costs about a megabyte of memcpy a frame.
 
-**What is still wrong.** The materials: the world is fogged washes and the car's rear panel is a rainbow,
-which is the untranslated register combiners (the pixel shaders below) drawn through the fixed-function
-fallback. The pause menu, checked after the fix, draws its text over the live scene with no backdrop
-behind it, and nothing in the log names a texture it could not build - so that is a draw that is issued and
-comes out invisible, which points at blend or alpha state rather than at a missing image. The loading-screen
-images have not been looked at since.
+### The register combiners
+
+With the geometry right, the materials were the fixed-function fallback: the world in fogged washes, the
+car's rear panel a rainbow. The game's materials are NV2A pixel shaders - register combiner programs, 197 of
+them created in a run - and the seam had been accepting and ignoring them. They are translated now
+(`src/common/gfx/nv2aPixelShader.cpp`), and the level looks like the game.
+
+What one of these is, for the next reader: not a program but 240 bytes of register values, the XDK's
+`D3DPIXELSHADERDEF`, which the console's D3D8 copies straight into the push buffer when the shader is set
+(`D3DDevice_SetPixelShader`, `0x0016af60`, is a word-for-word copy). Up to eight combiner stages, each
+computing `A*B` and `C*D` and their sum or a mux on the RGB and alpha halves of a few registers (`r0`, `r1`,
+the four texture results, the two vertex colours, two constants and fog), with a mapping on every input and
+a scale on every output; then a final combiner doing `A*B + (1-A)*C + D`. The translator writes the same
+arithmetic as ps_2_0 HLSL (ps_2_b when a long program needs the room), reads all of a stage's inputs before
+writing any of its outputs because the halves run in parallel, and clamps where the hardware clamps.
+
+Three decisions worth knowing about:
+
+- **Fog is the host's.** The NV2A applies fog only where the final combiner does, and ps_2_0 cannot read
+  the fog factor. 36 of the 61 custom final combiners here are the standard `fog.a * r0 + (1 - fog.a) *
+  fog.rgb`, and the other 136 shaders leave the final combiner at its default, which the runtime fills in
+  with the same blend. In both cases the program leaves fog out and D3D9's post-shader fog, driven by the
+  vertex shader's `oFog`, does that exact blend; for any other final combiner the host's fog is turned off,
+  as the hardware would have it. A program that reads the fog register anywhere else sees its colour with a
+  factor of one.
+- **Constants come from two places.** A stage's constant is the literal in the definition unless its
+  mapping nibble names one of the sixteen `SetPixelShaderConstant` registers, which the original checks per
+  stage as it writes (`0x0016b160`); the backend builds the block the same way at each draw. Nearly every
+  mapping here is "none"; the car's paint is one that is not.
+- **The stages are the program's.** A translated shader binds Xbox stage *n* to sampler *n* and reads
+  coordinate set *n*, with none of the packing the fixed-function fallback does, and the bump-environment
+  matrices (`SetTextureState_BumpEnv`, which the seam used to drop) are read out of the deferred texture
+  state table where the original puts them. `X_D3DTSS_COLORSIGN` expands the channels the game declared
+  signed, which is how the bump maps arrive.
+
+What the game uses, from a dump of all 197 (`tools/nv2a_psh_dump.py --summary` on
+`d3d9_pixel_shaders.log`, which the backend writes with the HLSL each became): texture modes PROJECT2D,
+PASSTHRU, BUMPENVMAP (nine) and one dependent-AR read; dot products in 35 stages, output scaling in 67,
+combiner writes to the texture registers in 37, a single mux. All translated. The modes the game does not
+use - the cube and 3D projections, the DOT_* reflection family, clip planes - sample as 2D and say so in
+the log, so a shader that turns up later in another level names itself rather than drawing black.
+
+The pause menu's missing backdrop went with it: the panel is drawn through a combiner, and had been coming
+out invisible through the fallback. The loading-screen images have not been looked at yet.
 
 ### What is left
 
 In the order the frame counter puts them:
 
-1. **Pixel shaders** - 196 created, and `SetPixelShader` called about fifty times a frame. These are NV2A
-   register combiner programs, and section 6.1 is right that they need a translator to ps_1.x/ps_2_0 or to
-   fixed-function stage states. Until then the world draws dark and flat. The seam accepts and ignores them
-   for now, so that everything behind them can run.
-2. **Fog, stencil, bump environment and fill mode**, all accepted and dropped by the seam.
-3. **Sound.** The seam is silent: it creates buffers, times them and reports them finished, but plays
+1. **Stencil and fill mode**, accepted and dropped by the seam, and the visibility tests behind the lens
+   flares (section 3).
+2. **Sound.** The seam is silent: it creates buffers, times them and reports them finished, but plays
    nothing. The action engine's XAudio2 backend is written and the formats here are ones it handles - 48 kHz
    mono, PCM or Xbox ADPCM - so this is wiring rather than invention. The timing model matters more than it
    looks: the movie above is paced by it.
-4. **The clock runs fast** (section 2.1): the game's own log timestamps advance about six times real time,
+3. **The clock runs fast** (section 2.1): the game's own log timestamps advance about six times real time,
    which is the 733 MHz constant baked into `timestamp()` and the `QueryPerformance*` pair. The action
    engine's fix transposes. Note this is a different clock from `KeTickCount` above - the game has both, and
    only the second one paced the movie.

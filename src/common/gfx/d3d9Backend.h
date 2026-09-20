@@ -63,6 +63,13 @@ void D3D9_SetYuvEnable(uint32_t enable);
 void D3D9_SetDepthClipPlanes(uint32_t param1, uint32_t param2, uint32_t param3);
 void D3D9_SetTextureBorderColor(uint32_t stage, uint32_t colour);
 
+// Pixel shaders: NV2A register combiner definitions, translated (see nv2aPixelShader.h). Handles are tagged
+// indices, not pointers; the game never looks inside one.
+uint32_t D3D9_CreatePixelShader(const void *definition, uint32_t *handleOut);
+void D3D9_SetPixelShader(uint32_t handle);
+void D3D9_SetPixelShaderConstant(uint32_t reg, const float *values, uint32_t count);
+void D3D9_DeletePixelShader(uint32_t handle);
+
 // Shaders and constants
 uint32_t D3D9_CreateVertexShader(const void *pDeclaration, const void *pFunction, void **pHandle, uint32_t usage);
 void D3D9_SetVertexShader(void *handle);

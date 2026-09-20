@@ -480,38 +480,29 @@ static void __stdcall Seam_D3DDevice_SetPalette(uint32_t stage, void *palette) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Pixel shaders, as far as accepting them goes.
+// Pixel shaders.
 //
-// These are NV2A register combiner programs, and translating them is section 6.1's remaining piece of work.
-// Until then the fixed-function stage state stands in for them (see the defaults above), and these two exist
-// so that the game gets a handle it can hold and set without the seam reporting it a thousand times a frame.
-// The definition is kept, unused, because the translator will want it.
+// NV2A register combiner definitions, which the backend translates (common/gfx/nv2aPixelShader.h). The
+// handle the game gets back is the backend's tag; the original's is a pointer to a copy of the definition,
+// and the only reader of that pointer is SetPixelShader, which is replaced too. The constants arrive as
+// float4s, which the original packs to bytes and writes into the stages whose mapping nibble names them -
+// the backend does the same at draw time.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define PIXEL_SHADER_HANDLE_TAG 0x50530000u   // 'PS'
-
-static const void *g_pixelShaderDefinitions[256];
-static uint32_t g_pixelShaderCount = 0;
-
 static uint32_t __stdcall Seam_D3DDevice_CreatePixelShader(const void *definition, uint32_t *handleOut) {
-    if (handleOut == NULL)
-        return 0x8876086Cu;   // D3DERR_INVALIDCALL
-    if (g_pixelShaderCount < sizeof(g_pixelShaderDefinitions) / sizeof(g_pixelShaderDefinitions[0]))
-        g_pixelShaderDefinitions[g_pixelShaderCount] = definition;
-    *handleOut = PIXEL_SHADER_HANDLE_TAG | g_pixelShaderCount++;
-    return 0;
+    return D3D9_CreatePixelShader(definition, handleOut);
 }
 
 static void __stdcall Seam_D3DDevice_SetPixelShader(uint32_t handle) {
-    (void)handle;   // nothing to select until the combiners are translated
+    D3D9_SetPixelShader(handle);
 }
 
 static void __stdcall Seam_D3DDevice_SetPixelShaderConstant(uint32_t reg, const void *values, uint32_t count) {
-    (void)reg; (void)values; (void)count;
+    D3D9_SetPixelShaderConstant(reg, (const float *)values, count);
 }
 
 static void __stdcall Seam_D3DDevice_DeletePixelShader(uint32_t handle) {
-    (void)handle;
+    D3D9_DeletePixelShader(handle);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -817,10 +808,13 @@ static void __stdcall Seam_D3DDevice_SetRenderState_FillMode(uint32_t fillMode) 
     (void)fillMode;
 }
 
-// Bump-environment matrices for embossed bump mapping. The backend has no bump path yet, so this is dropped
-// rather than reported on every material that sets one.
+// Bump-environment matrices and luminance, for the BUMPENVMAP texture modes. The original (0x00167d50)
+// writes the value into the deferred texture state table at the type's index and pushes it; the backend
+// reads the table when it binds a translated pixel shader, so writing it is the whole job here.
 static void __stdcall Seam_D3DDevice_SetTextureState_BumpEnv(uint32_t stage, uint32_t type, uint32_t value) {
-    (void)stage; (void)type; (void)value;
+    if (g_xboxTextureStateTable == 0 || stage >= 4 || type >= TEXTURE_STAGE_WORDS)
+        return;
+    *(uint32_t *)(g_xboxTextureStateTable + stage * TEXTURE_STAGE_WORDS * 4 + type * 4) = value;
 }
 
 // The vertex shader constant family, all register-argument functions like SetRenderState_Simple: ECX is the

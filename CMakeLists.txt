@@ -92,6 +92,7 @@ add_library(actioninject SHARED
   src/action/engine/Direct3D/d3dSeam.cpp
   src/action/engine/Direct3D/backendHost.cpp
   src/common/gfx/d3d9Backend.cpp
+  src/common/gfx/nv2aPixelShader.cpp
   src/action/game/Autoaim.cpp
   src/action/game/weapon_stats.cpp
   src/action/math/math.cpp
@@ -239,6 +240,7 @@ add_library(drivinginject SHARED
   src/common/xbeEntrySeam.cpp
   src/common/xbeProfiler.cpp
   src/common/gfx/d3d9Backend.cpp
+  src/common/gfx/nv2aPixelShader.cpp
 )
 
 

@@ -25,6 +25,7 @@
 // Still missing: render targets (shadow blur, aux pass), the backbuffer readback in psiBlurScreen.
 
 #include "backendHost.h"   // the engine this is compiled into provides these three; see the header
+#include "nv2aPixelShader.h"
 
 int g_gfxBackend = GFX_BACKEND_CXBX;
 
@@ -236,6 +237,7 @@ enum { XTSS_TEXCOORDINDEX = 28, XTSS_ADDRESSU = 0, XTSS_ADDRESSV = 1, XTSS_MAGFI
        XTSS_COLOROP = 12, XTSS_COLORARG0 = 13, XTSS_COLORARG1 = 14, XTSS_COLORARG2 = 15,
        XTSS_ALPHAOP = 16, XTSS_ALPHAARG0 = 17, XTSS_ALPHAARG1 = 18, XTSS_ALPHAARG2 = 19, XTSS_BORDERCOLOR = 29 };
 enum { XRS_FOGENABLE = 92, XRS_FOGTABLEMODE = 93, XRS_FOGSTART = 94, XRS_FOGEND = 95, XRS_FOGDENSITY = 96 };
+enum { XTSS_COLORSIGN = 10, XTSS_BUMPENVMAT00 = 22 };   // BUMPENVMAT00..11, BUMPENVLSCALE, BUMPENVLOFFSET are 22..27
 
 // Xbox pixel container header (the first 20 bytes of Gfx's 36-byte texture slots and of surface objects).
 struct XboxPixelContainer { uint32_t Common, Data, Lock, Format, Size; };
@@ -1003,7 +1005,9 @@ void D3D9_SetCullMode(int xboxCullMode) {
     DWORD mode = (xboxCullMode == 0x901) ? D3DCULL_CCW : (xboxCullMode == 0x900) ? D3DCULL_CW : D3DCULL_NONE;
     g_device->SetRenderState(D3DRS_CULLMODE, mode);
 }
+static uint32_t g_fogColour = 0;   // the pixel shader translation reads the fog register as this colour
 void D3D9_SetFogColor(uint32_t colour) {
+    g_fogColour = colour;
     if (g_device != NULL) g_device->SetRenderState(D3DRS_FOGCOLOR, colour);
 }
 void D3D9_SetZBias(int zBias) {
@@ -1084,41 +1088,203 @@ static bool TextureHasNoColour(const void *header) {
     return xboxFormat == XFMT_A8 || xboxFormat == XFMT_LIN_A8;
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// Pixel shaders.
+//
+// An Xbox pixel shader is a 240-byte block of NV2A combiner register values (nv2aPixelShader.h). Each one the
+// game creates is kept here and translated to HLSL on its first draw; the draw then binds the program, the
+// textures it samples - to samplers numbered by Xbox stage, with no packing, since the program addresses
+// them itself - and the constant block built from the definition and the current state. A shader that
+// cannot be translated falls back to the fixed-function stage state, which is what every draw used before
+// there was a translator, and the log says which one.
+//
+// Nothing here is shared with the vertex-shader side except the habit: the definitions are dumped to
+// d3d9_pixel_shaders.log with the HLSL each became, and tools/nv2a_psh_dump.py reads the raw words back into
+// the XDK's notation.
+// ---------------------------------------------------------------------------------------------------------------
+#define PS_HANDLE_TAG 0x50530000u   // 'PS'
+
+struct TranslatedPixelShader {
+    uint32_t def[60];
+    Nv2aPixelShaderInfo info;
+    IDirect3DPixelShader9 *shader;
+    bool attempted, failed;
+};
+static TranslatedPixelShader g_pixelShaders[512];
+static int g_pixelShaderCount = 0;
+static int g_currentPixelShader = -1;
+static float g_pixelShaderConstants[16][4];
+
+static void DumpPixelShader(int index, const TranslatedPixelShader *ps, const char *hlsl) {
+    static FILE *f = NULL;
+    static bool opened = false;
+    if (!opened) { opened = true; f = fopen("d3d9_pixel_shaders.log", "w"); }
+    if (f == NULL)
+        return;
+    fprintf(f, "==== pixel shader %d at %p\n", index, (const void*)ps->def);
+    for (int i = 0; i < 60; i++) fprintf(f, "%s%08x", (i % 8) ? " " : "\n  ", ps->def[i]);
+    fprintf(f, "\nhlsl:\n%s\n", hlsl);
+    fflush(f);
+}
+
+static void BuildPixelShader(TranslatedPixelShader *ps, int index) {
+    ps->attempted = true;
+    ps->failed = true;
+    if (g_device == NULL)
+        return;
+    static char hlsl[32768];
+    if (!Nv2aPixelShader_Translate(ps->def, hlsl, sizeof(hlsl), &ps->info)) {
+        D3D9Log("[d3d9] pixel shader %d: translation failed\n", index);
+        DumpPixelShader(index, ps, "(translation failed)");
+        return;
+    }
+    DumpPixelShader(index, ps, hlsl);
+    if (ps->info.unsupportedMode != 0)
+        D3D9Log("[d3d9] pixel shader %d: texture mode %u is not translated; sampling it as 2D\n", index, ps->info.unsupportedMode);
+    static const char *profiles[3] = { "ps_2_0", "ps_2_b", "ps_2_a" };
+    ID3DBlob *code = NULL, *errors = NULL;
+    HRESULT hr = E_FAIL;
+    for (int p = 0; p < 3 && FAILED(hr); p++) {
+        if (errors != NULL) { errors->Release(); errors = NULL; }
+        hr = D3DCompile(hlsl, strlen(hlsl), NULL, NULL, NULL, "main", profiles[p], D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &code, &errors);
+    }
+    if (FAILED(hr)) {
+        D3D9Log("[d3d9] pixel shader %d: HLSL compile failed (0x%08lx):\n%s\n", index, hr, errors ? (const char*)errors->GetBufferPointer() : "(no message)");
+        if (errors) errors->Release();
+        return;
+    }
+    if (errors) errors->Release();
+    hr = g_device->CreatePixelShader((const DWORD*)code->GetBufferPointer(), &ps->shader);
+    code->Release();
+    if (FAILED(hr)) { D3D9Log("[d3d9] pixel shader %d: CreatePixelShader failed 0x%08lx\n", index, hr); return; }
+    D3D9Log("[d3d9] pixel shader %d translated: %u stages, texture modes %u/%u/%u/%u%s\n", index, ps->info.stageCount,
+            ps->info.textureMode[0], ps->info.textureMode[1], ps->info.textureMode[2], ps->info.textureMode[3],
+            ps->info.fogByHost ? ", fog by the host" : "");
+    ps->failed = false;
+}
+
+uint32_t D3D9_CreatePixelShader(const void *definition, uint32_t *handleOut) {
+    if (handleOut == NULL || definition == NULL)
+        return 0x8876086Cu;   // D3DERR_INVALIDCALL
+    if (g_pixelShaderCount >= (int)(sizeof(g_pixelShaders) / sizeof(g_pixelShaders[0]))) {
+        static bool said = false;
+        if (!said) { said = true; D3D9Log("[d3d9] out of pixel shader slots after %d\n", g_pixelShaderCount); }
+        return 0x8876086Cu;
+    }
+    TranslatedPixelShader *ps = &g_pixelShaders[g_pixelShaderCount];
+    memset(ps, 0, sizeof(*ps));
+    memcpy(ps->def, definition, sizeof(ps->def));
+    *handleOut = PS_HANDLE_TAG | (uint32_t)g_pixelShaderCount;
+    g_pixelShaderCount++;
+    return 0;
+}
+
+void D3D9_SetPixelShader(uint32_t handle) {
+    g_currentPixelShader = ((handle & 0xFFFF0000u) == PS_HANDLE_TAG && (int)(handle & 0xFFFF) < g_pixelShaderCount)
+                           ? (int)(handle & 0xFFFF) : -1;
+    if (handle != 0 && g_currentPixelShader < 0) {
+        static bool said = false;
+        if (!said) { said = true; D3D9Log("[d3d9] pixel shader handle 0x%08x is not one of ours\n", handle); }
+    }
+}
+
+void D3D9_SetPixelShaderConstant(uint32_t reg, const float *values, uint32_t count) {
+    for (uint32_t i = 0; i < count && reg + i < 16; i++)
+        memcpy(g_pixelShaderConstants[reg + i], values + i * 4, 16);
+}
+
+void D3D9_DeletePixelShader(uint32_t handle) {
+    (void)handle;   // slots are never reused; the game creates its shaders once
+}
+
+// The translated program to draw with, or NULL for the fixed-function stage state.
+static TranslatedPixelShader *CurrentPixelShaderForDraw(void) {
+    if (g_currentPixelShader < 0 || g_currentPixelShader >= g_pixelShaderCount)
+        return NULL;
+    TranslatedPixelShader *ps = &g_pixelShaders[g_currentPixelShader];
+    if (!ps->attempted)
+        BuildPixelShader(ps, g_currentPixelShader);
+    return ps->failed ? NULL : ps;
+}
+
+static void BindPixelShaderConstants(const TranslatedPixelShader *ps) {
+    uint32_t bumpEnv[4][6], colourSign[4];
+    for (int s = 0; s < 4; s++) {
+        for (int m = 0; m < 6; m++) bumpEnv[s][m] = XBOX_TEXTURE_STATE(s, XTSS_BUMPENVMAT00 + m);
+        colourSign[s] = XBOX_TEXTURE_STATE(s, XTSS_COLORSIGN);
+    }
+    float k[NV2A_PS_K_COUNT][4];
+    Nv2aPixelShader_BuildConstants(ps->def, g_pixelShaderConstants, g_fogColour, bumpEnv, colourSign, k);
+    g_device->SetPixelShaderConstantF(0, &k[0][0], NV2A_PS_K_COUNT);
+}
+
+// The sampler state of one Xbox stage, applied to one host sampler.
+static void ApplySamplerState(uint32_t h, uint32_t s) {
+    g_device->SetSamplerState(h, D3DSAMP_ADDRESSU, XboxAddressToD3D(XBOX_TEXTURE_STATE(s, XTSS_ADDRESSU)));
+    g_device->SetSamplerState(h, D3DSAMP_ADDRESSV, XboxAddressToD3D(XBOX_TEXTURE_STATE(s, XTSS_ADDRESSV)));
+    g_device->SetSamplerState(h, D3DSAMP_MAGFILTER, XboxFilterToD3D(XBOX_TEXTURE_STATE(s, XTSS_MAGFILTER)));
+    g_device->SetSamplerState(h, D3DSAMP_MINFILTER, XboxFilterToD3D(XBOX_TEXTURE_STATE(s, XTSS_MINFILTER)));
+    g_device->SetSamplerState(h, D3DSAMP_MIPFILTER, XboxFilterToD3D(XBOX_TEXTURE_STATE(s, XTSS_MIPFILTER)));
+    g_device->SetSamplerState(h, D3DSAMP_MIPMAPLODBIAS, XBOX_TEXTURE_STATE(s, XTSS_MIPMAPLODBIAS));
+    g_device->SetSamplerState(h, D3DSAMP_BORDERCOLOR, g_borderColour[s]);
+}
+
+// Binds an Xbox stage's texture to a host sampler, uploading it if the CPU wrote to it, and works out the
+// coordinate scale a linear texture needs on the coordinate set it is read through.
+static void BindStageTexture(uint32_t h, uint32_t s, uint32_t coordSet) {
+    g_uploadPalette = (s < 4) ? g_palette[s] : NULL;   // for a paletted texture; see D3D9_SetPalette
+    g_device->SetTexture(h, g_boundTexture[s] != NULL ? GetHostTexture(g_boundTexture[s]) : NULL);
+    if (g_dumpFrame != 0 && g_boundTexture[s] != NULL && g_dumpRtCount < 8) {
+        HostTexture *t = FindHostTexture(g_boundTexture[s]);
+        if (t != NULL && t->renderTarget && t->rtSurface != NULL) {
+            char name[64];
+            snprintf(name, sizeof(name), "d3d9_dump_rt_sampled_%d", g_dumpRtCount++);
+            DumpSurface(t->rtSurface, name);
+        }
+    }
+    if (g_boundTexture[s] != NULL) {
+        const XboxPixelContainer *header = (const XboxPixelContainer*)g_boundTexture[s];
+        if (header->Size != 0 && coordSet < 4) { // linear: texel coordinates on the NV2A
+            g_texCoordScale[coordSet][0] = 1.0f / (float)((header->Size & 0xFFF) + 1);
+            g_texCoordScale[coordSet][1] = 1.0f / (float)(((header->Size >> 12) & 0xFFF) + 1);
+        }
+    }
+}
+
 static void ApplyTextureStageState(bool shaderDraw) {
+    for (int t = 0; t < 4; t++) g_texCoordScale[t][0] = g_texCoordScale[t][1] = 1.0f;
+
+    // A translated pixel shader addresses the stages itself: sampler s is Xbox stage s, coordinate set s.
+    TranslatedPixelShader *ps = CurrentPixelShaderForDraw();
+    if (ps != NULL) {
+        for (uint32_t s = 0; s < 4; s++) {
+            if (ps->info.samplesStage[s] && g_boundTexture[s] != NULL) {
+                BindStageTexture(s, s, s);
+                ApplySamplerState(s, s);
+            } else {
+                g_device->SetTexture(s, NULL);
+            }
+        }
+        BindPixelShaderConstants(ps);
+        g_device->SetPixelShader(ps->shader);
+        // The NV2A applies fog only where the final combiner does; the host applies it where the program
+        // left it out because the host would (nv2aPixelShader.h).
+        g_device->SetRenderState(D3DRS_FOGENABLE, ps->info.fogByHost && XBOX_RENDER_STATE(XRS_FOGENABLE) != 0);
+        return;
+    }
+    g_device->SetPixelShader(NULL);
+
     static const uint32_t xboxStages[3] = { 0, 1, 3 };
     uint32_t host = 0;
-    for (int t = 0; t < 4; t++) g_texCoordScale[t][0] = g_texCoordScale[t][1] = 1.0f;
     for (int i = 0; i < 3; i++) {
         uint32_t s = xboxStages[i];
         if (s != 0 && g_boundTexture[s] == NULL)
             continue;
         uint32_t h = host++;
-        g_uploadPalette = (s < 4) ? g_palette[s] : NULL;   // for a paletted texture; see D3D9_SetPalette
-        g_device->SetTexture(h, g_boundTexture[s] != NULL ? GetHostTexture(g_boundTexture[s]) : NULL);
-        if (g_dumpFrame != 0 && g_boundTexture[s] != NULL && g_dumpRtCount < 8) {
-            HostTexture *t = FindHostTexture(g_boundTexture[s]);
-            if (t != NULL && t->renderTarget && t->rtSurface != NULL) {
-                char name[64];
-                snprintf(name, sizeof(name), "d3d9_dump_rt_sampled_%d", g_dumpRtCount++);
-                DumpSurface(t->rtSurface, name);
-            }
-        }
-        if (g_boundTexture[s] != NULL) {
-            const XboxPixelContainer *header = (const XboxPixelContainer*)g_boundTexture[s];
-            if (header->Size != 0) { // linear: texel coordinates on the NV2A
-                uint32_t tci = XBOX_TEXTURE_STATE(s, XTSS_TEXCOORDINDEX) & 0xFFFF;
-                if (tci >= 4) tci = s;
-                g_texCoordScale[tci][0] = 1.0f / (float)((header->Size & 0xFFF) + 1);
-                g_texCoordScale[tci][1] = 1.0f / (float)(((header->Size >> 12) & 0xFFF) + 1);
-            }
-        }
-        g_device->SetSamplerState(h, D3DSAMP_ADDRESSU, XboxAddressToD3D(XBOX_TEXTURE_STATE(s, XTSS_ADDRESSU)));
-        g_device->SetSamplerState(h, D3DSAMP_ADDRESSV, XboxAddressToD3D(XBOX_TEXTURE_STATE(s, XTSS_ADDRESSV)));
-        g_device->SetSamplerState(h, D3DSAMP_MAGFILTER, XboxFilterToD3D(XBOX_TEXTURE_STATE(s, XTSS_MAGFILTER)));
-        g_device->SetSamplerState(h, D3DSAMP_MINFILTER, XboxFilterToD3D(XBOX_TEXTURE_STATE(s, XTSS_MINFILTER)));
-        g_device->SetSamplerState(h, D3DSAMP_MIPFILTER, XboxFilterToD3D(XBOX_TEXTURE_STATE(s, XTSS_MIPFILTER)));
-        g_device->SetSamplerState(h, D3DSAMP_MIPMAPLODBIAS, XBOX_TEXTURE_STATE(s, XTSS_MIPMAPLODBIAS));
-        g_device->SetSamplerState(h, D3DSAMP_BORDERCOLOR, g_borderColour[s]);
+        uint32_t tci = XBOX_TEXTURE_STATE(s, XTSS_TEXCOORDINDEX) & 0xFFFF;
+        if (tci >= 4) tci = s;
+        BindStageTexture(h, s, tci);
+        ApplySamplerState(h, s);
         uint32_t colorOp = XBOX_TEXTURE_STATE(s, XTSS_COLOROP), alphaOp = XBOX_TEXTURE_STATE(s, XTSS_ALPHAOP);
         bool noColour = TextureHasNoColour(g_boundTexture[s]);
         g_device->SetTextureStageState(h, D3DTSS_COLOROP, colorOp == 0 ? D3DTOP_DISABLE : colorOp);
@@ -1135,8 +1301,7 @@ static void ApplyTextureStageState(bool shaderDraw) {
         g_device->SetTextureStageState(h, D3DTSS_ALPHAARG0, XBOX_TEXTURE_STATE(s, XTSS_ALPHAARG0));
         g_device->SetTextureStageState(h, D3DTSS_ALPHAARG1, XBOX_TEXTURE_STATE(s, XTSS_ALPHAARG1));
         g_device->SetTextureStageState(h, D3DTSS_ALPHAARG2, XBOX_TEXTURE_STATE(s, XTSS_ALPHAARG2));
-        uint32_t texCoordIndex = XBOX_TEXTURE_STATE(s, XTSS_TEXCOORDINDEX) & 0xFFFF;
-        g_device->SetTextureStageState(h, D3DTSS_TEXCOORDINDEX, texCoordIndex < 4 ? texCoordIndex : s);
+        g_device->SetTextureStageState(h, D3DTSS_TEXCOORDINDEX, tci);
         // Every NV2A 2D texture stage divides by q; the shaders leave q = 1 unless projecting (the character
         // shadow). Pre-transformed quads carry 2D coordinates with no q.
         g_device->SetTextureStageState(h, D3DTSS_TEXTURETRANSFORMFLAGS, shaderDraw ? (D3DTTFF_COUNT4 | D3DTTFF_PROJECTED) : D3DTTFF_DISABLE);
@@ -2258,7 +2423,6 @@ static void DrawImmediateQuads(uint32_t vertexCount, const uint8_t *data, uint32
         d->v = src[4] * g_texCoordScale[0][1];
     }
     g_device->SetVertexShader(NULL);
-    g_device->SetPixelShader(NULL);
     g_device->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
     g_device->DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, vertexCount, (vertexCount / 4) * 2, g_quadIndices, D3DFMT_INDEX16, g_rhwVertices, sizeof(RhwVertex));
 }
@@ -2346,7 +2510,6 @@ void D3D9_ImmediateEnd(void) {
     }
 
     g_device->SetVertexShader(NULL);
-    g_device->SetPixelShader(NULL);
     g_device->SetFVF(IMMEDIATE_FVF);
 
     g_statDraws++;
