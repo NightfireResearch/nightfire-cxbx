@@ -48522,7 +48522,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000e3a20(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined d3dComputeSwizzleMasks(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -48676,7 +48676,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e3fe0(int param_1)",
+        "prototype_string": "void __cdecl d3dDisableLight(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -48699,7 +48699,7 @@
             "float",
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_000e4040(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, float param_5, float param_6, float param_7, float param_8)",
+        "prototype_string": "void __cdecl d3dSetLight(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, float param_5, float param_6, float param_7, float param_8)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -48930,6 +48930,42 @@
         "namespace": "Global"
     },
     {
+        "name": "d3dsetVertexShaderConstant",
+        "address": "0x000e4a50",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined d3dsetVertexShaderConstant()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "d3dsetVertexShader",
+        "address": "0x000e4b30",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined d3dsetVertexShader()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "d3dDrawIndexedVertices",
+        "address": "0x000e4b80",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined d3dDrawIndexedVertices()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
         "name": "drawShard",
         "address": "0x000e4be0",
         "calling_convention": "__cdecl",
@@ -48976,6 +49012,18 @@
         "parameters": [
             "[undefined4 * param_1@Stack[0x4]:4]"
         ],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "d3dSetSkinMatrix",
+        "address": "0x000e4e40",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined d3dSetSkinMatrix()",
+        "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
@@ -49252,7 +49300,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000e56f0(int param_1)",
+        "prototype_string": "undefined4 __cdecl d3dGetIndexBufferData(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -49526,7 +49574,7 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e62d0(void)",
+        "prototype_string": "void __stdcall d3dInitFallbackOverlayTexture(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -57628,7 +57676,7 @@
         "param_types": [
             "undefined4 *"
         ],
-        "prototype_string": "void __stdcall FUN_00103ca0(undefined4 * param_1)",
+        "prototype_string": "void __stdcall D3DDevice_GetRasterStatus(undefined4 * param_1)",
         "parameters": [
             "[undefined4 * param_1@Stack[0x4]:4]"
         ],
@@ -57862,6 +57910,18 @@
             "[uint param_2@Stack[0x8]:4]",
             "[uint param_3@Stack[0xc]:4]"
         ],
+        "is_thunk": false,
+        "namespace": "D3D8"
+    },
+    {
+        "name": "D3D8::D3DDevice_DrawIndexedVertices",
+        "address": "0x00104a60",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined D3DDevice_DrawIndexedVertices()",
+        "parameters": [],
         "is_thunk": false,
         "namespace": "D3D8"
     },
@@ -66795,7 +66855,7 @@
             "undefined4",
             "undefined4 *"
         ],
-        "prototype_string": "undefined4 __stdcall FUN_001300b8(undefined4 param_1, undefined4 * param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 * param_6)",
+        "prototype_string": "undefined4 __stdcall maybeXmvDecoderCreate(undefined4 param_1, undefined4 * param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 * param_6)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 * param_2@Stack[0x8]:4]",
@@ -66917,7 +66977,7 @@
             "int *",
             "uint *"
         ],
-        "prototype_string": "int * __stdcall FUN_00130624(maybeVideoDecoder * param_1, uint * param_2, int * param_3, uint * param_4)",
+        "prototype_string": "int * __stdcall maybeXmvDecoderUpdate(maybeVideoDecoder * param_1, uint * param_2, int * param_3, uint * param_4)",
         "parameters": [
             "[maybeVideoDecoder * param_1@Stack[0x4]:4]",
             "[uint * param_2@Stack[0x8]:4]",
@@ -67025,7 +67085,7 @@
             "int",
             "uint *"
         ],
-        "prototype_string": "void __stdcall FUN_00130eaf(int param_1, uint * param_2)",
+        "prototype_string": "void __stdcall maybeXmvDecoderWriteFrame(int param_1, uint * param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[uint * param_2@Stack[0x8]:4]"
