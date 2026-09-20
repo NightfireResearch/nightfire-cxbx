@@ -1006,11 +1006,19 @@ void D3D9_SetYuvEnable(uint32_t enable) { (void)enable; }      // movie frames a
 // The game runs with W-buffering (SetRenderState_ZEnable(2)) and scales its projection so that clip w is the
 // 24-bit depth value; SetDepthClipPlanes then gives the near/far clip in those units (float bit patterns).
 // The translated shaders write depth from w accordingly - see the translation notes.
+//
+// Only the action engine does that. The driving engine's D3D8 does not even export SetDepthClipPlanes, and
+// EAGL projects the ordinary way - so there is no W range to map, and the formula above with the defaults
+// gives every vertex the same depth: the whole scene lands on one plane and draws in submission order, which
+// looks like solid shapes cutting through each other. When the planes are never set, the shader's own z is
+// used instead - its projection matrix has already computed the right thing.
 static float g_depthClipNear = 0.0f, g_depthClipFar = 16777215.0f;
+static bool g_depthClipPlanesSet = false;
 void D3D9_SetDepthClipPlanes(uint32_t p1, uint32_t p2, uint32_t p3) {
     (void)p3;
     memcpy(&g_depthClipNear, &p1, 4);
     memcpy(&g_depthClipFar, &p2, 4);
+    g_depthClipPlanesSet = true;
 }
 // Texture stages. The game only ever binds Xbox stages 0, 1 and 3, and the NV2A's register combiners didn't
 // care about gaps; D3D9's fixed-function pixel pipeline stops at the first disabled stage. So at draw time the
@@ -1040,6 +1048,27 @@ static float g_texCoordScale[4][2] = { { 1, 1 }, { 1, 1 }, { 1, 1 }, { 1, 1 } };
 
 // Binds textures (re-uploading any the CPU wrote to since - movie frames, the intro effect - the seam only
 // calls SetTexture when the bound slot changes) and applies the stage state for the current draw.
+// An alpha-only texture (A8) has no colour in it: sampling one gives RGB zero, on the NV2A as on D3D9. A
+// stage that names the texture as a colour argument therefore paints black - which is what the HUD font did,
+// because the game draws its text with a register combiner that takes the colour from somewhere else and only
+// the coverage from the texture, and the combiners are not translated yet. Until they are, the fixed-function
+// fallback has to make the same choice the combiner would: colour from what came before, coverage from the
+// texture's alpha. This substitutes only the colour arguments, only for a texture that has no colour, and
+// leaves the alpha arguments alone - so the glyph shape still comes from the font.
+static uint32_t ColourArgWithoutTexture(uint32_t arg, uint32_t stage) {
+    enum { TA_DIFFUSE = 0, TA_CURRENT = 1, TA_TEXTURE = 2, TA_ALPHAREPLICATE = 0x20 };
+    if ((arg & 0x7u) != TA_TEXTURE || (arg & TA_ALPHAREPLICATE) != 0)
+        return arg;   // not the texture, or it is the texture's alpha, which an A8 does have
+    return (arg & ~0x7u) | (stage == 0 ? TA_DIFFUSE : TA_CURRENT);
+}
+
+static bool TextureHasNoColour(const void *header) {
+    if (header == NULL)
+        return false;
+    uint32_t xboxFormat = (((const XboxPixelContainer *)header)->Format >> 8) & 0xFF;
+    return xboxFormat == XFMT_A8 || xboxFormat == XFMT_LIN_A8;
+}
+
 static void ApplyTextureStageState(bool shaderDraw) {
     static const uint32_t xboxStages[3] = { 0, 1, 3 };
     uint32_t host = 0;
@@ -1076,10 +1105,17 @@ static void ApplyTextureStageState(bool shaderDraw) {
         g_device->SetSamplerState(h, D3DSAMP_MIPMAPLODBIAS, XBOX_TEXTURE_STATE(s, XTSS_MIPMAPLODBIAS));
         g_device->SetSamplerState(h, D3DSAMP_BORDERCOLOR, g_borderColour[s]);
         uint32_t colorOp = XBOX_TEXTURE_STATE(s, XTSS_COLOROP), alphaOp = XBOX_TEXTURE_STATE(s, XTSS_ALPHAOP);
+        bool noColour = TextureHasNoColour(g_boundTexture[s]);
         g_device->SetTextureStageState(h, D3DTSS_COLOROP, colorOp == 0 ? D3DTOP_DISABLE : colorOp);
-        g_device->SetTextureStageState(h, D3DTSS_COLORARG0, XBOX_TEXTURE_STATE(s, XTSS_COLORARG0));
-        g_device->SetTextureStageState(h, D3DTSS_COLORARG1, XBOX_TEXTURE_STATE(s, XTSS_COLORARG1));
-        g_device->SetTextureStageState(h, D3DTSS_COLORARG2, XBOX_TEXTURE_STATE(s, XTSS_COLORARG2));
+        g_device->SetTextureStageState(h, D3DTSS_COLORARG0,
+                                       noColour ? ColourArgWithoutTexture(XBOX_TEXTURE_STATE(s, XTSS_COLORARG0), s)
+                                                : XBOX_TEXTURE_STATE(s, XTSS_COLORARG0));
+        g_device->SetTextureStageState(h, D3DTSS_COLORARG1,
+                                       noColour ? ColourArgWithoutTexture(XBOX_TEXTURE_STATE(s, XTSS_COLORARG1), s)
+                                                : XBOX_TEXTURE_STATE(s, XTSS_COLORARG1));
+        g_device->SetTextureStageState(h, D3DTSS_COLORARG2,
+                                       noColour ? ColourArgWithoutTexture(XBOX_TEXTURE_STATE(s, XTSS_COLORARG2), s)
+                                                : XBOX_TEXTURE_STATE(s, XTSS_COLORARG2));
         g_device->SetTextureStageState(h, D3DTSS_ALPHAOP, alphaOp == 0 ? D3DTOP_DISABLE : alphaOp);
         g_device->SetTextureStageState(h, D3DTSS_ALPHAARG0, XBOX_TEXTURE_STATE(s, XTSS_ALPHAARG0));
         g_device->SetTextureStageState(h, D3DTSS_ALPHAARG1, XBOX_TEXTURE_STATE(s, XTSS_ALPHAARG1));
@@ -1207,7 +1243,8 @@ static void VshMaskString(int vshMask, char out[5]) { // NV2A mask bits: 8 = x, 
 
 // Translates one XDK vertex shader function blob to HLSL. Returns false if something isn't handled.
 // inputsUsed/outputsWritten come back as register bitmasks (v0..v15 / the oX output addresses).
-static bool TranslateVshToHlsl(const uint8_t *function, const uint32_t *normPackedInputs, char *out, size_t outSize,
+static bool TranslateVshToHlsl(const uint8_t *function, const uint32_t *normPackedInputs,
+                               const uint8_t *inputComponents, char *out, size_t outSize,
                                uint32_t *inputsUsed, uint32_t *outputsWritten, int *instructionCountOut) {
     if (function[0] != 0x78 || function[1] != 0x20)
         return false;
@@ -1295,7 +1332,7 @@ static bool TranslateVshToHlsl(const uint8_t *function, const uint32_t *normPack
     HlslWriter h = { out, outSize / 2, 0, false };
     h.printf("float4 c[192] : register(c0);\n");
     h.printf("float4 hostAdjust : register(c200); // .xy = D3D9's half-pixel offset in NDC\n");
-    h.printf("float4 depthClip : register(c201);  // z_clip = .x * (w - .y): the W-buffer depth in screen-affine form, see PrepareShaderDraw\n");
+    h.printf("float4 depthClip : register(c201);  // .xy: the W-buffer depth mapping; .z: use the shader's own z instead; .w: reverse it\n");
     h.printf("float4 fogParams : register(c202);  // .x = start, .y = end, .z = density, .w = table mode (0 none, 1 exp, 2 exp2, 3 linear)\n");
     h.printf("float4 texScale01 : register(c203); // 1/size for linear textures on coordinate sets 0 (.xy) and 1 (.zw), else 1\n");
     h.printf("float4 texScale23 : register(c204); // same for sets 2 and 3\n");
@@ -1315,6 +1352,13 @@ static bool TranslateVshToHlsl(const uint8_t *function, const uint32_t *normPack
             h.printf("        float x = fmod(lo, 2048.0);\n        float y = floor(lo / 2048.0) + 32.0 * fmod(b.z, 64.0);\n        float z = floor(b.z / 64.0) + 4.0 * b.w;\n");
             h.printf("        x = (x >= 1024.0) ? x - 2048.0 : x;\n        y = (y >= 1024.0) ? y - 2048.0 : y;\n        z = (z >= 512.0) ? z - 1024.0 : z;\n");
             h.printf("        v%d = float4(x / 1023.0, y / 1023.0, z / 511.0, 1.0);\n    }\n", r);
+        } else if (inputComponents[r] < 4) {
+            // The declaration gave fewer components than the host type reads: put the NV2A's
+            // defaults back, so a neighbouring vertex's bytes cannot arrive as this one's .y.
+            static const char *shapes[3] = { "vin.v%d.x, 0, 0, 1", "vin.v%d.xy, 0, 1", "vin.v%d.xyz, 1" };
+            char shape[48];
+            snprintf(shape, sizeof(shape), shapes[inputComponents[r] - 1], r);
+            h.printf("    float4 v%d = float4(%s);\n", r, shape);
         } else {
             h.printf("    float4 v%d = vin.v%d;\n", r, r);
         }
@@ -1331,7 +1375,9 @@ static bool TranslateVshToHlsl(const uint8_t *function, const uint32_t *normPack
     // Position: xy back to clip space; z from w (the W-buffer depth) in the a + b/w form the rasteriser
     // interpolates exactly, mapped so the depth-clip planes land on D3D9's 0..1 z range (reversed when the
     // float depth buffer is in use) - which both clips where the NV2A clipped and keeps the depth ordering.
-    h.printf("    o.oPos = float4((oPos.xy + hostAdjust.xy) * oPos.w, depthClip.x * (oPos.w - depthClip.y), oPos.w);\n");
+    h.printf("    float zFromW = depthClip.x * (oPos.w - depthClip.y);\n");
+    h.printf("    float zFromShader = lerp(oPos.z, 1.0 - oPos.z, depthClip.w) * oPos.w;\n");
+    h.printf("    o.oPos = float4((oPos.xy + hostAdjust.xy) * oPos.w, lerp(zFromW, zFromShader, depthClip.z), oPos.w);\n");
     h.printf("    o.oD0 = oD0;\n    o.oD1 = oD1;\n");
     // Fog: on the Xbox the shader's oFog is the fog coordinate (the game emits its normalised near..far
     // distance) and the fog table mode turns it into the factor; D3D9 takes the factor straight from the
@@ -1352,16 +1398,23 @@ static bool TranslateVshToHlsl(const uint8_t *function, const uint32_t *normPack
 
 // Xbox D3DVSD declaration tokens: 0x2000000s selects stream s, 0x40tt00rr declares register rr of type tt at the
 // running offset, 0xffffffff ends. Type codes are the Xbox D3DVSDT_* values.
-static bool XboxVertexTypeInfo(uint32_t type, uint32_t *bytes, D3DDECLTYPE *hostType, bool *normPacked) {
+// The Xbox type byte is (component count << 4) | kind. D3D9's smallest vertex element is four bytes, so a
+// one- or three-component short arrives in a host type that reads further than the Xbox one did, and for a
+// stream whose stride is exactly the Xbox element's width those extra components are the next vertex's data.
+// The NV2A fills what the declaration does not give with (0,0,0,1), so the component count is carried through
+// to the translator, which writes those defaults back in.
+static bool XboxVertexTypeInfo(uint32_t type, uint32_t *bytes, D3DDECLTYPE *hostType, bool *normPacked,
+                               uint32_t *components) {
     *normPacked = false;
+    *components = (type >> 4) & 0xF;
     switch (type) {
         case 0x12: *bytes = 4;  *hostType = D3DDECLTYPE_FLOAT1; return true;
         case 0x22: *bytes = 8;  *hostType = D3DDECLTYPE_FLOAT2; return true;
         case 0x32: *bytes = 12; *hostType = D3DDECLTYPE_FLOAT3; return true;
         case 0x42: *bytes = 16; *hostType = D3DDECLTYPE_FLOAT4; return true;
-        case 0x40: *bytes = 4;  *hostType = D3DDECLTYPE_D3DCOLOR; return true;
-        case 0x16: *bytes = 4;  *hostType = D3DDECLTYPE_UBYTE4; *normPacked = true; return true; // NORMPACKED3
-        case 0x15: *bytes = 4;  *hostType = D3DDECLTYPE_SHORT2; return true; // SHORT1, padded to a dword
+        case 0x40: *bytes = 4;  *hostType = D3DDECLTYPE_D3DCOLOR; *components = 4; return true;
+        case 0x16: *bytes = 4;  *hostType = D3DDECLTYPE_UBYTE4; *normPacked = true; *components = 3; return true; // NORMPACKED3
+        case 0x15: *bytes = 2;  *hostType = D3DDECLTYPE_SHORT2; return true; // SHORT1, read as a host SHORT2
         case 0x25: *bytes = 4;  *hostType = D3DDECLTYPE_SHORT2; return true;
         case 0x35: *bytes = 6;  *hostType = D3DDECLTYPE_SHORT4; return true; // SHORT3: read as SHORT4, .w unused (see the +8 buffer slack)
         case 0x45: *bytes = 8;  *hostType = D3DDECLTYPE_SHORT4; return true;
@@ -1378,6 +1431,7 @@ struct TranslatedVertexShader {
     IDirect3DVertexShader9 *shader;
     IDirect3DVertexDeclaration9 *decl;
     uint32_t streamsUsed;   // bit s = declaration reads stream s
+    uint16_t declaredStride[16];  // bytes the declaration reads from each stream, for the stride check
     uint32_t inputsUsed, outputsWritten;
     bool attempted, failed;
 };
@@ -1433,14 +1487,16 @@ static bool BuildVertexShader(TranslatedVertexShader *vs, int index) {
     D3DVERTEXELEMENT9 elements[24];
     int elementCount = 0;
     uint32_t normPacked = 0;
+    uint8_t inputComponents[16];
+    memset(inputComponents, 4, sizeof(inputComponents));
     uint32_t stream = 0, offset = 0;
     vs->streamsUsed = 0;
     for (const uint32_t *tok = (const uint32_t*)vs->declaration; *tok != 0xFFFFFFFFu; tok++) {
         if ((*tok & 0xF0000000u) == 0x20000000u) { stream = *tok & 0xF; offset = 0; continue; }
         if ((*tok & 0xF0000000u) != 0x40000000u) continue;
         uint32_t type = (*tok >> 16) & 0xFF, reg = *tok & 0xF;
-        uint32_t bytes; D3DDECLTYPE hostType; bool np;
-        if (!XboxVertexTypeInfo(type, &bytes, &hostType, &np) || elementCount >= 23) {
+        uint32_t bytes; D3DDECLTYPE hostType; bool np; uint32_t components;
+        if (!XboxVertexTypeInfo(type, &bytes, &hostType, &np, &components) || elementCount >= 23) {
             D3D9Log("[d3d9] shader %d: vertex type 0x%02x not handled\n", index, type);
             return false;
         }
@@ -1448,15 +1504,18 @@ static bool BuildVertexShader(TranslatedVertexShader *vs, int index) {
                                 (BYTE)(reg == 0 ? D3DDECLUSAGE_POSITION : D3DDECLUSAGE_TEXCOORD), (BYTE)(reg == 0 ? 0 : reg) };
         elements[elementCount++] = e;
         if (np) normPacked |= 1u << reg;
+        if (reg < 16) inputComponents[reg] = (uint8_t)(components == 0 || components > 4 ? 4 : components);
         vs->streamsUsed |= 1u << stream;
         offset += bytes;
+        if (stream < 16) vs->declaredStride[stream] = (uint16_t)offset;
     }
     D3DVERTEXELEMENT9 end = D3DDECL_END();
     elements[elementCount++] = end;
 
     static char hlsl[65536];
     int instructionCount = 0;
-    if (!TranslateVshToHlsl((const uint8_t*)vs->function, &normPacked, hlsl, sizeof(hlsl), &vs->inputsUsed, &vs->outputsWritten, &instructionCount)) {
+    if (!TranslateVshToHlsl((const uint8_t*)vs->function, &normPacked, inputComponents, hlsl, sizeof(hlsl),
+                            &vs->inputsUsed, &vs->outputsWritten, &instructionCount)) {
         D3D9Log("[d3d9] shader %d: translation failed\n", index);
         return false;
     }
@@ -1550,7 +1609,7 @@ static void InitPinnedConstants(void) {
 uint32_t g_overlayTableBase = 0;   // the action engine's overlay quad table; empty means "no such table"
 uint32_t g_overlayTableEnd = 0;
 
-struct HostVertexBuffer { const void *obj; const void *data; uint32_t size; IDirect3DVertexBuffer9 *vb; };
+struct HostVertexBuffer { const void *obj; const void *data; uint32_t size; uint32_t uploadedFrame; IDirect3DVertexBuffer9 *vb; };
 struct HostIndexBuffer  { const void *obj; const void *data; uint32_t size; IDirect3DIndexBuffer9 *ib; };
 static HostVertexBuffer g_vertexBuffers[2300];
 static int g_vertexBufferCount = 0;
@@ -1598,8 +1657,30 @@ static IDirect3DVertexBuffer9 *GetHostVertexBuffer(const void *obj, uint32_t nee
     for (int i = 0; i < g_vertexBufferCount; i++) {
         HostVertexBuffer *h = &g_vertexBuffers[i];
         if (h->obj == obj) {
-            // A cached buffer that is long enough still serves: only a shorter one has to be made again.
-            if (h->data == data && h->size >= size) { *sizeOut = h->size; return h->vb; }
+            // A cached buffer that is long enough still serves; only a shorter one has to be made again.
+            //
+            // Its *contents* are another matter. On the console the hardware reads the game's own memory, so
+            // a buffer the game rewrites is simply rewritten - there is no upload, and therefore no moment at
+            // which the game has to say it changed. EAGL rewrites plenty of them, and a host copy taken once
+            // and kept was drawing last time's vertices for the rest of the level: stretched shapes with the
+            // wrong colours, which is what the driving engine's geometry looked like. So the copy is refreshed
+            // on the buffer's first use in each frame, which is as often as the game can meaningfully have
+            // changed it between draws of the same object. (Textures have a real signal for this -
+            // D3D9_NotifyTextureModified - because the action engine's D3D8 calls one. Nothing calls anything
+            // here.)
+            if (h->data == data && h->size >= size) {
+                if (h->uploadedFrame != g_frameCount && h->vb != NULL) {
+                    void *dst = NULL;
+                    if (SUCCEEDED(h->vb->Lock(0, 0, &dst, 0))) {
+                        memcpy(dst, data, h->size);
+                        memset((uint8_t*)dst + h->size, 0, 8);
+                        h->vb->Unlock();
+                    }
+                    h->uploadedFrame = g_frameCount;
+                }
+                *sizeOut = h->size;
+                return h->vb;
+            }
             if (h->vb) h->vb->Release();
             g_vertexBuffers[i] = g_vertexBuffers[--g_vertexBufferCount];
             break;
@@ -1619,7 +1700,7 @@ static IDirect3DVertexBuffer9 *GetHostVertexBuffer(const void *obj, uint32_t nee
         vb->Unlock();
     }
     HostVertexBuffer *h = &g_vertexBuffers[g_vertexBufferCount++];
-    h->obj = obj; h->data = data; h->size = size; h->vb = vb;
+    h->obj = obj; h->data = data; h->size = size; h->uploadedFrame = g_frameCount; h->vb = vb;
     *sizeOut = size;
     return vb;
 }
@@ -1811,6 +1892,9 @@ static bool PrepareShaderDraw(bool bindStreams, uint32_t vertexLimit) {
         float range = (g_depthClipFar - g_depthClipNear) != 0.0f ? (g_depthClipFar - g_depthClipNear) : 1.0f;
         if (g_reversedDepth) { hostConstants[1][0] = -g_depthClipNear / range; hostConstants[1][1] = g_depthClipFar; }
         else                 { hostConstants[1][0] = g_depthClipFar / range;   hostConstants[1][1] = g_depthClipNear; }
+        // .z chooses the shader's own z over the W mapping; .w reverses it for the float depth buffer.
+        hostConstants[1][2] = g_depthClipPlanesSet ? 0.0f : 1.0f;
+        hostConstants[1][3] = g_reversedDepth ? 1.0f : 0.0f;
     }
     memcpy(&hostConstants[2][0], &XBOX_RENDER_STATE(XRS_FOGSTART), 4);   // the deferred fog states hold raw floats
     memcpy(&hostConstants[2][1], &XBOX_RENDER_STATE(XRS_FOGEND), 4);
@@ -1823,6 +1907,19 @@ static bool PrepareShaderDraw(bool bindStreams, uint32_t vertexLimit) {
                 continue;
             uint32_t size;
             uint32_t stride = g_streamStrides[s] > 0 ? g_streamStrides[s] : 6;
+            // A declaration that reads more bytes than the stream's stride is reading into the next
+            // vertex - a vertex type sized wrongly in XboxVertexTypeInfo, which is worth saying out loud.
+            if (vs->declaredStride[s] > stride) {
+                static uint32_t said[64]; static int saidCount = 0;
+                uint32_t key = (uint32_t)g_currentVertexShader * 16 + s;
+                bool seen = false;
+                for (int i2 = 0; i2 < saidCount; i2++) if (said[i2] == key) seen = true;
+                if (!seen && saidCount < 64) {
+                    said[saidCount++] = key;
+                    D3D9Log("[d3d9] shader %d stream %d: the declaration reads %u bytes but the stride is %u\n",
+                            g_currentVertexShader, s, vs->declaredStride[s], stride);
+                }
+            }
             IDirect3DVertexBuffer9 *vb = (g_streams[s] != NULL)
                 ? GetHostVertexBuffer(g_streams[s], vertexLimit * stride, &size) : NULL;
             if (vb == NULL && s != 0) {

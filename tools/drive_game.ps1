@@ -27,6 +27,10 @@
 # object already exists and input mostly does not apply. "enter" skips the cutscene too (it is the A button);
 # "escape" would also skip it, but a second press pauses the game instead.
 #
+# THE DRIVING ENGINE maps the same keys differently (src/driving/platform/XboxInput.cpp): "enter" is START,
+# "space" is A, "escape" is BACK. Pass -Exe Release\driving.exe to drive it; "enter" is what skips its intro
+# movie and answers its "press START" prompts.
+#
 # KEY NAMES are the host keyboard's, and the game's mapping of them is in src/action/engine/psiInput.cpp
 # (BuildKeyboardPadState). The ones worth knowing: "enter" is A, "back" is B, "escape" is Start, and the
 # arrow keys are the right stick. Any single character - "c", "p", "1" - is sent as that key.
@@ -96,7 +100,13 @@ if ($hwnd -eq [IntPtr]::Zero) {
         Write-Output "!! could not bring the game to the foreground; its focus check will ignore the keys"
     }
 
-    foreach ($key in $Keys) {
+    # Called as "powershell -File drive_game.ps1 -Keys enter,enter" - which is how anything other than a
+    # PowerShell prompt has to call it - the whole list arrives as one string, because -File does not parse
+    # arguments the way the shell does. Splitting here makes both spellings work.
+    $keyList = @($Keys | ForEach-Object { $_ -split ',' } | Where-Object { $_ -ne '' })
+
+    foreach ($key in $keyList) {
+        $key = $key.Trim()
         if ($proc.HasExited) { Write-Output "!! exited before key '$key'"; break }
 
         $vk = switch ($key) {

@@ -290,6 +290,38 @@ above are kept only as a floor for draws that do not know their own extent.
 With that the level draws: the sunken tanker, the water surface, the wreckage. Dark and flat, because the
 materials are the register combiners that are still ahead.
 
+### What the world looked like after that, and what was wrong with it
+
+Geometry on screen is not the same as geometry right. Four more things, each found by looking rather than
+reasoning:
+
+- **The HUD text went black** when the texture stage defaults went in. The font is `X_D3DFMT_LIN_A8` -
+  alpha only - and an A8 texture has no colour in it: sampling one gives RGB zero, on the NV2A as on D3D9.
+  The game draws its text with a combiner that takes the colour from elsewhere and only the coverage from
+  the font, and the combiners are not translated, so the fixed-function fallback painted black. A colour
+  argument naming a texture that has no colour now falls back to the diffuse.
+- **Nothing was depth-sorted.** The translated shaders write depth from w, mapped through the near/far the
+  game gives `SetDepthClipPlanes` - which the driving engine's D3D8 does not even export. With the defaults
+  that mapping is a constant: every vertex in the level came out at the same depth and the scene drew in
+  submission order. When the planes are never set, the shader's own z is used instead.
+- **A one-component short read two bytes of the next vertex.** `X_D3DVSDT_SHORT1` is two bytes; the table
+  had it as four, and D3D9's smallest vertex element is four bytes anyway. The declaration is sized right
+  now, and the translator puts the NV2A's (0,0,0,1) defaults back for anything the declaration does not
+  give, so a neighbour's bytes cannot arrive as this vertex's .y. The backend says so when a declaration
+  reads past its stream's stride, which is how this was found.
+- **The vertex buffers went stale.** On the console the hardware reads the game's own memory, so a buffer
+  the game rewrites is simply rewritten - there is no upload and therefore no moment at which the game has
+  to announce a change. EAGL rewrites plenty of them, and the host copy was taken once and kept: the level
+  drew last time's vertices, in the wrong colours and stretched into the shapes that made it look spiky.
+  The copy is refreshed on each buffer's first use in a frame. Textures have a real signal for this
+  (`D3D9_NotifyTextureModified`, which the action engine's D3D8 calls); nothing calls anything here.
+
+**What is still wrong, and the thread to pull.** The world draws in flat washes of colour. It is not the
+fog and it is not the stage state: 115330 of 115330 world draws have `COLOROP = MODULATE` with
+`COLORARG1 = TEXTURE` and a texture bound at stage 0, which is exactly right. So the texture is being
+sampled at one point - the coordinates are the next thing to look at, and the candidate is the SHORT2
+(`0x25`) texture coordinate stream, whose scaling the combiner would have applied.
+
 ### What is left
 
 In the order the frame counter puts them:
