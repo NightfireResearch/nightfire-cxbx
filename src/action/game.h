@@ -145,7 +145,10 @@ typedef struct { /* PTP Data */
     };
     union {
         PTP_EA EACDataBuf;
-        char asBytes[1200];
+        // Named apart from the first union's asBytes. Both unions are anonymous, so their members are
+        // members of this struct, and MSVC tolerates the repeated name where every other compiler rejects
+        // it. Neither member is referenced anywhere - they record that each buffer is 1200 bytes.
+        char asBytesEAC[1200];
     };
     undefined4 Version;
     undefined4 SoundVol;

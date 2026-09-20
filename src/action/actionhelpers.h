@@ -128,7 +128,7 @@ typedef short MallocFlags;
 #include "game/obj/object.h" // for obj_tag needed by some autogen functions
 #include "game/obj/OneSided.h"
 #include "game/obj/PCQWorm.h"
-#include "game/obj/player.h" // for BLData
+#include "game/obj/Player.h" // for BLData
 #include "game/obj/RainBox.h"
 #include "game/obj/Rotor.h"
 #include "game/obj/ScriptPlayer.h"

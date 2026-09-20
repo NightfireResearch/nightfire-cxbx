@@ -1,1 +1,1 @@
-void main(int argc,char **argv);
+void Game_Main(int argc,char **argv);

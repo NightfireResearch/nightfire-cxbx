@@ -2,6 +2,16 @@ cmake_minimum_required(VERSION 3.5)
 
 project(nightfiRE LANGUAGES CXX)
 
+# tools/preprocess.py runs as a pre-build step. "python" is not a command on every host - macOS has only
+# "python3" - so ask CMake for an interpreter rather than assuming a name.
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+# Building for Windows from something that is not Windows. Everything guarded by this is a MinGW-ism that
+# exists only to reproduce what MSVC does by default; see docs/macos-build.md for why each one is needed.
+if(CMAKE_CROSSCOMPILING)
+  message(STATUS "Cross-compiling for Windows with ${CMAKE_CXX_COMPILER_ID} (${CMAKE_CXX_COMPILER_TARGET})")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -10,6 +20,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 set(CMAKE_IMPORT_LIBRARY_PREFIX "")
+
+# MinGW links its C++ and GCC support libraries dynamically by default, which would make every binary here
+# depend on libstdc++-6.dll and libgcc_s_*.dll sitting beside it. MSVC builds carry no such companions, and
+# a DLL that cannot find them fails to load with a bare "error 126", so link them in instead.
+if(MINGW)
+  # -pthread rather than naming the library: statically linked libstdc++ and libgcc both call into
+  # winpthreads, and the driver appends them after everything CMake writes, so a -lpthread placed among
+  # the target's own libraries would come too early to resolve either. -pthread lets the driver put it
+  # where it belongs.
+  add_link_options(-static-libgcc -static-libstdc++ -pthread)
+endif()
 
 # Statically link UCRT, improves ability to run on XP when compiled with v141_xp
 #set(CMAKE_CXX_FLAGS_RELEASE "/MT")
@@ -152,7 +173,18 @@ add_library(actioninject SHARED
 )
 
 # The seams' native backends (common/gfx/d3d9Backend.cpp, sound/xaudio2Backend.cpp)
-target_link_libraries(actioninject PRIVATE d3d9 d3dcompiler winmm xaudio2)
+#
+# xinput9_1_0 and user32 come from #pragma comment(lib) in the sources, which only MSVC's linker acts on -
+# GNU ld ignores it silently - so they are named here as well. That is a harmless duplicate under MSVC.
+# The XAudio2 import library is "xaudio2" in the Windows SDK; mingw-w64 ships per-version libraries and
+# has no such alias, so the 2.9 one (Windows 10's, which is what the backend targets) is named instead.
+if(MINGW)
+  set(XAUDIO2_LIB xaudio2_9)
+else()
+  set(XAUDIO2_LIB xaudio2)
+endif()
+target_link_libraries(actioninject PRIVATE
+  d3d9 d3dcompiler winmm ${XAUDIO2_LIB} xinput9_1_0 user32)
 
 # The standalone loader (stage B 4.2/4.3): maps the XBE itself and runs it in-process, with no emulator in
 # the process at all. This is "action.exe" - the canonical way to run the action engine - and the CXBX
@@ -182,11 +214,49 @@ add_executable(action
 # ("tried to access <heap address>, protection PAGE_READWRITE"). Marking the image as not DEP-aware turns
 # DEP off for the process, which is the console's own model; the loader's memory shims hand out executable
 # pages to match (src/loader/kernel.cpp).
-target_link_options(action PRIVATE
-  /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /NXCOMPAT:NO /INCREMENTAL:NO)
+#
+# A function because both loaders - this one and "driving" below - are linked exactly the same way.
+function(nightfire_loader_link target)
+  if(MSVC)
+    target_link_options(${target} PRIVATE
+      /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /NXCOMPAT:NO /INCREMENTAL:NO)
+  else()
+    # The same things GNU ld's way. --disable-reloc-section is /FIXED: with no relocation directory the
+    # image cannot be moved. There is no equivalent of /SAFESEH:NO and none is needed, because MinGW does
+    # not emit the table of safe handlers that option exists to switch off. /INCREMENTAL has no counterpart
+    # either.
+    target_link_options(${target} PRIVATE
+      -Wl,--image-base,0x10000 -Wl,--disable-dynamicbase -Wl,--disable-reloc-section
+      -Wl,--disable-nxcompat)
+  endif()
 
-# winmm for the millisecond clock behind KeTickCount (src/loader/kernel.cpp).
-target_link_libraries(action PRIVATE winmm)
+  # MinGW links its C runtime's startup objects ahead of the target's own, which would put mainCRTStartup
+  # inside the range the XBE is copied over - the loader would run, then return into memory it had already
+  # overwritten. -nostartfiles drops them from the front and they are named again below, after our objects,
+  # so that reserve.cpp's array really is the first thing in .text. tools/check_loader_image.py enforces the
+  # result, because nothing about this fails at build time.
+  if(MINGW)
+    target_link_options(${target} PRIVATE -nostartfiles)
+    # The compiler knows where its startup objects are; asking beats hardcoding a sysroot layout. It needs
+    # the same --sysroot the compile flags carry, or it answers with the bare filename it was given.
+    separate_arguments(nf_cxx_flags NATIVE_COMMAND "${CMAKE_CXX_FLAGS}")
+    foreach(crt crt2.o crtbegin.o crtend.o)
+      execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} --target=${CMAKE_CXX_COMPILER_TARGET} ${nf_cxx_flags}
+                -print-file-name=${crt}
+        OUTPUT_VARIABLE crt_path OUTPUT_STRIP_TRAILING_WHITESPACE)
+      if(NOT EXISTS "${crt_path}")
+        message(FATAL_ERROR "could not locate the MinGW startup object ${crt}: got '${crt_path}'")
+      endif()
+      target_link_libraries(${target} PRIVATE "${crt_path}")
+    endforeach()
+  endif()
+
+  # winmm for the millisecond clock behind KeTickCount (src/loader/kernel.cpp).
+  target_link_libraries(${target} PRIVATE winmm)
+endfunction()
+
+nightfire_loader_link(action)
 
 # Symbol maps for both binaries that appear in crash backtraces.
 #
@@ -194,8 +264,13 @@ target_link_libraries(action PRIVATE winmm)
 # exception cannot be dispatched at all - the host prints raw module offsets instead, as Wine did with
 # "actioninject (+0x16643)". Without a map that offset names nothing. The maps are written beside the
 # binaries, cost nothing at runtime and are not shipped in the executable, so there is no reason not to.
-target_link_options(action PRIVATE /MAP)
-target_link_options(actioninject PRIVATE /MAP)
+if(MSVC)
+  target_link_options(action PRIVATE /MAP)
+  target_link_options(actioninject PRIVATE /MAP)
+else()
+  target_link_options(action PRIVATE -Wl,-Map,action.map)
+  target_link_options(actioninject PRIVATE -Wl,-Map,actioninject.map)
+endif()
 
 # The same loader, pointed at Driving.xbe and drivinginject.dll - step 1 of docs/driving-engine-plan.md
 # section 7. Nothing in the loader was ever specific to the action engine: both XBEs have base 0x10000, the
@@ -213,9 +288,12 @@ add_executable(driving
   src/res/res.rc
 )
 target_compile_definitions(driving PRIVATE IS_DRIVING)
-target_link_libraries(driving PRIVATE winmm)
-target_link_options(driving PRIVATE
-  /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /NXCOMPAT:NO /INCREMENTAL:NO /MAP)
+nightfire_loader_link(driving)
+if(MSVC)
+  target_link_options(driving PRIVATE /MAP)
+else()
+  target_link_options(driving PRIVATE -Wl,-Map,driving.map)
+endif()
 
 add_library(drivinginject SHARED
   src/dllmain.cpp
@@ -249,7 +327,8 @@ add_library(drivinginject SHARED
 
 # winmm for the multimedia timer the game's tick now comes from (src/driving/platform/XboxTimer.cpp);
 # d3d9/d3dcompiler for the shared graphics backend the D3D8 seam dispatches to.
-target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm xinput9_1_0 xaudio2)
+# XAUDIO2_LIB is xaudio2 or xaudio2_9 - see actioninject above.
+target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm xinput9_1_0 ${XAUDIO2_LIB})
 
 target_compile_definitions(action_cxbx PRIVATE UNICODE _UNICODE IS_ACTION)
 target_compile_definitions(driving_cxbx PRIVATE UNICODE _UNICODE IS_DRIVING)
@@ -257,7 +336,16 @@ target_compile_definitions(actioninject PRIVATE UNICODE _UNICODE)
 target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)
 
 
-# Run preprocess.py before building actioninject and drivinginject
-add_custom_command(TARGET actioninject PRE_BUILD
-                   COMMAND python tools/preprocess.py
-                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+# Run preprocess.py before building actioninject and drivinginject. It writes the injection tables
+# (src/*/autogenerated_injections.inc) and the generated wrappers that autofunc.cpp and the UI handler
+# switch are built from, all of which are #included by sources in those two targets.
+#
+# This is a target rather than a PRE_BUILD command on purpose: PRE_BUILD is only honoured by the Visual
+# Studio generators, and everywhere else CMake quietly downgrades it to PRE_LINK - which runs after the
+# compilation that needed the generated files, so the build uses whatever the previous run left behind.
+add_custom_target(preprocess
+                  COMMAND ${Python3_EXECUTABLE} tools/preprocess.py
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                  COMMENT "Generating injection tables (tools/preprocess.py)")
+add_dependencies(actioninject preprocess)
+add_dependencies(drivinginject preprocess)

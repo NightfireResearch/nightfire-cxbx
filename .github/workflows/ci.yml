@@ -8,41 +8,57 @@ on:
   pull_request:
 
 jobs:
-  build:
+  # The native build, with MSVC. Pinned to the 2022 generator to match the runner image; the game is a
+  # 32-bit x86 binary and the loader has to share its address space, so Win32 is not a choice. Both of
+  # those live in CMakePresets.json now, so this runs the same two commands the README gives a person.
+  windows:
     runs-on: windows-2022
-
     steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Create Build Folder
-        run: |
-          cmake -E make_directory ${{ runner.workspace }}/build
-
-      # Pinned to the 2022 generator to match the runner image above. The game is a 32-bit x86 binary and the
-      # loader has to share its address space, so Win32 is not a choice.
-      - name: Configure CMake
-        shell: bash
-        working-directory: ${{ runner.workspace }}/build
-        run: |
-          cmake $GITHUB_WORKSPACE -G "Visual Studio 17 2022" -A Win32
+      - name: Configure
+        run: cmake --preset windows
 
       - name: Build
-        working-directory: ${{ runner.workspace }}/build
-        shell: bash
-        run: |
-          cmake --build . --config Release
+        run: cmake --build --preset windows
 
       # action.exe only works because it is the image at the XBE's base address - linked at 0x10000, large
-      # enough to span the XBE, with ASLR off. Those are link options, and losing one of them fails at
-      # runtime rather than at build time, so without this a broken loader would be published happily.
+      # enough to span the XBE, with ASLR off, and with its own code above the XBE's end. Those are link
+      # options, and losing one of them fails at runtime rather than at build time, so without this a broken
+      # loader would be published happily.
       - name: Check the loader was linked correctly
-        shell: pwsh
-        run: |
-          ./tools/check_loader_image.ps1 -Exe "${{ runner.workspace }}/build/Release/action.exe"
+        run: python tools/check_loader_image.py build/windows/Release/action.exe
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: nightfire-cxbx-Release
-          path: ${{ runner.workspace }}/build/Release
+          path: build/windows/Release
+
+  # The cross build: clang with the mingw-w64 sysroot, producing the same Windows binaries from macOS. It
+  # is here to keep that path working rather than to ship from - see docs/macos-build.md for what differs.
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the cross toolchain
+        run: brew install mingw-w64 ninja
+
+      - name: Configure
+        run: cmake --preset macos
+
+      - name: Build
+        run: cmake --build --preset macos
+
+      - name: Check the loader was linked correctly
+        run: python3 tools/check_loader_image.py build/macos/action.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nightfire-cxbx-macos-cross
+          path: |
+            build/macos/action.exe
+            build/macos/actioninject.dll
+            build/macos/drivinginject.dll
+            build/macos/action_cxbx.exe
+            build/macos/driving_cxbx.exe

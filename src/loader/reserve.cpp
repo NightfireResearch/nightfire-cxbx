@@ -21,10 +21,18 @@
 // wrong side. The cost is that the array is stored in the file, so the executable is as large as the array.
 // ---------------------------------------------------------------------------------------------------------------
 
+// MSVC places a variable in a named section with #pragma section plus __declspec(allocate); GCC and clang
+// spell the same thing as a section attribute. "used" is needed there because nothing in this translation
+// unit reads the array, and an unreferenced definition may otherwise be dropped.
+#ifdef _MSC_VER
 #pragma section(".text")
+#define XBE_RESERVATION __declspec(allocate(".text"))
+#else
+#define XBE_RESERVATION __attribute__((section(".text"), used))
+#endif
 
 // Nightfire's action XBE needs 0x2fb660; the driving one is smaller. Rounded up with headroom.
-__declspec(allocate(".text")) unsigned char XBE_ADDRESS_SPACE[0x340000];
+XBE_RESERVATION unsigned char XBE_ADDRESS_SPACE[0x340000];
 
 // Where the reservation actually landed, so the loader can check its assumptions instead of trusting them.
 extern "C" const unsigned char *Loader_ReservationStart(void) { return XBE_ADDRESS_SPACE; }
