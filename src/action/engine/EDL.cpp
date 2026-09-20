@@ -1,6 +1,8 @@
 #include "EDL.h"
 #include "Inflate.h"
 
+#include <cstddef> // NULL, which MSVC's headers supply transitively and others do not
+
 typedef enum {
     DIRECT_COPY = 0,
     HUFFMAN = 1,

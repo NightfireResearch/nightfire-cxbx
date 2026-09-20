@@ -51,7 +51,11 @@ struct Win32_XINPUT_VIBRATION {
 
 extern "C" __declspec(dllimport) unsigned long __stdcall XInputGetState(unsigned long dwUserIndex, Win32_XINPUT_STATE *pState);
 extern "C" __declspec(dllimport) unsigned long __stdcall XInputSetState(unsigned long dwUserIndex, Win32_XINPUT_VIBRATION *pVibration);
+// MSVC acts on this; other linkers get the library from the CMake target instead. Guarded because
+// clang emits the directive into .drectve regardless, and GNU ld then warns that it cannot read it.
+#ifdef _MSC_VER
 #pragma comment(lib, "xinput9_1_0.lib")
+#endif
 
 #define WIN32_ERROR_SUCCESS 0
 
@@ -104,7 +108,11 @@ extern "C" __declspec(dllimport) short __stdcall GetAsyncKeyState(int vKey);
 extern "C" __declspec(dllimport) void *__stdcall GetForegroundWindow(void);
 extern "C" __declspec(dllimport) void *__stdcall FindWindowA(const char *lpClassName, const char *lpWindowName);
 extern "C" __declspec(dllimport) void *__stdcall GetAncestor(void *hWnd, unsigned int gaFlags);
+// MSVC acts on this; other linkers get the library from the CMake target instead. Guarded because
+// clang emits the directive into .drectve regardless, and GNU ld then warns that it cannot read it.
+#ifdef _MSC_VER
 #pragma comment(lib, "user32.lib")
+#endif
 
 #define VK_BACKSPACE 0x08
 #define VK_RETURN_   0x0D

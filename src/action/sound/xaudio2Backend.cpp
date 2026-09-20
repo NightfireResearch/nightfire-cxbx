@@ -5,13 +5,38 @@
 #include <windows.h>
 #include <xaudio2.h>
 #include <xaudio2fx.h>
+// mingw-w64's x3daudio.h declares its functions without extern "C" (the Windows SDK's does not make that
+// mistake), so a C++ caller would ask the linker for mangled names the import library has never heard of.
+// Only that header needs the wrapper: the SDK's pulls in other headers, which must not be declared as C.
+#ifdef _MSC_VER
 #include <x3daudio.h>
+#else
+extern "C" {
+#include <x3daudio.h>
+}
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
+// MSVC acts on this; other linkers get the library from the CMake target instead. Guarded because
+// clang emits the directive into .drectve regardless, and GNU ld then warns that it cannot read it.
+#ifdef _MSC_VER
 #pragma comment(lib, "xaudio2.lib")
+#endif
+
+// The reverb APO needs XAudio2CreateReverb and the XAUDIO2FX_REVERB_* parameter structures. The Windows
+// SDK's xaudio2fx.h declares them; mingw-w64's is generated from a WIDL IDL that declares only
+// CreateAudioReverb and CreateAudioVolumeMeter, so none of them exist there. Those structures are a
+// published ABI and could be written out by hand, but a field in the wrong place would hand the APO
+// garbage rather than fail to build, so this build says plainly that it has no reverb instead. See
+// docs/macos-build.md.
+#ifdef _MSC_VER
+#define NF_HAVE_REVERB_APO 1
+#else
+#define NF_HAVE_REVERB_APO 0
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // Checkpoint 1: the 2D voice path. See xaudio2Backend.h for the scope, and docs/audio-inventory.md for the
@@ -472,6 +497,7 @@ static bool EnsureDevice(void) {
     g_listener.OrientTop.y = 1.0f;
 
     if (Settings_GetReverbEnabled()) {
+#if NF_HAVE_REVERB_APO
         IUnknown *reverbApo = NULL;
         hr = XAudio2CreateReverb(&reverbApo);
         if (SUCCEEDED(hr)) {
@@ -501,6 +527,10 @@ static bool EnsureDevice(void) {
         } else {
             XA2Log("[xa2] XAudio2CreateReverb failed: 0x%08lx - 3D voices will be dry\n", hr);
         }
+#else
+        XA2Log("[xa2] this build has no reverb: the SDK it was compiled against does not declare the\n"
+               "[xa2]   XAUDIO2FX reverb parameters - 3D voices will be dry\n");
+#endif
     } else {
         XA2Log("[xa2] reverb disabled by settings.ini\n");
     }

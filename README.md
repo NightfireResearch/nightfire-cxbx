@@ -100,17 +100,32 @@ All under `[Settings]` in `settings.ini`, read at startup:
 
 ## Building
 
-CMake, and a 32-bit MSVC toolchain. The game is a 32-bit x86 binary and the loader has to share its address
-space, so this cannot be built for x64.
+CMake and Python, plus a compiler. The game is a 32-bit x86 binary and the loader has to share its address
+space, so this cannot be built for x64 on any host.
+
+**On Windows**, with Visual Studio 2022:
 
 ```
-cmake -B . -G "Visual Studio 17 2022" -A Win32
-msbuild nightfiRE.sln /p:Configuration=Release /p:Platform=Win32
+cmake --preset windows
+cmake --build --preset windows
 ```
+
+**On macOS**, cross-compiling with clang and the mingw-w64 sysroot:
+
+```
+brew install mingw-w64 ninja
+cmake --preset macos
+cmake --build --preset macos
+```
+
+Both produce the same 32-bit Windows binaries, in `build/windows/Release/` and `build/macos/`
+respectively, and both are built by CI. The cross build is a build only - see
+`docs/macOS-D3D9-setup.md` for running the result on macOS, and `docs/macos-build.md` for the one
+functional difference (no XAudio2 reverb) and why clang rather than mingw's GCC.
 
 The targets are `action` and `actioninject`, `driving` and `drivinginject`, and the two `_cxbx` launchers. A
 DLL is compiled with the shared backends in it, so a change under `src/common/` wants both injects rebuilt.
-Everything lands in `Release/`. `tools/preprocess.py` runs as a pre-build step and needs a function name in
+`tools/preprocess.py` runs before the injected DLLs are compiled and needs a function name in
 `tools/functions_action.json` or `tools/functions_driving.json` for every `AUTOINJECT` tag, or an address via
 `FUNC_AT`.
 
@@ -132,7 +147,7 @@ Everything lands in `Release/`. `tools/preprocess.py` runs as a pre-build step a
 | `tools/gen_kernel_ordinals.py` | Regenerates the loader's kernel ordinal-to-name table from Cxbx-Reloaded's thunk table. |
 | `tools/dsp_image_dump.py` | Extracts and identifies the audio DSP program the action engine downloads. |
 | `tools/xadpcm_test.ps1` | Checks the Xbox ADPCM decoder offline. |
-| `tools/check_loader_image.ps1` | Verifies `action.exe` was linked at the XBE's base, big enough, with ASLR off. Run by CI, because losing any of those link options fails at runtime rather than at build time. |
+| `tools/check_loader_image.py` | Verifies a loader (`action.exe`, `driving.exe`) was linked at the XBE's base, big enough, with ASLR off, and with its own code above the XBE's end. Run by CI on every platform, because losing any of those link options fails at runtime rather than at build time. |
 | `tools/preprocess.py` | Generates the injection table from the source tags. |
 | `ghidra/NightfireSync.py` | Exports names and signatures from Ghidra into `tools/functions_*.json`, and every structure's layout into `tools/structs_*.json` (which the driving engine's overlay classes take their fields from). |
 
@@ -157,8 +172,9 @@ easily as C ones in the action engine - overloads, `__thiscall`, class layouts -
 `docs/audio-inventory.md`
 records what the action engine actually asks of DirectSound. `docs/macOS-D3D9-setup.md` is how to run this on
 Apple Silicon at full speed, which needs DXVK rather than Wine's own Direct3D - and which currently pins you
-to a Wine version that is no longer published. `CHEATSHEET.md` is the helper macros for reaching the game's
-memory from injected code.
+to a Wine version that is no longer published. `docs/macos-build.md` is the other half of working on a Mac:
+building the Windows binaries there. `CHEATSHEET.md` is the helper macros for reaching the game's memory from
+injected code.
 
 They are written to be read by whoever picks the work up, including agents, and they carry the reasoning and
 the dead ends rather than only the conclusions.

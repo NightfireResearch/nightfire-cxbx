@@ -1,0 +1,29 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "windows",
+      "displayName": "Windows - MSVC (Visual Studio 2022, Win32)",
+      "description": "The native build. 32-bit because the loader has to share the game's address space.",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "Win32",
+      "binaryDir": "${sourceDir}/build/windows",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+    {
+      "name": "macos",
+      "displayName": "macOS - clang with the mingw-w64 sysroot, cross-compiling to Windows",
+      "description": "Needs mingw-w64 and ninja. Works on Linux too. See docs/macos-build.md.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/macos",
+      "toolchainFile": "${sourceDir}/cmake/toolchain-macos-mingw.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
+      "condition": { "type": "notEquals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows", "configurePreset": "windows", "configuration": "Release" },
+    { "name": "macos", "configurePreset": "macos" }
+  ]
+}

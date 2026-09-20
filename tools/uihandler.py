@@ -152,5 +152,8 @@ bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int 
 """
 
     # Must be a CPP file because of the autogen/autoinject comments
-    with open("src/action/ui/ui.cpp", 'w') as file:
+    # newline pinned so this generated file is byte-identical whichever platform runs the build;
+    # in text mode Python would write CRLF on Windows and LF everywhere else, and ui.cpp is
+    # tracked, so the tree would come up dirty after every cross build.
+    with open("src/action/ui/ui.cpp", 'w', newline='\r\n') as file:
         file.write(output)

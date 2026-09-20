@@ -10,8 +10,12 @@ void* GetPTPData(void);
 // AUTOGEN
 void Graphics_Init_LowLevel(void);
 
-// AUTOINJECT
-void main(int argc, char **argv) {
+// The game's own main - not the entry point of any executable we build. It cannot keep that name in C++,
+// which requires main to return int: MSVC accepts "void main", clang rejects it outright. Because the name
+// no longer matches the Ghidra export, this is injected by address rather than through AUTOINJECT, which
+// would look "Game_Main" up in tools/functions_action.json and not find it.
+// FUNC_AT(000e8e90)
+void Game_Main(int argc, char **argv) {
 
     xboxInitInputDevices();
     xboxInitGraphics();
