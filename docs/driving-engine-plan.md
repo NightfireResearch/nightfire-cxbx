@@ -147,12 +147,69 @@ current workaround in `src/driving/Scheduler.cpp` can be deleted rather than rep
 If it does still need work, the fix below stands.
 
 Proposed fix: replace `Timer_Init`/`TIMER_ontick`/`RealClock_*` with our
-own implementation that derives `Clock` from `QueryPerformanceCounter` (ticks elapsed at 1000/freqHz ms,
+own implementation that derives `Clock` from the host's `QueryPerformanceCounter` (ticks elapsed at 1000/freqHz ms,
 sampled when `Scheduler::Run` is entered, or a `timeBeginPeriod(1)` thread if other timer tasks need
 callbacks), and restore the original `Scheduler::Run` semantics with the catch-up capped (for example run
 at most 4 ticks per loop and never drop time). Then pace the loop: either sleep to the next tick edge in
 `Scheduler::Run` when `dt == 0`, or rely on Present pacing once the D3D9 backend is in use. Keep the
-`timeScale` and cinematic-skipping paths intact.
+`timeScale` and cinematic-skipping paths intact. Note *the host's*: the XBE has a function of that name
+too, and it is the one at fault - see 2.1.
+
+### 2.1 The clock runs fast standalone, and it is not emulation's fault
+
+Found in September 2026 while chasing a glow that pulsed at the wrong speed in the action engine. It applies
+here unchanged, and it is the kind of thing that will be misattributed to the section above if you meet it
+cold.
+
+The console's CPU clock is baked into both binaries. Two places read the cycle counter and convert it using
+733.333 MHz, the Xbox's own speed:
+
+- `timestamp()` (action `0x000e8f20`) computes `rdtsc * 3 / 2200 * 0.001` to get milliseconds. 2200/3 is
+  733.333.
+- `XAPILIB::QueryPerformanceCounter` returns the raw counter, and the `QueryPerformanceFrequency` sitting
+  immediately after it returns the literal `0x2bb5c755` = 733,333,333.
+
+On hardware the pair is self-consistent. Executed on a host CPU, `rdtsc` returns the host's counter while
+the divisor still insists the machine is a 733 MHz Xbox, so every interval derived from it passes too fast
+by the ratio of the two clock speeds - measured at **6.41x** on a 4.7 GHz part, and a different number on
+every machine it runs on.
+
+CXBX never showed this, because it rewrites every `rdtsc` in the image and emulates it at the Xbox's rate
+(`Cxbx-Reloaded/src/core/kernel/support/PatchRdtsc.cpp`). The standalone loader executes the instruction
+natively. **This is a decoupling regression, not an emulation artefact, and it will appear in the driving
+engine the moment it stops going through CXBX** - as timing that runs fast, which is exactly what section 2
+above teaches you to blame on CXBX's timer jitter. Do not make that attribution by reflex.
+
+The driving binary carries the same code. Byte-identical searches of the two XBEs on disc:
+
+| | action `default.xbe` | `Driving.xbe` |
+|---|---|---|
+| `QueryPerformanceCounter` body | 1 | 1 |
+| `QueryPerformanceFrequency` body, with the 733,333,333 literal | 1 | 1 |
+| raw `0f 31` byte sequences | 5 | 13 |
+
+`XAPILIB::QueryPerformanceCounter` is at `0x0014bee0` in the driving symbols. The raw byte counts are an
+upper bound rather than a site count - some `0f 31` runs are data, which is why CXBX's patcher carries a
+false-positive filter - so expect fewer real sites than 13, but more than the action engine's three.
+
+**What was done in the action engine, to copy rather than rediscover.** `timestamp()` and the
+`QueryPerformance*` pair were replaced with injected versions built on the host's own
+`QueryPerformanceCounter`/`QueryPerformanceFrequency` (see `src/action/game.cpp`, which carries the full
+reasoning). Three things worth carrying over:
+
+- The counter pair is patched **by address** (`FUNC_AT`) rather than by name, because the names collide with
+  the Win32 functions being called inside them.
+- Replacing *both* halves is what matters. Consistency between them is the only property the callers depend
+  on - none assumes a particular frequency, they all ask for it. The action engine's caller of record is the
+  XMV video decoder, which stores frequency/1000 as ticks-per-millisecond at creation and divides counter
+  deltas by it to decide when each frame of a background movie is due.
+- Verify by measurement, not inspection. The action engine's check was the game's own `psiGetTimeIn100ths`,
+  which should advance 100 per second: it read 641 before the fix and exactly 100 after.
+
+The action engine's third `rdtsc` site, a bare wrapper used by the XBE's NV2A driver to timestamp vblank
+interrupts and predict the next one, needed no fix - that layer talks to real graphics registers and never
+runs behind a native backend. Expect the same to be true of the driving engine's equivalents, but check what
+each site is for before assuming it.
 
 ## 3. Lens flares
 

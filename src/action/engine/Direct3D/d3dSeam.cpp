@@ -363,9 +363,9 @@ typedef void(__stdcall *D3DDevice_SwapFn)(uint32_t type);
 typedef void(__stdcall *D3DDevice_SetTextureFn)(uint32_t stage, void *pTexture);
 #define D3DDevice_SetTexture (D3DSeamTraced("D3DDevice_SetTexture", (D3DDevice_SetTextureFn)D3DDevice_SetTexture_ADDR, D3D9_SetTexture))
 
-// Eurocom's own frame-timing helper (Global namespace, not D3D8::) - already AUTOGEN-declared (and its stub
-// body generated) via game.cpp; just a plain forward declaration here so d3dSwap can call it too, without
-// asking preprocess.py to generate a second, colliding body for it.
+// Eurocom's own frame-timing helper (Global namespace, not D3D8::) - reimplemented and injected in game.cpp,
+// where the comment explains why the original could not be used. Just a plain forward declaration here so
+// that d3dSwap can call it too.
 double timestamp(void);
 
 // D3DDevice_SetVertexShaderConstant1(constant index in ECX, pointer to 4 floats in EDX) - confirmed via raw
