@@ -411,10 +411,6 @@ void MouseLook_SetScoped(bool scoped) {
     g_scoped = scoped;
 }
 
-bool MouseLook_Captured(void) {
-    return g_captured;
-}
-
 bool MouseLook_NextWeapon(void) {
     return g_captured && !g_scoped && g_wheelStep > 0;
 }

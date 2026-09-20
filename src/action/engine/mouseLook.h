@@ -33,10 +33,6 @@ bool MouseLook_ZoomHeld(void);
 // which is the only place that both runs every frame of play and has the player object to ask.
 void MouseLook_SetScoped(bool scoped);
 
-// Whether the pointer is currently captured, i.e. whether the player is driving with a mouse at all. Used by
-// Player_Move to decide whether the scope's walk restriction applies.
-bool MouseLook_Captured(void);
-
 // One notch of the wheel, reported as a single frame's worth of "that d-pad direction is pressed" and then
 // forgotten - a wheel has no held state to report, and the game acts on a press rather than while a direction
 // is held. At most one notch is handed over per frame, so a fast scroll is spread across frames rather than

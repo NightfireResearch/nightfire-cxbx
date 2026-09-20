@@ -338,11 +338,12 @@ void Player_ViewClamping(obj_tag *player) {
 //
 //     if ((player->animState->animFlags & 1) != 0) { forward = 0; turn = 0; }
 //
-// Strafing is deliberately left alone, which is why scoped movement is sideways-only in the original. That is
-// a concession to aiming a scope with a thumbstick; with a mouse it is just an obstruction, so it is lifted
-// while the pointer is captured and left exactly as it was otherwise. Suppressing the *turn* is not optional
-// either way - while scoped, Player_Aiming turns the player through its own scope-speed path, and leaving
-// this one in as well would add the two together.
+// Strafing was deliberately left alone, which is why scoped movement is sideways-only in the original. That
+// is a concession to aiming a scope with a thumbstick, and it is dropped here for every input device rather
+// than only for the mouse: making it depend on whether the pointer happens to be captured meant the same pad,
+// in the same level, moved differently depending on something the player was not thinking about. Suppressing
+// the *turn* is not optional - while scoped, Player_Aiming turns the player through its own scope-speed path,
+// and leaving this one in as well would add the two together.
 //
 // Everything else here is the original's arithmetic, reproduced rather than improved:
 //
@@ -419,10 +420,7 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
         turn = 0.0f;
     }
     if ((player->animState->animFlags & 1) != 0) { // scoped
-        if (!MouseLook_Captured()) {
-            forward = 0.0f;
-        }
-        turn = 0.0f;
+        turn = 0.0f; // Player_Aiming turns through the scope path instead; both would add up
     }
     if ((blData->previousSubState == 7) && (blData->maybeCamRelatedCountdown != '\0')) {
         strafe = 0.0f;
@@ -448,6 +446,10 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
     }
     forwards = ClampToStep(forwards);
 
+    // Channel 0x48 is "cover blown": set once Bond has rendezvoused with Zoe and been told to stop
+    // playing a party guest. Until then he walks rather than jogs, and Player_HandleJump refuses to let
+    // him jump at all. See docs/switch-channels.md for the rest of the hard-coded channels, and for why
+    // a channel number need not mean the same thing in another level.
     if ((GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1) && (switch_channels[0x48] == '\0')) {
         speedScale = speedScale * 0.9f;
     }
