@@ -50,6 +50,18 @@ param(
     # How long to keep running after the last key, which is when a fault usually arrives.
     [int]$TailWaitMs = 30000,
 
+    # A key to hold down for HoldMs after the last key press - "w" drives the car forward - so that a run
+    # can reach the things that only happen in motion. Empty holds nothing.
+    [string]$HoldKey = "",
+    [int]$HoldMs = 0,
+    [int]$HoldDelayMs = 0,   # how long after the last key press the hold starts (a level load, say)
+
+    # Or, instead of a fixed delay: start the hold once the game's log matches this pattern, polling it
+    # until HoldDelayMs runs out. "draw mix: [1-9][0-9][0-9]? indexed" is the driving engine drawing a level
+    # (its PerfLog line), which is what makes "get into the level, then press START" reproducible when the
+    # load takes a different time on every run.
+    [string]$HoldAfterPattern = "",
+
     [string]$Exe = "Release\action.exe",
     [string]$WorkingDirectory = "Release",
     [string]$LogPath = "$env:TEMP\nightfire-drive.log"
@@ -89,14 +101,24 @@ $proc.Refresh()
 $hwnd = $proc.MainWindowHandle
 if ($hwnd -eq [IntPtr]::Zero) { $hwnd = [DriveGameNative]::FindWindowA("NightfireRender", $null) }
 
+# Windows only lets the process that owns the foreground give it away, and a script started from a tool
+# shell owns nothing. Tapping ALT first is the documented way round that: the shell then counts as having
+# had recent input, and SetForegroundWindow is allowed. Called before every key and before the hold, since
+# the game's own window can lose the foreground again between them.
+function Focus-Game([IntPtr]$h) {
+    if ([DriveGameNative]::GetForegroundWindow() -eq $h) { return $true }
+    [void][DriveGameNative]::ShowWindow($h, 5)
+    [DriveGameNative]::keybd_event(0x12, 0, 0, [IntPtr]::Zero)      # ALT down
+    [DriveGameNative]::keybd_event(0x12, 0, 2, [IntPtr]::Zero)      # ALT up
+    [void][DriveGameNative]::SetForegroundWindow($h)
+    Start-Sleep -Milliseconds 300
+    return ([DriveGameNative]::GetForegroundWindow() -eq $h)
+}
+
 if ($hwnd -eq [IntPtr]::Zero) {
     Write-Output "!! no game window found - keys would go to whatever is in front, so not sending any"
 } else {
-    [void][DriveGameNative]::ShowWindow($hwnd, 5)
-    [void][DriveGameNative]::SetForegroundWindow($hwnd)
-    Start-Sleep -Milliseconds 700
-
-    if ([DriveGameNative]::GetForegroundWindow() -ne $hwnd) {
+    if (-not (Focus-Game $hwnd)) {
         Write-Output "!! could not bring the game to the foreground; its focus check will ignore the keys"
     }
 
@@ -125,6 +147,7 @@ if ($hwnd -eq [IntPtr]::Zero) {
         }
 
         Write-Output ">> $key"
+        [void](Focus-Game $hwnd)
         [DriveGameNative]::keybd_event([byte]$vk, 0, 0, [IntPtr]::Zero)
         Start-Sleep -Milliseconds 120
         [DriveGameNative]::keybd_event([byte]$vk, 0, 2, [IntPtr]::Zero)   # 2 = KEYEVENTF_KEYUP
@@ -132,6 +155,25 @@ if ($hwnd -eq [IntPtr]::Zero) {
     }
 }
 
+if ($HoldKey -ne "" -and $HoldMs -gt 0 -and -not $proc.HasExited) {
+    $hold = if ($HoldKey.Length -eq 1) { [byte][char]$HoldKey.ToUpper() } else { switch ($HoldKey) { "enter" { 0x0D } "up" { 0x26 } "down" { 0x28 } "left" { 0x25 } "right" { 0x27 } "space" { 0x20 } default { throw "unknown hold key '$HoldKey'" } } }
+    if ($HoldAfterPattern -ne "") {
+        $deadline = (Get-Date).AddMilliseconds($HoldDelayMs)
+        $seen = $false
+        while ((Get-Date) -lt $deadline -and -not $proc.HasExited) {
+            $tail = Get-Content $LogPath -Tail 40 -ErrorAction SilentlyContinue
+            if ($tail -and ($tail | Select-String -Pattern $HoldAfterPattern -Quiet)) { $seen = $true; break }
+            Start-Sleep -Milliseconds 500
+        }
+        if ($seen) { Write-Output ">> log matched '$HoldAfterPattern'" } else { Write-Output "!! log never matched '$HoldAfterPattern' within $HoldDelayMs ms" }
+        Start-Sleep -Milliseconds 1500
+    } elseif ($HoldDelayMs -gt 0) { Start-Sleep -Milliseconds $HoldDelayMs }
+    Write-Output ">> holding $HoldKey for $HoldMs ms"
+    if (-not (Focus-Game $hwnd)) { Write-Output "!! the game is not in the foreground for the hold" }
+    [DriveGameNative]::keybd_event([byte]$hold, 0, 0, [IntPtr]::Zero)
+    Start-Sleep -Milliseconds $HoldMs
+    [DriveGameNative]::keybd_event([byte]$hold, 0, 2, [IntPtr]::Zero)
+}
 if (-not $proc.HasExited) { Start-Sleep -Milliseconds $TailWaitMs }
 
 if ($proc.HasExited) {

@@ -49,10 +49,17 @@ enum {
 // Translates a definition to HLSL. False if the program could not be expressed (the info says why).
 bool Nv2aPixelShader_Translate(const uint32_t def[60], char *hlsl, size_t hlslSize, Nv2aPixelShaderInfo *info);
 
-// Fills the constant block for a draw. d3dConstants are the 16 float4s D3DDevice_SetPixelShaderConstant wrote;
-// bumpEnv is X_D3DTSS_BUMPENVMAT00..BUMPENVLOFFSET (six words) per stage, as float bit patterns; colourSign is
-// X_D3DTSS_COLORSIGN per stage.
-void Nv2aPixelShader_BuildConstants(const uint32_t def[60], const float d3dConstants[16][4], uint32_t fogColour,
+// The factors a program draws with: each stage's C0 and C1, then the final combiner's two. LoadFactors is
+// what setting the shader does - the definition's literals; SetConstant is what D3DDevice_SetPixelShaderConstant
+// does afterwards - one float4, packed to bytes as the original packs it, written into every factor whose
+// mapping nibble names the register (driving 0x0016b160).
+#define NV2A_PS_FACTOR_COUNT 18
+void Nv2aPixelShader_LoadFactors(const uint32_t def[60], float factors[NV2A_PS_FACTOR_COUNT][4]);
+void Nv2aPixelShader_SetConstant(const uint32_t def[60], uint32_t reg, const float value[4], float factors[NV2A_PS_FACTOR_COUNT][4]);
+
+// Fills the constant block for a draw from the factors, the fog colour, X_D3DTSS_BUMPENVMAT00..BUMPENVLOFFSET
+// (six words) per stage as float bit patterns, and X_D3DTSS_COLORSIGN per stage.
+void Nv2aPixelShader_BuildConstants(const float factors[NV2A_PS_FACTOR_COUNT][4], uint32_t fogColour,
                                     const uint32_t bumpEnv[4][6], const uint32_t colourSign[4],
                                     float out[NV2A_PS_K_COUNT][4]);
 

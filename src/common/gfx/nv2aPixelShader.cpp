@@ -299,24 +299,37 @@ static float FloatBits(uint32_t bits) {
     return f;
 }
 
-void Nv2aPixelShader_BuildConstants(const uint32_t def[60], const float d3dConstants[16][4], uint32_t fogColour,
+void Nv2aPixelShader_LoadFactors(const uint32_t def[60], float factors[NV2A_PS_FACTOR_COUNT][4]) {
+    // PS_COMBINERCOUNT_UNIQUE_C0/C1 (the bits set) give each stage its own; clear, every stage uses stage 0's.
+    bool uniqueC0 = (def[DEF_COMBINER_COUNT] & 0x1000) != 0, uniqueC1 = (def[DEF_COMBINER_COUNT] & 0x10000) != 0;
+    for (int s = 0; s < 8; s++) {
+        UnpackColour(def[DEF_C0 + (uniqueC0 ? s : 0)], factors[s]);
+        UnpackColour(def[DEF_C1 + (uniqueC1 ? s : 0)], factors[8 + s]);
+    }
+    UnpackColour(def[DEF_FINAL_C0], factors[16]);
+    UnpackColour(def[DEF_FINAL_C1], factors[17]);
+}
+
+void Nv2aPixelShader_SetConstant(const uint32_t def[60], uint32_t reg, const float value[4], float factors[NV2A_PS_FACTOR_COUNT][4]) {
+    // Packed to a byte per channel, as the original does before it writes the register.
+    float packed[4];
+    for (int c = 0; c < 4; c++) {
+        float v = value[c] < 0.0f ? 0.0f : value[c] > 1.0f ? 1.0f : value[c];
+        packed[c] = (float)(int)(v * 255.0f + 0.5f) / 255.0f;
+    }
+    for (int s = 0; s < 8; s++) {
+        if (((def[DEF_C0_MAPPING] >> (4 * s)) & 0xF) == reg) memcpy(factors[s], packed, 16);
+        if (((def[DEF_C1_MAPPING] >> (4 * s)) & 0xF) == reg) memcpy(factors[8 + s], packed, 16);
+    }
+    if ((def[DEF_FINAL_CONSTANTS] & 0xF) == reg) memcpy(factors[16], packed, 16);
+    if (((def[DEF_FINAL_CONSTANTS] >> 4) & 0xF) == reg) memcpy(factors[17], packed, 16);
+}
+
+void Nv2aPixelShader_BuildConstants(const float factors[NV2A_PS_FACTOR_COUNT][4], uint32_t fogColour,
                                     const uint32_t bumpEnv[4][6], const uint32_t colourSign[4],
                                     float out[NV2A_PS_K_COUNT][4]) {
     memset(out, 0, sizeof(float) * 4 * NV2A_PS_K_COUNT);
-    // A stage's constant is the literal in the definition unless its mapping nibble names a D3D constant, in
-    // which case SetPixelShaderConstant's value stands in - that is what the original does with the mapping
-    // (driving 0x0016b160). Unless the count word says the stages share stage 0's (PS_COMBINERCOUNT_SAME_C0,
-    // the bit clear), in which case they all do.
-    bool uniqueC0 = (def[DEF_COMBINER_COUNT] & 0x1000) != 0, uniqueC1 = (def[DEF_COMBINER_COUNT] & 0x10000) != 0;
-    for (int s = 0; s < 8; s++) {
-        int src0 = uniqueC0 ? s : 0, src1 = uniqueC1 ? s : 0;
-        uint32_t m0 = (def[DEF_C0_MAPPING] >> (4 * src0)) & 0xF, m1 = (def[DEF_C1_MAPPING] >> (4 * src1)) & 0xF;
-        if (m0 != 0xF) memcpy(out[NV2A_PS_K_C0 + s], d3dConstants[m0], 16); else UnpackColour(def[DEF_C0 + src0], out[NV2A_PS_K_C0 + s]);
-        if (m1 != 0xF) memcpy(out[NV2A_PS_K_C1 + s], d3dConstants[m1], 16); else UnpackColour(def[DEF_C1 + src1], out[NV2A_PS_K_C1 + s]);
-    }
-    uint32_t f0 = def[DEF_FINAL_CONSTANTS] & 0xF, f1 = (def[DEF_FINAL_CONSTANTS] >> 4) & 0xF;
-    if (f0 != 0xF) memcpy(out[NV2A_PS_K_FINAL_C0], d3dConstants[f0], 16); else UnpackColour(def[DEF_FINAL_C0], out[NV2A_PS_K_FINAL_C0]);
-    if (f1 != 0xF) memcpy(out[NV2A_PS_K_FINAL_C1], d3dConstants[f1], 16); else UnpackColour(def[DEF_FINAL_C1], out[NV2A_PS_K_FINAL_C1]);
+    memcpy(out[NV2A_PS_K_C0], factors, sizeof(float) * 4 * NV2A_PS_FACTOR_COUNT);   // C0s, C1s, then the final pair
     UnpackColour(fogColour, out[NV2A_PS_K_FOG]);
     for (int s = 0; s < 4; s++) {
         for (int m = 0; m < 4; m++)

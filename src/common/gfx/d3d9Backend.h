@@ -33,9 +33,11 @@ extern uint32_t g_xboxRenderStateTable;
 // empty by an engine that has no such table.
 extern uint32_t g_overlayTableBase;
 extern uint32_t g_overlayTableEnd;
-// True when the game rewrites its vertex buffers between draws with no signal to the backend (EAGL does: its
-// dynamic vertex buffer is triple-buffered and refilled per draw), in which case every draw streams the
-// range it reads through a ring buffer instead of using a cached host copy. See PrepareShaderDraw.
+// True when the game writes into memory the GPU reads with no signal to the backend - EAGL does: its dynamic
+// vertex buffer is triple-buffered and refilled per draw, and its linear textures (the video window, the
+// things it draws on the CPU) are written in place. Every draw then streams the vertex range it reads
+// through a ring buffer instead of using a cached host copy (PrepareShaderDraw), and a linear texture is
+// re-uploaded on its first bind in each frame (GetHostTexture).
 extern bool g_streamsVolatile;
 
 void D3D9_BackendMissing(const char *entryPoint);
@@ -117,6 +119,9 @@ void D3D9_GetSurfaceDesc(void *pSurface, uint32_t *format, uint32_t *width, uint
 // CPU can read or write - there is no Xbox-side framebuffer here - so a caller that wants to lock one has to
 // be given something else.
 bool D3D9_IsStandInSurface(const void *pSurface);
+// Copies the backbuffer's pixels, as X8R8G8B8 rows of the given pitch, into memory the game is about to
+// read - what a lock of the backbuffer means. Returns false if nothing could be read.
+bool D3D9_ReadBackBuffer(void *destination, uint32_t pitch, uint32_t width, uint32_t height);
 void D3D9_BlockUntilNotBusy(void *pResource);
 
 #endif // D3D9BACKEND_H_

@@ -418,6 +418,19 @@ static void LockPixels(void *container, XboxLockedRect *lockedRect) {
     if (container == NULL)
         return;
 
+    {   // Each distinct object the game locks, once: it is how a read of something the seam stands in for
+        // gets noticed, since a stand-in has no pixels to give.
+        static const void *seen[64]; static unsigned seenCount = 0;
+        bool known = false;
+        for (unsigned i = 0; i < seenCount; i++) if (seen[i] == container) known = true;
+        if (!known && seenCount < 64) {
+            seen[seenCount++] = container;
+            const XboxPixelContainer *h = (const XboxPixelContainer *)container;
+            printf("[d3dSeam] lock of %p (common %08x data %08x format %08x size %08x)%s\n", container, h->Common,
+                   h->Data, h->Format, h->Size, D3D9_IsStandInSurface(container) ? " - a stand-in" : "");
+        }
+    }
+
     uint32_t format = 0, width = 0, height = 0;
     D3D9_GetSurfaceDesc(container, &format, &width, &height);
 
@@ -425,6 +438,10 @@ static void LockPixels(void *container, XboxLockedRect *lockedRect) {
     lockedRect->Pitch = (((width * XboxFormatBits(format)) / 8) + 63) & ~63u;
     if (D3D9_IsStandInSurface(container)) {
         lockedRect->pBits = ScratchForStandIn(container, lockedRect->Pitch * height);
+        // A lock of the backbuffer is the game about to read the scene - the pause menu copies it to blur
+        // behind its panel - so the scene is fetched into the scratch first. Anything else stays zeros.
+        if (lockedRect->pBits != NULL && container == D3D9_GetBackBuffer2(0))
+            D3D9_ReadBackBuffer(lockedRect->pBits, lockedRect->Pitch, width, height);
         return;
     }
     lockedRect->pBits = (void *)(uintptr_t)header->Data;

@@ -403,7 +403,38 @@ use - the cube and 3D projections, the DOT_* reflection family, clip planes - sa
 the log, so a shader that turns up later in another level names itself rather than drawing black.
 
 The pause menu's missing backdrop went with it: the panel is drawn through a combiner, and had been coming
-out invisible through the fallback. The loading-screen images have not been looked at yet.
+out invisible through the fallback. So did the loading-screen images.
+
+**And the text went black, which corrected an earlier correction.** The fonts are alpha-only textures, and
+the text combiner is `r0 = v0 * t3`: the vertex colour times the texture's colour. On the NV2A an A8 texture
+samples as (1, 1, 1, a) - xemu's format table swizzles it that way - so the colour is the vertex's. On D3D9 an
+A8 samples as black, which is what the translated combiner then drew. The earlier "an alpha-only texture has
+no colour on the NV2A either" (above) was wrong; the fixed-function hack it justified, taking the colour from
+the diffuse, happened to give the right answer for the fixed-function path and was removed. A8 textures are
+widened to A8L8 with a white luminance on upload, and every path gets white.
+
+Two things were added while looking for what the combiners had left: `CheckVertices=on` in `settings.ini`
+reads every draw's positions out of the game's memory before the draw and, for the first one that is not a
+number or is off any level's scale, logs the draw and its streams and dumps that frame - it exists for a
+glitch that lasts one frame, which no periodic dump catches (a minute of driving has not yet produced one,
+so whatever those are, they are not positions out of range); and the dumped frame's textures are written
+out beside it, decoded, with the header words in each file's name. `tools/drive_game.ps1` can now hold a
+key (`-HoldKey w -HoldDelayMs 20000 -HoldMs 60000` drives the car for a minute), and can wait for a line
+in the game's log before it does: `-HoldKey enter -HoldAfterPattern "draw mix: [1-9][0-9][0-9]? indexed"`
+holds START once the level is drawing, which is how the pause menu is reached on every run rather than
+when the load happens to take the expected time. It also re-asserts the foreground before every key, with
+the ALT tap Windows requires of a process that does not own it.
+
+**The pause menu's video window.** A 128x128 linear texture is bound at stage 3 of a quad in every frame,
+in the level and in the menu, and its memory is a contiguous allocation the game made and writes into
+directly - no lock the seam could see. The console's GPU reads such memory live; the host copy was taken
+once, at first bind, and kept, so it showed whatever the memory held then: nothing here, noise on another
+machine ("static" in the pause menu). Linear textures are now uploaded again on their first bind in each
+frame where `g_streamsVolatile` is set, which is the same policy the vertex buffers needed and for the
+same reason. What the game writes there is another matter: in these runs it writes nothing - the window
+stays empty - and the likeliest reason is that it is a streamed video paced, like the intro movie, by the
+audio path, which is still silent (section 0.1, "Sound"). A lock of the backbuffer stand-in now reads the
+real backbuffer back, in case a screen copy is what fills it; nothing has locked it yet.
 
 ### What is left
 

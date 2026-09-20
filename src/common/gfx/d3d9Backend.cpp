@@ -70,6 +70,7 @@ static uint64_t g_statRenderTargetCreates = 0;  // each one is a D3DPOOL_DEFAULT
 static uint64_t g_statBufferCreates = 0;        // vertex and index buffers created, not reused
 
 static int HostTextureCount(void);   // defined with the texture table further down
+extern bool g_streamsVolatile;       // defined with the vertex ring further down; see the header
 static void MarkAllConstantsDirty(void);   // defined with the vertex constants further down
 
 // Where the frame time actually goes, printed every few seconds when PerfLog is on in settings.ini.
@@ -309,6 +310,7 @@ struct HostTexture {
     const void *header;      // Xbox header address (the cache key)
     uint32_t data, format, size; // the header words the host texture was built from - any change means rebuild
     IDirect3DTexture9 *texture;
+    uint32_t uploadedFrame;  // the frame of the last upload, for the per-frame refresh of linear textures
     bool dirty;              // CPU wrote into the pixel data since the last upload
     bool renderTarget;       // lives in D3DPOOL_DEFAULT with D3DUSAGE_RENDERTARGET; never uploaded from CPU memory
     IDirect3DSurface9 *rtSurface; // level 0 of a render-target texture
@@ -452,7 +454,11 @@ static D3DFORMAT HostFormatFor(uint32_t xboxFormat, bool *convertYuy2) {
         case XFMT_X1R5G5B5: case XFMT_LIN_X1R5G5B5: return D3DFMT_X1R5G5B5;
         case XFMT_R5G6B5: case XFMT_LIN_R5G6B5: return D3DFMT_R5G6B5;
         case XFMT_L8: case XFMT_LIN_L8: return D3DFMT_L8;
-        case XFMT_A8: case XFMT_LIN_A8: return D3DFMT_A8;
+        // An alpha-only texture samples as (1, 1, 1, a) on the NV2A - the fonts are drawn by combiners that
+        // multiply the vertex colour by the texture's colour, and on the console that colour is white.
+        // D3DFMT_A8 samples as black on D3D9, so the texture is widened to A8L8 with a white luminance on
+        // the way in (see the upload).
+        case XFMT_A8: case XFMT_LIN_A8: return D3DFMT_A8L8;
         case XFMT_A8L8: case XFMT_LIN_A8L8: return D3DFMT_A8L8;
         case XFMT_DXT1: return D3DFMT_DXT1;
         case XFMT_DXT3: return D3DFMT_DXT3;
@@ -498,7 +504,13 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
         return t->texture; // drawn by the GPU, nothing to upload
 
     bool rebuild = (t->texture == NULL) || t->format != h->Format || t->size != h->Size || t->data != h->Data;
-    if (!rebuild && !t->dirty)
+    // A linear texture is the kind the game writes on the CPU - the video window in the driving engine's
+    // pause menu is one, decoded into the texture's memory every frame with nothing told to anyone, because
+    // on the console the GPU reads that memory as it stands. Where the game does that (g_streamsVolatile),
+    // a linear texture is uploaded again on its first bind in each frame; a copy taken once showed whatever
+    // the memory held at the time, which was noise or nothing, for the rest of the run.
+    bool refresh = g_streamsVolatile && h->Size != 0 && t->uploadedFrame != g_frameCount;
+    if (!rebuild && !t->dirty && !refresh)
         return t->texture;
 
     // A texture whose pixels are "the backbuffer's memory" is a capture of the backbuffer, not something to
@@ -570,6 +582,22 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
         } else if (convertYuy2) {
             for (uint32_t r = 0; r < lh; r++)
                 ConvertYuy2Row((uint32_t*)((uint8_t*)lr.pBits + (size_t)r * lr.Pitch), src + (size_t)r * pitch, lw);
+        } else if (xboxFormat == XFMT_A8 || xboxFormat == XFMT_LIN_A8) {
+            // One byte of alpha in, luminance 0xFF and that alpha out: white with the texture's coverage.
+            size_t levelBytes = (size_t)lw * lh;
+            const uint8_t *alpha = src;
+            if (!linear) {
+                if (scratchSize < levelBytes) { free(scratch); scratch = (uint8_t*)malloc(levelBytes); scratchSize = levelBytes; }
+                Unswizzle(scratch, src, lw, lh, 1);
+                alpha = scratch;
+            }
+            for (uint32_t r = 0; r < lh; r++) {
+                uint16_t *row = (uint16_t*)((uint8_t*)lr.pBits + (size_t)r * lr.Pitch);
+                const uint8_t *in = alpha + (size_t)r * (linear ? pitch : lw);
+                for (uint32_t c = 0; c < lw; c++)
+                    row[c] = (uint16_t)(0x00FFu | ((uint16_t)in[c] << 8));
+            }
+            if (!linear) src += levelBytes;
         } else if (linear) {
             uint32_t rowBytes = lw * bpp / 8;
             for (uint32_t r = 0; r < lh; r++)
@@ -600,6 +628,7 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
         t->texture->UnlockRect(level);
     }
     t->dirty = false;
+    t->uploadedFrame = g_frameCount;
     return t->texture;
 }
 
@@ -806,6 +835,84 @@ static void WriteBmp24(const char *path, uint32_t width, uint32_t height, const 
     fclose(f);
 }
 
+// The dumped frame's textures: each host texture bound during that frame, once, as level 0 in BMP form with
+// the Xbox header words in the name - so a texture that looks wrong on screen can be seen on its own and
+// its format read off the file name. Managed textures are lockable, which is what makes this cheap.
+// One 4x4 DXT block (DXT1, or the colour half of DXT3/DXT5) to 16 RGB texels; DXT3's alpha block alongside.
+static void DecodeDxtBlock(const uint8_t *block, bool dxt1, bool dxt3, uint8_t rgb[16][3], uint8_t alpha[16]) {
+    const uint8_t *colour = dxt1 ? block : block + 8;
+    uint16_t c0 = (uint16_t)(colour[0] | (colour[1] << 8)), c1 = (uint16_t)(colour[2] | (colour[3] << 8));
+    uint8_t p[4][3];
+    p[0][0] = (uint8_t)((c0 >> 11) << 3); p[0][1] = (uint8_t)(((c0 >> 5) & 63) << 2); p[0][2] = (uint8_t)((c0 & 31) << 3);
+    p[1][0] = (uint8_t)((c1 >> 11) << 3); p[1][1] = (uint8_t)(((c1 >> 5) & 63) << 2); p[1][2] = (uint8_t)((c1 & 31) << 3);
+    bool fourColour = !dxt1 || c0 > c1;
+    for (int k = 0; k < 3; k++) {
+        p[2][k] = fourColour ? (uint8_t)((2 * p[0][k] + p[1][k]) / 3) : (uint8_t)((p[0][k] + p[1][k]) / 2);
+        p[3][k] = fourColour ? (uint8_t)((p[0][k] + 2 * p[1][k]) / 3) : 0;
+    }
+    uint32_t bits = (uint32_t)colour[4] | ((uint32_t)colour[5] << 8) | ((uint32_t)colour[6] << 16) | ((uint32_t)colour[7] << 24);
+    for (int i = 0; i < 16; i++) {
+        int sel = (bits >> (2 * i)) & 3;
+        memcpy(rgb[i], p[sel], 3);
+        alpha[i] = 255;
+        if (dxt1 && !fourColour && sel == 3) alpha[i] = 0;
+        if (dxt3) alpha[i] = (uint8_t)(((block[i / 2] >> ((i & 1) * 4)) & 15) * 17);
+    }
+}
+
+static void DumpBoundTexture(const void *header, IDirect3DTexture9 *texture) {
+    static const void *seen[64]; static int seenCount = 0; static uint32_t seenFrame = 0;
+    if (texture == NULL || header == NULL)
+        return;
+    if (seenFrame != g_dumpFrame) { seenFrame = g_dumpFrame; seenCount = 0; }
+    for (int i = 0; i < seenCount; i++) if (seen[i] == header) return;
+    if (seenCount >= (int)(sizeof(seen) / sizeof(seen[0]))) return;
+    seen[seenCount++] = header;
+    const XboxPixelContainer *h = (const XboxPixelContainer*)header;
+    D3DSURFACE_DESC desc;
+    D3DLOCKED_RECT lr;
+    if (FAILED(texture->GetLevelDesc(0, &desc)) || FAILED(texture->LockRect(0, &lr, NULL, D3DLOCK_READONLY)))
+        return;
+    size_t rowBytes = (size_t)desc.Width * 3;
+    uint8_t *colour = (uint8_t*)malloc(rowBytes * desc.Height), *alpha = (uint8_t*)malloc(rowBytes * desc.Height);
+    if (colour != NULL && alpha != NULL) {
+        for (UINT y = 0; y < desc.Height; y++) {
+            const uint8_t *row = (const uint8_t*)lr.pBits + y * lr.Pitch;
+            for (UINT x = 0; x < desc.Width; x++) {
+                uint8_t r = 0, g = 0, b = 0, a = 255;
+                switch (desc.Format) {
+                    case D3DFMT_A8R8G8B8: case D3DFMT_X8R8G8B8: b = row[x * 4]; g = row[x * 4 + 1]; r = row[x * 4 + 2]; a = row[x * 4 + 3]; break;
+                    case D3DFMT_R5G6B5: { uint16_t p = ((const uint16_t*)row)[x]; r = (uint8_t)((p >> 11) << 3); g = (uint8_t)(((p >> 5) & 63) << 2); b = (uint8_t)((p & 31) << 3); break; }
+                    case D3DFMT_A1R5G5B5: case D3DFMT_X1R5G5B5: { uint16_t p = ((const uint16_t*)row)[x]; r = (uint8_t)(((p >> 10) & 31) << 3); g = (uint8_t)(((p >> 5) & 31) << 3); b = (uint8_t)((p & 31) << 3); a = (p & 0x8000) ? 255 : 0; break; }
+                    case D3DFMT_A4R4G4B4: { uint16_t p = ((const uint16_t*)row)[x]; r = (uint8_t)(((p >> 8) & 15) * 17); g = (uint8_t)(((p >> 4) & 15) * 17); b = (uint8_t)((p & 15) * 17); a = (uint8_t)((p >> 12) * 17); break; }
+                    case D3DFMT_A8L8: r = g = b = row[x * 2]; a = row[x * 2 + 1]; break;
+                    case D3DFMT_L8: r = g = b = row[x]; break;
+                    case D3DFMT_A8: a = row[x]; break;
+                    case D3DFMT_DXT1: case D3DFMT_DXT3: case D3DFMT_DXT5: {
+                        bool dxt1 = desc.Format == D3DFMT_DXT1;
+                        const uint8_t *block = (const uint8_t*)lr.pBits + (y / 4) * lr.Pitch + (x / 4) * (dxt1 ? 8 : 16);
+                        uint8_t rgb[16][3], al[16];
+                        DecodeDxtBlock(block, dxt1, desc.Format == D3DFMT_DXT3, rgb, al);
+                        int i = (y & 3) * 4 + (x & 3);
+                        r = rgb[i][0]; g = rgb[i][1]; b = rgb[i][2]; a = al[i];   // DXT5's alpha is left opaque
+                        break;
+                    }
+                    default: r = 255; g = 0; b = 255; break;   // not decoded here: magenta
+                }
+                colour[y * rowBytes + x * 3] = b; colour[y * rowBytes + x * 3 + 1] = g; colour[y * rowBytes + x * 3 + 2] = r;
+                memset(alpha + y * rowBytes + x * 3, a, 3);
+            }
+        }
+        char path[160];
+        snprintf(path, sizeof(path), "d3d9_dump_tex_%02d_%08x_%08x_%ux%u.bmp", seenCount - 1, h->Format, h->Size, (unsigned)desc.Width, (unsigned)desc.Height);
+        WriteBmp24(path, desc.Width, desc.Height, colour, rowBytes);
+        snprintf(path, sizeof(path), "d3d9_dump_tex_%02d_%08x_%08x_%ux%u_alpha.bmp", seenCount - 1, h->Format, h->Size, (unsigned)desc.Width, (unsigned)desc.Height);
+        WriteBmp24(path, desc.Width, desc.Height, alpha, rowBytes);
+    }
+    free(colour); free(alpha);
+    texture->UnlockRect(0);
+}
+
 static void DumpSurface(IDirect3DSurface9 *surface, const char *name) {
     D3DSURFACE_DESC desc;
     if (surface == NULL || FAILED(surface->GetDesc(&desc)))
@@ -871,7 +978,10 @@ void D3D9_Swap(uint32_t type) {
         g_inScene = false;
     }
     if (g_dumpFrame != 0) {
-        DumpSurface(g_backBufferSurface, "d3d9_dump_frame");
+        char name[64];
+        snprintf(name, sizeof(name), "d3d9_dump_frame_%u", g_dumpFrame);
+        DumpSurface(g_backBufferSurface, name);
+        DumpSurface(g_backBufferSurface, "d3d9_dump_frame");   // and the latest, under a fixed name
         g_dumpFrame = 0;
     }
     if (DumpEvery() > 0 && (g_frameCount + 1) % DumpEvery() == 0) {
@@ -1067,27 +1177,6 @@ static float g_texCoordScale[4][2] = { { 1, 1 }, { 1, 1 }, { 1, 1 }, { 1, 1 } };
 
 // Binds textures (re-uploading any the CPU wrote to since - movie frames, the intro effect - the seam only
 // calls SetTexture when the bound slot changes) and applies the stage state for the current draw.
-// An alpha-only texture (A8) has no colour in it: sampling one gives RGB zero, on the NV2A as on D3D9. A
-// stage that names the texture as a colour argument therefore paints black - which is what the HUD font did,
-// because the game draws its text with a register combiner that takes the colour from somewhere else and only
-// the coverage from the texture, and the combiners are not translated yet. Until they are, the fixed-function
-// fallback has to make the same choice the combiner would: colour from what came before, coverage from the
-// texture's alpha. This substitutes only the colour arguments, only for a texture that has no colour, and
-// leaves the alpha arguments alone - so the glyph shape still comes from the font.
-static uint32_t ColourArgWithoutTexture(uint32_t arg, uint32_t stage) {
-    enum { TA_DIFFUSE = 0, TA_CURRENT = 1, TA_TEXTURE = 2, TA_ALPHAREPLICATE = 0x20 };
-    if ((arg & 0x7u) != TA_TEXTURE || (arg & TA_ALPHAREPLICATE) != 0)
-        return arg;   // not the texture, or it is the texture's alpha, which an A8 does have
-    return (arg & ~0x7u) | (stage == 0 ? TA_DIFFUSE : TA_CURRENT);
-}
-
-static bool TextureHasNoColour(const void *header) {
-    if (header == NULL)
-        return false;
-    uint32_t xboxFormat = (((const XboxPixelContainer *)header)->Format >> 8) & 0xFF;
-    return xboxFormat == XFMT_A8 || xboxFormat == XFMT_LIN_A8;
-}
-
 // ---------------------------------------------------------------------------------------------------------------
 // Pixel shaders.
 //
@@ -1113,7 +1202,13 @@ struct TranslatedPixelShader {
 static TranslatedPixelShader g_pixelShaders[512];
 static int g_pixelShaderCount = 0;
 static int g_currentPixelShader = -1;
-static float g_pixelShaderConstants[16][4];
+
+// The factors the program draws with: eight C0s, eight C1s and the final combiner's pair. SetPixelShader
+// loads them from the definition's literals - the original pushes the definition's words - and a later
+// SetPixelShaderConstant overwrites the ones whose mapping nibble names its register, until the next
+// SetPixelShader loads the literals again. Keeping the two apart matters: a shader whose mapping names
+// register 0 draws with its literal until the game says otherwise, not with whatever register 0 holds.
+static float g_pixelShaderFactors[NV2A_PS_FACTOR_COUNT][4];
 
 static void DumpPixelShader(int index, const TranslatedPixelShader *ps, const char *hlsl) {
     static FILE *f = NULL;
@@ -1182,6 +1277,8 @@ uint32_t D3D9_CreatePixelShader(const void *definition, uint32_t *handleOut) {
 void D3D9_SetPixelShader(uint32_t handle) {
     g_currentPixelShader = ((handle & 0xFFFF0000u) == PS_HANDLE_TAG && (int)(handle & 0xFFFF) < g_pixelShaderCount)
                            ? (int)(handle & 0xFFFF) : -1;
+    if (g_currentPixelShader >= 0)
+        Nv2aPixelShader_LoadFactors(g_pixelShaders[g_currentPixelShader].def, g_pixelShaderFactors);
     if (handle != 0 && g_currentPixelShader < 0) {
         static bool said = false;
         if (!said) { said = true; D3D9Log("[d3d9] pixel shader handle 0x%08x is not one of ours\n", handle); }
@@ -1189,8 +1286,10 @@ void D3D9_SetPixelShader(uint32_t handle) {
 }
 
 void D3D9_SetPixelShaderConstant(uint32_t reg, const float *values, uint32_t count) {
+    if (g_currentPixelShader < 0)
+        return;   // the original writes into the current shader's stages; with none set there is nowhere to write
     for (uint32_t i = 0; i < count && reg + i < 16; i++)
-        memcpy(g_pixelShaderConstants[reg + i], values + i * 4, 16);
+        Nv2aPixelShader_SetConstant(g_pixelShaders[g_currentPixelShader].def, reg + i, values + i * 4, g_pixelShaderFactors);
 }
 
 void D3D9_DeletePixelShader(uint32_t handle) {
@@ -1214,7 +1313,7 @@ static void BindPixelShaderConstants(const TranslatedPixelShader *ps) {
         colourSign[s] = XBOX_TEXTURE_STATE(s, XTSS_COLORSIGN);
     }
     float k[NV2A_PS_K_COUNT][4];
-    Nv2aPixelShader_BuildConstants(ps->def, g_pixelShaderConstants, g_fogColour, bumpEnv, colourSign, k);
+    Nv2aPixelShader_BuildConstants(g_pixelShaderFactors, g_fogColour, bumpEnv, colourSign, k);
     g_device->SetPixelShaderConstantF(0, &k[0][0], NV2A_PS_K_COUNT);
 }
 
@@ -1233,7 +1332,12 @@ static void ApplySamplerState(uint32_t h, uint32_t s) {
 // coordinate scale a linear texture needs on the coordinate set it is read through.
 static void BindStageTexture(uint32_t h, uint32_t s, uint32_t coordSet) {
     g_uploadPalette = (s < 4) ? g_palette[s] : NULL;   // for a paletted texture; see D3D9_SetPalette
-    g_device->SetTexture(h, g_boundTexture[s] != NULL ? GetHostTexture(g_boundTexture[s]) : NULL);
+    IDirect3DTexture9 *hostTexture = g_boundTexture[s] != NULL ? GetHostTexture(g_boundTexture[s]) : NULL;
+    g_device->SetTexture(h, hostTexture);
+    if (g_dumpFrame != 0 && hostTexture != NULL) {
+        HostTexture *t = FindHostTexture(g_boundTexture[s]);
+        if (t == NULL || !t->renderTarget) DumpBoundTexture(g_boundTexture[s], hostTexture);
+    }
     if (g_dumpFrame != 0 && g_boundTexture[s] != NULL && g_dumpRtCount < 8) {
         HostTexture *t = FindHostTexture(g_boundTexture[s]);
         if (t != NULL && t->renderTarget && t->rtSurface != NULL) {
@@ -1286,17 +1390,10 @@ static void ApplyTextureStageState(bool shaderDraw) {
         BindStageTexture(h, s, tci);
         ApplySamplerState(h, s);
         uint32_t colorOp = XBOX_TEXTURE_STATE(s, XTSS_COLOROP), alphaOp = XBOX_TEXTURE_STATE(s, XTSS_ALPHAOP);
-        bool noColour = TextureHasNoColour(g_boundTexture[s]);
         g_device->SetTextureStageState(h, D3DTSS_COLOROP, colorOp == 0 ? D3DTOP_DISABLE : colorOp);
-        g_device->SetTextureStageState(h, D3DTSS_COLORARG0,
-                                       noColour ? ColourArgWithoutTexture(XBOX_TEXTURE_STATE(s, XTSS_COLORARG0), s)
-                                                : XBOX_TEXTURE_STATE(s, XTSS_COLORARG0));
-        g_device->SetTextureStageState(h, D3DTSS_COLORARG1,
-                                       noColour ? ColourArgWithoutTexture(XBOX_TEXTURE_STATE(s, XTSS_COLORARG1), s)
-                                                : XBOX_TEXTURE_STATE(s, XTSS_COLORARG1));
-        g_device->SetTextureStageState(h, D3DTSS_COLORARG2,
-                                       noColour ? ColourArgWithoutTexture(XBOX_TEXTURE_STATE(s, XTSS_COLORARG2), s)
-                                                : XBOX_TEXTURE_STATE(s, XTSS_COLORARG2));
+        g_device->SetTextureStageState(h, D3DTSS_COLORARG0, XBOX_TEXTURE_STATE(s, XTSS_COLORARG0));
+        g_device->SetTextureStageState(h, D3DTSS_COLORARG1, XBOX_TEXTURE_STATE(s, XTSS_COLORARG1));
+        g_device->SetTextureStageState(h, D3DTSS_COLORARG2, XBOX_TEXTURE_STATE(s, XTSS_COLORARG2));
         g_device->SetTextureStageState(h, D3DTSS_ALPHAOP, alphaOp == 0 ? D3DTOP_DISABLE : alphaOp);
         g_device->SetTextureStageState(h, D3DTSS_ALPHAARG0, XBOX_TEXTURE_STATE(s, XTSS_ALPHAARG0));
         g_device->SetTextureStageState(h, D3DTSS_ALPHAARG1, XBOX_TEXTURE_STATE(s, XTSS_ALPHAARG1));
@@ -1612,6 +1709,7 @@ struct TranslatedVertexShader {
     IDirect3DVertexDeclaration9 *decl;
     uint32_t streamsUsed;   // bit s = declaration reads stream s
     uint16_t declaredStride[16];  // bytes the declaration reads from each stream, for the stride check
+    uint8_t positionComponents;   // floats in register 0's element, or 0 when it is not a float type
     uint32_t inputsUsed, outputsWritten;
     bool attempted, failed;
 };
@@ -1717,6 +1815,7 @@ static bool BuildVertexShader(TranslatedVertexShader *vs, int index) {
         elements[elementCount++] = e;
         if (np) normPacked |= 1u << reg;
         if (reg < 16) inputComponents[reg] = (uint8_t)(components == 0 || components > 4 ? 4 : components);
+        if (reg == 0) vs->positionComponents = (uint8_t)((type & 0xF) == 2 ? components : 0);   // kind 2 = float
         vs->streamsUsed |= 1u << stream;
         offset += bytes;
         if (stream < 16) vs->declaredStride[stream] = (uint16_t)offset;
@@ -1956,6 +2055,7 @@ static IDirect3DIndexBuffer9 *GetHostIndexBuffer(const void *obj, const void **d
     return ib;
 }
 
+static uint32_t g_vertexRingWrapFrame = 0, g_indexRingWrapFrame = 0;   // when each ring last discarded
 static const void *g_streams[16];
 static int g_streamStrides[16];
 static const void *g_indexBuffer = NULL;
@@ -2012,7 +2112,7 @@ static IDirect3DVertexBuffer9 *StreamThroughVertexRing(const void *obj, uint32_t
     }
     uint32_t span = (bytes + VERTEX_RING_SLACK + 15u) & ~15u;
     DWORD lockFlags = D3DLOCK_NOOVERWRITE;
-    if (g_vertexRingPos + span > VERTEX_RING_BYTES) { g_vertexRingPos = 0; lockFlags = D3DLOCK_DISCARD; }
+    if (g_vertexRingPos + span > VERTEX_RING_BYTES) { g_vertexRingPos = 0; lockFlags = D3DLOCK_DISCARD; g_vertexRingWrapFrame = g_frameCount; }
     void *dst = NULL;
     if (FAILED(g_vertexRing->Lock(g_vertexRingPos, span, &dst, lockFlags)))
         return NULL;
@@ -2257,7 +2357,15 @@ static void TraceDraw(const char *kind, uint32_t primType, uint32_t count, uint3
     }
     if (f == NULL)
         return;
-    fprintf(f, "%s prim %u count %u vertices [%u, %u) shader %d\n", kind, primType, count, first, limit, g_currentVertexShader);
+    fprintf(f, "%s prim %u count %u vertices [%u, %u) shader %d pixel shader %d\n", kind, primType, count, first, limit,
+            g_currentVertexShader, g_currentPixelShader);
+    for (int s = 0; s < 4; s++) {
+        const XboxPixelContainer *h = (const XboxPixelContainer*)g_boundTexture[s];
+        if (h != NULL)
+            fprintf(f, "  texture stage %d: header %p data %08x format %08x size %08x\n", s, (const void*)h, h->Data, h->Format, h->Size);
+    }
+    if (limit == 0)
+        return;   // an immediate draw: no streams
     if (g_currentVertexShader >= 0 && g_currentVertexShader < g_vertexShaderCount) {
         const TranslatedVertexShader *vs = &g_vertexShaders[g_currentVertexShader];
         for (int s = 0; s < 16; s++) {
@@ -2291,6 +2399,56 @@ static void TraceDraw(const char *kind, uint32_t primType, uint32_t count, uint3
             g_vertexConstants[58][0], g_vertexConstants[58][1], g_vertexConstants[58][2], g_vertexConstants[58][3],
             g_vertexConstants[59][0], g_vertexConstants[59][1], g_vertexConstants[59][2], g_vertexConstants[59][3]);
     fflush(f);
+}
+
+// CheckVertices=on in settings.ini: every draw's positions are read out of the game's memory before the draw,
+// and one with a coordinate that cannot be right - not a number, or off the scale of any level - is reported
+// with everything TraceDraw would say, and its frame is dumped. It exists for a glitch that lasts one frame,
+// which no periodic dump will ever catch; it costs a pass over the vertices drawn and is off by default.
+static bool CheckVerticesEnabled(void) {
+    static int value = -1;
+    if (value < 0) {
+        char setting[16] = "";
+        GetPrivateProfileStringA("Settings", "CheckVertices", "", setting, sizeof(setting), ".\\settings.ini");
+        value = (_stricmp(setting, "on") == 0 || strcmp(setting, "1") == 0) ? 1 : 0;
+    }
+    return value != 0;
+}
+
+
+static void CheckDrawVertices(const char *kind, uint32_t primType, uint32_t count, uint32_t first, uint32_t limit) {
+    if (!CheckVerticesEnabled() || g_currentVertexShader < 0 || g_currentVertexShader >= g_vertexShaderCount)
+        return;
+    static int reported = 0;
+    if (reported >= 12)
+        return;
+    const uint32_t *slot = (const uint32_t*)g_streams[0];
+    if (slot == NULL || slot[1] == 0 || limit <= first)
+        return;
+    const TranslatedVertexShader *vs = &g_vertexShaders[g_currentVertexShader];
+    if (vs->positionComponents < 3)
+        return;   // positions that are not floats are not checked
+    uint32_t stride = g_streamStrides[0] > 0 ? (uint32_t)g_streamStrides[0] : 12;
+    const uint8_t *data = (const uint8_t*)(uintptr_t)slot[1];
+    for (uint32_t v = first; v < limit; v++) {
+        const float *p = (const float*)(data + (size_t)v * stride);
+        bool bad = false;
+        for (int k = 0; k < 3; k++)
+            if (!(p[k] == p[k]) || p[k] > 1.0e6f || p[k] < -1.0e6f) bad = true;
+        if (!bad)
+            continue;
+        reported++;
+        D3D9Log("[d3d9] frame %u: %s draw (prim %u, %u vertices, range [%u, %u)) with shader %d has vertex %u at "
+                "(%g %g %g) - stream 0 object %p data %p stride %u; vertex ring last wrapped frame %u, index ring %u\n",
+                g_frameCount, kind, primType, count, first, limit, g_currentVertexShader, v, p[0], p[1], p[2],
+                (const void*)slot, (const void*)data, stride, g_vertexRingWrapFrame, g_indexRingWrapFrame);
+        for (int s = 1; s < 16; s++)
+            if ((vs->streamsUsed & (1u << s)) && g_streams[s] != NULL)
+                D3D9Log("[d3d9]   stream %d object %p data %p stride %d\n", s, g_streams[s],
+                        (const void*)(uintptr_t)((const uint32_t*)g_streams[s])[1], g_streamStrides[s]);
+        if (g_dumpFrame == 0) { g_dumpFrame = g_frameCount + 1; g_dumpRtCount = 0; }   // dump this frame at its swap
+        return;
+    }
 }
 
 static bool XboxPrimitiveToD3D(uint32_t xboxType, uint32_t vertexCount, D3DPRIMITIVETYPE *type, UINT *primCount) {
@@ -2332,7 +2490,7 @@ void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, cons
         return;
     }
     DWORD lockFlags = D3DLOCK_NOOVERWRITE;
-    if (g_indexRingPos + vertexCount > INDEX_RING_COUNT) { g_indexRingPos = 0; lockFlags = D3DLOCK_DISCARD; }
+    if (g_indexRingPos + vertexCount > INDEX_RING_COUNT) { g_indexRingPos = 0; lockFlags = D3DLOCK_DISCARD; g_indexRingWrapFrame = g_frameCount; }
     void *dst = NULL;
     if (FAILED(g_indexRing->Lock(g_indexRingPos * 2, vertexCount * 2, &dst, lockFlags)))
         return;
@@ -2348,6 +2506,7 @@ void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, cons
     uint32_t start = g_indexRingPos;
     g_indexRingPos += vertexCount;
     int baseVertex = 0;
+    CheckDrawVertices("indexed", primitiveType, vertexCount, minIndex, (uint32_t)maxIndex + 1);
     TraceDraw("indexed", primitiveType, vertexCount, minIndex, (uint32_t)maxIndex + 1);
     if (!PrepareShaderDraw(true, minIndex, (uint32_t)maxIndex + 1, &baseVertex))
         return;
@@ -2364,6 +2523,7 @@ void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t ve
     if (!XboxPrimitiveToD3D(primitiveType, vertexCount, &type, &primCount))
         return;
     int baseVertex = 0;
+    CheckDrawVertices("direct", primitiveType, vertexCount, startVertex, startVertex + vertexCount);
     TraceDraw("direct", primitiveType, vertexCount, startVertex, startVertex + vertexCount);
     if (!PrepareShaderDraw(true, startVertex, startVertex + vertexCount, &baseVertex))
         return;
@@ -2497,6 +2657,7 @@ void D3D9_ImmediateEnd(void) {
         return;
 
     BeginSceneIfNeeded();
+    TraceDraw("immediate", g_immediatePrimitive, g_immediateCount, 0, 0);
     ApplyTextureStageState(false);   // also fills in the coordinate scales linear textures need
 
     // A linear texture is addressed in texels on the NV2A, so the coordinates that arrive are in texels too.
@@ -2651,6 +2812,39 @@ void D3D9_GetSurfaceDesc(void *pSurface, uint32_t *format, uint32_t *width, uint
     if (format != NULL) *format = f;
     if (width != NULL)  *width = w;
     if (height != NULL) *height = h;
+}
+
+// The game locking the backbuffer to read it: the driving engine's pause menu takes a copy of the scene to
+// blur behind its panel, by locking the backbuffer and downscaling it on the CPU. The backbuffer here is a
+// GPU surface, so a lock means fetching it: a system-memory copy of the render target, read row by row
+// into the memory the seam hands the game. It costs a pipeline flush and a megabyte, once per capture.
+bool D3D9_ReadBackBuffer(void *destination, uint32_t pitch, uint32_t width, uint32_t height) {
+    if (g_device == NULL || g_backBufferSurface == NULL || destination == NULL)
+        return false;
+    static IDirect3DSurface9 *sys = NULL;
+    D3DSURFACE_DESC desc;
+    if (FAILED(g_backBufferSurface->GetDesc(&desc)))
+        return false;
+    if (sys == NULL && FAILED(g_device->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format, D3DPOOL_SYSTEMMEM, &sys, NULL)))
+        return false;
+    bool wasInScene = g_inScene;
+    if (wasInScene) { g_device->EndScene(); g_inScene = false; }
+    bool ok = SUCCEEDED(g_device->GetRenderTargetData(g_backBufferSurface, sys));
+    if (wasInScene) BeginSceneIfNeeded();
+    if (!ok)
+        return false;
+    D3DLOCKED_RECT lr;
+    if (FAILED(sys->LockRect(&lr, NULL, D3DLOCK_READONLY)))
+        return false;
+    uint32_t rows = height < desc.Height ? height : desc.Height;
+    uint32_t bytes = (width < desc.Width ? width : desc.Width) * 4;
+    if (bytes > pitch) bytes = pitch;
+    for (uint32_t y = 0; y < rows; y++)
+        memcpy((uint8_t*)destination + (size_t)y * pitch, (const uint8_t*)lr.pBits + (size_t)y * lr.Pitch, bytes);
+    sys->UnlockRect();
+    static bool said = false;
+    if (!said) { said = true; D3D9Log("[d3d9] the game read the backbuffer back (%ux%u)\n", width, rows); }
+    return true;
 }
 
 bool D3D9_IsStandInSurface(const void *pSurface) {
