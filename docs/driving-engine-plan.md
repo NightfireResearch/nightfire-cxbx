@@ -187,19 +187,48 @@ inside the D3D8 library this seam replaces - fifteen of them, fourteen in D3D8 a
 slot index. EAGL never does it, so the seam's `Lock` functions can hand back ordinary pointers and no alias
 has to exist.
 
-### Where it stops now
+### Where it is now
 
-Two fronts, both expected:
+It runs: the underwater level loads, the game reaches its main loop and holds fifty frames a second with
+about 195 draws in each, and the menus take input from a pad or from the keyboard standing in for one. Five
+things were in the way, and each was a different kind of wrong - they are written up in the commits, but the
+two worth knowing about here are:
 
-1. **The renderer.** Thirty-odd entry points are implemented - device, clear, swap, render states, textures,
-   surfaces, palettes, vertex buffers, vertex shaders, the draws, the swizzle helpers - and the ones left are
-   the immediate-mode path (`D3DDevice_Begin`/`SetVertexData2f`/`4f`/`SetVertexDataColor`/`End`, used for the
-   HUD), pixel shaders, `RunPushBuffer`, the visibility tests and the fixed-function transforms. A run
-   currently ends inside the display driver's shader compiler, which means something invalid reached D3D9 -
-   the next thing to find.
-2. **Audio.** A run that gets past the renderer reaches `0x00181c7e` writing to `0xfe801100` - the MCPX audio
-   registers, exactly the hazard section 0 describes. That is section 6.2's seam, and it is now the next
-   large piece of work rather than a future one.
+- **the shared backend was reading the action engine's addresses.** It reads D3D8's own deferred state -
+  texture stage operations, filters, fog - back out of the XBE at draw time, and those tables are at
+  different addresses in the two builds. Reading the action engine's landed in the middle of the driving
+  build's XAPI, so every filter mode and colour operation was whatever happened to be in that code. It
+  looked like untextured geometry and it ended as a crash inside the display driver, compiling a shader for
+  the nonsense. The addresses are the engine's to set now (`g_xboxTextureStateTable`), read out of the two
+  functions that write them;
+- **an Xbox title's memory is all executable, and this one means it.** EAGL compiles each model's render
+  method into allocated memory and calls it. Under DEP the first model drawn faults. The loader is linked
+  `/NXCOMPAT:NO` and its memory shims hand out executable pages.
+
+**The seam checks its own replacements now.** Two of them popped the wrong number of argument bytes, which
+is silent until the caller returns into whatever was left on the stack - one arrived as a jump into the
+middle of a vertex buffer, two calls later. Every replacement declares what it pops and the seam compares it
+against the generated table at install time; that check found the second one immediately, and a bug in the
+generator behind it.
+
+### What is left
+
+In the order the frame counter puts them:
+
+1. **Pixel shaders** - 196 created, and `SetPixelShader` called about fifty times a frame. These are NV2A
+   register combiner programs, and section 6.1 is right that they need a translator to ps_1.x/ps_2_0 or to
+   fixed-function stage states. Until then materials are flat.
+2. **A vertex buffer that will not upload**, once a frame, and two vertex declarations using a type
+   (`0x25`) the translator does not handle.
+3. **Fog, stencil, bump environment and fill mode**, all accepted and dropped by the seam.
+4. **Sound.** The seam is silent: it creates buffers, times them and reports them finished, but plays
+   nothing. The action engine's XAudio2 backend is written and the formats here are ones it handles - 48 kHz
+   mono, PCM or Xbox ADPCM - so this is wiring rather than invention.
+5. **The clock runs fast** (section 2.1): the game's own log timestamps advance about six times real time,
+   which is the 733 MHz constant baked into `timestamp()` and the `QueryPerformance*` pair. The action
+   engine's fix transposes.
+6. **Movies.** The disc dump in this project has no `.mad` files, so the intro is skipped rather than
+   played; the code path is there and works the moment the files are.
 
 ## 1. What the driving engine is
 
