@@ -14,8 +14,12 @@
 // first, so a stall can be looked up in the disassembly by address.
 // ---------------------------------------------------------------------------------------------------------------
 
-// Called once a frame from the graphics seam. It does nothing at all unless NIGHTFIRE_PROFILE is set in the
-// environment, in which case the first call starts sampling and every 250th prints what has been seen since.
+// Called once a frame from the graphics seam. It does nothing at all unless settings.ini has
+//
+//     [Settings]
+//     Profile=on
+//
+// in which case the first call starts sampling and every 250th prints what has been seen since.
 void Profiler_Frame(const char *what);
 
 #endif // XBEPROFILER_H_

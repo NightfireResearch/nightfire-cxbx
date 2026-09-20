@@ -179,13 +179,19 @@ static void Profiler_Report(const char *what) {
     fflush(stdout);
 }
 
-// The one entry point the rest of the code uses. The environment variable keeps the cost of having this
-// here at a getenv per frame and nothing else, so it can sit in the frame loop permanently.
+// The one entry point the rest of the code uses.
+//
+// The switch is settings.ini's [Settings] Profile key, read the same way and spelt the same way as the rest
+// of that file ("on" or "1" turns it on, anything else leaves it off) - see the action engine's
+// XboxSettings.cpp, whose parser ignores keys it does not know, so the one file serves both engines. The
+// file is read once, so the cost of having this call in the frame loop permanently is a compare.
 void Profiler_Frame(const char *what) {
     static int enabled = -1;
     if (enabled < 0) {
-        const char *setting = getenv("NIGHTFIRE_PROFILE");
-        enabled = (setting != NULL && *setting != '0') ? 1 : 0;
+        char setting[16] = "";
+        // A bare file name would be looked for in the Windows directory, so the path has to say "here".
+        GetPrivateProfileStringA("Settings", "Profile", "", setting, sizeof(setting), ".\\settings.ini");
+        enabled = (_stricmp(setting, "on") == 0 || _stricmp(setting, "1") == 0) ? 1 : 0;
         if (enabled)
             Profiler_Start();
     }

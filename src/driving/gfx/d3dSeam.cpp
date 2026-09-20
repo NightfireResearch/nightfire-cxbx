@@ -151,7 +151,7 @@ static void __stdcall Seam_D3DDevice_Clear(uint32_t count, void *rects, uint32_t
 }
 
 static void __stdcall Seam_D3DDevice_Swap(uint32_t flags) {
-    Profiler_Frame("the frame just presented");   // does nothing unless NIGHTFIRE_PROFILE is set
+    Profiler_Frame("the frame just presented");   // does nothing unless settings.ini says Profile=on
     D3D9_Swap(flags);
 }
 

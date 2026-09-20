@@ -258,8 +258,9 @@ shape of trap.
 **There is a sampling profiler now** (`src/common/xbeProfiler.cpp`), because none of the above was findable
 any other way: the XBE is mapped by hand, so no Windows profiler can see into it. It suspends every thread in
 the process a thousand times a second, records EIP, and prints the hottest addresses per thread - raw
-addresses for the XBE, which are the ones Ghidra shows, and `module!export+offset` for anything else. Set
-`NIGHTFIRE_PROFILE=1` to turn it on; it costs a `getenv` a frame otherwise.
+addresses for the XBE, which are the ones Ghidra shows, and `module!export+offset` for anything else. Turn
+it on with `Profile=on` under `[Settings]` in `settings.ini`, the same file the action engine's settings live
+in; the file is read once, so it costs a compare a frame otherwise.
 
 ### What is left
 
