@@ -1,6 +1,7 @@
 #include "psiInput.h"
 #include "../actionhelpers.h"
 #include "../../common/renderWindow.h"
+#include "mouseLook.h"
 #include <string.h>
 #include <math.h>
 
@@ -74,9 +75,9 @@ extern "C" __declspec(dllimport) unsigned long __stdcall XInputSetState(unsigned
 //
 //   W / A / S / D          left stick   - move and strafe
 //   arrow keys             right stick  - look (60% deflection, full with Shift held)
-//   Left Ctrl              right trigger - fire
+//   Left Ctrl  or  mouse 1 right trigger - fire        (the mouse only while the pointer is captured)
 //   Z                      left shoulder - alternate fire
-//   X                      left trigger  - scope zoom
+//   X          or  mouse 2 left trigger  - scope zoom   (likewise)
 //   Space                  Y  - jump                 (also menu alt-select 1)
 //   C  or  Return          A  - crouch               (also menu select)
 //   R                      X  - reload               (also menu alt-select 2)
@@ -176,8 +177,11 @@ static bool BuildKeyboardPadState(Win32_XINPUT_STATE *state) {
     if (KeyDown('1'))                        buttons |= XINPUT_GAMEPAD_DPAD_DOWN;
     state->Gamepad.wButtons = buttons;
 
-    state->Gamepad.bRightTrigger = KeyDown(VK_LCONTROL_) ? 0xFF : 0; // fire
-    state->Gamepad.bLeftTrigger  = KeyDown('X') ? 0xFF : 0;          // scope zoom
+    // The mouse buttons come in here rather than being applied to the player directly, so that they go
+    // through the same mapping as every other button - see the comment on MouseLook_FireHeld. Both are held
+    // false unless the pointer is captured, so this cannot pick up a click meant for something else.
+    state->Gamepad.bRightTrigger = (KeyDown(VK_LCONTROL_) || MouseLook_FireHeld()) ? 0xFF : 0; // fire
+    state->Gamepad.bLeftTrigger  = (KeyDown('X') || MouseLook_ZoomHeld()) ? 0xFF : 0;          // scope zoom
 
     return buttons != 0 || moveX != 0 || moveY != 0 || lookX != 0 || lookY != 0 ||
            state->Gamepad.bLeftTrigger != 0 || state->Gamepad.bRightTrigger != 0;

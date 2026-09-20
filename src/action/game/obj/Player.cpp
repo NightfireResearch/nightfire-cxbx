@@ -3,6 +3,7 @@
 #include "../view.h"
 #include "../../engine/viewer.h"
 #include "../../engine/Anim.h"
+#include "../../engine/mouseLook.h"
 
 #include <string.h>
 
@@ -14,6 +15,8 @@ void Player_Disable(obj_tag *param_1,char param_2);
 void Player_Enable(obj_tag *param_1, _MATRIX *mtx, int param_3);
 // AUTOGEN
 void Player_SetHealth(BLData *obj, float health);
+// AUTOGEN
+void Concat(float *param_1, float *param_2);
 
 
 #define player_start_positions_index U32_AT(0x002774c8)
@@ -254,5 +257,67 @@ void Player_WeaponNone(obj_tag* obj) {
     blData->lensFlareRelated = 1.0f;
 
     obj->animState->animFlags &= 0xfe;
+
+}
+
+
+// The game's own view pitch clamp, and the one place mouse look reaches the player.
+//
+// Player_Update runs this immediately after Player_Aiming and before it uses either angle: the yaw in
+// rotationDelta.y is added to the object's rotation a few lines further on, and the pitch here is what the
+// camera reads. So this is the moment when the frame's aim has been decided but not yet acted on, which is
+// exactly where an extra contribution belongs - and, the point of doing it here rather than by pretending
+// to be a stick, it is past the deadzone in psiInput_PollDevices and past the AccelFunc0 ramps in
+// Player_Move and Player_Aiming. See engine/mouseLook.h for why neither should apply to a mouse.
+//
+// Player 0 only. Split-screen players are on pads; there is one mouse.
+//
+// AUTOINJECT
+void Player_ViewClamping(obj_tag *player) {
+
+    BLData *blData = (BLData*)player->extraObjectData;
+
+    float yawRadians = 0.0f, pitchFraction = 0.0f;
+    if (blData->playerNum == 0 && MouseLook_TakeAimDelta(&yawRadians, &pitchFraction)) {
+
+        if (player->subState == MovementType_ZeroG || player->subState == MovementType_ZeroG_Anim) {
+            // Zero G does not steer the way everything else does. Player_ZeroG builds a rotation matrix from
+            // the frame's turn and concatenates it straight onto the object's matrix, then holds
+            // pitchFromHorizontal at zero - so by the time this runs the orientation is already baked in, and
+            // adding to either of the fields the rest of the game uses achieves nothing. (That is why mouse
+            // look looked completely dead in the last mission while working everywhere else.) The answer is
+            // to apply a second rotation the same way, which is the three calls below, copied from what
+            // Player_ZeroG itself does. Zero G also counts pitch the other way up, hence the negation.
+            _VECTOR delta;
+            delta.x = -(pitchFraction * 1.5707964f); // back into radians, which is what RotMatrix wants
+            delta.y = yawRadians;
+            delta.z = 0.0f;
+
+            _MATRIX rotation;
+            RotMatrix(&delta, &rotation);
+            Concat(player->transformMatrix.m, rotation.m);
+            Mat_CopyRot(&rotation, &player->transformMatrix);
+        }
+        else {
+            blData->rotationDelta.y += yawRadians;
+            blData->pitchFromHorizontal += pitchFraction;
+
+            // Without this the pitch springs straight back to wherever the game last decided the view should
+            // settle: Player_ClampSomeAngles eases pitchFromHorizontal towards pitchAutoLevelTarget by 7.5% a
+            // frame whenever aimAutoLevelState is 2 or 3, which at 50fps undoes the whole movement in about a
+            // quarter of a second. Player_Aiming sets the state to 1 on every frame the stick moves the view,
+            // for exactly this reason, so mouse look says the same thing rather than inventing its own escape.
+            blData->aimAutoLevelState = 1;
+        }
+    }
+
+    // Unchanged from the original, and deliberately after the above so that the mouse cannot drive the view
+    // past straight up or straight down either.
+    if (blData->pitchFromHorizontal < -1.0f) {
+        blData->pitchFromHorizontal = -1.0f;
+    }
+    else if (blData->pitchFromHorizontal > 1.0f) {
+        blData->pitchFromHorizontal = 1.0f;
+    }
 
 }

@@ -21,6 +21,12 @@
 # faulting address, what it touched, and a call stack, which is usually enough to name the cause in Ghidra
 # without attaching a debugger.
 #
+# GETTING INTO A LEVEL, which is what most of this is for: three "enter" presses, a few seconds apart, gets
+# from the attract movie through the codename screen to a loaded mission. Note that arriving in a level is not
+# the same as being in control of it - the opening in-engine cutscene runs first, during which the player
+# object already exists and input mostly does not apply. "enter" skips the cutscene too (it is the A button);
+# "escape" would also skip it, but a second press pauses the game instead.
+#
 # KEY NAMES are the host keyboard's, and the game's mapping of them is in src/action/engine/psiInput.cpp
 # (BuildKeyboardPadState). The ones worth knowing: "enter" is A, "back" is B, "escape" is Start, and the
 # arrow keys are the right stick. Any single character - "c", "p", "1" - is sent as that key.

@@ -23,7 +23,13 @@ static_assert(sizeof(WeaponStatus) == 0xc, "WeaponStatus size wrong");
 
 // WIP
 typedef struct BLData {
-    char _pad_0[0xbc];
+    char _pad_0[0x24];
+    // This frame's change in the object's rotation, not an angle: Player_Update zeroes it before the
+    // movement handlers run and adds it to obj_tag::rotation afterwards. .y is the turn, and it goes
+    // negative turning right. Anything wanting to steer the player adds to it in between - which is what
+    // mouse look does, in Player_ViewClamping.
+    _VECTOR rotationDelta; // 0x24
+    char _pad_0b[0xbc - 0x30];
     float someMPCameraThing1; // 0xbc
     float someMPCameraThing2; // 0xc0
     float someMPCameraThing3; // 0xc4
@@ -31,7 +37,14 @@ typedef struct BLData {
     char _pad_11111[0xe0 - 0xcc];
     float crosshairOffsetX; // 0xe0
     float crosshairOffsetY; // 0xe4
-    char _pad_1[0xf3-0xe8]; // next entry offset - (first byte above previous)
+    char _pad_1[0xf0-0xe8];
+    // Whether the game is easing the view pitch back towards pitchAutoLevelTarget. 0 and 1 mean it is not,
+    // 1 specifically meaning "the player is aiming right now"; 2 and 3 mean it is. Player_Aiming sets this
+    // to 1 on any frame the stick moves the view, which is what stops the easing fighting the player - see
+    // Player_ClampSomeAngles, which is the other half of it, and Player_ViewClamping, which is where mouse
+    // look has to do the same thing for the same reason.
+    char aimAutoLevelState; // 0xf0
+    char _pad_1b[0xf3-0xf1];
     char crosshairType; // 0xf3
     char _pad_11[0x15c-0xf4];
     WeaponStatus weaponStats[114]; // 0x15c-0x6b3 inclusive
@@ -46,7 +59,12 @@ typedef struct BLData {
     obj_tag* remoteControlDevice; // 0x808
     char _pad_2a[0x824-0x808-4];
     float health; // 0x824 - used eg. by SP_Update to abort an in-progress NIS if the player has died
-    char _pad_2b[0x860-0x824-4];
+    char _pad_2b[0x838-0x824-4];
+    // Where the player is looking vertically, as a fraction of a right angle rather than in radians, so
+    // +-1 is straight up and straight down - which is exactly the range Player_ViewClamping enforces.
+    float pitchFromHorizontal; // 0x838
+    float pitchAutoLevelTarget; // 0x83c - what aimAutoLevelState above eases pitchFromHorizontal towards
+    char _pad_2c[0x860-0x83c-4];
     float lensFlareRelated; // 0x860
     char _pad_222222[0x8b0-0x860-4];
     float nightVisionTimer; // 0x8b0
@@ -77,6 +95,10 @@ static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisi
 static_assert(offsetof(BLData, remoteControlDevice) == 0x808, "Offset of remoteControlDevice not correct");
 static_assert(offsetof(BLData, health) == 0x824, "Offset of health not correct");
 static_assert(offsetof(BLData, playerNum) == 0x8de, "Offset of playerNum not correct");
+static_assert(offsetof(BLData, rotationDelta) == 0x24, "Offset of rotationDelta not correct");
+static_assert(offsetof(BLData, pitchFromHorizontal) == 0x838, "Offset of pitchFromHorizontal not correct");
+static_assert(offsetof(BLData, pitchAutoLevelTarget) == 0x83c, "Offset of pitchAutoLevelTarget not correct");
+static_assert(offsetof(BLData, aimAutoLevelState) == 0xf0, "Offset of aimAutoLevelState not correct");
 
 
 typedef enum {
@@ -89,6 +111,7 @@ typedef enum {
     MovementType_Wire = 6,
     MovementType_Creep = 7,
     MovementType_ZeroG = 8,
+    MovementType_ZeroG_Anim = 9, // Ghidra's ZEROG_2 - the same movement, animated; Player_ZeroG handles both
     MovementType_RemoteControl = 10, // Experimentally, seems to be if firing Sentinel? Maybe also RC Cars?
     MovementType_Zipline = 15,
     MovementType_Ronin = 16,
@@ -120,6 +143,7 @@ unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState); // 
 void Player_SetCamMode(BLData *param_1,unsigned short param_2);
 void Player_Disable(obj_tag *param_1,char param_2);
 void Player_WeaponNone(obj_tag *param_1);
+void Player_ViewClamping(obj_tag *player);
 void Player_Enable(obj_tag *param_1, _MATRIX *mtx, int param_3);
 void Player_SetHealth(BLData *obj, float health);
 void Player_CheckWeaponsLoaded(BLData *blData);

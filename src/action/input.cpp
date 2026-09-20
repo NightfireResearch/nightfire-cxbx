@@ -2,6 +2,7 @@
 #include <windows.h>
 
 #include "input.h"
+#include "engine/mouseLook.h"
 #include "game/mp/multiplayer.h"
 
 // Keyboard input proper now lives in engine/psiInput.cpp, which presents the keyboard as a virtual Xbox pad on
@@ -41,11 +42,17 @@ void Inject_KeyboardInput(void) {
 // UNINJECTABLE
 void Input_Update(void) {
 
+    // The mouse goes first, so that the buttons it reports land in the pad state the game's own poll
+    // builds immediately below, rather than a frame behind it. It is serviced from here rather than
+    // alongside the aiming it feeds because letting go of the pointer is a menu-time job, and the aim
+    // hook is precisely what stops running in menus. See engine/mouseLook.h.
+    MouseLook_Update();
+
     // Game functions - poll, compensate stick, map from keys to actions
     void (*funcPtr)(void) = (void (*)(void))(0x0006cf50);
     funcPtr();
 
-    // Our added function - keyboard input
+    // Our added function - the debug keys
     Inject_KeyboardInput();
 }
 

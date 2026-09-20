@@ -34,6 +34,12 @@ bool Settings_GetReverbEnabled(void);
 // Whether to print the periodic frame-time and streaming-I/O summary. See PerfLog in settings.ini.
 bool Settings_GetPerfLog(void);
 
+// settings.ini's [Settings] MouseLook, MouseSensitivity and MouseInvertY keys - see engine/mouseLook.h.
+// Sensitivity is a plain multiplier on the default, and is clamped to something usable rather than trusted.
+bool Settings_GetMouseLook(void);
+float Settings_GetMouseSensitivity(void);
+bool Settings_GetMouseInvertY(void);
+
 // settings.ini's [Settings] DiscPath key: the host folder the Xbox D: drive resolves to, i.e. the one holding
 // eurocom\filesys.d00. Defaults to "../disc", relative to the working directory the executables run in. See
 // engine/XboxPaths.h for the drive-letter mapping this feeds.

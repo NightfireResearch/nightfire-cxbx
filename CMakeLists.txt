@@ -76,6 +76,7 @@ add_library(actioninject SHARED
   src/action/engine/parsemap.cpp
   src/action/engine/psiFile.cpp
   src/action/engine/psiGraphics.cpp
+  src/action/engine/mouseLook.cpp
   src/action/engine/psiInput.cpp
   src/action/engine/psiLight.cpp
   src/action/engine/psiSave.cpp

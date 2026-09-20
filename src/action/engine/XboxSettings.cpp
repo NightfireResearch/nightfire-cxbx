@@ -47,6 +47,9 @@ struct Settings {
     int graphicsBackend; // 0 = CXBX's D3D8 HLE (default), 1 = the seam's own D3D9 backend (see Direct3D/d3d9Backend.h)
     int audioBackend;    // 0 = CXBX's DSOUND HLE (default), 1 = the audio seam's own native backend (see sound/dsndSeam.h)
     bool reverb;         // xaudio2 backend only: run the I3DL2 reverb send. On by default.
+    bool mouseLook;        // see engine/mouseLook.h
+    float mouseSensitivity;
+    bool mouseInvertY;
     char discPath[240];  // where the game's disc data lives; see XboxPaths.cpp
 };
 
@@ -93,6 +96,17 @@ static void WriteDefaultSettingsFile() {
         "; approximation, since the game never sets the room parameters and nothing local can reproduce them.\n"
         "Reverb=on\n"
         "\n"
+        "; Mouse look, which the game itself has no idea about. Click in the window during play to\n"
+        "; capture the pointer, Escape (or anything that opens a menu) to let it go again.\n"
+        "MouseLook=on\n"
+        "\n"
+        "; Multiplier on the default mouse speed, which is about a five inch sweep per 360 degrees\n"
+        "; on an 800 DPI mouse. Larger is faster.\n"
+        "MouseSensitivity=1.0\n"
+        "\n"
+        "; Whether moving the mouse away from you looks down instead of up.\n"
+        "MouseInvertY=off\n"
+        "\n"
         "; Where the game's disc data lives - the folder containing eurocom\\filesys.d00 and the rest. This is\n"
         "; what the Xbox's D: drive resolves to. Relative paths are relative to this executable's folder.\n"
         "DiscPath=../disc\n"
@@ -124,6 +138,9 @@ static void LoadSettingsFile() {
     g_settings.graphicsBackend = 0;
     g_settings.audioBackend = 0;
     g_settings.reverb = true;
+    g_settings.mouseLook = true;
+    g_settings.mouseSensitivity = 1.0f;
+    g_settings.mouseInvertY = false;
     strncpy(g_settings.discPath, "../disc", sizeof(g_settings.discPath) - 1);
     g_settings.discPath[sizeof(g_settings.discPath) - 1] = '\0';
 
@@ -174,6 +191,17 @@ static void LoadSettingsFile() {
             g_settings.perfLog = (_stricmp(value, "on") == 0 || _stricmp(value, "1") == 0);
         } else if (_stricmp(key, "Reverb") == 0) {
             g_settings.reverb = !(_stricmp(value, "off") == 0 || _stricmp(value, "0") == 0);
+        } else if (_stricmp(key, "MouseLook") == 0) {
+            g_settings.mouseLook = !(_stricmp(value, "off") == 0 || _stricmp(value, "0") == 0);
+        } else if (_stricmp(key, "MouseSensitivity") == 0) {
+            // Clamped rather than trusted: a zero or a typo'd negative would silently look like the mouse
+            // not working at all, and a huge one like the view having come loose.
+            float sensitivity = (float)atof(value);
+            if (sensitivity < 0.05f) sensitivity = 0.05f;
+            if (sensitivity > 20.0f) sensitivity = 20.0f;
+            g_settings.mouseSensitivity = sensitivity;
+        } else if (_stricmp(key, "MouseInvertY") == 0) {
+            g_settings.mouseInvertY = (_stricmp(value, "on") == 0 || _stricmp(value, "1") == 0);
         } else if (_stricmp(key, "DiscPath") == 0) {
             if (value[0] != '\0') {
                 strncpy(g_settings.discPath, value, sizeof(g_settings.discPath) - 1);
@@ -249,6 +277,18 @@ bool Settings_GetReverbEnabled(void) {
 
 bool Settings_GetPerfLog(void) {
     return GetSettings()->perfLog;
+}
+
+bool Settings_GetMouseLook(void) {
+    return GetSettings()->mouseLook;
+}
+
+float Settings_GetMouseSensitivity(void) {
+    return GetSettings()->mouseSensitivity;
+}
+
+bool Settings_GetMouseInvertY(void) {
+    return GetSettings()->mouseInvertY;
 }
 
 const char *Settings_GetDiscPath(void) {
