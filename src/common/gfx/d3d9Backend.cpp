@@ -213,14 +213,25 @@ static void PrintMissingSummary(void) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Xbox D3D8 structures and state arrays we read directly. The seam still writes D3D8's own deferred state
-// arrays (via its D3D8_* macros), so the backend reads them back at draw time rather than needing a second
-// copy of the state: D3D__TextureState[4][32] at 0x001117D0 (index = X_D3DTSS_*) and D3D__RenderState at
-// 0x001119D0 (index = X_D3DRS_*).
+// Xbox D3D8 structures and state arrays we read directly.
+//
+// Both engines keep setting D3D8's own deferred state through its entry points, so the backend reads that
+// state back at draw time rather than keeping a second copy of it: D3D__TextureState[4][32] (index =
+// X_D3DTSS_*) and D3D__RenderState (index = X_D3DRS_*), which is where the texture stage operations, the
+// filtering and addressing modes and the fog parameters live.
+//
+// The addresses are the XBE's, so they differ between the two games and the engine sets them - which is not
+// a formality. Reading the action engine's addresses while running the driving engine lands in the middle of
+// the driving build's XAPI, so every filter mode, every colour operation and every fog parameter is whatever
+// happens to be in that code: textures come out untextured, and the nonsense reaches the display driver,
+// which crashed compiling a shader for it.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define XBOX_TEXTURE_STATE(stage, index) (*(const uint32_t*)(0x001117D0u + (stage) * 0x80u + (index) * 4u))
-#define XBOX_RENDER_STATE(index)         (*(const uint32_t*)(0x001119D0u + (index) * 4u))
+uint32_t g_xboxTextureStateTable = 0;   // D3D__TextureState[4][32], four stages of 0x80 bytes
+uint32_t g_xboxRenderStateTable = 0;    // D3D__RenderState[]
+
+#define XBOX_TEXTURE_STATE(stage, index) (*(const uint32_t*)(g_xboxTextureStateTable + (stage) * 0x80u + (index) * 4u))
+#define XBOX_RENDER_STATE(index)         (*(const uint32_t*)(g_xboxRenderStateTable + (index) * 4u))
 enum { XTSS_TEXCOORDINDEX = 28, XTSS_ADDRESSU = 0, XTSS_ADDRESSV = 1, XTSS_MAGFILTER = 3, XTSS_MINFILTER = 4, XTSS_MIPFILTER = 5, XTSS_MIPMAPLODBIAS = 6,
        XTSS_COLOROP = 12, XTSS_COLORARG0 = 13, XTSS_COLORARG1 = 14, XTSS_COLORARG2 = 15,
        XTSS_ALPHAOP = 16, XTSS_ALPHAARG0 = 17, XTSS_ALPHAARG1 = 18, XTSS_ALPHAARG2 = 19, XTSS_BORDERCOLOR = 29 };
@@ -455,6 +466,16 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
     if (!rebuild && !t->dirty)
         return t->texture;
 
+    // A texture whose pixels are "the backbuffer's memory" is a capture of the backbuffer, not something to
+    // upload: that address is a sentinel, not memory (see the stand-in surfaces above). The action engine
+    // announces this by registering the texture, which is caught in D3D9_ResourceRegister; the driving
+    // engine's EAGL builds the header itself at device creation and copies the surface's data word into it,
+    // so it arrives here instead - and reading from the sentinel is a fault inside memcpy.
+    if ((h->Data | 0x80000000u) == (BACKBUFFER_DATA_SENTINEL | 0x80000000u)) {
+        CaptureBackBufferInto((void *)headerPtr);
+        return t->texture;
+    }
+
     uint32_t xboxFormat = (h->Format >> 8) & 0xFF;
     bool linear = (h->Size != 0);
     bool dxt = XboxFormatIsDxt(xboxFormat);
@@ -612,6 +633,9 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
     (void)adapter; (void)deviceType; (void)hFocusWindow; (void)behaviorFlags;
     const uint32_t *xboxParams = (const uint32_t*)pPresentationParameters; // Xbox D3DPRESENT_PARAMETERS: [0] width, [1] height, ..., [11] refresh rate
     uint32_t width = xboxParams[0], height = xboxParams[1];
+
+    if (g_xboxTextureStateTable == 0 || g_xboxRenderStateTable == 0)
+        D3D9Log("[d3d9] the D3D8 state table addresses were never set - see g_xboxTextureStateTable\n");
 
     g_window = FindRenderWindow();
     if (g_window == NULL) {
@@ -1463,8 +1487,8 @@ static void InitPinnedConstants(void) {
 // object gets a host copy on first bind; D3DResource_Register on the same slot (a level reload) drops it.
 // The overlay quad table (0x2CAFE8, 20-byte slots) has no byte size, only a vertex count at +0x10 with the
 // point-sprite stride of 0x24; the vertex-buffer table (0x2DECEC, 36-byte slots) has its byte size at +0x14.
-#define OVERLAY_TABLE_BASE 0x002CAFE8u
-#define OVERLAY_TABLE_END  (OVERLAY_TABLE_BASE + 256u * 20u)
+uint32_t g_overlayTableBase = 0;   // the action engine's overlay quad table; empty means "no such table"
+uint32_t g_overlayTableEnd = 0;
 
 struct HostVertexBuffer { const void *obj; const void *data; uint32_t size; IDirect3DVertexBuffer9 *vb; };
 struct HostIndexBuffer  { const void *obj; const void *data; uint32_t size; IDirect3DIndexBuffer9 *ib; };
@@ -1494,7 +1518,7 @@ static IDirect3DVertexBuffer9 *GetHostVertexBuffer(const void *obj, uint32_t *si
     const uint32_t *slot = (const uint32_t*)obj;
     const void *data = (const void*)(uintptr_t)slot[1];
     uint32_t size;
-    if ((uintptr_t)obj >= OVERLAY_TABLE_BASE && (uintptr_t)obj < OVERLAY_TABLE_END)
+    if (g_overlayTableEnd != 0 && (uintptr_t)obj >= g_overlayTableBase && (uintptr_t)obj < g_overlayTableEnd)
         size = slot[4] * 0x24;
     else
         size = slot[5];
@@ -1716,9 +1740,9 @@ static bool PrepareShaderDraw(bool bindStreams) {
         if (g_reversedDepth) { hostConstants[1][0] = -g_depthClipNear / range; hostConstants[1][1] = g_depthClipFar; }
         else                 { hostConstants[1][0] = g_depthClipFar / range;   hostConstants[1][1] = g_depthClipNear; }
     }
-    memcpy(&hostConstants[2][0], (const void*)(0x001119D0u + XRS_FOGSTART * 4), 4);   // the deferred fog render states hold raw floats
-    memcpy(&hostConstants[2][1], (const void*)(0x001119D0u + XRS_FOGEND * 4), 4);
-    memcpy(&hostConstants[2][2], (const void*)(0x001119D0u + XRS_FOGDENSITY * 4), 4);
+    memcpy(&hostConstants[2][0], &XBOX_RENDER_STATE(XRS_FOGSTART), 4);   // the deferred fog states hold raw floats
+    memcpy(&hostConstants[2][1], &XBOX_RENDER_STATE(XRS_FOGEND), 4);
+    memcpy(&hostConstants[2][2], &XBOX_RENDER_STATE(XRS_FOGDENSITY), 4);
     hostConstants[2][3] = (float)XBOX_RENDER_STATE(XRS_FOGTABLEMODE);
     g_device->SetVertexShaderConstantF(200, &hostConstants[0][0], 5);
     if (bindStreams) {
@@ -1991,6 +2015,11 @@ void D3D9_GetSurfaceDesc(void *pSurface, uint32_t *format, uint32_t *width, uint
     if (format != NULL) *format = f;
     if (width != NULL)  *width = w;
     if (height != NULL) *height = h;
+}
+
+bool D3D9_IsStandInSurface(const void *pSurface) {
+    return pSurface == &g_dummyBackBuffer || pSurface == &g_dummyRenderTarget ||
+           pSurface == &g_dummyDepthStencil;
 }
 
 void D3D9_BlockUntilNotBusy(void *pResource) {

@@ -1,6 +1,7 @@
 #include "../../common/gfx/backendHost.h"
 
 #include "d3dSeam.h"
+#include "../sound/dsndSeam.h"
 
 // The driving engine's answers to the three questions the shared D3D9 backend asks.
 //
@@ -22,4 +23,5 @@ void GfxHost_ReportPeriodic(void) {
     // beside the frame timing, while the graphics seam is being filled in, is which D3D8 entry points the
     // game has reached that the seam does not implement yet.
     D3dSeam_ReportMissing();
+    DsndSeam_ReportMissing();
 }

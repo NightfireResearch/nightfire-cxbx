@@ -176,8 +176,13 @@ add_executable(action
 # /SAFESEH:NO because the mapped XBE ends up inside this image's address range, so every SEH handler the
 # game registers looks to Windows like one of this executable's - and would be rejected for not being in its
 # table of safe handlers.
+# /NXCOMPAT:NO because an Xbox title's memory is all executable and this one means it: EAGL compiles its
+# render methods into allocated memory and calls them, which under DEP faults the moment a model draws
+# ("tried to access <heap address>, protection PAGE_READWRITE"). Marking the image as not DEP-aware turns
+# DEP off for the process, which is the console's own model; the loader's memory shims hand out executable
+# pages to match (src/loader/kernel.cpp).
 target_link_options(action PRIVATE
-  /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /INCREMENTAL:NO)
+  /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /NXCOMPAT:NO /INCREMENTAL:NO)
 
 # Symbol maps for both binaries that appear in crash backtraces.
 #
@@ -205,7 +210,7 @@ add_executable(driving
 )
 target_compile_definitions(driving PRIVATE IS_DRIVING)
 target_link_options(driving PRIVATE
-  /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /INCREMENTAL:NO /MAP)
+  /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /NXCOMPAT:NO /INCREMENTAL:NO /MAP)
 
 add_library(drivinginject SHARED
   src/dllmain.cpp
@@ -220,11 +225,15 @@ add_library(drivinginject SHARED
   src/driving/Scheduler.cpp
   src/driving/engine/FileNameList.cpp
   src/driving/engine/UFileLoader.cpp
+  src/driving/engine/Stream.cpp
+  src/common/xboxPath.cpp
   src/driving/platform/XboxStartup.cpp
   src/driving/platform/XboxTimer.cpp
   src/driving/platform/XboxInput.cpp
   src/driving/gfx/backendHost.cpp
   src/driving/gfx/d3dSeam.cpp
+  src/driving/sound/dsndSeam.cpp
+  src/common/xbeEntrySeam.cpp
   src/common/gfx/d3d9Backend.cpp
 )
 

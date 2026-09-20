@@ -141,6 +141,15 @@ static LONG OpenCommon(HANDLE *fileHandle, ACCESS_MASK desiredAccess,
                                 Win32DispositionOf(createDisposition), flags, NULL);
     if (handle == INVALID_HANDLE_VALUE) {
         DWORD error = GetLastError();
+        // Worth saying out loud. A game that cannot find a file mostly carries on without it, and the
+        // symptom arrives much later and looks like something else entirely - a movie that never starts, a
+        // texture that is never bound. Only failures are printed; the successful opens are the game's own
+        // business and there are thousands of them.
+        if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND)
+            printf("[loader] file not found: %s\n", hostPath);
+        else
+            printf("[loader] could not open %s (error %lu)\n", hostPath, error);
+        fflush(stdout);
         if (ioStatusBlock != NULL) {
             ioStatusBlock->Status = StatusFromLastError(error);
             ioStatusBlock->Information = 0;

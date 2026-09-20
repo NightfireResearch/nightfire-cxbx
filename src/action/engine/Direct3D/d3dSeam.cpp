@@ -3322,6 +3322,14 @@ static uint32_t g_d3dDisplayFormat = 7;
 //
 // AUTOINJECT
 void xboxInitGraphics(void) {
+    // Where this XBE's D3D8 keeps the deferred state the backend reads, and the overlay quad table whose
+    // slots hold a vertex count instead of a byte size. Both are addresses in this build; the driving engine
+    // sets its own (src/driving/gfx/d3dSeam.cpp).
+    g_xboxTextureStateTable = 0x001117D0u;
+    g_xboxRenderStateTable = 0x001119D0u;
+    g_overlayTableBase = 0x002CAFE8u;
+    g_overlayTableEnd = g_overlayTableBase + 256u * 20u;
+
     g_gfxBackend = Settings_GetGraphicsBackend(); // decided once, before the first D3D8 entry point is touched
     printf("[d3dSeam] graphics backend: %s\n", g_gfxBackend == GFX_BACKEND_D3D9 ? "d3d9 (native)" : "cxbx (D3D8 HLE)");
 

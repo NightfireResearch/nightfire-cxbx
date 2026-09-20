@@ -286,10 +286,12 @@ static const unsigned char NOTIFICATION_HOOK_BYTES[12] = {
 //
 // There is nothing to flush: no GPU reads this process's memory behind its back. So each becomes two nops.
 //
-// The list is every WBINVD that Ghidra places inside a function. It finds eleven in the image; the two left
-// out (0x0014d452 and 0x0024bf11) are in no function and are almost certainly data that happens to contain
-// 0f 09, and nopping data would corrupt it silently. The byte check below is the other half of that guard: an
-// address that is not a WBINVD is reported rather than written to.
+// Ghidra finds eleven WBINVDs in the image and places nine of them inside a function. Of the other two,
+// 0x0014d452 is real - it is in a region Ghidra has not analysed as code, and the movie player reaches it,
+// which is how it announced itself as a privileged-instruction fault at exactly that address - and
+// 0x0024bf11 is not: it is the bytes "cc 0f 09 00" inside an ascending table of dwords. Both halves of that
+// were worth checking rather than assuming, and the byte check below is the guard either way: an address
+// that does not hold a WBINVD is reported rather than written to.
 // ---------------------------------------------------------------------------------------------------------------
 
 static const unsigned WBINVD_SITES[] = {
@@ -302,6 +304,7 @@ static const unsigned WBINVD_SITES[] = {
     0x00117682,   // FileLoad
     0x00117762,   // FUN_001176f0
     0x0016dbb2,   // FUN_0016d800
+    0x0014d452,   // no function around it, but the movie player runs it
 };
 
 static const unsigned char WBINVD_BYTES[2] = { 0x0f, 0x09 };

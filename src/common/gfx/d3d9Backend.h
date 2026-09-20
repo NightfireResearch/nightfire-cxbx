@@ -23,6 +23,17 @@
 enum { GFX_BACKEND_CXBX = 0, GFX_BACKEND_D3D9 = 1 };
 extern int g_gfxBackend;
 
+// Where the XBE's statically linked D3D8 keeps the state the backend reads back at draw time: the deferred
+// texture stage states (four stages of 32 dwords) and the render states. Both addresses belong to the XBE
+// being run, so the engine sets them before the device is created - see the note in d3d9Backend.cpp.
+extern uint32_t g_xboxTextureStateTable;
+extern uint32_t g_xboxRenderStateTable;
+
+// The action engine's overlay quad table, whose slots carry a vertex count rather than a byte size. Left
+// empty by an engine that has no such table.
+extern uint32_t g_overlayTableBase;
+extern uint32_t g_overlayTableEnd;
+
 void D3D9_BackendMissing(const char *entryPoint);
 
 // Device
@@ -77,6 +88,11 @@ uint32_t D3D9_ResourceRelease(void *pResource);
 // The geometry behind a surface object, for the D3D8 entry points that report it (D3DSurface_GetDesc). The
 // format is an Xbox X_D3DFMT_* value, because that is what the callers feed back into XGSetTextureHeader.
 void D3D9_GetSurfaceDesc(void *pSurface, uint32_t *format, uint32_t *width, uint32_t *height);
+
+// True for the backbuffer, render target and depth stand-ins the backend hands out. They have no pixels a
+// CPU can read or write - there is no Xbox-side framebuffer here - so a caller that wants to lock one has to
+// be given something else.
+bool D3D9_IsStandInSurface(const void *pSurface);
 void D3D9_BlockUntilNotBusy(void *pResource);
 
 #endif // D3D9BACKEND_H_

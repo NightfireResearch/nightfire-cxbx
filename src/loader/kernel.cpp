@@ -147,6 +147,34 @@ static LONG __stdcall Xbox_PsCreateSystemThreadEx(HANDLE *threadHandle,
 #define XBOX_STATUS_NO_MEMORY            ((LONG)0xC0000017)
 #define XBOX_STATUS_INVALID_PARAMETER    ((LONG)0xC000000D)
 
+// ---------------------------------------------------------------------------------------------------------------
+// Every page the game gets is executable, because on the console every page is.
+//
+// An Xbox title runs in ring 0 with no data execution prevention, and this one relies on it: EAGL compiles
+// each model's render method into a stream of its own and calls into the result, so the game's heap holds
+// code. Under Windows those pages are PAGE_READWRITE and the first model drawn faults trying to execute one -
+// which is what happened, with the loader reporting "tried to access 0x0423ed00, protection 0x4" from inside
+// EAGL::Model::Draw.
+//
+// The loader is also linked /NXCOMPAT:NO, which turns DEP off for the process as a whole; this is the other
+// half of the same decision, and it is the half that does not depend on the system's DEP policy.
+// ---------------------------------------------------------------------------------------------------------------
+
+static DWORD ExecutableProtection(DWORD protect) {
+    switch (protect & 0xFF) {
+        case PAGE_NOACCESS:
+        case PAGE_EXECUTE:
+        case PAGE_EXECUTE_READ:
+        case PAGE_EXECUTE_READWRITE:
+        case PAGE_EXECUTE_WRITECOPY:
+            return protect;                                    // already executable, or deliberately nothing
+        case PAGE_READONLY:
+            return (protect & ~0xFFu) | PAGE_EXECUTE_READ;
+        default:
+            return (protect & ~0xFFu) | PAGE_EXECUTE_READWRITE;
+    }
+}
+
 // Ordinal 184. Note there is no process handle: an Xbox title is the only process there is.
 static LONG __stdcall Xbox_NtAllocateVirtualMemory(void **baseAddress, ULONG zeroBits, ULONG *allocationSize,
                                                    DWORD allocationType, DWORD protect) {
@@ -154,7 +182,8 @@ static LONG __stdcall Xbox_NtAllocateVirtualMemory(void **baseAddress, ULONG zer
     if (baseAddress == NULL || allocationSize == NULL)
         return XBOX_STATUS_INVALID_PARAMETER;
 
-    void *result = VirtualAlloc(*baseAddress, *allocationSize, allocationType, protect);
+    void *result = VirtualAlloc(*baseAddress, *allocationSize, allocationType,
+                                ExecutableProtection(protect));
     if (result == NULL)
         return XBOX_STATUS_NO_MEMORY;
 
@@ -191,7 +220,7 @@ static LONG __stdcall Xbox_NtProtectVirtualMemory(void **baseAddress, ULONG *reg
         return XBOX_STATUS_INVALID_PARAMETER;
 
     DWORD previous = 0;
-    if (!VirtualProtect(*baseAddress, *regionSize, newProtect, &previous))
+    if (!VirtualProtect(*baseAddress, *regionSize, ExecutableProtection(newProtect), &previous))
         return XBOX_STATUS_INVALID_PARAMETER;
     if (oldProtect != NULL)
         *oldProtect = previous;
@@ -225,7 +254,7 @@ static void *__stdcall Xbox_ExAllocatePoolWithTag(ULONG numberOfBytes, ULONG tag
     (void)tag;   // a debugging aid on the console; nothing reads it back
 
     if (g_poolHeap == NULL) {
-        g_poolHeap = HeapCreate(0, 0, 0);
+        g_poolHeap = HeapCreate(HEAP_CREATE_ENABLE_EXECUTE, 0, 0);
         if (g_poolHeap == NULL) {
             printf("[loader] ExAllocatePoolWithTag: no pool heap (error %lu)\n", GetLastError());
             return NULL;
@@ -276,7 +305,7 @@ static void *__stdcall Xbox_MmAllocateContiguousMemoryEx(ULONG numberOfBytes,
     (void)highestAcceptableAddress;
     (void)protectionType;
 
-    void *memory = VirtualAlloc(NULL, numberOfBytes, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    void *memory = VirtualAlloc(NULL, numberOfBytes, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if (memory == NULL) {
         printf("[loader] MmAllocateContiguousMemoryEx: %lu bytes refused (error %lu)\n",
                numberOfBytes, GetLastError());
@@ -337,6 +366,7 @@ static ULONG __stdcall Xbox_MmQueryAllocationSize(void *baseAddress) {
 // ---------------------------------------------------------------------------------------------------------------
 
 #define XBOX_STATUS_OBJECT_NAME_NOT_FOUND ((LONG)0xC0000034)
+#define XBOX_REG_BINARY                   3
 #define XBOX_REG_DWORD                    4
 
 #define XC_LANGUAGE            0x07
@@ -347,6 +377,7 @@ static ULONG __stdcall Xbox_MmQueryAllocationSize(void *baseAddress) {
 #define XC_DVD_REGION          0x12
 #define XC_FACTORY_AV_REGION   0x103
 #define XC_FACTORY_GAME_REGION 0x104
+#define XC_MAX_OS              0xff    // the whole operating-system settings block, rather than one value
 
 #define AV_STANDARD_PAL_I      0x00000300   // bits 8..15 are the standard; 1 is NTSC-M, 3 is PAL-I
 
@@ -364,6 +395,18 @@ static LONG __stdcall Xbox_ExQueryNonVolatileSetting(ULONG valueIndex, ULONG *ty
         case XC_DVD_REGION:          setting = 2; break;                  // Europe, to match PAL below
         case XC_FACTORY_AV_REGION:   setting = AV_STANDARD_PAL_I; break;
         case XC_FACTORY_GAME_REGION: setting = 2; break;                  // 1 is NA, 2 Japan, 4 rest of world
+        case XC_MAX_OS:
+            // Not one setting but the whole OS block, which is what the time zone code asks for: it reads
+            // the lot and picks the fields it wants. Zeroed means UTC with no daylight saving, which is the
+            // truthful answer when there is no EEPROM to have configured.
+            if (value == NULL)
+                return XBOX_STATUS_INVALID_PARAMETER;
+            memset(value, 0, valueLength);
+            if (type != NULL)
+                *type = XBOX_REG_BINARY;
+            if (resultLength != NULL)
+                *resultLength = valueLength;
+            return XBOX_STATUS_SUCCESS;
         default:
             printf("[loader] ExQueryNonVolatileSetting: no answer for setting 0x%lx\n", valueIndex);
             fflush(stdout);
@@ -580,6 +623,195 @@ static LONG __stdcall Xbox_KeDelayExecutionThread(char waitMode, BOOLEAN alertab
 }
 
 // ---------------------------------------------------------------------------------------------------------------
+// Time, as the kernel tells it.
+//
+// Two clocks, and they are not the same one. System time is the wall clock, in 100-nanosecond units since
+// 1601 - the same epoch Win32's FILETIME uses, so it is the same number. Interrupt time is how long the
+// machine has been up, in the same units, and it is the one the game uses for intervals because it does not
+// jump when the clock is set.
+// ---------------------------------------------------------------------------------------------------------------
+
+#define HUNDRED_NS_PER_MS 10000ull
+
+// Ordinal 128.
+static void __stdcall Xbox_KeQuerySystemTime(LARGE_INTEGER *systemTime) {
+    if (systemTime == NULL)
+        return;
+    FILETIME now;
+    GetSystemTimeAsFileTime(&now);
+    systemTime->LowPart = now.dwLowDateTime;
+    systemTime->HighPart = (LONG)now.dwHighDateTime;
+}
+
+// Ordinal 125. Returned in EDX:EAX, which is what a 64-bit return value is on x86.
+static ULONGLONG __stdcall Xbox_KeQueryInterruptTime(void) {
+    return (ULONGLONG)GetTickCount64() * HUNDRED_NS_PER_MS;
+}
+
+// Ordinal 151. A busy wait on the console, where it is used for microsecond-scale hardware delays. Nothing
+// here drives hardware, so the only thing that matters is not spinning a whole timeslice away.
+static void __stdcall Xbox_KeStallExecutionProcessor(ULONG microseconds) {
+    if (microseconds >= 1000)
+        Sleep(microseconds / 1000);
+    else
+        SwitchToThread();
+}
+
+// The broken-down time both conversions work on. Same shape as NT's TIME_FIELDS, and the same as Win32's
+// SYSTEMTIME with the fields in a different order - which is the whole of the work below.
+struct XboxTimeFields {
+    SHORT Year, Month, Day, Hour, Minute, Second, Milliseconds, Weekday;
+};
+
+// Ordinal 305. Splits a 100-nanosecond count since 1601 into fields; Win32 has the same calendar, so this is
+// its FileTimeToSystemTime with the fields moved.
+static void __stdcall Xbox_RtlTimeToTimeFields(const LARGE_INTEGER *time, XboxTimeFields *fields) {
+    if (time == NULL || fields == NULL)
+        return;
+
+    FILETIME fileTime;
+    fileTime.dwLowDateTime = time->LowPart;
+    fileTime.dwHighDateTime = (DWORD)time->HighPart;
+
+    SYSTEMTIME systemTime;
+    memset(&systemTime, 0, sizeof(systemTime));
+    if (!FileTimeToSystemTime(&fileTime, &systemTime)) {
+        memset(fields, 0, sizeof(*fields));
+        return;
+    }
+
+    fields->Year = (SHORT)systemTime.wYear;
+    fields->Month = (SHORT)systemTime.wMonth;
+    fields->Day = (SHORT)systemTime.wDay;
+    fields->Hour = (SHORT)systemTime.wHour;
+    fields->Minute = (SHORT)systemTime.wMinute;
+    fields->Second = (SHORT)systemTime.wSecond;
+    fields->Milliseconds = (SHORT)systemTime.wMilliseconds;
+    fields->Weekday = (SHORT)systemTime.wDayOfWeek;
+}
+
+// Ordinal 304, the other direction. False for a date that is not a real one, as the original does.
+static BOOLEAN __stdcall Xbox_RtlTimeFieldsToTime(const XboxTimeFields *fields, LARGE_INTEGER *time) {
+    if (fields == NULL || time == NULL)
+        return FALSE;
+
+    SYSTEMTIME systemTime;
+    memset(&systemTime, 0, sizeof(systemTime));
+    systemTime.wYear = (WORD)fields->Year;
+    systemTime.wMonth = (WORD)fields->Month;
+    systemTime.wDay = (WORD)fields->Day;
+    systemTime.wHour = (WORD)fields->Hour;
+    systemTime.wMinute = (WORD)fields->Minute;
+    systemTime.wSecond = (WORD)fields->Second;
+    systemTime.wMilliseconds = (WORD)fields->Milliseconds;
+
+    FILETIME fileTime;
+    if (!SystemTimeToFileTime(&systemTime, &fileTime))
+        return FALSE;
+    time->LowPart = fileTime.dwLowDateTime;
+    time->HighPart = (LONG)fileTime.dwHighDateTime;
+    return TRUE;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Interrupt levels, which a Win32 process does not have.
+//
+// IRQL is the console's interrupt priority: raising it stops the scheduler and the interrupt handlers from
+// running, which is how the game's driver code makes itself atomic. There is no equivalent here and nothing
+// to protect against - the game's own threads use critical sections for that - so these keep the shape and
+// do nothing. The value returned is the "old IRQL" the caller will hand back to KfLowerIrql.
+// ---------------------------------------------------------------------------------------------------------------
+
+// Ordinal 129.
+static UCHAR __stdcall Xbox_KeRaiseIrqlToDpcLevel(void) {
+    return 0;
+}
+
+// Ordinal 160. __fastcall on the console: the new IRQL arrives in CL.
+static UCHAR __fastcall Xbox_KfRaiseIrql(UCHAR newIrql) {
+    (void)newIrql;
+    return 0;
+}
+
+// Ordinal 161.
+static void __fastcall Xbox_KfLowerIrql(UCHAR newIrql) {
+    (void)newIrql;
+}
+
+// Ordinal 153. On the console this runs a routine with the device's interrupt blocked. Here it is just the
+// routine, called the way it would have been.
+static BOOLEAN __stdcall Xbox_KeSynchronizeExecution(void *interrupt, BOOLEAN (__stdcall *routine)(void *),
+                                                     void *context) {
+    (void)interrupt;
+    return (routine != NULL) ? routine(context) : FALSE;
+}
+
+// Ordinals 142 and 139. The kernel saves the FPU state around code that uses it from an interrupt handler.
+// Nothing here runs in an interrupt, and Win32 saves the FPU state per thread anyway.
+static LONG __stdcall Xbox_KeSaveFloatingPointState(void *state) {
+    (void)state;
+    return XBOX_STATUS_SUCCESS;
+}
+
+static LONG __stdcall Xbox_KeRestoreFloatingPointState(void *state) {
+    (void)state;
+    return XBOX_STATUS_SUCCESS;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Objects and threads.
+//
+// The console's kernel hands out handles to objects and lets a caller convert one into the object itself.
+// Every handle here is a Win32 handle and there is no object behind it, so a reference is the handle: the
+// callers that do this (XAPI's thread functions) either pass it straight back to another kernel call or read
+// fields the replacements in src/driving/platform/XboxStartup.cpp no longer go through.
+// ---------------------------------------------------------------------------------------------------------------
+
+// Ordinal 246.
+static LONG __stdcall Xbox_ObReferenceObjectByHandle(HANDLE handle, void *objectType, void **object) {
+    (void)objectType;
+    if (object == NULL)
+        return XBOX_STATUS_INVALID_PARAMETER;
+    *object = handle;
+    return XBOX_STATUS_SUCCESS;
+}
+
+// Ordinal 250. __fastcall on the console, with the object in ECX.
+static void __fastcall Xbox_ObfDereferenceObject(void *object) {
+    (void)object;
+}
+
+// Ordinal 258. The thread is a Win32 thread, so this is its exit.
+static void __stdcall Xbox_PsTerminateSystemThread(LONG exitStatus) {
+    ExitThread((DWORD)exitStatus);
+}
+
+// Ordinal 95. The console's panic: it stops, shows a message and waits to be switched off. Saying which code
+// it was and stopping is the honest equivalent, and much more useful than continuing into whatever made it
+// panic in the first place.
+static void __stdcall Xbox_KeBugCheck(ULONG bugCheckCode) {
+    printf("\n[loader] the game called KeBugCheck(0x%lx) - it has decided it cannot continue\n", bugCheckCode);
+    fflush(stdout);
+    if (IsDebuggerPresent())
+        DebugBreak();
+    ExitProcess(1);
+}
+
+// Ordinals 49 and 360. Rebooting, powering off, or going back to the dashboard. The process ending is as
+// close as this gets.
+static void __stdcall Xbox_HalReturnToFirmware(ULONG routine) {
+    printf("[loader] the game asked the firmware to take over (mode %lu) - exiting\n", routine);
+    fflush(stdout);
+    ExitProcess(0);
+}
+
+static void __stdcall Xbox_HalInitiateShutdown(void) {
+    printf("[loader] the game asked for a shutdown - exiting\n");
+    fflush(stdout);
+    ExitProcess(0);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // Critical sections.
 //
 // The game embeds these in its own structures - the heap has one - so they are built in place rather than
@@ -695,7 +927,18 @@ static const struct { unsigned ordinal; void *implementation; } g_implemented[] 
     { 178, (void *)Xbox_MmPersistContiguousMemory },
     { 180, (void *)Xbox_MmQueryAllocationSize },
     { 184, (void *)Xbox_NtAllocateVirtualMemory },
+    { 49,  (void *)Xbox_HalReturnToFirmware },
+    { 95,  (void *)Xbox_KeBugCheck },
     { 99,  (void *)Xbox_KeDelayExecutionThread },
+    { 125, (void *)Xbox_KeQueryInterruptTime },
+    { 128, (void *)Xbox_KeQuerySystemTime },
+    { 129, (void *)Xbox_KeRaiseIrqlToDpcLevel },
+    { 139, (void *)Xbox_KeRestoreFloatingPointState },
+    { 142, (void *)Xbox_KeSaveFloatingPointState },
+    { 151, (void *)Xbox_KeStallExecutionProcessor },
+    { 153, (void *)Xbox_KeSynchronizeExecution },
+    { 160, (void *)Xbox_KfRaiseIrql },
+    { 161, (void *)Xbox_KfLowerIrql },
     { 186, (void *)Xbox_NtClearEvent },
     { 187, (void *)Xbox_NtClose },
     { 189, (void *)Xbox_NtCreateEvent },
@@ -710,10 +953,16 @@ static const struct { unsigned ordinal; void *implementation; } g_implemented[] 
     { 199, (void *)Xbox_NtFreeVirtualMemory },
     { 204, (void *)Xbox_NtProtectVirtualMemory },
     { 217, (void *)Xbox_NtQueryVirtualMemory },
+    { 246, (void *)Xbox_ObReferenceObjectByHandle },
+    { 250, (void *)Xbox_ObfDereferenceObject },
     { 255, (void *)Xbox_PsCreateSystemThreadEx },
+    { 258, (void *)Xbox_PsTerminateSystemThread },
+    { 360, (void *)Xbox_HalInitiateShutdown },
     { 277, (void *)Xbox_RtlEnterCriticalSection },
     { 278, (void *)Xbox_RtlEnterCriticalSection },   // ...AndRegion: APC disabling has no meaning here
     { 291, (void *)Xbox_RtlInitializeCriticalSection },
+    { 304, (void *)Xbox_RtlTimeFieldsToTime },
+    { 305, (void *)Xbox_RtlTimeToTimeFields },
     { 294, (void *)Xbox_RtlLeaveCriticalSection },
     { 295, (void *)Xbox_RtlLeaveCriticalSection },   // ...AndRegion, as above
     { 306, (void *)Xbox_RtlTryEnterCriticalSection },
