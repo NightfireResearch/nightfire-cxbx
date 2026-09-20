@@ -819,6 +819,22 @@ static uint32_t __stdcall Seam_D3DDevice_IsBusy(void) {
 static void __stdcall Seam_D3DDevice_MakeSpace(void) {
 }
 
+// Visibility tests, which gate the lens flares - the red lights on mines, projectiles and door nodes. The
+// backend answers them with occlusion queries; see the notes there. GetVisibilityTestResult's result is a
+// pointer to a UINT and the timestamp a pointer to a ULONGLONG, both optional.
+static void __stdcall Seam_D3DDevice_BeginVisibilityTest(void) {
+    D3D9_BeginVisibilityTest();
+}
+
+static void __stdcall Seam_D3DDevice_EndVisibilityTest(uint32_t index) {
+    D3D9_EndVisibilityTest(index);
+}
+
+static uint32_t __stdcall Seam_D3DDevice_GetVisibilityTestResult(uint32_t index, uint32_t *result,
+                                                                 uint64_t *timeStamp) {
+    return D3D9_GetVisibilityTestResult(index, result, timeStamp);
+}
+
 // Wireframe and point fill modes are a debug feature the game does not use in anger, and D3D9 has them
 // through a render state the backend does not expose yet. Accepting and ignoring it keeps solid fill.
 static void __stdcall Seam_D3DDevice_SetRenderState_FillMode(uint32_t fillMode) {
@@ -933,6 +949,9 @@ static const struct { const char *name; void *replacement; unsigned stackBytes; 
     { "D3DDevice_BlockOnFence",               (void *)Seam_D3DDevice_BlockOnFence, 4 },
     { "D3DDevice_IsBusy",                     (void *)Seam_D3DDevice_IsBusy, 0 },
     { "D3DDevice_MakeSpace",                  (void *)Seam_D3DDevice_MakeSpace, 0 },
+    { "D3DDevice_BeginVisibilityTest",        (void *)Seam_D3DDevice_BeginVisibilityTest, 0 },
+    { "D3DDevice_EndVisibilityTest",          (void *)Seam_D3DDevice_EndVisibilityTest, 4 },
+    { "D3DDevice_GetVisibilityTestResult",    (void *)Seam_D3DDevice_GetVisibilityTestResult, 12 },
     { "D3DDevice_CreateTexture2",             (void *)Seam_D3DDevice_CreateTexture2, 28 },
     { "D3DTexture_LockRect",                  (void *)Seam_D3DTexture_LockRect, 20 },
     { "D3DSurface_LockRect",                  (void *)Seam_D3DSurface_LockRect, 16 },

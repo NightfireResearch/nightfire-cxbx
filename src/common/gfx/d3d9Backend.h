@@ -124,4 +124,11 @@ bool D3D9_IsStandInSurface(const void *pSurface);
 bool D3D9_ReadBackBuffer(void *destination, uint32_t pitch, uint32_t width, uint32_t height);
 void D3D9_BlockUntilNotBusy(void *pResource);
 
+// Visibility tests: the NV2A counts the pixels that pass the depth test between Begin and End(index), and the
+// game asks for the count later. Occlusion queries, one per index. GetResult returns 0 with the count when it
+// is ready, or a failing HRESULT (D3DERR_TESTINCOMPLETE) until it is - the game spins on that.
+void D3D9_BeginVisibilityTest(void);
+void D3D9_EndVisibilityTest(uint32_t index);
+uint32_t D3D9_GetVisibilityTestResult(uint32_t index, uint32_t *result, uint64_t *timeStamp);
+
 #endif // D3D9BACKEND_H_

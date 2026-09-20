@@ -467,6 +467,18 @@ a survey of the XBE for other physical-ness tests (including the write-combined 
 and the seam's own allocations moved into the alias too so that there is one convention. Section 0's
 warning about the alias was right; this is where it bit.
 
+**The lights are lens flares, and the flares are visibility tests - implemented, not yet seen working.**
+The red lights on mines, projectiles and door nodes never drew because `RLensFlareManager` gates every
+flare on a visibility test the seam was stubbing (section 3 below has the mechanism). They are D3D9
+occlusion queries now, one per test index,
+taken from a pool at `BeginVisibilityTest` and filed under the index at `EndVisibilityTest`;
+`GetVisibilityTestResult` answers `D3DERR_TESTINCOMPLETE` until the query has data, which is what the game's
+wrapper spins on, and asks D3D9 to flush so the spin is short. Because the backbuffer is the game's own
+640x480, the pixel count is the console's, and the resolution scaling that broke this under CXBX does not
+arise. The `[perf]` line counts the tests per window. No run has yet had a light in view to test against -
+the earlier long run first reached these calls a minute into the level, after a scripted "openwater"
+event - so whether the lights now draw is unverified; that is left for play-testing.
+
 **The pause menu's video window, as first understood.** A 128x128 linear texture is bound at stage 3 of a quad in every frame,
 in the level and in the menu, and its memory is a contiguous allocation the game made and writes into
 directly - no lock the seam could see. The console's GPU reads such memory live; the host copy was taken
@@ -487,8 +499,7 @@ nothing has locked it yet.
 
 In the order the frame counter puts them:
 
-1. **Stencil and fill mode**, accepted and dropped by the seam, and the visibility tests behind the lens
-   flares (section 3).
+1. **Stencil and fill mode**, accepted and dropped by the seam.
 2. **Sound.** The seam is silent: it creates buffers, times them and reports them finished, but plays
    nothing. The action engine's XAudio2 backend is written and the formats here are ones it handles - 48 kHz
    mono, PCM or Xbox ADPCM - so this is wiring rather than invention. The timing model matters more than it

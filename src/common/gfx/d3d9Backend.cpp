@@ -68,6 +68,7 @@ static uint64_t g_statTextureScanSteps = 0;
 static uint64_t g_statBackBufferCaptures = 0;   // psiBlurScreen grabbing the frame
 static uint64_t g_statRenderTargetCreates = 0;  // each one is a D3DPOOL_DEFAULT allocation
 static uint64_t g_statBufferCreates = 0;        // vertex and index buffers created, not reused
+static uint64_t g_statVisibilityTests = 0;      // occlusion queries issued for the game's visibility tests
 
 static int HostTextureCount(void);   // defined with the texture table further down
 extern bool g_streamsVolatile;       // defined with the vertex ring further down; see the header
@@ -140,15 +141,17 @@ static void ReportFrameTiming(double arrivedAtPacer, double leftPacer) {
     // D3DPOOL_DEFAULT render target or a vertex buffer costs far more than issuing a draw, and doing either
     // every frame is the usual reason a scene is slow in a way that scales with nothing obvious.
     printf("[perf]   per frame: %llu backbuffer captures, %llu render targets created,"
-           " %llu buffers created\n",
+           " %llu buffers created; %llu visibility tests in the window\n",
            (unsigned long long)(g_statBackBufferCaptures / frames),
            (unsigned long long)(g_statRenderTargetCreates / frames),
-           (unsigned long long)(g_statBufferCreates / frames));
+           (unsigned long long)(g_statBufferCreates / frames),
+           (unsigned long long)g_statVisibilityTests);
     if (pacedMs < 0.5) {
         printf("[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.\n");
     }
     g_statDraws = g_statTextureUploads = g_statTextureLookups = g_statTextureScanSteps = 0;
     g_statBackBufferCaptures = g_statRenderTargetCreates = g_statBufferCreates = 0;
+    g_statVisibilityTests = 0;
     g_statDrawsIndexed = g_statDrawsDirect = g_statDrawsImmediate = g_statVertices = 0;
     g_statConstantUploads = g_statConstantRegisters = 0;
     fflush(stdout);
@@ -2297,9 +2300,11 @@ static void CaptureBackBufferInto(void *header) {
     g_device->StretchRect(g_backBufferSurface, NULL, t->rtSurface, NULL, D3DTEXF_NONE);
 }
 
+static void ReleaseVisibilityQueries(void);
 static void ReleaseDefaultPoolResources(void) {
     ReleaseIndexRing();
     ReleaseVertexRing();
+    ReleaseVisibilityQueries();
     for (int i = 0; i < g_textureCount; i++)
         if (g_textures[i].renderTarget)
             ReleaseHostTexture(&g_textures[i]);
@@ -2968,6 +2973,112 @@ bool D3D9_ReadBackBuffer(void *destination, uint32_t pitch, uint32_t width, uint
 bool D3D9_IsStandInSurface(const void *pSurface) {
     return pSurface == &g_dummyBackBuffer || pSurface == &g_dummyRenderTarget ||
            pSurface == &g_dummyDepthStencil;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Visibility tests.
+//
+// The driving engine's lens flares - the red lights on mines, projectiles and door nodes among them - are
+// gated by these. RLensFlareManager::TestFlares (0x0009e720) draws a small depth-tested quad at each light
+// between BeginVisibilityTest and EndVisibilityTest(index), with the index cycling through sixteen; DrawFlares
+// (0x0009e540) asks for the count the next frame, spinning until it is ready, and adds a glare scaled by
+// (visible pixels - 256) / 256. The NV2A counts pixels that passed the depth test; a D3D9 occlusion query
+// counts the same thing, and because the backbuffer is the game's own 640x480 the count is what the console
+// would have got - the resolution scaling that broke this under CXBX (plan section 3) does not arise.
+//
+// Begin has no index - it only arrives at End - so a query is taken from a pool at Begin and filed under its
+// index at End, replacing (and recycling) whatever was there. Asking for a result before it is ready gets
+// D3DERR_TESTINCOMPLETE, which is what the game's wrapper (0x000e7ca0) treats as "not yet"; GetData is asked
+// to flush, so a spin completes as soon as the GPU has run the frame's commands.
+// ---------------------------------------------------------------------------------------------------------------
+#define VISIBILITY_INDICES 64
+#define VISIBILITY_POOL 96
+#define X_D3DERR_TESTINCOMPLETE 0x8876085Cu
+
+static IDirect3DQuery9 *g_visibilityPool[VISIBILITY_POOL];
+static bool g_visibilityInUse[VISIBILITY_POOL];
+static int g_visibilityPoolCount = 0;
+static IDirect3DQuery9 *g_visibilityByIndex[VISIBILITY_INDICES];
+static IDirect3DQuery9 *g_visibilityOpen = NULL;
+static bool g_visibilityUnsupported = false;
+
+static IDirect3DQuery9 *TakeVisibilityQuery(void) {
+    for (int i = 0; i < g_visibilityPoolCount; i++)
+        if (!g_visibilityInUse[i]) { g_visibilityInUse[i] = true; return g_visibilityPool[i]; }
+    if (g_visibilityPoolCount >= VISIBILITY_POOL)
+        return NULL;
+    IDirect3DQuery9 *q = NULL;
+    if (FAILED(g_device->CreateQuery(D3DQUERYTYPE_OCCLUSION, &q))) {
+        if (!g_visibilityUnsupported) { g_visibilityUnsupported = true; D3D9Log("[d3d9] occlusion queries are not available; visibility tests will report nothing visible\n"); }
+        return NULL;
+    }
+    g_visibilityPool[g_visibilityPoolCount] = q;
+    g_visibilityInUse[g_visibilityPoolCount] = true;
+    g_visibilityPoolCount++;
+    return q;
+}
+
+static void ReturnVisibilityQuery(IDirect3DQuery9 *q) {
+    for (int i = 0; i < g_visibilityPoolCount; i++)
+        if (g_visibilityPool[i] == q) { g_visibilityInUse[i] = false; return; }
+}
+
+void D3D9_BeginVisibilityTest(void) {
+    if (g_device == NULL || g_visibilityUnsupported)
+        return;
+    if (g_visibilityOpen != NULL) {   // a Begin without an End: finish the old one and drop it
+        g_visibilityOpen->Issue(D3DISSUE_END);
+        ReturnVisibilityQuery(g_visibilityOpen);
+        g_visibilityOpen = NULL;
+    }
+    IDirect3DQuery9 *q = TakeVisibilityQuery();
+    if (q == NULL)
+        return;
+    BeginSceneIfNeeded();
+    q->Issue(D3DISSUE_BEGIN);
+    g_visibilityOpen = q;
+}
+
+void D3D9_EndVisibilityTest(uint32_t index) {
+    if (g_visibilityOpen == NULL)
+        return;
+    g_visibilityOpen->Issue(D3DISSUE_END);
+    g_statVisibilityTests++;
+    if (index < VISIBILITY_INDICES) {
+        if (g_visibilityByIndex[index] != NULL)
+            ReturnVisibilityQuery(g_visibilityByIndex[index]);
+        g_visibilityByIndex[index] = g_visibilityOpen;
+    } else {
+        ReturnVisibilityQuery(g_visibilityOpen);
+    }
+    g_visibilityOpen = NULL;
+}
+
+uint32_t D3D9_GetVisibilityTestResult(uint32_t index, uint32_t *result, uint64_t *timeStamp) {
+    if (timeStamp != NULL) *timeStamp = 0;
+    if (result != NULL) *result = 0;
+    if (index >= VISIBILITY_INDICES || g_visibilityByIndex[index] == NULL)
+        return 0;   // nothing was tested under this index: nothing visible, and no reason to wait
+    DWORD count = 0;
+    HRESULT hr = g_visibilityByIndex[index]->GetData(&count, sizeof(count), D3DGETDATA_FLUSH);
+    if (hr == S_FALSE)
+        return X_D3DERR_TESTINCOMPLETE;
+    if (SUCCEEDED(hr) && result != NULL) {
+        *result = (uint32_t)count;
+        static int said = 0;
+        if (count != 0 && said++ < 3)
+            D3D9Log("[d3d9] frame %u: visibility test %u answered %lu visible pixels\n", g_frameCount, index, count);
+    }
+    return 0;   // a lost device answers "nothing visible" rather than making the game spin forever
+}
+
+static void ReleaseVisibilityQueries(void) {
+    for (int i = 0; i < g_visibilityPoolCount; i++)
+        if (g_visibilityPool[i] != NULL) g_visibilityPool[i]->Release();
+    g_visibilityPoolCount = 0;
+    memset(g_visibilityInUse, 0, sizeof(g_visibilityInUse));
+    memset(g_visibilityByIndex, 0, sizeof(g_visibilityByIndex));
+    g_visibilityOpen = NULL;
 }
 
 void D3D9_BlockUntilNotBusy(void *pResource) {
