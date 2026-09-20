@@ -565,6 +565,35 @@ static HWND FindRenderWindow(void) {
     return FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
 }
 
+// The loader has to create its window before the game starts running, so at that point it cannot know what
+// resolution the game will ask for - it guesses 640x480 (see CreateRenderWindow in src/loader/loadermain.cpp).
+// The back buffer size only becomes known here, so this is where the window is given a client area to match,
+// and the rendered image is presented 1:1 instead of being scaled into the guess.
+//
+// Only our own window is touched. Under CXBX the render window belongs to the launcher, which sizes and
+// positions it for its own reasons; resizing it from in here would fight with it.
+static void SizeWindowToBackBuffer(HWND window, uint32_t width, uint32_t height) {
+    char className[64];
+    if (GetClassNameA(window, className, sizeof(className)) == 0 ||
+        strcmp(className, NIGHTFIRE_RENDER_WINDOW_CLASS) != 0)
+        return;
+
+    RECT wanted = { 0, 0, (LONG)width, (LONG)height };
+    if (!AdjustWindowRect(&wanted, (DWORD)GetWindowLongA(window, GWL_STYLE), FALSE))
+        return;
+    int outerWidth = wanted.right - wanted.left, outerHeight = wanted.bottom - wanted.top;
+
+    // A window bigger than the desktop is a legitimate thing to ask for - the caption ends up off-screen and
+    // the user has to move or maximise it - but it is confusing enough to be worth saying out loud.
+    RECT workArea;
+    if (SystemParametersInfoA(SPI_GETWORKAREA, 0, &workArea, 0) &&
+        (outerWidth > workArea.right - workArea.left || outerHeight > workArea.bottom - workArea.top))
+        D3D9Log("[d3d9] window %dx%d is larger than the %dx%d desktop work area.\n",
+                outerWidth, outerHeight, (int)(workArea.right - workArea.left), (int)(workArea.bottom - workArea.top));
+
+    SetWindowPos(window, NULL, 0, 0, outerWidth, outerHeight, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
 static void InitPinnedConstants(void);
 static void ReleaseIndexRing(void);
 static IDirect3DSurface9 *g_backBufferSurface = NULL, *g_mainDepthSurface = NULL; // the device's own, held across the frame
@@ -590,6 +619,9 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
         D3D9Log("[d3d9] no render window found (no /hwnd on the command line and no CxbxRender window).\n");
         return 0x8876086Cu; // D3DERR_INVALIDCALL
     }
+
+    // Do this before creating the device, so the swap chain is made against the window at its final size.
+    SizeWindowToBackBuffer(g_window, width, height);
 
     g_d3d = Direct3DCreate9(D3D_SDK_VERSION);
     if (g_d3d == NULL) {

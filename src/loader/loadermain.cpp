@@ -232,7 +232,9 @@ int main(int argc, char **argv) {
     printf("[loader] actioninject.dll loaded and patches applied\n");
 
     // Before the entry point, so that the window is already there when the game's graphics init looks for it.
-    // 640x480 is the game's own back buffer size; the window is resizable and D3D9 presents scaled into it.
+    // That is too early to know what resolution the game will ask for, so this is only a starting size: the
+    // D3D9 backend resizes the window to match the back buffer when it creates the device. The window stays
+    // resizable after that, and D3D9 presents scaled into whatever size the user drags it to.
     if (CreateRenderWindow(640, 480) == NULL)
         return 1;
 

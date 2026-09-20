@@ -3,9 +3,10 @@
 
 // Original is 640x480, 1280x960 is a clean 2x scaling.
 //
-// Higher resolutions now work - 1920x1080 runs at full speed with no measurable cost - but positioned HUD
-// sprites are still authored in 640x480 coordinates and will not move with it. See the longer note in
-// src/inject_action.cpp before raising this.
+// Higher resolutions now work - 1920x1080 runs at full speed with no measurable cost, and the window is
+// created at whatever size is set here - but the menus and the positioned HUD sprites are still authored in
+// 640x480 coordinates and do not move with it. See the longer note in src/inject_action.cpp before raising
+// this.
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 // #define SCREEN_WIDTH 1280

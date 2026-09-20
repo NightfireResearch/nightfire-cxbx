@@ -69,12 +69,15 @@ void Inject()
   // call submission on the CPU, not fill rate. Widescreen=1 in settings.ini alongside it also runs clean,
   // which is the right pairing for a 16:9 display since the game has its own 16:9 projection.
   //
-  // What has NOT been verified is how it looks, and there is a known reason to expect trouble: the HUD
-  // sprite tables in ui/HUD.cpp mix entries that scale with SCREEN_WIDTH/SCREEN_HEIGHT against entries
-  // carrying hard-coded 640x480 coordinates - there is a "TODO: Change from 640x480 to generic" sitting
-  // above one of them. Full-screen overlays and the cameras scale; individually positioned HUD sprites will
-  // not. That is the "UI elements misaligned" the old notes mention at 800x600, and it is the remaining
-  // work rather than a crash.
+  // How it looks is the remaining problem, and it is 2D, not 3D. Observed at 1920x1080: the 3D views are
+  // correct and sharp, and the window is now created at the render resolution (SizeWindowToBackBuffer in
+  // Direct3D/d3d9Backend.cpp). But the main menus draw at their 640x480 pixel size in the top-left corner,
+  // the movie letterboxing does the same, and HUD elements are a mixture - the ones rewritten since (the
+  // crosshairs, for instance) follow the resolution, while the rest are drawn at the wrong scale. The cause
+  // is in the sprite tables in ui/HUD.cpp, which mix entries derived from SCREEN_WIDTH/SCREEN_HEIGHT with
+  // entries carrying hard-coded 640x480 coordinates; there is a "TODO: Change from 640x480 to generic"
+  // sitting above one of them. That is the "UI elements misaligned" the old notes mention at 800x600, and
+  // it is the remaining work rather than a crash.
   //
   // So this is left at 640x480 by default, and raising it is two lines in action/actionhelpers.h.
   int width = SCREEN_WIDTH;
