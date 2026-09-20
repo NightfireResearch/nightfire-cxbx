@@ -1361,7 +1361,8 @@ static bool XboxVertexTypeInfo(uint32_t type, uint32_t *bytes, D3DDECLTYPE *host
         case 0x42: *bytes = 16; *hostType = D3DDECLTYPE_FLOAT4; return true;
         case 0x40: *bytes = 4;  *hostType = D3DDECLTYPE_D3DCOLOR; return true;
         case 0x16: *bytes = 4;  *hostType = D3DDECLTYPE_UBYTE4; *normPacked = true; return true; // NORMPACKED3
-        case 0x15: *bytes = 4;  *hostType = D3DDECLTYPE_SHORT2; return true;
+        case 0x15: *bytes = 4;  *hostType = D3DDECLTYPE_SHORT2; return true; // SHORT1, padded to a dword
+        case 0x25: *bytes = 4;  *hostType = D3DDECLTYPE_SHORT2; return true;
         case 0x35: *bytes = 6;  *hostType = D3DDECLTYPE_SHORT4; return true; // SHORT3: read as SHORT4, .w unused (see the +8 buffer slack)
         case 0x45: *bytes = 8;  *hostType = D3DDECLTYPE_SHORT4; return true;
         case 0x11: *bytes = 2;  *hostType = D3DDECLTYPE_SHORT2N; return true; // NORMSHORT1 - approximated
@@ -1380,7 +1381,12 @@ struct TranslatedVertexShader {
     uint32_t inputsUsed, outputsWritten;
     bool attempted, failed;
 };
-static TranslatedVertexShader g_vertexShaders[160];
+// The driving engine creates about 196 of these, the action engine far fewer. A table too small to hold
+// them all is quiet in a way that is hard to trace: CreateVertexShader fails, the game keeps whatever
+// handle it had, and every draw that would have used the shader is dropped by PrepareShaderDraw with
+// nothing said about why. It was 160, and the driving engine's world geometry was on the far side of
+// that line - the level drew as fog and a HUD.
+static TranslatedVertexShader g_vertexShaders[512];
 static int g_vertexShaderCount = 0;
 static int g_currentVertexShader = -1;
 static float g_vertexConstants[192][4];
@@ -1480,8 +1486,15 @@ static bool BuildVertexShader(TranslatedVertexShader *vs, int index) {
 
 uint32_t D3D9_CreateVertexShader(const void *pDeclaration, const void *pFunction, void **pHandle, uint32_t usage) {
     (void)usage;
-    if (g_vertexShaderCount >= (int)(sizeof(g_vertexShaders) / sizeof(g_vertexShaders[0])))
-        return 0x8876086Cu;
+    if (g_vertexShaderCount >= (int)(sizeof(g_vertexShaders) / sizeof(g_vertexShaders[0]))) {
+        static bool said = false;
+        if (!said) {
+            said = true;
+            D3D9Log("[d3d9] out of vertex shader slots after %d - every shader from here on will be missing\n",
+                    g_vertexShaderCount);
+        }
+        return 0x8876086Cu;   // D3DERR_INVALIDCALL
+    }
     TranslatedVertexShader *vs = &g_vertexShaders[g_vertexShaderCount];
     memset(vs, 0, sizeof(*vs));
     vs->declaration = pDeclaration;
@@ -1561,20 +1574,32 @@ static void InvalidateHostBuffers(const void *obj) {
     }
 }
 
-static IDirect3DVertexBuffer9 *GetHostVertexBuffer(const void *obj, uint32_t *sizeOut) {
+// An Xbox vertex buffer object is three words - Common, Data, Lock - and none of them is a length: on the
+// console the hardware reads the game's memory directly and nothing ever needs to know where the buffer ends.
+// A host buffer does, so the length has to come from somewhere else, and "somewhere else" differs per engine.
+// The action engine's own slots keep a byte size at word 5 and its overlay table keeps a vertex count at word
+// 4; EAGL's buffer headers keep neither, and word 5 is whatever the heap put after the object - 12, in the
+// case that had the driving engine's whole world drawing from a single vertex.
+//
+// So the size the draw needs is passed in, computed from the highest vertex it will read. That is exact and
+// cannot over-read the game's allocation. The words above are used only as a floor, for the draws that do not
+// know their own extent (DrawVerticesUP, which binds no stream) and for the action engine's overlay quads.
+static IDirect3DVertexBuffer9 *GetHostVertexBuffer(const void *obj, uint32_t neededBytes, uint32_t *sizeOut) {
     const uint32_t *slot = (const uint32_t*)obj;
     const void *data = (const void*)(uintptr_t)slot[1];
-    uint32_t size;
-    if (g_overlayTableEnd != 0 && (uintptr_t)obj >= g_overlayTableBase && (uintptr_t)obj < g_overlayTableEnd)
-        size = slot[4] * 0x24;
-    else
+    uint32_t size = neededBytes;
+    if (g_overlayTableEnd != 0 && (uintptr_t)obj >= g_overlayTableBase && (uintptr_t)obj < g_overlayTableEnd) {
+        if (slot[4] * 0x24 > size) size = slot[4] * 0x24;
+    } else if (neededBytes == 0) {
         size = slot[5];
+    }
     if (data == NULL || size == 0)
         return NULL;
     for (int i = 0; i < g_vertexBufferCount; i++) {
         HostVertexBuffer *h = &g_vertexBuffers[i];
         if (h->obj == obj) {
-            if (h->data == data && h->size == size) { *sizeOut = size; return h->vb; }
+            // A cached buffer that is long enough still serves: only a shorter one has to be made again.
+            if (h->data == data && h->size >= size) { *sizeOut = h->size; return h->vb; }
             if (h->vb) h->vb->Release();
             g_vertexBuffers[i] = g_vertexBuffers[--g_vertexBufferCount];
             break;
@@ -1751,7 +1776,7 @@ void D3D9_SetRenderTarget(void *pRenderTarget, void *pDepthStencil) {
 
 // Everything a programmable draw needs: the translated shader and declaration, the constants, the bound
 // streams' host buffers, textures and stage state. Returns false (after counting why) if the draw can't happen.
-static bool PrepareShaderDraw(bool bindStreams) {
+static bool PrepareShaderDraw(bool bindStreams, uint32_t vertexLimit) {
     if (g_currentVertexShader < 0 || g_currentVertexShader >= g_vertexShaderCount) {
         D3D9_BackendMissing("draw with no vertex shader selected");
         return false;
@@ -1797,7 +1822,9 @@ static bool PrepareShaderDraw(bool bindStreams) {
             if (!(vs->streamsUsed & (1u << s)))
                 continue;
             uint32_t size;
-            IDirect3DVertexBuffer9 *vb = (g_streams[s] != NULL) ? GetHostVertexBuffer(g_streams[s], &size) : NULL;
+            uint32_t stride = g_streamStrides[s] > 0 ? g_streamStrides[s] : 6;
+            IDirect3DVertexBuffer9 *vb = (g_streams[s] != NULL)
+                ? GetHostVertexBuffer(g_streams[s], vertexLimit * stride, &size) : NULL;
             if (vb == NULL && s != 0) {
                 // A morph-capable shader selected with no morph streams bound (or a stream that couldn't be
                 // uploaded): the NV2A would read whatever was bound last, with zero weights. Feed zeros.
@@ -1814,7 +1841,7 @@ static bool PrepareShaderDraw(bool bindStreams) {
                 D3D9_BackendMissing(g_streams[s] == NULL ? "draw with stream 0 unbound" : "draw with a vertex buffer that couldn't be uploaded");
                 return false;
             }
-            g_device->SetStreamSource(s, vb, 0, g_streamStrides[s] > 0 ? g_streamStrides[s] : 6);
+            g_device->SetStreamSource(s, vb, 0, stride);
         }
     }
     g_device->SetRenderState(D3DRS_FOGTABLEMODE, D3DFOG_NONE);   // the shader's oFog is the fog factor
@@ -1876,7 +1903,7 @@ void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, cons
     g_indexRing->Unlock();
     uint32_t start = g_indexRingPos;
     g_indexRingPos += vertexCount;
-    if (!PrepareShaderDraw(true))
+    if (!PrepareShaderDraw(true, (uint32_t)maxIndex + 1))
         return;
     g_device->SetIndices(g_indexRing);
     g_device->DrawIndexedPrimitive(type, 0, minIndex, maxIndex - minIndex + 1, start, primCount);
@@ -1890,7 +1917,7 @@ void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t ve
     D3DPRIMITIVETYPE type; UINT primCount;
     if (!XboxPrimitiveToD3D(primitiveType, vertexCount, &type, &primCount))
         return;
-    if (!PrepareShaderDraw(true))
+    if (!PrepareShaderDraw(true, startVertex + vertexCount))
         return;
     bool points = (type == D3DPT_POINTLIST);
     if (points) {
@@ -2080,7 +2107,7 @@ void D3D9_DrawVerticesUP(uint32_t primitiveType, uint32_t vertexCount, void *pVe
     D3DPRIMITIVETYPE type; UINT primCount;
     if (!XboxPrimitiveToD3D(primitiveType, vertexCount, &type, &primCount))
         return;
-    if (!PrepareShaderDraw(false))
+    if (!PrepareShaderDraw(false, 0))
         return;
     g_device->DrawPrimitiveUP(type, primCount, pVertexData, stride);
 }

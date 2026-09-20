@@ -262,16 +262,44 @@ addresses for the XBE, which are the ones Ghidra shows, and `module!export+offse
 it on with `Profile=on` under `[Settings]` in `settings.ini`, the same file the action engine's settings live
 in; the file is read once, so it costs a compare a frame otherwise.
 
+### The world was drawing from a single vertex
+
+The level loaded, the game ran at fifty frames a second with about two hundred draws in each, the HUD and the
+menus were right - and the 3D world was not there at all, just the water's blue fog. Three things were in the
+way, and the shape of each is worth keeping, because none of them said anything in a log.
+
+**The shared backend's vertex shader table was too small.** 160 slots, and the driving engine creates about
+196. Past the end `CreateVertexShader` returned a failure the game ignores, so it kept whatever handle it had,
+and `PrepareShaderDraw` dropped every draw that would have used one of the missing shaders - a third of the
+frame's draws, counted but not explained. The table holds 512 now and says so when it fills.
+
+**Vertex type `0x25` (SHORT2) was missing from the declaration translator**, which failed two more shaders
+outright. The Xbox type byte is `(count << 4) | kind`, so the neighbours of a missing entry name it exactly.
+
+**And the one that actually hid the world: an Xbox vertex buffer object has no length in it.** It is three
+words - Common, Data, Lock - because the console's hardware reads the game's own memory and nothing needs to
+know where the buffer ends. The backend was reading a byte size out of word 5, which is where the *action*
+engine's own buffer slots keep one; EAGL's headers keep nothing there, so word 5 was whatever the heap had
+put after the object. It read 12. Every world draw therefore uploaded one vertex and drew the whole level
+from it, which is why disabling depth, culling and alpha changed nothing: there was nothing to reject.
+
+The size now comes from the draw - the highest vertex index it will read, times the stream's stride - which
+is exact, cannot over-read the game's allocation, and does not care which engine made the buffer. The words
+above are kept only as a floor for draws that do not know their own extent.
+
+With that the level draws: the sunken tanker, the water surface, the wreckage. Dark and flat, because the
+materials are the register combiners that are still ahead.
+
 ### What is left
 
 In the order the frame counter puts them:
 
 1. **Pixel shaders** - 196 created, and `SetPixelShader` called about fifty times a frame. These are NV2A
    register combiner programs, and section 6.1 is right that they need a translator to ps_1.x/ps_2_0 or to
-   fixed-function stage states. Until then materials are flat. The seam accepts and ignores them for now, so
-   that everything behind them can run.
-2. **A vertex buffer that will not upload**, once a frame, and two vertex declarations using a type
-   (`0x25`) the translator does not handle.
+   fixed-function stage states. Until then the world draws dark and flat. The seam accepts and ignores them
+   for now, so that everything behind them can run.
+2. **A vertex buffer that will not upload**, once a frame, and `XGSetVertexBufferHeader` (twice a run)
+   unimplemented beside it.
 3. **Fog, stencil, bump environment and fill mode**, all accepted and dropped by the seam.
 4. **Sound.** The seam is silent: it creates buffers, times them and reports them finished, but plays
    nothing. The action engine's XAudio2 backend is written and the formats here are ones it handles - 48 kHz

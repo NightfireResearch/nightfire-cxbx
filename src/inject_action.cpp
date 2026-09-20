@@ -9,6 +9,7 @@
 #include "action/ui/ui.h"
 #include "action/engine/psiFile.h"
 #include "action/engine/XboxFile.h"
+#include "common/xboxPath.h"
 #include "action/engine/XboxStartup.h"
 #include "action/engine/psiSave.h"
 #include "action/engine/Direct3D/d3dSeam.h"
