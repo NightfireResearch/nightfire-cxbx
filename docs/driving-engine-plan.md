@@ -479,6 +479,42 @@ arise. The `[perf]` line counts the tests per window. No run has yet had a light
 the earlier long run first reached these calls a minute into the level, after a scripted "openwater"
 event - so whether the lights now draw is unverified; that is left for play-testing.
 
+### Sound
+
+The seam has XAudio2 behind it now (`src/driving/sound/xaudio2Driving.cpp`), and it is a different shape
+from the action engine's backend because the engine is a different shape. What EA's `SND` layer actually
+does with DirectSound, read out of `dsndMixInit` (`0x0013d5e0`) and `dsndCreateBufferAndMixBins`
+(`0x0013d430`):
+
+- **six looping 48 kHz mono PCM buffers of 50 ms, one per 5.1 speaker**, played once at start-up and never
+  stopped. EA's software mixer (`AMix`) mixes every sound in the game into them on the CPU from its 100 Hz
+  thread, 20 ms at a time, ahead of the play cursor it reads back through `GetCurrentPosition`. Nothing
+  tells DirectSound the memory changed: the console's hardware read it live;
+- **180 pooled buffers**, 48 kHz mono, Xbox ADPCM or PCM, given their samples by pointer, played once or
+  looping, pitched with `SetFrequency`, positioned with per-mixbin volumes (`SetMixBinVolumes_8`, fifteen
+  thousand calls in a run). No 3D: this DirectSound has no 3D voice entry points at all.
+
+So every voice streams: it copies the next four milliseconds out of the game's memory each time XAudio2
+finishes a chunk, decoding ADPCM on the way (`common/sound/xadpcm.cpp`, moved from the action engine), and
+reports the start of the chunk sounding now as its play cursor. The rewritten rings and the static sounds
+are the same case, no hook the game does not offer is needed, and the read-ahead of eight milliseconds sits
+inside the mixer's twenty. The mastering voice runs at 48 kHz so the mixer's output is never resampled;
+mixbins become a stereo output matrix. The `[xa2]` line beside the frame timing counts chunks streamed and
+how many carried sound, which is how a headless run shows audio flowing.
+
+**The rule that took longest: never flush a voice that will be fed again.** The game plays a sound, sets
+its frequency and plays it again within a tick. The first version stopped and flushed the voice on that
+second Play and refilled it; from then on XAudio2 ended every chunk the voice was given the instant it was
+submitted, a million a second, its own thread saturated and every other sound frozen for as long as it
+lasted - which was the sound dropping out while steering, and going for good once a looping voice got
+into that state. Waiting for the flush's own buffer-end callbacks before refilling made no difference. So
+`FlushSourceBuffers` is called once, when a voice is destroyed; a restart or seek changes where the next
+chunk comes from and lets the eight milliseconds already queued play out, and a Stop leaves them queued
+for the resume.
+
+Not done: the per-voice low-pass filter (`SetFilter`, distance muffling) and the I3DL2 reverb, both
+accepted and ignored.
+
 **The pause menu's video window, as first understood.** A 128x128 linear texture is bound at stage 3 of a quad in every frame,
 in the level and in the menu, and its memory is a contiguous allocation the game made and writes into
 directly - no lock the seam could see. The console's GPU reads such memory live; the host copy was taken
@@ -500,10 +536,7 @@ nothing has locked it yet.
 In the order the frame counter puts them:
 
 1. **Stencil and fill mode**, accepted and dropped by the seam.
-2. **Sound.** The seam is silent: it creates buffers, times them and reports them finished, but plays
-   nothing. The action engine's XAudio2 backend is written and the formats here are ones it handles - 48 kHz
-   mono, PCM or Xbox ADPCM - so this is wiring rather than invention. The timing model matters more than it
-   looks: the movie above is paced by it.
+2. **Sound's remainder**: the low-pass filter and the reverb, and whatever play-testing turns up.
 3. **The clock runs fast** (section 2.1): the game's own log timestamps advance about six times real time,
    which is the 733 MHz constant baked into `timestamp()` and the `QueryPerformance*` pair. The action
    engine's fix transposes. Note this is a different clock from `KeTickCount` above - the game has both, and

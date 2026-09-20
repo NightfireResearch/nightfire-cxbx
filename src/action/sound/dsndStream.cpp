@@ -9,7 +9,7 @@
 #include <stdarg.h>
 #include <math.h>
 
-#include "xadpcm.h"
+#include "../../common/sound/xadpcm.h"
 #include "xaudio2Backend.h"
 #include "../engine/XboxStartup.h"
 

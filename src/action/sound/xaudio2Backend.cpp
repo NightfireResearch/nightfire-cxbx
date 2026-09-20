@@ -1,5 +1,5 @@
 #include "xaudio2Backend.h"
-#include "xadpcm.h"
+#include "../../common/sound/xadpcm.h"
 #include "../engine/XboxSettings.h" // Settings_GetReverbEnabled
 
 #include <windows.h>

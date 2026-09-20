@@ -1,4 +1,5 @@
 #include "dsndSeam.h"
+#include "xaudio2Driving.h"
 
 #include "../../common/standalone.h"
 #include "../../common/xbeEntrySeam.h"
@@ -28,16 +29,16 @@
 // group is enough to keep the other two from ever running, and the rest of the table is stubbed so that
 // anything unexpected is reported rather than reaching the registers.
 //
-// WHAT IT DOES SO FAR: silence, but bookkeeping that is true. Buffers are created, given their data, played
-// and stopped, and - this is the part that matters - a buffer that has played for as long as its data lasts
-// reports itself stopped. EA's voice allocator reclaims buffers only when GetStatus says they have finished
-// (SNDDRV's 100 Hz thread polls it), so a seam that reported everything as permanently playing would drain
-// the free lists in minutes and crash exactly where section 4 of the plan says it crashes. Timing the
-// playback is what keeps that healthy, and it is the same bookkeeping a real backend needs underneath.
-//
-// The next step is the action engine's XAudio2 backend behind these same entry points: it already has the
-// voice, mixbin, I3DL2 and Xbox-ADPCM decoding work done (src/action/sound/), and the formats here are the
-// ones it handles - 48 kHz mono, 16-bit PCM or Xbox ADPCM.
+// WHAT IS BEHIND IT. XAudio2, through xaudio2Driving.cpp, which streams every buffer out of the game's own
+// memory a few milliseconds at a time - the only arrangement that works for EA's software mixer, whose six
+// looping 50 ms rings (one per 5.1 speaker) are rewritten twenty milliseconds at a time by its 100 Hz thread
+// with nothing said to DirectSound, because the console's hardware simply read the memory. The pooled
+// one-shot and looping buffers go the same way. If XAudio2 cannot start, the bookkeeping below stands on
+// its own: buffers are created, given their data, played and stopped, and a buffer that has played for as
+// long as its data lasts reports itself stopped. EA's voice allocator reclaims buffers only when GetStatus
+// says they have finished (SNDDRV's 100 Hz thread polls it), so a seam that reported everything as
+// permanently playing would drain the free lists in minutes and crash exactly where section 4 of the plan
+// says it crashes.
 // ---------------------------------------------------------------------------------------------------------------
 
 static XbeEntry g_entries[] = {
@@ -58,7 +59,7 @@ static XbeEntrySeam g_seam = { g_entries, sizeof(g_entries) / sizeof(g_entries[0
 // DirectSound object.
 // ---------------------------------------------------------------------------------------------------------------
 
-// Xbox DSBUFFERDESC and WAVEFORMATEX, at the offsets the game fills in (dsndCreateBufferAndMixBins,
+// Xbox DSBUFFERDESC, WAVEFORMATEX and DSMIXBINS, at the offsets the game fills in (dsndCreateBufferAndMixBins,
 // 0x0013d430, and dsndMixInit, 0x0013d5e0).
 #pragma pack(push, 1)
 struct XboxWaveFormat {
@@ -78,6 +79,16 @@ struct XboxBufferDesc {
     XboxWaveFormat *lpwfxFormat;
     void           *lpMixBins;
     uint32_t        dwInputMixBin;
+};
+
+struct XboxMixBinVolumePair {
+    uint32_t dwMixBin;
+    int32_t  lVolume;      // hundredths of a decibel, -10000 (silence) to 0
+};
+
+struct XboxMixBins {
+    uint32_t              dwMixBinCount;
+    XboxMixBinVolumePair *lpMixBinVolumePairs;
 };
 #pragma pack(pop)
 
@@ -100,6 +111,9 @@ struct SeamBuffer {
     const void *data;
     uint32_t    dataBytes;
 
+    DrivingVoice *voice;       // the backend's, or NULL when there is no audio device
+
+    // The silent bookkeeping, used only when there is no voice.
     bool     playing;
     bool     looping;
     uint32_t startedAtMs;      // timeGetTime when Play was called, adjusted by SetCurrentPosition
@@ -109,6 +123,7 @@ struct SeamBuffer {
 
 // A device object, to hand back from DirectSoundCreate. Nothing reads it.
 static uint32_t g_device = 0;
+static bool g_audio = false;   // XAudio2 started
 
 // How long a block of this format lasts. Xbox ADPCM packs 64 samples into each 36-byte block; PCM is the
 // obvious division. Both are per channel, and the game's buffers are mono.
@@ -128,9 +143,12 @@ static uint32_t DurationMsOf(const SeamBuffer *buffer, uint32_t bytes) {
     return (uint32_t)((samples * 1000) / buffer->sampleRate);
 }
 
-// True while the buffer still has sound left to play. A looping buffer never runs out; a one-shot stops
-// itself when its data has been played through, which is what EA's voice allocator waits to see.
+// True while the buffer still has sound left to play. With a voice, the backend knows; without one, a
+// looping buffer never runs out and a one-shot stops itself when its data has been played through, which
+// is what EA's voice allocator waits to see.
 static bool StillPlaying(SeamBuffer *buffer) {
+    if (buffer->voice != NULL)
+        return DrivingAudio_IsPlaying(buffer->voice);
     if (!buffer->playing)
         return false;
     if (buffer->looping || buffer->durationMs == 0)
@@ -166,7 +184,22 @@ static SeamBuffer *CreateBuffer(const XboxBufferDesc *desc) {
         buffer->dataBytes = desc->dwBufferBytes;
         buffer->durationMs = DurationMsOf(buffer, desc->dwBufferBytes);
     }
+    if (g_audio)
+        buffer->voice = DrivingAudio_CreateVoice(buffer->sampleRate, buffer->formatTag, buffer->channels,
+                                                 buffer->blockAlign, buffer->bitsPerSample);
     return buffer;
+}
+
+// The pairs of a DSMIXBINS, split for the backend.
+static void UnpackMixBins(const XboxMixBins *mixBins, uint32_t bins[8], int32_t volumes[8], uint32_t *count) {
+    *count = 0;
+    if (mixBins == NULL || mixBins->lpMixBinVolumePairs == NULL)
+        return;
+    for (uint32_t i = 0; i < mixBins->dwMixBinCount && *count < 8; i++) {
+        bins[*count] = mixBins->lpMixBinVolumePairs[i].dwMixBin;
+        volumes[*count] = mixBins->lpMixBinVolumePairs[i].lVolume;
+        (*count)++;
+    }
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -180,7 +213,9 @@ static uint32_t __stdcall Seam_DirectSoundCreate(void *guid, void **returnedDevi
     (void)guid; (void)outer;
     if (returnedDevice != NULL)
         *returnedDevice = &g_device;
-    printf("[dsnd] DirectSound opened (silent: no backend behind the seam yet)\n");
+    g_audio = DrivingAudio_Start();
+    printf(g_audio ? "[dsnd] DirectSound opened, XAudio2 behind it\n"
+                   : "[dsnd] DirectSound opened (silent: XAudio2 could not start)\n");
     fflush(stdout);
     return 0;
 }
@@ -203,7 +238,8 @@ static uint32_t __stdcall Seam_DirectSoundCreateBuffer(const XboxBufferDesc *des
 }
 
 // On the Xbox a buffer is created empty and given its samples afterwards, by pointer - there is no lock and
-// no copy, the hardware reads the game's own memory. So this is where a buffer learns how long it is.
+// no copy, the hardware reads the game's own memory. So this is where a buffer learns how long it is, and
+// where the backend learns what to stream.
 static uint32_t __stdcall Seam_IDirectSoundBuffer_SetBufferData(SeamBuffer *buffer, const void *data,
                                                                 uint32_t bytes) {
     if (buffer == NULL)
@@ -211,6 +247,7 @@ static uint32_t __stdcall Seam_IDirectSoundBuffer_SetBufferData(SeamBuffer *buff
     buffer->data = data;
     buffer->dataBytes = bytes;
     buffer->durationMs = DurationMsOf(buffer, bytes);
+    DrivingAudio_SetData(buffer->voice, data, bytes);
     return 0;
 }
 
@@ -222,6 +259,7 @@ static uint32_t __stdcall Seam_IDirectSoundBuffer_Play(SeamBuffer *buffer, uint3
     buffer->playing = true;
     buffer->looping = (flags & DSBPLAY_LOOPING) != 0;
     buffer->startedAtMs = timeGetTime();
+    DrivingAudio_Play(buffer->voice, buffer->looping);
     return 0;
 }
 
@@ -229,6 +267,7 @@ static uint32_t __stdcall Seam_IDirectSoundBuffer_Stop(SeamBuffer *buffer) {
     if (buffer != NULL) {
         buffer->playing = false;
         buffer->position = 0;
+        DrivingAudio_Stop(buffer->voice);
     }
     return 0;
 }
@@ -244,10 +283,15 @@ static uint32_t __stdcall Seam_IDirectSoundBuffer_GetStatus(SeamBuffer *buffer, 
     return 0;
 }
 
-// Where the buffer has got to, in bytes. The read cursor is the play cursor: nothing is being written ahead
+// Where the buffer has got to, in bytes. With a voice these are the backend's cursors, which is what EA's
+// mixer paces its refills by. Without one the read cursor is the play cursor: nothing is being written ahead
 // of it, so reporting them at the same place is as true as anything here.
 static uint32_t __stdcall Seam_IDirectSoundBuffer_GetCurrentPosition(SeamBuffer *buffer, uint32_t *playPosition,
                                                                      uint32_t *writePosition) {
+    if (buffer != NULL && buffer->voice != NULL) {
+        DrivingAudio_GetPosition(buffer->voice, playPosition, writePosition);
+        return 0;
+    }
     uint32_t position = 0;
     if (buffer != NULL && buffer->dataBytes != 0 && StillPlaying(buffer) && buffer->durationMs != 0) {
         uint32_t elapsed = timeGetTime() - buffer->startedAtMs;
@@ -276,10 +320,75 @@ static uint32_t __stdcall Seam_IDirectSoundBuffer_SetCurrentPosition(SeamBuffer 
         uint32_t into = (uint32_t)(((uint64_t)position * buffer->durationMs) / buffer->dataBytes);
         buffer->startedAtMs = timeGetTime() - into;
     }
+    DrivingAudio_SetPosition(buffer->voice, position);
+    return 0;
+}
+
+static uint32_t __stdcall Seam_IDirectSoundBuffer_SetLoopRegion(SeamBuffer *buffer, uint32_t start, uint32_t length) {
+    if (buffer != NULL)
+        DrivingAudio_SetLoopRegion(buffer->voice, start, length);
+    return 0;
+}
+
+static uint32_t __stdcall Seam_IDirectSoundBuffer_SetVolume(SeamBuffer *buffer, int32_t volume) {
+    if (buffer != NULL)
+        DrivingAudio_SetVolume(buffer->voice, volume);
+    return 0;
+}
+
+static uint32_t __stdcall Seam_IDirectSoundBuffer_SetFrequency(SeamBuffer *buffer, uint32_t hz) {
+    if (buffer != NULL)
+        DrivingAudio_SetFrequency(buffer->voice, hz);
+    return 0;
+}
+
+static uint32_t __stdcall Seam_IDirectSoundBuffer_SetMixBins(SeamBuffer *buffer, const XboxMixBins *mixBins) {
+    if (buffer == NULL)
+        return 0;
+    uint32_t bins[8], count; int32_t volumes[8];
+    UnpackMixBins(mixBins, bins, volumes, &count);
+    DrivingAudio_SetMixBins(buffer->voice, bins, volumes, count);
+    return 0;
+}
+
+// The same structure; the "_8" is the entry point's name for the eight-bin form of the call, and the game
+// makes it for every active voice on every mixer tick - it is how EA positions a sound.
+static uint32_t __stdcall Seam_IDirectSoundBuffer_SetMixBinVolumes_8(SeamBuffer *buffer, const XboxMixBins *mixBins) {
+    if (buffer == NULL)
+        return 0;
+    uint32_t bins[8], count; int32_t volumes[8];
+    UnpackMixBins(mixBins, bins, volumes, &count);
+    DrivingAudio_SetMixBinVolumes(buffer->voice, bins, volumes, count);
+    return 0;
+}
+
+// The per-voice low-pass filter, which the console's DSP applied. Accepted and not applied: EA sets it on a
+// few dozen voices a session, for distance muffling, and the sound is right without it before it is right
+// with it.
+static uint32_t __stdcall Seam_IDirectSoundBuffer_SetFilter(SeamBuffer *buffer, const void *filter) {
+    (void)buffer; (void)filter;
+    return 0;
+}
+
+// The DSP effects image and the I3DL2 room: the reverb path, which has no host behind it yet. The image
+// call wants a descriptor back; an empty one keeps the caller's pointer valid.
+static uint32_t __stdcall Seam_IDirectSound_DownloadEffectsImage(void *device, const void *image, uint32_t bytes,
+                                                                 void *imageLocation, void **descriptor) {
+    (void)device; (void)image; (void)bytes; (void)imageLocation;
+    static uint32_t emptyDescriptor[8];
+    if (descriptor != NULL)
+        *descriptor = emptyDescriptor;
+    return 0;
+}
+
+static uint32_t __stdcall Seam_IDirectSound_SetI3DL2Listener(void *device, const void *listener, uint32_t apply) {
+    (void)device; (void)listener; (void)apply;
     return 0;
 }
 
 static uint32_t __stdcall Seam_IDirectSoundBuffer_Release(SeamBuffer *buffer) {
+    if (buffer != NULL)
+        DrivingAudio_Release(buffer->voice);
     free(buffer);
     return 0;
 }
@@ -299,12 +408,21 @@ static const struct { const char *name; void *replacement; unsigned stackBytes; 
     { "IDirectSoundBuffer_GetStatus",          (void *)Seam_IDirectSoundBuffer_GetStatus, 8 },
     { "IDirectSoundBuffer_GetCurrentPosition", (void *)Seam_IDirectSoundBuffer_GetCurrentPosition, 12 },
     { "IDirectSoundBuffer_SetCurrentPosition", (void *)Seam_IDirectSoundBuffer_SetCurrentPosition, 8 },
+    { "IDirectSoundBuffer_SetLoopRegion",      (void *)Seam_IDirectSoundBuffer_SetLoopRegion, 12 },
+    { "IDirectSoundBuffer_SetVolume",          (void *)Seam_IDirectSoundBuffer_SetVolume, 8 },
+    { "IDirectSoundBuffer_SetFrequency",       (void *)Seam_IDirectSoundBuffer_SetFrequency, 8 },
+    { "IDirectSoundBuffer_SetMixBins",         (void *)Seam_IDirectSoundBuffer_SetMixBins, 8 },
+    { "IDirectSoundBuffer_SetMixBinVolumes_8", (void *)Seam_IDirectSoundBuffer_SetMixBinVolumes_8, 8 },
+    { "IDirectSoundBuffer_SetFilter",          (void *)Seam_IDirectSoundBuffer_SetFilter, 8 },
+    { "IDirectSound_DownloadEffectsImage",     (void *)Seam_IDirectSound_DownloadEffectsImage, 20 },
+    { "IDirectSound_SetI3DL2Listener",         (void *)Seam_IDirectSound_SetI3DL2Listener, 12 },
     { "IDirectSoundBuffer_Release",            (void *)Seam_IDirectSoundBuffer_Release, 4 },
     { "IDirectSound_Release",                  (void *)Seam_IDirectSound_Release, 4 },
 };
 
 void DsndSeam_ReportMissing(void) {
     XbeSeam_ReportMissing(&g_seam);
+    DrivingAudio_Report();
 }
 
 void Inject_DsndSeam(void) {

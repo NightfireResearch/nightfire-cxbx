@@ -143,7 +143,7 @@ add_library(actioninject SHARED
   src/action/game/sp/PlayerStats.cpp
   src/action/game/sp/SwitchChannels.cpp
   src/action/sound/dsndSeam.cpp
-  src/action/sound/xadpcm.cpp
+  src/common/sound/xadpcm.cpp
   src/action/sound/xaudio2Backend.cpp
   src/action/sound/dsndStream.cpp
   src/action/sound/music.cpp
@@ -237,6 +237,8 @@ add_library(drivinginject SHARED
   src/driving/gfx/backendHost.cpp
   src/driving/gfx/d3dSeam.cpp
   src/driving/sound/dsndSeam.cpp
+  src/driving/sound/xaudio2Driving.cpp
+  src/common/sound/xadpcm.cpp
   src/common/xbeEntrySeam.cpp
   src/common/xbeProfiler.cpp
   src/common/gfx/d3d9Backend.cpp
@@ -246,7 +248,7 @@ add_library(drivinginject SHARED
 
 # winmm for the multimedia timer the game's tick now comes from (src/driving/platform/XboxTimer.cpp);
 # d3d9/d3dcompiler for the shared graphics backend the D3D8 seam dispatches to.
-target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm xinput9_1_0)
+target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm xinput9_1_0 xaudio2)
 
 target_compile_definitions(action_cxbx PRIVATE UNICODE _UNICODE IS_ACTION)
 target_compile_definitions(driving_cxbx PRIVATE UNICODE _UNICODE IS_DRIVING)
