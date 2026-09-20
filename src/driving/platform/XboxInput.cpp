@@ -5,6 +5,8 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "../../common/renderWindow.h"
+
 // ---------------------------------------------------------------------------------------------------------------
 // Controllers, from Win32's XInput instead of the Xbox's USB stack.
 //
@@ -29,8 +31,12 @@
 // the questions XAPI would have answered.
 //
 // Not implemented: XInputGetCapabilities, which the game calls into a structure it has already zeroed - and
-// zero is a truthful answer to "what extra features does this pad have". Keyboard input, which the action
-// engine synthesises as a virtual pad on port 0, would go here when the driving engine wants it.
+// zero is a truthful answer to "what extra features does this pad have".
+//
+// There is a keyboard fallback, synthesised as a pad on port 0 whenever nothing real is plugged into it. It
+// is the same idea as the action engine's and for the same reason: without it the game stops at "please
+// reconnect the controller to controller port 1" and there is no way past that screen. See the bindings
+// below.
 // ---------------------------------------------------------------------------------------------------------------
 
 #pragma pack(push, 1)
@@ -107,6 +113,114 @@ enum { ANALOG_A = 0, ANALOG_B = 1, ANALOG_X = 2, ANALOG_Y = 3,
 
 #define MAX_PORTS 4
 
+// ---------------------------------------------------------------------------------------------------------------
+// The keyboard, as a pad on port 0.
+//
+// A driving game needs four things - steer, accelerate, brake, handbrake - and a menu needs a few more. The
+// bindings follow the conventions the game's own prompts assume (START to continue, A to accept, B to go
+// back), and the analogue controls are all-or-nothing, which is what a keyboard can offer:
+//
+//   A / D  or  left / right      steer            (the left stick)
+//   W  or  up arrow              accelerate       (the right trigger)
+//   S  or  down arrow            brake and reverse (the left trigger)
+//   Space                        handbrake        (A)
+//   Left Shift                   B
+//   Enter                        START - which is what the "press START to continue" prompts want
+//   Escape                       BACK
+//   arrow keys                   the d-pad as well as the stick, for menus
+//
+// Only while the game's window is in front, so that typing elsewhere does not drive the car. If the window
+// cannot be found the keys are accepted anyway: better stray input than input that silently does nothing.
+// ---------------------------------------------------------------------------------------------------------------
+
+#define VK_BACK_        0x08
+#define VK_RETURN_      0x0D
+#define VK_SHIFT_       0x10
+#define VK_ESCAPE_      0x1B
+#define VK_SPACE_       0x20
+#define VK_LEFT_        0x25
+#define VK_UP_          0x26
+#define VK_RIGHT_       0x27
+#define VK_DOWN_        0x28
+#define GA_ROOT_        2
+
+#define WIN32_GAMEPAD_DPAD_UP    0x0001
+#define WIN32_GAMEPAD_DPAD_DOWN  0x0002
+#define WIN32_GAMEPAD_DPAD_LEFT  0x0004
+#define WIN32_GAMEPAD_DPAD_RIGHT 0x0008
+#define WIN32_GAMEPAD_START      0x0010
+#define WIN32_GAMEPAD_BACK       0x0020
+
+static bool KeyHeld(int virtualKey) {
+    return (GetAsyncKeyState(virtualKey) & 0x8000) != 0;
+}
+
+static bool GameWindowHasFocus(void) {
+    HWND render = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
+    if (render == NULL)
+        render = FindWindowA("CxbxRender", NULL);
+    if (render == NULL)
+        return true;
+    HWND root = GetAncestor(render, GA_ROOT_);
+    HWND foreground = GetForegroundWindow();
+    return foreground != NULL && (foreground == render || foreground == root);
+}
+
+// Builds the state a pad would have reported. Always fills it in; returns whether anything is held, which is
+// only used to decide whether to say so the first time.
+static bool BuildKeyboardState(Win32State *state) {
+    memset(state, 0, sizeof(*state));
+    if (!GameWindowHasFocus())
+        return false;
+
+    // The packet number only has to change when the state does, which is what the game's own edge detection
+    // watches; counting every poll is simpler and equally true.
+    static uint32_t packet = 0;
+    state->dwPacketNumber = ++packet;
+
+    bool left = KeyHeld('A') || KeyHeld(VK_LEFT_);
+    bool right = KeyHeld('D') || KeyHeld(VK_RIGHT_);
+    bool forward = KeyHeld('W') || KeyHeld(VK_UP_);
+    bool back = KeyHeld('S') || KeyHeld(VK_DOWN_);
+
+    if (left != right)
+        state->Gamepad.sThumbLX = left ? -32767 : 32767;
+    state->Gamepad.bRightTrigger = forward ? 255 : 0;
+    state->Gamepad.bLeftTrigger = back ? 255 : 0;
+
+    if (KeyHeld(VK_SPACE_))  state->Gamepad.wButtons |= WIN32_GAMEPAD_A;
+    if (KeyHeld(VK_SHIFT_))  state->Gamepad.wButtons |= WIN32_GAMEPAD_B;
+    if (KeyHeld(VK_RETURN_)) state->Gamepad.wButtons |= WIN32_GAMEPAD_START;
+    if (KeyHeld(VK_ESCAPE_)) state->Gamepad.wButtons |= WIN32_GAMEPAD_BACK;
+    if (KeyHeld(VK_UP_))     state->Gamepad.wButtons |= WIN32_GAMEPAD_DPAD_UP;
+    if (KeyHeld(VK_DOWN_))   state->Gamepad.wButtons |= WIN32_GAMEPAD_DPAD_DOWN;
+    if (KeyHeld(VK_LEFT_))   state->Gamepad.wButtons |= WIN32_GAMEPAD_DPAD_LEFT;
+    if (KeyHeld(VK_RIGHT_))  state->Gamepad.wButtons |= WIN32_GAMEPAD_DPAD_RIGHT;
+
+    return state->Gamepad.wButtons != 0 || state->Gamepad.sThumbLX != 0 ||
+           state->Gamepad.bLeftTrigger != 0 || state->Gamepad.bRightTrigger != 0;
+}
+
+// The port-0 read, from a real pad if there is one and from the keyboard if there is not. Everything else in
+// this file goes through it, so the keyboard appears as a device to XGetDevices as well - which is what gets
+// the game past its "no controller" screen.
+static bool ReadPort(int port, Win32State *state) {
+    if (XInputGetState((unsigned long)port, state) == WIN32_ERROR_SUCCESS)
+        return true;
+    if (port != 0)
+        return false;
+
+    static bool announced = false;
+    if (!announced) {
+        announced = true;
+        printf("[input] no pad on port 1: the keyboard is standing in for one "
+               "(WASD or arrows, Enter for START)\n");
+        fflush(stdout);
+    }
+    BuildKeyboardState(state);
+    return true;
+}
+
 // A handle is the port it was opened for, plus one so that no valid handle is null - the game tests handles
 // against zero and would treat port 0 as "not open" otherwise.
 static int PortOfHandle(void *handle) {
@@ -123,7 +237,7 @@ static uint32_t ConnectedMask(void) {
     for (int port = 0; port < MAX_PORTS; port++) {
         Win32State state;
         memset(&state, 0, sizeof(state));
-        if (XInputGetState((unsigned long)port, &state) == WIN32_ERROR_SUCCESS)
+        if (ReadPort(port, &state))
             mask |= 1u << port;
     }
     return mask;
@@ -142,8 +256,6 @@ static uint32_t __stdcall Xbox_XGetDevices(void *deviceType) {
         printf("[input] controllers on ports:%s%s%s%s\n",
                (mask & 1) ? " 1" : "", (mask & 2) ? " 2" : "",
                (mask & 4) ? " 3" : "", (mask & 8) ? " 4" : "");
-        if (mask == 0)
-            printf("[input] no controller found - the driving engine has no keyboard fallback yet\n");
         fflush(stdout);
     }
     return mask;
@@ -196,7 +308,7 @@ static uint32_t __stdcall Xbox_XInputGetState(void *handle, XboxState *state) {
 
     Win32State win32;
     memset(&win32, 0, sizeof(win32));
-    if (XInputGetState((unsigned long)port, &win32) != WIN32_ERROR_SUCCESS) {
+    if (!ReadPort(port, &win32)) {
         memset(state, 0, sizeof(*state));
         return XBOX_ERROR_DEVICE_NOT_CONNECTED;
     }

@@ -72,9 +72,22 @@ void D3D9_XGSetTextureHeader(uint32_t width, uint32_t height, uint32_t levels, u
 void D3D9_ResourceRegister(void *pResource, uint32_t data);
 void D3D9_NotifyTextureModified(void *pTextureOrSurface); // CPU wrote into the pixel data (decoder, intro effect)
 void D3D9_SetTexture(uint32_t stage, void *pTexture);
+
+// The palette bound to a texture stage: 256 (or fewer) A8R8G8B8 entries, or null for none. Paletted textures
+// are expanded through it at upload, since D3D9 has no equivalent of the NV2A's palette hardware.
+void D3D9_SetPalette(uint32_t stage, const void *entries);
 void D3D9_SetStreamSource(int streamNumber, void *vertexBuffer, int stride);
 void D3D9_SetIndices(void *pIndexBuffer, uint32_t baseVertexIndex);
 void D3D9_DrawVerticesUP(uint32_t primitiveType, uint32_t vertexCount, void *pVertexData, uint32_t stride);
+
+// Immediate mode: D3DDevice_Begin, a run of SetVertexData* calls, then End. The register numbers are the
+// Xbox's vertex attribute slots - 3 is the diffuse colour, 9 is the first texture coordinate, and writing
+// the position completes a vertex. See the immediate-mode section of d3d9Backend.cpp.
+void D3D9_ImmediateBegin(uint32_t primitiveType);
+void D3D9_ImmediateColour(uint32_t reg, uint32_t colour);
+void D3D9_ImmediateTexCoord(uint32_t reg, float u, float v);
+void D3D9_ImmediateVertex(uint32_t reg, float x, float y, float z, float w);
+void D3D9_ImmediateEnd(void);
 void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, const void *pIndexData);
 void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t vertexCount);
 void D3D9_SetRenderTarget(void *pRenderTarget, void *pDepthStencil);

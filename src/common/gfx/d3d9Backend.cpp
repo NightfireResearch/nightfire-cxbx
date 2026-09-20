@@ -449,8 +449,34 @@ static D3DFORMAT HostFormatFor(uint32_t xboxFormat, bool *convertYuy2) {
         case XFMT_DXT3: return D3DFMT_DXT3;
         case XFMT_DXT5: return D3DFMT_DXT5;
         case XFMT_YUY2: *convertYuy2 = true; return D3DFMT_A8R8G8B8;
+        case XFMT_P8: return D3DFMT_A8R8G8B8;   // expanded through the stage's palette at upload
         default: return D3DFMT_UNKNOWN;
     }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Palettes.
+//
+// A P8 texture is a byte per pixel indexing 256 colours, and the NV2A samples it through a palette object
+// bound to the stage. D3D9 has no such thing - D3DFMT_P8 exists but depends on a device palette that modern
+// drivers do not support - so the expansion happens on the way in: the upload reads the indices, looks each
+// one up and writes A8R8G8B8. The cost is four bytes a texel instead of one, on textures that are small by
+// definition, and the benefit is that nothing downstream has to know.
+//
+// The palette a texture is expanded through is whichever one is bound to the stage it is being bound to,
+// which is what g_uploadPalette carries: the upload happens inside the bind, and the stage is known there.
+//
+// A texture already uploaded is not re-expanded when its palette changes. The game builds each palette
+// before the textures that use it and leaves it alone afterwards, so this has not mattered; if a palette
+// animation ever appears, this is where it would be handled.
+// ---------------------------------------------------------------------------------------------------------------
+
+static const uint32_t *g_palette[4];
+static const uint32_t *g_uploadPalette = NULL;
+
+void D3D9_SetPalette(uint32_t stage, const void *entries) {
+    if (stage < 4)
+        g_palette[stage] = (const uint32_t *)entries;
 }
 
 // (Re)creates and/or uploads the host texture for an Xbox header. Returns NULL for formats not handled yet.
@@ -539,6 +565,19 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
             uint32_t rowBytes = lw * bpp / 8;
             for (uint32_t r = 0; r < lh; r++)
                 memcpy((uint8_t*)lr.pBits + (size_t)r * lr.Pitch, src + (size_t)r * pitch, rowBytes);
+        } else if (xboxFormat == XFMT_P8) {
+            // One byte per texel in, four out. Without a palette every index would read the same colour, so
+            // white keeps the shape of whatever it is rather than turning it black.
+            size_t levelBytes = (size_t)lw * lh;
+            if (scratchSize < levelBytes) { free(scratch); scratch = (uint8_t*)malloc(levelBytes); scratchSize = levelBytes; }
+            Unswizzle(scratch, src, lw, lh, 1);
+            for (uint32_t r = 0; r < lh; r++) {
+                uint32_t *row = (uint32_t*)((uint8_t*)lr.pBits + (size_t)r * lr.Pitch);
+                const uint8_t *indices = scratch + (size_t)r * lw;
+                for (uint32_t c = 0; c < lw; c++)
+                    row[c] = (g_uploadPalette != NULL) ? g_uploadPalette[indices[c]] : 0xFFFFFFFFu;
+            }
+            src += levelBytes;
         } else {
             uint32_t bytesPerPixel = bpp / 8;
             size_t levelBytes = (size_t)lw * lh * bytesPerPixel;
@@ -1010,6 +1049,7 @@ static void ApplyTextureStageState(bool shaderDraw) {
         if (s != 0 && g_boundTexture[s] == NULL)
             continue;
         uint32_t h = host++;
+        g_uploadPalette = (s < 4) ? g_palette[s] : NULL;   // for a paletted texture; see D3D9_SetPalette
         g_device->SetTexture(h, g_boundTexture[s] != NULL ? GetHostTexture(g_boundTexture[s]) : NULL);
         if (g_dumpFrame != 0 && g_boundTexture[s] != NULL && g_dumpRtCount < 8) {
             HostTexture *t = FindHostTexture(g_boundTexture[s]);
@@ -1454,6 +1494,13 @@ uint32_t D3D9_CreateVertexShader(const void *pDeclaration, const void *pFunction
 void D3D9_SetVertexShader(void *handle) {
     uint32_t h = (uint32_t)(uintptr_t)handle;
     g_currentVertexShader = ((h & 0xFFFF0000u) == VS_HANDLE_TAG) ? (int)(h & 0xFFFF) : -1;
+    if (g_currentVertexShader < 0) {
+        static uint32_t reported[8]; static int reportedCount = 0;
+        bool seen = false;
+        for (int i = 0; i < reportedCount; i++) if (reported[i] == h) seen = true;
+        if (!seen && reportedCount < 8) { reported[reportedCount++] = h;
+            D3D9Log("[d3d9] vertex shader handle 0x%08x is not a translated shader\n", h); }
+    }
 }
 
 static void StoreConstants(uint32_t index, const float *values, uint32_t count4) {
@@ -1904,6 +1951,121 @@ static void DrawImmediateQuads(uint32_t vertexCount, const uint8_t *data, uint32
     g_device->SetPixelShader(NULL);
     g_device->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
     g_device->DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, vertexCount, (vertexCount / 4) * 2, g_quadIndices, D3DFMT_INDEX16, g_rhwVertices, sizeof(RhwVertex));
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Immediate mode.
+//
+// The Xbox lets a game submit vertices one attribute at a time: D3DDevice_Begin(primitiveType), then
+// SetVertexDataColor / SetVertexData2f / SetVertexData4f writing numbered vertex registers, then
+// D3DDevice_End. Writing the position register completes a vertex, which is why the calls come in the order
+// colour, texture coordinate, position.
+//
+// The driving engine uses it heavily - fonts, the HUD, the loading screen, the movie player - at about a
+// hundred batches a frame. It is a two-dimensional path: the positions arrive already in screen pixels with
+// a constant z and w, which is what the fixed-function pipeline's transformed-vertex format takes, so the
+// vertices go straight through with no shader and no transform.
+//
+// Quads become triangle pairs, since D3D9 dropped the quad primitive the NV2A has.
+// ---------------------------------------------------------------------------------------------------------------
+
+struct ImmediateVertex { float x, y, z, rhw; uint32_t colour; float u, v; };
+#define IMMEDIATE_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)
+#define IMMEDIATE_MAX_VERTICES 4096
+
+// The Xbox vertex registers this path uses. -1 is X_D3DVSDE_VERTEX, "the vertex is finished".
+enum { XVSDE_POSITION = 0, XVSDE_DIFFUSE = 3, XVSDE_TEXCOORD0 = 9, XVSDE_VERTEX_END = 0xFFFFFFFFu };
+
+static ImmediateVertex g_immediateVertices[IMMEDIATE_MAX_VERTICES];
+static uint32_t g_immediateCount = 0;
+static uint32_t g_immediatePrimitive = 0;
+static bool g_immediateOpen = false;
+static uint32_t g_immediateColour = 0xFFFFFFFFu;
+static float g_immediateU = 0.0f, g_immediateV = 0.0f;
+
+void D3D9_ImmediateBegin(uint32_t primitiveType) {
+    g_immediatePrimitive = primitiveType;
+    g_immediateCount = 0;
+    g_immediateOpen = true;
+}
+
+void D3D9_ImmediateColour(uint32_t reg, uint32_t colour) {
+    if (reg == XVSDE_DIFFUSE)
+        g_immediateColour = colour;
+}
+
+void D3D9_ImmediateTexCoord(uint32_t reg, float u, float v) {
+    if (reg == XVSDE_TEXCOORD0) {
+        g_immediateU = u;
+        g_immediateV = v;
+    }
+}
+
+void D3D9_ImmediateVertex(uint32_t reg, float x, float y, float z, float w) {
+    if (reg != XVSDE_POSITION && reg != XVSDE_VERTEX_END)
+        return;                                  // some other register written four floats at a time
+    if (!g_immediateOpen || g_immediateCount >= IMMEDIATE_MAX_VERTICES)
+        return;
+
+    ImmediateVertex *v = &g_immediateVertices[g_immediateCount++];
+    v->x = x;
+    v->y = y;
+    v->z = z;
+    v->rhw = (w != 0.0f) ? w : 1.0f;
+    v->colour = g_immediateColour;
+    v->u = g_immediateU;
+    v->v = g_immediateV;
+}
+
+void D3D9_ImmediateEnd(void) {
+    g_immediateOpen = false;
+    if (g_device == NULL || g_immediateCount == 0)
+        return;
+
+    BeginSceneIfNeeded();
+    ApplyTextureStageState(false);   // also fills in the coordinate scales linear textures need
+
+    // A linear texture is addressed in texels on the NV2A, so the coordinates that arrive are in texels too.
+    // The shader path applies the scale as a constant; here it goes into the vertices.
+    float scaleU = g_texCoordScale[0][0], scaleV = g_texCoordScale[0][1];
+    if (scaleU != 1.0f || scaleV != 1.0f) {
+        for (uint32_t i = 0; i < g_immediateCount; i++) {
+            g_immediateVertices[i].u *= scaleU;
+            g_immediateVertices[i].v *= scaleV;
+        }
+    }
+
+    g_device->SetVertexShader(NULL);
+    g_device->SetPixelShader(NULL);
+    g_device->SetFVF(IMMEDIATE_FVF);
+
+    g_statDraws++;
+    g_statDrawsImmediate++;
+    g_statVertices += g_immediateCount;
+
+    if (g_immediatePrimitive == 8) {             // X_D3DPT_QUADLIST: four corners per quad
+        static ImmediateVertex triangles[IMMEDIATE_MAX_VERTICES * 3 / 2];
+        uint32_t out = 0;
+        for (uint32_t i = 0; i + 3 < g_immediateCount && out + 6 <= sizeof(triangles) / sizeof(triangles[0]);
+             i += 4) {
+            triangles[out++] = g_immediateVertices[i];
+            triangles[out++] = g_immediateVertices[i + 1];
+            triangles[out++] = g_immediateVertices[i + 2];
+            triangles[out++] = g_immediateVertices[i];
+            triangles[out++] = g_immediateVertices[i + 2];
+            triangles[out++] = g_immediateVertices[i + 3];
+        }
+        if (out >= 3)
+            g_device->DrawPrimitiveUP(D3DPT_TRIANGLELIST, out / 3, triangles, sizeof(ImmediateVertex));
+        g_immediateCount = 0;
+        return;
+    }
+
+    D3DPRIMITIVETYPE type;
+    UINT primCount;
+    if (XboxPrimitiveToD3D(g_immediatePrimitive, g_immediateCount, &type, &primCount))
+        g_device->DrawPrimitiveUP(type, primCount, g_immediateVertices, sizeof(ImmediateVertex));
+    g_immediateCount = 0;
 }
 
 void D3D9_DrawVerticesUP(uint32_t primitiveType, uint32_t vertexCount, void *pVertexData, uint32_t stride) {

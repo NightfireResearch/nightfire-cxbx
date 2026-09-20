@@ -64,8 +64,25 @@ static bool HostHasFile(const char *xboxPath) {
            GetFileAttributesA(hostPath) != INVALID_FILE_ATTRIBUTES;
 }
 
+// Each missing file is worth saying once. The game asks for the same ambient sound every few frames when it
+// cannot have it, and a line per request buries everything else in the log.
+static bool ReportedBefore(const char *path) {
+    static char reported[32][MAX_PATH];
+    static unsigned count = 0;
+
+    for (unsigned i = 0; i < count; i++) {
+        if (strcmp(reported[i], path) == 0)
+            return true;
+    }
+    if (count < sizeof(reported) / sizeof(reported[0]))
+        snprintf(reported[count++], MAX_PATH, "%s", path);
+    return false;
+}
+
 static unsigned int __cdecl Stream_QueueFile(void *stream, const char *path, unsigned int a, unsigned int b) {
     if (path != NULL && !HostHasFile(path)) {
+        if (ReportedBefore(path))
+            return 0;
         printf("[stream] %s is not on the disc - refusing the request rather than waiting for it\n", path);
         fflush(stdout);
         return 0;   // nothing queued, so the stream is idle and the caller's wait ends at once

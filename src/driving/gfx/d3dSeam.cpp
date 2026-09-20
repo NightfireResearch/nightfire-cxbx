@@ -412,11 +412,42 @@ static void *__stdcall Seam_D3DPalette_Lock2(void *palette, uint32_t flags) {
     return (palette != NULL) ? (void *)(uintptr_t)((const XboxPixelContainer *)palette)->Data : NULL;
 }
 
-// Binding a palette. The backend has no P8 path yet - a paletted texture will upload as if its indices were
-// intensities - so this is accepted and dropped rather than reported on every material. It is the first thing
-// to do when paletted textures matter.
+// Binding a palette, which the backend expands paletted textures through at upload.
 static void __stdcall Seam_D3DDevice_SetPalette(uint32_t stage, void *palette) {
-    (void)stage; (void)palette;
+    const XboxPixelContainer *header = (const XboxPixelContainer *)palette;
+    D3D9_SetPalette(stage, (header != NULL) ? (const void *)(uintptr_t)header->Data : NULL);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Immediate mode.
+//
+// Four entry points that between them are most of the game's two-dimensional drawing: the font renderer, the
+// HUD, the loading screen and the movie player. Each vertex arrives as a colour, a texture coordinate and
+// then a position, and the position is what completes it - EAGLFont::FONTEAGL_draw (0x000ee490) is the
+// clearest example, writing register 3, then 9, then 0xffffffff, four times for a character's quad.
+//
+// The backend does the collecting and the drawing; these only unpack the arguments. SetVertexData2f and
+// SetVertexData4f differ only in how many floats follow the register number.
+// ---------------------------------------------------------------------------------------------------------------
+
+static void __stdcall Seam_D3DDevice_Begin(uint32_t primitiveType) {
+    D3D9_ImmediateBegin(primitiveType);
+}
+
+static void __stdcall Seam_D3DDevice_End(void) {
+    D3D9_ImmediateEnd();
+}
+
+static void __stdcall Seam_D3DDevice_SetVertexDataColor(uint32_t reg, uint32_t colour) {
+    D3D9_ImmediateColour(reg, colour);
+}
+
+static void __stdcall Seam_D3DDevice_SetVertexData2f(uint32_t reg, float a, float b) {
+    D3D9_ImmediateTexCoord(reg, a, b);
+}
+
+static void __stdcall Seam_D3DDevice_SetVertexData4f(uint32_t reg, float a, float b, float c, float d) {
+    D3D9_ImmediateVertex(reg, a, b, c, d);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -783,6 +814,11 @@ static const struct { const char *name; void *replacement; unsigned stackBytes; 
     { "D3DPalette_Lock2",                     (void *)Seam_D3DPalette_Lock2, 8 },
     { "D3DDevice_SetPalette",                 (void *)Seam_D3DDevice_SetPalette, 8 },
     { "D3D_CreateStandAloneSurface",          (void *)Seam_D3D_CreateStandAloneSurface, 16 },
+    { "D3DDevice_Begin",                      (void *)Seam_D3DDevice_Begin, 4 },
+    { "D3DDevice_End",                        (void *)Seam_D3DDevice_End, 0 },
+    { "D3DDevice_SetVertexDataColor",         (void *)Seam_D3DDevice_SetVertexDataColor, 8 },
+    { "D3DDevice_SetVertexData2f",            (void *)Seam_D3DDevice_SetVertexData2f, 12 },
+    { "D3DDevice_SetVertexData4f",            (void *)Seam_D3DDevice_SetVertexData4f, 20 },
     { "XGIsSwizzledFormat",                   (void *)Seam_XGIsSwizzledFormat, 4 },
     { "XGUnswizzleRect",                      (void *)Seam_XGUnswizzleRect, 32 },
     { "XGSwizzleRect",                        (void *)Seam_XGSwizzleRect, 32 },
