@@ -264,13 +264,6 @@ static const unsigned char WBINVD_BYTES[2] = { 0x0f, 0x09 };
 // have run. Patching by hand here keeps a CXBX-hosted run byte for byte as it was.
 // ---------------------------------------------------------------------------------------------------------------
 
-bool Xbox_RunningStandalone(void) {
-    // CXBX's emulation lives in cxbxr-emu.dll. Asking whether it is in the process tests the thing that
-    // actually matters - whether anything else has already replaced the XBE's libraries - rather than a proxy
-    // for it such as a setting.
-    return GetModuleHandleA("cxbxr-emu.dll") == NULL;
-}
-
 static void WriteJump(unsigned address, void *target) {
     unsigned char *site = (unsigned char *)address;
     DWORD previous = 0;

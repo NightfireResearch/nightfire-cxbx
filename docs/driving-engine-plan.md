@@ -84,13 +84,72 @@ and is reusable.
 because the suffix is what says it still needs an emulator - a plain `driving.exe` sitting beside a
 standalone `action.exe` would quietly imply otherwise. `driving.exe` is reserved for the standalone build
 when there is one. The injected DLLs keep their plain names (`actioninject`, `drivinginject`): they are not
-specific to a host, and `actioninject.dll` is already loaded unchanged by both.
+specific to a host, and `actioninject.dll` is already loaded unchanged by both. (`driving.exe` now exists - see 0.1 - and is the same loader binary as `action.exe` with two default file names changed.)
 
 **And one correction to section 6.3 below:** the action-to-driving hand-off cannot become an in-process
 transition. Both XBEs are linked to base `0x10000`, and the loader gets that address by *being* the image
 there - so only one XBE can be mapped at a time, and that is not a limitation a cleverer loader removes. The
 hand-off stays a process relaunch: the loader re-executes itself with the other XBE, carrying the launch
 data page across in a file, which is what `psiLaunch.bin` already does.
+
+## 0.1 Status: what runs standalone today
+
+Written after the first pass at steps 1 and 2 of section 7, and measured rather than predicted - every line
+below came out of a run. `driving.exe` (the loader, built from the same sources as `action.exe` with
+`IS_DRIVING` choosing the two default file names) maps `Driving.xbe`, loads `drivinginject.dll` and gets as
+far as **creating the Direct3D device**, with the game's own logging live:
+
+```
+[timer] tick every 20 ms (timer 16), callback at 0x0010ae10
+[startup] calling main
+main launching with 0 args:
+(00:00:00) 35.64MB - Init main singletons
+(00:00:00) 35.64MB - Init Lib Render
+[loader] unimplemented kernel import: KeInitializeDpc (ordinal 107), called from 0x0016fcca
+```
+
+So the process heap, the C runtime, the C++ constructors, the launch-data read, `main`, the memory heap and
+the engine's first singletons all work. What it took, in the order the loader's stub table asked for it:
+
+- `NtClose` in the loader (the entry point closes the startup thread's handle immediately).
+- **The startup replacement**, `src/driving/platform/XboxStartup.cpp`: `mainXapiStartup`, `XapiInitProcess`,
+  the last-error pair, the CRT's per-thread data, the seven `FS:[0x20]` notification hooks and nine `WBINVD`
+  sites. It is the action engine's file transposed - the XAPI in the two XBEs decompiles identically - and it
+  carries the address correspondence table, so the next person does not have to re-derive it.
+- `XInitDevices` replaced by nothing (same file). It starts XAPI's USB stack, which is the first thing on the
+  boot path with no PC meaning; the input seam will talk to Win32 XInput as the action engine's does.
+- **Critical sections that were never initialised.** An Xbox `RTL_CRITICAL_SECTION` can be built by the
+  compiler - a static one is simply laid out unlocked in `.data` - and XAPI's multimedia timer has one at
+  `0x001d2f48`. Those bytes mean something else to Win32, so `EnterCriticalSection` waited forever and the
+  boot hung. The loader now initialises any section it has not seen before, on first use.
+- **The tick source**, `src/driving/platform/XboxTimer.cpp`: `timeSetEvent` (`0x0010eed3`) becomes winmm's,
+  with `timeBeginPeriod(1)`. XAPI's own is a thread waiting on sixty-four kernel timer objects; implementing
+  the dispatcher under it would have meant reproducing Xbox timers and DPCs to deliver a callback Windows
+  delivers itself. This is the "timer of our choosing" section 2 asks for, and it is the thing step 4 should
+  now measure against `Scheduler::Run`.
+- `ExQueryNonVolatileSetting` in the loader, answering with PAL-I, English, 4:3 and no parental control.
+  `ConfigureRes` reads the video flags and the AV region through it before choosing a resolution.
+
+**One correction to the order of work.** Section 7 step 1 expected the boot to "get as far as audio
+initialisation and then hit DirectSound reaching for hardware". It does not: the renderer comes first, and it
+is the *graphics* hardware that is reached first. The chain is
+
+```
+main -> "Init Lib Render" -> RRenderer (0x0007d2a0) -> FUN_000e6c00 -> D3D8::Direct3D_CreateDevice (0x00169480)
+     -> D3D8::CMiniport_InitHardware (0x0016fcad)
+```
+
+and `CMiniport_InitHardware` is the nv2a miniport: `KeInitializeDpc`, `HalGetInterruptVector`,
+`KeConnectInterrupt`, `HalReadWritePCISpace`, an `out` to port `0x80c0`. There is nothing to emulate there,
+and nothing that should ever run - exactly as the action engine never runs D3D8's `CreateDevice` because the
+seam replaces the graphics init above it.
+
+`FUN_000e6c00` is that seam point, and it is a good one: it is EAGL's device creation, and everything it does
+is D3D8 - `D3D_SetPushBufferSize`, `Direct3D_CreateDevice`, the initial render states, `Swap`,
+`GetBackBuffer2`, `GetDepthStencilSurface2`, the tile setup, and the three texture headers it wraps around
+the back buffer and depth surface. Reimplementing it against the D3D9 backend is where section 6.1 starts in
+practice, and it moves the graphics work ahead of the audio seam in the running order - not because audio got
+easier, but because nothing reaches audio until the renderer exists.
 
 ## 1. What the driving engine is
 
@@ -416,7 +475,7 @@ transition; that is not possible, and it is not a limitation a better loader rem
 
 ## 7. Suggested order of work
 
-Reordered now that the standalone loader exists. The principle that changed: the original order front-loaded
+Reordered now that the standalone loader exists. Steps 1 and 2 are done; 0.1 says what that bought and what it corrected about the order below. The principle that changed: the original order front-loaded
 fixes for CXBX's behaviour - scaling the visibility-test result, containing the sound-buffer leak, replacing
 the game's clock - and each of those is a correction for a host that is being removed. Going standalone first
 makes several of them unnecessary rather than merely earlier.

@@ -36,6 +36,34 @@
 typedef void (*XbeEntryPoint)(void);
 
 // ---------------------------------------------------------------------------------------------------------------
+// Which engine this loader is for.
+//
+// Nothing below here is specific to the action engine any more: both XBEs are linked at 0x10000, both are
+// spanned by the reservation array, and both are mapped and have their kernel imports resolved the same way.
+// The only two engine-specific facts are the name of the XBE to look for and the name of the injection DLL
+// that carries that engine's patches, so they are the only two things the build chooses between. See the
+// "driving" target in CMakeLists.txt, and the naming note in docs/driving-engine-plan.md section 0.
+//
+// Both can still be overridden on the command line, which is what makes "run the other engine's XBE to see
+// where it stops" a one-liner rather than a rebuild.
+// ---------------------------------------------------------------------------------------------------------------
+
+#ifdef IS_DRIVING
+#define LOADER_ENGINE_NAME "driving"
+#define LOADER_XBE_NAME    "Driving.xbe"
+#define LOADER_INJECT_DLL  "drivinginject.dll"
+#else
+#define LOADER_ENGINE_NAME "action"
+#define LOADER_XBE_NAME    "default.xbe"
+#define LOADER_INJECT_DLL  "actioninject.dll"
+#endif
+
+// Where the XBE ended up, for ModuleContaining below. Set once the image is mapped; before that there is
+// nothing at the base but this executable's own headers.
+static uintptr_t g_imageStart = 0;
+static uintptr_t g_imageEnd = 0;
+
+// ---------------------------------------------------------------------------------------------------------------
 // First-chance exception reporting.
 //
 // Faults in this stage are mostly silent otherwise. An access violation inside a DLL's initialiser is caught by
@@ -47,7 +75,7 @@ typedef void (*XbeEntryPoint)(void);
 // ---------------------------------------------------------------------------------------------------------------
 
 static const char *ModuleContaining(uintptr_t address, char *scratch, size_t scratchSize) {
-    if (address >= 0x00010000 && address < 0x0030b660)
+    if (g_imageStart != 0 && address >= g_imageStart && address < g_imageEnd)
         return "the mapped XBE";
 
     HMODULE module = NULL;
@@ -177,11 +205,11 @@ static HWND CreateRenderWindow(int width, int height) {
 
 // Kept in one place because the useful failure message is "where did you look", not "not found".
 static bool FindXbe(char *out, size_t outSize) {
-    static const char *candidates[] = {
-        "../disc/default.xbe",
-        "disc/default.xbe",
-        "default.xbe",
-    };
+    char candidates[3][MAX_PATH];
+    snprintf(candidates[0], sizeof(candidates[0]), "../disc/%s", LOADER_XBE_NAME);
+    snprintf(candidates[1], sizeof(candidates[1]), "disc/%s", LOADER_XBE_NAME);
+    snprintf(candidates[2], sizeof(candidates[2]), "%s", LOADER_XBE_NAME);
+
     for (size_t i = 0; i < sizeof(candidates) / sizeof(candidates[0]); i++) {
         if (GetFileAttributesA(candidates[i]) != INVALID_FILE_ATTRIBUTES) {
             snprintf(out, outSize, "%s", candidates[i]);
@@ -191,7 +219,7 @@ static bool FindXbe(char *out, size_t outSize) {
     char cwd[MAX_PATH];
     if (GetCurrentDirectoryA(sizeof(cwd), cwd) == 0)
         snprintf(cwd, sizeof(cwd), "(unknown)");
-    printf("[loader] could not find default.xbe. Looked for:\n");
+    printf("[loader] could not find %s. Looked for:\n", LOADER_XBE_NAME);
     for (size_t i = 0; i < sizeof(candidates) / sizeof(candidates[0]); i++)
         printf("[loader]   %s\n", candidates[i]);
     printf("[loader] (relative to the working directory, which is %s)\n", cwd);
@@ -203,14 +231,19 @@ int main(int argc, char **argv) {
     // matters when this is started detached, where stdout is a handle onto a console nobody can see.
     EnsureConsoleOutput();
 
-    printf("[loader] Nightfire standalone loader\n");
+    printf("[loader] Nightfire standalone loader (%s engine)\n", LOADER_ENGINE_NAME);
     AddVectoredExceptionHandler(1, ReportException);
 
+    // Both arguments are optional and positional: the XBE to map, then the DLL carrying its patches. They
+    // exist so that either engine's XBE can be run under either loader without a rebuild.
     char xbePath[MAX_PATH];
     if (argc > 1)
         snprintf(xbePath, sizeof(xbePath), "%s", argv[1]);
     else if (!FindXbe(xbePath, sizeof(xbePath)))
         return 1;
+
+    char injectDll[MAX_PATH];
+    snprintf(injectDll, sizeof(injectDll), "%s", argc > 2 ? argv[2] : LOADER_INJECT_DLL);
 
     XbeImage image;
     if (!Xbe_Load(xbePath, &image))
@@ -218,6 +251,8 @@ int main(int argc, char **argv) {
 
     if (!Xbe_Map(&image))
         return 1;
+    g_imageStart = image.baseAddress;
+    g_imageEnd = (uintptr_t)image.baseAddress + image.sizeOfImage;
     if (!Kernel_Init())
         return 1;
     if (!Xbe_ResolveKernelImports(&image, Kernel_Resolve))
@@ -225,11 +260,11 @@ int main(int argc, char **argv) {
 
     // The existing injection DLL, unchanged. Its DllMain calls Inject(), which patches the game code at the
     // addresses it has always used - now that the image is mapped, those addresses mean what they always did.
-    if (LoadLibraryA("actioninject.dll") == NULL) {
-        printf("[loader] could not load actioninject.dll (error %lu)\n", GetLastError());
+    if (LoadLibraryA(injectDll) == NULL) {
+        printf("[loader] could not load %s (error %lu)\n", injectDll, GetLastError());
         return 1;
     }
-    printf("[loader] actioninject.dll loaded and patches applied\n");
+    printf("[loader] %s loaded and patches applied\n", injectDll);
 
     // Before the entry point, so that the window is already there when the game's graphics init looks for it.
     // That is too early to know what resolution the game will ask for, so this is only a starting size: the

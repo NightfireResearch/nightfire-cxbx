@@ -312,6 +312,94 @@ static ULONG __stdcall Xbox_MmQueryAllocationSize(void *baseAddress) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
+// The EEPROM.
+//
+// A console keeps the settings made in the dashboard - language, video standard, widescreen, audio mode,
+// parental controls - in a hundred-odd bytes of non-volatile memory, and the kernel hands them out one value
+// at a time. The driving engine reads two of them before it can decide on a resolution: XC_VIDEO for the
+// video flags (0x0010e02b, the video-flags getter, masks the high word) and XC_FACTORY_AV_REGION for the
+// video standard (0x0010e002 takes bits 8..15), both from ConfigureRes.
+//
+// There is no EEPROM here, so the answers are constants: PAL-I, English, 4:3, stereo, no parental control.
+// PAL matches what the engine has already chosen by the time it asks - the tick it set up is 20 ms, 50 Hz -
+// and it is what the action engine defaults to as well.
+//
+// The action engine puts these behind a settings.ini instead (src/action/engine/XboxSettings.cpp), replacing
+// the game's own getters rather than the kernel call under them. When the driving engine grows the same file,
+// this is where it should be read from: one implementation serving every caller beats a getter each.
+//
+// An index that is not in the table is refused rather than answered with a zero, and says so once, because a
+// plausible-looking zero would be indistinguishable from a real setting and the next thing to ask for one is
+// how we find out that it matters.
+// ---------------------------------------------------------------------------------------------------------------
+
+#define XBOX_STATUS_OBJECT_NAME_NOT_FOUND ((LONG)0xC0000034)
+#define XBOX_REG_DWORD                    4
+
+#define XC_LANGUAGE            0x07
+#define XC_VIDEO               0x08
+#define XC_AUDIO               0x09
+#define XC_P_CONTROL_GAMES     0x0a
+#define XC_MISC                0x11
+#define XC_DVD_REGION          0x12
+#define XC_FACTORY_AV_REGION   0x103
+#define XC_FACTORY_GAME_REGION 0x104
+
+#define AV_STANDARD_PAL_I      0x00000300   // bits 8..15 are the standard; 1 is NTSC-M, 3 is PAL-I
+
+// Ordinal 24. ValueLength is what the caller has room for; resultLength is optional and the callers here pass
+// null for it.
+static LONG __stdcall Xbox_ExQueryNonVolatileSetting(ULONG valueIndex, ULONG *type, void *value,
+                                                     ULONG valueLength, ULONG *resultLength) {
+    ULONG setting = 0;
+    switch (valueIndex) {
+        case XC_LANGUAGE:            setting = 1; break;                  // English
+        case XC_VIDEO:               setting = 0; break;                  // 4:3, no HDTV mode, no letterbox
+        case XC_AUDIO:               setting = 0; break;                  // stereo, no Dolby encoding
+        case XC_P_CONTROL_GAMES:     setting = 0; break;                  // nothing restricted
+        case XC_MISC:                setting = 0; break;
+        case XC_DVD_REGION:          setting = 2; break;                  // Europe, to match PAL below
+        case XC_FACTORY_AV_REGION:   setting = AV_STANDARD_PAL_I; break;
+        case XC_FACTORY_GAME_REGION: setting = 2; break;                  // 1 is NA, 2 Japan, 4 rest of world
+        default:
+            printf("[loader] ExQueryNonVolatileSetting: no answer for setting 0x%lx\n", valueIndex);
+            fflush(stdout);
+            return XBOX_STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+    if (value == NULL || valueLength < sizeof(ULONG))
+        return XBOX_STATUS_INVALID_PARAMETER;
+
+    memcpy(value, &setting, sizeof(setting));
+    if (type != NULL)
+        *type = XBOX_REG_DWORD;
+    if (resultLength != NULL)
+        *resultLength = sizeof(setting);
+    return XBOX_STATUS_SUCCESS;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Handles.
+//
+// The Xbox has one handle table for everything, so NtClose closes threads, events, timers and files alike -
+// which is why it is reached before anything else does anything interesting: the XBE's entry point creates the
+// startup thread and immediately closes the handle it got back. Every handle the loader hands out is a Win32
+// handle, so this is CloseHandle.
+//
+// The action engine never needed this in the loader because its injected file layer replaces the XAPI wrapper
+// that calls it (DoNtClose in src/action/engine/XboxFile.cpp), which also has to tell find handles from file
+// handles. Nothing on the driving side replaces that wrapper yet, and when a file layer does arrive it will
+// want the same distinction - so the general case lives here and the file layer can still take the wrapper.
+// ---------------------------------------------------------------------------------------------------------------
+
+// Ordinal 187.
+static LONG __stdcall Xbox_NtClose(HANDLE handle) {
+    if (handle == NULL || handle == INVALID_HANDLE_VALUE)
+        return XBOX_STATUS_INVALID_PARAMETER;
+    return CloseHandle(handle) ? XBOX_STATUS_SUCCESS : XBOX_STATUS_INVALID_PARAMETER;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // Critical sections.
 //
 // The game embeds these in its own structures - the heap has one - so they are built in place rather than
@@ -327,21 +415,85 @@ static ULONG __stdcall Xbox_MmQueryAllocationSize(void *baseAddress) {
 static_assert(sizeof(CRITICAL_SECTION) <= XBOX_CRITICAL_SECTION_SIZE,
               "a Win32 CRITICAL_SECTION no longer fits where the game reserved space for an Xbox one");
 
+// ---------------------------------------------------------------------------------------------------------------
+// Sections that were never initialised at run time, because on the Xbox they did not have to be.
+//
+// An Xbox RTL_CRITICAL_SECTION can be built by the compiler: it is a plain structure whose unlocked state is a
+// self-linked dispatcher header and LockCount -1, so a static one is simply laid out that way in .data and
+// RtlEnterCriticalSection works on it without any initialiser ever running. XAPI's multimedia timer has one
+// (0x001d2f48 in the driving build), and it is the first thing the driving engine touched that the action
+// engine never did.
+//
+// Those bytes mean something quite different to Win32: a CRITICAL_SECTION starts with DebugInfo, so the Xbox
+// header's first word becomes a debug pointer, the list pointers become RecursionCount and OwningThread, and
+// the -1 that means "free" becomes LockSemaphore. EnterCriticalSection then waits on a handle that is not one
+// and never returns - which is exactly how the driving engine's boot hung, inside timeSetEvent.
+//
+// So every section is initialised on first use unless we initialised it ourselves earlier. Remembering which
+// ones we have seen is what makes that safe: initialising a section that is currently held would lose the
+// hold, and there is no field to test for "initialised" that a static Xbox section does not already fill in
+// with something plausible.
+// ---------------------------------------------------------------------------------------------------------------
+
+#define KNOWN_SECTION_MAX 1024
+
+static CRITICAL_SECTION g_knownSectionsLock;
+static void *g_knownSections[KNOWN_SECTION_MAX];
+static unsigned g_knownSectionCount = 0;
+
+// True if this is the first time the loader has seen this section, in which case the caller initialises it.
+// The linear scan is fine: the count is in the tens, and the alternative is a hash table for a list that is
+// walked only on the first touch of each section.
+static bool IsNewSection(void *section) {
+    bool isNew = true;
+
+    EnterCriticalSection(&g_knownSectionsLock);
+    for (unsigned i = 0; i < g_knownSectionCount; i++) {
+        if (g_knownSections[i] == section) {
+            isNew = false;
+            break;
+        }
+    }
+    if (isNew) {
+        if (g_knownSectionCount < KNOWN_SECTION_MAX) {
+            g_knownSections[g_knownSectionCount++] = section;
+        } else {
+            // Not expected, and worth saying rather than silently re-initialising a live section from here on.
+            printf("[loader] more than %u critical sections - the loader has stopped tracking them\n",
+                   (unsigned)KNOWN_SECTION_MAX);
+            isNew = false;
+        }
+    }
+    LeaveCriticalSection(&g_knownSectionsLock);
+    return isNew;
+}
+
+static void EnsureSectionInitialised(CRITICAL_SECTION *section) {
+    if (IsNewSection(section))
+        InitializeCriticalSection(section);
+}
+
 static void __stdcall Xbox_RtlInitializeCriticalSection(CRITICAL_SECTION *section) {
-    InitializeCriticalSection(section);
+    // Through the same path, so that a section initialised here is not initialised a second time when it is
+    // first entered - and so that one initialised twice by the game is initialised once by us.
+    EnsureSectionInitialised(section);
 }
 
 static void __stdcall Xbox_RtlEnterCriticalSection(CRITICAL_SECTION *section) {
+    EnsureSectionInitialised(section);
     EnterCriticalSection(section);
 }
 
 static void __stdcall Xbox_RtlLeaveCriticalSection(CRITICAL_SECTION *section) {
+    // No initialising here: nothing can leave a section it did not enter, so by this point it is known. Doing
+    // it anyway would turn a stray leave into a fresh section rather than the noisy failure it should be.
     LeaveCriticalSection(section);
 }
 
 // Returns a BOOLEAN on the Xbox, but callers test the whole of EAX, so this returns a full-width value rather
 // than letting only AL be meaningful.
 static DWORD __stdcall Xbox_RtlTryEnterCriticalSection(CRITICAL_SECTION *section) {
+    EnsureSectionInitialised(section);
     return TryEnterCriticalSection(section) ? 1u : 0u;
 }
 
@@ -350,11 +502,13 @@ static const struct { unsigned ordinal; void *implementation; } g_implemented[] 
     { 15,  (void *)Xbox_ExAllocatePoolWithTag },
     { 17,  (void *)Xbox_ExFreePool },
     { 23,  (void *)Xbox_ExQueryPoolBlockSize },
+    { 24,  (void *)Xbox_ExQueryNonVolatileSetting },
     { 166, (void *)Xbox_MmAllocateContiguousMemoryEx },
     { 171, (void *)Xbox_MmFreeContiguousMemory },
     { 178, (void *)Xbox_MmPersistContiguousMemory },
     { 180, (void *)Xbox_MmQueryAllocationSize },
     { 184, (void *)Xbox_NtAllocateVirtualMemory },
+    { 187, (void *)Xbox_NtClose },
     { 199, (void *)Xbox_NtFreeVirtualMemory },
     { 205, (void *)Xbox_NtProtectVirtualMemory },
     { 217, (void *)Xbox_NtQueryVirtualMemory },
@@ -368,6 +522,8 @@ static const struct { unsigned ordinal; void *implementation; } g_implemented[] 
 };
 
 bool Kernel_Init(void) {
+    InitializeCriticalSection(&g_knownSectionsLock);
+
     g_trampolines = (KernelTrampoline *)VirtualAlloc(NULL, KERNEL_MAX_ORDINAL * sizeof(KernelTrampoline),
                                                      MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if (g_trampolines == NULL) {

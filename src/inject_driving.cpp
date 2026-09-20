@@ -4,6 +4,7 @@
 #include "driving/engine/UFileLoader.h"
 #include "driving/main.h"
 #include "driving/Scheduler.hpp"
+#include "driving/platform/XboxStartup.h"
 #include "common/launchInfo.h"
 
 #include "cxbx/cxbxbinding.h"
@@ -73,6 +74,10 @@ inline size_t GetFunctionAddress(U T::*func) {
 
 void Inject()
 {
+  // First, because it decides whether the game's own startup runs at all. Under CXBX it does nothing;
+  // under the standalone loader it replaces the XAPI startup that reaches for a KPCR this process does
+  // not have. See src/driving/platform/XboxStartup.cpp.
+  Inject_XboxStartup();
 
   // WriteBytes(0x0005ad78, NOP, 5); // Bypass intro cutscene
 

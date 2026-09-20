@@ -23,7 +23,8 @@ int __cdecl Xbox_mtinit(void);
 // True when no emulator is hosting this process - that is, when the standalone loader is running the game and
 // the XBE's own libraries are the only implementation there is. Everything in this file is conditional on it,
 // because under CXBX the same code is already replaced by CXBX's patches and must be left exactly as it is.
-bool Xbox_RunningStandalone(void);
+// It lives in src/common because the driving engine's startup asks the same question.
+#include "../../common/standalone.h"
 
 // Installs everything above, and the instruction-level patches. Called from Inject(). None of it is done
 // through AUTOINJECT or FUNC_AT, because those patch unconditionally and these must not touch a CXBX-hosted

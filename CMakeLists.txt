@@ -185,6 +185,23 @@ target_link_options(action PRIVATE
 target_link_options(action PRIVATE /MAP)
 target_link_options(actioninject PRIVATE /MAP)
 
+# The same loader, pointed at Driving.xbe and drivinginject.dll - step 1 of docs/driving-engine-plan.md
+# section 7. Nothing in the loader was ever specific to the action engine: both XBEs have base 0x10000, the
+# reservation array spans the larger of the two, and the kernel imports are the same shape. Only the two
+# default file names differ, and IS_DRIVING is what picks them; both are still overridable on the command
+# line. This is the "driving.exe" the plan reserved the name for.
+add_executable(driving
+  # reserve.cpp first, for the same reason as the action loader above.
+  src/loader/reserve.cpp
+  src/loader/loadermain.cpp
+  src/loader/xbe.cpp
+  src/loader/kernel.cpp
+  src/res/res.rc
+)
+target_compile_definitions(driving PRIVATE IS_DRIVING)
+target_link_options(driving PRIVATE
+  /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /INCREMENTAL:NO /MAP)
+
 add_library(drivinginject SHARED
   src/dllmain.cpp
   src/driving/autofunc.cpp
@@ -198,8 +215,13 @@ add_library(drivinginject SHARED
   src/driving/Scheduler.cpp
   src/driving/engine/FileNameList.cpp
   src/driving/engine/UFileLoader.cpp
+  src/driving/platform/XboxStartup.cpp
+  src/driving/platform/XboxTimer.cpp
 )
 
+
+# winmm: the game's tick now comes from Windows' multimedia timer (src/driving/platform/XboxTimer.cpp).
+target_link_libraries(drivinginject PRIVATE winmm)
 
 target_compile_definitions(action_cxbx PRIVATE UNICODE _UNICODE IS_ACTION)
 target_compile_definitions(driving_cxbx PRIVATE UNICODE _UNICODE IS_DRIVING)
