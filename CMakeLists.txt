@@ -184,6 +184,9 @@ add_executable(action
 target_link_options(action PRIVATE
   /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /NXCOMPAT:NO /INCREMENTAL:NO)
 
+# winmm for the millisecond clock behind KeTickCount (src/loader/kernel.cpp).
+target_link_libraries(action PRIVATE winmm)
+
 # Symbol maps for both binaries that appear in crash backtraces.
 #
 # When a fault escapes the loader's own handler - which happens if the corruption is bad enough that the
@@ -209,6 +212,7 @@ add_executable(driving
   src/res/res.rc
 )
 target_compile_definitions(driving PRIVATE IS_DRIVING)
+target_link_libraries(driving PRIVATE winmm)
 target_link_options(driving PRIVATE
   /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /NXCOMPAT:NO /INCREMENTAL:NO /MAP)
 
@@ -225,7 +229,6 @@ add_library(drivinginject SHARED
   src/driving/Scheduler.cpp
   src/driving/engine/FileNameList.cpp
   src/driving/engine/UFileLoader.cpp
-  src/driving/engine/Stream.cpp
   src/common/xboxPath.cpp
   src/driving/platform/XboxStartup.cpp
   src/driving/platform/XboxTimer.cpp
@@ -234,6 +237,7 @@ add_library(drivinginject SHARED
   src/driving/gfx/d3dSeam.cpp
   src/driving/sound/dsndSeam.cpp
   src/common/xbeEntrySeam.cpp
+  src/common/xbeProfiler.cpp
   src/common/gfx/d3d9Backend.cpp
 )
 

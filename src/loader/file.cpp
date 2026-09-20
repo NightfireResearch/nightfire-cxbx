@@ -140,16 +140,10 @@ static LONG OpenCommon(HANDLE *fileHandle, ACCESS_MASK desiredAccess,
     HANDLE handle = CreateFileA(hostPath, access, share, NULL,
                                 Win32DispositionOf(createDisposition), flags, NULL);
     if (handle == INVALID_HANDLE_VALUE) {
+        // A miss is not news. The game looks for a loose file first and falls back to the archives, so
+        // every file that lives in a .viv is reported missing here on its way to being found - see the
+        // fallback in FUN_0010c070, which searches every open big file when the loose open fails.
         DWORD error = GetLastError();
-        // Worth saying out loud. A game that cannot find a file mostly carries on without it, and the
-        // symptom arrives much later and looks like something else entirely - a movie that never starts, a
-        // texture that is never bound. Only failures are printed; the successful opens are the game's own
-        // business and there are thousands of them.
-        if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND)
-            printf("[loader] file not found: %s\n", hostPath);
-        else
-            printf("[loader] could not open %s (error %lu)\n", hostPath, error);
-        fflush(stdout);
         if (ioStatusBlock != NULL) {
             ioStatusBlock->Status = StatusFromLastError(error);
             ioStatusBlock->Information = 0;

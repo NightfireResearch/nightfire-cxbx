@@ -190,9 +190,10 @@ has to exist.
 ### Where it is now
 
 It runs: the underwater level loads, the game reaches its main loop and holds fifty frames a second with
-about 195 draws in each, and the menus take input from a pad or from the keyboard standing in for one. Five
-things were in the way, and each was a different kind of wrong - they are written up in the commits, but the
-two worth knowing about here are:
+about 195 draws in each, the menus are textured and take input from a pad or from the keyboard standing in
+for one, and the intro movie plays from inside `misc.viv` at its own 25 fps. Several things were in the way,
+and each was a different kind of wrong - they are written up in the commits, but the two worth knowing about
+here are:
 
 - **the shared backend was reading the action engine's addresses.** It reads D3D8's own deferred state -
   texture stage operations, filters, fog - back out of the XBE at draw time, and those tables are at
@@ -211,24 +212,74 @@ middle of a vertex buffer, two calls later. Every replacement declares what it p
 against the generated table at install time; that check found the second one immediately, and a bug in the
 generator behind it.
 
+### Textures, movies, and a stopped clock
+
+Three things looked like three problems and were not.
+
+**The textures were missing because the D3D8 state tables start empty.** Everything drew as flat squares -
+menus, the briefing screen, the HUD. The backend reads D3D8's deferred texture stage state back out of the
+XBE at draw time, and in the image those tables are all zero: it is the real `Direct3D_CreateDevice` that
+fills them with the defaults, and this seam replaces it. Stage 0's colour operation was therefore
+`D3DTOP_DISABLE`, which is exactly "ignore the texture". `InitialiseD3D8State` in the seam now writes the
+defaults the library would have written - wrap addressing, linear filtering, modulate on stage 0, disable
+above - right after the device is created, and the briefing screen came up fully textured.
+
+**The movies were never broken.** They are not on the disc as loose `.mad` files, they are inside `misc.viv`,
+and the engine's own file system looks for the loose file first and falls back to the open archives - so the
+"could not open `D:\pal\eng\island_intro2.mad`" that led to a patched-around FMV path was the *normal*
+first half of a lookup that then succeeds. The reads land at offset `0x75F6880` of `misc.viv`, which is where
+that movie is. The patch and the stream shim written for it were removed; nothing was wrong with the paths.
+
+**But the movie played at a tenth of a frame a second, and the reason was a kernel variable.** The chain is
+worth writing down, because nothing about the symptom pointed at the cause:
+
+- `KeTickCount` is kernel ordinal 156, and it is *data*: the XBE's import thunk holds the address of a
+  variable the console's kernel increments every millisecond, not the address of a routine. The loader
+  resolved it like every other unimplemented ordinal, to a reporting stub - and because a stub is only
+  reported when it is *called*, a variable that is only ever read said nothing at all. `getTickCount()`
+  returned the first four bytes of a `push` instruction, forever.
+- EA's sound driver thread paces itself with `sleep(nextDeadline - getTickCount())` and `nextDeadline += 10`.
+  With the clock stopped the deadline runs away from it: every iteration sleeps ten milliseconds longer than
+  the last. The 100 Hz sound server was down to two or three hertz within a minute.
+- That server is what drains the mixer's ring buffer, which is 50 ms long. Asked three times a second, it
+  can see at most one ring's worth of movement per ask, so the game believed about 3 kB/s of audio had been
+  consumed where the truth was 96 kB/s.
+- The movie's streaming is paced by audio consumption: video and audio chunks share one ring, and ring space
+  is reclaimed in order, so the unconsumed audio at the tail held everything behind it. The player spun in
+  `GetRCMPChunk` waiting for a video chunk that could not be read until the audio in front of it was freed.
+
+`KeTickCount` is now a real counter advanced by a thread in the loader. The mixer runs at 100 Hz, consumes
+96000 bytes a second, and the intro movie plays at a steady 25 fps; the menus behind it hold 50 fps with
+19 ms a frame to spare. The other data exports the XBE imports - `XboxHardwareInfo`, `LaunchDataPage`,
+`ExEventObjectType`, `PsThreadObjectType`, `HalDiskCachePartitionCount`, `XboxKrnlVersion` - still resolve to
+stubs and are still read as though they were data. None has caused trouble yet, but they are all the same
+shape of trap.
+
+**There is a sampling profiler now** (`src/common/xbeProfiler.cpp`), because none of the above was findable
+any other way: the XBE is mapped by hand, so no Windows profiler can see into it. It suspends every thread in
+the process a thousand times a second, records EIP, and prints the hottest addresses per thread - raw
+addresses for the XBE, which are the ones Ghidra shows, and `module!export+offset` for anything else. Set
+`NIGHTFIRE_PROFILE=1` to turn it on; it costs a `getenv` a frame otherwise.
+
 ### What is left
 
 In the order the frame counter puts them:
 
 1. **Pixel shaders** - 196 created, and `SetPixelShader` called about fifty times a frame. These are NV2A
    register combiner programs, and section 6.1 is right that they need a translator to ps_1.x/ps_2_0 or to
-   fixed-function stage states. Until then materials are flat.
+   fixed-function stage states. Until then materials are flat. The seam accepts and ignores them for now, so
+   that everything behind them can run.
 2. **A vertex buffer that will not upload**, once a frame, and two vertex declarations using a type
    (`0x25`) the translator does not handle.
 3. **Fog, stencil, bump environment and fill mode**, all accepted and dropped by the seam.
 4. **Sound.** The seam is silent: it creates buffers, times them and reports them finished, but plays
    nothing. The action engine's XAudio2 backend is written and the formats here are ones it handles - 48 kHz
-   mono, PCM or Xbox ADPCM - so this is wiring rather than invention.
+   mono, PCM or Xbox ADPCM - so this is wiring rather than invention. The timing model matters more than it
+   looks: the movie above is paced by it.
 5. **The clock runs fast** (section 2.1): the game's own log timestamps advance about six times real time,
    which is the 733 MHz constant baked into `timestamp()` and the `QueryPerformance*` pair. The action
-   engine's fix transposes.
-6. **Movies.** The disc dump in this project has no `.mad` files, so the intro is skipped rather than
-   played; the code path is there and works the moment the files are.
+   engine's fix transposes. Note this is a different clock from `KeTickCount` above - the game has both, and
+   only the second one paced the movie.
 
 ## 1. What the driving engine is
 

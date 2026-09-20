@@ -8,7 +8,6 @@
 #include "driving/gfx/d3dSeam.h"
 #include "driving/platform/XboxInput.h"
 #include "driving/sound/dsndSeam.h"
-#include "driving/engine/Stream.h"
 #include "common/launchInfo.h"
 
 #include "cxbx/cxbxbinding.h"
@@ -93,9 +92,6 @@ void Inject()
   // The sound seam: DirectSound's lower half programs the console's audio hardware, which standalone is
   // unmapped memory. Silent for now; see src/driving/sound/dsndSeam.cpp.
   Inject_DsndSeam();
-
-  // A streamed file the disc does not have should be skipped, not waited for.
-  Inject_Stream();
 
   // WriteBytes(0x0005ad78, NOP, 5); // Bypass intro cutscene
 

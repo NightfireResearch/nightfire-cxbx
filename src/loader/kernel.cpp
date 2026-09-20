@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <mmsystem.h>
 #include <stdio.h>
 #include <stdint.h>
 
@@ -968,8 +969,42 @@ static const struct { unsigned ordinal; void *implementation; } g_implemented[] 
     { 306, (void *)Xbox_RtlTryEnterCriticalSection },
 };
 
+// ---------------------------------------------------------------------------------------------------------------
+// KeTickCount - ordinal 156, and the one kernel export here that is data rather than a function.
+//
+// The console's kernel increments it once per clock interrupt, which on the Xbox is once a millisecond, and
+// a game reads it straight out of kernel memory: the XBE's import thunk holds the address of the variable,
+// not of a routine. That makes it invisible to the reporting stubs - nothing is ever called, so nothing is
+// ever reported - and before this was here the thunk pointed at a stub trampoline, so the game's
+// getTickCount() returned the first four bytes of a push instruction, the same number every time.
+//
+// That has consequences a frozen clock would not obviously have. EA's sound driver thread paces itself by
+//
+//     sleep(nextDeadline - getTickCount()); nextDeadline += 10;
+//
+// so with the clock stopped the deadline runs away from it and each sleep is ten milliseconds longer than
+// the last. The 100 Hz sound server slows to a few hertz within a minute; the movie player, whose streaming
+// is paced by how much audio the mixer has consumed, slows with it.
+//
+// One thread advances it. Sleep(1) with the multimedia timer period raised is a millisecond to within the
+// scheduler's accuracy, and being a millisecond or two out matters to nothing that reads this: it is a
+// coarse clock on the console too.
+// ---------------------------------------------------------------------------------------------------------------
+
+static volatile ULONG g_keTickCount;
+
+static DWORD WINAPI KeTickCountThread(LPVOID) {
+    timeBeginPeriod(1);
+    DWORD start = timeGetTime();
+    for (;;) {
+        g_keTickCount = timeGetTime() - start;
+        Sleep(1);
+    }
+}
+
 bool Kernel_Init(void) {
     InitializeCriticalSection(&g_knownSectionsLock);
+    CloseHandle(CreateThread(NULL, 0, KeTickCountThread, NULL, 0, NULL));
 
     g_trampolines = (KernelTrampoline *)VirtualAlloc(NULL, KERNEL_MAX_ORDINAL * sizeof(KernelTrampoline),
                                                      MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
@@ -993,6 +1028,10 @@ bool Kernel_Init(void) {
 }
 
 void *Kernel_Resolve(unsigned ordinal) {
+    // The data export: the thunk takes the address of the counter itself, not of anything to call.
+    if (ordinal == 156)
+        return (void *)&g_keTickCount;
+
     for (size_t i = 0; i < sizeof(g_implemented) / sizeof(g_implemented[0]); i++) {
         if (g_implemented[i].ordinal == ordinal)
             return g_implemented[i].implementation;

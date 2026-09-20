@@ -3,6 +3,7 @@
 #include "../../common/gfx/d3d9Backend.h"
 #include "../../common/standalone.h"
 #include "../../common/xbeEntrySeam.h"
+#include "../../common/xbeProfiler.h"
 
 #include <windows.h>
 #include <stdint.h>
@@ -60,6 +61,63 @@ static XbeEntrySeam g_seam = { g_entries, sizeof(g_entries) / sizeof(g_entries[0
 // The game's tick rate, as Timer_Init (0x0010ae50) left it: 50 on a PAL video mode, 60 on an NTSC one.
 #define GameTimerFrequency (*(const uint32_t *)0x00242424u)
 
+// ---------------------------------------------------------------------------------------------------------------
+// The state D3D8 would have started with.
+//
+// D3D8 keeps its deferred texture stage and render states in two tables inside the XBE, and the backend reads
+// them back at draw time - it is the game's own state, so there is no second copy to keep in step. Both start
+// as zeros in the image and are filled in by Direct3D_CreateDevice, which this seam replaces. Nothing put
+// them back, so every stage read as COLOROP = 0, which the backend maps to DISABLE, and *everything drew
+// untextured*: the level, the HUD, and the menu font, whose glyph quads came out as blocks of flat colour.
+//
+// So the defaults go in here, where the device is created, which is where they went before. They are D3D8's
+// own: stage 0 modulates the texture with what came before, the other three are off, and every stage wraps
+// and filters linearly.
+//
+// This matters more than it should because the game uses pixel shaders for most materials. With a shader
+// bound the NV2A ignores the stage states entirely, so the values here are what the fixed-function fallback
+// draws with until the combiner translator exists - and "modulate the texture by the vertex colour" is what
+// most of those shaders amount to.
+// ---------------------------------------------------------------------------------------------------------------
+
+// Xbox X_D3DTSS_* indices into a stage's 32 words, and the X_D3DTOP_/X_D3DTA_ values the defaults use. Same
+// numbering as PC D3D8, which is what lets the backend pass them through.
+enum { TSS_ADDRESSU = 0, TSS_ADDRESSV = 1, TSS_ADDRESSW = 2, TSS_MAGFILTER = 3, TSS_MINFILTER = 4,
+       TSS_MIPFILTER = 5, TSS_MIPMAPLODBIAS = 6, TSS_COLOROP = 12, TSS_COLORARG0 = 13, TSS_COLORARG1 = 14,
+       TSS_COLORARG2 = 15, TSS_ALPHAOP = 16, TSS_ALPHAARG0 = 17, TSS_ALPHAARG1 = 18, TSS_ALPHAARG2 = 19,
+       TSS_TEXCOORDINDEX = 28 };
+enum { TOP_DISABLE = 1, TOP_SELECTARG1 = 2, TOP_MODULATE = 4 };
+enum { TA_DIFFUSE = 0, TA_CURRENT = 1, TA_TEXTURE = 2 };
+enum { TADDRESS_WRAP = 1, TEXF_POINT = 1, TEXF_LINEAR = 2 };
+
+#define TEXTURE_STAGE_WORDS 32
+
+static void InitialiseD3D8State(void) {
+    if (g_xboxTextureStateTable == 0)
+        return;
+
+    for (uint32_t stage = 0; stage < 4; stage++) {
+        uint32_t *state = (uint32_t *)(g_xboxTextureStateTable + stage * TEXTURE_STAGE_WORDS * 4);
+
+        state[TSS_ADDRESSU] = TADDRESS_WRAP;
+        state[TSS_ADDRESSV] = TADDRESS_WRAP;
+        state[TSS_ADDRESSW] = TADDRESS_WRAP;
+        state[TSS_MAGFILTER] = TEXF_LINEAR;
+        state[TSS_MINFILTER] = TEXF_LINEAR;
+        state[TSS_MIPFILTER] = TEXF_POINT;
+        state[TSS_MIPMAPLODBIAS] = 0;
+        state[TSS_TEXCOORDINDEX] = stage;
+
+        // Stage 0 samples and modulates; the rest are off until something turns them on.
+        state[TSS_COLOROP] = (stage == 0) ? TOP_MODULATE : TOP_DISABLE;
+        state[TSS_COLORARG1] = TA_TEXTURE;
+        state[TSS_COLORARG2] = TA_CURRENT;
+        state[TSS_ALPHAOP] = (stage == 0) ? TOP_SELECTARG1 : TOP_DISABLE;
+        state[TSS_ALPHAARG1] = TA_TEXTURE;
+        state[TSS_ALPHAARG2] = TA_CURRENT;
+    }
+}
+
 static uint32_t __stdcall Seam_Direct3D_CreateDevice(uint32_t adapter, uint32_t deviceType, void *focusWindow,
                                                      uint32_t behaviourFlags, void *presentationParameters,
                                                      void **returnedDevice) {
@@ -74,8 +132,10 @@ static uint32_t __stdcall Seam_Direct3D_CreateDevice(uint32_t adapter, uint32_t 
                GameTimerFrequency);
     }
 
-    return D3D9_CreateDevice(adapter, deviceType, focusWindow, behaviourFlags,
-                             parameters, returnedDevice);
+    uint32_t result = D3D9_CreateDevice(adapter, deviceType, focusWindow, behaviourFlags,
+                                        parameters, returnedDevice);
+    InitialiseD3D8State();
+    return result;
 }
 
 static void __stdcall Seam_D3D_SetPushBufferSize(uint32_t pushBufferSize, uint32_t kickOffSize) {
@@ -91,6 +151,7 @@ static void __stdcall Seam_D3DDevice_Clear(uint32_t count, void *rects, uint32_t
 }
 
 static void __stdcall Seam_D3DDevice_Swap(uint32_t flags) {
+    Profiler_Frame("the frame just presented");   // does nothing unless NIGHTFIRE_PROFILE is set
     D3D9_Swap(flags);
 }
 
@@ -416,6 +477,41 @@ static void *__stdcall Seam_D3DPalette_Lock2(void *palette, uint32_t flags) {
 static void __stdcall Seam_D3DDevice_SetPalette(uint32_t stage, void *palette) {
     const XboxPixelContainer *header = (const XboxPixelContainer *)palette;
     D3D9_SetPalette(stage, (header != NULL) ? (const void *)(uintptr_t)header->Data : NULL);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Pixel shaders, as far as accepting them goes.
+//
+// These are NV2A register combiner programs, and translating them is section 6.1's remaining piece of work.
+// Until then the fixed-function stage state stands in for them (see the defaults above), and these two exist
+// so that the game gets a handle it can hold and set without the seam reporting it a thousand times a frame.
+// The definition is kept, unused, because the translator will want it.
+// ---------------------------------------------------------------------------------------------------------------
+
+#define PIXEL_SHADER_HANDLE_TAG 0x50530000u   // 'PS'
+
+static const void *g_pixelShaderDefinitions[256];
+static uint32_t g_pixelShaderCount = 0;
+
+static uint32_t __stdcall Seam_D3DDevice_CreatePixelShader(const void *definition, uint32_t *handleOut) {
+    if (handleOut == NULL)
+        return 0x8876086Cu;   // D3DERR_INVALIDCALL
+    if (g_pixelShaderCount < sizeof(g_pixelShaderDefinitions) / sizeof(g_pixelShaderDefinitions[0]))
+        g_pixelShaderDefinitions[g_pixelShaderCount] = definition;
+    *handleOut = PIXEL_SHADER_HANDLE_TAG | g_pixelShaderCount++;
+    return 0;
+}
+
+static void __stdcall Seam_D3DDevice_SetPixelShader(uint32_t handle) {
+    (void)handle;   // nothing to select until the combiners are translated
+}
+
+static void __stdcall Seam_D3DDevice_SetPixelShaderConstant(uint32_t reg, const void *values, uint32_t count) {
+    (void)reg; (void)values; (void)count;
+}
+
+static void __stdcall Seam_D3DDevice_DeletePixelShader(uint32_t handle) {
+    (void)handle;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -815,6 +911,10 @@ static const struct { const char *name; void *replacement; unsigned stackBytes; 
     { "D3DDevice_SetPalette",                 (void *)Seam_D3DDevice_SetPalette, 8 },
     { "D3D_CreateStandAloneSurface",          (void *)Seam_D3D_CreateStandAloneSurface, 16 },
     { "D3DDevice_Begin",                      (void *)Seam_D3DDevice_Begin, 4 },
+    { "D3DDevice_CreatePixelShader",          (void *)Seam_D3DDevice_CreatePixelShader, 8 },
+    { "D3DDevice_SetPixelShader",             (void *)Seam_D3DDevice_SetPixelShader, 4 },
+    { "D3DDevice_SetPixelShaderConstant",     (void *)Seam_D3DDevice_SetPixelShaderConstant, 12 },
+    { "D3DDevice_DeletePixelShader",          (void *)Seam_D3DDevice_DeletePixelShader, 4 },
     { "D3DDevice_End",                        (void *)Seam_D3DDevice_End, 0 },
     { "D3DDevice_SetVertexDataColor",         (void *)Seam_D3DDevice_SetVertexDataColor, 8 },
     { "D3DDevice_SetVertexData2f",            (void *)Seam_D3DDevice_SetVertexData2f, 12 },
