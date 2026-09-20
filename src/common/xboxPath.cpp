@@ -1,15 +1,24 @@
-#include "XboxPaths.h"
-#include "XboxSettings.h"
+#include "xboxPath.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <direct.h>
 
-// See XboxPaths.h for what this is and which drives map where.
+// See xboxPath.h for what this is and which drives map where.
+
+// Where D: is. The loader has no settings file and wants the default; the action engine sets this from
+// settings.ini before anything opens a file. Kept here rather than read from a settings header, because this
+// file is compiled into the loader as well, and the loader has no settings to read.
+static const char *g_discRoot = "../disc";
+
+void Xbox_SetDiscRoot(const char *path) {
+    if (path != NULL && path[0] != '\0')
+        g_discRoot = path;
+}
 
 const char *Xbox_GetDiscRoot(void) {
-    return Settings_GetDiscPath();
+    return g_discRoot;
 }
 
 // The fixed roots. Only D: is configurable - the others are working directories this project creates beside

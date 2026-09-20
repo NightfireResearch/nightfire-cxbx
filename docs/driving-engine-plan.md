@@ -94,62 +94,112 @@ data page across in a file, which is what `psiLaunch.bin` already does.
 
 ## 0.1 Status: what runs standalone today
 
-Written after the first pass at steps 1 and 2 of section 7, and measured rather than predicted - every line
-below came out of a run. `driving.exe` (the loader, built from the same sources as `action.exe` with
-`IS_DRIVING` choosing the two default file names) maps `Driving.xbe`, loads `drivinginject.dll` and gets as
-far as **creating the Direct3D device**, with the game's own logging live:
+Measured rather than predicted - every line below came out of a run. `driving.exe` (the loader, built from
+the same sources as `action.exe` with `IS_DRIVING` choosing the two default file names) maps `Driving.xbe`,
+loads `drivinginject.dll`, and the engine now **loads a level and enters its game loop**:
 
 ```
 [timer] tick every 20 ms (timer 16), callback at 0x0010ae10
-[startup] calling main
-main launching with 0 args:
-(00:00:00) 35.64MB - Init main singletons
-(00:00:00) 35.64MB - Init Lib Render
-[loader] unimplemented kernel import: KeInitializeDpc (ordinal 107), called from 0x0016fcca
+[d3d9] device created on window (640x480 backbuffer, 32-bit float reversed depth, paced to 50 Hz)
+(00:00:01) 35.58MB - Init File System
+-------- Loading file data\track\uw_mis11.crp ... (6256128 bytes)
+(00:00:03) 28.47MB - Entering GameLoop
+(00:00:03) 28.44MB - Init Game Render
+[d3d9] shader 5 translated: 8 NV2A instructions, inputs 0x0007, outputs 0x1009, streams 0x007
 ```
 
-So the process heap, the C runtime, the C++ constructors, the launch-data read, `main`, the memory heap and
-the engine's first singletons all work. What it took, in the order the loader's stub table asked for it:
+So: process startup, the C runtime, the launch-data read, `main`, the 36 MB heap, the file system, the
+async loader, controllers, the scheduler, the underwater level's data, and the first vertex shaders through
+the D3D9 backend's translator. It stops in the renderer's first frames, in two places (below).
 
-- `NtClose` in the loader (the entry point closes the startup thread's handle immediately).
+### What it took
+
+- **The loader's kernel**, one import at a time as its stub table named them: `NtClose`, the event and wait
+  family (`NtCreateEvent`/`SetEvent`/`ClearEvent`/`PulseEvent`/`WaitForSingleObject(Ex)`/
+  `WaitForMultipleObjectsEx`, `KeDelayExecutionThread`), thread control (`NtResumeThread`,
+  `NtSuspendThread`, `NtYieldExecution`), `ExQueryNonVolatileSetting` answering PAL-I and English, and a
+  file system (`src/loader/file.cpp`): `NtCreateFile`, `NtOpenFile`, `NtReadFile`, `NtWriteFile`, the two
+  information classes the game asks for, and `RtlInitAnsiString` beside them. Paths resolve through
+  `src/common/xboxPath.cpp`, which moved out of the action engine so the loader could share it.
 - **The startup replacement**, `src/driving/platform/XboxStartup.cpp`: `mainXapiStartup`, `XapiInitProcess`,
   the last-error pair, the CRT's per-thread data, the seven `FS:[0x20]` notification hooks and nine `WBINVD`
   sites. It is the action engine's file transposed - the XAPI in the two XBEs decompiles identically - and it
-  carries the address correspondence table, so the next person does not have to re-derive it.
-- `XInitDevices` replaced by nothing (same file). It starts XAPI's USB stack, which is the first thing on the
-  boot path with no PC meaning; the input seam will talk to Win32 XInput as the action engine's does.
-- **Critical sections that were never initialised.** An Xbox `RTL_CRITICAL_SECTION` can be built by the
-  compiler - a static one is simply laid out unlocked in `.data` - and XAPI's multimedia timer has one at
-  `0x001d2f48`. Those bytes mean something else to Win32, so `EnterCriticalSection` waited forever and the
-  boot hung. The loader now initialises any section it has not seen before, on first use.
+  carries the address correspondence table, so the next person does not re-derive it. `XInitDevices`,
+  XAPI's `GetCurrentThreadId` and `SetThreadPriority` go the same way: all three reach for something a Win32
+  thread does not have, or for a USB stack that is not there.
 - **The tick source**, `src/driving/platform/XboxTimer.cpp`: `timeSetEvent` (`0x0010eed3`) becomes winmm's,
   with `timeBeginPeriod(1)`. XAPI's own is a thread waiting on sixty-four kernel timer objects; implementing
   the dispatcher under it would have meant reproducing Xbox timers and DPCs to deliver a callback Windows
-  delivers itself. This is the "timer of our choosing" section 2 asks for, and it is the thing step 4 should
-  now measure against `Scheduler::Run`.
-- `ExQueryNonVolatileSetting` in the loader, answering with PAL-I, English, 4:3 and no parental control.
-  `ConfigureRes` reads the video flags and the AV region through it before choosing a resolution.
+  delivers itself. This is the "timer of our choosing" section 2 asks for, and what step 4 should now measure
+  `Scheduler::Run` against.
+- **Controllers**, `src/driving/platform/XboxInput.cpp`: XAPI's seven input functions become Win32 XInput.
+  The two APIs are the same API twice - identical digital bits, identical sticks - with two differences: the
+  Xbox's face buttons are analogue (a pressed Win32 button becomes 255) and its black and white buttons take
+  the shoulder bits. `IOModule` then runs unchanged and reads real pads. There is no keyboard fallback yet;
+  the action engine's (a synthesised pad on port 0) is the model.
+- **The graphics seam**, `src/driving/gfx/`, described below.
 
-**One correction to the order of work.** Section 7 step 1 expected the boot to "get as far as audio
-initialisation and then hit DirectSound reaching for hardware". It does not: the renderer comes first, and it
-is the *graphics* hardware that is reached first. The chain is
+### Two traps worth knowing about
 
-```
-main -> "Init Lib Render" -> RRenderer (0x0007d2a0) -> FUN_000e6c00 -> D3D8::Direct3D_CreateDevice (0x00169480)
-     -> D3D8::CMiniport_InitHardware (0x0016fcad)
-```
+**Critical sections that were never initialised, and ones that were.** An Xbox `RTL_CRITICAL_SECTION` can be
+built by the compiler - a static one is simply laid out unlocked in `.data` - and XAPI's multimedia timer has
+one at `0x001d2f48`. Those bytes mean something else to Win32, so `EnterCriticalSection` waited on a handle
+that was not one and the boot hung. The loader now initialises any section it has not seen before, on first
+use. The second half of that is subtler: `RtlInitializeCriticalSection` must *always* initialise, even for an
+address already seen, because the game frees and re-allocates blocks that contain sections, and the new owner
+zeroes the memory first. Skipping that left a zeroed section whose first contended wait faulted inside ntdll,
+a long way from the cause.
 
-and `CMiniport_InitHardware` is the nv2a miniport: `KeInitializeDpc`, `HalGetInterruptVector`,
-`KeConnectInterrupt`, `HalReadWritePCISpace`, an `out` to port `0x80c0`. There is nothing to emulate there,
-and nothing that should ever run - exactly as the action engine never runs D3D8's `CreateDevice` because the
-seam replaces the graphics init above it.
+**A kernel ordinal that was wrong.** `tools/gen_kernel_ordinals.py` took its names from Cxbx-Reloaded's
+`EXPORTNUM` annotations, and the header annotates `NtProtectVirtualMemory` with `EXPORTNUM(205)` - which is
+`NtPulseEvent`'s number. The loader's own table had copied the mistake, so a call to `NtPulseEvent` would
+have landed in `NtProtectVirtualMemory`. The generator now reads Cxbx's kernel thunk array, which is indexed
+by ordinal and therefore cannot disagree with itself; that also fixed nine other names.
 
-`FUN_000e6c00` is that seam point, and it is a good one: it is EAGL's device creation, and everything it does
-is D3D8 - `D3D_SetPushBufferSize`, `Direct3D_CreateDevice`, the initial render states, `Swap`,
-`GetBackBuffer2`, `GetDepthStencilSurface2`, the tile setup, and the three texture headers it wraps around
-the back buffer and depth surface. Reimplementing it against the D3D9 backend is where section 6.1 starts in
-practice, and it moves the graphics work ahead of the audio seam in the running order - not because audio got
-easier, but because nothing reaches audio until the renderer exists.
+### The graphics seam, and why it is at the D3D8 entry points
+
+Section 7 step 1 expected the boot to "get as far as audio initialisation and then hit DirectSound reaching
+for hardware". It does not: the renderer comes first. `RRenderer` (`0x0007d2a0`) calls EAGL's device creation
+(`FUN_000e6c00`), which calls `D3D8::Direct3D_CreateDevice` (`0x00169480`), which calls
+`D3D8::CMiniport_InitHardware` (`0x0016fcad`) - the nv2a miniport, with `KeInitializeDpc`,
+`HalGetInterruptVector`, `KeConnectInterrupt`, `HalReadWritePCISpace` and an `out` to port `0x80c0`.
+
+The action engine's seam sits *above* D3D8, reimplementing Eurocom's thin wrappers. That does not transpose:
+the driving engine's equivalent layer is EAGL, which is most of the binary, largely unnamed, and reaches D3D8
+from everywhere. So the seam is at the library boundary instead - every D3D8 and XGRAPHC entry point patched
+at its own address, EAGL running exactly as built. Three things make that work:
+
+- the backend's API already mirrors D3D8 entry point for entry point, because it was written against those
+  semantics for the action engine. It moved to `src/common/gfx/` and is now shared; its only ties to the
+  action engine were a settings read and a streaming report, which became `common/gfx/backendHost.h`;
+- `tools/d3d8_entry_points.py` generates the table of all 113 entry points with the stack-argument size each
+  one pops, read out of the binary by disassembling from the entry point to its first `RET`. That tool has to
+  *follow* a first-instruction jump rather than sweep past it: `Get2DSurfaceDesc` is a one-instruction thunk
+  to a function that pops twelve bytes, and reading the eight bytes of the next function put a four-byte hole
+  in the caller's stack;
+- anything not implemented yet gets a stub that reports itself once, cleans up the caller's stack from that
+  table and returns zero, so a single run names everything the game reaches. The count and the names are
+  printed alongside the backend's frame timing.
+
+**The uncached alias is not a problem here, which was worth checking.** Section 0 warns about `0x80000000 |
+address`, the Xbox's uncached view of RAM. Every site in `Driving.xbe` that sets that bit on an address is
+inside the D3D8 library this seam replaces - fifteen of them, fourteen in D3D8 and one a flag on a physics
+slot index. EAGL never does it, so the seam's `Lock` functions can hand back ordinary pointers and no alias
+has to exist.
+
+### Where it stops now
+
+Two fronts, both expected:
+
+1. **The renderer.** Thirty-odd entry points are implemented - device, clear, swap, render states, textures,
+   surfaces, palettes, vertex buffers, vertex shaders, the draws, the swizzle helpers - and the ones left are
+   the immediate-mode path (`D3DDevice_Begin`/`SetVertexData2f`/`4f`/`SetVertexDataColor`/`End`, used for the
+   HUD), pixel shaders, `RunPushBuffer`, the visibility tests and the fixed-function transforms. A run
+   currently ends inside the display driver's shader compiler, which means something invalid reached D3D9 -
+   the next thing to find.
+2. **Audio.** A run that gets past the renderer reaches `0x00181c7e` writing to `0xfe801100` - the MCPX audio
+   registers, exactly the hazard section 0 describes. That is section 6.2's seam, and it is now the next
+   large piece of work rather than a future one.
 
 ## 1. What the driving engine is
 

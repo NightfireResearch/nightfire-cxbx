@@ -52,6 +52,10 @@ void Inject()
 {
   // Instruction-level patches that are not whole-function replacements. Done first, so that nothing the rest
   // of this function sets up can run against un-patched XAPI.
+  // Where D: lives, for the file layer below and for anything else that resolves an Xbox path. The mapper
+  // itself is shared with the loader (src/common/xboxPath.cpp), which is why it is told rather than asking.
+  Xbox_SetDiscRoot(Settings_GetDiscPath());
+
   Inject_XboxStartup();
 
   // The DirectSound stream entry points, but only when no emulator is hosting this process - see

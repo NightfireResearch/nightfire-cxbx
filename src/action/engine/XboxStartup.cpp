@@ -80,7 +80,7 @@ void __stdcall Xbox_SetLastError(DWORD error) {
 //  - it runs the table of initialisers at 0x163178, which is how parts of XAPI register themselves.
 //
 // The other four are dropped. Mounting D:, the title's save directories and the utility drive is handled by
-// our own file layer (src/action/engine/XboxPaths.cpp), which maps drive letters to host paths directly, so
+// our own file layer (src/common/xboxPath.cpp), which maps drive letters to host paths directly, so
 // doing it again through the kernel would only ask for symbolic links nothing reads. The auto-power-down
 // timer, the allowed-media check and the parental-control check are console concerns with no meaning on a PC -
 // and each of them ends in XapiBootToDash, which reboots.

@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "kernel.h"
+#include "file.h"
 #include "kernel_ordinals.inc"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -653,9 +654,16 @@ static void EnsureSectionInitialised(CRITICAL_SECTION *section) {
 }
 
 static void __stdcall Xbox_RtlInitializeCriticalSection(CRITICAL_SECTION *section) {
-    // Through the same path, so that a section initialised here is not initialised a second time when it is
-    // first entered - and so that one initialised twice by the game is initialised once by us.
-    EnsureSectionInitialised(section);
+    // Always, even for an address we have seen before. The game allocates some of its sections, and when a
+    // block is freed and handed out again the new owner zeroes it and initialises it afresh; skipping that
+    // because the address was familiar leaves a zeroed CRITICAL_SECTION that the first contended wait faults
+    // on, inside ntdll, a long way from the cause. Being remembered is still what stops the *entry* path
+    // initialising one that is already held.
+    //
+    // Nothing deletes these - the XBE does not even import RtlDeleteCriticalSection - so re-initialising
+    // leaks whatever Win32 attached to the previous one, which is nothing until a wait actually contends.
+    IsNewSection(section);
+    InitializeCriticalSection(section);
 }
 
 static void __stdcall Xbox_RtlEnterCriticalSection(CRITICAL_SECTION *section) {
@@ -739,6 +747,14 @@ void *Kernel_Resolve(unsigned ordinal) {
     for (size_t i = 0; i < sizeof(g_implemented) / sizeof(g_implemented[0]); i++) {
         if (g_implemented[i].ordinal == ordinal)
             return g_implemented[i].implementation;
+    }
+
+    // The file system lives in its own file; it is the one part of this that is more than a translation.
+    unsigned fileExportCount = 0;
+    const KernelFileExport *fileExports = Kernel_FileExports(&fileExportCount);
+    for (unsigned i = 0; i < fileExportCount; i++) {
+        if (fileExports[i].ordinal == ordinal)
+            return fileExports[i].implementation;
     }
 
     // Everything else gets the stub, which reports itself when the game reaches it.

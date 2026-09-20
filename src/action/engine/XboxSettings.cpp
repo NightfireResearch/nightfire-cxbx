@@ -50,7 +50,7 @@ struct Settings {
     bool mouseLook;        // see engine/mouseLook.h
     float mouseSensitivity;
     bool mouseInvertY;
-    char discPath[240];  // where the game's disc data lives; see XboxPaths.cpp
+    char discPath[240];  // where the game's disc data lives; see common/xboxPath.cpp
 };
 
 static Settings g_settings;

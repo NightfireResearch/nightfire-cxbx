@@ -1,5 +1,5 @@
-#ifndef XBOXPATHS_H_
-#define XBOXPATHS_H_
+#ifndef COMMON_XBOXPATH_H_
+#define COMMON_XBOXPATH_H_
 
 #include <stddef.h>
 
@@ -28,8 +28,12 @@
 // result would not fit, in which case out is left as an empty string.
 bool Xbox_ResolvePath(const char *xboxPath, char *out, size_t outSize);
 
-// The host directory D: resolves to. From settings.ini's DiscPath, defaulting to "../disc" - which, with the
-// working directory being the one the executables live in, is a "disc" folder beside it.
+// The host directory D: resolves to. Defaults to "../disc" - which, with the working directory being the one
+// the executables live in, is a "disc" folder beside it. The action engine overrides it from settings.ini's
+// DiscPath; the standalone loader, which has no settings file, takes the default.
 const char *Xbox_GetDiscRoot(void);
 
-#endif // XBOXPATHS_H_
+// Sets it. Call before anything opens a file; a null or empty path leaves the default in place.
+void Xbox_SetDiscRoot(const char *path);
+
+#endif // COMMON_XBOXPATH_H_

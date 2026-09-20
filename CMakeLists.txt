@@ -85,7 +85,7 @@ add_library(actioninject SHARED
   src/action/engine/Vision.cpp
   src/action/engine/Woman.cpp
   src/action/engine/XboxSettings.cpp
-  src/action/engine/XboxPaths.cpp
+  src/common/xboxPath.cpp
   src/action/engine/XboxFile.cpp
   src/action/engine/XboxStartup.cpp
   src/action/engine/Direct3D/d3dhelpers.cpp
@@ -164,6 +164,8 @@ add_executable(action
   src/loader/loadermain.cpp
   src/loader/xbe.cpp
   src/loader/kernel.cpp
+  src/loader/file.cpp
+  src/common/xboxPath.cpp
   # The same icon the other executables carry. A .rc contributes nothing to .text, so it does not disturb
   # the ordering the reservation array depends on.
   src/res/res.rc
@@ -197,6 +199,8 @@ add_executable(driving
   src/loader/loadermain.cpp
   src/loader/xbe.cpp
   src/loader/kernel.cpp
+  src/loader/file.cpp
+  src/common/xboxPath.cpp
   src/res/res.rc
 )
 target_compile_definitions(driving PRIVATE IS_DRIVING)
@@ -218,6 +222,7 @@ add_library(drivinginject SHARED
   src/driving/engine/UFileLoader.cpp
   src/driving/platform/XboxStartup.cpp
   src/driving/platform/XboxTimer.cpp
+  src/driving/platform/XboxInput.cpp
   src/driving/gfx/backendHost.cpp
   src/driving/gfx/d3dSeam.cpp
   src/common/gfx/d3d9Backend.cpp
@@ -226,7 +231,7 @@ add_library(drivinginject SHARED
 
 # winmm for the multimedia timer the game's tick now comes from (src/driving/platform/XboxTimer.cpp);
 # d3d9/d3dcompiler for the shared graphics backend the D3D8 seam dispatches to.
-target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm)
+target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm xinput9_1_0)
 
 target_compile_definitions(action_cxbx PRIVATE UNICODE _UNICODE IS_ACTION)
 target_compile_definitions(driving_cxbx PRIVATE UNICODE _UNICODE IS_DRIVING)

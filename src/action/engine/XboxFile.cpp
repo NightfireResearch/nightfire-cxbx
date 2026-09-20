@@ -1,6 +1,6 @@
 #include <windows.h>
 
-#include "XboxPaths.h"
+#include "../../common/xboxPath.h"
 #include "XboxSettings.h"
 #include "../actionhelpers.h"
 
@@ -15,7 +15,7 @@
 // changes at all. Everything above this layer (openOrCreateFile, maybeReadFile, FS_OperationInProgress, and
 // the archive reader) is left exactly as it is; only the bottom is swapped out.
 //
-// With these in place, every file the game opens through createFile is resolved by XboxPaths.cpp and read with
+// With these in place, every file the game opens through createFile is resolved by common/xboxPath.cpp and read with
 // real Win32 handles, so disc data comes from the DiscPath folder rather than from whatever CXBX mounted as
 // D:. The one path still going through the kernel is the async reader at FUN_0010a6b0, which calls
 // NtCreateFile/NtReadFile directly rather than coming through here.
