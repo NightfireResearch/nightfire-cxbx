@@ -425,16 +425,35 @@ holds START once the level is drawing, which is how the pause menu is reached on
 when the load happens to take the expected time. It also re-asserts the foreground before every key, with
 the ALT tap Windows requires of a process that does not own it.
 
+**The one-frame spikes were the vertex ring wrapping mid-draw.** Found by the method the diagnostics above
+could not manage on their own: `DumpBurst=500` writes the five hundred frames after the level first draws
+as `burst/frame_NNNN.bmp`, a person looks through them and names the frames (36, 410 and 448 in one run),
+and `TraceBurstFrames=36,410,448` then traces those with a backbuffer image after every single draw, so the
+draw that puts the wrong polygon up is the first image it appears in. It was the car body, one frame in
+sixteen or so, with its vertex streams read from the wrong bytes. A discard of a dynamic buffer renames it:
+draws already issued keep the old memory, everything locked afterwards lands in the new. A draw here has
+up to eight streams, locked one after another, and when the ring's wrap fell between two of them the
+earlier streams were in the old allocation, the later in the new, and D3D9 bound the new one for all of
+them. A megabyte a frame wraps sixteen megabytes every sixteen frames, which is "every so often", and the
+wrap frames the backend logs during a burst were the glitch frames exactly, one for one. A draw now reserves
+what all its streams need before the first is written, and wraps then or not at all. The same frames are
+clean.
+
 **The pause menu's video window.** A 128x128 linear texture is bound at stage 3 of a quad in every frame,
 in the level and in the menu, and its memory is a contiguous allocation the game made and writes into
 directly - no lock the seam could see. The console's GPU reads such memory live; the host copy was taken
 once, at first bind, and kept, so it showed whatever the memory held then: nothing here, noise on another
 machine ("static" in the pause menu). Linear textures are now uploaded again on their first bind in each
 frame where `g_streamsVolatile` is set, which is the same policy the vertex buffers needed and for the
-same reason. What the game writes there is another matter: in these runs it writes nothing - the window
-stays empty - and the likeliest reason is that it is a streamed video paced, like the intro movie, by the
-audio path, which is still silent (section 0.1, "Sound"). A lock of the backbuffer stand-in now reads the
-real backbuffer back, in case a screen copy is what fills it; nothing has locked it yet.
+same reason. What is in that memory is another matter. Dumped raw, it is dense high-entropy bytes that
+change every frame in every layout tried - not an image in any format, but something like a compressed
+stream, which means the memory has been reused as a buffer by something else (the contiguous allocator
+zero-fills, so it is written, not stale) while the window's header still points at it. On the console the
+window shows a decoded video of the mission contact; the video is not playing here, and until it does the
+window shows whatever lives in that memory. That is a streaming-and-decoding question, most likely paced by
+the audio path like the intro movie was (section 0.1, "Sound"), and it is where the window's fix is. A lock
+of the backbuffer stand-in now reads the real backbuffer back, in case a screen copy is what fills it;
+nothing has locked it yet.
 
 ### What is left
 

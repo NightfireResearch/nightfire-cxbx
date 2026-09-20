@@ -813,6 +813,57 @@ static uint32_t DumpEvery(void) {
     return (uint32_t)value;
 }
 static uint32_t g_dumpFrame = 0;   // the frame currently being dumped (0 = none)
+static uint32_t g_burstRemaining = 0;   // frames left in a DumpBurst; the machinery is further down
+static uint32_t DumpBurst(void);
+
+// DumpBurst=N in settings.ini: from the first frame that draws a level's worth of indexed geometry, the next
+// N frames are written as burst/frame_NNNN.bmp, every one. For a glitch that lasts one frame and comes
+// every so often, a person looking through the sequence is the instrument; DumpEvery cannot catch it.
+static uint32_t DumpBurst(void) {
+    static int value = -1;
+    if (value < 0)
+        value = (int)GetPrivateProfileIntA("Settings", "DumpBurst", 0, ".\\settings.ini");
+    return (uint32_t)value;
+}
+static uint32_t g_frameIndexedDraws = 0;   // indexed draws so far this frame
+static bool g_burstStarted = false;
+
+// TraceBurstFrames=36,410,448 in settings.ini: those frames of the burst (numbered as the burst's files
+// are) get the full treatment - the draw trace, the bound textures, and the backbuffer written after every
+// single draw as burst/fNNNN_dMMM.bmp - so that the draw which puts a wrong polygon on the screen can be
+// found by looking at which image it first appears in, and named from the trace.
+static bool TraceBurstFrame(uint32_t burstIndex) {
+    static int loaded = 0;
+    static uint32_t frames[16]; static int count = 0;
+    if (!loaded) {
+        loaded = 1;
+        char setting[128] = "";
+        GetPrivateProfileStringA("Settings", "TraceBurstFrames", "", setting, sizeof(setting), ".\\settings.ini");
+        for (char *p = setting; *p != 0 && count < 16; ) {
+            char *end;
+            long v = strtol(p, &end, 10);
+            if (end == p) { p++; continue; }
+            frames[count++] = (uint32_t)v;
+            p = end;
+        }
+    }
+    for (int i = 0; i < count; i++) if (frames[i] == burstIndex) return true;
+    return false;
+}
+static bool g_perDrawDump = false;    // this frame's draws each dump the backbuffer
+static uint32_t g_perDrawIndex = 0;
+
+static void DumpSurface(IDirect3DSurface9 *surface, const char *name);
+static void DumpAfterDraw(void) {
+    if (!g_perDrawDump || g_backBufferSurface == NULL)
+        return;
+    char name[64];
+    snprintf(name, sizeof(name), "burst/f%04u_d%03u", DumpBurst() - g_burstRemaining, g_perDrawIndex++);
+    bool wasInScene = g_inScene;
+    if (wasInScene) { g_device->EndScene(); g_inScene = false; }
+    DumpSurface(g_backBufferSurface, name);
+    if (wasInScene) BeginSceneIfNeeded();
+}
 static int g_dumpRtCount = 0;
 
 static void WriteBmp24(const char *path, uint32_t width, uint32_t height, const uint8_t *bgr, size_t rowBytes) {
@@ -904,10 +955,16 @@ static void DumpBoundTexture(const void *header, IDirect3DTexture9 *texture) {
             }
         }
         char path[160];
-        snprintf(path, sizeof(path), "d3d9_dump_tex_%02d_%08x_%08x_%ux%u.bmp", seenCount - 1, h->Format, h->Size, (unsigned)desc.Width, (unsigned)desc.Height);
+        snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x_%ux%u.bmp", g_dumpFrame, seenCount - 1, h->Format, h->Size, (unsigned)desc.Width, (unsigned)desc.Height);
         WriteBmp24(path, desc.Width, desc.Height, colour, rowBytes);
-        snprintf(path, sizeof(path), "d3d9_dump_tex_%02d_%08x_%08x_%ux%u_alpha.bmp", seenCount - 1, h->Format, h->Size, (unsigned)desc.Width, (unsigned)desc.Height);
+        snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x_%ux%u_alpha.bmp", g_dumpFrame, seenCount - 1, h->Format, h->Size, (unsigned)desc.Width, (unsigned)desc.Height);
         WriteBmp24(path, desc.Width, desc.Height, alpha, rowBytes);
+        if (h->Size != 0) {   // linear: the game's memory as it stands, for trying other layouts on
+            uint32_t pitch = ((h->Size >> 24) + 1) * 64, rows = ((h->Size >> 12) & 0xFFF) + 1;
+            snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x.raw", g_dumpFrame, seenCount - 1, h->Format, h->Size);
+            FILE *rf = fopen(path, "wb");
+            if (rf != NULL) { fwrite((const void*)(uintptr_t)h->Data, 1, (size_t)pitch * rows, rf); fclose(rf); }
+        }
     }
     free(colour); free(alpha);
     texture->UnlockRect(0);
@@ -984,6 +1041,28 @@ void D3D9_Swap(uint32_t type) {
         DumpSurface(g_backBufferSurface, "d3d9_dump_frame");   // and the latest, under a fixed name
         g_dumpFrame = 0;
     }
+    if (DumpBurst() > 0 && !g_burstStarted && g_frameIndexedDraws >= 100) {
+        g_burstStarted = true;
+        g_burstRemaining = DumpBurst();
+        CreateDirectoryA("burst", NULL);
+        D3D9Log("[d3d9] frame %u: the level is drawing; dumping the next %u frames to burst/\n", g_frameCount, g_burstRemaining);
+    }
+    if (g_burstRemaining > 0) {
+        char name[64];
+        snprintf(name, sizeof(name), "burst/frame_%04u", DumpBurst() - g_burstRemaining);
+        DumpSurface(g_backBufferSurface, name);
+        if (--g_burstRemaining == 0) D3D9Log("[d3d9] frame %u: burst complete\n", g_frameCount);
+    }
+    g_perDrawDump = false;
+    g_perDrawIndex = 0;
+    if (g_burstRemaining > 0 && TraceBurstFrame(DumpBurst() - g_burstRemaining)) {
+        g_dumpFrame = g_frameCount + 1;   // the draw trace and the texture dumps, as DumpEvery would
+        g_dumpRtCount = 0;
+        g_perDrawDump = true;
+        D3D9Log("[d3d9] frame %u: burst frame %u is traced, with a backbuffer dump after every draw\n",
+                g_frameCount + 1, DumpBurst() - g_burstRemaining);
+    }
+    g_frameIndexedDraws = 0;
     if (DumpEvery() > 0 && (g_frameCount + 1) % DumpEvery() == 0) {
         g_dumpFrame = g_frameCount + 1; // the next frame gets dumped
         g_dumpRtCount = 0;
@@ -1890,6 +1969,14 @@ void D3D9_SetVertexShader(void *handle) {
 
 static void StoreConstants(uint32_t index, const float *values, uint32_t count4) {
     uint32_t lastWritten = index;
+    if (index <= 59 && index + count4 > 58) {
+        static int said = 0;
+        if (said++ < 12) {
+            const float *v = values + (58 >= index ? (58 - index) * 4 : 0);
+            D3D9Log("[d3d9] frame %u: the game wrote constants [%u, %u), which covers the pinned viewport registers 58/59;"
+                    " c58 = %g %g %g %g\n", g_frameCount, index, index + count4, v[0], v[1], v[2], v[3]);
+        }
+    }
     for (uint32_t i = 0; i < count4; i++) {
         uint32_t k = index + i;
         if (k < 192 && k != 58 && k != 59) { // 58/59 are the pinned viewport constants, see the translation notes
@@ -2081,16 +2168,32 @@ static const void *g_indexBuffer = NULL;
 // Only the streams a draw reads are copied, from its lowest vertex, and the draw is issued with a base vertex
 // index of minus that lowest vertex so that the indices still land: D3D9 allows a negative base as long as
 // MinVertexIndex + BaseVertexIndex is not.
+//
+// One draw's streams all go into the same allocation of the ring. A discard renames the buffer: draws already
+// issued keep the old memory, and everything locked from then on lands in the new. A draw here has up to
+// eight streams, each locked in turn - and when the wrap fell between two of them, the streams written
+// before it were in the old allocation, the ones after in the new, and D3D9 bound the new one for all
+// eight. The car's body then drew from the wrong bytes for exactly one frame, once every sixteen or so,
+// which is how often a megabyte a frame wraps sixteen megabytes. So a draw reserves the whole of what its
+// streams need before the first is written, and wraps then or not at all (VertexRingReserve).
 // ---------------------------------------------------------------------------------------------------------------
 bool g_streamsVolatile = false;
 static IDirect3DVertexBuffer9 *g_vertexRing = NULL;
 static uint32_t g_vertexRingPos = 0;
+static bool g_vertexRingDiscardNext = false;   // the next lock starts a new allocation at offset 0
 #define VERTEX_RING_BYTES (16u << 20)
 #define VERTEX_RING_SLACK 8u   // SHORT3 declared as SHORT4 reads two bytes past the last vertex
 
 static void ReleaseVertexRing(void) {
     if (g_vertexRing != NULL) { g_vertexRing->Release(); g_vertexRing = NULL; }
     g_vertexRingPos = 0;
+}
+
+// Makes sure a draw's streams, totalling this many bytes, will all land in one allocation of the ring.
+static void VertexRingReserve(uint32_t totalBytes) {
+    uint32_t spans = totalBytes + 16u * (VERTEX_RING_SLACK + 15u);   // the per-stream rounding, at most sixteen times
+    if (g_vertexRingPos + spans > VERTEX_RING_BYTES)
+        g_vertexRingDiscardNext = true;
 }
 
 // Copies bytes [firstByte, firstByte + bytes) of an Xbox vertex buffer's memory into the ring and returns the
@@ -2112,7 +2215,10 @@ static IDirect3DVertexBuffer9 *StreamThroughVertexRing(const void *obj, uint32_t
     }
     uint32_t span = (bytes + VERTEX_RING_SLACK + 15u) & ~15u;
     DWORD lockFlags = D3DLOCK_NOOVERWRITE;
-    if (g_vertexRingPos + span > VERTEX_RING_BYTES) { g_vertexRingPos = 0; lockFlags = D3DLOCK_DISCARD; g_vertexRingWrapFrame = g_frameCount; }
+    if (g_vertexRingDiscardNext || g_vertexRingPos + span > VERTEX_RING_BYTES) {
+        g_vertexRingPos = 0; lockFlags = D3DLOCK_DISCARD; g_vertexRingWrapFrame = g_frameCount; g_vertexRingDiscardNext = false;
+        if (g_burstRemaining > 0) D3D9Log("[d3d9] frame %u (burst %u): vertex ring wrapped\n", g_frameCount, DumpBurst() - g_burstRemaining);
+    }
     void *dst = NULL;
     if (FAILED(g_vertexRing->Lock(g_vertexRingPos, span, &dst, lockFlags)))
         return NULL;
@@ -2287,6 +2393,13 @@ static bool PrepareShaderDraw(bool bindStreams, uint32_t firstVertex, uint32_t v
     hostConstants[2][3] = (float)XBOX_RENDER_STATE(XRS_FOGTABLEMODE);
     g_device->SetVertexShaderConstantF(200, &hostConstants[0][0], 5);
     if (bindStreams) {
+        if (g_streamsVolatile && vertexLimit > firstVertex) {
+            uint32_t total = 0;
+            for (int s = 0; s < 16; s++)
+                if ((vs->streamsUsed & (1u << s)) && g_streams[s] != NULL)
+                    total += (vertexLimit - firstVertex) * (g_streamStrides[s] > 0 ? (uint32_t)g_streamStrides[s] : 6u);
+            VertexRingReserve(total);
+        }
         for (int s = 0; s < 16; s++) {
             if (!(vs->streamsUsed & (1u << s)))
                 continue;
@@ -2357,8 +2470,8 @@ static void TraceDraw(const char *kind, uint32_t primType, uint32_t count, uint3
     }
     if (f == NULL)
         return;
-    fprintf(f, "%s prim %u count %u vertices [%u, %u) shader %d pixel shader %d\n", kind, primType, count, first, limit,
-            g_currentVertexShader, g_currentPixelShader);
+    fprintf(f, "d%03u %s prim %u count %u vertices [%u, %u) shader %d pixel shader %d\n", g_perDrawIndex, kind, primType,
+            count, first, limit, g_currentVertexShader, g_currentPixelShader);
     for (int s = 0; s < 4; s++) {
         const XboxPixelContainer *h = (const XboxPixelContainer*)g_boundTexture[s];
         if (h != NULL)
@@ -2480,6 +2593,7 @@ static void ReleaseIndexRing(void) {
 
 void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, const void *pIndexData) {
     g_statDraws++; g_statDrawsIndexed++; g_statVertices += vertexCount;
+    g_frameIndexedDraws++;
     if (g_device == NULL)
         return;
     D3DPRIMITIVETYPE type; UINT primCount;
@@ -2512,6 +2626,7 @@ void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, cons
         return;
     g_device->SetIndices(g_indexRing);
     g_device->DrawIndexedPrimitive(type, baseVertex, minIndex, maxIndex - minIndex + 1, start, primCount);
+    DumpAfterDraw();
 }
 
 // Non-indexed draws from a bound stream: the point-sprite overlay (reticle etc.) is the only user.
@@ -2535,6 +2650,7 @@ void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t ve
     g_device->DrawPrimitive(type, (UINT)((int)startVertex + baseVertex), primCount);
     if (points)
         g_device->SetRenderState(D3DRS_POINTSPRITEENABLE, FALSE);
+    DumpAfterDraw();
 }
 
 // Multiplies a packed D3DCOLOR by a float4 colour constant (what the immediate-mode shader's MUL oD0 does).
@@ -2692,6 +2808,7 @@ void D3D9_ImmediateEnd(void) {
         if (out >= 3)
             g_device->DrawPrimitiveUP(D3DPT_TRIANGLELIST, out / 3, triangles, sizeof(ImmediateVertex));
         g_immediateCount = 0;
+        DumpAfterDraw();
         return;
     }
 
@@ -2700,6 +2817,7 @@ void D3D9_ImmediateEnd(void) {
     if (XboxPrimitiveToD3D(g_immediatePrimitive, g_immediateCount, &type, &primCount))
         g_device->DrawPrimitiveUP(type, primCount, g_immediateVertices, sizeof(ImmediateVertex));
     g_immediateCount = 0;
+    DumpAfterDraw();
 }
 
 void D3D9_DrawVerticesUP(uint32_t primitiveType, uint32_t vertexCount, void *pVertexData, uint32_t stride) {
