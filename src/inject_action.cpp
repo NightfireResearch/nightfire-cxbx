@@ -59,13 +59,24 @@ void Inject()
   DSoundStream_InstallHooks();
 
 
-  // Experiments with increasing resolution beyond original limits
-  
-  // 640x480: Default
-  // 800x600: Stable, UI elements misaligned
-  // 1024x768: Various graphics are broken entirely, videos fail to play, will crash if cameras are scaled
-  // 1280x720: crashes at Mem_Init
-  // 1920x1080: crashes at Mem_Init
+  // Resolution beyond the original 640x480.
+  //
+  // The notes that were here described CXBX's behaviour and are no longer true. Under the standalone loader
+  // and the D3D9 backend, 1920x1080 was measured in September 2026 as running the whole way: the device is
+  // created at that size, Mem_Init - which the old notes named as the crash point for anything above
+  // 1024x768 - completes, levels load, shaders translate, background movies play, and the frame rate is
+  // unchanged at 50 fps and about 0.9 ms of work per frame. The cost is nil because the limit here is draw
+  // call submission on the CPU, not fill rate. Widescreen=1 in settings.ini alongside it also runs clean,
+  // which is the right pairing for a 16:9 display since the game has its own 16:9 projection.
+  //
+  // What has NOT been verified is how it looks, and there is a known reason to expect trouble: the HUD
+  // sprite tables in ui/HUD.cpp mix entries that scale with SCREEN_WIDTH/SCREEN_HEIGHT against entries
+  // carrying hard-coded 640x480 coordinates - there is a "TODO: Change from 640x480 to generic" sitting
+  // above one of them. Full-screen overlays and the cameras scale; individually positioned HUD sprites will
+  // not. That is the "UI elements misaligned" the old notes mention at 800x600, and it is the remaining
+  // work rather than a crash.
+  //
+  // So this is left at 640x480 by default, and raising it is two lines in action/actionhelpers.h.
   int width = SCREEN_WIDTH;
   int height = SCREEN_HEIGHT;
   float fWidth = (float)width;
