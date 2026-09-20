@@ -439,7 +439,35 @@ wrap frames the backend logs during a burst were the glitch frames exactly, one 
 what all its streams need before the first is written, and wraps then or not at all. The same frames are
 clean.
 
-**The pause menu's video window.** A 128x128 linear texture is bound at stage 3 of a quad in every frame,
+**The pause menu's girl, and a texture commit that copied.** Solved after the paragraph below was written;
+it stays because the wrong guesses in it are instructive. The window is `GGirl` - `InitGirl` (`0x000d7990`),
+`DoGirl` (`0x000d7a50`), `KillGirl` - called straight from `DrawPauseMenu`, and it is a bodge of exactly the
+kind a late feature gets: two 128x128 textures made procedurally, a run-length stream decoded thirty times
+a second *directly into the texture's pixels*, blended with a scrolling fire table, double-buffered by
+hand, drawn as a quad. It never commits the texture again after the first time, because on the console it
+does not need to. The two engines share nothing here: the action engine's `psiDecompressWoman` is a different
+studio's different format.
+
+Why it showed noise: EAGL's texture commit (`FUN_000eba80`) registers a texture *in place* when its
+descriptor lies in the physical-memory alias `0x80000000..0x8FFFFFFF` - it tests the descriptor's own
+address, not the pixel pointer - and otherwise allocates contiguous memory, copies the pixels once, and
+registers the copy. The girl's descriptors come from the shape allocator, physical memory on the console,
+so there the GPU reads the buffer `DoGirl` writes. Here nothing is at `0x80000000`, the commit copied the
+pixels while they were still uninitialised, and every frame decoded afterwards went into memory nothing
+read. Proved by a page guard on the copy - once registered, nothing ever wrote to it - and by a stack scan at
+the header build naming `InitGirl` under `DrawPauseMenu`.
+
+The fix for now is two no-ops in the seam (`PatchTextureCommitInPlace` in `gfx/d3dSeam.cpp`) over the
+conditional jumps that choose the copy path, so every texture registers in place - which is what the
+console does for everything EAGL keeps in physical memory, and this backend can read any memory. The risk
+is a texture whose source the game frees after committing; none seen. The proper answer, deferred, is a
+real alias: contiguous allocations served from a reservation at `0x80000000`, which needs a
+large-address-aware loader, an audit of every pointer-as-signed-integer in the loader, seam and backend,
+a survey of the XBE for other physical-ness tests (including the write-combined alias at `0xF0000000`),
+and the seam's own allocations moved into the alias too so that there is one convention. Section 0's
+warning about the alias was right; this is where it bit.
+
+**The pause menu's video window, as first understood.** A 128x128 linear texture is bound at stage 3 of a quad in every frame,
 in the level and in the menu, and its memory is a contiguous allocation the game made and writes into
 directly - no lock the seam could see. The console's GPU reads such memory live; the host copy was taken
 once, at first bind, and kept, so it showed whatever the memory held then: nothing here, noise on another

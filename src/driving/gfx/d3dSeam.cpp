@@ -959,6 +959,56 @@ static const struct { const char *name; void *replacement; unsigned stackBytes; 
 };
 
 // ---------------------------------------------------------------------------------------------------------------
+// EAGL's texture commit, made to register every texture in place.
+//
+// EAGL::Texture's commit (FUN_000eba80) has two ways of giving a texture to D3D. If the texture's descriptor
+// lies in the console's physical-memory alias, 0x80000000..0x8FFFFFFF - it tests the descriptor's own
+// address, at +0x20, not the pixel pointer stored there - it builds the header over the pixels where they
+// are and registers them in place, and the GPU reads whatever the CPU writes there afterwards. Otherwise it
+// allocates contiguous memory, copies the pixels into it once, and registers the copy.
+//
+// The pause menu's girl is drawn through the first path. GGirl::InitGirl (0x000d7990) makes two 128x128
+// textures whose descriptors come from the shape allocator, which on the console hands out physical memory;
+// GGirl::DoGirl (0x000d7a50) then decodes each frame of its run-length stream, blended with a scrolling fire
+// table, straight into the texture's pixels, thirty times a second, and never commits again. Under this
+// loader nothing lives at 0x80000000, so the commit took the copy path, copied the pixels while they were
+// still uninitialised, and every frame decoded afterwards went into memory nothing read. The window showed
+// a frozen copy of whatever the allocator had handed out: noise on one machine, black on another.
+//
+// The right answer is a real alias - contiguous allocations served from a reservation at 0x80000000, which
+// needs a large-address-aware loader and a survey of every other place the game tests an address for
+// physical-ness (docs/driving-engine-plan.md, section 0). Until that is done, the two conditional jumps
+// that choose the copy path are made no-ops, so every texture registers in place. That is what the console
+// does for every texture EAGL keeps in physical memory, and this backend can read any memory, so the copy
+// was never needed here; the one risk is a texture whose source the game frees after committing it, which
+// would then draw from freed memory. None has been seen. The bytes are checked before they are written,
+// as the WBINVD patches in platform/XboxStartup.cpp check theirs.
+// ---------------------------------------------------------------------------------------------------------------
+
+static void PatchTextureCommitInPlace(void) {
+    static const struct { uint32_t address; unsigned char expected[2]; const char *what; } jumps[] = {
+        { 0x000ebbecu, { 0x72, 0x39 }, "jb (descriptor below the alias)" },
+        { 0x000ebbf4u, { 0x77, 0x31 }, "ja (descriptor above the alias)" },
+    };
+    for (size_t i = 0; i < sizeof(jumps) / sizeof(jumps[0]); i++) {
+        unsigned char *site = (unsigned char *)(uintptr_t)jumps[i].address;
+        if (memcmp(site, jumps[i].expected, 2) != 0) {
+            printf("[d3dSeam] 0x%08x is not the %s of EAGL's texture commit - not patching it\n",
+                   jumps[i].address, jumps[i].what);
+            continue;
+        }
+        DWORD previous = 0;
+        if (!VirtualProtect(site, 2, PAGE_EXECUTE_READWRITE, &previous)) {
+            printf("[d3dSeam] could not unprotect 0x%08x to patch the texture commit\n", jumps[i].address);
+            continue;
+        }
+        site[0] = 0x90;
+        site[1] = 0x90;
+    }
+    printf("[d3dSeam] EAGL's texture commit registers every texture in place (the copy branch is patched out)\n");
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // Installing it.
 // ---------------------------------------------------------------------------------------------------------------
 
@@ -993,4 +1043,5 @@ void Inject_D3dSeam(void) {
                         g_replacements[i].stackBytes);
 
     XbeSeam_Install(&g_seam);
+    PatchTextureCommitInPlace();
 }
