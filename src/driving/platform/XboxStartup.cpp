@@ -190,6 +190,32 @@ int __cdecl Xbox_mtinit(void) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
+// The thread id.
+//
+// XAPI's GetCurrentThreadId (0x0010ecd8) is three instructions: it reaches the current KTHREAD through the
+// KPCR at FS:[0x28] and takes the id from +0x12c. On a Win32 thread FS:[0x28] is ActiveRpcHandle, which is
+// zero, so the second instruction reads address 0x12c and faults - which is exactly where the boot stopped
+// once the renderer was up, in THREAD_init. Win32 has the same function, and the game only ever compares the
+// value against itself (THREAD_iscurrent), so any id that is unique per thread will do.
+//
+// This is one of the plan's eight FS:[0x28] sites; the other seven are inside the CRT's per-thread data
+// functions above, which are replaced whole.
+// ---------------------------------------------------------------------------------------------------------------
+
+static DWORD __stdcall Xbox_GetCurrentThreadId(void) {
+    return GetCurrentThreadId();
+}
+
+// XAPI's SetThreadPriority (0x0010ea0f) turns the handle into a KTHREAD with ObReferenceObjectByHandle and
+// calls KeSetBasePriorityThread on it - three kernel imports in aid of something Win32 does in one call, and
+// all three would need fabricated kernel objects to mean anything. The priority values are the same numbers
+// on both systems (the Xbox's own function only special-cases the two extremes, which Win32 handles), so the
+// whole thing is the Win32 function.
+static BOOL __stdcall Xbox_SetThreadPriority(HANDLE thread, int priority) {
+    return SetThreadPriority(thread, priority);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // XInitDevices, replaced by nothing at all.
 //
 // ApplicationMemoryHeapConfig (0x00059920) calls XAPILIB::XInitDevices(0, 0) on its way to setting the video
@@ -313,6 +339,8 @@ void Inject_XboxStartup(void) {
     WriteJump(0x00135889, (void *)Xbox_mtinit);
     WriteJump(0x00183dfd, (void *)Xbox_XInitDevices);   // XAPI's USB stack, which has nothing to talk to
     WriteJump(0x0010eed3, (void *)Xbox_timeSetEvent);   // the tick source, see XboxTimer.cpp
+    WriteJump(0x0010ecd8, (void *)Xbox_GetCurrentThreadId);   // FS:[0x28] is not a KTHREAD here
+    WriteJump(0x0010ea0f, (void *)Xbox_SetThreadPriority);    // no kernel thread objects to reference
 
     for (size_t i = 0; i < sizeof(WBINVD_SITES) / sizeof(WBINVD_SITES[0]); i++) {
         unsigned char *site = (unsigned char *)WBINVD_SITES[i];

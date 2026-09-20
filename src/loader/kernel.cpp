@@ -181,7 +181,9 @@ static LONG __stdcall Xbox_NtFreeVirtualMemory(void **baseAddress, ULONG *freeSi
     return XBOX_STATUS_SUCCESS;
 }
 
-// Ordinal 205.
+// Ordinal 204. It was registered as 205 until the ordinal table was regenerated from Cxbx-Reloaded's kernel
+// thunk array rather than its headers: the header annotates this function EXPORTNUM(205), which is
+// NtPulseEvent's number, and a game calling NtPulseEvent would have arrived here instead.
 static LONG __stdcall Xbox_NtProtectVirtualMemory(void **baseAddress, ULONG *regionSize, ULONG newProtect,
                                                   ULONG *oldProtect) {
     if (baseAddress == NULL || regionSize == NULL)
@@ -400,6 +402,183 @@ static LONG __stdcall Xbox_NtClose(HANDLE handle) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
+// Threads, as far as the handle-based part goes.
+//
+// The rest of XAPI's thread layer converts handles into kernel objects and works on those - see the note in
+// src/driving/platform/XboxStartup.cpp about SetThreadPriority, which is replaced wholesale for that reason.
+// These two take handles and do exactly what Win32 does, so they stay here.
+// ---------------------------------------------------------------------------------------------------------------
+
+// Ordinal 224. The previous suspend count is what ResumeThread returns, and -1 is its failure.
+static LONG __stdcall Xbox_NtResumeThread(HANDLE thread, ULONG *previousSuspendCount) {
+    DWORD previous = ResumeThread(thread);
+    if (previous == (DWORD)-1)
+        return XBOX_STATUS_UNSUCCESSFUL;
+    if (previousSuspendCount != NULL)
+        *previousSuspendCount = previous;
+    return XBOX_STATUS_SUCCESS;
+}
+
+// Ordinal 231.
+static LONG __stdcall Xbox_NtSuspendThread(HANDLE thread, ULONG *previousSuspendCount) {
+    DWORD previous = SuspendThread(thread);
+    if (previous == (DWORD)-1)
+        return XBOX_STATUS_UNSUCCESSFUL;
+    if (previousSuspendCount != NULL)
+        *previousSuspendCount = previous;
+    return XBOX_STATUS_SUCCESS;
+}
+
+// Ordinal 238.
+static LONG __stdcall Xbox_NtYieldExecution(void) {
+    SwitchToThread();
+    return XBOX_STATUS_SUCCESS;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Events and waiting.
+//
+// The Xbox's synchronisation is NT's, so these are nearly one-for-one with Win32: a notification event is a
+// manual-reset event and a synchronisation event is an auto-reset one, which is the whole of the difference
+// the game cares about. The driving engine reaches them through XAPI's CreateEvent/WaitForSingleObject as
+// soon as the file system starts a thread - docs/driving-engine-plan.md section 6.3 lists them.
+//
+// Two shape differences are worth naming because a silent mistranslation would look like a hang:
+//
+//  - an NT timeout is a pointer, not a value. Null means "wait forever"; a negative value is a relative time
+//    in 100-nanosecond units; a positive one is an absolute time since 1601, which nothing here uses and
+//    which is refused rather than silently treated as relative;
+//  - waiting returns a status, not a Win32 wait result. Zero is the object being signalled (or, for a
+//    multiple wait, the index of the one that was), and a timeout is STATUS_TIMEOUT rather than a failure.
+// ---------------------------------------------------------------------------------------------------------------
+
+#define XBOX_STATUS_TIMEOUT       ((LONG)0x00000102)
+#define XBOX_STATUS_USER_APC      ((LONG)0x000000C0)
+#define XBOX_WAIT_ANY             1     // WaitType: any one of the objects, as against WaitAll = 0
+
+// Milliseconds for Win32, out of an NT timeout pointer. Returns false if the timeout is one this cannot
+// express - an absolute time - so the caller can refuse rather than wait for the wrong length.
+static bool TimeoutToMilliseconds(const LARGE_INTEGER *timeout, DWORD *milliseconds) {
+    if (timeout == NULL) {
+        *milliseconds = INFINITE;
+        return true;
+    }
+    if (timeout->QuadPart > 0) {
+        printf("[loader] absolute NT timeouts are not implemented (0x%08x%08x)\n",
+               (unsigned)timeout->HighPart, (unsigned)timeout->LowPart);
+        return false;
+    }
+    // Negative, in 100ns units. Round up, so that a sub-millisecond wait is a wait rather than a spin.
+    ULONGLONG hundredNanoseconds = (ULONGLONG)(-timeout->QuadPart);
+    *milliseconds = (DWORD)((hundredNanoseconds + 9999) / 10000);
+    return true;
+}
+
+// Win32's wait result as the status the caller expects. WAIT_OBJECT_0 is zero, so for a single object the
+// success case needs no translation at all; for several, the index is the return value.
+static LONG WaitResultToStatus(DWORD result, ULONG objectCount) {
+    if (result == WAIT_TIMEOUT)
+        return XBOX_STATUS_TIMEOUT;
+    if (result == WAIT_IO_COMPLETION)
+        return XBOX_STATUS_USER_APC;
+    if (result >= WAIT_OBJECT_0 && result < WAIT_OBJECT_0 + objectCount)
+        return (LONG)(result - WAIT_OBJECT_0);
+    if (result >= WAIT_ABANDONED_0 && result < WAIT_ABANDONED_0 + objectCount)
+        return (LONG)(result - WAIT_ABANDONED_0);   // an abandoned mutex; the wait still succeeded
+    return XBOX_STATUS_UNSUCCESSFUL;
+}
+
+// Ordinal 189. The object attributes name the event on the console, for the object namespace; nothing here
+// looks an event up by name, so an unnamed Win32 event is the whole of it.
+static LONG __stdcall Xbox_NtCreateEvent(HANDLE *eventHandle, void *objectAttributes,
+                                         ULONG eventType, BOOLEAN initialState) {
+    (void)objectAttributes;
+    if (eventHandle == NULL)
+        return XBOX_STATUS_INVALID_PARAMETER;
+
+    // NotificationEvent (0) stays signalled until it is cleared; SynchronizationEvent (1) releases one waiter
+    // and resets itself. That is manual-reset and auto-reset respectively.
+    BOOL manualReset = (eventType == 0) ? TRUE : FALSE;
+    HANDLE handle = CreateEventA(NULL, manualReset, initialState ? TRUE : FALSE, NULL);
+    if (handle == NULL)
+        return XBOX_STATUS_UNSUCCESSFUL;
+
+    *eventHandle = handle;
+    return XBOX_STATUS_SUCCESS;
+}
+
+// Ordinal 225. PreviousState is the signalled state before the call, which Win32 does not report; nothing has
+// asked for it yet, and answering with a guess would be worse than saying so if something ever does.
+static LONG __stdcall Xbox_NtSetEvent(HANDLE eventHandle, LONG *previousState) {
+    if (previousState != NULL)
+        printf("[loader] NtSetEvent: the previous state was asked for and is not tracked\n");
+    return SetEvent(eventHandle) ? XBOX_STATUS_SUCCESS : XBOX_STATUS_UNSUCCESSFUL;
+}
+
+// Ordinal 186.
+static LONG __stdcall Xbox_NtClearEvent(HANDLE eventHandle) {
+    return ResetEvent(eventHandle) ? XBOX_STATUS_SUCCESS : XBOX_STATUS_UNSUCCESSFUL;
+}
+
+// Ordinal 205. Releases everything waiting and leaves the event clear, which is what PulseEvent does.
+static LONG __stdcall Xbox_NtPulseEvent(HANDLE eventHandle, LONG *previousState) {
+    if (previousState != NULL)
+        printf("[loader] NtPulseEvent: the previous state was asked for and is not tracked\n");
+    return PulseEvent(eventHandle) ? XBOX_STATUS_SUCCESS : XBOX_STATUS_UNSUCCESSFUL;
+}
+
+// Ordinal 233.
+static LONG __stdcall Xbox_NtWaitForSingleObject(HANDLE handle, BOOLEAN alertable, LARGE_INTEGER *timeout) {
+    DWORD milliseconds = INFINITE;
+    if (!TimeoutToMilliseconds(timeout, &milliseconds))
+        return XBOX_STATUS_INVALID_PARAMETER;
+    return WaitResultToStatus(WaitForSingleObjectEx(handle, milliseconds, alertable ? TRUE : FALSE), 1);
+}
+
+// Ordinal 234. The extra argument is the processor mode the wait is performed in, which has no meaning here.
+static LONG __stdcall Xbox_NtWaitForSingleObjectEx(HANDLE handle, char waitMode, BOOLEAN alertable,
+                                                   LARGE_INTEGER *timeout) {
+    (void)waitMode;
+    return Xbox_NtWaitForSingleObject(handle, alertable, timeout);
+}
+
+// Ordinal 235.
+static LONG __stdcall Xbox_NtWaitForMultipleObjectsEx(ULONG count, HANDLE *handles, ULONG waitType,
+                                                      char waitMode, BOOLEAN alertable,
+                                                      LARGE_INTEGER *timeout) {
+    (void)waitMode;
+    DWORD milliseconds = INFINITE;
+    if (!TimeoutToMilliseconds(timeout, &milliseconds))
+        return XBOX_STATUS_INVALID_PARAMETER;
+    if (handles == NULL || count == 0 || count > MAXIMUM_WAIT_OBJECTS)
+        return XBOX_STATUS_INVALID_PARAMETER;
+
+    BOOL waitAll = (waitType == XBOX_WAIT_ANY) ? FALSE : TRUE;
+    DWORD result = WaitForMultipleObjectsEx(count, handles, waitAll, milliseconds,
+                                            alertable ? TRUE : FALSE);
+    return WaitResultToStatus(result, count);
+}
+
+// Ordinal 99. The game's sleep, once XAPI's Sleep is unwrapped: the same timeout shape as the waits above.
+static LONG __stdcall Xbox_KeDelayExecutionThread(char waitMode, BOOLEAN alertable, LARGE_INTEGER *interval) {
+    (void)waitMode;
+    DWORD milliseconds = INFINITE;
+    if (!TimeoutToMilliseconds(interval, &milliseconds))
+        return XBOX_STATUS_INVALID_PARAMETER;
+    if (milliseconds == INFINITE) {
+        // A sleep with no end is a hang, and the console's own would be one too; say so rather than joining it.
+        printf("[loader] KeDelayExecutionThread with no interval - not sleeping forever\n");
+        return XBOX_STATUS_INVALID_PARAMETER;
+    }
+    if (alertable) {
+        DWORD result = SleepEx(milliseconds, TRUE);
+        return (result == WAIT_IO_COMPLETION) ? XBOX_STATUS_USER_APC : XBOX_STATUS_SUCCESS;
+    }
+    Sleep(milliseconds);
+    return XBOX_STATUS_SUCCESS;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // Critical sections.
 //
 // The game embeds these in its own structures - the heap has one - so they are built in place rather than
@@ -508,9 +687,20 @@ static const struct { unsigned ordinal; void *implementation; } g_implemented[] 
     { 178, (void *)Xbox_MmPersistContiguousMemory },
     { 180, (void *)Xbox_MmQueryAllocationSize },
     { 184, (void *)Xbox_NtAllocateVirtualMemory },
+    { 99,  (void *)Xbox_KeDelayExecutionThread },
+    { 186, (void *)Xbox_NtClearEvent },
     { 187, (void *)Xbox_NtClose },
+    { 189, (void *)Xbox_NtCreateEvent },
+    { 205, (void *)Xbox_NtPulseEvent },
+    { 224, (void *)Xbox_NtResumeThread },
+    { 225, (void *)Xbox_NtSetEvent },
+    { 231, (void *)Xbox_NtSuspendThread },
+    { 233, (void *)Xbox_NtWaitForSingleObject },
+    { 234, (void *)Xbox_NtWaitForSingleObjectEx },
+    { 235, (void *)Xbox_NtWaitForMultipleObjectsEx },
+    { 238, (void *)Xbox_NtYieldExecution },
     { 199, (void *)Xbox_NtFreeVirtualMemory },
-    { 205, (void *)Xbox_NtProtectVirtualMemory },
+    { 204, (void *)Xbox_NtProtectVirtualMemory },
     { 217, (void *)Xbox_NtQueryVirtualMemory },
     { 255, (void *)Xbox_PsCreateSystemThreadEx },
     { 277, (void *)Xbox_RtlEnterCriticalSection },

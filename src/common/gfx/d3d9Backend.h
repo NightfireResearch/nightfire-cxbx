@@ -74,6 +74,9 @@ void *D3D9_GetSurfaceLevel2(void *pTexture, uint32_t level);
 void *D3D9_GetRenderTarget2(void);
 void *D3D9_GetDepthStencilSurface2(void);
 uint32_t D3D9_ResourceRelease(void *pResource);
+// The geometry behind a surface object, for the D3D8 entry points that report it (D3DSurface_GetDesc). The
+// format is an Xbox X_D3DFMT_* value, because that is what the callers feed back into XGSetTextureHeader.
+void D3D9_GetSurfaceDesc(void *pSurface, uint32_t *format, uint32_t *width, uint32_t *height);
 void D3D9_BlockUntilNotBusy(void *pResource);
 
 #endif // D3D9BACKEND_H_

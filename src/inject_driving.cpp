@@ -5,6 +5,7 @@
 #include "driving/main.h"
 #include "driving/Scheduler.hpp"
 #include "driving/platform/XboxStartup.h"
+#include "driving/gfx/d3dSeam.h"
 #include "common/launchInfo.h"
 
 #include "cxbx/cxbxbinding.h"
@@ -78,6 +79,10 @@ void Inject()
   // under the standalone loader it replaces the XAPI startup that reaches for a KPCR this process does
   // not have. See src/driving/platform/XboxStartup.cpp.
   Inject_XboxStartup();
+
+  // The graphics seam: every D3D8 entry point in the XBE goes to the native backend instead of to
+  // Microsoft's library, which standalone would be talking to an nv2a that is not there.
+  Inject_D3dSeam();
 
   // WriteBytes(0x0005ad78, NOP, 5); // Bypass intro cutscene
 

@@ -2,7 +2,7 @@
 #include "d3dhelpers.h"
 #include "../../actionhelpers.h"
 #include "../XboxSettings.h" // GetVideoMode/XboxGetAVRegion, for xboxInitGraphics
-#include "d3d9Backend.h"      // the native D3D9 backend the entry-point wrappers can dispatch to
+#include "../../../common/gfx/d3d9Backend.h"      // the native D3D9 backend the entry-point wrappers can dispatch to
 
 #include <stdint.h>
 #include <string.h>

@@ -90,7 +90,8 @@ add_library(actioninject SHARED
   src/action/engine/XboxStartup.cpp
   src/action/engine/Direct3D/d3dhelpers.cpp
   src/action/engine/Direct3D/d3dSeam.cpp
-  src/action/engine/Direct3D/d3d9Backend.cpp
+  src/action/engine/Direct3D/backendHost.cpp
+  src/common/gfx/d3d9Backend.cpp
   src/action/game/Autoaim.cpp
   src/action/game/weapon_stats.cpp
   src/action/math/math.cpp
@@ -149,7 +150,7 @@ add_library(actioninject SHARED
   src/action/sound/Sound.cpp
 )
 
-# The seams' native backends (Direct3D/d3d9Backend.cpp, sound/xaudio2Backend.cpp)
+# The seams' native backends (common/gfx/d3d9Backend.cpp, sound/xaudio2Backend.cpp)
 target_link_libraries(actioninject PRIVATE d3d9 d3dcompiler winmm xaudio2)
 
 # The standalone loader (stage B 4.2/4.3): maps the XBE itself and runs it in-process, with no emulator in
@@ -217,11 +218,15 @@ add_library(drivinginject SHARED
   src/driving/engine/UFileLoader.cpp
   src/driving/platform/XboxStartup.cpp
   src/driving/platform/XboxTimer.cpp
+  src/driving/gfx/backendHost.cpp
+  src/driving/gfx/d3dSeam.cpp
+  src/common/gfx/d3d9Backend.cpp
 )
 
 
-# winmm: the game's tick now comes from Windows' multimedia timer (src/driving/platform/XboxTimer.cpp).
-target_link_libraries(drivinginject PRIVATE winmm)
+# winmm for the multimedia timer the game's tick now comes from (src/driving/platform/XboxTimer.cpp);
+# d3d9/d3dcompiler for the shared graphics backend the D3D8 seam dispatches to.
+target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm)
 
 target_compile_definitions(action_cxbx PRIVATE UNICODE _UNICODE IS_ACTION)
 target_compile_definitions(driving_cxbx PRIVATE UNICODE _UNICODE IS_DRIVING)

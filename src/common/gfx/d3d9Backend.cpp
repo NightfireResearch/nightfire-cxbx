@@ -1,5 +1,5 @@
 #include "d3d9Backend.h"
-#include "../../../common/renderWindow.h"
+#include "../renderWindow.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -24,8 +24,7 @@
 //   overlay. Draws issued while an off-screen render target is selected are skipped for now.
 // Still missing: render targets (shadow blur, aux pass), the backbuffer readback in psiBlurScreen.
 
-#include "../XboxSettings.h"
-#include "../XboxFile.h"      // XboxFile_ReportStreamingIfDue, reported alongside the frame timing
+#include "backendHost.h"   // the engine this is compiled into provides these three; see the header
 
 int g_gfxBackend = GFX_BACKEND_CXBX;
 
@@ -80,7 +79,7 @@ static void MarkAllConstantsDirty(void);   // defined with the vertex constants 
 // game is genuinely behind - and then the interesting question is what it spent the time on, which is what
 // the streaming-read counters next door are for.
 static void ReportFrameTiming(double arrivedAtPacer, double leftPacer) {
-    if (!Settings_GetPerfLog())
+    if (!GfxHost_PerfLogEnabled())
         return;
 
     static double windowStart = 0.0;
@@ -156,7 +155,7 @@ static void ReportFrameTiming(double arrivedAtPacer, double leftPacer) {
     busySeconds = pacedSeconds = 0.0;
     frames = 0;
 
-    XboxFile_ReportStreamingIfDue();
+    GfxHost_ReportPeriodic();
 }
 
 // On the Xbox, D3DDevice_Swap waits for the next vertical blank, which is what held the game to its 50/60 Hz
@@ -669,7 +668,7 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
 
     QueryPerformanceFrequency(&g_qpcFrequency);
     timeBeginPeriod(1);
-    int fpsOverride = Settings_GetFPSOverride(); // the same override mainloop applies to the game's own tick rate
+    int fpsOverride = GfxHost_FpsOverride(); // the same override mainloop applies to the game's own tick rate
     g_targetFrameRate = (fpsOverride > 0) ? fpsOverride : (int)xboxParams[11];
     D3D9Log("[d3d9] device created on window %p (%ux%u backbuffer, %s depth, paced to %d Hz).\n",
            (void*)g_window, width, height, g_reversedDepth ? "32-bit float reversed" : "24-bit fixed", g_targetFrameRate);
@@ -1963,6 +1962,35 @@ uint32_t D3D9_ResourceRelease(void *pResource) {
         }
     }
     return 0;
+}
+
+// What a surface is, for the callers that ask - the driving engine's EAGL wraps a texture header around the
+// backbuffer and the depth surface at device creation, and needs their size and format to do it.
+//
+// The dummies have no Xbox header words to read (there is no Xbox-side backbuffer here), so they are answered
+// from the present parameters, in the linear Xbox formats whose bit depth matches what D3D9 actually created.
+// Everything else is a real Xbox header and is decoded the way XGSetTextureHeader wrote it: linear formats
+// keep width and height in the Size word, swizzled ones keep log2 sizes in the Format word.
+void D3D9_GetSurfaceDesc(void *pSurface, uint32_t *format, uint32_t *width, uint32_t *height) {
+    uint32_t f = XFMT_LIN_X8R8G8B8, w = g_presentParams.BackBufferWidth, h = g_presentParams.BackBufferHeight;
+
+    if (pSurface == &g_dummyDepthStencil) {
+        f = 0x2e;   // X_D3DFMT_LIN_D24S8: 32 bits, and what the callers map onto a linear 32-bit colour format
+    } else if (pSurface != &g_dummyBackBuffer && pSurface != &g_dummyRenderTarget && pSurface != NULL) {
+        const XboxSurface *s = (const XboxSurface*)pSurface;
+        f = (s->Format >> 8) & 0xFF;
+        if (XboxFormatIsLinear(f)) {
+            w = (s->Size & 0xFFF) + 1;
+            h = ((s->Size >> 12) & 0xFFF) + 1;
+        } else {
+            w = 1u << ((s->Format >> 20) & 0xF);
+            h = 1u << ((s->Format >> 24) & 0xF);
+        }
+    }
+
+    if (format != NULL) *format = f;
+    if (width != NULL)  *width = w;
+    if (height != NULL) *height = h;
 }
 
 void D3D9_BlockUntilNotBusy(void *pResource) {
