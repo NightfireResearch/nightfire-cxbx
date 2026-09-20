@@ -28,15 +28,27 @@ void MouseLook_Update(void);
 bool MouseLook_FireHeld(void);
 bool MouseLook_ZoomHeld(void);
 
-// One notch of the wheel, reported as a single frame's worth of "the weapon d-pad is pressed" and then
-// forgotten - a wheel has no held state to report, and the game cycles weapons on a press rather than while
-// a direction is held. At most one notch is handed over per frame, so a fast scroll is spread across frames
-// rather than skipping several weapons in one. Both are false unless the pointer is captured.
+// Whether the player is currently looking down a scope, which changes what the mouse does: the wheel adjusts
+// the zoom instead of changing weapon, and aiming is slowed down. Set once a frame from Player_ViewClamping,
+// which is the only place that both runs every frame of play and has the player object to ask.
+void MouseLook_SetScoped(bool scoped);
+
+// Whether the pointer is currently captured, i.e. whether the player is driving with a mouse at all. Used by
+// Player_Move to decide whether the scope's walk restriction applies.
+bool MouseLook_Captured(void);
+
+// One notch of the wheel, reported as a single frame's worth of "that d-pad direction is pressed" and then
+// forgotten - a wheel has no held state to report, and the game acts on a press rather than while a direction
+// is held. At most one notch is handed over per frame, so a fast scroll is spread across frames rather than
+// skipping several weapons at once. All four are false unless the pointer is captured, and the pair that
+// applies depends on whether the player is scoped.
 //
 // Wheel movement only arrives through raw input; there is nothing to fall back on if that is unavailable,
 // because the fallback reads the cursor's position, which a wheel does not move.
 bool MouseLook_NextWeapon(void);
 bool MouseLook_PrevWeapon(void);
+bool MouseLook_ZoomIn(void);
+bool MouseLook_ZoomOut(void);
 
 // Called from Player_ViewClamping, which the game runs once a frame for each player it is actively updating
 // in a level. That makes the call itself the "we are in a level" signal the capture logic needs: menus, the

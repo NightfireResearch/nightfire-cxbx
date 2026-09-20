@@ -84,9 +84,10 @@ extern "C" __declspec(dllimport) unsigned long __stdcall XInputSetState(unsigned
 //   Backspace              B  - next weapon          (also menu back)
 //   N                      BACK - night vision       (also menu back)
 //   P  or  Escape          START - pause             (also skip cutscene)
-//   Q  or  wheel down      d-pad left  - previous weapon
-//   wheel up               d-pad right - next weapon
-//   1 / 2                  d-pad down/up    - previous / next gadget, and scope zoom out / in
+//   Q  or  wheel down      d-pad left  - previous weapon      (wheel only when not scoped)
+//   wheel up               d-pad right - next weapon          (likewise)
+//   1 / 2  or  wheel       d-pad down/up - previous / next gadget, and scope zoom out / in
+//                                        (wheel only when scoped, where it adjusts the zoom)
 //
 // E is "interact" as much as "reload": Player_WeaponFiring calls Player_Activate - doors, triggers, cars,
 // turrets, monitors, locks - when ACTION_RELOAD has just been pressed and fire is not held. The game has no
@@ -181,8 +182,8 @@ static bool BuildKeyboardPadState(Win32_XINPUT_STATE *state) {
     if (KeyDown('N'))                        buttons |= XINPUT_GAMEPAD_BACK;
     if (MouseLook_NextWeapon())              buttons |= XINPUT_GAMEPAD_DPAD_RIGHT;
     if (KeyDown('Q') || MouseLook_PrevWeapon()) buttons |= XINPUT_GAMEPAD_DPAD_LEFT;
-    if (KeyDown('2'))                        buttons |= XINPUT_GAMEPAD_DPAD_UP;
-    if (KeyDown('1'))                        buttons |= XINPUT_GAMEPAD_DPAD_DOWN;
+    if (KeyDown('2') || MouseLook_ZoomIn())   buttons |= XINPUT_GAMEPAD_DPAD_UP;
+    if (KeyDown('1') || MouseLook_ZoomOut())  buttons |= XINPUT_GAMEPAD_DPAD_DOWN;
     state->Gamepad.wButtons = buttons;
 
     // The mouse buttons come in here rather than being applied to the player directly, so that they go

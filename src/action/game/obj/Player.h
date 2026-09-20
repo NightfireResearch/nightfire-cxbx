@@ -23,7 +23,12 @@ static_assert(sizeof(WeaponStatus) == 0xc, "WeaponStatus size wrong");
 
 // WIP
 typedef struct BLData {
-    char _pad_0[0x24];
+    _VECTOR lastPosition; // 0x00 - Player_Update copies the object's position here every frame
+    // This frame's movement, in the object's local frame. Player_Move fills it in, Player_Update rotates it
+    // by the object's matrix and adds it to the position, then copies it to lastMovement for next time -
+    // which is what makes lastMovement the state Player_Move smooths from.
+    _VECTOR movement;     // 0x0c
+    _VECTOR lastMovement; // 0x18
     // This frame's change in the object's rotation, not an angle: Player_Update zeroes it before the
     // movement handlers run and adds it to obj_tag::rotation afterwards. .y is the turn, and it goes
     // negative turning right. Anything wanting to steer the player adds to it in between - which is what
@@ -46,7 +51,10 @@ typedef struct BLData {
     char aimAutoLevelState; // 0xf0
     char _pad_1b[0xf3-0xf1];
     char crosshairType; // 0xf3
-    char _pad_11[0x15c-0xf4];
+    char _pad_11[0x110-0xf4];
+    // Non-zero while something else is driving the player - Player_Move takes the controls away entirely.
+    char movementDisabled; // 0x110
+    char _pad_11b[0x15c-0x111];
     WeaponStatus weaponStats[114]; // 0x15c-0x6b3 inclusive
     char _pad_222[0x770-0x6b4];
     HUDINFO_tag* hudInfo; // 0x770
@@ -66,7 +74,9 @@ typedef struct BLData {
     float pitchAutoLevelTarget; // 0x83c - what aimAutoLevelState above eases pitchFromHorizontal towards
     char _pad_2c[0x860-0x83c-4];
     float lensFlareRelated; // 0x860
-    char _pad_222222[0x8b0-0x860-4];
+    char _pad_222222[0x88c-0x864];
+    float turnAccelState; // 0x88c - AccelFunc0's carried state for the turn axis; see Player_Move
+    char _pad_222223[0x8b0-0x890];
     float nightVisionTimer; // 0x8b0
     char _pad_22[0x8c8-0x8b0-4];
     short muzzleFlashRelated; // 0x8c8
@@ -78,7 +88,8 @@ typedef struct BLData {
     char playerNum; // 0x8de
     char pad_4;
     char camMode; // 0x8e0 - CamMode
-    char pad_5[16];
+    char maybeCamRelatedCountdown; // 0x8e1
+    char pad_5[15];
     char nightVisionActive; // 0x8f1
     // ...
 } BLData;
@@ -96,6 +107,11 @@ static_assert(offsetof(BLData, remoteControlDevice) == 0x808, "Offset of remoteC
 static_assert(offsetof(BLData, health) == 0x824, "Offset of health not correct");
 static_assert(offsetof(BLData, playerNum) == 0x8de, "Offset of playerNum not correct");
 static_assert(offsetof(BLData, rotationDelta) == 0x24, "Offset of rotationDelta not correct");
+static_assert(offsetof(BLData, movement) == 0x0c, "Offset of movement not correct");
+static_assert(offsetof(BLData, lastMovement) == 0x18, "Offset of lastMovement not correct");
+static_assert(offsetof(BLData, movementDisabled) == 0x110, "Offset of movementDisabled not correct");
+static_assert(offsetof(BLData, turnAccelState) == 0x88c, "Offset of turnAccelState not correct");
+static_assert(offsetof(BLData, maybeCamRelatedCountdown) == 0x8e1, "Offset of maybeCamRelatedCountdown not correct");
 static_assert(offsetof(BLData, pitchFromHorizontal) == 0x838, "Offset of pitchFromHorizontal not correct");
 static_assert(offsetof(BLData, pitchAutoLevelTarget) == 0x83c, "Offset of pitchAutoLevelTarget not correct");
 static_assert(offsetof(BLData, aimAutoLevelState) == 0xf0, "Offset of aimAutoLevelState not correct");
@@ -144,6 +160,7 @@ void Player_SetCamMode(BLData *param_1,unsigned short param_2);
 void Player_Disable(obj_tag *param_1,char param_2);
 void Player_WeaponNone(obj_tag *param_1);
 void Player_ViewClamping(obj_tag *player);
+void Player_Move(BLData *blData, obj_tag *player, float speedScale);
 void Player_Enable(obj_tag *param_1, _MATRIX *mtx, int param_3);
 void Player_SetHealth(BLData *obj, float health);
 void Player_CheckWeaponsLoaded(BLData *blData);

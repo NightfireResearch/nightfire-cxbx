@@ -66,6 +66,11 @@
 
 #define TWO_OVER_PI 0.63661977f
 
+// Multipliers on the configured sensitivity, chosen so that scoped aiming is a quarter of the speed
+// of hip fire rather than the same.
+#define HIPFIRE_SENSITIVITY 2.0f
+#define SCOPED_SENSITIVITY 0.5f
+
 static bool    g_captured = false;
 static HWND    g_rawWindow = NULL;        // message-only window that WM_INPUT is delivered to
 static bool    g_rawWindowTried = false;
@@ -82,6 +87,7 @@ static bool     g_leftDown = false, g_rightDown = false; // as of the last Mouse
 static bool     g_swallowLeftUntilRelease = false;       // see Capture
 static int      g_wheelAccum = 0;                        // raw wheel movement not yet turned into notches
 static int      g_wheelStep = 0;                         // -1, 0 or +1, for this frame only
+static bool     g_scoped = false;                        // as of the last Player_ViewClamping
 
 // Either host's render window: CXBX's, or the one the loader creates when running standalone. Same order as
 // psiInput.cpp's own lookup, and for the same reason - nothing changes for a CXBX-hosted run.
@@ -298,6 +304,7 @@ static void Release(HWND window) {
     g_accumY = 0;
     g_wheelAccum = 0;
     g_wheelStep = 0;
+    g_scoped = false;
     g_captured = false;
     printf("[mouse] released\n");
 }
@@ -400,12 +407,28 @@ bool MouseLook_ZoomHeld(void) {
     return g_captured && g_rightDown;
 }
 
+void MouseLook_SetScoped(bool scoped) {
+    g_scoped = scoped;
+}
+
+bool MouseLook_Captured(void) {
+    return g_captured;
+}
+
 bool MouseLook_NextWeapon(void) {
-    return g_captured && g_wheelStep > 0;
+    return g_captured && !g_scoped && g_wheelStep > 0;
 }
 
 bool MouseLook_PrevWeapon(void) {
-    return g_captured && g_wheelStep < 0;
+    return g_captured && !g_scoped && g_wheelStep < 0;
+}
+
+bool MouseLook_ZoomIn(void) {
+    return g_captured && g_scoped && g_wheelStep > 0;
+}
+
+bool MouseLook_ZoomOut(void) {
+    return g_captured && g_scoped && g_wheelStep < 0;
 }
 
 bool MouseLook_TakeAimDelta(float *yawRadians, float *pitchFraction) {
@@ -423,7 +446,11 @@ bool MouseLook_TakeAimDelta(float *yawRadians, float *pitchFraction) {
     // No frame-time term anywhere in here, on purpose. These are counts the mouse has already moved, so the
     // angle they are worth is the same whether they arrived over one long frame or several short ones - and
     // scaling them by frame time would make the same movement turn a different amount depending on load.
-    float radiansPerCount = RADIANS_PER_COUNT * Settings_GetMouseSensitivity();
+    // Down a scope the view covers a much smaller angle, so the same hand movement should turn the player
+    // less; everywhere else the original default was on the slow side for a mouse. The setting keeps meaning
+    // hip-fire speed, and these two multipliers hang off it.
+    float radiansPerCount = RADIANS_PER_COUNT * Settings_GetMouseSensitivity()
+                          * (g_scoped ? SCOPED_SENSITIVITY : HIPFIRE_SENSITIVITY);
 
     // Screen axes against game axes: x grows to the right while the object's rotation grows turning left, and
     // y grows downwards while pitch grows looking up. Both are therefore negated.
