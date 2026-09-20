@@ -175,6 +175,15 @@ add_executable(action
 target_link_options(action PRIVATE
   /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /INCREMENTAL:NO)
 
+# Symbol maps for both binaries that appear in crash backtraces.
+#
+# When a fault escapes the loader's own handler - which happens if the corruption is bad enough that the
+# exception cannot be dispatched at all - the host prints raw module offsets instead, as Wine did with
+# "actioninject (+0x16643)". Without a map that offset names nothing. The maps are written beside the
+# binaries, cost nothing at runtime and are not shipped in the executable, so there is no reason not to.
+target_link_options(action PRIVATE /MAP)
+target_link_options(actioninject PRIVATE /MAP)
+
 add_library(drivinginject SHARED
   src/dllmain.cpp
   src/driving/autofunc.cpp

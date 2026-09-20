@@ -88,6 +88,8 @@ Conventions: rename in Ghidra, re-sync the JSON, cite addresses in comments so a
 `docs/cxbx-removal-plan.md` is the main one - what has been done to get the action engine off cxbx-reloaded,
 what is left, and the method. `docs/driving-engine-plan.md` is the same for the driving engine, which is
 where the work goes next. `docs/audio-inventory.md` records what the game actually asks of DirectSound.
+`docs/macOS-D3D9-setup.md` is how to run this on Apple Silicon at full speed, which needs DXVK rather than
+Wine's own Direct3D - and which currently pins you to a Wine version that is no longer published.
 
 They are written to be read by whoever picks the work up, including agents, and they carry the reasoning and
 the dead ends rather than only the conclusions.
