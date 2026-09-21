@@ -698,6 +698,27 @@ static void InitPinnedConstants(void);
 static void ReleaseIndexRing(void);
 static IDirect3DSurface9 *g_backBufferSurface = NULL, *g_mainDepthSurface = NULL; // the device's own, held across the frame
 static uint32_t g_targetWidth = 640, g_targetHeight = 480; // size of the current render target (backbuffer or texture)
+
+// ---------------------------------------------------------------------------------------------------------------
+// Render scale: RenderWidth and RenderHeight in settings.ini.
+//
+// Both engines render at a fixed 640x480 - the driving engine's RRenderer::ConfigureRes (0x0007cfb0) writes
+// the numbers in and only reads a widescreen flag - so a higher resolution has to be the backend's doing: the
+// backbuffer is created at the size asked for while the game goes on believing it has the size it requested.
+// Everything that arrives in the game's screen pixels is scaled on the way through: viewports, the
+// immediate-mode and quad paths' pre-transformed vertices, and the visibility tests' pixel counts on the way
+// back. Shader draws need nothing: their positions are clip space by the time D3D9 sees them (see the vertex
+// shader notes), and the viewport does the rest. Render-target textures keep their own sizes, so the scaling
+// applies only while the backbuffer is the target. A readback of the backbuffer (the pause menu's blur) is
+// scaled back down to what the game expects, and the size the game is told for its stand-in surfaces is its
+// own. Set Widescreen=1 as well, or the 4:3 frame is stretched across a 16:9 buffer.
+// ---------------------------------------------------------------------------------------------------------------
+static uint32_t g_gameWidth = 640, g_gameHeight = 480;        // what the game asked for
+static float g_renderScaleX = 1.0f, g_renderScaleY = 1.0f;    // backbuffer size over the game's
+static bool g_renderScaled = false;
+static bool g_targetIsBackBuffer = true;                      // kept by SetRenderTarget
+static IDirect3DSurface9 *g_readBackScaled = NULL;            // a game-sized copy for readbacks, default pool
+static inline bool ScalingTarget(void) { return g_renderScaled && g_targetIsBackBuffer; }
 static void ReleaseDefaultPoolResources(void);
 static bool g_reversedDepth = false;   // 32-bit float depth buffer with reversed Z (see D3D9_CreateDevice)
 static bool g_hasStencil = true;
@@ -713,6 +734,22 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
     (void)adapter; (void)deviceType; (void)hFocusWindow; (void)behaviorFlags;
     const uint32_t *xboxParams = (const uint32_t*)pPresentationParameters; // Xbox D3DPRESENT_PARAMETERS: [0] width, [1] height, ..., [11] refresh rate
     uint32_t width = xboxParams[0], height = xboxParams[1];
+
+    g_gameWidth = width; g_gameHeight = height;
+    g_renderScaled = false; g_renderScaleX = g_renderScaleY = 1.0f; g_targetIsBackBuffer = true;
+    {
+        int renderWidth = GetPrivateProfileIntA("Settings", "RenderWidth", 0, ".\\settings.ini");
+        int renderHeight = GetPrivateProfileIntA("Settings", "RenderHeight", 0, ".\\settings.ini");
+        if (renderWidth > 0 && renderHeight > 0 && ((uint32_t)renderWidth != width || (uint32_t)renderHeight != height)) {
+            g_renderScaled = true;
+            g_renderScaleX = (float)renderWidth / (float)width;
+            g_renderScaleY = (float)renderHeight / (float)height;
+            D3D9Log("[d3d9] rendering the game's %ux%u at %dx%d (RenderWidth/RenderHeight in settings.ini)\n",
+                    width, height, renderWidth, renderHeight);
+            width = (uint32_t)renderWidth;
+            height = (uint32_t)renderHeight;
+        }
+    }
 
     if (g_xboxTextureStateTable == 0 || g_xboxRenderStateTable == 0)
         D3D9Log("[d3d9] the D3D8 state table addresses were never set - see g_xboxTextureStateTable\n");
@@ -1092,6 +1129,16 @@ void D3D9_Swap(uint32_t type) {
 void D3D9_SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height, float minZ, float maxZ) {
     if (g_device == NULL)
         return;
+    if (ScalingTarget()) {
+        uint32_t right = (uint32_t)((float)(x + width) * g_renderScaleX + 0.5f);
+        uint32_t bottom = (uint32_t)((float)(y + height) * g_renderScaleY + 0.5f);
+        x = (uint32_t)((float)x * g_renderScaleX + 0.5f);
+        y = (uint32_t)((float)y * g_renderScaleY + 0.5f);
+        if (right > g_targetWidth) right = g_targetWidth;
+        if (bottom > g_targetHeight) bottom = g_targetHeight;
+        width = right > x ? right - x : 0;
+        height = bottom > y ? bottom - y : 0;
+    }
     D3DVIEWPORT9 vp = { x, y, width, height, minZ, maxZ };
     g_device->SetViewport(&vp);
 }
@@ -2297,11 +2344,12 @@ static void CaptureBackBufferInto(void *header) {
     HostTexture *t = EnsureRenderTargetTexture(header);
     if (t == NULL || g_backBufferSurface == NULL)
         return;
-    g_device->StretchRect(g_backBufferSurface, NULL, t->rtSurface, NULL, D3DTEXF_NONE);
+    g_device->StretchRect(g_backBufferSurface, NULL, t->rtSurface, NULL, g_renderScaled ? D3DTEXF_LINEAR : D3DTEXF_NONE);
 }
 
 static void ReleaseVisibilityQueries(void);
 static void ReleaseDefaultPoolResources(void) {
+    if (g_readBackScaled != NULL) { g_readBackScaled->Release(); g_readBackScaled = NULL; }
     ReleaseIndexRing();
     ReleaseVertexRing();
     ReleaseVisibilityQueries();
@@ -2341,6 +2389,7 @@ void D3D9_SetRenderTarget(void *pRenderTarget, void *pDepthStencil) {
             g_device->SetDepthStencilSurface(GetDepthSurfaceFor(desc.Width, desc.Height));
             g_currentRtSurface = t->rtSurface;
             g_targetWidth = desc.Width; g_targetHeight = desc.Height;
+            g_targetIsBackBuffer = false;
             return;
         }
         D3D9_BackendMissing("D3DDevice_SetRenderTarget(surface with no texture behind it)");
@@ -2348,6 +2397,7 @@ void D3D9_SetRenderTarget(void *pRenderTarget, void *pDepthStencil) {
     g_device->SetRenderTarget(0, g_backBufferSurface);
     g_device->SetDepthStencilSurface(g_mainDepthSurface);
     g_targetWidth = g_presentParams.BackBufferWidth; g_targetHeight = g_presentParams.BackBufferHeight;
+    g_targetIsBackBuffer = true;
 }
 
 // Everything a programmable draw needs: the translated shader and declaration, the constants, the bound
@@ -2692,11 +2742,12 @@ static void DrawImmediateQuads(uint32_t vertexCount, const uint8_t *data, uint32
     BeginSceneIfNeeded();
     ApplyTextureStageState(false); // first: it also works out the linear-texture coordinate scale used below
     const float *k = g_vertexConstants[103];
+    float scaleX = ScalingTarget() ? g_renderScaleX : 1.0f, scaleY = ScalingTarget() ? g_renderScaleY : 1.0f;
     for (uint32_t v = 0; v < vertexCount; v++) {
         const float *src = (const float*)(data + (size_t)v * stride);
         RhwVertex *d = &g_rhwVertices[v];
-        d->x = src[0] - 0.5f; // D3D9 samples pixel centres at +0.5; the game already biases by -1/32
-        d->y = src[1] - 0.5f;
+        d->x = src[0] * scaleX - 0.5f; // D3D9 samples pixel centres at +0.5; the game already biases by -1/32
+        d->y = src[1] * scaleY - 0.5f;
         d->z = g_reversedDepth ? 0.0f : 1.0f; // the shader writes constant 102's z (the far-plane sentinel) for z and w
         d->rhw = 1.0f;
         d->colour = ModulateColour(*(const uint32_t*)&src[2], k);
@@ -2788,6 +2839,12 @@ void D3D9_ImmediateEnd(void) {
         for (uint32_t i = 0; i < g_immediateCount; i++) {
             g_immediateVertices[i].u *= scaleU;
             g_immediateVertices[i].v *= scaleV;
+        }
+    }
+    if (ScalingTarget()) {
+        for (uint32_t i = 0; i < g_immediateCount; i++) {
+            g_immediateVertices[i].x *= g_renderScaleX;
+            g_immediateVertices[i].y *= g_renderScaleY;
         }
     }
 
@@ -2916,7 +2973,7 @@ uint32_t D3D9_ResourceRelease(void *pResource) {
 // Everything else is a real Xbox header and is decoded the way XGSetTextureHeader wrote it: linear formats
 // keep width and height in the Size word, swizzled ones keep log2 sizes in the Format word.
 void D3D9_GetSurfaceDesc(void *pSurface, uint32_t *format, uint32_t *width, uint32_t *height) {
-    uint32_t f = XFMT_LIN_X8R8G8B8, w = g_presentParams.BackBufferWidth, h = g_presentParams.BackBufferHeight;
+    uint32_t f = XFMT_LIN_X8R8G8B8, w = g_gameWidth, h = g_gameHeight;   // the game's size, whatever the backbuffer's
 
     if (pSurface == &g_dummyDepthStencil) {
         f = 0x2e;   // X_D3DFMT_LIN_D24S8: 32 bits, and what the callers map onto a linear 32-bit colour format
@@ -2948,11 +3005,23 @@ bool D3D9_ReadBackBuffer(void *destination, uint32_t pitch, uint32_t width, uint
     D3DSURFACE_DESC desc;
     if (FAILED(g_backBufferSurface->GetDesc(&desc)))
         return false;
+    // Scaled rendering: the game wants its own size back, so the backbuffer is filtered down first.
+    IDirect3DSurface9 *source = g_backBufferSurface;
+    if (g_renderScaled) {
+        if (g_readBackScaled == NULL &&
+            FAILED(g_device->CreateRenderTarget(g_gameWidth, g_gameHeight, desc.Format, D3DMULTISAMPLE_NONE, 0, FALSE,
+                                                &g_readBackScaled, NULL)))
+            return false;
+        if (FAILED(g_device->StretchRect(g_backBufferSurface, NULL, g_readBackScaled, NULL, D3DTEXF_LINEAR)))
+            return false;
+        source = g_readBackScaled;
+        desc.Width = g_gameWidth; desc.Height = g_gameHeight;
+    }
     if (sys == NULL && FAILED(g_device->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format, D3DPOOL_SYSTEMMEM, &sys, NULL)))
         return false;
     bool wasInScene = g_inScene;
     if (wasInScene) { g_device->EndScene(); g_inScene = false; }
-    bool ok = SUCCEEDED(g_device->GetRenderTargetData(g_backBufferSurface, sys));
+    bool ok = SUCCEEDED(g_device->GetRenderTargetData(source, sys));
     if (wasInScene) BeginSceneIfNeeded();
     if (!ok)
         return false;
@@ -3064,6 +3133,8 @@ uint32_t D3D9_GetVisibilityTestResult(uint32_t index, uint32_t *result, uint64_t
     if (hr == S_FALSE)
         return X_D3DERR_TESTINCOMPLETE;
     if (SUCCEEDED(hr) && result != NULL) {
+        if (g_renderScaled)   // the game's arithmetic expects counts from its own 640x480
+            count = (DWORD)((float)count / (g_renderScaleX * g_renderScaleY) + 0.5f);
         *result = (uint32_t)count;
         static int said = 0;
         if (count != 0 && said++ < 3)

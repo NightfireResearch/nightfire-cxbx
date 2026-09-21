@@ -556,6 +556,22 @@ the audio path like the intro movie was (section 0.1, "Sound"), and it is where 
 of the backbuffer stand-in now reads the real backbuffer back, in case a screen copy is what fills it;
 nothing has locked it yet.
 
+### Resolution
+
+The engine renders at 640x480 and nothing in it can be asked for more: `RRenderer::ConfigureRes`
+(0x0007cfb0) writes the numbers in and reads only a widescreen flag from the EEPROM's video setting. So a
+higher resolution is the backend's: `RenderWidth` and `RenderHeight` in `settings.ini` make the D3D9 backend
+create the backbuffer at that size while the game goes on believing it has 640x480, and everything that
+arrives in the game's pixels is scaled on the way through - viewports, the immediate-mode and quad paths'
+pre-transformed vertices - and on the way back: the pause menu's readback is filtered down to 640x480, the
+visibility tests' pixel counts are divided by the area ratio, and the stand-in surfaces report the game's
+size. Shader draws need nothing, since their positions are clip space by the time D3D9 sees them, and
+render-target textures keep their own sizes. `Widescreen=1` goes with a 16:9 size: the loader now answers the
+EEPROM's video flags from that key, and the engine renders 16:9 into its 640x480 rather than stretching 4:3.
+Verified at 1920x1080 in the snow level, and in the action engine's space level and results screen - the
+backend is shared, and the action engine's own layout size (SCREEN_WIDTH, 640x480) is exactly what it should
+stay: it is the space its HUD tables and cameras are written in, and the backend does the rest.
+
 ### What is left
 
 Roughly in order of how much a player would notice:

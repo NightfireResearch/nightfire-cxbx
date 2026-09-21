@@ -41,6 +41,8 @@ You need a dump of your own Xbox disc. The game data is not in this repository a
   in `settings.ini`.
 * Build (below), or download a release.
 * Run `action.exe`. It prints what it is doing, and says plainly what it could not do.
+* For a higher resolution, set `RenderWidth` and `RenderHeight` in `settings.ini` (with `Widescreen=1` for a
+  16:9 size). Both engines render their 640x480 into a backbuffer of that size; 0 turns it off.
 
 For the driving engine, or to compare against the emulator, you also need cxbx-reloaded extracted somewhere,
 and `action_cxbx.exe` / `driving_cxbx.exe` will ask for its location the first time.

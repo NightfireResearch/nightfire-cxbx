@@ -389,7 +389,11 @@ static LONG __stdcall Xbox_ExQueryNonVolatileSetting(ULONG valueIndex, ULONG *ty
     ULONG setting = 0;
     switch (valueIndex) {
         case XC_LANGUAGE:            setting = 1; break;                  // English
-        case XC_VIDEO:               setting = 0; break;                  // 4:3, no HDTV mode, no letterbox
+        case XC_VIDEO:                                                    // bit 0 widescreen; no HDTV mode, no letterbox
+            // The one video setting the driving engine acts on (ConfigureRes reads bit 0 into its widescreen
+            // flag), taken from the same settings.ini key the action engine uses.
+            setting = GetPrivateProfileIntA("Settings", "Widescreen", 0, ".\\settings.ini") != 0 ? 1 : 0;
+            break;
         case XC_AUDIO:               setting = 0; break;                  // stereo, no Dolby encoding
         case XC_P_CONTROL_GAMES:     setting = 0; break;                  // nothing restricted
         case XC_MISC:                setting = 0; break;
