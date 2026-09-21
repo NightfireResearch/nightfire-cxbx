@@ -215,6 +215,15 @@ static BOOL __stdcall Xbox_SetThreadPriority(HANDLE thread, int priority) {
     return SetThreadPriority(thread, priority);
 }
 
+// XAPI's GetExitCodeThread (0x0010eaef) does the same: ObReferenceObjectByHandle, then the ETHREAD's
+// terminated flag at +4 and its ExitStatus at +0x120. With the handle standing in for the object, that is a
+// read of address 0x650 - which is how the first part of a mission ended, in IFeedback's destructor waiting
+// for the force-feedback thread to finish (0x0010a8f0 polls it for STILL_ACTIVE, 0x103). The Win32 function
+// returns the same values: STILL_ACTIVE while the thread runs, its exit code after.
+static BOOL __stdcall Xbox_GetExitCodeThread(HANDLE thread, DWORD *exitCode) {
+    return GetExitCodeThread(thread, exitCode);
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // XInitDevices, replaced by nothing at all.
 //
@@ -344,6 +353,7 @@ void Inject_XboxStartup(void) {
     WriteJump(0x0010eed3, (void *)Xbox_timeSetEvent);   // the tick source, see XboxTimer.cpp
     WriteJump(0x0010ecd8, (void *)Xbox_GetCurrentThreadId);   // FS:[0x28] is not a KTHREAD here
     WriteJump(0x0010ea0f, (void *)Xbox_SetThreadPriority);    // no kernel thread objects to reference
+    WriteJump(0x0010eaef, (void *)Xbox_GetExitCodeThread);    // same
 
     for (size_t i = 0; i < sizeof(WBINVD_SITES) / sizeof(WBINVD_SITES[0]); i++) {
         unsigned char *site = (unsigned char *)WBINVD_SITES[i];

@@ -90,7 +90,10 @@ specific to a host, and `actioninject.dll` is already loaded unchanged by both. 
 transition. Both XBEs are linked to base `0x10000`, and the loader gets that address by *being* the image
 there - so only one XBE can be mapped at a time, and that is not a limitation a cleverer loader removes. The
 hand-off stays a process relaunch: the loader re-executes itself with the other XBE, carrying the launch
-data page across in a file, which is what `psiLaunch.bin` already does.
+data page across in a file, which is what `psiLaunch.bin` already does. (Done, in `src/common/launchInfo.cpp`:
+`XLaunchNewImageA` starts `driving.exe` or `action.exe` from beside the running executable and exits. The
+driving engine needs it between the parts of a mission, not only at the end - `ReturnToAction` launches
+`DRIVING.XBE` itself for the next part, which is where the first full play-through stopped.)
 
 ## 0.1 Status: what runs standalone today
 
@@ -163,6 +166,19 @@ a long way from the cause.
 `NtPulseEvent`'s number. The loader's own table had copied the mistake, so a call to `NtPulseEvent` would
 have landed in `NtProtectVirtualMemory`. The generator now reads Cxbx's kernel thunk array, which is indexed
 by ordinal and therefore cannot disagree with itself; that also fixed nine other names.
+
+**Handles that XAPI turns back into kernel objects.** The loader's `ObReferenceObjectByHandle` returns the
+Win32 handle itself, because there is no object behind it. Two XAPI functions then read ETHREAD fields from
+that "object": `SetThreadPriority` and `GetExitCodeThread`, the second of which faulted at address 0x650
+(handle 0x64c plus four) when the first part of a mission ended and `IFeedback`'s destructor polled its
+thread for `STILL_ACTIVE`. Both are now the Win32 functions, jumped in from `XboxStartup.cpp`; Ghidra lists
+no other caller outside the stubbed USB stack. A read fault at a tiny address inside `0x0010exxx` is this.
+
+The crash that found it was only reachable by playing the level through, so the loader now keeps a record on
+its own: every hard fault goes to `Release\crash.log` (registers, the bytes at EIP, the frame chain and a
+scan of every return address on the stack, which reaches past the first frame without a frame pointer) and
+the first one writes `Release\crash.dmp`, a full-memory minidump. Closing the render window snapshots every
+thread's location first, which is the record for a freeze. `tools/symbolise.py` names the functions.
 
 ### The graphics seam, and why it is at the D3D8 entry points
 

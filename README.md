@@ -45,8 +45,9 @@ You need a dump of your own Xbox disc. The game data is not in this repository a
 For the driving engine, or to compare against the emulator, you also need cxbx-reloaded extracted somewhere,
 and `action_cxbx.exe` / `driving_cxbx.exe` will ask for its location the first time.
 
-Switching between the two engines is still a manual restart: the game writes `psiLaunch.bin` and stops, and
-you launch the other executable.
+Switching between the two engines, and between the parts of a driving mission, is a process relaunch: the
+game writes its launch data to `psiLaunch.bin`, the loader starts `action.exe` or `driving.exe` from beside
+itself with the same log, and exits. Under the CXBX launchers it still stops and you start the other one.
 
 ## Building
 
