@@ -94,9 +94,16 @@ data page across in a file, which is what `psiLaunch.bin` already does.
 
 ## 0.1 Status: what runs standalone today
 
+**As of 21 September 2026 the underwater level is playable standalone, with graphics and sound.** A full
+play-through of the level with no geometry glitches, correct materials, the pause menu complete, and the
+engine, effects, voice-over and music all audible and panned as they should be (play-tested; the run logs
+say the same). What is not there yet is at the end of this section under "What is left". The rest of the
+section is the history of how it got here, kept because each step records a trap the next engine will
+meet.
+
 Measured rather than predicted - every line below came out of a run. `driving.exe` (the loader, built from
 the same sources as `action.exe` with `IS_DRIVING` choosing the two default file names) maps `Driving.xbe`,
-loads `drivinginject.dll`, and the engine now **loads a level and enters its game loop**:
+loads `drivinginject.dll`, and the engine first **loaded a level and entered its game loop** like this:
 
 ```
 [timer] tick every 20 ms (timer 16), callback at 0x0010ae10
@@ -110,7 +117,8 @@ loads `drivinginject.dll`, and the engine now **loads a level and enters its gam
 
 So: process startup, the C runtime, the launch-data read, `main`, the 36 MB heap, the file system, the
 async loader, controllers, the scheduler, the underwater level's data, and the first vertex shaders through
-the D3D9 backend's translator. It stops in the renderer's first frames, in two places (below).
+the D3D9 backend's translator. At that point it stopped in the renderer's first frames; the subsections
+below are what it took from there.
 
 ### What it took
 
@@ -512,8 +520,9 @@ into that state. Waiting for the flush's own buffer-end callbacks before refilli
 chunk comes from and lets the eight milliseconds already queued play out, and a Stop leaves them queued
 for the resume.
 
-Not done: the per-voice low-pass filter (`SetFilter`, distance muffling) and the I3DL2 reverb, both
-accepted and ignored.
+Play-tested after the flush fix: engine, effects, voice-over and music all audible and correctly panned,
+nothing pausing under steering or after the checkpoint, engine and ambient pitch right. Not done: the
+per-voice low-pass filter (`SetFilter`, distance muffling) and the I3DL2 reverb, both accepted and ignored.
 
 **The pause menu's video window, as first understood.** A 128x128 linear texture is bound at stage 3 of a quad in every frame,
 in the level and in the menu, and its memory is a contiguous allocation the game made and writes into
@@ -533,14 +542,24 @@ nothing has locked it yet.
 
 ### What is left
 
-In the order the frame counter puts them:
+Roughly in order of how much a player would notice:
 
-1. **Stencil and fill mode**, accepted and dropped by the seam.
-2. **Sound's remainder**: the low-pass filter and the reverb, and whatever play-testing turns up.
+1. **The red lights on mines, projectiles and door nodes** - the lens flares. The visibility tests behind
+   them are implemented (above), but no run has yet had a light in view, so whether they draw is
+   unverified. First reached a minute into the level after the scripted "openwater" event; check there.
+2. **Sound's remainder**: the per-voice low-pass filter (distance muffling) and the I3DL2 reverb, both
+   accepted and ignored; and the instrumentation section 4 asks for, which has never been written - the
+   free lists that drained under CXBX are worth watching once, to confirm they do not here.
 3. **The clock runs fast** (section 2.1): the game's own log timestamps advance about six times real time,
    which is the 733 MHz constant baked into `timestamp()` and the `QueryPerformance*` pair. The action
    engine's fix transposes. Note this is a different clock from `KeTickCount` above - the game has both, and
-   only the second one paced the movie.
+   only the second one paced the movie. Nothing a player has noticed yet, which is why it is this far down.
+4. **Stencil and fill mode**, accepted and dropped by the seam.
+5. **The physical-memory alias**, properly (see "The pause menu's girl" above): the two-byte patch that
+   makes EAGL register every texture in place is doing its job, and the design that replaces it is written
+   down there for when a texture drawn from freed memory says it is time.
+6. **Other levels.** Everything above was measured on the underwater level; the others will reach texture
+   modes, shaders and sound formats this one does not, and the logs are built to name them.
 
 ## 1. What the driving engine is
 
@@ -732,6 +751,9 @@ What to do, in order:
    (`SNDVOICEI_free` the voice and return). This turns the crash into a dropped sound.
 3. **Cure**: the native audio backend (section 6.2), where buffer status is exact and creation cannot fail.
 
+*The cure is in (section 0.1, "Sound"): buffer status comes from XAudio2's own queue, and a full level
+played through without a voice going missing. The instrumentation below is still unwritten.*
+
 **This diagnosis now argues for skipping straight to the cure.** Every symptom in this section is downstream
 of CXBX reporting playback status from a host buffer that does not track the Xbox's, and the audio seam has
 to be written anyway before the driving engine will boot standalone at all (section 0). Containment is a
@@ -839,6 +861,12 @@ as the seam, trace a level, then extend `d3d9Backend.cpp` (shared with the actio
 
 ### 6.2 Audio - do this first, not third
 
+*Done, and not as described here* - see "Sound" in section 0.1. The seam went in at DirectSound's own 63
+entry points rather than at `SNDPLATFORM_*`, because that is completeness by construction; and the action
+engine's backend was not reused, because EA's layer mixes on the CPU into six speaker rings the hardware
+read live, which needs a streaming backend rather than a voice-per-buffer one. The paragraphs below are the
+original reasoning, kept for the record.
+
 63 DSOUND entry points behind EA's `SND*` platform layer (`SNDPLATFORM_init`, `SNDPLATFORM_playtimbre`,
 `SNDVOICEI_*`, `SNDSTRM_*`, `SNDDRV_thread`) - a cleaner boundary than the action engine's, since the EA
 layer is already an abstraction with its own voice allocator and mixer (`AMix`). Seam the `SNDPLATFORM_*`
@@ -866,7 +894,10 @@ transition; that is not possible, and it is not a limitation a better loader rem
 
 ## 7. Suggested order of work
 
-Reordered now that the standalone loader exists. Steps 1 and 2 are done; 0.1 says what that bought and what it corrected about the order below. The principle that changed: the original order front-loaded
+Reordered now that the standalone loader exists. Steps 1, 2, 3 and 6 are done, and 4 turned out to need
+nothing (the native timer delivers even ticks and the scheduler's original semantics hold; only the fast
+clock of 2.1 remains); 0.1 says what each bought and what it corrected about the order below. Step 5, the
+symbol tool, has not been needed yet - every function this work touched was named by hand from its callers. The principle that changed: the original order front-loaded
 fixes for CXBX's behaviour - scaling the visibility-test result, containing the sound-buffer leak, replacing
 the game's clock - and each of those is a correction for a host that is being removed. Going standalone first
 makes several of them unnecessary rather than merely earlier.
