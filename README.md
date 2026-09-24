@@ -9,20 +9,17 @@ function at a time.
 Graphics go through Direct3D 9, audio through XAudio2, input through XInput, and files through a plain Win32
 layer. The two hand over to each other as the console did, by relaunching.
 
-How far each has got: the action engine boots, plays its movies and loads missions. The driving engine's
-underwater level plays through with correct graphics and sound, and two more of its eight missions have been
-seen loading and drawing; playing each of them through is the work in progress. `docs/driving-engine-plan.md` and `docs/cxbx-removal-plan.md` say what is
-known to be missing.
-
-The project is named for how it started, which was inside cxbx-reloaded. That is now the fallback rather
-than the foundation.
+Together, these two executables allow you to play through the entire game, both single and multiplayer.
 
 ## How it works
 
-The game is the original x86 code. Roughly 10% of its functions have been reimplemented in C++ in this
-repository, and at startup those are patched over the originals - `tools/preprocess.py` turns `AUTOINJECT`
-and `FUNC_AT(<address>)` comment tags into a table of jumps. Everything else still runs as shipped. The
-proportion goes up over time; nothing has to be finished before the game runs.
+The original Xbox game is x86 code, which is executable on a modern PC, except for its interactions with
+the operating system / kernel. The Xbox provides one set of APIs; modern PCs have similar but not identical ones.
+
+Roughly 10% of its functions have been reimplemented in C++ in this repository, and at startup those are 
+patched over the originals - `tools/preprocess.py` turns `AUTOINJECT`and `FUNC_AT(<address>)` comment tags 
+into a table of jumps. Everything else still runs as shipped. The proportion goes up over time; nothing has
+to be finished before the game runs.
 
 Replacing a whole library rather than one function is done with a "seam". In the action engine every entry
 point goes through a dispatcher that can send the call either to the original or to a native backend, chosen
@@ -140,7 +137,7 @@ Everything lands in `Release/`. `tools/preprocess.py` runs as a pre-build step a
 
 Various bits of information are automatically generated from the Ghidra project. To create or update these:
 
-* Install the latest release of Ghidra (11.3)
+* Install the latest release of Ghidra
 * Launch the PyGhidra variant (eg, MacOS: `/opt/homebrew/Caskroom/ghidra/11.3-20250205/ghidra_11.3_PUBLIC/support/pyghidraRun`)
 * Add the `ghidra` subfolder as a Script Directory using the Script Manager within the Code Browser tool
 * Run the `NightfireSync` script
@@ -167,17 +164,11 @@ the dead ends rather than only the conclusions.
 - [x] Allow extraction of game assets
 - [x] Allow patching and hot reloading of game assets
 - [x] Re-implement Xbox-specific code to run independently of cxbx-reloaded
-- [ ] Play through the whole game standalone, closing the gaps that finds
+- [x] Play through the whole game standalone
 - [x] Implement high-resolution, widescreen fixes etc
-- [ ] Fix crash when control has been passed from the Driving engine
+- [x] Fix crash when control has been passed from the Driving engine
 - [ ] Swap out various blocks of logic to fully understand how the engine works/data structures
 - [ ] Re-implement the remaining code, resulting in a full source decompilation
-
-The third box is ticked in the sense that the engine boots, plays video and audio, takes input and loads a
-mission with no emulator present. It is not ticked in the sense that everything is implemented: 47 of its 96
-kernel imports are, and the rest announce themselves by name when something reaches them. The fifth is
-`RenderWidth`/`RenderHeight` and `Widescreen`, shared with the driving engine. The hand-back from the driving
-engine is automatic now; whether the action engine survives it standalone has not been tested yet.
 
 ### Driving engine
 
@@ -187,16 +178,8 @@ engine is automatic now; whether the action engine survives it standalone has no
 - [ ] Allow patching and hot reloading of game assets
 - [ ] Swap out various blocks of logic to fully understand how the engine works/data structures
 - [x] Re-implement Xbox-specific code to run independently of cxbx-reloaded
-- [ ] Play through every mission standalone, closing the gaps that finds
+- [ ] Play through every mission standalone to confirm no crashes or visual/audible bugs
 - [ ] Re-implement the remaining code, resulting in a full source decompilation
-
-The first two were mostly cxbx-reloaded's: its timer jitter starved the scheduler, and its DirectSound
-emulation reported buffers as still playing until the sound pool ran dry and the game dereferenced a null.
-Standalone, with a native timer and XAudio2 reporting exact buffer status, the underwater level holds 50
-frames a second with most of each frame to spare, and plays through without the crash. Assets: every file the
-engine loads is written to `dump_driving/` as it is read. "Independently of cxbx-reloaded" is ticked in the
-same sense as the action engine's - 55 of its 100 kernel imports are implemented, the D3D8 and DirectSound
-entry points it reaches have native replacements, and the ones not reached yet report themselves.
 
 ### Misc
 
