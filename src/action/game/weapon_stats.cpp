@@ -5,7 +5,7 @@ void callOriginal(void) {
     reinterpret_cast<void (*)(void)>(0x000f5530)();
 }
 
-// On Xbox, weapon stats are set up partially in the compiled code, but partially (from 0x35 onwards) in a constructor, called before main()
+// On Xbox, weapon stats are set up partially in the compiled code, but partially (from 0x35 onwards) in a constructor, called before Game_Main()
 // We have a special case for injecting all the data...
 void ctor_WeaponDefinitionTable(void) {
 

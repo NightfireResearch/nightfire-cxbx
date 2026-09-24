@@ -615,7 +615,7 @@ void __cdecl xboxCreateSoundBuffers(void) {
 }
 
 // One DirectSound object, full HRTF, the I3DL2 reverb DSP image, 192 buffers, and the volume table. Called once
-// from main (src/action/main.cpp).
+// from Game_Main (src/action/main.cpp).
 //
 // The volume table maps a 0..100 game volume to hundredths of a dB: entry i is 1500*log10(i/100), clamped to
 // -10000..0, with 0 and 100 written directly. The decompile of the x87 sequence reads as a multiply by

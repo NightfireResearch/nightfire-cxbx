@@ -53,15 +53,30 @@ itself with the same log, and exits. Under the CXBX launchers it still stops and
 
 ## Building
 
-CMake, and a 32-bit MSVC toolchain. The game is a 32-bit x86 binary and the loader has to share its address
-space, so this cannot be built for x64.
+CMake and Python, plus a compiler. The game is a 32-bit x86 binary and the loader has to share its address
+space, so this cannot be built for x64 on any host.
+
+**On Windows**, with Visual Studio 2022:
 
 ```
-cmake -B . -G "Visual Studio 17 2022" -A Win32
-msbuild nightfiRE.sln /p:Configuration=Release /p:Platform=Win32
+cmake --preset windows
+cmake --build --preset windows
 ```
 
-Everything lands in `Release/`. `tools/preprocess.py` runs as a pre-build step and needs a function name in
+**On macOS**, cross-compiling with clang and the mingw-w64 sysroot:
+
+```
+brew install mingw-w64 ninja
+cmake --preset macos
+cmake --build --preset macos
+```
+
+Both produce the same 32-bit Windows binaries, in `build/windows/Release/` and `build/macos/`
+respectively, and both are built by CI. The cross build is a build only - see
+`docs/macOS-D3D9-setup.md` for running the result on macOS, and `docs/macos-build.md` for the one
+functional difference (no XAudio2 reverb) and why clang rather than mingw's GCC.
+
+`tools/preprocess.py` runs before the injected DLLs are compiled and needs a function name in
 `tools/functions_action.json` for every `AUTOINJECT` tag, or an address via `FUNC_AT`.
 
 ## Tools
@@ -71,7 +86,7 @@ Everything lands in `Release/`. `tools/preprocess.py` runs as a pre-build step a
 | `tools/drive_game.ps1` | Launches the game and presses keys at it, to reproduce something several menus in without a person at the keyboard. |
 | `tools/survey_xbe.py` | Prints an XBE's base, size, kernel imports and FS-segment usage - how much of the startup incompatibility applies to it. |
 | `tools/kernel_imports.py` | Which kernel imports live game code actually reaches. |
-| `tools/check_loader_image.ps1` | Verifies `action.exe` was linked at the XBE's base, big enough, with ASLR off. Run by CI, because losing any of those link options fails at runtime rather than at build time. |
+| `tools/check_loader_image.py` | Verifies `action.exe` was linked at the XBE's base, big enough, with ASLR off, and with its own code above the XBE's end. Run by CI on both platforms, because losing any of those link options fails at runtime rather than at build time. |
 | `tools/preprocess.py` | Generates the injection table from the source tags. |
 | `ghidra/NightfireSync.py` | Exports names and signatures from Ghidra into `tools/functions_*.json`. |
 
@@ -93,6 +108,7 @@ what is left, and the method. `docs/driving-engine-plan.md` is the same for the 
 where the work goes next. `docs/audio-inventory.md` records what the game actually asks of DirectSound.
 `docs/macOS-D3D9-setup.md` is how to run this on Apple Silicon at full speed, which needs DXVK rather than
 Wine's own Direct3D - and which currently pins you to a Wine version that is no longer published.
+`docs/macos-build.md` is the other half of working on a Mac: building the Windows binaries there.
 
 They are written to be read by whoever picks the work up, including agents, and they carry the reasoning and
 the dead ends rather than only the conclusions.

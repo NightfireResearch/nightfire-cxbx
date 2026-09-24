@@ -94,7 +94,7 @@ void SpaceLaser_Update(obj_tag *obj) {
 
                 // Randomly pick one of two side lasers to fire?
                 int side = Rand_Random() & 1;
-                spaceLaser->scriptInfo = Script_Load(spaceLaser->someScripts[side], &CONST_ZERO_VECTOR, &CONST_ZERO_VECTOR, NULL, NULL, SpaceLaser_Register, spaceLaser);
+                spaceLaser->scriptInfo = Script_Load(spaceLaser->someScripts[side], &CONST_ZERO_VECTOR, &CONST_ZERO_VECTOR, NULL, NULL, (void *)SpaceLaser_Register, spaceLaser);
                 Script_Play(spaceLaser->scriptInfo, 0);
                 Script_Update(spaceLaser->scriptInfo);
                 Vec_Copy(&glb_players[0]->position, &spaceLaser->targetPnt);

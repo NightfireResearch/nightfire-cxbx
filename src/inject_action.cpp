@@ -170,7 +170,7 @@ void Inject()
 
   // Special case for weapon stats
   // This has the limitation that the DLL must be injected before the constructor is called otherwise it will have no effect
-  void *ptrCtorWeaponDefinitionTable = &ctor_WeaponDefinitionTable;
+  void *ptrCtorWeaponDefinitionTable = (void *)&ctor_WeaponDefinitionTable;
   WriteMemory(0x0016313c, &ptrCtorWeaponDefinitionTable, 4);
 
 }
