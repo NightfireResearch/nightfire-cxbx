@@ -17,12 +17,13 @@ uint32_t GetAudioMode(void);
 // their own region-appropriate default (mainloop does: 60 for NTSC-ish regions, 50 for PAL-I).
 int Settings_GetFPSOverride(void);
 
-// settings.ini's [Settings] GraphicsBackend key: 0 = "cxbx" (D3D8 through CXBX's HLE, the default), 1 = "d3d9"
-// (the seam's own native Direct3D 9 backend, see Direct3D/d3d9Backend.h).
+// Which graphics backend runs, decided by the host rather than settings.ini: 0 = D3D8 through CXBX's HLE (under
+// the CXBX launchers), 1 = the seam's own native Direct3D 9 backend (under the standalone loader, see
+// Direct3D/d3d9Backend.h).
 int Settings_GetGraphicsBackend(void);
 
-// settings.ini's [Settings] AudioBackend key: 0 = "cxbx" (DSOUND through CXBX's HLE, the default), 1 = "xaudio2"
-// (the audio seam's own native backend - not written yet, see sound/dsndSeam.h).
+// Which audio backend runs, decided the same way: 0 = DSOUND through CXBX's HLE, 1 = the audio seam's own
+// native XAudio2 backend (see sound/dsndSeam.h).
 int Settings_GetAudioBackend(void);
 
 // settings.ini's [Settings] Reverb key, for the xaudio2 backend only: whether to run the I3DL2 reverb

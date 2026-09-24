@@ -144,11 +144,9 @@ means the game needs no special launch environment.
 
 ### 6. `settings.ini`
 
-```ini
-GraphicsBackend=d3d9
-```
-
-Add `PerfLog=on` for the `[perf]` diagnostics quoted here.
+Nothing is needed to pick the D3D9 backend: `action.exe` always uses it. (Older versions had a
+`GraphicsBackend` key for this; it is ignored now.) Add `PerfLog=on` for the `[perf]` diagnostics
+quoted here.
 
 ## Verify it actually worked
 
