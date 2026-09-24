@@ -10,4 +10,9 @@
 unsigned __stdcall Xbox_timeSetEvent(unsigned delayMs, unsigned resolutionMs,
                                      LPTIMECALLBACK callback, DWORD_PTR user, unsigned flags);
 
+// Makes the cycle counter count at the console's 733 MHz where the game reads it: the frame-rate estimate in
+// RRenderHigh::Render, EAGL's bare RDTSC helper, and XAPI's QueryPerformanceCounter/Frequency pair. The audit
+// of every RDTSC site is in XboxTimer.cpp. Called from Inject_XboxStartup, standalone only.
+void Inject_XboxCycleCounter(void);
+
 #endif // DRIVING_PLATFORM_XBOXTIMER_H_

@@ -354,6 +354,7 @@ void Inject_XboxStartup(void) {
     WriteJump(0x0010ecd8, (void *)Xbox_GetCurrentThreadId);   // FS:[0x28] is not a KTHREAD here
     WriteJump(0x0010ea0f, (void *)Xbox_SetThreadPriority);    // no kernel thread objects to reference
     WriteJump(0x0010eaef, (void *)Xbox_GetExitCodeThread);    // same
+    Inject_XboxCycleCounter();                                // RDTSC at the console's rate, see XboxTimer.cpp
 
     for (size_t i = 0; i < sizeof(WBINVD_SITES) / sizeof(WBINVD_SITES[0]); i++) {
         unsigned char *site = (unsigned char *)WBINVD_SITES[i];
