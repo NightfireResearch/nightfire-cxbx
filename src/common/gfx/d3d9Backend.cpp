@@ -721,6 +721,7 @@ static IDirect3DSurface9 *g_readBackScaled = NULL;            // a game-sized co
 static inline bool ScalingTarget(void) { return g_renderScaled && g_targetIsBackBuffer; }
 static void ReleaseDefaultPoolResources(void);
 static bool g_reversedDepth = false;   // 32-bit float depth buffer with reversed Z (see D3D9_CreateDevice)
+static uint32_t g_xboxSamplesPerPixel = 1;   // from the game's MultiSampleType; scales visibility-test counts
 static bool g_hasStencil = true;
 static void BeginSceneIfNeeded(void) {
     if (g_device != NULL && !g_inScene) {
@@ -737,6 +738,15 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
 
     g_gameWidth = width; g_gameHeight = height;
     g_renderScaled = false; g_renderScaleX = g_renderScaleY = 1.0f; g_targetIsBackBuffer = true;
+    {
+        // [4] is MultiSampleType: the low nibble is the vertical sample scale and the next the horizontal one
+        // (X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX, 0x1121, is two across and one down). The NV2A
+        // renders into a buffer that many times larger, and its visibility tests count those samples - see
+        // D3D9_GetVisibilityTestResult. Zero, which a game that never set it passes, is one sample.
+        uint32_t multiSample = xboxParams[4];
+        uint32_t across = (multiSample >> 4) & 0xF, down = multiSample & 0xF;
+        g_xboxSamplesPerPixel = (across != 0 && down != 0) ? across * down : 1;
+    }
     {
         int renderWidth = GetPrivateProfileIntA("Settings", "RenderWidth", 0, ".\\settings.ini");
         int renderHeight = GetPrivateProfileIntA("Settings", "RenderHeight", 0, ".\\settings.ini");
@@ -3126,9 +3136,10 @@ bool D3D9_IsStandInSurface(const void *pSurface) {
 // drawn as quad lists with no test (see QuadListIndices). RLensFlareManager::TestFlares (0x0009e720) draws a
 // small depth-tested quad at the flare between BeginVisibilityTest and EndVisibilityTest(index), with the index
 // cycling through sixteen; DrawFlares (0x0009e540) asks for the count the next frame, spinning until it is
-// ready, and adds a glare scaled by (visible pixels - 256) / 256. The NV2A counts pixels that passed the depth
-// test and a D3D9 occlusion query counts the same thing; at a RenderWidth/RenderHeight above 640x480 the count
-// is divided back down (D3D9_GetVisibilityTestResult), which is the correction CXBX never made (plan section 3).
+// ready, and adds a glare scaled by (visible samples - 256) / 256. The NV2A counts samples that passed the depth
+// test and a D3D9 occlusion query counts pixels; D3D9_GetVisibilityTestResult multiplies by the game's samples
+// per pixel (two, for the driving engine's quincunx) and, at a RenderWidth/RenderHeight above 640x480, divides
+// by the area ratio - the correction CXBX never made (plan section 3).
 //
 // Begin has no index - it only arrives at End - so a query is taken from a pool at Begin and filed under its
 // index at End, replacing (and recycling) whatever was there. Asking for a result before it is ready gets
@@ -3208,8 +3219,14 @@ uint32_t D3D9_GetVisibilityTestResult(uint32_t index, uint32_t *result, uint64_t
     if (hr == S_FALSE)
         return X_D3DERR_TESTINCOMPLETE;
     if (SUCCEEDED(hr) && result != NULL) {
-        if (g_renderScaled)   // the game's arithmetic expects counts from its own 640x480
-            count = (DWORD)((float)count / (g_renderScaleX * g_renderScaleY) + 0.5f);
+        // The game's arithmetic expects what the NV2A would have counted: samples in its own 640x480 at the
+        // multisample type it asked for. DrawFlares depends on exactly that - its 16x16 sun test quad counts
+        // 512 at the driving engine's two samples a pixel, and it lights the flare by (count - 256) / 256, so
+        // a count of pixels alone can never reach it.
+        float scale = (float)g_xboxSamplesPerPixel;
+        if (g_renderScaled)
+            scale /= g_renderScaleX * g_renderScaleY;
+        count = (DWORD)((float)count * scale + 0.5f);
         *result = (uint32_t)count;
         static int said = 0;
         if (count != 0 && said++ < 3)

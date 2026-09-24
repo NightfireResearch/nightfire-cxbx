@@ -3,7 +3,8 @@
 Companion to `cxbx-removal-plan.md` (the action engine). Written September 2026 after a first survey of
 `Driving.xbe` in Ghidra (`/Xbox_EU/Driving.xbe`, 8959 functions), the repository's driving code
 (`src/driving`, `src/inject_driving.cpp`) and the PS2 symbol spreadsheet. Facts below cite addresses in the
-Xbox EU build so they can be re-checked; nothing here has been verified at runtime yet.
+Xbox EU build so they can be re-checked. Sections 1 to 7 are the original survey, made before anything ran;
+section 0.1 is what running it has since measured, and where the two disagree, 0.1 is right.
 
 Revised after the action engine stopped needing CXBX at all. Section 0 is what that changes, and it changes
 enough that the order of work at the end is different: several items in the original plan were workarounds
@@ -146,8 +147,8 @@ below are what it took from there.
 - **Controllers**, `src/driving/platform/XboxInput.cpp`: XAPI's seven input functions become Win32 XInput.
   The two APIs are the same API twice - identical digital bits, identical sticks - with two differences: the
   Xbox's face buttons are analogue (a pressed Win32 button becomes 255) and its black and white buttons take
-  the shoulder bits. `IOModule` then runs unchanged and reads real pads. There is no keyboard fallback yet;
-  the action engine's (a synthesised pad on port 0) is the model.
+  the shoulder bits. `IOModule` then runs unchanged and reads real pads. The keyboard stands in for a pad on
+  port 0 whenever nothing real is plugged into it, as in the action engine.
 - **The graphics seam**, `src/driving/gfx/`, described below.
 
 ### Two traps worth knowing about
@@ -500,8 +501,9 @@ below to stand in front of the door every run:
 - *Lens flares are only the sun.* `RLensFlareManager` is given exactly one flare a frame, by the sky draw
   (`0x000a6690`, from its two world-render callers), 1500 units out along the light manager's sun angle.
   Underwater there is no sky, so no flare and no visibility test - the `[perf]` line's zero is correct.
-  `TestFlares`/`DrawFlares` and the occlusion queries behind them stand as written (section 3), and are
-  unverified until a level with a sky is looked at.
+  `TestFlares`/`DrawFlares` and the occlusion queries behind them are in section 3, which also has why
+  the flare never drew until the counts were scaled to the game's multisampling - verified in the snow
+  level.
 - *The lights are model glares.* A model node of type 2 with flag bit 0 is a glare point: as the model draws,
   `DrawGroupDrawInstance` (`0x0007dcb0`) hands it to `FUN_000a9aa0`, which applies the node's blink
   (`FUN_000a99a0` - the triangle and sawtooth brightness the fuse box has), a facing test for directional
@@ -567,7 +569,9 @@ Play-tested after the flush fix: engine, effects, voice-over and music all audib
 nothing pausing under steering or after the checkpoint, engine and ambient pitch right. Not done: the
 per-voice low-pass filter (`SetFilter`, distance muffling) and the I3DL2 reverb, both accepted and ignored.
 
-**The pause menu's video window, as first understood.** A 128x128 linear texture is bound at stage 3 of a quad in every frame,
+**The pause menu's video window, as first understood.** *Superseded - this is `GGirl`, solved: see "The
+pause menu's girl" above. There is no contact video; the "compressed stream" below is `DoGirl`'s run-length
+decode and fire blend, written straight into the texture. Kept for the wrong guesses.* A 128x128 linear texture is bound at stage 3 of a quad in every frame,
 in the level and in the menu, and its memory is a contiguous allocation the game made and writes into
 directly - no lock the seam could see. The console's GPU reads such memory live; the host copy was taken
 once, at first bind, and kept, so it showed whatever the memory held then: nothing here, noise on another
@@ -599,26 +603,69 @@ Verified at 1920x1080 in the snow level, and in the action engine's space level 
 backend is shared, and the action engine's own layout size (SCREEN_WIDTH, 640x480) is exactly what it should
 stay: it is the space its HUD tables and cameras are written in, and the backend does the rest.
 
+### Push buffers: not the main path
+
+Section 6.1 called this the single biggest risk: if EAGL's render methods were precompiled NV2A command
+streams, the backend would need a command interpreter. It is not the main path. Looked at on 24 September
+2026:
+
+- `D3DDevice_RunPushBuffer` (`0x0016baa0`) has two callers. `FUN_000f4340` is a one-line wrapper whose only
+  caller is `FUN_000f6870`, a virtual in the vtable at `0x001ce780` (next to `"EAGL::VertexBuffer new"`), which
+  runs the push buffer held by the object at `DAT_002401c4` if its `+4` word is set. `FUN_000f7040` builds a
+  push buffer header in place, registers it and runs it, and nothing in the image calls it.
+- It is not in the seam, so it reaches the reporting stub - and in about seven hundred logged runs of the
+  underwater level it has never appeared in the "unimplemented entry points reached" list. The level's
+  geometry is all vertex buffers, indices and immediate mode.
+- The caveat is general: render methods are compiled at run time into allocated memory (see "an Xbox title's
+  memory is all executable" above), so a call from one of them is invisible to Ghidra's cross-references.
+  "No caller in the image" does not mean "never called", for this or any other entry point; only running
+  each level says what is reached. If `RunPushBuffer` turns up, the buffer is most likely small and
+  per-effect, and worth dumping and translating at its call site before an interpreter is considered.
+
+### The clock does not run fast
+
+This list used to carry "the clock runs fast", on the evidence of the game's own log timestamps advancing
+several times faster than real time, and the assumption that section 2.1 had arrived here. It had not. The
+timestamps are `GLoadingScreen::Status` (`0x000e2ff0`) printing `TIMER_gettick` - the 50 Hz tick from the
+winmm timer, not the cycle counter - through `"(%02d:%02d:%02d)"` with `tick / 3600`, `(tick % 3600) / 60` and
+`(tick % 60) / 6`. That is minutes, seconds and tenths at 60 Hz; read as hours, minutes and seconds it
+looks fast. The clock is right.
+
+The cycle counter was audited anyway - every `RDTSC` in the image, for what reads it. The result is in
+`src/driving/platform/XboxTimer.cpp`; in short, nothing that steers the game depends on it, unlike the action
+engine's `timestamp()`. The one wrong number was the frame rate `RRenderHigh::Render` estimates as 733e6 over
+cycles per frame, which feeds only the mission manager's per-section frame-rate statistics; it read low by
+the ratio of the host's clock to 733 MHz, and now reads 50.0 at 50 fps (measured). XAPI's `QueryPerformance*` pair is the host's now
+too, although its only caller in the image is D3D8's screen-capture recorder behind the seam. EAGL's profiler
+compares cycle counts only with each other, and the nv2a driver's vblank prediction does not run.
+
 ### What is left
 
 Roughly in order of how much a player would notice:
 
-1. **The sun's lens flare**, the one thing the visibility tests gate (above): implemented, unseen, since the
-   underwater level has no sky. Look at it on the first level that does. (The red and blue lights, long
-   listed here, were glares and draw now.)
-2. **Sound's remainder**: the per-voice low-pass filter (distance muffling) and the I3DL2 reverb, both
-   accepted and ignored; and the instrumentation section 4 asks for, which has never been written - the
-   free lists that drained under CXBX are worth watching once, to confirm they do not here.
-3. **The clock runs fast** (section 2.1): the game's own log timestamps advance about six times real time,
-   which is the 733 MHz constant baked into `timestamp()` and the `QueryPerformance*` pair. The action
-   engine's fix transposes. Note this is a different clock from `KeTickCount` above - the game has both, and
-   only the second one paced the movie. Nothing a player has noticed yet, which is why it is this far down.
-4. **Stencil and fill mode**, accepted and dropped by the seam.
+1. **Other levels, played through.** Everything above was measured on the underwater level (and the
+   resolution work glanced at the snow level). The others will reach shaders, texture modes, sound formats
+   and D3D8 entry points this one does not, and the logs are built to name them; the relaunch between
+   mission parts is new and wants exercising on each. This is most of the remaining work, and the items
+   below are largely what it is expected to turn up.
+2. **The D3D8 entry points still stubbed.** About thirty that EAGL could call return zero and draw nothing:
+   `RunPushBuffer` (above), `SetTransform`, `SelectVertexShader` and `LoadVertexShader`, `CopyRects`,
+   `SetScissors`, `SetRenderState_TextureFactor`, `SetTextureState_TexCoordIndex` and `ColorKeyColor`,
+   `SetRenderState_LineWidth`, the `...NotInline` state setters, `Lock2DSurface`, `BlockUntilVerticalBlank`.
+   None is reached underwater. Read the seam's stub report after each new level. Of the ones that are
+   reached, `DeleteVertexShader` matters: the backend's shader table is 512 slots and a level creates about
+   196, so if a restart within one process does not free them, a few restarts fill it.
+3. **Stencil and fill mode**, accepted and dropped by the seam. The seam ties stencil to shadows; compare a
+   CXBX capture of the same spot to see whether anything is missing. Related, for fidelity rather than
+   correctness: the game asks for two-sample quincunx antialiasing (section 3), and the backend renders
+   without any.
+4. **Sound's remainder**: the per-voice low-pass filter (distance muffling) and the I3DL2 reverb, both
+   accepted and ignored - CXBX's own support for both was partial, so this is past parity rather than to it;
+   and the instrumentation section 4 asks for, which has never been written - the free lists that drained
+   under CXBX are worth watching once, to confirm they do not here.
 5. **The physical-memory alias**, properly (see "The pause menu's girl" above): the two-byte patch that
    makes EAGL register every texture in place is doing its job, and the design that replaces it is written
    down there for when a texture drawn from freed memory says it is time.
-6. **Other levels.** Everything above was measured on the underwater level; the others will reach texture
-   modes, shaders and sound formats this one does not, and the logs are built to name them.
 
 ## 1. What the driving engine is
 
@@ -720,6 +767,12 @@ The driving binary carries the same code. Byte-identical searches of the two XBE
 upper bound rather than a site count - some `0f 31` runs are data, which is why CXBX's patcher carries a
 false-positive filter - so expect fewer real sites than 13, but more than the action engine's three.
 
+*Audited, September 2026 (0.1, "The clock does not run fast"; the site-by-site table is in
+`src/driving/platform/XboxTimer.cpp`).* Eleven real sites and two data matches, and the prediction above did
+not hold: the driving engine has no `timestamp()` equivalent, and the `QueryPerformance*` pair has no caller
+outside D3D8. Nothing that steers the game reads the cycle counter. The frame-rate estimate, EAGL's bare
+`RDTSC` helper and the XAPI pair are corrected regardless; the profiler and the nv2a driver are left.
+
 **What was done in the action engine, to copy rather than rediscover.** `timestamp()` and the
 `QueryPerformance*` pair were replaced with injected versions built on the host's own
 `QueryPerformanceCounter`/`QueryPerformanceFrequency` (see `src/action/game.cpp`, which carries the full
@@ -750,14 +803,27 @@ different system that has no visibility test).
 ring). The quad is 16x16 when the manager fell back to the `sunf` texture (no `moon` texture was found,
 `+0x21dc`), and `RLightManager + 0x2d0` pixels otherwise. `DrawFlares` (`0x9e540`) spins on
 `D3DDevice_GetVisibilityTestResult` until the result is ready and computes intensity as
-`(visiblePixels - 256) / 256`, which assumes the 16x16 case at native resolution. Its only input is the sky
-draw (`0x000a6690`), which adds the sun each frame.
+`(count - 256) / 256`, drawing the glare only when that is above zero. Its only input is the sky draw
+(`0x000a6690`), which adds the sun each frame. (When the `moon` texture *was* found, `DrawFlares` draws
+nothing at all.)
+
+**The count is samples, not pixels, and that is the whole design.** EAGL creates its device with
+`MultiSampleType` `0x1121`, two-sample quincunx: the NV2A renders into a buffer twice as wide, and a visibility
+test counts samples. So the 16x16 test quad counts 512 when the sun is in full view - intensity 1.0 - and
+the flare fades out as the quad is covered, reaching nothing at half. A count of pixels tops out at 256,
+which is intensity zero: a backend that counts pixels never shows the flare, however visible the sun is.
 
 Under CXBX the visibility test was answered with a host occlusion query at the host's render resolution, so
-the pixel count scaled with the render-scale squared and the flare exploded; the inject NOPped the
-`DrawFlares` call. The D3D9 backend answers the tests with `D3DQUERYTYPE_OCCLUSION` and divides the count
-back to 640x480 when `RenderWidth`/`RenderHeight` are larger, and the NOP is gone. Unverified, for want of
-a sky.
+the count scaled with the render-scale squared and the flare exploded; the inject NOPped the `DrawFlares`
+call. The D3D9 backend answers the tests with `D3DQUERYTYPE_OCCLUSION`, multiplies by the game's samples per
+pixel (read from its present parameters, so two here) and divides by the area ratio when
+`RenderWidth`/`RenderHeight` are larger; the NOP is gone.
+
+**Verified 24 September 2026 in "Enemies Vanquished"** (`snow2a_mis4`), with teleports recorded along the
+village road (`teleports.txt`, mission 6): at `7.915,-43.023,-417.366` the sun is clear, the test counts 512
+and the flare draws in full with its rays; at `128.751,-43.024,-421.415` it is behind the clock tower, counts
+about 207 and nothing draws; at `320.173,-43.023,-418.841` it is behind a tree, counts about 446 and the flare
+draws smaller and dimmer.
 
 ## 4. The crash: DirectSound buffer pool exhaustion in the EA sound layer
 
@@ -821,12 +887,13 @@ same free lists should simply never drain.
 
 Performance and other crashes still need data:
 
-- **Crash capture**: a vectored exception handler in the injected DLL that logs EIP, registers, the
-  faulting address and a stack walk, symbolised from `tools/functions_driving.json` (nearest function
-  below each return address), to `driving_crash.log`.
-- **Sampling profiler**: a thread in the DLL that every 1 ms suspends the game's main thread, reads EIP
-  (`GetThreadContext`), resumes it and histograms by function (same symbolisation). Dump the top 50 at
-  level end. This answers "where does the time go" without host tools that cannot see XBE symbols.
+- **Crash capture**: *built, in the loader rather than the DLL* - `Release\crash.log`, `Release\crash.dmp`
+  and `tools/symbolise.py` (0.1, "Handles that XAPI turns back into kernel objects"). The original
+  proposal: a vectored exception handler in the injected DLL that logs EIP, registers, the faulting address
+  and a stack walk, symbolised from `tools/functions_driving.json`.
+- **Sampling profiler**: *built* - `src/common/xbeProfiler.cpp`, `Profile=on` in `settings.ini` (0.1,
+  "Textures, movies, and a stopped clock"). The original proposal: a thread that every 1 ms suspends the
+  game's threads, reads EIP and histograms by function.
 - Candidate hot spots to expect: `D3DDevice_Begin`/`SetVertexData2f`/`4f`/`End` immediate-mode calls (per
   vertex HLE overhead), `D3DDevice_RunPushBuffer` (EAGL submits precompiled NV2A command streams - see 6.1),
   `BlockOnFence`/`IsBusy`/visibility-result spins, and the sound driver thread contending with CXBX's
@@ -904,7 +971,9 @@ and its usage is a different shape:
   (`eaglrm.o`) may be precompiled NV2A command streams. Find out first how much geometry goes this way
   (xrefs of `D3DDevice_RunPushBuffer` and what builds the buffers); if it is the main path, the backend
   needs an NV2A command interpreter for the subset used, which is the single biggest risk item in this
-  plan. If it is only used for a few effects, it can be reimplemented per call site.
+  plan. If it is only used for a few effects, it can be reimplemented per call site. *(Answered in 0.1,
+  "Push buffers: not the main path": two callers, neither reached on the underwater level; the render
+  methods draw through ordinary D3D8 calls.)*
 - Visibility tests (section 3), fences (`InsertFence`/`BlockOnFence`), `CopyRects`, palettes
   (`CreatePalette2`/`SetPalette` - P8 textures), tiles/scissors/screen-space offset, `PersistDisplay`,
   `SetTile`, `GetGammaRamp`, stencil states, `TextureFactor`, `BumpEnv`, `ColorKey`, `LineWidth`,
@@ -952,10 +1021,11 @@ transition; that is not possible, and it is not a limitation a better loader rem
 
 ## 7. Suggested order of work
 
-Reordered now that the standalone loader exists. Steps 1, 2, 3 and 6 are done, and 4 turned out to need
-nothing (the native timer delivers even ticks and the scheduler's original semantics hold; only the fast
-clock of 2.1 remains); 0.1 says what each bought and what it corrected about the order below. Step 5, the
-symbol tool, has not been needed yet - every function this work touched was named by hand from its callers. The principle that changed: the original order front-loaded
+Reordered now that the standalone loader exists. Steps 1, 2, 3, 6 and 7 are done, and 4 turned out to need
+nothing (the native timer delivers even ticks and the scheduler's original semantics hold; the cycle
+counter of 2.1 was audited and steers nothing); 0.1 says what each bought and what it corrected about the
+order below, and its "What is left" is the current list. Step 5, the symbol tool, has not been needed yet -
+every function this work touched was named by hand from its callers. The principle that changed: the original order front-loaded
 fixes for CXBX's behaviour - scaling the visibility-test result, containing the sound-buffer leak, replacing
 the game's clock - and each of those is a correction for a host that is being removed. Going standalone first
 makes several of them unnecessary rather than merely earlier.

@@ -126,6 +126,11 @@ static uint32_t __stdcall Seam_Direct3D_CreateDevice(uint32_t adapter, uint32_t 
     // particular rate, which would mean no pacing at all - so where it is zero, the video mode's own rate is
     // what it means, and that is the rate Timer_Init already derived.
     uint32_t *parameters = (uint32_t *)presentationParameters;
+    // Word 4 is MultiSampleType. The NV2A's visibility tests count samples, not pixels, so the lens flare's
+    // arithmetic depends on it (RLensFlareManager::DrawFlares, plan section 3).
+    if (parameters != NULL)
+        printf("[d3dSeam] device %ux%u, format 0x%x, multisample type 0x%x, flags 0x%x\n",
+               parameters[0], parameters[1], parameters[2], parameters[4], parameters[10]);
     if (parameters != NULL && parameters[11] == 0 && GameTimerFrequency != 0) {
         parameters[11] = GameTimerFrequency;
         printf("[d3dSeam] no refresh rate in the present parameters; pacing to the game's %u Hz tick\n",
