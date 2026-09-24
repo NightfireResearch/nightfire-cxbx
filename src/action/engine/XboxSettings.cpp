@@ -1,5 +1,6 @@
 #include "XboxSettings.h"
 #include "../actionhelpers.h"
+#include "../../common/standalone.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -84,12 +85,12 @@ static void WriteDefaultSettingsFile() {
         "; Target frame rate. 0 = use the region default (60 for NTSC, 50 for PAL)\n"
         "FPS=0\n"
         "\n"
-        "; cxbx = render through CXBX's Direct3D 8 emulation (the default), d3d9 = the project's own native\n"
-        "; Direct3D 9 backend (work in progress - expect missing rendering while it's being brought up)\n"
+        "; Under CXBX only: cxbx = render through CXBX's Direct3D 8 emulation (the default), d3d9 = the\n"
+        "; project's own Direct3D 9 backend. The standalone action.exe always uses d3d9.\n"
         "GraphicsBackend=cxbx\n"
         "\n"
-        "; cxbx = play audio through CXBX's DirectSound emulation (the default), xaudio2 = the project's own\n"
-        "; native audio backend (work in progress - FMV audio is still played by CXBX either way)\n"
+        "; Under CXBX only: cxbx = play audio through CXBX's DirectSound emulation (the default), xaudio2 =\n"
+        "; the project's own backend. The standalone action.exe always uses xaudio2.\n"
         "AudioBackend=cxbx\n"
         "\n"
         "; xaudio2 backend only: reverb on 3D sounds. The Xbox ran this on its audio DSP; the room here is an\n"
@@ -263,12 +264,24 @@ int Settings_GetFPSOverride(void) {
     return GetSettings()->fpsOverride;
 }
 
+// The two backend keys choose between CXBX's HLE and the project's own backends, and the choice only exists
+// under CXBX. Standalone there is no HLE to fall back to: "cxbx" would send D3D8 into the XBE's own nv2a
+// miniport (the loader stops at KeInitializeDpc) and DirectSound onto the MCPX's registers. So the native
+// backend is forced there, whatever the file says - including a file written before the keys existed, whose
+// defaults are "cxbx".
+static int NativeWhenStandalone(int configured, const char *key, const char *native) {
+    if (configured != 0 || !Xbox_RunningStandalone())
+        return configured;
+    printf("[settings] %s=cxbx needs CXBX, which is not in this process - using %s\n", key, native);
+    return 1;
+}
+
 int Settings_GetGraphicsBackend(void) {
-    return GetSettings()->graphicsBackend;
+    return NativeWhenStandalone(GetSettings()->graphicsBackend, "GraphicsBackend", "d3d9");
 }
 
 int Settings_GetAudioBackend(void) {
-    return GetSettings()->audioBackend;
+    return NativeWhenStandalone(GetSettings()->audioBackend, "AudioBackend", "xaudio2");
 }
 
 bool Settings_GetReverbEnabled(void) {
