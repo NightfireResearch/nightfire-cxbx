@@ -61,9 +61,12 @@ struct XboxIoStatusBlock {
     ULONG  Information;
 };
 
-// CreateDisposition, as NtCreateFile takes it.
+// CreateDisposition, as NtCreateFile takes it. mingw-w64's winnt.h already defines these as macros, with the
+// same values; the Windows SDK's leaves them to winternl.h, which is not included here.
+#ifndef FILE_SUPERSEDE
 enum { FILE_SUPERSEDE = 0, FILE_OPEN = 1, FILE_CREATE = 2, FILE_OPEN_IF = 3,
        FILE_OVERWRITE = 4, FILE_OVERWRITE_IF = 5 };
+#endif
 
 // Information, as the IO_STATUS_BLOCK reports it after a create.
 enum { FILE_SUPERSEDED = 0, FILE_OPENED = 1, FILE_CREATED = 2, FILE_OVERWRITTEN = 3 };
@@ -72,9 +75,11 @@ enum { FILE_SUPERSEDED = 0, FILE_OPENED = 1, FILE_CREATED = 2, FILE_OVERWRITTEN 
 enum { FileDirectoryInformation = 1, FileBasicInformation = 4, FileStandardInformation = 5,
        FilePositionInformation = 14, FileEndOfFileInformation = 20, FileNetworkOpenInformation = 34 };
 
-// Seen in CreateOptions.
+// Seen in CreateOptions. mingw-w64 defines these too.
+#ifndef FILE_DIRECTORY_FILE
 #define FILE_DIRECTORY_FILE     0x00000001u
 #define FILE_NON_DIRECTORY_FILE 0x00000040u
+#endif
 
 static LONG StatusFromLastError(DWORD error) {
     switch (error) {
