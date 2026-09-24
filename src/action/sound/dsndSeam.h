@@ -92,9 +92,9 @@ struct DSI3DL2BUFFER_Xbox {
 #pragma pack(pop)
 
 // ---------------------------------------------------------------------------------------------------------------
-// Backend selection. "AudioBackend=cxbx" in settings.ini (the default) leaves every DSOUND entry point going to
-// CXBX's HLE exactly as before. The native backend is not written yet - the enum and the dispatch exist now so
-// that the bring-up can be driven by the DSound_BackendMissing accounting, the way the D3D9 one was.
+// Backend selection, by host (Settings_GetAudioBackend): under the CXBX launchers every DSOUND entry point goes
+// to CXBX's HLE; under the standalone loader, to the native XAudio2 backend. Entry points the native backend
+// does not cover yet are counted by the DSound_BackendMissing accounting.
 // ---------------------------------------------------------------------------------------------------------------
 enum { AUDIO_BACKEND_CXBX = 0, AUDIO_BACKEND_XAUDIO2 = 1 };
 extern int g_audioBackend;

@@ -45,8 +45,6 @@ struct Settings {
     bool perfLog;      // see PerfLog in the file this writes
     uint32_t language; // raw XC_LANGUAGE-style value: 1=English,2=Japanese,3=German,4=French,5=Spanish,6=Italian
     int fpsOverride;   // 0 = "unset" - callers fall back to their own region-based default
-    int graphicsBackend; // 0 = CXBX's D3D8 HLE (default), 1 = the seam's own D3D9 backend (see Direct3D/d3d9Backend.h)
-    int audioBackend;    // 0 = CXBX's DSOUND HLE (default), 1 = the audio seam's own native backend (see sound/dsndSeam.h)
     bool reverb;         // xaudio2 backend only: run the I3DL2 reverb send. On by default.
     bool mouseLook;        // see engine/mouseLook.h
     float mouseSensitivity;
@@ -85,15 +83,7 @@ static void WriteDefaultSettingsFile() {
         "; Target frame rate. 0 = use the region default (60 for NTSC, 50 for PAL)\n"
         "FPS=0\n"
         "\n"
-        "; Under CXBX only: cxbx = render through CXBX's Direct3D 8 emulation (the default), d3d9 = the\n"
-        "; project's own Direct3D 9 backend. The standalone action.exe always uses d3d9.\n"
-        "GraphicsBackend=cxbx\n"
-        "\n"
-        "; Under CXBX only: cxbx = play audio through CXBX's DirectSound emulation (the default), xaudio2 =\n"
-        "; the project's own backend. The standalone action.exe always uses xaudio2.\n"
-        "AudioBackend=cxbx\n"
-        "\n"
-        "; xaudio2 backend only: reverb on 3D sounds. The Xbox ran this on its audio DSP; the room here is an\n"
+        "; Native audio (action.exe) only: reverb on 3D sounds. The Xbox ran this on its audio DSP; the room here is an\n"
         "; approximation, since the game never sets the room parameters and nothing local can reproduce them.\n"
         "Reverb=on\n"
         "\n"
@@ -136,8 +126,6 @@ static void LoadSettingsFile() {
     g_settings.avRegion = 3; // PAL-I - matched this project's own CXBX setup in testing; see block comment above
     g_settings.language = 1; // English
     g_settings.fpsOverride = 0;
-    g_settings.graphicsBackend = 0;
-    g_settings.audioBackend = 0;
     g_settings.reverb = true;
     g_settings.mouseLook = true;
     g_settings.mouseSensitivity = 1.0f;
@@ -184,10 +172,6 @@ static void LoadSettingsFile() {
             else g_settings.language = 1; // English, also the fallback for anything unrecognised
         } else if (_stricmp(key, "FPS") == 0) {
             g_settings.fpsOverride = atoi(value);
-        } else if (_stricmp(key, "GraphicsBackend") == 0) {
-            g_settings.graphicsBackend = (_stricmp(value, "d3d9") == 0) ? 1 : 0;
-        } else if (_stricmp(key, "AudioBackend") == 0) {
-            g_settings.audioBackend = (_stricmp(value, "xaudio2") == 0) ? 1 : 0;
         } else if (_stricmp(key, "PerfLog") == 0) {
             g_settings.perfLog = (_stricmp(value, "on") == 0 || _stricmp(value, "1") == 0);
         } else if (_stricmp(key, "Reverb") == 0) {
@@ -264,24 +248,18 @@ int Settings_GetFPSOverride(void) {
     return GetSettings()->fpsOverride;
 }
 
-// The two backend keys choose between CXBX's HLE and the project's own backends, and the choice only exists
-// under CXBX. Standalone there is no HLE to fall back to: "cxbx" would send D3D8 into the XBE's own nv2a
-// miniport (the loader stops at KeInitializeDpc) and DirectSound onto the MCPX's registers. So the native
-// backend is forced there, whatever the file says - including a file written before the keys existed, whose
-// defaults are "cxbx".
-static int NativeWhenStandalone(int configured, const char *key, const char *native) {
-    if (configured != 0 || !Xbox_RunningStandalone())
-        return configured;
-    printf("[settings] %s=cxbx needs CXBX, which is not in this process - using %s\n", key, native);
-    return 1;
-}
-
+// The backends are not settings: they follow the host. Under the CXBX launchers the D3D8 and DSOUND calls go to
+// CXBX's HLE, as they always did. Under the standalone loader there is no CXBX in the process to hand them to,
+// so the native backends are the only thing that can run - "cxbx" there sent every call to a kernel import the
+// loader does not have (KeInitializeDpc, ordinal 107) and the game stopped before drawing anything. These were
+// GraphicsBackend and AudioBackend in settings.ini once; a file that still has them is fine, since unknown keys
+// are ignored.
 int Settings_GetGraphicsBackend(void) {
-    return NativeWhenStandalone(GetSettings()->graphicsBackend, "GraphicsBackend", "d3d9");
+    return Xbox_RunningStandalone() ? 1 : 0;
 }
 
 int Settings_GetAudioBackend(void) {
-    return NativeWhenStandalone(GetSettings()->audioBackend, "AudioBackend", "xaudio2");
+    return Xbox_RunningStandalone() ? 1 : 0;
 }
 
 bool Settings_GetReverbEnabled(void) {

@@ -4,8 +4,9 @@
 #include <stdint.h>
 
 // ---------------------------------------------------------------------------------------------------------------
-// The native Direct3D 9 backend for the D3D8 seam (d3dSeam.cpp). Selected by "GraphicsBackend=d3d9" in
-// settings.ini; the default ("cxbx") leaves every D3D8 entry point going to CXBX's HLE exactly as before.
+// The native Direct3D 9 backend for the D3D8 seam (d3dSeam.cpp). Used whenever the game runs under the
+// standalone loader; under the CXBX launchers every D3D8 entry point goes to CXBX's HLE instead (see
+// Settings_GetGraphicsBackend).
 //
 // In d3d9 mode the seam never calls a D3D8 library function: each entry-point macro in d3dSeam.cpp dispatches
 // to the D3D9_* function attached to it here, or - for entry points this backend doesn't implement yet - to
