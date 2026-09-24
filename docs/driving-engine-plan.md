@@ -532,6 +532,22 @@ enough to reach the level: with the movie skipped the load is quick, and a secon
 which also freezes its effects. `D3D9_TraceNote` marks a dumped frame's draw trace, so a hook can bracket
 the draws one game function issues.
 
+**Choosing the mission from the command line** (`src/driving/platform/LaunchOptions.cpp`, 24 September
+2026). `driving.exe -mission N` - or the track name - starts that mission, or that part of one, without
+swapping `psiLaunch.bin` files; `tools/drive_game.ps1 -GameArgs "-mission 4"` passes it through. The
+mission comes from the launch page's `MissionNum` (`0x00244504`), which `MissionNumToString` (`0x000596a0`)
+turns into a track: 1 `paris_mis01`, 2 `uw_mis11`, 3/4/7 `junglea_mis13a`/`jungleb_mis13b`/`junglec_mis13c`
+(Island Infiltration's three parts), 5 `snow1a_mis3`, 6 `snow2a_mis4`, 8 `snow2a_race`. A part is just a
+number: winning one reads `CHAIN_NEXT_MISSION`/`CHAIN_NEXT_MISSION_NAME` from the level's attributes
+(`SMissionManager::Win`, `0x000b8574`) and relaunches with those, so `-mission 4` is exactly where the chain
+out of part one lands. The option only changes the page as it is read (a clean built-in hand-over stands in
+when there is no file, and a between-parts page's "LOADER READY" second-boot marker is cleared), and
+`-difficulty 1..4` does the same for the difficulty. Every other `-`/`+` flag goes to the game's own `main`,
+which knows `-ntsc`, `-pal`, `-pal60`, `±streams` and `-T<track>`; `main` frees its `argv`, so the startup
+builds it in the XBE's process heap as XAPI did. The loader's positional XBE and DLL come first and end at the
+first option. Verified: `-mission 6 -pal` over the underwater page loads `snow2a_mis4`, and
+`-mission jungleb_mis13b` with no launch file loads the jungle's second part to its opening cutscene.
+
 ### Sound
 
 The seam has XAudio2 behind it now (`src/driving/sound/xaudio2Driving.cpp`), and it is a different shape
@@ -647,7 +663,8 @@ Roughly in order of how much a player would notice:
    resolution work glanced at the snow level). The others will reach shaders, texture modes, sound formats
    and D3D8 entry points this one does not, and the logs are built to name them; the relaunch between
    mission parts is new and wants exercising on each. This is most of the remaining work, and the items
-   below are largely what it is expected to turn up.
+   below are largely what it is expected to turn up. `-mission 1` to `8` reaches each one headlessly (see
+   "Choosing the mission from the command line" above).
 2. **The D3D8 entry points still stubbed.** About thirty that EAGL could call return zero and draw nothing:
    `RunPushBuffer` (above), `SetTransform`, `SelectVertexShader` and `LoadVertexShader`, `CopyRects`,
    `SetScissors`, `SetRenderState_TextureFactor`, `SetTextureState_TexCoordIndex` and `ColorKeyColor`,

@@ -6,6 +6,7 @@
 
 #include "../main.h"
 #include "XboxTimer.h"
+#include "LaunchOptions.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The driving engine's process startup, as run by the standalone loader - step 2 of docs/driving-engine-plan.md
@@ -48,6 +49,9 @@
 // game's own free() understands.
 #define XapiCreateHeap  ((void *(__stdcall *)(unsigned flags, void *base, unsigned reserve, \
                                               unsigned commit, void *lock, void *parameters))0x001118ddu)
+
+// Its allocator, RtlAllocateHeap(heap, flags, size): what XAPI's LocalAlloc (0x0010fe33) calls.
+#define XapiAllocateHeap ((void *(__stdcall *)(void *heap, unsigned flags, unsigned size))0x00111d01u)
 
 // Where XapiInitProcess leaves the process heap handle, and the table of initialisers it runs afterwards.
 #define ProcessHeapHandle (*(void **)0x0024b218u)
@@ -381,6 +385,33 @@ void Inject_XboxStartup(void) {
     }
 }
 
+// The game's main frees argv when it has parsed it (0x0005a353, the C runtime's free, into the process heap) -
+// on the console XAPI built it there from the launch data's command line. So it is built there here too: one
+// block holding the pointers and then the strings, which is what that one free releases. NULL when there is
+// nothing to pass, which main takes as "no arguments" and does not free.
+static char **BuildArgvInProcessHeap(int argc, char **source) {
+    if (argc <= 0 || source == NULL)
+        return NULL;
+    unsigned size = (unsigned)(argc + 1) * sizeof(char *);
+    for (int i = 0; i < argc; i++)
+        size += (unsigned)strlen(source[i]) + 1;
+
+    char **argv = (char **)XapiAllocateHeap(ProcessHeapHandle, 0, size);
+    if (argv == NULL) {
+        printf("[startup] could not allocate the game's argv - starting it without arguments\n");
+        return NULL;
+    }
+    char *text = (char *)(argv + argc + 1);
+    for (int i = 0; i < argc; i++) {
+        size_t length = strlen(source[i]) + 1;
+        memcpy(text, source[i], length);
+        argv[i] = text;
+        text += length;
+    }
+    argv[argc] = NULL;
+    return argv;
+}
+
 DWORD WINAPI mainXapiStartup(LPVOID unused) {
     (void)unused;
 
@@ -400,8 +431,11 @@ DWORD WINAPI mainXapiStartup(LPVOID unused) {
 
     // Through preMain rather than straight to the game's main at 0x0005a1b0, so that a standalone run logs its
     // arguments exactly as a CXBX-hosted one does - there the same call site is patched to reach it, see
-    // src/inject_driving.cpp. The game's main takes argc and argv, and does not return.
-    preMain(0, NULL);
+    // src/inject_driving.cpp. The game's main takes argc and argv, and does not return; they are the flags on
+    // driving.exe's command line that are the game's own (-pal, -T<track> and so on, see LaunchOptions.cpp).
+    int argc = LaunchOptions_GameArgc();
+    char **argv = BuildArgvInProcessHeap(argc, LaunchOptions_GameArgv());
+    preMain(argv != NULL ? argc : 0, argv);
 
     printf("[startup] main returned - it is not supposed to\n");
     fflush(stdout);

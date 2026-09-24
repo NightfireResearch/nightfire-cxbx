@@ -7,6 +7,7 @@
 #include "driving/platform/XboxStartup.h"
 #include "driving/gfx/d3dSeam.h"
 #include "driving/platform/XboxInput.h"
+#include "driving/platform/LaunchOptions.h"
 #include "driving/sound/dsndSeam.h"
 #include "common/launchInfo.h"
 
@@ -125,6 +126,7 @@ void Inject()
    */
   WriteJmpTo(0x0010f0db, (size_t)&XGetLaunchInfo);
   WriteJmpTo(0x0010f186, (size_t)&XLaunchNewImageA);
+  Inject_LaunchOptions();   // -mission and friends, applied to that page as it is read
 
   // Logging goes thrugh some weird paths... 001d1bac is a table of possible outputs - console, debugger, and file
   WriteJmpTo(0x000e2e30, (size_t)&dbg_printf);

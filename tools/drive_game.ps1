@@ -81,6 +81,11 @@ param(
     # "teleport\] dumping frame" stops once the frame is asked for (plus a second for it to be written).
     [string]$StopPattern = "",
 
+    # Arguments for the game's executable. For the driving engine, "-mission 6" (or "-mission snow2a_mis4")
+    # starts that mission - or part of one - with no psiLaunch.bin juggling; see
+    # src/driving/platform/LaunchOptions.cpp for the list and the other options.
+    [string]$GameArgs = "",
+
     [string]$Exe = "Release\action.exe",
     [string]$WorkingDirectory = "Release",
     [string]$LogPath = "$env:TEMP\nightfire-drive.log"
@@ -106,8 +111,10 @@ Remove-Item $LogPath -ErrorAction SilentlyContinue
 if ($Teleport -ne "") { $env:NIGHTFIRE_TELEPORT = $Teleport } else { Remove-Item Env:NIGHTFIRE_TELEPORT -ErrorAction SilentlyContinue }
 if ($GameHold -ne "") { $env:NIGHTFIRE_HOLD = $GameHold } else { Remove-Item Env:NIGHTFIRE_HOLD -ErrorAction SilentlyContinue }
 if ($DumpAfterMs -ge 0) { $env:NIGHTFIRE_DUMP_MS = "$DumpAfterMs" } else { Remove-Item Env:NIGHTFIRE_DUMP_MS -ErrorAction SilentlyContinue }
-$proc = Start-Process -FilePath $exePath -WorkingDirectory $workDir -PassThru `
-    -RedirectStandardOutput $LogPath -RedirectStandardError "$LogPath.err"
+$startArgs = @{ FilePath = $exePath; WorkingDirectory = $workDir; PassThru = $true
+                RedirectStandardOutput = $LogPath; RedirectStandardError = "$LogPath.err" }
+if ($GameArgs -ne "") { $startArgs.ArgumentList = $GameArgs }
+$proc = Start-Process @startArgs
 Remove-Item Env:NIGHTFIRE_TELEPORT, Env:NIGHTFIRE_HOLD, Env:NIGHTFIRE_DUMP_MS -ErrorAction SilentlyContinue
 
 Start-Sleep -Milliseconds $StartupWaitMs

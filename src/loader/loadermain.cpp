@@ -478,15 +478,26 @@ int main(int argc, char **argv) {
     AddVectoredExceptionHandler(1, ReportException);
 
     // Both arguments are optional and positional: the XBE to map, then the DLL carrying its patches. They
-    // exist so that either engine's XBE can be run under either loader without a rebuild.
+    // exist so that either engine's XBE can be run under either loader without a rebuild. They come first: the
+    // first argument beginning with '-' or '+' ends them, and it and everything after it are the engine's (the
+    // driving engine's "-mission 6", say, in src/driving/platform/LaunchOptions.cpp), which reads the command
+    // line for itself.
+    const char *positional[2] = { NULL, NULL };
+    int positionals = 0;
+    for (int i = 1; i < argc && positionals < 2; i++) {
+        if (argv[i][0] == '-' || argv[i][0] == '+')
+            break;
+        positional[positionals++] = argv[i];
+    }
+
     char xbePath[MAX_PATH];
-    if (argc > 1)
-        snprintf(xbePath, sizeof(xbePath), "%s", argv[1]);
+    if (positional[0] != NULL)
+        snprintf(xbePath, sizeof(xbePath), "%s", positional[0]);
     else if (!FindXbe(xbePath, sizeof(xbePath)))
         return 1;
 
     char injectDll[MAX_PATH];
-    snprintf(injectDll, sizeof(injectDll), "%s", argc > 2 ? argv[2] : LOADER_INJECT_DLL);
+    snprintf(injectDll, sizeof(injectDll), "%s", positional[1] != NULL ? positional[1] : LOADER_INJECT_DLL);
 
     XbeImage image;
     if (!Xbe_Load(xbePath, &image))

@@ -1,3 +1,4 @@
+#include "launchInfo.h"
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,13 +31,24 @@
 #define LAUNCH_FILE "psiLaunch.bin"
 #define LAUNCH_WORDS 0x300
 
+static LaunchPageHook g_pageHook = NULL;
+
+void LaunchInfo_SetPageHook(LaunchPageHook hook) {
+    g_pageHook = hook;
+}
+
 // Replaces XAPILIB::XGetLaunchInfo
 int __stdcall XGetLaunchInfo(int *launchDataType, void *data) {
     printf("[launch] XGetLaunchInfo: data at 0x%08x\n", (unsigned)(uintptr_t)data);
 
     FILE *file = fopen(LAUNCH_FILE, "rb");
-    if (file == NULL)
-        return 0x490;   // ERROR_NOT_FOUND: no launch data page
+    if (file == NULL) {
+        memset(data, 0, LAUNCH_WORDS * 4);
+        if (g_pageHook == NULL || !g_pageHook(data, false))
+            return 0x490;   // ERROR_NOT_FOUND: no launch data page
+        *launchDataType = 0;
+        return 0;
+    }
 
     fseek(file, 0, SEEK_END);
     long length = ftell(file);
@@ -44,6 +56,8 @@ int __stdcall XGetLaunchInfo(int *launchDataType, void *data) {
     size_t words = fread(data, 4, LAUNCH_WORDS, file);
     fclose(file);
     printf("[launch] read %ld bytes of launch data from " LAUNCH_FILE " (%u words taken)\n", length, (unsigned)words);
+    if (g_pageHook != NULL)
+        g_pageHook(data, true);
 
     // LDT_TITLE: launched by another title. Values 2 and 3 (dashboard, debugger command line) make the games
     // take other paths - the action engine fails out on anything non-zero, the driving engine treats 3 as a
