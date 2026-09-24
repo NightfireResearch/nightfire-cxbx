@@ -228,6 +228,7 @@ add_library(drivinginject SHARED
   src/driving/memory.cpp
   src/driving/EventManager.cpp
   src/driving/Scheduler.cpp
+  src/driving/devtools/Teleport.cpp
   src/driving/engine/FileNameList.cpp
   src/driving/engine/UFileLoader.cpp
   src/common/xboxPath.cpp

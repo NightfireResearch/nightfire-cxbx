@@ -166,8 +166,10 @@ void Inject()
   // Inject a whole new working version of the scheduler
   WriteJmpTo(0x0005ba80, GetFunctionAddress(&Scheduler::Run));
 
-  // Lens flare is bugged. This just replaces the call to DrawFlares with a NOP
-  FillBytes(0x0009e6c9, NOP, 13);
+  // DrawFlares (called at 0x0009e6c9) used to be NOPped out here, when its flare came out at the wrong scale
+  // under CXBX. Its only flare is the sun (the sky draw, 0x000a6690, is the one thing that adds to it), and the
+  // D3D9 backend scales visibility counts back to 640x480, so it runs again. The lights on mines, doors and cars
+  // are glares, a separate path that never depended on this - see d3d9Backend.cpp's quad lists.
 
   /*
    * Function Patching

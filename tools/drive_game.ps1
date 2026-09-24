@@ -62,6 +62,25 @@ param(
     # load takes a different time on every run.
     [string]$HoldAfterPattern = "",
 
+    # Keys to press after the hold, the same way as Keys - "f8" to record where a drive ended up, say.
+    [string[]]$AfterHoldKeys = @(),
+
+    # Driving engine only: put the player's car at "x,y,z,dx,dy,dz" once it has been in the level for
+    # TeleportDelayMs (settings.ini, default 3 s), then dump that frame TeleportDumpMs later (default 2 s). The
+    # places come from pressing F8 in-game, which prints them and appends them to Release/teleports.txt. Passed
+    # to the game as NIGHTFIRE_TELEPORT; see src/driving/devtools/Teleport.cpp.
+    [string]$Teleport = "",
+
+    # Driving engine only, and both independent of window focus and of any real pad: hold "brake" or
+    # "accelerate" from inside the game for the whole run (NIGHTFIRE_HOLD), and/or dump one frame this many ms
+    # after the car appears without teleporting it (NIGHTFIRE_DUMP_MS). See src/driving/platform/XboxInput.cpp.
+    [string]$GameHold = "",
+    [int]$DumpAfterMs = -1,
+
+    # End the run as soon as the game's log matches this, instead of waiting out TailWaitMs. With -Teleport,
+    # "teleport\] dumping frame" stops once the frame is asked for (plus a second for it to be written).
+    [string]$StopPattern = "",
+
     [string]$Exe = "Release\action.exe",
     [string]$WorkingDirectory = "Release",
     [string]$LogPath = "$env:TEMP\nightfire-drive.log"
@@ -83,8 +102,13 @@ $exePath = (Resolve-Path $Exe -ErrorAction Stop).Path
 $workDir = (Resolve-Path $WorkingDirectory -ErrorAction Stop).Path
 Remove-Item $LogPath -ErrorAction SilentlyContinue
 
+# Inherited by the game; cleared again below so that it does not outlive this run in the calling shell.
+if ($Teleport -ne "") { $env:NIGHTFIRE_TELEPORT = $Teleport } else { Remove-Item Env:NIGHTFIRE_TELEPORT -ErrorAction SilentlyContinue }
+if ($GameHold -ne "") { $env:NIGHTFIRE_HOLD = $GameHold } else { Remove-Item Env:NIGHTFIRE_HOLD -ErrorAction SilentlyContinue }
+if ($DumpAfterMs -ge 0) { $env:NIGHTFIRE_DUMP_MS = "$DumpAfterMs" } else { Remove-Item Env:NIGHTFIRE_DUMP_MS -ErrorAction SilentlyContinue }
 $proc = Start-Process -FilePath $exePath -WorkingDirectory $workDir -PassThru `
     -RedirectStandardOutput $LogPath -RedirectStandardError "$LogPath.err"
+Remove-Item Env:NIGHTFIRE_TELEPORT, Env:NIGHTFIRE_HOLD, Env:NIGHTFIRE_DUMP_MS -ErrorAction SilentlyContinue
 
 Start-Sleep -Milliseconds $StartupWaitMs
 
@@ -115,18 +139,12 @@ function Focus-Game([IntPtr]$h) {
     return ([DriveGameNative]::GetForegroundWindow() -eq $h)
 }
 
-if ($hwnd -eq [IntPtr]::Zero) {
-    Write-Output "!! no game window found - keys would go to whatever is in front, so not sending any"
-} else {
-    if (-not (Focus-Game $hwnd)) {
-        Write-Output "!! could not bring the game to the foreground; its focus check will ignore the keys"
-    }
-
-    # Called as "powershell -File drive_game.ps1 -Keys enter,enter" - which is how anything other than a
-    # PowerShell prompt has to call it - the whole list arrives as one string, because -File does not parse
-    # arguments the way the shell does. Splitting here makes both spellings work.
-    $keyList = @($Keys | ForEach-Object { $_ -split ',' } | Where-Object { $_ -ne '' })
-
+# Presses each key in turn, BetweenKeysMs apart.
+# Called as "powershell -File drive_game.ps1 -Keys enter,enter" - which is how anything other than a
+# PowerShell prompt has to call it - the whole list arrives as one string, because -File does not parse
+# arguments the way the shell does. Splitting here makes both spellings work.
+function Press-Keys([string[]]$list) {
+    $keyList = @($list | ForEach-Object { $_ -split ',' } | Where-Object { $_ -ne '' })
     foreach ($key in $keyList) {
         $key = $key.Trim()
         if ($proc.HasExited) { Write-Output "!! exited before key '$key'"; break }
@@ -140,6 +158,8 @@ if ($hwnd -eq [IntPtr]::Zero) {
             "left"   { 0x25 }
             "right"  { 0x27 }
             "space"  { 0x20 }
+            "f8"     { 0x77 }   # driving engine: record the car's place (src/driving/devtools/Teleport.cpp)
+            "f9"     { 0x78 }   # driving engine: teleport back to it
             default  {
                 if ($key.Length -ne 1) { throw "unknown key '$key' - see the key names in this script's header" }
                 [byte][char]$key.ToUpper()
@@ -153,6 +173,16 @@ if ($hwnd -eq [IntPtr]::Zero) {
         [DriveGameNative]::keybd_event([byte]$vk, 0, 2, [IntPtr]::Zero)   # 2 = KEYEVENTF_KEYUP
         Start-Sleep -Milliseconds $BetweenKeysMs
     }
+}
+
+if ($hwnd -eq [IntPtr]::Zero) {
+    Write-Output "!! no game window found - keys would go to whatever is in front, so not sending any"
+} else {
+    if (-not (Focus-Game $hwnd)) {
+        Write-Output "!! could not bring the game to the foreground; its focus check will ignore the keys"
+    }
+
+    Press-Keys $Keys
 }
 
 if ($HoldKey -ne "" -and $HoldMs -gt 0 -and -not $proc.HasExited) {
@@ -174,7 +204,26 @@ if ($HoldKey -ne "" -and $HoldMs -gt 0 -and -not $proc.HasExited) {
     Start-Sleep -Milliseconds $HoldMs
     [DriveGameNative]::keybd_event([byte]$hold, 0, 2, [IntPtr]::Zero)
 }
-if (-not $proc.HasExited) { Start-Sleep -Milliseconds $TailWaitMs }
+if ($AfterHoldKeys.Count -gt 0 -and -not $proc.HasExited -and $hwnd -ne [IntPtr]::Zero) {
+    Start-Sleep -Milliseconds $BetweenKeysMs
+    Press-Keys $AfterHoldKeys
+}
+if (-not $proc.HasExited) {
+    if ($StopPattern -ne "") {
+        $deadline = (Get-Date).AddMilliseconds($TailWaitMs)
+        while ((Get-Date) -lt $deadline -and -not $proc.HasExited) {
+            $tail = Get-Content $LogPath -Tail 40 -ErrorAction SilentlyContinue
+            if ($tail -and ($tail | Select-String -Pattern $StopPattern -Quiet)) {
+                Write-Output ">> log matched '$StopPattern'"
+                Start-Sleep -Milliseconds 1000
+                break
+            }
+            Start-Sleep -Milliseconds 500
+        }
+    } else {
+        Start-Sleep -Milliseconds $TailWaitMs
+    }
+}
 
 if ($proc.HasExited) {
     Write-Output "=== the game exited, code $($proc.ExitCode) ==="

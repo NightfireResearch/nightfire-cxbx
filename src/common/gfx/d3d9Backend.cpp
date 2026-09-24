@@ -854,6 +854,12 @@ static uint32_t DumpEvery(void) {
 }
 static uint32_t g_dumpFrame = 0;   // the frame currently being dumped (0 = none)
 static uint32_t g_burstRemaining = 0;   // frames left in a DumpBurst; the machinery is further down
+static volatile bool g_dumpRequested = false;   // D3D9_RequestDump: the next frame is dumped, once
+
+uint32_t D3D9_RequestDump(void) {
+    g_dumpRequested = true;
+    return g_frameCount + 1;
+}
 static uint32_t DumpBurst(void);
 
 // DumpBurst=N in settings.ini: from the first frame that draws a level's worth of indexed geometry, the next
@@ -1103,7 +1109,8 @@ void D3D9_Swap(uint32_t type) {
                 g_frameCount + 1, DumpBurst() - g_burstRemaining);
     }
     g_frameIndexedDraws = 0;
-    if (DumpEvery() > 0 && (g_frameCount + 1) % DumpEvery() == 0) {
+    if (g_dumpRequested || (DumpEvery() > 0 && (g_frameCount + 1) % DumpEvery() == 0)) {
+        g_dumpRequested = false;
         g_dumpFrame = g_frameCount + 1; // the next frame gets dumped
         g_dumpRtCount = 0;
     }
@@ -2511,9 +2518,9 @@ static bool PrepareShaderDraw(bool bindStreams, uint32_t firstVertex, uint32_t v
 // A per-draw trace of the frame being dumped (see DumpEvery): which shader, which streams with which
 // strides, the vertex range, the extents of the positions the draw actually reads out of the game's memory,
 // and the first constants. It is what tells a wrong vertex layout from a wrong transform.
-static void TraceDraw(const char *kind, uint32_t primType, uint32_t count, uint32_t first, uint32_t limit) {
+static FILE *TraceFile(void) {
     if (g_dumpFrame == 0)
-        return;
+        return NULL;
     static FILE *f = NULL;
     static uint32_t openedFor = 0;
     if (f == NULL || openedFor != g_dumpFrame) {
@@ -2523,6 +2530,17 @@ static void TraceDraw(const char *kind, uint32_t primType, uint32_t count, uint3
         f = fopen(name, "w");
         openedFor = g_dumpFrame;
     }
+    return f;
+}
+
+void D3D9_TraceNote(const char *note) {
+    FILE *f = TraceFile();
+    if (f != NULL)
+        fprintf(f, "-- %s\n", note);
+}
+
+static void TraceDraw(const char *kind, uint32_t primType, uint32_t count, uint32_t first, uint32_t limit) {
+    FILE *f = TraceFile();
     if (f == NULL)
         return;
     fprintf(f, "d%03u %s prim %u count %u vertices [%u, %u) shader %d pixel shader %d\n", g_perDrawIndex, kind, primType,
@@ -2627,6 +2645,12 @@ static bool XboxPrimitiveToD3D(uint32_t xboxType, uint32_t vertexCount, D3DPRIMI
         case 5: *type = D3DPT_TRIANGLELIST;  *primCount = vertexCount / 3; break;
         case 6: *type = D3DPT_TRIANGLESTRIP; *primCount = vertexCount > 2 ? vertexCount - 2 : 0; break;
         case 7: *type = D3DPT_TRIANGLEFAN;   *primCount = vertexCount > 2 ? vertexCount - 2 : 0; break;
+        // D3D9 dropped the quad primitives the NV2A has. A quad list is drawn as a triangle list through indices
+        // that split each quad (0,1,2)(0,2,3) - see QuadListIndices; a quad strip's vertex order is already a
+        // triangle strip's, and a convex polygon is a fan.
+        case 8: *type = D3DPT_TRIANGLELIST;  *primCount = (vertexCount / 4) * 2; break;
+        case 9: *type = D3DPT_TRIANGLESTRIP; *primCount = vertexCount > 3 ? ((vertexCount - 2) / 2) * 2 : 0; break;
+        case 10: *type = D3DPT_TRIANGLEFAN;  *primCount = vertexCount > 2 ? vertexCount - 2 : 0; break;
         default: return false;
     }
     return *primCount > 0;
@@ -2646,34 +2670,61 @@ static void ReleaseIndexRing(void) {
     g_indexRingPos = 0;
 }
 
+// Reserves count indices in the ring and locks them; *start is where they begin, for DrawIndexedPrimitive.
+static uint16_t *LockIndexRing(uint32_t count, uint32_t *start) {
+    if (count == 0 || count > INDEX_RING_COUNT)
+        return NULL;
+    if (g_indexRing == NULL && FAILED(g_device->CreateIndexBuffer(INDEX_RING_COUNT * 2, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &g_indexRing, NULL))) {
+        D3D9_BackendMissing("DrawIndexedVertices: index ring buffer creation failed");
+        return NULL;
+    }
+    DWORD lockFlags = D3DLOCK_NOOVERWRITE;
+    if (g_indexRingPos + count > INDEX_RING_COUNT) { g_indexRingPos = 0; lockFlags = D3DLOCK_DISCARD; g_indexRingWrapFrame = g_frameCount; }
+    void *dst = NULL;
+    if (FAILED(g_indexRing->Lock(g_indexRingPos * 2, count * 2, &dst, lockFlags)))
+        return NULL;
+    *start = g_indexRingPos;
+    g_indexRingPos += count;
+    return (uint16_t*)dst;
+}
+
+// A quad list's indices (the game's own, or 0,1,2,... for a non-indexed draw when source is NULL) as the
+// triangle list D3D9 can draw: each quad a,b,c,d becomes a,b,c a,c,d, the split the immediate path uses.
+static void QuadListIndices(uint16_t *dst, const uint16_t *source, uint32_t firstVertex, uint32_t vertexCount) {
+    for (uint32_t q = 0; q + 3 < vertexCount; q += 4) {
+        uint16_t v[4];
+        for (int k = 0; k < 4; k++)
+            v[k] = source != NULL ? source[q + k] : (uint16_t)(firstVertex + q + k);
+        dst[0] = v[0]; dst[1] = v[1]; dst[2] = v[2]; dst[3] = v[0]; dst[4] = v[2]; dst[5] = v[3];
+        dst += 6;
+    }
+}
+
 void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, const void *pIndexData) {
     g_statDraws++; g_statDrawsIndexed++; g_statVertices += vertexCount;
     g_frameIndexedDraws++;
     if (g_device == NULL)
         return;
     D3DPRIMITIVETYPE type; UINT primCount;
-    if (!XboxPrimitiveToD3D(primitiveType, vertexCount, &type, &primCount) || vertexCount > INDEX_RING_COUNT)
+    if (!XboxPrimitiveToD3D(primitiveType, vertexCount, &type, &primCount))
         return;
-    if (g_indexRing == NULL && FAILED(g_device->CreateIndexBuffer(INDEX_RING_COUNT * 2, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &g_indexRing, NULL))) {
-        D3D9_BackendMissing("DrawIndexedVertices: index ring buffer creation failed");
-        return;
-    }
-    DWORD lockFlags = D3DLOCK_NOOVERWRITE;
-    if (g_indexRingPos + vertexCount > INDEX_RING_COUNT) { g_indexRingPos = 0; lockFlags = D3DLOCK_DISCARD; g_indexRingWrapFrame = g_frameCount; }
-    void *dst = NULL;
-    if (FAILED(g_indexRing->Lock(g_indexRingPos * 2, vertexCount * 2, &dst, lockFlags)))
+    bool quads = (primitiveType == 8);
+    uint32_t ringCount = quads ? primCount * 3 : vertexCount;
+    uint32_t start = 0;
+    uint16_t *dst = LockIndexRing(ringCount, &start);
+    if (dst == NULL)
         return;
     const uint16_t *srcIndices = (const uint16_t*)pIndexData;
     uint16_t minIndex = 0xFFFF, maxIndex = 0;
     for (uint32_t i = 0; i < vertexCount; i++) {
         uint16_t v = srcIndices[i];
-        ((uint16_t*)dst)[i] = v;
+        if (!quads) dst[i] = v;
         if (v < minIndex) minIndex = v;
         if (v > maxIndex) maxIndex = v;
     }
+    if (quads)
+        QuadListIndices(dst, srcIndices, 0, vertexCount);
     g_indexRing->Unlock();
-    uint32_t start = g_indexRingPos;
-    g_indexRingPos += vertexCount;
     int baseVertex = 0;
     CheckDrawVertices("indexed", primitiveType, vertexCount, minIndex, (uint32_t)maxIndex + 1);
     TraceDraw("indexed", primitiveType, vertexCount, minIndex, (uint32_t)maxIndex + 1);
@@ -2684,7 +2735,9 @@ void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, cons
     DumpAfterDraw();
 }
 
-// Non-indexed draws from a bound stream: the point-sprite overlay (reticle etc.) is the only user.
+// Non-indexed draws from a bound stream: the point-sprite overlay (reticle etc.), and quad lists - the driving
+// engine's glares (RGlareManager::DrawGlares through the BondPostGlare render method), which draw as a triangle
+// list through generated indices because D3D9 has no quads.
 void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t vertexCount) {
     g_statDraws++; g_statDrawsDirect++; g_statVertices += vertexCount;
     if (g_device == NULL)
@@ -2697,6 +2750,18 @@ void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t ve
     TraceDraw("direct", primitiveType, vertexCount, startVertex, startVertex + vertexCount);
     if (!PrepareShaderDraw(true, startVertex, startVertex + vertexCount, &baseVertex))
         return;
+    if (primitiveType == 8) {
+        uint32_t start = 0;
+        uint16_t *dst = startVertex + vertexCount <= 0x10000 ? LockIndexRing(primCount * 3, &start) : NULL;
+        if (dst == NULL)
+            return;
+        QuadListIndices(dst, NULL, startVertex, vertexCount);
+        g_indexRing->Unlock();
+        g_device->SetIndices(g_indexRing);
+        g_device->DrawIndexedPrimitive(type, baseVertex, startVertex, vertexCount, start, primCount);
+        DumpAfterDraw();
+        return;
+    }
     bool points = (type == D3DPT_POINTLIST);
     if (points) {
         g_device->SetRenderState(D3DRS_POINTSPRITEENABLE, TRUE);
@@ -2897,6 +2962,15 @@ void D3D9_DrawVerticesUP(uint32_t primitiveType, uint32_t vertexCount, void *pVe
     int baseVertex = 0;
     if (!PrepareShaderDraw(false, 0, 0, &baseVertex))
         return;
+    if (primitiveType == 8) {   // any other quad list: split into triangle pairs, as the stream paths do
+        static uint16_t indices[0x4000 * 6 / 4];
+        if (vertexCount > 0x4000)
+            vertexCount = 0x4000;
+        QuadListIndices(indices, NULL, 0, vertexCount);
+        g_device->DrawIndexedPrimitiveUP(type, 0, vertexCount, (vertexCount / 4) * 2, indices, D3DFMT_INDEX16,
+                                         pVertexData, stride);
+        return;
+    }
     g_device->DrawPrimitiveUP(type, primCount, pVertexData, stride);
 }
 
@@ -3047,13 +3121,14 @@ bool D3D9_IsStandInSurface(const void *pSurface) {
 // ---------------------------------------------------------------------------------------------------------------
 // Visibility tests.
 //
-// The driving engine's lens flares - the red lights on mines, projectiles and door nodes among them - are
-// gated by these. RLensFlareManager::TestFlares (0x0009e720) draws a small depth-tested quad at each light
-// between BeginVisibilityTest and EndVisibilityTest(index), with the index cycling through sixteen; DrawFlares
-// (0x0009e540) asks for the count the next frame, spinning until it is ready, and adds a glare scaled by
-// (visible pixels - 256) / 256. The NV2A counts pixels that passed the depth test; a D3D9 occlusion query
-// counts the same thing, and because the backbuffer is the game's own 640x480 the count is what the console
-// would have got - the resolution scaling that broke this under CXBX (plan section 3) does not arise.
+// The driving engine's lens flare - the sun's, which is the only thing its RLensFlareManager is ever given (by
+// the sky draw, 0x000a6690) - is gated by these. The lights on cars, mines and doors are not: they are glares,
+// drawn as quad lists with no test (see QuadListIndices). RLensFlareManager::TestFlares (0x0009e720) draws a
+// small depth-tested quad at the flare between BeginVisibilityTest and EndVisibilityTest(index), with the index
+// cycling through sixteen; DrawFlares (0x0009e540) asks for the count the next frame, spinning until it is
+// ready, and adds a glare scaled by (visible pixels - 256) / 256. The NV2A counts pixels that passed the depth
+// test and a D3D9 occlusion query counts the same thing; at a RenderWidth/RenderHeight above 640x480 the count
+// is divided back down (D3D9_GetVisibilityTestResult), which is the correction CXBX never made (plan section 3).
 //
 // Begin has no index - it only arrives at End - so a query is taken from a pool at Begin and filed under its
 // index at End, replacing (and recycling) whatever was there. Asking for a result before it is ready gets

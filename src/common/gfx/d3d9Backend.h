@@ -131,4 +131,14 @@ void D3D9_BeginVisibilityTest(void);
 void D3D9_EndVisibilityTest(uint32_t index);
 uint32_t D3D9_GetVisibilityTestResult(uint32_t index, uint32_t *result, uint64_t *timeStamp);
 
+// Dumps the next whole frame - backbuffer, draw trace and bound textures - exactly as DumpEvery would, and
+// writes it as d3d9_dump_frame_<frame>.bmp and d3d9_dump_frame.bmp. Returns the frame number it will carry,
+// so a caller can name the file in its own log. For debug tools that know when the interesting frame is
+// (the driving engine's teleport, src/driving/devtools/Teleport.cpp) rather than dumping on a fixed interval.
+uint32_t D3D9_RequestDump(void);
+
+// Writes "-- note" into the frame being dumped's draw trace (nothing when no frame is being dumped), so a debug
+// hook can mark which of the traced draws came from the game function it wraps.
+void D3D9_TraceNote(const char *note);
+
 #endif // D3D9BACKEND_H_

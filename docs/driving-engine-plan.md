@@ -491,17 +491,44 @@ a survey of the XBE for other physical-ness tests (including the write-combined 
 and the seam's own allocations moved into the alias too so that there is one convention. Section 0's
 warning about the alias was right; this is where it bit.
 
-**The lights are lens flares, and the flares are visibility tests - implemented, not yet seen working.**
-The red lights on mines, projectiles and door nodes never drew because `RLensFlareManager` gates every
-flare on a visibility test the seam was stubbing (section 3 below has the mechanism). They are D3D9
-occlusion queries now, one per test index,
-taken from a pool at `BeginVisibilityTest` and filed under the index at `EndVisibilityTest`;
-`GetVisibilityTestResult` answers `D3DERR_TESTINCOMPLETE` until the query has data, which is what the game's
-wrapper spins on, and asks D3D9 to flush so the spin is short. Because the backbuffer is the game's own
-640x480, the pixel count is the console's, and the resolution scaling that broke this under CXBX does not
-arise. The `[perf]` line counts the tests per window. No run has yet had a light in view to test against -
-the earlier long run first reached these calls a minute into the level, after a scripted "openwater"
-event - so whether the lights now draw is unverified; that is left for play-testing.
+**The lights were glares, and the glares were quad lists the backend dropped.** The red and blue lights -
+the car's brake lights, the lamps round the laser-grid door, the emitters on its lasers, the fuse box behind
+it - never drew, and the long-standing guess was that they were lens flares waiting on visibility tests.
+They are not. Measured on 24 September 2026, with probes on each function in the chain and the teleport
+below to stand in front of the door every run:
+
+- *Lens flares are only the sun.* `RLensFlareManager` is given exactly one flare a frame, by the sky draw
+  (`0x000a6690`, from its two world-render callers), 1500 units out along the light manager's sun angle.
+  Underwater there is no sky, so no flare and no visibility test - the `[perf]` line's zero is correct.
+  `TestFlares`/`DrawFlares` and the occlusion queries behind them stand as written (section 3), and are
+  unverified until a level with a sky is looked at.
+- *The lights are model glares.* A model node of type 2 with flag bit 0 is a glare point: as the model draws,
+  `DrawGroupDrawInstance` (`0x0007dcb0`) hands it to `FUN_000a9aa0`, which applies the node's blink
+  (`FUN_000a99a0` - the triangle and sawtooth brightness the fuse box has), a facing test for directional
+  ones (brake lights face backwards) and a range limit, and queues it with `RGlareManager`. `DrawEffects`
+  then calls `DrawGlares` (`0x000aa5d0`), which builds two camera-facing quads per glare and draws them
+  through the `BondPostGlare` render method - whose program ends in `D3DDevice_DrawVertices` with primitive
+  8, a quad list. Nothing about them is gated on a visibility test.
+- *And the backend had no quads.* D3D9 has no quad primitive; the immediate-mode path split quads into
+  triangle pairs, but the stream paths' primitive mapping had no case for 8, so every glare draw returned
+  before it reached D3D9 - silently, which is why a trace of the frame showed nothing. Quad lists now become
+  indexed triangle lists in all three draw paths (`QuadListIndices`), and quad strips and polygons map to
+  strips and fans. The lights match a CXBX capture of the same spot.
+
+A trap on the way, for the next effect that goes missing: the glare manager has a second way in,
+`RGlareManager::AddGlare` (`0x000a9c10`), used only by GFX effects with a `gg` tag and by the sun - a probe on
+that alone reads zero at every light in the level and points the wrong way. The `DrawFlares` call the inject
+used to NOP out (for the sun's scale under CXBX) is restored.
+
+**Testing aids that came out of it.** `src/driving/devtools/Teleport.cpp`: F8 in-game logs the car's place
+as `Teleport=x,y,z,dx,dy,dz` and appends it to `teleports.txt`, F9 goes back to it, and `Teleport=` in
+`settings.ini` (or `tools/drive_game.ps1 -Teleport`) puts the car there unattended and dumps the frame - it
+uses the game's own `EResetPlayerCarPos` sequence, so the height comes from the ground. `-GameHold brake`
+holds a trigger from inside the game, immune to window focus and to a real pad being switched on (which
+takes port 0 from the keyboard), and `-DumpAfterMs` dumps a frame without teleporting. One START is now
+enough to reach the level: with the movie skipped the load is quick, and a second START pauses the game,
+which also freezes its effects. `D3D9_TraceNote` marks a dumped frame's draw trace, so a hook can bracket
+the draws one game function issues.
 
 ### Sound
 
@@ -576,9 +603,9 @@ stay: it is the space its HUD tables and cameras are written in, and the backend
 
 Roughly in order of how much a player would notice:
 
-1. **The red lights on mines, projectiles and door nodes** - the lens flares. The visibility tests behind
-   them are implemented (above), but no run has yet had a light in view, so whether they draw is
-   unverified. First reached a minute into the level after the scripted "openwater" event; check there.
+1. **The sun's lens flare**, the one thing the visibility tests gate (above): implemented, unseen, since the
+   underwater level has no sky. Look at it on the first level that does. (The red and blue lights, long
+   listed here, were glares and draw now.)
 2. **Sound's remainder**: the per-voice low-pass filter (distance muffling) and the I3DL2 reverb, both
    accepted and ignored; and the instrumentation section 4 asks for, which has never been written - the
    free lists that drained under CXBX are worth watching once, to confirm they do not here.
@@ -714,24 +741,23 @@ each site is for before assuming it.
 
 ## 3. Lens flares
 
-`RLensFlareManager::TestFlares` (`0x9e720`) draws a 16x16 test quad per flare inside an NV2A visibility test
+What this section first described is right as far as it goes, and was wrong about what it covers: the
+lens flare is only the sun (see "The lights were glares" in 0.1 - the lights on cars, mines and doors are a
+different system that has no visibility test).
+
+`RLensFlareManager::TestFlares` (`0x9e720`) draws a test quad per flare inside an NV2A visibility test
 (`FUN_000e7c60`/`FUN_000e7c80` wrap `D3DDevice_BeginVisibilityTest`/`EndVisibilityTest`, index 0..15
-ring). `DrawFlares` (`0x9e540`) spins on `D3DDevice_GetVisibilityTestResult` until the result is ready and
-computes intensity as `(visiblePixels - 256) / 256`, so it assumes a 256-pixel quad at native resolution.
+ring). The quad is 16x16 when the manager fell back to the `sunf` texture (no `moon` texture was found,
+`+0x21dc`), and `RLightManager + 0x2d0` pixels otherwise. `DrawFlares` (`0x9e540`) spins on
+`D3DDevice_GetVisibilityTestResult` until the result is ready and computes intensity as
+`(visiblePixels - 256) / 256`, which assumes the 16x16 case at native resolution. Its only input is the sky
+draw (`0x000a6690`), which adds the sun each frame.
 
-Under CXBX the visibility test is answered with a host occlusion query at the host's render resolution, so
-the pixel count scales with the render-scale squared and the flare's brightness/size explodes. The current
-patch NOPs the `DrawFlares` call. Two fixes, in order of effort:
-
-1. In a native D3D9 backend, implement the visibility tests with `D3DQUERYTYPE_OCCLUSION` at the game's own
-   resolution; the count is then exact, and the spin-wait becomes a `GetData(FLUSH)` wait.
-2. In CXBX mode, hook `FUN_000e7ca0` (the result wrapper) and divide the count by (host width / 640) x
-   (host height / 480), read from the present parameters. Restores flares immediately - but this is a
-   correction for an emulator that is being removed, so do it only if CXBX-hosted driving has to look right
-   in the meantime. These two were the other way round before the standalone loader existed.
-
-Also note the spin-wait itself: with a slow emulated query it stalls the frame; that is one of the
-"performance" symptoms.
+Under CXBX the visibility test was answered with a host occlusion query at the host's render resolution, so
+the pixel count scaled with the render-scale squared and the flare exploded; the inject NOPped the
+`DrawFlares` call. The D3D9 backend answers the tests with `D3DQUERYTYPE_OCCLUSION` and divides the count
+back to 640x480 when `RenderWidth`/`RenderHeight` are larger, and the NOP is gone. Unverified, for want of
+a sky.
 
 ## 4. The crash: DirectSound buffer pool exhaustion in the EA sound layer
 
@@ -953,7 +979,7 @@ the audio seam is on the critical path either way.
 5. **Symbol alignment tool** (section 5). Unchanged, still the enabler for the graphics work, and still
    parallelisable with everything above.
 6. **Push-buffer investigation** (section 6.1) to size the graphics work, then the D3D8 seam and the D3D9
-   backend extension - including the visibility tests, which fix the lens flares properly (section 3).
+   backend extension - including the visibility tests behind the sun's lens flare (section 3).
 7. **Profiling** (section 4) once it runs standalone, where the numbers mean something. Under CXBX they
    mostly measured CXBX.
 

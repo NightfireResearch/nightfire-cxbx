@@ -2,6 +2,7 @@
 
 #include "Scheduler.hpp"
 #include "EventManager.hpp"
+#include "devtools/Teleport.h"
 
 #include <cstdio>
 
@@ -52,6 +53,10 @@ void Scheduler::Run(int i) {
     // Run quarterSimRate
     Schedule__RunTasks(this->s_quarterSimRate, tickNum & 3, i);
   }
+
+  // Debug teleport (F8/F9, or Teleport= in settings.ini): here because this is where the game's own
+  // EResetPlayerCarPos event would run.
+  Teleport_Tick();
   
   EventManager__RunEvents();
 

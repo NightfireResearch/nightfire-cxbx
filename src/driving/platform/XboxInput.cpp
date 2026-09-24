@@ -204,9 +204,34 @@ static bool BuildKeyboardState(Win32State *state) {
 // The port-0 read, from a real pad if there is one and from the keyboard if there is not. Everything else in
 // this file goes through it, so the keyboard appears as a device to XGetDevices as well - which is what gets
 // the game past its "no controller" screen.
+// NIGHTFIRE_HOLD=brake (or accelerate) holds that trigger on port 0 for the whole run, over whatever the pad or
+// keyboard says. For unattended tests (tools/drive_game.ps1 -GameHold): keys sent from outside the game are
+// lost whenever the window is not in front or a real pad is switched on, and this is neither.
+static void ApplyForcedHold(Win32State *state) {
+    static int hold = -1;   // 0 none, 1 left trigger (brake/reverse), 2 right trigger (accelerate)
+    if (hold < 0) {
+        char text[32] = "";
+        GetEnvironmentVariableA("NIGHTFIRE_HOLD", text, sizeof(text));
+        hold = _stricmp(text, "brake") == 0 ? 1 : _stricmp(text, "accelerate") == 0 ? 2 : 0;
+        if (hold != 0) {
+            printf("[input] NIGHTFIRE_HOLD: holding %s for the whole run\n", hold == 1 ? "brake" : "accelerate");
+            fflush(stdout);
+        }
+    }
+    if (hold == 0)
+        return;
+    if (hold == 1) state->Gamepad.bLeftTrigger = 255;
+    if (hold == 2) state->Gamepad.bRightTrigger = 255;
+    static uint32_t packet = 0x40000000;   // the unfocused keyboard reports packet 0; a held trigger is still news
+    state->dwPacketNumber = ++packet;
+}
+
 static bool ReadPort(int port, Win32State *state) {
-    if (XInputGetState((unsigned long)port, state) == WIN32_ERROR_SUCCESS)
+    if (XInputGetState((unsigned long)port, state) == WIN32_ERROR_SUCCESS) {
+        if (port == 0)
+            ApplyForcedHold(state);
         return true;
+    }
     if (port != 0)
         return false;
 
@@ -218,6 +243,7 @@ static bool ReadPort(int port, Win32State *state) {
         fflush(stdout);
     }
     BuildKeyboardState(state);
+    ApplyForcedHold(state);
     return true;
 }
 
