@@ -148,7 +148,10 @@ Conventions: rename in Ghidra, re-sync the JSON, cite addresses in comments so a
 
 `docs/cxbx-removal-plan.md` is the action engine's: what has been done to get it off cxbx-reloaded, what is
 left, and the method. `docs/driving-engine-plan.md` is the same for the driving engine, which is where the
-work is now; its section 0.1 is the current state and the list of what is left. `docs/audio-inventory.md`
+work is now; its section 0.1 is the current state and the list of what is left.
+`docs/driving-injection-framework.md` is the design for tagging C++ replacements in the driving engine as
+easily as C ones in the action engine - overloads, `__thiscall`, class layouts - and how far it has got.
+`docs/audio-inventory.md`
 records what the action engine actually asks of DirectSound. `docs/macOS-D3D9-setup.md` is how to run this on
 Apple Silicon at full speed, which needs DXVK rather than Wine's own Direct3D - and which currently pins you
 to a Wine version that is no longer published. `CHEATSHEET.md` is the helper macros for reaching the game's

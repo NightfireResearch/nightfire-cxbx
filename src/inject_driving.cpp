@@ -10,6 +10,7 @@
 #include "driving/platform/LaunchOptions.h"
 #include "driving/sound/dsndSeam.h"
 #include "common/launchInfo.h"
+#include "common/xbeOverload.h"   // the generated table selects overloads with it
 
 #include "cxbx/cxbxbinding.h"
 #include <stdio.h>
