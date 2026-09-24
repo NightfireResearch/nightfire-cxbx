@@ -294,7 +294,41 @@ static ULONG __stdcall Xbox_ExQueryPoolBlockSize(void *poolBlock) {
 // The alignment argument is honoured, though, because the game does rely on it - the nv2a wanted its push
 // buffer aligned and the game still asks. VirtualAlloc's 64 KB granularity covers every alignment the game
 // requests, so a plain allocation satisfies it, and the check below says so rather than assuming it.
+//
+// One physical-address constraint is not noise: the address has to be below 0x10000000. The game's D3D code
+// treats what it gets back as the console's 0x8xxxxxxx alias and strips the top nibble to make a resource's
+// Data word (D3DResource_Register, D3DTexture_GetSurfaceLevel2), so a block at 0x111d0000 becomes 0x011d0000
+// and the first write through it lands somewhere else - the XMV decoder writing its first frame into a
+// reservation was how this showed up. Where VirtualAlloc(NULL) puts things depends on everything else in the
+// process: the MSVC build's allocations happened to land at 0x09000000-0x0c000000, while the same game under
+// the mingw-w64 binaries (a UCRT runtime and different DLL sizes) got them above 0x10000000 and crashed at
+// the first movie. So the memory is placed explicitly, lowest free range first, under whichever of the two
+// limits is lower.
 // ---------------------------------------------------------------------------------------------------------------
+
+// The top nibble has to be clear; see above.
+#define CONTIGUOUS_ADDRESS_LIMIT 0x10000000u
+
+static void *AllocateBelow(uintptr_t lowest, uintptr_t limit, SIZE_T size) {
+    const uintptr_t granularity = 0x10000;
+    uintptr_t address = (lowest + granularity - 1) & ~(granularity - 1);
+    if (address < granularity)
+        address = granularity;
+
+    while (address < limit && size <= limit - address) {
+        MEMORY_BASIC_INFORMATION mbi;
+        if (VirtualQuery((void *)address, &mbi, sizeof(mbi)) != sizeof(mbi))
+            return NULL;
+        uintptr_t regionEnd = (uintptr_t)mbi.BaseAddress + mbi.RegionSize;
+        if (mbi.State == MEM_FREE && regionEnd - address >= size) {
+            void *memory = VirtualAlloc((void *)address, size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+            if (memory != NULL)
+                return memory;
+        }
+        address = (regionEnd + granularity - 1) & ~(granularity - 1);
+    }
+    return NULL;
+}
 
 // Ordinal 166.
 static void *__stdcall Xbox_MmAllocateContiguousMemoryEx(ULONG numberOfBytes,
@@ -302,11 +336,23 @@ static void *__stdcall Xbox_MmAllocateContiguousMemoryEx(ULONG numberOfBytes,
                                                          ULONG highestAcceptableAddress,
                                                          ULONG alignment,
                                                          ULONG protectionType) {
-    (void)lowestAcceptableAddress;
-    (void)highestAcceptableAddress;
     (void)protectionType;
 
-    void *memory = VirtualAlloc(NULL, numberOfBytes, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    // highestAcceptableAddress is the last acceptable byte, so the limit is one past it.
+    uintptr_t limit = CONTIGUOUS_ADDRESS_LIMIT;
+    if ((uintptr_t)highestAcceptableAddress < limit - 1)
+        limit = (uintptr_t)highestAcceptableAddress + 1;
+
+    void *memory = AllocateBelow(lowestAcceptableAddress, limit, numberOfBytes);
+    if (memory == NULL) {
+        // Out of room under the limit. Anything is better than failing outright - an allocation the game
+        // uses only through the CPU still works - but a resource placed here will be written somewhere else.
+        memory = VirtualAlloc(NULL, numberOfBytes, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+        if (memory != NULL)
+            printf("[loader] MmAllocateContiguousMemoryEx: nothing free below 0x%08lx for %lu bytes; placed at "
+                   "%p, which the game's D3D code will not address correctly\n",
+                   (unsigned long)limit, numberOfBytes, memory);
+    }
     if (memory == NULL) {
         printf("[loader] MmAllocateContiguousMemoryEx: %lu bytes refused (error %lu)\n",
                numberOfBytes, GetLastError());

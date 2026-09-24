@@ -233,8 +233,15 @@ function(nightfire_loader_link target)
     # executable page costs a fault and a flush of translated code. That took the action engine from 50 fps to
     # 11 and the driving engine to under one. The loader's memory shims (src/loader/kernel.cpp) already hand
     # the game executable pages, which is all EAGL needs; the process-wide switch only ever added the cost.
+    #
+    # --stack sets MSVC's default. GNU ld's is 2 MB, and every thread in the process - the game's, D3D's, the
+    # driver's, XAudio2's - reserves its stack at the size in the executable's header, so under the default
+    # they took twice the address space. Most of them land below 0x10000000, which is where the game's
+    # contiguous memory has to be (see MmAllocateContiguousMemoryEx in src/loader/kernel.cpp), and with 2 MB
+    # stacks it ran out: the action engine crashed at its first movie.
     target_link_options(${target} PRIVATE
-      -Wl,--image-base,0x10000 -Wl,--disable-dynamicbase -Wl,--disable-reloc-section)
+      -Wl,--image-base,0x10000 -Wl,--disable-dynamicbase -Wl,--disable-reloc-section
+      -Wl,--stack,0x100000)
   endif()
 
   # MinGW links its C runtime's startup objects ahead of the target's own, which would put mainCRTStartup
