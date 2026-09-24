@@ -71,6 +71,13 @@ platform-specific, and most of it was worth fixing regardless:
   filesystem, fatal anywhere else.
 - **Two implicit function-pointer-to-`void*` conversions,** and one `NULL` that arrived only through MSVC's
   headers.
+- **Names mingw's `windows.h` already defines.** mingw-w64's `winnt.h` carries the NT create dispositions
+  (`FILE_SUPERSEDE` .. `FILE_OVERWRITE_IF`) and `FILE_DIRECTORY_FILE`/`FILE_NON_DIRECTORY_FILE` as macros;
+  the Windows SDK leaves them to `winternl.h`. `src/loader/file.cpp` declares its own, so a declaration like
+  `enum { FILE_SUPERSEDE = 0, ... }` became `enum { 0x00000000 = 0, ... }`. Those definitions are behind
+  `#ifndef` now - the values are the same either way. The same applies to any new code that spells out NT
+  names from `ntdef.h`/`winternl.h`: check whether mingw's `winnt.h` already has them.
+- **`offsetof` without `<stddef.h>`.** MSVC's `windows.h` brings it in, mingw's does not.
 
 Worth saying plainly: **no struct layout differences turned up.** Once the union was fixed, every
 `static_assert` on a memory-mapped game structure passed. mingw defaults to `-mms-bitfields`, so the
@@ -123,6 +130,46 @@ must not get it, because it pulls in others.
 
 Binaries are also linked against a static libstdc++ and libgcc, so there is no `libstdc++-6.dll` to ship
 beside them. Without that they fail to load with a bare `error 126`, which names nothing.
+
+winpthreads has to be static as well, and `-static-libgcc -static-libstdc++` alone does not do that: the
+static libstdc++ calls into winpthreads, `-pthread` adds it to the link, and without `-static` the linker
+prefers `libwinpthread.dll.a` - the import library - to `libwinpthread.a`. The result loaded fine for any
+binary that happened not to use a thread primitive and failed for the rest:
+
+```
+err:module:import_dll Library libwinpthread-1.dll (which is needed by L"...\drivinginject.dll") not found
+[loader] could not load drivinginject.dll (error 126).
+```
+
+So the link options are `-static -static-libgcc -static-libstdc++ -pthread`. `-static` only changes which
+file is picked for a library that has both kinds, and in mingw's sysroot only its own runtime libraries do;
+kernel32, d3d9, xinput and the rest exist only as import archives and link as before. To check a build,
+list each binary's imports - nothing should name a mingw DLL:
+
+```sh
+for f in build/macos/*.dll build/macos/*.exe; do
+  echo "$f: $(x86_64-w64-mingw32-objdump -p $f | grep 'DLL Name' | awk '{print $3}' | grep -v api-ms-win-crt | tr '\n' ' ')"
+done
+```
+
+**The loaders are DEP-aware.** The MSVC link says `/NXCOMPAT:NO`, the MinGW one deliberately does not. The
+driving engine needs executable heap memory, because EAGL compiles each model's render method into memory
+it allocated and calls it. `/NXCOMPAT:NO` was one way to get that, by turning DEP off for the whole process.
+Under Wine that means every page in the process is mapped executable, Wine's and DXVK's own memory
+included, and under Rosetta a write to an executable page costs a fault and a flush of translated code. It
+was the single largest cost in the cross build:
+
+| | with `--disable-nxcompat` | without |
+|---|---|---|
+| `action.exe`, startup FMV | ~11 fps, ~70 ms working per frame | 50 fps, 1-2 ms |
+| `driving.exe`, `paris_mis01` | 0.1-0.4 fps | 50 fps, 5-9 ms |
+
+It does not show up as a crash or an error, only as a game that plays in bursts and then stalls, which is
+easy to mistake for a DXVK or Wine configuration problem. The other half of the same decision is what EAGL
+actually relies on: the loader's memory shims in `src/loader/kernel.cpp` hand the game executable pages
+(`NtAllocateVirtualMemory`, `NtProtectVirtualMemory`, the pool heap, contiguous memory), and those cost
+nothing measurable. With them alone the driving engine draws its models without a fault. `objdump -p`
+reports `DllCharacteristics 00000100` (NX-compatible) for both loaders.
 
 ## Running what you built
 

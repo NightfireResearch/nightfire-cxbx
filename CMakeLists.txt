@@ -28,8 +28,10 @@ if(MINGW)
   # -pthread rather than naming the library: statically linked libstdc++ and libgcc both call into
   # winpthreads, and the driver appends them after everything CMake writes, so a -lpthread placed among
   # the target's own libraries would come too early to resolve either. -pthread lets the driver put it
-  # where it belongs.
-  add_link_options(-static-libgcc -static-libstdc++ -pthread)
+  # where it belongs. -static is what makes that the archive: without it the linker takes
+  # libwinpthread.dll.a first and the binary needs libwinpthread-1.dll at load time. The system and DirectX
+  # libraries are unaffected, since mingw ships them only as import archives.
+  add_link_options(-static -static-libgcc -static-libstdc++ -pthread)
 endif()
 
 # Statically link UCRT, improves ability to run on XP when compiled with v141_xp
@@ -225,9 +227,14 @@ function(nightfire_loader_link target)
     # image cannot be moved. There is no equivalent of /SAFESEH:NO and none is needed, because MinGW does
     # not emit the table of safe handlers that option exists to switch off. /INCREMENTAL has no counterpart
     # either.
+    #
+    # And no /NXCOMPAT:NO. This build runs under Wine, which answers an image that is not DEP-aware by making
+    # every page in the process executable - Wine's and DXVK's own included - and under Rosetta a write to an
+    # executable page costs a fault and a flush of translated code. That took the action engine from 50 fps to
+    # 11 and the driving engine to under one. The loader's memory shims (src/loader/kernel.cpp) already hand
+    # the game executable pages, which is all EAGL needs; the process-wide switch only ever added the cost.
     target_link_options(${target} PRIVATE
-      -Wl,--image-base,0x10000 -Wl,--disable-dynamicbase -Wl,--disable-reloc-section
-      -Wl,--disable-nxcompat)
+      -Wl,--image-base,0x10000 -Wl,--disable-dynamicbase -Wl,--disable-reloc-section)
   endif()
 
   # MinGW links its C runtime's startup objects ahead of the target's own, which would put mainCRTStartup

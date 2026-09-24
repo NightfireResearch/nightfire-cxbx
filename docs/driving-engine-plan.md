@@ -228,7 +228,9 @@ here are:
   functions that write them;
 - **an Xbox title's memory is all executable, and this one means it.** EAGL compiles each model's render
   method into allocated memory and calls it. Under DEP the first model drawn faults. The loader is linked
-  `/NXCOMPAT:NO` and its memory shims hand out executable pages.
+  `/NXCOMPAT:NO` and its memory shims hand out executable pages. (The macOS cross build drops
+  `/NXCOMPAT:NO`: the shims are enough, and under Wine and Rosetta the process-wide switch cost both engines
+  most of their frame rate - see `docs/macos-build.md`.)
 
 **The seam checks its own replacements now.** Two of them popped the wrong number of argument bytes, which
 is silent until the caller returns into whatever was left on the stack - one arrived as a jump into the
