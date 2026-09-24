@@ -1,32 +1,31 @@
 name: CI
 
-on: push
+# Pushes to any branch, and pull requests - the latter so that a PR from a fork is built too, which a push
+# trigger alone never sees. A PR from a branch in this repository is therefore built twice; if that becomes
+# annoying, restrict the push trigger to the default branch rather than dropping either one.
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
-    #name:
     runs-on: windows-2022
 
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
-        with:
-          submodules: 'true'
-
-      #- name: Install vc141_xp
-      #  run: |
-      #    Start-Process "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" -ArgumentList 'modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise" --quiet --add Microsoft.VisualStudio.Component.WinXP' -Wait -PassThru
 
       - name: Create Build Folder
         run: |
           cmake -E make_directory ${{ runner.workspace }}/build
 
+      # Pinned to the 2022 generator to match the runner image above. The game is a 32-bit x86 binary and the
+      # loader has to share its address space, so Win32 is not a choice.
       - name: Configure CMake
         shell: bash
         working-directory: ${{ runner.workspace }}/build
         run: |
           cmake $GITHUB_WORKSPACE -G "Visual Studio 17 2022" -A Win32
-          # cmake $GITHUB_WORKSPACE -G "Visual Studio 16 2019" -T v141_xp -A Win32
 
       - name: Build
         working-directory: ${{ runner.workspace }}/build
@@ -34,8 +33,16 @@ jobs:
         run: |
           cmake --build . --config Release
 
-      - name: Upload Installer Artifact to GitHub
+      # action.exe only works because it is the image at the XBE's base address - linked at 0x10000, large
+      # enough to span the XBE, with ASLR off. Those are link options, and losing one of them fails at
+      # runtime rather than at build time, so without this a broken loader would be published happily.
+      - name: Check the loader was linked correctly
+        shell: pwsh
+        run: |
+          ./tools/check_loader_image.ps1 -Exe "${{ runner.workspace }}/build/Release/action.exe"
+
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          #name: ${{ env.PKGNAME }}-Installer
+          name: nightfire-cxbx-Release
           path: ${{ runner.workspace }}/build/Release

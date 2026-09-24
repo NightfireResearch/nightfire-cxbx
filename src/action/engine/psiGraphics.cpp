@@ -1,9 +1,8 @@
 #include "psiGraphics.h"
 
 #include "Direct3D/d3dhelpers.h"
+#include "Direct3D/d3dSeam.h" // d3dSetMatrix is reimplemented there now, not called through an AUTOGEN passthrough
 
-// AUTOGEN
-void d3dSetMatrix(D3DMATRIX* matrix);
 // AUTOGEN
 void RecurseAndDrawBoxes(int geom_idx);
 // AUTOGEN
