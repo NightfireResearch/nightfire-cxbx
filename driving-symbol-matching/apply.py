@@ -4,6 +4,7 @@
     python apply.py results/batches/batch-001.json --apply    # snapshot, write, read back, log
     python apply.py --undo results/batches/batch-001.log.json [--apply]
     python apply.py results/batches/batch-001.json --namespaces  # checklist of by-hand namespace moves
+    python apply.py --pending-namespaces    # results/namespace-moves.json, for ghidra/NightfireNamespaces.py
 
 Checks before any write, all against live Ghidra:
   - the function's current name is still the one the batch was reviewed against ("expect"), so nothing
@@ -196,9 +197,43 @@ def namespaces(batch_path):
     print(f"{path}: {pending} still to move")
 
 
+def pending_moves():
+    """Every batch's namespace moves that live Ghidra doesn't show yet, for ghidra/NightfireNamespaces.py to
+    apply: results/namespace-moves.json. Only entries whose function still has the batch's bare name go in."""
+    import glob
+
+    moves = []
+    live_ns, bare = {}, {}
+    for path in sorted(glob.glob(os.path.join(HERE, "results", "batches", "batch-*.json"))):
+        if path.endswith(".log.json"):
+            continue
+        with open(path) as f:
+            batch = json.load(f)
+        program = batch.get("program", g.XBOX)
+        if program not in live_ns:
+            live_ns[program] = g.qualified_names(program)
+            bare[program] = dict(g.functions(program))
+        for it in batch["items"]:
+            if "::" not in it["name"] or not it.get("rename", True):
+                continue
+            a = int(it["xbox"], 16)
+            if live_ns[program].get(a) == it["name"]:
+                continue
+            if bare[program].get(a) != it["name"].split("::")[-1]:
+                print(f"  skipped {program} {it['xbox']}: now {bare[program].get(a)}, not {it['name'].split('::')[-1]}")
+                continue
+            moves.append({"program": program, "address": it["xbox"], "name": it["name"], "batch": batch["batch"]})
+    out = os.path.join(HERE, "results", "namespace-moves.json")
+    with open(out, "w") as f:
+        json.dump({"generated": time.ctime(), "moves": moves}, f, indent=1)
+    print(f"{out}: {len(moves)} moves")
+
+
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    if "--namespaces" in sys.argv:
+    if "--pending-namespaces" in sys.argv:
+        pending_moves()
+    elif "--namespaces" in sys.argv:
         namespaces(args[0])
     elif "--undo" in sys.argv:
         undo(args[0], "--apply" in sys.argv)
