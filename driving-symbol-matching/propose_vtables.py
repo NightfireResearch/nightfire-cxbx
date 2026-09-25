@@ -31,6 +31,11 @@ STUB_LIMIT = 8
 SOURCE_RANK = {"sheet": 0, "ghidra": 1, "infill-exact": 1, "infill-exact-run": 2, "infill-count": 3}
 
 
+def same(have, name):
+    """Already carries the name: exactly, or bare while the namespace move is still to do."""
+    return bool(have) and (key(have) == name or ("::" in name and have == name.split("::")[-1]))
+
+
 def canonical(name):
     """Sheet name without its argument list, spaces made Ghidra-safe: 'A::operator delete(void *' -> 'A::operator_delete'."""
     return key(name)
@@ -83,8 +88,8 @@ def main():
             outcome = "propose (create function)"
         elif have.startswith("FUN_"):
             outcome = "propose"
-        elif key(have) == first:
-            outcome = "confirmed"
+        elif key(have) == first or (have == first.split("::")[-1] and "::" in first):
+            outcome = "confirmed"  # bare name: the namespace move is still to do
         else:
             outcome = "conflict"
         weakest = max(cl, key=lambda c: SOURCE_RANK.get(c["from"], 9))
@@ -100,7 +105,7 @@ def main():
         dtor = o["name"]
         o["name"] = cls + "::scalar_deleting_destructor"
         o["also"] = [n for n in o["also"]]
-        o["outcome"] = ("confirmed" if o["have"] and key(o["have"]) == o["name"] else
+        o["outcome"] = ("confirmed" if same(o["have"], o["name"]) else
                         "propose" if (o["have"] or "FUN_").startswith("FUN_") else "conflict")
         o["evidence"].append("vtable slot 0 on MSVC is the scalar deleting destructor")
         # The real destructor: a callee that itself stores this class's vtable (0x1cbf0: mov [ecx], vtable;
@@ -116,7 +121,7 @@ def main():
                 continue
             have = f["qualified"]
             out.append({"xbox": a, "have": have, "name": dtor, "also": [],
-                        "outcome": "confirmed" if key(have) == dtor else
+                        "outcome": "confirmed" if same(have, dtor) else
                                    "propose" if have.startswith("FUN_") else "conflict",
                         "weakest_source": o["weakest_source"], "pair": o["pair"],
                         "evidence": [f"called by {cls}::scalar_deleting_destructor (0x{o['xbox']:08x})"

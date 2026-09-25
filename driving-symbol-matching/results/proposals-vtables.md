@@ -1,6 +1,6 @@
 # Proposals from vtables (87 pairs)
 
-Outcomes: propose 150, confirmed 36, propose (create function) 36, conflict 17, stub 8
+Outcomes: propose 144, confirmed 43, propose (create function) 35, conflict 17, stub 8
 
 Pairs skipped because two PS2 vtables claim one Xbox vtable:
 
@@ -29,11 +29,10 @@ Pairs skipped because two PS2 vtables claim one Xbox vtable:
 | 001008e0 | EAGLAnim::FnDeltaF3::~FnDeltaF3 | EAGLAnim::FnDeltaF3::scalar_deleting_destructor |  | sheet | EAGLAnim::FnDeltaF3 slot 0 (PS2 00270008, row 6624, sheet); vtable slot 0 on MSVC is the scalar deleting destructor |
 | 00122550 | AStream::~AStream | AStream::scalar_deleting_destructor |  | sheet | AStream slot 0 (PS2 002e8c00, row 8790, sheet); vtable slot 0 on MSVC is the scalar deleting destructor |
 
-## propose (create function) (36)
+## propose (create function) (35)
 
 | Xbox | now | proposed | also (folded) | weakest PS2 source | evidence |
 |---|---|---|---|---|---|
-| 0001d090 | (no function) | AICharacterBond::DoNeutral |  | infill-exact-run | AICharacterBond slot 8 (PS2 0011a318, row 457, infill-exact-run) |
 | 00023890 | (no function) | AICharacterPassenger::DoNeutral |  | infill-exact-run | AICharacterPassenger slot 8 (PS2 001257c8, row 649, infill-exact-run) |
 | 000238c0 | (no function) | AICharacterPassenger::HandleInterrupts |  | infill-exact-run | AICharacterPassenger slot 30 (PS2 00125860, row 654, infill-exact-run) |
 | 00027150 | (no function) | AICharacterPedestrian::DoStartled |  | infill-count | AICharacterPedestrian slot 13 (PS2 00127908, row 682, infill-count) |
@@ -70,19 +69,13 @@ Pairs skipped because two PS2 vtables claim one Xbox vtable:
 | 0012c930 | (no function) | AHelicopter::PlayLanding |  | infill-exact | AHelicopter slot 4 (PS2 002f6900, row 9010, infill-exact) |
 | 0012c950 | (no function) | AHelicopter::Play |  | infill-exact | AHelicopter slot 3 (PS2 002f6938, row 9011, infill-exact) |
 
-## propose (150)
+## propose (144)
 
 | Xbox | now | proposed | also (folded) | weakest PS2 source | evidence |
 |---|---|---|---|---|---|
 | 00011100 | FUN_00011100 | StandardAnimationController::Update |  | ghidra | StandardAnimationController slot 0 (PS2 00107490, row 20, ghidra) |
 | 000125f0 | FUN_000125f0 | StandardAnimationController::scalar_deleting_destructor |  | infill-exact | StandardAnimationController slot 1 (PS2 0010bba8, row 107, infill-exact); vtable slot 0 on MSVC is the scalar deleting destructor |
 | 0001c090 | FUN_0001c090 | ABaseSound::scalar_deleting_destructor |  | ghidra | ABaseSound slot 0 (PS2 002fcb28, row 9108, ghidra); vtable slot 0 on MSVC is the scalar deleting destructor |
-| 0001cbf0 | FUN_0001cbf0 | AICharacterBond::~AICharacterBond |  | ghidra | called by AICharacterBond::scalar_deleting_destructor (0x0001cc00) and stores AICharacterBond's vtable |
-| 0001cc00 | FUN_0001cc00 | AICharacterBond::scalar_deleting_destructor |  | ghidra | AICharacterBond slot 0 (PS2 0011a288, row 455, ghidra); vtable slot 0 on MSVC is the scalar deleting destructor |
-| 0001d0c0 | FUN_0001d0c0 | AICharacterBond::DoInitial | AICharacterBond::DoIdling, AICharacterPassenger::DoInitial, AICharacterPassenger::DoIdling | infill-exact-run | AICharacterBond slot 7 (PS2 0011a2e0, row 456, infill-exact-run); AICharacterBond slot 9 (PS2 0011a360, row 458, infill-exact-run); AICharacterPassenger slot 7 (PS2 00125790, row 648, infill-exact-run) ... |
-| 0001d0e0 | FUN_0001d0e0 | AICharacterBond::DoArming |  | infill-exact-run | AICharacterBond slot 15 (PS2 0011a398, row 459, infill-exact-run) |
-| 0001d1c0 | FUN_0001d1c0 | AICharacterBond::DoFiring |  | infill-exact-run | AICharacterBond slot 18 (PS2 0011a4a0, row 460, infill-exact-run) |
-| 0001d2a0 | FUN_0001d2a0 | AICharacterBond::HandleInterrupts |  | infill-exact-run | AICharacterBond slot 30 (PS2 0011a5b8, row 461, infill-exact-run) |
 | 0001d640 | FUN_0001d640 | AICharacterEnemyDriver::~AICharacterEnemyDriver |  | sheet | called by AICharacterEnemyDriver::scalar_deleting_destructor (0x0001d650) and stores AICharacterEnemyDriver's vtable |
 | 0001d650 | FUN_0001d650 | AICharacterEnemyDriver::scalar_deleting_destructor |  | sheet | AICharacterEnemyDriver slot 0 (PS2 0011ad88, row 470, sheet); vtable slot 0 on MSVC is the scalar deleting destructor |
 | 0001d680 | FUN_0001d680 | AICharacterEnemyDriver::DoInitial |  | infill-exact-run | AICharacterEnemyDriver slot 7 (PS2 0011ade0, row 471, infill-exact-run) |
@@ -238,7 +231,7 @@ Pairs skipped because two PS2 vtables claim one Xbox vtable:
 | 000f7310 | FUN_000f7310 | EAGLAnim::FnAnim::EvalSQT | EAGLAnim::FnAnim::FindTime | infill-exact-run | EAGLAnim::FnPoseMirror slot 12 (PS2 0026e010, row 6595, infill-exact-run); EAGLAnim::FnRawLinearChannel slot 6 (PS2 0026dfe0, row 6589, infill-exact-run); EAGLAnim::FnRawLinearChannel slot 12 (PS2 0026e010, row 6595, infill-exact-run) ... |
 | 000f7330 | dummyGetNullValue | AICharacter::GetVehiclePtr | EAGLAnim::FnAnim::GetPhaseChan | infill-exact-run | AICharacterBond slot 3 (PS2 001196c8, row 404, ghidra); AICharacterEnemyDriver slot 3 (PS2 001196c8, row 404, ghidra); AICharacterPassenger slot 3 (PS2 001196c8, row 404, ghidra) ... |
 
-## confirmed (36)
+## confirmed (43)
 
 | Xbox | now | proposed | also (folded) | weakest PS2 source | evidence |
 |---|---|---|---|---|---|
@@ -246,6 +239,13 @@ Pairs skipped because two PS2 vtables claim one Xbox vtable:
 | 0001c220 | AICharacter::SetActor | AICharacter::SetActor |  | infill-exact | AICharacterBond slot 2 (PS2 00119698, row 401, infill-exact); AICharacterEnemyDriver slot 2 (PS2 00119698, row 401, infill-exact); AICharacterPassenger slot 2 (PS2 00119698, row 401, infill-exact) |
 | 0001c5b0 | AICharacter::GetZoneHitPointScale | AICharacter::GetZoneHitPointScale |  | ghidra | AICharacterBond slot 5 (PS2 001190f8, row 376, ghidra); AICharacterEnemyDriver slot 5 (PS2 001190f8, row 376, ghidra); AICharacterPassenger slot 5 (PS2 001190f8, row 376, ghidra) ... |
 | 0001c690 | AICharacter::NotifyZoneDamage | AICharacter::NotifyZoneDamage |  | ghidra | AICharacterBond slot 4 (PS2 00118eb0, row 374, ghidra); AICharacterEnemyDriver slot 4 (PS2 00118eb0, row 374, ghidra); AICharacterPassenger slot 4 (PS2 00118eb0, row 374, ghidra) ... |
+| 0001cbf0 | ~AICharacterBond | AICharacterBond::~AICharacterBond |  | ghidra | called by AICharacterBond::scalar_deleting_destructor (0x0001cc00) and stores AICharacterBond's vtable |
+| 0001cc00 | scalar_deleting_destructor | AICharacterBond::scalar_deleting_destructor |  | ghidra | AICharacterBond slot 0 (PS2 0011a288, row 455, ghidra); vtable slot 0 on MSVC is the scalar deleting destructor |
+| 0001d090 | DoNeutral | AICharacterBond::DoNeutral |  | infill-exact-run | AICharacterBond slot 8 (PS2 0011a318, row 457, infill-exact-run) |
+| 0001d0c0 | DoInitial | AICharacterBond::DoInitial | AICharacterBond::DoIdling, AICharacterPassenger::DoInitial, AICharacterPassenger::DoIdling | infill-exact-run | AICharacterBond slot 7 (PS2 0011a2e0, row 456, infill-exact-run); AICharacterBond slot 9 (PS2 0011a360, row 458, infill-exact-run); AICharacterPassenger slot 7 (PS2 00125790, row 648, infill-exact-run) ... |
+| 0001d0e0 | DoArming | AICharacterBond::DoArming |  | infill-exact-run | AICharacterBond slot 15 (PS2 0011a398, row 459, infill-exact-run) |
+| 0001d1c0 | DoFiring | AICharacterBond::DoFiring |  | infill-exact-run | AICharacterBond slot 18 (PS2 0011a4a0, row 460, infill-exact-run) |
+| 0001d2a0 | HandleInterrupts | AICharacterBond::HandleInterrupts |  | infill-exact-run | AICharacterBond slot 30 (PS2 0011a5b8, row 461, infill-exact-run) |
 | 00049eb0 | ECollision::~ECollision | ECollision::~ECollision |  | ghidra | called by ECollision::scalar_deleting_destructor (0x0004eb40) and stores ECollision's vtable |
 | 0005dfa0 | Human::ApplyDamage | Human::ApplyDamage |  | sheet | Human slot 2 (PS2 0017f6c0, row 2485, sheet) |
 | 00060a30 | Missile::Simulate | Missile::Simulate |  | sheet | Missile slot 4 (PS2 00181c80, row 2512, sheet) |

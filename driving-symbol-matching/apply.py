@@ -3,6 +3,7 @@
     python apply.py results/batches/batch-001.json            # dry run: checks and planned writes
     python apply.py results/batches/batch-001.json --apply    # snapshot, write, read back, log
     python apply.py --undo results/batches/batch-001.log.json [--apply]
+    python apply.py results/batches/batch-001.json --namespaces  # checklist of by-hand namespace moves
 
 Checks before any write, all against live Ghidra:
   - the function's current name is still the one the batch was reviewed against ("expect"), so nothing
@@ -154,9 +155,35 @@ def undo(log_path, do_apply):
     print("dry run" if not do_apply else "undone (functions created by the batch are left in place)")
 
 
+def namespaces(batch_path):
+    """Which batch functions still need moving into their class (done by hand in Ghidra's Edit Function
+    dialog, typing the full "Class::Name"). Reads live Ghidra; re-run to check the moves."""
+    with open(batch_path) as f:
+        batch = json.load(f)
+    live_ns = g.qualified_names(g.XBOX)
+    lines = [f"# Batch {batch['batch']}: namespace moves", "",
+             "In Ghidra: Edit Function (F) on each address, and set the name to the full text in the last column.", "",
+             "| done | address | now | set name to |", "|---|---|---|---|"]
+    pending = 0
+    for it in batch["items"]:
+        if "::" not in it["name"]:
+            continue
+        a = int(it["xbox"], 16)
+        now = live_ns.get(a) or live(a)[0]
+        done = now == it["name"]
+        pending += not done
+        lines.append(f"| {'yes' if done else ''} | {it['xbox']} | {now} | {it['name']} |")
+    path = batch_path.replace(".json", "-namespaces.md")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+    print(f"{path}: {pending} still to move")
+
+
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    if "--undo" in sys.argv:
+    if "--namespaces" in sys.argv:
+        namespaces(args[0])
+    elif "--undo" in sys.argv:
         undo(args[0], "--apply" in sys.argv)
     else:
         run(args[0], "--apply" in sys.argv)
