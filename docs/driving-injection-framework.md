@@ -253,8 +253,9 @@ closes the action engine's `AUTOLTCG` TODO.
   in `Scheduler` fails its size check and three field checks, each naming the field and the game's offset.
 - **Still to come** from sections 4 and 5: `VCall` for calling a virtual method through the explicit vtable,
   `__single_inheritance` for forward declarations (not needed yet - every class is complete where its
-  member pointers are formed, which `XbeOriginal`'s size check enforces), `const` methods, and struct export
-  from Ghidra (step 4) so that the layout checks are generated rather than written by hand.
+  member pointers are formed, which `XbeOriginal`'s size check enforces) and `const` methods. (Struct
+  export from Ghidra, also listed here at first, was step 4; inheritance, not listed at all, came after the
+  glare pilot - see "Inheritance".)
 
 ## Step 4, as done
 
@@ -421,3 +422,46 @@ Vanquished", against frames dumped at the same teleports with the original code:
 brightness, its spikes at a different angle because glares spin with time and the frames were taken at
 different moments; the remaining differences, never more than 14 pixels in any 64x48 cell, are scattered where
 the scene moves.
+
+## Inheritance
+
+Added after the glare pilot, because the next classes worth replacing (`PBondCar`, the AI hierarchy) derive from
+others, and the overlay rules forbade base classes (25 September 2026).
+
+**Finding a small example.** The allocation sites reveal inheritance on their own: an allocation named after one
+class that runs another class's constructor is almost always a derived class whose constructor was inlined. Of
+the pairs that turned up, most were not inheritance (a shared container constructor, a label used for a family
+of classes, a member constructed in place), and of the two that were, `RRenderHUDView : RViewCamera` adds no
+fields. `RAutonomousObj : RSceneObj` is the example: every one of its five allocation sites does
+`FastAlloc(0x80, "RAutonomousObj")`, copies the identity matrix to `+0x40`, runs `RSceneObj`'s constructor and
+replaces the vtable with its own (`0x0018a398`); `RSceneObj` is allocated on its own as 0x40 bytes; and the two
+vtables differ only in slot 0, the scalar deleting destructor, where each destroys the base and frees its own size
+(0x80, 0x40). So `RAutonomousObj` is an `RSceneObj` plus one `MATRIX4`.
+
+**Ghidra.** Its own class-recovery convention: the derived structure's first field is the base, at offset 0,
+named `super_<Base>`. `RSceneObj` (0x40, replacing a 1-byte placeholder) has only the fields understood - the
+vtable, the instance data at `+0x0c`, the flags byte at `+0x1f` whose bit 0 is "visible" - and `RAutonomousObj`
+(0x80) is `super_RSceneObj` then `MATRIX4 transform`. `Show` and `Hide`, labelled `__fastcall` in Ghidra, are
+`__thiscall` with no arguments by measurement, and are typed so; the decompiler reads `Show` as
+`this->flags = this->flags | 1`. A trap on the way: `RSceneObj` already existed as a one-byte placeholder, and
+`create_struct`'s `replace_placeholder` deletes it before creating the real one - which turned the one field
+that pointed at it, `PBondCar +0x4c`, into `-BAD-`. It was retyped `RSceneObj *` in place. Before replacing a
+placeholder, search the structures (and signatures) that reference it, and re-point them afterwards.
+
+**Generator.** An overlay class may now declare one public base. When its Ghidra structure begins with
+`super_<B>`, the generated `XBE_FIELDS` holds only the derived fields, starting at the end of the base, the class
+aligns at least as strictly as its base, and the checks add `std::is_base_of` beside the size and offsets. The
+declared base must agree with Ghidra's in both directions - a derived class declaring none, or a class declaring
+a base Ghidra does not show, is refused with a message saying which. The base can be another overlay class, or,
+if there is none, it is generated like an embedded structure, and a generated structure with a base is
+generated as `struct X : B`.
+
+**Code** (`src/driving/render/RSceneObj.hpp`, `.cpp`). `RSceneObj` is an overlay with `Show` and `Hide`
+reimplemented (ABI-checked: nothing popped, `this` in `ECX`); `class RAutonomousObj : public RSceneObj` adds its
+`transform`. `offsetof` on the derived class, which is not standard-layout, compiles without warning under MSVC.
+
+**Checked.** The build passes every check, including `static_assert(std::is_base_of_v<RSceneObj,
+RAutonomousObj>)`. Removing the base from the declaration, or giving `RSceneObj` a base, each fails preprocessing
+with the reason. In game, a temporary probe showed the replacement `Hide` running on visible scene objects
+during a drive through the underwater level, which ran normally; `Show` was not reached in that run, and is
+its one-instruction mirror image.

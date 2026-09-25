@@ -5114,6 +5114,27 @@
   ]
  },
  {
+  "name": "RAutonomousObj",
+  "category": "/",
+  "size": 128,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 64,
+    "name": "super_RSceneObj",
+    "type": "RSceneObj",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 64,
+    "name": "transform",
+    "type": "MATRIX4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
   "name": "RCamera",
   "category": "/",
   "size": 192,
@@ -5535,6 +5556,34 @@
     "size": 4,
     "name": "field29_0x38",
     "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "RSceneObj",
+  "category": "/",
+  "size": 64,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "vtable",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "instance",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 31,
+    "size": 1,
+    "name": "flags",
+    "type": "byte",
     "bitfield": false
    }
   ]

@@ -16,7 +16,11 @@
 //     vtable points at, like any other.
 //   - Never constructed by our code. Instances are the game's, and `this` is reinterpreted; objects are made by
 //     calling the game's own constructors.
-//   - Everything public and no base classes, so the class stays standard-layout and offsetof is meaningful.
+//   - Everything public. Single, public, non-virtual inheritance only, and only where Ghidra's structure says
+//     so: its first field is super_<Base>, of the base's type (Ghidra's own convention for a base class). The
+//     generated layout then holds only the derived class's own fields, from the end of the base, and the build
+//     refuses a class whose declared base disagrees with Ghidra's in either direction. The base's vtable pointer
+//     is the derived class's too, as in the game (RAutonomousObj : RSceneObj is the worked example).
 //   - Constructors and destructors are ordinary methods (Construct, Destruct) tagged with FUNC_AT or
 //     AUTOGEN(address), since the language will not give their addresses.
 //

@@ -39084,24 +39084,32 @@
     {
         "name": "RSceneObj::Hide",
         "address": "0x0008db30",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined Hide()",
-        "parameters": [],
+        "return_type": "void",
+        "param_types": [
+            "RSceneObj *"
+        ],
+        "prototype_string": "void __thiscall Hide(void)",
+        "parameters": [
+            "[RSceneObj * this@ECX:4 (auto)]"
+        ],
         "is_thunk": false,
         "namespace": "RSceneObj"
     },
     {
         "name": "RSceneObj::Show",
         "address": "0x0008db40",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined Show()",
-        "parameters": [],
+        "return_type": "void",
+        "param_types": [
+            "RSceneObj *"
+        ],
+        "prototype_string": "void __thiscall Show(void)",
+        "parameters": [
+            "[RSceneObj * this@ECX:4 (auto)]"
+        ],
         "is_thunk": false,
         "namespace": "RSceneObj"
     },
