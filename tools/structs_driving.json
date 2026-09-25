@@ -1,5 +1,7371 @@
 [
  {
+  "name": "ABank",
+  "category": "/",
+  "size": 16,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "bankFileData",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "bankIdx",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "bankCreationResult",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "ABaseSound",
+  "category": "/",
+  "size": 208,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "vtable",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field13_0x10",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field14_0x14",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field15_0x18",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "field20_0x20",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field21_0x24",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field22_0x28",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field27_0x30",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "field28_0x34",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field29_0x38",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "field34_0x40",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 4,
+    "name": "field35_0x44",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 72,
+    "size": 4,
+    "name": "field36_0x48",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 80,
+    "size": 4,
+    "name": "field41_0x50",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 84,
+    "size": 4,
+    "name": "field42_0x54",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 88,
+    "size": 4,
+    "name": "field43_0x58",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 108,
+    "size": 4,
+    "name": "minDist",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 112,
+    "size": 4,
+    "name": "maxDist",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 116,
+    "size": 4,
+    "name": "maxSqDist",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 120,
+    "size": 4,
+    "name": "field63_0x78",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 124,
+    "size": 4,
+    "name": "field64_0x7c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 128,
+    "size": 4,
+    "name": "field65_0x80",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 132,
+    "size": 4,
+    "name": "field66_0x84",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 136,
+    "size": 4,
+    "name": "field67_0x88",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 140,
+    "size": 4,
+    "name": "field68_0x8c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 144,
+    "size": 1,
+    "name": "field69_0x90",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 148,
+    "size": 4,
+    "name": "field73_0x94",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 152,
+    "size": 4,
+    "name": "getViewSet",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 172,
+    "size": 4,
+    "name": "field91_0xac",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 176,
+    "size": 4,
+    "name": "field92_0xb0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 180,
+    "size": 4,
+    "name": "field93_0xb4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 184,
+    "size": 1,
+    "name": "field94_0xb8",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 192,
+    "size": 4,
+    "name": "aStreamPriv",
+    "type": "AStreamPriv *",
+    "bitfield": false
+   },
+   {
+    "offset": 196,
+    "size": 4,
+    "name": "frequency",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 200,
+    "size": 4,
+    "name": "field104_0xc8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 204,
+    "size": 4,
+    "name": "field105_0xcc",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "AFXSettings",
+  "category": "/",
+  "size": 20,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "name",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "mode",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "delay",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "feedback",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "AListener",
+  "category": "/auto_structs",
+  "size": 128,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field4_0x10",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field5_0x14",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field6_0x18",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "field7_0x1c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "field8_0x20",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field9_0x24",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field10_0x28",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field11_0x2c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field12_0x30",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "field13_0x34",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field14_0x38",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 60,
+    "size": 4,
+    "name": "field15_0x3c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "field16_0x40",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 4,
+    "name": "field17_0x44",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 72,
+    "size": 4,
+    "name": "field18_0x48",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 76,
+    "size": 4,
+    "name": "field19_0x4c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 80,
+    "size": 4,
+    "name": "field20_0x50",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 84,
+    "size": 4,
+    "name": "field21_0x54",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 88,
+    "size": 4,
+    "name": "field22_0x58",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 92,
+    "size": 4,
+    "name": "field23_0x5c",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 96,
+    "size": 12,
+    "name": "somePos",
+    "type": "_VECTOR",
+    "bitfield": false
+   },
+   {
+    "offset": 108,
+    "size": 4,
+    "name": "field25_0x6c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 112,
+    "size": 4,
+    "name": "field26_0x70",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 116,
+    "size": 4,
+    "name": "field27_0x74",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "AMix",
+  "category": "/",
+  "size": 29,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "float10 *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field14_0x14",
+    "type": "float10 *",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field15_0x18",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "AStream",
+  "category": "/",
+  "size": 196,
+  "fields": [
+   {
+    "offset": 112,
+    "size": 4,
+    "name": "field112_0x70",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 116,
+    "size": 4,
+    "name": "field113_0x74",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 192,
+    "size": 4,
+    "name": "aStreamPriv",
+    "type": "AStreamPriv *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "AStreamPriv",
+  "category": "/",
+  "size": 296,
+  "fields": [
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field4_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field5_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field6_0xc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field7_0x10",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field36_0x30",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "field37_0x34",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field38_0x38",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "sndstrm_sz",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 4,
+    "name": "field44_0x44",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 72,
+    "size": 4,
+    "name": "field45_0x48",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 76,
+    "size": 4,
+    "name": "field46_0x4c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 80,
+    "size": 4,
+    "name": "field47_0x50",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 84,
+    "size": 4,
+    "name": "field48_0x54",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 88,
+    "size": 1,
+    "name": "field49_0x58",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 92,
+    "size": 1,
+    "name": "isOver",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 93,
+    "size": 1,
+    "name": "isNotFound",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 94,
+    "size": 1,
+    "name": "isPaused",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 95,
+    "size": 1,
+    "name": "isLoop",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 96,
+    "size": 1,
+    "name": "field57_0x60",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 97,
+    "size": 1,
+    "name": "field58_0x61",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 100,
+    "size": 4,
+    "name": "sndstrm_data",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 104,
+    "size": 2,
+    "name": "field62_0x68",
+    "type": "undefined2",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "AVehicle",
+  "category": "/",
+  "size": 496,
+  "fields": [
+   {
+    "offset": 32,
+    "size": 12,
+    "name": "velocity",
+    "type": "_VEC3",
+    "bitfield": false
+   },
+   {
+    "offset": 208,
+    "size": 4,
+    "name": "field197_0xd0",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 212,
+    "size": 4,
+    "name": "field198_0xd4",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 216,
+    "size": 4,
+    "name": "field199_0xd8",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 220,
+    "size": 4,
+    "name": "field200_0xdc",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 224,
+    "size": 4,
+    "name": "field201_0xe0",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 260,
+    "size": 4,
+    "name": "field234_0x104",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 264,
+    "size": 4,
+    "name": "field235_0x108",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 268,
+    "size": 4,
+    "name": "field236_0x10c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 272,
+    "size": 4,
+    "name": "field237_0x110",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 276,
+    "size": 4,
+    "name": "field238_0x114",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 288,
+    "size": 4,
+    "name": "field247_0x120",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 292,
+    "size": 4,
+    "name": "field248_0x124",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 296,
+    "size": 4,
+    "name": "field249_0x128",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 300,
+    "size": 4,
+    "name": "field250_0x12c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 304,
+    "size": 4,
+    "name": "field251_0x130",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 308,
+    "size": 4,
+    "name": "field252_0x134",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 312,
+    "size": 4,
+    "name": "field253_0x138",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 316,
+    "size": 4,
+    "name": "speed",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 324,
+    "size": 4,
+    "name": "field259_0x144",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 328,
+    "size": 4,
+    "name": "field260_0x148",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 332,
+    "size": 4,
+    "name": "field261_0x14c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 348,
+    "size": 4,
+    "name": "field274_0x15c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 352,
+    "size": 4,
+    "name": "field275_0x160",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 356,
+    "size": 4,
+    "name": "field276_0x164",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 360,
+    "size": 4,
+    "name": "field277_0x168",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 364,
+    "size": 4,
+    "name": "field278_0x16c",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 368,
+    "size": 4,
+    "name": "field279_0x170",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 372,
+    "size": 4,
+    "name": "field280_0x174",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 392,
+    "size": 4,
+    "name": "field297_0x188",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 396,
+    "size": 4,
+    "name": "field298_0x18c",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 400,
+    "size": 4,
+    "name": "field299_0x190",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 404,
+    "size": 4,
+    "name": "field300_0x194",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 468,
+    "size": 4,
+    "name": "field361_0x1d4",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 472,
+    "size": 4,
+    "name": "field362_0x1d8",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 476,
+    "size": 4,
+    "name": "field363_0x1dc",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 484,
+    "size": 4,
+    "name": "field368_0x1e4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 488,
+    "size": 4,
+    "name": "field369_0x1e8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 492,
+    "size": 4,
+    "name": "field370_0x1ec",
+    "type": "AMix *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "ActActor",
+  "category": "/",
+  "size": 77,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "ActCharacter *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field4_0x10",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 1,
+    "name": "field5_0x14",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field9_0x18",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 1,
+    "name": "field10_0x1c",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 29,
+    "size": 1,
+    "name": "field11_0x1d",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 30,
+    "size": 1,
+    "name": "field12_0x1e",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 31,
+    "size": 1,
+    "name": "field13_0x1f",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "field14_0x20",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 1,
+    "name": "field15_0x24",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 37,
+    "size": 1,
+    "name": "field16_0x25",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 38,
+    "size": 1,
+    "name": "field17_0x26",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field19_0x28",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field20_0x2c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 1,
+    "name": "field21_0x30",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "scale",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field26_0x38",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 60,
+    "size": 4,
+    "name": "field27_0x3c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 1,
+    "name": "field28_0x40",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 4,
+    "name": "field32_0x44",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 72,
+    "size": 4,
+    "name": "field33_0x48",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 76,
+    "size": 1,
+    "name": "field34_0x4c",
+    "type": "undefined1",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "ActCharacter",
+  "category": "/",
+  "size": 36,
+  "fields": [
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "field32_0x20",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "ActManager",
+  "category": "/auto_structs",
+  "size": 24,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "actTextureDb",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "actModelDb",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "actAnimationDb",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "actSkeletonDb",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "actWeaponDb",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "actEvents",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "ActionQueue",
+  "category": "/",
+  "size": 32,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field4_0x10",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "AttributeSystem",
+  "category": "/",
+  "size": 104,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "vtable",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "attrExtensionTypeMap",
+    "type": "undefined1 *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "attrExtensionClassMap",
+    "type": "undefined1 *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "attrEditConfigMap",
+    "type": "undefined1 *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "attrCollectionMap",
+    "type": "undefined1 *",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "attrStringSet",
+    "type": "undefined1 *",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "attrStoreBlockList",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 1,
+    "name": "field8_0x20",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 96,
+    "size": 1,
+    "name": "field72_0x60",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 97,
+    "size": 1,
+    "name": "field73_0x61",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 100,
+    "size": 4,
+    "name": "field76_0x64",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "COORD3",
+  "category": "/",
+  "size": 12,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "x",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "y",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "z",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "DIRECTSOUNDBUFFER",
+  "category": "/",
+  "size": 512,
+  "fields": []
+ },
+ {
+  "name": "DSBUFFERDESC",
+  "category": "/",
+  "size": 24,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "dwSize",
+    "type": "DWORD",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "dwFlags",
+    "type": "DSBCAPS",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "dwBufferBytes",
+    "type": "DWORD",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "lpwfxFormat",
+    "type": "WAVEFORMATEX *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "lpMixBins",
+    "type": "DSMIXBINS *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "dwInputMixBin",
+    "type": "DWORD",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "DSMIXBINS",
+  "category": "/auto_structs",
+  "size": 8,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "dwMixBinCount",
+    "type": "DWORD",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "lpMixBinVolumePairs",
+    "type": "DSMIXBINVOLUMEPAIR *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "DSMIXBINVOLUMEPAIR",
+  "category": "/",
+  "size": 8,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "dwMixBin",
+    "type": "DSMIXBIN",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "lVolume",
+    "type": "LONG",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "DTuningDBMgr",
+  "category": "/",
+  "size": 16,
+  "fields": [
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "currentFilename",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field5_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "currentFile",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "EAudioUpdate",
+  "category": "/",
+  "size": 4,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined * *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "ECollision",
+  "category": "/",
+  "size": 88,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field8_0x14",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field9_0x18",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "field10_0x1c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field15_0x24",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field16_0x28",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field17_0x2c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 72,
+    "size": 4,
+    "name": "field42_0x48",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 77,
+    "size": 1,
+    "name": "objA_rigidbodyID",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 78,
+    "size": 2,
+    "name": "field45_0x4e",
+    "type": "short",
+    "bitfield": false
+   },
+   {
+    "offset": 81,
+    "size": 1,
+    "name": "objB_rigidbodyID",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 82,
+    "size": 2,
+    "name": "field48_0x52",
+    "type": "short",
+    "bitfield": false
+   },
+   {
+    "offset": 84,
+    "size": 4,
+    "name": "field49_0x54",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "ESpawnSentry",
+  "category": "/",
+  "size": 52,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field4_0x10",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field5_0x14",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field6_0x18",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "field7_0x1c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "field8_0x20",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field9_0x24",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field10_0x28",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field11_0x2c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field12_0x30",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "Event",
+  "category": "/auto_structs",
+  "size": 4,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "vtable",
+    "type": "vtable_Event *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "Explosion",
+  "category": "/",
+  "size": 144,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 74,
+    "size": 2,
+    "name": "field71_0x4a",
+    "type": "short",
+    "bitfield": false
+   },
+   {
+    "offset": 108,
+    "size": 4,
+    "name": "explosionType",
+    "type": "ExplosionType",
+    "bitfield": false
+   },
+   {
+    "offset": 112,
+    "size": 4,
+    "name": "yield",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 116,
+    "size": 4,
+    "name": "field106_0x74",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 120,
+    "size": 4,
+    "name": "field107_0x78",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 124,
+    "size": 4,
+    "name": "field108_0x7c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 128,
+    "size": 4,
+    "name": "field109_0x80",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 132,
+    "size": 4,
+    "name": "field110_0x84",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 136,
+    "size": 4,
+    "name": "field111_0x88",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 140,
+    "size": 4,
+    "name": "field112_0x8c",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "FXBUS",
+  "category": "/auto_structs",
+  "size": 20,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 2,
+    "name": "mode",
+    "type": "short",
+    "bitfield": false
+   },
+   {
+    "offset": 2,
+    "size": 1,
+    "name": "masterLevel",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "delay",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "feedback",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 2,
+    "name": "field5_0xc",
+    "type": "undefined2",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "FileNameList",
+  "category": "/",
+  "size": 8,
+  "fields": [
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field4_0x4",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "FuncInfo",
+  "category": "/",
+  "size": 28,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "magicNum",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "maxState",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "pUnwindMap",
+    "type": "UnwindMapEntry *",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "nTryBlocks",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "pTryBlockMap",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "nIPMapEntries",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "pIPMap",
+    "type": "void *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "GGallery",
+  "category": "/",
+  "size": 1,
+  "fields": []
+ },
+ {
+  "name": "GHud",
+  "category": "/",
+  "size": 1252,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "someTAR",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "gallery",
+    "type": "GGallery *",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "field19_0x1c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "hud_base",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "weapon",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "ammo",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "irisList",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field24_0x30",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "field25_0x34",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field26_0x38",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 60,
+    "size": 4,
+    "name": "field27_0x3c",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "field28_0x40",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 4,
+    "name": "field29_0x44",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 72,
+    "size": 4,
+    "name": "armList",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 76,
+    "size": 4,
+    "name": "field31_0x4c",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 80,
+    "size": 4,
+    "name": "field32_0x50",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 84,
+    "size": 4,
+    "name": "field33_0x54",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 88,
+    "size": 4,
+    "name": "field34_0x58",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 92,
+    "size": 4,
+    "name": "field35_0x5c",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 96,
+    "size": 4,
+    "name": "field36_0x60",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 100,
+    "size": 4,
+    "name": "field37_0x64",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 104,
+    "size": 4,
+    "name": "healthBorder",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 132,
+    "size": 4,
+    "name": "stylin",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 136,
+    "size": 4,
+    "name": "gadgetList",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 140,
+    "size": 4,
+    "name": "field65_0x8c",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 144,
+    "size": 4,
+    "name": "field66_0x90",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 148,
+    "size": 4,
+    "name": "field67_0x94",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 152,
+    "size": 4,
+    "name": "field68_0x98",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 156,
+    "size": 4,
+    "name": "field69_0x9c",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 160,
+    "size": 4,
+    "name": "zoomLevel",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 164,
+    "size": 4,
+    "name": "zoomCircle",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 168,
+    "size": 4,
+    "name": "status",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 172,
+    "size": 4,
+    "name": "statusback",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 176,
+    "size": 4,
+    "name": "field74_0xb0",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 180,
+    "size": 4,
+    "name": "field75_0xb4",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 184,
+    "size": 4,
+    "name": "statusbacktop",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 188,
+    "size": 4,
+    "name": "field77_0xbc",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 192,
+    "size": 4,
+    "name": "field78_0xc0",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 196,
+    "size": 4,
+    "name": "field79_0xc4",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 200,
+    "size": 4,
+    "name": "field80_0xc8",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 204,
+    "size": 4,
+    "name": "field81_0xcc",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 208,
+    "size": 4,
+    "name": "buttonTxt",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 212,
+    "size": 4,
+    "name": "field83_0xd4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 216,
+    "size": 4,
+    "name": "field84_0xd8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 220,
+    "size": 4,
+    "name": "field85_0xdc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 224,
+    "size": 4,
+    "name": "field86_0xe0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 228,
+    "size": 4,
+    "name": "paus_err",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 232,
+    "size": 4,
+    "name": "text1",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 236,
+    "size": 4,
+    "name": "text2",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 240,
+    "size": 4,
+    "name": "text3",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 244,
+    "size": 4,
+    "name": "text4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 248,
+    "size": 4,
+    "name": "quad1",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 252,
+    "size": 4,
+    "name": "quad2",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 256,
+    "size": 4,
+    "name": "pauseN",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 260,
+    "size": 4,
+    "name": "field95_0x104",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 264,
+    "size": 4,
+    "name": "field96_0x108",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 268,
+    "size": 4,
+    "name": "field97_0x10c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 272,
+    "size": 4,
+    "name": "continueMis",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 276,
+    "size": 4,
+    "name": "restartMis",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 280,
+    "size": 4,
+    "name": "quitMis",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 284,
+    "size": 4,
+    "name": "mission",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 288,
+    "size": 4,
+    "name": "objectives",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 296,
+    "size": 4,
+    "name": "controls",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 300,
+    "size": 4,
+    "name": "score",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 304,
+    "size": 4,
+    "name": "arrow",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 308,
+    "size": 4,
+    "name": "controlsArrowL",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 312,
+    "size": 4,
+    "name": "controlsArrowR",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 316,
+    "size": 4,
+    "name": "controlsGelL",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 320,
+    "size": 4,
+    "name": "controlsGelM",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 324,
+    "size": 4,
+    "name": "controlsGelR",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 328,
+    "size": 4,
+    "name": "controlsHeader",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 332,
+    "size": 4,
+    "name": "controlsDetails",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 336,
+    "size": 4,
+    "name": "controlsYAxis",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 340,
+    "size": 4,
+    "name": "controlsInverted",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 360,
+    "size": 4,
+    "name": "controlsXBOXA",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 364,
+    "size": 4,
+    "name": "controlsXBOXY",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 368,
+    "size": 4,
+    "name": "controlsXBOXX",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 372,
+    "size": 4,
+    "name": "controlsXBOXB",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 376,
+    "size": 4,
+    "name": "controlsXBOXDHor",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 380,
+    "size": 4,
+    "name": "controlsXBOXDVert",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 384,
+    "size": 4,
+    "name": "controlsXBOXLA",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 388,
+    "size": 4,
+    "name": "field142_0x184",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 392,
+    "size": 4,
+    "name": "field143_0x188",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 396,
+    "size": 4,
+    "name": "field144_0x18c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 400,
+    "size": 4,
+    "name": "field145_0x190",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 404,
+    "size": 4,
+    "name": "field146_0x194",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 408,
+    "size": 4,
+    "name": "hintTitle",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 412,
+    "size": 4,
+    "name": "hintText",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 416,
+    "size": 4,
+    "name": "hintQuit",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 452,
+    "size": 4,
+    "name": "objCheck",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 456,
+    "size": 4,
+    "name": "objBullet",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 460,
+    "size": 4,
+    "name": "continue",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 464,
+    "size": 4,
+    "name": "back",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 468,
+    "size": 4,
+    "name": "invert",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 472,
+    "size": 4,
+    "name": "select",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 476,
+    "size": 4,
+    "name": "hint",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 480,
+    "size": 4,
+    "name": "changepage",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 484,
+    "size": 4,
+    "name": "scroll",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 488,
+    "size": 4,
+    "name": "scrollButXBOX",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 492,
+    "size": 4,
+    "name": "continueButXBOX",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 496,
+    "size": 4,
+    "name": "backButXBOX",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 500,
+    "size": 4,
+    "name": "invertButXBOX",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 504,
+    "size": 4,
+    "name": "selectButXBOX",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 508,
+    "size": 4,
+    "name": "changepageButXBOX",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 512,
+    "size": 4,
+    "name": "scratchTxt",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 516,
+    "size": 4,
+    "name": "restartConfirm",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 520,
+    "size": 4,
+    "name": "quitConfirm",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 524,
+    "size": 4,
+    "name": "yes",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 528,
+    "size": 4,
+    "name": "no",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 532,
+    "size": 4,
+    "name": "blip",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 536,
+    "size": 4,
+    "name": "blipBond",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 540,
+    "size": 4,
+    "name": "blipEnemy",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 544,
+    "size": 4,
+    "name": "blipPowerup",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 548,
+    "size": 4,
+    "name": "blipObjective",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 552,
+    "size": 4,
+    "name": "rechargeBar",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 556,
+    "size": 4,
+    "name": "rdrarrow",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 560,
+    "size": 4,
+    "name": "field209_0x230",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 564,
+    "size": 4,
+    "name": "rdrarrowbrdr",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 568,
+    "size": 4,
+    "name": "pulse",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 572,
+    "size": 4,
+    "name": "radar",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 576,
+    "size": 4,
+    "name": "radar_border",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 580,
+    "size": 4,
+    "name": "radar_stencil",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 584,
+    "size": 4,
+    "name": "fbw1",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 588,
+    "size": 4,
+    "name": "fbw2",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 592,
+    "size": 4,
+    "name": "fbw3",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 596,
+    "size": 4,
+    "name": "fbw4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 600,
+    "size": 4,
+    "name": "guidedtxt",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 604,
+    "size": 4,
+    "name": "guideddot",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 608,
+    "size": 4,
+    "name": "autoAimText",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 612,
+    "size": 4,
+    "name": "autoAimDot",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 616,
+    "size": 4,
+    "name": "hud_msg",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 620,
+    "size": 4,
+    "name": "txt",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 624,
+    "size": 4,
+    "name": "objcomptxt",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 628,
+    "size": 4,
+    "name": "objnewtxt",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 632,
+    "size": 4,
+    "name": "objobjtxt",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 636,
+    "size": 4,
+    "name": "objbody",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 640,
+    "size": 4,
+    "name": "crossNorm",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 644,
+    "size": 4,
+    "name": "crossZoom",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 648,
+    "size": 4,
+    "name": "crossTorpNorm",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 652,
+    "size": 4,
+    "name": "crossTorpRoam",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 656,
+    "size": 4,
+    "name": "crossTorpOffscreen",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 660,
+    "size": 4,
+    "name": "TargetZone",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 664,
+    "size": 4,
+    "name": "TargetLock",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 668,
+    "size": 4,
+    "name": "hole",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 676,
+    "size": 4,
+    "name": "ared",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 680,
+    "size": 4,
+    "name": "radioactive",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 684,
+    "size": 4,
+    "name": "ayellow",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 688,
+    "size": 1,
+    "name": "isPaused",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 692,
+    "size": 4,
+    "name": "field248_0x2b4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 696,
+    "size": 4,
+    "name": "field249_0x2b8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 716,
+    "size": 4,
+    "name": "field266_0x2cc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 720,
+    "size": 4,
+    "name": "field267_0x2d0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 724,
+    "size": 4,
+    "name": "field268_0x2d4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 728,
+    "size": 4,
+    "name": "field269_0x2d8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 732,
+    "size": 4,
+    "name": "field270_0x2dc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 736,
+    "size": 4,
+    "name": "field271_0x2e0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 740,
+    "size": 4,
+    "name": "field272_0x2e4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 744,
+    "size": 4,
+    "name": "field273_0x2e8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 748,
+    "size": 4,
+    "name": "field274_0x2ec",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 752,
+    "size": 4,
+    "name": "field275_0x2f0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 760,
+    "size": 4,
+    "name": "field280_0x2f8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 764,
+    "size": 4,
+    "name": "field281_0x2fc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 772,
+    "size": 4,
+    "name": "field286_0x304",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 776,
+    "size": 4,
+    "name": "field287_0x308",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 784,
+    "size": 4,
+    "name": "field292_0x310",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 788,
+    "size": 4,
+    "name": "field293_0x314",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 792,
+    "size": 4,
+    "name": "field294_0x318",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 796,
+    "size": 4,
+    "name": "field295_0x31c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 800,
+    "size": 4,
+    "name": "field296_0x320",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 804,
+    "size": 4,
+    "name": "field297_0x324",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 808,
+    "size": 4,
+    "name": "field298_0x328",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 812,
+    "size": 4,
+    "name": "field299_0x32c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 816,
+    "size": 4,
+    "name": "field300_0x330",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 820,
+    "size": 4,
+    "name": "field301_0x334",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 824,
+    "size": 4,
+    "name": "field302_0x338",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 828,
+    "size": 4,
+    "name": "field303_0x33c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 832,
+    "size": 4,
+    "name": "field304_0x340",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 836,
+    "size": 4,
+    "name": "field305_0x344",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 840,
+    "size": 4,
+    "name": "field306_0x348",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 844,
+    "size": 4,
+    "name": "field307_0x34c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 852,
+    "size": 4,
+    "name": "field312_0x354",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 856,
+    "size": 4,
+    "name": "field313_0x358",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 860,
+    "size": 4,
+    "name": "field314_0x35c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 864,
+    "size": 4,
+    "name": "field315_0x360",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 876,
+    "size": 4,
+    "name": "field324_0x36c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 884,
+    "size": 4,
+    "name": "field329_0x374",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 888,
+    "size": 4,
+    "name": "field330_0x378",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 896,
+    "size": 4,
+    "name": "field335_0x380",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 900,
+    "size": 4,
+    "name": "field336_0x384",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 904,
+    "size": 4,
+    "name": "field337_0x388",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 908,
+    "size": 4,
+    "name": "field338_0x38c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 912,
+    "size": 4,
+    "name": "field339_0x390",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 924,
+    "size": 4,
+    "name": "field348_0x39c",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 928,
+    "size": 4,
+    "name": "field349_0x3a0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 932,
+    "size": 4,
+    "name": "field350_0x3a4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 936,
+    "size": 4,
+    "name": "field351_0x3a8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 940,
+    "size": 4,
+    "name": "field352_0x3ac",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 944,
+    "size": 4,
+    "name": "field353_0x3b0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 948,
+    "size": 4,
+    "name": "field354_0x3b4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 952,
+    "size": 4,
+    "name": "field355_0x3b8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 956,
+    "size": 4,
+    "name": "field356_0x3bc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 960,
+    "size": 4,
+    "name": "field357_0x3c0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 984,
+    "size": 4,
+    "name": "field378_0x3d8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1020,
+    "size": 4,
+    "name": "field411_0x3fc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1024,
+    "size": 4,
+    "name": "field412_0x400",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1028,
+    "size": 4,
+    "name": "field413_0x404",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1032,
+    "size": 4,
+    "name": "field414_0x408",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1044,
+    "size": 4,
+    "name": "field423_0x414",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1048,
+    "size": 1,
+    "name": "isAimOn",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 1056,
+    "size": 4,
+    "name": "field432_0x420",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1060,
+    "size": 4,
+    "name": "field433_0x424",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1064,
+    "size": 4,
+    "name": "field434_0x428",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1068,
+    "size": 4,
+    "name": "field435_0x42c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1084,
+    "size": 4,
+    "name": "field448_0x43c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1088,
+    "size": 4,
+    "name": "field449_0x440",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 1092,
+    "size": 4,
+    "name": "field450_0x444",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 1096,
+    "size": 4,
+    "name": "field451_0x448",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 1100,
+    "size": 4,
+    "name": "field452_0x44c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 1104,
+    "size": 4,
+    "name": "field453_0x450",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1112,
+    "size": 4,
+    "name": "field458_0x458",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1116,
+    "size": 4,
+    "name": "field459_0x45c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1120,
+    "size": 4,
+    "name": "field460_0x460",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1124,
+    "size": 4,
+    "name": "field461_0x464",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1128,
+    "size": 4,
+    "name": "field462_0x468",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1136,
+    "size": 4,
+    "name": "field467_0x470",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1140,
+    "size": 4,
+    "name": "field468_0x474",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1144,
+    "size": 4,
+    "name": "field469_0x478",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1148,
+    "size": 4,
+    "name": "field470_0x47c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1156,
+    "size": 4,
+    "name": "field475_0x484",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1160,
+    "size": 4,
+    "name": "field476_0x488",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1164,
+    "size": 4,
+    "name": "field477_0x48c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1172,
+    "size": 4,
+    "name": "field482_0x494",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1176,
+    "size": 4,
+    "name": "field483_0x498",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1180,
+    "size": 4,
+    "name": "field484_0x49c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1248,
+    "size": 4,
+    "name": "field549_0x4e0",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "GHud::CheatCode",
+  "category": "/auto_structs",
+  "size": 68,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "length",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 64,
+    "name": "inputList",
+    "type": "int[16]",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "HPFSTATE",
+  "category": "/auto_structs",
+  "size": 88,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field4_0x10",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field5_0x14",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 27,
+    "size": 1,
+    "name": "field9_0x1b",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "field10_0x1c",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "HeapInfo",
+  "category": "/auto_structs",
+  "size": 24,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "heapStart",
+    "type": "uint *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "heapTop",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field6_0xc",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field7_0x10",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field8_0x14",
+    "type": "uint *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "Human",
+  "category": "/",
+  "size": 141,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "vtable",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 74,
+    "size": 2,
+    "name": "field71_0x4a",
+    "type": "short",
+    "bitfield": false
+   },
+   {
+    "offset": 108,
+    "size": 4,
+    "name": "humanType",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 112,
+    "size": 4,
+    "name": "field105_0x70",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "I3DL2Listener",
+  "category": "/",
+  "size": 48,
+  "fields": []
+ },
+ {
+  "name": "IMAGE_TLS_DIRECTORY_32",
+  "category": "/XBE",
+  "size": 24,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "StartAddressOfRawData",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "EndAddressOfRawData",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "AddressOfIndex",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "AddressOfCallBacks",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "SizeOfZeroFill",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "Characteristics",
+    "type": "dword",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "IOModule",
+  "category": "/",
+  "size": 164,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 1,
+    "name": "field0_0x0",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "numControllers",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 64,
+    "name": "padDevices",
+    "type": "XBoxPadDevice *[16]",
+    "bitfield": false
+   },
+   {
+    "offset": 72,
+    "size": 64,
+    "name": "inputActionMappings",
+    "type": "InputToAction *[16]",
+    "bitfield": false
+   },
+   {
+    "offset": 136,
+    "size": 1,
+    "name": "field7_0x88",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 140,
+    "size": 4,
+    "name": "field11_0x8c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 144,
+    "size": 1,
+    "name": "field12_0x90",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 145,
+    "size": 1,
+    "name": "field13_0x91",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 148,
+    "size": 4,
+    "name": "field16_0x94",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 152,
+    "size": 4,
+    "name": "field17_0x98",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 156,
+    "size": 4,
+    "name": "someFrequency1",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 160,
+    "size": 4,
+    "name": "someFrequency2",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "IniFiles",
+  "category": "/",
+  "size": 8,
+  "fields": [
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field4_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "InputToAction",
+  "category": "/",
+  "size": 16,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "LList",
+  "category": "/",
+  "size": 12,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "length",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "LPFRCSTATE",
+  "category": "/auto_structs",
+  "size": 40,
+  "fields": [
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field4_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "MATRIX",
+  "category": "/Demangler",
+  "size": 64,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 64,
+    "name": "m",
+    "type": "float[16]",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "MATRIX4",
+  "category": "/auto_structs",
+  "size": 64,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field4_0x10",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field5_0x14",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field6_0x18",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "field7_0x1c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "field8_0x20",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field9_0x24",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field10_0x28",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field11_0x2c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field12_0x30",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "field13_0x34",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field14_0x38",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 60,
+    "size": 4,
+    "name": "field15_0x3c",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "MIX",
+  "category": "/auto_structs",
+  "size": 96,
+  "fields": [
+   {
+    "offset": 1,
+    "size": 1,
+    "name": "dryGainApplied",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field4_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 32,
+    "name": "dryGains",
+    "type": "undefined4[8]",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "filters",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 72,
+    "size": 4,
+    "name": "unpackerBuffer",
+    "type": "UNPACKSTATEcommon *",
+    "bitfield": false
+   },
+   {
+    "offset": 76,
+    "size": 4,
+    "name": "timeStretchState",
+    "type": "TIMESTRETCHSTATE *",
+    "bitfield": false
+   },
+   {
+    "offset": 80,
+    "size": 4,
+    "name": "rsfInit",
+    "type": "RSFINIT *",
+    "bitfield": false
+   },
+   {
+    "offset": 88,
+    "size": 4,
+    "name": "lpfState",
+    "type": "LPFRCSTATE *",
+    "bitfield": false
+   },
+   {
+    "offset": 92,
+    "size": 4,
+    "name": "hpfState",
+    "type": "HPFSTATE *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "MIXRELATED",
+  "category": "/",
+  "size": 28,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 24,
+    "name": "maybeMixVoices",
+    "type": "DIRECTSOUNDBUFFER *[6]",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "someMem",
+    "type": "void *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "MIX_create_params",
+  "category": "/auto_structs",
+  "size": 12,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "theSndmix",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "numMixes",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "voiceFreeFunc",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "PBondCar",
+  "category": "/",
+  "size": 1042,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 74,
+    "size": 2,
+    "name": "field71_0x4a",
+    "type": "short",
+    "bitfield": false
+   },
+   {
+    "offset": 76,
+    "size": 4,
+    "name": "field72_0x4c",
+    "type": "RSceneObj *",
+    "bitfield": false
+   },
+   {
+    "offset": 96,
+    "size": 4,
+    "name": "field89_0x60",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 116,
+    "size": 4,
+    "name": "tyreTracks",
+    "type": "RTyreTrack *",
+    "bitfield": false
+   },
+   {
+    "offset": 120,
+    "size": 4,
+    "name": "field107_0x78",
+    "type": "RTyreTrack *",
+    "bitfield": false
+   },
+   {
+    "offset": 124,
+    "size": 4,
+    "name": "field108_0x7c",
+    "type": "RTyreTrack *",
+    "bitfield": false
+   },
+   {
+    "offset": 128,
+    "size": 4,
+    "name": "field109_0x80",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 144,
+    "size": 4,
+    "name": "field122_0x90",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 188,
+    "size": 1,
+    "name": "wheelRoadSurfaces",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 400,
+    "size": 1,
+    "name": "wheelRoadNormals",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 528,
+    "size": 4,
+    "name": "field503_0x210",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 532,
+    "size": 4,
+    "name": "field504_0x214",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 536,
+    "size": 4,
+    "name": "field505_0x218",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 540,
+    "size": 4,
+    "name": "field506_0x21c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 560,
+    "size": 4,
+    "name": "field523_0x230",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 564,
+    "size": 4,
+    "name": "field524_0x234",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 572,
+    "size": 4,
+    "name": "physics",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 576,
+    "size": 4,
+    "name": "carControlSteering",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 580,
+    "size": 4,
+    "name": "carControlSteeringVertical",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 584,
+    "size": 4,
+    "name": "field532_0x248",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 588,
+    "size": 4,
+    "name": "field533_0x24c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 592,
+    "size": 4,
+    "name": "field534_0x250",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 596,
+    "size": 4,
+    "name": "field535_0x254",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 616,
+    "size": 4,
+    "name": "field552_0x268",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 620,
+    "size": 4,
+    "name": "actionQueue",
+    "type": "ActionQueue *",
+    "bitfield": false
+   },
+   {
+    "offset": 628,
+    "size": 4,
+    "name": "field558_0x274",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 632,
+    "size": 4,
+    "name": "field559_0x278",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 636,
+    "size": 4,
+    "name": "field560_0x27c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 640,
+    "size": 4,
+    "name": "field561_0x280",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 644,
+    "size": 4,
+    "name": "field562_0x284",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 648,
+    "size": 4,
+    "name": "carSpeed",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 652,
+    "size": 4,
+    "name": "carSteer",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 660,
+    "size": 4,
+    "name": "field569_0x294",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 669,
+    "size": 1,
+    "name": "shockCountdown",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 672,
+    "size": 4,
+    "name": "field578_0x2a0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 676,
+    "size": 4,
+    "name": "field579_0x2a4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 680,
+    "size": 4,
+    "name": "field580_0x2a8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 684,
+    "size": 4,
+    "name": "field581_0x2ac",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 690,
+    "size": 1,
+    "name": "twoWheelStuntEnabled",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 692,
+    "size": 4,
+    "name": "field586_0x2b4",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 700,
+    "size": 4,
+    "name": "field591_0x2bc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 704,
+    "size": 4,
+    "name": "field592_0x2c0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 708,
+    "size": 4,
+    "name": "field593_0x2c4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 712,
+    "size": 4,
+    "name": "carClass",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 716,
+    "size": 4,
+    "name": "carType",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 720,
+    "size": 4,
+    "name": "carColour",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 732,
+    "size": 4,
+    "name": "field605_0x2dc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 736,
+    "size": 4,
+    "name": "targetBeacon",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 740,
+    "size": 4,
+    "name": "aiGroundVehiclePtr",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 744,
+    "size": 4,
+    "name": "field608_0x2e8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 752,
+    "size": 4,
+    "name": "field613_0x2f0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 756,
+    "size": 4,
+    "name": "field614_0x2f4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 880,
+    "size": 4,
+    "name": "playerDamageAmt",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 884,
+    "size": 1,
+    "name": "damageByPlayerTimer",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 886,
+    "size": 1,
+    "name": "tyreBlowoutsEnabled",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 887,
+    "size": 1,
+    "name": "empActive",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 888,
+    "size": 4,
+    "name": "field740_0x378",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 892,
+    "size": 4,
+    "name": "audio",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 896,
+    "size": 4,
+    "name": "field742_0x380",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 900,
+    "size": 4,
+    "name": "field743_0x384",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 904,
+    "size": 4,
+    "name": "field744_0x388",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 912,
+    "size": 4,
+    "name": "field749_0x390",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 920,
+    "size": 4,
+    "name": "field754_0x398",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 924,
+    "size": 4,
+    "name": "field755_0x39c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 928,
+    "size": 4,
+    "name": "field756_0x3a0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 932,
+    "size": 4,
+    "name": "field757_0x3a4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 936,
+    "size": 4,
+    "name": "field758_0x3a8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 940,
+    "size": 4,
+    "name": "resetAvailable",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 944,
+    "size": 4,
+    "name": "field760_0x3b0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 948,
+    "size": 4,
+    "name": "field761_0x3b4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 952,
+    "size": 4,
+    "name": "field762_0x3b8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 988,
+    "size": 4,
+    "name": "field795_0x3dc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 992,
+    "size": 4,
+    "name": "field796_0x3e0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 996,
+    "size": 4,
+    "name": "field797_0x3e4",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 1000,
+    "size": 4,
+    "name": "field798_0x3e8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1004,
+    "size": 4,
+    "name": "field799_0x3ec",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 1008,
+    "size": 1,
+    "name": "immunity",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 1012,
+    "size": 4,
+    "name": "field804_0x3f4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1016,
+    "size": 4,
+    "name": "field805_0x3f8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1020,
+    "size": 1,
+    "name": "oilSlick",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 1024,
+    "size": 4,
+    "name": "field810_0x400",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1028,
+    "size": 4,
+    "name": "field811_0x404",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1036,
+    "size": 4,
+    "name": "field816_0x40c",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "RCamera",
+  "category": "/",
+  "size": 184,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 64,
+    "name": "field13_0x10",
+    "type": "MATRIX4",
+    "bitfield": false
+   },
+   {
+    "offset": 96,
+    "size": 1,
+    "name": "matrixInitialised",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 112,
+    "size": 64,
+    "name": "field46_0x70",
+    "type": "MATRIX4",
+    "bitfield": false
+   },
+   {
+    "offset": 176,
+    "size": 1,
+    "name": "active",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 180,
+    "size": 4,
+    "name": "field51_0xb4",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "RParticleSystemManager",
+  "category": "/",
+  "size": 65584,
+  "fields": []
+ },
+ {
+  "name": "RRenderHigh",
+  "category": "/",
+  "size": 68,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 16,
+    "name": "field0_0x0",
+    "type": "undefined[16]",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 16,
+    "name": "field1_0x10",
+    "type": "undefined[16]",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "numCameras",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field3_0x24",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field4_0x28",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "dbgViewPerspective",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "dbgViewScreenSpace",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field11_0x38",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 60,
+    "size": 4,
+    "name": "field12_0x3c",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "field13_0x40",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "RRenderer",
+  "category": "/",
+  "size": 117,
+  "fields": [
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field4_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field13_0x10",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field14_0x14",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field15_0x18",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 29,
+    "size": 1,
+    "name": "doScreenCap",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 30,
+    "size": 1,
+    "name": "alphaWritesEnabled",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "field20_0x20",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "frameCnt",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "resX",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 4,
+    "name": "resY",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 72,
+    "size": 4,
+    "name": "field48_0x48",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 80,
+    "size": 4,
+    "name": "field53_0x50",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 84,
+    "size": 4,
+    "name": "field54_0x54",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 88,
+    "size": 4,
+    "name": "field55_0x58",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 92,
+    "size": 4,
+    "name": "ps2Mipmap",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 96,
+    "size": 4,
+    "name": "eaglDevice",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 100,
+    "size": 4,
+    "name": "renderContext",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 104,
+    "size": 4,
+    "name": "viewPort",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 108,
+    "size": 4,
+    "name": "field60_0x6c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 112,
+    "size": 4,
+    "name": "fontFileHandle",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "RSFINIT",
+  "category": "/auto_structs",
+  "size": 60,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "funcPtr1",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 2,
+    "name": "field18_0x18",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "pitch",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "field22_0x20",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "funcPtr2",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 2,
+    "name": "field24_0x28",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 42,
+    "size": 2,
+    "name": "field25_0x2a",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field26_0x2c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field27_0x30",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "field28_0x34",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field29_0x38",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "RTyreTrack",
+  "category": "/",
+  "size": 2328,
+  "fields": [
+   {
+    "offset": 2304,
+    "size": 4,
+    "name": "field2304_0x900",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 2308,
+    "size": 4,
+    "name": "field2305_0x904",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 2312,
+    "size": 4,
+    "name": "field2306_0x908",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 2316,
+    "size": 4,
+    "name": "field2307_0x90c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 2320,
+    "size": 4,
+    "name": "field2308_0x910",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "RVehicleParticle",
+  "category": "/",
+  "size": 76,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 60,
+    "size": 4,
+    "name": "linkedVehicle",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "field55_0x40",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 4,
+    "name": "field56_0x44",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 72,
+    "size": 4,
+    "name": "field57_0x48",
+    "type": "undefined *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "RViewCamera",
+  "category": "/",
+  "size": 72,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "vtable",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "camera",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field4_0x10",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field5_0x14",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "viewPort",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "field7_0x1c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "field8_0x20",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field9_0x24",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field10_0x28",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field11_0x2c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "zFar",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "field13_0x34",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field14_0x38",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "field19_0x40",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 4,
+    "name": "field20_0x44",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "RenderContext",
+  "category": "/EAGL",
+  "size": 90,
+  "fields": []
+ },
+ {
+  "name": "RigidBody",
+  "category": "/",
+  "size": 96,
+  "fields": [
+   {
+    "offset": 92,
+    "size": 4,
+    "name": "field92_0x5c",
+    "type": "float *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SFILTER",
+  "category": "/auto_structs",
+  "size": 60,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "someFuncPtr",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "field26_0x20",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "otherFuncPtr",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 2,
+    "name": "field28_0x28",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 42,
+    "size": 2,
+    "name": "field29_0x2a",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field30_0x2c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field31_0x30",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "field32_0x34",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field33_0x38",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SMissionManager",
+  "category": "/",
+  "size": 2288,
+  "fields": [
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field4_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field5_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field10_0x10",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field11_0x14",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field12_0x18",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "field13_0x1c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "stageNum",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field15_0x24",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field20_0x2c",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "field25_0x34",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field26_0x38",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1064,
+    "size": 4,
+    "name": "field1031_0x428",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1076,
+    "size": 4,
+    "name": "field1040_0x434",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1140,
+    "size": 4,
+    "name": "field1101_0x474",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1148,
+    "size": 4,
+    "name": "field1106_0x47c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1152,
+    "size": 4,
+    "name": "field1107_0x480",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1156,
+    "size": 4,
+    "name": "field1108_0x484",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1160,
+    "size": 4,
+    "name": "field1109_0x488",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1164,
+    "size": 4,
+    "name": "field1110_0x48c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1168,
+    "size": 4,
+    "name": "actionQueue",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1172,
+    "size": 4,
+    "name": "field1112_0x494",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1176,
+    "size": 4,
+    "name": "field1113_0x498",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1180,
+    "size": 4,
+    "name": "currentHealth",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 1184,
+    "size": 4,
+    "name": "maybeMaxHealth",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 1188,
+    "size": 4,
+    "name": "currentShield",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 1192,
+    "size": 4,
+    "name": "maybeMaxShield",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 1196,
+    "size": 4,
+    "name": "field1118_0x4ac",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1200,
+    "size": 4,
+    "name": "field1119_0x4b0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1204,
+    "size": 4,
+    "name": "field1120_0x4b4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1208,
+    "size": 4,
+    "name": "field1121_0x4b8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1212,
+    "size": 4,
+    "name": "field1122_0x4bc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1216,
+    "size": 4,
+    "name": "field1123_0x4c0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1220,
+    "size": 4,
+    "name": "field1124_0x4c4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1224,
+    "size": 4,
+    "name": "field1125_0x4c8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1228,
+    "size": 4,
+    "name": "field1126_0x4cc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1232,
+    "size": 4,
+    "name": "field1127_0x4d0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1236,
+    "size": 4,
+    "name": "field1128_0x4d4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1240,
+    "size": 4,
+    "name": "field1129_0x4d8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1244,
+    "size": 4,
+    "name": "field1130_0x4dc",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 1248,
+    "size": 4,
+    "name": "field1131_0x4e0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1252,
+    "size": 4,
+    "name": "shotsHit",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1256,
+    "size": 4,
+    "name": "field1133_0x4e8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1260,
+    "size": 4,
+    "name": "field1134_0x4ec",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1264,
+    "size": 4,
+    "name": "field1135_0x4f0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1272,
+    "size": 4,
+    "name": "field1140_0x4f8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1276,
+    "size": 4,
+    "name": "field1141_0x4fc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1280,
+    "size": 4,
+    "name": "field1142_0x500",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1284,
+    "size": 4,
+    "name": "field1143_0x504",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1288,
+    "size": 4,
+    "name": "magicCounters",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1544,
+    "size": 4,
+    "name": "field1397_0x608",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1800,
+    "size": 4,
+    "name": "field1650_0x708",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1804,
+    "size": 4,
+    "name": "field1651_0x70c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1808,
+    "size": 1,
+    "name": "superEasy",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 1812,
+    "size": 4,
+    "name": "field1656_0x714",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1816,
+    "size": 4,
+    "name": "field1657_0x718",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 1828,
+    "size": 4,
+    "name": "field1666_0x724",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1848,
+    "size": 4,
+    "name": "field1683_0x738",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1896,
+    "size": 4,
+    "name": "field1728_0x768",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 1944,
+    "size": 4,
+    "name": "field1773_0x798",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 2204,
+    "size": 4,
+    "name": "field2030_0x89c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 2208,
+    "size": 4,
+    "name": "field2031_0x8a0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 2212,
+    "size": 4,
+    "name": "field2032_0x8a4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 2216,
+    "size": 4,
+    "name": "field2033_0x8a8",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDBANKI",
+  "category": "/auto_structs",
+  "size": 8,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "fileData",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 1,
+    "name": "field1_0x4",
+    "type": "undefined1",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDBANK_file",
+  "category": "/auto_structs",
+  "size": 256,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "magicIdentifier",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 2,
+    "name": "field1_0x4",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 6,
+    "size": 2,
+    "name": "numPatches",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 8,
+    "name": "offsets",
+    "type": "undefined4[2]",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDIPATCHHEADER",
+  "category": "/auto_structs",
+  "size": 136,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 2,
+    "name": "field0_0x0",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 19,
+    "size": 1,
+    "name": "field18_0x13",
+    "type": "char",
+    "bitfield": false
+   },
+   {
+    "offset": 92,
+    "size": 4,
+    "name": "field91_0x5c",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 96,
+    "size": 4,
+    "name": "field92_0x60",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 104,
+    "size": 4,
+    "name": "field97_0x68",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 128,
+    "size": 4,
+    "name": "field118_0x80",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 132,
+    "size": 4,
+    "name": "field119_0x84",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDLINKLIST",
+  "category": "/auto_structs",
+  "size": 12,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "head",
+    "type": "SNDLINKNODE *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "tail",
+    "type": "SNDLINKNODE *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "numNodes",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDLINKNODE",
+  "category": "/auto_structs",
+  "size": 48,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "tail",
+    "type": "SNDLINKNODE *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "head",
+    "type": "SNDLINKNODE *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "dsndBufferObj",
+    "type": "DIRECTSOUNDBUFFER *",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 2,
+    "name": "field3_0xc",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 14,
+    "size": 1,
+    "name": "field4_0xe",
+    "type": "bool",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "dsndBufferData",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field7_0x14",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field8_0x18",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "field9_0x1c",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "pktplayIdx",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field11_0x24",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field12_0x28",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field13_0x2c",
+    "type": "void *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDOPTS",
+  "category": "/auto_structs",
+  "size": 288,
+  "fields": [
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "sndopts1",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 264,
+    "size": 24,
+    "name": "sndopts2",
+    "type": "undefined4[6]",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDPKTPLAY",
+  "category": "/",
+  "size": 72,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 2,
+    "name": "field2_0x8",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 2,
+    "name": "field13_0x14",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 2,
+    "name": "field24_0x20",
+    "type": "short",
+    "bitfield": false
+   },
+   {
+    "offset": 34,
+    "size": 1,
+    "name": "field25_0x22",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 35,
+    "size": 1,
+    "name": "field26_0x23",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 2,
+    "name": "field27_0x24",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 38,
+    "size": 2,
+    "name": "field28_0x26",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field29_0x28",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field30_0x2c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field31_0x30",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "releaseCallback",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "framesCallback",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 60,
+    "size": 4,
+    "name": "callbackCtx",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "field35_0x40",
+    "type": "SNDPKTPLAY_start_info",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 4,
+    "name": "field36_0x44",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDPKTPLAY_start_info",
+  "category": "/auto_structs",
+  "size": 4,
+  "fields": [
+   {
+    "offset": 2,
+    "size": 2,
+    "name": "field2_0x2",
+    "type": "ushort",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDPLATFORMVOICE",
+  "category": "/",
+  "size": 24,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 2,
+    "name": "field2_0x8",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 10,
+    "size": 2,
+    "name": "field3_0xa",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "dsndLinkNode",
+    "type": "SNDLINKNODE *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field9_0x14",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDPLAYOPTS",
+  "category": "/auto_structs",
+  "size": 24,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 1,
+    "name": "field0_0x0",
+    "type": "char",
+    "bitfield": false
+   },
+   {
+    "offset": 1,
+    "size": 1,
+    "name": "field1_0x1",
+    "type": "char",
+    "bitfield": false
+   },
+   {
+    "offset": 2,
+    "size": 1,
+    "name": "field2_0x2",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 3,
+    "size": 1,
+    "name": "field3_0x3",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 1,
+    "name": "field4_0x4",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 5,
+    "size": 1,
+    "name": "field5_0x5",
+    "type": "char",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 2,
+    "name": "field8_0x8",
+    "type": "short",
+    "bitfield": false
+   },
+   {
+    "offset": 10,
+    "size": 2,
+    "name": "field9_0xa",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 2,
+    "name": "field10_0xc",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 14,
+    "size": 2,
+    "name": "field11_0xe",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 2,
+    "name": "field12_0x10",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 18,
+    "size": 2,
+    "name": "field13_0x12",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 2,
+    "name": "field14_0x14",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 22,
+    "size": 2,
+    "name": "field15_0x16",
+    "type": "ushort",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDSAMPLEFORMAT",
+  "category": "/auto_structs",
+  "size": 4,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 2,
+    "name": "field0_0x0",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 3,
+    "size": 1,
+    "name": "field2_0x3",
+    "type": "char",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDSTREAMCHANNEL",
+  "category": "/auto_structs",
+  "size": 312,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "stream",
+    "type": "STREAM *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "sndctrl",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "sndpktplay",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 1,
+    "name": "maybePlaybackState",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 17,
+    "size": 1,
+    "name": "streamWasSuppliedExternally",
+    "type": "bool",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field8_0x14",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "sampleFormat",
+    "type": "SNDSAMPLEFORMAT",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 104,
+    "name": "thing26words_2",
+    "type": "undefined4[26]",
+    "bitfield": false
+   },
+   {
+    "offset": 132,
+    "size": 104,
+    "name": "thing26words_1",
+    "type": "undefined4[26]",
+    "bitfield": false
+   },
+   {
+    "offset": 236,
+    "size": 24,
+    "name": "maybeEffectParams",
+    "type": "Snd_MaybeEffectParams",
+    "bitfield": false
+   },
+   {
+    "offset": 260,
+    "size": 1,
+    "name": "filterInfo",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 284,
+    "size": 12,
+    "name": "a",
+    "type": "SNDLINKLIST",
+    "bitfield": false
+   },
+   {
+    "offset": 296,
+    "size": 12,
+    "name": "b",
+    "type": "SNDLINKLIST",
+    "bitfield": false
+   },
+   {
+    "offset": 308,
+    "size": 4,
+    "name": "field39_0x134",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDSTRMI",
+  "category": "/auto_structs",
+  "size": 360,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 312,
+    "name": "channel",
+    "type": "SNDSTREAMCHANNEL",
+    "bitfield": false
+   },
+   {
+    "offset": 312,
+    "size": 48,
+    "name": "llist1",
+    "type": "SNDLINKNODE",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SNDVOICEI",
+  "category": "/auto_structs",
+  "size": 136,
+  "fields": [
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "maybePlatformVoiceIdxs",
+    "type": "undefined2[2]",
+    "bitfield": false
+   },
+   {
+    "offset": 18,
+    "size": 2,
+    "name": "field15_0x12",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field16_0x14",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field17_0x18",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 2,
+    "name": "field18_0x1c",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 2,
+    "name": "field21_0x20",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 35,
+    "size": 1,
+    "name": "numPlatformVoiceIdxs",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 2,
+    "name": "flags",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 2,
+    "name": "field27_0x28",
+    "type": "short",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field30_0x2c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field31_0x30",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field36_0x38",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 60,
+    "size": 4,
+    "name": "field37_0x3c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "field38_0x40",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 4,
+    "name": "field39_0x44",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 74,
+    "size": 2,
+    "name": "field42_0x4a",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 104,
+    "size": 4,
+    "name": "field71_0x68",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 108,
+    "size": 4,
+    "name": "field72_0x6c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 112,
+    "size": 4,
+    "name": "field73_0x70",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 116,
+    "size": 4,
+    "name": "field74_0x74",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 120,
+    "size": 4,
+    "name": "field75_0x78",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 126,
+    "size": 2,
+    "name": "field78_0x7e",
+    "type": "short",
+    "bitfield": false
+   },
+   {
+    "offset": 128,
+    "size": 2,
+    "name": "field79_0x80",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 130,
+    "size": 2,
+    "name": "field80_0x82",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 134,
+    "size": 2,
+    "name": "field83_0x86",
+    "type": "undefined2",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "STREAM",
+  "category": "/auto_structs",
+  "size": 16,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "streamInternal",
+    "type": "STREAMINTERNAL *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "pData",
+    "type": "int *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "STREAMINTERNAL",
+  "category": "/auto_structs",
+  "size": 400,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "type",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "mutex",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field30_0x24",
+    "type": "undefined1 *",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field31_0x28",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field32_0x2c",
+    "type": "undefined1 *",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field33_0x30",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "field34_0x34",
+    "type": "undefined1 *",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field35_0x38",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 60,
+    "size": 4,
+    "name": "maybeOverheadSize",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "field37_0x40",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 4,
+    "name": "maybeTotalSize",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 72,
+    "size": 4,
+    "name": "state",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 76,
+    "size": 4,
+    "name": "field40_0x4c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 80,
+    "size": 4,
+    "name": "field41_0x50",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 84,
+    "size": 4,
+    "name": "greedyLevel",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 88,
+    "size": 4,
+    "name": "field43_0x58",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 92,
+    "size": 4,
+    "name": "field44_0x5c",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 96,
+    "size": 4,
+    "name": "field45_0x60",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 100,
+    "size": 4,
+    "name": "field46_0x64",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 104,
+    "size": 4,
+    "name": "field47_0x68",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 108,
+    "size": 4,
+    "name": "field48_0x6c",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 112,
+    "size": 4,
+    "name": "field49_0x70",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 116,
+    "size": 4,
+    "name": "field50_0x74",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 120,
+    "size": 4,
+    "name": "field51_0x78",
+    "type": "undefined1 *",
+    "bitfield": false
+   },
+   {
+    "offset": 124,
+    "size": 256,
+    "name": "field52_0x7c",
+    "type": "undefined1[256]",
+    "bitfield": false
+   },
+   {
+    "offset": 380,
+    "size": 4,
+    "name": "field53_0x17c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 388,
+    "size": 4,
+    "name": "field58_0x184",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 396,
+    "size": 4,
+    "name": "field63_0x18c",
+    "type": "uint",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SWeaponManager",
+  "category": "/",
+  "size": 384,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field4_0x10",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field5_0x14",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field6_0x18",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "field7_0x1c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "actionQueue",
+    "type": "ActionQueue *",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "field25_0x34",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field26_0x38",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "field31_0x40",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 4,
+    "name": "field32_0x44",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 92,
+    "size": 4,
+    "name": "field53_0x5c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 96,
+    "size": 4,
+    "name": "field54_0x60",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 100,
+    "size": 4,
+    "name": "field55_0x64",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 104,
+    "size": 4,
+    "name": "field56_0x68",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 112,
+    "size": 4,
+    "name": "field61_0x70",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 116,
+    "size": 4,
+    "name": "field62_0x74",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 120,
+    "size": 4,
+    "name": "field63_0x78",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SYNCTASK",
+  "category": "/",
+  "size": 16,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "synctasks_funcptr",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "synctasks_someThing1",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "synctasks_someThing2",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "synctasks_someOther3",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
   "name": "Schedule",
   "category": "/",
   "size": 44,
@@ -100,6 +7466,2183 @@
     "size": 4,
     "name": "timeScale",
     "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "SimpleRigidBody",
+  "category": "/",
+  "size": 64,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field4_0x10",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field5_0x14",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field6_0x18",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 1,
+    "name": "field7_0x1c",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 29,
+    "size": 1,
+    "name": "field8_0x1d",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 30,
+    "size": 2,
+    "name": "field9_0x1e",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 12,
+    "name": "velocity",
+    "type": "_VEC3",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "field11_0x2c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field12_0x30",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "field13_0x34",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field14_0x38",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 60,
+    "size": 4,
+    "name": "field15_0x3c",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "Simulation",
+  "category": "/",
+  "size": 3656,
+  "fields": [
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field8_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field9_0xc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 3632,
+    "size": 4,
+    "name": "field3626_0xe30",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 3636,
+    "size": 4,
+    "name": "field3627_0xe34",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 3644,
+    "size": 4,
+    "name": "rate",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 3648,
+    "size": 4,
+    "name": "rcpRate",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 3652,
+    "size": 4,
+    "name": "field3634_0xe44",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "Snd_MaybeEffectParams",
+  "category": "/auto_structs",
+  "size": 24,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 1,
+    "name": "vol",
+    "type": "char",
+    "bitfield": false
+   },
+   {
+    "offset": 1,
+    "size": 1,
+    "name": "field1_0x1",
+    "type": "char",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 1,
+    "name": "field4_0x4",
+    "type": "char",
+    "bitfield": false
+   },
+   {
+    "offset": 5,
+    "size": 1,
+    "name": "field5_0x5",
+    "type": "char",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 2,
+    "name": "field8_0x8",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 1,
+    "name": "field11_0xc",
+    "type": "char",
+    "bitfield": false
+   },
+   {
+    "offset": 13,
+    "size": 1,
+    "name": "field12_0xd",
+    "type": "char",
+    "bitfield": false
+   },
+   {
+    "offset": 14,
+    "size": 2,
+    "name": "timeMult",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 18,
+    "size": 2,
+    "name": "field16_0x12",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 2,
+    "name": "lowPass",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 22,
+    "size": 2,
+    "name": "highPass",
+    "type": "ushort",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "TIMESTRETCHSTATE",
+  "category": "/auto_structs",
+  "size": 40,
+  "fields": [
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field36_0x24",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "TaskRecord",
+  "category": "/auto_structs",
+  "size": 20,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "eventType",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "staticData",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 1,
+    "name": "spacing",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 10,
+    "size": 2,
+    "name": "delayTicks",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 2,
+    "name": "numTimesToFire",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "taskNum",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "TaskRecord_LListEntry",
+  "category": "/auto_structs",
+  "size": 28,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "next",
+    "type": "TaskRecord_LListEntry *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "maybeSentry",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 20,
+    "name": "entry",
+    "type": "TaskRecord",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "UNPACKINITPARAMS",
+  "category": "/auto_structs",
+  "size": 32,
+  "fields": [
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field12_0xc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "maybeDriver",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "UNPACKSTATEcommon",
+  "category": "/auto_structs",
+  "size": 4096,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "func1",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "func2",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "field22_0x1c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "field23_0x20",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field24_0x24",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field25_0x28",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "packetHandle",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field27_0x30",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 1,
+    "name": "sampleChan",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field32_0x38",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "UTALKSTATE",
+  "category": "/auto_structs",
+  "size": 2100,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "byte *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field4_0x10",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field5_0x14",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 272,
+    "size": 4,
+    "name": "field254_0x110",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 276,
+    "size": 4,
+    "name": "field255_0x114",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 280,
+    "size": 4,
+    "name": "field256_0x118",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 284,
+    "size": 4,
+    "name": "field257_0x11c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 288,
+    "size": 4,
+    "name": "field258_0x120",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 292,
+    "size": 4,
+    "name": "field259_0x124",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 296,
+    "size": 4,
+    "name": "field260_0x128",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 300,
+    "size": 4,
+    "name": "field261_0x12c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 304,
+    "size": 4,
+    "name": "field262_0x130",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 308,
+    "size": 4,
+    "name": "field263_0x134",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 312,
+    "size": 4,
+    "name": "field264_0x138",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 316,
+    "size": 4,
+    "name": "field265_0x13c",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 320,
+    "size": 4,
+    "name": "field266_0x140",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 368,
+    "size": 4,
+    "name": "field311_0x170",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 2096,
+    "size": 4,
+    "name": "field2036_0x830",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "UnwindMapEntry",
+  "category": "/",
+  "size": 8,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "toState",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "action",
+    "type": "unwindAction *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "Vector_Schedule",
+  "category": "/auto_structs",
+  "size": 16,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "first",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "sentinel",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "WAVEFORMATEX",
+  "category": "/",
+  "size": 18,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 2,
+    "name": "wFormatTag",
+    "type": "WAVE_FORMAT",
+    "bitfield": false
+   },
+   {
+    "offset": 2,
+    "size": 2,
+    "name": "nChannels",
+    "type": "word",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "nSamplesPerSec",
+    "type": "DWORD",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "nAvgBytesPerSec",
+    "type": "DWORD",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 2,
+    "name": "nBlockAlign",
+    "type": "word",
+    "bitfield": false
+   },
+   {
+    "offset": 14,
+    "size": 2,
+    "name": "wBitsPerSample",
+    "type": "word",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 2,
+    "name": "cbSize",
+    "type": "word",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "WSoundGroup",
+  "category": "/",
+  "size": 16,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "soundMap",
+    "type": "undefined *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "WTargetPicker",
+  "category": "/",
+  "size": 168,
+  "fields": [
+   {
+    "offset": 160,
+    "size": 4,
+    "name": "field160_0xa0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 164,
+    "size": 4,
+    "name": "field161_0xa4",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "WWorld",
+  "category": "/",
+  "size": 60,
+  "fields": [
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field8_0x8",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field9_0xc",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field10_0x10",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field11_0x14",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field12_0x18",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "field17_0x20",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field18_0x24",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field19_0x28",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field24_0x30",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "wSoundGroup",
+    "type": "WSoundGroup *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "XBE_CERTIFICATE_HEADER",
+  "category": "/XBE",
+  "size": 476,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "SizeOfHeader",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "TimeDateStamp",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "TitleID",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 80,
+    "name": "TitleName",
+    "type": "unicode",
+    "bitfield": false
+   },
+   {
+    "offset": 92,
+    "size": 64,
+    "name": "AlternateTitleIDs",
+    "type": "dword[16]",
+    "bitfield": false
+   },
+   {
+    "offset": 156,
+    "size": 4,
+    "name": "AllowedMedia",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 160,
+    "size": 4,
+    "name": "GameRegion",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 164,
+    "size": 4,
+    "name": "GameRatings",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 168,
+    "size": 4,
+    "name": "DiscNumber",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 172,
+    "size": 4,
+    "name": "Version",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 176,
+    "size": 16,
+    "name": "LANKey",
+    "type": "byte[16]",
+    "bitfield": false
+   },
+   {
+    "offset": 192,
+    "size": 16,
+    "name": "SignatureKey",
+    "type": "byte[16]",
+    "bitfield": false
+   },
+   {
+    "offset": 208,
+    "size": 256,
+    "name": "AlternateSignatureKeys",
+    "type": "byte[16][16]",
+    "bitfield": false
+   },
+   {
+    "offset": 464,
+    "size": 4,
+    "name": "OriginalCertificateSize",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 468,
+    "size": 4,
+    "name": "OnlineServiceID",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 472,
+    "size": 4,
+    "name": "SecurityFlags",
+    "type": "dword",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "XBE_FILE_HEADER",
+  "category": "/XBE",
+  "size": 376,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "magic",
+    "type": "char[4]",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 256,
+    "name": "Signature",
+    "type": "byte[256]",
+    "bitfield": false
+   },
+   {
+    "offset": 260,
+    "size": 4,
+    "name": "ImageBase",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 264,
+    "size": 4,
+    "name": "SizeOfHeaders",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 268,
+    "size": 4,
+    "name": "SizeOfImage",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 272,
+    "size": 4,
+    "name": "SizeOfImageHeader",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 276,
+    "size": 4,
+    "name": "TimeDateStamp",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 280,
+    "size": 4,
+    "name": "CertificateHeader",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 284,
+    "size": 4,
+    "name": "NumberOfSections",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 288,
+    "size": 4,
+    "name": "PointerToSectionTable",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 292,
+    "size": 4,
+    "name": "InitFlags",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 296,
+    "size": 4,
+    "name": "AddressOfEntryPoint",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 300,
+    "size": 4,
+    "name": "PointerToTlsDirectory",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 304,
+    "size": 4,
+    "name": "SizeOfStack",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 308,
+    "size": 4,
+    "name": "SizeOfHeapReserve",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 312,
+    "size": 4,
+    "name": "SizeOfHeapCommit",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 316,
+    "size": 4,
+    "name": "PeImageBase",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 320,
+    "size": 4,
+    "name": "PeSizeOfImage",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 324,
+    "size": 4,
+    "name": "PeImageCheckSum",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 328,
+    "size": 4,
+    "name": "PeTimeDateStamp",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 332,
+    "size": 4,
+    "name": "PeDebugPath",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 336,
+    "size": 4,
+    "name": "PeDebugFilename",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 340,
+    "size": 4,
+    "name": "PeDebugFilenameUnicode",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 344,
+    "size": 4,
+    "name": "PointerToKernelThunkTable",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 348,
+    "size": 4,
+    "name": "PointerToDebugImportTable",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 352,
+    "size": 4,
+    "name": "NumberOfLibraries",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 356,
+    "size": 4,
+    "name": "PointerToLibraries",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 360,
+    "size": 4,
+    "name": "PointerToKernelLibrary",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 364,
+    "size": 4,
+    "name": "PointerToXapiLibrary",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 368,
+    "size": 4,
+    "name": "PointerToLogoBitmap",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 372,
+    "size": 4,
+    "name": "SizeOfLogoBitmap",
+    "type": "dword",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "XBE_LIBRARY_HEADER",
+  "category": "/XBE",
+  "size": 16,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 8,
+    "name": "LibraryName",
+    "type": "char[8]",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 2,
+    "name": "MajorVersion",
+    "type": "word",
+    "bitfield": false
+   },
+   {
+    "offset": 10,
+    "size": 2,
+    "name": "MinorVersion",
+    "type": "word",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 2,
+    "name": "BuildVersion",
+    "type": "word",
+    "bitfield": false
+   },
+   {
+    "offset": 14,
+    "size": 2,
+    "name": "LibraryFlags",
+    "type": "word",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "XBE_SECTION_HEADER",
+  "category": "/XBE",
+  "size": 56,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "Flags",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "VirtualAddress",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "VirtualSize",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "FileAddress",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "FileSize",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "SectionName",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "SectionReferenceCount",
+    "type": "dword",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "HeadReferenceCount",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "TailReferenceCount",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 20,
+    "name": "CheckSum",
+    "type": "byte[20]",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "XBoxPadDevice",
+  "category": "/",
+  "size": 1308,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field4_0x10",
+    "type": "undefined *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field5_0x14",
+    "type": "undefined *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "_IO_FILE",
+  "category": "/stdio.h",
+  "size": 152,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "_flags",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "_IO_read_ptr",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "_IO_read_end",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "_IO_read_base",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "_IO_write_base",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "_IO_write_ptr",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "_IO_write_end",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "_IO_buf_base",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "_IO_buf_end",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "_IO_save_base",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "_IO_backup_base",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "_IO_save_end",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "_markers",
+    "type": "_IO_marker *",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "_chain",
+    "type": "_IO_FILE *",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "_fileno",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 60,
+    "size": 4,
+    "name": "_flags2",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "_old_offset",
+    "type": "__off_t",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 2,
+    "name": "_cur_column",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 70,
+    "size": 1,
+    "name": "_vtable_offset",
+    "type": "char",
+    "bitfield": false
+   },
+   {
+    "offset": 71,
+    "size": 1,
+    "name": "_shortbuf",
+    "type": "char[1]",
+    "bitfield": false
+   },
+   {
+    "offset": 72,
+    "size": 4,
+    "name": "_lock",
+    "type": "_IO_lock_t *",
+    "bitfield": false
+   },
+   {
+    "offset": 80,
+    "size": 8,
+    "name": "_offset",
+    "type": "__off64_t",
+    "bitfield": false
+   },
+   {
+    "offset": 88,
+    "size": 4,
+    "name": "__pad1",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 92,
+    "size": 4,
+    "name": "__pad2",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 96,
+    "size": 4,
+    "name": "__pad3",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 100,
+    "size": 4,
+    "name": "__pad4",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 104,
+    "size": 4,
+    "name": "__pad5",
+    "type": "size_t",
+    "bitfield": false
+   },
+   {
+    "offset": 108,
+    "size": 4,
+    "name": "_mode",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 112,
+    "size": 40,
+    "name": "_unused2",
+    "type": "char[40]",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "_IO_marker",
+  "category": "/libio.h",
+  "size": 12,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "_next",
+    "type": "_IO_marker *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "_sbuf",
+    "type": "_IO_FILE *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "_pos",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "_VEC3",
+  "category": "/",
+  "size": 12,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "x",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "y",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "z",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "_VECTOR",
+  "category": "/Demangler",
+  "size": 12,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "x",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "y",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "z",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "astruct",
+  "category": "/auto_structs",
+  "size": 12,
+  "fields": [
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field4_0x4",
+    "type": "int *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field5_0x8",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "astruct_1",
+  "category": "/auto_structs",
+  "size": 141,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 74,
+    "size": 2,
+    "name": "field71_0x4a",
+    "type": "short",
+    "bitfield": false
+   },
+   {
+    "offset": 108,
+    "size": 4,
+    "name": "field104_0x6c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 112,
+    "size": 4,
+    "name": "field105_0x70",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 116,
+    "size": 1,
+    "name": "field106_0x74",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 140,
+    "size": 1,
+    "name": "field130_0x8c",
+    "type": "undefined1",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "astruct_2",
+  "category": "/auto_structs",
+  "size": 141,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 74,
+    "size": 2,
+    "name": "field71_0x4a",
+    "type": "short",
+    "bitfield": false
+   },
+   {
+    "offset": 108,
+    "size": 4,
+    "name": "field104_0x6c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 112,
+    "size": 4,
+    "name": "field105_0x70",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 116,
+    "size": 1,
+    "name": "field106_0x74",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 140,
+    "size": 1,
+    "name": "field130_0x8c",
+    "type": "undefined1",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "astruct_3",
+  "category": "/auto_structs",
+  "size": 185,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field13_0x10",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field14_0x14",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "field15_0x18",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "field20_0x20",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "field21_0x24",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "field22_0x28",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "field27_0x30",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "field28_0x34",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "field29_0x38",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 64,
+    "size": 4,
+    "name": "field34_0x40",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 68,
+    "size": 4,
+    "name": "field35_0x44",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 72,
+    "size": 4,
+    "name": "field36_0x48",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 80,
+    "size": 4,
+    "name": "field41_0x50",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 84,
+    "size": 4,
+    "name": "field42_0x54",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 88,
+    "size": 4,
+    "name": "field43_0x58",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 108,
+    "size": 4,
+    "name": "field60_0x6c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 112,
+    "size": 4,
+    "name": "field61_0x70",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 116,
+    "size": 4,
+    "name": "field62_0x74",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 120,
+    "size": 4,
+    "name": "field63_0x78",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 124,
+    "size": 4,
+    "name": "field64_0x7c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 128,
+    "size": 4,
+    "name": "field65_0x80",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 132,
+    "size": 4,
+    "name": "field66_0x84",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 136,
+    "size": 4,
+    "name": "field67_0x88",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 140,
+    "size": 4,
+    "name": "field68_0x8c",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 144,
+    "size": 1,
+    "name": "field69_0x90",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 148,
+    "size": 4,
+    "name": "field73_0x94",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 152,
+    "size": 4,
+    "name": "field74_0x98",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 172,
+    "size": 4,
+    "name": "field91_0xac",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 176,
+    "size": 4,
+    "name": "field92_0xb0",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 180,
+    "size": 4,
+    "name": "field93_0xb4",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 184,
+    "size": 1,
+    "name": "field94_0xb8",
+    "type": "undefined1",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "astruct_4",
+  "category": "/auto_structs",
+  "size": 1308,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field4_0x10",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field5_0x14",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 1068,
+    "size": 4,
+    "name": "field1050_0x42c",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "astruct_5",
+  "category": "/auto_structs",
+  "size": 1308,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "field0_0x0",
+    "type": "undefined * *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "field1_0x4",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "field2_0x8",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "field3_0xc",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "field4_0x10",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "field5_0x14",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 1068,
+    "size": 4,
+    "name": "field1050_0x42c",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "sndpktplay_list_thing",
+  "category": "/",
+  "size": 8,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 2,
+    "name": "op_type",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 2,
+    "size": 2,
+    "name": "idx_into_sndpps",
+    "type": "undefined2",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "op_argument",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "vtable_Event",
+  "category": "/",
+  "size": 4,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "dtor",
+    "type": "Event_dtor *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "vtable_Schedule",
+  "category": "/",
+  "size": 8,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "unknown0",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "process",
+    "type": "Schedule_Process *",
     "bitfield": false
    }
   ]

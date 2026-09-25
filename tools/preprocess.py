@@ -80,7 +80,13 @@ def match_tag(tag, name, signature, ghidra_funcs):
     # patching one definition over two functions is how UFileLoader::FileLoad came to read an argument its
     # callers never pushed. See docs/driving-injection-framework.md.
     matching = [x for x in ghidra_funcs if x['name'] == name and x['is_thunk'] == False]
-    assert len(matching) >= 1, f"{tag} {name}: no function of that name in Ghidra's export"
+    if not matching:
+        # Usually a rename in Ghidra since the tag was written - including Ghidra moving a class's methods to a
+        # "Class_conflict1" namespace when a second type of that name appears. Say where the name went.
+        short = name.split("::")[-1]
+        elsewhere = [f"{x['name']} ({x['address']})" for x in ghidra_funcs if x['name'].split("::")[-1] == short]
+        hint = (" - functions with that name elsewhere: " + ", ".join(elsewhere[:6])) if elsewhere else ""
+        assert False, f"{tag} {name}: no function of that name in Ghidra's export{hint}"
     if len(matching) == 1:
         return matching[0]
     candidates = ", ".join(f"{x['address']} ({count_ghidra_params(x)} parameters)" for x in matching)
@@ -363,6 +369,8 @@ def generate_layouts(side):
         matches = [s for s in structs if s["name"] == ghidra_name]
         assert len(matches) == 1, f"{file}: XBE_FIELDS({ghidra_name}) - {len(matches)} Ghidra structures of that name"
         s = matches[0]
+        assert s["size"] > 1 or s["fields"], (f"{file}: XBE_FIELDS({ghidra_name}) - Ghidra's {ghidra_name} is a "
+                                             f"{s['size']}-byte placeholder with no fields; define it in Ghidra and re-sync")
         lines, cursor, used_names = [], 0, set()
         checks_for = [f"XBE_CLASS_SIZE({cls}, 0x{s['size']:x});"]
         for f in sorted(s["fields"], key=lambda f: f["offset"]):
