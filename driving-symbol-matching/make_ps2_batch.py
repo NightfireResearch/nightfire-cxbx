@@ -30,7 +30,7 @@ def ghidra_name(row_name):
         cls = name[:-len(" type_info function")]
         if "<" in cls:
             return None, "template"
-        return cls + "_type_info_function", None
+        return cls.replace(" ", "_") + "_type_info_function", None   # "long long type_info function"
     full = sheet.complete_name(name)
     if full is None:
         return None, "name cut short by the sheet's 63 characters"

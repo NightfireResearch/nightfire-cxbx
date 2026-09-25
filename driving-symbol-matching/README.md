@@ -40,6 +40,10 @@ names to PS2 retail addresses only, so the work is matching PS2 functions to Xbo
 | `../ghidra/NightfireNamespaces.py` | run by hand in Ghidra (Script Manager, category Nightfire): moves the functions listed in `results/namespace-moves.json` (`python apply.py --pending-namespaces`) into their namespaces, after showing the list and asking; one undoable step |
 | `classes.py` | which namespaces are C++ classes, from the symbol file (vtable, type_info, constructor/destructor, const method): `results/class-namespaces.json` and `.md` |
 | `../ghidra/NightfireClasses.py` | run by hand in Ghidra: converts the listed namespaces into classes, after showing the list and asking; one undoable step |
+| `lib/align.py`, `place_align.py` | sheet rows placed on PS2 functions by aligning each window between placed rows (row absent / unlisted static allowed), with a per-row margin; placements in `results/ps2-align-placements.json` (the index reads it), disputes of known addresses in `results/ps2-audit.md` |
+| `validate_align.py` | held-out test of the alignment, accuracy by margin band |
+| `make_ps2_batch.py` | a DRIVING.ELF batch from placed rows, Ghidra-safe names, holding cut names, templates and static initialisers |
+| `lib/features_cache.py` | per-function strings/callees for a program, cached in `data/` |
 | `lib/ghidra_rw.py` | write whitelist used by apply.py (create_function, rename, plate comment; Driving.xbe only) |
 | `results/` | reports, proposals and approved batches (committed) |
 | `data/` | sheet download, snapshots, caches (not committed) |
@@ -62,6 +66,10 @@ Setup: `pip install openpyxl`, then
 - Thunks show their target's name until given their own (`__pure_virtual` = `j __terminate` in retail).
   Snapshots record `thunk`, and the index treats a thunk that carries a real function's name as unnamed, so it
   can't match a sheet row or vote in a vtable pairing (23 such thunks on Xbox, 25 Sept 2026).
+- Alignment (`validate_align.py`, 30% of trusted rows hidden, 3 trials): margin >= 3 is 99.5% right over
+  2,963 predictions, >= 6 is 99.55%; below 2 it falls to 83-94%. Most "errors" at high margin turned out to be
+  wrong answer keys (a sheet address or PS2 name the sizes contradict), which `results/ps2-audit.md` lists. It
+  confirmed 705 of the old exact-run guesses and contradicted 6, so it replaces exact-run.
 - Infill conflicts with existing PS2 names are settled in `results/ps2-name-resolutions.json` (the index
   reads it): "sheet" means the same function under another name, "reject"/"open" means don't place it.
 - Sheet names are cut at 63 characters: 1,122 rows. Where the cut falls in the argument list the name is

@@ -21,6 +21,7 @@ replaces the block. Each write is read back. The log records old and new values 
 
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -95,6 +96,8 @@ def check(items, program):
             refs = used_in_src(it["expect"])
             if refs:
                 problems.append(f"{it['xbox']}: old name {it['expect']} is used in src/driving: {refs[:2]}")
+        if it.get("rename", True) and re.search(r"\s", it["name"]):
+            problems.append(f"{it['xbox']}: {it['name']!r} has whitespace, which Ghidra refuses")
         if it.get("rename", True) and not it.get("allow_duplicate"):
             elsewhere = [x for x in existing.get(it["name"], []) if x != int(it["xbox"], 16)]
             if elsewhere:
@@ -140,9 +143,14 @@ def run(batch_path, do_apply):
                 entry["created"] = True
             bare = it["name"].split("::")[-1] if it.get("rename", True) else old_name
             if bare != old_name:
-                entry["steps"].append(("rename", w.post("rename_function_by_address",
-                                                        {"function_address": it["xbox"], "new_name": bare, "strict_mode": "off"},
-                                                        program)))
+                result = w.post("rename_function_by_address",
+                                {"function_address": it["xbox"], "new_name": bare, "strict_mode": "off"}, program)
+                entry["steps"].append(("rename", result))
+                if isinstance(result, dict) and result.get("error"):
+                    entry["new_name"], entry["ok"] = old_name, False
+                    print(f"  FAIL {it['xbox']} rename refused: {result['error']}")
+                    print("  stopping at the first failure (plate comment left alone)")
+                    break
             plate = merged_plate(old_plate, block(it))
             entry["steps"].append(("plate", w.post("set_plate_comment", {"address": it["xbox"], "comment": plate}, program)))
             got_name, got_plate = live(a, program)

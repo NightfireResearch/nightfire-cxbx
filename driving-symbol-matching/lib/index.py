@@ -30,7 +30,7 @@ def key(name):
 
 
 class Index:
-    def __init__(self, xbox="Driving.xbe", ps2="DRIVING.ELF"):
+    def __init__(self, xbox="Driving.xbe", ps2="DRIVING.ELF", use_align=True):
         self.rows = sheet.load()
         self.xbox = {int(f["address"], 16): f for f in latest_snapshot(xbox)}
         self.ps2 = {int(f["address"], 16): f for f in latest_snapshot(ps2)}
@@ -45,6 +45,8 @@ class Index:
         self.xbox_addrs = sorted(self.xbox)
         self._row_ps2()
         self._infill()
+        if use_align:
+            self._align()
         self._xbox_rows()
 
     def _row_ps2(self):
@@ -96,6 +98,26 @@ class Index:
                 self.ps2_conflicts.append((r, a, how, have, "PS2 Ghidra name differs"))
             else:
                 r["ps2"], r["ps2_from"] = a, "infill-" + how
+
+    def _align(self):
+        """Placements from place_align.py (results/ps2-align-placements.json): rows it placed with a margin
+        validate_align.py measured, onto functions no other row holds. They replace exact-run/count guesses."""
+        path = os.path.join(HERE, "results", "ps2-align-placements.json")
+        if not os.path.exists(path):
+            return
+        with open(path) as f:
+            placements = {p["row"]: int(p["ps2"], 16) for p in json.load(f)["placements"]}
+        held = {r["ps2"] for r in self.rows if r["ps2"] is not None and r["row"] not in placements}
+        for r in self.rows:
+            a = placements.get(r["row"])
+            if a is None or a in held:
+                continue
+            if r.get("ps2_from") in (None, "infill-exact-run", "infill-count") or r["ps2"] == a:
+                have = self.ps2[a]["qualified"]
+                if not have.startswith(("FUN_", "thunk_FUN_")) and not _same(have, r["name"]):
+                    self.ps2_conflicts.append((r, a, "align", have, "PS2 Ghidra name differs"))
+                    continue
+                r["ps2"], r["ps2_from"] = a, "align"
 
     def _xbox_rows(self):
         by_key = {}
