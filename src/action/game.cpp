@@ -5,6 +5,9 @@
 #include "game/mp/multiplayer.h" // for MPSettings
 #include "ui/MenuManager.h"
 #include "engine/Text.h"
+#include "engine/XboxSettings.h"
+
+#include <windows.h>
 
 #include <cstring>
 #include <cstdio>
@@ -65,7 +68,7 @@ bool movieFinished(void) {
 
 #define FreezeGame U8_AT(0x001fec48)
 #define sloflag U16_AT(0x001fec64)
-#define ScriptCam U32_AT(0x001f6678)
+// ScriptCam is defined in engine/Script.h (same address, HASHCODE-typed)
 #define switch_allowFreeze U32_AT(0x0025d79c)
 
 
@@ -432,8 +435,96 @@ void GameFlow_QuickPushState(uint state) {
     set_InhibitGameDrawIfRequired();
 }
 
-// AUTOGEN
-double timestamp(void);
+// ---------------------------------------------------------------------------------------------------------------
+// Eurocom's frame-timing helper. The original is four instructions and they are worth reading, because the
+// reason this is reimplemented is in them:
+//
+//     rdtsc                        ; the CPU's cycle counter
+//     imul  3 / idiv 2200          ; 2200/3 = 733.333 - the Xbox's 733 MHz Pentium III, baked in
+//     fmul  0.001                  ; microseconds to milliseconds
+//
+// The divisor is the console's own clock speed. Run that on a host CPU and the instruction returns the host's
+// counter, so the clock comes out fast by exactly the ratio of the two clock speeds - measured at 6.41x on a
+// 4.7 GHz part, and a different number on every machine it runs on. Everything timed by it ran that much fast:
+// psiGetTimeIn100ths, psiSFXGetTimer, the streaming timeouts in FS_AllocateAndLoadBlocking, and the pulsing
+// glow on pickups and usable doors, which is what led here.
+//
+// CXBX never had the problem because it rewrites every rdtsc in the image and emulates it at the Xbox's rate
+// (Cxbx-Reloaded/src/core/kernel/support/PatchRdtsc.cpp). The standalone loader executes the instruction
+// natively, so the arithmetic has to be corrected here instead.
+//
+// QueryPerformanceCounter rather than rdtsc scaled by a measured CPU frequency: it is already the fixed-rate
+// monotonic counter that measuring rdtsc would be trying to approximate, and it does not drift when the CPU
+// changes speed. Every caller takes a difference between two of these, so the epoch is arbitrary and only the
+// rate matters - which is just as well, since the original counted from power-on and this counts from the
+// first call.
+//
+// Two rdtsc sites remain in the image and are deliberately not touched here. QueryPerformanceCounter at
+// 0x000f53d4 is the XBE's own, and is wrong in the same way for anything that calls it. FUN_0010afe0 is a bare
+// rdtsc used by the XBE's NV2A driver to timestamp vblank interrupts and predict the next one; that layer
+// talks to real graphics hardware registers and does not run at all behind the D3D9 backend.
+//
+// AUTOINJECT
+double timestamp(void) {
+
+  static LARGE_INTEGER frequency = { 0 };
+  static LARGE_INTEGER origin = { 0 };
+
+  if (frequency.QuadPart == 0) {
+    LARGE_INTEGER f, o;
+    if (!QueryPerformanceFrequency(&f) || f.QuadPart == 0) {
+      f.QuadPart = 10000000; // the usual value; being wrong beats dividing by zero
+    }
+    QueryPerformanceCounter(&o);
+    origin = o;
+    frequency = f; // published last, so nothing can see a frequency without an origin to go with it
+  }
+
+  LARGE_INTEGER now;
+  QueryPerformanceCounter(&now);
+  long long ticks = now.QuadPart - origin.QuadPart;
+
+  // Split rather than (ticks * 1000000) / frequency, which overflows a 64-bit multiply after a few days of
+  // uptime. Microseconds first, then scaled, to keep the original's quantisation - it truncated to whole
+  // microseconds before converting to milliseconds and callers may compare small differences.
+  long long micros = (ticks / frequency.QuadPart) * 1000000
+                   + ((ticks % frequency.QuadPart) * 1000000) / frequency.QuadPart;
+  return (double)micros * 0.001;
+}
+
+
+// The same fault one layer down, in the XAPI the game links against. These two are a matched pair and the
+// original is self-consistent only on a real console:
+//
+//     QueryPerformanceCounter   (000f53d0)  returns the raw cycle counter
+//     QueryPerformanceFrequency (000f53e1)  returns the literal 0x2bb5c755 = 733,333,333
+//
+// i.e. the counter is whatever the CPU is running at, and the frequency is a hard-coded claim that it is a
+// 733 MHz Xbox. Anything dividing one by the other therefore gets time that passes too fast by the ratio of
+// the real clock to that constant - the same 6.41x that made pickups pulse wrongly, arrived at by a different
+// route. The XMV video decoder is the caller that matters: maybeXmvDecoderCreate asks for the frequency once,
+// stores frequency/1000 as ticks-per-millisecond, and maybeXmvDecoderUpdate divides counter deltas by it to
+// decide when each frame of a background movie is due.
+//
+// Replacing both with the host's own pair keeps them consistent with each other, which is the only property
+// the callers actually depend on - none of them assumes any particular frequency, they all ask. Patched by
+// address rather than by name because the names collide with the Win32 functions being called here.
+//
+// Both are __stdcall taking one pointer and returning 1 in EAX, confirmed from the image: each ends RET 4.
+
+// FUNC_AT(000f53d0)
+uint32_t __stdcall Xbox_QueryPerformanceCounter(LARGE_INTEGER *counter) {
+  QueryPerformanceCounter(counter);
+  return 1;
+}
+
+// FUNC_AT(000f53e1)
+uint32_t __stdcall Xbox_QueryPerformanceFrequency(LARGE_INTEGER *frequency) {
+  if (!QueryPerformanceFrequency(frequency)) {
+    frequency->QuadPart = 10000000; // as in timestamp() above: being wrong beats a divide by zero
+  }
+  return 1;
+}
 
 // AUTOGEN
 void __stdcall PlrStat_Init(void);
@@ -566,6 +657,7 @@ void GameFlow_Main(void) {
     GameState.VideoFrames += VIDEO_FRAME_RATE / FRAME_RATE_INT;
   }
 
+
   // vestigial logic, value never read?
   bVar2 = (byte)GameState.NumFrames & 0x3f;
   if (0x1f < bVar2) {
@@ -680,7 +772,17 @@ bool Graphics_IsPalI(void) {
 
 // AUTOINJECT
 void mainloop(void) {
-  int refreshRate = Graphics_IsPalI() ? 50 : 60;
+  // Fixed: this was backwards (50 for PAL, 60 otherwise) relative to the original's own formula at this
+  // exact spot ("(-(uint)(cVar1 != 0) & 10) + 50", i.e. 60 when Graphics_IsPalI() is true, 50 otherwise) -
+  // confirmed against the raw disassembly of both this function and xboxInitGraphics's matching refresh-
+  // rate calculation, which agree with each other and disagree with the ternary this used to have here.
+  // Despite the name, Graphics_IsPalI() reads true for everywhere except the PAL-I region specifically.
+  int refreshRate = Graphics_IsPalI() ? 60 : 50;
+
+  int fpsOverride = Settings_GetFPSOverride();
+  if (fpsOverride > 0)
+    refreshRate = fpsOverride;
+
   GS_SetRefreshRate(refreshRate, refreshRate);
   GameFlow_Main();
 }

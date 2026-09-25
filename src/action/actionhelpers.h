@@ -1,11 +1,18 @@
 #ifndef ACTIONHELPERS_H_
 #define ACTIONHELPERS_H_
 
-// Original is 640x480, 1280x960 is a clean 2x scaling
+// Original is 640x480, 1280x960 is a clean 2x scaling.
+//
+// Higher resolutions now work - 1920x1080 runs at full speed with no measurable cost, and the window is
+// created at whatever size is set here - but the menus and the positioned HUD sprites are still authored in
+// 640x480 coordinates and do not move with it. See the longer note in src/inject_action.cpp before raising
+// this.
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 // #define SCREEN_WIDTH 1280
 // #define SCREEN_HEIGHT 960
+// #define SCREEN_WIDTH 1920
+// #define SCREEN_HEIGHT 1080
 
 #include <stddef.h> // for offsetof
 
@@ -36,6 +43,7 @@ typedef struct AnimState AnimState;
 typedef struct sprite sprite;
 typedef struct SpriteInfo SpriteInfo;
 typedef struct _D3DMATRIX D3DMATRIX;
+typedef struct MatrixChainNode MatrixChainNode;
 typedef struct M_CONTROL M_CONTROL;
 typedef struct M_ITEM M_ITEM;
 typedef struct M_MANAGER M_MANAGER;
@@ -78,6 +86,7 @@ typedef short MallocFlags;
 #include "engine/FS.h"
 #include "engine/Inflate.h"
 #include "engine/Loader.h"
+#include "engine/Script.h"
 #include "engine/Text.h"
 #include "engine/Vision.h"
 #include "engine/parsemap.h"

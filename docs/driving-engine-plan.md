@@ -1,0 +1,1076 @@
+# Driving engine: state of knowledge and project plan
+
+Companion to `cxbx-removal-plan.md` (the action engine). Written September 2026 after a first survey of
+`Driving.xbe` in Ghidra (`/Xbox_EU/Driving.xbe`, 8959 functions), the repository's driving code
+(`src/driving`, `src/inject_driving.cpp`) and the PS2 symbol spreadsheet. Facts below cite addresses in the
+Xbox EU build so they can be re-checked. Sections 1 to 7 are the original survey, made before anything ran;
+section 0.1 is what running it has since measured, and where the two disagree, 0.1 is right.
+
+Revised after the action engine stopped needing CXBX at all. Section 0 is what that changes, and it changes
+enough that the order of work at the end is different: several items in the original plan were workarounds
+for CXBX's behaviour, and are now worth skipping rather than doing.
+
+## 0. What the standalone loader changes
+
+The action engine now runs with no emulator in the process: `action.exe` (`src/loader/`) maps `default.xbe`
+itself, resolves its kernel imports and runs it. Most of that machinery is not specific to the action engine,
+so the driving engine inherits it. What follows is measured rather than assumed - `disc/Driving.xbe` was
+surveyed statically for the numbers below, and they can be re-derived without opening Ghidra
+(`python tools/survey_xbe.py disc/Driving.xbe`).
+
+**What comes for free.**
+
+- *The loader.* `Driving.xbe` has the same image base (`0x10000`) and is smaller than the action XBE
+  (`0x244f40`, 2.3 MB, against `0x2fb660`), so the reservation array in `src/loader/reserve.cpp` already
+  spans it. Loading it should be a matter of pointing the loader at a different file.
+- *The dual-header trick.* The loader keeps its own PE headers and the XBE's headers both live at `0x10000`
+  (see the action plan, 4.3). That is generic; the driving engine reads its own header the same way.
+- *Kernel imports.* 100, against the action engine's 96, and the same file/event/timer/memory shape. The
+  twelve implemented in `src/loader/kernel.cpp` are shared, and anything missing announces itself by name
+  and by the address that called it instead of crashing.
+- *Diagnostics.* The loader's fault handler prints the faulting address, what it touched, and a call stack
+  walked from the frame pointers. That is most of section 4's proposed "crash capture" already built, and it
+  wants only symbolisation from `tools/functions_driving.json` to be exactly what that section asked for.
+  `tools/drive_game.ps1` drives the menus with synthetic input to reach a level unattended.
+
+**The FS-segment problem is the same size here, which was not obvious.** Game code reaches the Xbox KPCR
+through FS, and a Win32 thread has a TEB there instead; this is the one genuine incompatibility in the
+action engine's startup. `Driving.xbe` makes 2987 FS accesses against the action engine's 40, which looks
+alarming until they are broken down by offset:
+
+| Offset | Meaning on Xbox | Driving | Action | Status |
+| --- | --- | ---:| ---:| --- |
+| `+0x00` | SEH exception list | 2956 | 10 | identical on Win32 - **nothing to do** |
+| `+0x04` | the TLS array | 6 | 6 | the incompatible one; Win32 keeps the stack base here |
+| `+0x20` | `KPCR.Prcb` | 8 | 6 | Win32 has the process id |
+| `+0x24` | current IRQL | 7 | 8 | Win32 has the thread id |
+| `+0x28` | current `KTHREAD` | 8 | 8 | Win32 has `ActiveRpcHandle`, which is free |
+| `+0x58` | (unidentified) | 2 | 2 | dormant in the action engine |
+
+So the whole difference is `FS:[0x00]`, which is a C++ codebase using structured exception handling
+everywhere and costs nothing. **The part that needs work is 31 sites against the action engine's 30** - the
+same handful of functions, and the same fixes should apply: replace the five or so functions that read
+`FS:[0x04]` rather than trying to repoint it (Win32 validates every SEH frame against the stack base kept
+there), and patch out the `FS:[0x20]` notification hook. Budget a day, not a month.
+
+**The hazard: standalone, DSOUND drives real hardware.** This is the one thing that is strictly harder
+without CXBX, and it is worth understanding before starting. The XBE statically links Microsoft's DirectSound,
+whose lower half programs the MCPX audio registers at `0xfe80xxxx` and spins on them. Under CXBX those calls
+were replaced wholesale by CXBX's HLE. Standalone they run for real against unmapped memory, so **any**
+DSOUND call that is not intercepted faults or hangs - and a zero-filled page would hang rather than fault,
+because the waits are `do {} while ((reg & ~3) < 4)`.
+
+The action engine hit this through exactly one gap: the XMV decoder calls `DirectSoundCreateStream` directly
+rather than through any game function the seam had replaced, so it reached the real library. The fix was to
+hook those entry points at their own addresses (`src/action/sound/dsndStream.cpp`).
+
+For the driving engine this is not an edge case but the main event: 63 DSOUND entry points under EA's `SND`
+layer. The seam has to be complete before the engine will boot standalone at all, which moves audio from
+"section 6.2, after graphics" to "the thing that decides whether anything runs". The good news is that the
+`SNDPLATFORM_*` boundary is above DirectSound, so a complete seam there means no DSOUND entry point is ever
+reached - and the action engine's XAudio2 backend, including the stream implementation, is already written
+and is reusable.
+
+**Two smaller things to expect,** both already solved once:
+
+- *Privileged instructions.* An Xbox title runs in ring 0. `WBINVD` (cache flush before the GPU reads memory)
+  raises `0xc0000096` on Windows; the action engine had three, patched to nops because nothing reads game
+  memory behind its back any more. Expect the same, plus possibly `CLI`/`STI` in the EA sound driver thread.
+- *The physical-memory alias.* `0x80000000 | address` is the Xbox's uncached view of RAM. The action engine
+  funnels every use through one helper that decides once, by probing whether the alias is mapped, whether to
+  apply it; do the same here rather than scattering the decision.
+
+**Naming.** The CXBX-hosted launchers are `action_cxbx.exe` and `driving_cxbx.exe`; the standalone loader is
+`action.exe`. `driving_cxbx.exe` carries the suffix even though its standalone sibling does not exist yet,
+because the suffix is what says it still needs an emulator - a plain `driving.exe` sitting beside a
+standalone `action.exe` would quietly imply otherwise. `driving.exe` is reserved for the standalone build
+when there is one. The injected DLLs keep their plain names (`actioninject`, `drivinginject`): they are not
+specific to a host, and `actioninject.dll` is already loaded unchanged by both. (`driving.exe` now exists - see 0.1 - and is the same loader binary as `action.exe` with two default file names changed.)
+
+**And one correction to section 6.3 below:** the action-to-driving hand-off cannot become an in-process
+transition. Both XBEs are linked to base `0x10000`, and the loader gets that address by *being* the image
+there - so only one XBE can be mapped at a time, and that is not a limitation a cleverer loader removes. The
+hand-off stays a process relaunch: the loader re-executes itself with the other XBE, carrying the launch
+data page across in a file, which is what `psiLaunch.bin` already does. (Done, in `src/common/launchInfo.cpp`:
+`XLaunchNewImageA` starts `driving.exe` or `action.exe` from beside the running executable and exits. The
+driving engine needs it between the parts of a mission, not only at the end - `ReturnToAction` launches
+`DRIVING.XBE` itself for the next part, which is where the first full play-through stopped.)
+
+## 0.1 Status: what runs standalone today
+
+**As of 21 September 2026 the underwater level is playable standalone, with graphics and sound.** A full
+play-through of the level with no geometry glitches, correct materials, the pause menu complete, and the
+engine, effects, voice-over and music all audible and panned as they should be (play-tested; the run logs
+say the same). What is not there yet is at the end of this section under "What is left". The rest of the
+section is the history of how it got here, kept because each step records a trap the next engine will
+meet.
+
+Measured rather than predicted - every line below came out of a run. `driving.exe` (the loader, built from
+the same sources as `action.exe` with `IS_DRIVING` choosing the two default file names) maps `Driving.xbe`,
+loads `drivinginject.dll`, and the engine first **loaded a level and entered its game loop** like this:
+
+```
+[timer] tick every 20 ms (timer 16), callback at 0x0010ae10
+[d3d9] device created on window (640x480 backbuffer, 32-bit float reversed depth, paced to 50 Hz)
+(00:00:01) 35.58MB - Init File System
+-------- Loading file data\track\uw_mis11.crp ... (6256128 bytes)
+(00:00:03) 28.47MB - Entering GameLoop
+(00:00:03) 28.44MB - Init Game Render
+[d3d9] shader 5 translated: 8 NV2A instructions, inputs 0x0007, outputs 0x1009, streams 0x007
+```
+
+So: process startup, the C runtime, the launch-data read, `main`, the 36 MB heap, the file system, the
+async loader, controllers, the scheduler, the underwater level's data, and the first vertex shaders through
+the D3D9 backend's translator. At that point it stopped in the renderer's first frames; the subsections
+below are what it took from there.
+
+### What it took
+
+- **The loader's kernel**, one import at a time as its stub table named them: `NtClose`, the event and wait
+  family (`NtCreateEvent`/`SetEvent`/`ClearEvent`/`PulseEvent`/`WaitForSingleObject(Ex)`/
+  `WaitForMultipleObjectsEx`, `KeDelayExecutionThread`), thread control (`NtResumeThread`,
+  `NtSuspendThread`, `NtYieldExecution`), `ExQueryNonVolatileSetting` answering PAL-I and English, and a
+  file system (`src/loader/file.cpp`): `NtCreateFile`, `NtOpenFile`, `NtReadFile`, `NtWriteFile`, the two
+  information classes the game asks for, and `RtlInitAnsiString` beside them. Paths resolve through
+  `src/common/xboxPath.cpp`, which moved out of the action engine so the loader could share it.
+- **The startup replacement**, `src/driving/platform/XboxStartup.cpp`: `mainXapiStartup`, `XapiInitProcess`,
+  the last-error pair, the CRT's per-thread data, the seven `FS:[0x20]` notification hooks and nine `WBINVD`
+  sites. It is the action engine's file transposed - the XAPI in the two XBEs decompiles identically - and it
+  carries the address correspondence table, so the next person does not re-derive it. `XInitDevices`,
+  XAPI's `GetCurrentThreadId` and `SetThreadPriority` go the same way: all three reach for something a Win32
+  thread does not have, or for a USB stack that is not there.
+- **The tick source**, `src/driving/platform/XboxTimer.cpp`: `timeSetEvent` (`0x0010eed3`) becomes winmm's,
+  with `timeBeginPeriod(1)`. XAPI's own is a thread waiting on sixty-four kernel timer objects; implementing
+  the dispatcher under it would have meant reproducing Xbox timers and DPCs to deliver a callback Windows
+  delivers itself. This is the "timer of our choosing" section 2 asks for, and what step 4 should now measure
+  `Scheduler::Run` against.
+- **Controllers**, `src/driving/platform/XboxInput.cpp`: XAPI's seven input functions become Win32 XInput.
+  The two APIs are the same API twice - identical digital bits, identical sticks - with two differences: the
+  Xbox's face buttons are analogue (a pressed Win32 button becomes 255) and its black and white buttons take
+  the shoulder bits. `IOModule` then runs unchanged and reads real pads. The keyboard stands in for a pad on
+  port 0 whenever nothing real is plugged into it, as in the action engine.
+- **The graphics seam**, `src/driving/gfx/`, described below.
+
+### Two traps worth knowing about
+
+**Critical sections that were never initialised, and ones that were.** An Xbox `RTL_CRITICAL_SECTION` can be
+built by the compiler - a static one is simply laid out unlocked in `.data` - and XAPI's multimedia timer has
+one at `0x001d2f48`. Those bytes mean something else to Win32, so `EnterCriticalSection` waited on a handle
+that was not one and the boot hung. The loader now initialises any section it has not seen before, on first
+use. The second half of that is subtler: `RtlInitializeCriticalSection` must *always* initialise, even for an
+address already seen, because the game frees and re-allocates blocks that contain sections, and the new owner
+zeroes the memory first. Skipping that left a zeroed section whose first contended wait faulted inside ntdll,
+a long way from the cause.
+
+**A kernel ordinal that was wrong.** `tools/gen_kernel_ordinals.py` took its names from Cxbx-Reloaded's
+`EXPORTNUM` annotations, and the header annotates `NtProtectVirtualMemory` with `EXPORTNUM(205)` - which is
+`NtPulseEvent`'s number. The loader's own table had copied the mistake, so a call to `NtPulseEvent` would
+have landed in `NtProtectVirtualMemory`. The generator now reads Cxbx's kernel thunk array, which is indexed
+by ordinal and therefore cannot disagree with itself; that also fixed nine other names.
+
+**Handles that XAPI turns back into kernel objects.** The loader's `ObReferenceObjectByHandle` returns the
+Win32 handle itself, because there is no object behind it. Two XAPI functions then read ETHREAD fields from
+that "object": `SetThreadPriority` and `GetExitCodeThread`, the second of which faulted at address 0x650
+(handle 0x64c plus four) when the first part of a mission ended and `IFeedback`'s destructor polled its
+thread for `STILL_ACTIVE`. Both are now the Win32 functions, jumped in from `XboxStartup.cpp`; Ghidra lists
+no other caller outside the stubbed USB stack. A read fault at a tiny address inside `0x0010exxx` is this.
+
+The crash that found it was only reachable by playing the level through, so the loader now keeps a record on
+its own: every hard fault goes to `Release\crash.log` (registers, the bytes at EIP, the frame chain and a
+scan of every return address on the stack, which reaches past the first frame without a frame pointer) and
+the first one writes `Release\crash.dmp`, a full-memory minidump. Closing the render window snapshots every
+thread's location first, which is the record for a freeze. `tools/symbolise.py` names the functions.
+
+### The graphics seam, and why it is at the D3D8 entry points
+
+Section 7 step 1 expected the boot to "get as far as audio initialisation and then hit DirectSound reaching
+for hardware". It does not: the renderer comes first. `RRenderer` (`0x0007d2a0`) calls EAGL's device creation
+(`FUN_000e6c00`), which calls `D3D8::Direct3D_CreateDevice` (`0x00169480`), which calls
+`D3D8::CMiniport_InitHardware` (`0x0016fcad`) - the nv2a miniport, with `KeInitializeDpc`,
+`HalGetInterruptVector`, `KeConnectInterrupt`, `HalReadWritePCISpace` and an `out` to port `0x80c0`.
+
+The action engine's seam sits *above* D3D8, reimplementing Eurocom's thin wrappers. That does not transpose:
+the driving engine's equivalent layer is EAGL, which is most of the binary, largely unnamed, and reaches D3D8
+from everywhere. So the seam is at the library boundary instead - every D3D8 and XGRAPHC entry point patched
+at its own address, EAGL running exactly as built. Three things make that work:
+
+- the backend's API already mirrors D3D8 entry point for entry point, because it was written against those
+  semantics for the action engine. It moved to `src/common/gfx/` and is now shared; its only ties to the
+  action engine were a settings read and a streaming report, which became `common/gfx/backendHost.h`;
+- `tools/d3d8_entry_points.py` generates the table of all 113 entry points with the stack-argument size each
+  one pops, read out of the binary by disassembling from the entry point to its first `RET`. That tool has to
+  *follow* a first-instruction jump rather than sweep past it: `Get2DSurfaceDesc` is a one-instruction thunk
+  to a function that pops twelve bytes, and reading the eight bytes of the next function put a four-byte hole
+  in the caller's stack;
+- anything not implemented yet gets a stub that reports itself once, cleans up the caller's stack from that
+  table and returns zero, so a single run names everything the game reaches. The count and the names are
+  printed alongside the backend's frame timing.
+
+**The uncached alias is not a problem here, which was worth checking.** Section 0 warns about `0x80000000 |
+address`, the Xbox's uncached view of RAM. Every site in `Driving.xbe` that sets that bit on an address is
+inside the D3D8 library this seam replaces - fifteen of them, fourteen in D3D8 and one a flag on a physics
+slot index. EAGL never does it, so the seam's `Lock` functions can hand back ordinary pointers and no alias
+has to exist.
+
+### Where it is now
+
+It runs: the underwater level loads, the game reaches its main loop and holds fifty frames a second with
+about 195 draws in each, the menus are textured and take input from a pad or from the keyboard standing in
+for one, and the intro movie plays from inside `misc.viv` at its own 25 fps. Several things were in the way,
+and each was a different kind of wrong - they are written up in the commits, but the two worth knowing about
+here are:
+
+- **the shared backend was reading the action engine's addresses.** It reads D3D8's own deferred state -
+  texture stage operations, filters, fog - back out of the XBE at draw time, and those tables are at
+  different addresses in the two builds. Reading the action engine's landed in the middle of the driving
+  build's XAPI, so every filter mode and colour operation was whatever happened to be in that code. It
+  looked like untextured geometry and it ended as a crash inside the display driver, compiling a shader for
+  the nonsense. The addresses are the engine's to set now (`g_xboxTextureStateTable`), read out of the two
+  functions that write them;
+- **an Xbox title's memory is all executable, and this one means it.** EAGL compiles each model's render
+  method into allocated memory and calls it. Under DEP the first model drawn faults. The loader is linked
+  `/NXCOMPAT:NO` and its memory shims hand out executable pages.
+
+**The seam checks its own replacements now.** Two of them popped the wrong number of argument bytes, which
+is silent until the caller returns into whatever was left on the stack - one arrived as a jump into the
+middle of a vertex buffer, two calls later. Every replacement declares what it pops and the seam compares it
+against the generated table at install time; that check found the second one immediately, and a bug in the
+generator behind it.
+
+### Textures, movies, and a stopped clock
+
+Three things looked like three problems and were not.
+
+**The textures were missing because the D3D8 state tables start empty.** Everything drew as flat squares -
+menus, the briefing screen, the HUD. The backend reads D3D8's deferred texture stage state back out of the
+XBE at draw time, and in the image those tables are all zero: it is the real `Direct3D_CreateDevice` that
+fills them with the defaults, and this seam replaces it. Stage 0's colour operation was therefore
+`D3DTOP_DISABLE`, which is exactly "ignore the texture". `InitialiseD3D8State` in the seam now writes the
+defaults the library would have written - wrap addressing, linear filtering, modulate on stage 0, disable
+above - right after the device is created, and the briefing screen came up fully textured.
+
+**The movies were never broken.** They are not on the disc as loose `.mad` files, they are inside `misc.viv`,
+and the engine's own file system looks for the loose file first and falls back to the open archives - so the
+"could not open `D:\pal\eng\island_intro2.mad`" that led to a patched-around FMV path was the *normal*
+first half of a lookup that then succeeds. The reads land at offset `0x75F6880` of `misc.viv`, which is where
+that movie is. The patch and the stream shim written for it were removed; nothing was wrong with the paths.
+
+**But the movie played at a tenth of a frame a second, and the reason was a kernel variable.** The chain is
+worth writing down, because nothing about the symptom pointed at the cause:
+
+- `KeTickCount` is kernel ordinal 156, and it is *data*: the XBE's import thunk holds the address of a
+  variable the console's kernel increments every millisecond, not the address of a routine. The loader
+  resolved it like every other unimplemented ordinal, to a reporting stub - and because a stub is only
+  reported when it is *called*, a variable that is only ever read said nothing at all. `getTickCount()`
+  returned the first four bytes of a `push` instruction, forever.
+- EA's sound driver thread paces itself with `sleep(nextDeadline - getTickCount())` and `nextDeadline += 10`.
+  With the clock stopped the deadline runs away from it: every iteration sleeps ten milliseconds longer than
+  the last. The 100 Hz sound server was down to two or three hertz within a minute.
+- That server is what drains the mixer's ring buffer, which is 50 ms long. Asked three times a second, it
+  can see at most one ring's worth of movement per ask, so the game believed about 3 kB/s of audio had been
+  consumed where the truth was 96 kB/s.
+- The movie's streaming is paced by audio consumption: video and audio chunks share one ring, and ring space
+  is reclaimed in order, so the unconsumed audio at the tail held everything behind it. The player spun in
+  `GetRCMPChunk` waiting for a video chunk that could not be read until the audio in front of it was freed.
+
+`KeTickCount` is now a real counter advanced by a thread in the loader. The mixer runs at 100 Hz, consumes
+96000 bytes a second, and the intro movie plays at a steady 25 fps; the menus behind it hold 50 fps with
+19 ms a frame to spare. The other data exports the XBE imports - `XboxHardwareInfo`, `LaunchDataPage`,
+`ExEventObjectType`, `PsThreadObjectType`, `HalDiskCachePartitionCount`, `XboxKrnlVersion` - still resolve to
+stubs and are still read as though they were data. None has caused trouble yet, but they are all the same
+shape of trap.
+
+**There is a sampling profiler now** (`src/common/xbeProfiler.cpp`), because none of the above was findable
+any other way: the XBE is mapped by hand, so no Windows profiler can see into it. It suspends every thread in
+the process a thousand times a second, records EIP, and prints the hottest addresses per thread - raw
+addresses for the XBE, which are the ones Ghidra shows, and `module!export+offset` for anything else. Turn
+it on with `Profile=on` under `[Settings]` in `settings.ini`, the same file the action engine's settings live
+in; the file is read once, so it costs a compare a frame otherwise.
+
+### The world was drawing from a single vertex
+
+The level loaded, the game ran at fifty frames a second with about two hundred draws in each, the HUD and the
+menus were right - and the 3D world was not there at all, just the water's blue fog. Three things were in the
+way, and the shape of each is worth keeping, because none of them said anything in a log.
+
+**The shared backend's vertex shader table was too small.** 160 slots, and the driving engine creates about
+196. Past the end `CreateVertexShader` returned a failure the game ignores, so it kept whatever handle it had,
+and `PrepareShaderDraw` dropped every draw that would have used one of the missing shaders - a third of the
+frame's draws, counted but not explained. The table holds 512 now and says so when it fills.
+
+**Vertex type `0x25` (SHORT2) was missing from the declaration translator**, which failed two more shaders
+outright. The Xbox type byte is `(count << 4) | kind`, so the neighbours of a missing entry name it exactly.
+
+**And the one that actually hid the world: an Xbox vertex buffer object has no length in it.** It is three
+words - Common, Data, Lock - because the console's hardware reads the game's own memory and nothing needs to
+know where the buffer ends. The backend was reading a byte size out of word 5, which is where the *action*
+engine's own buffer slots keep one; EAGL's headers keep nothing there, so word 5 was whatever the heap had
+put after the object. It read 12. Every world draw therefore uploaded one vertex and drew the whole level
+from it, which is why disabling depth, culling and alpha changed nothing: there was nothing to reject.
+
+The size now comes from the draw - the highest vertex index it will read, times the stream's stride - which
+is exact, cannot over-read the game's allocation, and does not care which engine made the buffer. The words
+above are kept only as a floor for draws that do not know their own extent.
+
+With that the level draws: the sunken tanker, the water surface, the wreckage. Dark and flat, because the
+materials are the register combiners that are still ahead.
+
+### What the world looked like after that, and what was wrong with it
+
+Geometry on screen is not the same as geometry right. Four more things, each found by looking rather than
+reasoning:
+
+- **The HUD text went black** when the texture stage defaults went in. The font is `X_D3DFMT_LIN_A8` -
+  alpha only - and an A8 texture has no colour in it: sampling one gives RGB zero, on the NV2A as on D3D9.
+  The game draws its text with a combiner that takes the colour from elsewhere and only the coverage from
+  the font, and the combiners are not translated, so the fixed-function fallback painted black. A colour
+  argument naming a texture that has no colour now falls back to the diffuse.
+- **Nothing was depth-sorted.** The translated shaders write depth from w, mapped through the near/far the
+  game gives `SetDepthClipPlanes` - which the driving engine's D3D8 does not even export. With the defaults
+  that mapping is a constant: every vertex in the level came out at the same depth and the scene drew in
+  submission order. When the planes are never set, the shader's own z is used instead.
+- **A one-component short read two bytes of the next vertex.** `X_D3DVSDT_SHORT1` is two bytes; the table
+  had it as four, and D3D9's smallest vertex element is four bytes anyway. The declaration is sized right
+  now, and the translator puts the NV2A's (0,0,0,1) defaults back for anything the declaration does not
+  give, so a neighbour's bytes cannot arrive as this vertex's .y. The backend says so when a declaration
+  reads past its stream's stride, which is how this was found.
+- **The vertex buffers went stale.** On the console the hardware reads the game's own memory, so a buffer
+  the game rewrites is simply rewritten - there is no upload and therefore no moment at which the game has
+  to announce a change. EAGL rewrites plenty of them, and the host copy was taken once and kept: the level
+  drew last time's vertices, in the wrong colours and stretched into the shapes that made it look spiky.
+  The copy is refreshed on each buffer's first use in a frame. Textures have a real signal for this
+  (`D3D9_NotifyTextureModified`, which the action engine's D3D8 calls); nothing calls anything here.
+
+After those four the world was still made of triangles that reached across the screen - "spiky", with the
+right objects moving in the right places. That was the next section's problem.
+
+### The level was drawing the level file's header
+
+Three tools before the finding, because guessing had stopped working:
+
+- **every translated shader is written to `d3d9_shaders.log`** - the declaration tokens as the game gave
+  them, the D3D9 elements they became, the raw microcode and the HLSL. It showed EAGL's vertex layout at
+  once: one stream per attribute (a FLOAT3 position stream, SHORT2 coordinate streams, a D3DCOLOR stream),
+  never interleaved, and every program ending in the XDK's standard viewport epilogue on `c[58]`/`c[59]`,
+  so the translator's assumptions all held;
+- **`DumpEvery=N` in `settings.ini`** dumps every Nth frame as before (it was a compile-time constant, and
+  a rebuild each way), and now also **traces that frame's draws** to `d3d9_trace_<frame>.log`: shader,
+  primitive, vertex range, each stream's buffer object and the memory it points at, the extents of the
+  positions the draw actually reads, and the first transform constants;
+- and the trace was decisive. Every stream of every world draw pointed at the same address, and the bytes
+  there were `7f 45 4c 46` - the ELF header of the render-method object file that begins the level pack.
+  The first "position" of the sunken tanker was `(13073.4, 9e-41, 0)`.
+
+**`D3DResource_Register` adds the base to the Data word; the backend was storing it.** A resource built
+inside a loaded file carries the *offset* of its data from the file's start in its Data word, and
+registering it against the file's address in memory turns that into a pointer - that is what the original
+does (`0x001693a0`: `Data += base`, then masked to 28 bits for anything but a push buffer). The action
+engine only ever registers headers it has just zeroed, so for it "store" and "add" are the same operation,
+and the shared backend had done the former for as long as it had one engine. EAGL registers every static
+vertex buffer in a level pack this way (`VertexBufferConstructor`, `0x000f0ee0`, is one of three callers),
+so all of them read from byte zero of the pack, and the level was that header drawn a few thousand times
+through the right object matrices. One line; the car, the seabed and the cliffs appeared.
+
+Two smaller things fell out of the same investigation:
+
+- **`XGSetVertexBufferHeader` is implemented** (it was the one dropped draw a frame). Its one caller,
+  `FUN_000f6d50`, passes its pointer *minus* `0x80000000` - which on the console strips the uncached alias
+  to reach the physical address, and on a Win32 pointer sets bit 31 instead. So the claim above that EAGL
+  never touches bit 31 was one site short; the seam masks it off, which is right either way;
+- **EAGL's dynamic vertex buffer is three Xbox buffers behind one object**, rotated on each lock
+  (`FUN_000f6d00`), and its stream-binding routine copies each draw's CPU-side array into the current one
+  just before the draw (`FUN_000f6890`). A host copy refreshed once a frame therefore serves the first draw
+  of a frame and feeds later ones stale vertices. That was suspected of the spikes first and was not them,
+  but it is real, so the driving engine's draws now copy exactly the range they read through a dynamic
+  vertex ring at the draw - the same arrangement the index ring already used (`g_streamsVolatile`, set by
+  the seam; the action engine keeps its cached copies). It costs about a megabyte of memcpy a frame.
+
+### The register combiners
+
+With the geometry right, the materials were the fixed-function fallback: the world in fogged washes, the
+car's rear panel a rainbow. The game's materials are NV2A pixel shaders - register combiner programs, 197 of
+them created in a run - and the seam had been accepting and ignoring them. They are translated now
+(`src/common/gfx/nv2aPixelShader.cpp`), and the level looks like the game.
+
+What one of these is, for the next reader: not a program but 240 bytes of register values, the XDK's
+`D3DPIXELSHADERDEF`, which the console's D3D8 copies straight into the push buffer when the shader is set
+(`D3DDevice_SetPixelShader`, `0x0016af60`, is a word-for-word copy). Up to eight combiner stages, each
+computing `A*B` and `C*D` and their sum or a mux on the RGB and alpha halves of a few registers (`r0`, `r1`,
+the four texture results, the two vertex colours, two constants and fog), with a mapping on every input and
+a scale on every output; then a final combiner doing `A*B + (1-A)*C + D`. The translator writes the same
+arithmetic as ps_2_0 HLSL (ps_2_b when a long program needs the room), reads all of a stage's inputs before
+writing any of its outputs because the halves run in parallel, and clamps where the hardware clamps.
+
+Three decisions worth knowing about:
+
+- **Fog is the host's.** The NV2A applies fog only where the final combiner does, and ps_2_0 cannot read
+  the fog factor. 36 of the 61 custom final combiners here are the standard `fog.a * r0 + (1 - fog.a) *
+  fog.rgb`, and the other 136 shaders leave the final combiner at its default, which the runtime fills in
+  with the same blend. In both cases the program leaves fog out and D3D9's post-shader fog, driven by the
+  vertex shader's `oFog`, does that exact blend; for any other final combiner the host's fog is turned off,
+  as the hardware would have it. A program that reads the fog register anywhere else sees its colour with a
+  factor of one.
+- **Constants come from two places.** A stage's constant is the literal in the definition unless its
+  mapping nibble names one of the sixteen `SetPixelShaderConstant` registers, which the original checks per
+  stage as it writes (`0x0016b160`); the backend builds the block the same way at each draw. Nearly every
+  mapping here is "none"; the car's paint is one that is not.
+- **The stages are the program's.** A translated shader binds Xbox stage *n* to sampler *n* and reads
+  coordinate set *n*, with none of the packing the fixed-function fallback does, and the bump-environment
+  matrices (`SetTextureState_BumpEnv`, which the seam used to drop) are read out of the deferred texture
+  state table where the original puts them. `X_D3DTSS_COLORSIGN` expands the channels the game declared
+  signed, which is how the bump maps arrive.
+
+What the game uses, from a dump of all 197 (`tools/nv2a_psh_dump.py --summary` on
+`d3d9_pixel_shaders.log`, which the backend writes with the HLSL each became): texture modes PROJECT2D,
+PASSTHRU, BUMPENVMAP (nine) and one dependent-AR read; dot products in 35 stages, output scaling in 67,
+combiner writes to the texture registers in 37, a single mux. All translated. The modes the game does not
+use - the cube and 3D projections, the DOT_* reflection family, clip planes - sample as 2D and say so in
+the log, so a shader that turns up later in another level names itself rather than drawing black.
+
+The pause menu's missing backdrop went with it: the panel is drawn through a combiner, and had been coming
+out invisible through the fallback. So did the loading-screen images.
+
+**And the text went black, which corrected an earlier correction.** The fonts are alpha-only textures, and
+the text combiner is `r0 = v0 * t3`: the vertex colour times the texture's colour. On the NV2A an A8 texture
+samples as (1, 1, 1, a) - xemu's format table swizzles it that way - so the colour is the vertex's. On D3D9 an
+A8 samples as black, which is what the translated combiner then drew. The earlier "an alpha-only texture has
+no colour on the NV2A either" (above) was wrong; the fixed-function hack it justified, taking the colour from
+the diffuse, happened to give the right answer for the fixed-function path and was removed. A8 textures are
+widened to A8L8 with a white luminance on upload, and every path gets white.
+
+Two things were added while looking for what the combiners had left: `CheckVertices=on` in `settings.ini`
+reads every draw's positions out of the game's memory before the draw and, for the first one that is not a
+number or is off any level's scale, logs the draw and its streams and dumps that frame - it exists for a
+glitch that lasts one frame, which no periodic dump catches (a minute of driving has not yet produced one,
+so whatever those are, they are not positions out of range); and the dumped frame's textures are written
+out beside it, decoded, with the header words in each file's name. `tools/drive_game.ps1` can now hold a
+key (`-HoldKey w -HoldDelayMs 20000 -HoldMs 60000` drives the car for a minute), and can wait for a line
+in the game's log before it does: `-HoldKey enter -HoldAfterPattern "draw mix: [1-9][0-9][0-9]? indexed"`
+holds START once the level is drawing, which is how the pause menu is reached on every run rather than
+when the load happens to take the expected time. It also re-asserts the foreground before every key, with
+the ALT tap Windows requires of a process that does not own it.
+
+**The one-frame spikes were the vertex ring wrapping mid-draw.** Found by the method the diagnostics above
+could not manage on their own: `DumpBurst=500` writes the five hundred frames after the level first draws
+as `burst/frame_NNNN.bmp`, a person looks through them and names the frames (36, 410 and 448 in one run),
+and `TraceBurstFrames=36,410,448` then traces those with a backbuffer image after every single draw, so the
+draw that puts the wrong polygon up is the first image it appears in. It was the car body, one frame in
+sixteen or so, with its vertex streams read from the wrong bytes. A discard of a dynamic buffer renames it:
+draws already issued keep the old memory, everything locked afterwards lands in the new. A draw here has
+up to eight streams, locked one after another, and when the ring's wrap fell between two of them the
+earlier streams were in the old allocation, the later in the new, and D3D9 bound the new one for all of
+them. A megabyte a frame wraps sixteen megabytes every sixteen frames, which is "every so often", and the
+wrap frames the backend logs during a burst were the glitch frames exactly, one for one. A draw now reserves
+what all its streams need before the first is written, and wraps then or not at all. The same frames are
+clean.
+
+**The pause menu's girl, and a texture commit that copied.** Solved after the paragraph below was written;
+it stays because the wrong guesses in it are instructive. The window is `GGirl` - `InitGirl` (`0x000d7990`),
+`DoGirl` (`0x000d7a50`), `KillGirl` - called straight from `DrawPauseMenu`, and it is a bodge of exactly the
+kind a late feature gets: two 128x128 textures made procedurally, a run-length stream decoded thirty times
+a second *directly into the texture's pixels*, blended with a scrolling fire table, double-buffered by
+hand, drawn as a quad. It never commits the texture again after the first time, because on the console it
+does not need to. The two engines share nothing here: the action engine's `psiDecompressWoman` is a different
+studio's different format.
+
+Why it showed noise: EAGL's texture commit (`FUN_000eba80`) registers a texture *in place* when its
+descriptor lies in the physical-memory alias `0x80000000..0x8FFFFFFF` - it tests the descriptor's own
+address, not the pixel pointer - and otherwise allocates contiguous memory, copies the pixels once, and
+registers the copy. The girl's descriptors come from the shape allocator, physical memory on the console,
+so there the GPU reads the buffer `DoGirl` writes. Here nothing is at `0x80000000`, the commit copied the
+pixels while they were still uninitialised, and every frame decoded afterwards went into memory nothing
+read. Proved by a page guard on the copy - once registered, nothing ever wrote to it - and by a stack scan at
+the header build naming `InitGirl` under `DrawPauseMenu`.
+
+The fix for now is two no-ops in the seam (`PatchTextureCommitInPlace` in `gfx/d3dSeam.cpp`) over the
+conditional jumps that choose the copy path, so every texture registers in place - which is what the
+console does for everything EAGL keeps in physical memory, and this backend can read any memory. The risk
+is a texture whose source the game frees after committing; none seen. The proper answer, deferred, is a
+real alias: contiguous allocations served from a reservation at `0x80000000`, which needs a
+large-address-aware loader, an audit of every pointer-as-signed-integer in the loader, seam and backend,
+a survey of the XBE for other physical-ness tests (including the write-combined alias at `0xF0000000`),
+and the seam's own allocations moved into the alias too so that there is one convention. Section 0's
+warning about the alias was right; this is where it bit.
+
+**The lights were glares, and the glares were quad lists the backend dropped.** The red and blue lights -
+the car's brake lights, the lamps round the laser-grid door, the emitters on its lasers, the fuse box behind
+it - never drew, and the long-standing guess was that they were lens flares waiting on visibility tests.
+They are not. Measured on 24 September 2026, with probes on each function in the chain and the teleport
+below to stand in front of the door every run:
+
+- *Lens flares are only the sun.* `RLensFlareManager` is given exactly one flare a frame, by the sky draw
+  (`0x000a6690`, from its two world-render callers), 1500 units out along the light manager's sun angle.
+  Underwater there is no sky, so no flare and no visibility test - the `[perf]` line's zero is correct.
+  `TestFlares`/`DrawFlares` and the occlusion queries behind them are in section 3, which also has why
+  the flare never drew until the counts were scaled to the game's multisampling - verified in the snow
+  level.
+- *The lights are model glares.* A model node of type 2 with flag bit 0 is a glare point: as the model draws,
+  `DrawGroupDrawInstance` (`0x0007dcb0`) hands it to `FUN_000a9aa0`, which applies the node's blink
+  (`FUN_000a99a0` - the triangle and sawtooth brightness the fuse box has), a facing test for directional
+  ones (brake lights face backwards) and a range limit, and queues it with `RGlareManager`. `DrawEffects`
+  then calls `DrawGlares` (`0x000aa5d0`), which builds two camera-facing quads per glare and draws them
+  through the `BondPostGlare` render method - whose program ends in `D3DDevice_DrawVertices` with primitive
+  8, a quad list. Nothing about them is gated on a visibility test.
+- *And the backend had no quads.* D3D9 has no quad primitive; the immediate-mode path split quads into
+  triangle pairs, but the stream paths' primitive mapping had no case for 8, so every glare draw returned
+  before it reached D3D9 - silently, which is why a trace of the frame showed nothing. Quad lists now become
+  indexed triangle lists in all three draw paths (`QuadListIndices`), and quad strips and polygons map to
+  strips and fans. The lights match a CXBX capture of the same spot.
+
+A trap on the way, for the next effect that goes missing: the glare manager has a second way in,
+`RGlareManager::AddGlare` (`0x000a9c10`), used only by GFX effects with a `gg` tag and by the sun - a probe on
+that alone reads zero at every light in the level and points the wrong way. The `DrawFlares` call the inject
+used to NOP out (for the sun's scale under CXBX) is restored.
+
+**Testing aids that came out of it.** `src/driving/devtools/Teleport.cpp`: F8 in-game logs the car's place
+as `Teleport=x,y,z,dx,dy,dz` and appends it to `teleports.txt`, F9 goes back to it, and `Teleport=` in
+`settings.ini` (or `tools/drive_game.ps1 -Teleport`) puts the car there unattended and dumps the frame - it
+uses the game's own `EResetPlayerCarPos` sequence, so the height comes from the ground. `-GameHold brake`
+holds a trigger from inside the game, immune to window focus and to a real pad being switched on (which
+takes port 0 from the keyboard), and `-DumpAfterMs` dumps a frame without teleporting. One START is now
+enough to reach the level: with the movie skipped the load is quick, and a second START pauses the game,
+which also freezes its effects. `D3D9_TraceNote` marks a dumped frame's draw trace, so a hook can bracket
+the draws one game function issues.
+
+**Choosing the mission from the command line** (`src/driving/platform/LaunchOptions.cpp`, 24 September
+2026). `driving.exe -mission N` - or the track name - starts that mission, or that part of one, without
+swapping `psiLaunch.bin` files; `tools/drive_game.ps1 -GameArgs "-mission 4"` passes it through. The
+mission comes from the launch page's `MissionNum` (`0x00244504`), which `MissionNumToString` (`0x000596a0`)
+turns into a track: 1 `paris_mis01`, 2 `uw_mis11`, 3/4/7 `junglea_mis13a`/`jungleb_mis13b`/`junglec_mis13c`
+(Island Infiltration's three parts), 5 `snow1a_mis3`, 6 `snow2a_mis4`, 8 `snow2a_race`. A part is just a
+number: winning one reads `CHAIN_NEXT_MISSION`/`CHAIN_NEXT_MISSION_NAME` from the level's attributes
+(`SMissionManager::Win`, `0x000b8574`) and relaunches with those, so `-mission 4` is exactly where the chain
+out of part one lands. The option only changes the page as it is read (a clean built-in hand-over stands in
+when there is no file, and a between-parts page's "LOADER READY" second-boot marker is cleared), and
+`-difficulty 1..4` does the same for the difficulty. Every other `-`/`+` flag goes to the game's own `main`,
+which knows `-ntsc`, `-pal`, `-pal60`, `±streams` and `-T<track>`; `main` frees its `argv`, so the startup
+builds it in the XBE's process heap as XAPI did. The loader's positional XBE and DLL come first and end at the
+first option. Verified: `-mission 6 -pal` over the underwater page loads `snow2a_mis4`, and
+`-mission jungleb_mis13b` with no launch file loads the jungle's second part to its opening cutscene.
+
+### Sound
+
+The seam has XAudio2 behind it now (`src/driving/sound/xaudio2Driving.cpp`), and it is a different shape
+from the action engine's backend because the engine is a different shape. What EA's `SND` layer actually
+does with DirectSound, read out of `dsndMixInit` (`0x0013d5e0`) and `dsndCreateBufferAndMixBins`
+(`0x0013d430`):
+
+- **six looping 48 kHz mono PCM buffers of 50 ms, one per 5.1 speaker**, played once at start-up and never
+  stopped. EA's software mixer (`AMix`) mixes every sound in the game into them on the CPU from its 100 Hz
+  thread, 20 ms at a time, ahead of the play cursor it reads back through `GetCurrentPosition`. Nothing
+  tells DirectSound the memory changed: the console's hardware read it live;
+- **180 pooled buffers**, 48 kHz mono, Xbox ADPCM or PCM, given their samples by pointer, played once or
+  looping, pitched with `SetFrequency`, positioned with per-mixbin volumes (`SetMixBinVolumes_8`, fifteen
+  thousand calls in a run). No 3D: this DirectSound has no 3D voice entry points at all.
+
+So every voice streams: it copies the next four milliseconds out of the game's memory each time XAudio2
+finishes a chunk, decoding ADPCM on the way (`common/sound/xadpcm.cpp`, moved from the action engine), and
+reports the start of the chunk sounding now as its play cursor. The rewritten rings and the static sounds
+are the same case, no hook the game does not offer is needed, and the read-ahead of eight milliseconds sits
+inside the mixer's twenty. The mastering voice runs at 48 kHz so the mixer's output is never resampled;
+mixbins become a stereo output matrix. The `[xa2]` line beside the frame timing counts chunks streamed and
+how many carried sound, which is how a headless run shows audio flowing.
+
+**The rule that took longest: never flush a voice that will be fed again.** The game plays a sound, sets
+its frequency and plays it again within a tick. The first version stopped and flushed the voice on that
+second Play and refilled it; from then on XAudio2 ended every chunk the voice was given the instant it was
+submitted, a million a second, its own thread saturated and every other sound frozen for as long as it
+lasted - which was the sound dropping out while steering, and going for good once a looping voice got
+into that state. Waiting for the flush's own buffer-end callbacks before refilling made no difference. So
+`FlushSourceBuffers` is called once, when a voice is destroyed; a restart or seek changes where the next
+chunk comes from and lets the eight milliseconds already queued play out, and a Stop leaves them queued
+for the resume.
+
+Play-tested after the flush fix: engine, effects, voice-over and music all audible and correctly panned,
+nothing pausing under steering or after the checkpoint, engine and ambient pitch right. Not done: the
+per-voice low-pass filter (`SetFilter`, distance muffling) and the I3DL2 reverb, both accepted and ignored.
+
+**The pause menu's video window, as first understood.** *Superseded - this is `GGirl`, solved: see "The
+pause menu's girl" above. There is no contact video; the "compressed stream" below is `DoGirl`'s run-length
+decode and fire blend, written straight into the texture. Kept for the wrong guesses.* A 128x128 linear texture is bound at stage 3 of a quad in every frame,
+in the level and in the menu, and its memory is a contiguous allocation the game made and writes into
+directly - no lock the seam could see. The console's GPU reads such memory live; the host copy was taken
+once, at first bind, and kept, so it showed whatever the memory held then: nothing here, noise on another
+machine ("static" in the pause menu). Linear textures are now uploaded again on their first bind in each
+frame where `g_streamsVolatile` is set, which is the same policy the vertex buffers needed and for the
+same reason. What is in that memory is another matter. Dumped raw, it is dense high-entropy bytes that
+change every frame in every layout tried - not an image in any format, but something like a compressed
+stream, which means the memory has been reused as a buffer by something else (the contiguous allocator
+zero-fills, so it is written, not stale) while the window's header still points at it. On the console the
+window shows a decoded video of the mission contact; the video is not playing here, and until it does the
+window shows whatever lives in that memory. That is a streaming-and-decoding question, most likely paced by
+the audio path like the intro movie was (section 0.1, "Sound"), and it is where the window's fix is. A lock
+of the backbuffer stand-in now reads the real backbuffer back, in case a screen copy is what fills it;
+nothing has locked it yet.
+
+### Resolution
+
+The engine renders at 640x480 and nothing in it can be asked for more: `RRenderer::ConfigureRes`
+(0x0007cfb0) writes the numbers in and reads only a widescreen flag from the EEPROM's video setting. So a
+higher resolution is the backend's: `RenderWidth` and `RenderHeight` in `settings.ini` make the D3D9 backend
+create the backbuffer at that size while the game goes on believing it has 640x480, and everything that
+arrives in the game's pixels is scaled on the way through - viewports, the immediate-mode and quad paths'
+pre-transformed vertices - and on the way back: the pause menu's readback is filtered down to 640x480, the
+visibility tests' pixel counts are divided by the area ratio, and the stand-in surfaces report the game's
+size. Shader draws need nothing, since their positions are clip space by the time D3D9 sees them, and
+render-target textures keep their own sizes. `Widescreen=1` goes with a 16:9 size: the loader now answers the
+EEPROM's video flags from that key, and the engine renders 16:9 into its 640x480 rather than stretching 4:3.
+Verified at 1920x1080 in the snow level, and in the action engine's space level and results screen - the
+backend is shared, and the action engine's own layout size (SCREEN_WIDTH, 640x480) is exactly what it should
+stay: it is the space its HUD tables and cameras are written in, and the backend does the rest.
+
+### Push buffers: not the main path
+
+Section 6.1 called this the single biggest risk: if EAGL's render methods were precompiled NV2A command
+streams, the backend would need a command interpreter. It is not the main path. Looked at on 24 September
+2026:
+
+- `D3DDevice_RunPushBuffer` (`0x0016baa0`) has two callers. `FUN_000f4340` is a one-line wrapper whose only
+  caller is `FUN_000f6870`, a virtual in the vtable at `0x001ce780` (next to `"EAGL::VertexBuffer new"`), which
+  runs the push buffer held by the object at `DAT_002401c4` if its `+4` word is set. `FUN_000f7040` builds a
+  push buffer header in place, registers it and runs it, and nothing in the image calls it.
+- It is not in the seam, so it reaches the reporting stub - and in about seven hundred logged runs of the
+  underwater level it has never appeared in the "unimplemented entry points reached" list. The level's
+  geometry is all vertex buffers, indices and immediate mode.
+- The caveat is general: render methods are compiled at run time into allocated memory (see "an Xbox title's
+  memory is all executable" above), so a call from one of them is invisible to Ghidra's cross-references.
+  "No caller in the image" does not mean "never called", for this or any other entry point; only running
+  each level says what is reached. If `RunPushBuffer` turns up, the buffer is most likely small and
+  per-effect, and worth dumping and translating at its call site before an interpreter is considered.
+
+### The clock does not run fast
+
+This list used to carry "the clock runs fast", on the evidence of the game's own log timestamps advancing
+several times faster than real time, and the assumption that section 2.1 had arrived here. It had not. The
+timestamps are `GLoadingScreen::Status` (`0x000e2ff0`) printing `TIMER_gettick` - the 50 Hz tick from the
+winmm timer, not the cycle counter - through `"(%02d:%02d:%02d)"` with `tick / 3600`, `(tick % 3600) / 60` and
+`(tick % 60) / 6`. That is minutes, seconds and tenths at 60 Hz; read as hours, minutes and seconds it
+looks fast. The clock is right.
+
+The cycle counter was audited anyway - every `RDTSC` in the image, for what reads it. The result is in
+`src/driving/platform/XboxTimer.cpp`; in short, nothing that steers the game depends on it, unlike the action
+engine's `timestamp()`. The one wrong number was the frame rate `RRenderHigh::Render` estimates as 733e6 over
+cycles per frame, which feeds only the mission manager's per-section frame-rate statistics; it read low by
+the ratio of the host's clock to 733 MHz, and now reads 50.0 at 50 fps (measured). XAPI's `QueryPerformance*` pair is the host's now
+too, although its only caller in the image is D3D8's screen-capture recorder behind the seam. EAGL's profiler
+compares cycle counts only with each other, and the nv2a driver's vblank prediction does not run.
+
+### What is left
+
+Roughly in order of how much a player would notice:
+
+1. **Other levels, played through.** Everything above was measured on the underwater level (and the
+   resolution work glanced at the snow level). The others will reach shaders, texture modes, sound formats
+   and D3D8 entry points this one does not, and the logs are built to name them; the relaunch between
+   mission parts is new and wants exercising on each. This is most of the remaining work, and the items
+   below are largely what it is expected to turn up. `-mission 1` to `8` reaches each one headlessly (see
+   "Choosing the mission from the command line" above).
+2. **The D3D8 entry points still stubbed.** About thirty that EAGL could call return zero and draw nothing:
+   `RunPushBuffer` (above), `SetTransform`, `SelectVertexShader` and `LoadVertexShader`, `CopyRects`,
+   `SetScissors`, `SetRenderState_TextureFactor`, `SetTextureState_TexCoordIndex` and `ColorKeyColor`,
+   `SetRenderState_LineWidth`, the `...NotInline` state setters, `Lock2DSurface`, `BlockUntilVerticalBlank`.
+   None is reached underwater. Read the seam's stub report after each new level. Of the ones that are
+   reached, `DeleteVertexShader` matters: the backend's shader table is 512 slots and a level creates about
+   196, so if a restart within one process does not free them, a few restarts fill it.
+3. **Stencil and fill mode**, accepted and dropped by the seam. The seam ties stencil to shadows; compare a
+   CXBX capture of the same spot to see whether anything is missing. Related, for fidelity rather than
+   correctness: the game asks for two-sample quincunx antialiasing (section 3), and the backend renders
+   without any.
+4. **Sound's remainder**: the per-voice low-pass filter (distance muffling) and the I3DL2 reverb, both
+   accepted and ignored - CXBX's own support for both was partial, so this is past parity rather than to it;
+   and the instrumentation section 4 asks for, which has never been written - the free lists that drained
+   under CXBX are worth watching once, to confirm they do not here.
+5. **The physical-memory alias**, properly (see "The pause menu's girl" above): the two-byte patch that
+   makes EAGL register every texture in place is doing its job, and the design that replaces it is written
+   down there for when a texture drawn from freed memory says it is time.
+
+## 1. What the driving engine is
+
+- A separate XBE (`Driving.xbe`, 1.9 MB, image base `0x10000`, `.text` `0x11000`-`0x15d370`), built from
+  `D:\ToBurn\BondXbox\Final\BondXBOX.exe` (string at `0x10682`). The PS2 map comes from the sibling tree
+  `D:\ToBurn\BondPS2\PS2_EE_Release`, so the two builds share source and, importantly, **link order**.
+- It is EA's **EAGL** engine (EA Graphics Library, the Burnout / Need for Speed lineage; strings
+  `EAGL::Device new`, `EAGL::ViewPort::gpModelViewProjectionMatrix`, `eaglrm.o` = render methods) with the
+  Bond game layer on top: `PBondCar`, `SMissionManager`, `AIGroundVehicle`, `RPlayerCamera`, `GHud`,
+  `WRoadNetwork`, `Simulation`, `PhysicsObject`, `RigidBody` and so on. Reburn3 (the project this repository is
+  modelled on) targets a later EAGL, so its findings on EAGL structures are worth cross-reading.
+- Statically linked libraries by XBE section: `D3D` (108 D3D8 entry points), `D3DX` (matrix helpers and a JPEG
+  decoder), `XGRPH`, `DSOUND` (63 entry points), `XPP`, `DOLBY` (Dolby Digital encoder; irrelevant on PC),
+  plus XAPILIB (39). Kernel imports: 100 (`list_imports`), the usual file/event/timer/memory set.
+- Audio is EA's own `SND*` library on top of DirectSound (`SNDPLATFORM_init`, `SNDDRV_thread`, `SNDBANK_play`,
+  `AMix`, `ASoundManager`, `AStream`), running its own driver thread (`THREAD_create` -> `CreateThread`).
+- Startup: `entry` -> XAPI -> `main` (`0x5a1b0`): parses `-ntsc/-pal/-pal60/-T<track>` style arguments,
+  `Bond_StartUpSystem`, `GameLoop_MainGameLoop` -> `RunTheGame` (`0x5aa80`), then `ReturnToAction` (the
+  `XLaunchNewImage` hand-back). `ApplicationMemoryHeapConfig` (`0x59920`) reads launch info, sets the video
+  mode, starts the timer at the video refresh rate and creates a 36 MB `UMemory` heap.
+- Main loop (`RunTheGame`): tasks are registered on two schedules, `s_SimRate` (`ESimFrameUpdate`,
+  `EAnimUpdate`, `EAIUpdate`, `ESimEndFrame`, `ECameraUpdate`) and `s_oncePerGameLoop` (`ERenderFrame`,
+  `EAudioUpdate`); then `while (Sim.state != 2) { drain ActionQueue; SYNCTASK_run(0); Scheduler::Run(); }`.
+  There is no sleep or vsync wait in the loop itself.
+
+## 2. Timekeeping, and why it misbehaves under CXBX
+
+This is the mechanism behind the "slowdowns / timekeeping errors" and it is fully understood now:
+
+- `Timer_Init(freqHz)` (`0x10ae50`) calls `timeSetEvent(1000 / freqHz, ...)` with `freqHz` = the video
+  refresh rate (50 or 60). The callback `TIMER_ontick` (`0x10ae10`) runs a task list that includes
+  `RealClock_InterruptHandler` (`0x5b9f0`), which does `Clock++` (`Clock` at `0x1e5204`) and a divide-by-2
+  counter. So `Clock` is meant to be a 50/60 Hz wall-clock tick delivered from a timer thread.
+- `Scheduler::Run` (`0x5ba80`) computes `dt = (Clock - lastTickCount) * timeScale`. If `dt` is 0 it does
+  nothing; if `dt < 12` it runs every schedule once per elapsed tick (8 priority passes each) and the
+  once-per-loop schedule on the last tick; **if `dt >= 12` it skips simulation entirely** and just resets
+  `lastTickCount`. (The commented "weird 12" in `inject_driving.cpp` is this stall guard.)
+- Consequences under emulation: CXBX implements `timeSetEvent` with a host timer whose granularity and
+  jitter are worse than the Xbox's; ticks arrive in bursts, so the simulation alternates between doing
+  nothing and catching up several ticks per frame, and any frame longer than 12 ticks (200 ms at 60 Hz,
+  common during loads or CXBX hitches) drops time on the floor.
+- The repository's current workaround (`src/driving/Scheduler.cpp`, injected over `0x5ba80`) ignores `Clock`
+  and runs exactly one simulation tick per loop iteration, which trades jitter for a game speed tied to the
+  frame rate.
+
+**Standalone this changes shape, and for the better.** `timeSetEvent` here is XAPI's, statically linked in
+the XBE, and it is built on the Xbox kernel's timers - so standalone it lands on the loader's kernel
+implementations, which are ours to write. The tick source becomes a Win32 waitable timer or a
+`timeBeginPeriod(1)` thread of our choosing, with no emulation in between, and the jitter this section
+blames CXBX for should simply not be there. Confirm that before patching anything in the game: if a native
+`KeSetTimerEx` delivers ticks evenly, the scheduler's original semantics may need no change at all, and the
+current workaround in `src/driving/Scheduler.cpp` can be deleted rather than replaced.
+
+If it does still need work, the fix below stands.
+
+Proposed fix: replace `Timer_Init`/`TIMER_ontick`/`RealClock_*` with our
+own implementation that derives `Clock` from the host's `QueryPerformanceCounter` (ticks elapsed at 1000/freqHz ms,
+sampled when `Scheduler::Run` is entered, or a `timeBeginPeriod(1)` thread if other timer tasks need
+callbacks), and restore the original `Scheduler::Run` semantics with the catch-up capped (for example run
+at most 4 ticks per loop and never drop time). Then pace the loop: either sleep to the next tick edge in
+`Scheduler::Run` when `dt == 0`, or rely on Present pacing once the D3D9 backend is in use. Keep the
+`timeScale` and cinematic-skipping paths intact. Note *the host's*: the XBE has a function of that name
+too, and it is the one at fault - see 2.1.
+
+### 2.1 The clock runs fast standalone, and it is not emulation's fault
+
+Found in September 2026 while chasing a glow that pulsed at the wrong speed in the action engine. It applies
+here unchanged, and it is the kind of thing that will be misattributed to the section above if you meet it
+cold.
+
+The console's CPU clock is baked into both binaries. Two places read the cycle counter and convert it using
+733.333 MHz, the Xbox's own speed:
+
+- `timestamp()` (action `0x000e8f20`) computes `rdtsc * 3 / 2200 * 0.001` to get milliseconds. 2200/3 is
+  733.333.
+- `XAPILIB::QueryPerformanceCounter` returns the raw counter, and the `QueryPerformanceFrequency` sitting
+  immediately after it returns the literal `0x2bb5c755` = 733,333,333.
+
+On hardware the pair is self-consistent. Executed on a host CPU, `rdtsc` returns the host's counter while
+the divisor still insists the machine is a 733 MHz Xbox, so every interval derived from it passes too fast
+by the ratio of the two clock speeds - measured at **6.41x** on a 4.7 GHz part, and a different number on
+every machine it runs on.
+
+CXBX never showed this, because it rewrites every `rdtsc` in the image and emulates it at the Xbox's rate
+(`Cxbx-Reloaded/src/core/kernel/support/PatchRdtsc.cpp`). The standalone loader executes the instruction
+natively. **This is a decoupling regression, not an emulation artefact, and it will appear in the driving
+engine the moment it stops going through CXBX** - as timing that runs fast, which is exactly what section 2
+above teaches you to blame on CXBX's timer jitter. Do not make that attribution by reflex.
+
+The driving binary carries the same code. Byte-identical searches of the two XBEs on disc:
+
+| | action `default.xbe` | `Driving.xbe` |
+|---|---|---|
+| `QueryPerformanceCounter` body | 1 | 1 |
+| `QueryPerformanceFrequency` body, with the 733,333,333 literal | 1 | 1 |
+| raw `0f 31` byte sequences | 5 | 13 |
+
+`XAPILIB::QueryPerformanceCounter` is at `0x0014bee0` in the driving symbols. The raw byte counts are an
+upper bound rather than a site count - some `0f 31` runs are data, which is why CXBX's patcher carries a
+false-positive filter - so expect fewer real sites than 13, but more than the action engine's three.
+
+*Audited, September 2026 (0.1, "The clock does not run fast"; the site-by-site table is in
+`src/driving/platform/XboxTimer.cpp`).* Eleven real sites and two data matches, and the prediction above did
+not hold: the driving engine has no `timestamp()` equivalent, and the `QueryPerformance*` pair has no caller
+outside D3D8. Nothing that steers the game reads the cycle counter. The frame-rate estimate, EAGL's bare
+`RDTSC` helper and the XAPI pair are corrected regardless; the profiler and the nv2a driver are left.
+
+**What was done in the action engine, to copy rather than rediscover.** `timestamp()` and the
+`QueryPerformance*` pair were replaced with injected versions built on the host's own
+`QueryPerformanceCounter`/`QueryPerformanceFrequency` (see `src/action/game.cpp`, which carries the full
+reasoning). Three things worth carrying over:
+
+- The counter pair is patched **by address** (`FUNC_AT`) rather than by name, because the names collide with
+  the Win32 functions being called inside them.
+- Replacing *both* halves is what matters. Consistency between them is the only property the callers depend
+  on - none assumes a particular frequency, they all ask for it. The action engine's caller of record is the
+  XMV video decoder, which stores frequency/1000 as ticks-per-millisecond at creation and divides counter
+  deltas by it to decide when each frame of a background movie is due.
+- Verify by measurement, not inspection. The action engine's check was the game's own `psiGetTimeIn100ths`,
+  which should advance 100 per second: it read 641 before the fix and exactly 100 after.
+
+The action engine's third `rdtsc` site, a bare wrapper used by the XBE's NV2A driver to timestamp vblank
+interrupts and predict the next one, needed no fix - that layer talks to real graphics registers and never
+runs behind a native backend. Expect the same to be true of the driving engine's equivalents, but check what
+each site is for before assuming it.
+
+## 3. Lens flares
+
+What this section first described is right as far as it goes, and was wrong about what it covers: the
+lens flare is only the sun (see "The lights were glares" in 0.1 - the lights on cars, mines and doors are a
+different system that has no visibility test).
+
+`RLensFlareManager::TestFlares` (`0x9e720`) draws a test quad per flare inside an NV2A visibility test
+(`FUN_000e7c60`/`FUN_000e7c80` wrap `D3DDevice_BeginVisibilityTest`/`EndVisibilityTest`, index 0..15
+ring). The quad is 16x16 when the manager fell back to the `sunf` texture (no `moon` texture was found,
+`+0x21dc`), and `RLightManager + 0x2d0` pixels otherwise. `DrawFlares` (`0x9e540`) spins on
+`D3DDevice_GetVisibilityTestResult` until the result is ready and computes intensity as
+`(count - 256) / 256`, drawing the glare only when that is above zero. Its only input is the sky draw
+(`0x000a6690`), which adds the sun each frame. (When the `moon` texture *was* found, `DrawFlares` draws
+nothing at all.)
+
+**The count is samples, not pixels, and that is the whole design.** EAGL creates its device with
+`MultiSampleType` `0x1121`, two-sample quincunx: the NV2A renders into a buffer twice as wide, and a visibility
+test counts samples. So the 16x16 test quad counts 512 when the sun is in full view - intensity 1.0 - and
+the flare fades out as the quad is covered, reaching nothing at half. A count of pixels tops out at 256,
+which is intensity zero: a backend that counts pixels never shows the flare, however visible the sun is.
+
+Under CXBX the visibility test was answered with a host occlusion query at the host's render resolution, so
+the count scaled with the render-scale squared and the flare exploded; the inject NOPped the `DrawFlares`
+call. The D3D9 backend answers the tests with `D3DQUERYTYPE_OCCLUSION`, multiplies by the game's samples per
+pixel (read from its present parameters, so two here) and divides by the area ratio when
+`RenderWidth`/`RenderHeight` are larger; the NOP is gone.
+
+**Verified 24 September 2026 in "Enemies Vanquished"** (`snow2a_mis4`), with teleports recorded along the
+village road (`teleports.txt`, mission 6): at `7.915,-43.023,-417.366` the sun is clear, the test counts 512
+and the flare draws in full with its rays; at `128.751,-43.024,-421.415` it is behind the clock tower, counts
+about 207 and nothing draws; at `320.173,-43.023,-418.841` it is behind a tree, counts about 446 and the flare
+draws smaller and dimmer.
+
+## 4. The crash: DirectSound buffer pool exhaustion in the EA sound layer
+
+Earlier debugging traced the driving-level crash to a NULL pointer inside the audio system, and NULL checks
+added to a custom CXBX build did not help. The static reading explains both: the NULL is manufactured and
+dereferenced in the game's own EA `SND` layer, above anything CXBX can guard.
+
+How the layer works (`SNDPLATFORM_init`, `0x13dc50`):
+
+- At start-up it creates **180 DirectSound buffers** in two pools: 152 in pool 0 and 28 in pool 1
+  (`NUM_SND_BUFFERS1/2`, list heads `LList_maybeFreeDsndBuffers[2]`, active lists
+  `Llist_MaybeActiveDsndBuffers[2]`, each via `dsndCreateBufferAndMixBins`). Pool 1 is for looping/streamed
+  timbres (`patchHeader->field18_0x13 == 20` selects it in `SNDPLATFORM_playtimbre`).
+- A 100 Hz driver thread (`SNDDRV_thread`, `0x13d980`, paced with `getTickCount`/`SleepMilliseconds`
+  under `SNDI_mutex*`) runs `SNDSYSI_100hzserver` -> `iSNDserve` (`0x13e530`), the only place that polls
+  `IDirectSoundBuffer_GetStatus` and returns finished buffers to the free lists. `SNDPLATFORM_stop`
+  (`0x13de50`) returns them on explicit stops.
+- `SNDPLATFORM_playtimbre` (`0x142b10`) pops a buffer from the pool's free list for every platform voice
+  of the timbre. If that list is empty it first calls `FUN_0013d550`, which **borrows from the other pool**:
+  pops a node there, `Release`s its DirectSound buffer and creates a replacement of the wanted type.
+
+The two NULL paths, both reachable only when the pools run dry:
+
+1. If **both** free lists are empty, `FUN_0013d550` picks pool index `-1` and pops from memory in front of
+   the array; the returned "node" is garbage or NULL and `node->dsndBufferObj` is dereferenced. This is the
+   "all slots filled" case.
+2. If the replacement `IDirectSound_CreateSoundBuffer` inside the borrow fails (CXBX's HLE can fail where
+   the hardware never did), `node->dsndBufferObj` becomes NULL and the next `SetBufferData`/`Play` on it
+   crashes.
+
+Why the pools run dry under CXBX but not on hardware: buffers are only reclaimed when `GetStatus` reports
+them stopped, from the 100 Hz thread. CXBX's DirectSound emulation reports playback status from a host
+buffer whose position and completion do not track the Xbox's (the action engine's movie stutter had the
+same root: emulated status/timing), and CXBX's thread scheduling can starve the 10 ms driver loop. Either
+way finished one-shot sounds stay "playing", the free lists drain over minutes of play, and the crash
+lands when a busy moment needs more voices than are left. The fact that it triggers "eventually" on
+driving levels, not immediately, fits a leak rather than a hard limit.
+
+What to do, in order:
+
+1. **Instrument** (one afternoon): hook `SNDLINKI_pop` (`0x13f110`) / `SNDLINKI_push` (`0x13f0b0`) to log
+   both free-list lengths once a second and on every pop that returns NULL; hook `FUN_0013d550` to log
+   borrows and a NULL result from `dsndCreateBufferAndMixBins`; count `iSNDserve` iterations per
+   second to see whether the driver thread keeps its 100 Hz. Add the generic crash logger below so the
+   next crash names its function. If the free lists trend down over a level, the leak is confirmed.
+2. **Contain**: make `FUN_0013d550` and the pop site in `SNDPLATFORM_playtimbre` fail soft -
+   when no buffer is available, steal the oldest active buffer of the pool (stop it and reuse it) instead
+   of borrowing from an empty neighbour, and treat a NULL from buffer creation as "voice unavailable"
+   (`SNDVOICEI_free` the voice and return). This turns the crash into a dropped sound.
+3. **Cure**: the native audio backend (section 6.2), where buffer status is exact and creation cannot fail.
+
+*The cure is in (section 0.1, "Sound"): buffer status comes from XAudio2's own queue, and a full level
+played through without a voice going missing. The instrumentation below is still unwritten.*
+
+**This diagnosis now argues for skipping straight to the cure.** Every symptom in this section is downstream
+of CXBX reporting playback status from a host buffer that does not track the Xbox's, and the audio seam has
+to be written anyway before the driving engine will boot standalone at all (section 0). Containment is a
+fix for a host that is being removed. The instrumentation in step 1 is still worth having - it is how the
+diagnosis gets confirmed rather than assumed, and it keeps its value against the native backend, where the
+same free lists should simply never drain.
+
+Performance and other crashes still need data:
+
+- **Crash capture**: *built, in the loader rather than the DLL* - `Release\crash.log`, `Release\crash.dmp`
+  and `tools/symbolise.py` (0.1, "Handles that XAPI turns back into kernel objects"). The original
+  proposal: a vectored exception handler in the injected DLL that logs EIP, registers, the faulting address
+  and a stack walk, symbolised from `tools/functions_driving.json`.
+- **Sampling profiler**: *built* - `src/common/xbeProfiler.cpp`, `Profile=on` in `settings.ini` (0.1,
+  "Textures, movies, and a stopped clock"). The original proposal: a thread that every 1 ms suspends the
+  game's threads, reads EIP and histograms by function.
+- Candidate hot spots to expect: `D3DDevice_Begin`/`SetVertexData2f`/`4f`/`End` immediate-mode calls (per
+  vertex HLE overhead), `D3DDevice_RunPushBuffer` (EAGL submits precompiled NV2A command streams - see 6.1),
+  `BlockOnFence`/`IsBusy`/visibility-result spins, and the sound driver thread contending with CXBX's
+  thread emulation.
+- Other candidate crash sources, lower priority: the 36 MB `UMemory` heap (`UMemory::Init(0x2400000)`),
+  async big-file streaming (`UFileLoader` request lists, `SYNCTASK`), and the `Event` buffer
+  (`EventManager`, 32 KB ring at `0x1e47d4`) overflowing when the simulation catches up many ticks at once
+  (the timekeeping fix in section 2 may remove that class by itself).
+
+## 5. Symbols: making the driving binary readable
+
+### 5.1 Current coverage
+
+- Ghidra: 8959 functions; `tools/functions_driving.json` exports 7982 of them, 2118 with real names (the
+  rest `FUN_*`). Naming density by 64 KB region ranges from good (`0x40000`-`0x4ffff`: 41 unnamed of 585)
+  to almost none (`0x150000`+: library code).
+- The PS2 spreadsheet (`offset, size, method_name, known_func_address, known_offset, guess_offset,
+  guess_func_address, note`): 12719 rows, 529 `.obj` module markers in link order (212 distinct modules),
+  3256 rows with a human-reviewed Xbox address, 492 with a guess only. Large classes with no matches yet:
+  `EAGLAnim` (667 symbols), `EAGL` (578), `EAGLInternal` (160), `GHud` (150), `RPlayerCamera` (144),
+  `AIGroundVehicle` (114), `AICharacter*` (150+), `RCMP` (73).
+- Agent Under Fire symbols have been transposed with Ghidra's similarity tools (unverified coverage).
+
+### 5.2 Suggested tooling: link-order alignment
+
+Because both builds come from one source tree with one link order, the PS2 symbol sequence and the Xbox
+function sequence are two orderings of nearly the same list, with local insertions and deletions
+(platform-specific objects, inlining differences, VU0 code on PS2). That is a sequence-alignment problem,
+and the 3256 confirmed matches are anchors. Build `tools/driving_symbol_align.py` that:
+
+1. Loads the sheet CSV and `functions_driving.json` (plus, from Ghidra, per-function features: size,
+   number of call sites, callees, referenced strings, whether it is referenced from a vtable).
+2. Runs a monotonic alignment (dynamic programming with a gap penalty) between consecutive anchors,
+   scoring candidate pairs on size ratio, callee-count similarity, and **string anchors**: the EA allocator
+   takes a name string per allocation (`"EAGL::DynamicLoader new"`, `"EventBuffer"`), event classes have
+   `GetEventName` returning a literal, and there are printf formats and file paths everywhere. A function
+   that references `"%s\\paris_intro.mad"` on both platforms is a match regardless of code differences.
+3. Propagates matches through **vtables**: PS2 vtables carry `type_info` names; once one virtual of a class
+   is matched, the Xbox vtable (same slot order) names every other virtual of the class. This alone should
+   cover most of `GHud`, `RPlayerCamera`, the `E*` event classes and the AI hierarchy.
+4. Propagates through the **call graph**: if `A` and `B` are matched and PS2 `A` calls `X` at the same
+   position Xbox `A'` calls `X'`, propose `X = X'`.
+5. Emits proposals with a confidence and the evidence, for review in the sheet (new column), and an
+   importer that writes accepted names into Ghidra (extend `ghidra/NightfireSync.py`, which currently only
+   exports).
+
+Expect this to lift named coverage from ~2100 to well over 5000 functions in a few iterations; the EAGL
+library half of the binary is where AUF symbols help most, since that engine version is closer to AUF's.
+
+### 5.3 Conventions
+
+Keep the action-side conventions: rename in Ghidra, re-sync the JSON, cite addresses in comments. Add a
+`docs/driving-symbols.md` glossary as classes become understood (scheduler, event manager, UMemory,
+UFileLoader are already partly documented in `src/driving`).
+
+## 6. Removing CXBX from the driving engine
+
+Same method as the action engine (`cxbx-removal-plan.md` section 2), same order, with these differences.
+
+### 6.1 Graphics: broader than the action engine
+
+The action engine used 41 D3D8 entry points and its own vertex shaders; the driving engine reaches 108,
+and its usage is a different shape:
+
+- **Fixed-function transforms** (`SetTransform`, `D3D_UpdateProjectionViewportTransform`) alongside
+  vertex shaders (`CreateVertexShader`, `LoadVertexShader`, `SelectVertexShader`, constants) - the D3D9
+  backend's translator can be reused for the shader side; the fixed-function side needs the world/view/
+  projection state and the fixed-function vertex pipeline (D3D9 still has it).
+- **Pixel shaders** (`CreatePixelShader`, `SetPixelShader`, `SetPixelShaderConstant`): NV2A register
+  combiner programs, which the action engine never used. These need a translator to ps_1.x/ps_2_0 or to
+  fixed-function stage states where they are simple. CXBX's `PixelShader.cpp` is a reference for the
+  combiner semantics (read, do not copy).
+- **Immediate mode** (`Begin`/`SetVertexData2f`/`4f`/`SetVertexDataColor`/`End`) for HUD and debug drawing.
+- **Push buffers** (`RunPushBuffer`, `D3DDevice_MakeSpace`, `D3D_SetFence`): EAGL "render methods"
+  (`eaglrm.o`) may be precompiled NV2A command streams. Find out first how much geometry goes this way
+  (xrefs of `D3DDevice_RunPushBuffer` and what builds the buffers); if it is the main path, the backend
+  needs an NV2A command interpreter for the subset used, which is the single biggest risk item in this
+  plan. If it is only used for a few effects, it can be reimplemented per call site. *(Answered in 0.1,
+  "Push buffers: not the main path": two callers, neither reached on the underwater level; the render
+  methods draw through ordinary D3D8 calls.)*
+- Visibility tests (section 3), fences (`InsertFence`/`BlockOnFence`), `CopyRects`, palettes
+  (`CreatePalette2`/`SetPalette` - P8 textures), tiles/scissors/screen-space offset, `PersistDisplay`,
+  `SetTile`, `GetGammaRamp`, stencil states, `TextureFactor`, `BumpEnv`, `ColorKey`, `LineWidth`,
+  `FillMode`, `Dxt1NoiseEnable`.
+- `D3DX` section: matrix functions and a JPEG decoder (loading screens?) - plain C, reimplement or map to
+  a small library.
+
+Plan: sweep the callers of all 108 entry points (`get_bulk_xrefs`), reimplement the EAGL device layer
+functions that call them (`EAGL::Device`, `EAGL::GeoPrimState`, `RRenderer`, `SimpleDraw`, `RStateManager`)
+as the seam, trace a level, then extend `d3d9Backend.cpp` (shared with the action engine, behind the same
+`GraphicsBackend` switch) with the missing features in the order the trace demands.
+
+### 6.2 Audio - do this first, not third
+
+*Done, and not as described here* - see "Sound" in section 0.1. The seam went in at DirectSound's own 63
+entry points rather than at `SNDPLATFORM_*`, because that is completeness by construction; and the action
+engine's backend was not reused, because EA's layer mixes on the CPU into six speaker rings the hardware
+read live, which needs a streaming backend rather than a voice-per-buffer one. The paragraphs below are the
+original reasoning, kept for the record.
+
+63 DSOUND entry points behind EA's `SND*` platform layer (`SNDPLATFORM_init`, `SNDPLATFORM_playtimbre`,
+`SNDVOICEI_*`, `SNDSTRM_*`, `SNDDRV_thread`) - a cleaner boundary than the action engine's, since the EA
+layer is already an abstraction with its own voice allocator and mixer (`AMix`). Seam the `SNDPLATFORM_*`
+functions, then reuse the XAudio2 backend from the action engine (voices, mixbins, I3DL2 listener,
+streams). The driver thread and its mutexes (`SNDI_mutex*`, `THREAD_*`) become Win32 threads/critical
+sections.
+
+The seam has to be **complete** rather than merely good, because anything that slips through reaches the
+XBE's real DirectSound and its hardware registers (section 0). The action engine's experience is the warning:
+its seam covered every game-side call and still missed the video decoder, which calls DirectSound directly.
+Here, check the same way - find every caller of the 63 entry points, and treat any that is not inside the
+`SND*` layer as a hole to hook at the entry point itself.
+
+### 6.3 Runtime, kernel, loader
+
+Identical shape to the action plan, plus: the multimedia timer (section 2), Xbox events
+(`NtCreateEvent/SetEvent/PulseEvent/WaitForMultipleObjects`), kernel timers (`KeSetTimerEx`),
+`KeTickCount`/`KeQueryInterruptTime` reads, and `UFileLoader`'s big-file streaming on `NtReadFile`.
+The loader from the action plan should load either XBE - `Driving.xbe` is smaller than the action XBE and
+has the same base, so the existing reservation covers it. The hand-off stays a **process relaunch**, though:
+both XBEs are linked at `0x10000` and the loader gets that address by being the image there, so two of them
+cannot be mapped at once. The loader re-executes itself with the other XBE and the launch data page travels
+in a file, as `psiLaunch.bin` already does. (An earlier version of this plan expected an in-process
+transition; that is not possible, and it is not a limitation a better loader removes.)
+
+## 7. Suggested order of work
+
+Reordered now that the standalone loader exists. Steps 1, 2, 3, 6 and 7 are done, and 4 turned out to need
+nothing (the native timer delivers even ticks and the scheduler's original semantics hold; the cycle
+counter of 2.1 was audited and steers nothing); 0.1 says what each bought and what it corrected about the
+order below, and its "What is left" is the current list. Step 5, the symbol tool, has not been needed yet -
+every function this work touched was named by hand from its callers. The principle that changed: the original order front-loaded
+fixes for CXBX's behaviour - scaling the visibility-test result, containing the sound-buffer leak, replacing
+the game's clock - and each of those is a correction for a host that is being removed. Going standalone first
+makes several of them unnecessary rather than merely earlier.
+
+The risk of going standalone first is that nothing runs until the audio seam is complete, so there is a
+longer stretch with no playable build than the old order had. That is the trade, and it is worth it because
+the audio seam is on the critical path either way.
+
+1. **Boot `Driving.xbe` under the loader and see where it stops.** Point the loader at the other XBE, run,
+   read what the kernel stub table names, implement that, repeat - the same loop that took the action engine
+   from nothing to the main menu. Expect it to get as far as audio initialisation and then hit DirectSound
+   reaching for hardware. Cheap, and it turns the rest of this list from estimates into a queue.
+2. **The FS and startup work** (section 0): 31 sites, the same five-ish functions as the action engine.
+   Needed before anything runs, and well understood now.
+3. **The `SNDPLATFORM_*` seam and the XAudio2 backend** (section 6.2). The backend, including streams, is
+   already written for the action engine. This is what makes the engine boot, and it is also the cure for
+   the crash in section 4 - which is why the instrumentation there is worth doing as part of this rather
+   than before it.
+4. **Timekeeping** (section 2), measured rather than assumed: with our own timer implementation underneath,
+   check whether the original scheduler semantics behave before changing them.
+5. **Symbol alignment tool** (section 5). Unchanged, still the enabler for the graphics work, and still
+   parallelisable with everything above.
+6. **Push-buffer investigation** (section 6.1) to size the graphics work, then the D3D8 seam and the D3D9
+   backend extension - including the visibility tests behind the sun's lens flare (section 3).
+7. **Profiling** (section 4) once it runs standalone, where the numbers mean something. Under CXBX they
+   mostly measured CXBX.
+
+Keeping the CXBX path working in parallel, as the action engine did, is still worth it for as long as it is
+free: it is the only way to bisect "did we break this or was it always broken". It stops being free at the
+point where a change has to be conditional on the host, which is the same judgement the action engine's
+`Xbox_RunningStandalone()` records.

@@ -5312,15 +5312,15 @@
         "param_types": [
             "HITDATA_tag *",
             "obj_tag * *",
-            "undefined4",
-            "undefined2"
+            "ushort *",
+            "ushort"
         ],
-        "prototype_string": "float __cdecl Collide_GetDamageNObjects(HITDATA_tag * hitDatas, obj_tag * * objectList, undefined4 objectListIndices, undefined2 numObjectsInList)",
+        "prototype_string": "float __cdecl Collide_GetDamageNObjects(HITDATA_tag * hitDatas, obj_tag * * objectList, ushort * objectListCountOut, ushort maxObjectsInList)",
         "parameters": [
             "[HITDATA_tag * hitDatas@Stack[0x4]:4]",
             "[obj_tag * * objectList@Stack[0x8]:4]",
-            "[undefined4 objectListIndices@Stack[0xc]:4]",
-            "[undefined2 numObjectsInList@Stack[0x10]:2]"
+            "[ushort * objectListCountOut@Stack[0xc]:4]",
+            "[ushort maxObjectsInList@Stack[0x10]:2]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -7385,12 +7385,12 @@
         "return_type": "void",
         "param_types": [
             "char",
-            "int"
+            "HASHCODE"
         ],
-        "prototype_string": "void __cdecl Drone_EnableAll(char param_1, int param_2)",
+        "prototype_string": "void __cdecl Drone_EnableAll(char enable, HASHCODE hashcode)",
         "parameters": [
-            "[char param_1@Stack[0x4]:1]",
-            "[int param_2@Stack[0x8]:4]"
+            "[char enable@Stack[0x4]:1]",
+            "[HASHCODE hashcode@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -36968,11 +36968,11 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "uint32_t"
+            "HASHCODE"
         ],
-        "prototype_string": "bool __cdecl LoadableReload(uint32_t param_1)",
+        "prototype_string": "bool __cdecl LoadableReload(HASHCODE hashcode)",
         "parameters": [
-            "[uint32_t param_1@Stack[0x4]:4]"
+            "[HASHCODE hashcode@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -37358,11 +37358,11 @@
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "int"
+            "HASHCODE"
         ],
-        "prototype_string": "bool __cdecl Script_IsDeathNIS(int param_1)",
+        "prototype_string": "bool __cdecl Script_IsDeathNIS(HASHCODE hashcode)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]"
+            "[HASHCODE hashcode@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -37928,12 +37928,12 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "SCRIPTINFO *",
             "char"
         ],
-        "prototype_string": "void __cdecl Script_FFwd(int param_1, char param_2)",
+        "prototype_string": "void __cdecl Script_FFwd(SCRIPTINFO * scriptInfo, char param_2)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
+            "[SCRIPTINFO * scriptInfo@Stack[0x4]:4]",
             "[char param_2@Stack[0x8]:1]"
         ],
         "is_thunk": false,
@@ -38028,17 +38028,17 @@
     {
         "name": "Script_Interp",
         "address": "0x000c3950",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "SCRIPTINFO *",
+            "SSTREAM *"
         ],
-        "prototype_string": "undefined Script_Interp(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "void __cdecl Script_Interp(SCRIPTINFO * scriptInfo, SSTREAM * stream)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[SCRIPTINFO * scriptInfo@Stack[0x4]:4]",
+            "[SSTREAM * stream@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -44428,13 +44428,13 @@
     {
         "name": "Mat_Normalize",
         "address": "0x000d7be0",
-        "calling_convention": "__cdecl",
+        "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
             "_MATRIX *"
         ],
-        "prototype_string": "void __cdecl Mat_Normalize(_MATRIX * mtx)",
+        "prototype_string": "void __stdcall Mat_Normalize(_MATRIX * mtx)",
         "parameters": [
             "[_MATRIX * mtx@Stack[0x4]:4]"
         ],
@@ -48512,7 +48512,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3a20",
+        "name": "d3dComputeSwizzleMasks",
         "address": "0x000e3a20",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -48522,7 +48522,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000e3a20(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined d3dComputeSwizzleMasks(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -48532,7 +48532,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3aa0",
+        "name": "d3dSetProjectionMatrix",
         "address": "0x000e3aa0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48540,7 +48540,7 @@
         "param_types": [
             "D3DMATRIX *"
         ],
-        "prototype_string": "void __cdecl FUN_000e3aa0(D3DMATRIX * param_1)",
+        "prototype_string": "void __cdecl d3dSetProjectionMatrix(D3DMATRIX * param_1)",
         "parameters": [
             "[D3DMATRIX * param_1@Stack[0x4]:4]"
         ],
@@ -48548,7 +48548,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3b80",
+        "name": "d3dSetColorConstant67",
         "address": "0x000e3b80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48556,7 +48556,7 @@
         "param_types": [
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000e3b80(uint param_1)",
+        "prototype_string": "void __cdecl d3dSetColorConstant67(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ],
@@ -48564,7 +48564,7 @@
         "namespace": "Global"
     },
     {
-        "name": "d3dSetTexture",
+        "name": "d3dSetTextureStage1",
         "address": "0x000e3c10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48573,7 +48573,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __cdecl d3dSetTexture(int param_1, int param_2)",
+        "prototype_string": "void __cdecl d3dSetTextureStage1(int param_1, int param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"
@@ -48604,7 +48604,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3df0",
+        "name": "d3dSetFogEnable",
         "address": "0x000e3df0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48612,7 +48612,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e3df0(int param_1)",
+        "prototype_string": "void __cdecl d3dSetFogEnable(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -48620,7 +48620,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3e60",
+        "name": "d3dSetFogNear",
         "address": "0x000e3e60",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48628,7 +48628,7 @@
         "param_types": [
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_000e3e60(float param_1)",
+        "prototype_string": "void __cdecl d3dSetFogNear(float param_1)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]"
         ],
@@ -48636,7 +48636,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3f00",
+        "name": "d3dSetFogFar",
         "address": "0x000e3f00",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48644,7 +48644,7 @@
         "param_types": [
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_000e3f00(float param_1)",
+        "prototype_string": "void __cdecl d3dSetFogFar(float param_1)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]"
         ],
@@ -48652,7 +48652,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3f90",
+        "name": "d3dSetFogColor",
         "address": "0x000e3f90",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48660,7 +48660,7 @@
         "param_types": [
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000e3f90(uint param_1)",
+        "prototype_string": "void __cdecl d3dSetFogColor(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ],
@@ -48668,7 +48668,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3fe0",
+        "name": "d3dDisableLight",
         "address": "0x000e3fe0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48676,7 +48676,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e3fe0(int param_1)",
+        "prototype_string": "void __cdecl d3dDisableLight(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -48684,7 +48684,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e4040",
+        "name": "d3dSetLight",
         "address": "0x000e4040",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48699,7 +48699,7 @@
             "float",
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_000e4040(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, float param_5, float param_6, float param_7, float param_8)",
+        "prototype_string": "void __cdecl d3dSetLight(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, float param_5, float param_6, float param_7, float param_8)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -48734,13 +48734,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e41e0",
+        "name": "d3dBeginFrame",
         "address": "0x000e41e0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e41e0(void)",
+        "prototype_string": "void __stdcall d3dBeginFrame(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -48762,7 +48762,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e4320",
+        "name": "d3dSetLevelDirectionVector",
         "address": "0x000e4320",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48772,7 +48772,7 @@
             "float",
             "float"
         ],
-        "prototype_string": "undefined __cdecl FUN_000e4320(float param_1, float param_2, float param_3)",
+        "prototype_string": "undefined __cdecl d3dSetLevelDirectionVector(float param_1, float param_2, float param_3)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]",
@@ -48896,7 +48896,7 @@
         "namespace": "Global"
     },
     {
-        "name": "d3dSetTexture",
+        "name": "d3dSetTextureStage0",
         "address": "0x000e4950",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48904,7 +48904,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl d3dSetTexture(int texNum)",
+        "prototype_string": "void __cdecl d3dSetTextureStage0(int texNum)",
         "parameters": [
             "[int texNum@Stack[0x4]:4]"
         ],
@@ -48926,6 +48926,42 @@
             "[int streamBufferHandle@Stack[0x4]:4]",
             "[int indexBufferHandle@Stack[0x8]:4]"
         ],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "d3dsetVertexShaderConstant",
+        "address": "0x000e4a50",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined d3dsetVertexShaderConstant()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "d3dsetVertexShader",
+        "address": "0x000e4b30",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined d3dsetVertexShader()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "d3dDrawIndexedVertices",
+        "address": "0x000e4b80",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined d3dDrawIndexedVertices()",
+        "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
@@ -48964,7 +49000,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e4d50",
+        "name": "d3dSetWorldMatrix",
         "address": "0x000e4d50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48972,7 +49008,7 @@
         "param_types": [
             "undefined4 *"
         ],
-        "prototype_string": "void __cdecl FUN_000e4d50(undefined4 * param_1)",
+        "prototype_string": "void __cdecl d3dSetWorldMatrix(undefined4 * param_1)",
         "parameters": [
             "[undefined4 * param_1@Stack[0x4]:4]"
         ],
@@ -48980,7 +49016,19 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e4e80",
+        "name": "d3dSetSkinMatrix",
+        "address": "0x000e4e40",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined d3dSetSkinMatrix()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "d3dSetViewMatrixFromRigidTransform",
         "address": "0x000e4e80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -48988,7 +49036,7 @@
         "param_types": [
             "undefined4 *"
         ],
-        "prototype_string": "void __cdecl FUN_000e4e80(undefined4 * param_1)",
+        "prototype_string": "void __cdecl d3dSetViewMatrixFromRigidTransform(undefined4 * param_1)",
         "parameters": [
             "[undefined4 * param_1@Stack[0x4]:4]"
         ],
@@ -48996,7 +49044,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e4ee0",
+        "name": "d3dMarkTexturePermanent",
         "address": "0x000e4ee0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49004,7 +49052,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e4ee0(int param_1)",
+        "prototype_string": "void __cdecl d3dMarkTexturePermanent(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -49012,7 +49060,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e4f00",
+        "name": "ReleaseTexture",
         "address": "0x000e4f00",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49020,7 +49068,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e4f00(int texIdx)",
+        "prototype_string": "void __cdecl ReleaseTexture(int texIdx)",
         "parameters": [
             "[int texIdx@Stack[0x4]:4]"
         ],
@@ -49130,7 +49178,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e52a0",
+        "name": "d3dRegisterOverlayBuffer",
         "address": "0x000e52a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49139,7 +49187,7 @@
             "int",
             "undefined4"
         ],
-        "prototype_string": "int __cdecl FUN_000e52a0(int param_1, undefined4 param_2)",
+        "prototype_string": "int __cdecl d3dRegisterOverlayBuffer(int param_1, undefined4 param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -49148,7 +49196,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5330",
+        "name": "d3dReleaseOverlayBuffer",
         "address": "0x000e5330",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49156,7 +49204,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e5330(int param_1)",
+        "prototype_string": "void __cdecl d3dReleaseOverlayBuffer(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -49164,7 +49212,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5350",
+        "name": "d3dDrawOverlayQuad",
         "address": "0x000e5350",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49176,7 +49224,7 @@
             "float",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e5350(int param_1, float param_2, int param_3, float param_4, int param_5)",
+        "prototype_string": "void __cdecl d3dDrawOverlayQuad(int param_1, float param_2, int param_3, float param_4, int param_5)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]",
@@ -49244,7 +49292,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e56f0",
+        "name": "d3dGetIndexBufferData",
         "address": "0x000e56f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49252,7 +49300,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000e56f0(int param_1)",
+        "prototype_string": "undefined4 __cdecl d3dGetIndexBufferData(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -49308,7 +49356,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5a10",
+        "name": "d3dSetTextureWithBorderColor",
         "address": "0x000e5a10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49317,7 +49365,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e5a10(int param_1, int param_2)",
+        "prototype_string": "void __cdecl d3dSetTextureWithBorderColor(int param_1, int param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"
@@ -49356,7 +49404,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5db0",
+        "name": "d3dBeginEndAuxRenderPass",
         "address": "0x000e5db0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49366,7 +49414,7 @@
             "undefined4 *",
             "undefined4 *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000e5db0(char param_1, undefined4 * param_2, undefined4 * param_3)",
+        "prototype_string": "undefined4 __cdecl d3dBeginEndAuxRenderPass(char param_1, undefined4 * param_2, undefined4 * param_3)",
         "parameters": [
             "[char param_1@Stack[0x4]:1]",
             "[undefined4 * param_2@Stack[0x8]:4]",
@@ -49376,7 +49424,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5f10",
+        "name": "d3dSetYuvEnable",
         "address": "0x000e5f10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49384,7 +49432,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e5f10(int param_1)",
+        "prototype_string": "void __cdecl d3dSetYuvEnable(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -49392,7 +49440,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5f40",
+        "name": "d3dGetTextureSurfaceLevel0",
         "address": "0x000e5f40",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -49400,7 +49448,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000e5f40(int param_1)",
+        "prototype_string": "void __cdecl d3dGetTextureSurfaceLevel0(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -49484,13 +49532,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e5fc0",
+        "name": "d3dResetRenderTargetAndBuffers",
         "address": "0x000e5fc0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000e5fc0()",
+        "prototype_string": "undefined d3dResetRenderTargetAndBuffers()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -49508,37 +49556,37 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e6260",
+        "name": "d3dResetTransformCaches",
         "address": "0x000e6260",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e6260(void)",
+        "prototype_string": "void __stdcall d3dResetTransformCaches(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e62d0",
+        "name": "d3dInitFallbackOverlayTexture",
         "address": "0x000e62d0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e62d0(void)",
+        "prototype_string": "void __stdcall d3dInitFallbackOverlayTexture(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e6430",
+        "name": "d3dInitShadowBlurTextures",
         "address": "0x000e6430",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e6430(void)",
+        "prototype_string": "void __stdcall d3dInitShadowBlurTextures(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -49656,13 +49704,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e7460",
+        "name": "psiBlurCharacterShadow",
         "address": "0x000e7460",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000e7460(void)",
+        "prototype_string": "void __stdcall psiBlurCharacterShadow(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -51142,13 +51190,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000ead06",
+        "name": "LanguageNVSetting",
         "address": "0x000ead06",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "uint32_t",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall FUN_000ead06(void)",
+        "prototype_string": "uint32_t __stdcall LanguageNVSetting(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -57620,7 +57668,7 @@
         "namespace": "D3D8"
     },
     {
-        "name": "FUN_00103ca0",
+        "name": "D3DDevice_GetRasterStatus",
         "address": "0x00103ca0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -57628,7 +57676,7 @@
         "param_types": [
             "undefined4 *"
         ],
-        "prototype_string": "void __stdcall FUN_00103ca0(undefined4 * param_1)",
+        "prototype_string": "void __stdcall D3DDevice_GetRasterStatus(undefined4 * param_1)",
         "parameters": [
             "[undefined4 * param_1@Stack[0x4]:4]"
         ],
@@ -57862,6 +57910,18 @@
             "[uint param_2@Stack[0x8]:4]",
             "[uint param_3@Stack[0xc]:4]"
         ],
+        "is_thunk": false,
+        "namespace": "D3D8"
+    },
+    {
+        "name": "D3D8::D3DDevice_DrawIndexedVertices",
+        "address": "0x00104a60",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined D3DDevice_DrawIndexedVertices()",
+        "parameters": [],
         "is_thunk": false,
         "namespace": "D3D8"
     },
@@ -66782,7 +66842,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_001300b8",
+        "name": "maybeXmvDecoderCreate",
         "address": "0x001300b8",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -66795,7 +66855,7 @@
             "undefined4",
             "undefined4 *"
         ],
-        "prototype_string": "undefined4 __stdcall FUN_001300b8(undefined4 param_1, undefined4 * param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 * param_6)",
+        "prototype_string": "undefined4 __stdcall maybeXmvDecoderCreate(undefined4 param_1, undefined4 * param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 * param_6)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 * param_2@Stack[0x8]:4]",
@@ -66906,7 +66966,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00130624",
+        "name": "maybeXmvDecoderUpdate",
         "address": "0x00130624",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -66917,7 +66977,7 @@
             "int *",
             "uint *"
         ],
-        "prototype_string": "int * __stdcall FUN_00130624(maybeVideoDecoder * param_1, uint * param_2, int * param_3, uint * param_4)",
+        "prototype_string": "int * __stdcall maybeXmvDecoderUpdate(maybeVideoDecoder * param_1, uint * param_2, int * param_3, uint * param_4)",
         "parameters": [
             "[maybeVideoDecoder * param_1@Stack[0x4]:4]",
             "[uint * param_2@Stack[0x8]:4]",
@@ -67016,7 +67076,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00130eaf",
+        "name": "maybeXmvDecoderWriteFrame",
         "address": "0x00130eaf",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -67025,7 +67085,7 @@
             "int",
             "uint *"
         ],
-        "prototype_string": "void __stdcall FUN_00130eaf(int param_1, uint * param_2)",
+        "prototype_string": "void __stdcall maybeXmvDecoderWriteFrame(int param_1, uint * param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[uint * param_2@Stack[0x8]:4]"

@@ -55,7 +55,44 @@ def export_json(side):
         # We want to make each entry human-readable so that diffs look nice
         json.dump(function_list, outfile, indent=4)
 
+def export_structs(side):
+    # Every structure in the program's own data types, for the overlay classes that stand in for them
+    # (src/common/xbeClass.h): tools/preprocess.py generates each class's fields, at these offsets, from this.
+    # Types are Ghidra's display names ("Schedule *", "undefined4", "TaskRecord_LListEntry *[8]"), which the
+    # generator translates; bit-fields are listed with "bitfield": true and become plain bytes.
+    structs = []
+    for dt in currentProgram.getDataTypeManager().getAllStructures():
+        if dt.isNotYetDefined() or dt.getLength() <= 0:
+            continue
+        fields = []
+        for c in dt.getDefinedComponents():
+            name = c.getFieldName()
+            if name is None or name == "":
+                name = c.getDefaultFieldName()
+            fields.append({
+                "offset": c.getOffset(),
+                "size": c.getLength(),
+                "name": name,
+                "type": c.getDataType().getDisplayName(),
+                "bitfield": c.isBitFieldComponent(),
+            })
+        structs.append({
+            "name": dt.getName(),
+            "category": str(dt.getCategoryPath()),
+            "size": dt.getLength(),
+            "fields": fields,
+        })
+
+    structs.sort(key=lambda x: (x["name"], x["category"]))
+
+    import json
+
+    with open(f"{structs_loc}_{side}.json", "w") as outfile:
+        json.dump(structs, outfile, indent=1)
+    print(f"Exported {len(structs)} structures")
+
 print("Current file: " + __file__)
+structs_loc = os.path.join(os.path.dirname(__file__), "../tools/structs")
 json_loc = os.path.join(os.path.dirname(__file__), "../tools/functions")
 print("Location of JSON: " + json_loc)
 
@@ -79,3 +116,5 @@ fm = currentProgram.getFunctionManager()
 funcs = fm.getFunctions(True)
 
 export_json(side)
+
+export_structs(side)

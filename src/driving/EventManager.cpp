@@ -21,6 +21,7 @@ void* FUN_00114470(size_t sz, uint param_2,const char* param_3) {
     return reinterpret_cast<void* (*)(size_t, uint,const char*)>(0x00114470)(sz, param_2, param_3);
 }
 
+// FUNC_AT(0005a550)
 void EventManager__Init(void)
 {
   eventBuffer = (unsigned int)FUN_00114470(0x8000,0,"EventBuffer");
@@ -29,6 +30,7 @@ void EventManager__Init(void)
   return;
 }
 
+// FUNC_AT(0005a600)
 void EventManager__RunEvents(void)
 {
   Event *puVar1;

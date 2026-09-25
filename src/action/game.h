@@ -11,6 +11,18 @@ void mainloop(void);
 void bootup_bootup(void);
 void psiInitTimeIn100ths(void);
 unsigned long long psiGetTimeIn100ths(void);
+
+// Milliseconds from a free-running host clock. Reimplemented rather than used from the image, because
+// the original divides the CPU's cycle counter by the Xbox's own 733 MHz - see game.cpp.
+double timestamp(void);
+
+// The XAPI's own performance counter pair, replaced for the same reason - see game.cpp. Patched by
+// address, so these names are ours and only the addresses matter. The parameter type is spelled by its
+// tag so that this header does not have to drag in windows.h, which collides with the Xbox-shaped
+// XINPUT structures elsewhere in the tree.
+union _LARGE_INTEGER;
+uint32_t __stdcall Xbox_QueryPerformanceCounter(union _LARGE_INTEGER *counter);
+uint32_t __stdcall Xbox_QueryPerformanceFrequency(union _LARGE_INTEGER *frequency);
 void Reset_MapLoadSettings(void);
 uint GameFlow_GetState(void);
 void GameFlow_PushState(int state, float param_2, uint param_3);

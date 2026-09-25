@@ -29,14 +29,18 @@ set(LAUNCHWRAPPER
   src/cxbx/cxbxbinding.h
 )
 
-add_executable(action WIN32 ${LAUNCHWRAPPER})
-add_executable(driving WIN32 ${LAUNCHWRAPPER})
+# The CXBX-hosted launchers. Both carry the suffix, including driving_cxbx, which has no standalone
+# counterpart yet: the point of the name is to say that it still needs cxbx-reloaded, which a plain
+# "driving.exe" beside a standalone "action.exe" would quietly deny. action_cxbx is kept as the reference to
+# bisect the standalone path against; both go when CXBX does. See docs/driving-engine-plan.md.
+add_executable(action_cxbx WIN32 ${LAUNCHWRAPPER})
+add_executable(driving_cxbx WIN32 ${LAUNCHWRAPPER})
 
-target_link_libraries(action PRIVATE
+target_link_libraries(action_cxbx PRIVATE
   shlwapi
 )
 
-target_link_libraries(driving PRIVATE
+target_link_libraries(driving_cxbx PRIVATE
   shlwapi
 )
 
@@ -45,7 +49,7 @@ target_link_libraries(driving PRIVATE
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 # We aren't currently loading the XBE on our end, so this is unnecessary
-#target_link_options(action PRIVATE
+#target_link_options(action_cxbx PRIVATE
 #  /INCREMENTAL:NO
 #  /BASE:0x10000
 #  /FIXED
@@ -72,14 +76,23 @@ add_library(actioninject SHARED
   src/action/engine/parsemap.cpp
   src/action/engine/psiFile.cpp
   src/action/engine/psiGraphics.cpp
+  src/action/engine/mouseLook.cpp
   src/action/engine/psiInput.cpp
   src/action/engine/psiLight.cpp
   src/action/engine/psiSave.cpp
+  src/action/engine/Script.cpp
   src/action/engine/Text.cpp
   src/action/engine/Vision.cpp
   src/action/engine/Woman.cpp
   src/action/engine/XboxSettings.cpp
+  src/common/xboxPath.cpp
+  src/action/engine/XboxFile.cpp
+  src/action/engine/XboxStartup.cpp
   src/action/engine/Direct3D/d3dhelpers.cpp
+  src/action/engine/Direct3D/d3dSeam.cpp
+  src/action/engine/Direct3D/backendHost.cpp
+  src/common/gfx/d3d9Backend.cpp
+  src/common/gfx/nv2aPixelShader.cpp
   src/action/game/Autoaim.cpp
   src/action/game/weapon_stats.cpp
   src/action/math/math.cpp
@@ -124,14 +137,85 @@ add_library(actioninject SHARED
   src/action/game/obj/Sensor.cpp
   src/action/game/obj/SpaceLaser.cpp
   src/action/game/obj/SpaceMissile.cpp
+  src/action/game/obj/Switch.cpp
   src/action/game/sp/Locks.cpp
   src/action/game/sp/Mission.cpp
   src/action/game/sp/PlayerStats.cpp
   src/action/game/sp/SwitchChannels.cpp
+  src/action/sound/dsndSeam.cpp
+  src/common/sound/xadpcm.cpp
+  src/action/sound/xaudio2Backend.cpp
+  src/action/sound/dsndStream.cpp
   src/action/sound/music.cpp
   src/action/sound/SFX.cpp
   src/action/sound/Sound.cpp
 )
+
+# The seams' native backends (common/gfx/d3d9Backend.cpp, sound/xaudio2Backend.cpp)
+target_link_libraries(actioninject PRIVATE d3d9 d3dcompiler winmm xaudio2)
+
+# The standalone loader (stage B 4.2/4.3): maps the XBE itself and runs it in-process, with no emulator in
+# the process at all. This is "action.exe" - the canonical way to run the action engine - and the CXBX
+# launcher above is the one that now carries a suffix. Linked with /FIXED and no ASLR because the XBE is full
+# of absolute addresses and has to land at its own base; see src/loader/loadermain.cpp.
+add_executable(action
+  # reserve.cpp must stay first: its array has to be the first thing in .text so that the XBE, copied over
+  # the start of the image, lands on the array rather than on the loader's own code. Xbe_Map checks this.
+  src/loader/reserve.cpp
+  src/loader/loadermain.cpp
+  src/loader/xbe.cpp
+  src/loader/kernel.cpp
+  src/loader/file.cpp
+  src/common/xboxPath.cpp
+  # The same icon the other executables carry. A .rc contributes nothing to .text, so it does not disturb
+  # the ordering the reservation array depends on.
+  src/res/res.rc
+)
+# /BASE plus /FIXED is how the loader gets the XBE's address range at all: the kernel maps the executable at
+# its preferred base before anything else exists in the process, which is the only way to be there first.
+# VirtualAlloc cannot do it, even into a suspended process - see src/loader/reserve.cpp.
+# /SAFESEH:NO because the mapped XBE ends up inside this image's address range, so every SEH handler the
+# game registers looks to Windows like one of this executable's - and would be rejected for not being in its
+# table of safe handlers.
+# /NXCOMPAT:NO because an Xbox title's memory is all executable and this one means it: EAGL compiles its
+# render methods into allocated memory and calls them, which under DEP faults the moment a model draws
+# ("tried to access <heap address>, protection PAGE_READWRITE"). Marking the image as not DEP-aware turns
+# DEP off for the process, which is the console's own model; the loader's memory shims hand out executable
+# pages to match (src/loader/kernel.cpp).
+target_link_options(action PRIVATE
+  /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /NXCOMPAT:NO /INCREMENTAL:NO)
+
+# winmm for the millisecond clock behind KeTickCount (src/loader/kernel.cpp).
+target_link_libraries(action PRIVATE winmm)
+
+# Symbol maps for both binaries that appear in crash backtraces.
+#
+# When a fault escapes the loader's own handler - which happens if the corruption is bad enough that the
+# exception cannot be dispatched at all - the host prints raw module offsets instead, as Wine did with
+# "actioninject (+0x16643)". Without a map that offset names nothing. The maps are written beside the
+# binaries, cost nothing at runtime and are not shipped in the executable, so there is no reason not to.
+target_link_options(action PRIVATE /MAP)
+target_link_options(actioninject PRIVATE /MAP)
+
+# The same loader, pointed at Driving.xbe and drivinginject.dll - step 1 of docs/driving-engine-plan.md
+# section 7. Nothing in the loader was ever specific to the action engine: both XBEs have base 0x10000, the
+# reservation array spans the larger of the two, and the kernel imports are the same shape. Only the two
+# default file names differ, and IS_DRIVING is what picks them; both are still overridable on the command
+# line. This is the "driving.exe" the plan reserved the name for.
+add_executable(driving
+  # reserve.cpp first, for the same reason as the action loader above.
+  src/loader/reserve.cpp
+  src/loader/loadermain.cpp
+  src/loader/xbe.cpp
+  src/loader/kernel.cpp
+  src/loader/file.cpp
+  src/common/xboxPath.cpp
+  src/res/res.rc
+)
+target_compile_definitions(driving PRIVATE IS_DRIVING)
+target_link_libraries(driving PRIVATE winmm)
+target_link_options(driving PRIVATE
+  /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /NXCOMPAT:NO /INCREMENTAL:NO /MAP)
 
 add_library(drivinginject SHARED
   src/dllmain.cpp
@@ -144,13 +228,33 @@ add_library(drivinginject SHARED
   src/driving/memory.cpp
   src/driving/EventManager.cpp
   src/driving/Scheduler.cpp
-  src/driving/engine/FileNameList.cpp
+  src/driving/render/RGlareManager.cpp
+  src/driving/render/RSceneObj.cpp
+  src/driving/devtools/Teleport.cpp
   src/driving/engine/UFileLoader.cpp
+  src/common/xboxPath.cpp
+  src/driving/platform/XboxStartup.cpp
+  src/driving/platform/XboxTimer.cpp
+  src/driving/platform/XboxInput.cpp
+  src/driving/platform/LaunchOptions.cpp
+  src/driving/gfx/backendHost.cpp
+  src/driving/gfx/d3dSeam.cpp
+  src/driving/sound/dsndSeam.cpp
+  src/driving/sound/xaudio2Driving.cpp
+  src/common/sound/xadpcm.cpp
+  src/common/xbeEntrySeam.cpp
+  src/common/xbeProfiler.cpp
+  src/common/gfx/d3d9Backend.cpp
+  src/common/gfx/nv2aPixelShader.cpp
 )
 
 
-target_compile_definitions(action PRIVATE UNICODE _UNICODE IS_ACTION)
-target_compile_definitions(driving PRIVATE UNICODE _UNICODE IS_DRIVING)
+# winmm for the multimedia timer the game's tick now comes from (src/driving/platform/XboxTimer.cpp);
+# d3d9/d3dcompiler for the shared graphics backend the D3D8 seam dispatches to.
+target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm xinput9_1_0 xaudio2 shell32)
+
+target_compile_definitions(action_cxbx PRIVATE UNICODE _UNICODE IS_ACTION)
+target_compile_definitions(driving_cxbx PRIVATE UNICODE _UNICODE IS_DRIVING)
 target_compile_definitions(actioninject PRIVATE UNICODE _UNICODE)
 target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)
 

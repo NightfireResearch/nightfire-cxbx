@@ -143,7 +143,8 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     undefined1 field256_0x202;
     undefined1 field257_0x203;
     undefined1 field258_0x204;
-    undefined1 field259_0x205;
+    undefined1 fadeActive; // 0x205 - set to 1 by Camera_SetFade (guards it from stomping an in-progress fade);
+                            // read by Script_Update to avoid double-triggering a scripted-camera-NIS fade-out
     undefined2 nightVisionRelated;
 };
 

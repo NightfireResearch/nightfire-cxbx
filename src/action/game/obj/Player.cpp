@@ -3,7 +3,12 @@
 #include "../view.h"
 #include "../../engine/viewer.h"
 #include "../../engine/Anim.h"
+#include "../../engine/mouseLook.h"
 
+#include "../../input.h"
+#include "../../game.h"
+#include "../sp/SwitchChannels.h"
+#include <math.h>
 #include <string.h>
 
 // AUTOGEN
@@ -14,6 +19,8 @@ void Player_Disable(obj_tag *param_1,char param_2);
 void Player_Enable(obj_tag *param_1, _MATRIX *mtx, int param_3);
 // AUTOGEN
 void Player_SetHealth(BLData *obj, float health);
+// AUTOGEN
+void Concat(float *param_1, float *param_2);
 
 
 #define player_start_positions_index U32_AT(0x002774c8)
@@ -255,4 +262,218 @@ void Player_WeaponNone(obj_tag* obj) {
 
     obj->animState->animFlags &= 0xfe;
 
+}
+
+
+// The game's own view pitch clamp, and the one place mouse look reaches the player.
+//
+// Player_Update runs this immediately after Player_Aiming and before it uses either angle: the yaw in
+// rotationDelta.y is added to the object's rotation a few lines further on, and the pitch here is what the
+// camera reads. So this is the moment when the frame's aim has been decided but not yet acted on, which is
+// exactly where an extra contribution belongs - and, the point of doing it here rather than by pretending
+// to be a stick, it is past the deadzone in psiInput_PollDevices and past the AccelFunc0 ramps in
+// Player_Move and Player_Aiming. See engine/mouseLook.h for why neither should apply to a mouse.
+//
+// Player 0 only. Split-screen players are on pads; there is one mouse.
+//
+// AUTOINJECT
+void Player_ViewClamping(obj_tag *player) {
+
+    BLData *blData = (BLData*)player->extraObjectData;
+
+    // Bit 0 of animFlags is "weapon is zoomed in" (engine/Anim.h). Mouse look needs it for the wheel, which
+    // adjusts the zoom instead of changing weapon while it is set, and for aim speed.
+    if (blData->playerNum == 0) {
+        MouseLook_SetScoped((player->animState->animFlags & 1) != 0);
+    }
+
+    float yawRadians = 0.0f, pitchFraction = 0.0f;
+    if (blData->playerNum == 0 && MouseLook_TakeAimDelta(&yawRadians, &pitchFraction)) {
+
+        if (player->subState == MovementType_ZeroG || player->subState == MovementType_ZeroG_Anim) {
+            // Zero G does not steer the way everything else does. Player_ZeroG builds a rotation matrix from
+            // the frame's turn and concatenates it straight onto the object's matrix, then holds
+            // pitchFromHorizontal at zero - so by the time this runs the orientation is already baked in, and
+            // adding to either of the fields the rest of the game uses achieves nothing. (That is why mouse
+            // look looked completely dead in the last mission while working everywhere else.) The answer is
+            // to apply a second rotation the same way, which is the three calls below, copied from what
+            // Player_ZeroG itself does. Zero G also counts pitch the other way up, hence the negation.
+            _VECTOR delta;
+            delta.x = -(pitchFraction * 1.5707964f); // back into radians, which is what RotMatrix wants
+            delta.y = yawRadians;
+            delta.z = 0.0f;
+
+            _MATRIX rotation;
+            RotMatrix(&delta, &rotation);
+            Concat(player->transformMatrix.m, rotation.m);
+            Mat_CopyRot(&rotation, &player->transformMatrix);
+        }
+        else {
+            blData->rotationDelta.y += yawRadians;
+            blData->pitchFromHorizontal += pitchFraction;
+
+            // Without this the pitch springs straight back to wherever the game last decided the view should
+            // settle: Player_ClampSomeAngles eases pitchFromHorizontal towards pitchAutoLevelTarget by 7.5% a
+            // frame whenever aimAutoLevelState is 2 or 3, which at 50fps undoes the whole movement in about a
+            // quarter of a second. Player_Aiming sets the state to 1 on every frame the stick moves the view,
+            // for exactly this reason, so mouse look says the same thing rather than inventing its own escape.
+            blData->aimAutoLevelState = 1;
+        }
+    }
+
+    // Unchanged from the original, and deliberately after the above so that the mouse cannot drive the view
+    // past straight up or straight down either.
+    if (blData->pitchFromHorizontal < -1.0f) {
+        blData->pitchFromHorizontal = -1.0f;
+    }
+    else if (blData->pitchFromHorizontal > 1.0f) {
+        blData->pitchFromHorizontal = 1.0f;
+    }
+
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Walking, strafing and turning on foot. Transliterated from 0x000a9cf0 so that one line of it can change:
+// the original refuses to walk forwards or backwards while the scope is up.
+//
+//     if ((player->animState->animFlags & 1) != 0) { forward = 0; turn = 0; }
+//
+// Strafing was deliberately left alone, which is why scoped movement is sideways-only in the original. That
+// is a concession to aiming a scope with a thumbstick, and it is dropped here for every input device rather
+// than only for the mouse: making it depend on whether the pointer happens to be captured meant the same pad,
+// in the same level, moved differently depending on something the player was not thinking about. Suppressing
+// the *turn* is not optional - while scoped, Player_Aiming turns the player through its own scope-speed path,
+// and leaving this one in as well would add the two together.
+//
+// Everything else here is the original's arithmetic, reproduced rather than improved:
+//
+//  - the walk axis is shaped by a square law with a small bias, and backwards is 75% of forwards;
+//  - both ground axes ease 20% of the way towards their target per frame, without overshooting it, snap to
+//    zero once the stick is centred and the residue is under 0.01, and clamp to +-FRAME_RATE_MUL * 0.1;
+//  - the turn goes through AccelFunc0, which carries its state in blData->turnAccelState;
+//  - swimming adds the forward component along the view direction instead of the object's own forward, and
+//    accumulates into the movement vector rather than replacing it.
+//
+// ABI note, since this calls two functions by address: AccelFunc0 (0x000b7420) ends in a bare RET, not
+// RET 0x1c, so it is caller-cleans __cdecl despite Ghidra labelling it __stdcall - taking that label at face
+// value would unbalance the stack by 28 bytes. It returns its float in ST0, which is what MSVC expects.
+// ---------------------------------------------------------------------------------------------------------------
+
+// Tuning values the original passes straight through to AccelFunc0. Only the first has a name in the
+// symbols; the other two sit next to it in the same table and are read by address, as the original does.
+#define Ply_NoAimTurnSpeed_X FLOAT_AT(0x00181a70) // 0.04
+#define Ply_TurnAccelParamA  FLOAT_AT(0x00181a74) // 2.0
+#define Ply_TurnAccelParamB  FLOAT_AT(0x00181a78) // 120.0
+
+// False while dying or dead, and in the substates that move the player themselves (climbing, wire, creeping,
+// zipline). Called rather than reproduced, so that naming it in Ghidra later does not leave two copies.
+static bool PlayerMoveAllowed(obj_tag *player) {
+    return reinterpret_cast<bool (__cdecl *)(obj_tag *)>(0x000a9930)(player);
+}
+
+static float TurnAccel(float channel, float *state, float a, float b, float c, float d, float e) {
+    return reinterpret_cast<float (__cdecl *)(float, float *, float, float, float, float, float)>(0x000b7420)
+        (channel, state, a, b, c, d, e);
+}
+
+static void RotMatrixX(float angle, float *matrix) {
+    reinterpret_cast<void (__cdecl *)(float, float *)>(0x000d67b0)(angle, matrix);
+}
+
+// Eases value towards target by 20% of the gap, stopping there rather than overshooting it.
+static float EaseTowards(float value, float target) {
+    float gap = target - value;
+    float moved = FRAME_RATE_MUL * 0.2f * gap + value;
+    if (gap < 0.0f) {
+        return (moved < target) ? target : moved;
+    }
+    return (target < moved) ? target : moved;
+}
+
+static float ClampToStep(float value) {
+    float limit = FRAME_RATE_MUL * 0.1f;
+    if (value < -limit) return -limit;
+    if (value > limit) return limit;
+    return value;
+}
+
+// AUTOINJECT
+void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
+
+    if (!PlayerMoveAllowed(player)) {
+        return;
+    }
+
+    float forward = Input_Actionf(blData->playerNum, ACTION_WALK_F_B, 1);
+    float strafe  = Input_Actionf(blData->playerNum, ACTION_WALK_L_R, 1);
+    float turn    = -Input_Actionf(blData->playerNum, ACTION_AIM_L_R, 1);
+
+    char weapon = player->animState->currentWeaponId;
+    if (((weapon == 0x50) || (weapon == 0x51)) && (blData->weaponObject->curState == 9)) { // the two grapples, reeling in
+        forward = 0.0f;
+        strafe = 0.0f;
+        turn = 0.0f;
+    }
+    if (blData->movementDisabled != '\0') {
+        forward = 0.0f;
+        strafe = 0.0f;
+        turn = 0.0f;
+    }
+    if ((player->animState->animFlags & 1) != 0) { // scoped
+        turn = 0.0f; // Player_Aiming turns through the scope path instead; both would add up
+    }
+    if ((blData->previousSubState == 7) && (blData->maybeCamRelatedCountdown != '\0')) {
+        strafe = 0.0f;
+    }
+
+    if (forward > 0.0f) {
+        forward = FRAME_RATE_MUL * 0.005f + FRAME_RATE_MUL * 0.1f * forward * forward;
+    }
+    else if (forward < 0.0f) {
+        forward = FRAME_RATE_MUL * 0.1f * -0.75f * forward * forward - FRAME_RATE_MUL * 0.005f;
+    }
+    strafe = FRAME_RATE_MUL * 0.075f * strafe;
+
+    float sideways = EaseTowards(blData->lastMovement.x, strafe);
+    if ((strafe >= -0.0002f) && (strafe <= 0.0002f) && (fabsf(sideways) < 0.01f)) {
+        sideways = 0.0f;
+    }
+    sideways = ClampToStep(sideways);
+
+    float forwards = EaseTowards(blData->lastMovement.z, forward);
+    if ((forward >= -0.0002f) && (forward <= 0.0002f) && (fabsf(forwards) < 0.01f)) {
+        forwards = 0.0f;
+    }
+    forwards = ClampToStep(forwards);
+
+    // Channel 0x48 is "cover blown": set once Bond has rendezvoused with Zoe and been told to stop
+    // playing a party guest. Until then he walks rather than jogs, and Player_HandleJump refuses to let
+    // him jump at all. See docs/switch-channels.md for the rest of the hard-coded channels, and for why
+    // a channel number need not mean the same thing in another level.
+    if ((GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1) && (switch_channels[0x48] == '\0')) {
+        speedScale = speedScale * 0.9f;
+    }
+    float moveZ = forwards * speedScale;
+    float moveX = sideways * speedScale;
+
+    float accel = TurnAccel(turn, &blData->turnAccelState, Ply_NoAimTurnSpeed_X,
+                            Ply_TurnAccelParamA, Ply_TurnAccelParamB, 0.05f, 0.95f);
+    blData->turnAccelState = accel;
+    float yaw = accel * FRAME_RATE_MUL * turn;
+
+    if (player->subState != MovementType_Swim) {
+        blData->movement.x = moveX;
+        blData->movement.z = moveZ;
+        blData->rotationDelta.y = yaw;
+        return;
+    }
+
+    // Swimming goes where the player is looking, and adds to the movement vector rather than replacing it.
+    _MATRIX pitched;
+    _VECTOR direction;
+    RotMatrixX(player->rotation.x - blData->pitchFromHorizontal * 1.5707964f, pitched.m);
+    Mat_GetDir(&direction, &pitched);
+    auxVec_AddMulR32(&blData->movement, &direction, moveZ, &blData->movement);
+    blData->movement.x = moveX;
+    blData->rotationDelta.y = yaw;
 }
