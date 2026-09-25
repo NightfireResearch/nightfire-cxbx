@@ -130,6 +130,12 @@ def run(batch_path, do_apply):
     if problems or not do_apply:
         print("dry run" if not problems else "stopped: nothing written")
         return
+    log_path = batch_path.replace(".json", ".log.json")
+    if os.path.exists(log_path):
+        with open(log_path) as f:
+            if all(e.get("ok") for e in json.load(f)["items"]):
+                print(f"already applied (see {log_path}); nothing written")
+                return
 
     subprocess.run([sys.executable, os.path.join(HERE, "snapshot.py"), program], check=True, cwd=HERE)
     log = {"batch": batch["batch"], "program": program, "applied": time.ctime(), "items": []}

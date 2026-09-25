@@ -2,7 +2,7 @@
 
 From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; `undecided` ones are left.
 
-## Driving.xbe: class 358, class (already) 68, undecided 62
+## Driving.xbe: class 359, class (already) 67, undecided 62
 
 | namespace | kind | sheet evidence |
 |---|---|---|
@@ -81,7 +81,6 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | PBondCar | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | PhysicsObject | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | RAnimEngine | undecided | member, prefix |
-| RAnimEngine::Handle | class (already) | const method, constructor, destructor, member |
 | RAnimEngine::System | undecided | member |
 | RBulletStreak | undecided | member |
 | RCamera | class (already) | const method, constructor, destructor, member, type_info, vtable |
@@ -137,7 +136,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | std::vector<> | undecided |  |
 | xboxkrnl.exe | undecided |  |
 
-## DRIVING.ELF: class 144, class (already) 452, undecided 95
+## DRIVING.ELF: class 4, class (already) 595, undecided 124
 
 | namespace | kind | sheet evidence |
 |---|---|---|
@@ -150,6 +149,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | AEngine | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | AFX | undecided | member |
 | AFader | class (already) | const method, constructor, destructor, member, prefix |
+| AFader::Priv | class (already) | constructor, destructor, member |
 | AFingoDeath | class (already) | constructor, destructor, member, type_info, vtable |
 | AGun | class (already) | constructor, destructor, member |
 | AHelicopter | class (already) | constructor, destructor, member, type_info, vtable |
@@ -166,16 +166,20 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | AICharacterHands | class (already) | constructor, destructor, member, type_info, vtable |
 | AICharacterPassenger | class (already) | constructor, destructor, member, type_info, vtable |
 | AICharacterPedestrian | class (already) | constructor, destructor, member, type_info, vtable |
+| AIElementController | class (already) | constructor, destructor, member |
+| AIElementTracking | class (already) | constructor, destructor, member |
 | AIGroundVehicle | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | AIHeliScript | undecided | member |
 | AIHelicopter | class (already) | constructor, destructor, member, type_info, vtable |
 | AIRoadSpawn | undecided | member |
+| AISplinePath | class (already) | constructor, destructor, member |
 | AIVehicle | class (already) | constructor, destructor, member, type_info, vtable |
 | AIVehicleController | undecided | member |
 | AIZoneController | undecided | member |
 | AIndex | class (already) | const method, constructor, destructor |
 | AIndexMap | class (already) | constructor, destructor |
 | ALimitedSound | class (already) | constructor, destructor, member, type_info, vtable |
+| AListener | class (already) | constructor |
 | AMenuSound | undecided | member |
 | AMenuSoundPriv | class (already) | constructor, destructor, member, type_info, vtable |
 | AMix | class (already) | constructor, destructor, member |
@@ -185,9 +189,12 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | APlayerTank | class (already) | constructor, destructor, member, type_info, vtable |
 | APlayerVehicle | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | ARaceEngine | class (already) | constructor, destructor, member, type_info, vtable |
+| ARegisterSound | class (already) | constructor, destructor, member |
 | ASceneObj | class (already) | constructor, destructor, member, type_info, vtable |
 | ASentry | class (already) | constructor, destructor, member, type_info, vtable |
+| ASmackable | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | ASnowMobile | class (already) | constructor, destructor, member, type_info, vtable |
+| ASound | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | ASoundManager | undecided | member |
 | AStream | class (already) | constructor, destructor, member, type_info, vtable |
 | AStreamPriv | class (already) | constructor, destructor |
@@ -198,7 +205,9 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | ATurret | class (already) | constructor, destructor, member |
 | AUltraLite | class (already) | constructor, destructor, member, type_info, vtable |
 | AVehicle | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| AVehicleWind | class (already) | constructor, destructor, member |
 | AVoice | class (already) | constructor, member, prefix |
+| AVoice::View | class (already) | destructor, member |
 | AWorldSound | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | AZoomObj | class (already) | constructor, destructor, member |
 | ActActor | class (already) | constructor, destructor, member |
@@ -224,39 +233,109 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | ActWeapon | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | ActWeaponAux | undecided | member |
 | ActWeaponDatabase | class (already) | constructor, destructor, member |
+| ActionData | class (already) | constructor |
 | ActionQueue | class (already) | constructor, destructor, member |
 | ActionQueueManager | undecided | member |
+| ActionRef | class (already) | constructor |
 | AimedAnimationController | class (already) | constructor, destructor, member, type_info, vtable |
 | AimedShootingAnimationController | class (already) | constructor, destructor, member, type_info, vtable |
 | AnimationController | class (already) | constructor, destructor, member, type_info, vtable |
 | AttributeSet | class (already) | const method, constructor, destructor, member |
 | AttributeSystem | class (already) | const method, constructor, destructor, member, prefix, type_info, vtable |
+| AttributeSystem::AttributeExtensionParserMap | class (already) | constructor |
 | AttributeValue | class (already) | const method, member |
 | AudioTarget | class (already) | constructor, member |
 | BlendedAnimationController | class (already) | constructor, destructor, type_info, vtable |
 | CARP | undecided | member, prefix |
+| CARP::AISpline | class (already) | const method |
+| CARP::BaseDesc | class (already) | const method |
+| CARP::Instance | class (already) | member, type_info |
+| CARP::PathInfo | class (already) | const method, member |
+| CARP::SymbolicResolver | class (already) | member, type_info, vtable |
 | CHierarchicalTiming | undecided | member |
 | CNormalTiming | undecided | member |
 | CrossFadeAnimationController | class (already) | constructor, destructor, member, type_info, vtable |
 | DAudio | undecided | member |
 | DTuningDBMgr | class (already) | constructor, destructor, member, type_info, vtable |
 | DTuningFile | class (already) | constructor, destructor, member, prefix |
+| DTuningFile::Reader | class (already) | constructor, member |
 | DTuningFile::Writer | undecided | member |
 | DebugData | class (already) | member, type_info |
+| DebugItem | class (already) | destructor, member, type_info, vtable |
+| DebugVariable<unsigned_int> | undecided |  |
 | DefaultEventHandler | class (already) | member, type_info, vtable |
 | DeviceScalar | class (already) | constructor, member |
 | Draw | undecided | member |
+| DropWeaponEvent | class (already) | member, type_info, vtable |
 | E007Logo | class (already) | const method, constructor, destructor, type_info, vtable |
 | EAGL | undecided | member, prefix |
+| EAGL::ConstructorPool | class (already) | destructor, member |
+| EAGL::Device | class (already) | const method, constructor, destructor, member |
+| EAGL::DeviceExtension | class (already) | const method, constructor, destructor, member |
+| EAGL::DrawArray | class (already) | constructor, destructor, member |
+| EAGL::DrawClipGouraud | class (already) | constructor, destructor, member |
+| EAGL::DrawClipTextured | class (already) | constructor, destructor, member |
+| EAGL::DrawGouraud | class (already) | constructor, destructor, member |
+| EAGL::DrawTextured | class (already) | constructor, destructor, member |
+| EAGL::DynamicLoader | class (already) | const method, constructor, destructor, member |
+| EAGL::DynamicModel | class (already) | constructor, destructor, member |
+| EAGL::GeoPrimState | class (already) | constructor, destructor, member |
+| EAGL::GeoPrimStateExtension | class (already) | constructor, destructor, member |
+| EAGL::Model | class (already) | const method, constructor, destructor, member, prefix |
+| EAGL::Profiler | class (already) | constructor, destructor, member |
+| EAGL::ProfilerRegion | class (already) | constructor, destructor, member, prefix |
+| EAGL::RenderContext | class (already) | const method, constructor, destructor, member |
+| EAGL::RenderContextExtension | class (already) | const method, constructor, destructor, member |
+| EAGL::RuntimeAllocConstructorPool | class (already) | destructor, member |
+| EAGL::SymbolPool | class (already) | const method, constructor, destructor, member |
+| EAGL::TAR | class (already) | const method, constructor, destructor, member |
+| EAGL::TARExtension | class (already) | const method, constructor, destructor, member |
+| EAGL::TextureRenderContext | class (already) | const method, constructor, destructor, member |
+| EAGL::TextureRenderContextExtension | class (already) | constructor, destructor, member |
+| EAGL::Transform | class (already) | const method, member |
+| EAGL::ViewPort | class (already) | const method, constructor, destructor, member |
+| EAGL::ViewPortExtension | class (already) | constructor, destructor |
 | EAGLAnim | undecided | member, prefix |
+| EAGLAnim::AnimBank | class (already) | const method, member |
+| EAGLAnim::AnimMemoryMap | class (already) | const method |
 | EAGLAnim::AttributeBlock | undecided | member |
+| EAGLAnim::BoneMask | class (already) | const method, constructor, member |
 | EAGLAnim::CompoundChannel | undecided | member |
 | EAGLAnim::DeltaCompressedData | undecided | member |
 | EAGLAnim::DeltaQ | undecided | member |
 | EAGLAnim::DeltaQFast | undecided | member |
 | EAGLAnim::DeltaQFastMinRange | undecided | member |
+| EAGLAnim::DeltaQFastPhysical | class (already) | const method |
 | EAGLAnim::DeltaQMinRange | undecided | member |
 | EAGLAnim::DeltaQPhysical | undecided | member |
+| EAGLAnim::EventTarget | class (already) | const method, destructor, member |
+| EAGLAnim::FnAnim | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnAnimMemoryMap | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnCompoundChannel | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnCycle | class (already) | destructor, member, type_info, vtable |
+| EAGLAnim::FnDefaultAnimBank | class (already) | const method, destructor, member, type_info, vtable |
+| EAGLAnim::FnDeltaChan | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnDeltaF1 | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnDeltaF3 | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnDeltaLerpChan | class (already) | constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnDeltaQ | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnDeltaQFast | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnDeltaQuatChan | class (already) | constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnDeltaSingleQ | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnEventBlender | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnGraft | class (already) | destructor, member, type_info, vtable |
+| EAGLAnim::FnKeyDeltaChan | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnKeyLerpChan | class (already) | constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnKeyQuatChan | class (already) | constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnPhaseChan | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnPoseBlender | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnPoseMirror | class (already) | destructor, member, type_info, vtable |
+| EAGLAnim::FnRawEventChannel | class (already) | destructor, member, type_info, vtable |
+| EAGLAnim::FnRawLinearChannel | class (already) | const method, destructor, member, type_info, vtable |
+| EAGLAnim::FnRawPoseChannel | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnRawStateChan | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnRunBlender | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| EAGLAnim::FnTurnBlender | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | EAGLAnim::Initializer | undecided | member |
 | EAGLAnim::MemoryPoolManager | undecided | member |
 | EAGLAnim::PhaseChan | undecided | member |
@@ -267,11 +346,24 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | EAGLInternal | undecided | member, prefix |
 | EAGLInternal::DMAAccumulator | undecided | member |
 | EAGLInternal::DMAPerf | undecided | member |
+| EAGLInternal::DevicePrivate | class (already) | constructor, destructor, member |
+| EAGLInternal::DmaMgr | class (already) | constructor, destructor, member |
+| EAGLInternal::Image | class (already) | constructor, destructor, member |
 | EAGLInternal::PropertyParser | undecided | member |
-| EAGLInternal::TexAlloc | class (already) | constructor, destructor, member |
+| EAGLInternal::RenderContextPrivate | class (already) | constructor, member, prefix |
+| EAGLInternal::RenderContextPrivate::FlickerFilter | class (already) | constructor |
+| EAGLInternal::RenderContextPrivate::FrameBuffer | class (already) | constructor |
+| EAGLInternal::RenderContextPrivate::Screen | class (already) | constructor |
+| EAGLInternal::RenderContextPrivate::Video | class (already) | constructor |
+| EAGLInternal::TARSharedData | class (already) | constructor, destructor, member |
+| EAGLInternal::TextureRenderContextPrivate | class (already) | constructor, member, prefix |
+| EAGLInternal::TextureRenderContextPrivate::FrameBuffer | class (already) | constructor |
+| EAGLInternal::TextureRenderContextPrivate::Screen | class (already) | constructor |
 | EAGLInternal::VUmuAlloc | undecided | member |
+| EAGLInternal::ViewPortPrivate | class (already) | constructor, member |
 | EAGLInternal::VifListAccumulator | undecided | member |
 | EAGLNamespace | class (already) | const method, constructor, type_info, vtable |
+| EAGL_VD_PS2_SINGLE_BUFFERD | class (already) | constructor, destructor, member, type_info, vtable |
 | EAICommand | class (already) | const method, constructor, destructor, type_info, vtable |
 | EAIElementFireOff | class (already) | const method, constructor, destructor, type_info, vtable |
 | EAIElementFireOn | class (already) | const method, constructor, destructor, type_info, vtable |
@@ -495,6 +587,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | Explosion | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | FeatureManager | class (already) | destructor, member, type_info, vtable |
 | FileNameList | undecided | member |
+| FireEvent | class (already) | member, type_info, vtable |
 | GFX | undecided | member |
 | GFXGallery | class (already) | constructor, destructor, member |
 | GGallery | class (already) | constructor, destructor, member |
@@ -505,11 +598,13 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | GLocale | undecided | member |
 | GOrthoHudView | class (already) | constructor, destructor, member, type_info, vtable |
 | GRenderUtil | undecided | member |
+| GSubtitleSplitter | class (already) | constructor, member |
 | GSubtitles | class (already) | constructor, destructor, member, type_info, vtable |
 | GSystem | undecided | member |
 | GiottoNamespace | class (already) | const method, constructor, destructor, type_info, vtable |
 | GlobalSymbolTable | class (already) | destructor, member, type_info, vtable |
 | Grenade | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| HeightCalcEvent | class (already) | member, type_info, vtable |
 | Human | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | IFeedback | class (already) | constructor, destructor, member |
 | IFeedbackPort | class (already) | constructor, member |
@@ -524,23 +619,35 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | Missile | class (already) | constructor, destructor, member, type_info, vtable |
 | Newton | class (already) | constructor, destructor, member, type_info, vtable |
 | Noise | undecided | member |
+| OBB | class (already) | constructor, destructor, member |
 | OptionParser | class (already) | constructor, member |
 | PBondCar | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | PHelicopter | class (already) | constructor, destructor, member, type_info, vtable |
 | PS2PadDevice | class (already) | constructor, destructor, member, type_info, vtable |
+| PS2_SONY_CODEC_INTERNAL | class (already) | constructor, destructor, member, type_info, vtable |
+| PS2_SONY_FRAME | class (already) | constructor, destructor |
 | PTank | class (already) | constructor, destructor, type_info, vtable |
 | PVehicle | class (already) | constructor, destructor, member, type_info, vtable |
+| PackedRigidBody | class (already) | const method, member |
 | PhysicsNamespace | class (already) | const method, constructor, destructor, type_info, vtable |
 | PhysicsObject | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | PlayMPC | class (already) | constructor, destructor, member |
 | PlayMPCTextFile | class (already) | constructor, destructor, member |
 | RAnimEngine | undecided | member, prefix |
+| RAnimEngine::Handle | class (already) | const method, constructor, destructor, member |
 | RAnimEngine::System | undecided | member |
+| RAutonomousObj | class (already) | destructor, type_info, vtable |
 | RBulletStreak | undecided | member |
 | RCARPFile | class (already) | constructor, destructor, member |
 | RCARPFileLoader | class (already) | constructor, destructor, member |
 | RCMP | undecided | member, prefix |
+| RCMP::AUDIO_PLAYER | class (already) | constructor, destructor, member |
 | RCMP::AV_MS_TIMER | undecided | member |
+| RCMP::AV_PLAYER | class (already) | constructor, destructor, member |
+| RCMP::CHUNK | class (already) | constructor |
+| RCMP::CODEC | class (already) | destructor, type_info, vtable |
+| RCMP::DECODER | class (already) | constructor, destructor, member, type_info, vtable |
+| RCMP::RCMP_SYSTEM | class (already) | constructor, destructor, member, type_info, vtable |
 | RCamera | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | RCameraIniLoader | class (already) | constructor, destructor, member |
 | RCameraMath | undecided | member |
@@ -552,8 +659,15 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | RDecalLibraryData | undecided | member |
 | RDecalManager | class (already) | constructor, destructor, member, type_info, vtable |
 | RDirectorQueue | class (already) | constructor, destructor, member |
+| RDirectorQueueData | class (already) | constructor, destructor |
+| RDrawElement | class (already) | const method |
+| RDrawGroup | class (already) | constructor, destructor, member |
 | REmp | undecided | member |
 | REmpBolts | class (already) | constructor, destructor, member |
+| RFlock | class (already) | constructor, destructor, member |
+| RFlockAgent | class (already) | constructor, destructor, member |
+| RFlockGoal | class (already) | constructor, destructor, member |
+| RFlockManager | class (already) | constructor, destructor, member, type_info, vtable |
 | RFog | class (already) | constructor, destructor, member, type_info, vtable |
 | RGain | class (already) | constructor, destructor, member, type_info, vtable |
 | RGlareManager | class (already) | constructor, destructor, member, type_info, vtable |
@@ -561,6 +675,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | RLensFlareManager | class (already) | constructor, destructor, member, type_info, vtable |
 | RLightManager | class (already) | constructor, destructor, member, type_info, vtable |
 | RLightning | class (already) | constructor, destructor, member, prefix, type_info, vtable |
+| RLightning::Bolt | class (already) | destructor, member |
 | RLightning::ControlPoint | undecided | member |
 | RLightning::MidPoint | undecided | member |
 | RLightning::Point | undecided | member |
@@ -568,15 +683,19 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | RMissileCam | class (already) | constructor, destructor, member, type_info, vtable |
 | RMissileStreak | class (already) | constructor, destructor, member |
 | RMovableParticleSystem | class (already) | constructor, destructor, member, prefix, type_info, vtable |
+| RMovableParticleSystem::RMovableParticleCreator | class (already) | constructor, member, type_info, vtable |
 | RMuzzleFlash | undecided | member |
+| ROffscreenBuffer | class (already) | constructor, destructor, member |
 | RParticleLibrary | class (already) | constructor, destructor, member, prefix |
 | RParticleLibrary::RPartLibraryData | undecided | member |
 | RParticleParticleCache | class (already) | constructor, destructor, member |
 | RParticleSystem | class (already) | constructor, destructor, member, prefix, type_info, vtable |
 | RParticleSystem::RParticle | undecided | member |
+| RParticleSystem::RParticleCreator | class (already) | constructor, member, type_info, vtable |
 | RParticleSystemManager | class (already) | constructor, destructor, member |
 | RParticulate | class (already) | constructor, destructor, member, type_info, vtable |
 | RPathEngine | undecided | member, prefix |
+| RPathEngine::RPathHandle | class (already) | const method, constructor, member |
 | RPlayerCamState | class (already) | constructor, destructor, member |
 | RPlayerCamera | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | RPlayerViewCamera | class (already) | constructor, destructor, member, type_info, vtable |
@@ -584,15 +703,19 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | RPostProcessing::PPPrivateData | undecided | member |
 | RRandom | undecided | member |
 | RReflection | class (already) | constructor, destructor, member, prefix, type_info, vtable |
+| RReflection::ReflPrivateData | class (already) | constructor, destructor |
 | RRenderDebugViewPerspective | class (already) | constructor, destructor, member, type_info, vtable |
 | RRenderDebugViewScreenSpace | class (already) | constructor, destructor, member, type_info, vtable |
+| RRenderHUDView | class (already) | destructor, member, type_info, vtable |
 | RRenderHigh | class (already) | constructor, destructor, member |
 | RRenderSharedData | undecided | member |
 | RRenderWorldCamera | class (already) | constructor, destructor, member, type_info, vtable |
+| RRenderWorldCulling | class (already) | constructor, member |
 | RRenderer | class (already) | constructor, destructor, member |
 | RSceneObj | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | RScorchWorld | undecided | member |
 | RShadowMap | class (already) | constructor, destructor, member, prefix, type_info, vtable |
+| RShadowMap::ShadowPrivateData | class (already) | constructor, destructor |
 | RSkeletalObj | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | RSniperZoom | class (already) | constructor, destructor, member, type_info, vtable |
 | RStateManager | class (already) | const method, constructor, destructor, member, prefix, type_info, vtable |
@@ -617,6 +740,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | SMissionRuleTarget | class (already) | constructor, member |
 | SMissionTimer | class (already) | constructor, destructor, member |
 | SND | undecided | member, prefix |
+| SND::CEAXABLKDecf | class (already) | constructor, destructor, member |
 | SRuleAlways | class (already) | constructor, destructor, member, type_info, vtable |
 | SRuleAmmo | class (already) | constructor, destructor, member, type_info, vtable |
 | SRuleCollision | class (already) | constructor, destructor, member, type_info, vtable |
@@ -648,7 +772,14 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | Simulation | class (already) | const method, constructor, destructor, member |
 | Smackable | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | StandardAnimationController | class (already) | constructor, destructor, member, type_info, vtable |
+| StringToNumber | class (already) | constructor, destructor, member |
 | TexAlloc | undecided |  |
+| TypeTraits<bool> | undecided |  |
+| TypeTraits<char> | undecided |  |
+| TypeTraits<float> | undecided |  |
+| TypeTraits<int> | undecided |  |
+| TypeTraits<unsigned_char> | undecided |  |
+| TypeTraits<unsigned_int> | undecided |  |
 | UCarpNamespace | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | UCharNamespace | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | UData | class (already) | const method, constructor, destructor, member |
@@ -656,22 +787,35 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | UFileHandler | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | UFileLoader | undecided | member |
 | UGroup | class (already) | const method, constructor, destructor, member, prefix |
+| UGroup::Processor | class (already) | member, type_info |
+| UGroupRecursiveSort | class (already) | member, type_info, vtable |
 | UMemory | undecided | member |
 | UModule | undecided | member |
 | URefCounter<ABank> | undecided |  |
+| URefCounter<AEngine> | undecided |  |
+| URefCounter<AFader> | undecided |  |
 | URefCounter<AMix> | undecided |  |
 | URefCounter<AStream> | undecided |  |
+| URefCounter<ActModelDatabase::ModelInfo> | undecided |  |
+| URefCounter<ActTextureDatabase::TextureInfo> | undecided |  |
+| URefCounter<ActWeaponDatabase::WeaponInfo> | undecided |  |
+| URefCounter<RCARPFile> | undecided |  |
+| URefCounter<RTextureContext> | undecided |  |
 | USimpleMaterial | class (already) | constructor, destructor, member |
 | USimpleTexturedMaterial | class (already) | constructor, destructor, member |
+| USimpleVec<RLightning::Segment> | undecided |  |
 | USingleton | class (already) | destructor, type_info, vtable |
 | USingletonManager | undecided | member |
+| USphere | class (already) | constructor, member |
 | USymbolTable | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | UVolatileMaterial | class (already) | constructor, destructor, member |
 | UberBond | class (already) | const method, member |
 | VD_TEXTURE_POINTER | undecided | member |
 | Vector_Schedule | undecided |  |
 | WCollider | class (already) | const method, constructor, destructor, member |
+| WCollisionInstance | class (already) | const method |
 | WCollisionMgr | class (already) | constructor, destructor, member |
+| WCollisionWindowDynDataMap | class (already) | constructor |
 | WGrid | class (already) | const method, constructor, destructor, member |
 | WRender | class (already) | constructor, destructor, member |
 | WRoadNav | class (already) | constructor, destructor, member |
@@ -687,5 +831,32 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | WWorld | class (already) | const method, constructor, destructor, member |
 | WWorldMath | undecided | member |
 | WWorldPos | class (already) | const method, constructor, destructor, member |
+| WeaponInfo | class (already) | const method |
+| __array_type_info | class (already) | destructor, type_info, vtable |
+| __attr_type_info | class (already) | destructor, type_info, vtable |
+| __builtin_type_info | class (already) | destructor, type_info, vtable |
+| __func_type_info | class (already) | destructor, type_info, vtable |
+| __ptmd_type_info | class (already) | destructor, type_info, vtable |
+| __ptmf_type_info | class (already) | destructor, type_info, vtable |
+| __si_type_info | class (already) | constructor, destructor, member, type_info, vtable |
+| __user_type_info | class (already) | constructor, destructor, member, type_info, vtable |
+| bad_alloc | class (already) | const method, destructor, type_info, vtable |
+| bad_exception | class (already) | constructor, destructor, type_info, vtable |
+| exception | class (already) | const method, constructor, destructor, type_info, vtable |
+| list<ABaseSound_*,_allocator<ABaseSound_*>_> | undecided |  |
+| list<AVoice::View_*,_allocator<AVoice::View_*>_> | undecided |  |
+| type_info | class (already) | const method, constructor, destructor, type_info, vtable |
+| vector<Explosion_*,_allocator<Explosion_*>_> | undecided |  |
+| vector<Grenade_*,_allocator<Grenade_*>_> | undecided |  |
+| vector<Human_*,_allocator<Human_*>_> | undecided |  |
+| vector<Mine_*,_allocator<Mine_*>_> | undecided |  |
+| vector<Missile_*,_allocator<Missile_*>_> | undecided |  |
+| vector<Newton_*,_allocator<Newton_*>_> | undecided |  |
+| vector<PVehicle_*,_allocator<PVehicle_*>_> | undecided |  |
+| vector<RDrawElement,_allocator<RDrawElement>_> | undecided |  |
+| vector<Sentry_*,_allocator<Sentry_*>_> | undecided |  |
+| vector<Shell_*,_allocator<Shell_*>_> | undecided |  |
+| vector<Smackable_*,_allocator<Smackable_*>_> | undecided |  |
+| vector<USingleton_*,_allocator<USingleton_*>_> | undecided |  |
 | {anonymous} | undecided | member |
 

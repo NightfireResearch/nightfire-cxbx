@@ -64,6 +64,11 @@ def ghidra_name(row_name, truncated=None):
 def main():
     batch_id, sources = sys.argv[1], set(sys.argv[2:])
     ix = Index()
+    completions = {}
+    path = os.path.join(HERE, "results", "cut-name-completions.json")
+    if os.path.exists(path):   # complete_cut.py: names the sheet cut, completed where not in doubt
+        with open(path) as f:
+            completions = {c["row"]: c for c in json.load(f)}
     base_counts = Counter(sheet.base_name(r["name"]) for r in ix.rows)
     items, held = [], []
     for r in ix.rows:
@@ -79,13 +84,15 @@ def main():
         if f.get("thunk"):
             held.append((r, a, "thunk"))
             continue
-        name, why = ghidra_name(r["name"], r["truncated"])
+        done = completions.get(r["row"])
+        name, why = ghidra_name(done["complete"], False) if done else ghidra_name(r["name"], r["truncated"])
         if name is None:
             held.append((r, a, why))
             continue
         items.append({"xbox": f"0x{a:08x}", "expect": f["name"], "name": name, "sheet_name": r["name"],
                       "create": False, "allow_duplicate": base_counts[sheet.base_name(r["name"])] > 1,
-                      "evidence": [f"sheet row {r['row']}, placed by {r['ps2_from']}"]})
+                      "evidence": [f"sheet row {r['row']}, placed by {r['ps2_from']}"]
+                                  + ([f"name cut at 63 characters, completed by rule '{done['rule']}'"] if done else [])})
     path = os.path.join(HERE, "results", "batches", f"batch-{batch_id}.json")
     with open(path, "w") as f:
         json.dump({"batch": batch_id, "program": "DRIVING.ELF",

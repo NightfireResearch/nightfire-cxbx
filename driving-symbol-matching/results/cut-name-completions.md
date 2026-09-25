@@ -1,0 +1,251 @@
+# Sheet names cut at 63 characters
+
+34 completed (rule in brackets), 208 not.
+
+## Completed
+
+- row 99: `int __lexicographical_compare_3way<signed char *, signed char *` -> `__lexicographical_compare_3way<signed char *, signed char *>` (sgi)
+- row 512: `global constructors keyed to AICharacterEnemyGround::AICharacte` -> `global constructors keyed to AICharacterEnemyGround::AICharacterEnemyGround` (auf)
+- row 2269: `void __push_heap<AttributeStoreBlock *, int, AttributeStoreBloc` -> `__push_heap<AttributeStoreBlock *, int, AttributeStoreBlock>` (sgi)
+- row 2270: `void __adjust_heap<AttributeStoreBlock *, int, AttributeStoreBl` -> `__adjust_heap<AttributeStoreBlock *, int, AttributeStoreBlock>` (sgi)
+- row 2271: `void __make_heap<AttributeStoreBlock *, AttributeStoreBlock, in` -> `__make_heap<AttributeStoreBlock *, AttributeStoreBlock, int>` (sgi)
+- row 2273: `void __partial_sort<AttributeStoreBlock *, AttributeStoreBlock>` -> `__partial_sort<AttributeStoreBlock *, AttributeStoreBlock>` (sgi)
+- row 2275: `void __introsort_loop<AttributeStoreBlock *, AttributeStoreBloc` -> `__introsort_loop<AttributeStoreBlock *, AttributeStoreBlock, int>` (sgi)
+- row 2276: `void __unguarded_linear_insert<AttributeStoreBlock *, Attribute` -> `__unguarded_linear_insert<AttributeStoreBlock *, AttributeStoreBlock>` (sgi)
+- row 2278: `void __unguarded_insertion_sort_aux<AttributeStoreBlock *, Attr` -> `__unguarded_insertion_sort_aux<AttributeStoreBlock *, AttributeStoreBlock>` (sgi)
+- row 2929: `unsigned char * __unguarded_partition<unsigned char *, unsigned` -> `__unguarded_partition<unsigned char *, unsigned char>` (sgi)
+- row 2933: `void __unguarded_insertion_sort_aux<unsigned char *, unsigned c` -> `__unguarded_insertion_sort_aux<unsigned char *, unsigned char>` (sgi)
+- row 2938: `unsigned char * __lower_bound<unsigned char *, unsigned char, i` -> `__lower_bound<unsigned char *, unsigned char, int>` (sgi)
+- row 2939: `CARP::AnimInfo * __lower_bound<CARP::AnimInfo *, CARP::AnimInfo` -> `__lower_bound<CARP::AnimInfo *, CARP::AnimInfo, int>` (sgi)
+- row 3052: `RDrawElement * __uninitialized_copy_aux<RDrawElement *, RDrawEl` -> `__uninitialized_copy_aux<RDrawElement *, RDrawElement *>` (sgi)
+- row 3132: `RLightManager::EnableAndCopyDirectionalDiffuseToPlatformSpecifi` -> `RLightManager::EnableAndCopyDirectionalDiffuseToPlatformSpecific` (sibling)
+- row 3176: `global constructors keyed to RLightManager::fgThis_RLightManage` -> `global constructors keyed to RLightManager::fgThis_RLightManager` (fgThis)
+- row 3361: `global constructors keyed to RPlayerViewCamera::RPlayerViewCame` -> `global constructors keyed to RPlayerViewCamera::RPlayerViewCamera` (auf)
+- row 3487: `global constructors keyed to RRenderWorldCamera::RRenderWorldCa` -> `global constructors keyed to RRenderWorldCamera::RRenderWorldCamera` (auf)
+- row 3644: `global constructors keyed to RStateManager::fgThis_RStateManage` -> `global constructors keyed to RStateManager::fgThis_RStateManager` (fgThis)
+- row 3645: `global destructors keyed to RStateManager::fgThis_RStateManager` -> `global destructors keyed to RStateManager::fgThis_RStateManager` (fgThis)
+- row 3937: `global constructors keyed to RDecalManager::fgThis_RDecalManage` -> `global constructors keyed to RDecalManager::fgThis_RDecalManager` (fgThis)
+- row 3938: `global destructors keyed to RDecalManager::fgThis_RDecalManager` -> `global destructors keyed to RDecalManager::fgThis_RDecalManager` (fgThis)
+- row 4024: `global constructors keyed to RLensFlareManager::fgThis_RLensFla` -> `global constructors keyed to RLensFlareManager::fgThis_RLensFlareManager` (fgThis)
+- row 4206: `global constructors keyed to RPostProcessing::fgThis_RPostProce` -> `global constructors keyed to RPostProcessing::fgThis_RPostProcessing` (fgThis)
+- row 4329: `global constructors keyed to RParticleSystem::RParticle::ResetP` -> `global constructors keyed to RParticleSystem::RParticle::ResetParticle` (auf)
+- row 4330: `global destructors keyed to RParticleSystem::RParticle::ResetPa` -> `global destructors keyed to RParticleSystem::RParticle::ResetParticle` (auf)
+- row 4546: `PHelicopter ** remove_copy<PHelicopter **, PHelicopter **, PHel` -> `remove_copy<PHelicopter **, PHelicopter **, PHelicopter *>` (sgi)
+- row 4555: `SimTrackedInstance ** find<SimTrackedInstance **, SimTrackedIns` -> `find<SimTrackedInstance **, SimTrackedInstance *>` (sgi)
+- row 4556: `SimTrackedInstance ** remove_copy<SimTrackedInstance **, SimTra` -> `remove_copy<SimTrackedInstance **, SimTrackedInstance **, SimTrackedInstance *>` (sgi)
+- row 4918: `void __push_heap<InstanceAndDistance *, int, InstanceAndDistanc` -> `__push_heap<InstanceAndDistance *, int, InstanceAndDistance>` (sgi)
+- row 4919: `void __adjust_heap<InstanceAndDistance *, int, InstanceAndDista` -> `__adjust_heap<InstanceAndDistance *, int, InstanceAndDistance>` (sgi)
+- row 4924: `void __introsort_loop<InstanceAndDistance *, InstanceAndDistanc` -> `__introsort_loop<InstanceAndDistance *, InstanceAndDistance, int>` (sgi)
+- row 4925: `void __unguarded_linear_insert<InstanceAndDistance *, InstanceA` -> `__unguarded_linear_insert<InstanceAndDistance *, InstanceAndDistance>` (sgi)
+- row 4927: `void __unguarded_insertion_sort_aux<InstanceAndDistance *, Inst` -> `__unguarded_insertion_sort_aux<InstanceAndDistance *, InstanceAndDistance>` (sgi)
+
+## Not completed (manual check)
+
+- row 100: `_Rb_tree<LString, LString, _Identity<LString>, less<LString>, a`
+- row 101: `_Rb_tree<LString, pair<LString, DebugItem *>, _Select1st<pair<L`
+- row 234: `_Rb_tree<MapKey, pair<MapKey, MapElement<ActModelDatabase::Mode`
+- row 237: `_Rb_tree<MapKey, pair<MapKey, MapElement<ActModelDatabase::Mode`
+- row 239: `_Rb_tree<MapKey, pair<MapKey, MapElement<ActModelDatabase::Mode`
+- row 240: `_Rb_tree<MapKey, pair<MapKey, MapElement<ActModelDatabase::Mode`
+- row 303: `_Rb_tree<MapKey, pair<MapKey, MapElement<ActTextureDatabase::Te`
+- row 306: `_Rb_tree<MapKey, pair<MapKey, MapElement<ActTextureDatabase::Te`
+- row 308: `_Rb_tree<MapKey, pair<MapKey, MapElement<ActTextureDatabase::Te`
+- row 309: `_Rb_tree<MapKey, pair<MapKey, MapElement<ActTextureDatabase::Te`
+- row 338: `_Rb_tree<MapKey, pair<MapKey, MapElement<ActWeaponDatabase::Wea`
+- row 341: `_Rb_tree<MapKey, pair<MapKey, MapElement<ActWeaponDatabase::Wea`
+- row 343: `_Rb_tree<MapKey, pair<MapKey, MapElement<ActWeaponDatabase::Wea`
+- row 344: `_Rb_tree<MapKey, pair<MapKey, MapElement<ActWeaponDatabase::Wea`
+- row 586: `global constructors keyed to AICharacterEnemySunroof::GetRotPos`
+- row 718: `global constructors keyed to AICharacterPedestrian::fgPedConvOf`
+- row 802: `basic_string<char, string_char_traits<char>, chunky_alloc<false`
+- row 2075: `vector<ActionQueue *, allocator<ActionQueue *> >::_M_insert_aux`
+- row 2236: `_Rb_tree<CStringKey, pair<CStringKey, AttributeValue>, _Select1`
+- row 2237: `_Rb_tree<CStringKey, pair<CStringKey, AttributeValue>, _Select1`
+- row 2238: `_Rb_tree<CStringKey, pair<CStringKey, AttributeValue>, _Select1`
+- row 2239: `_Rb_tree<CStringKey, pair<CStringKey, AttributeValue>, _Select1`
+- row 2241: `_Rb_tree<CStringKey, pair<CStringKey, AttributeSystem::Attribut`
+- row 2242: `_Rb_tree<CStringPairKey, pair<CStringPairKey, AttributeEditConf`
+- row 2243: `_Rb_tree<CStringPairKey, pair<CStringPairKey, AttributeCollecti`
+- row 2244: `_Rb_tree<CCaseSenseStringKey, CCaseSenseStringKey, _Identity<CC`
+- row 2245: `_Rb_tree<CStringPairKey, pair<CStringPairKey, AttributeCollecti`
+- row 2247: `_Rb_tree<CStringPairKey, pair<CStringPairKey, AttributeCollecti`
+- row 2248: `_Rb_tree<CStringPairKey, pair<CStringPairKey, AttributeCollecti`
+- row 2249: `_Rb_tree<CStringKey, pair<CStringKey, AttributeSystem::Attribut`
+- row 2250: `_Rb_tree<CStringKey, pair<CStringKey, AttributeParser>, _Select`
+- row 2251: `_Rb_tree<CStringKey, pair<CStringKey, AttributeParser>, _Select`
+- row 2252: `_Rb_tree<CStringKey, pair<CStringKey, AttributeSystem::Attribut`
+- row 2253: `_Rb_tree<CStringKey, pair<CStringKey, AttributeSystem::Attribut`
+- row 2254: `_Rb_tree<CStringKey, pair<CStringKey, AttributeSystem::Attribut`
+- row 2255: `_Rb_tree<CStringKey, pair<CStringKey, AttributeParser>, _Select`
+- row 2260: `_Rb_tree<CStringKey, pair<CStringKey, AttributeValue>, _Select1`
+- row 2261: `_Rb_tree<CStringKey, pair<CStringKey, AttributeValue>, _Select1`
+- row 2266: `_Rb_tree<CCaseSenseStringKey, CCaseSenseStringKey, _Identity<CC`
+- row 2267: `AttributeStoreBlock * __uninitialized_copy_aux<AttributeStoreBl`
+- row 2268: `vector<AttributeStoreBlock, allocator<AttributeStoreBlock> >::_`
+- row 2274: `AttributeStoreBlock * __unguarded_partition<AttributeStoreBlock`
+- row 2280: `_Rb_tree<CCaseSenseStringKey, CCaseSenseStringKey, _Identity<CC`
+- row 2281: `_Rb_tree<CCaseSenseStringKey, CCaseSenseStringKey, _Identity<CC`
+- row 2282: `_Rb_tree<CStringPairKey, pair<CStringPairKey, AttributeCollecti`
+- row 2284: `_Rb_tree<CStringKey, pair<CStringKey, AttributeParser>, _Select`
+- row 2285: `_Rb_tree<CStringKey, pair<CStringKey, AttributeParser>, _Select`
+- row 2339: `basic_string<char, string_char_traits<char>, chunky_alloc<false`
+- row 2377: `_GLOBAL_$I$__lexicographical_compare_3way__H2ZPCScZPCSc_X01X01X`
+- row 2699: `global constructors keyed to PhysicsNamespace::PhysicsNamespace`
+- row 2771: `_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, _Select1st`
+- row 2772: `_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, _Select1st`
+- row 2773: `_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, _Select1st`
+- row 2774: `_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, _Select1st`
+- row 2775: `_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, _Select1st`
+- row 2936: `unsigned char * __unique_copy<unsigned char *, unsigned char *>`
+- row 3041: `_List_base<RDirectorQueueData, allocator<RDirectorQueueData> >:`
+- row 3185: `global constructors keyed to ROffscreenBuffer::ROffscreenBuffer`
+- row 3220: `_List_base<RPathEngine::RPathHandle, allocator<RPathEngine::RPa`
+- row 3225: `_GLOBAL_$I$d__ToBurn_Bond_source_Render_common_RPIPView.cppMNaa`
+- row 3578: `_Rb_tree<MapKey, pair<MapKey, MapElement<RCARPFile> >, _Select1`
+- row 3581: `_Rb_tree<MapKey, pair<MapKey, MapElement<RCARPFile> >, _Select1`
+- row 3583: `_Rb_tree<MapKey, pair<MapKey, MapElement<RCARPFile> >, _Select1`
+- row 3584: `_Rb_tree<MapKey, pair<MapKey, MapElement<RCARPFile> >, _Select1`
+- row 3635: `_Rb_tree<StateRef, StateRef, _Identity<StateRef>, less<StateRef`
+- row 3636: `_Rb_tree<StateRef, StateRef, _Identity<StateRef>, less<StateRef`
+- row 3637: `_Rb_tree<StateRef, StateRef, _Identity<StateRef>, less<StateRef`
+- row 3638: `_Rb_tree<StateRef, StateRef, _Identity<StateRef>, less<StateRef`
+- row 3656: `_Rb_tree<RTexElement, RTexElement, _Identity<RTexElement>, less`
+- row 3657: `_Rb_tree<RTexElement, RTexElement, _Identity<RTexElement>, less`
+- row 3658: `_Rb_tree<RTexElement, RTexElement, _Identity<RTexElement>, less`
+- row 3659: `_Rb_tree<RTexElement, RTexElement, _Identity<RTexElement>, less`
+- row 3672: `_Rb_tree<MapKey, pair<MapKey, MapElement<RTextureContext> >, _S`
+- row 3675: `_Rb_tree<MapKey, pair<MapKey, MapElement<RTextureContext> >, _S`
+- row 3677: `_Rb_tree<MapKey, pair<MapKey, MapElement<RTextureContext> >, _S`
+- row 3678: `_Rb_tree<MapKey, pair<MapKey, MapElement<RTextureContext> >, _S`
+- row 3680: `_Rb_tree<RTextureContextManager::TextureContextType, pair<RText`
+- row 3681: `_Rb_tree<RTextureContextManager::TextureContextType, pair<RText`
+- row 3682: `_Rb_tree<RTextureContextManager::TextureContextType, pair<RText`
+- row 3683: `_Rb_tree<RTextureContextManager::TextureContextType, pair<RText`
+- row 3684: `_Rb_tree<RTextureContextManager::TextureContextType, pair<RText`
+- row 3883: `_GLOBAL_$I$_M_erase__t8_Rb_tree5Z7LStringZt4pair2ZC7LStringZP9D`
+- row 3957: `_Rb_tree<unsigned int, pair<unsigned int, USimpleVec<REmpBolts:`
+- row 3958: `_Rb_tree<unsigned int, pair<unsigned int, int>, _Select1st<pair`
+- row 3959: `_Rb_tree<unsigned int, pair<unsigned int, int>, _Select1st<pair`
+- row 3960: `_Rb_tree<unsigned int, pair<unsigned int, int>, _Select1st<pair`
+- row 3961: `_Rb_tree<unsigned int, pair<unsigned int, int>, _Select1st<pair`
+- row 3962: `_Rb_tree<unsigned int, pair<unsigned int, int>, _Select1st<pair`
+- row 3963: `_Rb_tree<unsigned int, pair<unsigned int, USimpleVec<REmpBolts:`
+- row 3964: `_Rb_tree<unsigned int, pair<unsigned int, USimpleVec<REmpBolts:`
+- row 3965: `_Rb_tree<unsigned int, pair<unsigned int, USimpleVec<REmpBolts:`
+- row 3966: `_Rb_tree<unsigned int, pair<unsigned int, USimpleVec<REmpBolts:`
+- row 3991: `vector<RFlockAgent *, allocator<RFlockAgent *> >::_M_insert_aux`
+- row 4061: `vector<RLightning::Bolt *, allocator<RLightning::Bolt *> >::_M_`
+- row 4136: `_Rb_tree<unsigned int, pair<unsigned int, RParticleSystem *>, _`
+- row 4137: `_Rb_tree<unsigned int, pair<unsigned int, RParticleSystem *>, _`
+- row 4138: `_Rb_tree<unsigned int, pair<unsigned int, RParticleSystem *>, _`
+- row 4139: `_Rb_tree<unsigned int, pair<unsigned int, RParticleSystem *>, _`
+- row 4140: `_Rb_tree<unsigned int, pair<unsigned int, MungedGenericParticle`
+- row 4141: `_Rb_tree<unsigned int, pair<unsigned int, MungedGenericParticle`
+- row 4142: `_Rb_tree<unsigned int, pair<unsigned int, MungedGenericParticle`
+- row 4143: `_Rb_tree<unsigned int, pair<unsigned int, MungedGenericParticle`
+- row 4166: `RMovableParticleSystem::RMovableParticleCreator type_info funct`
+- row 4269: `_Rb_tree<RVehicleParticle *, RVehicleParticle *, _Identity<RVeh`
+- row 4270: `_Rb_tree<RVehicleParticle *, RVehicleParticle *, _Identity<RVeh`
+- row 4271: `_Rb_tree<RVehicleParticle *, RVehicleParticle *, _Identity<RVeh`
+- row 4272: `_Rb_tree<RVehicleParticle *, RVehicleParticle *, _Identity<RVeh`
+- row 4273: `_Rb_tree<RVehicleParticle *, RVehicleParticle *, _Identity<RVeh`
+- row 4274: `_Rb_tree<RVehicleParticle *, RVehicleParticle *, _Identity<RVeh`
+- row 4275: `_Rb_tree<RVehicleParticle *, RVehicleParticle *, _Identity<RVeh`
+- row 4296: `_Rb_tree<WCollisionInstance *, pair<WCollisionInstance *, WColl`
+- row 4499: `_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se`
+- row 4500: `_Rb_tree<PhysicsObjMapIterator, PhysicsObjMapIterator, _Identit`
+- row 4505: `_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se`
+- row 4506: `_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se`
+- row 4514: `vector<PHelicopter *, allocator<PHelicopter *> >::_M_insert_aux`
+- row 4517: `_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se`
+- row 4518: `_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se`
+- row 4519: `_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se`
+- row 4520: `_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se`
+- row 4521: `_Rb_tree<PhysicsObjMapIterator, PhysicsObjMapIterator, _Identit`
+- row 4522: `_Rb_tree<PhysicsObjMapIterator, PhysicsObjMapIterator, _Identit`
+- row 4523: `_Rb_tree<PhysicsObjMapIterator, PhysicsObjMapIterator, _Identit`
+- row 4554: `vector<SimTrackedInstance *, allocator<SimTrackedInstance *> >:`
+- row 4557: `SimTrackedInstance ** remove<SimTrackedInstance **, SimTrackedI`
+- row 4655: `_List_base<SMissionMessage *, allocator<SMissionMessage *> >::c`
+- row 4815: `WCollisionInstanceCache * __uninitialized_copy_aux<WCollisionIn`
+- row 4816: `WCollisionBarrierListEntry * __uninitialized_copy_aux<WCollisio`
+- row 4817: `WCollider::InstValidationRec * __uninitialized_copy_aux<WCollid`
+- row 4818: `vector<WCollider::InstValidationRec, allocator<WCollider::InstV`
+- row 4865: `_Rb_tree<WCollisionInstance *, pair<WCollisionInstance *, WColl`
+- row 4866: `_Rb_tree<WCollisionInstance *, pair<WCollisionInstance *, WColl`
+- row 4867: `_Rb_tree<WCollisionInstance *, pair<WCollisionInstance *, WColl`
+- row 4868: `_Rb_tree<WCollisionInstance *, pair<WCollisionInstance *, WColl`
+- row 4869: `_Rb_tree<WCollisionInstance *, pair<WCollisionInstance *, WColl`
+- row 4870: `_Rb_tree<WCollisionWindow *, pair<WCollisionWindow *, WCollisio`
+- row 4871: `_Rb_tree<WCollisionWindow *, pair<WCollisionWindow *, WCollisio`
+- row 4872: `_Rb_tree<WCollisionInstance *, pair<WCollisionInstance *, WColl`
+- row 4873: `_Rb_tree<WCollisionInstance *, pair<WCollisionInstance *, WColl`
+- row 4874: `_Rb_tree<WCollisionWindow *, pair<WCollisionWindow *, WCollisio`
+- row 4875: `_Rb_tree<WCollisionWindow *, pair<WCollisionWindow *, WCollisio`
+- row 4876: `vector<WCollisionStripSphere *, allocator<WCollisionStripSphere`
+- row 4877: `vector<WCollisionInstanceCache, allocator<WCollisionInstanceCac`
+- row 4878: `vector<WCollisionObject *, allocator<WCollisionObject *> >::_M_`
+- row 4879: `vector<WCollisionBarrierListEntry, allocator<WCollisionBarrierL`
+- row 4895: `_List_base<WGridManagedDynamicElem, allocator<WGridManagedDynam`
+- row 4922: `void __partial_sort<InstanceAndDistance *, InstanceAndDistance,`
+- row 4923: `InstanceAndDistance * __unguarded_partition<InstanceAndDistance`
+- row 5130: `ProcAnimInstanceAndPointer * __uninitialized_copy_aux<ProcAnimI`
+- row 5131: `vector<ProcAnimInstanceAndPointer, allocator<ProcAnimInstanceAn`
+- row 5442: `_List_base<basic_string<char, string_char_traits<char>, chunky_`
+- row 6371: `global constructors keyed to EAGLAnim::ScratchBufferHelper::mSc`
+- row 8214: `_Rb_tree<CStringKey, pair<CStringKey, USymbolTable::Namespace *`
+- row 8215: `_Rb_tree<CStringKey, pair<CStringKey, USymbolTable::Namespace *`
+- row 8216: `_Rb_tree<CStringKey, pair<CStringKey, USymbolTable::Namespace *`
+- row 8217: `_Rb_tree<CStringKey, pair<CStringKey, USymbolTable::Namespace *`
+- row 8218: `_Rb_tree<CStringKey, pair<CStringKey, UGroup *>, _Select1st<pai`
+- row 8219: `_Rb_tree<CStringKey, pair<CStringKey, UGroup *>, _Select1st<pai`
+- row 8220: `_Rb_tree<CStringKey, pair<CStringKey, UGroup *>, _Select1st<pai`
+- row 8221: `_Rb_tree<CStringKey, pair<CStringKey, UGroup *>, _Select1st<pai`
+- row 8467: `_List_base<FileLoadRequest, allocator<FileLoadRequest> >::clear`
+- row 8468: `_Rb_tree<basic_string<char, string_char_traits<char>, chunky_al`
+- row 8469: `_Rb_tree<basic_string<char, string_char_traits<char>, chunky_al`
+- row 8478: `set<basic_string<char, string_char_traits<char>, chunky_alloc<f`
+- row 8580: `USpeedTalk::SpeedTalkData::ReceiverEntry * find<USpeedTalk::Spe`
+- row 8581: `USpeedTalk::SpeedTalkData::ReceiverEntry * __uninitialized_copy`
+- row 8582: `vector<USpeedTalk::SpeedTalkData::ReceiverEntry, allocator<USpe`
+- row 8662: `_Rb_tree<char *, pair<char *, AVoiceInfo>, _Select1st<pair<char`
+- row 8663: `_Rb_tree<char *, pair<char *, AVoiceInfo>, _Select1st<pair<char`
+- row 8664: `_Rb_tree<char *, pair<char *, AVoiceInfo>, _Select1st<pair<char`
+- row 8815: `_Deque_base<AStreamEntry, allocator<AStreamEntry>, 0>::_M_creat`
+- row 8816: `_Deque_base<AStreamEntry, allocator<AStreamEntry>, 0>::_M_initi`
+- row 8817: `_Deque_base<AStreamEntry, allocator<AStreamEntry>, 0>::_M_destr`
+- row 8818: `_Deque_base<AStreamEntry, allocator<AStreamEntry>, 0>::~_Deque_`
+- row 8819: `deque<AStreamEntry, allocator<AStreamEntry>, 0>::_M_pop_front_a`
+- row 8820: `_Rb_tree<MapKey, pair<MapKey, MapElement<AStream> >, _Select1st`
+- row 8823: `_Rb_tree<MapKey, pair<MapKey, MapElement<AStream> >, _Select1st`
+- row 8825: `_Rb_tree<MapKey, pair<MapKey, MapElement<AStream> >, _Select1st`
+- row 8826: `_Rb_tree<MapKey, pair<MapKey, MapElement<AStream> >, _Select1st`
+- row 8829: `deque<AStreamEntry, allocator<AStreamEntry>, 0>::_M_reallocate_`
+- row 8830: `deque<AStreamEntry, allocator<AStreamEntry>, 0>::_M_push_back_a`
+- row 8965: `_Rb_tree<MapKey, pair<MapKey, MapElement<AMix> >, _Select1st<pa`
+- row 8968: `_Rb_tree<MapKey, pair<MapKey, MapElement<AMix> >, _Select1st<pa`
+- row 8970: `_Rb_tree<MapKey, pair<MapKey, MapElement<AMix> >, _Select1st<pa`
+- row 8971: `_Rb_tree<MapKey, pair<MapKey, MapElement<AMix> >, _Select1st<pa`
+- row 8999: `_Rb_tree<int, pair<int, char *>, _Select1st<pair<int, char *> >`
+- row 9000: `_Rb_tree<AIndexCharPtr, pair<AIndexCharPtr, int>, _Select1st<pa`
+- row 9001: `_Rb_tree<int, pair<int, char *>, _Select1st<pair<int, char *> >`
+- row 9002: `_Rb_tree<int, pair<int, char *>, _Select1st<pair<int, char *> >`
+- row 9003: `_Rb_tree<AIndexCharPtr, pair<AIndexCharPtr, int>, _Select1st<pa`
+- row 9004: `_Rb_tree<AIndexCharPtr, pair<AIndexCharPtr, int>, _Select1st<pa`
+- row 9005: `_Rb_tree<int, pair<int, char *>, _Select1st<pair<int, char *> >`
+- row 9006: `_Rb_tree<AIndexCharPtr, pair<AIndexCharPtr, int>, _Select1st<pa`
+- row 9063: `_Rb_tree<MapKey, pair<MapKey, MapElement<AFader> >, _Select1st<`
+- row 9066: `_Rb_tree<MapKey, pair<MapKey, MapElement<AFader> >, _Select1st<`
+- row 9068: `_Rb_tree<MapKey, pair<MapKey, MapElement<AFader> >, _Select1st<`
+- row 9069: `_Rb_tree<MapKey, pair<MapKey, MapElement<AFader> >, _Select1st<`
+- row 9079: `_Rb_tree<MapKey, pair<MapKey, MapElement<AEngine> >, _Select1st`
+- row 9082: `_Rb_tree<MapKey, pair<MapKey, MapElement<AEngine> >, _Select1st`
+- row 9084: `_Rb_tree<MapKey, pair<MapKey, MapElement<AEngine> >, _Select1st`
+- row 9085: `_Rb_tree<MapKey, pair<MapKey, MapElement<AEngine> >, _Select1st`
+- row 9160: `_Rb_tree<MapKey, pair<MapKey, MapElement<ABank> >, _Select1st<p`
+- row 9163: `_Rb_tree<MapKey, pair<MapKey, MapElement<ABank> >, _Select1st<p`
+- row 9165: `_Rb_tree<MapKey, pair<MapKey, MapElement<ABank> >, _Select1st<p`
+- row 9166: `_Rb_tree<MapKey, pair<MapKey, MapElement<ABank> >, _Select1st<p`
+- row 9796: `basic_string<char, string_char_traits<char>, chunky_alloc<false`
+- row 11253: `basic_string<char, string_char_traits<char>, chunky_alloc<false`
+- row 12062: `set<basic_string<char, string_char_traits<char>, chunky_alloc<f`

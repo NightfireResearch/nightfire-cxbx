@@ -16,6 +16,15 @@ BASE = os.environ.get("GHIDRA_HTTP", "http://127.0.0.1:8089")
 
 XBOX = "Driving.xbe"
 PS2 = "DRIVING.ELF"
+AUF = "AUF"
+
+# Requests name programs by project path: a bare name is matched without regard to case, and AUF's
+# driving.elf would be taken for Nightfire's DRIVING.ELF (both open since 25 Sept 2026).
+PATHS = {
+    XBOX: "/Xbox_EU/Driving.xbe",
+    PS2: "/PS2_EU_51258/DRIVING.ELF",
+    AUF: "/Similar_Games/AUF/driving.elf",
+}
 
 READ_ONLY = {
     "list_open_programs",
@@ -43,6 +52,7 @@ def get(endpoint, timeout=120, **params):
         raise PermissionError(f"{endpoint} is not in the read-only list")
     if "program" not in params:
         raise ValueError("pass program explicitly: omitting it targets whichever program is current")
+    params["program"] = PATHS.get(params["program"], params["program"])
     return request("GET", f"/{endpoint}?{urllib.parse.urlencode(params)}", timeout=timeout)
 
 

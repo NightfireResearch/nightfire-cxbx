@@ -1,0 +1,403 @@
+{
+ "batch": "P009",
+ "program": "DRIVING.ELF",
+ "note": "Sheet names for PS2 functions placed by align, infill-count, infill-exact, resolved, sheet. 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x0010b950",
+   "expect": "FUN_0010b950",
+   "name": "__lexicographical_compare_3way<signed_char_*,_signed_char_*>",
+   "sheet_name": "int __lexicographical_compare_3way<signed char *, signed char *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 99, placed by align",
+    "name cut at 63 characters, completed by rule 'sgi'"
+   ]
+  },
+  {
+   "xbox": "0x00115418",
+   "expect": "FUN_00115418",
+   "name": "URefCounter<ActTextureDatabase::TextureInfo>::GetReference",
+   "sheet_name": "URefCounter<ActTextureDatabase::TextureInfo>::GetReference(char",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 307, placed by infill-count"
+   ]
+  },
+  {
+   "xbox": "0x00115a98",
+   "expect": "FUN_00115a98",
+   "name": "URefCounter<ActTextureDatabase::TextureInfo>::AddReference",
+   "sheet_name": "URefCounter<ActTextureDatabase::TextureInfo>::AddReference(char",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 310, placed by infill-count"
+   ]
+  },
+  {
+   "xbox": "0x001724a0",
+   "expect": "FUN_001724a0",
+   "name": "__push_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>",
+   "sheet_name": "void __push_heap<AttributeStoreBlock *, int, AttributeStoreBloc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2269, placed by align",
+    "name cut at 63 characters, completed by rule 'sgi'"
+   ]
+  },
+  {
+   "xbox": "0x00172568",
+   "expect": "FUN_00172568",
+   "name": "__adjust_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>",
+   "sheet_name": "void __adjust_heap<AttributeStoreBlock *, int, AttributeStoreBl",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2270, placed by align",
+    "name cut at 63 characters, completed by rule 'sgi'"
+   ]
+  },
+  {
+   "xbox": "0x00172648",
+   "expect": "FUN_00172648",
+   "name": "__make_heap<AttributeStoreBlock_*,_AttributeStoreBlock,_int>",
+   "sheet_name": "void __make_heap<AttributeStoreBlock *, AttributeStoreBlock, in",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2271, placed by align",
+    "name cut at 63 characters, completed by rule 'sgi'"
+   ]
+  },
+  {
+   "xbox": "0x001727a8",
+   "expect": "FUN_001727a8",
+   "name": "__partial_sort<AttributeStoreBlock_*,_AttributeStoreBlock>",
+   "sheet_name": "void __partial_sort<AttributeStoreBlock *, AttributeStoreBlock>",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2273, placed by align",
+    "name cut at 63 characters, completed by rule 'sgi'"
+   ]
+  },
+  {
+   "xbox": "0x001a3ef0",
+   "expect": "FUN_001a3ef0",
+   "name": "__unguarded_partition<unsigned_char_*,_unsigned_char>",
+   "sheet_name": "unsigned char * __unguarded_partition<unsigned char *, unsigned",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2929, placed by align",
+    "name cut at 63 characters, completed by rule 'sgi'"
+   ]
+  },
+  {
+   "xbox": "0x001a4148",
+   "expect": "FUN_001a4148",
+   "name": "__unguarded_insertion_sort_aux<unsigned_char_*,_unsigned_char>",
+   "sheet_name": "void __unguarded_insertion_sort_aux<unsigned char *, unsigned c",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2933, placed by align",
+    "name cut at 63 characters, completed by rule 'sgi'"
+   ]
+  },
+  {
+   "xbox": "0x001a42c8",
+   "expect": "FUN_001a42c8",
+   "name": "__lower_bound<unsigned_char_*,_unsigned_char,_int>",
+   "sheet_name": "unsigned char * __lower_bound<unsigned char *, unsigned char, i",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2938, placed by align",
+    "name cut at 63 characters, completed by rule 'sgi'"
+   ]
+  },
+  {
+   "xbox": "0x001ab2f0",
+   "expect": "FUN_001ab2f0",
+   "name": "__uninitialized_copy_aux<RDrawElement_*,_RDrawElement_*>",
+   "sheet_name": "RDrawElement * __uninitialized_copy_aux<RDrawElement *, RDrawEl",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3052, placed by align",
+    "name cut at 63 characters, completed by rule 'sgi'"
+   ]
+  },
+  {
+   "xbox": "0x001b05e8",
+   "expect": "FUN_001b05e8",
+   "name": "RLightManager::fgThis_RLightManager_global_ctors",
+   "sheet_name": "global constructors keyed to RLightManager::fgThis_RLightManage",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3176, placed by infill-exact",
+    "name cut at 63 characters, completed by rule 'fgThis'"
+   ]
+  },
+  {
+   "xbox": "0x001cee80",
+   "expect": "FUN_001cee80",
+   "name": "RStateManager::fgThis_RStateManager_global_ctors",
+   "sheet_name": "global constructors keyed to RStateManager::fgThis_RStateManage",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3644, placed by align",
+    "name cut at 63 characters, completed by rule 'fgThis'"
+   ]
+  },
+  {
+   "xbox": "0x001ceea0",
+   "expect": "FUN_001ceea0",
+   "name": "RStateManager::fgThis_RStateManager_global_dtors",
+   "sheet_name": "global destructors keyed to RStateManager::fgThis_RStateManager",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3645, placed by align",
+    "name cut at 63 characters, completed by rule 'fgThis'"
+   ]
+  },
+  {
+   "xbox": "0x001dae60",
+   "expect": "FUN_001dae60",
+   "name": "RDecalManager::fgThis_RDecalManager_global_ctors",
+   "sheet_name": "global constructors keyed to RDecalManager::fgThis_RDecalManage",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3937, placed by infill-exact",
+    "name cut at 63 characters, completed by rule 'fgThis'"
+   ]
+  },
+  {
+   "xbox": "0x001dae80",
+   "expect": "FUN_001dae80",
+   "name": "RDecalManager::fgThis_RDecalManager_global_dtors",
+   "sheet_name": "global destructors keyed to RDecalManager::fgThis_RDecalManager",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3938, placed by infill-exact",
+    "name cut at 63 characters, completed by rule 'fgThis'"
+   ]
+  },
+  {
+   "xbox": "0x001e08e0",
+   "expect": "FUN_001e08e0",
+   "name": "RLensFlareManager::fgThis_RLensFlareManager_global_ctors",
+   "sheet_name": "global constructors keyed to RLensFlareManager::fgThis_RLensFla",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4024, placed by align",
+    "name cut at 63 characters, completed by rule 'fgThis'"
+   ]
+  },
+  {
+   "xbox": "0x001ea8c8",
+   "expect": "FUN_001ea8c8",
+   "name": "RPostProcessing::fgThis_RPostProcessing_global_ctors",
+   "sheet_name": "global constructors keyed to RPostProcessing::fgThis_RPostProce",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4206, placed by infill-exact",
+    "name cut at 63 characters, completed by rule 'fgThis'"
+   ]
+  },
+  {
+   "xbox": "0x001f4f70",
+   "expect": "FUN_001f4f70",
+   "name": "RParticleSystem::RParticle::ResetParticle_global_ctors",
+   "sheet_name": "global constructors keyed to RParticleSystem::RParticle::ResetP",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4329, placed by align",
+    "name cut at 63 characters, completed by rule 'auf'"
+   ]
+  },
+  {
+   "xbox": "0x001f4f90",
+   "expect": "FUN_001f4f90",
+   "name": "RParticleSystem::RParticle::ResetParticle_global_dtors",
+   "sheet_name": "global destructors keyed to RParticleSystem::RParticle::ResetPa",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4330, placed by align",
+    "name cut at 63 characters, completed by rule 'auf'"
+   ]
+  },
+  {
+   "xbox": "0x00204410",
+   "expect": "FUN_00204410",
+   "name": "remove_copy<PHelicopter_**,_PHelicopter_**,_PHelicopter_*>",
+   "sheet_name": "PHelicopter ** remove_copy<PHelicopter **, PHelicopter **, PHel",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4546, placed by align",
+    "name cut at 63 characters, completed by rule 'sgi'"
+   ]
+  },
+  {
+   "xbox": "0x002048b0",
+   "expect": "FUN_002048b0",
+   "name": "find<SimTrackedInstance_**,_SimTrackedInstance_*>",
+   "sheet_name": "SimTrackedInstance ** find<SimTrackedInstance **, SimTrackedIns",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4555, placed by align",
+    "name cut at 63 characters, completed by rule 'sgi'"
+   ]
+  },
+  {
+   "xbox": "0x00220298",
+   "expect": "FUN_00220298",
+   "name": "__push_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>",
+   "sheet_name": "void __push_heap<InstanceAndDistance *, int, InstanceAndDistanc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4918, placed by align",
+    "name cut at 63 characters, completed by rule 'sgi'"
+   ]
+  },
+  {
+   "xbox": "0x00220368",
+   "expect": "FUN_00220368",
+   "name": "__adjust_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>",
+   "sheet_name": "void __adjust_heap<InstanceAndDistance *, int, InstanceAndDista",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4919, placed by align",
+    "name cut at 63 characters, completed by rule 'sgi'"
+   ]
+  },
+  {
+   "xbox": "0x002608b0",
+   "expect": "FUN_002608b0",
+   "name": "PRINT_setdevicestate",
+   "sheet_name": "PRINT_setdevicestate",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7192, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00260918",
+   "expect": "FUN_00260918",
+   "name": "PRINT_getdevicestate",
+   "sheet_name": "PRINT_getdevicestate",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7193, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00260968",
+   "expect": "FUN_00260968",
+   "name": "PRINT_setdevicename",
+   "sheet_name": "PRINT_setdevicename",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7194, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002609d0",
+   "expect": "FUN_002609d0",
+   "name": "PRINT_setchannelstate",
+   "sheet_name": "PRINT_setchannelstate",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7195, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00260a18",
+   "expect": "FUN_00260a18",
+   "name": "PRINT_getchannelstate",
+   "sheet_name": "PRINT_getchannelstate",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7196, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00260a60",
+   "expect": "FUN_00260a60",
+   "name": "PRINT_setchannelname",
+   "sheet_name": "PRINT_setchannelname",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7197, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00260ab0",
+   "expect": "FUN_00260ab0",
+   "name": "PRINT_todevice",
+   "sheet_name": "PRINT_todevice",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7198, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00260b28",
+   "expect": "FUN_00260b28",
+   "name": "REAL_restore",
+   "sheet_name": "REAL_restore",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7199, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002f9b28",
+   "expect": "FUN_002f9b28",
+   "name": "URefCounter<AFader>::GetReference",
+   "sheet_name": "URefCounter<AFader>::GetReference(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9067, placed by infill-count"
+   ]
+  },
+  {
+   "xbox": "0x002fa1a8",
+   "expect": "FUN_002fa1a8",
+   "name": "URefCounter<AFader>::AddReference",
+   "sheet_name": "URefCounter<AFader>::AddReference(char *, AFader *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9070, placed by infill-count"
+   ]
+  }
+ ]
+}

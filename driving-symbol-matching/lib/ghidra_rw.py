@@ -7,7 +7,7 @@ import json
 import urllib.parse
 import urllib.request
 
-from lib.ghidra_ro import BASE, PS2, XBOX, request
+from lib.ghidra_ro import BASE, PATHS, PS2, XBOX, request
 
 WRITE = {
     "create_function",
@@ -21,7 +21,7 @@ def post(endpoint, body, program=XBOX, timeout=120):
         raise PermissionError(f"{endpoint} is not in the write list")
     if program not in (XBOX, PS2):
         raise PermissionError("only Driving.xbe and DRIVING.ELF are written to")
-    text = request("POST", f"/{endpoint}?{urllib.parse.urlencode({'program': program})}",
+    text = request("POST", f"/{endpoint}?{urllib.parse.urlencode({'program': PATHS[program]})}",
                    body=json.dumps(body).encode(), headers={"Content-Type": "application/json"}, timeout=timeout)
     try:
         return json.loads(text)
