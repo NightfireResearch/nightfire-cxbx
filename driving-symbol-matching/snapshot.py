@@ -37,8 +37,10 @@ def main():
     with ThreadPoolExecutor(4) as pool:
         out = list(pool.map(lambda f: one(program, f[0]), funcs))
     qualified = g.qualified_names(program)
+    thunks = g.thunks(program)
     for (addr, name), rec in zip(funcs, out):
         rec["name"] = name
+        rec["thunk"] = addr in thunks
         rec["qualified"] = qualified.get(addr, name)
     folder = os.path.join(HERE, "data", "snapshots")
     os.makedirs(folder, exist_ok=True)

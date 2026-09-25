@@ -35,6 +35,13 @@ class Index:
         self.xbox = {int(f["address"], 16): f for f in latest_snapshot(xbox)}
         self.ps2 = {int(f["address"], 16): f for f in latest_snapshot(ps2)}
         self.ps2_addrs = sorted(self.ps2)
+        # A thunk carrying the same name as a real function is showing its target's name, not its own:
+        # treat it as unnamed so it can't match a sheet row or vote in a vtable pairing.
+        for prog in (self.xbox, self.ps2):
+            real = {f["qualified"] for f in prog.values() if not f.get("thunk")}
+            for f in prog.values():
+                if f.get("thunk") and f["qualified"] in real:
+                    f["qualified"] = f"thunk_FUN_{int(f['address'], 16):08x}"
         self.xbox_addrs = sorted(self.xbox)
         self._row_ps2()
         self._infill()

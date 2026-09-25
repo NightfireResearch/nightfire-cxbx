@@ -4,12 +4,12 @@ In Ghidra: Edit Function (F) on each address, and set the name to the full text 
 
 | done | address | now | set name to |
 |---|---|---|---|
-|  | 0x0001cc00 | scalar_deleting_destructor | AICharacterBond::scalar_deleting_destructor |
-|  | 0x0001cbf0 | ~AICharacterBond | AICharacterBond::~AICharacterBond |
-|  | 0x0001d090 | DoNeutral | AICharacterBond::DoNeutral |
-|  | 0x0001d0c0 | DoInitial | AICharacterBond::DoInitial |
-|  | 0x0001d0e0 | DoArming | AICharacterBond::DoArming |
-|  | 0x0001d1c0 | DoFiring | AICharacterBond::DoFiring |
-|  | 0x0001d2a0 | HandleInterrupts | AICharacterBond::HandleInterrupts |
-|  | 0x00023950 | UpdateRotPos | AICharacterBond::UpdateRotPos |
-|  | 0x0005b870 | OptionParser | OptionParser::OptionParser |
+| yes | 0x0001cc00 | AICharacterBond::scalar_deleting_destructor | AICharacterBond::scalar_deleting_destructor |
+| yes | 0x0001cbf0 | AICharacterBond::~AICharacterBond | AICharacterBond::~AICharacterBond |
+| yes | 0x0001d090 | AICharacterBond::DoNeutral | AICharacterBond::DoNeutral |
+| yes | 0x0001d0c0 | AICharacterBond::DoInitial | AICharacterBond::DoInitial |
+| yes | 0x0001d0e0 | AICharacterBond::DoArming | AICharacterBond::DoArming |
+| yes | 0x0001d1c0 | AICharacterBond::DoFiring | AICharacterBond::DoFiring |
+| yes | 0x0001d2a0 | AICharacterBond::HandleInterrupts | AICharacterBond::HandleInterrupts |
+| yes | 0x00023950 | AICharacterBond::UpdateRotPos | AICharacterBond::UpdateRotPos |
+| yes | 0x0005b870 | OptionParser::OptionParser | OptionParser::OptionParser |

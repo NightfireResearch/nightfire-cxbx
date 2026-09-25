@@ -15,7 +15,7 @@ Confidence: probable 203, unresolved 90, certain 86
 | FireEvent (0x00364cb8) | 10936 | 1 | unresolved | 0x001b3d78 | 0.0 | 0/0 | 0.0 |  | 0.0 |
 | DefaultEventHandler (0x00364cd0) | 10937 | 1 | unresolved | 0x001b3d78 | 0.0 | 0/0 | 0.0 |  | 0.0 |
 | AICharacterEnemy (0x00367800) | 10952 | 36 | unresolved | 0x0018ad28 | 4.36 | 3/0 | 0.68 |  | 4.24 |
-| AICharacterBond (0x00367e38) | 10955 | 33 | certain | 0x0018a688 | 14.94 | 3/0 | 0.97 | yes | 4.44 |
+| AICharacterBond (0x00367e38) | 10955 | 33 | certain | 0x0018a688 | 16.94 | 8/1 | 0.97 | yes | -13.56 |
 | AICharacterEnemyDriver (0x003681f0) | 10957 | 33 | certain | 0x0018a788 | 4.94 | 3/0 | 0.97 |  | -5.16 |
 | AICharacterEnemyGround (0x00368648) | 10959 | 36 | unresolved | 0x0018a840 | 2.95 | 1/0 | 0.98 |  | 2.26 |
 | AICharacterEnemySnow (0x00368950) | 10961 | 36 | unresolved | 0x0018a948 | 4.97 | 3/0 | 0.98 |  | 4.76 |

@@ -236,13 +236,13 @@ Skipped (two PS2 vtables claiming one Xbox vtable, or a sheet name cut short):
 | 0001c220 | AICharacter::SetActor | AICharacter::SetActor |  | infill-exact | AICharacterBond slot 2 (PS2 00119698, row 401, infill-exact); AICharacterEnemyDriver slot 2 (PS2 00119698, row 401, infill-exact); AICharacterPassenger slot 2 (PS2 00119698, row 401, infill-exact) |
 | 0001c5b0 | AICharacter::GetZoneHitPointScale | AICharacter::GetZoneHitPointScale |  | ghidra | AICharacterBond slot 5 (PS2 001190f8, row 376, ghidra); AICharacterEnemyDriver slot 5 (PS2 001190f8, row 376, ghidra); AICharacterPassenger slot 5 (PS2 001190f8, row 376, ghidra) ... |
 | 0001c690 | AICharacter::NotifyZoneDamage | AICharacter::NotifyZoneDamage |  | ghidra | AICharacterBond slot 4 (PS2 00118eb0, row 374, ghidra); AICharacterEnemyDriver slot 4 (PS2 00118eb0, row 374, ghidra); AICharacterPassenger slot 4 (PS2 00118eb0, row 374, ghidra) ... |
-| 0001cbf0 | ~AICharacterBond | AICharacterBond::~AICharacterBond |  | ghidra | called by AICharacterBond::scalar_deleting_destructor (0x0001cc00) and stores AICharacterBond's vtable |
-| 0001cc00 | scalar_deleting_destructor | AICharacterBond::scalar_deleting_destructor |  | ghidra | AICharacterBond slot 0 (PS2 0011a288, row 455, ghidra); vtable slot 0 on MSVC is the scalar deleting destructor |
-| 0001d090 | DoNeutral | AICharacterBond::DoNeutral |  | infill-exact-run | AICharacterBond slot 8 (PS2 0011a318, row 457, infill-exact-run) |
-| 0001d0c0 | DoInitial | AICharacterBond::DoInitial | AICharacterBond::DoIdling, AICharacterPassenger::DoInitial, AICharacterPassenger::DoIdling | infill-exact-run | AICharacterBond slot 7 (PS2 0011a2e0, row 456, infill-exact-run); AICharacterBond slot 9 (PS2 0011a360, row 458, infill-exact-run); AICharacterPassenger slot 7 (PS2 00125790, row 648, infill-exact-run) ... |
-| 0001d0e0 | DoArming | AICharacterBond::DoArming |  | infill-exact-run | AICharacterBond slot 15 (PS2 0011a398, row 459, infill-exact-run) |
-| 0001d1c0 | DoFiring | AICharacterBond::DoFiring |  | infill-exact-run | AICharacterBond slot 18 (PS2 0011a4a0, row 460, infill-exact-run) |
-| 0001d2a0 | HandleInterrupts | AICharacterBond::HandleInterrupts |  | infill-exact-run | AICharacterBond slot 30 (PS2 0011a5b8, row 461, infill-exact-run) |
+| 0001cbf0 | AICharacterBond::~AICharacterBond | AICharacterBond::~AICharacterBond |  | ghidra | called by AICharacterBond::scalar_deleting_destructor (0x0001cc00) and stores AICharacterBond's vtable |
+| 0001cc00 | AICharacterBond::scalar_deleting_destructor | AICharacterBond::scalar_deleting_destructor |  | ghidra | AICharacterBond slot 0 (PS2 0011a288, row 455, ghidra); vtable slot 0 on MSVC is the scalar deleting destructor |
+| 0001d090 | AICharacterBond::DoNeutral | AICharacterBond::DoNeutral |  | infill-exact-run | AICharacterBond slot 8 (PS2 0011a318, row 457, infill-exact-run) |
+| 0001d0c0 | AICharacterBond::DoInitial | AICharacterBond::DoInitial | AICharacterBond::DoIdling, AICharacterPassenger::DoInitial, AICharacterPassenger::DoIdling | infill-exact-run | AICharacterBond slot 7 (PS2 0011a2e0, row 456, infill-exact-run); AICharacterBond slot 9 (PS2 0011a360, row 458, infill-exact-run); AICharacterPassenger slot 7 (PS2 00125790, row 648, infill-exact-run) ... |
+| 0001d0e0 | AICharacterBond::DoArming | AICharacterBond::DoArming |  | infill-exact-run | AICharacterBond slot 15 (PS2 0011a398, row 459, infill-exact-run) |
+| 0001d1c0 | AICharacterBond::DoFiring | AICharacterBond::DoFiring |  | infill-exact-run | AICharacterBond slot 18 (PS2 0011a4a0, row 460, infill-exact-run) |
+| 0001d2a0 | AICharacterBond::HandleInterrupts | AICharacterBond::HandleInterrupts |  | infill-exact-run | AICharacterBond slot 30 (PS2 0011a5b8, row 461, infill-exact-run) |
 | 00049eb0 | ECollision::~ECollision | ECollision::~ECollision |  | ghidra | called by ECollision::scalar_deleting_destructor (0x0004eb40) and stores ECollision's vtable |
 | 0005dfa0 | Human::ApplyDamage | Human::ApplyDamage |  | sheet | Human slot 2 (PS2 0017f6c0, row 2485, sheet) |
 | 00060a30 | Missile::Simulate | Missile::Simulate |  | sheet | Missile slot 4 (PS2 00181c80, row 2512, sheet) |

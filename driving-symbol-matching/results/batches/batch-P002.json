@@ -1,0 +1,16 @@
+{
+ "batch": "P002",
+ "program": "DRIVING.ELF",
+ "note": "The thunk at 0x24c5d0 (j __terminate) is __pure_virtual; it showed its target's name after P001 renamed the target.",
+ "items": [
+  {
+   "xbox": "0x0024c5d0",
+   "expect": "__terminate",
+   "name": "__pure_virtual",
+   "create": false,
+   "evidence": [
+    "j __terminate: GCC's __pure_virtual with its message compiled out; sheet row 5533"
+   ]
+  }
+ ]
+}

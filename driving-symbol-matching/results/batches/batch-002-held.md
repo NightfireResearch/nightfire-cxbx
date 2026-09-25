@@ -54,3 +54,5 @@
 | 0012d7c0 | ASentry::scalar_deleting_destructor | PS2 name from infill-exact-run infill: needs a body or slot-order check |
 | 000faac0 | EAGLAnim::FnAnimMemoryMap::GetAnimMemoryMap | same name proposed for two Xbox functions |
 | 000faad0 | EAGLAnim::FnAnimMemoryMap::GetAnimMemoryMap | same name proposed for two Xbox functions |
+| 00100910 | EAGLAnim::FnDeltaF3::~FnDeltaF3 | name still on the wrapper 0x1008e0 (a conflict to review first) |
+| 00122450 | AStream::~AStream | name still on the wrapper 0x122550 (a conflict to review first) |

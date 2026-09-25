@@ -1,6 +1,6 @@
 {
  "batch": "002",
- "note": "DRAFT for review: Xbox names from certain vtable pairs. Held back: conflicts, count-only and exact-run PS2 infill, duplicate targets.",
+ "note": "Xbox names from certain vtable pairs. Held back: conflicts, count-only and exact-run PS2 infill, duplicate targets, destructors whose name the wrapper still holds.",
  "items": [
   {
    "xbox": "0x00011100",
@@ -1068,16 +1068,6 @@
    ]
   },
   {
-   "xbox": "0x00100910",
-   "expect": "FUN_00100910",
-   "name": "EAGLAnim::FnDeltaF3::~FnDeltaF3",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "called by EAGLAnim::FnDeltaF3::scalar_deleting_destructor (0x001008e0) and stores EAGLAnim::FnDeltaF3's vtable"
-   ]
-  },
-  {
    "xbox": "0x001051a0",
    "expect": "(none)",
    "name": "EAGLAnim::FnRunBlender::Eval",
@@ -1191,16 +1181,6 @@
    "evidence": [
     "AVehicle slot 0 (PS2 002e2b60, row 8691, sheet)",
     "vtable slot 0 on MSVC is the scalar deleting destructor"
-   ]
-  },
-  {
-   "xbox": "0x00122450",
-   "expect": "FUN_00122450",
-   "name": "AStream::~AStream",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "called by AStream::scalar_deleting_destructor (0x00122550) and stores AStream's vtable"
    ]
   },
   {

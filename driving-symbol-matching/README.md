@@ -56,6 +56,9 @@ Setup: `pip install openpyxl`, then
   span is longer than its sheet span (or under 60% of it) straddles a linker discontinuity and is skipped. The
   sheet lists EA's sound library twice. Exact-run and count-only names still need a second check before a
   batch takes them.
+- Thunks show their target's name until given their own (`__pure_virtual` = `j __terminate` in retail).
+  Snapshots record `thunk`, and the index treats a thunk that carries a real function's name as unnamed, so it
+  can't match a sheet row or vote in a vtable pairing (23 such thunks on Xbox, 25 Sept 2026).
 - Infill conflicts with existing PS2 names are settled in `results/ps2-name-resolutions.json` (the index
   reads it): "sheet" means the same function under another name, "reject"/"open" means don't place it.
 - Sheet names are cut at 63 characters: 1,122 rows. Where the cut falls in the argument list the name is

@@ -55,6 +55,12 @@ def functions(program):
     return sorted((int(f["address"], 16), f["name"]) for f in out)
 
 
+def thunks(program):
+    """Addresses of thunk functions. A thunk shows its target's name unless given its own."""
+    out = get_json("list_functions_enhanced", program=program, limit=50000)["functions"]
+    return {int(f["address"], 16) for f in out if f.get("isThunk")}
+
+
 def function_info(program, address):
     """Name, signature and body range, parsed from get_function_by_address."""
     text = get("get_function_by_address", program=program, address=f"0x{address:x}")
