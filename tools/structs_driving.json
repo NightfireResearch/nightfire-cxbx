@@ -3701,6 +3701,195 @@
   ]
  },
  {
+  "name": "Glare",
+  "category": "/",
+  "size": 64,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 12,
+    "name": "position",
+    "type": "_VEC3",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "w",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "flags",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "type",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "rangeOrIntensity",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 12,
+    "name": "direction",
+    "type": "_VEC3",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "blinkStartTick",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "blinkRate",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "blinkDuty",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "blinkBase",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 60,
+    "size": 4,
+    "name": "blinkAmplitude",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "GlareSprite",
+  "category": "/",
+  "size": 16,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "u",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "v",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "uvSize",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "spin",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "GlareType",
+  "category": "/",
+  "size": 64,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 16,
+    "name": "halo",
+    "type": "GlareSprite",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 16,
+    "name": "spike",
+    "type": "GlareSprite",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "haloColour",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "spikeColour",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "haloSize",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "spikeSize",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "haloTexture",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 52,
+    "size": 4,
+    "name": "spikeTexture",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 56,
+    "size": 4,
+    "name": "zBias",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
   "name": "HPFSTATE",
   "category": "/auto_structs",
   "size": 88,
@@ -4969,6 +5158,62 @@
     "size": 4,
     "name": "field51_0xb4",
     "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "RGlareManager",
+  "category": "/",
+  "size": 13376,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "vtable",
+    "type": "pointer",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "screenScale",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "farDepth",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 8192,
+    "name": "glares",
+    "type": "Glare[128]",
+    "bitfield": false
+   },
+   {
+    "offset": 8224,
+    "size": 4,
+    "name": "glareCount",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 8228,
+    "size": 1,
+    "name": "enabled",
+    "type": "byte",
+    "bitfield": false
+   },
+   {
+    "offset": 8248,
+    "size": 5120,
+    "name": "types",
+    "type": "GlareType[80]",
     "bitfield": false
    }
   ]
