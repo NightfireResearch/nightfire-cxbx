@@ -27,6 +27,8 @@ float VEC3_Dot(const _VEC3 *a, const _VEC3 *b);
 // the phase passes blinkDuty; before that its brightness is blinkBase + blinkAmplitude * shape(phase), where the
 // shape is the phase itself (a sawtooth), a triangle wave, or a pulse that rises, dips at its peak and falls.
 // The original computes in the x87's extended precision; double is the nearest C++ has.
+//
+// UNINJECTABLE - takes its glare in ESI, and its only caller (AddModelGlare) is replaced
 static double GlareBlinkBrightness(const Glare *glare) {
     uint32_t elapsed = GlareTick - glare->blinkStartTick;
     float cycles = (float)elapsed * glare->blinkRate;

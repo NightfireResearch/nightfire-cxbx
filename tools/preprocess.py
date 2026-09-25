@@ -585,6 +585,18 @@ def generate(side):
     injections = generate_auto_inject(side, ghidra_funcs)
     uninjectable = gather_functions_with_tag("UNINJECTABLE", side=side)
 
+    # UNINJECTABLE marks a function reimplemented but not patched in - only counted, never looked up, so a
+    # misspelled or since-renamed name would be counted all the same. Warn about any Ghidra does not know, with
+    # the same "that name elsewhere" hint as a stale AUTOINJECT tag.
+    known_names = {x['name'] for x in ghidra_funcs}
+    for f in uninjectable:
+        if f[1] in known_names:
+            continue
+        short = f[1].split("::")[-1]
+        elsewhere = [f"{x['name']} ({x['address']})" for x in ghidra_funcs if x['name'].split("::")[-1] == short]
+        hint = (" - functions with that name elsewhere: " + ", ".join(elsewhere[:6])) if elsewhere else ""
+        print(f"  warning: UNINJECTABLE {f[1]} ({f[3].replace(chr(92), '/')}): no function of that name in Ghidra's export{hint}")
+
     # Print statistics
     num_injecions = len(injections)
     num_uninjectable = len(uninjectable)
