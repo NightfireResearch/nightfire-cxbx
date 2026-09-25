@@ -363,6 +363,8 @@ def generate_layouts(side):
     assert os.path.exists(path), f"XBE_FIELDS is used but {path} does not exist - run ghidra/NightfireSync.py"
     structs = json.load(open(path, 'r'))
     struct_names = {s["name"] for s in structs}
+    sizes_path = f"tools/alloc_sizes_{side}.json"
+    alloc_sizes = json.load(open(sizes_path, 'r')) if os.path.exists(sizes_path) else {}
     forward, macros, includes = set(), [], []
     overlays = {cls: keyword for _, _, cls, keyword in uses}
     for ghidra_name, file, cls, keyword in uses:
@@ -399,7 +401,29 @@ def generate_layouts(side):
             cursor = f["offset"] + f["size"]
         if cursor < s["size"]:
             lines.append(f"uint8_t _pad_0x{cursor:x}[{s['size'] - cursor}];")
-        macros.append(f"// {ghidra_name}: {s['size']} bytes, for {cls} ({file.replace(chr(92), '/')})\n"
+
+        # The binary's own size for the class, from the allocations made under its name (tools/alloc_sizes.py).
+        # Ghidra's structure often stops at its last known field; the game's allocation does not. Where the
+        # game allocates more, the class is padded out to the real size - so sizeof is right, and the unknown
+        # tail is visible - and checked against that instead.
+        size = s["size"]
+        measured = alloc_sizes.get(ghidra_name, {})
+        exact = measured.get("allocated", [])
+        if len(exact) == 1 and exact[0] > size:
+            lines.append(f"uint8_t _beyond_ghidra_0x{size:x}[{exact[0] - size}]; "
+                         f"/* the game allocates 0x{exact[0]:x}; Ghidra's structure ends at 0x{size:x} */")
+            print(f"  {ghidra_name}: Ghidra's structure is 0x{size:x} bytes, the game allocates 0x{exact[0]:x} - "
+                  f"padded to the game's size")
+            size = exact[0]
+            checks_for[0] = f"XBE_CLASS_SIZE({cls}, 0x{size:x});   /* the game's allocation size */"
+        elif len(exact) == 1 and exact[0] < size:
+            print(f"  warning: {ghidra_name}: Ghidra's structure is 0x{size:x} bytes but the game allocates only "
+                  f"0x{exact[0]:x} - fields past 0x{exact[0]:x} cannot be right")
+        elif not exact and measured.get("constructed") and max(measured["constructed"]) > size \
+                and size not in measured["constructed"]:
+            print(f"  warning: {ghidra_name}: Ghidra's structure is 0x{size:x} bytes, and allocations its constructor "
+                  f"runs on are 0x{min(measured['constructed']):x} or more - it may be short")
+        macros.append(f"// {ghidra_name}: {size} bytes, for {cls} ({file.replace(chr(92), '/')})\n"
                       f"#define XBE_FIELDS_{ghidra_name} \\\n    "
                       + " \\\n    ".join(lines) + "\n")
         checks.append(f'#include "{os.path.relpath(file, f"src/{side}").replace(chr(92), "/")}"')

@@ -334,3 +334,49 @@ cannot patch any of them without an `AUTOLTCG` tag and a hand-written adaptor, a
 the register and the instruction that reads it. Note also that the analyser can under-report: it found `EAX`
 for `DrawGroupDrawInstance` but not the `EDI` its callers also set, so read the callers before writing an
 adaptor.
+
+## Checking Ghidra's structures against the binary
+
+The layout checks prove an overlay class matches Ghidra's structure, not that Ghidra's structure matches the
+game - and Ghidra's structures are reverse-engineering, not debug information: a structure stops where its
+last known field stops, and 800 of the 1270 fields in the first full export are unnamed. `tools/alloc_sizes.py`
+supplies a check from the binary itself (25 September 2026).
+
+EA's allocators take a size, and most a name: `UMemory::FastAlloc(0x4c, "RRenderHUDView")` (`0x00114750`),
+`UMemory::Alloc(size, flags, name)` (`0x00114470`), EAGL's allocator through the pointer at `0x001caf68`
+(`0x0007d040`, installed by `RRenderer`; the "weird indirection" the old comment in `inject_driving.cpp`
+noticed), `ABaseSound::operator new(size, name)`, and the nameless `__builtin_new`, `Event::operator new` and
+`malloc`. The object is usually handed straight to its constructor. So each allocation site gives a size, often a
+name, and the class whose constructor runs on the result. The name, when there is one, names the object
+actually allocated, so its size is exact; the constructor's class may be a base class whose derived class's
+constructor was inlined (`FastAlloc(0x4c, "RRenderHUDView")` is followed by `RViewCamera`'s constructor), so a
+size known only that way is a lower bound.
+
+**The first run**: 960 allocation sites, 846 with a constant size, 456 named, 229 followed by a constructor;
+184 classes with a size from the binary.
+
+- **11 Ghidra structures confirmed**, `Schedule` and `Scheduler` among them.
+- **17 contradicted, every one too short** - which is what a structure that stops at its last known field
+  looks like. By how much: `SMissionManager` 0x8f0 against 0x1c70 (`SMissionManager::Construct` does
+  `new(0x1c70)` and runs its constructor), `ActionQueue` 0x20 against 0x974 (five allocations, each constructed
+  as an `ActionQueue` - a queue with its buffer inline), `RenderContext` 0x5a against 0x14c, `ActCharacter` 0x24
+  against 0x84, `XBoxPadDevice` 0x51c against 0x56c, `AMix` 0x1d against 0x50, `RRenderer` 0x75 against 0x90,
+  `PBondCar` 0x412 against 0x420, `AStream` 0xc4 against 0xd0, `GHud` 0x4e4 against 0x4f0, and a few bytes each
+  for `ABank`, `Explosion`, `RCamera`, `RTyreTrack`, `RViewCamera`, `ActActor` and `Human`. `python
+  tools/alloc_sizes.py` prints the current list; it is the to-do list for extending those structures in Ghidra.
+- **156 classes with a size from the binary and no Ghidra structure** - including `RGlareManager` (0x3440),
+  `RLightManager` (0x3f0), `RLensFlareManager` (8), `Missile` (0x730) and the vehicles. A structure of the right
+  size can be created for any of them before its first field is known. A few names are shared by several
+  sizes (`AICharacter`, `SMissionRule`, `GeoPrim`, and `STL` for the standard library's allocations): the name
+  labels a family, not one class.
+
+**How the generator uses it.** `python tools/alloc_sizes.py --json` writes `tools/alloc_sizes_driving.json`
+(committed; re-run it after re-syncing from Ghidra). When an overlay class's Ghidra structure is shorter than
+the size the game allocates under that name, `XBE_FIELDS` pads the class out to the game's size with a
+`_beyond_ghidra_0x...` array and `XBE_CLASS_SIZE` checks the game's size, printing a line to say so; `sizeof` is
+then right, and the unknown tail is in plain sight. When the only evidence is a constructor's allocation (a
+lower bound), or Ghidra's structure is longer than the allocation, it warns and changes nothing. Tried on a
+temporary header: `PBondCar` came out padded to exactly 0x420 with all 84 fields at their offsets, `GHud` printed
+its warning, and all 337 generated checks passed.
+
+**The 17 corrected in Ghidra** (25 September 2026): each contradicted structure was grown to the game's size with `resize_struct` through the Ghidra connection, keeping its fields. `GHud` and `SMissionManager`, known only from their constructors' allocations, were checked first: each is allocated and handed straight to its own constructor (`RRenderHigh`'s constructor, `SMissionManager::Construct`), with no derived class's vtable written over it, so the size is the class's own. After a re-sync the report shows 0 contradicted and 28 confirmed.

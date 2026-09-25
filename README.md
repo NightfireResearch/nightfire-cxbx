@@ -125,6 +125,7 @@ Everything lands in `Release/`. `tools/preprocess.py` runs as a pre-build step a
 | `tools/vsh_dump.py`, `tools/vsh_translate_test.ps1` | Dumps the action engine's vertex shaders, and compile-checks the translator over all of them. |
 | `tools/xbe_entry_points.py` | Regenerates the driving engine's D3D8 and DirectSound entry-point tables, with the stack bytes each pops, out of the binary. |
 | `tools/abi_facts.py` | Measures every function's calling convention from the binary - bytes popped, registers read on entry - into `tools/abi_*.json`, which the injection table checks each tagged declaration against at compile time. Re-run after re-syncing from Ghidra. |
+| `tools/alloc_sizes.py` | Finds every allocation in the driving engine with its size, name and constructor, and checks Ghidra's structure sizes against them; `--json` writes `tools/alloc_sizes_driving.json`, which pads overlay classes out to the game's real sizes. |
 | `tools/survey_xbe.py` | Prints an XBE's base, size, kernel imports and FS-segment usage - how much of the startup incompatibility applies to it. |
 | `tools/kernel_imports.py` | Which kernel imports live game code actually reaches. |
 | `tools/gen_kernel_ordinals.py` | Regenerates the loader's kernel ordinal-to-name table from Cxbx-Reloaded's thunk table. |

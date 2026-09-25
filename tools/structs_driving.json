@@ -2,7 +2,7 @@
  {
   "name": "ABank",
   "category": "/",
-  "size": 16,
+  "size": 24,
   "fields": [
    {
     "offset": 0,
@@ -541,7 +541,7 @@
  {
   "name": "AMix",
   "category": "/",
-  "size": 29,
+  "size": 80,
   "fields": [
    {
     "offset": 0,
@@ -576,7 +576,7 @@
  {
   "name": "AStream",
   "category": "/",
-  "size": 196,
+  "size": 208,
   "fields": [
    {
     "offset": 112,
@@ -1045,7 +1045,7 @@
  {
   "name": "ActActor",
   "category": "/",
-  "size": 77,
+  "size": 80,
   "fields": [
    {
     "offset": 0,
@@ -1227,7 +1227,7 @@
  {
   "name": "ActCharacter",
   "category": "/",
-  "size": 36,
+  "size": 132,
   "fields": [
    {
     "offset": 32,
@@ -1290,7 +1290,7 @@
  {
   "name": "ActionQueue",
   "category": "/",
-  "size": 32,
+  "size": 2420,
   "fields": [
    {
     "offset": 0,
@@ -1821,7 +1821,7 @@
  {
   "name": "Explosion",
   "category": "/",
-  "size": 144,
+  "size": 152,
   "fields": [
    {
     "offset": 0,
@@ -2023,7 +2023,7 @@
  {
   "name": "GHud",
   "category": "/",
-  "size": 1252,
+  "size": 1264,
   "fields": [
    {
     "offset": 0,
@@ -3808,7 +3808,7 @@
  {
   "name": "Human",
   "category": "/",
-  "size": 141,
+  "size": 144,
   "fields": [
    {
     "offset": 0,
@@ -4332,7 +4332,7 @@
  {
   "name": "PBondCar",
   "category": "/",
-  "size": 1042,
+  "size": 1056,
   "fields": [
    {
     "offset": 0,
@@ -4927,7 +4927,7 @@
  {
   "name": "RCamera",
   "category": "/",
-  "size": 184,
+  "size": 192,
   "fields": [
    {
     "offset": 0,
@@ -5059,7 +5059,7 @@
  {
   "name": "RRenderer",
   "category": "/",
-  "size": 117,
+  "size": 144,
   "fields": [
    {
     "offset": 4,
@@ -5297,7 +5297,7 @@
  {
   "name": "RTyreTrack",
   "category": "/",
-  "size": 2328,
+  "size": 2336,
   "fields": [
    {
     "offset": 2304,
@@ -5388,7 +5388,7 @@
  {
   "name": "RViewCamera",
   "category": "/",
-  "size": 72,
+  "size": 76,
   "fields": [
    {
     "offset": 0,
@@ -5514,7 +5514,7 @@
  {
   "name": "RenderContext",
   "category": "/EAGL",
-  "size": 90,
+  "size": 332,
   "fields": []
  },
  {
@@ -5611,7 +5611,7 @@
  {
   "name": "SMissionManager",
   "category": "/",
-  "size": 2288,
+  "size": 7280,
   "fields": [
    {
     "offset": 4,
@@ -8782,7 +8782,7 @@
  {
   "name": "XBoxPadDevice",
   "category": "/",
-  "size": 1308,
+  "size": 1388,
   "fields": [
    {
     "offset": 0,
