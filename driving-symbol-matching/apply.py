@@ -10,7 +10,8 @@ Checks before any write, all against live Ghidra:
   - the function's current name is still the one the batch was reviewed against ("expect"), so nothing
     renamed by hand since is overwritten; a function to create must not exist yet;
   - an old name that isn't FUN_ must not appear as Class::Method in src/driving (AUTOINJECT resolves by name);
-  - the new name must not already be taken by another function in the batch.
+  - the new name must not already be taken, in the program or the batch, unless the item allows it
+    ("allow_duplicate": the symbol file itself gives the name to several functions - overloads).
 One failed check stops the whole batch before any write.
 
 Writes: create_function (if asked), rename_function_by_address, set_plate_comment. The plate comment gets a
@@ -94,11 +95,11 @@ def check(items, program):
             refs = used_in_src(it["expect"])
             if refs:
                 problems.append(f"{it['xbox']}: old name {it['expect']} is used in src/driving: {refs[:2]}")
-        if it.get("rename", True):
+        if it.get("rename", True) and not it.get("allow_duplicate"):
             elsewhere = [x for x in existing.get(it["name"], []) if x != int(it["xbox"], 16)]
             if elsewhere:
                 problems.append(f"{it['xbox']}: {it['name']} already exists at {', '.join(hex(x) for x in elsewhere)}")
-        if it["name"] in names:
+        if it["name"] in names and not it.get("allow_duplicate"):
             problems.append(f"{it['xbox']}: {it['name']} also proposed for {names[it['name']]}")
         names[it["name"]] = it["xbox"]
     return problems
