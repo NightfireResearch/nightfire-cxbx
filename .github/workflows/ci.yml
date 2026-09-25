@@ -73,9 +73,10 @@ jobs:
             build/macos/driving_cxbx.exe
 
   # The same cross build from Linux, with the distribution's mingw-w64 in place of Homebrew's. The toolchain
-  # file is shared with macOS and finds the /usr sysroot by itself.
+  # file is shared with macOS and finds the /usr sysroot by itself. Pinned to 26.04 because the build needs
+  # mingw-w64 13 or later for x3daudio.h, and ubuntu-latest is still 24.04, whose mingw-w64 is 11.
   linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
 

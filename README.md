@@ -71,7 +71,8 @@ cmake --preset macos
 cmake --build --preset macos
 ```
 
-**On Linux**, the same, with clang and the distribution's i686 mingw-w64 packages:
+**On Linux**, the same, with clang and the distribution's i686 mingw-w64 packages. They have to be mingw-w64
+13 or later (Ubuntu 26.04+, Debian testing), because older releases have no `x3daudio.h`:
 
 ```
 sudo pacman -S clang mingw-w64-gcc ninja                 # Arch
