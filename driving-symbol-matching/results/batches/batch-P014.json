@@ -1,0 +1,216 @@
+{
+ "batch": "P014",
+ "program": "DRIVING.ELF",
+ "note": "Extras from body review round 2 and the trial, reviewed by hand; 4 functions created. 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x00167c78",
+   "expect": "(none)",
+   "name": "InputDevice::DeadZoneScale",
+   "sheet_name": "InputDevice::DeadZoneScale(float &, float, float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2127: (value-min)/(1-min) past the dead zone; code after DeadZoneChop that Ghidra never made a function"
+   ]
+  },
+  {
+   "xbox": "0x00194cb0",
+   "expect": "FUN_00194cb0",
+   "name": "PHelicopter::PHelicopter_global_ctors",
+   "sheet_name": "global constructors keyed to PHelicopter::PHelicopter(char *, f",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2692: ctors-table stub calling 0x194ac8(1, 0xffff), after the PHelicopter setters"
+   ]
+  },
+  {
+   "xbox": "0x00195ff0",
+   "expect": "FUN_00195ff0",
+   "name": "PhysicsObject::GetSimpleRigidBody",
+   "sheet_name": "PhysicsObject::GetSimpleRigidBody(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2737: returns Sim.GetSimpleRigidBody(this+0x46)"
+   ]
+  },
+  {
+   "xbox": "0x00196018",
+   "expect": "FUN_00196018",
+   "name": "PhysicsObject::GetSimpleRigidBodyPtr",
+   "sheet_name": "PhysicsObject::GetSimpleRigidBodyPtr(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2738: identical to GetSimpleRigidBody; which copy is Ptr follows sheet order"
+   ]
+  },
+  {
+   "xbox": "0x00196040",
+   "expect": "FUN_00196040",
+   "name": "PhysicsObject::GetRigidBody",
+   "sheet_name": "PhysicsObject::GetRigidBody(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2739: returns Sim.GetRigidBody(this+0x46)"
+   ]
+  },
+  {
+   "xbox": "0x00196068",
+   "expect": "FUN_00196068",
+   "name": "PhysicsObject::GetRigidBodyPtr",
+   "sheet_name": "PhysicsObject::GetRigidBodyPtr(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2740: identical to GetRigidBody; which copy is Ptr follows sheet order"
+   ]
+  },
+  {
+   "xbox": "0x001b0d10",
+   "expect": "FUN_001b0d10",
+   "name": "ROffscreenBuffer::End",
+   "sheet_name": "ROffscreenBuffer::End(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3184: TextureRenderContext::EndFrame then restores the view; called by MakeCopy/MakeTexCopy after Begin"
+   ]
+  },
+  {
+   "xbox": "0x001d8048",
+   "expect": "FUN_001d8048",
+   "name": "RBulletStreak::Add",
+   "sheet_name": "RBulletStreak::Add(COORD3 &, COORD3 &, RBulletStreak::StreakTyp",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 3890: the COORD3 overload: called from DrawTracers/DrawBulletStreaks, calls the COORD4 Add at 0x1d7d78, as in AUF"
+   ]
+  },
+  {
+   "xbox": "0x00208428",
+   "expect": "FUN_00208428",
+   "name": "SMissionManager::GetEnemyAccuracyBoost",
+   "sheet_name": "SMissionManager::GetEnemyAccuracyBoost(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4626: returns an int by difficulty and is called from ~EFireWeapon, as AUF's"
+   ]
+  },
+  {
+   "xbox": "0x002083e8",
+   "expect": "(none)",
+   "name": "SMissionManager::GetScore",
+   "sheet_name": "SMissionManager::GetScore(MissionScoreCategory)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4624: returns this->scores[category] (+0x648); code Ghidra never made a function"
+   ]
+  },
+  {
+   "xbox": "0x002083f8",
+   "expect": "(none)",
+   "name": "SMissionManager::GetScoreTotal",
+   "sheet_name": "SMissionManager::GetScoreTotal(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4625: sums the 12 scores at +0x648; code Ghidra never made a function"
+   ]
+  },
+  {
+   "xbox": "0x00210460",
+   "expect": "Util_Step",
+   "name": "SWeaponManager::fWeaponSortOrder_global_ctors",
+   "sheet_name": "global constructors keyed to SWeaponManager::fWeaponSortOrder",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4780: ctors-table stub calling the weapon-table initialiser 0x20f2b8(1, 0xffff). Batch P004 had named it Util_Step"
+   ]
+  },
+  {
+   "xbox": "0x00231418",
+   "expect": "(none)",
+   "name": "WWorldMath::CalcBoundingBox",
+   "sheet_name": "WWorldMath::CalcBoundingBox(COORD4 *, unsigned int, COORD3 &, C",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5133: zeroes the box when the count is 0, else scans the points; spans exactly the sheet's 0x130; code Ghidra never made a function"
+   ]
+  },
+  {
+   "xbox": "0x002313f8",
+   "expect": "FUN_002313f8",
+   "name": "WWorld::SetTrackName_global_ctors",
+   "sheet_name": "global constructors keyed to WWorld::SetTrackName(char *, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5132: ctors-table stub calling 0x2313c0(1, 0xffff)"
+   ]
+  },
+  {
+   "xbox": "0x00235720",
+   "expect": "FUN_00235720",
+   "name": "GFXGallery::CANVAS_Suppress",
+   "sheet_name": "GFXGallery::CANVAS_Suppress(GiottoHandle *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5222: sets the suppress bit in a canvas entry; called from SuppressEffect"
+   ]
+  },
+  {
+   "xbox": "0x00235750",
+   "expect": "FUN_00235750",
+   "name": "GFXGallery::CANVAS_SetIntensity",
+   "sheet_name": "GFXGallery::CANVAS_SetIntensity(GiottoHandle *, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5223: writes the intensity to every element of a canvas; called from SetIntensity"
+   ]
+  },
+  {
+   "xbox": "0x00238028",
+   "expect": "FUN_00238028",
+   "name": "GGallery::LINE_Draw2DStrip",
+   "sheet_name": "GGallery::LINE_Draw2DStrip(COORD4 *, EAGL::Colour *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5264: static USimpleMaterial, sets vertex and colour pointers, draws the strip"
+   ]
+  },
+  {
+   "xbox": "0x0012c5d0",
+   "expect": "FUN_0012c5d0",
+   "name": "AIElementController::OkToSpawnHench",
+   "sheet_name": "AIElementController::OkToSpawnHench(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 736: count at +0x50 below the maximum at +4; called by the activate-AI-element events"
+   ]
+  },
+  {
+   "xbox": "0x00138b88",
+   "expect": "FUN_00138b88",
+   "name": "AIHelicopter::FireBullets",
+   "sheet_name": "AIHelicopter::FireBullets(float, COORD3 &, COORD3 &, COORD3 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 882: called 3x from DoAgentLogic with the (float, COORD3 &, ...) arguments of FireBullets"
+   ]
+  }
+ ]
+}

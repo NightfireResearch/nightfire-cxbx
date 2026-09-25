@@ -1,0 +1,29 @@
+{
+ "batch": "P014",
+ "program": "DRIVING.ELF",
+ "applied": "Fri Sep 25 23:45:22 2026",
+ "items": [
+  {
+   "xbox": "0x00167c78",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "error": "Failed to create function at 0x00167c78: Unable to create function at 00167c78"
+     }
+    ],
+    [
+     "rename",
+     {
+      "error": "No function found for 0x00167c78"
+     }
+    ]
+   ],
+   "new_name": null,
+   "ok": false
+  }
+ ]
+}
