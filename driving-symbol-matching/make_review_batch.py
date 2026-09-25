@@ -39,8 +39,8 @@ def main():
     items, held, settle = [], [], []
     for v in verdicts:
         k, r = by_row[v["row"]]
-        a = int(v["ps2"], 16)
-        if v["verdict"] != "accept":
+        a = int(v["ps2"], 16) if v.get("ps2") else 0
+        if v["verdict"] != "accept" or not a:
             held.append((r, a, f"{v['verdict']}: {v['why']}"))
             continue
         if r["name"].startswith("_Rb_tree<") and r["truncated"]:

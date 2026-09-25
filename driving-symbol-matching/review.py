@@ -2,6 +2,7 @@
 
     python review.py 3132            # one row
     python review.py --queue 0 15    # items 0..14 of data/review-queue.json
+    python review.py --window 0 5    # windows 0..4 of data/window-queue.json (unplaced rows vs unnamed functions)
 
 For each row: the sheet row and its neighbours (with where they are placed), the candidate PS2 function (size
 against the sheet's, callers, callees, strings, decompiled body), the PS2 functions either side of it, and the
@@ -76,7 +77,49 @@ def packet(row_number, candidate=None, note=""):
     return "\n".join(out)
 
 
+def window_packet(w, index):
+    """One window: its unplaced sheet rows in order, and every PS2 function between its two placed rows."""
+    ix, fe, auf = _load()
+    byrow = {r["row"]: r for r in ix.rows}
+    unnamed = {int(x, 16) for x in w["funcs"]}
+    out = [f"## window {index}: between row {w['from_row']} ({byrow[w['from_row']]['name'][:50]}) "
+           f"and row {w['to_row']} ({byrow[w['to_row']]['name'][:50]})", "", "Unplaced sheet rows, in sheet order:"]
+    for n in w["rows"]:
+        r = byrow[n]
+        key = (sheet.complete_name(r["name"]) or sheet.base_name(r["name"])).replace(" ", "_")
+        hit = auf.get(key)
+        out.append(f"  row {n}  0x{r['size'] or 0:x}  {r['name']}" + (f"   [AUF 0x{hit[0][0]:08x}]" if hit else ""))
+    addrs = ix.ps2_addrs
+    out += ["", "PS2 functions in the window, in address order:"]
+    for x in w["all_funcs"]:
+        a = int(x, 16)
+        k = addrs.index(a)
+        size = addrs[k + 1] - a
+        if a not in unnamed:
+            out.append(f"  0x{a:08x} 0x{size:x}  (named) {ix.ps2[a]['qualified']}")
+            continue
+        f = fe.get(a, {})
+        callers = g.get("get_xrefs_to", program=g.PS2, address=hex(a)).replace(chr(10), " | ")[:220]
+        out.append(f"  0x{a:08x} 0x{size:x}  UNNAMED  callers: {callers}")
+        out.append(f"      callees: {sorted(set(f.get('callees', [])))[:10]}  strings: {f.get('strings', [])[:4]}")
+        out.append("      " + body(g.PS2, a, 14).replace(chr(10), chr(10) + "      "))
+    for n in w["rows"]:
+        r = byrow[n]
+        key = (sheet.complete_name(r["name"]) or sheet.base_name(r["name"])).replace(" ", "_")
+        hit = auf.get(key)
+        if hit:
+            out += ["", f"AUF body for row {n} ({key}) at 0x{hit[0][0]:08x}:", body(g.AUF, hit[0][0], 14)]
+    return "\n".join(out)
+
+
 if __name__ == "__main__":
+    if sys.argv[1] == "--window":
+        with open(os.path.join(HERE, "data", "window-queue.json")) as f:
+            wq = json.load(f)
+        for i in range(int(sys.argv[2]), min(int(sys.argv[3]), len(wq))):
+            print(window_packet(wq[i], i))
+            print("\n" + "=" * 100 + "\n")
+        sys.exit(0)
     if sys.argv[1] == "--queue":
         with open(os.path.join(HERE, "data", "review-queue.json")) as f:
             q = json.load(f)
