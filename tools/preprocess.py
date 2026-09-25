@@ -79,7 +79,8 @@ def match_tag(tag, name, signature, ghidra_funcs):
     # name - so several candidates are narrowed by parameter count, and anything still ambiguous is refused:
     # patching one definition over two functions is how UFileLoader::FileLoad came to read an argument its
     # callers never pushed. See docs/driving-injection-framework.md.
-    matching = [x for x in ghidra_funcs if x['name'] == name and x['is_thunk'] == False]
+    name = re.sub(r'\boperator (new|delete)$', r'operator_\1', name)   # Ghidra's spelling
+    matching =[x for x in ghidra_funcs if x['name'] == name and x['is_thunk'] == False]
     if not matching:
         # Usually a rename in Ghidra since the tag was written - including Ghidra moving a class's methods to a
         # "Class_conflict1" namespace when a second type of that name appears. Say where the name went.
@@ -757,9 +758,15 @@ def gather_functions_with_tag(tag_name=None, has_params=False, side="action"):
                         # We want to extract the function name, eg "func_name" - ie the token preceding the last "(" character
                         # It must specifically be the last "(" character, as we may have other "(" characters in the function signature (eg "declspec(naked)")
 
-                        chunks = next_line.split(" ")
-                        chunks_with_brackets = [x for x in chunks if "(" in x]
-                        function_name = chunks_with_brackets[-1].split("(")[0]
+                        # A class's own operator new or delete is two words in C++ ("Event::operator new"), and
+                        # match_tag looks it up under Ghidra's spelling ("Event::operator_new").
+                        operator = re.search(r'([\w:]*operator) (new|delete)\(', next_line)
+                        if operator:
+                            function_name = f"{operator.group(1)} {operator.group(2)}"
+                        else:
+                            chunks = next_line.split(" ")
+                            chunks_with_brackets = [x for x in chunks if "(" in x]
+                            function_name = chunks_with_brackets[-1].split("(")[0]
                         functions.append((address, function_name, parse_signature(next_line, function_name), file_path))
     return functions
 

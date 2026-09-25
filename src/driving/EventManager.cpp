@@ -1,52 +1,72 @@
 #include "drivinghelpers.h"
 #include "EventManager.hpp"
+#include "engine/UMemory.hpp"
 
-#define eventBytesConsumed U32_AT(0x001e47dc)
-#define eventHead U32_AT(0x001e47d8)
-#define eventCurrent U32_AT(0x001e47e0)
-#define eventBuffer U32_AT(0x001e47d4)
+// The event manager's state, all at file scope in the original (Ghidra's names). The two points are addresses in
+// the buffer: events live from the deletion point, which is the next to run, up to the creation point.
+#define gMemoryBuffer (*(char **)0x001e47d4)
+#define gCreationPoint (*(char **)0x001e47d8)
+#define gDeletionPoint (*(char **)0x001e47dc)
+#define fgCurrentEvent (*(Event **)0x001e47e0)   // the event running; written, never read by the game
 
-void* FUN_00114470(size_t sz, uint param_2,const char* param_3) {
-    return reinterpret_cast<void* (*)(size_t, uint,const char*)>(0x00114470)(sz, param_2, param_3);
+static const unsigned int kBufferSize = 0x8000;
+
+// Events are laid out on 16-byte boundaries.
+static size_t EventBytes(size_t size) {
+    return (size + 0xf) & ~(size_t)0xf;
 }
 
-// FUNC_AT(0005a550)
-void EventManager__Init(void)
-{
-  eventBuffer = (unsigned int)FUN_00114470(0x8000,0,"EventBuffer");
-  eventHead = eventBuffer;
-  eventBytesConsumed = eventBuffer;
-  return;
+// AUTOINJECT
+void EventManager::Init() {
+    gMemoryBuffer = (char *)UMemory::Alloc(kBufferSize, 0, "EventBuffer");
+    gCreationPoint = gMemoryBuffer;
+    gDeletionPoint = gMemoryBuffer;
 }
 
-// FUNC_AT(0005a600)
-void EventManager__RunEvents(void)
-{
-  Event *event;
-
-  event = (Event*)eventBytesConsumed;
-  if (eventBytesConsumed < eventHead) {
-    do {
-      if (event != (Event *)0x0) {
-        eventCurrent = (int)event;
-        // Runs the event and advances eventBytesConsumed past it - see Event::DeletingDestructor.
-        event->DeletingDestructor(1);
-        event = (Event*)eventBytesConsumed;
-      }
-      eventCurrent = 0;
-    } while ((uint32_t)event < eventHead);
-  }
-  eventHead = eventBuffer;
-  eventBytesConsumed = eventBuffer;
-  return;
+// AUTOINJECT
+void EventManager::Shutdown() {
+    UMemory::Free(gMemoryBuffer);
+    gMemoryBuffer = nullptr;
+    gCreationPoint = nullptr;
+    gDeletionPoint = nullptr;
 }
 
-
-Event* Event__operator_new(size_t param_1) {
-  eventHead += (param_1 + 0xfU & 0xfffffff0); // Align to 0x10 bytes
-  return (Event*)eventHead;
+// Runs every event in the queue, oldest first, then empties it. An event that raises another while it runs (in
+// its destructor) puts it at the creation point, so the new one runs in this same call - the loop re-reads the
+// creation point each time round.
+//
+// As in the original, nothing checks the buffer's size: a tick that raised more than 32 KB of events would write
+// past it. None is known to.
+// AUTOINJECT
+void EventManager::RunEvents() {
+    Event *event = (Event *)gDeletionPoint;
+    if (gDeletionPoint < gCreationPoint) {
+        do {
+            if (event != nullptr) {
+                fgCurrentEvent = event;
+                // Runs the event, and its operator delete moves the deletion point past it.
+                event->DeletingDestructor(1);
+                event = (Event *)gDeletionPoint;
+            }
+            fgCurrentEvent = nullptr;
+        } while ((char *)event < gCreationPoint);
+    }
+    gCreationPoint = gMemoryBuffer;
+    gDeletionPoint = gMemoryBuffer;
 }
 
-void Event__operator_delete(undefined4 param_1, size_t param_2) {
-  eventBytesConsumed += (param_2 + 0xfU & 0xfffffff0); // Align to 0x10 bytes
+// AUTOINJECT
+void *Event::operator new(size_t size) {
+    char *event = gCreationPoint;
+    gCreationPoint += EventBytes(size);
+    return event;
+}
+
+// Called by every event's destructor with the event's own size, which is how the deletion point knows how far to
+// move. The original ignores the pointer too: it assumes the event being deleted is the one at the deletion
+// point, which holds while events are only ever destroyed by RunEvents, in order.
+// AUTOINJECT
+void Event::operator delete(void *event, size_t size) {
+    (void)event;
+    gDeletionPoint += EventBytes(size);
 }

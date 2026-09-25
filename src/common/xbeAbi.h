@@ -94,6 +94,13 @@ template <class R, class C, class... A> struct XbeAbi<R (__stdcall C::*)(A...)> 
     static constexpr bool ecx = false, edx = false;
 };
 
+// noexcept is part of a function's type, and changes nothing about how it is called. A class's operator delete
+// is noexcept without saying so (Event's, in src/driving/EventManager.hpp).
+template <class R, class... A> struct XbeAbi<R (__cdecl *)(A...) noexcept> : XbeAbi<R (__cdecl *)(A...)> {};
+template <class R, class... A> struct XbeAbi<R (__stdcall *)(A...) noexcept> : XbeAbi<R (__stdcall *)(A...)> {};
+template <class R, class... A> struct XbeAbi<R (__fastcall *)(A...) noexcept> : XbeAbi<R (__fastcall *)(A...)> {};
+template <class R, class C, class... A> struct XbeAbi<R (__thiscall C::*)(A...) noexcept> : XbeAbi<R (__thiscall C::*)(A...)> {};
+
 // The check the injection table makes for each patch. `pops` is -1 when the binary did not say. A register the
 // original reads before writing must be one the declaration passes an argument in; the converse is not
 // checked, because a method that never touches `this` (a GetEventName returning a constant) is common.

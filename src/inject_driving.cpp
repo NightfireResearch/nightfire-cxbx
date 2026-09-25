@@ -66,8 +66,6 @@ void* ea_malloc(int amt, char* name);
 void RealClock_InterruptHandler(void);
 unsigned int Scheduler_Constructor_Hook(void);
 void Scheduler__Run(int i);
-void EventManager__RunEvents(void);
-void EventManager__Init(void);
 
 
 

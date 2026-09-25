@@ -504,3 +504,26 @@ fps with the mission's objectives advancing - they are driven by events, so ever
 generated `VIRTUAL(0)` call. `Scheduler::Run` now also follows the original's timekeeping (`timeScale`, the 12-tick
 guard, cinematic skipping), except that it carries the fraction of a tick instead of dropping it: see
 `docs/driving-engine-plan.md`, section 2.
+
+## EventManager, as a class
+
+The first whole module moved onto the framework: `src/driving/EventManager.{hpp,cpp}`. Five functions, all tagged
+`AUTOINJECT` and all checked: `EventManager::Init`, `Shutdown` and `RunEvents` as static members of a class standing
+in for Ghidra's `EventManager` namespace, and `Event`'s own `operator new` and `operator delete`, which every one
+of the ~185 event classes inherits - so every `new EFoo` in the game now lands in our code. Its four globals use
+Ghidra's names (`gMemoryBuffer`, `gCreationPoint`, `gDeletionPoint`, `fgCurrentEvent`), and the buffer comes from
+`UMemory::Alloc`, declared `AUTOGEN` in `src/driving/engine/UMemory.hpp`.
+
+It needed two small additions:
+
+- **Operators as tagged names.** A tagged `void *Event::operator new(size_t size)` is read as `Event::operator new`
+  and looked up as Ghidra's `Event::operator_new`. Only `new` and `delete`, the ones the game defines per class.
+- **`noexcept` in the calling-convention check.** A class's `operator delete` is implicitly `noexcept`, which C++17
+  makes part of its type, so `XbeAbi` had nothing to match it. `src/common/xbeAbi.h` now forwards each
+  `noexcept` form to the plain one.
+
+It also fixed a latent bug: the hand-written `Event__operator_new` it replaces returned the creation point *after*
+moving it, not before, so it handed out the bytes past the event. It was never patched in, so it had not bitten.
+
+**Checked.** In the underwater level at 50 fps, the mission's radio lines and cues play as before - raised by
+events, allocated by the new `operator new` and run by the new `RunEvents`.

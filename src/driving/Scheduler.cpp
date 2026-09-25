@@ -33,12 +33,12 @@ static void RunTick(Scheduler *scheduler, int tick, bool last, bool *teleportDon
         Teleport_Tick();
         *teleportDone = true;
     }
-    EventManager__RunEvents();
+    EventManager::RunEvents();
 
     if (last) {
         for (int priority = 0; priority < 8; priority++)
             scheduler->s_oncePerGameLoop->Process(tick, (unsigned short)priority);
-        EventManager__RunEvents();
+        EventManager::RunEvents();
     }
 }
 
