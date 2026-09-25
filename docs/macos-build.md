@@ -41,6 +41,9 @@ The distribution packages (Arch `mingw-w64-gcc`, Debian/Ubuntu `g++-mingw-w64-i6
 `-B${NF_MINGW_ROOT}/bin`, which would otherwise hand clang the host's own `/usr/bin/ld` instead of
 `i686-w64-mingw32-ld`.
 
+The packages have to be mingw-w64 13 or later, which means Ubuntu 26.04 or newer, or Debian testing. Older
+releases have no `x3daudio.h`, and the audio code really does use X3DAudio, so the header can't be left out.
+
 Arch's host `ld` happens to write PE files too, so that mistake links there and fails elsewhere. Output 
 lands in `build/linux/`.
 
