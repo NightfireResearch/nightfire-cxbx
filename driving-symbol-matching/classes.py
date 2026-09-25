@@ -47,6 +47,15 @@ def evidence_from_sheet(rows):
     return ev
 
 
+def census(program):
+    """Full paths of the program's classes, from the census ghidra/NightfireClasses.py writes, or None."""
+    path = os.path.join(HERE, "results", f"namespace-census-{program}.json")
+    if not os.path.exists(path):
+        return None
+    with open(path) as f:
+        return set(json.load(f)["classes"])
+
+
 def main():
     ix = Index()
     ev = evidence_from_sheet(ix.rows)
@@ -59,9 +68,14 @@ def main():
             e = ev.get(p, set())
             kind = "class" if e & strong else ("namespace" if e == {"prefix"} else "undecided")
             if kind == "class":
-                last = p.split("::")[-1]
-                info = g.get_json("list_class_members", program=program, class_name=last, limit=1)
-                if info.get("class_namespace_exists"):
+                # The MCP server only sees top-level classes; the script's census sees nested ones too.
+                known = census(program)
+                if known is not None:
+                    is_class = p in known
+                else:
+                    info = g.get_json("list_class_members", program=program, class_name=p.split("::")[-1], limit=1)
+                    is_class = "::" not in p and info.get("class_namespace_exists")
+                if is_class:
                     kind = "class (already)"
                 else:
                     convert.append({"path": p, "evidence": sorted(e & strong)})

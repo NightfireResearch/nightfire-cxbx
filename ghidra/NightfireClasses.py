@@ -22,6 +22,9 @@
 #
 # Only for the open program; a path that doesn't resolve to exactly one plain namespace is reported and left.
 # It lists what it will convert and asks first; the whole run is one undoable step (Edit > Undo).
+# Every run, even a cancelled one, writes a census of the program's namespaces and classes (full paths) and what
+# happened to each listed entry to driving-symbol-matching/results/namespace-census-<program>.json: the MCP
+# server can't tell a nested class from a namespace, so classes.py reads this instead.
 # @category: Nightfire
 # @runtime PyGhidra
 import json
@@ -35,19 +38,23 @@ with open(list_path) as f:
     entries = json.load(f).get(currentProgram.name, [])
 print("Program: %s, %d namespaces listed for it" % (currentProgram.name, len(entries)))
 
+outcome = {}
 todo = []
 for e in entries:
     found = NamespaceUtils.getNamespaceByPath(currentProgram, None, e["path"])
     found = [ns for ns in found] if found is not None else []
     if len(found) != 1:
         print("  skip %s: %d namespaces with that path" % (e["path"], len(found)))
+        outcome[e["path"]] = "skipped: %d namespaces with that path" % len(found)
         continue
     ns = found[0]
     kind = ns.getSymbol().getSymbolType()
     if kind == SymbolType.CLASS:
+        outcome[e["path"]] = "already a class"
         continue
     if kind != SymbolType.NAMESPACE:
         print("  skip %s: it is a %s" % (e["path"], kind))
+        outcome[e["path"]] = "skipped: it is a %s" % kind
         continue
     todo.append((ns, e))
 
@@ -62,8 +69,23 @@ elif askYesNo("Nightfire classes", "Convert %d namespaces into classes? (Edit > 
         try:
             NamespaceUtils.convertNamespaceToClass(ns)
             done += 1
+            outcome[e["path"]] = "converted"
         except Exception as ex:
             print("  FAILED %s: %s" % (e["path"], ex))
+            outcome[e["path"]] = "FAILED: %s" % ex
     print("Converted %d of %d" % (done, len(todo)))
 else:
     print("Cancelled; nothing changed")
+    for ns, e in todo:
+        outcome[e["path"]] = "cancelled"
+
+census = {"namespace": [], "class": []}
+for sym in currentProgram.getSymbolTable().getAllSymbols(False):
+    kind = sym.getSymbolType()
+    if kind == SymbolType.CLASS or kind == SymbolType.NAMESPACE:
+        census["class" if kind == SymbolType.CLASS else "namespace"].append(sym.getObject().getName(True))
+census_path = os.path.join(os.path.dirname(list_path), "namespace-census-%s.json" % currentProgram.name)
+with open(census_path, "w") as f:
+    json.dump({"program": currentProgram.name, "classes": sorted(census["class"]),
+               "namespaces": sorted(census["namespace"]), "outcome": outcome}, f, indent=1)
+print("Census: %d classes, %d plain namespaces -> %s" % (len(census["class"]), len(census["namespace"]), census_path))
