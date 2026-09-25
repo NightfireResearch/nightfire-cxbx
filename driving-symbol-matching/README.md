@@ -31,6 +31,7 @@ names to PS2 retail addresses only, so the work is matching PS2 functions to Xbo
 | `region.py` | `python region.py 0x59900 0x5bb00`: Xbox range beside its sheet window |
 | `vtable_pairs.py` | `python vtable_pairs.py AICharacterBond`: PS2 and Xbox vtables slot by slot |
 | `lib/image.py` | both programs' section bytes, cached in `data/image/` |
+| `validate_infill.py` | held-out accuracy test of the infill |
 | `lib/ps2_infill.py` | PS2 addresses for sheet rows from retail layout (exact sizes between known rows) |
 | `vtables.py` | every Xbox vtable (code-pointer runs stored by `mov [reg], imm32`) paired with the sheet's PS2 vtables |
 | `propose_vtables.py` | Xbox name proposals from the certain vtable pairs; folded functions and destructors handled |
@@ -48,6 +49,11 @@ Setup: `pip install openpyxl`, then
 - Sheet: 12,190 symbols, names cut at 63 characters, sparse `.obj` markers. Colour is on the PS2 address
   column. A green row without an address was named in Ghidra but not copied back; `lib/index.py` recovers
   those addresses by name, within the neighbouring rows' addresses.
+- PS2 infill accuracy (`validate_infill.py`, 30% of known addresses hidden, 5 trials): equal-count modes
+  99.8% ("exact") and 99.9% ("count"); **exact-run 94%, and 78% inside runs of equal sizes**. Exact-run is a
+  hint only: names resting on it need a body comparison or the slot-order check before a batch takes them.
+  68% of functions keep exactly the same size between the symbol build and retail; the ~12% shrink is
+  concentrated in the rest.
 - A sheet size can include static functions the symbol file doesn't list (`deleteSysFiles`).
 - Xbox order: compilation units stay together and in similar order, but the order within a unit is shuffled
   (87% of adjacent pairs are within 40 sheet rows; only 51% lie on one rising sequence).

@@ -1,6 +1,6 @@
 {
  "batch": "002",
- "note": "DRAFT for review: Xbox names from certain vtable pairs (results/proposals-vtables.md). Held back: conflicts, count-only PS2 infill, duplicate targets.",
+ "note": "DRAFT for review: Xbox names from certain vtable pairs. Held back: conflicts, count-only and exact-run PS2 infill (exact-run measured 94% right, 78% in equal-size runs), duplicate targets.",
  "items": [
   {
    "xbox": "0x00011100",
@@ -56,16 +56,6 @@
    ]
   },
   {
-   "xbox": "0x0001d680",
-   "expect": "FUN_0001d680",
-   "name": "AICharacterEnemyDriver::DoInitial",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "AICharacterEnemyDriver slot 7 (PS2 0011ade0, row 471, infill-exact-run)"
-   ]
-  },
-  {
    "xbox": "0x000236c0",
    "expect": "FUN_000236c0",
    "name": "AICharacterPassenger::~AICharacterPassenger",
@@ -84,26 +74,6 @@
    "evidence": [
     "AICharacterPassenger slot 0 (PS2 00125738, row 647, sheet)",
     "vtable slot 0 on MSVC is the scalar deleting destructor"
-   ]
-  },
-  {
-   "xbox": "0x00023890",
-   "expect": "(none)",
-   "name": "AICharacterPassenger::DoNeutral",
-   "also": [],
-   "create": true,
-   "evidence": [
-    "AICharacterPassenger slot 8 (PS2 001257c8, row 649, infill-exact-run)"
-   ]
-  },
-  {
-   "xbox": "0x000238c0",
-   "expect": "(none)",
-   "name": "AICharacterPassenger::HandleInterrupts",
-   "also": [],
-   "create": true,
-   "evidence": [
-    "AICharacterPassenger slot 30 (PS2 00125860, row 654, infill-exact-run)"
    ]
   },
   {
@@ -134,27 +104,6 @@
    "create": false,
    "evidence": [
     "AICharacterPedestrian slot 0 (PS2 00125b48, row 659, ghidra)",
-    "vtable slot 0 on MSVC is the scalar deleting destructor"
-   ]
-  },
-  {
-   "xbox": "0x000263d0",
-   "expect": "FUN_000263d0",
-   "name": "AICharacterPedestrian::DoLeaning",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "AICharacterPedestrian slot 28 (PS2 001284e0, row 688, infill-exact-run)"
-   ]
-  },
-  {
-   "xbox": "0x00035b90",
-   "expect": "FUN_00035b90",
-   "name": "AIVehicle::scalar_deleting_destructor",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "AIVehicle slot 0 (PS2 0013df50, row 939, infill-exact-run)",
     "vtable slot 0 on MSVC is the scalar deleting destructor"
    ]
   },
@@ -302,16 +251,6 @@
    "evidence": [
     "PHelicopter slot 0 (PS2 001937b0, row 2663, ghidra)",
     "vtable slot 0 on MSVC is the scalar deleting destructor"
-   ]
-  },
-  {
-   "xbox": "0x0006e330",
-   "expect": "FUN_0006e330",
-   "name": "PHelicopter::ApplyDamage",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "PHelicopter slot 2 (PS2 00193938, row 2665, infill-exact-run)"
    ]
   },
   {
@@ -479,16 +418,6 @@
    ]
   },
   {
-   "xbox": "0x000877e0",
-   "expect": "(none)",
-   "name": "RPlayerCamera::UpdateCamera",
-   "also": [],
-   "create": true,
-   "evidence": [
-    "RPlayerCamera slot 3 (PS2 001b29e0, row 3230, infill-exact-run)"
-   ]
-  },
-  {
    "xbox": "0x0008b3c0",
    "expect": "(none)",
    "name": "RRenderDebugViewScreenSpace::Debug",
@@ -496,17 +425,6 @@
    "create": true,
    "evidence": [
     "RRenderDebugViewScreenSpace slot 1 (PS2 001c2f78, row 3421, sheet)"
-   ]
-  },
-  {
-   "xbox": "0x0008b4d0",
-   "expect": "FUN_0008b4d0",
-   "name": "RRenderDebugViewPerspective::scalar_deleting_destructor",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "RRenderDebugViewPerspective slot 0 (PS2 001c3758, row 3424, infill-exact-run)",
-    "vtable slot 0 on MSVC is the scalar deleting destructor"
    ]
   },
   {
@@ -610,16 +528,6 @@
    "evidence": [
     "RSceneObj slot 0 (PS2 001c7270, row 3498, sheet)",
     "vtable slot 0 on MSVC is the scalar deleting destructor"
-   ]
-  },
-  {
-   "xbox": "0x000959b0",
-   "expect": "FUN_000959b0",
-   "name": "RVehicle::TriggerIlluminate",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "RVehicle slot 12 (PS2 001d2aa0, row 3702, infill-exact-run)"
    ]
   },
   {
@@ -994,90 +902,6 @@
    ]
   },
   {
-   "xbox": "0x000f70f0",
-   "expect": "FUN_000f70f0",
-   "name": "EAGLAnim::FnCompoundChannel::GetTargetCheckSum",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "EAGLAnim::FnCompoundChannel slot 1 (PS2 00266390, row 6427, infill-exact-run)"
-   ]
-  },
-  {
-   "xbox": "0x000f7100",
-   "expect": "FUN_000f7100",
-   "name": "EAGLAnim::FnCompoundChannel::GetLength",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "EAGLAnim::FnCompoundChannel slot 4 (PS2 002663b0, row 6430, infill-exact-run)"
-   ]
-  },
-  {
-   "xbox": "0x000f7140",
-   "expect": "FUN_000f7140",
-   "name": "EAGLAnim::FnCompoundChannel::GetAttributes",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "EAGLAnim::FnCompoundChannel slot 0 (PS2 00266410, row 6432, infill-exact-run)"
-   ]
-  },
-  {
-   "xbox": "0x000f72f0",
-   "expect": "FUN_000f72f0",
-   "name": "EAGLAnim::FnAnim::GetTargetCheckSum",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "EAGLAnim::FnPoseMirror slot 1 (PS2 0026dfb8, row 6584, infill-exact-run)",
-    "EAGLAnim::FnAnim slot 1 (PS2 0026dfb8, row 6584, infill-exact-run)",
-    "EAGLAnim::FnRunBlender slot 1 (PS2 0026dfb8, row 6584, infill-exact-run)",
-    "EAGLAnim::FnTurnBlender slot 1 (PS2 0026dfb8, row 6584, infill-exact-run)"
-   ]
-  },
-  {
-   "xbox": "0x000f7300",
-   "expect": "FUN_000f7300",
-   "name": "EAGLAnim::FnAnim::GetLength",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "EAGLAnim::FnPoseMirror slot 4 (PS2 0026dfd0, row 6587, infill-exact-run)",
-    "EAGLAnim::FnRawEventChannel slot 4 (PS2 0026dfd0, row 6587, infill-exact-run)",
-    "EAGLAnim::FnAnimMemoryMap slot 4 (PS2 0026dfd0, row 6587, infill-exact-run)",
-    "EAGLAnim::FnAnim slot 4 (PS2 0026dfd0, row 6587, infill-exact-run)",
-    "EAGLAnim::FnRunBlender slot 4 (PS2 0026dfd0, row 6587, infill-exact-run)",
-    "EAGLAnim::FnTurnBlender slot 4 (PS2 0026dfd0, row 6587, infill-exact-run)"
-   ]
-  },
-  {
-   "xbox": "0x000f7320",
-   "expect": "FUN_000f7320",
-   "name": "EAGLAnim::FnAnim::EvalEvent",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "EAGLAnim::FnPoseMirror slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnRawLinearChannel slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnRawStateChan slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnDeltaQ slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnDeltaSingleQ slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnDeltaQFast slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnAnimMemoryMap slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnAnim slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnDeltaF3 slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnDeltaF1 slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnKeyQuatChan slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnKeyLerpChan slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnDeltaQuatChan slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnDeltaLerpChan slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnPhaseChan slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnRunBlender slot 9 (PS2 0026dff8, row 6592, infill-exact-run)",
-    "EAGLAnim::FnTurnBlender slot 9 (PS2 0026dff8, row 6592, infill-exact-run)"
-   ]
-  },
-  {
    "xbox": "0x000f7410",
    "expect": "FUN_000f7410",
    "name": "EAGLAnim::FnRawEventChannel::SetAnimMemoryMap",
@@ -1170,17 +994,6 @@
    ]
   },
   {
-   "xbox": "0x000f7770",
-   "expect": "FUN_000f7770",
-   "name": "EAGLAnim::FnDeltaChan::GetLength",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "EAGLAnim::FnDeltaQuatChan slot 4 (PS2 002761e0, row 6823, infill-exact-run)",
-    "EAGLAnim::FnDeltaLerpChan slot 4 (PS2 002761e0, row 6823, infill-exact-run)"
-   ]
-  },
-  {
    "xbox": "0x000f78a0",
    "expect": "FUN_000f78a0",
    "name": "EAGLAnim::FnPoseMirror::Eval",
@@ -1223,17 +1036,6 @@
    ]
   },
   {
-   "xbox": "0x000f82d0",
-   "expect": "FUN_000f82d0",
-   "name": "EAGLAnim::FnPhaseChan::scalar_deleting_destructor",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "EAGLAnim::FnPhaseChan slot 0 (PS2 00277538, row 6837, infill-exact-run)",
-    "vtable slot 0 on MSVC is the scalar deleting destructor"
-   ]
-  },
-  {
    "xbox": "0x000faaf0",
    "expect": "FUN_000faaf0",
    "name": "EAGLAnim::FnAnimMemoryMap::scalar_deleting_destructor",
@@ -1242,16 +1044,6 @@
    "evidence": [
     "EAGLAnim::FnAnimMemoryMap slot 0 (PS2 0026dd18, row 6553, sheet)",
     "vtable slot 0 on MSVC is the scalar deleting destructor"
-   ]
-  },
-  {
-   "xbox": "0x000fd4c0",
-   "expect": "FUN_000fd4c0",
-   "name": "EAGLAnim::FnPhaseChan::Eval",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "EAGLAnim::FnPhaseChan slot 3 (PS2 00277360, row 6836, infill-exact-run)"
    ]
   },
   {
@@ -1286,26 +1078,6 @@
    ]
   },
   {
-   "xbox": "0x00101f00",
-   "expect": "FUN_00101f00",
-   "name": "EAGLAnim::FnDeltaSingleQ::InitBuffersAsRequired",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "EAGLAnim::FnDeltaSingleQ slot 0 (PS2 0026b368, row 6514, infill-exact-run)"
-   ]
-  },
-  {
-   "xbox": "0x001032b0",
-   "expect": "FUN_001032b0",
-   "name": "EAGLAnim::FnDeltaQFast::InitBuffers",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "EAGLAnim::FnDeltaQFast slot 0 (PS2 0026d468, row 6546, infill-exact-run)"
-   ]
-  },
-  {
    "xbox": "0x001051a0",
    "expect": "(none)",
    "name": "EAGLAnim::FnRunBlender::Eval",
@@ -1313,16 +1085,6 @@
    "create": true,
    "evidence": [
     "EAGLAnim::FnRunBlender slot 3 (PS2 00279398, row 6881, sheet)"
-   ]
-  },
-  {
-   "xbox": "0x00105780",
-   "expect": "(none)",
-   "name": "EAGLAnim::FnRunBlender::EvalPhase",
-   "also": [],
-   "create": true,
-   "evidence": [
-    "EAGLAnim::FnRunBlender slot 7 (PS2 00279498, row 6884, infill-exact-run)"
    ]
   },
   {
@@ -1442,16 +1204,6 @@
    ]
   },
   {
-   "xbox": "0x00129b00",
-   "expect": "(none)",
-   "name": "AUltraLite::Play",
-   "also": [],
-   "create": true,
-   "evidence": [
-    "AUltraLite slot 3 (PS2 002e3c40, row 8743, infill-exact-run)"
-   ]
-  },
-  {
    "xbox": "0x00129b20",
    "expect": "FUN_00129b20",
    "name": "AUltraLite::~AUltraLite",
@@ -1462,16 +1214,6 @@
    ]
   },
   {
-   "xbox": "0x00129cd0",
-   "expect": "(none)",
-   "name": "AUltraLite::PlayMotor",
-   "also": [],
-   "create": true,
-   "evidence": [
-    "AUltraLite slot 9 (PS2 002e3c90, row 8744, infill-exact-run)"
-   ]
-  },
-  {
    "xbox": "0x0012a410",
    "expect": "FUN_0012a410",
    "name": "AUltraLite::scalar_deleting_destructor",
@@ -1479,78 +1221,6 @@
    "create": false,
    "evidence": [
     "AUltraLite slot 0 (PS2 002e3948, row 8742, sheet)",
-    "vtable slot 0 on MSVC is the scalar deleting destructor"
-   ]
-  },
-  {
-   "xbox": "0x0012a890",
-   "expect": "FUN_0012a890",
-   "name": "ASnowMobile::~ASnowMobile",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "called by ASnowMobile::scalar_deleting_destructor (0x0012b510) and stores ASnowMobile's vtable"
-   ]
-  },
-  {
-   "xbox": "0x0012b510",
-   "expect": "FUN_0012b510",
-   "name": "ASnowMobile::scalar_deleting_destructor",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "ASnowMobile slot 0 (PS2 002edb08, row 8869, infill-exact-run)",
-    "vtable slot 0 on MSVC is the scalar deleting destructor"
-   ]
-  },
-  {
-   "xbox": "0x0012b540",
-   "expect": "(none)",
-   "name": "ASnowMobile::Play",
-   "also": [],
-   "create": true,
-   "evidence": [
-    "ASnowMobile slot 3 (PS2 002edd88, row 8870, infill-exact-run)"
-   ]
-  },
-  {
-   "xbox": "0x0012bb60",
-   "expect": "(none)",
-   "name": "ASubmersible::SetCreakLevel",
-   "also": [],
-   "create": true,
-   "evidence": [
-    "ASubmersible slot 9 (PS2 002e8650, row 8783, infill-exact-run)"
-   ]
-  },
-  {
-   "xbox": "0x0012c640",
-   "expect": "(none)",
-   "name": "APlayerTank::Play",
-   "also": [],
-   "create": true,
-   "evidence": [
-    "APlayerTank slot 3 (PS2 002f1000, row 8921, infill-exact-run)"
-   ]
-  },
-  {
-   "xbox": "0x0012c730",
-   "expect": "FUN_0012c730",
-   "name": "APlayerTank::~APlayerTank",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "called by APlayerTank::scalar_deleting_destructor (0x0012c7c0) and stores APlayerTank's vtable"
-   ]
-  },
-  {
-   "xbox": "0x0012c7c0",
-   "expect": "FUN_0012c7c0",
-   "name": "APlayerTank::scalar_deleting_destructor",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "APlayerTank slot 0 (PS2 002f1128, row 8922, infill-exact-run)",
     "vtable slot 0 on MSVC is the scalar deleting destructor"
    ]
   },
@@ -1592,27 +1262,6 @@
    "create": false,
    "evidence": [
     "AHelicopter slot 0 (PS2 002f6b08, row 9012, sheet)",
-    "vtable slot 0 on MSVC is the scalar deleting destructor"
-   ]
-  },
-  {
-   "xbox": "0x0012d750",
-   "expect": "FUN_0012d750",
-   "name": "ASentry::~ASentry",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "called by ASentry::scalar_deleting_destructor (0x0012d7c0) and stores ASentry's vtable"
-   ]
-  },
-  {
-   "xbox": "0x0012d7c0",
-   "expect": "FUN_0012d7c0",
-   "name": "ASentry::scalar_deleting_destructor",
-   "also": [],
-   "create": false,
-   "evidence": [
-    "ASentry slot 0 (PS2 002effe8, row 8889, infill-exact-run)",
     "vtable slot 0 on MSVC is the scalar deleting destructor"
    ]
   },
