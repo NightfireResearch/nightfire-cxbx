@@ -172,6 +172,232 @@
     "0x0018dc28"
    ]
   },
+  "EAGLAnim::FnAnimMemoryMap": {
+   "derived_classes": [],
+   "derived_vtables": [
+    "0x001a0be8",
+    "0x001a0ca8",
+    "0x001a0cf0",
+    "0x001a0d38",
+    "0x001a0dc8",
+    "0x001a0e10",
+    "0x001a0fd0",
+    "0x001a1018",
+    "0x001a1060",
+    "0x001a10a8",
+    "0x001a1270",
+    "0x001a12e8",
+    "0x001a1360",
+    "0x001a13e0",
+    "0x001a1450"
+   ],
+   "own": [
+    "0x001a1130"
+   ]
+  },
+  "EAGLAnim::FnCompoundChannel": {
+   "derived_classes": [
+    "EAGLAnim::FnRawStateChan"
+   ],
+   "derived_vtables": [
+    "0x001a1018"
+   ],
+   "own": [
+    "0x001a0be8"
+   ]
+  },
+  "EAGLAnim::FnDeltaF1": {
+   "derived_classes": [],
+   "derived_vtables": [],
+   "own": [
+    "0x001a1270"
+   ]
+  },
+  "EAGLAnim::FnDeltaF3": {
+   "derived_classes": [
+    "EAGLAnim::FnDeltaF1"
+   ],
+   "derived_vtables": [
+    "0x001a1270"
+   ],
+   "own": [
+    "0x001a12e8"
+   ]
+  },
+  "EAGLAnim::FnDeltaLerpChan": {
+   "derived_classes": [
+    "EAGLAnim::FnDeltaQuatChan"
+   ],
+   "derived_vtables": [
+    "0x001a10a8"
+   ],
+   "own": [
+    "0x001a1060"
+   ]
+  },
+  "EAGLAnim::FnDeltaQ": {
+   "derived_classes": [
+    "EAGLAnim::FnDeltaQFast"
+   ],
+   "derived_vtables": [
+    "0x001a13e0"
+   ],
+   "own": [
+    "0x001a1450"
+   ]
+  },
+  "EAGLAnim::FnDeltaQFast": {
+   "derived_classes": [
+    "EAGLAnim::FnDeltaSingleQ"
+   ],
+   "derived_vtables": [
+    "0x001a1360"
+   ],
+   "own": [
+    "0x001a13e0"
+   ]
+  },
+  "EAGLAnim::FnDeltaQuatChan": {
+   "derived_classes": [
+    "EAGLAnim::FnKeyLerpChan"
+   ],
+   "derived_vtables": [
+    "0x001a0dc8"
+   ],
+   "own": [
+    "0x001a10a8"
+   ]
+  },
+  "EAGLAnim::FnDeltaSingleQ": {
+   "derived_classes": [
+    "EAGLAnim::FnDeltaF3"
+   ],
+   "derived_vtables": [
+    "0x001a12e8"
+   ],
+   "own": [
+    "0x001a1360"
+   ]
+  },
+  "EAGLAnim::FnKeyLerpChan": {
+   "derived_classes": [
+    "EAGLAnim::FnKeyQuatChan"
+   ],
+   "derived_vtables": [
+    "0x001a0e10"
+   ],
+   "own": [
+    "0x001a0dc8"
+   ]
+  },
+  "EAGLAnim::FnKeyQuatChan": {
+   "derived_classes": [
+    "EAGLAnim::FnPhaseChan"
+   ],
+   "derived_vtables": [
+    "0x001a0fd0"
+   ],
+   "own": [
+    "0x001a0e10"
+   ]
+  },
+  "EAGLAnim::FnPhaseChan": {
+   "derived_classes": [
+    "EAGLAnim::FnCompoundChannel"
+   ],
+   "derived_vtables": [
+    "0x001a0be8"
+   ],
+   "own": [
+    "0x001a0fd0"
+   ]
+  },
+  "EAGLAnim::FnPoseBlender": {
+   "derived_classes": [
+    "EAGLAnim::FnPoseMirror"
+   ],
+   "derived_vtables": [
+    "0x001a0f18"
+   ],
+   "own": [
+    "0x001a0edc"
+   ]
+  },
+  "EAGLAnim::FnPoseMirror": {
+   "derived_classes": [
+    "EAGLAnim::FnRunBlender"
+   ],
+   "derived_vtables": [
+    "0x001a1504"
+   ],
+   "own": [
+    "0x001a0f18"
+   ]
+  },
+  "EAGLAnim::FnRawEventChannel": {
+   "derived_classes": [
+    "EAGLAnim::FnRawLinearChannel"
+   ],
+   "derived_vtables": [
+    "0x001a0d38"
+   ],
+   "own": [
+    "0x001a0cf0"
+   ]
+  },
+  "EAGLAnim::FnRawLinearChannel": {
+   "derived_classes": [],
+   "derived_vtables": [
+    "0x001a0f54"
+   ],
+   "own": [
+    "0x001a0d38"
+   ]
+  },
+  "EAGLAnim::FnRawPoseChannel": {
+   "derived_classes": [
+    "EAGLAnim::FnRawEventChannel"
+   ],
+   "derived_vtables": [
+    "0x001a0cf0"
+   ],
+   "own": [
+    "0x001a0ca8"
+   ]
+  },
+  "EAGLAnim::FnRawStateChan": {
+   "derived_classes": [
+    "EAGLAnim::FnDeltaQ"
+   ],
+   "derived_vtables": [
+    "0x001a1450"
+   ],
+   "own": [
+    "0x001a1018"
+   ]
+  },
+  "EAGLAnim::FnRunBlender": {
+   "derived_classes": [
+    "EAGLAnim::FnTurnBlender"
+   ],
+   "derived_vtables": [
+    "0x001a14b4"
+   ],
+   "own": [
+    "0x001a1504"
+   ]
+  },
+  "EAGLAnim::FnTurnBlender": {
+   "derived_classes": [
+    "EAGLAnim::FnDeltaLerpChan"
+   ],
+   "derived_vtables": [
+    "0x001a1060"
+   ],
+   "own": [
+    "0x001a14b4"
+   ]
+  },
   "EChangeMaxTraffic": {
    "derived_classes": [],
    "derived_vtables": [],
@@ -441,232 +667,6 @@
     "0x0018ed58"
    ]
   },
-  "FnAnimMemoryMap": {
-   "derived_classes": [],
-   "derived_vtables": [
-    "0x001a0be8",
-    "0x001a0ca8",
-    "0x001a0cf0",
-    "0x001a0d38",
-    "0x001a0dc8",
-    "0x001a0e10",
-    "0x001a0fd0",
-    "0x001a1018",
-    "0x001a1060",
-    "0x001a10a8",
-    "0x001a1270",
-    "0x001a12e8",
-    "0x001a1360",
-    "0x001a13e0",
-    "0x001a1450"
-   ],
-   "own": [
-    "0x001a1130"
-   ]
-  },
-  "FnCompoundChannel": {
-   "derived_classes": [
-    "FnRawStateChan"
-   ],
-   "derived_vtables": [
-    "0x001a1018"
-   ],
-   "own": [
-    "0x001a0be8"
-   ]
-  },
-  "FnDeltaF1": {
-   "derived_classes": [],
-   "derived_vtables": [],
-   "own": [
-    "0x001a1270"
-   ]
-  },
-  "FnDeltaF3": {
-   "derived_classes": [
-    "FnDeltaF1"
-   ],
-   "derived_vtables": [
-    "0x001a1270"
-   ],
-   "own": [
-    "0x001a12e8"
-   ]
-  },
-  "FnDeltaLerpChan": {
-   "derived_classes": [
-    "FnDeltaQuatChan"
-   ],
-   "derived_vtables": [
-    "0x001a10a8"
-   ],
-   "own": [
-    "0x001a1060"
-   ]
-  },
-  "FnDeltaQ": {
-   "derived_classes": [
-    "FnDeltaQFast"
-   ],
-   "derived_vtables": [
-    "0x001a13e0"
-   ],
-   "own": [
-    "0x001a1450"
-   ]
-  },
-  "FnDeltaQFast": {
-   "derived_classes": [
-    "FnDeltaSingleQ"
-   ],
-   "derived_vtables": [
-    "0x001a1360"
-   ],
-   "own": [
-    "0x001a13e0"
-   ]
-  },
-  "FnDeltaQuatChan": {
-   "derived_classes": [
-    "FnKeyLerpChan"
-   ],
-   "derived_vtables": [
-    "0x001a0dc8"
-   ],
-   "own": [
-    "0x001a10a8"
-   ]
-  },
-  "FnDeltaSingleQ": {
-   "derived_classes": [
-    "FnDeltaF3"
-   ],
-   "derived_vtables": [
-    "0x001a12e8"
-   ],
-   "own": [
-    "0x001a1360"
-   ]
-  },
-  "FnKeyLerpChan": {
-   "derived_classes": [
-    "FnKeyQuatChan"
-   ],
-   "derived_vtables": [
-    "0x001a0e10"
-   ],
-   "own": [
-    "0x001a0dc8"
-   ]
-  },
-  "FnKeyQuatChan": {
-   "derived_classes": [
-    "FnPhaseChan"
-   ],
-   "derived_vtables": [
-    "0x001a0fd0"
-   ],
-   "own": [
-    "0x001a0e10"
-   ]
-  },
-  "FnPhaseChan": {
-   "derived_classes": [
-    "FnCompoundChannel"
-   ],
-   "derived_vtables": [
-    "0x001a0be8"
-   ],
-   "own": [
-    "0x001a0fd0"
-   ]
-  },
-  "FnPoseBlender": {
-   "derived_classes": [
-    "FnPoseMirror"
-   ],
-   "derived_vtables": [
-    "0x001a0f18"
-   ],
-   "own": [
-    "0x001a0edc"
-   ]
-  },
-  "FnPoseMirror": {
-   "derived_classes": [
-    "FnRunBlender"
-   ],
-   "derived_vtables": [
-    "0x001a1504"
-   ],
-   "own": [
-    "0x001a0f18"
-   ]
-  },
-  "FnRawEventChannel": {
-   "derived_classes": [
-    "FnRawLinearChannel"
-   ],
-   "derived_vtables": [
-    "0x001a0d38"
-   ],
-   "own": [
-    "0x001a0cf0"
-   ]
-  },
-  "FnRawLinearChannel": {
-   "derived_classes": [],
-   "derived_vtables": [
-    "0x001a0f54"
-   ],
-   "own": [
-    "0x001a0d38"
-   ]
-  },
-  "FnRawPoseChannel": {
-   "derived_classes": [
-    "FnRawEventChannel"
-   ],
-   "derived_vtables": [
-    "0x001a0cf0"
-   ],
-   "own": [
-    "0x001a0ca8"
-   ]
-  },
-  "FnRawStateChan": {
-   "derived_classes": [
-    "FnDeltaQ"
-   ],
-   "derived_vtables": [
-    "0x001a1450"
-   ],
-   "own": [
-    "0x001a1018"
-   ]
-  },
-  "FnRunBlender": {
-   "derived_classes": [
-    "FnTurnBlender"
-   ],
-   "derived_vtables": [
-    "0x001a14b4"
-   ],
-   "own": [
-    "0x001a1504"
-   ]
-  },
-  "FnTurnBlender": {
-   "derived_classes": [
-    "FnDeltaLerpChan"
-   ],
-   "derived_vtables": [
-    "0x001a1060"
-   ],
-   "own": [
-    "0x001a14b4"
-   ]
-  },
   "GHud": {
    "derived_classes": [],
    "derived_vtables": [],
@@ -718,6 +718,13 @@
    ],
    "own": [
     "0x0018fa00"
+   ]
+  },
+  "PhysicsNamespace": {
+   "derived_classes": [],
+   "derived_vtables": [],
+   "own": [
+    "0x0018f8fc"
    ]
   },
   "PhysicsObject": {
@@ -1007,7 +1014,17 @@
    "0x000d3580",
    "0x00017550",
    "0x00017550",
-   "0x00017550"
+   "0x00017550",
+   "0x0008dce0",
+   "0x000d3580",
+   "0x0008dae0",
+   "0x00015770",
+   "0x0008e1a0",
+   "0x0008f270",
+   "0x0008ea70",
+   "0x000d3580",
+   "0x000d3580",
+   "0x0008d6d0"
   ],
   "0x0018a440": [
    "0x0001b1b0",
@@ -1068,7 +1085,32 @@
    "0x0001c690",
    "0x0001c5b0",
    "0x00015770",
-   "0x0001d0c0"
+   "0x0001d0c0",
+   "0x0001d090",
+   "0x0001d0c0",
+   "0x000d3580",
+   "0x000d3580",
+   "0x000d3580",
+   "0x000d3580",
+   "0x000d3580",
+   "0x0001d0e0",
+   "0x000d3580",
+   "0x000d3580",
+   "0x0001d1c0",
+   "0x000d3580",
+   "0x000d3580",
+   "0x000d3580",
+   "0x000d3580",
+   "0x000d3580",
+   "0x000d3580",
+   "0x000d3580",
+   "0x000d3580",
+   "0x000d3580",
+   "0x000d3580",
+   "0x000d3580",
+   "0x0001d2a0",
+   "0x0001c080",
+   "0x00023950"
   ],
   "0x0018a788": [
    "0x0001d650",
@@ -1970,7 +2012,8 @@
   ],
   "0x0018dc28": [
    "0x00059530",
-   "0x000d3580"
+   "0x000d3580",
+   "0x000592b0"
   ],
   "0x0018ea0c": [
    "0x0005bfc0",
@@ -2127,6 +2170,10 @@
    "0x00017550",
    "0x0006e330"
   ],
+  "0x0018f8fc": [
+   "0x0006ed40",
+   "0x0006f050"
+  ],
   "0x0018f9a0": [
    "0x0006f7f0",
    "0x00017550",
@@ -2266,7 +2313,8 @@
   ],
   "0x00191628": [
    "0x0007f450",
-   "0x000d3580"
+   "0x000d3580",
+   "0x0007e930"
   ],
   "0x001918ac": [
    "0x00084a30",
@@ -2289,7 +2337,11 @@
    "0x000d3580"
   ],
   "0x001919b4": [
-   "0x0008b510"
+   "0x0008b510",
+   "0x0008b3c0",
+   "0x000d3580",
+   "0x000d3580",
+   "0x0008b530"
   ],
   "0x00191aa8": [
    "0x0008b510",
@@ -2315,7 +2367,17 @@
    "0x000d3580",
    "0x00017550",
    "0x00017550",
-   "0x00017550"
+   "0x00017550",
+   "0x0008dce0",
+   "0x000d3580",
+   "0x0008dae0",
+   "0x00015770",
+   "0x0008e1a0",
+   "0x0008f270",
+   "0x0008ea70",
+   "0x000d3580",
+   "0x000d3580",
+   "0x0008d6d0"
   ],
   "0x00191c78": [
    "0x000912d0",
@@ -2326,7 +2388,17 @@
    "0x000d3580",
    "0x00017550",
    "0x00017550",
-   "0x00017550"
+   "0x00017550",
+   "0x0008dce0",
+   "0x000912b0",
+   "0x0008dae0",
+   "0x00015770",
+   "0x0008e1a0",
+   "0x00091360",
+   "0x0008ea70",
+   "0x000d3580",
+   "0x00091300",
+   "0x0008d6d0"
   ],
   "0x00192130": [
    "0x00093160",
@@ -2340,7 +2412,12 @@
    "0x000967f0",
    "0x000955b0",
    "0x000965e0",
-   "0x0008f930"
+   "0x0008f930",
+   "0x00095b30",
+   "0x00096770",
+   "0x00017550",
+   "0x00017550",
+   "0x00017550"
   ],
   "0x00192444": [
    "0x00096c60",
@@ -2364,11 +2441,14 @@
    "0x000d3580"
   ],
   "0x001927c8": [
-   "0x0007dac0"
+   "0x0007dac0",
+   "0x0009ac00",
+   "0x0009a480"
   ],
   "0x00192838": [
    "0x0009b450",
-   "0x0009af70"
+   "0x0009af70",
+   "0x0009af50"
   ],
   "0x00192bdc": [
    "0x0009e120",
@@ -2382,11 +2462,13 @@
   ],
   "0x00192d20": [
    "0x000a0000",
-   "0x0009fe30"
+   "0x0009fe30",
+   "0x0009ff60"
   ],
   "0x00192d38": [
    "0x000a0e70",
-   "0x000d3580"
+   "0x000d3580",
+   "0x000a0b30"
   ],
   "0x00192da8": [
    "0x000a1ed0",
@@ -2395,10 +2477,13 @@
   ],
   "0x00192e54": [
    "0x000a3fa0",
-   "0x000d3580"
+   "0x000d3580",
+   "0x000a3290"
   ],
   "0x00192ec4": [
-   "0x000a5060"
+   "0x000a5060",
+   "0x000a4550",
+   "0x000a4eb0"
   ],
   "0x00192fd4": [
    "0x000a6670",
@@ -2417,10 +2502,13 @@
   ],
   "0x001930b8": [
    "0x0007dac0",
-   "0x000d3580"
+   "0x000d3580",
+   "0x000a8470"
   ],
   "0x001931e0": [
-   "0x0007dac0"
+   "0x0007dac0",
+   "0x000a9ed0",
+   "0x000a9eb0"
   ],
   "0x001935e0": [
    "0x000b9d00",
@@ -2886,7 +2974,9 @@
   "0x001a1504": [
    "0x00106300",
    "0x000f72f0",
-   "0x00017550"
+   "0x00017550",
+   "0x001051a0",
+   "0x000f7300"
   ],
   "0x001a19b4": [
    "0x00162f6c"
@@ -2973,7 +3063,13 @@
   "0x001a2e58": [
    "0x0012cb60",
    "0x0001c080",
-   "0x0011c710"
+   "0x0011c710",
+   "0x0012c950",
+   "0x0012c930",
+   "0x0011f1a0",
+   "0x0001c080",
+   "0x0001c080",
+   "0x0001c080"
   ],
   "0x001a2ed8": [
    "0x0012d400",

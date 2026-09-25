@@ -100,16 +100,16 @@
         "namespace": "StandardAnimationController"
     },
     {
-        "name": "FUN_00011100",
+        "name": "StandardAnimationController::Update",
         "address": "0x00011100",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00011100()",
+        "prototype_string": "undefined Update()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "StandardAnimationController"
     },
     {
         "name": "FUN_00011110",
@@ -610,7 +610,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000125f0",
+        "name": "StandardAnimationController::scalar_deleting_destructor",
         "address": "0x000125f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -618,12 +618,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000125f0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "StandardAnimationController"
     },
     {
         "name": "FUN_00012610",
@@ -1470,7 +1470,7 @@
         "namespace": "Global"
     },
     {
-        "name": "MemoryPoolManager::NewFnAnim",
+        "name": "EAGLAnim::MemoryPoolManager::NewFnAnim",
         "address": "0x00014210",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -1483,7 +1483,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "MemoryPoolManager"
+        "namespace": "EAGLAnim::MemoryPoolManager"
     },
     {
         "name": "ActAnimGroup::ChangeAnimation",
@@ -4148,16 +4148,16 @@
         "namespace": "Global"
     },
     {
-        "name": "thunk_FUN_000905a0",
+        "name": "RSceneObj::~RSceneObj",
         "address": "0x0001aa70",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined thunk_FUN_000905a0()",
+        "prototype_string": "undefined ~RSceneObj()",
         "parameters": [],
         "is_thunk": true,
-        "namespace": "Global"
+        "namespace": "RSceneObj"
     },
     {
         "name": "FUN_0001aa80",
@@ -4760,7 +4760,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001c090",
+        "name": "ABaseSound::scalar_deleting_destructor",
         "address": "0x0001c090",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -4768,12 +4768,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0001c090(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ABaseSound"
     },
     {
         "name": "FUN_0001c0c0",
@@ -5124,19 +5124,19 @@
         "namespace": "AICharacterBond"
     },
     {
-        "name": "FUN_0001cbf0",
+        "name": "AICharacterBond::~AICharacterBond",
         "address": "0x0001cbf0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0001cbf0()",
+        "prototype_string": "undefined ~AICharacterBond()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterBond"
     },
     {
-        "name": "FUN_0001cc00",
+        "name": "AICharacterBond::scalar_deleting_destructor",
         "address": "0x0001cc00",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -5144,12 +5144,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0001cc00(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterBond"
     },
     {
         "name": "FUN_0001cc30",
@@ -5182,52 +5182,64 @@
         "namespace": "AICharacterBond"
     },
     {
-        "name": "FUN_0001d0c0",
+        "name": "AICharacterBond::DoNeutral",
+        "address": "0x0001d090",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined DoNeutral()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "AICharacterBond"
+    },
+    {
+        "name": "AICharacterBond::DoInitial",
         "address": "0x0001d0c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0001d0c0()",
+        "prototype_string": "undefined DoInitial()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterBond"
     },
     {
-        "name": "FUN_0001d0e0",
+        "name": "AICharacterBond::DoArming",
         "address": "0x0001d0e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0001d0e0()",
+        "prototype_string": "undefined DoArming()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterBond"
     },
     {
-        "name": "FUN_0001d1c0",
+        "name": "AICharacterBond::DoFiring",
         "address": "0x0001d1c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0001d1c0()",
+        "prototype_string": "undefined DoFiring()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterBond"
     },
     {
-        "name": "FUN_0001d2a0",
+        "name": "AICharacterBond::HandleInterrupts",
         "address": "0x0001d2a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0001d2a0()",
+        "prototype_string": "undefined HandleInterrupts()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterBond"
     },
     {
         "name": "FUN_0001d530",
@@ -5268,19 +5280,19 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001d640",
+        "name": "AICharacterEnemyDriver::~AICharacterEnemyDriver",
         "address": "0x0001d640",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0001d640()",
+        "prototype_string": "undefined ~AICharacterEnemyDriver()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterEnemyDriver"
     },
     {
-        "name": "FUN_0001d650",
+        "name": "AICharacterEnemyDriver::scalar_deleting_destructor",
         "address": "0x0001d650",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -5288,12 +5300,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0001d650(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterEnemyDriver"
     },
     {
         "name": "FUN_0001d680",
@@ -6642,19 +6654,19 @@
         "namespace": "AICharacterPassenger"
     },
     {
-        "name": "FUN_000236c0",
+        "name": "AICharacterPassenger::~AICharacterPassenger",
         "address": "0x000236c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000236c0()",
+        "prototype_string": "undefined ~AICharacterPassenger()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterPassenger"
     },
     {
-        "name": "FUN_000236d0",
+        "name": "AICharacterPassenger::scalar_deleting_destructor",
         "address": "0x000236d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -6662,12 +6674,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000236d0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterPassenger"
     },
     {
         "name": "AICharacterPassenger::Init",
@@ -6682,16 +6694,16 @@
         "namespace": "AICharacterPassenger"
     },
     {
-        "name": "FUN_00023950",
+        "name": "AICharacterBond::UpdateRotPos",
         "address": "0x00023950",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00023950()",
+        "prototype_string": "undefined UpdateRotPos()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterBond"
     },
     {
         "name": "FUN_00023990",
@@ -6774,16 +6786,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00023b70",
+        "name": "AICharacterPedestrian::DoDead",
         "address": "0x00023b70",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00023b70()",
+        "prototype_string": "undefined DoDead()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterPedestrian"
     },
     {
         "name": "FUN_00023ba0",
@@ -6868,16 +6880,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00023f50",
+        "name": "AICharacterPedestrian::~AICharacterPedestrian",
         "address": "0x00023f50",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00023f50()",
+        "prototype_string": "undefined ~AICharacterPedestrian()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterPedestrian"
     },
     {
         "name": "AICharacterPedestrian::Destroy",
@@ -6950,7 +6962,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00024700",
+        "name": "AICharacterPedestrian::scalar_deleting_destructor",
         "address": "0x00024700",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -6958,12 +6970,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_00024700(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AICharacterPedestrian"
     },
     {
         "name": "FUN_00024730",
@@ -9864,16 +9876,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00037a10",
+        "name": "ASceneObj::PlayCollision",
         "address": "0x00037a10",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00037a10()",
+        "prototype_string": "undefined PlayCollision()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ASceneObj"
     },
     {
         "name": "FUN_00037a20",
@@ -12216,7 +12228,7 @@
         "namespace": "DTuningFile"
     },
     {
-        "name": "Reader::FindItem",
+        "name": "DTuningFile::Reader::FindItem",
         "address": "0x0003d7f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -12229,10 +12241,10 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Reader"
+        "namespace": "DTuningFile::Reader"
     },
     {
-        "name": "Reader::FindIndexedItem",
+        "name": "DTuningFile::Reader::FindIndexedItem",
         "address": "0x0003d870",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -12247,7 +12259,7 @@
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Reader"
+        "namespace": "DTuningFile::Reader"
     },
     {
         "name": "DTuningFile::ParseData",
@@ -21766,7 +21778,7 @@
         "namespace": "ECinematicCamera"
     },
     {
-        "name": "FUN_0004eb40",
+        "name": "ECollision::scalar_deleting_destructor",
         "address": "0x0004eb40",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -21774,12 +21786,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0004eb40(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ECollision"
     },
     {
         "name": "EControlToCPU::~EControlToCPU",
@@ -26560,19 +26572,31 @@
         "namespace": "AttributeSystem"
     },
     {
-        "name": "FUN_000592d0",
+        "name": "AttributeSystem::Kill",
+        "address": "0x000592b0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Kill()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "AttributeSystem"
+    },
+    {
+        "name": "AttributeSystem::~AttributeSystem",
         "address": "0x000592d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000592d0()",
+        "prototype_string": "undefined ~AttributeSystem()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AttributeSystem"
     },
     {
-        "name": "FUN_00059530",
+        "name": "AttributeSystem::scalar_deleting_destructor",
         "address": "0x00059530",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -26580,12 +26604,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_00059530(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AttributeSystem"
     },
     {
         "name": "AttributeSystem::InitSingleton",
@@ -26990,7 +27014,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0005b870",
+        "name": "OptionParser::OptionParser",
         "address": "0x0005b870",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -26999,13 +27023,13 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0005b870(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined OptionParser(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "OptionParser"
     },
     {
         "name": "OptionParser::GetFullString",
@@ -27108,7 +27132,7 @@
         "namespace": "Scheduler"
     },
     {
-        "name": "list<>::clear",
+        "name": "std::list<>::clear",
         "address": "0x0005bbe0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -27121,10 +27145,10 @@
             "[void * this@ECX:4 (auto)]"
         ],
         "is_thunk": false,
-        "namespace": "list<>"
+        "namespace": "std::list<>"
     },
     {
-        "name": "list<>::insert",
+        "name": "std::list<>::insert",
         "address": "0x0005bc30",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -27141,10 +27165,10 @@
             "[TaskRecord * param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false,
-        "namespace": "list<>"
+        "namespace": "std::list<>"
     },
     {
-        "name": "list<>::erase",
+        "name": "std::list<>::erase",
         "address": "0x0005bc70",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -27159,7 +27183,7 @@
             "[int * taskNum@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "list<>"
+        "namespace": "std::list<>"
     },
     {
         "name": "Schedule::RunTasks",
@@ -27234,7 +27258,7 @@
         "namespace": "Schedule_QuarterSimRate"
     },
     {
-        "name": "list<>::list",
+        "name": "std::list<>::list",
         "address": "0x0005bda0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -27247,7 +27271,7 @@
             "[void * this@ECX:4 (auto)]"
         ],
         "is_thunk": false,
-        "namespace": "list<>"
+        "namespace": "std::list<>"
     },
     {
         "name": "FUN_0005bdc0",
@@ -27844,16 +27868,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0005dc60",
+        "name": "Human::~Human",
         "address": "0x0005dc60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0005dc60()",
+        "prototype_string": "undefined ~Human()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Human"
     },
     {
         "name": "Human::Activate",
@@ -27880,16 +27904,16 @@
         "namespace": "Human"
     },
     {
-        "name": "FUN_0005dd00",
+        "name": "Human::Simulate",
         "address": "0x0005dd00",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0005dd00()",
+        "prototype_string": "undefined Simulate()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Human"
     },
     {
         "name": "Human::Human",
@@ -27914,7 +27938,7 @@
         "namespace": "Human"
     },
     {
-        "name": "FUN_0005dea0",
+        "name": "Human::scalar_deleting_destructor",
         "address": "0x0005dea0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -27922,12 +27946,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0005dea0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Human"
     },
     {
         "name": "Human::SetAICharacter",
@@ -28090,16 +28114,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0005f350",
+        "name": "Missile::~Missile",
         "address": "0x0005f350",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0005f350()",
+        "prototype_string": "undefined ~Missile()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Missile"
     },
     {
         "name": "Missile::Render",
@@ -28166,7 +28190,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0005f6a0",
+        "name": "Missile::scalar_deleting_destructor",
         "address": "0x0005f6a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -28174,12 +28198,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0005f6a0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Missile"
     },
     {
         "name": "Missile::CheckForCollision",
@@ -28218,16 +28242,16 @@
         "namespace": "Missile"
     },
     {
-        "name": "FUN_00060b60",
+        "name": "Newton::~Newton",
         "address": "0x00060b60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00060b60()",
+        "prototype_string": "undefined ~Newton()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Newton"
     },
     {
         "name": "Newton::Simulate",
@@ -28272,7 +28296,7 @@
         "namespace": "Newton"
     },
     {
-        "name": "FUN_000612f0",
+        "name": "Newton::scalar_deleting_destructor",
         "address": "0x000612f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -28280,12 +28304,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000612f0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Newton"
     },
     {
         "name": "FUN_00061310",
@@ -30078,19 +30102,19 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0006e290",
+        "name": "PHelicopter::~PHelicopter",
         "address": "0x0006e290",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0006e290()",
+        "prototype_string": "undefined ~PHelicopter()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "PHelicopter"
     },
     {
-        "name": "FUN_0006e300",
+        "name": "PHelicopter::scalar_deleting_destructor",
         "address": "0x0006e300",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -30098,12 +30122,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0006e300(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "PHelicopter"
     },
     {
         "name": "FUN_0006e330",
@@ -30148,6 +30172,18 @@
         "namespace": "Global"
     },
     {
+        "name": "PhysicsNamespace::NameLookup",
+        "address": "0x0006ed40",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined NameLookup()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "PhysicsNamespace"
+    },
+    {
         "name": "FUN_0006ee10",
         "address": "0x0006ee10",
         "calling_convention": "unknown",
@@ -30179,6 +30215,18 @@
         "return_type": "undefined",
         "param_types": [],
         "prototype_string": "undefined PhysicsNamespace()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "PhysicsNamespace"
+    },
+    {
+        "name": "PhysicsNamespace::scalar_deleting_destructor",
+        "address": "0x0006f050",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined scalar_deleting_destructor()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "PhysicsNamespace"
@@ -30592,7 +30640,7 @@
         "namespace": "PhysicsObject"
     },
     {
-        "name": "FUN_0006f7f0",
+        "name": "PhysicsObject::scalar_deleting_destructor",
         "address": "0x0006f7f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -30600,12 +30648,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0006f7f0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "PhysicsObject"
     },
     {
         "name": "FUN_0006f810",
@@ -31312,7 +31360,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000735d0",
+        "name": "Sentry::scalar_deleting_destructor",
         "address": "0x000735d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -31320,12 +31368,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000735d0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Sentry"
     },
     {
         "name": "FUN_00073600",
@@ -31428,7 +31476,7 @@
         "namespace": "Sentry"
     },
     {
-        "name": "FUN_00073f80",
+        "name": "Sentry::ApplyDamage",
         "address": "0x00073f80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -31441,7 +31489,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00073f80(undefined param_1, undefined param_2, undefined4 param_3, undefined param_4, undefined4 param_5, undefined4 param_6)",
+        "prototype_string": "undefined ApplyDamage(undefined param_1, undefined param_2, undefined4 param_3, undefined param_4, undefined4 param_5, undefined4 param_6)",
         "parameters": [
             "[undefined param_1@<UNASSIGNED>]",
             "[undefined param_2@<UNASSIGNED>]",
@@ -31451,7 +31499,7 @@
             "[undefined4 param_6@<UNASSIGNED>]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Sentry"
     },
     {
         "name": "FUN_00074280",
@@ -31470,16 +31518,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000744d0",
+        "name": "Sentry::Simulate",
         "address": "0x000744d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000744d0()",
+        "prototype_string": "undefined Simulate()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Sentry"
     },
     {
         "name": "FUN_00074660",
@@ -31620,16 +31668,16 @@
         "namespace": "AttributeSet"
     },
     {
-        "name": "FUN_00075300",
+        "name": "Smackable::~Smackable",
         "address": "0x00075300",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00075300()",
+        "prototype_string": "undefined ~Smackable()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Smackable"
     },
     {
         "name": "Smackable::GoToSleep",
@@ -31656,7 +31704,7 @@
         "namespace": "Smackable"
     },
     {
-        "name": "FUN_00075530",
+        "name": "Smackable::scalar_deleting_destructor",
         "address": "0x00075530",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -31664,12 +31712,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_00075530(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Smackable"
     },
     {
         "name": "Smackable::ApplyDamage",
@@ -32022,7 +32070,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Handle::SetEffectBits",
+        "name": "RAnimEngine::Handle::SetEffectBits",
         "address": "0x00076830",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -32037,10 +32085,10 @@
             "[undefined2 param_2@Stack[0x8]:2]"
         ],
         "is_thunk": false,
-        "namespace": "Handle"
+        "namespace": "RAnimEngine::Handle"
     },
     {
-        "name": "Handle::FindEffectByID",
+        "name": "RAnimEngine::Handle::FindEffectByID",
         "address": "0x00076850",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -32053,10 +32101,10 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Handle"
+        "namespace": "RAnimEngine::Handle"
     },
     {
-        "name": "Handle::InitAllSystemStates",
+        "name": "RAnimEngine::Handle::InitAllSystemStates",
         "address": "0x00076890",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -32069,10 +32117,10 @@
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Handle"
+        "namespace": "RAnimEngine::Handle"
     },
     {
-        "name": "Handle::AnySystemPlaying",
+        "name": "RAnimEngine::Handle::AnySystemPlaying",
         "address": "0x000768c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -32081,10 +32129,10 @@
         "prototype_string": "undefined AnySystemPlaying()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Handle"
+        "namespace": "RAnimEngine::Handle"
     },
     {
-        "name": "Handle::GetInstanceSystemID",
+        "name": "RAnimEngine::Handle::GetInstanceSystemID",
         "address": "0x00076900",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -32099,7 +32147,7 @@
             "[uint instance@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Handle"
+        "namespace": "RAnimEngine::Handle"
     },
     {
         "name": "FUN_00076930",
@@ -32332,7 +32380,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Handle::IsSystemPlaying",
+        "name": "RAnimEngine::Handle::IsSystemPlaying",
         "address": "0x000774a0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -32347,7 +32395,7 @@
             "[uint systemId@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Handle"
+        "namespace": "RAnimEngine::Handle"
     },
     {
         "name": "FUN_00077500",
@@ -32432,7 +32480,7 @@
         "namespace": "Global"
     },
     {
-        "name": "System::ProcessStimuli",
+        "name": "RAnimEngine::System::ProcessStimuli",
         "address": "0x00077720",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -32449,7 +32497,7 @@
             "[undefined4 param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false,
-        "namespace": "System"
+        "namespace": "RAnimEngine::System"
     },
     {
         "name": "FUN_000778f0",
@@ -32538,7 +32586,7 @@
         "namespace": "RAnimEngine"
     },
     {
-        "name": "Handle::Stop",
+        "name": "RAnimEngine::Handle::Stop",
         "address": "0x00077be0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -32547,7 +32595,7 @@
         "prototype_string": "undefined Stop()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Handle"
+        "namespace": "RAnimEngine::Handle"
     },
     {
         "name": "FUN_00077c50",
@@ -32630,7 +32678,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Handle::ProcessStimuli",
+        "name": "RAnimEngine::Handle::ProcessStimuli",
         "address": "0x00077e00",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -32647,10 +32695,10 @@
             "[undefined4 param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Handle"
+        "namespace": "RAnimEngine::Handle"
     },
     {
-        "name": "Handle::ProcessStimuliZones",
+        "name": "RAnimEngine::Handle::ProcessStimuliZones",
         "address": "0x00077e60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -32669,10 +32717,10 @@
             "[undefined4 param_4@Stack[0x10]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Handle"
+        "namespace": "RAnimEngine::Handle"
     },
     {
-        "name": "System::Update",
+        "name": "RAnimEngine::System::Update",
         "address": "0x00077ed0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -32687,7 +32735,7 @@
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "System"
+        "namespace": "RAnimEngine::System"
     },
     {
         "name": "FUN_000780d0",
@@ -32726,7 +32774,7 @@
         "namespace": "RAnimEngine"
     },
     {
-        "name": "Handle::Stop",
+        "name": "RAnimEngine::Handle::Stop",
         "address": "0x00078200",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -32735,10 +32783,10 @@
         "prototype_string": "undefined Stop()",
         "parameters": [],
         "is_thunk": true,
-        "namespace": "Handle"
+        "namespace": "RAnimEngine::Handle"
     },
     {
-        "name": "Handle::Create",
+        "name": "RAnimEngine::Handle::Create",
         "address": "0x00078210",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -32759,7 +32807,7 @@
             "[undefined4 param_5@Stack[0x14]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Handle"
+        "namespace": "RAnimEngine::Handle"
     },
     {
         "name": "RCamera::RCamera",
@@ -34640,19 +34688,19 @@
         "namespace": "RFog"
     },
     {
-        "name": "FUN_0007daa0",
+        "name": "RFog::Kill",
         "address": "0x0007daa0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0007daa0()",
+        "prototype_string": "undefined Kill()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RFog"
     },
     {
-        "name": "FUN_0007dac0",
+        "name": "RFog::scalar_deleting_destructor",
         "address": "0x0007dac0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -34660,12 +34708,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0007dac0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RFog"
     },
     {
         "name": "FUN_0007dae0",
@@ -35160,16 +35208,28 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0007e8c0",
+        "name": "RLightManager::~RLightManager",
         "address": "0x0007e8c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0007e8c0()",
+        "prototype_string": "undefined ~RLightManager()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RLightManager"
+    },
+    {
+        "name": "RLightManager::Kill",
+        "address": "0x0007e930",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Kill()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RLightManager"
     },
     {
         "name": "RLightManager::AddSpecularLight",
@@ -35286,7 +35346,7 @@
         "namespace": "RLightManager"
     },
     {
-        "name": "FUN_0007f450",
+        "name": "RLightManager::scalar_deleting_destructor",
         "address": "0x0007f450",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -35294,12 +35354,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0007f450(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RLightManager"
     },
     {
         "name": "LightManager::SetLightingModel",
@@ -36620,16 +36680,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00081bf0",
+        "name": "RPlayerCamera::~RPlayerCamera",
         "address": "0x00081bf0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00081bf0()",
+        "prototype_string": "undefined ~RPlayerCamera()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RPlayerCamera"
     },
     {
         "name": "FUN_00081d10",
@@ -36980,7 +37040,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00084a30",
+        "name": "RPlayerCamera::scalar_deleting_destructor",
         "address": "0x00084a30",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -36988,12 +37048,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_00084a30(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RPlayerCamera"
     },
     {
         "name": "FUN_00084a60",
@@ -38060,6 +38120,18 @@
         "namespace": "RRenderDebugViewScreenSpace"
     },
     {
+        "name": "RRenderDebugViewScreenSpace::Debug",
+        "address": "0x0008b3c0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Debug()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RRenderDebugViewScreenSpace"
+    },
+    {
         "name": "FUN_0008b4d0",
         "address": "0x0008b4d0",
         "calling_convention": "unknown",
@@ -38076,19 +38148,19 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0008b4f0",
+        "name": "RRenderDebugViewPerspective::PreRender",
         "address": "0x0008b4f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0008b4f0()",
+        "prototype_string": "undefined PreRender()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RRenderDebugViewPerspective"
     },
     {
-        "name": "FUN_0008b510",
+        "name": "RRenderDebugViewScreenSpace::scalar_deleting_destructor",
         "address": "0x0008b510",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -38096,24 +38168,24 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0008b510(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RRenderDebugViewScreenSpace"
     },
     {
-        "name": "FUN_0008b530",
+        "name": "RRenderDebugViewScreenSpace::DoRender",
         "address": "0x0008b530",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0008b530()",
+        "prototype_string": "undefined DoRender()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RRenderDebugViewScreenSpace"
     },
     {
         "name": "FUN_0008b5b0",
@@ -38550,16 +38622,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0008c950",
+        "name": "RRenderWorldCamera::~RRenderWorldCamera",
         "address": "0x0008c950",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0008c950()",
+        "prototype_string": "undefined ~RRenderWorldCamera()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RRenderWorldCamera"
     },
     {
         "name": "RRenderWorldCamera::LoadAttributes",
@@ -38574,16 +38646,16 @@
         "namespace": "RRenderWorldCamera"
     },
     {
-        "name": "FUN_0008c990",
+        "name": "RRenderWorldCamera::PreRender",
         "address": "0x0008c990",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0008c990()",
+        "prototype_string": "undefined PreRender()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RRenderWorldCamera"
     },
     {
         "name": "RRenderWorldCamera::CullModule",
@@ -38672,7 +38744,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0008ccf0",
+        "name": "RRenderWorldCamera::scalar_deleting_destructor",
         "address": "0x0008ccf0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -38680,12 +38752,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0008ccf0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RRenderWorldCamera"
     },
     {
         "name": "RRenderWorldCamera::DrawTyreTracks",
@@ -39212,6 +39284,18 @@
         "namespace": "Global"
     },
     {
+        "name": "RSceneObj::GetRenderOffset",
+        "address": "0x0008dce0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined GetRenderOffset()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RSceneObj"
+    },
+    {
         "name": "FUN_0008dcf0",
         "address": "0x0008dcf0",
         "calling_convention": "unknown",
@@ -39698,7 +39782,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0008f270",
+        "name": "RSceneObj::UpdatePosition",
         "address": "0x0008f270",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -39706,12 +39790,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0008f270(undefined1 param_1)",
+        "prototype_string": "undefined UpdatePosition(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSceneObj"
     },
     {
         "name": "FUN_0008f500",
@@ -40048,16 +40132,16 @@
         "namespace": "RSceneObj"
     },
     {
-        "name": "FUN_000905a0",
+        "name": "RSceneObj::~RSceneObj",
         "address": "0x000905a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000905a0()",
+        "prototype_string": "undefined ~RSceneObj()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSceneObj"
     },
     {
         "name": "FUN_00090660",
@@ -40108,7 +40192,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000908b0",
+        "name": "RSceneObj::scalar_deleting_destructor",
         "address": "0x000908b0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -40116,12 +40200,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000908b0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSceneObj"
     },
     {
         "name": "RSceneObj::UseArticle",
@@ -41610,6 +41694,18 @@
         "namespace": "Global"
     },
     {
+        "name": "RVehicle::RenderShadow",
+        "address": "0x00095b30",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined RenderShadow()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RVehicle"
+    },
+    {
         "name": "FUN_00095b60",
         "address": "0x00095b60",
         "calling_convention": "unknown",
@@ -41726,16 +41822,28 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00096430",
+        "name": "RVehicle::~RVehicle",
         "address": "0x00096430",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00096430()",
+        "prototype_string": "undefined ~RVehicle()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RVehicle"
+    },
+    {
+        "name": "RVehicle::UpdatePosition",
+        "address": "0x000964b0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined UpdatePosition()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RVehicle"
     },
     {
         "name": "RVehicle::Render",
@@ -41762,7 +41870,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000967f0",
+        "name": "RVehicle::scalar_deleting_destructor",
         "address": "0x000967f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -41770,12 +41878,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000967f0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RVehicle"
     },
     {
         "name": "FUN_00096820",
@@ -41958,7 +42066,7 @@
         "namespace": "RViewCamera"
     },
     {
-        "name": "FUN_00096c60",
+        "name": "RViewCamera::scalar_deleting_destructor",
         "address": "0x00096c60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -41966,12 +42074,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_00096c60(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RViewCamera"
     },
     {
         "name": "FUN_00096ca0",
@@ -42336,16 +42444,16 @@
         "namespace": "RWorldCamera"
     },
     {
-        "name": "FUN_000979f0",
+        "name": "RWorldCamera::~RWorldCamera",
         "address": "0x000979f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000979f0()",
+        "prototype_string": "undefined ~RWorldCamera()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RWorldCamera"
     },
     {
         "name": "PhysicsObject::ComputeImpulse",
@@ -42414,7 +42522,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00097eb0",
+        "name": "RWorldCamera::scalar_deleting_destructor",
         "address": "0x00097eb0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -42422,12 +42530,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_00097eb0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RWorldCamera"
     },
     {
         "name": "RWorldCamera::RestartCamera",
@@ -42814,7 +42922,7 @@
         "namespace": "Global"
     },
     {
-        "name": "ReflPrivateData::ReflPrivateData",
+        "name": "RReflection::ReflPrivateData::ReflPrivateData",
         "address": "0x00098b60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -42823,7 +42931,7 @@
         "prototype_string": "undefined ReflPrivateData()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "ReflPrivateData"
+        "namespace": "RReflection::ReflPrivateData"
     },
     {
         "name": "RReflection::InitPostSim",
@@ -43092,6 +43200,18 @@
         "namespace": "RColorize"
     },
     {
+        "name": "RColorize::Kill",
+        "address": "0x0009a480",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Kill()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RColorize"
+    },
+    {
         "name": "FUN_0009a4a0",
         "address": "0x0009a4a0",
         "calling_convention": "unknown",
@@ -43168,6 +43288,18 @@
         "namespace": "RColorize"
     },
     {
+        "name": "RColorize::Reset",
+        "address": "0x0009ac00",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Reset()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RColorize"
+    },
+    {
         "name": "FUN_0009ac40",
         "address": "0x0009ac40",
         "calling_convention": "unknown",
@@ -43187,6 +43319,18 @@
         "return_type": "undefined",
         "param_types": [],
         "prototype_string": "undefined RDecalManager()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RDecalManager"
+    },
+    {
+        "name": "RDecalManager::Kill",
+        "address": "0x0009af50",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Kill()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "RDecalManager"
@@ -43870,16 +44014,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0009de00",
+        "name": "RGain::~RGain",
         "address": "0x0009de00",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0009de00()",
+        "prototype_string": "undefined ~RGain()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RGain"
     },
     {
         "name": "FUN_0009de80",
@@ -43894,16 +44038,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0009dea0",
+        "name": "RGain::Reset",
         "address": "0x0009dea0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0009dea0()",
+        "prototype_string": "undefined Reset()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RGain"
     },
     {
         "name": "RGain::Draw",
@@ -43934,7 +44078,7 @@
         "namespace": "RGain"
     },
     {
-        "name": "FUN_0009e120",
+        "name": "RGain::scalar_deleting_destructor",
         "address": "0x0009e120",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -43942,36 +44086,36 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0009e120(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RGain"
     },
     {
-        "name": "FUN_0009e150",
+        "name": "RLensFlareManager::Reset",
         "address": "0x0009e150",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0009e150()",
+        "prototype_string": "undefined Reset()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RLensFlareManager"
     },
     {
-        "name": "FUN_0009e1b0",
+        "name": "RLensFlareManager::~RLensFlareManager",
         "address": "0x0009e1b0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0009e1b0()",
+        "prototype_string": "undefined ~RLensFlareManager()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RLensFlareManager"
     },
     {
         "name": "FUN_0009e1d0",
@@ -44044,7 +44188,7 @@
         "namespace": "RLensFlareManager"
     },
     {
-        "name": "FUN_0009e520",
+        "name": "RLensFlareManager::scalar_deleting_destructor",
         "address": "0x0009e520",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -44052,12 +44196,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0009e520(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RLensFlareManager"
     },
     {
         "name": "RLensFlareManager::DrawFlares",
@@ -44446,6 +44590,18 @@
         "namespace": "Global"
     },
     {
+        "name": "RLightning::Kill",
+        "address": "0x0009ff60",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Kill()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RLightning"
+    },
+    {
         "name": "FUN_0009ff80",
         "address": "0x0009ff80",
         "calling_convention": "unknown",
@@ -44602,6 +44758,18 @@
         "namespace": "RMissileCam"
     },
     {
+        "name": "RMissileCam::Kill",
+        "address": "0x000a0b30",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Kill()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RMissileCam"
+    },
+    {
         "name": "RMissileCam::Draw",
         "address": "0x000a0b50",
         "calling_convention": "__thiscall",
@@ -44618,19 +44786,19 @@
         "namespace": "RMissileCam"
     },
     {
-        "name": "FUN_000a0df0",
+        "name": "RMissileCam::~RMissileCam",
         "address": "0x000a0df0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000a0df0()",
+        "prototype_string": "undefined ~RMissileCam()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RMissileCam"
     },
     {
-        "name": "FUN_000a0e70",
+        "name": "RMissileCam::scalar_deleting_destructor",
         "address": "0x000a0e70",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -44638,12 +44806,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000a0e70(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RMissileCam"
     },
     {
         "name": "FUN_000a0e90",
@@ -45306,16 +45474,28 @@
         "namespace": "RParticulates"
     },
     {
-        "name": "FUN_000a3240",
+        "name": "RParticulate::~RParticulate",
         "address": "0x000a3240",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000a3240()",
+        "prototype_string": "undefined ~RParticulate()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RParticulate"
+    },
+    {
+        "name": "RParticulate::Kill",
+        "address": "0x000a3290",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Kill()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RParticulate"
     },
     {
         "name": "FUN_000a32b0",
@@ -45358,7 +45538,7 @@
         "namespace": "RParticulate"
     },
     {
-        "name": "FUN_000a3fa0",
+        "name": "RParticulate::scalar_deleting_destructor",
         "address": "0x000a3fa0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -45366,12 +45546,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000a3fa0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RParticulate"
     },
     {
         "name": "RParticulate::Update",
@@ -45388,6 +45568,18 @@
         ],
         "is_thunk": false,
         "namespace": "RParticulate"
+    },
+    {
+        "name": "RPostProcessing::Reset",
+        "address": "0x000a4550",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Reset()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RPostProcessing"
     },
     {
         "name": "FUN_000a4560",
@@ -45482,6 +45674,18 @@
         "namespace": "RPostProcessing"
     },
     {
+        "name": "RPostProcessing::Kill",
+        "address": "0x000a4eb0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Kill()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RPostProcessing"
+    },
+    {
         "name": "RPostProcessing::Draw",
         "address": "0x000a4ed0",
         "calling_convention": "__thiscall",
@@ -45510,16 +45714,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000a4f70",
+        "name": "RPostProcessing::~RPostProcessing",
         "address": "0x000a4f70",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000a4f70()",
+        "prototype_string": "undefined ~RPostProcessing()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RPostProcessing"
     },
     {
         "name": "FUN_000a5020",
@@ -45538,7 +45742,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000a5060",
+        "name": "RPostProcessing::scalar_deleting_destructor",
         "address": "0x000a5060",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -45546,12 +45750,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000a5060(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RPostProcessing"
     },
     {
         "name": "FUN_000a5080",
@@ -45804,40 +46008,40 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000a6810",
+        "name": "RSniperZoom::~RSniperZoom",
         "address": "0x000a6810",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000a6810()",
+        "prototype_string": "undefined ~RSniperZoom()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSniperZoom"
     },
     {
-        "name": "FUN_000a6870",
+        "name": "RSniperZoom::Kill",
         "address": "0x000a6870",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000a6870()",
+        "prototype_string": "undefined Kill()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSniperZoom"
     },
     {
-        "name": "FUN_000a6890",
+        "name": "RSniperZoom::Reset",
         "address": "0x000a6890",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000a6890()",
+        "prototype_string": "undefined Reset()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSniperZoom"
     },
     {
         "name": "FUN_000a68a0",
@@ -45886,7 +46090,7 @@
         "namespace": "RSniperZoom"
     },
     {
-        "name": "FUN_000a6a50",
+        "name": "RSniperZoom::scalar_deleting_destructor",
         "address": "0x000a6a50",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -45894,12 +46098,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000a6a50(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSniperZoom"
     },
     {
         "name": "FUN_000a6a80",
@@ -46277,6 +46481,18 @@
         "return_type": "undefined",
         "param_types": [],
         "prototype_string": "undefined RWater()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RWater"
+    },
+    {
+        "name": "RWater::Kill",
+        "address": "0x000a8470",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Kill()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "RWater"
@@ -46666,6 +46882,30 @@
         "parameters": [
             "[RGlareManager * this@ECX:4 (auto)]"
         ],
+        "is_thunk": false,
+        "namespace": "RGlareManager"
+    },
+    {
+        "name": "RGlareManager::Kill",
+        "address": "0x000a9eb0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Kill()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "RGlareManager"
+    },
+    {
+        "name": "RGlareManager::Reset",
+        "address": "0x000a9ed0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Reset()",
+        "parameters": [],
         "is_thunk": false,
         "namespace": "RGlareManager"
     },
@@ -48648,7 +48888,7 @@
         "namespace": "Global"
     },
     {
-        "name": "__tree<>::insert_multi",
+        "name": "std::__tree<>::insert_multi",
         "address": "0x000b3930",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -48663,7 +48903,7 @@
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "__tree<>"
+        "namespace": "std::__tree<>"
     },
     {
         "name": "FUN_000b39a0",
@@ -48894,7 +49134,7 @@
         "namespace": "Global"
     },
     {
-        "name": "vector<>::push_back",
+        "name": "std::vector<>::push_back",
         "address": "0x000b4980",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": true,
@@ -48909,7 +49149,7 @@
             "[int * param_2@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "vector<>"
+        "namespace": "std::vector<>"
     },
     {
         "name": "Simulation::Reset",
@@ -60514,7 +60754,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e00d0",
+        "name": "GHud::scalar_deleting_destructor",
         "address": "0x000e00d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -60522,12 +60762,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000e00d0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "GHud"
     },
     {
         "name": "FUN_000e00f0",
@@ -61160,7 +61400,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000e3ad0",
+        "name": "GSubtitles::scalar_deleting_destructor",
         "address": "0x000e3ad0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -61168,12 +61408,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000e3ad0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "GSubtitles"
     },
     {
         "name": "GSystem::LOCALE_Symbol",
@@ -61648,7 +61888,7 @@
         "namespace": "Global"
     },
     {
-        "name": "ViewPort::IsSphereInView",
+        "name": "EAGL::ViewPort::IsSphereInView",
         "address": "0x000e4a10",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -61663,7 +61903,7 @@
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "ViewPort"
+        "namespace": "EAGL::ViewPort"
     },
     {
         "name": "FUN_000e4b50",
@@ -61826,7 +62066,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Device::Device",
+        "name": "EAGL::Device::Device",
         "address": "0x000e50c0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -61839,10 +62079,10 @@
             "[void * this@ECX:4 (auto)]"
         ],
         "is_thunk": false,
-        "namespace": "Device"
+        "namespace": "EAGL::Device"
     },
     {
-        "name": "Device::~Device",
+        "name": "EAGL::Device::~Device",
         "address": "0x000e50e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -61851,7 +62091,7 @@
         "prototype_string": "undefined ~Device()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Device"
+        "namespace": "EAGL::Device"
     },
     {
         "name": "FUN_000e51d0",
@@ -61866,7 +62106,7 @@
         "namespace": "Global"
     },
     {
-        "name": "DynamicLoader::RunDestructors",
+        "name": "EAGL::DynamicLoader::RunDestructors",
         "address": "0x000e5220",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -61875,7 +62115,7 @@
         "prototype_string": "undefined RunDestructors()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "DynamicLoader"
+        "namespace": "EAGL::DynamicLoader"
     },
     {
         "name": "FUN_000e52a0",
@@ -61894,7 +62134,7 @@
         "namespace": "Global"
     },
     {
-        "name": "DynamicLoader::GetAddr",
+        "name": "EAGL::DynamicLoader::GetAddr",
         "address": "0x000e57e0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": true,
@@ -61913,7 +62153,7 @@
             "[undefined4 param_4@Stack[0xc]:4]"
         ],
         "is_thunk": false,
-        "namespace": "DynamicLoader"
+        "namespace": "EAGL::DynamicLoader"
     },
     {
         "name": "FUN_000e5a10",
@@ -62022,7 +62262,7 @@
         "namespace": "DynamicLoader"
     },
     {
-        "name": "DynamicLoader::UnRegisterVar",
+        "name": "EAGL::DynamicLoader::UnRegisterVar",
         "address": "0x000e5ce0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -62035,7 +62275,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "DynamicLoader"
+        "namespace": "EAGL::DynamicLoader"
     },
     {
         "name": "FUN_000e5cf0",
@@ -62056,7 +62296,7 @@
         "namespace": "Global"
     },
     {
-        "name": "DynamicLoader::Release",
+        "name": "EAGL::DynamicLoader::Release",
         "address": "0x000e5d10",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -62065,10 +62305,10 @@
         "prototype_string": "undefined Release()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "DynamicLoader"
+        "namespace": "EAGL::DynamicLoader"
     },
     {
-        "name": "DynamicLoader::RunConstructors",
+        "name": "EAGL::DynamicLoader::RunConstructors",
         "address": "0x000e5d70",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -62077,10 +62317,10 @@
         "prototype_string": "undefined RunConstructors()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "DynamicLoader"
+        "namespace": "EAGL::DynamicLoader"
     },
     {
-        "name": "DynamicLoader::Resolve",
+        "name": "EAGL::DynamicLoader::Resolve",
         "address": "0x000e5e80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -62089,10 +62329,10 @@
         "prototype_string": "undefined Resolve()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "DynamicLoader"
+        "namespace": "EAGL::DynamicLoader"
     },
     {
-        "name": "DynamicLoader::DynamicLoader",
+        "name": "EAGL::DynamicLoader::DynamicLoader",
         "address": "0x000e62f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -62109,10 +62349,10 @@
             "[undefined4 param_3@Stack[0xc]:4]"
         ],
         "is_thunk": false,
-        "namespace": "DynamicLoader"
+        "namespace": "EAGL::DynamicLoader"
     },
     {
-        "name": "DynamicLoader::DynamicLoader",
+        "name": "EAGL::DynamicLoader::DynamicLoader",
         "address": "0x000e6330",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -62133,10 +62373,10 @@
             "[undefined4 param_5@Stack[0x14]:4]"
         ],
         "is_thunk": false,
-        "namespace": "DynamicLoader"
+        "namespace": "EAGL::DynamicLoader"
     },
     {
-        "name": "DynamicLoader::~DynamicLoader",
+        "name": "EAGL::DynamicLoader::~DynamicLoader",
         "address": "0x000e6380",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -62149,7 +62389,7 @@
             "[void * this@ECX:4 (auto)]"
         ],
         "is_thunk": false,
-        "namespace": "DynamicLoader"
+        "namespace": "EAGL::DynamicLoader"
     },
     {
         "name": "FUN_000e6390",
@@ -62296,7 +62536,7 @@
         "namespace": "Global"
     },
     {
-        "name": "RenderContext::SetZWritesEnable",
+        "name": "EAGL::RenderContext::SetZWritesEnable",
         "address": "0x000e73f0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -62311,7 +62551,7 @@
             "[byte param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "RenderContext"
+        "namespace": "EAGL::RenderContext"
     },
     {
         "name": "FUN_000e7430",
@@ -62774,7 +63014,7 @@
         "namespace": "Global"
     },
     {
-        "name": "RenderContext::RenderContext",
+        "name": "EAGL::RenderContext::RenderContext",
         "address": "0x000e8740",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -62787,10 +63027,10 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "RenderContext"
+        "namespace": "EAGL::RenderContext"
     },
     {
-        "name": "Device::NewRenderContext",
+        "name": "EAGL::Device::NewRenderContext",
         "address": "0x000e8900",
         "calling_convention": "__fastcall",
         "has_custom_variable_storage": false,
@@ -62803,7 +63043,7 @@
             "[void * eaglDevice@ECX:4]"
         ],
         "is_thunk": false,
-        "namespace": "Device"
+        "namespace": "EAGL::Device"
     },
     {
         "name": "FUN_000e8970",
@@ -62818,7 +63058,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Device::GetCurrentTextureRenderContext",
+        "name": "EAGL::Device::GetCurrentTextureRenderContext",
         "address": "0x000e89e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -62827,10 +63067,10 @@
         "prototype_string": "undefined GetCurrentTextureRenderContext()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Device"
+        "namespace": "EAGL::Device"
     },
     {
-        "name": "Device::GetCurrentRenderContext",
+        "name": "EAGL::Device::GetCurrentRenderContext",
         "address": "0x000e89f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -62839,7 +63079,7 @@
         "prototype_string": "undefined GetCurrentRenderContext()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Device"
+        "namespace": "EAGL::Device"
     },
     {
         "name": "FUN_000e8a00",
@@ -62906,7 +63146,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Device::Get",
+        "name": "EAGL::Device::Get",
         "address": "0x000e8a40",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -62915,10 +63155,10 @@
         "prototype_string": "undefined Get()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Device"
+        "namespace": "EAGL::Device"
     },
     {
-        "name": "Device::DeleteRenderContext",
+        "name": "EAGL::Device::DeleteRenderContext",
         "address": "0x000e8a50",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -62931,7 +63171,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Device"
+        "namespace": "EAGL::Device"
     },
     {
         "name": "FUN_000e8ad0",
@@ -63298,7 +63538,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Model::Patc",
+        "name": "EAGL::Model::Patc",
         "address": "0x000e9510",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -63311,7 +63551,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Model"
+        "namespace": "EAGL::Model"
     },
     {
         "name": "FUN_000e96c0",
@@ -63664,7 +63904,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Model::Draw",
+        "name": "EAGL::Model::Draw",
         "address": "0x000ea210",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -63679,7 +63919,7 @@
             "[MATRIX * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Model"
+        "namespace": "EAGL::Model"
     },
     {
         "name": "FUN_000ea480",
@@ -64094,7 +64334,7 @@
         "namespace": "Global"
     },
     {
-        "name": "TAR::~TAR",
+        "name": "EAGL::TAR::~TAR",
         "address": "0x000ecab0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -64107,7 +64347,7 @@
             "[void * this@ECX:4 (auto)]"
         ],
         "is_thunk": false,
-        "namespace": "TAR"
+        "namespace": "EAGL::TAR"
     },
     {
         "name": "FUN_000ecbc0",
@@ -64296,7 +64536,7 @@
         "namespace": "Global"
     },
     {
-        "name": "DynamicLoader::RegisterShapes",
+        "name": "EAGL::DynamicLoader::RegisterShapes",
         "address": "0x000ede60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -64309,10 +64549,10 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "DynamicLoader"
+        "namespace": "EAGL::DynamicLoader"
     },
     {
-        "name": "DynamicLoader::UnRegisterShapes",
+        "name": "EAGL::DynamicLoader::UnRegisterShapes",
         "address": "0x000edf50",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -64325,10 +64565,10 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "DynamicLoader"
+        "namespace": "EAGL::DynamicLoader"
     },
     {
-        "name": "RenderContext::NewViewPort",
+        "name": "EAGL::RenderContext::NewViewPort",
         "address": "0x000ee010",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -64337,10 +64577,10 @@
         "prototype_string": "undefined NewViewPort()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "RenderContext"
+        "namespace": "EAGL::RenderContext"
     },
     {
-        "name": "TextureRenderContext::GetCurrentViewPort",
+        "name": "EAGL::TextureRenderContext::GetCurrentViewPort",
         "address": "0x000ee080",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -64349,7 +64589,7 @@
         "prototype_string": "undefined GetCurrentViewPort()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "TextureRenderContext"
+        "namespace": "EAGL::TextureRenderContext"
     },
     {
         "name": "FUN_000ee090",
@@ -64368,7 +64608,7 @@
         "namespace": "Global"
     },
     {
-        "name": "RenderContext::DeleteViewPort",
+        "name": "EAGL::RenderContext::DeleteViewPort",
         "address": "0x000ee0a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -64381,7 +64621,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "RenderContext"
+        "namespace": "EAGL::RenderContext"
     },
     {
         "name": "FUN_000ee130",
@@ -64590,7 +64830,7 @@
         "namespace": "Global"
     },
     {
-        "name": "GeoPrimState::SetTransparencyMethod",
+        "name": "EAGL::GeoPrimState::SetTransparencyMethod",
         "address": "0x000eec90",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -64603,7 +64843,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "GeoPrimState"
+        "namespace": "EAGL::GeoPrimState"
     },
     {
         "name": "FUN_000eecb0",
@@ -64622,7 +64862,7 @@
         "namespace": "Global"
     },
     {
-        "name": "GeoPrimState::SetDepthTestMethod",
+        "name": "EAGL::GeoPrimState::SetDepthTestMethod",
         "address": "0x000eecd0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -64635,7 +64875,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "GeoPrimState"
+        "namespace": "EAGL::GeoPrimState"
     },
     {
         "name": "FUN_000eecf0",
@@ -64718,7 +64958,7 @@
         "namespace": "Global"
     },
     {
-        "name": "GeoPrimState::SetAlphaTestMethod",
+        "name": "EAGL::GeoPrimState::SetAlphaTestMethod",
         "address": "0x000eee00",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -64731,7 +64971,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "GeoPrimState"
+        "namespace": "EAGL::GeoPrimState"
     },
     {
         "name": "FUN_000eee20",
@@ -64914,7 +65154,7 @@
         "namespace": "Global"
     },
     {
-        "name": "GeoPrimState::GeoPrimState",
+        "name": "EAGL::GeoPrimState::GeoPrimState",
         "address": "0x000ef480",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -64923,7 +65163,7 @@
         "prototype_string": "undefined GeoPrimState()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "GeoPrimState"
+        "namespace": "EAGL::GeoPrimState"
     },
     {
         "name": "FUN_000ef490",
@@ -65400,7 +65640,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Transform::BuildMatrix",
+        "name": "EAGL::Transform::BuildMatrix",
         "address": "0x000f19a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -65413,7 +65653,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Transform"
+        "namespace": "EAGL::Transform"
     },
     {
         "name": "FUN_000f19f0",
@@ -65676,7 +65916,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Transform::PrependMatrix",
+        "name": "EAGL::Transform::PrependMatrix",
         "address": "0x000f2e50",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -65689,7 +65929,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Transform"
+        "namespace": "EAGL::Transform"
     },
     {
         "name": "FUN_000f2ea0",
@@ -65874,7 +66114,7 @@
         "namespace": "Global"
     },
     {
-        "name": "RenderContext::GetCurrentViewPort",
+        "name": "EAGL::RenderContext::GetCurrentViewPort",
         "address": "0x000f3520",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -65883,7 +66123,7 @@
         "prototype_string": "undefined GetCurrentViewPort()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "RenderContext"
+        "namespace": "EAGL::RenderContext"
     },
     {
         "name": "FUN_000f3530",
@@ -66066,7 +66306,7 @@
         "namespace": "Global"
     },
     {
-        "name": "ViewPort::GetEnableModelSphereCull",
+        "name": "EAGL::ViewPort::GetEnableModelSphereCull",
         "address": "0x000f3900",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -66075,7 +66315,7 @@
         "prototype_string": "undefined GetEnableModelSphereCull()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "ViewPort"
+        "namespace": "EAGL::ViewPort"
     },
     {
         "name": "thunk_FUN_000e4ba0",
@@ -66142,7 +66382,7 @@
         "namespace": "EAGL"
     },
     {
-        "name": "ConstructorPool::RemoveType",
+        "name": "EAGL::ConstructorPool::RemoveType",
         "address": "0x000f3a20",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -66155,7 +66395,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "ConstructorPool"
+        "namespace": "EAGL::ConstructorPool"
     },
     {
         "name": "ConstructorPool::AddType",
@@ -66180,7 +66420,7 @@
         "namespace": "ConstructorPool"
     },
     {
-        "name": "ConstructorPool::FindConstructor",
+        "name": "EAGL::ConstructorPool::FindConstructor",
         "address": "0x000f3a70",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -66193,10 +66433,10 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "ConstructorPool"
+        "namespace": "EAGL::ConstructorPool"
     },
     {
-        "name": "ConstructorPool::FindDestructor",
+        "name": "EAGL::ConstructorPool::FindDestructor",
         "address": "0x000f3a90",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -66209,7 +66449,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "ConstructorPool"
+        "namespace": "EAGL::ConstructorPool"
     },
     {
         "name": "FUN_000f3ab0",
@@ -66224,7 +66464,7 @@
         "namespace": "Global"
     },
     {
-        "name": "RuntimeAllocConstructorPool::RemoveType",
+        "name": "EAGL::RuntimeAllocConstructorPool::RemoveType",
         "address": "0x000f3b20",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -66237,10 +66477,10 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "RuntimeAllocConstructorPool"
+        "namespace": "EAGL::RuntimeAllocConstructorPool"
     },
     {
-        "name": "RuntimeAllocConstructorPool::AddType",
+        "name": "EAGL::RuntimeAllocConstructorPool::AddType",
         "address": "0x000f3b40",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": true,
@@ -66259,10 +66499,10 @@
             "[void * dtor@Stack[0xc]:4]"
         ],
         "is_thunk": false,
-        "namespace": "RuntimeAllocConstructorPool"
+        "namespace": "EAGL::RuntimeAllocConstructorPool"
     },
     {
-        "name": "RuntimeAllocConstructorPool::FindConstructor",
+        "name": "EAGL::RuntimeAllocConstructorPool::FindConstructor",
         "address": "0x000f3b70",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -66275,10 +66515,10 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "RuntimeAllocConstructorPool"
+        "namespace": "EAGL::RuntimeAllocConstructorPool"
     },
     {
-        "name": "RuntimeAllocConstructorPool::FindDestructor",
+        "name": "EAGL::RuntimeAllocConstructorPool::FindDestructor",
         "address": "0x000f3b90",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -66291,7 +66531,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "RuntimeAllocConstructorPool"
+        "namespace": "EAGL::RuntimeAllocConstructorPool"
     },
     {
         "name": "FUN_000f3bb0",
@@ -66358,7 +66598,7 @@
         "namespace": "Global"
     },
     {
-        "name": "SymbolPool::Insert",
+        "name": "EAGL::SymbolPool::Insert",
         "address": "0x000f3cc0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -66371,10 +66611,10 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "SymbolPool"
+        "namespace": "EAGL::SymbolPool"
     },
     {
-        "name": "SymbolPool::AddSymbol",
+        "name": "EAGL::SymbolPool::AddSymbol",
         "address": "0x000f3df0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -66391,10 +66631,10 @@
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "SymbolPool"
+        "namespace": "EAGL::SymbolPool"
     },
     {
-        "name": "SymbolPool::RemoveSymbol",
+        "name": "EAGL::SymbolPool::RemoveSymbol",
         "address": "0x000f3e50",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": true,
@@ -66409,10 +66649,10 @@
             "[byte * param_2@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "SymbolPool"
+        "namespace": "EAGL::SymbolPool"
     },
     {
-        "name": "SymbolPool::Search",
+        "name": "EAGL::SymbolPool::Search",
         "address": "0x000f3fa0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -66427,7 +66667,7 @@
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "SymbolPool"
+        "namespace": "EAGL::SymbolPool"
     },
     {
         "name": "FUN_000f40a0",
@@ -67960,7 +68200,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnCompoundChannel::FnCompoundChannel",
+        "name": "EAGLAnim::FnCompoundChannel::FnCompoundChannel",
         "address": "0x000f70b0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -67969,7 +68209,7 @@
         "prototype_string": "undefined FnCompoundChannel()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnCompoundChannel"
+        "namespace": "EAGLAnim::FnCompoundChannel"
     },
     {
         "name": "FUN_000f70e0",
@@ -68024,7 +68264,7 @@
         "namespace": "Global"
     },
     {
-        "name": "AnimBank::Constructor",
+        "name": "EAGLAnim::AnimBank::Constructor",
         "address": "0x000f7170",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68037,10 +68277,10 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "AnimBank"
+        "namespace": "EAGLAnim::AnimBank"
     },
     {
-        "name": "AnimBank::Destructor",
+        "name": "EAGLAnim::AnimBank::Destructor",
         "address": "0x000f71a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68049,7 +68289,7 @@
         "prototype_string": "undefined Destructor()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "AnimBank"
+        "namespace": "EAGLAnim::AnimBank"
     },
     {
         "name": "FUN_000f71b0",
@@ -68156,7 +68396,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnAnim::~FnAnim",
+        "name": "EAGLAnim::FnAnim::~FnAnim",
         "address": "0x000f7340",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68165,10 +68405,10 @@
         "prototype_string": "undefined ~FnAnim()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnAnim"
+        "namespace": "EAGLAnim::FnAnim"
     },
     {
-        "name": "FnRawPoseChannel::FnRawPoseChannel",
+        "name": "EAGLAnim::FnRawPoseChannel::FnRawPoseChannel",
         "address": "0x000f7360",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68177,7 +68417,7 @@
         "prototype_string": "undefined FnRawPoseChannel()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnRawPoseChannel"
+        "namespace": "EAGLAnim::FnRawPoseChannel"
     },
     {
         "name": "FUN_000f7380",
@@ -68226,7 +68466,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnRawEventChannel::FnRawEventChannel",
+        "name": "EAGLAnim::FnRawEventChannel::FnRawEventChannel",
         "address": "0x000f73e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68235,46 +68475,46 @@
         "prototype_string": "undefined FnRawEventChannel()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnRawEventChannel"
+        "namespace": "EAGLAnim::FnRawEventChannel"
     },
     {
-        "name": "FUN_000f7410",
+        "name": "EAGLAnim::FnRawEventChannel::SetAnimMemoryMap",
         "address": "0x000f7410",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f7410()",
+        "prototype_string": "undefined SetAnimMemoryMap()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnRawEventChannel"
     },
     {
-        "name": "FUN_000f7430",
+        "name": "EAGLAnim::FnRawEventChannel::EvalEvent",
         "address": "0x000f7430",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f7430()",
+        "prototype_string": "undefined EvalEvent()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnRawEventChannel"
     },
     {
-        "name": "FUN_000f7460",
+        "name": "EAGLAnim::FnRawEventChannel::Eval",
         "address": "0x000f7460",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f7460()",
+        "prototype_string": "undefined Eval()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnRawEventChannel"
     },
     {
-        "name": "FUN_000f7480",
+        "name": "EAGLAnim::FnRawEventChannel::scalar_deleting_destructor",
         "address": "0x000f7480",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68282,27 +68522,27 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000f7480(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnRawEventChannel"
     },
     {
-        "name": "FUN_000f74b0",
+        "name": "EAGLAnim::FnRawEventChannel::~FnRawEventChannel",
         "address": "0x000f74b0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f74b0()",
+        "prototype_string": "undefined ~FnRawEventChannel()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnRawEventChannel"
     },
     {
-        "name": "FnRawLinearChannel::FnRawLinearChannel",
+        "name": "EAGLAnim::FnRawLinearChannel::FnRawLinearChannel",
         "address": "0x000f74c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68311,19 +68551,19 @@
         "prototype_string": "undefined FnRawLinearChannel()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnRawLinearChannel"
+        "namespace": "EAGLAnim::FnRawLinearChannel"
     },
     {
-        "name": "FUN_000f74e0",
+        "name": "EAGLAnim::FnRawLinearChannel::Eval",
         "address": "0x000f74e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f74e0()",
+        "prototype_string": "undefined Eval()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnRawLinearChannel"
     },
     {
         "name": "FUN_000f7500",
@@ -68386,7 +68626,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f7650",
+        "name": "EAGLAnim::FnRawLinearChannel::GetLength",
         "address": "0x000f7650",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
@@ -68395,16 +68635,16 @@
             "void *",
             "float *"
         ],
-        "prototype_string": "undefined1 __thiscall FUN_000f7650(float * param_1)",
+        "prototype_string": "undefined1 __thiscall GetLength(float * param_1)",
         "parameters": [
             "[void * this@ECX:4 (auto)]",
             "[float * param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnRawLinearChannel"
     },
     {
-        "name": "FUN_000f7670",
+        "name": "EAGLAnim::FnRawLinearChannel::scalar_deleting_destructor",
         "address": "0x000f7670",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68412,24 +68652,24 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000f7670(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnRawLinearChannel"
     },
     {
-        "name": "FUN_000f76a0",
+        "name": "EAGLAnim::FnRawLinearChannel::~FnRawLinearChannel",
         "address": "0x000f76a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f76a0()",
+        "prototype_string": "undefined ~FnRawLinearChannel()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnRawLinearChannel"
     },
     {
         "name": "FUN_000f76b0",
@@ -68448,7 +68688,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnKeyLerpChan::FnKeyLerpChan",
+        "name": "EAGLAnim::FnKeyLerpChan::FnKeyLerpChan",
         "address": "0x000f76e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68457,10 +68697,10 @@
         "prototype_string": "undefined FnKeyLerpChan()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnKeyLerpChan"
+        "namespace": "EAGLAnim::FnKeyLerpChan"
     },
     {
-        "name": "FnKeyQuatChan::FnKeyQuatChan",
+        "name": "EAGLAnim::FnKeyQuatChan::FnKeyQuatChan",
         "address": "0x000f7710",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68469,7 +68709,7 @@
         "prototype_string": "undefined FnKeyQuatChan()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnKeyQuatChan"
+        "namespace": "EAGLAnim::FnKeyQuatChan"
     },
     {
         "name": "FUN_000f7740",
@@ -68536,7 +68776,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnPoseBlender::FnPoseBlender",
+        "name": "EAGLAnim::FnPoseBlender::FnPoseBlender",
         "address": "0x000f7810",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68545,7 +68785,7 @@
         "prototype_string": "undefined FnPoseBlender()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnPoseBlender"
+        "namespace": "EAGLAnim::FnPoseBlender"
     },
     {
         "name": "FUN_000f7840",
@@ -68564,7 +68804,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnPoseMirror::FnPoseMirror",
+        "name": "EAGLAnim::FnPoseMirror::FnPoseMirror",
         "address": "0x000f7870",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68573,10 +68813,10 @@
         "prototype_string": "undefined FnPoseMirror()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnPoseMirror"
+        "namespace": "EAGLAnim::FnPoseMirror"
     },
     {
-        "name": "FUN_000f78a0",
+        "name": "EAGLAnim::FnPoseMirror::Eval",
         "address": "0x000f78a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68585,16 +68825,16 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000f78a0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined Eval(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnPoseMirror"
     },
     {
-        "name": "FUN_000f78f0",
+        "name": "EAGLAnim::FnPoseMirror::EvalSQT",
         "address": "0x000f78f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68604,17 +68844,17 @@
             "undefined",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000f78f0(undefined4 param_1, undefined param_2, undefined4 param_3)",
+        "prototype_string": "undefined EvalSQT(undefined4 param_1, undefined param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined param_2@<UNASSIGNED>]",
             "[undefined4 param_3@<UNASSIGNED>]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnPoseMirror"
     },
     {
-        "name": "FUN_000f7940",
+        "name": "EAGLAnim::FnPoseMirror::scalar_deleting_destructor",
         "address": "0x000f7940",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68622,12 +68862,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000f7940(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnPoseMirror"
     },
     {
         "name": "FUN_000f7970",
@@ -68710,7 +68950,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnPhaseChan::FnPhaseChan",
+        "name": "EAGLAnim::FnPhaseChan::FnPhaseChan",
         "address": "0x000f7b20",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68719,7 +68959,7 @@
         "prototype_string": "undefined FnPhaseChan()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnPhaseChan"
+        "namespace": "EAGLAnim::FnPhaseChan"
     },
     {
         "name": "FUN_000f7b50",
@@ -68734,7 +68974,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnRawStateChan::FnRawStateChan",
+        "name": "EAGLAnim::FnRawStateChan::FnRawStateChan",
         "address": "0x000f7b60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68743,7 +68983,7 @@
         "prototype_string": "undefined FnRawStateChan()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnRawStateChan"
+        "namespace": "EAGLAnim::FnRawStateChan"
     },
     {
         "name": "FUN_000f7b80",
@@ -68902,7 +69142,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnDeltaLerpChan::FnDeltaLerpChan",
+        "name": "EAGLAnim::FnDeltaLerpChan::FnDeltaLerpChan",
         "address": "0x000f81f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68911,10 +69151,10 @@
         "prototype_string": "undefined FnDeltaLerpChan()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnDeltaLerpChan"
+        "namespace": "EAGLAnim::FnDeltaLerpChan"
     },
     {
-        "name": "FnDeltaQuatChan::FnDeltaQuatChan",
+        "name": "EAGLAnim::FnDeltaQuatChan::FnDeltaQuatChan",
         "address": "0x000f8220",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68923,10 +69163,10 @@
         "prototype_string": "undefined FnDeltaQuatChan()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnDeltaQuatChan"
+        "namespace": "EAGLAnim::FnDeltaQuatChan"
     },
     {
-        "name": "FUN_000f8250",
+        "name": "EAGLAnim::FnDeltaQuatChan::scalar_deleting_destructor",
         "address": "0x000f8250",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -68934,12 +69174,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000f8250(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnDeltaQuatChan"
     },
     {
         "name": "thunk_FUN_000fb360",
@@ -69054,7 +69294,7 @@
         "namespace": "Global"
     },
     {
-        "name": "EventTarget::GetEventId",
+        "name": "EAGLAnim::EventTarget::GetEventId",
         "address": "0x000f8670",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -69067,7 +69307,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "EventTarget"
+        "namespace": "EAGLAnim::EventTarget"
     },
     {
         "name": "FUN_000f8780",
@@ -69516,7 +69756,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Initializer::InitInternal",
+        "name": "EAGLAnim::Initializer::InitInternal",
         "address": "0x000fa9c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -69529,7 +69769,7 @@
             "[int param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Initializer"
+        "namespace": "EAGLAnim::Initializer"
     },
     {
         "name": "FUN_000faa00",
@@ -69604,7 +69844,7 @@
         "namespace": "EAGLAnim"
     },
     {
-        "name": "FnAnimMemoryMap::FnAnimMemoryMap",
+        "name": "EAGLAnim::FnAnimMemoryMap::FnAnimMemoryMap",
         "address": "0x000faa80",
         "calling_convention": "__fastcall",
         "has_custom_variable_storage": false,
@@ -69617,10 +69857,10 @@
             "[undefined4 * param_1@ECX:4]"
         ],
         "is_thunk": false,
-        "namespace": "FnAnimMemoryMap"
+        "namespace": "EAGLAnim::FnAnimMemoryMap"
     },
     {
-        "name": "FnAnimMemoryMap::~FnAnimMemoryMap",
+        "name": "EAGLAnim::FnAnimMemoryMap::~FnAnimMemoryMap",
         "address": "0x000faaa0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -69629,10 +69869,10 @@
         "prototype_string": "undefined ~FnAnimMemoryMap()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnAnimMemoryMap"
+        "namespace": "EAGLAnim::FnAnimMemoryMap"
     },
     {
-        "name": "FnAnimMemoryMap::SetAnimMemoryMap",
+        "name": "EAGLAnim::FnAnimMemoryMap::SetAnimMemoryMap",
         "address": "0x000faab0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -69641,7 +69881,7 @@
         "prototype_string": "undefined SetAnimMemoryMap()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnAnimMemoryMap"
+        "namespace": "EAGLAnim::FnAnimMemoryMap"
     },
     {
         "name": "FUN_000faac0",
@@ -69668,7 +69908,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnAnimMemoryMap::GetTargetCheckSum",
+        "name": "EAGLAnim::FnAnimMemoryMap::GetTargetCheckSum",
         "address": "0x000faae0",
         "calling_convention": "__fastcall",
         "has_custom_variable_storage": false,
@@ -69681,10 +69921,10 @@
             "[int param_1@ECX:4]"
         ],
         "is_thunk": false,
-        "namespace": "FnAnimMemoryMap"
+        "namespace": "EAGLAnim::FnAnimMemoryMap"
     },
     {
-        "name": "FUN_000faaf0",
+        "name": "EAGLAnim::FnAnimMemoryMap::scalar_deleting_destructor",
         "address": "0x000faaf0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -69692,12 +69932,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000faaf0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnAnimMemoryMap"
     },
     {
         "name": "FUN_000fab10",
@@ -70614,7 +70854,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnDeltaF1::FnDeltaF1",
+        "name": "EAGLAnim::FnDeltaF1::FnDeltaF1",
         "address": "0x000fe280",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -70623,10 +70863,10 @@
         "prototype_string": "undefined FnDeltaF1()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnDeltaF1"
+        "namespace": "EAGLAnim::FnDeltaF1"
     },
     {
-        "name": "FUN_000ff1e0",
+        "name": "EAGLAnim::FnDeltaF1::scalar_deleting_destructor",
         "address": "0x000ff1e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -70634,27 +70874,27 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000ff1e0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnDeltaF1"
     },
     {
-        "name": "FUN_000ff210",
+        "name": "EAGLAnim::FnDeltaF1::~FnDeltaF1",
         "address": "0x000ff210",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000ff210()",
+        "prototype_string": "undefined ~FnDeltaF1()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "EAGLAnim::FnDeltaF1"
     },
     {
-        "name": "FnDeltaF3::FnDeltaF3",
+        "name": "EAGLAnim::FnDeltaF3::FnDeltaF3",
         "address": "0x000ff280",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -70663,7 +70903,7 @@
         "prototype_string": "undefined FnDeltaF3()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnDeltaF3"
+        "namespace": "EAGLAnim::FnDeltaF3"
     },
     {
         "name": "FUN_000ff2b0",
@@ -70774,7 +71014,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnDeltaF3::~FnDeltaF3",
+        "name": "EAGLAnim::FnDeltaF3::~FnDeltaF3",
         "address": "0x001008e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -70787,7 +71027,7 @@
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "FnDeltaF3"
+        "namespace": "EAGLAnim::FnDeltaF3"
     },
     {
         "name": "FUN_00100910",
@@ -70814,7 +71054,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnDeltaSingleQ::FnDeltaSingleQ",
+        "name": "EAGLAnim::FnDeltaSingleQ::FnDeltaSingleQ",
         "address": "0x00100980",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -70823,7 +71063,7 @@
         "prototype_string": "undefined FnDeltaSingleQ()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnDeltaSingleQ"
+        "namespace": "EAGLAnim::FnDeltaSingleQ"
     },
     {
         "name": "FUN_001009c0",
@@ -70932,7 +71172,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnDeltaQFast::FnDeltaQFast",
+        "name": "EAGLAnim::FnDeltaQFast::FnDeltaQFast",
         "address": "0x00101f40",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -70941,7 +71181,7 @@
         "prototype_string": "undefined FnDeltaQFast()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnDeltaQFast"
+        "namespace": "EAGLAnim::FnDeltaQFast"
     },
     {
         "name": "FUN_00101f90",
@@ -71234,7 +71474,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnDeltaQ::FnDeltaQ",
+        "name": "EAGLAnim::FnDeltaQ::FnDeltaQ",
         "address": "0x001033b0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -71243,7 +71483,7 @@
         "prototype_string": "undefined FnDeltaQ()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnDeltaQ"
+        "namespace": "EAGLAnim::FnDeltaQ"
     },
     {
         "name": "FUN_001033f0",
@@ -71370,7 +71610,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnTurnBlender::FnTurnBlender",
+        "name": "EAGLAnim::FnTurnBlender::FnTurnBlender",
         "address": "0x001042d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -71379,7 +71619,7 @@
         "prototype_string": "undefined FnTurnBlender()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnTurnBlender"
+        "namespace": "EAGLAnim::FnTurnBlender"
     },
     {
         "name": "FUN_00104310",
@@ -71604,7 +71844,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FnRunBlender::FnRunBlender",
+        "name": "EAGLAnim::FnRunBlender::FnRunBlender",
         "address": "0x00105000",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -71613,7 +71853,7 @@
         "prototype_string": "undefined FnRunBlender()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "FnRunBlender"
+        "namespace": "EAGLAnim::FnRunBlender"
     },
     {
         "name": "FUN_00105050",
@@ -71626,6 +71866,18 @@
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
+    },
+    {
+        "name": "EAGLAnim::FnRunBlender::Eval",
+        "address": "0x001051a0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Eval()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "EAGLAnim::FnRunBlender"
     },
     {
         "name": "FUN_001051c0",
@@ -71950,7 +72202,7 @@
         "namespace": "Global"
     },
     {
-        "name": "ScratchBuffer::AllocateBuffer",
+        "name": "EAGLAnim::ScratchBuffer::AllocateBuffer",
         "address": "0x00106710",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -71963,10 +72215,10 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "ScratchBuffer"
+        "namespace": "EAGLAnim::ScratchBuffer"
     },
     {
-        "name": "ScratchBuffer::FreeBuffer",
+        "name": "EAGLAnim::ScratchBuffer::FreeBuffer",
         "address": "0x00106750",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -71975,10 +72227,10 @@
         "prototype_string": "undefined FreeBuffer()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "ScratchBuffer"
+        "namespace": "EAGLAnim::ScratchBuffer"
     },
     {
-        "name": "ScratchBuffer::GetScratchBuffer",
+        "name": "EAGLAnim::ScratchBuffer::GetScratchBuffer",
         "address": "0x00106780",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -71991,10 +72243,10 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "ScratchBuffer"
+        "namespace": "EAGLAnim::ScratchBuffer"
     },
     {
-        "name": "ScratchBuffer::FreeScratchBuffers",
+        "name": "EAGLAnim::ScratchBuffer::FreeScratchBuffers",
         "address": "0x00106790",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -72003,7 +72255,7 @@
         "prototype_string": "undefined __stdcall FreeScratchBuffers(void)",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "ScratchBuffer"
+        "namespace": "EAGLAnim::ScratchBuffer"
     },
     {
         "name": "FUN_001067c0",
@@ -80184,7 +80436,7 @@
         "namespace": "CARP"
     },
     {
-        "name": "Processor::StartGroup",
+        "name": "UGroup::Processor::StartGroup",
         "address": "0x00117e40",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -80193,10 +80445,10 @@
         "prototype_string": "undefined StartGroup()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Processor"
+        "namespace": "UGroup::Processor"
     },
     {
-        "name": "TagReference::TagReference",
+        "name": "CARP::TagReference::TagReference",
         "address": "0x00117e50",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": true,
@@ -80213,7 +80465,7 @@
             "[int param_3@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "TagReference"
+        "namespace": "CARP::TagReference"
     },
     {
         "name": "FUN_00117ef0",
@@ -80530,7 +80782,7 @@
         "namespace": "CARP"
     },
     {
-        "name": "SymbolicResolver::ProcessData",
+        "name": "CARP::SymbolicResolver::ProcessData",
         "address": "0x00118b40",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -80545,7 +80797,7 @@
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "SymbolicResolver"
+        "namespace": "CARP::SymbolicResolver"
     },
     {
         "name": "FUN_00118cc0",
@@ -80690,7 +80942,7 @@
         "namespace": "Global"
     },
     {
-        "name": "TagResolver::ProcessData",
+        "name": "CARP::TagResolver::ProcessData",
         "address": "0x00118ff0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -80705,7 +80957,7 @@
             "[undefined4 param_2@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "TagResolver"
+        "namespace": "CARP::TagResolver"
     },
     {
         "name": "FUN_00119010",
@@ -80852,7 +81104,7 @@
         "namespace": "Global"
     },
     {
-        "name": "__tree<>::insert_one",
+        "name": "std::__tree<>::insert_one",
         "address": "0x001198f0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": true,
@@ -80869,7 +81121,7 @@
             "[int * * param_3@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "__tree<>"
+        "namespace": "std::__tree<>"
     },
     {
         "name": "FUN_001199b0",
@@ -81608,7 +81860,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0011b650",
+        "name": "USymbolTable::scalar_deleting_destructor",
         "address": "0x0011b650",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -81616,12 +81868,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0011b650(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "USymbolTable"
     },
     {
         "name": "FUN_0011b690",
@@ -82000,16 +82252,16 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0011c6f0",
+        "name": "ABaseSound::~ABaseSound",
         "address": "0x0011c6f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0011c6f0()",
+        "prototype_string": "undefined ~ABaseSound()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ABaseSound"
     },
     {
         "name": "ABaseSound::GetName",
@@ -82594,16 +82846,16 @@
         "namespace": "AMenuSoundPriv"
     },
     {
-        "name": "FUN_0011dee0",
+        "name": "AMenuSoundPriv::Play",
         "address": "0x0011dee0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0011dee0()",
+        "prototype_string": "undefined Play()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AMenuSoundPriv"
     },
     {
         "name": "FUN_0011df50",
@@ -82672,7 +82924,7 @@
         "namespace": "AMenuSound"
     },
     {
-        "name": "FUN_0011e060",
+        "name": "AMenuSoundPriv::scalar_deleting_destructor",
         "address": "0x0011e060",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -82680,24 +82932,24 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0011e060(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AMenuSoundPriv"
     },
     {
-        "name": "FUN_0011e090",
+        "name": "AMenuSoundPriv::~AMenuSoundPriv",
         "address": "0x0011e090",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0011e090()",
+        "prototype_string": "undefined ~AMenuSoundPriv()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AMenuSoundPriv"
     },
     {
         "name": "AHorn::AHorn",
@@ -82874,7 +83126,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0011ed30",
+        "name": "AVehicle::PlayLanding",
         "address": "0x0011ed30",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -82883,25 +83135,25 @@
             "undefined",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0011ed30(undefined param_1, undefined4 param_2)",
+        "prototype_string": "undefined PlayLanding(undefined param_1, undefined4 param_2)",
         "parameters": [
             "[undefined param_1@<UNASSIGNED>]",
             "[undefined4 param_2@<UNASSIGNED>]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AVehicle"
     },
     {
-        "name": "FUN_0011f1a0",
+        "name": "AVehicle::PlayCollision",
         "address": "0x0011f1a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0011f1a0()",
+        "prototype_string": "undefined PlayCollision()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AVehicle"
     },
     {
         "name": "AVehicle::Play",
@@ -82942,23 +83194,23 @@
         "namespace": "AVehicle"
     },
     {
-        "name": "FUN_00120a10",
+        "name": "AVehicle::~AVehicle",
         "address": "0x00120a10",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "void *"
+            "AVehicle *"
         ],
-        "prototype_string": "void __thiscall FUN_00120a10(void)",
+        "prototype_string": "void __thiscall ~AVehicle(void)",
         "parameters": [
-            "[void * this@ECX:4 (auto)]"
+            "[AVehicle * this@ECX:4 (auto)]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AVehicle"
     },
     {
-        "name": "FUN_00120d50",
+        "name": "AVehicle::scalar_deleting_destructor",
         "address": "0x00120d50",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -82966,12 +83218,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_00120d50(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AVehicle"
     },
     {
         "name": "ASoundManager::SetMissionOver",
@@ -85816,19 +86068,19 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00129b20",
+        "name": "AUltraLite::~AUltraLite",
         "address": "0x00129b20",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00129b20()",
+        "prototype_string": "undefined ~AUltraLite()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AUltraLite"
     },
     {
-        "name": "FUN_0012a410",
+        "name": "AUltraLite::scalar_deleting_destructor",
         "address": "0x0012a410",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -85836,12 +86088,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0012a410(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AUltraLite"
     },
     {
         "name": "AUltraLite::AUltraLite",
@@ -85940,6 +86192,18 @@
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
+        "is_thunk": false,
+        "namespace": "ASubmersible"
+    },
+    {
+        "name": "ASubmersible::SetCreakLevel",
+        "address": "0x0012bb60",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined SetCreakLevel()",
+        "parameters": [],
         "is_thunk": false,
         "namespace": "ASubmersible"
     },
@@ -86088,19 +86352,43 @@
         "namespace": "AHelicopter"
     },
     {
-        "name": "FUN_0012cac0",
+        "name": "AHelicopter::PlayLanding",
+        "address": "0x0012c930",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined PlayLanding()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "AHelicopter"
+    },
+    {
+        "name": "AHelicopter::Play",
+        "address": "0x0012c950",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Play()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "AHelicopter"
+    },
+    {
+        "name": "AHelicopter::~AHelicopter",
         "address": "0x0012cac0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0012cac0()",
+        "prototype_string": "undefined ~AHelicopter()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AHelicopter"
     },
     {
-        "name": "FUN_0012cb60",
+        "name": "AHelicopter::scalar_deleting_destructor",
         "address": "0x0012cb60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -86108,12 +86396,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_0012cb60(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "AHelicopter"
     },
     {
         "name": "ATrafficVehicle::ATrafficVehicle",
@@ -86898,7 +87186,7 @@
         "namespace": "ARaceEngine"
     },
     {
-        "name": "FUN_0012ffb0",
+        "name": "ARaceEngine::Play",
         "address": "0x0012ffb0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -86906,12 +87194,12 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0012ffb0(undefined4 param_1)",
+        "prototype_string": "undefined Play(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ARaceEngine"
     },
     {
         "name": "FUN_00130590",
@@ -86926,7 +87214,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_001306b0",
+        "name": "ARaceEngine::scalar_deleting_destructor",
         "address": "0x001306b0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -86934,12 +87222,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_001306b0(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "ARaceEngine"
     },
     {
         "name": "GetLaunchInfo",
@@ -97486,7 +97774,7 @@
         "namespace": "Global"
     },
     {
-        "name": "CEAXABLKDecf::operator_new",
+        "name": "SND::CEAXABLKDecf::operator_new",
         "address": "0x00149e50",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -97495,10 +97783,10 @@
         "prototype_string": "undefined operator_new()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "CEAXABLKDecf"
+        "namespace": "SND::CEAXABLKDecf"
     },
     {
-        "name": "CEAXABLKDecf::operator_delete",
+        "name": "SND::CEAXABLKDecf::operator_delete",
         "address": "0x00149e60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -97507,7 +97795,7 @@
         "prototype_string": "undefined operator_delete()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "CEAXABLKDecf"
+        "namespace": "SND::CEAXABLKDecf"
     },
     {
         "name": "FUN_00149e70",
@@ -98770,7 +99058,7 @@
         "namespace": "Global"
     },
     {
-        "name": "AV_PLAYER::Init",
+        "name": "RCMP::AV_PLAYER::Init",
         "address": "0x0014c430",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -98797,7 +99085,7 @@
             "[undefined4 param_8@<UNASSIGNED>]"
         ],
         "is_thunk": false,
-        "namespace": "AV_PLAYER"
+        "namespace": "RCMP::AV_PLAYER"
     },
     {
         "name": "FUN_0014c750",
@@ -98852,7 +99140,7 @@
         "namespace": "Global"
     },
     {
-        "name": "AV_PLAYER::GetRCMPChunk",
+        "name": "RCMP::AV_PLAYER::GetRCMPChunk",
         "address": "0x0014c800",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -98867,7 +99155,7 @@
             "[undefined4 param_2@<UNASSIGNED>]"
         ],
         "is_thunk": false,
-        "namespace": "AV_PLAYER"
+        "namespace": "RCMP::AV_PLAYER"
     },
     {
         "name": "FUN_0014c8d0",
@@ -98904,7 +99192,7 @@
         "namespace": "Global"
     },
     {
-        "name": "AV_PLAYER::~AV_PLAYER",
+        "name": "RCMP::AV_PLAYER::~AV_PLAYER",
         "address": "0x0014c930",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -98913,7 +99201,7 @@
         "prototype_string": "undefined ~AV_PLAYER()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "AV_PLAYER"
+        "namespace": "RCMP::AV_PLAYER"
     },
     {
         "name": "FUN_0014c9f0",
@@ -98928,7 +99216,7 @@
         "namespace": "Global"
     },
     {
-        "name": "AV_PLAYER::ReleaseRCMPChunk",
+        "name": "RCMP::AV_PLAYER::ReleaseRCMPChunk",
         "address": "0x0014cad0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -98937,10 +99225,10 @@
         "prototype_string": "undefined ReleaseRCMPChunk()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "AV_PLAYER"
+        "namespace": "RCMP::AV_PLAYER"
     },
     {
-        "name": "AV_PLAYER::GetFirstFrame",
+        "name": "RCMP::AV_PLAYER::GetFirstFrame",
         "address": "0x0014cb00",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -98949,7 +99237,7 @@
         "prototype_string": "undefined GetFirstFrame()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "AV_PLAYER"
+        "namespace": "RCMP::AV_PLAYER"
     },
     {
         "name": "FUN_0014cd00",
@@ -98964,7 +99252,7 @@
         "namespace": "Global"
     },
     {
-        "name": "AUDIO_PLAYER::AUDIO_PLAYER",
+        "name": "RCMP::AUDIO_PLAYER::AUDIO_PLAYER",
         "address": "0x0014cd70",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -98973,10 +99261,10 @@
         "prototype_string": "undefined AUDIO_PLAYER()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "AUDIO_PLAYER"
+        "namespace": "RCMP::AUDIO_PLAYER"
     },
     {
-        "name": "AUDIO_PLAYER::~AUDIO_PLAYER",
+        "name": "RCMP::AUDIO_PLAYER::~AUDIO_PLAYER",
         "address": "0x0014ce10",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -98985,10 +99273,10 @@
         "prototype_string": "undefined ~AUDIO_PLAYER()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "AUDIO_PLAYER"
+        "namespace": "RCMP::AUDIO_PLAYER"
     },
     {
-        "name": "AUDIO_PLAYER::SetSpeed",
+        "name": "RCMP::AUDIO_PLAYER::SetSpeed",
         "address": "0x0014ce40",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -99001,10 +99289,10 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "AUDIO_PLAYER"
+        "namespace": "RCMP::AUDIO_PLAYER"
     },
     {
-        "name": "AUDIO_PLAYER::StartSound",
+        "name": "RCMP::AUDIO_PLAYER::StartSound",
         "address": "0x0014ce80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -99013,10 +99301,10 @@
         "prototype_string": "undefined StartSound()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "AUDIO_PLAYER"
+        "namespace": "RCMP::AUDIO_PLAYER"
     },
     {
-        "name": "AUDIO_PLAYER::SetVol",
+        "name": "RCMP::AUDIO_PLAYER::SetVol",
         "address": "0x0014ceb0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -99029,7 +99317,7 @@
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "AUDIO_PLAYER"
+        "namespace": "RCMP::AUDIO_PLAYER"
     },
     {
         "name": "FUN_0014cf10",
