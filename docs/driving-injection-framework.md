@@ -501,5 +501,6 @@ convention: 4 bytes popped, `this` in `ECX`); the event manager calls it for eve
 **Checked.** It builds with every check passing; declaring `Process` as `VIRTUAL(0)` fails the build ("the original
 pops 4 bytes"), naming the slot and the implementation it disagrees with. In game, the underwater level runs at 50
 fps with the mission's objectives advancing - they are driven by events, so every one of them now runs through the
-generated `VIRTUAL(0)` call. The timekeeping `Scheduler::Run` still omits (`timeScale`, the 12-tick guard, cinematic
-skipping) is a separate piece of work.
+generated `VIRTUAL(0)` call. `Scheduler::Run` now also follows the original's timekeeping (`timeScale`, the 12-tick
+guard, cinematic skipping), except that it carries the fraction of a tick instead of dropping it: see
+`docs/driving-engine-plan.md`, section 2.

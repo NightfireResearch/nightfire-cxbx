@@ -7749,6 +7749,13 @@
     "bitfield": false
    },
    {
+    "offset": 28,
+    "size": 1,
+    "name": "oneTickPerRun",
+    "type": "byte",
+    "bitfield": false
+   },
+   {
     "offset": 29,
     "size": 1,
     "name": "cinematicModeSkipping",

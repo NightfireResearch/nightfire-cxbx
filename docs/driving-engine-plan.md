@@ -724,9 +724,26 @@ This is the mechanism behind the "slowdowns / timekeeping errors" and it is full
   jitter are worse than the Xbox's; ticks arrive in bursts, so the simulation alternates between doing
   nothing and catching up several ticks per frame, and any frame longer than 12 ticks (200 ms at 60 Hz,
   common during loads or CXBX hitches) drops time on the floor.
-- The repository's current workaround (`src/driving/Scheduler.cpp`, injected over `0x5ba80`) ignores `Clock`
-  and runs exactly one simulation tick per loop iteration, which trades jitter for a game speed tied to the
-  frame rate.
+- `timeScale` makes it worse. The original truncates `dt` to whole ticks and then sets `lastTickCount` to
+  `Clock`, so the fraction is lost on every call. The clock usually moves one tick per call, so that loss is
+  the whole effect: a slow motion of 0.75 or 0.9 (`ESetSimRate`) ran at half speed, 0.3 at a quarter, and 1.5
+  (fast motion, or anything up to 2) no faster than 1.
+
+**Status (25 Sept 2026).** `src/driving/Scheduler.cpp` (injected over `0x5ba80`) now follows the original:
+it reads `Clock`, applies `timeScale` and `oneTickPerRun` (`+0x1c`, now in the Ghidra struct), keeps the
+12-tick stall guard and the cinematic-skip loop (flat out, drawing every fourth tick), and calls each
+schedule's own `Process` through its vtable. It departs from the original in two places:
+
+- The fraction of a tick is carried to the next call (`g_pendingTicks`) rather than dropped. The effective
+  speed was measured in the underwater level: 1.000 at a `timeScale` of 1, 0.75 at 0.75 (the original gives
+  0.5), and 1.5 at 1.5 (the original gives 1). Slow motion still lowers the frame rate (37.6 fps at 0.75),
+  as on the console, because rendering happens only on a call that runs a tick. Smoothing that would need
+  interpolation between ticks.
+- A call with nothing to run does a `Sleep(1)`. The console spins there, because the loop has no wait of its
+  own. Without the sleep, a PC core sits at 100% (the perf line read 20 ms working, 0 ms waiting); with it,
+  the level holds 50 fps at about 10 ms working.
+
+The earlier workaround ran one tick per loop and ignored `Clock` entirely; it is gone.
 
 **Standalone this changes shape, and for the better.** `timeSetEvent` here is XAPI's, statically linked in
 the XBE, and it is built on the Xbox kernel's timers - so standalone it lands on the loader's kernel
