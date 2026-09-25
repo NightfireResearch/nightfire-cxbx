@@ -36,6 +36,31 @@ or
 
 To mark a function as injectable, prefix the function declaration with `// AUTOINJECT` - this will add an entry to the injection list. The function must have a prototype in a header that autofunc.cpp can see.
 
+Every `AUTOINJECT` and `FUNC_AT` patch is checked at compile time against the calling convention measured from the binary (`tools/abi_*.json`, from `tools/abi_facts.py`). A failing `static_assert` names the function and says what the original pops and which registers it reads - usually a method declared `static`, a missing `__stdcall`, or a wrong argument type. When Ghidra has several functions of one name (overloads), the tag is matched on its parameter count; if that is still ambiguous, use `FUNC_AT(address)`.
+
+### Driving engine: classes
+
+The driving engine is C++, and most of its functions are methods. Write the game's class as an *overlay* (`src/common/xbeClass.h` has the rules): the exact layout, checked; no `virtual` (declare `void **vtable;` first instead); never constructed by our code.
+
+```cpp
+struct Schedule {
+    void **vtable;
+    Schedule *next;
+    void *listOfTasks[8];
+    unsigned int numTasks;
+
+    // AUTOGEN
+    void RunTasks(int bucket, unsigned short priority);   // not reimplemented: calls the original
+};
+
+XBE_CLASS_SIZE(Schedule, 0x2c);
+XBE_FIELD(Schedule, numTasks, 0x28);
+```
+
+* `// AUTOGEN` above a declaration - a method in its class's header, or a free function - generates a body that calls the original at its address, through `this` for a method, with the declaration's own calling convention. Our code then calls it like any method: `s_SimRate->RunTasks(0, i)`. `// AUTOGEN(address)` names the address when the name is ambiguous.
+* To reimplement a method, define it and put `// AUTOINJECT` above the definition, as for a function. A non-static member is `__thiscall`, which is what the game's methods are.
+* The action engine's `AUTOGEN` still generates from Ghidra's types; the declaration-driven kind is the driving engine's. See `docs/driving-injection-framework.md`.
+
 
 ## Common mistakes
 

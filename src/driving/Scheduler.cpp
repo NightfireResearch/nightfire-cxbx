@@ -8,9 +8,7 @@
 
 #define Clock U32_AT(0x001e5204)
 
-// Schedule::RunTasks is a thiscall at 0x0005bce0. We want to call it with a function pointer
-using RunTasksFunc = void(__thiscall*)(void*, int, unsigned short);
-RunTasksFunc Schedule__RunTasks = (RunTasksFunc)0x0005bce0;
+// Schedule::RunTasks (0x0005bce0) is declared AUTOGEN in Schedule.hpp, so calling it reaches the original.
 
 
 
@@ -46,13 +44,13 @@ void Scheduler::Run(int i) {
     int tickNum = this->lastTickCount;
     
     // Run SimRate
-    Schedule__RunTasks(this->s_SimRate, 0, i);
+    this->s_SimRate->RunTasks(0, i);
 
     // Run halfSimRate
-    Schedule__RunTasks(this->s_halfSimRate, tickNum & 1, i);
+    this->s_halfSimRate->RunTasks(tickNum & 1, i);
 
     // Run quarterSimRate
-    Schedule__RunTasks(this->s_quarterSimRate, tickNum & 3, i);
+    this->s_quarterSimRate->RunTasks(tickNum & 3, i);
   }
 
   // Debug teleport (F8/F9, or Teleport= in settings.ini): here because this is where the game's own
@@ -63,7 +61,7 @@ void Scheduler::Run(int i) {
 
   for(int i = 0; i < 8; i++) {
     // Run per-frame schedules
-    Schedule__RunTasks(this->s_oncePerGameLoop, 0, i);
+    this->s_oncePerGameLoop->RunTasks(0, i);
   }
   
   EventManager__RunEvents();

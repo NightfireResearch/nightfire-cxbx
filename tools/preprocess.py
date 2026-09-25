@@ -175,7 +175,107 @@ def generate_auto_inject(side, ghidra_funcs):
 
     return injections
 
+CONVENTIONS = ("__cdecl", "__stdcall", "__fastcall", "__thiscall")
+
+
+def gather_declaration_tags(tag_name, side):
+    # AUTOGEN tags for the driving engine: above a declaration, in a .cpp or a header, possibly inside a class.
+    # Returns (file, line number, declaration line, enclosing class or None, address or None) for each. The
+    # enclosing class comes from tracking "class X {" / "struct X {" scopes by their braces, which is enough for
+    # the one-class-per-header style this code uses.
+    found = []
+    exclude = {"driving" if side == "action" else "action"}
+    for root, dirs, files in os.walk("src"):
+        [dirs.remove(d) for d in list(dirs) if d in exclude]
+        for name in files:
+            if not name.endswith(('.c', '.cpp', '.h', '.hpp')):
+                continue
+            path = os.path.join(root, name)
+            lines = open(path, 'r', encoding='utf-8', errors='replace').readlines()
+            scopes, depth, pending = [], 0, None
+            for i, line in enumerate(lines):
+                code = line.split("//")[0]
+                tag = re.search(rf'// {tag_name}(?:\((\w+)\))?\s*$', line)
+                if tag and i + 1 < len(lines):
+                    enclosing = scopes[-1][0] if scopes else None
+                    found.append((path, i + 1, lines[i + 1].strip(), enclosing, tag.group(1)))
+                m = re.match(r'^\s*(?:class|struct)\s+(\w+)\b[^;(]*$', code)
+                if m:
+                    pending = m.group(1)
+                for ch in code:
+                    if ch == "{":
+                        depth += 1
+                        if pending is not None:
+                            scopes.append((pending, depth))
+                            pending = None
+                    elif ch == "}":
+                        if scopes and scopes[-1][1] == depth:
+                            scopes.pop()
+                        depth -= 1
+    return found
+
+
+def generate_declared_funcs(side, ghidra_funcs):
+    # AUTOGEN from our declaration rather than Ghidra's types (docs/driving-injection-framework.md, section 5).
+    # The author writes the declaration - in its class, for a method - and this generates only the body, which
+    # calls the original at its address through a pointer of the declaration's own type: a member-function
+    # pointer through `this` for a method, a plain one otherwise. The ABI check of step 2 goes in the body.
+    abi = load_abi_facts(side)
+    includes, bodies, names = [], [], []
+    for path, line_number, declaration, enclosing, address in gather_declaration_tags("AUTOGEN", side):
+        where = f"{path}:{line_number}".replace("\\", "/")
+        assert declaration.endswith(";"), f"{where}: AUTOGEN wants a one-line declaration ending in ';'"
+        chunks = [x for x in declaration.split(" ") if "(" in x]
+        assert chunks, f"{where}: could not find the function name in '{declaration}'"
+        short_name = chunks[-1].split("(")[0].lstrip("*&")
+        signature = parse_signature(declaration, short_name)
+        assert signature is not None, f"{where}: could not read the declaration '{declaration}'"
+        return_type, types = signature
+        is_static = re.search(r'\bstatic\b', declaration) is not None
+        is_member = enclosing is not None and not is_static
+        qualified = f"{enclosing}::{short_name}" if enclosing else short_name
+
+        convention = next((c for c in CONVENTIONS if re.search(rf'\b{c}\b', return_type)), "")
+        bare_return = re.sub(r'\b(' + "|".join(CONVENTIONS) + r')\b', '', return_type).strip()
+
+        if address is None:
+            address = match_tag("AUTOGEN", qualified, signature, ghidra_funcs)['address']
+        elif not address.startswith("0x"):
+            address = f"0x{address}"
+        address = "0x%08x" % int(address, 16)
+
+        if path.endswith(('.h', '.hpp')):
+            include = os.path.relpath(path, f"src/{side}").replace("\\", "/")
+            if include not in includes:
+                includes.append(include)
+        else:
+            assert enclosing is None, f"{where}: a class's AUTOGEN declarations belong in its header"
+
+        pointer_type = f"decltype(XbeOverload<{bare_return}({', '.join(types)})>::Of(&{qualified}))"
+        params = ", ".join(f"{t} a{i}" for i, t in enumerate(types))
+        args = ", ".join(f"a{i}" for i in range(len(types)))
+        check = abi_check(abi, address, qualified, f"XbeOverload<{bare_return}({', '.join(types)})>::Of(&{qualified})")
+        call = (f"(this->*XbeOriginal<{pointer_type}>({address}))({args})" if is_member
+                else f"XbeOriginal<{pointer_type}>({address})({args})")
+        bodies.append(f"// {where}\n"
+                      f"{bare_return} {convention + ' ' if convention else ''}{qualified}({params}) {{\n"
+                      + (f"    {check}\n" if check else "")
+                      + f"    return {call};\n}}\n")
+        names.append(qualified)
+
+    output = "// This file is autogenerated by tools/preprocess.py. Do not modify.\n"
+    output += "// Bodies for the functions declared with // AUTOGEN: each calls the original at its address.\n\n"
+    output += f"#include \"{side}helpers.h\"\n#include \"../common/xbeAbi.h\"\n#include \"../common/xbeOverload.h\"\n"
+    output += "".join(f"#include \"{inc}\"\n" for inc in includes) + "\n"
+    output += "\n".join(bodies)
+    with open(f"src/{side}/autogenerated_functions.inc", 'w') as file:
+        file.write(output)
+    return names
+
+
 def generate_auto_funcs(side, ghidra_funcs):
+    if side == "driving":
+        return generate_declared_funcs(side, ghidra_funcs)
     # For all functions in the source code which are:
     # - Tagged with an "AUTOGEN" comment
     # Create a wrapper function that calls the original function via function pointer

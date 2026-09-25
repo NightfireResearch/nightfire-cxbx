@@ -41,4 +41,16 @@ template <class F> inline size_t XbeAddress(F f) {
     return address;
 }
 
+// The other direction: the original at `address`, as a pointer of type F - which may be a member-function
+// pointer, so that the generated AUTOGEN body for a method can call it as (this->*original)(...), with the
+// declaration's own calling convention. The type comes from the declaration (decltype of XbeOverload::Of), so
+// the compiler, not a hand-written cast, decides how the call is made.
+template <class F> inline F XbeOriginal(size_t address) {
+    static_assert(sizeof(F) == sizeof(size_t), "not a plain function or single-inheritance member function pointer - "
+                                               "is the class complete where this is used?");
+    F f;
+    memcpy(&f, &address, sizeof(f));
+    return f;
+}
+
 #endif // COMMON_XBEOVERLOAD_H_
