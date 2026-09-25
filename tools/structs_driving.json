@@ -3953,6 +3953,34 @@
   ]
  },
  {
+  "name": "Handle",
+  "category": "/RAnimEngine",
+  "size": 32,
+  "fields": [
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "pSystems",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "pSystemIds",
+    "type": "byte *",
+    "bitfield": false
+   },
+   {
+    "offset": 30,
+    "size": 1,
+    "name": "bSystemCount",
+    "type": "byte",
+    "bitfield": false
+   }
+  ]
+ },
+ {
   "name": "HeapInfo",
   "category": "/auto_structs",
   "size": 24,
@@ -5246,6 +5274,20 @@
   "fields": []
  },
  {
+  "name": "RReflection",
+  "category": "/",
+  "size": 84,
+  "fields": [
+   {
+    "offset": 80,
+    "size": 4,
+    "name": "submitDistanceLimit",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ },
+ {
   "name": "RRenderHigh",
   "category": "/",
   "size": 68,
@@ -5584,6 +5626,20 @@
     "size": 1,
     "name": "flags",
     "type": "byte",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "RTextureContext",
+  "category": "/",
+  "size": 16,
+  "fields": [
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "pTextureMap",
+    "type": "void *",
     "bitfield": false
    }
   ]

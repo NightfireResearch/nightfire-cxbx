@@ -13,11 +13,11 @@
 // The three maths helpers AddModelGlare calls, all __cdecl with stack arguments: a point through a matrix
 // (0x00114e20, a wrapper of VU0_MATRIX4_vect3mult), a direction through its rotation (0x00114e60), and a dot
 // product (0x001089e0). Not reimplemented; these reach the originals.
-// AUTOGEN(0x00114e20)
+// AUTOGEN
 void MATRIX4_TransformPoint(MATRIX4 *m, const Glare *in, Glare *out);
-// AUTOGEN(0x00114e60)
+// AUTOGEN
 void MATRIX4_RotateVector(MATRIX4 *m, const _VEC3 *in, _VEC3 *out);
-// AUTOGEN(0x001089e0)
+// AUTOGEN
 float VEC3_Dot(const _VEC3 *a, const _VEC3 *b);
 
 // GlareBlinkBrightness (0x000a99a0). The original takes the glare in ESI - a register argument no C++
@@ -169,15 +169,15 @@ void __stdcall AddGlareToRender(int *count, const Glare *glare, const GlareSprit
     Vec4 up, right;
     VU0_MATRIX4_vect3mult(camera + 0x20, &spin, &up);
     VU0_MATRIX4_vect3mult(camera + 0x10, &spin, &right);
-    VEC4_Scale(&up, size, &up);
-    VEC4_Scale(&right, size, &right);
+    VU0_v4scale(&up, size, &up);
+    VU0_v4scale(&right, size, &right);
 
     // The centre, moved size * zBias towards the camera.
     Vec4 centre = { glare->position.x, glare->position.y, glare->position.z, 0.0f };
     Vec4 away;
-    VEC4_Subtract(&centre, camera + 0x40, &away);
+    VU0_v4sub(&centre, camera + 0x40, &away);
     VU0_v4unitxyz(&away, &away);
-    VEC4_ScaleAdd(&away, (float)-((double)size * zBias), &centre, &centre);
+    VU0_v4scaleadd(&away, (float)-((double)size * zBias), &centre, &centre);
 
     for (int corner = 0; corner < 4; corner++) {
         double u = kWorldCorner[corner][0], r = kWorldCorner[corner][1];
@@ -199,8 +199,8 @@ void __stdcall Add2DGlareToRender(int *count, const Glare *glare, const GlareSpr
     Vec4 up, right;
     VU0_MATRIX4_vect3mult(&yAxis, &spin, &up);
     VU0_MATRIX4_vect3mult(&xAxis, &spin, &right);
-    VEC4_Scale(&up, size, &up);
-    VEC4_Scale(&right, size, &right);
+    VU0_v4scale(&up, size, &up);
+    VU0_v4scale(&right, size, &right);
 
     // At the glare's x and y, and a fixed depth of 0.2.
     for (int corner = 0; corner < 4; corner++) {

@@ -23,16 +23,16 @@ void VU0_MATRIX4_vect3mult(const void *in, const MATRIX4 *m, Vec4 *out);
 void VU0_v4unitxyz(const Vec4 *in, Vec4 *out);
 
 // out = in * scale (0x00115f00).
-// AUTOGEN(0x00115f00)
-void VEC4_Scale(const Vec4 *in, float scale, Vec4 *out);
+// AUTOGEN
+void VU0_v4scale(const Vec4 *in, float scale, Vec4 *out);
 
 // out = a - b (0x00115ad0).
-// AUTOGEN(0x00115ad0)
-void VEC4_Subtract(const Vec4 *a, const void *b, Vec4 *out);
+// AUTOGEN
+void VU0_v4sub(const Vec4 *a, const void *b, Vec4 *out);
 
 // out = a * scale + b (0x00115f80).
-// AUTOGEN(0x00115f80)
-void VEC4_ScaleAdd(const Vec4 *a, float scale, const Vec4 *b, Vec4 *out);
+// AUTOGEN
+void VU0_v4scaleadd(const Vec4 *a, float scale, const Vec4 *b, Vec4 *out);
 
 // The distance between two points, x87 (0x00116020).
 // AUTOGEN

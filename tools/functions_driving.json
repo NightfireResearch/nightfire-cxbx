@@ -32084,20 +32084,22 @@
         "namespace": "Handle"
     },
     {
-        "name": "FUN_00076900",
+        "name": "Handle::GetInstanceSystemID",
         "address": "0x00076900",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "ushort",
         "param_types": [
-            "undefined4"
+            "Handle *",
+            "uint"
         ],
-        "prototype_string": "undefined FUN_00076900(undefined4 param_1)",
+        "prototype_string": "ushort __thiscall GetInstanceSystemID(uint instance)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[Handle * this@ECX:4 (auto)]",
+            "[uint instance@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Handle"
     },
     {
         "name": "FUN_00076930",
@@ -32330,20 +32332,22 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000774a0",
+        "name": "Handle::IsSystemPlaying",
         "address": "0x000774a0",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "bool",
         "param_types": [
-            "undefined4"
+            "Handle *",
+            "uint"
         ],
-        "prototype_string": "undefined FUN_000774a0(undefined4 param_1)",
+        "prototype_string": "bool __thiscall IsSystemPlaying(uint systemId)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[Handle * this@ECX:4 (auto)]",
+            "[uint systemId@Stack[0x4]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "Handle"
     },
     {
         "name": "FUN_00077500",
@@ -34704,7 +34708,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0007dc00",
+        "name": "GetArticleViewDistance",
         "address": "0x0007dc00",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -34713,7 +34717,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0007dc00(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined GetArticleViewDistance(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -34796,7 +34800,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0007de30",
+        "name": "DrawInstance",
         "address": "0x0007de30",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -34809,7 +34813,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0007de30(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6)",
+        "prototype_string": "undefined DrawInstance(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -34840,7 +34844,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0007df90",
+        "name": "DrawInstanceList",
         "address": "0x0007df90",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -34853,7 +34857,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0007df90(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6)",
+        "prototype_string": "undefined DrawInstanceList(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -39224,24 +39228,26 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0008dd20",
+        "name": "RSceneObj::GetInstancePosition",
         "address": "0x0008dd20",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "undefined4",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined1"
+            "RSceneObj *",
+            "uint",
+            "MATRIX4 *",
+            "bool"
         ],
-        "prototype_string": "undefined FUN_0008dd20(undefined4 param_1, undefined4 param_2, undefined1 param_3)",
+        "prototype_string": "undefined4 __thiscall GetInstancePosition(uint index, MATRIX4 * transform, bool param_3)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined1 param_3@Stack[0xc]:1]"
+            "[RSceneObj * this@ECX:4 (auto)]",
+            "[uint index@Stack[0x4]:4]",
+            "[MATRIX4 * transform@Stack[0x8]:4]",
+            "[bool param_3@Stack[0xc]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSceneObj"
     },
     {
         "name": "FUN_0008ddf0",
@@ -39404,38 +39410,44 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0008e430",
+        "name": "RSceneObj::ToggleEffect",
         "address": "0x0008e430",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "RSceneObj *",
+            "bool",
+            "uint",
+            "void *",
+            "float"
         ],
-        "prototype_string": "undefined FUN_0008e430(undefined1 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
+        "prototype_string": "void __thiscall ToggleEffect(bool on, uint index, void * effect, float value)",
         "parameters": [
-            "[undefined1 param_1@Stack[0x4]:1]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]"
+            "[RSceneObj * this@ECX:4 (auto)]",
+            "[bool on@Stack[0x4]:1]",
+            "[uint index@Stack[0x8]:4]",
+            "[void * effect@Stack[0xc]:4]",
+            "[float value@Stack[0x10]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSceneObj"
     },
     {
-        "name": "FUN_0008e580",
+        "name": "RSceneObj::DecayEffects",
         "address": "0x0008e580",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_0008e580()",
-        "parameters": [],
+        "return_type": "void",
+        "param_types": [
+            "RSceneObj *"
+        ],
+        "prototype_string": "void __thiscall DecayEffects(void)",
+        "parameters": [
+            "[RSceneObj * this@ECX:4 (auto)]"
+        ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSceneObj"
     },
     {
         "name": "FUN_0008e6a0",
@@ -39494,22 +39506,24 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0008ea20",
+        "name": "RSceneObj::RenderEffect",
         "address": "0x0008ea20",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "bool",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "RSceneObj *",
+            "void *",
+            "MATRIX4 *"
         ],
-        "prototype_string": "undefined FUN_0008ea20(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "bool __thiscall RenderEffect(void * effect, MATRIX4 * transform)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[RSceneObj * this@ECX:4 (auto)]",
+            "[void * effect@Stack[0x4]:4]",
+            "[MATRIX4 * transform@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSceneObj"
     },
     {
         "name": "FUN_0008ea70",
@@ -39760,20 +39774,22 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0008f740",
+        "name": "RSceneObj::RenderEffects",
         "address": "0x0008f740",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined1"
+            "RSceneObj *",
+            "bool"
         ],
-        "prototype_string": "undefined FUN_0008f740(undefined1 param_1)",
+        "prototype_string": "void __thiscall RenderEffects(bool param_1)",
         "parameters": [
-            "[undefined1 param_1@Stack[0x4]:1]"
+            "[RSceneObj * this@ECX:4 (auto)]",
+            "[bool param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RSceneObj"
     },
     {
         "name": "FUN_0008f930",
@@ -40882,22 +40898,24 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00093ba0",
+        "name": "RTextureContext::FindOrCreateTexture",
         "address": "0x00093ba0",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void *",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "RTextureContext *",
+            "uint",
+            "uint"
         ],
-        "prototype_string": "undefined FUN_00093ba0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "void * __thiscall FindOrCreateTexture(uint name, uint flags)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[RTextureContext * this@ECX:4 (auto)]",
+            "[uint name@Stack[0x4]:4]",
+            "[uint flags@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RTextureContext"
     },
     {
         "name": "FUN_00093c70",
@@ -41344,11 +41362,11 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined4 *",
         "param_types": [
-            "void *"
+            "RTextureContext *"
         ],
         "prototype_string": "undefined4 * __thiscall RTextureContext_or_ContextManager(void)",
         "parameters": [
-            "[void * this@ECX:4 (auto)]"
+            "[RTextureContext * this@ECX:4 (auto)]"
         ],
         "is_thunk": false,
         "namespace": "RTextureContext"
@@ -42674,22 +42692,24 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00098520",
+        "name": "RReflection::PrivateSubmitSceneObj",
         "address": "0x00098520",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "RReflection *",
+            "float",
+            "RSceneObj *"
         ],
-        "prototype_string": "undefined FUN_00098520(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "void __thiscall PrivateSubmitSceneObj(float distance, RSceneObj * sceneObj)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[RReflection * this@ECX:4 (auto)]",
+            "[float distance@Stack[0x4]:4]",
+            "[RSceneObj * sceneObj@Stack[0x8]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RReflection"
     },
     {
         "name": "FUN_000986a0",
@@ -72966,7 +72986,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_001089e0",
+        "name": "VEC3_Dot",
         "address": "0x001089e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -72975,7 +72995,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_001089e0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined VEC3_Dot(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -78302,7 +78322,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00114e20",
+        "name": "MATRIX4_TransformPoint",
         "address": "0x00114e20",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -78312,7 +78332,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00114e20(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined MATRIX4_TransformPoint(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -78342,7 +78362,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00114e60",
+        "name": "MATRIX4_RotateVector",
         "address": "0x00114e60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -78352,7 +78372,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00114e60(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined MATRIX4_RotateVector(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -78542,7 +78562,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00115ad0",
+        "name": "VU0_v4sub",
         "address": "0x00115ad0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -78552,7 +78572,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00115ad0(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined VU0_v4sub(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -78910,7 +78930,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00115f00",
+        "name": "VU0_v4scale",
         "address": "0x00115f00",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -78920,7 +78940,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00115f00(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined VU0_v4scale(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -78972,7 +78992,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00115f80",
+        "name": "VU0_v4scaleadd",
         "address": "0x00115f80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -78983,7 +79003,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00115f80(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
+        "prototype_string": "undefined VU0_v4scaleadd(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -79214,7 +79234,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_001162d0",
+        "name": "VU0_MATRIX4_vect3rotate",
         "address": "0x001162d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -79224,7 +79244,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_001162d0(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined VU0_MATRIX4_vect3rotate(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
