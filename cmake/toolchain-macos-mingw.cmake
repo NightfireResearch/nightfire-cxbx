@@ -32,14 +32,22 @@ if(NOT NF_MINGW_ROOT)
                     ERROR_QUIET RESULT_VARIABLE NF_BREW_RESULT)
     if(NF_BREW_RESULT EQUAL 0 AND EXISTS "${NF_BREW_MINGW}/toolchain-i686")
       set(NF_MINGW_ROOT "${NF_BREW_MINGW}/toolchain-i686")
+    elseif(EXISTS "/usr/${NF_MINGW_TRIPLE}/include/windows.h")
+      # Linux distributions install the sysroot under /usr (Arch: mingw-w64-gcc; Debian/Ubuntu:
+      # g++-mingw-w64-i686).
+      set(NF_MINGW_ROOT /usr)
     endif()
   endif()
 endif()
+
+# try_compile reruns this file in a fresh project, without the -D variables from the command line.
+list(APPEND CMAKE_TRY_COMPILE_PLATFORM_VARIABLES NF_MINGW_ROOT)
 
 if(NOT NF_MINGW_ROOT OR NOT EXISTS "${NF_MINGW_ROOT}/${NF_MINGW_TRIPLE}/include/windows.h")
   message(FATAL_ERROR
     "Could not find a 32-bit mingw-w64 sysroot.\n"
     "On macOS: brew install mingw-w64\n"
+    "On Linux: pacman -S mingw-w64-gcc, or apt install g++-mingw-w64-i686\n"
     "Otherwise pass -DNF_MINGW_ROOT=/path/to/sysroot (the directory holding ${NF_MINGW_TRIPLE}/include).")
 endif()
 
@@ -55,7 +63,12 @@ set(CMAKE_RC_COMPILER ${NF_WINDRES})
 # -fms-extensions  : __declspec(naked), and the MSVC spelling of other extensions the sources use
 # -fasm-blocks     : MSVC's __asm { } Intel-syntax blocks
 # -fno-exceptions  : nothing here throws, and it keeps the unwinder out of the binaries entirely
-set(NF_MINGW_FLAGS "--sysroot=${NF_MINGW_ROOT} -B${NF_MINGW_ROOT}/bin -fms-extensions -fasm-blocks -fno-exceptions")
+set(NF_MINGW_FLAGS "--sysroot=${NF_MINGW_ROOT} -fms-extensions -fasm-blocks -fno-exceptions")
+# -B points clang at the sysroot's binutils. Not for a /usr sysroot: there it would pick the host's own
+# /usr/bin/ld over i686-w64-mingw32-ld, which clang already finds on PATH.
+if(NOT NF_MINGW_ROOT STREQUAL "/usr")
+  string(APPEND NF_MINGW_FLAGS " -B${NF_MINGW_ROOT}/bin")
+endif()
 set(CMAKE_C_FLAGS_INIT   "${NF_MINGW_FLAGS}")
 set(CMAKE_CXX_FLAGS_INIT "${NF_MINGW_FLAGS}")
 

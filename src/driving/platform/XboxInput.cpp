@@ -93,7 +93,11 @@ static_assert(offsetof(XboxFeedback, wLeftMotorSpeed) == 0x42, "the game writes 
 extern "C" __declspec(dllimport) unsigned long __stdcall XInputGetState(unsigned long index, Win32State *state);
 extern "C" __declspec(dllimport) unsigned long __stdcall XInputSetState(unsigned long index,
                                                                         Win32Vibration *vibration);
+// MSVC acts on this; other linkers get the library from the CMake target instead. Guarded because
+// clang emits the directive into .drectve regardless, and GNU ld then warns that it cannot read it.
+#ifdef _MSC_VER
 #pragma comment(lib, "xinput9_1_0.lib")
+#endif
 
 #define WIN32_ERROR_SUCCESS          0
 #define XBOX_ERROR_DEVICE_NOT_CONNECTED 0x48F

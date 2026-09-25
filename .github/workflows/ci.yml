@@ -29,6 +29,11 @@ jobs:
       - name: Check the loader was linked correctly
         run: python tools/check_loader_image.py build/windows/Release/action.exe
 
+      # The same loader, linked the same way, carrying Driving.xbe. That XBE is the smaller of the two, so
+      # the default size check (the action engine's) is the stricter one and needs no argument.
+      - name: Check the driving loader was linked correctly
+        run: python tools/check_loader_image.py build/windows/Release/driving.exe
+
       - uses: actions/upload-artifact@v4
         with:
           name: nightfire-cxbx-Release
@@ -53,12 +58,54 @@ jobs:
       - name: Check the loader was linked correctly
         run: python3 tools/check_loader_image.py build/macos/action.exe
 
+      - name: Check the driving loader was linked correctly
+        run: python3 tools/check_loader_image.py build/macos/driving.exe
+
       - uses: actions/upload-artifact@v4
         with:
           name: nightfire-cxbx-macos-cross
           path: |
             build/macos/action.exe
+            build/macos/driving.exe
             build/macos/actioninject.dll
             build/macos/drivinginject.dll
             build/macos/action_cxbx.exe
             build/macos/driving_cxbx.exe
+
+  # The same cross build from Linux, with the distribution's mingw-w64 in place of Homebrew's. The toolchain
+  # file is shared with macOS and finds the /usr sysroot by itself.
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # g++-mingw-w64-i686 rather than just the headers and CRT: the build links libstdc++ and libgcc
+      # statically, and those come with the GCC cross compiler. It pulls in binutils-mingw-w64-i686 for
+      # i686-w64-mingw32-ld and -windres.
+      - name: Install the cross toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang g++-mingw-w64-i686 ninja-build
+
+      - name: Configure
+        run: cmake --preset linux
+
+      - name: Build
+        run: cmake --build --preset linux
+
+      - name: Check the loader was linked correctly
+        run: python3 tools/check_loader_image.py build/linux/action.exe
+
+      - name: Check the driving loader was linked correctly
+        run: python3 tools/check_loader_image.py build/linux/driving.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nightfire-cxbx-linux-cross
+          path: |
+            build/linux/action.exe
+            build/linux/driving.exe
+            build/linux/actioninject.dll
+            build/linux/drivinginject.dll
+            build/linux/action_cxbx.exe
+            build/linux/driving_cxbx.exe

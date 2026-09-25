@@ -71,8 +71,17 @@ cmake --preset macos
 cmake --build --preset macos
 ```
 
-Both produce the same 32-bit Windows binaries, in `build/windows/Release/` and `build/macos/`
-respectively, and both are built by CI. The cross build is a build only - see
+**On Linux**, the same, with clang and the distribution's i686 mingw-w64 packages:
+
+```
+sudo pacman -S clang mingw-w64-gcc ninja                 # Arch
+sudo apt install clang g++-mingw-w64-i686 ninja-build    # Debian/Ubuntu
+cmake --preset linux
+cmake --build --preset linux
+```
+
+All three produce the same 32-bit Windows binaries, in `build/windows/Release/`, `build/macos/` and
+`build/linux/` respectively, and all three are built by CI. The cross builds are a build only - see
 `docs/macOS-D3D9-setup.md` for running the result on macOS, and `docs/macos-build.md` for the one
 functional difference (no XAudio2 reverb) and why clang rather than mingw's GCC.
 
