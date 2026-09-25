@@ -28,29 +28,23 @@ void Scheduler::Run(int i) {
   // TODO: Handle cinematic mode
   // TODO: Frame skipping for performance
 
-  // Schedules are virtual - would need to use vtable to determine where the true Process function is. It's the second function in the vtable.
-  // Process is very basic - it just calls RunTasks, but with minor tweaks to run at half or quarter speed in the case of s_halfSimRate or s_quarterSimRate
-
-  // It looks like the structure is:
-  // 1. Run each of the simulation schedules by iterating the list. The list likely just consists of (s_SimRate, s_halfSimRate, s_quarterSimRate) though! (8 times)
+  // Schedules are virtual: Process, slot 1 of each schedule's vtable, decides which of its buckets a tick runs
+  // (see Schedule::Process). The original iterates listOfSchedules, which the Scheduler's constructor fills with
+  // exactly these three and nothing else adds to; the three are named here rather than walking the vector.
+  //
+  // The structure is:
+  // 1. Run each of the simulation schedules, for each of the 8 priorities
   // 2. Run the generated events
-  // 3. Run the per-frame schedules (8 times)
+  // 3. Run the per-frame schedule, for each of the 8 priorities
   // 4. Run the generated events
-
-  // Instead of re-implementing the list iteration and vtable lookup, we can simplify and just call RunTasks directly. Less flexible, but easier
 
   for(int i = 0; i < 8; i++) {
 
     int tickNum = this->lastTickCount;
-    
-    // Run SimRate
-    this->s_SimRate->RunTasks(0, i);
 
-    // Run halfSimRate
-    this->s_halfSimRate->RunTasks(tickNum & 1, i);
-
-    // Run quarterSimRate
-    this->s_quarterSimRate->RunTasks(tickNum & 3, i);
+    this->s_SimRate->Process(tickNum, i);
+    this->s_halfSimRate->Process(tickNum, i);
+    this->s_quarterSimRate->Process(tickNum, i);
   }
 
   // Debug teleport (F8/F9, or Teleport= in settings.ini): here because this is where the game's own
@@ -61,7 +55,7 @@ void Scheduler::Run(int i) {
 
   for(int i = 0; i < 8; i++) {
     // Run per-frame schedules
-    this->s_oncePerGameLoop->RunTasks(0, i);
+    this->s_oncePerGameLoop->Process(this->lastTickCount, i);
   }
   
   EventManager__RunEvents();

@@ -53,4 +53,13 @@ template <class F> inline F XbeOriginal(size_t address) {
     return f;
 }
 
+// A virtual method of the game's, as a pointer of type F: slot `slot` of the vtable `object` points at. Overlay
+// classes declare no `virtual` - their vtable is the game's, held in their first word - so a call to an override
+// has to read that vtable as the compiler would have. The generated body of a // VIRTUAL(n) declaration is
+// (this->*XbeVirtual<F>(this, n))(args...), with F the declaration's own member-function-pointer type.
+template <class F, class T> inline F XbeVirtual(const T *object, int slot) {
+    const size_t *vtable = *(const size_t *const *)object;
+    return XbeOriginal<F>(vtable[slot]);
+}
+
 #endif // COMMON_XBEOVERLOAD_H_

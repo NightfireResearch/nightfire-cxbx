@@ -13,7 +13,8 @@
 //     uses (Ghidra's structure, or the offsets in the disassembly).
 //   - No `virtual` keyword. A class with a vtable declares `void **vtable;` as its first member; the compiler
 //     must never add a vtable pointer of its own. A virtual method is replaced by patching the function the
-//     vtable points at, like any other.
+//     vtable points at, like any other, and called - reaching the object's own override - by declaring it
+//     with // VIRTUAL(n), n its vtable slot (see Event::DeletingDestructor, Schedule::Process).
 //   - Never constructed by our code. Instances are the game's, and `this` is reinterpreted; objects are made by
 //     calling the game's own constructors.
 //   - Everything public. Single, public, non-virtual inheritance only, and only where Ghidra's structure says

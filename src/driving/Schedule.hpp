@@ -13,4 +13,11 @@ struct Schedule {
     // Runs the tasks in one bucket whose spacing matches `priority` (0x0005bce0).
     // AUTOGEN
     void RunTasks(int bucket, unsigned short priority);
+
+    // Slot 1: runs this schedule's tasks for a tick. Every schedule is a Schedule with a subclass's vtable, and
+    // the subclass decides which bucket a tick runs: every tick for the once-per-loop and sim-rate schedules
+    // (0x0005bd70), tick & 1 for the half rate (0x0005bd80), tick & 3 for the quarter rate (0x0005bd90). The base
+    // Schedule's slot is pure virtual. Called through the schedule's own vtable.
+    // VIRTUAL(1)
+    void Process(int tick, unsigned short priority);
 };

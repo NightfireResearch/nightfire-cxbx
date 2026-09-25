@@ -238,16 +238,89 @@ def gather_declaration_tags(tag_name, side):
     return found
 
 
+def class_vtables(vtables, cls, seen=None):
+    # Every vtable an object of `cls` can have: its own, and those of every class derived from it, transitively
+    # (tools/vtables.py says how each is found).
+    seen = seen if seen is not None else set()
+    if cls in seen or cls not in vtables["classes"]:
+        return set()
+    seen.add(cls)
+    entry = vtables["classes"][cls]
+    found = set(entry["own"]) | set(entry["derived_vtables"])
+    for sub in entry["derived_classes"]:
+        found |= class_vtables(vtables, sub, seen)
+    return found
+
+
+def virtual_body(where, path, cls, is_member, short_name, qualified, bare_return, convention, types, slot,
+                 vtables, abi, function_names, side, includes):
+    # // VIRTUAL(n): a method called through the object's own vtable, slot n, so that it reaches the override of
+    # whatever class the object really is. Checked against every implementation that can be in that slot: the
+    # slot in each vtable of the class and of the classes derived from it (tools/vtables_<side>.json), one ABI
+    # check per distinct convention found. Pure-virtual stubs are skipped - they are never called.
+    assert is_member, f"{where}: VIRTUAL declares a non-static method of an overlay class"
+    assert path.endswith(('.h', '.hpp')), f"{where}: a class's VIRTUAL declarations belong in its header"
+    assert slot is not None and slot.isdigit(), f"{where}: VIRTUAL wants its vtable slot, as VIRTUAL(1)"
+    include = os.path.relpath(path, f"src/{side}").replace("\\", "/")
+    if include not in includes:
+        includes.append(include)
+    slot = int(slot)
+    overload = f"XbeOverload<{bare_return}({', '.join(types)})>::Of(&{qualified})"
+    checks = []
+    if vtables is None:
+        print(f"  warning: {where}: tools/vtables_{side}.json not found - VIRTUAL({slot}) {qualified} unchecked "
+              f"(run tools/vtables.py)")
+    else:
+        impls = {}
+        for vt in sorted(class_vtables(vtables, cls)):
+            entries = vtables["vtables"].get(vt, [])
+            if slot >= len(entries):
+                print(f"  warning: {where}: vtable {vt} of {cls} or a class derived from it has only "
+                      f"{len(entries)} slots; VIRTUAL({slot}) cannot be right for it")
+                continue
+            name = function_names.get(entries[slot], "")
+            if "pure_virtual" in name or "purecall" in name:
+                continue
+            impls[entries[slot]] = name
+        if not impls:
+            print(f"  warning: {where}: no implementations of {cls}'s slot {slot} found - VIRTUAL({slot}) "
+                  f"{qualified} unchecked")
+        by_facts = {}
+        for address, name in sorted(impls.items()):
+            facts = abi.get(address) if abi else None
+            key = json.dumps(facts and {k: facts[k] for k in ("pops", "regs_in")}, sort_keys=True)
+            by_facts.setdefault(key, []).append((address, name))
+        for group in by_facts.values():
+            address, name = group[0]
+            what = (f"{qualified} (VIRTUAL({slot})) against {name or address}"
+                    + (f" and {len(group) - 1} other overrides of the same convention" if len(group) > 1 else ""))
+            check = abi_check(abi, address, what, overload)
+            if check:
+                checks.append(check)
+    pointer_type = f"decltype({overload})"
+    params = ", ".join(f"{t} a{i}" for i, t in enumerate(types))
+    args = ", ".join(f"a{i}" for i in range(len(types)))
+    return (f"// {where} - slot {slot} of the object's vtable\n"
+            f"{bare_return} {convention + ' ' if convention else ''}{qualified}({params}) {{\n"
+            + "".join(f"    {c}\n" for c in checks)
+            + f"    return (this->*XbeVirtual<{pointer_type}>(this, {slot}))({args});\n}}\n")
+
+
 def generate_declared_funcs(side, ghidra_funcs):
     # AUTOGEN from our declaration rather than Ghidra's types (docs/driving-injection-framework.md, section 5).
     # The author writes the declaration - in its class, for a method - and this generates only the body, which
     # calls the original at its address through a pointer of the declaration's own type: a member-function
     # pointer through `this` for a method, a plain one otherwise. The ABI check of step 2 goes in the body.
     abi = load_abi_facts(side)
+    vtables_path = f"tools/vtables_{side}.json"
+    vtables = json.load(open(vtables_path, 'r')) if os.path.exists(vtables_path) else None
+    function_names = {x['address'].lower(): x['name'] for x in ghidra_funcs}
     includes, bodies, names = [], [], []
-    for path, line_number, declaration, enclosing, address in gather_declaration_tags("AUTOGEN", side):
+    tagged = [("AUTOGEN",) + t for t in gather_declaration_tags("AUTOGEN", side)]
+    tagged += [("VIRTUAL",) + t for t in gather_declaration_tags("VIRTUAL", side)]
+    for tag, path, line_number, declaration, enclosing, address in tagged:
         where = f"{path}:{line_number}".replace("\\", "/")
-        assert declaration.endswith(";"), f"{where}: AUTOGEN wants a one-line declaration ending in ';'"
+        assert declaration.endswith(";"), f"{where}: {tag} wants a one-line declaration ending in ';'"
         chunks = [x for x in declaration.split(" ") if "(" in x]
         assert chunks, f"{where}: could not find the function name in '{declaration}'"
         short_name = chunks[-1].split("(")[0].lstrip("*&")
@@ -260,6 +333,12 @@ def generate_declared_funcs(side, ghidra_funcs):
 
         convention = next((c for c in CONVENTIONS if re.search(rf'\b{c}\b', return_type)), "")
         bare_return = re.sub(r'\b(' + "|".join(CONVENTIONS) + r')\b', '', return_type).strip()
+
+        if tag == "VIRTUAL":
+            bodies.append(virtual_body(where, path, enclosing, is_member, short_name, qualified, bare_return,
+                                       convention, types, address, vtables, abi, function_names, side, includes))
+            names.append(qualified)
+            continue
 
         if address is None:
             address = match_tag("AUTOGEN", qualified, signature, ghidra_funcs)['address']
@@ -287,7 +366,8 @@ def generate_declared_funcs(side, ghidra_funcs):
         names.append(qualified)
 
     output = "// This file is autogenerated by tools/preprocess.py. Do not modify.\n"
-    output += "// Bodies for the functions declared with // AUTOGEN: each calls the original at its address.\n\n"
+    output += ("// Bodies for the functions declared with // AUTOGEN - each calls the original at its address - and\n"
+               "// // VIRTUAL(n) - each calls slot n of the object's own vtable.\n\n")
     output += f"#include \"{side}helpers.h\"\n#include \"../common/xbeAbi.h\"\n#include \"../common/xbeOverload.h\"\n"
     output += "".join(f"#include \"{inc}\"\n" for inc in includes) + "\n"
     output += "\n".join(bodies)

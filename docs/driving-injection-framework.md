@@ -465,3 +465,41 @@ RAutonomousObj>)`. Removing the base from the declaration, or giving `RSceneObj`
 with the reason. In game, a temporary probe showed the replacement `Hide` running on visible scene objects
 during a drive through the underwater level, which ran normally; `Show` was not reached in that run, and is
 its one-instruction mirror image.
+
+## VIRTUAL(n)
+
+Overlay classes have no `virtual`: their vtable is the game's, held as an ordinary field, so the compiler never
+lays one out. Replacing a virtual method needs nothing new - it is patching the function a vtable points at. Calling
+one from our code does: to reach the override of whatever class an object really is, the call has to read the
+object's vtable and take the slot, as the compiler would (25 September 2026).
+
+**Where it is needed.** Only where our code calls a virtual method and the concrete class varies at run time. The
+event manager is the unavoidable case: every event in the buffer is one of some 185 event classes, and running one
+is calling slot 0 of its vtable, MSVC's scalar deleting destructor, with 1 - `EventManager.cpp` did this by hand
+through a `vtable_Event` struct of its own. `Scheduler::Run` was the avoidable one: the original calls `Process`,
+slot 1, on each schedule, and our replacement had inlined the three overrides by hand (`RunTasks(0 / tick & 1 /
+tick & 3, ...)`), correct only because the scheduler's constructor is the one thing that ever fills its list.
+
+**How.** A declaration in the overlay class tagged `// VIRTUAL(n)` gets a generated body that calls slot `n` of the
+object's vtable, with the declaration's own type: `(this->*XbeVirtual<...>(this, n))(args)` (`XbeVirtual` is in
+`src/common/xbeOverload.h`). It is checked against every implementation that can be in that slot. Those come from
+`tools/vtables.py`, which reads the binary for 406 vtables and, for 87 classes, which are theirs: a constructor
+`C::C` storing its own; a call to a base constructor followed by another vtable store (a derived class with its
+constructor inlined - the scheduler's four schedules); a call to `B::operator_new` followed by a vtable store or a
+derived constructor (every event, since all are allocated from the event buffer); and one vtable stored over
+another at the same address. `tools/vtables_driving.json` is committed; re-run it after re-syncing, as with
+`abi_facts.py`. The generator emits one `XBE_ABI_CHECK` per distinct convention among the implementations, skips
+pure-virtual stubs (the base `Schedule`'s slot 1 is `__pure_virtual`), and warns when a vtable is too short for the
+slot or none is known for the class.
+
+**Used for.** `Event::DeletingDestructor(unsigned int flags)`, `VIRTUAL(0)`, in `src/driving/EventManager.hpp` - with
+`Event` now an overlay class - checked against all 176 distinct destructors in the 185 event vtables (one
+convention: 4 bytes popped, `this` in `ECX`); the event manager calls it for every event. And
+`Schedule::Process(int tick, unsigned short priority)`, `VIRTUAL(1)`, checked against the three real overrides
+(8 bytes popped); `Scheduler::Run` calls it on each schedule instead of choosing the tick masks itself.
+
+**Checked.** It builds with every check passing; declaring `Process` as `VIRTUAL(0)` fails the build ("the original
+pops 4 bytes"), naming the slot and the implementation it disagrees with. In game, the underwater level runs at 50
+fps with the mission's objectives advancing - they are driven by events, so every one of them now runs through the
+generated `VIRTUAL(0)` call. The timekeeping `Scheduler::Run` still omits (`timeScale`, the 12-tick guard, cinematic
+skipping) is a separate piece of work.
