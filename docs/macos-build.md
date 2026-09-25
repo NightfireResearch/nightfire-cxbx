@@ -32,6 +32,18 @@ To use a mingw-w64 that did not come from Homebrew, point the toolchain file at 
 cmake --preset macos -DNF_MINGW_ROOT=/path/to/sysroot
 ```
 
+### On Linux
+
+The `linux` preset uses this same toolchain file; everything else in this document applies unchanged.
+
+The distribution packages (Arch `mingw-w64-gcc`, Debian/Ubuntu `g++-mingw-w64-i686`) put the sysroot under
+`/usr`, which the toolchain finds when Homebrew is absent. With a `/usr` sysroot it leaves out
+`-B${NF_MINGW_ROOT}/bin`, which would otherwise hand clang the host's own `/usr/bin/ld` instead of
+`i686-w64-mingw32-ld`.
+
+Arch's host `ld` happens to write PE files too, so that mistake links there and fails elsewhere. Output 
+lands in `build/linux/`.
+
 ## clang, not mingw-w64's GCC
 
 This matters more than it sounds, and it is why `cmake/mingw-w64-i686.cmake` - a sample GCC toolchain file

@@ -10,7 +10,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+// MSVC acts on this; other linkers get the library from the CMake target instead. Guarded because
+// clang emits the directive into .drectve regardless, and GNU ld then warns that it cannot read it.
+#ifdef _MSC_VER
 #pragma comment(lib, "xaudio2.lib")
+#endif
 
 // See the header for the shape of this. The numbers that matter:
 //
