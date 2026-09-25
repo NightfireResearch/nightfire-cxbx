@@ -132,7 +132,7 @@ Everything lands in `Release/`. `tools/preprocess.py` runs as a pre-build step a
 | `tools/xadpcm_test.ps1` | Checks the Xbox ADPCM decoder offline. |
 | `tools/check_loader_image.ps1` | Verifies `action.exe` was linked at the XBE's base, big enough, with ASLR off. Run by CI, because losing any of those link options fails at runtime rather than at build time. |
 | `tools/preprocess.py` | Generates the injection table from the source tags. |
-| `ghidra/NightfireSync.py` | Exports names and signatures from Ghidra into `tools/functions_*.json`. |
+| `ghidra/NightfireSync.py` | Exports names and signatures from Ghidra into `tools/functions_*.json`, and every structure's layout into `tools/structs_*.json` (which the driving engine's overlay classes take their fields from). |
 
 ## Ghidra
 

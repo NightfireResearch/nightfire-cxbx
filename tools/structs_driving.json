@@ -1,0 +1,107 @@
+[
+ {
+  "name": "Schedule",
+  "category": "/",
+  "size": 44,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "vtable",
+    "type": "vtable_Schedule *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "next",
+    "type": "undefined4 *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 32,
+    "name": "listOfTasks",
+    "type": "TaskRecord_LListEntry *[8]",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "numTasks",
+    "type": "undefined4",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "Scheduler",
+  "category": "/",
+  "size": 36,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "s_oncePerGameLoop",
+    "type": "Schedule *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "s_SimRate",
+    "type": "Schedule *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "s_halfSimRate",
+    "type": "Schedule *",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "s_quarterSimRate",
+    "type": "Schedule *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "listOfSchedules",
+    "type": "Vector_Schedule *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "lastTickCount",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "maybeElapsedTime",
+    "type": "undefined4",
+    "bitfield": false
+   },
+   {
+    "offset": 29,
+    "size": 1,
+    "name": "cinematicModeSkipping",
+    "type": "undefined1",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "timeScale",
+    "type": "float",
+    "bitfield": false
+   }
+  ]
+ }
+]
