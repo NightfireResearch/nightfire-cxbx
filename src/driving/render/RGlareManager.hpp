@@ -34,7 +34,19 @@ public:
     // camera (0x000a9aa0).
     void AddModelGlare(Glare *node, MATRIX4 *transform, float distance);
 
-    // Draws every queued glare as two camera-facing quads and empties the queue (0x000aa5d0).
-    // AUTOGEN
-    void DrawGlares(bool twoD);
+    // Draws every queued glare - a halo quad and a spike quad each - and empties the queue (0x000aa5d0). In the
+    // world (inWorld, from DrawEffects: the glares on lights and models) the quads face the camera and are depth
+    // tested; otherwise (from DrawFlares: the lens flares) the glares' positions are screen positions and the
+    // quads are drawn with the depth test off.
+    void DrawGlares(bool inWorld);
 };
+
+// The quad builders DrawGlares calls for each of a glare's two sprites: each appends one quad - four vertices -
+// to the glare vertex arrays and advances *count. In the world, a camera-facing quad `size` across, pulled
+// towards the camera by size * zBias so it is not lost inside the lamp it sits on (0x000a9ee0); on the screen, a
+// quad 600 * size across at the glare's x and y (0x000aa2a0). Both spin the sprite by an angle that grows with
+// its distance from the camera.
+void __stdcall AddGlareToRender(int *count, const Glare *glare, const GlareSprite *sprite, float size,
+                                uint32_t colour, float distance, float zBias);
+void __stdcall Add2DGlareToRender(int *count, const Glare *glare, const GlareSprite *sprite, float size,
+                                  uint32_t colour, float distance);
