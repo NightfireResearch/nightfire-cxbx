@@ -702,6 +702,1122 @@
    "ps2": "0x0013e398",
    "verdict": "address",
    "why": "body review: FastAlloc(size, \"AIVehicle\")."
+  },
+  {
+   "row": 949,
+   "ps2": "0x0013e3b8",
+   "verdict": "address",
+   "why": "body review: Body is FastFree(p,size) directly after AIVehicle::operator new; unreferenced like other class deletes."
+  },
+  {
+   "row": 1168,
+   "ps2": "0x00145d00",
+   "verdict": "address",
+   "why": "body review: Takes (Instance*, AIElement*): scene object from instance else spline path from AI element or player vehicle; called from EPath* event code."
+  },
+  {
+   "row": 2055,
+   "ps2": "0x001651a0",
+   "verdict": "address",
+   "why": "body review: ConvertStringToNumber on the action-name table with default 0x75; called from LoadParseDefFile; AUF getActionID maps strings to action IDs."
+  },
+  {
+   "row": 2126,
+   "ps2": "0x00167c48",
+   "verdict": "address",
+   "why": "body review: Sets float& to 0 when strictly between the two float bounds; called by PollDevice."
+  },
+  {
+   "row": 2147,
+   "ps2": "0x00168678",
+   "verdict": "address",
+   "why": "body review: Iterates an input device's scalars against an InputToAction map, testing transitions and feeding ActionQueueManager; called from UpdateAllDevices."
+  },
+  {
+   "row": 2225,
+   "ps2": "0x0016e868",
+   "verdict": "address",
+   "why": "body review: Extension-type map lookup returning node[6], which RegisterExtensionType fills from its unsigned size argument; caller ComputeBytes."
+  },
+  {
+   "row": 2226,
+   "ps2": "0x0016e950",
+   "verdict": "address",
+   "why": "body review: Same lookup returning node[9], filled from RegisterExtensionType's first char* ('smackable' = class)."
+  },
+  {
+   "row": 2227,
+   "ps2": "0x0016ea38",
+   "verdict": "address",
+   "why": "body review: Same lookup returning node[8], filled from RegisterExtensionType's second char* ('PhysicsData' = type name)."
+  },
+  {
+   "row": 2228,
+   "ps2": "0x0016eb20",
+   "verdict": "address",
+   "why": "body review: Looks up the extension type and calls its stored init function pointer with the type's fields and the passed args; callers CreateExtensionAttribute/AddStruct."
+  },
+  {
+   "row": 2235,
+   "ps2": "0x0016ec90",
+   "verdict": "address",
+   "why": "body review: Empty stub (8 bytes, last of three consecutive jr-ra stubs) called after every Float field registration with the extension class; float overload stubbed in retail."
+  },
+  {
+   "row": 2246,
+   "ps2": "0x0016f890",
+   "verdict": "address",
+   "why": "body review: Copy-constructs a pair: copies CStringPairKey, builds an empty STL tree header (FastAlloc 0x1c 'STL'), copies remaining collection fields; called twice from the _Rb_tree insert."
+  },
+  {
+   "row": 2284,
+   "ps2": "0x00173260",
+   "verdict": "address",
+   "why": "body review: SGI _Rb_tree _M_insert shape (x,y,v; FastAlloc node 0x2c 'STL', strcasecmp key compare, rebalance); called from the insert_unique below."
+  },
+  {
+   "row": 2285,
+   "ps2": "0x00173628",
+   "verdict": "address",
+   "why": "body review: Descends with strcasecmp, checks predecessor, calls the _M_insert above; the insert_unique shape."
+  },
+  {
+   "row": 2478,
+   "ps2": "0x0017f288",
+   "verdict": "address",
+   "why": "body review: Sets the +0x6d4 flag that CheckTimer/CheckForProximity set to trigger the explosion in Grenade::Simulate."
+  },
+  {
+   "row": 2501,
+   "ps2": "0x00180620",
+   "verdict": "address",
+   "why": "body review: Decrements the mine timer and on expiry spawns an explosion and deletes the mine; called from Mine::Simulate."
+  },
+  {
+   "row": 2526,
+   "ps2": "0x00183b48",
+   "verdict": "address",
+   "why": "body review: Returns the address of a static COORD3 (the one the global ctor keyed to Missile::fUserMissileLaunchPos initialises)."
+  },
+  {
+   "row": 2532,
+   "ps2": "0x001847e8",
+   "verdict": "address",
+   "why": "body review: Same shape as AUF Newton::SpawnFromEvent (instance fallback, flag 0x10 path, Hide, SpawnNewtonObject); callers ESpawn* events."
+  },
+  {
+   "row": 2535,
+   "ps2": "0x00185280",
+   "verdict": "address",
+   "why": "body review: UMemory::Free(p), matching Newton::operator new which uses UMemory::Alloc rather than FastAlloc."
+  },
+  {
+   "row": 2667,
+   "ps2": "0x001942e8",
+   "verdict": "address",
+   "why": "body review: Matches AUF PHelicopter::Simulate (ForceVehicleToSleep, GetControllerInput, forward-vector steering); referenced from the vtable."
+  },
+  {
+   "row": 2669,
+   "ps2": "0x00194b50",
+   "verdict": "address",
+   "why": "body review: FastAlloc(size, 'PHelicopter')."
+  },
+  {
+   "row": 2670,
+   "ps2": "0x00194b70",
+   "verdict": "address",
+   "why": "body review: FastFree(p, size) right after PHelicopter::operator new."
+  },
+  {
+   "row": 2672,
+   "ps2": "0x00194b98",
+   "verdict": "address",
+   "why": "body review: Copies a COORD3 argument to this+0x7c; first of two consecutive COORD3 setters (+0x7c then +0x88), matching sheet order SetTargetPos, SetDestPos."
+  },
+  {
+   "row": 2673,
+   "ps2": "0x00194bd8",
+   "verdict": "address",
+   "why": "body review: corrected from 0x194cb0 (a static-ctor stub); 0x194bd8 copies a COORD3 to this+0x88, the second consecutive COORD3 setter after SetTargetPos."
+  },
+  {
+   "row": 2731,
+   "ps2": "0x00195f80",
+   "verdict": "address",
+   "why": "body review: FastAlloc(size, 'PhysicsObject')."
+  },
+  {
+   "row": 2732,
+   "ps2": "0x00195fa0",
+   "verdict": "address",
+   "why": "body review: FastFree(p, size) right after PhysicsObject::operator new."
+  },
+  {
+   "row": 2757,
+   "ps2": "0x00196330",
+   "verdict": "address",
+   "why": "body review: corrected from 0x196350 (a static pvehicle-name-table builder called by PVehicle::GetName*); 0x196330 is in the ctors table and calls the init helper with (1,0xffff) after PTank's functions."
+  },
+  {
+   "row": 2794,
+   "ps2": "0x001998c0",
+   "verdict": "address",
+   "why": "body review: Matches AUF RayShell::CollideWithObjects (ordered-body loop, IsOwnedBy, GetRadius/GetPosition, OBB tests, ConsiderVictim)."
+  },
+  {
+   "row": 2796,
+   "ps2": "0x0019a3e0",
+   "verdict": "address",
+   "why": "body review: Matches AUF RayShell::Fire: switch on shell state, tracer store in state 0, damage via signature lookup, writes float& out."
+  },
+  {
+   "row": 2801,
+   "ps2": "0x0019abb8",
+   "verdict": "address",
+   "why": "body review: Adds (SimObjSig, COORD3) to a static flash array capped at 8, skipping duplicates and the player; called from the RayShell fire and collision paths."
+  },
+  {
+   "row": 2819,
+   "ps2": "0x0019c908",
+   "verdict": "address",
+   "why": "body review: Matches AUF Sentry::DrawMuzzleFlashes: draws each flash, decays intensity x0.33, removes it below 0.1 by swapping with the last."
+  },
+  {
+   "row": 2829,
+   "ps2": "0x0019ddb8",
+   "verdict": "address",
+   "why": "body review: Takes damage float, position and decal type: ScorchWorld plus anim stimuli at damage thresholds 10/50/250/500; called from shell/missile collision."
+  },
+  {
+   "row": 2835,
+   "ps2": "0x0019e0b8",
+   "verdict": "address",
+   "why": "body review: corrected from 0x19e0d8; 0x19e0b8 is in the ctors table and calls the Shell static-init helper 0x19dfe0 with (1,0xffff). NOTE: Ghidra currently names it Shell::operator_delete (batch P004), which is wrong."
+  },
+  {
+   "row": 2857,
+   "ps2": "0x0019f8f0",
+   "verdict": "address",
+   "why": "body review: corrected from 0x19f850 (a static prim helper); code at 0x19f8f0 (no Ghidra function yet) fills a colour array n times with the Colour arg then draws n line verts via 0x19f850."
+  },
+  {
+   "row": 2880,
+   "ps2": "0x001a1628",
+   "verdict": "address",
+   "why": "body review: Matches AUF Draw::DrawBatchedSprite: flushes the batch on texture change or full buffer via USimpleTexturedMaterial::Draw, then appends a sprite."
+  },
+  {
+   "row": 2884,
+   "ps2": "0x001a1a10",
+   "verdict": "address",
+   "why": "body review: corrected from 0x1a1bc8 (a flag predicate); 0x1a1a10 matches AUF RAnimEngine::Update exactly (time*invFreq*60, System::Update over active systems). NOTE: Ghidra currently names it RAnimEngine::Init, which is wrong."
+  },
+  {
+   "row": 2918,
+   "ps2": "0x001a30c0",
+   "verdict": "address",
+   "why": "body review: Matches AUF RAnimEngine::EvaluateInstance (keyframe index, qslerp, quattom4, translation lerp)."
+  },
+  {
+   "row": 2939,
+   "ps2": "0x001a4318",
+   "verdict": "address",
+   "why": "body review: Binary search over 16-byte AnimInfo elements comparing bytes +0xc/+0xd; the lower_bound shape."
+  },
+  {
+   "row": 2953,
+   "ps2": "0x001a4670",
+   "verdict": "address",
+   "why": "body review: Calls CreateMatrix4Inv then returns this+0x60."
+  },
+  {
+   "row": 2981,
+   "ps2": "0x001a74b8",
+   "verdict": "address",
+   "why": "body review: Builds a matrix from the input matrix's forward row via GenerateMatrix4 (0x1a7558) then multiplies the matrices, after VU0_InvTransformByForwardVec."
+  },
+  {
+   "row": 2987,
+   "ps2": "0x001a77b0",
+   "verdict": "address",
+   "why": "body review: Matches AUF FindAngleBetweenVectors: dot product, clamped acos helper, cross product sign test."
+  },
+  {
+   "row": 2988,
+   "ps2": "0x001a7948",
+   "verdict": "address",
+   "why": "body review: In the ctors table and calls the init helper with (1,0xffff), directly after RCameraMath's functions."
+  },
+  {
+   "row": 3050,
+   "ps2": "0x001ab050",
+   "verdict": "address",
+   "why": "body review: corrected from 0x1ab220 (an _Rb_tree _M_erase); 0x1ab050 push_backs the element onto the vector at this+0, exactly like AUF AddToTranslucentList, right after AddToList."
+  },
+  {
+   "row": 3135,
+   "ps2": "0x001aee60",
+   "verdict": "address",
+   "why": "body review: Zeroes the light counts and MEM_fills the light blocks."
+  },
+  {
+   "row": 3146,
+   "ps2": "0x001af638",
+   "verdict": "address",
+   "why": "body review: corrected from 0x1af708 (a dynamic-light flicker intensity function); 0x1af638 counts positional lights within radius+10 of the COORD4, returning 1 when forced; called from SendPerCarInstance."
+  },
+  {
+   "row": 3151,
+   "ps2": "0x001afd50",
+   "verdict": "address",
+   "why": "body review: Matches AUF RHighLevelLightManager::Process (AddPositionalLight loop, then explosion lights fading over time)."
+  },
+  {
+   "row": 3152,
+   "ps2": "0x001affd0",
+   "verdict": "address",
+   "why": "body review: corrected from 0x1b0038 (a light-block builder); 0x1affd0 stores the bool at +0x70 and saves/zeroes or restores the positional light block."
+  },
+  {
+   "row": 3154,
+   "ps2": "0x001b0158",
+   "verdict": "address",
+   "why": "body review: Rebuilds the 4 light blocks via 0x1b0038 from stored angles and resets default directions; called from the RLightManager ctor."
+  },
+  {
+   "row": 3183,
+   "ps2": "0x001b0cb8",
+   "verdict": "address",
+   "why": "body review: Lock, TextureRenderContext::BeginFrame, BeginView, ClearViewPort; called from MakeCopy/MakeTexCopy."
+  },
+  {
+   "row": 3185,
+   "ps2": "0x001b0f28",
+   "verdict": "address",
+   "why": "body review: corrected from 0x1b0ef0 (the static-init helper itself); 0x1b0f28 is in the ctors table and calls it with (1,0xffff)."
+  },
+  {
+   "row": 3198,
+   "ps2": "0x001b1860",
+   "verdict": "address",
+   "why": "body review: Setter for +0xbc; field order throttle<accel<desired matches AUF (+0x30,+0x32,+0x34); called from EPathSetThrottle*."
+  },
+  {
+   "row": 3199,
+   "ps2": "0x001b1868",
+   "verdict": "address",
+   "why": "body review: Setter for +0xc4, the third field in AUF order (desired throttle +0x34); called from EPathChange/MultiplyThrottle."
+  },
+  {
+   "row": 3200,
+   "ps2": "0x001b1870",
+   "verdict": "address",
+   "why": "body review: Setter for +0xc0, the middle field in AUF order (acceleration +0x32)."
+  },
+  {
+   "row": 3201,
+   "ps2": "0x001b1878",
+   "verdict": "address",
+   "why": "body review: Stores the unsigned delay at +0xc8, after the throttle/accel fields; AUF stores it converted at the next field."
+  },
+  {
+   "row": 3204,
+   "ps2": "0x001b18a8",
+   "verdict": "address",
+   "why": "body review: Copies a 4x4 matrix from the handle into the MATRIX4& argument; callers are spline-path movement code."
+  },
+  {
+   "row": 3212,
+   "ps2": "0x001b1f68",
+   "verdict": "address",
+   "why": "body review: Advances the static path-handle iterator and returns the handle or 0 at list end, like AUF GetNextPathHandle."
+  },
+  {
+   "row": 3217,
+   "ps2": "0x001b2058",
+   "verdict": "address",
+   "why": "body review: corrected from 0x1b21f0 (an _Rb_tree _M_erase); 0x1b2058 calls RPathHandle::Update(float) for every handle in the list, like AUF RPathEngine::Update."
+  },
+  {
+   "row": 3219,
+   "ps2": "0x001b20c8",
+   "verdict": "address",
+   "why": "body review: corrected from 0x1b2258 (an _Rb_tree _M_erase); 0x1b20c8 walks the path list returning the handle whose instance matches, like AUF GetPathHandle."
+  },
+  {
+   "row": 3249,
+   "ps2": "0x001b8ae0",
+   "verdict": "address",
+   "why": "body review: Loops physics objects skipping own, GetRigidBody, calls ellipse-adjust helper; same shape as AUF."
+  },
+  {
+   "row": 3250,
+   "ps2": "0x001b8d08",
+   "verdict": "address",
+   "why": "body review: Only callee of CheckObjectCollisions; rigidbody-null branch and kCameraObjectRadiusEx scaling as in AUF."
+  },
+  {
+   "row": 3284,
+   "ps2": "0x001bbf70",
+   "verdict": "address",
+   "why": "body review: Bool flag/mode-table test called from every Update*Cam function, sits between RestartCamera and SetCameraLookBack."
+  },
+  {
+   "row": 3287,
+   "ps2": "0x001bc0e0",
+   "verdict": "address",
+   "why": "body review: corrected from 0x001bc1e8: 0x1bc0e0 takes (float,this) and returns scaled rotation, called by SetAutoDriveRotationX/Y; 0x1bc1e8 is a (float*,float*) clamp helper (sizes sum to sheet 0x2b0)."
+  },
+  {
+   "row": 3308,
+   "ps2": "0x001bd198",
+   "verdict": "address",
+   "why": "body review: Stores bool arg into control struct (+0x354)->0x10; called from EControlToCPU/EControlToPlayer event handlers."
+  },
+  {
+   "row": 3312,
+   "ps2": "0x001bd2b8",
+   "verdict": "address",
+   "why": "body review: Clears cinematic flag, clears director queue list, zeroes two control fields - matches AUF."
+  },
+  {
+   "row": 3313,
+   "ps2": "0x001bd2f8",
+   "verdict": "address",
+   "why": "body review: Null-checked read of control struct field, matches AUF CameraAiming."
+  },
+  {
+   "row": 3319,
+   "ps2": "0x001bd4b8",
+   "verdict": "address",
+   "why": "body review: Returns RCameraIniLoader::kMaxTumble, identical to AUF."
+  },
+  {
+   "row": 3321,
+   "ps2": "0x001bd878",
+   "verdict": "address",
+   "why": "body review: FastAlloc(size,\"RPlayerCamera\")."
+  },
+  {
+   "row": 3322,
+   "ps2": "0x001bd898",
+   "verdict": "address",
+   "why": "body review: FastFree(p,size) directly after RPlayerCamera operator new."
+  },
+  {
+   "row": 3342,
+   "ps2": "0x001bda78",
+   "verdict": "address",
+   "why": "body review: corrected from 0x001bd898 (operator delete): 0x1bda78 is the ctors-table stub calling helper(1,0xffff)."
+  },
+  {
+   "row": 3353,
+   "ps2": "0x001be8b8",
+   "verdict": "address",
+   "why": "body review: corrected from 0x001bea00 (atan2f wrapper): 0x1be8b8 is the ctors-table stub calling helper(1,0xffff) after RPlayerCamState code."
+  },
+  {
+   "row": 3357,
+   "ps2": "0x001beba0",
+   "verdict": "address",
+   "why": "body review: RefreshLODMultiplier then Setup2dFrustrum with far-plane scaling, same shape as AUF ConfigureView; vtable ref."
+  },
+  {
+   "row": 3367,
+   "ps2": "0x001bf000",
+   "verdict": "address",
+   "why": "body review: Stores float into a global and calls SetProcAnimParamList(&it,1)."
+  },
+  {
+   "row": 3368,
+   "ps2": "0x001bf028",
+   "verdict": "address",
+   "why": "body review: Calls SetProcAnimXFormList(matrix,1), paired with SetFEAnimation."
+  },
+  {
+   "row": 3369,
+   "ps2": "0x001c0898",
+   "verdict": "address",
+   "why": "body review: Ctors-table stub calling helper(1,0xffff) before RRandom."
+  },
+  {
+   "row": 3370,
+   "ps2": "0x001c08b8",
+   "verdict": "address",
+   "why": "body review: Empty, called from Render_KillLibRender; AUF CleanUp is empty too."
+  },
+  {
+   "row": 3384,
+   "ps2": "0x001c18b0",
+   "verdict": "address",
+   "why": "body review: Locks two TARs, SetupFrameBuffers, clears 256x256 target; called from Begin."
+  },
+  {
+   "row": 3406,
+   "ps2": "0x001c28b0",
+   "verdict": "address",
+   "why": "body review: Empty stub called from PreRender with a bool arg (a1=0), in order after GetReflectionMatrix."
+  },
+  {
+   "row": 3413,
+   "ps2": "0x001c2b60",
+   "verdict": "address",
+   "why": "body review: Ctors-table stub calling helper(1,0xffff) after RReflection::DoRender."
+  },
+  {
+   "row": 3422,
+   "ps2": "0x001c2fa0",
+   "verdict": "address",
+   "why": "body review: Called from RRenderDebugViewScreenSpace::Debug; SetRenderMask/SetAlphaCorrection/DrawQuad full-screen quad."
+  },
+  {
+   "row": 3423,
+   "ps2": "0x001c3138",
+   "verdict": "address",
+   "why": "body review: Walks world article textures setting mipmap mode (0/2/4), filter mode and further int bitfields from its 5 args."
+  },
+  {
+   "row": 3432,
+   "ps2": "0x001c3908",
+   "verdict": "address",
+   "why": "body review: Ctors-table stub calling helper(1,0xffff) before RRenderHigh."
+  },
+  {
+   "row": 3459,
+   "ps2": "0x001c5100",
+   "verdict": "address",
+   "why": "body review: FastFree(p,size) right after RRenderHUDView operator new."
+  },
+  {
+   "row": 3482,
+   "ps2": "0x001c60c0",
+   "verdict": "address",
+   "why": "body review: Empty vtable-referenced function after AddPlayerHeadlight; AUF Debug is empty."
+  },
+  {
+   "row": 3487,
+   "ps2": "0x001c6330",
+   "verdict": "address",
+   "why": "body review: Ctors-table stub calling helper(1,0xffff) after RRenderWorldCamera operator delete."
+  },
+  {
+   "row": 3493,
+   "ps2": "0x001c6b70",
+   "verdict": "address",
+   "why": "body review: Stores fov/dist, cos/sin, normalises plane - same as AUF InitializePlaneInfo; called from ctor and Setup2dFrustrum."
+  },
+  {
+   "row": 3496,
+   "ps2": "0x001c6fa8",
+   "verdict": "address",
+   "why": "body review: *flag=0; return 0 - identical to AUF, vtable-referenced."
+  },
+  {
+   "row": 3558,
+   "ps2": "0x001c9e38",
+   "verdict": "address",
+   "why": "body review: Averages collision info when timestamp matches else deletes it - same as AUF GetCollisionInfo."
+  },
+  {
+   "row": 3576,
+   "ps2": "0x001cb000",
+   "verdict": "address",
+   "why": "body review: GetTransform then GetArticleViewDistance, as AUF; called from ResetSceneObjDistances."
+  },
+  {
+   "row": 3577,
+   "ps2": "0x001cb0d0",
+   "verdict": "address",
+   "why": "body review: Takes an instance, finds it in the group's instance data and returns the matching local instance; called from EHide/EShowInstanceStatic."
+  },
+  {
+   "row": 3578,
+   "ps2": "0x001cb398",
+   "verdict": "address",
+   "why": "body review: Recurses right child, walks left, FastFree(node,0x98) - SGI _M_erase; called from ~URefCounter<RCARPFile>."
+  },
+  {
+   "row": 3579,
+   "ps2": "0x001cb400",
+   "verdict": "address",
+   "why": "body review: Allocates 0x98 header node \"STL\" and initialises empty map; called from Get."
+  },
+  {
+   "row": 3582,
+   "ps2": "0x001cb590",
+   "verdict": "address",
+   "why": "body review: strcpy key, map find, return node+0x94 or 0; called from RSceneObj Load/PreLoad."
+  },
+  {
+   "row": 3585,
+   "ps2": "0x001cbc10",
+   "verdict": "address",
+   "why": "body review: find, insert if absent storing pointer at +0x94, increments refcount +0x90."
+  },
+  {
+   "row": 3586,
+   "ps2": "0x001cbcf8",
+   "verdict": "address",
+   "why": "body review: Iterates map for value==arg, decrements count and erases node at zero; called from PurgePreloaded/Close."
+  },
+  {
+   "row": 3617,
+   "ps2": "0x001cc9b0",
+   "verdict": "address",
+   "why": "body review: Large VU0 spring-mass routine using GetLocalVelocity/GetLocalAngularVelocity, called only from UpdatePosition."
+  },
+  {
+   "row": 3627,
+   "ps2": "0x001cd398",
+   "verdict": "address",
+   "why": "body review: Ctors-table stub calling helper(1,0xffff) after RSkeletalObj::NumBones."
+  },
+  {
+   "row": 3638,
+   "ps2": "0x001ceaf0",
+   "verdict": "address",
+   "why": "body review: Descends tree with memcmp(0x80) key compare, _M_insert at leftmost or after decrement check - insert_unique; called from GetGeoPrimState."
+  },
+  {
+   "row": 3661,
+   "ps2": "0x001cfcd0",
+   "verdict": "address",
+   "why": "body review: FastAlloc(size,\"RTextureContext\")."
+  },
+  {
+   "row": 3662,
+   "ps2": "0x001cfcf0",
+   "verdict": "address",
+   "why": "body review: FastFree(p,size) right after RTextureContext operator new."
+  },
+  {
+   "row": 3676,
+   "ps2": "0x001d0ac8",
+   "verdict": "address",
+   "why": "body review: strcpy key, find, return +0x94 or 0; called from NewContext."
+  },
+  {
+   "row": 3679,
+   "ps2": "0x001d1148",
+   "verdict": "address",
+   "why": "body review: find, insert if absent storing pointer at +0x94, increment count; called from NewContext."
+  },
+  {
+   "row": 3685,
+   "ps2": "0x001d1708",
+   "verdict": "address",
+   "why": "body review: Find by value, decrement count, erase at zero; same body as RCARPFile RemoveReference; called from ~RTextureContextManager."
+  },
+  {
+   "row": 3693,
+   "ps2": "0x001d1ef8",
+   "verdict": "address",
+   "why": "body review: Copies frame counter to fTime and float fTimeData, as AUF Update; called from StartFrameRender."
+  },
+  {
+   "row": 3702,
+   "ps2": "0x001d2aa0",
+   "verdict": "address",
+   "why": "body review: corrected from 0x001d2ac0: 0x1d2aa0 is the vtable entry taking (this,int,int) storing an illuminate value per light; 0x1d2ac0 is a float fade helper for SetPerObjectBuffers."
+  },
+  {
+   "row": 3725,
+   "ps2": "0x001d3e30",
+   "verdict": "address",
+   "why": "body review: Empty vtable-referenced function after RenderShadowVolume (Debug slot)."
+  },
+  {
+   "row": 3728,
+   "ps2": "0x001d4078",
+   "verdict": "address",
+   "why": "body review: FastFree(p,size) right after RVehicle operator new."
+  },
+  {
+   "row": 3733,
+   "ps2": "0x001d40d0",
+   "verdict": "address",
+   "why": "body review: Ctors-table stub calling helper(1,0xffff) before RViewCamera ctor."
+  },
+  {
+   "row": 3789,
+   "ps2": "0x001d51f8",
+   "verdict": "address",
+   "why": "body review: Dtors-table stub calling helper(0,0xffff) right after the fCulling global ctors stub."
+  },
+  {
+   "row": 3824,
+   "ps2": "0x001d6cd0",
+   "verdict": "address",
+   "why": "body review: FastAlloc(size,\"RWorldCamera\")."
+  },
+  {
+   "row": 3825,
+   "ps2": "0x001d6cf0",
+   "verdict": "address",
+   "why": "body review: FastFree(p,size) right after RWorldCamera operator new."
+  },
+  {
+   "row": 3826,
+   "ps2": "0x001d6d10",
+   "verdict": "address",
+   "why": "body review: Empty vtable-referenced function; AUF CreateDBVars is empty."
+  },
+  {
+   "row": 3829,
+   "ps2": "0x001d6d30",
+   "verdict": "address",
+   "why": "body review: Empty vtable-referenced function before RWorldCamera gctors; AUF CameraInputCallback is empty."
+  },
+  {
+   "row": 3889,
+   "ps2": "0x001d7d78",
+   "verdict": "address",
+   "why": "body review: COORD4 streak builder (camera-facing cross product, type table) called from the COORD3 wrapper 0x1d8048, as in AUF."
+  },
+  {
+   "row": 3909,
+   "ps2": "0x001d93c8",
+   "verdict": "address",
+   "why": "body review: corrected from 0x001d93e8 (a helper called by RDebris::RDebris): 0x1d93c8 is the ctors-table stub calling helper(1,0xffff) after RColorize::Reset."
+  },
+  {
+   "row": 3921,
+   "ps2": "0x001d9bb8",
+   "verdict": "address",
+   "why": "body review: Appends pos/vel entry to a 0x40-slot debris array with lifetime 0x46; called from RDebris Add."
+  },
+  {
+   "row": 3955,
+   "ps2": "0x001dd248",
+   "verdict": "address",
+   "why": "body review: Takes two anchor pointers, AddRoundedBolt between them plus LocateFX/ApplyWorldEffects; called from TrySpawnBolt."
+  },
+  {
+   "row": 3956,
+   "ps2": "0x001dd4a0",
+   "verdict": "address",
+   "why": "body review: Anchor plus world point passed to RLightning::AddBolt; called from TrySpawnBolt, follows CreateVehicleBolt."
+  },
+  {
+   "row": 3990,
+   "ps2": "0x001df198",
+   "verdict": "address",
+   "why": "body review: Empty debug stub called from flock update, sits exactly after addFlock."
+  },
+  {
+   "row": 4019,
+   "ps2": "0x001e0358",
+   "verdict": "address",
+   "why": "body review: TransformPoint to screen, bounds test by mode, store flare (<10 per buffer) - same as AUF AddFlare."
+  },
+  {
+   "row": 4060,
+   "ps2": "0x001e2d18",
+   "verdict": "address",
+   "why": "body review: CalcWorldPos per control point, BeginBoltDraw, Segment::Draw/AdvanceBoltDraw loop, FinishBoltDraw; called from RLightning::Draw."
+  },
+  {
+   "row": 4061,
+   "ps2": "0x001e3028",
+   "verdict": "address",
+   "why": "body review: Vector-of-pointers grow-by-doubling with FastAlloc \"STL\"/memmove; called from AddBolt/AddRoundedBolt."
+  },
+  {
+   "row": 4105,
+   "ps2": "0x001e5cd8",
+   "verdict": "address",
+   "why": "body review: (int,int,int,int)->float emission rate calc called from RParticleSystem ctor and SetSystem, right before InitData."
+  },
+  {
+   "row": 4169,
+   "ps2": "0x001e9100",
+   "verdict": "address",
+   "why": "body review: Body is FastFree(p,size) between operator new and SetEmitterPosition."
+  },
+  {
+   "row": 4197,
+   "ps2": "0x001ea468",
+   "verdict": "address",
+   "why": "body review: Empty debug stub in exact run between Draw (0x1ea460) and GrabBackBuffer."
+  },
+  {
+   "row": 4198,
+   "ps2": "0x001ea470",
+   "verdict": "address",
+   "why": "body review: Copies back buffer via ROffscreenBuffer::MakeCopy (gated on sniper zoom); called from DrawPostProcessingEffects."
+  },
+  {
+   "row": 4208,
+   "ps2": "0x001eb078",
+   "verdict": "address",
+   "why": "body review: Same shape as AUF ScorchGround: FindClosestFace, face-flag early outs, height at point, normal via cross product, AddDecal; callers ESpawnExplosion/FireWeapon."
+  },
+  {
+   "row": 4210,
+   "ps2": "0x001eb6b0",
+   "verdict": "address",
+   "why": "body review: Creates two 128x128 textures and a TextureRenderContext, returns this; called only from RShadowMap ctor; sits just before ~ShadowPrivateData."
+  },
+  {
+   "row": 4227,
+   "ps2": "0x001ec390",
+   "verdict": "address",
+   "why": "body review: strcmp on GAME::Shadow* symbol names, returns address and sets the bool& out; registered via AddMajorCallbacks."
+  },
+  {
+   "row": 4228,
+   "ps2": "0x001ec4a0",
+   "verdict": "address",
+   "why": "body review: Matches AUF DrawSimpleShadow (static USimpleTexturedMaterial, quad UV table, GetRigidBody); called from DrawShadowUnderCar."
+  },
+  {
+   "row": 4237,
+   "ps2": "0x001ecdf8",
+   "verdict": "address",
+   "why": "body review: Ctors-table stub (DATA 0x362f80) calling helper(1,0xffff) right after RShadowMap::DoRender."
+  },
+  {
+   "row": 4238,
+   "ps2": "0x001ece18",
+   "verdict": "address",
+   "why": "body review: Matches AUF RSky::Draw: DisableFog, Z-writes off unless bool, QuickDrawInstance loop over instances, sun angle statics."
+  },
+  {
+   "row": 4245,
+   "ps2": "0x001ed8d8",
+   "verdict": "address",
+   "why": "body review: Takes only this, fills vertex position/colour arrays for the zoom ring via helper 0x1ed7b0; called from RSniperZoom::Draw."
+  },
+  {
+   "row": 4256,
+   "ps2": "0x001ede28",
+   "verdict": "address",
+   "why": "body review: corrected from 0x1ede48 (a UV-lookup helper called by RVehicleParticle::Init); 0x1ede28 is the ctors-table stub (DATA 0x362f88) calling 0x1edc18(1,0xffff); sheet 0x110 = 0x20 stub + 0xf0 static helper."
+  },
+  {
+   "row": 4268,
+   "ps2": "0x001ef338",
+   "verdict": "address",
+   "why": "body review: Iterates the global RVehicleParticle set calling Reset on each; called from RestartTrackRender."
+  },
+  {
+   "row": 4275,
+   "ps2": "0x001f0148",
+   "verdict": "address",
+   "why": "body review: Descends tree comparing key, checks predecessor, calls _M_insert (0x1efdf0), returns pair; called from UpdateCar."
+  },
+  {
+   "row": 4294,
+   "ps2": "0x001f0b80",
+   "verdict": "address",
+   "why": "body review: corrected from 0x1f0b88 (a batched draw helper called by DrawBrokenWindows); 0x1f0b80 is empty like AUF RWindow::Kill and is called from KillGameRender."
+  },
+  {
+   "row": 4336,
+   "ps2": "0x001f5a48",
+   "verdict": "address",
+   "why": "body review: Same shape as AUF RTyreTrack::Break: bumps ring indices at +0x900/0x904, clears +0x914/915, writes colour to +0x800 table."
+  },
+  {
+   "row": 4344,
+   "ps2": "0x001f5ff8",
+   "verdict": "address",
+   "why": "body review: Same shape as AUF CheckOBBOverlapAndFindIntersection (two-pass axis loop swapping OBBs, axis order 0,2,1); callers CollideWithObject/World."
+  },
+  {
+   "row": 4349,
+   "ps2": "0x001f63a8",
+   "verdict": "address",
+   "why": "body review: GetOrientMat then dot of velocity (this+0x20) with orientation axis[int]; follows GetScalarVelocity."
+  },
+  {
+   "row": 4386,
+   "ps2": "0x001f86e8",
+   "verdict": "address",
+   "why": "body review: Identical to AUF ResolveForce: skip if state 3, set state 2, clear flag bit, add force to +0x60."
+  },
+  {
+   "row": 4499,
+   "ps2": "0x00201d10",
+   "verdict": "address",
+   "why": "body review: Recursive right, walk left, FastFree(node,0x18) = map<uint,PhysicsObject*> node; called from ~Simulation."
+  },
+  {
+   "row": 4500,
+   "ps2": "0x00201d78",
+   "verdict": "address",
+   "why": "body review: Recursive _M_erase freeing 0x14-byte nodes (set of 4-byte PhysicsObjMapIterator); callers ~Simulation and DeleteDeadObjects."
+  },
+  {
+   "row": 4627,
+   "ps2": "0x00208468",
+   "verdict": "address",
+   "why": "body review: corrected from 0x208428: AUF GlueFactor returns a difficulty-indexed float and is called from DoAttackMode; 0x208468 returns float (lwc1 f0, +0x2b8..0x2c0) and is called from DoAttackMode."
+  },
+  {
+   "row": 4744,
+   "ps2": "0x0020b8a8",
+   "verdict": "address",
+   "why": "body review: Ctors-table stub (DATA 0x362fbc) calling 0x20b0e8(1,0xffff) after the SRule type_info functions."
+  },
+  {
+   "row": 4778,
+   "ps2": "0x0020ea20",
+   "verdict": "address",
+   "why": "body review: Sets this+0x54=1, start time +0x6c, copies COORD3 to +0x60 and the float to +0x70; called from ENuclearBlast; 0x20ea60 then consumes these fields."
+  },
+  {
+   "row": 4779,
+   "ps2": "0x0020ea60",
+   "verdict": "address",
+   "why": "body review: corrected from 0x20f2b8 (a static initialiser building the weapon table); 0x20ea60 runs when this+0x54==1, times from +0x6c, colourise/explosion SFX/SpawnExplosion/GenerateImpulse; called from SWeaponManager::Update."
+  },
+  {
+   "row": 4801,
+   "ps2": "0x00211600",
+   "verdict": "address",
+   "why": "body review: Arcsine by binary search in the trig table (calls Util_InitTrigTable lazily), returns +-0.25 turns at +-1."
+  },
+  {
+   "row": 4824,
+   "ps2": "0x00212ed0",
+   "verdict": "address",
+   "why": "body review: Builds a MATRIX4 from the instance axes (cross product for the up vector), bool chooses translation or identity row; many collision callers."
+  },
+  {
+   "row": 4833,
+   "ps2": "0x002138b0",
+   "verdict": "address",
+   "why": "body review: No-matrix triangle-strip point test (this, COORD3, WCollisionStrip*&), used by the FindFaceInCInst variants."
+  },
+  {
+   "row": 4834,
+   "ps2": "0x00213d68",
+   "verdict": "address",
+   "why": "body review: Matches AUF FindFaceInTriStrip(MATRIX4&,...): scratchpad buffer or static fallback, transforms strip vertices by the matrix, GetPlaneY; called from FindFaceInCInst(MATRIX4...)."
+  },
+  {
+   "row": 4835,
+   "ps2": "0x00213ff8",
+   "verdict": "address",
+   "why": "body review: Makes the instance matrix (MakeMatrix), transforms the point, bounds check, loops strips calling FindFaceInTriStrip(COORD3...)."
+  },
+  {
+   "row": 4836,
+   "ps2": "0x00214338",
+   "verdict": "address",
+   "why": "body review: Cache-list variant: falls back to 0x213ff8 when no cache, else walks the cache list; called from WWorldPos::FindClosestFace."
+  },
+  {
+   "row": 4894,
+   "ps2": "0x0021e100",
+   "verdict": "address",
+   "why": "body review: const, takes this and a pointer to two COORD3s, converts both to grid cells and checks the span is < 21 cells; directly follows FindNodes(COORD3&,...)."
+  },
+  {
+   "row": 4896,
+   "ps2": "0x0021e420",
+   "verdict": "address",
+   "why": "body review: vector<uint> _M_insert_aux (grow x2 with FastAlloc(\"STL\"), memmove, FastFree old); callers WGrid::FindNodes/FindNodesBox."
+  },
+  {
+   "row": 4917,
+   "ps2": "0x0021fef0",
+   "verdict": "address",
+   "why": "body review: Debug quad draw with no callers directly after DrawWorldAtPoint: builds a square from a COORD4 centre/radius, colour chosen by the trailing bool, DrawQuad + DrawQuadLines."
+  },
+  {
+   "row": 4931,
+   "ps2": "0x00220bf8",
+   "verdict": "address",
+   "why": "body review: Ctors-table stub (DATA 0x362fd8) calling 0x220b88(1,0xffff) just before WRoadNetwork::Get."
+  },
+  {
+   "row": 4974,
+   "ps2": "0x00222ca0",
+   "verdict": "address",
+   "why": "body review: Gets segment nodes and forwards to GetSegmentCurveStep(COORD3&,COORD3&,WRoadSegment&,...); called from the (int,...) overload."
+  },
+  {
+   "row": 5001,
+   "ps2": "0x002270e8",
+   "verdict": "address",
+   "why": "body review: Loops over node segments returning the first whose id differs from the short and is drivable; road-network callers."
+  },
+  {
+   "row": 5025,
+   "ps2": "0x00229118",
+   "verdict": "address",
+   "why": "body review: map<int,WSound*> insert_unique: descend, check predecessor, call _M_insert; called from Add."
+  },
+  {
+   "row": 5129,
+   "ps2": "0x00230c48",
+   "verdict": "address",
+   "why": "body review: Identical to AUF GetProcAnimStateFromInstance (instance range check, flag 0x10, index*0x20)."
+  },
+  {
+   "row": 5149,
+   "ps2": "0x00232228",
+   "verdict": "address",
+   "why": "body review: Builds a tiny triangle (+0.2 offsets) at the point and sets face fields; called from TempGetHeightInformation."
+  },
+  {
+   "row": 5153,
+   "ps2": "0x002327a0",
+   "verdict": "address",
+   "why": "body review: Same as AUF HeightAtPoint: if face valid, compute normal and return GetPlaneY; many callers."
+  },
+  {
+   "row": 5154,
+   "ps2": "0x00232ad8",
+   "verdict": "address",
+   "why": "body review: corrected from 0x232af8 (a CANVAS trigger helper); 0x232ad8 is the ctors-table stub (DATA 0x362ff4) calling 0x232aa0(1,0xffff) before GFX::Init."
+  },
+  {
+   "row": 5187,
+   "ps2": "0x00233440",
+   "verdict": "address",
+   "why": "body review: corrected from 0x233460 (static GFXGetSceneTransform, per its assert string); 0x233440 is the ctors-table stub (DATA 0x362ff8); sheet 0x1d8 = 0x20 + 0x1b8."
+  },
+  {
+   "row": 5221,
+   "ps2": "0x002356d8",
+   "verdict": "address",
+   "why": "body review: corrected from 0x235750 (that is CANVAS_SetIntensity, called from SetIntensity); 0x2356d8 sets a bool bit in the canvas flags and is called from SetCulling."
+  },
+  {
+   "row": 5224,
+   "ps2": "0x00235808",
+   "verdict": "address",
+   "why": "body review: Empty stub called from CANVAS_Draw immediately before DEBRIS_Draw."
+  },
+  {
+   "row": 5225,
+   "ps2": "0x00235810",
+   "verdict": "address",
+   "why": "body review: Called from CANVAS_Draw after DEBRIS_SetState; builds debris particles from Keys (quat rotate, Add); sizes match (0x540 vs 0x538)."
+  },
+  {
+   "row": 5256,
+   "ps2": "0x00237928",
+   "verdict": "address",
+   "why": "body review: Takes Text* and char*; falls back to LOCALE_Symbol(text id) when the string is null, then draws."
+  },
+  {
+   "row": 5257,
+   "ps2": "0x00237a50",
+   "verdict": "address",
+   "why": "body review: FONT_Draw with explicit colour argument written to the font colour field; otherwise identical to the 3-arg version."
+  },
+  {
+   "row": 5258,
+   "ps2": "0x00237b80",
+   "verdict": "address",
+   "why": "body review: FONT_Draw(char*,x,y) using this+0x50 default colour; callers DrawFont*."
+  },
+  {
+   "row": 5259,
+   "ps2": "0x00237ca8",
+   "verdict": "address",
+   "why": "body review: FONT_getrecta with width out-pointer (5th arg); the next function passes the 6th (height). Ghidra name is GGallery::FUN_00237ca8 (namespace only)."
+  },
+  {
+   "row": 5260,
+   "ps2": "0x00237ce0",
+   "verdict": "address",
+   "why": "body review: corrected from 0x238000 (atexit destructor for a static USimpleMaterial); 0x237ce0 is FONT_getrecta with the height out-pointer, directly after FONT_Width."
+  },
+  {
+   "row": 5282,
+   "ps2": "0x00239498",
+   "verdict": "address",
+   "why": "body review: Same as AUF TRANSFORM_Vertices: conjugate quat to matrix, scale rows, transform N vertices."
+  },
+  {
+   "row": 5311,
+   "ps2": "0x0023c6c8",
+   "verdict": "address",
+   "why": "body review: Sets a flag to 1 as AUF SetLevelLoadText does; called from EEndMission."
+  },
+  {
+   "row": 5386,
+   "ps2": "0x002454f0",
+   "verdict": "address",
+   "why": "body review: Same as AUF ComputeAngle0to1: flatten and normalise, v3sub, dot, acos, sign by cross; called from GetObjectiveOrientation0to1."
+  },
+  {
+   "row": 5441,
+   "ps2": "0x00249930",
+   "verdict": "address",
+   "why": "body review: Begin/clear/end frames with sync-to-VBL and filter set; called from InitLoadScreen/InitLoadDots."
+  },
+  {
+   "row": 5468,
+   "ps2": "0x0024ad40",
+   "verdict": "address",
+   "why": "body review: Advances the subtitle chunk index by elapsed time and returns the current string pointer; called from DrawSubtitles."
+  },
+  {
+   "row": 5494,
+   "ps2": "0x0024b820",
+   "verdict": "address",
+   "why": "body review: Returns partic01/02/ears/sav .ssh file name by game variant; called from InitGameRender/InitFrontEndRender."
+  },
+  {
+   "row": 5503,
+   "ps2": "0x0024bd68",
+   "verdict": "address",
+   "why": "body review: First of three 8-byte empty stubs after FindSection matching WriteFloat/WriteInteger/WriteString (writes stubbed on PS2)."
+  },
+  {
+   "row": 2854,
+   "ps2": "0x0019f8b0",
+   "verdict": "address",
+   "why": "body review (P013): stores its float argument to the draw z-depth global (0x3335cc); called before drawing by Draw, TestFlares, DrawFont (row 2854). Batch P004 had named it DrawLineMeshC"
+  },
+  {
+   "row": 2832,
+   "ps2": "0x0019e088",
+   "verdict": "address",
+   "why": "body review (P013): FastFree(p, size) directly after Shell::operator new (row 2832)"
+  },
+  {
+   "row": 2855,
+   "ps2": "0x0019f8c0",
+   "verdict": "address",
+   "why": "body review (P013): stores 9.99f to the z-depth global (row 2855, after SetZDepth)"
+  },
+  {
+   "row": 2856,
+   "ps2": "0x0019f8d8",
+   "verdict": "address",
+   "why": "body review (P013): stores 1.0f to the z-depth global (row 2856)"
+  },
+  {
+   "row": 2858,
+   "ps2": "0x0019f938",
+   "verdict": "address",
+   "why": "body review (P013): passes vertices and a colour array to the prim helper 0x19f850 with the colour flag set (row 2858)"
+  },
+  {
+   "row": 2881,
+   "ps2": "0x001a19c8",
+   "verdict": "address",
+   "why": "body review (P013): ctors-table stub calling the static-init helper 0x1a1970(1, 0xffff) (row 2881)"
+  },
+  {
+   "row": 2882,
+   "ps2": "0x001a19e8",
+   "verdict": "address",
+   "why": "body review (P013): zeroes the engine's last-update tick (0x333604) and active-system count (0x333600) that Update uses (row 2882)"
+  },
+  {
+   "row": 2883,
+   "ps2": "0x001a1a00",
+   "verdict": "address",
+   "why": "body review (P013): zeroes the active-system count (row 2883)"
   }
  ]
 }

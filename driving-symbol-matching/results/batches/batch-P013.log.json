@@ -1,0 +1,453 @@
+{
+ "batch": "P013",
+ "program": "DRIVING.ELF",
+ "applied": "Fri Sep 25 23:42:34 2026",
+ "items": [
+  {
+   "xbox": "0x001a1af8",
+   "old_name": "Shutdown",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001a1af8 from 'Shutdown' to 'FUN_001a1af8'"
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001a1af8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "FUN_001a1af8",
+   "ok": true
+  },
+  {
+   "xbox": "0x001a1a10",
+   "old_name": "Init",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001a1a10 from 'Init' to 'Update'",
+      "warnings": [
+       "Function name 'Update' is too short (main part 'Update' is 6 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Update' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Update' shares the same token set as existing function 'UpdateAll' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001a1a10",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Update",
+   "ok": true
+  },
+  {
+   "xbox": "0x0019e0b8",
+   "old_name": "operator_delete",
+   "old_plate": "[symbol-matching]\nCanonical name: Shell::operator_delete\nSymbol file name: Shell::operator delete(void *, unsigned int)\nClass: Shell\nEvidence: sheet row 2832, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0019e0b8 from 'operator_delete' to 'Shell_global_ctors'",
+      "warnings": [
+       "Function name 'Shell_global_ctors' \u2014 main part 'Shell_global_ctors' is not PascalCase. Expected: ShellGlobalCtors",
+       "Function name 'Shell_global_ctors' \u2014 main part 'Shell_global_ctors' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'Shell_global_ctors' does not start with a recognized verb. First word 'Shell_global_ctors' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0019e0b8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Shell_global_ctors",
+   "ok": true
+  },
+  {
+   "xbox": "0x0019f8b0",
+   "old_name": "DrawLineMeshC",
+   "old_plate": "[symbol-matching]\nCanonical name: Draw::DrawLineMeshC\nSymbol file name: Draw::DrawLineMeshC(int, COORD4 *, EAGL::Colour *)\nClass: Draw\nEvidence: sheet row 2858, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0019f8b0 from 'DrawLineMeshC' to 'SetZDepth'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'SetZDepth' shares the same token set as existing function 'Set' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0019f8b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetZDepth",
+   "ok": true
+  },
+  {
+   "xbox": "0x0019e088",
+   "old_name": "FUN_0019e088",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0019e088 from 'FUN_0019e088' to 'operator_delete'",
+      "warnings": [
+       "Function name 'operator_delete' \u2014 main part 'operator_delete' is not PascalCase. Expected: OperatorDelete",
+       "Function name 'operator_delete' \u2014 main part 'operator_delete' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0019e088",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "operator_delete",
+   "ok": true
+  },
+  {
+   "xbox": "0x0019f8c0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0019f8c0",
+      "function_name": "FUN_0019f8c0",
+      "entry_point": "0019f8c0",
+      "body_size": 24,
+      "message": "Function created successfully at 0019f8c0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0019f8c0 from 'FUN_0019f8c0' to 'SetZDepthFar'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'SetZDepthFar' shares the same token set as existing function 'SetZDepth' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0019f8c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetZDepthFar",
+   "ok": true
+  },
+  {
+   "xbox": "0x0019f8d8",
+   "old_name": "FUN_0019f8d8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0019f8d8 from 'FUN_0019f8d8' to 'SetZDepthNear'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'SetZDepthNear' shares the same token set as existing function 'SetZDepth' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0019f8d8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetZDepthNear",
+   "ok": true
+  },
+  {
+   "xbox": "0x0019f8f0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0019f8f0",
+      "function_name": "FUN_0019f8f0",
+      "entry_point": "0019f8f0",
+      "body_size": 72,
+      "message": "Function created successfully at 0019f8f0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0019f8f0 from 'FUN_0019f8f0' to 'DrawLineMesh'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'DrawLineMesh' shares the same token set as existing function 'Draw' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0019f8f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DrawLineMesh",
+   "ok": true
+  },
+  {
+   "xbox": "0x0019f938",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0019f938",
+      "function_name": "FUN_0019f938",
+      "entry_point": "0019f938",
+      "body_size": 40,
+      "message": "Function created successfully at 0019f938"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0019f938 from 'FUN_0019f938' to 'DrawLineMeshC'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'DrawLineMeshC' shares the same token set as existing function 'Draw' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0019f938",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DrawLineMeshC",
+   "ok": true
+  },
+  {
+   "xbox": "0x001a19c8",
+   "old_name": "FUN_001a19c8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001a19c8 from 'FUN_001a19c8' to 'squareUV_global_ctors'",
+      "warnings": [
+       "Function name 'squareUV_global_ctors' \u2014 main part 'squareUV_global_ctors' is not PascalCase. Expected: SquareuvGlobalCtors",
+       "Function name 'squareUV_global_ctors' \u2014 main part 'squareUV_global_ctors' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001a19c8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "squareUV_global_ctors",
+   "ok": true
+  },
+  {
+   "xbox": "0x001a19e8",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "001a19e8",
+      "function_name": "FUN_001a19e8",
+      "entry_point": "001a19e8",
+      "body_size": 20,
+      "message": "Function created successfully at 001a19e8"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001a19e8 from 'FUN_001a19e8' to 'Init'",
+      "warnings": [
+       "Function name 'Init' is too short (main part 'Init' is 4 chars, minimum 8).",
+       "Function name 'Init' does not start with a recognized verb. First word 'Init' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Init' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Init' shares the same token set as existing function 'ActManagerInit' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001a19e8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Init",
+   "ok": true
+  },
+  {
+   "xbox": "0x001a1a00",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "001a1a00",
+      "function_name": "FUN_001a1a00",
+      "entry_point": "001a1a00",
+      "body_size": 12,
+      "message": "Function created successfully at 001a1a00"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001a1a00 from 'FUN_001a1a00' to 'Shutdown'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Shutdown' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Shutdown' shares the same token set as existing function 'SapphireShutdown' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001a1a00",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Shutdown",
+   "ok": true
+  }
+ ]
+}
