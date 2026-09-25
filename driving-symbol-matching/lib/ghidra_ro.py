@@ -4,8 +4,11 @@ Only GET requests to the endpoints in READ_ONLY are allowed; anything else raise
 Writes to Ghidra go through apply.py alone, which snapshots first and runs dry by default.
 """
 
+import http.client
 import json
 import os
+import threading
+import time
 import urllib.parse
 import urllib.request
 
@@ -40,9 +43,34 @@ def get(endpoint, timeout=120, **params):
         raise PermissionError(f"{endpoint} is not in the read-only list")
     if "program" not in params:
         raise ValueError("pass program explicitly: omitting it targets whichever program is current")
-    url = f"{BASE}/{endpoint}?{urllib.parse.urlencode(params)}"
-    with urllib.request.urlopen(url, timeout=timeout) as r:
-        return r.read().decode("utf-8")
+    return request("GET", f"/{endpoint}?{urllib.parse.urlencode(params)}", timeout=timeout)
+
+
+_local = threading.local()
+
+
+def request(method, path, body=None, headers=None, timeout=120):
+    """One kept-alive connection per thread: a new socket per request ran Windows out of them (WinError
+    10055) after tens of thousands of calls. Reconnects and retries a few times on a socket error."""
+    host = urllib.parse.urlparse(BASE)
+    for attempt in range(4):
+        conn = getattr(_local, "conn", None)
+        if conn is None:
+            conn = _local.conn = http.client.HTTPConnection(host.hostname, host.port, timeout=timeout)
+        try:
+            conn.request(method, path, body=body, headers=headers or {})
+            r = conn.getresponse()
+            data = r.read().decode("utf-8")
+            if r.getheader("Connection", "").lower() == "close":
+                conn.close()
+                _local.conn = None
+            return data
+        except (OSError, http.client.HTTPException):
+            conn.close()
+            _local.conn = None
+            if attempt == 3:
+                raise
+            time.sleep(2 ** attempt)
 
 
 def get_json(endpoint, **params):

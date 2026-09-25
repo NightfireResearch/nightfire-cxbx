@@ -22,7 +22,7 @@ from lib.index import Index
 from lib.ps2_infill import is_function_row
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ANCHORS = ("sheet", "ghidra", "infill-exact", "infill-count")
+ANCHORS = ("sheet", "ghidra", "resolved", "infill-exact", "infill-count")
 
 
 def main():
@@ -56,6 +56,7 @@ def main():
           f"exact-run guesses: {agree_run} confirmed, {len(disagree_run)} contradicted")
 
     # Audit: hide each trusted row in turn, in 5 random partitions, and see where the alignment puts it.
+    # Settled rows ("resolved") stay as anchors and are never re-guessed.
     trusted = [r for r in ix.rows if is_function_row(r) and r.get("ps2_from") in ("sheet", "ghidra")]
     doubts = {}
     for t in range(5):

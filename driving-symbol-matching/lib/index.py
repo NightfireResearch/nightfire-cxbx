@@ -44,6 +44,7 @@ class Index:
                     f["qualified"] = f"thunk_FUN_{int(f['address'], 16):08x}"
         self.xbox_addrs = sorted(self.xbox)
         self._row_ps2()
+        self._overrides()
         self._infill()
         if use_align:
             self._align()
@@ -70,6 +71,21 @@ class Index:
             hits = [x for x in self.ps2_addrs[a:b] if key(self.ps2[x]["qualified"]) == want]
             if len(hits) == 1:
                 r["ps2"], r["ps2_from"] = hits[0], "ghidra"
+
+    def _overrides(self):
+        """Addresses settled by hand ("address" in results/ps2-name-resolutions.json): they replace the sheet's
+        own address and any name match, and no other row keeps that address."""
+        path = os.path.join(HERE, "results", "ps2-name-resolutions.json")
+        if not os.path.exists(path):
+            return
+        with open(path) as f:
+            fixed = {d["row"]: int(d["ps2"], 16) for d in json.load(f)["resolutions"] if d["verdict"] == "address"}
+        claimed = set(fixed.values())
+        for r in self.rows:
+            if r["row"] in fixed:
+                r["ps2"], r["ps2_from"] = fixed[r["row"]], "resolved"
+            elif r["ps2"] in claimed:
+                r["ps2"], r["ps2_from"] = None, None
 
     def _infill(self):
         """PS2 addresses from retail layout (lib/ps2_infill.py), unless PS2 Ghidra already names it otherwise."""

@@ -31,13 +31,13 @@ def main():
     ix = Index()
     feats = features_cache.load("DRIVING.ELF")
     scorer = Scorer(ix, {a: v["strings"] for a, v in feats.items()})
-    trusted = [r for r in ix.rows if is_function_row(r) and r.get("ps2_from") in ("sheet", "ghidra")]
+    trusted = [r for r in ix.rows if is_function_row(r) and r.get("ps2_from") in ("sheet", "ghidra", "resolved")]
     tally = Counter()
     for t in range(trials):
         random.seed(100 + t)
         hidden = {id(r) for r in random.sample(trusted, int(len(trusted) * share))}
         truth = {id(r): r["ps2"] for r in trusted if id(r) in hidden}
-        anchor_ok = lambda r: r.get("ps2_from") in ("sheet", "ghidra") and id(r) not in hidden
+        anchor_ok = lambda r: r.get("ps2_from") in ("sheet", "ghidra", "resolved") and id(r) not in hidden
         for rows, funcs in windows(ix, is_function_row, anchor_ok):
             for row, func, margin in align_window(rows, funcs, scorer):
                 if id(row) not in hidden:

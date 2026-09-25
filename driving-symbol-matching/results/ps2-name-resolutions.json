@@ -1,32 +1,251 @@
 {
- "note": "Decisions on PS2 infill conflicts (sheet row vs the name PS2 Ghidra holds at that address), 25 Sept 2026. 'sheet': the sheet name is canonical and the Ghidra name is the same function under another name (a spelling, an SDK alias, a template written out, or a guess made while reading code). 'reject': the infill placement is wrong. 'open': for the user to decide.",
+ "note": "Decisions on PS2 infill conflicts (sheet row vs the name PS2 Ghidra holds at that address), 25 Sept 2026. 'sheet': the sheet name is canonical and the Ghidra name is the same function under another name (a spelling, an SDK alias, a template written out, or a guess made while reading code). 'reject': the infill placement is wrong. 'open': for the user to decide. 'address': the row's true PS2 address, overriding the sheet's own and any name match (from the audit, 25 Sept 2026).",
  "resolutions": [
-  {"row": 350, "ps2": "0x001184b8", "verdict": "sheet", "why": "ActWeapon::New is FastAlloc(size, \"ActWeapon\"): operator new"},
-  {"row": 383, "ps2": "0x00119560", "verdict": "sheet", "why": "AICharacter::new = operator new"},
-  {"row": 384, "ps2": "0x00119580", "verdict": "sheet", "why": "AICharacter::delete = operator delete"},
-  {"row": 2078, "ps2": "0x00165bc8", "verdict": "sheet", "why": "between IFeedbackPort::Reset and IFeedback::Thread, only caller IFeedback::Thread; ITimer::Update was a guess"},
-  {"row": 2400, "ps2": "0x0017a7c0", "verdict": "sheet", "why": "Vector_Schedule::_M_insert_aux is the vector<Schedule *> template written out"},
-  {"row": 2401, "ps2": "0x0017a928", "verdict": "sheet", "why": "List_TaskRecord_Clear is _List_base<TaskRecord>::clear written out"},
-  {"row": 2463, "ps2": "0x0017e4f0", "verdict": "sheet", "why": "Explosion::_ctor is FastAlloc(size, \"Explosion\"): operator new, not a constructor"},
-  {"row": 4640, "ps2": "0x00208a00", "verdict": "sheet", "why": "maybeFindObjective walks a list comparing ids: GetObjectiveByID"},
-  {"row": 5021, "ps2": "0x00228b70", "verdict": "sheet", "why": "wSoundGroup_dtor is the destructor (frees members, delete flag)"},
-  {"row": 5595, "ps2": "0x0024edf0", "verdict": "sheet", "why": "calls through the terminate-handler pointer with no message: __terminate (GCC's __pure_virtual prints first)"},
-  {"row": 6289, "ps2": "0x0029fd60", "verdict": "sheet", "why": "ModelType_global_ctors = global constructors keyed to EAGL::DynamicLoader::ModelType"},
-  {"row": 6290, "ps2": "0x0029fd80", "verdict": "sheet", "why": "ModelType_global_dtors = global destructors keyed to EAGL::DynamicLoader::ModelType"},
-  {"row": 6949, "ps2": "0x00253590", "verdict": "sheet", "why": "setBaseDirectory (host0: prefix handling) was a guess for FILESYS_setcurrentpath"},
-  {"row": 7190, "ps2": "0x00260818", "verdict": "sheet", "why": "someDebugPrint was a guess for PRINT_string"},
-  {"row": 7300, "ps2": "0x0030d938", "verdict": "sheet", "why": "EA's private strcat: SNDDRV_strcat"},
-  {"row": 7362, "ps2": "0x00312b00", "verdict": "sheet", "why": "2-instruction wrapper jumping to SNDMEMI_free (Ghidra named the thunk after its target): SNDI_Delete"},
-  {"row": 8794, "ps2": "0x002e9688", "verdict": "sheet", "why": "URefCounter<AStream>::Get then GetReference(name): AStream::Get(char *); AStream::Event was a guess"},
-  {"row": 9292, "ps2": "0x003037f0", "verdict": "sheet", "why": "empty in retail; someLibraryAssert was a guess for Error(char *)"},
-  {"row": 7743, "ps2": "0x002b6990", "verdict": "sheet", "why": "syscall 5; RFU005 is the SDK's name, ResumeIntrDispatch an alias"},
-  {"row": 7746, "ps2": "0x002b69c0", "verdict": "sheet", "why": "syscall 8; RFU008 is the SDK's name, ResumeT3IntrDispatch an alias"},
-  {"row": 7800, "ps2": "0x002b6d20", "verdict": "sheet", "why": "syscall 0x3c; RFU060 = SetupThread"},
-  {"row": 7801, "ps2": "0x002b6d30", "verdict": "sheet", "why": "syscall 0x3d; RFU061 = SetupHeap"},
-  {"row": 7860, "ps2": "0x002b70e0", "verdict": "sheet", "why": "syscall 0x74; RFU116 = SetSyscall"},
-  {"row": 7876, "ps2": "0x002b71e0", "verdict": "sheet", "why": "sceResetttyinit (three t's) is Sony's own spelling"},
-  {"row": 7754, "ps2": "0x002b6a40", "verdict": "sheet", "why": "syscall 0x10; AddIntcHandler and AddIntcHandler2 are SDK variants of one syscall, so the symbol table decides"},
-  {"row": 7758, "ps2": "0x002b6a80", "verdict": "sheet", "why": "syscall 0x12; AddDmacHandler and AddDmacHandler2 likewise"},
-  {"row": 7286, "ps2": "0x0030cac0", "verdict": "open", "why": "retail has an 8-byte 'j SNDSYS_restore' where the sheet has SNDMEMI_printf (0x70) and SNDMEMI_format (0x1b0); the debug printers look compiled out, and the stub may be SNDREAL_exithandler(void), 8 bytes in the sheet's other copy of the sound library"}
+  {
+   "row": 350,
+   "ps2": "0x001184b8",
+   "verdict": "sheet",
+   "why": "ActWeapon::New is FastAlloc(size, \"ActWeapon\"): operator new"
+  },
+  {
+   "row": 383,
+   "ps2": "0x00119560",
+   "verdict": "sheet",
+   "why": "AICharacter::new = operator new"
+  },
+  {
+   "row": 384,
+   "ps2": "0x00119580",
+   "verdict": "sheet",
+   "why": "AICharacter::delete = operator delete"
+  },
+  {
+   "row": 2078,
+   "ps2": "0x00165bc8",
+   "verdict": "sheet",
+   "why": "between IFeedbackPort::Reset and IFeedback::Thread, only caller IFeedback::Thread; ITimer::Update was a guess"
+  },
+  {
+   "row": 2400,
+   "ps2": "0x0017a7c0",
+   "verdict": "sheet",
+   "why": "Vector_Schedule::_M_insert_aux is the vector<Schedule *> template written out"
+  },
+  {
+   "row": 2401,
+   "ps2": "0x0017a928",
+   "verdict": "sheet",
+   "why": "List_TaskRecord_Clear is _List_base<TaskRecord>::clear written out"
+  },
+  {
+   "row": 2463,
+   "ps2": "0x0017e4f0",
+   "verdict": "sheet",
+   "why": "Explosion::_ctor is FastAlloc(size, \"Explosion\"): operator new, not a constructor"
+  },
+  {
+   "row": 4640,
+   "ps2": "0x00208a00",
+   "verdict": "sheet",
+   "why": "maybeFindObjective walks a list comparing ids: GetObjectiveByID"
+  },
+  {
+   "row": 5021,
+   "ps2": "0x00228b70",
+   "verdict": "sheet",
+   "why": "wSoundGroup_dtor is the destructor (frees members, delete flag)"
+  },
+  {
+   "row": 5595,
+   "ps2": "0x0024edf0",
+   "verdict": "sheet",
+   "why": "calls through the terminate-handler pointer with no message: __terminate (GCC's __pure_virtual prints first)"
+  },
+  {
+   "row": 6289,
+   "ps2": "0x0029fd60",
+   "verdict": "sheet",
+   "why": "ModelType_global_ctors = global constructors keyed to EAGL::DynamicLoader::ModelType"
+  },
+  {
+   "row": 6290,
+   "ps2": "0x0029fd80",
+   "verdict": "sheet",
+   "why": "ModelType_global_dtors = global destructors keyed to EAGL::DynamicLoader::ModelType"
+  },
+  {
+   "row": 6949,
+   "ps2": "0x00253590",
+   "verdict": "sheet",
+   "why": "setBaseDirectory (host0: prefix handling) was a guess for FILESYS_setcurrentpath"
+  },
+  {
+   "row": 7190,
+   "ps2": "0x00260818",
+   "verdict": "sheet",
+   "why": "someDebugPrint was a guess for PRINT_string"
+  },
+  {
+   "row": 7300,
+   "ps2": "0x0030d938",
+   "verdict": "sheet",
+   "why": "EA's private strcat: SNDDRV_strcat"
+  },
+  {
+   "row": 7362,
+   "ps2": "0x00312b00",
+   "verdict": "sheet",
+   "why": "2-instruction wrapper jumping to SNDMEMI_free (Ghidra named the thunk after its target): SNDI_Delete"
+  },
+  {
+   "row": 8794,
+   "ps2": "0x002e9688",
+   "verdict": "sheet",
+   "why": "URefCounter<AStream>::Get then GetReference(name): AStream::Get(char *); AStream::Event was a guess"
+  },
+  {
+   "row": 9292,
+   "ps2": "0x003037f0",
+   "verdict": "sheet",
+   "why": "empty in retail; someLibraryAssert was a guess for Error(char *)"
+  },
+  {
+   "row": 7743,
+   "ps2": "0x002b6990",
+   "verdict": "sheet",
+   "why": "syscall 5; RFU005 is the SDK's name, ResumeIntrDispatch an alias"
+  },
+  {
+   "row": 7746,
+   "ps2": "0x002b69c0",
+   "verdict": "sheet",
+   "why": "syscall 8; RFU008 is the SDK's name, ResumeT3IntrDispatch an alias"
+  },
+  {
+   "row": 7800,
+   "ps2": "0x002b6d20",
+   "verdict": "sheet",
+   "why": "syscall 0x3c; RFU060 = SetupThread"
+  },
+  {
+   "row": 7801,
+   "ps2": "0x002b6d30",
+   "verdict": "sheet",
+   "why": "syscall 0x3d; RFU061 = SetupHeap"
+  },
+  {
+   "row": 7860,
+   "ps2": "0x002b70e0",
+   "verdict": "sheet",
+   "why": "syscall 0x74; RFU116 = SetSyscall"
+  },
+  {
+   "row": 7876,
+   "ps2": "0x002b71e0",
+   "verdict": "sheet",
+   "why": "sceResetttyinit (three t's) is Sony's own spelling"
+  },
+  {
+   "row": 7754,
+   "ps2": "0x002b6a40",
+   "verdict": "sheet",
+   "why": "syscall 0x10; AddIntcHandler and AddIntcHandler2 are SDK variants of one syscall, so the symbol table decides"
+  },
+  {
+   "row": 7758,
+   "ps2": "0x002b6a80",
+   "verdict": "sheet",
+   "why": "syscall 0x12; AddDmacHandler and AddDmacHandler2 likewise"
+  },
+  {
+   "row": 7286,
+   "ps2": "0x0030cac0",
+   "verdict": "open",
+   "why": "retail has an 8-byte 'j SNDSYS_restore' where the sheet has SNDMEMI_printf (0x70) and SNDMEMI_format (0x1b0); the debug printers look compiled out, and the stub may be SNDREAL_exithandler(void), 8 bytes in the sheet's other copy of the sound library"
+  },
+  {
+   "row": 1093,
+   "ps2": "0x00143580",
+   "verdict": "address",
+   "why": "builds type_info from \"9DebugItem\"; 0x143668 builds \"9DebugData\" (derives from DebugItem) - the sheet gave DebugItem DebugData's address"
+  },
+  {
+   "row": 1284,
+   "ps2": "0x00149c70",
+   "verdict": "address",
+   "why": "stores its argument and the vtable: the constructor; the sheet's 0x149c88 is the destructor"
+  },
+  {
+   "row": 3147,
+   "ps2": "0x001af8c0",
+   "verdict": "address",
+   "why": "0x1c8 bytes as the sheet says, called from RenderEffect, calls AddPositionalLight"
+  },
+  {
+   "row": 3150,
+   "ps2": "0x001afc58",
+   "verdict": "address",
+   "why": "0xf8 as the sheet says; adds a light to a list of at most 4 at this+0x80; called by AddDynamicLightEffect"
+  },
+  {
+   "row": 3499,
+   "ps2": "0x001c7360",
+   "verdict": "address",
+   "why": "four arguments (char *, char *, char *, uint) like this overload; called by PBondCar, PHelicopter, Grenade"
+  },
+  {
+   "row": 3500,
+   "ps2": "0x001c7488",
+   "verdict": "address",
+   "why": "five arguments like this overload"
+  },
+  {
+   "row": 3765,
+   "ps2": "0x001d50a8",
+   "verdict": "address",
+   "why": "const overload, first by sheet order"
+  },
+  {
+   "row": 3766,
+   "ps2": "0x001d50b0",
+   "verdict": "address",
+   "why": "non-const overload, second by sheet order"
+  },
+  {
+   "row": 5124,
+   "ps2": "0x00230648",
+   "verdict": "address",
+   "why": "called by GameLoop_CleanUp, frees the world's data: Close; the sheet's 0x230730 is Reset (called by ~ERestart)"
+  },
+  {
+   "row": 5125,
+   "ps2": "0x00230730",
+   "verdict": "address",
+   "why": "called by ~ERestart: Reset"
+  },
+  {
+   "row": 5297,
+   "ps2": "0x0023a790",
+   "verdict": "address",
+   "why": "builds type_info from \"15GGirlieMaterial\""
+  },
+  {
+   "row": 5489,
+   "ps2": "0x0024b5e0",
+   "verdict": "address",
+   "why": "unpacks a 32-bit colour into four floats; the sheet gave it COLOR_Interpolate's address"
+  },
+  {
+   "row": 6360,
+   "ps2": "0x00264570",
+   "verdict": "address",
+   "why": "empty in retail (stats compiled out), in the sheet's order after InitInternal"
+  },
+  {
+   "row": 7145,
+   "ps2": "0x0025ef00",
+   "verdict": "address",
+   "why": "0x200 as the sheet says; sets up the render-math pipeline from flags, called by m3xform; the sheet's rmpipepreproj (0x1b20) swallows 0x1b00 of unlisted static stages"
+  }
  ]
 }

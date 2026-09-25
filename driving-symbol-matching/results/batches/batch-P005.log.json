@@ -1,0 +1,231 @@
+{
+ "batch": "P005",
+ "program": "DRIVING.ELF",
+ "applied": "Fri Sep 25 22:11:31 2026",
+ "items": [
+  {
+   "xbox": "0x00143580",
+   "old_name": "FUN_00143580",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00143580 from 'FUN_00143580' to 'DebugItem_type_info_function'",
+      "warnings": [
+       "Function name 'DebugItem_type_info_function' \u2014 main part 'DebugItem_type_info_function' is not PascalCase. Expected: DebugitemTypeInfoFunction",
+       "Function name 'DebugItem_type_info_function' \u2014 main part 'DebugItem_type_info_function' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'DebugItem_type_info_function' does not start with a recognized verb. First word 'Debug' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00143580",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DebugItem_type_info_function",
+   "ok": true
+  },
+  {
+   "xbox": "0x001af8c0",
+   "old_name": "maybe_AddPositionalLight",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001af8c0 from 'maybe_AddPositionalLight' to 'AddDynamicLightEffect'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'AddDynamicLightEffect' shares the same token set as existing function 'Add' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001af8c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "AddDynamicLightEffect",
+   "ok": true
+  },
+  {
+   "xbox": "0x001afc58",
+   "old_name": "FUN_001afc58",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001afc58 from 'FUN_001afc58' to 'AddPositionalLight'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'AddPositionalLight' shares the same token set as existing function 'Add' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001afc58",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "AddPositionalLight",
+   "ok": true
+  },
+  {
+   "xbox": "0x001d50a8",
+   "old_name": "Camera_const",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001d50a8 from 'Camera_const' to 'Camera'",
+      "warnings": [
+       "Function name 'Camera' is too short (main part 'Camera' is 6 chars, minimum 8).",
+       "Function name 'Camera' does not start with a recognized verb. First word 'Camera' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Camera' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Camera' shares the same token set as existing function 'ECameraLockOn' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001d50a8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Camera",
+   "ok": true
+  },
+  {
+   "xbox": "0x0024b5e0",
+   "old_name": "FUN_0024b5e0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0024b5e0 from 'FUN_0024b5e0' to 'COLOR_ConvertColorToCoord4'"
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0024b5e0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "COLOR_ConvertColorToCoord4",
+   "ok": true
+  },
+  {
+   "xbox": "0x0025d400",
+   "old_name": "rmpipe",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0025d400 from 'rmpipe' to 'FUN_0025d400'"
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0025d400",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "FUN_0025d400",
+   "ok": true
+  },
+  {
+   "xbox": "0x0025ef00",
+   "old_name": "FUN_0025ef00",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0025ef00 from 'FUN_0025ef00' to 'rmpipe'",
+      "warnings": [
+       "Function name 'rmpipe' \u2014 main part 'rmpipe' is not PascalCase. Expected: Rmpipe",
+       "Function name 'rmpipe' is too short (main part 'rmpipe' is 6 chars, minimum 8)."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0025ef00",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "rmpipe",
+   "ok": true
+  }
+ ]
+}

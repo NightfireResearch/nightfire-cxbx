@@ -5,13 +5,8 @@ wrong address in the sheet, a mis-named PS2 function, overloads (two constructor
 
 | row | colour | sheet name | known at | from | sheet size | retail size there | alignment says | its name now | retail size | margin |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1093 | green | DebugItem type_info function | 00143668 | sheet | 40 | 78 | 00143580 | FUN_00143580 | 40 | 7.0 |
-| 1284 | green | EClearProgrammerEvent::EClearProgrammerEvent(int) | 00149c88 | sheet | 18 | 68 | 00149c70 | EClearProgrammerEvent::EClearProgrammerEvent | 18 | 6.4 |
-| 3150 | orange | RHighLevelLightManager::AddPositionalLight(COORD4 &, COORD4 &, | 001af8c0 | sheet | f8 | 1c8 | 001afc58 | FUN_001afc58 | f8 | 8.9 |
-| 3499 | green | RSceneObj::Load(char *, char *, char *, unsigned int) | 001c7360 | sheet | 1d0 | 128 | 001c7488 | RSceneObj::Load | 1d0 | 3.5 |
-| 3765 |  | RViewCamera::Camera(void) const | 001d50b0 | ghidra | 8 | 8 | 001d50a8 | RViewCamera::Camera_const | 8 | 6.0 |
-| 5124 |  | WWorld::Close(void) | 00230730 | sheet | e8 | 380 | 00230648 | WWorld::Close | e8 | 8.6 |
-| 5297 | green | GGirlieMaterial type_info function | 0023a790 | sheet | 40 | 58 | 0023a758 | FUN_0023a758 | 38 | 3.5 |
-| 5489 | green | GSystem::COLOR_ConvertColorToCoord4(unsigned int, COORD4 *) | 0024b4a8 | sheet | 60 | 138 | 0024b5e0 | FUN_0024b5e0 | 60 | 7.1 |
-| 6360 | orange | EAGLAnim::ResetStats(void) | 00264570 | sheet | 28 | 8 | 002644e0 | FUN_002644e0 | 28 | 3.1 |
-| 7145 | orange | rmpipe | 0025d400 | sheet | 200 | a0 | 0025ef00 | FUN_0025ef00 | 200 | 6.2 |
+| 1233 | green | EAwardHitToPlayer::EAwardHitToPlayer(int) | 00148540 | sheet | 18 | 68 | 00148528 | EAwardHitToPlayer::EAwardHitToPlayer | 18 | 6.4 |
+| 2331 |  | GameLoop_StartUsingMainBigFile(void) | 00175ab8 | sheet | 90 | 20 | 00175a28 | UseNamedVivFile | 90 | 5.2 |
+| 3092 |  | RFog::Debug(void) | 001aca28 | sheet | b0 | 48 | 001ac978 | RFog::SetFogParams | b0 | 3.0 |
+| 4469 |  | Simulation::SpawnNewtonObject(COORD3 &, COORD3 &, COORD3 &, COO | 00200200 | sheet | f8 | e0 | 002002e0 | Simulation::SpawnNewtonObject | e8 | 3.5 |
+| 7191 |  | PRINT_string(char *,...) | 00260818 | ghidra | 50 | 48 | 00260860 | FUN_00260860 | 50 | 7.0 |

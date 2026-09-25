@@ -1,4 +1,713 @@
 {
- "generated": "Fri Sep 25 21:38:14 2026",
- "moves": []
+ "generated": "Fri Sep 25 22:14:33 2026",
+ "moves": [
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001afc58",
+   "name": "RHighLevelLightManager::AddPositionalLight",
+   "batch": "P005"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0024b5e0",
+   "name": "GSystem::COLOR_ConvertColorToCoord4",
+   "batch": "P005"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0010f620",
+   "name": "ActGlobalPoseOverrideArray::SetGlobalPoseOverrides",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00110cf8",
+   "name": "ActManager::SetIRMode",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001191e8",
+   "name": "AICharacterEnemy::TargetIsInRange",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0011bf80",
+   "name": "AICharacterEnemyGround::DoAiming",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0011c070",
+   "name": "AICharacterEnemyGround::DoFiring",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0011c208",
+   "name": "AICharacterEnemyGround::DoDying",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0011cf80",
+   "name": "AICharacterEnemyGround::ThreatenedByVehicle",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00120160",
+   "name": "AICharacterEnemySSnow::DoAiming",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001202e0",
+   "name": "AICharacterEnemySSnow::DoDying",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001214d0",
+   "name": "AICharacterEnemySunroof::DoTilting",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00122780",
+   "name": "AICharacterEnemyWindow::DoNeutral",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00129d80",
+   "name": "AICharacterPedestrian::CheckVehicleThreat",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0012be48",
+   "name": "AIElementController::Construct",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0012be90",
+   "name": "AIElementController::Destruct",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0012bec8",
+   "name": "AIElementController::Update",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0012e350",
+   "name": "AIGroundVehicle::Update",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0012e468",
+   "name": "AIGroundVehicle::SetNavigateMode",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0012e808",
+   "name": "AIGroundVehicle::DoAttackMode",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00130140",
+   "name": "AIGroundVehicle::UpdateNavPos",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00130508",
+   "name": "AIGroundVehicle::DoMoveMode",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00130e88",
+   "name": "AIGroundVehicle::EngageAutoDrive",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00131018",
+   "name": "AIGroundVehicle::DoPlayerLogic",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00131080",
+   "name": "AIGroundVehicle::DoAutoDriveUpdate",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00131620",
+   "name": "AIGroundVehicle::DoSplinePathUpdate",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00131770",
+   "name": "AIGroundVehicle::DoAgentStateUpdate",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00132808",
+   "name": "AIGroundVehicle::Spawn",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00132ba8",
+   "name": "AIGroundVehicle::UnSpawn",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00132d80",
+   "name": "AIGroundVehicle::DoTrafficStateUpdate",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00132f80",
+   "name": "AIGroundVehicle::GetLookAhead",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001330d0",
+   "name": "AIGroundVehicle::DrivableVec",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00133238",
+   "name": "AIGroundVehicle::BarriersInPath",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00133ab0",
+   "name": "AIGroundVehicle::DriveToPointTraffic",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00133f60",
+   "name": "AIGroundVehicle::DriveToPoint",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001349c0",
+   "name": "AIGroundVehicle::DriveToPointSub",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00135018",
+   "name": "AIGroundVehicle::GetHeliCollNav",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001351d0",
+   "name": "AIGroundVehicle::GetCollNav",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001385d8",
+   "name": "AIHelicopter::GetDirectionToTarget",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013c4c8",
+   "name": "AIRoadSpawn::Get",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013cfd8",
+   "name": "AIRoadSpawn::PedRespawnPosCheck",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013d228",
+   "name": "AIRoadSpawn::PedRespawnAvailable",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001434c8",
+   "name": "DebugIndexer::~DebugIndexer",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001435c0",
+   "name": "DebugItem::~DebugItem",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001435f0",
+   "name": "DebugItem::Increase",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001435f8",
+   "name": "DebugItem::Decrease",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00143600",
+   "name": "DebugItem::SetToMin",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00143608",
+   "name": "DebugItem::SetToMax",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00143610",
+   "name": "DebugItem::AsString",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00143650",
+   "name": "DebugItem::Debounce",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00143658",
+   "name": "DebugItem::IsIndexed",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00143660",
+   "name": "DebugItem::GetIndexer",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a01a8",
+   "name": "Draw::Draw2dLine",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001adcc0",
+   "name": "RRenderSharedData::SendPerWorldInstance",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001adce8",
+   "name": "RRenderSharedData::GetShadowBrightness",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001ade10",
+   "name": "RRenderSharedData::SendPerObjectInstance",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001afa88",
+   "name": "RHighLevelLightManager::AddExplosion",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001afba8",
+   "name": "RHighLevelLightManager::AddMissile",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001b62d0",
+   "name": "RPlayerCamera::UpdateADWeaponAnims",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001ba2f8",
+   "name": "RPlayerCamera::ShakeCamera",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001ba418",
+   "name": "RPlayerCamera::SetCameraModeByIndex",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001ba518",
+   "name": "RPlayerCamera::SetCameraModeByType",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001bb970",
+   "name": "RPlayerCamera::EndMissileCamera",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001bcab8",
+   "name": "RPlayerCamera::TriggerFixedCamera",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001bcc00",
+   "name": "RPlayerCamera::CameraInputCallback",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001bd070",
+   "name": "RPlayerCamera::SetAutoDriveForwardLock",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c1ac8",
+   "name": "RReflection::TextureWeaponEnvMap",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c1ad8",
+   "name": "RReflection::TextureSpecular",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c1ae8",
+   "name": "RReflection::Texture",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c1af8",
+   "name": "RReflection::GetReflectionState",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c1b08",
+   "name": "RReflection::GetReflectionStateGlass",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c1e10",
+   "name": "RReflection::Begin",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c1ec0",
+   "name": "RReflection::Draw",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c2440",
+   "name": "RReflection::End",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c8ad8",
+   "name": "RSceneObj::DestroyAll",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c8b08",
+   "name": "RSceneObj::SetEventDynamicData",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c9730",
+   "name": "RSceneObj::GetEnvironmentIndex",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c9a80",
+   "name": "RSceneObj::GetBoneByIndex",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c9b28",
+   "name": "RSceneObj::SetPhysics",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c9c78",
+   "name": "RSceneObj::GetVelocity",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001d37f0",
+   "name": "RVehicle::RenderDeferredEffects",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001d3b10",
+   "name": "RVehicle::StartColourDissolve",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001d3c28",
+   "name": "RVehicle::TriggerFX",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001e2320",
+   "name": "RLightning::AdvanceBoltDraw",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001e2380",
+   "name": "RLightning::RenderBolts",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001e2698",
+   "name": "RLightning::UpdateMetrics",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001e28b8",
+   "name": "RLightning::MidPoint::Respawn",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001e29c8",
+   "name": "RLightning::Segment::Update",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001ec138",
+   "name": "RShadowMap::Begin",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001ec1f8",
+   "name": "RShadowMap::ClearShadowMap",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001ec300",
+   "name": "RShadowMap::End",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001f5220",
+   "name": "RTyreTrack::Draw",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00216b60",
+   "name": "WCollisionMgr::GetGroundCollision",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00216d30",
+   "name": "WCollisionMgr::ClosestCollisionInfo",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00233da8",
+   "name": "GFXGallery::GET_SceneObj",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00233dd0",
+   "name": "GFXGallery::GET_Key",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00244f30",
+   "name": "GHud::AimOff",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002457a0",
+   "name": "GHud::SetTarget",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00245890",
+   "name": "GHud::TriggerMissionMsg",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002470f0",
+   "name": "GHud::DrawDebugMessage",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0024b640",
+   "name": "GSystem::COLOR_ReduceAlpha",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0028ec50",
+   "name": "EAGL::RenderContextExtension::SetDepthOfFieldClut",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00290fe0",
+   "name": "EAGL::RenderContextExtension::ReadRectAtEndOfFrame",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00296b98",
+   "name": "EAGL::ViewPort::IsSphereInView",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029a008",
+   "name": "EAGL::DrawGouraud::Init",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029a728",
+   "name": "EAGL::DrawClipGouraud::Init",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029ae48",
+   "name": "EAGL::DrawTextured::Init",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00266910",
+   "name": "EAGLAnim::FnCompoundChannel::EvalPhase",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00267528",
+   "name": "EAGLAnim::BoneMask::SetBone",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00271e60",
+   "name": "EAGLAnim::FnRawPoseChannel::Eval",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00271e88",
+   "name": "EAGLAnim::FnRawPoseChannel::EvalSQT",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00279498",
+   "name": "EAGLAnim::FnRunBlender::EvalPhase",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002d4d10",
+   "name": "UGroup::EndianPrepareMembers",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002d4e20",
+   "name": "UGroup::EndianUnprepareMembers",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002dab48",
+   "name": "CARP::TagReference::TagReference",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002db080",
+   "name": "CARP::PathInfo::EvaluateLinear",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002db320",
+   "name": "CARP::PathInfo::Evaluate",
+   "batch": "P006"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002fc130",
+   "name": "ACharacter::Play",
+   "batch": "P006"
+  }
+ ]
 }

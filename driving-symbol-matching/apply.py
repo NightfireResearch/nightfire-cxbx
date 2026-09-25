@@ -82,8 +82,10 @@ def check(items, program):
     # Every function's qualified name now, to refuse a new name that already exists at another address.
     existing = {}
     qualified = g.qualified_names(program)
+    renamed = {int(it["xbox"], 16) for it in items if it.get("rename", True)}   # names this batch frees
     for a, n in g.functions(program):
-        existing.setdefault(qualified.get(a, n), []).append(a)
+        if a not in renamed:
+            existing.setdefault(qualified.get(a, n), []).append(a)
     for it in items:
         a = int(it["xbox"], 16)
         have, _ = live(a, program)
