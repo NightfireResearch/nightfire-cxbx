@@ -1,0 +1,277 @@
+{
+ "batch": "P001",
+ "program": "DRIVING.ELF",
+ "note": "PS2 names from ps2-name-resolutions.json, 25 Sept 2026. Syscall stubs, written-out templates and static initialisers keep their readable names; the symbol file's name goes in the plate comment. 'xbox' is the PS2 address in this batch.",
+ "items": [
+  {
+   "xbox": "0x001184b8",
+   "expect": "New",
+   "name": "ActWeapon::operator_new",
+   "evidence": [
+    "FastAlloc(size, \"ActWeapon\"); sheet row 350"
+   ],
+   "create": false,
+   "sheet_name": "ActWeapon::operator new(unsigned int)"
+  },
+  {
+   "xbox": "0x00119560",
+   "expect": "new",
+   "name": "AICharacter::operator_new",
+   "evidence": [
+    "sheet row 383"
+   ],
+   "create": false,
+   "sheet_name": "AICharacter::operator new(unsigned int)"
+  },
+  {
+   "xbox": "0x00119580",
+   "expect": "delete",
+   "name": "AICharacter::operator_delete",
+   "evidence": [
+    "sheet row 384"
+   ],
+   "create": false,
+   "sheet_name": "AICharacter::operator delete(void *, unsigned int)"
+  },
+  {
+   "xbox": "0x0017e4f0",
+   "expect": "_ctor",
+   "name": "Explosion::operator_new",
+   "evidence": [
+    "FastAlloc(size, \"Explosion\"): an allocator, not a constructor; sheet row 2463"
+   ],
+   "create": false,
+   "sheet_name": "Explosion::operator new(unsigned int)"
+  },
+  {
+   "xbox": "0x002e9688",
+   "expect": "Event",
+   "name": "AStream::Get",
+   "evidence": [
+    "URefCounter<AStream>::Get, then GetReference(name); sheet row 8794"
+   ],
+   "create": false,
+   "sheet_name": "AStream::Get(char *)"
+  },
+  {
+   "xbox": "0x0024edf0",
+   "expect": "__pure_virtual",
+   "name": "__terminate",
+   "evidence": [
+    "calls through the terminate-handler pointer (0x33bfb4), no message; sheet row 5595"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x0024ede0",
+   "expect": "FUN_0024ede0",
+   "name": "__default_terminate",
+   "evidence": [
+    "the terminate-handler pointer's default value; calls abort; sheet row 5594"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x00253590",
+   "expect": "setBaseDirectory",
+   "name": "FILESYS_setcurrentpath",
+   "evidence": [
+    "sheet row 6949"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x00260818",
+   "expect": "someDebugPrint",
+   "name": "PRINT_string",
+   "evidence": [
+    "sheet row 7190"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x0030d938",
+   "expect": "strcat",
+   "name": "SNDDRV_strcat",
+   "evidence": [
+    "EA's private strcat; sheet row 7300"
+   ],
+   "create": false,
+   "sheet_name": "SNDDRV_strcat(char *, char *)"
+  },
+  {
+   "xbox": "0x00312b00",
+   "expect": "SNDMEMI_free",
+   "name": "SNDI_Delete",
+   "evidence": [
+    "2-instruction wrapper jumping to SNDMEMI_free; sheet row 7362"
+   ],
+   "create": false,
+   "sheet_name": "SNDI_Delete(void *)"
+  },
+  {
+   "xbox": "0x003037f0",
+   "expect": "someLibraryAssert",
+   "name": "Error",
+   "evidence": [
+    "empty in retail; sheet row 9292"
+   ],
+   "create": false,
+   "sheet_name": "Error(char *)"
+  },
+  {
+   "xbox": "0x002b71e0",
+   "expect": "sceResettyinit",
+   "name": "sceResetttyinit",
+   "evidence": [
+    "Sony's own spelling (three t's); sheet row 7876"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x002b6a40",
+   "expect": "AddIntcHandler2",
+   "name": "AddIntcHandler",
+   "evidence": [
+    "syscall 0x10; sheet row 7754 (0x2b6a50 is AddIntcHandler2, row 7755)"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x002b6a80",
+   "expect": "AddDmacHandler",
+   "name": "AddDmacHandler2",
+   "evidence": [
+    "syscall 0x12; sheet row 7758 (0x2b6a70 is AddDmacHandler, row 7757)"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x00165bc8",
+   "expect": "Update",
+   "name": "IFeedback::Update",
+   "evidence": [
+    "between IFeedbackPort::Reset and IFeedback::Thread, only caller IFeedback::Thread; sheet row 2078. Move out of ITimer by hand"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x00208a00",
+   "expect": "maybeFindObjective",
+   "name": "SMissionManager::GetObjectiveByID",
+   "evidence": [
+    "walks a list comparing ids; sheet row 4640"
+   ],
+   "create": false,
+   "sheet_name": "SMissionManager::GetObjectiveByID(unsigned int)"
+  },
+  {
+   "xbox": "0x00228b70",
+   "expect": "wSoundGroup_dtor",
+   "name": "WSoundGroup::~WSoundGroup",
+   "evidence": [
+    "destructor with delete flag; sheet row 5021"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x0017a7c0",
+   "expect": "_M_insert_aux",
+   "name": "Vector_Schedule::_M_insert_aux",
+   "evidence": [
+    "the vector<Schedule *> template, written out; sheet row 2400"
+   ],
+   "create": false,
+   "rename": false,
+   "sheet_name": "vector<Schedule *, allocator<Schedule *> >::_M_insert_aux(Sched..."
+  },
+  {
+   "xbox": "0x0017a928",
+   "expect": "List_TaskRecord_Clear",
+   "name": "List_TaskRecord_Clear",
+   "evidence": [
+    "the _List_base<TaskRecord> template, written out; sheet row 2401"
+   ],
+   "create": false,
+   "rename": false,
+   "sheet_name": "_List_base<TaskRecord, allocator<TaskRecord> >::clear(void)"
+  },
+  {
+   "xbox": "0x0029fd60",
+   "expect": "ModelType_global_ctors",
+   "name": "EAGL::DynamicLoader::ModelType_global_ctors",
+   "evidence": [
+    "GCC static initialiser; sheet row 6289"
+   ],
+   "create": false,
+   "rename": false,
+   "sheet_name": "global constructors keyed to EAGL::DynamicLoader::ModelType"
+  },
+  {
+   "xbox": "0x0029fd80",
+   "expect": "ModelType_global_dtors",
+   "name": "EAGL::DynamicLoader::ModelType_global_dtors",
+   "evidence": [
+    "GCC static finaliser; sheet row 6290"
+   ],
+   "create": false,
+   "rename": false,
+   "sheet_name": "global destructors keyed to EAGL::DynamicLoader::ModelType"
+  },
+  {
+   "xbox": "0x002b6990",
+   "expect": "ResumeIntrDispatch",
+   "name": "ResumeIntrDispatch",
+   "evidence": [
+    "syscall 5; sheet row 7743"
+   ],
+   "create": false,
+   "rename": false,
+   "sheet_name": "RFU005"
+  },
+  {
+   "xbox": "0x002b69c0",
+   "expect": "ResumeT3IntrDispatch",
+   "name": "ResumeT3IntrDispatch",
+   "evidence": [
+    "syscall 8; sheet row 7746"
+   ],
+   "create": false,
+   "rename": false,
+   "sheet_name": "RFU008"
+  },
+  {
+   "xbox": "0x002b6d20",
+   "expect": "SetupThread",
+   "name": "SetupThread",
+   "evidence": [
+    "syscall 0x3c; sheet row 7800"
+   ],
+   "create": false,
+   "rename": false,
+   "sheet_name": "RFU060"
+  },
+  {
+   "xbox": "0x002b6d30",
+   "expect": "SetupHeap",
+   "name": "SetupHeap",
+   "evidence": [
+    "syscall 0x3d; sheet row 7801"
+   ],
+   "create": false,
+   "rename": false,
+   "sheet_name": "RFU061"
+  },
+  {
+   "xbox": "0x002b70e0",
+   "expect": "SetSyscall",
+   "name": "SetSyscall",
+   "evidence": [
+    "syscall 0x74; sheet row 7860"
+   ],
+   "create": false,
+   "rename": false,
+   "sheet_name": "RFU116"
+  }
+ ]
+}

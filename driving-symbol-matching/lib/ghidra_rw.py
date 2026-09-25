@@ -1,13 +1,13 @@
 """Writes to Ghidra. Only apply.py imports this.
 
-A short whitelist of POST endpoints; every call names Driving.xbe explicitly and nothing else can be targeted.
+A short whitelist of POST endpoints; every call names its program (Driving.xbe or DRIVING.ELF) explicitly.
 """
 
 import json
 import urllib.parse
 import urllib.request
 
-from lib.ghidra_ro import BASE, XBOX
+from lib.ghidra_ro import BASE, PS2, XBOX
 
 WRITE = {
     "create_function",
@@ -19,8 +19,8 @@ WRITE = {
 def post(endpoint, body, program=XBOX, timeout=120):
     if endpoint not in WRITE:
         raise PermissionError(f"{endpoint} is not in the write list")
-    if program != XBOX:
-        raise PermissionError("only Driving.xbe is written to")
+    if program not in (XBOX, PS2):
+        raise PermissionError("only Driving.xbe and DRIVING.ELF are written to")
     url = f"{BASE}/{endpoint}?{urllib.parse.urlencode({'program': program})}"
     req = urllib.request.Request(url, data=json.dumps(body).encode(), method="POST",
                                  headers={"Content-Type": "application/json"})
