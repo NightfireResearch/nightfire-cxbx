@@ -46568,13 +46568,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000a99a0",
+        "name": "GlareBlinkBrightness",
         "address": "0x000a99a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000a99a0()",
+        "prototype_string": "undefined GlareBlinkBrightness()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -46584,13 +46584,14 @@
         "address": "0x000a9aa0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "RGlareManager *",
+            "Glare *",
+            "MATRIX4 *",
+            "float"
         ],
-        "prototype_string": "undefined FUN_000a9aa0(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "void __thiscall AddModelGlare(Glare * node, MATRIX4 * transform, float distance)",
         "parameters": [
             "[RGlareManager * this@ECX:4 (auto)]",
             "[Glare * node@Stack[0x4]:4]",
@@ -46603,15 +46604,19 @@
     {
         "name": "RGlareManager::AddGlare",
         "address": "0x000a9c10",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4"
+            "RGlareManager *",
+            "Glare *",
+            "int"
         ],
-        "prototype_string": "undefined AddGlare(undefined4 param_1)",
+        "prototype_string": "void __thiscall AddGlare(Glare * glare, int unused)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[RGlareManager * this@ECX:4 (auto)]",
+            "[Glare * glare@Stack[0x4]:4]",
+            "[int unused@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "RGlareManager"
@@ -46619,12 +46624,16 @@
     {
         "name": "RGlareManager::RGlareManager",
         "address": "0x000a9c70",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined RGlareManager()",
-        "parameters": [],
+        "return_type": "RGlareManager *",
+        "param_types": [
+            "RGlareManager *"
+        ],
+        "prototype_string": "RGlareManager * __thiscall RGlareManager(void)",
+        "parameters": [
+            "[RGlareManager * this@ECX:4 (auto)]"
+        ],
         "is_thunk": false,
         "namespace": "RGlareManager"
     },
@@ -46689,12 +46698,12 @@
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "void *",
+            "RGlareManager *",
             "undefined1"
         ],
         "prototype_string": "undefined __thiscall DrawGlares(undefined1 param_1)",
         "parameters": [
-            "[void * this@ECX:4 (auto)]",
+            "[RGlareManager * this@ECX:4 (auto)]",
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,

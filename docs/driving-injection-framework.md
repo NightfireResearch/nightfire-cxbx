@@ -397,8 +397,7 @@ constructor are typed `__thiscall` on `RGlareManager *`, and the decompiler now 
 things about the Ghidra MCP server, for next time: it prefixes new field names in Hungarian notation from the
 type as written (`float` gives `fl`, arrays `a`, `dword` `dw`) - writing `int32_t`, `uint32_t`, `pointer` or
 `uint8_t` avoids it for those types, but floats and arrays cannot avoid it - and its field rename fails on this
-Ghidra version, so those fields are renamed in the UI. It also has a naming linter; `strict_mode=false`
-on `rename_function_by_address` overrides it.
+Ghidra version. Both come from the server's convention layer, not Ghidra: `Strict Naming Enforcement` (Tool Options, GhidraMCP) off turns off the prefixing and the function-name linter, or `.ghidra-mcp/conventions.json` in the project with `hungarian.auto_fix_struct_fields: false` turns off just the prefixing. The rename failure is a version mismatch - v6.0.0 is built against Ghidra 12.1.2, whose `DataTypeComponent.setFieldName` it calls, and this project's Ghidra is 12.0.4. With enforcement off, the 17 prefixed fields were renamed by adding a field of the same type at the same offset, which replaces the old one in place (removing a field shifts everything after it, so that is not a way to rename). The re-sync afterwards reproduced the committed structures exactly.
 
 **Generator.** The pilot needed two things the earlier steps had not: structures embedded by value (`Glare
 glares[128]`, `GlareType types[80]`, `_VEC3 position`), which are now generated as plain structs in dependency
