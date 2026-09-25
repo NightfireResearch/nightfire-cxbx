@@ -34742,7 +34742,7 @@
         "namespace": "Global"
     },
     {
-        "name": "DrawGroupDrawInstance",
+        "name": "DrawGroupDrawEffects",
         "address": "0x0007dcb0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -34750,7 +34750,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined DrawGroupDrawInstance(undefined4 param_1)",
+        "prototype_string": "undefined DrawGroupDrawEffects(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -34758,7 +34758,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0007dd50",
+        "name": "DrawGroupDrawModel",
         "address": "0x0007dd50",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -34768,7 +34768,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0007dd50(undefined param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "undefined DrawGroupDrawModel(undefined param_1, undefined4 param_2, undefined4 param_3)",
         "parameters": [
             "[undefined param_1@<UNASSIGNED>]",
             "[undefined4 param_2@<UNASSIGNED>]",
@@ -34778,7 +34778,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0007ddd0",
+        "name": "DrawGroupDrawInstance",
         "address": "0x0007ddd0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -34789,7 +34789,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0007ddd0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
+        "prototype_string": "undefined DrawGroupDrawInstance(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -34870,7 +34870,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0007dfe0",
+        "name": "DrawIndexedInstanceList",
         "address": "0x0007dfe0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -34884,7 +34884,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0007dfe0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7)",
+        "prototype_string": "undefined DrawIndexedInstanceList(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]",
@@ -41094,7 +41094,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000940c0",
+        "name": "RTextureContextManager::GetContext",
         "address": "0x000940c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -41102,12 +41102,12 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined FUN_000940c0(undefined1 param_1)",
+        "prototype_string": "undefined GetContext(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RTextureContextManager"
     },
     {
         "name": "FUN_000940f0",
@@ -46584,16 +46584,20 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000a9870",
+        "name": "RGlareManager::CreateUVsFromTexIDs",
         "address": "0x000a9870",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_000a9870()",
-        "parameters": [],
+        "return_type": "void",
+        "param_types": [
+            "RGlareManager *"
+        ],
+        "prototype_string": "void __thiscall CreateUVsFromTexIDs(void)",
+        "parameters": [
+            "[RGlareManager * this@ECX:4 (auto)]"
+        ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "RGlareManager"
     },
     {
         "name": "GlareBlinkBrightness",
