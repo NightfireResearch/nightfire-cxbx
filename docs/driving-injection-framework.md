@@ -136,8 +136,9 @@ preprocessor to scan headers as well as `.cpp` files.
 Ghidra's export already records where each parameter lives (`param_1@EAX`, `this@ECX`, `@Stack[0x4]`).
 From that the preprocessor can emit the naked-assembly adaptor that `AUTOLTCG` currently asks a person to
 write: move the register arguments to where a normal convention wants them, call the C++ function, put the
-result back. That covers the driving engine's 55 functions with custom storage and closes the action
-engine's `AUTOLTCG` TODO.
+result back. That covers the driving engine's register-argument functions - about 37 once measured, not the 55 Ghidra
+flags, which are mostly ordinary (see "Does the driving engine need register-argument adaptors?") - and
+closes the action engine's `AUTOLTCG` TODO.
 
 ### 7. Runtime safety nets
 
@@ -287,4 +288,49 @@ engine's `AUTOLTCG` TODO.
   header and its entries were removed afterwards.
 - **Not done: the register-argument adaptors** (section 6). The ABI check refuses a function that takes
   arguments in `EAX`, `EBX`, `ESI` or `EDI` and points at `AUTOLTCG`; generating the adaptor is worth doing
-  when the first driving-engine function that needs one is being replaced, with it as the test.
+  when the first driving-engine function that needs one is being replaced, with it as the test. Whether any
+  do is answered below.
+
+## Does the driving engine need register-argument adaptors?
+
+Checked on 25 September 2026, because none had turned up in practice. **Yes, but few, and none of the
+classes being worked on.** From `tools/abi_driving.json`, every function that reads `EAX`, `EBX`, `ESI` or
+`EDI` on entry, or `EDX` without `ECX` - arguments where no C++ convention puts them - or that Ghidra marks as
+having custom variable storage:
+
+| | Functions | Needs an adaptor? |
+|---|---:|---|
+| Library code (D3D8, DirectSound, XAPI, the CRT, `0x0010e000` up) | 110 | No - replaced whole by the seams, or never replaced |
+| Game code Ghidra marks "custom storage", where the binary reads only `ECX` and the stack | 34 | No - ordinary `__thiscall`; Ghidra's flag comes from edited signatures |
+| Game code fragments starting off a 16-byte boundary (`0x00081619`, `0x000898ee`, `0x000e384a`) | 4 | No - pieces of a larger function, jumped into rather than called |
+| Game code whose odd read is far from the entry (`0x00028bb0`, `GameLoop_StopUsingMainBigFile`) | 2 | Probably not - an exception-unwind block counted as part of the function |
+| **Game code reading a register argument at entry** | **37** | **Yes** |
+
+So Ghidra's custom-storage flag is wrong in both directions for this binary: every game-code function it flags
+is ordinary, and none of the 37 real ones is flagged. The measured facts are the signal to use, and the ABI
+check already refuses all 37 by name, so none can be replaced by mistake.
+
+The 37 are small, hot helpers that link-time code generation gave private conventions to, in two places:
+Bond/EAGL game code (`0x00077000`-`0x000f2000`) and EA's C libraries just below XAPI (`0x00107000`-`0x0010e000`:
+the timer, sound and file layers). Confirmed from the callers' side:
+
+- **`DrawGroupDrawInstance` (`0x0007dcb0`)**, the model draw that queues glares: both callers do
+  `mov eax, esi` and set `EDI` (`mov edi, ebp` / `lea edi, [esp + 0x14]`) immediately before the call, with a
+  third argument pushed. Two register arguments plus the stack.
+- **The glare blink, `FUN_000a99a0`**: its one caller (`FUN_000a9aa0`) does `mov esi, ebp` right before the
+  call - the glare node comes in `ESI`.
+- **`GFX::Trigger` (`0x000d32f0`)** reads `ESI` and `EDI` on entry with four stack arguments; its callers' `ESI`
+  set-up is further back than a few instructions, and was not traced.
+- **Accessors at `0x000ee130`-`0x000ee180` and `0x000e8b20`/`0x000e8b30`**: one or two instructions each, `this`
+  in `ECX` and an index in `EAX` (`mov eax, [ecx + eax*4 + 0x20]; ret`).
+
+Others worth knowing before replacing them: `RAnimEngine::Shutdown` (an index in `EDI`), `FUN_000e51d0` (a
+string in `EDX`), and `FUN_000bd690`, which reads four registers.
+
+**What this means for the plan.** The adaptor generator (section 6) stays unbuilt until one of these is being
+replaced, and should be built then, with it as the test - `FUN_000a99a0` is the natural first, being small,
+understood from the glare work, and with one caller. Until then, nothing is at risk: the injection table
+cannot patch any of them without an `AUTOLTCG` tag and a hand-written adaptor, and the `static_assert` names
+the register and the instruction that reads it. Note also that the analyser can under-report: it found `EAX`
+for `DrawGroupDrawInstance` but not the `EDI` its callers also set, so read the callers before writing an
+adaptor.
