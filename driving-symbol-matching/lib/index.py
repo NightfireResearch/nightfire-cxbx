@@ -37,6 +37,7 @@ class Index:
         self.ps2_addrs = sorted(self.ps2)
         self.xbox_addrs = sorted(self.xbox)
         self._row_ps2()
+        self._infill()
         self._xbox_rows()
 
     def _row_ps2(self):
@@ -61,6 +62,22 @@ class Index:
             if len(hits) == 1:
                 r["ps2"], r["ps2_from"] = hits[0], "ghidra"
 
+    def _infill(self):
+        """PS2 addresses from retail layout (lib/ps2_infill.py), unless PS2 Ghidra already names it otherwise."""
+        from lib.ps2_infill import infill
+
+        self.ps2_conflicts = []
+        taken = {r["ps2"] for r in self.rows if r["ps2"] is not None}
+        for i, (a, how) in infill(self).items():
+            r = self.rows[i]
+            have = self.ps2[a]["qualified"]
+            if a in taken:
+                self.ps2_conflicts.append((r, a, how, have, "address already has a sheet row"))
+            elif not have.startswith("FUN_") and not _same(have, r["name"]):
+                self.ps2_conflicts.append((r, a, how, have, "PS2 Ghidra name differs"))
+            else:
+                r["ps2"], r["ps2_from"] = a, "infill-" + how
+
     def _xbox_rows(self):
         by_key = {}
         for i, r in enumerate(self.rows):
@@ -71,6 +88,11 @@ class Index:
             if len(hits) == 1:
                 self.xbox_row[a] = hits[0]
 
+
+
+def _same(ghidra_name, sheet_name):
+    g, s = key(ghidra_name).lower(), key(sheet_name).lower()
+    return g == s or s.endswith("::" + g) or g.replace("_", "") == s.replace("_", "").replace("::", "")
 
 
 def body_size(f):

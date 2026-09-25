@@ -7,8 +7,14 @@ names to PS2 retail addresses only, so the work is matching PS2 functions to Xbo
 
 - Everything here reads Ghidra through `lib/ghidra_ro.py`. It sends only GET requests to a whitelist of read
   endpoints, and always names the program (an unnamed request hits whichever program is current).
-- Writes will go through one script only (not written yet). It will take a fresh snapshot first, run dry by
-  default, write only proposals the user has approved, and log every change it makes.
+- Writes go through `apply.py` only. It runs dry by default. With `--apply` it snapshots first, then checks
+  every item against live Ghidra: the current name must match what was reviewed, the old name must not be used
+  in `src/driving`, and new names must be unique. One failed check stops the whole batch. It reads back each
+  write and logs old and new values for `--undo`.
+- Conventions (user, 25 Sept 2026): a folded function takes its first canonical name by sheet row, with the
+  full list in the plate comment. MSVC's vtable slot 0 is `Class::scalar_deleting_destructor`, and the
+  function it calls that stores the class's vtable is `Class::~Class`. Functions a vtable reaches but Ghidra
+  never made into functions may be created.
 - `snapshot.py` records every function's name, namespace, signature and plate comment, enough to undo names
   and signatures. It does not replace a copy of the Ghidra project; take one of those before a batch too.
 - Beware MCP tools that sound read-only but aren't: `disassemble_bytes` disassembles into the listing
@@ -24,7 +30,13 @@ names to PS2 retail addresses only, so the work is matching PS2 functions to Xbo
 | `snapshot.py` | `python snapshot.py [program]`: take a snapshot to `data/snapshots/` |
 | `region.py` | `python region.py 0x59900 0x5bb00`: Xbox range beside its sheet window |
 | `vtable_pairs.py` | `python vtable_pairs.py AICharacterBond`: PS2 and Xbox vtables slot by slot |
-| `results/` | reports and reviewed proposals (committed) |
+| `lib/image.py` | both programs' section bytes, cached in `data/image/` |
+| `lib/ps2_infill.py` | PS2 addresses for sheet rows from retail layout (exact sizes between known rows) |
+| `vtables.py` | every Xbox vtable (code-pointer runs stored by `mov [reg], imm32`) paired with the sheet's PS2 vtables |
+| `propose_vtables.py` | Xbox name proposals from the certain vtable pairs; folded functions and destructors handled |
+| `apply.py` | the only writer: `python apply.py results/batches/batch-001.json [--apply]`, `--undo <log>` |
+| `lib/ghidra_rw.py` | write whitelist used by apply.py (create_function, rename, plate comment; Driving.xbe only) |
+| `results/` | reports, proposals and approved batches (committed) |
 | `data/` | sheet download, snapshots, caches (not committed) |
 
 Setup: `pip install openpyxl`, then

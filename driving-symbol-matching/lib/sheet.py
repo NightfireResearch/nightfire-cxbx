@@ -57,7 +57,8 @@ def parse():
         if name is None:
             continue
         name = str(name)
-        if name.lower().endswith(".obj"):
+        low = name.lower()
+        if low.endswith((".obj", ".o", ".o)", ".obj)")) or ":" + chr(92) in name:  # object-file marker rows
             obj = name.split(chr(92))[-1]  # backslash: heredocs have eaten literal ones before
             continue
         rows.append({
