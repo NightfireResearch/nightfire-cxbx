@@ -38,6 +38,8 @@ names to PS2 retail addresses only, so the work is matching PS2 functions to Xbo
 | `propose_vtables.py` | Xbox name proposals from the certain vtable pairs; folded functions and destructors handled |
 | `apply.py` | the only writer: `python apply.py results/batches/batch-001.json [--apply]`, `--undo <log>`, `--namespaces` (checklist of by-hand moves). A batch's `program` picks Driving.xbe (default) or DRIVING.ELF; an item with `"rename": false` gets only the plate note |
 | `../ghidra/NightfireNamespaces.py` | run by hand in Ghidra (Script Manager, category Nightfire): moves the functions listed in `results/namespace-moves.json` (`python apply.py --pending-namespaces`) into their namespaces, after showing the list and asking; one undoable step |
+| `classes.py` | which namespaces are C++ classes, from the symbol file (vtable, type_info, constructor/destructor, const method): `results/class-namespaces.json` and `.md` |
+| `../ghidra/NightfireClasses.py` | run by hand in Ghidra: converts the listed namespaces into classes, after showing the list and asking; one undoable step |
 | `lib/ghidra_rw.py` | write whitelist used by apply.py (create_function, rename, plate comment; Driving.xbe only) |
 | `results/` | reports, proposals and approved batches (committed) |
 | `data/` | sheet download, snapshots, caches (not committed) |

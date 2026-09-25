@@ -1,0 +1,6585 @@
+{
+ "Driving.xbe": [
+  {
+   "path": "AEngine",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AFader",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "AGun",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "AHelicopter",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AHorn",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "AICharacterBond",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterEnemyDriver",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterHands",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterPassenger",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterPedestrian",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AIndex",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "AMenuSoundPriv",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ASceneObj",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ASystem",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "AUltraLite",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AVoice",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "AWorldSound",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ActActorDatabase",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActAnimGroup",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActAnimationDatabase",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActCharacterInfo",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActEventResolver",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActEvents",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActManager",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActModel",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActModelDatabase",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActPoser",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActSkeleton",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActSkeletonDatabase",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActTextureDatabase",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActWeapon",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ActWeaponDatabase",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "AttributeSet",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "CARP::SymbolicResolver",
+   "evidence": [
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "CARP::TagReference",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "CARP::TagResolver",
+   "evidence": [
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "DTuningDBMgr",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "DTuningFile",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "DTuningFile::Reader",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "DebugData",
+   "evidence": [
+    "type_info"
+   ]
+  },
+  {
+   "path": "E007Logo",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGL::ConstructorPool",
+   "evidence": [
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::Device",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::DynamicLoader",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::GeoPrimState",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::Model",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::RenderContext",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::RuntimeAllocConstructorPool",
+   "evidence": [
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::SymbolPool",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::TAR",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::TextureRenderContext",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::Transform",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "EAGL::ViewPort",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGLAnim::AnimBank",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "EAGLAnim::EventTarget",
+   "evidence": [
+    "const method",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnAnim",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnAnimMemoryMap",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnCompoundChannel",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaF1",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaF3",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaLerpChan",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaQ",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaQFast",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaQuatChan",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaSingleQ",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnKeyLerpChan",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnKeyQuatChan",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnPhaseChan",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnPoseBlender",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnPoseMirror",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnRawEventChannel",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnRawLinearChannel",
+   "evidence": [
+    "const method",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnRawPoseChannel",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnRawStateChan",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnRunBlender",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnTurnBlender",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAICommand",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementFireOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementFireOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementSetAccuracy",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementSetCharParams",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementSetNonScoreable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementSetVehicleParams",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementSetWakeRange",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIUpdate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EActivateAIElement",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EActorMuzzleFlash",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAddObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAddScoreAction",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAddScoreObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAnimUpdate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAutoDrive",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAutoDriveSpeedChange",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAutoDriveSteering",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAwardHitToPlayer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAwardKillToPlayer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EBashCarAlongObjectAxis",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EBeginDownloadCode",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EButtonMsgOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EButtonMsgOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECall911",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECallStage",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECameraShake",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECameraUpdate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECameraZoom",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EChangeCarCameraView",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EChangeMaxTraffic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECinematicCamera",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EClearBitMagicCounter",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EClearProgrammerEvent",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EControlToCPU",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EControlToPlayer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EControlToSpline",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECustomTransition",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDamagePlayer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDeactivateAIElement",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDisablePowerUp",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDisableTrigger",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDisplayObjectiveText",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDisplayText",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDropMine",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EEnablePowerUp",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EEnableTrigger",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EEndCameraAnim",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EEndCarStop",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EEndControlToSpline",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EEndMission",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EExit",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EFESimFrameUpdate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EFailMissionObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EFireEventList",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EFireRandomTrigger",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EFireTriggerSpeedCondition",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EFireWeapon",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EForceCarStop",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EForceNearPedRespawn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EGadgetOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EGadgetOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EHideInstance",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EHideInstanceStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EHitWindow",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EIncMagicCounter",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EInflictDamage",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EInfraRedOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EInfraRedOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EInsertObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EKickAIElement",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EKickObject",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EKillAIElement",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EKillObject",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EKillSentry",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ELavaHaze",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ELetterBoxOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ELetterBoxOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EMaybeActivateAIElement",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EMuzzleFlash",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ENuclearBlast",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectiveAdd",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectiveDisplayText",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectiveFail",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectiveInsert",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectivePass",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectiveSetCurrent",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectiveSetIncomplete",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPassMissionObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPassObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathChangeThrottleDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathChangeThrottleStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathMultiplyThrottleDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathMultiplyThrottleStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSFX",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSFXUpdate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetAccelDelayDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetAccelDelayStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetAccelerationDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetAccelerationStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetDesiredThrottleDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetDesiredThrottleStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetRunningDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetRunningStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetThrottleDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetThrottleStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetTimeDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetTimeStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPause",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayActorEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayCameraAnim",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayCameraSpline",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayCarCameraAnim",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayGiottoEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayPOVDeath",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlaySound",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlaySoundPos",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlaySystemAnim",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayerLose",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayerSetImmunity",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayerWin",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUp",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpAmmo",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpBraking",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpHealth",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpInvulnerable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpMultiDamage",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpShield",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpTimer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpTopSpeed",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EProfileMissionSection",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ERandomExplosion",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EReleaseStream",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ERenderFrame",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EResetAudioMix",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EResetPlayerCar",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EResetPlayerCarPos",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ERestart",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EResume",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ERevertAudioMix",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ERollSub",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESapphirePole",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EScaleFieldOfView",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EScaleFog",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EScheduleEvent",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESentryMuzzleFlash",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAFXMode",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAreaBrightness",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAudioMix",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAutoDriveCamOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAutoDriveCamOffMovie",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAutoDriveCamOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAutoDriveCamOnMovie",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAvoidZone",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetBitMagicCounter",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetCollisionGeometry",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetCreakLevel",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetCullDistanceFactor",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetFrameAnimationTime",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetJumpGravity",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetMagicCounter",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetMagicCounterThreshold",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetMissionMessage",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetNextAISpline",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetNextPath",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetRecSpeedOffset",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetRecordedGameTime",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetReflectiveObject",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetRenderVariation",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetSimRate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetSpecialWeapon",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetSubRollDirection",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetSubtitle",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetTerrain",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetTimer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetVideo",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetVisualDamage",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetWaypoint",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EShake",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EShowInstance",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EShowInstanceStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESimEndFrame",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESimFrameUpdate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnDramaticSmackable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnExplosion",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnExplosionStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnForceEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnSimplePhysics",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnSmackable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnTraffic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStartEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStartMission",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStartTimer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStopEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStopSoundPos",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStopTimedAction",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStopTimer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStreamEvent",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESuppressEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESwitchEffectOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESwitchEffectOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESwitchStingerChannel",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ETargetBeaconOnOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ETimerDrawOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ETimerDrawOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ETwoWheelsOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ETwoWheelsOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EUnloadWeapon",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EWakeupSmackable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "Event",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "FeatureManager",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "GSubtitles",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "GlobalSymbolTable",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "Grenade",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "IFeedback",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "InputConfigManager",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "OptionParser",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "PHelicopter",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "PVehicle",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "PhysicsNamespace",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "PlayMPC",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RCARPFile",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RCARPFileLoader",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RCMP::AUDIO_PLAYER",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RCMP::AV_PLAYER",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RCameraIniLoader",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RCameraSpline",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RColorize",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RDebris",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RDecalManager",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RDirectorQueue",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RDrawGroup",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "REmpBolts",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RFog",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RGain",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RLensFlareManager",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RLightManager",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RLightning",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RMissileCam",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RMissileStreak",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RParticleLibrary",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RParticleParticleCache",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RParticulate",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RPlayerCamState",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RPlayerCamera",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RPostProcessing",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RReflection::ReflPrivateData",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RRenderDebugViewPerspective",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RRenderDebugViewScreenSpace",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RRenderWorldCamera",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RShadowMap",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RSniperZoom",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RTextureContextManager",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RVehicle",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RVehicleParticle",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RWater",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RWorldCamera",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RayShell",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RegisterEvent",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "SMissionRuleTarget",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "SMissionTimer",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "SND::CEAXABLKDecf",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "SRuleRange",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "Schedule_OncePerGameLoop",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "Schedule_QuarterSimRate",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SimRandom",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "Smackable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "StandardAnimationController",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "UData",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "UGroup",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "UGroup::Processor",
+   "evidence": [
+    "type_info"
+   ]
+  },
+  {
+   "path": "USimpleMaterial",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "USimpleTexturedMaterial",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "USymbolTable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "UVolatileMaterial",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "WCollisionMgr",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "WGrid",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "WRoadNav",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "WTrigger",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "WWorldPos",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  }
+ ],
+ "DRIVING.ELF": [
+  {
+   "path": "ACarAlarm",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "AFader",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "AGun",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "AHorn",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "AICharacterEnemy",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterEnemyDriver",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterEnemyGround",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterEnemySSnow",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterEnemySnow",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterEnemySunroof",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterEnemyWindow",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AIHelicopter",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AIndex",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ALimitedSound",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AOneShotSound",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ASystem",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ATurret",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "AWorldSound",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AZoomObj",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActActorDatabase",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "CARP::SymbolicResolver",
+   "evidence": [
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "DTuningFile::Reader",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "DebugData",
+   "evidence": [
+    "type_info"
+   ]
+  },
+  {
+   "path": "DeviceScalar",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "E007Logo",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGL::ConstructorPool",
+   "evidence": [
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::Device",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::DeviceExtension",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::DrawArray",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::DynamicLoader",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::DynamicModel",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::RenderContext",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::RenderContextExtension",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::RuntimeAllocConstructorPool",
+   "evidence": [
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::SymbolPool",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::TAR",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::TARExtension",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::TextureRenderContext",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::Transform",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "EAGL::ViewPort",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGLAnim::AnimBank",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "EAGLAnim::EventTarget",
+   "evidence": [
+    "const method",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnAnim",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnAnimMemoryMap",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnCycle",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaChan",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaF1",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaF3",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaQ",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaQFast",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaQuatChan",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaSingleQ",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnGraft",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnPoseMirror",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnRawLinearChannel",
+   "evidence": [
+    "const method",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnRunBlender",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnTurnBlender",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLInternal::DevicePrivate",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGLInternal::DmaMgr",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGLInternal::RenderContextPrivate",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "EAGLInternal::TARSharedData",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGLInternal::TextureRenderContextPrivate",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "EAGLNamespace",
+   "evidence": [
+    "const method",
+    "constructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAICommand",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementFireOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementFireOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementSetAccuracy",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementSetCharParams",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementSetNonScoreable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementSetVehicleParams",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIElementSetWakeRange",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAIUpdate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAbortCinematic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EActivateAIElement",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EActorMuzzleFlash",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAddObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAddScoreAction",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAddScoreObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAnimUpdate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAudioUpdate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAutoDrive",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAutoDriveSpeedChange",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAutoDriveSteering",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAwardHitToPlayer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAwardKillToPlayer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EBashCarAlongObjectAxis",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EBeginDownloadCode",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EButtonMsgOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EButtonMsgOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECall911",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECallStage",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECameraShake",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECameraUpdate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECameraZoom",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EChangeCarCameraView",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EChangeMaxTraffic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EChangeStage",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECinematicCamera",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EClearBitMagicCounter",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EClearProgrammerEvent",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECollision",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EControlToCPU",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EControlToPlayer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EControlToSpline",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECustomTransition",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDamagePlayer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDeactivateAIElement",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDisablePowerUp",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDisableTrigger",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDisplayObjectiveText",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDisplayText",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EDropMine",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EEnablePowerUp",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EEnableTrigger",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EEndCameraAnim",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EEndCarStop",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EEndControlToSpline",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EEndMission",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EExit",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EFESimFrameUpdate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EFailMissionObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EFireRandomTrigger",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EFireTriggerSpeedCondition",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EFireWeapon",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EForceCarStop",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EForceNearPedRespawn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EGadgetOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EGadgetOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EHideInstance",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EHideInstanceStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EHitWindow",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EIncMagicCounter",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EInflictDamage",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EInfraRedOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EInfraRedOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EInsertObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EKickAIElement",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EKickObject",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EKillAIElement",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EKillObject",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EKillSentry",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ELavaHaze",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ELetterBoxOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ELetterBoxOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EMaybeActivateAIElement",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EMuzzleFlash",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ENuclearBlast",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectiveAdd",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectiveDisplayText",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectiveFail",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectiveInsert",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectivePass",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectiveSetCurrent",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EObjectiveSetIncomplete",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPassMissionObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPassObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathChangeThrottleDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathChangeThrottleStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathMultiplyThrottleDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathMultiplyThrottleStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSFX",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSFXUpdate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetAccelDelayDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetAccelDelayStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetAccelerationDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetAccelerationStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetDesiredThrottleDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetDesiredThrottleStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetRunningDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetRunningStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetThrottleDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetThrottleStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetTimeDynamic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPathSetTimeStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPause",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayActorEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayCameraAnim",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayCameraSpline",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayCarCameraAnim",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayGiottoEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayPOVDeath",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlaySound",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlaySoundPos",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlaySystemAnim",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayerLose",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayerSetImmunity",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPlayerWin",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUp",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpAmmo",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpBraking",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpHealth",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpInvulnerable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpMultiDamage",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpShield",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpTimer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EPowerUpTopSpeed",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EProfileMissionSection",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ERandomExplosion",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EReleaseStream",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ERenderFrame",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EResetAudioMix",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EResetPlayerCar",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EResetPlayerCarPos",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ERestart",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EResume",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ERevertAudioMix",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ERollSub",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESapphirePole",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EScaleFieldOfView",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EScaleFog",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EScheduleEvent",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESentryMuzzleFlash",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAFXMode",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAreaBrightness",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAudioMix",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAutoDriveCamOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAutoDriveCamOffMovie",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAutoDriveCamOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAutoDriveCamOnMovie",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetAvoidZone",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetBitMagicCounter",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetCollisionGeometry",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetCreakLevel",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetCullDistanceFactor",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetFrameAnimationTime",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetJumpGravity",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetMagicCounter",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetMagicCounterThreshold",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetMissionMessage",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetNextAISpline",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetNextPath",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetObjective",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetRecSpeedOffset",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetRecordedGameTime",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetReflectiveObject",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetRenderVariation",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetSimRate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetSpecialWeapon",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetSubRollDirection",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetSubtitle",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetTerrain",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetTimer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetVideo",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetVisualDamage",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESetWaypoint",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EShake",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EShowInstance",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EShowInstanceStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESimEndFrame",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESimFrameUpdate",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnDramaticSmackable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnExplosion",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnExplosionStatic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnForceEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnSentry",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnSimplePhysics",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnSmackable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnTraffic",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESpawnVehicle",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStartEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStartMission",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStartTimedAction",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStartTimer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStopEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStopSoundPos",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStopTimedAction",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStopTimer",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EStreamEvent",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESuppressEffect",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESwitchEffectOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESwitchEffectOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ESwitchStingerChannel",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ETargetBeaconOnOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ETimerDrawOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ETimerDrawOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ETwoWheelsOff",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ETwoWheelsOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EUnloadWeapon",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EWakeupSmackable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "FeatureManager",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "GFXGallery",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "GOrthoHudView",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "GiottoNamespace",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "GlobalSymbolTable",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "InputConfigManager",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "InputTable",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "InputToAction",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "OptionParser",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "PS2PadDevice",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "PTank",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "PhysicsNamespace",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "PlayMPC",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "PlayMPCTextFile",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RAnimEngine::Handle",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RCARPFile",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RCARPFileLoader",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RCMP::AUDIO_PLAYER",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RCMP::AV_PLAYER",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RCameraIniLoader",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RColorize",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RDecalManager",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "REmpBolts",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RGain",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RLensFlareManager",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RMovableParticleSystem",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RParticleLibrary",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RParticleParticleCache",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RParticleSystem",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RParticleSystemManager",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RPlayerCamState",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RPlayerViewCamera",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RReflection::ReflPrivateData",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RRenderWorldCamera",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RSkeletalObj",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RStateManager",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RayShell",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RegisterEvent",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "SMissionObjective",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "SND::CEAXABLKDecf",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "SRuleAlways",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleAmmo",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleCollision",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleDamage",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleDeath",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleDifficulty",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleHealth",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRulePIP",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRulePlayerDir",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleProg",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleProperty",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleRange",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleSpeed",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleTimer",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "Schedule_HalfSimRate",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "Schedule_OncePerGameLoop",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "Schedule_QuarterSimRate",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "Schedule_SimRate",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "UCarpNamespace",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "UCharNamespace",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "UData",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "UFileFind",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "USimpleMaterial",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "USimpleTexturedMaterial",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "USingleton",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "USymbolTable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "UVolatileMaterial",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "UberBond",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "WCollisionMgr",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "WGrid",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "WSoundGroup",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "WTrigger",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "WTriggerManager",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  }
+ ]
+}

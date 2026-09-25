@@ -4,124 +4,124 @@ In Ghidra: Edit Function (F) on each address, and set the name to the full text 
 
 | done | address | now | set name to |
 |---|---|---|---|
-|  | 0x00011100 | Update | StandardAnimationController::Update |
-|  | 0x000125f0 | scalar_deleting_destructor | StandardAnimationController::scalar_deleting_destructor |
-|  | 0x0001c090 | scalar_deleting_destructor | ABaseSound::scalar_deleting_destructor |
-|  | 0x0001d640 | ~AICharacterEnemyDriver | AICharacterEnemyDriver::~AICharacterEnemyDriver |
-|  | 0x0001d650 | scalar_deleting_destructor | AICharacterEnemyDriver::scalar_deleting_destructor |
-|  | 0x000236c0 | ~AICharacterPassenger | AICharacterPassenger::~AICharacterPassenger |
-|  | 0x000236d0 | scalar_deleting_destructor | AICharacterPassenger::scalar_deleting_destructor |
-|  | 0x00023b70 | DoDead | AICharacterPedestrian::DoDead |
-|  | 0x00023f50 | ~AICharacterPedestrian | AICharacterPedestrian::~AICharacterPedestrian |
-|  | 0x00024700 | scalar_deleting_destructor | AICharacterPedestrian::scalar_deleting_destructor |
-|  | 0x00037a10 | PlayCollision | ASceneObj::PlayCollision |
-|  | 0x0004eb40 | scalar_deleting_destructor | ECollision::scalar_deleting_destructor |
-|  | 0x000592b0 | Kill | AttributeSystem::Kill |
-|  | 0x000592d0 | ~AttributeSystem | AttributeSystem::~AttributeSystem |
-|  | 0x00059530 | scalar_deleting_destructor | AttributeSystem::scalar_deleting_destructor |
-|  | 0x0005dc60 | ~Human | Human::~Human |
-|  | 0x0005dd00 | Simulate | Human::Simulate |
-|  | 0x0005dea0 | scalar_deleting_destructor | Human::scalar_deleting_destructor |
-|  | 0x0005f350 | ~Missile | Missile::~Missile |
-|  | 0x0005f6a0 | scalar_deleting_destructor | Missile::scalar_deleting_destructor |
-|  | 0x00060b60 | ~Newton | Newton::~Newton |
-|  | 0x000612f0 | scalar_deleting_destructor | Newton::scalar_deleting_destructor |
-|  | 0x0006e290 | ~PHelicopter | PHelicopter::~PHelicopter |
-|  | 0x0006e300 | scalar_deleting_destructor | PHelicopter::scalar_deleting_destructor |
-|  | 0x0006ed40 | NameLookup | PhysicsNamespace::NameLookup |
-|  | 0x0006f050 | scalar_deleting_destructor | PhysicsNamespace::scalar_deleting_destructor |
-|  | 0x0006f7f0 | scalar_deleting_destructor | PhysicsObject::scalar_deleting_destructor |
-|  | 0x000735d0 | scalar_deleting_destructor | Sentry::scalar_deleting_destructor |
-|  | 0x00073f80 | ApplyDamage | Sentry::ApplyDamage |
-|  | 0x000744d0 | Simulate | Sentry::Simulate |
-|  | 0x00075300 | ~Smackable | Smackable::~Smackable |
-|  | 0x00075530 | scalar_deleting_destructor | Smackable::scalar_deleting_destructor |
-|  | 0x0007daa0 | Kill | RFog::Kill |
-|  | 0x0007dac0 | scalar_deleting_destructor | RFog::scalar_deleting_destructor |
-|  | 0x0007e8c0 | ~RLightManager | RLightManager::~RLightManager |
-|  | 0x0007e930 | Kill | RLightManager::Kill |
-|  | 0x0007f450 | scalar_deleting_destructor | RLightManager::scalar_deleting_destructor |
-|  | 0x00081bf0 | ~RPlayerCamera | RPlayerCamera::~RPlayerCamera |
-|  | 0x00084a30 | scalar_deleting_destructor | RPlayerCamera::scalar_deleting_destructor |
-|  | 0x0008b3c0 | Debug | RRenderDebugViewScreenSpace::Debug |
-|  | 0x0008b4f0 | PreRender | RRenderDebugViewPerspective::PreRender |
-|  | 0x0008b510 | scalar_deleting_destructor | RRenderDebugViewScreenSpace::scalar_deleting_destructor |
-|  | 0x0008b530 | DoRender | RRenderDebugViewScreenSpace::DoRender |
-|  | 0x0008c950 | ~RRenderWorldCamera | RRenderWorldCamera::~RRenderWorldCamera |
-|  | 0x0008c990 | PreRender | RRenderWorldCamera::PreRender |
-|  | 0x0008ccf0 | scalar_deleting_destructor | RRenderWorldCamera::scalar_deleting_destructor |
-|  | 0x0008dce0 | GetRenderOffset | RSceneObj::GetRenderOffset |
-|  | 0x0008f270 | UpdatePosition | RSceneObj::UpdatePosition |
-|  | 0x000905a0 | ~RSceneObj | RSceneObj::~RSceneObj |
-|  | 0x000908b0 | scalar_deleting_destructor | RSceneObj::scalar_deleting_destructor |
-|  | 0x00095b30 | RenderShadow | RVehicle::RenderShadow |
-|  | 0x00096430 | ~RVehicle | RVehicle::~RVehicle |
-|  | 0x000964b0 | UpdatePosition | RVehicle::UpdatePosition |
-|  | 0x000967f0 | scalar_deleting_destructor | RVehicle::scalar_deleting_destructor |
-|  | 0x00096c60 | scalar_deleting_destructor | RViewCamera::scalar_deleting_destructor |
-|  | 0x000979f0 | ~RWorldCamera | RWorldCamera::~RWorldCamera |
-|  | 0x00097eb0 | scalar_deleting_destructor | RWorldCamera::scalar_deleting_destructor |
-|  | 0x0009a480 | Kill | RColorize::Kill |
-|  | 0x0009ac00 | Reset | RColorize::Reset |
-|  | 0x0009af50 | Kill | RDecalManager::Kill |
-|  | 0x0009de00 | ~RGain | RGain::~RGain |
-|  | 0x0009dea0 | Reset | RGain::Reset |
-|  | 0x0009e120 | scalar_deleting_destructor | RGain::scalar_deleting_destructor |
-|  | 0x0009e150 | Reset | RLensFlareManager::Reset |
-|  | 0x0009e1b0 | ~RLensFlareManager | RLensFlareManager::~RLensFlareManager |
-|  | 0x0009e520 | scalar_deleting_destructor | RLensFlareManager::scalar_deleting_destructor |
-|  | 0x0009ff60 | Kill | RLightning::Kill |
-|  | 0x000a0b30 | Kill | RMissileCam::Kill |
-|  | 0x000a0df0 | ~RMissileCam | RMissileCam::~RMissileCam |
-|  | 0x000a0e70 | scalar_deleting_destructor | RMissileCam::scalar_deleting_destructor |
-|  | 0x000a3240 | ~RParticulate | RParticulate::~RParticulate |
-|  | 0x000a3290 | Kill | RParticulate::Kill |
-|  | 0x000a3fa0 | scalar_deleting_destructor | RParticulate::scalar_deleting_destructor |
-|  | 0x000a4550 | Reset | RPostProcessing::Reset |
-|  | 0x000a4eb0 | Kill | RPostProcessing::Kill |
-|  | 0x000a4f70 | ~RPostProcessing | RPostProcessing::~RPostProcessing |
-|  | 0x000a5060 | scalar_deleting_destructor | RPostProcessing::scalar_deleting_destructor |
-|  | 0x000a6810 | ~RSniperZoom | RSniperZoom::~RSniperZoom |
-|  | 0x000a6870 | Kill | RSniperZoom::Kill |
-|  | 0x000a6890 | Reset | RSniperZoom::Reset |
-|  | 0x000a6a50 | scalar_deleting_destructor | RSniperZoom::scalar_deleting_destructor |
-|  | 0x000a8470 | Kill | RWater::Kill |
-|  | 0x000a9eb0 | Kill | RGlareManager::Kill |
-|  | 0x000a9ed0 | Reset | RGlareManager::Reset |
-|  | 0x000e00d0 | scalar_deleting_destructor | GHud::scalar_deleting_destructor |
-|  | 0x000e3ad0 | scalar_deleting_destructor | GSubtitles::scalar_deleting_destructor |
-|  | 0x000f7410 | SetAnimMemoryMap | EAGLAnim::FnRawEventChannel::SetAnimMemoryMap |
-|  | 0x000f7430 | EvalEvent | EAGLAnim::FnRawEventChannel::EvalEvent |
-|  | 0x000f7460 | Eval | EAGLAnim::FnRawEventChannel::Eval |
-|  | 0x000f7480 | scalar_deleting_destructor | EAGLAnim::FnRawEventChannel::scalar_deleting_destructor |
-|  | 0x000f74b0 | ~FnRawEventChannel | EAGLAnim::FnRawEventChannel::~FnRawEventChannel |
-|  | 0x000f74e0 | Eval | EAGLAnim::FnRawLinearChannel::Eval |
-|  | 0x000f7650 | GetLength | EAGLAnim::FnRawLinearChannel::GetLength |
-|  | 0x000f7670 | scalar_deleting_destructor | EAGLAnim::FnRawLinearChannel::scalar_deleting_destructor |
-|  | 0x000f76a0 | ~FnRawLinearChannel | EAGLAnim::FnRawLinearChannel::~FnRawLinearChannel |
-|  | 0x000f78a0 | Eval | EAGLAnim::FnPoseMirror::Eval |
-|  | 0x000f78f0 | EvalSQT | EAGLAnim::FnPoseMirror::EvalSQT |
-|  | 0x000f7940 | scalar_deleting_destructor | EAGLAnim::FnPoseMirror::scalar_deleting_destructor |
-|  | 0x000f8250 | scalar_deleting_destructor | EAGLAnim::FnDeltaQuatChan::scalar_deleting_destructor |
-|  | 0x000faaf0 | scalar_deleting_destructor | EAGLAnim::FnAnimMemoryMap::scalar_deleting_destructor |
-|  | 0x000ff1e0 | scalar_deleting_destructor | EAGLAnim::FnDeltaF1::scalar_deleting_destructor |
-|  | 0x000ff210 | ~FnDeltaF1 | EAGLAnim::FnDeltaF1::~FnDeltaF1 |
-|  | 0x001051a0 | Eval | EAGLAnim::FnRunBlender::Eval |
-|  | 0x0011b650 | scalar_deleting_destructor | USymbolTable::scalar_deleting_destructor |
-|  | 0x0011c6f0 | ~ABaseSound | ABaseSound::~ABaseSound |
-|  | 0x0011dee0 | Play | AMenuSoundPriv::Play |
-|  | 0x0011e060 | scalar_deleting_destructor | AMenuSoundPriv::scalar_deleting_destructor |
-|  | 0x0011e090 | ~AMenuSoundPriv | AMenuSoundPriv::~AMenuSoundPriv |
-|  | 0x0011ed30 | PlayLanding | AVehicle::PlayLanding |
-|  | 0x0011f1a0 | PlayCollision | AVehicle::PlayCollision |
-|  | 0x00120a10 | ~AVehicle | AVehicle::~AVehicle |
-|  | 0x00120d50 | scalar_deleting_destructor | AVehicle::scalar_deleting_destructor |
-|  | 0x00129b20 | ~AUltraLite | AUltraLite::~AUltraLite |
-|  | 0x0012a410 | scalar_deleting_destructor | AUltraLite::scalar_deleting_destructor |
-|  | 0x0012bb60 | SetCreakLevel | ASubmersible::SetCreakLevel |
-|  | 0x0012c930 | PlayLanding | AHelicopter::PlayLanding |
-|  | 0x0012c950 | Play | AHelicopter::Play |
-|  | 0x0012cac0 | ~AHelicopter | AHelicopter::~AHelicopter |
-|  | 0x0012cb60 | scalar_deleting_destructor | AHelicopter::scalar_deleting_destructor |
-|  | 0x0012ffb0 | Play | ARaceEngine::Play |
-|  | 0x001306b0 | scalar_deleting_destructor | ARaceEngine::scalar_deleting_destructor |
+| yes | 0x00011100 | StandardAnimationController::Update | StandardAnimationController::Update |
+| yes | 0x000125f0 | StandardAnimationController::scalar_deleting_destructor | StandardAnimationController::scalar_deleting_destructor |
+| yes | 0x0001c090 | ABaseSound::scalar_deleting_destructor | ABaseSound::scalar_deleting_destructor |
+| yes | 0x0001d640 | AICharacterEnemyDriver::~AICharacterEnemyDriver | AICharacterEnemyDriver::~AICharacterEnemyDriver |
+| yes | 0x0001d650 | AICharacterEnemyDriver::scalar_deleting_destructor | AICharacterEnemyDriver::scalar_deleting_destructor |
+| yes | 0x000236c0 | AICharacterPassenger::~AICharacterPassenger | AICharacterPassenger::~AICharacterPassenger |
+| yes | 0x000236d0 | AICharacterPassenger::scalar_deleting_destructor | AICharacterPassenger::scalar_deleting_destructor |
+| yes | 0x00023b70 | AICharacterPedestrian::DoDead | AICharacterPedestrian::DoDead |
+| yes | 0x00023f50 | AICharacterPedestrian::~AICharacterPedestrian | AICharacterPedestrian::~AICharacterPedestrian |
+| yes | 0x00024700 | AICharacterPedestrian::scalar_deleting_destructor | AICharacterPedestrian::scalar_deleting_destructor |
+| yes | 0x00037a10 | ASceneObj::PlayCollision | ASceneObj::PlayCollision |
+| yes | 0x0004eb40 | ECollision::scalar_deleting_destructor | ECollision::scalar_deleting_destructor |
+| yes | 0x000592b0 | AttributeSystem::Kill | AttributeSystem::Kill |
+| yes | 0x000592d0 | AttributeSystem::~AttributeSystem | AttributeSystem::~AttributeSystem |
+| yes | 0x00059530 | AttributeSystem::scalar_deleting_destructor | AttributeSystem::scalar_deleting_destructor |
+| yes | 0x0005dc60 | Human::~Human | Human::~Human |
+| yes | 0x0005dd00 | Human::Simulate | Human::Simulate |
+| yes | 0x0005dea0 | Human::scalar_deleting_destructor | Human::scalar_deleting_destructor |
+| yes | 0x0005f350 | Missile::~Missile | Missile::~Missile |
+| yes | 0x0005f6a0 | Missile::scalar_deleting_destructor | Missile::scalar_deleting_destructor |
+| yes | 0x00060b60 | Newton::~Newton | Newton::~Newton |
+| yes | 0x000612f0 | Newton::scalar_deleting_destructor | Newton::scalar_deleting_destructor |
+| yes | 0x0006e290 | PHelicopter::~PHelicopter | PHelicopter::~PHelicopter |
+| yes | 0x0006e300 | PHelicopter::scalar_deleting_destructor | PHelicopter::scalar_deleting_destructor |
+| yes | 0x0006ed40 | PhysicsNamespace::NameLookup | PhysicsNamespace::NameLookup |
+| yes | 0x0006f050 | PhysicsNamespace::scalar_deleting_destructor | PhysicsNamespace::scalar_deleting_destructor |
+| yes | 0x0006f7f0 | PhysicsObject::scalar_deleting_destructor | PhysicsObject::scalar_deleting_destructor |
+| yes | 0x000735d0 | Sentry::scalar_deleting_destructor | Sentry::scalar_deleting_destructor |
+| yes | 0x00073f80 | Sentry::ApplyDamage | Sentry::ApplyDamage |
+| yes | 0x000744d0 | Sentry::Simulate | Sentry::Simulate |
+| yes | 0x00075300 | Smackable::~Smackable | Smackable::~Smackable |
+| yes | 0x00075530 | Smackable::scalar_deleting_destructor | Smackable::scalar_deleting_destructor |
+| yes | 0x0007daa0 | RFog::Kill | RFog::Kill |
+| yes | 0x0007dac0 | RFog::scalar_deleting_destructor | RFog::scalar_deleting_destructor |
+| yes | 0x0007e8c0 | RLightManager::~RLightManager | RLightManager::~RLightManager |
+| yes | 0x0007e930 | RLightManager::Kill | RLightManager::Kill |
+| yes | 0x0007f450 | RLightManager::scalar_deleting_destructor | RLightManager::scalar_deleting_destructor |
+| yes | 0x00081bf0 | RPlayerCamera::~RPlayerCamera | RPlayerCamera::~RPlayerCamera |
+| yes | 0x00084a30 | RPlayerCamera::scalar_deleting_destructor | RPlayerCamera::scalar_deleting_destructor |
+| yes | 0x0008b3c0 | RRenderDebugViewScreenSpace::Debug | RRenderDebugViewScreenSpace::Debug |
+| yes | 0x0008b4f0 | RRenderDebugViewPerspective::PreRender | RRenderDebugViewPerspective::PreRender |
+| yes | 0x0008b510 | RRenderDebugViewScreenSpace::scalar_deleting_destructor | RRenderDebugViewScreenSpace::scalar_deleting_destructor |
+| yes | 0x0008b530 | RRenderDebugViewScreenSpace::DoRender | RRenderDebugViewScreenSpace::DoRender |
+| yes | 0x0008c950 | RRenderWorldCamera::~RRenderWorldCamera | RRenderWorldCamera::~RRenderWorldCamera |
+| yes | 0x0008c990 | RRenderWorldCamera::PreRender | RRenderWorldCamera::PreRender |
+| yes | 0x0008ccf0 | RRenderWorldCamera::scalar_deleting_destructor | RRenderWorldCamera::scalar_deleting_destructor |
+| yes | 0x0008dce0 | RSceneObj::GetRenderOffset | RSceneObj::GetRenderOffset |
+| yes | 0x0008f270 | RSceneObj::UpdatePosition | RSceneObj::UpdatePosition |
+| yes | 0x000905a0 | RSceneObj::~RSceneObj | RSceneObj::~RSceneObj |
+| yes | 0x000908b0 | RSceneObj::scalar_deleting_destructor | RSceneObj::scalar_deleting_destructor |
+| yes | 0x00095b30 | RVehicle::RenderShadow | RVehicle::RenderShadow |
+| yes | 0x00096430 | RVehicle::~RVehicle | RVehicle::~RVehicle |
+| yes | 0x000964b0 | RVehicle::UpdatePosition | RVehicle::UpdatePosition |
+| yes | 0x000967f0 | RVehicle::scalar_deleting_destructor | RVehicle::scalar_deleting_destructor |
+| yes | 0x00096c60 | RViewCamera::scalar_deleting_destructor | RViewCamera::scalar_deleting_destructor |
+| yes | 0x000979f0 | RWorldCamera::~RWorldCamera | RWorldCamera::~RWorldCamera |
+| yes | 0x00097eb0 | RWorldCamera::scalar_deleting_destructor | RWorldCamera::scalar_deleting_destructor |
+| yes | 0x0009a480 | RColorize::Kill | RColorize::Kill |
+| yes | 0x0009ac00 | RColorize::Reset | RColorize::Reset |
+| yes | 0x0009af50 | RDecalManager::Kill | RDecalManager::Kill |
+| yes | 0x0009de00 | RGain::~RGain | RGain::~RGain |
+| yes | 0x0009dea0 | RGain::Reset | RGain::Reset |
+| yes | 0x0009e120 | RGain::scalar_deleting_destructor | RGain::scalar_deleting_destructor |
+| yes | 0x0009e150 | RLensFlareManager::Reset | RLensFlareManager::Reset |
+| yes | 0x0009e1b0 | RLensFlareManager::~RLensFlareManager | RLensFlareManager::~RLensFlareManager |
+| yes | 0x0009e520 | RLensFlareManager::scalar_deleting_destructor | RLensFlareManager::scalar_deleting_destructor |
+| yes | 0x0009ff60 | RLightning::Kill | RLightning::Kill |
+| yes | 0x000a0b30 | RMissileCam::Kill | RMissileCam::Kill |
+| yes | 0x000a0df0 | RMissileCam::~RMissileCam | RMissileCam::~RMissileCam |
+| yes | 0x000a0e70 | RMissileCam::scalar_deleting_destructor | RMissileCam::scalar_deleting_destructor |
+| yes | 0x000a3240 | RParticulate::~RParticulate | RParticulate::~RParticulate |
+| yes | 0x000a3290 | RParticulate::Kill | RParticulate::Kill |
+| yes | 0x000a3fa0 | RParticulate::scalar_deleting_destructor | RParticulate::scalar_deleting_destructor |
+| yes | 0x000a4550 | RPostProcessing::Reset | RPostProcessing::Reset |
+| yes | 0x000a4eb0 | RPostProcessing::Kill | RPostProcessing::Kill |
+| yes | 0x000a4f70 | RPostProcessing::~RPostProcessing | RPostProcessing::~RPostProcessing |
+| yes | 0x000a5060 | RPostProcessing::scalar_deleting_destructor | RPostProcessing::scalar_deleting_destructor |
+| yes | 0x000a6810 | RSniperZoom::~RSniperZoom | RSniperZoom::~RSniperZoom |
+| yes | 0x000a6870 | RSniperZoom::Kill | RSniperZoom::Kill |
+| yes | 0x000a6890 | RSniperZoom::Reset | RSniperZoom::Reset |
+| yes | 0x000a6a50 | RSniperZoom::scalar_deleting_destructor | RSniperZoom::scalar_deleting_destructor |
+| yes | 0x000a8470 | RWater::Kill | RWater::Kill |
+| yes | 0x000a9eb0 | RGlareManager::Kill | RGlareManager::Kill |
+| yes | 0x000a9ed0 | RGlareManager::Reset | RGlareManager::Reset |
+| yes | 0x000e00d0 | GHud::scalar_deleting_destructor | GHud::scalar_deleting_destructor |
+| yes | 0x000e3ad0 | GSubtitles::scalar_deleting_destructor | GSubtitles::scalar_deleting_destructor |
+| yes | 0x000f7410 | EAGLAnim::FnRawEventChannel::SetAnimMemoryMap | EAGLAnim::FnRawEventChannel::SetAnimMemoryMap |
+| yes | 0x000f7430 | EAGLAnim::FnRawEventChannel::EvalEvent | EAGLAnim::FnRawEventChannel::EvalEvent |
+| yes | 0x000f7460 | EAGLAnim::FnRawEventChannel::Eval | EAGLAnim::FnRawEventChannel::Eval |
+| yes | 0x000f7480 | EAGLAnim::FnRawEventChannel::scalar_deleting_destructor | EAGLAnim::FnRawEventChannel::scalar_deleting_destructor |
+| yes | 0x000f74b0 | EAGLAnim::FnRawEventChannel::~FnRawEventChannel | EAGLAnim::FnRawEventChannel::~FnRawEventChannel |
+| yes | 0x000f74e0 | EAGLAnim::FnRawLinearChannel::Eval | EAGLAnim::FnRawLinearChannel::Eval |
+| yes | 0x000f7650 | EAGLAnim::FnRawLinearChannel::GetLength | EAGLAnim::FnRawLinearChannel::GetLength |
+| yes | 0x000f7670 | EAGLAnim::FnRawLinearChannel::scalar_deleting_destructor | EAGLAnim::FnRawLinearChannel::scalar_deleting_destructor |
+| yes | 0x000f76a0 | EAGLAnim::FnRawLinearChannel::~FnRawLinearChannel | EAGLAnim::FnRawLinearChannel::~FnRawLinearChannel |
+| yes | 0x000f78a0 | EAGLAnim::FnPoseMirror::Eval | EAGLAnim::FnPoseMirror::Eval |
+| yes | 0x000f78f0 | EAGLAnim::FnPoseMirror::EvalSQT | EAGLAnim::FnPoseMirror::EvalSQT |
+| yes | 0x000f7940 | EAGLAnim::FnPoseMirror::scalar_deleting_destructor | EAGLAnim::FnPoseMirror::scalar_deleting_destructor |
+| yes | 0x000f8250 | EAGLAnim::FnDeltaQuatChan::scalar_deleting_destructor | EAGLAnim::FnDeltaQuatChan::scalar_deleting_destructor |
+| yes | 0x000faaf0 | EAGLAnim::FnAnimMemoryMap::scalar_deleting_destructor | EAGLAnim::FnAnimMemoryMap::scalar_deleting_destructor |
+| yes | 0x000ff1e0 | EAGLAnim::FnDeltaF1::scalar_deleting_destructor | EAGLAnim::FnDeltaF1::scalar_deleting_destructor |
+| yes | 0x000ff210 | EAGLAnim::FnDeltaF1::~FnDeltaF1 | EAGLAnim::FnDeltaF1::~FnDeltaF1 |
+| yes | 0x001051a0 | EAGLAnim::FnRunBlender::Eval | EAGLAnim::FnRunBlender::Eval |
+| yes | 0x0011b650 | USymbolTable::scalar_deleting_destructor | USymbolTable::scalar_deleting_destructor |
+| yes | 0x0011c6f0 | ABaseSound::~ABaseSound | ABaseSound::~ABaseSound |
+| yes | 0x0011dee0 | AMenuSoundPriv::Play | AMenuSoundPriv::Play |
+| yes | 0x0011e060 | AMenuSoundPriv::scalar_deleting_destructor | AMenuSoundPriv::scalar_deleting_destructor |
+| yes | 0x0011e090 | AMenuSoundPriv::~AMenuSoundPriv | AMenuSoundPriv::~AMenuSoundPriv |
+| yes | 0x0011ed30 | AVehicle::PlayLanding | AVehicle::PlayLanding |
+| yes | 0x0011f1a0 | AVehicle::PlayCollision | AVehicle::PlayCollision |
+| yes | 0x00120a10 | AVehicle::~AVehicle | AVehicle::~AVehicle |
+| yes | 0x00120d50 | AVehicle::scalar_deleting_destructor | AVehicle::scalar_deleting_destructor |
+| yes | 0x00129b20 | AUltraLite::~AUltraLite | AUltraLite::~AUltraLite |
+| yes | 0x0012a410 | AUltraLite::scalar_deleting_destructor | AUltraLite::scalar_deleting_destructor |
+| yes | 0x0012bb60 | ASubmersible::SetCreakLevel | ASubmersible::SetCreakLevel |
+| yes | 0x0012c930 | AHelicopter::PlayLanding | AHelicopter::PlayLanding |
+| yes | 0x0012c950 | AHelicopter::Play | AHelicopter::Play |
+| yes | 0x0012cac0 | AHelicopter::~AHelicopter | AHelicopter::~AHelicopter |
+| yes | 0x0012cb60 | AHelicopter::scalar_deleting_destructor | AHelicopter::scalar_deleting_destructor |
+| yes | 0x0012ffb0 | ARaceEngine::Play | ARaceEngine::Play |
+| yes | 0x001306b0 | ARaceEngine::scalar_deleting_destructor | ARaceEngine::scalar_deleting_destructor |

@@ -33,8 +33,11 @@ def export_json(side):
     function_list = []
     for f in funcs:
         param_types = [paramToStr(x) for x in f.getParameters()]
+        # Full namespace path ("EAGLAnim::FnAnim::Eval"), not just the innermost namespace
+        ns = f.getParentNamespace()
+        ns_path = "Global" if ns.isGlobal() else ns.getName(True)
         function_dict = {
-            "name": f.getName() if f.getParentNamespace().getName() == "Global" else f.getParentNamespace().getName() + "::" + f.getName(),
+            "name": f.getName() if ns.isGlobal() else ns_path + "::" + f.getName(),
             "address": "0x" + str(f.getEntryPoint()),
             "calling_convention": f.getCallingConventionName(),
             "has_custom_variable_storage": f.hasCustomVariableStorage(),
@@ -43,7 +46,7 @@ def export_json(side):
             "prototype_string": f.getPrototypeString(True, True),
             "parameters": [str(x) for x in f.getParameters()],
             "is_thunk": f.isThunk(),
-            "namespace": f.getParentNamespace().getName()
+            "namespace": ns_path
         }
         function_list.append(function_dict)
 
