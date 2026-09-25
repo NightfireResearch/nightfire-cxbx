@@ -1,0 +1,77 @@
+[
+ {
+  "row": 2127,
+  "ps2": "0x00167c78",
+  "why": "Unfunctioned code after DeadZoneChop: rescales value outside [min,max] into 0..1/-1..0 else sets 0 (DeadZoneScale)."
+ },
+ {
+  "row": 2692,
+  "ps2": "0x00194cb0",
+  "why": "In the ctors table and calls the helper 0x194ac8 with (1,0xffff) right after the PHelicopter setters: global constructors keyed to PHelicopter."
+ },
+ {
+  "row": 2737,
+  "ps2": "0x00195ff0",
+  "why": "Returns Sim.GetSimpleRigidBody(this+0x46); first of four accessors after PhysicsObject::operator delete (GetSimpleRigidBody)."
+ },
+ {
+  "row": 2738,
+  "ps2": "0x00196018",
+  "why": "Identical body, second accessor (GetSimpleRigidBodyPtr)."
+ },
+ {
+  "row": 2739,
+  "ps2": "0x00196040",
+  "why": "Returns Sim.GetRigidBody(this+0x46) (GetRigidBody); was queued as NotTracer."
+ },
+ {
+  "row": 2740,
+  "ps2": "0x00196068",
+  "why": "Identical GetRigidBody body, fourth accessor (GetRigidBodyPtr)."
+ },
+ {
+  "row": 2832,
+  "ps2": "0x0019e088",
+  "why": "FastFree(p,size) right after Shell::operator new; Ghidra's current Shell::operator_delete at 0x19e0b8 is actually the Shell global ctor."
+ },
+ {
+  "row": 2854,
+  "ps2": "0x0019f8b0",
+  "why": "Stores the float arg to the Draw z-depth global (0x3335cc) used by DrawBatchedSprite; Ghidra currently names this Draw::DrawLineMeshC, which is wrong."
+ },
+ {
+  "row": 2855,
+  "ps2": "0x0019f8c0",
+  "why": "Unfunctioned 0x18 stub storing constant 9.99 to the z-depth global (SetZDepthFar by sheet order)."
+ },
+ {
+  "row": 2856,
+  "ps2": "0x0019f8d8",
+  "why": "0x18 stub storing 1.0 to the z-depth global (SetZDepthNear by sheet order)."
+ },
+ {
+  "row": 2858,
+  "ps2": "0x0019f938",
+  "why": "Unfunctioned code: DrawLineMeshC(int n, COORD4*, Colour*) passes verts and colour array straight to the prim helper 0x19f850 with type 1."
+ },
+ {
+  "row": 2881,
+  "ps2": "0x001a19c8",
+  "why": "In the ctors table, calls helper 0x1a1970(1,0xffff) that zeroes a squareUV-sized array: global constructors keyed to Draw::squareUV."
+ },
+ {
+  "row": 2882,
+  "ps2": "0x001a19e8",
+  "why": "Unfunctioned 0x18 code zeroing RAnimEngine's last-update tick and active-system count (Init); Ghidra's RAnimEngine::Init at 0x1a1a10 is really Update."
+ },
+ {
+  "row": 2883,
+  "ps2": "0x001a1a00",
+  "why": "Unfunctioned 0x10 code zeroing the active-system count (Shutdown); Ghidra's RAnimEngine::Shutdown at 0x1a1af8 is something else (removes one active system)."
+ },
+ {
+  "row": 3184,
+  "ps2": "0x001b0d10",
+  "why": "TextureRenderContext::EndFrame then restores the renderer's view; called from MakeCopy/MakeTexCopy after Begin: ROffscreenBuffer::End."
+ }
+]
