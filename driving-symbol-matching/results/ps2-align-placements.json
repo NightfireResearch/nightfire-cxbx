@@ -6,98 +6,42 @@
 "name": "bool lexicographical_compare<signed char *, signed char *>(sign",
 "ps2": "0x0010b8e8",
 "margin": 6.66,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 99,
 "name": "int __lexicographical_compare_3way<signed char *, signed char *",
 "ps2": "0x0010b950",
 "margin": 7.1,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 166,
+"name": "global constructors keyed to ActCharacter::LoadCharacter(char *",
+"ps2": "0x0010de78",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 220,
 "name": "global constructors keyed to ActManager::fpsManager",
 "ps2": "0x001110f0",
 "margin": 6.27,
-"was": "infill-exact-run"
-},
-{
-"row": 285,
-"name": "ActSkeleton::GetNumBones(void)",
-"ps2": "0x00114a48",
-"margin": 6.21,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 303,
 "name": "_Rb_tree<MapKey, pair<MapKey, MapElement<ActTextureDatabase::Te",
 "ps2": "0x00115220",
 "margin": 5.16,
-"was": null
-},
-{
-"row": 304,
-"name": "URefCounter<ActTextureDatabase::TextureInfo>::URefCounter(void)",
-"ps2": "0x00115288",
-"margin": 5.16,
-"was": null
-},
-{
-"row": 305,
-"name": "URefCounter<ActTextureDatabase::TextureInfo>::~URefCounter(void",
-"ps2": "0x001152f0",
-"margin": 7.89,
-"was": null
-},
-{
-"row": 306,
-"name": "_Rb_tree<MapKey, pair<MapKey, MapElement<ActTextureDatabase::Te",
-"ps2": "0x00115370",
-"margin": 7.95,
-"was": null
-},
-{
-"row": 308,
-"name": "_Rb_tree<MapKey, pair<MapKey, MapElement<ActTextureDatabase::Te",
-"ps2": "0x00115470",
-"margin": 10.27,
-"was": null
-},
-{
-"row": 309,
-"name": "_Rb_tree<MapKey, pair<MapKey, MapElement<ActTextureDatabase::Te",
-"ps2": "0x00115908",
-"margin": 8.83,
-"was": null
-},
-{
-"row": 311,
-"name": "URefCounter<ActTextureDatabase::TextureInfo>::RemoveReference(A",
-"ps2": "0x00115b80",
-"margin": 10.35,
 "was": "infill-exact-run"
-},
-{
-"row": 312,
-"name": "URefCounter<ActTextureDatabase::TextureInfo>::Get(void)",
-"ps2": "0x00116170",
-"margin": 7.31,
-"was": "infill-exact-run"
-},
-{
-"row": 340,
-"name": "URefCounter<ActWeaponDatabase::WeaponInfo>::~URefCounter(void)",
-"ps2": "0x001174a8",
-"margin": 4.39,
-"was": null
 },
 {
 "row": 341,
 "name": "_Rb_tree<MapKey, pair<MapKey, MapElement<ActWeaponDatabase::Wea",
 "ps2": "0x00117528",
 "margin": 7.95,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 343,
@@ -114,235 +58,88 @@
 "was": null
 },
 {
-"row": 365,
-"name": "URefCounter<ActWeaponDatabase::WeaponInfo>::Get(void)",
-"ps2": "0x001185f8",
-"margin": 7.31,
-"was": "infill-exact-run"
+"row": 367,
+"name": "global constructors keyed to ActWeapon::LoadAttributes(void)",
+"ps2": "0x00118690",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 512,
+"name": "global constructors keyed to AICharacterEnemyGround::AICharacte",
+"ps2": "0x0011e178",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 657,
+"name": "global constructors keyed to AICharacterPassenger::GetRotPos(in",
+"ps2": "0x00125ab8",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 752,
 "name": "global constructors keyed to AIElementTracking::kLowestFreq",
 "ps2": "0x0012dd60",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 874,
+"name": "global constructors keyed to AIGroundVehicle::AIGroundVehicle(v",
+"ps2": "0x00138200",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 932,
 "name": "global constructors keyed to AIRoadSpawn::fgRoadSpawn",
 "ps2": "0x0013da60",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 937,
 "name": "global constructors keyed to AISplinePath::AISplinePath(CARP::A",
 "ps2": "0x0013de48",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 1000,
 "name": "global constructors keyed to AIVehicleController::fgController",
 "ps2": "0x001400c0",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 1001,
 "name": "global destructors keyed to AIVehicleController::fgController",
 "ps2": "0x001400e0",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 1008,
 "name": "global constructors keyed to AIZoneController::fgController",
 "ps2": "0x001406c0",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 1009,
 "name": "global destructors keyed to AIZoneController::fgController",
 "ps2": "0x001406e0",
 "margin": 6.27,
-"was": "infill-exact-run"
-},
-{
-"row": 1049,
-"name": "TypeTraits<unsigned int>::isChar(void)",
-"ps2": "0x00142df0",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1050,
-"name": "TypeTraits<unsigned int>::isStdFloat(void)",
-"ps2": "0x00142df8",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1051,
-"name": "TypeTraits<unsigned int>::isStdBool(void)",
-"ps2": "0x00142e00",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1052,
-"name": "DebugVariable<unsigned int>::AsString(void)",
-"ps2": "0x00142e08",
-"margin": 8.06,
-"was": "infill-exact-run"
-},
-{
-"row": 1053,
-"name": "TypeTraits<int>::isChar(void)",
-"ps2": "0x00142ea8",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1054,
-"name": "TypeTraits<int>::isStdUnsignedInt(void)",
-"ps2": "0x00142eb0",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1055,
-"name": "TypeTraits<int>::isStdFloat(void)",
-"ps2": "0x00142eb8",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1056,
-"name": "TypeTraits<int>::isStdBool(void)",
-"ps2": "0x00142ec0",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1057,
-"name": "TypeTraits<char>::isStdUnsignedInt(void)",
-"ps2": "0x00142ec8",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1058,
-"name": "TypeTraits<char>::isStdFloat(void)",
-"ps2": "0x00142ed0",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1059,
-"name": "TypeTraits<char>::isStdBool(void)",
-"ps2": "0x00142ed8",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1060,
-"name": "TypeTraits<unsigned char>::isStdFloat(void)",
-"ps2": "0x00142ee0",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1061,
-"name": "TypeTraits<unsigned char>::isStdBool(void)",
-"ps2": "0x00142ee8",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1062,
-"name": "TypeTraits<float>::isChar(void)",
-"ps2": "0x00142ef0",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1063,
-"name": "TypeTraits<float>::isStdInt(void)",
-"ps2": "0x00142ef8",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1064,
-"name": "TypeTraits<float>::isStdUnsignedInt(void)",
-"ps2": "0x00142f00",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1065,
-"name": "TypeTraits<float>::isStdBool(void)",
-"ps2": "0x00142f08",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1066,
-"name": "TypeTraits<bool>::isChar(void)",
-"ps2": "0x00142f10",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1067,
-"name": "TypeTraits<bool>::isStdInt(void)",
-"ps2": "0x00142f18",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1068,
-"name": "TypeTraits<bool>::isStdUnsignedInt(void)",
-"ps2": "0x00142f20",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1069,
-"name": "TypeTraits<bool>::isStdFloat(void)",
-"ps2": "0x00142f28",
-"margin": 6.05,
-"was": "infill-exact-run"
-},
-{
-"row": 1070,
-"name": "DebugVariable<unsigned int>::Increase(float)",
-"ps2": "0x00142f30",
-"margin": 9.12,
-"was": "infill-exact-run"
-},
-{
-"row": 1071,
-"name": "DebugVariable<unsigned int>::Decrease(float)",
-"ps2": "0x00143090",
-"margin": 9.12,
-"was": "infill-exact-run"
-},
-{
-"row": 1072,
-"name": "DebugVariable<unsigned int>::Parse(char *)",
-"ps2": "0x001431f0",
-"margin": 6.79,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 1169,
 "name": "global constructors keyed to EPathUtil_GetFromInstanceOrAI(CARP",
 "ps2": "0x00145ec8",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 1257,
@@ -356,7 +153,21 @@
 "name": "global constructors keyed to E007Logo::E007Logo(void)",
 "ps2": "0x00165158",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 2057,
+"name": "global constructors keyed to ActionRef::ActionRef(ActionData *)",
+"ps2": "0x00165248",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 2058,
+"name": "global destructors keyed to ActionRef::ActionRef(ActionData *)",
+"ps2": "0x00165268",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 2075,
@@ -370,28 +181,28 @@
 "name": "global constructors keyed to IFeedbackPort::IFeedbackPort(void)",
 "ps2": "0x001664a0",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2112,
 "name": "global constructors keyed to InputUpdateTypeToStringTable",
 "ps2": "0x00167728",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2113,
 "name": "global destructors keyed to InputUpdateTypeToStringTable",
 "ps2": "0x00167748",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2148,
 "name": "global constructors keyed to IOModule::GetIOModule(void)",
 "ps2": "0x00168ae8",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2236,
@@ -727,14 +538,14 @@
 "name": "global constructors keyed to kTracks",
 "ps2": "0x00177550",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2341,
 "name": "global destructors keyed to kTracks",
 "ps2": "0x00177570",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2377,
@@ -762,119 +573,161 @@
 "name": "global constructors keyed to Float_m3Reorthoganalize(MATRIX3 *)",
 "ps2": "0x0017bbf8",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 2467,
+"name": "global constructors keyed to Explosion::Explosion(ExplosionType",
+"ps2": "0x0017e540",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 2479,
 "name": "global constructors keyed to Grenade::Grenade(WeaponType, COORD",
 "ps2": "0x0017f390",
 "margin": 4.77,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 2495,
+"name": "global constructors keyed to Human::Human(HumanType, COORD3 &,",
+"ps2": "0x0017fbf8",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 2527,
 "name": "global constructors keyed to Missile::fUserMissileLaunchPos",
 "ps2": "0x00183c50",
 "margin": 4.77,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 2661,
+"name": "global constructors keyed to TRAFFIC_OPT_DISTANCE_SQUARE",
+"ps2": "0x001933e8",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 2699,
+"name": "global constructors keyed to PhysicsNamespace::PhysicsNamespace",
+"ps2": "0x00195310",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 2753,
 "name": "global constructors keyed to kPhysObjTypeName",
 "ps2": "0x00196128",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2777,
 "name": "global constructors keyed to PVehicle::GetNameCount(void)",
 "ps2": "0x00198e60",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 2805,
+"name": "global constructors keyed to gEnableRayShells",
+"ps2": "0x0019ae98",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 2824,
+"name": "global constructors keyed to Sentry::fFlashCount",
+"ps2": "0x0019cd70",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 2924,
 "name": "void __push_heap<unsigned char *, int, unsigned char>(unsigned",
 "ps2": "0x001a3c50",
 "margin": 7.1,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2925,
 "name": "void __adjust_heap<unsigned char *, int, unsigned char>(unsigne",
 "ps2": "0x001a3cb0",
 "margin": 8.0,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2926,
 "name": "void __make_heap<unsigned char *, unsigned char, int>(unsigned",
 "ps2": "0x001a3d48",
 "margin": 7.71,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2927,
 "name": "void sort_heap<unsigned char *>(unsigned char *, unsigned char",
 "ps2": "0x001a3db8",
 "margin": 8.0,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2928,
 "name": "void __partial_sort<unsigned char *, unsigned char>(unsigned ch",
 "ps2": "0x001a3e50",
 "margin": 8.06,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2929,
 "name": "unsigned char * __unguarded_partition<unsigned char *, unsigned",
 "ps2": "0x001a3ef0",
 "margin": 6.79,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2930,
 "name": "void __introsort_loop<unsigned char *, unsigned char, int>(unsi",
 "ps2": "0x001a3f68",
 "margin": 8.92,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2931,
 "name": "void __unguarded_linear_insert<unsigned char *, unsigned char>(",
 "ps2": "0x001a4070",
 "margin": 6.56,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2932,
 "name": "void __insertion_sort<unsigned char *>(unsigned char *, unsigne",
 "ps2": "0x001a40a8",
 "margin": 8.06,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2933,
 "name": "void __unguarded_insertion_sort_aux<unsigned char *, unsigned c",
 "ps2": "0x001a4148",
 "margin": 7.34,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2934,
 "name": "void __final_insertion_sort<unsigned char *>(unsigned char *, u",
 "ps2": "0x001a4190",
 "margin": 7.1,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2935,
 "name": "unsigned char * adjacent_find<unsigned char *>(unsigned char *,",
 "ps2": "0x001a41f0",
 "margin": 6.96,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2936,
@@ -888,21 +741,21 @@
 "name": "unsigned char * unique<unsigned char *>(unsigned char *, unsign",
 "ps2": "0x001a4280",
 "margin": 7.34,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2938,
 "name": "unsigned char * __lower_bound<unsigned char *, unsigned char, i",
 "ps2": "0x001a42c8",
 "margin": 5.96,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2940,
 "name": "global constructors keyed to RAnimEngine::Init(void)",
 "ps2": "0x001a43b8",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 2985,
@@ -923,28 +776,28 @@
 "name": "RDrawElement * __uninitialized_copy_aux<RDrawElement *, RDrawEl",
 "ps2": "0x001ab2f0",
 "margin": 7.07,
-"was": "infill-exact-run"
-},
-{
-"row": 3053,
-"name": "vector<RDrawElement, allocator<RDrawElement> >::_M_insert_aux(R",
-"ps2": "0x001ab3d8",
-"margin": 12.14,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 3085,
 "name": "global constructors keyed to RRenderer::fgRenderer",
 "ps2": "0x001ac648",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 3126,
 "name": "global constructors keyed to gDrawGlares",
 "ps2": "0x001ae610",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 3176,
+"name": "global constructors keyed to RLightManager::fgThis_RLightManage",
+"ps2": "0x001b05e8",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 3187,
@@ -968,24 +821,24 @@
 "was": "infill-exact-run"
 },
 {
+"row": 3361,
+"name": "global constructors keyed to RPlayerViewCamera::RPlayerViewCame",
+"ps2": "0x001beec0",
+"margin": 6.27,
+"was": null
+},
+{
 "row": 3453,
 "name": "global constructors keyed to RRenderHigh::fgThis",
 "ps2": "0x001c5000",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 3454,
 "name": "global destructors keyed to RRenderHigh::fgThis",
 "ps2": "0x001c5020",
 "margin": 6.27,
-"was": "infill-exact-run"
-},
-{
-"row": 3580,
-"name": "URefCounter<RCARPFile>::~URefCounter(void)",
-"ps2": "0x001cb468",
-"margin": 4.39,
 "was": null
 },
 {
@@ -993,7 +846,7 @@
 "name": "_Rb_tree<MapKey, pair<MapKey, MapElement<RCARPFile> >, _Select1",
 "ps2": "0x001cb4e8",
 "margin": 7.95,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 3583,
@@ -1007,6 +860,13 @@
 "name": "_Rb_tree<MapKey, pair<MapKey, MapElement<RCARPFile> >, _Select1",
 "ps2": "0x001cba80",
 "margin": 8.83,
+"was": null
+},
+{
+"row": 3611,
+"name": "global constructors keyed to gRigidBodyDraw",
+"ps2": "0x001cc548",
+"margin": 6.27,
 "was": null
 },
 {
@@ -1035,34 +895,13 @@
 "name": "global constructors keyed to RStateManager::fgThis_RStateManage",
 "ps2": "0x001cee80",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 3645,
 "name": "global destructors keyed to RStateManager::fgThis_RStateManager",
 "ps2": "0x001ceea0",
 "margin": 6.27,
-"was": "infill-exact-run"
-},
-{
-"row": 3672,
-"name": "_Rb_tree<MapKey, pair<MapKey, MapElement<RTextureContext> >, _S",
-"ps2": "0x001d08d0",
-"margin": 6.66,
-"was": null
-},
-{
-"row": 3673,
-"name": "URefCounter<RTextureContext>::URefCounter(void)",
-"ps2": "0x001d0938",
-"margin": 6.66,
-"was": null
-},
-{
-"row": 3674,
-"name": "URefCounter<RTextureContext>::~URefCounter(void)",
-"ps2": "0x001d09a0",
-"margin": 7.89,
 "was": null
 },
 {
@@ -1070,7 +909,7 @@
 "name": "_Rb_tree<MapKey, pair<MapKey, MapElement<RTextureContext> >, _S",
 "ps2": "0x001d0a20",
 "margin": 7.95,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 3677,
@@ -1126,49 +965,63 @@
 "name": "global constructors keyed to RViewCamera::fCulling",
 "ps2": "0x001d51d8",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 3830,
 "name": "global constructors keyed to RWorldCamera::RWorldCamera(void)",
 "ps2": "0x001d6d38",
 "margin": 6.05,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 3891,
 "name": "global constructors keyed to RBulletStreak::fgMaterial",
 "ps2": "0x001d83d8",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 3892,
 "name": "global destructors keyed to RBulletStreak::fgMaterial",
 "ps2": "0x001d83f8",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 3922,
 "name": "global constructors keyed to RDebris::fgThis",
 "ps2": "0x001da010",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 3937,
+"name": "global constructors keyed to RDecalManager::fgThis_RDecalManage",
+"ps2": "0x001dae60",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 3938,
+"name": "global destructors keyed to RDecalManager::fgThis_RDecalManager",
+"ps2": "0x001dae80",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 3944,
 "name": "global constructors keyed to CylinderSection(COORD3 *, COORD2 *",
 "ps2": "0x001dbc78",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 3945,
 "name": "global destructors keyed to CylinderSection(COORD3 *, COORD2 *,",
 "ps2": "0x001dbc98",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 3957,
@@ -1238,28 +1091,49 @@
 "name": "global constructors keyed to RFlockGoal::RFlockGoal(RFlock *)",
 "ps2": "0x001df7a8",
 "margin": 5.27,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 4011,
+"name": "global constructors keyed to RGain::fgThis_RGain",
+"ps2": "0x001dfc38",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 4024,
 "name": "global constructors keyed to RLensFlareManager::fgThis_RLensFla",
 "ps2": "0x001e08e0",
 "margin": 5.27,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 4072,
+"name": "global constructors keyed to RLightning::fgThis_RLightning",
+"ps2": "0x001e34f8",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 4085,
+"name": "global constructors keyed to RMissileCam::fgThis_RMissileCam",
+"ps2": "0x001e3e08",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 4096,
 "name": "global constructors keyed to RMissileStreak::Init(void)",
 "ps2": "0x001e4b08",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 4097,
 "name": "global destructors keyed to RMissileStreak::Init(void)",
 "ps2": "0x001e4b28",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 4103,
@@ -1318,6 +1192,34 @@
 "was": null
 },
 {
+"row": 4173,
+"name": "global constructors keyed to CalcEmitVal(int, int, int, int)",
+"ps2": "0x001e91a0",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 4188,
+"name": "global constructors keyed to RParticulate::fgThis_RParticulate",
+"ps2": "0x001ea0f0",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 4189,
+"name": "global destructors keyed to RParticulate::fgThis_RParticulate",
+"ps2": "0x001ea110",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 4206,
+"name": "global constructors keyed to RPostProcessing::fgThis_RPostProce",
+"ps2": "0x001ea8c8",
+"margin": 6.27,
+"was": null
+},
+{
 "row": 4209,
 "name": "global constructors keyed to RScorchWorld::ScorchWorld(WWorldPo",
 "ps2": "0x001eb690",
@@ -1360,46 +1262,74 @@
 "was": null
 },
 {
+"row": 4279,
+"name": "global constructors keyed to RVehicleParticle::fAllCars",
+"ps2": "0x001f0340",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 4292,
+"name": "global constructors keyed to RWater::fgThis_RWater",
+"ps2": "0x001f0b28",
+"margin": 6.27,
+"was": null
+},
+{
 "row": 4297,
 "name": "global constructors keyed to RWindow::Init(void)",
 "ps2": "0x001f1490",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 4312,
+"name": "global constructors keyed to fgGlareTexture",
+"ps2": "0x001f2998",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 4313,
+"name": "global destructors keyed to fgGlareTexture",
+"ps2": "0x001f29b8",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 4329,
 "name": "global constructors keyed to RParticleSystem::RParticle::ResetP",
 "ps2": "0x001f4f70",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 4330,
 "name": "global destructors keyed to RParticleSystem::RParticle::ResetPa",
 "ps2": "0x001f4f90",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 4337,
 "name": "global constructors keyed to RTyreTrack::RTyreTrack(float, bool",
 "ps2": "0x001f5ca8",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 4338,
 "name": "global destructors keyed to RTyreTrack::RTyreTrack(float, bool,",
 "ps2": "0x001f5cc8",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 4345,
 "name": "global constructors keyed to OBB::OBB(void)",
 "ps2": "0x001f6298",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 4350,
@@ -1409,11 +1339,11 @@
 "was": null
 },
 {
-"row": 4434,
-"name": "operator<(PhysicsObjMapIterator &, PhysicsObjMapIterator &)",
-"ps2": "0x001fe198",
-"margin": 6.36,
-"was": "infill-exact-run"
+"row": 4413,
+"name": "global constructors keyed to GRAVITY",
+"ps2": "0x001fd428",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 4501,
@@ -1437,144 +1367,53 @@
 "was": null
 },
 {
-"row": 4504,
-"name": "vector<PVehicle *, allocator<PVehicle *> >::_M_insert_aux(PVehi",
-"ps2": "0x00201f38",
-"margin": 8.74,
-"was": null
-},
-{
-"row": 4505,
-"name": "_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se",
-"ps2": "0x002020a0",
-"margin": 9.89,
-"was": null
-},
-{
-"row": 4506,
-"name": "_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se",
-"ps2": "0x00202408",
-"margin": 7.1,
-"was": null
-},
-{
-"row": 4507,
-"name": "vector<Explosion *, allocator<Explosion *> >::_M_insert_aux(Exp",
-"ps2": "0x00202468",
-"margin": 8.74,
-"was": null
-},
-{
-"row": 4508,
-"name": "vector<Human *, allocator<Human *> >::_M_insert_aux(Human **, H",
-"ps2": "0x002025d0",
-"margin": 8.74,
-"was": null
-},
-{
-"row": 4509,
-"name": "vector<Mine *, allocator<Mine *> >::_M_insert_aux(Mine **, Mine",
-"ps2": "0x00202738",
-"margin": 8.74,
-"was": null
-},
-{
-"row": 4510,
-"name": "vector<Missile *, allocator<Missile *> >::_M_insert_aux(Missile",
-"ps2": "0x002028a0",
-"margin": 8.74,
-"was": null
-},
-{
-"row": 4511,
-"name": "vector<Shell *, allocator<Shell *> >::_M_insert_aux(Shell **, S",
-"ps2": "0x00202a08",
-"margin": 8.74,
-"was": null
-},
-{
-"row": 4512,
-"name": "vector<Grenade *, allocator<Grenade *> >::_M_insert_aux(Grenade",
-"ps2": "0x00202b70",
-"margin": 8.74,
-"was": null
-},
-{
-"row": 4513,
-"name": "vector<Newton *, allocator<Newton *> >::_M_insert_aux(Newton **",
-"ps2": "0x00202cd8",
-"margin": 8.74,
-"was": null
-},
-{
-"row": 4514,
-"name": "vector<PHelicopter *, allocator<PHelicopter *> >::_M_insert_aux",
-"ps2": "0x00202e40",
-"margin": 8.74,
-"was": null
-},
-{
-"row": 4515,
-"name": "vector<Sentry *, allocator<Sentry *> >::_M_insert_aux(Sentry **",
-"ps2": "0x00202fa8",
-"margin": 8.74,
-"was": null
-},
-{
-"row": 4516,
-"name": "vector<Smackable *, allocator<Smackable *> >::_M_insert_aux(Sma",
-"ps2": "0x00203110",
-"margin": 8.74,
-"was": null
-},
-{
 "row": 4517,
 "name": "_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se",
 "ps2": "0x00203278",
 "margin": 6.66,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 4518,
 "name": "_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se",
 "ps2": "0x002032e0",
 "margin": 6.97,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 4519,
 "name": "_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se",
 "ps2": "0x00203320",
 "margin": 6.97,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 4520,
 "name": "_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se",
 "ps2": "0x00203360",
 "margin": 8.79,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 4521,
 "name": "_Rb_tree<PhysicsObjMapIterator, PhysicsObjMapIterator, _Identit",
 "ps2": "0x00203460",
 "margin": 7.74,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 4522,
 "name": "_Rb_tree<PhysicsObjMapIterator, PhysicsObjMapIterator, _Identit",
 "ps2": "0x002034f0",
 "margin": 11.23,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 4523,
 "name": "_Rb_tree<PhysicsObjMapIterator, PhysicsObjMapIterator, _Identit",
 "ps2": "0x00203848",
 "margin": 8.83,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 4524,
@@ -1791,7 +1630,7 @@
 "name": "vector<SimTrackedInstance *, allocator<SimTrackedInstance *> >:",
 "ps2": "0x00204748",
 "margin": 8.74,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 4555,
@@ -1805,7 +1644,7 @@
 "name": "SimTrackedInstance ** remove_copy<SimTrackedInstance **, SimTra",
 "ps2": "0x00204980",
 "margin": 6.56,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 4558,
@@ -1819,14 +1658,14 @@
 "name": "global constructors keyed to Util_Step(int, int, int)",
 "ps2": "0x002117c8",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 4825,
 "name": "global constructors keyed to WCollisionObject::MakeMatrix(MATRI",
 "ps2": "0x002130f0",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 4837,
@@ -1840,6 +1679,13 @@
 "name": "WCollisionMgr::FindFaceInCInst(MATRIX4 &, COORD3 &, WCollisionI",
 "ps2": "0x00214c08",
 "margin": 3.0,
+"was": null
+},
+{
+"row": 4881,
+"name": "global constructors keyed to WCollisionMgr::fgCollisionMgr",
+"ps2": "0x0021c0d0",
+"margin": 6.27,
 "was": null
 },
 {
@@ -1959,7 +1805,7 @@
 "name": "global constructors keyed to WRoadNetwork::fgRoadNetwork",
 "ps2": "0x002273b8",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 5022,
@@ -1987,14 +1833,14 @@
 "name": "global constructors keyed to WTargetPicker::kTargetRangeBits",
 "ps2": "0x0022c168",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 5078,
 "name": "global destructors keyed to WTargetPicker::kTargetRangeBits",
 "ps2": "0x0022c188",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 5079,
@@ -2064,33 +1910,61 @@
 "name": "global constructors keyed to NULL_ID",
 "ps2": "0x002396f8",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 5418,
+"name": "global constructors keyed to GHud::fActionQueue",
+"ps2": "0x00247e78",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 5443,
 "name": "global constructors keyed to LoadingDotBinary",
 "ps2": "0x00249f58",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 5444,
 "name": "global destructors keyed to LoadingDotBinary",
 "ps2": "0x00249f78",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 5470,
+"name": "global constructors keyed to GSubtitles::fTheApp",
+"ps2": "0x0024afc0",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 5495,
 "name": "global constructors keyed to DEFAULT_STRING",
 "ps2": "0x0024b9a8",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 5571,
 "name": "__rtti_user",
 "ps2": "0x0024e7c8",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 5869,
+"name": "global constructors keyed to EAGL::DeviceExtension::gPerfMeter",
+"ps2": "0x00287508",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 5870,
+"name": "global destructors keyed to EAGL::DeviceExtension::gPerfMeter",
+"ps2": "0x00287528",
 "margin": 6.27,
 "was": null
 },
@@ -2183,7 +2057,7 @@
 "name": "global destructors keyed to EAGL::ProfilerRegion::gBufferHead",
 "ps2": "0x00299d88",
 "margin": 5.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
 "row": 6420,
@@ -2557,80 +2431,17 @@
 "was": null
 },
 {
-"row": 7146,
-"name": "rsetproj",
-"ps2": "0x0025f100",
-"margin": 8.44,
-"was": "infill-exact-run"
-},
-{
-"row": 7147,
-"name": "rsetprojxy",
-"ps2": "0x0025f1d8",
-"margin": 9.17,
-"was": "infill-exact-run"
-},
-{
-"row": 7148,
-"name": "rprojectone",
-"ps2": "0x0025f360",
-"margin": 8.44,
-"was": "infill-exact-run"
-},
-{
-"row": 7149,
-"name": "rreverseproject",
-"ps2": "0x0025f438",
-"margin": 6.56,
-"was": "infill-exact-run"
-},
-{
-"row": 7164,
-"name": "SHAPE_createsize",
-"ps2": "0x0025fa50",
-"margin": 7.42,
+"row": 7040,
+"name": "void FONT_drawtextx<unsigned char>(FONT *, float, float, unsign",
+"ps2": "0x00258100",
+"margin": 10.76,
 "was": null
 },
 {
-"row": 7165,
-"name": "SHAPE_createat",
-"ps2": "0x0025fb58",
-"margin": 10.0,
-"was": null
-},
-{
-"row": 7166,
-"name": "SHAPE_create",
-"ps2": "0x0025fdf0",
-"margin": 8.79,
-"was": null
-},
-{
-"row": 7167,
-"name": "SHAPE_cluttype",
-"ps2": "0x0025fef0",
-"margin": 7.34,
-"was": null
-},
-{
-"row": 7168,
-"name": "SHAPE_locatez",
-"ps2": "0x0025ff38",
-"margin": 8.26,
-"was": null
-},
-{
-"row": 7169,
-"name": "SHAPE_locate",
-"ps2": "0x0025fff0",
-"margin": 6.27,
-"was": null
-},
-{
-"row": 7170,
-"name": "SHAPE_rowbytes",
-"ps2": "0x00260010",
-"margin": 7.34,
+"row": 7041,
+"name": "void FONT_drawtextx<unsigned short>(FONT *, float, float, unsig",
+"ps2": "0x002584c0",
+"margin": 10.76,
 "was": null
 },
 {
@@ -2638,35 +2449,14 @@
 "name": "SHAPE_depth",
 "ps2": "0x00260058",
 "margin": 6.27,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 7172,
 "name": "SHAPE_depth(int)",
 "ps2": "0x00260078",
 "margin": 4.86,
-"was": null
-},
-{
-"row": 7176,
-"name": "SHAPE_name",
-"ps2": "0x00260104",
-"margin": 10.32,
-"was": null
-},
-{
-"row": 7178,
-"name": "SHAPE_type",
-"ps2": "0x00260148",
-"margin": 8.0,
-"was": null
-},
-{
-"row": 7180,
-"name": "SHAPE_setmemcallbacks",
-"ps2": "0x002601e0",
-"margin": 5.71,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 7259,
@@ -2702,20 +2492,6 @@
 "ps2": "0x002b98d0",
 "margin": 7.0,
 "was": null
-},
-{
-"row": 8002,
-"name": "Exit",
-"ps2": "0x002be988",
-"margin": 5.1,
-"was": "infill-exact-run"
-},
-{
-"row": 8003,
-"name": "ExecOSD",
-"ps2": "0x002be9b0",
-"margin": 6.56,
-"was": "infill-exact-run"
 },
 {
 "row": 8216,
@@ -2830,32 +2606,39 @@
 "was": null
 },
 {
-"row": 8662,
-"name": "_Rb_tree<char *, pair<char *, AVoiceInfo>, _Select1st<pair<char",
-"ps2": "0x002de208",
-"margin": 6.66,
-"was": "infill-exact-run"
+"row": 8649,
+"name": "global constructors keyed to AWorldSound::Play(APath &)",
+"ps2": "0x002dd678",
+"margin": 6.27,
+"was": null
 },
 {
-"row": 8663,
-"name": "_Rb_tree<char *, pair<char *, AVoiceInfo>, _Select1st<pair<char",
-"ps2": "0x002de270",
-"margin": 11.45,
-"was": "infill-exact-run"
+"row": 8740,
+"name": "global constructors keyed to AHorn::AHorn(char *, float, float)",
+"ps2": "0x002e3598",
+"margin": 6.27,
+"was": null
 },
 {
-"row": 8664,
-"name": "_Rb_tree<char *, pair<char *, AVoiceInfo>, _Select1st<pair<char",
-"ps2": "0x002de5f8",
-"margin": 8.83,
-"was": "infill-exact-run"
+"row": 8749,
+"name": "global constructors keyed to AUltraLite::AUltraLite(void)",
+"ps2": "0x002e4910",
+"margin": 6.27,
+"was": null
 },
 {
-"row": 8665,
-"name": "list<AVoice::View *, allocator<AVoice::View *> >::remove(AVoice",
-"ps2": "0x002de738",
-"margin": 4.24,
-"was": "infill-exact-run"
+"row": 8765,
+"name": "global constructors keyed to ATrafficVehicle::ATrafficVehicle(c",
+"ps2": "0x002e6a68",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 8785,
+"name": "global constructors keyed to ASubmersible::ASubmersible(char *)",
+"ps2": "0x002e8680",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 8815,
@@ -2900,55 +2683,6 @@
 "was": "infill-exact-run"
 },
 {
-"row": 8821,
-"name": "URefCounter<AStream>::URefCounter(void)",
-"ps2": "0x002ea1f8",
-"margin": 6.66,
-"was": "infill-exact-run"
-},
-{
-"row": 8822,
-"name": "URefCounter<AStream>::~URefCounter(void)",
-"ps2": "0x002ea260",
-"margin": 7.89,
-"was": "infill-exact-run"
-},
-{
-"row": 8823,
-"name": "_Rb_tree<MapKey, pair<MapKey, MapElement<AStream> >, _Select1st",
-"ps2": "0x002ea2e0",
-"margin": 7.95,
-"was": "infill-exact-run"
-},
-{
-"row": 8828,
-"name": "URefCounter<AStream>::RemoveReference(AStream *)",
-"ps2": "0x002eaaf0",
-"margin": 10.35,
-"was": null
-},
-{
-"row": 8829,
-"name": "deque<AStreamEntry, allocator<AStreamEntry>, 0>::_M_reallocate_",
-"ps2": "0x002eb0e0",
-"margin": 9.5,
-"was": null
-},
-{
-"row": 8830,
-"name": "deque<AStreamEntry, allocator<AStreamEntry>, 0>::_M_push_back_a",
-"ps2": "0x002eb2b0",
-"margin": 10.0,
-"was": null
-},
-{
-"row": 8831,
-"name": "deque<AStreamEntry, allocator<AStreamEntry>, 0>::clear(void)",
-"ps2": "0x002eb4d8",
-"margin": 7.74,
-"was": null
-},
-{
 "row": 8859,
 "name": "ASound::ASound(char *)",
 "ps2": "0x002ed260",
@@ -2961,6 +2695,34 @@
 "ps2": "0x002ed3d0",
 "margin": 8.87,
 "was": "infill-exact-run"
+},
+{
+"row": 8876,
+"name": "global constructors keyed to ASnowMobile::ASnowMobile(char *)",
+"ps2": "0x002ef6d0",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 8919,
+"name": "global constructors keyed to APlayerVehicle::APlayerVehicle(cha",
+"ps2": "0x002f0ef0",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 8926,
+"name": "global constructors keyed to APlayerTank::APlayerTank(char *)",
+"ps2": "0x002f1408",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 8932,
+"name": "global constructors keyed to APlayerHeli::APlayerHeli(void)",
+"ps2": "0x002f1f20",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 8937,
@@ -2977,10 +2739,24 @@
 "was": "infill-exact-run"
 },
 {
-"row": 8973,
-"name": "URefCounter<AMix>::RemoveReference(AMix *)",
-"ps2": "0x002f3ff0",
-"margin": 9.35,
+"row": 8976,
+"name": "global constructors keyed to AMix::gList",
+"ps2": "0x002f4740",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 8977,
+"name": "global destructors keyed to AMix::gList",
+"ps2": "0x002f4760",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 9016,
+"name": "global constructors keyed to AHelicopter::AHelicopter(char *)",
+"ps2": "0x002f6e40",
+"margin": 6.27,
 "was": null
 },
 {
@@ -2988,62 +2764,20 @@
 "name": "global constructors keyed to AGun::AGun(ASceneObj &, char *)",
 "ps2": "0x002f7c80",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 9042,
+"name": "global constructors keyed to AFingoDeath::AFingoDeath(void)",
+"ps2": "0x002f8d38",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 9063,
 "name": "_Rb_tree<MapKey, pair<MapKey, MapElement<AFader> >, _Select1st<",
 "ps2": "0x002f9930",
 "margin": 4.16,
-"was": null
-},
-{
-"row": 9064,
-"name": "URefCounter<AFader>::URefCounter(void)",
-"ps2": "0x002f9998",
-"margin": 4.16,
-"was": null
-},
-{
-"row": 9065,
-"name": "URefCounter<AFader>::~URefCounter(void)",
-"ps2": "0x002f9a00",
-"margin": 7.89,
-"was": null
-},
-{
-"row": 9066,
-"name": "_Rb_tree<MapKey, pair<MapKey, MapElement<AFader> >, _Select1st<",
-"ps2": "0x002f9a80",
-"margin": 7.95,
-"was": null
-},
-{
-"row": 9068,
-"name": "_Rb_tree<MapKey, pair<MapKey, MapElement<AFader> >, _Select1st<",
-"ps2": "0x002f9b80",
-"margin": 10.27,
-"was": null
-},
-{
-"row": 9069,
-"name": "_Rb_tree<MapKey, pair<MapKey, MapElement<AFader> >, _Select1st<",
-"ps2": "0x002fa018",
-"margin": 8.83,
-"was": null
-},
-{
-"row": 9071,
-"name": "URefCounter<AFader>::RemoveReference(AFader *)",
-"ps2": "0x002fa290",
-"margin": 10.35,
-"was": "infill-exact-run"
-},
-{
-"row": 9072,
-"name": "URefCounter<AFader>::Get(void)",
-"ps2": "0x002fa880",
-"margin": 7.31,
 "was": "infill-exact-run"
 },
 {
@@ -3051,28 +2785,14 @@
 "name": "_Rb_tree<MapKey, pair<MapKey, MapElement<AEngine> >, _Select1st",
 "ps2": "0x002fadb8",
 "margin": 6.66,
-"was": null
-},
-{
-"row": 9080,
-"name": "URefCounter<AEngine>::URefCounter(void)",
-"ps2": "0x002fae20",
-"margin": 6.66,
-"was": null
-},
-{
-"row": 9081,
-"name": "URefCounter<AEngine>::~URefCounter(void)",
-"ps2": "0x002fae88",
-"margin": 7.89,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 9082,
 "name": "_Rb_tree<MapKey, pair<MapKey, MapElement<AEngine> >, _Select1st",
 "ps2": "0x002faf08",
 "margin": 7.95,
-"was": null
+"was": "infill-exact-run"
 },
 {
 "row": 9084,
@@ -3089,32 +2809,39 @@
 "was": null
 },
 {
-"row": 9090,
-"name": "URefCounter<AEngine>::Get(void)",
-"ps2": "0x002fbd88",
-"margin": 7.31,
-"was": "infill-exact-run"
-},
-{
 "row": 9091,
 "name": "global constructors keyed to AEngine::AEngine(void)",
 "ps2": "0x002fbde0",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
 },
 {
-"row": 9112,
-"name": "list<ABaseSound *, allocator<ABaseSound *> >::remove(ABaseSound",
-"ps2": "0x002fcce0",
-"margin": 4.24,
-"was": "infill-exact-run"
+"row": 9170,
+"name": "global constructors keyed to ABank::fgPath",
+"ps2": "0x002fe980",
+"margin": 6.27,
+"was": null
+},
+{
+"row": 9171,
+"name": "global destructors keyed to ABank::fgPath",
+"ps2": "0x002fe9a0",
+"margin": 6.27,
+"was": null
 },
 {
 "row": 9176,
 "name": "global constructors keyed to AVehicleWind::gMaxVolume",
 "ps2": "0x002ff020",
 "margin": 6.27,
-"was": "infill-exact-run"
+"was": null
+},
+{
+"row": 9181,
+"name": "global constructors keyed to ARaceEngine::ARaceEngine(void)",
+"ps2": "0x002ffdd0",
+"margin": 6.27,
+"was": null
 }
 ]
 }

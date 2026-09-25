@@ -3313,34 +3313,5 @@
    ]
   }
  ],
- "DRIVING.ELF": [
-  {
-   "path": "CARP::TagReference",
-   "evidence": [
-    "constructor"
-   ]
-  },
-  {
-   "path": "DebugIndexer",
-   "evidence": [
-    "constructor",
-    "destructor",
-    "type_info",
-    "vtable"
-   ]
-  },
-  {
-   "path": "EAGLInternal::TexAlloc",
-   "evidence": [
-    "constructor",
-    "destructor"
-   ]
-  },
-  {
-   "path": "WCollisionObject",
-   "evidence": [
-    "const method"
-   ]
-  }
- ]
+ "DRIVING.ELF": []
 }

@@ -1,0 +1,656 @@
+{
+ "batch": "P011",
+ "program": "DRIVING.ELF",
+ "note": "Names accepted by reading function bodies (review.py). 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x0010b9b0",
+   "expect": "FUN_0010b9b0",
+   "name": "_Rb_tree<LString,_LString>::_M_erase",
+   "sheet_name": "_Rb_tree<LString, LString, _Identity<LString>, less<LString>, a",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 100, body review: SGI _Rb_tree::_M_erase: recurse right, step left, free a 0x18-byte node (set<LString>); class arguments cut by the sheet"
+   ]
+  },
+  {
+   "xbox": "0x0010ba18",
+   "expect": "FUN_0010ba18",
+   "name": "_Rb_tree<LString,_DebugItem_*>::_M_erase",
+   "sheet_name": "_Rb_tree<LString, pair<LString, DebugItem *>, _Select1st<pair<L",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 101, body review: _M_erase as row 100, 0x1c-byte node (the map's extra DebugItem * pointer); class arguments cut"
+   ]
+  },
+  {
+   "xbox": "0x0010ba80",
+   "expect": "FUN_0010ba80",
+   "name": "_List_base<ActActor_*,_allocator<ActActor_*>_>::clear",
+   "sheet_name": "_List_base<ActActor *, allocator<ActActor *> >::clear(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 102, body review: clears a list, freeing 0xc-byte nodes; called by ~ActActorDatabase"
+   ]
+  },
+  {
+   "xbox": "0x0010c818",
+   "expect": "FUN_0010c818",
+   "name": "EAGLAnim::FnDefaultAnimBank::GetAnimIndex",
+   "sheet_name": "EAGLAnim::FnDefaultAnimBank::GetAnimIndex(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 134, body review: looks the name up in the bank at this+4 and returns the index; AUF's has the search inlined"
+   ]
+  },
+  {
+   "xbox": "0x00110f10",
+   "expect": "FUN_00110f10",
+   "name": "ActManager::SymbolResolver",
+   "sheet_name": "ActManager::SymbolResolver(char *, bool &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 219, body review: \"event.\" prefix then EventTarget::ResolveEventId, as AUF's"
+   ]
+  },
+  {
+   "xbox": "0x001115d8",
+   "expect": "FUN_001115d8",
+   "name": "ActModel::UnLoad",
+   "sheet_name": "ActModel::UnLoad(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 226, body review: for 3 slots at this+0xc: destroy the DynamicLoader, free, clear - as AUF's; called by ~ActModel"
+   ]
+  },
+  {
+   "xbox": "0x00114a58",
+   "expect": "FUN_00114a58",
+   "name": "ActSkeleton::GetStillPose",
+   "sheet_name": "ActSkeleton::GetStillPose(void)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 286, body review: still pose into the object's own buffer (this+0xc)"
+   ]
+  },
+  {
+   "xbox": "0x00114a80",
+   "expect": "FUN_00114a80",
+   "name": "ActSkeleton::GetStillPose",
+   "sheet_name": "ActSkeleton::GetStillPose(float *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 287, body review: still pose into the caller's float *, as AUF's GetStillPose(float *)"
+   ]
+  },
+  {
+   "xbox": "0x00116f58",
+   "expect": "FUN_00116f58",
+   "name": "ActWeapon::GetVelocity",
+   "sheet_name": "ActWeapon::GetVelocity(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 331, body review: returns this+0x150, referenced from a vtable (AUF returns this+0x138: offsets differ by platform). The alignment's 0x116f60 is a static destructor of a URefCounter"
+   ]
+  },
+  {
+   "xbox": "0x001173d8",
+   "expect": "FUN_001173d8",
+   "name": "_Rb_tree<MapKey,_ActWeaponDatabase::WeaponInfo>::_M_erase",
+   "sheet_name": "_Rb_tree<MapKey, pair<MapKey, MapElement<ActWeaponDatabase::Wea",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 338, body review: _M_erase, 0x98-byte node; class arguments cut"
+   ]
+  },
+  {
+   "xbox": "0x00117440",
+   "expect": "FUN_00117440",
+   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::URefCounter",
+   "sheet_name": "URefCounter<ActWeaponDatabase::WeaponInfo>::URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 339, body review: builds the map header node (FastAlloc(0x98, \"STL\")); called by Get"
+   ]
+  },
+  {
+   "xbox": "0x001175d0",
+   "expect": "FUN_001175d0",
+   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::GetReference",
+   "sheet_name": "URefCounter<ActWeaponDatabase::WeaponInfo>::GetReference(char *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 342, body review: copies the key, tree lookup, returns the element's field or 0; called by LoadWeapon/UseWeapon/UnloadWeapon"
+   ]
+  },
+  {
+   "xbox": "0x00117c50",
+   "expect": "FUN_00117c50",
+   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::AddReference",
+   "sheet_name": "URefCounter<ActWeaponDatabase::WeaponInfo>::AddReference(char *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 345, body review: Looks up the name in the map (FUN_00117528), inserts a new entry (FUN_00117ac0) if it is missing, then increments the refcount at +0x90; called from LoadWeapon."
+   ]
+  },
+  {
+   "xbox": "0x00117d38",
+   "expect": "FUN_00117d38",
+   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::RemoveReference",
+   "sheet_name": "URefCounter<ActWeaponDatabase::WeaponInfo>::RemoveReference(Act",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 346, body review: Walks the map matching the key and decrementing the refcount at +0x90, erasing and FastFree-ing the node when it reaches 0; called from UnloadWeapon."
+   ]
+  },
+  {
+   "xbox": "0x001184d8",
+   "expect": "FUN_001184d8",
+   "name": "ActWeapon::operator_delete",
+   "sheet_name": "ActWeapon::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 351, body review: Tail-calls UMemory::FastFree(p,size) directly after ActWeapon::operator new; the real body is 0x1c bytes."
+   ]
+  },
+  {
+   "xbox": "0x00119290",
+   "expect": "FUN_00119290",
+   "name": "AICharacterEnemy::TargetIsAcquired",
+   "sheet_name": "AICharacterEnemy::TargetIsAcquired(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 381, body review: Same shape as AUF: GetWeaponPosition, two atan2 of player vs weapon, wraps to +/-0.5, sets the side flag and returns true within the tolerance."
+   ]
+  },
+  {
+   "xbox": "0x00119940",
+   "expect": "FUN_00119940",
+   "name": "AICharacter::kMissileDeathThresh_global_ctors",
+   "sheet_name": "global constructors keyed to AICharacter::kMissileDeathThresh",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 448, body review: corrected from 0x119b98 (a matrix-copy GetRotPos helper); 0x119940 is the static-init stub calling FUN_001194e8(1,0xffff)."
+   ]
+  },
+  {
+   "xbox": "0x0011a858",
+   "expect": "FUN_0011a858",
+   "name": "AICharacterBond::UpdateRotPos",
+   "sheet_name": "AICharacterBond::UpdateRotPos(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 462, body review: Gets the player rot/pos (FUN_00119b98), then GetActorLocalPosOri and VU0_MATRIX4_mult, as in the AUF UpdateRotPos; referenced from the vtable."
+   ]
+  },
+  {
+   "xbox": "0x0011b128",
+   "expect": "FUN_0011b128",
+   "name": "AICharacterEnemyDriver::UpdateRotPos",
+   "sheet_name": "AICharacterEnemyDriver::UpdateRotPos(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 475, body review: Same UpdateRotPos pattern (GetRotPos helper, GetActorLocalPosOri, MATRIX4 mult), sitting right before the Driver type_info."
+   ]
+  },
+  {
+   "xbox": "0x0011b2c0",
+   "expect": "FUN_0011b2c0",
+   "name": "AICharacterEnemyDriver::GetRotPos_global_ctors",
+   "sheet_name": "global constructors keyed to AICharacterEnemyDriver::GetRotPos(",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 477, body review: Static-init stub calling FUN_0011b238(1,0xffff), referenced from the ctors table, right after the type_info."
+   ]
+  },
+  {
+   "xbox": "0x0011d9f0",
+   "expect": "FUN_0011d9f0",
+   "name": "AICharacterEnemyGround::PlayZoneInjuryAnim",
+   "sheet_name": "AICharacterEnemyGround::PlayZoneInjuryAnim(int, float, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 505, body review: Matches AUF PlayZoneInjuryAnim: the hitpoint threshold, the 0xf/0x16 state checks, Say HGrunt/HDeath, and a random injury anim from the table."
+   ]
+  },
+  {
+   "xbox": "0x0011f528",
+   "expect": "FUN_0011f528",
+   "name": "AICharacterEnemySnow::TargetIsInRange",
+   "sheet_name": "AICharacterEnemySnow::TargetIsInRange(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 536, body review: Snow vtable slot before TargetIsAcquired: GetRotPos, then target position (vehicle or player) and an atan2 range/angle check."
+   ]
+  },
+  {
+   "xbox": "0x0011f768",
+   "expect": "FUN_0011f768",
+   "name": "AICharacterEnemySnow::TargetIsAcquired",
+   "sheet_name": "AICharacterEnemySnow::TargetIsAcquired(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 537, body review: GetWeaponPosition plus target position and atan2 facing check, the same shape as the other TargetIsAcquired methods; next in the vtable."
+   ]
+  },
+  {
+   "xbox": "0x0011f9a8",
+   "expect": "FUN_0011f9a8",
+   "name": "AICharacterEnemySnow::PlayZoneInjuryAnim",
+   "sheet_name": "AICharacterEnemySnow::PlayZoneInjuryAnim(int, float, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 538, body review: PlayZoneInjuryAnim shape: the hitpoint threshold, state 0xf/0x16, Say HGrunt, then a random crossfade anim."
+   ]
+  },
+  {
+   "xbox": "0x00120478",
+   "expect": "FUN_00120478",
+   "name": "AICharacterEnemySSnow::TargetIsInRange",
+   "sheet_name": "AICharacterEnemySSnow::TargetIsInRange(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 555, body review: Distance squared from the player rigid body to this+0x30 compared against the range at +0x64."
+   ]
+  },
+  {
+   "xbox": "0x00120500",
+   "expect": "FUN_00120500",
+   "name": "AICharacterEnemySSnow::PlayZoneInjuryAnim",
+   "sheet_name": "AICharacterEnemySSnow::PlayZoneInjuryAnim(int, float, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 556, body review: PlayZoneInjuryAnim shape with HGrunt/HDeath, the crossfade anim table and an IS_SNOWMOBILE lookup."
+   ]
+  },
+  {
+   "xbox": "0x001219c0",
+   "expect": "FUN_001219c0",
+   "name": "AICharacterEnemySunroof::TargetIsAcquired",
+   "sheet_name": "AICharacterEnemySunroof::TargetIsAcquired(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 581, body review: GetWeaponPosition plus target (vehicle/player) and atan2 acquisition test, like the sibling TargetIsAcquired methods; vtable-referenced."
+   ]
+  },
+  {
+   "xbox": "0x00121c10",
+   "expect": "FUN_00121c10",
+   "name": "AICharacterEnemySunroof::VehicleIsAccelerating",
+   "sheet_name": "AICharacterEnemySunroof::VehicleIsAccelerating(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 582, body review: Matches AUF VehicleIsAccelerating: the vehicle velocity delta dotted with the rigid-body axes against thresholds, returning codes 1-4; called from DoArmed and DoLeaning."
+   ]
+  },
+  {
+   "xbox": "0x00121dd8",
+   "expect": "FUN_00121dd8",
+   "name": "AICharacterEnemySunroof::PlayZoneInjuryAnim",
+   "sheet_name": "AICharacterEnemySunroof::PlayZoneInjuryAnim(int, float, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 583, body review: Matches AUF PlayZoneInjuryAnim: the threshold, the vehicle flag check, Say HGrunt/HDeath and the injuryAnims table indexed by random."
+   ]
+  },
+  {
+   "xbox": "0x00122e20",
+   "expect": "FUN_00122e20",
+   "name": "AICharacterEnemyWindow::TargetIsInRange",
+   "sheet_name": "AICharacterEnemyWindow::TargetIsInRange(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 606, body review: GetRotPos helper, then target position and atan2 angle, like the AUF Window TargetIsInRange (distance plus angle to target)."
+   ]
+  },
+  {
+   "xbox": "0x00123058",
+   "expect": "FUN_00123058",
+   "name": "AICharacterEnemyWindow::TargetIsAcquired",
+   "sheet_name": "AICharacterEnemyWindow::TargetIsAcquired(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 607, body review: GetWeaponPosition plus target position and atan2 acquisition test; next vtable slot after TargetIsInRange."
+   ]
+  },
+  {
+   "xbox": "0x00123298",
+   "expect": "FUN_00123298",
+   "name": "AICharacterEnemyWindow::PlayZoneInjuryAnim",
+   "sheet_name": "AICharacterEnemyWindow::PlayZoneInjuryAnim(int, float, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 608, body review: PlayZoneInjuryAnim shape: the hitpoint threshold, state 0xf/0x16, Say HDeath/HGrunt and a random crossfade anim."
+   ]
+  },
+  {
+   "xbox": "0x00123578",
+   "expect": "FUN_00123578",
+   "name": "AICharacterEnemyWindow::GetRotPos_global_ctors",
+   "sheet_name": "global constructors keyed to AICharacterEnemyWindow::GetRotPos(",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 610, body review: Static-init stub calling FUN_001234f0(1,0xffff), referenced from the ctors table, right after the Window type_info."
+   ]
+  },
+  {
+   "xbox": "0x00123878",
+   "expect": "FUN_00123878",
+   "name": "AICharacterHands::GetRotPos",
+   "sheet_name": "AICharacterHands::GetRotPos(int, MATRIX4 &, COORD3 &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 614, body review: corrected from 0x1236c0 (a bare atan2f wrapper); 0x123878 copies this matrix to param2 and the player rigid body +0x20..0x28 into the COORD3, exactly as AUF does."
+   ]
+  },
+  {
+   "xbox": "0x00124848",
+   "expect": "FUN_00124848",
+   "name": "AICharacterHands::UpdateRotPos",
+   "sheet_name": "AICharacterHands::UpdateRotPos(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 635, body review: Matches AUF: GetAimMatrix4 from the player camera copied into this, then the rest of the aim update; vtable-referenced."
+   ]
+  },
+  {
+   "xbox": "0x00125920",
+   "expect": "FUN_00125920",
+   "name": "AICharacterPassenger::UpdateRotPos",
+   "sheet_name": "AICharacterPassenger::UpdateRotPos(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 655, body review: UpdateRotPos pattern (GetRotPos helper, GetActorLocalPosOri, MATRIX4 mult) matching AUF's Passenger body; vtable-referenced."
+   ]
+  },
+  {
+   "xbox": "0x0012aa20",
+   "expect": "FUN_0012aa20",
+   "name": "AICharacterPedestrian::SetNewState",
+   "sheet_name": "AICharacterPedestrian::SetNewState(AICharacter::EState, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 712, body review: Stores new state at +0x4c keeping previous at +0x15c plus the int arg; called from every AICharacterPedestrian Do*/KillSelf/Recycle/HandleInterrupts state handler."
+   ]
+  },
+  {
+   "xbox": "0x0012c4c0",
+   "expect": "FUN_0012c4c0",
+   "name": "AIElementController::EveryoneChill",
+   "sheet_name": "AIElementController::EveryoneChill(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 735, body review: Loops elements, for state 1 with vehicle calls SetAttackMode(1)/SetNavigateMode(1), same shape as AUF EveryoneChill; called from EPlayerLose/EPlayerWin."
+   ]
+  },
+  {
+   "xbox": "0x0012c608",
+   "expect": "FUN_0012c608",
+   "name": "AIElementController::RedirectCarpElement",
+   "sheet_name": "AIElementController::RedirectCarpElement(CARP::AIElement *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 738, body review: Index from (elem - fObj base)/size with abs, returns element array (+0xc) entry, identical to AUF RedirectCarpElement."
+   ]
+  },
+  {
+   "xbox": "0x0012c640",
+   "expect": "FUN_0012c640",
+   "name": "AIElementController::GetCarpElementTracking",
+   "sheet_name": "AIElementController::GetCarpElementTracking(CARP::AIElement *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 739, body review: Same index computation but returns tracking array (+0x14, stride 0x50), matching AUF GetCarpElementTracking (+8, stride 0x3c)."
+   ]
+  },
+  {
+   "xbox": "0x0012dc48",
+   "expect": "FUN_0012dc48",
+   "name": "AIElementController::GetElementTracking",
+   "sheet_name": "AIElementController::GetElementTracking(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 751, body review: Returns tracking array + i*0x50, identical to AUF GetElementTracking(int)."
+   ]
+  },
+  {
+   "xbox": "0x00137310",
+   "expect": "FUN_00137310",
+   "name": "AIGroundVehicle::CheckAgentDirectCollision",
+   "sheet_name": "AIGroundVehicle::CheckAgentDirectCollision(COORD3 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 800, body review: Checks field==0, gets vehicle rigid body pos, calls GetDirectLaneWeights/GetBestWeightedLane/InCollisionRange, matches AUF CheckAgentDirectCollision opening."
+   ]
+  },
+  {
+   "xbox": "0x001377c8",
+   "expect": "FUN_001377c8",
+   "name": "AIGroundVehicle::CheckTrafficCollision",
+   "sheet_name": "AIGroundVehicle::CheckTrafficCollision(COORD3 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 801, body review: Clears two fields, WRoadNetwork segment flag 0x80, node count >2, GetSegmentOppNode, intersection walk - same shape as AUF CheckTrafficCollision; follows CheckAgentDirectCollision and called from DoMoveMode."
+   ]
+  },
+  {
+   "xbox": "0x00138ef0",
+   "expect": "FUN_00138ef0",
+   "name": "AIHelicopter::Update",
+   "sheet_name": "AIHelicopter::Update(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 884, body review: corrected from placement 0x138b88: vtable-referenced function with two enable flags, state not 2/9/10 copies rigid-body pos, then calls DoAgentLogic - identical to AUF AIHelicopter::Update."
+   ]
+  },
+  {
+   "xbox": "0x00138fa8",
+   "expect": "FUN_00138fa8",
+   "name": "AIHelicopter::NewState",
+   "sheet_name": "AIHelicopter::NewState(CARP::AICommand *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 885, body review: ProcessStimuli 7/8/9 with 8 then 7/8 with 0xb when mode differs, then copies AICommand fields - same as AUF NewState."
+   ]
+  },
+  {
+   "xbox": "0x00139380",
+   "expect": "FUN_00139380",
+   "name": "AIHelicopter::ControlMoveState",
+   "sheet_name": "AIHelicopter::ControlMoveState(bool, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 886, body review: Gets SimpleRigidBody pos then switches on move state, calls ManeuverToPos/GetLookAhead; called repeatedly from DoAgentLogic, matching AUF ControlMoveState."
+   ]
+  },
+  {
+   "xbox": "0x00139be8",
+   "expect": "FUN_00139be8",
+   "name": "AIHelicopter::DoAgentLogic",
+   "sheet_name": "AIHelicopter::DoAgentLogic(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 887, body review: GetHitPoints<=0 sets state 0x10 and kills vehicle, then big switch on state - identical opening to AUF DoAgentLogic; called from Update."
+   ]
+  },
+  {
+   "xbox": "0x0013b2a8",
+   "expect": "FUN_0013b2a8",
+   "name": "AIHelicopter::DoProximityDestruct",
+   "sheet_name": "AIHelicopter::DoProximityDestruct(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 888, body review: Measures distance to player vs proximity radius, fires ProgrammerDefinedEvent 0x17, else LoseHitPoints(all)+ForceVehicleToSleep; called from Update before DoAgentLogic."
+   ]
+  },
+  {
+   "xbox": "0x0013b4f8",
+   "expect": "FUN_0013b4f8",
+   "name": "AIHelicopter::ManeuverToPos",
+   "sheet_name": "AIHelicopter::ManeuverToPos(COORD3 *, float, float, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 892, body review: FindClosestFace + height at point, decrements counter zeroing speed/flag, adds height offset, forward/right vectors - same as AUF ManeuverToPos."
+   ]
+  },
+  {
+   "xbox": "0x0013bd80",
+   "expect": "FUN_0013bd80",
+   "name": "AIHelicopter::operator_new",
+   "sheet_name": "AIHelicopter::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 894, body review: FastAlloc(size, \"AIHelicopter\")."
+   ]
+  },
+  {
+   "xbox": "0x0013bda0",
+   "expect": "FUN_0013bda0",
+   "name": "AIHelicopter::operator_delete",
+   "sheet_name": "AIHelicopter::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 895, body review: FastFree(ptr,size) wrapper directly after AIHelicopter operator new."
+   ]
+  },
+  {
+   "xbox": "0x0013bea8",
+   "expect": "FUN_0013bea8",
+   "name": "AIHelicopter::AIHelicopter_global_ctors",
+   "sheet_name": "global constructors keyed to AIHelicopter::AIHelicopter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 913, body review: .ctors-referenced stub calling static init FUN_0013bcf8(1,0xffff), right before AIHeliScript::InitScript."
+   ]
+  },
+  {
+   "xbox": "0x0013c798",
+   "expect": "FUN_0013c798",
+   "name": "AIRoadSpawn::TrafficRespawnPosCheck",
+   "sheet_name": "AIRoadSpawn::TrafficRespawnPosCheck(COORD3 &, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 924, body review: Player position distance to point minus radius compared to min spawn distance, same as AUF TrafficRespawnPosCheck."
+   ]
+  },
+  {
+   "xbox": "0x0013c860",
+   "expect": "FUN_0013c860",
+   "name": "AIRoadSpawn::TrafficRespawnAvailable",
+   "sheet_name": "AIRoadSpawn::TrafficRespawnAvailable(COORD3 &, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 925, body review: Player distance vs min/max spawn distance with mission-manager flag and camera-direction check, same shape as AUF TrafficRespawnAvailable."
+   ]
+  },
+  {
+   "xbox": "0x0013ca60",
+   "expect": "FUN_0013ca60",
+   "name": "AIRoadSpawn::GetRandomTrafficSpawn",
+   "sheet_name": "AIRoadSpawn::GetRandomTrafficSpawn(short &, char &, float &, bo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 926, body review: RefreshSpawnData then random spawn segment, road lane check, GetTrafficSpawnPointOnSegment - same as AUF GetRandomTrafficSpawn."
+   ]
+  },
+  {
+   "xbox": "0x0013d618",
+   "expect": "FUN_0013d618",
+   "name": "AIRoadSpawn::RefreshSpawnData",
+   "sheet_name": "AIRoadSpawn::RefreshSpawnData(bool, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 931, body review: Skips unless forced or refresh time passed, sets next refresh +0x59, gathers nodes around player - AUF RefreshSpawnData(bool) with extra float args; called from both random spawn getters."
+   ]
+  },
+  {
+   "xbox": "0x0013dd28",
+   "expect": "FUN_0013dd28",
+   "name": "AISplinePath::SetNext",
+   "sheet_name": "AISplinePath::SetNext(CARP::AISpline *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 936, body review: Sets the path object's next spline (this->0x60 ->0x9c = spline->0x40); sole caller is AIVehicle::SetNextSplinePath."
+   ]
+  },
+  {
+   "xbox": "0x0013e120",
+   "expect": "FUN_0013e120",
+   "name": "AIVehicle::GetRotPos",
+   "sheet_name": "AIVehicle::GetRotPos(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 946, body review: Builds and returns matrix at this+0x10 from rigid body orientation and translation (simple or full body); last AIVehicle method before type_info."
+   ]
+  },
+  {
+   "xbox": "0x0013e398",
+   "expect": "FUN_0013e398",
+   "name": "AIVehicle::operator_new",
+   "sheet_name": "AIVehicle::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 948, body review: FastAlloc(size, \"AIVehicle\")."
+   ]
+  }
+ ]
+}

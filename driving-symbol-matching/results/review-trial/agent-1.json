@@ -1,0 +1,152 @@
+[
+ {
+  "row": 345,
+  "ps2": "0x00117c50",
+  "verdict": "accept",
+  "why": "Looks up the name in the map (FUN_00117528), inserts a new entry (FUN_00117ac0) if it is missing, then increments the refcount at +0x90; called from LoadWeapon."
+ },
+ {
+  "row": 346,
+  "ps2": "0x00117d38",
+  "verdict": "accept",
+  "why": "Walks the map matching the key and decrementing the refcount at +0x90, erasing and FastFree-ing the node when it reaches 0; called from UnloadWeapon."
+ },
+ {
+  "row": 351,
+  "ps2": "0x001184d8",
+  "verdict": "accept",
+  "why": "Tail-calls UMemory::FastFree(p,size) directly after ActWeapon::operator new; the real body is 0x1c bytes."
+ },
+ {
+  "row": 381,
+  "ps2": "0x00119290",
+  "verdict": "accept",
+  "why": "Same shape as AUF: GetWeaponPosition, two atan2 of player vs weapon, wraps to +/-0.5, sets the side flag and returns true within the tolerance."
+ },
+ {
+  "row": 448,
+  "ps2": "0x00119940",
+  "verdict": "accept",
+  "why": "corrected from 0x119b98 (a matrix-copy GetRotPos helper); 0x119940 is the static-init stub calling FUN_001194e8(1,0xffff)."
+ },
+ {
+  "row": 462,
+  "ps2": "0x0011a858",
+  "verdict": "accept",
+  "why": "Gets the player rot/pos (FUN_00119b98), then GetActorLocalPosOri and VU0_MATRIX4_mult, as in the AUF UpdateRotPos; referenced from the vtable."
+ },
+ {
+  "row": 475,
+  "ps2": "0x0011b128",
+  "verdict": "accept",
+  "why": "Same UpdateRotPos pattern (GetRotPos helper, GetActorLocalPosOri, MATRIX4 mult), sitting right before the Driver type_info."
+ },
+ {
+  "row": 477,
+  "ps2": "0x0011b2c0",
+  "verdict": "accept",
+  "why": "Static-init stub calling FUN_0011b238(1,0xffff), referenced from the ctors table, right after the type_info."
+ },
+ {
+  "row": 505,
+  "ps2": "0x0011d9f0",
+  "verdict": "accept",
+  "why": "Matches AUF PlayZoneInjuryAnim: the hitpoint threshold, the 0xf/0x16 state checks, Say HGrunt/HDeath, and a random injury anim from the table."
+ },
+ {
+  "row": 536,
+  "ps2": "0x0011f528",
+  "verdict": "accept",
+  "why": "Snow vtable slot before TargetIsAcquired: GetRotPos, then target position (vehicle or player) and an atan2 range/angle check."
+ },
+ {
+  "row": 537,
+  "ps2": "0x0011f768",
+  "verdict": "accept",
+  "why": "GetWeaponPosition plus target position and atan2 facing check, the same shape as the other TargetIsAcquired methods; next in the vtable."
+ },
+ {
+  "row": 538,
+  "ps2": "0x0011f9a8",
+  "verdict": "accept",
+  "why": "PlayZoneInjuryAnim shape: the hitpoint threshold, state 0xf/0x16, Say HGrunt, then a random crossfade anim."
+ },
+ {
+  "row": 555,
+  "ps2": "0x00120478",
+  "verdict": "accept",
+  "why": "Distance squared from the player rigid body to this+0x30 compared against the range at +0x64."
+ },
+ {
+  "row": 556,
+  "ps2": "0x00120500",
+  "verdict": "accept",
+  "why": "PlayZoneInjuryAnim shape with HGrunt/HDeath, the crossfade anim table and an IS_SNOWMOBILE lookup."
+ },
+ {
+  "row": 581,
+  "ps2": "0x001219c0",
+  "verdict": "accept",
+  "why": "GetWeaponPosition plus target (vehicle/player) and atan2 acquisition test, like the sibling TargetIsAcquired methods; vtable-referenced."
+ },
+ {
+  "row": 582,
+  "ps2": "0x00121c10",
+  "verdict": "accept",
+  "why": "Matches AUF VehicleIsAccelerating: the vehicle velocity delta dotted with the rigid-body axes against thresholds, returning codes 1-4; called from DoArmed and DoLeaning."
+ },
+ {
+  "row": 583,
+  "ps2": "0x00121dd8",
+  "verdict": "accept",
+  "why": "Matches AUF PlayZoneInjuryAnim: the threshold, the vehicle flag check, Say HGrunt/HDeath and the injuryAnims table indexed by random."
+ },
+ {
+  "row": 606,
+  "ps2": "0x00122e20",
+  "verdict": "accept",
+  "why": "GetRotPos helper, then target position and atan2 angle, like the AUF Window TargetIsInRange (distance plus angle to target)."
+ },
+ {
+  "row": 607,
+  "ps2": "0x00123058",
+  "verdict": "accept",
+  "why": "GetWeaponPosition plus target position and atan2 acquisition test; next vtable slot after TargetIsInRange."
+ },
+ {
+  "row": 608,
+  "ps2": "0x00123298",
+  "verdict": "accept",
+  "why": "PlayZoneInjuryAnim shape: the hitpoint threshold, state 0xf/0x16, Say HDeath/HGrunt and a random crossfade anim."
+ },
+ {
+  "row": 610,
+  "ps2": "0x00123578",
+  "verdict": "accept",
+  "why": "Static-init stub calling FUN_001234f0(1,0xffff), referenced from the ctors table, right after the Window type_info."
+ },
+ {
+  "row": 614,
+  "ps2": "0x00123878",
+  "verdict": "accept",
+  "why": "corrected from 0x1236c0 (a bare atan2f wrapper); 0x123878 copies this matrix to param2 and the player rigid body +0x20..0x28 into the COORD3, exactly as AUF does."
+ },
+ {
+  "row": 635,
+  "ps2": "0x00124848",
+  "verdict": "accept",
+  "why": "Matches AUF: GetAimMatrix4 from the player camera copied into this, then the rest of the aim update; vtable-referenced."
+ },
+ {
+  "row": 655,
+  "ps2": "0x00125920",
+  "verdict": "accept",
+  "why": "UpdateRotPos pattern (GetRotPos helper, GetActorLocalPosOri, MATRIX4 mult) matching AUF's Passenger body; vtable-referenced."
+ },
+ {
+  "row": 700,
+  "ps2": "0x00129818",
+  "verdict": "defer",
+  "why": "(downgraded on review) body ignores the COORD3 argument the sheet signature has; nothing else corroborates TooFarAway. Body 0x44 plus an 8-byte gap before UpdateAnimSpeed, which fits TooFarAway (0x48) followed by IsVisible (0x8); it tests AIRoadSpawn::PedRespawnAvailable at the ped position."
+ }
+]

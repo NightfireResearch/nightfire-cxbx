@@ -136,7 +136,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | std::vector<> | undecided |  |
 | xboxkrnl.exe | undecided |  |
 
-## DRIVING.ELF: class 4, class (already) 595, undecided 124
+## DRIVING.ELF: class (already) 599, undecided 124
 
 | namespace | kind | sheet evidence |
 |---|---|---|
@@ -252,6 +252,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | CARP::Instance | class (already) | member, type_info |
 | CARP::PathInfo | class (already) | const method, member |
 | CARP::SymbolicResolver | class (already) | member, type_info, vtable |
+| CARP::TagReference | class (already) | constructor |
 | CHierarchicalTiming | undecided | member |
 | CNormalTiming | undecided | member |
 | CrossFadeAnimationController | class (already) | constructor, destructor, member, type_info, vtable |
@@ -261,6 +262,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | DTuningFile::Reader | class (already) | constructor, member |
 | DTuningFile::Writer | undecided | member |
 | DebugData | class (already) | member, type_info |
+| DebugIndexer | class (already) | constructor, destructor, type_info, vtable |
 | DebugItem | class (already) | destructor, member, type_info, vtable |
 | DebugVariable<unsigned_int> | undecided |  |
 | DefaultEventHandler | class (already) | member, type_info, vtable |
@@ -356,6 +358,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | EAGLInternal::RenderContextPrivate::Screen | class (already) | constructor |
 | EAGLInternal::RenderContextPrivate::Video | class (already) | constructor |
 | EAGLInternal::TARSharedData | class (already) | constructor, destructor, member |
+| EAGLInternal::TexAlloc | class (already) | constructor, destructor, member |
 | EAGLInternal::TextureRenderContextPrivate | class (already) | constructor, member, prefix |
 | EAGLInternal::TextureRenderContextPrivate::FrameBuffer | class (already) | constructor |
 | EAGLInternal::TextureRenderContextPrivate::Screen | class (already) | constructor |
@@ -815,6 +818,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | WCollider | class (already) | const method, constructor, destructor, member |
 | WCollisionInstance | class (already) | const method |
 | WCollisionMgr | class (already) | constructor, destructor, member |
+| WCollisionObject | class (already) | const method |
 | WCollisionWindowDynDataMap | class (already) | constructor |
 | WGrid | class (already) | const method, constructor, destructor, member |
 | WRender | class (already) | constructor, destructor, member |

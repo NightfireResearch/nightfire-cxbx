@@ -5,8 +5,7 @@ wrong address in the sheet, a mis-named PS2 function, overloads (two constructor
 
 | row | colour | sheet name | known at | from | sheet size | retail size there | alignment says | its name now | retail size | margin |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1233 | green | EAwardHitToPlayer::EAwardHitToPlayer(int) | 00148540 | sheet | 18 | 68 | 00148528 | EAwardHitToPlayer::EAwardHitToPlayer | 18 | 6.4 |
-| 2331 |  | GameLoop_StartUsingMainBigFile(void) | 00175ab8 | sheet | 90 | 20 | 00175a28 | UseNamedVivFile | 90 | 5.2 |
-| 3092 |  | RFog::Debug(void) | 001aca28 | sheet | b0 | 48 | 001ac978 | RFog::SetFogParams | b0 | 3.0 |
-| 4469 |  | Simulation::SpawnNewtonObject(COORD3 &, COORD3 &, COORD3 &, COO | 00200200 | sheet | f8 | e0 | 002002e0 | Simulation::SpawnNewtonObject | e8 | 3.5 |
-| 7191 |  | PRINT_string(char *,...) | 00260818 | ghidra | 50 | 48 | 00260860 | FUN_00260860 | 50 | 7.0 |
+| 683 |  | AICharacterPedestrian::DoAvoiding(void) | 00127a30 | ghidra | 370 | 328 | 00127d58 | AICharacterPedestrian::DoDodging | 370 | 5.1 |
+| 1386 | green | EInflictDamage::EInflictDamage(unsigned int, bool, WTrigger *, | 0014fd20 | sheet | 28 | f0 | 0014fcf8 | EInflictDamage::EInflictDamage | 28 | 5.6 |
+| 4094 |  | RMissileStreak::Update(COORD4 &, float) | 001e4640 | ghidra | 2a8 | 2a8 | 001e4400 | FUN_001e4400 | 240 | 3.5 |
+| 7980 | orange | sceSifStopModule | 002bdec0 | sheet | 208 | a0 | 002bdc28 | FUN_002bdc28 | 208 | 3.5 |

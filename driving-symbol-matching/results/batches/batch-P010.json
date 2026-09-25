@@ -1,0 +1,6 @@
+{
+ "batch": "P010",
+ "program": "DRIVING.ELF",
+ "note": "Sheet names for PS2 functions placed by align, infill-count, infill-exact, resolved, sheet. 'xbox' is the PS2 address.",
+ "items": []
+}
