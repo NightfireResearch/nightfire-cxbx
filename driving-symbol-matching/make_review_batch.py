@@ -22,7 +22,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 def main():
-    batch_id, sources = sys.argv[1], sys.argv[2:]
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    batch_id, sources = args[0], args[1:]
     verdicts = []
     for path in sources:
         with open(path) as f:

@@ -1,4 +1,359 @@
 {
- "generated": "Fri Sep 25 23:00:42 2026",
- "moves": []
+ "generated": "Fri Sep 25 23:24:23 2026",
+ "moves": [
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0010b9b0",
+   "name": "_Rb_tree<LString,_LString>::_M_erase",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0010ba18",
+   "name": "_Rb_tree<LString,_DebugItem_*>::_M_erase",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0010ba80",
+   "name": "_List_base<ActActor_*,_allocator<ActActor_*>_>::clear",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0010c818",
+   "name": "EAGLAnim::FnDefaultAnimBank::GetAnimIndex",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00110f10",
+   "name": "ActManager::SymbolResolver",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001115d8",
+   "name": "ActModel::UnLoad",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00114a58",
+   "name": "ActSkeleton::GetStillPose",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00114a80",
+   "name": "ActSkeleton::GetStillPose",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00116f58",
+   "name": "ActWeapon::GetVelocity",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001173d8",
+   "name": "_Rb_tree<MapKey,_ActWeaponDatabase::WeaponInfo>::_M_erase",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00117440",
+   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::URefCounter",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001175d0",
+   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::GetReference",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00117c50",
+   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::AddReference",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00117d38",
+   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::RemoveReference",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001184d8",
+   "name": "ActWeapon::operator_delete",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00119290",
+   "name": "AICharacterEnemy::TargetIsAcquired",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00119940",
+   "name": "AICharacter::kMissileDeathThresh_global_ctors",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0011a858",
+   "name": "AICharacterBond::UpdateRotPos",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0011b128",
+   "name": "AICharacterEnemyDriver::UpdateRotPos",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0011b2c0",
+   "name": "AICharacterEnemyDriver::GetRotPos_global_ctors",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0011d9f0",
+   "name": "AICharacterEnemyGround::PlayZoneInjuryAnim",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0011f528",
+   "name": "AICharacterEnemySnow::TargetIsInRange",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0011f768",
+   "name": "AICharacterEnemySnow::TargetIsAcquired",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0011f9a8",
+   "name": "AICharacterEnemySnow::PlayZoneInjuryAnim",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00120478",
+   "name": "AICharacterEnemySSnow::TargetIsInRange",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00120500",
+   "name": "AICharacterEnemySSnow::PlayZoneInjuryAnim",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001219c0",
+   "name": "AICharacterEnemySunroof::TargetIsAcquired",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00121c10",
+   "name": "AICharacterEnemySunroof::VehicleIsAccelerating",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00121dd8",
+   "name": "AICharacterEnemySunroof::PlayZoneInjuryAnim",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00122e20",
+   "name": "AICharacterEnemyWindow::TargetIsInRange",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00123058",
+   "name": "AICharacterEnemyWindow::TargetIsAcquired",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00123298",
+   "name": "AICharacterEnemyWindow::PlayZoneInjuryAnim",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00123578",
+   "name": "AICharacterEnemyWindow::GetRotPos_global_ctors",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00123878",
+   "name": "AICharacterHands::GetRotPos",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00124848",
+   "name": "AICharacterHands::UpdateRotPos",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00125920",
+   "name": "AICharacterPassenger::UpdateRotPos",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0012aa20",
+   "name": "AICharacterPedestrian::SetNewState",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0012c4c0",
+   "name": "AIElementController::EveryoneChill",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0012c608",
+   "name": "AIElementController::RedirectCarpElement",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0012c640",
+   "name": "AIElementController::GetCarpElementTracking",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0012dc48",
+   "name": "AIElementController::GetElementTracking",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00137310",
+   "name": "AIGroundVehicle::CheckAgentDirectCollision",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001377c8",
+   "name": "AIGroundVehicle::CheckTrafficCollision",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00138ef0",
+   "name": "AIHelicopter::Update",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00138fa8",
+   "name": "AIHelicopter::NewState",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00139380",
+   "name": "AIHelicopter::ControlMoveState",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00139be8",
+   "name": "AIHelicopter::DoAgentLogic",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013b2a8",
+   "name": "AIHelicopter::DoProximityDestruct",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013b4f8",
+   "name": "AIHelicopter::ManeuverToPos",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013bd80",
+   "name": "AIHelicopter::operator_new",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013bda0",
+   "name": "AIHelicopter::operator_delete",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013bea8",
+   "name": "AIHelicopter::AIHelicopter_global_ctors",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013c798",
+   "name": "AIRoadSpawn::TrafficRespawnPosCheck",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013c860",
+   "name": "AIRoadSpawn::TrafficRespawnAvailable",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013ca60",
+   "name": "AIRoadSpawn::GetRandomTrafficSpawn",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013d618",
+   "name": "AIRoadSpawn::RefreshSpawnData",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013dd28",
+   "name": "AISplinePath::SetNext",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013e120",
+   "name": "AIVehicle::GetRotPos",
+   "batch": "P011"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013e398",
+   "name": "AIVehicle::operator_new",
+   "batch": "P011"
+  }
+ ]
 }

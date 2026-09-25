@@ -348,6 +348,360 @@
    "ps2": "0x002be9b0",
    "verdict": "address",
    "why": "exit cleanup then _ExecOSD"
+  },
+  {
+   "row": 100,
+   "ps2": "0x0010b9b0",
+   "verdict": "address",
+   "why": "body review: SGI _Rb_tree::_M_erase: recurse right, step left, free a 0x18-byte node (set<LString>); class arguments cut by the sheet"
+  },
+  {
+   "row": 101,
+   "ps2": "0x0010ba18",
+   "verdict": "address",
+   "why": "body review: _M_erase as row 100, 0x1c-byte node (the map's extra DebugItem * pointer); class arguments cut"
+  },
+  {
+   "row": 102,
+   "ps2": "0x0010ba80",
+   "verdict": "address",
+   "why": "body review: clears a list, freeing 0xc-byte nodes; called by ~ActActorDatabase"
+  },
+  {
+   "row": 134,
+   "ps2": "0x0010c818",
+   "verdict": "address",
+   "why": "body review: looks the name up in the bank at this+4 and returns the index; AUF's has the search inlined"
+  },
+  {
+   "row": 219,
+   "ps2": "0x00110f10",
+   "verdict": "address",
+   "why": "body review: \"event.\" prefix then EventTarget::ResolveEventId, as AUF's"
+  },
+  {
+   "row": 226,
+   "ps2": "0x001115d8",
+   "verdict": "address",
+   "why": "body review: for 3 slots at this+0xc: destroy the DynamicLoader, free, clear - as AUF's; called by ~ActModel"
+  },
+  {
+   "row": 286,
+   "ps2": "0x00114a58",
+   "verdict": "address",
+   "why": "body review: still pose into the object's own buffer (this+0xc)"
+  },
+  {
+   "row": 287,
+   "ps2": "0x00114a80",
+   "verdict": "address",
+   "why": "body review: still pose into the caller's float *, as AUF's GetStillPose(float *)"
+  },
+  {
+   "row": 331,
+   "ps2": "0x00116f58",
+   "verdict": "address",
+   "why": "body review: returns this+0x150, referenced from a vtable (AUF returns this+0x138: offsets differ by platform). The alignment's 0x116f60 is a static destructor of a URefCounter"
+  },
+  {
+   "row": 338,
+   "ps2": "0x001173d8",
+   "verdict": "address",
+   "why": "body review: _M_erase, 0x98-byte node; class arguments cut"
+  },
+  {
+   "row": 339,
+   "ps2": "0x00117440",
+   "verdict": "address",
+   "why": "body review: builds the map header node (FastAlloc(0x98, \"STL\")); called by Get"
+  },
+  {
+   "row": 342,
+   "ps2": "0x001175d0",
+   "verdict": "address",
+   "why": "body review: copies the key, tree lookup, returns the element's field or 0; called by LoadWeapon/UseWeapon/UnloadWeapon"
+  },
+  {
+   "row": 345,
+   "ps2": "0x00117c50",
+   "verdict": "address",
+   "why": "body review: Looks up the name in the map (FUN_00117528), inserts a new entry (FUN_00117ac0) if it is missing, then increments the refcount at +0x90; called from LoadWeapon."
+  },
+  {
+   "row": 346,
+   "ps2": "0x00117d38",
+   "verdict": "address",
+   "why": "body review: Walks the map matching the key and decrementing the refcount at +0x90, erasing and FastFree-ing the node when it reaches 0; called from UnloadWeapon."
+  },
+  {
+   "row": 351,
+   "ps2": "0x001184d8",
+   "verdict": "address",
+   "why": "body review: Tail-calls UMemory::FastFree(p,size) directly after ActWeapon::operator new; the real body is 0x1c bytes."
+  },
+  {
+   "row": 381,
+   "ps2": "0x00119290",
+   "verdict": "address",
+   "why": "body review: Same shape as AUF: GetWeaponPosition, two atan2 of player vs weapon, wraps to +/-0.5, sets the side flag and returns true within the tolerance."
+  },
+  {
+   "row": 448,
+   "ps2": "0x00119940",
+   "verdict": "address",
+   "why": "body review: corrected from 0x119b98 (a matrix-copy GetRotPos helper); 0x119940 is the static-init stub calling FUN_001194e8(1,0xffff)."
+  },
+  {
+   "row": 462,
+   "ps2": "0x0011a858",
+   "verdict": "address",
+   "why": "body review: Gets the player rot/pos (FUN_00119b98), then GetActorLocalPosOri and VU0_MATRIX4_mult, as in the AUF UpdateRotPos; referenced from the vtable."
+  },
+  {
+   "row": 475,
+   "ps2": "0x0011b128",
+   "verdict": "address",
+   "why": "body review: Same UpdateRotPos pattern (GetRotPos helper, GetActorLocalPosOri, MATRIX4 mult), sitting right before the Driver type_info."
+  },
+  {
+   "row": 477,
+   "ps2": "0x0011b2c0",
+   "verdict": "address",
+   "why": "body review: Static-init stub calling FUN_0011b238(1,0xffff), referenced from the ctors table, right after the type_info."
+  },
+  {
+   "row": 505,
+   "ps2": "0x0011d9f0",
+   "verdict": "address",
+   "why": "body review: Matches AUF PlayZoneInjuryAnim: the hitpoint threshold, the 0xf/0x16 state checks, Say HGrunt/HDeath, and a random injury anim from the table."
+  },
+  {
+   "row": 536,
+   "ps2": "0x0011f528",
+   "verdict": "address",
+   "why": "body review: Snow vtable slot before TargetIsAcquired: GetRotPos, then target position (vehicle or player) and an atan2 range/angle check."
+  },
+  {
+   "row": 537,
+   "ps2": "0x0011f768",
+   "verdict": "address",
+   "why": "body review: GetWeaponPosition plus target position and atan2 facing check, the same shape as the other TargetIsAcquired methods; next in the vtable."
+  },
+  {
+   "row": 538,
+   "ps2": "0x0011f9a8",
+   "verdict": "address",
+   "why": "body review: PlayZoneInjuryAnim shape: the hitpoint threshold, state 0xf/0x16, Say HGrunt, then a random crossfade anim."
+  },
+  {
+   "row": 555,
+   "ps2": "0x00120478",
+   "verdict": "address",
+   "why": "body review: Distance squared from the player rigid body to this+0x30 compared against the range at +0x64."
+  },
+  {
+   "row": 556,
+   "ps2": "0x00120500",
+   "verdict": "address",
+   "why": "body review: PlayZoneInjuryAnim shape with HGrunt/HDeath, the crossfade anim table and an IS_SNOWMOBILE lookup."
+  },
+  {
+   "row": 581,
+   "ps2": "0x001219c0",
+   "verdict": "address",
+   "why": "body review: GetWeaponPosition plus target (vehicle/player) and atan2 acquisition test, like the sibling TargetIsAcquired methods; vtable-referenced."
+  },
+  {
+   "row": 582,
+   "ps2": "0x00121c10",
+   "verdict": "address",
+   "why": "body review: Matches AUF VehicleIsAccelerating: the vehicle velocity delta dotted with the rigid-body axes against thresholds, returning codes 1-4; called from DoArmed and DoLeaning."
+  },
+  {
+   "row": 583,
+   "ps2": "0x00121dd8",
+   "verdict": "address",
+   "why": "body review: Matches AUF PlayZoneInjuryAnim: the threshold, the vehicle flag check, Say HGrunt/HDeath and the injuryAnims table indexed by random."
+  },
+  {
+   "row": 606,
+   "ps2": "0x00122e20",
+   "verdict": "address",
+   "why": "body review: GetRotPos helper, then target position and atan2 angle, like the AUF Window TargetIsInRange (distance plus angle to target)."
+  },
+  {
+   "row": 607,
+   "ps2": "0x00123058",
+   "verdict": "address",
+   "why": "body review: GetWeaponPosition plus target position and atan2 acquisition test; next vtable slot after TargetIsInRange."
+  },
+  {
+   "row": 608,
+   "ps2": "0x00123298",
+   "verdict": "address",
+   "why": "body review: PlayZoneInjuryAnim shape: the hitpoint threshold, state 0xf/0x16, Say HDeath/HGrunt and a random crossfade anim."
+  },
+  {
+   "row": 610,
+   "ps2": "0x00123578",
+   "verdict": "address",
+   "why": "body review: Static-init stub calling FUN_001234f0(1,0xffff), referenced from the ctors table, right after the Window type_info."
+  },
+  {
+   "row": 614,
+   "ps2": "0x00123878",
+   "verdict": "address",
+   "why": "body review: corrected from 0x1236c0 (a bare atan2f wrapper); 0x123878 copies this matrix to param2 and the player rigid body +0x20..0x28 into the COORD3, exactly as AUF does."
+  },
+  {
+   "row": 635,
+   "ps2": "0x00124848",
+   "verdict": "address",
+   "why": "body review: Matches AUF: GetAimMatrix4 from the player camera copied into this, then the rest of the aim update; vtable-referenced."
+  },
+  {
+   "row": 655,
+   "ps2": "0x00125920",
+   "verdict": "address",
+   "why": "body review: UpdateRotPos pattern (GetRotPos helper, GetActorLocalPosOri, MATRIX4 mult) matching AUF's Passenger body; vtable-referenced."
+  },
+  {
+   "row": 712,
+   "ps2": "0x0012aa20",
+   "verdict": "address",
+   "why": "body review: Stores new state at +0x4c keeping previous at +0x15c plus the int arg; called from every AICharacterPedestrian Do*/KillSelf/Recycle/HandleInterrupts state handler."
+  },
+  {
+   "row": 735,
+   "ps2": "0x0012c4c0",
+   "verdict": "address",
+   "why": "body review: Loops elements, for state 1 with vehicle calls SetAttackMode(1)/SetNavigateMode(1), same shape as AUF EveryoneChill; called from EPlayerLose/EPlayerWin."
+  },
+  {
+   "row": 738,
+   "ps2": "0x0012c608",
+   "verdict": "address",
+   "why": "body review: Index from (elem - fObj base)/size with abs, returns element array (+0xc) entry, identical to AUF RedirectCarpElement."
+  },
+  {
+   "row": 739,
+   "ps2": "0x0012c640",
+   "verdict": "address",
+   "why": "body review: Same index computation but returns tracking array (+0x14, stride 0x50), matching AUF GetCarpElementTracking (+8, stride 0x3c)."
+  },
+  {
+   "row": 751,
+   "ps2": "0x0012dc48",
+   "verdict": "address",
+   "why": "body review: Returns tracking array + i*0x50, identical to AUF GetElementTracking(int)."
+  },
+  {
+   "row": 800,
+   "ps2": "0x00137310",
+   "verdict": "address",
+   "why": "body review: Checks field==0, gets vehicle rigid body pos, calls GetDirectLaneWeights/GetBestWeightedLane/InCollisionRange, matches AUF CheckAgentDirectCollision opening."
+  },
+  {
+   "row": 801,
+   "ps2": "0x001377c8",
+   "verdict": "address",
+   "why": "body review: Clears two fields, WRoadNetwork segment flag 0x80, node count >2, GetSegmentOppNode, intersection walk - same shape as AUF CheckTrafficCollision; follows CheckAgentDirectCollision and called from DoMoveMode."
+  },
+  {
+   "row": 884,
+   "ps2": "0x00138ef0",
+   "verdict": "address",
+   "why": "body review: corrected from placement 0x138b88: vtable-referenced function with two enable flags, state not 2/9/10 copies rigid-body pos, then calls DoAgentLogic - identical to AUF AIHelicopter::Update."
+  },
+  {
+   "row": 885,
+   "ps2": "0x00138fa8",
+   "verdict": "address",
+   "why": "body review: ProcessStimuli 7/8/9 with 8 then 7/8 with 0xb when mode differs, then copies AICommand fields - same as AUF NewState."
+  },
+  {
+   "row": 886,
+   "ps2": "0x00139380",
+   "verdict": "address",
+   "why": "body review: Gets SimpleRigidBody pos then switches on move state, calls ManeuverToPos/GetLookAhead; called repeatedly from DoAgentLogic, matching AUF ControlMoveState."
+  },
+  {
+   "row": 887,
+   "ps2": "0x00139be8",
+   "verdict": "address",
+   "why": "body review: GetHitPoints<=0 sets state 0x10 and kills vehicle, then big switch on state - identical opening to AUF DoAgentLogic; called from Update."
+  },
+  {
+   "row": 888,
+   "ps2": "0x0013b2a8",
+   "verdict": "address",
+   "why": "body review: Measures distance to player vs proximity radius, fires ProgrammerDefinedEvent 0x17, else LoseHitPoints(all)+ForceVehicleToSleep; called from Update before DoAgentLogic."
+  },
+  {
+   "row": 892,
+   "ps2": "0x0013b4f8",
+   "verdict": "address",
+   "why": "body review: FindClosestFace + height at point, decrements counter zeroing speed/flag, adds height offset, forward/right vectors - same as AUF ManeuverToPos."
+  },
+  {
+   "row": 894,
+   "ps2": "0x0013bd80",
+   "verdict": "address",
+   "why": "body review: FastAlloc(size, \"AIHelicopter\")."
+  },
+  {
+   "row": 895,
+   "ps2": "0x0013bda0",
+   "verdict": "address",
+   "why": "body review: FastFree(ptr,size) wrapper directly after AIHelicopter operator new."
+  },
+  {
+   "row": 913,
+   "ps2": "0x0013bea8",
+   "verdict": "address",
+   "why": "body review: .ctors-referenced stub calling static init FUN_0013bcf8(1,0xffff), right before AIHeliScript::InitScript."
+  },
+  {
+   "row": 924,
+   "ps2": "0x0013c798",
+   "verdict": "address",
+   "why": "body review: Player position distance to point minus radius compared to min spawn distance, same as AUF TrafficRespawnPosCheck."
+  },
+  {
+   "row": 925,
+   "ps2": "0x0013c860",
+   "verdict": "address",
+   "why": "body review: Player distance vs min/max spawn distance with mission-manager flag and camera-direction check, same shape as AUF TrafficRespawnAvailable."
+  },
+  {
+   "row": 926,
+   "ps2": "0x0013ca60",
+   "verdict": "address",
+   "why": "body review: RefreshSpawnData then random spawn segment, road lane check, GetTrafficSpawnPointOnSegment - same as AUF GetRandomTrafficSpawn."
+  },
+  {
+   "row": 931,
+   "ps2": "0x0013d618",
+   "verdict": "address",
+   "why": "body review: Skips unless forced or refresh time passed, sets next refresh +0x59, gathers nodes around player - AUF RefreshSpawnData(bool) with extra float args; called from both random spawn getters."
+  },
+  {
+   "row": 936,
+   "ps2": "0x0013dd28",
+   "verdict": "address",
+   "why": "body review: Sets the path object's next spline (this->0x60 ->0x9c = spline->0x40); sole caller is AIVehicle::SetNextSplinePath."
+  },
+  {
+   "row": 946,
+   "ps2": "0x0013e120",
+   "verdict": "address",
+   "why": "body review: Builds and returns matrix at this+0x10 from rigid body orientation and translation (simple or full body); last AIVehicle method before type_info."
+  },
+  {
+   "row": 948,
+   "ps2": "0x0013e398",
+   "verdict": "address",
+   "why": "body review: FastAlloc(size, \"AIVehicle\")."
   }
  ]
 }
