@@ -70,6 +70,17 @@
    ]
   },
   {
+   "xbox": "0x0024fdb0",
+   "expect": "FUN_0024fdb0",
+   "name": "__cp_exception_info",
+   "sheet_name": "__cp_exception_info",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5614: returns __get_eh_info()'s context +8 (function split out of FUN_0024fd98 by hand in the UI)"
+   ]
+  },
+  {
    "xbox": "0x0024f288",
    "expect": "(none)",
    "name": "__get_eh_table_version",

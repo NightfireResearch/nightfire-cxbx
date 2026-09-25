@@ -1,0 +1,469 @@
+{
+ "batch": "P016",
+ "program": "DRIVING.ELF",
+ "applied": "Sat Sep 26 00:01:58 2026",
+ "items": [
+  {
+   "xbox": "0x002b69a0",
+   "old_name": "LoadExecPS2",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002b69a0 from 'LoadExecPS2' to '_LoadExecPS2'",
+      "warnings": [
+       "Function name '_LoadExecPS2' \u2014 main part '_LoadExecPS2' is not PascalCase. Expected: Loadexecps2",
+       "Function name '_LoadExecPS2' \u2014 main part '_LoadExecPS2' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b69a0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "_LoadExecPS2",
+   "ok": true
+  },
+  {
+   "xbox": "0x002be940",
+   "old_name": "FUN_002be940",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002be940 from 'FUN_002be940' to 'LoadExecPS2'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'LoadExecPS2' shares the same token set as existing function 'Load' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002be940",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "LoadExecPS2",
+   "ok": true
+  },
+  {
+   "xbox": "0x0024e440",
+   "old_name": "maybe_float2double",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0024e440 from 'maybe_float2double' to 'fptodp'",
+      "warnings": [
+       "Function name 'fptodp' \u2014 main part 'fptodp' is not PascalCase. Expected: Fptodp",
+       "Function name 'fptodp' is too short (main part 'fptodp' is 6 chars, minimum 8)."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0024e440",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "fptodp",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b8e10",
+   "old_name": "DisableDmac",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002b8e10 from 'DisableDmac' to 'sceSifExitCmd'",
+      "warnings": [
+       "Function name 'sceSifExitCmd' \u2014 main part 'sceSifExitCmd' is not PascalCase. Expected: Scesifexitcmd"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b8e10",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "sceSifExitCmd",
+   "ok": true
+  },
+  {
+   "xbox": "0x0024f650",
+   "old_name": "__get_eh_table_version",
+   "old_plate": "[symbol-matching]\nCanonical name: __get_eh_table_version\nEvidence: sheet row 5604, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0024f650 from '__get_eh_table_version' to '__unwinding_cleanup'",
+      "warnings": [
+       "Function name '__unwinding_cleanup' \u2014 main part '__unwinding_cleanup' is not PascalCase. Expected: UnwindingCleanup",
+       "Function name '__unwinding_cleanup' \u2014 main part '__unwinding_cleanup' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0024f650",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__unwinding_cleanup",
+   "ok": true
+  },
+  {
+   "xbox": "0x00304150",
+   "old_name": "TRP_init",
+   "old_plate": "[symbol-matching]\nCanonical name: TRP_init\nEvidence: sheet row 9319, placed by align\nBatch: P004b\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00304150 from 'TRP_init' to 'slice_header'",
+      "warnings": [
+       "Function name 'slice_header' \u2014 main part 'slice_header' is not PascalCase. Expected: SliceHeader",
+       "Function name 'slice_header' \u2014 main part 'slice_header' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00304150",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "slice_header",
+   "ok": true
+  },
+  {
+   "xbox": "0x0024fdb0",
+   "old_name": "FUN_0024fdb0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0024fdb0 from 'FUN_0024fdb0' to '__cp_exception_info'",
+      "warnings": [
+       "Function name '__cp_exception_info' \u2014 main part '__cp_exception_info' is not PascalCase. Expected: CpExceptionInfo",
+       "Function name '__cp_exception_info' \u2014 main part '__cp_exception_info' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0024fdb0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__cp_exception_info",
+   "ok": true
+  },
+  {
+   "xbox": "0x0024f288",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0024f288",
+      "function_name": "FUN_0024f288",
+      "entry_point": "0024f288",
+      "body_size": 8,
+      "message": "Function created successfully at 0024f288"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0024f288 from 'FUN_0024f288' to '__get_eh_table_version'",
+      "warnings": [
+       "Function name '__get_eh_table_version' \u2014 main part '__get_eh_table_version' is not PascalCase. Expected: GetEhTableVersion",
+       "Function name '__get_eh_table_version' \u2014 main part '__get_eh_table_version' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0024f288",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__get_eh_table_version",
+   "ok": true
+  },
+  {
+   "xbox": "0x0024f290",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0024f290",
+      "function_name": "FUN_0024f290",
+      "entry_point": "0024f290",
+      "body_size": 8,
+      "message": "Function created successfully at 0024f290"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0024f290 from 'FUN_0024f290' to '__get_eh_table_language'",
+      "warnings": [
+       "Function name '__get_eh_table_language' \u2014 main part '__get_eh_table_language' is not PascalCase. Expected: GetEhTableLanguage",
+       "Function name '__get_eh_table_language' \u2014 main part '__get_eh_table_language' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0024f290",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__get_eh_table_language",
+   "ok": true
+  },
+  {
+   "xbox": "0x00297440",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00297440",
+      "function_name": "FUN_00297440",
+      "entry_point": "00297440",
+      "body_size": 36,
+      "message": "Function created successfully at 00297440"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00297440 from 'FUN_00297440' to 'GetFrustum'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetFrustum' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00297440",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetFrustum",
+   "ok": true
+  },
+  {
+   "xbox": "0x002bec28",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "002bec28",
+      "function_name": "FUN_002bec28",
+      "entry_point": "002bec28",
+      "body_size": 132,
+      "message": "Function created successfully at 002bec28"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002bec28 from 'FUN_002bec28' to 'SetDebugHandler'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'SetDebugHandler' shares the same token set as existing function 'Debug' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002bec28",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetDebugHandler",
+   "ok": true
+  },
+  {
+   "xbox": "0x002c9860",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "002c9860",
+      "function_name": "FUN_002c9860",
+      "entry_point": "002c9860",
+      "body_size": 84,
+      "message": "Function created successfully at 002c9860"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002c9860 from 'FUN_002c9860' to 'scePadExitPressMode'",
+      "warnings": [
+       "Function name 'scePadExitPressMode' \u2014 main part 'scePadExitPressMode' is not PascalCase. Expected: Scepadexitpressmode"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002c9860",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scePadExitPressMode",
+   "ok": true
+  },
+  {
+   "xbox": "0x002d3dd8",
+   "old_name": null,
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "create_function",
+     {
+      "error": "Failed to create function at 0x002d3dd8: Unable to create function at 002d3dd8"
+     }
+    ]
+   ],
+   "new_name": null,
+   "ok": false
+  }
+ ]
+}

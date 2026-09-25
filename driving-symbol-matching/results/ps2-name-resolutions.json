@@ -1926,6 +1926,1386 @@
    "ps2": "0x00138b88",
    "verdict": "address",
    "why": "extras review (P014): sheet row 882: called 3x from DoAgentLogic with the (float, COORD3 &, ...) arguments of FireBullets"
+  },
+  {
+   "row": 5536,
+   "ps2": "0x0024ccd8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5536, body review: corrected from 0x0024cd78: 0x24ccd8 decodes a double into class/sign/exp/fraction and is called by every dp* routine; 0x24cd78 is the static _fpadd_parts (only dpadd/dpsub call it), folded into this sheet row"
+  },
+  {
+   "row": 5550,
+   "ps2": "0x0024d9b0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5550, body review: corrected from 0x0024da40: 0x24d9b0 decodes a float (exp 0xff, bias 0x7f) and is called by every fp* routine; 0x24da40 is static _fpadd_parts called only by fpadd/fpsub"
+  },
+  {
+   "row": 5574,
+   "ps2": "0x0024e8b0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5574, body review: walks the base-class list calling each base's dcast through its vtable after a type_info== check, with ambiguity check - __class_type_info::dcast"
+  },
+  {
+   "row": 5577,
+   "ps2": "0x0024eaf8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5577, body review: calls ~type_info, referenced from a type_info vtable, sits right after the __class_type_info type_info function"
+  },
+  {
+   "row": 5580,
+   "ps2": "0x0024eb88",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5580, body review: calls ~type_info, referenced from a vtable, sits right after the __si_type_info type_info function"
+  },
+  {
+   "row": 5584,
+   "ps2": "0x0024ec30",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5584, body review: resets vtable and optionally deletes; referenced from inside __throw_bad_typeid (0x250308) and a vtable; precedes bad_typeid type_info function"
+  },
+  {
+   "row": 5587,
+   "ps2": "0x0024ecc8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5587, body review: resets vtable and optionally deletes; referenced from inside __throw_bad_cast (0x250288); precedes bad_cast type_info function"
+  },
+  {
+   "row": 5597,
+   "ps2": "0x0024ee48",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5597, body review: corrected from 0x0024ee50: 0x24ee48 is an 8-byte empty jr ra; 0x24ee50 is static new_eh_context (malloc 0x18/__terminate/memset) folded into this row (8+0x58=0x60)"
+  },
+  {
+   "row": 5599,
+   "ps2": "0x0024eed0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5599, body review: corrected from 0x0024ef20 (static eh_context_static): 0x24eed0 returns (*get_eh_context)()+8 (&eh->info) and is called by every __cp_* exception routine; 0x28+0x28+0x68 of statics = sheet 0xb8"
+  },
+  {
+   "row": 5600,
+   "ps2": "0x0024ef88",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5600, body review: returns (*get_eh_context)()+4, the dynamic_handler_chain field that eh_context_static initialises"
+  },
+  {
+   "row": 5609,
+   "ps2": "0x0024fd50",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5609, body review: calls through the __terminate_func pointer (initially __default_terminate) and is called by __eh_alloc/__cp_pop_exception etc."
+  },
+  {
+   "row": 5610,
+   "ps2": "0x0024fd68",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5610, body review: calls terminate() and is the initial value of the unexpected-handler pointer (DATA 0x33c5ac); Ghidra's body also swallows set_terminate"
+  },
+  {
+   "row": 5623,
+   "ps2": "0x00250070",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5623, body review: loops over the spec list with __throw_type_match_rtti, calls unexpected() and throws bad_exception (retail range also holds __throw_bad_cast/typeid)"
+  },
+  {
+   "row": 5641,
+   "ps2": "0x00251188",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5641, body review: find_fde + extract_cie_info + execute_cfa_insn loop into a memset 0x2f8 frame state, called from __throw/__rethrow"
+  },
+  {
+   "row": 5645,
+   "ps2": "0x002514f8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5645, body review: returns \"bad_alloc\", referenced from a vtable, precedes the bad_alloc type_info function"
+  },
+  {
+   "row": 5650,
+   "ps2": "0x00251a78",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5650, body review: __dynamic_cast of a type_info to __pointer_type_info, returns non-null test"
+  },
+  {
+   "row": 5694,
+   "ps2": "0x0027d088",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5694, body review: EAGL::TAR::SwapClut(SHAPE*) calls it with (this+4, shape); finds the CLUT chunk in the shape and re-inits the TAR image"
+  },
+  {
+   "row": 5760,
+   "ps2": "0x0027f480",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5760, body review: takes (this, data, w, h, format, flags), clears fields, switches on pixel format, calls BuildChains; called from TARExtension::Init and SwapClut"
+  },
+  {
+   "row": 5761,
+   "ps2": "0x0027f850",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5761, body review: allocates 'PreBuilt Texture Chain' and fills the image-upload DMA tags"
+  },
+  {
+   "row": 5789,
+   "ps2": "0x00285608",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5789, body review: searches the variable table backwards with strncasecmp, returns end if none - find_end; sits before ModelConstructor"
+  },
+  {
+   "row": 5798,
+   "ps2": "0x00285780",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5798, body review: corrected from 0x002858d8 (a strcmp lookup returning a geometry slot, probably GetGeometry): 0x285780 walks the three child-model lists (+0xa4/+0xac/+0xa8) strcmp'ing names"
+  },
+  {
+   "row": 5835,
+   "ps2": "0x002869c0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5835, body review: forward strncasecmp search of the variable table returning first match or end - find_first"
+  },
+  {
+   "row": 5838,
+   "ps2": "0x00286c68",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5838, body review: ctors-table entry (DATA 0x36301c) calling the file's static init with (1,0xffff)"
+  },
+  {
+   "row": 5912,
+   "ps2": "0x00289548",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5912, body review: writes VIF1 TADR and CHCR in chain mode (0x105) from (addr, flags) - source-chain DMA to VIF1"
+  },
+  {
+   "row": 5973,
+   "ps2": "0x002910d8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5973, body review: reads the TAR's image dims/format and forwards to ReadRectDuringFrame"
+  },
+  {
+   "row": 5982,
+   "ps2": "0x00291208",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5982, body review: stores int at context+0x76c; GetDXPos reads the same field; called from RRenderer"
+  },
+  {
+   "row": 5983,
+   "ps2": "0x00291218",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5983, body review: returns context+0x76c, the field SetDXPos writes"
+  },
+  {
+   "row": 5984,
+   "ps2": "0x00291228",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5984, body review: stores int at context+0x770 next to the DX field; called from RRenderer right after SetDXPos"
+  },
+  {
+   "row": 5987,
+   "ps2": "0x00291258",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5987, body review: stores flag at context+0x878, called from BeginFrame and EndFrame"
+  },
+  {
+   "row": 5990,
+   "ps2": "0x00291338",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5990, body review: VBL handler passed by InstallVBLHandler: bumps VBL count, when due swaps frame regs and ExecuteLists, then EI"
+  },
+  {
+   "row": 5993,
+   "ps2": "0x002913e8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 5993, body review: stores bool at +0x7fc and returns 1, called from RRenderer; sits just before SetZWritesEnable"
+  },
+  {
+   "row": 6021,
+   "ps2": "0x00291ce8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6021, body review: stores mask at +0x38 and emits a FRAME_1 (0x4c) GS register with FBMSK in the high word"
+  },
+  {
+   "row": 6022,
+   "ps2": "0x00291e88",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6022, body review: emits the FBA_1 (0x4a) GS register from the argument - alpha correction"
+  },
+  {
+   "row": 6023,
+   "ps2": "0x00291fe8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6023, body review: stores flag at +0x3c and emits ZBUF_1 (0x4e) with ZMSK bit 32; called from SetZWritesEnable"
+  },
+  {
+   "row": 6053,
+   "ps2": "0x00293500",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6053, body review: MultMatrix(this, m, this), same as AUF PostMult(const Transform&)"
+  },
+  {
+   "row": 6054,
+   "ps2": "0x00293520",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6054, body review: four floats written to the diagonal, zeros elsewhere - BuildScale"
+  },
+  {
+   "row": 6068,
+   "ps2": "0x00294030",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6068, body review: calls Invert(this, out) - const Inverse(Transform*)"
+  },
+  {
+   "row": 6072,
+   "ps2": "0x00294188",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6072, body review: copies the minor skipping row/col, sign by (row+col) parity, times Determinant(minor,3)"
+  },
+  {
+   "row": 6076,
+   "ps2": "0x002944e0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6076, body review: BuildRotate (0x295410) into a temp then MultMatrix(this,temp,this)"
+  },
+  {
+   "row": 6084,
+   "ps2": "0x002949a0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6084, body review: BuildRotate (0x295410) into a temp then PreMult"
+  },
+  {
+   "row": 6092,
+   "ps2": "0x00294f28",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6092, body review: writes transposed rotation and -t*R translation to the output matrix"
+  },
+  {
+   "row": 6112,
+   "ps2": "0x00296f58",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6112, body review: clears the active flag and calls BeginView unless state is 0/1, then state=0 - same shape as AUF EndView"
+  },
+  {
+   "row": 6115,
+   "ps2": "0x00296fa8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6115, body review: *this = viewport; called from the ViewPort ctor; identical to AUF body"
+  },
+  {
+   "row": 6143,
+   "ps2": "0x002985d0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6143, body review: VU0 quat-to-matrix scaled by arg1 with translation arg3 stored to the MATRIX4 - SQTquattom4"
+  },
+  {
+   "row": 6156,
+   "ps2": "0x00299458",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6156, body review: corrected from 0x00299588 (the file's static init, called with (1,0xffff)): 0x299458 is called from EndFrame, builds a Profiler on the global region and runs ProcessRegion per region, like AUF"
+  },
+  {
+   "row": 6160,
+   "ps2": "0x002998e8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6160, body review: RemoveRegionFromList then optional delete - same as AUF ~ProfilerRegion"
+  },
+  {
+   "row": 6187,
+   "ps2": "0x0029b6b8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6187, body review: body identical to DrawTextured::Init (buffer allocs and attribute lookups) and sits just before DrawClipTextured::Begin"
+  },
+  {
+   "row": 6275,
+   "ps2": "0x0029f478",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6275, body review: corrected from 0x0029f5b0 (an ELF-hash name lookup, dlsym-like): 0x29f478 indexes the symbol table by int and returns name/address/flags like AUF GetSymbol"
+  },
+  {
+   "row": 6409,
+   "ps2": "0x002659a8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6409, body review: in the vtable slot used by base EvalEvent (0x26dff8) elsewhere; lazily builds children then ORs each child's EvalEvent(float,float,...)"
+  },
+  {
+   "row": 6410,
+   "ps2": "0x00265b28",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6410, body review: occupies the EvalSQT slot of the FnCompoundChannel vtable (slot where other vtables hold base stub 0x26dfe0)"
+  },
+  {
+   "row": 6411,
+   "ps2": "0x00265c90",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6411, body review: occupies the EvalWeights slot of the FnCompoundChannel vtable (base stub 0x26e000 slot)"
+  },
+  {
+   "row": 6412,
+   "ps2": "0x00265df8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6412, body review: occupies the EvalVel2D slot of the FnCompoundChannel vtable (base stub 0x26dff0 slot)"
+  },
+  {
+   "row": 6413,
+   "ps2": "0x00265f60",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6413, body review: occupies the EvalState slot of the FnCompoundChannel vtable (base stub 0x26e008 slot)"
+  },
+  {
+   "row": 6414,
+   "ps2": "0x002660c8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6414, body review: occupies the GetPhaseChan slot of the FnCompoundChannel vtable (base stub 0x26e018 slot)"
+  },
+  {
+   "row": 6451,
+   "ps2": "0x00267178",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6451, body review: eagl_alloc(size, \"EAGLAnim::FnRawStateChan new\")"
+  },
+  {
+   "row": 6452,
+   "ps2": "0x002671a0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6452, body review: eagl_alloc(size, name) in the class's operator new/delete run"
+  },
+  {
+   "row": 6453,
+   "ps2": "0x002671c8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6453, body review: eagl_free between new(char*) and new[] in the class's operator run"
+  },
+  {
+   "row": 6454,
+   "ps2": "0x002671f0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6454, body review: eagl_alloc(size, \"EAGLAnim::FnRawStateChan new[]\")"
+  },
+  {
+   "row": 6455,
+   "ps2": "0x00267218",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6455, body review: eagl_alloc(size, name) right after new[]"
+  },
+  {
+   "row": 6456,
+   "ps2": "0x00267240",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6456, body review: eagl_free after new[](char*), before the FnRawStateChan ctor"
+  },
+  {
+   "row": 6484,
+   "ps2": "0x00268ab8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6484, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaQ new\")"
+  },
+  {
+   "row": 6485,
+   "ps2": "0x00268ae0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6485, body review: eagl_alloc(size, name) in the FnDeltaQ operator run"
+  },
+  {
+   "row": 6486,
+   "ps2": "0x00268b08",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6486, body review: eagl_free between new(char*) and new[]"
+  },
+  {
+   "row": 6487,
+   "ps2": "0x00268b30",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6487, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaQ new[]\")"
+  },
+  {
+   "row": 6488,
+   "ps2": "0x00268b58",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6488, body review: eagl_alloc(size, name) right after new[]"
+  },
+  {
+   "row": 6489,
+   "ps2": "0x00268b80",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6489, body review: eagl_free after new[](char*), before the FnDeltaQ ctor"
+  },
+  {
+   "row": 6503,
+   "ps2": "0x0026b1f8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6503, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaSingleQ new\")"
+  },
+  {
+   "row": 6504,
+   "ps2": "0x0026b220",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6504, body review: eagl_alloc(size, name) in the FnDeltaSingleQ operator run"
+  },
+  {
+   "row": 6505,
+   "ps2": "0x0026b248",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6505, body review: eagl_free between new(char*) and new[]"
+  },
+  {
+   "row": 6506,
+   "ps2": "0x0026b270",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6506, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaSingleQ new[]\")"
+  },
+  {
+   "row": 6507,
+   "ps2": "0x0026b298",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6507, body review: eagl_alloc(size, name) right after new[]"
+  },
+  {
+   "row": 6508,
+   "ps2": "0x0026b2c0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6508, body review: eagl_free after new[](char*), before the FnDeltaSingleQ ctor"
+  },
+  {
+   "row": 6515,
+   "ps2": "0x0026b950",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6515, body review: stores the map at +0xc and sits in the same vtable slot (0x3afb64) as FnCompoundChannel::SetAnimMemoryMap (0x266518, slot 0x3af0cc)"
+  },
+  {
+   "row": 6523,
+   "ps2": "0x0026bbc8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6523, body review: Stores the memory map, fetches ConstBoneIdx/ConstPhysical, allocates the +0x10/+0x20/+0x2c buffers and UnQuantizes min-ranges: SetAnimMemoryMap."
+  },
+  {
+   "row": 6524,
+   "ps2": "0x0026bd08",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6524, body review: (time, out, mask) evaluator that delegates to the Mask variant when mask!=0 and calls UpdateNextQs (0x26c4f8): EvalSQT."
+  },
+  {
+   "row": 6525,
+   "ps2": "0x0026c4f8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6525, body review: Called only from EvalSQT; (this, DeltaQFast*, int frame, ...) rebuilds the next quaternion buffer via UnQuantize/delta add: UpdateNextQs."
+  },
+  {
+   "row": 6526,
+   "ps2": "0x0026c6e8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6526, body review: Masked twin of EvalSQT (tracks mask at +0x3c) called from it and calling UpdateNextQsMask: EvalSQTMask."
+  },
+  {
+   "row": 6613,
+   "ps2": "0x0026fea0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6613, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaF3 new\")."
+  },
+  {
+   "row": 6614,
+   "ps2": "0x0026fec8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6614, body review: eagl_alloc(size, name) passthrough directly after operator new(unsigned) in the standard new/new(char*)/delete/new[]/new[](char*)/delete[] run."
+  },
+  {
+   "row": 6615,
+   "ps2": "0x0026fef0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6615, body review: eagl_free tail call in the delete slot of the FnDeltaF3 operator run."
+  },
+  {
+   "row": 6616,
+   "ps2": "0x0026ff18",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6616, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaF3 new[]\")."
+  },
+  {
+   "row": 6617,
+   "ps2": "0x0026ff40",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6617, body review: eagl_alloc(size, name) directly after new[] in the FnDeltaF3 operator run."
+  },
+  {
+   "row": 6618,
+   "ps2": "0x0026ff68",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6618, body review: eagl_free in the delete[] slot, followed by FnDeltaF3::FnDeltaF3."
+  },
+  {
+   "row": 6692,
+   "ps2": "0x00272248",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6692, body review: Same shape as AUF RawPoseChannel::Eval: integer frame, interpolates channel functions when fraction!=0 and interp flag set, else calls EvalFrame (0x2724d8)."
+  },
+  {
+   "row": 6698,
+   "ps2": "0x00272ae8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6698, body review: Matches AUF QuatF4Interp: reads 4 floats from each stream into qt0/out then slerps (VU0_fastqslerp)."
+  },
+  {
+   "row": 6773,
+   "ps2": "0x002759e0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6773, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaQuatChan new\")."
+  },
+  {
+   "row": 6774,
+   "ps2": "0x00275a08",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6774, body review: eagl_alloc(size, name) after FnDeltaQuatChan operator new in the operator run."
+  },
+  {
+   "row": 6775,
+   "ps2": "0x00275a30",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6775, body review: eagl_free in the delete slot of the FnDeltaQuatChan operator run."
+  },
+  {
+   "row": 6776,
+   "ps2": "0x00275a58",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6776, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaQuatChan new[]\")."
+  },
+  {
+   "row": 6777,
+   "ps2": "0x00275a80",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6777, body review: eagl_alloc(size, name) after new[] in the FnDeltaQuatChan operator run."
+  },
+  {
+   "row": 6778,
+   "ps2": "0x00275aa8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6778, body review: eagl_free in the delete[] slot, followed by the FnDeltaQuatChan ctor."
+  },
+  {
+   "row": 6827,
+   "ps2": "0x00276658",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6827, body review: corrected from 0x276538 (that is the FnKeyDeltaChan deleting dtor, dtor slot of vtable 0x3b2440); 0x276658 sits in the GetLength vtable slot, writes last key time to float& and returns 1, like AUF."
+  },
+  {
+   "row": 6828,
+   "ps2": "0x00276688",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6828, body review: corrected from 0x2765c0 (that is SetAnimMemoryMap, shared vtable slot); 0x276688(this,int n) runs DecompressValues from the last frame up to n and stores n at +0x10: EvalToPrevValues."
+  },
+  {
+   "row": 6839,
+   "ps2": "0x002775d8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6839, body review: eagl_alloc(size, \"EAGLAnim::FnPhaseChan new\")."
+  },
+  {
+   "row": 6840,
+   "ps2": "0x00277600",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6840, body review: eagl_alloc(size, name) after FnPhaseChan operator new in the operator run."
+  },
+  {
+   "row": 6841,
+   "ps2": "0x00277628",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6841, body review: eagl_free in the delete slot of the FnPhaseChan operator run."
+  },
+  {
+   "row": 6842,
+   "ps2": "0x00277650",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6842, body review: eagl_alloc(size, \"EAGLAnim::FnPhaseChan new[]\")."
+  },
+  {
+   "row": 6843,
+   "ps2": "0x00277678",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6843, body review: eagl_alloc(size, name) after new[] in the FnPhaseChan operator run."
+  },
+  {
+   "row": 6844,
+   "ps2": "0x002776a0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6844, body review: eagl_free in the delete[] slot, followed by the FnPhaseChan ctor."
+  },
+  {
+   "row": 6849,
+   "ps2": "0x002776e8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6849, body review: Calls FnAnimMemoryMap ctor then installs vtable_EAGLAnim__FnPhaseChan and zeroes fields, as the AUF ctor."
+  },
+  {
+   "row": 6950,
+   "ps2": "0x00253678",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6950, body review: strncpy(out, current-path global, 0x100), right after FILESYS_setcurrentpath: getcurrentpath."
+  },
+  {
+   "row": 6953,
+   "ps2": "0x00253ba8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6953, body review: Same body as AUF FILESYS_bypassqueuefileinfo ('|' split, FILEDEV_open/getsize, BIG_locateentryz)."
+  },
+  {
+   "row": 6978,
+   "ps2": "0x00254f08",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6978, body review: BIG_locateentry then strcpy name to out (or empty string): BIG_name."
+  },
+  {
+   "row": 6979,
+   "ps2": "0x00254f60",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6979, body review: corrected from 0x254fe0 (a CreateSema/SetAlarm/WaitSema delay helper); 0x254f60 is the BIG_name twin calling BIG_locateentryz."
+  },
+  {
+   "row": 6983,
+   "ps2": "0x00255198",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6983, body review: Recursive ISO9660 directory walker (readsectorB, builds path, recurses into subdirs, CDVD_hashname), called from CDVD_init with (sector,count)."
+  },
+  {
+   "row": 6984,
+   "ps2": "0x00255458",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6984, body review: corrected from 0x255538 (the CD thread loop, a thread entry from CDVD_init); 0x255458 retries the sector read up to 3 times with a delay and sets error flags: StartReadWithRetry."
+  },
+  {
+   "row": 6992,
+   "ps2": "0x00256198",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 6992, body review: CDVD_open(name) then returns a pointer to that file's directory info entry; last public function of the object before ASYNCFILE (second arg unused)."
+  },
+  {
+   "row": 7032,
+   "ps2": "0x00257f88",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7032, body review: corrected from 0x257fb0 (a static case-swap helper); 0x257f88 copies a size-prefixed extension table into the font driver global, right after FONT_installdriver."
+  },
+  {
+   "row": 7044,
+   "ps2": "0x00259040",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7044, body review: Formats fmt+varargs into a stack buffer then FONT_drawtexta, as AUF FONT_drawtextfa."
+  },
+  {
+   "row": 7046,
+   "ps2": "0x00259140",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7046, body review: Looks up a (char,next) kerning pair in the font's kern table via bsearch helpers and returns the byte adjustment; called from drawtextx/getrectx."
+  },
+  {
+   "row": 7049,
+   "ps2": "0x002592a0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7049, body review: corrected from 0x2592e0 (static string-id bsearch used by LOCALE_getstr); 0x2592a0 writes state 0 into +0xe, the mirror of LOCALE_getstate case 0."
+  },
+  {
+   "row": 7084,
+   "ps2": "0x0025a098",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7084, body review: Returns the actuator byte for (pad, index) if the pad's actuator flag is set."
+  },
+  {
+   "row": 7086,
+   "ps2": "0x0025a538",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7086, body review: Queries pad state for port/slot, returns state=='c' (stable), resets on failure; callers CheckUnplugged/~EResume."
+  },
+  {
+   "row": 7150,
+   "ps2": "0x0025f470",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7150, body review: Computes outcode bits from x,y,z,w against clip bounds (reads 4 components): setflags4."
+  },
+  {
+   "row": 7151,
+   "ps2": "0x0025f4f8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7151, body review: Outcode from x,y,z only (3 components), next to setflags4: setflags3."
+  },
+  {
+   "row": 7153,
+   "ps2": "0x0025f618",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7153, body review: corrected from 0x25f8f0 (a SHAPE size calculator); 0x25f618 takes x,y,w,h,near,far and writes the clip bound globals (0x3c81dc..f4) that setflags4 reads."
+  },
+  {
+   "row": 7173,
+   "ps2": "0x00260090",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7173, body review: Walks shape attribute chunks looking for 'p', identical to AUF SHAPE_longname."
+  },
+  {
+   "row": 7189,
+   "ps2": "0x00260748",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7189, body review: corrected from 0x260760 (the print/vsprintf device dispatcher used by PRINT_string); 0x260748 clears the initialised flag, like AUF PRINT_restore."
+  },
+  {
+   "row": 7408,
+   "ps2": "0x00314fb0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7408, body review: Converts s16 samples to floats (vector path with unaligned fallback SNDI_s16tofunaligned), called by the SFILTER_unpack* functions: decode16x87."
+  },
+  {
+   "row": 7411,
+   "ps2": "0x00315180",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7411, body review: Same bit-reader structure as AUF readsamples (param_2==0 path with 2-bit/1-bit codes, discardbits), called from decodemut."
+  },
+  {
+   "row": 7422,
+   "ps2": "0x00315f38",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7422, body review: Installs SFILTER_unpackxalf/restore, creates CEAXABLKDecf, sets getframe to unpackgetframexalf: unpackxalfinit."
+  },
+  {
+   "row": 7425,
+   "ps2": "0x00316178",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7425, body review: Installs unpackxapf/restore, getmastervoice/voicetopackethandle/getsamplechan as in AUF unpackxapfinit."
+  },
+  {
+   "row": 7437,
+   "ps2": "0x00316998",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7437, body review: One-arg state initialiser used for filter type 0 (source) in SNDMIXI_initfx2's switch, right after SFILTER_initSOURCE."
+  },
+  {
+   "row": 7452,
+   "ps2": "0x00317c38",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7452, body review: Calls each fx filter's restore callback, frees them and the fx tables, clears fx globals; called from MIX_restorereverb."
+  },
+  {
+   "row": 7558,
+   "ps2": "0x002a8bbc",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7558, body review: Stores seed into _impure_ptr+0x58 (rand's state), right before rand: srand."
+  },
+  {
+   "row": 7567,
+   "ps2": "0x002a8f60",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7567, body review: _init_signal_r(_impure_ptr) wrapper."
+  },
+  {
+   "row": 7568,
+   "ps2": "0x002a8f84",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7568, body review: __sigtramp_r(_impure_ptr, sig) wrapper."
+  },
+  {
+   "row": 7595,
+   "ps2": "0x002aaed8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7595, body review: corrected from 0x2aaf58 (that is __sbprintf, a vfiprintf buffering helper); 0x2aaed8 is _strtol_r(_impure_ptr, s, end, base)."
+  },
+  {
+   "row": 7598,
+   "ps2": "0x002ab088",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7598, body review: The vfiprintf engine: called from vfiprintf, 'bug in vfprintf: bad base', '(null)', hex digits."
+  },
+  {
+   "row": 7710,
+   "ps2": "0x002b4f38",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7710, body review: Decodes REG_VIF1_STAT into a 0-4 condition code; used by sceDevVif1Pause/Continue: GetCnd."
+  },
+  {
+   "row": 7717,
+   "ps2": "0x002b5370",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7717, body review: corrected from 0x2b5280 (that is sceDmaReset, which calls this); 0x2b5370 validates a sceDmaEnv struct and writes DMAC_CTRL/PCR etc.: sceDmaPutEnv."
+  },
+  {
+   "row": 7727,
+   "ps2": "0x002b5bc0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7727, body review: (chan, addr, mode, timeout): polls chan MADR against addr, 'libdma: sync timeout' on expiry: sceDmaWatch."
+  },
+  {
+   "row": 7882,
+   "ps2": "0x002b7448",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7882, body review: Returns -1 stub called only by _close_r (0x2b2150), which is called by __sclose (0x2b1b40)."
+  },
+  {
+   "row": 7884,
+   "ps2": "0x002b7458",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7884, body review: Returns -1 stub called only by _lseek_r (0x2b2208), which __swrite (0x2b1a58) calls for append mode."
+  },
+  {
+   "row": 7903,
+   "ps2": "0x002b79f8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7903, body review: Creates sema and helper thread for deferred i* kernel calls, starts it and changes priority: libkernl InitThread."
+  },
+  {
+   "row": 7906,
+   "ps2": "0x002b7be8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7906, body review: syscall -0x2f (iSuspendThread) with self-suspend deferred to the helper thread via iSignalSema."
+  },
+  {
+   "row": 7910,
+   "ps2": "0x002b80e0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7910, body review: FlushCache, sceDeci2Open, initialises tty buffers; called from read/write."
+  },
+  {
+   "row": 7916,
+   "ps2": "0x002b8b48",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7916, body review: Returns sreg table entry [index], used by sceSifInitRpc."
+  },
+  {
+   "row": 7921,
+   "ps2": "0x002b8e48",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7921, body review: Sets cmd handler buffer and size globals and returns the old buffer; called from SNDPLATFORM_init."
+  },
+  {
+   "row": 7924,
+   "ps2": "0x002b8ea8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7924, body review: corrected from 0x2b8ed0 (internal _sceSifSendCmd core); 0x2b8ea8 clears the handler slot for cmd (system table if negative), mirror of AddCmdHandler 0x2b8e78."
+  },
+  {
+   "row": 7926,
+   "ps2": "0x002b9048",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7926, body review: corrected from 0x2b9088 (the SIF cmd interrupt handler); 0x2b9048 calls the send-cmd core with flag 1 (isceSifSetDma path)."
+  },
+  {
+   "row": 7929,
+   "ps2": "0x002b9400",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7929, body review: Calls sceSifExitCmd (0x2b8e10, currently misnamed DisableDmac) then clears the rpc-initialised flag."
+  },
+  {
+   "row": 7934,
+   "ps2": "0x002b9cd0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7934, body review: (queue, thread id) under DIntr: initialises queue and appends it to the global queue list."
+  },
+  {
+   "row": 7936,
+   "ps2": "0x002b9e38",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7936, body review: (sd, queue) unlinks sd from the queue's server list (+0x38 next) under DIntr."
+  },
+  {
+   "row": 7940,
+   "ps2": "0x002ba180",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7940, body review: corrected from 0x2ba318 (a fileio IOP-to-EE data command handler); 0x2ba180 loops sceSifGetNextRequest/SleepThread/sceSifExecRequest."
+  },
+  {
+   "row": 7942,
+   "ps2": "0x002ba7f8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7942, body review: corrected from 0x2ba758 (a SignalSema unlock helper); 0x2ba7f8 is the SIF cmd handler sceFsInit registers for 0x80000013, invoking the stored callback(arg) then EI, directly before sceFsInit."
+  },
+  {
+   "row": 7943,
+   "ps2": "0x002ba828",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 7943, body review: sceSifInitRpc, registers fileio cmd handlers, binds the fileio RPC server and calls it: sceFsInit (called lazily from sceOpen)."
+  },
+  {
+   "row": 8008,
+   "ps2": "0x002beab0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8008, body review: Deci2Call(-5, args) wrapper in the Deci2 run (1 Open, 2 Close, 3 ReqSend, 4 Poll, -5, -6, -7, -8 ExLock): ExRecv."
+  },
+  {
+   "row": 8009,
+   "ps2": "0x002beae8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8009, body review: Deci2Call(-6, ...) between ExRecv (-5) and ExReqSend (-7); called from the tty write path"
+  },
+  {
+   "row": 8016,
+   "ps2": "0x002bed18",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8016, body review: corrected from 0x2becb0 (a syscall 0x5a stub); 0x2bed18 is exactly 0xb8, calls SetSyscall/GetEntryAddress stubs and copies handler code to kernel memory"
+  },
+  {
+   "row": 8085,
+   "ps2": "0x002c72a8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8085, body review: libmc RPC function 6 copying unaligned head bytes of the write buffer; called by writeFile"
+  },
+  {
+   "row": 8089,
+   "ps2": "0x002c77c8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8089, body review: libmc RPC 0xd with path, flags, max entries and table write-back (64-byte entries); called by getNumSlotsAvailable etc."
+  },
+  {
+   "row": 8097,
+   "ps2": "0x002c81a8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8097, body review: libmc RPC 0x12 taking (port, slot, path), last before sceMtapInit; matches sceMcGetEntSpace signature"
+  },
+  {
+   "row": 8104,
+   "ps2": "0x002c8728",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8104, body review: corrected from 0x2c8790 (a libpad sceSifSetDma helper); 0x2c8728 does an RPC on the mtap client and returns the version word"
+  },
+  {
+   "row": 8106,
+   "ps2": "0x002c88a8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8106, body review: binds padman RPC servers 0x80000100/0x80000101 and checks module version with the libpad mismatch strings"
+  },
+  {
+   "row": 8112,
+   "ps2": "0x002c8ed8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8112, body review: corrected from 0x2c8f88 (sets reqState byte); 0x2c8ed8 returns state byte +0x70, mapping STABLE with reqState BUSY to EXECCMD"
+  },
+  {
+   "row": 8121,
+   "ps2": "0x002c9568",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8121, body review: padman RPC command 8 with port, slot and a 6-byte align array"
+  },
+  {
+   "row": 8123,
+   "ps2": "0x002c9808",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8123, body review: calls the SetButtonInfo RPC helper with mask 0xfff (enter press mode)"
+  },
+  {
+   "row": 8140,
+   "ps2": "0x002ca1a0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8140, body review: corrected from 0x2ca380; 0x2ca1a0 clears Status bit 0x8000 (mirror of _snProfEnableInt) and is called by snProfDisableInt"
+  },
+  {
+   "row": 8146,
+   "ps2": "0x002ca740",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8146, body review: corrected from 0x2ca760 (the static block allocator); 0x2ca740 returns memclass[x&0x3f]+0x30 like AUF MEM_tailsize, called by alloc/MEM_free/MEM_resize"
+  },
+  {
+   "row": 8213,
+   "ps2": "0x002cdcf0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8213, body review: strlen(name)+1 into size ref, returns name: identical to AUF NameLookup"
+  },
+  {
+   "row": 8229,
+   "ps2": "0x002cea68",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8229, body review: FastAlloc(size, \"UCarpNamespace\")"
+  },
+  {
+   "row": 8230,
+   "ps2": "0x002cea88",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8230, body review: corrected from 0x2ceaa8 (Namespace type_info function); 0x2cea88 is FastFree(p, size) right after operator new"
+  },
+  {
+   "row": 8336,
+   "ps2": "0x002d2b00",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8336, body review: computes min/max bounds over count points (1e9 sentinels) then a sphere via sqrtf"
+  },
+  {
+   "row": 8347,
+   "ps2": "0x002d3f60",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8347, body review: ctors-table entry calling helper(1, 0xffff)"
+  },
+  {
+   "row": 8348,
+   "ps2": "0x002d3f80",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8348, body review: dtors-table entry calling helper(0, 0xffff)"
+  },
+  {
+   "row": 8359,
+   "ps2": "0x002d4688",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8359, body review: byte-swaps members and calls PrepareBitField (0x2d8870, exact sheet size 0x170); precedes UData::UData"
+  },
+  {
+   "row": 8360,
+   "ps2": "0x002d4790",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8360, body review: identical twin calling UnprepareBitField (0x2d89e0, exact sheet size 0x208)"
+  },
+  {
+   "row": 8531,
+   "ps2": "0x002d9bd0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8531, body review: returns value table entry (+0x2eec, keys at +0x1f4c) by index; called by DAFI_getvalue with the key index"
+  },
+  {
+   "row": 8666,
+   "ps2": "0x002de7c8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8666, body review: corrected from 0x2de830 (static init); 0x2de7c8 walks the list freeing 0xc nodes and resets the sentinel; 0x68+0x108 = sheet 0x170"
+  },
+  {
+   "row": 8670,
+   "ps2": "0x002de998",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8670, body review: ctors-table entry calling helper 0x2de978(1, 0xffff)"
+  },
+  {
+   "row": 8744,
+   "ps2": "0x002e3c90",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8744, body review: vtable entry adjusting motor pitch/volume from speed and calling Play/GetVolume, directly after AUltraLite::Play"
+  },
+  {
+   "row": 8752,
+   "ps2": "0x002e5148",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8752, body review: frees three AVoice::View arrays then the object (0x1c): same shape as AUF ATurret dtor; called by ~AVehicle and ~ASentry"
+  },
+  {
+   "row": 8781,
+   "ps2": "0x002e8450",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8781, body review: occupies the GetName slot (after IsOneShot) of the ASubmersible vtable, returns this+0x210"
+  },
+  {
+   "row": 8854,
+   "ps2": "0x002ed040",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8854, body review: stores (type, callback) into the static table by id; called by the ARegisterSound ctor"
+  },
+  {
+   "row": 8855,
+   "ps2": "0x002ed060",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8855, body review: corrected from 0x2ed090 (lexicographical_compare); 0x2ed060 returns the table callback by id"
+  },
+  {
+   "row": 8856,
+   "ps2": "0x002ed078",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8856, body review: corrected from 0x2ed0f8 (lexicographical_compare_3way); 0x2ed078 returns the table type word by id"
+  },
+  {
+   "row": 8857,
+   "ps2": "0x002ed158",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8857, body review: list clear freeing 0xc nodes; ASoundManager::Shutdown uses it on the list of playing sounds (vtable at +0xac)"
+  },
+  {
+   "row": 8858,
+   "ps2": "0x002ed1c0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8858, body review: list clear on the second ASoundManager list (Shutdown and Restart), after the ABaseSound* one"
+  },
+  {
+   "row": 8865,
+   "ps2": "0x002ed778",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8865, body review: ABaseSound::operator new(size, \"ASound\")"
+  },
+  {
+   "row": 8872,
+   "ps2": "0x002ee768",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8872, body review: called by ASnowMobile::Play, plays SFX_tiressnow carve and landing sounds; directly after PlayMotor"
+  },
+  {
+   "row": 8889,
+   "ps2": "0x002effe8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8889, body review: corrected from 0x2f01c8 (basic_string replace); 0x2effe8 sets vtable_ASentry, ~AGun, ~ATurret, ~ASceneObj, delete 0x120"
+  },
+  {
+   "row": 8898,
+   "ps2": "0x002f0730",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8898, body review: return-0 stub in the IsStillActive vtable slot (before the overridden IsTracked/IsAirborne of AUltraLite/APlayerTank); same as AUF"
+  },
+  {
+   "row": 8899,
+   "ps2": "0x002f0738",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8899, body review: return-0 stub in the vtable slot that AUltraLite/APlayerTank override with their IsTracked"
+  },
+  {
+   "row": 8900,
+   "ps2": "0x002f0740",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8900, body review: return-0 stub in the vtable slot that AUltraLite overrides with IsAirborne"
+  },
+  {
+   "row": 8916,
+   "ps2": "0x002f0cd0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8916, body review: GetName slot of the APlayerVehicle vtable returning an inline name buffer (this+0x210; AUF this+0x140)"
+  },
+  {
+   "row": 8922,
+   "ps2": "0x002f1128",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8922, body review: sets vtable_APlayerTank, frees View array, ~ATurret, ~AVehicle, delete 0x240: AUF shape"
+  },
+  {
+   "row": 8929,
+   "ps2": "0x002f1ae8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8929, body review: sets vtable_APlayerHeli, frees View arrays, ~AVehicle, delete; from its vtable"
+  },
+  {
+   "row": 8939,
+   "ps2": "0x002f2a50",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8939, body review: AOneShotSound ctor shape (ABaseSound vtable, AMix::Add(name), AVoice ctor) with name as 4th arg, i.e. (int, int, char *)"
+  },
+  {
+   "row": 8944,
+   "ps2": "0x002f2c68",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 8944, body review: ABaseSound::operator new(size, \"AOneShotSound\")"
+  },
+  {
+   "row": 9051,
+   "ps2": "0x002f9610",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9051, body review: deletes Priv then FastFree(this, 4) on flag; called by AFader::Remove"
+  },
+  {
+   "row": 9059,
+   "ps2": "0x002f9808",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9059, body review: forwards to AFader::Priv::Call911(*this); called by ~ECall911"
+  },
+  {
+   "row": 9060,
+   "ps2": "0x002f9828",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9060, body review: forwards to AFader::Priv::Update(*this) exactly like AUF; called by ~EAudioUpdate"
+  },
+  {
+   "row": 9083,
+   "ps2": "0x002fafb0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9083, body review: copies the name key, finds it in the map and returns element+0x94 or 0"
+  },
+  {
+   "row": 9086,
+   "ps2": "0x002fb630",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9086, body review: finds the name; if absent inserts a new element storing the AEngine* at +0x94; then increments refcount +0x90"
+  },
+  {
+   "row": 9087,
+   "ps2": "0x002fb718",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9087, body review: walks the map for element+0x94 == pointer, decrements refcount and erases the node at zero; called by Remove"
+  },
+  {
+   "row": 9160,
+   "ps2": "0x002fd998",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9160, body review: recursive right, walk left, FastFree 0x98 nodes; called by ~URefCounter<ABank>"
+  },
+  {
+   "row": 9168,
+   "ps2": "0x002fe2f8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9168, body review: same RemoveReference shape as the AEngine one (refcount +0x90, pointer +0x94, erase); called by ABank Remove"
+  },
+  {
+   "row": 9175,
+   "ps2": "0x002fedd8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9175, body review: frees the voice View array then deletes; called from ~AVehicle and ~ASnowMobile, right after AVehicleWind::Stop"
+  },
+  {
+   "row": 9227,
+   "ps2": "0x00301fe0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9227, body review: sets vtable_EAGL_VD_PS2_SINGLE_BUFFERD, frees frame textures and TARs, releases decoder frame, sets base vtable, frees"
+  },
+  {
+   "row": 9233,
+   "ps2": "0x00302590",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9233, body review: base-class dtor: sets the VIDEO_DRIVER vtable (0x3c6f50, also set by the derived dtor) and deletes on flag"
+  },
+  {
+   "row": 9237,
+   "ps2": "0x003026b0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9237, body review: allocator call with (size) via plaympc_alloc; identical twin of new[] at 0x3026f0, first after the type_info function as in the sheet"
+  },
+  {
+   "row": 9238,
+   "ps2": "0x003026f0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9238, body review: identical allocator twin following operator new (0x3026b0); sizes 0x40/0x40 exact, then the (size, char *, ...) variants at 0x302730/0x302760"
+  },
+  {
+   "row": 9247,
+   "ps2": "0x00302800",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9247, body review: sets vtable_RCMP__RCMP_SYSTEM and zeroes fields; the rcmp_sys static initialiser calls it on 0x3562d0"
+  },
+  {
+   "row": 9259,
+   "ps2": "0x00302b28",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9259, body review: zeroes three fields and sets [3]=2; called by DECODER::DECODER on its embedded CODEC_IDATA member"
+  },
+  {
+   "row": 9260,
+   "ps2": "0x00302b48",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9260, body review: corrected from 0x302b60 (rcmp_sys static init helper); 0x302b48 stores four args (streamer, callback, ...) into the object; 0x18+0x48 = sheet 0x60"
+  },
+  {
+   "row": 9264,
+   "ps2": "0x00302c58",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9264, body review: allocator call via plaympc_alloc(size), first after the DECODER type_info function; twin of new[]"
+  },
+  {
+   "row": 9265,
+   "ps2": "0x00302c98",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9265, body review: identical allocator twin following DECODER operator new"
+  },
+  {
+   "row": 9276,
+   "ps2": "0x00302dc0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9276, body review: ctors-table entry calling helper(1, 0xffff) which constructs RCMP_SYSTEM at rcmp_sys"
+  },
+  {
+   "row": 9277,
+   "ps2": "0x00302de0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9277, body review: dtors-table entry calling helper(0, 0xffff)"
+  },
+  {
+   "row": 9278,
+   "ps2": "0x00302e00",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9278, body review: sets alloc/free hooks to MEM_allocalign/MEM_free (REAL defaults); called by PlayMPC"
+  },
+  {
+   "row": 9296,
+   "ps2": "0x003038e8",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9296, body review: allocator call via plaympc_alloc(size), first after the PS2_SONY_CODEC_INTERNAL type_info function"
+  },
+  {
+   "row": 9297,
+   "ps2": "0x00303928",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9297, body review: identical allocator twin following PS2_SONY_CODEC_INTERNAL operator new"
+  },
+  {
+   "row": 9334,
+   "ps2": "0x00304e10",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9334, body review: corrected from 0x304e18 (called by StartResize); 0x304e10 return-0 stub is called by StartDelete"
+  },
+  {
+   "row": 9335,
+   "ps2": "0x00304e18",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9335, body review: corrected from 0x304e20 (called by Resize); 0x304e18 return-0 stub is called by StartResize"
+  },
+  {
+   "row": 9336,
+   "ps2": "0x00304e20",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9336, body review: corrected from 0x304e28 (called by Delete/FileDeleteSync); 0x304e20 return-0 stub is called by Resize"
+  },
+  {
+   "row": 9633,
+   "ps2": "0x00323e98",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9633, body review: RefPack decoder: parses the 0x8000/0x100 flag header and 3/4-byte size then runs the literal/copy opcode loop into dest"
+  },
+  {
+   "row": 9637,
+   "ps2": "0x003244d0",
+   "verdict": "address",
+   "why": "body review (P015): sheet row 9637, body review: mode 0 spins while IPU_CTRL busy bit set, mode 1 returns the busy bit"
+  },
+  {
+   "row": 7744,
+   "ps2": "0x002b69a0",
+   "verdict": "address",
+   "why": "body review (P016): sheet row 7744: the syscall stub; the sheet names it _LoadExecPS2 (as _Exit/_ExecOSD)"
+  },
+  {
+   "row": 8001,
+   "ps2": "0x002be940",
+   "verdict": "address",
+   "why": "body review (P016): sheet row 8001, body review: Wrapper running the library shutdown thunk then the LoadExecPS2 syscall stub (which Ghidra already names LoadExecPS2), before Exit/ExecOSD."
+  },
+  {
+   "row": 5562,
+   "ps2": "0x0024e440",
+   "verdict": "address",
+   "why": "body review (P016): sheet row 5562: __unpack_f then __make_dp: libgcc fptodp (the old name was a guess)"
+  },
+  {
+   "row": 7920,
+   "ps2": "0x002b8e10",
+   "verdict": "address",
+   "why": "body review (P016): sheet row 7920: calls DisableDmac and RemoveDmacHandler, then clears the SIF-cmd init flag; called by RunNextModule"
+  },
+  {
+   "row": 5606,
+   "ps2": "0x0024f650",
+   "verdict": "address",
+   "why": "body review (P016): sheet row 5606: empty, called from throw_helper: libgcc's __unwinding_cleanup. Batch P004 had named it __get_eh_table_version"
+  },
+  {
+   "row": 9317,
+   "ps2": "0x00304150",
+   "verdict": "address",
+   "why": "body review (P016): sheet row 9317: MPEG slice header parsing (quantiser_scale_code, intra_slice); the sheet size 0xae8 ends exactly at marker_bit. Batch P004b had named it TRP_init"
+  },
+  {
+   "row": 5614,
+   "ps2": "0x0024fdb0",
+   "verdict": "address",
+   "why": "body review (P016): sheet row 5614: returns __get_eh_info()'s context +8 (function split out of FUN_0024fd98 by hand in the UI)"
+  },
+  {
+   "row": 5604,
+   "ps2": "0x0024f288",
+   "verdict": "address",
+   "why": "body review (P016): sheet row 5604: returns the eh table's version (short at +6)"
+  },
+  {
+   "row": 5605,
+   "ps2": "0x0024f290",
+   "verdict": "address",
+   "why": "body review (P016): sheet row 5605: returns the eh table's language (short at +4)"
+  },
+  {
+   "row": 6123,
+   "ps2": "0x00297440",
+   "verdict": "address",
+   "why": "body review (P016): sheet row 6123: copies four floats (+0x110..+0x11c) to its four out parameters"
+  },
+  {
+   "row": 8015,
+   "ps2": "0x002bec28",
+   "verdict": "address",
+   "why": "body review (P016): sheet row 8015: range-checks the cause number and installs the handler (after SetTLBHandler)"
+  },
+  {
+   "row": 8124,
+   "ps2": "0x002c9860",
+   "verdict": "address",
+   "why": "body review (P016): sheet row 8124: calls the press-mode helper with mask 0 (after EnterPressMode)"
   }
  ]
 }
