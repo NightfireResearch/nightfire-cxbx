@@ -1,10 +1,272 @@
 {
  "batch": "P014",
  "program": "DRIVING.ELF",
- "applied": "Fri Sep 25 23:45:22 2026",
+ "applied": "Fri Sep 25 23:46:30 2026",
  "items": [
   {
-   "xbox": "0x00167c78",
+   "xbox": "0x00194cb0",
+   "old_name": "FUN_00194cb0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00194cb0 from 'FUN_00194cb0' to 'PHelicopter_global_ctors'",
+      "warnings": [
+       "Function name 'PHelicopter_global_ctors' \u2014 main part 'PHelicopter_global_ctors' is not PascalCase. Expected: PhelicopterGlobalCtors",
+       "Function name 'PHelicopter_global_ctors' \u2014 main part 'PHelicopter_global_ctors' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00194cb0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PHelicopter_global_ctors",
+   "ok": true
+  },
+  {
+   "xbox": "0x00195ff0",
+   "old_name": "FUN_00195ff0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00195ff0 from 'FUN_00195ff0' to 'GetSimpleRigidBody'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetSimpleRigidBody' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00195ff0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetSimpleRigidBody",
+   "ok": true
+  },
+  {
+   "xbox": "0x00196018",
+   "old_name": "FUN_00196018",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00196018 from 'FUN_00196018' to 'GetSimpleRigidBodyPtr'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetSimpleRigidBodyPtr' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00196018",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetSimpleRigidBodyPtr",
+   "ok": true
+  },
+  {
+   "xbox": "0x00196040",
+   "old_name": "FUN_00196040",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00196040 from 'FUN_00196040' to 'GetRigidBody'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetRigidBody' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00196040",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetRigidBody",
+   "ok": true
+  },
+  {
+   "xbox": "0x00196068",
+   "old_name": "FUN_00196068",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00196068 from 'FUN_00196068' to 'GetRigidBodyPtr'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetRigidBodyPtr' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00196068",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetRigidBodyPtr",
+   "ok": true
+  },
+  {
+   "xbox": "0x001b0d10",
+   "old_name": "FUN_001b0d10",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001b0d10 from 'FUN_001b0d10' to 'End'",
+      "warnings": [
+       "Function name 'End' is too short (main part 'End' is 3 chars, minimum 8).",
+       "Function name 'End' does not start with a recognized verb. First word 'End' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'End' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'End' shares the same token set as existing function 'EndShadow' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001b0d10",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "End",
+   "ok": true
+  },
+  {
+   "xbox": "0x001d8048",
+   "old_name": "FUN_001d8048",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001d8048 from 'FUN_001d8048' to 'Add'",
+      "warnings": [
+       "Function name 'Add' is too short (main part 'Add' is 3 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Add' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Add' shares the same token set as existing function 'AddReference' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001d8048",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Add",
+   "ok": true
+  },
+  {
+   "xbox": "0x00208428",
+   "old_name": "FUN_00208428",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00208428 from 'FUN_00208428' to 'GetEnemyAccuracyBoost'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetEnemyAccuracyBoost' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00208428",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetEnemyAccuracyBoost",
+   "ok": true
+  },
+  {
+   "xbox": "0x002083e8",
    "old_name": null,
    "old_plate": null,
    "created": true,
@@ -12,18 +274,350 @@
     [
      "create_function",
      {
-      "error": "Failed to create function at 0x00167c78: Unable to create function at 00167c78"
+      "success": true,
+      "address": "002083e8",
+      "function_name": "FUN_002083e8",
+      "entry_point": "002083e8",
+      "body_size": 16,
+      "message": "Function created successfully at 002083e8"
      }
     ],
     [
      "rename",
      {
-      "error": "No function found for 0x00167c78"
+      "status": "success",
+      "message": "Success: Renamed function at 0x002083e8 from 'FUN_002083e8' to 'GetScore'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetScore' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002083e8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
      }
     ]
    ],
-   "new_name": null,
-   "ok": false
+   "new_name": "GetScore",
+   "ok": true
+  },
+  {
+   "xbox": "0x002083f8",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "002083f8",
+      "function_name": "FUN_002083f8",
+      "entry_point": "002083f8",
+      "body_size": 44,
+      "message": "Function created successfully at 002083f8"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002083f8 from 'FUN_002083f8' to 'GetScoreTotal'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetScoreTotal' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002083f8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetScoreTotal",
+   "ok": true
+  },
+  {
+   "xbox": "0x00210460",
+   "old_name": "Util_Step",
+   "old_plate": "[symbol-matching]\nCanonical name: Util_Step\nSymbol file name: Util_Step(float, float, float)\nEvidence: sheet row 4782, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00210460 from 'Util_Step' to 'fWeaponSortOrder_global_ctors'",
+      "warnings": [
+       "Function name 'fWeaponSortOrder_global_ctors' \u2014 main part 'fWeaponSortOrder_global_ctors' is not PascalCase. Expected: FweaponsortorderGlobalCtors",
+       "Function name 'fWeaponSortOrder_global_ctors' \u2014 main part 'fWeaponSortOrder_global_ctors' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00210460",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "fWeaponSortOrder_global_ctors",
+   "ok": true
+  },
+  {
+   "xbox": "0x00231418",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00231418",
+      "function_name": "FUN_00231418",
+      "entry_point": "00231418",
+      "body_size": 300,
+      "message": "Function created successfully at 00231418"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00231418 from 'FUN_00231418' to 'CalcBoundingBox'",
+      "warnings": [
+       "Function name 'CalcBoundingBox' does not start with a recognized verb. First word 'Calc' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00231418",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "CalcBoundingBox",
+   "ok": true
+  },
+  {
+   "xbox": "0x002313f8",
+   "old_name": "FUN_002313f8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002313f8 from 'FUN_002313f8' to 'SetTrackName_global_ctors'",
+      "warnings": [
+       "Function name 'SetTrackName_global_ctors' \u2014 main part 'SetTrackName_global_ctors' is not PascalCase. Expected: SettracknameGlobalCtors",
+       "Function name 'SetTrackName_global_ctors' \u2014 main part 'SetTrackName_global_ctors' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002313f8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetTrackName_global_ctors",
+   "ok": true
+  },
+  {
+   "xbox": "0x00235720",
+   "old_name": "FUN_00235720",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00235720 from 'FUN_00235720' to 'CANVAS_Suppress'",
+      "warnings": [
+       "Function name 'CANVAS_Suppress' does not start with a recognized verb. First word 'Suppress' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'CANVAS_Suppress' has only one token. Function names need at least one specifier after the verb."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00235720",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "CANVAS_Suppress",
+   "ok": true
+  },
+  {
+   "xbox": "0x00235750",
+   "old_name": "FUN_00235750",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00235750 from 'FUN_00235750' to 'CANVAS_SetIntensity'"
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00235750",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "CANVAS_SetIntensity",
+   "ok": true
+  },
+  {
+   "xbox": "0x00238028",
+   "old_name": "FUN_00238028",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00238028 from 'FUN_00238028' to 'LINE_Draw2DStrip'",
+      "warnings": [
+       "Function name 'LINE_Draw2DStrip' does not start with a recognized verb. First word 'Draw2' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00238028",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "LINE_Draw2DStrip",
+   "ok": true
+  },
+  {
+   "xbox": "0x0012c5d0",
+   "old_name": "FUN_0012c5d0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0012c5d0 from 'FUN_0012c5d0' to 'OkToSpawnHench'",
+      "warnings": [
+       "Function name 'OkToSpawnHench' does not start with a recognized verb. First word 'Ok' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'OkToSpawnHench' shares the same token set as existing function 'Spawn' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0012c5d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "OkToSpawnHench",
+   "ok": true
+  },
+  {
+   "xbox": "0x00138b88",
+   "old_name": "FUN_00138b88",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00138b88 from 'FUN_00138b88' to 'FireBullets'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'FireBullets' shares the same token set as existing function 'Fire' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00138b88",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "FireBullets",
+   "ok": true
   }
  ]
 }

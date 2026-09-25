@@ -4,17 +4,6 @@
  "note": "Extras from body review round 2 and the trial, reviewed by hand; 4 functions created. 'xbox' is the PS2 address.",
  "items": [
   {
-   "xbox": "0x00167c78",
-   "expect": "(none)",
-   "name": "InputDevice::DeadZoneScale",
-   "sheet_name": "InputDevice::DeadZoneScale(float &, float, float)",
-   "create": true,
-   "allow_duplicate": false,
-   "evidence": [
-    "sheet row 2127: (value-min)/(1-min) past the dead zone; code after DeadZoneChop that Ghidra never made a function"
-   ]
-  },
-  {
    "xbox": "0x00194cb0",
    "expect": "FUN_00194cb0",
    "name": "PHelicopter::PHelicopter_global_ctors",

@@ -1818,6 +1818,114 @@
    "ps2": "0x001a1a00",
    "verdict": "address",
    "why": "body review (P013): zeroes the active-system count (row 2883)"
+  },
+  {
+   "row": 2692,
+   "ps2": "0x00194cb0",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 2692: ctors-table stub calling 0x194ac8(1, 0xffff), after the PHelicopter setters"
+  },
+  {
+   "row": 2737,
+   "ps2": "0x00195ff0",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 2737: returns Sim.GetSimpleRigidBody(this+0x46)"
+  },
+  {
+   "row": 2738,
+   "ps2": "0x00196018",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 2738: identical to GetSimpleRigidBody; which copy is Ptr follows sheet order"
+  },
+  {
+   "row": 2739,
+   "ps2": "0x00196040",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 2739: returns Sim.GetRigidBody(this+0x46)"
+  },
+  {
+   "row": 2740,
+   "ps2": "0x00196068",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 2740: identical to GetRigidBody; which copy is Ptr follows sheet order"
+  },
+  {
+   "row": 3184,
+   "ps2": "0x001b0d10",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 3184: TextureRenderContext::EndFrame then restores the view; called by MakeCopy/MakeTexCopy after Begin"
+  },
+  {
+   "row": 3890,
+   "ps2": "0x001d8048",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 3890: the COORD3 overload: called from DrawTracers/DrawBulletStreaks, calls the COORD4 Add at 0x1d7d78, as in AUF"
+  },
+  {
+   "row": 4626,
+   "ps2": "0x00208428",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 4626: returns an int by difficulty and is called from ~EFireWeapon, as AUF's"
+  },
+  {
+   "row": 4624,
+   "ps2": "0x002083e8",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 4624: returns this->scores[category] (+0x648); code Ghidra never made a function"
+  },
+  {
+   "row": 4625,
+   "ps2": "0x002083f8",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 4625: sums the 12 scores at +0x648; code Ghidra never made a function"
+  },
+  {
+   "row": 4780,
+   "ps2": "0x00210460",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 4780: ctors-table stub calling the weapon-table initialiser 0x20f2b8(1, 0xffff). Batch P004 had named it Util_Step"
+  },
+  {
+   "row": 5133,
+   "ps2": "0x00231418",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 5133: zeroes the box when the count is 0, else scans the points; spans exactly the sheet's 0x130; code Ghidra never made a function"
+  },
+  {
+   "row": 5132,
+   "ps2": "0x002313f8",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 5132: ctors-table stub calling 0x2313c0(1, 0xffff)"
+  },
+  {
+   "row": 5222,
+   "ps2": "0x00235720",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 5222: sets the suppress bit in a canvas entry; called from SuppressEffect"
+  },
+  {
+   "row": 5223,
+   "ps2": "0x00235750",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 5223: writes the intensity to every element of a canvas; called from SetIntensity"
+  },
+  {
+   "row": 5264,
+   "ps2": "0x00238028",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 5264: static USimpleMaterial, sets vertex and colour pointers, draws the strip"
+  },
+  {
+   "row": 736,
+   "ps2": "0x0012c5d0",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 736: count at +0x50 below the maximum at +4; called by the activate-AI-element events"
+  },
+  {
+   "row": 882,
+   "ps2": "0x00138b88",
+   "verdict": "address",
+   "why": "extras review (P014): sheet row 882: called 3x from DoAgentLogic with the (float, COORD3 &, ...) arguments of FireBullets"
   }
  ]
 }

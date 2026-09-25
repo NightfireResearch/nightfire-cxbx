@@ -147,7 +147,13 @@ def run(batch_path, do_apply):
             entry = {"xbox": it["xbox"], "old_name": old_name, "old_plate": old_plate, "created": False, "steps": []}
             log["items"].append(entry)
             if it.get("create"):
-                entry["steps"].append(("create_function", w.post("create_function", {"address": it["xbox"]}, program)))
+                result = w.post("create_function", {"address": it["xbox"]}, program)
+                entry["steps"].append(("create_function", result))
+                if isinstance(result, dict) and result.get("error"):
+                    entry["new_name"], entry["ok"] = None, False
+                    print(f"  FAIL {it['xbox']} create_function refused: {result['error']}")
+                    print("  stopping at the first failure")
+                    break
                 entry["created"] = True
             bare = names.bare(it["name"]) if it.get("rename", True) else old_name
             if bare != old_name:
