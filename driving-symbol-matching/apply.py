@@ -133,7 +133,7 @@ def run(batch_path, do_apply):
     log_path = batch_path.replace(".json", ".log.json")
     if os.path.exists(log_path):
         with open(log_path) as f:
-            if all(e.get("ok") for e in json.load(f)["items"]):
+            if all(e.get("ok") or e.get("skipped") for e in json.load(f)["items"]):
                 print(f"already applied (see {log_path}); nothing written")
                 return
 
@@ -152,6 +152,9 @@ def run(batch_path, do_apply):
                 if isinstance(result, dict) and result.get("error"):
                     entry["new_name"], entry["ok"] = None, False
                     print(f"  FAIL {it['xbox']} create_function refused: {result['error']}")
+                    if batch.get("skip_refused_creates"):
+                        entry["skipped"] = True   # nothing was written for this item; carry on
+                        continue
                     print("  stopping at the first failure")
                     break
                 entry["created"] = True

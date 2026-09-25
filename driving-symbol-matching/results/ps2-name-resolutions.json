@@ -3306,6 +3306,348 @@
    "ps2": "0x002c9860",
    "verdict": "address",
    "why": "body review (P016): sheet row 8124: calls the press-mode helper with mask 0 (after EnterPressMode)"
+  },
+  {
+   "row": 5598,
+   "ps2": "0x0024eea8",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 5598: __get_eh_context: returns (*get_eh_context)(), between new_eh_context and __get_eh_info"
+  },
+  {
+   "row": 5612,
+   "ps2": "0x0024fd88",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 5612: set_unexpected: swaps __unexpected_func; not a Ghidra function"
+  },
+  {
+   "row": 5613,
+   "ps2": "0x0024fd98",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 5613: unexpected(): calls through __unexpected_func; Ghidra function also swallows __cp_exception_info at 0x24fdb0"
+  },
+  {
+   "row": 5802,
+   "ps2": "0x002858d8",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 5802: EAGL::Model::GetGeometry(char*): strcmp over name list at +0xa0, returns slot in +0xc4 array; sits right after GetChild"
+  },
+  {
+   "row": 6051,
+   "ps2": "0x00295410",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6051: EAGL::Transform::BuildRotate: sin/cos of angle*pi/180, normalised axis, identity on zero angle - matches AUF; called by AppendRotate/PrependRotate"
+  },
+  {
+   "row": 6052,
+   "ps2": "0x002934e0",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6052: EAGL::Transform::PostMult(Transform&, Transform*): MultMatrix(this, a, out) wrapper"
+  },
+  {
+   "row": 6125,
+   "ps2": "0x00297470",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6125: EAGL::ViewPort::SetBackgroundColour: stores at +0x1c, called from SetFillColour; Ghidra function spans the getter too"
+  },
+  {
+   "row": 6170,
+   "ps2": "0x00299c38",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6170: EAGL::Profiler::Profiler(ProfilerRegion&, bool): stores region, if bool closes the current section and opens this one (sheet currently places 6169 and 6170 both at 0x299bd0)"
+  },
+  {
+   "row": 6173,
+   "ps2": "0x00299d68",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6173: global constructors keyed to EAGL::ProfilerRegion::gBufferHead: ctors-table stub calling static init (1,0xffff)"
+  },
+  {
+   "row": 6407,
+   "ps2": "0x00266410",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6407: EAGLAnim::FnCompoundChannel::~FnCompoundChannel: vtable slot 1, sets vtable, frees child anims and block, ~FnAnimMemoryMap, free 0x1c"
+  },
+  {
+   "row": 6408,
+   "ps2": "0x00266518",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6408: EAGLAnim::FnCompoundChannel::SetAnimMemoryMap: sets +0xc and frees existing children, in the SetAnimMemoryMap vtable slot 0x3af0cc; AUF same shape"
+  },
+  {
+   "row": 6516,
+   "ps2": "0x0026b958",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6516: EAGLAnim::FnDeltaSingleQ::GetLength(float&) const: in the GetLength vtable slot (0x3afb0c), writes frame count as float, returns 1"
+  },
+  {
+   "row": 6522,
+   "ps2": "0x0026d468",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6522: ~FnDeltaQFast: dtor slot of vtable 0x3afe80, frees the +0x10/+0x20/+0x2c buffers SetAnimMemoryMap allocates, eagl_free(this,0x40)"
+  },
+  {
+   "row": 6693,
+   "ps2": "0x002724d8",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6693: RawPoseChannel::EvalFrame(int,float*,mask): called from Eval for integer frames"
+  },
+  {
+   "row": 6694,
+   "ps2": "0x002726a8",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6694: EAGLAnim::EulF3: reads 3 euler degrees from stream, builds quat with sin/cos"
+  },
+  {
+   "row": 6743,
+   "ps2": "0x00276538",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6743: ~FnKeyDeltaChan: dtor slot of the vtable at 0x3b2440 whose type_info is FnKeyDeltaChan (Ghidra's vtable label in the body says FnDeltaQuatChan); sheet row is far from this retail position"
+  },
+  {
+   "row": 7259,
+   "ps2": "0x00307c00",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 7259: SNDMEMI_constrain(unsigned*,int*): clamps size to heap end"
+  },
+  {
+   "row": 7576,
+   "ps2": "0x002b1a58",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 7576: __swrite: _lseek_r if __SAPP then _write_r"
+  },
+  {
+   "row": 7578,
+   "ps2": "0x002b1b40",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 7578: __sclose: _close_r(fp->_data)"
+  },
+  {
+   "row": 7608,
+   "ps2": "0x002b2150",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 7608: _close_r: errno-wrapping call to close stub"
+  },
+  {
+   "row": 7619,
+   "ps2": "0x002b2208",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 7619: _lseek_r: errno-wrapping call to lseek stub"
+  },
+  {
+   "row": 7715,
+   "ps2": "0x002b5280",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 7715: sceDmaReset: clears channels and DMAC_STAT, PutEnv(zeroed env), optional enable"
+  },
+  {
+   "row": 7923,
+   "ps2": "0x002b8e78",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 7923: sceSifAddCmdHandler(cmd, fn, data)"
+  },
+  {
+   "row": 7925,
+   "ps2": "0x002b9008",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 7925: sceSifSendCmd: send-cmd core with flag 0"
+  },
+  {
+   "row": 8014,
+   "ps2": "0x002bebc8",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 8014: SetTLBHandler: stores handler and installs a fixed refill handler for causes 1-3; exact sheet size 0x60 (Ghidra function FUN_002bebc8 currently spans 0xe8 and swallows SetDebugHandler)"
+  },
+  {
+   "row": 8114,
+   "ps2": "0x002c8ff0",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 8114: scePadGetReqState: returns reqState byte +0x71 of the pad area (0x2c8f88 is its setter)"
+  },
+  {
+   "row": 8214,
+   "ps2": "0x002cddf8",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 8214: _Rb_tree<CStringKey, pair<CStringKey, USymbolTable::Namespace *>> _M_erase: recursive free of 0x18 nodes, called by ~USymbolTable; exact 0x68"
+  },
+  {
+   "row": 8344,
+   "ps2": "0x002d3d58",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 8344: CalcPlaneNormal(COORD4 *, COORD4 *): VU0 cross product of two edges, normalised into out; exact 0x80"
+  },
+  {
+   "row": 8495,
+   "ps2": "0x002d8870",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 8495: PrepareBitField(void *, int, ...): exact 0x170, called by UData::EndianPrepareMembers"
+  },
+  {
+   "row": 8496,
+   "ps2": "0x002d89e0",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 8496: UnprepareBitField(void *, int, ...): exact 0x208, called by UData::EndianUnprepareMembers"
+  },
+  {
+   "row": 8667,
+   "ps2": "0x002de938",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 8667: global constructors keyed to AVoice::Set: ctors-table entry calling 0x2de830(1, 0xffff)"
+  },
+  {
+   "row": 8668,
+   "ps2": "0x002de958",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 8668: global destructors keyed to AVoice::Set: dtors-table entry calling 0x2de830(0, 0xffff)"
+  },
+  {
+   "row": 9241,
+   "ps2": "0x00302790",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 9241: EAGL_VD_PS2_SINGLE_BUFFERD::operator delete(void *): calls the free hook at 0x3562d4; 0x28"
+  },
+  {
+   "row": 9268,
+   "ps2": "0x00302d38",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 9268: RCMP::DECODER::operator delete(void *): free hook call, 0x28"
+  },
+  {
+   "row": 9300,
+   "ps2": "0x003039c8",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 9300: PS2_SONY_CODEC_INTERNAL::operator delete(void *): free hook call, 0x28"
+  },
+  {
+   "row": 9318,
+   "ps2": "0x00304c38",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 9318: marker_bit(char *): Get_Bits(1) with the text arg ignored, called from every MPEG header parser; 0x304c38+0x1c8 lands on 0x304e00"
+  },
+  {
+   "row": 9337,
+   "ps2": "0x00304e28",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 9337: FILESYS_deletesync: return-0 stub called by Delete and FileDeleteSync"
+  },
+  {
+   "row": 5624,
+   "ps2": "0x00250228",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 5624: __throw_bad_cast: function start inside FUN_00250070's body, references the bad_cast dtor at 0x250288; not a Ghidra function"
+  },
+  {
+   "row": 5625,
+   "ps2": "0x002502a8",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 5625: __throw_bad_typeid: function start inside FUN_00250070's body, references the bad_typeid dtor at 0x250308; not a Ghidra function"
+  },
+  {
+   "row": 5991,
+   "ps2": "0x002913b0",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 5991: EAGLInternal::RenderContextPrivate::EAGLVBL_end: sync; ei; return 0; not a Ghidra function (inside EAGLVBL_start's range)"
+  },
+  {
+   "row": 5992,
+   "ps2": "0x002913c0",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 5992: EAGL::RenderContextExtension::SetFrameRate(int): stores 60/rate at +0x874, the threshold EAGLVBL_start tests; not a Ghidra function"
+  },
+  {
+   "row": 6124,
+   "ps2": "0x00297468",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6124: EAGL::ViewPort::GetProjectionType: 'lw v0,0x18(a0)', right after GetFrustum; not a Ghidra function"
+  },
+  {
+   "row": 6126,
+   "ps2": "0x00297478",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6126: EAGL::ViewPort::GetBackgroundColour: loads +0x1c; not a separate Ghidra function"
+  },
+  {
+   "row": 6520,
+   "ps2": "0x0026bab0",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6520: QuatMultXxQ: uses x/w of arg0 and full arg1 (not yet a Ghidra function)"
+  },
+  {
+   "row": 6521,
+   "ps2": "0x0026bb40",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6521: QuatMultQxZ: full arg0, z/w of arg1 (not yet a Ghidra function)"
+  },
+  {
+   "row": 6695,
+   "ps2": "0x002727f0",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6695: EAGLAnim::QuatF4: copies 4 floats from stream (not yet a Ghidra function)"
+  },
+  {
+   "row": 6696,
+   "ps2": "0x00272838",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6696: EAGLAnim::TranF3: copies 3 floats to out+0x10 (not yet a Ghidra function)"
+  },
+  {
+   "row": 6699,
+   "ps2": "0x00272ba8",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 6699: EAGLAnim::TranF3Interp: lerps 3 floats into out+0x10 (not yet a Ghidra function)"
+  },
+  {
+   "row": 7935,
+   "ps2": "0x002b9d68",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 7935: sceSifRegisterRpc: 7-arg prologue right after SetRpcQueue (Ghidra retail size 0x168 = 0x98+0xd0) (not yet a Ghidra function)"
+  },
+  {
+   "row": 8017,
+   "ps2": "0x002bedd0",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 8017: PutTLBEntry: syscall 0x55 stub just before SetTLBEntry; not yet a Ghidra function"
+  },
+  {
+   "row": 8018,
+   "ps2": "0x002bede0",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 8018: iPutTLBEntry: syscall -0x55 stub; not yet a Ghidra function"
+  },
+  {
+   "row": 9239,
+   "ps2": "0x00302730",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 9239: EAGL_VD_PS2_SINGLE_BUFFERD::operator new(unsigned int, char *, ...): 0x30 allocator variant after new[]; not yet a Ghidra function"
+  },
+  {
+   "row": 9240,
+   "ps2": "0x00302760",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 9240: EAGL_VD_PS2_SINGLE_BUFFERD::operator new[](unsigned int, char *, ...): twin 0x30 variant; not yet a Ghidra function"
+  },
+  {
+   "row": 9266,
+   "ps2": "0x00302cd8",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 9266: RCMP::DECODER::operator new(unsigned int, char *, int, int, int): 0x30 variant; not yet a Ghidra function"
+  },
+  {
+   "row": 9267,
+   "ps2": "0x00302d08",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 9267: RCMP::DECODER::operator new[](unsigned int, char *, ...): 0x30 twin; not yet a Ghidra function"
+  },
+  {
+   "row": 9298,
+   "ps2": "0x00303968",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 9298: PS2_SONY_CODEC_INTERNAL::operator new(unsigned int, char *, ...): 0x30 variant; not yet a Ghidra function"
+  },
+  {
+   "row": 9299,
+   "ps2": "0x00303998",
+   "verdict": "address",
+   "why": "extras review (P017): sheet row 9299: PS2_SONY_CODEC_INTERNAL::operator new[](unsigned int, char *, ...): 0x30 twin; not yet a Ghidra function"
   }
  ]
 }

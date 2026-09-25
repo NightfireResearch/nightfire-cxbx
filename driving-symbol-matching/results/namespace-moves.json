@@ -1,5 +1,5 @@
 {
- "generated": "Sat Sep 26 00:02:48 2026",
+ "generated": "Sat Sep 26 00:05:37 2026",
  "moves": [
   {
    "program": "DRIVING.ELF",
@@ -2304,6 +2304,198 @@
    "address": "0x00297440",
    "name": "EAGL::ViewPort::GetFrustum",
    "batch": "P016"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002858d8",
+   "name": "EAGL::Model::GetGeometry",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00295410",
+   "name": "EAGL::Transform::BuildRotate",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002934e0",
+   "name": "EAGL::Transform::PostMult",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00297470",
+   "name": "EAGL::ViewPort::SetBackgroundColour",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00299c38",
+   "name": "EAGL::Profiler::Profiler",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00299d68",
+   "name": "EAGL::ProfilerRegion::gBufferHead_global_ctors",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00266410",
+   "name": "EAGLAnim::FnCompoundChannel::~FnCompoundChannel",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00266518",
+   "name": "EAGLAnim::FnCompoundChannel::SetAnimMemoryMap",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0026b958",
+   "name": "EAGLAnim::FnDeltaSingleQ::GetLength",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0026d468",
+   "name": "EAGLAnim::FnDeltaQFast::~FnDeltaQFast",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002724d8",
+   "name": "EAGLAnim::RawPoseChannel::EvalFrame",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002726a8",
+   "name": "EAGLAnim::EulF3",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00276538",
+   "name": "EAGLAnim::FnKeyDeltaChan::~FnKeyDeltaChan",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002cddf8",
+   "name": "_Rb_tree<CStringKey,_USymbolTable::Namespace_*>::_M_erase",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002de938",
+   "name": "AVoice::Set_global_ctors",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002de958",
+   "name": "AVoice::Set_global_dtors",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00302790",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator_delete",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00302d38",
+   "name": "RCMP::DECODER::operator_delete",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x003039c8",
+   "name": "PS2_SONY_CODEC_INTERNAL::operator_delete",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002913b0",
+   "name": "EAGLInternal::RenderContextPrivate::EAGLVBL_end",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002913c0",
+   "name": "EAGL::RenderContextExtension::SetFrameRate",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00297468",
+   "name": "EAGL::ViewPort::GetProjectionType",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00297478",
+   "name": "EAGL::ViewPort::GetBackgroundColour",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002727f0",
+   "name": "EAGLAnim::QuatF4",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00272838",
+   "name": "EAGLAnim::TranF3",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00272ba8",
+   "name": "EAGLAnim::TranF3Interp",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00302730",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator_new",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00302760",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator_new_array",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00302cd8",
+   "name": "RCMP::DECODER::operator_new",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00302d08",
+   "name": "RCMP::DECODER::operator_new_array",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00303968",
+   "name": "PS2_SONY_CODEC_INTERNAL::operator_new",
+   "batch": "P017"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00303998",
+   "name": "PS2_SONY_CODEC_INTERNAL::operator_new_array",
+   "batch": "P017"
   }
  ]
 }
