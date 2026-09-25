@@ -3648,6 +3648,48 @@
    "ps2": "0x00303998",
    "verdict": "address",
    "why": "extras review (P017): sheet row 9299: PS2_SONY_CODEC_INTERNAL::operator new[](unsigned int, char *, ...): 0x30 twin; not yet a Ghidra function"
+  },
+  {
+   "row": 5611,
+   "ps2": "0x0024fd78",
+   "verdict": "address",
+   "why": "P018: sheet row 5611: swaps __terminate_func (0x33bfb4) and returns the old one; split out of __default_unexpected by hand"
+  },
+  {
+   "row": 7453,
+   "ps2": "0x00317dc8",
+   "verdict": "address",
+   "why": "P018: sheet row 7453: prologue directly after restorefx2 (0x190); split out of SNDMIXI_initfx2 by hand"
+  },
+  {
+   "row": 2127,
+   "ps2": "0x00167c78",
+   "verdict": "address",
+   "why": "P018: sheet row 2127: (value-min)/(1-min) past the dead zone; the leading 00 00 had been taken for padding"
+  },
+  {
+   "row": 8345,
+   "ps2": "0x002d3dd8",
+   "verdict": "address",
+   "why": "P018: sheet row 8345: solves the plane equation for y from three COORD4 points; leading 00 00 taken for padding"
+  },
+  {
+   "row": 6519,
+   "ps2": "0x0026ba08",
+   "verdict": "address",
+   "why": "P018: sheet row 6519: 4-argument quat product using x/w, y/w, z/w of its inputs; leading 00 00 taken for padding"
+  },
+  {
+   "row": 7152,
+   "ps2": "0x0025f5a8",
+   "verdict": "address",
+   "why": "P018: sheet row 7152: outcode from x, y only, after setflags3; leading 00 00 taken for padding"
+  },
+  {
+   "row": 8010,
+   "ps2": "0x002beb20",
+   "verdict": "address",
+   "why": "P018: sheet row 8010: Deci2Call(-7) after ExSend; leading 00 00 taken for padding"
   }
  ]
 }

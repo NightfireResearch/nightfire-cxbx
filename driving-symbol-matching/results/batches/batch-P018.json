@@ -1,0 +1,85 @@
+{
+ "batch": "P018",
+ "program": "DRIVING.ELF",
+ "skip_refused_creates": true,
+ "note": "Functions the user freed by hand (padding misread as the end of the previous function). 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x0024fd78",
+   "expect": "FUN_0024fd78",
+   "name": "set_terminate",
+   "sheet_name": "set_terminate(void (*)(void))",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5611: swaps __terminate_func (0x33bfb4) and returns the old one; split out of __default_unexpected by hand"
+   ]
+  },
+  {
+   "xbox": "0x00317dc8",
+   "expect": "FUN_00317dc8",
+   "name": "SNDMIXI_initfx",
+   "sheet_name": "SNDMIXI_initfx(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7453: prologue directly after restorefx2 (0x190); split out of SNDMIXI_initfx2 by hand"
+   ]
+  },
+  {
+   "xbox": "0x00167c78",
+   "expect": "(none)",
+   "name": "InputDevice::DeadZoneScale",
+   "sheet_name": "InputDevice::DeadZoneScale(float &, float, float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2127: (value-min)/(1-min) past the dead zone; the leading 00 00 had been taken for padding"
+   ]
+  },
+  {
+   "xbox": "0x002d3dd8",
+   "expect": "(none)",
+   "name": "CalcPlaneY",
+   "sheet_name": "CalcPlaneY(COORD4 *, COORD4 *, COORD4 *)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8345: solves the plane equation for y from three COORD4 points; leading 00 00 taken for padding"
+   ]
+  },
+  {
+   "xbox": "0x0026ba08",
+   "expect": "(none)",
+   "name": "QuatMultXxYxZ",
+   "sheet_name": "QuatMultXxYxZ(COORD4 &, COORD4 &, COORD4 &, COORD4 &)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6519: 4-argument quat product using x/w, y/w, z/w of its inputs; leading 00 00 taken for padding"
+   ]
+  },
+  {
+   "xbox": "0x0025f5a8",
+   "expect": "(none)",
+   "name": "CLIP_setflags2",
+   "sheet_name": "CLIP_setflags2",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7152: outcode from x, y only, after setflags3; leading 00 00 taken for padding"
+   ]
+  },
+  {
+   "xbox": "0x002beb20",
+   "expect": "(none)",
+   "name": "sceDeci2ExReqSend",
+   "sheet_name": "sceDeci2ExReqSend",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8010: Deci2Call(-7) after ExSend; leading 00 00 taken for padding"
+   ]
+  }
+ ]
+}
