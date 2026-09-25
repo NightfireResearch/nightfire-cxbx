@@ -49,9 +49,18 @@ Setup: `pip install openpyxl`, then
 - Sheet: 12,190 symbols, names cut at 63 characters, sparse `.obj` markers. Colour is on the PS2 address
   column. A green row without an address was named in Ghidra but not copied back; `lib/index.py` recovers
   those addresses by name, within the neighbouring rows' addresses.
-- PS2 infill accuracy (`validate_infill.py`, 30% of known addresses hidden, 5 trials): equal-count modes
-  99.8% ("exact") and 99.9% ("count"); **exact-run 94%, and 78% inside runs of equal sizes**. Exact-run is a
-  hint only: names resting on it need a body comparison or the slot-order check before a batch takes them.
+- PS2 infill accuracy (`validate_infill.py`, 30% of known addresses hidden, 5 trials): "exact" 99.8%,
+  "count" 99.9%, "exact-run" 99.4% (91% inside runs of equal sizes). It was 94%/78% until two fixes:
+  "global constructors keyed to" rows are real functions and must stay in the walk, and a window whose retail
+  span is longer than its sheet span (or under 60% of it) straddles a linker discontinuity and is skipped. The
+  sheet lists EA's sound library twice. Exact-run and count-only names still need a second check before a
+  batch takes them.
+- Infill conflicts with existing PS2 names are settled in `results/ps2-name-resolutions.json` (the index
+  reads it): "sheet" means the same function under another name, "reject"/"open" means don't place it.
+- Sheet names are cut at 63 characters: 1,122 rows. Where the cut falls in the argument list the name is
+  whole; where it falls in the name, `sheet.complete_name` completes constructors and destructors from the
+  class, and the rest (242, mostly templates) are never proposed. Signatures from cut rows will need their
+  arguments from the PS2 prototype.
   68% of functions keep exactly the same size between the symbol build and retail; the ~12% shrink is
   concentrated in the rest.
 - A sheet size can include static functions the symbol file doesn't list (`deleteSysFiles`).

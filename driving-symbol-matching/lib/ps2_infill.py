@@ -7,12 +7,17 @@ one, in order ("exact"). If the counts are equal but some sizes differ, the mapp
 distance A->next function), so a sheet size that swallows unlisted static functions (deleteSysFiles) breaks
 the run instead of shifting it.
 
+A window whose retail span is longer than its sheet span, or under 60% of it, straddles a linker
+discontinuity (the sheet lists EA's sound library twice) and is skipped.
+
 Rows are the sheet's function rows only; data symbols (vtables, type_info nodes) are skipped.
 """
 
 import bisect
 
-DATA_WORDS = (" virtual table", " type_info node", "global constructors keyed to", "global destructors keyed to")
+# Data symbols. "global constructors/destructors keyed to X" are real functions (GCC static initialisers)
+# and must stay in, or a walk past one shifts every name after it.
+DATA_WORDS = (" virtual table", " type_info node")
 
 
 def is_function_row(r):
@@ -30,6 +35,13 @@ def infill(ix):
         ia, ib = idx[ka], idx[kb]
         a, b = rows[ia]["ps2"], rows[ib]["ps2"]
         if b <= a:
+            continue
+        # The two known rows must bound one stretch of code, not straddle a place where the linker put
+        # things in a different order: retail can be smaller than the symbol build, never larger, and not
+        # wildly smaller.
+        span_sheet = rows[ib]["sym"] - rows[ia]["sym"]
+        span_retail = b - a
+        if not (0.6 * span_sheet - 0x100 <= span_retail <= span_sheet):
             continue
         between_rows = idx[ka + 1:kb]
         if not between_rows:

@@ -88,7 +88,7 @@ def features(program, address):
 
 
 def decompile(program, address):
-    return get_json("decompile_function", program=program, address=f"0x{address:x}")["result"]
+    return get("decompile_function", program=program, address=f"0x{address:x}")
 
 
 def qualified_names(program):

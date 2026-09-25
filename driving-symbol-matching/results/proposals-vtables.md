@@ -1,8 +1,8 @@
-# Proposals from vtables (87 pairs)
+# Proposals from vtables (86 pairs)
 
-Outcomes: propose 144, confirmed 43, propose (create function) 35, conflict 17, stub 8
+Outcomes: propose 143, confirmed 41, propose (create function) 32, conflict 17, stub 9
 
-Pairs skipped because two PS2 vtables claim one Xbox vtable:
+Skipped (two PS2 vtables claiming one Xbox vtable, or a sheet name cut short):
 
 - PBondCar virtual table: Xbox vtable 0x0018f580 is also paired with PTank virtual table
 - PTank virtual table: Xbox vtable 0x0018f580 is also paired with PBondCar virtual table
@@ -29,7 +29,7 @@ Pairs skipped because two PS2 vtables claim one Xbox vtable:
 | 001008e0 | EAGLAnim::FnDeltaF3::~FnDeltaF3 | EAGLAnim::FnDeltaF3::scalar_deleting_destructor |  | sheet | EAGLAnim::FnDeltaF3 slot 0 (PS2 00270008, row 6624, sheet); vtable slot 0 on MSVC is the scalar deleting destructor |
 | 00122550 | AStream::~AStream | AStream::scalar_deleting_destructor |  | sheet | AStream slot 0 (PS2 002e8c00, row 8790, sheet); vtable slot 0 on MSVC is the scalar deleting destructor |
 
-## propose (create function) (35)
+## propose (create function) (32)
 
 | Xbox | now | proposed | also (folded) | weakest PS2 source | evidence |
 |---|---|---|---|---|---|
@@ -55,21 +55,18 @@ Pairs skipped because two PS2 vtables claim one Xbox vtable:
 | 000a8470 | (no function) | RWater::Kill |  | sheet | RWater slot 2 (PS2 001f0ad8, row 4288, sheet) |
 | 000a9eb0 | (no function) | RGlareManager::Kill |  | sheet | RGlareManager slot 2 (PS2 001f2948, row 4308, sheet) |
 | 000a9ed0 | (no function) | RGlareManager::Reset |  | ghidra | RGlareManager slot 1 (PS2 001f2990, row 4311, ghidra) |
-| 000fe2b0 | (no function) | EAGLAnim::FnDeltaF1::Eval |  | infill-count | EAGLAnim::FnDeltaF1 slot 3 (PS2 00271830, row 6648, infill-count) |
-| 000feaa0 | (no function) | EAGLAnim::FnDeltaF1::EvalWeights |  | infill-count | EAGLAnim::FnDeltaF1 slot 10 (PS2 00271860, row 6649, infill-count) |
-| 000feac0 | (no function) | EAGLAnim::FnDeltaF1::EvalVel2D |  | infill-count | EAGLAnim::FnDeltaF1 slot 8 (PS2 00271890, row 6650, infill-count) |
 | 000febd0 | (no function) | EAGLAnim::FnDeltaF1::EvalSQT |  | infill-count | EAGLAnim::FnDeltaF1 slot 6 (PS2 002701b8, row 6630, infill-count) |
 | 001051a0 | (no function) | EAGLAnim::FnRunBlender::Eval |  | sheet | EAGLAnim::FnRunBlender slot 3 (PS2 00279398, row 6881, sheet) |
 | 00105780 | (no function) | EAGLAnim::FnRunBlender::EvalPhase |  | infill-exact-run | EAGLAnim::FnRunBlender slot 7 (PS2 00279498, row 6884, infill-exact-run) |
 | 00129b00 | (no function) | AUltraLite::Play |  | infill-exact-run | AUltraLite slot 3 (PS2 002e3c40, row 8743, infill-exact-run) |
 | 00129cd0 | (no function) | AUltraLite::PlayMotor |  | infill-exact-run | AUltraLite slot 9 (PS2 002e3c90, row 8744, infill-exact-run) |
 | 0012b540 | (no function) | ASnowMobile::Play |  | infill-exact-run | ASnowMobile slot 3 (PS2 002edd88, row 8870, infill-exact-run) |
-| 0012bb60 | (no function) | ASubmersible::SetCreakLevel |  | infill-exact-run | ASubmersible slot 9 (PS2 002e8650, row 8783, infill-exact-run) |
+| 0012bb60 | (no function) | ASubmersible::SetCreakLevel |  | infill-exact | ASubmersible slot 9 (PS2 002e8650, row 8783, infill-exact) |
 | 0012c640 | (no function) | APlayerTank::Play |  | infill-exact-run | APlayerTank slot 3 (PS2 002f1000, row 8921, infill-exact-run) |
 | 0012c930 | (no function) | AHelicopter::PlayLanding |  | infill-exact | AHelicopter slot 4 (PS2 002f6900, row 9010, infill-exact) |
 | 0012c950 | (no function) | AHelicopter::Play |  | infill-exact | AHelicopter slot 3 (PS2 002f6938, row 9011, infill-exact) |
 
-## propose (144)
+## propose (143)
 
 | Xbox | now | proposed | also (folded) | weakest PS2 source | evidence |
 |---|---|---|---|---|---|
@@ -190,11 +187,10 @@ Pairs skipped because two PS2 vtables claim one Xbox vtable:
 | 000ff2b0 | FUN_000ff2b0 | EAGLAnim::FnDeltaF3::Eval |  | infill-count | EAGLAnim::FnDeltaF3 slot 3 (PS2 00270128, row 6627, infill-count) |
 | 000ffce0 | FUN_000ffce0 | EAGLAnim::FnDeltaF3::EvalWeights |  | infill-count | EAGLAnim::FnDeltaF3 slot 10 (PS2 00270158, row 6628, infill-count) |
 | 000ffd00 | FUN_000ffd00 | EAGLAnim::FnDeltaF3::EvalVel2D |  | infill-count | EAGLAnim::FnDeltaF3 slot 8 (PS2 00270188, row 6629, infill-count) |
-| 00100880 | FUN_00100880 | EAGLAnim::FnDeltaF3::SetAnimMemoryMap | EAGLAnim::FnDeltaF1::SetAnimMemoryMap | infill-count | EAGLAnim::FnDeltaF3 slot 15 (PS2 002700d0, row 6625, infill-count); EAGLAnim::FnDeltaF1 slot 15 (PS2 002717d8, row 6646, infill-count) |
-| 001008a0 | FUN_001008a0 | EAGLAnim::FnDeltaF3::GetLength | EAGLAnim::FnDeltaF1::GetLength | infill-count | EAGLAnim::FnDeltaF3 slot 4 (PS2 002700e8, row 6626, infill-count); EAGLAnim::FnDeltaF1 slot 4 (PS2 002717f0, row 6647, infill-count) |
+| 00100880 | FUN_00100880 | EAGLAnim::FnDeltaF3::SetAnimMemoryMap |  | infill-count | EAGLAnim::FnDeltaF3 slot 15 (PS2 002700d0, row 6625, infill-count) |
+| 001008a0 | FUN_001008a0 | EAGLAnim::FnDeltaF3::GetLength |  | infill-count | EAGLAnim::FnDeltaF3 slot 4 (PS2 002700e8, row 6626, infill-count) |
 | 00100910 | FUN_00100910 | EAGLAnim::FnDeltaF3::~FnDeltaF3 |  | sheet | called by EAGLAnim::FnDeltaF3::scalar_deleting_destructor (0x001008e0) and stores EAGLAnim::FnDeltaF3's vtable |
 | 00101f00 | FUN_00101f00 | EAGLAnim::FnDeltaSingleQ::InitBuffersAsRequired |  | infill-exact-run | EAGLAnim::FnDeltaSingleQ slot 0 (PS2 0026b368, row 6514, infill-exact-run) |
-| 001032b0 | FUN_001032b0 | EAGLAnim::FnDeltaQFast::InitBuffers |  | infill-exact-run | EAGLAnim::FnDeltaQFast slot 0 (PS2 0026d468, row 6546, infill-exact-run) |
 | 0011b650 | FUN_0011b650 | USymbolTable::scalar_deleting_destructor |  | sheet | USymbolTable slot 0 (PS2 002ccfa8, row 8199, sheet); vtable slot 0 on MSVC is the scalar deleting destructor |
 | 0011c6f0 | FUN_0011c6f0 | ABaseSound::~ABaseSound |  | ghidra | called by ABaseSound::scalar_deleting_destructor (0x0001c090) and stores ABaseSound's vtable |
 | 0011dee0 | FUN_0011dee0 | AMenuSoundPriv::Play |  | sheet | AMenuSoundPriv slot 3 (PS2 002f4918, row 8979, sheet) |
@@ -218,20 +214,21 @@ Pairs skipped because two PS2 vtables claim one Xbox vtable:
 | 0012ffb0 | FUN_0012ffb0 | ARaceEngine::Play |  | sheet | ARaceEngine slot 0 (PS2 002ff320, row 9178, sheet) |
 | 001306b0 | FUN_001306b0 | ARaceEngine::scalar_deleting_destructor |  | sheet | ARaceEngine slot 1 (PS2 002ff998, row 9179, sheet); vtable slot 0 on MSVC is the scalar deleting destructor |
 
-## stub (8)
+## stub (9)
 
 | Xbox | now | proposed | also (folded) | weakest PS2 source | evidence |
 |---|---|---|---|---|---|
 | 00015770 | FUN_00015770 | AICharacter::PlayZoneInjuryAnim | EAGLAnim::FnAnim::Eval, ASceneObj::PlayLanding | infill-exact-run | AICharacterBond slot 6 (PS2 00119138, row 377, infill-exact-run); AICharacterEnemyDriver slot 6 (PS2 00119138, row 377, infill-exact-run); AICharacterPassenger slot 6 (PS2 00119138, row 377, infill-exact-run) ... |
 | 00017550 | dummyNullFunction | PhysicsObject::SetInShock | RSceneObj::SetViewDrawList, RSceneObj::TransformToWorldSpace, RSceneObj::TransformPointToWorldSpace, RSceneObj::TransformMatrixToWorldSpace +2 | infill-exact-run | Human slot 1 (PS2 00195938, row 2710, ghidra); Missile slot 1 (PS2 00195938, row 2710, ghidra); Newton slot 1 (PS2 00195938, row 2710, ghidra) ... |
 | 0001c080 | Generic_FuncReturnsFalse | AICharacter::IsTooFarAway | AUltraLite::IsTracked, ASceneObj::IsStillActive, ASceneObj::IsTracked, ASceneObj::IsAirborne +1 | infill-exact-run | AICharacterBond slot 31 (PS2 00119850, row 444, infill-exact); AICharacterEnemyDriver slot 31 (PS2 00119850, row 444, infill-exact); AICharacterPassenger slot 31 (PS2 00119850, row 444, infill-exact) ... |
-| 000b98f0 | StubError | AUltraLite::IsAirborne | ASnowMobile::IsTracked, APlayerTank::IsTracked, AMenuSoundPriv::IsOneShot | infill-exact-run | AUltraLite slot 8 (PS2 002e48e8, row 8747, infill-exact-run); ASnowMobile slot 7 (PS2 002ef6a8, row 8874, infill-exact-run); APlayerTank slot 7 (PS2 002f13e0, row 8924, infill-exact-run) ... |
+| 00097a90 | PhysicsObject::ComputeImpulse | PhysicsObject::ComputeImpulse | RWorldCamera::CameraInputCallback | infill-exact-run | Human slot 6 (PS2 00195970, row 2713, ghidra); Missile slot 6 (PS2 00195970, row 2713, ghidra); Newton slot 6 (PS2 00195970, row 2713, ghidra) ... |
+| 000b98f0 | StubError | AUltraLite::IsAirborne | ASnowMobile::IsTracked, APlayerTank::IsTracked, AMenuSoundPriv::IsOneShot | infill-count | AUltraLite slot 8 (PS2 002e48e8, row 8747, infill-exact); ASnowMobile slot 7 (PS2 002ef6a8, row 8874, infill-count); APlayerTank slot 7 (PS2 002f13e0, row 8924, infill-exact) ... |
 | 000d3580 | dummyNullFunction | AICharacter::DoWalking | AICharacter::DoWandering, AICharacter::DoAvoiding, AICharacter::DoStartled, AICharacter::DoDodging +40 | infill-count | AICharacterBond slot 10 (PS2 001197a8, row 423, infill-exact); AICharacterBond slot 11 (PS2 001197b0, row 424, infill-exact); AICharacterBond slot 12 (PS2 001197b8, row 425, infill-exact) ... |
 | 000f70e0 | FUN_000f70e0 | EAGLAnim::FnAnim::FindMatchTime | EAGLAnim::FnAnim::EvalPhase, EAGLAnim::FnAnim::EvalVel2D, EAGLAnim::FnAnim::EvalWeights, EAGLAnim::FnAnim::EvalState | infill-exact-run | EAGLAnim::FnPoseMirror slot 5 (PS2 0026dfd8, row 6588, infill-exact-run); EAGLAnim::FnPoseMirror slot 7 (PS2 0026dfe8, row 6590, infill-exact-run); EAGLAnim::FnPoseMirror slot 8 (PS2 0026dff0, row 6591, infill-exact-run) ... |
 | 000f7310 | FUN_000f7310 | EAGLAnim::FnAnim::EvalSQT | EAGLAnim::FnAnim::FindTime | infill-exact-run | EAGLAnim::FnPoseMirror slot 12 (PS2 0026e010, row 6595, infill-exact-run); EAGLAnim::FnRawLinearChannel slot 6 (PS2 0026dfe0, row 6589, infill-exact-run); EAGLAnim::FnRawLinearChannel slot 12 (PS2 0026e010, row 6595, infill-exact-run) ... |
 | 000f7330 | dummyGetNullValue | AICharacter::GetVehiclePtr | EAGLAnim::FnAnim::GetPhaseChan | infill-exact-run | AICharacterBond slot 3 (PS2 001196c8, row 404, ghidra); AICharacterEnemyDriver slot 3 (PS2 001196c8, row 404, ghidra); AICharacterPassenger slot 3 (PS2 001196c8, row 404, ghidra) ... |
 
-## confirmed (43)
+## confirmed (41)
 
 | Xbox | now | proposed | also (folded) | weakest PS2 source | evidence |
 |---|---|---|---|---|---|
@@ -264,15 +261,13 @@ Pairs skipped because two PS2 vtables claim one Xbox vtable:
 | 000955b0 | RVehicle::SetViewDrawList | RVehicle::SetViewDrawList |  | sheet | RVehicle slot 1 (PS2 001d2618, row 3698, sheet) |
 | 000955d0 | RVehicle::PostLoad | RVehicle::PostLoad |  | sheet | RVehicle slot 17 (PS2 001d2648, row 3699, sheet) |
 | 000965e0 | RVehicle::Render | RVehicle::Render |  | sheet | RVehicle slot 2 (PS2 001d35d8, row 3717, sheet) |
-| 00097a90 | PhysicsObject::ComputeImpulse | PhysicsObject::ComputeImpulse |  | ghidra | Human slot 6 (PS2 00195970, row 2713, ghidra); Missile slot 6 (PS2 00195970, row 2713, ghidra); Newton slot 6 (PS2 00195970, row 2713, ghidra) ... |
 | 00097ee0 | RWorldCamera::RestartCamera | RWorldCamera::RestartCamera |  | sheet | RWorldCamera slot 4 (PS2 001d5538, row 3793, sheet) |
 | 000dc420 | GHud::~GHud | GHud::~GHud |  | sheet | called by GHud::scalar_deleting_destructor (0x000e00d0) and stores GHud's vtable |
 | 000e3730 | GSubtitles::~GSubtitles | GSubtitles::~GSubtitles |  | sheet | called by GSubtitles::scalar_deleting_destructor (0x000e3ad0) and stores GSubtitles's vtable |
 | 000faab0 | EAGLAnim::FnAnimMemoryMap::SetAnimMemoryMap | EAGLAnim::FnAnimMemoryMap::SetAnimMemoryMap |  | ghidra | EAGLAnim::FnRawLinearChannel slot 15 (PS2 0026dd48, row 6554, ghidra); EAGLAnim::FnRawStateChan slot 15 (PS2 0026dd48, row 6554, ghidra); EAGLAnim::FnAnimMemoryMap slot 15 (PS2 0026dd48, row 6554, ghidra) |
 | 000faae0 | EAGLAnim::FnAnimMemoryMap::GetTargetCheckSum | EAGLAnim::FnAnimMemoryMap::GetTargetCheckSum |  | ghidra | EAGLAnim::FnRawLinearChannel slot 1 (PS2 0026dd60, row 6557, ghidra); EAGLAnim::FnRawEventChannel slot 1 (PS2 0026dd60, row 6557, ghidra); EAGLAnim::FnRawStateChan slot 1 (PS2 0026dd60, row 6557, ghidra) ... |
-| 00117e40 | UGroup::Processor::StartGroup | UGroup::Processor::StartGroup |  | infill-exact-run | CARP::TagResolver slot 0 (PS2 002dc150, row 8560, infill-exact-run); CARP::SymbolicResolver slot 0 (PS2 002dc150, row 8560, infill-exact-run) |
+| 00117e40 | UGroup::Processor::StartGroup | UGroup::Processor::StartGroup |  | infill-exact-run | CARP::SymbolicResolver slot 0 (PS2 002dc150, row 8560, infill-exact-run) |
 | 00118b40 | CARP::SymbolicResolver::ProcessData | CARP::SymbolicResolver::ProcessData |  | sheet | CARP::SymbolicResolver slot 1 (PS2 002dc1b0, row 8562, sheet) |
-| 00118ff0 | CARP::TagResolver::ProcessData | CARP::TagResolver::ProcessData |  | infill-exact-run | CARP::TagResolver slot 1 (PS2 002dc460, row 8564, infill-exact-run) |
 | 0011c710 | ABaseSound::GetName | ABaseSound::GetName |  | ghidra | AVehicle slot 2 (PS2 002fcb80, row 9109, ghidra); AUltraLite slot 2 (PS2 002fcb80, row 9109, ghidra); AStream slot 2 (PS2 002fcb80, row 9109, ghidra) ... |
 | 0011f9b0 | AVehicle::Play | AVehicle::Play |  | sheet | AVehicle slot 3 (PS2 002e1768, row 8690, sheet) |
 | 00122580 | AStream::Play | AStream::Play |  | ghidra | AStream slot 3 (PS2 002e8c70, row 8791, ghidra) |

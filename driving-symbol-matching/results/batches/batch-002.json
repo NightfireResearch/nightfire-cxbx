@@ -1,6 +1,6 @@
 {
  "batch": "002",
- "note": "DRAFT for review: Xbox names from certain vtable pairs. Held back: conflicts, count-only and exact-run PS2 infill (exact-run measured 94% right, 78% in equal-size runs), duplicate targets.",
+ "note": "DRAFT for review: Xbox names from certain vtable pairs. Held back: conflicts, count-only and exact-run PS2 infill, duplicate targets.",
  "items": [
   {
    "xbox": "0x00011100",
@@ -1222,6 +1222,16 @@
    "evidence": [
     "AUltraLite slot 0 (PS2 002e3948, row 8742, sheet)",
     "vtable slot 0 on MSVC is the scalar deleting destructor"
+   ]
+  },
+  {
+   "xbox": "0x0012bb60",
+   "expect": "(none)",
+   "name": "ASubmersible::SetCreakLevel",
+   "also": [],
+   "create": true,
+   "evidence": [
+    "ASubmersible slot 9 (PS2 002e8650, row 8783, infill-exact)"
    ]
   },
   {

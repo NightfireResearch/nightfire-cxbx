@@ -84,6 +84,25 @@ def load():
         return json.load(f)
 
 
+def complete_name(name):
+    """The sheet name without its argument list, or None if the 63-character cut fell inside the name itself.
+
+    A cut constructor or destructor is completed from its class ('A::AimedAnim' -> 'A::A' when the stub is a
+    prefix of the class name); any other name cut before its '(' is incomplete."""
+    if len(name) < 63 or "(" in name:
+        return base_name(name)
+    if "<" in name:
+        return None  # a template cut short: nothing reliable to complete it from
+    if "::" in name:
+        cls, meth = name.rsplit("::", 1)
+        short = cls.split("::")[-1]
+        if meth and short.startswith(meth):
+            return f"{cls}::{short}"
+        if meth.startswith("~") and short.startswith(meth[1:]):
+            return f"{cls}::~{short}"
+    return None
+
+
 def base_name(name):
     """'Class::Method(args' -> 'Class::Method', the part a Ghidra function name holds."""
     return name.split("(")[0].strip()

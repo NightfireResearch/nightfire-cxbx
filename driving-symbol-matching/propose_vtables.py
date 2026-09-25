@@ -23,7 +23,7 @@ import os
 import sys
 from collections import defaultdict
 
-from lib import ghidra_ro as g
+from lib import ghidra_ro as g, sheet
 from lib.index import Index, body_size, key
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -37,8 +37,9 @@ def same(have, name):
 
 
 def canonical(name):
-    """Sheet name without its argument list, spaces made Ghidra-safe: 'A::operator delete(void *' -> 'A::operator_delete'."""
-    return key(name)
+    """Sheet name without its argument list, spaces made Ghidra-safe: 'A::operator delete(void *' -> 'A::operator_delete'.
+    A constructor or destructor cut short by the sheet's 63 characters is completed from its class."""
+    return key(sheet.complete_name(name) or name)
 
 
 def main():
@@ -69,6 +70,9 @@ def main():
             ps, xs = int(ps, 16), int(xs, 16)
             r = row_by_ps2.get(ps)
             if r is None:
+                continue
+            if sheet.complete_name(r["name"]) is None:
+                skipped.append(f"{cls} slot {slot}: row {r['row']} name cut short in the sheet ({r['name']})")
                 continue
             claims[xs].append({"name": canonical(r["name"]), "full": r["name"], "row": r["row"], "ps2": ps,
                                "from": r["ps2_from"], "class": cls, "slot": slot, "vtable_ps2": p["address"],
@@ -136,7 +140,7 @@ def main():
     lines = [f"# Proposals from vtables ({len(pairs)} pairs{' incl. probable' if with_probable else ''})", "",
              "Outcomes: " + ", ".join(f"{k} {n}" for k, n in counts.most_common()), ""]
     if skipped:
-        lines += ["Pairs skipped because two PS2 vtables claim one Xbox vtable:", ""] + [f"- {s}" for s in skipped] + [""]
+        lines += ["Skipped (two PS2 vtables claiming one Xbox vtable, or a sheet name cut short):", ""] + [f"- {s}" for s in skipped] + [""]
     for outcome in ("conflict", "propose (create function)", "propose", "stub", "confirmed"):
         sel = [o for o in out if o["outcome"] == outcome]
         if not sel:

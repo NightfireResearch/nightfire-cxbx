@@ -1,6 +1,6 @@
 # Vtables: 843 Xbox (405 stored by code), 382 PS2 from the sheet (3 rejected)
 
-Confidence: probable 203, unresolved 89, certain 87
+Confidence: probable 203, unresolved 90, certain 86
 
 | PS2 vtable | row | slots | confidence | best Xbox | score | agree/clash | shape | named by ctor | runner-up score |
 |---|---|---|---|---|---|---|---|---|---|
@@ -352,7 +352,7 @@ Confidence: probable 203, unresolved 89, certain 87
 | USymbolTable (0x003c0fe0) | 11724 | 1 | certain | 0x001a2240 | 10.0 | 0/0 | 0.0 | yes | 0.0 |
 | UGroupRecursiveSort (0x003c19a8) | 11732 | 3 | unresolved | 0x0018bf48 | 2.0 | 0/0 | 1.0 |  | 0.15 |
 | UFileFind (0x003c1be0) | 11737 | 1 | unresolved | 0x001b3d78 | 0.0 | 0/0 | 0.0 |  | 0.0 |
-| CARP::TagResolver (0x003c1f58) | 11747 | 3 | certain | 0x001a20c0 | 3.95 | 2/0 | 0.98 |  | -0.01 |
+| CARP::TagResolver (0x003c1f58) | 11747 | 3 | unresolved | 0x001a20cc | 2.99 | 1/0 | 1.0 |  | 2.95 |
 | CARP::SymbolicResolver (0x003c1f80) | 11748 | 3 | certain | 0x001a20cc | 3.99 | 2/0 | 1.0 |  | -0.05 |
 | UFileHandler (0x003c7c28) | 11753 | 2 | unresolved | 0x001a3288 | 0.0 | 0/0 | 0.0 |  | 0.0 |
 | AWorldSound (0x003c2398) | 11758 | 4 | unresolved | 0x00193ae8 | 2.95 | 1/0 | 0.97 |  | 2.95 |

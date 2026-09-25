@@ -67,10 +67,22 @@ class Index:
         from lib.ps2_infill import infill
 
         self.ps2_conflicts = []
+        res_path = os.path.join(HERE, "results", "ps2-name-resolutions.json")
+        resolved = {}
+        if os.path.exists(res_path):
+            with open(res_path) as f:
+                for d in json.load(f)["resolutions"]:
+                    resolved[d["row"]] = (int(d["ps2"], 16), d["verdict"])
         taken = {r["ps2"] for r in self.rows if r["ps2"] is not None}
         for i, (a, how) in infill(self).items():
             r = self.rows[i]
             have = self.ps2[a]["qualified"]
+            verdict = resolved.get(r["row"])
+            if verdict and verdict[0] == a and verdict[1] in ("reject", "open"):
+                continue
+            if verdict and verdict[0] == a and verdict[1] == "sheet":
+                r["ps2"], r["ps2_from"] = a, "infill-" + how
+                continue
             if a in taken:
                 self.ps2_conflicts.append((r, a, how, have, "address already has a sheet row"))
             elif not have.startswith("FUN_") and not _same(have, r["name"]):
