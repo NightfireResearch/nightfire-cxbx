@@ -1,0 +1,139 @@
+{
+ "batch": "P016",
+ "program": "DRIVING.ELF",
+ "note": "Round-3 fixes: wrong existing names (two from P004/P004b), the _LoadExecPS2/LoadExecPS2 pair, and functions created at accepted addresses. 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x002b69a0",
+   "expect": "LoadExecPS2",
+   "name": "_LoadExecPS2",
+   "sheet_name": "_LoadExecPS2",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7744: the syscall stub; the sheet names it _LoadExecPS2 (as _Exit/_ExecOSD)"
+   ]
+  },
+  {
+   "xbox": "0x002be940",
+   "expect": "FUN_002be940",
+   "name": "LoadExecPS2",
+   "sheet_name": "LoadExecPS2",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8001, body review: Wrapper running the library shutdown thunk then the LoadExecPS2 syscall stub (which Ghidra already names LoadExecPS2), before Exit/ExecOSD."
+   ]
+  },
+  {
+   "xbox": "0x0024e440",
+   "expect": "maybe_float2double",
+   "name": "fptodp",
+   "sheet_name": "fptodp",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5562: __unpack_f then __make_dp: libgcc fptodp (the old name was a guess)"
+   ]
+  },
+  {
+   "xbox": "0x002b8e10",
+   "expect": "DisableDmac",
+   "name": "sceSifExitCmd",
+   "sheet_name": "sceSifExitCmd",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7920: calls DisableDmac and RemoveDmacHandler, then clears the SIF-cmd init flag; called by RunNextModule"
+   ]
+  },
+  {
+   "xbox": "0x0024f650",
+   "expect": "__get_eh_table_version",
+   "name": "__unwinding_cleanup",
+   "sheet_name": "__unwinding_cleanup",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5606: empty, called from throw_helper: libgcc's __unwinding_cleanup. Batch P004 had named it __get_eh_table_version"
+   ]
+  },
+  {
+   "xbox": "0x00304150",
+   "expect": "TRP_init",
+   "name": "slice_header",
+   "sheet_name": "slice_header(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9317: MPEG slice header parsing (quantiser_scale_code, intra_slice); the sheet size 0xae8 ends exactly at marker_bit. Batch P004b had named it TRP_init"
+   ]
+  },
+  {
+   "xbox": "0x0024f288",
+   "expect": "(none)",
+   "name": "__get_eh_table_version",
+   "sheet_name": "__get_eh_table_version",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5604: returns the eh table's version (short at +6)"
+   ]
+  },
+  {
+   "xbox": "0x0024f290",
+   "expect": "(none)",
+   "name": "__get_eh_table_language",
+   "sheet_name": "__get_eh_table_language",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5605: returns the eh table's language (short at +4)"
+   ]
+  },
+  {
+   "xbox": "0x00297440",
+   "expect": "(none)",
+   "name": "EAGL::ViewPort::GetFrustum",
+   "sheet_name": "EAGL::ViewPort::GetFrustum(float &, float &, float &, float &)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6123: copies four floats (+0x110..+0x11c) to its four out parameters"
+   ]
+  },
+  {
+   "xbox": "0x002bec28",
+   "expect": "(none)",
+   "name": "SetDebugHandler",
+   "sheet_name": "SetDebugHandler",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8015: range-checks the cause number and installs the handler (after SetTLBHandler)"
+   ]
+  },
+  {
+   "xbox": "0x002c9860",
+   "expect": "(none)",
+   "name": "scePadExitPressMode",
+   "sheet_name": "scePadExitPressMode",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8124: calls the press-mode helper with mask 0 (after EnterPressMode)"
+   ]
+  },
+  {
+   "xbox": "0x002d3dd8",
+   "expect": "(none)",
+   "name": "CalcPlaneY",
+   "sheet_name": "CalcPlaneY(COORD4 *, COORD4 *, COORD4 *)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8345: solves the plane equation for y from three COORD4 points"
+   ]
+  }
+ ]
+}

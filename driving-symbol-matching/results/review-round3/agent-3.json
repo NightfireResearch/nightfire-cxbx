@@ -1,0 +1,500 @@
+[
+ {
+  "row": 8009,
+  "ps2": "0x002beae8",
+  "verdict": "accept",
+  "why": "Deci2Call(-6, ...) between ExRecv (-5) and ExReqSend (-7); called from the tty write path"
+ },
+ {
+  "row": 8015,
+  "ps2": "0x002bec28",
+  "verdict": "accept",
+  "why": "corrected from 0x2bebc8 (that is SetTLBHandler: sets causes 1-3); 0x2bec28 takes (cause 1..13, handler), stores in table and installs VTLB/VCommon handler; sheet 0xf0 = 0x2bec28..0x2bed18 exactly; not yet a Ghidra function (inside FUN_002bebc8)"
+ },
+ {
+  "row": 8016,
+  "ps2": "0x002bed18",
+  "verdict": "accept",
+  "why": "corrected from 0x2becb0 (a syscall 0x5a stub); 0x2bed18 is exactly 0xb8, calls SetSyscall/GetEntryAddress stubs and copies handler code to kernel memory"
+ },
+ {
+  "row": 8085,
+  "ps2": "0x002c72a8",
+  "verdict": "accept",
+  "why": "libmc RPC function 6 copying unaligned head bytes of the write buffer; called by writeFile"
+ },
+ {
+  "row": 8089,
+  "ps2": "0x002c77c8",
+  "verdict": "accept",
+  "why": "libmc RPC 0xd with path, flags, max entries and table write-back (64-byte entries); called by getNumSlotsAvailable etc."
+ },
+ {
+  "row": 8097,
+  "ps2": "0x002c81a8",
+  "verdict": "accept",
+  "why": "libmc RPC 0x12 taking (port, slot, path), last before sceMtapInit; matches sceMcGetEntSpace signature"
+ },
+ {
+  "row": 8104,
+  "ps2": "0x002c8728",
+  "verdict": "accept",
+  "why": "corrected from 0x2c8790 (a libpad sceSifSetDma helper); 0x2c8728 does an RPC on the mtap client and returns the version word"
+ },
+ {
+  "row": 8106,
+  "ps2": "0x002c88a8",
+  "verdict": "accept",
+  "why": "binds padman RPC servers 0x80000100/0x80000101 and checks module version with the libpad mismatch strings"
+ },
+ {
+  "row": 8112,
+  "ps2": "0x002c8ed8",
+  "verdict": "accept",
+  "why": "corrected from 0x2c8f88 (sets reqState byte); 0x2c8ed8 returns state byte +0x70, mapping STABLE with reqState BUSY to EXECCMD"
+ },
+ {
+  "row": 8113,
+  "ps2": "0x002c8ff0",
+  "verdict": "reject",
+  "why": "body returns reqState byte +0x71 (that is scePadGetReqState, row 8114), not a state-to-string function; no IntToStr code in retail"
+ },
+ {
+  "row": 8121,
+  "ps2": "0x002c9568",
+  "verdict": "accept",
+  "why": "padman RPC command 8 with port, slot and a 6-byte align array"
+ },
+ {
+  "row": 8123,
+  "ps2": "0x002c9808",
+  "verdict": "accept",
+  "why": "calls the SetButtonInfo RPC helper with mask 0xfff (enter press mode)"
+ },
+ {
+  "row": 8124,
+  "ps2": "0x002c9860",
+  "verdict": "accept",
+  "why": "corrected from 0x2c9808 (EnterPressMode); 0x2c9860 calls the same helper with mask 0 (exit press mode); not yet a Ghidra function (inside FUN_002c9808)"
+ },
+ {
+  "row": 8140,
+  "ps2": "0x002ca1a0",
+  "verdict": "accept",
+  "why": "corrected from 0x2ca380; 0x2ca1a0 clears Status bit 0x8000 (mirror of _snProfEnableInt) and is called by snProfDisableInt"
+ },
+ {
+  "row": 8146,
+  "ps2": "0x002ca740",
+  "verdict": "accept",
+  "why": "corrected from 0x2ca760 (the static block allocator); 0x2ca740 returns memclass[x&0x3f]+0x30 like AUF MEM_tailsize, called by alloc/MEM_free/MEM_resize"
+ },
+ {
+  "row": 8213,
+  "ps2": "0x002cdcf0",
+  "verdict": "accept",
+  "why": "strlen(name)+1 into size ref, returns name: identical to AUF NameLookup"
+ },
+ {
+  "row": 8215,
+  "ps2": "0x002cde60",
+  "verdict": "accept",
+  "method": "_M_insert",
+  "why": "allocates 0x18 STL node, strcasecmp key compare, links and rebalances; called by the insert routine at 0x2ce1c8 used by AddNamespace"
+ },
+ {
+  "row": 8229,
+  "ps2": "0x002cea68",
+  "verdict": "accept",
+  "why": "FastAlloc(size, \"UCarpNamespace\")"
+ },
+ {
+  "row": 8230,
+  "ps2": "0x002cea88",
+  "verdict": "accept",
+  "why": "corrected from 0x2ceaa8 (Namespace type_info function); 0x2cea88 is FastFree(p, size) right after operator new"
+ },
+ {
+  "row": 8336,
+  "ps2": "0x002d2b00",
+  "verdict": "accept",
+  "why": "computes min/max bounds over count points (1e9 sentinels) then a sphere via sqrtf"
+ },
+ {
+  "row": 8345,
+  "ps2": "0x002d3dd8",
+  "verdict": "accept",
+  "why": "corrected from 0x2d3e30 (static init helper); 0x2d3dd8 solves plane eq for y from three COORD4 args; sheet 0x150 = 0x58 + 0xf8 static init; not yet a Ghidra function (inside FUN_002d3d58)"
+ },
+ {
+  "row": 8347,
+  "ps2": "0x002d3f60",
+  "verdict": "accept",
+  "why": "ctors-table entry calling helper(1, 0xffff)"
+ },
+ {
+  "row": 8348,
+  "ps2": "0x002d3f80",
+  "verdict": "accept",
+  "why": "dtors-table entry calling helper(0, 0xffff)"
+ },
+ {
+  "row": 8359,
+  "ps2": "0x002d4688",
+  "verdict": "accept",
+  "why": "byte-swaps members and calls PrepareBitField (0x2d8870, exact sheet size 0x170); precedes UData::UData"
+ },
+ {
+  "row": 8360,
+  "ps2": "0x002d4790",
+  "verdict": "accept",
+  "why": "identical twin calling UnprepareBitField (0x2d89e0, exact sheet size 0x208)"
+ },
+ {
+  "row": 8531,
+  "ps2": "0x002d9bd0",
+  "verdict": "accept",
+  "why": "returns value table entry (+0x2eec, keys at +0x1f4c) by index; called by DAFI_getvalue with the key index"
+ },
+ {
+  "row": 8559,
+  "ps2": "0x002dbff8",
+  "verdict": "accept",
+  "method": "_M_erase",
+  "why": "corrected from 0x2dc060 (static init of the resolver map); 0x2dbff8 is the recursive erase freeing 0x18 nodes; 0x68+0xf0 = sheet 0x158"
+ },
+ {
+  "row": 8666,
+  "ps2": "0x002de7c8",
+  "verdict": "accept",
+  "method": "clear",
+  "why": "corrected from 0x2de830 (static init); 0x2de7c8 walks the list freeing 0xc nodes and resets the sentinel; 0x68+0x108 = sheet 0x170"
+ },
+ {
+  "row": 8670,
+  "ps2": "0x002de998",
+  "verdict": "accept",
+  "why": "ctors-table entry calling helper 0x2de978(1, 0xffff)"
+ },
+ {
+  "row": 8744,
+  "ps2": "0x002e3c90",
+  "verdict": "accept",
+  "why": "vtable entry adjusting motor pitch/volume from speed and calling Play/GetVolume, directly after AUltraLite::Play"
+ },
+ {
+  "row": 8752,
+  "ps2": "0x002e5148",
+  "verdict": "accept",
+  "why": "frees three AVoice::View arrays then the object (0x1c): same shape as AUF ATurret dtor; called by ~AVehicle and ~ASentry"
+ },
+ {
+  "row": 8781,
+  "ps2": "0x002e8450",
+  "verdict": "accept",
+  "why": "occupies the GetName slot (after IsOneShot) of the ASubmersible vtable, returns this+0x210"
+ },
+ {
+  "row": 8854,
+  "ps2": "0x002ed040",
+  "verdict": "accept",
+  "why": "stores (type, callback) into the static table by id; called by the ARegisterSound ctor"
+ },
+ {
+  "row": 8855,
+  "ps2": "0x002ed060",
+  "verdict": "accept",
+  "why": "corrected from 0x2ed090 (lexicographical_compare); 0x2ed060 returns the table callback by id"
+ },
+ {
+  "row": 8856,
+  "ps2": "0x002ed078",
+  "verdict": "accept",
+  "why": "corrected from 0x2ed0f8 (lexicographical_compare_3way); 0x2ed078 returns the table type word by id"
+ },
+ {
+  "row": 8857,
+  "ps2": "0x002ed158",
+  "verdict": "accept",
+  "method": "clear",
+  "why": "list clear freeing 0xc nodes; ASoundManager::Shutdown uses it on the list of playing sounds (vtable at +0xac)"
+ },
+ {
+  "row": 8858,
+  "ps2": "0x002ed1c0",
+  "verdict": "accept",
+  "method": "clear",
+  "why": "list clear on the second ASoundManager list (Shutdown and Restart), after the ABaseSound* one"
+ },
+ {
+  "row": 8865,
+  "ps2": "0x002ed778",
+  "verdict": "accept",
+  "why": "ABaseSound::operator new(size, \"ASound\")"
+ },
+ {
+  "row": 8872,
+  "ps2": "0x002ee768",
+  "verdict": "accept",
+  "why": "called by ASnowMobile::Play, plays SFX_tiressnow carve and landing sounds; directly after PlayMotor"
+ },
+ {
+  "row": 8889,
+  "ps2": "0x002effe8",
+  "verdict": "accept",
+  "why": "corrected from 0x2f01c8 (basic_string replace); 0x2effe8 sets vtable_ASentry, ~AGun, ~ATurret, ~ASceneObj, delete 0x120"
+ },
+ {
+  "row": 8898,
+  "ps2": "0x002f0730",
+  "verdict": "accept",
+  "why": "return-0 stub in the IsStillActive vtable slot (before the overridden IsTracked/IsAirborne of AUltraLite/APlayerTank); same as AUF"
+ },
+ {
+  "row": 8899,
+  "ps2": "0x002f0738",
+  "verdict": "accept",
+  "why": "return-0 stub in the vtable slot that AUltraLite/APlayerTank override with their IsTracked"
+ },
+ {
+  "row": 8900,
+  "ps2": "0x002f0740",
+  "verdict": "accept",
+  "why": "return-0 stub in the vtable slot that AUltraLite overrides with IsAirborne"
+ },
+ {
+  "row": 8916,
+  "ps2": "0x002f0cd0",
+  "verdict": "accept",
+  "why": "GetName slot of the APlayerVehicle vtable returning an inline name buffer (this+0x210; AUF this+0x140)"
+ },
+ {
+  "row": 8922,
+  "ps2": "0x002f1128",
+  "verdict": "accept",
+  "why": "sets vtable_APlayerTank, frees View array, ~ATurret, ~AVehicle, delete 0x240: AUF shape"
+ },
+ {
+  "row": 8929,
+  "ps2": "0x002f1ae8",
+  "verdict": "accept",
+  "why": "sets vtable_APlayerHeli, frees View arrays, ~AVehicle, delete; from its vtable"
+ },
+ {
+  "row": 8939,
+  "ps2": "0x002f2a50",
+  "verdict": "accept",
+  "why": "AOneShotSound ctor shape (ABaseSound vtable, AMix::Add(name), AVoice ctor) with name as 4th arg, i.e. (int, int, char *)"
+ },
+ {
+  "row": 8944,
+  "ps2": "0x002f2c68",
+  "verdict": "accept",
+  "why": "ABaseSound::operator new(size, \"AOneShotSound\")"
+ },
+ {
+  "row": 9051,
+  "ps2": "0x002f9610",
+  "verdict": "accept",
+  "why": "deletes Priv then FastFree(this, 4) on flag; called by AFader::Remove"
+ },
+ {
+  "row": 9059,
+  "ps2": "0x002f9808",
+  "verdict": "accept",
+  "why": "forwards to AFader::Priv::Call911(*this); called by ~ECall911"
+ },
+ {
+  "row": 9060,
+  "ps2": "0x002f9828",
+  "verdict": "accept",
+  "why": "forwards to AFader::Priv::Update(*this) exactly like AUF; called by ~EAudioUpdate"
+ },
+ {
+  "row": 9083,
+  "ps2": "0x002fafb0",
+  "verdict": "accept",
+  "why": "copies the name key, finds it in the map and returns element+0x94 or 0"
+ },
+ {
+  "row": 9086,
+  "ps2": "0x002fb630",
+  "verdict": "accept",
+  "why": "finds the name; if absent inserts a new element storing the AEngine* at +0x94; then increments refcount +0x90"
+ },
+ {
+  "row": 9087,
+  "ps2": "0x002fb718",
+  "verdict": "accept",
+  "why": "walks the map for element+0x94 == pointer, decrements refcount and erases the node at zero; called by Remove"
+ },
+ {
+  "row": 9160,
+  "ps2": "0x002fd998",
+  "verdict": "accept",
+  "method": "_M_erase",
+  "why": "recursive right, walk left, FastFree 0x98 nodes; called by ~URefCounter<ABank>"
+ },
+ {
+  "row": 9168,
+  "ps2": "0x002fe2f8",
+  "verdict": "accept",
+  "why": "same RemoveReference shape as the AEngine one (refcount +0x90, pointer +0x94, erase); called by ABank Remove"
+ },
+ {
+  "row": 9175,
+  "ps2": "0x002fedd8",
+  "verdict": "accept",
+  "why": "frees the voice View array then deletes; called from ~AVehicle and ~ASnowMobile, right after AVehicleWind::Stop"
+ },
+ {
+  "row": 9227,
+  "ps2": "0x00301fe0",
+  "verdict": "accept",
+  "why": "sets vtable_EAGL_VD_PS2_SINGLE_BUFFERD, frees frame textures and TARs, releases decoder frame, sets base vtable, frees"
+ },
+ {
+  "row": 9233,
+  "ps2": "0x00302590",
+  "verdict": "accept",
+  "why": "base-class dtor: sets the VIDEO_DRIVER vtable (0x3c6f50, also set by the derived dtor) and deletes on flag"
+ },
+ {
+  "row": 9237,
+  "ps2": "0x003026b0",
+  "verdict": "accept",
+  "why": "allocator call with (size) via plaympc_alloc; identical twin of new[] at 0x3026f0, first after the type_info function as in the sheet"
+ },
+ {
+  "row": 9238,
+  "ps2": "0x003026f0",
+  "verdict": "accept",
+  "why": "identical allocator twin following operator new (0x3026b0); sizes 0x40/0x40 exact, then the (size, char *, ...) variants at 0x302730/0x302760"
+ },
+ {
+  "row": 9247,
+  "ps2": "0x00302800",
+  "verdict": "accept",
+  "why": "sets vtable_RCMP__RCMP_SYSTEM and zeroes fields; the rcmp_sys static initialiser calls it on 0x3562d0"
+ },
+ {
+  "row": 9259,
+  "ps2": "0x00302b28",
+  "verdict": "accept",
+  "why": "zeroes three fields and sets [3]=2; called by DECODER::DECODER on its embedded CODEC_IDATA member"
+ },
+ {
+  "row": 9260,
+  "ps2": "0x00302b48",
+  "verdict": "accept",
+  "why": "corrected from 0x302b60 (rcmp_sys static init helper); 0x302b48 stores four args (streamer, callback, ...) into the object; 0x18+0x48 = sheet 0x60"
+ },
+ {
+  "row": 9264,
+  "ps2": "0x00302c58",
+  "verdict": "accept",
+  "why": "allocator call via plaympc_alloc(size), first after the DECODER type_info function; twin of new[]"
+ },
+ {
+  "row": 9265,
+  "ps2": "0x00302c98",
+  "verdict": "accept",
+  "why": "identical allocator twin following DECODER operator new"
+ },
+ {
+  "row": 9276,
+  "ps2": "0x00302dc0",
+  "verdict": "accept",
+  "why": "ctors-table entry calling helper(1, 0xffff) which constructs RCMP_SYSTEM at rcmp_sys"
+ },
+ {
+  "row": 9277,
+  "ps2": "0x00302de0",
+  "verdict": "accept",
+  "why": "dtors-table entry calling helper(0, 0xffff)"
+ },
+ {
+  "row": 9278,
+  "ps2": "0x00302e00",
+  "verdict": "accept",
+  "why": "sets alloc/free hooks to MEM_allocalign/MEM_free (REAL defaults); called by PlayMPC"
+ },
+ {
+  "row": 9296,
+  "ps2": "0x003038e8",
+  "verdict": "accept",
+  "why": "allocator call via plaympc_alloc(size), first after the PS2_SONY_CODEC_INTERNAL type_info function"
+ },
+ {
+  "row": 9297,
+  "ps2": "0x00303928",
+  "verdict": "accept",
+  "why": "identical allocator twin following PS2_SONY_CODEC_INTERNAL operator new"
+ },
+ {
+  "row": 9320,
+  "ps2": "0x00304260",
+  "verdict": "reject",
+  "why": "body is the MPEG extension_and_user_data loop (0x1b5/0x1b2 start codes, extension dispatch); the TRP trap library is absent from retail"
+ },
+ {
+  "row": 9321,
+  "ps2": "0x00304260",
+  "verdict": "reject",
+  "why": "same MPEG extension parser as above, nothing to do with displaying trap registers"
+ },
+ {
+  "row": 9325,
+  "ps2": "0x00304bf0",
+  "verdict": "reject",
+  "why": "MPEG extra_bit_information (count Get_Bits1 flags, flush 8); TRP code absent from retail"
+ },
+ {
+  "row": 9326,
+  "ps2": "0x00304c38",
+  "verdict": "reject",
+  "why": "this is marker_bit(char *) (Get_Bits(1), text ignored; row 9318), not TrpOpWriteImmS"
+ },
+ {
+  "row": 9327,
+  "ps2": "0x00304c58",
+  "verdict": "reject",
+  "why": "MPEG user_data helper calling next_start_code; TRP code absent from retail"
+ },
+ {
+  "row": 9334,
+  "ps2": "0x00304e10",
+  "verdict": "accept",
+  "why": "corrected from 0x304e18 (called by StartResize); 0x304e10 return-0 stub is called by StartDelete"
+ },
+ {
+  "row": 9335,
+  "ps2": "0x00304e18",
+  "verdict": "accept",
+  "why": "corrected from 0x304e20 (called by Resize); 0x304e18 return-0 stub is called by StartResize"
+ },
+ {
+  "row": 9336,
+  "ps2": "0x00304e20",
+  "verdict": "accept",
+  "why": "corrected from 0x304e28 (called by Delete/FileDeleteSync); 0x304e20 return-0 stub is called by Resize"
+ },
+ {
+  "row": 9633,
+  "ps2": "0x00323e98",
+  "verdict": "accept",
+  "why": "RefPack decoder: parses the 0x8000/0x100 flag header and 3/4-byte size then runs the literal/copy opcode loop into dest"
+ },
+ {
+  "row": 9637,
+  "ps2": "0x003244d0",
+  "verdict": "accept",
+  "why": "mode 0 spins while IPU_CTRL busy bit set, mode 1 returns the busy bit"
+ },
+ {
+  "row": 9660,
+  "ps2": "0x00324538",
+  "verdict": "reject",
+  "why": "row is a data variable (ActManager::fCurrentActor); candidate is IPU DMA channel-4 code (DIntr, DMAC enable, CHCR)"
+ }
+]
