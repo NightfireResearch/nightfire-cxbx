@@ -1,0 +1,1536 @@
+[
+ {
+  "window": 0,
+  "row": 60,
+  "ps2": "0x00109500",
+  "verdict": "accept",
+  "why": "Called from DrawAll; draw-actor body with GetShadowTriangle, DrawWeapons, SetWeaponsTransformToWorldSpace, same shape as AUF ActActor::Draw."
+ },
+ {
+  "window": 1,
+  "row": 118,
+  "ps2": "0x0010bf60",
+  "verdict": "accept",
+  "why": "8-byte setter storing a float (swc1 $f12) at +0x20, paired with the GetCurrent float getter that follows; sheet size 0x80 shrank in retail."
+ },
+ {
+  "window": 1,
+  "row": 119,
+  "ps2": "0x0010bf68",
+  "verdict": "accept",
+  "why": "8-byte float getter (lwc1 +0x24), exact sheet size, directly after SetTarget."
+ },
+ {
+  "window": 1,
+  "row": 120,
+  "ps2": "0x0010bf70",
+  "verdict": "accept",
+  "why": "Global ctor calling static-init helper (1,0xffff), in ctor table 0x362df4."
+ },
+ {
+  "window": 1,
+  "row": 121,
+  "ps2": "0x0010bf90",
+  "verdict": "accept",
+  "why": "Builds data\\actors\\anims\\ paths, FileLoadz, 'EAGL::DynamicLoader new', GetSymbolResolver - same as AUF BankInfo::Load."
+ },
+ {
+  "window": 1,
+  "row": 122,
+  "ps2": "0x0010c110",
+  "verdict": "accept",
+  "why": "Loops bank names with strcmp, calls BankInfo::Load and counts loaded banks; called from ActAnimationDatabase ctor."
+ },
+ {
+  "window": 1,
+  "row": 123,
+  "ps2": "0x0010c1d8",
+  "verdict": "accept",
+  "why": "Same body as AUF ActAnimationDatabase::GetAnimation (+0x440 table, ==-1 check, vtable call); the public wrapper forwards to it."
+ },
+ {
+  "window": 2,
+  "row": 126,
+  "ps2": "0x0010c5e0",
+  "verdict": "accept",
+  "why": "Public GetAnimation(int,int,**,**) forwarding *this to the private GetAnimation; called from ChangeAnimation."
+ },
+ {
+  "window": 3,
+  "row": 130,
+  "ps2": "0x0010c788",
+  "verdict": "accept",
+  "why": "FnDefaultAnimBank vtable slot (0x36403c) returning bank->count, AUF GetNumAnims same shape (offset differs). Ghidra body overruns and swallows GetAnim(int) 0x10c798 and GetAnimName(int) 0x10c7b0."
+ },
+ {
+  "window": 4,
+  "row": 220,
+  "ps2": "0x001110f0",
+  "verdict": "accept",
+  "why": "Global ctor calling the fpsManager static-init helper 0x111050 (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 5,
+  "row": 248,
+  "ps2": "0x00112c18",
+  "verdict": "accept",
+  "why": "Copies bone matrix poser->+0x100 + boneIndex*0x40 (index from the skeleton weapon-bone table) like AUF; called from Update and GetWeaponRange."
+ },
+ {
+  "window": 5,
+  "row": 249,
+  "ps2": "0x00112cc0",
+  "verdict": "accept",
+  "why": "Called from ActActor::ChangeAnimationOrigin; writes COORD3 into data+0x30, identical to AUF."
+ },
+ {
+  "window": 5,
+  "row": 250,
+  "ps2": "0x00112ce8",
+  "verdict": "accept",
+  "why": "Called from GetAnimationOrigin; reads COORD3 from data+0x30."
+ },
+ {
+  "window": 5,
+  "row": 251,
+  "ps2": "0x00112d10",
+  "verdict": "accept",
+  "why": "Called from SetAnimationOrigin; writes origin then calls CalculateFinalCorrectionMatrix."
+ },
+ {
+  "window": 5,
+  "row": 252,
+  "ps2": "0x00112d50",
+  "verdict": "accept",
+  "why": "Called from GetInitialTrOu; copies the matrix at data+0 out."
+ },
+ {
+  "window": 5,
+  "row": 253,
+  "ps2": "0x00112d80",
+  "verdict": "accept",
+  "why": "Called from SetInitialTrOu; copies matrix in then recalculates the correction matrix."
+ },
+ {
+  "window": 5,
+  "row": 254,
+  "ps2": "0x00112dc0",
+  "verdict": "accept",
+  "why": "Called from RotateActor; builds Y rotation from cos/sin(2pi*f), multiplies, recalcs (AUF Rotate)."
+ },
+ {
+  "window": 5,
+  "row": 255,
+  "ps2": "0x00112ef0",
+  "verdict": "accept",
+  "why": "Called from RotateActorX; X-axis variant of Rotate."
+ },
+ {
+  "window": 5,
+  "row": 256,
+  "ps2": "0x00113020",
+  "verdict": "accept",
+  "why": "0x48 exact; two VU0_MATRIX4_mult on poser data, called by every Set*/Rotate."
+ },
+ {
+  "window": 5,
+  "row": 257,
+  "ps2": "0x00113068",
+  "verdict": "accept",
+  "why": "0x90 exact; zeroes the Y of the forward row and renormalises (level with ground); called only from CalcSnapAndCorrectionMatrices."
+ },
+ {
+  "window": 5,
+  "row": 258,
+  "ps2": "0x001130f8",
+  "verdict": "accept",
+  "why": "Copies matrix to data, calls SnapMatrixLevelWithGround and CalculateFinalCorrectionMatrix, like AUF."
+ },
+ {
+  "window": 5,
+  "row": 259,
+  "ps2": "0x001133d0",
+  "verdict": "accept",
+  "why": "Sets mode=1, anim group, times from float*rate like AUF SetNormalAnimation."
+ },
+ {
+  "window": 5,
+  "row": 260,
+  "ps2": "0x00113430",
+  "verdict": "accept",
+  "why": "0x40 exact; calls SetNormalAnimation(grp,f) then CalcSnapAndCorrectionMatrices; called from Standard/AimedAnimationController."
+ },
+ {
+  "window": 5,
+  "row": 261,
+  "ps2": "0x00113470",
+  "verdict": "accept",
+  "why": "FastAlloc 'ActCrossFadeBlendData', builds ActAnimGroup; AUF SetupCrossFadeBlend shape."
+ },
+ {
+  "window": 5,
+  "row": 262,
+  "ps2": "0x00113760",
+  "verdict": "accept",
+  "why": "mode=1, grp, time 0, then CalcSnap; AUF SetCrossFadeBlendAnimation shape; called by the CrossFade controllers."
+ },
+ {
+  "window": 5,
+  "row": 263,
+  "ps2": "0x001137f0",
+  "verdict": "accept",
+  "why": "Picks the blend end frame, calls SetNormalAnimation then ShutdownCrossFadeBlend; called from AdvanceTime."
+ },
+ {
+  "window": 5,
+  "row": 264,
+  "ps2": "0x00113898",
+  "verdict": "accept",
+  "why": "Destroys the crossfade data's ActAnimGroup and frees the block (FastFree/vec_delete)."
+ },
+ {
+  "window": 5,
+  "row": 265,
+  "ps2": "0x00113908",
+  "verdict": "accept",
+  "why": "Five float& outputs from crossfade data +0x114/+0x118, same as AUF CalcCrossFadeTimes."
+ },
+ {
+  "window": 5,
+  "row": 266,
+  "ps2": "0x00113a38",
+  "verdict": "accept",
+  "why": "mode=3 (manual), grp, time 0, CalcSnap - AUF SetManualAnimation; called from AimedShootingAnimationController."
+ },
+ {
+  "window": 5,
+  "row": 267,
+  "ps2": "0x00113ae8",
+  "verdict": "accept",
+  "why": "Orchestrates DoMainPose, DoIK, global overrides and TransformLocalPoseToWorldPose."
+ },
+ {
+  "window": 5,
+  "row": 268,
+  "ps2": "0x00113b48",
+  "verdict": "accept",
+  "why": "Large pose builder starting with ActSkeleton::GetStillPose and BlendBones, AUF DoMainPose shape."
+ },
+ {
+  "window": 5,
+  "row": 269,
+  "ps2": "0x00114180",
+  "verdict": "accept",
+  "why": "0x68 exact; loops ActIKSolverArray::Solve."
+ },
+ {
+  "window": 5,
+  "row": 270,
+  "ps2": "0x001141e8",
+  "verdict": "accept",
+  "why": "Calls the skeleton local-to-world transform (0x262508) on poser transforms; called around IK/overrides."
+ },
+ {
+  "window": 5,
+  "row": 271,
+  "ps2": "0x00114218",
+  "verdict": "accept",
+  "why": "Calls PoseSkin-like 0x2634f8 with skeleton, transforms and the fSkinnedTransforms global, as AUF Skin; called from ActActor::Draw."
+ },
+ {
+  "window": 5,
+  "row": 272,
+  "ps2": "0x00114250",
+  "verdict": "accept",
+  "why": "Starts with the (t1==t0 && t0==0) -> -0.0001 guard and mode switch, as AUF DoEventPose; called from Update."
+ },
+ {
+  "window": 5,
+  "row": 273,
+  "ps2": "0x001143b8",
+  "verdict": "accept",
+  "why": "0x38 exact; saves time, zeroes it, runs the pose, restores - AUF DoInitialPoses; called from SetStartPosOri."
+ },
+ {
+  "window": 5,
+  "row": 274,
+  "ps2": "0x001143f0",
+  "verdict": "accept",
+  "why": "Only callee of ActActor::GetWeaponRange; poses and measures the weapon bone angle (v3angle)."
+ },
+ {
+  "window": 5,
+  "row": 275,
+  "ps2": "0x001145c0",
+  "verdict": "accept",
+  "why": "If mode!=3 advance by frame step, finish crossfade when mode==2 - AUF AdvanceTime."
+ },
+ {
+  "window": 5,
+  "row": 276,
+  "ps2": "0x001146b8",
+  "verdict": "accept",
+  "why": "0x18 exact; returns the rate*speed*scale product used as the frame step in AdvanceTime."
+ },
+ {
+  "window": 5,
+  "row": 277,
+  "ps2": "0x001146d0",
+  "verdict": "accept",
+  "why": "0x8; returns current frame (+0xc), called by AdvanceTime."
+ },
+ {
+  "window": 5,
+  "row": 278,
+  "ps2": "0x001146d8",
+  "verdict": "accept",
+  "why": "Returns total frames (+0x1c), compared against the step in AdvanceTime; order after GetCurrentFrame."
+ },
+ {
+  "window": 5,
+  "row": 279,
+  "ps2": "0x001146e0",
+  "verdict": "accept",
+  "why": "Global ctor calling the ActPoser static-init helper (1,0xffff)."
+ },
+ {
+  "window": 5,
+  "row": 280,
+  "ps2": "0x00114700",
+  "verdict": "accept",
+  "why": "Zeroes the skinned-transform buffer globals; called from ActSkeletonDatabase ctor."
+ },
+ {
+  "window": 5,
+  "row": 281,
+  "ps2": "0x00114718",
+  "verdict": "accept",
+  "why": "0x48 exact; vec_delete buffer and UnRegisterVar('EAGLAnimationBuffer'); called from ~ActSkeletonDatabase."
+ },
+ {
+  "window": 6,
+  "row": 301,
+  "ps2": "0x00115148",
+  "verdict": "accept",
+  "why": "Empty stub called from StopUsingResources; AUF StopUsingTexture is also empty."
+ },
+ {
+  "window": 6,
+  "row": 302,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Only candidate is an unreferenced empty stub at 0x115150 (not a function) - order-only match."
+ },
+ {
+  "window": 7,
+  "row": 450,
+  "ps2": "0x00119b98",
+  "verdict": "accept",
+  "why": "Copies player rigid-body matrix and position, no COORD3 output - the (int, MATRIX4&) overload; callers HandleInterrupts/UpdateRotPos."
+ },
+ {
+  "window": 7,
+  "row": 451,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Only one GetRotPos in the stretch (2-arg); the rest are unreferenced maths helpers."
+ },
+ {
+  "window": 8,
+  "row": 466,
+  "ps2": "0x0011aa10",
+  "verdict": "accept",
+  "why": "Global ctor calling the Bond-file static-init helper, ctor table 0x362e10."
+ },
+ {
+  "window": 8,
+  "row": 467,
+  "ps2": "0x0011aa30",
+  "verdict": "accept",
+  "why": "GetRigidBody of car +0x150, copies matrix+pos, no COORD3 write (2-arg overload)."
+ },
+ {
+  "window": 8,
+  "row": 468,
+  "ps2": "0x0011ab50",
+  "verdict": "accept",
+  "why": "Same plus writes rigid-body velocity to the COORD3 param (3-arg overload); WakeUp passes it as a pointer."
+ },
+ {
+  "window": 8,
+  "row": 469,
+  "ps2": "0x0011aca8",
+  "verdict": "accept",
+  "why": "Calls AICharacter ctor and installs vtable_AICharacterEnemyDriver; called from WakeUp."
+ },
+ {
+  "window": 9,
+  "row": 540,
+  "ps2": "0x0011fc80",
+  "verdict": "accept",
+  "why": "Global ctor calling static-init helper, ctor table 0x362e1c."
+ },
+ {
+  "window": 9,
+  "row": 541,
+  "ps2": "0x0011fca0",
+  "verdict": "accept",
+  "why": "2-arg GetRotPos (0x120, no COORD3 write) (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 9,
+  "row": 542,
+  "ps2": "0x0011fdc0",
+  "verdict": "accept",
+  "why": "3-arg GetRotPos (0x158, writes COORD3) (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 10,
+  "row": 558,
+  "ps2": "0x001208d8",
+  "verdict": "accept",
+  "why": "Global ctor calling static-init helper, ctor table 0x362e20."
+ },
+ {
+  "window": 10,
+  "row": 559,
+  "ps2": "0x001208f8",
+  "verdict": "accept",
+  "why": "2-arg GetRotPos (0x120) (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 10,
+  "row": 560,
+  "ps2": "0x00120a18",
+  "verdict": "accept",
+  "why": "3-arg GetRotPos (0x158, writes COORD3) (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 11,
+  "row": 585,
+  "ps2": "0x00122210",
+  "verdict": "accept",
+  "why": "Not a function yet: 8 bytes after the type_info fn, 'jr ra; lw v0,0x150(a0)' returns the car pointer the GetRotPos pair uses."
+ },
+ {
+  "window": 11,
+  "row": 586,
+  "ps2": "0x00122218",
+  "verdict": "accept",
+  "why": "Global ctor calling static-init helper, ctor table 0x362e24."
+ },
+ {
+  "window": 11,
+  "row": 587,
+  "ps2": "0x00122238",
+  "verdict": "accept",
+  "why": "2-arg GetRotPos (car +0x150 rigid body, no COORD3)."
+ },
+ {
+  "window": 11,
+  "row": 588,
+  "ps2": "0x00122358",
+  "verdict": "accept",
+  "why": "3-arg GetRotPos (writes COORD3); WakeUp passes it as a pointer."
+ },
+ {
+  "window": 12,
+  "row": 612,
+  "ps2": "0x001237d0",
+  "verdict": "accept",
+  "why": "Static: returns fgHandObj->+0x160 or 0.0; called from DrawCrossHairs."
+ },
+ {
+  "window": 12,
+  "row": 613,
+  "ps2": "0x001237f0",
+  "verdict": "accept",
+  "why": "Not a function yet (inside 0x1237d0 body): 0x88 exact, copies a 64-byte matrix like AUF and like the placed 3-arg sibling at 0x123878."
+ },
+ {
+  "window": 13,
+  "row": 637,
+  "ps2": "0x00124f30",
+  "verdict": "accept",
+  "why": "Not a function yet: static, stores the bool arg to global 0x3276e0; 0x10 exact."
+ },
+ {
+  "window": 13,
+  "row": 638,
+  "ps2": "0x00124f40",
+  "verdict": "accept",
+  "why": "Not a function yet: static, returns fgHandObj (0x327670, the global GetAimFraction reads); 0x10 exact."
+ },
+ {
+  "window": 13,
+  "row": 639,
+  "ps2": "0x00124f50",
+  "verdict": "accept",
+  "why": "Not a function yet: 8-byte member getter (+0x164) between Get and the global ctor."
+ },
+ {
+  "window": 13,
+  "row": 640,
+  "ps2": "0x00124f58",
+  "verdict": "accept",
+  "why": "Global ctor calling the hands static-init helper (1,0xffff); Ghidra body also swallows the maths helpers the sheet size includes."
+ },
+ {
+  "window": 13,
+  "row": 642,
+  "ps2": "0x001251b0",
+  "verdict": "accept",
+  "why": "Player rigid-body matrix copy, no COORD3 write (2-arg); caller UpdateRotPos."
+ },
+ {
+  "window": 13,
+  "row": 643,
+  "ps2": "0x001252d8",
+  "verdict": "accept",
+  "why": "Writes COORD3 as well (3-arg); Init passes it as a pointer."
+ },
+ {
+  "window": 14,
+  "row": 713,
+  "ps2": "0x0012ab00",
+  "verdict": "accept",
+  "why": "Walks the circular list freeing 0x10-byte nodes then resets the head - list clear; called from Shutdown."
+ },
+ {
+  "window": 15,
+  "row": 752,
+  "ps2": "0x0012dd60",
+  "verdict": "accept",
+  "why": "kLowestFreq global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 16,
+  "row": 802,
+  "ps2": "0x00137e28",
+  "verdict": "accept",
+  "method": "basic_string<char, string_char_traits<char>, chunky_alloc<false, 0> >::Rep::clone(void)",
+  "why": "Rounds len+1 up to a power of two, FastAlloc 'STL', ref=1, memcpy data, sets len, returns data - Rep::create + copy = Rep::clone."
+ },
+ {
+  "window": 17,
+  "row": 896,
+  "ps2": "0x0013bdc0",
+  "verdict": "accept",
+  "why": "Not a function yet: lw +0x70 getter, paired with the setter 8 bytes on."
+ },
+ {
+  "window": 17,
+  "row": 897,
+  "ps2": "0x0013bdc8",
+  "verdict": "accept",
+  "why": "Not a function yet: sw +0x70 setter."
+ },
+ {
+  "window": 17,
+  "row": 898,
+  "ps2": "0x0013bdd0",
+  "verdict": "accept",
+  "why": "Not a function yet: lw +0x74 getter."
+ },
+ {
+  "window": 17,
+  "row": 899,
+  "ps2": "0x0013bdd8",
+  "verdict": "accept",
+  "why": "Not a function yet: sw +0x74 setter."
+ },
+ {
+  "window": 17,
+  "row": 900,
+  "ps2": "0x0013bde0",
+  "verdict": "accept",
+  "why": "Not a function yet: lw +0x78 getter."
+ },
+ {
+  "window": 17,
+  "row": 901,
+  "ps2": "0x0013bde8",
+  "verdict": "accept",
+  "why": "Not a function yet: sw +0x78 setter."
+ },
+ {
+  "window": 17,
+  "row": 902,
+  "ps2": "0x0013bdf0",
+  "verdict": "accept",
+  "why": "Not a function yet: lw +0x7c getter."
+ },
+ {
+  "window": 17,
+  "row": 903,
+  "ps2": "0x0013bdf8",
+  "verdict": "accept",
+  "why": "Not a function yet: sw +0x7c setter."
+ },
+ {
+  "window": 17,
+  "row": 904,
+  "ps2": "0x0013be00",
+  "verdict": "accept",
+  "why": "0x20 exact; forwards to AIVehicle::GetPhysicsObject (the sim heli)."
+ },
+ {
+  "window": 17,
+  "row": 905,
+  "ps2": "0x0013be20",
+  "verdict": "accept",
+  "why": "0x20; forwards to AIVehicle::SetPhysicsObject. Ghidra body (0x88) swallows the accessors after it."
+ },
+ {
+  "window": 17,
+  "row": 906,
+  "ps2": "0x0013be40",
+  "verdict": "accept",
+  "why": "Not a function yet: 0x20, copies a COORD3 into +0x90."
+ },
+ {
+  "window": 17,
+  "row": 907,
+  "ps2": "0x0013be60",
+  "verdict": "accept",
+  "why": "Not a function yet: 0x20, copies a COORD3 into +0xa0."
+ },
+ {
+  "window": 17,
+  "row": 908,
+  "ps2": "0x0013be80",
+  "verdict": "accept",
+  "why": "Not a function yet: returns this+0x110."
+ },
+ {
+  "window": 17,
+  "row": 909,
+  "ps2": "0x0013be88",
+  "verdict": "accept",
+  "why": "Not a function yet: returns this+0xf0."
+ },
+ {
+  "window": 17,
+  "row": 910,
+  "ps2": "0x0013be90",
+  "verdict": "accept",
+  "why": "Not a function yet: lw +0x88 getter."
+ },
+ {
+  "window": 17,
+  "row": 911,
+  "ps2": "0x0013be98",
+  "verdict": "accept",
+  "why": "Not a function yet: sw +0x9c setter, paired with GetPrimaryTarget reading +0x9c."
+ },
+ {
+  "window": 17,
+  "row": 912,
+  "ps2": "0x0013bea0",
+  "verdict": "accept",
+  "why": "Not a function yet: lw +0x9c getter, just before AIHelicopter_global_ctors."
+ },
+ {
+  "window": 18,
+  "row": 932,
+  "ps2": "0x0013da60",
+  "verdict": "accept",
+  "why": "fgRoadSpawn global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 19,
+  "row": 937,
+  "ps2": "0x0013de48",
+  "verdict": "accept",
+  "why": "AISplinePath global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 20,
+  "row": 950,
+  "ps2": "0x0013e3d8",
+  "verdict": "accept",
+  "why": "Not a function yet: lw +0 getter, paired with the setter after it."
+ },
+ {
+  "window": 20,
+  "row": 951,
+  "ps2": "0x0013e3e0",
+  "verdict": "accept",
+  "why": "Not a function yet: sw +0 setter."
+ },
+ {
+  "window": 20,
+  "row": 952,
+  "ps2": "0x0013e3e8",
+  "verdict": "accept",
+  "why": "Not a function yet: lw +0x54 getter."
+ },
+ {
+  "window": 20,
+  "row": 953,
+  "ps2": "0x0013e3f0",
+  "verdict": "accept",
+  "why": "Not a function yet: sw +0x58, paired with IsActive."
+ },
+ {
+  "window": 20,
+  "row": 954,
+  "ps2": "0x0013e3f8",
+  "verdict": "accept",
+  "why": "Not a function yet: lw +0x58."
+ },
+ {
+  "window": 20,
+  "row": 955,
+  "ps2": "0x0013e400",
+  "verdict": "accept",
+  "why": "Not a function yet: sw +0x5c, paired with ValidCommand."
+ },
+ {
+  "window": 20,
+  "row": 956,
+  "ps2": "0x0013e408",
+  "verdict": "accept",
+  "why": "Not a function yet: lw +0x5c."
+ },
+ {
+  "window": 20,
+  "row": 957,
+  "ps2": "0x0013e410",
+  "verdict": "accept",
+  "why": "Not a function yet: lw +0x60, paired with the setter."
+ },
+ {
+  "window": 20,
+  "row": 958,
+  "ps2": "0x0013e418",
+  "verdict": "accept",
+  "why": "Not a function yet: sw +0x60."
+ },
+ {
+  "window": 20,
+  "row": 959,
+  "ps2": "0x0013e420",
+  "verdict": "accept",
+  "why": "Global ctor calling the AIVehicle static-init helper; Ghidra body swallows the maths helpers the sheet size includes."
+ },
+ {
+  "window": 21,
+  "row": 1000,
+  "ps2": "0x001400c0",
+  "verdict": "accept",
+  "why": "fgController global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 21,
+  "row": 1001,
+  "ps2": "0x001400e0",
+  "verdict": "accept",
+  "why": "fgController global dtor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 22,
+  "row": 1008,
+  "ps2": "0x001406c0",
+  "verdict": "accept",
+  "why": "fgController global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 22,
+  "row": 1009,
+  "ps2": "0x001406e0",
+  "verdict": "accept",
+  "why": "fgController global dtor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 23,
+  "row": 1152,
+  "ps2": "0x001447b0",
+  "verdict": "accept",
+  "why": "0x80 exact; varargs format then strlen + FILESYS_writesync on the file handle."
+ },
+ {
+  "window": 23,
+  "row": 1153,
+  "ps2": "0x00144830",
+  "verdict": "accept",
+  "why": "0x58 exact; strlen + FILESYS_writesync, advances the offset; called from DTuningFile Output."
+ },
+ {
+  "window": 23,
+  "row": 1154,
+  "ps2": "0x00144888",
+  "verdict": "accept",
+  "why": "0x48 exact; zeroes fields and FILESYS_opensync; called from OpenForWrite."
+ },
+ {
+  "window": 23,
+  "row": 1155,
+  "ps2": "0x001448d0",
+  "verdict": "accept",
+  "why": "FILESYS_closesync if open, delete if flag; called from ~DTuningFile and Close."
+ },
+ {
+  "window": 24,
+  "row": 1169,
+  "ps2": "0x00145ec8",
+  "verdict": "accept",
+  "why": "EPathUtil global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 25,
+  "row": 1258,
+  "ps2": "0x00148e30",
+  "verdict": "accept",
+  "why": "Destructor in the ECameraLockOn vtable (0x3713ec): sets vtable, logs the ECameraLockOn fields, resets to vtable_Event (already carries this name in Ghidra; row just not recorded as placed) (no class namespace)."
+ },
+ {
+  "window": 25,
+  "row": 1259,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "ECameraLockOn vtable has only type_info and dtor, so the virtual GetEventName is compiled out; the function named GetEventName at 0x149040 is a creator from the event table at 0x370168."
+ },
+ {
+  "window": 26,
+  "row": 2052,
+  "ps2": "0x00165158",
+  "verdict": "accept",
+  "why": "E007Logo global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 27,
+  "row": 2088,
+  "ps2": "0x001664a0",
+  "verdict": "accept",
+  "why": "IFeedbackPort global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 28,
+  "row": 2112,
+  "ps2": "0x00167728",
+  "verdict": "accept",
+  "why": "InputUpdateTypeToStringTable global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 28,
+  "row": 2113,
+  "ps2": "0x00167748",
+  "verdict": "accept",
+  "why": "InputUpdateTypeToStringTable global dtor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 29,
+  "row": 2148,
+  "ps2": "0x00168ae8",
+  "verdict": "accept",
+  "why": "GetIOModule global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 30,
+  "row": 2229,
+  "ps2": "0x0016ec40",
+  "verdict": "accept",
+  "why": "Not a function yet: right after InitializeExtensionType, zeroes eight unsigned int& outputs (a1..t3 and a stack arg) - metrics stubbed to 0."
+ },
+ {
+  "window": 30,
+  "row": 2230,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Candidate 0x16ec68 is an unreferenced empty stub - order-only match."
+ },
+ {
+  "window": 30,
+  "row": 2231,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Candidate 0x16ec70 is an unreferenced empty stub - order-only match."
+ },
+ {
+  "window": 30,
+  "row": 2232,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Candidate 0x16ec78 is an unreferenced empty stub - order-only match."
+ },
+ {
+  "window": 30,
+  "row": 2233,
+  "ps2": "0x0016ec80",
+  "verdict": "accept",
+  "why": "Empty stub called after each Int field registration in InitializeGlobals (e.g. NUM_BLEND_STEPS with 1,200) - the int,int overload."
+ },
+ {
+  "window": 30,
+  "row": 2234,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Candidate 0x16ec88 is an unreferenced empty stub between the int and float overloads - order-only match."
+ },
+ {
+  "window": 31,
+  "row": 2312,
+  "ps2": "0x001755b8",
+  "verdict": "accept",
+  "why": "0x10 exact; returns bool byte UberBond+0x4b4, tested on 0x100000 before choosing the cdrom0 or host0 BASE.ELF path."
+ },
+ {
+  "window": 31,
+  "row": 2313,
+  "ps2": "0x001755c8",
+  "verdict": "accept",
+  "why": "0x8 exact; returns UberBond+0xa20, tested after IsLoaderPresent before choosing the cdrom0 path."
+ },
+ {
+  "window": 31,
+  "row": 2314,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No dump function in the stretch; the only other code is a varargs no-op print stub (0x175580) called from heap/timer init."
+ },
+ {
+  "window": 31,
+  "row": 2315,
+  "ps2": "0x001755d0",
+  "verdict": "accept",
+  "why": "Global ctor calling static-init helper, ctor table 0x362e7c."
+ },
+ {
+  "window": 32,
+  "row": 2329,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Stretch holds only unreferenced maths helpers (wrap/sin/cos/tan/atan2/acos/asin)."
+ },
+ {
+  "window": 33,
+  "row": 2339,
+  "ps2": "0x00177260",
+  "verdict": "accept",
+  "method": "basic_string<char, string_char_traits<char>, chunky_alloc<false, 0> >::replace(unsigned int, unsigned int, char const *, unsigned int)",
+  "why": "bastring.cc asserts '!(pos > len)' and '!(len - n1 > max_size () - n2)' with (pos, n1, s, n2) args - replace; 0x248 vs sheet 0x2b8."
+ },
+ {
+  "window": 33,
+  "row": 2340,
+  "ps2": "0x00177550",
+  "verdict": "accept",
+  "why": "kTracks global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 33,
+  "row": 2341,
+  "ps2": "0x00177570",
+  "verdict": "accept",
+  "why": "kTracks global dtor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 34,
+  "row": 2436,
+  "ps2": "0x0017bbf8",
+  "verdict": "accept",
+  "why": "Float_m3Reorthoganalize global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 35,
+  "row": 2479,
+  "ps2": "0x0017f390",
+  "verdict": "accept",
+  "why": "Grenade global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 36,
+  "row": 2507,
+  "ps2": "0x00180970",
+  "verdict": "accept",
+  "why": "Global ctor calling the Mine static-init helper, ctor table 0x362e98; the sheet size includes the maths helpers after it."
+ },
+ {
+  "window": 37,
+  "row": 2527,
+  "ps2": "0x00183c50",
+  "verdict": "accept",
+  "why": "fUserMissileLaunchPos global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 38,
+  "row": 2536,
+  "ps2": "0x00185398",
+  "verdict": "accept",
+  "why": "Global ctor calling the Newton static-init helper, ctor table 0x362ea0; maths helpers follow."
+ },
+ {
+  "window": 39,
+  "row": 2769,
+  "ps2": "0x00198428",
+  "verdict": "accept",
+  "why": "0x90 exact; frees PVehicle globals and the name map (_M_erase); called from GameLoop_CleanUp."
+ },
+ {
+  "window": 39,
+  "row": 2770,
+  "ps2": "0x001984b8",
+  "verdict": "accept",
+  "why": "0x108 exact; bool picks which bitmask (+0x6c/+0x70) gets bit n; called from the ESwitchEffectOn/Off dtors."
+ },
+ {
+  "window": 39,
+  "row": 2771,
+  "ps2": "0x001985c0",
+  "verdict": "accept",
+  "method": "_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, ...>::_M_erase",
+  "why": "Recurses right (+0xc), walks left (+8), FastFree 0x18 nodes."
+ },
+ {
+  "window": 39,
+  "row": 2772,
+  "ps2": "0x00198628",
+  "verdict": "accept",
+  "method": "_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, ...>::lower_bound",
+  "why": "0x78 exact; strcasecmp descent keeping the last not-less node, no final equality test."
+ },
+ {
+  "window": 39,
+  "row": 2773,
+  "ps2": "0x001986a0",
+  "verdict": "accept",
+  "method": "_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, ...>::_M_insert",
+  "why": "FastAlloc 0x18 'STL' node, links left/right by strcasecmp and rebalances."
+ },
+ {
+  "window": 39,
+  "row": 2774,
+  "ps2": "0x00198a08",
+  "verdict": "accept",
+  "method": "_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, ...>::insert_unique(value_type const &)",
+  "why": "0x190 exact; descent, decrement iterator, compare, _M_insert or return the existing node."
+ },
+ {
+  "window": 39,
+  "row": 2775,
+  "ps2": "0x00198b98",
+  "verdict": "accept",
+  "method": "_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, ...>::insert_unique(iterator, value_type const &)",
+  "why": "Hinted insert: checks the position against leftmost/rightmost then falls back to insert_unique."
+ },
+ {
+  "window": 40,
+  "row": 2777,
+  "ps2": "0x00198e60",
+  "verdict": "accept",
+  "why": "GetNameCount global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 41,
+  "row": 2795,
+  "ps2": "0x00199f88",
+  "verdict": "accept",
+  "why": "WWorldPos ctor, CheckHitWorld/Window, float& param, SpawnExplosion - AUF CollideWithWorld shape; called from RayShell."
+ },
+ {
+  "window": 42,
+  "row": 2798,
+  "ps2": "0x0019a710",
+  "verdict": "accept",
+  "why": "FindPhysicsObjectSignature then the damage vtable call, as AUF DamagePhysicsObject; called from Fire."
+ },
+ {
+  "window": 43,
+  "row": 2820,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Stretch holds only STL erase helpers, a Rep::clone copy and the static-init helper."
+ },
+ {
+  "window": 44,
+  "row": 2845,
+  "ps2": "0x0019efd0",
+  "verdict": "accept",
+  "why": "Not a function yet: 'jr ra; lw v0,0x7c(a0)' const getter between the real operator delete (0x19efb0) and the global ctor."
+ },
+ {
+  "window": 44,
+  "row": 2846,
+  "ps2": "0x0019efd8",
+  "verdict": "accept",
+  "why": "In ctor table 0x362ec8, calls the Smackable static-init helper (1,0xffff). CONFLICT: currently misnamed Smackable::operator_delete (P004 align); the real operator delete is 0x19efb0."
+ },
+ {
+  "window": 45,
+  "row": 2940,
+  "ps2": "0x001a43b8",
+  "verdict": "accept",
+  "why": "RAnimEngine Init global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 46,
+  "row": 2954,
+  "ps2": "0x001a4698",
+  "verdict": "accept",
+  "why": "Not a function yet: returns this+0x40 (velocity), 4-vector form first."
+ },
+ {
+  "window": 46,
+  "row": 2955,
+  "ps2": "0x001a46a0",
+  "verdict": "accept",
+  "why": "Not a function yet: returns this+0x40 (COORD3 form)."
+ },
+ {
+  "window": 46,
+  "row": 2956,
+  "ps2": "0x001a46a8",
+  "verdict": "accept",
+  "why": "Not a function yet: 0x28 exact; stores the float to +0xa4 when > 2.0."
+ },
+ {
+  "window": 46,
+  "row": 2957,
+  "ps2": "0x001a46d0",
+  "verdict": "accept",
+  "why": "Not a function yet: lwc1 +0xa4, the field SetViewAngle writes."
+ },
+ {
+  "window": 46,
+  "row": 2958,
+  "ps2": "0x001a46d8",
+  "verdict": "accept",
+  "why": "Not a function yet: lw +0xa0 getter."
+ },
+ {
+  "window": 46,
+  "row": 2959,
+  "ps2": "0x001a46e0",
+  "verdict": "accept",
+  "why": "Not a function yet: returns this+0x30 (matrix row 3 = position)."
+ },
+ {
+  "window": 46,
+  "row": 2960,
+  "ps2": "0x001a46e8",
+  "verdict": "accept",
+  "why": "Not a function yet: returns this+0x30."
+ },
+ {
+  "window": 46,
+  "row": 2961,
+  "ps2": "0x001a46f0",
+  "verdict": "accept",
+  "why": "Not a function yet: returns this+0x20 (row 2 = forward)."
+ },
+ {
+  "window": 46,
+  "row": 2962,
+  "ps2": "0x001a46f8",
+  "verdict": "accept",
+  "why": "Not a function yet: returns this+0x20."
+ },
+ {
+  "window": 46,
+  "row": 2963,
+  "ps2": "0x001a4700",
+  "verdict": "accept",
+  "why": "Not a function yet: returns this+0x10 (row 1 = up)."
+ },
+ {
+  "window": 46,
+  "row": 2964,
+  "ps2": "0x001a4708",
+  "verdict": "accept",
+  "why": "Not a function yet: returns this+0x10."
+ },
+ {
+  "window": 46,
+  "row": 2965,
+  "ps2": "0x001a4710",
+  "verdict": "accept",
+  "why": "Not a function yet: returns this (row 0 = right)."
+ },
+ {
+  "window": 46,
+  "row": 2966,
+  "ps2": "0x001a4718",
+  "verdict": "accept",
+  "why": "Not a function yet: returns this."
+ },
+ {
+  "window": 46,
+  "row": 2967,
+  "ps2": "0x001a4720",
+  "verdict": "accept",
+  "why": "Global ctor calling the RCamera static-init helper, ctor table 0x362ed4; maths helpers follow."
+ },
+ {
+  "window": 46,
+  "row": 2969,
+  "ps2": "0x001a4978",
+  "verdict": "accept",
+  "why": "Stores the RPlayerCamera* into a static (fPlayerCam) exactly as AUF; called from the RPlayerCamera ctor."
+ },
+ {
+  "window": 46,
+  "row": 2970,
+  "ps2": "0x001a4988",
+  "verdict": "accept",
+  "why": "Deletes if the flag bit is set, as AUF; called from ~RPlayerCamera."
+ },
+ {
+  "window": 47,
+  "row": 2974,
+  "ps2": "0x001a7020",
+  "verdict": "accept",
+  "why": "Global ctor calling the kMaxTumble static-init helper, ctor table 0x362ed8."
+ },
+ {
+  "window": 48,
+  "row": 3004,
+  "ps2": "0x001a8848",
+  "verdict": "accept",
+  "why": "List clear freeing 0x18-byte nodes (8 + COORD4); called from ClearSplinePtList, ~RCameraSpline, BuildSpline."
+ },
+ {
+  "window": 48,
+  "row": 3005,
+  "ps2": "0x001a88e8",
+  "verdict": "accept",
+  "why": "Global ctor calling the RCameraSpline static-init helper, ctor table 0x362ee0."
+ },
+ {
+  "window": 49,
+  "row": 3030,
+  "ps2": "0x001aa450",
+  "verdict": "accept",
+  "why": "Global ctor calling static-init helper, ctor table 0x362ee4; maths helpers follow."
+ },
+ {
+  "window": 50,
+  "row": 3051,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Only candidate is an unreferenced empty stub at 0x1ab150 (not a function) right after AddToTranslucentList - order-only."
+ },
+ {
+  "window": 50,
+  "row": 3052,
+  "ps2": "0x001ab2f0",
+  "verdict": "accept",
+  "why": "0xe8 exact (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 51,
+  "row": 3062,
+  "ps2": "0x001abf80",
+  "verdict": "accept",
+  "why": "Not a function yet: 0x18 exact float maths on (f12,f13) storing to *a0, right after ConfigureRes."
+ },
+ {
+  "window": 51,
+  "row": 3063,
+  "ps2": "0x001abf98",
+  "verdict": "accept",
+  "why": "Stores the view camera at +4, identical to AUF BeginView; caller BeginView."
+ },
+ {
+  "window": 51,
+  "row": 3064,
+  "ps2": "0x001abfa0",
+  "verdict": "accept",
+  "why": "Calls RDrawGroup::FlushDrawLists(this->+0x10), identical to AUF."
+ },
+ {
+  "window": 51,
+  "row": 3065,
+  "ps2": "0x001abfc0",
+  "verdict": "accept",
+  "why": "Calls RDrawGroup::ClearDrawLists(this->+0x10)."
+ },
+ {
+  "window": 51,
+  "row": 3066,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Candidate 0x1abfe0 is an empty stub (not a function) between ClearDrawLists and EndView - order-only."
+ },
+ {
+  "window": 51,
+  "row": 3067,
+  "ps2": "0x001abfe8",
+  "verdict": "accept",
+  "why": "Returns +4 and clears it, identical to AUF EndView."
+ },
+ {
+  "window": 51,
+  "row": 3068,
+  "ps2": "0x001abff8",
+  "verdict": "accept",
+  "why": "0x18 exact; points the current draw group (+0x10) at the reflection group (+0xc) and increments a depth counter."
+ },
+ {
+  "window": 51,
+  "row": 3069,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "BufferName (row 3073) starts right after EnterReflection at 0x1ac010; no code left for rows 3069-3072."
+ },
+ {
+  "window": 51,
+  "row": 3070,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No code between EnterReflection and BufferName."
+ },
+ {
+  "window": 51,
+  "row": 3071,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No code between EnterReflection and BufferName."
+ },
+ {
+  "window": 51,
+  "row": 3072,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No code between EnterReflection and BufferName."
+ },
+ {
+  "window": 52,
+  "row": 3085,
+  "ps2": "0x001ac648",
+  "verdict": "accept",
+  "why": "fgRenderer global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 53,
+  "row": 3125,
+  "ps2": "0x001ae138",
+  "verdict": "accept",
+  "why": "Unreferenced debug routine taking (obj,int): builds a 12x12 quad at the object's rigid-body position and draws it with USimpleTexturedMaterial."
+ },
+ {
+  "window": 53,
+  "row": 3126,
+  "ps2": "0x001ae610",
+  "verdict": "accept",
+  "why": "gDrawGlares global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 54,
+  "row": 3192,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Candidate 0x1b1828 is an unreferenced empty stub right after Update - order-only."
+ },
+ {
+  "window": 54,
+  "row": 3193,
+  "ps2": "0x001b1830",
+  "verdict": "accept",
+  "why": "Not a function yet: sw a1,+0x98 - the path pointer GetParametricDuration dereferences."
+ },
+ {
+  "window": 54,
+  "row": 3194,
+  "ps2": "0x001b1838",
+  "verdict": "accept",
+  "why": "Sets +0x9c; callers AISplinePath::SetNext, ~ESetNextPath, LoadAISplinePathAnimation."
+ },
+ {
+  "window": 54,
+  "row": 3195,
+  "ps2": "0x001b1840",
+  "verdict": "accept",
+  "why": "0x10 exact; returns *(float*)(current path at +0x98); callers are the EPathSetTime events."
+ },
+ {
+  "window": 54,
+  "row": 3196,
+  "ps2": "0x001b1850",
+  "verdict": "accept",
+  "why": "8-byte bool setter (+0xcc) like AUF SetRunning; called from the path throttle events."
+ },
+ {
+  "window": 54,
+  "row": 3197,
+  "ps2": "0x001b1858",
+  "verdict": "accept",
+  "why": "Not a function yet: swc1 f12,+0xa4 float setter right before the placed SetThrottle."
+ },
+ {
+  "window": 55,
+  "row": 3220,
+  "ps2": "0x001b22c0",
+  "verdict": "accept",
+  "method": "_List_base<RPathEngine::RPathHandle, allocator<RPathEngine::RPathHandle> >::clear(void)",
+  "why": "List clear freeing 0xdc-byte nodes; called from RPathEngine::Purge."
+ },
+ {
+  "window": 56,
+  "row": 3225,
+  "ps2": "0x001b23c8",
+  "verdict": "accept",
+  "why": "RPIPView global ctor: in ctor table 0x362efc, calls its static-init helper 0x1b2390; maths helpers follow. Outside the computed window because row 3223 is misplaced on 0x1b23e8."
+ },
+ {
+  "window": 57,
+  "row": 3453,
+  "ps2": "0x001c5000",
+  "verdict": "accept",
+  "why": "fgThis global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 57,
+  "row": 3454,
+  "ps2": "0x001c5020",
+  "verdict": "accept",
+  "why": "fgThis global dtor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 58,
+  "row": 3483,
+  "ps2": "0x001c6298",
+  "verdict": "accept",
+  "why": "Not a function yet (inside the static-init body): 8-byte setter storing a1 at +0x54, passed as the set-cull callback by PerformCulling next to the ActActorDatabase getter."
+ },
+ {
+  "window": 59,
+  "row": 3618,
+  "ps2": "0x001cd178",
+  "verdict": "accept",
+  "why": "Referenced from two vtables; calls SetProcAnimXFormList and SetProcAnimParamList."
+ },
+ {
+  "window": 60,
+  "row": 3644,
+  "ps2": "0x001cee80",
+  "verdict": "accept",
+  "why": "fgThis_RStateManager global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 60,
+  "row": 3645,
+  "ps2": "0x001ceea0",
+  "verdict": "accept",
+  "why": "fgThis_RStateManager global dtor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 61,
+  "row": 3663,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Candidate 0x1cfd10 ('jr ra; lw v0,8(a0)', not a function) after operator delete, but nothing ties field +8 to a shape file and size 0x70 vs 8."
+ },
+ {
+  "window": 62,
+  "row": 3687,
+  "ps2": "0x001d1de0",
+  "verdict": "accept",
+  "why": "Not a function yet (Ghidra folds it into type_info): returns fgThis at 0x333fe4, the global Init writes."
+ },
+ {
+  "window": 62,
+  "row": 3688,
+  "ps2": "0x001d1df0",
+  "verdict": "accept",
+  "why": "new(8), RTextureContextManager ctor, store to fgThis."
+ },
+ {
+  "window": 62,
+  "row": 3689,
+  "ps2": "0x001d1e28",
+  "verdict": "accept",
+  "why": "If fgThis, virtual delete - same as AUF Kill."
+ },
+ {
+  "window": 63,
+  "row": 3799,
+  "ps2": "0x001d5838",
+  "verdict": "accept",
+  "why": "Validates the anchor (+0x118) and clears it if the object is gone; called first by every anchor getter."
+ },
+ {
+  "window": 63,
+  "row": 3800,
+  "ps2": "0x001d5888",
+  "verdict": "accept",
+  "why": "Rigid-body velocity magnitude or SimpleRigidBody::GetScalarVelocity, as AUF GetAnchorSpeed."
+ },
+ {
+  "window": 63,
+  "row": 3801,
+  "ps2": "0x001d5940",
+  "verdict": "accept",
+  "why": "COORD4& output built from rigid body +0x60 times orientation - acceleration; before the angular variant."
+ },
+ {
+  "window": 63,
+  "row": 3802,
+  "ps2": "0x001d5a58",
+  "verdict": "accept",
+  "why": "Same shape as GetAnchorAcceleration reading +0x70 - angular acceleration."
+ },
+ {
+  "window": 63,
+  "row": 3803,
+  "ps2": "0x001d5b90",
+  "verdict": "accept",
+  "why": "Rigid-body matrix or RecalcOrientMat into a static, identity fallback - AUF GetAnchorMatrix4."
+ },
+ {
+  "window": 63,
+  "row": 3804,
+  "ps2": "0x001d5cd0",
+  "verdict": "accept",
+  "why": "Returns rigid body +0x10 (either body type), as AUF GetAnchorPosition."
+ },
+ {
+  "window": 63,
+  "row": 3805,
+  "ps2": "0x001d5d50",
+  "verdict": "accept",
+  "why": "Returns rigid body +0x20 (spline-path branch added), as AUF GetAnchorLinearVelocity."
+ },
+ {
+  "window": 64,
+  "row": 3883,
+  "ps2": "0x001d73c8",
+  "verdict": "accept",
+  "why": "Global ctor calling the FeatureManager-file static-init helper, ctor table 0x362f38; maths helpers follow."
+ },
+ {
+  "window": 65,
+  "row": 3891,
+  "ps2": "0x001d83d8",
+  "verdict": "accept",
+  "why": "fgMaterial global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 65,
+  "row": 3892,
+  "ps2": "0x001d83f8",
+  "verdict": "accept",
+  "why": "fgMaterial global dtor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 66,
+  "row": 3922,
+  "ps2": "0x001da010",
+  "verdict": "accept",
+  "why": "RDebris fgThis global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 67,
+  "row": 3944,
+  "ps2": "0x001dbc78",
+  "verdict": "accept",
+  "why": "CylinderSection global ctor (already carries this name in Ghidra; row just not recorded as placed)."
+ },
+ {
+  "window": 67,
+  "row": 3945,
+  "ps2": "0x001dbc98",
+  "verdict": "accept",
+  "why": "CylinderSection global dtor (already carries this name in Ghidra; row just not recorded as placed)."
+ }
+]

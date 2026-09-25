@@ -1,546 +1,6 @@
 {
- "generated": "Sat Sep 26 00:05:37 2026",
+ "generated": "Sat Sep 26 00:51:11 2026",
  "moves": [
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0010b9b0",
-   "name": "_Rb_tree<LString,_LString>::_M_erase",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0010ba18",
-   "name": "_Rb_tree<LString,_DebugItem_*>::_M_erase",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0010ba80",
-   "name": "_List_base<ActActor_*,_allocator<ActActor_*>_>::clear",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0010c818",
-   "name": "EAGLAnim::FnDefaultAnimBank::GetAnimIndex",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00110f10",
-   "name": "ActManager::SymbolResolver",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x001115d8",
-   "name": "ActModel::UnLoad",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00114a58",
-   "name": "ActSkeleton::GetStillPose",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00114a80",
-   "name": "ActSkeleton::GetStillPose",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00116f58",
-   "name": "ActWeapon::GetVelocity",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x001173d8",
-   "name": "_Rb_tree<MapKey,_ActWeaponDatabase::WeaponInfo>::_M_erase",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00117440",
-   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::URefCounter",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x001175d0",
-   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::GetReference",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00117c50",
-   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::AddReference",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00117d38",
-   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::RemoveReference",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x001184d8",
-   "name": "ActWeapon::operator_delete",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00119290",
-   "name": "AICharacterEnemy::TargetIsAcquired",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00119940",
-   "name": "AICharacter::kMissileDeathThresh_global_ctors",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0011a858",
-   "name": "AICharacterBond::UpdateRotPos",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0011b128",
-   "name": "AICharacterEnemyDriver::UpdateRotPos",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0011b2c0",
-   "name": "AICharacterEnemyDriver::GetRotPos_global_ctors",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0011d9f0",
-   "name": "AICharacterEnemyGround::PlayZoneInjuryAnim",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0011f528",
-   "name": "AICharacterEnemySnow::TargetIsInRange",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0011f768",
-   "name": "AICharacterEnemySnow::TargetIsAcquired",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0011f9a8",
-   "name": "AICharacterEnemySnow::PlayZoneInjuryAnim",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00120478",
-   "name": "AICharacterEnemySSnow::TargetIsInRange",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00120500",
-   "name": "AICharacterEnemySSnow::PlayZoneInjuryAnim",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x001219c0",
-   "name": "AICharacterEnemySunroof::TargetIsAcquired",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00121c10",
-   "name": "AICharacterEnemySunroof::VehicleIsAccelerating",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00121dd8",
-   "name": "AICharacterEnemySunroof::PlayZoneInjuryAnim",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00122e20",
-   "name": "AICharacterEnemyWindow::TargetIsInRange",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00123058",
-   "name": "AICharacterEnemyWindow::TargetIsAcquired",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00123298",
-   "name": "AICharacterEnemyWindow::PlayZoneInjuryAnim",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00123578",
-   "name": "AICharacterEnemyWindow::GetRotPos_global_ctors",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00123878",
-   "name": "AICharacterHands::GetRotPos",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00124848",
-   "name": "AICharacterHands::UpdateRotPos",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00125920",
-   "name": "AICharacterPassenger::UpdateRotPos",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0012aa20",
-   "name": "AICharacterPedestrian::SetNewState",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0012c4c0",
-   "name": "AIElementController::EveryoneChill",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0012c608",
-   "name": "AIElementController::RedirectCarpElement",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0012c640",
-   "name": "AIElementController::GetCarpElementTracking",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0012dc48",
-   "name": "AIElementController::GetElementTracking",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00137310",
-   "name": "AIGroundVehicle::CheckAgentDirectCollision",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x001377c8",
-   "name": "AIGroundVehicle::CheckTrafficCollision",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00138ef0",
-   "name": "AIHelicopter::Update",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00138fa8",
-   "name": "AIHelicopter::NewState",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00139380",
-   "name": "AIHelicopter::ControlMoveState",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00139be8",
-   "name": "AIHelicopter::DoAgentLogic",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0013b2a8",
-   "name": "AIHelicopter::DoProximityDestruct",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0013b4f8",
-   "name": "AIHelicopter::ManeuverToPos",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0013bd80",
-   "name": "AIHelicopter::operator_new",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0013bda0",
-   "name": "AIHelicopter::operator_delete",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0013bea8",
-   "name": "AIHelicopter::AIHelicopter_global_ctors",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0013c798",
-   "name": "AIRoadSpawn::TrafficRespawnPosCheck",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0013c860",
-   "name": "AIRoadSpawn::TrafficRespawnAvailable",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0013ca60",
-   "name": "AIRoadSpawn::GetRandomTrafficSpawn",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0013d618",
-   "name": "AIRoadSpawn::RefreshSpawnData",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0013dd28",
-   "name": "AISplinePath::SetNext",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0013e120",
-   "name": "AIVehicle::GetRotPos",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0013e398",
-   "name": "AIVehicle::operator_new",
-   "batch": "P011"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0013e3b8",
-   "name": "AIVehicle::operator_delete",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00167c48",
-   "name": "InputDevice::DeadZoneChop",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00168678",
-   "name": "IOModule::SendGameMessages",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0016e868",
-   "name": "AttributeSystem::GetExtensionTypeSize",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0016e950",
-   "name": "AttributeSystem::GetExtensionTypeClass",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0016ea38",
-   "name": "AttributeSystem::GetExtensionTypeName",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0016eb20",
-   "name": "AttributeSystem::InitializeExtensionType",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0016ec90",
-   "name": "AttributeSystem::ConfigEditParameters",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0016f890",
-   "name": "pair<CStringPairKey,_AttributeCollection>::pair",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00173260",
-   "name": "_Rb_tree<CStringKey,_AttributeParser>::_M_insert",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00173628",
-   "name": "_Rb_tree<CStringKey,_AttributeParser>::insert_unique",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0017f288",
-   "name": "Grenade::BlowUp",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00180620",
-   "name": "Mine::CheckTimer",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00183b48",
-   "name": "Missile::GetAutoDriveLaunchPos",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x001847e8",
-   "name": "Newton::SpawnFromEvent",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00185280",
-   "name": "Newton::operator_delete",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x001942e8",
-   "name": "PHelicopter::Simulate",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00194b50",
-   "name": "PHelicopter::operator_new",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00194b70",
-   "name": "PHelicopter::operator_delete",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00194b98",
-   "name": "PHelicopter::SetTargetPos",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00194bd8",
-   "name": "PHelicopter::SetDestPos",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00195f80",
-   "name": "PhysicsObject::operator_new",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00195fa0",
-   "name": "PhysicsObject::operator_delete",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00196330",
-   "name": "PTank::PTank_global_ctors",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x001998c0",
-   "name": "RayShell::CollideWithObjects",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0019a3e0",
-   "name": "RayShell::Fire",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0019abb8",
-   "name": "RayShell::AddFlash",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0019c908",
-   "name": "Sentry::DrawMuzzleFlashes",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0019ddb8",
-   "name": "Shell::ApplyWorldDamage",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x001a1628",
-   "name": "Draw::DrawBatchedSprite",
-   "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x001a30c0",
-   "name": "RAnimEngine::EvaluateInstance",
-   "batch": "P012"
-  },
   {
    "program": "DRIVING.ELF",
    "address": "0x001a4318",
@@ -549,1953 +9,2187 @@
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001a4670",
-   "name": "RCamera::GetMatrix4Inv",
-   "batch": "P012"
+   "address": "0x00167c78",
+   "name": "InputDevice::DeadZoneScale",
+   "batch": "P018"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001a74b8",
-   "name": "RCameraMath::VU0_TransformByForwardVec",
-   "batch": "P012"
+   "address": "0x00109500",
+   "name": "ActActor::Draw",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001a77b0",
-   "name": "RCameraMath::FindAngleBetweenVectors",
-   "batch": "P012"
+   "address": "0x0010bf60",
+   "name": "AimedShootingAnimationController::SetTarget",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001ab050",
-   "name": "RDrawGroup::AddToTranslucentList",
-   "batch": "P012"
+   "address": "0x0010bf68",
+   "name": "AimedShootingAnimationController::GetCurrent",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001aee60",
-   "name": "RLightManager::ClearAllLights",
-   "batch": "P012"
+   "address": "0x0010bf70",
+   "name": "ActActorDatabase::fActorDatabase_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001af638",
-   "name": "RLightManager::NumPositionalLightsAffecting",
-   "batch": "P012"
+   "address": "0x0010bf90",
+   "name": "BankInfo::Load",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001afd50",
-   "name": "RHighLevelLightManager::Process",
-   "batch": "P012"
+   "address": "0x0010c110",
+   "name": "PrivateData::LoadBank",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001affd0",
-   "name": "RLightManager::DisablePositionalLighting",
-   "batch": "P012"
+   "address": "0x0010c1d8",
+   "name": "PrivateData::GetAnimation",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b0158",
-   "name": "RLightManager::RefreshLightBlocks",
-   "batch": "P012"
+   "address": "0x0010c5e0",
+   "name": "ActAnimationDatabase::GetAnimation",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b0cb8",
-   "name": "ROffscreenBuffer::Begin",
-   "batch": "P012"
+   "address": "0x0010c788",
+   "name": "EAGLAnim::FnDefaultAnimBank::GetNumAnims",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b0f28",
-   "name": "ROffscreenBuffer::ROffscreenBuffer_global_ctors",
-   "batch": "P012"
+   "address": "0x00112c18",
+   "name": "ActPoser::GetWeaponBonePosOri",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b1860",
-   "name": "RPathEngine::RPathHandle::SetThrottle",
-   "batch": "P012"
+   "address": "0x00112cc0",
+   "name": "ActPoser::ChangeAnimationOrigin",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b1868",
-   "name": "RPathEngine::RPathHandle::SetDesiredThrottle",
-   "batch": "P012"
+   "address": "0x00112ce8",
+   "name": "ActPoser::GetAnimationOrigin",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b1870",
-   "name": "RPathEngine::RPathHandle::SetAcceleration",
-   "batch": "P012"
+   "address": "0x00112d10",
+   "name": "ActPoser::SetAnimationOrigin",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b1878",
-   "name": "RPathEngine::RPathHandle::SetAccelDelay",
-   "batch": "P012"
+   "address": "0x00112d50",
+   "name": "ActPoser::GetInitialTbOu",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b18a8",
-   "name": "RPathEngine::RPathHandle::GetOrientMat",
-   "batch": "P012"
+   "address": "0x00112d80",
+   "name": "ActPoser::SetInitialTbOu",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b1f68",
-   "name": "RPathEngine::GetNextPathHandle",
-   "batch": "P012"
+   "address": "0x00112dc0",
+   "name": "ActPoser::Rotate",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b2058",
-   "name": "RPathEngine::Update",
-   "batch": "P012"
+   "address": "0x00112ef0",
+   "name": "ActPoser::RotateX",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b20c8",
-   "name": "RPathEngine::GetPathHandle",
-   "batch": "P012"
+   "address": "0x00113020",
+   "name": "ActPoser::CalculateFinalCorrectionMatrix",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b8ae0",
-   "name": "RPlayerCamera::CheckObjectCollisions",
-   "batch": "P012"
+   "address": "0x00113068",
+   "name": "ActPoser::SnapMatrixLevelWithGround",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b8d08",
-   "name": "RPlayerCamera::AdjustCamAroundObjectEllipse",
-   "batch": "P012"
+   "address": "0x001130f8",
+   "name": "ActPoser::CalcSnapAndCorrectionMatrices",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001bbf70",
-   "name": "RPlayerCamera::DoSmoothModeChange",
-   "batch": "P012"
+   "address": "0x001133d0",
+   "name": "ActPoser::SetNormalAnimation",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001bc0e0",
-   "name": "RPlayerCamera::SetAutoDriveRotation",
-   "batch": "P012"
+   "address": "0x00113430",
+   "name": "ActPoser::SetNormalAnimation",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001bd198",
-   "name": "RPlayerCamera::SetControlToCPU",
-   "batch": "P012"
+   "address": "0x00113470",
+   "name": "ActPoser::SetupCrossFadeBlend",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001bd2b8",
-   "name": "RPlayerCamera::AbortCinematic",
-   "batch": "P012"
+   "address": "0x00113760",
+   "name": "ActPoser::SetCrossFadeBlendAnimation",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001bd2f8",
-   "name": "RPlayerCamera::CameraAiming",
-   "batch": "P012"
+   "address": "0x001137f0",
+   "name": "ActPoser::FinishCrossFadeBlend",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001bd4b8",
-   "name": "RPlayerCamera::GetMaxTumble",
-   "batch": "P012"
+   "address": "0x00113898",
+   "name": "ActPoser::ShutdownCrossFadeBlend",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001bd878",
-   "name": "RPlayerCamera::operator_new",
-   "batch": "P012"
+   "address": "0x00113908",
+   "name": "ActPoser::CalcCrossFadeTimes",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001bd898",
-   "name": "RPlayerCamera::operator_delete",
-   "batch": "P012"
+   "address": "0x00113a38",
+   "name": "ActPoser::SetManualAnimation",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001bda78",
-   "name": "RPlayerCamera::fBumperCamInfo_global_ctors",
-   "batch": "P012"
+   "address": "0x00113ae8",
+   "name": "ActPoser::DoSkeletonPose",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001be8b8",
-   "name": "RPlayerCamState::RPlayerCamState_global_ctors",
-   "batch": "P012"
+   "address": "0x00113b48",
+   "name": "ActPoser::DoMainPose",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001beba0",
-   "name": "RPlayerViewCamera::ConfigureView",
-   "batch": "P012"
+   "address": "0x00114180",
+   "name": "ActPoser::DoIK",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001c08b8",
-   "name": "RRandom::CleanUp",
-   "batch": "P012"
+   "address": "0x001141e8",
+   "name": "ActPoser::TransformLocalPoseToWorldPose",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001c18b0",
-   "name": "RReflection::Lock",
-   "batch": "P012"
+   "address": "0x00114218",
+   "name": "ActPoser::Skin",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001c28b0",
-   "name": "RReflection::EnableReflectionMapWarpage",
-   "batch": "P012"
+   "address": "0x00114250",
+   "name": "ActPoser::DoEventPose",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001c2b60",
-   "name": "RReflection::fgThis_global_ctors",
-   "batch": "P012"
+   "address": "0x001143b8",
+   "name": "ActPoser::DoInitialPoses",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001c5100",
-   "name": "RRenderHUDView::operator_delete",
-   "batch": "P012"
+   "address": "0x001143f0",
+   "name": "ActPoser::GetWeaponRange",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001c60c0",
-   "name": "RRenderWorldCamera::Debug",
-   "batch": "P012"
+   "address": "0x001145c0",
+   "name": "ActPoser::AdvanceTime",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001c6330",
-   "name": "RRenderWorldCamera::RRenderWorldCamera_global_ctors",
-   "batch": "P012"
+   "address": "0x001146b8",
+   "name": "ActPoser::FrameStep",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001c6b70",
-   "name": "RRenderWorldCulling::InitializePlaneInfo",
-   "batch": "P012"
+   "address": "0x001146d0",
+   "name": "ActPoser::GetCurrentFrame",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001c6fa8",
-   "name": "RSceneObj::ResolveObjectData",
-   "batch": "P012"
+   "address": "0x001146d8",
+   "name": "ActPoser::GetTotalAnimFrames",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001c9e38",
-   "name": "RSceneObj::GetCollisionInfo",
-   "batch": "P012"
+   "address": "0x001146e0",
+   "name": "ActPoser::ActPoser_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001cb000",
-   "name": "RSceneObj::GetViewDistance",
-   "batch": "P012"
+   "address": "0x00114700",
+   "name": "ActSkeleton::StartUp",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001cb0d0",
-   "name": "RSceneObj::ConvertInstanceToLocal",
-   "batch": "P012"
+   "address": "0x00114718",
+   "name": "ActSkeleton::ShutDown",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001cb398",
-   "name": "_Rb_tree<MapKey,_RCARPFile>::_M_erase",
-   "batch": "P012"
+   "address": "0x00115148",
+   "name": "ActTextureDatabase::StopUsingTexture",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001cb400",
-   "name": "URefCounter<RCARPFile>::URefCounter",
-   "batch": "P012"
+   "address": "0x00119b98",
+   "name": "AICharacterBond::GetRotPos",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001cb590",
-   "name": "URefCounter<RCARPFile>::GetReference",
-   "batch": "P012"
+   "address": "0x0011aa10",
+   "name": "AICharacterBond::GetRotPos_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001cbc10",
-   "name": "URefCounter<RCARPFile>::AddReference",
-   "batch": "P012"
+   "address": "0x0011aa30",
+   "name": "AICharacterEnemyDriver::GetRotPos",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001cbcf8",
-   "name": "URefCounter<RCARPFile>::RemoveReference",
-   "batch": "P012"
+   "address": "0x0011ab50",
+   "name": "AICharacterEnemyDriver::GetRotPos",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001cc9b0",
-   "name": "RSkeletalObj::UpdateSpringMassSystem",
-   "batch": "P012"
+   "address": "0x0011aca8",
+   "name": "AICharacterEnemyDriver::AICharacterEnemyDriver",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001cd398",
-   "name": "RSkeletalObj::RSkeletalObj_global_ctors",
-   "batch": "P012"
+   "address": "0x0011fc80",
+   "name": "AICharacterEnemySnow::GetRotPos_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001ceaf0",
-   "name": "_Rb_tree<StateRef,_StateRef>::insert_unique",
-   "batch": "P012"
+   "address": "0x001208d8",
+   "name": "AICharacterEnemySSnow::GetRotPos_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001cfcd0",
-   "name": "RTextureContext::operator_new",
-   "batch": "P012"
+   "address": "0x00122238",
+   "name": "AICharacterEnemyWindow::GetRotPos",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001cfcf0",
-   "name": "RTextureContext::operator_delete",
-   "batch": "P012"
+   "address": "0x00122358",
+   "name": "AICharacterEnemyWindow::GetRotPos",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d0ac8",
-   "name": "URefCounter<RTextureContext>::GetReference",
-   "batch": "P012"
+   "address": "0x001237d0",
+   "name": "AICharacterHands::GetAimFraction",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d1148",
-   "name": "URefCounter<RTextureContext>::AddReference",
-   "batch": "P012"
+   "address": "0x00124f58",
+   "name": "AICharacterHands::fgHandObj_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d1708",
-   "name": "URefCounter<RTextureContext>::RemoveReference",
-   "batch": "P012"
+   "address": "0x001251b0",
+   "name": "AICharacterPassenger::GetRotPos",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d1ef8",
-   "name": "RTimeData::Update",
-   "batch": "P012"
+   "address": "0x001252d8",
+   "name": "AICharacterPassenger::GetRotPos",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d2aa0",
-   "name": "RVehicle::TriggerIlluminate",
-   "batch": "P012"
+   "address": "0x0012ab00",
+   "name": "_List_base<WGridNodeElem,_allocator<WGridNodeElem>_>::clear",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d3e30",
-   "name": "RVehicle::Debug",
-   "batch": "P012"
+   "address": "0x0013be00",
+   "name": "AIHelicopter::GetSimHeli",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d4078",
-   "name": "RVehicle::operator_delete",
-   "batch": "P012"
+   "address": "0x0013be20",
+   "name": "AIHelicopter::SetSimHeli",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d40d0",
-   "name": "RVehicle::fDoSimpleShadow_global_ctors",
-   "batch": "P012"
+   "address": "0x0013e420",
+   "name": "AIVehicle::AIVehicle_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d51f8",
-   "name": "RViewCamera::fCulling_global_dtors",
-   "batch": "P012"
+   "address": "0x001447b0",
+   "name": "TextFile::Printf",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d6cd0",
-   "name": "RWorldCamera::operator_new",
-   "batch": "P012"
+   "address": "0x00144830",
+   "name": "TextFile::Print",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d6cf0",
-   "name": "RWorldCamera::operator_delete",
-   "batch": "P012"
+   "address": "0x00144888",
+   "name": "TextFile::TextFile",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d6d10",
-   "name": "RWorldCamera::CreateDBVars",
-   "batch": "P012"
+   "address": "0x001448d0",
+   "name": "TextFile::~TextFile",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d6d30",
-   "name": "RWorldCamera::CameraInputCallback",
-   "batch": "P012"
+   "address": "0x0016ec80",
+   "name": "AttributeSystem::ConfigEditParameters",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d7d78",
-   "name": "RBulletStreak::Add",
-   "batch": "P012"
+   "address": "0x001755b8",
+   "name": "UberBond::IsLoaderPresent",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d93c8",
-   "name": "RColorize::fgThis_RColorize_global_ctors",
-   "batch": "P012"
+   "address": "0x001755c8",
+   "name": "UberBond::IsLoadedFromCDOrDVD",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d9bb8",
-   "name": "RDebrisType::Add",
-   "batch": "P012"
+   "address": "0x00180970",
+   "name": "Mine::Mine_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001dd248",
-   "name": "REmpBolts::CreateVehicleBolt",
-   "batch": "P012"
+   "address": "0x00185398",
+   "name": "Newton::Newton_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001dd4a0",
-   "name": "REmpBolts::CreateWorldBolt",
-   "batch": "P012"
+   "address": "0x00198428",
+   "name": "PVehicle::Shutdown",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001df198",
-   "name": "RFlockManager::FlockDB",
-   "batch": "P012"
+   "address": "0x001984b8",
+   "name": "PVehicle::MissionEditorSwitch",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001e0358",
-   "name": "RLensFlareManager::AddFlare",
-   "batch": "P012"
+   "address": "0x001985c0",
+   "name": "_Rb_tree<CStringKey,_unsigned_int>::_M_erase",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001e2d18",
-   "name": "RLightning::Bolt::Draw",
-   "batch": "P012"
+   "address": "0x00198628",
+   "name": "_Rb_tree<CStringKey,_unsigned_int>::lower_bound",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001e3028",
-   "name": "vector<RLightning::Bolt_*,_allocator<RLightning::Bolt_*>_>::_M_insert_aux",
-   "batch": "P012"
+   "address": "0x001986a0",
+   "name": "_Rb_tree<CStringKey,_unsigned_int>::_M_insert",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001e9100",
-   "name": "RMovableParticleSystem::operator_delete",
-   "batch": "P012"
+   "address": "0x00198a08",
+   "name": "_Rb_tree<CStringKey,_unsigned_int>::insert_unique",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001ea468",
-   "name": "RPostProcessing::Debug",
-   "batch": "P012"
+   "address": "0x00198b98",
+   "name": "_Rb_tree<CStringKey,_unsigned_int>::insert_unique",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001ea470",
-   "name": "RPostProcessing::GrabBackBuffer",
-   "batch": "P012"
+   "address": "0x00199f88",
+   "name": "RayShell::CollideWithWorld",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001eb078",
-   "name": "RScorchWorld::ScorchGround",
-   "batch": "P012"
+   "address": "0x0019a710",
+   "name": "RayShell::DamagePhysicsObject",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001eb6b0",
-   "name": "RShadowMap::ShadowPrivateData::ShadowPrivateData",
-   "batch": "P012"
+   "address": "0x001a4720",
+   "name": "RCamera::RCamera_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001ec390",
-   "name": "RShadowMap::Resolve",
-   "batch": "P012"
+   "address": "0x001a4978",
+   "name": "RCameraIniLoader::RCameraIniLoader",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001ec4a0",
-   "name": "RShadowMap::DrawSimpleShadow",
-   "batch": "P012"
+   "address": "0x001a4988",
+   "name": "RCameraIniLoader::~RCameraIniLoader",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001ecdf8",
-   "name": "RShadowMap::fgThis_RShadowMap_global_ctors",
-   "batch": "P012"
+   "address": "0x001a7020",
+   "name": "RCameraIniLoader::kMaxTumble_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001ece18",
-   "name": "RSky::Draw",
-   "batch": "P012"
+   "address": "0x001a8848",
+   "name": "_List_base<COORD4,_allocator<COORD4>_>::clear",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001ed8d8",
-   "name": "RSniperZoom::SetupVerts",
-   "batch": "P012"
+   "address": "0x001a88e8",
+   "name": "RCameraSpline::RCameraSpline_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001ede28",
-   "name": "RSniperZoom::fgThis_RSniperZoom_global_ctors",
-   "batch": "P012"
+   "address": "0x001abf98",
+   "name": "RRenderer::BeginView",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001ef338",
-   "name": "RVehicleParticle::ResetAll",
-   "batch": "P012"
+   "address": "0x001abfa0",
+   "name": "RRenderer::FlushDrawLists",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001f0148",
-   "name": "_Rb_tree<RVehicleParticle_*,_RVehicleParticle_*>::insert_unique",
-   "batch": "P012"
+   "address": "0x001abfc0",
+   "name": "RRenderer::ClearDrawLists",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001f0b80",
-   "name": "RWindow::Kill",
-   "batch": "P012"
+   "address": "0x001abfe8",
+   "name": "RRenderer::EndView",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001f5a48",
-   "name": "RTyreTrack::Break",
-   "batch": "P012"
+   "address": "0x001abff8",
+   "name": "RRenderer::EnterReflection",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001f5ff8",
-   "name": "OBB::CheckOBBOverlapAndFindIntersection",
-   "batch": "P012"
+   "address": "0x001b1838",
+   "name": "RPathEngine::RPathHandle::SetNextPath",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001f63a8",
-   "name": "PackedRigidBody::GetLinearVelocityCH",
-   "batch": "P012"
+   "address": "0x001b1840",
+   "name": "RPathEngine::RPathHandle::GetParametricDuration",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001f86e8",
-   "name": "RigidBody::ResolveForce",
-   "batch": "P012"
+   "address": "0x001b1850",
+   "name": "RPathEngine::RPathHandle::SetRunning",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00201d10",
-   "name": "_Rb_tree<unsigned_int,_PhysicsObject_*>::_M_erase",
-   "batch": "P012"
+   "address": "0x001cd178",
+   "name": "RSkeletalObj::SetProcAnimState",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00201d78",
-   "name": "_Rb_tree<PhysicsObjMapIterator,_PhysicsObjMapIterator>::_M_erase",
-   "batch": "P012"
+   "address": "0x001d1df0",
+   "name": "RTextureContextManager::Init",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00208468",
-   "name": "SMissionManager::GetEnemyGlueFactor",
-   "batch": "P012"
+   "address": "0x001d1e28",
+   "name": "RTextureContextManager::Kill",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0020b8a8",
-   "name": "SMissionRule::SMissionRule_global_ctors",
-   "batch": "P012"
+   "address": "0x001d5838",
+   "name": "RWorldCamera::IsAnchorValid",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0020ea20",
-   "name": "SWeaponManager::StartNuclearSequence",
-   "batch": "P012"
+   "address": "0x001d5888",
+   "name": "RWorldCamera::GetAnchorSpeed",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0020ea60",
-   "name": "SWeaponManager::HandleNuclearSequence",
-   "batch": "P012"
+   "address": "0x001d5940",
+   "name": "RWorldCamera::GetAnchorAcceleration",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00212ed0",
-   "name": "WCollisionInstance::MakeMatrix",
-   "batch": "P012"
+   "address": "0x001d5a58",
+   "name": "RWorldCamera::GetAnchorAngularAcceleration",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002138b0",
-   "name": "WCollisionMgr::FindFaceInTriStrip",
-   "batch": "P012"
+   "address": "0x001d5b90",
+   "name": "RWorldCamera::GetAnchorMatrix4",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00213d68",
-   "name": "WCollisionMgr::FindFaceInTriStrip",
-   "batch": "P012"
+   "address": "0x001d5cd0",
+   "name": "RWorldCamera::GetAnchorPosition",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00213ff8",
-   "name": "WCollisionMgr::FindFaceInCInst",
-   "batch": "P012"
+   "address": "0x001d5d50",
+   "name": "RWorldCamera::GetAnchorLinearVelocity",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00214338",
-   "name": "WCollisionMgr::FindFaceInCInst",
-   "batch": "P012"
+   "address": "0x001de640",
+   "name": "REmpBolts::kSnapToBoundingBox_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0021e100",
-   "name": "WGrid::RangeCheck",
-   "batch": "P012"
+   "address": "0x001df4a0",
+   "name": "vector<RFlock_*,_allocator<RFlock_*>_>::_M_insert_aux",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0021e420",
-   "name": "vector<unsigned_int,_allocator<unsigned_int>_>::_M_insert_aux",
-   "batch": "P012"
+   "address": "0x001df738",
+   "name": "RFlockManager::Init",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00222ca0",
-   "name": "WRoadNetwork::GetSegmentCurveStep",
-   "batch": "P012"
+   "address": "0x001df770",
+   "name": "RFlockManager::Kill",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00230c48",
-   "name": "WWorld::GetProcAnimStateFromInstance",
-   "batch": "P012"
+   "address": "0x001dfb88",
+   "name": "RGain::Init",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00232228",
-   "name": "WWorldPos::MakeFaceAtPoint",
-   "batch": "P012"
+   "address": "0x001dfbc0",
+   "name": "RGain::Kill",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002327a0",
-   "name": "WWorldPos::HeightAtPoint",
-   "batch": "P012"
+   "address": "0x001e0870",
+   "name": "RLensFlareManager::Init",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00232ad8",
-   "name": "WWorldPos::WWorldPos_global_ctors",
-   "batch": "P012"
+   "address": "0x001e08a8",
+   "name": "RLensFlareManager::Kill",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00233440",
-   "name": "GFX::fGallery_global_ctors",
-   "batch": "P012"
+   "address": "0x001e82f8",
+   "name": "_Rb_tree<unsigned_int,_RParticleSystem_*>::find",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002356d8",
-   "name": "GFXGallery::CANVAS_SetCulling",
-   "batch": "P012"
+   "address": "0x001ea4d0",
+   "name": "RPostProcessing::PPPrivateData::ExtractAlphaInfo",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00235808",
-   "name": "GFXGallery::DEBRIS_SetState",
-   "batch": "P012"
+   "address": "0x001ed228",
+   "name": "RSky::Draw_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00235810",
-   "name": "GFXGallery::DEBRIS_Draw",
-   "batch": "P012"
+   "address": "0x001f13f0",
+   "name": "_Rb_tree<WCollisionInstance_*,_WCollisionInstance>::find",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00237928",
-   "name": "GGallery::FONT_Draw",
-   "batch": "P012"
+   "address": "0x001fd170",
+   "name": "RigidBody::ForceToSleep",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00237a50",
-   "name": "GGallery::FONT_Draw",
-   "batch": "P012"
+   "address": "0x001fdf40",
+   "name": "SimpleRigidBody::SimpleRigidBody_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00237b80",
-   "name": "GGallery::FONT_Draw",
-   "batch": "P012"
+   "address": "0x00209200",
+   "name": "_List_base<SMissionRule_*,_allocator<SMissionRule_*>_>::clear",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00237ce0",
-   "name": "GGallery::FONT_Height",
-   "batch": "P012"
+   "address": "0x002092d8",
+   "name": "MissionSectionProfile::Clear",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00239498",
-   "name": "GGallery::TRANSFORM_Vertices",
-   "batch": "P012"
+   "address": "0x002127f0",
+   "name": "WCollider::GetWorldNormal",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0023c6c8",
-   "name": "GHud::SetLevelLoadText",
-   "batch": "P012"
+   "address": "0x00212bf0",
+   "name": "WCollider::WCollider_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002454f0",
-   "name": "GHud::ComputeAngle0to1",
-   "batch": "P012"
+   "address": "0x00212c10",
+   "name": "WCollisionObject::MakeMatrix",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00249930",
-   "name": "GLoadingScreen::ClearFrameBuffers",
-   "batch": "P012"
+   "address": "0x00212cc8",
+   "name": "WCollisionInstance::GetRenderInstance",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0024ad40",
-   "name": "GSubtitleSplitter::GetString",
-   "batch": "P012"
+   "address": "0x0021e650",
+   "name": "WGridNode::TotalSize",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0024b820",
-   "name": "GSystem::ParticleShapeFileInUse",
-   "batch": "P012"
+   "address": "0x00229ce8",
+   "name": "WTargetable::fTargetsInWorld_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0024bd68",
-   "name": "IniFiles::WriteFloat",
-   "batch": "P012"
+   "address": "0x0022c008",
+   "name": "_List_base<WTargetable_*,_allocator<WTargetable_*>_>::clear",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0019e088",
-   "name": "Shell::operator_delete",
-   "batch": "P013"
+   "address": "0x0022c070",
+   "name": "list<WTargetable_*,_allocator<WTargetable_*>_>::remove",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0019f8c0",
-   "name": "Draw::SetZDepthFar",
-   "batch": "P013"
+   "address": "0x0022f3c0",
+   "name": "WTriggerManager::fgTriggerManager_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0019f8d8",
-   "name": "Draw::SetZDepthNear",
-   "batch": "P013"
+   "address": "0x0022f428",
+   "name": "WVisCurtain::CalcRadius",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0019f8f0",
-   "name": "Draw::DrawLineMesh",
-   "batch": "P013"
+   "address": "0x0022f620",
+   "name": "WVisCurtain::WVisCurtain",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0019f938",
-   "name": "Draw::DrawLineMeshC",
-   "batch": "P013"
+   "address": "0x0022f660",
+   "name": "WVisCurtain::WVisCurtain",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001a19c8",
-   "name": "Draw::squareUV_global_ctors",
-   "batch": "P013"
+   "address": "0x00231ff8",
+   "name": "WWorldMath::Quatern_Interpolate",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001a19e8",
-   "name": "RAnimEngine::Init",
-   "batch": "P013"
+   "address": "0x00237e88",
+   "name": "GGallery::LINE_Draw2D",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001a1a00",
-   "name": "RAnimEngine::Shutdown",
-   "batch": "P013"
+   "address": "0x0023a7e8",
+   "name": "GGirl::fCurrentTexture_global_ctors",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00194cb0",
-   "name": "PHelicopter::PHelicopter_global_ctors",
-   "batch": "P014"
+   "address": "0x00244828",
+   "name": "GHud::DrawRadar2DBlips",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00195ff0",
-   "name": "PhysicsObject::GetSimpleRigidBody",
-   "batch": "P014"
+   "address": "0x00244c00",
+   "name": "GHud::DrawRadar2DPulse",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00196018",
-   "name": "PhysicsObject::GetSimpleRigidBodyPtr",
-   "batch": "P014"
+   "address": "0x002477a0",
+   "name": "GHud::dbDrawTarget",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00196040",
-   "name": "PhysicsObject::GetRigidBody",
-   "batch": "P014"
+   "address": "0x00249260",
+   "name": "GLoadingScreen::DrawDebugMessage",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00196068",
-   "name": "PhysicsObject::GetRigidBodyPtr",
-   "batch": "P014"
+   "address": "0x00249268",
+   "name": "GLoadingScreen::Print",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001b0d10",
-   "name": "ROffscreenBuffer::End",
-   "batch": "P014"
+   "address": "0x00249528",
+   "name": "GLoadingScreen::PrintChannel",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x001d8048",
-   "name": "RBulletStreak::Add",
-   "batch": "P014"
+   "address": "0x00283fc8",
+   "name": "EAGL::GeoPrimState::SetPrimitiveType",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00208428",
-   "name": "SMissionManager::GetEnemyAccuracyBoost",
-   "batch": "P014"
+   "address": "0x00284038",
+   "name": "EAGL::GeoPrimState::SetDepthTestMethod",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002083e8",
-   "name": "SMissionManager::GetScore",
-   "batch": "P014"
+   "address": "0x002840c0",
+   "name": "EAGL::Model::RemoveModel",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002083f8",
-   "name": "SMissionManager::GetScoreTotal",
-   "batch": "P014"
+   "address": "0x00285ba0",
+   "name": "EAGL::Model::PS2SetOverlay",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00210460",
-   "name": "SWeaponManager::fWeaponSortOrder_global_ctors",
-   "batch": "P014"
+   "address": "0x00285ca8",
+   "name": "EAGL::Model::Patch",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00231418",
-   "name": "WWorldMath::CalcBoundingBox",
-   "batch": "P014"
+   "address": "0x00285e88",
+   "name": "EAGL::Model::~Model",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002313f8",
-   "name": "WWorld::SetTrackName_global_ctors",
-   "batch": "P014"
+   "address": "0x00291130",
+   "name": "EAGL::RenderContextExtension::GetZBufferInfo",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00235720",
-   "name": "GFXGallery::CANVAS_Suppress",
-   "batch": "P014"
+   "address": "0x00291178",
+   "name": "EAGL::RenderContextExtension::GetFrontBuffer",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00235750",
-   "name": "GFXGallery::CANVAS_SetIntensity",
-   "batch": "P014"
+   "address": "0x00291188",
+   "name": "EAGL::RenderContextExtension::GetBackBuffer",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00238028",
-   "name": "GGallery::LINE_Draw2DStrip",
-   "batch": "P014"
+   "address": "0x00293750",
+   "name": "EAGL::Transform::BuildAimedTrans",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0012c5d0",
-   "name": "AIElementController::OkToSpawnHench",
-   "batch": "P014"
+   "address": "0x00293890",
+   "name": "EAGL::Transform::BuildSRT",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00138b88",
-   "name": "AIHelicopter::FireBullets",
-   "batch": "P014"
+   "address": "0x00293aa0",
+   "name": "EAGL::Transform::BuildMatrix",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0024e8b0",
-   "name": "__class_type_info::dcast",
-   "batch": "P015"
+   "address": "0x00294580",
+   "name": "EAGL::Transform::AppendRotTrans",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0024eaf8",
-   "name": "__class_type_info::~__class_type_info",
-   "batch": "P015"
+   "address": "0x00294620",
+   "name": "EAGL::Transform::AppendRotTrans",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0024eb88",
-   "name": "__si_type_info::~__si_type_info",
-   "batch": "P015"
+   "address": "0x002946e0",
+   "name": "EAGL::Transform::AppendQuatTrans",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0024ec30",
-   "name": "bad_typeid::~bad_typeid",
-   "batch": "P015"
+   "address": "0x00294a40",
+   "name": "EAGL::Transform::PrependRotTrans",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0024ecc8",
-   "name": "bad_cast::~bad_cast",
-   "batch": "P015"
+   "address": "0x00294ad8",
+   "name": "EAGL::Transform::PrependRotTrans",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002514f8",
-   "name": "bad_alloc::what",
-   "batch": "P015"
+   "address": "0x00294b98",
+   "name": "EAGL::Transform::PrependQuatTrans",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0027d088",
-   "name": "EAGL::TARExtension::SwapClut",
-   "batch": "P015"
+   "address": "0x002950b0",
+   "name": "EAGL::Transform::BuildSQT",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0027f480",
-   "name": "EAGLInternal::Image::Init",
-   "batch": "P015"
+   "address": "0x00295238",
+   "name": "EAGL::Transform::ReplaceRotate",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0027f850",
-   "name": "EAGLInternal::Image::BuildChains",
-   "batch": "P015"
+   "address": "0x00296f98",
+   "name": "EAGL::ViewPort::SetGuardBandScale",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00285608",
-   "name": "EAGL::Model::VariableTable::find_end",
-   "batch": "P015"
+   "address": "0x00297700",
+   "name": "EAGL::VU0_quatstoangvel",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00285780",
-   "name": "EAGL::Model::GetChild",
-   "batch": "P015"
+   "address": "0x00297c60",
+   "name": "EAGL::VU0_MATRIX4_mult",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002869c0",
-   "name": "EAGL::Model::VariableTable::find_first",
-   "batch": "P015"
+   "address": "0x00299970",
+   "name": "EAGL::ProfilerRegion::ProcessRegions",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00286c68",
-   "name": "EAGLInternal::ProfileDMDraw_global_ctors",
-   "batch": "P015"
+   "address": "0x00299a00",
+   "name": "EAGL::ProfilerRegion::ProcessInput",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00289548",
-   "name": "EAGLInternal::DMA_To_VIF1_SourceChain",
-   "batch": "P015"
+   "address": "0x0029c0f8",
+   "name": "EAGL::DrawArray::SetPrimitiveType",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002910d8",
-   "name": "EAGL::RenderContextExtension::ReadImageDuringFrame",
-   "batch": "P015"
+   "address": "0x0029c1a0",
+   "name": "EAGL::DrawArray::GetIndexFromName",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00291208",
-   "name": "EAGL::RenderContextExtension::SetDXPos",
-   "batch": "P015"
+   "address": "0x0029c250",
+   "name": "EAGL::DrawArray::SetParamName",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00291218",
-   "name": "EAGL::RenderContextExtension::GetDXPos",
-   "batch": "P015"
+   "address": "0x0029c2e8",
+   "name": "EAGL::DrawArray::SetVar",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00291228",
-   "name": "EAGL::RenderContextExtension::SetDYPos",
-   "batch": "P015"
+   "address": "0x0029c3b0",
+   "name": "EAGL::DrawArray::SetVar",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00291258",
-   "name": "EAGL::RenderContextExtension::SetTRCCalledEndFrame",
-   "batch": "P015"
+   "address": "0x0029c488",
+   "name": "EAGL::DrawArray::Lock",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00291338",
-   "name": "EAGLInternal::RenderContextPrivate::EAGLVBL_start",
-   "batch": "P015"
+   "address": "0x0029c4a0",
+   "name": "EAGL::DrawArray::Unlock",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002913e8",
-   "name": "EAGL::RenderContextExtension::SetVBLKick",
-   "batch": "P015"
+   "address": "0x0029c4b0",
+   "name": "EAGL::DrawArray::Draw",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00291ce8",
-   "name": "EAGL::TextureRenderContextExtension::SetRenderMask",
-   "batch": "P015"
+   "address": "0x0029c558",
+   "name": "EAGL::DrawArray::SetNumVerts",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00291e88",
-   "name": "EAGL::TextureRenderContextExtension::SetAlphaCorrection",
-   "batch": "P015"
+   "address": "0x0029c568",
+   "name": "EAGL::DrawArray::SetLocalMatrix",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00291fe8",
-   "name": "EAGL::TextureRenderContextExtension::DisableZWrite",
-   "batch": "P015"
+   "address": "0x0029c588",
+   "name": "EAGL::DrawGouraud::DrawGouraud",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00293500",
-   "name": "EAGL::Transform::PostMult",
-   "batch": "P015"
+   "address": "0x0029c678",
+   "name": "EAGL::DrawGouraud::~DrawGouraud",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00293520",
-   "name": "EAGL::Transform::BuildScale",
-   "batch": "P015"
+   "address": "0x0029c750",
+   "name": "EAGL::DrawGouraud::InternalFlush",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00294030",
-   "name": "EAGL::Transform::Inverse",
-   "batch": "P015"
+   "address": "0x0029c800",
+   "name": "EAGL::DrawGouraud::End",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00294188",
-   "name": "EAGL::Transform::ElementMinor",
-   "batch": "P015"
+   "address": "0x0029c8c8",
+   "name": "EAGL::DrawGouraud::SetState",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002944e0",
-   "name": "EAGL::Transform::AppendRotate",
-   "batch": "P015"
+   "address": "0x0029c908",
+   "name": "EAGL::DrawGouraud::GetState",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002949a0",
-   "name": "EAGL::Transform::PrependRotate",
-   "batch": "P015"
+   "address": "0x0029c910",
+   "name": "EAGL::DrawGouraud::SetModelMatrix",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00294f28",
+   "address": "0x0029c930",
+   "name": "EAGL::DrawClipGouraud::DrawClipGouraud",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029ca20",
+   "name": "EAGL::DrawClipGouraud::~DrawClipGouraud",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029caf8",
+   "name": "EAGL::DrawClipGouraud::InternalFlush",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029cba8",
+   "name": "EAGL::DrawClipGouraud::End",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029cc70",
+   "name": "EAGL::DrawClipGouraud::SetState",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029ccb8",
+   "name": "EAGL::DrawClipGouraud::SetModelMatrix",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029ccd8",
+   "name": "EAGL::DrawTextured::DrawTextured",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029cdd0",
+   "name": "EAGL::DrawTextured::~DrawTextured",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029cec0",
+   "name": "EAGL::DrawTextured::InternalFlush",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029cf70",
+   "name": "EAGL::DrawTextured::End",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029d038",
+   "name": "EAGL::DrawTextured::SetState",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029d080",
+   "name": "EAGL::DrawTextured::SetModelMatrix",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029d1d8",
+   "name": "EAGL::DrawClipTextured::DrawClipTextured",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029d2d0",
+   "name": "EAGL::DrawClipTextured::~DrawClipTextured",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029d3c0",
+   "name": "EAGL::DrawClipTextured::InternalFlush",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029d470",
+   "name": "EAGL::DrawClipTextured::End",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029d538",
+   "name": "EAGL::DrawClipTextured::SetState",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029d580",
+   "name": "EAGL::DrawClipTextured::SetModelMatrix",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0029d6d8",
+   "name": "EAGL::Print",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002656b8",
+   "name": "EAGLAnim::MemoryPoolManager::NewBlockByIdx",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00265788",
+   "name": "EAGLAnim::MemoryPoolManager::ResetPool",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00268cb0",
+   "name": "EAGLAnim::FnDeltaQ::InitBuffersAsRequired",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00268d88",
+   "name": "EAGLAnim::FnDeltaQ::SetAnimMemoryMap",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00268d90",
+   "name": "EAGLAnim::FnDeltaQ::GetLength",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00268dd0",
+   "name": "EAGLAnim::FnDeltaQ::Eval",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00268e08",
+   "name": "EAGLAnim::FnDeltaQ::EvalSQT",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0026b368",
+   "name": "EAGLAnim::FnDeltaSingleQ::~FnDeltaSingleQ",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002717d8",
+   "name": "EAGLAnim::FnDeltaF1::SetAnimMemoryMap",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002717f0",
+   "name": "EAGLAnim::FnDeltaF1::GetLength",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00271830",
+   "name": "EAGLAnim::FnDeltaF1::Eval",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00271860",
+   "name": "EAGLAnim::FnDeltaF1::EvalWeights",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00271890",
+   "name": "EAGLAnim::FnDeltaF1::EvalVel2D",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002718c0",
+   "name": "EAGLAnim::FnEventBlender::Eval",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275670",
+   "name": "EAGLAnim::FnDeltaLerpChan::~FnDeltaLerpChan",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275b80",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_new",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275ba8",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_new",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275bd0",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_delete",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275bf8",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_new_array",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275c20",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_new_array",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275c48",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_delete_array",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275c70",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_new",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275c78",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_delete",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275c80",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_new_array",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275c88",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_delete_array",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275c90",
+   "name": "EAGLAnim::FnKeyDeltaChan::FnKeyDeltaChan",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275cd0",
+   "name": "EAGLAnim::FnKeyLerpChan::~FnKeyLerpChan",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275de0",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_new",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275e08",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_new",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275e30",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_delete",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275e58",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_new_array",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275e80",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_new_array",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275ea8",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_delete_array",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275ed0",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_new",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275ed8",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_delete",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275ee0",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_new_array",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275ee8",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_delete_array",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275ef0",
+   "name": "EAGLAnim::FnKeyLerpChan::FnKeyLerpChan",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00275f38",
+   "name": "EAGLAnim::FnKeyQuatChan::~FnKeyQuatChan",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00277758",
+   "name": "EAGLAnim::FnPhaseChan::SetAnimMemoryMap",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002777b8",
+   "name": "EAGLAnim::FnRunBlender::~FnRunBlender",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002779e0",
+   "name": "EAGLAnim::FnRunBlender::EvalSQT",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00277c08",
+   "name": "EAGLAnim::FnRunBlender::SetWeight",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002781c8",
+   "name": "EAGLAnim::FnRunBlender::SetAnims",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00278b48",
+   "name": "EAGLAnim::FnRunBlender::AlignVel",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0027a448",
+   "name": "EAGLAnim::FnTurnBlender::AlignVel",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002d8368",
+   "name": "UFileLoader::m_bInitialized_global_ctors",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002d8388",
+   "name": "UFileLoader::m_bInitialized_global_dtors",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002d9070",
+   "name": "LString::SplitAtFirstOccurence",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002d90e8",
+   "name": "LString::SplitAtLastOccurence",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002d9178",
+   "name": "LString::SplitAtIndex",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002d91c0",
+   "name": "LString::AsString",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002e67e0",
+   "name": "ATrafficVehicle::GetName",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002e6a20",
+   "name": "ATrafficVehicle::IsTracked",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002e7018",
+   "name": "UDevCons::AbortMessage",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002f45e0",
+   "name": "_List_base<AMix_*,_allocator<AMix_*>_>::clear",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00122210",
+   "name": "AICharacterEnemySunroof::GetCarPtr",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001237f0",
+   "name": "AICharacterHands::GetRotPos",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00124f30",
+   "name": "AICharacterHands::SetZoomButton",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00124f40",
+   "name": "AICharacterHands::Get",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00124f50",
+   "name": "AICharacterHands::AreVisible",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013bdc0",
+   "name": "AIHelicopter::GetType",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013bdc8",
+   "name": "AIHelicopter::SetType",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013bdd0",
+   "name": "AIHelicopter::GetNavigateMode",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013bdd8",
+   "name": "AIHelicopter::SetNavigateMode",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013bde0",
+   "name": "AIHelicopter::GetTargetMode",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013bde8",
+   "name": "AIHelicopter::SetTargetMode",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013bdf0",
+   "name": "AIHelicopter::GetAttackMode",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013bdf8",
+   "name": "AIHelicopter::SetAttackMode",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013be40",
+   "name": "AIHelicopter::SetAttackedPosition",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013be60",
+   "name": "AIHelicopter::SetTargetPosition",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013be80",
+   "name": "AIHelicopter::GetHeliTargetPosition",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013be88",
+   "name": "AIHelicopter::GetHeliBulletDir",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013be90",
+   "name": "AIHelicopter::GetTargetBeacon",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013be98",
+   "name": "AIHelicopter::SetPrimaryTarget",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013bea0",
+   "name": "AIHelicopter::GetPrimaryTarget",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013e3d8",
+   "name": "AIVehicle::GetVehicleType",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013e3e0",
+   "name": "AIVehicle::SetVehicleType",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013e3e8",
+   "name": "AIVehicle::GetDriveToNav",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013e3f0",
+   "name": "AIVehicle::SetActive",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013e3f8",
+   "name": "AIVehicle::IsActive",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013e400",
+   "name": "AIVehicle::SetValidCommand",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013e408",
+   "name": "AIVehicle::ValidCommand",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013e410",
+   "name": "AIVehicle::GetControllerIdx",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0013e418",
+   "name": "AIVehicle::SetControllerIdx",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0019efd0",
+   "name": "Smackable::GetTrigger",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a4698",
+   "name": "RCamera::GetVelocity4",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a46a0",
+   "name": "RCamera::GetVelocity",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a46a8",
+   "name": "RCamera::SetViewAngle",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a46d0",
+   "name": "RCamera::GetViewAngle",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a46d8",
+   "name": "RCamera::IsActive",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a46e0",
+   "name": "RCamera::GetPosition4",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a46e8",
+   "name": "RCamera::GetPosition3",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a46f0",
+   "name": "RCamera::GetForwardVec4",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a46f8",
+   "name": "RCamera::GetForwardVec3",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a4700",
+   "name": "RCamera::GetUpVec4",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a4708",
+   "name": "RCamera::GetUpVec3",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a4710",
+   "name": "RCamera::GetRightVec4",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001a4718",
+   "name": "RCamera::GetRightVec3",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001abf80",
+   "name": "RRenderer::CalculateCompensatedDepthBias",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001b1830",
+   "name": "RPathEngine::RPathHandle::SetCurrentPath",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001b1858",
+   "name": "RPathEngine::RPathHandle::SetSpeed",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001c6298",
+   "name": "ActActorDatabase::SetActorCull",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001d1de0",
+   "name": "RTextureContextManager::Get",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001de660",
+   "name": "RFlockGoal::RFlockGoal",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001df728",
+   "name": "RFlockManager::Get",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001dfb78",
+   "name": "RGain::Get",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x001e0860",
+   "name": "RLensFlareManager::Get",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00220bc0",
+   "name": "InstanceAndDistance::lessThanByInstance",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00220bd0",
+   "name": "InstanceAndDistance::greaterThanByDistance",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0022f6d0",
+   "name": "WVisCurtain::Draw",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00237d90",
+   "name": "GGallery::LINE_Draw2D",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0023a7d0",
+   "name": "GGirlieMaterial::GetShape",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0023a7d8",
+   "name": "GGirlieMaterial::GetTexture",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0023a7e0",
+   "name": "GGirlieMaterial::GetMaterial",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00244790",
+   "name": "GHud::GetHelpIconAndTextSpacing",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00244c08",
+   "name": "GHud::DrawRadar2D",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00284008",
+   "name": "EAGL::GeoPrimState::GetPrimitiveType",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00284088",
+   "name": "EAGL::GeoPrimState::GetDepthTestMethod",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00285c80",
+   "name": "EAGL::Model::IsOn",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00285c90",
+   "name": "EAGL::Model::On",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00285ca0",
+   "name": "EAGL::Model::Off",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00285cf0",
+   "name": "EAGL::Model::Model",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00285df0",
+   "name": "EAGL::Model::Model",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00285eb8",
+   "name": "EAGL::Model::Link",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00286a58",
+   "name": "EAGL::Model::Variable::IsModifiable",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00286a68",
+   "name": "EAGL::Model::Variable::CopyData",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002935b8",
+   "name": "EAGL::Transform::BuildIdentity",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00293608",
+   "name": "EAGL::Transform::BuildZero",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00293658",
+   "name": "EAGL::Transform::BuildRotTrans",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002936d0",
+   "name": "EAGL::Transform::BuildRotTrans",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00293c20",
+   "name": "EAGL::Transform::TransformPoints",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00293d40",
+   "name": "EAGL::Transform::TransformPoints",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00293e48",
+   "name": "EAGL::Transform::TransformPoints",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00293f48",
+   "name": "EAGL::Transform::TransformPoints",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00294518",
+   "name": "EAGL::Transform::AppendTranslate",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x002949d8",
+   "name": "EAGL::Transform::PrependTranslate",
+   "batch": "P019"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00295010",
    "name": "EAGL::Transform::OrthoInverse",
-   "batch": "P015"
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00296f58",
-   "name": "EAGL::ViewPort::EndView",
-   "batch": "P015"
+   "address": "0x00297488",
+   "name": "EAGL::ViewPort::GetProjectionMatrix",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00296fa8",
-   "name": "EAGL::ViewPortExtension::ViewPortExtension",
-   "batch": "P015"
+   "address": "0x00297490",
+   "name": "EAGL::ViewPort::GetViewProjectionMatrix",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002985d0",
-   "name": "EAGL::VU0_SQTquattom4",
-   "batch": "P015"
+   "address": "0x00297498",
+   "name": "EAGL::VU0_m4toquat",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00299458",
-   "name": "EAGL::Profiler::ProcessProfile",
-   "batch": "P015"
+   "address": "0x00297bf8",
+   "name": "EAGL::VU0_MATRIX3x4_multtrans",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002998e8",
-   "name": "EAGL::ProfilerRegion::~ProfilerRegion",
-   "batch": "P015"
+   "address": "0x00297d80",
+   "name": "EAGL::VU0_Sin",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0029b6b8",
-   "name": "EAGL::DrawClipTextured::Init",
-   "batch": "P015"
+   "address": "0x00297e48",
+   "name": "EAGL::VU0_Cos",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x0029f478",
-   "name": "EAGL::DynamicLoader::GetSymbol",
-   "batch": "P015"
+   "address": "0x00297f20",
+   "name": "EAGL::VU0_MATRIX4setxrot",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002659a8",
-   "name": "EAGLAnim::FnCompoundChannel::EvalEvent",
-   "batch": "P015"
+   "address": "0x002980e8",
+   "name": "EAGL::VU0_MATRIX4setyrot",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00265b28",
-   "name": "EAGLAnim::FnCompoundChannel::EvalSQT",
-   "batch": "P015"
+   "address": "0x002982b0",
+   "name": "EAGL::VU0_MATRIX4setzrot",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00265c90",
-   "name": "EAGLAnim::FnCompoundChannel::EvalWeights",
-   "batch": "P015"
+   "address": "0x00299798",
+   "name": "EAGL::ProfilerRegion::History::History",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00265df8",
-   "name": "EAGLAnim::FnCompoundChannel::EvalVel2D",
-   "batch": "P015"
+   "address": "0x002997d8",
+   "name": "EAGL::ProfilerRegion::History::SetHistoryValue",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00265f60",
-   "name": "EAGLAnim::FnCompoundChannel::EvalState",
-   "batch": "P015"
+   "address": "0x00299930",
+   "name": "EAGL::ProfilerRegion::ClearAllRegionsHighWaterMarks",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002660c8",
-   "name": "EAGLAnim::FnCompoundChannel::GetPhaseChan",
-   "batch": "P015"
+   "address": "0x00299aa0",
+   "name": "EAGL::ProfilerRegion::ResetAllCycleCounts",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00267178",
-   "name": "EAGLAnim::FnRawStateChan::operator_new",
-   "batch": "P015"
+   "address": "0x0029c230",
+   "name": "EAGL::DrawArray::GetNameFromIndex",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002671a0",
-   "name": "EAGLAnim::FnRawStateChan::operator_new",
-   "batch": "P015"
+   "address": "0x0029ccb0",
+   "name": "EAGL::DrawClipGouraud::GetState",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002671c8",
-   "name": "EAGLAnim::FnRawStateChan::operator_delete",
-   "batch": "P015"
+   "address": "0x0029d078",
+   "name": "EAGL::DrawTextured::GetState",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x002671f0",
-   "name": "EAGLAnim::FnRawStateChan::operator_new_array",
-   "batch": "P015"
+   "address": "0x0029d578",
+   "name": "EAGL::DrawClipTextured::GetState",
+   "batch": "P019"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00267218",
-   "name": "EAGLAnim::FnRawStateChan::operator_new_array",
-   "batch": "P015"
+   "address": "0x0019efb0",
+   "name": "Smackable::operator_delete",
+   "batch": "P020"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00267240",
-   "name": "EAGLAnim::FnRawStateChan::operator_delete_array",
-   "batch": "P015"
+   "address": "0x00275510",
+   "name": "EAGLAnim::FnDeltaChan_type_info_function",
+   "batch": "P020"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00268ab8",
-   "name": "EAGLAnim::FnDeltaQ::operator_new",
-   "batch": "P015"
+   "address": "0x002cfd68",
+   "name": "UMemory::ObjectMemClass",
+   "batch": "P020"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00268ae0",
-   "name": "EAGLAnim::FnDeltaQ::operator_new",
-   "batch": "P015"
+   "address": "0x002126d0",
+   "name": "WCollider::InRegion",
+   "batch": "P020"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00268b08",
-   "name": "EAGLAnim::FnDeltaQ::operator_delete",
-   "batch": "P015"
+   "address": "0x002446d8",
+   "name": "GHud::DrawFont",
+   "batch": "P020"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00268b30",
-   "name": "EAGLAnim::FnDeltaQ::operator_new_array",
-   "batch": "P015"
+   "address": "0x00285b08",
+   "name": "EAGL::Model::SetTexture",
+   "batch": "P020"
   },
   {
    "program": "DRIVING.ELF",
-   "address": "0x00268b58",
-   "name": "EAGLAnim::FnDeltaQ::operator_new_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00268b80",
-   "name": "EAGLAnim::FnDeltaQ::operator_delete_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026b1f8",
-   "name": "EAGLAnim::FnDeltaSingleQ::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026b220",
-   "name": "EAGLAnim::FnDeltaSingleQ::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026b248",
-   "name": "EAGLAnim::FnDeltaSingleQ::operator_delete",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026b270",
-   "name": "EAGLAnim::FnDeltaSingleQ::operator_new_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026b298",
-   "name": "EAGLAnim::FnDeltaSingleQ::operator_new_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026b2c0",
-   "name": "EAGLAnim::FnDeltaSingleQ::operator_delete_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026b950",
-   "name": "EAGLAnim::FnDeltaSingleQ::SetAnimMemoryMap",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026bbc8",
-   "name": "EAGLAnim::FnDeltaQFast::SetAnimMemoryMap",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026bd08",
-   "name": "EAGLAnim::FnDeltaQFast::EvalSQT",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026c4f8",
-   "name": "EAGLAnim::FnDeltaQFast::UpdateNextQs",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026c6e8",
-   "name": "EAGLAnim::FnDeltaQFast::EvalSQTMask",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026fea0",
-   "name": "EAGLAnim::FnDeltaF3::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026fec8",
-   "name": "EAGLAnim::FnDeltaF3::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026fef0",
-   "name": "EAGLAnim::FnDeltaF3::operator_delete",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026ff18",
-   "name": "EAGLAnim::FnDeltaF3::operator_new_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026ff40",
-   "name": "EAGLAnim::FnDeltaF3::operator_new_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026ff68",
-   "name": "EAGLAnim::FnDeltaF3::operator_delete_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00272248",
-   "name": "EAGLAnim::RawPoseChannel::Eval",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00272ae8",
-   "name": "EAGLAnim::QuatF4Interp",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002759e0",
-   "name": "EAGLAnim::FnDeltaQuatChan::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00275a08",
-   "name": "EAGLAnim::FnDeltaQuatChan::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00275a30",
-   "name": "EAGLAnim::FnDeltaQuatChan::operator_delete",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00275a58",
-   "name": "EAGLAnim::FnDeltaQuatChan::operator_new_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00275a80",
-   "name": "EAGLAnim::FnDeltaQuatChan::operator_new_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00275aa8",
-   "name": "EAGLAnim::FnDeltaQuatChan::operator_delete_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00276658",
-   "name": "EAGLAnim::FnKeyDeltaChan::GetLength",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00276688",
-   "name": "EAGLAnim::FnKeyDeltaChan::EvalToPrevValues",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002775d8",
-   "name": "EAGLAnim::FnPhaseChan::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00277600",
-   "name": "EAGLAnim::FnPhaseChan::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00277628",
-   "name": "EAGLAnim::FnPhaseChan::operator_delete",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00277650",
-   "name": "EAGLAnim::FnPhaseChan::operator_new_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00277678",
-   "name": "EAGLAnim::FnPhaseChan::operator_new_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002776a0",
-   "name": "EAGLAnim::FnPhaseChan::operator_delete_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002776e8",
-   "name": "EAGLAnim::FnPhaseChan::FnPhaseChan",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002cdcf0",
-   "name": "UCharNamespace::NameLookup",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002cea68",
-   "name": "UCarpNamespace::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002cea88",
-   "name": "UCarpNamespace::operator_delete",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002d4688",
-   "name": "UData::EndianPrepareMembers",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002d4790",
-   "name": "UData::EndianUnprepareMembers",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002de7c8",
-   "name": "_List_base<AVoice::View_*,_allocator<AVoice::View_*>_>::clear",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002de998",
-   "name": "AViewSet::fgDefault_global_ctors",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002e3c90",
-   "name": "AUltraLite::PlayMotor",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002e5148",
-   "name": "ATurret::~ATurret",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002e8450",
-   "name": "ASubmersible::GetName",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002ed040",
-   "name": "ARegisterSound::Register",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002ed060",
-   "name": "ARegisterSound::LookupSound",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002ed078",
-   "name": "ARegisterSound::LookupSoundDynamicDataType",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002ed158",
-   "name": "_List_base<ABaseSound_*,_allocator<ABaseSound_*>_>::clear",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002ed1c0",
-   "name": "_List_base<char_*,_allocator<char_*>_>::clear",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002ed778",
-   "name": "ASound::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002ee768",
-   "name": "ASnowMobile::PlayCarving",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002effe8",
-   "name": "ASentry::~ASentry",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002f0730",
-   "name": "ASceneObj::IsStillActive",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002f0738",
-   "name": "ASceneObj::IsTracked",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002f0740",
-   "name": "ASceneObj::IsAirborne",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002f0cd0",
-   "name": "APlayerVehicle::GetName",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002f1128",
-   "name": "APlayerTank::~APlayerTank",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002f1ae8",
-   "name": "APlayerHeli::~APlayerHeli",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002f2a50",
-   "name": "AOneShotSound::AOneShotSound",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002f2c68",
-   "name": "AOneShotSound::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002f9610",
-   "name": "AFader::~AFader",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002f9808",
-   "name": "AFader::Call911",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002f9828",
-   "name": "AFader::Update",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002fafb0",
-   "name": "URefCounter<AEngine>::GetReference",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002fb630",
-   "name": "URefCounter<AEngine>::AddReference",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002fb718",
-   "name": "URefCounter<AEngine>::RemoveReference",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002fd998",
-   "name": "_Rb_tree<MapKey,_ABank>::_M_erase",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002fe2f8",
-   "name": "URefCounter<ABank>::RemoveReference",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002fedd8",
-   "name": "AVehicleWind::~AVehicleWind",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00301fe0",
-   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::~EAGL_VD_PS2_SINGLE_BUFFERD",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302590",
-   "name": "RCMP::VIDEO_DRIVER::~VIDEO_DRIVER",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x003026b0",
-   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x003026f0",
-   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator_new_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302800",
-   "name": "RCMP::RCMP_SYSTEM::RCMP_SYSTEM",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302b28",
-   "name": "RCMP::CODEC_IDATA::CODEC_IDATA",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302b48",
-   "name": "RCMP::CODEC_IDATA::CODEC_IDATA",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302c58",
-   "name": "RCMP::DECODER::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302c98",
-   "name": "RCMP::DECODER::operator_new_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302dc0",
-   "name": "RCMP::rcmp_sys_global_ctors",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302de0",
-   "name": "RCMP::rcmp_sys_global_dtors",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302e00",
-   "name": "RCMP::RCMP_SYSTEM::SetREALDefaults",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x003038e8",
-   "name": "PS2_SONY_CODEC_INTERNAL::operator_new",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00303928",
-   "name": "PS2_SONY_CODEC_INTERNAL::operator_new_array",
-   "batch": "P015"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00297440",
-   "name": "EAGL::ViewPort::GetFrustum",
-   "batch": "P016"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002858d8",
-   "name": "EAGL::Model::GetGeometry",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00295410",
-   "name": "EAGL::Transform::BuildRotate",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002934e0",
-   "name": "EAGL::Transform::PostMult",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00297470",
-   "name": "EAGL::ViewPort::SetBackgroundColour",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00299c38",
-   "name": "EAGL::Profiler::Profiler",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00299d68",
-   "name": "EAGL::ProfilerRegion::gBufferHead_global_ctors",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00266410",
-   "name": "EAGLAnim::FnCompoundChannel::~FnCompoundChannel",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00266518",
-   "name": "EAGLAnim::FnCompoundChannel::SetAnimMemoryMap",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026b958",
-   "name": "EAGLAnim::FnDeltaSingleQ::GetLength",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0026d468",
-   "name": "EAGLAnim::FnDeltaQFast::~FnDeltaQFast",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002724d8",
-   "name": "EAGLAnim::RawPoseChannel::EvalFrame",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002726a8",
-   "name": "EAGLAnim::EulF3",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00276538",
-   "name": "EAGLAnim::FnKeyDeltaChan::~FnKeyDeltaChan",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002cddf8",
-   "name": "_Rb_tree<CStringKey,_USymbolTable::Namespace_*>::_M_erase",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002de938",
-   "name": "AVoice::Set_global_ctors",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002de958",
-   "name": "AVoice::Set_global_dtors",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302790",
-   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator_delete",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302d38",
-   "name": "RCMP::DECODER::operator_delete",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x003039c8",
-   "name": "PS2_SONY_CODEC_INTERNAL::operator_delete",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002913b0",
-   "name": "EAGLInternal::RenderContextPrivate::EAGLVBL_end",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002913c0",
-   "name": "EAGL::RenderContextExtension::SetFrameRate",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00297468",
-   "name": "EAGL::ViewPort::GetProjectionType",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00297478",
-   "name": "EAGL::ViewPort::GetBackgroundColour",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x002727f0",
-   "name": "EAGLAnim::QuatF4",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00272838",
-   "name": "EAGLAnim::TranF3",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00272ba8",
-   "name": "EAGLAnim::TranF3Interp",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302730",
-   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator_new",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302760",
-   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator_new_array",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302cd8",
-   "name": "RCMP::DECODER::operator_new",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00302d08",
-   "name": "RCMP::DECODER::operator_new_array",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00303968",
-   "name": "PS2_SONY_CODEC_INTERNAL::operator_new",
-   "batch": "P017"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00303998",
-   "name": "PS2_SONY_CODEC_INTERNAL::operator_new_array",
-   "batch": "P017"
+   "address": "0x002953c0",
+   "name": "EAGL::Transform::PreMult",
+   "batch": "P020"
   }
  ]
 }

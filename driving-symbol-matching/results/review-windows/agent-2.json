@@ -1,0 +1,1628 @@
+[
+ {
+  "window": 68,
+  "row": 3966,
+  "ps2": "0x001de470",
+  "verdict": "accept",
+  "method": "insert_unique(_Rb_tree_iterator, const value_type &)",
+  "why": "Hinted insert (checks hint vs begin/end/prev, falls back to insert_unique 0x1de330) calling the USimpleVec-tree _M_insert 0x1dde98; callers FindAnchors/GetRandomAnchor."
+ },
+ {
+  "window": 68,
+  "row": 3967,
+  "ps2": "0x001de640",
+  "verdict": "accept",
+  "why": "0x20 ctor calling the static-init helper (1,0xffff), DATA-referenced from the ctors table; Ghidra body 0x30 includes the next 0x10 function."
+ },
+ {
+  "window": 68,
+  "row": 3968,
+  "ps2": "0x001de660",
+  "verdict": "accept",
+  "why": "Hidden 0x10 function inside the 0x1de640 body: stores a1 into *this and returns this, directly before ~RFlockGoal at 0x1de670; needs creating."
+ },
+ {
+  "window": 69,
+  "row": 3991,
+  "ps2": "0x001df338",
+  "verdict": "accept",
+  "why": "Pointer-vector _M_insert_aux (grow x2, memmove, \"STL\" alloc) called only from RFlock addAgent."
+ },
+ {
+  "window": 69,
+  "row": 3992,
+  "ps2": "0x001df4a0",
+  "verdict": "accept",
+  "why": "Pointer-vector _M_insert_aux called only from RFlockManager addFlock."
+ },
+ {
+  "window": 70,
+  "row": 3994,
+  "ps2": "0x001df728",
+  "verdict": "accept",
+  "why": "Hidden 0x10 function between the type_info fn and Init: returns the singleton pointer 0x334d48 that Init sets; needs creating."
+ },
+ {
+  "window": 70,
+  "row": 3995,
+  "ps2": "0x001df738",
+  "verdict": "accept",
+  "why": "new(0x10) + RFlockManager ctor stored to singleton 0x334d48."
+ },
+ {
+  "window": 70,
+  "row": 3996,
+  "ps2": "0x001df770",
+  "verdict": "accept",
+  "why": "If singleton non-null, call its virtual deleting destructor (vtable+0xc, flag 3) - same shape as AUF Kill."
+ },
+ {
+  "window": 70,
+  "row": 3997,
+  "ps2": "0x001df7a8",
+  "verdict": "accept",
+  "why": "Already named RFlockGoal_global_ctors (not linked to the row); calls static-init helper 0x1df608."
+ },
+ {
+  "window": 71,
+  "row": 4006,
+  "ps2": "0x001dfb78",
+  "verdict": "accept",
+  "why": "Hidden 0x10 function after the type_info fn: returns RGain::fgThis_RGain (0x334d4c); needs creating."
+ },
+ {
+  "window": 71,
+  "row": 4007,
+  "ps2": "0x001dfb88",
+  "verdict": "accept",
+  "why": "operator_new(0x24) + RGain ctor stored to fgThis_RGain."
+ },
+ {
+  "window": 71,
+  "row": 4008,
+  "ps2": "0x001dfbc0",
+  "verdict": "accept",
+  "why": "Deletes fgThis_RGain via its virtual deleting dtor, like AUF Kill."
+ },
+ {
+  "window": 72,
+  "row": 4021,
+  "ps2": "0x001e0860",
+  "verdict": "accept",
+  "why": "Hidden 0x10 function after the type_info fn: returns fgThis_RLensFlareManager (0x334d50); needs creating."
+ },
+ {
+  "window": 72,
+  "row": 4022,
+  "ps2": "0x001e0870",
+  "verdict": "accept",
+  "why": "new(8) + RLensFlareManager ctor stored to fgThis_RLensFlareManager."
+ },
+ {
+  "window": 72,
+  "row": 4023,
+  "ps2": "0x001e08a8",
+  "verdict": "accept",
+  "why": "Deletes fgThis_RLensFlareManager via its virtual dtor; matches AUF Kill."
+ },
+ {
+  "window": 72,
+  "row": 4024,
+  "ps2": "0x001e08e0",
+  "verdict": "accept",
+  "why": "Already named fgThis_RLensFlareManager_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 73,
+  "row": 4096,
+  "ps2": "0x001e4b08",
+  "verdict": "accept",
+  "why": "Already named RMissileStreak::Init_global_ctors (not linked to the row); calls helper(1,0xffff)."
+ },
+ {
+  "window": 73,
+  "row": 4097,
+  "ps2": "0x001e4b28",
+  "verdict": "accept",
+  "why": "Already named RMissileStreak::Init_global_dtors; calls helper(0,0xffff) which destroys the GeoPrimState."
+ },
+ {
+  "window": 74,
+  "row": 4103,
+  "ps2": "0x001e5c98",
+  "verdict": "accept",
+  "why": "Already named RMuzzleFlash_fgPts_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 74,
+  "row": 4104,
+  "ps2": "0x001e5cb8",
+  "verdict": "accept",
+  "why": "Already named RMuzzleFlash_fgPts_global_dtors (not linked to the row)."
+ },
+ {
+  "window": 75,
+  "row": 4136,
+  "ps2": "0x001e82f8",
+  "verdict": "accept",
+  "method": "find",
+  "why": "Tree find (lower_bound walk, key compare, else end) on the RParticleSystem* map; callers AddOrRefresh/GetSystem; 0x68 exact, just before the placed _M_insert 0x1e8360."
+ },
+ {
+  "window": 76,
+  "row": 4143,
+  "ps2": "0x001e8d80",
+  "verdict": "accept",
+  "method": "find",
+  "why": "Only Munged-tree function left after its _M_erase/_M_insert/insert_unique; body is find, called by RPartLibraryData::FindSystemViaTag (sheet 0xa0 vs 0x68, same pattern as row 4296)."
+ },
+ {
+  "window": 77,
+  "row": 4199,
+  "ps2": "0x001ea4d0",
+  "verdict": "accept",
+  "why": "Empty stub called at the end of GrabBackBuffer with a0 = this->private (PPPrivateData*), right after the back-buffer copy; extraction compiled out."
+ },
+ {
+  "window": 78,
+  "row": 4209,
+  "ps2": "0x001eb690",
+  "verdict": "accept",
+  "why": "Already named ScorchWorld_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 79,
+  "row": 4239,
+  "ps2": "0x001ed228",
+  "verdict": "accept",
+  "why": "TU global ctor: calls static-init helper (1,0xffff), DATA-referenced from the ctors table; the sheet 0x258 had the init inlined."
+ },
+ {
+  "window": 80,
+  "row": 4296,
+  "ps2": "0x001f13f0",
+  "verdict": "accept",
+  "method": "find",
+  "why": "Tree find on a pointer-keyed map called from RWindow::DrawBrokenWindows; only tree function in the window (sheet 0xa0 vs 0x68, as row 4143)."
+ },
+ {
+  "window": 80,
+  "row": 4297,
+  "ps2": "0x001f1490",
+  "verdict": "accept",
+  "why": "Already named RWindow::Init_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 81,
+  "row": 4304,
+  "ps2": "0x001f2508",
+  "verdict": "defer",
+  "why": "Only candidate is an unreferenced empty 0x8 stub right after DrawGlares while the sheet has 0x380 of code; order only."
+ },
+ {
+  "window": 82,
+  "row": 4329,
+  "ps2": "0x001f4f70",
+  "verdict": "accept",
+  "why": "Already named ResetParticle_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 82,
+  "row": 4330,
+  "ps2": "0x001f4f90",
+  "verdict": "accept",
+  "why": "Already named ResetParticle_global_dtors (not linked to the row)."
+ },
+ {
+  "window": 83,
+  "row": 4337,
+  "ps2": "0x001f5ca8",
+  "verdict": "accept",
+  "why": "Already named RTyreTrack_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 83,
+  "row": 4338,
+  "ps2": "0x001f5cc8",
+  "verdict": "accept",
+  "why": "Already named RTyreTrack_global_dtors (not linked to the row)."
+ },
+ {
+  "window": 84,
+  "row": 4345,
+  "ps2": "0x001f6298",
+  "verdict": "accept",
+  "why": "Already named OBB::OBB_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 85,
+  "row": 4350,
+  "ps2": "0x001f64f8",
+  "verdict": "accept",
+  "why": "Already named PackedRigidBody::GetOrientMat_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 85,
+  "row": 4351,
+  "ps2": "0x001f6518",
+  "verdict": "accept",
+  "why": "First of four consecutive empty stubs after the TU global ctor; the sheet row is itself an 0x8 empty stub."
+ },
+ {
+  "window": 85,
+  "row": 4352,
+  "ps2": "0x001f6520",
+  "verdict": "accept",
+  "why": "Second stub, 0x8 \"return 0\" - a Retreive function returning a value; sheet also 0x8."
+ },
+ {
+  "window": 85,
+  "row": 4353,
+  "ps2": "0x001f6528",
+  "verdict": "accept",
+  "why": "Third empty 0x8 stub; sheet also 0x8."
+ },
+ {
+  "window": 85,
+  "row": 4354,
+  "ps2": "0x001f6530",
+  "verdict": "defer",
+  "why": "The fourth stub 0x1f6530 is the obvious slot, but the sheet has 0xd0 of code, retail is empty and unreferenced; order only."
+ },
+ {
+  "window": 86,
+  "row": 4411,
+  "ps2": "0x001fd170",
+  "verdict": "accept",
+  "why": "Called twice from ControlSleep; zeroes velocities/forces and sets the sleep flag (+0x6e = 1)."
+ },
+ {
+  "window": 87,
+  "row": 4432,
+  "ps2": "0x001fdf40",
+  "verdict": "accept",
+  "why": "TU global ctor calling helper(1,0xffff), DATA ref from the ctors table."
+ },
+ {
+  "window": 88,
+  "row": 4558,
+  "ps2": "0x00204aa0",
+  "verdict": "accept",
+  "why": "Already named operator<_global_ctors (not linked to the row); constructs Sim."
+ },
+ {
+  "window": 88,
+  "row": 4559,
+  "ps2": "0x00204ac0",
+  "verdict": "accept",
+  "why": "Global dtor: calls helper(0,0xffff) which runs ~Simulation; DATA ref from the dtors table."
+ },
+ {
+  "window": 89,
+  "row": 4654,
+  "ps2": "0x00209130",
+  "verdict": "accept",
+  "method": "clear",
+  "why": "List clear freeing 0xc nodes, called from ClearObjectiveList and ~SMissionManager."
+ },
+ {
+  "window": 89,
+  "row": 4655,
+  "ps2": "0x00209198",
+  "verdict": "accept",
+  "method": "clear",
+  "why": "List clear called from ClearMessageList and ~SMissionManager."
+ },
+ {
+  "window": 89,
+  "row": 4656,
+  "ps2": "0x00209200",
+  "verdict": "accept",
+  "method": "clear",
+  "why": "List clear called from DestroyRuleList and ~SMissionManager."
+ },
+ {
+  "window": 89,
+  "row": 4657,
+  "ps2": "0x002092d8",
+  "verdict": "accept",
+  "why": "0x20 exact: resets a small profile struct (zeros, 1000.0f) and is called from the SMissionManager ctor."
+ },
+ {
+  "window": 89,
+  "row": 4658,
+  "ps2": "0x002092f8",
+  "verdict": "accept",
+  "why": "TU global ctor calling helper(1,0xffff), DATA ref from the ctors table."
+ },
+ {
+  "window": 90,
+  "row": 4781,
+  "ps2": "0x00210480",
+  "verdict": "accept",
+  "why": "Hidden 0x28 function after the SWeaponManager ctor: integer version of AUF Util_Step (step a toward b by c, clamp); needs creating."
+ },
+ {
+  "window": 90,
+  "row": 4782,
+  "ps2": "0x002104a8",
+  "verdict": "accept",
+  "why": "Float step toward target with clamp, same as AUF Util_Step; real size 0x48 (Ghidra body 0x68 swallows Util_Ramp)."
+ },
+ {
+  "window": 90,
+  "row": 4783,
+  "ps2": "0x002104f0",
+  "verdict": "accept",
+  "why": "Hidden 0x20 function inside the 0x2104a8 body: a*t + b*(1-t) ramp just before Util_Bound; needs creating."
+ },
+ {
+  "window": 91,
+  "row": 4802,
+  "ps2": "0x00211758",
+  "verdict": "accept",
+  "why": "x + x*variance*Util_GaussRandom(); callers Respawn/AddRoundedBolt."
+ },
+ {
+  "window": 91,
+  "row": 4803,
+  "ps2": "0x002117c8",
+  "verdict": "accept",
+  "why": "Already named Util_Step_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 92,
+  "row": 4814,
+  "ps2": "0x002127f0",
+  "verdict": "accept",
+  "why": "WCollider method forwarding to WCollisionMgr::GetWorldNormal with the this+0x30/0x3c ranges."
+ },
+ {
+  "window": 92,
+  "row": 4815,
+  "ps2": "0x00212920",
+  "verdict": "accept",
+  "why": "uninitialized_copy of 8-byte elements, called from GetInstanceList (instance cache)."
+ },
+ {
+  "window": 92,
+  "row": 4816,
+  "ps2": "0x00212958",
+  "verdict": "accept",
+  "why": "uninitialized_copy of 0x28-byte elements, called from GetBarrierList/PrepareRegion."
+ },
+ {
+  "window": 92,
+  "row": 4817,
+  "ps2": "0x002129d0",
+  "verdict": "accept",
+  "why": "uninitialized_copy of 8-byte elements used by PrepareRegion and by the vector insert below."
+ },
+ {
+  "window": 92,
+  "row": 4818,
+  "ps2": "0x00212a08",
+  "verdict": "accept",
+  "why": "vector<InstValidationRec>::_M_insert_aux: grows an 8-byte vector using 0x2129d0, called from PrepareRegion."
+ },
+ {
+  "window": 92,
+  "row": 4819,
+  "ps2": "0x00212bf0",
+  "verdict": "accept",
+  "why": "TU global ctor calling helper(1,0xffff), DATA ref."
+ },
+ {
+  "window": 92,
+  "row": 4820,
+  "ps2": "0x00212c10",
+  "verdict": "accept",
+  "why": "Copies the 0x40 world instance matrix indexed by the ushort at +0x24, same as AUF WCollisionObject::MakeMatrix."
+ },
+ {
+  "window": 92,
+  "row": 4821,
+  "ps2": "0x00212cc8",
+  "verdict": "accept",
+  "why": "Returns fgWorld instance array + ushort(+0x1a)*0x40 (the render instance), just before WCollisionInstance::GetName which uses the same index."
+ },
+ {
+  "window": 93,
+  "row": 4825,
+  "ps2": "0x002130f0",
+  "verdict": "accept",
+  "why": "Already named WCollisionObject::MakeMatrix_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 94,
+  "row": 4897,
+  "ps2": "0x0021e610",
+  "verdict": "accept",
+  "why": "Already named WGrid::fgGrid_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 94,
+  "row": 4898,
+  "ps2": "0x0021e630",
+  "verdict": "accept",
+  "why": "Already named WGrid::fgGrid_global_dtors (not linked to the row)."
+ },
+ {
+  "window": 94,
+  "row": 4899,
+  "ps2": "0x0021e650",
+  "verdict": "accept",
+  "why": "Only candidate: computes 0x10 + 2*sum of four byte counts at +4 (a node size in bytes), right after the grid ctors; sheet 0x3a0 is much larger."
+ },
+ {
+  "window": 95,
+  "row": 4918,
+  "ps2": "0x00220298",
+  "verdict": "accept",
+  "why": "Already named __push_heap<InstanceAndDistance...>, size 0xd0 identical (not linked to the row)."
+ },
+ {
+  "window": 95,
+  "row": 4919,
+  "ps2": "0x00220368",
+  "verdict": "accept",
+  "why": "Already named __adjust_heap<InstanceAndDistance...>, size 0x118 identical."
+ },
+ {
+  "window": 95,
+  "row": 4920,
+  "ps2": "0x00220480",
+  "verdict": "accept",
+  "why": "Already named __make_heap<InstanceAndDistance...>, size 0xa8 identical."
+ },
+ {
+  "window": 95,
+  "row": 4921,
+  "ps2": "0x00220528",
+  "verdict": "accept",
+  "why": "Already named sort_heap<InstanceAndDistance...>, size 0xd8 identical."
+ },
+ {
+  "window": 96,
+  "row": 4926,
+  "ps2": "0x002209a8",
+  "verdict": "accept",
+  "why": "Already named __insertion_sort<InstanceAndDistance...>, size 0xf8 identical."
+ },
+ {
+  "window": 96,
+  "row": 4927,
+  "ps2": "0x00220aa0",
+  "verdict": "accept",
+  "why": "Unguarded insertion over 8-byte elements, called only by 0x220b10; 0x70 exact."
+ },
+ {
+  "window": 96,
+  "row": 4928,
+  "ps2": "0x00220b10",
+  "verdict": "accept",
+  "why": "Threshold 16 elements: insertion_sort on the first 16 then the unguarded aux (__final_insertion_sort); called from DrawPass/DrawWorldAtPoint."
+ },
+ {
+  "window": 96,
+  "row": 4929,
+  "ps2": "0x00220bc0",
+  "verdict": "accept",
+  "why": "Hidden 0x10 function inside the 0x220b88 body: a->inst < b->inst; its address is passed as the comparator by DrawPass/DrawWorldAtPoint; needs creating."
+ },
+ {
+  "window": 96,
+  "row": 4930,
+  "ps2": "0x00220bd0",
+  "verdict": "accept",
+  "why": "Hidden 0x24 function right after it: returns b->dist < a->dist (float at +4); needs creating."
+ },
+ {
+  "window": 97,
+  "row": 5002,
+  "ps2": "0x002273b8",
+  "verdict": "accept",
+  "why": "Already named WRoadNetwork::fgRoadNetwork_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 98,
+  "row": 5041,
+  "ps2": "0x00229ce8",
+  "verdict": "accept",
+  "why": "TU global ctor calling helper(1,0xffff), DATA ref; the sheet 0x258 had the init inlined."
+ },
+ {
+  "window": 99,
+  "row": 5075,
+  "ps2": "0x0022c008",
+  "verdict": "accept",
+  "method": "clear",
+  "why": "List clear called from ~WTargetPicker and ClearAllTargets."
+ },
+ {
+  "window": 99,
+  "row": 5076,
+  "ps2": "0x0022c070",
+  "verdict": "accept",
+  "why": "list::remove(value): walks nodes, unlinks and frees matches; called from UnregisterTarget."
+ },
+ {
+  "window": 99,
+  "row": 5077,
+  "ps2": "0x0022c168",
+  "verdict": "accept",
+  "why": "Already named kTargetRangeBits_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 99,
+  "row": 5078,
+  "ps2": "0x0022c188",
+  "verdict": "accept",
+  "why": "Already named kTargetRangeBits_global_dtors (not linked to the row)."
+ },
+ {
+  "window": 100,
+  "row": 5105,
+  "ps2": "0x0022f3c0",
+  "verdict": "accept",
+  "why": "TU global ctor calling helper(1,0xffff), DATA ref."
+ },
+ {
+  "window": 100,
+  "row": 5106,
+  "ps2": "0x0022f3e0",
+  "verdict": "accept",
+  "why": "0x28 exact: VU0_UploadMicrocode(culling code, flag, flag); called from GenerateCurtainsAndNodes."
+ },
+ {
+  "window": 100,
+  "row": 5107,
+  "ps2": "0x0022f408",
+  "verdict": "accept",
+  "why": "Sets the curtain count global 0x33aa9c to 0, like AUF InitActiveCurtainList; called from GenerateCurtainsAndNodes; real size 0x10."
+ },
+ {
+  "window": 100,
+  "row": 5108,
+  "ps2": "0x0022f418",
+  "verdict": "accept",
+  "why": "Hidden 0x10 function in the 0x22f408 body: returns the curtain count global; needs creating."
+ },
+ {
+  "window": 100,
+  "row": 5109,
+  "ps2": "0x0022f428",
+  "verdict": "accept",
+  "why": "Midpoint of the two corners and distance -> radius; called by both WVisCurtain ctors; real size 0x70."
+ },
+ {
+  "window": 100,
+  "row": 5110,
+  "ps2": "0x0022f498",
+  "verdict": "accept",
+  "why": "Hidden empty 0x8 stub between CalcRadius and AddCurtain; the sheet row is also an 0x8 stub."
+ },
+ {
+  "window": 100,
+  "row": 5111,
+  "ps2": "0x0022f4a0",
+  "verdict": "accept",
+  "why": "0x108 exact; count < 0x3f guard like AUF AddCurtain; called from FindVisibleTreeNodesAndCurtains."
+ },
+ {
+  "window": 100,
+  "row": 5112,
+  "ps2": "0x0022f5a8",
+  "verdict": "accept",
+  "why": "(float, COORD4&) VU0 curtain test returning visible; 0x40 real size; called by CullModule and AddCurtain."
+ },
+ {
+  "window": 100,
+  "row": 5113,
+  "ps2": "0x0022f5e8",
+  "verdict": "accept",
+  "why": "Hidden 0x38 function in the 0x22f5a8 body: same curtain test with only a COORD4 arg; needs creating."
+ },
+ {
+  "window": 100,
+  "row": 5114,
+  "ps2": "0x0022f620",
+  "verdict": "accept",
+  "why": "0x40 exact: stores six floats into this then CalcRadius."
+ },
+ {
+  "window": 100,
+  "row": 5115,
+  "ps2": "0x0022f660",
+  "verdict": "accept",
+  "why": "0x70 real size: copies two COORD4 into this then CalcRadius; called from WRender."
+ },
+ {
+  "window": 100,
+  "row": 5116,
+  "ps2": "0x0022f6d0",
+  "verdict": "accept",
+  "why": "Hidden empty 0x8 stub after the COORD4 ctor; the sheet row is also 0x8."
+ },
+ {
+  "window": 100,
+  "row": 5117,
+  "ps2": "0x0022f6d8",
+  "verdict": "accept",
+  "why": "0x110 exact; 2D segment intersection with a zero-determinant early out, matches AUF."
+ },
+ {
+  "window": 101,
+  "row": 5144,
+  "ps2": "0x00231ff8",
+  "verdict": "accept",
+  "why": "Lerps two quaternions (4 floats) then calls Quatern_VecInterpolate; real size 0x90."
+ },
+ {
+  "window": 101,
+  "row": 5145,
+  "ps2": "0x00232088",
+  "verdict": "accept",
+  "why": "Hidden 0xa0 function inside the 0x231ff8 body: quaternion -> 3x3 matrix (x2 products, 1 - ...); needs creating."
+ },
+ {
+  "window": 101,
+  "row": 5146,
+  "ps2": "0x00232160",
+  "verdict": "accept",
+  "why": "Already named CalcBoundingBox_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 102,
+  "row": 5230,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "PARTICLE_Add runs to 0x236548 and the rest of the stretch is lexicographical_compare statics, tree erases and the TU ctor; no drawing code."
+ },
+ {
+  "window": 102,
+  "row": 5231,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No candidate between PARTICLE_Add and the NULL_SOUND_ID ctor."
+ },
+ {
+  "window": 102,
+  "row": 5232,
+  "ps2": "0x00236718",
+  "verdict": "accept",
+  "why": "TU global ctor calling helper(1,0xffff), DATA ref."
+ },
+ {
+  "window": 103,
+  "row": 5253,
+  "ps2": "0x002377d8",
+  "verdict": "accept",
+  "why": "0xc8 exact: copies Keys translation/quat/colour/font into gallery state then FONT_SetScale, like AUF FONT_SetState; many HUD callers."
+ },
+ {
+  "window": 104,
+  "row": 5261,
+  "ps2": "0x00237d18",
+  "verdict": "accept",
+  "why": "Hidden 0x78 function after FONT_Height (exact size): copies Keys fields into gallery state at +0x60 like FONT_SetState; needs creating."
+ },
+ {
+  "window": 104,
+  "row": 5262,
+  "ps2": "0x00237d90",
+  "verdict": "accept",
+  "why": "Hidden 0xf8 function next (exact size), line drawing; needs creating."
+ },
+ {
+  "window": 104,
+  "row": 5263,
+  "ps2": "0x00237e88",
+  "verdict": "accept",
+  "why": "(Keys*, Lines*): uses Keys+0x30 when Lines is null, MATH_TransformPoints then DrawLine."
+ },
+ {
+  "window": 105,
+  "row": 5283,
+  "ps2": "0x002396f8",
+  "verdict": "accept",
+  "why": "Already named NULL_ID_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 106,
+  "row": 5298,
+  "ps2": "0x0023a7d0",
+  "verdict": "accept",
+  "why": "Hidden 0x8 getter after the type_info fn: return *(this+0); needs creating."
+ },
+ {
+  "window": 106,
+  "row": 5299,
+  "ps2": "0x0023a7d8",
+  "verdict": "accept",
+  "why": "Hidden 0x8 getter: return *(this+0x10); needs creating."
+ },
+ {
+  "window": 106,
+  "row": 5300,
+  "ps2": "0x0023a7e0",
+  "verdict": "accept",
+  "why": "Hidden 0x8 getter: return *(this+0x20); needs creating."
+ },
+ {
+  "window": 106,
+  "row": 5301,
+  "ps2": "0x0023a7e8",
+  "verdict": "accept",
+  "why": "TU global ctor calling helper 0x23a758(1,0xffff), DATA ref."
+ },
+ {
+  "window": 107,
+  "row": 5370,
+  "ps2": "0x00244790",
+  "verdict": "accept",
+  "why": "Hidden 0x98 function (exact) inside the 0x2446d8 body (0xb8 + 0x98 = 0x150): loops over a count writing float spacing outputs; needs creating."
+ },
+ {
+  "window": 107,
+  "row": 5371,
+  "ps2": "0x00244828",
+  "verdict": "accept",
+  "why": "Radar blip drawing over tracked instances with DrawMapIndicator; called from DrawQRadarBlips."
+ },
+ {
+  "window": 107,
+  "row": 5372,
+  "ps2": "0x00244c00",
+  "verdict": "accept",
+  "why": "Empty 0x8 stub called from DrawQRadarPulse; sheet also 0x8."
+ },
+ {
+  "window": 107,
+  "row": 5373,
+  "ps2": "0x00244c08",
+  "verdict": "accept",
+  "why": "Hidden second empty 0x8 stub inside the 0x244c00 body, before DrawRadarArrow2D; sheet also 0x8."
+ },
+ {
+  "window": 108,
+  "row": 5409,
+  "ps2": "0x002477a0",
+  "verdict": "accept",
+  "why": "Draws label text and a sprite at a COORD2 with FONT_Draw/SPRITE_Draw2D, right after DrawTarget; called from DrawTargets."
+ },
+ {
+  "window": 109,
+  "row": 5433,
+  "ps2": "0x00249260",
+  "verdict": "accept",
+  "why": "Empty stub called from GLoadingScreen::Update behind a debug flag, right after FadeToBlack."
+ },
+ {
+  "window": 109,
+  "row": 5434,
+  "ps2": "0x00249268",
+  "verdict": "accept",
+  "why": "0x2c0 exact; message append/printf_err, called by Status and PrintVAList."
+ },
+ {
+  "window": 109,
+  "row": 5435,
+  "ps2": "0x00249528",
+  "verdict": "accept",
+  "why": "0x20 exact: ignores the channel and calls Print(text)."
+ },
+ {
+  "window": 110,
+  "row": 5442,
+  "ps2": "0x00249e00",
+  "verdict": "accept",
+  "method": "clear",
+  "why": "Walks list nodes releasing refcounted basic_strings and freeing nodes; the static dtor calls it then frees the 0xc head."
+ },
+ {
+  "window": 110,
+  "row": 5443,
+  "ps2": "0x00249f58",
+  "verdict": "accept",
+  "why": "Already named LoadingDotBinary_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 110,
+  "row": 5444,
+  "ps2": "0x00249f78",
+  "verdict": "accept",
+  "why": "Already named LoadingDotBinary_global_dtors (not linked to the row)."
+ },
+ {
+  "window": 111,
+  "row": 5495,
+  "ps2": "0x0024b9a8",
+  "verdict": "accept",
+  "why": "Already named DEFAULT_STRING_global_ctors (not linked to the row)."
+ },
+ {
+  "window": 112,
+  "row": 5504,
+  "ps2": "0x0024bd70",
+  "verdict": "defer",
+  "why": "Next empty stub after the resolved WriteFloat stub 0x24bd68, no callers; the sheet has 0x40 of code, so order only."
+ },
+ {
+  "window": 112,
+  "row": 5505,
+  "ps2": "0x0024bd78",
+  "verdict": "defer",
+  "why": "The following empty stub, no callers; the sheet has 0x108 of code, so order only."
+ },
+ {
+  "window": 113,
+  "row": 5642,
+  "ps2": "0x002514d8",
+  "verdict": "accept",
+  "why": "Hidden 0x10 function after 0x251360: swaps the global new-handler pointer and returns the old one; needs creating."
+ },
+ {
+  "window": 113,
+  "row": 5643,
+  "ps2": "0x002514e8",
+  "verdict": "accept",
+  "why": "Hidden 0x8 function: return a1 (placement new); first of two identical, needs creating."
+ },
+ {
+  "window": 113,
+  "row": 5644,
+  "ps2": "0x002514f0",
+  "verdict": "accept",
+  "why": "Hidden 0x8 function: return a1 (placement new), just before bad_alloc::what; needs creating."
+ },
+ {
+  "window": 114,
+  "row": 5777,
+  "ps2": "0x00283fc8",
+  "verdict": "accept",
+  "why": "0x40 real size: maps PrimitiveType through a byte table, -1 -> return 0, else sets the low 3 bits (GS PRIM) of +0x10."
+ },
+ {
+  "window": 114,
+  "row": 5778,
+  "ps2": "0x00284008",
+  "verdict": "accept",
+  "why": "Hidden 0x30 function (exact): reads the low 3 bits of +0x10, maps back through a table, stores to out; needs creating."
+ },
+ {
+  "window": 114,
+  "row": 5779,
+  "ps2": "0x00284038",
+  "verdict": "accept",
+  "why": "0x50 real size: maps DepthTestMethod through a table into bits 17-18 (GS ZTST) of +0x30."
+ },
+ {
+  "window": 114,
+  "row": 5780,
+  "ps2": "0x00284088",
+  "verdict": "accept",
+  "why": "Hidden 0x38 function (exact): reads bits 17-18 of +0x30, maps back, stores to out; needs creating."
+ },
+ {
+  "window": 114,
+  "row": 5781,
+  "ps2": "0x002840c0",
+  "verdict": "accept",
+  "why": "Searches the child-model list at this+0xa4 by name (+0xb4) with strcmp and unlinks the match."
+ },
+ {
+  "window": 115,
+  "row": 5809,
+  "ps2": "0x00285ba0",
+  "verdict": "accept",
+  "why": "(name, overlay): finds the TAR list by name at this+0xbc and applies the overlay to each shape."
+ },
+ {
+  "window": 115,
+  "row": 5810,
+  "ps2": "0x00285c80",
+  "verdict": "accept",
+  "why": "Hidden 0x10 function in the 0x285ba0 body: return this+0xc8 != 0; needs creating."
+ },
+ {
+  "window": 115,
+  "row": 5811,
+  "ps2": "0x00285c90",
+  "verdict": "accept",
+  "why": "Hidden 0x10 function: this+0xc8 = 1; needs creating."
+ },
+ {
+  "window": 115,
+  "row": 5812,
+  "ps2": "0x00285ca0",
+  "verdict": "accept",
+  "why": "Hidden 0x8 function: this+0xc8 = 0; needs creating."
+ },
+ {
+  "window": 115,
+  "row": 5813,
+  "ps2": "0x00285ca8",
+  "verdict": "accept",
+  "why": "0x48 real size: null check, count, then *(ptr) = value pairs, like AUF Patch; called from Model::Draw."
+ },
+ {
+  "window": 115,
+  "row": 5814,
+  "ps2": "0x00285cf0",
+  "verdict": "accept",
+  "why": "Hidden 0x100 function (exact): copies another Model field by field, returns this; needs creating."
+ },
+ {
+  "window": 115,
+  "row": 5815,
+  "ps2": "0x00285df0",
+  "verdict": "accept",
+  "why": "Hidden 0x98 function (exact): zero-initialises a Model with 1.0 scale entries; needs creating."
+ },
+ {
+  "window": 115,
+  "row": 5816,
+  "ps2": "0x00285e88",
+  "verdict": "accept",
+  "why": "Deleting-dtor tail freeing 0xdc bytes when flag&1."
+ },
+ {
+  "window": 115,
+  "row": 5817,
+  "ps2": "0x00285eb8",
+  "verdict": "accept",
+  "why": "Hidden 0x8 function: this+0xd4 = morph, just before Model::Call; needs creating."
+ },
+ {
+  "window": 116,
+  "row": 5836,
+  "ps2": "0x00286a58",
+  "verdict": "accept",
+  "why": "Hidden 0x10 function after find_first: return (flags(+6) & 3) != 0; needs creating."
+ },
+ {
+  "window": 116,
+  "row": 5837,
+  "ps2": "0x00286a68",
+  "verdict": "accept",
+  "why": "Hidden 0xa0 function: copies n bytes src->dst in 32/8/1-byte chunks; needs creating."
+ },
+ {
+  "window": 117,
+  "row": 5974,
+  "ps2": "0x00291130",
+  "verdict": "accept",
+  "why": "0x20 real size: writes two ints from render context +0x780/+0x794 to out params; called from TestFlares."
+ },
+ {
+  "window": 117,
+  "row": 5975,
+  "ps2": "0x00291150",
+  "verdict": "accept",
+  "why": "Hidden 0x28 function (exact) in the 0x291130 body: writes three ints (+0x77c/+0x790/+0x788) to out params; needs creating."
+ },
+ {
+  "window": 117,
+  "row": 5976,
+  "ps2": "0x00291178",
+  "verdict": "accept",
+  "why": "Returns context +0x838; called from the RPostProcessing ctor."
+ },
+ {
+  "window": 117,
+  "row": 5977,
+  "ps2": "0x00291188",
+  "verdict": "accept",
+  "why": "Returns context +0x83c (real size 0x10); called from the RPostProcessing ctor."
+ },
+ {
+  "window": 117,
+  "row": 5978,
+  "ps2": "0x00291198",
+  "verdict": "accept",
+  "why": "Hidden 0x10 function in the 0x291188 body: returns context +0x840; needs creating."
+ },
+ {
+  "window": 118,
+  "row": 6056,
+  "ps2": "0x002935b8",
+  "verdict": "accept",
+  "why": "Hidden 0x50 function (exact) after BuildTranslate: identity matrix; needs creating."
+ },
+ {
+  "window": 118,
+  "row": 6057,
+  "ps2": "0x00293608",
+  "verdict": "accept",
+  "why": "Hidden 0x50 function (exact): zero matrix with w=1; needs creating."
+ },
+ {
+  "window": 118,
+  "row": 6058,
+  "ps2": "0x00293658",
+  "verdict": "accept",
+  "why": "Hidden 0x78 function: copies MATRIX3 rows plus a 4-float COORD4 translation; needs creating."
+ },
+ {
+  "window": 118,
+  "row": 6059,
+  "ps2": "0x002936d0",
+  "verdict": "accept",
+  "why": "Hidden 0x80 function: MATRIX3 rows plus a 3-float translation and w=1.0; needs creating."
+ },
+ {
+  "window": 118,
+  "row": 6060,
+  "ps2": "0x00293750",
+  "verdict": "accept",
+  "why": "0x140 exact; builds a basis from two v3unitcrossprod calls into axis slots chosen by args."
+ },
+ {
+  "window": 118,
+  "row": 6061,
+  "ps2": "0x00293890",
+  "verdict": "accept",
+  "why": "Scale + sin/cos of three angles in degrees + translation; real size 0x1a8 exact."
+ },
+ {
+  "window": 118,
+  "row": 6062,
+  "ps2": "0x00293a38",
+  "verdict": "accept",
+  "why": "Hidden 0x68 function: copies this rotation rows to a MATRIX3 and the translation to a COORD3; needs creating."
+ },
+ {
+  "window": 118,
+  "row": 6063,
+  "ps2": "0x00293aa0",
+  "verdict": "accept",
+  "why": "Copies a MATRIX4 into this (real size 0x88), like AUF BuildMatrix; callers BeginView/Model::Draw."
+ },
+ {
+  "window": 118,
+  "row": 6064,
+  "ps2": "0x00293c20",
+  "verdict": "accept",
+  "why": "Hidden 0x120 function (exact): point-array transform, COORD3 source with a stride arg; needs creating."
+ },
+ {
+  "window": 118,
+  "row": 6065,
+  "ps2": "0x00293d40",
+  "verdict": "accept",
+  "why": "Hidden 0x108 function (exact): COORD3 source to COORD4 dest; needs creating."
+ },
+ {
+  "window": 118,
+  "row": 6066,
+  "ps2": "0x00293e48",
+  "verdict": "accept",
+  "why": "Hidden 0x100 function (exact): COORD4 source with a stride arg; needs creating."
+ },
+ {
+  "window": 118,
+  "row": 6067,
+  "ps2": "0x00293f48",
+  "verdict": "accept",
+  "why": "Hidden 0xe8 function (exact): COORD4 source to COORD3 dest; needs creating."
+ },
+ {
+  "window": 119,
+  "row": 6077,
+  "ps2": "0x00294518",
+  "verdict": "accept",
+  "why": "Hidden 0x68 function (exact) after AppendRotate: translate matrix on the stack then multiply; needs creating."
+ },
+ {
+  "window": 119,
+  "row": 6078,
+  "ps2": "0x00294580",
+  "verdict": "accept",
+  "why": "MATRIX3 + 4-float translation into a temp then matrix multiply."
+ },
+ {
+  "window": 119,
+  "row": 6079,
+  "ps2": "0x00294620",
+  "verdict": "accept",
+  "why": "MATRIX3 + 3-float translation (w=1) into a temp then multiply."
+ },
+ {
+  "window": 120,
+  "row": 6081,
+  "ps2": "0x002946e0",
+  "verdict": "accept",
+  "why": "Quaternion -> matrix plus translation into a temp, then multiply (Append side)."
+ },
+ {
+  "window": 121,
+  "row": 6085,
+  "ps2": "0x002949d8",
+  "verdict": "accept",
+  "why": "Hidden 0x68 function (exact) after PrependRotate: translate matrix then PreMult; needs creating."
+ },
+ {
+  "window": 121,
+  "row": 6086,
+  "ps2": "0x00294a40",
+  "verdict": "accept",
+  "why": "MATRIX3 + 4-float translation then PreMult."
+ },
+ {
+  "window": 121,
+  "row": 6087,
+  "ps2": "0x00294ad8",
+  "verdict": "accept",
+  "why": "MATRIX3 + 3-float translation then PreMult."
+ },
+ {
+  "window": 122,
+  "row": 6089,
+  "ps2": "0x00294b98",
+  "verdict": "accept",
+  "why": "Quaternion + translation into a temp then PreMult."
+ },
+ {
+  "window": 123,
+  "row": 6093,
+  "ps2": "0x00295010",
+  "verdict": "accept",
+  "why": "Hidden 0xa0 function (exact) after OrthoInverse(Transform*) const: in-place transpose and translation negation; needs creating."
+ },
+ {
+  "window": 123,
+  "row": 6094,
+  "ps2": "0x002950b0",
+  "verdict": "accept",
+  "why": "Scale*quaternion matrix + translation, real size 0xd8 exact; callers include EvalSQT."
+ },
+ {
+  "window": 123,
+  "row": 6095,
+  "ps2": "0x00295188",
+  "verdict": "accept",
+  "why": "Hidden 0xb0 function (exact) in the 0x2950b0 body: quaternion matrix + translation without scale; needs creating."
+ },
+ {
+  "window": 123,
+  "row": 6096,
+  "ps2": "0x00295238",
+  "verdict": "accept",
+  "why": "Angle in degrees, sin/cos, rewrites only the rotation part (identity when the angle is 0)."
+ },
+ {
+  "window": 123,
+  "row": 6097,
+  "ps2": "0x002953a0",
+  "verdict": "accept",
+  "why": "0x20 real size: straight call to the matrix multiply 0x297c60."
+ },
+ {
+  "window": 124,
+  "row": 6113,
+  "ps2": "0x00296f98",
+  "verdict": "accept",
+  "why": "Stores a float at viewport +400; called from SetGuardBandSize."
+ },
+ {
+  "window": 124,
+  "row": 6114,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No room: SetGuardBandScale is directly followed by the placed ViewPortExtension(ViewPort*) at 0x296fa8."
+ },
+ {
+  "window": 125,
+  "row": 6128,
+  "ps2": "0x00297488",
+  "verdict": "accept",
+  "why": "Hidden 0x8 accessor after GetViewMatrix: return this+0x20; needs creating."
+ },
+ {
+  "window": 125,
+  "row": 6129,
+  "ps2": "0x00297490",
+  "verdict": "accept",
+  "why": "Hidden 0x8 accessor: return this+0xa0 (AUF returns +0x9c); needs creating."
+ },
+ {
+  "window": 125,
+  "row": 6130,
+  "ps2": "0x00297498",
+  "verdict": "accept",
+  "why": "Hidden 0x268 function (exact, three returns): matrix diagonal/trace -> quaternion; needs creating."
+ },
+ {
+  "window": 125,
+  "row": 6131,
+  "ps2": "0x00297700",
+  "verdict": "accept",
+  "why": "0x4a8 exact; largest-component quaternion maths with a float and three vector args."
+ },
+ {
+  "window": 125,
+  "row": 6132,
+  "ps2": "0x00297ba8",
+  "verdict": "accept",
+  "why": "Hidden 0x50 VU0 lqc2 matrix multiply (exact); needs creating."
+ },
+ {
+  "window": 125,
+  "row": 6133,
+  "ps2": "0x00297bf8",
+  "verdict": "accept",
+  "why": "Hidden VU0 matrix multiply variant, 0x68 by returns (sheet 0x70); needs creating."
+ },
+ {
+  "window": 125,
+  "row": 6134,
+  "ps2": "0x00297c60",
+  "verdict": "accept",
+  "why": "0x78 real size: VU0 4x4 multiply; called by all the Transform Append/Mult functions."
+ },
+ {
+  "window": 125,
+  "row": 6135,
+  "ps2": "0x00297cd8",
+  "verdict": "accept",
+  "why": "Hidden 0xa8 VU0 multiply with operands swapped (exact); needs creating."
+ },
+ {
+  "window": 125,
+  "row": 6136,
+  "ps2": "0x00297d80",
+  "verdict": "accept",
+  "why": "Hidden 0xc8 function (exact): range-reduced polynomial sine on turns; needs creating."
+ },
+ {
+  "window": 125,
+  "row": 6137,
+  "ps2": "0x00297e48",
+  "verdict": "accept",
+  "why": "Hidden 0xd8 function (exact): adds 0.25 then the same sine polynomial; needs creating."
+ },
+ {
+  "window": 125,
+  "row": 6138,
+  "ps2": "0x00297f20",
+  "verdict": "accept",
+  "why": "Hidden 0x1c8 function (exact), first of three identical rotation-matrix builders; needs creating."
+ },
+ {
+  "window": 125,
+  "row": 6139,
+  "ps2": "0x002980e8",
+  "verdict": "accept",
+  "why": "Hidden 0x1c8 function (exact), second rotation builder; needs creating."
+ },
+ {
+  "window": 125,
+  "row": 6140,
+  "ps2": "0x002982b0",
+  "verdict": "accept",
+  "why": "Hidden 0x1c8 function (exact), third rotation builder, before VU0_fastqslerp; needs creating."
+ },
+ {
+  "window": 126,
+  "row": 6157,
+  "ps2": "0x00299798",
+  "verdict": "accept",
+  "why": "Hidden 0x40 function (exact) after the gBufferHead static helper: zeroes +0x80/+0x104 and a 32-entry loop, like the AUF History ctor; needs creating."
+ },
+ {
+  "window": 126,
+  "row": 6158,
+  "ps2": "0x002997d8",
+  "verdict": "accept",
+  "why": "Hidden 0x90 function (exact): writes a value into a slot and updates the +0x80 total; needs creating."
+ },
+ {
+  "window": 127,
+  "row": 6161,
+  "ps2": "0x00299930",
+  "verdict": "accept",
+  "why": "Hidden 0x40 function (exact) after ~ProfilerRegion: walks the region list clearing +0x114; needs creating."
+ },
+ {
+  "window": 127,
+  "row": 6162,
+  "ps2": "0x00299970",
+  "verdict": "accept",
+  "why": "0x90 exact: ProcessRegion on every region in the list, then DrawRegions, bumps the frame count."
+ },
+ {
+  "window": 127,
+  "row": 6163,
+  "ps2": "0x00299a00",
+  "verdict": "accept",
+  "why": "0xa0 real size: TIMER_gettick-based input/refresh counter with the uint arg as period."
+ },
+ {
+  "window": 127,
+  "row": 6164,
+  "ps2": "0x00299aa0",
+  "verdict": "accept",
+  "why": "Hidden 0x40 function (exact): walks the region list clearing +0x110; needs creating."
+ },
+ {
+  "window": 128,
+  "row": 6195,
+  "ps2": "0x0029c0f8",
+  "verdict": "accept",
+  "why": "0xa8 exact: switch on PrimitiveType setting +0x30 etc., like AUF SetPrimitiveType."
+ },
+ {
+  "window": 128,
+  "row": 6196,
+  "ps2": "0x0029c1a0",
+  "verdict": "accept",
+  "why": "strcmp over the name table returning index or -1, like AUF; called from DynamicModel GetIndexFromName."
+ },
+ {
+  "window": 128,
+  "row": 6197,
+  "ps2": "0x0029c230",
+  "verdict": "accept",
+  "why": "Hidden 0x20 function (exact) in the 0x29c1a0 body: returns the name table entry [index*8]; needs creating."
+ },
+ {
+  "window": 128,
+  "row": 6198,
+  "ps2": "0x0029c250",
+  "verdict": "accept",
+  "why": "Looks up a name, stores the index at +0x2c (-1 if missing), returns found."
+ },
+ {
+  "window": 128,
+  "row": 6199,
+  "ps2": "0x0029c2e8",
+  "verdict": "accept",
+  "why": "Finds the var index by name then calls SetVar(int,...) 0x29c3b0."
+ },
+ {
+  "window": 128,
+  "row": 6200,
+  "ps2": "0x0029c3b0",
+  "verdict": "accept",
+  "why": "Alignment check with the \"User Var ... not aligned\" message then stores pointer/stride, like AUF SetVar."
+ },
+ {
+  "window": 128,
+  "row": 6201,
+  "ps2": "0x0029c488",
+  "verdict": "accept",
+  "why": "0x18 exact: sets +0x34 and +0x18 to 1; called from DynamicModel Lock."
+ },
+ {
+  "window": 128,
+  "row": 6202,
+  "ps2": "0x0029c4a0",
+  "verdict": "accept",
+  "why": "0x10 exact: clears +0x18; called from Unlock and the Draw* destructors."
+ },
+ {
+  "window": 128,
+  "row": 6203,
+  "ps2": "0x0029c4b0",
+  "verdict": "accept",
+  "why": "0xa8 exact: batches the count into a SetUpGeoPrim + DynamicModel::Draw loop, like AUF Draw."
+ },
+ {
+  "window": 128,
+  "row": 6204,
+  "ps2": "0x0029c558",
+  "verdict": "accept",
+  "why": "0x10 exact: stores the vertex count at +0x3c; called from SetNumVerts."
+ },
+ {
+  "window": 128,
+  "row": 6205,
+  "ps2": "0x0029c568",
+  "verdict": "accept",
+  "why": "0x20 exact: forwards to DynamicModel::SetModelMatrix of the member at +4."
+ },
+ {
+  "window": 128,
+  "row": 6206,
+  "ps2": "0x0029c588",
+  "verdict": "accept",
+  "why": "0xf0 exact: zero-init, allocs DynamicModel, registers gpModelViewProjectionMatrix; first of four Draw* class blocks; called from DrawRegions."
+ },
+ {
+  "window": 128,
+  "row": 6207,
+  "ps2": "0x0029c678",
+  "verdict": "accept",
+  "why": "0xd8 exact: frees the 0xc00/0x300 buffers, ~GeoPrimState, ~DynamicModel."
+ },
+ {
+  "window": 128,
+  "row": 6208,
+  "ps2": "0x0029c750",
+  "verdict": "accept",
+  "why": "0xb0 exact: flushes pending verts via SetUpGeoPrim/Draw, like AUF InternalFlush."
+ },
+ {
+  "window": 128,
+  "row": 6209,
+  "ps2": "0x0029c800",
+  "verdict": "accept",
+  "why": "0xc8 exact: flush plus the strip-type special case, like AUF End."
+ },
+ {
+  "window": 128,
+  "row": 6210,
+  "ps2": "0x0029c8c8",
+  "verdict": "accept",
+  "why": "0x40 exact: GeoPrimState assign at +0x80 then SetPrimitiveType."
+ },
+ {
+  "window": 128,
+  "row": 6211,
+  "ps2": "0x0029c908",
+  "verdict": "accept",
+  "why": "0x8: return this+0x80."
+ },
+ {
+  "window": 128,
+  "row": 6212,
+  "ps2": "0x0029c910",
+  "verdict": "accept",
+  "why": "0x20: forwards SetModelMatrix to the DynamicModel at +0x10."
+ },
+ {
+  "window": 128,
+  "row": 6213,
+  "ps2": "0x0029c930",
+  "verdict": "accept",
+  "why": "Second identical Draw* block, ctor 0xf0."
+ },
+ {
+  "window": 128,
+  "row": 6214,
+  "ps2": "0x0029ca20",
+  "verdict": "accept",
+  "why": "Second block dtor 0xd8."
+ },
+ {
+  "window": 128,
+  "row": 6215,
+  "ps2": "0x0029caf8",
+  "verdict": "accept",
+  "why": "Second block InternalFlush 0xb0."
+ },
+ {
+  "window": 128,
+  "row": 6216,
+  "ps2": "0x0029cba8",
+  "verdict": "accept",
+  "why": "Second block End 0xc8."
+ },
+ {
+  "window": 128,
+  "row": 6217,
+  "ps2": "0x0029cc70",
+  "verdict": "accept",
+  "why": "Second block SetState 0x40 (Ghidra body 0x48 includes GetState)."
+ },
+ {
+  "window": 128,
+  "row": 6218,
+  "ps2": "0x0029ccb0",
+  "verdict": "accept",
+  "why": "Hidden 0x8 function: return this+0x80; needs creating."
+ },
+ {
+  "window": 128,
+  "row": 6219,
+  "ps2": "0x0029ccb8",
+  "verdict": "accept",
+  "why": "Second block SetModelMatrix 0x20."
+ },
+ {
+  "window": 128,
+  "row": 6220,
+  "ps2": "0x0029ccd8",
+  "verdict": "accept",
+  "why": "Third block ctor 0xf8 (extra texture buffer slot); called from Play."
+ },
+ {
+  "window": 128,
+  "row": 6221,
+  "ps2": "0x0029cdd0",
+  "verdict": "accept",
+  "why": "Third block dtor 0xf0 frees three buffers; called from Play."
+ },
+ {
+  "window": 128,
+  "row": 6222,
+  "ps2": "0x0029cec0",
+  "verdict": "accept",
+  "why": "Third block InternalFlush 0xb0."
+ },
+ {
+  "window": 128,
+  "row": 6223,
+  "ps2": "0x0029cf70",
+  "verdict": "accept",
+  "why": "Third block End 0xc8."
+ },
+ {
+  "window": 128,
+  "row": 6224,
+  "ps2": "0x0029d038",
+  "verdict": "accept",
+  "why": "Third block SetState 0x40 (state at +0x90)."
+ },
+ {
+  "window": 128,
+  "row": 6225,
+  "ps2": "0x0029d078",
+  "verdict": "accept",
+  "why": "Hidden 0x8 function: return this+0x90; needs creating."
+ },
+ {
+  "window": 128,
+  "row": 6226,
+  "ps2": "0x0029d080",
+  "verdict": "accept",
+  "why": "Third block SetModelMatrix 0x20."
+ },
+ {
+  "window": 128,
+  "row": 6227,
+  "ps2": "0x0029d1d8",
+  "verdict": "accept",
+  "why": "Fourth block ctor 0xf8."
+ },
+ {
+  "window": 128,
+  "row": 6228,
+  "ps2": "0x0029d2d0",
+  "verdict": "accept",
+  "why": "Fourth block dtor 0xf0."
+ },
+ {
+  "window": 128,
+  "row": 6229,
+  "ps2": "0x0029d3c0",
+  "verdict": "accept",
+  "why": "Fourth block InternalFlush 0xb0."
+ },
+ {
+  "window": 128,
+  "row": 6230,
+  "ps2": "0x0029d470",
+  "verdict": "accept",
+  "why": "Fourth block End 0xc8."
+ },
+ {
+  "window": 128,
+  "row": 6231,
+  "ps2": "0x0029d538",
+  "verdict": "accept",
+  "why": "Fourth block SetState 0x40."
+ },
+ {
+  "window": 128,
+  "row": 6232,
+  "ps2": "0x0029d578",
+  "verdict": "accept",
+  "why": "Hidden 0x8 function: return this+0x90; needs creating."
+ },
+ {
+  "window": 128,
+  "row": 6233,
+  "ps2": "0x0029d580",
+  "verdict": "accept",
+  "why": "Fourth block SetModelMatrix 0x20."
+ },
+ {
+  "window": 128,
+  "row": 6234,
+  "ps2": "0x0029d6d8",
+  "verdict": "accept",
+  "why": "0x78 exact: varargs to printHandler or vfprintf(stderr)."
+ }
+]

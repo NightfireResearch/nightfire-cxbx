@@ -1,0 +1,283 @@
+{
+ "batch": "P020",
+ "program": "DRIVING.ELF",
+ "skip_refused_creates": true,
+ "note": "Fixes from the windowed review: wrong existing names (two more from P004/P004b), the MOUSE/PAD block two functions late, overload pairs. 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x002b4c08",
+   "expect": "sceDevVif0GetErr",
+   "name": "FUN_002b4c08",
+   "sheet_name": null,
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "not sceDevVif0GetErr: a static helper decoding VIF0_STAT into a condition code for Pause/Continue (P004b had named it)"
+   ]
+  },
+  {
+   "xbox": "0x002b4f38",
+   "expect": "sceDevVif1GetCnd",
+   "name": "FUN_002b4f38",
+   "sheet_name": null,
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "not sceDevVif1GetCnd: the same static decoder for VIF1_STAT (named in body-review round 3; the window review corrected it)"
+   ]
+  },
+  {
+   "xbox": "0x002bedf0",
+   "expect": "SetTLBEntry",
+   "name": "FUN_002bedf0",
+   "sheet_name": null,
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "the bare syscall-0x56 stub that SetTLBEntry calls; the sheet has no row for it"
+   ]
+  },
+  {
+   "xbox": "0x001b23e8",
+   "expect": "RPathHandle",
+   "name": "FUN_001b23e8",
+   "sheet_name": null,
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "not RPathHandle's copy constructor: a static float wrap-to-[0,1) helper called from DirectorChangeCameraMode/UpdateRelativeAnimationCam"
+   ]
+  },
+  {
+   "xbox": "0x0019efd8",
+   "expect": "operator_delete",
+   "name": "Smackable::Smackable_global_ctors",
+   "sheet_name": "global constructors keyed to Smackable::Smackable(RSceneObj *,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2846: referenced from the ctors table, calls the static-init helper (1, 0xffff). Batch P004 had named it operator_delete"
+   ]
+  },
+  {
+   "xbox": "0x0019efb0",
+   "expect": "FUN_0019efb0",
+   "name": "Smackable::operator_delete",
+   "sheet_name": "Smackable::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2844: FastFree(p, size) after Smackable::operator new"
+   ]
+  },
+  {
+   "xbox": "0x00259560",
+   "expect": "MOUSE_init",
+   "name": "MOUSE_init",
+   "sheet_name": "MOUSE_init",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7063: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+   ]
+  },
+  {
+   "xbox": "0x002595f0",
+   "expect": "MOUSE_restore",
+   "name": "MOUSE_restore",
+   "sheet_name": "MOUSE_restore",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7064: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+   ]
+  },
+  {
+   "xbox": "0x002595f8",
+   "expect": "maybe_MOUSE_init",
+   "name": "MOUSE_setstate",
+   "sheet_name": "MOUSE_setstate",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7065: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+   ]
+  },
+  {
+   "xbox": "0x00259668",
+   "expect": "maybe_MOUSE_restore",
+   "name": "MOUSE_getstate",
+   "sheet_name": "MOUSE_getstate",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7066: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+   ]
+  },
+  {
+   "xbox": "0x002598e0",
+   "expect": "maybe_MOUSE_setstate",
+   "name": "MOUSE_setbounds",
+   "sheet_name": "MOUSE_setbounds",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7067: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+   ]
+  },
+  {
+   "xbox": "0x002598f8",
+   "expect": "maybe_MOUSE_getstate",
+   "name": "MOUSE_getbounds",
+   "sheet_name": "MOUSE_getbounds",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7068: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+   ]
+  },
+  {
+   "xbox": "0x00259920",
+   "expect": "maybe_MOUSE_setbounds",
+   "name": "PAD_getconfigopts",
+   "sheet_name": "PAD_getconfigopts",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7069: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+   ]
+  },
+  {
+   "xbox": "0x00259950",
+   "expect": "maybe_MOUSE_getbounds",
+   "name": "PAD_setconfigopts",
+   "sheet_name": "PAD_setconfigopts",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7070: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+   ]
+  },
+  {
+   "xbox": "0x00259980",
+   "expect": "maybe_PAD_getconfigopts",
+   "name": "PAD_init",
+   "sheet_name": "PAD_init",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7071: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+   ]
+  },
+  {
+   "xbox": "0x00275510",
+   "expect": "FnDeltaChan",
+   "name": "EAGLAnim::FnDeltaChan_type_info_function",
+   "sheet_name": "EAGLAnim::FnDeltaChan type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6747: builds its type_info with __rtti_si(\"Q28EAGLAnim11FnDeltaChan\"), vtable slot 0; was named as the constructor"
+   ]
+  },
+  {
+   "xbox": "0x002b4f88",
+   "expect": "FUN_002b4f88",
+   "name": "sceDevVif1GetCnd",
+   "sheet_name": "sceDevVif1GetCnd",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7710: fills the caller's structure from the VIF1 registers; body exactly the sheet's 0x1d8"
+   ]
+  },
+  {
+   "xbox": "0x002bee00",
+   "expect": "FUN_002bee00",
+   "name": "SetTLBEntry",
+   "sheet_name": "SetTLBEntry",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8019: range-checks the TLB index (0xd..0x2f) then calls the syscall-0x56 stub; 0x30 as the sheet says"
+   ]
+  },
+  {
+   "xbox": "0x002b98d0",
+   "expect": "maybeLibcdvd_bind",
+   "name": "sceSifBindRpc",
+   "sheet_name": "sceSifBindRpc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7931: the sheet name; maybeLibcdvd_bind was a guess"
+   ]
+  },
+  {
+   "xbox": "0x002cfd68",
+   "expect": "GetSomeGlobalFileRelatedObject",
+   "name": "UMemory::ObjectMemClass",
+   "sheet_name": "UMemory::ObjectMemClass(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8256: the sheet name; GetSomeGlobalFileRelatedObject was a guess"
+   ]
+  },
+  {
+   "xbox": "0x002126d0",
+   "expect": "FUN_002126d0",
+   "name": "WCollider::InRegion",
+   "sheet_name": "WCollider::InRegion(COORD3 &, float, unsigned int) const",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 4813: the (COORD3 &, float, uint) overload; row 4812's two-point version is 0x212540"
+   ]
+  },
+  {
+   "xbox": "0x002446d8",
+   "expect": "FUN_002446d8",
+   "name": "GHud::DrawFont",
+   "sheet_name": "GHud::DrawFont(GGallery::Keys *, float, float, unsigned int, fl",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5369: GHud::DrawFont's second overload (row 5368 is 0x244600)"
+   ]
+  },
+  {
+   "xbox": "0x00285b08",
+   "expect": "FUN_00285b08",
+   "name": "EAGL::Model::SetTexture",
+   "sheet_name": "EAGL::Model::SetTexture(EAGL::Model::TARList &, SHAPE *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5808: SetTexture(TARList &, SHAPE *): called from the other SetTexture (0x2859f8), loops over the list calling SwapShape"
+   ]
+  },
+  {
+   "xbox": "0x002953c0",
+   "expect": "(none)",
+   "name": "EAGL::Transform::PreMult",
+   "sheet_name": "EAGL::Transform::PreMult(EAGL::Transform &, EAGL::Transform *)",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6098: PreMult's first overload: identical 0x28 body to 0x2953e8 (row 6099); which is which follows sheet order"
+   ]
+  },
+  {
+   "xbox": "0x002b4bf8",
+   "expect": "(none)",
+   "name": "sceDevVif0GetErr",
+   "sheet_name": "sceDevVif0GetErr",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7702: reads VIF0_ERR; directly before the static decoder that had carried its name"
+   ]
+  }
+ ]
+}

@@ -2702,12 +2702,6 @@
    "why": "body review (P015): sheet row 7598, body review: The vfiprintf engine: called from vfiprintf, 'bug in vfprintf: bad base', '(null)', hex digits."
   },
   {
-   "row": 7710,
-   "ps2": "0x002b4f38",
-   "verdict": "address",
-   "why": "body review (P015): sheet row 7710, body review: Decodes REG_VIF1_STAT into a 0-4 condition code; used by sceDevVif1Pause/Continue: GetCnd."
-  },
-  {
    "row": 7717,
    "ps2": "0x002b5370",
    "verdict": "address",
@@ -3690,6 +3684,2784 @@
    "ps2": "0x002beb20",
    "verdict": "address",
    "why": "P018: sheet row 8010: Deci2Call(-7) after ExSend; leading 00 00 taken for padding"
+  },
+  {
+   "row": 60,
+   "ps2": "0x00109500",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 60: window review: Called from DrawAll; draw-actor body with GetShadowTriangle, DrawWeapons, SetWeaponsTransformToWorldSpace, same shape as AUF ActActor::Draw."
+  },
+  {
+   "row": 118,
+   "ps2": "0x0010bf60",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 118: window review: 8-byte setter storing a float (swc1 $f12) at +0x20, paired with the GetCurrent float getter that follows; sheet size 0x80 shrank in retail."
+  },
+  {
+   "row": 119,
+   "ps2": "0x0010bf68",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 119: window review: 8-byte float getter (lwc1 +0x24), exact sheet size, directly after SetTarget."
+  },
+  {
+   "row": 120,
+   "ps2": "0x0010bf70",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 120: window review: Global ctor calling static-init helper (1,0xffff), in ctor table 0x362df4."
+  },
+  {
+   "row": 121,
+   "ps2": "0x0010bf90",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 121: window review: Builds data\\actors\\anims\\ paths, FileLoadz, 'EAGL::DynamicLoader new', GetSymbolResolver - same as AUF BankInfo::Load."
+  },
+  {
+   "row": 122,
+   "ps2": "0x0010c110",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 122: window review: Loops bank names with strcmp, calls BankInfo::Load and counts loaded banks; called from ActAnimationDatabase ctor."
+  },
+  {
+   "row": 123,
+   "ps2": "0x0010c1d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 123: window review: Same body as AUF ActAnimationDatabase::GetAnimation (+0x440 table, ==-1 check, vtable call); the public wrapper forwards to it."
+  },
+  {
+   "row": 126,
+   "ps2": "0x0010c5e0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 126: window review: Public GetAnimation(int,int,**,**) forwarding *this to the private GetAnimation; called from ChangeAnimation."
+  },
+  {
+   "row": 130,
+   "ps2": "0x0010c788",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 130: window review: FnDefaultAnimBank vtable slot (0x36403c) returning bank->count, AUF GetNumAnims same shape (offset differs). Ghidra body overruns and swallows GetAnim(int) 0x10c798 and G"
+  },
+  {
+   "row": 248,
+   "ps2": "0x00112c18",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 248: window review: Copies bone matrix poser->+0x100 + boneIndex*0x40 (index from the skeleton weapon-bone table) like AUF; called from Update and GetWeaponRange."
+  },
+  {
+   "row": 249,
+   "ps2": "0x00112cc0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 249: window review: Called from ActActor::ChangeAnimationOrigin; writes COORD3 into data+0x30, identical to AUF."
+  },
+  {
+   "row": 250,
+   "ps2": "0x00112ce8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 250: window review: Called from GetAnimationOrigin; reads COORD3 from data+0x30."
+  },
+  {
+   "row": 251,
+   "ps2": "0x00112d10",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 251: window review: Called from SetAnimationOrigin; writes origin then calls CalculateFinalCorrectionMatrix."
+  },
+  {
+   "row": 252,
+   "ps2": "0x00112d50",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 252: window review: Called from GetInitialTrOu; copies the matrix at data+0 out."
+  },
+  {
+   "row": 253,
+   "ps2": "0x00112d80",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 253: window review: Called from SetInitialTrOu; copies matrix in then recalculates the correction matrix."
+  },
+  {
+   "row": 254,
+   "ps2": "0x00112dc0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 254: window review: Called from RotateActor; builds Y rotation from cos/sin(2pi*f), multiplies, recalcs (AUF Rotate)."
+  },
+  {
+   "row": 255,
+   "ps2": "0x00112ef0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 255: window review: Called from RotateActorX; X-axis variant of Rotate."
+  },
+  {
+   "row": 256,
+   "ps2": "0x00113020",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 256: window review: 0x48 exact; two VU0_MATRIX4_mult on poser data, called by every Set*/Rotate."
+  },
+  {
+   "row": 257,
+   "ps2": "0x00113068",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 257: window review: 0x90 exact; zeroes the Y of the forward row and renormalises (level with ground); called only from CalcSnapAndCorrectionMatrices."
+  },
+  {
+   "row": 258,
+   "ps2": "0x001130f8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 258: window review: Copies matrix to data, calls SnapMatrixLevelWithGround and CalculateFinalCorrectionMatrix, like AUF."
+  },
+  {
+   "row": 259,
+   "ps2": "0x001133d0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 259: window review: Sets mode=1, anim group, times from float*rate like AUF SetNormalAnimation."
+  },
+  {
+   "row": 260,
+   "ps2": "0x00113430",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 260: window review: 0x40 exact; calls SetNormalAnimation(grp,f) then CalcSnapAndCorrectionMatrices; called from Standard/AimedAnimationController."
+  },
+  {
+   "row": 261,
+   "ps2": "0x00113470",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 261: window review: FastAlloc 'ActCrossFadeBlendData', builds ActAnimGroup; AUF SetupCrossFadeBlend shape."
+  },
+  {
+   "row": 262,
+   "ps2": "0x00113760",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 262: window review: mode=1, grp, time 0, then CalcSnap; AUF SetCrossFadeBlendAnimation shape; called by the CrossFade controllers."
+  },
+  {
+   "row": 263,
+   "ps2": "0x001137f0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 263: window review: Picks the blend end frame, calls SetNormalAnimation then ShutdownCrossFadeBlend; called from AdvanceTime."
+  },
+  {
+   "row": 264,
+   "ps2": "0x00113898",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 264: window review: Destroys the crossfade data's ActAnimGroup and frees the block (FastFree/vec_delete)."
+  },
+  {
+   "row": 265,
+   "ps2": "0x00113908",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 265: window review: Five float& outputs from crossfade data +0x114/+0x118, same as AUF CalcCrossFadeTimes."
+  },
+  {
+   "row": 266,
+   "ps2": "0x00113a38",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 266: window review: mode=3 (manual), grp, time 0, CalcSnap - AUF SetManualAnimation; called from AimedShootingAnimationController."
+  },
+  {
+   "row": 267,
+   "ps2": "0x00113ae8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 267: window review: Orchestrates DoMainPose, DoIK, global overrides and TransformLocalPoseToWorldPose."
+  },
+  {
+   "row": 268,
+   "ps2": "0x00113b48",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 268: window review: Large pose builder starting with ActSkeleton::GetStillPose and BlendBones, AUF DoMainPose shape."
+  },
+  {
+   "row": 269,
+   "ps2": "0x00114180",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 269: window review: 0x68 exact; loops ActIKSolverArray::Solve."
+  },
+  {
+   "row": 270,
+   "ps2": "0x001141e8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 270: window review: Calls the skeleton local-to-world transform (0x262508) on poser transforms; called around IK/overrides."
+  },
+  {
+   "row": 271,
+   "ps2": "0x00114218",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 271: window review: Calls PoseSkin-like 0x2634f8 with skeleton, transforms and the fSkinnedTransforms global, as AUF Skin; called from ActActor::Draw."
+  },
+  {
+   "row": 272,
+   "ps2": "0x00114250",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 272: window review: Starts with the (t1==t0 && t0==0) -> -0.0001 guard and mode switch, as AUF DoEventPose; called from Update."
+  },
+  {
+   "row": 273,
+   "ps2": "0x001143b8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 273: window review: 0x38 exact; saves time, zeroes it, runs the pose, restores - AUF DoInitialPoses; called from SetStartPosOri."
+  },
+  {
+   "row": 274,
+   "ps2": "0x001143f0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 274: window review: Only callee of ActActor::GetWeaponRange; poses and measures the weapon bone angle (v3angle)."
+  },
+  {
+   "row": 275,
+   "ps2": "0x001145c0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 275: window review: If mode!=3 advance by frame step, finish crossfade when mode==2 - AUF AdvanceTime."
+  },
+  {
+   "row": 276,
+   "ps2": "0x001146b8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 276: window review: 0x18 exact; returns the rate*speed*scale product used as the frame step in AdvanceTime."
+  },
+  {
+   "row": 277,
+   "ps2": "0x001146d0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 277: window review: 0x8; returns current frame (+0xc), called by AdvanceTime."
+  },
+  {
+   "row": 278,
+   "ps2": "0x001146d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 278: window review: Returns total frames (+0x1c), compared against the step in AdvanceTime; order after GetCurrentFrame."
+  },
+  {
+   "row": 279,
+   "ps2": "0x001146e0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 279: window review: Global ctor calling the ActPoser static-init helper (1,0xffff)."
+  },
+  {
+   "row": 280,
+   "ps2": "0x00114700",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 280: window review: Zeroes the skinned-transform buffer globals; called from ActSkeletonDatabase ctor."
+  },
+  {
+   "row": 281,
+   "ps2": "0x00114718",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 281: window review: 0x48 exact; vec_delete buffer and UnRegisterVar('EAGLAnimationBuffer'); called from ~ActSkeletonDatabase."
+  },
+  {
+   "row": 301,
+   "ps2": "0x00115148",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 301: window review: Empty stub called from StopUsingResources; AUF StopUsingTexture is also empty."
+  },
+  {
+   "row": 450,
+   "ps2": "0x00119b98",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 450: window review: Copies player rigid-body matrix and position, no COORD3 output - the (int, MATRIX4&) overload; callers HandleInterrupts/UpdateRotPos."
+  },
+  {
+   "row": 466,
+   "ps2": "0x0011aa10",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 466: window review: Global ctor calling the Bond-file static-init helper, ctor table 0x362e10."
+  },
+  {
+   "row": 467,
+   "ps2": "0x0011aa30",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 467: window review: GetRigidBody of car +0x150, copies matrix+pos, no COORD3 write (2-arg overload)."
+  },
+  {
+   "row": 468,
+   "ps2": "0x0011ab50",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 468: window review: Same plus writes rigid-body velocity to the COORD3 param (3-arg overload); WakeUp passes it as a pointer."
+  },
+  {
+   "row": 469,
+   "ps2": "0x0011aca8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 469: window review: Calls AICharacter ctor and installs vtable_AICharacterEnemyDriver; called from WakeUp."
+  },
+  {
+   "row": 540,
+   "ps2": "0x0011fc80",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 540: window review: Global ctor calling static-init helper, ctor table 0x362e1c."
+  },
+  {
+   "row": 558,
+   "ps2": "0x001208d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 558: window review: Global ctor calling static-init helper, ctor table 0x362e20."
+  },
+  {
+   "row": 587,
+   "ps2": "0x00122238",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 587: window review: 2-arg GetRotPos (car +0x150 rigid body, no COORD3)."
+  },
+  {
+   "row": 588,
+   "ps2": "0x00122358",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 588: window review: 3-arg GetRotPos (writes COORD3); WakeUp passes it as a pointer."
+  },
+  {
+   "row": 612,
+   "ps2": "0x001237d0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 612: window review: Static: returns fgHandObj->+0x160 or 0.0; called from DrawCrossHairs."
+  },
+  {
+   "row": 640,
+   "ps2": "0x00124f58",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 640: window review: Global ctor calling the hands static-init helper (1,0xffff); Ghidra body also swallows the maths helpers the sheet size includes."
+  },
+  {
+   "row": 642,
+   "ps2": "0x001251b0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 642: window review: Player rigid-body matrix copy, no COORD3 write (2-arg); caller UpdateRotPos."
+  },
+  {
+   "row": 643,
+   "ps2": "0x001252d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 643: window review: Writes COORD3 as well (3-arg); Init passes it as a pointer."
+  },
+  {
+   "row": 713,
+   "ps2": "0x0012ab00",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 713: window review: Walks the circular list freeing 0x10-byte nodes then resets the head - list clear; called from Shutdown."
+  },
+  {
+   "row": 904,
+   "ps2": "0x0013be00",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 904: window review: 0x20 exact; forwards to AIVehicle::GetPhysicsObject (the sim heli)."
+  },
+  {
+   "row": 905,
+   "ps2": "0x0013be20",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 905: window review: 0x20; forwards to AIVehicle::SetPhysicsObject. Ghidra body (0x88) swallows the accessors after it."
+  },
+  {
+   "row": 959,
+   "ps2": "0x0013e420",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 959: window review: Global ctor calling the AIVehicle static-init helper; Ghidra body swallows the maths helpers the sheet size includes."
+  },
+  {
+   "row": 1152,
+   "ps2": "0x001447b0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 1152: window review: 0x80 exact; varargs format then strlen + FILESYS_writesync on the file handle."
+  },
+  {
+   "row": 1153,
+   "ps2": "0x00144830",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 1153: window review: 0x58 exact; strlen + FILESYS_writesync, advances the offset; called from DTuningFile Output."
+  },
+  {
+   "row": 1154,
+   "ps2": "0x00144888",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 1154: window review: 0x48 exact; zeroes fields and FILESYS_opensync; called from OpenForWrite."
+  },
+  {
+   "row": 1155,
+   "ps2": "0x001448d0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 1155: window review: FILESYS_closesync if open, delete if flag; called from ~DTuningFile and Close."
+  },
+  {
+   "row": 2233,
+   "ps2": "0x0016ec80",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2233: window review: Empty stub called after each Int field registration in InitializeGlobals (e.g. NUM_BLEND_STEPS with 1,200) - the int,int overload."
+  },
+  {
+   "row": 2312,
+   "ps2": "0x001755b8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2312: window review: 0x10 exact; returns bool byte UberBond+0x4b4, tested on 0x100000 before choosing the cdrom0 or host0 BASE.ELF path."
+  },
+  {
+   "row": 2313,
+   "ps2": "0x001755c8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2313: window review: 0x8 exact; returns UberBond+0xa20, tested after IsLoaderPresent before choosing the cdrom0 path."
+  },
+  {
+   "row": 2315,
+   "ps2": "0x001755d0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2315: window review: Global ctor calling static-init helper, ctor table 0x362e7c."
+  },
+  {
+   "row": 2507,
+   "ps2": "0x00180970",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2507: window review: Global ctor calling the Mine static-init helper, ctor table 0x362e98; the sheet size includes the maths helpers after it."
+  },
+  {
+   "row": 2536,
+   "ps2": "0x00185398",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2536: window review: Global ctor calling the Newton static-init helper, ctor table 0x362ea0; maths helpers follow."
+  },
+  {
+   "row": 2769,
+   "ps2": "0x00198428",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2769: window review: 0x90 exact; frees PVehicle globals and the name map (_M_erase); called from GameLoop_CleanUp."
+  },
+  {
+   "row": 2770,
+   "ps2": "0x001984b8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2770: window review: 0x108 exact; bool picks which bitmask (+0x6c/+0x70) gets bit n; called from the ESwitchEffectOn/Off dtors."
+  },
+  {
+   "row": 2771,
+   "ps2": "0x001985c0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2771: window review: Recurses right (+0xc), walks left (+8), FastFree 0x18 nodes."
+  },
+  {
+   "row": 2772,
+   "ps2": "0x00198628",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2772: window review: 0x78 exact; strcasecmp descent keeping the last not-less node, no final equality test."
+  },
+  {
+   "row": 2773,
+   "ps2": "0x001986a0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2773: window review: FastAlloc 0x18 'STL' node, links left/right by strcasecmp and rebalances."
+  },
+  {
+   "row": 2774,
+   "ps2": "0x00198a08",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2774: window review: 0x190 exact; descent, decrement iterator, compare, _M_insert or return the existing node."
+  },
+  {
+   "row": 2775,
+   "ps2": "0x00198b98",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2775: window review: Hinted insert: checks the position against leftmost/rightmost then falls back to insert_unique."
+  },
+  {
+   "row": 2795,
+   "ps2": "0x00199f88",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2795: window review: WWorldPos ctor, CheckHitWorld/Window, float& param, SpawnExplosion - AUF CollideWithWorld shape; called from RayShell."
+  },
+  {
+   "row": 2798,
+   "ps2": "0x0019a710",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2798: window review: FindPhysicsObjectSignature then the damage vtable call, as AUF DamagePhysicsObject; called from Fire."
+  },
+  {
+   "row": 2967,
+   "ps2": "0x001a4720",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2967: window review: Global ctor calling the RCamera static-init helper, ctor table 0x362ed4; maths helpers follow."
+  },
+  {
+   "row": 2969,
+   "ps2": "0x001a4978",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2969: window review: Stores the RPlayerCamera* into a static (fPlayerCam) exactly as AUF; called from the RPlayerCamera ctor."
+  },
+  {
+   "row": 2970,
+   "ps2": "0x001a4988",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2970: window review: Deletes if the flag bit is set, as AUF; called from ~RPlayerCamera."
+  },
+  {
+   "row": 2974,
+   "ps2": "0x001a7020",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2974: window review: Global ctor calling the kMaxTumble static-init helper, ctor table 0x362ed8."
+  },
+  {
+   "row": 3004,
+   "ps2": "0x001a8848",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3004: window review: List clear freeing 0x18-byte nodes (8 + COORD4); called from ClearSplinePtList, ~RCameraSpline, BuildSpline."
+  },
+  {
+   "row": 3005,
+   "ps2": "0x001a88e8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3005: window review: Global ctor calling the RCameraSpline static-init helper, ctor table 0x362ee0."
+  },
+  {
+   "row": 3030,
+   "ps2": "0x001aa450",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3030: window review: Global ctor calling static-init helper, ctor table 0x362ee4; maths helpers follow."
+  },
+  {
+   "row": 3063,
+   "ps2": "0x001abf98",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3063: window review: Stores the view camera at +4, identical to AUF BeginView; caller BeginView."
+  },
+  {
+   "row": 3064,
+   "ps2": "0x001abfa0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3064: window review: Calls RDrawGroup::FlushDrawLists(this->+0x10), identical to AUF."
+  },
+  {
+   "row": 3065,
+   "ps2": "0x001abfc0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3065: window review: Calls RDrawGroup::ClearDrawLists(this->+0x10)."
+  },
+  {
+   "row": 3067,
+   "ps2": "0x001abfe8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3067: window review: Returns +4 and clears it, identical to AUF EndView."
+  },
+  {
+   "row": 3068,
+   "ps2": "0x001abff8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3068: window review: 0x18 exact; points the current draw group (+0x10) at the reflection group (+0xc) and increments a depth counter."
+  },
+  {
+   "row": 3125,
+   "ps2": "0x001ae138",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3125: window review: Unreferenced debug routine taking (obj,int): builds a 12x12 quad at the object's rigid-body position and draws it with USimpleTexturedMaterial."
+  },
+  {
+   "row": 3194,
+   "ps2": "0x001b1838",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3194: window review: Sets +0x9c; callers AISplinePath::SetNext, ~ESetNextPath, LoadAISplinePathAnimation."
+  },
+  {
+   "row": 3195,
+   "ps2": "0x001b1840",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3195: window review: 0x10 exact; returns *(float*)(current path at +0x98); callers are the EPathSetTime events."
+  },
+  {
+   "row": 3196,
+   "ps2": "0x001b1850",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3196: window review: 8-byte bool setter (+0xcc) like AUF SetRunning; called from the path throttle events."
+  },
+  {
+   "row": 3618,
+   "ps2": "0x001cd178",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3618: window review: Referenced from two vtables; calls SetProcAnimXFormList and SetProcAnimParamList."
+  },
+  {
+   "row": 3688,
+   "ps2": "0x001d1df0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3688: window review: new(8), RTextureContextManager ctor, store to fgThis."
+  },
+  {
+   "row": 3689,
+   "ps2": "0x001d1e28",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3689: window review: If fgThis, virtual delete - same as AUF Kill."
+  },
+  {
+   "row": 3799,
+   "ps2": "0x001d5838",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3799: window review: Validates the anchor (+0x118) and clears it if the object is gone; called first by every anchor getter."
+  },
+  {
+   "row": 3800,
+   "ps2": "0x001d5888",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3800: window review: Rigid-body velocity magnitude or SimpleRigidBody::GetScalarVelocity, as AUF GetAnchorSpeed."
+  },
+  {
+   "row": 3801,
+   "ps2": "0x001d5940",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3801: window review: COORD4& output built from rigid body +0x60 times orientation - acceleration; before the angular variant."
+  },
+  {
+   "row": 3802,
+   "ps2": "0x001d5a58",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3802: window review: Same shape as GetAnchorAcceleration reading +0x70 - angular acceleration."
+  },
+  {
+   "row": 3803,
+   "ps2": "0x001d5b90",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3803: window review: Rigid-body matrix or RecalcOrientMat into a static, identity fallback - AUF GetAnchorMatrix4."
+  },
+  {
+   "row": 3804,
+   "ps2": "0x001d5cd0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3804: window review: Returns rigid body +0x10 (either body type), as AUF GetAnchorPosition."
+  },
+  {
+   "row": 3805,
+   "ps2": "0x001d5d50",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3805: window review: Returns rigid body +0x20 (spline-path branch added), as AUF GetAnchorLinearVelocity."
+  },
+  {
+   "row": 3967,
+   "ps2": "0x001de640",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3967: window review: 0x20 ctor calling the static-init helper (1,0xffff), DATA-referenced from the ctors table; Ghidra body 0x30 includes the next 0x10 function."
+  },
+  {
+   "row": 3992,
+   "ps2": "0x001df4a0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3992: window review: Pointer-vector _M_insert_aux called only from RFlockManager addFlock."
+  },
+  {
+   "row": 3995,
+   "ps2": "0x001df738",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3995: window review: new(0x10) + RFlockManager ctor stored to singleton 0x334d48."
+  },
+  {
+   "row": 3996,
+   "ps2": "0x001df770",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3996: window review: If singleton non-null, call its virtual deleting destructor (vtable+0xc, flag 3) - same shape as AUF Kill."
+  },
+  {
+   "row": 4007,
+   "ps2": "0x001dfb88",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4007: window review: operator_new(0x24) + RGain ctor stored to fgThis_RGain."
+  },
+  {
+   "row": 4008,
+   "ps2": "0x001dfbc0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4008: window review: Deletes fgThis_RGain via its virtual deleting dtor, like AUF Kill."
+  },
+  {
+   "row": 4022,
+   "ps2": "0x001e0870",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4022: window review: new(8) + RLensFlareManager ctor stored to fgThis_RLensFlareManager."
+  },
+  {
+   "row": 4023,
+   "ps2": "0x001e08a8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4023: window review: Deletes fgThis_RLensFlareManager via its virtual dtor; matches AUF Kill."
+  },
+  {
+   "row": 4136,
+   "ps2": "0x001e82f8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4136: window review: Tree find (lower_bound walk, key compare, else end) on the RParticleSystem* map; callers AddOrRefresh/GetSystem; 0x68 exact, just before the placed _M_insert 0x1e8360."
+  },
+  {
+   "row": 4199,
+   "ps2": "0x001ea4d0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4199: window review: Empty stub called at the end of GrabBackBuffer with a0 = this->private (PPPrivateData*), right after the back-buffer copy; extraction compiled out."
+  },
+  {
+   "row": 4239,
+   "ps2": "0x001ed228",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4239: window review: TU global ctor: calls static-init helper (1,0xffff), DATA-referenced from the ctors table; the sheet 0x258 had the init inlined."
+  },
+  {
+   "row": 4296,
+   "ps2": "0x001f13f0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4296: window review: Tree find on a pointer-keyed map called from RWindow::DrawBrokenWindows; only tree function in the window (sheet 0xa0 vs 0x68, as row 4143)."
+  },
+  {
+   "row": 4351,
+   "ps2": "0x001f6518",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4351: window review: First of four consecutive empty stubs after the TU global ctor; the sheet row is itself an 0x8 empty stub."
+  },
+  {
+   "row": 4352,
+   "ps2": "0x001f6520",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4352: window review: Second stub, 0x8 \"return 0\" - a Retreive function returning a value; sheet also 0x8."
+  },
+  {
+   "row": 4353,
+   "ps2": "0x001f6528",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4353: window review: Third empty 0x8 stub; sheet also 0x8."
+  },
+  {
+   "row": 4411,
+   "ps2": "0x001fd170",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4411: window review: Called twice from ControlSleep; zeroes velocities/forces and sets the sleep flag (+0x6e = 1)."
+  },
+  {
+   "row": 4432,
+   "ps2": "0x001fdf40",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4432: window review: TU global ctor calling helper(1,0xffff), DATA ref from the ctors table."
+  },
+  {
+   "row": 4559,
+   "ps2": "0x00204ac0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4559: window review: Global dtor: calls helper(0,0xffff) which runs ~Simulation; DATA ref from the dtors table."
+  },
+  {
+   "row": 4654,
+   "ps2": "0x00209130",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4654: window review: List clear freeing 0xc nodes, called from ClearObjectiveList and ~SMissionManager."
+  },
+  {
+   "row": 4656,
+   "ps2": "0x00209200",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4656: window review: List clear called from DestroyRuleList and ~SMissionManager."
+  },
+  {
+   "row": 4657,
+   "ps2": "0x002092d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4657: window review: 0x20 exact: resets a small profile struct (zeros, 1000.0f) and is called from the SMissionManager ctor."
+  },
+  {
+   "row": 4658,
+   "ps2": "0x002092f8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4658: window review: TU global ctor calling helper(1,0xffff), DATA ref from the ctors table."
+  },
+  {
+   "row": 4782,
+   "ps2": "0x002104a8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4782: window review: Float step toward target with clamp, same as AUF Util_Step; real size 0x48 (Ghidra body 0x68 swallows Util_Ramp)."
+  },
+  {
+   "row": 4802,
+   "ps2": "0x00211758",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4802: window review: x + x*variance*Util_GaussRandom(); callers Respawn/AddRoundedBolt."
+  },
+  {
+   "row": 4814,
+   "ps2": "0x002127f0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4814: window review: WCollider method forwarding to WCollisionMgr::GetWorldNormal with the this+0x30/0x3c ranges."
+  },
+  {
+   "row": 4819,
+   "ps2": "0x00212bf0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4819: window review: TU global ctor calling helper(1,0xffff), DATA ref."
+  },
+  {
+   "row": 4820,
+   "ps2": "0x00212c10",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4820: window review: Copies the 0x40 world instance matrix indexed by the ushort at +0x24, same as AUF WCollisionObject::MakeMatrix."
+  },
+  {
+   "row": 4821,
+   "ps2": "0x00212cc8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4821: window review: Returns fgWorld instance array + ushort(+0x1a)*0x40 (the render instance), just before WCollisionInstance::GetName which uses the same index."
+  },
+  {
+   "row": 4899,
+   "ps2": "0x0021e650",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4899: window review: Only candidate: computes 0x10 + 2*sum of four byte counts at +4 (a node size in bytes), right after the grid ctors; sheet 0x3a0 is much larger."
+  },
+  {
+   "row": 4928,
+   "ps2": "0x00220b10",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4928: window review: Threshold 16 elements: insertion_sort on the first 16 then the unguarded aux (__final_insertion_sort); called from DrawPass/DrawWorldAtPoint."
+  },
+  {
+   "row": 5041,
+   "ps2": "0x00229ce8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5041: window review: TU global ctor calling helper(1,0xffff), DATA ref; the sheet 0x258 had the init inlined."
+  },
+  {
+   "row": 5075,
+   "ps2": "0x0022c008",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5075: window review: List clear called from ~WTargetPicker and ClearAllTargets."
+  },
+  {
+   "row": 5076,
+   "ps2": "0x0022c070",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5076: window review: list::remove(value): walks nodes, unlinks and frees matches; called from UnregisterTarget."
+  },
+  {
+   "row": 5105,
+   "ps2": "0x0022f3c0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5105: window review: TU global ctor calling helper(1,0xffff), DATA ref."
+  },
+  {
+   "row": 5106,
+   "ps2": "0x0022f3e0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5106: window review: 0x28 exact: VU0_UploadMicrocode(culling code, flag, flag); called from GenerateCurtainsAndNodes."
+  },
+  {
+   "row": 5107,
+   "ps2": "0x0022f408",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5107: window review: Sets the curtain count global 0x33aa9c to 0, like AUF InitActiveCurtainList; called from GenerateCurtainsAndNodes; real size 0x10."
+  },
+  {
+   "row": 5109,
+   "ps2": "0x0022f428",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5109: window review: Midpoint of the two corners and distance -> radius; called by both WVisCurtain ctors; real size 0x70."
+  },
+  {
+   "row": 5111,
+   "ps2": "0x0022f4a0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5111: window review: 0x108 exact; count < 0x3f guard like AUF AddCurtain; called from FindVisibleTreeNodesAndCurtains."
+  },
+  {
+   "row": 5112,
+   "ps2": "0x0022f5a8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5112: window review: (float, COORD4&) VU0 curtain test returning visible; 0x40 real size; called by CullModule and AddCurtain."
+  },
+  {
+   "row": 5114,
+   "ps2": "0x0022f620",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5114: window review: 0x40 exact: stores six floats into this then CalcRadius."
+  },
+  {
+   "row": 5115,
+   "ps2": "0x0022f660",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5115: window review: 0x70 real size: copies two COORD4 into this then CalcRadius; called from WRender."
+  },
+  {
+   "row": 5117,
+   "ps2": "0x0022f6d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5117: window review: 0x110 exact; 2D segment intersection with a zero-determinant early out, matches AUF."
+  },
+  {
+   "row": 5144,
+   "ps2": "0x00231ff8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5144: window review: Lerps two quaternions (4 floats) then calls Quatern_VecInterpolate; real size 0x90."
+  },
+  {
+   "row": 5232,
+   "ps2": "0x00236718",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5232: window review: TU global ctor calling helper(1,0xffff), DATA ref."
+  },
+  {
+   "row": 5253,
+   "ps2": "0x002377d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5253: window review: 0xc8 exact: copies Keys translation/quat/colour/font into gallery state then FONT_SetScale, like AUF FONT_SetState; many HUD callers."
+  },
+  {
+   "row": 5263,
+   "ps2": "0x00237e88",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5263: window review: (Keys*, Lines*): uses Keys+0x30 when Lines is null, MATH_TransformPoints then DrawLine."
+  },
+  {
+   "row": 5301,
+   "ps2": "0x0023a7e8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5301: window review: TU global ctor calling helper 0x23a758(1,0xffff), DATA ref."
+  },
+  {
+   "row": 5371,
+   "ps2": "0x00244828",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5371: window review: Radar blip drawing over tracked instances with DrawMapIndicator; called from DrawQRadarBlips."
+  },
+  {
+   "row": 5372,
+   "ps2": "0x00244c00",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5372: window review: Empty 0x8 stub called from DrawQRadarPulse; sheet also 0x8."
+  },
+  {
+   "row": 5409,
+   "ps2": "0x002477a0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5409: window review: Draws label text and a sprite at a COORD2 with FONT_Draw/SPRITE_Draw2D, right after DrawTarget; called from DrawTargets."
+  },
+  {
+   "row": 5433,
+   "ps2": "0x00249260",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5433: window review: Empty stub called from GLoadingScreen::Update behind a debug flag, right after FadeToBlack."
+  },
+  {
+   "row": 5434,
+   "ps2": "0x00249268",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5434: window review: 0x2c0 exact; message append/printf_err, called by Status and PrintVAList."
+  },
+  {
+   "row": 5435,
+   "ps2": "0x00249528",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5435: window review: 0x20 exact: ignores the channel and calls Print(text)."
+  },
+  {
+   "row": 5777,
+   "ps2": "0x00283fc8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5777: window review: 0x40 real size: maps PrimitiveType through a byte table, -1 -> return 0, else sets the low 3 bits (GS PRIM) of +0x10."
+  },
+  {
+   "row": 5779,
+   "ps2": "0x00284038",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5779: window review: 0x50 real size: maps DepthTestMethod through a table into bits 17-18 (GS ZTST) of +0x30."
+  },
+  {
+   "row": 5781,
+   "ps2": "0x002840c0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5781: window review: Searches the child-model list at this+0xa4 by name (+0xb4) with strcmp and unlinks the match."
+  },
+  {
+   "row": 5809,
+   "ps2": "0x00285ba0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5809: window review: (name, overlay): finds the TAR list by name at this+0xbc and applies the overlay to each shape."
+  },
+  {
+   "row": 5813,
+   "ps2": "0x00285ca8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5813: window review: 0x48 real size: null check, count, then *(ptr) = value pairs, like AUF Patch; called from Model::Draw."
+  },
+  {
+   "row": 5816,
+   "ps2": "0x00285e88",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5816: window review: Deleting-dtor tail freeing 0xdc bytes when flag&1."
+  },
+  {
+   "row": 5974,
+   "ps2": "0x00291130",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5974: window review: 0x20 real size: writes two ints from render context +0x780/+0x794 to out params; called from TestFlares."
+  },
+  {
+   "row": 5976,
+   "ps2": "0x00291178",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5976: window review: Returns context +0x838; called from the RPostProcessing ctor."
+  },
+  {
+   "row": 5977,
+   "ps2": "0x00291188",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5977: window review: Returns context +0x83c (real size 0x10); called from the RPostProcessing ctor."
+  },
+  {
+   "row": 6060,
+   "ps2": "0x00293750",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6060: window review: 0x140 exact; builds a basis from two v3unitcrossprod calls into axis slots chosen by args."
+  },
+  {
+   "row": 6061,
+   "ps2": "0x00293890",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6061: window review: Scale + sin/cos of three angles in degrees + translation; real size 0x1a8 exact."
+  },
+  {
+   "row": 6063,
+   "ps2": "0x00293aa0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6063: window review: Copies a MATRIX4 into this (real size 0x88), like AUF BuildMatrix; callers BeginView/Model::Draw."
+  },
+  {
+   "row": 6078,
+   "ps2": "0x00294580",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6078: window review: MATRIX3 + 4-float translation into a temp then matrix multiply."
+  },
+  {
+   "row": 6079,
+   "ps2": "0x00294620",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6079: window review: MATRIX3 + 3-float translation (w=1) into a temp then multiply."
+  },
+  {
+   "row": 6081,
+   "ps2": "0x002946e0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6081: window review: Quaternion -> matrix plus translation into a temp, then multiply (Append side)."
+  },
+  {
+   "row": 6086,
+   "ps2": "0x00294a40",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6086: window review: MATRIX3 + 4-float translation then PreMult."
+  },
+  {
+   "row": 6087,
+   "ps2": "0x00294ad8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6087: window review: MATRIX3 + 3-float translation then PreMult."
+  },
+  {
+   "row": 6089,
+   "ps2": "0x00294b98",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6089: window review: Quaternion + translation into a temp then PreMult."
+  },
+  {
+   "row": 6094,
+   "ps2": "0x002950b0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6094: window review: Scale*quaternion matrix + translation, real size 0xd8 exact; callers include EvalSQT."
+  },
+  {
+   "row": 6096,
+   "ps2": "0x00295238",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6096: window review: Angle in degrees, sin/cos, rewrites only the rotation part (identity when the angle is 0)."
+  },
+  {
+   "row": 6097,
+   "ps2": "0x002953a0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6097: window review: 0x20 real size: straight call to the matrix multiply 0x297c60."
+  },
+  {
+   "row": 6113,
+   "ps2": "0x00296f98",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6113: window review: Stores a float at viewport +400; called from SetGuardBandSize."
+  },
+  {
+   "row": 6131,
+   "ps2": "0x00297700",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6131: window review: 0x4a8 exact; largest-component quaternion maths with a float and three vector args."
+  },
+  {
+   "row": 6134,
+   "ps2": "0x00297c60",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6134: window review: 0x78 real size: VU0 4x4 multiply; called by all the Transform Append/Mult functions."
+  },
+  {
+   "row": 6162,
+   "ps2": "0x00299970",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6162: window review: 0x90 exact: ProcessRegion on every region in the list, then DrawRegions, bumps the frame count."
+  },
+  {
+   "row": 6163,
+   "ps2": "0x00299a00",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6163: window review: 0xa0 real size: TIMER_gettick-based input/refresh counter with the uint arg as period."
+  },
+  {
+   "row": 6195,
+   "ps2": "0x0029c0f8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6195: window review: 0xa8 exact: switch on PrimitiveType setting +0x30 etc., like AUF SetPrimitiveType."
+  },
+  {
+   "row": 6196,
+   "ps2": "0x0029c1a0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6196: window review: strcmp over the name table returning index or -1, like AUF; called from DynamicModel GetIndexFromName."
+  },
+  {
+   "row": 6198,
+   "ps2": "0x0029c250",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6198: window review: Looks up a name, stores the index at +0x2c (-1 if missing), returns found."
+  },
+  {
+   "row": 6199,
+   "ps2": "0x0029c2e8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6199: window review: Finds the var index by name then calls SetVar(int,...) 0x29c3b0."
+  },
+  {
+   "row": 6200,
+   "ps2": "0x0029c3b0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6200: window review: Alignment check with the \"User Var ... not aligned\" message then stores pointer/stride, like AUF SetVar."
+  },
+  {
+   "row": 6201,
+   "ps2": "0x0029c488",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6201: window review: 0x18 exact: sets +0x34 and +0x18 to 1; called from DynamicModel Lock."
+  },
+  {
+   "row": 6202,
+   "ps2": "0x0029c4a0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6202: window review: 0x10 exact: clears +0x18; called from Unlock and the Draw* destructors."
+  },
+  {
+   "row": 6203,
+   "ps2": "0x0029c4b0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6203: window review: 0xa8 exact: batches the count into a SetUpGeoPrim + DynamicModel::Draw loop, like AUF Draw."
+  },
+  {
+   "row": 6204,
+   "ps2": "0x0029c558",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6204: window review: 0x10 exact: stores the vertex count at +0x3c; called from SetNumVerts."
+  },
+  {
+   "row": 6205,
+   "ps2": "0x0029c568",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6205: window review: 0x20 exact: forwards to DynamicModel::SetModelMatrix of the member at +4."
+  },
+  {
+   "row": 6206,
+   "ps2": "0x0029c588",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6206: window review: 0xf0 exact: zero-init, allocs DynamicModel, registers gpModelViewProjectionMatrix; first of four Draw* class blocks; called from DrawRegions."
+  },
+  {
+   "row": 6207,
+   "ps2": "0x0029c678",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6207: window review: 0xd8 exact: frees the 0xc00/0x300 buffers, ~GeoPrimState, ~DynamicModel."
+  },
+  {
+   "row": 6208,
+   "ps2": "0x0029c750",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6208: window review: 0xb0 exact: flushes pending verts via SetUpGeoPrim/Draw, like AUF InternalFlush."
+  },
+  {
+   "row": 6209,
+   "ps2": "0x0029c800",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6209: window review: 0xc8 exact: flush plus the strip-type special case, like AUF End."
+  },
+  {
+   "row": 6210,
+   "ps2": "0x0029c8c8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6210: window review: 0x40 exact: GeoPrimState assign at +0x80 then SetPrimitiveType."
+  },
+  {
+   "row": 6211,
+   "ps2": "0x0029c908",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6211: window review: 0x8: return this+0x80."
+  },
+  {
+   "row": 6212,
+   "ps2": "0x0029c910",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6212: window review: 0x20: forwards SetModelMatrix to the DynamicModel at +0x10."
+  },
+  {
+   "row": 6213,
+   "ps2": "0x0029c930",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6213: window review: Second identical Draw* block, ctor 0xf0."
+  },
+  {
+   "row": 6214,
+   "ps2": "0x0029ca20",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6214: window review: Second block dtor 0xd8."
+  },
+  {
+   "row": 6215,
+   "ps2": "0x0029caf8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6215: window review: Second block InternalFlush 0xb0."
+  },
+  {
+   "row": 6216,
+   "ps2": "0x0029cba8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6216: window review: Second block End 0xc8."
+  },
+  {
+   "row": 6217,
+   "ps2": "0x0029cc70",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6217: window review: Second block SetState 0x40 (Ghidra body 0x48 includes GetState)."
+  },
+  {
+   "row": 6219,
+   "ps2": "0x0029ccb8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6219: window review: Second block SetModelMatrix 0x20."
+  },
+  {
+   "row": 6220,
+   "ps2": "0x0029ccd8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6220: window review: Third block ctor 0xf8 (extra texture buffer slot); called from Play."
+  },
+  {
+   "row": 6221,
+   "ps2": "0x0029cdd0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6221: window review: Third block dtor 0xf0 frees three buffers; called from Play."
+  },
+  {
+   "row": 6222,
+   "ps2": "0x0029cec0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6222: window review: Third block InternalFlush 0xb0."
+  },
+  {
+   "row": 6223,
+   "ps2": "0x0029cf70",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6223: window review: Third block End 0xc8."
+  },
+  {
+   "row": 6224,
+   "ps2": "0x0029d038",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6224: window review: Third block SetState 0x40 (state at +0x90)."
+  },
+  {
+   "row": 6226,
+   "ps2": "0x0029d080",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6226: window review: Third block SetModelMatrix 0x20."
+  },
+  {
+   "row": 6227,
+   "ps2": "0x0029d1d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6227: window review: Fourth block ctor 0xf8."
+  },
+  {
+   "row": 6228,
+   "ps2": "0x0029d2d0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6228: window review: Fourth block dtor 0xf0."
+  },
+  {
+   "row": 6229,
+   "ps2": "0x0029d3c0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6229: window review: Fourth block InternalFlush 0xb0."
+  },
+  {
+   "row": 6230,
+   "ps2": "0x0029d470",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6230: window review: Fourth block End 0xc8."
+  },
+  {
+   "row": 6231,
+   "ps2": "0x0029d538",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6231: window review: Fourth block SetState 0x40."
+  },
+  {
+   "row": 6233,
+   "ps2": "0x0029d580",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6233: window review: Fourth block SetModelMatrix 0x20."
+  },
+  {
+   "row": 6234,
+   "ps2": "0x0029d6d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6234: window review: 0x78 exact: varargs to printHandler or vfprintf(stderr)."
+  },
+  {
+   "row": 6399,
+   "ps2": "0x002656b8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6399: window review: Same shape as AUF NewBlockByIdx: per-index free list at 0x343d68, carve from pool when empty, block size from 0x343d28 table."
+  },
+  {
+   "row": 6400,
+   "ps2": "0x00265788",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6400: window review: Resets pool cursor to base and clears both free-list tables; called by ResetMemoryPool, matching AUF ResetPool."
+  },
+  {
+   "row": 6495,
+   "ps2": "0x00268cb0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6495: window review: Non-virtual FnDeltaQ helper that lazily allocates buffers (FUN_00265728) and caches DeltaQ::GetConstBoneIdx/GetConstPhysical."
+  },
+  {
+   "row": 6496,
+   "ps2": "0x00268d88",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6496: window review: FnDeltaQ vtable 0x3af810 SetAnimMemoryMap slot (same slot as in FnDeltaF1's vtable): stores map at +0xc."
+  },
+  {
+   "row": 6497,
+   "ps2": "0x00268d90",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6497: window review: FnDeltaQ vtable GetLength slot: writes frame count to *param_2 and returns 1."
+  },
+  {
+   "row": 6498,
+   "ps2": "0x00268dd0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6498: window review: FnDeltaQ vtable Eval slot (slot 3, between UseFPS and GetLength)."
+  },
+  {
+   "row": 6499,
+   "ps2": "0x00268e08",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6499: window review: FnDeltaQ vtable EvalSQT slot (between FindMatchTime and FnAnim::EvalPhase)."
+  },
+  {
+   "row": 6500,
+   "ps2": "0x0026b368",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6500: window review: Slot 1 (dtor) of FnDeltaSingleQ vtable 0x3afae0 (slot 0 = FnDeltaSingleQ type_info); stores FnDeltaSingleQ vtable, frees 3 buffers, frees 0x30. NOTE: lies after the type"
+  },
+  {
+   "row": 6646,
+   "ps2": "0x002717d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6646: window review: FnDeltaF1 vtable 0x3b1180 SetAnimMemoryMap slot: stores map at +0xc, resets cached indices."
+  },
+  {
+   "row": 6647,
+   "ps2": "0x002717f0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6647: window review: FnDeltaF1 vtable GetLength slot: frame count into *param_2, returns 1."
+  },
+  {
+   "row": 6648,
+   "ps2": "0x00271830",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6648: window review: FnDeltaF1 vtable Eval slot (slot 3)."
+  },
+  {
+   "row": 6649,
+   "ps2": "0x00271860",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6649: window review: FnDeltaF1 vtable EvalWeights slot (the FnAnim::EvalWeights position in base vtables)."
+  },
+  {
+   "row": 6650,
+   "ps2": "0x00271890",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6650: window review: FnDeltaF1 vtable EvalVel2D slot (the FnAnim::EvalVel2D position)."
+  },
+  {
+   "row": 6651,
+   "ps2": "0x002718c0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6651: window review: Eval slot of FnEventBlender vtable 0x3b1570 (slot 0 = ~FnEventBlender); blends two child anims by time window like AUF."
+  },
+  {
+   "row": 6758,
+   "ps2": "0x00275670",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6758: window review: Slot 1 of FnDeltaLerpChan vtable 0x3b2580 (slot 0 = FnDeltaLerpChan type_info); inlined base dtor stores FnDeltaChan vtable, frees 0x18."
+  },
+  {
+   "row": 6785,
+   "ps2": "0x00275b80",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6785: window review: eagl_alloc with string 'EAGLAnim::FnKeyDeltaChan new'."
+  },
+  {
+   "row": 6786,
+   "ps2": "0x00275ba8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6786: window review: eagl_alloc with the caller's name, between the 'new' and 'new[]' string anchors."
+  },
+  {
+   "row": 6787,
+   "ps2": "0x00275bd0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6787: window review: eagl_free, between the 'new' and 'new[]' string anchors."
+  },
+  {
+   "row": 6788,
+   "ps2": "0x00275bf8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6788: window review: eagl_alloc with string 'EAGLAnim::FnKeyDeltaChan new[]'."
+  },
+  {
+   "row": 6789,
+   "ps2": "0x00275c20",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6789: window review: eagl_alloc with the caller's name, after the 'new[]' anchor."
+  },
+  {
+   "row": 6790,
+   "ps2": "0x00275c48",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6790: window review: eagl_free, after the 'new[]' anchor."
+  },
+  {
+   "row": 6791,
+   "ps2": "0x00275c70",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6791: window review: Returns param_2 (placement new); block pattern ret/empty/ret/empty matches new/delete/new[]/delete[], order decides new vs new[]."
+  },
+  {
+   "row": 6792,
+   "ps2": "0x00275c78",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6792: window review: Empty 8-byte stub (placement delete); pattern plus order only."
+  },
+  {
+   "row": 6793,
+   "ps2": "0x00275c80",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6793: window review: Returns param_2 (placement new[]); pattern plus order only."
+  },
+  {
+   "row": 6794,
+   "ps2": "0x00275c88",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6794: window review: Empty 8-byte stub (placement delete[]); pattern plus order only."
+  },
+  {
+   "row": 6795,
+   "ps2": "0x00275c90",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6795: window review: Constructor storing vtable 0x3b2440, whose slot 0 is FnKeyDeltaChan type_info and slot 1 ~FnKeyDeltaChan; no callers (abstract base)."
+  },
+  {
+   "row": 6796,
+   "ps2": "0x00275cd0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6796: window review: Slot 1 of FnKeyLerpChan vtable 0x3b23a0 (slot 0 = FnKeyLerpChan type_info); inlined FnKeyDeltaChan dtor as in AUF."
+  },
+  {
+   "row": 6798,
+   "ps2": "0x00275de0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6798: window review: eagl_alloc with string 'EAGLAnim::FnKeyLerpChan new'."
+  },
+  {
+   "row": 6799,
+   "ps2": "0x00275e08",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6799: window review: eagl_alloc with the caller's name, between the 'new' and 'new[]' string anchors."
+  },
+  {
+   "row": 6800,
+   "ps2": "0x00275e30",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6800: window review: eagl_free, between the 'new' and 'new[]' string anchors."
+  },
+  {
+   "row": 6801,
+   "ps2": "0x00275e58",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6801: window review: eagl_alloc with string 'EAGLAnim::FnKeyLerpChan new[]'."
+  },
+  {
+   "row": 6802,
+   "ps2": "0x00275e80",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6802: window review: eagl_alloc with the caller's name, after the 'new[]' anchor."
+  },
+  {
+   "row": 6803,
+   "ps2": "0x00275ea8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6803: window review: eagl_free, after the 'new[]' anchor."
+  },
+  {
+   "row": 6804,
+   "ps2": "0x00275ed0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6804: window review: Returns param_2 (placement new); block pattern ret/empty/ret/empty matches new/delete/new[]/delete[], order decides new vs new[]."
+  },
+  {
+   "row": 6805,
+   "ps2": "0x00275ed8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6805: window review: Empty 8-byte stub (placement delete); pattern plus order only."
+  },
+  {
+   "row": 6806,
+   "ps2": "0x00275ee0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6806: window review: Returns param_2 (placement new[]); pattern plus order only."
+  },
+  {
+   "row": 6807,
+   "ps2": "0x00275ee8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6807: window review: Empty 8-byte stub (placement delete[]); pattern plus order only."
+  },
+  {
+   "row": 6808,
+   "ps2": "0x00275ef0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6808: window review: Constructor storing FnKeyLerpChan vtable 0x3b23a0 (also used by NewFnAnim), as AUF ctor."
+  },
+  {
+   "row": 6809,
+   "ps2": "0x00275f38",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6809: window review: Slot 1 of FnKeyQuatChan vtable 0x3b2300 (slot 0 = FnKeyQuatChan type_info); inlined FnKeyDeltaChan dtor."
+  },
+  {
+   "row": 6852,
+   "ps2": "0x00277758",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6852: window review: Same body as AUF FnPhaseChan::SetAnimMemoryMap: store map, count from +6, flag bits 8/0x10/0x20/0x40 select 1/2/4/8."
+  },
+  {
+   "row": 6853,
+   "ps2": "0x002777b8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6853: window review: Stores FnRunBlender vtable, releases child anims and scratch buffer (FreeBuffer) as AUF dtor."
+  },
+  {
+   "row": 6854,
+   "ps2": "0x002779e0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6854: window review: FnRunBlender vtable EvalSQT slot; calls SetWeight(0) when uninitialised, then cycle alignment, like AUF EvalSQT."
+  },
+  {
+   "row": 6855,
+   "ps2": "0x00277c08",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6855: window review: Clamps weight index to count-2 and creates anims via NewFnAnim; called by EvalSQT/EvalVel2D, as AUF SetWeight."
+  },
+  {
+   "row": 6856,
+   "ps2": "0x002781c8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6856: window review: Takes skeleton (+0x34) and count, allocates scratch buffers and creates child FnAnims."
+  },
+  {
+   "row": 6861,
+   "ps2": "0x00278b48",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6861: window review: Rotates a 2D vector by the quaternion at +0x58; called from EvalVel2D."
+  },
+  {
+   "row": 6898,
+   "ps2": "0x0027a448",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6898: window review: Rotates a 2D vector by the quaternion at +0x48; called from FnTurnBlender EvalVel2D."
+  },
+  {
+   "row": 7542,
+   "ps2": "0x002a73b0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7542: window review: Varargs wrapper calling vfiprintf, called from __assert."
+  },
+  {
+   "row": 7545,
+   "ps2": "0x002a73e8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7545: window review: _malloc_r(_impure_ptr, n); 0x28 exact."
+  },
+  {
+   "row": 7546,
+   "ps2": "0x002a7410",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7546: window review: Calls _free_r(_impure_ptr, p); sheet 0x268 = this 0x10 + the static extend-top 0x258."
+  },
+  {
+   "row": 7640,
+   "ps2": "0x002b2268",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7640: window review: errno=0; read(); on -1 copies errno into the reent struct: newlib _read_r."
+  },
+  {
+   "row": 7651,
+   "ps2": "0x002b22c8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7651: window review: realloc(NULL) -> _malloc_r, malloc lock/unlock, memcpy; sheet 0x598 = 0x570 + 0x28 alarm helper."
+  },
+  {
+   "row": 7653,
+   "ps2": "0x002b2860",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7653: window review: CreateSema, SetAlarm, WaitSema, DeleteSema; 0x68 exact."
+  },
+  {
+   "row": 7654,
+   "ps2": "0x002b28c8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7654: window review: Swaps in the CD callback under DIntr/EIntr, returns the old one; 0x58 exact."
+  },
+  {
+   "row": 7655,
+   "ps2": "0x002b2920",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7655: window review: Interrupt-side CD callback: records status, iSignalSema; 0xa0 exact."
+  },
+  {
+   "row": 7656,
+   "ps2": "0x002b29c0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7656: window review: Callback thread loop with the 'sceCdCbfunc=' string; 0xc0 exact."
+  },
+  {
+   "row": 7657,
+   "ps2": "0x002b2a80",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7657: window review: Creates/starts the callback thread (body 0xd4, sheet 0xd8)."
+  },
+  {
+   "row": 7659,
+   "ps2": "0x002b2d10",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7659: window review: Sets power-off callback and arg under DIntr, installs the SIF handler on first use; span 0x118 exact."
+  },
+  {
+   "row": 7660,
+   "ps2": "0x002b2e28",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7660: window review: Strings 'Libcdvd bind err CdSearchFile', 'search name %s'."
+  },
+  {
+   "row": 7661,
+   "ps2": "0x002b3128",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7661: window review: 'Ncmd fail sema cur_cmd' string; N-command precheck."
+  },
+  {
+   "row": 7662,
+   "ps2": "0x002b3298",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7662: window review: ncmd_prechk(2) then RPC 0xe returning the ready state; 0x98 exact."
+  },
+  {
+   "row": 7663,
+   "ps2": "0x002b3330",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7663: window review: 'N cmd wait' polling loop."
+  },
+  {
+   "row": 7664,
+   "ps2": "0x002b33d0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7664: window review: 'S cmd wait' polling loop."
+  },
+  {
+   "row": 7665,
+   "ps2": "0x002b3440",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7665: window review: 'Scmd fail sema cur_cmd' string; S-command precheck."
+  },
+  {
+   "row": 7666,
+   "ps2": "0x002b35b0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7666: window review: 'Libcdvd bind err %d CD_Init' and 'Libcdvd Exit' strings; 0x2e0 exact."
+  },
+  {
+   "row": 7667,
+   "ps2": "0x002b3890",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7667: window review: 'DiskReady 0' / 'DiskReady ended' strings; 0x1f8 exact."
+  },
+  {
+   "row": 7668,
+   "ps2": "0x002b3a88",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7668: window review: S-command 0x22 with one argument (media mode); 0xc8 exact."
+  },
+  {
+   "row": 7669,
+   "ps2": "0x002b3b50",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7669: window review: 'call cdread cmd' / 'cdread end' strings."
+  },
+  {
+   "row": 7670,
+   "ps2": "0x002b3d30",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7670: window review: N-command into a 0x810-byte buffer (TOC); 0x290 exact."
+  },
+  {
+   "row": 7671,
+   "ps2": "0x002b3fc0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7671: window review: N-command with async callback after the disk-ready check; 0xb0 exact, in sheet order."
+  },
+  {
+   "row": 7672,
+   "ps2": "0x002b4070",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7672: window review: S-command RPC 3 returning one word; 0x98 exact, in sheet order."
+  },
+  {
+   "row": 7673,
+   "ps2": "0x002b4108",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7673: window review: S-command RPC 4 returning -1 on failure; sheet 0xb0 = 0x98 + 0x18 static VU0 helper."
+  },
+  {
+   "row": 7675,
+   "ps2": "0x002b41b8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7675: window review: Sets FBRST bit 1 (VU0 reset) with ctc2; 0x18 exact."
+  },
+  {
+   "row": 7676,
+   "ps2": "0x002b41d0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7676: window review: If VU0 is running, sets the FBRST force-break bit; 0x60 exact."
+  },
+  {
+   "row": 7677,
+   "ps2": "0x002b4230",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7677: window review: If stopped, Exec(GetTpc()); body 0x50 exact."
+  },
+  {
+   "row": 7682,
+   "ps2": "0x002b4340",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7682: window review: ctc2 CMSAR0 + vcallmsr; 0x10 exact."
+  },
+  {
+   "row": 7683,
+   "ps2": "0x002b4350",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7683: window review: Reads TPC (cfc2) & 0xffff; 0x10 exact."
+  },
+  {
+   "row": 7684,
+   "ps2": "0x002b4360",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7684: window review: Saves VU0 control registers into buffer +0x200; 0xe0 exact."
+  },
+  {
+   "row": 7685,
+   "ps2": "0x002b4440",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7685: window review: Restores VU0 state from the buffer (repeated lqc2); span 0x228 exact including the following helpers."
+  },
+  {
+   "row": 7700,
+   "ps2": "0x002b4b98",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7700: window review: If VIF0 is stalled, writes FBRST=8 (STC); 0x40 slot."
+  },
+  {
+   "row": 7901,
+   "ps2": "0x002b7848",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7901: window review: Starts right after iDisableDmac's 0x88 span and ends at InitThread (0x1b0 exact); called by _InitSys just before InitThread."
+  },
+  {
+   "row": 7930,
+   "ps2": "0x002b9678",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7930: window review: Allocates a packet, fills src/dst/size, sends the SIF cmd and waits; span 0x258 exact from the end of sceSifExitRpc."
+  },
+  {
+   "row": 7996,
+   "ps2": "0x002be718",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7996: window review: Calls sema init, InitAlarm, InitThread, InitExecPS2, InitTLBFunctions; called from entry."
+  },
+  {
+   "row": 7998,
+   "ps2": "0x002be828",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 7998: window review: Third init call of _InitSys (OSD config, syscall patching); sheet span 0xb8 ends at 0x2be8e0."
+  },
+  {
+   "row": 8109,
+   "ps2": "0x002c8cf0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8109: window review: If the port is open, RPC close command (0xe) and clears the open flag; span 0x118 including the static frame helper."
+  },
+  {
+   "row": 8116,
+   "ps2": "0x002c9078",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8116: window review: Checks the pad is stable, returns the actuator count (+0x6a) for -1 or per-actuator info; body 0x120 exact."
+  },
+  {
+   "row": 8162,
+   "ps2": "0x002cb2f8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8162: window review: Same logic as AUF checksentinel: 'BS'/'BF'/'BM' tags, 0x8000/0x4000 flags, 'BEND' sentinel, error codes 1-4."
+  },
+  {
+   "row": 8307,
+   "ps2": "0x002d0aa8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8307: window review: random() scaled to a float in [0,1), as AUF rrandom."
+  },
+  {
+   "row": 8308,
+   "ps2": "0x002d0b08",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8308: window review: Unpacks 3 colour bytes into a COORD3 scaled by 1/255."
+  },
+  {
+   "row": 8309,
+   "ps2": "0x002d0c48",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8309: window review: Unpacks 4 bytes into a COORD4 scaled by 1/255, as AUF BytesToCoord(COORD4)."
+  },
+  {
+   "row": 8310,
+   "ps2": "0x002d0db8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8310: window review: Tests a matrix's rows (dpcmp); 0x198 exact."
+  },
+  {
+   "row": 8311,
+   "ps2": "0x002d0f50",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8311: window review: Angles/360, floorf, VU0 sin/cos into a matrix from scale/rotation/translation floats; 0x1d8 exact."
+  },
+  {
+   "row": 8338,
+   "ps2": "0x002d2ec8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8338: window review: At the sheet's exact address; allocates point arrays and uses PTDir to build a convex hull."
+  },
+  {
+   "row": 8471,
+   "ps2": "0x002d8368",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8471: window review: Calls the static init with (1, 0xffff); in the ctor list."
+  },
+  {
+   "row": 8472,
+   "ps2": "0x002d8388",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8472: window review: Calls the static init with (0, 0xffff); in the dtor list."
+  },
+  {
+   "row": 8498,
+   "ps2": "0x002d8c38",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8498: window review: Masked ints -> xyzrottom3 -> m3toquat."
+  },
+  {
+   "row": 8499,
+   "ps2": "0x002d8d58",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8499: window review: quattom3 -> m3toxyzrot -> rounded masked ints."
+  },
+  {
+   "row": 8500,
+   "ps2": "0x002d8e78",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8500: window review: Reads an n-bit field at a bit offset; 0x78 exact."
+  },
+  {
+   "row": 8501,
+   "ps2": "0x002d8ef0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8501: window review: Writes an n-bit field at a bit offset; 0x98 exact."
+  },
+  {
+   "row": 8502,
+   "ps2": "0x002d8f88",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8502: window review: GetIntBitField / (2^n-1) as a float."
+  },
+  {
+   "row": 8503,
+   "ps2": "0x002d9000",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8503: window review: float*(2^n-1) -> SetIntBitField."
+  },
+  {
+   "row": 8505,
+   "ps2": "0x002d9070",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8505: window review: Scans from a start index for a char and splits into two LStrings."
+  },
+  {
+   "row": 8506,
+   "ps2": "0x002d90e8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8506: window review: Scans backwards for a char and splits."
+  },
+  {
+   "row": 8507,
+   "ps2": "0x002d9178",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8507: window review: Splits into two LStrings at an index."
+  },
+  {
+   "row": 8508,
+   "ps2": "0x002d91c0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8508: window review: strncpy into a static buffer and terminates; called by Name()."
+  },
+  {
+   "row": 8509,
+   "ps2": "0x002d9210",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8509: window review: Key table 0x359, 0xbb7, ... as AUF EncryptDecrypt; called from IniFiles."
+  },
+  {
+   "row": 8758,
+   "ps2": "0x002e67e0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8758: window review: ATrafficVehicle vtable slot after IsOneShot; returns this+name offset like AUF GetName."
+  },
+  {
+   "row": 8761,
+   "ps2": "0x002e6a20",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8761: window review: ATrafficVehicle vtable 0x3c2e38 slot where the other vtables hold ASceneObj::IsTracked; returns state==5."
+  },
+  {
+   "row": 8773,
+   "ps2": "0x002e7018",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8773: window review: 8-byte empty function right before the ASubmersible ctor, passed as the error callback in ASystem::SetOpts."
+  },
+  {
+   "row": 8974,
+   "ps2": "0x002f45e0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 8974: window review: Walks the list freeing 0xc nodes; used by Clear and the gList static init."
+  },
+  {
+   "row": 9367,
+   "ps2": "0x00306cb8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 9367: window review: Clears *shape and calls MEM_free; called by frame destructors; at the sheet's exact address."
+  },
+  {
+   "row": 9369,
+   "ps2": "0x00306e28",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 9369: window review: Calls loader 0x306ce0 with a2=1, as AUF SHAPE_loadfile."
+  },
+  {
+   "row": 9370,
+   "ps2": "0x00306e48",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 9370: window review: Calls the loader with a2=0, as AUF SHAPE_loadfilez."
+  },
+  {
+   "row": 9371,
+   "ps2": "0x00306e68",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 9371: window review: Parses a 3-digit version from header bytes 0xd..0xf; 0x88 exact."
+  },
+  {
+   "row": 9639,
+   "ps2": "0x003245a0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 9639: window review: Stops IPU DMA, restores the FIFO, IPU_CTRL reset, IPU_CMD=0; sheet address and size 0x238 exact."
+  },
+  {
+   "row": 585,
+   "ps2": "0x00122210",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 585: window review: Not a function yet: 8 bytes after the type_info fn, 'jr ra; lw v0,0x150(a0)' returns the car pointer the GetRotPos pair uses."
+  },
+  {
+   "row": 613,
+   "ps2": "0x001237f0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 613: window review: Not a function yet (inside 0x1237d0 body): 0x88 exact, copies a 64-byte matrix like AUF and like the placed 3-arg sibling at 0x123878."
+  },
+  {
+   "row": 637,
+   "ps2": "0x00124f30",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 637: window review: Not a function yet: static, stores the bool arg to global 0x3276e0; 0x10 exact."
+  },
+  {
+   "row": 638,
+   "ps2": "0x00124f40",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 638: window review: Not a function yet: static, returns fgHandObj (0x327670, the global GetAimFraction reads); 0x10 exact."
+  },
+  {
+   "row": 639,
+   "ps2": "0x00124f50",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 639: window review: Not a function yet: 8-byte member getter (+0x164) between Get and the global ctor."
+  },
+  {
+   "row": 896,
+   "ps2": "0x0013bdc0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 896: window review: Not a function yet: lw +0x70 getter, paired with the setter 8 bytes on."
+  },
+  {
+   "row": 897,
+   "ps2": "0x0013bdc8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 897: window review: Not a function yet: sw +0x70 setter."
+  },
+  {
+   "row": 898,
+   "ps2": "0x0013bdd0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 898: window review: Not a function yet: lw +0x74 getter."
+  },
+  {
+   "row": 899,
+   "ps2": "0x0013bdd8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 899: window review: Not a function yet: sw +0x74 setter."
+  },
+  {
+   "row": 900,
+   "ps2": "0x0013bde0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 900: window review: Not a function yet: lw +0x78 getter."
+  },
+  {
+   "row": 901,
+   "ps2": "0x0013bde8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 901: window review: Not a function yet: sw +0x78 setter."
+  },
+  {
+   "row": 902,
+   "ps2": "0x0013bdf0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 902: window review: Not a function yet: lw +0x7c getter."
+  },
+  {
+   "row": 903,
+   "ps2": "0x0013bdf8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 903: window review: Not a function yet: sw +0x7c setter."
+  },
+  {
+   "row": 906,
+   "ps2": "0x0013be40",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 906: window review: Not a function yet: 0x20, copies a COORD3 into +0x90."
+  },
+  {
+   "row": 907,
+   "ps2": "0x0013be60",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 907: window review: Not a function yet: 0x20, copies a COORD3 into +0xa0."
+  },
+  {
+   "row": 908,
+   "ps2": "0x0013be80",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 908: window review: Not a function yet: returns this+0x110."
+  },
+  {
+   "row": 909,
+   "ps2": "0x0013be88",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 909: window review: Not a function yet: returns this+0xf0."
+  },
+  {
+   "row": 910,
+   "ps2": "0x0013be90",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 910: window review: Not a function yet: lw +0x88 getter."
+  },
+  {
+   "row": 911,
+   "ps2": "0x0013be98",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 911: window review: Not a function yet: sw +0x9c setter, paired with GetPrimaryTarget reading +0x9c."
+  },
+  {
+   "row": 912,
+   "ps2": "0x0013bea0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 912: window review: Not a function yet: lw +0x9c getter, just before AIHelicopter_global_ctors."
+  },
+  {
+   "row": 950,
+   "ps2": "0x0013e3d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 950: window review: Not a function yet: lw +0 getter, paired with the setter after it."
+  },
+  {
+   "row": 951,
+   "ps2": "0x0013e3e0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 951: window review: Not a function yet: sw +0 setter."
+  },
+  {
+   "row": 952,
+   "ps2": "0x0013e3e8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 952: window review: Not a function yet: lw +0x54 getter."
+  },
+  {
+   "row": 953,
+   "ps2": "0x0013e3f0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 953: window review: Not a function yet: sw +0x58, paired with IsActive."
+  },
+  {
+   "row": 954,
+   "ps2": "0x0013e3f8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 954: window review: Not a function yet: lw +0x58."
+  },
+  {
+   "row": 955,
+   "ps2": "0x0013e400",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 955: window review: Not a function yet: sw +0x5c, paired with ValidCommand."
+  },
+  {
+   "row": 956,
+   "ps2": "0x0013e408",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 956: window review: Not a function yet: lw +0x5c."
+  },
+  {
+   "row": 957,
+   "ps2": "0x0013e410",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 957: window review: Not a function yet: lw +0x60, paired with the setter."
+  },
+  {
+   "row": 958,
+   "ps2": "0x0013e418",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 958: window review: Not a function yet: sw +0x60."
+  },
+  {
+   "row": 2845,
+   "ps2": "0x0019efd0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2845: window review: Not a function yet: 'jr ra; lw v0,0x7c(a0)' const getter between the real operator delete (0x19efb0) and the global ctor."
+  },
+  {
+   "row": 2954,
+   "ps2": "0x001a4698",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2954: window review: Not a function yet: returns this+0x40 (velocity), 4-vector form first."
+  },
+  {
+   "row": 2955,
+   "ps2": "0x001a46a0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2955: window review: Not a function yet: returns this+0x40 (COORD3 form)."
+  },
+  {
+   "row": 2956,
+   "ps2": "0x001a46a8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2956: window review: Not a function yet: 0x28 exact; stores the float to +0xa4 when > 2.0."
+  },
+  {
+   "row": 2957,
+   "ps2": "0x001a46d0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2957: window review: Not a function yet: lwc1 +0xa4, the field SetViewAngle writes."
+  },
+  {
+   "row": 2958,
+   "ps2": "0x001a46d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2958: window review: Not a function yet: lw +0xa0 getter."
+  },
+  {
+   "row": 2959,
+   "ps2": "0x001a46e0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2959: window review: Not a function yet: returns this+0x30 (matrix row 3 = position)."
+  },
+  {
+   "row": 2960,
+   "ps2": "0x001a46e8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2960: window review: Not a function yet: returns this+0x30."
+  },
+  {
+   "row": 2961,
+   "ps2": "0x001a46f0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2961: window review: Not a function yet: returns this+0x20 (row 2 = forward)."
+  },
+  {
+   "row": 2962,
+   "ps2": "0x001a46f8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2962: window review: Not a function yet: returns this+0x20."
+  },
+  {
+   "row": 2963,
+   "ps2": "0x001a4700",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2963: window review: Not a function yet: returns this+0x10 (row 1 = up)."
+  },
+  {
+   "row": 2964,
+   "ps2": "0x001a4708",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2964: window review: Not a function yet: returns this+0x10."
+  },
+  {
+   "row": 2965,
+   "ps2": "0x001a4710",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2965: window review: Not a function yet: returns this (row 0 = right)."
+  },
+  {
+   "row": 2966,
+   "ps2": "0x001a4718",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 2966: window review: Not a function yet: returns this."
+  },
+  {
+   "row": 3062,
+   "ps2": "0x001abf80",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3062: window review: Not a function yet: 0x18 exact float maths on (f12,f13) storing to *a0, right after ConfigureRes."
+  },
+  {
+   "row": 3193,
+   "ps2": "0x001b1830",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3193: window review: Not a function yet: sw a1,+0x98 - the path pointer GetParametricDuration dereferences."
+  },
+  {
+   "row": 3197,
+   "ps2": "0x001b1858",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3197: window review: Not a function yet: swc1 f12,+0xa4 float setter right before the placed SetThrottle."
+  },
+  {
+   "row": 3483,
+   "ps2": "0x001c6298",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3483: window review: Not a function yet (inside the static-init body): 8-byte setter storing a1 at +0x54, passed as the set-cull callback by PerformCulling next to the ActActorDatabase gette"
+  },
+  {
+   "row": 3687,
+   "ps2": "0x001d1de0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3687: window review: Not a function yet (Ghidra folds it into type_info): returns fgThis at 0x333fe4, the global Init writes."
+  },
+  {
+   "row": 3968,
+   "ps2": "0x001de660",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3968: window review: Hidden 0x10 function inside the 0x1de640 body: stores a1 into *this and returns this, directly before ~RFlockGoal at 0x1de670; needs creating."
+  },
+  {
+   "row": 3994,
+   "ps2": "0x001df728",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 3994: window review: Hidden 0x10 function between the type_info fn and Init: returns the singleton pointer 0x334d48 that Init sets; needs creating."
+  },
+  {
+   "row": 4006,
+   "ps2": "0x001dfb78",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4006: window review: Hidden 0x10 function after the type_info fn: returns RGain::fgThis_RGain (0x334d4c); needs creating."
+  },
+  {
+   "row": 4021,
+   "ps2": "0x001e0860",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4021: window review: Hidden 0x10 function after the type_info fn: returns fgThis_RLensFlareManager (0x334d50); needs creating."
+  },
+  {
+   "row": 4781,
+   "ps2": "0x00210480",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4781: window review: Hidden 0x28 function after the SWeaponManager ctor: integer version of AUF Util_Step (step a toward b by c, clamp); needs creating."
+  },
+  {
+   "row": 4783,
+   "ps2": "0x002104f0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4783: window review: Hidden 0x20 function inside the 0x2104a8 body: a*t + b*(1-t) ramp just before Util_Bound; needs creating."
+  },
+  {
+   "row": 4929,
+   "ps2": "0x00220bc0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4929: window review: Hidden 0x10 function inside the 0x220b88 body: a->inst < b->inst; its address is passed as the comparator by DrawPass/DrawWorldAtPoint; needs creating."
+  },
+  {
+   "row": 4930,
+   "ps2": "0x00220bd0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 4930: window review: Hidden 0x24 function right after it: returns b->dist < a->dist (float at +4); needs creating."
+  },
+  {
+   "row": 5108,
+   "ps2": "0x0022f418",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5108: window review: Hidden 0x10 function in the 0x22f408 body: returns the curtain count global; needs creating."
+  },
+  {
+   "row": 5110,
+   "ps2": "0x0022f498",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5110: window review: Hidden empty 0x8 stub between CalcRadius and AddCurtain; the sheet row is also an 0x8 stub."
+  },
+  {
+   "row": 5113,
+   "ps2": "0x0022f5e8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5113: window review: Hidden 0x38 function in the 0x22f5a8 body: same curtain test with only a COORD4 arg; needs creating."
+  },
+  {
+   "row": 5116,
+   "ps2": "0x0022f6d0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5116: window review: Hidden empty 0x8 stub after the COORD4 ctor; the sheet row is also 0x8."
+  },
+  {
+   "row": 5262,
+   "ps2": "0x00237d90",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5262: window review: Hidden 0xf8 function next (exact size), line drawing; needs creating."
+  },
+  {
+   "row": 5298,
+   "ps2": "0x0023a7d0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5298: window review: Hidden 0x8 getter after the type_info fn: return *(this+0); needs creating."
+  },
+  {
+   "row": 5299,
+   "ps2": "0x0023a7d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5299: window review: Hidden 0x8 getter: return *(this+0x10); needs creating."
+  },
+  {
+   "row": 5300,
+   "ps2": "0x0023a7e0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5300: window review: Hidden 0x8 getter: return *(this+0x20); needs creating."
+  },
+  {
+   "row": 5370,
+   "ps2": "0x00244790",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5370: window review: Hidden 0x98 function (exact) inside the 0x2446d8 body (0xb8 + 0x98 = 0x150): loops over a count writing float spacing outputs; needs creating."
+  },
+  {
+   "row": 5373,
+   "ps2": "0x00244c08",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5373: window review: Hidden second empty 0x8 stub inside the 0x244c00 body, before DrawRadarArrow2D; sheet also 0x8."
+  },
+  {
+   "row": 5642,
+   "ps2": "0x002514d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5642: window review: Hidden 0x10 function after 0x251360: swaps the global new-handler pointer and returns the old one; needs creating."
+  },
+  {
+   "row": 5643,
+   "ps2": "0x002514e8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5643: window review: Hidden 0x8 function: return a1 (placement new); first of two identical, needs creating."
+  },
+  {
+   "row": 5644,
+   "ps2": "0x002514f0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5644: window review: Hidden 0x8 function: return a1 (placement new), just before bad_alloc::what; needs creating."
+  },
+  {
+   "row": 5778,
+   "ps2": "0x00284008",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5778: window review: Hidden 0x30 function (exact): reads the low 3 bits of +0x10, maps back through a table, stores to out; needs creating."
+  },
+  {
+   "row": 5780,
+   "ps2": "0x00284088",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5780: window review: Hidden 0x38 function (exact): reads bits 17-18 of +0x30, maps back, stores to out; needs creating."
+  },
+  {
+   "row": 5810,
+   "ps2": "0x00285c80",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5810: window review: Hidden 0x10 function in the 0x285ba0 body: return this+0xc8 != 0; needs creating."
+  },
+  {
+   "row": 5811,
+   "ps2": "0x00285c90",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5811: window review: Hidden 0x10 function: this+0xc8 = 1; needs creating."
+  },
+  {
+   "row": 5812,
+   "ps2": "0x00285ca0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5812: window review: Hidden 0x8 function: this+0xc8 = 0; needs creating."
+  },
+  {
+   "row": 5814,
+   "ps2": "0x00285cf0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5814: window review: Hidden 0x100 function (exact): copies another Model field by field, returns this; needs creating."
+  },
+  {
+   "row": 5815,
+   "ps2": "0x00285df0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5815: window review: Hidden 0x98 function (exact): zero-initialises a Model with 1.0 scale entries; needs creating."
+  },
+  {
+   "row": 5817,
+   "ps2": "0x00285eb8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5817: window review: Hidden 0x8 function: this+0xd4 = morph, just before Model::Call; needs creating."
+  },
+  {
+   "row": 5836,
+   "ps2": "0x00286a58",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5836: window review: Hidden 0x10 function after find_first: return (flags(+6) & 3) != 0; needs creating."
+  },
+  {
+   "row": 5837,
+   "ps2": "0x00286a68",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 5837: window review: Hidden 0xa0 function: copies n bytes src->dst in 32/8/1-byte chunks; needs creating."
+  },
+  {
+   "row": 6056,
+   "ps2": "0x002935b8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6056: window review: Hidden 0x50 function (exact) after BuildTranslate: identity matrix; needs creating."
+  },
+  {
+   "row": 6057,
+   "ps2": "0x00293608",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6057: window review: Hidden 0x50 function (exact): zero matrix with w=1; needs creating."
+  },
+  {
+   "row": 6058,
+   "ps2": "0x00293658",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6058: window review: Hidden 0x78 function: copies MATRIX3 rows plus a 4-float COORD4 translation; needs creating."
+  },
+  {
+   "row": 6059,
+   "ps2": "0x002936d0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6059: window review: Hidden 0x80 function: MATRIX3 rows plus a 3-float translation and w=1.0; needs creating."
+  },
+  {
+   "row": 6064,
+   "ps2": "0x00293c20",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6064: window review: Hidden 0x120 function (exact): point-array transform, COORD3 source with a stride arg; needs creating."
+  },
+  {
+   "row": 6065,
+   "ps2": "0x00293d40",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6065: window review: Hidden 0x108 function (exact): COORD3 source to COORD4 dest; needs creating."
+  },
+  {
+   "row": 6066,
+   "ps2": "0x00293e48",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6066: window review: Hidden 0x100 function (exact): COORD4 source with a stride arg; needs creating."
+  },
+  {
+   "row": 6067,
+   "ps2": "0x00293f48",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6067: window review: Hidden 0xe8 function (exact): COORD4 source to COORD3 dest; needs creating."
+  },
+  {
+   "row": 6077,
+   "ps2": "0x00294518",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6077: window review: Hidden 0x68 function (exact) after AppendRotate: translate matrix on the stack then multiply; needs creating."
+  },
+  {
+   "row": 6085,
+   "ps2": "0x002949d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6085: window review: Hidden 0x68 function (exact) after PrependRotate: translate matrix then PreMult; needs creating."
+  },
+  {
+   "row": 6093,
+   "ps2": "0x00295010",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6093: window review: Hidden 0xa0 function (exact) after OrthoInverse(Transform*) const: in-place transpose and translation negation; needs creating."
+  },
+  {
+   "row": 6128,
+   "ps2": "0x00297488",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6128: window review: Hidden 0x8 accessor after GetViewMatrix: return this+0x20; needs creating."
+  },
+  {
+   "row": 6129,
+   "ps2": "0x00297490",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6129: window review: Hidden 0x8 accessor: return this+0xa0 (AUF returns +0x9c); needs creating."
+  },
+  {
+   "row": 6130,
+   "ps2": "0x00297498",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6130: window review: Hidden 0x268 function (exact, three returns): matrix diagonal/trace -> quaternion; needs creating."
+  },
+  {
+   "row": 6133,
+   "ps2": "0x00297bf8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6133: window review: Hidden VU0 matrix multiply variant, 0x68 by returns (sheet 0x70); needs creating."
+  },
+  {
+   "row": 6136,
+   "ps2": "0x00297d80",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6136: window review: Hidden 0xc8 function (exact): range-reduced polynomial sine on turns; needs creating."
+  },
+  {
+   "row": 6137,
+   "ps2": "0x00297e48",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6137: window review: Hidden 0xd8 function (exact): adds 0.25 then the same sine polynomial; needs creating."
+  },
+  {
+   "row": 6138,
+   "ps2": "0x00297f20",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6138: window review: Hidden 0x1c8 function (exact), first of three identical rotation-matrix builders; needs creating."
+  },
+  {
+   "row": 6139,
+   "ps2": "0x002980e8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6139: window review: Hidden 0x1c8 function (exact), second rotation builder; needs creating."
+  },
+  {
+   "row": 6140,
+   "ps2": "0x002982b0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6140: window review: Hidden 0x1c8 function (exact), third rotation builder, before VU0_fastqslerp; needs creating."
+  },
+  {
+   "row": 6157,
+   "ps2": "0x00299798",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6157: window review: Hidden 0x40 function (exact) after the gBufferHead static helper: zeroes +0x80/+0x104 and a 32-entry loop, like the AUF History ctor; needs creating."
+  },
+  {
+   "row": 6158,
+   "ps2": "0x002997d8",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6158: window review: Hidden 0x90 function (exact): writes a value into a slot and updates the +0x80 total; needs creating."
+  },
+  {
+   "row": 6161,
+   "ps2": "0x00299930",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6161: window review: Hidden 0x40 function (exact) after ~ProfilerRegion: walks the region list clearing +0x114; needs creating."
+  },
+  {
+   "row": 6164,
+   "ps2": "0x00299aa0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6164: window review: Hidden 0x40 function (exact): walks the region list clearing +0x110; needs creating."
+  },
+  {
+   "row": 6197,
+   "ps2": "0x0029c230",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6197: window review: Hidden 0x20 function (exact) in the 0x29c1a0 body: returns the name table entry [index*8]; needs creating."
+  },
+  {
+   "row": 6218,
+   "ps2": "0x0029ccb0",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6218: window review: Hidden 0x8 function: return this+0x80; needs creating."
+  },
+  {
+   "row": 6225,
+   "ps2": "0x0029d078",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6225: window review: Hidden 0x8 function: return this+0x90; needs creating."
+  },
+  {
+   "row": 6232,
+   "ps2": "0x0029d578",
+   "verdict": "address",
+   "why": "window review (P019): sheet row 6232: window review: Hidden 0x8 function: return this+0x90; needs creating."
+  },
+  {
+   "row": 2846,
+   "ps2": "0x0019efd8",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 2846: referenced from the ctors table, calls the static-init helper (1, 0xffff). Batch P004 had named it operator_delete"
+  },
+  {
+   "row": 2844,
+   "ps2": "0x0019efb0",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 2844: FastFree(p, size) after Smackable::operator new"
+  },
+  {
+   "row": 7063,
+   "ps2": "0x00259560",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 7063: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+  },
+  {
+   "row": 7064,
+   "ps2": "0x002595f0",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 7064: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+  },
+  {
+   "row": 7065,
+   "ps2": "0x002595f8",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 7065: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+  },
+  {
+   "row": 7066,
+   "ps2": "0x00259668",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 7066: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+  },
+  {
+   "row": 7067,
+   "ps2": "0x002598e0",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 7067: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+  },
+  {
+   "row": 7068,
+   "ps2": "0x002598f8",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 7068: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+  },
+  {
+   "row": 7069,
+   "ps2": "0x00259920",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 7069: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+  },
+  {
+   "row": 7070,
+   "ps2": "0x00259950",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 7070: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+  },
+  {
+   "row": 7071,
+   "ps2": "0x00259980",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 7071: MOUSE/PAD block: retail sizes 0x90,0x8,0x70,0x278,0x18,0x28,0x30,0x30,0x140 match rows 7063-7071 exactly; the existing maybe_* guesses were two functions late"
+  },
+  {
+   "row": 6747,
+   "ps2": "0x00275510",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 6747: builds its type_info with __rtti_si(\"Q28EAGLAnim11FnDeltaChan\"), vtable slot 0; was named as the constructor"
+  },
+  {
+   "row": 7710,
+   "ps2": "0x002b4f88",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 7710: fills the caller's structure from the VIF1 registers; body exactly the sheet's 0x1d8"
+  },
+  {
+   "row": 8019,
+   "ps2": "0x002bee00",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 8019: range-checks the TLB index (0xd..0x2f) then calls the syscall-0x56 stub; 0x30 as the sheet says"
+  },
+  {
+   "row": 7931,
+   "ps2": "0x002b98d0",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 7931: the sheet name; maybeLibcdvd_bind was a guess"
+  },
+  {
+   "row": 8256,
+   "ps2": "0x002cfd68",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 8256: the sheet name; GetSomeGlobalFileRelatedObject was a guess"
+  },
+  {
+   "row": 4813,
+   "ps2": "0x002126d0",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 4813: the (COORD3 &, float, uint) overload; row 4812's two-point version is 0x212540"
+  },
+  {
+   "row": 5369,
+   "ps2": "0x002446d8",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 5369: GHud::DrawFont's second overload (row 5368 is 0x244600)"
+  },
+  {
+   "row": 5808,
+   "ps2": "0x00285b08",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 5808: SetTexture(TARList &, SHAPE *): called from the other SetTexture (0x2859f8), loops over the list calling SwapShape"
+  },
+  {
+   "row": 6098,
+   "ps2": "0x002953c0",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 6098: PreMult's first overload: identical 0x28 body to 0x2953e8 (row 6099); which is which follows sheet order"
+  },
+  {
+   "row": 7702,
+   "ps2": "0x002b4bf8",
+   "verdict": "address",
+   "why": "window review fixes (P020): sheet row 7702: reads VIF0_ERR; directly before the static decoder that had carried its name"
   }
  ]
 }
