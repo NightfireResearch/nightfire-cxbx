@@ -10,7 +10,8 @@
 #include "driving/platform/LaunchOptions.h"
 #include "driving/sound/dsndSeam.h"
 #include "common/launchInfo.h"
-#include "common/xbeOverload.h"   // the generated table selects overloads with it
+#include "common/xbeAbi.h"        // the generated table checks each patch against the binary with it
+#include "common/xbeOverload.h"   // and selects overloads with it
 
 #include "cxbx/cxbxbinding.h"
 #include <stdio.h>
@@ -68,14 +69,6 @@ void EventManager__RunEvents(void);
 void EventManager__Init(void);
 
 
-// Wrapper to extract function pointer
-template<typename T, typename U>
-inline size_t GetFunctionAddress(U T::*func) {
-    union { U T::*mfp; size_t addr; } u;
-    u.mfp = func;
-    return u.addr;
-}
-
 
 void Inject()
 {
@@ -129,9 +122,9 @@ void Inject()
   WriteJmpTo(0x0010f186, (size_t)&XLaunchNewImageA);
   Inject_LaunchOptions();   // -mission and friends, applied to that page as it is read
 
-  // Logging goes thrugh some weird paths... 001d1bac is a table of possible outputs - console, debugger, and file
-  WriteJmpTo(0x000e2e30, (size_t)&dbg_printf);
-  WriteJmpTo(0x00132192, (size_t)&dbg_wprintf);
+  // Logging goes thrugh some weird paths... 001d1bac is a table of possible outputs - console, debugger, and file.
+  // dbg_printf and dbg_wprintf are patched through their FUNC_AT tags in driving/logging.cpp, like the scheduler
+  // (Scheduler::Run) and the event manager: the generated table checks each against the binary.
   // WriteJmpRet(0x0010e832, (size_t)&xapiDebugStringA); // UNTESTED
   WriteJmpTo(0x0010e75f, (size_t)&preMain);
 
@@ -160,14 +153,10 @@ void Inject()
   // WriteBytes(0x0005aea8, 0x90, 5); // Disable scheduler run
 
 
-  WriteJmpTo(0x0005a600, (size_t)&EventManager__RunEvents);
-  WriteJmpTo(0x0005a550, (size_t)&EventManager__Init);
 
   //WriteJmpTo(0x00117610, (size_t)&UFileLoader__FileLoad);
 
 
-  // Inject a whole new working version of the scheduler
-  WriteJmpTo(0x0005ba80, GetFunctionAddress(&Scheduler::Run));
 
   // DrawFlares (called at 0x0009e6c9) used to be NOPped out here, when its flare came out at the wrong scale
   // under CXBX. Its only flare is the sun (the sky draw, 0x000a6690, is the one thing that adds to it), and the

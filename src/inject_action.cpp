@@ -1,4 +1,6 @@
 #include "inject.h"
+#include "common/xbeAbi.h"       // the generated table checks each patch against the binary with it
+#include "common/xbeOverload.h"  // and selects overloads with it
 
 #include "action/math/math.h"
 #include "action/game.h"

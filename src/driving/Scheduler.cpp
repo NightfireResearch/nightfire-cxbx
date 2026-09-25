@@ -14,6 +14,7 @@ RunTasksFunc Schedule__RunTasks = (RunTasksFunc)0x0005bce0;
 
 
 
+// AUTOINJECT
 void Scheduler::Run(int i) {
 
   unsigned int now = Clock;

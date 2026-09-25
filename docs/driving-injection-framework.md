@@ -1,7 +1,7 @@
 # Injecting C++ into the driving engine
 
 A design for making the driving engine as easy to replace a function at a time as the action engine is.
-Written September 2026. Step 1 is done (below); the rest is proposed.
+Written September 2026. Steps 1 and 2 are done (see the end); the rest is proposed.
 
 ## Where things stand
 
@@ -155,7 +155,7 @@ engine's `AUTOLTCG` TODO.
 2. **ABI facts and the compile-time checks** (sections 1 and 2) for the tags that exist, then moving the
    hand-written patches in `inject_driving.cpp` (`Scheduler::Run`, the event manager) onto tags so they are
    checked too. Together with step 1, this makes the driving engine's `AUTOINJECT` as safe as the action
-   engine's.
+   engine's. *Done, 25 September 2026 - see "Step 2, as done".*
 3. **Overlay classes and declaration-driven `AUTOGEN`** (sections 4 and 5), proved on `Scheduler`, whose
    layout and `Run` are already written. This is the step that makes classes with data ergonomic.
 4. **Struct export from Ghidra** for the layout checks, and the **register-argument adaptors** (section 6)
@@ -175,3 +175,44 @@ engine's `AUTOLTCG` TODO.
   and two of them - `data\loading\uw_mis11.ini` and `data\render\camera.ini`, the ones that come through the
   two-argument overload - were being loaded with `false` for the argument the original passes as `true`. They
   now load as the original loads them. The action engine's generated table is unchanged, patch for patch.
+
+## Step 2, as done
+
+- **`tools/abi_facts.py`** measures every function in both XBEs (about 25 seconds for the driving engine's
+  7982) and writes `tools/abi_action.json` and `tools/abi_driving.json`, committed. Per function: `pops`,
+  `regs_in`, `first_read` (the instruction where each of those registers is first read, so any result can be
+  checked by looking at one line of disassembly), `complete`, and the first eight `bytes`. It walks each
+  function's own control flow, jump tables included; a jump out of the function is a tail call, and calls and
+  tail calls take the callee's facts, iterated until nothing changes (four passes). Idioms that look like
+  reads and are not: `push ecx` (MSVC's stack-slot reservation), `xor`/`sub`/`sbb reg, reg`, `or reg, -1` and
+  `and reg, 0` at any width, and the `lea ecx, [ecx]` / `mov edi, edi` padding. Run it again after
+  re-syncing `functions_*.json`.
+- **How far to trust it.** All 176 D3D8 and DirectSound entry points agree with the pop counts the seams
+  verify at install time. All 21 functions Ghidra labels `__fastcall`, and 235 of the 250 it labels
+  `__thiscall`, read `ECX` on entry; the other 15 are methods that never touch `this` (`GetEventName`
+  returning a constant). Of the 244 labelled `__cdecl` or `__stdcall`, the ones that read `ECX` turned out to
+  be two analyser mistakes, since fixed (`lea ecx, [ecx]` padding, and `sbb cl, cl` inside a tail-called
+  `_stricmp`), and real ones Ghidra has wrong: `FUN_00057240` does `mov esi, ecx`, and
+  `AttributeSet::LookupInt`, `LookupFloat` and `LookupString`, labelled `__stdcall`, pass their `this` in
+  `ECX` straight through to `0x00058020`.
+- **`src/common/xbeAbi.h`**: `XbeAbi<F>` gives the pops and the `ECX`/`EDX` use a function or member-function
+  pointer type implies (`__cdecl`, variadic, `__stdcall`, `__fastcall` with its register allocation, and
+  `__thiscall`/`__cdecl`/`__stdcall` members), and `XBE_ABI_CHECK` asserts a declaration against the measured
+  facts. The converse - a declaration passing `this` to an original that never reads it - is not an error.
+- **`tools/preprocess.py`** emits an `XBE_ABI_CHECK` before every `AUTOINJECT` and `FUNC_AT` patch, and a
+  failing `static_assert` naming the register and the instruction when the original reads `EAX`, `EBX`,
+  `ESI` or `EDI` on entry - register arguments no C++ convention passes, which want an `AUTOLTCG` adaptor.
+  `AUTOLTCG` patches are not checked; their adaptors are assembly. Every entry now takes its address through
+  `XbeAddress`, which also works for member functions.
+- **Results.** All 480 checked action-engine patches pass - one first failed, `MP_PlayerOrBotInd`, on the
+  analyser's reading of `or ax, 0xffff`, which is how the any-width idiom was found. The driving engine's
+  eight pass: the `UFileLoader` three, and five hand-written patches moved onto tags - `Scheduler::Run`
+  (`AUTOINJECT`; a `__thiscall` taking one `int`, measured as popping 4 and reading `ECX`), the event
+  manager's `Init` and `RunEvents`, and the two logging hooks (`FUNC_AT`). The hand-written
+  `GetFunctionAddress` is gone in favour of `XbeAddress`. What stays hand-patched in `inject_driving.cpp` is
+  `preMain`, which is patched mid-function rather than over one, and the launch-data pair, whose definitions
+  are shared by both engines at different addresses.
+- **Checked by breaking it.** Declaring `UFileLoader::FileLoadz` `__stdcall` fails the build with "the
+  original pops 0 bytes on return, and this declaration's calling convention does not"; declaring
+  `Scheduler::Run` a `__stdcall` member fails both the pops and the `ECX` checks. Built correctly, the
+  underwater level loads and holds 50 fps, and the action engine boots to its background movie.
