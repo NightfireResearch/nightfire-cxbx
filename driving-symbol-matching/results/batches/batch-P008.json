@@ -1,0 +1,109 @@
+{
+ "batch": "P008",
+ "program": "DRIVING.ELF",
+ "note": "Audit round 2, 25 Sept 2026. 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x00175a28",
+   "expect": "UseNamedVivFile",
+   "name": "GameLoop_StartUsingMainBigFile",
+   "evidence": [
+    "opens %s.viv and calls StartUsingBigFile, called at start-up; 0x90 as the sheet says (row 2331)"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x00175ab8",
+   "expect": "GameLoop_StartUsingMainBigFile",
+   "name": "GameLoop_DumpMainBigFile",
+   "evidence": [
+    "calls DumpFileRequestList(\"..\\bigprocess\"); 0x20 as the sheet says (row 2332)"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x00175ad8",
+   "expect": "GameLoop_DumpMainBigFile",
+   "name": "GameLoop_StopUsingMainBigFile",
+   "evidence": [
+    "calls StopUsingBigFile(\"..\\bigprocess\"), called at the end of MainGameLoop (row 2333)"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x00175af8",
+   "expect": "GameLoop_StopUsingMainBigFile",
+   "name": "FUN_00175af8",
+   "evidence": [
+    "not StopUsingMainBigFile: an unlisted static that plays a movie (PlayMPC, subtitles, \"Play Movie\"), called twice by RunTheGame; the sheet's StopUsingMainBigFile size (0x3f0) swallows it"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x00260860",
+   "expect": "FUN_00260860",
+   "name": "PRINT_string",
+   "evidence": [
+    "the PRINT_string(char *,...) overload: passes channel 2; 0x50 as the sheet says (row 7191)"
+   ],
+   "create": false,
+   "sheet_name": "PRINT_string(char *,...)",
+   "allow_duplicate": true
+  },
+  {
+   "xbox": "0x002b6980",
+   "expect": "Exit",
+   "name": "_Exit",
+   "evidence": [
+    "syscall 4 stub; the sheet's _Exit (row 7742)"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x002b7180",
+   "expect": "ExecOSD",
+   "name": "_ExecOSD",
+   "evidence": [
+    "syscall 0x7b stub; the sheet's _ExecOSD (row 7870)"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x002be988",
+   "expect": "FUN_002be988",
+   "name": "Exit",
+   "evidence": [
+    "libkernl exit.o: runs the exit cleanup, then _Exit (row 8002)"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x002be9b0",
+   "expect": "FUN_002be9b0",
+   "name": "ExecOSD",
+   "evidence": [
+    "libkernl exit.o: runs the exit cleanup, then _ExecOSD (row 8003)"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x00112b78",
+   "expect": "GetNumBones",
+   "name": "ActPoser::GetRootBonePosOri",
+   "evidence": [
+    "next in the sheet's order after GetBoneIndex, which ends exactly here; takes a matrix, called from Update (row 247)"
+   ],
+   "create": false,
+   "sheet_name": "ActPoser::GetRootBonePosOri(MATRIX4 &)"
+  },
+  {
+   "xbox": "0x00114a48",
+   "expect": "FUN_00114a48",
+   "name": "ActSkeleton::GetNumBones",
+   "evidence": [
+    "returns the bone count from the skeleton; called by ActPoser and BlendBones (row 285)"
+   ],
+   "create": false
+  }
+ ]
+}

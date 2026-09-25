@@ -84,12 +84,14 @@ def load():
         return json.load(f)
 
 
-def complete_name(name):
+def complete_name(name, truncated=None):
     """The sheet name without its argument list, or None if the 63-character cut fell inside the name itself.
 
     A cut constructor or destructor is completed from its class ('A::AimedAnim' -> 'A::A' when the stub is a
-    prefix of the class name); any other name cut before its '(' is incomplete."""
-    if len(name) < 63 or "(" in name:
+    prefix of the class name); any other name cut before its '(' is incomplete. `truncated` says the text was
+    cut even though it is shorter than 63 characters (the key of "global constructors keyed to K")."""
+    truncated = len(name) >= 63 if truncated is None else truncated
+    if not truncated or "(" in name:
         return base_name(name)
     if "<" in name:
         return None  # a template cut short: nothing reliable to complete it from

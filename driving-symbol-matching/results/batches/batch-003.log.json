@@ -1,0 +1,70 @@
+{
+ "batch": "003",
+ "program": "Driving.xbe",
+ "applied": "Fri Sep 25 22:35:07 2026",
+ "items": [
+  {
+   "xbox": "0x0005a650",
+   "old_name": "UseNamedVivFile",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0005a650 from 'UseNamedVivFile' to 'GameLoop_StartUsingMainBigFile'",
+      "warnings": [
+       "Function name 'GameLoop_StartUsingMainBigFile' \u2014 main part 'GameLoop_StartUsingMainBigFile' is not PascalCase. Expected: GameloopStartusingmainbigfile",
+       "Function name 'GameLoop_StartUsingMainBigFile' \u2014 main part 'GameLoop_StartUsingMainBigFile' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'GameLoop_StartUsingMainBigFile' does not start with a recognized verb. First word 'Game' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0005a650",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GameLoop_StartUsingMainBigFile",
+   "ok": true
+  },
+  {
+   "xbox": "0x0005a6b0",
+   "old_name": "GameLoop_StopUsingMainBigFile",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0005a6b0 from 'GameLoop_StopUsingMainBigFile' to 'FUN_0005a6b0'"
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0005a6b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "FUN_0005a6b0",
+   "ok": true
+  }
+ ]
+}

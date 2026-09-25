@@ -53,7 +53,8 @@ def census(program):
     if not os.path.exists(path):
         return None
     with open(path) as f:
-        return set(json.load(f)["classes"])
+        classes = set(json.load(f)["classes"])
+    return classes or None   # an empty census is a broken one, never "no classes"
 
 
 def main():

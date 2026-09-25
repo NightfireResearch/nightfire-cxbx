@@ -246,6 +246,108 @@
    "ps2": "0x0025ef00",
    "verdict": "address",
    "why": "0x200 as the sheet says; sets up the render-math pipeline from flags, called by m3xform; the sheet's rmpipepreproj (0x1b20) swallows 0x1b00 of unlisted static stages"
+  },
+  {
+   "row": 1233,
+   "ps2": "0x00148528",
+   "verdict": "address",
+   "why": "stores the vtable: the constructor; the sheet's address is the destructor"
+  },
+  {
+   "row": 1234,
+   "ps2": "0x00148540",
+   "verdict": "address",
+   "why": "destructor (IncShotsHit, delete)"
+  },
+  {
+   "row": 2331,
+   "ps2": "0x00175a28",
+   "verdict": "address",
+   "why": "opens the .viv"
+  },
+  {
+   "row": 2332,
+   "ps2": "0x00175ab8",
+   "verdict": "address",
+   "why": "DumpFileRequestList"
+  },
+  {
+   "row": 2333,
+   "ps2": "0x00175ad8",
+   "verdict": "address",
+   "why": "StopUsingBigFile, end of MainGameLoop"
+  },
+  {
+   "row": 3091,
+   "ps2": "0x001ac978",
+   "verdict": "address",
+   "why": "called by the constructor, UpdateScale and Debug"
+  },
+  {
+   "row": 3092,
+   "ps2": "0x001aca28",
+   "verdict": "address",
+   "why": "calls SetFogParams, sets the fill colour"
+  },
+  {
+   "row": 4468,
+   "ps2": "0x00200200",
+   "verdict": "address",
+   "why": "allocates \"Explosion\""
+  },
+  {
+   "row": 4469,
+   "ps2": "0x002002e0",
+   "verdict": "address",
+   "why": "allocates \"Newton\""
+  },
+  {
+   "row": 7190,
+   "ps2": "0x00260818",
+   "verdict": "address",
+   "why": "channel + format, 0x48"
+  },
+  {
+   "row": 7191,
+   "ps2": "0x00260860",
+   "verdict": "address",
+   "why": "format only, channel 2, 0x50"
+  },
+  {
+   "row": 247,
+   "ps2": "0x00112b78",
+   "verdict": "address",
+   "why": "after GetBoneIndex in order, takes a matrix"
+  },
+  {
+   "row": 285,
+   "ps2": "0x00114a48",
+   "verdict": "address",
+   "why": "returns the bone count"
+  },
+  {
+   "row": 7742,
+   "ps2": "0x002b6980",
+   "verdict": "address",
+   "why": "syscall 4 stub"
+  },
+  {
+   "row": 7870,
+   "ps2": "0x002b7180",
+   "verdict": "address",
+   "why": "syscall 0x7b stub"
+  },
+  {
+   "row": 8002,
+   "ps2": "0x002be988",
+   "verdict": "address",
+   "why": "exit cleanup then _Exit"
+  },
+  {
+   "row": 8003,
+   "ps2": "0x002be9b0",
+   "verdict": "address",
+   "why": "exit cleanup then _ExecOSD"
   }
  ]
 }

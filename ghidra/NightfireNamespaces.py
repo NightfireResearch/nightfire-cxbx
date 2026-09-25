@@ -28,8 +28,37 @@
 import json
 import os
 
-from ghidra.app.util import NamespaceUtils
 from ghidra.program.model.symbol import SourceType
+
+
+def split(qualified):
+    # Top-level "::" only: in "URefCounter<ActTextureDatabase::TextureInfo>::URefCounter" the inner "::"
+    # belongs to the template argument (same as driving-symbol-matching/lib/names.py).
+    parts, depth, cur, i = [], 0, "", 0
+    while i < len(qualified):
+        c = qualified[i]
+        if c == "<":
+            depth += 1
+        elif c == ">":
+            depth -= 1
+        if depth == 0 and qualified.startswith("::", i):
+            parts.append(cur)
+            cur, i = "", i + 2
+            continue
+        cur += c
+        i += 1
+    parts.append(cur)
+    return parts
+
+
+def namespace_for(parts):
+    # Find or create each level in turn (NamespaceUtils.createNamespaceHierarchy splits on every "::").
+    table = currentProgram.getSymbolTable()
+    ns = currentProgram.getGlobalNamespace()
+    for part in parts:
+        found = table.getNamespace(part, ns)
+        ns = found if found is not None else table.createNameSpace(ns, part, SourceType.USER_DEFINED)
+    return ns
 
 moves_path = os.path.join(os.path.dirname(__file__), "../driving-symbol-matching/results/namespace-moves.json")
 with open(moves_path) as f:
@@ -38,7 +67,8 @@ print("Program: %s, %d moves listed for it" % (currentProgram.name, len(moves)))
 
 todo = []
 for m in moves:
-    path, bare = m["name"].rsplit("::", 1)
+    parts = split(m["name"])
+    path, bare = "::".join(parts[:-1]), parts[-1]
     func = getFunctionAt(toAddr(m["address"]))
     if func is None:
         print("  skip %s: no function there" % m["address"])
@@ -48,10 +78,10 @@ for m in moves:
         continue
     if func.getParentNamespace().getName(True) == path:
         continue
-    todo.append((func, path, m))
+    todo.append((func, parts[:-1], m))
 
 for func, path, m in todo:
-    print("  %s %s -> %s::%s" % (m["address"], func.getName(True), path, func.getName()))
+    print("  %s %s -> %s::%s" % (m["address"], func.getName(True), "::".join(path), func.getName()))
 
 if not todo:
     print("Nothing to move")
@@ -59,11 +89,10 @@ elif askYesNo("Nightfire namespaces", "Move %d functions into their namespaces? 
     moved = 0
     for func, path, m in todo:
         try:
-            ns = NamespaceUtils.createNamespaceHierarchy(path, None, currentProgram, SourceType.USER_DEFINED)
-            func.setParentNamespace(ns)
+            func.setParentNamespace(namespace_for(path))
             moved += 1
         except Exception as e:
-            print("  FAILED %s -> %s: %s" % (m["address"], path, e))
+            print("  FAILED %s -> %s: %s" % (m["address"], "::".join(path), e))
     print("Moved %d of %d; re-run `python apply.py --pending-namespaces` to confirm" % (moved, len(todo)))
 else:
     print("Cancelled; nothing changed")

@@ -79,13 +79,21 @@ else:
     for ns, e in todo:
         outcome[e["path"]] = "cancelled"
 
+# Walk the namespace tree from the global namespace (getAllSymbols returned none of them).
 census = {"namespace": [], "class": []}
-for sym in currentProgram.getSymbolTable().getAllSymbols(False):
-    kind = sym.getSymbolType()
-    if kind == SymbolType.CLASS or kind == SymbolType.NAMESPACE:
-        census["class" if kind == SymbolType.CLASS else "namespace"].append(sym.getObject().getName(True))
+table = currentProgram.getSymbolTable()
+stack = [currentProgram.getGlobalNamespace().getSymbol()]
+while stack:
+    for child in table.getChildren(stack.pop()):
+        kind = child.getSymbolType()
+        if kind == SymbolType.CLASS or kind == SymbolType.NAMESPACE:
+            census["class" if kind == SymbolType.CLASS else "namespace"].append(child.getObject().getName(True))
+            stack.append(child)
+class_count = sum(1 for _ in table.getClassNamespaces())
 census_path = os.path.join(os.path.dirname(list_path), "namespace-census-%s.json" % currentProgram.name)
 with open(census_path, "w") as f:
-    json.dump({"program": currentProgram.name, "classes": sorted(census["class"]),
+    json.dump({"program": currentProgram.name, "class_namespaces_count": class_count,
+               "classes": sorted(census["class"]),
                "namespaces": sorted(census["namespace"]), "outcome": outcome}, f, indent=1)
-print("Census: %d classes, %d plain namespaces -> %s" % (len(census["class"]), len(census["namespace"]), census_path))
+print("Census: %d classes (Ghidra counts %d), %d plain namespaces -> %s"
+      % (len(census["class"]), class_count, len(census["namespace"]), census_path))

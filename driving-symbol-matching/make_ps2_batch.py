@@ -5,8 +5,9 @@
 Takes rows whose PS2 address came from the given sources, where PS2 Ghidra still has FUN_ there (a row whose
 function is already named is never touched). Names are made Ghidra-safe the way PS2 Ghidra already spells them:
 "operator new" -> operator_new, "operator delete []" -> operator_delete_array, "X type_info function" ->
-X_type_info_function. Held back and listed: names the sheet cut short, templates, static initialisers, and
-thunks. A name the sheet gives to several rows (overloads) may repeat. Read-only.
+X_type_info_function, "global constructors keyed to K" -> K_global_ctors, templates keep their arguments with
+spaces as underscores (the user's conventions, 25 Sept 2026). Held back and listed: names the sheet cut inside
+the name itself (flag for AUF or a manual check) and thunks. A name the sheet gives to several rows (overloads) may repeat. Read-only.
 """
 
 import json
@@ -21,27 +22,43 @@ from lib.index import Index
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def ghidra_name(row_name):
+def ghidra_safe(name):
+    """Spaces become underscores, as Ghidra's demangler writes template arguments."""
+    return re.sub(r"\s+", "_", name.strip())
+
+
+def complete_cut(name, truncated):
+    """The part before any argument list, or None when the sheet's 63-character cut fell inside the name and
+    the constructor/destructor rule can't complete it."""
+    if not truncated or "(" in name:
+        return sheet.base_name(name)
+    return sheet.complete_name(name, truncated=True)
+
+
+def ghidra_name(row_name, truncated=None):
     """(qualified Ghidra-safe name, None) or (None, reason to hold)."""
     name = row_name
-    if name.startswith(("global constructors keyed to", "global destructors keyed to")):
-        return None, "static initialiser (no naming convention agreed yet)"
+    truncated = len(name) >= 63 if truncated is None else truncated
+    m = re.match(r"^global (constructors|destructors) keyed to (.*)$", name)
+    if m:
+        # Convention (user, 25 Sept 2026): "<key>_global_ctors" / "_global_dtors" in the key's namespace,
+        # like the existing EAGL::DynamicLoader::ModelType_global_ctors.
+        key = complete_cut(m.group(2), truncated)
+        if key is None:
+            return None, "name cut short by the sheet's 63 characters"
+        return ghidra_safe(key) + ("_global_ctors" if m.group(1) == "constructors" else "_global_dtors"), None
     if name.endswith(" type_info function"):
-        cls = name[:-len(" type_info function")]
-        if "<" in cls:
-            return None, "template"
-        return cls.replace(" ", "_") + "_type_info_function", None   # "long long type_info function"
+        return ghidra_safe(name[:-len(" type_info function")]) + "_type_info_function", None
     full = sheet.complete_name(name)
     if full is None:
         return None, "name cut short by the sheet's 63 characters"
-    if "<" in full:
-        return None, "template"
+    # A template function carries its return type in the symbol file: "bool lexicographical_compare<...>".
+    full = re.sub(r"^(?:[\w:]+\s*\**\s+)+(?=[\w:~]+<)", "", full)
     full = re.sub(r"operator (new|delete) \[\]$", r"operator_\1_array", full)
     full = re.sub(r"operator (new|delete)$", r"operator_\1", full)
     full = re.sub(r"operator\s+(\S+)$", r"operator\1", full)
-    if " " in full:
-        return None, "name has spaces Ghidra can't take"
-    return full, None
+    # Convention (user, 25 Sept 2026): templates keep their arguments, spaces as underscores.
+    return ghidra_safe(full), None
 
 
 def main():
@@ -53,13 +70,16 @@ def main():
         if r.get("ps2_from") not in sources:
             continue
         a = r["ps2"]
-        f = ix.ps2[a]
+        f = ix.ps2.get(a)
+        if f is None:
+            continue  # a data symbol (a variable): the sheet's own address, not a function
+
         if not f["name"].startswith("FUN_"):
             continue
         if f.get("thunk"):
             held.append((r, a, "thunk"))
             continue
-        name, why = ghidra_name(r["name"])
+        name, why = ghidra_name(r["name"], r["truncated"])
         if name is None:
             held.append((r, a, why))
             continue

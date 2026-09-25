@@ -26,7 +26,7 @@ import subprocess
 import sys
 import time
 
-from lib import ghidra_ro as g
+from lib import ghidra_ro as g, names
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -49,7 +49,7 @@ def block(item):
         lines.append(f"Symbol file name: {item['sheet_name']}")
     if item.get("also"):
         lines.append("Identical code folded by the linker; also: " + ", ".join(item["also"]))
-    cls = item["name"].rsplit("::", 1)[0] if "::" in item["name"] else None
+    cls = names.namespace(item["name"]) or None
     if cls:
         lines.append(f"Class: {cls}")
     for e in item.get("evidence", []):
@@ -78,7 +78,7 @@ def used_in_src(qualified):
 
 def check(items, program):
     problems = []
-    names = {}
+    seen = {}
     # Every function's qualified name now, to refuse a new name that already exists at another address.
     existing = {}
     qualified = g.qualified_names(program)
@@ -92,21 +92,21 @@ def check(items, program):
         if it.get("create"):
             if have is not None:
                 problems.append(f"{it['xbox']}: expected no function, found {have}")
-        elif have != it["expect"].split("::")[-1]:
+        elif have != names.bare(it["expect"]):
             problems.append(f"{it['xbox']}: expected {it['expect']}, Ghidra has {have}")
         if program == g.XBOX and not it["expect"].startswith("FUN_") and it["expect"] != "(none)":
             refs = used_in_src(it["expect"])
             if refs:
                 problems.append(f"{it['xbox']}: old name {it['expect']} is used in src/driving: {refs[:2]}")
-        if it.get("rename", True) and re.search(r"\s", it["name"]):
-            problems.append(f"{it['xbox']}: {it['name']!r} has whitespace, which Ghidra refuses")
+        if it.get("rename", True) and re.search(r"[\s\x00-\x1f]", it["name"]):
+            problems.append(f"{it['xbox']}: {it['name']!r} has whitespace or control characters, which Ghidra refuses")
         if it.get("rename", True) and not it.get("allow_duplicate"):
             elsewhere = [x for x in existing.get(it["name"], []) if x != int(it["xbox"], 16)]
             if elsewhere:
                 problems.append(f"{it['xbox']}: {it['name']} already exists at {', '.join(hex(x) for x in elsewhere)}")
-        if it["name"] in names and not it.get("allow_duplicate"):
-            problems.append(f"{it['xbox']}: {it['name']} also proposed for {names[it['name']]}")
-        names[it["name"]] = it["xbox"]
+        if it["name"] in seen and not it.get("allow_duplicate"):
+            problems.append(f"{it['xbox']}: {it['name']} also proposed for {seen[it['name']]}")
+        seen[it["name"]] = it["xbox"]
     return problems
 
 
@@ -143,7 +143,7 @@ def run(batch_path, do_apply):
             if it.get("create"):
                 entry["steps"].append(("create_function", w.post("create_function", {"address": it["xbox"]}, program)))
                 entry["created"] = True
-            bare = it["name"].split("::")[-1] if it.get("rename", True) else old_name
+            bare = names.bare(it["name"]) if it.get("rename", True) else old_name
             if bare != old_name:
                 result = w.post("rename_function_by_address",
                                 {"function_address": it["xbox"], "new_name": bare, "strict_mode": "off"}, program)
@@ -230,8 +230,8 @@ def pending_moves():
             a = int(it["xbox"], 16)
             if live_ns[program].get(a) == it["name"]:
                 continue
-            if bare[program].get(a) != it["name"].split("::")[-1]:
-                print(f"  skipped {program} {it['xbox']}: now {bare[program].get(a)}, not {it['name'].split('::')[-1]}")
+            if bare[program].get(a) != names.bare(it["name"]):
+                print(f"  skipped {program} {it['xbox']}: now {bare[program].get(a)}, not {names.bare(it['name'])}")
                 continue
             moves.append({"program": program, "address": it["xbox"], "name": it["name"], "batch": batch["batch"]})
     out = os.path.join(HERE, "results", "namespace-moves.json")
