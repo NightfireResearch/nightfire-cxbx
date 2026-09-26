@@ -6462,6 +6462,60 @@
    "ps2": "0x002b4bf8",
    "verdict": "address",
    "why": "window review fixes (P020): sheet row 7702: reads VIF0_ERR; directly before the static decoder that had carried its name"
+  },
+  {
+   "row": 2229,
+   "ps2": "0x0016ec40",
+   "verdict": "address",
+   "why": "P021: sheet row 2229: window review: Not a function yet: right after InitializeExtensionType, zeroes eight unsigned int& outputs (a1..t3 and a stack arg) - metrics stubbed to 0."
+  },
+  {
+   "row": 5145,
+   "ps2": "0x00232088",
+   "verdict": "address",
+   "why": "P021: sheet row 5145: window review: Hidden 0xa0 function inside the 0x231ff8 body: quaternion -> 3x3 matrix (x2 products, 1 - ...); needs creating."
+  },
+  {
+   "row": 5261,
+   "ps2": "0x00237d18",
+   "verdict": "address",
+   "why": "P021: sheet row 5261: window review: Hidden 0x78 function after FONT_Height (exact size): copies Keys fields into gallery state at +0x60 like FONT_SetState; needs creating."
+  },
+  {
+   "row": 5975,
+   "ps2": "0x00291150",
+   "verdict": "address",
+   "why": "P021: sheet row 5975: window review: Hidden 0x28 function (exact) in the 0x291130 body: writes three ints (+0x77c/+0x790/+0x788) to out params; needs creating."
+  },
+  {
+   "row": 5978,
+   "ps2": "0x00291198",
+   "verdict": "address",
+   "why": "P021: sheet row 5978: window review: Hidden 0x10 function in the 0x291188 body: returns context +0x840; needs creating."
+  },
+  {
+   "row": 6062,
+   "ps2": "0x00293a38",
+   "verdict": "address",
+   "why": "P021: sheet row 6062: window review: Hidden 0x68 function: copies this rotation rows to a MATRIX3 and the translation to a COORD3; needs creating."
+  },
+  {
+   "row": 6095,
+   "ps2": "0x00295188",
+   "verdict": "address",
+   "why": "P021: sheet row 6095: window review: Hidden 0xb0 function (exact) in the 0x2950b0 body: quaternion matrix + translation without scale; needs creating."
+  },
+  {
+   "row": 6132,
+   "ps2": "0x00297ba8",
+   "verdict": "address",
+   "why": "P021: sheet row 6132: window review: Hidden 0x50 VU0 lqc2 matrix multiply (exact); needs creating."
+  },
+  {
+   "row": 6135,
+   "ps2": "0x00297cd8",
+   "verdict": "address",
+   "why": "P021: sheet row 6135: window review: Hidden 0xa8 VU0 multiply with operands swapped (exact); needs creating."
   }
  ]
 }

@@ -3313,5 +3313,84 @@
    ]
   }
  ],
- "DRIVING.ELF": []
+ "DRIVING.ELF": [
+  {
+   "path": "EAGL::Model::Variable",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "EAGL::Model::VariableTable",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "EAGL::ProfilerRegion::History",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "LString",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "RCMP::CODEC_IDATA",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "RCMP::VIDEO_DRIVER",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "TextFile",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "WVisCurtain",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "__class_type_info",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "bad_cast",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "bad_typeid",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  }
+ ]
 }

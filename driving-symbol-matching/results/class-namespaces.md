@@ -136,7 +136,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | std::vector<> | undecided |  |
 | xboxkrnl.exe | undecided |  |
 
-## DRIVING.ELF: class (already) 599, undecided 124
+## DRIVING.ELF: class 11, class (already) 599, undecided 160
 
 | namespace | kind | sheet evidence |
 |---|---|---|
@@ -206,6 +206,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | AUltraLite | class (already) | constructor, destructor, member, type_info, vtable |
 | AVehicle | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | AVehicleWind | class (already) | constructor, destructor, member |
+| AViewSet | undecided | member |
 | AVoice | class (already) | constructor, member, prefix |
 | AVoice::View | class (already) | destructor, member |
 | AWorldSound | class (already) | const method, constructor, destructor, member, type_info, vtable |
@@ -245,6 +246,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | AttributeSystem::AttributeExtensionParserMap | class (already) | constructor |
 | AttributeValue | class (already) | const method, member |
 | AudioTarget | class (already) | constructor, member |
+| BankInfo | undecided | member |
 | BlendedAnimationController | class (already) | constructor, destructor, type_info, vtable |
 | CARP | undecided | member, prefix |
 | CARP::AISpline | class (already) | const method |
@@ -617,9 +619,11 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | InputDevice | class (already) | constructor, destructor, member, type_info, vtable |
 | InputTable | class (already) | constructor, destructor, member |
 | InputToAction | class (already) | constructor, destructor, member |
+| InstanceAndDistance | undecided | member |
 | MemCardManager | class (already) | constructor, member |
 | Mine | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | Missile | class (already) | constructor, destructor, member, type_info, vtable |
+| MissionSectionProfile | undecided | member |
 | Newton | class (already) | constructor, destructor, member, type_info, vtable |
 | Noise | undecided | member |
 | OBB | class (already) | constructor, destructor, member |
@@ -636,6 +640,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | PhysicsObject | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | PlayMPC | class (already) | constructor, destructor, member |
 | PlayMPCTextFile | class (already) | constructor, destructor, member |
+| PrivateData | undecided | member |
 | RAnimEngine | undecided | member, prefix |
 | RAnimEngine::Handle | class (already) | const method, constructor, destructor, member |
 | RAnimEngine::System | undecided | member |
@@ -720,6 +725,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | RShadowMap | class (already) | constructor, destructor, member, prefix, type_info, vtable |
 | RShadowMap::ShadowPrivateData | class (already) | constructor, destructor |
 | RSkeletalObj | class (already) | const method, constructor, destructor, member, type_info, vtable |
+| RSky | undecided | member |
 | RSniperZoom | class (already) | constructor, destructor, member, type_info, vtable |
 | RStateManager | class (already) | const method, constructor, destructor, member, prefix, type_info, vtable |
 | RTexList | undecided | member |
@@ -786,6 +792,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | UCarpNamespace | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | UCharNamespace | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | UData | class (already) | const method, constructor, destructor, member |
+| UDevCons | undecided | member |
 | UFileFind | class (already) | constructor, destructor, member, type_info, vtable |
 | UFileHandler | class (already) | const method, constructor, destructor, member, type_info, vtable |
 | UFileLoader | undecided | member |
@@ -821,6 +828,7 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | WCollisionObject | class (already) | const method |
 | WCollisionWindowDynDataMap | class (already) | constructor |
 | WGrid | class (already) | const method, constructor, destructor, member |
+| WGridNode | undecided | member |
 | WRender | class (already) | constructor, destructor, member |
 | WRoadNav | class (already) | constructor, destructor, member |
 | WRoadNetwork | undecided | member |
@@ -836,6 +844,29 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | WWorldMath | undecided | member |
 | WWorldPos | class (already) | const method, constructor, destructor, member |
 | WeaponInfo | class (already) | const method |
+| _List_base<ABaseSound_*,_allocator<ABaseSound_*>_> | undecided |  |
+| _List_base<AMix_*,_allocator<AMix_*>_> | undecided |  |
+| _List_base<AVoice::View_*,_allocator<AVoice::View_*>_> | undecided |  |
+| _List_base<ActActor_*,_allocator<ActActor_*>_> | undecided |  |
+| _List_base<COORD4,_allocator<COORD4>_> | undecided |  |
+| _List_base<SMissionRule_*,_allocator<SMissionRule_*>_> | undecided |  |
+| _List_base<WGridNodeElem,_allocator<WGridNodeElem>_> | undecided |  |
+| _List_base<WTargetable_*,_allocator<WTargetable_*>_> | undecided |  |
+| _List_base<char_*,_allocator<char_*>_> | undecided |  |
+| _Rb_tree<CStringKey,_AttributeParser> | undecided |  |
+| _Rb_tree<CStringKey,_USymbolTable::Namespace_*> | undecided |  |
+| _Rb_tree<CStringKey,_unsigned_int> | undecided |  |
+| _Rb_tree<LString,_DebugItem_*> | undecided |  |
+| _Rb_tree<LString,_LString> | undecided |  |
+| _Rb_tree<MapKey,_ABank> | undecided |  |
+| _Rb_tree<MapKey,_ActWeaponDatabase::WeaponInfo> | undecided |  |
+| _Rb_tree<MapKey,_RCARPFile> | undecided |  |
+| _Rb_tree<PhysicsObjMapIterator,_PhysicsObjMapIterator> | undecided |  |
+| _Rb_tree<RVehicleParticle_*,_RVehicleParticle_*> | undecided |  |
+| _Rb_tree<StateRef,_StateRef> | undecided |  |
+| _Rb_tree<WCollisionInstance_*,_WCollisionInstance> | undecided |  |
+| _Rb_tree<unsigned_int,_PhysicsObject_*> | undecided |  |
+| _Rb_tree<unsigned_int,_RParticleSystem_*> | undecided |  |
 | __array_type_info | class (already) | destructor, type_info, vtable |
 | __attr_type_info | class (already) | destructor, type_info, vtable |
 | __builtin_type_info | class (already) | destructor, type_info, vtable |
@@ -849,6 +880,8 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | exception | class (already) | const method, constructor, destructor, type_info, vtable |
 | list<ABaseSound_*,_allocator<ABaseSound_*>_> | undecided |  |
 | list<AVoice::View_*,_allocator<AVoice::View_*>_> | undecided |  |
+| list<WTargetable_*,_allocator<WTargetable_*>_> | undecided |  |
+| pair<CStringPairKey,_AttributeCollection> | undecided |  |
 | type_info | class (already) | const method, constructor, destructor, type_info, vtable |
 | vector<Explosion_*,_allocator<Explosion_*>_> | undecided |  |
 | vector<Grenade_*,_allocator<Grenade_*>_> | undecided |  |
@@ -858,9 +891,12 @@ From the symbol file. `class` ones are converted by ghidra/NightfireClasses.py; 
 | vector<Newton_*,_allocator<Newton_*>_> | undecided |  |
 | vector<PVehicle_*,_allocator<PVehicle_*>_> | undecided |  |
 | vector<RDrawElement,_allocator<RDrawElement>_> | undecided |  |
+| vector<RFlock_*,_allocator<RFlock_*>_> | undecided |  |
+| vector<RLightning::Bolt_*,_allocator<RLightning::Bolt_*>_> | undecided |  |
 | vector<Sentry_*,_allocator<Sentry_*>_> | undecided |  |
 | vector<Shell_*,_allocator<Shell_*>_> | undecided |  |
 | vector<Smackable_*,_allocator<Smackable_*>_> | undecided |  |
 | vector<USingleton_*,_allocator<USingleton_*>_> | undecided |  |
+| vector<unsigned_int,_allocator<unsigned_int>_> | undecided |  |
 | {anonymous} | undecided | member |
 
