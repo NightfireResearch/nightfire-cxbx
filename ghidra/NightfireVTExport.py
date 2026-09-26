@@ -29,14 +29,14 @@ out_path = os.path.join(os.path.dirname(__file__), "../driving-symbol-matching/d
 df = state.getProject().getProjectData().getFile(SESSION)
 if df is None:
     raise Exception("No project file " + SESSION)
-# Open in the VT tool: borrow that instance (it includes unsaved work). Otherwise open a read-only copy;
-# getDomainObject would fail with "Domain object(s) are busy/locked" while the VT tool holds it.
+# Open in the VT tool: borrow that instance (it includes unsaved work); a second getDomainObject would fail
+# with "Domain object(s) are busy/locked" while the VT tool holds it.
 session = df.getOpenedDomainObject(this)
 how = "borrowed from the open VT tool"
 if session is None:
-    from ghidra.framework.model import DomainFile
-    session = df.getImmutableDomainObject(this, DomainFile.DEFAULT_VERSION, monitor)
-    how = "read-only copy"
+    # VT sessions don't support read-only opening; open normally, never save, release at the end.
+    session = df.getDomainObject(this, False, False, monitor)
+    how = "opened here (not saved)"
 print("Session %s: %s" % (SESSION, how))
 try:
     src, dst = session.getSourceProgram(), session.getDestinationProgram()
