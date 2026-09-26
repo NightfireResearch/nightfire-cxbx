@@ -45,6 +45,42 @@ def names(program):
     return {a: q.get(a, n) for a, n in g.functions(program)}
 
 
+def up(xn, pn, cache, votes, xnames_set, min_named=3):
+    """Upward: an unnamed Xbox function whose named callees (in first-call order) are also, in the same order, the
+    named callees of exactly one PS2 function whose name the Xbox doesn't have yet. Needs at least min_named named
+    callees on the Xbox side, all found on the PS2 side; the PS2 function may call more (inlining on Xbox)."""
+    def seq(program, names_, a):
+        k = f"{program}:{a:x}"
+        if k not in cache:
+            cache[k] = calls(program, a)
+        return [names_.get(t) for t in cache[k] if names_.get(t) and not unnamed(names_.get(t))]
+    # PS2 candidates: named functions whose name is not on the Xbox, indexed by each named callee.
+    ps2_cands = [a for a, n in pn.items() if not unnamed(n) and n not in xnames_set]
+    with ThreadPoolExecutor(6) as pool:
+        ps2_seqs = dict(zip(ps2_cands, pool.map(lambda a: seq(g.PS2, pn, a), ps2_cands)))
+    by_callee = collections.defaultdict(set)
+    for a, s in ps2_seqs.items():
+        for n in set(s):
+            by_callee[n].add(a)
+    xbox_cands = [a for a, n in xn.items() if unnamed(n) and n is not None]
+    with ThreadPoolExecutor(6) as pool:
+        xbox_seqs = dict(zip(xbox_cands, pool.map(lambda a: seq(g.XBOX, xn, a), xbox_cands)))
+
+    def subsequence(small, big):
+        it = iter(big)
+        return all(any(s == b for b in it) for s in small)
+    for x, s in xbox_seqs.items():
+        s = list(dict.fromkeys(s))
+        if len(s) < min_named:
+            continue
+        pool_ = set.intersection(*(by_callee.get(n, set()) for n in s))
+        fits = [p for p in pool_ if subsequence(s, list(dict.fromkeys(ps2_seqs[p])))]
+        if len(fits) == 1:
+            votes[(x, fits[0])].append({"anchor": f"calls {len(s)} named functions in PS2 order", "kind": "up"})
+    with open(CACHE, "w") as f:
+        json.dump(cache, f)
+
+
 def main():
     xn, pn = names(g.XBOX), names(g.PS2)
     pcount = collections.Counter(pn.values())
@@ -98,6 +134,8 @@ def main():
             for i, j in zip(sx, sp):
                 if unnamed(nx[i]) and np_[j] and not unnamed(np_[j]) and np_[j] not in xnames_set and nx[i] is not None:
                     votes[(cx[i], cp[j])].append({"anchor": xn[x], "kind": kind})
+    if "--up" in os.sys.argv:
+        up(xn, pn, cache, votes, xnames_set)
     by_x, by_p = collections.defaultdict(set), collections.defaultdict(set)
     for x, p in votes:
         by_x[x].add(p)
