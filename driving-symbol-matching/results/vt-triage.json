@@ -168,7 +168,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemyDriver::HandleInterrupts",
   "ps2_name": "AICharacterBond::HandleInterrupts",
-  "distance": 11,
+  "distance": 12,
   "positive": [
    "4/4 named callees"
   ],
@@ -203,7 +203,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemyGround::DoFiring",
   "ps2_name": "AICharacterEnemyGround::TargetIsAcquired",
-  "distance": 2,
+  "distance": 4,
   "positive": [
    "2/4 named callees"
   ],
@@ -687,23 +687,6 @@
   ],
   "contra": [],
   "size": 0.54,
-  "correlators": [
-   "Combined Function and Data Reference Match (AVAILABLE)"
-  ],
-  "tier": "A"
- },
- {
-  "xbox": "0x00075e80",
-  "ps2": "0x0019f768",
-  "kind": "differs",
-  "xbox_name": "Draw::Init",
-  "ps2_name": "SimpleDraw::Init",
-  "distance": 4,
-  "positive": [
-   "3/3 named callees"
-  ],
-  "contra": [],
-  "size": 1.86,
   "correlators": [
    "Combined Function and Data Reference Match (AVAILABLE)"
   ],
@@ -1233,24 +1216,6 @@
   "tier": "A"
  },
  {
-  "xbox": "0x000a3210",
-  "ps2": "0x001e9b38",
-  "kind": "differs",
-  "xbox_name": "RParticulates::LoadAttributes",
-  "ps2_name": "RParticulate::LoadAttributes",
-  "distance": 5,
-  "positive": [
-   "1/1 named callees",
-   "1 named callers"
-  ],
-  "contra": [],
-  "size": 0.69,
-  "correlators": [
-   "Combined Function and Data Reference Match (AVAILABLE)"
-  ],
-  "tier": "A"
- },
- {
   "xbox": "0x000abf20",
   "ps2": "0x001f4920",
   "kind": "differs",
@@ -1480,24 +1445,6 @@
   "tier": "A"
  },
  {
-  "xbox": "0x000d3450",
-  "ps2": "0x00232d58",
-  "kind": "differs",
-  "xbox_name": "GGallery::CULL_GetNextCanvas",
-  "ps2_name": "GFX::CULL_GetNextCanvas",
-  "distance": 3,
-  "positive": [
-   "1/1 named callees"
-  ],
-  "contra": [],
-  "size": 0.73,
-  "correlators": [
-   "BSim Function Matching (AVAILABLE)",
-   "BSim Function Matching (AVAILABLE)"
-  ],
-  "tier": "A"
- },
- {
   "xbox": "0x000d5a00",
   "ps2": "0x00237ca8",
   "kind": "differs",
@@ -1665,7 +1612,7 @@
   "ps2_name": "eagl_free",
   "distance": 4,
   "positive": [
-   "6 named callers"
+   "7 named callers"
   ],
   "contra": [],
   "size": 0.71,
@@ -1682,7 +1629,7 @@
   "ps2_name": "eagl_alloc",
   "distance": 0,
   "positive": [
-   "5 named callers"
+   "6 named callers"
   ],
   "contra": [],
   "size": 0.71,
@@ -1748,16 +1695,16 @@
  },
  {
   "xbox": "0x000ed2d0",
-  "ps2": "0x0027e108",
+  "ps2": "0x0027e188",
   "kind": "differs",
-  "xbox_name": "EAGLInternal::TARDestructor",
-  "ps2_name": "EAGLInternal::RuntimeAllocTARDestructor",
-  "distance": 9,
+  "xbox_name": "EAGLInternal::RuntimeAllocTARDestructor",
+  "ps2_name": "EAGLInternal::TARDestructor",
+  "distance": 0,
   "positive": [
    "1/1 named callees"
   ],
   "contra": [],
-  "size": 0.81,
+  "size": 3.71,
   "correlators": [
    "Combined Function and Data Reference Match (AVAILABLE)"
   ],
@@ -2376,7 +2323,7 @@
   "kind": "differs",
   "xbox_name": "APlayerVehicle::APlayerVehicle",
   "ps2_name": "APlayerVehicle::Play",
-  "distance": 17,
+  "distance": 1,
   "positive": [
    "2 shared strings",
    "3/8 named callees"
@@ -2523,23 +2470,6 @@
   "correlators": [
    "BSim Function Matching (BLOCKED)",
    "BSim Function Matching (BLOCKED)"
-  ],
-  "tier": "A"
- },
- {
-  "xbox": "0x0013d3e0",
-  "ps2": "0x003077c0",
-  "kind": "differs",
-  "xbox_name": "SNDREAL_systemtasak",
-  "ps2_name": "SNDREAL_systemtask",
-  "distance": 1,
-  "positive": [
-   "1/1 named callees"
-  ],
-  "contra": [],
-  "size": 0.38,
-  "correlators": [
-   "Combined Function and Data Reference Match (AVAILABLE)"
   ],
   "tier": "A"
  },
@@ -2979,11 +2909,28 @@
  },
  {
   "xbox": "0x0001ff90",
+  "ps2": "0x0011b908",
+  "kind": "differs",
+  "xbox_name": "AICharacterEnemySnow::DoArmed",
+  "ps2_name": "AICharacterEnemyGround::DoWandering",
+  "distance": 37,
+  "positive": [
+   "2/2 named callees"
+  ],
+  "contra": [],
+  "size": 0.53,
+  "correlators": [
+   "Combined Function and Data Reference Match (AVAILABLE)"
+  ],
+  "tier": "A?"
+ },
+ {
+  "xbox": "0x0001ff90",
   "ps2": "0x0011bbf0",
   "kind": "differs",
   "xbox_name": "AICharacterEnemySnow::DoArmed",
   "ps2_name": "AICharacterEnemyGround::DoArmed",
-  "distance": 37,
+  "distance": 33,
   "positive": [
    "2/2 named callees"
   ],
@@ -3000,7 +2947,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemySnow::PlayZoneInjuryAnim",
   "ps2_name": "AICharacterEnemySunroof::PlayZoneInjuryAnim",
-  "distance": 38,
+  "distance": 40,
   "positive": [
    "3/3 named callees"
   ],
@@ -3017,7 +2964,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemySnow::PlayZoneInjuryAnim",
   "ps2_name": "AICharacterEnemySSnow::PlayZoneInjuryAnim",
-  "distance": 10,
+  "distance": 12,
   "positive": [
    "3/3 named callees"
   ],
@@ -3069,7 +3016,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemySunroof::PlayZoneInjuryAnim",
   "ps2_name": "AICharacterEnemyWindow::PlayZoneInjuryAnim",
-  "distance": 19,
+  "distance": 18,
   "positive": [
    "1 shared strings",
    "3/3 named callees"
@@ -3105,7 +3052,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemyWindow::DoInitial",
   "ps2_name": "AICharacterEnemySunroof::DoUnarming",
-  "distance": 20,
+  "distance": 24,
   "positive": [
    "2/2 named callees"
   ],
@@ -3117,29 +3064,12 @@
   "tier": "A?"
  },
  {
-  "xbox": "0x00022050",
-  "ps2": "0x0011e9a0",
-  "kind": "differs",
-  "xbox_name": "AICharacterEnemyWindow::DoArmed",
-  "ps2_name": "AICharacterEnemySnow::DoArmed",
-  "distance": 14,
-  "positive": [
-   "2/3 named callees"
-  ],
-  "contra": [],
-  "size": 0.8,
-  "correlators": [
-   "Combined Function and Data Reference Match (AVAILABLE)"
-  ],
-  "tier": "A?"
- },
- {
   "xbox": "0x000223a0",
   "ps2": "0x00123878",
   "kind": "differs",
-  "xbox_name": "TargetIsInRange",
+  "xbox_name": "AICharacterEnemyWindow::TargetIsInRange",
   "ps2_name": "AICharacterHands::GetRotPos",
-  "distance": 19,
+  "distance": 12,
   "positive": [
    "1/4 named callees"
   ],
@@ -3211,7 +3141,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterPedestrian::ForceRecycle",
   "ps2_name": "AICharacterPedestrian::KillSelf",
-  "distance": 18,
+  "distance": 17,
   "positive": [
    "1/1 named callees"
   ],
@@ -3244,7 +3174,7 @@
   "xbox": "0x00025fc0",
   "ps2": "0x00126ad8",
   "kind": "differs",
-  "xbox_name": "DoDying",
+  "xbox_name": "AICharacterPedestrian::DoDying",
   "ps2_name": "AICharacterPedestrian::KillSelf",
   "distance": 6,
   "positive": [
@@ -3297,7 +3227,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterPedestrian::DoAvoiding",
   "ps2_name": "AICharacterPedestrian::DoStartled",
-  "distance": 2,
+  "distance": 0,
   "positive": [
    "2/9 named callees"
   ],
@@ -3729,7 +3659,7 @@
   "kind": "differs",
   "xbox_name": "Mine::CheckForProximity",
   "ps2_name": "Mine::CheckTimer",
-  "distance": 0,
+  "distance": 1,
   "positive": [
    "2/7 named callees",
    "1 named callers"
@@ -4240,7 +4170,7 @@
   "kind": "differs",
   "xbox_name": "RDecalManager::DrawDecals",
   "ps2_name": "REmp::DrawTargetEffect",
-  "distance": 7,
+  "distance": 18,
   "positive": [
    "4/4 named callees"
   ],
@@ -4257,7 +4187,7 @@
   "kind": "differs",
   "xbox_name": "RDecalManager::DrawDecals",
   "ps2_name": "REmp::DrawShootingEffect",
-  "distance": 8,
+  "distance": 19,
   "positive": [
    "4/4 named callees"
   ],
@@ -5054,7 +4984,7 @@
   "xbox": "0x001290e0",
   "ps2": "0x002f84e0",
   "kind": "differs",
-  "xbox_name": "~APlayerHeli",
+  "xbox_name": "APlayerHeli::~APlayerHeli",
   "ps2_name": "AFingoDeath::~AFingoDeath",
   "distance": 23,
   "positive": [
@@ -5062,23 +4992,6 @@
   ],
   "contra": [],
   "size": 2.25,
-  "correlators": [
-   "Combined Function and Data Reference Match (AVAILABLE)"
-  ],
-  "tier": "A?"
- },
- {
-  "xbox": "0x00129b20",
-  "ps2": "0x002f84e0",
-  "kind": "differs",
-  "xbox_name": "AUltraLite::~AUltraLite",
-  "ps2_name": "AFingoDeath::~AFingoDeath",
-  "distance": 1,
-  "positive": [
-   "2/3 named callees"
-  ],
-  "contra": [],
-  "size": 3.14,
   "correlators": [
    "Combined Function and Data Reference Match (AVAILABLE)"
   ],
@@ -5179,7 +5092,7 @@
   "ps2_name": "strncasecmp",
   "distance": 6,
   "positive": [
-   "9 named callers"
+   "10 named callers"
   ],
   "contra": [],
   "size": 0.35,
@@ -5196,7 +5109,7 @@
   "ps2_name": "strlen",
   "distance": 7,
   "positive": [
-   "4 named callers"
+   "5 named callers"
   ],
   "contra": [],
   "size": 0.38,
@@ -10194,7 +10107,7 @@
   "kind": "differs",
   "xbox_name": "RGain::~RGain",
   "ps2_name": "RGain::RGain",
-  "distance": 2,
+  "distance": 17,
   "positive": [],
   "contra": [],
   "size": 2.62,
@@ -10877,7 +10790,7 @@
   "xbox": "0x0001ca90",
   "ps2": "0x00123878",
   "kind": "differs",
-  "xbox_name": "TargetIsAcquired",
+  "xbox_name": "AICharacterEnemy::TargetIsAcquired",
   "ps2_name": "AICharacterHands::GetRotPos",
   "distance": 167,
   "positive": [
@@ -11020,7 +10933,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemyGround::DoFiring",
   "ps2_name": "AICharacterHands::GetRotPos",
-  "distance": 121,
+  "distance": 123,
   "positive": [
    "1/4 named callees"
   ],
@@ -11036,9 +10949,9 @@
   "xbox": "0x0001f8f0",
   "ps2": "0x00123878",
   "kind": "differs",
-  "xbox_name": "TargetIsAcquired",
+  "xbox_name": "AICharacterEnemyGround::TargetIsAcquired",
   "ps2_name": "AICharacterHands::GetRotPos",
-  "distance": 99,
+  "distance": 102,
   "positive": [
    "1/4 named callees"
   ],
@@ -11051,12 +10964,29 @@
   "tier": "C"
  },
  {
+  "xbox": "0x0001fcf0",
+  "ps2": "0x00130050",
+  "kind": "differs",
+  "xbox_name": "AICharacterEnemySnow::HandleInterrupts",
+  "ps2_name": "AIGroundVehicle::DoWeaponUpdate",
+  "distance": 224,
+  "positive": [
+   "1/1 named callees"
+  ],
+  "contra": [],
+  "size": 0.31,
+  "correlators": [
+   "Combined Function and Data Reference Match (AVAILABLE)"
+  ],
+  "tier": "C"
+ },
+ {
   "xbox": "0x0001ff90",
   "ps2": "0x00122920",
   "kind": "differs",
   "xbox_name": "AICharacterEnemySnow::DoArmed",
   "ps2_name": "AICharacterEnemyWindow::DoArmed",
-  "distance": 66,
+  "distance": 75,
   "positive": [
    "2/2 named callees"
   ],
@@ -11069,28 +10999,11 @@
  },
  {
   "xbox": "0x0001ff90",
-  "ps2": "0x0011b908",
-  "kind": "differs",
-  "xbox_name": "AICharacterEnemySnow::DoArmed",
-  "ps2_name": "AICharacterEnemyGround::DoWandering",
-  "distance": 41,
-  "positive": [
-   "2/2 named callees"
-  ],
-  "contra": [],
-  "size": 0.53,
-  "correlators": [
-   "Combined Function and Data Reference Match (AVAILABLE)"
-  ],
-  "tier": "C"
- },
- {
-  "xbox": "0x0001ff90",
   "ps2": "0x00126958",
   "kind": "differs",
   "xbox_name": "AICharacterEnemySnow::DoArmed",
   "ps2_name": "AICharacterPedestrian::GetRandomConvAnim",
-  "distance": 142,
+  "distance": 151,
   "positive": [
    "1/2 named callees"
   ],
@@ -11107,7 +11020,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemySnow::DoAiming",
   "ps2_name": "AICharacterPedestrian::DoAiming",
-  "distance": 159,
+  "distance": 169,
   "positive": [
    "2/3 named callees"
   ],
@@ -11122,7 +11035,7 @@
   "xbox": "0x00020710",
   "ps2": "0x00123878",
   "kind": "differs",
-  "xbox_name": "TargetIsInRange",
+  "xbox_name": "AICharacterEnemySnow::TargetIsInRange",
   "ps2_name": "AICharacterHands::GetRotPos",
   "distance": 80,
   "positive": [
@@ -11142,7 +11055,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemySnow::PlayZoneInjuryAnim",
   "ps2_name": "AICharacterEnemyWindow::PlayZoneInjuryAnim",
-  "distance": 64,
+  "distance": 66,
   "positive": [
    "3/3 named callees"
   ],
@@ -11175,7 +11088,7 @@
   "xbox": "0x00021df0",
   "ps2": "0x001287f8",
   "kind": "differs",
-  "xbox_name": "SetActor",
+  "xbox_name": "AICharacterEnemySnow::SetActor",
   "ps2_name": "AICharacterPedestrian::SetActor",
   "distance": 101,
   "positive": [
@@ -11191,11 +11104,28 @@
  },
  {
   "xbox": "0x00022050",
+  "ps2": "0x0011e9a0",
+  "kind": "differs",
+  "xbox_name": "AICharacterEnemyWindow::DoArmed",
+  "ps2_name": "AICharacterEnemySnow::DoArmed",
+  "distance": 75,
+  "positive": [
+   "2/3 named callees"
+  ],
+  "contra": [],
+  "size": 0.8,
+  "correlators": [
+   "Combined Function and Data Reference Match (AVAILABLE)"
+  ],
+  "tier": "C"
+ },
+ {
+  "xbox": "0x00022050",
   "ps2": "0x0011b908",
   "kind": "differs",
   "xbox_name": "AICharacterEnemyWindow::DoArmed",
   "ps2_name": "AICharacterEnemyGround::DoWandering",
-  "distance": 54,
+  "distance": 115,
   "positive": [
    "2/3 named callees"
   ],
@@ -11212,7 +11142,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemyWindow::DoArmed",
   "ps2_name": "AICharacterEnemyGround::DoArmed",
-  "distance": 50,
+  "distance": 111,
   "positive": [
    "2/3 named callees"
   ],
@@ -11229,7 +11159,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemyWindow::DoArmed",
   "ps2_name": "AICharacterPedestrian::GetRandomConvAnim",
-  "distance": 78,
+  "distance": 75,
   "positive": [
    "1/3 named callees"
   ],
@@ -11246,7 +11176,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterHands::Shutdown",
   "ps2_name": "AICharacterPedestrian::DoDead",
-  "distance": 65,
+  "distance": 71,
   "positive": [
    "1/1 named callees"
   ],
@@ -11311,7 +11241,7 @@
   "xbox": "0x00024b30",
   "ps2": "0x00123878",
   "kind": "differs",
-  "xbox_name": "TargetIsInRange",
+  "xbox_name": "AICharacterPedestrian::TargetIsInRange",
   "ps2_name": "AICharacterHands::GetRotPos",
   "distance": 79,
   "positive": [
@@ -11329,7 +11259,7 @@
   "xbox": "0x00025fc0",
   "ps2": "0x0013c5e8",
   "kind": "differs",
-  "xbox_name": "DoDying",
+  "xbox_name": "AICharacterPedestrian::DoDying",
   "ps2_name": "AIRoadSpawn::GetTrafficSpawnPointOnSegment",
   "distance": 247,
   "positive": [
@@ -11365,7 +11295,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterPedestrian::DoAvoiding",
   "ps2_name": "AICharacterEnemySnow::PlayZoneInjuryAnim",
-  "distance": 147,
+  "distance": 150,
   "positive": [
    "2/9 named callees"
   ],
@@ -11962,7 +11892,7 @@
   "kind": "differs",
   "xbox_name": "Newton::Simulate",
   "ps2_name": "PHelicopter::Simulate",
-  "distance": 158,
+  "distance": 156,
   "positive": [
    "4/11 named callees"
   ],
@@ -12194,7 +12124,7 @@
   "kind": "differs",
   "xbox_name": "RVehicle::StartColourDissolve",
   "ps2_name": "RSceneObj::ConvertInstanceToLocal",
-  "distance": 174,
+  "distance": 180,
   "positive": [
    "2/2 named callees"
   ],
@@ -12228,7 +12158,7 @@
   "kind": "differs",
   "xbox_name": "RDecalManager::DrawDecals",
   "ps2_name": "RMissileStreak::Draw",
-  "distance": 191,
+  "distance": 202,
   "positive": [
    "4/4 named callees"
   ],
@@ -12922,7 +12852,7 @@
   "ps2_name": "strcpy",
   "distance": 147,
   "positive": [
-   "1 named callers"
+   "2 named callers"
   ],
   "contra": [],
   "size": 1.51,
@@ -12964,42 +12894,10 @@
   "tier": "C"
  },
  {
-  "xbox": "0x000fac00",
-  "ps2": "0x00266518",
-  "kind": "differs",
-  "xbox_name": "SetAnimMemoryMap",
-  "ps2_name": "EAGLAnim::FnCompoundChannel::SetAnimMemoryMap",
-  "distance": 114,
-  "positive": [],
-  "contra": [],
-  "size": 0.69,
-  "correlators": [
-   "BSim Function Matching (AVAILABLE)",
-   "BSim Function Matching (AVAILABLE)"
-  ],
-  "tier": "C"
- },
- {
-  "xbox": "0x000fd4c0",
-  "ps2": "0x00277360",
-  "kind": "differs",
-  "xbox_name": "Eval",
-  "ps2_name": "EAGLAnim::FnPhaseChan::Eval",
-  "distance": 128,
-  "positive": [],
-  "contra": [],
-  "size": 1.15,
-  "correlators": [
-   "BSim Function Matching (AVAILABLE)",
-   "BSim Function Matching (AVAILABLE)"
-  ],
-  "tier": "C"
- },
- {
   "xbox": "0x00100910",
   "ps2": "0x0026dd18",
   "kind": "differs",
-  "xbox_name": "~FnDeltaF3",
+  "xbox_name": "EAGLAnim::FnDeltaF3::~FnDeltaF3",
   "ps2_name": "EAGLAnim::FnAnimMemoryMap::~FnAnimMemoryMap",
   "distance": 41,
   "positive": [],
@@ -13014,9 +12912,9 @@
   "xbox": "0x00106300",
   "ps2": "0x00287778",
   "kind": "differs",
-  "xbox_name": "scalar_deleting_destructor",
+  "xbox_name": "EAGLAnim::FnRunBlender::scalar_deleting_destructor",
   "ps2_name": "EAGL::Device::SetDeleteOverride",
-  "distance": 238,
+  "distance": 240,
   "positive": [],
   "contra": [],
   "size": 4.0,
@@ -13271,31 +13169,14 @@
   "xbox": "0x001285f0",
   "ps2": "0x002f84e0",
   "kind": "differs",
-  "xbox_name": "~APlayerVehicle",
+  "xbox_name": "APlayerVehicle::~APlayerVehicle",
   "ps2_name": "AFingoDeath::~AFingoDeath",
-  "distance": 122,
+  "distance": 139,
   "positive": [
    "2/3 named callees"
   ],
   "contra": [],
   "size": 0.8,
-  "correlators": [
-   "Combined Function and Data Reference Match (AVAILABLE)"
-  ],
-  "tier": "C"
- },
- {
-  "xbox": "0x0012d300",
-  "ps2": "0x002f84e0",
-  "kind": "differs",
-  "xbox_name": "~ATrafficVehicle",
-  "ps2_name": "AFingoDeath::~AFingoDeath",
-  "distance": 158,
-  "positive": [
-   "2/3 named callees"
-  ],
-  "contra": [],
-  "size": 1.7,
   "correlators": [
    "Combined Function and Data Reference Match (AVAILABLE)"
   ],
@@ -14186,7 +14067,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemyDriver::DoInitial",
   "ps2_name": "AICharacterPedestrian::SetActor",
-  "distance": 224,
+  "distance": 226,
   "positive": [
    "2/5 named callees"
   ],
@@ -14205,12 +14086,12 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemyDriver::HandleInterrupts",
   "ps2_name": "ActGlobalPoseOverrideArray::DoGlobalOverrides",
-  "distance": 272,
+  "distance": 273,
   "positive": [
    "2/4 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (272)"
+   "far from its Xbox neighbours' PS2 functions (273)"
   ],
   "size": 0.22,
   "correlators": [
@@ -14224,7 +14105,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemyGround::AvoidThreat",
   "ps2_name": "AICharacterPedestrian::GetRandomConvAnim",
-  "distance": 197,
+  "distance": 172,
   "positive": [
    "1/4 named callees"
   ],
@@ -14243,12 +14124,12 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemyGround::AvoidThreat",
   "ps2_name": "SimRandom::Reset",
-  "distance": 2237,
+  "distance": 2212,
   "positive": [
    "1/4 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (2237)"
+   "far from its Xbox neighbours' PS2 functions (2212)"
   ],
   "size": 4.93,
   "correlators": [
@@ -14262,10 +14143,10 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemyGround::AICharacterEnemyGround",
   "ps2_name": "AIHelicopter::DisableTargetBeacon",
-  "distance": 392,
+  "distance": 382,
   "positive": [],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (392)",
+   "far from its Xbox neighbours' PS2 functions (382)",
    "no named callee shared",
    "size ratio 7.16"
   ],
@@ -14279,14 +14160,14 @@
   "xbox": "0x0001dea0",
   "ps2": "0x00138588",
   "kind": "differs",
-  "xbox_name": "~AICharacterEnemyGround",
+  "xbox_name": "AICharacterEnemyGround::~AICharacterEnemyGround",
   "ps2_name": "AIHelicopter::DisableTargetBeacon",
-  "distance": 393,
+  "distance": 382,
   "positive": [
    "2/4 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (393)"
+   "far from its Xbox neighbours' PS2 functions (382)"
   ],
   "size": 2.11,
   "correlators": [
@@ -14299,14 +14180,14 @@
   "xbox": "0x0001dea0",
   "ps2": "0x0017ff48",
   "kind": "differs",
-  "xbox_name": "~AICharacterEnemyGround",
+  "xbox_name": "AICharacterEnemyGround::~AICharacterEnemyGround",
   "ps2_name": "Mine::~Mine",
-  "distance": 2268,
+  "distance": 2257,
   "positive": [
    "3/4 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (2268)"
+   "far from its Xbox neighbours' PS2 functions (2257)"
   ],
   "size": 1.25,
   "correlators": [
@@ -14318,14 +14199,14 @@
   "xbox": "0x0001dea0",
   "ps2": "0x0019b520",
   "kind": "differs",
-  "xbox_name": "~AICharacterEnemyGround",
+  "xbox_name": "AICharacterEnemyGround::~AICharacterEnemyGround",
   "ps2_name": "Sentry::~Sentry",
-  "distance": 2596,
+  "distance": 2585,
   "positive": [
    "3/4 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (2596)"
+   "far from its Xbox neighbours' PS2 functions (2585)"
   ],
   "size": 1.18,
   "correlators": [
@@ -14353,31 +14234,12 @@
   "tier": "X"
  },
  {
-  "xbox": "0x0001fcf0",
-  "ps2": "0x00130050",
-  "kind": "differs",
-  "xbox_name": "AICharacterEnemySnow::HandleInterrupts",
-  "ps2_name": "AIGroundVehicle::DoWeaponUpdate",
-  "distance": 256,
-  "positive": [
-   "1/1 named callees"
-  ],
-  "contra": [
-   "far from its Xbox neighbours' PS2 functions (256)"
-  ],
-  "size": 0.31,
-  "correlators": [
-   "Combined Function and Data Reference Match (AVAILABLE)"
-  ],
-  "tier": "X"
- },
- {
   "xbox": "0x00020090",
   "ps2": "0x00126958",
   "kind": "differs",
   "xbox_name": "AICharacterEnemySnow::DoAiming",
   "ps2_name": "AICharacterPedestrian::GetRandomConvAnim",
-  "distance": 137,
+  "distance": 147,
   "positive": [
    "1/3 named callees"
   ],
@@ -14396,7 +14258,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemySSnow::PlayZoneInjuryAnim",
   "ps2_name": "AICharacterEnemySnow::PlayZoneInjuryAnim",
-  "distance": 9,
+  "distance": 18,
   "positive": [
    "3/4 named callees"
   ],
@@ -14433,12 +14295,12 @@
   "kind": "differs",
   "xbox_name": "AICharacterEnemySunroof::DoArmed",
   "ps2_name": "AIHelicopter::DisableTargetBeacon",
-  "distance": 321,
+  "distance": 292,
   "positive": [
    "1/4 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (321)",
+   "far from its Xbox neighbours' PS2 functions (292)",
    "size ratio 6.68"
   ],
   "size": 6.68,
@@ -14508,14 +14370,14 @@
   "xbox": "0x00022150",
   "ps2": "0x001f03b0",
   "kind": "differs",
-  "xbox_name": "DoAiming",
+  "xbox_name": "AICharacterEnemyWindow::DoAiming",
   "ps2_name": "RWater::UpdateData",
-  "distance": 4229,
+  "distance": 4226,
   "positive": [
    "1/1 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (4229)",
+   "far from its Xbox neighbours' PS2 functions (4226)",
    "size ratio 6.75"
   ],
   "size": 6.75,
@@ -14605,12 +14467,12 @@
   "kind": "differs",
   "xbox_name": "AICharacterPedestrian::DoAiming",
   "ps2_name": "SimRandom::Reset",
-  "distance": 2011,
+  "distance": 2017,
   "positive": [
    "1/2 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (2011)"
+   "far from its Xbox neighbours' PS2 functions (2017)"
   ],
   "size": 4.79,
   "correlators": [
@@ -14681,7 +14543,7 @@
   "xbox": "0x00025fc0",
   "ps2": "0x00124440",
   "kind": "differs",
-  "xbox_name": "DoDying",
+  "xbox_name": "AICharacterPedestrian::DoDying",
   "ps2_name": "AICharacterHands::DoArmed",
   "distance": 50,
   "positive": [],
@@ -14699,7 +14561,7 @@
   "xbox": "0x00025fc0",
   "ps2": "0x0013d3f0",
   "kind": "differs",
-  "xbox_name": "DoDying",
+  "xbox_name": "AICharacterPedestrian::DoDying",
   "ps2_name": "AIRoadSpawn::GetRandomPedSpawn",
   "distance": 255,
   "positive": [
@@ -14718,7 +14580,7 @@
   "xbox": "0x00025fc0",
   "ps2": "0x0013cf08",
   "kind": "differs",
-  "xbox_name": "DoDying",
+  "xbox_name": "AICharacterPedestrian::DoDying",
   "ps2_name": "AIRoadSpawn::GetPedSpawnPointOnSegment",
   "distance": 252,
   "positive": [
@@ -14777,7 +14639,7 @@
   "kind": "differs",
   "xbox_name": "AICharacterPedestrian::DoAvoiding",
   "ps2_name": "AICharacterPedestrian::GetRandomConvAnim",
-  "distance": 10,
+  "distance": 13,
   "positive": [
    "1/9 named callees"
   ],
@@ -15465,7 +15327,7 @@
   "xbox": "0x00035b90",
   "ps2": "0x001d6778",
   "kind": "differs",
-  "xbox_name": "scalar_deleting_destructor",
+  "xbox_name": "AIVehicle::scalar_deleting_destructor",
   "ps2_name": "RWorldCamera::LoadSingleAnimation",
   "distance": 3260,
   "positive": [],
@@ -15580,7 +15442,7 @@
   "xbox": "0x00035df0",
   "ps2": "0x00177550",
   "kind": "differs",
-  "xbox_name": "scalar_deleting_destructor",
+  "xbox_name": "AIHelicopter::scalar_deleting_destructor",
   "ps2_name": "kTracks_global_ctors",
   "distance": 1600,
   "positive": [],
@@ -19225,7 +19087,7 @@
   "kind": "differs",
   "xbox_name": "Newton::Simulate",
   "ps2_name": "Human::Simulate",
-  "distance": 65,
+  "distance": 66,
   "positive": [
    "2/11 named callees"
   ],
@@ -19378,12 +19240,12 @@
   "kind": "differs",
   "xbox_name": "PHelicopter::GetControllerInput",
   "ps2_name": "RWorldCamera::ReceiveCameraInput",
-  "distance": 1259,
+  "distance": 1260,
   "positive": [
    "3/3 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (1259)"
+   "far from its Xbox neighbours' PS2 functions (1260)"
   ],
   "size": 1.62,
   "correlators": [
@@ -19864,12 +19726,12 @@
   "kind": "differs",
   "xbox_name": "Shell::ApplyWorldDamage",
   "ps2_name": "EPathUtil_GetFromInstanceOrAI",
-  "distance": 1913,
+  "distance": 1933,
   "positive": [
    "1/4 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (1913)",
+   "far from its Xbox neighbours' PS2 functions (1933)",
    "named callers on both sides, none shared"
   ],
   "size": 1.59,
@@ -19899,9 +19761,27 @@
  },
  {
   "xbox": "0x00075e80",
+  "ps2": "0x0019f800",
+  "kind": "differs",
+  "xbox_name": "SimpleDraw::Init",
+  "ps2_name": "Draw::Init",
+  "distance": 2,
+  "positive": [],
+  "contra": [
+   "no named callee shared",
+   "size ratio 5.57"
+  ],
+  "size": 5.57,
+  "correlators": [
+   "Exact Symbol Name Match (ACCEPTED)"
+  ],
+  "tier": "X"
+ },
+ {
+  "xbox": "0x00075e80",
   "ps2": "0x002393b8",
   "kind": "differs",
-  "xbox_name": "Draw::Init",
+  "xbox_name": "SimpleDraw::Init",
   "ps2_name": "GGallery::SPRITE_Flush",
   "distance": 2784,
   "positive": [],
@@ -20009,6 +19889,24 @@
   "size": 5.0,
   "correlators": [
    "Implied Match (BLOCKED)"
+  ],
+  "tier": "X"
+ },
+ {
+  "xbox": "0x00077b60",
+  "ps2": "0x001a1a00",
+  "kind": "differs",
+  "xbox_name": "RAnimEngine::DeactivateSystem",
+  "ps2_name": "RAnimEngine::Shutdown",
+  "distance": 11,
+  "positive": [],
+  "contra": [
+   "no named callee shared",
+   "size ratio 14.00"
+  ],
+  "size": 14.0,
+  "correlators": [
+   "Exact Symbol Name Match (ACCEPTED)"
   ],
   "tier": "X"
  },
@@ -20621,12 +20519,12 @@
   "kind": "differs",
   "xbox_name": "RPlayerCamera::GetAimMatrix4",
   "ps2_name": "AICharacterHands::GetRotPos",
-  "distance": 2982,
+  "distance": 2953,
   "positive": [
    "1/3 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (2982)"
+   "far from its Xbox neighbours' PS2 functions (2953)"
   ],
   "size": 1.81,
   "correlators": [
@@ -20702,25 +20600,6 @@
    "no named callee shared"
   ],
   "size": 1.34,
-  "correlators": [
-   "Combined Function and Data Reference Match (AVAILABLE)"
-  ],
-  "tier": "X"
- },
- {
-  "xbox": "0x0008a410",
-  "ps2": "0x001beb48",
-  "kind": "differs",
-  "xbox_name": "~RPlayerViewCamera",
-  "ps2_name": "RPlayerViewCamera::~RPlayerViewCamera",
-  "distance": 1,
-  "positive": [
-   "1/1 named callees"
-  ],
-  "contra": [
-   "size ratio 0.10"
-  ],
-  "size": 0.1,
   "correlators": [
    "Combined Function and Data Reference Match (AVAILABLE)"
   ],
@@ -21337,12 +21216,12 @@
   "kind": "differs",
   "xbox_name": "RVehicle::StartColourDissolve",
   "ps2_name": "UGroup::DataLocateFirstMutable",
-  "distance": 4646,
+  "distance": 4647,
   "positive": [
    "2/2 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (4646)"
+   "far from its Xbox neighbours' PS2 functions (4647)"
   ],
   "size": 1.69,
   "correlators": [
@@ -21356,7 +21235,7 @@
   "kind": "differs",
   "xbox_name": "RVehicle::RenderShadowGeometry",
   "ps2_name": "RVehicle::RenderShadowVolume",
-  "distance": 3,
+  "distance": 2,
   "positive": [
    "1/1 named callees"
   ],
@@ -21935,10 +21814,10 @@
   "kind": "differs",
   "xbox_name": "RGain::~RGain",
   "ps2_name": "EAGL::Device::SetDeleteOverride",
-  "distance": 3000,
+  "distance": 2985,
   "positive": [],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (3000)",
+   "far from its Xbox neighbours' PS2 functions (2985)",
    "size ratio 11.33"
   ],
   "size": 11.33,
@@ -22184,7 +22063,7 @@
   "xbox": "0x000a0000",
   "ps2": "0x001e33a8",
   "kind": "differs",
-  "xbox_name": "scalar_deleting_destructor",
+  "xbox_name": "RLightning::scalar_deleting_destructor",
   "ps2_name": "RLightning::Init",
   "distance": 1,
   "positive": [],
@@ -22601,10 +22480,10 @@
   "kind": "differs",
   "xbox_name": "RParticleSystemManager::Shutdown",
   "ps2_name": "UFileLoader::fopen",
-  "distance": 4173,
+  "distance": 4168,
   "positive": [],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (4173)"
+   "far from its Xbox neighbours' PS2 functions (4168)"
   ],
   "size": 0.72,
   "correlators": [
@@ -24995,12 +24874,12 @@
   "kind": "differs",
   "xbox_name": "GFX::Init",
   "ps2_name": "GSystem::FILE_Init",
-  "distance": 338,
+  "distance": 343,
   "positive": [
    "1 named callers"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (338)",
+   "far from its Xbox neighbours' PS2 functions (343)",
    "no named callee shared"
   ],
   "size": 2.17,
@@ -26544,10 +26423,10 @@
   "kind": "differs",
   "xbox_name": "RMissileStreak::RMissileStreak",
   "ps2_name": "RColorize::EnableMotionBlur",
-  "distance": 2980,
+  "distance": 2971,
   "positive": [],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (2980)"
+   "far from its Xbox neighbours' PS2 functions (2971)"
   ],
   "size": 2.0,
   "correlators": [
@@ -26707,7 +26586,7 @@
   "xbox": "0x000f7140",
   "ps2": "0x00287778",
   "kind": "differs",
-  "xbox_name": "scalar_deleting_destructor",
+  "xbox_name": "EAGLAnim::FnCompoundChannel::scalar_deleting_destructor",
   "ps2_name": "EAGL::Device::SetDeleteOverride",
   "distance": 509,
   "positive": [],
@@ -26814,12 +26693,12 @@
   "xbox": "0x000f7bc0",
   "ps2": "0x00287778",
   "kind": "differs",
-  "xbox_name": "scalar_deleting_destructor",
+  "xbox_name": "EAGLAnim::FnRawStateChan::scalar_deleting_destructor",
   "ps2_name": "EAGL::Device::SetDeleteOverride",
-  "distance": 324,
+  "distance": 596,
   "positive": [],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (324)"
+   "far from its Xbox neighbours' PS2 functions (596)"
   ],
   "size": 4.0,
   "correlators": [
@@ -26848,7 +26727,7 @@
   "xbox": "0x000f8290",
   "ps2": "0x00287778",
   "kind": "differs",
-  "xbox_name": "scalar_deleting_destructor",
+  "xbox_name": "EAGLAnim::FnKeyLerpChan::scalar_deleting_destructor",
   "ps2_name": "EAGL::Device::SetDeleteOverride",
   "distance": 315,
   "positive": [],
@@ -26865,7 +26744,7 @@
   "xbox": "0x000f82d0",
   "ps2": "0x00287778",
   "kind": "differs",
-  "xbox_name": "scalar_deleting_destructor",
+  "xbox_name": "EAGLAnim::FnPhaseChan::scalar_deleting_destructor",
   "ps2_name": "EAGL::Device::SetDeleteOverride",
   "distance": 315,
   "positive": [],
@@ -26919,10 +26798,10 @@
   "kind": "differs",
   "xbox_name": "EAGLAnim::FnDeltaF3::scalar_deleting_destructor",
   "ps2_name": "EAGL::Device::SetDeleteOverride",
-  "distance": 466,
+  "distance": 463,
   "positive": [],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (466)"
+   "far from its Xbox neighbours' PS2 functions (463)"
   ],
   "size": 4.0,
   "correlators": [
@@ -26934,7 +26813,7 @@
   "xbox": "0x00101f00",
   "ps2": "0x00287778",
   "kind": "differs",
-  "xbox_name": "scalar_deleting_destructor",
+  "xbox_name": "EAGLAnim::FnDeltaSingleQ::scalar_deleting_destructor",
   "ps2_name": "EAGL::Device::SetDeleteOverride",
   "distance": 525,
   "positive": [],
@@ -26951,12 +26830,12 @@
   "xbox": "0x001032b0",
   "ps2": "0x00287778",
   "kind": "differs",
-  "xbox_name": "scalar_deleting_destructor",
+  "xbox_name": "EAGLAnim::FnDeltaQFast::scalar_deleting_destructor",
   "ps2_name": "EAGL::Device::SetDeleteOverride",
-  "distance": 525,
+  "distance": 544,
   "positive": [],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (525)"
+   "far from its Xbox neighbours' PS2 functions (544)"
   ],
   "size": 4.0,
   "correlators": [
@@ -29467,12 +29346,12 @@
   "kind": "differs",
   "xbox_name": "USymbolTable::NameLookup",
   "ps2_name": "GHud::GetButton",
-  "distance": 2533,
+  "distance": 2541,
   "positive": [
    "1/3 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (2533)",
+   "far from its Xbox neighbours' PS2 functions (2541)",
    "named callers on both sides, none shared"
   ],
   "size": 2.36,
@@ -29487,12 +29366,12 @@
   "kind": "differs",
   "xbox_name": "USymbolTable::NameLookup",
   "ps2_name": "RCameraIniLoader::ResolveWeaponNames",
-  "distance": 5305,
+  "distance": 5313,
   "positive": [
    "1/3 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (5305)"
+   "far from its Xbox neighbours' PS2 functions (5313)"
   ],
   "size": 1.71,
   "correlators": [
@@ -29849,7 +29728,7 @@
   "xbox": "0x0011dd00",
   "ps2": "0x002efd38",
   "kind": "differs",
-  "xbox_name": "GetName",
+  "xbox_name": "ACharacter::GetName",
   "ps2_name": "ASmackable::GetName",
   "distance": 225,
   "positive": [
@@ -30565,10 +30444,29 @@
   "tier": "X"
  },
  {
+  "xbox": "0x00129b20",
+  "ps2": "0x002f84e0",
+  "kind": "differs",
+  "xbox_name": "AUltraLite::~AUltraLite",
+  "ps2_name": "AFingoDeath::~AFingoDeath",
+  "distance": 322,
+  "positive": [
+   "2/3 named callees"
+  ],
+  "contra": [
+   "far from its Xbox neighbours' PS2 functions (322)"
+  ],
+  "size": 3.14,
+  "correlators": [
+   "Combined Function and Data Reference Match (AVAILABLE)"
+  ],
+  "tier": "X"
+ },
+ {
   "xbox": "0x0012be30",
   "ps2": "0x002f84e0",
   "kind": "differs",
-  "xbox_name": "~ASubmersible",
+  "xbox_name": "ASubmersible::~ASubmersible",
   "ps2_name": "AFingoDeath::~AFingoDeath",
   "distance": 276,
   "positive": [
@@ -30578,6 +30476,25 @@
    "far from its Xbox neighbours' PS2 functions (276)"
   ],
   "size": 1.36,
+  "correlators": [
+   "Combined Function and Data Reference Match (AVAILABLE)"
+  ],
+  "tier": "X"
+ },
+ {
+  "xbox": "0x0012d300",
+  "ps2": "0x002f84e0",
+  "kind": "differs",
+  "xbox_name": "ATrafficVehicle::~ATrafficVehicle",
+  "ps2_name": "AFingoDeath::~AFingoDeath",
+  "distance": 301,
+  "positive": [
+   "2/3 named callees"
+  ],
+  "contra": [
+   "far from its Xbox neighbours' PS2 functions (301)"
+  ],
+  "size": 1.7,
   "correlators": [
    "Combined Function and Data Reference Match (AVAILABLE)"
   ],
@@ -30616,26 +30533,6 @@
   "size": 3.67,
   "correlators": [
    "Implied Match (AVAILABLE)"
-  ],
-  "tier": "X"
- },
- {
-  "xbox": "0x0012e1e0",
-  "ps2": "0x002f05c0",
-  "kind": "differs",
-  "xbox_name": "~ASceneObj",
-  "ps2_name": "ASceneObj::~ASceneObj",
-  "distance": 144,
-  "positive": [
-   "1/1 named callees",
-   "2 named callers"
-  ],
-  "contra": [
-   "size ratio 0.10"
-  ],
-  "size": 0.1,
-  "correlators": [
-   "Combined Function and Data Reference Match (AVAILABLE)"
   ],
   "tier": "X"
  },
@@ -33257,7 +33154,7 @@
   "kind": "new",
   "xbox_name": "FUN_00088380",
   "ps2_name": "RPlayerCamera::SetCameraZoom",
-  "distance": 28,
+  "distance": 15,
   "positive": [
    "1/10 named callees"
   ],
@@ -33327,7 +33224,7 @@
   "kind": "new",
   "xbox_name": "FUN_00099670",
   "ps2_name": "RReflection::SetCamera",
-  "distance": 17,
+  "distance": 16,
   "positive": [
    "2/2 named callees"
   ],
@@ -33487,9 +33384,9 @@
   "kind": "new",
   "xbox_name": "FUN_000ed330",
   "ps2_name": "EAGLInternal::PropertyParser::FindTokenEnd",
-  "distance": 10,
+  "distance": 1,
   "positive": [
-   "1 named callers"
+   "2 named callers"
   ],
   "contra": [],
   "size": 1.24,
@@ -33514,6 +33411,24 @@
   "correlators": [
    "Data Reference Match (BLOCKED)",
    "Combined Function and Data Reference Match (BLOCKED)"
+  ],
+  "tier": "A"
+ },
+ {
+  "xbox": "0x000fb930",
+  "ps2": "0x00276688",
+  "kind": "new",
+  "xbox_name": "FUN_000fb930",
+  "ps2_name": "EAGLAnim::FnKeyDeltaChan::EvalToPrevValues",
+  "distance": 2,
+  "positive": [
+   "1/1 named callees"
+  ],
+  "contra": [],
+  "size": 0.95,
+  "correlators": [
+   "BSim Function Matching (AVAILABLE)",
+   "BSim Function Matching (AVAILABLE)"
   ],
   "tier": "A"
  },
@@ -34249,6 +34164,22 @@
   "tier": "B"
  },
  {
+  "xbox": "0x000faf60",
+  "ps2": "0x002669c8",
+  "kind": "new",
+  "xbox_name": "FUN_000faf60",
+  "ps2_name": "EAGLAnim::CompoundChannel::InitAnimMemoryMap",
+  "distance": 1,
+  "positive": [],
+  "contra": [],
+  "size": 0.82,
+  "correlators": [
+   "BSim Function Matching (AVAILABLE)",
+   "BSim Function Matching (AVAILABLE)"
+  ],
+  "tier": "B"
+ },
+ {
   "xbox": "0x0010aea0",
   "ps2": "0x00260450",
   "kind": "new",
@@ -34524,7 +34455,7 @@
   "kind": "new",
   "xbox_name": "FUN_0001d9d0",
   "ps2_name": "AICharacterPedestrian::GetRandomConvAnim",
-  "distance": 174,
+  "distance": 190,
   "positive": [
    "1/1 named callees"
   ],
@@ -34712,7 +34643,7 @@
   "kind": "new",
   "xbox_name": "FUN_000997d0",
   "ps2_name": "RRenderWorldCamera::DrawFinalStaticWorldGeometry",
-  "distance": 124,
+  "distance": 123,
   "positive": [
    "2/4 named callees"
   ],
@@ -34730,7 +34661,7 @@
   "kind": "new",
   "xbox_name": "FUN_000997d0",
   "ps2_name": "RRenderWorldCamera::DrawTranslucentStaticWorldGeometry",
-  "distance": 123,
+  "distance": 122,
   "positive": [
    "1/4 named callees"
   ],
@@ -34747,7 +34678,7 @@
   "kind": "new",
   "xbox_name": "FUN_000997d0",
   "ps2_name": "RRenderWorldCamera::DrawSceneObjects",
-  "distance": 126,
+  "distance": 125,
   "positive": [
    "1/4 named callees"
   ],
@@ -35153,7 +35084,7 @@
   "kind": "new",
   "xbox_name": "FUN_000f7d50",
   "ps2_name": "EAGLAnim::MemoryPoolManager::Cleanup",
-  "distance": 55,
+  "distance": 56,
   "positive": [
    "2 named callers"
   ],
@@ -35171,7 +35102,7 @@
   "kind": "new",
   "xbox_name": "FUN_000f7d70",
   "ps2_name": "EAGLAnim::MemoryPoolManager::InitAnimMemoryMap",
-  "distance": 83,
+  "distance": 84,
   "positive": [
    "1/1 named callees",
    "1 named callers"
@@ -35191,7 +35122,7 @@
   "kind": "new",
   "xbox_name": "FUN_000f7de0",
   "ps2_name": "EAGLAnim::MemoryPoolManager::NewFnAnim",
-  "distance": 84,
+  "distance": 85,
   "positive": [
    "7/19 named callees"
   ],
@@ -35199,40 +35130,6 @@
   "size": 1.42,
   "correlators": [
    "Combined Function and Data Reference Match (AVAILABLE)"
-  ],
-  "tier": "C"
- },
- {
-  "xbox": "0x000faf60",
-  "ps2": "0x002669c8",
-  "kind": "new",
-  "xbox_name": "FUN_000faf60",
-  "ps2_name": "EAGLAnim::CompoundChannel::InitAnimMemoryMap",
-  "distance": 108,
-  "positive": [],
-  "contra": [],
-  "size": 0.82,
-  "correlators": [
-   "BSim Function Matching (AVAILABLE)",
-   "BSim Function Matching (AVAILABLE)"
-  ],
-  "tier": "C"
- },
- {
-  "xbox": "0x000fb930",
-  "ps2": "0x00276688",
-  "kind": "new",
-  "xbox_name": "FUN_000fb930",
-  "ps2_name": "EAGLAnim::FnKeyDeltaChan::EvalToPrevValues",
-  "distance": 84,
-  "positive": [
-   "1/1 named callees"
-  ],
-  "contra": [],
-  "size": 0.95,
-  "correlators": [
-   "BSim Function Matching (AVAILABLE)",
-   "BSim Function Matching (AVAILABLE)"
   ],
   "tier": "C"
  },
@@ -36036,12 +35933,12 @@
   "kind": "new",
   "xbox_name": "FUN_0001d9d0",
   "ps2_name": "SimRandom::Reset",
-  "distance": 2214,
+  "distance": 2230,
   "positive": [
    "1/1 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (2214)"
+   "far from its Xbox neighbours' PS2 functions (2230)"
   ],
   "size": 0.24,
   "correlators": [
@@ -37043,12 +36940,12 @@
   "kind": "new",
   "xbox_name": "FUN_0005d3f0",
   "ps2_name": "v3unitcrossprod",
-  "distance": 3833,
+  "distance": 3834,
   "positive": [
    "2/2 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (3833)",
+   "far from its Xbox neighbours' PS2 functions (3834)",
    "named callers on both sides, none shared",
    "size ratio 5.92"
   ],
@@ -38271,7 +38168,7 @@
   "kind": "new",
   "xbox_name": "FUN_000997d0",
   "ps2_name": "RRenderWorldCamera::DrawStaticWorldGeometry",
-  "distance": 122,
+  "distance": 121,
   "positive": [],
   "contra": [
    "no named callee shared"
@@ -39896,7 +39793,7 @@
   "ps2_name": "atoi",
   "distance": 595,
   "positive": [
-   "1 named callers"
+   "2 named callers"
   ],
   "contra": [
    "far from its Xbox neighbours' PS2 functions (595)"
@@ -39913,7 +39810,7 @@
   "kind": "new",
   "xbox_name": "FUN_000ed390",
   "ps2_name": "EAGLInternal::RuntimeAllocTARConstructor",
-  "distance": 27,
+  "distance": 18,
   "positive": [
    "13 shared strings",
    "1/2 named callees"
@@ -40921,12 +40818,12 @@
   "kind": "new",
   "xbox_name": "FUN_001066f0",
   "ps2_name": "MultMatrix",
-  "distance": 438,
+  "distance": 440,
   "positive": [
    "1/1 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (438)"
+   "far from its Xbox neighbours' PS2 functions (440)"
   ],
   "size": 1.14,
   "correlators": [
@@ -41933,12 +41830,12 @@
   "kind": "new",
   "xbox_name": "FUN_0012ce30",
   "ps2_name": "WSound::operator_new",
-  "distance": 3456,
+  "distance": 3460,
   "positive": [
    "1/2 named callees"
   ],
   "contra": [
-   "far from its Xbox neighbours' PS2 functions (3456)",
+   "far from its Xbox neighbours' PS2 functions (3460)",
    "strings on both sides, none shared"
   ],
   "size": 4.0,
@@ -42225,7 +42122,7 @@
   "ps2_name": "atof",
   "distance": 35,
   "positive": [
-   "2 named callers"
+   "3 named callers"
   ],
   "contra": [
    "size ratio 5.71"
