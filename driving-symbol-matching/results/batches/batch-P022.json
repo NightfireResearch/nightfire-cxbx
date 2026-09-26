@@ -1,0 +1,29 @@
+{
+ "batch": "P022",
+ "program": "DRIVING.ELF",
+ "note": "Two PS2 destructors from the Xbox review.",
+ "items": [
+  {
+   "xbox": "0x0027aa10",
+   "expect": "FUN_0027aa10",
+   "name": "EAGLAnim::FnTurnBlender::~FnTurnBlender",
+   "sheet_name": "EAGLAnim::FnTurnBlender::~FnTurnBlender(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6891 (unplaced); entry 0 of the FnTurnBlender vtable at 0x3b3300 (Xbox windowed review, 0x104fa0/0x104310)"
+   ]
+  },
+  {
+   "xbox": "0x00148e30",
+   "expect": "~ECameraLockOn",
+   "name": "ECameraLockOn::~ECameraLockOn",
+   "sheet_name": "ECameraLockOn::~ECameraLockOn(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1258; the function carried the bare name ~ECameraLockOn outside its class"
+   ]
+  }
+ ]
+}

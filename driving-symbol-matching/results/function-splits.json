@@ -1,0 +1,5102 @@
+{
+ "program": "Driving.xbe",
+ "note": "MSVC unwind funclets that Ghidra merged into the preceding funclet or handler; create them, then re-run xbox_eh.py to name them.",
+ "splits": [
+  {
+   "address": "0x00150400",
+   "name": "ActActor__SetNewAnimation_Unwind_0",
+   "inside": "StandardAnimationController__StandardAnimationController_Frame_Handler",
+   "owner": "ActActor::SetNewAnimation",
+   "state": 0
+  },
+  {
+   "address": "0x00150420",
+   "name": "ActActor__SetNewCrossFadeAnimation_Unwind_0",
+   "inside": "ActActor__SetNewAnimation_Frame_Handler",
+   "owner": "ActActor::SetNewCrossFadeAnimation",
+   "state": 0
+  },
+  {
+   "address": "0x00150440",
+   "name": "ActActor__ActActor_Unwind_0",
+   "inside": "ActActor__SetNewCrossFadeAnimation_Frame_Handler",
+   "owner": "ActActor::ActActor",
+   "state": 0
+  },
+  {
+   "address": "0x0015044b",
+   "name": "ActActor__ActActor_Unwind_1",
+   "inside": "ActActor__SetNewCrossFadeAnimation_Frame_Handler",
+   "owner": "ActActor::ActActor",
+   "state": 1
+  },
+  {
+   "address": "0x0015045d",
+   "name": "ActActor__ActActor_Unwind_2",
+   "inside": "ActActor__SetNewCrossFadeAnimation_Frame_Handler",
+   "owner": "ActActor::ActActor",
+   "state": 2
+  },
+  {
+   "address": "0x0015046c",
+   "name": "ActActor__ActActor_Unwind_3",
+   "inside": "ActActor__SetNewCrossFadeAnimation_Frame_Handler",
+   "owner": "ActActor::ActActor",
+   "state": 3
+  },
+  {
+   "address": "0x001504a0",
+   "name": "ActActorDatabase__StartUp_Unwind_0",
+   "inside": "FUN_00150490",
+   "owner": "ActActorDatabase::StartUp",
+   "state": 0
+  },
+  {
+   "address": "0x00150500",
+   "name": "ActActorDatabase__GetNewActorHandle_Unwind_0",
+   "inside": "FUN_001504e8",
+   "owner": "ActActorDatabase::GetNewActorHandle",
+   "state": 0
+  },
+  {
+   "address": "0x00150520",
+   "name": "BankInfo__Load_Unwind_0",
+   "inside": "ActActorDatabase__GetNewActorHandle_Frame_Handler",
+   "owner": "BankInfo::Load",
+   "state": 0
+  },
+  {
+   "address": "0x00150540",
+   "name": "ActAnimationDatabase__ActAnimationDatabase_Unwind_0",
+   "inside": "BankInfo__Load_Frame_Handler",
+   "owner": "ActAnimationDatabase::ActAnimationDatabase",
+   "state": 0
+  },
+  {
+   "address": "0x00150560",
+   "name": "ActCharacter__LoadCharacter_Unwind_0",
+   "inside": "ActAnimationDatabase__ActAnimationDatabase_Frame_Handler",
+   "owner": "ActCharacter::LoadCharacter",
+   "state": 0
+  },
+  {
+   "address": "0x00150580",
+   "name": "ActCharacter__ChangeCharacter_Unwind_0",
+   "inside": "ActCharacter__LoadCharacter_Frame_Handler",
+   "owner": "ActCharacter::ChangeCharacter",
+   "state": 0
+  },
+  {
+   "address": "0x001505a0",
+   "name": "ActIKSolverArray__CreateIKs_Unwind_0",
+   "inside": "ActCharacter__ChangeCharacter_Frame_Handler",
+   "owner": "ActIKSolverArray::CreateIKs",
+   "state": 0
+  },
+  {
+   "address": "0x001505c0",
+   "name": "ActManager__ActManagerInit_Unwind_0",
+   "inside": "ActIKSolverArray__CreateIKs_Frame_Handler",
+   "owner": "ActManager::ActManagerInit",
+   "state": 0
+  },
+  {
+   "address": "0x001505cf",
+   "name": "ActManager__ActManagerInit_Unwind_1",
+   "inside": "ActIKSolverArray__CreateIKs_Frame_Handler",
+   "owner": "ActManager::ActManagerInit",
+   "state": 1
+  },
+  {
+   "address": "0x001505e1",
+   "name": "ActManager__ActManagerInit_Unwind_2",
+   "inside": "ActIKSolverArray__CreateIKs_Frame_Handler",
+   "owner": "ActManager::ActManagerInit",
+   "state": 2
+  },
+  {
+   "address": "0x001505f3",
+   "name": "ActManager__ActManagerInit_Unwind_3",
+   "inside": "ActIKSolverArray__CreateIKs_Frame_Handler",
+   "owner": "ActManager::ActManagerInit",
+   "state": 3
+  },
+  {
+   "address": "0x00150602",
+   "name": "ActManager__ActManagerInit_Unwind_4",
+   "inside": "ActIKSolverArray__CreateIKs_Frame_Handler",
+   "owner": "ActManager::ActManagerInit",
+   "state": 4
+  },
+  {
+   "address": "0x00150611",
+   "name": "ActManager__ActManagerInit_Unwind_5",
+   "inside": "ActIKSolverArray__CreateIKs_Frame_Handler",
+   "owner": "ActManager::ActManagerInit",
+   "state": 5
+  },
+  {
+   "address": "0x00150630",
+   "name": "ActManager__StartUp_Unwind_0",
+   "inside": "ActManager__ActManagerInit_Frame_Handler",
+   "owner": "ActManager::StartUp",
+   "state": 0
+  },
+  {
+   "address": "0x00150650",
+   "name": "ActModel__Load_Unwind_1",
+   "inside": "ActManager__StartUp_Frame_Handler",
+   "owner": "ActModel::Load",
+   "state": 1
+  },
+  {
+   "address": "0x0015065f",
+   "name": "ActModel__Load_Unwind_0",
+   "inside": "ActManager__StartUp_Frame_Handler",
+   "owner": "ActModel::Load",
+   "state": 0
+  },
+  {
+   "address": "0x00151190",
+   "name": "(owner 0x3ab80 still unnamed; unwind state 0)",
+   "inside": "FUN_00151181",
+   "owner": "FUN_0003ab80",
+   "state": 0
+  },
+  {
+   "address": "0x001511c0",
+   "name": "(owner 0x3b010 still unnamed; unwind state 0)",
+   "inside": "FUN_001511b0",
+   "owner": "FUN_0003b010",
+   "state": 0
+  },
+  {
+   "address": "0x001511e0",
+   "name": "(owner 0x3b630 still unnamed; unwind state 0)",
+   "inside": "FUN_001511c8",
+   "owner": "FUN_0003b630",
+   "state": 0
+  },
+  {
+   "address": "0x00151200",
+   "name": "(owner 0x3b810 still unnamed; unwind state 0)",
+   "inside": "FUN_001511e8",
+   "owner": "FUN_0003b810",
+   "state": 0
+  },
+  {
+   "address": "0x00151208",
+   "name": "(owner 0x3b810 still unnamed; unwind state 1)",
+   "inside": "FUN_001511e8",
+   "owner": "FUN_0003b810",
+   "state": 1
+  },
+  {
+   "address": "0x00151220",
+   "name": "(owner 0x3cb00 still unnamed; unwind state 0)",
+   "inside": "FUN_00151210",
+   "owner": "FUN_0003cb00",
+   "state": 0
+  },
+  {
+   "address": "0x00151228",
+   "name": "(owner 0x3cb00 still unnamed; unwind state 1)",
+   "inside": "FUN_00151210",
+   "owner": "FUN_0003cb00",
+   "state": 1
+  },
+  {
+   "address": "0x0015123f",
+   "name": "(owner 0x3cb00 still unnamed; unwind state 2)",
+   "inside": "FUN_00151210",
+   "owner": "FUN_0003cb00",
+   "state": 2
+  },
+  {
+   "address": "0x00151256",
+   "name": "(owner 0x3cb00 still unnamed; unwind state 3)",
+   "inside": "FUN_00151210",
+   "owner": "FUN_0003cb00",
+   "state": 3
+  },
+  {
+   "address": "0x00151270",
+   "name": "(owner 0x3cdd0 still unnamed; unwind state 0)",
+   "inside": "FUN_0015125e",
+   "owner": "FUN_0003cdd0",
+   "state": 0
+  },
+  {
+   "address": "0x00151278",
+   "name": "(owner 0x3cdd0 still unnamed; unwind state 1)",
+   "inside": "FUN_0015125e",
+   "owner": "FUN_0003cdd0",
+   "state": 1
+  },
+  {
+   "address": "0x00151280",
+   "name": "(owner 0x3cdd0 still unnamed; unwind state 2)",
+   "inside": "FUN_0015125e",
+   "owner": "FUN_0003cdd0",
+   "state": 2
+  },
+  {
+   "address": "0x00151288",
+   "name": "(owner 0x3cdd0 still unnamed; unwind state 3)",
+   "inside": "FUN_0015125e",
+   "owner": "FUN_0003cdd0",
+   "state": 3
+  },
+  {
+   "address": "0x00151290",
+   "name": "(owner 0x3cdd0 still unnamed; unwind state 4)",
+   "inside": "FUN_0015125e",
+   "owner": "FUN_0003cdd0",
+   "state": 4
+  },
+  {
+   "address": "0x001512b0",
+   "name": "(owner 0x3d180 still unnamed; unwind state 0)",
+   "inside": "FUN_00151298",
+   "owner": "FUN_0003d180",
+   "state": 0
+  },
+  {
+   "address": "0x001512d0",
+   "name": "DTuningDBMgr__LoadDatabase_Unwind_0",
+   "inside": "FUN_001512b8",
+   "owner": "DTuningDBMgr::LoadDatabase",
+   "state": 0
+  },
+  {
+   "address": "0x001512f0",
+   "name": "DTuningFile__OpenForRead_Unwind_0",
+   "inside": "DTuningDBMgr__LoadDatabase_Frame_Handler",
+   "owner": "DTuningFile::OpenForRead",
+   "state": 0
+  },
+  {
+   "address": "0x00151310",
+   "name": "E007Logo__~E007Logo_Unwind_0",
+   "inside": "DTuningFile__OpenForRead_Frame_Handler",
+   "owner": "E007Logo::~E007Logo",
+   "state": 0
+  },
+  {
+   "address": "0x00151330",
+   "name": "EActorMuzzleFlash__~EActorMuzzleFlash_Unwind_0",
+   "inside": "E007Logo__~E007Logo_Frame_Handler",
+   "owner": "EActorMuzzleFlash::~EActorMuzzleFlash",
+   "state": 0
+  },
+  {
+   "address": "0x00151350",
+   "name": "ECameraLockOn__~ECameraLockOn_Unwind_0",
+   "inside": "EActorMuzzleFlash__~EActorMuzzleFlash_Frame_Handler",
+   "owner": "ECameraLockOn::~ECameraLockOn",
+   "state": 0
+  },
+  {
+   "address": "0x00151370",
+   "name": "ECameraShake__~ECameraShake_Unwind_0",
+   "inside": "ECameraLockOn__~ECameraLockOn_Frame_Handler",
+   "owner": "ECameraShake::~ECameraShake",
+   "state": 0
+  },
+  {
+   "address": "0x00151390",
+   "name": "ECameraZoom__~ECameraZoom_Unwind_0",
+   "inside": "ECameraShake__~ECameraShake_Frame_Handler",
+   "owner": "ECameraZoom::~ECameraZoom",
+   "state": 0
+  },
+  {
+   "address": "0x001513b0",
+   "name": "EChangeMaxTraffic__GetEventName_Unwind_0",
+   "inside": "ECameraZoom__~ECameraZoom_Frame_Handler",
+   "owner": "EChangeMaxTraffic::GetEventName",
+   "state": 0
+  },
+  {
+   "address": "0x001513d0",
+   "name": "(owner 0x3f210 still unnamed; unwind state 0)",
+   "inside": "EChangeMaxTraffic__GetEventName_Frame_Handler",
+   "owner": "FUN_0003f210",
+   "state": 0
+  },
+  {
+   "address": "0x001513f0",
+   "name": "(owner 0x3feb0 still unnamed; unwind state 0)",
+   "inside": "FUN_001513e4",
+   "owner": "FUN_0003feb0",
+   "state": 0
+  },
+  {
+   "address": "0x00151404",
+   "name": "(owner 0x3feb0 still unnamed; unwind state 1)",
+   "inside": "FUN_001513e4",
+   "owner": "FUN_0003feb0",
+   "state": 1
+  },
+  {
+   "address": "0x00151418",
+   "name": "(owner 0x3feb0 still unnamed; unwind state 2)",
+   "inside": "FUN_001513e4",
+   "owner": "FUN_0003feb0",
+   "state": 2
+  },
+  {
+   "address": "0x0015142c",
+   "name": "(owner 0x3feb0 still unnamed; unwind state 3)",
+   "inside": "FUN_001513e4",
+   "owner": "FUN_0003feb0",
+   "state": 3
+  },
+  {
+   "address": "0x00151450",
+   "name": "EForceNearPedRespawn__GetEventName_Unwind_0",
+   "inside": "FUN_00151440",
+   "owner": "EForceNearPedRespawn::GetEventName",
+   "state": 0
+  },
+  {
+   "address": "0x00151470",
+   "name": "EKickAIElement__~EKickAIElement_Unwind_0",
+   "inside": "EForceNearPedRespawn__GetEventName_Frame_Handler",
+   "owner": "EKickAIElement::~EKickAIElement",
+   "state": 0
+  },
+  {
+   "address": "0x00151490",
+   "name": "(owner 0x3f500 still unnamed; unwind state 0)",
+   "inside": "EKickAIElement__~EKickAIElement_Frame_Handler",
+   "owner": "FUN_0003f500",
+   "state": 0
+  },
+  {
+   "address": "0x001514b0",
+   "name": "(owner 0x41fe0 still unnamed; unwind state 0)",
+   "inside": "FUN_001514a4",
+   "owner": "FUN_00041fe0",
+   "state": 0
+  },
+  {
+   "address": "0x001514c4",
+   "name": "(owner 0x41fe0 still unnamed; unwind state 1)",
+   "inside": "FUN_001514a4",
+   "owner": "FUN_00041fe0",
+   "state": 1
+  },
+  {
+   "address": "0x001514f0",
+   "name": "EPlayActorEffect__~EPlayActorEffect_Unwind_0",
+   "inside": "FUN_001514d8",
+   "owner": "EPlayActorEffect::~EPlayActorEffect",
+   "state": 0
+  },
+  {
+   "address": "0x00151510",
+   "name": "EPlayEffect__~EPlayEffect_Unwind_0",
+   "inside": "EPlayActorEffect__~EPlayActorEffect_Frame_Handler",
+   "owner": "EPlayEffect::~EPlayEffect",
+   "state": 0
+  },
+  {
+   "address": "0x00151530",
+   "name": "(owner 0x42ae0 still unnamed; unwind state 0)",
+   "inside": "EPlayEffect__~EPlayEffect_Frame_Handler",
+   "owner": "FUN_00042ae0",
+   "state": 0
+  },
+  {
+   "address": "0x00151544",
+   "name": "(owner 0x42ae0 still unnamed; unwind state 1)",
+   "inside": "EPlayEffect__~EPlayEffect_Frame_Handler",
+   "owner": "FUN_00042ae0",
+   "state": 1
+  },
+  {
+   "address": "0x00151570",
+   "name": "EPowerUp__~EPowerUp_Unwind_0",
+   "inside": "FUN_00151558",
+   "owner": "EPowerUp::~EPowerUp",
+   "state": 0
+  },
+  {
+   "address": "0x00151590",
+   "name": "ERandomExplosion__~ERandomExplosion_Unwind_0",
+   "inside": "EPowerUp__~EPowerUp_Frame_Handler",
+   "owner": "ERandomExplosion::~ERandomExplosion",
+   "state": 0
+  },
+  {
+   "address": "0x001515b0",
+   "name": "ESetTimer__GetEventName_Unwind_0",
+   "inside": "ERandomExplosion__~ERandomExplosion_Frame_Handler",
+   "owner": "ESetTimer::GetEventName",
+   "state": 0
+  },
+  {
+   "address": "0x001515d0",
+   "name": "ESetVideo__~ESetVideo_Unwind_0",
+   "inside": "ESetTimer__GetEventName_Frame_Handler",
+   "owner": "ESetVideo::~ESetVideo",
+   "state": 0
+  },
+  {
+   "address": "0x001515db",
+   "name": "ESetVideo__~ESetVideo_Unwind_1",
+   "inside": "ESetTimer__GetEventName_Frame_Handler",
+   "owner": "ESetVideo::~ESetVideo",
+   "state": 1
+  },
+  {
+   "address": "0x001515f0",
+   "name": "(owner 0x464b0 still unnamed; unwind state 0)",
+   "inside": "ESetVideo__~ESetVideo_Frame_Handler",
+   "owner": "FUN_000464b0",
+   "state": 0
+  },
+  {
+   "address": "0x00151604",
+   "name": "(owner 0x464b0 still unnamed; unwind state 1)",
+   "inside": "ESetVideo__~ESetVideo_Frame_Handler",
+   "owner": "FUN_000464b0",
+   "state": 1
+  },
+  {
+   "address": "0x00151618",
+   "name": "(owner 0x464b0 still unnamed; unwind state 2)",
+   "inside": "ESetVideo__~ESetVideo_Frame_Handler",
+   "owner": "FUN_000464b0",
+   "state": 2
+  },
+  {
+   "address": "0x00151640",
+   "name": "(owner 0x446f0 still unnamed; unwind state 0)",
+   "inside": "FUN_0015162c",
+   "owner": "FUN_000446f0",
+   "state": 0
+  },
+  {
+   "address": "0x00151660",
+   "name": "(owner 0x45090 still unnamed; unwind state 0)",
+   "inside": "FUN_00151654",
+   "owner": "FUN_00045090",
+   "state": 0
+  },
+  {
+   "address": "0x00151674",
+   "name": "(owner 0x45090 still unnamed; unwind state 1)",
+   "inside": "FUN_00151654",
+   "owner": "FUN_00045090",
+   "state": 1
+  },
+  {
+   "address": "0x00151688",
+   "name": "(owner 0x45090 still unnamed; unwind state 2)",
+   "inside": "FUN_00151654",
+   "owner": "FUN_00045090",
+   "state": 2
+  },
+  {
+   "address": "0x001516b0",
+   "name": "ESpawnExplosionStatic__~ESpawnExplosionStatic_Unwind_0",
+   "inside": "FUN_0015169c",
+   "owner": "ESpawnExplosionStatic::~ESpawnExplosionStatic",
+   "state": 0
+  },
+  {
+   "address": "0x001516d0",
+   "name": "(owner 0x452a0 still unnamed; unwind state 0)",
+   "inside": "ESpawnExplosionStatic__~ESpawnExplosionStatic_Frame_Handler",
+   "owner": "FUN_000452a0",
+   "state": 0
+  },
+  {
+   "address": "0x001516e4",
+   "name": "(owner 0x452a0 still unnamed; unwind state 1)",
+   "inside": "ESpawnExplosionStatic__~ESpawnExplosionStatic_Frame_Handler",
+   "owner": "FUN_000452a0",
+   "state": 1
+  },
+  {
+   "address": "0x001516f8",
+   "name": "(owner 0x452a0 still unnamed; unwind state 2)",
+   "inside": "ESpawnExplosionStatic__~ESpawnExplosionStatic_Frame_Handler",
+   "owner": "FUN_000452a0",
+   "state": 2
+  },
+  {
+   "address": "0x00151720",
+   "name": "(owner 0x457a0 still unnamed; unwind state 0)",
+   "inside": "FUN_0015170c",
+   "owner": "FUN_000457a0",
+   "state": 0
+  },
+  {
+   "address": "0x00151740",
+   "name": "ESpawnSmackable__~ESpawnSmackable_Unwind_0",
+   "inside": "FUN_00151734",
+   "owner": "ESpawnSmackable::~ESpawnSmackable",
+   "state": 0
+  },
+  {
+   "address": "0x00151748",
+   "name": "ESpawnSmackable__~ESpawnSmackable_Unwind_1",
+   "inside": "FUN_00151734",
+   "owner": "ESpawnSmackable::~ESpawnSmackable",
+   "state": 1
+  },
+  {
+   "address": "0x00151770",
+   "name": "(owner 0x45d00 still unnamed; unwind state 0)",
+   "inside": "ESpawnSmackable__~ESpawnSmackable_Frame_Handler",
+   "owner": "FUN_00045d00",
+   "state": 0
+  },
+  {
+   "address": "0x00151784",
+   "name": "(owner 0x45d00 still unnamed; unwind state 1)",
+   "inside": "ESpawnSmackable__~ESpawnSmackable_Frame_Handler",
+   "owner": "FUN_00045d00",
+   "state": 1
+  },
+  {
+   "address": "0x001517b0",
+   "name": "ESpawnTraffic__~ESpawnTraffic_Unwind_0",
+   "inside": "FUN_00151798",
+   "owner": "ESpawnTraffic::~ESpawnTraffic",
+   "state": 0
+  },
+  {
+   "address": "0x001517d0",
+   "name": "EStartTimedAction__GetEventName_Unwind_0",
+   "inside": "ESpawnTraffic__~ESpawnTraffic_Frame_Handler",
+   "owner": "EStartTimedAction::GetEventName",
+   "state": 0
+  },
+  {
+   "address": "0x001517f0",
+   "name": "EWakeupSmackable__~EWakeupSmackable_Unwind_0",
+   "inside": "EStartTimedAction__GetEventName_Frame_Handler",
+   "owner": "EWakeupSmackable::~EWakeupSmackable",
+   "state": 0
+  },
+  {
+   "address": "0x001517fb",
+   "name": "EWakeupSmackable__~EWakeupSmackable_Unwind_1",
+   "inside": "EStartTimedAction__GetEventName_Frame_Handler",
+   "owner": "EWakeupSmackable::~EWakeupSmackable",
+   "state": 1
+  },
+  {
+   "address": "0x00151806",
+   "name": "EWakeupSmackable__~EWakeupSmackable_Unwind_2",
+   "inside": "EStartTimedAction__GetEventName_Frame_Handler",
+   "owner": "EWakeupSmackable::~EWakeupSmackable",
+   "state": 2
+  },
+  {
+   "address": "0x00151820",
+   "name": "(owner 0x472e0 still unnamed; unwind state 0)",
+   "inside": "EWakeupSmackable__~EWakeupSmackable_Frame_Handler",
+   "owner": "FUN_000472e0",
+   "state": 0
+  },
+  {
+   "address": "0x00151834",
+   "name": "(owner 0x472e0 still unnamed; unwind state 1)",
+   "inside": "EWakeupSmackable__~EWakeupSmackable_Frame_Handler",
+   "owner": "FUN_000472e0",
+   "state": 1
+  },
+  {
+   "address": "0x00151848",
+   "name": "(owner 0x472e0 still unnamed; unwind state 2)",
+   "inside": "EWakeupSmackable__~EWakeupSmackable_Frame_Handler",
+   "owner": "FUN_000472e0",
+   "state": 2
+  },
+  {
+   "address": "0x0015185c",
+   "name": "(owner 0x472e0 still unnamed; unwind state 3)",
+   "inside": "EWakeupSmackable__~EWakeupSmackable_Frame_Handler",
+   "owner": "FUN_000472e0",
+   "state": 3
+  },
+  {
+   "address": "0x00151880",
+   "name": "(owner 0x476f0 still unnamed; unwind state 0)",
+   "inside": "FUN_00151870",
+   "owner": "FUN_000476f0",
+   "state": 0
+  },
+  {
+   "address": "0x001518c0",
+   "name": "EHitWindow__~EHitWindow_Unwind_0",
+   "inside": "FUN_001518a8",
+   "owner": "EHitWindow::~EHitWindow",
+   "state": 0
+  },
+  {
+   "address": "0x001518c8",
+   "name": "EHitWindow__~EHitWindow_Unwind_1",
+   "inside": "FUN_001518a8",
+   "owner": "EHitWindow::~EHitWindow",
+   "state": 1
+  },
+  {
+   "address": "0x001518da",
+   "name": "EHitWindow__~EHitWindow_Unwind_2",
+   "inside": "FUN_001518a8",
+   "owner": "EHitWindow::~EHitWindow",
+   "state": 2
+  },
+  {
+   "address": "0x001518ec",
+   "name": "EHitWindow__~EHitWindow_Unwind_3",
+   "inside": "FUN_001518a8",
+   "owner": "EHitWindow::~EHitWindow",
+   "state": 3
+  },
+  {
+   "address": "0x00151910",
+   "name": "EPathSFX__~EPathSFX_Unwind_0",
+   "inside": "EHitWindow__~EHitWindow_Frame_Handler",
+   "owner": "EPathSFX::~EPathSFX",
+   "state": 0
+  },
+  {
+   "address": "0x00151918",
+   "name": "EPathSFX__~EPathSFX_Unwind_1",
+   "inside": "EHitWindow__~EHitWindow_Frame_Handler",
+   "owner": "EPathSFX::~EPathSFX",
+   "state": 1
+  },
+  {
+   "address": "0x00151940",
+   "name": "EAudioUpdate__~EAudioUpdate_Unwind_0",
+   "inside": "EPathSFX__~EPathSFX_Frame_Handler",
+   "owner": "EAudioUpdate::~EAudioUpdate",
+   "state": 0
+  },
+  {
+   "address": "0x00151948",
+   "name": "EAudioUpdate__~EAudioUpdate_Unwind_1",
+   "inside": "EPathSFX__~EPathSFX_Frame_Handler",
+   "owner": "EAudioUpdate::~EAudioUpdate",
+   "state": 1
+  },
+  {
+   "address": "0x00151953",
+   "name": "EAudioUpdate__~EAudioUpdate_Unwind_2",
+   "inside": "EPathSFX__~EPathSFX_Frame_Handler",
+   "owner": "EAudioUpdate::~EAudioUpdate",
+   "state": 2
+  },
+  {
+   "address": "0x00151970",
+   "name": "EBashCarAlongObjectAxis__~EBashCarAlongObjectAxis_Unwind_0",
+   "inside": "EAudioUpdate__~EAudioUpdate_Frame_Handler",
+   "owner": "EBashCarAlongObjectAxis::~EBashCarAlongObjectAxis",
+   "state": 0
+  },
+  {
+   "address": "0x001519b0",
+   "name": "ECustomTransition__~ECustomTransition_Unwind_0",
+   "inside": "FUN_00151998",
+   "owner": "ECustomTransition::~ECustomTransition",
+   "state": 0
+  },
+  {
+   "address": "0x001519d0",
+   "name": "EFireWeapon__~EFireWeapon_Unwind_0",
+   "inside": "ECustomTransition__~ECustomTransition_Frame_Handler",
+   "owner": "EFireWeapon::~EFireWeapon",
+   "state": 0
+  },
+  {
+   "address": "0x001519db",
+   "name": "EFireWeapon__~EFireWeapon_Unwind_1",
+   "inside": "ECustomTransition__~ECustomTransition_Frame_Handler",
+   "owner": "EFireWeapon::~EFireWeapon",
+   "state": 1
+  },
+  {
+   "address": "0x001519ed",
+   "name": "EFireWeapon__~EFireWeapon_Unwind_2",
+   "inside": "ECustomTransition__~ECustomTransition_Frame_Handler",
+   "owner": "EFireWeapon::~EFireWeapon",
+   "state": 2
+  },
+  {
+   "address": "0x001519ff",
+   "name": "EFireWeapon__~EFireWeapon_Unwind_3",
+   "inside": "ECustomTransition__~ECustomTransition_Frame_Handler",
+   "owner": "EFireWeapon::~EFireWeapon",
+   "state": 3
+  },
+  {
+   "address": "0x00151a14",
+   "name": "EFireWeapon__~EFireWeapon_Unwind_4",
+   "inside": "ECustomTransition__~ECustomTransition_Frame_Handler",
+   "owner": "EFireWeapon::~EFireWeapon",
+   "state": 4
+  },
+  {
+   "address": "0x00151a29",
+   "name": "EFireWeapon__~EFireWeapon_Unwind_5",
+   "inside": "ECustomTransition__~ECustomTransition_Frame_Handler",
+   "owner": "EFireWeapon::~EFireWeapon",
+   "state": 5
+  },
+  {
+   "address": "0x00151a3e",
+   "name": "EFireWeapon__~EFireWeapon_Unwind_6",
+   "inside": "ECustomTransition__~ECustomTransition_Frame_Handler",
+   "owner": "EFireWeapon::~EFireWeapon",
+   "state": 6
+  },
+  {
+   "address": "0x00151a53",
+   "name": "EFireWeapon__~EFireWeapon_Unwind_7",
+   "inside": "ECustomTransition__~ECustomTransition_Frame_Handler",
+   "owner": "EFireWeapon::~EFireWeapon",
+   "state": 7
+  },
+  {
+   "address": "0x00151a68",
+   "name": "EFireWeapon__~EFireWeapon_Unwind_8",
+   "inside": "ECustomTransition__~ECustomTransition_Frame_Handler",
+   "owner": "EFireWeapon::~EFireWeapon",
+   "state": 8
+  },
+  {
+   "address": "0x00151a90",
+   "name": "EMuzzleFlash__~EMuzzleFlash_Unwind_0",
+   "inside": "EFireWeapon__~EFireWeapon_Frame_Handler",
+   "owner": "EMuzzleFlash::~EMuzzleFlash",
+   "state": 0
+  },
+  {
+   "address": "0x00151ab0",
+   "name": "ESetCreakLevel__~ESetCreakLevel_Unwind_0",
+   "inside": "EMuzzleFlash__~EMuzzleFlash_Frame_Handler",
+   "owner": "ESetCreakLevel::~ESetCreakLevel",
+   "state": 0
+  },
+  {
+   "address": "0x00151ad0",
+   "name": "ESpawnExplosion__~ESpawnExplosion_Unwind_0",
+   "inside": "ESetCreakLevel__~ESetCreakLevel_Frame_Handler",
+   "owner": "ESpawnExplosion::~ESpawnExplosion",
+   "state": 0
+  },
+  {
+   "address": "0x00151ad8",
+   "name": "ESpawnExplosion__~ESpawnExplosion_Unwind_1",
+   "inside": "ESetCreakLevel__~ESetCreakLevel_Frame_Handler",
+   "owner": "ESpawnExplosion::~ESpawnExplosion",
+   "state": 1
+  },
+  {
+   "address": "0x00151ae0",
+   "name": "ESpawnExplosion__~ESpawnExplosion_Unwind_2",
+   "inside": "ESetCreakLevel__~ESetCreakLevel_Frame_Handler",
+   "owner": "ESpawnExplosion::~ESpawnExplosion",
+   "state": 2
+  },
+  {
+   "address": "0x00151af5",
+   "name": "ESpawnExplosion__~ESpawnExplosion_Unwind_3",
+   "inside": "ESetCreakLevel__~ESetCreakLevel_Frame_Handler",
+   "owner": "ESpawnExplosion::~ESpawnExplosion",
+   "state": 3
+  },
+  {
+   "address": "0x00151b20",
+   "name": "(owner 0x4f490 still unnamed; unwind state 0)",
+   "inside": "ESpawnExplosion__~ESpawnExplosion_Frame_Handler",
+   "owner": "FUN_0004f490",
+   "state": 0
+  },
+  {
+   "address": "0x00151b50",
+   "name": "ActionQueueManager__GetActionQueueManager_Unwind_0",
+   "inside": "FUN_00151b40",
+   "owner": "ActionQueueManager::GetActionQueueManager",
+   "state": 0
+  },
+  {
+   "address": "0x00151b70",
+   "name": "InputConfigManager__InitAndPreload_Unwind_0",
+   "inside": "ActionQueueManager__GetActionQueueManager_Frame_Handler",
+   "owner": "InputConfigManager::InitAndPreload",
+   "state": 0
+  },
+  {
+   "address": "0x00151b90",
+   "name": "InputToAction__InputToAction_Unwind_0",
+   "inside": "InputConfigManager__InitAndPreload_Frame_Handler",
+   "owner": "InputToAction::InputToAction",
+   "state": 0
+  },
+  {
+   "address": "0x00151b9b",
+   "name": "InputToAction__InputToAction_Unwind_1",
+   "inside": "InputConfigManager__InitAndPreload_Frame_Handler",
+   "owner": "InputToAction::InputToAction",
+   "state": 1
+  },
+  {
+   "address": "0x00151bc0",
+   "name": "IOModule__CreateDevices_Unwind_0",
+   "inside": "InputToAction__InputToAction_Frame_Handler",
+   "owner": "IOModule::CreateDevices",
+   "state": 0
+  },
+  {
+   "address": "0x00151bd2",
+   "name": "IOModule__CreateDevices_Unwind_1",
+   "inside": "InputToAction__InputToAction_Frame_Handler",
+   "owner": "IOModule::CreateDevices",
+   "state": 1
+  },
+  {
+   "address": "0x00151bf0",
+   "name": "XBoxPadDevice__XBoxPadDevice_Unwind_0",
+   "inside": "IOModule__CreateDevices_Frame_Handler",
+   "owner": "XBoxPadDevice::XBoxPadDevice",
+   "state": 0
+  },
+  {
+   "address": "0x00151c20",
+   "name": "(owner 0x540a0 still unnamed; unwind state 0)",
+   "inside": "FUN_00151c10",
+   "owner": "FUN_000540a0",
+   "state": 0
+  },
+  {
+   "address": "0x00151c60",
+   "name": "(owner 0x56270 still unnamed; unwind state 1)",
+   "inside": "FUN_00151c50",
+   "owner": "FUN_00056270",
+   "state": 1
+  },
+  {
+   "address": "0x00151c80",
+   "name": "(owner 0x56320 still unnamed; unwind state 1)",
+   "inside": "FUN_00151c71",
+   "owner": "FUN_00056320",
+   "state": 1
+  },
+  {
+   "address": "0x00151ca0",
+   "name": "(owner 0x56f70 still unnamed; unwind state 0)",
+   "inside": "FUN_00151c91",
+   "owner": "FUN_00056f70",
+   "state": 0
+  },
+  {
+   "address": "0x00151ca8",
+   "name": "(owner 0x56f70 still unnamed; unwind state 1)",
+   "inside": "FUN_00151c91",
+   "owner": "FUN_00056f70",
+   "state": 1
+  },
+  {
+   "address": "0x00151cc0",
+   "name": "AttributeSystem__CreateExtensionAttribute_Unwind_0",
+   "inside": "FUN_00151cb0",
+   "owner": "AttributeSystem::CreateExtensionAttribute",
+   "state": 0
+  },
+  {
+   "address": "0x00151cc8",
+   "name": "AttributeSystem__CreateExtensionAttribute_Unwind_1",
+   "inside": "FUN_00151cb0",
+   "owner": "AttributeSystem::CreateExtensionAttribute",
+   "state": 1
+  },
+  {
+   "address": "0x00151ce0",
+   "name": "(owner 0x572e0 still unnamed; unwind state 0)",
+   "inside": "AttributeSystem__CreateExtensionAttribute_Frame_Handler",
+   "owner": "FUN_000572e0",
+   "state": 0
+  },
+  {
+   "address": "0x00151ce8",
+   "name": "(owner 0x572e0 still unnamed; unwind state 1)",
+   "inside": "AttributeSystem__CreateExtensionAttribute_Frame_Handler",
+   "owner": "FUN_000572e0",
+   "state": 1
+  },
+  {
+   "address": "0x00151d00",
+   "name": "(owner 0x57520 still unnamed; unwind state 0)",
+   "inside": "FUN_00151cf0",
+   "owner": "FUN_00057520",
+   "state": 0
+  },
+  {
+   "address": "0x00151d08",
+   "name": "(owner 0x57520 still unnamed; unwind state 1)",
+   "inside": "FUN_00151cf0",
+   "owner": "FUN_00057520",
+   "state": 1
+  },
+  {
+   "address": "0x00151d20",
+   "name": "(owner 0x57a80 still unnamed; unwind state 0)",
+   "inside": "FUN_00151d10",
+   "owner": "FUN_00057a80",
+   "state": 0
+  },
+  {
+   "address": "0x00151d2b",
+   "name": "(owner 0x57a80 still unnamed; unwind state 1)",
+   "inside": "FUN_00151d10",
+   "owner": "FUN_00057a80",
+   "state": 1
+  },
+  {
+   "address": "0x00151d36",
+   "name": "(owner 0x57a80 still unnamed; unwind state 2)",
+   "inside": "FUN_00151d10",
+   "owner": "FUN_00057a80",
+   "state": 2
+  },
+  {
+   "address": "0x00151d41",
+   "name": "(owner 0x57a80 still unnamed; unwind state 3)",
+   "inside": "FUN_00151d10",
+   "owner": "FUN_00057a80",
+   "state": 3
+  },
+  {
+   "address": "0x00151d60",
+   "name": "AttributeSystem__LoadCollection_Unwind_0",
+   "inside": "FUN_00151d4c",
+   "owner": "AttributeSystem::LoadCollection",
+   "state": 0
+  },
+  {
+   "address": "0x00151d80",
+   "name": "(owner 0x58470 still unnamed; unwind state 0)",
+   "inside": "AttributeSystem__LoadCollection_Frame_Handler",
+   "owner": "FUN_00058470",
+   "state": 0
+  },
+  {
+   "address": "0x00151da0",
+   "name": "(owner 0x585f0 still unnamed; unwind state 1)",
+   "inside": "FUN_00151d88",
+   "owner": "FUN_000585f0",
+   "state": 1
+  },
+  {
+   "address": "0x00151dc0",
+   "name": "AttributeSystem__GetCollection_Unwind_0",
+   "inside": "FUN_00151db1",
+   "owner": "AttributeSystem::GetCollection",
+   "state": 0
+  },
+  {
+   "address": "0x00151dc8",
+   "name": "AttributeSystem__GetCollection_Unwind_1",
+   "inside": "FUN_00151db1",
+   "owner": "AttributeSystem::GetCollection",
+   "state": 1
+  },
+  {
+   "address": "0x00151de0",
+   "name": "AttributeSystem__AttributeSystem_Unwind_0",
+   "inside": "AttributeSystem__GetCollection_Frame_Handler",
+   "owner": "AttributeSystem::AttributeSystem",
+   "state": 0
+  },
+  {
+   "address": "0x00151de8",
+   "name": "AttributeSystem__AttributeSystem_Unwind_1",
+   "inside": "AttributeSystem__GetCollection_Frame_Handler",
+   "owner": "AttributeSystem::AttributeSystem",
+   "state": 1
+  },
+  {
+   "address": "0x00151df7",
+   "name": "AttributeSystem__AttributeSystem_Unwind_2",
+   "inside": "AttributeSystem__GetCollection_Frame_Handler",
+   "owner": "AttributeSystem::AttributeSystem",
+   "state": 2
+  },
+  {
+   "address": "0x00151e06",
+   "name": "AttributeSystem__AttributeSystem_Unwind_3",
+   "inside": "AttributeSystem__GetCollection_Frame_Handler",
+   "owner": "AttributeSystem::AttributeSystem",
+   "state": 3
+  },
+  {
+   "address": "0x00151e15",
+   "name": "AttributeSystem__AttributeSystem_Unwind_4",
+   "inside": "AttributeSystem__GetCollection_Frame_Handler",
+   "owner": "AttributeSystem::AttributeSystem",
+   "state": 4
+  },
+  {
+   "address": "0x00151e24",
+   "name": "AttributeSystem__AttributeSystem_Unwind_5",
+   "inside": "AttributeSystem__GetCollection_Frame_Handler",
+   "owner": "AttributeSystem::AttributeSystem",
+   "state": 5
+  },
+  {
+   "address": "0x00151e33",
+   "name": "AttributeSystem__AttributeSystem_Unwind_6",
+   "inside": "AttributeSystem__GetCollection_Frame_Handler",
+   "owner": "AttributeSystem::AttributeSystem",
+   "state": 6
+  },
+  {
+   "address": "0x00151e50",
+   "name": "AttributeSystem__~AttributeSystem_Unwind_0",
+   "inside": "AttributeSystem__AttributeSystem_Frame_Handler",
+   "owner": "AttributeSystem::~AttributeSystem",
+   "state": 0
+  },
+  {
+   "address": "0x00151e70",
+   "name": "AttributeSystem__Init_Unwind_0",
+   "inside": "AttributeSystem__~AttributeSystem_Frame_Handler",
+   "owner": "AttributeSystem::Init",
+   "state": 0
+  },
+  {
+   "address": "0x00151e90",
+   "name": "(owner 0x59c30 still unnamed; unwind state 0)",
+   "inside": "AttributeSystem__Init_Frame_Handler",
+   "owner": "FUN_00059c30",
+   "state": 0
+  },
+  {
+   "address": "0x00151eb0",
+   "name": "(owner 0x59ca0 still unnamed; unwind state 0)",
+   "inside": "FUN_00151e98",
+   "owner": "FUN_00059ca0",
+   "state": 0
+  },
+  {
+   "address": "0x00151ed0",
+   "name": "(owner 0x59d20 still unnamed; unwind state 0)",
+   "inside": "FUN_00151eb8",
+   "owner": "FUN_00059d20",
+   "state": 0
+  },
+  {
+   "address": "0x00151ef0",
+   "name": "Bond_StartUpSystem_Unwind_0",
+   "inside": "FUN_00151ede",
+   "owner": "Bond_StartUpSystem",
+   "state": 0
+  },
+  {
+   "address": "0x00151ef8",
+   "name": "Bond_StartUpSystem_Unwind_1",
+   "inside": "FUN_00151ede",
+   "owner": "Bond_StartUpSystem",
+   "state": 1
+  },
+  {
+   "address": "0x00151f10",
+   "name": "main_Unwind_0",
+   "inside": "Bond_StartUpSystem_Frame_Handler",
+   "owner": "main",
+   "state": 0
+  },
+  {
+   "address": "0x00151f30",
+   "name": "(owner 0x5a6b0 still unnamed; unwind state 0)",
+   "inside": "main_Frame_Handler",
+   "owner": "FUN_0005a6b0",
+   "state": 0
+  },
+  {
+   "address": "0x00151f50",
+   "name": "GameLoop_CleanUp_Unwind_0",
+   "inside": "FUN_00151f38",
+   "owner": "GameLoop_CleanUp",
+   "state": 0
+  },
+  {
+   "address": "0x00151f70",
+   "name": "RunTheGame_Unwind_0",
+   "inside": "GameLoop_CleanUp_Frame_Handler",
+   "owner": "RunTheGame",
+   "state": 0
+  },
+  {
+   "address": "0x00151f7b",
+   "name": "RunTheGame_Unwind_1",
+   "inside": "GameLoop_CleanUp_Frame_Handler",
+   "owner": "RunTheGame",
+   "state": 1
+  },
+  {
+   "address": "0x00151f90",
+   "name": "GameLoop_StartUp_Unwind_0",
+   "inside": "RunTheGame_Frame_Handler",
+   "owner": "GameLoop_StartUp",
+   "state": 0
+  },
+  {
+   "address": "0x00151f9b",
+   "name": "GameLoop_StartUp_Unwind_1",
+   "inside": "RunTheGame_Frame_Handler",
+   "owner": "GameLoop_StartUp",
+   "state": 1
+  },
+  {
+   "address": "0x00151fa9",
+   "name": "GameLoop_StartUp_Unwind_2",
+   "inside": "RunTheGame_Frame_Handler",
+   "owner": "GameLoop_StartUp",
+   "state": 2
+  },
+  {
+   "address": "0x00151fb4",
+   "name": "GameLoop_StartUp_Unwind_3",
+   "inside": "RunTheGame_Frame_Handler",
+   "owner": "GameLoop_StartUp",
+   "state": 3
+  },
+  {
+   "address": "0x00151fd0",
+   "name": "Schedule__Schedule_Unwind_0",
+   "inside": "GameLoop_StartUp_Frame_Handler",
+   "owner": "Schedule::Schedule",
+   "state": 0
+  },
+  {
+   "address": "0x00151ff0",
+   "name": "Schedule__RemoveAllTasks_Unwind_0",
+   "inside": "Schedule__Schedule_Frame_Handler",
+   "owner": "Schedule::RemoveAllTasks",
+   "state": 0
+  },
+  {
+   "address": "0x00152010",
+   "name": "(owner 0x5bfe0 still unnamed; unwind state 0)",
+   "inside": "Schedule__RemoveAllTasks_Frame_Handler",
+   "owner": "FUN_0005bfe0",
+   "state": 0
+  },
+  {
+   "address": "0x00152090",
+   "name": "Scheduler__Init_Unwind_0",
+   "inside": "Scheduler__Scheduler_Frame_Handler",
+   "owner": "Scheduler::Init",
+   "state": 0
+  },
+  {
+   "address": "0x001520b0",
+   "name": "Explosion__Explosion_Unwind_0",
+   "inside": "Scheduler__Init_Frame_Handler",
+   "owner": "Explosion::Explosion",
+   "state": 0
+  },
+  {
+   "address": "0x001520b8",
+   "name": "Explosion__Explosion_Unwind_1",
+   "inside": "Scheduler__Init_Frame_Handler",
+   "owner": "Explosion::Explosion",
+   "state": 1
+  },
+  {
+   "address": "0x001520e0",
+   "name": "Grenade__~Grenade_Unwind_0",
+   "inside": "Explosion__Explosion_Frame_Handler",
+   "owner": "Grenade::~Grenade",
+   "state": 0
+  },
+  {
+   "address": "0x00152100",
+   "name": "Grenade__Grenade_Unwind_0",
+   "inside": "Grenade__~Grenade_Frame_Handler",
+   "owner": "Grenade::Grenade",
+   "state": 0
+  },
+  {
+   "address": "0x0015210b",
+   "name": "Grenade__Grenade_Unwind_1",
+   "inside": "Grenade__~Grenade_Frame_Handler",
+   "owner": "Grenade::Grenade",
+   "state": 1
+  },
+  {
+   "address": "0x00152119",
+   "name": "Grenade__Grenade_Unwind_2",
+   "inside": "Grenade__~Grenade_Frame_Handler",
+   "owner": "Grenade::Grenade",
+   "state": 2
+  },
+  {
+   "address": "0x00152130",
+   "name": "Grenade__Grenade_Unwind_3",
+   "inside": "Grenade__~Grenade_Frame_Handler",
+   "owner": "Grenade::Grenade",
+   "state": 3
+  },
+  {
+   "address": "0x00152150",
+   "name": "Grenade__Simulate_Unwind_0",
+   "inside": "Grenade__Grenade_Frame_Handler",
+   "owner": "Grenade::Simulate",
+   "state": 0
+  },
+  {
+   "address": "0x00152170",
+   "name": "Human__~Human_Unwind_0",
+   "inside": "Grenade__Simulate_Frame_Handler",
+   "owner": "Human::~Human",
+   "state": 0
+  },
+  {
+   "address": "0x001521c0",
+   "name": "Mine__~Mine_Unwind_0",
+   "inside": "FUN_001521b2",
+   "owner": "Mine::~Mine",
+   "state": 0
+  },
+  {
+   "address": "0x001521e0",
+   "name": "Mine__Mine_Unwind_0",
+   "inside": "Mine__~Mine_Frame_Handler",
+   "owner": "Mine::Mine",
+   "state": 0
+  },
+  {
+   "address": "0x001521eb",
+   "name": "Mine__Mine_Unwind_1",
+   "inside": "Mine__~Mine_Frame_Handler",
+   "owner": "Mine::Mine",
+   "state": 1
+  },
+  {
+   "address": "0x00152202",
+   "name": "Mine__Mine_Unwind_2",
+   "inside": "Mine__~Mine_Frame_Handler",
+   "owner": "Mine::Mine",
+   "state": 2
+  },
+  {
+   "address": "0x00152230",
+   "name": "Missile__Missile_Unwind_0",
+   "inside": "Mine__Mine_Frame_Handler",
+   "owner": "Missile::Missile",
+   "state": 0
+  },
+  {
+   "address": "0x0015223b",
+   "name": "Missile__Missile_Unwind_1",
+   "inside": "Mine__Mine_Frame_Handler",
+   "owner": "Missile::Missile",
+   "state": 1
+  },
+  {
+   "address": "0x0015224c",
+   "name": "Missile__Missile_Unwind_2",
+   "inside": "Mine__Mine_Frame_Handler",
+   "owner": "Missile::Missile",
+   "state": 2
+  },
+  {
+   "address": "0x00152263",
+   "name": "Missile__Missile_Unwind_3",
+   "inside": "Mine__Mine_Frame_Handler",
+   "owner": "Missile::Missile",
+   "state": 3
+  },
+  {
+   "address": "0x00152278",
+   "name": "Missile__Missile_Unwind_4",
+   "inside": "Mine__Mine_Frame_Handler",
+   "owner": "Missile::Missile",
+   "state": 4
+  },
+  {
+   "address": "0x00152320",
+   "name": "Newton__Newton_Unwind_0",
+   "inside": "Missile__CheckForCollision_Frame_Handler",
+   "owner": "Newton::Newton",
+   "state": 0
+  },
+  {
+   "address": "0x0015232b",
+   "name": "Newton__Newton_Unwind_1",
+   "inside": "Missile__CheckForCollision_Frame_Handler",
+   "owner": "Newton::Newton",
+   "state": 1
+  },
+  {
+   "address": "0x00152340",
+   "name": "Newton__Newton_Unwind_2",
+   "inside": "Missile__CheckForCollision_Frame_Handler",
+   "owner": "Newton::Newton",
+   "state": 2
+  },
+  {
+   "address": "0x00152370",
+   "name": "PBondCar__InitTyreTracks_Unwind_0",
+   "inside": "Newton__Newton_Frame_Handler",
+   "owner": "PBondCar::InitTyreTracks",
+   "state": 0
+  },
+  {
+   "address": "0x00152382",
+   "name": "PBondCar__InitTyreTracks_Unwind_1",
+   "inside": "Newton__Newton_Frame_Handler",
+   "owner": "PBondCar::InitTyreTracks",
+   "state": 1
+  },
+  {
+   "address": "0x00152394",
+   "name": "PBondCar__InitTyreTracks_Unwind_2",
+   "inside": "Newton__Newton_Frame_Handler",
+   "owner": "PBondCar::InitTyreTracks",
+   "state": 2
+  },
+  {
+   "address": "0x001523a6",
+   "name": "PBondCar__InitTyreTracks_Unwind_3",
+   "inside": "Newton__Newton_Frame_Handler",
+   "owner": "PBondCar::InitTyreTracks",
+   "state": 3
+  },
+  {
+   "address": "0x001523b8",
+   "name": "PBondCar__InitTyreTracks_Unwind_4",
+   "inside": "Newton__Newton_Frame_Handler",
+   "owner": "PBondCar::InitTyreTracks",
+   "state": 4
+  },
+  {
+   "address": "0x001523e0",
+   "name": "PBondCar__EnableTargetBeacon_Unwind_0",
+   "inside": "PBondCar__InitTyreTracks_Frame_Handler",
+   "owner": "PBondCar::EnableTargetBeacon",
+   "state": 0
+  },
+  {
+   "address": "0x00152400",
+   "name": "PBondCar__ProcessSnowmobilePhysics_Unwind_0",
+   "inside": "PBondCar__EnableTargetBeacon_Frame_Handler",
+   "owner": "PBondCar::ProcessSnowmobilePhysics",
+   "state": 0
+  },
+  {
+   "address": "0x00152420",
+   "name": "GetCarColourVariation_Unwind_0",
+   "inside": "PBondCar__ProcessSnowmobilePhysics_Frame_Handler",
+   "owner": "GetCarColourVariation",
+   "state": 0
+  },
+  {
+   "address": "0x00152440",
+   "name": "PBondCar__~PBondCar_Unwind_0",
+   "inside": "GetCarColourVariation_Frame_Handler",
+   "owner": "PBondCar::~PBondCar",
+   "state": 0
+  },
+  {
+   "address": "0x00152448",
+   "name": "PBondCar__~PBondCar_Unwind_1",
+   "inside": "GetCarColourVariation_Frame_Handler",
+   "owner": "PBondCar::~PBondCar",
+   "state": 1
+  },
+  {
+   "address": "0x00152470",
+   "name": "PBondCar__ControlTyreTracks_Unwind_0",
+   "inside": "PBondCar__~PBondCar_Frame_Handler",
+   "owner": "PBondCar::ControlTyreTracks",
+   "state": 0
+  },
+  {
+   "address": "0x00152490",
+   "name": "PBondCar__ProcessPhysics_Unwind_0",
+   "inside": "PBondCar__ControlTyreTracks_Frame_Handler",
+   "owner": "PBondCar::ProcessPhysics",
+   "state": 0
+  },
+  {
+   "address": "0x001524b0",
+   "name": "PBondCar__ProcessSimplePhysics_Unwind_0",
+   "inside": "PBondCar__ProcessPhysics_Frame_Handler",
+   "owner": "PBondCar::ProcessSimplePhysics",
+   "state": 0
+  },
+  {
+   "address": "0x001524d0",
+   "name": "PBondCar__ChangeCarType_Unwind_0",
+   "inside": "PBondCar__ProcessSimplePhysics_Frame_Handler",
+   "owner": "PBondCar::ChangeCarType",
+   "state": 0
+  },
+  {
+   "address": "0x001524db",
+   "name": "PBondCar__ChangeCarType_Unwind_1",
+   "inside": "PBondCar__ProcessSimplePhysics_Frame_Handler",
+   "owner": "PBondCar::ChangeCarType",
+   "state": 1
+  },
+  {
+   "address": "0x001524f0",
+   "name": "PBondCar__ChangeCarType_Unwind_2",
+   "inside": "PBondCar__ProcessSimplePhysics_Frame_Handler",
+   "owner": "PBondCar::ChangeCarType",
+   "state": 2
+  },
+  {
+   "address": "0x00152505",
+   "name": "PBondCar__ChangeCarType_Unwind_3",
+   "inside": "PBondCar__ProcessSimplePhysics_Frame_Handler",
+   "owner": "PBondCar::ChangeCarType",
+   "state": 3
+  },
+  {
+   "address": "0x00152530",
+   "name": "PBondCar__ApplyDamage_Unwind_0",
+   "inside": "PBondCar__ChangeCarType_Frame_Handler",
+   "owner": "PBondCar::ApplyDamage",
+   "state": 0
+  },
+  {
+   "address": "0x00152550",
+   "name": "PBondCar__InitAudioObject_Unwind_12",
+   "inside": "PBondCar__ApplyDamage_Frame_Handler",
+   "owner": "PBondCar::InitAudioObject",
+   "state": 12
+  },
+  {
+   "address": "0x00152562",
+   "name": "PBondCar__InitAudioObject_Unwind_11",
+   "inside": "PBondCar__ApplyDamage_Frame_Handler",
+   "owner": "PBondCar::InitAudioObject",
+   "state": 11
+  },
+  {
+   "address": "0x00152574",
+   "name": "PBondCar__InitAudioObject_Unwind_10",
+   "inside": "PBondCar__ApplyDamage_Frame_Handler",
+   "owner": "PBondCar::InitAudioObject",
+   "state": 10
+  },
+  {
+   "address": "0x00152586",
+   "name": "PBondCar__InitAudioObject_Unwind_8",
+   "inside": "PBondCar__ApplyDamage_Frame_Handler",
+   "owner": "PBondCar::InitAudioObject",
+   "state": 8
+  },
+  {
+   "address": "0x00152598",
+   "name": "PBondCar__InitAudioObject_Unwind_9",
+   "inside": "PBondCar__ApplyDamage_Frame_Handler",
+   "owner": "PBondCar::InitAudioObject",
+   "state": 9
+  },
+  {
+   "address": "0x001525aa",
+   "name": "PBondCar__InitAudioObject_Unwind_0",
+   "inside": "PBondCar__ApplyDamage_Frame_Handler",
+   "owner": "PBondCar::InitAudioObject",
+   "state": 0
+  },
+  {
+   "address": "0x001525bc",
+   "name": "PBondCar__InitAudioObject_Unwind_2",
+   "inside": "PBondCar__ApplyDamage_Frame_Handler",
+   "owner": "PBondCar::InitAudioObject",
+   "state": 2
+  },
+  {
+   "address": "0x001525ce",
+   "name": "PBondCar__InitAudioObject_Unwind_3",
+   "inside": "PBondCar__ApplyDamage_Frame_Handler",
+   "owner": "PBondCar::InitAudioObject",
+   "state": 3
+  },
+  {
+   "address": "0x001525e0",
+   "name": "PBondCar__InitAudioObject_Unwind_4",
+   "inside": "PBondCar__ApplyDamage_Frame_Handler",
+   "owner": "PBondCar::InitAudioObject",
+   "state": 4
+  },
+  {
+   "address": "0x001525f2",
+   "name": "PBondCar__InitAudioObject_Unwind_5",
+   "inside": "PBondCar__ApplyDamage_Frame_Handler",
+   "owner": "PBondCar::InitAudioObject",
+   "state": 5
+  },
+  {
+   "address": "0x00152604",
+   "name": "PBondCar__InitAudioObject_Unwind_6",
+   "inside": "PBondCar__ApplyDamage_Frame_Handler",
+   "owner": "PBondCar::InitAudioObject",
+   "state": 6
+  },
+  {
+   "address": "0x00152616",
+   "name": "PBondCar__InitAudioObject_Unwind_7",
+   "inside": "PBondCar__ApplyDamage_Frame_Handler",
+   "owner": "PBondCar::InitAudioObject",
+   "state": 7
+  },
+  {
+   "address": "0x00152628",
+   "name": "PBondCar__InitAudioObject_Unwind_1",
+   "inside": "PBondCar__ApplyDamage_Frame_Handler",
+   "owner": "PBondCar::InitAudioObject",
+   "state": 1
+  },
+  {
+   "address": "0x00152650",
+   "name": "PBondCar__PBondCar_Unwind_0",
+   "inside": "PBondCar__InitAudioObject_Frame_Handler",
+   "owner": "PBondCar::PBondCar",
+   "state": 0
+  },
+  {
+   "address": "0x0015265b",
+   "name": "PBondCar__PBondCar_Unwind_1",
+   "inside": "PBondCar__InitAudioObject_Frame_Handler",
+   "owner": "PBondCar::PBondCar",
+   "state": 1
+  },
+  {
+   "address": "0x00152676",
+   "name": "PBondCar__PBondCar_Unwind_2",
+   "inside": "PBondCar__InitAudioObject_Frame_Handler",
+   "owner": "PBondCar::PBondCar",
+   "state": 2
+  },
+  {
+   "address": "0x0015268b",
+   "name": "PBondCar__PBondCar_Unwind_3",
+   "inside": "PBondCar__InitAudioObject_Frame_Handler",
+   "owner": "PBondCar::PBondCar",
+   "state": 3
+  },
+  {
+   "address": "0x0015269d",
+   "name": "PBondCar__PBondCar_Unwind_4",
+   "inside": "PBondCar__InitAudioObject_Frame_Handler",
+   "owner": "PBondCar::PBondCar",
+   "state": 4
+  },
+  {
+   "address": "0x001526af",
+   "name": "PBondCar__PBondCar_Unwind_5",
+   "inside": "PBondCar__InitAudioObject_Frame_Handler",
+   "owner": "PBondCar::PBondCar",
+   "state": 5
+  },
+  {
+   "address": "0x001526c4",
+   "name": "PBondCar__PBondCar_Unwind_6",
+   "inside": "PBondCar__InitAudioObject_Frame_Handler",
+   "owner": "PBondCar::PBondCar",
+   "state": 6
+  },
+  {
+   "address": "0x001526db",
+   "name": "PBondCar__PBondCar_Unwind_7",
+   "inside": "PBondCar__InitAudioObject_Frame_Handler",
+   "owner": "PBondCar::PBondCar",
+   "state": 7
+  },
+  {
+   "address": "0x00152700",
+   "name": "PHelicopter__PHelicopter_Unwind_0",
+   "inside": "PBondCar__PBondCar_Frame_Handler",
+   "owner": "PHelicopter::PHelicopter",
+   "state": 0
+  },
+  {
+   "address": "0x0015270b",
+   "name": "PHelicopter__PHelicopter_Unwind_1",
+   "inside": "PBondCar__PBondCar_Frame_Handler",
+   "owner": "PHelicopter::PHelicopter",
+   "state": 1
+  },
+  {
+   "address": "0x00152720",
+   "name": "PHelicopter__PHelicopter_Unwind_2",
+   "inside": "PBondCar__PBondCar_Frame_Handler",
+   "owner": "PHelicopter::PHelicopter",
+   "state": 2
+  },
+  {
+   "address": "0x00152737",
+   "name": "PHelicopter__PHelicopter_Unwind_3",
+   "inside": "PBondCar__PBondCar_Frame_Handler",
+   "owner": "PHelicopter::PHelicopter",
+   "state": 3
+  },
+  {
+   "address": "0x00152760",
+   "name": "PHelicopter__~PHelicopter_Unwind_0",
+   "inside": "PHelicopter__PHelicopter_Frame_Handler",
+   "owner": "PHelicopter::~PHelicopter",
+   "state": 0
+  },
+  {
+   "address": "0x00152780",
+   "name": "PhysicsNamespace__NameLookup_Unwind_0",
+   "inside": "PHelicopter__~PHelicopter_Frame_Handler",
+   "owner": "PhysicsNamespace::NameLookup",
+   "state": 0
+  },
+  {
+   "address": "0x00152788",
+   "name": "PhysicsNamespace__NameLookup_Unwind_1",
+   "inside": "PHelicopter__~PHelicopter_Frame_Handler",
+   "owner": "PhysicsNamespace::NameLookup",
+   "state": 1
+  },
+  {
+   "address": "0x001527a0",
+   "name": "(owner 0x6ee10 still unnamed; unwind state 0)",
+   "inside": "PhysicsNamespace__NameLookup_Frame_Handler",
+   "owner": "FUN_0006ee10",
+   "state": 0
+  },
+  {
+   "address": "0x001527c0",
+   "name": "PhysicsObject__PhysicsObject_Unwind_0",
+   "inside": "FUN_001527b1",
+   "owner": "PhysicsObject::PhysicsObject",
+   "state": 0
+  },
+  {
+   "address": "0x001527e0",
+   "name": "PhysicsObject__~PhysicsObject_Unwind_0",
+   "inside": "PhysicsObject__PhysicsObject_Frame_Handler",
+   "owner": "PhysicsObject::~PhysicsObject",
+   "state": 0
+  },
+  {
+   "address": "0x001527eb",
+   "name": "PhysicsObject__~PhysicsObject_Unwind_1",
+   "inside": "PhysicsObject__PhysicsObject_Frame_Handler",
+   "owner": "PhysicsObject::~PhysicsObject",
+   "state": 1
+  },
+  {
+   "address": "0x00152800",
+   "name": "(owner 0x710b0 still unnamed; unwind state 0)",
+   "inside": "PhysicsObject__~PhysicsObject_Frame_Handler",
+   "owner": "FUN_000710b0",
+   "state": 0
+  },
+  {
+   "address": "0x00152820",
+   "name": "(owner 0x71730 still unnamed; unwind state 0)",
+   "inside": "FUN_00152808",
+   "owner": "FUN_00071730",
+   "state": 0
+  },
+  {
+   "address": "0x00152840",
+   "name": "RayShell__CollideWithObjects_Unwind_0",
+   "inside": "FUN_0015282b",
+   "owner": "RayShell::CollideWithObjects",
+   "state": 0
+  },
+  {
+   "address": "0x0015284b",
+   "name": "RayShell__CollideWithObjects_Unwind_1",
+   "inside": "FUN_0015282b",
+   "owner": "RayShell::CollideWithObjects",
+   "state": 1
+  },
+  {
+   "address": "0x00152860",
+   "name": "RayShell__CollideWithWorld_Unwind_0",
+   "inside": "RayShell__CollideWithObjects_Frame_Handler",
+   "owner": "RayShell::CollideWithWorld",
+   "state": 0
+  },
+  {
+   "address": "0x00152880",
+   "name": "Sentry__~Sentry_Unwind_0",
+   "inside": "RayShell__CollideWithWorld_Frame_Handler",
+   "owner": "Sentry::~Sentry",
+   "state": 0
+  },
+  {
+   "address": "0x001528a0",
+   "name": "Sentry__Sentry_Unwind_0",
+   "inside": "Sentry__~Sentry_Frame_Handler",
+   "owner": "Sentry::Sentry",
+   "state": 0
+  },
+  {
+   "address": "0x001528a8",
+   "name": "Sentry__Sentry_Unwind_1",
+   "inside": "Sentry__~Sentry_Frame_Handler",
+   "owner": "Sentry::Sentry",
+   "state": 1
+  },
+  {
+   "address": "0x001528b9",
+   "name": "Sentry__Sentry_Unwind_2",
+   "inside": "Sentry__~Sentry_Frame_Handler",
+   "owner": "Sentry::Sentry",
+   "state": 2
+  },
+  {
+   "address": "0x001528e0",
+   "name": "(owner 0x73330 still unnamed; unwind state 0)",
+   "inside": "Sentry__Sentry_Frame_Handler",
+   "owner": "FUN_00073330",
+   "state": 0
+  },
+  {
+   "address": "0x00152900",
+   "name": "Shell__Shell_Unwind_0",
+   "inside": "Sentry__Simulate_Frame_Handler",
+   "owner": "Shell::Shell",
+   "state": 0
+  },
+  {
+   "address": "0x0015290b",
+   "name": "Shell__Shell_Unwind_1",
+   "inside": "Sentry__Simulate_Frame_Handler",
+   "owner": "Shell::Shell",
+   "state": 1
+  },
+  {
+   "address": "0x00152930",
+   "name": "Shell__ApplyWorldEffects_Unwind_0",
+   "inside": "Shell__Shell_Frame_Handler",
+   "owner": "Shell::ApplyWorldEffects",
+   "state": 0
+  },
+  {
+   "address": "0x0015293e",
+   "name": "Shell__ApplyWorldEffects_Unwind_1",
+   "inside": "Shell__Shell_Frame_Handler",
+   "owner": "Shell::ApplyWorldEffects",
+   "state": 1
+  },
+  {
+   "address": "0x00152960",
+   "name": "Smackable__~Smackable_Unwind_0",
+   "inside": "Shell__ApplyWorldEffects_Frame_Handler",
+   "owner": "Smackable::~Smackable",
+   "state": 0
+  },
+  {
+   "address": "0x00152980",
+   "name": "Smackable__Smackable_Unwind_0",
+   "inside": "Smackable__~Smackable_Frame_Handler",
+   "owner": "Smackable::Smackable",
+   "state": 0
+  },
+  {
+   "address": "0x0015299d",
+   "name": "Smackable__Smackable_Unwind_1",
+   "inside": "Smackable__~Smackable_Frame_Handler",
+   "owner": "Smackable::Smackable",
+   "state": 1
+  },
+  {
+   "address": "0x001529a8",
+   "name": "Smackable__Smackable_Unwind_3",
+   "inside": "Smackable__~Smackable_Frame_Handler",
+   "owner": "Smackable::Smackable",
+   "state": 3
+  },
+  {
+   "address": "0x001529b6",
+   "name": "Smackable__Smackable_Unwind_4",
+   "inside": "Smackable__~Smackable_Frame_Handler",
+   "owner": "Smackable::Smackable",
+   "state": 4
+  },
+  {
+   "address": "0x001529cb",
+   "name": "Smackable__Smackable_Unwind_5",
+   "inside": "Smackable__~Smackable_Frame_Handler",
+   "owner": "Smackable::Smackable",
+   "state": 5
+  },
+  {
+   "address": "0x001529f0",
+   "name": "SimpleDraw__Init_Unwind_0",
+   "inside": "Smackable__Smackable_Frame_Handler",
+   "owner": "SimpleDraw::Init",
+   "state": 0
+  },
+  {
+   "address": "0x001529fb",
+   "name": "SimpleDraw__Init_Unwind_1",
+   "inside": "Smackable__Smackable_Frame_Handler",
+   "owner": "SimpleDraw::Init",
+   "state": 1
+  },
+  {
+   "address": "0x00152a10",
+   "name": "RAnimEngine__Handle__Create_Unwind_0",
+   "inside": "SimpleDraw__Init_Frame_Handler",
+   "owner": "RAnimEngine::Handle::Create",
+   "state": 0
+  },
+  {
+   "address": "0x00152a40",
+   "name": "RCameraIniLoader__LoadFile_Unwind_0",
+   "inside": "RAnimEngine__Handle__Create_Frame_Handler",
+   "owner": "RCameraIniLoader::LoadFile",
+   "state": 0
+  },
+  {
+   "address": "0x00152a60",
+   "name": "RCameraSpline__RCameraSpline_Unwind_0",
+   "inside": "RCameraIniLoader__LoadFile_Frame_Handler",
+   "owner": "RCameraSpline::RCameraSpline",
+   "state": 0
+  },
+  {
+   "address": "0x00152a80",
+   "name": "(owner 0x7ad50 still unnamed; unwind state 0)",
+   "inside": "RCameraSpline__RCameraSpline_Frame_Handler",
+   "owner": "FUN_0007ad50",
+   "state": 0
+  },
+  {
+   "address": "0x00152ac0",
+   "name": "RCARPFile__RegisterSymbols_Unwind_0",
+   "inside": "FUN_00152aa8",
+   "owner": "RCARPFile::RegisterSymbols",
+   "state": 0
+  },
+  {
+   "address": "0x00152ae0",
+   "name": "RCARPFile__Resolve_Unwind_0",
+   "inside": "RCARPFile__RegisterSymbols_Frame_Handler",
+   "owner": "RCARPFile::Resolve",
+   "state": 0
+  },
+  {
+   "address": "0x00152af2",
+   "name": "RCARPFile__Resolve_Unwind_1",
+   "inside": "RCARPFile__RegisterSymbols_Frame_Handler",
+   "owner": "RCARPFile::Resolve",
+   "state": 1
+  },
+  {
+   "address": "0x00152b10",
+   "name": "RCARPFile__LoadEAGLMaterials_Unwind_0",
+   "inside": "RCARPFile__Resolve_Frame_Handler",
+   "owner": "RCARPFile::LoadEAGLMaterials",
+   "state": 0
+  },
+  {
+   "address": "0x00152b30",
+   "name": "GlobalSymbolTable__Init_Unwind_0",
+   "inside": "RCARPFile__LoadEAGLMaterials_Frame_Handler",
+   "owner": "GlobalSymbolTable::Init",
+   "state": 0
+  },
+  {
+   "address": "0x00152b3f",
+   "name": "GlobalSymbolTable__Init_Unwind_1",
+   "inside": "RCARPFile__LoadEAGLMaterials_Frame_Handler",
+   "owner": "GlobalSymbolTable::Init",
+   "state": 1
+  },
+  {
+   "address": "0x00152b60",
+   "name": "(owner 0x7c5f0 still unnamed; unwind state 0)",
+   "inside": "GlobalSymbolTable__Init_Frame_Handler",
+   "owner": "FUN_0007c5f0",
+   "state": 0
+  },
+  {
+   "address": "0x00152b80",
+   "name": "(owner 0x7c6e0 still unnamed; unwind state 0)",
+   "inside": "FUN_00152b68",
+   "owner": "FUN_0007c6e0",
+   "state": 0
+  },
+  {
+   "address": "0x00152ba0",
+   "name": "(owner 0x7ca60 still unnamed; unwind state 0)",
+   "inside": "FUN_00152b8f",
+   "owner": "FUN_0007ca60",
+   "state": 0
+  },
+  {
+   "address": "0x00152bd0",
+   "name": "RDrawGroup__RDrawGroup_Unwind_0",
+   "inside": "FUN_00152bc0",
+   "owner": "RDrawGroup::RDrawGroup",
+   "state": 0
+  },
+  {
+   "address": "0x00152bf0",
+   "name": "RRenderer__RRenderer_Unwind_0",
+   "inside": "RDrawGroup__RDrawGroup_Frame_Handler",
+   "owner": "RRenderer::RRenderer",
+   "state": 0
+  },
+  {
+   "address": "0x00152bfe",
+   "name": "RRenderer__RRenderer_Unwind_1",
+   "inside": "RDrawGroup__RDrawGroup_Frame_Handler",
+   "owner": "RRenderer::RRenderer",
+   "state": 1
+  },
+  {
+   "address": "0x00152c0c",
+   "name": "RRenderer__RRenderer_Unwind_2",
+   "inside": "RDrawGroup__RDrawGroup_Frame_Handler",
+   "owner": "RRenderer::RRenderer",
+   "state": 2
+  },
+  {
+   "address": "0x00152c30",
+   "name": "RRenderer__Init_Unwind_0",
+   "inside": "RRenderer__RRenderer_Frame_Handler",
+   "owner": "RRenderer::Init",
+   "state": 0
+  },
+  {
+   "address": "0x00152c50",
+   "name": "RRenderer__~RRenderer_Unwind_0",
+   "inside": "RRenderer__Init_Frame_Handler",
+   "owner": "RRenderer::~RRenderer",
+   "state": 0
+  },
+  {
+   "address": "0x00152c5b",
+   "name": "RRenderer__~RRenderer_Unwind_1",
+   "inside": "RRenderer__Init_Frame_Handler",
+   "owner": "RRenderer::~RRenderer",
+   "state": 1
+  },
+  {
+   "address": "0x00152c70",
+   "name": "RFog__RFog_Unwind_0",
+   "inside": "RRenderer__~RRenderer_Frame_Handler",
+   "owner": "RFog::RFog",
+   "state": 0
+  },
+  {
+   "address": "0x00152c90",
+   "name": "RLightManager__~RLightManager_Unwind_0",
+   "inside": "RFog__RFog_Frame_Handler",
+   "owner": "RLightManager::~RLightManager",
+   "state": 0
+  },
+  {
+   "address": "0x00152cb0",
+   "name": "(owner 0x80430 still unnamed; unwind state 0)",
+   "inside": "RLightManager__~RLightManager_Frame_Handler",
+   "owner": "FUN_00080430",
+   "state": 0
+  },
+  {
+   "address": "0x00152cd0",
+   "name": "RPathEngine__AddInstanceList_Unwind_0",
+   "inside": "FUN_00152cb8",
+   "owner": "RPathEngine::AddInstanceList",
+   "state": 0
+  },
+  {
+   "address": "0x00152cf0",
+   "name": "RPathEngine__CreatePathHandle_Unwind_0",
+   "inside": "RPathEngine__AddInstanceList_Frame_Handler",
+   "owner": "RPathEngine::CreatePathHandle",
+   "state": 0
+  },
+  {
+   "address": "0x00152d10",
+   "name": "(owner 0x81740 still unnamed; unwind state 0)",
+   "inside": "RPathEngine__CreatePathHandle_Frame_Handler",
+   "owner": "FUN_00081740",
+   "state": 0
+  },
+  {
+   "address": "0x00152d30",
+   "name": "RPlayerCamera__~RPlayerCamera_Unwind_0",
+   "inside": "RPlayerCamera__SetMissileCamera_Frame_Handler",
+   "owner": "RPlayerCamera::~RPlayerCamera",
+   "state": 0
+  },
+  {
+   "address": "0x00152d50",
+   "name": "RPlayerCamera__SetCameraModeByIndex_Unwind_0",
+   "inside": "RPlayerCamera__~RPlayerCamera_Frame_Handler",
+   "owner": "RPlayerCamera::SetCameraModeByIndex",
+   "state": 0
+  },
+  {
+   "address": "0x00152d70",
+   "name": "(owner 0x86d00 still unnamed; unwind state 0)",
+   "inside": "RPlayerCamera__SetCameraModeByIndex_Frame_Handler",
+   "owner": "FUN_00086d00",
+   "state": 0
+  },
+  {
+   "address": "0x00152d82",
+   "name": "(owner 0x86d00 still unnamed; unwind state 1)",
+   "inside": "RPlayerCamera__SetCameraModeByIndex_Frame_Handler",
+   "owner": "FUN_00086d00",
+   "state": 1
+  },
+  {
+   "address": "0x00152da0",
+   "name": "RPlayerCamera__RPlayerCamera_Unwind_0",
+   "inside": "FUN_00152d94",
+   "owner": "RPlayerCamera::RPlayerCamera",
+   "state": 0
+  },
+  {
+   "address": "0x00152da8",
+   "name": "RPlayerCamera__RPlayerCamera_Unwind_1",
+   "inside": "FUN_00152d94",
+   "owner": "RPlayerCamera::RPlayerCamera",
+   "state": 1
+  },
+  {
+   "address": "0x00152db7",
+   "name": "RPlayerCamera__RPlayerCamera_Unwind_2",
+   "inside": "FUN_00152d94",
+   "owner": "RPlayerCamera::RPlayerCamera",
+   "state": 2
+  },
+  {
+   "address": "0x00152dc9",
+   "name": "RPlayerCamera__RPlayerCamera_Unwind_3",
+   "inside": "FUN_00152d94",
+   "owner": "RPlayerCamera::RPlayerCamera",
+   "state": 3
+  },
+  {
+   "address": "0x00152dd8",
+   "name": "RPlayerCamera__RPlayerCamera_Unwind_4",
+   "inside": "FUN_00152d94",
+   "owner": "RPlayerCamera::RPlayerCamera",
+   "state": 4
+  },
+  {
+   "address": "0x00152de7",
+   "name": "RPlayerCamera__RPlayerCamera_Unwind_5",
+   "inside": "FUN_00152d94",
+   "owner": "RPlayerCamera::RPlayerCamera",
+   "state": 5
+  },
+  {
+   "address": "0x00152df6",
+   "name": "RPlayerCamera__RPlayerCamera_Unwind_6",
+   "inside": "FUN_00152d94",
+   "owner": "RPlayerCamera::RPlayerCamera",
+   "state": 6
+  },
+  {
+   "address": "0x00152e10",
+   "name": "RPlayerCamera__SetOldCameraMode_Unwind_0",
+   "inside": "RPlayerCamera__RPlayerCamera_Frame_Handler",
+   "owner": "RPlayerCamera::SetOldCameraMode",
+   "state": 0
+  },
+  {
+   "address": "0x00152e30",
+   "name": "RPlayerCamera__TriggerAIPathAnimationCamera_Unwind_0",
+   "inside": "RPlayerCamera__SetOldCameraMode_Frame_Handler",
+   "owner": "RPlayerCamera::TriggerAIPathAnimationCamera",
+   "state": 0
+  },
+  {
+   "address": "0x00152e50",
+   "name": "(owner 0x8b5b0 still unnamed; unwind state 0)",
+   "inside": "RPlayerCamera__TriggerAIPathAnimationCamera_Frame_Handler",
+   "owner": "FUN_0008b5b0",
+   "state": 0
+  },
+  {
+   "address": "0x00152e70",
+   "name": "(owner 0x8ba10 still unnamed; unwind state 0)",
+   "inside": "RLightManager__Init_Frame_Handler",
+   "owner": "FUN_0008ba10",
+   "state": 0
+  },
+  {
+   "address": "0x001537f0",
+   "name": "(owner 0x9f4c0 still unnamed; unwind state 0)",
+   "inside": "RLensFlareManager__RLensFlareManager_Frame_Handler",
+   "owner": "FUN_0009f4c0",
+   "state": 0
+  },
+  {
+   "address": "0x00153810",
+   "name": "(owner 0x9f7e0 still unnamed; unwind state 0)",
+   "inside": "FUN_001537f8",
+   "owner": "FUN_0009f7e0",
+   "state": 0
+  },
+  {
+   "address": "0x00153830",
+   "name": "(owner 0x9f8b0 still unnamed; unwind state 0)",
+   "inside": "FUN_0015381b",
+   "owner": "FUN_0009f8b0",
+   "state": 0
+  },
+  {
+   "address": "0x00153850",
+   "name": "(owner 0x9ff80 still unnamed; unwind state 0)",
+   "inside": "FUN_0015383b",
+   "owner": "FUN_0009ff80",
+   "state": 0
+  },
+  {
+   "address": "0x00153880",
+   "name": "RLightning__~RLightning_Unwind_0",
+   "inside": "FUN_00153870",
+   "owner": "RLightning::~RLightning",
+   "state": 0
+  },
+  {
+   "address": "0x00153888",
+   "name": "RLightning__~RLightning_Unwind_1",
+   "inside": "FUN_00153870",
+   "owner": "RLightning::~RLightning",
+   "state": 1
+  },
+  {
+   "address": "0x00153893",
+   "name": "RLightning__~RLightning_Unwind_2",
+   "inside": "FUN_00153870",
+   "owner": "RLightning::~RLightning",
+   "state": 2
+  },
+  {
+   "address": "0x001538b0",
+   "name": "RMissileCam__RMissileCam_Unwind_0",
+   "inside": "RLightning__~RLightning_Frame_Handler",
+   "owner": "RMissileCam::RMissileCam",
+   "state": 0
+  },
+  {
+   "address": "0x001538b8",
+   "name": "RMissileCam__RMissileCam_Unwind_1",
+   "inside": "RLightning__~RLightning_Frame_Handler",
+   "owner": "RMissileCam::RMissileCam",
+   "state": 1
+  },
+  {
+   "address": "0x001538e0",
+   "name": "RMissileCam__Draw_Unwind_0",
+   "inside": "RMissileCam__RMissileCam_Frame_Handler",
+   "owner": "RMissileCam::Draw",
+   "state": 0
+  },
+  {
+   "address": "0x001538ee",
+   "name": "RMissileCam__Draw_Unwind_1",
+   "inside": "RMissileCam__RMissileCam_Frame_Handler",
+   "owner": "RMissileCam::Draw",
+   "state": 1
+  },
+  {
+   "address": "0x00153900",
+   "name": "RMissileCam__~RMissileCam_Unwind_0",
+   "inside": "RMissileCam__Draw_Frame_Handler",
+   "owner": "RMissileCam::~RMissileCam",
+   "state": 0
+  },
+  {
+   "address": "0x00153920",
+   "name": "RMissileStreak__Init_Unwind_0",
+   "inside": "RMissileCam__~RMissileCam_Frame_Handler",
+   "owner": "RMissileStreak::Init",
+   "state": 0
+  },
+  {
+   "address": "0x00153940",
+   "name": "RMissileStreak__Draw_Unwind_0",
+   "inside": "RMissileStreak__Init_Frame_Handler",
+   "owner": "RMissileStreak::Draw",
+   "state": 0
+  },
+  {
+   "address": "0x00153960",
+   "name": "(owner 0xa2350 still unnamed; unwind state 0)",
+   "inside": "RMissileStreak__Draw_Frame_Handler",
+   "owner": "FUN_000a2350",
+   "state": 0
+  },
+  {
+   "address": "0x00153980",
+   "name": "(owner 0xa23c0 still unnamed; unwind state 0)",
+   "inside": "FUN_0015396f",
+   "owner": "FUN_000a23c0",
+   "state": 0
+  },
+  {
+   "address": "0x001539a0",
+   "name": "RParticleLibrary__RParticleLibrary_Unwind_0",
+   "inside": "FUN_00153988",
+   "owner": "RParticleLibrary::RParticleLibrary",
+   "state": 0
+  },
+  {
+   "address": "0x001539c0",
+   "name": "RParticleSystemManager__RParticleSystemManager_Unwind_0",
+   "inside": "RParticleLibrary__RParticleLibrary_Frame_Handler",
+   "owner": "RParticleSystemManager::RParticleSystemManager",
+   "state": 0
+  },
+  {
+   "address": "0x001539cb",
+   "name": "RParticleSystemManager__RParticleSystemManager_Unwind_1",
+   "inside": "RParticleLibrary__RParticleLibrary_Frame_Handler",
+   "owner": "RParticleSystemManager::RParticleSystemManager",
+   "state": 1
+  },
+  {
+   "address": "0x001539d6",
+   "name": "RParticleSystemManager__RParticleSystemManager_Unwind_2",
+   "inside": "RParticleLibrary__RParticleLibrary_Frame_Handler",
+   "owner": "RParticleSystemManager::RParticleSystemManager",
+   "state": 2
+  },
+  {
+   "address": "0x001539f0",
+   "name": "(owner 0xa2fc0 still unnamed; unwind state 0)",
+   "inside": "RParticleSystemManager__RParticleSystemManager_Frame_Handler",
+   "owner": "FUN_000a2fc0",
+   "state": 0
+  },
+  {
+   "address": "0x001539fb",
+   "name": "(owner 0xa2fc0 still unnamed; unwind state 1)",
+   "inside": "RParticleSystemManager__RParticleSystemManager_Frame_Handler",
+   "owner": "FUN_000a2fc0",
+   "state": 1
+  },
+  {
+   "address": "0x00153a10",
+   "name": "RParticleSystemManager__Init_Unwind_0",
+   "inside": "FUN_00153a06",
+   "owner": "RParticleSystemManager::Init",
+   "state": 0
+  },
+  {
+   "address": "0x00153a30",
+   "name": "RParticulate__~RParticulate_Unwind_0",
+   "inside": "RParticleSystemManager__Init_Frame_Handler",
+   "owner": "RParticulate::~RParticulate",
+   "state": 0
+  },
+  {
+   "address": "0x00153a50",
+   "name": "(owner 0xa4580 still unnamed; unwind state 0)",
+   "inside": "RParticulate__~RParticulate_Frame_Handler",
+   "owner": "FUN_000a4580",
+   "state": 0
+  },
+  {
+   "address": "0x00153a70",
+   "name": "(owner 0xa4630 still unnamed; unwind state 0)",
+   "inside": "FUN_00153a5f",
+   "owner": "FUN_000a4630",
+   "state": 0
+  },
+  {
+   "address": "0x00153a7b",
+   "name": "(owner 0xa4630 still unnamed; unwind state 1)",
+   "inside": "FUN_00153a5f",
+   "owner": "FUN_000a4630",
+   "state": 1
+  },
+  {
+   "address": "0x00153aa0",
+   "name": "RPostProcessing__RPostProcessing_Unwind_0",
+   "inside": "FUN_00153a89",
+   "owner": "RPostProcessing::RPostProcessing",
+   "state": 0
+  },
+  {
+   "address": "0x00153aa8",
+   "name": "RPostProcessing__RPostProcessing_Unwind_1",
+   "inside": "FUN_00153a89",
+   "owner": "RPostProcessing::RPostProcessing",
+   "state": 1
+  },
+  {
+   "address": "0x00153ab3",
+   "name": "RPostProcessing__RPostProcessing_Unwind_2",
+   "inside": "FUN_00153a89",
+   "owner": "RPostProcessing::RPostProcessing",
+   "state": 2
+  },
+  {
+   "address": "0x00153abe",
+   "name": "RPostProcessing__RPostProcessing_Unwind_3",
+   "inside": "FUN_00153a89",
+   "owner": "RPostProcessing::RPostProcessing",
+   "state": 3
+  },
+  {
+   "address": "0x00153ac9",
+   "name": "RPostProcessing__RPostProcessing_Unwind_4",
+   "inside": "FUN_00153a89",
+   "owner": "RPostProcessing::RPostProcessing",
+   "state": 4
+  },
+  {
+   "address": "0x00153ae0",
+   "name": "RPostProcessing__~RPostProcessing_Unwind_0",
+   "inside": "RPostProcessing__RPostProcessing_Frame_Handler",
+   "owner": "RPostProcessing::~RPostProcessing",
+   "state": 0
+  },
+  {
+   "address": "0x00153b00",
+   "name": "RShadowMap__RShadowMap_Unwind_0",
+   "inside": "RPostProcessing__~RPostProcessing_Frame_Handler",
+   "owner": "RShadowMap::RShadowMap",
+   "state": 0
+  },
+  {
+   "address": "0x00153b08",
+   "name": "RShadowMap__RShadowMap_Unwind_1",
+   "inside": "RPostProcessing__~RPostProcessing_Frame_Handler",
+   "owner": "RShadowMap::RShadowMap",
+   "state": 1
+  },
+  {
+   "address": "0x00153b13",
+   "name": "RShadowMap__RShadowMap_Unwind_2",
+   "inside": "RPostProcessing__~RPostProcessing_Frame_Handler",
+   "owner": "RShadowMap::RShadowMap",
+   "state": 2
+  },
+  {
+   "address": "0x00153b30",
+   "name": "(owner 0xa5c10 still unnamed; unwind state 0)",
+   "inside": "RShadowMap__RShadowMap_Frame_Handler",
+   "owner": "FUN_000a5c10",
+   "state": 0
+  },
+  {
+   "address": "0x00153b38",
+   "name": "(owner 0xa5c10 still unnamed; unwind state 1)",
+   "inside": "RShadowMap__RShadowMap_Frame_Handler",
+   "owner": "FUN_000a5c10",
+   "state": 1
+  },
+  {
+   "address": "0x00153b70",
+   "name": "RShadowMap__DrawSimpleShadow_Unwind_0",
+   "inside": "FUN_00153b5f",
+   "owner": "RShadowMap::DrawSimpleShadow",
+   "state": 0
+  },
+  {
+   "address": "0x00153b90",
+   "name": "RSniperZoom__~RSniperZoom_Unwind_0",
+   "inside": "RShadowMap__DrawSimpleShadow_Frame_Handler",
+   "owner": "RSniperZoom::~RSniperZoom",
+   "state": 0
+  },
+  {
+   "address": "0x00153b98",
+   "name": "RSniperZoom__~RSniperZoom_Unwind_1",
+   "inside": "RShadowMap__DrawSimpleShadow_Frame_Handler",
+   "owner": "RSniperZoom::~RSniperZoom",
+   "state": 1
+  },
+  {
+   "address": "0x00153bb0",
+   "name": "RSniperZoom__RSniperZoom_Unwind_0",
+   "inside": "RSniperZoom__~RSniperZoom_Frame_Handler",
+   "owner": "RSniperZoom::RSniperZoom",
+   "state": 0
+  },
+  {
+   "address": "0x00153bb8",
+   "name": "RSniperZoom__RSniperZoom_Unwind_1",
+   "inside": "RSniperZoom__~RSniperZoom_Frame_Handler",
+   "owner": "RSniperZoom::RSniperZoom",
+   "state": 1
+  },
+  {
+   "address": "0x00153bc3",
+   "name": "RSniperZoom__RSniperZoom_Unwind_2",
+   "inside": "RSniperZoom__~RSniperZoom_Frame_Handler",
+   "owner": "RSniperZoom::RSniperZoom",
+   "state": 2
+  },
+  {
+   "address": "0x00153be0",
+   "name": "RVehicleParticle__RVehicleParticle_Unwind_0",
+   "inside": "RSniperZoom__RSniperZoom_Frame_Handler",
+   "owner": "RVehicleParticle::RVehicleParticle",
+   "state": 0
+  },
+  {
+   "address": "0x00153c00",
+   "name": "(owner 0xa73c0 still unnamed; unwind state 0)",
+   "inside": "RVehicleParticle__RVehicleParticle_Frame_Handler",
+   "owner": "FUN_000a73c0",
+   "state": 0
+  },
+  {
+   "address": "0x00153c20",
+   "name": "RVehicleParticle__Init_Unwind_0",
+   "inside": "FUN_00153c08",
+   "owner": "RVehicleParticle::Init",
+   "state": 0
+  },
+  {
+   "address": "0x00153c40",
+   "name": "(owner 0xa8b90 still unnamed; unwind state 0)",
+   "inside": "RVehicleParticle__Init_Frame_Handler",
+   "owner": "FUN_000a8b90",
+   "state": 0
+  },
+  {
+   "address": "0x00153c60",
+   "name": "RWindow__DrawBrokenWindows_Unwind_0",
+   "inside": "FUN_00153c48",
+   "owner": "RWindow::DrawBrokenWindows",
+   "state": 0
+  },
+  {
+   "address": "0x00153c80",
+   "name": "RDebris__RDebris_Unwind_0",
+   "inside": "RWindow__DrawBrokenWindows_Frame_Handler",
+   "owner": "RDebris::RDebris",
+   "state": 0
+  },
+  {
+   "address": "0x00153c92",
+   "name": "RDebris__RDebris_Unwind_1",
+   "inside": "RWindow__DrawBrokenWindows_Frame_Handler",
+   "owner": "RDebris::RDebris",
+   "state": 1
+  },
+  {
+   "address": "0x00153cb0",
+   "name": "RGlareManager__RGlareManager_Unwind_0",
+   "inside": "RDebris__RDebris_Frame_Handler",
+   "owner": "RGlareManager::RGlareManager",
+   "state": 0
+  },
+  {
+   "address": "0x00153cd0",
+   "name": "RigidBody__CollideWithObject_Unwind_0",
+   "inside": "RGlareManager__RGlareManager_Frame_Handler",
+   "owner": "RigidBody::CollideWithObject",
+   "state": 0
+  },
+  {
+   "address": "0x00153cf0",
+   "name": "RigidBody__RigidBody_Unwind_0",
+   "inside": "RigidBody__CollideWithObject_Frame_Handler",
+   "owner": "RigidBody::RigidBody",
+   "state": 0
+  },
+  {
+   "address": "0x00153d10",
+   "name": "(owner 0xb13a0 still unnamed; unwind state 0)",
+   "inside": "RigidBody__RigidBody_Frame_Handler",
+   "owner": "FUN_000b13a0",
+   "state": 0
+  },
+  {
+   "address": "0x00153d30",
+   "name": "(owner 0xb1420 still unnamed; unwind state 0)",
+   "inside": "FUN_00153d18",
+   "owner": "FUN_000b1420",
+   "state": 0
+  },
+  {
+   "address": "0x00153d3b",
+   "name": "(owner 0xb1420 still unnamed; unwind state 1)",
+   "inside": "FUN_00153d18",
+   "owner": "FUN_000b1420",
+   "state": 1
+  },
+  {
+   "address": "0x00153d46",
+   "name": "(owner 0xb1420 still unnamed; unwind state 2)",
+   "inside": "FUN_00153d18",
+   "owner": "FUN_000b1420",
+   "state": 2
+  },
+  {
+   "address": "0x00153d58",
+   "name": "(owner 0xb1420 still unnamed; unwind state 3)",
+   "inside": "FUN_00153d18",
+   "owner": "FUN_000b1420",
+   "state": 3
+  },
+  {
+   "address": "0x00153d6a",
+   "name": "(owner 0xb1420 still unnamed; unwind state 4)",
+   "inside": "FUN_00153d18",
+   "owner": "FUN_000b1420",
+   "state": 4
+  },
+  {
+   "address": "0x00153d90",
+   "name": "SimpleRigidBody__CheckCollisions_Unwind_0",
+   "inside": "FUN_00153d7c",
+   "owner": "SimpleRigidBody::CheckCollisions",
+   "state": 0
+  },
+  {
+   "address": "0x00153d9b",
+   "name": "SimpleRigidBody__CheckCollisions_Unwind_1",
+   "inside": "FUN_00153d7c",
+   "owner": "SimpleRigidBody::CheckCollisions",
+   "state": 1
+  },
+  {
+   "address": "0x00153da6",
+   "name": "SimpleRigidBody__CheckCollisions_Unwind_2",
+   "inside": "FUN_00153d7c",
+   "owner": "SimpleRigidBody::CheckCollisions",
+   "state": 2
+  },
+  {
+   "address": "0x00153db1",
+   "name": "SimpleRigidBody__CheckCollisions_Unwind_3",
+   "inside": "FUN_00153d7c",
+   "owner": "SimpleRigidBody::CheckCollisions",
+   "state": 3
+  },
+  {
+   "address": "0x00153dd0",
+   "name": "(owner 0xb3130 still unnamed; unwind state 0)",
+   "inside": "SimpleRigidBody__CheckCollisions_Frame_Handler",
+   "owner": "FUN_000b3130",
+   "state": 0
+  },
+  {
+   "address": "0x00153e10",
+   "name": "Simulation__SpawnExplosion_Unwind_0",
+   "inside": "FUN_00153e00",
+   "owner": "Simulation::SpawnExplosion",
+   "state": 0
+  },
+  {
+   "address": "0x00153e30",
+   "name": "Simulation__Simulation_Unwind_0",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 0
+  },
+  {
+   "address": "0x00153e3e",
+   "name": "Simulation__Simulation_Unwind_1",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 1
+  },
+  {
+   "address": "0x00153e4c",
+   "name": "Simulation__Simulation_Unwind_2",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 2
+  },
+  {
+   "address": "0x00153e5a",
+   "name": "Simulation__Simulation_Unwind_3",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 3
+  },
+  {
+   "address": "0x00153e68",
+   "name": "Simulation__Simulation_Unwind_4",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 4
+  },
+  {
+   "address": "0x00153e76",
+   "name": "Simulation__Simulation_Unwind_5",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 5
+  },
+  {
+   "address": "0x00153e84",
+   "name": "Simulation__Simulation_Unwind_6",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 6
+  },
+  {
+   "address": "0x00153e92",
+   "name": "Simulation__Simulation_Unwind_7",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 7
+  },
+  {
+   "address": "0x00153ea0",
+   "name": "Simulation__Simulation_Unwind_8",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 8
+  },
+  {
+   "address": "0x00153eae",
+   "name": "Simulation__Simulation_Unwind_9",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 9
+  },
+  {
+   "address": "0x00153ebc",
+   "name": "Simulation__Simulation_Unwind_10",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 10
+  },
+  {
+   "address": "0x00153eca",
+   "name": "Simulation__Simulation_Unwind_11",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 11
+  },
+  {
+   "address": "0x00153ed8",
+   "name": "Simulation__Simulation_Unwind_12",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 12
+  },
+  {
+   "address": "0x00153ee6",
+   "name": "Simulation__Simulation_Unwind_13",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 13
+  },
+  {
+   "address": "0x00153ef5",
+   "name": "Simulation__Simulation_Unwind_14",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 14
+  },
+  {
+   "address": "0x00153f04",
+   "name": "Simulation__Simulation_Unwind_15",
+   "inside": "Simulation__SpawnExplosion_Frame_Handler",
+   "owner": "Simulation::Simulation",
+   "state": 15
+  },
+  {
+   "address": "0x00153f20",
+   "name": "(owner 0xb5310 still unnamed; unwind state 0)",
+   "inside": "Simulation__Simulation_Frame_Handler",
+   "owner": "FUN_000b5310",
+   "state": 0
+  },
+  {
+   "address": "0x00153f2e",
+   "name": "(owner 0xb5310 still unnamed; unwind state 1)",
+   "inside": "Simulation__Simulation_Frame_Handler",
+   "owner": "FUN_000b5310",
+   "state": 1
+  },
+  {
+   "address": "0x00153f3c",
+   "name": "(owner 0xb5310 still unnamed; unwind state 2)",
+   "inside": "Simulation__Simulation_Frame_Handler",
+   "owner": "FUN_000b5310",
+   "state": 2
+  },
+  {
+   "address": "0x00153f4a",
+   "name": "(owner 0xb5310 still unnamed; unwind state 3)",
+   "inside": "Simulation__Simulation_Frame_Handler",
+   "owner": "FUN_000b5310",
+   "state": 3
+  },
+  {
+   "address": "0x00153f58",
+   "name": "(owner 0xb5310 still unnamed; unwind state 4)",
+   "inside": "Simulation__Simulation_Frame_Handler",
+   "owner": "FUN_000b5310",
+   "state": 4
+  },
+  {
+   "address": "0x00153f66",
+   "name": "(owner 0xb5310 still unnamed; unwind state 5)",
+   "inside": "Simulation__Simulation_Frame_Handler",
+   "owner": "FUN_000b5310",
+   "state": 5
+  },
+  {
+   "address": "0x00153f74",
+   "name": "(owner 0xb5310 still unnamed; unwind state 6)",
+   "inside": "Simulation__Simulation_Frame_Handler",
+   "owner": "FUN_000b5310",
+   "state": 6
+  },
+  {
+   "address": "0x00153f82",
+   "name": "(owner 0xb5310 still unnamed; unwind state 7)",
+   "inside": "Simulation__Simulation_Frame_Handler",
+   "owner": "FUN_000b5310",
+   "state": 7
+  },
+  {
+   "address": "0x00153f90",
+   "name": "(owner 0xb5310 still unnamed; unwind state 8)",
+   "inside": "Simulation__Simulation_Frame_Handler",
+   "owner": "FUN_000b5310",
+   "state": 8
+  },
+  {
+   "address": "0x00153f9e",
+   "name": "(owner 0xb5310 still unnamed; unwind state 9)",
+   "inside": "Simulation__Simulation_Frame_Handler",
+   "owner": "FUN_000b5310",
+   "state": 9
+  },
+  {
+   "address": "0x00153fac",
+   "name": "(owner 0xb5310 still unnamed; unwind state 10)",
+   "inside": "Simulation__Simulation_Frame_Handler",
+   "owner": "FUN_000b5310",
+   "state": 10
+  },
+  {
+   "address": "0x00153fba",
+   "name": "(owner 0xb5310 still unnamed; unwind state 11)",
+   "inside": "Simulation__Simulation_Frame_Handler",
+   "owner": "FUN_000b5310",
+   "state": 11
+  },
+  {
+   "address": "0x00153fc8",
+   "name": "(owner 0xb5310 still unnamed; unwind state 12)",
+   "inside": "Simulation__Simulation_Frame_Handler",
+   "owner": "FUN_000b5310",
+   "state": 12
+  },
+  {
+   "address": "0x00153fe0",
+   "name": "Simulation__SpawnCarObject_Unwind_0",
+   "inside": "FUN_00153fd6",
+   "owner": "Simulation::SpawnCarObject",
+   "state": 0
+  },
+  {
+   "address": "0x00154000",
+   "name": "Simulation__SpawnSmackableObject_Unwind_0",
+   "inside": "Simulation__SpawnCarObject_Frame_Handler",
+   "owner": "Simulation::SpawnSmackableObject",
+   "state": 0
+  },
+  {
+   "address": "0x00154020",
+   "name": "Simulation__SpawnHumanObject_Unwind_0",
+   "inside": "Simulation__SpawnSmackableObject_Frame_Handler",
+   "owner": "Simulation::SpawnHumanObject",
+   "state": 0
+  },
+  {
+   "address": "0x00154040",
+   "name": "Simulation__SpawnMissileObject_Unwind_0",
+   "inside": "Simulation__SpawnHumanObject_Frame_Handler",
+   "owner": "Simulation::SpawnMissileObject",
+   "state": 0
+  },
+  {
+   "address": "0x00154060",
+   "name": "Simulation__SpawnMineObject_Unwind_0",
+   "inside": "Simulation__SpawnMissileObject_Frame_Handler",
+   "owner": "Simulation::SpawnMineObject",
+   "state": 0
+  },
+  {
+   "address": "0x00154080",
+   "name": "Simulation__SpawnGrenadeObject_Unwind_0",
+   "inside": "Simulation__SpawnMineObject_Frame_Handler",
+   "owner": "Simulation::SpawnGrenadeObject",
+   "state": 0
+  },
+  {
+   "address": "0x001540a0",
+   "name": "Simulation__SpawnShellObject_Unwind_0",
+   "inside": "Simulation__SpawnGrenadeObject_Frame_Handler",
+   "owner": "Simulation::SpawnShellObject",
+   "state": 0
+  },
+  {
+   "address": "0x001540c0",
+   "name": "Simulation__SpawnExplosionObject_Unwind_0",
+   "inside": "Simulation__SpawnShellObject_Frame_Handler",
+   "owner": "Simulation::SpawnExplosionObject",
+   "state": 0
+  },
+  {
+   "address": "0x001540e0",
+   "name": "Simulation__SpawnNewtonObject_Unwind_0",
+   "inside": "Simulation__SpawnExplosionObject_Frame_Handler",
+   "owner": "Simulation::SpawnNewtonObject",
+   "state": 0
+  },
+  {
+   "address": "0x00154100",
+   "name": "Simulation__SpawnHelicopterObject_Unwind_0",
+   "inside": "Simulation__SpawnNewtonObject_Frame_Handler",
+   "owner": "Simulation::SpawnHelicopterObject",
+   "state": 0
+  },
+  {
+   "address": "0x00154120",
+   "name": "Simulation__SpawnSentryObject_Unwind_0",
+   "inside": "Simulation__SpawnHelicopterObject_Frame_Handler",
+   "owner": "Simulation::SpawnSentryObject",
+   "state": 0
+  },
+  {
+   "address": "0x00154140",
+   "name": "SMissionManager__Update_Unwind_0",
+   "inside": "Simulation__SpawnSentryObject_Frame_Handler",
+   "owner": "SMissionManager::Update",
+   "state": 0
+  },
+  {
+   "address": "0x00154160",
+   "name": "SMissionManager__SMissionManager_Unwind_0",
+   "inside": "SMissionManager__Update_Frame_Handler",
+   "owner": "SMissionManager::SMissionManager",
+   "state": 0
+  },
+  {
+   "address": "0x00154168",
+   "name": "SMissionManager__SMissionManager_Unwind_1",
+   "inside": "SMissionManager__Update_Frame_Handler",
+   "owner": "SMissionManager::SMissionManager",
+   "state": 1
+  },
+  {
+   "address": "0x00154173",
+   "name": "SMissionManager__SMissionManager_Unwind_2",
+   "inside": "SMissionManager__Update_Frame_Handler",
+   "owner": "SMissionManager::SMissionManager",
+   "state": 2
+  },
+  {
+   "address": "0x0015417e",
+   "name": "SMissionManager__SMissionManager_Unwind_3",
+   "inside": "SMissionManager__Update_Frame_Handler",
+   "owner": "SMissionManager::SMissionManager",
+   "state": 3
+  },
+  {
+   "address": "0x00154194",
+   "name": "SMissionManager__SMissionManager_Unwind_4",
+   "inside": "SMissionManager__Update_Frame_Handler",
+   "owner": "SMissionManager::SMissionManager",
+   "state": 4
+  },
+  {
+   "address": "0x001541ac",
+   "name": "SMissionManager__SMissionManager_Unwind_5",
+   "inside": "SMissionManager__Update_Frame_Handler",
+   "owner": "SMissionManager::SMissionManager",
+   "state": 5
+  },
+  {
+   "address": "0x001541d0",
+   "name": "SMissionManager__~SMissionManager_Unwind_0",
+   "inside": "SMissionManager__SMissionManager_Frame_Handler",
+   "owner": "SMissionManager::~SMissionManager",
+   "state": 0
+  },
+  {
+   "address": "0x001541d8",
+   "name": "SMissionManager__~SMissionManager_Unwind_1",
+   "inside": "SMissionManager__SMissionManager_Frame_Handler",
+   "owner": "SMissionManager::~SMissionManager",
+   "state": 1
+  },
+  {
+   "address": "0x001541e3",
+   "name": "SMissionManager__~SMissionManager_Unwind_2",
+   "inside": "SMissionManager__SMissionManager_Frame_Handler",
+   "owner": "SMissionManager::~SMissionManager",
+   "state": 2
+  },
+  {
+   "address": "0x001541ee",
+   "name": "SMissionManager__~SMissionManager_Unwind_3",
+   "inside": "SMissionManager__SMissionManager_Frame_Handler",
+   "owner": "SMissionManager::~SMissionManager",
+   "state": 3
+  },
+  {
+   "address": "0x00154204",
+   "name": "SMissionManager__~SMissionManager_Unwind_4",
+   "inside": "SMissionManager__SMissionManager_Frame_Handler",
+   "owner": "SMissionManager::~SMissionManager",
+   "state": 4
+  },
+  {
+   "address": "0x00154230",
+   "name": "SMissionManager__Construct_Unwind_0",
+   "inside": "SMissionManager__~SMissionManager_Frame_Handler",
+   "owner": "SMissionManager::Construct",
+   "state": 0
+  },
+  {
+   "address": "0x00154250",
+   "name": "(owner 0xb9090 still unnamed; unwind state 0)",
+   "inside": "SMissionManager__Construct_Frame_Handler",
+   "owner": "FUN_000b9090",
+   "state": 0
+  },
+  {
+   "address": "0x00154270",
+   "name": "SWeaponManager__SWeaponManager_Unwind_0",
+   "inside": "FUN_00154258",
+   "owner": "SWeaponManager::SWeaponManager",
+   "state": 0
+  },
+  {
+   "address": "0x00154290",
+   "name": "SWeaponManager__FireWeapon_Unwind_0",
+   "inside": "SWeaponManager__SWeaponManager_Frame_Handler",
+   "owner": "SWeaponManager::FireWeapon",
+   "state": 0
+  },
+  {
+   "address": "0x001542b0",
+   "name": "SWeaponManager__HandleNuclearSequence_Unwind_0",
+   "inside": "SWeaponManager__FireWeapon_Frame_Handler",
+   "owner": "SWeaponManager::HandleNuclearSequence",
+   "state": 0
+  },
+  {
+   "address": "0x001542bb",
+   "name": "SWeaponManager__HandleNuclearSequence_Unwind_1",
+   "inside": "SWeaponManager__FireWeapon_Frame_Handler",
+   "owner": "SWeaponManager::HandleNuclearSequence",
+   "state": 1
+  },
+  {
+   "address": "0x001542d0",
+   "name": "SWeaponManager__HandleNuclearSequence_Unwind_2",
+   "inside": "SWeaponManager__FireWeapon_Frame_Handler",
+   "owner": "SWeaponManager::HandleNuclearSequence",
+   "state": 2
+  },
+  {
+   "address": "0x001542f0",
+   "name": "(owner 0xbd9f0 still unnamed; unwind state 0)",
+   "inside": "SWeaponManager__HandleNuclearSequence_Frame_Handler",
+   "owner": "FUN_000bd9f0",
+   "state": 0
+  },
+  {
+   "address": "0x00154350",
+   "name": "(owner 0xbe2d0 still unnamed; unwind state 0)",
+   "inside": "FUN_00154340",
+   "owner": "FUN_000be2d0",
+   "state": 0
+  },
+  {
+   "address": "0x00154370",
+   "name": "WCollider__~WCollider_Unwind_0",
+   "inside": "FUN_00154358",
+   "owner": "WCollider::~WCollider",
+   "state": 0
+  },
+  {
+   "address": "0x0015437b",
+   "name": "WCollider__~WCollider_Unwind_1",
+   "inside": "FUN_00154358",
+   "owner": "WCollider::~WCollider",
+   "state": 1
+  },
+  {
+   "address": "0x00154386",
+   "name": "WCollider__~WCollider_Unwind_2",
+   "inside": "FUN_00154358",
+   "owner": "WCollider::~WCollider",
+   "state": 2
+  },
+  {
+   "address": "0x001543a0",
+   "name": "WCollisionMgr__GetWorldHeightAtPoint_Unwind_0",
+   "inside": "WCollider__~WCollider_Frame_Handler",
+   "owner": "WCollisionMgr::GetWorldHeightAtPoint",
+   "state": 0
+  },
+  {
+   "address": "0x001543c0",
+   "name": "(owner 0xc0e00 still unnamed; unwind state 0)",
+   "inside": "WCollisionMgr__GetWorldHeightAtPoint_Frame_Handler",
+   "owner": "FUN_000c0e00",
+   "state": 0
+  },
+  {
+   "address": "0x001543f0",
+   "name": "(owner 0xc1380 still unnamed; unwind state 0)",
+   "inside": "FUN_001543e0",
+   "owner": "FUN_000c1380",
+   "state": 0
+  },
+  {
+   "address": "0x00154410",
+   "name": "(owner 0xc1500 still unnamed; unwind state 0)",
+   "inside": "FUN_00154402",
+   "owner": "FUN_000c1500",
+   "state": 0
+  },
+  {
+   "address": "0x00154490",
+   "name": "WCollisionMgr__GetInstanceList_Unwind_0",
+   "inside": "FUN_00154480",
+   "owner": "WCollisionMgr::GetInstanceList",
+   "state": 0
+  },
+  {
+   "address": "0x001544b0",
+   "name": "WCollisionMgr__GetObjectLists_Unwind_0",
+   "inside": "WCollisionMgr__GetInstanceList_Frame_Handler",
+   "owner": "WCollisionMgr::GetObjectLists",
+   "state": 0
+  },
+  {
+   "address": "0x001544e0",
+   "name": "WCollisionMgr__CheckHitWorld_Unwind_0",
+   "inside": "FUN_001544d0",
+   "owner": "WCollisionMgr::CheckHitWorld",
+   "state": 0
+  },
+  {
+   "address": "0x001544eb",
+   "name": "WCollisionMgr__CheckHitWorld_Unwind_1",
+   "inside": "FUN_001544d0",
+   "owner": "WCollisionMgr::CheckHitWorld",
+   "state": 1
+  },
+  {
+   "address": "0x001544f3",
+   "name": "WCollisionMgr__CheckHitWorld_Unwind_2",
+   "inside": "FUN_001544d0",
+   "owner": "WCollisionMgr::CheckHitWorld",
+   "state": 2
+  },
+  {
+   "address": "0x001544fe",
+   "name": "WCollisionMgr__CheckHitWorld_Unwind_3",
+   "inside": "FUN_001544d0",
+   "owner": "WCollisionMgr::CheckHitWorld",
+   "state": 3
+  },
+  {
+   "address": "0x00154520",
+   "name": "WCollisionMgr__GetInstanceStripList_Unwind_0",
+   "inside": "WCollisionMgr__CheckHitWorld_Frame_Handler",
+   "owner": "WCollisionMgr::GetInstanceStripList",
+   "state": 0
+  },
+  {
+   "address": "0x00154540",
+   "name": "(owner 0xc46f0 still unnamed; unwind state 1)",
+   "inside": "WCollisionMgr__GetInstanceStripList_Frame_Handler",
+   "owner": "FUN_000c46f0",
+   "state": 1
+  },
+  {
+   "address": "0x00154560",
+   "name": "WCollisionMgr__CheckHitWindow_Unwind_0",
+   "inside": "FUN_00154551",
+   "owner": "WCollisionMgr::CheckHitWindow",
+   "state": 0
+  },
+  {
+   "address": "0x0015456b",
+   "name": "WCollisionMgr__CheckHitWindow_Unwind_1",
+   "inside": "FUN_00154551",
+   "owner": "WCollisionMgr::CheckHitWindow",
+   "state": 1
+  },
+  {
+   "address": "0x00154576",
+   "name": "WCollisionMgr__CheckHitWindow_Unwind_2",
+   "inside": "FUN_00154551",
+   "owner": "WCollisionMgr::CheckHitWindow",
+   "state": 2
+  },
+  {
+   "address": "0x001545a0",
+   "name": "(owner 0xc5460 still unnamed; unwind state 0)",
+   "inside": "WCollisionMgr__CheckHitWindow_Frame_Handler",
+   "owner": "FUN_000c5460",
+   "state": 0
+  },
+  {
+   "address": "0x001545c0",
+   "name": "WCollisionMgr__WCollisionMgr_Unwind_0",
+   "inside": "FUN_001545ab",
+   "owner": "WCollisionMgr::WCollisionMgr",
+   "state": 0
+  },
+  {
+   "address": "0x001545e0",
+   "name": "WCollisionMgr__Init_Unwind_0",
+   "inside": "WCollisionMgr__WCollisionMgr_Frame_Handler",
+   "owner": "WCollisionMgr::Init",
+   "state": 0
+  },
+  {
+   "address": "0x00154600",
+   "name": "(owner 0xc5a80 still unnamed; unwind state 0)",
+   "inside": "WCollisionMgr__Init_Frame_Handler",
+   "owner": "FUN_000c5a80",
+   "state": 0
+  },
+  {
+   "address": "0x00154630",
+   "name": "(owner 0xc5f10 still unnamed; unwind state 0)",
+   "inside": "FUN_00154620",
+   "owner": "FUN_000c5f10",
+   "state": 0
+  },
+  {
+   "address": "0x00154650",
+   "name": "WGrid__Init_Unwind_0",
+   "inside": "FUN_0015463b",
+   "owner": "WGrid::Init",
+   "state": 0
+  },
+  {
+   "address": "0x00154670",
+   "name": "WGrid__AddGridNodeDynamicElement_Unwind_0",
+   "inside": "WGrid__Init_Frame_Handler",
+   "owner": "WGrid::AddGridNodeDynamicElement",
+   "state": 0
+  },
+  {
+   "address": "0x00154678",
+   "name": "WGrid__AddGridNodeDynamicElement_Unwind_1",
+   "inside": "WGrid__Init_Frame_Handler",
+   "owner": "WGrid::AddGridNodeDynamicElement",
+   "state": 1
+  },
+  {
+   "address": "0x00154690",
+   "name": "WRender__Init_Unwind_0",
+   "inside": "WGrid__AddGridNodeDynamicElement_Frame_Handler",
+   "owner": "WRender::Init",
+   "state": 0
+  },
+  {
+   "address": "0x001546b0",
+   "name": "WRoadNetwork__GetSegmentCurveStep_Unwind_0",
+   "inside": "WRender__Init_Frame_Handler",
+   "owner": "WRoadNetwork::GetSegmentCurveStep",
+   "state": 0
+  },
+  {
+   "address": "0x001546d0",
+   "name": "WRoadNav__WRoadNav_Unwind_0",
+   "inside": "WRoadNetwork__GetSegmentCurveStep_Frame_Handler",
+   "owner": "WRoadNav::WRoadNav",
+   "state": 0
+  },
+  {
+   "address": "0x001546f0",
+   "name": "(owner 0xcc930 still unnamed; unwind state 0)",
+   "inside": "WRoadNav__WRoadNav_Frame_Handler",
+   "owner": "FUN_000cc930",
+   "state": 0
+  },
+  {
+   "address": "0x00154710",
+   "name": "(owner 0xccc20 still unnamed; unwind state 0)",
+   "inside": "FUN_001546f8",
+   "owner": "FUN_000ccc20",
+   "state": 0
+  },
+  {
+   "address": "0x00154730",
+   "name": "WSoundGroup__Add_Unwind_0",
+   "inside": "FUN_00154718",
+   "owner": "WSoundGroup::Add",
+   "state": 0
+  },
+  {
+   "address": "0x00154742",
+   "name": "WSoundGroup__Add_Unwind_1",
+   "inside": "FUN_00154718",
+   "owner": "WSoundGroup::Add",
+   "state": 1
+  },
+  {
+   "address": "0x00154760",
+   "name": "WSoundGroup__WSoundGroup_Unwind_0",
+   "inside": "WSoundGroup__Add_Frame_Handler",
+   "owner": "WSoundGroup::WSoundGroup",
+   "state": 0
+  },
+  {
+   "address": "0x00154780",
+   "name": "(owner 0xcdfd0 still unnamed; unwind state 0)",
+   "inside": "WSoundGroup__WSoundGroup_Frame_Handler",
+   "owner": "FUN_000cdfd0",
+   "state": 0
+  },
+  {
+   "address": "0x001547a0",
+   "name": "WTargetPicker__GetScreenPos_Unwind_0",
+   "inside": "FUN_0015478f",
+   "owner": "WTargetPicker::GetScreenPos",
+   "state": 0
+  },
+  {
+   "address": "0x001547c0",
+   "name": "(owner 0xcebc0 still unnamed; unwind state 0)",
+   "inside": "WTargetPicker__GetScreenPos_Frame_Handler",
+   "owner": "FUN_000cebc0",
+   "state": 0
+  },
+  {
+   "address": "0x001547cb",
+   "name": "(owner 0xcebc0 still unnamed; unwind state 1)",
+   "inside": "WTargetPicker__GetScreenPos_Frame_Handler",
+   "owner": "FUN_000cebc0",
+   "state": 1
+  },
+  {
+   "address": "0x001547e0",
+   "name": "(owner 0xceca0 still unnamed; unwind state 0)",
+   "inside": "FUN_001547d6",
+   "owner": "FUN_000ceca0",
+   "state": 0
+  },
+  {
+   "address": "0x00154800",
+   "name": "WTriggerManager__CheckCollide_Unwind_0",
+   "inside": "FUN_001547e8",
+   "owner": "WTriggerManager::CheckCollide",
+   "state": 0
+  },
+  {
+   "address": "0x0015480b",
+   "name": "WTriggerManager__CheckCollide_Unwind_1",
+   "inside": "FUN_001547e8",
+   "owner": "WTriggerManager::CheckCollide",
+   "state": 1
+  },
+  {
+   "address": "0x00154820",
+   "name": "WTriggerManager__Process_Unwind_0",
+   "inside": "WTriggerManager__CheckCollide_Frame_Handler",
+   "owner": "WTriggerManager::Process",
+   "state": 0
+  },
+  {
+   "address": "0x00154840",
+   "name": "WTriggerManager__Process_Unwind_0",
+   "inside": "WTriggerManager__Process_Frame_Handler_154828",
+   "owner": "WTriggerManager::Process",
+   "state": 0
+  },
+  {
+   "address": "0x00154860",
+   "name": "WWorld__WWorld_Unwind_0",
+   "inside": "WTriggerManager__Process_Frame_Handler_154848",
+   "owner": "WWorld::WWorld",
+   "state": 0
+  },
+  {
+   "address": "0x00154868",
+   "name": "WWorld__WWorld_Unwind_1",
+   "inside": "WTriggerManager__Process_Frame_Handler_154848",
+   "owner": "WWorld::WWorld",
+   "state": 1
+  },
+  {
+   "address": "0x00154890",
+   "name": "WWorld__LoadTrackFile_Unwind_0",
+   "inside": "WWorld__WWorld_Frame_Handler",
+   "owner": "WWorld::LoadTrackFile",
+   "state": 0
+  },
+  {
+   "address": "0x001548b0",
+   "name": "(owner 0xd1570 still unnamed; unwind state 0)",
+   "inside": "WWorld__LoadTrackFile_Frame_Handler",
+   "owner": "FUN_000d1570",
+   "state": 0
+  },
+  {
+   "address": "0x001548d0",
+   "name": "WWorld__~WWorld_Unwind_0",
+   "inside": "FUN_001548bf",
+   "owner": "WWorld::~WWorld",
+   "state": 0
+  },
+  {
+   "address": "0x001548f0",
+   "name": "WWorld__Reset_Unwind_0",
+   "inside": "WWorld__~WWorld_Frame_Handler",
+   "owner": "WWorld::Reset",
+   "state": 0
+  },
+  {
+   "address": "0x00154910",
+   "name": "(owner 0xd1ba0 still unnamed; unwind state 0)",
+   "inside": "WWorld__Reset_Frame_Handler",
+   "owner": "FUN_000d1ba0",
+   "state": 0
+  },
+  {
+   "address": "0x00154950",
+   "name": "WWorld__Open_Unwind_0",
+   "inside": "FUN_00154940",
+   "owner": "WWorld::Open",
+   "state": 0
+  },
+  {
+   "address": "0x0015495b",
+   "name": "WWorld__Open_Unwind_1",
+   "inside": "FUN_00154940",
+   "owner": "WWorld::Open",
+   "state": 1
+  },
+  {
+   "address": "0x00154969",
+   "name": "WWorld__Open_Unwind_2",
+   "inside": "FUN_00154940",
+   "owner": "WWorld::Open",
+   "state": 2
+  },
+  {
+   "address": "0x00154990",
+   "name": "WWorldPos__FindClosestFace_Unwind_0",
+   "inside": "WWorld__Open_Frame_Handler",
+   "owner": "WWorldPos::FindClosestFace",
+   "state": 0
+  },
+  {
+   "address": "0x001549b0",
+   "name": "GFX__Init_Unwind_0",
+   "inside": "WWorldPos__FindClosestFace_Frame_Handler",
+   "owner": "GFX::Init",
+   "state": 0
+  },
+  {
+   "address": "0x001549d0",
+   "name": "GFXGallery__CANVAS_Draw_Unwind_0",
+   "inside": "GFX__Init_Frame_Handler",
+   "owner": "GFXGallery::CANVAS_Draw",
+   "state": 0
+  },
+  {
+   "address": "0x001549f0",
+   "name": "GGallery__GGallery_Unwind_0",
+   "inside": "GFXGallery__CANVAS_Draw_Frame_Handler",
+   "owner": "GGallery::GGallery",
+   "state": 0
+  },
+  {
+   "address": "0x00154a10",
+   "name": "GGallery__LINE_Draw2DStrip_Unwind_0",
+   "inside": "GGallery__GGallery_Frame_Handler",
+   "owner": "GGallery::LINE_Draw2DStrip",
+   "state": 0
+  },
+  {
+   "address": "0x00154a30",
+   "name": "GGirlieMaterial__GGirlieMaterial_Unwind_0",
+   "inside": "GGallery__LINE_Draw2DStrip_Frame_Handler",
+   "owner": "GGirlieMaterial::GGirlieMaterial",
+   "state": 0
+  },
+  {
+   "address": "0x00154a3f",
+   "name": "GGirlieMaterial__GGirlieMaterial_Unwind_1",
+   "inside": "GGallery__LINE_Draw2DStrip_Frame_Handler",
+   "owner": "GGirlieMaterial::GGirlieMaterial",
+   "state": 1
+  },
+  {
+   "address": "0x00154a60",
+   "name": "GGirl__InitGirl_Unwind_0",
+   "inside": "GGirlieMaterial__GGirlieMaterial_Frame_Handler",
+   "owner": "GGirl::InitGirl",
+   "state": 0
+  },
+  {
+   "address": "0x00154a80",
+   "name": "GHud__Reset_Unwind_0",
+   "inside": "GGirl__InitGirl_Frame_Handler",
+   "owner": "GHud::Reset",
+   "state": 0
+  },
+  {
+   "address": "0x00154aa0",
+   "name": "GOrthoHudView__PostRender_Unwind_0",
+   "inside": "GHud__Reset_Frame_Handler",
+   "owner": "GOrthoHudView::PostRender",
+   "state": 0
+  },
+  {
+   "address": "0x00154aaf",
+   "name": "GOrthoHudView__PostRender_Unwind_1",
+   "inside": "GHud__Reset_Frame_Handler",
+   "owner": "GOrthoHudView::PostRender",
+   "state": 1
+  },
+  {
+   "address": "0x00154ad0",
+   "name": "GHud__GHud_Unwind_0",
+   "inside": "GOrthoHudView__PostRender_Frame_Handler",
+   "owner": "GHud::GHud",
+   "state": 0
+  },
+  {
+   "address": "0x00154ae2",
+   "name": "GHud__GHud_Unwind_1",
+   "inside": "GOrthoHudView__PostRender_Frame_Handler",
+   "owner": "GHud::GHud",
+   "state": 1
+  },
+  {
+   "address": "0x00154af7",
+   "name": "GHud__GHud_Unwind_2",
+   "inside": "GOrthoHudView__PostRender_Frame_Handler",
+   "owner": "GHud::GHud",
+   "state": 2
+  },
+  {
+   "address": "0x00154b05",
+   "name": "GHud__GHud_Unwind_3",
+   "inside": "GOrthoHudView__PostRender_Frame_Handler",
+   "owner": "GHud::GHud",
+   "state": 3
+  },
+  {
+   "address": "0x00154b30",
+   "name": "GHud__PauseOff_Unwind_0",
+   "inside": "GHud__GHud_Frame_Handler",
+   "owner": "GHud::PauseOff",
+   "state": 0
+  },
+  {
+   "address": "0x00154b50",
+   "name": "GLoadingScreen__InitLoadDots_Unwind_0",
+   "inside": "GHud__PauseOff_Frame_Handler",
+   "owner": "GLoadingScreen::InitLoadDots",
+   "state": 0
+  },
+  {
+   "address": "0x00154b70",
+   "name": "GLoadingScreen__LoadAndDrawUnLoadingScreen_Unwind_0",
+   "inside": "GLoadingScreen__InitLoadDots_Frame_Handler",
+   "owner": "GLoadingScreen::LoadAndDrawUnLoadingScreen",
+   "state": 0
+  },
+  {
+   "address": "0x00154b90",
+   "name": "GLoadingScreen__InitLoadScreen_Unwind_0",
+   "inside": "GLoadingScreen__LoadAndDrawUnLoadingScreen_Frame_Handler",
+   "owner": "GLoadingScreen::InitLoadScreen",
+   "state": 0
+  },
+  {
+   "address": "0x00154bb0",
+   "name": "(owner 0xe2ce0 still unnamed; unwind state 1)",
+   "inside": "GLoadingScreen__InitLoadScreen_Frame_Handler",
+   "owner": "FUN_000e2ce0",
+   "state": 1
+  },
+  {
+   "address": "0x00154bd0",
+   "name": "(owner 0xe2d80 still unnamed; unwind state 0)",
+   "inside": "FUN_00154bc1",
+   "owner": "FUN_000e2d80",
+   "state": 0
+  },
+  {
+   "address": "0x00154bf0",
+   "name": "GLoadingScreen__Print_Unwind_0",
+   "inside": "FUN_00154bd8",
+   "owner": "GLoadingScreen::Print",
+   "state": 0
+  },
+  {
+   "address": "0x00154c10",
+   "name": "(owner 0xe6390 still unnamed; unwind state 0)",
+   "inside": "GLoadingScreen__Print_Frame_Handler",
+   "owner": "FUN_000e6390",
+   "state": 0
+  },
+  {
+   "address": "0x00154c30",
+   "name": "EAGL__DynamicLoader__Initialize_Unwind_0",
+   "inside": "FUN_00154c18",
+   "owner": "EAGL::DynamicLoader::Initialize",
+   "state": 0
+  },
+  {
+   "address": "0x00154c50",
+   "name": "EAGL__RenderContext__~RenderContext_Unwind_0",
+   "inside": "EAGL__DynamicLoader__Initialize_Frame_Handler",
+   "owner": "EAGL::RenderContext::~RenderContext",
+   "state": 0
+  },
+  {
+   "address": "0x00154c70",
+   "name": "EAGL__Device__NewRenderContext_Unwind_0",
+   "inside": "EAGL__RenderContext__~RenderContext_Frame_Handler",
+   "owner": "EAGL::Device::NewRenderContext",
+   "state": 0
+  },
+  {
+   "address": "0x00154c8c",
+   "name": "EAGL__DeviceExtension__NewTextureRenderContext_Unwind_0",
+   "inside": "EAGL__Device__NewRenderContext_Frame_Handler",
+   "owner": "EAGL::DeviceExtension::NewTextureRenderContext",
+   "state": 0
+  },
+  {
+   "address": "0x00154cb0",
+   "name": "(owner 0xe9aa0 still unnamed; unwind state 0)",
+   "inside": "EAGL__DeviceExtension__NewTextureRenderContext_Frame_Handler",
+   "owner": "FUN_000e9aa0",
+   "state": 0
+  },
+  {
+   "address": "0x00154cc9",
+   "name": "(owner 0xe9b40 still unnamed; unwind state 0)",
+   "inside": "FUN_00154cbf",
+   "owner": "FUN_000e9b40",
+   "state": 0
+  },
+  {
+   "address": "0x00154ce2",
+   "name": "(owner 0xe9be0 still unnamed; unwind state 0)",
+   "inside": "FUN_00154cd8",
+   "owner": "FUN_000e9be0",
+   "state": 0
+  },
+  {
+   "address": "0x00154cfb",
+   "name": "(owner 0xe9c90 still unnamed; unwind state 0)",
+   "inside": "FUN_00154cf1",
+   "owner": "FUN_000e9c90",
+   "state": 0
+  },
+  {
+   "address": "0x00154d14",
+   "name": "(owner 0xe9d40 still unnamed; unwind state 0)",
+   "inside": "FUN_00154d0a",
+   "owner": "FUN_000e9d40",
+   "state": 0
+  },
+  {
+   "address": "0x00154d2d",
+   "name": "(owner 0xe9df0 still unnamed; unwind state 0)",
+   "inside": "FUN_00154d23",
+   "owner": "FUN_000e9df0",
+   "state": 0
+  },
+  {
+   "address": "0x00154d46",
+   "name": "(owner 0xe9ea0 still unnamed; unwind state 0)",
+   "inside": "FUN_00154d3c",
+   "owner": "FUN_000e9ea0",
+   "state": 0
+  },
+  {
+   "address": "0x00154d5f",
+   "name": "(owner 0xe9f40 still unnamed; unwind state 0)",
+   "inside": "FUN_00154d55",
+   "owner": "FUN_000e9f40",
+   "state": 0
+  },
+  {
+   "address": "0x00154d78",
+   "name": "(owner 0xe9fe0 still unnamed; unwind state 0)",
+   "inside": "FUN_00154d6e",
+   "owner": "FUN_000e9fe0",
+   "state": 0
+  },
+  {
+   "address": "0x00154d91",
+   "name": "(owner 0xea080 still unnamed; unwind state 0)",
+   "inside": "FUN_00154d87",
+   "owner": "FUN_000ea080",
+   "state": 0
+  },
+  {
+   "address": "0x00154db0",
+   "name": "(owner 0xedb30 still unnamed; unwind state 0)",
+   "inside": "FUN_00154da0",
+   "owner": "FUN_000edb30",
+   "state": 0
+  },
+  {
+   "address": "0x00154dd0",
+   "name": "(owner 0xebee0 still unnamed; unwind state 0)",
+   "inside": "FUN_00154dbf",
+   "owner": "FUN_000ebee0",
+   "state": 0
+  },
+  {
+   "address": "0x00154de2",
+   "name": "(owner 0xec610 still unnamed; unwind state 0)",
+   "inside": "FUN_00154dd8",
+   "owner": "FUN_000ec610",
+   "state": 0
+  },
+  {
+   "address": "0x00154dfb",
+   "name": "(owner 0xec6e0 still unnamed; unwind state 0)",
+   "inside": "FUN_00154df1",
+   "owner": "FUN_000ec6e0",
+   "state": 0
+  },
+  {
+   "address": "0x00154e14",
+   "name": "(owner 0xec8a0 still unnamed; unwind state 0)",
+   "inside": "FUN_00154e0a",
+   "owner": "FUN_000ec8a0",
+   "state": 0
+  },
+  {
+   "address": "0x00154e2d",
+   "name": "EAGL__TAR__TAR_Unwind_0",
+   "inside": "FUN_00154e23",
+   "owner": "EAGL::TAR::TAR",
+   "state": 0
+  },
+  {
+   "address": "0x00154e3f",
+   "name": "EAGL__TAR__~TAR_Unwind_0",
+   "inside": "EAGL__TAR__TAR_Frame_Handler",
+   "owner": "EAGL::TAR::~TAR",
+   "state": 0
+  },
+  {
+   "address": "0x00154e51",
+   "name": "EAGLInternal__RuntimeAllocTARConstructor_Unwind_0",
+   "inside": "EAGL__TAR__~TAR_Frame_Handler",
+   "owner": "EAGLInternal::RuntimeAllocTARConstructor",
+   "state": 0
+  },
+  {
+   "address": "0x00154e59",
+   "name": "EAGLInternal__RuntimeAllocTARConstructor_Unwind_1",
+   "inside": "EAGL__TAR__~TAR_Frame_Handler",
+   "owner": "EAGLInternal::RuntimeAllocTARConstructor",
+   "state": 1
+  },
+  {
+   "address": "0x00154e74",
+   "name": "EAGLInternal__TARConstructor_Unwind_0",
+   "inside": "EAGLInternal__RuntimeAllocTARConstructor_Frame_Handler",
+   "owner": "EAGLInternal::TARConstructor",
+   "state": 0
+  },
+  {
+   "address": "0x00154e88",
+   "name": "EAGLInternal__TARConstructor_Unwind_1",
+   "inside": "EAGLInternal__RuntimeAllocTARConstructor_Frame_Handler",
+   "owner": "EAGLInternal::TARConstructor",
+   "state": 1
+  },
+  {
+   "address": "0x00154eb0",
+   "name": "EAGL__RenderContext__NewViewPort_Unwind_0",
+   "inside": "EAGLInternal__TARConstructor_Frame_Handler",
+   "owner": "EAGL::RenderContext::NewViewPort",
+   "state": 0
+  },
+  {
+   "address": "0x00154ed0",
+   "name": "(owner 0xee760 still unnamed; unwind state 0)",
+   "inside": "EAGL__RenderContext__NewViewPort_Frame_Handler",
+   "owner": "FUN_000ee760",
+   "state": 0
+  },
+  {
+   "address": "0x00154edf",
+   "name": "(owner 0xee760 still unnamed; unwind state 1)",
+   "inside": "EAGL__RenderContext__NewViewPort_Frame_Handler",
+   "owner": "FUN_000ee760",
+   "state": 1
+  },
+  {
+   "address": "0x00154eee",
+   "name": "(owner 0xee760 still unnamed; unwind state 2)",
+   "inside": "EAGL__RenderContext__NewViewPort_Frame_Handler",
+   "owner": "FUN_000ee760",
+   "state": 2
+  },
+  {
+   "address": "0x00154f10",
+   "name": "EAGLInternal__RuntimeAllocGeoPrimStateConstructor_Unwind_0",
+   "inside": "FUN_00154efd",
+   "owner": "EAGLInternal::RuntimeAllocGeoPrimStateConstructor",
+   "state": 0
+  },
+  {
+   "address": "0x00154f30",
+   "name": "(owner 0xf1050 still unnamed; unwind state 0)",
+   "inside": "EAGLInternal__RuntimeAllocGeoPrimStateConstructor_Frame_Handler",
+   "owner": "FUN_000f1050",
+   "state": 0
+  },
+  {
+   "address": "0x00154f3f",
+   "name": "(owner 0xf1050 still unnamed; unwind state 1)",
+   "inside": "EAGLInternal__RuntimeAllocGeoPrimStateConstructor_Frame_Handler",
+   "owner": "FUN_000f1050",
+   "state": 1
+  },
+  {
+   "address": "0x00154f60",
+   "name": "EAGL__TextureRenderContext__TextureRenderContext_Unwind_0",
+   "inside": "FUN_00154f4e",
+   "owner": "EAGL::TextureRenderContext::TextureRenderContext",
+   "state": 0
+  },
+  {
+   "address": "0x00154f72",
+   "name": "EAGL__TextureRenderContext__NewViewPort_Unwind_0",
+   "inside": "EAGL__TextureRenderContext__TextureRenderContext_Frame_Handler",
+   "owner": "EAGL::TextureRenderContext::NewViewPort",
+   "state": 0
+  },
+  {
+   "address": "0x00154f8e",
+   "name": "(owner 0xf35a0 still unnamed; unwind state 0)",
+   "inside": "EAGL__TextureRenderContext__NewViewPort_Frame_Handler",
+   "owner": "FUN_000f35a0",
+   "state": 0
+  },
+  {
+   "address": "0x00154fa0",
+   "name": "EAGL__ViewPort__ViewPort_Unwind_0",
+   "inside": "FUN_00154f96",
+   "owner": "EAGL::ViewPort::ViewPort",
+   "state": 0
+  },
+  {
+   "address": "0x00154fb2",
+   "name": "(owner 0xf3860 still unnamed; unwind state 0)",
+   "inside": "EAGL__ViewPort__ViewPort_Frame_Handler",
+   "owner": "FUN_000f3860",
+   "state": 0
+  },
+  {
+   "address": "0x00154fd0",
+   "name": "~RuntimeAllocConstructorPool_Unwind_0",
+   "inside": "FUN_00154fba",
+   "owner": "~RuntimeAllocConstructorPool",
+   "state": 0
+  },
+  {
+   "address": "0x00154fd8",
+   "name": "~RuntimeAllocConstructorPool_Unwind_1",
+   "inside": "FUN_00154fba",
+   "owner": "~RuntimeAllocConstructorPool",
+   "state": 1
+  },
+  {
+   "address": "0x00154fed",
+   "name": "~ConstructorPool_Unwind_0",
+   "inside": "FUN_00154fe3",
+   "owner": "~ConstructorPool",
+   "state": 0
+  },
+  {
+   "address": "0x00154ff5",
+   "name": "~ConstructorPool_Unwind_1",
+   "inside": "FUN_00154fe3",
+   "owner": "~ConstructorPool",
+   "state": 1
+  },
+  {
+   "address": "0x00155010",
+   "name": "EAGL__ProfilerRegion__DrawRegions_Unwind_0",
+   "inside": "FUN_00155000",
+   "owner": "EAGL::ProfilerRegion::DrawRegions",
+   "state": 0
+  },
+  {
+   "address": "0x0015502c",
+   "name": "(owner 0xf52d0 still unnamed; unwind state 0)",
+   "inside": "EAGL__ProfilerRegion__DrawRegions_Frame_Handler",
+   "owner": "FUN_000f52d0",
+   "state": 0
+  },
+  {
+   "address": "0x00155040",
+   "name": "(owner 0xf5500 still unnamed; unwind state 0)",
+   "inside": "FUN_00155034",
+   "owner": "FUN_000f5500",
+   "state": 0
+  },
+  {
+   "address": "0x00155059",
+   "name": "(owner 0xf58b0 still unnamed; unwind state 0)",
+   "inside": "FUN_0015504f",
+   "owner": "FUN_000f58b0",
+   "state": 0
+  },
+  {
+   "address": "0x00155064",
+   "name": "(owner 0xf58b0 still unnamed; unwind state 1)",
+   "inside": "FUN_0015504f",
+   "owner": "FUN_000f58b0",
+   "state": 1
+  },
+  {
+   "address": "0x00155073",
+   "name": "(owner 0xf58b0 still unnamed; unwind state 2)",
+   "inside": "FUN_0015504f",
+   "owner": "FUN_000f58b0",
+   "state": 2
+  },
+  {
+   "address": "0x0015508c",
+   "name": "EAGL__DrawTextured__Init_Unwind_0",
+   "inside": "FUN_00155082",
+   "owner": "EAGL::DrawTextured::Init",
+   "state": 0
+  },
+  {
+   "address": "0x0015509b",
+   "name": "EAGL__DrawTextured__Init_Unwind_1",
+   "inside": "FUN_00155082",
+   "owner": "EAGL::DrawTextured::Init",
+   "state": 1
+  },
+  {
+   "address": "0x001550b4",
+   "name": "EAGL__DrawTextured__~DrawTextured_Unwind_0",
+   "inside": "EAGL__DrawTextured__Init_Frame_Handler",
+   "owner": "EAGL::DrawTextured::~DrawTextured",
+   "state": 0
+  },
+  {
+   "address": "0x001550c9",
+   "name": "(owner 0xf5cf0 still unnamed; unwind state 0)",
+   "inside": "EAGL__DrawTextured__~DrawTextured_Frame_Handler",
+   "owner": "FUN_000f5cf0",
+   "state": 0
+  },
+  {
+   "address": "0x001550e0",
+   "name": "(owner 0xf6890 still unnamed; unwind state 0)",
+   "inside": "FUN_001550d4",
+   "owner": "FUN_000f6890",
+   "state": 0
+  },
+  {
+   "address": "0x001550ef",
+   "name": "(owner 0xf6890 still unnamed; unwind state 1)",
+   "inside": "FUN_001550d4",
+   "owner": "FUN_000f6890",
+   "state": 1
+  },
+  {
+   "address": "0x00155110",
+   "name": "(owner 0xf7240 still unnamed; unwind state 0)",
+   "inside": "FUN_001550fe",
+   "owner": "FUN_000f7240",
+   "state": 0
+  },
+  {
+   "address": "0x00155130",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 0)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 0
+  },
+  {
+   "address": "0x00155141",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 1)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 1
+  },
+  {
+   "address": "0x00155152",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 2)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 2
+  },
+  {
+   "address": "0x00155163",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 3)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 3
+  },
+  {
+   "address": "0x00155174",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 4)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 4
+  },
+  {
+   "address": "0x00155185",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 5)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 5
+  },
+  {
+   "address": "0x00155196",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 6)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 6
+  },
+  {
+   "address": "0x001551a7",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 7)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 7
+  },
+  {
+   "address": "0x001551b8",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 8)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 8
+  },
+  {
+   "address": "0x001551c9",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 9)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 9
+  },
+  {
+   "address": "0x001551da",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 10)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 10
+  },
+  {
+   "address": "0x001551eb",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 11)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 11
+  },
+  {
+   "address": "0x001551fc",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 12)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 12
+  },
+  {
+   "address": "0x0015520d",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 13)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 13
+  },
+  {
+   "address": "0x0015521e",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 14)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 14
+  },
+  {
+   "address": "0x0015522f",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 15)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 15
+  },
+  {
+   "address": "0x00155240",
+   "name": "(owner 0xf7de0 still unnamed; unwind state 16)",
+   "inside": "FUN_00155121",
+   "owner": "FUN_000f7de0",
+   "state": 16
+  },
+  {
+   "address": "0x00155260",
+   "name": "EAGLAnim__FnCompoundChannel__~FnCompoundChannel_Unwind_0",
+   "inside": "FUN_00155251",
+   "owner": "EAGLAnim::FnCompoundChannel::~FnCompoundChannel",
+   "state": 0
+  },
+  {
+   "address": "0x00155280",
+   "name": "~FnTurnBlender_Unwind_0",
+   "inside": "EAGLAnim__FnCompoundChannel__~FnCompoundChannel_Frame_Handler",
+   "owner": "~FnTurnBlender",
+   "state": 0
+  },
+  {
+   "address": "0x001552a0",
+   "name": "EAGLAnim__FnRunBlender__~FnRunBlender_Unwind_0",
+   "inside": "FUN_00155288",
+   "owner": "EAGLAnim::FnRunBlender::~FnRunBlender",
+   "state": 0
+  },
+  {
+   "address": "0x001552c0",
+   "name": "(owner 0x117420 still unnamed; unwind state 0)",
+   "inside": "EAGLAnim__FnRunBlender__~FnRunBlender_Frame_Handler",
+   "owner": "FUN_00117420",
+   "state": 0
+  },
+  {
+   "address": "0x001552e0",
+   "name": "(owner 0x118180 still unnamed; unwind state 0)",
+   "inside": "FUN_001552c8",
+   "owner": "FUN_00118180",
+   "state": 0
+  },
+  {
+   "address": "0x001552f1",
+   "name": "(owner 0x118180 still unnamed; unwind state 1)",
+   "inside": "FUN_001552c8",
+   "owner": "FUN_00118180",
+   "state": 1
+  },
+  {
+   "address": "0x00155305",
+   "name": "(owner 0x118180 still unnamed; unwind state 2)",
+   "inside": "FUN_001552c8",
+   "owner": "FUN_00118180",
+   "state": 2
+  },
+  {
+   "address": "0x00155330",
+   "name": "(owner 0x118220 still unnamed; unwind state 0)",
+   "inside": "FUN_00155319",
+   "owner": "FUN_00118220",
+   "state": 0
+  },
+  {
+   "address": "0x00155341",
+   "name": "(owner 0x118220 still unnamed; unwind state 1)",
+   "inside": "FUN_00155319",
+   "owner": "FUN_00118220",
+   "state": 1
+  },
+  {
+   "address": "0x00155355",
+   "name": "(owner 0x118220 still unnamed; unwind state 2)",
+   "inside": "FUN_00155319",
+   "owner": "FUN_00118220",
+   "state": 2
+  },
+  {
+   "address": "0x00155369",
+   "name": "(owner 0x118220 still unnamed; unwind state 3)",
+   "inside": "FUN_00155319",
+   "owner": "FUN_00118220",
+   "state": 3
+  },
+  {
+   "address": "0x0015537d",
+   "name": "(owner 0x118220 still unnamed; unwind state 4)",
+   "inside": "FUN_00155319",
+   "owner": "FUN_00118220",
+   "state": 4
+  },
+  {
+   "address": "0x001553a0",
+   "name": "(owner 0x118320 still unnamed; unwind state 0)",
+   "inside": "FUN_00155391",
+   "owner": "FUN_00118320",
+   "state": 0
+  },
+  {
+   "address": "0x001553c0",
+   "name": "(owner 0x1183a0 still unnamed; unwind state 0)",
+   "inside": "CARP__WorldNodeResolver_Frame_Handler",
+   "owner": "FUN_001183a0",
+   "state": 0
+  },
+  {
+   "address": "0x001553e0",
+   "name": "(owner 0x118420 still unnamed; unwind state 0)",
+   "inside": "CARP__InstanceResolver_Frame_Handler",
+   "owner": "FUN_00118420",
+   "state": 0
+  },
+  {
+   "address": "0x00155400",
+   "name": "CARP__DissolveInfoResolver_Unwind_0",
+   "inside": "FUN_001553f4",
+   "owner": "CARP::DissolveInfoResolver",
+   "state": 0
+  },
+  {
+   "address": "0x00155414",
+   "name": "CARP__DissolveInfoResolver_Unwind_1",
+   "inside": "FUN_001553f4",
+   "owner": "CARP::DissolveInfoResolver",
+   "state": 1
+  },
+  {
+   "address": "0x00155428",
+   "name": "CARP__DissolveInfoResolver_Unwind_2",
+   "inside": "FUN_001553f4",
+   "owner": "CARP::DissolveInfoResolver",
+   "state": 2
+  },
+  {
+   "address": "0x0015543c",
+   "name": "CARP__DissolveInfoResolver_Unwind_3",
+   "inside": "FUN_001553f4",
+   "owner": "CARP::DissolveInfoResolver",
+   "state": 3
+  },
+  {
+   "address": "0x00155450",
+   "name": "CARP__DissolveInfoResolver_Unwind_4",
+   "inside": "FUN_001553f4",
+   "owner": "CARP::DissolveInfoResolver",
+   "state": 4
+  },
+  {
+   "address": "0x00155464",
+   "name": "CARP__DissolveInfoResolver_Unwind_5",
+   "inside": "FUN_001553f4",
+   "owner": "CARP::DissolveInfoResolver",
+   "state": 5
+  },
+  {
+   "address": "0x00155490",
+   "name": "CARP__ProcAnimResolver_Unwind_0",
+   "inside": "CARP__DissolveInfoResolver_Frame_Handler",
+   "owner": "CARP::ProcAnimResolver",
+   "state": 0
+  },
+  {
+   "address": "0x001554a4",
+   "name": "CARP__ProcAnimResolver_Unwind_1",
+   "inside": "CARP__DissolveInfoResolver_Frame_Handler",
+   "owner": "CARP::ProcAnimResolver",
+   "state": 1
+  },
+  {
+   "address": "0x001554d0",
+   "name": "(owner 0x118750 still unnamed; unwind state 0)",
+   "inside": "CARP__ProcAnimResolver_Frame_Handler",
+   "owner": "FUN_00118750",
+   "state": 0
+  },
+  {
+   "address": "0x001554e4",
+   "name": "(owner 0x118750 still unnamed; unwind state 1)",
+   "inside": "CARP__ProcAnimResolver_Frame_Handler",
+   "owner": "FUN_00118750",
+   "state": 1
+  },
+  {
+   "address": "0x00155510",
+   "name": "(owner 0x118750 still unnamed; unwind state 0)",
+   "inside": "FUN_001554f8",
+   "owner": "FUN_00118750",
+   "state": 0
+  },
+  {
+   "address": "0x00155540",
+   "name": "CARP__AICommandResolver_Unwind_0",
+   "inside": "FUN_0015552e",
+   "owner": "CARP::AICommandResolver",
+   "state": 0
+  },
+  {
+   "address": "0x0015555e",
+   "name": "CARP__AICommandResolver_Unwind_1",
+   "inside": "FUN_0015552e",
+   "owner": "CARP::AICommandResolver",
+   "state": 1
+  },
+  {
+   "address": "0x00155590",
+   "name": "CARP__AICommandResolver_Unwind_0",
+   "inside": "CARP__AICommandResolver_Frame_Handler_15557f",
+   "owner": "CARP::AICommandResolver",
+   "state": 0
+  },
+  {
+   "address": "0x001555c0",
+   "name": "WorldMapResolver_Unwind_0",
+   "inside": "CARP__AICommandResolver_Frame_Handler_1555ab",
+   "owner": "WorldMapResolver",
+   "state": 0
+  },
+  {
+   "address": "0x001555d1",
+   "name": "WorldMapResolver_Unwind_1",
+   "inside": "CARP__AICommandResolver_Frame_Handler_1555ab",
+   "owner": "WorldMapResolver",
+   "state": 1
+  },
+  {
+   "address": "0x001555e5",
+   "name": "WorldMapResolver_Unwind_2",
+   "inside": "CARP__AICommandResolver_Frame_Handler_1555ab",
+   "owner": "WorldMapResolver",
+   "state": 2
+  },
+  {
+   "address": "0x001555f9",
+   "name": "WorldMapResolver_Unwind_3",
+   "inside": "CARP__AICommandResolver_Frame_Handler_1555ab",
+   "owner": "WorldMapResolver",
+   "state": 3
+  },
+  {
+   "address": "0x00155620",
+   "name": "(owner 0x119440 still unnamed; unwind state 0)",
+   "inside": "WorldMapResolver_Frame_Handler",
+   "owner": "FUN_00119440",
+   "state": 0
+  },
+  {
+   "address": "0x00155640",
+   "name": "(owner 0x11aba0 still unnamed; unwind state 0)",
+   "inside": "FUN_00155628",
+   "owner": "FUN_0011aba0",
+   "state": 0
+  },
+  {
+   "address": "0x00155660",
+   "name": "USymbolTable__USymbolTable_Unwind_0",
+   "inside": "FUN_00155648",
+   "owner": "USymbolTable::USymbolTable",
+   "state": 0
+  },
+  {
+   "address": "0x00155690",
+   "name": "USimpleMaterial__USimpleMaterial_Unwind_0",
+   "inside": "FUN_00155680",
+   "owner": "USimpleMaterial::USimpleMaterial",
+   "state": 0
+  },
+  {
+   "address": "0x001556b0",
+   "name": "(owner 0x11be40 still unnamed; unwind state 0)",
+   "inside": "USimpleMaterial__USimpleMaterial_Frame_Handler",
+   "owner": "FUN_0011be40",
+   "state": 0
+  },
+  {
+   "address": "0x001556d0",
+   "name": "USimpleMaterial__Init_Unwind_0",
+   "inside": "FUN_001556bf",
+   "owner": "USimpleMaterial::Init",
+   "state": 0
+  },
+  {
+   "address": "0x001556df",
+   "name": "USimpleMaterial__Init_Unwind_1",
+   "inside": "FUN_001556bf",
+   "owner": "USimpleMaterial::Init",
+   "state": 1
+  },
+  {
+   "address": "0x00155700",
+   "name": "USimpleTexturedMaterial__Init_Unwind_0",
+   "inside": "USimpleMaterial__Init_Frame_Handler",
+   "owner": "USimpleTexturedMaterial::Init",
+   "state": 0
+  },
+  {
+   "address": "0x0015570f",
+   "name": "USimpleTexturedMaterial__Init_Unwind_1",
+   "inside": "USimpleMaterial__Init_Frame_Handler",
+   "owner": "USimpleTexturedMaterial::Init",
+   "state": 1
+  },
+  {
+   "address": "0x00155730",
+   "name": "UVolatileMaterial__UVolatileMaterial_Unwind_0",
+   "inside": "USimpleTexturedMaterial__Init_Frame_Handler",
+   "owner": "UVolatileMaterial::UVolatileMaterial",
+   "state": 0
+  },
+  {
+   "address": "0x00155750",
+   "name": "(owner 0x11c380 still unnamed; unwind state 0)",
+   "inside": "UVolatileMaterial__UVolatileMaterial_Frame_Handler",
+   "owner": "FUN_0011c380",
+   "state": 0
+  },
+  {
+   "address": "0x00155770",
+   "name": "UVolatileMaterial__Init_Unwind_0",
+   "inside": "FUN_0015575f",
+   "owner": "UVolatileMaterial::Init",
+   "state": 0
+  },
+  {
+   "address": "0x0015577f",
+   "name": "UVolatileMaterial__Init_Unwind_1",
+   "inside": "FUN_0015575f",
+   "owner": "UVolatileMaterial::Init",
+   "state": 1
+  },
+  {
+   "address": "0x001557a0",
+   "name": "(owner 0x11c860 still unnamed; unwind state 0)",
+   "inside": "UVolatileMaterial__Init_Frame_Handler",
+   "owner": "FUN_0011c860",
+   "state": 0
+  },
+  {
+   "address": "0x001557c0",
+   "name": "(owner 0x11cc80 still unnamed; unwind state 0)",
+   "inside": "FUN_001557a8",
+   "owner": "FUN_0011cc80",
+   "state": 0
+  },
+  {
+   "address": "0x001557e0",
+   "name": "(owner 0x11d580 still unnamed; unwind state 0)",
+   "inside": "FUN_001557c8",
+   "owner": "FUN_0011d580",
+   "state": 0
+  },
+  {
+   "address": "0x00155800",
+   "name": "URefCounter<AMix>__Get_Unwind_0",
+   "inside": "FUN_001557e8",
+   "owner": "URefCounter<AMix>::Get",
+   "state": 0
+  },
+  {
+   "address": "0x00155820",
+   "name": "ACharacter__Say_Unwind_0",
+   "inside": "URefCounter<AMix>__Get_Frame_Handler",
+   "owner": "ACharacter::Say",
+   "state": 0
+  },
+  {
+   "address": "0x00155840",
+   "name": "ACharacter__~ACharacter_Unwind_0",
+   "inside": "ACharacter__Say_Frame_Handler",
+   "owner": "ACharacter::~ACharacter",
+   "state": 0
+  },
+  {
+   "address": "0x00155860",
+   "name": "AMenuSound__Trigger_Unwind_0",
+   "inside": "ACharacter__~ACharacter_Frame_Handler",
+   "owner": "AMenuSound::Trigger",
+   "state": 0
+  },
+  {
+   "address": "0x00155880",
+   "name": "AMenuSoundPriv__AMenuSoundPriv_Unwind_0",
+   "inside": "AMenuSound__Trigger_Frame_Handler",
+   "owner": "AMenuSoundPriv::AMenuSoundPriv",
+   "state": 0
+  },
+  {
+   "address": "0x001558a0",
+   "name": "AVehicle__AVehicle_Unwind_0",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 0
+  },
+  {
+   "address": "0x001558a8",
+   "name": "AVehicle__AVehicle_Unwind_1",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 1
+  },
+  {
+   "address": "0x001558b7",
+   "name": "AVehicle__AVehicle_Unwind_2",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 2
+  },
+  {
+   "address": "0x001558c6",
+   "name": "AVehicle__AVehicle_Unwind_3",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 3
+  },
+  {
+   "address": "0x001558d5",
+   "name": "AVehicle__AVehicle_Unwind_4",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 4
+  },
+  {
+   "address": "0x001558e4",
+   "name": "AVehicle__AVehicle_Unwind_5",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 5
+  },
+  {
+   "address": "0x001558f3",
+   "name": "AVehicle__AVehicle_Unwind_6",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 6
+  },
+  {
+   "address": "0x00155902",
+   "name": "AVehicle__AVehicle_Unwind_7",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 7
+  },
+  {
+   "address": "0x00155911",
+   "name": "AVehicle__AVehicle_Unwind_8",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 8
+  },
+  {
+   "address": "0x00155920",
+   "name": "AVehicle__AVehicle_Unwind_9",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 9
+  },
+  {
+   "address": "0x0015592f",
+   "name": "AVehicle__AVehicle_Unwind_10",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 10
+  },
+  {
+   "address": "0x0015593e",
+   "name": "AVehicle__AVehicle_Unwind_11",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 11
+  },
+  {
+   "address": "0x0015594d",
+   "name": "AVehicle__AVehicle_Unwind_12",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 12
+  },
+  {
+   "address": "0x0015595c",
+   "name": "AVehicle__AVehicle_Unwind_13",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 13
+  },
+  {
+   "address": "0x0015596b",
+   "name": "AVehicle__AVehicle_Unwind_14",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 14
+  },
+  {
+   "address": "0x0015597a",
+   "name": "AVehicle__AVehicle_Unwind_15",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 15
+  },
+  {
+   "address": "0x00155989",
+   "name": "AVehicle__AVehicle_Unwind_16",
+   "inside": "AMenuSoundPriv__AMenuSoundPriv_Frame_Handler",
+   "owner": "AVehicle::AVehicle",
+   "state": 16
+  },
+  {
+   "address": "0x001559b0",
+   "name": "AVehicle__ActivateGun_Unwind_0",
+   "inside": "AVehicle__AVehicle_Frame_Handler",
+   "owner": "AVehicle::ActivateGun",
+   "state": 0
+  },
+  {
+   "address": "0x001559d0",
+   "name": "AVehicle__ActivateTurret_Unwind_0",
+   "inside": "AVehicle__ActivateGun_Frame_Handler",
+   "owner": "AVehicle::ActivateTurret",
+   "state": 0
+  },
+  {
+   "address": "0x001559f0",
+   "name": "AVehicle__ActivateZoom_Unwind_0",
+   "inside": "AVehicle__ActivateTurret_Frame_Handler",
+   "owner": "AVehicle::ActivateZoom",
+   "state": 0
+  },
+  {
+   "address": "0x00155a10",
+   "name": "(owner 0x11ec10 still unnamed; unwind state 0)",
+   "inside": "AVehicle__ActivateZoom_Frame_Handler",
+   "owner": "FUN_0011ec10",
+   "state": 0
+  },
+  {
+   "address": "0x00155a30",
+   "name": "AVehicle__PlayLanding_Unwind_0",
+   "inside": "FUN_00155a1b",
+   "owner": "AVehicle::PlayLanding",
+   "state": 0
+  },
+  {
+   "address": "0x00155a42",
+   "name": "AVehicle__PlayLanding_Unwind_1",
+   "inside": "FUN_00155a1b",
+   "owner": "AVehicle::PlayLanding",
+   "state": 1
+  },
+  {
+   "address": "0x00155a54",
+   "name": "AVehicle__PlayLanding_Unwind_2",
+   "inside": "FUN_00155a1b",
+   "owner": "AVehicle::PlayLanding",
+   "state": 2
+  },
+  {
+   "address": "0x00155a66",
+   "name": "AVehicle__PlayLanding_Unwind_3",
+   "inside": "FUN_00155a1b",
+   "owner": "AVehicle::PlayLanding",
+   "state": 3
+  },
+  {
+   "address": "0x00155a78",
+   "name": "AVehicle__PlayLanding_Unwind_4",
+   "inside": "FUN_00155a1b",
+   "owner": "AVehicle::PlayLanding",
+   "state": 4
+  },
+  {
+   "address": "0x00155a8a",
+   "name": "AVehicle__PlayLanding_Unwind_5",
+   "inside": "FUN_00155a1b",
+   "owner": "AVehicle::PlayLanding",
+   "state": 5
+  },
+  {
+   "address": "0x00155a9c",
+   "name": "AVehicle__PlayLanding_Unwind_6",
+   "inside": "FUN_00155a1b",
+   "owner": "AVehicle::PlayLanding",
+   "state": 6
+  },
+  {
+   "address": "0x00155aae",
+   "name": "AVehicle__PlayLanding_Unwind_7",
+   "inside": "FUN_00155a1b",
+   "owner": "AVehicle::PlayLanding",
+   "state": 7
+  },
+  {
+   "address": "0x00155ac0",
+   "name": "AVehicle__PlayLanding_Unwind_8",
+   "inside": "FUN_00155a1b",
+   "owner": "AVehicle::PlayLanding",
+   "state": 8
+  },
+  {
+   "address": "0x00155ae0",
+   "name": "AVehicle__PlayCollision_Unwind_0",
+   "inside": "AVehicle__PlayLanding_Frame_Handler",
+   "owner": "AVehicle::PlayCollision",
+   "state": 0
+  },
+  {
+   "address": "0x00155af5",
+   "name": "AVehicle__PlayCollision_Unwind_1",
+   "inside": "AVehicle__PlayLanding_Frame_Handler",
+   "owner": "AVehicle::PlayCollision",
+   "state": 1
+  },
+  {
+   "address": "0x00155b0a",
+   "name": "AVehicle__PlayCollision_Unwind_4",
+   "inside": "AVehicle__PlayLanding_Frame_Handler",
+   "owner": "AVehicle::PlayCollision",
+   "state": 4
+  },
+  {
+   "address": "0x00155b1f",
+   "name": "AVehicle__PlayCollision_Unwind_2",
+   "inside": "AVehicle__PlayLanding_Frame_Handler",
+   "owner": "AVehicle::PlayCollision",
+   "state": 2
+  },
+  {
+   "address": "0x00155b34",
+   "name": "AVehicle__PlayCollision_Unwind_3",
+   "inside": "AVehicle__PlayLanding_Frame_Handler",
+   "owner": "AVehicle::PlayCollision",
+   "state": 3
+  },
+  {
+   "address": "0x00155bc0",
+   "name": "AVehicle__ChooseHorn_Unwind_0",
+   "inside": "FUN_00155ba8",
+   "owner": "AVehicle::ChooseHorn",
+   "state": 0
+  },
+  {
+   "address": "0x00155be0",
+   "name": "AVehicle__~AVehicle_Unwind_0",
+   "inside": "AVehicle__ChooseHorn_Frame_Handler",
+   "owner": "AVehicle::~AVehicle",
+   "state": 0
+  },
+  {
+   "address": "0x00155c00",
+   "name": "ASoundManager__Init_Unwind_0",
+   "inside": "AVehicle__~AVehicle_Frame_Handler",
+   "owner": "ASoundManager::Init",
+   "state": 0
+  },
+  {
+   "address": "0x00155c12",
+   "name": "ASoundManager__Init_Unwind_1",
+   "inside": "AVehicle__~AVehicle_Frame_Handler",
+   "owner": "ASoundManager::Init",
+   "state": 1
+  },
+  {
+   "address": "0x00155c24",
+   "name": "ASoundManager__Init_Unwind_2",
+   "inside": "AVehicle__~AVehicle_Frame_Handler",
+   "owner": "ASoundManager::Init",
+   "state": 2
+  },
+  {
+   "address": "0x00155c40",
+   "name": "(owner 0x121d90 still unnamed; unwind state 0)",
+   "inside": "ASoundManager__Init_Frame_Handler",
+   "owner": "FUN_00121d90",
+   "state": 0
+  },
+  {
+   "address": "0x00155c60",
+   "name": "AStreamPriv__AStreamPriv_Unwind_0",
+   "inside": "FUN_00155c48",
+   "owner": "AStreamPriv::AStreamPriv",
+   "state": 0
+  },
+  {
+   "address": "0x00155c80",
+   "name": "AStreamPriv__~AStreamPriv_Unwind_0",
+   "inside": "AStreamPriv__AStreamPriv_Frame_Handler",
+   "owner": "AStreamPriv::~AStreamPriv",
+   "state": 0
+  },
+  {
+   "address": "0x0015606f",
+   "name": "APlayerVehicle__Play_Unwind_1",
+   "inside": "APlayerVehicle__Play_Unwind_0",
+   "owner": "APlayerVehicle::Play",
+   "state": 1
+  },
+  {
+   "address": "0x0015607e",
+   "name": "APlayerVehicle__Play_Unwind_2",
+   "inside": "APlayerVehicle__Play_Unwind_0",
+   "owner": "APlayerVehicle::Play",
+   "state": 2
+  },
+  {
+   "address": "0x0015608d",
+   "name": "APlayerVehicle__Play_Unwind_3",
+   "inside": "APlayerVehicle__Play_Unwind_0",
+   "owner": "APlayerVehicle::Play",
+   "state": 3
+  },
+  {
+   "address": "0x0015609c",
+   "name": "APlayerVehicle__Play_Unwind_4",
+   "inside": "APlayerVehicle__Play_Unwind_0",
+   "owner": "APlayerVehicle::Play",
+   "state": 4
+  },
+  {
+   "address": "0x001560ab",
+   "name": "APlayerVehicle__Play_Unwind_5",
+   "inside": "APlayerVehicle__Play_Unwind_0",
+   "owner": "APlayerVehicle::Play",
+   "state": 5
+  },
+  {
+   "address": "0x001560e7",
+   "name": "APlayerHeli__APlayerHeli_Unwind_2",
+   "inside": "APlayerHeli__APlayerHeli_Unwind_1",
+   "owner": "APlayerHeli::APlayerHeli",
+   "state": 2
+  },
+  {
+   "address": "0x001560f6",
+   "name": "APlayerHeli__APlayerHeli_Unwind_3",
+   "inside": "APlayerHeli__APlayerHeli_Unwind_1",
+   "owner": "APlayerHeli::APlayerHeli",
+   "state": 3
+  },
+  {
+   "address": "0x00156105",
+   "name": "APlayerHeli__APlayerHeli_Unwind_4",
+   "inside": "APlayerHeli__APlayerHeli_Unwind_1",
+   "owner": "APlayerHeli::APlayerHeli",
+   "state": 4
+  },
+  {
+   "address": "0x00156114",
+   "name": "APlayerHeli__APlayerHeli_Unwind_5",
+   "inside": "APlayerHeli__APlayerHeli_Unwind_1",
+   "owner": "APlayerHeli::APlayerHeli",
+   "state": 5
+  },
+  {
+   "address": "0x00156123",
+   "name": "APlayerHeli__APlayerHeli_Unwind_6",
+   "inside": "APlayerHeli__APlayerHeli_Unwind_1",
+   "owner": "APlayerHeli::APlayerHeli",
+   "state": 6
+  },
+  {
+   "address": "0x00156140",
+   "name": "APlayerHeli__~APlayerHeli_Unwind_0",
+   "inside": "APlayerHeli__APlayerHeli_Frame_Handler",
+   "owner": "APlayerHeli::~APlayerHeli",
+   "state": 0
+  },
+  {
+   "address": "0x00156172",
+   "name": "AGun__Play_Unwind_1",
+   "inside": "AGun__Play_Unwind_0",
+   "owner": "AGun::Play",
+   "state": 1
+  },
+  {
+   "address": "0x00156392",
+   "name": "ASnowMobile__PlayMotor_Unwind_1",
+   "inside": "ASnowMobile__PlayMotor_Unwind_0",
+   "owner": "ASnowMobile::PlayMotor",
+   "state": 1
+  },
+  {
+   "address": "0x001563a1",
+   "name": "ASnowMobile__PlayMotor_Unwind_2",
+   "inside": "ASnowMobile__PlayMotor_Unwind_0",
+   "owner": "ASnowMobile::PlayMotor",
+   "state": 2
+  },
+  {
+   "address": "0x001563b0",
+   "name": "ASnowMobile__PlayMotor_Unwind_3",
+   "inside": "ASnowMobile__PlayMotor_Unwind_0",
+   "owner": "ASnowMobile::PlayMotor",
+   "state": 3
+  },
+  {
+   "address": "0x001563d8",
+   "name": "ASnowMobile__ASnowMobile_Unwind_1",
+   "inside": "ASnowMobile__ASnowMobile_Unwind_0",
+   "owner": "ASnowMobile::ASnowMobile",
+   "state": 1
+  },
+  {
+   "address": "0x001563e3",
+   "name": "ASnowMobile__ASnowMobile_Unwind_2",
+   "inside": "ASnowMobile__ASnowMobile_Unwind_0",
+   "owner": "ASnowMobile::ASnowMobile",
+   "state": 2
+  },
+  {
+   "address": "0x001563f2",
+   "name": "ASnowMobile__ASnowMobile_Unwind_3",
+   "inside": "ASnowMobile__ASnowMobile_Unwind_0",
+   "owner": "ASnowMobile::ASnowMobile",
+   "state": 3
+  },
+  {
+   "address": "0x00156401",
+   "name": "ASnowMobile__ASnowMobile_Unwind_4",
+   "inside": "ASnowMobile__ASnowMobile_Unwind_0",
+   "owner": "ASnowMobile::ASnowMobile",
+   "state": 4
+  },
+  {
+   "address": "0x00156410",
+   "name": "ASnowMobile__ASnowMobile_Unwind_5",
+   "inside": "ASnowMobile__ASnowMobile_Unwind_0",
+   "owner": "ASnowMobile::ASnowMobile",
+   "state": 5
+  },
+  {
+   "address": "0x0015641f",
+   "name": "ASnowMobile__ASnowMobile_Unwind_6",
+   "inside": "ASnowMobile__ASnowMobile_Unwind_0",
+   "owner": "ASnowMobile::ASnowMobile",
+   "state": 6
+  },
+  {
+   "address": "0x0015642e",
+   "name": "ASnowMobile__ASnowMobile_Unwind_7",
+   "inside": "ASnowMobile__ASnowMobile_Unwind_0",
+   "owner": "ASnowMobile::ASnowMobile",
+   "state": 7
+  },
+  {
+   "address": "0x00156458",
+   "name": "ASubmersible__ASubmersible_Unwind_1",
+   "inside": "ASubmersible__ASubmersible_Unwind_0",
+   "owner": "ASubmersible::ASubmersible",
+   "state": 1
+  },
+  {
+   "address": "0x00156467",
+   "name": "ASubmersible__ASubmersible_Unwind_2",
+   "inside": "ASubmersible__ASubmersible_Unwind_0",
+   "owner": "ASubmersible::ASubmersible",
+   "state": 2
+  },
+  {
+   "address": "0x00156476",
+   "name": "ASubmersible__ASubmersible_Unwind_3",
+   "inside": "ASubmersible__ASubmersible_Unwind_0",
+   "owner": "ASubmersible::ASubmersible",
+   "state": 3
+  },
+  {
+   "address": "0x001564c2",
+   "name": "ASubmersible__PlayCavitation_Unwind_0",
+   "inside": "ASubmersible__PlayCavitation_Unwind_1",
+   "owner": "ASubmersible::PlayCavitation",
+   "state": 0
+  },
+  {
+   "address": "0x001564f2",
+   "name": "ASubmersible__PlayServos_Unwind_0",
+   "inside": "ASubmersible__PlayServos_Unwind_1",
+   "owner": "ASubmersible::PlayServos",
+   "state": 0
+  },
+  {
+   "address": "0x00156504",
+   "name": "ASubmersible__PlayServos_Unwind_3",
+   "inside": "ASubmersible__PlayServos_Unwind_1",
+   "owner": "ASubmersible::PlayServos",
+   "state": 3
+  },
+  {
+   "address": "0x00156516",
+   "name": "ASubmersible__PlayServos_Unwind_2",
+   "inside": "ASubmersible__PlayServos_Unwind_1",
+   "owner": "ASubmersible::PlayServos",
+   "state": 2
+  },
+  {
+   "address": "0x00156548",
+   "name": "APlayerTank__APlayerTank_Unwind_1",
+   "inside": "APlayerTank__APlayerTank_Unwind_0",
+   "owner": "APlayerTank::APlayerTank",
+   "state": 1
+  },
+  {
+   "address": "0x00156556",
+   "name": "APlayerTank__APlayerTank_Unwind_2",
+   "inside": "APlayerTank__APlayerTank_Unwind_0",
+   "owner": "APlayerTank::APlayerTank",
+   "state": 2
+  },
+  {
+   "address": "0x00156570",
+   "name": "APlayerTank__~APlayerTank_Unwind_0",
+   "inside": "APlayerTank__APlayerTank_Frame_Handler",
+   "owner": "APlayerTank::~APlayerTank",
+   "state": 0
+  },
+  {
+   "address": "0x00156578",
+   "name": "APlayerTank__~APlayerTank_Unwind_1",
+   "inside": "APlayerTank__APlayerTank_Frame_Handler",
+   "owner": "APlayerTank::~APlayerTank",
+   "state": 1
+  },
+  {
+   "address": "0x00156590",
+   "name": "AHelicopter__AHelicopter_Unwind_0",
+   "inside": "APlayerTank__~APlayerTank_Frame_Handler",
+   "owner": "AHelicopter::AHelicopter",
+   "state": 0
+  },
+  {
+   "address": "0x00156598",
+   "name": "AHelicopter__AHelicopter_Unwind_1",
+   "inside": "APlayerTank__~APlayerTank_Frame_Handler",
+   "owner": "AHelicopter::AHelicopter",
+   "state": 1
+  },
+  {
+   "address": "0x001565a6",
+   "name": "AHelicopter__AHelicopter_Unwind_2",
+   "inside": "APlayerTank__~APlayerTank_Frame_Handler",
+   "owner": "AHelicopter::AHelicopter",
+   "state": 2
+  },
+  {
+   "address": "0x001565b4",
+   "name": "AHelicopter__AHelicopter_Unwind_3",
+   "inside": "APlayerTank__~APlayerTank_Frame_Handler",
+   "owner": "AHelicopter::AHelicopter",
+   "state": 3
+  },
+  {
+   "address": "0x001565d8",
+   "name": "AHelicopter__~AHelicopter_Unwind_1",
+   "inside": "AHelicopter__~AHelicopter_Unwind_0",
+   "owner": "AHelicopter::~AHelicopter",
+   "state": 1
+  },
+  {
+   "address": "0x001565e6",
+   "name": "AHelicopter__~AHelicopter_Unwind_2",
+   "inside": "AHelicopter__~AHelicopter_Unwind_0",
+   "owner": "AHelicopter::~AHelicopter",
+   "state": 2
+  },
+  {
+   "address": "0x00156608",
+   "name": "ATrafficVehicle__ATrafficVehicle_Unwind_1",
+   "inside": "ATrafficVehicle__ATrafficVehicle_Unwind_0",
+   "owner": "ATrafficVehicle::ATrafficVehicle",
+   "state": 1
+  },
+  {
+   "address": "0x00156617",
+   "name": "ATrafficVehicle__ATrafficVehicle_Unwind_2",
+   "inside": "ATrafficVehicle__ATrafficVehicle_Unwind_0",
+   "owner": "ATrafficVehicle::ATrafficVehicle",
+   "state": 2
+  },
+  {
+   "address": "0x00156626",
+   "name": "ATrafficVehicle__ATrafficVehicle_Unwind_3",
+   "inside": "ATrafficVehicle__ATrafficVehicle_Unwind_0",
+   "owner": "ATrafficVehicle::ATrafficVehicle",
+   "state": 3
+  },
+  {
+   "address": "0x00156635",
+   "name": "ATrafficVehicle__ATrafficVehicle_Unwind_4",
+   "inside": "ATrafficVehicle__ATrafficVehicle_Unwind_0",
+   "owner": "ATrafficVehicle::ATrafficVehicle",
+   "state": 4
+  },
+  {
+   "address": "0x00156650",
+   "name": "(owner 0x12ce30 still unnamed; unwind state 0)",
+   "inside": "ATrafficVehicle__ATrafficVehicle_Frame_Handler",
+   "owner": "FUN_0012ce30",
+   "state": 0
+  },
+  {
+   "address": "0x00156685",
+   "name": "ATrafficVehicle__PlaySnowmobileSpecifics_Unwind_1",
+   "inside": "ATrafficVehicle__PlaySnowmobileSpecifics_Unwind_0",
+   "owner": "ATrafficVehicle::PlaySnowmobileSpecifics",
+   "state": 1
+  },
+  {
+   "address": "0x0015669a",
+   "name": "ATrafficVehicle__PlaySnowmobileSpecifics_Unwind_2",
+   "inside": "ATrafficVehicle__PlaySnowmobileSpecifics_Unwind_0",
+   "owner": "ATrafficVehicle::PlaySnowmobileSpecifics",
+   "state": 2
+  },
+  {
+   "address": "0x001566e8",
+   "name": "ASentry__~ASentry_Unwind_1",
+   "inside": "ASentry__~ASentry_Unwind_0",
+   "owner": "ASentry::~ASentry",
+   "state": 1
+  },
+  {
+   "address": "0x00156700",
+   "name": "ASentry__ASentry_Unwind_0",
+   "inside": "ASentry__~ASentry_Frame_Handler",
+   "owner": "ASentry::ASentry",
+   "state": 0
+  },
+  {
+   "address": "0x00156708",
+   "name": "ASentry__ASentry_Unwind_1",
+   "inside": "ASentry__~ASentry_Frame_Handler",
+   "owner": "ASentry::ASentry",
+   "state": 1
+  },
+  {
+   "address": "0x00156716",
+   "name": "ASentry__ASentry_Unwind_2",
+   "inside": "ASentry__~ASentry_Frame_Handler",
+   "owner": "ASentry::ASentry",
+   "state": 2
+  },
+  {
+   "address": "0x00156738",
+   "name": "ASmackable__ASmackable_Unwind_1",
+   "inside": "ASmackable__ASmackable_Unwind_0_156730",
+   "owner": "ASmackable::ASmackable",
+   "state": 1
+  },
+  {
+   "address": "0x00156a6c",
+   "name": "??0_Locimp@locale@std@@AAE@_N@Z_Unwind_0",
+   "inside": "FUN_00156a62",
+   "owner": "??0_Locimp@locale@std@@AAE@_N@Z",
+   "state": 0
+  }
+ ]
+}

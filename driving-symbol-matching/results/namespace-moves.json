@@ -1,5 +1,5 @@
 {
- "generated": "Sat Sep 26 21:43:08 2026",
+ "generated": "Sat Sep 26 22:04:50 2026",
  "moves": [
   {
    "program": "Driving.xbe",
@@ -170,10 +170,58 @@
    "batch": "026"
   },
   {
+   "program": "Driving.xbe",
+   "address": "0x0010e864",
+   "name": "XAPILIB::CreateEventA",
+   "batch": "027"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0010e8e5",
+   "name": "XAPILIB::ResetEvent",
+   "batch": "027"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0010e8c5",
+   "name": "XAPILIB::SetEvent",
+   "batch": "027"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0016d2a0",
+   "name": "D3D8::CDevice_InitializeFrameBuffers",
+   "batch": "027"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0016d180",
+   "name": "D3D8::CDevice_FreeFrameBuffers",
+   "batch": "027"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000e8270",
+   "name": "EAGL::RenderContextExtension::GetFrontBuffer",
+   "batch": "028"
+  },
+  {
    "program": "DRIVING.ELF",
    "address": "0x001a4318",
    "name": "__lower_bound<CARP::AnimInfo_*,_CARP::AnimInfo,_int>",
    "batch": "P012"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x0027aa10",
+   "name": "EAGLAnim::FnTurnBlender::~FnTurnBlender",
+   "batch": "P022"
+  },
+  {
+   "program": "DRIVING.ELF",
+   "address": "0x00148e30",
+   "name": "ECameraLockOn::~ECameraLockOn",
+   "batch": "P022"
   }
  ]
 }

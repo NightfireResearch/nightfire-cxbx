@@ -33,7 +33,8 @@ from ghidra.program.model.address import AddressSet
 list_path = os.path.join(os.path.dirname(__file__), "../driving-symbol-matching/results/function-splits.json")
 with open(list_path) as f:
     data = json.load(f)
-entries = [e for e in data["splits"] if data.get("program", "DRIVING.ELF") == currentProgram.name]
+# Each entry may name its program; otherwise the file's "program" (default DRIVING.ELF).
+entries = [e for e in data["splits"] if e.get("program", data.get("program", "DRIVING.ELF")) == currentProgram.name]
 entries.sort(key=lambda e: int(e["address"], 16))
 print("Program: %s, %d addresses listed" % (currentProgram.name, len(entries)))
 

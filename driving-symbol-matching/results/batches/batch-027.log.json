@@ -1,0 +1,1334 @@
+{
+ "batch": "027",
+ "program": "Driving.xbe",
+ "applied": "Sat Sep 26 22:00:42 2026",
+ "items": [
+  {
+   "xbox": "0x0010eb96",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0010eb96",
+      "function_name": "UnhandledExceptionFilter",
+      "entry_point": "0010eb96",
+      "body_size": 60,
+      "message": "Function created successfully at 0010eb96"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0010eb96 from 'UnhandledExceptionFilter' to 'UnhandledExceptionFilter'",
+      "warnings": [
+       "Function name 'UnhandledExceptionFilter' does not start with a recognized verb. First word 'Unhandled' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0010eb96",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "UnhandledExceptionFilter",
+   "ok": true
+  },
+  {
+   "xbox": "0x0010ebd2",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0010ebd2",
+      "function_name": "XapiThreadStartup",
+      "entry_point": "0010ebd2",
+      "body_size": 140,
+      "message": "Function created successfully at 0010ebd2"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0010ebd2 from 'XapiThreadStartup' to 'XapiThreadStartup'",
+      "warnings": [
+       "Function name 'XapiThreadStartup' does not start with a recognized verb. First word 'Xapi' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0010ebd2",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "XapiThreadStartup",
+   "ok": true
+  },
+  {
+   "xbox": "0x0010e864",
+   "old_name": "FUN_0010e864",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0010e864 from 'FUN_0010e864' to 'CreateEventA'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'CreateEventA' shares the same token set as existing function 'Create' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0010e864",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "CreateEventA",
+   "ok": true
+  },
+  {
+   "xbox": "0x0010e8e5",
+   "old_name": "FUN_0010e8e5",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0010e8e5 from 'FUN_0010e8e5' to 'ResetEvent'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'ResetEvent' shares the same token set as existing function 'Reset' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0010e8e5",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ResetEvent",
+   "ok": true
+  },
+  {
+   "xbox": "0x0010e8c5",
+   "old_name": "FUN_0010e8c5",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0010e8c5 from 'FUN_0010e8c5' to 'SetEvent'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'SetEvent' shares the same token set as existing function 'SetEventDynamicData' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0010e8c5",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetEvent",
+   "ok": true
+  },
+  {
+   "xbox": "0x0016d2a0",
+   "old_name": "FUN_0016d2a0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0016d2a0 from 'FUN_0016d2a0' to 'CDevice_InitializeFrameBuffers'",
+      "warnings": [
+       "Function name 'CDevice_InitializeFrameBuffers' \u2014 main part 'CDevice_InitializeFrameBuffers' is not PascalCase. Expected: CdeviceInitializeframebuffers",
+       "Function name 'CDevice_InitializeFrameBuffers' \u2014 main part 'CDevice_InitializeFrameBuffers' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0016d2a0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "CDevice_InitializeFrameBuffers",
+   "ok": true
+  },
+  {
+   "xbox": "0x0016d180",
+   "old_name": "FUN_0016d180",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0016d180 from 'FUN_0016d180' to 'CDevice_FreeFrameBuffers'",
+      "warnings": [
+       "Function name 'CDevice_FreeFrameBuffers' \u2014 main part 'CDevice_FreeFrameBuffers' is not PascalCase. Expected: CdeviceFreeframebuffers",
+       "Function name 'CDevice_FreeFrameBuffers' \u2014 main part 'CDevice_FreeFrameBuffers' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0016d180",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "CDevice_FreeFrameBuffers",
+   "ok": true
+  },
+  {
+   "xbox": "0x0016b430",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0016b430",
+      "function_name": "D3DDevice_CreateIndexBuffer2",
+      "entry_point": "0016b430",
+      "body_size": 49,
+      "message": "Function created successfully at 0016b430"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0016b430 from 'D3DDevice_CreateIndexBuffer2' to 'D3DDevice_CreateIndexBuffer2'",
+      "warnings": [
+       "Function name 'D3DDevice_CreateIndexBuffer2' \u2014 main part 'D3DDevice_CreateIndexBuffer2' is not PascalCase. Expected: D3ddeviceCreateindexbuffer2",
+       "Function name 'D3DDevice_CreateIndexBuffer2' \u2014 main part 'D3DDevice_CreateIndexBuffer2' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_CreateIndexBuffer2' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0016b430",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_CreateIndexBuffer2",
+   "ok": true
+  },
+  {
+   "xbox": "0x00165de0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00165de0",
+      "function_name": "D3DDevice_SetGammaRamp",
+      "entry_point": "00165de0",
+      "body_size": 131,
+      "message": "Function created successfully at 00165de0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00165de0 from 'D3DDevice_SetGammaRamp' to 'D3DDevice_SetGammaRamp'",
+      "warnings": [
+       "Function name 'D3DDevice_SetGammaRamp' \u2014 main part 'D3DDevice_SetGammaRamp' is not PascalCase. Expected: D3ddeviceSetgammaramp",
+       "Function name 'D3DDevice_SetGammaRamp' \u2014 main part 'D3DDevice_SetGammaRamp' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetGammaRamp' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00165de0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetGammaRamp",
+   "ok": true
+  },
+  {
+   "xbox": "0x00166a70",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00166a70",
+      "function_name": "D3DDevice_SetIndices",
+      "entry_point": "00166a70",
+      "body_size": 132,
+      "message": "Function created successfully at 00166a70"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00166a70 from 'D3DDevice_SetIndices' to 'D3DDevice_SetIndices'",
+      "warnings": [
+       "Function name 'D3DDevice_SetIndices' \u2014 main part 'D3DDevice_SetIndices' is not PascalCase. Expected: D3ddeviceSetindices",
+       "Function name 'D3DDevice_SetIndices' \u2014 main part 'D3DDevice_SetIndices' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetIndices' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00166a70",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetIndices",
+   "ok": true
+  },
+  {
+   "xbox": "0x00167b20",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00167b20",
+      "function_name": "D3DDevice_SetRenderState_BackFillMode",
+      "entry_point": "00167b20",
+      "body_size": 81,
+      "message": "Function created successfully at 00167b20"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00167b20 from 'D3DDevice_SetRenderState_BackFillMode' to 'D3DDevice_SetRenderState_BackFillMode'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_BackFillMode' \u2014 main part 'D3DDevice_SetRenderState_BackFillMode' is not PascalCase. Expected: D3ddeviceSetrenderstateBackfillmode",
+       "Function name 'D3DDevice_SetRenderState_BackFillMode' \u2014 main part 'D3DDevice_SetRenderState_BackFillMode' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_BackFillMode' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00167b20",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_BackFillMode",
+   "ok": true
+  },
+  {
+   "xbox": "0x00168ad0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00168ad0",
+      "function_name": "D3DDevice_SetRenderState_DoNotCullUncompressed",
+      "entry_point": "00168ad0",
+      "body_size": 17,
+      "message": "Function created successfully at 00168ad0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00168ad0 from 'D3DDevice_SetRenderState_DoNotCullUncompressed' to 'D3DDevice_SetRenderState_DoNotCullUncompressed'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_DoNotCullUncompressed' \u2014 main part 'D3DDevice_SetRenderState_DoNotCullUncompressed' is not PascalCase. Expected: D3ddeviceSetrenderstateDonotculluncompressed",
+       "Function name 'D3DDevice_SetRenderState_DoNotCullUncompressed' \u2014 main part 'D3DDevice_SetRenderState_DoNotCullUncompressed' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_DoNotCullUncompressed' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00168ad0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_DoNotCullUncompressed",
+   "ok": true
+  },
+  {
+   "xbox": "0x001676e0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "001676e0",
+      "function_name": "D3DDevice_SetRenderState_EdgeAntiAlias",
+      "entry_point": "001676e0",
+      "body_size": 50,
+      "message": "Function created successfully at 001676e0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001676e0 from 'D3DDevice_SetRenderState_EdgeAntiAlias' to 'D3DDevice_SetRenderState_EdgeAntiAlias'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_EdgeAntiAlias' \u2014 main part 'D3DDevice_SetRenderState_EdgeAntiAlias' is not PascalCase. Expected: D3ddeviceSetrenderstateEdgeantialias",
+       "Function name 'D3DDevice_SetRenderState_EdgeAntiAlias' \u2014 main part 'D3DDevice_SetRenderState_EdgeAntiAlias' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_EdgeAntiAlias' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001676e0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_EdgeAntiAlias",
+   "ok": true
+  },
+  {
+   "xbox": "0x00167820",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00167820",
+      "function_name": "D3DDevice_SetRenderState_FrontFace",
+      "entry_point": "00167820",
+      "body_size": 58,
+      "message": "Function created successfully at 00167820"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00167820 from 'D3DDevice_SetRenderState_FrontFace' to 'D3DDevice_SetRenderState_FrontFace'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_FrontFace' \u2014 main part 'D3DDevice_SetRenderState_FrontFace' is not PascalCase. Expected: D3ddeviceSetrenderstateFrontface",
+       "Function name 'D3DDevice_SetRenderState_FrontFace' \u2014 main part 'D3DDevice_SetRenderState_FrontFace' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_FrontFace' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00167820",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_FrontFace",
+   "ok": true
+  },
+  {
+   "xbox": "0x00167a70",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00167a70",
+      "function_name": "D3DDevice_SetRenderState_LogicOp",
+      "entry_point": "00167a70",
+      "body_size": 82,
+      "message": "Function created successfully at 00167a70"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00167a70 from 'D3DDevice_SetRenderState_LogicOp' to 'D3DDevice_SetRenderState_LogicOp'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_LogicOp' \u2014 main part 'D3DDevice_SetRenderState_LogicOp' is not PascalCase. Expected: D3ddeviceSetrenderstateLogicop",
+       "Function name 'D3DDevice_SetRenderState_LogicOp' \u2014 main part 'D3DDevice_SetRenderState_LogicOp' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_LogicOp' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00167a70",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_LogicOp",
+   "ok": true
+  },
+  {
+   "xbox": "0x00168b70",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00168b70",
+      "function_name": "D3DDevice_SetRenderState_MultiSampleAntiAlias",
+      "entry_point": "00168b70",
+      "body_size": 114,
+      "message": "Function created successfully at 00168b70"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00168b70 from 'D3DDevice_SetRenderState_MultiSampleAntiAlias' to 'D3DDevice_SetRenderState_MultiSampleAntiAlias'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_MultiSampleAntiAlias' \u2014 main part 'D3DDevice_SetRenderState_MultiSampleAntiAlias' is not PascalCase. Expected: D3ddeviceSetrenderstateMultisampleantialias",
+       "Function name 'D3DDevice_SetRenderState_MultiSampleAntiAlias' \u2014 main part 'D3DDevice_SetRenderState_MultiSampleAntiAlias' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_MultiSampleAntiAlias' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00168b70",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_MultiSampleAntiAlias",
+   "ok": true
+  },
+  {
+   "xbox": "0x00168bf0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00168bf0",
+      "function_name": "D3DDevice_SetRenderState_MultiSampleMask",
+      "entry_point": "00168bf0",
+      "body_size": 80,
+      "message": "Function created successfully at 00168bf0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00168bf0 from 'D3DDevice_SetRenderState_MultiSampleMask' to 'D3DDevice_SetRenderState_MultiSampleMask'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_MultiSampleMask' \u2014 main part 'D3DDevice_SetRenderState_MultiSampleMask' is not PascalCase. Expected: D3ddeviceSetrenderstateMultisamplemask",
+       "Function name 'D3DDevice_SetRenderState_MultiSampleMask' \u2014 main part 'D3DDevice_SetRenderState_MultiSampleMask' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_MultiSampleMask' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00168bf0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_MultiSampleMask",
+   "ok": true
+  },
+  {
+   "xbox": "0x00168af0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00168af0",
+      "function_name": "D3DDevice_SetRenderState_MultiSampleMode",
+      "entry_point": "00168af0",
+      "body_size": 52,
+      "message": "Function created successfully at 00168af0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00168af0 from 'D3DDevice_SetRenderState_MultiSampleMode' to 'D3DDevice_SetRenderState_MultiSampleMode'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_MultiSampleMode' \u2014 main part 'D3DDevice_SetRenderState_MultiSampleMode' is not PascalCase. Expected: D3ddeviceSetrenderstateMultisamplemode",
+       "Function name 'D3DDevice_SetRenderState_MultiSampleMode' \u2014 main part 'D3DDevice_SetRenderState_MultiSampleMode' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_MultiSampleMode' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00168af0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_MultiSampleMode",
+   "ok": true
+  },
+  {
+   "xbox": "0x00168b30",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00168b30",
+      "function_name": "D3DDevice_SetRenderState_MultiSampleRenderTargetMode",
+      "entry_point": "00168b30",
+      "body_size": 52,
+      "message": "Function created successfully at 00168b30"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00168b30 from 'D3DDevice_SetRenderState_MultiSampleRenderTargetMode' to 'D3DDevice_SetRenderState_MultiSampleRenderTargetMode'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_MultiSampleRenderTargetMode' \u2014 main part 'D3DDevice_SetRenderState_MultiSampleRenderTargetMode' is not PascalCase. Expected: D3ddeviceSetrenderstateMultisamplerendertargetmode",
+       "Function name 'D3DDevice_SetRenderState_MultiSampleRenderTargetMode' \u2014 main part 'D3DDevice_SetRenderState_MultiSampleRenderTargetMode' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_MultiSampleRenderTargetMode' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00168b30",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_MultiSampleRenderTargetMode",
+   "ok": true
+  },
+  {
+   "xbox": "0x00167860",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00167860",
+      "function_name": "D3DDevice_SetRenderState_NormalizeNormals",
+      "entry_point": "00167860",
+      "body_size": 57,
+      "message": "Function created successfully at 00167860"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00167860 from 'D3DDevice_SetRenderState_NormalizeNormals' to 'D3DDevice_SetRenderState_NormalizeNormals'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_NormalizeNormals' \u2014 main part 'D3DDevice_SetRenderState_NormalizeNormals' is not PascalCase. Expected: D3ddeviceSetrenderstateNormalizenormals",
+       "Function name 'D3DDevice_SetRenderState_NormalizeNormals' \u2014 main part 'D3DDevice_SetRenderState_NormalizeNormals' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_NormalizeNormals' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00167860",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_NormalizeNormals",
+   "ok": true
+  },
+  {
+   "xbox": "0x001689b0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "001689b0",
+      "function_name": "D3DDevice_SetRenderState_OcclusionCullEnable",
+      "entry_point": "001689b0",
+      "body_size": 98,
+      "message": "Function created successfully at 001689b0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001689b0 from 'D3DDevice_SetRenderState_OcclusionCullEnable' to 'D3DDevice_SetRenderState_OcclusionCullEnable'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_OcclusionCullEnable' \u2014 main part 'D3DDevice_SetRenderState_OcclusionCullEnable' is not PascalCase. Expected: D3ddeviceSetrenderstateOcclusioncullenable",
+       "Function name 'D3DDevice_SetRenderState_OcclusionCullEnable' \u2014 main part 'D3DDevice_SetRenderState_OcclusionCullEnable' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_OcclusionCullEnable' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001689b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_OcclusionCullEnable",
+   "ok": true
+  },
+  {
+   "xbox": "0x001673b0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "001673b0",
+      "function_name": "D3DDevice_SetRenderState_PSTextureModes",
+      "entry_point": "001673b0",
+      "body_size": 34,
+      "message": "Function created successfully at 001673b0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001673b0 from 'D3DDevice_SetRenderState_PSTextureModes' to 'D3DDevice_SetRenderState_PSTextureModes'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_PSTextureModes' \u2014 main part 'D3DDevice_SetRenderState_PSTextureModes' is not PascalCase. Expected: D3ddeviceSetrenderstatePstexturemodes",
+       "Function name 'D3DDevice_SetRenderState_PSTextureModes' \u2014 main part 'D3DDevice_SetRenderState_PSTextureModes' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_PSTextureModes' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001673b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_PSTextureModes",
+   "ok": true
+  },
+  {
+   "xbox": "0x00168a90",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00168a90",
+      "function_name": "D3DDevice_SetRenderState_RopZCmpAlwaysRead",
+      "entry_point": "00168a90",
+      "body_size": 17,
+      "message": "Function created successfully at 00168a90"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00168a90 from 'D3DDevice_SetRenderState_RopZCmpAlwaysRead' to 'D3DDevice_SetRenderState_RopZCmpAlwaysRead'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_RopZCmpAlwaysRead' \u2014 main part 'D3DDevice_SetRenderState_RopZCmpAlwaysRead' is not PascalCase. Expected: D3ddeviceSetrenderstateRopzcmpalwaysread",
+       "Function name 'D3DDevice_SetRenderState_RopZCmpAlwaysRead' \u2014 main part 'D3DDevice_SetRenderState_RopZCmpAlwaysRead' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_RopZCmpAlwaysRead' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00168a90",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_RopZCmpAlwaysRead",
+   "ok": true
+  },
+  {
+   "xbox": "0x00168ab0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00168ab0",
+      "function_name": "D3DDevice_SetRenderState_RopZRead",
+      "entry_point": "00168ab0",
+      "body_size": 17,
+      "message": "Function created successfully at 00168ab0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00168ab0 from 'D3DDevice_SetRenderState_RopZRead' to 'D3DDevice_SetRenderState_RopZRead'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_RopZRead' \u2014 main part 'D3DDevice_SetRenderState_RopZRead' is not PascalCase. Expected: D3ddeviceSetrenderstateRopzread",
+       "Function name 'D3DDevice_SetRenderState_RopZRead' \u2014 main part 'D3DDevice_SetRenderState_RopZRead' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_RopZRead' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00168ab0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_RopZRead",
+   "ok": true
+  },
+  {
+   "xbox": "0x00168c40",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00168c40",
+      "function_name": "D3DDevice_SetRenderState_SampleAlpha",
+      "entry_point": "00168c40",
+      "body_size": 78,
+      "message": "Function created successfully at 00168c40"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00168c40 from 'D3DDevice_SetRenderState_SampleAlpha' to 'D3DDevice_SetRenderState_SampleAlpha'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_SampleAlpha' \u2014 main part 'D3DDevice_SetRenderState_SampleAlpha' is not PascalCase. Expected: D3ddeviceSetrenderstateSamplealpha",
+       "Function name 'D3DDevice_SetRenderState_SampleAlpha' \u2014 main part 'D3DDevice_SetRenderState_SampleAlpha' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_SampleAlpha' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00168c40",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_SampleAlpha",
+   "ok": true
+  },
+  {
+   "xbox": "0x00168a20",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00168a20",
+      "function_name": "D3DDevice_SetRenderState_StencilCullEnable",
+      "entry_point": "00168a20",
+      "body_size": 98,
+      "message": "Function created successfully at 00168a20"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00168a20 from 'D3DDevice_SetRenderState_StencilCullEnable' to 'D3DDevice_SetRenderState_StencilCullEnable'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_StencilCullEnable' \u2014 main part 'D3DDevice_SetRenderState_StencilCullEnable' is not PascalCase. Expected: D3ddeviceSetrenderstateStencilcullenable",
+       "Function name 'D3DDevice_SetRenderState_StencilCullEnable' \u2014 main part 'D3DDevice_SetRenderState_StencilCullEnable' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_StencilCullEnable' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00168a20",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_StencilCullEnable",
+   "ok": true
+  },
+  {
+   "xbox": "0x00167b80",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00167b80",
+      "function_name": "D3DDevice_SetRenderState_TwoSidedLighting",
+      "entry_point": "00167b80",
+      "body_size": 99,
+      "message": "Function created successfully at 00167b80"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00167b80 from 'D3DDevice_SetRenderState_TwoSidedLighting' to 'D3DDevice_SetRenderState_TwoSidedLighting'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_TwoSidedLighting' \u2014 main part 'D3DDevice_SetRenderState_TwoSidedLighting' is not PascalCase. Expected: D3ddeviceSetrenderstateTwosidedlighting",
+       "Function name 'D3DDevice_SetRenderState_TwoSidedLighting' \u2014 main part 'D3DDevice_SetRenderState_TwoSidedLighting' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_TwoSidedLighting' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00167b80",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_TwoSidedLighting",
+   "ok": true
+  },
+  {
+   "xbox": "0x00167bf0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00167bf0",
+      "function_name": "D3DDevice_SetRenderState_VertexBlend",
+      "entry_point": "00167bf0",
+      "body_size": 65,
+      "message": "Function created successfully at 00167bf0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00167bf0 from 'D3DDevice_SetRenderState_VertexBlend' to 'D3DDevice_SetRenderState_VertexBlend'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_VertexBlend' \u2014 main part 'D3DDevice_SetRenderState_VertexBlend' is not PascalCase. Expected: D3ddeviceSetrenderstateVertexblend",
+       "Function name 'D3DDevice_SetRenderState_VertexBlend' \u2014 main part 'D3DDevice_SetRenderState_VertexBlend' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_VertexBlend' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00167bf0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_VertexBlend",
+   "ok": true
+  },
+  {
+   "xbox": "0x001679f0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "001679f0",
+      "function_name": "D3DDevice_SetRenderState_ZBias",
+      "entry_point": "001679f0",
+      "body_size": 116,
+      "message": "Function created successfully at 001679f0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001679f0 from 'D3DDevice_SetRenderState_ZBias' to 'D3DDevice_SetRenderState_ZBias'",
+      "warnings": [
+       "Function name 'D3DDevice_SetRenderState_ZBias' \u2014 main part 'D3DDevice_SetRenderState_ZBias' is not PascalCase. Expected: D3ddeviceSetrenderstateZbias",
+       "Function name 'D3DDevice_SetRenderState_ZBias' \u2014 main part 'D3DDevice_SetRenderState_ZBias' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DDevice_SetRenderState_ZBias' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001679f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DDevice_SetRenderState_ZBias",
+   "ok": true
+  },
+  {
+   "xbox": "0x00169310",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00169310",
+      "function_name": "D3DResource_IsBusy",
+      "entry_point": "00169310",
+      "body_size": 138,
+      "message": "Function created successfully at 00169310"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00169310 from 'D3DResource_IsBusy' to 'D3DResource_IsBusy'",
+      "warnings": [
+       "Function name 'D3DResource_IsBusy' \u2014 main part 'D3DResource_IsBusy' is not PascalCase. Expected: D3dresourceIsbusy",
+       "Function name 'D3DResource_IsBusy' \u2014 main part 'D3DResource_IsBusy' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'D3DResource_IsBusy' does not start with a recognized verb. First word 'D3' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00169310",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "D3DResource_IsBusy",
+   "ok": true
+  },
+  {
+   "xbox": "0x0017acb3",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0017acb3",
+      "function_name": "DSound_CRefCount_AddRef",
+      "entry_point": "0017acb3",
+      "body_size": 13,
+      "message": "Function created successfully at 0017acb3"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0017acb3 from 'DSound_CRefCount_AddRef' to 'DSound_CRefCount_AddRef'",
+      "warnings": [
+       "Function name 'DSound_CRefCount_AddRef' \u2014 main part 'DSound_CRefCount_AddRef' is not PascalCase. Expected: DsoundCrefcountAddref",
+       "Function name 'DSound_CRefCount_AddRef' \u2014 main part 'DSound_CRefCount_AddRef' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0017acb3",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DSound_CRefCount_AddRef",
+   "ok": true
+  }
+ ]
+}

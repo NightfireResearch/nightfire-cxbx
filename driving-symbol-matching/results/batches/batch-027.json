@@ -1,0 +1,318 @@
+{
+ "batch": "027",
+ "program": "Driving.xbe",
+ "skip_refused_creates": true,
+ "note": "XDK library functions found by XbSymbolDatabase.",
+ "items": [
+  {
+   "xbox": "0x0010eb96",
+   "expect": "(none)",
+   "name": "XAPILIB::UnhandledExceptionFilter",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): XAPILIB stdcall UnhandledExceptionFilter(psh ExceptionPointers)"
+   ]
+  },
+  {
+   "xbox": "0x0010ebd2",
+   "expect": "(none)",
+   "name": "XAPILIB::XapiThreadStartup",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): XAPILIB stdcall XapiThreadStartup(psh StartRoutine, psh StartContext)"
+   ]
+  },
+  {
+   "xbox": "0x0010e864",
+   "expect": "FUN_0010e864",
+   "name": "XAPILIB::CreateEventA",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): XAPILIB stdcall CreateEventA(psh lpEventAttributes, psh bManualReset, psh bInitialState, psh lpName)"
+   ]
+  },
+  {
+   "xbox": "0x0010e8e5",
+   "expect": "FUN_0010e8e5",
+   "name": "XAPILIB::ResetEvent",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): XAPILIB stdcall ResetEvent(psh hEvent)"
+   ]
+  },
+  {
+   "xbox": "0x0010e8c5",
+   "expect": "FUN_0010e8c5",
+   "name": "XAPILIB::SetEvent",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): XAPILIB stdcall SetEvent(psh hEvent)"
+   ]
+  },
+  {
+   "xbox": "0x0016d2a0",
+   "expect": "FUN_0016d2a0",
+   "name": "D3D8::CDevice_InitializeFrameBuffers",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 thiscall CDevice_InitializeFrameBuffers(ecx this, psh pPresentationParams)"
+   ]
+  },
+  {
+   "xbox": "0x0016d180",
+   "expect": "FUN_0016d180",
+   "name": "D3D8::CDevice_FreeFrameBuffers",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 thiscall CDevice_FreeFrameBuffers(ecx this)"
+   ]
+  },
+  {
+   "xbox": "0x0016b430",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_CreateIndexBuffer2",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_CreateIndexBuffer2(psh Length)"
+   ]
+  },
+  {
+   "xbox": "0x00165de0",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetGammaRamp",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetGammaRamp(psh dwFlags, psh pRamp)"
+   ]
+  },
+  {
+   "xbox": "0x00166a70",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetIndices",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetIndices(psh pIndexData, psh BaseVertexIndex)"
+   ]
+  },
+  {
+   "xbox": "0x00167b20",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_BackFillMode",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_BackFillMode(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00168ad0",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_DoNotCullUncompressed",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_DoNotCullUncompressed(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x001676e0",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_EdgeAntiAlias",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_EdgeAntiAlias(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00167820",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_FrontFace",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_FrontFace(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00167a70",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_LogicOp",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_LogicOp(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00168b70",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_MultiSampleAntiAlias",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_MultiSampleAntiAlias(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00168bf0",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_MultiSampleMask",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_MultiSampleMask(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00168af0",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_MultiSampleMode",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_MultiSampleMode(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00168b30",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_MultiSampleRenderTargetMode",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_MultiSampleRenderTargetMode(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00167860",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_NormalizeNormals",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_NormalizeNormals(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x001689b0",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_OcclusionCullEnable",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_OcclusionCullEnable(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x001673b0",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_PSTextureModes",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_PSTextureModes(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00168a90",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_RopZCmpAlwaysRead",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_RopZCmpAlwaysRead(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00168ab0",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_RopZRead",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_RopZRead(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00168c40",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_SampleAlpha",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_SampleAlpha(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00168a20",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_StencilCullEnable",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_StencilCullEnable(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00167b80",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_TwoSidedLighting",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_TwoSidedLighting(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00167bf0",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_VertexBlend",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_VertexBlend(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x001679f0",
+   "expect": "(none)",
+   "name": "D3D8::D3DDevice_SetRenderState_ZBias",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DDevice_SetRenderState_ZBias(psh Value)"
+   ]
+  },
+  {
+   "xbox": "0x00169310",
+   "expect": "(none)",
+   "name": "D3D8::D3DResource_IsBusy",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): D3D8 stdcall D3DResource_IsBusy(psh pThis)"
+   ]
+  },
+  {
+   "xbox": "0x0017acb3",
+   "expect": "(none)",
+   "name": "DSOUND::DSound_CRefCount_AddRef",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "XbSymbolDatabase (Cxbx-Reloaded XDK signature scan, 20eced5): DSOUND stdcall DSound_CRefCount_AddRef(psh pThis)"
+   ]
+  }
+ ]
+}
