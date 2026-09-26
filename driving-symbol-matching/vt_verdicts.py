@@ -1,6 +1,6 @@
 """Turn Version Tracking review verdicts (vt_review.py packets, reviewed) into a rename list for vt_plates.py.
 
-    python vt_verdicts.py results/vt-accepted-007.json results/vt-review-trial/agent-*.json
+    python vt_verdicts.py results/vt-accepted-007.json results/vt-review-trial/agent-*.json [--exclude 0x..,0x..]
 
 Accepts and their accepted "intermediates" (unnamed functions placed along an agreeing caller chain) become
 [{"xbox", "name", "ps2", "why"}]. Dropped, and listed: anything whose Xbox function is no longer unnamed, the
@@ -16,7 +16,13 @@ from lib import ghidra_ro as g
 
 
 def main():
-    out_path, sources = sys.argv[1], sys.argv[2:]
+    exclude = set()
+    args = sys.argv[1:]
+    if "--exclude" in args:   # --exclude 0x14310,0x14700: Xbox addresses to leave out (weak evidence)
+        k = args.index("--exclude")
+        exclude = {int(x, 16) for x in args[k + 1].split(",")}
+        args = args[:k] + args[k + 2:]
+    out_path, sources = args[0], args[1:]
     q = g.qualified_names(g.XBOX)
     xn = {a: q.get(a, n) for a, n in g.functions(g.XBOX)}
     qp = g.qualified_names(g.PS2)
@@ -43,7 +49,9 @@ def main():
     for it in items:
         a = int(it["xbox"], 16)
         why = None
-        if a not in xn:
+        if a in exclude:
+            why = "excluded by hand"
+        elif a not in xn:
             why = "no Xbox function there"
         elif not xn[a].split("::")[-1].startswith("FUN_"):
             why = f"Xbox already named {xn[a]}"

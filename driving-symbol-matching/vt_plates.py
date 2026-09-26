@@ -65,7 +65,7 @@ def main():
             continue
         name = fix["name"] if fix else f["qualified"]
         it = {"xbox": f"0x{a:08x}", "expect": f["qualified"], "name": name, "rename": fix is not None,
-              "create": False, "allow_duplicate": fix is None}
+              "create": False, "allow_duplicate": fix is None or bool(fix.get("allow_duplicate"))}
         if fix:
             ps2_a = fix.get("ps2")
             sym = field(now, "Symbol file name") if BEGIN in now and f["qualified"] == name else None
