@@ -1,5 +1,5 @@
 {
- "generated": "Sat Sep 26 19:05:34 2026",
+ "generated": "Sat Sep 26 20:23:06 2026",
  "moves": [
   {
    "program": "Driving.xbe",
@@ -174,6 +174,132 @@
    "address": "0x000aca70",
    "name": "OBB::CheckOBBOverlap",
    "batch": "021"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00011050",
+   "name": "AnimationController::GetTotalTime",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00011020",
+   "name": "AnimationController::GetCurrentFrame",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00011040",
+   "name": "AnimationController::GetCurrentTime",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00011060",
+   "name": "AnimationController::GetRemainingTime",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00023e60",
+   "name": "AICharacterPedestrian::UpdateThreatRelativeDirection",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00023bc0",
+   "name": "AICharacterPedestrian::GetDegFromAng",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00081a20",
+   "name": "RPlayerCamera::InitWeaponChange",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00081af0",
+   "name": "RPlayerCamera::GetMaxTumble",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00096960",
+   "name": "RViewCamera::AspectRatio",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000fb050",
+   "name": "EAGLAnim::FnCompoundChannel::InitSubChannels",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000fb930",
+   "name": "EAGLAnim::FnKeyDeltaChan::EvalToPrevValues",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000fe2d0",
+   "name": "EAGLAnim::FnDeltaF1::EvalSQTMask",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000feae0",
+   "name": "EAGLAnim::FnDeltaF1::InitBuffersAsRequired",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000ff2d0",
+   "name": "EAGLAnim::FnDeltaF3::EvalSQTMask",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000ffd20",
+   "name": "EAGLAnim::FnDeltaF3::InitBuffersAsRequired",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x001051c0",
+   "name": "EAGLAnim::FnRunBlender::SetWeight",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00105670",
+   "name": "EAGLAnim::FnRunBlender::CycleTime",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00105710",
+   "name": "EAGLAnim::FnRunBlender::ComputeCycleIdx",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00105a60",
+   "name": "EAGLAnim::FnRunBlender::AlignVel",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00105ab0",
+   "name": "EAGLAnim::FnRunBlender::BlendVel",
+   "batch": "022"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00120db0",
+   "name": "ASoundManager::NormalizedRandomNumber",
+   "batch": "022"
   },
   {
    "program": "DRIVING.ELF",
