@@ -1,0 +1,284 @@
+{
+ "verdicts": [
+  {
+   "item": "31.1",
+   "xbox": "0x4de20",
+   "ps2": "0x2f53e8",
+   "name": "ALimitedSound::scalar_deleting_destructor",
+   "verdict": "accept",
+   "why": "Calls 0x4de50 (ALimitedSound::~ALimitedSound), then ABaseSound::operator_delete(this,0x120) if flag&1. Same shape as PS2 ~ALimitedSound's deleting path (delete size 0x120).",
+   "intermediates": []
+  },
+  {
+   "item": "31.2",
+   "xbox": "0x4de50",
+   "ps2": "0x2f53e8",
+   "name": "ALimitedSound::~ALimitedSound",
+   "verdict": "accept",
+   "why": "Sets the vtable 0x18c8c8, decrements the instance counter DAT_00243b30, then calls the AOneShotSound dtor. PS2 does the same: DAT_00355ec0--, vtable ALimitedSound -> AOneShotSound. The same vtable and counter++ are inlined in ESpawnExplosion's 'ExplosionBass' sound, as PS2 inlines ALimitedSound there.",
+   "intermediates": [
+    {
+     "item": "31.2-i1",
+     "xbox": "0x478a0",
+     "ps2": "0x2f2bc8",
+     "name": "AOneShotSound::~AOneShotSound",
+     "verdict": "accept",
+     "why": "Called by ALimitedSound::~ALimitedSound (0x4de50) as the base dtor. Sets vtable 0x18c840, destroys the 3 AVoice::View array (stride 0x1c), then ~ABaseSound. Same as PS2 ~AOneShotSound without the delete flag.",
+     "intermediates": []
+    }
+   ]
+  },
+  {
+   "item": "32.1",
+   "xbox": "0x80430",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list<T>::_Incsize ('list<T> too long'): MSVC STL helper.",
+   "intermediates": []
+  },
+  {
+   "item": "32.2",
+   "xbox": "0x804e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list push_back (_Buynode 0x800f0 + _Incsize) inlined from CreatePathHandle: MSVC STL helper.",
+   "intermediates": []
+  },
+  {
+   "item": "33.1",
+   "xbox": "0x9f4c0",
+   "ps2": "0x1e3238",
+   "name": "RLightning::Bolt::~Bolt",
+   "verdict": "accept",
+   "why": "ClearAllBolts calls it before delete, in the same position as PS2's ~Bolt. Body frees the array member at +8 (0x9f870, new[] with count, element size 0x18), then the new[] array at +0 and zeroes +0/+4, like PS2 ~Bolt without the delete flag.",
+   "intermediates": []
+  },
+  {
+   "item": "33.2",
+   "xbox": "0x9f520",
+   "ps2": "0x1e2178",
+   "name": "RLightning::BeginBoltDraw",
+   "verdict": "accept",
+   "why": "Bolt::Draw calls it after the CalcWorldPos loop, where PS2 calls BeginBoltDraw. Body: stores the float at +0x6e0 (PS2 +0x710), allocates the 0xe000 buffer and zeroes the 0x800 dwords at +0xc000, then takes the flag at +0x6c8 (PS2 +0x6f8) into the JitterStripPoints branches. Identical, offsets -0x30.",
+   "intermediates": []
+  },
+  {
+   "item": "34.1",
+   "xbox": "0xb4080",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "vector<T*>::reserve (FastAlloc 'STL', length check 0x40000000): MSVC STL helper.",
+   "intermediates": []
+  },
+  {
+   "item": "34.2",
+   "xbox": "0xb4190",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "_Tree::insert (lower-bound walk, _Insert): MSVC STL helper.",
+   "intermediates": []
+  },
+  {
+   "item": "35.1",
+   "xbox": "0xc7920",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL heap helper (_Push_heap with a predicate): MSVC STL.",
+   "intermediates": []
+  },
+  {
+   "item": "35.2",
+   "xbox": "0xc7990",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL heap/sort helper (_Adjust_heap-style on 8-byte elements): MSVC STL.",
+   "intermediates": []
+  },
+  {
+   "item": "36.1",
+   "xbox": "0xd1520",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "vector size() for 0x4c-byte elements: generic STL helper; PS2 has no counterpart.",
+   "intermediates": []
+  },
+  {
+   "item": "36.2",
+   "xbox": "0xd1570",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Sound-object helper called from WWorld::Open: frees the old AVoice at +0x13c and allocates a new one from sample id >>7 / &0x7f. PS2 inlines this whole body in WWorld::Open (FastAlloc(100,'AVoice')), so there is no PS2 function to name.",
+   "intermediates": []
+  },
+  {
+   "item": "37.1",
+   "xbox": "0xeec80",
+   "ps2": "0x284008",
+   "name": "EAGL::GeoPrimState::GetPrimitiveType",
+   "verdict": "accept",
+   "why": "Sits right after SetPrimitiveType on both platforms. Getter of the field SetPrimitiveType writes (+0): *out = this->type; return 1. The PS2 signature is the same (this, int* out) returning 1; PS2 decodes a packed bitfield instead.",
+   "intermediates": []
+  },
+  {
+   "item": "37.2",
+   "xbox": "0xeecb0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Sets the byte at +8 and returns 1. PS2 has no such GeoPrimState setter (PS2 GeoPrimState keeps only Set/GetPrimitiveType and Set/GetDepthTestMethod), so there is no name to give.",
+   "intermediates": []
+  },
+  {
+   "item": "38.1",
+   "xbox": "0x12f7e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Tree/list teardown (erase all, FastFree head 0x98) called from an unwind/atexit thunk: MSVC STL helper.",
+   "intermediates": []
+  },
+  {
+   "item": "38.2",
+   "xbox": "0x12f820",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Tree clear (recursive erase 0x12ef80, reset head links) called from an atexit thunk: MSVC STL helper.",
+   "intermediates": []
+  },
+  {
+   "item": "39.1",
+   "xbox": "0x14b660",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STREAM static (buffer-fill completion check). The PS2 counterparts in STREAM.c are unnamed FUN_ statics (0x3050e8..0x305630), so there is no name.",
+   "intermediates": []
+  },
+  {
+   "item": "39.2",
+   "xbox": "0x14b730",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STREAM static (request pump: FILESYS_read/MEM_copy). The PS2 counterpart is an unnamed FUN_ static, so there is no name.",
+   "intermediates": []
+  },
+  {
+   "item": "40.1",
+   "xbox": "0x186f0",
+   "ps2": "0x112b78",
+   "name": "ActPoser::GetRootBonePosOri",
+   "verdict": "accept",
+   "why": "Called by ActActor::Update as on PS2. It copies the 64-byte matrix from (this+0x24)->+0x100 at index (this+4)->+0x18. PS2 does the same with this+0x28 and this+8, the same +0x100 and +0x18 (object offsets -4).",
+   "intermediates": []
+  },
+  {
+   "item": "40.2",
+   "xbox": "0x18720",
+   "ps2": "0x112c18",
+   "name": "ActPoser::GetWeaponBonePosOri",
+   "verdict": "accept",
+   "why": "Called by ActActor::Update. It copies the 64-byte matrix at index (this+4)->+0x1c+i*4 into out. Identical to PS2 (this+8 ->+0x1c+i*4, same +0x100 table).",
+   "intermediates": []
+  },
+  {
+   "item": "41.1",
+   "xbox": "0x19820",
+   "ps2": "0x114a58",
+   "name": "ActSkeleton::GetStillPose",
+   "verdict": "accept",
+   "why": "DoMainPose calls it first, like PS2. Body: FUN_fa340(this+8 as ECX, this+0xc, 0), matching PS2 FUN_262aa8(this+8, this+0xc, 0). This is the no-argument overload.",
+   "intermediates": []
+  },
+  {
+   "item": "41.2",
+   "xbox": "0x19830",
+   "ps2": "0x114a80",
+   "name": "ActSkeleton::GetStillPose",
+   "verdict": "accept",
+   "why": "The overload with a pose argument: FUN_fa340(this+8, arg, 0), matching PS2 GetStillPose(pose*) -> FUN_262aa8(this+8, arg, 0). DoMainPose calls it twice on both platforms. Genuine PS2 overload.",
+   "intermediates": []
+  },
+  {
+   "item": "42.1",
+   "xbox": "0x2a3c0",
+   "ps2": "0x12e7d0",
+   "name": "AIGroundVehicle::GetTargetPos",
+   "verdict": "accept",
+   "why": "Called by ~EFireWeapon on both platforms. Returns target ? AIVehicle::GetPosition(target) : this+0x17c; PS2 does the same with +0x1a4/+0x1a8 (shift -0x2c).",
+   "intermediates": []
+  },
+  {
+   "item": "42.2",
+   "xbox": "0x2a3e0",
+   "ps2": "0x130140",
+   "name": "AIGroundVehicle::UpdateNavPos",
+   "verdict": "accept",
+   "why": "Called by DoMoveMode as on PS2. Same body: the rigid-body distance check, the +0xb1/+0xb2 direction branches with v4sub/unit, WRoadNav::IncNavPosition, the WRoadNetwork segment flag 0x4000 (byte +0x51 &0x40) -> tangent eval.",
+   "intermediates": []
+  },
+  {
+   "item": "43.1",
+   "xbox": "0x2a800",
+   "ps2": "0x131508",
+   "name": "AIGroundVehicle::EngageSplinePath",
+   "verdict": "accept",
+   "why": "Vtable slot 0x18b8e0, next to Disengage. Sets the two flags, physics vcall(1) then vcall(), mode=3 (+0x80, PS2 +0x70), SetSplinePath(arg). Identical sequence to PS2.",
+   "intermediates": []
+  },
+  {
+   "item": "43.2",
+   "xbox": "0x2a850",
+   "ps2": "0x131590",
+   "name": "AIGroundVehicle::DisengageSplinePath",
+   "verdict": "accept",
+   "why": "Vtable slot 0x18b8e4. Physics vcall(0), vcall(), mode=1; the inlined SetAttackMode(1) and SetNavigateMode(1) (+0x94, +0x88, SetSplinePath(0)); target +0x178=0 (PS2 +0x1a4, the same -0x2c shift as GetTargetPos); SetSplinePath(0). Same as PS2.",
+   "intermediates": []
+  },
+  {
+   "item": "44.1",
+   "xbox": "0x50e10",
+   "ps2": "0x167b80",
+   "name": "InputDevice::InputDevice",
+   "verdict": "accept",
+   "why": "XBoxPadDevice ctor calls it where PS2PadDevice calls InputDevice::InputDevice. It sets the vptr to 0x18d9fc (slot 0 = InputDevice::scalar_deleting_destructor 0x50eb0) and stores the int arg (PS2 stores it at +0x14 with the vptr at +0x18).",
+   "intermediates": []
+  },
+  {
+   "item": "44.2",
+   "xbox": "0x50e30",
+   "ps2": "0x167b98",
+   "name": "InputDevice::~InputDevice",
+   "verdict": "accept",
+   "why": "Called by the XBoxPadDevice dtor (0x51d80) as PS2's ~PS2PadDevice calls ~InputDevice. It only resets the vptr to InputDevice's vtable; this is the non-deleting part of PS2 ~InputDevice.",
+   "intermediates": []
+  },
+  {
+   "item": "45.1",
+   "xbox": "0x78560",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Generic float clamp(v,lo,hi) used by LoadFile. PS2 has no named counterpart (inlined, or the unlisted static FUN_001a49b0 inside the ~RCameraIniLoader row extent).",
+   "intermediates": []
+  },
+  {
+   "item": "45.2",
+   "xbox": "0x78590",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Substring-token match helper = PS2 FUN_001a6c68, which lies inside the extent of sheet row 2971 (RCameraIniLoader::LoadFile, size 0x2a70). It is an unlisted static with no name.",
+   "intermediates": []
+  }
+ ]
+}

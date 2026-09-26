@@ -75,6 +75,13 @@ right; the labels are wrong (Symbol Table, or the listing's label at the entry):
   0xb2810, a thunk to `ResetRigidBodySP` sitting where PS2 calls `Simulation::CopyRigidBodiesToScratchPad`
   (linker folding). Name them if you're happy with that evidence.
 
+- **Round 2 held back** (call position only): `EAGL::RenderContext::SetFrontBufferDepth` 0xe6aa0 (an empty `RET 4`),
+  `SetBackBufferDepth` 0xe6ac0, `SetZBufferDepth` 0xe6b10 (the call order after SetSize in the RRenderer
+  constructor), and `EAGL::GeoPrimState::GetPrimitiveType` 0xeec80 (right after SetPrimitiveType, reads its field).
+- **Five EAGLAnim channel functions not yet created** (0xfdf20, 0xfdf60, 0xfdf90, 0xfdfd0, 0xfe060 - code
+  pointers in the RawPoseChannel tables; likely QuatF4 / TranF3 and the *Interp variants). Added to
+  `function-splits.json`; after creation they can go through review.
+
 ## 6. Namespace moves
 
 `python apply.py --pending-namespaces` lists the pending moves (including P022's ECameraLockOn::~ECameraLockOn and

@@ -3,6 +3,36 @@
  "note": "MSVC unwind funclets that Ghidra merged into the preceding funclet or handler; create them, then re-run xbox_eh.py to name them.",
  "splits": [
   {
+   "address": "0x000fdf20",
+   "name": "(EAGLAnim RawPoseChannel table entry: QuatF4 / TranF3 / *Interp - to review after creation)",
+   "inside": null,
+   "program": "Driving.xbe"
+  },
+  {
+   "address": "0x000fdf60",
+   "name": "(EAGLAnim RawPoseChannel table entry: QuatF4 / TranF3 / *Interp - to review after creation)",
+   "inside": null,
+   "program": "Driving.xbe"
+  },
+  {
+   "address": "0x000fdf90",
+   "name": "(EAGLAnim RawPoseChannel table entry: QuatF4 / TranF3 / *Interp - to review after creation)",
+   "inside": null,
+   "program": "Driving.xbe"
+  },
+  {
+   "address": "0x000fdfd0",
+   "name": "(EAGLAnim RawPoseChannel table entry: QuatF4 / TranF3 / *Interp - to review after creation)",
+   "inside": null,
+   "program": "Driving.xbe"
+  },
+  {
+   "address": "0x000fe060",
+   "name": "(EAGLAnim RawPoseChannel table entry: QuatF4 / TranF3 / *Interp - to review after creation)",
+   "inside": null,
+   "program": "Driving.xbe"
+  },
+  {
    "address": "0x00150400",
    "name": "ActActor__SetNewAnimation_Unwind_0",
    "inside": "StandardAnimationController__StandardAnimationController_Frame_Handler",

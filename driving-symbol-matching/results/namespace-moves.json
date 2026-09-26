@@ -1,5 +1,5 @@
 {
- "generated": "Sat Sep 26 22:50:33 2026",
+ "generated": "Sat Sep 26 23:19:36 2026",
  "moves": [
   {
    "program": "Driving.xbe",
@@ -954,6 +954,276 @@
    "address": "0x0002b7a0",
    "name": "AIGroundVehicle::GetDirectLaneWeights",
    "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000cd740",
+   "name": "WTargetable::GetVelocity",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00014700",
+   "name": "ActCharacter::~ActCharacter",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0001adc0",
+   "name": "ActWeapon::SetEventDynamicData",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00082400",
+   "name": "RPlayerCamera::UpdateWorldAnimationCam",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000bad00",
+   "name": "SWeaponManager::StartNuclearSequence",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0005ca80",
+   "name": "Noise::Noise1",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0005cc80",
+   "name": "SimRandom::SimRandom",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000982a0",
+   "name": "RReflection::ReflPrivateData::~ReflPrivateData",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0009f870",
+   "name": "USimpleVec<RLightning::Segment>::~USimpleVec",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0009f4c0",
+   "name": "RLightning::Bolt::~Bolt",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000f5640",
+   "name": "EAGL::DrawArray::SetPrimitiveType",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000e9410",
+   "name": "EAGL::Model::Optimize",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0001fd40",
+   "name": "AICharacterEnemySnow::AICharacterEnemySnow",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00089010",
+   "name": "RPlayerCamera::AbortCinematic",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00102e30",
+   "name": "EAGLAnim::DeltaQFastMinRange::UnQuantize",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000e6c00",
+   "name": "EAGL::RenderContext::SetupFrameBuffers",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000ba150",
+   "name": "SMissionRule::Instantiate",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b96c0",
+   "name": "SRuleAlways::SRuleAlways",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b9d20",
+   "name": "SRuleAmmo::SRuleAmmo",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b9700",
+   "name": "SRuleDamage::SRuleDamage",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b9e10",
+   "name": "SRuleHealth::SRuleHealth",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b9f80",
+   "name": "SRuleRange::SRuleRange",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000ba000",
+   "name": "SRuleSpeed::SRuleSpeed",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000ba080",
+   "name": "SRuleTimer::SRuleTimer",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b9960",
+   "name": "SRuleProperty::SRuleProperty",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b9b30",
+   "name": "SRuleCollision::SRuleCollision",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b9a50",
+   "name": "SRulePlayerDir::SRulePlayerDir",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b99d0",
+   "name": "SRuleDifficulty::SRuleDifficulty",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b9b90",
+   "name": "SRuleProgCounter::SRuleProgCounter",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000fdd40",
+   "name": "EAGLAnim::RawPoseChannel::Eval",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000fdc20",
+   "name": "EAGLAnim::RawPoseChannel::EvalFrame",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0004de20",
+   "name": "ALimitedSound::scalar_deleting_destructor",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0004de50",
+   "name": "ALimitedSound::~ALimitedSound",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000478a0",
+   "name": "AOneShotSound::~AOneShotSound",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0009f520",
+   "name": "RLightning::BeginBoltDraw",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000186f0",
+   "name": "ActPoser::GetRootBonePosOri",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00018720",
+   "name": "ActPoser::GetWeaponBonePosOri",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00019820",
+   "name": "ActSkeleton::GetStillPose",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00019830",
+   "name": "ActSkeleton::GetStillPose",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0002a3c0",
+   "name": "AIGroundVehicle::GetTargetPos",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0002a3e0",
+   "name": "AIGroundVehicle::UpdateNavPos",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0002a800",
+   "name": "AIGroundVehicle::EngageSplinePath",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0002a850",
+   "name": "AIGroundVehicle::DisengageSplinePath",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00050e10",
+   "name": "InputDevice::InputDevice",
+   "batch": "032"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00050e30",
+   "name": "InputDevice::~InputDevice",
+   "batch": "032"
   },
   {
    "program": "DRIVING.ELF",
