@@ -15,6 +15,12 @@ import sys
 from lib import ghidra_ro as g
 
 
+def deleting(name, ps2_name):
+    """MSVC's Class::scalar_deleting_destructor is GCC's deleting Class::~Class."""
+    cls = name.rsplit("::", 1)[0]
+    return name.endswith("::scalar_deleting_destructor") and ps2_name == f"{cls}::~{cls.split('::')[-1]}"
+
+
 def main():
     exclude = set()
     args = sys.argv[1:]
@@ -71,7 +77,7 @@ def main():
             why = f"two names proposed: {sorted(by_x[a])}"
         elif len(by_n[it["name"]]) > 1 and not overload(it["name"]):
             why = "same name for several Xbox functions"
-        elif it.get("ps2") and pn.get(int(it["ps2"], 16)) != it["name"]:
+        elif it.get("ps2") and pn.get(int(it["ps2"], 16)) != it["name"] and not deleting(it["name"], pn.get(int(it["ps2"], 16))):
             why = f"PS2 {it['ps2']} is {pn.get(int(it['ps2'], 16))}, not {it['name']}"
         if why:
             dropped.append((it, why))

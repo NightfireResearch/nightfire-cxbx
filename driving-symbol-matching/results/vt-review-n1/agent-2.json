@@ -1,0 +1,608 @@
+{
+ "verdicts": [
+  {
+   "item": 47,
+   "xbox": "0x00093390",
+   "ps2": "0x001cf0f8",
+   "name": "RTextureContext::Unload",
+   "verdict": "accept",
+   "why": "Sole caller is the unnamed RTextureContext deleting destructor 0x93e80 (vtable store, then this call, frees 0x10), the same position as PS2 ~RTextureContext; body: walks the texture map deleting TARs, Free(+8), then clears the tree",
+   "intermediates": [
+    {
+     "xbox": "0x00093e80",
+     "ps2": "0x001cf010",
+     "name": "RTextureContext::scalar_deleting_destructor",
+     "why": "Stores the RTextureContext vtable, calls Unload, frees the tree header (+0xc), then FastFree(this,0x10) if the flag is set: same body as PS2 ~RTextureContext, delete-flag form"
+    }
+   ]
+  },
+  {
+   "item": 48,
+   "xbox": "0x000d6e30",
+   "ps2": "0x00236a00",
+   "name": "GGallery::~GGallery",
+   "verdict": "accept",
+   "why": "Called on the gallery member in GHud::~GHud on both builds, followed by delete; same body: MEM_free(+4), TAR loop over +0x10 for count +0x4c, FONT_destroy if +0xa8, free +0xac. No delete flag, so this is the plain ~GGallery",
+   "intermediates": []
+  },
+  {
+   "item": 49,
+   "xbox": "0x0014b340",
+   "ps2": "0x00305df8",
+   "name": "STREAM_setgreedystate",
+   "verdict": "accept",
+   "why": "Sole call from STREAM_setgreedylevel on both builds, on a change in greediness; stores the state, then FILESYS_priorityop if state!=0 and mode==1. Offsets consistently +0x10 (handle lookup 'STRM' inlined on Xbox)",
+   "intermediates": []
+  },
+  {
+   "item": 50,
+   "xbox": "0x001224d0",
+   "ps2": "0x002e9bc8",
+   "name": "AStream::Stop",
+   "verdict": "reject",
+   "why": "AStream::Stop is already on 0x122430 (same callers as PS2 Stop: ClearMission/Render/Restart/Update). 0x1224d0 takes an error code (arg+0x13, the residue of the switch from -0x13) and is called only from Play, so it is AStream::DecodeError with the logging removed and Stop inlined",
+   "intermediates": [
+    {
+     "xbox": "0x001224d0",
+     "ps2": "0x002e9350",
+     "name": "AStream::DecodeError",
+     "why": "Called from AStream::Play as on PS2; takes the error code (adds 0x13 = leftover of the -0x13..-1 message switch), then the Stop body (queue purge + Next), as PS2 DecodeError ends with Stop()"
+    }
+   ]
+  },
+  {
+   "item": 51,
+   "xbox": "0x00108480",
+   "ps2": "0x00259b78",
+   "name": "PAD_getdataptr",
+   "verdict": "accept",
+   "why": "Returns base + port*record size (0x90 Xbox vs 0x20 PS2) of the pad data table; called from IOModule::PollDevice and PlayMPC::Play on both builds",
+   "intermediates": []
+  },
+  {
+   "item": 52,
+   "xbox": "0x00024ee0",
+   "ps2": "0x00129c88",
+   "name": "AICharacterPedestrian::FindClosestCar",
+   "verdict": "accept",
+   "why": "Same loop over the playerPhysicsObject vehicle list keeping the nearest within the float limit (position +0x40 vs +0x30); sole caller 0x26760 is PS2 AICharacterPedestrian::ThreatenedByVehicle (FindClosestCar(1000.0) call there)",
+   "intermediates": [
+    {
+     "xbox": "0x00026760",
+     "ps2": "0x00129bc8",
+     "name": "AICharacterPedestrian::ThreatenedByVehicle",
+     "why": "Same body: time gate +4, <100 check, FindClosestCar(1000.0), CheckVehicleThreat(car,1), reset to 999.0 on no threat, then UpdateAnimSpeed; offsets -0x10"
+    },
+    {
+     "xbox": "0x00024280",
+     "ps2": "0x00129d80",
+     "name": "AICharacterPedestrian::CheckVehicleThreat",
+     "why": "Second call in ThreatenedByVehicle on both, (car,1) args; vehicle rigid-body relative position threat test returning 0/1/3"
+    },
+    {
+     "xbox": "0x00024db0",
+     "ps2": "0x00129868",
+     "name": "AICharacterPedestrian::UpdateAnimSpeed",
+     "why": "Last call in ThreatenedByVehicle on both; scales animation time by distance to the threat (15.0/2.0 limits) via SetTimeScale"
+    }
+   ]
+  },
+  {
+   "item": 53,
+   "xbox": "0x00098070",
+   "ps2": "0x001d5450",
+   "name": "RWorldCamera::RWorldCamera",
+   "verdict": "accept",
+   "why": "Called from RPlayerCamera::RPlayerCamera on both; RCamera base ctor, six fields zeroed, own vtable, then RestartCamera: same sequence",
+   "intermediates": []
+  },
+  {
+   "item": 54,
+   "xbox": "0x000720d0",
+   "ps2": "0x0019abb8",
+   "name": "RayShell::AddFlash",
+   "verdict": "accept",
+   "why": "Same body: count<8, FindPhysicsObjectSignature, not the player, type 4 or 0xb, dedup loop over 16-byte flash entries, append signature+position; callers are the RayShell file (from ~EFireWeapon chain as PS2 CollideWithWorld/Fire)",
+   "intermediates": [
+    {
+     "xbox": "0x000b27d0",
+     "ps2": "0x001ff280",
+     "name": "Simulation::FindPhysicsObjectSignature",
+     "why": "Same body (FindSignature then pick from one of two tables by the bool); caller set matches PS2: IsOwnedBy x2, Process, several ApplyDamage, RayShell/Missile"
+    }
+   ]
+  },
+  {
+   "item": 55,
+   "xbox": "0x000720d0",
+   "ps2": "0x0019bf30",
+   "name": "Sentry::AcquireTarget",
+   "verdict": "reject",
+   "why": "Xbox body is RayShell::AddFlash (item 54); Sentry::AcquireTarget is a 3-line GetPlayerObject/GetSig store",
+   "intermediates": []
+  },
+  {
+   "item": 56,
+   "xbox": "0x000720d0",
+   "ps2": "0x00198e80",
+   "name": "RayShell::RayShell",
+   "verdict": "reject",
+   "why": "Xbox body is RayShell::AddFlash (item 54); the PS2 RayShell ctor is 4x larger with collision calls",
+   "intermediates": []
+  },
+  {
+   "item": 57,
+   "xbox": "0x00125db0",
+   "ps2": "0x002fd418",
+   "name": "ABank::ABank",
+   "verdict": "accept",
+   "why": "Genuine PS2 overload: 0x2fd418 is ABank::ABank(void) (zero +0, -1 +4/+8, AIndex() on +0x10); the existing Xbox ABank::ABank at 0x125dd0 is the (char*, bool) overload that loads the bank file",
+   "intermediates": []
+  },
+  {
+   "item": 58,
+   "xbox": "0x000e4f50",
+   "ps2": "0x002871f0",
+   "name": "eagl_alloc",
+   "verdict": "accept",
+   "why": "Thin wrapper around malloc used through the EAGL allocator pointer (AddGeoPrim, ActSkeleton, SymbolPool::AddSymbol, ScratchBuffer::AllocateBuffer callers as PS2)",
+   "intermediates": []
+  },
+  {
+   "item": 59,
+   "xbox": "0x000e4f50",
+   "ps2": "0x00287210",
+   "name": "eagl_free",
+   "verdict": "reject",
+   "why": "0xe4f50 calls _malloc, so it is eagl_alloc (item 58); eagl_free is the neighbour 0xe4f60",
+   "intermediates": [
+    {
+     "xbox": "0x000e4f60",
+     "ps2": "0x00287210",
+     "name": "eagl_free",
+     "why": "Adjacent wrapper that calls the CRT free (0x1331dc) and is called through the same EAGL allocator pointer as PS2 eagl_free (AddGeoPrim, TAR deletes via maybeEaglFree)"
+    }
+   ]
+  },
+  {
+   "item": 60,
+   "xbox": "0x000f5730",
+   "ps2": "0x0029c230",
+   "name": "EAGL::DrawArray::GetNameFromIndex",
+   "verdict": "accept",
+   "why": "Returns entry i of the name table at (**(this+8))+0x20; the neighbours 0xf56c0 (strcmp over the same table -> index or -1) and 0xf5750 (stores that index at +0x2c) are PS2 GetIndexFromName/SetParamName in the same order; the table stride differs per build (4 vs 8) but is consistent within each",
+   "intermediates": [
+    {
+     "xbox": "0x000f56c0",
+     "ps2": "0x0029c1a0",
+     "name": "EAGL::DrawArray::GetIndexFromName",
+     "why": "Inlined strcmp over the name table for count +0x10, returns index or -1, as PS2; directly precedes GetNameFromIndex on both"
+    },
+    {
+     "xbox": "0x000f5750",
+     "ps2": "0x0029c250",
+     "name": "EAGL::DrawArray::SetParamName",
+     "why": "Calls GetIndexFromName, stores the result at +0x2c, returns !=-1: same as PS2 SetParamName (+0x2c)"
+    }
+   ]
+  },
+  {
+   "item": 61,
+   "xbox": "0x0008cc70",
+   "ps2": "0x001c5e50",
+   "name": "RRenderWorldCamera::DrawSceneObjects",
+   "verdict": "reject",
+   "why": "DrawSceneObjects is inlined in the Xbox DoRender (commented there); 0x8cc70 is called after DrawTyreTracks = DrawVehiclesAndDeferredSceneObjects (item 63)",
+   "intermediates": [
+    {
+     "xbox": "0x0008d9f0",
+     "ps2": "0x001c8558",
+     "name": "RSceneObj::RenderAllNormal",
+     "why": "At the RenderAllNormal position inside the inlined DrawSceneObjects in Xbox DoRender; body = reflection distance reset + render loop over the normal visible list (0x1f1d80), as PS2"
+    }
+   ]
+  },
+  {
+   "item": 62,
+   "xbox": "0x0008cc70",
+   "ps2": "0x001c5ca8",
+   "name": "RRenderWorldCamera::DrawTranslucentStaticWorldGeometry",
+   "verdict": "reject",
+   "why": "That function is inlined in Xbox DoRender (EnableFog/SendPerViewPort/DrawPass(1,1,2)/DisableFog right after the 0x8cc70 call); 0x8cc70 is DrawVehiclesAndDeferredSceneObjects",
+   "intermediates": []
+  },
+  {
+   "item": 63,
+   "xbox": "0x0008cc70",
+   "ps2": "0x001c5eb0",
+   "name": "RRenderWorldCamera::DrawVehiclesAndDeferredSceneObjects",
+   "verdict": "accept",
+   "why": "Called in DoRender right after DrawTyreTracks, the same position as PS2; body: EnableAlphaWrites, EnableFog, SetVehiclesAllowed(1) saving old, Lock, RenderAllDrawLast, DisableAlphaWrites, FlushDrawLists, UnLock, restore, DisableFog (reflection draw moved elsewhere on Xbox)",
+   "intermediates": [
+    {
+     "xbox": "0x0007e1a0",
+     "ps2": "0x001adc48",
+     "name": "RRenderSharedData::SetVehiclesAllowed",
+     "why": "Swaps a global flag and returns the old value; called with 1 and then the saved value around the deferred draw as PS2"
+    },
+    {
+     "xbox": "0x0008da30",
+     "ps2": "0x001c8598",
+     "name": "RSceneObj::RenderAllDrawLast",
+     "why": "Render loop over the draw-last visible list (0x1f1d00, filled by SetNowVisible when flag bit 3 is set), at the RenderAllDrawLast position"
+    }
+   ]
+  },
+  {
+   "item": 64,
+   "xbox": "0x000b5d50",
+   "ps2": "0x00200200",
+   "name": "Simulation::SpawnExplosionObject",
+   "verdict": "accept",
+   "why": "CanSpawnSimpleRigidBody(pos, force>500.0), FastAlloc(0x98,\"Explosion\"), Explosion ctor, SpawnPhysicsObject; callers ~ESpawnExplosion and ~ESpawnForceEffect on both",
+   "intermediates": []
+  },
+  {
+   "item": 65,
+   "xbox": "0x00058470",
+   "ps2": "0x0016c2b8",
+   "name": "String_AttribByteOffsetParserFunc",
+   "verdict": "reject",
+   "why": "String_AttribByteOffsetParserFunc is already on 0x55f20; 0x58470 is a constructor (EH frame, tree header alloc, two MakeString calls stored at +0x14/+0x18), not a parser callback",
+   "intermediates": []
+  },
+  {
+   "item": 66,
+   "xbox": "0x000817f0",
+   "ps2": "0x001bcb88",
+   "name": "RPlayerCamera::PauseOff",
+   "verdict": "accept",
+   "why": "Called in EResume::~EResume after the resume flag store and before the player vcall, the PauseOff position on PS2; body tests the camera-mode table byte 3 and calls SetCameraLookBack (0x814c0) like PS2",
+   "intermediates": [
+    {
+     "xbox": "0x000814c0",
+     "ps2": "0x001bc048",
+     "name": "RPlayerCamera::SetCameraLookBack",
+     "why": "Same body: mode-table byte 3 -> store flag + dirty bit 2, else clear on false for five mode indices; callers PauseOff and DriveCamInputHandler x2 as PS2"
+    },
+    {
+     "xbox": "0x00121150",
+     "ps2": "0x002ec6d8",
+     "name": "ASoundManager::Resume",
+     "why": "At the ASoundManager::Resume position in EResume::~EResume; clears per-sound pause flags, AFX::Resume, fgIsPaused=0, restores the Music/Effects mix volumes"
+    }
+   ]
+  },
+  {
+   "item": 67,
+   "xbox": "0x0011d610",
+   "ps2": "0x002f46e8",
+   "name": "URefCounter<AMix>::Get",
+   "verdict": "accept",
+   "why": "Function-static singleton: guard bit, construct the map, atexit, return the static; callers AMix::Add/Clear/Get/SetMaster and the Remove helper as PS2",
+   "intermediates": []
+  },
+  {
+   "item": 68,
+   "xbox": "0x000819a0",
+   "ps2": "0x001bc3c8",
+   "name": "RPlayerCamera::SetAutoDriveRotationY",
+   "verdict": "reject",
+   "why": "Called in AutoDriveCamInputHandler case 0x32 (snow1a_mis3), which is RPlayerCamera::InitSpin on PS2; its body stores 0x24, 0x3f7fc19f and anchor axis * 0.04361939 exactly as PS2 InitSpin. SetAutoDriveRotationY is 0x84820 (cases 0x2c/0x2f)",
+   "intermediates": [
+    {
+     "xbox": "0x000819a0",
+     "ps2": "0x001bd338",
+     "name": "RPlayerCamera::InitSpin",
+     "why": "Case 0x32 call in AutoDriveCamInputHandler as PS2; same constants 0x24, 0x3f7fc19f (cos) and 0.04361939 scale of the anchor matrix row"
+    },
+    {
+     "xbox": "0x00084820",
+     "ps2": "0x001bc3c8",
+     "name": "RPlayerCamera::SetAutoDriveRotationY",
+     "why": "Called in cases 0x2c/0x2f as PS2; SetAutoDriveRotation(v) stored at +0x2a4, then the shared helper, returns +0x2a8"
+    },
+    {
+     "xbox": "0x000847f0",
+     "ps2": "0x001bc390",
+     "name": "RPlayerCamera::SetAutoDriveRotationX",
+     "why": "Called in cases 0x2d/0x2e/0x30/0x31 as PS2; same body storing at +0x2a0"
+    },
+    {
+     "xbox": "0x000816e0",
+     "ps2": "0x001bc4a0",
+     "name": "RPlayerCamera::SetAutoDriveZoom",
+     "why": "Called in cases 0x34-0x36 as PS2; +0x2b4=1.0, +0x2ac=global*arg, identical"
+    }
+   ]
+  },
+  {
+   "item": 69,
+   "xbox": "0x0010cbf0",
+   "ps2": "0x00252cb8",
+   "name": "FILESYS_close",
+   "verdict": "reject",
+   "why": "0x10cbf0 is the Xbox request-allocation helper called by exists/size/addbig/delbig and by the open/close wrappers; FILESYS_close is 0x10ce60 (item 92)",
+   "intermediates": []
+  },
+  {
+   "item": 70,
+   "xbox": "0x0010cbf0",
+   "ps2": "0x00252c00",
+   "name": "FILESYS_open",
+   "verdict": "reject",
+   "why": "Generic Xbox request allocator (see item 69); FILESYS_open is 0x10cdc0",
+   "intermediates": [
+    {
+     "xbox": "0x0010cdc0",
+     "ps2": "0x00252c00",
+     "name": "FILESYS_open",
+     "why": "Called by FILESYS_opensync (and the AV player/stream queue paths) as PS2 FILESYS_open; allocs a request, copies the file name, queues and executes it"
+    }
+   ]
+  },
+  {
+   "item": 71,
+   "xbox": "0x0001f3c0",
+   "ps2": "0x0011c640",
+   "name": "AICharacterEnemyGround::HandleInterrupts",
+   "verdict": "accept",
+   "why": "Slot 30 of the Xbox AICharacterEnemyGround vtable 0x18a840 (36 slots; DoWandering/DoAiming/DoFiring at 11/17/18), same slot as PS2 0x368648; callees ThreatenedByVehicle, HeightAtPoint, FindClosestFace, Say, crossfade agree",
+   "intermediates": []
+  },
+  {
+   "item": 72,
+   "xbox": "0x0001d840",
+   "ps2": "0x0011aff8",
+   "name": "AICharacterEnemyDriver::HandleInterrupts",
+   "verdict": "accept",
+   "why": "Slot 30 of the Xbox driver vtable 0x18a788 (33 slots, slots 10-29 null as PS2 AICharacterEnemyDriver); body: two LocateFX on +0x144/+0x148, GetRotPos, OrthoInverse, two matrix mults, SetIKInfoArray",
+   "intermediates": []
+  },
+  {
+   "item": 73,
+   "xbox": "0x0001d840",
+   "ps2": "0x0011a5b8",
+   "name": "AICharacterBond::HandleInterrupts",
+   "verdict": "reject",
+   "why": "AICharacterBond::HandleInterrupts is already 0x1d2a0 (slot 30 of the Bond vtable 0x18a688); 0x1d840 is slot 30 of the driver vtable (item 72)",
+   "intermediates": []
+  },
+  {
+   "item": 74,
+   "xbox": "0x00036060",
+   "ps2": "0x0013efc8",
+   "name": "AIVehicleController::IntersectionGreenLight",
+   "verdict": "accept",
+   "why": "Sole caller CheckTrafficCollision on both; path-handle loop with the height difference <5.0 and distance^2 <2500.0 tests",
+   "intermediates": []
+  },
+  {
+   "item": 75,
+   "xbox": "0x0008dbc0",
+   "ps2": "0x001c8c70",
+   "name": "RSceneObj::SetNowVisible",
+   "verdict": "accept",
+   "why": "Same body: visible flag and capacity check, then append to the draw-last list if flag bit 3, else the normal list (the lists RenderAllDrawLast/RenderAllNormal walk); called from ActWeapon::ManualRender on both",
+   "intermediates": []
+  },
+  {
+   "item": 76,
+   "xbox": "0x0005d7d0",
+   "ps2": "0x0017e8b8",
+   "name": "Grenade::Simulate",
+   "verdict": "accept",
+   "why": "Slot 4 of vtable 0x18ed98, which Grenade::Grenade (0x5d5c0) stores; PS2 Grenade vtable slot 4 is Simulate. Callees HeightAtPoint/FindClosestFace/SetOrientation/m4toquat are Grenade's",
+   "intermediates": []
+  },
+  {
+   "item": 77,
+   "xbox": "0x0005d7d0",
+   "ps2": "0x0017ffc8",
+   "name": "Mine::Simulate",
+   "verdict": "reject",
+   "why": "0x5d7d0 is Grenade::Simulate (Grenade vtable slot 4, item 76)",
+   "intermediates": []
+  },
+  {
+   "item": 78,
+   "xbox": "0x00080b90",
+   "ps2": "0x001b3b40",
+   "name": "RPlayerCamera::UpdateBumperCam",
+   "verdict": "accept",
+   "why": "CameraLoader LoadFile stores it as the update callback for the \"Bumper\" camera type; body matches PS2 (mode table byte 4 index, alt row when look-back, anchor matrix/position, rotate+add offset)",
+   "intermediates": []
+  },
+  {
+   "item": 79,
+   "xbox": "0x00080b90",
+   "ps2": "0x001b3ce0",
+   "name": "RPlayerCamera::UpdateDashboardCam",
+   "verdict": "reject",
+   "why": "0x80b90 is registered for \"Bumper\" (item 78); the \"Dashboard\" callback is 0x81d10",
+   "intermediates": []
+  },
+  {
+   "item": 80,
+   "xbox": "0x00081d10",
+   "ps2": "0x001b3b40",
+   "name": "RPlayerCamera::UpdateBumperCam",
+   "verdict": "reject",
+   "why": "LoadFile stores 0x81d10 for the \"Dashboard\" camera type; its callees (BuildRotationMat4, MATRIX4_mult, anchor queries) are UpdateDashboardCam's",
+   "intermediates": [
+    {
+     "xbox": "0x00081d10",
+     "ps2": "0x001b3ce0",
+     "name": "RPlayerCamera::UpdateDashboardCam",
+     "why": "Update callback registered for the \"Dashboard\" camera string in LoadFile; callees BuildRotationMat4/VU0_MATRIX4_mult/GetAnchor* agree with PS2 UpdateDashboardCam"
+    }
+   ]
+  },
+  {
+   "item": 81,
+   "xbox": "0x00035470",
+   "ps2": "0x0013c5e8",
+   "name": "AIRoadSpawn::GetTrafficSpawnPointOnSegment",
+   "verdict": "reject",
+   "why": "0x35470 is GetRandomPedSpawn (item 82); the traffic point picker has no mission check or random-segment loop",
+   "intermediates": []
+  },
+  {
+   "item": 82,
+   "xbox": "0x00035470",
+   "ps2": "0x0013d3f0",
+   "name": "AIRoadSpawn::GetRandomPedSpawn",
+   "verdict": "accept",
+   "why": "Called from AICharacterPedestrian::Recycle on both; *out=-1, RefreshSpawnData(0,75.0,150.0), mission-manager check, up to 10 random segment picks with the flag tests, then GetPedSpawnPointOnSegment",
+   "intermediates": [
+    {
+     "xbox": "0x00034960",
+     "ps2": "0x0013cf08",
+     "name": "AIRoadSpawn::GetPedSpawnPointOnSegment",
+     "why": "Identical body: segment lookup, random t *1.5258789e-05, random lane from bytes +0x52/+0x53; the tail call of GetRandomPedSpawn on both"
+    },
+    {
+     "xbox": "0x00034ed0",
+     "ps2": "0x0013d618",
+     "name": "AIRoadSpawn::RefreshSpawnData",
+     "why": "Callers GetRandomPedSpawn, the traffic spawn picker and EForceNearPedRespawn, as PS2's three callers; time-gated rebuild around the player position"
+    }
+   ]
+  },
+  {
+   "item": 83,
+   "xbox": "0x00035470",
+   "ps2": "0x0013cf08",
+   "name": "AIRoadSpawn::GetPedSpawnPointOnSegment",
+   "verdict": "reject",
+   "why": "0x35470 is GetRandomPedSpawn (item 82); GetPedSpawnPointOnSegment is its callee 0x34960",
+   "intermediates": []
+  },
+  {
+   "item": 84,
+   "xbox": "0x0008c8e0",
+   "ps2": "0x001c5358",
+   "name": "RRenderWorldCamera::RRenderWorldCamera",
+   "verdict": "accept",
+   "why": "RViewCamera base ctor, own vtable, LensFlareManager Enable(1), global=1, SetGuardBandSize(4.0): same sequence",
+   "intermediates": [
+    {
+     "xbox": "0x0009e1f0",
+     "ps2": "0x001dfd98",
+     "name": "RLensFlareManager::Enable",
+     "why": "One-line store to (this+4)->enable field; sole call in the RRenderWorldCamera ctor as PS2 (sole caller there too)"
+    },
+    {
+     "xbox": "0x00096850",
+     "ps2": "0x001d4298",
+     "name": "RViewCamera::SetGuardBandSize",
+     "why": "Stores the guard band size at +0x48 and passes it on to the viewport; called with 4.0 in the ctor as PS2"
+    }
+   ]
+  },
+  {
+   "item": 85,
+   "xbox": "0x0006e330",
+   "ps2": "0x00193938",
+   "name": "PHelicopter::ApplyDamage",
+   "verdict": "accept",
+   "why": "Slot 2 of the PHelicopter vtable 0x18f8bc (stored by PHelicopter::PHelicopter), the ApplyDamage slot in PS2 0x37a4e8; 14/17 named callees shared",
+   "intermediates": []
+  },
+  {
+   "item": 86,
+   "xbox": "0x000d8820",
+   "ps2": "0x0023e7b8",
+   "name": "GHud::DrawScreenHits",
+   "verdict": "accept",
+   "why": "First call after SPRITE_Flush in GOrthoHudView::DoRender (hud on) on both; body: hit counters +0x328/+0x32c, SPRITE_SetState/Draw2D",
+   "intermediates": [
+    {
+     "xbox": "0x000d8970",
+     "ps2": "0x0023e930",
+     "name": "GHud::DrawScreenFades",
+     "why": "Next call in GOrthoHudView::DoRender after DrawScreenHits as PS2; same fade update: +0x350 active, (time-start)*rate+base into +0x34c clamped 0..1, global fade value"
+    }
+   ]
+  },
+  {
+   "item": 87,
+   "xbox": "0x0001ea60",
+   "ps2": "0x0011d9f0",
+   "name": "AICharacterEnemyGround::PlayZoneInjuryAnim",
+   "verdict": "accept",
+   "why": "Slot 6 of the Xbox AICharacterEnemyGround vtable 0x18a840 = PS2 slot 6 PlayZoneInjuryAnim; 2 shared strings, default zone 3, hit point scale check",
+   "intermediates": []
+  },
+  {
+   "item": 88,
+   "xbox": "0x00108460",
+   "ps2": "0x00259b90",
+   "name": "PAD_getpadtype",
+   "verdict": "reject",
+   "why": "Different job: returns a connected bool from field +0x88 of the Xbox pad record, one caller (CheckUnplugged); PS2 getpadtype returns the pad type word and has 5 callers. An Xbox-specific pad query at that call position",
+   "intermediates": []
+  },
+  {
+   "item": 89,
+   "xbox": "0x000223a0",
+   "ps2": "0x00123878",
+   "name": "AICharacterHands::GetRotPos",
+   "verdict": "reject",
+   "why": "0x223a0 is slot 33 of Xbox vtable 0x18ab68 (TargetIsInRange slot); PS2 AICharacterHands::GetRotPos is not virtual (passed as a pointer in Init) and is a matrix copy; Xbox body is a range/angle test 2x the size",
+   "intermediates": []
+  },
+  {
+   "item": 90,
+   "xbox": "0x000718e0",
+   "ps2": "0x00196708",
+   "name": "PVehicle::GetCarNames",
+   "verdict": "accept",
+   "why": "Checks and returns the same global (0x1e7ac4) after lazy init, as PS2 GetCarNames checks and returns 0x33209c; callers RShadowMap::LoadAttributes and ReflPrivateData on both",
+   "intermediates": []
+  },
+  {
+   "item": 91,
+   "xbox": "0x000718e0",
+   "ps2": "0x001965b8",
+   "name": "PVehicle::GetNameCount",
+   "verdict": "reject",
+   "why": "PVehicle::GetNameCount is already 0x71880 (checks flag, returns flag+8); 0x718e0 returns the checked global itself = GetCarNames (item 90)",
+   "intermediates": []
+  },
+  {
+   "item": 92,
+   "xbox": "0x0010ce60",
+   "ps2": "0x00252cb8",
+   "name": "FILESYS_close",
+   "verdict": "accept",
+   "why": "Called by FILESYS_closesync with (handle, cb, 0) then waitop/completeop, as PS2; allocates a request, sets the handle, queues and executes it; also used by the stream queue path as PS2",
+   "intermediates": []
+  },
+  {
+   "item": 93,
+   "xbox": "0x00099670",
+   "ps2": "0x001c1b18",
+   "name": "RReflection::SetCamera",
+   "verdict": "accept",
+   "why": "Sits between RReflection ctor and the reflection draw (PS2 order SetCamera, Begin, Draw); builds the reflection camera matrix with Y offset from the private data, RCamera::SetMatrix4, ConvertToRHCS, inverse, view matrix; first call of the Xbox reflection draw (0x997d0). Xbox takes a matrix+scale instead of a direction",
+   "intermediates": []
+  },
+  {
+   "item": 94,
+   "xbox": "0x000b9db0",
+   "ps2": "0x00209ec0",
+   "name": "SRuleAmmo::CheckRule",
+   "verdict": "accept",
+   "why": "Slot 1 of 2-slot SRule vtable 0x193630 (object size 0x1c); only SRule CheckRule on PS2 that reads WeaponManager (weapon record stride 0x54, ammo at +0x18); same above/below threshold edge logic, offsets -8",
+   "intermediates": [
+    {
+     "xbox": "0x000b9d90",
+     "ps2": "0x00209e68",
+     "name": "SRuleAmmo::scalar_deleting_destructor",
+     "why": "Slot 0 of the same vtable; base destructor then FastFree(this,0x1c) on the flag, PS2 slot 0 is ~SRuleAmmo"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,586 @@
+{
+ "verdicts": [
+  {
+   "item": 95,
+   "xbox": "0x00021e70",
+   "ps2": "0x00121378",
+   "name": "AICharacterEnemySunroof::DoUnarming",
+   "verdict": "reject",
+   "why": "Name already on Xbox 0x21630 (exact body: IsAnimationDone, state=1, +0x24=0, Deactivate). 0x21e70 is the same slot in another vtable (0x18ab84) with an extra buddy-search loop; no PS2 DoUnarming (Ground/Snow/Window/Hands) matches it",
+   "intermediates": []
+  },
+  {
+   "item": 96,
+   "xbox": "0x000b6770",
+   "ps2": "0x00206960",
+   "name": "SMissionManager::IncKills",
+   "verdict": "accept",
+   "why": "Same body (field += n, clamp at 0; 0x3c4 -> 0x4e8, the +0x124 SMissionManager shift); all 5 named callers agree; sits between IncShotsHit and GetMagicCounter as on PS2",
+   "intermediates": []
+  },
+  {
+   "item": 97,
+   "xbox": "0x000898ee",
+   "ps2": "0x001bb970",
+   "name": "RPlayerCamera::EndMissileCamera",
+   "verdict": "reject",
+   "why": "Name already on Xbox 0x895e0 (exact body, batch 011). 0x898ee is an unaligned fragment (a function tail after TriggerAnimationCamera), not a function",
+   "intermediates": []
+  },
+  {
+   "item": 98,
+   "xbox": "0x001177b0",
+   "ps2": "0x002d4090",
+   "name": "UDataGroupDecodeTag",
+   "verdict": "accept",
+   "why": "Same body: length>5, '{' then '}' at 5 or 9, packs 4 chars, sscanf \"%04x\" into the low 16 bits (strlen inlined); only caller 0x11a750 is ParseNameAndTag",
+   "intermediates": [
+    {
+     "xbox": "0x0011a750",
+     "ps2": "0x002cdbd0",
+     "name": "UCarpNamespace::ParseNameAndTag",
+     "why": "Same body: '{' -> DecodeTag, else copy, strstr \"::\", DecodeTag, strstr \"}::\" then atoi; only Xbox caller of 0x1177b0"
+    }
+   ]
+  },
+  {
+   "item": 99,
+   "xbox": "0x00020c70",
+   "ps2": "0x00120500",
+   "name": "AICharacterEnemySSnow::PlayZoneInjuryAnim",
+   "verdict": "accept",
+   "why": "Slot 6 of the SSnow vtable (Xbox 0x18aa18 base / PS2 0x368c20); body has HGrunt/HDeath, the crossfade table and the IS_SNOWMOBILE lookup like PS2 SSnow",
+   "intermediates": []
+  },
+  {
+   "item": 100,
+   "xbox": "0x00020c70",
+   "ps2": "0x00121dd8",
+   "name": "AICharacterEnemySunroof::PlayZoneInjuryAnim",
+   "verdict": "reject",
+   "why": "0x20c70 is the SSnow copy (item 99): it has the IS_SNOWMOBILE lookup and lacks the Sunroof vcall in the first test; the Sunroof one would follow DoUnarming 0x21630",
+   "intermediates": []
+  },
+  {
+   "item": 101,
+   "xbox": "0x0005e480",
+   "ps2": "0x0017fc18",
+   "name": "Mine::Mine",
+   "verdict": "accept",
+   "why": "PhysicsObject(\"weapon\",\"Mine\",5), same callee set; only caller 0xb5a70 is SpawnMineObject (FastAlloc(0x88,\"Mine\")) <- EFireWeapon, as on PS2",
+   "intermediates": [
+    {
+     "xbox": "0x000b5a70",
+     "ps2": "0x001ffd70",
+     "name": "Simulation::SpawnMineObject",
+     "why": "CanSpawnSimpleRigidBody, FastAlloc(0x88,\"Mine\"), Mine ctor, SpawnPhysicsObject; called from ~EFireWeapon as on PS2"
+    }
+   ]
+  },
+  {
+   "item": 102,
+   "xbox": "0x000f5020",
+   "ps2": "0x00298928",
+   "name": "EAGL::ProfilerRegion::DrawRegions",
+   "verdict": "accept",
+   "why": "Same body: lazy ViewPort + \"EAGL::DrawGouraud new\", BeginView, 3 passes over the region list (0x11c>0x1f / 0.5 test, DrawRegion, y+=34), flush, EndView, timer page counter",
+   "intermediates": [
+    {
+     "xbox": "0x000f5280",
+     "ps2": "0x00299970",
+     "name": "EAGL::ProfilerRegion::ProcessRegions",
+     "why": "Exact: per-region call over the list at +0x124, frame count wraps at 0x1f, then DrawRegions if enabled; only caller of 0xf5020"
+    }
+   ]
+  },
+  {
+   "item": 103,
+   "xbox": "0x00081930",
+   "ps2": "0x001bd070",
+   "name": "RPlayerCamera::SetAutoDriveForwardLock",
+   "verdict": "accept",
+   "why": "Called at the same two positions in EAutoDriveSteering::~EAutoDriveSteering (1 after HideHands, 0 after ShowHands); one-field setter",
+   "intermediates": []
+  },
+  {
+   "item": 104,
+   "xbox": "0x00097770",
+   "ps2": "0x001d6778",
+   "name": "RWorldCamera::LoadSingleAnimation",
+   "verdict": "accept",
+   "why": "Frees old handle (inlined ~Handle), Handle::Create(1,..), GetInstanceSystemID into 0x110, returns handle!=0; caller DirectorChangeCameraMode agrees; RWorldCamera order SetCameraZoom, this, ..., LoadSingleAnimationFromList matches",
+   "intermediates": []
+  },
+  {
+   "item": 105,
+   "xbox": "0x000b8580",
+   "ps2": "0x002065d0",
+   "name": "SMissionManager::SetCinematicMode",
+   "verdict": "reject",
+   "why": "Name already on Xbox 0xb8160. 0xb8580 is SMissionManager::Lose: state=4, inlined IsSkippingCinematic and SetCinematicMode(0); caller ~EPlayerLose; follows Win 0xb84b0",
+   "intermediates": [
+    {
+     "xbox": "0x000b8580",
+     "ps2": "0x00205bf0",
+     "name": "SMissionManager::Lose",
+     "why": "Sets the state field to 4 then, when skipping a cinematic, ClearCinematicMode(-1) and the global = cinematic mode (inlined SetCinematicMode(0)); only caller ~EPlayerLose; right after Win"
+    }
+   ]
+  },
+  {
+   "item": 106,
+   "xbox": "0x0001da80",
+   "ps2": "0x0011d608",
+   "name": "AICharacterEnemyGround::AvoidThreat",
+   "verdict": "accept",
+   "why": "Same flow and constants: mission flag, +0x13c, state==1, random<0.01, forward-aim vs direction dot >= 0.707, stretched-sphere ray (radius*1.25), random side byte, 0.5 tests; unique PS2 name, distance 1",
+   "intermediates": []
+  },
+  {
+   "item": 107,
+   "xbox": "0x0002cd80",
+   "ps2": "0x00131770",
+   "name": "AIGroundVehicle::DoAgentStateUpdate",
+   "verdict": "accept",
+   "why": "Same position in AIGroundVehicle::Update: UpdateStuck, this, DoAttackMode, DoWeaponUpdate; 10/17 callees shared",
+   "intermediates": [
+    {
+     "xbox": "0x0002f0e0",
+     "ps2": "0x00130050",
+     "name": "AIGroundVehicle::DoWeaponUpdate",
+     "why": "Next call in Update's agent case; body: hit points > 0, type 10 -> FireRockets, 9 -> FireBullets, else flag bytes -> Bullets/Rockets/Missiles as on PS2"
+    },
+    {
+     "xbox": "0x0002e910",
+     "ps2": "0x0012f730",
+     "name": "AIGroundVehicle::FireBullets",
+     "why": "Called by DoWeaponUpdate for weapon type 9 and the first flag byte, as PS2 FireBullets"
+    },
+    {
+     "xbox": "0x0002eb40",
+     "ps2": "0x0012fa28",
+     "name": "AIGroundVehicle::FireRockets",
+     "why": "Called by DoWeaponUpdate for weapon type 10 and the second flag byte, as PS2 FireRockets"
+    },
+    {
+     "xbox": "0x0002ee00",
+     "ps2": "0x0012fd58",
+     "name": "AIGroundVehicle::FireMissiles",
+     "why": "Called by DoWeaponUpdate for the third flag byte, as PS2 FireMissiles"
+    }
+   ]
+  },
+  {
+   "item": 108,
+   "xbox": "0x00090660",
+   "ps2": "0x001c7940",
+   "name": "RSceneObj::UseInstanceList",
+   "verdict": "accept",
+   "why": "Same body start (close, name or \"<<unknown>>\", zero fields, delete old list...); callers Newton::Newton, UseArticle and UseInstance agree",
+   "intermediates": [
+    {
+     "xbox": "0x00090820",
+     "ps2": "0x001c7b60",
+     "name": "RSceneObj::UseInstance",
+     "why": "Clamps the index to +0x1c, calls UseInstanceList(.., \"<<fragment1>>\"), copies the matrix, sets 0x4d/0x4e by the 0x10 flag; same as PS2 overload 0x1c7b60"
+    }
+   ]
+  },
+  {
+   "item": 109,
+   "xbox": "0x000b9950",
+   "ps2": "0x0020a420",
+   "name": "SRuleProg::CheckRule",
+   "verdict": "accept",
+   "why": "Slot 1 of the SRuleProg vtable (Xbox 0x193600, set by ctor 0xb9900 / PS2 0x397b30 after ~SRuleProg); the only caller of CheckProgrammerEvent besides Reset on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 110,
+   "xbox": "0x000287d0",
+   "ps2": "0x0012c740",
+   "name": "AIElementController::GoToSleep",
+   "verdict": "accept",
+   "why": "Callers agree: AIElementController::Update, AIElementTracking::Update and ForceVehicleToSleep (whose 6 callers all agree); state==1 / 0x44 / 0x40&1 structure; delete helpers merged on Xbox",
+   "intermediates": [
+    {
+     "xbox": "0x000289f0",
+     "ps2": "0x0012da78",
+     "name": "AIElementController::ForceVehicleToSleep",
+     "why": "Loops the 0x100-byte element array for state 1/1 and matching vehicle, then GoToSleep; all 6 named callers agree"
+    }
+   ]
+  },
+  {
+   "item": 111,
+   "xbox": "0x00027800",
+   "ps2": "0x00126ad8",
+   "name": "AICharacterPedestrian::KillSelf",
+   "verdict": "reject",
+   "why": "Name already on Xbox 0x24140 (right body). 0x27800 inlines KillSelf inside PedRespawnAvailable, then threat/wall checks: it is AICharacterPedestrian::HandleInterrupts",
+   "intermediates": [
+    {
+     "xbox": "0x00027800",
+     "ps2": "0x00128cd8",
+     "name": "AICharacterPedestrian::HandleInterrupts",
+     "why": "Same flow: state!=0x16, AIRoadSpawn::Get+PedRespawnAvailable -> (inlined) KillSelf, special ped info, frame&3 gate, vcall, ThreatenedByVehicle/FindPointAgainstWall(3.2) state table (0x15, 0x11, 0xf, 6, 7), zone loop"
+    },
+    {
+     "xbox": "0x00034d30",
+     "ps2": "0x0013d228",
+     "name": "AIRoadSpawn::PedRespawnAvailable",
+     "why": "Called by pedestrian HandleInterrupts with the position right after AIRoadSpawn::Get, before the inlined KillSelf; sits after TrafficRespawnPosCheck in the AIRoadSpawn block"
+    }
+   ]
+  },
+  {
+   "item": 112,
+   "xbox": "0x0001fcf0",
+   "ps2": "0x0011f468",
+   "name": "AICharacterEnemySnow::HandleInterrupts",
+   "verdict": "accept",
+   "why": "Slot 30 of the Snow vtable (Xbox 0x18a9c0 / PS2 0x368a48, slot 17 = DoAiming and 6 = PlayZoneInjuryAnim line up too); body vcall, hit points <= 0 and state not 0xf/0x16 -> 0xf",
+   "intermediates": []
+  },
+  {
+   "item": 113,
+   "xbox": "0x000324d0",
+   "ps2": "0x00138b88",
+   "name": "AIHelicopter::FireBullets",
+   "verdict": "accept",
+   "why": "Caller AIHelicopter::DoAgentLogic agrees; body same with +0x10 shift (0x7c/0xdc/0x100/0x120 -> 0x8c/0xec/0x110/0x130), 5.0 / -0.05 tests, IsSystemPlaying/ProcessStimuli; the AIGroundVehicle overload is 0x2e910",
+   "intermediates": []
+  },
+  {
+   "item": 114,
+   "xbox": "0x000ba990",
+   "ps2": "0x0020bf80",
+   "name": "SWeaponManager::SetPlayerCar",
+   "verdict": "accept",
+   "why": "Same body: store car, InitPlayerCar, GetPlayerObject, LookupInt \"MISSILES_FIRED_SIMULTANEOUSLY\" *2 into two fields; callers GameLoop_StartUp and ~ERestart agree",
+   "intermediates": [
+    {
+     "xbox": "0x000b8090",
+     "ps2": "0x00205a90",
+     "name": "SMissionManager::InitPlayerCar",
+     "why": "First call in SetPlayerCar; body is the player object's vcall with &this->currentShield (0x4a4), as on PS2; only caller SetPlayerCar"
+    }
+   ]
+  },
+  {
+   "item": 115,
+   "xbox": "0x000da540",
+   "ps2": "0x002476b8",
+   "name": "GHud::DrawTarget",
+   "verdict": "reject",
+   "why": "PS2 DrawTarget is a small sprite + FONT_Draw helper called by Draw*Target; 0xda540 is 3.9x larger, has its own 0x2f0 state machine, no FONT_Draw and is called from GHud::Draw",
+   "intermediates": []
+  },
+  {
+   "item": 116,
+   "xbox": "0x00074670",
+   "ps2": "0x0019ddb8",
+   "name": "Shell::ApplyWorldDamage",
+   "verdict": "accept",
+   "why": "Same body: scorch unless 0x52 / 'p' / 0x51&2, then render instance -> scene obj -> ProcessStimuli 0x16/0x15/0x14/0x13 at 500/250/50/10; caller Missile::CheckForCollision agrees",
+   "intermediates": [
+    {
+     "xbox": "0x000a50c0",
+     "ps2": "0x001ea8e8",
+     "name": "RScorchWorld::ScorchWorld",
+     "why": "Called at the scorch position in ApplyWorldDamage with (.., obj, obj+0x10, ..) as PS2; only caller"
+    }
+   ]
+  },
+  {
+   "item": 117,
+   "xbox": "0x000fbb60",
+   "ps2": "0x00275228",
+   "name": "EAGLAnim::FnKeyQuatChan::EvalSQT",
+   "verdict": "accept",
+   "why": "Of the 14 PS2 EvalSQT only FnKeyQuatChan and FnKeyLerpChan call DecompressValues; Xbox calls DecompressValues plus 0xfbd10 (the slerp FnPoseBlender::EvalSQT also uses, PS2 VU0_fastqslerp), not DecompressValuesIndexed",
+   "intermediates": []
+  },
+  {
+   "item": 118,
+   "xbox": "0x00097930",
+   "ps2": "0x001d6970",
+   "name": "RWorldCamera::PlayCurrentAnimation",
+   "verdict": "accept",
+   "why": "Same body: handle 0x114 null -> false, ProcessStimuli(id,8,..,2), return IsSystemPlaying; follows LoadSingleAnimationFromList as on PS2",
+   "intermediates": []
+  },
+  {
+   "item": 119,
+   "xbox": "0x000c8490",
+   "ps2": "0x0021f670",
+   "name": "WRender::DrawPass",
+   "verdict": "reject",
+   "why": "Name already on Xbox 0xc8370 (right body and callers). 0xc8490 is WRender::DrawWorldAtPoint",
+   "intermediates": [
+    {
+     "xbox": "0x000c8490",
+     "ps2": "0x0021fa58",
+     "name": "WRender::DrawWorldAtPoint",
+     "why": "After DrawWorld; SimpleDrawVisibleTreeNodes around a point, distance-filtered instance list, insertion sort, QuickDrawInstance loop, as PS2 (Xbox adds an RSky::Draw)"
+    }
+   ]
+  },
+  {
+   "item": 120,
+   "xbox": "0x000d8ea0",
+   "ps2": "0x0023f080",
+   "name": "GHud::DrawFadingCrossHairs",
+   "verdict": "accept",
+   "why": "Last call in GHud::DrawCrossHairs (this->TargetLock) on both sides; no BuildRotate/MATRIX4_mult (the Zooming one has them), uses 0x38c/0x390 like PS2",
+   "intermediates": []
+  },
+  {
+   "item": 121,
+   "xbox": "0x000d8ea0",
+   "ps2": "0x0023ec08",
+   "name": "GHud::DrawZoomingCrossHairs",
+   "verdict": "reject",
+   "why": "Name already on Xbox 0xd8c00; 0xd8ea0 is DrawFadingCrossHairs (item 120)",
+   "intermediates": []
+  },
+  {
+   "item": 122,
+   "xbox": "0x00121150",
+   "ps2": "0x002ec6d8",
+   "name": "ASoundManager::Resume",
+   "verdict": "accept",
+   "why": "Same body: clear paused flag on each sound, AFX::Resume, paused=0, restore \"1:Music\" and \"1:Effects\" volumes; callers ~EResume, ~ESetVideo and the RunTheGame helper agree",
+   "intermediates": []
+  },
+  {
+   "item": 123,
+   "xbox": "0x000d9c50",
+   "ps2": "0x002476b8",
+   "name": "GHud::DrawTarget",
+   "verdict": "reject",
+   "why": "PS2 DrawTarget is a small sprite + FONT_Draw helper called by Draw*Target; 0xd9c50 is a larger GHud::Draw callee with a smoothstep lock animation and no FONT_Draw",
+   "intermediates": []
+  },
+  {
+   "item": 124,
+   "xbox": "0x0008a310",
+   "ps2": "0x001be570",
+   "name": "RPlayerCamState::AimZoom",
+   "verdict": "accept",
+   "why": "Same body: not aiming and no cinematic -> aiming=1, InitAimZoom, zero 4 fields, SetAutoDriveRotationX(0)/Y, player flag=1, GHud::AimOn",
+   "intermediates": [
+    {
+     "xbox": "0x00081a70",
+     "ps2": "0x001bd440",
+     "name": "RPlayerCamera::InitAimZoom",
+     "why": "Called at InitAimZoom's position; body zeroes two fields and reads the zoom table entry +0x58 like PS2"
+    },
+    {
+     "xbox": "0x000847f0",
+     "ps2": "0x001bc390",
+     "name": "RPlayerCamera::SetAutoDriveRotationX",
+     "why": "Called with 0 at the X position; stores SetAutoDriveRotation result at 0x2a0, recomputes, returns 0x2a8 (same offsets as PS2)"
+    },
+    {
+     "xbox": "0x00084820",
+     "ps2": "0x001bc3c8",
+     "name": "RPlayerCamera::SetAutoDriveRotationY",
+     "why": "Called at the Y position; stores at 0x2a4, same offsets as PS2"
+    },
+    {
+     "xbox": "0x00081540",
+     "ps2": "0x001bc0e0",
+     "name": "RPlayerCamera::SetAutoDriveRotation",
+     "why": "First call of both SetAutoDriveRotationX and Y, as on PS2"
+    }
+   ]
+  },
+  {
+   "item": 125,
+   "xbox": "0x0008a310",
+   "ps2": "0x001be660",
+   "name": "RPlayerCamState::AimRelease",
+   "verdict": "reject",
+   "why": "Name already on Xbox 0x8a390; 0x8a310 turns aiming on and calls AimOn, so it is AimZoom (item 124)",
+   "intermediates": []
+  },
+  {
+   "item": 126,
+   "xbox": "0x00034860",
+   "ps2": "0x0013c5e8",
+   "name": "AIRoadSpawn::GetTrafficSpawnPointOnSegment",
+   "verdict": "accept",
+   "why": "Same body (random t, road 0x3c lane rotor modulo 0x52+0x53); caller 0x35130 is GetRandomTrafficSpawn <- AIGroundVehicle::Spawn as on PS2",
+   "intermediates": [
+    {
+     "xbox": "0x00035130",
+     "ps2": "0x0013ca60",
+     "name": "AIRoadSpawn::GetRandomTrafficSpawn",
+     "why": "Refresh(75,150), random spawn segment, road capacity test, GetTrafficSpawnPointOnSegment, static WRoadNav; called from AIGroundVehicle::Spawn as on PS2"
+    },
+    {
+     "xbox": "0x00034ed0",
+     "ps2": "0x0013d618",
+     "name": "AIRoadSpawn::RefreshSpawnData",
+     "why": "First call in GetRandomTrafficSpawn with (75.0,150.0) as the PS2 spawn functions call RefreshSpawnData"
+    }
+   ]
+  },
+  {
+   "item": 127,
+   "xbox": "0x00034860",
+   "ps2": "0x0013d3f0",
+   "name": "AIRoadSpawn::GetRandomPedSpawn",
+   "verdict": "reject",
+   "why": "0x34860 is GetTrafficSpawnPointOnSegment (item 126); PS2 GetRandomPedSpawn has RefreshSpawnData and a retry loop, caller AICharacterPedestrian::Recycle",
+   "intermediates": []
+  },
+  {
+   "item": 128,
+   "xbox": "0x00034860",
+   "ps2": "0x0013cf08",
+   "name": "AIRoadSpawn::GetPedSpawnPointOnSegment",
+   "verdict": "reject",
+   "why": "0x34860 has the road 0x3c lane-rotor logic of GetTrafficSpawnPointOnSegment (item 126); the ped version picks a side with a second random only",
+   "intermediates": []
+  },
+  {
+   "item": 129,
+   "xbox": "0x0011ddb0",
+   "ps2": "0x002fc130",
+   "name": "ACharacter::Play",
+   "verdict": "accept",
+   "why": "Follows ACharacter::Say (0x11dad0) as on PS2; AVoice::Play with volume*0x7c*param, voice-done check, free the voice (FastFree) and clear 0xc0",
+   "intermediates": []
+  },
+  {
+   "item": 130,
+   "xbox": "0x0007a6d0",
+   "ps2": "0x001a8440",
+   "name": "RCameraSpline::EvaluateSpline",
+   "verdict": "accept",
+   "why": "Callers are the two animation-cam updates (0x82400/0x82840) that also call PlayCurrentAnimation, as PS2 0x1a8440's callers UpdateWorld/RelativeAnimationCam; basis choice, MATRIX4_mult, slerp/quattom4 path; the other overload 0x1a85d0 is called by WRoadNav",
+   "intermediates": []
+  },
+  {
+   "item": 131,
+   "xbox": "0x0011a5c0",
+   "ps2": "0x002d9a38",
+   "name": "DAFI_getsectionindex",
+   "verdict": "accept",
+   "why": "Same body: null name -> *p, else strcasecmp over p[1] names at p+2; caller DAFI_setsection agrees (getkeyindex reads 0x1f48 offsets)",
+   "intermediates": []
+  },
+  {
+   "item": 132,
+   "xbox": "0x0011a5c0",
+   "ps2": "0x002d9af0",
+   "name": "DAFI_getkeyindex",
+   "verdict": "reject",
+   "why": "Name already on Xbox 0x11a660; 0x11a5c0 has the null-name early return and p+2 table of getsectionindex (item 131)",
+   "intermediates": []
+  },
+  {
+   "item": 133,
+   "xbox": "0x00020090",
+   "ps2": "0x0011ead0",
+   "name": "AICharacterEnemySnow::DoAiming",
+   "verdict": "accept",
+   "why": "Slot 17 of the Snow vtable (Xbox 0x18a98c / PS2 0x3689e0), vcall gate, BuildRotate/MATRIX4_mult pose overrides as PS2",
+   "intermediates": []
+  },
+  {
+   "item": 134,
+   "xbox": "0x000b66c0",
+   "ps2": "0x002068b8",
+   "name": "SMissionManager::IncPlayerDamage",
+   "verdict": "accept",
+   "why": "Same body with the +0x124 shift (0x3cc/0x3c8/0x3e0 -> 0x4f0/0x4ec/0x504); caller PBondCar::ApplyDamage agrees; between BoostPlayerShield and IncShotsFired as on PS2",
+   "intermediates": []
+  },
+  {
+   "item": 135,
+   "xbox": "0x000224f0",
+   "ps2": "0x00123878",
+   "name": "AICharacterHands::GetRotPos",
+   "verdict": "reject",
+   "why": "0x224f0 is in the Snow vtable TargetIsAcquired slot (0x18a9d4, also 0x18abf4: folded copy); body is the weapon-to-target atan facing test with +-0.0055555557",
+   "intermediates": [
+    {
+     "xbox": "0x000224f0",
+     "ps2": "0x0011f768",
+     "name": "AICharacterEnemySnow::TargetIsAcquired",
+     "why": "Slot 35 of the Snow vtable; same body (vehicle target or player position, atan difference wrapped to +-0.5, side flag, +-1/180 turn window). MSVC folded an identical copy used by a second vtable 0x18abf4"
+    }
+   ]
+  },
+  {
+   "item": 136,
+   "xbox": "0x0005e710",
+   "ps2": "0x00180620",
+   "name": "Mine::CheckTimer",
+   "verdict": "reject",
+   "why": "0x5e710 is Mine::Simulate (item 137); CheckTimer is its callee 0x5e400",
+   "intermediates": [
+    {
+     "xbox": "0x0005e400",
+     "ps2": "0x00180620",
+     "name": "Mine::CheckTimer",
+     "why": "Exact: rigid body, --timer, <1 -> forward vector, SpawnExplosion, delete; called by Mine::Simulate for type 4 as on PS2"
+    },
+    {
+     "xbox": "0x0005e200",
+     "ps2": "0x001802e0",
+     "name": "Mine::CheckForProximity",
+     "why": "Called by Mine::Simulate for types 5/7 at the CheckForProximity position"
+    }
+   ]
+  },
+  {
+   "item": 137,
+   "xbox": "0x0005e710",
+   "ps2": "0x0017ffc8",
+   "name": "Mine::Simulate",
+   "verdict": "accept",
+   "why": "In the Mine vtable (0x18ee38; ctor sets 0x18ee28); once-only 0x84 setup, type 4 -> CheckTimer, 5/7 -> proximity, PhysicsObject::Simulate, type 7 CheckHitWorld as PS2",
+   "intermediates": []
+  },
+  {
+   "item": 138,
+   "xbox": "0x0005e710",
+   "ps2": "0x0017f980",
+   "name": "Human::Simulate",
+   "verdict": "reject",
+   "why": "Name already on Xbox 0x5dd00; 0x5e710 is Mine::Simulate (item 137)",
+   "intermediates": []
+  },
+  {
+   "item": 139,
+   "xbox": "0x000274c0",
+   "ps2": "0x001284e0",
+   "name": "AICharacterPedestrian::DoLeaning",
+   "verdict": "reject",
+   "why": "Name already on Xbox 0x263d0; 0x274c0's state machine is DoDodging (item 141)",
+   "intermediates": []
+  },
+  {
+   "item": 140,
+   "xbox": "0x000274c0",
+   "ps2": "0x00127a30",
+   "name": "AICharacterPedestrian::DoAvoiding",
+   "verdict": "reject",
+   "why": "DoAvoiding starts with FindPointAgainstWall and has 4 different states; 0x274c0 matches DoDodging (item 141)",
+   "intermediates": []
+  },
+  {
+   "item": 141,
+   "xbox": "0x000274c0",
+   "ps2": "0x00127d58",
+   "name": "AICharacterPedestrian::DoDodging",
+   "verdict": "accept",
+   "why": "State machine matches: 0 -> 0x24c=-1, threat target, MPed/FPed say; 1 -> anim 0x15/0x16, +2; 2 -> ThreatenedByVehicle, 0x15/0x16; 3 -> PreventFalling<5, wall 3.2, count<0x19, 7.5 test, anim 0x19/4; 4 -> state 3, anim 0x1b/5",
+   "intermediates": []
+  }
+ ]
+}
