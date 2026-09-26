@@ -60,12 +60,25 @@ def block(item):
 
 
 def merged_plate(old, new_block):
+    """The new block in place of the first managed block; any further managed blocks are dropped."""
     old = old or ""
     if BEGIN in old and END in old:
         head, rest = old.split(BEGIN, 1)
         tail = rest.split(END, 1)[1]
+        while BEGIN in tail and END in tail.split(BEGIN, 1)[1]:
+            before, after = tail.split(BEGIN, 1)
+            tail = before.rstrip() + after.split(END, 1)[1]
         return (head + new_block + tail).strip()
     return (old.rstrip() + "\n\n" + new_block).strip() if old.strip() else new_block
+
+
+def plate_for(item, live_plate):
+    """The plate to write. Normally the live plate with its managed block replaced. An item may instead give
+    "plate_exact" (the whole plate, e.g. restoring one another tool overwrote) or "plate_base" (the text to
+    merge the block into, in place of the live plate)."""
+    if "plate_exact" in item:
+        return item["plate_exact"]
+    return merged_plate(item["plate_base"] if "plate_base" in item else live_plate, block(item))
 
 
 def used_in_src(qualified):
@@ -94,7 +107,8 @@ def check(items, program):
                 problems.append(f"{it['xbox']}: expected no function, found {have}")
         elif have != names.bare(it["expect"]):
             problems.append(f"{it['xbox']}: expected {it['expect']}, Ghidra has {have}")
-        if program == g.XBOX and not it["expect"].startswith("FUN_") and it["expect"] != "(none)":
+        if (program == g.XBOX and not it["expect"].startswith("FUN_") and it["expect"] != "(none)"
+                and it.get("rename", True) and it["name"] != it["expect"]):
             refs = used_in_src(it["expect"])
             if refs:
                 problems.append(f"{it['xbox']}: old name {it['expect']} is used in src/driving: {refs[:2]}")
@@ -168,10 +182,12 @@ def run(batch_path, do_apply):
                     print(f"  FAIL {it['xbox']} rename refused: {result['error']}")
                     print("  stopping at the first failure (plate comment left alone)")
                     break
-            plate = merged_plate(old_plate, block(it))
+            plate = plate_for(it, old_plate)
             entry["steps"].append(("plate", w.post("set_plate_comment", {"address": it["xbox"], "comment": plate}, program)))
             got_name, got_plate = live(a, program)
-            entry["new_name"], entry["ok"] = got_name, got_name == bare and BEGIN in (got_plate or "")
+            entry["new_name"] = got_name
+            entry["ok"] = got_name == bare and ((got_plate or "").strip() == plate.strip() if "plate_exact" in it
+                                                 else BEGIN in (got_plate or ""))
             print(f"  {'ok  ' if entry['ok'] else 'FAIL'} {it['xbox']} {old_name} -> {got_name}")
             if not entry["ok"]:
                 print("  stopping at the first failure")
@@ -248,6 +264,7 @@ def pending_moves():
             if bare[program].get(a) != names.bare(it["name"]):
                 print(f"  skipped {program} {it['xbox']}: now {bare[program].get(a)}, not {names.bare(it['name'])}")
                 continue
+            moves = [m for m in moves if (m["program"], m["address"]) != (program, it["xbox"])]   # a later batch wins
             moves.append({"program": program, "address": it["xbox"], "name": it["name"], "batch": batch["batch"]})
     out = os.path.join(HERE, "results", "namespace-moves.json")
     with open(out, "w") as f:

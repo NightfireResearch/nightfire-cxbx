@@ -28,6 +28,7 @@ PATHS = {
 
 READ_ONLY = {
     "list_open_programs",
+    "get_function_labels",
     "list_functions_enhanced",
     "search_functions_enhanced",
     "get_function_by_address",

@@ -1,119 +1,47 @@
 {
- "generated": "Sat Sep 26 01:09:09 2026",
+ "generated": "Sat Sep 26 03:15:09 2026",
  "moves": [
+  {
+   "program": "Driving.xbe",
+   "address": "0x000e3d20",
+   "name": "GSystem::IsEARS",
+   "batch": "004b"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000e3db0",
+   "name": "GSystem::IsSavage",
+   "batch": "004b"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0011b730",
+   "name": "UCarpNamespace::~UCarpNamespace",
+   "batch": "004b"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0011b760",
+   "name": "UCarpNamespace::scalar_deleting_destructor",
+   "batch": "004b"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000d4b90",
+   "name": "GFXGallery::DEBRIS_Draw",
+   "batch": "004d"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000d51e0",
+   "name": "GFXGallery::CANVAS_Draw",
+   "batch": "004d"
+  },
   {
    "program": "DRIVING.ELF",
    "address": "0x001a4318",
    "name": "__lower_bound<CARP::AnimInfo_*,_CARP::AnimInfo,_int>",
    "batch": "P012"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0016ec40",
-   "name": "AttributeSystem::GetMetrics",
-   "batch": "P019"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00232088",
-   "name": "WWorldMath::Quatern_QuatToMat",
-   "batch": "P019"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00237d18",
-   "name": "GGallery::LINE_SetState",
-   "batch": "P019"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00291150",
-   "name": "EAGL::RenderContextExtension::GetBackBufferInfo",
-   "batch": "P019"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00291198",
-   "name": "EAGL::RenderContextExtension::GetZBuffer",
-   "batch": "P019"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00293a38",
-   "name": "EAGL::Transform::ExtractRotTrans",
-   "batch": "P019"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00295188",
-   "name": "EAGL::Transform::BuildQT",
-   "batch": "P019"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00297ba8",
-   "name": "EAGL::VU0_MATRIX3x4_mult",
-   "batch": "P019"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00297cd8",
-   "name": "EAGL::VU0_MATRIX4_multb",
-   "batch": "P019"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x0016ec40",
-   "name": "AttributeSystem::GetMetrics",
-   "batch": "P021"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00232088",
-   "name": "WWorldMath::Quatern_QuatToMat",
-   "batch": "P021"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00237d18",
-   "name": "GGallery::LINE_SetState",
-   "batch": "P021"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00291150",
-   "name": "EAGL::RenderContextExtension::GetBackBufferInfo",
-   "batch": "P021"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00291198",
-   "name": "EAGL::RenderContextExtension::GetZBuffer",
-   "batch": "P021"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00293a38",
-   "name": "EAGL::Transform::ExtractRotTrans",
-   "batch": "P021"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00295188",
-   "name": "EAGL::Transform::BuildQT",
-   "batch": "P021"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00297ba8",
-   "name": "EAGL::VU0_MATRIX3x4_mult",
-   "batch": "P021"
-  },
-  {
-   "program": "DRIVING.ELF",
-   "address": "0x00297cd8",
-   "name": "EAGL::VU0_MATRIX4_multb",
-   "batch": "P021"
   }
  ]
 }

@@ -1,0 +1,16 @@
+[
+ {"xbox": "0x00096c60", "name": "RViewCamera::scalar_deleting_destructor", "ps2": "0x001d4238",
+  "why": "vtable slot 0; frees this when flag bit 1 is set (MSVC scalar deleting destructor). VT had renamed it ~RViewCamera"},
+ {"xbox": "0x0008beb0", "name": "RShadowMap::Init", "ps2": "0x001ecd38",
+  "why": "allocates and constructs RShadowMap into its singleton; called by InitGameRender where PS2 calls RShadowMap::Init. VT had named it operator_new, which MSVC inlined"},
+ {"xbox": "0x0011b690", "name": "UCarpNamespace::UCarpNamespace", "ps2": "0x002cd788",
+  "why": "sets vtable 001a2244, FastAlloc(0xc, \"UCarpNamespace\") map header into this+4, as PS2 UCarpNamespace::UCarpNamespace. VT had named it operator_new, which MSVC inlined"},
+ {"xbox": "0x0011b730", "name": "UCarpNamespace::~UCarpNamespace", "ps2": "0x002cd818",
+  "why": "resets vtable 001a2244, clears and frees the 0xc map header, as PS2 ~UCarpNamespace"},
+ {"xbox": "0x0011b760", "name": "UCarpNamespace::scalar_deleting_destructor", "ps2": "0x002cd818",
+  "why": "same as ~UCarpNamespace plus FastFree(this, 8) when flag bit 1 is set"},
+ {"xbox": "0x000e3db0", "name": "GSystem::IsSavage", "ps2": "0x0024b740",
+  "why": "compares MissionName with snow1a_mis3 and snow2a_mis4, as PS2 GSystem::IsSavage (sheet row 5492, between IsEARS and GetGalleryName); GetGalleryName returns sav_gall1.gal when it is true. Was the guess IsSnowMission"},
+ {"xbox": "0x000e3d20", "name": "GSystem::IsEARS", "ps2": "0x0024b680",
+  "why": "compares MissionName with junglea_mis13a etc., as PS2 GSystem::IsEARS (sheet row 5491, green, 'Certain'); GetGalleryName returns ears_gall1.gal when it is true. Was the guess IsJungleMission"}
+]

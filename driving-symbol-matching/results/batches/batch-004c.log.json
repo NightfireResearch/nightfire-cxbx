@@ -1,0 +1,29 @@
+{
+ "batch": "004c",
+ "program": "Driving.xbe",
+ "applied": "Sat Sep 26 03:13:14 2026",
+ "items": [
+  {
+   "xbox": "0x00096c60",
+   "old_name": "~RViewCamera",
+   "old_plate": "[symbol-matching]\nCanonical name: RViewCamera::scalar_deleting_destructor\nClass: RViewCamera\nEvidence: RViewCamera slot 0 (PS2 001d4238, row 3735, sheet)\nEvidence: vtable slot 0 on MSVC is the scalar deleting destructor\nBatch: 002\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00096c60",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RViewCamera",
+   "ok": true
+  }
+ ]
+}
