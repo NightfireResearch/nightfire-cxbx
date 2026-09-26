@@ -20,7 +20,7 @@ public:
 };
 
 // A scene object with a transform of its own (0x80 bytes; allocated under this name by Newton's constructor,
-// ESpawnSmackable::Process and three others). It derives from RSceneObj and adds one MATRIX4 at +0x40: every
+// ESpawnSmackable's destructor and three others). It derives from RSceneObj and adds one MATRIX4 at +0x40: every
 // allocation site copies the identity matrix there, runs RSceneObj's constructor, and replaces the vtable with its
 // own (0x0018a398), which overrides only the destructor. Ghidra records the base as a first field named
 // super_RSceneObj, and the generated layout checks that this class derives from it.

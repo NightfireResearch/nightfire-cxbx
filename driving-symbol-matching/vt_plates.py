@@ -57,7 +57,7 @@ def main():
         ps2_by_q[f["qualified"]].append(a)
 
     items, kinds = [], collections.Counter()
-    for a in sorted(set(new) | set(fixes)):
+    for a in list(fixes) + sorted(set(new) - set(fixes)):   # fixes first, in their given order (renames may free names)
         f, o = new[a], old.get(a) or {}
         now, was = f.get("plate") or "", o.get("plate") or ""
         fix = fixes.get(a)

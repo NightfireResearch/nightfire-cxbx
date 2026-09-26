@@ -25,8 +25,9 @@
 //    the frame TeleportDumpMs after that (default 2000; 0 dumps nothing) through the backend's DumpEvery
 //    machinery. "[teleport] dumping frame N" in the log says which d3d9_dump_frame_N.bmp it is.
 //
-// The teleport itself is the game's own, not a write to the car's matrix: EResetPlayerCarPos::Process
-// (0x0004d4c0) is the event scripts send to put the player somewhere, and this does what it does. It calls
+// The teleport itself is the game's own, not a write to the car's matrix: EResetPlayerCarPos is the event
+// scripts send to put the player somewhere, its destructor (0x0004d4c0; events act in their destructors) does
+// the work, and this does what that does. It calls
 // Simulation::0x000b2b50 on the simulation (0x00233ff0), which finds the ground under the position and places
 // the player's rigid body on it facing the direction, and then PBondCar::ResetCar(pos, dir) (0x000627c0,
 // vtable slot 0xa8), which resets the car's own state - suspension, wheels, tyre tracks, the EMP effect - to
