@@ -1,0 +1,483 @@
+{
+ "verdicts": [
+  {
+   "item": 190,
+   "xbox": "0x00018410",
+   "ps2": "0x0010f140",
+   "name": "ActGlobalPoseOverrideArray::CreateGlobalPoseOverrides",
+   "verdict": "reject",
+   "why": "Xbox body is a struct/matrix copy (three 16-dword loops, field 0x42) reached from ActPoser::SetupCrossFadeBlend; PS2 allocates four arrays with vec_new and fills them - different function, different caller",
+   "intermediates": []
+  },
+  {
+   "item": 191,
+   "xbox": "0x00018410",
+   "ps2": "0x0010eeb8",
+   "name": "ActIKSolverArray::CreateIKs",
+   "verdict": "reject",
+   "why": "Same copy routine; PS2 CreateIKs news ActIKSolver objects; name already on Xbox 0x16c30",
+   "intermediates": []
+  },
+  {
+   "item": 192,
+   "xbox": "0x000ad330",
+   "ps2": "0x001f85c0",
+   "name": "RigidBody::SetOrientation",
+   "verdict": "accept",
+   "why": "Sits between SetAngularMomentum and ResolveForce on both sides; sole caller PBondCar::ImproveLanding on both; stores quat, quattom4, scale/tensor matrix mults (Store*/GetBodyTensor helpers inlined on Xbox)",
+   "intermediates": []
+  },
+  {
+   "item": 193,
+   "xbox": "0x000c9fe0",
+   "ps2": "0x00222d40",
+   "name": "WRoadNetwork::GetSegmentCurveStep",
+   "verdict": "accept",
+   "why": "PS2 0x222d40 is the 232-byte (COORD3&,COORD3&,WRoadSegment&,float,COORD3&) overload; Xbox has the same 5 args, static RCameraSpline+atexit, BuildSpline/Evaluate, and is called only from the flag-0x4000 branch of the matching GetPointOnSegment overload",
+   "intermediates": [
+    {
+     "xbox": "0x000cb430",
+     "ps2": "0x00222468",
+     "name": "WRoadNetwork::GetPointOnSegment",
+     "why": "Overload (COORD3&,COORD3&,WRoadSegment&,float,COORD3&): same body - if segment flag 0x4000 (byte 0x51 & 0x40) call GetSegmentCurveStep else lerp; called by GetPointOnSegment(seg,t,out) Xbox 0xcbe70 = PS2 0x2223b0 and IncNavPosition on both sides"
+    }
+   ]
+  },
+  {
+   "item": 194,
+   "xbox": "0x000b4870",
+   "ps2": "0x002017b8",
+   "name": "Simulation::UpdateTrackedInstanceVisibility",
+   "verdict": "accept",
+   "why": "Sole caller SimulateGame on both; takes head of tracked-instance vector, camera-to-instance distance vs 100.0, StepCheckHitWorld result into +8, rotates vector (memmove / push_back)",
+   "intermediates": []
+  },
+  {
+   "item": 195,
+   "xbox": "0x0005e200",
+   "ps2": "0x00180620",
+   "name": "Mine::CheckTimer",
+   "verdict": "reject",
+   "why": "Xbox body is the proximity scan over rigid bodies (IsOwnedBy, ExtractZAxis) = Mine::CheckForProximity; CheckTimer is already Xbox 0x5e400",
+   "intermediates": []
+  },
+  {
+   "item": 196,
+   "xbox": "0x0005e200",
+   "ps2": "0x001802e0",
+   "name": "Mine::CheckForProximity",
+   "verdict": "accept",
+   "why": "Loops all rigid bodies with GetRigidBody/IsOwnedBy/VU0_ExtractZAxis3FromQuat, then SpawnExplosion + delete like PS2; already named CheckForProximity on Xbox by the last batch (consistent)",
+   "intermediates": []
+  },
+  {
+   "item": 197,
+   "xbox": "0x0005e200",
+   "ps2": "0x0017f008",
+   "name": "Grenade::CheckForProximity",
+   "verdict": "reject",
+   "why": "Grenade version is a short ordered-body bitmask loop with no explosion; Xbox body is the Mine version",
+   "intermediates": []
+  },
+  {
+   "item": 198,
+   "xbox": "0x000b9be0",
+   "ps2": "0x0020af78",
+   "name": "SRuleProgCounter::CheckRule",
+   "verdict": "accept",
+   "why": "Only CheckRule calling GetMagicCounter; identical 5-case compare switch; SRule field offsets shift -8 on Xbox consistently (SRuleProg::CheckRule uses 0xc vs 0x14 too)",
+   "intermediates": []
+  },
+  {
+   "item": 199,
+   "xbox": "0x000be7a0",
+   "ps2": "0x00212ce8",
+   "name": "WCollisionInstance::GetName",
+   "verdict": "accept",
+   "why": "Same tags 'Map '/'iN  ', same field 0x1a, '<unnamed>' string, same callees; caller WCollisionMgr::Init on both",
+   "intermediates": []
+  },
+  {
+   "item": 200,
+   "xbox": "0x00057ee0",
+   "ps2": "0x0016cf38",
+   "name": "AttributeSystem::LoadCollection",
+   "verdict": "accept",
+   "why": "Builds data\\sim\\attrib\\<name>.atr, FileLoadz, DAFI_open/setsection/close loop - matches LoadCollection; PrepareDatabase is already Xbox 0x58e30",
+   "intermediates": []
+  },
+  {
+   "item": 201,
+   "xbox": "0x00057ee0",
+   "ps2": "0x0016e140",
+   "name": "AttributeSystem::PrepareDatabase",
+   "verdict": "reject",
+   "why": "Body is LoadCollection (DAFI section loading); PrepareDatabase already on Xbox 0x58e30",
+   "intermediates": []
+  },
+  {
+   "item": 202,
+   "xbox": "0x000ac050",
+   "ps2": "0x001f5010",
+   "name": "RTyreTrack::Init",
+   "verdict": "accept",
+   "why": "Same texture tags 'skid','sno1','sno2' into three globals then table fill loop; caller RRenderHigh::InitGameRender on both",
+   "intermediates": []
+  },
+  {
+   "item": 203,
+   "xbox": "0x000b9140",
+   "ps2": "0x00205220",
+   "name": "SMissionManager::Load",
+   "verdict": "accept",
+   "why": "Callers WWorld::Open and WWorld::Reset on both; same rule-instantiation loop over CARP chunk (flag 2 relative ptr, count +8), LoadWeaponSet/ResetCharInfo/SetCarType",
+   "intermediates": []
+  },
+  {
+   "item": 204,
+   "xbox": "0x00022050",
+   "ps2": "0x00122920",
+   "name": "AICharacterEnemyWindow::DoArmed",
+   "verdict": "accept",
+   "why": "In the Window vtable (0x18aba8) two slots after Window::DoNeutral 0x21f10; same body: vcall guard, state 0xb with random*5 anim table / state 0xd with SetTimeScale(2.0); existing Xbox DoArmed 0x1ff90 is the Snow overload",
+   "intermediates": []
+  },
+  {
+   "item": 205,
+   "xbox": "0x00097240",
+   "ps2": "0x001d5888",
+   "name": "RWorldCamera::GetAnchorSpeed",
+   "verdict": "accept",
+   "why": "IsAnchorValid inlined (+0x10 anchor field 0x128/0x118, +4 on object fields); type 1 -> rigid body velocity length, flag 1 -> SimpleRigidBody::GetScalarVelocity, else 0",
+   "intermediates": []
+  },
+  {
+   "item": 206,
+   "xbox": "0x0006f070",
+   "ps2": "0x00195330",
+   "name": "PhysicsObject::PhysicsObject",
+   "verdict": "accept",
+   "why": "Genuine overload: PS2 0x195330 is the (AttributeSet&, PhysicsObjectType) ctor (AttributeSet copy-ctor, AssignRigidBodySlot); existing Xbox 0x6f100/0x6f190 are the char* overloads (0x6f100 = PS2 0x1953c8); caller Smackable::Smackable on both",
+   "intermediates": []
+  },
+  {
+   "item": 207,
+   "xbox": "0x000b27d0",
+   "ps2": "0x001ff280",
+   "name": "Simulation::FindPhysicsObjectSignature",
+   "verdict": "accept",
+   "why": "Already named by last batch; FindSignature then pick table at +0x3b0/+0x2b0 (PS2 +0x330/+0x270, consistent +0x80); caller set ApplyDamage x3 + RayShell matches",
+   "intermediates": []
+  },
+  {
+   "item": 208,
+   "xbox": "0x000fda70",
+   "ps2": "0x00272088",
+   "name": "EAGLAnim::RawPoseChannel::UnInit",
+   "verdict": "reject",
+   "why": "Direction is reversed: Xbox maps channel type ints 0/1/2 to function pointers in two passes (plain and Interp) = InitAnimMemoryMap; UnInit maps pointers back to ints",
+   "intermediates": [
+    {
+     "xbox": "0x000fda70",
+     "ps2": "0x00271eb0",
+     "name": "EAGLAnim::RawPoseChannel::InitAnimMemoryMap",
+     "why": "Same two-pass loop over (param+0x10) and (param+0x10+count*4) replacing type 0/1/2 with Quat/Eul/Tran eval fns, 'Bad signature channel type' printf; reached from AnimBank::Constructor"
+    }
+   ]
+  },
+  {
+   "item": 209,
+   "xbox": "0x000ce4f0",
+   "ps2": "0x0022b1c0",
+   "name": "WTargetPicker::CompareDistFromScreenPos",
+   "verdict": "accept",
+   "why": "qsort comparator: GetScreenPos, per-target flag -> DistFromScreenPos else 1e7, returns -1/0/1; siblings ScreenCenter (named PS2 0x22b150) and Camera do not call GetScreenPos/DistFromScreenPos",
+   "intermediates": [
+    {
+     "xbox": "0x000cd890",
+     "ps2": "0x00229b40",
+     "name": "WTargetable::DistFromScreenPos",
+     "why": "Squared 2D distance from fields +0x10/+0x14 to the given point, identical on both; called by this comparator"
+    }
+   ]
+  },
+  {
+   "item": 210,
+   "xbox": "0x0001d680",
+   "ps2": "0x0011ade0",
+   "name": "AICharacterEnemyDriver::DoInitial",
+   "verdict": "accept",
+   "why": "Unique strings steerleft/steerright, Root.LShoulder/RShoulder, CreateIKs/CreateGlobalPoseOverrides; existing Xbox DoInitial 0x21260 is the Sunroof overload",
+   "intermediates": []
+  },
+  {
+   "item": 211,
+   "xbox": "0x000a8780",
+   "ps2": "0x001f0b48",
+   "name": "RWindow::Init",
+   "verdict": "accept",
+   "why": "Single FindOrCreateTexture('wndw') into a global; caller RRenderHigh::InitGameRender on both",
+   "intermediates": []
+  },
+  {
+   "item": 212,
+   "xbox": "0x000e384a",
+   "ps2": "0x0024a300",
+   "name": "GSubtitles::LoadSubtitles",
+   "verdict": "reject",
+   "why": "Unaligned fragment inside Xbox 0xe3840 (no xrefs, decompile starts with in_EAX/in_ZF); the real function starts at 0xe3840",
+   "intermediates": [
+    {
+     "xbox": "0x000e3840",
+     "ps2": "0x0024a300",
+     "name": "GSubtitles::LoadSubtitles",
+     "why": "Full body: FileLoad, strtok CRLF, atol count, vec_new((n+1)*8), frame=value pairs with PAL 5/6 GetFoundationVideoMode scaling, MEM_free; callers ~ESetVideo and FUN_0005a6b0 match PS2 ESetVideo::~ESetVideo / FUN_00175af8"
+    }
+   ]
+  },
+  {
+   "item": 213,
+   "xbox": "0x00098410",
+   "ps2": "0x001c1840",
+   "name": "RReflection::GetReflectionData2",
+   "verdict": "accept",
+   "why": "Exact shape: stricmp 'Character' else PVehicle::NameToIndex, return table+0x60+idx*0x80; LightingProps (extra 'Dynamic Objects' branch and +param*0x10) is already Xbox 0x98380",
+   "intermediates": []
+  },
+  {
+   "item": 214,
+   "xbox": "0x00098410",
+   "ps2": "0x001c1778",
+   "name": "RReflection::LightingProps",
+   "verdict": "reject",
+   "why": "No 'Dynamic Objects' branch or index*0x10 term; LightingProps already on Xbox 0x98380",
+   "intermediates": []
+  },
+  {
+   "item": 215,
+   "xbox": "0x000e41c0",
+   "ps2": "0x0024bcb8",
+   "name": "IniFiles::ReadString",
+   "verdict": "accept",
+   "why": "getsectionindex/setsection/getkeyindex then returns DAFI_getvalue (GetValue inlined) raw, else default; ReadInteger/ReadFloat already Xbox 0xe4150/0xe40f0; caller RCameraIniLoader::LoadFile",
+   "intermediates": []
+  },
+  {
+   "item": 216,
+   "xbox": "0x000e41c0",
+   "ps2": "0x0024bc20",
+   "name": "IniFiles::ReadInteger",
+   "verdict": "reject",
+   "why": "No atoi; ReadInteger already on Xbox 0xe4150",
+   "intermediates": []
+  },
+  {
+   "item": 217,
+   "xbox": "0x000e41c0",
+   "ps2": "0x0024bb80",
+   "name": "IniFiles::ReadFloat",
+   "verdict": "reject",
+   "why": "No atof; ReadFloat already on Xbox 0xe40f0",
+   "intermediates": []
+  },
+  {
+   "item": 218,
+   "xbox": "0x000e41c0",
+   "ps2": "0x0024bb60",
+   "name": "IniFiles::GetValue",
+   "verdict": "reject",
+   "why": "GetValue is a one-call wrapper inlined into the Xbox ReadString",
+   "intermediates": []
+  },
+  {
+   "item": 219,
+   "xbox": "0x00081950",
+   "ps2": "0x001bd288",
+   "name": "RPlayerCamera::WeaponFired",
+   "verdict": "accept",
+   "why": "Same: if mission-manager flag set and weapon id 0x1c, store sim time in camera field (0x204 vs 0x1f4, +0x10); caller EFireWeapon chain on both",
+   "intermediates": []
+  },
+  {
+   "item": 220,
+   "xbox": "0x00072e90",
+   "ps2": "0x00198e80",
+   "name": "RayShell::RayShell",
+   "verdict": "accept",
+   "why": "Already named RayShell; range clamp 220.0, calls CollideWithObjects/CollideWithWorld/Fire (Xbox 0x72190/0x72790/0x72d60 now named) and FindPhysicsObjectSignature",
+   "intermediates": []
+  },
+  {
+   "item": 221,
+   "xbox": "0x00025430",
+   "ps2": "0x00126818",
+   "name": "AICharacterPedestrian::InvalidateFurthestPed",
+   "verdict": "accept",
+   "why": "Loops fpPeds for furthest non-buddy ped (state 0x16 break, flags 2, distance field) then ForceRecycle; callers Manage and Recycle on both",
+   "intermediates": [
+    {
+     "xbox": "0x00024730",
+     "ps2": "0x00126928",
+     "name": "AICharacterPedestrian::ForceRecycle",
+     "why": "Takes a ped index, fpPeds[i] then the KillSelf(ped,0) body inlined (state 0x16, 9999.9 distances, road node count decrement, buddy release); only caller InvalidateFurthestPed on both"
+    }
+   ]
+  },
+  {
+   "item": 222,
+   "xbox": "0x00025430",
+   "ps2": "0x00126ad8",
+   "name": "AICharacterPedestrian::KillSelf",
+   "verdict": "reject",
+   "why": "Body is InvalidateFurthestPed; KillSelf already on Xbox 0x24140",
+   "intermediates": []
+  },
+  {
+   "item": 223,
+   "xbox": "0x00081840",
+   "ps2": "0x001bcc00",
+   "name": "RPlayerCamera::CameraInputCallback",
+   "verdict": "accept",
+   "why": "InputConfigManager::Get()+4 == 1 -> AutoDriveCamInputHandler else DriveCamInputHandler",
+   "intermediates": [
+    {
+     "xbox": "0x00089be0",
+     "ps2": "0x001bddc8",
+     "name": "RPlayerCamState::DriveCamInputHandler",
+     "why": "Same switch (cases 1 steer=-value, 0x1b timer 0x78, ...) gated by advance-frame==3 || time<3 and four flags; adjacent to AutoDriveCamInputHandler 0x89e10 as on PS2; only caller CameraInputCallback"
+    }
+   ]
+  },
+  {
+   "item": 224,
+   "xbox": "0x000b4cd0",
+   "ps2": "0x00200088",
+   "name": "Simulation::SpawnExplosion",
+   "verdict": "accept",
+   "why": "Same callers (Missile::CheckForCollision, HandleNuclearSequence, ~ERandomExplosion, RayShell::CollideWithWorld, Mine::CheckForProximity) and callees CanSpawnSimpleRigidBody/ESpawnExplosion/operator new",
+   "intermediates": []
+  },
+  {
+   "item": 225,
+   "xbox": "0x000a5a50",
+   "ps2": "0x001eb6b0",
+   "name": "RShadowMap::ShadowPrivateData::ShadowPrivateData",
+   "verdict": "accept",
+   "why": "Two render-target creations into +0x44/+0x48, NewTextureRenderContext into +0x40, SetupFrameBuffers(+0x44,+0x48); called from RShadowMap ctor after __builtin_new(0x60) on both",
+   "intermediates": [
+    {
+     "xbox": "0x000a5ac0",
+     "ps2": "0x001eb9c8",
+     "name": "RShadowMap::RShadowMap",
+     "why": "RViewCamera ctor, vtables, new(0x60)+ShadowPrivateData, texture 'cshd' into +0x4c, viewport setup (FUN_e4340 = PS2 FUN_2955d0), SetBackgroundColour; caller RShadowMap::Init on both"
+    }
+   ]
+  },
+  {
+   "item": 226,
+   "xbox": "0x000b5c90",
+   "ps2": "0x001fffa8",
+   "name": "Simulation::SpawnShellObject",
+   "verdict": "accept",
+   "why": "Already named SpawnShellObject; FastAlloc(0x90,'Shell') + ctor + SpawnPhysicsObject",
+   "intermediates": []
+  },
+  {
+   "item": 227,
+   "xbox": "0x000b5c90",
+   "ps2": "0x002004a0",
+   "name": "Simulation::SpawnSentryObject",
+   "verdict": "reject",
+   "why": "Xbox allocates 0x90 'Shell', Sentry uses 0xcc 'Sentry'; SpawnSentryObject already on Xbox 0xb5fb0",
+   "intermediates": []
+  },
+  {
+   "item": 228,
+   "xbox": "0x00078590",
+   "ps2": "0x001a6e18",
+   "name": "RCameraIniLoader::ResolveWeaponNames",
+   "verdict": "reject",
+   "why": "Xbox body is a whole-word strstr token test (char after match is ' ', ',' or NUL) returning bool; ResolveWeaponNames (loops WeaponManager table, sets bitmask) is already Xbox 0x785f0",
+   "intermediates": []
+  },
+  {
+   "item": 229,
+   "xbox": "0x000e6a80",
+   "ps2": "0x00290ce0",
+   "name": "EAGL::RenderContext::GetSize",
+   "verdict": "accept",
+   "why": "Width/height ints converted to float out-params; caller set matches (DoScreenCapture, PlayMPC::Play, viewport helper FUN_e4340 = PS2 FUN_2955d0); TextureRenderContext::GetSize is a different Xbox function 0xf3640",
+   "intermediates": []
+  },
+  {
+   "item": 230,
+   "xbox": "0x000e6a80",
+   "ps2": "0x00290f70",
+   "name": "EAGL::RenderContextExtension::TakeSnapShot",
+   "verdict": "reject",
+   "why": "TakeSnapShot calls ReadRectAtEndOfFrame; Xbox is the GetSize one-liner",
+   "intermediates": []
+  },
+  {
+   "item": 231,
+   "xbox": "0x000e6a80",
+   "ps2": "0x002911a8",
+   "name": "EAGL::RenderContextExtension::SetFilterAlpha",
+   "verdict": "reject",
+   "why": "SetFilterAlpha stores a masked byte; Xbox is the GetSize one-liner",
+   "intermediates": []
+  },
+  {
+   "item": 232,
+   "xbox": "0x00081980",
+   "ps2": "0x001bd2f8",
+   "name": "RPlayerCamera::CameraAiming",
+   "verdict": "accept",
+   "why": "Same three named callers (SWeaponManager::Update, UpdateAutoDriveTargeting, EFireWeapon); returns cam-state (+0x354) flag; PS2 int flags [n] map to Xbox bytes n+3 (as in DriveCamInputHandler), so PS2 +0x24 = Xbox +0xc",
+   "intermediates": []
+  },
+  {
+   "item": 233,
+   "xbox": "0x00013e90",
+   "ps2": "0x0010c4f8",
+   "name": "ActAnimationDatabase::~ActAnimationDatabase",
+   "verdict": "reject",
+   "why": "Outlined inner helper: Xbox ~ActAnimationDatabase (0x141b0) calls this on *this then deletes it; PS2 inlines that loop into the destructor",
+   "intermediates": []
+  },
+  {
+   "item": 234,
+   "xbox": "0x00013790",
+   "ps2": "0x0010b228",
+   "name": "ActActorDatabase::StartUp",
+   "verdict": "accept",
+   "why": "new + inlined ActActorDatabase ctor stored into ActActorDatabase::fActorDatabase; caller GameLoop_StartUp on both",
+   "intermediates": []
+  },
+  {
+   "item": 235,
+   "xbox": "0x00065740",
+   "ps2": "0x00192498",
+   "name": "PBondCar::ProcessSplinePhysics",
+   "verdict": "accept",
+   "why": "Sole caller PBondCar::Simulate on both; GetSplinePath, TempGetHeightInformation, GetPosition, matrix mult; placed after the snowmobile helpers and before DebugObject on both",
+   "intermediates": []
+  },
+  {
+   "item": 236,
+   "xbox": "0x000632a0",
+   "ps2": "0x0018e548",
+   "name": "PBondCar::AddSimpleWheelForces",
+   "verdict": "reject",
+   "why": "AddSimpleWheelForces is already Xbox 0x690a0 (caller ProcessSimplePhysics); this one is called only by ProcessSnowmobilePhysics and uses stricmp",
+   "intermediates": [
+    {
+     "xbox": "0x000632a0",
+     "ps2": "0x0018fc00",
+     "name": "PBondCar::AddSnowmobileForces",
+     "why": "Sole caller ProcessSnowmobilePhysics on both, strcasecmp/__stricmp, ResolveTorque + ResolveMassScaledTorque4, GetHitPoints; placed just before ProcessSnowmobilePhysics on Xbox"
+    }
+   ]
+  }
+ ]
+}

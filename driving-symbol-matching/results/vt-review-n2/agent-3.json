@@ -1,0 +1,502 @@
+{
+ "verdicts": [
+  {
+   "item": 237,
+   "xbox": "0x0011d750",
+   "ps2": "0x002f2e18",
+   "name": "AMix::Remove",
+   "verdict": "accept",
+   "why": "Get + RemoveReference, then inlined ~AMix (master Remove, FastFree 0x50) as PS2 Remove(Get,RemoveReference,~AMix); identical 6 named callers incl. Clear/Event/PARTICLE_Add/Shutdown/Update/~ABaseSound",
+   "intermediates": []
+  },
+  {
+   "item": 238,
+   "xbox": "0x000d7d50",
+   "ps2": "0x0023c810",
+   "name": "GHud::GetBlackFadeAnimating",
+   "verdict": "reject",
+   "why": "PS2 GetBlackFadeAnimating is lw 0x350 (int); Xbox d7d50 is FLD float [+0x34c] = GetBlackFadePct; GetBlackFadeAnimating is already on Xbox 0xd7d40 (MOV AL,[+0x350])",
+   "intermediates": []
+  },
+  {
+   "item": 239,
+   "xbox": "0x000d7d50",
+   "ps2": "0x0023c818",
+   "name": "GHud::GetBlackFadePct",
+   "verdict": "accept",
+   "why": "PS2 disasm lwc1 f0,0x34c(a0) = Xbox FLD float [ECX+0x34c]; sibling GetBlackFadeAnimating (+0x350) sits at Xbox d7d40; already named GetBlackFadePct (unqualified)",
+   "intermediates": []
+  },
+  {
+   "item": 240,
+   "xbox": "0x00072790",
+   "ps2": "0x00199f88",
+   "name": "RayShell::CollideWithWorld",
+   "verdict": "accept",
+   "why": "Already named CollideWithWorld (batch 013); called twice from RayShell::RayShell (72e90) like PS2; callees CheckHitWorld/WWorldPos/ApplyWorldEffects/IsOwnedBy match",
+   "intermediates": []
+  },
+  {
+   "item": 241,
+   "xbox": "0x00072790",
+   "ps2": "0x0019a710",
+   "name": "RayShell::DamagePhysicsObject",
+   "verdict": "reject",
+   "why": "DamagePhysicsObject is Xbox 0x72ba0 (called from both branches of RayShell::Fire 72d60 like PS2); 72790 is CollideWithWorld",
+   "intermediates": []
+  },
+  {
+   "item": 242,
+   "xbox": "0x0006dd30",
+   "ps2": "0x001942e8",
+   "name": "PHelicopter::Simulate",
+   "verdict": "accept",
+   "why": "Single vtable DATA ref each side; ForceVehicleToSleep on +300 timeout, GetControllerInput, GetForward/RightVector, Accelerate as PS2; already named Simulate (batch 013)",
+   "intermediates": []
+  },
+  {
+   "item": 243,
+   "xbox": "0x000285b0",
+   "ps2": "0x0012be48",
+   "name": "AIElementController::Construct",
+   "verdict": "accept",
+   "why": "__builtin_new(0x58) + AIElementController ctor stored to the singleton global; same callers GameLoop_StartUp and WWorld::Reset",
+   "intermediates": []
+  },
+  {
+   "item": 244,
+   "xbox": "0x00133aee",
+   "ps2": "0x002a9030",
+   "name": "_sprintf_r",
+   "verdict": "reject",
+   "why": "Xbox 133aee is MSVC CRT vsprintf (takes a va_list, _IOWRT|_IOSTRG 0x42, _flsbuf) - CRT vs newlib _sprintf_r; not the same function",
+   "intermediates": []
+  },
+  {
+   "item": 245,
+   "xbox": "0x00133aee",
+   "ps2": "0x002a9098",
+   "name": "sprintf",
+   "verdict": "reject",
+   "why": "sprintf already on Xbox 0x132767 (same body with &stack varargs); 133aee takes a va_list = MSVC vsprintf",
+   "intermediates": []
+  },
+  {
+   "item": 246,
+   "xbox": "0x000e4ef0",
+   "ps2": "0x00296f58",
+   "name": "EAGL::ViewPort::EndView",
+   "verdict": "reject",
+   "why": "EAGL::ViewPort::EndView already on Xbox 0xe49a0 (exact PS2 body); e4ef0 copies a 16-dword matrix to +0x80 then runs an inlined EndView on the viewport at +400 - a different method",
+   "intermediates": []
+  },
+  {
+   "item": 247,
+   "xbox": "0x00081430",
+   "ps2": "0x001bbc58",
+   "name": "RPlayerCamera::ResetCamera",
+   "verdict": "accept",
+   "why": "flags|=1 at +0xf0 (PS2 +0xe0), inlined ClearTransition (PS2 clears bytes +0x27c/+0x27d and +0x12c; Xbox +0x27a/+0x279, +0x13c), +0x140=0 (PS2 +0x130); same two PBondCar::ResetCar callers",
+   "intermediates": []
+  },
+  {
+   "item": 248,
+   "xbox": "0x00097fc0",
+   "ps2": "0x001d5d50",
+   "name": "RWorldCamera::GetAnchorLinearVelocity",
+   "verdict": "accept",
+   "why": "Inlined IsAnchorValid on anchor +0x128 (PS2 +0x118); spline path +0x60 +0x88, rigid/simple body +0x20, same flag test; sole caller RPlayerCamera::UpdateAutoDriveCam both sides",
+   "intermediates": []
+  },
+  {
+   "item": 249,
+   "xbox": "0x000fba20",
+   "ps2": "0x00274fe0",
+   "name": "EAGLAnim::FnKeyLerpChan::EvalSQT",
+   "verdict": "accept",
+   "why": "Vtable: Xbox 1a0dc8 (written by named FnKeyLerpChan ctor f76e0) slot 6 = fba20; PS2 FnKeyLerpChan vtable has EvalSQT after Eval/GetLength/FindMatchTime; DecompressValues/DecompressValuesIndexed body matches (key search outlined to fb960)",
+   "intermediates": []
+  },
+  {
+   "item": 250,
+   "xbox": "0x000848d0",
+   "ps2": "0x001bd078",
+   "name": "RPlayerCamera::SetCinematicCamera",
+   "verdict": "accept",
+   "why": "0.002777778 deg->frac, sin/cos pairs, SetCameraModeByIndex; unique caller ~ECinematicCamera both sides",
+   "intermediates": []
+  },
+  {
+   "item": 251,
+   "xbox": "0x000e4f60",
+   "ps2": "0x00287210",
+   "name": "eagl_free",
+   "verdict": "accept",
+   "why": "Already named eagl_free; single call to CRT free (FUN_001331dc); eagl_alloc is the neighbour at 0xe4f50",
+   "intermediates": []
+  },
+  {
+   "item": 252,
+   "xbox": "0x000e4f60",
+   "ps2": "0x002871f0",
+   "name": "eagl_alloc",
+   "verdict": "reject",
+   "why": "eagl_alloc already on Xbox 0xe4f50; e4f60 is eagl_free",
+   "intermediates": []
+  },
+  {
+   "item": 253,
+   "xbox": "0x00017010",
+   "ps2": "0x00110f10",
+   "name": "ActManager::SymbolResolver",
+   "verdict": "accept",
+   "why": "Unique \"event.\" prefix compare then EventTarget::ResolveEventId, sets/clears the bool out param; strncasecmp vs _strncmp is a CRT difference only",
+   "intermediates": []
+  },
+  {
+   "item": 254,
+   "xbox": "0x001269f0",
+   "ps2": "0x002fd348",
+   "name": "ABank::Remove",
+   "verdict": "accept",
+   "why": "Get, RemoveReference, ABankArray[idx]=default slot, ~ABank + FastFree(0x18) as PS2; caller ASoundManager::ClearMission (PS2 Load->Remove call is inlined in Xbox Load)",
+   "intermediates": [
+    {
+     "xbox": "0x126580",
+     "ps2": "0x2fe2f8",
+     "name": "URefCounter<ABank>::RemoveReference",
+     "why": "Called by ABank::Remove and Load; map walk matching key [0x24] (PS2 [0x25]), decrement count [0x23] (PS2 [0x24]), erase on zero - same as PS2"
+    }
+   ]
+  },
+  {
+   "item": 255,
+   "xbox": "0x00034ed0",
+   "ps2": "0x0013cf08",
+   "name": "AIRoadSpawn::GetPedSpawnPointOnSegment",
+   "verdict": "reject",
+   "why": "34ed0 is AIRoadSpawn::RefreshSpawnData (already named; callees FindNodes/GetRigidBody/FastFree identical); GetPedSpawnPointOnSegment is a small random-segment helper",
+   "intermediates": []
+  },
+  {
+   "item": 256,
+   "xbox": "0x00034ed0",
+   "ps2": "0x0013d618",
+   "name": "AIRoadSpawn::RefreshSpawnData",
+   "verdict": "accept",
+   "why": "Already named RefreshSpawnData; callees FastFree/FindNodes/Get/GetRigidBody identical, caller EForceNearPedRespawn plus GetRandomPed/TrafficSpawn chains",
+   "intermediates": []
+  },
+  {
+   "item": 257,
+   "xbox": "0x00035c10",
+   "ps2": "0x0013e688",
+   "name": "AIVehicleController::Init",
+   "verdict": "accept",
+   "why": "fgController __builtin_new(1), vec_new AIGroundVehicle/AIHelicopter arrays sized from the AIElementController singleton; sole caller GameLoop_StartUp both sides",
+   "intermediates": []
+  },
+  {
+   "item": 258,
+   "xbox": "0x00025fc0",
+   "ps2": "0x00126ad8",
+   "name": "AICharacterPedestrian::KillSelf",
+   "verdict": "reject",
+   "why": "AICharacterPedestrian::KillSelf already on Xbox 0x24140; 25fc0 is a state handler (Say, PlayAnim, IsAnimationDone) with no SetNewState(0x16) logic",
+   "intermediates": []
+  },
+  {
+   "item": 259,
+   "xbox": "0x000def90",
+   "ps2": "0x00245ab8",
+   "name": "GHud::DrawButtonMessage",
+   "verdict": "accept",
+   "why": "GetButton/LOCALE_Symbol/FONT_Width/DrawFontAndShadow/SPRITE_* callee set, early out on a float timer, sole caller GHud::Draw both sides",
+   "intermediates": []
+  },
+  {
+   "item": 260,
+   "xbox": "0x000f5c30",
+   "ps2": "0x0029c070",
+   "name": "EAGL::DrawArray::~DrawArray",
+   "verdict": "accept",
+   "why": "Mutual recursion with ~DynamicModel on both sides: clears +0x18 (PS2 Unlock = sw zero,0x18), frees +0xc buffer (size +0x10<<3), destroys DynamicModel at +4 and frees 0x58; no delete flag (caller frees 0x4c)",
+   "intermediates": [
+    {
+     "xbox": "0xea720",
+     "ps2": "0x286080",
+     "name": "EAGL::DynamicModel::~DynamicModel",
+     "why": "Frees +0x4c (size +0x44<<2), loops +0x48 DrawArrays at +0x50 calling ~DrawArray, frees +0x50 - PS2 body minus delete flag; callers RMissileCam/RMissileStreak::Draw, DrawDecals, DrawShootingEffect, material Shutdowns as PS2"
+    }
+   ]
+  },
+  {
+   "item": 261,
+   "xbox": "0x0014a5f0",
+   "ps2": "0x00261178",
+   "name": "THREAD_init",
+   "verdict": "reject",
+   "why": "THREAD_init already on Xbox 0x10a780; 14a5f0 initialises a struct (mutex at +0x18, default callback) called from FILESYS code, no GetThreadId/priority",
+   "intermediates": []
+  },
+  {
+   "item": 262,
+   "xbox": "0x000d9570",
+   "ps2": "0x002422b8",
+   "name": "GHud::DrawBlinkingArrow",
+   "verdict": "accept",
+   "why": "TIMER_gettick blink state machine; fields shift +4 consistently (state 0x2c4->0x2c8, tick 0x2bc->0x2c0, accum 0x2c0->0x2c4, value 0x2b8->0x2bc); sole caller GHud::DrawPauseMenu",
+   "intermediates": []
+  },
+  {
+   "item": 263,
+   "xbox": "0x00051750",
+   "ps2": "0x00167e10",
+   "name": "IOModule::EnableUpdating",
+   "verdict": "reject",
+   "why": "EnableUpdating already on Xbox 0x51710; 51750 = SYNCTASK_del if enabled, clear flag, ReleaseDevices = IOModule::Release",
+   "intermediates": [
+    {
+     "xbox": "0x51750",
+     "ps2": "0x1683f8",
+     "name": "IOModule::Release",
+     "why": "PS2 Release = EnableUpdating(false) + ReleaseDevices; Xbox inlines EnableUpdating(false) then ReleaseDevices; sole caller Bond_CleanUp both sides"
+    }
+   ]
+  },
+  {
+   "item": 264,
+   "xbox": "0x00074e80",
+   "ps2": "0x0019d080",
+   "name": "Shell::Simulate",
+   "verdict": "accept",
+   "why": "Single vtable DATA ref each side; GetOrderedBody, VU0_ExtractZAxis3FromQuat, GetLinearVelocity, CheckHitWorld, DeletePhysicsObject, ApplyWorldEffects callee set unique to Shell::Simulate",
+   "intermediates": []
+  },
+  {
+   "item": 265,
+   "xbox": "0x000213c0",
+   "ps2": "0x00120fe0",
+   "name": "AICharacterEnemySunroof::DoArmed",
+   "verdict": "accept",
+   "why": "Vtable: Xbox 18aae0 DoNeutral (named), 6 dummy slots (Idling..Dodging), 18aafc DoArming (21600, folded), 18ab00 = 213c0, 18ab10 DoUnarming (named) - same slots as PS2 DoArming/DoArmed/.../DoUnarming",
+   "intermediates": []
+  },
+  {
+   "item": 266,
+   "xbox": "0x000f46b0",
+   "ps2": "0x00298be0",
+   "name": "EAGL::ProfilerRegion::ProcessRegion",
+   "verdict": "accept",
+   "why": "Same body: count +0x110, max +0x114, pct*40.0 max into +0x118, idle counter +0x11c<0x20; next to named ProfilerRegion::DrawRegion (f4760)",
+   "intermediates": []
+  },
+  {
+   "item": 267,
+   "xbox": "0x00091300",
+   "ps2": "0x001cc6b0",
+   "name": "RSkeletalObj::PostLoad",
+   "verdict": "accept",
+   "why": "GetNumBones + AllocateSkeleton, loop bones (stride 0x40, type 8) OR-ing a 64-bit mask into +0x70; sole caller RVehicle::PostLoad both sides",
+   "intermediates": [
+    {
+     "xbox": "0x8e080",
+     "ps2": "0x1c9910",
+     "name": "RSceneObj::GetNumBones",
+     "why": "DataLocateTag(\"Skel\") on the model group, end-of-array check, returns entry+8 - PS2 body; called by both PostLoads as PS2"
+    }
+   ]
+  },
+  {
+   "item": 268,
+   "xbox": "0x001297a0",
+   "ps2": "0x002f84e0",
+   "name": "AFingoDeath::~AFingoDeath",
+   "verdict": "accept",
+   "why": "Sets AFingoDeath vtable 1a2b60 (also written by named AFingoDeath ctor 129a30), destroys the AVoice (3 Views) at +4, ~AVehicle; no delete flag (wrapper 129a00 does operator_delete)",
+   "intermediates": [
+    {
+     "xbox": "0x129a00",
+     "ps2": "0x2f84e0",
+     "name": "AFingoDeath::scalar_deleting_destructor",
+     "why": "Calls ~AFingoDeath (1297a0) then ABaseSound::operator_delete if flag&1 - the delete-flag half of PS2 ~AFingoDeath"
+    }
+   ]
+  },
+  {
+   "item": 269,
+   "xbox": "0x0012fa90",
+   "ps2": "0x002fc700",
+   "name": "ABasic::Play",
+   "verdict": "accept",
+   "why": "Vtable 1a3060 = dtor, IsOneShot, GetName, Play, Stop as PS2 ABasic vtable; voice +0xc0 created via Lookup/FastAlloc(\"AVoice\")/AVoice ctor, GetVolume, Play",
+   "intermediates": [
+    {
+     "xbox": "0x12fc30",
+     "ps2": "0x2fc7c8",
+     "name": "ABasic::Stop",
+     "why": "Slot after Play in the ABasic vtable; frees the voice at +0xc0 and zeroes it, as PS2"
+    },
+    {
+     "xbox": "0x12fa40",
+     "ps2": "0x2fc5d0",
+     "name": "ABasic::ABasic",
+     "why": "Writes the ABasic vtable 1a3060 after the ABaseSound ctor, sprintf(\"%s\") of the name"
+    }
+   ]
+  },
+  {
+   "item": 270,
+   "xbox": "0x0001dc80",
+   "ps2": "0x0011b518",
+   "name": "AICharacterEnemyGround::AICharacterEnemyGround",
+   "verdict": "accept",
+   "why": "Only WakeUp ctor with the 800 constant and FastAlloc(\"WTargetable\")+RegisterTarget like PS2; WakeUp ctors by address Driver/Ground/Snow/SSnow/Sunroof/Window put 1dc80 second. Existing name on 21d50 is wrong (see intermediate)",
+   "intermediates": [
+    {
+     "xbox": "0x21d50",
+     "ps2": "0x1224b0",
+     "name": "AICharacterEnemyWindow::AICharacterEnemyWindow",
+     "why": "CURRENTLY MISNAMED AICharacterEnemyGround ctor: stores the vehicle arg at +0x140, zeroes 5 fields, copies MATRIX4 - PS2 Window ctor body; last of the six WakeUp ctors by address"
+    }
+   ]
+  },
+  {
+   "item": 271,
+   "xbox": "0x000240e0",
+   "ps2": "0x00126768",
+   "name": "AICharacterPedestrian::GetRandomPedTexture",
+   "verdict": "accept",
+   "why": "Same round-robin over a 0x70-stride table with counter reset, GetSpecialPedInfo inlined (0x4c stride), \"0_p_mjack\" name table; callers Init and Recycle both sides",
+   "intermediates": []
+  },
+  {
+   "item": 272,
+   "xbox": "0x0008dc60",
+   "ps2": "0x001c8c70",
+   "name": "RSceneObj::SetNowVisible",
+   "verdict": "reject",
+   "why": "Xbox 8dc60 copies the matrix at +0xc and clears the translation column; PS2 SetNowVisible pushes the object into visibility lists by flags - unrelated",
+   "intermediates": []
+  },
+  {
+   "item": 273,
+   "xbox": "0x000fce70",
+   "ps2": "0x00274738",
+   "name": "EAGLAnim::FnPoseBlender::Set",
+   "verdict": "accept",
+   "why": "Two anim vfunc evals (Xbox slot 3 = PS2 +0x24 with header), BuildSQT x2 on 0x30-stride arrays at +0x10/+0x14, XZProjectAlign into +0x30, inner Set overload inlined (stores +0x18..+0x28, +0x70..+0x78)",
+   "intermediates": [
+    {
+     "xbox": "0xf8780",
+     "ps2": "0x2950b0",
+     "name": "EAGL::Transform::BuildSQT",
+     "why": "Called twice in FnPoseBlender::Set and by FnPoseBlender::Eval/EvalSQT plus two helpers - same caller set as PS2 BuildSQT"
+    },
+    {
+     "xbox": "0xfcde0",
+     "ps2": "0x273c98",
+     "name": "EAGLAnim::FnPoseBlender::XZProjectAlign",
+     "why": "Callee after the two BuildSQTs in Set, sole caller Set on both sides; writes the XZ translation difference with y=0"
+    }
+   ]
+  },
+  {
+   "item": 274,
+   "xbox": "0x000c2ff0",
+   "ps2": "0x00213720",
+   "name": "WCollisionMgr::SetCollisionArticle",
+   "verdict": "accept",
+   "why": "Instance index (inst - fgWorld+0x20)>>6 lookup, DataLocateTag with the \"ca\" tag family; sole caller ~ESetCollisionGeometry both sides",
+   "intermediates": []
+  },
+  {
+   "item": 275,
+   "xbox": "0x000c2ff0",
+   "ps2": "0x00212ce8",
+   "name": "WCollisionInstance::GetName",
+   "verdict": "reject",
+   "why": "c2ff0 is SetCollisionArticle; GetName is a \"<unnamed>\" string lookup called from WCollisionMgr::Init",
+   "intermediates": []
+  },
+  {
+   "item": 276,
+   "xbox": "0x0014cff0",
+   "ps2": "0x00302e20",
+   "name": "PS2_SONY_FRAME::PS2_SONY_FRAME",
+   "verdict": "reject",
+   "why": "Platform-specific: 14cff0 is the Xbox video frame ctor (vtable 1a7710, format switch) built twice by the Xbox VD ctor 14d340; PS2_SONY_FRAME is a PS2 class with a different body",
+   "intermediates": []
+  },
+  {
+   "item": 277,
+   "xbox": "0x0014cff0",
+   "ps2": "0x00301d38",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::EAGL_VD_PS2_SINGLE_BUFFERD",
+   "verdict": "reject",
+   "why": "Xbox 14cff0 is a frame ctor called in a 2x loop by 14d340 (the Xbox VD ctor); the PS2 single-buffered VD ctor would correspond to 14d340 if anything, and is PS2-specific",
+   "intermediates": []
+  },
+  {
+   "item": 278,
+   "xbox": "0x000ce410",
+   "ps2": "0x0022a960",
+   "name": "WTargetPicker::MoveTargetingCursors",
+   "verdict": "accept",
+   "why": "Same state logic: +0xa4!=1 or weapon 0x1c, target +0x28 active, time since +0x1c vs threshold -> +0xa0 1/2 and ATargeting::SetState, else GetScreenPos; sole caller UpdateTargets",
+   "intermediates": []
+  },
+  {
+   "item": 279,
+   "xbox": "0x0010a6e0",
+   "ps2": "0x00261b70",
+   "name": "SIGNAL_create",
+   "verdict": "accept",
+   "why": "Creates the sync object (CreateEvent-style import) and stores the handle, returns success; next to named SIGNAL_destroy (10a720); caller IFeedback::IFeedback as PS2",
+   "intermediates": []
+  },
+  {
+   "item": 280,
+   "xbox": "0x0010a6e0",
+   "ps2": "0x002611f0",
+   "name": "THREAD_create",
+   "verdict": "reject",
+   "why": "THREAD_create already on Xbox 0x10a9c0; 10a6e0 is SIGNAL_create",
+   "intermediates": []
+  },
+  {
+   "item": 281,
+   "xbox": "0x000930a0",
+   "ps2": "0x001ce038",
+   "name": "RStateManager::~RStateManager",
+   "verdict": "accept",
+   "why": "Two vtables (+0/+4), deletes the map at +0x10 (FastFree 0x24 head, delete), vec-dtor GeoPrimState array at +0xc with eagl free, base vtable restored; no delete flag (wrapper 93160)",
+   "intermediates": [
+    {
+     "xbox": "0x93160",
+     "ps2": "0x1ce038",
+     "name": "RStateManager::scalar_deleting_destructor",
+     "why": "Calls ~RStateManager (930a0) then __builtin_delete if flag&1"
+    }
+   ]
+  },
+  {
+   "item": 282,
+   "xbox": "0x00072ba0",
+   "ps2": "0x0019a710",
+   "name": "RayShell::DamagePhysicsObject",
+   "verdict": "accept",
+   "why": "Called from both damage branches of RayShell::Fire (72d60) exactly as PS2 Fire calls DamagePhysicsObject; ApplyWorldEffects/GetPlayerObject/IsOwnedBy callees",
+   "intermediates": []
+  },
+  {
+   "item": 283,
+   "xbox": "0x00072ba0",
+   "ps2": "0x00199f88",
+   "name": "RayShell::CollideWithWorld",
+   "verdict": "reject",
+   "why": "72ba0 is DamagePhysicsObject; CollideWithWorld is 72790 (already named)",
+   "intermediates": []
+  }
+ ]
+}
