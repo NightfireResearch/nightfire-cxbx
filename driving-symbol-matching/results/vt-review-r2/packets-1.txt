@@ -1,0 +1,2764 @@
+## item 210: Xbox 0x00018490 (FUN_00018490)  <-  PS2 0x00113470 ActPoser::SetupCrossFadeBlend
+triage: tier A, PS2 distance to Xbox neighbours 17, + 1 shared strings, 1/1 named callees, size ratio 0.25; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: FUN_000187d0@187d0 <- CrossFadeAnimationController::StartNewCrossFade@11210 | FUN_000187d0@187d0 <- CrossFadeAnimationController::Update@111a0
+PS2 callers up to a shared name:  CrossFadeAnimationController::StartNewCrossFade@1075e0 | CrossFadeAnimationController::Update@107550
+Xbox callees: FUN_000143a0, FUN_00018410, FastAlloc
+PS2 callees:  ActAnimGroup, FastAlloc, __builtin_vec_new
+--- Xbox
+int __thiscall
+FUN_00018490(int param_1_00,float param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
+            undefined4 param_5,undefined1 param_6)
+{
+  void *pvVar1;
+  undefined4 uVar2;
+  undefined4 local_c;
+  code *pcStack_8;
+  undefined4 local_4;
+  local_4 = 0xffffffff;
+  pcStack_8 = FUN_00150717;
+  FUN_00018410(param_5);
+  *(float *)(param_1_00 + 0x10c) = param_1 + 1.0;
+  local_4 = 0;
+  *(undefined4 *)(param_1_00 + 0x114) = param_2;
+  *(undefined4 *)(param_1_00 + 0x118) = param_3;
+  *(undefined1 *)(param_1_00 + 0x120) = param_6;
+  *(float *)(param_1_00 + 0x110) = 1.0 / param_1;
+  pvVar1 = UMemory::FastAlloc(0x20,"ActAnimGroup");
+  local_4 = CONCAT31(local_4._1_3_,1);
+  if (pvVar1 == (void *)0x0) {
+    uVar2 = 0;
+  }
+  else {
+    uVar2 = FUN_000143a0(param_4);
+  }
+  *(undefined4 *)(param_1_00 + 0x11c) = uVar2;
+  return param_1_00;
+}
+--- PS2
+void ActPoser::SetupCrossFadeBlend(float param_1,int param_2,undefined4 param_3,ulong param_4)
+{
+  uint uVar1;
+  uint uVar2;
+  uint uVar3;
+  int iVar4;
+  ActAnimGroup *other;
+  ulong *puVar5;
+  void *pvVar6;
+  void *pvVar7;
+  ActAnimGroup *this;
+  ulong uVar8;
+  undefined8 uVar9;
+  ulong extraout_a0;
+  ulong uVar10;
+  ulong extraout_a1;
+  ulong uVar11;
+  ulong extraout_a2;
+  ulong uVar12;
+  float fVar13;
+  undefined4 uVar14;
+  undefined4 uVar15;
+  pvVar6 = UMemory::FastAlloc(0x130,"ActCrossFadeBlendData");
+  uVar3 = *(uint *)(param_2 + 0x28);
+  fVar13 = *(float *)(param_2 + 0x2c);
+  iVar4 = *(int *)(uVar3 + 0x108);
+  uVar14 = *(undefined4 *)(param_2 + 0xc);
+  uVar15 = *(undefined4 *)(param_2 + 0x18);
+  other = *(ActAnimGroup **)(param_2 + 0x20);
+  *(int *)((int)pvVar6 + 0x108) = iVar4;
+    ...
+
+====================================================================================================
+## item 211: Xbox 0x00129a30 (FUN_00129a30)  <-  PS2 0x002f83e0 AFingoDeath::AFingoDeath
+triage: tier A, PS2 distance to Xbox neighbours 2, + 3 shared strings, 2/2 named callees, 1 named callers, size ratio 0.87; VT: Data Reference Match (AVAILABLE)
+Xbox callers up to a shared name: PBondCar::InitAudioObject@6cc20
+PS2 callers up to a shared name:  PBondCar::InitAudioObject@186878
+Xbox callees: AVehicle, ActivateGun, ActivateTurret, FUN_00013630, FUN_001296b0
+PS2 callees:  AVehicle, ActivateGun, ActivateTurret, FUN_00137e28, FUN_00177260, SetFirePatch, strlen
+--- Xbox
+AVehicle * __fastcall FUN_00129a30(AVehicle *param_1)
+{
+  char *pcVar1;
+  char *pcVar2;
+  undefined4 local_c;
+  code *pcStack_8;
+  undefined4 local_4;
+  local_4 = 0xffffffff;
+  pcStack_8 = FUN_00156288;
+  local_4 = 0;
+  *(undefined ***)param_1 = &PTR_FUN_001a2b60;
+  *(undefined4 *)(param_1 + 1) = 0;
+  *(undefined4 *)&param_1[1].field_0x4 = 0x3f800000;
+  param_1[1].field_0x8 = 0;
+  AVehicle::ActivateGun();
+  pcVar1 = "SFX_fingergunfire";
+  do {
+    pcVar2 = pcVar1;
+    pcVar1 = pcVar2 + 1;
+  } while (*pcVar2 != '\0');
+  FUN_00013630("SFX_fingergunfire",pcVar2 + -0x1a2bb0);
+  FUN_001296b0();
+  *(undefined1 *)(param_1->field297_0x188 + 0x78) = 1;
+  param_1->field_0xc5 = 0;
+  AVehicle::ActivateTurret();
+  return param_1;
+}
+--- PS2
+long __thiscall
+AFingoDeath::AFingoDeath
+          (AFingoDeath *this,undefined8 param_1,undefined8 param_2,undefined8 param_3,
+          undefined8 param_4,undefined8 param_5,ulong param_6)
+{
+  int iVar1;
+  undefined8 *local_50 [4];
+  undefined4 local_40;
+  undefined4 uStack_3c;
+  undefined4 local_30;
+  undefined4 uStack_2c;
+  undefined4 local_20;
+  undefined4 uStack_1c;
+  undefined4 local_10;
+  undefined4 uStack_c;
+  AVehicle::AVehicle((AVehicle *)this,"Player Car",0xd);
+  this->field516_0x210 = 0;
+  this->field518_0x218 = 0;
+  this->field172_0xac = &vtable_AFingoDeath;
+  this->rechargePercent = 0x3f800000;
+  AVehicle::ActivateGun((AVehicle *)this,"POV Weapons");
+  if (DAT_0032f14c == 0) {
+    local_50[0] = (undefined8 *)&fMission;
+    DAT_0032f148 = DAT_0032f148 + 1;
+  }
+  else {
+    local_50[0] = FUN_00137e28((uint *)&DAT_0032f140);
+  }
+  iVar1 = strlen("SFX_fingergunfire");
+  FUN_00177260((long)(int)local_50,0,0xffffffff,(undefined8 *)"SFX_fingergunfire",(long)iVar1);
+    ...
+
+====================================================================================================
+## item 212: Xbox 0x0010b050 (FUN_0010b050)  <-  PS2 0x00260648 PRINT_init
+triage: tier A, PS2 distance to Xbox neighbours 16, + 1 named callers, size ratio 0.69; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: UMemory::Init@114880 | PRINT_setchannelname@10b1a0 | PRINT_setchannelstate@10b030 | PRINT_setdevicestate@10aff0 | FUN_0010b110@10b110 <- PRINT_string@10b180
+PS2 callers up to a shared name:  UMemory::Init@2d0020 | PRINT_setchannelname@260a60 | PRINT_setchannelstate@2609d0 | PRINT_setdevicestate@2608b0 | FUN_00260760@260760 <- PRINT_string@260860 | FUN_00260760@260760 <- PRINT_string@260818
+Xbox callees: 
+PS2 callees:  PRINT_setchannelstate, PRINT_setdevicestate
+--- Xbox
+void PRINT_init(void)
+{
+  uint *puVar1;
+  undefined4 *puVar2;
+  if (DAT_002422d8 == 0) {
+    _DAT_001d1ba8 = _DAT_001d1ba8 & 0xfffffffe;
+    _DAT_001d1bb4 = _DAT_001d1bb4 & 0xfffffffe;
+    _DAT_001d1bc0 = _DAT_001d1bc0 & 0xfffffffe;
+    _DAT_001d1bcc = _DAT_001d1bcc & 0xfffffffe;
+    _DAT_001d1bd8 = _DAT_001d1bd8 & 0xfffffffe;
+    _DAT_001d1be4 = _DAT_001d1be4 & 0xfffffffe;
+    _DAT_001d1bf0 = _DAT_001d1bf0 & 0xfffffffe;
+    _DAT_001d1bfc = _DAT_001d1bfc & 0xfffffffe;
+    DAT_002422d8 = 1;
+    puVar1 = &DAT_001d1994;
+    do {
+      *puVar1 = *puVar1 & 0xfffffffe;
+      puVar1 = puVar1 + 2;
+    } while ((int)puVar1 < 0x1d1b94);
+    puVar2 = &DAT_001d1bd4;
+    do {
+      puVar2[-1] = 0;
+      *puVar2 = 0;
+      puVar2 = puVar2 + 3;
+    } while ((int)puVar2 < 0x1d1c04);
+    puVar1 = &DAT_001d1a04;
+    do {
+      puVar1[-1] = 0;
+      *puVar1 = *puVar1 & 0xfffffffd;
+      puVar1 = puVar1 + 2;
+    ...
+--- PS2
+void PRINT_init(void)
+{
+  undefined *puVar1;
+  undefined **ppuVar2;
+  undefined4 *puVar3;
+  int iVar4;
+  if (DAT_003c80c0 == 0) {
+    DAT_003c80c0 = 1;
+    ppuVar2 = &PTR_DAT_00343c98;
+    puVar1 = DAT_00343ca0;
+    while( true ) {
+      ppuVar2[2] = (undefined *)((uint)puVar1 & 0xfffffffe);
+      if (0x343cf7 < (int)(ppuVar2 + 3)) break;
+      puVar1 = ppuVar2[5];
+      ppuVar2 = ppuVar2 + 3;
+    }
+    ppuVar2 = &PTR_DAT_00343948;
+    iVar4 = 0x3f;
+    do {
+      iVar4 = iVar4 + -1;
+      ppuVar2[1] = (undefined *)((uint)ppuVar2[1] & 0xfffffffe);
+      ppuVar2 = ppuVar2 + 2;
+    } while (-1 < iVar4);
+    puVar3 = &DAT_00343cc8;
+    DAT_00343cc8 = 0;
+    while( true ) {
+      puVar3[1] = 0;
+      puVar3 = puVar3 + 3;
+      if (0x343cf7 < (int)puVar3) break;
+      *puVar3 = 0;
+    ...
+
+====================================================================================================
+## item 213: Xbox 0x00121280 (FUN_00121280)  <-  PS2 0x002ecb18 ASoundManager::ClearMission
+triage: tier A, PS2 distance to Xbox neighbours 1, + 2 shared strings, 1/2 named callees, 1 named callers, size ratio 0.76; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: GameLoop_CleanUp@5a870
+PS2 callers up to a shared name:  GameLoop_CleanUp@176e98
+Xbox callees: Event, FUN_001269f0, FUN_0012f9e0, Stop
+PS2 callees:  Get, Remove, RemoveAll, Stop
+--- Xbox
+void FUN_00121280(void)
+{
+  AStream *pAVar1;
+  pAVar1 = (AStream *)AStream::Event("music");
+  AStream::Stop(pAVar1);
+  pAVar1 = (AStream *)AStream::Event("speech");
+  AStream::Stop(pAVar1);
+  ASoundManager::Stop();
+  FUN_0012f9e0();
+  FUN_001269f0();
+  FUN_001269f0();
+  FUN_001269f0();
+  FUN_001269f0();
+  FUN_001269f0();
+  FUN_001269f0();
+  FUN_001269f0();
+  FUN_001269f0();
+  FUN_001269f0();
+  FUN_001269f0();
+  return;
+}
+--- PS2
+void ASoundManager::ClearMission
+               (undefined8 param_1,undefined8 param_2,undefined8 param_3,undefined8 param_4,
+               undefined8 param_5)
+{
+  AStream *pAVar1;
+  AEngine *this;
+  pAVar1 = (AStream *)AStream::Get("music");
+  AStream::Stop(pAVar1);
+  pAVar1 = (AStream *)AStream::Get("speech");
+  AStream::Stop(pAVar1);
+  Stop();
+  AEngine::RemoveAll(this);
+  ABank::Remove((ABank *)ABankArray);
+  ABank::Remove((ABank *)PTR_DAT_003562a4);
+  ABank::Remove((ABank *)PTR_DAT_003562a8);
+  ABank::Remove((ABank *)PTR_DAT_003562ac);
+  ABank::Remove((ABank *)PTR_DAT_003562b0);
+  ABank::Remove((ABank *)PTR_DAT_003562b4);
+  ABank::Remove((ABank *)PTR_DAT_003562b8);
+  ABank::Remove((ABank *)PTR_DAT_003562bc);
+  ABank::Remove((ABank *)PTR_DAT_003562c0);
+  ABank::Remove((ABank *)PTR_DAT_003562c4);
+  return;
+}
+
+====================================================================================================
+## item 214: Xbox 0x00095e20 (FUN_00095e20)  <-  PS2 0x001d3b10 RVehicle::StartColourDissolve
+triage: tier A, PS2 distance to Xbox neighbours 9, + 2/2 named callees, size ratio 0.84; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: (no chain to a function named on both sides within 3 levels)
+PS2 callers up to a shared name:  (no chain to a function named on both sides within 3 levels)
+Xbox callees: DataLocateFirst, FUN_0008d760, GetArray
+PS2 callees:  DataLocateFirst, GetArray, SetVariation
+--- Xbox
+void __fastcall FUN_00095e20(int param_1)
+{
+  UGroup *this;
+  uint *puVar1;
+  int iVar2;
+  uint uVar3;
+  undefined4 *puVar4;
+  uint uVar5;
+  uint uVar6;
+  *(undefined4 *)(param_1 + 0x34c) = 0;
+  this = (UGroup *)**(undefined4 **)(param_1 + 0x10);
+  puVar1 = UGroup::DataLocateFirst
+  iVar2 = UGroup::GetArray();
+  if (puVar1 != (uint *)(iVar2 + ((*(uint *)(this + 4) >> 5) + *(int *)(this + 8)) * 0x10)) {
+    uVar5 = *puVar1;
+    uVar6 = puVar1[1] & 1;
+    uVar3 = uVar5;
+    if (uVar6 != 0) {
+      uVar3 = uVar5 & 0xffff2020 | 0x2020;
+    }
+    if (uVar3 == 0x64692020) {
+      if (uVar6 == 0) {
+        uVar5 = 0xffffffff;
+      }
+      else {
+        uVar5 = uVar5 & 0xffff;
+      }
+      if (uVar5 >> 8 == (uint)*(byte *)(param_1 + 0x1d)) {
+        puVar4 = (undefined4 *)puVar1[3];
+        if ((puVar1[1] & 2) != 0) {
+    ...
+--- PS2
+uint * RVehicle::StartColourDissolve(int param_1)
+{
+  int iVar1;
+  uint uVar2;
+  uint *puVar3;
+  int iVar4;
+  uint *puVar5;
+  uint uVar6;
+  uint uVar7;
+  *(undefined4 *)(param_1 + 0x34c) = 0;
+  iVar1 = **(int **)(param_1 + 0xc);
+  puVar3 = UGroup::DataLocateFirst(iVar1,0x64692020,(uint)*(byte *)(param_1 + 0x19) << 8,0xffffffff)
+  ;
+  iVar4 = UGroup::GetArray(iVar1);
+  puVar5 = (uint *)(iVar4 + (*(uint *)(iVar1 + 4) >> 5) * 0x10 + *(int *)(iVar1 + 8) * 0x10);
+  if (puVar3 != puVar5) {
+    uVar2 = puVar3[1];
+    uVar6 = *puVar3;
+    uVar7 = uVar6;
+    if ((uVar2 & 1) != 0) {
+      uVar7 = uVar6 & 0xffff0000 | 0x2020;
+    }
+    puVar5 = (uint *)0x64692020;
+    if (uVar7 == 0x64692020) {
+      uVar6 = uVar6 & 0xffff;
+      if ((uVar2 & 1) == 0) {
+        uVar6 = 0xffffffff;
+      }
+      puVar5 = (uint *)(uVar6 >> 8);
+      if (puVar5 == (uint *)(uint)*(byte *)(param_1 + 0x19)) {
+    ...
+
+====================================================================================================
+## item 215: Xbox 0x000baee0 (FUN_000baee0)  <-  PS2 0x0020d4c0 SWeaponManager::SelectSecondary
+triage: tier A, PS2 distance to Xbox neighbours 12, + 1 named callers, size ratio 0.78; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: SWeaponManager::Update@bbdc0
+PS2 callers up to a shared name:  SWeaponManager::Update@20c078
+Xbox callees: FUN_000baad0, FUN_000bab20
+PS2 callees:  GetNextSecondaryType, GetPreviousSecondaryType
+--- Xbox
+void __thiscall FUN_000baee0(int param_1_00,char param_1)
+{
+  int iVar1;
+  int extraout_ECX;
+  int extraout_ECX_00;
+  int iVar2;
+  if ((*(char *)(param_1_00 + 0x28) != '\0') &&
+     (*(char *)(SMissionManager::glbMissionManager + 0x478) != '\0')) {
+    iVar1 = *(int *)(param_1_00 + 4) * 0x54 + *(int *)(param_1_00 + 0x10);
+    iVar2 = *(int *)(iVar1 + 0x18);
+    if ((0 < iVar2) && ((*(byte *)(iVar1 + 0x14) & 4) == 0)) {
+      if (*(int *)(iVar1 + 0x20) <= iVar2) {
+        iVar2 = *(int *)(iVar1 + 0x20);
+      }
+      *(int *)(iVar1 + 0x1c) = iVar2;
+      *(undefined1 *)(param_1_00 + 0x28) = 0;
+    }
+  }
+  if (param_1 == '\0') {
+    iVar1 = FUN_000baad0();
+    iVar2 = extraout_ECX_00;
+  }
+  else {
+    iVar1 = FUN_000bab20();
+    iVar2 = extraout_ECX;
+  }
+  if (iVar1 != *(int *)(iVar2 + 4)) {
+    *(int *)(iVar2 + 4) = iVar1;
+    *(int *)(iVar2 + 0x40) = (int)Sim.rate / 3 + Sim.field3634_0xe44;
+  }
+    ...
+--- PS2
+void SWeaponManager::SelectSecondary(int param_1,long param_2)
+{
+  int iVar1;
+  int iVar2;
+  int iVar3;
+  if ((*(int *)(param_1 + 0x34) != 0) && (*(int *)(SMissionManager::glbMissionManager + 0x350) != 0)
+     ) {
+    iVar3 = *(int *)(param_1 + 0x10) + *(int *)(param_1 + 4) * 0x54;
+    iVar2 = *(int *)(iVar3 + 0x18);
+    if ((0 < iVar2) && ((*(uint *)(iVar3 + 0x14) & 4) == 0)) {
+      iVar1 = *(int *)(iVar3 + 0x20);
+      if (iVar2 < *(int *)(iVar3 + 0x20)) {
+        iVar1 = iVar2;
+      }
+      *(int *)(iVar3 + 0x1c) = iVar1;
+      *(undefined4 *)(param_1 + 0x34) = 0;
+    }
+  }
+  if (param_2 == 0) {
+    iVar2 = GetPreviousSecondaryType(param_1);
+  }
+  else {
+    iVar2 = GetNextSecondaryType(param_1);
+  }
+  if (iVar2 != *(int *)(param_1 + 4)) {
+    *(int *)(param_1 + 4) = iVar2;
+    *(int *)(param_1 + 0x50) = DAT_00339f54 + DAT_00339f4c / 3;
+  }
+  return;
+}
+
+====================================================================================================
+## item 216: Xbox 0x001083f0 (FUN_001083f0)  <-  PS2 0x0025fef0 SHAPE_cluttype
+triage: tier A, PS2 distance to Xbox neighbours 8, + 1 named callers, size ratio 0.94; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: SHAPE_createat@108000
+PS2 callers up to a shared name:  SHAPE_createat@25fb58
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+undefined4 FUN_001083f0(undefined4 param_1)
+{
+  undefined4 uVar1;
+  uVar1 = 0;
+  switch(param_1) {
+  case 0xf:
+    return 0x2d;
+  case 0x10:
+    return 0x29;
+  case 0x12:
+    return 0x22;
+  case 0x18:
+    return 0x24;
+  case 0x20:
+    uVar1 = 0x2a;
+  }
+  return uVar1;
+}
+--- PS2
+undefined4 SHAPE_cluttype(undefined4 param_1)
+{
+  undefined4 uVar1;
+  uVar1 = 0;
+  switch(param_1) {
+  case 0xf:
+  case 0x10:
+    uVar1 = 0x20;
+    break;
+  case 0x12:
+  case 0x18:
+    uVar1 = 0;
+    break;
+  case 0x20:
+    uVar1 = 0x21;
+  }
+  return uVar1;
+}
+
+====================================================================================================
+## item 217: Xbox 0x0011ca90 (FUN_0011ca90)  <-  PS2 0x002f3578 AMix::GetPresetVolume
+triage: tier A, PS2 distance to Xbox neighbours 1, + 1 named callers, size ratio 1.0; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: ESetAudioMix::~ESetAudioMix@43a00
+PS2 callers up to a shared name:  ESetAudioMix::~ESetAudioMix@157308
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+float10 __fastcall FUN_0011ca90(int param_1)
+{
+  return (float10)*(float *)(param_1 + 0x10);
+}
+--- PS2
+undefined4 AMix::GetPresetVolume(int param_1)
+{
+  undefined4 in_v0_lo;
+  return in_v0_lo;
+}
+
+====================================================================================================
+## item 218: Xbox 0x0012e0f0 (FUN_0012e0f0)  <-  PS2 0x002e6a88 ATargeting::ATargeting
+triage: tier A, PS2 distance to Xbox neighbours 1, + 1 shared strings, 1/1 named callees, 1 named callers, size ratio 0.73; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: GHud::Reset@d7da0
+PS2 callers up to a shared name:  GHud::Reset@23c858
+Xbox callees: Get
+PS2 callees:  Get
+--- Xbox
+undefined4 * __fastcall FUN_0012e0f0(undefined4 *param_1)
+{
+  undefined4 uVar1;
+  *param_1 = 0;
+  param_1[1] = 0;
+  uVar1 = AMix::Get("Tracking System");
+  param_1[2] = uVar1;
+  return param_1;
+}
+--- PS2
+long __thiscall ATargeting::ATargeting(ATargeting *this)
+{
+  undefined4 uVar1;
+  this->state = 0;
+  this->field1_0x4 = 0;
+  uVar1 = AMix::Get("Tracking System");
+  this->mix = uVar1;
+  return (long)(int)this;
+}
+
+====================================================================================================
+## item 219: Xbox 0x000d4050 (FUN_000d4050)  <-  PS2 0x00235750 GFXGallery::CANVAS_SetIntensity
+triage: tier A, PS2 distance to Xbox neighbours 3, + 1/1 named callees, size ratio 1.76; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: GFX::SetIntensity@d35b0
+PS2 callers up to a shared name:  GFX::SetIntensity@2331e8
+Xbox callees: DataLocateTag
+PS2 callees:  DataLocateTag
+--- Xbox
+void __thiscall FUN_000d4050(int param_1_00,int param_1,undefined4 param_2)
+{
+  int iVar1;
+  int iVar2;
+  int *piVar3;
+  int iVar4;
+  int iVar5;
+  int iVar6;
+  iVar6 = (param_1 * 9 + -9) * 0x10;
+  iVar1 = UGroup::DataLocateTag(0x4e554d50);
+  piVar3 = *(int **)(iVar1 + 0xc);
+  if ((*(byte *)(iVar1 + 4) & 2) != 0) {
+    piVar3 = (int *)((int)piVar3 + iVar1);
+  }
+  iVar1 = *piVar3;
+  iVar4 = 0;
+  param_1 = 0;
+  if (3 < iVar1) {
+    iVar5 = 3;
+    iVar2 = 0;
+    do {
+      iVar4 = *(int *)(*(int *)(iVar6 + 0x54 + *(int *)(param_1_00 + 0x1414)) + 0x18 + iVar2);
+      if (iVar4 != 0) {
+        *(undefined4 *)(iVar4 + 0x58) = param_2;
+      }
+      iVar4 = *(int *)(*(int *)(iVar6 + 0x54 + *(int *)(param_1_00 + 0x1414)) + 0x58 + iVar2);
+      if (iVar4 != 0) {
+        *(undefined4 *)(iVar4 + 0x58) = param_2;
+      }
+      iVar4 = *(int *)(*(int *)(iVar6 + 0x54 + *(int *)(param_1_00 + 0x1414)) + 0x98 + iVar2);
+    ...
+--- PS2
+void GFXGallery::CANVAS_SetIntensity(undefined4 param_1,int param_2,int param_3)
+{
+  int iVar1;
+  uint *puVar2;
+  int *piVar3;
+  int iVar4;
+  int iVar5;
+  puVar2 = UGroup::DataLocateTag
+                     (*(int *)((param_3 + -1) * 0x90 + *(int *)(&DAT_00001414 + param_2) + 0x1c),
+                      (char *)0x4e554d50);
+  piVar3 = (int *)puVar2[3];
+  if ((puVar2[1] & 2) != 0) {
+    piVar3 = (int *)((int)puVar2 + (int)piVar3);
+  }
+  iVar1 = *piVar3;
+  iVar5 = 0;
+  if (0 < iVar1) {
+    iVar4 = *(int *)(&DAT_00001414 + param_2);
+    while( true ) {
+      iVar4 = *(int *)(iVar5 * 0x40 + *(int *)((param_3 + -1) * 0x90 + iVar4 + 0x54) + 0x18);
+      if (iVar4 != 0) {
+        *(undefined4 *)(iVar4 + 0x4c) = param_1;
+      }
+      iVar5 = iVar5 + 1;
+      if (iVar1 <= iVar5) break;
+      iVar4 = *(int *)(&DAT_00001414 + param_2);
+    }
+  }
+  return;
+}
+
+====================================================================================================
+## item 220: Xbox 0x0001f0c0 (FUN_0001f0c0)  <-  PS2 0x0011cd68 AICharacterEnemyGround::TargetIsAcquired
+triage: tier A, PS2 distance to Xbox neighbours 31, + 1/1 named callees, size ratio 0.44; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: (no chain to a function named on both sides within 3 levels)
+PS2 callers up to a shared name:  (no chain to a function named on both sides within 3 levels)
+Xbox callees: FUN_000116a0, FUN_00012280, FUN_0001e9a0, GetRigidBody, IsAnimationDone
+PS2 callees:  GetAngleToTarget, GetRigidBody, GetWeaponPosition
+--- Xbox
+void __fastcall FUN_0001f0c0(int param_1)
+{
+  char cVar1;
+  int iVar2;
+  float10 fVar3;
+  undefined4 local_60;
+  undefined4 local_5c;
+  undefined4 local_58;
+  undefined1 local_50 [76];
+  FUN_000116a0(local_50,1,0);
+  if (*(char *)(param_1 + 0xcc) == '\0') {
+    iVar2 = Simulation::GetRigidBody(&Sim,(int)*(short *)(*playerPhysicsObject + 0x4a));
+    local_60 = *(undefined4 *)(iVar2 + 0x10);
+    local_5c = *(undefined4 *)(iVar2 + 0x14);
+    local_58 = *(undefined4 *)(iVar2 + 0x18);
+  }
+  else {
+    local_60 = *(undefined4 *)(param_1 + 0xc0);
+    local_5c = *(undefined4 *)(param_1 + 0xc4);
+    local_58 = *(undefined4 *)(param_1 + 200);
+  }
+  fVar3 = (float10)FUN_0001e9a0(&local_60,1);
+  FUN_00012280((float)((float10)Sim.rcpRate * fVar3 * (float10)0.5));
+  cVar1 = ActActor::IsAnimationDone();
+  if (cVar1 != '\0') {
+    *(undefined4 *)(param_1 + 0x5c) = 9;
+  }
+  return;
+}
+--- PS2
+bool AICharacterEnemyGround::TargetIsAcquired(int param_1)
+{
+  undefined1 *puVar1;
+  uint uVar2;
+  uint uVar3;
+  int iVar4;
+  ulong extraout_a2;
+  float fVar5;
+  undefined1 in_vf0 [16];
+  undefined1 auVar6 [16];
+  undefined1 auVar7 [16];
+  undefined1 auVar8 [16];
+  undefined4 uVar9;
+  undefined1 auStack_90 [64];
+  undefined1 local_50 [8];
+  undefined4 uStack_48;
+  undefined4 uStack_44;
+  undefined1 local_40 [16];
+  undefined4 local_30;
+  undefined4 uStack_2c;
+  undefined4 local_20;
+  undefined4 uStack_1c;
+  undefined4 local_10;
+  undefined4 uStack_c;
+  ActActor::GetWeaponPosition((long)*(int *)(*(int *)(param_1 + 0x98) + 8),(uint)auStack_90,1,0);
+  if ((long)*(int *)(param_1 + 0xcc) == 0) {
+    iVar4 = Simulation::GetRigidBody
+                      ((Simulation *)&Sim,(int)*(short *)(*playerPhysicsObject + 0x46));
+    uVar2 = iVar4 + 0x17U & 7;
+    uVar3 = iVar4 + 0x10U & 7;
+    ...
+
+====================================================================================================
+## item 221: Xbox 0x000cf520 (FUN_000cf520)  <-  PS2 0x0022e3a0 WTriggerManager::CheckCollide
+triage: tier A, PS2 distance to Xbox neighbours 5, + 2/3 named callees, 1 named callers, size ratio 1.05; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: RayShell::Process@d0a30 <- WTriggerManager::Update@d0c90
+PS2 callers up to a shared name:  WTriggerManager::Process@22def0
+Xbox callees: FUN_000cf260, FUN_000cf440, FUN_000d2b70, FUN_000d2cf0, FUN_00114e40, FUN_00115b10, FUN_001160c0, OrthoInverse, VU0_v3distancesquare, printf
+PS2 callees:  NearestPointLine2D, NearestPointLine3D, OrthoInverse, TestDirection, TransformPoint, memset, printf, v3crossprod
+--- Xbox
+uint FUN_000cf520(float *param_1,float param_2,float *param_3)
+{
+  float *pfVar1;
+  char cVar2;
+  float fVar3;
+  float fVar4;
+  float fVar5;
+  float fVar6;
+  float fVar7;
+  uint uVar8;
+  ushort extraout_var;
+  int iVar9;
+  undefined2 uVar10;
+  undefined2 extraout_var_00;
+  ushort uVar11;
+  float10 fVar12;
+  float10 fVar13;
+  float local_80;
+  float local_7c;
+  float local_78;
+  undefined4 local_74;
+  float local_70;
+  float local_6c;
+  float local_68;
+  float local_60;
+  float local_5c;
+  float local_58;
+  MATRIX4 local_50;
+  pfVar1 = param_1 + 4;
+  local_80 = *param_3;
+    ...
+--- PS2
+undefined4
+WTriggerManager::CheckCollide
+          (float param_1,undefined8 param_2,undefined (*param_3) [16],ulong *param_4,
+          undefined8 param_5,undefined8 param_6)
+{
+  undefined1 *puVar1;
+  char cVar2;
+  uint uVar3;
+  uint uVar4;
+  undefined1 auVar5 [16];
+  undefined1 auVar6 [16];
+  undefined1 auVar7 [16];
+  ulong uVar8;
+  bool bVar9;
+  ulong in_v0;
+  float fVar10;
+  float fVar11;
+  float fVar12;
+  float fVar13;
+  float fVar14;
+  undefined1 auVar15 [16];
+  undefined1 auVar16 [16];
+  undefined1 auVar17 [16];
+  undefined1 local_100 [8];
+  float local_f8;
+  float local_f0;
+  float local_ec;
+  float local_e8;
+  undefined1 local_e0 [16];
+  COORD4 local_d0;
+    ...
+
+====================================================================================================
+## item 222: Xbox 0x00104820 (FUN_00104820)  <-  PS2 0x0027a448 EAGLAnim::FnTurnBlender::AlignVel
+triage: tier A, PS2 distance to Xbox neighbours 3, + 1 named callers, size ratio 0.45; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: EAGLAnim::FnTurnBlender::EvalVel2D@104d60
+PS2 callers up to a shared name:  EAGLAnim::FnTurnBlender::EvalVel2D@279e30
+Xbox callees: FUN_00104eb0
+PS2 callees:  
+--- Xbox
+void __thiscall FUN_00104820(int param_1_00,undefined4 *param_1)
+{
+  undefined4 local_20;
+  undefined4 local_1c;
+  undefined4 local_18;
+  undefined4 local_14;
+  undefined4 local_10 [2];
+  undefined4 local_8;
+  local_20 = *param_1;
+  local_18 = param_1[1];
+  local_1c = 0;
+  local_14 = 0x3f800000;
+  FUN_00104eb0(param_1_00 + 0x48,&local_20,local_10);
+  *param_1 = local_10[0];
+  param_1[1] = local_8;
+  return;
+}
+--- PS2
+void EAGLAnim::FnTurnBlender::AlignVel(int param_1,float *param_2)
+{
+  float fVar1;
+  float fVar2;
+  float fVar3;
+  float fVar4;
+  float fVar5;
+  float fVar6;
+  fVar6 = param_2[1];
+  fVar3 = *(float *)(param_1 + 0x48);
+  fVar4 = *(float *)(param_1 + 0x4c);
+  fVar1 = *(float *)(param_1 + 0x50);
+  fVar2 = fVar4 * (fVar4 + fVar4);
+  fVar5 = fVar3 * (fVar1 + fVar1);
+  fVar4 = *(float *)(param_1 + 0x54) * (fVar4 + fVar4);
+  param_2[1] = *param_2 * (fVar5 - fVar4) + fVar6 * (1.0 - (fVar3 * (fVar3 + fVar3) + fVar2));
+  *param_2 = *param_2 * (1.0 - (fVar2 + fVar1 * (fVar1 + fVar1))) + fVar6 * (fVar5 + fVar4);
+  return;
+}
+
+====================================================================================================
+## item 223: Xbox 0x000d3560 (FUN_000d3560)  <-  PS2 0x00233160 GFX::Purge
+triage: tier A, PS2 distance to Xbox neighbours 21, + 1 named callers, size ratio 0.5; VT: Implied Match (AVAILABLE)
+Xbox callers up to a shared name: RSceneObj::ToggleEffect@8e430 | FUN_0008eb60@8eb60 <- Missile::Simulate@60a30
+PS2 callers up to a shared name:  RSceneObj::ToggleEffect@1ca198
+Xbox callees: FUN_000d4010
+PS2 callees:  CANVAS_Purge
+--- Xbox
+void FUN_000d3560(undefined4 param_1)
+{
+  FUN_000d4010(param_1);
+  return;
+}
+--- PS2
+void GFX::Purge(int param_1)
+{
+  undefined8 in_a2;
+  undefined8 in_a3;
+  undefined8 in_t0;
+  GFXGallery::CANVAS_Purge(glbGfxGallery,param_1,in_a2,in_a3,in_t0);
+  return;
+}
+
+====================================================================================================
+## item 224: Xbox 0x0008edd0 (FUN_0008edd0)  <-  PS2 0x001cb0d0 RSceneObj::ConvertInstanceToLocal
+triage: tier A, PS2 distance to Xbox neighbours 9, + 2/2 named callees, 2 named callers, size ratio 1.04; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: EHideInstanceStatic::~EHideInstanceStatic@40340 | EShowInstanceStatic::~EShowInstanceStatic@44d40
+PS2 callers up to a shared name:  EHideInstanceStatic::~EHideInstanceStatic@14f218 | EShowInstanceStatic::~EShowInstanceStatic@159b38
+Xbox callees: DataLocateFirst, GetArray
+PS2 callees:  DataLocateFirst, FUN_001cb090, GetArray
+--- Xbox
+uint __thiscall FUN_0008edd0(int param_1_00,uint param_1)
+{
+  UGroup *this;
+  uint *puVar1;
+  int iVar2;
+  uint uVar3;
+  if (*(undefined4 **)(param_1 + 0x1c) != (undefined4 *)0x0) {
+    this = *(UGroup **)**(undefined4 **)(param_1 + 0x1c);
+    iVar2 = UGroup::GetArray();
+    if (puVar1 != (uint *)(iVar2 + ((*(uint *)(this + 4) >> 5) + *(int *)(this + 8)) * 0x10)) {
+      while( true ) {
+        uVar3 = *puVar1;
+        if ((puVar1[1] & 1) != 0) {
+          uVar3 = uVar3 & 0xffff2020 | 0x2020;
+        }
+        if (uVar3 != 0x696e2020) {
+          return param_1;
+        }
+        uVar3 = puVar1[3];
+        if ((puVar1[1] & 2) != 0) {
+          uVar3 = uVar3 + (int)puVar1;
+        }
+        if ((uVar3 <= param_1) && (param_1 < puVar1[2] * 0x40 + uVar3)) break;
+        puVar1 = puVar1 + 4;
+        iVar2 = UGroup::GetArray();
+        if (puVar1 == (uint *)(iVar2 + ((*(uint *)(this + 4) >> 5) + *(int *)(this + 8)) * 0x10)) {
+          return param_1;
+        }
+      }
+      uVar3 = puVar1[3];
+    ...
+--- PS2
+uint RSceneObj::ConvertInstanceToLocal(int param_1,uint param_2)
+{
+  int iVar1;
+  bool bVar2;
+  uint *puVar3;
+  int iVar4;
+  uint uVar5;
+  if (*(undefined4 **)(param_2 + 0x1c) != (undefined4 *)0x0) {
+    iVar1 = *(int *)**(undefined4 **)(param_2 + 0x1c);
+    for (puVar3 = UGroup::DataLocateFirst(iVar1,0x696e2020,0,0xffffffff);
+        iVar4 = UGroup::GetArray(iVar1),
+        puVar3 != (uint *)(iVar4 + (*(uint *)(iVar1 + 4) >> 5) * 0x10 + *(int *)(iVar1 + 8) * 0x10);
+        puVar3 = puVar3 + 4) {
+      uVar5 = *puVar3;
+      if ((puVar3[1] & 1) != 0) {
+        uVar5 = uVar5 & 0xffff0000 | 0x2020;
+      }
+      if (uVar5 != 0x696e2020) {
+        return param_2;
+      }
+      bVar2 = FUN_001cb090(param_2,(int)puVar3);
+      if (bVar2) {
+        uVar5 = puVar3[3];
+        if ((puVar3[1] & 2) != 0) {
+          uVar5 = (int)puVar3 + uVar5;
+        }
+        return *(int *)(param_1 + 0x28) + 0x40 + ((int)(param_2 - uVar5) >> 6) * 0x40;
+      }
+    }
+  }
+    ...
+
+====================================================================================================
+## item 225: Xbox 0x0010a8f0 (FUN_0010a8f0)  <-  PS2 0x00261be0 SIGNAL_set
+triage: tier A, PS2 distance to Xbox neighbours 17, + 1 named callers, size ratio 1.15; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: IFeedback::~IFeedback@4fb10
+PS2 callers up to a shared name:  IFeedback::~IFeedback@166260
+Xbox callees: GetExitCodeThread
+PS2 callees:  SignalSema, iSignalSema
+--- Xbox
+bool THREAD_testexit(int param_1)
+{
+  int iVar1;
+  iVar1 = XAPILIB::GetExitCodeThread(*(undefined4 *)(param_1 + 4),&param_1);
+  if (iVar1 != 0) {
+    return param_1 != 0x103;
+  }
+  return false;
+}
+--- PS2
+void SIGNAL_set(void)
+{
+  int in_a0_lo;
+  if (use_iThreadingMutexesSemaphors == 0) {
+    SignalSema(*(undefined4 *)(in_a0_lo + 8));
+  }
+  else {
+    iSignalSema();
+  }
+  return;
+}
+
+====================================================================================================
+## item 226: Xbox 0x000b0510 (FUN_000b0510)  <-  PS2 0x001fbbd8 RigidBody::CollideWithObject
+triage: tier A, PS2 distance to Xbox neighbours 1, + 2/3 named callees, 1 named callers, size ratio 0.88; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: Simulation::SimulateGame@b4a60
+PS2 callers up to a shared name:  Simulation::SimulateGame@1ff3d8
+Xbox callees: FUN_0003dc20, FUN_0003f370, FUN_000ac970, FUN_000acb90, FUN_000aec10, GetRigidBody, VU0_v3distancesquare, operator_new
+PS2 callees:  CheckOBBOverlapAndFindIntersection, ECollision, GetOwner, GetRigidBody, Reset, ResolveCollision, operator_new
+--- Xbox
+void __thiscall FUN_000b0510(undefined4 *param_1_00,uint param_1)
+{
+  float fVar1;
+  float fVar2;
+  undefined4 uVar3;
+  int *piVar4;
+  int *piVar5;
+  char cVar6;
+  undefined4 *puVar7;
+  int iVar8;
+  undefined4 *puVar9;
+  float10 fVar10;
+  undefined4 auStackY_124 [14];
+  undefined4 uStackY_ec;
+  undefined4 *puStackY_e8;
+  undefined4 *puStackY_e4;
+  float fStackY_e0;
+  undefined4 *puStackY_dc;
+  undefined4 *puStackY_d8;
+  float local_bc;
+  float fStack_b0;
+  float fStack_ac;
+  float local_a8;
+  undefined4 uStack_90;
+  undefined4 uStack_8c;
+  undefined4 uStack_88;
+  undefined4 auStack_80 [12];
+  float fStack_50;
+  float fStack_4c;
+  float fStack_3c;
+    ...
+--- PS2
+void RigidBody::CollideWithObject
+               (int param_1,int param_2,undefined8 param_3,undefined8 param_4,ulong param_5)
+{
+  undefined1 *puVar1;
+  uint uVar2;
+  uint uVar3;
+  undefined4 *puVar4;
+  undefined4 uVar5;
+  bool bVar6;
+  char cVar7;
+  RigidBody *this;
+  undefined4 *puVar8;
+  int iVar9;
+  int iVar10;
+  int iVar11;
+  long lVar12;
+  ulong extraout_a2;
+  ulong extraout_a3;
+  ulong uVar13;
+  ulong extraout_t0;
+  ulong uVar14;
+  ulong extraout_t0_00;
+  ulong extraout_t0_01;
+  uint uVar15;
+  float fVar16;
+  float fVar17;
+  undefined1 auVar18 [16];
+  undefined1 auVar19 [16];
+  undefined1 auVar20 [16];
+  undefined1 local_150 [8];
+    ...
+
+====================================================================================================
+## item 227: Xbox 0x00092f50 (FUN_00092f50)  <-  PS2 0x001cdf08 RStateManager::RStateManager
+triage: tier A, PS2 distance to Xbox neighbours 5, + 1 shared strings, 2/4 named callees, size ratio 1.18; VT: Data Reference Match (AVAILABLE)
+Xbox callers up to a shared name: FUN_0008b5b0@8b5b0 <- RRenderHigh::InitGameRender@8c3d0
+PS2 callers up to a shared name:  RRenderHigh::InitGameRender@1c4008
+Xbox callees: ??_L@YGXPAXIHP6EX0@Z1@Z, FUN_00093310, FUN_000e4f50, GeoPrimState, MEM_fill, __builtin_new
+PS2 callees:  FUN_00283eb0, FastAlloc, MEM_fill, __builtin_new, eagl_alloc
+--- Xbox
+undefined4 * __fastcall FUN_00092f50(undefined4 *param_1)
+{
+  undefined4 *puVar1;
+  undefined1 *puVar2;
+  int iVar3;
+  undefined4 *puVar4;
+  uint uVar5;
+  undefined1 uStack_19;
+  undefined4 uStack_c;
+  code *pcStack_8;
+  undefined4 local_4;
+  pcStack_8 = FUN_001531ac;
+  param_1[1] = &PTR___pure_virtual_0018f8f8;
+  local_4 = 0;
+  *param_1 = &PTR_FUN_00192130;
+  param_1[1] = &PTR_LAB_0019212c;
+  param_1[2] = 0;
+  puVar1 = (undefined4 *)(*(code *)EAGLInternal::EAGLMalloc)(0x984,"EAGL::GeoPrimState new[]");
+  local_4._0_1_ = 1;
+  if (puVar1 == (undefined4 *)0x0) {
+    puVar4 = (undefined4 *)0x0;
+  }
+  else {
+    puVar4 = puVar1 + 1;
+    *puVar1 = 0x20;
+    ___L_YGXPAXIHP6EX0_Z1_Z(puVar4,0x4c,0x20,EAGL::GeoPrimState::GeoPrimState,FUN_000ef490);
+  }
+  local_4._0_1_ = 0;
+  param_1[3] = puVar4;
+  puVar2 = __builtin_new(0xc);
+    ...
+--- PS2
+undefined8 RStateManager::RStateManager(undefined8 param_1)
+{
+  unknownFunction *puVar1;
+  char cVar2;
+  int *piVar3;
+  undefined4 *puVar4;
+  int iVar5;
+  undefined4 *puVar6;
+  int iVar7;
+  uint uVar8;
+  undefined4 *puVar9;
+  puVar1 = maybeEaglAlloc;
+  puVar6 = (undefined4 *)param_1;
+  puVar6[2] = 0;
+  puVar6[1] = &vtable_RStateManager;
+  iVar7 = 0x3f;
+  *puVar6 = &DAT_003873e8;
+  cVar2 = (*puVar1)(0x2010,"EAGL::GeoPrimState new[]");
+  puVar9 = (undefined4 *)(int)cVar2 + 4;
+  *(undefined4 *)(int)cVar2 = 0x40;
+  puVar4 = puVar9;
+  do {
+    iVar7 = iVar7 + -1;
+    FUN_00283eb0((long)(int)puVar4);
+    puVar4 = puVar4 + 0x20;
+  } while (iVar7 != -1);
+  puVar6[3] = puVar9;
+  uVar8 = 0;
+  piVar3 = __builtin_new(0xc);
+  *piVar3 = 0;
+    ...
+
+====================================================================================================
+## item 228: Xbox 0x000ef7a0 (FUN_000ef7a0)  <-  PS2 0x0027fe80 EAGLInternal::RuntimeAllocGeoPrimStateConstructor
+triage: tier A, PS2 distance to Xbox neighbours 3, + 54 shared strings, 1/2 named callees, size ratio 0.37; VT: Data Reference Match (BLOCKED)
+Xbox callers up to a shared name: FUN_000f0c50@f0c50 <- EAGLInternal::RuntimeAllocGeoPrimStateConstructor@ef4c0
+PS2 callers up to a shared name:  (no chain to a function named on both sides within 3 levels)
+Xbox callees: PrintMessage, _strncmp
+PS2 callees:  FUN_00283eb0, FindTokenEnd, MAXINT, PrintMessage, SetDepthTestMethod, SetPrimitiveType, SkipDelims, atoi, eagl_alloc, eagl_free, sscanf, strcmp, strcpy, strlen, strncasecmp
+--- Xbox
+undefined4 FUN_000ef7a0(byte *param_1)
+{
+  byte bVar1;
+  int iVar2;
+  byte *pbVar3;
+  char *pcVar4;
+  byte *pbVar5;
+  bool bVar6;
+  iVar2 = _strncmp((char *)param_1,s_EAGL__PT__001cd6e4,9);
+  if (iVar2 == 0) {
+    pcVar4 = s_EAGL__PT_POINTLIST_001cd6d0;
+    pbVar3 = param_1;
+    do {
+      bVar1 = *pbVar3;
+      bVar6 = bVar1 < (byte)*pcVar4;
+      if (bVar1 != *pcVar4) {
+LAB_000ef7ee:
+        iVar2 = (1 - (uint)bVar6) - (uint)(bVar6 != 0);
+        goto LAB_000ef7f3;
+      }
+      if (bVar1 == 0) break;
+      bVar1 = pbVar3[1];
+      bVar6 = bVar1 < (byte)pcVar4[1];
+      if (bVar1 != pcVar4[1]) goto LAB_000ef7ee;
+      pbVar3 = pbVar3 + 2;
+      pcVar4 = pcVar4 + 2;
+    } while (bVar1 != 0);
+    iVar2 = 0;
+LAB_000ef7f3:
+    if (iVar2 == 0) {
+    ...
+--- PS2
+undefined8
+EAGLInternal::RuntimeAllocGeoPrimStateConstructor
+          (char *param_1,undefined8 param_2,undefined8 param_3,undefined8 param_4,undefined8 param_5
+          ,undefined8 param_6,undefined8 param_7,undefined8 param_8)
+{
+  undefined4 *puVar1;
+  bool bVar2;
+  char cVar3;
+  int *piVar4;
+  int iVar5;
+  char *pcVar6;
+  undefined8 uVar7;
+  ulong uVar8;
+  int iVar9;
+  undefined4 uVar10;
+  undefined8 uVar11;
+  int *piVar12;
+  ulong uVar13;
+  ulong uVar14;
+  char *pcVar15;
+  int iVar16;
+  undefined8 extraout_a3;
+  undefined8 extraout_a3_00;
+  undefined8 extraout_a3_01;
+  undefined8 extraout_a3_02;
+  undefined8 extraout_a3_03;
+  undefined8 extraout_a3_04;
+  undefined8 extraout_a3_05;
+  undefined8 extraout_a3_06;
+  undefined8 extraout_a3_07;
+    ...
+
+====================================================================================================
+## item 229: Xbox 0x00124ca0 (FUN_00124ca0)  <-  PS2 0x002f8e00 AFader::Priv::Event
+triage: tier A, PS2 distance to Xbox neighbours 2, + 2 shared strings, 7/7 named callees, size ratio 0.67; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: AFader::QueuePrimary@1251f0
+PS2 callers up to a shared name:  AFader::QueuePrimary@2f9798
+Xbox callees: Add, Event, FUN_0011d750, FUN_00121f30, FUN_00121f80, Get, GetVolume, IsLoop, IsOver, strcat
+PS2 callees:  Add, Event, FILESYS_bypassqueuefileinfo, Get, GetVolume, IsEffect, IsLoop, IsOver, Remove, SetFilter, printf, sprintf, strcat, strcpy
+--- Xbox
+void __thiscall
+AFader::Priv::Event(undefined4 *param_1_00,char *param_1,float param_2,undefined4 param_3,
+                   undefined4 param_4)
+{
+  undefined4 uVar1;
+  bool bVar2;
+  char cVar3;
+  AMix *pAVar4;
+  AMix_conflict *pAVar5;
+  int iVar6;
+  char *pcVar7;
+  float10 extraout_ST0;
+  float10 extraout_ST0_00;
+  float10 extraout_ST0_01;
+  float10 extraout_ST0_02;
+  undefined1 local_40 [64];
+  pAVar4 = (AMix *)AMix::Get("Speech");
+  if (extraout_ST0 != (float10)0.0) {
+    pAVar4 = (AMix *)AMix::Get("NIS");
+    if ((extraout_ST0_00 != (float10)0.0) &&
+       (((((char)param_3 == '\0' || (bVar2 = AStream::IsOver((AStream *)param_1_00[5]), bVar2)) ||
+         (bVar2 = AStream::IsLoop((AStream *)param_1_00[5]), bVar2)) ||
+        (cVar3 = FUN_00121f80(), cVar3 != '\0')))) {
+      bVar2 = AStream::IsOver((AStream *)param_1_00[5]);
+      if ((bVar2) || (0.0 <= param_2)) {
+        iVar6 = param_1_00[5];
+        FUN_0011d750();
+        if ((char)param_3 == '\0') {
+          pAVar5 = AMix::Add("Speech");
+          *(AMix_conflict **)(iVar6 + 0x94) = pAVar5;
+    ...
+--- PS2
+void AFader::Priv::Event(float param_1,undefined4 *param_2,undefined8 param_3,long param_4,
+                        ulong param_5,undefined8 param_6,ulong param_7)
+{
+  AMix *pAVar1;
+  int iVar2;
+  undefined4 uVar3;
+  float fVar4;
+  char acStack_160 [128];
+  char acStack_e0 [64];
+  uint auStack_a0 [4];
+  undefined4 local_90;
+  undefined4 uStack_8c;
+  undefined4 local_80;
+  undefined4 uStack_7c;
+  undefined4 local_70;
+  undefined4 uStack_6c;
+  undefined4 local_60;
+  undefined4 uStack_5c;
+  undefined4 local_50;
+  undefined4 uStack_4c;
+  undefined4 local_40;
+  undefined4 uStack_3c;
+  undefined4 local_30;
+  undefined4 uStack_2c;
+  undefined4 local_20;
+  undefined4 uStack_1c;
+  pAVar1 = (AMix *)AMix::Get("Speech");
+  fVar4 = AMix::GetVolume(pAVar1);
+  if (fVar4 != 0.0) {
+    pAVar1 = (AMix *)AMix::Get("NIS");
+    ...
+
+====================================================================================================
+## item 230: Xbox 0x000e39b0 (FUN_000e39b0)  <-  PS2 0x0024a6d0 GSubtitles::DrawSubtitles
+triage: tier A, PS2 distance to Xbox neighbours 10, + 2/2 named callees, 1 named callers, size ratio 0.72; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: GHud::Draw@e1970
+PS2 callers up to a shared name:  GHud::Draw@23cf88
+Xbox callees: DrawFont, FUN_000e36f0, GetString, Reset, TIMER_getfrequency, TIMER_gettick
+PS2 callees:  DrawBackground, DrawFont, GetString, GetWidthHeight, Reset, TIMER_getfrequency, TIMER_gettick
+--- Xbox
+void __fastcall GSubtitles::DrawSubtitles(int param_1)
+{
+  float fVar1;
+  int iVar2;
+  int iVar3;
+  int iVar4;
+  float local_8;
+  undefined1 local_4 [4];
+  if ((*(int *)(param_1 + 0x2c) != 0) &&
+     (*(float *)(param_1 + 8) < 0.0 == (*(float *)(param_1 + 8) == 0.0))) {
+    if (*(char *)(param_1 + 4) == '\0') {
+      iVar2 = TIMER_gettick();
+      iVar4 = *(int *)(param_1 + 0xc);
+      iVar3 = TIMER_getfrequency();
+      fVar1 = (float)(iVar2 - iVar4) / (float)iVar3;
+    }
+    else {
+      fVar1 = (float)(Sim.field3634_0xe44 - *(int *)(param_1 + 0xc)) * Sim.rcpRate;
+    }
+    if (*(float *)(param_1 + 8) <= fVar1) {
+      GSubtitleSplitter::Reset();
+      *(undefined4 *)(param_1 + 0xc) = 0;
+      *(undefined4 *)(param_1 + 8) = 0;
+      *(undefined4 *)(param_1 + 0x2c) = 0;
+      return;
+    }
+    iVar4 = GSubtitleSplitter::GetString();
+    if (iVar4 != 0) {
+      FUN_000e36f0(iVar4,1.0,&local_8,local_4);
+      DrawFont(iVar4,(*(float *)(param_1 + 0x18) - local_8) * 0.5,
+    ...
+--- PS2
+void GSubtitles::DrawSubtitles(int *param_1)
+{
+  int iVar1;
+  int iVar2;
+  byte *pbVar3;
+  float fVar4;
+  float fVar5;
+  float local_60 [4];
+  undefined4 local_50;
+  undefined4 uStack_4c;
+  undefined4 local_40;
+  undefined4 uStack_3c;
+  undefined4 local_30;
+  undefined4 uStack_2c;
+  if ((param_1[10] != 0) && (0.0 < (float)param_1[1])) {
+    if (*param_1 == 0) {
+      iVar1 = TIMER_gettick();
+      iVar2 = TIMER_getfrequency();
+      fVar4 = (float)(iVar1 - param_1[2]) / (float)iVar2;
+    }
+    else {
+      fVar4 = (float)(DAT_00339f54 - param_1[2]) * DAT_00339f50;
+    }
+    if ((float)param_1[1] <= fVar4) {
+      GSubtitleSplitter::Reset(param_1 + 0xb);
+      param_1[10] = 0;
+      param_1[2] = 0;
+      param_1[1] = 0;
+    }
+    else {
+    ...
+
+====================================================================================================
+## item 231: Xbox 0x00019b80 (FUN_00019b80)  <-  PS2 0x00114bc8 ActSkeleton::BlendQT
+triage: tier A, PS2 distance to Xbox neighbours 2, + 1 named callers, size ratio 0.77; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: ActIKSolver::BlendMatrices@15900
+PS2 callers up to a shared name:  ActIKSolver::BlendMatrices@10ea38
+Xbox callees: FUN_00116630
+PS2 callees:  VU0_fastqslerp
+--- Xbox
+void FUN_00019b80(undefined4 param_1,float *param_2,undefined4 param_3,float *param_4,float param_5)
+{
+  FUN_00116630(param_1,param_3,param_1,param_5);
+  *param_2 = (*param_4 - *param_2) * param_5 + *param_2;
+  param_2[1] = (param_4[1] - param_2[1]) * param_5 + param_2[1];
+  param_2[2] = (param_4[2] - param_2[2]) * param_5 + param_2[2];
+  return;
+}
+--- PS2
+void ActSkeleton::BlendQT
+               (float param_1,undefined (*param_2) [16],float *param_3,undefined (*param_4) [16],
+               float *param_5)
+{
+  VU0_fastqslerp(param_1,param_2,param_4,param_2);
+  *param_3 = *param_3 + param_1 * (*param_5 - *param_3);
+  param_3[1] = param_3[1] + param_1 * (param_5[1] - param_3[1]);
+  param_3[2] = param_3[2] + param_1 * (param_5[2] - param_3[2]);
+  return;
+}
+
+====================================================================================================
+## item 232: Xbox 0x00028700 (FUN_00028700)  <-  PS2 0x0012c640 AIElementController::GetCarpElementTracking
+triage: tier A, PS2 distance to Xbox neighbours 4, + 6 named callers, size ratio 0.86; VT: Implied Match (AVAILABLE); BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: SMissionRuleTarget::GetPos@ba3e0 | SMissionRuleTarget::GetProperty@ba4a0 | EAIElementSetNonScoreable::~EAIElementSetNonScoreable@3e0a0 | EAIElementSetWakeRange::~EAIElementSetWakeRange@3e210 | EKickAIElement::~EKickAIElement@40710 | EKillAIElement::~EKillAIElement@4ca20
+PS2 callers up to a shared name:  SMissionRuleTarget::GetPos@2098a0 | SMissionRuleTarget::GetProperty@209aa0 | EAIElementSetNonScoreable::~EAIElementSetNonScoreable@146f68 | EAIElementSetWakeRange::~EAIElementSetWakeRange@1471e0 | EKickAIElement::~EKickAIElement@150080 | EKillAIElement::~EKillAIElement@150748
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+int __thiscall FUN_00028700(int param_1_00,int param_1)
+{
+  int iVar1;
+  iVar1 = param_1 - *(int *)(DAT_001ddee4 + 0x10) >> 8;
+  if (iVar1 < 0) {
+    iVar1 = -iVar1;
+  }
+  return iVar1 * 0x50 + *(int *)(param_1_00 + 0x14);
+}
+--- PS2
+int AIElementController::GetCarpElementTracking(int param_1,int param_2)
+{
+  int iVar1;
+  int iVar2;
+  iVar2 = param_2 - *(int *)(DAT_00327c30 + 0x10) >> 8;
+  iVar1 = -iVar2;
+  if (-1 < iVar2) {
+    iVar1 = iVar2;
+  }
+  return *(int *)(param_1 + 0x14) + iVar1 * 0x50;
+}
+
+====================================================================================================
+## item 233: Xbox 0x00077d70 (FUN_00077d70)  <-  PS2 0x001a27a0 RAnimEngine::Handle::ProcessStimuli
+triage: tier A, PS2 distance to Xbox neighbours 4, + 1/2 named callees, 5 named callers, size ratio 1.0; VT: Implied Match (AVAILABLE)
+Xbox callers up to a shared name: PBondCar::ApplyDamage@6b6f0 | AICharacterEnemySunroof::DoNeutral@21300 | SWeaponManager::DoWeaponAnim@bab80 | FUN_00032700@32700 <- EAICommand::~EAICommand@48ec0 | FUN_000733f0@733f0 <- Sentry::Simulate@744d0
+PS2 callers up to a shared name:  PBondCar::ApplyDamage@189598 | AICharacterEnemySunroof::DoNeutral@120e80 | SWeaponManager::DoWeaponAnim@20d740 | PHelicopter::PHelicopter@193408 | AIHelicopter::NewState@138fa8 <- EAICommand::~EAICommand@145ff8
+Xbox callees: FUN_00076c20, ProcessStimuli, __ftol2
+PS2 callees:  FindSystem, ProcessStimuli, fptoui
+--- Xbox
+void __thiscall
+RAnimEngine::Handle::ProcessStimuli
+          (int param_1_00,uint param_1,undefined4 param_2,int param_3,undefined4 param_4)
+{
+  int iVar1;
+  uint uVar2;
+  byte *pbVar3;
+  byte *pbVar4;
+  float10 fVar5;
+  ulonglong uVar6;
+  fVar5 = (float10)param_3;
+  if (param_3 < 0) {
+    fVar5 = fVar5 + (float10)4.2949673e+09;
+  }
+  uVar6 = __ftol2(fVar5 * (float10)_DAT_001f2a48 * (float10)60.0);
+  uVar2 = param_1;
+  param_3 = (int)uVar6;
+  iVar1 = *(int *)(param_1_00 + 0x10);
+  pbVar4 = (byte *)((uint)*(byte *)(param_1_00 + 0x1e) + iVar1);
+  pbVar3 = (byte *)FUN_00076c20(iVar1,pbVar4,&param_1,0);
+  if (((pbVar3 != pbVar4) && (*pbVar3 == uVar2)) &&
+     (((int)pbVar3 - iVar1) * 0x40 + *(int *)(param_1_00 + 0xc) != 0)) {
+    System::ProcessStimuli(param_2,param_3,param_4);
+  }
+  return;
+}
+--- PS2
+void RAnimEngine::Handle::ProcessStimuli
+               (int param_1,ulong param_2,char param_3,uint param_4,long param_5)
+{
+  uint uVar1;
+  int *piVar2;
+  uVar1 = fptoui((uint)((float)param_4 * DAT_00333ff4 * 60.0));
+  piVar2 = (int *)FindSystem((Handle *)param_1,(uint)param_2);
+  if (piVar2 != (int *)0x0) {
+    System::ProcessStimuli(piVar2,param_3,uVar1,param_5);
+  }
+  return;
+}
+
+====================================================================================================
+## item 234: Xbox 0x0004fa00 (FUN_0004fa00)  <-  PS2 0x00166210 IFeedback::Pause
+triage: tier A, PS2 distance to Xbox neighbours 1, + 4 named callers, size ratio 2.5; VT: Implied Match (AVAILABLE)
+Xbox callers up to a shared name: DAudio::MixerDraw@36d10 | EPlayerLose::~EPlayerLose@4cf50 | EPlayerWin::~EPlayerWin@4d240 | ESetVideo::~ESetVideo@44970 | FUN_0005a6b0@5a6b0 <- RunTheGame@5aa80
+PS2 callers up to a shared name:  DAudio::MixerDraw@141108 | EPlayerLose::~EPlayerLose@154cb0 | EPlayerWin::~EPlayerWin@1551b8 | ESetVideo::~ESetVideo@1592d8 | FUN_00175af8@175af8 <- RunTheGame@175d78
+Xbox callees: 
+PS2 callees:  Reset
+--- Xbox
+void FUN_0004fa00(void)
+{
+  DAT_001e4490 = 0;
+  DAT_001e4494 = 0;
+  DAT_001e4498 = 0;
+  DAT_001e449c = 0;
+  DAT_001e44a0 = 0;
+  DAT_001e44a4 = 0;
+  DAT_001e44ac = 0;
+  DAT_001e44a8 = 0;
+  DAT_001e44b0 = 0;
+  DAT_001e44b4 = 0;
+  DAT_001e44b8 = 0;
+  _DAT_001e448c = 0;
+  DAT_001e44c4 = 0;
+  _DAT_001e44c8 = 0;
+  _DAT_001e44cc = 0;
+  DAT_001e44d0 = 0;
+  _DAT_001e44d4 = 0;
+  _DAT_001e44d8 = 0;
+  _DAT_001e44e0 = 0;
+  DAT_001e44dc = 0;
+  DAT_001e44e4 = 0;
+  DAT_001e44e8 = 0;
+  DAT_001e44ec = 0;
+  _DAT_001e44c0 = 1;
+  _DAT_001e44f8 = 0;
+  _DAT_001e44fc = 0;
+  _DAT_001e4500 = 0;
+  _DAT_001e4504 = 0;
+    ...
+--- PS2
+void IFeedback::Pause(void)
+{
+  int iVar1;
+  IFeedbackPort *this;
+  this = (IFeedbackPort *)&DAT_0032c468;
+  iVar1 = 0;
+  do {
+    IFeedbackPort::Reset(this,iVar1);
+    iVar1 = iVar1 + 1;
+    this = this + 1;
+  } while (iVar1 < 4);
+  return;
+}
+
+====================================================================================================
+## item 235: Xbox 0x0001e440 (FUN_0001e440)  <-  PS2 0x0011cf80 AICharacterEnemyGround::ThreatenedByVehicle
+triage: tier A, PS2 distance to Xbox neighbours 32, + 1/5 named callees, size ratio 0.92; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: (no chain to a function named on both sides within 3 levels)
+PS2 callers up to a shared name:  (no chain to a function named on both sides within 3 levels)
+Xbox callees: GetRigidBody, VU0_v3length, VU0_v4sub, atan_turns, v3dotprod
+PS2 callees:  GetRigidBody, atan2f
+--- Xbox
+uint __fastcall FUN_0001e440(int param_1)
+{
+  undefined4 uVar1;
+  float fVar2;
+  float fVar3;
+  int iVar4;
+  int iVar5;
+  int *piVar6;
+  float10 fVar7;
+  float fVar8;
+  float fVar9;
+  float fVar10;
+  _VEC3 local_20 [2];
+  piVar6 = playerPhysicsObject;
+  if (playerPhysicsObject != DAT_00234e44) {
+    do {
+      iVar4 = Simulation::GetRigidBody(&Sim,(int)*(short *)(*piVar6 + 0x4a));
+      VU0_v4sub(param_1 + 0x40,iVar4 + 0x10,local_20);
+      iVar4 = Simulation::GetRigidBody(&Sim,(int)*(short *)(*piVar6 + 0x4a));
+      fVar8 = v3dotprod(*(float **)(iVar4 + 0x5c),&local_20[0].x);
+      iVar4 = Simulation::GetRigidBody(&Sim,(int)*(short *)(*piVar6 + 0x4a));
+      fVar2 = *(float *)(*(int *)(iVar4 + 0x5c) + 0x4c0) + 6.0;
+      if ((-fVar2 <= fVar8) && (fVar8 <= fVar2)) {
+        iVar4 = Simulation::GetRigidBody(&Sim,(int)*(short *)(*piVar6 + 0x4a));
+        fVar9 = v3dotprod((float *)(*(int *)(iVar4 + 0x5c) + 0x20),&local_20[0].x);
+        iVar4 = Simulation::GetRigidBody(&Sim,(int)*(short *)(*piVar6 + 0x4a));
+        iVar5 = Simulation::GetRigidBody(&Sim,(int)*(short *)(*piVar6 + 0x4a));
+        fVar10 = v3dotprod((float *)(*(int *)(iVar5 + 0x5c) + 0x20),(float *)(iVar4 + 0x20));
+        iVar4 = Simulation::GetRigidBody(&Sim,(int)*(short *)(*piVar6 + 0x4a));
+        fVar2 = *(float *)(*(int *)(iVar4 + 0x5c) + 0x4c8) * 4.0;
+    ...
+--- PS2
+undefined8 AICharacterEnemyGround::ThreatenedByVehicle(int param_1)
+{
+  uint uVar1;
+  uint uVar2;
+  ulong *puVar3;
+  int iVar4;
+  float fVar5;
+  int iVar6;
+  ulong uVar7;
+  int *piVar8;
+  float fVar9;
+  float fVar10;
+  float fVar11;
+  float fVar12;
+  undefined1 in_vf0 [16];
+  undefined1 auVar13 [16];
+  undefined1 auVar14 [16];
+  undefined1 auVar15 [16];
+  undefined4 uVar16;
+  undefined1 local_e0 [16];
+  if (playerPhysicsObject == DAT_00339f60) {
+    return 0;
+  }
+  fVar11 = 0.15915494;
+  iVar4 = *playerPhysicsObject;
+  piVar8 = playerPhysicsObject;
+  do {
+    iVar4 = Simulation::GetRigidBody((Simulation *)&Sim,(int)*(short *)(iVar4 + 0x46));
+    auVar13 = _lqc2(*(undefined1 (*) [16])(param_1 + 0x30));
+    auVar14 = _lqc2(*(undefined1 (*) [16])(iVar4 + 0x10));
+    ...
+
+====================================================================================================
+## item 236: Xbox 0x00089a40 (FUN_00089a40)  <-  PS2 0x001bd1b8 RPlayerCamera::ForceCameraChange
+triage: tier A, PS2 distance to Xbox neighbours 20, + 1 named callers, size ratio 0.98; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: EChangeCarCameraView::~EChangeCarCameraView@3ef10
+PS2 callers up to a shared name:  EChangeCarCameraView::~EChangeCarCameraView@149528
+Xbox callees: FUN_000894d0, SetCameraModeByIndex
+PS2 callees:  SetCameraModeByIndex, SetLastSelectableCameraMode
+--- Xbox
+void FUN_00089a40(int param_1,undefined4 param_2,undefined4 param_3)
+{
+  int iVar1;
+  short *psVar2;
+  if (param_1 == 0) {
+    FUN_000894d0(param_2,param_3,0,1);
+  }
+  else {
+    iVar1 = 0;
+    if (0 < DAT_001ec398) {
+      psVar2 = (short *)(DAT_001ec368 + 8);
+      while (*psVar2 != param_1) {
+        iVar1 = iVar1 + 1;
+        psVar2 = psVar2 + 0xc;
+        if (DAT_001ec398 <= iVar1) {
+          return;
+        }
+      }
+      if (iVar1 != -1) {
+        RPlayerCamera::SetCameraModeByIndex(iVar1,param_2,4,param_3,0,0,0);
+        return;
+      }
+    }
+  }
+  return;
+}
+--- PS2
+void RPlayerCamera::ForceCameraChange(int param_1,short param_2,undefined2 param_3,ulong param_4)
+{
+  int iVar1;
+  int iVar2;
+  if (param_2 == 0) {
+    SetLastSelectableCameraMode(param_1,param_3,param_4,0,1);
+  }
+  else {
+    iVar1 = 0;
+    iVar2 = -1;
+    if (0 < DAT_00333a04) {
+      if (*(short *)(DAT_003339bc + 8) == param_2) {
+        iVar2 = 0;
+      }
+      else {
+        do {
+          iVar1 = iVar1 + 1;
+          iVar2 = -1;
+          if (DAT_00333a04 <= iVar1) break;
+          iVar2 = iVar1;
+        } while (*(short *)(iVar1 * 0x1c + DAT_003339bc + 8) != param_2);
+      }
+    }
+    if (iVar2 != -1) {
+      SetCameraModeByIndex(param_1,iVar2,param_3,4,(short)param_4,0,0,0);
+    }
+  }
+  return;
+}
+
+====================================================================================================
+## item 237: Xbox 0x001307d0 (FUN_001307d0)  <-  PS2 0x003001d0 PlayMPC::Init
+triage: tier A, PS2 distance to Xbox neighbours 1, + 1 named callers, size ratio 1.24; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: ESetVideo::~ESetVideo@44970 | FUN_0005a6b0@5a6b0 <- RunTheGame@5aa80
+PS2 callers up to a shared name:  ESetVideo::~ESetVideo@1592d8 | FUN_00175af8@175af8 <- RunTheGame@175d78
+Xbox callees: AV_PLAYER
+PS2 callees:  AV_PLAYER
+--- Xbox
+void __thiscall PlayMPC::Init(int param_1_00,int param_1,undefined4 param_3,char param_4)
+{
+  int iVar1;
+  undefined4 uVar2;
+  undefined4 local_c;
+  code *pcStack_8;
+  undefined4 uStack_4;
+  uStack_4 = 0xffffffff;
+  pcStack_8 = FUN_00156a16;
+  if (param_1 == 0) goto LAB_00130884;
+  if (param_4 == '\0') {
+    iVar1 = (*plaympc_alloc)(&SMissionManager::glbMissionManager,0x68,0,0,DAT_001dcd1c);
+    uStack_4 = 1;
+    if (iVar1 == 0) goto LAB_00130878;
+    uVar2 = RCMP::AV_PLAYER::AV_PLAYER(param_1,FUN_000a0000,0,0);
+  }
+  else {
+    iVar1 = (*plaympc_alloc)(&SMissionManager::glbMissionManager,0x68,0,0,DAT_001dcd1c);
+    uStack_4 = 0;
+    if (iVar1 == 0) {
+LAB_00130878:
+      uVar2 = 0;
+    }
+    else {
+      uVar2 = RCMP::AV_PLAYER::AV_PLAYER(param_1,FUN_000a0000,1,0);
+    }
+  }
+  *(undefined4 *)(param_1_00 + 0x14) = uVar2;
+  *(undefined4 *)(param_1_00 + 0x1c) = param_3;
+LAB_00130884:
+    ...
+--- PS2
+void PlayMPC::Init(int param_1,long param_2,undefined4 param_3,long param_4)
+{
+  undefined8 uVar1;
+  if (param_2 != 0) {
+    if (param_4 == 0) {
+      uVar1 = (*plaympc_alloc)(0x3c8130,0x68,0,0,DAT_003562d8);
+    }
+    else {
+      uVar1 = (*plaympc_alloc)(0x3c8130,0x68,0,0,DAT_003562d8);
+    }
+    uVar1 = RCMP::AV_PLAYER::AV_PLAYER(uVar1,(char *)param_2,0x64000,(uint)(param_4 != 0),0);
+    *(int *)(param_1 + 0x14) = (int)uVar1;
+    *(undefined4 *)(param_1 + 0x1c) = param_3;
+  }
+  return;
+}
+
+====================================================================================================
+## item 238: Xbox 0x0010aff0 (FUN_0010aff0)  <-  PS2 0x002608b0 PRINT_setdevicestate
+triage: tier A, PS2 distance to Xbox neighbours 11, + 2 named callers, size ratio 0.73; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: ApplicationMemoryHeapConfig@59920 | UMemory::Init@114880
+PS2 callers up to a shared name:  ApplicationMemoryHeapConfig@173c60 | UMemory::Init@2d0020 | PRINT_init@260648
+Xbox callees: PRINT_init
+PS2 callees:  FUN_00260560, PRINT_init
+--- Xbox
+void PRINT_setdevicestate(int param_1,uint param_2)
+{
+  int iVar1;
+  iVar1 = param_1 * 0xc;
+  if ((&DAT_001d1ba4)[param_1 * 3] != 0) {
+    if (DAT_002422d8 == 0) {
+      PRINT_init();
+    }
+    *(uint *)(&DAT_001d1ba8 + iVar1) =
+         *(uint *)(&DAT_001d1ba8 + iVar1) ^ (*(uint *)(&DAT_001d1ba8 + iVar1) ^ param_2) & 1;
+  }
+  return;
+}
+--- PS2
+void PRINT_setdevicestate(int param_1,uint param_2)
+{
+  if ((&DAT_00343c9c)[param_1 * 3] != 0) {
+    if (DAT_003c80c0 == 0) {
+      PRINT_init();
+    }
+    FUN_00260560(param_1,param_2);
+  }
+  return;
+}
+
+====================================================================================================
+## item 239: Xbox 0x00030fb0 (FUN_00030fb0)  <-  PS2 0x00130508 AIGroundVehicle::DoMoveMode
+triage: tier A, PS2 distance to Xbox neighbours 25, + 4/9 named callees, size ratio 1.04; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: (no chain to a function named on both sides within 3 levels)
+PS2 callers up to a shared name:  (no chain to a function named on both sides within 3 levels)
+Xbox callees: FUN_0001c600, FUN_0002a3e0, FUN_0002dc90, FUN_0002dd80, FUN_0002f610, FUN_0002fde0, FUN_000306b0, FUN_00030b80, FUN_00035840, FUN_0007ff60, FUN_000adcd0, GetHitPoints, GetPosition, GetRigidBody, GetSplinePath, VU0_MATRIX4_mult, VU0_v3length, VU0_v4scale, VU0_v4scaleadd, VU0_v4unitxyz, v3dotprod
+PS2 callees:  CheckAgentDirectCollision, CheckAgentRoadNetworkCollision, CheckTrafficCollision, DriveToPoint, DriveToPointTraffic, GetHitPoints, GetLookAhead, GetOrientMat, GetPhysicsObject, GetPosition, GetRigidBody, GetSplinePath, ResetObject, UpdateNavPos, VU0_MATRIX4_mult
+--- Xbox
+void __fastcall FUN_00030fb0(int param_1)
+{
+  char cVar1;
+  int *piVar2;
+  int iVar3;
+  int iVar4;
+  undefined4 *puVar5;
+  float10 fVar6;
+  float fVar7;
+  float fVar8;
+  undefined1 *puVar9;
+  float fStack_70;
+  undefined4 uStack_6c;
+  float afStack_68 [2];
+  undefined4 uStack_60;
+  undefined4 uStack_5c;
+  undefined4 uStack_58;
+  undefined1 auStack_50 [48];
+  undefined4 uStack_20;
+  undefined4 uStack_1c;
+  undefined4 uStack_18;
+  if (*(int *)(param_1 + 0x80) == 5) {
+    FUN_00035840();
+    fVar6 = (float10)PhysicsObject::GetHitPoints();
+    if (fVar6 < (float10)0.0 != (fVar6 == (float10)0.0)) goto LAB_00031562;
+  }
+  if (*(int *)(param_1 + 0x80) == 4) {
+    FUN_00035840();
+    fVar6 = (float10)PhysicsObject::GetHitPoints();
+    if (fVar6 < (float10)0.5) goto LAB_00031562;
+    ...
+--- PS2
+void AIGroundVehicle::DoMoveMode
+               (int param_1,undefined8 param_2,ulong param_3,ulong param_4,ulong param_5,
+               double param_6,double param_7)
+{
+  undefined1 *puVar1;
+  uint uVar2;
+  uint uVar3;
+  short sVar4;
+  int *piVar5;
+  ulong *puVar6;
+  PhysicsObject *pPVar7;
+  int iVar8;
+  uint uVar9;
+  long lVar10;
+  int iVar11;
+  ulong extraout_a0;
+  ulong uVar12;
+  float fVar13;
+  ulong uVar14;
+  ulong extraout_t0;
+  ulong extraout_t0_00;
+  ulong extraout_t0_01;
+  ulong extraout_t0_02;
+  undefined8 extraout_t0_03;
+  undefined8 extraout_t0_04;
+  undefined8 uVar15;
+  ulong extraout_t0_05;
+  ulong extraout_t0_06;
+  ulong extraout_t0_07;
+  undefined8 extraout_t0_08;
+    ...
+
+====================================================================================================
+## item 240: Xbox 0x00016940 (FUN_00016940)  <-  PS2 0x0010ee70 ActIKSolverArray::~ActIKSolverArray
+triage: tier A, PS2 distance to Xbox neighbours 4, + 1/1 named callees, size ratio 1.18; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: ActPoser::~ActPoser@19580
+PS2 callers up to a shared name:  ActPoser::~ActPoser@112a70
+Xbox callees: __builtin_delete
+PS2 callees:  DeleteIKs, __builtin_delete
+--- Xbox
+void __fastcall ActGlobalPoseOverrideArray::~ActGlobalPoseOverrideArray(int *param_1)
+{
+  if (0 < *param_1) {
+    __builtin_delete(param_1[3]);
+    __builtin_delete(param_1[1]);
+    __builtin_delete(param_1[2]);
+    __builtin_delete(param_1[6]);
+  }
+  *param_1 = 0;
+  return;
+}
+--- PS2
+void __thiscall ActIKSolverArray::~ActIKSolverArray(ActIKSolverArray *this,ulong param_1)
+{
+  DeleteIKs(this);
+  if ((param_1 & 1) != 0) {
+    __builtin_delete((long)(int)this);
+  }
+  return;
+}
+
+====================================================================================================
+## item 241: Xbox 0x00093dd0 (FUN_00093dd0)  <-  PS2 0x001cef60 RTextureContext::RTextureContext
+triage: tier A, PS2 distance to Xbox neighbours 6, + 1 shared strings, 1/2 named callees, 1 named callers, size ratio 1.3; VT: Data Reference Match (AVAILABLE)
+Xbox callers up to a shared name: RTextureContextManager::NewContext@951e0
+PS2 callers up to a shared name:  RTextureContextManager::NewContext@1cfd80
+Xbox callees: FUN_00093310, FastAlloc, FileLoadz
+PS2 callees:  FastAlloc, Load
+--- Xbox
+undefined4 * __thiscall FUN_00093dd0(undefined4 *param_1_00,char *param_1,undefined4 param_2)
+{
+  undefined1 *puVar1;
+  int iVar2;
+  void *pvVar3;
+  undefined4 local_c;
+  code *pcStack_8;
+  undefined4 local_4;
+  local_4 = 0xffffffff;
+  pcStack_8 = FUN_0015322f;
+  *param_1_00 = &PTR_LAB_0019219c;
+  param_1_00[1] = param_2;
+  param_1_00[2] = 0;
+  param_1_00[3] = 0;
+  puVar1 = UMemory::FastAlloc(0xc,"RTexList");
+  local_4 = 0;
+  if (puVar1 == (undefined1 *)0x0) {
+    puVar1 = (undefined1 *)0x0;
+  }
+  else {
+    param_2._0_1_ = SUB41(puVar1,0);
+    *puVar1 = (undefined1)param_2;
+    iVar2 = FUN_00093310();
+    *(int *)(puVar1 + 4) = iVar2;
+    *(undefined1 *)(iVar2 + 0x21) = 1;
+    *(int *)(*(int *)(puVar1 + 4) + 4) = *(int *)(puVar1 + 4);
+    *(undefined4 *)*(undefined4 *)(puVar1 + 4) = *(undefined4 *)(puVar1 + 4);
+    *(int *)(*(int *)(puVar1 + 4) + 8) = *(int *)(puVar1 + 4);
+    *(undefined4 *)(puVar1 + 8) = 0;
+  }
+    ...
+--- PS2
+RTextureContext * __thiscall
+RTextureContext::RTextureContext(RTextureContext *this,char *param_1,uint param_2)
+{
+  int *piVar1;
+  undefined4 *puVar2;
+  this->field2_0x8 = 0;
+  this->field3_0xc = (void *)0x0;
+  this->field1_0x4 = param_2;
+  this->field0_0x0 = &vtable_RTextureContext;
+  piVar1 = UMemory::FastAlloc(0xc,"RTexList");
+  *piVar1 = 0;
+  puVar2 = UMemory::FastAlloc(0x24,"STL");
+  *piVar1 = (int)puVar2;
+  piVar1[1] = 0;
+  *(undefined1 *)(piVar1 + 2) = 0;
+  *puVar2 = 0;
+  *(undefined4 *)(*piVar1 + 4) = 0;
+  *(int *)(*piVar1 + 8) = *piVar1;
+  *(int *)(*piVar1 + 0xc) = *piVar1;
+  this->field3_0xc = piVar1;
+  Load((int)this,param_1);
+  return this;
+}
+
+====================================================================================================
+## item 242: Xbox 0x000d68c0 (FUN_000d68c0)  <-  PS2 0x00238408 GGallery::QUAD_Draw2D
+triage: tier A, PS2 distance to Xbox neighbours 2, + 3 named callers, size ratio 0.76; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: GHud::DrawCrossHairs@e0440 | GHud::DrawObjectiveMessage@dfc30 | GHud::DrawPauseMenu@dd340 | GHud::DrawTimer@dc7d0 | FUN_000da2e0@da2e0 <- GHud::Draw@e1970
+PS2 callers up to a shared name:  GHud::DrawCrossHairs@23f328 | GHud::DrawObjectiveMessage@246c48 | GHud::DrawPauseMenu@2426a0 | GHud::DrawTimer@23e580 | GHud::DrawMessage@2469b8 <- GHud::Draw@23cf88
+Xbox callees: FUN_000762d0, FUN_000eedc0, SetDepthTestMethod
+PS2 callees:  DrawQuad, STATE_SetDefaultRenderState, memset
+--- Xbox
+void __thiscall
+FUN_000d68c0(int param_1_00,float param_1,float param_2,float param_3,float param_4,
+            undefined4 param_5)
+{
+  float local_50;
+  float local_4c;
+  undefined4 local_48;
+  undefined4 local_44;
+  float local_40;
+  float local_3c;
+  undefined4 local_38;
+  undefined4 local_34;
+  float local_30;
+  float local_2c;
+  undefined4 local_28;
+  undefined4 local_24;
+  float local_20;
+  float local_1c;
+  undefined4 local_18;
+  undefined4 local_14;
+  local_40 = param_1 + param_3;
+  local_50 = param_1;
+  local_3c = param_2;
+  local_2c = param_2 + param_4;
+  local_4c = param_2;
+  local_48 = 0x3f800000;
+  local_44 = 0x3f800000;
+  local_38 = 0x3f800000;
+  local_34 = 0x3f800000;
+  local_30 = param_1;
+    ...
+--- PS2
+void GGallery::QUAD_Draw2D
+               (float param_1,float param_2,float param_3,float param_4,int param_5,
+               undefined4 param_6,undefined8 param_7,undefined8 param_8,undefined8 param_9)
+{
+  float fVar1;
+  float fVar2;
+  float local_a0;
+  float local_9c;
+  undefined4 local_98;
+  undefined4 local_94;
+  float local_90;
+  float local_8c;
+  undefined4 local_88;
+  undefined4 local_84;
+  float local_80;
+  float local_7c;
+  undefined4 local_78;
+  undefined4 local_74;
+  float local_70;
+  float local_6c;
+  undefined4 local_68;
+  undefined4 local_64;
+  undefined4 local_60;
+  undefined4 uStack_5c;
+  undefined4 local_50;
+  undefined4 uStack_4c;
+  undefined4 local_40;
+  undefined4 uStack_3c;
+  memset(&local_a0,0,0x10);
+  fVar1 = param_1 + param_3;
+    ...
+
+====================================================================================================
+## item 243: Xbox 0x0002f4c0 (FUN_0002f4c0)  <-  PS2 0x00132d80 AIGroundVehicle::DoTrafficStateUpdate
+triage: tier A, PS2 distance to Xbox neighbours 36, + 2/2 named callees, size ratio 0.77; VT: Data Reference Match (AVAILABLE); BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: (no chain to a function named on both sides within 3 levels)
+PS2 callers up to a shared name:  (no chain to a function named on both sides within 3 levels)
+Xbox callees: FUN_00029c90, FUN_00029cb0, FUN_00035840, FUN_00116060, Get, GetRigidBody, Spawn
+PS2 callees:  Get, GetPhysicsObject, GetRigidBody, Spawn
+--- Xbox
+void __fastcall FUN_0002f4c0(int param_1)
+{
+  char *pcVar1;
+  short sVar2;
+  undefined2 uVar3;
+  char cVar4;
+  int *piVar5;
+  int iVar6;
+  int iVar7;
+  float10 fVar8;
+  uVar3 = DAT_001de914;
+  if (*(int *)(param_1 + 0xa4) == 0) {
+    AIVehicleController::Get();
+    AIGroundVehicle::Spawn(uVar3);
+  }
+  if (*(int *)(param_1 + 0x94) == 0xc) {
+    iVar6 = *(int *)(WRoadNetwork::fSegments + *(short *)(*(int *)(param_1 + 100) + 0x3e) * 4);
+    WRoadNetwork::Get();
+    sVar2 = *(short *)(param_1 + 0xa0);
+    if (sVar2 == -1) {
+      iVar7 = (int)*(short *)(iVar6 + 0x3c);
+      WRoadNetwork::Get();
+      if ((-1 < iVar7) && (iVar7 < WRoadNetwork::numNodes)) {
+        pcVar1 = (char *)(*(int *)(WRoadNetwork::fRoads + iVar7 * 4) + 0x2e);
+        *pcVar1 = *pcVar1 + '\x01';
+      }
+      *(undefined2 *)(param_1 + 0xa0) = *(undefined2 *)(iVar6 + 0x3c);
+    }
+    else if ((*(short *)(iVar6 + 0x3c) != -1) && (*(short *)(iVar6 + 0x3c) != sVar2)) {
+      iVar7 = (int)sVar2;
+    ...
+--- PS2
+void AIGroundVehicle::DoTrafficStateUpdate
+               (int param_1,undefined8 param_2,ulong param_3,ulong param_4,ulong param_5,
+               undefined8 param_6,ulong param_7)
+{
+  short sVar1;
+  int iVar2;
+  int iVar3;
+  long lVar4;
+  ulong extraout_a2;
+  ulong extraout_a3;
+  ulong extraout_t0;
+  undefined8 extraout_t1;
+  ulong extraout_t2;
+  undefined1 in_vf0 [16];
+  undefined1 auVar5 [16];
+  undefined1 auVar6 [16];
+  undefined1 auVar7 [16];
+  undefined4 uVar8;
+  if (*(int *)(param_1 + 0x94) == 0) {
+    AIVehicleController::Get();
+    Spawn(param_1,DAT_0032b750,extraout_a2,extraout_a3,extraout_t0,extraout_t1,extraout_t2);
+    iVar3 = *(int *)(param_1 + 0x84);
+  }
+  else {
+    iVar3 = *(int *)(param_1 + 0x84);
+  }
+  if (iVar3 != 0xc) {
+    iVar3 = *(int *)(param_1 + 0xe4);
+    goto LAB_00132e9c;
+  }
+    ...
+
+====================================================================================================
+## item 244: Xbox 0x000cd630 (FUN_000cd630)  <-  PS2 0x00228b70 WSoundGroup::~WSoundGroup
+triage: tier A, PS2 distance to Xbox neighbours 8, + 1/1 named callees, 1 named callers, size ratio 0.34; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: WWorld::Close@d1b30
+PS2 callers up to a shared name:  WWorld::Close@230648
+Xbox callees: FUN_000cd220, FUN_000cd560, FastFree
+PS2 callees:  Clear, FastFree, _Rb_tree<int,_pair<int,_WSound_*>,__Select1st<pair<int,_WSound
+--- Xbox
+void __fastcall FUN_000cd630(int param_1)
+{
+  void *pvVar1;
+  FUN_000cd220();
+  pvVar1 = *(void **)(param_1 + 0xc);
+  if (pvVar1 != (void *)0x0) {
+    FUN_000cd560();
+    UMemory::FastFree(pvVar1,0xc);
+  }
+  return;
+}
+--- PS2
+void WSoundGroup::~WSoundGroup(undefined8 param_1,ulong param_2)
+{
+  int *piVar1;
+  Clear((int)(void *)param_1);
+  piVar1 = *(int **)((int)(void *)param_1 + 0xc);
+  if ((long)(int)piVar1 != 0) {
+    if (piVar1[1] != 0) {
+      _Rb_tree<int,_pair<int,_WSound_*>,__Select1st<pair<int,_WSound
+                ((long)(int)piVar1,(long)*(int *)(*piVar1 + 4));
+      *(int *)(*piVar1 + 8) = *piVar1;
+      *(undefined4 *)(*piVar1 + 4) = 0;
+      *(int *)(*piVar1 + 0xc) = *piVar1;
+      piVar1[1] = 0;
+    }
+    UMemory::FastFree((void *)*piVar1,0x18);
+    UMemory::FastFree(piVar1,0xc);
+  }
+  if ((param_2 & 1) != 0) {
+    UMemory::FastFree((void *)param_1,0x10);
+  }
+  return;
+}
+
+====================================================================================================
+## item 245: Xbox 0x000e3560 (FUN_000e3560)  <-  PS2 0x0024a598 GSubtitles::SetupFMVSubtitles
+triage: tier A, PS2 distance to Xbox neighbours 9, + 3/3 named callees, size ratio 0.81; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: (no chain to a function named on both sides within 3 levels)
+PS2 callers up to a shared name:  (no chain to a function named on both sides within 3 levels)
+Xbox callees: GetFoundationVideoMode, Init, LOCALE_Symbol, Reset, TIMER_gettick
+PS2 callees:  GetFoundationVideoMode, Init, LOCALE_Symbol, Reset, TIMER_gettick
+--- Xbox
+void __thiscall FUN_000e3560(int param_1_00,uint param_1)
+{
+  int *piVar1;
+  uint uVar2;
+  float fVar3;
+  float fVar4;
+  char *pcVar5;
+  undefined4 uVar6;
+  int iVar7;
+  uint uVar8;
+  float fVar9;
+  uVar8 = *(uint *)(param_1_00 + 0x28);
+  if ((uVar8 != 0) && (uVar2 = *(uint *)(param_1_00 + 0x24), uVar2 < uVar8)) {
+    *(undefined1 *)(param_1_00 + 4) = 0;
+    if ((uVar2 < uVar8 - 1) && (*(uint *)(*(int *)(param_1_00 + 0x20) + uVar2 * 8) <= param_1)) {
+      GSubtitleSplitter::Reset();
+      piVar1 = (int *)(*(int *)(param_1_00 + 0x20) + *(int *)(param_1_00 + 0x24) * 8);
+      *(undefined4 *)(param_1_00 + 0x2c) =
+           *(undefined4 *)(*(int *)(param_1_00 + 0x20) + 4 + *(int *)(param_1_00 + 0x24) * 8);
+      iVar7 = piVar1[2] - *piVar1;
+      fVar3 = (float)iVar7;
+      if (iVar7 < 0) {
+        fVar3 = fVar3 + 4.2949673e+09;
+      }
+      iVar7 = GetFoundationVideoMode();
+      if (iVar7 == 2) {
+        fVar4 = 0.04;
+      }
+      else {
+        fVar4 = 0.033333335;
+    ...
+--- PS2
+void GSubtitles::SetupFMVSubtitles(int *param_1,uint param_2)
+{
+  uint uVar1;
+  uint uVar2;
+  int iVar3;
+  int *piVar4;
+  int iVar5;
+  char *pcVar6;
+  int iVar7;
+  float fVar8;
+  uVar1 = param_1[9];
+  if (uVar1 != 0) {
+    uVar2 = param_1[8];
+    if (uVar2 < uVar1) {
+      *param_1 = 0;
+      if ((uVar2 < uVar1 - 1) && (*(uint *)(uVar2 * 8 + param_1[7]) <= param_2)) {
+        GSubtitleSplitter::Reset(param_1 + 0xb);
+        piVar4 = (int *)(param_1[8] * 8 + param_1[7]);
+        param_1[10] = piVar4[1];
+        iVar7 = *piVar4;
+        iVar3 = piVar4[2];
+        iVar5 = GetFoundationVideoMode();
+        fVar8 = 30.0;
+        if (iVar5 == 2) {
+          fVar8 = 25.0;
+        }
+        fVar8 = (float)(uint)(iVar3 - iVar7) / fVar8;
+        pcVar6 = GSystem::LOCALE_Symbol(param_1[10]);
+        GSubtitleSplitter::Init(fVar8,(int)(param_1 + 0xb),(undefined8 *)pcVar6,(long)*param_1);
+        param_1[1] = (int)fVar8;
+    ...
+
+====================================================================================================
+## item 246: Xbox 0x000239d0 (FUN_000239d0)  <-  PS2 0x001266a8 AICharacterPedestrian::GetPedBase
+triage: tier A, PS2 distance to Xbox neighbours 23, + 5 shared strings, 1/1 named callees, 1 named callers, size ratio 1.19; VT: Implied Match (AVAILABLE); BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: AICharacterPedestrian::Init@26800
+PS2 callers up to a shared name:  AICharacterPedestrian::Init@125bb8
+Xbox callees: strstr
+PS2 callees:  strstr
+--- Xbox
+undefined4 FUN_000239d0(void)
+{
+  uint *puVar1;
+  undefined4 uVar2;
+  puVar1 = strstr(MissionName,"snow1a");
+  if (puVar1 != (uint *)0x0) {
+    return 1;
+  }
+  puVar1 = strstr(MissionName,"snow2a");
+  if (puVar1 != (uint *)0x0) {
+    return 2;
+  }
+  puVar1 = strstr(MissionName,"junglea");
+  if (puVar1 != (uint *)0x0) {
+    return 3;
+  }
+  puVar1 = strstr(MissionName,"jungleb");
+  if (puVar1 != (uint *)0x0) {
+    return 4;
+  }
+  puVar1 = strstr(MissionName,"uw_");
+  if (puVar1 != (uint *)0x0) {
+    return 5;
+  }
+  puVar1 = strstr(MissionName,"junglec");
+  uVar2 = 6;
+  if (puVar1 == (uint *)0x0) {
+    uVar2 = 0;
+  }
+  return uVar2;
+    ...
+--- PS2
+undefined4 AICharacterPedestrian::GetPedBase(void)
+{
+  char *pcVar1;
+  undefined4 uVar2;
+  pcVar1 = strstr((char *)((int)&DAT_001004f0 + 4),"snow1a");
+  uVar2 = 1;
+  if (pcVar1 == (char *)0x0) {
+    pcVar1 = strstr((char *)((int)&DAT_001004f0 + 4),"snow2a");
+    uVar2 = 2;
+    if (pcVar1 == (char *)0x0) {
+      pcVar1 = strstr((char *)((int)&DAT_001004f0 + 4),"junglea");
+      uVar2 = 3;
+      if (pcVar1 == (char *)0x0) {
+        pcVar1 = strstr((char *)((int)&DAT_001004f0 + 4),"jungleb");
+        uVar2 = 4;
+        if (pcVar1 == (char *)0x0) {
+          pcVar1 = strstr((char *)((int)&DAT_001004f0 + 4),"uw_");
+          uVar2 = 5;
+          if (pcVar1 == (char *)0x0) {
+            pcVar1 = strstr((char *)((int)&DAT_001004f0 + 4),"junglec");
+            uVar2 = 6;
+            if (pcVar1 == (char *)0x0) {
+              uVar2 = 0;
+            }
+          }
+        }
+      }
+    }
+  }
+  return uVar2;
+    ...
+
+====================================================================================================
+## item 247: Xbox 0x0009f970 (FUN_0009f970)  <-  PS2 0x001e18e0 RLightning::BuildNewSegment
+triage: tier A, PS2 distance to Xbox neighbours 5, + 1/2 named callees, size ratio 0.82; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: FUN_000a0400@a0400 <- FUN_0009c260@9c260 <- REmpBolts::TrySpawnBolt@9d320 | FUN_000a0500@a0500 <- FUN_0009c0e0@9c0e0 <- REmpBolts::TrySpawnBolt@9d320
+PS2 callers up to a shared name:  RLightning::AddBolt@1e1010 <- REmpBolts::CreateWorldBolt@1dd4a0 <- REmpBolts::TrySpawnBolt@1dcea8 | RLightning::AddRoundedBolt@1e1280 <- REmpBolts::CreateVehicleBolt@1dd248 <- REmpBolts::TrySpawnBolt@1dcea8
+Xbox callees: FUN_0009ec70, FUN_0009f8b0, FUN_0009f970, __builtin_delete, __builtin_vec_new
+PS2 callees:  BuildNewSegment, Respawn, __builtin_vec_delete, __builtin_vec_new, ~USimpleVec
+--- Xbox
+void FUN_0009f970(undefined4 *param_1,undefined4 param_2,int param_3,int param_4,int param_5,
+                 int param_6,float param_7,float param_8,float param_9,float param_10)
+{
+  int iVar1;
+  float fVar2;
+  int iVar3;
+  void *pvVar4;
+  int iVar5;
+  int iVar6;
+  iVar3 = param_5;
+  *param_1 = param_2;
+  iVar6 = 0;
+  param_1[1] = param_3;
+  if (0 < param_6) {
+    iVar1 = param_5 + -1;
+    if (param_1[2] != 0) {
+      __builtin_delete(param_1[2]);
+    }
+    param_1[2] = 0;
+    param_1[3] = iVar1;
+    pvVar4 = __builtin_vec_new(iVar1 * 0x50);
+    param_1[2] = pvVar4;
+    param_3 = 0;
+    if (0 < iVar1) {
+      do {
+        fVar2 = (float)param_3;
+        iVar5 = param_1[2] + iVar6;
+        param_3 = param_3 + 1;
+        *(int *)(iVar5 + 0x1c) = param_4;
+        *(float *)(iVar5 + 0x44) = param_7;
+    ...
+--- PS2
+void RLightning::BuildNewSegment
+               (float param_1,float param_2,float param_3,float param_4,undefined4 param_5,
+               undefined4 *param_6,undefined4 param_7,undefined4 param_8,float param_9,int param_10,
+               long param_11)
+{
+  void *pvVar1;
+  float *pfVar2;
+  int *piVar3;
+  int *piVar4;
+  int iVar5;
+  int iVar6;
+  int iVar7;
+  int *piVar8;
+  int iVar9;
+  int iVar10;
+  long lVar11;
+  float fVar12;
+  float fVar13;
+  float fVar14;
+  float fVar15;
+  *param_6 = param_7;
+  param_6[1] = param_8;
+  if (0 < param_11) {
+    iVar7 = param_10 + -1;
+    if ((long)(int)param_6[2] != 0) {
+      __builtin_vec_delete((long)(int)param_6[2]);
+    }
+    param_6[2] = 0;
+    lVar11 = (long)((int)param_11 + -1);
+    fVar15 = (float)param_10;
+    ...
+
+====================================================================================================
+## item 248: Xbox 0x0014c7c0 (FUN_0014c7c0)  <-  PS2 0x00301498 RCMP::AV_PLAYER::SetSpeed
+triage: tier A, PS2 distance to Xbox neighbours 5, + 1/1 named callees, size ratio 0.32; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: PlayMPC::Play@1308a0
+PS2 callers up to a shared name:  RCMP::AV_PLAYER::GetFirstFrame@3010c0 | RCMP::AV_PLAYER::Pause@301548 <- PlayMPC::Play@300298 | RCMP::AV_PLAYER::UnPause@301568 <- PlayMPC::Play@300298
+Xbox callees: FUN_0014c3e0, SetSpeed
+PS2 callees:  SetSpeed, TIMER_gettick
+--- Xbox
+undefined4 __fastcall FUN_0014c7c0(int *param_1)
+{
+  int iVar1;
+  if (*param_1 != 0) {
+    RCMP::AUDIO_PLAYER::SetSpeed(0x1000);
+  }
+  iVar1 = param_1[0x17];
+  FUN_0014c3e0();
+  *(undefined4 *)(iVar1 + 0x10) = 0x1000;
+  return 0;
+}
+--- PS2
+undefined8 RCMP::AV_PLAYER::SetSpeed(int *param_1,ulong param_2)
+{
+  int *piVar1;
+  int iVar2;
+  ulong uVar3;
+  long lVar4;
+  ulong uVar5;
+  uVar5 = 0x4000;
+  if (param_2 < 0x4001) {
+    uVar5 = param_2;
+  }
+  if (*param_1 != 0) {
+    AUDIO_PLAYER::SetSpeed(*param_1,uVar5);
+  }
+  piVar1 = (int *)param_1[0x17];
+  iVar2 = TIMER_gettick();
+  if (piVar1[4] == 0x1000) {
+    lVar4 = *(long *)(piVar1 + 2);
+    uVar3 = (ulong)(uint)(iVar2 - *piVar1);
+  }
+  else {
+    lVar4 = *(long *)(piVar1 + 2);
+    uVar3 = (ulong)(uint)piVar1[4] * (ulong)(uint)(iVar2 - *piVar1);
+    uVar3 = ((long)(int)(uVar3 >> 0x20) << 0x20 | uVar3 & 0xffffffff) >> 0xc;
+  }
+  *(ulong *)(piVar1 + 2) = lVar4 + uVar3;
+  piVar1[4] = (int)uVar5;
+  *piVar1 = iVar2;
+  return 0;
+}
+
+====================================================================================================
+## item 249: Xbox 0x0002dac0 (FUN_0002dac0)  <-  PS2 0x00132ba8 AIGroundVehicle::UnSpawn
+triage: tier A, PS2 distance to Xbox neighbours 35, + 3/3 named callees, 3 named callers, size ratio 1.02; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: AIVehicleController::RegisterTrafficVehicle@362e0 | AIGroundVehicle::Spawn@2f190 | AIElementController::WakeUp@28bb0 | EAICommand::~EAICommand@48ec0
+PS2 callers up to a shared name:  AIVehicleController::RegisterTrafficVehicle@13f868 | AIGroundVehicle::Spawn@132808 | AIElementController::WakeUp@12cb08 | EAICommand::~EAICommand@145ff8
+Xbox callees: FUN_00035840, FUN_00035860, FUN_000adcd0, FUN_000bce90, Get, GetRigidBody, Reset
+PS2 callees:  Get, GetPhysicsObject, GetRigidBody, Reset, ResetObject, SetAttackMode, SetNavigateMode, Util_GenerateMatrix, memset
+--- Xbox
+void __fastcall FUN_0002dac0(int param_1)
+{
+  char *pcVar1;
+  float fVar2;
+  short sVar3;
+  undefined4 *puVar4;
+  int *piVar5;
+  int iVar6;
+  undefined4 *puVar7;
+  undefined4 local_b0;
+  undefined4 local_ac;
+  float local_a8;
+  undefined4 local_a0;
+  undefined4 local_9c;
+  undefined4 local_98;
+  undefined4 local_90 [16];
+  undefined1 local_50 [76];
+  _DAT_001ddf04 = _DAT_001ddf04 + 50.0;
+  if (0.0 <= _DAT_001ddf04) {
+    if (5000.0 < _DAT_001ddf04) {
+      _DAT_001ddf04 = 5000.0;
+    }
+  }
+  else {
+    _DAT_001ddf04 = 0.0;
+  }
+  fVar2 = _DAT_001ddf04 + 40000.0;
+  *(undefined4 *)(param_1 + 0x94) = 1;
+  *(undefined4 *)(param_1 + 0x88) = 1;
+  if (*(int *)(param_1 + 0x80) == 4) {
+    ...
+--- PS2
+void AIGroundVehicle::UnSpawn
+               (int param_1,undefined8 param_2,undefined8 param_3,ulong param_4,ulong param_5,
+               undefined8 param_6,ulong param_7)
+{
+  undefined1 *puVar1;
+  short sVar2;
+  uint uVar3;
+  int iVar4;
+  AVehicle *this;
+  undefined8 extraout_a3;
+  undefined8 extraout_a3_00;
+  ulong extraout_a3_01;
+  ulong extraout_t0;
+  undefined8 extraout_t1;
+  ulong extraout_t2;
+  float fVar5;
+  undefined1 auStack_b0 [8];
+  float local_a8;
+  undefined1 auStack_a0 [8];
+  undefined4 local_98;
+  float afStack_90 [16];
+  undefined4 local_50;
+  undefined4 uStack_4c;
+  undefined4 local_40;
+  undefined4 uStack_3c;
+  undefined4 local_30;
+  undefined4 uStack_2c;
+  undefined4 local_20;
+  undefined4 uStack_1c;
+  fVar5 = (float)((int)(DAT_00327c3c + 50.0) * (uint)(0.0 <= DAT_00327c3c + 50.0));
+    ...
+
+====================================================================================================
+## item 250: Xbox 0x00088d70 (FUN_00088d70)  <-  PS2 0x001bbc90 RPlayerCamera::RestartCamera
+triage: tier A, PS2 distance to Xbox neighbours 22, + 1/4 named callees, 1 named callers, size ratio 0.82; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: RPlayerCamera::RPlayerCamera@89060
+PS2 callers up to a shared name:  RPlayerCamera::RPlayerCamera@1b2620
+Xbox callees: FUN_0007c2e0, FUN_0007c5e0, FUN_00089b70, FUN_000be180, FUN_00115c80, FastFree, MatrixCopy, RestartCamera, VU0_v4Init
+PS2 callees:  ClearTransition, FUN_001aacd0, ResetState, RestartCamera, RestartDirectorQueue, ~WCollider
+--- Xbox
+void __fastcall FUN_00088d70(int param_1)
+{
+  void *pvVar1;
+  int iVar2;
+  undefined4 uVar3;
+  undefined4 *puVar4;
+  float *pfVar5;
+  undefined4 *puVar6;
+  MATRIX4 *pMVar7;
+  int local_4;
+  local_4 = param_1;
+  RWorldCamera::RestartCamera();
+  *(undefined4 *)(param_1 + 0x1d0) = 0;
+  *(undefined4 *)(param_1 + 0x1d4) = 0;
+  *(undefined4 *)(param_1 + 0x228) = 0;
+  VU0_v4Init(param_1 + 0x2f0);
+  VU0_v4Init(param_1 + 0x300);
+  VU0_v4Init(param_1 + 0x2c0);
+  *(undefined4 *)(param_1 + 0x2c4) = 0x3f800000;
+  VU0_v4Init(param_1 + 0x230);
+  *(undefined4 *)(param_1 + 0x23c) = 0;
+  VU0_v4Init(param_1 + 0x240);
+  *(undefined4 *)(param_1 + 0x24c) = 0;
+  *(undefined4 *)(param_1 + 0x250) = 0;
+  *(undefined4 *)(param_1 + 0x254) = 0;
+  FUN_00089b70();
+  *(undefined1 *)(*(int *)(param_1 + 0x354) + 0x21) = 0;
+  *(undefined1 *)(*(int *)(param_1 + 0x354) + 10) = 1;
+  *(undefined4 *)(param_1 + 0x150) = 0;
+  VU0_v4Init(param_1 + 0x160);
+    ...
+--- PS2
+void RPlayerCamera::RestartCamera(undefined4 *param_1)
+{
+  uint uVar1;
+  ulong *puVar2;
+  undefined1 auVar3 [16];
+  undefined1 in_vf0 [16];
+  RWorldCamera::RestartCamera((RWorldCamera *)param_1);
+  param_1[0x70] = 0;
+  param_1[0x71] = 0;
+  param_1[0x87] = 0;
+  auVar3 = _sqc2(in_vf0);
+  *(undefined1 (*) [16])(param_1 + 0xbc) = auVar3;
+  auVar3 = _sqc2(in_vf0);
+  *(undefined1 (*) [16])(param_1 + 0xc0) = auVar3;
+  auVar3 = _sqc2(in_vf0);
+  *(undefined1 (*) [16])(param_1 + 0xb0) = auVar3;
+  param_1[0xb1] = 0x3f800000;
+  auVar3 = _sqc2(in_vf0);
+  *(undefined1 (*) [16])(param_1 + 0x8c) = auVar3;
+  param_1[0x8f] = 0;
+  auVar3 = _sqc2(in_vf0);
+  *(undefined1 (*) [16])(param_1 + 0x90) = auVar3;
+  param_1[0x93] = 0;
+  param_1[0x94] = 0;
+  param_1[0x95] = 0;
+  RPlayerCamState::ResetState(param_1[0xd5]);
+  *(undefined4 *)(param_1[0xd5] + 0x48) = 0;
+  *(undefined4 *)(param_1[0xd5] + 0x1c) = 1;
+  param_1[0x50] = 0;
+  auVar3 = _sqc2(in_vf0);
+    ...
+
+====================================================================================================
+## item 251: Xbox 0x000d9b90 (FUN_000d9b90)  <-  PS2 0x00244ee8 GHud::GetLetterBoxMode
+triage: tier A, PS2 distance to Xbox neighbours 1, + 1 named callers, size ratio 1.0; VT: Implied Match (AVAILABLE); BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: SMissionManager::SkipCinematic@b79d0
+PS2 callers up to a shared name:  SMissionManager::SkipCinematic@2066d0
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+undefined4 __fastcall FUN_000d9b90(int param_1)
+{
+  return *(undefined4 *)(param_1 + 0x2b4);
+}
+--- PS2
+undefined4 GHud::GetLetterBoxMode(int param_1)
+{
+  return *(undefined4 *)(param_1 + 0x2b0);
+}
+
+====================================================================================================
+## item 252: Xbox 0x00050970 (FUN_00050970)  <-  PS2 0x00167498 AdvanceFilePtr
+triage: tier A, PS2 distance to Xbox neighbours 2, + 1/1 named callees, 2 named callers, size ratio 0.93; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: InputConfigManager::ParseDefFileForFrontEnd@4ff50 | InputConfigManager::ParseMasterConfigFile@502d0
+PS2 callers up to a shared name:  InputToAction::LoadParseDefFile@1674d0 | InputConfigManager::ParseDefFileForFrontEnd@166788 | InputConfigManager::ParseMasterConfigFile@166548
+Xbox callees: strchr
+PS2 callees:  strchr
+--- Xbox
+void FUN_00050970(undefined4 *param_1)
+{
+  char *pcVar1;
+  pcVar1 = strchr((char *)*param_1,10);
+  if (pcVar1 != (char *)0x0) {
+    pcVar1 = pcVar1 + 1;
+  }
+  *param_1 = pcVar1;
+  return;
+}
+--- PS2
+void AdvanceFilePtr(char **param_1)
+{
+  char *pcVar1;
+  char *pcVar2;
+  pcVar1 = strchr(*param_1,10);
+  pcVar2 = pcVar1 + 1;
+  if (pcVar1 == (char *)0x0) {
+    pcVar2 = (char *)0x0;
+  }
+  *param_1 = pcVar2;
+  return;
+}
+
+====================================================================================================
+## item 253: Xbox 0x0007e860 (FUN_0007e860)  <-  PS2 0x001affd0 RLightManager::DisablePositionalLighting
+triage: tier A, PS2 distance to Xbox neighbours 8, + 2/2 named callees, size ratio 1.0; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: FUN_000a6690@a6690 <- WRender::DrawWorld@c8450 | FUN_00014c50@14c50 <- FUN_000129c0@129c0 <- RRenderWorldCamera::DrawActors@12fd0
+PS2 callers up to a shared name:  RSky::Draw@1ece18 <- WRender::DrawWorld@21f868
+Xbox callees: MEM_copy, MEM_fill
+PS2 callees:  MEM_copy, MEM_fill
+--- Xbox
+void __thiscall FUN_0007e860(int param_1_00,char param_1)
+{
+  *(char *)(param_1_00 + 0x6d) = param_1;
+  if (param_1 != '\0') {
+    MEM_copy((undefined8 *)&DAT_001ec268,*(undefined8 **)(param_1_00 + 0x2a0),0x80);
+    MEM_fill(*(undefined8 **)(param_1_00 + 0x2a0),0,0x80);
+    return;
+  }
+  MEM_copy(*(undefined8 **)(param_1_00 + 0x2a0),(undefined8 *)&DAT_001ec268,0x80);
+  return;
+}
+--- PS2
+void RLightManager::DisablePositionalLighting(int param_1,long param_2)
+{
+  *(int *)(param_1 + 0x70) = (int)param_2;
+  if (param_2 == 0) {
+    MEM_copy(*(undefined8 **)(param_1 + 0x2a4),(undefined8 *)&DAT_003d1c30,0x80);
+  }
+  else {
+    MEM_copy((undefined8 *)&DAT_003d1c30,*(undefined8 **)(param_1 + 0x2a4),0x80);
+    MEM_fill(*(undefined8 **)(param_1 + 0x2a4),0,0x80);
+  }
+  return;
+}
+
+====================================================================================================
+## item 254: Xbox 0x0007fee0 (FUN_0007fee0)  <-  PS2 0x001b1878 RPathEngine::RPathHandle::SetAccelDelay
+triage: tier A, PS2 distance to Xbox neighbours 9, + 4 named callers, size ratio 1.5; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: EPathChangeThrottleDynamic::~EPathChangeThrottleDynamic@41380 | EPathChangeThrottleStatic::~EPathChangeThrottleStatic@41450 | EPathMultiplyThrottleDynamic::~EPathMultiplyThrottleDynamic@41520 | EPathMultiplyThrottleStatic::~EPathMultiplyThrottleStatic@41600 | EPathSetRunningDynamic::~EPathSetRunningDynamic@41c20 | EPathSetRunningStatic::~EPathSetRunningStatic@41cc0
+PS2 callers up to a shared name:  EPathChangeThrottleDynamic::~EPathChangeThrottleDynamic@151c88 | EPathChangeThrottleStatic::~EPathChangeThrottleStatic@151dc0 | EPathMultiplyThrottleDynamic::~EPathMultiplyThrottleDynamic@151f38 | EPathMultiplyThrottleStatic::~EPathMultiplyThrottleStatic@152078 | EPathSetAccelDelayDynamic::~EPathSetAccelDelayDynamic@152770 | EPathSetAccelDelayStatic::~EPathSetAccelDelayStatic@152860 | RPathEngine::RPathHandle::Init@1b1258 <- RPathEngine::AddInstanceList@1b1988 <- WWorld::Open@22faf8 | RPathEngine::RPathHandle::Init@1b1258 <- RPathEngine::Reset@1b1e58 <- WWorld::Reset@230730
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void __thiscall FUN_0007fee0(int param_1_00,undefined1 param_1)
+{
+  *(undefined1 *)(param_1_00 + 0xcc) = param_1;
+  return;
+}
+--- PS2
+void RPathEngine::RPathHandle::SetAccelDelay(int param_1,undefined4 param_2)
+{
+  *(undefined4 *)(param_1 + 200) = param_2;
+  return;
+}
+
+====================================================================================================
+## item 255: Xbox 0x000b9630 (FUN_000b9630)  <-  PS2 0x00209c88 SMissionTimer::GetValue
+triage: tier A, PS2 distance to Xbox neighbours 3, + 2 shared strings, 1/1 named callees, 2 named callers, size ratio 0.93; VT: Implied Match (AVAILABLE); Data Reference Match (AVAILABLE); BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: GHud::DrawTimer@dc7d0 | SMissionTimer::Stop@b9ce0
+PS2 callers up to a shared name:  GHud::DrawTimer@23e580 | SMissionTimer::Stop@209c38
+Xbox callees: Trigger
+PS2 callees:  Trigger
+--- Xbox
+int __fastcall FUN_000b9630(char *param_1)
+{
+  int iVar1;
+  int iVar2;
+  if (*param_1 != '\0') {
+    iVar2 = (Sim.field3634_0xe44 - *(int *)(param_1 + 4)) * *(int *)(param_1 + 0xc) +
+            *(int *)(param_1 + 8);
+    if (((param_1[1] != '\0') && (iVar1 = iVar2 / (int)Sim.rate, iVar1 != *(int *)(param_1 + 0x10)))
+       && (0 < iVar1)) {
+      AMenuSound::Trigger(0,"SFX_ReverseBeep","Gadgets",2);
+      *(int *)(param_1 + 0x10) = iVar1;
+    }
+    return iVar2;
+  }
+  return *(int *)(param_1 + 8);
+}
+--- PS2
+int SMissionTimer::GetValue(int *param_1)
+{
+  int iVar1;
+  int iVar2;
+  if (*param_1 == 0) {
+    iVar2 = param_1[3];
+  }
+  else {
+    iVar2 = param_1[3] + param_1[4] * (DAT_00339f54 - param_1[2]);
+    if (param_1[1] != 0) {
+      iVar1 = iVar2 / DAT_00339f4c;
+      if (DAT_00339f4c == 0) {
+        trap(7);
+      }
+      if ((iVar1 != param_1[5]) && (0 < iVar1)) {
+        AMenuSound::Trigger(0,"SFX_ReverseBeep","Gadgets",2);
+        param_1[5] = iVar1;
+      }
+    }
+  }
+  return iVar2;
+}
+
+====================================================================================================
+## item 256: Xbox 0x0008dfd0 (FUN_0008dfd0)  <-  PS2 0x001c9778 RSceneObj::GetBoundingDimensions
+triage: tier A, PS2 distance to Xbox neighbours 4, + 4 named callers, size ratio 0.81; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: PBondCar::ApplyDamage@6b6f0 | PBondCar::ChangeCarType@6a460 | PBondCar::PBondCar@6d350 | Smackable::Smackable@75920 | FUN_0006f520@6f520 <- Explosion::Simulate@5ceb0 | FUN_000e1a90@e1a90 <- RRenderWorldCamera::DrawStaticWorldGeometry@8cb30 | FUN_0006f520@6f520 <- FUN_000b1ff0@b1ff0 <- Simulation::DetectCollisionsSRB@b2830 | FUN_000a0500@a0500 <- FUN_0009c0e0@9c0e0 <- REmpBolts::TrySpawnBolt@9d320
+PS2 callers up to a shared name:  PBondCar::ApplyDamage@189598 | PBondCar::ChangeCarType@185e50 | PBondCar::PBondCar@1862c0 | Smackable::Smackable@19e100 | PhysicsObject::GetCollisionBounds@195b58 <- Explosion::Simulate@17ddc0 | GHud::UpdateTargets@23d6a8 <- RRenderWorldCamera::DrawStaticWorldGeometry@1c5c20 | RLightning::AddRoundedBolt@1e1280 <- REmpBolts::CreateVehicleBolt@1dd248 <- REmpBolts::TrySpawnBolt@1dcea8 | RSceneObj::ComputeBoundingRadius@1c98a0 <- RSceneObj::GetBoundingRadius@1c97d0 <- RRenderSharedData::SendPerCarInstance@1adea8
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void __thiscall FUN_0008dfd0(int param_1_00,float *param_1)
+{
+  *param_1 = (*(float *)(*(int *)(param_1_00 + 0x10) + 0x20) -
+             *(float *)(*(int *)(param_1_00 + 0x10) + 0x10)) * 0.5;
+  param_1[1] = (*(float *)(*(int *)(param_1_00 + 0x10) + 0x24) -
+               *(float *)(*(int *)(param_1_00 + 0x10) + 0x14)) * 0.5;
+  param_1[2] = (*(float *)(*(int *)(param_1_00 + 0x10) + 0x28) -
+               *(float *)(*(int *)(param_1_00 + 0x10) + 0x18)) * 0.5;
+  return;
+}
+--- PS2
+void RSceneObj::GetBoundingDimensions(int param_1,float *param_2)
+{
+  *param_2 = (*(float *)(*(int *)(param_1 + 0xc) + 0x20) -
+             *(float *)(*(int *)(param_1 + 0xc) + 0x10)) * 0.5;
+  param_2[1] = (*(float *)(*(int *)(param_1 + 0xc) + 0x24) -
+               *(float *)(*(int *)(param_1 + 0xc) + 0x14)) * 0.5;
+  param_2[2] = (*(float *)(*(int *)(param_1 + 0xc) + 0x28) -
+               *(float *)(*(int *)(param_1 + 0xc) + 0x18)) * 0.5;
+  return;
+}
+
+====================================================================================================
+## item 257: Xbox 0x000e1a90 (FUN_000e1a90)  <-  PS2 0x0023d6a8 GHud::UpdateTargets
+triage: tier A, PS2 distance to Xbox neighbours 7, + 2/3 named callees, 1 named callers, size ratio 0.84; VT: Data Reference Match (AVAILABLE)
+Xbox callers up to a shared name: RRenderWorldCamera::DrawStaticWorldGeometry@8cb30
+PS2 callers up to a shared name:  RRenderWorldCamera::DrawStaticWorldGeometry@1c5c20
+Xbox callees: FUN_00037750, FUN_0008dfd0, FUN_000b2900, FUN_000b6c70, FUN_000b6cc0, FUN_000b6cd0, FUN_000b6d40, FUN_000dc4a0, GetPosition, GetRigidBody, GetSceneObjFromInstance, vec3distance
+PS2 callees:  GetBoundingDimensions, GetCurrObjective, GetObjectiveArrowHeight, GetObjectiveComment, GetPosition, GetRigidBody, GetSceneObjFromInstance, GetScreenCoords, GetTrackedInstanceList, IsObjectiveVisibleToUser, UpdateTargets
+--- Xbox
+void __fastcall FUN_000e1a90(int param_1)
+{
+  int *piVar1;
+  char cVar2;
+  int iVar3;
+  undefined4 *puVar4;
+  undefined4 uVar5;
+  int *piVar6;
+  float10 fVar7;
+  char local_69;
+  float local_68;
+  float local_64;
+  int local_60;
+  int local_44;
+  undefined4 local_40;
+  undefined4 local_3c;
+  undefined4 local_30;
+  float local_2c;
+  undefined4 local_28;
+  undefined1 local_20 [4];
+  float local_1c;
+  *(undefined1 *)(param_1 + 0x3c4) = 0;
+  *(undefined1 *)(param_1 + 0x3dc) = 0;
+  local_64 = 120.0;
+  local_60 = Simulation::GetRigidBody(&Sim,(int)*(short *)(*playerPhysicsObject + 0x4a));
+  local_60 = local_60 + 0x10;
+  if (*(char *)(SMissionManager::glbMissionManager + 0x478) == '\0') {
+    local_44 = FUN_000b2900();
+    piVar6 = *(int **)(local_44 + 4);
+    if (piVar6 != *(int **)(local_44 + 8)) {
+    ...
+--- PS2
+void __thiscall GHud::UpdateTargets(GHud *this)
+{
+  undefined1 *puVar1;
+  uint uVar2;
+  uint uVar3;
+  ulong *puVar4;
+  int iVar5;
+  int *piVar6;
+  uint uVar7;
+  int iVar8;
+  ulong uVar9;
+  int *piVar10;
+  float fVar11;
+  undefined8 in_v1_udw;
+  int *piVar12;
+  float fVar13;
+  undefined1 in_vf0 [16];
+  undefined1 auVar14 [16];
+  undefined1 auVar15 [16];
+  undefined1 auVar16 [16];
+  undefined4 uVar17;
+  float local_110;
+  undefined1 auStack_10c [4];
+  undefined4 uStack_108;
+  undefined4 uStack_104;
+  float local_100;
+  float fStack_fc;
+  undefined8 uStack_f8;
+  ulong auStack_f0 [2];
+  int local_e0;
+    ...
+
+====================================================================================================
+## item 258: Xbox 0x00058420 (FUN_00058420)  <-  PS2 0x0016a040 AttributeSet::LookupStruct
+triage: tier A, PS2 distance to Xbox neighbours 2, + 1/1 named callees, 1 named callers, size ratio 0.96; VT: Implied Match (AVAILABLE)
+Xbox callers up to a shared name: PhysicsNamespace::NameLookup@6ed40 | FUN_0006f840@6f840 <- PBondCar::ChangeCarType@6a460 | FUN_0006f840@6f840 <- PBondCar::PBondCar@6d350
+PS2 callers up to a shared name:  PhysicsNamespace::NameLookup@1950a0 | PVehicle::CarPhysicsAttrib@196778 <- PBondCar::ChangeCarType@185e50 | PVehicle::CarPhysicsAttrib@196778 <- PBondCar::PBondCar@1862c0
+Xbox callees: FUN_000570c0, FindAttribute
+PS2 callees:  CreateExtensionAttribute, FindAttribute
+--- Xbox
+undefined4 __thiscall FUN_00058420(undefined4 *param_1_00,int param_1,undefined4 param_2)
+{
+  char cVar1;
+  int iVar2;
+  cVar1 = AttributeSet::FindAttribute(param_1,&param_1);
+  if (cVar1 == '\0') {
+    iVar2 = FUN_000570c0(param_2,*param_1_00);
+    *(byte *)(iVar2 + 2) = *(byte *)(iVar2 + 2) | 2;
+    return *(undefined4 *)(iVar2 + 4);
+  }
+  *(byte *)(param_1 + 2) = *(byte *)(param_1 + 2) | 2;
+  return *(undefined4 *)(param_1 + 4);
+}
+--- PS2
+int __thiscall
+AttributeSet::LookupStruct(AttributeSet *this,char *param_1,void *attrType,bool param_3)
+{
+  bool bVar1;
+  AttributeValue local_40 [4];
+  undefined4 local_30;
+  undefined4 uStack_2c;
+  undefined4 local_20;
+  undefined4 uStack_1c;
+  undefined4 local_10;
+  undefined4 uStack_c;
+  bVar1 = FindAttribute(this,param_1,local_40);
+  if (!bVar1) {
+    local_40[0] = (AttributeValue)
+                  AttributeSystem::CreateExtensionAttribute
+                            ((int)AttributeSystem::fgThis_AttributeSystem,attrType,
+                             (int **)this->collection);
+  }
+  *(byte *)((int)local_40[0] + 2) = *(byte *)((int)local_40[0] + 2) | 2;
+  return *(int *)((int)local_40[0] + 4);
+}
+
+====================================================================================================
+## item 259: Xbox 0x00142fc0 (FUN_00142fc0)  <-  PS2 0x00317dc8 SNDMIXI_initfx
+triage: tier A, PS2 distance to Xbox neighbours 5, + 6/7 named callees, size ratio 0.98; VT: BSim Function Matching (AVAILABLE)
+Xbox callers up to a shared name: FUN_001433a0@1433a0 <- MIX_initreverb@143510
+PS2 callers up to a shared name:  SNDMIXI_initfx2@318268 <- MIX_initreverb@318520
+Xbox callees: FUN_001444f0, FUN_00144cc0, FUN_00144e20, FUN_00144ff0, FUN_00145020, FUN_00145160, FUN_00145190, FUN_001453e0, FUN_00145410, FUN_00145500, FUN_00145640, FUN_00145670, FUN_00145700, SFILTER_createHPFFIR8, SFILTER_createLPFRC, SFILTER_modifyHPFFIR8, SFILTER_modifyLPFRC, SNDI_getb, SNDMEMI_alloc, memclr
+PS2 callees:  FUN_00319a40, FUN_00319a88, FUN_00319b58, FUN_00319ba0, FUN_00319cc0, FUN_00319cf0, FUN_00319e50, FUN_0031a028, FUN_0031a060, FUN_0031a280, FUN_0031a490, FUN_0031a4d0, SFILTER_connect, SFILTER_createHPFFIR8, SFILTER_createLPFRC, SFILTER_createSOURCE, SFILTER_modifyHPFFIR8, SFILTER_modifyLPFRC, SNDI_getb, SNDMEMI_alloc, memset, remap
+--- Xbox
+void FUN_00142fc0(int param_1)
+{
+  LPFRCSTATE_conflict *pLVar1;
+  HPFSTATE *pHVar2;
+  int iVar3;
+  int iVar4;
+  int iVar5;
+  uint uVar6;
+  uint uVar7;
+  byte *pbVar8;
+  int iVar9;
+  undefined4 uVar10;
+  int local_10;
+  int local_c;
+  int local_8;
+  int local_4;
+  DAT_002475d8 = &DAT_00245d90;
+  DAT_002475dc = SNDMEMI_alloc(0x18);
+  iVar3 = DAT_002475e4;
+  DAT_002475ec = DAT_00245d8c;
+  DAT_002475e8 = DAT_00245bfc;
+  iVar4 = SNDI_getb((byte *)(DAT_002475d8 + DAT_002475e4 + 1),4);
+  DAT_002475d4 = SNDMEMI_alloc(iVar4 * 4);
+  iVar9 = 0;
+  pbVar8 = DAT_002475ec;
+  if (0 < iVar4) {
+    do {
+      iVar5 = SNDMEMI_alloc(*(int *)(&DAT_001d9e88 + (uint)*pbVar8 * 4));
+      *(int *)(DAT_002475d4 + iVar9 * 4) = iVar5;
+      memclr(&local_10,0x10);
+    ...
+--- PS2
+void SNDMIXI_initfx(int param_1)
+{
+  byte *pbVar1;
+  byte *pbVar2;
+  LPFRCSTATE *pLVar3;
+  HPFSTATE *pHVar4;
+  undefined4 *puVar5;
+  undefined **ppuVar6;
+  byte bVar7;
+  int iVar8;
+  int iVar9;
+  undefined8 extraout_a2;
+  undefined8 extraout_a3;
+  undefined8 extraout_t0;
+  int *piVar10;
+  byte *pbVar11;
+  int iVar12;
+  int iVar13;
+  int iVar14;
+  int iStack_c0;
+  int iStack_bc;
+  int iStack_b8;
+  int iStack_b4;
+  int iStack_b0;
+  iVar13 = 0;
+  DAT_0035ebb8 = &DAT_00360b70;
+  DAT_0035ebc0 = SNDMEMI_alloc(0x18);
+  iStack_b0 = (DAT_0035ebd0 + -1) * 4;
+  DAT_0035ebc4 = DAT_00360ba8;
+  DAT_0035ebc8 = DAT_00360bac;
+    ...
+
+====================================================================================================

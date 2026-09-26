@@ -122,7 +122,7 @@ def _at_list(text):
     out = []
     for line in text.splitlines():
         name, sep, addr = line.rpartition(" @ ")
-        if sep:
+        if sep and ":" not in addr:   # skip EXTERNAL:0000005e (kernel imports)
             out.append((int(addr, 16), name))
     return out
 
