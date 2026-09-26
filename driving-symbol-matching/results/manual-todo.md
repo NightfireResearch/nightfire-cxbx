@@ -87,6 +87,16 @@ right; the labels are wrong (Symbol Table, or the listing's label at the entry):
   `WCollider::PrepareRegion` 0xbe2d0 (position only), `RigidBody::ScaleObjObjForces` 0xaea40 (body matches only
   at the start), `EAGL::DrawTextured::SetTexture` 0xf5c00 (PS2 0x29d0a0 unnamed; sheet row 6186 placement loose).
 
+- **Round 4:** the three buffer-depth setters (0xe6aa0/0xe6ac0/0xe6b10) are now applied - a third reviewer
+  independently found the same call order and arguments. `ScaleObjObjForces` 0xaea40 and `PrepareRegion` 0xbe2d0
+  are also applied (a second reviewer confirmed each). Still held: `ROffscreenBuffer::Begin`/`End` 0x7f5b0/0x7f5f0
+  (the Xbox versions do less than PS2's and are called from RReflection::Begin). Possibly nameable on order
+  alone if you accept it: empty stubs 0xfaa00 = ResetStats, 0xfaa10/0xfaa20 = DumpStats (the two overloads).
+  0x99670 looks like `RReflection::SetCamera` with a reworked signature (same callees; stores a reflection matrix).
+- **Code outside any function (Driving.xbe):** 0x13ccb and 0x13cf3 (both reference 0xf71b0), 0x143862 (calls
+  SFILTER_initSOURCE; on PS2 the caller is SNDMIXI_modlapifxadd), and 0x1456b0 (the SFILTER_src body). Worth
+  creating functions there when convenient.
+
 ## 6. Namespace moves
 
 `python apply.py --pending-namespaces` lists the pending moves (including P022's ECameraLockOn::~ECameraLockOn and

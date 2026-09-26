@@ -1,0 +1,372 @@
+{
+ "verdicts": [
+  {
+   "item": "0.1",
+   "xbox": "0xaea40",
+   "ps2": "0x1f9b40",
+   "name": "RigidBody::ScaleObjObjForces",
+   "verdict": "accept",
+   "why": "only caller ResolveCollision on both; identical body: max of two |v+0x20| lengths, v+0x40 -/+ forces scaled by 1/+0x4c, 0.5 threshold, (x-0.5)*2*1.5+1.5, +0x5c->+0x4fd flags",
+   "intermediates": [
+    {
+     "item": "3.x",
+     "xbox": "0xbd7b0",
+     "ps2": "0x212540",
+     "name": "WCollider::InRegion",
+     "verdict": "accept",
+     "why": "overload InRegion(COORD4*,uint) (sheet row 4812): Validate, flags +0x64(PS2 +0x5c) mask, r=+0x2c squared, both box corners p[0],p[1] distsq to +0x20 < r^2; called by box-Refresh 0xbe420=PS2 FUN_00211c98 which calls this overload"
+    },
+    {
+     "item": "5.x",
+     "xbox": "0x14e000",
+     "ps2": "0x302a70",
+     "name": "RCMP::DECODER::ReleaseFrame",
+     "verdict": "accept",
+     "why": "follows GetFrame in both file orders; body = codec(+0x18, PS2 +0x14) vslot 5 (Xbox +0x14, PS2 entry +0x34)"
+    },
+    {
+     "item": "5.x",
+     "xbox": "0x14e010",
+     "ps2": "0x302aa0",
+     "name": "RCMP::DECODER::GetChunk",
+     "verdict": "accept",
+     "why": "next in order; same body: if pending chunk (+4, PS2 +0) take and clear, else call fnptr +0xc(PS2 +8)(this,+8,&out)"
+    },
+    {
+     "item": "5.x",
+     "xbox": "0x14e040",
+     "ps2": "0x302ae8",
+     "name": "RCMP::DECODER::ReleaseChunk",
+     "verdict": "accept",
+     "why": "next in order, before CHUNK::CHUNK on both; body calls fnptr +0x10(PS2 +0xc)(this,+8(PS2 +4),arg); shares caller 0x14e730 with GetChunk (PS2 both called by mpegNodata)"
+    },
+    {
+     "item": "3.x",
+     "xbox": "0xbe420",
+     "ps2": "0x211c98",
+     "name": "WCollider::Refresh",
+     "verdict": "accept",
+     "why": "sheet row 4807 WCollider::Refresh(COORD4 *) (PS2 FUN_00211c98, between ctor/dtor rows and Refresh(COORD3&,float) 0x211e18, size fits); called by box ctor 0xbe620 (PS2 0x2118b8 calls 0x211c98); body: InRegion(box) else Clear, centre=(a+b)*0.5, radius=distance, copies, *1.1, PrepareRegion"
+    },
+    {
+     "item": "3.x",
+     "xbox": "0xbe2d0",
+     "ps2": "0x211ed0",
+     "name": "WCollider::PrepareRegion",
+     "verdict": "accept",
+     "why": "called by both Refresh overloads on both; body: flags(+0x64/PS2 +0x5c)&8 -> reserve 100, GetInstanceList(...,1); &4 -> GetInstanceList(...,0), reserve 0x15 x 0x28-byte barrier entries, GetBarrierList, sets done flag"
+    },
+    {
+     "item": "8.x",
+     "xbox": "0xc34c0",
+     "ps2": "0x217e30",
+     "name": "WCollisionMgr::GetObjectListsGuts",
+     "verdict": "accept",
+     "why": "called by both GetObjectLists on both platforms (Xbox c36a0/c37c0, PS2 218150/218440); body: per grid node cell loop, dist = max+0.25*min vs radius+r, 0x30-byte objects at +0x10, flag +0x20"
+    },
+    {
+     "item": "11.x",
+     "xbox": "0xe9f40",
+     "ps2": "0x2867d8",
+     "name": "EAGL::DynamicModel::Lock",
+     "verdict": "accept",
+     "why": "same wrapper as PS2: lazily allocate DrawArray (\"EAGL::DrawArray new\"), SetGeoPrim, then DrawArray::Lock; order SetParamName,Lock,Unlock,SetNumVerts matches PS2"
+    },
+    {
+     "item": "11.x",
+     "xbox": "0xe9fe0",
+     "ps2": "0x286878",
+     "name": "EAGL::DynamicModel::Unlock",
+     "verdict": "accept",
+     "why": "same lazy-alloc wrapper, then DrawArray::Unlock (0xf57e0)"
+    },
+    {
+     "item": "11.x",
+     "xbox": "0xea080",
+     "ps2": "0x286918",
+     "name": "EAGL::DynamicModel::SetNumVerts",
+     "verdict": "accept",
+     "why": "same lazy-alloc wrapper, then DrawArray::SetNumVerts(n) (0xf57f0)"
+    },
+    {
+     "item": "11.x",
+     "xbox": "0xe9ea0",
+     "ps2": "0x286730",
+     "name": "EAGL::DynamicModel::SetParamName",
+     "verdict": "accept",
+     "why": "same lazy-alloc wrapper, then DrawArray::SetParamName; precedes Lock as on PS2 (0xe9d40/0xe9df0 are the SetVar pair but which overload is which is unclear - left)"
+    }
+   ]
+  },
+  {
+   "item": "1.1",
+   "xbox": "0xaf960",
+   "ps2": "0x1fade8",
+   "name": "RigidBody::ResolveWorldOBBCollision",
+   "verdict": "accept",
+   "why": "only caller CollideWithWorld on both; same body: +0x6d<4 clamp +-0.5 of y*0.1, contact rec fields 0x48=1/0x4a=0x10/0x4c=6/0x4e=0x10, 5.0/25.0 tests, +0x5c->+0x4fc/+0x4fd, *0.25, 1.25 ratio",
+   "intermediates": []
+  },
+  {
+   "item": "2.1",
+   "xbox": "0xf40a0",
+   "ps2": "0x29dee0",
+   "name": "EAGL::SymbolPool::Empty",
+   "verdict": "accept",
+   "why": "called by ~SymbolPool; same body as PS2 Empty: frees each hash entry (strlen+5), zero count, frees 0xc-byte free-list nodes via +0x10 chain",
+   "intermediates": []
+  },
+  {
+   "item": "4.1",
+   "xbox": "0xf3c70",
+   "ps2": "0x29dc90",
+   "name": "EAGL::SymbolPool::SymbolPool",
+   "verdict": "accept",
+   "why": "identical to PS2 ctor: [0]=0,[1]=symbolPoolDefaultSize global,[2]=0,[4]=0; called from global ctor functions on both",
+   "intermediates": []
+  },
+  {
+   "item": "3.1",
+   "xbox": "0xbe620",
+   "ps2": "0x2118b8",
+   "name": "WCollider::WCollider",
+   "verdict": "accept",
+   "why": "second WCollider ctor overload (genuine PS2 overload; other is Xbox 0xbe540=PS2 0x2117e8): same init as 0xbe540 but +0x61 bool fixed 0, flags param stored +0x64(PS2 +0x5c), then calls box-Refresh 0xbe420 = PS2 FUN_00211c98 (InRegion(box)/Clear/centre=half sum/distance)",
+   "intermediates": []
+  },
+  {
+   "item": "5.1",
+   "xbox": "0x14df50",
+   "ps2": "0x3028e8",
+   "name": "RCMP::DECODER::ChooseCodec",
+   "verdict": "accept",
+   "why": "called from AV_PLAYER::GetRCMPChunk before FreeChosenCodec; same body: this+0x18(PS2 +0x14)=codec, this+4(PS2 +0)=chunk, codec vslot 1(this)",
+   "intermediates": []
+  },
+  {
+   "item": "6.1",
+   "xbox": "0x9f8b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "USimpleVec<RLightning::Segment> resize (vec delete + vec_new n*0x18); PS2 inlines it into BuildNewSegment, no PS2 function/name",
+   "intermediates": []
+  },
+  {
+   "item": "7.1",
+   "xbox": "0xb7f60",
+   "ps2": "0x2075a8",
+   "name": "SMissionManager::SetObjective",
+   "verdict": "accept",
+   "why": "~ESetObjective/~ESetWaypoint call it for param[1] on both (PS2 0x158690 jal 0x2075a8); body: type=1 at +0x724(PS2 +0x600), ptr +0x71c(PS2 +0x5f8), clear +0x734(+0x610), time to +0x798(+0x678) (+0x124/+0x120 shift); null -> ClearObjective (inlined on Xbox)",
+   "intermediates": []
+  },
+  {
+   "item": "7.2",
+   "xbox": "0xb7fb0",
+   "ps2": "0x207600",
+   "name": "SMissionManager::SetObjective",
+   "verdict": "accept",
+   "why": "dtor call for param[2] (PS2 jal 0x207600); identical to 0x2075a8 overload with type=2 (li a0,0x2)",
+   "intermediates": []
+  },
+  {
+   "item": "7.3",
+   "xbox": "0xb8000",
+   "ps2": "0x207658",
+   "name": "SMissionManager::SetObjective",
+   "verdict": "accept",
+   "why": "dtor call for param[3] (PS2 jal 0x207658); type=3 then RedirectCarpElement, +0x44==1,+0x48==1,+0x77==0,+0xfc vcall - same checks in PS2 disassembly",
+   "intermediates": []
+  },
+  {
+   "item": "8.1",
+   "xbox": "0xc37c0",
+   "ps2": "0x218440",
+   "name": "WCollisionMgr::GetObjectLists",
+   "verdict": "accept",
+   "why": "sheet row 4853 second GetObjectLists overload (PS2 FUN_00218440, next after row 4852 at 0x218150, 552 vs 600 bytes); both called only from RigidBody::CollideWithWorld; body: reserve 0x40 node vector, FindNodes(centre,radius), reserve 0x10 on both lists, GetObjectListsGuts, free",
+   "intermediates": []
+  },
+  {
+   "item": "8.2",
+   "xbox": "0xc3880",
+   "ps2": "0x219a50",
+   "name": "WCollisionMgr::GetBarrierList",
+   "verdict": "accept",
+   "why": "called from WCollider::PrepareRegion (0xbe2d0 = PS2 0x211ed0 which calls GetBarrierList 0x219a50); body: per instance MakeMatrix, OrthoInverse once, transform barrier ends, swap y min/max, push 0x28-byte entries",
+   "intermediates": []
+  },
+  {
+   "item": "8.3",
+   "xbox": "0xc3ab0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/set copy constructor (_Tree header alloc + copy), compiler-generated",
+   "intermediates": []
+  },
+  {
+   "item": "9.1",
+   "xbox": "0x84a60",
+   "ps2": "0x1b4430",
+   "name": "RPlayerCamera::UpdateSplineCam",
+   "verdict": "accept",
+   "why": "camera config LoadFile registers it as handler for mode string \"Spline\"; callees match PS2 (IncNavPosition, ReverseNavDirection, InitAtPoint, GetAnchor*, DoSmoothModeChange...)",
+   "intermediates": []
+  },
+  {
+   "item": "9.2",
+   "xbox": "0x85160",
+   "ps2": "0x1b5120",
+   "name": "RPlayerCamera::UpdateFixedCam",
+   "verdict": "accept",
+   "why": "LoadFile registers it for mode string \"Fixed\"; callees match PS2 UpdateFixedCam (AnchorCamera, DoSmoothModeChange, InitTransition, SetCameraZoom, SetViewingTransform, UpdateTransition)",
+   "intermediates": []
+  },
+  {
+   "item": "9.3",
+   "xbox": "0x853e0",
+   "ps2": "0x1b62d0",
+   "name": "RPlayerCamera::UpdateADWeaponAnims",
+   "verdict": "accept",
+   "why": "called by UpdateAutoDriveCam on both; body: GetRigidBody(player) matrix, arm index -1 -> FindAutoDriveArmInd, quattom4 of arm table, MATRIX4_mult, fastqslerp - same as PS2",
+   "intermediates": []
+  },
+  {
+   "item": "10.1",
+   "xbox": "0x99670",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox reflection render path is rewritten (3-pass via 0x99ce0 from Render, not PS2 Draw from DrawVehiclesAndDeferredSceneObjects); closest analogue PS2 SetCamera(COORD3&,COORD3&) 0x1c1b18 shares callees (SetMatrix4/ConvertToRHCS/CreateMatrix4Inv/SetViewMatrix) but Xbox takes (pos, matrix, +-1 scale) and stores reflection matrix at priv+0x140 (PS2 GetReflectionMatrix returns 0) - different body",
+   "intermediates": []
+  },
+  {
+   "item": "10.2",
+   "xbox": "0x997d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only reflection pass (SetCamera-like 0x99670, fog/glare save-restore, DrawWorldAtPoint, SceneObjRender); no PS2 function with this body (PS2 Draw is one GIF-based routine)",
+   "intermediates": []
+  },
+  {
+   "item": "10.3",
+   "xbox": "0x99990",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only env-map blend pass (USimpleTexturedMaterial loops 0.05/0.2 steps); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "11.1",
+   "xbox": "0xf57d0",
+   "ps2": "0x29c488",
+   "name": "EAGL::DrawArray::Lock",
+   "verdict": "accept",
+   "why": "only caller is DynamicModel::Lock wrapper 0xe9f40 (= PS2 0x2867d8 which calls 0x29c488); body sets +0x18=1 and +0x34=1 as PS2; same order Lock,Unlock,..,SetLocalMatrix",
+   "intermediates": []
+  },
+  {
+   "item": "11.2",
+   "xbox": "0xf57e0",
+   "ps2": "0x29c4a0",
+   "name": "EAGL::DrawArray::Unlock",
+   "verdict": "accept",
+   "why": "only caller DynamicModel::Unlock wrapper 0xe9fe0 (= PS2 0x286878 calling 0x29c4a0); body +0x18=0, return 1 as PS2",
+   "intermediates": []
+  },
+  {
+   "item": "11.3",
+   "xbox": "0xf57f0",
+   "ps2": "0x29c558",
+   "name": "EAGL::DrawArray::SetNumVerts",
+   "verdict": "accept",
+   "why": "only caller DynamicModel::SetNumVerts wrapper 0xea080 (= PS2 0x286918 calling 0x29c558); body store arg (+0x38, PS2 +0x3c), return 1; sits just before SetLocalMatrix on both",
+   "intermediates": []
+  },
+  {
+   "item": "12.1",
+   "xbox": "0xfaa00",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "empty RET stub; exact order between InitInternal and GetMemoryUsage matches PS2 ResetStats 0x264570 (then DumpStats x2) but no callers and no distinctive detail - order-only empty stub",
+   "intermediates": []
+  },
+  {
+   "item": "12.2",
+   "xbox": "0xfaa10",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "empty RET stub; order-only candidate PS2 DumpStats 0x264578, nothing distinctive",
+   "intermediates": []
+  },
+  {
+   "item": "12.3",
+   "xbox": "0xfaa20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "empty RET stub; order-only candidate PS2 DumpStats 0x264580, nothing distinctive",
+   "intermediates": []
+  },
+  {
+   "item": "13.1",
+   "xbox": "0x11aba0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree erase/clear helper (FastFree nodes), called from RemoveNamespace and other tree ops; compiler-generated",
+   "intermediates": []
+  },
+  {
+   "item": "13.2",
+   "xbox": "0x11ae70",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree wrapper (calls 0x11a8d0 + erase 0x11aba0); compiler-generated",
+   "intermediates": []
+  },
+  {
+   "item": "13.3",
+   "xbox": "0x11af30",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::_Insert (node alloc + rebalance); compiler-generated",
+   "intermediates": []
+  },
+  {
+   "item": "14.1",
+   "xbox": "0x11b180",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map<const char*,..,stricmp>::insert (lower-bound walk with __stricmp, then _Insert); compiler-generated",
+   "intermediates": []
+  },
+  {
+   "item": "14.2",
+   "xbox": "0x11b250",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "second map insert instantiation (stricmp compare, _Insert 0x11af30); compiler-generated",
+   "intermediates": []
+  },
+  {
+   "item": "14.3",
+   "xbox": "0x11b2d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree erase(range) wrapper (0x11a910 + 0x11aba0); PS2 ShareName/RootName/MapName are 'return static string' stubs, inlined on Xbox",
+   "intermediates": []
+  }
+ ]
+}

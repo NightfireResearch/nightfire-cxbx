@@ -1,0 +1,299 @@
+{
+ "verdicts": [
+  {
+   "item": "15.1",
+   "xbox": "0x14e000",
+   "ps2": "0x302a70",
+   "name": "RCMP::DECODER::ReleaseFrame",
+   "verdict": "accept",
+   "why": "Vcall on decoder object: Xbox [this+0x18]->vtbl+0x14, PS2 [this+0x14]->vtbl+0x30 (idx5 vs GCC entry6); same +4 field / +1 slot shift as named GetFrame (Xbox +0x18/+8, PS2 +0x14/+0x18)",
+   "intermediates": []
+  },
+  {
+   "item": "15.2",
+   "xbox": "0x14e010",
+   "ps2": "0x302aa0",
+   "name": "RCMP::DECODER::GetChunk",
+   "verdict": "accept",
+   "why": "Pending chunk at +4 (PS2 +0): take and clear, else callback [this+0xc](this,[this+8],&out) (PS2 +8/+4); only caller is the codec's no-data routine (PS2 mpegNodata), which also calls ReleaseChunk",
+   "intermediates": []
+  },
+  {
+   "item": "15.3",
+   "xbox": "0x14e040",
+   "ps2": "0x302ae8",
+   "name": "RCMP::DECODER::ReleaseChunk",
+   "verdict": "accept",
+   "why": "callback [this+0x10](this,[this+8],chunk) = PS2 [this+0xc](this,[this+4],chunk), +4 shift; paired with GetChunk in the same caller",
+   "intermediates": []
+  },
+  {
+   "item": "16.1",
+   "xbox": "0x731e0",
+   "ps2": "0x19bb50",
+   "name": "Sentry::ComputeTargetAngle",
+   "verdict": "accept",
+   "why": "Only callee of Sentry::TrackTarget that is not named; axis switch 0/1/2 zeroing one component, sign from param_3[axis]>0, unit/dot/acos, *1/2pi, 1-x, wrap <0 - as PS2",
+   "intermediates": []
+  },
+  {
+   "item": "16.2",
+   "xbox": "0x73330",
+   "ps2": "0x19bea0",
+   "name": "Sentry::GetTarget",
+   "verdict": "accept",
+   "why": "Sole caller EFireWeapon::~EFireWeapon on both; target sig at +0xc0 (PS2 +0xc4), FastAlloc + WTargetable ctor, return 0 when no target",
+   "intermediates": []
+  },
+  {
+   "item": "16.3",
+   "xbox": "0x733f0",
+   "ps2": "0x19c7a8",
+   "name": "Sentry::Shoot",
+   "verdict": "accept",
+   "why": "Called by Sentry::Simulate; GetSystemState on anim handles +0xa4/+0xa8 (PS2 +0xa8/+0xac) !=4, stimulus 8 if [+0xbc]==0 (PS2 +0xc0), then stimulus 10 ... - same body",
+   "intermediates": []
+  },
+  {
+   "item": "17.1",
+   "xbox": "0xf71b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Binary search of sorted name table (+4 count, +0x10 names); PS2 counterpart in position is unnamed FUN_0026ddd0; no name to give",
+   "intermediates": []
+  },
+  {
+   "item": "17.2",
+   "xbox": "0xf7240",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "No callers; allocates a FnAnimMemoryMap-derived object via FUN_000f7c40(0xf) and calls vslot 0x3c; PS2 counterpart would be unnamed FUN_0026deb0 area; no named match",
+   "intermediates": []
+  },
+  {
+   "item": "17.3",
+   "xbox": "0xf72e0",
+   "ps2": "0x26df80",
+   "name": "EAGLAnim::FnAnim::~FnAnim",
+   "verdict": "accept",
+   "why": "Stores vtable_EAGLAnim::FnAnim only (no field init as in PS2 ctor); called by FnAnim::scalar_deleting_destructor and derived deleting dtors (f7790 etc.) - base destructor, PS2 ~FnAnim",
+   "intermediates": []
+  },
+  {
+   "item": "18.1",
+   "xbox": "0x1144e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Allocates N 'FastBlock' 0x4080 blocks onto free list; exact PS2 counterpart FUN_002d0660 (called by ApplicationMemoryHeapConfig and the FastAlloc helper) is unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "18.2",
+   "xbox": "0x114540",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Fast-block free-list compaction called by UMemory::DeleteClass; PS2 counterpart FUN_002d06e0 (called by DeleteClass) is unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "18.3",
+   "xbox": "0x1145b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "FastAlloc refill helper; PS2 counterpart FUN_002d0770 (called by FastAlloc, calls 2d0660) is unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "19.1",
+   "xbox": "0x1b160",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "fabsf helper shared by physics/camera code; compiler/CRT-style, PS2 inlines - leave",
+   "intermediates": []
+  },
+  {
+   "item": "19.2",
+   "xbox": "0x1b180",
+   "ps2": "0x118360",
+   "name": "RAutonomousObj::scalar_deleting_destructor",
+   "verdict": "accept",
+   "why": "Slot 0 of vtable 0x18a398 set on FastAlloc(0x80,'RAutonomousObj') objects (Grenade/Mine/Missile/Newton); ~RSceneObj + FastFree(this,0x80) under delete flag = PS2 RAutonomousObj::~RAutonomousObj (FastFree 0x80), also in ActWeapon's file on PS2",
+   "intermediates": []
+  },
+  {
+   "item": "19.3",
+   "xbox": "0x1b1b0",
+   "ps2": "0x116410",
+   "name": "ActWeapon::scalar_deleting_destructor",
+   "verdict": "accept",
+   "why": "Slot 0 of ActWeapon vtable 0x18a440 (referenced by ActWeapon ctor/dtor); ~ActWeapon + FastFree(this,0x170) (PS2 ActWeapon::operator_delete inlined)",
+   "intermediates": []
+  },
+  {
+   "item": "20.1",
+   "xbox": "0x80070",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list<RPathHandle> range erase (FastFree 0xdc node) - STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "20.2",
+   "xbox": "0x800c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list _Buynode (head node, FastAlloc 0xdc 'STL') - STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "20.3",
+   "xbox": "0x800f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list _Buynode with value (constructs RPathHandle in node) - STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "21.1",
+   "xbox": "0xf2c80",
+   "ps2": "0x294940",
+   "name": "EAGL::Transform::PrependScale",
+   "verdict": "accept",
+   "why": "Builds diag(sx,sy,sz,sw) matrix and pre-multiplies (mult(out,tmp,this)); PS2 PrependScale 4 floats + PreMult; order Scale,Translate,RotTrans before PrependMatrix as on PS2",
+   "intermediates": []
+  },
+  {
+   "item": "21.2",
+   "xbox": "0xf2d40",
+   "ps2": "0x2949d8",
+   "name": "EAGL::Transform::PrependTranslate",
+   "verdict": "accept",
+   "why": "Identity with (x,y,z,1) translation row pre-multiplied; PS2 PrependTranslate 3 floats + PreMult (PrependRotate inlined/absent on Xbox)",
+   "intermediates": []
+  },
+  {
+   "item": "21.3",
+   "xbox": "0xf2e00",
+   "ps2": "0x294a40",
+   "name": "EAGL::Transform::PrependRotTrans",
+   "verdict": "accept",
+   "why": "BuildRotTrans(MATRIX3,COORD4) (w copied from trans[3]) then pre-multiply = PS2 PrependRotTrans(MATRIX3*, COORD4*) overload (the COORD3 one sets w=1.0); immediately precedes PrependMatrix as on PS2",
+   "intermediates": [
+    {
+     "item": "21.x",
+     "xbox": "0xf1660",
+     "ps2": "0x293658",
+     "name": "EAGL::Transform::BuildRotTrans",
+     "verdict": "accept",
+     "why": "MATRIX3 rows + 4-float COORD4 translation (w copied) = PS2 BuildRotTrans(MATRIX3*, COORD4*) sheet row 6058; followed by COORD3 overload then BuildAimedTrans in same order as PS2"
+    },
+    {
+     "item": "21.x",
+     "xbox": "0xf16d0",
+     "ps2": "0x2936d0",
+     "name": "EAGL::Transform::BuildRotTrans",
+     "verdict": "accept",
+     "why": "MATRIX3 rows + 3-float translation, w=1.0 = PS2 BuildRotTrans(MATRIX3*, COORD3*) sheet row 6059 (overload); sits just before named BuildAimedTrans as on PS2"
+    },
+    {
+     "item": "21.x",
+     "xbox": "0xf2ea0",
+     "ps2": "0x294b98",
+     "name": "EAGL::Transform::PrependQuatTrans",
+     "verdict": "accept",
+     "why": "Directly after PrependMatrix (as on PS2): quat->matrix3, BuildRotTrans(COORD4), pre-multiply; PS2 PrependQuatTrans inlines the quat conversion then PreMult"
+    }
+   ]
+  },
+  {
+   "item": "22.1",
+   "xbox": "0x1136e5",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Perspective projection builder (cot(fov/2)/aspect, -1 at [11]); Xbox-only math lib (odd address), PS2 inlines projection math - no counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "22.2",
+   "xbox": "0x113779",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Orthographic projection builder (2/w,2/h,1/(n-f)); Xbox-only, no PS2 counterpart among VU0_ functions",
+   "intermediates": []
+  },
+  {
+   "item": "22.3",
+   "xbox": "0x1137eb",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Off-centre orthographic builder called by ViewPort::SetOrthographic; PS2 SetOrthographic inlines it - no named counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "23.1",
+   "xbox": "0x14aba0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "stream request release helper (FILESYS_priorityop) used by STREAM_release/cancelrequest; PS2 counterparts are unnamed statics (FUN_00304ea8/FUN_00305630 area)",
+   "intermediates": []
+  },
+  {
+   "item": "23.2",
+   "xbox": "0x14ac00",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Request allocation with id += 0x100 used by STREAM_queuefile/queuemem; PS2 counterpart unnamed static (FUN_00304f38/FUN_00304fb8)",
+   "intermediates": []
+  },
+  {
+   "item": "23.3",
+   "xbox": "0x14ac70",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Request enqueue helper used by STREAM_queuefile/queuemem; PS2 counterpart unnamed static",
+   "intermediates": []
+  },
+  {
+   "item": "24.1",
+   "xbox": "0x18400",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Deletes buffer at +0x104; called only from EH unwind funclets (0x150700/0x150780) - inline dtor of crossfade blend data, no PS2 function",
+   "intermediates": []
+  },
+  {
+   "item": "24.2",
+   "xbox": "0x18410",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Copy of 4x64-byte pose block + vec_new(n*64) for ActCrossFadeBlendData; inlined into PS2 ActPoser::SetupCrossFadeBlend - no name",
+   "intermediates": []
+  },
+  {
+   "item": "24.3",
+   "xbox": "0x18490",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "ActCrossFadeBlendData ctor called by ActPoser::SetupCrossFadeBlend; inlined on PS2 (no class functions in PS2 names) - no name",
+   "intermediates": []
+  }
+ ]
+}
