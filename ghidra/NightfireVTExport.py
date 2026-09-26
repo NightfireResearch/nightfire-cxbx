@@ -31,6 +31,14 @@ if df is None:
     raise Exception("No project file " + SESSION)
 # Open in the VT tool: borrow that instance (it includes unsaved work); a second getDomainObject would fail
 # with "Domain object(s) are busy/locked" while the VT tool holds it.
+# A script runs inside a transaction on currentProgram. When that program is the session's source or
+# destination, opening the session can't lock it ("busy/locked"), so close the script's own (empty)
+# transaction first. This script changes nothing in currentProgram.
+try:
+    end(True)
+except Exception as ex:
+    print("Could not end the script transaction (%s); if opening fails, run this from a CodeBrowser "
+          "showing some other program, e.g. /Similar_Games/AUF/driving.elf" % ex)
 session = df.getOpenedDomainObject(this)
 how = "borrowed from the open VT tool"
 if session is None:
