@@ -1,0 +1,842 @@
+{
+ "verdicts": [
+  {
+   "item": 133,
+   "xbox": "0x000270b0",
+   "ps2": "0x00127840",
+   "name": "AICharacterPedestrian::DoWalking",
+   "verdict": "accept",
+   "why": "Same vtable slot (after DoIdling; slots aligned from NotifyZoneDamage/GetZoneHitPointScale); same body: IsAnimationDone, flags&3 -> ReachedTarget(1) -> state 2 + target copy, else PlayAnim 9 / 0x1f, MaintainHeading(1)",
+   "intermediates": [
+    {
+     "xbox": "0x00024e50",
+     "ps2": "0x00129920",
+     "name": "AICharacterPedestrian::ReachedTarget",
+     "why": "Called as ReachedTarget(1) in DoWalking; body = distance < 1.0 then ChangeAnimationOrigin when flag set"
+    },
+    {
+     "xbox": "0x000253b0",
+     "ps2": "0x0012a8f0",
+     "name": "AICharacterPedestrian::PlayAnim",
+     "why": "Called as PlayAnim(9/0x1f, 1.0) in DoWalking; body = SetNewAnimation, GetTotalFrames, SetTimeScale(scale*field), same as PS2"
+    }
+   ]
+  },
+  {
+   "item": 134,
+   "xbox": "0x000d2b70",
+   "ps2": "0x002318b0",
+   "name": "WWorldMath::NearestPointLine2D",
+   "verdict": "accept",
+   "why": "Identical 2D projection math with y=0; sole caller WTriggerManager::CheckCollide on both",
+   "intermediates": []
+  },
+  {
+   "item": 135,
+   "xbox": "0x00011030",
+   "ps2": "0x00107398",
+   "name": "AnimationController::GetTotalFrames",
+   "verdict": "accept",
+   "why": "Sole caller is PlayAnim (Xbox 0x253b0) right after SetNewAnimation on the returned controller, as PS2; disasm both load a pointer then a float (PS2 [4]->0x1c, Xbox [0x14]->0x18)",
+   "intermediates": []
+  },
+  {
+   "item": 136,
+   "xbox": "0x0010d290",
+   "ps2": "0x002528f0",
+   "name": "FILESYS_waitop",
+   "verdict": "reject",
+   "why": "Xbox allocates an op slot and copies fields; PS2 waitop spins on SYNCTASK_run/THREAD_yield - different routine",
+   "intermediates": []
+  },
+  {
+   "item": 137,
+   "xbox": "0x00031ca0",
+   "ps2": "0x0013b498",
+   "name": "AIHelicopter::DisengageSplinePath",
+   "verdict": "accept",
+   "why": "Last slot of the AIHelicopter vtable on both (Xbox 0x18b960, PS2 0x36b8b4), preceded by EngageSplinePath; same 1/1/0 stores (+0x10 shift) then SetSplinePath(0)",
+   "intermediates": [
+    {
+     "xbox": "0x00031c80",
+     "ps2": "0x0013b468",
+     "name": "AIHelicopter::EngageSplinePath",
+     "why": "Preceding vtable slot on both; stores 1,1,5 (0x74->0x84) then SetSplinePath(path)"
+    },
+    {
+     "xbox": "0x00035860",
+     "ps2": "0x0013dfd8",
+     "name": "AIVehicle::SetSplinePath",
+     "why": "Called by both spline-path methods; body: null -> delete spline path, else new(0xb0)+ctor or Reset, as PS2"
+    }
+   ]
+  },
+  {
+   "item": 138,
+   "xbox": "0x00106df0",
+   "ps2": "0x00276c70",
+   "name": "EAGLAnim::DeltaCompressedData::DecompressValuesIndexed",
+   "verdict": "accept",
+   "why": "Directly follows the named DecompressValues on Xbox as on PS2; same argument shape, divide by stride, same (end==0||start==-1||end<start) branch",
+   "intermediates": []
+  },
+  {
+   "item": 139,
+   "xbox": "0x00077d10",
+   "ps2": "0x001a26c0",
+   "name": "RAnimEngine::Handle::NumFrames",
+   "verdict": "accept",
+   "why": "Called in Sentry::RotateAnim (Xbox 0x738b0) right after SetFrameRate(sys,8,1) as NumFrames(sys,8), as PS2; body is FindSystem inlined + System::NumFrames (ratio from inlining)",
+   "intermediates": [
+    {
+     "xbox": "0x00077cb0",
+     "ps2": "0x001a2678",
+     "name": "RAnimEngine::Handle::SetFrameRate",
+     "why": "Called in RotateAnim as (sys,8,1) before NumFrames; FindSystem inlined then System::SetFrameRate"
+    },
+    {
+     "xbox": "0x00077a50",
+     "ps2": "0x001a3aa0",
+     "name": "RAnimEngine::System::NumFrames",
+     "why": "Tail call of Handle::NumFrames; loops systems computing max frames*60/rate"
+    },
+    {
+     "xbox": "0x00077c50",
+     "ps2": "0x001a2630",
+     "name": "RAnimEngine::Handle::SetFrame",
+     "why": "Called at the end of RotateAnim as SetFrame(sys,8,(int)(rot*frames)), as PS2"
+    },
+    {
+     "xbox": "0x00073600",
+     "ps2": "0x0019bd58",
+     "name": "Sentry::ComputeNewRotation",
+     "why": "Called in RotateAnim with (0x94,param,0x78,0x80) returning the new rotation, as PS2"
+    },
+    {
+     "xbox": "0x00077500",
+     "ps2": "0x001a2d90",
+     "name": "RAnimEngine::Handle::GetSystemState",
+     "why": "Called twice in RotateAnim, compared ==4 then ==2, as PS2"
+    }
+   ]
+  },
+  {
+   "item": 140,
+   "xbox": "0x000c9ba0",
+   "ps2": "0x00221ac8",
+   "name": "WRoadNetwork::GetSegmentLeftDrivableDist",
+   "verdict": "accept",
+   "why": "PS2 overload (WRoadSegment&) at 0x221ac8; same flags 0x10/0x800/0x200/0x1000, char 0x52, 5.0/2.5 and recursive attached-segment loop; called from the int-overload wrapper on both",
+   "intermediates": [
+    {
+     "xbox": "0x000cb3f0",
+     "ps2": "0x00221a88",
+     "name": "WRoadNetwork::GetSegmentLeftDrivableDist",
+     "why": "Int overload: fSegments[idx] -> segment overload; caller GetPlayerLaneOffsets on both"
+    }
+   ]
+  },
+  {
+   "item": 141,
+   "xbox": "0x00036a20",
+   "ps2": "0x001401e0",
+   "name": "AIZoneController::Shutdown",
+   "verdict": "reject",
+   "why": "Xbox body allocates fgController and sets the zone constants - it is Init; PS2 Shutdown deletes. Xbox Shutdown already named at 0x36b00",
+   "intermediates": [
+    {
+     "xbox": "0x00036a20",
+     "ps2": "0x00140110",
+     "name": "AIZoneController::Init",
+     "why": "Same new(1) + constants 0xaf/0x55/0x41440000/0x441c4000/0x44992000/0xf and 30-entry clear loop; called from GameLoop_StartUp"
+    }
+   ]
+  },
+  {
+   "item": 142,
+   "xbox": "0x000762d0",
+   "ps2": "0x001a01a8",
+   "name": "Draw::Draw2dLine",
+   "verdict": "reject",
+   "why": "Xbox sets a colour quad and draws with modelMatrix (callers GGallery::QUAD_Draw2D and a debug view); PS2 Draw2dLine builds two vertices - different",
+   "intermediates": []
+  },
+  {
+   "item": 143,
+   "xbox": "0x000c05f0",
+   "ps2": "0x00219280",
+   "name": "WCollisionMgr::GetClosestIntersectingOBBObject",
+   "verdict": "accept",
+   "why": "Same vector loop returning the first object whose OBB intersects (MakeMatrix + GetOBBObjectIntersection); chains agree (0xc1080 ~ 0x218960 under CheckHitWorld)",
+   "intermediates": []
+  },
+  {
+   "item": 144,
+   "xbox": "0x00093b20",
+   "ps2": "0x001cf2a8",
+   "name": "RTextureContext::FindWithoutOwning",
+   "verdict": "accept",
+   "why": "Same body: map find, CreateNewTextureElement if end, return element texture without a refcount; sits just before FindOrCreateTexture as on PS2",
+   "intermediates": []
+  },
+  {
+   "item": 145,
+   "xbox": "0x000ecbc0",
+   "ps2": "0x0027e348",
+   "name": "EAGL::TAR::SwapShape",
+   "verdict": "accept",
+   "why": "Called in the TARList loop of EAGL::Model::SetTexture (Xbox 0xe9210) and in ActModel::SetTexture after GetShape, as PS2; body calls the release-shared + TARExtension::Init helper on the extension and returns 1",
+   "intermediates": []
+  },
+  {
+   "item": 146,
+   "xbox": "0x0009eb90",
+   "ps2": "0x001e2760",
+   "name": "RLightning::ControlPoint::Init",
+   "verdict": "accept",
+   "why": "Same stores: copy pos, sim time, global vector (Xbox 0x243030 = PS2 0x355b80, also passed to AddBolt), zeros, two params; chain AddBolt <- CreateWorldBolt <- TrySpawnBolt agrees",
+   "intermediates": []
+  },
+  {
+   "item": 147,
+   "xbox": "0x001175a0",
+   "ps2": "0x002d7448",
+   "name": "UFileLoader::FileLoadAt",
+   "verdict": "reject",
+   "why": "Xbox prefixes '|' and loads a shape from the pack, adding to found/not-found lists; called first by the ShapeFileLoad core - it is AttemptBigFileShapeLoad",
+   "intermediates": [
+    {
+     "xbox": "0x001175a0",
+     "ps2": "0x002d71c8",
+     "name": "UFileLoader::AttemptBigFileShapeLoad",
+     "why": "'|'+name, pack shape load, FileNameList::AddFile to the found/not-found list; first call in the ShapeFileLoad core as on PS2"
+    }
+   ]
+  },
+  {
+   "item": 148,
+   "xbox": "0x00107cb0",
+   "ps2": "0x00259140",
+   "name": "FONT_getkern",
+   "verdict": "accept",
+   "why": "Same 0x40000 flag split and kerning-pair search (helpers inlined); callers FONT_drawtextx/FONT_getrectx on both",
+   "intermediates": []
+  },
+  {
+   "item": 149,
+   "xbox": "0x000ba620",
+   "ps2": "0x0020a1f8",
+   "name": "SRuleHealth::CheckRule",
+   "verdict": "reject",
+   "why": "Xbox reads GetStats +0x10/+0xc and calls SMissionRuleTarget::GetSpeed (velocity length) - that is SRuleSpeed::CheckRule; SRuleHealth reads stats[1]/[0] and calls GetHealth",
+   "intermediates": [
+    {
+     "xbox": "0x000ba620",
+     "ps2": "0x0020a788",
+     "name": "SRuleSpeed::CheckRule",
+     "why": "type==3 -> GetStats +0x10/+0xc exactly as PS2 SRuleSpeed, else GetSpeed; same threshold compare"
+    },
+    {
+     "xbox": "0x000ba390",
+     "ps2": "0x00209758",
+     "name": "SMissionRuleTarget::GetSpeed",
+     "why": "type 0 -> player rigid-body velocity length, type 4 -> tracking +0x3c, as PS2"
+    }
+   ]
+  },
+  {
+   "item": 150,
+   "xbox": "0x00145cc0",
+   "ps2": "0x00315d08",
+   "name": "SFILTER_unpackxalf",
+   "verdict": "accept",
+   "why": "Referenced as data only by SFILTER_unpackxalfinit on both; same Feed/Decode/GetState/SetState structure",
+   "intermediates": [
+    {
+     "xbox": "0x00149ec0",
+     "ps2": "0x00318dd8",
+     "name": "SND::CEAXABLKDecf::Decode",
+     "why": "Decode call in the unpackxalf loop at the same position"
+    },
+    {
+     "xbox": "0x0014a190",
+     "ps2": "0x00318fc0",
+     "name": "SND::CEAXABLKDecf::GetState",
+     "why": "Copies +0x98/+0x9c out to the caller buffer; GetState position in unpackxalf"
+    }
+   ]
+  },
+  {
+   "item": 151,
+   "xbox": "0x00023a90",
+   "ps2": "0x00126800",
+   "name": "AICharacterPedestrian::GetSpecialPedInfo",
+   "verdict": "reject",
+   "why": "Xbox picks a random entry from an 11- or 6-entry table - that is GetRandomConvAnim; GetSpecialPedInfo returns table+idx*0x4c",
+   "intermediates": [
+    {
+     "xbox": "0x00023a90",
+     "ps2": "0x00126958",
+     "name": "AICharacterPedestrian::GetRandomConvAnim",
+     "why": "flag ? 6-entry : 11-entry table, SimRandom*n>>16 index, identical to PS2"
+    }
+   ]
+  },
+  {
+   "item": 152,
+   "xbox": "0x0009c260",
+   "ps2": "0x001dd4a0",
+   "name": "REmpBolts::CreateWorldBolt",
+   "verdict": "accept",
+   "why": "Same LCG sign flip of kWorldArcFactor, kAllowWorldBolts gate, AddBolt(global,..,0,0,arc,rate/10); caller TrySpawnBolt",
+   "intermediates": [
+    {
+     "xbox": "0x000a0400",
+     "ps2": "0x001e1010",
+     "name": "RLightning::AddBolt",
+     "why": "The single call in CreateWorldBolt with the same argument pattern"
+    }
+   ]
+  },
+  {
+   "item": 153,
+   "xbox": "0x0004f830",
+   "ps2": "0x00165488",
+   "name": "ActionQueue::Initialize",
+   "verdict": "reject",
+   "why": "Xbox is an MSVC vector push_back; Initialize is inlined into the Xbox ActionQueue constructor",
+   "intermediates": [
+    {
+     "xbox": "0x0004f8a0",
+     "ps2": "0x00165778",
+     "name": "ActionQueueManager::RegisterQueue",
+     "why": "Called at the end of the Xbox ActionQueue ctor where PS2 Initialize calls RegisterQueue; body is the queue-list push_back"
+    }
+   ]
+  },
+  {
+   "item": 154,
+   "xbox": "0x000be810",
+   "ps2": "0x00212da8",
+   "name": "WCollisionInstance::CalcPosition",
+   "verdict": "accept",
+   "why": "Same dot products, flag&3 cross-product branch, -[0xd] fallback; caller GetInstanceListGuts on both",
+   "intermediates": []
+  },
+  {
+   "item": 155,
+   "xbox": "0x000a0390",
+   "ps2": "0x001e3028",
+   "name": "vector<RLightning::Bolt_*,_allocator<RLightning::Bolt_*>_>::_M_insert_aux",
+   "verdict": "reject",
+   "why": "Xbox is the MSVC push_back wrapper (capacity check, else insert helper); SGI _M_insert_aux is a different STL routine",
+   "intermediates": []
+  },
+  {
+   "item": 156,
+   "xbox": "0x000cb900",
+   "ps2": "0x00222060",
+   "name": "WRoadNetwork::GetSegmentLaneWeights",
+   "verdict": "reject",
+   "why": "Xbox initialises a nav object from a segment (stores segment id, node coordinates); the real GetSegmentLaneWeights is Xbox 0xc9e00 (item 196); callers differ",
+   "intermediates": []
+  },
+  {
+   "item": 157,
+   "xbox": "0x0010d290",
+   "ps2": "0x00252508",
+   "name": "FILESYS_restore",
+   "verdict": "reject",
+   "why": "Xbox allocates an op slot; FILESYS_restore shuts down CDVD, closes files, destroys the mutex",
+   "intermediates": []
+  },
+  {
+   "item": 158,
+   "xbox": "0x00096770",
+   "ps2": "0x001d37f0",
+   "name": "RVehicle::RenderDeferredEffects",
+   "verdict": "accept",
+   "why": "Same player-physics check with two render-mode shorts ==1, then GetTransform + RenderFX; adjacent placement",
+   "intermediates": []
+  },
+  {
+   "item": 159,
+   "xbox": "0x000f7380",
+   "ps2": "0x00271de8",
+   "name": "EAGLAnim::FnRawPoseChannel::GetLength",
+   "verdict": "accept",
+   "why": "Same slot in the FnRawPoseChannel vtables (after dtor, GetTargetCheckSum, UseFPS, Eval); same body *out=(float)frames, return 1",
+   "intermediates": []
+  },
+  {
+   "item": 160,
+   "xbox": "0x000d68b0",
+   "ps2": "0x002383e8",
+   "name": "GGallery::QUAD_Draw",
+   "verdict": "accept",
+   "why": "PS2 overload at 0x2383e8: both add 0x30 to the argument and tail-call the main QUAD_Draw; callers under GHud::Draw agree",
+   "intermediates": []
+  },
+  {
+   "item": 161,
+   "xbox": "0x0010d290",
+   "ps2": "0x002523b0",
+   "name": "FILESYS_initadr",
+   "verdict": "reject",
+   "why": "Different routine (op-slot allocation vs FILESYS initialisation)",
+   "intermediates": []
+  },
+  {
+   "item": 162,
+   "xbox": "0x00149e90",
+   "ps2": "0x00318db0",
+   "name": "SND::CEAXABLKDecf::Feed",
+   "verdict": "accept",
+   "why": "Identical body (+8, +0xa0, +0xc); caller SFILTER_unpackxafinit on both",
+   "intermediates": []
+  },
+  {
+   "item": 163,
+   "xbox": "0x0001e9a0",
+   "ps2": "0x0011d878",
+   "name": "AICharacterEnemyGround::GetAngleToTarget",
+   "verdict": "accept",
+   "why": "Same atan to target vs weapon position with wrap; callers DoAiming/DoFiring/DoWandering on both",
+   "intermediates": []
+  },
+  {
+   "item": 164,
+   "xbox": "0x00022f70",
+   "ps2": "0x001243f0",
+   "name": "AICharacterHands::DoArming",
+   "verdict": "accept",
+   "why": "Vtable slot 6 after DoIdling on both (Xbox 0x18ad4c->0x18ad64, PS2 0x369734->0x369764); same body IsAnimationDone, state 2, ChangeWeapon(pending), clear",
+   "intermediates": []
+  },
+  {
+   "item": 165,
+   "xbox": "0x0002b660",
+   "ps2": "0x00135d88",
+   "name": "AIGroundVehicle::GetRoadNetworkLaneWeights",
+   "verdict": "accept",
+   "why": "Same call GetSegmentLaneWeights(seg,dir,this+buf,0x40,0x20) then per-lane abs(lane-offset)*5 weighting; chain to DoMoveMode",
+   "intermediates": [
+    {
+     "xbox": "0x000c9e00",
+     "ps2": "0x00222060",
+     "name": "WRoadNetwork::GetSegmentLaneWeights",
+     "why": "Called with (seg,dir,buf,0x40,0x20); body = flags&8, &1 -> attached directional segment, lane flags"
+    }
+   ]
+  },
+  {
+   "item": 166,
+   "xbox": "0x0014a1c0",
+   "ps2": "0x00319018",
+   "name": "SND::CEAXABLKDecf::SetState",
+   "verdict": "accept",
+   "why": "Identical body; called in SFILTER_unpackxalf (item 150) at the SetState position, and the GetState sibling 0x14a190 is the reverse copy",
+   "intermediates": []
+  },
+  {
+   "item": 167,
+   "xbox": "0x000d1060",
+   "ps2": "0x0022f6d8",
+   "name": "FasterSegmentIntersect",
+   "verdict": "accept",
+   "why": "Same 2D segment intersection with [0,1] tests and optional point output; adjacent placement",
+   "intermediates": []
+  },
+  {
+   "item": 168,
+   "xbox": "0x0013844c",
+   "ps2": "0x002aaed8",
+   "name": "strtol",
+   "verdict": "reject",
+   "why": "Xbox is an MSVC ctype test (isspace-like table &8), not strtol; CRT across toolchains",
+   "intermediates": []
+  },
+  {
+   "item": 169,
+   "xbox": "0x0011a650",
+   "ps2": "0x002d9a30",
+   "name": "DAFI_getsectioncount",
+   "verdict": "reject",
+   "why": "Generic getter at a different offset (0x1f48 vs 4) with unrelated callers (AttributeSet vs RCameraIniLoader)",
+   "intermediates": []
+  },
+  {
+   "item": 170,
+   "xbox": "0x00076c60",
+   "ps2": "0x001a4318",
+   "name": "__lower_bound<CARP::AnimInfo_*,_CARP::AnimInfo,_int>",
+   "verdict": "reject",
+   "why": "Same algorithm, but this is the MSVC STL lower_bound instantiation, not the SGI __lower_bound helper (STL across toolchains)",
+   "intermediates": []
+  },
+  {
+   "item": 171,
+   "xbox": "0x000c8fd0",
+   "ps2": "0x00222300",
+   "name": "WRoadNetwork::GetSegmentOppNode",
+   "verdict": "accept",
+   "why": "Same logic with GetSegmentNodes inlined (node0==n ? node1 : node0); callers under IncNavPosition and DoMoveMode agree",
+   "intermediates": []
+  },
+  {
+   "item": 172,
+   "xbox": "0x00108320",
+   "ps2": "0x00260058",
+   "name": "SHAPE_depth",
+   "verdict": "accept",
+   "why": "PS2 overload SHAPE_depth(SHAPE*) at 0x260058 (dereferences; the 0x260078 overload takes the type); identical 128-byte tables; SHAPE_rowbytes/createsize callers",
+   "intermediates": []
+  },
+  {
+   "item": 173,
+   "xbox": "0x000ea1e0",
+   "ps2": "0x002859f8",
+   "name": "EAGL::Model::SetTexture",
+   "verdict": "accept",
+   "why": "Disasm: thiscall GetTARList(&list,name) then SetTexture(&list,shape), exactly PS2 0x2859f8",
+   "intermediates": [
+    {
+     "xbox": "0x000e9170",
+     "ps2": "0x00285a48",
+     "name": "EAGL::Model::GetTARList",
+     "why": "First call in Model::SetTexture, filling the local TARList"
+    },
+    {
+     "xbox": "0x000e9210",
+     "ps2": "0x00285b08",
+     "name": "EAGL::Model::SetTexture",
+     "why": "TARList overload: loops the list count calling SwapShape, as PS2"
+    }
+   ]
+  },
+  {
+   "item": 174,
+   "xbox": "0x001145b0",
+   "ps2": "0x002cfe50",
+   "name": "UMemory::FastFree",
+   "verdict": "reject",
+   "why": "Xbox carves a new page into a size-bucket free list (FastAlloc refill, sole caller FastAlloc); not FastFree",
+   "intermediates": []
+  },
+  {
+   "item": 175,
+   "xbox": "0x000cc880",
+   "ps2": "0x002273d8",
+   "name": "WSimpleZone::SetPosition",
+   "verdict": "accept",
+   "why": "Same round(x*0.2) for three coordinates; UpdateTargets/UpdatePosition caller chains agree",
+   "intermediates": []
+  },
+  {
+   "item": 176,
+   "xbox": "0x000eb790",
+   "ps2": "0x0027e338",
+   "name": "EAGL::TAR::GetShape",
+   "verdict": "accept",
+   "why": "Only Xbox caller 0x17450 calls it then SwapShape, exactly as PS2 ActModel::SetTexture",
+   "intermediates": [
+    {
+     "xbox": "0x00017450",
+     "ps2": "0x001111c0",
+     "name": "ActModel::SetTexture",
+     "why": "if(shape) SwapShape(GetShape(shape)) - same structure and callees as PS2"
+    }
+   ]
+  },
+  {
+   "item": 177,
+   "xbox": "0x000779c0",
+   "ps2": "0x001a39f0",
+   "name": "RAnimEngine::System::SetFrameRate",
+   "verdict": "accept",
+   "why": "Tail of Handle::SetFrameRate (0x77cb0) called from RotateAnim; same loop over systems, lower_bound on (id,0x16), store byte +0xf",
+   "intermediates": []
+  },
+  {
+   "item": 178,
+   "xbox": "0x00144f30",
+   "ps2": "0x003166e0",
+   "name": "SFILTER_lpfRC",
+   "verdict": "reject",
+   "why": "Xbox processes in chunks through a ring buffer (+0x24/+0x28) via helper 0x144e50; PS2 lpfRC is an inline one-pole filter - different filter",
+   "intermediates": []
+  },
+  {
+   "item": 179,
+   "xbox": "0x000c9e00",
+   "ps2": "0x00224e00",
+   "name": "WRoadNav::IncNavPosition",
+   "verdict": "reject",
+   "why": "Xbox body is GetSegmentLaneWeights (see item 196)",
+   "intermediates": [
+    {
+     "xbox": "0x000c9e00",
+     "ps2": "0x00222060",
+     "name": "WRoadNetwork::GetSegmentLaneWeights",
+     "why": "Same as items 165/196"
+    }
+   ]
+  },
+  {
+   "item": 180,
+   "xbox": "0x000c9cd0",
+   "ps2": "0x00221cb0",
+   "name": "WRoadNetwork::GetSegmentRightDrivableDist",
+   "verdict": "accept",
+   "why": "PS2 overload (WRoadSegment&) at 0x221cb0; the right variant uses 0x400 and char 0x53 (left uses 0x200/0x52); called from the int-overload wrapper",
+   "intermediates": [
+    {
+     "xbox": "0x000cb410",
+     "ps2": "0x00221c70",
+     "name": "WRoadNetwork::GetSegmentRightDrivableDist",
+     "why": "Int-overload wrapper fSegments[idx] -> segment overload; caller GetPlayerLaneOffsets on both"
+    }
+   ]
+  },
+  {
+   "item": 181,
+   "xbox": "0x001176f0",
+   "ps2": "0x002d75c8",
+   "name": "UFileLoader::FileSizez",
+   "verdict": "reject",
+   "why": "Xbox is the ShapeFileLoad core (path fix, AttemptBigFileShapeLoad, direct load z/non-z, AddFile); Xbox ShapeFileLoad 0x117790 is its (char*,int) wrapper",
+   "intermediates": [
+    {
+     "xbox": "0x001176f0",
+     "ps2": "0x002d76f0",
+     "name": "UFileLoader::ShapeFileLoad",
+     "why": "3-arg overload (char*,int,bool): LookupAbsolutePath inlined, AttemptBigFileShapeLoad, FileLoadShapeDirectFromDisk inlined, AddFileToRequestList"
+    }
+   ]
+  },
+  {
+   "item": 182,
+   "xbox": "0x000e3cf0",
+   "ps2": "0x0024b640",
+   "name": "GSystem::COLOR_ReduceAlpha",
+   "verdict": "accept",
+   "why": "Same alpha*factor in the top byte; caller GGallery::QUAD_Draw on both",
+   "intermediates": []
+  },
+  {
+   "item": 183,
+   "xbox": "0x0011c720",
+   "ps2": "0x002fcb88",
+   "name": "ABaseSound::StartFade",
+   "verdict": "accept",
+   "why": "Same four stores (length, fading flag, counter 0, progress 0); caller ASubmersible::PlayFanMotors",
+   "intermediates": []
+  },
+  {
+   "item": 184,
+   "xbox": "0x000c9e00",
+   "ps2": "0x002235c8",
+   "name": "WRoadNav::CalcNextSegmentRandom",
+   "verdict": "reject",
+   "why": "Xbox body is GetSegmentLaneWeights (see item 196)",
+   "intermediates": [
+    {
+     "xbox": "0x000c9e00",
+     "ps2": "0x00222060",
+     "name": "WRoadNetwork::GetSegmentLaneWeights",
+     "why": "Same as items 165/196"
+    }
+   ]
+  },
+  {
+   "item": 185,
+   "xbox": "0x00145700",
+   "ps2": "0x00316998",
+   "name": "SFILTER_createSOURCE",
+   "verdict": "accept",
+   "why": "Identical zeroing (8,0xc,0x10,0x14,0x1b,0x1c); single call from SNDMIXI_initfx on both",
+   "intermediates": []
+  },
+  {
+   "item": 186,
+   "xbox": "0x000ac870",
+   "ps2": "0x001f5de8",
+   "name": "OBB::Reset",
+   "verdict": "accept",
+   "why": "Same layout: position, axes, extents at 0x28, scaled axes at 0x10.., zeros, -100000 (0xc7c35000) at 0x24",
+   "intermediates": []
+  },
+  {
+   "item": 187,
+   "xbox": "0x00014870",
+   "ps2": "0x0010dd00",
+   "name": "ActCharacter::GetShadowTriangle",
+   "verdict": "accept",
+   "why": "Sole call in ActActor::Draw at the shadow block (flag 0x6c, then fills the triangle with HeightAtPoint+0.1), identical on both",
+   "intermediates": [
+    {
+     "xbox": "0x000d2f90",
+     "ps2": "0x002327a0",
+     "name": "WWorldPos::HeightAtPoint",
+     "why": "Called twice in the shadow block of ActActor::Draw, +0.1"
+    },
+    {
+     "xbox": "0x00015010",
+     "ps2": "0x0010db30",
+     "name": "ActCharacter::CalculateMuzzleFlashIntensity",
+     "why": "Called with -1, then 0 and 1 gated by weapon flags in ActActor::Draw"
+    },
+    {
+     "xbox": "0x00018940",
+     "ps2": "0x00114218",
+     "name": "ActPoser::Skin",
+     "why": "Called before ActCharacter::Draw when flags&1 in ActActor::Draw"
+    },
+    {
+     "xbox": "0x000118a0",
+     "ps2": "0x00109918",
+     "name": "ActActor::DrawWeapons",
+     "why": "Final call gated by the draw-weapons bool in ActActor::Draw"
+    },
+    {
+     "xbox": "0x00015180",
+     "ps2": "0x0010dc30",
+     "name": "ActCharacter::InheritWeaponLightingFromCar",
+     "why": "Called right after SetWeaponsTransformToWorldSpace in ActActor::Draw"
+    }
+   ]
+  },
+  {
+   "item": 188,
+   "xbox": "0x000dc590",
+   "ps2": "0x0023e2c0",
+   "name": "GHud::DrawBloodCurtain",
+   "verdict": "accept",
+   "why": "Same structure: flag 0x314, curtain>=0, -110/+220 widescreen offset, 0.05/0.15/0.95 UVs, two colour passes x two quads, curtain -= 0x368; caller DoRender (6.0 vs 8.0 tuned)",
+   "intermediates": []
+  },
+  {
+   "item": 189,
+   "xbox": "0x00050d80",
+   "ps2": "0x00167ad8",
+   "name": "DeviceScalar::isUpTransitionThreshold",
+   "verdict": "accept",
+   "why": "Same (*0x28 < v && !(*0x24 < v)); callers ReleaseAllButtons/SendGameMessages on both",
+   "intermediates": []
+  },
+  {
+   "item": 190,
+   "xbox": "0x000cbe70",
+   "ps2": "0x00222968",
+   "name": "WRoadNetwork::GetSegmentPointIntersect",
+   "verdict": "reject",
+   "why": "Xbox clamps t to [0,1] and evaluates a point on the segment - it is GetPointOnSegment(float,...); in FindClosestSegmentInd it is the flag-gated second call, as PS2 GetPointOnSegment",
+   "intermediates": [
+    {
+     "xbox": "0x000cbe70",
+     "ps2": "0x002223b0",
+     "name": "WRoadNetwork::GetPointOnSegment",
+     "why": "Overload (float t, segment, out): clamp t, endpoints, inner GetPointOnSegment; flag-gated call in FindClosestSegmentInd"
+    },
+    {
+     "xbox": "0x000c9f70",
+     "ps2": "0x00222968",
+     "name": "WRoadNetwork::GetSegmentPointIntersect",
+     "why": "First call in FindClosestSegmentInd (seg,pos,&out,1); body = segment nodes -> line-point intersect"
+    },
+    {
+     "xbox": "0x000cbf20",
+     "ps2": "0x00225490",
+     "name": "WRoadNav::FindClosestSegmentInd",
+     "why": "Grid cell scan with stamp, 20000 start, type 4/5 checks, calls the two above then distance, as PS2"
+    }
+   ]
+  },
+  {
+   "item": 191,
+   "xbox": "0x000e8a10",
+   "ps2": "0x00287758",
+   "name": "EAGLInternal::DevicePrivate::SetCurrentTextureRenderContext",
+   "verdict": "accept",
+   "why": "Called with this/0 by a begin/end pair that also sets a flag 1/0 (PS2 TextureRenderContext::BeginFrame/EndFrame); writes the second of two adjacent globals, as PS2 (RC 0x3485b0, TRC 0x3485b4)",
+   "intermediates": []
+  },
+  {
+   "item": 192,
+   "xbox": "0x000b09d0",
+   "ps2": "0x001fcfc0",
+   "name": "RigidBody::ControlSleep",
+   "verdict": "accept",
+   "why": "Same abs-sum of vel/angvel, 0.7 and SLEEP_VEL*0.25 thresholds, counter check then ForceToSleep; chain to SimulateGame",
+   "intermediates": [
+    {
+     "xbox": "0x000ad600",
+     "ps2": "0x001fd170",
+     "name": "RigidBody::ForceToSleep",
+     "why": "The single call at the end of ControlSleep"
+    }
+   ]
+  },
+  {
+   "item": 193,
+   "xbox": "0x000d9c30",
+   "ps2": "0x002456c0",
+   "name": "GHud::SetMissionPassed",
+   "verdict": "reject",
+   "why": "Xbox zeroes four fields; PS2 clears the objective message, AimOff, sets state 5; callers differ (EGadgetOff vs EPlayerWin)",
+   "intermediates": []
+  },
+  {
+   "item": 194,
+   "xbox": "0x00050b80",
+   "ps2": "0x00167b80",
+   "name": "InputDevice::InputDevice",
+   "verdict": "reject",
+   "why": "Xbox zeroes fields 0,4,0x24-0x30; PS2 ctor stores a param and the vtable - different (likely a member sub-object ctor)",
+   "intermediates": []
+  },
+  {
+   "item": 195,
+   "xbox": "0x000bd450",
+   "ps2": "0x00211758",
+   "name": "Util_ApplyVariance",
+   "verdict": "accept",
+   "why": "Same a + a*b*GaussRandom; callers in RLightning agree",
+   "intermediates": []
+  },
+  {
+   "item": 196,
+   "xbox": "0x000c9e00",
+   "ps2": "0x00222060",
+   "name": "WRoadNetwork::GetSegmentLaneWeights",
+   "verdict": "accept",
+   "why": "Called from GetRoadNetworkLaneWeights with (seg,dir,buf,0x40,0x20); same flags&8, &1 -> attached directional segment via node[dir], lane flag cases",
+   "intermediates": []
+  },
+  {
+   "item": 197,
+   "xbox": "0x000d5b30",
+   "ps2": "0x00238188",
+   "name": "GGallery::QUAD_SetState",
+   "verdict": "accept",
+   "why": "Identical stores incl. +0x50=0 (PS2 disasm); caller set matches (11 calls in the DrawMissionResult equivalent 0xdf2e0, plus the pause-errors caller)",
+   "intermediates": [
+    {
+     "xbox": "0x000df2e0",
+     "ps2": "0x00245f68",
+     "name": "GHud::DrawMissionResult",
+     "why": "Called from GHud::Draw; 11 QUAD_SetState calls and the QUAD_Draw(+0x30) wrapper, as PS2"
+    }
+   ]
+  },
+  {
+   "item": 198,
+   "xbox": "0x0011c750",
+   "ps2": "0x002fcba0",
+   "name": "ABaseSound::GetFade",
+   "verdict": "accept",
+   "why": "Same fade counter/progress logic; caller PlayFanMotors on both",
+   "intermediates": []
+  }
+ ]
+}
