@@ -1,5 +1,5 @@
 {
- "generated": "Sat Sep 26 07:19:28 2026",
+ "generated": "Sat Sep 26 17:44:29 2026",
  "moves": [
   {
    "program": "Driving.xbe",
@@ -1194,6 +1194,24 @@
    "address": "0x0011dd30",
    "name": "ACharacter::~ACharacter",
    "batch": "018"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000d3450",
+   "name": "GFX::CULL_GetNextCanvas",
+   "batch": "019"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000a3210",
+   "name": "RParticulate::LoadAttributes",
+   "batch": "019"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00075e80",
+   "name": "SimpleDraw::Init",
+   "batch": "019"
   },
   {
    "program": "DRIVING.ELF",

@@ -1,0 +1,172 @@
+{
+ "batch": "019",
+ "program": "Driving.xbe",
+ "applied": "Sat Sep 26 17:43:45 2026",
+ "items": [
+  {
+   "xbox": "0x000d3450",
+   "old_name": "CULL_GetNextCanvas",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000d3450",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "CULL_GetNextCanvas",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a3210",
+   "old_name": "LoadAttributes",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a3210",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "LoadAttributes",
+   "ok": true
+  },
+  {
+   "xbox": "0x00075e80",
+   "old_name": "Init",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00075e80",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Init",
+   "ok": true
+  },
+  {
+   "xbox": "0x000ed2d0",
+   "old_name": "TARDestructor",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000ed2d0 from 'TARDestructor' to 'RuntimeAllocTARDestructor'",
+      "warnings": [
+       "Function name 'RuntimeAllocTARDestructor' does not start with a recognized verb. First word 'Runtime' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'RuntimeAllocTARDestructor' shares the same token set as existing function 'Alloc' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000ed2d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "RuntimeAllocTARDestructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000ecbe0",
+   "old_name": "TARConstructor",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000ecbe0 from 'TARConstructor' to 'RuntimeAllocTARConstructor'",
+      "warnings": [
+       "Function name 'RuntimeAllocTARConstructor' does not start with a recognized verb. First word 'Runtime' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'RuntimeAllocTARConstructor' shares the same token set as existing function 'Alloc' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000ecbe0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "RuntimeAllocTARConstructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0013d3e0",
+   "old_name": "SNDREAL_systemtasak",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0013d3e0 from 'SNDREAL_systemtasak' to 'SNDREAL_systemtask'",
+      "warnings": [
+       "Function name 'SNDREAL_systemtask' \u2014 main part 'SNDREAL_systemtask' is not PascalCase. Expected: SndrealSystemtask",
+       "Function name 'SNDREAL_systemtask' \u2014 main part 'SNDREAL_systemtask' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0013d3e0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SNDREAL_systemtask",
+   "ok": true
+  }
+ ]
+}
