@@ -1,0 +1,308 @@
+{
+ "verdicts": [
+  {
+   "item": "32.1",
+   "xbox": "0xd2cf0",
+   "ps2": "0x231cc8",
+   "name": "WWorldMath::NearestPointLine3D",
+   "verdict": "accept",
+   "why": "Sole caller WTriggerManager::CheckCollide on both sides; identical body: d=seg[1]-seg[0], v=p-seg[0], t=dot(v,d)/dot(d,d), out=seg[0]+d*t (PS2 VU0 disasm step for step)",
+   "intermediates": []
+  },
+  {
+   "item": "32.2",
+   "xbox": "0xd2d70",
+   "ps2": "0x231d68",
+   "name": "WWorldMath::MakeSegSpaceMatrix",
+   "verdict": "accept",
+   "why": "Called by FindClosestFace overload (Xbox 0xd3110 = PS2 0x232638, which calls MakeSegSpaceMatrix); same body: 0.0001 coincidence test returns false, row1=normalise(a-b), row0=(1,0,0)/(0,1,0) by 0.5 test on y, cross products normalised, row3=a,1, returns true",
+   "intermediates": [
+    {
+     "item": "32.i1",
+     "xbox": "0xd3110",
+     "ps2": "0x232638",
+     "name": "WWorldPos::FindClosestFace",
+     "verdict": "accept",
+     "why": "Genuine overload (Xbox 0xd31f0 already holds the name for another overload). Callers CheckHitWorld + GetWorldNormal and callees FindFaceInCInst + MakeSegSpaceMatrix on both sides"
+    },
+    {
+     "item": "32.i2",
+     "xbox": "0xc01d0",
+     "ps2": "0x214c08",
+     "name": "WCollisionMgr::FindFaceInCInst",
+     "verdict": "accept",
+     "why": "Overload called by FindClosestFace 0x232638 (Xbox 0xd3110); callees match: FindFaceInTriStrip, MakeMatrix, OrthoInverse, VU0_MATRIX4_mult, vect3mult, v4sub"
+    },
+    {
+     "item": "32.i3",
+     "xbox": "0xc0e00",
+     "ps2": "0x2166f8",
+     "name": "WCollisionMgr::GetWorldNormal",
+     "verdict": "accept",
+     "why": "The other caller of FindClosestFace 0x232638 besides CheckHitWorld; bool return, optional WWorldPos + FindClosestFace + IntersectSegPlane + normal-flip block then the closest-collision query, as PS2"
+    }
+   ]
+  },
+  {
+   "item": "33.1",
+   "xbox": "0x80cf0",
+   "ps2": "0x1b6160",
+   "name": "RPlayerCamera::UpdateAIPathAnimationCam",
+   "verdict": "accept",
+   "why": "Camera-config LoadFile registers it as the handler for mode string AIPathAnim; same callees as PS2 (GetOrientMat, GetPosition x3, VU0_MATRIX4_mult, GetAnchorMatrix4, AnchorCamera)",
+   "intermediates": []
+  },
+  {
+   "item": "33.2",
+   "xbox": "0x80e20",
+   "ps2": "0x1b8960",
+   "name": "RPlayerCamera::GetZoomPercent",
+   "verdict": "accept",
+   "why": "Only caller GHud::DrawCrossHairs (PS2 caller DrawCrossHairs); same body: arm table entry type==0x200, min zoom from per-player table +0x5c, returns (max-cur)/(max-min) else 0",
+   "intermediates": []
+  },
+  {
+   "item": "34.1",
+   "xbox": "0xcdc10",
+   "ps2": "0x22a430",
+   "name": "WTargetPicker::GetOffScreenPos",
+   "verdict": "accept",
+   "why": "Called from WTargetPicker::UpdateTargets as on PS2; same body: view-matrix transpose/translate, transform point, unit xyz, screen = res*(x+0.5),(0.5-y), clamp to 0.46*resX / 0.4*resY box with slope rescale",
+   "intermediates": []
+  },
+  {
+   "item": "34.2",
+   "xbox": "0xcdee0",
+   "ps2": "0x22a728",
+   "name": "WTargetPicker::IsPointOnScreen",
+   "verdict": "accept",
+   "why": "Called from UpdateTargets as on PS2; identical constants: 0.46*resX (+107 if widescreen flag), 0.4*resY, point minus half-res tested inside box",
+   "intermediates": []
+  },
+  {
+   "item": "35.1",
+   "xbox": "0x12590",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::string c_str/_Myptr helper (SSO test 0xf<cap) - STL-generated, no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "35.2",
+   "xbox": "0x125a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "allocator deallocate wrapper (if p: FastFree(p,n)) - shared STL helper",
+   "intermediates": []
+  },
+  {
+   "item": "36.1",
+   "xbox": "0x1be20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::list/_Tree _Tidy (erase all, free 0x98 head node) - STL-generated",
+   "intermediates": []
+  },
+  {
+   "item": "36.2",
+   "xbox": "0x1be60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::list clear with EH frame - STL-generated",
+   "intermediates": []
+  },
+  {
+   "item": "37.1",
+   "xbox": "0xa1c00",
+   "ps2": "0x1e5d78",
+   "name": "RParticleSystem::InitData",
+   "verdict": "accept",
+   "why": "Called from RParticleSystem ctor (PS2 callers are the RParticleSystem/RMovableParticleSystem ctors); same body: cache source ptr, copy its position, cross(src+0x20,src+0x30) into direction, emit accumulator += count(uint)*rate*scale (offsets +0x10)",
+   "intermediates": []
+  },
+  {
+   "item": "37.2",
+   "xbox": "0xa1c60",
+   "ps2": "0x1e6330",
+   "name": "RParticleSystemManager::CreateParticles",
+   "verdict": "accept",
+   "why": "Shell::ApplyWorldEffects calls it with the SPKB system and count 2 exactly where PS2 calls CreateParticles(...,2); same body: basis from normal (0.1 thresholds), two unit cross products, loop count: Spawn then ResetParticle",
+   "intermediates": []
+  },
+  {
+   "item": "38.1",
+   "xbox": "0xd38f0",
+   "ps2": "0x233df8",
+   "name": "GFXGallery::GET_Keys",
+   "verdict": "accept",
+   "why": "Called from CANVAS_Draw (PS2 CANVAS_Draw calls GET_Keys); same 7-arg body with GET_Key inlined (stride max(byte[0x21]+0x30,0x40)), brackets time between key+0xc values; Xbox order GET_Canvas, this, next, GET_EffectPosQuat matches PS2 GET_Keys, GET_FirstIdleKey, GET_EffectPosQuat",
+   "intermediates": []
+  },
+  {
+   "item": "38.2",
+   "xbox": "0xd39d0",
+   "ps2": "0x233f18",
+   "name": "GFXGallery::GET_FirstIdleKey",
+   "verdict": "accept",
+   "why": "Called from CANVAS_Draw; body DataLocateTag(0x676b3000) = 'gk'|DataIndex(3,0), then data+0xc (relative if flag&2) - identical to PS2",
+   "intermediates": []
+  },
+  {
+   "item": "39.1",
+   "xbox": "0xad4a0",
+   "ps2": "0x1f8908",
+   "name": "RigidBody::UpdateZonalInfo",
+   "verdict": "accept",
+   "why": "Callers ResetObject, RigidBody ctor and the timestep function (PS2: ResetObject, RigidBody, Timestep_CollectVU0data); body: owner(+0x5c)+0x4f0..0x4f8 = round(pos*0.2)",
+   "intermediates": []
+  },
+  {
+   "item": "39.2",
+   "xbox": "0xad520",
+   "ps2": "0x1fc198",
+   "name": "RigidBody::CalculateAndApplyWorldDamage",
+   "verdict": "accept",
+   "why": "Only caller CollideWithWorld (same on PS2); same body: threshold 0.2/0.05 by +0x6d<4, dmg=2*v*scale, player boost + vslot checks, type==1 exemption, apply-damage virtual with flag 1",
+   "intermediates": []
+  },
+  {
+   "item": "40.1",
+   "xbox": "0x121d90",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC list _Incsize (list<T> too long) - STL helper",
+   "intermediates": []
+  },
+  {
+   "item": "40.2",
+   "xbox": "0x121e40",
+   "ps2": "0x2ecf60",
+   "name": "ASoundManager::ReportFailure",
+   "verdict": "accept",
+   "why": "WTriggerManager::Restart calls it after appending FAIL to the name exactly where PS2 Restart calls ASoundManager::ReportFailure; same body: allocate list node holding the string, push_back into global list; window starts at ASoundManager::Shutdown",
+   "intermediates": []
+  },
+  {
+   "item": "41.1",
+   "xbox": "0x123560",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::list/_Tree _Tidy (erase all, free 0x98 head) - STL-generated",
+   "intermediates": []
+  },
+  {
+   "item": "41.2",
+   "xbox": "0x1235a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::list clear with EH frame - STL-generated",
+   "intermediates": []
+  },
+  {
+   "item": "42.1",
+   "xbox": "0x10cae0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Lazy per-queue thread/mutex/event creation for the FILESYS operation queue; Xbox-specific, no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "42.2",
+   "xbox": "0x10cbf0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Op allocator used by FILESYS_open/close/read/...; PS2 equivalent is static FUN_00253d48 inside the FILESYS_bypassqueuefileinfo sheet extent (no name), and bodies differ (MUTEX vs pool alloc)",
+   "intermediates": []
+  },
+  {
+   "item": "43.1",
+   "xbox": "0xf5be0",
+   "ps2": "0x29cec0",
+   "name": "EAGL::DrawTextured::InternalFlush",
+   "verdict": "accept",
+   "why": "Directly after ~DrawTextured on both platforms; Xbox platform flush like accepted DrawGouraud::InternalFlush but on DrawTextured's batch-open flag +0x5c (set by DrawTextured::Begin 0x14cf10, cleared by DrawTextured::Init): if open D3DDevice_End/Begin(prim); called from Begin before a primitive change, as PS2 Begin inlines the flush",
+   "intermediates": [
+    {
+     "item": "43.i1",
+     "xbox": "0x14cf10",
+     "ps2": "0x29b330",
+     "name": "EAGL::DrawTextured::Begin",
+     "verdict": "accept",
+     "why": "if prim != current: DrawTextured::InternalFlush, store prim, GeoPrimState::SetPrimitiveType; binds texture +0x50, D3DDevice_Begin, sets +0x5c=1 - PS2 Begin (flush inlined, stores prim at +0x50). Note: sits in the RCMP address range on Xbox"
+    }
+   ]
+  },
+  {
+   "item": "43.2",
+   "xbox": "0xf5c00",
+   "ps2": "0x29d0a0",
+   "name": "EAGL::DrawTextured::SetTexture",
+   "verdict": "accept",
+   "why": "PS2 FUN_0029d0a0 = sheet row 6186 DrawTextured::SetTexture(TAR*) (after DrawTextured::SetModelMatrix; inlined InternalFlush then SetVar Texture); Xbox: inlined flush on +0x5c then store texture at +0x50 (zeroed by Init, bound by Begin); RCMP quad draw calls it before DrawTextured::Begin",
+   "intermediates": []
+  },
+  {
+   "item": "44.1",
+   "xbox": "0xf58b0",
+   "ps2": "0x29c588",
+   "name": "EAGL::DrawGouraud::DrawGouraud",
+   "verdict": "accept",
+   "why": "ProfilerRegion::DrawRegions: new(EAGL::DrawGouraud new) -> this ctor -> Init -> SetDepthTestMethod, same sequence as PS2; body GeoPrimState ctor + shader allocs, returns this",
+   "intermediates": []
+  },
+  {
+   "item": "44.2",
+   "xbox": "0xf5970",
+   "ps2": "0x29a008",
+   "name": "EAGL::DrawGouraud::Init",
+   "verdict": "accept",
+   "why": "Called right after the DrawGouraud ctor in DrawRegions as PS2 DrawGouraud::Init; same shape as accepted DrawTextured::Init (prim states, transparency 1, clears flag +0x58 used by DrawGouraud::InternalFlush, identity matrix)",
+   "intermediates": []
+  },
+  {
+   "item": "45.1",
+   "xbox": "0x90360",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::list/_Tree _Tidy (erase all, free 0x98 head) - STL-generated",
+   "intermediates": []
+  },
+  {
+   "item": "45.2",
+   "xbox": "0x903a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::list clear with EH frame - STL-generated",
+   "intermediates": []
+  },
+  {
+   "item": "46.1",
+   "xbox": "0x133aee",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT vsprintf (string FILE, vfprintf, _flsbuf); PS2 newlib routines differ - leave",
+   "intermediates": []
+  },
+  {
+   "item": "46.2",
+   "xbox": "0x133c9e",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT float-status wrapper around __abstract_sw (_statusfp/_clearfp); CRT, no PS2 counterpart",
+   "intermediates": []
+  }
+ ]
+}

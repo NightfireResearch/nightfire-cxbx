@@ -1,0 +1,2279 @@
+## window 47: Xbox 0x57a40 AttributeSet::~AttributeSet .. 0x57ee0 AttributeSystem::LoadCollection   (PS2 0x169728 .. 0x16cf38)
+
+Xbox functions in the window, address order:
+  0x57a80 UNNAMED
+     callers: LoadCollection
+     chain: AttributeSystem::LoadCollection@57ee0
+     callees: CreateExtensionAttribute, DAFI_getkeycount, FUN_00052560, FUN_00052de0, FUN_00056040, FUN_00056080, FUN_00056110, FUN_00056150, FUN_00056f70, FUN_000572e0, FUN_00057520, FUN_00057650, FUN_00057780, FUN_000578b0, FUN_0011a6b0, FUN_0011a6c0, MakeString
+     void FUN_00057a80(undefined4 *param_1,int param_2)
+     {
+       char cVar1;
+       int iVar2;
+       char *pcVar3;
+       char *pcVar4;
+       size_t __n;
+       int iVar5;
+       char **ppcVar6;
+       undefined4 *puVar7;
+       undefined4 uVar8;
+       int iVar9;
+       undefined2 *puVar10;
+       char *local_4f0;
+         ...
+  0x57ea0 UNNAMED
+     callers: FUN_00058990
+     chain: FUN_00058990@58990 <- FUN_00058fd0@58fd0 <- AttributeSystem::~AttributeSystem@592d0
+     callees: FUN_000573a0, FastFree
+     void __fastcall FUN_00057ea0(int param_1)
+     {
+       int local_4;
+       local_4 = param_1;
+       FUN_000573a0(&local_4,**(undefined4 **)(param_1 + 4),*(undefined4 **)(param_1 + 4));
+       if (*(void **)(param_1 + 4) != (void *)0x0) {
+         UMemory::FastFree(*(void **)(param_1 + 4),0x1c);
+       }
+       *(undefined4 *)(param_1 + 4) = 0;
+       *(undefined4 *)(param_1 + 8) = 0;
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1697d0 AttributeSet::Class
+     callers: 
+     callees: 
+     undefined4 __thiscall AttributeSet::Class(AttributeSet *this)
+     {
+       return *(undefined4 *)(this->collection + 0x18);
+     }
+  0x1698f8 AttributeSet::SetParent
+     callers: 
+     callees: FUN_0016ee30, FindCollection
+     void __thiscall AttributeSet::SetParent(AttributeSet *this,char *param_1)
+     {
+       int iVar1;
+       int **ppiVar2;
+       int iVar3;
+       int *piVar4;
+       ppiVar2 = AttributeSystem::FindCollection
+                           (AttributeSystem::fgThis_AttributeSystem,*(char **)(this->collection + 0x18),
+                            param_1);
+       iVar1 = this->collection;
+       if ((long)(int)ppiVar2 != 0) {
+         ppiVar2[3] = (int *)((int)ppiVar2[3] + 1);
+         ...
+  0x169aa0 AttributeSet::Exists
+     callers: 
+     callees: FindAttribute
+     bool __thiscall AttributeSet::Exists(AttributeSet *this,char *param_1)
+     {
+       bool bVar1;
+       AttributeValue aAStack_20 [4];
+       undefined4 local_10;
+       undefined4 uStack_c;
+       bVar1 = FindAttribute(this,param_1,aAStack_20);
+       return bVar1;
+     }
+  0x169ac0 AttributeSet::IsArray
+     callers: 
+     callees: FindAttribute
+     bool __thiscall AttributeSet::IsArray(AttributeSet *this,char *param_1)
+     {
+       bool bVar1;
+       AttributeValue local_20 [4];
+       undefined4 local_10;
+       undefined4 uStack_c;
+       bVar1 = FindAttribute(this,param_1,local_20);
+       if (bVar1) {
+         bVar1 = *(short *)local_20[0] != 0;
+       }
+       else {
+         bVar1 = false;
+         ...
+  0x169af8 AttributeSet::Type
+     callers: 
+     callees: FindAttribute
+     undefined1 __thiscall AttributeSet::Type(AttributeSet *this,char *param_1)
+     {
+       bool bVar1;
+       undefined1 uVar2;
+       AttributeValue local_20 [4];
+       undefined4 local_10;
+       undefined4 uStack_c;
+       bVar1 = FindAttribute(this,param_1,local_20);
+       if (bVar1) {
+         uVar2 = *(undefined1 *)((int)local_20[0] + 3);
+       }
+       else {
+         ...
+  0x169eb0 AttributeSet::LookupMatrix
+     callers: 
+     callees: FindAttribute
+     undefined8 * __thiscall AttributeSet::LookupMatrix(AttributeSet *this,char *param_1,bool *param_2)
+     {
+       bool bVar1;
+       undefined8 *puVar2;
+       AttributeValue local_30 [4];
+       undefined4 local_20;
+       undefined4 uStack_1c;
+       undefined4 local_10;
+       undefined4 uStack_c;
+       bVar1 = FindAttribute(this,param_1,local_30);
+       if (bVar1) {
+         if (param_2 != (bool *)0x0) {
+         ...
+  0x169fe0 AttributeSet::LookupSymbol
+     callers: 
+     callees: FindAttribute
+     undefined4 __thiscall AttributeSet::LookupSymbol(AttributeSet *this,char *param_1,bool *param_2)
+     {
+       bool bVar1;
+       undefined4 uVar2;
+       AttributeValue local_30 [4];
+       undefined4 local_20;
+       undefined4 uStack_1c;
+       undefined4 local_10;
+       undefined4 uStack_c;
+       bVar1 = FindAttribute(this,param_1,local_30);
+       if (bVar1) {
+         if (param_2 != (bool *)0x0) {
+         ...
+  0x16a0a8 AttributeSet::LookupBoolArray
+     callers: 
+     callees: FindAttribute
+     short * __thiscall
+     AttributeSet::LookupBoolArray(AttributeSet *this,char *param_1,uint *param_2,bool *param_3)
+     {
+       bool bVar1;
+       short *psVar2;
+       AttributeValue local_30 [4];
+       undefined4 local_20;
+       undefined4 uStack_1c;
+       undefined4 local_10;
+       undefined4 uStack_c;
+       bVar1 = FindAttribute(this,param_1,local_30);
+       if (bVar1) {
+         ...
+  0x16a118 AttributeSet::LookupIntArray
+     callers: 
+     callees: FindAttribute
+     short * __thiscall
+     AttributeSet::LookupIntArray(AttributeSet *this,char *param_1,uint *param_2,bool *param_3)
+     {
+       bool bVar1;
+       short *psVar2;
+       AttributeValue local_30 [4];
+       undefined4 local_20;
+       undefined4 uStack_1c;
+       undefined4 local_10;
+       undefined4 uStack_c;
+       bVar1 = FindAttribute(this,param_1,local_30);
+       if (bVar1) {
+         ...
+  0x16a188 AttributeSet::LookupUIntArray
+     callers: 
+     callees: FindAttribute
+     short * __thiscall
+     AttributeSet::LookupUIntArray(AttributeSet *this,char *param_1,uint *param_2,bool *param_3)
+     {
+       bool bVar1;
+       short *psVar2;
+       AttributeValue local_30 [4];
+       undefined4 local_20;
+       undefined4 uStack_1c;
+       undefined4 local_10;
+       undefined4 uStack_c;
+       bVar1 = FindAttribute(this,param_1,local_30);
+       if (bVar1) {
+         ...
+  0x16a1f8 AttributeSet::LookupFloatArray
+     callers: 
+     callees: FindAttribute
+     short * __thiscall
+     AttributeSet::LookupFloatArray(AttributeSet *this,char *param_1,uint *param_2,bool *param_3)
+     {
+       bool bVar1;
+       short *psVar2;
+       AttributeValue local_30 [4];
+       undefined4 local_20;
+       undefined4 uStack_1c;
+       undefined4 local_10;
+       undefined4 uStack_c;
+       bVar1 = FindAttribute(this,param_1,local_30);
+       if (bVar1) {
+         ...
+  0x16a268 AttributeSet::LookupVectorArray
+     callers: 
+     callees: FindAttribute
+     undefined4 __thiscall
+     AttributeSet::LookupVectorArray(AttributeSet *this,char *param_1,uint *param_2,bool *param_3)
+     {
+       bool bVar1;
+       undefined4 uVar2;
+       AttributeValue local_30 [4];
+       undefined4 local_20;
+       undefined4 uStack_1c;
+       undefined4 local_10;
+       undefined4 uStack_c;
+       bVar1 = FindAttribute(this,param_1,local_30);
+       if (bVar1) {
+         ...
+  0x16a2c8 AttributeSet::LookupMatrixArray
+     callers: 
+     callees: FindAttribute
+     undefined4 __thiscall
+     AttributeSet::LookupMatrixArray(AttributeSet *this,char *param_1,uint *param_2,bool *param_3)
+     {
+       bool bVar1;
+       undefined4 uVar2;
+       AttributeValue local_30 [4];
+       undefined4 local_20;
+       undefined4 uStack_1c;
+       undefined4 local_10;
+       undefined4 uStack_c;
+       bVar1 = FindAttribute(this,param_1,local_30);
+       if (bVar1) {
+         ...
+  0x16a328 AttributeSet::AddBool
+     callers: 
+     callees: Alloc, Count, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddBool
+               (undefined4 *param_1,char *param_2,undefined8 param_3,ulong param_4,undefined8 param_5)
+     {
+       uint uVar1;
+       undefined1 auStack_a0 [4];
+       undefined4 local_9c;
+       char *local_90;
+       AttributeValue local_8c;
+       void *local_88;
+       char *local_80;
+       AttributeValue local_70;
+         ...
+  0x16a448 AttributeSet::AddInt
+     callers: 
+     callees: Alloc, Count, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddInt
+               (undefined4 *param_1,char *param_2,undefined8 param_3,ulong param_4,undefined8 param_5)
+     {
+       uint uVar1;
+       undefined1 auStack_a0 [4];
+       undefined4 local_9c;
+       char *local_90;
+       AttributeValue local_8c;
+       void *local_88;
+       char *local_80;
+       AttributeValue local_70;
+         ...
+  0x16a568 AttributeSet::AddUInt
+     callers: 
+     callees: Alloc, Count, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddUInt
+               (undefined4 *param_1,char *param_2,undefined8 param_3,ulong param_4,undefined8 param_5)
+     {
+       uint uVar1;
+       undefined1 auStack_a0 [4];
+       undefined4 local_9c;
+       char *local_90;
+       AttributeValue local_8c;
+       void *local_88;
+       char *local_80;
+       AttributeValue local_70;
+         ...
+  0x16a688 AttributeSet::AddFloat
+     callers: 
+     callees: Alloc, Count, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddFloat
+               (undefined8 *param_1,undefined4 *param_2,char *param_3,undefined8 param_4,ulong param_5,
+               undefined8 param_6)
+     {
+       uint uVar1;
+       undefined1 auStack_a0 [4];
+       undefined4 local_9c;
+       char *local_90;
+       AttributeValue local_8c;
+       undefined8 *local_88;
+       char *local_80;
+         ...
+  0x16a7a8 AttributeSet::AddVector
+     callers: 
+     callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddVector
+               (undefined4 *param_1,char *param_2,long param_3,ulong param_4,undefined8 param_5)
+     {
+       int **ppiVar1;
+       short sVar2;
+       uint uVar3;
+       undefined8 *puVar4;
+       int *attrCollection;
+       int *local_d0 [4];
+       char *local_c0 [4];
+       int *local_b0;
+         ...
+  0x16a930 AttributeSet::AddMatrix
+     callers: 
+     callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddMatrix
+               (undefined4 *param_1,char *param_2,long param_3,ulong param_4,undefined8 param_5)
+     {
+       int **ppiVar1;
+       short sVar2;
+       uint uVar3;
+       undefined8 *puVar4;
+       int *attrCollection;
+       int *local_d0 [4];
+       char *local_c0 [4];
+       int *local_b0;
+         ...
+  0x16aab8 AttributeSet::AddString
+     callers: 
+     callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddString
+               (undefined4 *param_1,char *param_2,undefined8 param_3,ulong param_4,undefined8 param_5)
+     {
+       uint uVar1;
+       int *attrCollection;
+       int *local_d0 [4];
+       char *local_c0 [4];
+       int *local_b0;
+       undefined1 auStack_a0 [4];
+       undefined4 local_9c;
+       char *local_90;
+         ...
+  0x16ac08 AttributeSet::AddSymbol
+     callers: 
+     callees: Alloc, Count, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddSymbol
+               (undefined4 *param_1,char *param_2,undefined8 param_3,ulong param_4,undefined8 param_5)
+     {
+       uint uVar1;
+       undefined1 auStack_a0 [4];
+       undefined4 local_9c;
+       char *local_90;
+       AttributeValue local_8c;
+       void *local_88;
+       char *local_80;
+       AttributeValue local_70;
+         ...
+  0x16ad28 AttributeSet::AddStruct
+     callers: 
+     callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, InitializeExtensionType, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddStruct
+               (undefined4 *param_1,char *param_2,undefined8 param_3,ulong param_4,long param_5)
+     {
+       int **ppiVar1;
+       AttributeSystem *pAVar2;
+       short sVar3;
+       uint uVar4;
+       int *attrCollection;
+       int *local_e0 [4];
+       char *local_d0 [4];
+       int *local_c0;
+         ...
+  0x16aed8 AttributeSet::AddBoolArray
+     callers: 
+     callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddBoolArray
+               (undefined4 *param_1,char *param_2,long param_3,ulong param_4,long param_5)
+     {
+       int **ppiVar1;
+       short sVar2;
+       uint uVar3;
+       undefined8 *puVar4;
+       int *attrCollection;
+       int *local_e0 [4];
+       char *local_d0 [4];
+       int *local_c0;
+         ...
+  0x16b068 AttributeSet::AddIntArray
+     callers: 
+     callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddIntArray(undefined4 *param_1,char *param_2,long param_3,ulong param_4,long param_5)
+     {
+       int **ppiVar1;
+       short sVar2;
+       uint uVar3;
+       undefined8 *puVar4;
+       int *attrCollection;
+       int *local_e0 [4];
+       char *local_d0 [4];
+       int *local_c0;
+       undefined1 auStack_b0 [4];
+         ...
+  0x16b1f8 AttributeSet::AddUIntArray
+     callers: 
+     callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddUIntArray
+               (undefined4 *param_1,char *param_2,long param_3,ulong param_4,long param_5)
+     {
+       int **ppiVar1;
+       short sVar2;
+       uint uVar3;
+       undefined8 *puVar4;
+       int *attrCollection;
+       int *local_e0 [4];
+       char *local_d0 [4];
+       int *local_c0;
+         ...
+  0x16b388 AttributeSet::AddFloatArray
+     callers: 
+     callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddFloatArray
+               (undefined4 *param_1,char *param_2,long param_3,ulong param_4,long param_5)
+     {
+       int **ppiVar1;
+       short sVar2;
+       uint uVar3;
+       undefined8 *puVar4;
+       int *attrCollection;
+       int *local_e0 [4];
+       char *local_d0 [4];
+       int *local_c0;
+         ...
+  0x16b518 AttributeSet::AddVectorArray
+     callers: 
+     callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddVectorArray
+               (undefined4 *param_1,char *param_2,long param_3,ulong param_4,long param_5)
+     {
+       int **ppiVar1;
+       short sVar2;
+       uint uVar3;
+       undefined8 *puVar4;
+       int *attrCollection;
+       int *local_e0 [4];
+       char *local_d0 [4];
+       int *local_c0;
+         ...
+  0x16b6a8 AttributeSet::AddMatrixArray
+     callers: 
+     callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+     undefined4
+     AttributeSet::AddMatrixArray
+               (undefined4 *param_1,char *param_2,long param_3,ulong param_4,long param_5)
+     {
+       int **ppiVar1;
+       short sVar2;
+       uint uVar3;
+       undefined8 *puVar4;
+       int *attrCollection;
+       int *local_e0 [4];
+       char *local_d0 [4];
+       int *local_c0;
+         ...
+  0x16b838 AttributeSet::Remove
+     callers: 
+     callees: FUN_0016eeb0, FastFree, Free, LoadCollection, Size
+     undefined4 __thiscall AttributeSet::Remove(AttributeSet *this,char *param_1)
+     {
+       int iVar1;
+       int iVar2;
+       uint uVar3;
+       int *piVar4;
+       int *piVar5;
+       int *piVar6;
+       int *piVar7;
+       int *piVar8;
+       int *piVar9;
+       int *piVar10;
+         ...
+  0x16c458 Matrix_AttribByteOffsetParserFunc
+     callers: 
+     callees: FUN_0016bdd8, Float_AttribByteOffsetParserFunc
+     undefined8
+     Matrix_AttribByteOffsetParserFunc
+               (undefined8 param_1,undefined8 param_2,char *param_3,int param_4,uint param_5,
+               undefined8 param_6,undefined8 param_7,int param_8)
+     {
+       uint uVar1;
+       ulong *puVar2;
+       ulong uVar3;
+       ulong uVar4;
+       ulong uVar5;
+       uint uVar6;
+       uint uVar7;
+         ...
+  0x16c5e8 Symbol_AttribByteOffsetParserFunc
+     callers: 
+     callees: NameLookup
+     undefined8
+     Symbol_AttribByteOffsetParserFunc(undefined8 param_1,undefined8 param_2,char *param_3,int param_4)
+     {
+       uint uVar1;
+       ulong *puVar2;
+       long lVar3;
+       int in_t3_lo;
+       uint uVar4;
+       undefined4 local_40 [4];
+       undefined4 local_30;
+       undefined4 uStack_2c;
+       undefined4 local_20;
+         ...
+  0x16cc20 AttributeSystem::Reset
+     callers: 
+     callees: 
+     void AttributeSystem::Reset(void)
+     {
+       return;
+     }
+
+====================================================================================================
+
+## window 48: Xbox 0xad600 RigidBody::ForceToSleep .. 0xad690 RigidBody::TempGetHeightInformation   (PS2 0x1fd170 .. 0x1f6ae0)
+
+Xbox functions in the window, address order:
+  0xad630 UNNAMED
+     callers: FUN_0004f510, FUN_0005c1a0, FUN_000a0020, FUN_000b3b80, FUN_000c1bf0, FUN_000c2c70, FUN_000c5be0, FUN_0011b820
+     chain: FUN_000a0020@a0020 <- RLightning::AddRoundedBolt@a0500 | FUN_000c2c70@c2c70 <- WCollisionMgr::GetInstanceStripList@c4120 | FUN_000c5be0@c5be0 <- WGrid::FindNodes@c64b0
+     callees: FastFree
+     void FUN_000ad630(void *param_1,int param_2)
+     {
+       if (param_1 != (void *)0x0) {
+         UMemory::FastFree(param_1,param_2 * 4);
+       }
+       return;
+     }
+  0xad650 UNNAMED
+     callers: FUN_000aec10
+     chain: FUN_000aec10@aec10 <- RigidBody::CollideWithObject@b0510
+     callees: 
+     float10 FUN_000ad650(float param_1,float param_2,float param_3)
+     {
+       float10 fVar1;
+       fVar1 = (float10)param_1;
+       if (fVar1 < (float10)0.0) {
+         fVar1 = -fVar1;
+       }
+       fVar1 = (fVar1 * (float10)param_3) / (float10)param_2;
+       if ((float10)1.0 <= fVar1) {
+         fVar1 = (float10)1.0;
+       }
+       return fVar1;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1f6e70 Clear64ByteData
+     callers: RigidBody
+     callees: 
+     void Clear64ByteData(void *param_1,int numBytes)
+     {
+       undefined4 in_zero_lo;
+       undefined4 in_zero_hi;
+       undefined4 in_zero_udw;
+       undefined4 in_register_0000000c;
+       do {
+         numBytes = numBytes + -0x40;
+         *(undefined4 *)param_1 = in_zero_lo;
+         *(undefined4 *)((int)param_1 + 4) = in_zero_hi;
+         *(undefined4 *)((int)param_1 + 8) = in_zero_udw;
+         *(undefined4 *)((int)param_1 + 0xc) = in_register_0000000c;
+         ...
+  0x1f77e0 RigidBody::~RigidBody
+     callers: ReleaseRigidBodySlot
+     callees: __builtin_delete, ~WWorldPos
+     void RigidBody::~RigidBody(long param_1,ulong param_2)
+     {
+       int iVar1;
+       long lVar2;
+       int iVar3;
+       int iVar4;
+       iVar3 = 0;
+       iVar4 = (int)param_1;
+       *(undefined1 *)(iVar4 + 0x6d) = 0;
+       iVar1 = *(int *)(iVar4 + 0x5c);
+       while( true ) {
+         lVar2 = (long)*(int *)(iVar1 + iVar3 * 4 + 0x380);
+         ...
+  0x1f7a80 RigidBody::GetBodyTensorMatrix4
+     callers: ResetObject, RigidBody, SetOrientation
+     callees: 
+     void RigidBody::GetBodyTensorMatrix4(int param_1,undefined4 *param_2)
+     {
+       undefined1 auVar1 [16];
+       undefined4 uVar2;
+       undefined4 uVar3;
+       undefined4 uVar4;
+       undefined1 in_vf0 [16];
+       uVar4 = *(undefined4 *)(param_1 + 0x3c);
+       uVar2 = *(undefined4 *)(param_1 + 0x1c);
+       uVar3 = *(undefined4 *)(param_1 + 0x2c);
+       auVar1 = _sqc2(in_vf0);
+       *(undefined1 (*) [16])(param_2 + 0xc) = auVar1;
+         ...
+  0x1f7ac0 RigidBody::SetOrientMat
+     callers: ResetObject, RigidBody
+     callees: VU0_m4toquat
+     void RigidBody::SetOrientMat(float *param_1,float *param_2)
+     {
+       VU0_m4toquat(param_2,param_1);
+       return;
+     }
+  0x1f7ae8 RigidBody::StoreBodyMatrix
+     callers: ResetObject, RigidBody, SetOrientation
+     callees: 
+     void RigidBody::StoreBodyMatrix(ulong param_1,uint param_2,ulong param_3,ulong param_4)
+     {
+       uint uVar1;
+       uint uVar2;
+       uint uVar3;
+       ulong *puVar4;
+       ulong in_v1;
+       ulong uVar5;
+       ulong uVar6;
+       ulong uVar7;
+       ulong uVar8;
+       uVar3 = *(uint *)((int)param_1 + 0x5c);
+         ...
+  0x1f7b70 RigidBody::StoreInvWorldTensor
+     callers: ResetObject, RigidBody, SetOrientation
+     callees: 
+     void RigidBody::StoreInvWorldTensor(ulong param_1,uint param_2,ulong param_3,ulong param_4)
+     {
+       uint uVar1;
+       uint uVar2;
+       int iVar3;
+       ulong *puVar4;
+       ulong in_v1;
+       ulong uVar5;
+       ulong uVar6;
+       ulong uVar7;
+       ulong uVar8;
+       iVar3 = *(int *)((int)param_1 + 0x5c);
+         ...
+  0x1f7c00 RigidBody::GetOrientToGround
+     callers: CollideWithGround, Simulate
+     callees: 
+     float __thiscall RigidBody::GetOrientToGround(RigidBody *this)
+     {
+       int iVar1;
+       uint uVar2;
+       ulong *puVar3;
+       ulong uStack_9;
+       uVar2 = (uint)&uStack_9 & 7;
+       puVar3 = (ulong *)((int)&uStack_9 - uVar2);
+       *puVar3 = *puVar3 & -1L << (uVar2 + 1) * 8 | 0x3f80000000000000U >> (7 - uVar2) * 8;
+       iVar1 = *(int *)&this->field_0x5c;
+       return *(float *)(iVar1 + 0x10) * 0.0 + *(float *)(iVar1 + 0x14) * 1.0 +
+              *(float *)(iVar1 + 0x18) * 0.0;
+         ...
+  0x1f81b8 RigidBody::GetLocalMomentum
+     callers: 
+     callees: 
+     undefined8 RigidBody::GetLocalMomentum(undefined8 param_1,int param_2)
+     {
+       undefined1 (*pauVar1) [16];
+       uint uVar2;
+       ulong *puVar3;
+       undefined1 auVar4 [16];
+       uint uVar5;
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 auVar8 [16];
+       undefined1 auVar9 [16];
+       undefined1 in_vf0 [16];
+         ...
+  0x1f8250 RigidBody::GetLocalAngularMomentum
+     callers: ProcessSubmarinePhysics, TwoWheelStunt
+     callees: 
+     undefined8 RigidBody::GetLocalAngularMomentum(undefined8 param_1,int param_2)
+     {
+       undefined1 (*pauVar1) [16];
+       uint uVar2;
+       ulong *puVar3;
+       undefined1 auVar4 [16];
+       uint uVar5;
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 auVar8 [16];
+       undefined1 auVar9 [16];
+       undefined1 in_vf0 [16];
+         ...
+  0x1f82e8 RigidBody::GetLocalVelocity
+     callers: ProcessSubmarinePhysics, UpdateSpringMassSystem
+     callees: 
+     undefined8 RigidBody::GetLocalVelocity(undefined8 param_1,int param_2)
+     {
+       undefined1 (*pauVar1) [16];
+       uint uVar2;
+       ulong *puVar3;
+       undefined1 auVar4 [16];
+       uint uVar5;
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 auVar8 [16];
+       undefined1 auVar9 [16];
+       undefined1 in_vf0 [16];
+         ...
+  0x1f8380 RigidBody::GetLocalAngularVelocity
+     callers: AddWheelForces, ProcessSubmarinePhysics, UpdateSpringMassSystem
+     callees: 
+     undefined8 RigidBody::GetLocalAngularVelocity(undefined8 param_1,int param_2)
+     {
+       undefined1 (*pauVar1) [16];
+       uint uVar2;
+       ulong *puVar3;
+       undefined1 auVar4 [16];
+       uint uVar5;
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 auVar8 [16];
+       undefined1 auVar9 [16];
+       undefined1 in_vf0 [16];
+         ...
+  0x1f8418 RigidBody::ConvertToLocalAngularMomentum
+     callers: GenerateImpulse
+     callees: 
+     void RigidBody::ConvertToLocalAngularMomentum(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 (*pauVar1) [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined1 in_vf0 [16];
+       pauVar1 = *(undefined1 (**) [16])(param_1 + 0x5c);
+       auVar3 = _pextlw(SUB128(*(undefined1 (*) [12])pauVar1[1],0),SUB168(*pauVar1,0));
+       auVar4 = _pextuw(pauVar1[1],*pauVar1);
+         ...
+  0x1f8498 RigidBody::ConvertFromLocalAngularMomentum
+     callers: GenerateImpulse
+     callees: 
+     void RigidBody::ConvertFromLocalAngularMomentum(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 (*pauVar1) [16];
+       undefined1 in_vf0 [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       pauVar1 = *(undefined1 (**) [16])(param_1 + 0x5c);
+       auVar2 = _lqc2(*(undefined1 (*) [16])param_2);
+       auVar3 = _lqc2(*pauVar1);
+         ...
+  0x1f84d0 RigidBody::ConvertLocalToWorld
+     callers: AddSnowmobileForces, AddWheelForces, GenerateImpulse, ModifyLevers, ProcessSubmarinePhysics
+     callees: 
+     void RigidBody::ConvertLocalToWorld(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 (*pauVar1) [16];
+       undefined1 in_vf0 [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       pauVar1 = *(undefined1 (**) [16])(param_1 + 0x5c);
+       auVar2 = _lqc2(*(undefined1 (*) [16])param_2);
+       auVar3 = _lqc2(*pauVar1);
+         ...
+  0x1f8508 RigidBody::ConvertWorldToLocal
+     callers: AddSnowmobileForces, AddWheelForces, ApplyDamage, GenerateImpulse, ModifyLevers, ProcessSubmarinePhysics
+     callees: 
+     void RigidBody::ConvertWorldToLocal(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 (*pauVar1) [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined1 in_vf0 [16];
+       pauVar1 = *(undefined1 (**) [16])(param_1 + 0x5c);
+       auVar3 = _pextlw(SUB128(*(undefined1 (*) [12])pauVar1[1],0),SUB168(*pauVar1,0));
+       auVar4 = _pextuw(pauVar1[1],*pauVar1);
+         ...
+  0x1f87a8 RigidBody::ResolveTorque4
+     callers: AddSnowmobileForces
+     callees: 
+     void RigidBody::ResolveTorque4(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 auVar1 [16];
+       undefined1 auVar2 [16];
+       if (*(char *)(param_1 + 0x6e) != '\x03') {
+         *(undefined1 *)(param_1 + 0x6e) = 2;
+         auVar1 = _lqc2(*(undefined1 (*) [16])param_2);
+         auVar2 = _lqc2(*(undefined1 (*) [16])(param_1 + 0x70));
+         _lqc2(*(undefined1 (*) [16])(param_1 + 0x70));
+         auVar1 = _vadd(auVar1,auVar2);
+         auVar1 = _sqc2(auVar1);
+         *(undefined1 (*) [16])(param_1 + 0x70) = auVar1;
+         ...
+  0x1f87d8 RigidBody::ResolveMassScaledForce
+     callers: ApplyInitialForcesAndTorques, ProcessSubmarinePhysics
+     callees: 
+     void RigidBody::ResolveMassScaledForce(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 auVar1 [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       if (*(char *)(param_1 + 0x6e) != '\x03') {
+         *(undefined1 *)(param_1 + 0x6e) = 2;
+         *(uint *)(param_1 + 0x7c) = *(uint *)(param_1 + 0x7c) & 0xfffffffd;
+         auVar1 = _lqc2(*(undefined1 (*) [16])param_2);
+         auVar2 = _lqc2(*(undefined1 (*) [16])(param_1 + 0x60));
+         _lqc2(*(undefined1 (*) [16])(param_1 + 0x60));
+         auVar3 = _qmtc2(*(undefined4 *)(param_1 + 0x4c));
+         ...
+  0x1f8830 RigidBody::ResolveMassScaledForce4
+     callers: AddSimpleWheelForces, AddSnowmobileForces, AddWheelForces
+     callees: 
+     void RigidBody::ResolveMassScaledForce4(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 auVar1 [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       if (*(char *)(param_1 + 0x6e) != '\x03') {
+         *(undefined1 *)(param_1 + 0x6e) = 2;
+         *(uint *)(param_1 + 0x7c) = *(uint *)(param_1 + 0x7c) & 0xfffffffd;
+         auVar1 = _lqc2(*(undefined1 (*) [16])param_2);
+         auVar2 = _lqc2(*(undefined1 (*) [16])(param_1 + 0x60));
+         _lqc2(*(undefined1 (*) [16])(param_1 + 0x60));
+         auVar3 = _qmtc2(*(undefined4 *)(param_1 + 0x4c));
+         ...
+  0x1f8888 RigidBody::ResolveMassScaledTorque
+     callers: AddWheelForces, ProcessSubmarinePhysics
+     callees: 
+     void RigidBody::ResolveMassScaledTorque(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 auVar1 [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       if (*(char *)(param_1 + 0x6e) != '\x03') {
+         *(undefined1 *)(param_1 + 0x6e) = 2;
+         auVar1 = _lqc2(*(undefined1 (*) [16])param_2);
+         auVar2 = _lqc2(*(undefined1 (*) [16])(param_1 + 0x70));
+         _lqc2(*(undefined1 (*) [16])(param_1 + 0x70));
+         auVar3 = _qmtc2(*(undefined4 *)(param_1 + 0x4c));
+         auVar1 = _vmulbc(auVar1,auVar3);
+         ...
+  0x1f8908 RigidBody::UpdateZonalInfo
+     callers: ResetObject, RigidBody, Timestep_CollectVU0data
+     callees: 
+     void RigidBody::UpdateZonalInfo(int param_1)
+     {
+       float fVar1;
+       float fVar2;
+       float fVar3;
+       fVar2 = *(float *)(param_1 + 0x10) * 0.2;
+       fVar3 = 0.5;
+       if (fVar2 < 0.0) {
+         fVar3 = -0.5;
+       }
+       fVar1 = 0.5;
+       *(int *)(*(int *)(param_1 + 0x5c) + 0x4f0) = (int)(fVar3 + fVar2);
+         ...
+  0x1f89e0 Timestep_LoadAndStartVU0
+     callers: UpdatePositionAndOrientation
+     callees: Timestep_CollectVU0data, memset
+     void Timestep_LoadAndStartVU0
+                    (float param_1,undefined (*param_2) [16],undefined (*param_3) [16],undefined8 param_4
+                    ,undefined8 param_5,undefined8 param_6)
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       ulong uVar3;
+       int iVar4;
+       undefined1 auVar5 [8];
+       undefined1 auVar6 [16];
+       undefined (*pauVar7) [16];
+       undefined1 auVar8 [16];
+         ...
+  0x1f8cf0 RigidBody::Timestep_CollectVU0data
+     callers: SimulateGame, Timestep_LoadAndStartVU0
+     callees: ControlSleep, UpdateZonalInfo
+     void RigidBody::Timestep_CollectVU0data(void)
+     {
+       undefined4 *puVar1;
+       int iVar2;
+       undefined1 auVar3 [16];
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined1 (*pauVar7) [16];
+       undefined1 (*pauVar8) [16];
+       undefined1 auVar9 [16];
+       float fVar10;
+         ...
+  0x1f8fc8 RigidBody::Debug
+     callers: DebugObject
+     callees: 
+     void RigidBody::Debug(void)
+     {
+       return;
+     }
+  0x1f8fd0 RigidBody::UpdatePositionAndOrientation
+     callers: SimulateGame
+     callees: Timestep_LoadAndStartVU0
+     void RigidBody::UpdatePositionAndOrientation
+                    (float param_1,undefined (*param_2) [16],undefined8 param_3,undefined8 param_4,
+                    undefined8 param_5,undefined8 param_6)
+     {
+       Timestep_LoadAndStartVU0
+                 (param_1,param_2,*(undefined (**) [16])(param_2[5] + 0xc),param_4,param_5,param_6);
+       return;
+     }
+  0x1f8ff0 RigidBody::Resolve_CollectVU0data
+     callers: ResolveLeverForces, SimulateGame
+     callees: ECollision, operator_new
+     void RigidBody::Resolve_CollectVU0data(void)
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       int iVar3;
+       int iVar4;
+       float fVar5;
+       undefined4 extraout_a2_lo;
+       undefined4 extraout_a2_hi;
+       undefined1 auVar6 [16];
+       float fVar7;
+       undefined4 in_vf22w;
+         ...
+  0x1f91e8 RigidBody::ResolveLeverForces
+     callers: CollideWithGround
+     callees: GetOwner, Resolve_CollectVU0data
+     void RigidBody::ResolveLeverForces
+                    (undefined (*param_1) [16],int param_2,undefined (*param_3) [16],
+                    undefined (*param_4) [16],undefined (*param_5) [16])
+     {
+       int iVar1;
+       int iVar2;
+       undefined1 (*pauVar3) [16];
+       float fVar4;
+       float fVar5;
+       undefined4 uVar6;
+       undefined1 auVar7 [16];
+       iVar1 = DAT_00339178;
+         ...
+  0x1f9500 RigidBody::CollideWithGround
+     callers: SimulateGame
+     callees: GetOrientToGround, GetOwner, ResolveLeverForces, TempGetHeightInformation
+     void RigidBody::CollideWithGround(undefined (*param_1) [16])
+     {
+       undefined *puVar1;
+       char cVar2;
+       uint uVar3;
+       uint uVar4;
+       int iVar5;
+       long lVar6;
+       ulong uVar7;
+       int iVar8;
+       ulong uVar9;
+       ulong uVar10;
+         ...
+  0x1f98e8 RigidBody::ModifyLevers
+     callers: ResolveCollision
+     callees: ConvertLocalToWorld, ConvertWorldToLocal
+     void RigidBody::ModifyLevers
+                    (int param_1,int param_2,undefined (*param_3) [16],undefined (*param_4) [16],
+                    undefined (*param_5) [16],undefined (*param_6) [16],long param_7)
+     {
+       char cVar1;
+       bool bVar2;
+       bool bVar3;
+       float fVar4;
+       float fVar5;
+       float fVar6;
+       undefined1 in_vf0 [16];
+       undefined1 auVar7 [16];
+         ...
+  0x1f9b40 RigidBody::ScaleObjObjForces
+     callers: ResolveCollision
+     callees: 
+     void RigidBody::ScaleObjObjForces
+                    (float param_1,float param_2,float param_3,int param_4,int param_5,
+                    undefined (*param_6) [16],undefined (*param_7) [16])
+     {
+       float fVar1;
+       float fVar2;
+       float fVar3;
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 local_20 [16];
+         ...
+  0x1f9d98 RigidBody::ResolveCollision
+     callers: CollideWithObject
+     callees: GetHitPoints, GetOwner, ModifyLevers, PlayAnimation, ScaleObjObjForces
+     undefined8
+     RigidBody::ResolveCollision
+               (float param_1,int param_2,int param_3,int param_4,undefined (*param_5) [16],
+               undefined (*param_6) [16],uint param_7)
+     {
+       uint uVar1;
+       int iVar2;
+       ulong *puVar3;
+       bool bVar4;
+       bool bVar5;
+       bool bVar6;
+       bool bVar7;
+         ...
+  0x1fade8 RigidBody::ResolveWorldOBBCollision
+     callers: CollideWithWorld
+     callees: 
+     undefined8
+     RigidBody::ResolveWorldOBBCollision
+               (float param_1,undefined4 param_2,int param_3,undefined (*param_4) [16],
+               undefined (*param_5) [16],uint param_6,undefined (*param_7) [16])
+     {
+       byte bVar1;
+       uint uVar2;
+       uint uVar3;
+       int iVar4;
+       ulong *puVar5;
+       bool bVar6;
+       ulong uVar7;
+         ...
+  0x1fc198 RigidBody::CalculateAndApplyWorldDamage
+     callers: CollideWithWorld
+     callees: GetOwner
+     void RigidBody::CalculateAndApplyWorldDamage(float param_1,int param_2,undefined8 param_3)
+     {
+       char cVar1;
+       bool bVar2;
+       int iVar3;
+       long lVar4;
+       float fVar5;
+       fVar5 = 0.05;
+       bVar2 = *(char *)(param_2 + 0x6d) < '\x04';
+       if (bVar2) {
+         fVar5 = 0.2;
+       }
+         ...
+  0x1fc2f0 RigidBody::CollideWithWorld
+     callers: SimulateGame
+     callees: CalculateAndApplyWorldDamage, CheckOBBOverlapAndFindIntersection, ECollision, FUN_00218440, FUN_00218668, FUN_002187f0, FastAlloc, FastFree, GenerateImpulse, GetOwner, GetRenderInstance, GetSceneObjFromInstance, GetWorldNormal, ProcessStimuli, Progra
+     void RigidBody::CollideWithWorld(ulong param_1)
+     {
+       undefined1 *puVar1;
+       byte bVar2;
+       undefined1 (*pauVar3) [16];
+       bool bVar4;
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined8 *puVar7;
+       undefined8 *puVar8;
+       bool bVar9;
+       int iVar10;
+         ...
+
+====================================================================================================
+
+## window 49: Xbox 0xb0b20 RigidBody::RigidBody .. 0xb1e10 SimpleRigidBody::SimpleRigidBody   (PS2 0x1f6e98 .. 0x1fd448)
+
+Xbox functions in the window, address order:
+  0xb0ec0 UNNAMED
+     callers: SimulateGame
+     chain: Simulation::SimulateGame@b4a60
+     callees: BuildScale, ControlSleep, FUN_000ad4a0, FUN_00115af0, FUN_00115ba0, FUN_00115f30, Util_Bound, VU0_MATRIX4_mult, VU0_MATRIX4_transpose, VU0_MATRIX4_vect3rotate, VU0_quattom4, VU0_v4scale, VU0_v4scaleadd
+     void __fastcall FUN_000b0ec0(MATRIX4 *param_1)
+     {
+       MATRIX4 *pMVar1;
+       float (*pafVar2) [4];
+       float (*pafVar3) [4];
+       float fVar4;
+       float fVar5;
+       float fVar6;
+       float fVar7;
+       int iVar8;
+       float *pfVar9;
+       undefined4 *puVar10;
+       float *pfVar11;
+       undefined4 *puVar12;
+         ...
+  0xb13a0 UNNAMED
+     callers: FUN_000c1bf0, FUN_000c2970
+     chain: FUN_000c2970@c2970 <- WCollisionMgr::GetObjectLists@c36a0 | FUN_000c1bf0@c1bf0 <- FUN_000c34c0@c34c0 <- WCollisionMgr::GetObjectLists@c36a0
+     callees: FUN_00013630, FUN_00013700, FUN_001325ad
+     void FUN_000b13a0(void)
+     {
+       code *pcVar1;
+       char *pcVar2;
+       char *pcVar3;
+       undefined1 local_50 [4];
+       undefined1 local_4c;
+       undefined4 local_3c;
+       undefined4 local_38;
+       undefined **local_34 [10];
+       undefined4 uStack_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       local_4 = 0xffffffff;
+         ...
+  0xb1420 (named) CollideWithWorld
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1f77e0 RigidBody::~RigidBody
+     callers: ReleaseRigidBodySlot
+     callees: __builtin_delete, ~WWorldPos
+     void RigidBody::~RigidBody(long param_1,ulong param_2)
+     {
+       int iVar1;
+       long lVar2;
+       int iVar3;
+       int iVar4;
+       iVar3 = 0;
+       iVar4 = (int)param_1;
+       *(undefined1 *)(iVar4 + 0x6d) = 0;
+       iVar1 = *(int *)(iVar4 + 0x5c);
+       while( true ) {
+         lVar2 = (long)*(int *)(iVar1 + iVar3 * 4 + 0x380);
+         ...
+  0x1f7a80 RigidBody::GetBodyTensorMatrix4
+     callers: ResetObject, RigidBody, SetOrientation
+     callees: 
+     void RigidBody::GetBodyTensorMatrix4(int param_1,undefined4 *param_2)
+     {
+       undefined1 auVar1 [16];
+       undefined4 uVar2;
+       undefined4 uVar3;
+       undefined4 uVar4;
+       undefined1 in_vf0 [16];
+       uVar4 = *(undefined4 *)(param_1 + 0x3c);
+       uVar2 = *(undefined4 *)(param_1 + 0x1c);
+       uVar3 = *(undefined4 *)(param_1 + 0x2c);
+       auVar1 = _sqc2(in_vf0);
+       *(undefined1 (*) [16])(param_2 + 0xc) = auVar1;
+         ...
+  0x1f7ac0 RigidBody::SetOrientMat
+     callers: ResetObject, RigidBody
+     callees: VU0_m4toquat
+     void RigidBody::SetOrientMat(float *param_1,float *param_2)
+     {
+       VU0_m4toquat(param_2,param_1);
+       return;
+     }
+  0x1f7ae8 RigidBody::StoreBodyMatrix
+     callers: ResetObject, RigidBody, SetOrientation
+     callees: 
+     void RigidBody::StoreBodyMatrix(ulong param_1,uint param_2,ulong param_3,ulong param_4)
+     {
+       uint uVar1;
+       uint uVar2;
+       uint uVar3;
+       ulong *puVar4;
+       ulong in_v1;
+       ulong uVar5;
+       ulong uVar6;
+       ulong uVar7;
+       ulong uVar8;
+       uVar3 = *(uint *)((int)param_1 + 0x5c);
+         ...
+  0x1f7b70 RigidBody::StoreInvWorldTensor
+     callers: ResetObject, RigidBody, SetOrientation
+     callees: 
+     void RigidBody::StoreInvWorldTensor(ulong param_1,uint param_2,ulong param_3,ulong param_4)
+     {
+       uint uVar1;
+       uint uVar2;
+       int iVar3;
+       ulong *puVar4;
+       ulong in_v1;
+       ulong uVar5;
+       ulong uVar6;
+       ulong uVar7;
+       ulong uVar8;
+       iVar3 = *(int *)((int)param_1 + 0x5c);
+         ...
+  0x1f7c00 RigidBody::GetOrientToGround
+     callers: CollideWithGround, Simulate
+     callees: 
+     float __thiscall RigidBody::GetOrientToGround(RigidBody *this)
+     {
+       int iVar1;
+       uint uVar2;
+       ulong *puVar3;
+       ulong uStack_9;
+       uVar2 = (uint)&uStack_9 & 7;
+       puVar3 = (ulong *)((int)&uStack_9 - uVar2);
+       *puVar3 = *puVar3 & -1L << (uVar2 + 1) * 8 | 0x3f80000000000000U >> (7 - uVar2) * 8;
+       iVar1 = *(int *)&this->field_0x5c;
+       return *(float *)(iVar1 + 0x10) * 0.0 + *(float *)(iVar1 + 0x14) * 1.0 +
+              *(float *)(iVar1 + 0x18) * 0.0;
+         ...
+  0x1f81b8 RigidBody::GetLocalMomentum
+     callers: 
+     callees: 
+     undefined8 RigidBody::GetLocalMomentum(undefined8 param_1,int param_2)
+     {
+       undefined1 (*pauVar1) [16];
+       uint uVar2;
+       ulong *puVar3;
+       undefined1 auVar4 [16];
+       uint uVar5;
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 auVar8 [16];
+       undefined1 auVar9 [16];
+       undefined1 in_vf0 [16];
+         ...
+  0x1f8250 RigidBody::GetLocalAngularMomentum
+     callers: ProcessSubmarinePhysics, TwoWheelStunt
+     callees: 
+     undefined8 RigidBody::GetLocalAngularMomentum(undefined8 param_1,int param_2)
+     {
+       undefined1 (*pauVar1) [16];
+       uint uVar2;
+       ulong *puVar3;
+       undefined1 auVar4 [16];
+       uint uVar5;
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 auVar8 [16];
+       undefined1 auVar9 [16];
+       undefined1 in_vf0 [16];
+         ...
+  0x1f82e8 RigidBody::GetLocalVelocity
+     callers: ProcessSubmarinePhysics, UpdateSpringMassSystem
+     callees: 
+     undefined8 RigidBody::GetLocalVelocity(undefined8 param_1,int param_2)
+     {
+       undefined1 (*pauVar1) [16];
+       uint uVar2;
+       ulong *puVar3;
+       undefined1 auVar4 [16];
+       uint uVar5;
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 auVar8 [16];
+       undefined1 auVar9 [16];
+       undefined1 in_vf0 [16];
+         ...
+  0x1f8380 RigidBody::GetLocalAngularVelocity
+     callers: AddWheelForces, ProcessSubmarinePhysics, UpdateSpringMassSystem
+     callees: 
+     undefined8 RigidBody::GetLocalAngularVelocity(undefined8 param_1,int param_2)
+     {
+       undefined1 (*pauVar1) [16];
+       uint uVar2;
+       ulong *puVar3;
+       undefined1 auVar4 [16];
+       uint uVar5;
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 auVar8 [16];
+       undefined1 auVar9 [16];
+       undefined1 in_vf0 [16];
+         ...
+  0x1f8418 RigidBody::ConvertToLocalAngularMomentum
+     callers: GenerateImpulse
+     callees: 
+     void RigidBody::ConvertToLocalAngularMomentum(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 (*pauVar1) [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined1 in_vf0 [16];
+       pauVar1 = *(undefined1 (**) [16])(param_1 + 0x5c);
+       auVar3 = _pextlw(SUB128(*(undefined1 (*) [12])pauVar1[1],0),SUB168(*pauVar1,0));
+       auVar4 = _pextuw(pauVar1[1],*pauVar1);
+         ...
+  0x1f8498 RigidBody::ConvertFromLocalAngularMomentum
+     callers: GenerateImpulse
+     callees: 
+     void RigidBody::ConvertFromLocalAngularMomentum(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 (*pauVar1) [16];
+       undefined1 in_vf0 [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       pauVar1 = *(undefined1 (**) [16])(param_1 + 0x5c);
+       auVar2 = _lqc2(*(undefined1 (*) [16])param_2);
+       auVar3 = _lqc2(*pauVar1);
+         ...
+  0x1f84d0 RigidBody::ConvertLocalToWorld
+     callers: AddSnowmobileForces, AddWheelForces, GenerateImpulse, ModifyLevers, ProcessSubmarinePhysics
+     callees: 
+     void RigidBody::ConvertLocalToWorld(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 (*pauVar1) [16];
+       undefined1 in_vf0 [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       pauVar1 = *(undefined1 (**) [16])(param_1 + 0x5c);
+       auVar2 = _lqc2(*(undefined1 (*) [16])param_2);
+       auVar3 = _lqc2(*pauVar1);
+         ...
+  0x1f8508 RigidBody::ConvertWorldToLocal
+     callers: AddSnowmobileForces, AddWheelForces, ApplyDamage, GenerateImpulse, ModifyLevers, ProcessSubmarinePhysics
+     callees: 
+     void RigidBody::ConvertWorldToLocal(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 (*pauVar1) [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined1 in_vf0 [16];
+       pauVar1 = *(undefined1 (**) [16])(param_1 + 0x5c);
+       auVar3 = _pextlw(SUB128(*(undefined1 (*) [12])pauVar1[1],0),SUB168(*pauVar1,0));
+       auVar4 = _pextuw(pauVar1[1],*pauVar1);
+         ...
+  0x1f87a8 RigidBody::ResolveTorque4
+     callers: AddSnowmobileForces
+     callees: 
+     void RigidBody::ResolveTorque4(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 auVar1 [16];
+       undefined1 auVar2 [16];
+       if (*(char *)(param_1 + 0x6e) != '\x03') {
+         *(undefined1 *)(param_1 + 0x6e) = 2;
+         auVar1 = _lqc2(*(undefined1 (*) [16])param_2);
+         auVar2 = _lqc2(*(undefined1 (*) [16])(param_1 + 0x70));
+         _lqc2(*(undefined1 (*) [16])(param_1 + 0x70));
+         auVar1 = _vadd(auVar1,auVar2);
+         auVar1 = _sqc2(auVar1);
+         *(undefined1 (*) [16])(param_1 + 0x70) = auVar1;
+         ...
+  0x1f87d8 RigidBody::ResolveMassScaledForce
+     callers: ApplyInitialForcesAndTorques, ProcessSubmarinePhysics
+     callees: 
+     void RigidBody::ResolveMassScaledForce(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 auVar1 [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       if (*(char *)(param_1 + 0x6e) != '\x03') {
+         *(undefined1 *)(param_1 + 0x6e) = 2;
+         *(uint *)(param_1 + 0x7c) = *(uint *)(param_1 + 0x7c) & 0xfffffffd;
+         auVar1 = _lqc2(*(undefined1 (*) [16])param_2);
+         auVar2 = _lqc2(*(undefined1 (*) [16])(param_1 + 0x60));
+         _lqc2(*(undefined1 (*) [16])(param_1 + 0x60));
+         auVar3 = _qmtc2(*(undefined4 *)(param_1 + 0x4c));
+         ...
+  0x1f8830 RigidBody::ResolveMassScaledForce4
+     callers: AddSimpleWheelForces, AddSnowmobileForces, AddWheelForces
+     callees: 
+     void RigidBody::ResolveMassScaledForce4(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 auVar1 [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       if (*(char *)(param_1 + 0x6e) != '\x03') {
+         *(undefined1 *)(param_1 + 0x6e) = 2;
+         *(uint *)(param_1 + 0x7c) = *(uint *)(param_1 + 0x7c) & 0xfffffffd;
+         auVar1 = _lqc2(*(undefined1 (*) [16])param_2);
+         auVar2 = _lqc2(*(undefined1 (*) [16])(param_1 + 0x60));
+         _lqc2(*(undefined1 (*) [16])(param_1 + 0x60));
+         auVar3 = _qmtc2(*(undefined4 *)(param_1 + 0x4c));
+         ...
+  0x1f8888 RigidBody::ResolveMassScaledTorque
+     callers: AddWheelForces, ProcessSubmarinePhysics
+     callees: 
+     void RigidBody::ResolveMassScaledTorque(int param_1,undefined (*param_2) [16])
+     {
+       undefined1 auVar1 [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       if (*(char *)(param_1 + 0x6e) != '\x03') {
+         *(undefined1 *)(param_1 + 0x6e) = 2;
+         auVar1 = _lqc2(*(undefined1 (*) [16])param_2);
+         auVar2 = _lqc2(*(undefined1 (*) [16])(param_1 + 0x70));
+         _lqc2(*(undefined1 (*) [16])(param_1 + 0x70));
+         auVar3 = _qmtc2(*(undefined4 *)(param_1 + 0x4c));
+         auVar1 = _vmulbc(auVar1,auVar3);
+         ...
+  0x1f8908 RigidBody::UpdateZonalInfo
+     callers: ResetObject, RigidBody, Timestep_CollectVU0data
+     callees: 
+     void RigidBody::UpdateZonalInfo(int param_1)
+     {
+       float fVar1;
+       float fVar2;
+       float fVar3;
+       fVar2 = *(float *)(param_1 + 0x10) * 0.2;
+       fVar3 = 0.5;
+       if (fVar2 < 0.0) {
+         fVar3 = -0.5;
+       }
+       fVar1 = 0.5;
+       *(int *)(*(int *)(param_1 + 0x5c) + 0x4f0) = (int)(fVar3 + fVar2);
+         ...
+  0x1f89e0 Timestep_LoadAndStartVU0
+     callers: UpdatePositionAndOrientation
+     callees: Timestep_CollectVU0data, memset
+     void Timestep_LoadAndStartVU0
+                    (float param_1,undefined (*param_2) [16],undefined (*param_3) [16],undefined8 param_4
+                    ,undefined8 param_5,undefined8 param_6)
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       ulong uVar3;
+       int iVar4;
+       undefined1 auVar5 [8];
+       undefined1 auVar6 [16];
+       undefined (*pauVar7) [16];
+       undefined1 auVar8 [16];
+         ...
+  0x1f8cf0 RigidBody::Timestep_CollectVU0data
+     callers: SimulateGame, Timestep_LoadAndStartVU0
+     callees: ControlSleep, UpdateZonalInfo
+     void RigidBody::Timestep_CollectVU0data(void)
+     {
+       undefined4 *puVar1;
+       int iVar2;
+       undefined1 auVar3 [16];
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined1 (*pauVar7) [16];
+       undefined1 (*pauVar8) [16];
+       undefined1 auVar9 [16];
+       float fVar10;
+         ...
+  0x1f8fc8 RigidBody::Debug
+     callers: DebugObject
+     callees: 
+     void RigidBody::Debug(void)
+     {
+       return;
+     }
+  0x1f8fd0 RigidBody::UpdatePositionAndOrientation
+     callers: SimulateGame
+     callees: Timestep_LoadAndStartVU0
+     void RigidBody::UpdatePositionAndOrientation
+                    (float param_1,undefined (*param_2) [16],undefined8 param_3,undefined8 param_4,
+                    undefined8 param_5,undefined8 param_6)
+     {
+       Timestep_LoadAndStartVU0
+                 (param_1,param_2,*(undefined (**) [16])(param_2[5] + 0xc),param_4,param_5,param_6);
+       return;
+     }
+  0x1f8ff0 RigidBody::Resolve_CollectVU0data
+     callers: ResolveLeverForces, SimulateGame
+     callees: ECollision, operator_new
+     void RigidBody::Resolve_CollectVU0data(void)
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       int iVar3;
+       int iVar4;
+       float fVar5;
+       undefined4 extraout_a2_lo;
+       undefined4 extraout_a2_hi;
+       undefined1 auVar6 [16];
+       float fVar7;
+       undefined4 in_vf22w;
+         ...
+  0x1f91e8 RigidBody::ResolveLeverForces
+     callers: CollideWithGround
+     callees: GetOwner, Resolve_CollectVU0data
+     void RigidBody::ResolveLeverForces
+                    (undefined (*param_1) [16],int param_2,undefined (*param_3) [16],
+                    undefined (*param_4) [16],undefined (*param_5) [16])
+     {
+       int iVar1;
+       int iVar2;
+       undefined1 (*pauVar3) [16];
+       float fVar4;
+       float fVar5;
+       undefined4 uVar6;
+       undefined1 auVar7 [16];
+       iVar1 = DAT_00339178;
+         ...
+  0x1f9500 RigidBody::CollideWithGround
+     callers: SimulateGame
+     callees: GetOrientToGround, GetOwner, ResolveLeverForces, TempGetHeightInformation
+     void RigidBody::CollideWithGround(undefined (*param_1) [16])
+     {
+       undefined *puVar1;
+       char cVar2;
+       uint uVar3;
+       uint uVar4;
+       int iVar5;
+       long lVar6;
+       ulong uVar7;
+       int iVar8;
+       ulong uVar9;
+       ulong uVar10;
+         ...
+  0x1f98e8 RigidBody::ModifyLevers
+     callers: ResolveCollision
+     callees: ConvertLocalToWorld, ConvertWorldToLocal
+     void RigidBody::ModifyLevers
+                    (int param_1,int param_2,undefined (*param_3) [16],undefined (*param_4) [16],
+                    undefined (*param_5) [16],undefined (*param_6) [16],long param_7)
+     {
+       char cVar1;
+       bool bVar2;
+       bool bVar3;
+       float fVar4;
+       float fVar5;
+       float fVar6;
+       undefined1 in_vf0 [16];
+       undefined1 auVar7 [16];
+         ...
+  0x1f9b40 RigidBody::ScaleObjObjForces
+     callers: ResolveCollision
+     callees: 
+     void RigidBody::ScaleObjObjForces
+                    (float param_1,float param_2,float param_3,int param_4,int param_5,
+                    undefined (*param_6) [16],undefined (*param_7) [16])
+     {
+       float fVar1;
+       float fVar2;
+       float fVar3;
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 local_20 [16];
+         ...
+  0x1f9d98 RigidBody::ResolveCollision
+     callers: CollideWithObject
+     callees: GetHitPoints, GetOwner, ModifyLevers, PlayAnimation, ScaleObjObjForces
+     undefined8
+     RigidBody::ResolveCollision
+               (float param_1,int param_2,int param_3,int param_4,undefined (*param_5) [16],
+               undefined (*param_6) [16],uint param_7)
+     {
+       uint uVar1;
+       int iVar2;
+       ulong *puVar3;
+       bool bVar4;
+       bool bVar5;
+       bool bVar6;
+       bool bVar7;
+         ...
+  0x1fade8 RigidBody::ResolveWorldOBBCollision
+     callers: CollideWithWorld
+     callees: 
+     undefined8
+     RigidBody::ResolveWorldOBBCollision
+               (float param_1,undefined4 param_2,int param_3,undefined (*param_4) [16],
+               undefined (*param_5) [16],uint param_6,undefined (*param_7) [16])
+     {
+       byte bVar1;
+       uint uVar2;
+       uint uVar3;
+       int iVar4;
+       ulong *puVar5;
+       bool bVar6;
+       ulong uVar7;
+         ...
+  0x1fc198 RigidBody::CalculateAndApplyWorldDamage
+     callers: CollideWithWorld
+     callees: GetOwner
+     void RigidBody::CalculateAndApplyWorldDamage(float param_1,int param_2,undefined8 param_3)
+     {
+       char cVar1;
+       bool bVar2;
+       int iVar3;
+       long lVar4;
+       float fVar5;
+       fVar5 = 0.05;
+       bVar2 = *(char *)(param_2 + 0x6d) < '\x04';
+       if (bVar2) {
+         fVar5 = 0.2;
+       }
+         ...
+  0x1fc2f0 RigidBody::CollideWithWorld
+     callers: SimulateGame
+     callees: CalculateAndApplyWorldDamage, CheckOBBOverlapAndFindIntersection, ECollision, FUN_00218440, FUN_00218668, FUN_002187f0, FastAlloc, FastFree, GenerateImpulse, GetOwner, GetRenderInstance, GetSceneObjFromInstance, GetWorldNormal, ProcessStimuli, Progra
+     void RigidBody::CollideWithWorld(ulong param_1)
+     {
+       undefined1 *puVar1;
+       byte bVar2;
+       undefined1 (*pauVar3) [16];
+       bool bVar4;
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined8 *puVar7;
+       undefined8 *puVar8;
+       bool bVar9;
+       int iVar10;
+         ...
+  0x1fd408 RigidBody::RecalcOrientMat4
+     callers: ResetObject, RigidBody
+     callees: VU0_quattom4
+     void __thiscall RigidBody::RecalcOrientMat4(RigidBody *this,MATRIX4 *param_1)
+     {
+       VU0_quattom4(this,param_1);
+       return;
+     }
+  0x1fd428 GRAVITY_global_ctors
+     callers: 
+     callees: FUN_001fd338
+     void GRAVITY_global_ctors(void)
+     {
+       FUN_001fd338(1,0xffff);
+       return;
+     }
+
+====================================================================================================
+
+## window 50: Xbox 0x19cd0 ActSkeletonDatabase::~ActSkeletonDatabase .. 0x19e30 ActTextureDatabase::UseTexture   (PS2 0x114d00 .. 0x1150f8)
+
+Xbox functions in the window, address order:
+  0x19d20 UNNAMED
+     callers: FUN_000178e0, FUN_00017c70, FUN_00019eb0, FUN_0001a220, FUN_0001b4a0, FUN_0001b810, FUN_0008fb50, FUN_0008fec0, FUN_000946b0, FUN_00094a20, FUN_0011cd30, FUN_0011d0a0, FUN_00122b10, FUN_00122e80, FUN_
+     chain: FUN_00019eb0@19eb0 <- ActTextureDatabase::UnloadTexture@1a490 | FUN_0008fb50@8fb50 <- URefCounter<RCARPFile>::RemoveReference@90130 | FUN_000946b0@946b0 <- URefCounter<RTextureContext>::RemoveReference@94d80
+     callees: 
+     void __thiscall FUN_00019d20(int param_1_00,int *param_1)
+     {
+       int iVar1;
+       int *piVar2;
+       iVar1 = *param_1;
+       *param_1 = *(int *)(iVar1 + 8);
+       if (*(char *)(*(int *)(iVar1 + 8) + 0x95) == '\0') {
+         *(int **)(*(int *)(iVar1 + 8) + 4) = param_1;
+       }
+       *(int *)(iVar1 + 4) = param_1[1];
+       if (param_1 == *(int **)(*(int *)(param_1_00 + 4) + 4)) {
+         *(int *)(*(int *)(param_1_00 + 4) + 4) = iVar1;
+         *(int **)(iVar1 + 8) = param_1;
+         param_1[1] = iVar1;
+         ...
+  0x19d80 UNNAMED
+     callers: FUN_000178e0, FUN_00017e60, FUN_00017ee0, FUN_00019eb0, FUN_0001a410, FUN_0001b4a0, FUN_0001ba00, FUN_0001ba80, FUN_0008fb50, FUN_000900b0, FUN_000946b0, FUN_00094c10, FUN_0011cd30, FUN_0011d290, FUN_
+     chain: FUN_00017ee0@17ee0 <- ActModelDatabase::~ActModelDatabase@18110 | FUN_00019eb0@19eb0 <- ActTextureDatabase::UnloadTexture@1a490 | FUN_0001ba80@1ba80 <- ActWeaponDatabase::~ActWeaponDatabase@1bcb0
+     callees: 
+     void __fastcall FUN_00019d80(int *param_1)
+     {
+       char cVar1;
+       int iVar2;
+       int *piVar3;
+       int *piVar4;
+       int *piVar5;
+       iVar2 = *param_1;
+       if (*(char *)(iVar2 + 0x95) == '\0') {
+         piVar3 = *(int **)(iVar2 + 8);
+         if (*(char *)((int)piVar3 + 0x95) == '\0') {
+           cVar1 = *(char *)(*piVar3 + 0x95);
+           piVar4 = (int *)*piVar3;
+           while (piVar5 = piVar4, cVar1 == '\0') {
+         ...
+  0x19de0 UNNAMED
+     callers: AddReference, FUN_0011d460, GetReference
+     chain: URefCounter<AEngine>::AddReference@12f700 | URefCounter<ActModelDatabase::ModelInfo>::AddReference@18030 | URefCounter<ActWeaponDatabase::WeaponInfo>::AddReference@1bbd0
+     callees: __stricmp
+     undefined4 * __thiscall FUN_00019de0(int param_1_00,char *param_1)
+     {
+       char cVar1;
+       undefined4 *puVar2;
+       int iVar3;
+       undefined4 *puVar4;
+       undefined4 *puVar5;
+       puVar5 = (undefined4 *)(*(undefined4 **)(param_1_00 + 4))[1];
+       cVar1 = *(char *)((int)puVar5 + 0x95);
+       puVar2 = *(undefined4 **)(param_1_00 + 4);
+       while (cVar1 == '\0') {
+         iVar3 = __stricmp((char *)(puVar5 + 3),param_1);
+         if (iVar3 < 0) {
+           puVar4 = (undefined4 *)puVar5[2];
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x114f98 ActTextureDatabase::DoneLoading
+     callers: DoneLoadingCharacters
+     callees: 
+     void ActTextureDatabase::DoneLoading(void)
+     {
+       return;
+     }
+
+====================================================================================================
+
+## window 51: Xbox 0x8d440 RRenderWorldCulling::Setup2dFrustrum .. 0x8d6d0 RSceneObj::ResolveObjectData   (PS2 0x1c6858 .. 0x1c6fa8)
+
+Xbox functions in the window, address order:
+  0x8d610 UNNAMED
+     callers: ToggleEffect
+     chain: RSceneObj::ToggleEffect@8e430
+     callees: __allshl
+     void __fastcall FUN_0008d610(int param_1)
+     {
+       undefined8 uVar1;
+       uVar1 = __allshl();
+       *(uint *)(param_1 + 0x20) = *(uint *)(param_1 + 0x20) | (uint)uVar1;
+       *(uint *)(param_1 + 0x24) = *(uint *)(param_1 + 0x24) | (uint)((ulonglong)uVar1 >> 0x20);
+       return;
+     }
+  0x8d640 UNNAMED
+     callers: GetNextPoint, GetNextSceneObjCullInfo, GetObjectiveArrowHeight, Process
+     chain: WRender::GetNextPoint@c75e0 | RSceneObj::GetNextSceneObjCullInfo@8d860 | SMissionManager::GetObjectiveArrowHeight@b6cd0
+     callees: 
+     float10 __fastcall FUN_0008d640(int param_1)
+     {
+       uint uVar1;
+       float10 fVar2;
+       uVar1 = *(uint *)(param_1 + 0x3c);
+       if ((uVar1 & 0x80000000) == 0x80000000) {
+         return (float10)(uVar1 >> 10 & 0x3ff) *
+                (float10)*(float *)(&DAT_00191b64 + (uVar1 >> 0x1e & 1) * 4);
+       }
+       fVar2 = (float10)(uVar1 & 0x3ff) * (float10)*(float *)(&DAT_00191b64 + (uVar1 >> 0x1e & 1) * 4);
+       return fVar2 + fVar2;
+     }
+  0x8d6b0 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: 
+     undefined4 FUN_0008d6b0(undefined4 param_1,undefined1 *param_2)
+     {
+       undefined4 uVar1;
+       *param_2 = 0;
+       if (DAT_001f258c != (int *)0x0) {
+         uVar1 = (**(code **)(*DAT_001f258c + 0x48))(param_1,param_2);
+         return uVar1;
+       }
+       return 0;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1c6f60 RSceneObj::ResolveData
+     callers: 
+     callees: 
+     undefined8 RSceneObj::ResolveData(undefined8 param_1,undefined4 *param_2)
+     {
+       undefined8 uVar1;
+       *param_2 = 0;
+       if (DAT_00333f38 == 0) {
+         uVar1 = 0;
+       }
+       else {
+         uVar1 = (**(code **)(*(int *)(DAT_00333f38 + 0x3c) + 0x9c))
+                           (DAT_00333f38 + *(short *)(*(int *)(DAT_00333f38 + 0x3c) + 0x98),param_1);
+       }
+       return uVar1;
+         ...
+
+====================================================================================================
+
+## window 52: Xbox 0x11d310 URefCounter<AMix>::RemoveReference .. 0x11d610 URefCounter<AMix>::Get   (PS2 0x2f3ff0 .. 0x2f46e8)
+
+Xbox functions in the window, address order:
+  0x11d380 UNNAMED
+     callers: FUN_0011d460
+     chain: FUN_0011d460@11d460 <- AMix::Add@11d6a0
+     callees: FUN_0011caa0, FUN_0011d0a0, __stricmp
+     void __thiscall FUN_0011d380(int param_1_00,undefined4 *param_1,char *param_2)
+     {
+       char cVar1;
+       undefined4 *puVar2;
+       char *pcVar3;
+       int iVar4;
+       undefined4 *puVar5;
+       undefined4 *puVar6;
+       bool bVar7;
+       pcVar3 = param_2;
+       puVar5 = (undefined4 *)(*(undefined4 **)(param_1_00 + 4))[1];
+       bVar7 = true;
+       cVar1 = *(char *)((int)puVar5 + 0x95);
+       puVar2 = *(undefined4 **)(param_1_00 + 4);
+         ...
+  0x11d460 UNNAMED
+     callers: Add
+     chain: AMix::Add@11d6a0
+     callees: FUN_00019de0, FUN_0011d380, FUN_0012ef50, __stricmp
+     void __thiscall FUN_0011d460(int param_1_00,char *param_1,undefined4 param_2)
+     {
+       char cVar1;
+       char *pcVar2;
+       int iVar3;
+       undefined4 uVar4;
+       int *piVar5;
+       int local_194 [2];
+       int local_18c;
+       char local_188 [128];
+       char local_108 [264];
+       pcVar2 = param_1;
+       do {
+         cVar1 = *pcVar2;
+         ...
+  0x11d580 UNNAMED
+     callers: FUN_0015d250
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_0011cc30, FUN_0011d290, FastFree
+     void __fastcall FUN_0011d580(int param_1)
+     {
+       int local_10;
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       pcStack_8 = FUN_001557e8;
+       local_4 = 0;
+       local_10 = param_1;
+       FUN_0011cc30(*(undefined4 *)(*(int *)(param_1 + 4) + 4));
+       *(int *)(*(int *)(param_1 + 4) + 4) = *(int *)(param_1 + 4);
+       *(undefined4 *)(param_1 + 8) = 0;
+       *(undefined4 *)*(undefined4 *)(param_1 + 4) = *(undefined4 *)(param_1 + 4);
+       *(int *)(*(int *)(param_1 + 4) + 8) = *(int *)(param_1 + 4);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x2f45e0 _List_base<AMix_*,_allocator<AMix_*>_>::clear
+     callers: Clear, FUN_002f4648
+     callees: FastFree
+     void _List_base<AMix_*,_allocator<AMix_*>_>::clear(int **param_1)
+     {
+       int *piVar1;
+       int *piVar2;
+       piVar1 = *param_1;
+       piVar2 = (int *)*piVar1;
+       if (piVar2 != piVar1) {
+         do {
+           piVar1 = (int *)*piVar2;
+           UMemory::FastFree(piVar2,0xc);
+           piVar2 = piVar1;
+         } while (piVar1 != *param_1);
+         ...
+
+====================================================================================================
+
+## window 53: Xbox 0x130a0 ActActorDatabase::SetupFOVConversions .. 0x13270 ActActorDatabase::KillActorByHandle   (PS2 0x10b870 .. 0x10b4e0)
+
+Xbox functions in the window, address order:
+  0x130e0 UNNAMED
+     callers: FUN_00013ab0, FUN_000b9320, FUN_000b93c0, FUN_000b94a0, FUN_00121e40, GetNewActorHandle, Load, Push, RegisterTarget, operator_new
+     chain: ActActorDatabase::GetNewActorHandle@139c0 | AMix::Load@11d790 | SMissionManager::Load@b9140
+     callees: FastAlloc
+     void FUN_000130e0(undefined4 param_1,undefined4 param_2,undefined4 *param_3)
+     {
+       undefined4 *puVar1;
+       puVar1 = UMemory::FastAlloc(0xc,"STL");
+       if (puVar1 != (undefined4 *)0x0) {
+         *puVar1 = param_1;
+         puVar1[1] = param_2;
+         puVar1[2] = *param_3;
+       }
+       return;
+     }
+  0x13110 UNNAMED
+     callers: FUN_0003a530, FUN_00130e4c, FUN_00130ed2, FUN_00130f8f, FUN_001311d1
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FastFree
+     void __thiscall FUN_00013110(int param_1_00,char param_1)
+     {
+       if (((param_1 != '\0') && (0xf < *(uint *)(param_1_00 + 0x18))) &&
+          (*(void **)(param_1_00 + 4) != (void *)0x0)) {
+         UMemory::FastFree(*(void **)(param_1_00 + 4),*(uint *)(param_1_00 + 0x18) + 1);
+       }
+       *(undefined4 *)(param_1_00 + 0x18) = 0xf;
+       *(undefined4 *)(param_1_00 + 0x14) = 0;
+       *(undefined1 *)(param_1_00 + 4) = 0;
+       return;
+     }
+  0x13150 UNNAMED
+     callers: FUN_00013300, FUN_00013480, FUN_0003d090
+     chain: FUN_00013300@13300 <- FUN_00013630@13630 <- AFingoDeath::AFingoDeath@129a30 | FUN_00013300@13300 <- FUN_00013630@13630 <- AGun::AGun@129550 | FUN_00013300@13300 <- FUN_00013630@13630 <- ASentry::ASentry@12d7f0
+     callees: FastAlloc, FastFree
+     void __thiscall FUN_00013150(int param_1_00,uint param_1,uint param_2)
+     {
+       undefined4 *puVar1;
+       undefined4 *puVar2;
+       uint uVar3;
+       uint uVar4;
+       undefined4 *puVar5;
+       undefined4 local_10;
+       code *pcStack_c;
+       undefined4 local_8;
+       pcStack_c = FUN_00150490;
+       uVar4 = param_1 | 0xf;
+       if ((param_1 | 0xf) == 0xffffffff) {
+         uVar4 = param_1;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x10b540 ActActorDatabase::ActActorDatabase
+     callers: StartUp
+     callees: FastAlloc
+     long __thiscall ActActorDatabase::ActActorDatabase(ActActorDatabase *this)
+     {
+       void *pvVar1;
+       pvVar1 = UMemory::FastAlloc(0xc,"STL");
+       *(void **)this = pvVar1;
+       *(void **)pvVar1 = pvVar1;
+       *(int *)(*(int *)this + 4) = *(int *)this;
+       return (long)(int)this;
+     }
+  0x10b778 ActActorDatabase::DrawAllWeapons
+     callers: DrawActorWeapons
+     callees: DrawWeapons
+     void ActActorDatabase::DrawAllWeapons(int **param_1,undefined8 param_2,long param_3)
+     {
+       int *piVar1;
+       int *local_60;
+       local_60 = (int *)**param_1;
+       if (local_60 != *param_1) {
+         do {
+           if (((int *)local_60[2])[0x15] == 0) {
+             ActActor::DrawWeapons((int *)local_60[2],param_2,param_3);
+             piVar1 = *param_1;
+           }
+           else {
+         ...
+
+====================================================================================================
+
+## window 54: Xbox 0xa2930 RParticleSystemManager::UpdateSpawnAllSystems .. 0xa2bf0 RParticleSystemManager::AddOrRefresh   (PS2 0x1e67e0 .. 0x1e61f8)
+
+Xbox functions in the window, address order:
+  0xa29c0 UNNAMED
+     callers: RestartTrackRender
+     chain: RRenderHigh::RestartTrackRender@8c840
+     callees: FUN_000a2660
+     void __fastcall FUN_000a29c0(int param_1)
+     {
+       byte *pbVar1;
+       char cVar2;
+       int *piVar3;
+       int *piVar4;
+       int *piVar5;
+       int *piVar6;
+       int local_4;
+       *(undefined4 *)(param_1 + 0x14) = 0;
+       *(undefined4 *)(param_1 + 0x18) = 0xffffffff;
+       pbVar1 = XBE_FILE_HEADER_00010000.Signature + param_1 + 0x1c;
+       pbVar1[0] = 0;
+       pbVar1[1] = 0;
+         ...
+  0xa2a70 UNNAMED
+     callers: AddOrRefresh, AddSystem
+     chain: RParticleSystemManager::AddOrRefresh@a2bf0 | RParticleLibrary::RPartLibraryData::AddSystem@a2c80
+     callees: FUN_000a23c0, FUN_00126bd0
+     void __thiscall FUN_000a2a70(int param_1_00,undefined4 *param_1,uint *param_2)
+     {
+       int *piVar1;
+       uint *puVar2;
+       int *piVar3;
+       undefined4 *puVar4;
+       int *piVar5;
+       bool bVar6;
+       puVar2 = param_2;
+       piVar1 = *(int **)(param_1_00 + 4);
+       bVar6 = true;
+       piVar5 = piVar1;
+       if (*(char *)(piVar1[1] + 0x15) == '\0') {
+         piVar3 = (int *)piVar1[1];
+         ...
+  0xa2b30 UNNAMED
+     callers: FUN_000a2fc0
+     chain: FUN_000a2fc0@a2fc0 <- RParticleSystemManager::Shutdown@a31e0
+     callees: FUN_000a20c0, FUN_000a2660
+     void __thiscall FUN_000a2b30(int param_1_00,undefined4 *param_1,int *param_2,int *param_3)
+     {
+       char cVar1;
+       int *piVar2;
+       int *piVar3;
+       int *piVar4;
+       int *piVar5;
+       int *piVar6;
+       piVar4 = param_3;
+       piVar6 = *(int **)(param_1_00 + 4);
+       piVar2 = param_2;
+       if ((param_2 == (int *)*piVar6) && (param_3 == piVar6)) {
+         FUN_000a20c0(piVar6[1]);
+         *(int *)(*(int *)(param_1_00 + 4) + 4) = *(int *)(param_1_00 + 4);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1e62e0 RParticleSystemManager::GetSystem
+     callers: 
+     callees: find
+     undefined4 RParticleSystemManager::GetSystem(int param_1,uint param_2)
+     {
+       undefined4 uVar1;
+       int local_50 [8];
+       uint local_30 [4];
+       undefined4 local_20;
+       undefined4 uStack_1c;
+       undefined4 local_10;
+       undefined4 uStack_c;
+       local_30[0] = param_2;
+       _Rb_tree<unsigned_int,_RParticleSystem_*>::find
+                 ((long)(int)local_50,*(int **)(param_1 + 4),local_30);
+         ...
+  0x1e6330 RParticleSystemManager::CreateParticles
+     callers: ApplyWorldEffects
+     callees: ResetParticle, Spawn
+     void RParticleSystemManager::CreateParticles
+                    (undefined8 param_1,float *param_2,uint param_3,long param_4,int param_5)
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       uint uVar3;
+       float fVar4;
+       float *pfVar5;
+       ulong in_v1;
+       ulong uVar6;
+       uint uVar7;
+       undefined1 in_vf0 [16];
+         ...
+
+====================================================================================================
+
+## window 55: Xbox 0xa7ac0 RVehicleParticle::UpdateCar .. 0xa8240 RVehicleParticle::Init   (PS2 0x1ee4a0 .. 0x1edf38)
+
+Xbox functions in the window, address order:
+  0xa8120 UNNAMED
+     callers: Render
+     chain: RRenderHigh::Render@8bf30
+     callees: FUN_000a7930
+     void __fastcall FUN_000a8120(undefined4 param_1)
+     {
+       char cVar1;
+       int *piVar2;
+       int *piVar3;
+       int iVar4;
+       int *piVar5;
+       undefined4 local_4;
+       if ((3 < (uint)(Sim.field3634_0xe44 - _DAT_00201838)) || (Sim.field3634_0xe44 != _DAT_00201838)) {
+         _DAT_00201838 = DAT_001f2a4c;
+         piVar5 = (int *)**(int **)(DAT_00201834 + 4);
+         local_4 = param_1;
+         if (piVar5 != *(int **)(DAT_00201834 + 4)) {
+           do {
+         ...
+  0xa81e0 UNNAMED
+     callers: Kill
+     chain: RVehicleParticle::Kill@a8430
+     callees: FUN_000a7930, FastFree
+     void __fastcall FUN_000a81e0(int param_1)
+     {
+       int local_4;
+       local_4 = param_1;
+       FUN_000a7930(&local_4,**(undefined4 **)(param_1 + 4),*(undefined4 **)(param_1 + 4));
+       if (*(void **)(param_1 + 4) != (void *)0x0) {
+         UMemory::FastFree(*(void **)(param_1 + 4),0x14);
+       }
+       *(undefined4 *)(param_1 + 4) = 0;
+       *(undefined4 *)(param_1 + 8) = 0;
+       return;
+     }
+  0xa8220 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_000a79f0, FastFree
+     void * __thiscall FUN_000a8220(void *param_1_00,byte param_1)
+     {
+       FUN_000a79f0();
+       if ((param_1 & 1) != 0) {
+         UMemory::FastFree(param_1_00,0x4c);
+       }
+       return param_1_00;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1ee3d8 RVehicleParticle::Reset
+     callers: ResetAll
+     callees: 
+     void RVehicleParticle::Reset(int param_1)
+     {
+       *(undefined4 *)(param_1 + 0x40) = 0;
+       return;
+     }
+  0x1ee3e0 RVehicleParticle::~RVehicleParticle
+     callers: 
+     callees: FUN_001efcc0, FastFree, __builtin_vec_delete
+     int RVehicleParticle::~RVehicleParticle(undefined8 param_1,ulong param_2)
+     {
+       int iVar1;
+       long lVar2;
+       int *piVar3;
+       int iVar4;
+       int *local_60 [4];
+       undefined4 local_50;
+       undefined4 uStack_4c;
+       undefined4 local_40;
+       undefined4 uStack_3c;
+       undefined4 local_30;
+         ...
+
+====================================================================================================
+
+## window 56: Xbox 0xbdd40 WCollider::Clear .. 0xbe180 WCollider::~WCollider   (PS2 0x212368 .. 0x211988)
+
+Xbox functions in the window, address order:
+  0xbde10 UNNAMED
+     callers: FUN_000be2d0, FUN_000c3880
+     chain: FUN_000be2d0@be2d0 <- FUN_000be4b0@be4b0 <- WCollider::WCollider@be540
+     callees: FUN_000bd910, FUN_000bd9f0, FastAlloc, FastFree
+     void __thiscall FUN_000bde10(int param_1_00,uint param_1)
+     {
+       void *pvVar1;
+       void *pvVar2;
+       uint uVar3;
+       ulong size;
+       undefined4 local_10;
+       code *pcStack_c;
+       undefined4 local_8;
+       local_8 = 0xffffffff;
+       pcStack_c = FUN_00154320;
+       if (param_1 < 0x6666667) {
+         if (*(int *)(param_1_00 + 4) == 0) {
+           uVar3 = 0;
+         ...
+  0xbdf60 UNNAMED
+     callers: FUN_000be2d0, GetInstanceList
+     chain: WCollisionMgr::GetInstanceList@c4510 | WCollisionMgr::GetInstanceList@c3410 | FUN_000be2d0@be2d0 <- FUN_000be4b0@be4b0 <- WCollider::WCollider@be540
+     callees: FUN_000537f0, FUN_000a8b90, FastAlloc, FastFree
+     void __thiscall FUN_000bdf60(int param_1_00,uint param_1)
+     {
+       void *pvVar1;
+       uint uVar2;
+       void *pvVar3;
+       int iVar4;
+       undefined4 local_10;
+       code *pcStack_c;
+       undefined4 local_8;
+       local_8 = 0xffffffff;
+       pcStack_c = FUN_00154330;
+       if (param_1 < 0x20000000) {
+         iVar4 = 0;
+         if (*(int *)(param_1_00 + 4) == 0) {
+         ...
+  0xbe070 UNNAMED
+     callers: FUN_000be2d0
+     chain: FUN_000be2d0@be2d0 <- FUN_000be4b0@be4b0 <- WCollider::WCollider@be540
+     callees: FUN_000537f0, FUN_000bd9f0, FastAlloc, FastFree
+     void __thiscall FUN_000be070(int param_1_00,uint param_1)
+     {
+       void *pvVar1;
+       uint uVar2;
+       void *pvVar3;
+       int iVar4;
+       undefined4 local_10;
+       code *pcStack_c;
+       undefined4 local_8;
+       local_8 = 0xffffffff;
+       pcStack_c = FUN_00154340;
+       if (param_1 < 0x20000000) {
+         iVar4 = 0;
+         if (*(int *)(param_1_00 + 4) == 0) {
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x211e18 WCollider::Refresh
+     callers: CollideWithWorld, WCollider
+     callees: Clear, FUN_00211ac8, InRegion, PrepareRegion
+     void WCollider::Refresh(float param_1,undefined (*param_2) [16],undefined (*param_3) [16])
+     {
+       undefined *puVar1;
+       uint uVar2;
+       uint uVar3;
+       int iVar4;
+       undefined4 uVar5;
+       ulong *puVar6;
+       ulong uVar7;
+       uVar7 = InRegion(param_1,(int)param_2,param_3,*(uint *)(param_2[5] + 0xc));
+       if (uVar7 == 0) {
+         iVar4 = *(int *)(param_2[5] + 4);
+         ...
+  0x211ed0 WCollider::PrepareRegion
+     callers: FUN_00211c98, Refresh
+     callees: FUN_00212920, FUN_00212958, FUN_002129d0, FUN_00212a08, FastAlloc, FastFree, GetBarrierList, GetInstanceList
+     void WCollider::PrepareRegion(int param_1)
+     {
+       uint uVar1;
+       ulong *puVar2;
+       void *pvVar3;
+       int iVar4;
+       void *pvVar5;
+       int iVar6;
+       uint uVar7;
+       uint uVar8;
+       ulong extraout_a3;
+       ulong extraout_a3_00;
+         ...
+
+====================================================================================================
+
+## window 57: Xbox 0x122050 AStream::Next .. 0x122190 AStreamPriv::AStreamPriv   (PS2 0x2e99d0 .. 0x2e86f8)
+
+Xbox functions in the window, address order:
+  0x1220c0 UNNAMED
+     callers: Play
+     chain: AStream::Play@122580
+     callees: 
+     void __fastcall FUN_001220c0(int param_1)
+     {
+       int iVar1;
+       uint uVar2;
+       if (*(int *)(param_1 + 0x10) != 0) {
+         uVar2 = *(int *)(param_1 + 0xc) + 1;
+         *(uint *)(param_1 + 0xc) = uVar2;
+         if (*(uint *)(param_1 + 8) <= uVar2) {
+           *(undefined4 *)(param_1 + 0xc) = 0;
+         }
+         iVar1 = *(int *)(param_1 + 0x10) + -1;
+         *(int *)(param_1 + 0x10) = iVar1;
+         if (iVar1 == 0) {
+           *(undefined4 *)(param_1 + 0xc) = 0;
+         ...
+  0x1220f0 UNNAMED
+     callers: DecodeError, Stop, thunk_FUN_001220f0, ~AStream, ~AStreamPriv
+     chain: AStream::DecodeError@1224d0 | AStream::Stop@122430 | AStream::~AStream@122450
+     callees: FastFree
+     void __fastcall FUN_001220f0(int param_1)
+     {
+       void *pvVar1;
+       int iVar2;
+       iVar2 = *(int *)(param_1 + 0x10);
+       while (iVar2 != 0) {
+         if ((*(int *)(param_1 + 0x10) != 0) &&
+            (iVar2 = *(int *)(param_1 + 0x10) + -1, *(int *)(param_1 + 0x10) = iVar2, iVar2 == 0)) {
+           *(undefined4 *)(param_1 + 0xc) = 0;
+         }
+         iVar2 = *(int *)(param_1 + 0x10);
+       }
+       iVar2 = *(int *)(param_1 + 8);
+       while (iVar2 != 0) {
+         ...
+  0x122160 (named) thunk_FUN_001220f0
+  0x122170 UNNAMED
+     callers: Play
+     chain: AStream::Play@122580
+     callees: 
+     undefined4 __fastcall FUN_00122170(int param_1)
+     {
+       uint uVar1;
+       uVar1 = *(uint *)(param_1 + 0xc);
+       if (*(uint *)(param_1 + 8) <= uVar1) {
+         return *(undefined4 *)(*(int *)(param_1 + 4) + (uVar1 - *(uint *)(param_1 + 8)) * 4);
+       }
+       return *(undefined4 *)(*(int *)(param_1 + 4) + uVar1 * 4);
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x2e9968 AStream::IsQueueEmpty
+     callers: 
+     callees: 
+     bool __thiscall AStream::IsQueueEmpty(AStream *this)
+     {
+       return this->aStreamPriv->field6_0x18 == this->aStreamPriv->field2_0x8;
+     }
+  0x2e99c0 AStream::IsPreBuffered
+     callers: 
+     callees: 
+     undefined4 __thiscall AStream::IsPreBuffered(AStream *this)
+     {
+       return this->aStreamPriv->isPreBuffered;
+     }
+
+====================================================================================================
+

@@ -1,0 +1,309 @@
+{
+ "verdicts": [
+  {
+   "item": "0.1",
+   "xbox": "0xfde00",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "euler->quat helper outlined from EulF3 (also on the EvalSQTMasked path); inlined into PS2 EulF3/EulF3Interp (cosf/sinf direct), no PS2 function to name",
+   "intermediates": []
+  },
+  {
+   "item": "1.1",
+   "xbox": "0xb9d00",
+   "ps2": "0x209d98",
+   "name": "SRuleAlways::scalar_deleting_destructor",
+   "verdict": "accept",
+   "why": "slot 0 of SRuleAlways vtable 0x1935e0 (built by SRuleAlways ctor 0xb96c0), referenced by no other vtable; ~SMissionRule + FastFree(0xc) = PS2 ~SRuleAlways FastFree(0x14) (-8 size shift like the other SRules)",
+   "intermediates": []
+  },
+  {
+   "item": "2.1",
+   "xbox": "0xb9df0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "linker-folded: slot 0 of both SRuleDeath (0x1935f0) and SRuleCollision (0x193620) vtables (FastFree 0x14); no single name",
+   "intermediates": []
+  },
+  {
+   "item": "3.1",
+   "xbox": "0xb9a20",
+   "ps2": "0x20aac0",
+   "name": "SRuleDifficulty::CheckRule",
+   "verdict": "accept",
+   "why": "slot 1 of SRuleDifficulty vtable 0x193610; glbMissionManager+0x4dc (PS2 +0x3b8, +0x124) vs flag bits 1/2/4 of +0xc (PS2 +0x14) for difficulty 0/1/2 - same body",
+   "intermediates": []
+  },
+  {
+   "item": "4.1",
+   "xbox": "0x986a0",
+   "ps2": "0x1c25f8",
+   "name": "RReflection::DeregisterSceneObj",
+   "verdict": "accept",
+   "why": "sole caller ~RSceneObj on both; 4-slot search of scene objs (+0x240, PS2 +500), rank decrement, 0x4cbebc20 reset, max-distance recompute - same body (Xbox unrolled)",
+   "intermediates": []
+  },
+  {
+   "item": "4.2",
+   "xbox": "0x98850",
+   "ps2": "0x1c2720",
+   "name": "RReflection::SceneObjRender",
+   "verdict": "accept",
+   "why": "SetVehiclesAllowed(1), render each of 4 registered scene objs via vtable, restore SetVehiclesAllowed - same body",
+   "intermediates": []
+  },
+  {
+   "item": "5.1",
+   "xbox": "0xcfeb0",
+   "ps2": "0x22efb0",
+   "name": "WTriggerManager::CheckCollide",
+   "verdict": "accept",
+   "why": "overload (COORD3&,float,WTrigger*): both called by the same WTriggerManager::Process (Xbox 0xd0630 / PS2 0x22d5a8); xz-circle r^2 + y+r / y-r vs trigger y..y+h - identical body",
+   "intermediates": []
+  },
+  {
+   "item": "5.2",
+   "xbox": "0xcff20",
+   "ps2": "0x22f030",
+   "name": "WTriggerManager::CheckCollide",
+   "verdict": "accept",
+   "why": "overload (COORD3&,float,float,float,WTrigger*): same Process caller as 5.1; separate up/down extents - identical body",
+   "intermediates": []
+  },
+  {
+   "item": "6.1",
+   "xbox": "0xd3050",
+   "ps2": "0x2324e8",
+   "name": "WWorldPos::FindClosestFace",
+   "verdict": "accept",
+   "why": "overload (WCollisionInstanceCacheList&,COORD3&): called from FindClosestFace(COORD3&,bool) 0xd31f0 as PS2 0x2322c8 calls 0x2324e8; cache-list loop step 8, FindFaceInCInst, 1e38 best, copy 0x30 bytes, +0x34/+0x38, flag +0x30",
+   "intermediates": [
+    {
+     "item": "6.1",
+     "xbox": "0xbffe0",
+     "ps2": "0x214338",
+     "name": "WCollisionMgr::FindFaceInCInst",
+     "verdict": "accept",
+     "why": "overload called by FindClosestFace(CacheList,COORD3) on both (0xd3050 / PS2 0x2324e8); dispatches to point overload when cache null, MakeMatrix, vect3mult, v3sub loop"
+    }
+   ]
+  },
+  {
+   "item": "6.2",
+   "xbox": "0xd3110",
+   "ps2": "0x232638",
+   "name": "WWorldPos::FindClosestFace",
+   "verdict": "accept",
+   "why": "segment overload (CacheList&,COORD3&,COORD3&): caller CheckHitWorld on both; +0x3c=frame counter, MakeSegSpaceMatrix then FindFaceInCInst loop, returns 0 - same body",
+   "intermediates": [
+    {
+     "item": "6.2",
+     "xbox": "0xd2d70",
+     "ps2": "0x231d68",
+     "name": "WWorldMath::MakeSegSpaceMatrix",
+     "verdict": "accept",
+     "why": "first callee of FindClosestFace(seg) 0xd3110 as MakeSegSpaceMatrix is of PS2 0x232638; builds orthonormal seg-space matrix (sub, normalise, cross, translation w=1), returns 1"
+    },
+    {
+     "item": "6.2",
+     "xbox": "0xc01d0",
+     "ps2": "0x214c08",
+     "name": "WCollisionMgr::FindFaceInCInst",
+     "verdict": "accept",
+     "why": "segment overload called by FindClosestFace(seg) on both (0xd3110 / PS2 0x232638); MakeMatrix, OrthoInverse, MATRIX4_mult, FindFaceInTriStrip loop"
+    }
+   ]
+  },
+  {
+   "item": "7.1",
+   "xbox": "0xe4d80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "no refs; point-transform loop bracketed by Begin/EndView; no PS2 ViewPort function with this body (GetScale/GetOffset differ)",
+   "intermediates": []
+  },
+  {
+   "item": "7.2",
+   "xbox": "0xe4eb0",
+   "ps2": "0x296f28",
+   "name": "EAGLInternal::ViewPortPrivate::ReBegin",
+   "verdict": "accept",
+   "why": "this->viewport (+0x180, PS2 +0x188): EndView inlined (clear +0x188 flag, BeginView prev unless 0/1, +4=0) then BeginView = PS2 ReBegin (EndView+BeginView); no Xbox refs",
+   "intermediates": []
+  },
+  {
+   "item": "8.1",
+   "xbox": "0x2b210",
+   "ps2": "0x1351d0",
+   "name": "AIGroundVehicle::GetCollNav",
+   "verdict": "accept",
+   "why": "callers CheckAgentRoadNetworkCollision + DoAgentStateUpdate on both; callees GetPhysicsObject/GetRigidBody/InitAtPoint/ReverseNavDirection match",
+   "intermediates": []
+  },
+  {
+   "item": "8.2",
+   "xbox": "0x2b4d0",
+   "ps2": "0x135530",
+   "name": "TestForCollision",
+   "verdict": "accept",
+   "why": "sole caller CheckTrafficCollision on both; two unit dirs from rigid-body pos, dot>=0.9, distance vs param, then pos-distance compare - same body",
+   "intermediates": []
+  },
+  {
+   "item": "9.1",
+   "xbox": "0x52430",
+   "ps2": "0x16c458",
+   "name": "Matrix_AttribByteOffsetParserFunc",
+   "verdict": "accept",
+   "why": "parser-func family (Vector_ at 0x52350 before it); tokenises on ';', copies identity matrix, Float_AttribByteOffsetParserFunc(...,0x10,...), result {-7,count,ptr} - same body",
+   "intermediates": []
+  },
+  {
+   "item": "9.2",
+   "xbox": "0x52560",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "small functor-call wrapper (fn ptr + 4 bound args, default {-1,0,0}) used by ProcessDafiSection; no named PS2 counterpart (inlined)",
+   "intermediates": []
+  },
+  {
+   "item": "10.1",
+   "xbox": "0x96980",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "RCamera copy constructor (vtable_RCamera + member copy), compiler-generated; PS2 has only RCamera::RCamera() (already on Xbox 0x78430)",
+   "intermediates": []
+  },
+  {
+   "item": "10.2",
+   "xbox": "0x969f0",
+   "ps2": "0x1d4b78",
+   "name": "RViewCamera::SetViewPortToUnitTransformMode",
+   "verdict": "accept",
+   "why": "ortho(1.0,a,b), BuildTranslate(-1,1,0), BuildScale(2,-2,-1), mult, SetViewMatrix - exactly the PS2 Unit variant (Ortho uses translate 0, Device uses 2/w,-2/h)",
+   "intermediates": []
+  },
+  {
+   "item": "11.1",
+   "xbox": "0xa5930",
+   "ps2": "0x1ebb98",
+   "name": "RShadowMap::Lock",
+   "verdict": "accept",
+   "why": "REVIEW: PS2 Lock body is empty, but its 3 PS2 call sites (DrawVehiclesAndDeferredSceneObjects; Begin just before BeginFrame; ClearShadowMap) match exactly the 3 Xbox SetupFrameBuffers(priv+0x44,+0x48) sites: this out-of-line one from DrawVehiclesAndDeferredSceneObjects, inlined in Begin/ClearShadowMap",
+   "intermediates": []
+  },
+  {
+   "item": "11.2",
+   "xbox": "0xa5950",
+   "ps2": "0x1ec1e8",
+   "name": "RShadowMap::ProjectedShadowsEnabled",
+   "verdict": "accept",
+   "why": "returns a global flag whose only other xref is LoadAttributes on both (Xbox 0x1c5078 / PS2 0x335384)",
+   "intermediates": []
+  },
+  {
+   "item": "12.1",
+   "xbox": "0xcd9b0",
+   "ps2": "0x229570",
+   "name": "WTargetable::WTargetable",
+   "verdict": "accept",
+   "why": "overload setting type +0x34=2 and +0x44 (PS2 +0x48)=arg; callers AICharacterEnemyGround/AICharacterEnemySunroof ctors on both",
+   "intermediates": []
+  },
+  {
+   "item": "12.2",
+   "xbox": "0xcda20",
+   "ps2": "0x2295d8",
+   "name": "WTargetable::WTargetable",
+   "verdict": "accept",
+   "why": "overload setting type +0x34=3 and +0x44 (PS2 +0x48)=arg; caller EnableTargetBeacon on both",
+   "intermediates": []
+  },
+  {
+   "item": "13.1",
+   "xbox": "0xe5ae0",
+   "ps2": "0x29fb28",
+   "name": "EAGL::DynamicLoader::GetElfData",
+   "verdict": "accept",
+   "why": "REVIEW (trivial body): return this+0x10, inside DynamicLoader's run; the only PS2 DynamicLoader getter of +0x10; Xbox VertexBufferConstructor subtracts it from a pointer (ELF data base)",
+   "intermediates": []
+  },
+  {
+   "item": "13.2",
+   "xbox": "0xe5af0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "= PS2 FUN_0029f5b0 (dlsym hash lookup, 'Bad j val', called by GetAddr/Resolve) - unnamed static on PS2",
+   "intermediates": []
+  },
+  {
+   "item": "14.1",
+   "xbox": "0xef490",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "shared empty stub (many unrelated callers incl. EH unwinds) - linker-folded",
+   "intermediates": []
+  },
+  {
+   "item": "14.2",
+   "xbox": "0xef4a0",
+   "ps2": "0x283f28",
+   "name": "EAGL::GeoPrimState::GeoPrimState",
+   "verdict": "accept",
+   "why": "REVIEW name clash: copy ctor = GeoPrimStateExtension ctor then copy whole object (0x13 dwords; PS2 MEM_copy 0x80) = PS2 GeoPrimState(GeoPrimState&). Xbox 0xef480 already holds this name/PS2 addr but its body is the default ctor (ext ctor only) = PS2 unnamed FUN_00283eb0; suggest un-naming 0xef480",
+   "intermediates": [
+    {
+     "item": "14.2",
+     "xbox": "0xeeea0",
+     "ps2": "0x283568",
+     "name": "EAGL::GeoPrimStateExtension::GeoPrimStateExtension",
+     "verdict": "accept",
+     "why": "called by default GeoPrimState ctor, copy ctor and RuntimeAllocGeoPrimStateConstructor (PS2: FUN_00283eb0, GeoPrimState); sets default render state (D3D values on Xbox vs GS regs on PS2)"
+    }
+   ]
+  },
+  {
+   "item": "15.1",
+   "xbox": "0x94fb0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list clear/destroy (erase all nodes, free 0x98 head) called from EH funclet - STL-generated",
+   "intermediates": []
+  },
+  {
+   "item": "15.2",
+   "xbox": "0x94ff0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list clear (reset sentinel) called from EH funclet - STL-generated",
+   "intermediates": []
+  },
+  {
+   "item": "16.1",
+   "xbox": "0xd4f90",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "= PS2 FUN_002360c0 (particle draw helper called by CANVAS_Draw; AddOrRefresh, GET_StickyEffectPos) - unlisted static between GLARE_Interpolate row 5228 and PARTICLE_Add, no name",
+   "intermediates": []
+  },
+  {
+   "item": "16.2",
+   "xbox": "0xd5170",
+   "ps2": "0x233760",
+   "name": "GFXGallery::~GFXGallery",
+   "verdict": "accept",
+   "why": "called by GFX::Shutdown before delete on both; PurgeAllEffects, STICKY_ReleaseAllIndexes inlined (+0x400/+0x404=0), Free +0x140c/+0x1410/+0x1414 - same body, no delete flag on Xbox",
+   "intermediates": []
+  }
+ ]
+}

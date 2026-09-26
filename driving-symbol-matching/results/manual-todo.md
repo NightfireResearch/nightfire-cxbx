@@ -82,6 +82,11 @@ right; the labels are wrong (Symbol Table, or the listing's label at the entry):
   pointers in the RawPoseChannel tables; likely QuatF4 / TranF3 and the *Interp variants). Added to
   `function-splits.json`; after creation they can go through review.
 
+- **Round 3 held back:** `RShadowMap::Lock` 0xa5930 (PS2 body empty; three call sites match `SetupFrameBuffers`
+  positions), `EAGL::DynamicLoader::GetElfData` 0xe5ae0 (`return this+0x10`, could be folded),
+  `WCollider::PrepareRegion` 0xbe2d0 (position only), `RigidBody::ScaleObjObjForces` 0xaea40 (body matches only
+  at the start), `EAGL::DrawTextured::SetTexture` 0xf5c00 (PS2 0x29d0a0 unnamed; sheet row 6186 placement loose).
+
 ## 6. Namespace moves
 
 `python apply.py --pending-namespaces` lists the pending moves (including P022's ECameraLockOn::~ECameraLockOn and
