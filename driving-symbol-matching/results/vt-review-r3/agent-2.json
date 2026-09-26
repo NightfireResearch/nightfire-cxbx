@@ -1,0 +1,439 @@
+{
+ "verdicts": [
+  {
+   "item": 403,
+   "xbox": "0x000a5020",
+   "ps2": "0x001ea470",
+   "name": "RPostProcessing::GrabBackBuffer",
+   "verdict": "accept",
+   "why": "First call in DrawPostProcessingEffects on both sides (before RSniperZoom grab, SetDeviceTransformMode, TestFlares...); MakeCopy(this->+4->+0xc) then ExtractAlphaInfo shape",
+   "intermediates": [
+    {
+     "xbox": "0x000a68a0",
+     "ps2": "0x001ed5e0",
+     "name": "RSniperZoom::GrabBackBuffer",
+     "why": "Second call in DrawPostProcessingEffects; body: if glbMissionManager field !=0 clear this+4, then if this+4 lock/copy subsampled back buffer - same as PS2"
+    }
+   ]
+  },
+  {
+   "item": 404,
+   "xbox": "0x000bf2d0",
+   "ps2": "0x00216b60",
+   "name": "WCollisionMgr::GetGroundCollision",
+   "verdict": "accept",
+   "why": "Clears out+0x53, FindClosestFace(p+0x10,1), IntersectSegPlane, sets hit fields; caller Newton::Simulate both",
+   "intermediates": []
+  },
+  {
+   "item": 405,
+   "xbox": "0x000780d0",
+   "ps2": "0x001a4190",
+   "name": "__final_insertion_sort<unsigned_char_*>",
+   "verdict": "reject",
+   "why": "Xbox is a recursive introsort loop (MSVC _Sort: depth/2+depth/4, partition, recursion, heap fallback) - different STL routine, ratio 3.6",
+   "intermediates": []
+  },
+  {
+   "item": 406,
+   "xbox": "0x0007dbc0",
+   "ps2": "0x001ad050",
+   "name": "RInstanceRender_SetDefaultShadowInformation",
+   "verdict": "accept",
+   "why": "Same pointer init, FindOrCreateTexture(GetContext(0),0x6c666564,0), same 1/0 globals; caller WRender ctor",
+   "intermediates": []
+  },
+  {
+   "item": 407,
+   "xbox": "0x0003d9a0",
+   "ps2": "0x001448d0",
+   "name": "TextFile::~TextFile",
+   "verdict": "accept",
+   "why": "if(+8) FILESYS_closesync(*this,100); Xbox non-deleting ~TextFile; caller DTuningFile::~DTuningFile both",
+   "intermediates": []
+  },
+  {
+   "item": 408,
+   "xbox": "0x000d6eb0",
+   "ps2": "0x002377d8",
+   "name": "GGallery::FONT_SetState",
+   "verdict": "accept",
+   "why": "Already named; same field copies 0x60/64/68/70-7c, scale*0.001; same GHud callers",
+   "intermediates": []
+  },
+  {
+   "item": 409,
+   "xbox": "0x000a8f10",
+   "ps2": "0x001d95c0",
+   "name": "RDebris::Reset",
+   "verdict": "accept",
+   "why": "Zero this[0x17], loop over 23 pointers clearing one field; caller RestartTrackRender both",
+   "intermediates": []
+  },
+  {
+   "item": 410,
+   "xbox": "0x0011c980",
+   "ps2": "0x002f33a0",
+   "name": "AMix::SetTransition",
+   "verdict": "accept",
+   "why": "Already named; clamp 0..1, frames>=1, +0x1c=1, +8=+4, speed=(t-cur)/frames",
+   "intermediates": []
+  },
+  {
+   "item": 411,
+   "xbox": "0x000a60f0",
+   "ps2": "0x001ec4a0",
+   "name": "RShadowMap::DrawSimpleShadow",
+   "verdict": "accept",
+   "why": "7/8 named callees shared (USimpleTexturedMaterial static, Alpha/ZWrite toggles, GetRigidBody); caller RVehicle::Render",
+   "intermediates": []
+  },
+  {
+   "item": 412,
+   "xbox": "0x000d9e30",
+   "ps2": "0x00245190",
+   "name": "GHud::DrawLetterBox",
+   "verdict": "accept",
+   "why": "Same state machine 1/2/3 with 0x1e counter, *65/30 height, two DrawBox calls, SetDepthTestMethod",
+   "intermediates": []
+  },
+  {
+   "item": 413,
+   "xbox": "0x0012ede0",
+   "ps2": "0x002fa8f0",
+   "name": "AEngine::Play",
+   "verdict": "accept",
+   "why": "Same fgCount*150/0.05, +0xdc/+0xe0 test, 10000.0, (+0x11c + +0x120) - +0x110*1000; caller ARaceEngine::Play",
+   "intermediates": []
+  },
+  {
+   "item": 414,
+   "xbox": "0x0007ff10",
+   "ps2": "0x001b1870",
+   "name": "RPathEngine::RPathHandle::SetAcceleration",
+   "verdict": "accept",
+   "why": "Already named; +0xc0 setter, identical set of 6 EPath* event destructor callers on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 415,
+   "xbox": "0x000e3180",
+   "ps2": "0x0024a1d0",
+   "name": "GSubtitles::TheApp",
+   "verdict": "accept",
+   "why": "Singleton getter with identical caller set (GHud Draw/DrawHealth/DrawWeapon/FadeOutToBlack/Reset, ESetSubtitle, ESetVideo, RunTheGame helper)",
+   "intermediates": []
+  },
+  {
+   "item": 416,
+   "xbox": "0x00028620",
+   "ps2": "0x0012c440",
+   "name": "AIElementController::GetStats",
+   "verdict": "accept",
+   "why": "return this+0x1c; 4 callers on each side all in the SRule CheckRule family, incl. SRuleRange::CheckRule",
+   "intermediates": []
+  },
+  {
+   "item": 417,
+   "xbox": "0x0007c3f0",
+   "ps2": "0x001aa890",
+   "name": "RDirectorQueue::ProcessDirectorLogic",
+   "verdict": "accept",
+   "why": "Called from FUN_0007c5e0 which is RestartDirectorQueue (sets +0x10=2 then calls it) <- RestartCamera; shared callees DirectorChangeCameraMode/SetCameraModeByIndex/FastFree",
+   "intermediates": [
+    {
+     "xbox": "0x0007c5e0",
+     "ps2": "0x001aa870",
+     "name": "RDirectorQueue::RestartDirectorQueue",
+     "why": "Body: byte flag=2 then ProcessDirectorLogic; sole caller RPlayerCamera::RestartCamera on both sides"
+    }
+   ]
+  },
+  {
+   "item": 418,
+   "xbox": "0x000da8e0",
+   "ps2": "0x002477a0",
+   "name": "GHud::dbDrawTarget",
+   "verdict": "accept",
+   "why": "Callees FONT_Width/SPRITE_SetState/Sprite_Draw2D shared; sole caller DAudio::DrawTargets on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 419,
+   "xbox": "0x000d34c0",
+   "ps2": "0x00232e80",
+   "name": "GFX::Update",
+   "verdict": "accept",
+   "why": "if(!GHud::TheApp()->isPaused) FRAME_Draw; caller DrawEffects both",
+   "intermediates": []
+  },
+  {
+   "item": 420,
+   "xbox": "0x000365a0",
+   "ps2": "0x0013f2e8",
+   "name": "AIVehicleController::RegisterSimHeli",
+   "verdict": "reject",
+   "why": "Xbox function is already named RegisterSimCar: vtable type switch to RegisterAgentGroundVehicle/RegisterTrafficVehicle, not the RegisterHelicopter wrapper; ratio 4.4",
+   "intermediates": []
+  },
+  {
+   "item": 421,
+   "xbox": "0x00022dd0",
+   "ps2": "0x001240c8",
+   "name": "AICharacterHands::Fire",
+   "verdict": "accept",
+   "why": "state==2 -> 0xb, anim table lookup, SetNewAnimation, toggle alternating-hand flag ^1; caller SWeaponManager::FireWeapon",
+   "intermediates": []
+  },
+  {
+   "item": 422,
+   "xbox": "0x000d3c30",
+   "ps2": "0x002343e0",
+   "name": "GFXGallery::STICKY_UpdateAllIndexes",
+   "verdict": "accept",
+   "why": "Two 32-bit masks over 64 entries, per set bit update 16-byte slot via helper; caller FRAME_Draw both",
+   "intermediates": []
+  },
+  {
+   "item": 423,
+   "xbox": "0x000b80b0",
+   "ps2": "0x002064d8",
+   "name": "SMissionManager::SetDriveMissile",
+   "verdict": "accept",
+   "why": "Already named; same field clears, SetMissileCamera/GetSelectedTarget->SetTarget, vtable call with 8, same 4 callers",
+   "intermediates": []
+  },
+  {
+   "item": 424,
+   "xbox": "0x0008f690",
+   "ps2": "0x001cacb8",
+   "name": "RSceneObj::StopFX",
+   "verdict": "reject",
+   "why": "Xbox body is RSceneObj::InitEffects(bool): toggles effects ON with bit4|bit2 test, CalcDamageZone+SetEffectBits for damaged bits; callers differ (UseInstanceList-like vs Missile::Simulate)",
+   "intermediates": [
+    {
+     "xbox": "0x0008f690",
+     "ps2": "0x001ca048",
+     "name": "RSceneObj::InitEffects",
+     "why": "Identical loop: effect-bits test, else bit4 (|bit2 if param) -> ToggleEffect(true,i,eff,-1.0); damaged branch with short==0 -> CalcDamageZone, helper, SetEffectBits(i,0)"
+    }
+   ]
+  },
+  {
+   "item": 425,
+   "xbox": "0x00123be0",
+   "ps2": "0x002ddc80",
+   "name": "AVoice::View::Stop",
+   "verdict": "accept",
+   "why": "+0x16=0, list remove if +0x17, SNDstop in critical section if +0xc!=-1, +8 test; called from AVoice::View::Play volume<=0 branch",
+   "intermediates": [
+    {
+     "xbox": "0x001244d0",
+     "ps2": "0x002ddd20",
+     "name": "AVoice::View::Play",
+     "why": "Same body: vol<=0 -> Stop, else *127, clamp pitch 4.0*4096, *65536, Timer_Frequency*32767 clamp, pan*127; caller AVoice::Play both"
+    }
+   ]
+  },
+  {
+   "item": 426,
+   "xbox": "0x0007a4e0",
+   "ps2": "0x001a7398",
+   "name": "RCameraMath::VU0_GenerateQuat",
+   "verdict": "accept",
+   "why": "PS2 helper FUN_001a7558 = normalise + VU0_GenerateMatrix4Unit; Xbox inlines the normalise (v4unitxyz, w=0) then calls GenerateMatrix4Unit then m4toquat; caller chain UpdateAutoDriveTargeting <- UpdateTargets",
+   "intermediates": [
+    {
+     "xbox": "0x0007a2b0",
+     "ps2": "0x001a7608",
+     "name": "RCameraMath::VU0_GenerateMatrix4Unit",
+     "why": "Cross with (0,1,0) unit, second cross, identity last row, zero w; reached from GenerateQuat helper"
+    },
+    {
+     "xbox": "0x000ce1b0",
+     "ps2": "0x0022b918",
+     "name": "WTargetPicker::UpdateAutoDriveTargeting",
+     "why": "Same body: if camera aiming -> identity quat; if target state 2 -> v4sub from camera pos, transpose, rotate, GenerateQuat, slerp; caller UpdateTargets both"
+    }
+   ]
+  },
+  {
+   "item": 427,
+   "xbox": "0x00098380",
+   "ps2": "0x001c1778",
+   "name": "RReflection::LightingProps",
+   "verdict": "accept",
+   "why": "Strings Character/Dynamic Objects, NameToIndex fallback, +0xa0 table *0x80 + idx*0x10; caller RegisterSymbols",
+   "intermediates": []
+  },
+  {
+   "item": 428,
+   "xbox": "0x001433a0",
+   "ps2": "0x00318268",
+   "name": "SNDMIXI_initfx2",
+   "verdict": "accept",
+   "why": "Flag=1, copy 0x38 bytes, NUM_MIXES scan with SNDI_getb(...,4); caller MIX_initreverb both",
+   "intermediates": []
+  },
+  {
+   "item": 429,
+   "xbox": "0x000510f0",
+   "ps2": "0x00168428",
+   "name": "IOModule::ReleaseAllButtons",
+   "verdict": "accept",
+   "why": "glbIFeedback-indexed device/table pair, count via vcall, zero each device value, feed queue; caller SetAutoDrive both",
+   "intermediates": []
+  },
+  {
+   "item": 430,
+   "xbox": "0x000d7c20",
+   "ps2": "0x0023c6c8",
+   "name": "GHud::SetLevelLoadText",
+   "verdict": "accept",
+   "why": "this+0x430=1; sole caller EEndMission::~EEndMission on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 431,
+   "xbox": "0x0005d3f0",
+   "ps2": "0x0017bc18",
+   "name": "Math_v3unitAbort",
+   "verdict": "reject",
+   "why": "Xbox computes triangle normal (cross of edges, zero->(0,1,0), flip to y>=0); PS2 is zero-check+printf abort+v3unit; different routine, unrelated callers",
+   "intermediates": []
+  },
+  {
+   "item": 432,
+   "xbox": "0x00080330",
+   "ps2": "0x001b1e58",
+   "name": "RPathEngine::Reset",
+   "verdict": "accept",
+   "why": "Walk global path-handle list calling RPathHandle::Init(param) on each; caller WWorld::Reset",
+   "intermediates": []
+  },
+  {
+   "item": 433,
+   "xbox": "0x0005f680",
+   "ps2": "0x00183888",
+   "name": "Missile::SetTarget",
+   "verdict": "accept",
+   "why": "+0x6c=target, AddReference if non-null and !+0x38; callers SetDriveMissile and UpdateAutoDriveMissile on both",
+   "intermediates": []
+  },
+  {
+   "item": 434,
+   "xbox": "0x000b72c0",
+   "ps2": "0x002084a8",
+   "name": "SMissionManager::ShowMissionText",
+   "verdict": "accept",
+   "why": "PS2 disassembly (decompile misleading) returns float at (+0x1c)->0x2c8/0x2cc/0x2c4 by state 1/2/else - Xbox identical via +0x2c; caller AIElementController ctor twice on both",
+   "intermediates": []
+  },
+  {
+   "item": 435,
+   "xbox": "0x00145e40",
+   "ps2": "0x00315f38",
+   "name": "SFILTER_unpackxalfinit",
+   "verdict": "accept",
+   "why": "Sets two func ptrs, copies param fields, zeros 3 fields, operator_new(0xa8) CEAXABLKDecf construct into +0x1c; Implied+BSim",
+   "intermediates": []
+  },
+  {
+   "item": 436,
+   "xbox": "0x00095a80",
+   "ps2": "0x001d3138",
+   "name": "RVehicle::ComputeDamage",
+   "verdict": "accept",
+   "why": "If no damage source zero 16x16-byte table, else fill from vcall result; caller RVehicle::Render",
+   "intermediates": []
+  },
+  {
+   "item": 437,
+   "xbox": "0x0014c7f0",
+   "ps2": "0x00301588",
+   "name": "RCMP::AV_PLAYER::SetVol",
+   "verdict": "accept",
+   "why": "if(*this) AUDIO_PLAYER::SetVol else 0; caller PlayMPC::Play both",
+   "intermediates": []
+  },
+  {
+   "item": 438,
+   "xbox": "0x00051250",
+   "ps2": "0x00168678",
+   "name": "IOModule::SendGameMessages",
+   "verdict": "accept",
+   "why": "5/5 named callees (Get, IsInverted, isDown, isUp, GetActionQueueManager); caller UpdateAllDevices both",
+   "intermediates": []
+  },
+  {
+   "item": 439,
+   "xbox": "0x000b1eb0",
+   "ps2": "0x001fd548",
+   "name": "SimpleRigidBody::RecalcOrientMat",
+   "verdict": "accept",
+   "why": "Already named; VU0_quattom4 wrapper with identical caller set",
+   "intermediates": []
+  },
+  {
+   "item": 440,
+   "xbox": "0x0012f8b0",
+   "ps2": "0x002fbd88",
+   "name": "URefCounter<AEngine>::Get",
+   "verdict": "accept",
+   "why": "Static-init guard, inline URefCounter ctor (list sentinel), atexit, return static; caller AEngine::Get",
+   "intermediates": []
+  },
+  {
+   "item": 441,
+   "xbox": "0x000deee0",
+   "ps2": "0x00245708",
+   "name": "GHud::SetMissionFailed",
+   "verdict": "accept",
+   "why": "Same 0x18577 at +0x310, +0x318=0, 5 at +0x470/480, param -> 0x314=5/0x324=0 else +0x43c timer; ClearObjectiveMessage and AimOff inlined; caller EPlayerLose",
+   "intermediates": []
+  },
+  {
+   "item": 442,
+   "xbox": "0x00091360",
+   "ps2": "0x001cc738",
+   "name": "RSkeletalObj::UpdatePosition",
+   "verdict": "accept",
+   "why": "Calls RSceneObj::UpdatePosition first, bone-effect bitmask loop with sin/cos and quattom4; caller RVehicle::UpdatePosition",
+   "intermediates": []
+  },
+  {
+   "item": 443,
+   "xbox": "0x000509c0",
+   "ps2": "0x001673e0",
+   "name": "InputToAction::~InputToAction",
+   "verdict": "accept",
+   "why": "Vector-destroy InputTable array (0x3c), destroy StringToNumber, FastFree(+0xc, n*8+8); non-deleting ~InputToAction",
+   "intermediates": [
+    {
+     "xbox": "0x000515e0",
+     "ps2": "0x001681e8",
+     "name": "IOModule::ReleaseDevices",
+     "why": "Same loop: per device destroy InputToAction at +0x40 slot and free, virtual-delete device, count=0"
+    }
+   ]
+  },
+  {
+   "item": 444,
+   "xbox": "0x000d7d90",
+   "ps2": "0x0023c848",
+   "name": "GHud::RadarRadiusInMeters",
+   "verdict": "accept",
+   "why": "PS2 disassembly returns 0x41800000 = 16.0 in f0; Xbox returns 16.0; caller UpdateObjectiveSpecial both",
+   "intermediates": []
+  },
+  {
+   "item": 445,
+   "xbox": "0x0008d6e0",
+   "ps2": "0x001c6fb8",
+   "name": "UGroup::something",
+   "verdict": "accept",
+   "why": "Same tag masking 0xffff0000|param, DataLocateTag/GetArray twice with end check; caller UseArticle",
+   "intermediates": []
+  }
+ ]
+}

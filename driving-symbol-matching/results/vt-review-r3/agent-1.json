@@ -1,0 +1,452 @@
+{
+ "verdicts": [
+  {
+   "item": 360,
+   "xbox": "0x00013c70",
+   "ps2": "0x0010c5e0",
+   "name": "ActAnimationDatabase::GetAnimation",
+   "verdict": "accept",
+   "why": "Xbox is 'mov ecx,[ecx]; jmp 13c00' = PS2 wrapper forwarding *this to PrivateData::GetAnimation; sole caller ActAnimGroup::ChangeAnimation on both sides (small ratio is just the tail-jump)",
+   "intermediates": [
+    {
+     "xbox": "0x00013c00",
+     "ps2": "0x0010c1d8",
+     "name": "PrivateData::GetAnimation",
+     "why": "only target of the 13c70 wrapper; same +0x440 table, *0x3c stride, ==-1 checks and vtable call as PS2"
+    }
+   ]
+  },
+  {
+   "item": 361,
+   "xbox": "0x0005c9f0",
+   "ps2": "0x0017b8b0",
+   "name": "Float_COORD3toCOORD4",
+   "verdict": "accept",
+   "why": "copies xyz and zeroes w (PS2 stores zero-extended upper word); 5 direct named callers agree (FireWeapon, GetRotPos, ProcessPhysics, ProcessSimplePhysics, Spawn)",
+   "intermediates": []
+  },
+  {
+   "item": 362,
+   "xbox": "0x000a6690",
+   "ps2": "0x001ece18",
+   "name": "RSky::Draw",
+   "verdict": "accept",
+   "why": "same callee set (DisableFog, DisablePositionalLighting, SetZWritesEnable, QuickDrawInstance, sin/cos) and sole caller WRender::DrawWorld",
+   "intermediates": []
+  },
+  {
+   "item": 363,
+   "xbox": "0x00034a00",
+   "ps2": "0x0013c798",
+   "name": "AIRoadSpawn::TrafficRespawnPosCheck",
+   "verdict": "accept",
+   "why": "same global-flag guard, GetRigidBody of player physics object, distance to point minus param compared to constant; caller AIGroundVehicle::Spawn on both",
+   "intermediates": []
+  },
+  {
+   "item": 364,
+   "xbox": "0x00035840",
+   "ps2": "0x0013dfc8",
+   "name": "AIVehicle::GetPhysicsObject",
+   "verdict": "accept",
+   "why": "getter +0x14 vs +4 (consistent +0x10 shift; GetPosition item 392 uses +0x14 as the physics object); called from DoAgentLogic, DoAttackMode, DoMoveMode, DoProximityDestruct/DisengageAutoDrive chains on both",
+   "intermediates": []
+  },
+  {
+   "item": 365,
+   "xbox": "0x000d43a0",
+   "ps2": "0x002363b0",
+   "name": "GFXGallery::PARTICLE_Add",
+   "verdict": "accept",
+   "why": "'Giotto' AMix::Add, AIndex::Lookup on ABankArray, same field writes; caller GFXGallery::CANVAS_Draw",
+   "intermediates": []
+  },
+  {
+   "item": 366,
+   "xbox": "0x000e2a70",
+   "ps2": "0x00248fc8",
+   "name": "GLoadingScreen::Shutdown",
+   "verdict": "accept",
+   "why": "double ClearToBlack under same flag, TAR destroy loop, FONT_destroy/MEM_free; caller RunTheGame",
+   "intermediates": []
+  },
+  {
+   "item": 367,
+   "xbox": "0x000bcf40",
+   "ps2": "0x00210840",
+   "name": "Util_GenerateTensor",
+   "verdict": "accept",
+   "why": "identical inertia formulas (5.0 threshold, 3.0/, 0.25, 0.08333, 0.5); caller Smackable::Smackable",
+   "intermediates": []
+  },
+  {
+   "item": 368,
+   "xbox": "0x000c4120",
+   "ps2": "0x00216ec0",
+   "name": "WCollisionMgr::GetInstanceStripList",
+   "verdict": "accept",
+   "why": "size ratio 1.0, same callee pattern (v3sub, matrix vect3mult, __builtin_new) and sole caller WCollisionMgr::GetInstanceListGuts",
+   "intermediates": []
+  },
+  {
+   "item": 369,
+   "xbox": "0x000cf0b0",
+   "ps2": "0x0022c6b8",
+   "name": "WTree::FindNode",
+   "verdict": "accept",
+   "why": "CheckContainment then recurse into the other FindNode overload; caller RSceneObj::UpdatePosition on both (this is the PS2 overload at 0x22c6b8 that calls CheckContainment)",
+   "intermediates": [
+    {
+     "xbox": "0x000cefe0",
+     "ps2": "0x0022c530",
+     "name": "WTree::CheckContainment",
+     "why": "called at the same position in FindNode; bounds containment tests on MapNode bytes +0xd/+0xe/+0xf vs COORD4 radius; sole caller FindNode on both"
+    }
+   ]
+  },
+  {
+   "item": 370,
+   "xbox": "0x000d9970",
+   "ps2": "0x00244490",
+   "name": "GHud::DrawFontCentered",
+   "verdict": "accept",
+   "why": "FONT_SetState/SetScale, +0x50 write, FONT_Height+5.0 line spacing, centred FONT_Width loop; caller GHud::DrawPauseMenu",
+   "intermediates": []
+  },
+  {
+   "item": 371,
+   "xbox": "0x0007e040",
+   "ps2": "0x001ad808",
+   "name": "GetTextureVal",
+   "verdict": "accept",
+   "why": "rowbytes, -0.5 clamp to width/height-2, bilinear byte sample at +0x10; caller RRenderSharedData::GetShadowBrightness",
+   "intermediates": []
+  },
+  {
+   "item": 372,
+   "xbox": "0x000177f0",
+   "ps2": "0x001115d8",
+   "name": "ActModel::UnLoad",
+   "verdict": "accept",
+   "why": "3-slot loop from +0xc: ~DynamicLoader on slot+3, UMemory::Free, zero; Xbox caller ~ActModelDatabase absorbed ~ActModel/UnloadModel",
+   "intermediates": []
+  },
+  {
+   "item": 373,
+   "xbox": "0x0009bb30",
+   "ps2": "0x001db848",
+   "name": "REmp::DrawShootingEffect",
+   "verdict": "accept",
+   "why": "SetZWritesEnable(0), colour byte = global*(1-t) replicated into vertex array, BuildScale/AddGeoPrim/MATRIX4_mult; caller RVehicle::RenderFX",
+   "intermediates": []
+  },
+  {
+   "item": 374,
+   "xbox": "0x00123c50",
+   "ps2": "0x002de060",
+   "name": "AVoice::View::Restart",
+   "verdict": "reject",
+   "why": "Xbox body is AVoice::View::~View (non-deleting): list remove of this when +0x17 set, then SNDstop without resetting +0xc; referenced only as a dtor pointer (eh vector destructor iterator) from ~AVehicle/~AUltraLite etc., never called like Restart",
+   "intermediates": [
+    {
+     "xbox": "0x00123c50",
+     "ps2": "0x002de0b8",
+     "name": "AVoice::View::~View",
+     "why": "exact body of PS2 ~View minus the delete flag: list<View*>::remove(global,&this) if byte +0x17, then SNDstop(+0xc) in critical section"
+    },
+    {
+     "xbox": "0x00123870",
+     "ps2": "0x002dd698",
+     "name": "AVoice::Set",
+     "why": "NOTE: already named AVoice::View::Restart by batch 004b, which looks wrong: it loops 3 View slots comparing/storing two params and inlines Restart's SNDstop/-1 reset; GFXGallery::PARTICLE_Add calls it with (bank,index) where the PS2 PARTICLE_Add calls AVoice::Set"
+    }
+   ]
+  },
+  {
+   "item": 375,
+   "xbox": "0x000e2610",
+   "ps2": "0x002487d8",
+   "name": "GLoadingScreen::DrawBackground",
+   "verdict": "accept",
+   "why": "same guard global, identity UV block (0,0,1,0,1,1,1,0), per-tile sprite draw loop; caller GLoadingScreen::Update",
+   "intermediates": []
+  },
+  {
+   "item": 376,
+   "xbox": "0x0009fec0",
+   "ps2": "0x001e09d0",
+   "name": "RLightning::~RLightning",
+   "verdict": "accept",
+   "why": "vtable_RLightning, Reset, zero 4 fields, UVolatileMaterial dtor, FastFree vector, base vtable; no delete flag so it is the plain ~RLightning",
+   "intermediates": [
+    {
+     "xbox": "0x0009fe30",
+     "ps2": "0x001e0a70",
+     "name": "RLightning::Reset",
+     "why": "first call in both ~RLightning and the ctor; same body: timestamps, flag=1, rate, helper calls, delete +0x6c0/+0x6f0 buffer"
+    }
+   ]
+  },
+  {
+   "item": 377,
+   "xbox": "0x00089630",
+   "ps2": "0x001bc510",
+   "name": "RPlayerCamera::TriggerAnimationCamera",
+   "verdict": "accept",
+   "why": "three 0x42040000 stores, 2.0 < param override, then ResetStateForAnimation; caller EPlayCameraAnim::~EPlayCameraAnim",
+   "intermediates": [
+    {
+     "xbox": "0x00089bd0",
+     "ps2": "0x001bddb0",
+     "name": "RPlayerCamState::ResetStateForAnimation",
+     "why": "called right after the +0x1f8 clear in TriggerAnimationCamera; body global=0, flag=1, field=0 identical; its 3 Xbox callers match the 3 PS2 Trigger*AnimationCamera callers"
+    }
+   ]
+  },
+  {
+   "item": 378,
+   "xbox": "0x000f3970",
+   "ps2": "0x00297470",
+   "name": "EAGL::ViewPort::SetBackgroundColour",
+   "verdict": "accept",
+   "why": "one-line setter but positional agreement: first call with 0xff000000 in ClearToBlack, and called from LoadAndDrawUnLoadingScreen, SetFillColour, ROffscreenBuffer/RShadowMap ctor chains on both",
+   "intermediates": []
+  },
+  {
+   "item": 379,
+   "xbox": "0x000ad690",
+   "ps2": "0x001f6ae0",
+   "name": "RigidBody::TempGetHeightInformation",
+   "verdict": "accept",
+   "why": "FindClosestFace + nudge retries + SurfaceBumpHeight; callers ProcessPhysics, ProcessSimplePhysics, ResetCar, Snowmobile, CollideWithGround chains agree",
+   "intermediates": []
+  },
+  {
+   "item": 380,
+   "xbox": "0x000331c0",
+   "ps2": "0x00139be8",
+   "name": "AIHelicopter::DoAgentLogic",
+   "verdict": "accept",
+   "why": "Xbox already named; caller AIHelicopter::Update, shared GetPhysicsObject/FindClosestFace/GetHitPoints callees",
+   "intermediates": []
+  },
+  {
+   "item": 381,
+   "xbox": "0x000254c0",
+   "ps2": "0x00126c98",
+   "name": "AICharacterPedestrian::Recycle",
+   "verdict": "accept",
+   "why": "size ratio 1.0, GetNewActorHandle/KillActorByHandle; three named callers agree (EForceNearPedRespawn ctor, Init, Manage)",
+   "intermediates": []
+  },
+  {
+   "item": 382,
+   "xbox": "0x000a91b0",
+   "ps2": "0x001d94a8",
+   "name": "RDebris::RDebris",
+   "verdict": "accept",
+   "why": "+0x5c=0, 0x17-iteration FastAlloc('RDebrisType') + inlined RDebrisType ctor + Init(i), trailing helper; caller chain to InitGameRender",
+   "intermediates": [
+    {
+     "xbox": "0x000a8f30",
+     "ps2": "0x001d9720",
+     "name": "RDebrisType::Init",
+     "why": "called with the loop index right after each allocation in the RDebris ctor; stores index, SetPrimitiveType, FindOrCreateTexture from a 0x14-stride table indexed by type"
+    }
+   ]
+  },
+  {
+   "item": 383,
+   "xbox": "0x000d6520",
+   "ps2": "0x00237b80",
+   "name": "GGallery::FONT_Draw",
+   "verdict": "accept",
+   "why": "+0xb0 default render state check, +0xa8 font scale by resY/480, 0.75 widescreen and 320/80 x-adjust, FONT_drawtextfa; callers DrawFont/DrawFontAndShadow/DrawFontCentered",
+   "intermediates": []
+  },
+  {
+   "item": 384,
+   "xbox": "0x0011a020",
+   "ps2": "0x002cec40",
+   "name": "StringToNumber::~StringToNumber",
+   "verdict": "accept",
+   "why": "FastFree(+8, count<<4); no delete flag so plain destructor; caller InputConfigManager::InitAndPreload",
+   "intermediates": []
+  },
+  {
+   "item": 385,
+   "xbox": "0x00020a00",
+   "ps2": "0x001200a0",
+   "name": "AICharacterEnemySSnow::DoNeutral",
+   "verdict": "accept",
+   "why": "same IsBumping -> state 0xe/2 with anim table [kind*8(+4)], SetNewAnimation, clear field; same vtable slot (index 8) of the adjacent class vtable (Xbox 0x18aa38, PS2 0x368c64)",
+   "intermediates": []
+  },
+  {
+   "item": 386,
+   "xbox": "0x00089b70",
+   "ps2": "0x001bdd30",
+   "name": "RPlayerCamState::ResetState",
+   "verdict": "accept",
+   "why": "if(+4) clear field block + global + (x==3) flag else set +4=1; callers RPlayerCamState ctor and RestartCamera",
+   "intermediates": []
+  },
+  {
+   "item": 387,
+   "xbox": "0x000e2830",
+   "ps2": "0x00248ca0",
+   "name": "GLoadingScreen::ClearToBlack",
+   "verdict": "accept",
+   "why": "same guard, SetBackgroundColour(0xff000000), EnableAlphaWrites, BeginFrame, Begin/Clear(7)/End view; called twice from Shutdown",
+   "intermediates": []
+  },
+  {
+   "item": 388,
+   "xbox": "0x000d7690",
+   "ps2": "0x0023a368",
+   "name": "GGirl::DrawTexture",
+   "verdict": "accept",
+   "why": "(x,y) sprite draw of current texture array[idx]; Xbox inlined Draw::DrawSprite hence ratio 2; sole caller GGirl::DoGirl",
+   "intermediates": []
+  },
+  {
+   "item": 389,
+   "xbox": "0x000d9740",
+   "ps2": "0x002424a0",
+   "name": "WordWrap",
+   "verdict": "accept",
+   "why": "vec_new(0x14) zeroed 5 line pointers, strlen, max 4 lines, back up to space; caller DrawPauseMenu",
+   "intermediates": []
+  },
+  {
+   "item": 390,
+   "xbox": "0x000b66f0",
+   "ps2": "0x002068e0",
+   "name": "SMissionManager::IncShotsFired",
+   "verdict": "accept",
+   "why": "counter += n and timestamp store (both fields shifted +0x124 consistently); sole caller SWeaponManager::FireWeapon",
+   "intermediates": []
+  },
+  {
+   "item": 391,
+   "xbox": "0x00088cc0",
+   "ps2": "0x001bb9e8",
+   "name": "RPlayerCamera::SetPauseCamera",
+   "verdict": "accept",
+   "why": "helper on +0x368 then SetCameraModeByIndex(global,0,4,0,...); callers EPlayerLose/EPlayerWin dtors",
+   "intermediates": []
+  },
+  {
+   "item": 392,
+   "xbox": "0x000359e0",
+   "ps2": "0x0013e0b8",
+   "name": "AIVehicle::GetPosition",
+   "verdict": "accept",
+   "why": "if physics object, copy PhysicsObject::GetPosition into cached vec and return it (+0x14/+0x50 vs +4/+0x40); EFireWeapon chain via GetTargetPos agrees",
+   "intermediates": []
+  },
+  {
+   "item": 393,
+   "xbox": "0x000d66a0",
+   "ps2": "0x00238028",
+   "name": "GGallery::LINE_Draw2DStrip",
+   "verdict": "accept",
+   "why": "static USimpleMaterial with atexit guard, SetDepthTestMethod, two material fields from params, strip Draw with count; caller chain dbDrawTarget<-DAudio::DrawTargets",
+   "intermediates": []
+  },
+  {
+   "item": 394,
+   "xbox": "0x0008f550",
+   "ps2": "0x001c9858",
+   "name": "RSceneObj::ScaleBoundingRadius",
+   "verdict": "accept",
+   "why": "ComputeBoundingRadius*scale -> SetDimensions; caller PHelicopter ctor",
+   "intermediates": []
+  },
+  {
+   "item": 395,
+   "xbox": "0x0008ea70",
+   "ps2": "0x001caba8",
+   "name": "RSceneObj::TriggerFX",
+   "verdict": "accept",
+   "why": "identical switch 0/1,2/3 TriggerEffects, 4/5 SuppressEffects, 10 ProcessStimuliZones(0x12), 9 DamageEffects with ushort masks",
+   "intermediates": []
+  },
+  {
+   "item": 396,
+   "xbox": "0x0010a720",
+   "ps2": "0x00261bc0",
+   "name": "SIGNAL_destroy",
+   "verdict": "accept",
+   "why": "Xbox already named; destroys semaphore handle field; caller IFeedback::~IFeedback",
+   "intermediates": []
+  },
+  {
+   "item": 397,
+   "xbox": "0x00063ad0",
+   "ps2": "0x00190510",
+   "name": "PBondCar::ProcessSnowmobilePhysics",
+   "verdict": "accept",
+   "why": "callees ApplyHeavyFriction, ImproveLanding, GetHitPoints, COORD3toCOORD4, TempGetHeightInformation(ad690); caller PBondCar::Simulate",
+   "intermediates": []
+  },
+  {
+   "item": 398,
+   "xbox": "0x0009f020",
+   "ps2": "0x001e2380",
+   "name": "RLightning::RenderBolts",
+   "verdict": "accept",
+   "why": "UV quad table, per-vertex fill of buffer at +0x6c0 count +0x6c4, SetZWrites/SetDepthTest/Draw; caller RLightning::Draw",
+   "intermediates": []
+  },
+  {
+   "item": 399,
+   "xbox": "0x00015ac0",
+   "ps2": "0x0010f2b0",
+   "name": "ActGlobalPoseOverrideArray::BlendMatrices",
+   "verdict": "accept",
+   "why": "two m4toquat into statics, copy translation w=1, BlendQ, SQTquattom4 into matrix; caller DoGlobalOverrides",
+   "intermediates": [
+    {
+     "xbox": "0x00019850",
+     "ps2": "0x00114c58",
+     "name": "ActSkeleton::BlendQ",
+     "why": "called between the m4toquat pair and SQTquattom4 in BlendMatrices with the same two static quats; one-line forward to the qslerp helper as on PS2"
+    },
+    {
+     "xbox": "0x001159a0",
+     "ps2": "0x002cc170",
+     "name": "VU0_SQTquattom4",
+     "why": "(scale,quat,trans,out) quat-to-matrix; Xbox callers BlendMatrices, DoMainPose, LocateFX, SetPhysics match the PS2 caller set"
+    }
+   ]
+  },
+  {
+   "item": 400,
+   "xbox": "0x000bf8c0",
+   "ps2": "0x00218d10",
+   "name": "WCollisionMgr::GetOBBObjectIntersection",
+   "verdict": "accept",
+   "why": "size ratio 1.0, OrthoInverse + IntersectSegPlane; chain RayShell::CollideWithObjects<-RayShell<-EFireWeapon dtor matches Xbox FUN_72190<-FUN_72e90<-EFireWeapon dtor",
+   "intermediates": []
+  },
+  {
+   "item": 401,
+   "xbox": "0x0008dee0",
+   "ps2": "0x001c95f0",
+   "name": "RSceneObj::TransformMatrixByInstancePosition",
+   "verdict": "accept",
+   "why": "identity-or-instance matrix with cleared translation then MATRIX4_mult; callers LocateFX, EFireWeapon dtor, CANVAS_Add chain agree",
+   "intermediates": []
+  },
+  {
+   "item": 402,
+   "xbox": "0x000a68a0",
+   "ps2": "0x001ed5e0",
+   "name": "RSniperZoom::GrabBackBuffer",
+   "verdict": "accept",
+   "why": "mission-manager flag clears +4, then lock (stub on Xbox), subsampled back buffer, tex copy with the same two globals; caller DrawPostProcessingEffects",
+   "intermediates": []
+  }
+ ]
+}
