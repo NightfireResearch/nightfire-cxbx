@@ -67,7 +67,9 @@ def main():
         x, p = int(m["xbox"], 16), int(m["ps2"], 16)
         if x not in xn or p not in pn or unnamed(pn[p]):
             continue
-        kind = "new" if unnamed(xn[x]) else ("same" if xn[x] == pn[p] else "differs")
+        cls = pn[p].rsplit("::", 1)[0]
+        alike = xn[x] == pn[p] or (pn[p] == f"{cls}::~{cls.split('::')[-1]}" and xn[x] == f"{cls}::scalar_deleting_destructor")
+        kind = "new" if unnamed(xn[x]) else ("same" if alike else "differs")   # MSVC's deleting destructor = GCC's
         if kind == "same" and not CALIBRATE:
             continue
         if kind == "same":
