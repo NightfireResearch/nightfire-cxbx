@@ -1,0 +1,302 @@
+{
+ "verdicts": [
+  {
+   "item": 0,
+   "xbox": "0x000b1ea0",
+   "ps2": "0x001fd528",
+   "name": "SimpleRigidBody::GetOwner",
+   "verdict": "accept",
+   "why": "same owner-table lookup indexed by the byte ownerIdx (Sim+0x3b0 vs DAT_003394c0); caller WTriggerManager::Process agrees",
+   "intermediates": []
+  },
+  {
+   "item": 1,
+   "xbox": "0x0001bef0",
+   "ps2": "0x001185f8",
+   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::Get",
+   "verdict": "accept",
+   "why": "function-static singleton with guard + atexit (URefCounter ctor inlined on Xbox); sole caller and sole call in ActWeaponDatabase ctor on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 2,
+   "xbox": "0x0007ff20",
+   "ps2": "0x001b1850",
+   "name": "RPathEngine::RPathHandle::SetRunning",
+   "verdict": "reject",
+   "why": "neighbour confusion: Xbox 7ff20 is called by ~EPathSetAccelDelay* with the delay arg (PS2 there calls SetAccelDelay 0x1b1878, +0xc8); Xbox SetRunning is FUN_0007fee0 (called by ~EPathSetRunningDynamic with bool)",
+   "intermediates": []
+  },
+  {
+   "item": 3,
+   "xbox": "0x000da260",
+   "ps2": "0x00245eb0",
+   "name": "GHud::KillButtonMessage",
+   "verdict": "accept",
+   "why": "zeroes the same three GHud fields (consistent +4 shift 0x2f8/0x300/0x304 -> 0x2fc/0x304/0x308); caller ~EButtonMsgOff agrees",
+   "intermediates": []
+  },
+  {
+   "item": 4,
+   "xbox": "0x0007d790",
+   "ps2": "0x001ac848",
+   "name": "RFog::FogColour",
+   "verdict": "accept",
+   "why": "in RRenderHigh ctor on both sides its result feeds SetFillColour right after SetZBufferRange(0xff3cae) - exact positional match",
+   "intermediates": []
+  },
+  {
+   "item": 5,
+   "xbox": "0x0008ed50",
+   "ps2": "0x001caf08",
+   "name": "RSceneObj::RenderSimple",
+   "verdict": "reject",
+   "why": "Xbox body only builds the transform and returns GetArticleViewDistance - it is RSceneObj::GetViewDistance (0x1cb000); swapped with item 20",
+   "intermediates": []
+  },
+  {
+   "item": 6,
+   "xbox": "0x0009a4a0",
+   "ps2": "0x001d8740",
+   "name": "RColorize::SetAreaBrightness",
+   "verdict": "accept",
+   "why": "identical body (+0x4c=+0x48, +0x48=b*b*10, +0x38=sim tick); caller ~ESetAreaBrightness agrees",
+   "intermediates": []
+  },
+  {
+   "item": 7,
+   "xbox": "0x000dfc30",
+   "ps2": "0x00246c48",
+   "name": "GHud::DrawObjectiveMessage",
+   "verdict": "accept",
+   "why": "2 shared strings, LOCALE_Symbol/DrawFontAndShadow/Trigger callees, paused-flag check (0x2a0->0x2b0 same shift as SetControllerUnplugged); caller GHud::Draw agrees",
+   "intermediates": []
+  },
+  {
+   "item": 8,
+   "xbox": "0x000227a0",
+   "ps2": "0x001237d0",
+   "name": "AICharacterHands::GetAimFraction",
+   "verdict": "accept",
+   "why": "PS2 disassembly (decompile misleading) is 'fgHandObj ? fgHandObj->f(+0x160) : 0.0', same as Xbox (+0x14c); caller GHud::DrawCrossHairs agrees",
+   "intermediates": []
+  },
+  {
+   "item": 9,
+   "xbox": "0x000d6e30",
+   "ps2": "0x002378b8",
+   "name": "GGallery::FONT_Load",
+   "verdict": "reject",
+   "why": "Xbox body is a teardown (frees buffers, ~TAR loop, FONT_destroy) called from ~GHud, no FileLoad/FONT_create; different routine",
+   "intermediates": []
+  },
+  {
+   "item": 10,
+   "xbox": "0x0002a2c0",
+   "ps2": "0x0012e670",
+   "name": "AIGroundVehicle::SetTargetMode",
+   "verdict": "accept",
+   "why": "mode 0 -> AIVehicleController::Get + player vehicle ptr, mode 1 -> clear ptr and copy vector; caller ~EAICommand agrees",
+   "intermediates": []
+  },
+  {
+   "item": 11,
+   "xbox": "0x000d87a0",
+   "ps2": "0x0023e270",
+   "name": "GHud::TriggerDamageFlash",
+   "verdict": "accept",
+   "why": "identical body (fields 0x328/0x32c, <5, +0.5 round, clamp 0x14); caller PBondCar::ApplyDamage agrees",
+   "intermediates": []
+  },
+  {
+   "item": 12,
+   "xbox": "0x00050ee0",
+   "ps2": "0x00167e80",
+   "name": "IOModule::CheckUnplugged",
+   "verdict": "accept",
+   "why": "frame counter++, unplugged check (feedback vs PAD platform code), FlushAllQueues + SetControllerUnplugged(1) gated on sim time, SetControllerUnplugged(0) on replug; sole caller IOModule::Tick vs IOModule::Update",
+   "intermediates": [
+    {
+     "xbox": "0x000e00f0",
+     "ps2": "0x0023cb58",
+     "name": "GHud::SetControllerUnplugged",
+     "why": "identical body (if flag!=v: +0x49c/+0x48c = v, PauseOn unless paused); sole caller is the CheckUnplugged pair"
+    }
+   ]
+  },
+  {
+   "item": 13,
+   "xbox": "0x00046620",
+   "ps2": "0x0015cf10",
+   "name": "EStopTimer::EStopTimer",
+   "verdict": "accept",
+   "why": "sets vtable_EStopTimer + index, calls SMissionTimer::Stop; data-ref match and same caller GetEventName",
+   "intermediates": []
+  },
+  {
+   "item": 14,
+   "xbox": "0x0013e660",
+   "ps2": "0x0030b0e8",
+   "name": "iSNDdetunetolinear",
+   "verdict": "accept",
+   "why": "same constants 0x1000, 0x4b0 octave loop, *0x369d>>16, clamp -0xff, table lookups >>8/>>9; caller iSNDcalcpitch agrees",
+   "intermediates": []
+  },
+  {
+   "item": 15,
+   "xbox": "0x00062ec0",
+   "ps2": "0x0018b730",
+   "name": "PBondCar::ClearEMPState",
+   "verdict": "accept",
+   "why": "SetEMPVictimEffect(0) + clear two EMP fields; SetEMPVictimEffect caller sets match exactly (AttackWithEmp, ResetCar, Simulate + this)",
+   "intermediates": []
+  },
+  {
+   "item": 16,
+   "xbox": "0x000e3670",
+   "ps2": "0x0024a8b0",
+   "name": "GSubtitles::DrawFont",
+   "verdict": "accept",
+   "why": "same depth-test setup, font fields +0x38/+0x3c/+0x20 set then draw text; chain DrawSubtitles <- GHud::Draw agrees",
+   "intermediates": [
+    {
+     "xbox": "0x000e39b0",
+     "ps2": "0x0024a6d0",
+     "name": "GSubtitles::DrawSubtitles",
+     "why": "same timer (TIMER_gettick/frequency vs sim tick) expiry -> Reset, else GetString, width, DrawFont((w-x)*0.5, y-65-2); called from GHud::Draw"
+    }
+   ]
+  },
+  {
+   "item": 17,
+   "xbox": "0x0011a040",
+   "ps2": "0x002cedf0",
+   "name": "StringToNumber::BinarySearch",
+   "verdict": "accept",
+   "why": "binary search over 8-byte entries at param[2]+4 with strcmp (inlined on Xbox); caller ConvertStringToNumber agrees",
+   "intermediates": []
+  },
+  {
+   "item": 18,
+   "xbox": "0x00019750",
+   "ps2": "0x00113ae8",
+   "name": "ActPoser::DoSkeletonPose",
+   "verdict": "accept",
+   "why": "same shape: two calls, if **(+0x48/+0x4c)>0 {transform; global overrides}, transform; callers CrossFadeAnimationController::StartNewCrossFade/Update agree",
+   "intermediates": []
+  },
+  {
+   "item": 19,
+   "xbox": "0x0007fed0",
+   "ps2": "0x001b1840",
+   "name": "RPathEngine::RPathHandle::GetParametricDuration",
+   "verdict": "accept",
+   "why": "PS2 disassembly is lw v0,0x98(a0); lwc1 f0,0(v0) - same deref as Xbox; used by ~EPathSetTime* before SetParametricTime on both",
+   "intermediates": []
+  },
+  {
+   "item": 20,
+   "xbox": "0x0008f930",
+   "ps2": "0x001cb000",
+   "name": "RSceneObj::GetViewDistance",
+   "verdict": "reject",
+   "why": "Xbox body calls DrawInstanceList/RenderEffects and a vtable call - it is RSceneObj::RenderSimple (0x1caf08); swapped with item 5",
+   "intermediates": []
+  },
+  {
+   "item": 21,
+   "xbox": "0x0008f160",
+   "ps2": "0x001c8998",
+   "name": "RSceneObj::EnableTarget",
+   "verdict": "accept",
+   "why": "if no target: physics==0 -> transform/ExtractRotTrans/FastAlloc('WTargetable') ctor, else from physics; callers WWorld::Open/Reset and SetPhysics<-SetRenderObject agree",
+   "intermediates": [
+    {
+     "xbox": "0x0008f580",
+     "ps2": "0x001c9b28",
+     "name": "RSceneObj::SetPhysics",
+     "why": "compares +0x28 physics with arg and reads rigid-body transform; called from PhysicsObject::SetRenderObject on both sides (Xbox also from ~PhysicsObject)"
+    }
+   ]
+  },
+  {
+   "item": 22,
+   "xbox": "0x0007fbc0",
+   "ps2": "0x001b14b8",
+   "name": "RPathEngine::RPathHandle::Update",
+   "verdict": "accept",
+   "why": "only callee of the path-list loop RPathEngine::Update <- ~EAnimUpdate on both sides; path/throttle fields and VU0_MATRIX4_mult use agree",
+   "intermediates": [
+    {
+     "xbox": "0x0007fff0",
+     "ps2": "0x001b2058",
+     "name": "RPathEngine::Update",
+     "why": "iterates the global handle list calling RPathHandle::Update(dt); sole caller ~EAnimUpdate on both sides"
+    }
+   ]
+  },
+  {
+   "item": 23,
+   "xbox": "0x000d35b0",
+   "ps2": "0x002331e8",
+   "name": "GFX::SetIntensity",
+   "verdict": "accept",
+   "why": "thin wrapper; in RSceneObj::ToggleEffect it is the call at the same spot (value>=0 && effect handle) on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 24,
+   "xbox": "0x000e8a20",
+   "ps2": "0x00287768",
+   "name": "EAGL::Device::SetNewOverride",
+   "verdict": "accept",
+   "why": "stores the alloc hook global (EAGLMalloc / maybeEaglAlloc); caller RRenderer::RRenderer agrees",
+   "intermediates": []
+  },
+  {
+   "item": 25,
+   "xbox": "0x00071c80",
+   "ps2": "0x00199678",
+   "name": "RayShell::DrawFlashes",
+   "verdict": "accept",
+   "why": "same flash array loop, 0.2f colour constants, AddPositionalLight; caller DrawBulletStreaks agrees",
+   "intermediates": []
+  },
+  {
+   "item": 26,
+   "xbox": "0x00071560",
+   "ps2": "0x00198628",
+   "name": "_Rb_tree<CStringKey,_unsigned_int>::lower_bound",
+   "verdict": "reject",
+   "why": "Xbox body returns pair<iterator,bool> and calls an insert helper - it is the tree's insert_unique (PS2 0x198b98), not lower_bound",
+   "intermediates": []
+  },
+  {
+   "item": 27,
+   "xbox": "0x00031990",
+   "ps2": "0x001386b8",
+   "name": "AIHelicopter::GetPlayerLaneOffsets",
+   "verdict": "accept",
+   "why": "copies position at +0x30, heli coll-nav lookup, then road-network left/right drivable distances selected by the byte at +0x3c into statics; same callee roles",
+   "intermediates": []
+  },
+  {
+   "item": 28,
+   "xbox": "0x000e9a70",
+   "ps2": "0x00286210",
+   "name": "EAGL::DynamicModel::GetModelMatrix",
+   "verdict": "defer",
+   "why": "body is a bare identity return; the 3 callers agree (the Draw functions of USimpleTextured/UVolatile/USimple materials) but the shape proves nothing",
+   "intermediates": []
+  },
+  {
+   "item": 29,
+   "xbox": "0x00028b60",
+   "ps2": "0x0012be90",
+   "name": "AIElementController::Destruct",
+   "verdict": "accept",
+   "why": "deletes the singleton global and nulls it (destructor inlined on Xbox); callers WWorld::Close and ~ERestart agree",
+   "intermediates": []
+  }
+ ]
+}
