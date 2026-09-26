@@ -1,0 +1,176 @@
+[
+ {
+  "xbox": "0xcc840",
+  "name": "WSimpleZone::IsZoneInRange",
+  "ps2": "0x2274a0",
+  "why": "Version Tracking candidate, body review: WTargetPicker::UpdateTargets: after WTargetable::UpdatePosition, Xbox calls cc840(this+0x1c, table[...]) and PS2 calls IsZoneInRange(zone, +0x1c, table[...]). Bodies are identical: 1<<n bias on the x/y/z differences, OR'd, then >>(n+1)==0. Xbox sits just before WSimpleZone::SetPosition."
+ },
+ {
+  "xbox": "0x507a0",
+  "name": "InputTable::InputTable",
+  "ps2": "0x167098",
+  "why": "Version Tracking candidate, body review: InputToAction::InputToAction passes it as the vector-constructor ctor for an array of 0x3c-byte InputTables. Body is identical to PS2: [0]=0, [1]=4, [2]=&[3]."
+ },
+ {
+  "xbox": "0x507c0",
+  "name": "InputTable::~InputTable",
+  "ps2": "0x1670b8",
+  "why": "Version Tracking candidate, body review: The vector-ctor/dtor helpers in InputToAction::InputToAction and ~InputToAction pass it as the element destructor (0x3c elements). Body: FastFree([2], [1]*0xc) if [2] != &[3], the same as PS2 without the delete flag, so it is the plain destructor."
+ },
+ {
+  "xbox": "0x95ce0",
+  "name": "RVehicle::StartMuzzleFlash",
+  "ps2": "0x1d38d8",
+  "why": "Version Tracking candidate, body review: RVehicle::TriggerFX case 8 -> this. PS2 TriggerFX -> StartMuzzleFlash. Same timer check at +0x220+i*4 against the frame counter, then set to counter+5, copies two COORD3s, the HAS_TURRET LookupBool, fx 0x2d -> type 4 and rand*1.5258789e-05+3.0, else types 3/4 or 2 with 0.2*rand+0.6, fields +0x228/+0x230 identical."
+ },
+ {
+  "xbox": "0xea480",
+  "name": "EAGL::Model::MorphModel",
+  "ps2": "0x284d88",
+  "why": "Version Tracking candidate, body review: EAGL::Model::Call: Xbox inlines strcmp(name,'Morph') then calls ea480, and PS2 Call calls MorphModel on 'Morph'. Both walk the +0xd4 morph table, match names against the +0xb8 list, decode bits 0x1c/0x1e of the header with a 0xfffffff length, dst = [2]*(+0xc0)+[3], and dispatch to 3 per-type morph routines."
+ },
+ {
+  "xbox": "0xe96c0",
+  "name": "EAGL::Model::ClearMorphModel",
+  "ps2": "0x285f48",
+  "why": "on the caller chain of EAGL::Model::MorphModel, body review: Model::Call's 'ClearMorph' branch on both. It walks the +0xb8 list and copies n=(short)*(hw>>1) bytes from dst-off to dst, or to dst+off*(+0xc0) if bit 1 is set. It is the PS2 memcpy loop, inlined as rep movs on Xbox."
+ },
+ {
+  "xbox": "0x62d70",
+  "name": "PBondCar::GlareOff",
+  "ps2": "0x18b408",
+  "why": "Version Tracking candidate, body review: Called twice (3,4) at the start of 0x62de0 and from Simulate, the same as PS2 GlareOff from HandleTurnSignals/Simulate. It mirrors the named Xbox GlareOn: if state[i]==1, virtual call (2, 1<<(i+0x10), 0, g, g, -1.0) then (0xc, i, ...), state=0. GlareOn uses 0 and 0xb."
+ },
+ {
+  "xbox": "0x62de0",
+  "name": "PBondCar::HandleTurnSignals",
+  "ps2": "0x18b580",
+  "why": "Version Tracking candidate, body review: Called from PBondCar::Simulate on both. GlareOff(3), GlareOff(4); signal state (PS2 +0x39c, Xbox +0x390) 1/2 compares +0x398/+0x240 (Xbox +0x38c/+0x240) and clears; blink = (frame - start) % period > period*(1-duty); then virtual GlareOn(3 or 4). Offsets are shifted -0xc consistently."
+ },
+ {
+  "xbox": "0x14dfa0",
+  "name": "RCMP::DECODER::GetFrameRate",
+  "ps2": "0x3029b0",
+  "why": "Version Tracking candidate, body review: PlayMPC::Play -> 0x14cd00 (= AV_PLAYER::IsTimeForDecode) -> this, the same path as PS2 PlayMPC::Play -> IsTimeForDecode -> GetFrameRate. Body: if codec (+0x18 Xbox / +0x14 PS2) is null return 0.0, else codec vtable slot 4 (Xbox +0x10, PS2 +0x28/0x2c) returning a float."
+ },
+ {
+  "xbox": "0x14cd00",
+  "name": "RCMP::AV_PLAYER::IsTimeForDecode",
+  "ps2": "0x301390",
+  "why": "on the caller chain of RCMP::DECODER::GetFrameRate, body review: Called only from PlayMPC::Play on both. Body: audio time + [0x40], times GetFrameRate()*0.001, stored at +0x48, return (float)[0x44]+1.0 <= that. Offsets are identical."
+ },
+ {
+  "xbox": "0xf3ab0",
+  "name": "EAGL::RuntimeAllocConstructorPool::~RuntimeAllocConstructorPool",
+  "ps2": "0x29e1f8",
+  "why": "Version Tracking candidate, body review: The atexit stub 0x15d150 calls it with ECX=0x23fbb8. That global is used by Xbox DynamicLoader::Resolve (with RuntimeAllocConstructorPool::FindConstructor/Destructor), matching PS2 0x348b28, which PS2 _global_ctor_dtor destroys with ~RuntimeAllocConstructorPool. Body: ~SymbolPool on this, this+0x14, this+0x14, this, exactly like PS2. There is no delete flag, so it is the plain destructor. It also sits in the PS2 slot between ConstructorPool::FindDestructor and RuntimeAllocConstructorPool::RemoveType."
+ },
+ {
+  "xbox": "0xf3bf0",
+  "name": "EAGL::ConstructorPool::~ConstructorPool",
+  "ps2": "0x29e0a0",
+  "why": "on the caller chain of EAGL::RuntimeAllocConstructorPool::~RuntimeAllocConstructorPool, body review: The atexit stub 0x15d140 calls it with ECX=0x23fbe0. That global is used by RunConstructors/InitInternal/ShutDown, which is PS2 0x348b00, the ConstructorPool destroyed by ~ConstructorPool. Same 4x ~SymbolPool body, no delete flag."
+ },
+ {
+  "xbox": "0xf41d0",
+  "name": "EAGL::SymbolPool::~SymbolPool",
+  "ps2": "0x29dcb0",
+  "why": "on the caller chain of EAGL::RuntimeAllocConstructorPool::~RuntimeAllocConstructorPool, body review: The atexit stub 0x15d130 on SymbolPool global 0x23fb8c, and the 4x callee of both pool destructors. Body: Empty() then eagl_free([2], [1]<<2) and [2]=0, the same as PS2 without the delete flag."
+ },
+ {
+  "xbox": "0x50b80",
+  "name": "DeviceScalar::DeviceScalar",
+  "ps2": "0x167768",
+  "why": "Version Tracking candidate, body review: XBoxPadDevice ctor <- IOModule::CreateDevices calls it as PS2PadDevice calls DeviceScalar::DeviceScalar; body identical (+0=0, +4 byte=0, +0x24..+0x30=0)"
+ },
+ {
+  "xbox": "0x52350",
+  "name": "Vector_AttribByteOffsetParserFunc",
+  "ps2": "0x16c328",
+  "why": "found reviewing (rejected) candidate , body review: parser for the MOMENT field in PhysicsNamespace ctor on both sides; body: ';'-token loop into 128-byte buffer, default 16 bytes, Float_AttribByteOffsetParserFunc(...,4,...), result {-6,count,ptr}"
+ },
+ {
+  "xbox": "0x975d0",
+  "name": "RWorldCamera::GetAnchorRenderOffset",
+  "ps2": "0x1d5fa8",
+  "why": "Version Tracking candidate, body review: caller FUN_00082840 (camera update with GetAnchorMatrix4/UpdateAnimationCam/PlayCurrentAnimation/EvaluateSpline = PS2 RPlayerCamera::UpdateRelativeAnimationCam, a caller of GetAnchorRenderOffset); body: IsAnchorValid inlined on anchor +0x128 (PS2 +0x118, +0x10), virtual slot 9 on anchor+0x4c (PS2 +0x48, GCC vtable +0x54), float return, 0.0 when invalid"
+ },
+ {
+  "xbox": "0x8d250",
+  "name": "RRenderWorldCulling::QuadtreeFrustrumCheck2d",
+  "ps2": "0x1c66c8",
+  "why": "found reviewing (rejected) candidate , body review: sole caller-side callee of WRender::FindVisibleTreeNodesAndCurtains besides IsInFrustum2d on both; body: plane test at +0x40..+0x4c vs radius, 4-row x/z transform, classify returning 0/1/2 - identical"
+ },
+ {
+  "xbox": "0xb97f0",
+  "name": "SRuleDeath::SRuleDeath",
+  "ps2": "0x20a060",
+  "why": "Version Tracking candidate, body review: SMissionRule::Instantiate (Xbox FUN_000ba150 <- SMissionManager::Load) case 3 = SRuleDeath on PS2; SMissionRule base inlined then vtable 0x1935f0 + SMissionRuleTarget(type +0x10, id +0x14) at +0xc; Xbox alloc 0x14 vs PS2 0x1c (vptr layout -8)"
+ },
+ {
+  "xbox": "0xb9850",
+  "name": "SRuleDeath::CheckRule",
+  "ps2": "0x20a108",
+  "why": "Version Tracking candidate, body review: slot 1 of SRuleDeath vtable 0x1935f0 (built by the case-3 ctor); body = SMissionRuleTarget::GetHealth inlined (type 0: glbMissionManager+0x49c = PS2 +0x378 (+0x124); type 4: GetCarpElementTracking(...)+0x1c->+0x4c = PS2 +0x20) then ==0"
+ },
+ {
+  "xbox": "0xb98a0",
+  "name": "SRulePIP::SRulePIP",
+  "ps2": "0x20a2c8",
+  "why": "Version Tracking candidate, body review: Instantiate case 5 = SRulePIP; copies def +0x10,+0x14,+0x18 exactly like PS2; vtable 0x1935f8 whose CheckRule slot is StubError (return 1 = PS2 SRulePIP::CheckRule); alloc 0x18 vs PS2 0x20"
+ },
+ {
+  "xbox": "0xb9900",
+  "name": "SRuleProg::SRuleProg",
+  "ps2": "0x20a380",
+  "why": "Version Tracking candidate, body review: Instantiate case 6 = SRuleProg; copies def +0x10 like PS2; vtable 0x193600 whose slot 1 is the already named SRuleProg::CheckRule 0xb9950; alloc 0x10 vs PS2 0x18"
+ },
+ {
+  "xbox": "0x105bd0",
+  "name": "EAGLAnim::FnRunBlender::BlendFacing",
+  "ps2": "0x278d80",
+  "why": "Version Tracking candidate, body review: called twice from FnRunBlender::AlignCycleBeginEnd with (0,0,out) then (frames-1,frames-1,out) exactly as PS2 calls BlendFacing; body: GetScratchBuffer, virtual on +0x18 anim, if weight +0x28 != 0 then FUN_000fa340(=PS2 FUN_00262aa8) + virtual on +0x1c + VU0_fastqslerp, quat->2D facing, returns bool"
+ },
+ {
+  "xbox": "0x88d10",
+  "name": "RPlayerCamera::SetTumbleCam",
+  "ps2": "0x1bbbf8",
+  "why": "Version Tracking candidate, body review: called from RDirectorQueue::ProcessDirectorLogic as PS2 SetTumbleCam; body identical: store arg at +0x140 (PS2 +0x130), clear director queue +0x368, if mode +0x130 (PS2 +0x120) != global 0x1c4194 (PS2 0x333a08; SetPauseCamera's 0x1c419a/0x333a0e is 6 bytes on in both) SetCameraModeByIndex(global,0,...)"
+ },
+ {
+  "xbox": "0xd3ed0",
+  "name": "GFXGallery::CANVAS_PurgeSceneObj",
+  "ps2": "0x235520",
+  "why": "Version Tracking candidate, body review: sole callee of GFXGallery::CANVAS_Purge (h-1) and per-slot callee of CANVAS_PurgeSceneObjEffects on both sides; body identical: stride 0x90 into +0x1414, flag 0x800 test, virtual getter copy to +0x40, +0x4c=0, set 0x1000|0x800, +0x5c=+0x3c, loop over +0x6e children, +0x50=0"
+ },
+ {
+  "xbox": "0xd4b30",
+  "name": "GFXGallery::CANVAS_PurgeSceneObjEffects",
+  "ps2": "0x235490",
+  "why": "on the caller chain of GFXGallery::CANVAS_PurgeSceneObj, body review: loops +0x408 slot list to count +0x141c, calls CANVAS_PurgeSceneObj where slot +0x50 == arg; identical to PS2"
+ },
+ {
+  "xbox": "0xd3490",
+  "name": "GFX::PurgeSceneObjEffects",
+  "ps2": "0x232dc8",
+  "why": "on the caller chain of GFXGallery::CANVAS_PurgeSceneObj, body review: mov ecx,[glbGfxGallery]; call CANVAS_PurgeSceneObjEffects(arg) - PS2 wrapper identical; callers RSceneObj Load/UseInstanceList/dtor (PS2 KillEffects inlined)"
+ },
+ {
+  "xbox": "0xab460",
+  "name": "RParticleLibrary::MungeDataForPlatform",
+  "ps2": "0x1f3188",
+  "why": "Version Tracking candidate, body review: tail call of RParticleLibrary::MungeData as on PS2; body: copy struct if src!=dst, +0x5c=max(+0x34,+0x38), flag2 -> +0x44=99999, same 'lifeTime of %d is too large. Capping at 255' printf, +0x30=1/life, +0xc*0.5, flag 0x20 size tweak, +0x54 deg->rad, colour scaling (platform constants differ, as the name says)"
+ },
+ {
+  "xbox": "0x00104fa0",
+  "name": "EAGLAnim::FnTurnBlender::scalar_deleting_destructor",
+  "ps2": null,
+  "why": "windowed review: slot 0 of the FnTurnBlender vtable (PS2 vtable 0x3b3300 entry -> 0x27aa10, the sheet's ~FnTurnBlender(void), unnamed in PS2 Ghidra); takes the delete flag"
+ },
+ {
+  "xbox": "0x00104310",
+  "name": "EAGLAnim::FnTurnBlender::~FnTurnBlender",
+  "ps2": null,
+  "why": "windowed review: called by the FnTurnBlender scalar deleting destructor 0x104fa0; body matches PS2 0x27aa10 (sheet ~FnTurnBlender(void))"
+ }
+]
