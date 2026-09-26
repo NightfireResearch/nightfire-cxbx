@@ -1,5 +1,5 @@
 {
- "generated": "Sat Sep 26 03:15:09 2026",
+ "generated": "Sat Sep 26 03:17:59 2026",
  "moves": [
   {
    "program": "Driving.xbe",
@@ -36,6 +36,84 @@
    "address": "0x000d51e0",
    "name": "GFXGallery::CANVAS_Draw",
    "batch": "004d"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00018030",
+   "name": "URefCounter<ActModelDatabase::ModelInfo>::AddReference",
+   "batch": "005"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00021d50",
+   "name": "AICharacterEnemyGround::AICharacterEnemyGround",
+   "batch": "005"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00031850",
+   "name": "AIHelicopter::EnableTargetBeacon",
+   "batch": "005"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00035850",
+   "name": "AIVehicle::SetPhysicsObject",
+   "batch": "005"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00036180",
+   "name": "AIVehicleController::ApproveAdditionalHelicopterSpawn",
+   "batch": "005"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00036660",
+   "name": "AIVehicleController::RegisterHelicopter",
+   "batch": "005"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0003dcd0",
+   "name": "EAICommand::EAICommand",
+   "batch": "005"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00055cf0",
+   "name": "AttributeValue::ComputeBytes",
+   "batch": "005"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000cdfb0",
+   "name": "WTargetPicker::GetSelectedTarget",
+   "batch": "005"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000d98d0",
+   "name": "GHud::DrawFontAndShadow",
+   "batch": "005"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000f3450",
+   "name": "EAGL::TextureRenderContext::TextureRenderContext",
+   "batch": "005"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00116fc0",
+   "name": "UFileLoader::FileLoadAt",
+   "batch": "005"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00127dc0",
+   "name": "AZoomObj::AZoomObj",
+   "batch": "005"
   },
   {
    "program": "DRIVING.ELF",
