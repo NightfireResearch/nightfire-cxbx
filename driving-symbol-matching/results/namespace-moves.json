@@ -1,6 +1,114 @@
 {
- "generated": "Sun Sep 27 00:15:35 2026",
+ "generated": "Sun Sep 27 00:54:10 2026",
  "moves": [
+  {
+   "program": "Driving.xbe",
+   "address": "0x001173a0",
+   "name": "UFileLoader::Startup",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0011a810",
+   "name": "UCharNamespace::~UCharNamespace",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00125f50",
+   "name": "_Rb_tree<MapKey,_ABank>::_M_erase",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x001267f0",
+   "name": "URefCounter<ABank>::~URefCounter",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0007aa20",
+   "name": "RCameraSpline::BuildSpline",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0007a9f0",
+   "name": "RCameraSpline::ClearSplinePtList",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000d7b40",
+   "name": "GGirlieMaterial::~GGirlieMaterial",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000d7bb0",
+   "name": "GGirlieMaterial::scalar_deleting_destructor",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000d7bf0",
+   "name": "GOrthoHudView::PreRender",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00102060",
+   "name": "EAGLAnim::FnDeltaQFast::UpdateNextQs",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00102f00",
+   "name": "EAGLAnim::DeltaQFastPhysical::UnQuantize",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00102510",
+   "name": "EAGLAnim::FnDeltaQFast::EvalSQTMask",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00102370",
+   "name": "EAGLAnim::FnDeltaQFast::UpdateNextQsMask",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000f7c40",
+   "name": "EAGLAnim::MemoryPoolManager::NewBlockByIdx",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000f7cd0",
+   "name": "EAGLAnim::MemoryPoolManager::ResetPool",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000a2290",
+   "name": "RParticleSystem::SetSystem",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000a2350",
+   "name": "RParticleSystem::RParticleCreator::Create",
+   "batch": "039"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000f7d00",
+   "name": "EAGLAnim::MemoryPoolManager::Init",
+   "batch": "039"
+  },
   {
    "program": "DRIVING.ELF",
    "address": "0x001a4318",

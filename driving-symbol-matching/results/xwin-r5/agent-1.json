@@ -1,0 +1,356 @@
+{
+ "verdicts": [
+  {
+   "item": "0.1",
+   "xbox": "0xea120",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "no xrefs (dead code); byte+6 &3 test matches no PS2 Model/DynamicModel function in range",
+   "intermediates": []
+  },
+  {
+   "item": "0.2",
+   "xbox": "0xea130",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "no xrefs; generic word/byte block copy, no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "1.1",
+   "xbox": "0x11a810",
+   "ps2": "0x2cdcc0",
+   "name": "UCharNamespace::~UCharNamespace",
+   "verdict": "accept",
+   "why": "vtable-reset-only dtor for vtable 0x1a2238 (same as UCharNamespace ctor), called from atexit thunk 15ce40 registered in GlobalSymbolTable::Init; PS2 ~UCharNamespace resets vtable_UCharNamespace (+delete flag)",
+   "intermediates": []
+  },
+  {
+   "item": "1.2",
+   "xbox": "0x11a880",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map find/lower_bound with stricmp comparator; PS2 counterparts FUN_002cdd30/FUN_002cdd98 unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "1.3",
+   "xbox": "0x11a8d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::_Erase (node 0x18), no named PS2 counterpart in range",
+   "intermediates": []
+  },
+  {
+   "item": "1.4",
+   "xbox": "0x11a910",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::_Erase (node 0x18) for UCarpNamespace map; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "2.1",
+   "xbox": "0x143be0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "static helper of stretch; PS2 counterparts (stretch callees FUN_00316c10 chain) unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "2.2",
+   "xbox": "0x143e10",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "called by stretch and stretchframesneeded = PS2 FUN_00316ab8, unnamed static",
+   "intermediates": []
+  },
+  {
+   "item": "2.3",
+   "xbox": "0x143f20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "stretch helper = PS2 FUN_00316c10, unnamed static",
+   "intermediates": []
+  },
+  {
+   "item": "2.4",
+   "xbox": "0x144050",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "stretch helper = PS2 FUN_00316d78, unnamed static",
+   "intermediates": []
+  },
+  {
+   "item": "3.1",
+   "xbox": "0x125f50",
+   "ps2": "0x2fd998",
+   "name": "_Rb_tree<MapKey,_ABank>::_M_erase",
+   "verdict": "accept",
+   "why": "recursive map-node erase freeing 0x98-byte nodes, called by URefCounter<ABank> dtor (1267f0) exactly as PS2 ~URefCounter<ABank> calls _M_erase (FastFree 0x98); callers all ABank-local, not folded",
+   "intermediates": [
+    {
+     "xbox": "0x1267f0",
+     "ps2": "0x2fda68",
+     "name": "URefCounter<ABank>::~URefCounter",
+     "verdict": "accept",
+     "why": "clears map via 125f50, frees 0x98 header node; called from atexit thunk 15d2f0 like PS2 ~URefCounter from global dtor FUN_002fd178"
+    }
+   ]
+  },
+  {
+   "item": "3.2",
+   "xbox": "0x125fa0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::erase(iterator) rebalance; inlined into PS2 RemoveReference, no named counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "3.3",
+   "xbox": "0x126310",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::_Insert; PS2 counterpart FUN_002fdbe8 unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "3.4",
+   "xbox": "0x126500",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::erase(first,last); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "4.1",
+   "xbox": "0x7a850",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list _Buynode (FastAlloc 0x18 'STL')",
+   "intermediates": []
+  },
+  {
+   "item": "4.2",
+   "xbox": "0x7a8a0",
+   "ps2": "0x1a7ea0",
+   "name": "FindPointInList",
+   "verdict": "accept",
+   "why": "walks COORD4 list comparing x,y,z at node+8/+c/+10, counts < size, returns iterator via out-param; called from BuildSpline (7aa20) as PS2 FindPointInList from BuildSpline",
+   "intermediates": [
+    {
+     "xbox": "0x7aa20",
+     "ps2": "0x1a7f58",
+     "name": "RCameraSpline::BuildSpline",
+     "verdict": "accept",
+     "why": "callers UpdateRelative/WorldAnimationCam on both sides; calls FindPointInList + list clear like PS2"
+    },
+    {
+     "xbox": "0x7a9f0",
+     "ps2": "0x1a7cd8",
+     "name": "RCameraSpline::ClearSplinePtList",
+     "verdict": "accept",
+     "why": "clears list at this+0x64 (PS2 field_0x64); callers DirectorChangeCameraMode + UpdateRelativeAnimationCam on both sides"
+    }
+   ]
+  },
+  {
+   "item": "4.3",
+   "xbox": "0x7a900",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list erase(first,last); PS2 has _List_base::clear instead (different shape)",
+   "intermediates": []
+  },
+  {
+   "item": "4.4",
+   "xbox": "0x7a950",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list head-node allocation (_Buynode)",
+   "intermediates": []
+  },
+  {
+   "item": "5.1",
+   "xbox": "0xd7b40",
+   "ps2": "0x23a618",
+   "name": "GGirlieMaterial::~GGirlieMaterial",
+   "verdict": "accept",
+   "why": "resets vtable 0x19fe78 (the vtable GGirlieMaterial ctor d7770 installs), then ~TAR+free of TAR and UMemory::Free of buffer, like PS2 ~GGirlieMaterial (fields +0x10 shifted); non-deleting body",
+   "intermediates": []
+  },
+  {
+   "item": "5.2",
+   "xbox": "0xd7bb0",
+   "ps2": "0x23a618",
+   "name": "GGirlieMaterial::scalar_deleting_destructor",
+   "verdict": "accept",
+   "why": "sole slot of GGirlieMaterial vtable 0x19fe78: calls d7b40 then delete if flag&1",
+   "intermediates": []
+  },
+  {
+   "item": "5.3",
+   "xbox": "0xd7bd0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "game-state check (+0x978 ==1||==4) called by PauseMenuMsgHandler; PS2 inlines a global check (DAT_00100978) there - not CanToggleInvert (autoDrive test), no named counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "5.4",
+   "xbox": "0xd7bf0",
+   "ps2": "0x23aa40",
+   "name": "GOrthoHudView::PreRender",
+   "verdict": "accept",
+   "why": "SetOrthographic(0.5,10.0) as PS2 PreRender; sits in GOrthoHudView vtable 0x19ff84 right before PostRender (daac0) and DoRender (e1ce0)",
+   "intermediates": []
+  },
+  {
+   "item": "6.1",
+   "xbox": "0x133040",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT ceil (__ctrlfp/_except1 code 0xc); not newlib counterparts in window",
+   "intermediates": []
+  },
+  {
+   "item": "6.2",
+   "xbox": "0x13310e",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT floor (code 0xb); MSVC CRT, not in PS2 window",
+   "intermediates": []
+  },
+  {
+   "item": "6.3",
+   "xbox": "0x1331dc",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT free (heap lock + HeapFree); CRT internal",
+   "intermediates": []
+  },
+  {
+   "item": "6.4",
+   "xbox": "0x13322b",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT _unlock helper for heap lock 4",
+   "intermediates": []
+  },
+  {
+   "item": "7.1",
+   "xbox": "0x102060",
+   "ps2": "0x26c4f8",
+   "name": "EAGLAnim::FnDeltaQFast::UpdateNextQs",
+   "verdict": "accept",
+   "why": "called only from EvalSQT; same structure and offsets (+0x28 frame cache, +0x10/+0x24/+0x30 buffers, count at DeltaQFast+6, shift at +0x10), UnQuantize loop in else-branch",
+   "intermediates": [
+    {
+     "xbox": "0x102f00",
+     "ps2": "0x26d0d8",
+     "name": "EAGLAnim::DeltaQFastPhysical::UnQuantize",
+     "verdict": "accept",
+     "why": "(ushort*,COORD4&) unpack x/y/z>>4 and low nibbles *0.0004884005 -1.0; callers EvalSQT, UpdateNextQs, UpdateNextQsMask, EvalSQTMask as on PS2"
+    },
+    {
+     "xbox": "0x102510",
+     "ps2": "0x26c6e8",
+     "name": "EAGLAnim::FnDeltaQFast::EvalSQTMask",
+     "verdict": "accept",
+     "why": "called only from EvalSQT; calls UpdateNextQsMask (102370), UnQuantize and two unnamed statics (=PS2 FUN_0026d998/FUN_0026db20), as PS2 EvalSQTMask"
+    }
+   ]
+  },
+  {
+   "item": "7.2",
+   "xbox": "0x1021a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EvalSQTMask static helper = PS2 FUN_0026d998/FUN_0026db20, unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "7.3",
+   "xbox": "0x102280",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EvalSQTMask static helper = PS2 FUN_0026d998/FUN_0026db20, unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "7.4",
+   "xbox": "0x102370",
+   "ps2": "0x26ccf8",
+   "name": "EAGLAnim::FnDeltaQFast::UpdateNextQsMask",
+   "verdict": "accept",
+   "why": "UpdateNextQs body plus bone-mask test (mask[bone>>5] & 1<<(bone&31)) with bone idx table at DeltaQFast+0xc; called from EvalSQTMask; identical to PS2",
+   "intermediates": []
+  },
+  {
+   "item": "8.1",
+   "xbox": "0xf7c40",
+   "ps2": "0x2656b8",
+   "name": "EAGLAnim::MemoryPoolManager::NewBlockByIdx",
+   "verdict": "accept",
+   "why": "per-index free list (22 entries = gFreeList 88 bytes), carve from pool cursor with size from ushort table when empty; same as PS2 NewBlockByIdx",
+   "intermediates": []
+  },
+  {
+   "item": "8.2",
+   "xbox": "0xf7c90",
+   "ps2": "0x265728",
+   "name": "EAGLAnim::MemoryPoolManager::NewBlock",
+   "verdict": "accept",
+   "why": "sheet row 6373 NewBlock(unsigned int): PS2 FUN_00265728 = size-class free list (size>>4)&0xff over 256-entry gSizeFreeList, carve with header word; identical Xbox body; callers the InitBuffersAsRequired/InitSubChannels/SetAnimMemoryMap set on both. REVIEW: PS2 function is FUN_ (named via sheet row), debug-sheet size 600 vs retail 0x60",
+   "intermediates": []
+  },
+  {
+   "item": "8.3",
+   "xbox": "0xf7cd0",
+   "ps2": "0x265788",
+   "name": "EAGLAnim::MemoryPoolManager::ResetPool",
+   "verdict": "accept",
+   "why": "cursor=base, clear 256-entry and 22-entry free lists; tail-called by faa40 (ResetMemoryPool) as PS2 ResetPool by ResetMemoryPool",
+   "intermediates": [
+    {
+     "xbox": "0xfaa40",
+     "ps2": "0x2645a0",
+     "name": "EAGLAnim::ResetMemoryPool",
+     "verdict": "accept",
+     "why": "jmp ResetPool; sits between GetMemoryUsage and ShutDown on both sides (Ghidra shows it as thunk_FUN_000f7cd0)"
+    }
+   ]
+  },
+  {
+   "item": "8.4",
+   "xbox": "0xf7d00",
+   "ps2": "0x265800",
+   "name": "EAGLAnim::MemoryPoolManager::Init",
+   "verdict": "accept",
+   "why": "sheet row 6374 Init(unsigned int): PS2 FUN_00265800 stores size, EAGLMalloc(size,\"EAGLAnim Memory Pool\"), resets lists; callers InitInternal + ~ERestart on both sides. PS2 is FUN_ (named via sheet row)",
+   "intermediates": []
+  }
+ ]
+}

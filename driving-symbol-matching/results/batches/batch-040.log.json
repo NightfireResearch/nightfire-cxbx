@@ -1,0 +1,141 @@
+{
+ "batch": "040",
+ "program": "Driving.xbe",
+ "applied": "Sun Sep 27 00:53:39 2026",
+ "items": [
+  {
+   "xbox": "0x0015396f",
+   "old_name": "FUN_0015396f",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0015396f from 'FUN_0015396f' to 'Create_Frame_Handler'",
+      "warnings": [
+       "Function name 'Create_Frame_Handler' \u2014 main part 'Create_Frame_Handler' is not PascalCase. Expected: CreateFrameHandler",
+       "Function name 'Create_Frame_Handler' \u2014 main part 'Create_Frame_Handler' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'Create_Frame_Handler' does not start with a recognized verb. First word 'Create_' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0015396f",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Create_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x00153960",
+   "old_name": "FUN_00153960",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00153960 from 'FUN_00153960' to 'Create_Unwind_0'",
+      "warnings": [
+       "Function name 'Create_Unwind_0' \u2014 main part 'Create_Unwind_0' is not PascalCase. Expected: CreateUnwind0",
+       "Function name 'Create_Unwind_0' \u2014 main part 'Create_Unwind_0' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'Create_Unwind_0' does not start with a recognized verb. First word 'Create_' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00153960",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Create_Unwind_0",
+   "ok": true
+  },
+  {
+   "xbox": "0x00155e98",
+   "old_name": "FUN_00155e98",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00155e98 from 'FUN_00155e98' to '~URefCounter_Frame_Handler'",
+      "warnings": [
+       "Function name '~URefCounter_Frame_Handler' \u2014 main part '~URefCounter_Frame_Handler' is not PascalCase. Expected: ~urefcounterFrameHandler",
+       "Function name '~URefCounter_Frame_Handler' \u2014 main part '~URefCounter_Frame_Handler' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00155e98",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~URefCounter_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x00155e90",
+   "old_name": "FUN_00155e90",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00155e90 from 'FUN_00155e90' to '~URefCounter_Unwind_0'",
+      "warnings": [
+       "Function name '~URefCounter_Unwind_0' \u2014 main part '~URefCounter_Unwind_0' is not PascalCase. Expected: ~urefcounterUnwind0",
+       "Function name '~URefCounter_Unwind_0' \u2014 main part '~URefCounter_Unwind_0' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00155e90",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~URefCounter_Unwind_0",
+   "ok": true
+  }
+ ]
+}

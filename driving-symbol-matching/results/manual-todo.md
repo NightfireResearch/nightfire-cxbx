@@ -97,6 +97,11 @@ right; the labels are wrong (Symbol Table, or the listing's label at the entry):
   SFILTER_initSOURCE; on PS2 the caller is SNDMIXI_modlapifxadd), and 0x1456b0 (the SFILTER_src body). Worth
   creating functions there when convenient.
 
+- **Round 5:** `EAGLAnim::MemoryPoolManager::NewBlock` 0xf7c90 held (sheet row 6373 says 600 bytes, retail is
+  0x60); `EAGLAnim::ResetMemoryPool` 0xfaa40 is a Ghidra thunk to ResetPool (between GetMemoryUsage and ShutDown on
+  both platforms) - un-thunk and name it if you agree. UCharNamespace vtable 0x1a2238 has entries at 0x11a820 and
+  0x11a850 with no function defined.
+
 ## 6. Namespace moves
 
 `python apply.py --pending-namespaces` lists the pending moves (including P022's ECameraLockOn::~ECameraLockOn and
