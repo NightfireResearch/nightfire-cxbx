@@ -1,0 +1,40 @@
+{
+ "batch": "020",
+ "program": "Driving.xbe",
+ "applied": "Sat Sep 26 18:53:41 2026",
+ "items": [
+  {
+   "xbox": "0x00077b60",
+   "old_name": "Shutdown",
+   "old_plate": "[symbol-matching]\nCanonical name: RAnimEngine::Shutdown\nSymbol file name: RAnimEngine::Shutdown(void)\nClass: RAnimEngine\nEvidence: Version Tracking match (accepted by hand) to PS2 0x001a1a00\nBatch: 004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00077b60 from 'Shutdown' to 'DeactivateSystem'",
+      "warnings": [
+       "Function name 'DeactivateSystem' does not start with a recognized verb. First word 'Deactivate' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'DeactivateSystem' shares the same token set as existing function 'Deactivate' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00077b60",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DeactivateSystem",
+   "ok": true
+  }
+ ]
+}

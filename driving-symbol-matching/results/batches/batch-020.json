@@ -1,0 +1,16 @@
+{
+ "batch": "020",
+ "program": "Driving.xbe",
+ "note": "Invented name for the RAnimEngine static at 0x77b60 (user, 26 Sept 2026).",
+ "items": [
+  {
+   "xbox": "0x00077b60",
+   "expect": "RAnimEngine::Shutdown",
+   "name": "RAnimEngine::DeactivateSystem",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_exact": "INVENTED NAME, not canonical: this helper is absent from the debug-symbol spreadsheet (a static; the PS2 twin is FUN_001a1af8 at 0x001a1af8, which the sheet's RAnimEngine::Update size swallows). Named for what it does: deactivates one animation system - clears its active flag, and if asked processes its pending stimulus and shifts the 4-slot stimulus queue, then decrements the active-system count. Called by RAnimEngine::System::Update (0x77ed0). Was RAnimEngine::Shutdown from a Version Tracking match; the real Shutdown only zeroes the count.",
+   "evidence": []
+  }
+ ]
+}
