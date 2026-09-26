@@ -1,0 +1,318 @@
+{
+ "verdicts": [
+  {
+   "item": "90.1",
+   "xbox": "0xd3ce0",
+   "ps2": "0x234508",
+   "name": "GFXGallery::GET_StickyEffectPos",
+   "verdict": "accept",
+   "why": "RParticleParticleCache::RenderBlock -> it (PS2 RenderBlock -> GET_StickyEffectPos); identical body: idx<0x40, bitmask at +0x400, copy 16-byte pos from this+idx*0x10 (w=0), else default vector; returns 1/0",
+   "intermediates": []
+  },
+  {
+   "item": "91.1",
+   "xbox": "0x114040",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "heap free-block search helper of the MEM allocator (FUN_001140c0 = unnamed PS2 FUN_002ca760); inlined on PS2, no PS2 function; MEM_allocsize/z are thin wrappers, not this",
+   "intermediates": []
+  },
+  {
+   "item": "92.1",
+   "xbox": "0x114b30",
+   "ps2": "0x2d0c48",
+   "name": "BytesToCoord",
+   "verdict": "accept",
+   "why": "genuine overload (COORD4, 4 bytes): Missile::Missile and EKickObject::~EKickObject call it where PS2 calls BytesToCoord@2d0c48; same body: unpack RGBA (>>24,>>16,>>8,&ff) to 4 floats, scale 1/255 (0x3b808081), optional add/mul/add; Xbox 0x114a80 is the 3-component overload 0x2d0b08",
+   "intermediates": []
+  },
+  {
+   "item": "93.1",
+   "xbox": "0x11be40",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL GeoPrim-style constructor (EAGLMalloc 0x34 Rendermethod, GetRegisteredVar gpModelViewProjectionMatrix) called from USimpleMaterial::Init; PS2 Init inlines it; candidates are destructors (no match)",
+   "intermediates": []
+  },
+  {
+   "item": "94.1",
+   "xbox": "0x187b0",
+   "ps2": "0x112d50",
+   "name": "ActPoser::GetInitialTbOu",
+   "verdict": "accept",
+   "why": "ActActor::CurrentPositionRotateY -> (GetInitialTrOu inlined on Xbox) -> it, as PS2 CurrentPositionRotateY -> GetInitialTrOu -> GetInitialTbOu; body copies the MATRIX4 at *(this+0x24) (PS2 +0x28, -4 shift) to out; pairs with SetInitialTbOu called in the same function",
+   "intermediates": []
+  },
+  {
+   "item": "95.1",
+   "xbox": "0x5a6b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "RunTheGame movie-play helper = PS2 FUN_00175af8, an unlisted static swallowed by the sheet size of GameLoop_StopUsingMainBigFile (PS2 comment, batch P008); no name to give",
+   "intermediates": []
+  },
+  {
+   "item": "96.1",
+   "xbox": "0x802d0",
+   "ps2": "0x1b1dc0",
+   "name": "RPathEngine::DestroyPathHandle",
+   "verdict": "accept",
+   "why": "already named in the live DB (batch 029): sole callee of ~AISplinePath on both; walks global handle list, unlinks node whose +8 == handle, FastFree(node,0xdc)",
+   "intermediates": []
+  },
+  {
+   "item": "97.1",
+   "xbox": "0x846d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "SetAutoDriveRotationX/Y -> it corresponds to PS2 FUN_001bc1e8, an unnamed (float*,float*) clamp helper inside SetAutoDriveRotation's sheet row (P012 note); no name",
+   "intermediates": []
+  },
+  {
+   "item": "98.1",
+   "xbox": "0x8da90",
+   "ps2": "0x1c8a70",
+   "name": "RSceneObj::DestroySceneObjectList",
+   "verdict": "accept",
+   "why": "passed as a function pointer by RSceneObj::DestroyAll on both platforms (only xref); body walks list at +4 calling each object's deleting destructor, then clears +4",
+   "intermediates": []
+  },
+  {
+   "item": "99.1",
+   "xbox": "0xb6e80",
+   "ps2": "0x207f20",
+   "name": "SMissionManager::CalcEndMissionScores",
+   "verdict": "accept",
+   "why": "sole callee-position match in SMissionManager::Win; same body: ratio clamps 0..1 times mission config ints +0x254/+0x268/+0x278/+600(*0)/+0x25c/+0x260/+0x264 stored to score slots (PS2 +0x650.. -> Xbox +0x770..), health/shield inlined",
+   "intermediates": []
+  },
+  {
+   "item": "100.1",
+   "xbox": "0xcf440",
+   "ps2": "0x22caa8",
+   "name": "WTrigger::TestDirection",
+   "verdict": "accept",
+   "why": "WTriggerManager::CheckCollide -> it; 2-point overload: v4sub(p[1],p[0]) then dot with this+0x30 >= 0 (inner 1-point TestDirection 0x22ca68 inlined); PS2 overload 0x22caa8",
+   "intermediates": []
+  },
+  {
+   "item": "101.1",
+   "xbox": "0xe384a",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "not a function: Ghidra split fragment of GSubtitles::LoadSubtitles (0xe3840 is 10 bytes, falls into it; no xrefs); needs manual merge, not a name",
+   "intermediates": []
+  },
+  {
+   "item": "102.1",
+   "xbox": "0x108a00",
+   "ps2": "0x25a938",
+   "name": "v3unitcrossprod",
+   "verdict": "accept",
+   "why": "v3crossprod then 1/v3length scale (v3unit inlined); sole caller FUN_000f1740 = EAGL::Transform::BuildAimedTrans, which calls it twice exactly as PS2 BuildAimedTrans calls v3unitcrossprod",
+   "intermediates": [
+    {
+     "item": "extra",
+     "xbox": "0xf1740",
+     "ps2": "0x293750",
+     "name": "EAGL::Transform::BuildAimedTrans",
+     "verdict": "accept",
+     "why": "same body: iVar=(0xc-p5-p4), two unit-cross-products, writes axis rows into this at slots p4/p5/iVar, zeroes +0xc/+0x1c/+0x2c/+0x30..+0x38, +0x3c=1.0"
+    },
+    {
+     "item": "extra",
+     "xbox": "0xf2c30",
+     "ps2": "0x2947f0",
+     "name": "EAGL::Transform::AppendAimedTrans",
+     "verdict": "accept",
+     "why": "no callers on both (vtable/unused); builds aimed trans into a local then this = this * local (Xbox VU0_MATRIX4_mult(out,a,b) + MEM_copy), as PS2 AppendAimedTrans (PrependAimedTrans uses PreMult)"
+    }
+   ]
+  },
+  {
+   "item": "103.1",
+   "xbox": "0x10b110",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "vprint formatter called by PRINT_string = PS2 FUN_00260760, an unnamed static with no sheet row (P015 moved PRINT_restore off it to 0x260748); candidates PRINT_getdevicestate/setdevicename/getchannelstate are trivial accessors, not this",
+   "intermediates": []
+  },
+  {
+   "item": "104.1",
+   "xbox": "0x113d80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MEM heap block-lookup helper (called by MEM_free/MEM_resize/alloc core); inlined on PS2 (PS2 MEM_free calls only MEM_tailsize/MUTEX); candidates MEM_name/comment/setcomment differ",
+   "intermediates": []
+  },
+  {
+   "item": "105.1",
+   "xbox": "0x12570",
+   "ps2": "0x10b218",
+   "name": "ActActor::TurnShadowsOff",
+   "verdict": "accept",
+   "why": "AICharacterEnemyGround::HandleInterrupts -> it as PS2 HandleInterrupts -> TurnShadowsOff; body *(*this)+0x6c = 0 (PS2 lw a0[0]; sw zero,0x6c), vs TurnShadowsOn storing 1",
+   "intermediates": []
+  },
+  {
+   "item": "106.1",
+   "xbox": "0x18850",
+   "ps2": "0x113908",
+   "name": "ActPoser::CalcCrossFadeTimes",
+   "verdict": "accept",
+   "why": "callers DoMainPose and DoEventPose on both; body: blend=*(this+0x40) (PS2 +0x44), [+0x120]==1 ? t=[+0x114] : [+0x114]+this[+8] (PS2 +0xc), writes the out params",
+   "intermediates": [
+    {
+     "item": "extra",
+     "xbox": "0x18960",
+     "ps2": "0x114250",
+     "name": "ActPoser::DoEventPose",
+     "verdict": "accept",
+     "why": "sole caller ActActor::Update and sole callee CalcCrossFadeTimes on both; same body: if [+0x10]==[+8]==0 use -0.0001, switch on mode (Xbox +0x50/PS2 +0x54) 1/2/3 calling anim vtable +0x24"
+    }
+   ]
+  },
+  {
+   "item": "107.1",
+   "xbox": "0x1a500",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::_Tree insert_unique (map<name,TextureInfo> keyed by __stricmp, _Buynode/_Lrotate helpers) called by URefCounter<TextureInfo>::AddReference; STL helper (PS2 FUN_00115908 unnamed)",
+   "intermediates": []
+  },
+  {
+   "item": "108.1",
+   "xbox": "0x6f240",
+   "ps2": "0x195688",
+   "name": "PhysicsObject::GetMass",
+   "verdict": "accept",
+   "why": "Explosion::Simulate/Newton::Simulate -> it as PS2 Simulate -> GetMass; identical body: flags&1 ? GetSimpleRigidBody(slot)+0x3c : GetRigidBody(slot)+0x4c, slot short at +0x4a",
+   "intermediates": []
+  },
+  {
+   "item": "109.1",
+   "xbox": "0x83e10",
+   "ps2": "0x1b9de8",
+   "name": "RPlayerCamera::UpdateTransition",
+   "verdict": "accept",
+   "why": "callers UpdateAutoDriveCam + 3 other camera updates (PS2: AutoDrive/Ellipse/Fixed/Spline); body: [+0x2ec] -= step (Xbox +0x22c = PS2 +0x220, as in InitTransition), DeincrementTransition inlined (count +0x13c/PS2 +0x12c, flag +0x27a/PS2 +0x27d), then out = a + dir(+0x2e0)*[+0x2ec]",
+   "intermediates": []
+  },
+  {
+   "item": "110.1",
+   "xbox": "0x898ee",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "not a function: Ghidra split fragment of RPlayerCamera::TriggerAIPathAnimationCamera (0x898d0 is only the SEH prologue and falls into it; no xrefs); needs manual merge",
+   "intermediates": []
+  },
+  {
+   "item": "111.1",
+   "xbox": "0x9a1d0",
+   "ps2": "0x1d7d78",
+   "name": "RBulletStreak::Add",
+   "verdict": "accept",
+   "why": "overload (COORD4&,COORD4&,StreakType): sole callee of the named COORD3 Add (0x9a3b0 = PS2 0x1d8048), which widens to w=1 and forwards, as PS2; body: type*0x18 table, per-type count limit, camera-facing unit cross product, 6 verts written",
+   "intermediates": []
+  },
+  {
+   "item": "112.1",
+   "xbox": "0xa5c10",
+   "ps2": "0x1ebaf8",
+   "name": "RShadowMap::~RShadowMap",
+   "verdict": "accept",
+   "why": "no-delete-flag destructor: sets both RShadowMap vtables, DeleteViewPort(viewport), restore saved viewport (+0x54), delete private data (+0x50), base vtable then ~RViewCamera, as PS2 ~RShadowMap",
+   "intermediates": [
+    {
+     "item": "extra",
+     "xbox": "0xa6670",
+     "ps2": "0x1ebaf8",
+     "name": "RShadowMap::scalar_deleting_destructor",
+     "verdict": "accept",
+     "why": "vtable slot 0 of the RShadowMap vtable 0x192fd4; calls ~RShadowMap then FastFree(this,0x58) if flag&1"
+    }
+   ]
+  },
+  {
+   "item": "113.1",
+   "xbox": "0xad440",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "linker-folded: one body serves PS2 ResolveMassScaledForce (ProcessSubmarinePhysics) and ResolveMassScaledForce4 (AddSimpleWheelForces/AddSnowmobileForces), callers from both; leave unnamed (note: 0xad470 is already named ResolveMassScaledTorque4 though it is probably folded the same way)",
+   "intermediates": []
+  },
+  {
+   "item": "114.1",
+   "xbox": "0xb25c0",
+   "ps2": "0x1fde20",
+   "name": "SimpleRigidBody::SetCanHitTrigger",
+   "verdict": "accept",
+   "why": "callers Explosion::Simulate and AIElementController::WakeUp match PS2 Simulate/WakeUp; body sets/clears bit 0 of byte +0x1f = PS2 ushort +0x1e bit 0x100 (same byte, little-endian)",
+   "intermediates": []
+  },
+  {
+   "item": "115.1",
+   "xbox": "0xc52c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::_Tree::erase(first,last) (clear-all fast path, _Erase helper FUN_000c4d20) under WCollisionMgr shutdown; STL helper, FindFaceInCInst candidates are unrelated",
+   "intermediates": []
+  },
+  {
+   "item": "116.1",
+   "xbox": "0xd0d60",
+   "ps2": "0x22f4a0",
+   "name": "AddCurtain",
+   "verdict": "accept",
+   "why": "sole curtain-file callee of WRender::FindVisibleTreeNodesAndCurtains on both; body: if count<0x3f build curtain planes from the quad (unit cross products, dot distances) into the active-curtain table and count++, as PS2 AddCurtain (PS2 does it in a VU0 micro-program and first tests IsVisibleAgainstCurtains; Xbox lacks that pre-check - platform difference)",
+   "intermediates": []
+  },
+  {
+   "item": "117.1",
+   "xbox": "0xd35d0",
+   "ps2": "0x232d28",
+   "name": "GFX::Shutdown",
+   "verdict": "accept",
+   "why": "CURATOR_Shutdown -> it as PS2 CURATOR_Shutdown -> GFX::Shutdown; body: if gallery global != 0 destroy it (~GFXGallery + delete)",
+   "intermediates": [
+    {
+     "item": "extra",
+     "xbox": "0xd5170",
+     "ps2": "0x2337e0",
+     "name": "GFXGallery::~GFXGallery",
+     "verdict": "accept",
+     "why": "sole callee of GFX::Shutdown on both (Xbox delete done in the caller); PurgeAllEffects, sticky bitmask +0x400/+0x404 cleared (STICKY_ReleaseAllIndexes inlined), Free +0x140c/+0x1410/+0x1414"
+    }
+   ]
+  },
+  {
+   "item": "118.1",
+   "xbox": "0xf7310",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "linker-folded \"return false\" (XOR AL,AL; RET 0xc) referenced from 34 vtable slots across many animation classes; PS2 has several distinct return-0 stubs (FindMatchTime/EvalSQT/EvalPhase/EvalVel2D); leave unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "119.1",
+   "xbox": "0x23ad0",
+   "ps2": "0x1269e8",
+   "name": "AICharacterPedestrian::PedInRange",
+   "verdict": "accept",
+   "why": "AICharacterPedestrian::Recycle -> it as PS2 Recycle -> PedInRange (COORD3&,float,bool); body loops fpPeds[0..count): skip state 0x16, skip flag&3 unless bool, return 1 if distance(pos, ped pos) < range",
+   "intermediates": []
+  }
+ ]
+}

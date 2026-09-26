@@ -1,5 +1,5 @@
 {
- "generated": "Sat Sep 26 22:04:50 2026",
+ "generated": "Sat Sep 26 22:50:33 2026",
  "moves": [
   {
    "program": "Driving.xbe",
@@ -204,6 +204,756 @@
    "address": "0x000e8270",
    "name": "EAGL::RenderContextExtension::GetFrontBuffer",
    "batch": "028"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00014850",
+   "name": "ActCharacter::SetWeaponBone",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0002aaf0",
+   "name": "AIGroundVehicle::BarriersInPath",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0002f610",
+   "name": "AIGroundVehicle::DriveToPoint",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0002e0a0",
+   "name": "AIGroundVehicle::DriveToPointSub",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00031910",
+   "name": "AIHelicopter::GetDirectionToTarget",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00031cd0",
+   "name": "AIHelicopter::ManeuverToPos",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00032a20",
+   "name": "AIHelicopter::GetLookAhead",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00034830",
+   "name": "AIRoadSpawn::Restart",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00034bb0",
+   "name": "AIRoadSpawn::PedRespawnPosCheck",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00035730",
+   "name": "AISplinePath::~AISplinePath",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000802d0",
+   "name": "RPathEngine::DestroyPathHandle",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00035930",
+   "name": "AIVehicle::SetNextSplinePath",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00035780",
+   "name": "AISplinePath::SetNext",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000cdfd0",
+   "name": "WTargetPicker::GetWorldTarget",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000cd930",
+   "name": "WTargetable::WTargetable",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000670e0",
+   "name": "PBondCar::AddWheelForces",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000ad2c0",
+   "name": "RigidBody::ConvertWorldToLocal",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000ad2f0",
+   "name": "RigidBody::ConvertLocalToWorld",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000775c0",
+   "name": "RAnimEngine::Handle::GetBestSystemInstanceIndex",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00078670",
+   "name": "RCameraIniLoader::CheckCameraAgainstCar",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0007c3b0",
+   "name": "RDirectorQueue::~RDirectorQueue",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00081460",
+   "name": "RPlayerCamera::DoSmoothModeChange",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00081740",
+   "name": "RPlayerCamera::TriggerCarAnimationCamera",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00083190",
+   "name": "RPlayerCamera::LimitPitchYaw",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0008ddf0",
+   "name": "RSceneObj::TransformPointByInstancePosition",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000953a0",
+   "name": "RTimeData::Update",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000adc80",
+   "name": "RigidBody::~RigidBody",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b1e90",
+   "name": "SimpleRigidBody::~SimpleRigidBody",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b67b0",
+   "name": "SMissionManager::SetMagicCounterThreshold",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b9620",
+   "name": "SMissionTimer::Increment",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000c0660",
+   "name": "WCollisionMgr::GetClosestIntersectingBarrier",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000c5460",
+   "name": "WCollisionMgr::~WCollisionMgr",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000c99f0",
+   "name": "WRoadNav::UpdateLaneChange",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000cd8d0",
+   "name": "WTargetable::DistFromScreenCenter",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000ce050",
+   "name": "WTargetPicker::CompareDistFromScreenCenter",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000ce0a0",
+   "name": "WTargetPicker::CompareDistFromCamera",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000d9c30",
+   "name": "GHud::GadgetOff",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000e4220",
+   "name": "IniFiles::FindSection",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000f3760",
+   "name": "EAGL::TextureRenderContextExtension::~TextureRenderContextExtension",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000f35a0",
+   "name": "EAGL::TextureRenderContext::~TextureRenderContext",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000f3540",
+   "name": "EAGL::TextureRenderContext::DeleteViewPort",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000fb960",
+   "name": "EAGLAnim::FnKeyDeltaChan::FindLowerKey",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0011da20",
+   "name": "AMix::ClearMaster",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00125230",
+   "name": "AFader::Call911",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000112d0",
+   "name": "ActActor::Fire",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00014740",
+   "name": "ActCharacter::PlayEvent",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0001add0",
+   "name": "ActWeapon::PlayEvent",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000147f0",
+   "name": "ActCharacter::SpawnWeapon",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00011ff0",
+   "name": "ActActor::SpawnWeapon",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0001adf0",
+   "name": "ActWeapon::SpawnWeapon",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0002be70",
+   "name": "AIGroundVehicle::~AIGroundVehicle",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0004fbc0",
+   "name": "IFeedback::Update",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0007e190",
+   "name": "RRenderSharedData::Init",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0007f740",
+   "name": "ROffscreenBuffer::MakeCopy",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0008e0c0",
+   "name": "RSceneObj::GetBoneIndex",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0008e2d0",
+   "name": "RSceneObj::GetCollisionInfo",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00095c60",
+   "name": "RVehicle::GetNeedlePos",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000968e0",
+   "name": "RViewCamera::EndView",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000972c0",
+   "name": "RWorldCamera::GetAnchorAcceleration",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00098360",
+   "name": "RReflection::SetReflectiveSpecularStrength",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000984c0",
+   "name": "RReflection::Begin",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0009ebf0",
+   "name": "RLightning::ControlPoint::CalcWorldPos",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000d3b30",
+   "name": "GFXGallery::CULL_SetCanvas",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00097190",
+   "name": "RWorldCamera::SetViewingTransform",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000cd840",
+   "name": "WTargetable::DistFromCamera",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x001033f0",
+   "name": "EAGLAnim::FnDeltaQ::~FnDeltaQ",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00104200",
+   "name": "EAGLAnim::FnDeltaQ::scalar_deleting_destructor",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00016a30",
+   "name": "ActIK::Solve",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00075f60",
+   "name": "Draw::DrawSprite",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0008f050",
+   "name": "RSceneObj::InitializeLighting",
+   "batch": "029"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000d3ce0",
+   "name": "GFXGallery::GET_StickyEffectPos",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000187b0",
+   "name": "ActPoser::GetInitialTbOu",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0008da90",
+   "name": "RSceneObj::DestroySceneObjectList",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b6e80",
+   "name": "SMissionManager::CalcEndMissionScores",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000cf440",
+   "name": "WTrigger::TestDirection",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000f1740",
+   "name": "EAGL::Transform::BuildAimedTrans",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000f2c30",
+   "name": "EAGL::Transform::AppendAimedTrans",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00012570",
+   "name": "ActActor::TurnShadowsOff",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00018850",
+   "name": "ActPoser::CalcCrossFadeTimes",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00018960",
+   "name": "ActPoser::DoEventPose",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0006f240",
+   "name": "PhysicsObject::GetMass",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00083e10",
+   "name": "RPlayerCamera::UpdateTransition",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0009a1d0",
+   "name": "RBulletStreak::Add",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000a5c10",
+   "name": "RShadowMap::~RShadowMap",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000a6670",
+   "name": "RShadowMap::scalar_deleting_destructor",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b25c0",
+   "name": "SimpleRigidBody::SetCanHitTrigger",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000d35d0",
+   "name": "GFX::Shutdown",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00023ad0",
+   "name": "AICharacterPedestrian::PedInRange",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000a8fa0",
+   "name": "RDebrisType::Add",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000a9260",
+   "name": "RDebris::Add",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000ad0e0",
+   "name": "RigidBody::ResetRigidBodySP",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000ad110",
+   "name": "RigidBody::GetOrientToGround",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000bae50",
+   "name": "SWeaponManager::SetSpecialWeapon",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000f5c80",
+   "name": "EAGL::DrawArray::SetVar",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000f5770",
+   "name": "EAGL::DrawArray::SetVar",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0001c0c0",
+   "name": "ACharacter::ACharacter",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00071000",
+   "name": "PVehicle::MissionEditorSwitch",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0007f9f0",
+   "name": "RPathEngine::RPathHandle::RPathHandle",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000a60b0",
+   "name": "RShadowMap::Draw",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000a5960",
+   "name": "RShadowMap::ClearShadowMap",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000d8170",
+   "name": "GHud::IsTargetPointOnScreen",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000d9a50",
+   "name": "GHud::DrawFont",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x001296b0",
+   "name": "AGun::SetFirePatch",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00012620",
+   "name": "CrossFadeAnimationController::scalar_deleting_destructor",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b5310",
+   "name": "Simulation::~Simulation",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00086d00",
+   "name": "RPlayerCamera::ResolveAllCollisions",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00087880",
+   "name": "RPlayerCamera::UpdateMomentumHeliCam",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00088380",
+   "name": "RPlayerCamera::UpdateTumbleCam",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000886f0",
+   "name": "RPlayerCamera::UpdateEllipseCam",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00076810",
+   "name": "RAnimEngine::Handle::operator_delete",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000365f0",
+   "name": "AIVehicleController::DeRegisterSimCar",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00097d70",
+   "name": "RWorldCamera::AnchorRelativeCamera",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00082840",
+   "name": "RPlayerCamera::UpdateRelativeAnimationCam",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000acb90",
+   "name": "OBB::CheckOBBOverlapAndFindIntersection",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b1420",
+   "name": "RigidBody::CollideWithWorld",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000e3b40",
+   "name": "GSystem::MATH_TransformPoints",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0007e430",
+   "name": "RLightManager::VerticalFalloffMultiplier",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b7320",
+   "name": "SMissionManager::StartSectionProfile",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000dee80",
+   "name": "GHud::SetMissionPassed",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00096820",
+   "name": "RCamera::~RCamera",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000b88c0",
+   "name": "SMissionManager::SetIncompleteObjective",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000761c0",
+   "name": "Draw::DrawQuadC",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00076220",
+   "name": "Draw::SetAdditiveBlendMode",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0007d780",
+   "name": "USingleton::~USingleton",
+   "batch": "030"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0002b7a0",
+   "name": "AIGroundVehicle::GetDirectLaneWeights",
+   "batch": "030"
   },
   {
    "program": "DRIVING.ELF",

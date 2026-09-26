@@ -55,8 +55,28 @@ right; the labels are wrong (Symbol Table, or the listing's label at the entry):
 - **SRuleSpeed::CheckRule** - still untouched, as asked (candidates Xbox 0xb9eb0 / 0xba620; a windowed
   reviewer favoured 0xba620).
 
-## 5. Namespace moves
+## 5. Found by the windowed review (26 Sept 2026, evening)
 
-`python apply.py --pending-namespaces` lists 37 (including P022's ECameraLockOn::~ECameraLockOn and
+- **Merge two fragments (Driving.xbe):** 0xe384a is a split-off piece of `GSubtitles::LoadSubtitles` (0xe3840)
+  and 0x898ee of `RPlayerCamera::TriggerAIPathAnimationCamera` (0x898d0): odd entries, no callers, running on
+  the parent's registers. Delete the fragment function and let the parent's body extend over it.
+- **PARTICLE_Add looks wrong on both platforms:** Xbox 0xd43a0 and PS2 0x2363b0 carry `PARTICLE_Add` but their
+  bodies are AMix "Giotto" sound code (probably `SOUND_Play` or similar). The real PARTICLE_Add
+  (`GFXGallery::PARTICLE_Add(UGroup *, Particles *)`, sheet row 5229) looks like Xbox 0xd42a0 / PS2
+  FUN_00235ed0: a Particles lookup falling back to `RParticleLibrary::AddSystem`. Worth untangling by hand
+  before anything else is named from these.
+- **RigidBody::ResolveMassScaledTorque4 (Xbox 0xad470)** may be a linker-folded body shared with
+  `ResolveMassScaledTorque`, like 0xad440 (which serves both `ResolveMassScaledForce` and `...Force4` and is left
+  unnamed). If so the name only tells half the story; a plate note would do.
+- **GFXGallery::~GFXGallery:** Xbox 0xd5170 was identified, but the PS2 address given (0x2337e0) isn't a
+  function start in PS2 Ghidra - check whether PS2 needs a split there; the Xbox name is held back until then.
+- **Held back, weak evidence** (named by a reviewer on call position alone): `AddCurtain` 0xd0d60,
+  `RDebris::DrawShellCasings` 0xa9680 (PS2 body is an empty stub), `ExtractAlphaInfo` 0xa4ee0 (PS2 stub), and
+  0xb2810, a thunk to `ResetRigidBodySP` sitting where PS2 calls `Simulation::CopyRigidBodiesToScratchPad`
+  (linker folding). Name them if you're happy with that evidence.
+
+## 6. Namespace moves
+
+`python apply.py --pending-namespaces` lists the pending moves (including P022's ECameraLockOn::~ECameraLockOn and
 EAGLAnim::FnTurnBlender::~FnTurnBlender on DRIVING.ELF): run `NightfireNamespaces.py` then
 `NightfireClasses.py` on each program as usual.

@@ -1,0 +1,263 @@
+{
+ "batch": "031",
+ "program": "Driving.xbe",
+ "note": "Compiler-generated exception handling: frame handlers and unwind funclets (xbox_eh.py).",
+ "items": [
+  {
+   "xbox": "0x00150c5b",
+   "expect": "FUN_00150c5b",
+   "name": "BarriersInPath_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1a9220; JMP __CxxFrameHandler; installed by BarriersInPath (0x2aaf0)"
+   ]
+  },
+  {
+   "xbox": "0x00150c50",
+   "expect": "FUN_00150c50",
+   "name": "BarriersInPath_Unwind_0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of BarriersInPath's FuncInfo 0x1a9220 (frame handler 0x150c5b); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00150c86",
+   "expect": "FUN_00150c86",
+   "name": "GetDirectLaneWeights_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1a924c; JMP __CxxFrameHandler; installed by GetDirectLaneWeights (0x2b7a0)"
+   ]
+  },
+  {
+   "xbox": "0x00150c70",
+   "expect": "FUN_00150c70",
+   "name": "GetDirectLaneWeights_Unwind_0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of GetDirectLaneWeights's FuncInfo 0x1a924c (frame handler 0x150c86); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00150c7b",
+   "expect": "FUN_00150c7b",
+   "name": "GetDirectLaneWeights_Unwind_1",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 1 of the unwind map of GetDirectLaneWeights's FuncInfo 0x1a924c (frame handler 0x150c86); destroys a local when unwinding from state 1"
+   ]
+  },
+  {
+   "xbox": "0x00150cf8",
+   "expect": "FUN_00150cf8",
+   "name": "~AIGroundVehicle_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1a92b4; JMP __CxxFrameHandler; installed by ~AIGroundVehicle (0x2be70)"
+   ]
+  },
+  {
+   "xbox": "0x00150cf0",
+   "expect": "FUN_00150cf0",
+   "name": "~AIGroundVehicle_Unwind_0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of ~AIGroundVehicle's FuncInfo 0x1a92b4 (frame handler 0x150cf8); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00150e4b",
+   "expect": "FUN_00150e4b",
+   "name": "SetNextSplinePath_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1a9424; JMP __CxxFrameHandler; installed by SetNextSplinePath (0x35930)"
+   ]
+  },
+  {
+   "xbox": "0x00150e40",
+   "expect": "FUN_00150e40",
+   "name": "SetNextSplinePath_Unwind_0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of SetNextSplinePath's FuncInfo 0x1a9424 (frame handler 0x150e4b); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00152d94",
+   "expect": "FUN_00152d94",
+   "name": "ResolveAllCollisions_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1ae22c; JMP __CxxFrameHandler; installed by ResolveAllCollisions (0x86d00)"
+   ]
+  },
+  {
+   "xbox": "0x0015303e",
+   "expect": "FUN_0015303e",
+   "name": "InitializeLighting_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1ae648; JMP __CxxFrameHandler; installed by InitializeLighting (0x8f050)"
+   ]
+  },
+  {
+   "xbox": "0x00153030",
+   "expect": "FUN_00153030",
+   "name": "InitializeLighting_Unwind_0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of InitializeLighting's FuncInfo 0x1ae648 (frame handler 0x15303e); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00153b5f",
+   "expect": "FUN_00153b5f",
+   "name": "~RShadowMap_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1af540; JMP __CxxFrameHandler; installed by ~RShadowMap (0xa5c10)"
+   ]
+  },
+  {
+   "xbox": "0x00153d7c",
+   "expect": "FUN_00153d7c",
+   "name": "CollideWithWorld_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1af79c; JMP __CxxFrameHandler; installed by CollideWithWorld (0xb1420)"
+   ]
+  },
+  {
+   "xbox": "0x00153fd6",
+   "expect": "FUN_00153fd6",
+   "name": "~Simulation_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b04ac; JMP __CxxFrameHandler; installed by ~Simulation (0xb5310)"
+   ]
+  },
+  {
+   "xbox": "0x001545ab",
+   "expect": "FUN_001545ab",
+   "name": "~WCollisionMgr_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b10cc; JMP __CxxFrameHandler; installed by ~WCollisionMgr (0xc5460)"
+   ]
+  },
+  {
+   "xbox": "0x0015478f",
+   "expect": "FUN_0015478f",
+   "name": "GetWorldTarget_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b13a0; JMP __CxxFrameHandler; installed by GetWorldTarget (0xcdfd0)"
+   ]
+  },
+  {
+   "xbox": "0x00154f96",
+   "expect": "FUN_00154f96",
+   "name": "~TextureRenderContext_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1e44; JMP __CxxFrameHandler; installed by ~TextureRenderContext (0xf35a0)"
+   ]
+  },
+  {
+   "xbox": "0x00154fe3",
+   "expect": "FUN_00154fe3",
+   "name": "~RuntimeAllocConstructorPool_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1eb8; JMP __CxxFrameHandler; installed by ~RuntimeAllocConstructorPool (0xf3ab0)"
+   ]
+  },
+  {
+   "xbox": "0x00155000",
+   "expect": "FUN_00155000",
+   "name": "~ConstructorPool_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1ee4; JMP __CxxFrameHandler; installed by ~ConstructorPool (0xf3bf0)"
+   ]
+  },
+  {
+   "xbox": "0x00155288",
+   "expect": "FUN_00155288",
+   "name": "~FnTurnBlender_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b2134; JMP __CxxFrameHandler; installed by ~FnTurnBlender (0x104310)"
+   ]
+  },
+  {
+   "xbox": "0x00156217",
+   "expect": "FUN_00156217",
+   "name": "SetFirePatch_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b32e8; JMP __CxxFrameHandler; installed by SetFirePatch (0x1296b0)"
+   ]
+  },
+  {
+   "xbox": "0x00156200",
+   "expect": "FUN_00156200",
+   "name": "SetFirePatch_Unwind_0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of SetFirePatch's FuncInfo 0x1b32e8 (frame handler 0x156217); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00156208",
+   "expect": "FUN_00156208",
+   "name": "SetFirePatch_Unwind_1",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 1 of the unwind map of SetFirePatch's FuncInfo 0x1b32e8 (frame handler 0x156217); destroys a local when unwinding from state 1"
+   ]
+  }
+ ]
+}
