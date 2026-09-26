@@ -79,7 +79,27 @@ def packet(r, i):
         f"Xbox callers up to a shared name: " + " | ".join(chains(g.XBOX, x, pset)),
         f"PS2 callers up to a shared name:  " + " | ".join(chains(g.PS2, p, xset)),
         f"Xbox callees: {callee(g.XBOX, x)}", f"PS2 callees:  {callee(g.PS2, p)}",
-        "--- Xbox", body(g.XBOX, x, 30), "--- PS2", body(g.PS2, p, 30), ""])
+        "--- Xbox", body(g.XBOX, x, 30), "--- PS2", body(g.PS2, p, 30)] + current_name(r, x) + [""])
+
+
+def current_name(r, x):
+    """For a candidate that would rename a named Xbox function: where its current name came from, whether the
+    driving source uses it, and the PS2 function(s) of that name, to weigh against the proposed one."""
+    if r.get("kind") != "differs":
+        return []
+    import subprocess
+    cur = r["xbox_name"]
+    uses = subprocess.run(["git", "grep", "-n", "-F", cur, "--", "src/driving"], cwd=os.path.dirname(HERE),
+                          capture_output=True, text=True).stdout.splitlines()
+    out = [f"=== current Xbox name: {cur} (source: {r.get('xbox_source', '?')}); "
+           f"src/driving uses it: {len(uses)}" + (f" e.g. {uses[0][:150]}" if uses else "")]
+    pn = names(g.PS2)
+    same = [a for a, n in pn.items() if n == cur]
+    for a in same[:2]:
+        out += [f"--- PS2 function(s) with the current name: {a:#x}", body(g.PS2, a, 20)]
+    if not same:
+        out.append("(no PS2 function has the current Xbox name)")
+    return out
 
 
 def main():

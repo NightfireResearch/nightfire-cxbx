@@ -20,7 +20,7 @@
 // signed 16-bit pairs, and the packet number means the same thing. The differences are exactly two:
 //
 //  - the Xbox pad's face buttons are analogue. A, B, X, Y, black and white each report 0..255, and the game
-//    reads them that way (IOModule::Update copies all eight bytes and thresholds them at 1). Win32 reports
+//    reads them that way (PAD_update copies all eight bytes and thresholds them at 1). Win32 reports
 //    them as bits, so a pressed button becomes 255 here;
 //  - the Xbox has black and white shoulder buttons where Win32 has two digital shoulders, so those map onto
 //    the analogue black and white slots.
@@ -61,7 +61,7 @@ struct Win32Vibration {
 };
 
 // The Xbox's, as the game reads them. XINPUT_STATE is the packet number, the digital buttons, the eight
-// analogue buttons and the four stick axes - the layout IOModule::Update unpacks byte for byte.
+// analogue buttons and the four stick axes - the layout PAD_update unpacks byte for byte.
 struct XboxGamepad {
     uint16_t wButtons;
     uint8_t  bAnalogButtons[8];

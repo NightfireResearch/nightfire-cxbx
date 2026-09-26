@@ -108,7 +108,8 @@ def check(items, program):
         elif have != names.bare(it["expect"]):
             problems.append(f"{it['xbox']}: expected {it['expect']}, Ghidra has {have}")
         if (program == g.XBOX and not it["expect"].startswith("FUN_") and it["expect"] != "(none)"
-                and it.get("rename", True) and it["name"] != it["expect"]):
+                and it.get("rename", True) and it["name"] != it["expect"]
+                and not it.get("src_checked")):   # set by hand when the hits were read and aren't this function
             refs = used_in_src(it["expect"])
             if refs:
                 problems.append(f"{it['xbox']}: old name {it['expect']} is used in src/driving: {refs[:2]}")
