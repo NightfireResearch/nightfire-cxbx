@@ -1,0 +1,444 @@
+{
+ "classes": [
+  {
+   "name": "RSceneObj",
+   "size": 64,
+   "base": null,
+   "vtable": "0x00191be0",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "RSceneObj_vtbl *",
+     "name": "vtable",
+     "confidence": "high",
+     "evidence": "ctor stores 0x191be0; PS2 keeps its vptr at the END (+0x3c, ctor sw vtable_RSceneObj,0x3c), which is why every PS2 field sits 4 bytes lower than Xbox"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "RSceneObj *",
+     "name": "next",
+     "confidence": "high",
+     "evidence": "SetMapNode/UseInstanceList/~RSceneObj: doubly linked list headed at MapNode+4, new obj inserted at head (next=old head); DestroySceneObjectList/InitializeSceneObjectListLighting walk +4; dtor poisons it 0xabababab. PS2 +0x0"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "RSceneObj *",
+     "name": "prev",
+     "confidence": "high",
+     "evidence": "SetMapNode clears it on insert and fixes next->prev (+8); dtor unlinks via +4/+8. PS2 +0x4"
+    },
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "CARP::Instance *",
+     "name": "sourceInstance",
+     "confidence": "high",
+     "evidence": "POINTER, not a copy: ctor stores its CARP::Instance& arg (param_1_00[3]=param_1) and only copies it to a stack MATRIX4. 64-byte record: rows 0-3 are the transform, word +0x3c packs the bounding radius ((v&0x3ff)*table[bit30], bit31=compute), byte +0xc bit3 feeds flags bit2. GetTransform/GetPosition/Render/GetBoundingRadius/GetViewDistance read it; RAutonomousObj points it at its own +0x40. PS2 +0x8 = SourceInstance() accessor"
+    },
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "CARP::BaseDesc *",
+     "name": "baseDesc",
+     "confidence": "high",
+     "evidence": "PS2 GetBaseDesc returns PS2 +0xc. Set in UseInstanceList from *(article+0x1c); *baseDesc is the model UGroup (SetVariation/GetViewDrawList/GetNumBones/GetBoneIndex/Reset); +4 flags (0x2000 = skip lighting), +0x10/+0x20 bbox min/max (GetBoundingDimensions), +0x3c/+0x60 collision geometry (GetCollisionGeometry)"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "RCARPFile *",
+     "name": "carpFile",
+     "confidence": "high",
+     "evidence": "PS2 GetCARPFile returns PS2 +0x10. Load stores the URefCounter<RCARPFile> reference here; ~RSceneObj/Load RemoveReference it and FastFree(..,0x38)"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "CARP::MapNode *",
+     "name": "mapNode",
+     "confidence": "high",
+     "evidence": "SetMapNode(CARP::MapNode*) stores its arg here after unlinking from the old node; UpdatePosition passes it to WTree::FindNode as the search start; UseInstanceList sets it to the world-tree root when flags bit2. PS2 +0x14 (SetMapNode)"
+    },
+    {
+     "offset": "0x1c",
+     "size": 1,
+     "type": "byte",
+     "name": "renderTypeIndex",
+     "confidence": "medium",
+     "evidence": "ctor zeroes it; no Xbox RSceneObj method reads it. PS2 GetRenderTypeIndex/SetRenderTypeIndex = lbu/sb PS2 +0x18 (byte 0 of the PS2 bitfield word at +0x18)"
+    },
+    {
+     "offset": "0x1d",
+     "size": 1,
+     "type": "byte",
+     "name": "variation",
+     "confidence": "high",
+     "evidence": "SetVariation stores (char)arg on success; Reset passes it to UseArticle; UseArticle writes it. PS2 GetVariation = lbu PS2 +0x19"
+    },
+    {
+     "offset": "0x1e",
+     "size": 1,
+     "type": "byte",
+     "name": "brightness",
+     "confidence": "high",
+     "evidence": "ctor sets 100. PS2 Brightness() = lbu PS2 +0x1a * (1/255); SetBrightness(float) clamps 0..1, *255, sb PS2 +0x1a; PS2 ctor also sb 100 there"
+    },
+    {
+     "offset": "0x1f",
+     "size": 1,
+     "type": "byte (bitfield)",
+     "name": "flags",
+     "confidence": "high",
+     "evidence": "Show/Hide bit0; ctor does &0xe1|1 (clears bits1-4, sets visible). On PS2 these are bits 24-28 of the word at PS2 +0x18 (Show/Hide = or/and 0x01000000, IsVisible = lb +0x1b &1)",
+     "bits": [
+      {
+       "bit": 0,
+       "name": "visible",
+       "confidence": "high",
+       "evidence": "Show/Hide; SetNowVisible/SetSceneObjectCull only list visible objects. PS2 IsVisible/Show/Hide bit 24"
+      },
+      {
+       "bit": 1,
+       "name": "allInstancesSimple (unknown)",
+       "confidence": "low",
+       "evidence": "UseInstanceList sets it, then clears it if any anim-handle instance node's flag byte (+0x4c) has neither 0x01 nor 0x40; GetNextSceneObjCullInfo returns 0.3 in its last float& when set, 1.0 otherwise. PS2 bit 25, no accessor"
+      },
+      {
+       "bit": 2,
+       "name": "inRootNode (unknown)",
+       "confidence": "low",
+       "evidence": "UseInstanceList copies CARP::Instance flag byte +0xc bit3 here and, when set, puts the object in the world-tree root node; UpdatePosition then skips re-bucketing and lighting; GetNextSceneObjCullInfo's bool& = !bit2. PS2 bit 26, no accessor"
+      },
+      {
+       "bit": 3,
+       "name": "drawLast",
+       "confidence": "high",
+       "evidence": "SetNowVisible/SetSceneObjectCull put the object on the draw-last list (RenderAllDrawLast/RenderAllDeferredEffects); UseInstanceList sets it when baseDesc byte +0x1e==1. PS2 DrawLast(bool) writes bit 27"
+      },
+      {
+       "bit": 4,
+       "name": "isVehicle",
+       "confidence": "medium",
+       "evidence": "no Xbox RSceneObj use beyond the ctor clearing it; PS2 IsVehicle = (word+0x18 >> 28)&1, SetVehicle sets 0x10000000 = byte bit 4"
+      },
+      {
+       "bit": "5-7",
+       "name": "unused",
+       "confidence": "low",
+       "evidence": "never touched by the ctor or any RSceneObj method"
+      }
+     ]
+    },
+    {
+     "offset": "0x20",
+     "size": 2,
+     "type": "ushort",
+     "name": "damagedZones",
+     "confidence": "medium",
+     "evidence": "PS2 GetDamagedZones = lhu PS2 +0x1c. TriggerFX type 10 feeds the newly set bits to RAnimEngine::Handle::ProcessStimuliZones(0x12,..) and stores the mask; RenderEffects skips an effect whose zone (effect byte +0x16) bit is set here unless the effect has flag 0x2000; UseInstanceList zeroes it"
+    },
+    {
+     "offset": "0x22",
+     "size": 2,
+     "type": "ushort",
+     "name": "damageEffectZones",
+     "confidence": "low",
+     "evidence": "TriggerFX type 9: if new bits, DamageEffects(this+0x22 | mask) then ORs mask in; UseInstanceList zeroes it. PS2 +0x1e (TriggerFX uses it the same way); no PS2 accessor, name invented"
+    },
+    {
+     "offset": "0x24",
+     "size": 4,
+     "type": "uint",
+     "name": "effectDecayTime",
+     "confidence": "medium",
+     "evidence": "TriggerEffects/DamageEffects/DecayEffects set it to frame counter DAT_001f2a4c+600 while any effect is active, 0 otherwise; RenderEffects calls DecayEffects once the counter passes it. PS2 +0x20 (RenderEffects field9_0x20). Name invented"
+    },
+    {
+     "offset": "0x28",
+     "size": 4,
+     "type": "PhysicsObject *",
+     "name": "physics",
+     "confidence": "high",
+     "evidence": "SetPhysics(PhysicsObject*) stores here; PS2 GetPhysics (both overloads) = lw PS2 +0x24. UpdatePosition/GetVelocity/SetTransform/EnableTarget/SetEventDynamicData read +0x48 bit0 (simple body) and short +0x4a (rigid body index)"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "RAnimEngine::Handle *",
+     "name": "animHandle",
+     "confidence": "high",
+     "evidence": "UseInstanceList stores RAnimEngine::Handle::Create(...); dtor/Load/UseInstanceList Stop and operator_delete(..,0x40). The effect state lives in the handle: effects array +0x14, zone-mask ushort array +0x18, instance count byte +0x1c, numEffects byte +0x1f, 64-bit effect masks +0x20/+0x28/+0x30/+0x38, instance nodes from +0x40 stride 0x40. PS2 GetAnimHandle = lw PS2 +0x28"
+    },
+    {
+     "offset": "0x30",
+     "size": 4,
+     "type": "RPathEngine::Handle *",
+     "name": "pathHandle",
+     "confidence": "high",
+     "evidence": "ctor stores RPathEngine::GetPathHandle(instance); GetVelocity returns pathHandle+0x88 when there is no physics. PS2 GetPathHandle = lw PS2 +0x2c"
+    },
+    {
+     "offset": "0x34",
+     "size": 4,
+     "type": "WTargetable *",
+     "name": "target",
+     "confidence": "high",
+     "evidence": "EnableTarget FastAlloc(0x50,'WTargetable') and stores it; SetPhysics/~RSceneObj RemoveReference and clear it. PS2 +0x30 (DisableTarget clears PS2 +0x30)"
+    },
+    {
+     "offset": "0x38",
+     "size": 4,
+     "type": "SceneObjCollisionInfo *",
+     "name": "collisionInfo",
+     "confidence": "medium",
+     "evidence": "AddCollisionInfo lazily __builtin_new(0x20)s it: {COORD3 pointSum; uint frame; COORD3 normalSum; uint count}; GetCollisionInfo averages it for the current frame or deletes it; dtor/UseInstanceList delete it. PS2 +0x34. Struct type name invented"
+    },
+    {
+     "offset": "0x3c",
+     "size": 4,
+     "type": "const char *",
+     "name": "name",
+     "confidence": "medium",
+     "evidence": "UseInstanceList stores its name arg or '<<unknown>>' (UseInstance passes '<<fragment1>>', UseArticle the article's 'Name' tag). PS2 +0x38 (UseInstanceList piVar5[0xe]). No accessor; debug name"
+    }
+   ]
+  },
+  {
+   "name": "RAutonomousObj",
+   "size": 128,
+   "base": "RSceneObj",
+   "vtable": "0x0018a398",
+   "fields": [
+    {
+     "offset": "0x40",
+     "size": 64,
+     "type": "CARP::Instance",
+     "name": "instance",
+     "confidence": "high",
+     "evidence": "every allocation site (Grenade 0x5d728, Mine, Missile, Newton, ~ESpawnSmackable) copies the identity matrix to this+0x40 then calls RSceneObj(this+0x40), so sourceInstance points at this embedded 64-byte record: the object owns its own instance/transform. Typed MATRIX4 in the current header; CARP::Instance (MATRIX4-shaped, radius packed in the last word) is more accurate. PS2 RAutonomousObj has only its dtor (FastFree 0x80)"
+    }
+   ]
+  },
+  {
+   "name": "RSkeletalObj",
+   "size": 160,
+   "base": "RSceneObj",
+   "vtable": "0x00191c78",
+   "fields": [
+    {
+     "offset": "0x40",
+     "size": 48,
+     "type": "float[12]",
+     "name": "params",
+     "confidence": "high",
+     "evidence": "ctor zeroes 12 dwords; SetProcAnimState calls SetProcAnimParamList(this+0x40,12). PS2 GetParam(i) = this+0x40+4*i (same offset on PS2)"
+    },
+    {
+     "offset": "0x70",
+     "size": 8,
+     "type": "ulonglong",
+     "name": "springEffectMask",
+     "confidence": "medium",
+     "evidence": "PostLoad ORs 1<<i for every anim-handle effect of type 8; UpdatePosition walks its set bits and runs UpdateSpringMassSystem for each. PS2 sd zero,0x70 / PostLoad same. Name invented"
+    },
+    {
+     "offset": "0x78",
+     "size": 4,
+     "type": "uint",
+     "name": "numBones",
+     "confidence": "high",
+     "evidence": "AllocateSkeleton stores the count; dtor frees bones with size numBones<<6. PS2 NumBones = lw +0x78"
+    },
+    {
+     "offset": "0x7c",
+     "size": 4,
+     "type": "MATRIX4 *",
+     "name": "bones",
+     "confidence": "high",
+     "evidence": "AllocateSkeleton FastAlloc(n*0x40,'Bones') and inits each to identity; SetProcAnimState passes (bones,numBones) to SetProcAnimXFormList; UpdatePosition writes bone[id-1]. PS2 GetBone(i) = *(+0x7c)+(i-1)*0x40"
+    },
+    {
+     "offset": "0x80",
+     "size": 16,
+     "type": "COORD4",
+     "name": "springPrevPos",
+     "confidence": "low",
+     "evidence": "ctor sets (0,0,0,-1); UpdateSpringMassSystem treats w==-1 as 'uninitialised' (resets both to (0,0,0,1)), then shifts +0x90 into +0x80 each step. PS2 same offset. Name invented"
+    },
+    {
+     "offset": "0x90",
+     "size": 16,
+     "type": "COORD4",
+     "name": "springPos",
+     "confidence": "low",
+     "evidence": "ctor (0,0,0,-1); UpdateSpringMassSystem stores the new spring point here after velocity from (+0x90 - +0x80). PS2 same offset. Name invented"
+    }
+   ]
+  }
+ ],
+ "vtable_slots": [
+  {
+   "class": "RSceneObj",
+   "slot": 0,
+   "function": "0x908b0",
+   "name": "scalar_deleting_destructor"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 1,
+   "function": "0x17550",
+   "name": "SetViewDrawList (empty; shared dummyNullFunction)"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 2,
+   "function": "0x8f9f0",
+   "name": "Render"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 3,
+   "function": "0x8f930",
+   "name": "RenderSimple"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 4,
+   "function": "0xd3580",
+   "name": "RenderShadow (empty)"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 5,
+   "function": "0xd3580",
+   "name": "RenderDeferredEffects (empty)"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 6,
+   "function": "0x17550",
+   "name": "TransformToWorldSpace (empty)"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 7,
+   "function": "0x17550",
+   "name": "TransformPointToWorldSpace (empty)"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 8,
+   "function": "0x17550",
+   "name": "TransformMatrixToWorldSpace (empty)"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 9,
+   "function": "0x8dce0",
+   "name": "GetRenderOffset"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 10,
+   "function": "0xd3580",
+   "name": "SetProcAnimState (empty)"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 11,
+   "function": "0x8dae0",
+   "name": "SetEventDynamicData"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 12,
+   "function": "0x15770",
+   "name": "TriggerIlluminate (FUN_00015770, unnamed)"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 13,
+   "function": "0x8e1a0",
+   "name": "GetVelocity"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 14,
+   "function": "0x8f270",
+   "name": "UpdatePosition"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 15,
+   "function": "0x8ea70",
+   "name": "TriggerFX"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 16,
+   "function": "0xd3580",
+   "name": "Debug (empty)"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 17,
+   "function": "0xd3580",
+   "name": "PostLoad (empty)"
+  },
+  {
+   "class": "RSceneObj",
+   "slot": 18,
+   "function": "0x8d6d0",
+   "name": "ResolveObjectData"
+  },
+  {
+   "class": "RSkeletalObj",
+   "slot": 0,
+   "function": "0x912d0",
+   "name": "scalar_deleting_destructor"
+  },
+  {
+   "class": "RSkeletalObj",
+   "slot": 10,
+   "function": "0x912b0",
+   "name": "SetProcAnimState"
+  },
+  {
+   "class": "RSkeletalObj",
+   "slot": 14,
+   "function": "0x91360",
+   "name": "UpdatePosition"
+  },
+  {
+   "class": "RSkeletalObj",
+   "slot": 17,
+   "function": "0x91300",
+   "name": "PostLoad"
+  },
+  {
+   "class": "RAutonomousObj",
+   "slot": 0,
+   "function": "0x1b180",
+   "name": "scalar_deleting_destructor"
+  }
+ ],
+ "notes": [
+  "Offset rule: Xbox = PS2 + 4 for every RSceneObj field, because GCC 2.95 put the vptr last (PS2 +0x3c) and MSVC puts it first. Both are 0x40 bytes, so subclass fields (RSkeletalObj +0x40..+0x9f) have the SAME offsets on both builds.",
+  "Xbox vtable slot i = PS2 vtable entry i+1 (PS2 entry 0 is the type_info function; 8-byte GCC entries). 19 slots (0x4c bytes); the float 1.4f at 0x191c2c after them is not a slot. Virtual calls agree: +0x1c slot 7 TransformPointToWorldSpace, +0x20 slot 8 TransformMatrixToWorldSpace, +0x28 slot 10 SetProcAnimState, +0x34 slot 13 GetVelocity, +0x38 slot 14 UpdatePosition, +0x44 slot 17 PostLoad, +0x48 slot 18 ResolveObjectData, +0x14 slot 5 RenderDeferredEffects. Correction to the brief: slot 3 is RenderSimple; the re-pose-from-instance update is slot 14 UpdatePosition.",
+  "+0x0c is a POINTER to the CARP::Instance, not a copy (the RSceneObj.hpp comment 'a 64-byte record the constructor copies' is wrong; the ctor only copies it to a stack matrix).",
+  "The 64-bit effect masks (+0x20/+0x28/+0x30/+0x38), numEffects (+0x1f) and effect array (+0x14) belong to RAnimEngine::Handle (this->animHandle), not RSceneObj; SuppressEffects' '+0x38' is animHandle+0x38. Handle is 0x40 bytes (operator_delete(h,0x40)) plus instance nodes at +0x40 stride 0x40.",
+  "The two ~RSceneObj: 0x905a0 is the real RSceneObj::~RSceneObj (called by RSceneObj::scalar_deleting_destructor, ~RSkeletalObj, ~ActWeapon). 0x1aa70 is a 5-byte JMP to 0x905a0 (body 0x1aa70-0x1aa74; the decompiler shows the target's body) called only by RAutonomousObj::scalar_deleting_destructor 0x1b180 and an ActWeapon ctor unwind. It is almost certainly RAutonomousObj::~RAutonomousObj, the compiler-made destructor that just tail-jumps to the base; PS2 has ~RAutonomousObj 0x118360 in ActWeapon's file, next to where Xbox puts it.",
+  "The two Load functions: 0x90a60 is RSceneObj::Load (PS2 0x1c7360: same callers ChangeCarType/Grenade/PBondCar/PHelicopter, same body: RegisterCallback ResolveData, URefCounter<RCARPFile>, LoadCARPFile, GroupLocateTag('Arti'), UseArticle). 0xbd030 is NOT RSceneObj: a __cdecl that writes 3 floats of inverse box/cylinder inertia (0.5/(m*0.25*(y^2+z^2)+m/12*(2h)^2), 1/(m/3*(..))) from mass and dimensions into its first argument. Callers ChangeCarType/PBondCar/ProcessPhysics point at physics setup code (rigid-body inverse inertia); rename it. The second PS2 Load overload 0x1c7488 (strcasecmp, no callers) seems not to exist on Xbox.",
+  "RSkeletalObj: 0xa0 bytes (RSkeletalObj::scalar_deleting_destructor 0x912d0 does FastFree(this,0xa0)); its only constructor caller is RVehicle::RVehicle (0x953e0), so it is only ever a base of RVehicle and has no FastAlloc tag of its own. Vtable 0x00191c78 overrides slots 0, 10, 14, 17.",
+  "RAutonomousObj: allocation sites confirm that it passes &this->+0x40 as the CARP::Instance& to RSceneObj's ctor after copying the identity matrix from *(0x1c4654). With the identity matrix the packed radius word is 1.0f, so &0x3ff==0 and UseInstanceList computes a radius from the bbox.",
+  "Xbox renderTypeIndex/variation/brightness/flags are separate bytes (MSVC byte ops); PS2 packs the same four into one 32-bit bitfield word at PS2 +0x18 (bits 0-7, 8-15, 16-23, 24-28), so the byte offsets still map +4.",
+  "Invented names with no PS2 accessor behind them: damageEffectZones (+0x22), effectDecayTime (+0x24), collisionInfo/SceneObjCollisionInfo (+0x38), name (+0x3c), flags bits 1 and 2, springEffectMask/springPrevPos/springPos in RSkeletalObj. +0x20 is named after PS2 GetDamagedZones, but on both builds TriggerFX type 10 (stimuli) writes it and type 9 (damage) writes +0x22, so the damaged/other split between the two ushorts is uncertain."
+ ],
+ "skip_prototypes": [
+  "0x1aa70",
+  "0xbd030"
+ ]
+}
