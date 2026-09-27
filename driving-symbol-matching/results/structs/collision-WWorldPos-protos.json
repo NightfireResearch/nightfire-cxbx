@@ -1,0 +1,38 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000d2f10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "WWorldPos::MakeFaceAtPoint(COORD3 &)"
+  },
+  {
+   "address": "0x000d2f90",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "WWorldPos::HeightAtPoint(COORD3 &, bool) const"
+  },
+  {
+   "address": "0x000d2fd0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WWorldPos::WWorldPos(void)"
+  }
+ ]
+}

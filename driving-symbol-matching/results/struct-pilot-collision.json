@@ -726,12 +726,36 @@
    "comment": "Only the fields this packet adds or renames; the rest as in struct-pilot-cluster10.json.",
    "fields": [
     {
+     "offset": "0x0",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unk0",
+     "confidence": "low",
+     "evidence": "zeroed by ctor c5500 and again by Init c55b0 right after construction; PS2 ctor 213110 +0x0 W. No reader found. Name invented"
+    },
+    {
      "offset": "0x4",
      "size": 4,
      "type": "uint",
      "name": "queryStamp",
      "confidence": "high",
      "evidence": "GetInstanceListGuts c43c0/c31f0 increment [+4] and stamp instances (+0x10) with it to de-duplicate across grid cells"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "WCollisionInstance *",
+     "name": "collisionInstances",
+     "confidence": "medium",
+     "evidence": "Init c55b0 stores the data pointer of chunk 'ci' (0x63690000); SetCollisionArticle c2ff0 walks it at a 0x40 stride comparing word +0x1a; Init loop also 0x40 stride. PS2 +0x8 same methods. Name invented"
+    },
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "uint",
+     "name": "numCollisionInstances",
+     "confidence": "high",
+     "evidence": "Init c55b0 stores chunk 'ci' header +0x8 (count); SetCollisionArticle c2ff0 loop bound. PS2 +0xc same. Name invented"
     },
     {
      "offset": "0x10",
@@ -742,12 +766,68 @@
      "evidence": "Init c55b0: 'co' datum; GetObjectListsGuts c34c0 indexes it at 0x30 stride; WGrid::Init idx*0x30 + [mgr+0x10]"
     },
     {
+     "offset": "0x14",
+     "size": 1,
+     "type": "byte",
+     "name": "instanceCacheMapAlloc",
+     "confidence": "medium",
+     "evidence": "MSVC std::map (12 bytes: allocator byte, head, size): ctor c5500 stores a byte to [this+0x14], allocates head node via 0x53580 (isnil at node+0x1d; 0x20-byte nodes freed in dtor c5460). PS2 +0x14 addr-taken -> FastFree. Name invented"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "void *",
+     "name": "instanceCacheMapHead",
+     "confidence": "medium",
+     "evidence": "map head node (ctor [EDI+4]); dtor c5460 reads +0x18 and frees 0x20-byte nodes. Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "uint",
+     "name": "instanceCacheMapSize",
+     "confidence": "medium",
+     "evidence": "map size, zeroed by ctor ([EDI+8]) and dtor. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 1,
+     "type": "byte",
+     "name": "articleMapAlloc",
+     "confidence": "medium",
+     "evidence": "second MSVC std::map: ctor c5500 byte store, head from 0x94030 (isnil node+0x15; 0x18-byte nodes freed in dtor c5460); SetCollisionArticle c2ff0 does find (0x118f20) on this+0x20 and compares with end [this+0x24]. PS2 +0x20 addr-taken -> FastFree in SetCollisionArticle. Name invented"
+    },
+    {
+     "offset": "0x24",
+     "size": 4,
+     "type": "void *",
+     "name": "articleMapHead",
+     "confidence": "medium",
+     "evidence": "map head node, compared as end() in SetCollisionArticle c2ff0; dtor reads +0x24. Name invented"
+    },
+    {
+     "offset": "0x28",
+     "size": 4,
+     "type": "uint",
+     "name": "articleMapSize",
+     "confidence": "medium",
+     "evidence": "map size zeroed in ctor/dtor ([ESI+8] with ESI=this+0x20). Name invented"
+    },
+    {
      "offset": "0x2c",
      "size": 4,
      "type": "uint",
      "name": "faceMask",
      "confidence": "high",
      "evidence": "ctor c5500 sets 0xf0; FUN_000bef30 (ECX = [0x239a70], via FindFaceInCInst bffe0 from FindClosestFace d3050) tests [+0x2c] & faceFlags"
+    },
+    {
+     "offset": "0x30",
+     "size": 1,
+     "type": "bool",
+     "name": "unk30",
+     "confidence": "medium",
+     "evidence": "ctor c5500 byte store 0; PS2 ctor +0x30 w4 (4-byte bool). Name invented"
     }
    ]
   }
@@ -774,6 +854,8 @@
   "WCollisionStripVertex's 4th dword is overloaded: vertex 0 = vertex count, vertex 1 = strip flags, vertex i+2 = attributes of triangle i. A field-level struct cannot express this; surface/faceFlags/triRadius16 are right only for vertices 2..N-1.",
   "Surface numbering (friction[k] at 0x1c3728+4k, InitializeBondCarGlobals): 0 NODRIVE, 1 PAVED, 2 GRAVEL, 3 GRASS, 4 COBBLE, 5 DIRT, 6 WATER, 7 WOOD, 8 ICE, 9 SNOW, 10 PAVED_ROUGH, 12 RAILROAD, 13 METAL; 11, 14, 15 unnamed but used in the files.",
   "0xbf0e0 FindFaceInTriStrip returns the triangle's first vertex (vec_in) or 0; typed here as WCollisionStripVertex *.",
-  "WWorldPos: cluster3 named +0x2c faceType/+0x2d faceSubType/+0x2e faceId/+0x34 cacheStamp/+0x38 unknown_38/+0x3c unknown_3c; this packet replaces those names with the evidence above."
- ]
+  "WWorldPos: cluster3 named +0x2c faceType/+0x2d faceSubType/+0x2e faceId/+0x34 cacheStamp/+0x38 unknown_38/+0x3c unknown_3c; this packet replaces those names with the evidence above.",
+  "WCollisionMgr, WGrid and WWorldPos merged with their cluster10/cluster3 layouts (earlier fields kept where these don't overlap them)."
+ ],
+ "vtable_slots": []
 }

@@ -430,7 +430,28 @@ SURF_COLOURS = {0: (0.8, 0.1, 0.1), 1: (0.4, 0.4, 0.4), 2: (0.6, 0.5, 0.3), 3: (
                 13: (0.6, 0.65, 0.7)}
 
 
-def write_obj(track, out_path, include_masked=True):
+class RightHanded:
+    """The game's coordinates are Direct3D's, left-handed; OBJ is right-handed by convention, so an importer shows
+    the level mirrored. This writes through with Z negated on every vertex and every face's vertex order reversed,
+    which mirrors the geometry back and keeps the faces' normals pointing the same way: the vertices are (x, y, -z)
+    of the game's. The bounding box printed and --query stay in the game's coordinates."""
+
+    def __init__(self, f):
+        self.f = f
+
+    def write(self, text):
+        out = []
+        for line in text.split('\n'):
+            if line.startswith('v '):
+                x, y, z = line[2:].split()
+                line = 'v %s %s %.4f' % (x, y, -float(z))
+            elif line.startswith('f '):
+                line = 'f ' + ' '.join(reversed(line[2:].split()))
+            out.append(line)
+        self.f.write('\n'.join(out))
+
+
+def write_obj(track, out_path, include_masked=True, game_coords=False):
     base = os.path.splitext(out_path)[0]
     mtl_path = base + '.mtl'
     used = set()
@@ -438,10 +459,13 @@ def write_obj(track, out_path, include_masked=True):
     dynamic = set(idx for kind, idx in track.dynamic if kind == 0)
     stats = {'instances': 0, 'faces': 0, 'vertices': 0, 'barriers': 0, 'objects': 0,
              'bbox': [[1e30] * 3, [-1e30] * 3], 'no_article': 0}
-    with open(out_path, 'w', newline='\n') as f:
+    with open(out_path, 'w', newline='\n') as raw:
+        f = raw if game_coords else RightHanded(raw)
         f.write('# collision geometry of %s (tools/carp_collision.py)\n' % os.path.basename(
             track_path_of(track)))
-        f.write('# world space, Y up. Materials: surfNN_<surface>[_fXX face flag byte]'
+        f.write('# world space, Y up; %s\n' % ("the game's own left-handed coordinates" if game_coords else
+                "right-handed: Z is negated from the game's (--game-coords for the raw ones)"))
+        f.write('# Materials: surfNN_<surface>[_fXX face flag byte]'
                 '[_2s two-sided strip, facing undefined]; barrier_bXX_fYY; object_obb/cylinder\n')
         f.write('# objects: ciNNNN_<article>[_dyn = moved at run time], ciNNNN_<article>_barriers,'
                 ' coNNNN_obb, coNNNN_cyl\n')
@@ -640,6 +664,8 @@ def main(argv=None):
     ap.add_argument('--list', action='store_true', help='print a summary of chunks and counts')
     ap.add_argument('--query', action='append', default=[], metavar='X,Y,Z',
                     help='print the emulated GetWorldHeightAtPoint result at a point')
+    ap.add_argument('--game-coords', action='store_true',
+                    help="write the game's own left-handed coordinates (an importer shows them mirrored)")
     ap.add_argument('--skip-masked', action='store_true',
                     help='leave out faces the collision manager ignores (flag & 0xf0)')
     args = ap.parse_args(argv)
@@ -657,7 +683,7 @@ def main(argv=None):
             print('query %s: height %.3f (%.3f below) instance ci%04d %s' % (
                 p, h, p[1] - h, inst.index, inst.article_name))
     if args.obj and args.obj != '-':
-        st = write_obj(track, args.obj, include_masked=not args.skip_masked)
+        st = write_obj(track, args.obj, include_masked=not args.skip_masked, game_coords=args.game_coords)
         lo, hi = st['bbox']
         print('wrote %s: %d instances, %d faces, %d vertices, %d barriers, %d objects'
               % (args.obj, st['instances'], st['faces'], st['vertices'], st['barriers'],

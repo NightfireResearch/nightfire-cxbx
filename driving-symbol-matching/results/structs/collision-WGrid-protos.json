@@ -1,0 +1,58 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000c57b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "uint"
+    },
+    {
+     "name": "param_3",
+     "type": "uint"
+    },
+    {
+     "name": "param_4",
+     "type": "float"
+    }
+   ],
+   "sheet": "WGrid::WGrid(COORD4 &, unsigned int, unsigned int, float)"
+  },
+  {
+   "address": "0x000c59f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WGrid::Shutdown(void)"
+  },
+  {
+   "address": "0x000c5fc0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "UGroup *"
+    }
+   ],
+   "sheet": "WGrid::Init(UGroup *)"
+  },
+  {
+   "address": "0x000c6290",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "WGrid::Restart(void)"
+  },
+  {
+   "address": "0x000c7200",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "WGrid::UpdateDynamicNodes(void)"
+  }
+ ]
+}

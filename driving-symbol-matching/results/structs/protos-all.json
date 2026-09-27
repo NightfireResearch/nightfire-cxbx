@@ -4453,26 +4453,6 @@
    "return": "void"
   },
   {
-   "address": "0x0004f170",
-   "calling_convention": "__thiscall",
-   "params": [
-    {
-     "name": "param_1",
-     "type": "int"
-    },
-    {
-     "name": "param_2",
-     "type": "float"
-    },
-    {
-     "name": "param_3",
-     "type": "int"
-    }
-   ],
-   "sheet": "ActionData::ActionData(int, float, int)",
-   "return": "ActionData *"
-  },
-  {
    "address": "0x0004f190",
    "calling_convention": "__cdecl",
    "params": [
@@ -4606,7 +4586,7 @@
    "params": [
     {
      "name": "param_1",
-     "type": "void *"
+     "type": "InputDevice *"
     }
    ],
    "sheet": "InputToAction::InputToAction(InputDevice *)",
@@ -4652,7 +4632,7 @@
    "calling_convention": "__thiscall",
    "params": [],
    "sheet": "DeviceScalar::DeviceScalar(void)",
-   "return": "void *"
+   "return": "DeviceScalar *"
   },
   {
    "address": "0x00050be0",
@@ -4721,7 +4701,7 @@
     }
    ],
    "sheet": "InputDevice::InputDevice(int)",
-   "return": "void *"
+   "return": "InputDevice *"
   },
   {
    "address": "0x00050e30",
@@ -4766,7 +4746,7 @@
    "params": [
     {
      "name": "param_1",
-     "type": "void *"
+     "type": "InputDevice *"
     },
     {
      "name": "param_2",
@@ -7673,44 +7653,6 @@
     }
    ],
    "sheet": "WCollisionObject::MakeMatrix(MATRIX4 &, bool) const"
-  },
-  {
-   "address": "0x000be780",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "WCollisionInstance::GetRenderInstance(void) const"
-  },
-  {
-   "address": "0x000be7a0",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "WCollisionInstance::GetName(void) const"
-  },
-  {
-   "address": "0x000be810",
-   "calling_convention": "__thiscall",
-   "params": [
-    {
-     "name": "param_1",
-     "type": "COORD3 *"
-    }
-   ],
-   "sheet": "WCollisionInstance::CalcPosition(COORD3 &) const"
-  },
-  {
-   "address": "0x000be8b0",
-   "calling_convention": "__thiscall",
-   "params": [
-    {
-     "name": "param_1",
-     "type": "MATRIX4 *"
-    },
-    {
-     "name": "param_2",
-     "type": "bool"
-    }
-   ],
-   "sheet": "WCollisionInstance::MakeMatrix(MATRIX4 &, bool) const"
   },
   {
    "address": "0x000c7270",

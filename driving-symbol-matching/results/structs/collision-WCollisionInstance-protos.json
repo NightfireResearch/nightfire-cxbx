@@ -1,0 +1,46 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000be780",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WCollisionInstance::GetRenderInstance(void) const",
+   "return": "CARP::Instance *"
+  },
+  {
+   "address": "0x000be7a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WCollisionInstance::GetName(void) const",
+   "return": "char *"
+  },
+  {
+   "address": "0x000be810",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "WCollisionInstance::CalcPosition(COORD3 &) const"
+  },
+  {
+   "address": "0x000be8b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "WCollisionInstance::MakeMatrix(MATRIX4 &, bool) const"
+  }
+ ]
+}

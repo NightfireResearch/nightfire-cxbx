@@ -1,0 +1,720 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "UGroup",
+   "size": 16,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "uint",
+     "name": "tag",
+     "comment": "high: GroupLocateTag 117950 / DataLocateTag 117b50 compare [+0x0] with the tag; DataCountType 1179f0 masks it with 0xffff2020|0x2020 when flags bit 0 is set (indexed tags 'cn'+n, 'sr'+n)"
+    },
+    {
+     "offset": 4,
+     "type": "uint",
+     "name": "flags",
+     "comment": "high: GetArray 117940: bit 1 = +0xc relative; groups: flags>>5 = child group count (GroupLocateTag, ProcessBreadthFirst 117c10), bit 3 = data sorted (DataLocateTag binary search FUN_117840), bit 4 = groups sorted; ResolveOffsets 117cb0 clears bit 1. "
+    },
+    {
+     "offset": 8,
+     "type": "uint",
+     "name": "dataCount",
+     "comment": "high: groups: number of data entries after the child groups (DataLocateTag bound ((flags>>5)+[+8])*0x10); data entries: element count or index (WCollisionMgr::Init c55b0 takes the 'ci' count from +8; WGrid::Init c5fc0 uses 'cn' +8 as the node index)"
+    },
+    {
+     "offset": 12,
+     "type": "uint",
+     "name": "offset",
+     "comment": "high: groups: array offset in 16-byte units from this entry when bit 1 (GetArray: this + [+0xc]*0x10); data: byte offset from the entry (Init c55b0: [+0xc] + entry when [+4]&2); becomes an absolute pointer after ResolveOffsets"
+    }
+   ],
+   "comment": "One 16-byte entry of the serialised EAGL tree (.crp files are one UGroup tree loaded in place). Data entries (UData) share the layout: +0x4 bits 8.. = byte size, bit 0 = tag carries an index in its low 16 bits, +0xc = byte offset. Child groups precede data entries in the array."
+  },
+  {
+   "name": "WGrid",
+   "size": 36,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "COORD4",
+     "name": "origin",
+     "comment": "high: ctor c57b0 copies 4 floats; RangeCheckROWCOL c5710 uses origin.x/origin.z; file: (-448,0,-960,1) uw_mis11, (-672,0,-1536,1) snow2a_mis4"
+    },
+    {
+     "offset": 16,
+     "type": "float",
+     "name": "cellSize",
+     "comment": "high: ctor param 4 from CGrd+0x10; 24.0 in all four tracks; FindNodes c64b0 multiplies cell counts by it"
+    },
+    {
+     "offset": 20,
+     "type": "float",
+     "name": "invCellSize",
+     "comment": "high: ctor 1/cellSize; RangeCheckROWCOL multiplies by it; file holds 1/24"
+    },
+    {
+     "offset": 24,
+     "type": "uint",
+     "name": "numRows",
+     "comment": "high: rows along Z: RangeCheckROWCOL clamps the z index against it; node index = row*numCols+col (FindNodesBox c62b0)"
+    },
+    {
+     "offset": 28,
+     "type": "uint",
+     "name": "numCols",
+     "comment": "high: columns along X: RangeCheckROWCOL clamps the x index; row stride in FindNodesBox/FindNodes"
+    },
+    {
+     "offset": 32,
+     "type": "WGridNode **",
+     "name": "nodes",
+     "comment": "high: ctor allocates rows*cols pointers ('WGrid Nodes'); Init stores each 'cn' datum at nodes[datum+8]; GetInstanceListGuts reads [grid+0x20 + idx*4]. File value is junk"
+    }
+   ],
+   "comment": "Adds file evidence to cluster10's WGrid: the CDat datum 'CGrd' (36 bytes) has exactly this layout; WGrid::Init c5fc0 passes the datum (origin), [+0x18], [+0x1c], [+0x10] to the ctor c57b0."
+  },
+  {
+   "name": "WGridNode",
+   "size": 16,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "dynamicList",
+     "comment": "medium: node iterator FUN_000bfee0: if [node] != 0 walks [[node]+4] list nodes (+0 next, +8 element, +0xc kind); zero in the file; filled by WGrid::Init for 'de' elements / AddGridNodeDynamicElement c6d70"
+    },
+    {
+     "offset": 4,
+     "type": "byte[4]",
+     "name": "counts",
+     "comment": "high: FUN_000bfee0: count = byte [node+4+kind]"
+    },
+    {
+     "offset": 8,
+     "type": "ushort[4]",
+     "name": "listOffsets",
+     "comment": "high: FUN_000bfee0: list = node + 0x10 + ushort [node+8+kind*2]; FUN_000bff50 steps 2 bytes"
+    },
+    {
+     "offset": 16,
+     "type": "ushort[]",
+     "name": "indices",
+     "comment": "high: u16 indices read by FUN_000bff50 callers (GetInstanceListGuts multiplies by 0x40, GetObjectListsGuts by 0x30)"
+    }
+   ],
+   "comment": "Variable-size CDat datum 'cn'+n (size 0x10 + 2*sum(counts)); only the header is fixed. Kinds: 0 = WCollisionInstance index (GetInstanceListGuts), 1 = trigger (WTriggerManager::Process d04a0; max+1 = Map/Trgr count), 2 = WCollisionObject index (GetObjectListsGuts c34c0), 3 = road segment (inferred: max+1 = RNgp/rs count in every track, no Xbox reader found). PS2 WGridNode::TotalSize 21e650."
+  },
+  {
+   "name": "WGridDynamicRecord",
+   "size": 8,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "ushort",
+     "name": "index",
+     "comment": "high: Init: ci index *0x40 (kind 0) or co index *0x30 (kind 2)"
+    },
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pad",
+     "comment": "low: 0 in the files, unread"
+    },
+    {
+     "offset": 4,
+     "type": "uint",
+     "name": "kind",
+     "comment": "high: Init branches on [+4] == 0 (collision instance) / == 2 (collision object)"
+    }
+   ],
+   "comment": "CDat datum 'de'+n: an element placed on the grid's dynamic lists at load (WGrid::Init c5fc0). Name invented."
+  },
+  {
+   "name": "WCollisionInstance",
+   "size": 64,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "float[3]",
+     "name": "row0",
+     "comment": "high: MakeMatrix be8b0 -> mtx[0][0..2]; CalcPosition be810 x = -(row0 . t)"
+    },
+    {
+     "offset": 12,
+     "type": "float",
+     "name": "halfExtentX",
+     "comment": "high: FUN_000bf4c0 and FindFaceInCInst bffe0: -[+0xc] <= local.x <= [+0xc]"
+    },
+    {
+     "offset": 16,
+     "type": "uint",
+     "name": "queryStamp",
+     "comment": "high: GetInstanceListGuts c43c0/c31f0: skip when [+0x10] == mgr[+4], then store mgr[+4] (runtime; file bytes are junk)"
+    },
+    {
+     "offset": 20,
+     "type": "float",
+     "name": "halfExtentY",
+     "comment": "medium: GetInstanceListGuts c31f0: rejects when translation.y +/- [+0x14] is outside the segment's y range"
+    },
+    {
+     "offset": 24,
+     "type": "byte",
+     "name": "flags",
+     "comment": "medium: MakeMatrix: (flags&3)==0 -> row1=(0,1,0) else FUN_00115cc0(row2,row0) cross product; FUN_000bf4c0/FindFaceInCInst: flags&1 reverses the height distance; GetBarrierNormal c0890 stores (flags>>1)&1 at info+0x52; GetInstanceListGuts c31f0 files "
+    },
+    {
+     "offset": 25,
+     "type": "byte",
+     "name": "unk19",
+     "comment": "low: 0..43 in the files; no reader found"
+    },
+    {
+     "offset": 26,
+     "type": "ushort",
+     "name": "renderInstanceIndex",
+     "comment": "high: GetRenderInstance be780 = [+0x1a]*0x40 + fgWorld+0x20 (Map 'in'); SetCollisionArticle c2ff0 matches (CARP::Instance* - fgWorld+0x20)>>6; GetName be7a0 looks up 'iN'|[+0x1a]"
+    },
+    {
+     "offset": 28,
+     "type": "WCollisionArticle *",
+     "name": "article",
+     "comment": "high: file: tag reference 'sr'+n (0x7372xxxx) -> CDat 'sr' string 'CARP::<name>' -> Arti group (CARP::SymbolicResolver 118b40); Init c55b0 replaces it with that group's 'ca' datum; SetCollisionArticle sets 'ca'+n or 0; every query skips instances wit"
+    },
+    {
+     "offset": 32,
+     "type": "float[3]",
+     "name": "row2",
+     "comment": "high: MakeMatrix -> mtx[2]; CalcPosition z = -(row2 . t)"
+    },
+    {
+     "offset": 44,
+     "type": "float",
+     "name": "halfExtentZ",
+     "comment": "high: FUN_000bf4c0 / FindFaceInCInst bffe0: -[+0x2c] <= local.z <= [+0x2c]"
+    },
+    {
+     "offset": 48,
+     "type": "float[3]",
+     "name": "translation",
+     "comment": "high: MakeMatrix(m, true) -> mtx[3]; CalcPosition = -(row_i . t)"
+    },
+    {
+     "offset": 60,
+     "type": "float",
+     "name": "radiusXZ",
+     "comment": "high: GetInstanceListGuts c43c0: max(|dx|,|dz|)+0.25*min < r + [+0x3c]; c31f0: squared XZ distance < [+0x3c]^2"
+    }
+   ],
+   "comment": "CDat datum 'ci' array (fgCollisionMgr+0x8, count +0xc). Holds the WORLD->LOCAL matrix of its article (rows 0 and 2 + translation; row1 = (0,1,0) or row2 x row0). Local->world = OrthoInverse (FUN_000beeb0). Validated: grid cells list exactly the instances whose centre is within radius+half cell diagonal."
+  },
+  {
+   "name": "WCollisionArticle",
+   "size": 32,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "ushort",
+     "name": "numStrips",
+     "comment": "high: GetInstanceStripList c4120 and FUN_000bf4c0 loop over [+0x0] spheres from +0x20"
+    },
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "barrierOffset",
+     "comment": "high: GetBarrierList c3880 / GetBarrierNormal c0890 / GetClosestIntersectingBarrier c0660: barriers at ca + 0x20 + [+0x2]"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "numBarriers",
+     "comment": "high: GetBarrierList/GetBarrierNormal loop bound (short [+4])"
+    },
+    {
+     "offset": 6,
+     "type": "byte[26]",
+     "name": "unk6",
+     "comment": "low: mostly zero, +0xd = 0xfe/0x7a, int16 triples at +0x10/+0x18; no reader found"
+    }
+   ],
+   "comment": "Header of an Arti group's 'ca'+n datum (the geometry an instance points to after Init). Followed by WCollisionStripSphere[numStrips] at +0x20, strips and barriers. Name invented."
+  },
+  {
+   "name": "WCollisionStripSphere",
+   "size": 16,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "COORD3",
+     "name": "centre",
+     "comment": "high: v3sub(sphere, localPoint) in GetInstanceStripList c4120, FUN_000bf4c0, FindFaceInCInst bffe0/c01d0"
+    },
+    {
+     "offset": 12,
+     "type": "ushort",
+     "name": "radius16",
+     "comment": "high: radius = [+0xc] * 0.0625, compared with the XZ (or XYZ) distance in the same functions"
+    },
+    {
+     "offset": 14,
+     "type": "ushort",
+     "name": "stripOffset",
+     "comment": "high: strip = ca + 0x20 + [+0xe] (GetInstanceStripList, FUN_000bf4c0 'puVar3[7] + 0x20 + ca')"
+    }
+   ],
+   "comment": "Bounding circle of one strip (PS2 names: vector<WCollisionStripSphere *>). Array at ca+0x20."
+  },
+  {
+   "name": "WCollisionStripVertex",
+   "size": 16,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "COORD3",
+     "name": "position",
+     "comment": "high: FindFaceInTriStrip bf0e0 transforms [v], [v+0x10], [v+0x20] with VU0_MATRIX4_vect3mult; FUN_000beeb0 copies them to the WWorldPos"
+    },
+    {
+     "offset": 12,
+     "type": "byte",
+     "name": "surface",
+     "comment": "high: FUN_000beeb0 copies ushort [tri+0x2c] (= vertex i+2 +0xc) to WWorldPos+0x2c; SurfaceBumpHeight bedd0 switches on that byte (2,3,5,10 / 4,7 / 6 = gravel,grass,dirt,rough / cobble,wood / water in the friction[] order of InitializeBondCarGlobals, "
+    },
+    {
+     "offset": 13,
+     "type": "byte",
+     "name": "faceFlags",
+     "comment": "high: FUN_000bef30: skip when [+0x2d]&4 or [+0x2d]&mgr[+0x2c]; FindFaceInTriStrip bf0e0 same mask test. Values 0,2,4,6,0x10,0x14"
+    },
+    {
+     "offset": 14,
+     "type": "ushort",
+     "name": "triRadius16",
+     "comment": "high: GetInstanceStripList c4120: per-triangle radius = ushort [middle vertex+0x1e] * 0.0625 around the triangle centroid"
+    }
+   ],
+   "comment": "A strip is an array of these (PS2 WCollisionStrip). The 4th dword is data: vertex 0 = uint vertex count, vertex 1 = uint strip flags (bit1 two-sided -> FUN_000bebd0; else bit0 = initial orientation, alternating per triangle FUN_000bed40/becb0), vertex i+2 = attributes of triangle i (fields below). Name invented."
+  },
+  {
+   "name": "WCollisionBarrier",
+   "size": 32,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "COORD3",
+     "name": "p0",
+     "comment": "high: x, y min, z: GetClosestIntersectingBarrier c0660 accepts hit.y in ([+0x4], [+0x14]); SegmentIntersect on (p0,p1) XZ"
+    },
+    {
+     "offset": 12,
+     "type": "byte",
+     "name": "unkC",
+     "comment": "low: 0x10..0x60 in steps of 0x10; GetBarrierNormal copies ushort [+0xc] to collision info +0x50 (the surface slot)"
+    },
+    {
+     "offset": 13,
+     "type": "byte",
+     "name": "flags",
+     "comment": "high: GetBarrierList c3880 / GetBarrierNormal c0890: skipped when [+0xd] & mask"
+    },
+    {
+     "offset": 14,
+     "type": "ushort",
+     "name": "unkE",
+     "comment": "low: 0 or 0x322a; unread"
+    },
+    {
+     "offset": 16,
+     "type": "COORD3",
+     "name": "p1",
+     "comment": "high: x, y max, z (see p0); GetBarrierList swaps y after transforming to world"
+    },
+    {
+     "offset": 28,
+     "type": "float",
+     "name": "invLength",
+     "comment": "high: GetBarrierNormal: normal = ((z1-z0)*[+0x1c], 0, -(x1-x0)*[+0x1c]); equals 1/XZ length to 1e-7 in all 1639 barriers checked"
+    }
+   ],
+   "comment": "Vertical wall segment in article space, array at ca+0x20+barrierOffset. Name invented (PS2 has WCollisionBarrierListEntry for the world-space copy)."
+  },
+  {
+   "name": "WCollisionBarrierListEntry",
+   "size": 40,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "COORD4",
+     "name": "p0",
+     "comment": "high: GetBarrierList: barrier p0 through OrthoInverse(MakeMatrix); y sorted so p0.y <= p1.y"
+    },
+    {
+     "offset": 16,
+     "type": "COORD4",
+     "name": "p1",
+     "comment": "high: as p0"
+    },
+    {
+     "offset": 32,
+     "type": "WCollisionInstance *",
+     "name": "instance",
+     "comment": "high: GetBarrierList stores the instance; GetClosestIntersectingBarrier reads pfVar7[8] and its flags"
+    },
+    {
+     "offset": 36,
+     "type": "int",
+     "name": "barrierIndex",
+     "comment": "high: GetBarrierList stores the loop index; GetClosestIntersectingBarrier re-reads barrier ca+0x20+[+2]+(idx+1)*0x20 for rotated instances"
+    }
+   ],
+   "comment": "Runtime world-space copy of a barrier (vector element, 0x28 bytes) built by GetBarrierList c3880 for WCollider+0x40; read by GetClosestIntersectingBarrier c0660 (stride 10 floats)."
+  },
+  {
+   "name": "WCollisionInstanceCache",
+   "size": 8,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "WCollisionInstance *",
+     "name": "instance",
+     "comment": "high: GetInstanceStripList c4120 '*param_1 = instance'; FindFaceInCInst bffe0 reads [+0]"
+    },
+    {
+     "offset": 4,
+     "type": "WCollisionStripList *",
+     "name": "strips",
+     "comment": "high: GetInstanceStripList stores the 0x14-byte list or 0; FindFaceInCInst uses the point overload when [+4] == 0"
+    }
+   ],
+   "comment": "Element of WCollisionInstanceCacheList (vector, 8-byte stride) returned by GetInstanceList; PS2 name from vector<WCollisionInstanceCache>."
+  },
+  {
+   "name": "WCollisionStripList",
+   "size": 20,
+   "fields": [
+    {
+     "offset": 4,
+     "type": "WCollisionStripSphere **",
+     "name": "first",
+     "comment": "high: FindFaceInCInst bffe0/c01d0 loop [+4]..[+8]"
+    },
+    {
+     "offset": 8,
+     "type": "WCollisionStripSphere **",
+     "name": "last",
+     "comment": "high: loop end"
+    },
+    {
+     "offset": 12,
+     "type": "WCollisionStripSphere **",
+     "name": "end",
+     "comment": "medium: capacity test before growing (c4120)"
+    },
+    {
+     "offset": 16,
+     "type": "WCollisionArticle *",
+     "name": "article",
+     "comment": "high: GetInstanceStripList stores the instance's +0x1c"
+    }
+   ],
+   "comment": "Allocated (0x14 bytes) by GetInstanceStripList c4120: an MSVC vector of WCollisionStripSphere* plus the article. Name invented."
+  },
+  {
+   "name": "WCollisionObject",
+   "size": 48,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "COORD3",
+     "name": "position",
+     "comment": "high: WCollisionObject::MakeMatrix be6f0 translation (box centre); GetClosestIntersectingCylObject c0440 circle centre x/z and base y"
+    },
+    {
+     "offset": 12,
+     "type": "float",
+     "name": "radius",
+     "comment": "high: GetObjectListsGuts c34c0: octagonal distance < r + [+0xc]; cylinder radius passed to IntersectCircle"
+    },
+    {
+     "offset": 16,
+     "type": "COORD3",
+     "name": "halfExtents",
+     "comment": "high: GetClosestIntersectingOBBObject passes this+0x10 to GetOBBObjectIntersection bf8c0, which builds corners from +/-x,+/-y,+/-z; cylinder height 2*[+0x14]"
+    },
+    {
+     "offset": 28,
+     "type": "float",
+     "name": "unk1C",
+     "comment": "low: 1.0 in the file; unread"
+    },
+    {
+     "offset": 32,
+     "type": "bool",
+     "name": "isCylinder",
+     "comment": "high: GetObjectListsGuts: [+0x20]==0 -> list sent to FUN_000c1080 (GetClosestIntersectingOBBObject), else FUN_000c0f80 (GetClosestIntersectingCylObject) in CheckHitWorld c3b40"
+    },
+    {
+     "offset": 33,
+     "type": "byte",
+     "name": "unk21",
+     "comment": "low: 0xd0 in the file"
+    },
+    {
+     "offset": 36,
+     "type": "ushort",
+     "name": "renderInstanceIndex",
+     "comment": "high: MakeMatrix be6f0: rotation rows from fgWorld+0x20 + [+0x24]*0x40; WGrid::Init dynamic kind 2 uses the same"
+    }
+   ],
+   "comment": "CDat datum 'co' array (fgCollisionMgr+0x10), 48-byte stride (GetObjectListsGuts, WGrid::Init). Oriented box or vertical cylinder. Only snow2a_mis4 of the four dumped tracks has any (525)."
+  },
+  {
+   "name": "WWorldPos",
+   "size": 64,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "COORD3",
+     "name": "vertex0",
+     "comment": "high: FUN_000beeb0: vect3mult(tri, OrthoInverse(instance matrix)) -> +0x0"
+    },
+    {
+     "offset": 16,
+     "type": "COORD3",
+     "name": "vertex1",
+     "comment": "high: FUN_000beeb0 -> +0x10"
+    },
+    {
+     "offset": 28,
+     "type": "uint",
+     "name": "stripFlags",
+     "comment": "medium: FUN_000beeb0: param_1[7] = [tri+0x1c] (the word of the triangle's middle vertex; for the strip's first triangle this is the strip flags)"
+    },
+    {
+     "offset": 32,
+     "type": "COORD3",
+     "name": "vertex2",
+     "comment": "high: FUN_000beeb0 -> +0x20"
+    },
+    {
+     "offset": 44,
+     "type": "byte",
+     "name": "surface",
+     "comment": "high: FUN_000beeb0 copies ushort [tri+0x2c]; MakeFaceAtPoint writes 1 (PAVED); SurfaceBumpHeight(COORD3&, WSurface&) switches on it; GetWorldNormal c0e00 copies it to info"
+    },
+    {
+     "offset": 45,
+     "type": "byte",
+     "name": "faceFlags",
+     "comment": "high: second byte of the same word (vertex i+2 +0xd)"
+    },
+    {
+     "offset": 46,
+     "type": "ushort",
+     "name": "triRadius16",
+     "comment": "medium: FUN_000beeb0 copies ushort [tri+0x2e]"
+    },
+    {
+     "offset": 48,
+     "type": "bool",
+     "name": "faceValid",
+     "comment": "high: unchanged from cluster3: set by FindClosestFace d3050/d3110 when a face is found"
+    },
+    {
+     "offset": 52,
+     "type": "WCollisionInstance *",
+     "name": "instance",
+     "comment": "high: FindClosestFace d3050/d3110: param_1_00[0xd] = cache->instance; MakeFaceAtPoint stores fgCollisionMgr+8 (instance array base)"
+    },
+    {
+     "offset": 56,
+     "type": "WCollisionArticle *",
+     "name": "article",
+     "comment": "high: FindClosestFace stores instance[+0x1c]; FindClosestFace(COORD3&,bool) d31f0 reuses the cached face only while [+0x38] == [[+0x34]+0x1c]"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "lastStep",
+     "comment": "high: d31f0/d3110 store Sim.stepCount"
+    }
+   ],
+   "comment": "Revision of cluster3's WWorldPos: +0x0..+0x2f is a world-space copy of one strip triangle written by FUN_000beeb0 (three vertices, strip flags, attribute words), and +0x34/+0x38 identify the instance and its article."
+  },
+  {
+   "name": "WCollisionMgr",
+   "size": 52,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined4",
+     "name": "unk0",
+     "comment": "low: zeroed by ctor c5500 and again by Init c55b0 right after construction; PS2 ctor 213110 +0x0 W. No reader found. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "uint",
+     "name": "queryStamp",
+     "comment": "high: GetInstanceListGuts c43c0/c31f0 increment [+4] and stamp instances (+0x10) with it to de-duplicate across grid cells"
+    },
+    {
+     "offset": 8,
+     "type": "WCollisionInstance *",
+     "name": "collisionInstances",
+     "comment": "medium: Init c55b0 stores the data pointer of chunk 'ci' (0x63690000); SetCollisionArticle c2ff0 walks it at a 0x40 stride comparing word +0x1a; Init loop also 0x40 stride. PS2 +0x8 same methods. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "uint",
+     "name": "numCollisionInstances",
+     "comment": "high: Init c55b0 stores chunk 'ci' header +0x8 (count); SetCollisionArticle c2ff0 loop bound. PS2 +0xc same. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "WCollisionObject *",
+     "name": "collisionObjects",
+     "comment": "high: Init c55b0: 'co' datum; GetObjectListsGuts c34c0 indexes it at 0x30 stride; WGrid::Init idx*0x30 + [mgr+0x10]"
+    },
+    {
+     "offset": 20,
+     "type": "byte",
+     "name": "instanceCacheMapAlloc",
+     "comment": "medium: MSVC std::map (12 bytes: allocator byte, head, size): ctor c5500 stores a byte to [this+0x14], allocates head node via 0x53580 (isnil at node+0x1d; 0x20-byte nodes freed in dtor c5460). PS2 +0x14 addr-taken -> FastFree. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "void *",
+     "name": "instanceCacheMapHead",
+     "comment": "medium: map head node (ctor [EDI+4]); dtor c5460 reads +0x18 and frees 0x20-byte nodes. Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "uint",
+     "name": "instanceCacheMapSize",
+     "comment": "medium: map size, zeroed by ctor ([EDI+8]) and dtor. Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "byte",
+     "name": "articleMapAlloc",
+     "comment": "medium: second MSVC std::map: ctor c5500 byte store, head from 0x94030 (isnil node+0x15; 0x18-byte nodes freed in dtor c5460); SetCollisionArticle c2ff0 does find (0x118f20) on this+0x20 and compares with end [this+0x24]. PS2 +0x20 addr-taken -> Fast"
+    },
+    {
+     "offset": 36,
+     "type": "void *",
+     "name": "articleMapHead",
+     "comment": "medium: map head node, compared as end() in SetCollisionArticle c2ff0; dtor reads +0x24. Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "uint",
+     "name": "articleMapSize",
+     "comment": "medium: map size zeroed in ctor/dtor ([ESI+8] with ESI=this+0x20). Name invented"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "faceMask",
+     "comment": "high: ctor c5500 sets 0xf0; FUN_000bef30 (ECX = [0x239a70], via FindFaceInCInst bffe0 from FindClosestFace d3050) tests [+0x2c] & faceFlags"
+    },
+    {
+     "offset": 48,
+     "type": "bool",
+     "name": "unk30",
+     "comment": "medium: ctor c5500 byte store 0; PS2 ctor +0x30 w4 (4-byte bool). Name invented"
+    }
+   ],
+   "comment": "Only the fields this packet adds or renames; the rest as in struct-pilot-cluster10.json."
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x000bedd0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "void *"
+    }
+   ],
+   "sheet": "WCollisionMgr::SurfaceBumpHeight(COORD3 &, WSurface &)",
+   "return": "float"
+  },
+  {
+   "address": "0x000bf210",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "float *"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    }
+   ],
+   "sheet": "WCollisionMgr::GetWorldHeightAtPoint(COORD3 &, float &, bool)",
+   "return": "bool"
+  },
+  {
+   "address": "0x000c4000",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "WCollisionMgr::StepCheckHitWorld(COORD4 *, float)"
+  },
+  {
+   "address": "0x000c5380",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WCollisionMgr::Restart(void)"
+  },
+  {
+   "address": "0x000c5460",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WCollisionMgr::~WCollisionMgr(void)"
+  },
+  {
+   "address": "0x000c5500",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WCollisionMgr::WCollisionMgr(void)"
+  },
+  {
+   "address": "0x000c55b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "UGroup *"
+    }
+   ],
+   "sheet": "WCollisionMgr::Init(UGroup *)"
+  },
+  {
+   "address": "0x000c56d0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "WCollisionMgr::Shutdown(void)"
+  }
+ ]
+}
