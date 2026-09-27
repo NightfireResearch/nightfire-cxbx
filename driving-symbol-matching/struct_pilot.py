@@ -25,7 +25,9 @@ FORCE_MEMBER = {"RenderEffect", "ResolveData", "ResolveObjectData", "GetRenderOf
 # instructions don't touch ECX (a jump to a shared body, or ECX kept for later)
 KNOWN = {"char", "bool", "float", "int", "uint", "ushort", "byte", "MATRIX4", "COORD3", "COORD4", "CARP::MapNode",
          "CARP::Instance", "CARP::Effect", "CARP::BaseDesc", "UGroup", "RSceneObj", "CachedDrawInfo", "PhysicsObject",
-         "RCARPFile", "WTargetable"}
+         "RCARPFile", "WTargetable", "WWorldPos", "WCollider", "AttributeSet", "ABaseSound", "IFeedback",
+         "RPathEngine::RPathHandle", "RAnimEngine::Handle", "CARP::PathInfo", "CARP::ProcAnimState", "RAnimEngine::System",
+         "AICharacter", "AIVehicle", "COORD4"}
 
 
 def reads_ecx_first(address):
@@ -56,6 +58,7 @@ def ctype(p):
 
 def main():
     key, cls = sys.argv[1], sys.argv[2]
+    protos_only = "--protos-only" in sys.argv   # prototypes for <cls> only, into structs/<key>-<cls>-protos.json
     with open(os.path.join(HERE, "results", f"struct-pilot-{key}.json")) as f:
         lay = json.load(f)
     types = []
@@ -104,13 +107,23 @@ def main():
             continue
         m = re.search(r"\((.*)\)", r["name"])
         params = [x for x in m.group(1).split(",") if x.strip() and x.strip() != "void"] if m else []
-        member = reads_ecx_first(a) or a in virtual or n.split("::")[-1] in FORCE_MEMBER
+        leaf, owner = n.split("::")[-1], n.split("::")[-2]
+        first = g.get("disassemble_function", program=g.XBOX, address=hex(a)).splitlines()
+        if first and ":" in first[0] and first[0].split(":", 1)[1].strip().startswith("JMP"):
+            skipped["thunk (a jump to the real body)"] += 1
+            continue
+        member = (reads_ecx_first(a) or a in virtual or leaf in FORCE_MEMBER or leaf in (owner, "~" + owner)
+                  or r["name"].rstrip().endswith("const"))
         protos.append({"address": f"0x{a:08x}", "calling_convention": "__thiscall" if member else "__cdecl",
                        "params": [{"name": f"param_{i + 1}", "type": ctype(p)} for i, p in enumerate(params)],
                        "sheet": r["name"]})
     out = os.path.join(HERE, "results", "structs")
     os.makedirs(out, exist_ok=True)
-    path = os.path.join(out, f"{key}.json")
+    if protos_only:
+        types = []
+        path = os.path.join(out, f"{key}-{cls.replace('::', '_')}-protos.json")
+    else:
+        path = os.path.join(out, f"{key}.json")
     with open(path, "w") as f:
         json.dump({"program": "Driving.xbe", "types": types, "prototypes": protos}, f, indent=1)
     print(f"{path}: {len(types)} types, {len(protos)} prototypes "
