@@ -73,7 +73,9 @@ def main():
             fields.append({"offset": int(fl["offset"], 16), "type": t, "name": fl["name"],
                            "comment": f"{fl['confidence']}: {fl['evidence']}"[:250]})
         types.append({"name": c["name"], "size": c["size"], "fields": fields,
-                      "comment": f"Derived by the struct pilot (results/struct-pilot-{key}.json)"})
+                      "comment": c.get("comment") or f"Derived by the struct pilot (results/struct-pilot-{key}.json)"})
+        if c.get("if_missing"):
+            types[-1]["if_missing"] = True   # a placeholder: only created, never rebuilt
     slots = [s for s in lay["vtable_slots"] if s["class"] == cls]
     if slots:
         vt = [{"offset": 4 * s["slot"], "type": "void *", "name": re.sub(r"\W.*", "", s["name"].split(" ")[0])}
@@ -90,6 +92,7 @@ def main():
     virtual = {int(s["function"], 16) for s in lay["vtable_slots"]}
     cur_sig = {}
     skip = {int(x, 16) for x in lay.get("skip_prototypes", [])}
+    returns = {int(k, 16): v for k, v in lay.get("returns", {}).items()}   # inferred return types, by address
     for a, n in sorted(xn.items()):
         if not n.startswith(cls + "::") or a in skip:
             continue
@@ -117,6 +120,8 @@ def main():
         protos.append({"address": f"0x{a:08x}", "calling_convention": "__thiscall" if member else "__cdecl",
                        "params": [{"name": f"param_{i + 1}", "type": ctype(p)} for i, p in enumerate(params)],
                        "sheet": r["name"]})
+        if a in returns:
+            protos[-1]["return"] = returns[a]
     out = os.path.join(HERE, "results", "structs")
     os.makedirs(out, exist_ok=True)
     if protos_only:

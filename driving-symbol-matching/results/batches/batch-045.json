@@ -1,0 +1,16 @@
+{
+ "batch": "045",
+ "program": "Driving.xbe",
+ "note": "Struct cluster3 finding: the function named Simulation::GetRigidBody at 0x1c180 is PhysicsObject::GetRigidBody.",
+ "items": [
+  {
+   "xbox": "0x0001c180",
+   "expect": "Simulation::GetRigidBody",
+   "name": "PhysicsObject::GetRigidBody",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "PhysicsObject::GetRigidBody(void) const (PS2 0x196040). Reads this+0x4a (the rigid-body slot, MOVSX) and calls Simulation::GetRigidBody(slot) on the Simulation global at 0x233ff0; PS2 PhysicsObject::GetRigidBody reads only the slot the same way. Was misnamed Simulation::GetRigidBody (the real one is 0xb2700).",
+   "evidence": []
+  }
+ ]
+}
