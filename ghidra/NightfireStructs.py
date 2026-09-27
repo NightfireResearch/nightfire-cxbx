@@ -81,8 +81,9 @@ def resolve(spec):
     s = spec.strip().replace("const ", "")
     arrays = [int(n) for n in re.findall(r"\[(\d+)\]", s)]
     s = re.sub(r"\[\d+\]", "", s).strip()
-    stars = len(s) - len(s.rstrip("*"))
-    base = s.rstrip("*").strip()
+    m = re.match(r"^(.*?)\s*((?:\*\s*)*)$", s)   # "T * *" and "T**" alike
+    stars = m.group(2).count("*")
+    base = m.group(1).strip()
     if base in ALIASES:
         found = ArrayList()
         builtin.findDataTypes(ALIASES[base], found)
