@@ -266,3 +266,47 @@ ignores (probably the water surface).
 * The cylinder base is at `position.y`, while the box is centred on `position`; the snow posts
   (half height 2.88) therefore extend below the road as boxes. That is what the code tests, so the OBJ
   draws it that way.
+
+## Why the car goes through the cave wall in uw_mis11 (the speedrun clip)
+
+The clip: from (1338.976, -304.836, 1293.299), diving along about (0.752, -0.641, -0.153) with accelerate held,
+the car passes through a gravel wall into the void. The wall is one triangle, `ci0028 Cave_Tunnel_12A_UP45`
+strip 22 triangle 8, at the lower end of a tunnel piece pitched up 45°, where it meets `ci0013 Cave_BigTunnel1`.
+The triangle and its bounding data are fine; the car never tests it, because the whole instance is left out of
+the car's collision list.
+
+- **How walls are hit underwater.** `SimulateGame` (0xb4a60) runs `RigidBody::CollideWithWorld` (0xb1420) each
+  50 Hz step; `CollideWithGround` returns at once under water, so no height queries happen. The sub's collider
+  (mask 12: strips and barriers) keeps a region around the car - centre pos + 1.1·Δ, radius
+  (min(|Δ|, 1) + 2.559) × 1.1, about 3 m at 10 m/s - and `WCollider::PrepareRegion` (0xbe2d0) fills it through
+  `GetInstanceList` (0xc4510) → grid cells → **`GetInstanceListGuts` (0xc43c0)**. Then 11 segments from the car's
+  centre (box corners, nose, sides, pushed on by velocity × dt) are tested against the listed instances' strips
+  (`WCollisionMgr::GetWorldNormal` 0xc0e00 → `FindFaceInCInst` 0xc01d0 → `FindFaceInTriStrip` 0xbf0e0). A hit
+  becomes a velocity impulse (`GenerateImpulse` 0xafdb0); there is no position correction, so an unreported wall
+  does nothing at all.
+- **The failing test.** `GetInstanceListGuts` keeps an instance when
+  `max(|dx|,|dz|) + 0.25·min(|dx|,|dz|) < R_region + inst[+0x3c]`, dx and dz from the region centre to the
+  instance centre. Two errors add up here:
+  1. `+0x3c` (28.626 for ci0028) is the diagonal of the local X/Z half extents. The piece is pitched 45°, so
+     its local Y extent (±22.5) spreads into world XZ too: its geometry reaches **34.73 m** from its centre in
+     world XZ, and 33 of its 900 vertices - all at the lower -Z end, the seam - lie beyond the radius. The wall
+     triangle's vertices are 28.2, 29.7 and 32.5 m out.
+  2. The octagonal distance approximation reads long in this direction: from the start point dx = 9.2,
+     dz = 29.7, which it puts at 31.99 m against a true 31.08 m.
+
+  At 10 m/s: 31.98 against 3.03 + 28.63 = 31.66, so ci0028 is rejected by 0.32 m on every step up to the wall.
+  The neighbouring ci0013 is listed, but none of its triangles is on the path (the nearest is 2 m away), and the
+  grid cell beyond lists no instances at all.
+- **Speed.** Only the region radius depends on speed. Replaying the collider step by step
+  (`tools/collision_clip/clip_sim.py`): at 2-15 m/s, and accelerating from rest at the start point, ci0028 is
+  never listed and the car's centre crosses the wall; at 18 m/s it is listed on one step, 0.11 m before the
+  crossing; from 21 m/s the wall is reported 2-3 m early, as normal. So the trick is to arrive slowly, which
+  teleporting to the start point and holding accelerate does.
+- **Where else.** 23 of uw_mis11's 453 instances have geometry beyond their radius in world XZ. The worst are the
+  pitched cave pieces: ci0026/27/28 `Cave_Tunnel_12A_UP45` (6.1 m over), ci0030 `Cave_Tunnel_24A_UP45` (6.7 m),
+  ci0016 `Cave_Tunnel_12A` (2.7 m). Their other seams are candidates for the same trick (not checked).
+- **Fixes**, either of which makes the replay report the wall 2.6-2.9 m early at every speed from 2 to 50 m/s:
+  the data - set `+0x3c` to the world-XZ reach (34.74 for ci0026-28, 61.52 for ci0030, 34.15 for ci0016;
+  `world_xz_radius` in `clip_sim.py`) - or the code - a true Euclidean XZ distance in 0xc43c0.
+- **To confirm at run time:** at the end of `PrepareRegion` (0xbe2d0) the collider's list (owner +0x64, entries
+  +0x34..+0x38) should not contain ci0028 while approaching slowly from the start point.
