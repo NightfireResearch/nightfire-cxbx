@@ -323,6 +323,7 @@ add_library(drivinginject SHARED
   src/driving/render/RGlareManager.cpp
   src/driving/render/RSceneObj.cpp
   src/driving/devtools/Teleport.cpp
+  src/driving/devtools/CollisionOverlay.cpp
   src/driving/engine/UFileLoader.cpp
   src/driving/engine/ActionQueue.cpp
   src/driving/engine/InputDevice.cpp

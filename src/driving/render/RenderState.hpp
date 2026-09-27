@@ -27,6 +27,11 @@ public:
 // slot of the draw-request ring (below) at its vertex arrays, then calls Draw.
 class UVolatileMaterial {
 public:
+    // The constructor (0x0011c210): default state for a vertex-coloured material; returns this. The object is
+    // 0x60 bytes.
+    // AUTOGEN(0x0011c210)
+    UVolatileMaterial* Construct();
+
     // Queues `count` vertices of primitive type `primitive` (8 for the glares' quads) with this material and an
     // optional transform (none: identity), and moves the ring on to its next slot (0x0011c290).
     // AUTOGEN

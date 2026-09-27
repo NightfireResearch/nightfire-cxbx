@@ -2,6 +2,7 @@
 #include "RenderState.hpp"
 #include "VectorMaths.hpp"
 #include "../drivinghelpers.h"
+#include "../devtools/CollisionOverlay.h"
 
 #include <math.h>
 
@@ -230,6 +231,12 @@ static uint32_t FadeGlareColour(uint32_t colour, float intensity) {
 
 // AUTOINJECT
 void RGlareManager::DrawGlares(bool inWorld) {
+    // The world pass, with the game's camera and depth buffer set up: where the collision debug view draws.
+    if (inWorld) {
+        (*(RenderContext **)(RRendererInstance + 0x64))->SetZWritesEnable(0);
+        CollisionOverlay_Draw();
+        (*(RenderContext **)(RRendererInstance + 0x64))->SetZWritesEnable(1);
+    }
     if (glareCount == 0)
         return;
 
