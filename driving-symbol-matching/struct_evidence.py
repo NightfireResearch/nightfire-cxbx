@@ -110,7 +110,7 @@ def x86_accesses(a, xn, require_ecx=False):
         d = dst.strip()
         if op == "MOV" and d in X86_REGS and src.strip() in this:
             this.add(d)
-        elif d in X86_REGS and op in ("MOV", "LEA", "POP", "XOR", "MOVZX", "MOVSX", "ADD", "SUB", "AND", "OR", "INC", "DEC", "IMUL", "SHL", "SHR", "SAR"):
+        elif d in X86_REGS and op in ("MOV", "LEA", "XOR", "MOVZX", "MOVSX", "ADD", "SUB", "AND", "OR", "INC", "DEC", "IMUL", "SHL", "SHR", "SAR"):
             if not (op == "MOV" and src.strip() in this):
                 this.discard(d)
         elif op == "CALL":
