@@ -1,5 +1,5 @@
 {
- "generated": "Sun Sep 27 01:47:41 2026",
+ "generated": "Sun Sep 27 01:53:48 2026",
  "moves": [
   {
    "program": "Driving.xbe",
@@ -12,6 +12,12 @@
    "address": "0x00015770",
    "name": "RSceneObj::TriggerIlluminate",
    "batch": "043"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x000bd030",
+   "name": "ComputeInverseInertia",
+   "batch": "044"
   },
   {
    "program": "DRIVING.ELF",

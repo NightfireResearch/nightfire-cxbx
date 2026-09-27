@@ -64,6 +64,12 @@ def find_named(name):
     found = ArrayList()
     dtm.findDataTypes(name, found)
     cands = [t for t in found if t.getName() == name]
+    if not cands and "::" in name:
+        # Namespaced types can live as <leaf> in category /<Namespace>/... (e.g. /RAnimEngine/Handle)
+        parts = name.split("::")
+        dt = dtm.getDataType(CategoryPath("/" + "/".join(parts[:-1])), parts[-1])
+        if dt is not None:
+            return dt
     if not cands:
         return None
     cands.sort(key=lambda t: (str(t.getCategoryPath()) != "/", -max(t.getLength(), 0)))

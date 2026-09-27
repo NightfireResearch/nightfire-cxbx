@@ -257,9 +257,16 @@ def pending_moves():
             live_ns[program] = g.qualified_names(program)
             bare[program] = dict(g.functions(program))
         for it in batch["items"]:
-            if "::" not in it["name"] or not it.get("rename", True):
+            if not it.get("rename", True):
                 continue
             a = int(it["xbox"], 16)
+            if "::" not in it["name"]:
+                # "move_to_global": a bare name that must leave the namespace it was in (list_namespaces-based
+                # qualified_names only knows functions inside a namespace)
+                if it.get("move_to_global") and a in live_ns[program] and bare[program].get(a) == it["name"]:
+                    moves = [m for m in moves if (m["program"], m["address"]) != (program, it["xbox"])]
+                    moves.append({"program": program, "address": it["xbox"], "name": it["name"], "batch": batch["batch"]})
+                continue
             if live_ns[program].get(a) == it["name"]:
                 continue
             if bare[program].get(a) != names.bare(it["name"]):
