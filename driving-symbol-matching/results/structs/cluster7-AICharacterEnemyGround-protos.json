@@ -1,0 +1,195 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0001da60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::DoDodging(void)"
+  },
+  {
+   "address": "0x0001da70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::DoTilting(void)"
+  },
+  {
+   "address": "0x0001da80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AICharacterEnemyGround::AvoidThreat(char &, char &)"
+  },
+  {
+   "address": "0x0001dc50",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "AICharacterEnemyGround::GetZoneHitPointScale(int, float)"
+  },
+  {
+   "address": "0x0001dc80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::AICharacterEnemyGround(MATRIX4 &, int,"
+  },
+  {
+   "address": "0x0001de80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::IsAlive(void)"
+  },
+  {
+   "address": "0x0001dea0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::~AICharacterEnemyGround(void)"
+  },
+  {
+   "address": "0x0001df40",
+   "calling_convention": "__thiscall",
+   "return": "AICharacterEnemyGround *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0001df70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::DoInitial(void)"
+  },
+  {
+   "address": "0x0001dfc0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::DoNeutral(void)"
+  },
+  {
+   "address": "0x0001e010",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::DoAvoiding(void)"
+  },
+  {
+   "address": "0x0001e070",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::DoArming(void)"
+  },
+  {
+   "address": "0x0001e090",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::DoArmed(void)"
+  },
+  {
+   "address": "0x0001e380",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::DoDying(void)"
+  },
+  {
+   "address": "0x0001e400",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::UpdateRotPos(void)"
+  },
+  {
+   "address": "0x0001e440",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::ThreatenedByVehicle(void)"
+  },
+  {
+   "address": "0x0001e9a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "char"
+    }
+   ],
+   "sheet": "AICharacterEnemyGround::GetAngleToTarget(COORD3 &, char)"
+  },
+  {
+   "address": "0x0001ea60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterEnemyGround::PlayZoneInjuryAnim(int, float, int)"
+  },
+  {
+   "address": "0x0001ee60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::DoWandering(void)"
+  },
+  {
+   "address": "0x0001f000",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::DoAiming(void)"
+  },
+  {
+   "address": "0x0001f0c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::DoFiring(void)"
+  },
+  {
+   "address": "0x0001f180",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::DoRunning(void)"
+  },
+  {
+   "address": "0x0001f3c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::HandleInterrupts(void)"
+  },
+  {
+   "address": "0x0001f8f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyGround::TargetIsAcquired(void)"
+  }
+ ]
+}

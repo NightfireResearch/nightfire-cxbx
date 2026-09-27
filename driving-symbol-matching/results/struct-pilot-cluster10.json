@@ -1,0 +1,595 @@
+{
+ "classes": [
+  {
+   "name": "WCollisionMgr",
+   "size": 52,
+   "base": null,
+   "vtable": null,
+   "comment": "singleton: WCollisionMgr::Init (c55b0) does operator new(0x34) + ctor and stores the pointer in global 0x239a70 (fgCollisionMgr). No vptr; identical offsets on PS2 (GCC map is 12 bytes like the MSVC tree here).",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unk0",
+     "confidence": "low",
+     "evidence": "zeroed by ctor c5500 and again by Init c55b0 right after construction; PS2 ctor 213110 +0x0 W. No reader found. Name invented"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "uint",
+     "name": "unk4",
+     "confidence": "low",
+     "evidence": "ctor zeroes; read in GetInstanceListGuts c31f0/c43c0 (PS2 217228/217768 and GetBarrierList 219f48). Name invented"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "WCollisionInstance *",
+     "name": "collisionInstances",
+     "confidence": "medium",
+     "evidence": "Init c55b0 stores the data pointer of chunk 'ci' (0x63690000); SetCollisionArticle c2ff0 walks it at a 0x40 stride comparing word +0x1a; Init loop also 0x40 stride. PS2 +0x8 same methods. Name invented"
+    },
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "uint",
+     "name": "numCollisionInstances",
+     "confidence": "high",
+     "evidence": "Init c55b0 stores chunk 'ci' header +0x8 (count); SetCollisionArticle c2ff0 loop bound. PS2 +0xc same. Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "void *",
+     "name": "collisionObjects",
+     "confidence": "medium",
+     "evidence": "Init c55b0 stores the data pointer of chunk 'co' (0x636f0000); PS2 GetObjectListsGuts 217e30 reads +0x10. Name invented (WCollisionObject array)"
+    },
+    {
+     "offset": "0x14",
+     "size": 1,
+     "type": "byte",
+     "name": "instanceCacheMapAlloc",
+     "confidence": "medium",
+     "evidence": "MSVC std::map (12 bytes: allocator byte, head, size): ctor c5500 stores a byte to [this+0x14], allocates head node via 0x53580 (isnil at node+0x1d; 0x20-byte nodes freed in dtor c5460). PS2 +0x14 addr-taken -> FastFree. Name invented"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "void *",
+     "name": "instanceCacheMapHead",
+     "confidence": "medium",
+     "evidence": "map head node (ctor [EDI+4]); dtor c5460 reads +0x18 and frees 0x20-byte nodes. Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "uint",
+     "name": "instanceCacheMapSize",
+     "confidence": "medium",
+     "evidence": "map size, zeroed by ctor ([EDI+8]) and dtor. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 1,
+     "type": "byte",
+     "name": "articleMapAlloc",
+     "confidence": "medium",
+     "evidence": "second MSVC std::map: ctor c5500 byte store, head from 0x94030 (isnil node+0x15; 0x18-byte nodes freed in dtor c5460); SetCollisionArticle c2ff0 does find (0x118f20) on this+0x20 and compares with end [this+0x24]. PS2 +0x20 addr-taken -> FastFree in SetCollisionArticle. Name invented"
+    },
+    {
+     "offset": "0x24",
+     "size": 4,
+     "type": "void *",
+     "name": "articleMapHead",
+     "confidence": "medium",
+     "evidence": "map head node, compared as end() in SetCollisionArticle c2ff0; dtor reads +0x24. Name invented"
+    },
+    {
+     "offset": "0x28",
+     "size": 4,
+     "type": "uint",
+     "name": "articleMapSize",
+     "confidence": "medium",
+     "evidence": "map size zeroed in ctor/dtor ([ESI+8] with ESI=this+0x20). Name invented"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "int",
+     "name": "unk2C",
+     "confidence": "medium",
+     "evidence": "ctor c5500 sets 0xf0 (240); PS2 ctor sets, FindFaceInTriStrip 2138b0 reads. Name invented"
+    },
+    {
+     "offset": "0x30",
+     "size": 1,
+     "type": "bool",
+     "name": "unk30",
+     "confidence": "medium",
+     "evidence": "ctor c5500 byte store 0; PS2 ctor +0x30 w4 (4-byte bool). Name invented"
+    }
+   ]
+  },
+  {
+   "name": "WRoadNav",
+   "size": 192,
+   "base": null,
+   "vtable": null,
+   "comment": "allocated 192; no vptr; same offsets on PS2 and Xbox (vectors on a 16-byte stride in both builds, byte flags are char not bool). 0xb3-0xbf unaccessed.",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unk0",
+     "confidence": "low",
+     "evidence": "Reset c9130 zeroes dword; R/W in IncNavPosition cb4b0 and InitAtSegment cb900; PS2 +0x0 same plus FindClosestSegmentInd/InitAtPoint. Name invented"
+    },
+    {
+     "offset": "0x4",
+     "size": 1,
+     "type": "byte",
+     "name": "unk4",
+     "confidence": "low",
+     "evidence": "Reset byte store; PS2 +0x4 also w1 (so a char, not a bool). Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 12,
+     "type": "COORD3",
+     "name": "vec10",
+     "confidence": "medium",
+     "evidence": "Reset zeroes 12 bytes via LEA this+0x10; IncNavPosition LEA; PS2 +0x10 w8/+0x18 w4 (16-byte stride on both). Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 12,
+     "type": "COORD3",
+     "name": "vec20",
+     "confidence": "medium",
+     "evidence": "Reset zeroes 12 bytes at LEA this+0x20; IncNavPosition/InitAtPoint LEA; PS2 +0x20 w8/+0x28. Name invented"
+    },
+    {
+     "offset": "0x30",
+     "size": 12,
+     "type": "COORD3",
+     "name": "navPosition",
+     "confidence": "medium",
+     "evidence": "Reset zeroes 12 bytes at +0x30; IncNavPosition/ReverseNavDirection write floats +0x30/+0x34/+0x38; PS2 same offsets float. Name invented"
+    },
+    {
+     "offset": "0x3c",
+     "size": 1,
+     "type": "char",
+     "name": "segmentChar",
+     "confidence": "medium",
+     "evidence": "byte R/W in all CalcNextSegment* (sheet: CalcNextSegment*(..., char &, bool &)) and InitAtSegment(short, char, float, bool); Reset zero; PS2 +0x3c w1. Name invented (lane or direction)"
+    },
+    {
+     "offset": "0x3e",
+     "size": 2,
+     "type": "short",
+     "name": "segmentIndex",
+     "confidence": "medium",
+     "evidence": "word R/W in CalcNextSegment*/IncNavPosition/InitAtPoint, Reset zero; sheet InitAtSegment(short,...) and PathShareRoadSegment(short); PS2 +0x3e w2. Name invented"
+    },
+    {
+     "offset": "0x40",
+     "size": 4,
+     "type": "float",
+     "name": "segmentParam",
+     "confidence": "medium",
+     "evidence": "float R/W in IncNavPosition/InitAtSegment/ReverseNavDirection, Reset zero; PS2 +0x40 float. Probably the InitAtSegment float (distance along segment). Name invented"
+    },
+    {
+     "offset": "0x50",
+     "size": 12,
+     "type": "COORD3",
+     "name": "splineStartPos",
+     "confidence": "low",
+     "evidence": "Reset zeroes 12 bytes at +0x50; IncNavPosition writes +0x58 float; PS2 +0x50 w8/+0x58 float, 16-byte stride. Sheet SetStartEndPos/SetBoundPos suggest start/end points. Name invented"
+    },
+    {
+     "offset": "0x60",
+     "size": 12,
+     "type": "COORD3",
+     "name": "splineEndPos",
+     "confidence": "low",
+     "evidence": "Reset zeroes at +0x60; IncNavPosition writes +0x68; PS2 +0x60/+0x68. Name invented"
+    },
+    {
+     "offset": "0x70",
+     "size": 12,
+     "type": "COORD3",
+     "name": "splineStartControl",
+     "confidence": "low",
+     "evidence": "Reset zeroes at +0x70; PS2 +0x70 w8/+0x78 w4. Sheet SetStartEndControls/SetControlPos. Name invented"
+    },
+    {
+     "offset": "0x80",
+     "size": 12,
+     "type": "COORD3",
+     "name": "splineEndControl",
+     "confidence": "low",
+     "evidence": "Reset zeroes at +0x80; PS2 +0x80 w8/+0x88. Name invented"
+    },
+    {
+     "offset": "0x90",
+     "size": 4,
+     "type": "RCameraSpline *",
+     "name": "spline",
+     "confidence": "high",
+     "evidence": "ctor ca090 FastAlloc + RCameraSpline::RCameraSpline; dtor ~RCameraSpline; passed to EvaluateSpline in IncNavPosition; PS2 +0x90 -> BuildSplineEx/EvaluateSpline"
+    },
+    {
+     "offset": "0x94",
+     "size": 1,
+     "type": "byte",
+     "name": "unk94",
+     "confidence": "low",
+     "evidence": "byte store in Reset/IncNavPosition/InitAtSegment; PS2 +0x94 w1. Name invented"
+    },
+    {
+     "offset": "0x95",
+     "size": 1,
+     "type": "byte",
+     "name": "unk95",
+     "confidence": "low",
+     "evidence": "byte R/W in CalcNextSegmentLane/Sidewalk, InitAtSegment, ReverseNavDirection; PS2 +0x95 w1. Name invented"
+    },
+    {
+     "offset": "0x96",
+     "size": 1,
+     "type": "byte",
+     "name": "unk96",
+     "confidence": "low",
+     "evidence": "byte store in InitAtSegment/Reset/ReverseNavDirection; PS2 +0x96 w1. Name invented"
+    },
+    {
+     "offset": "0x98",
+     "size": 4,
+     "type": "float",
+     "name": "laneOffset",
+     "confidence": "medium",
+     "evidence": "float R/W in CalcNextSegmentSidewalk, ChangeLanes, IncNavPosition...; PS2 +0x98 float incl. CalcNextSegmentLane(float &,...). Name invented"
+    },
+    {
+     "offset": "0x9c",
+     "size": 4,
+     "type": "float",
+     "name": "unk9C",
+     "confidence": "low",
+     "evidence": "float in ChangeLanes/IncNavPosition/UpdateLaneChange; PS2 same. Name invented"
+    },
+    {
+     "offset": "0xa0",
+     "size": 4,
+     "type": "float",
+     "name": "unkA0",
+     "confidence": "low",
+     "evidence": "float R/W in ChangeLanes/UpdateLaneChange/IncNavPosition; PS2 same. Name invented"
+    },
+    {
+     "offset": "0xa4",
+     "size": 4,
+     "type": "float",
+     "name": "laneChangeA4",
+     "confidence": "low",
+     "evidence": "only ChangeLanes(float,float)/UpdateLaneChange(float)/Reset touch it, both builds. Name invented"
+    },
+    {
+     "offset": "0xa8",
+     "size": 4,
+     "type": "float",
+     "name": "laneChangeA8",
+     "confidence": "low",
+     "evidence": "ChangeLanes/UpdateLaneChange/Reset only, both builds. Name invented"
+    },
+    {
+     "offset": "0xac",
+     "size": 4,
+     "type": "float",
+     "name": "laneChangeAC",
+     "confidence": "low",
+     "evidence": "ChangeLanes/UpdateLaneChange/Reset only, both builds. Name invented"
+    },
+    {
+     "offset": "0xb0",
+     "size": 1,
+     "type": "char",
+     "name": "unkB0",
+     "confidence": "low",
+     "evidence": "Reset sets 0xff; R/W in CalcNextSegmentRandom c9240; PS2 +0xb0 w1. Name invented"
+    },
+    {
+     "offset": "0xb1",
+     "size": 1,
+     "type": "byte",
+     "name": "unkB1",
+     "confidence": "low",
+     "evidence": "Reset zero, CalcNextSegmentRandom R/W; PS2 +0xb1. Name invented"
+    },
+    {
+     "offset": "0xb2",
+     "size": 1,
+     "type": "byte",
+     "name": "unkB2",
+     "confidence": "low",
+     "evidence": "Reset zero, CalcNextSegmentRandom R/W; PS2 +0xb2. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "WTargetPicker",
+   "size": 176,
+   "base": null,
+   "vtable": null,
+   "comment": "static instance at 0x23e1b0 (callers load ECX=0x23e1b0, e.g. SetAutoDrive b651c); the next global at 0x23e260 caps the size at 0xb0; PS2 ctor writes up to +0xac. No Xbox ctor found in the namespace (likely an inlined static initializer). Same offsets on PS2.",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 16,
+     "type": "COORD4",
+     "name": "autoDriveQuat",
+     "confidence": "low",
+     "evidence": "ActivateTargeting ce0f0 stores (0,0,0,1.0f) to +0x0..+0xc, UpdateAutoDriveTargeting ce1b0 writes all four; PS2 ctor 229f40 same (f0=1.0 to +0xc). Quaternion guess (sheet SlerpTowardsTarget). Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 12,
+     "type": "COORD3",
+     "name": "worldTargetPos",
+     "confidence": "medium",
+     "evidence": "GetWorldTarget cdfd0 reads +0x10/+0x14/+0x18; MoveTargetingCursors ce410 passes LEA this+0x10 as GetScreenPos(COORD3 &); PS2 +0x10 w8 float/+0x18 float. Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "int",
+     "name": "lockStartTime",
+     "confidence": "medium",
+     "evidence": "MoveTargetingCursors ce410: set to global tick [0x234e34]; (tick - this[0x1c]) * [0x234e30] compared against a threshold to choose lock state; PS2 GetLockOnPercent 22aed0 reads +0x1c. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 8,
+     "type": "float[2]",
+     "name": "screenPos20",
+     "confidence": "low",
+     "evidence": "UpdateSelection ce620 LEA +0x20 and float store +0x24; PS2 +0x20 w8 LEA / +0x24 float (COORD2 shaped). Name invented"
+    },
+    {
+     "offset": "0x28",
+     "size": 4,
+     "type": "WTargetable *",
+     "name": "selectedTarget",
+     "confidence": "high",
+     "evidence": "GetSelectedTarget cdfb0 returns +0x28; zeroed in ActivateTargeting; MoveTargetingCursors reads target+0x41/+0x10; -> WTargetable::DistFromScreenPos; PS2 +0x28 -> WTargetable::GetVelocity"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "void *",
+     "name": "registeredTargets",
+     "confidence": "medium",
+     "evidence": "list<WTargetable *> *: PS2 ctor 229f40 does new(4) for a list object with a 0xc-byte sentinel node and stores it at +0x2c; PS2 -> list::remove in UnregisterTarget; Xbox read in Register/Unregister/UpdateTargets. Name invented"
+    },
+    {
+     "offset": "0x30",
+     "size": 64,
+     "type": "WTargetable *[16]",
+     "name": "sortedTargets",
+     "confidence": "low",
+     "evidence": "LEA +0x30 in UpdateSelection/UpdateTargets (both builds); next field at +0x70 is the count, giving 16 slots. Name invented"
+    },
+    {
+     "offset": "0x70",
+     "size": 4,
+     "type": "int",
+     "name": "numSortedTargets",
+     "confidence": "medium",
+     "evidence": "R/W in CycleToNextTarget/UpdateSelection/UpdateTargets; PS2 ctor zeroes. Name invented"
+    },
+    {
+     "offset": "0x74",
+     "size": 4,
+     "type": "int",
+     "name": "currentTargetIndex",
+     "confidence": "low",
+     "evidence": "R/W in CycleToNextTarget/UpdateSelection, both builds. Name invented"
+    },
+    {
+     "offset": "0x78",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unk78",
+     "confidence": "low",
+     "evidence": "PS2 ctor zeroes only; no Xbox access. Name invented"
+    },
+    {
+     "offset": "0x7c",
+     "size": 4,
+     "type": "void *",
+     "name": "targeting",
+     "confidence": "high",
+     "evidence": "ATargeting *: PS2 ctor news + constructs (0x2e6a88), dtor FastFree; Xbox MoveTargetingCursors calls ATargeting::SetState (0x12e120) on it with state 0/1/2. Name invented"
+    },
+    {
+     "offset": "0x80",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unk80",
+     "confidence": "low",
+     "evidence": "PS2 ctor zeroes only. Name invented"
+    },
+    {
+     "offset": "0x84",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unk84",
+     "confidence": "low",
+     "evidence": "ActivateTargeting zeroes (both builds). Name invented"
+    },
+    {
+     "offset": "0x88",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unk88",
+     "confidence": "low",
+     "evidence": "ActivateTargeting zeroes (both builds). Name invented"
+    },
+    {
+     "offset": "0x8c",
+     "size": 8,
+     "type": "float[2]",
+     "name": "cursorScreenPos",
+     "confidence": "medium",
+     "evidence": "MoveTargetingCursors ce410 copies 8 bytes here from GetScreenPos's returned COORD2 or from selectedTarget+0x10/+0x14; PS2 +0x8c w8. Name invented"
+    },
+    {
+     "offset": "0x94",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unk94",
+     "confidence": "low",
+     "evidence": "ActivateTargeting zeroes (both builds). Name invented"
+    },
+    {
+     "offset": "0x98",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unk98",
+     "confidence": "low",
+     "evidence": "ActivateTargeting zeroes (both builds). Name invented"
+    },
+    {
+     "offset": "0x9c",
+     "size": 1,
+     "type": "bool",
+     "name": "targetingActive",
+     "confidence": "medium",
+     "evidence": "ActivateTargeting tests the byte and sets it to 1, DeactivateTargeting clears it, DrawTargetingSystem tests it; PS2 +0x9c w4 (4-byte bool; padding keeps +0xa0 aligned). Name invented"
+    },
+    {
+     "offset": "0xa0",
+     "size": 4,
+     "type": "int",
+     "name": "lockState",
+     "confidence": "medium",
+     "evidence": "set to 0/1/2 in MoveTargetingCursors in step with ATargeting::SetState; -> GHud::SetTargetLockState; PS2 GetLockOnPercent reads. Name invented"
+    },
+    {
+     "offset": "0xa4",
+     "size": 4,
+     "type": "int",
+     "name": "targetingState",
+     "confidence": "high",
+     "evidence": "ActivateTargeting(TargetingState) stores its argument and returns early if already active with the same state; MoveTargetingCursors compares with 1. Name invented (type is the TargetingState enum)"
+    },
+    {
+     "offset": "0xa8",
+     "size": 4,
+     "type": "int",
+     "name": "unkA8",
+     "confidence": "low",
+     "evidence": "PS2 ctor sets 1; UpdateTargets reads (both builds). Name invented"
+    },
+    {
+     "offset": "0xac",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unkAC",
+     "confidence": "low",
+     "evidence": "PS2 ctor zeroes; no Xbox access, kept because the Xbox instance at 0x23e1b0 has room to 0x23e260. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "WGrid",
+   "size": 36,
+   "base": null,
+   "vtable": null,
+   "comment": "allocated 36 in WGrid::Init (c5fc0), pointer stored in global 0x23b3a0 (fgGrid). ctor(COORD4 &origin, uint, uint, float cellSize). Same layout on PS2.",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 16,
+     "type": "COORD4",
+     "name": "origin",
+     "confidence": "medium",
+     "evidence": "ctor c57b0 copies 4 dwords from the COORD4 & argument; RangeCheckROWCOL c5710 and FindNodes read +0x0 float; PS2 +0x0/+0x8 w8 float (x,z) in RangeCheck/FindNodes. Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "float",
+     "name": "cellSize",
+     "confidence": "medium",
+     "evidence": "ctor stores float argument 4; PS2 +0x10 float. Name invented"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "float",
+     "name": "invCellSize",
+     "confidence": "medium",
+     "evidence": "ctor: FLD [0x189de8] / arg4 -> FSTP +0x14; RangeCheckROWCOL multiplies by it. Name invented"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "uint",
+     "name": "numRows",
+     "confidence": "medium",
+     "evidence": "ctor stores arg2; allocation size arg2*arg3*4; FindNodesBox reads; PS2 +0x18. Row/col order guessed from RangeCheckROWCOL. Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "uint",
+     "name": "numCols",
+     "confidence": "medium",
+     "evidence": "ctor stores arg3; FindNodesBox reads; PS2 +0x1c. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 4,
+     "type": "void *",
+     "name": "nodes",
+     "confidence": "high",
+     "evidence": "ctor UMemory::Alloc(rows*cols*4) and zero-fills; PS2 dtor UMemory::Free. Array of WGridNode pointers. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "WCollisionInstance",
+   "size": 64,
+   "if_missing": true,
+   "fields": []
+  }
+ ],
+ "vtable_slots": [],
+ "returns": {
+  "0x000c5500": "WCollisionMgr *",
+  "0x000c5460": "void",
+  "0x000c2ff0": "bool",
+  "0x000c55b0": "void",
+  "0x000c57b0": "WGrid *",
+  "0x000c9130": "void",
+  "0x000ce0f0": "void",
+  "0x000ce410": "void",
+  "0x000cdfb0": "WTargetable *"
+ },
+ "skip_prototypes": [],
+ "notes": [
+  "No class in this packet has a vptr, and all four keep the same offsets on PS2 and Xbox. The only size difference is WCollisionMgr+0x30, a 1-byte bool on Xbox and 4 bytes on PS2, and the class ends there.",
+  "Singletons: WCollisionMgr is heap-allocated in Init (operator new 0x34 at c5604) and stored in global 0x239a70. WGrid is allocated in Init (0x24 at c6015) and stored in 0x23b3a0. WTargetPicker is a static object at 0x23e1b0.",
+  "WTargetPicker::GetScreenPos (ce2b0) returns a COORD2 by value through a hidden buffer argument (MoveTargetingCursors pushes &local then this+0x10). Its prototype needs a hidden return pointer and no return type is given here. The CompareDist* functions (ce050, ce0a0, ce4f0) are static qsort comparators, so the PS2 '+0x0 -> WTargetable::DistFromCamera' hint comes from their void* arguments, not from this.",
+  "WCollisionMgr::Init (c55b0) and Shutdown are static (Ghidra shows __cdecl/__stdcall), so they are not members. Init(UGroup *) finds chunk 'CDat' (0x43446174), then the child chunks 'ci' (instances, 64-byte records whose dword +0x1c is fixed up to a 'ca' chunk pointer) and 'co' (objects).",
+  "WCollisionMgr map value sizes: +0x14 map nodes are 0x20 bytes (a 16-byte value), +0x20 map nodes are 0x18 bytes (an 8-byte value, probably keyed by the instance index in SetCollisionArticle).",
+  "The Xbox name RangeCheckROWCOL (c5710, taking uint* row, uint* col) differs from the PS2 name RangeCheck(COORD3 *) const. It could be a different overload rather than the same function."
+ ]
+}

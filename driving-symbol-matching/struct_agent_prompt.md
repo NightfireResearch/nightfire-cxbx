@@ -11,6 +11,7 @@ How to read an evidence file: each "+0xNNN" row is one this-relative offset seen
 
 ## Layout rules learned so far (important)
 - Vptr: GCC 2.95 (PS2) usually puts it LAST in the class that introduces it, MSVC (Xbox) FIRST, giving +4 on Xbox for that class's own fields only; derived classes' fields then sit at the SAME offset on both builds. Not universal: PS2 AttributeSystem keeps its vptr at +0. Check the PS2 constructor's vtable store (`sw v0,N(sN)` with v0 = a lui/addiu vtable address) before assuming.
+- 16-byte alignment: a class holding a 16-byte-aligned member (MATRIX4, some vectors) pads the Xbox vptr out to 16 bytes, so the Xbox shift is +0x10, not +4 (AIVehicle, AICharacter).
 - bool: 4 bytes PS2, 1 byte Xbox; adjacent bools pack on Xbox (later fields shift negatively, or stay if padded). Bool arrays too (PBondCar glare: int[16] on PS2, bool[16] on Xbox).
 - Vectors: Xbox COORD3 is 12 bytes; PS2 sometimes pads vectors to 16 (and matrices), sometimes not; PS2 also pads before a COORD3 for alignment. Never blanket-apply a shift; follow it field by field and trust the Xbox table.
 - MSVC std::vector on this build is 16 bytes (allocator, first, last, end), GCC's 12; MSVC tree 12 bytes.

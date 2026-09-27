@@ -115,3 +115,8 @@ right; the labels are wrong (Symbol Table, or the listing's label at the entry):
 `python apply.py --pending-namespaces` lists the pending moves (including P022's ECameraLockOn::~ECameraLockOn and
 EAGLAnim::FnTurnBlender::~FnTurnBlender on DRIVING.ELF): run `NightfireNamespaces.py` then
 `NightfireClasses.py` on each program as usual.
+
+## From the struct clusters (27 Sept 2026)
+- [ ] 0x81610 RPlayerCamera CameraLockOn disassembles to 4 instructions: function body probably split or truncated (check for code after it that isn't in a function).
+- [ ] data/vtables.json misses some vtables (e.g. AIGroundVehicle 0x18b8d4, stored by 0x2bd40); struct_evidence.py now detects direct stores, but the vtable pass never named those slots.
+- [ ] 0x115c80 (unnamed) copies a vector; 0x1a17c0 is an identity MATRIX4 constant.

@@ -1,0 +1,623 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00080a60",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RPlayerCamera::Shutdown(void)"
+  },
+  {
+   "address": "0x00080b90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateBumperCam(void)"
+  },
+  {
+   "address": "0x00080cf0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateAIPathAnimationCam(void)"
+  },
+  {
+   "address": "0x00080e20",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::GetZoomPercent(void)"
+  },
+  {
+   "address": "0x00080e80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::SetupCameraZoom(void)"
+  },
+  {
+   "address": "0x00081110",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "float *"
+    }
+   ],
+   "sheet": "RPlayerCamera::GetSafeWRoadNavPosition(COORD4 &, float &)"
+  },
+  {
+   "address": "0x000811d0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RPlayerCamera::FindHeliArmInd(unsigned int)"
+  },
+  {
+   "address": "0x00081290",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RPlayerCamera::FindAutoDriveArmInd(unsigned int)"
+  },
+  {
+   "address": "0x00081340",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RPlayerCamera::DirectorSetAnchor(RDirectorQueueData *)"
+  },
+  {
+   "address": "0x00081430",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::ResetCamera(void)"
+  },
+  {
+   "address": "0x00081460",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::DoSmoothModeChange(void)"
+  },
+  {
+   "address": "0x000814c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RPlayerCamera::SetCameraLookBack(bool)"
+  },
+  {
+   "address": "0x00081540",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPlayerCamera::SetAutoDriveRotation(float)"
+  },
+  {
+   "address": "0x000816e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPlayerCamera::SetAutoDriveZoom(float)"
+  },
+  {
+   "address": "0x00081700",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RPlayerCamera::ToggleAutoDriveZoom(bool)"
+  },
+  {
+   "address": "0x000817f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::PauseOff(void)"
+  },
+  {
+   "address": "0x00081840",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPlayerCamera::CameraInputCallback(int, float)"
+  },
+  {
+   "address": "0x00081890",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPlayerCamera::GetForwardAimVec4(float)"
+  },
+  {
+   "address": "0x00081930",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RPlayerCamera::SetAutoDriveForwardLock(bool)"
+  },
+  {
+   "address": "0x00081940",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RPlayerCamera::SetControlToCPU(bool)"
+  },
+  {
+   "address": "0x00081950",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "RPlayerCamera::WeaponFired(WeaponType)"
+  },
+  {
+   "address": "0x00081980",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::CameraAiming(void) const"
+  },
+  {
+   "address": "0x000819a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::InitSpin(void)"
+  },
+  {
+   "address": "0x00081a20",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::InitWeaponChange(void)"
+  },
+  {
+   "address": "0x00081a70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::InitAimZoom(void)"
+  },
+  {
+   "address": "0x00081ad0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::ResetZoomSlope(void)"
+  },
+  {
+   "address": "0x00081af0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RPlayerCamera::GetMaxTumble(void)"
+  },
+  {
+   "address": "0x00081bf0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::~RPlayerCamera(void)"
+  },
+  {
+   "address": "0x00081d10",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateDashboardCam(void)"
+  },
+  {
+   "address": "0x00082400",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateWorldAnimationCam(void)"
+  },
+  {
+   "address": "0x00082840",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateRelativeAnimationCam(void)"
+  },
+  {
+   "address": "0x00082e00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    },
+    {
+     "name": "param_2",
+     "type": "float *"
+    }
+   ],
+   "sheet": "RPlayerCamera::UpdateADTargetAngles(float &, float &)"
+  },
+  {
+   "address": "0x00083940",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    }
+   ],
+   "sheet": "RPlayerCamera::SetCameraZoom(CameraZoomType, float, int)"
+  },
+  {
+   "address": "0x00083d70",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_3",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_4",
+     "type": "int"
+    }
+   ],
+   "sheet": "RPlayerCamera::InitTransition(char, COORD4 &, COORD4 &, int)"
+  },
+  {
+   "address": "0x00083e10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "RPlayerCamera::UpdateTransition(COORD4 &, COORD4 &)"
+  },
+  {
+   "address": "0x00083e60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_4",
+     "type": "int"
+    }
+   ],
+   "sheet": "RPlayerCamera::ShakeCamera(int, float, COORD4 &, int)"
+  },
+  {
+   "address": "0x00084030",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "ushort"
+    }
+   ],
+   "sheet": "RPlayerCamera::NextCameraMode(unsigned short)"
+  },
+  {
+   "address": "0x000840b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "ushort"
+    }
+   ],
+   "sheet": "RPlayerCamera::PrevCameraMode(unsigned short)"
+  },
+  {
+   "address": "0x00084130",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RPlayerCamera::DirectorChangeCameraMode(RDirectorQueueData &)"
+  },
+  {
+   "address": "0x00084680",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateCurrentArm(void)"
+  },
+  {
+   "address": "0x000847f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPlayerCamera::SetAutoDriveRotationX(float)"
+  },
+  {
+   "address": "0x00084820",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPlayerCamera::SetAutoDriveRotationY(float)"
+  },
+  {
+   "address": "0x000848d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    }
+   ],
+   "sheet": "RPlayerCamera::SetCinematicCamera(COORD4 &, int, int)"
+  },
+  {
+   "address": "0x00084a30",
+   "calling_convention": "__thiscall",
+   "return": "RPlayerCamera *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00084a60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateSplineCam(void)"
+  },
+  {
+   "address": "0x00085160",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateFixedCam(void)"
+  },
+  {
+   "address": "0x000853e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateADWeaponAnims(void)"
+  },
+  {
+   "address": "0x000857d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateAutoDriveCam(void)"
+  },
+  {
+   "address": "0x00086bb0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "RPlayerCamera::CheckObjectCollisions(COORD4 &)"
+  },
+  {
+   "address": "0x00086d00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RPlayerCamera::ResolveAllCollisions(COORD4 &, COORD4 &, bool)"
+  },
+  {
+   "address": "0x000873e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::CheckForCameraShaking(void)"
+  },
+  {
+   "address": "0x000876b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPlayerCamera::GetAimMatrix4(float, float)"
+  },
+  {
+   "address": "0x000877e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateCamera(void)"
+  },
+  {
+   "address": "0x00087880",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateMomentumHeliCam(void)"
+  },
+  {
+   "address": "0x00088380",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateTumbleCam(void)"
+  },
+  {
+   "address": "0x000886f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::UpdateEllipseCam(void)"
+  },
+  {
+   "address": "0x00088b10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    }
+   ],
+   "sheet": "RPlayerCamera::SetAutoDriveCamera(float, float, int)"
+  },
+  {
+   "address": "0x00088be0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "PhysicsObject *"
+    }
+   ],
+   "sheet": "RPlayerCamera::SetMissileCamera(PhysicsObject *)"
+  },
+  {
+   "address": "0x00088cc0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::SetPauseCamera(void)"
+  },
+  {
+   "address": "0x00088d10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RPlayerCamera::SetTumbleCam(unsigned int)"
+  },
+  {
+   "address": "0x00088d70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::RestartCamera(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00089010",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::AbortCinematic(void)"
+  },
+  {
+   "address": "0x00089060",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::RPlayerCamera(void)",
+   "return": "RPlayerCamera *"
+  },
+  {
+   "address": "0x000895e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamera::EndMissileCamera(void)"
+  }
+ ]
+}

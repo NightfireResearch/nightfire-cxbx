@@ -1,0 +1,80 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0001cbb0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterBond::AICharacterBond(MATRIX4 &, int)"
+  },
+  {
+   "address": "0x0001cbf0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterBond::~AICharacterBond(void)"
+  },
+  {
+   "address": "0x0001cc00",
+   "calling_convention": "__thiscall",
+   "return": "AICharacterBond *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0001cd80",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AICharacterBond::Init(void)"
+  },
+  {
+   "address": "0x0001d090",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterBond::DoNeutral(void)"
+  },
+  {
+   "address": "0x0001d0c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterBond::DoInitial(void)"
+  },
+  {
+   "address": "0x0001d0e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterBond::DoArming(void)"
+  },
+  {
+   "address": "0x0001d1c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterBond::DoFiring(void)"
+  },
+  {
+   "address": "0x0001d2a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterBond::HandleInterrupts(void)"
+  },
+  {
+   "address": "0x00023950",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterBond::UpdateRotPos(void)"
+  }
+ ]
+}

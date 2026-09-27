@@ -1,7 +1,7 @@
 # AIGroundVehicle
 
 FastAlloc/constructed sizes under its tag: None
-No vtable stored by its constructor(s) (no vptr => no +4 shift; check subclasses)
+Xbox vtable 0x0018b8d4 stored by constructor 0x2bd40 (not in vtables.json; slot count unknown)
 PS2 sheet virtual table row: ['AIGroundVehicle virtual table']
 constructor 0x2bd40 first calls: ['AIVehicle::AIVehicle', 'UMemory::FastAlloc', 'WRoadNav::WRoadNav']
 

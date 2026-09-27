@@ -1,0 +1,376 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00029d60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::Reset(void)"
+  },
+  {
+   "address": "0x0002a330",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "AIGroundVehicle::SetAttackMode(AICommandType::EAttackMode)"
+  },
+  {
+   "address": "0x0002a380",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "AIGroundVehicle::SetSecondaryTarget(CARP::AIElement *)"
+  },
+  {
+   "address": "0x0002a3c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::GetTargetPos(void)",
+   "return": "COORD3 *"
+  },
+  {
+   "address": "0x0002a3e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "AIGroundVehicle::UpdateNavPos(COORD3 &, float)"
+  },
+  {
+   "address": "0x0002a690",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::EngageAutoDrive(void)"
+  },
+  {
+   "address": "0x0002a760",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::DisengageAutoDrive(void)"
+  },
+  {
+   "address": "0x0002a7c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::DoPlayerLogic(void)"
+  },
+  {
+   "address": "0x0002a800",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "AIGroundVehicle::EngageSplinePath(CARP::AISpline *)"
+  },
+  {
+   "address": "0x0002a850",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::DisengageSplinePath(void)"
+  },
+  {
+   "address": "0x0002a8b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::DoSplinePathUpdate(void)"
+  },
+  {
+   "address": "0x0002a9e0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "AIGroundVehicle::DrivableVec(COORD3 &, COORD3 &)",
+   "return": "bool"
+  },
+  {
+   "address": "0x0002aaf0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AIGroundVehicle::BarriersInPath(bool)",
+   "return": "bool"
+  },
+  {
+   "address": "0x0002af50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::UpdateStuck(void)"
+  },
+  {
+   "address": "0x0002b0c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "AIGroundVehicle::GetHeliCollNav(COORD3 &)",
+   "return": "WRoadNav *"
+  },
+  {
+   "address": "0x0002b210",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    },
+    {
+     "name": "param_3",
+     "type": "char"
+    }
+   ],
+   "sheet": "AIGroundVehicle::GetCollNav(COORD3 &, bool, char)",
+   "return": "WRoadNav *"
+  },
+  {
+   "address": "0x0002b5e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "AIGroundVehicle::GetBestWeightedLane(short)"
+  },
+  {
+   "address": "0x0002b660",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::GetRoadNetworkLaneWeights(void)"
+  },
+  {
+   "address": "0x0002b7a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "AIGroundVehicle::GetDirectLaneWeights(COORD3 *)"
+  },
+  {
+   "address": "0x0002bd40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::AIGroundVehicle(void)"
+  },
+  {
+   "address": "0x0002be70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::~AIGroundVehicle(void)"
+  },
+  {
+   "address": "0x0002bf40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::DoAttackMode(void)"
+  },
+  {
+   "address": "0x0002c6e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::TurnTurret(void)"
+  },
+  {
+   "address": "0x0002c9d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::DoAutoDriveUpdate(void)"
+  },
+  {
+   "address": "0x0002cd80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::DoAgentStateUpdate(void)"
+  },
+  {
+   "address": "0x0002dac0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::UnSpawn(void)"
+  },
+  {
+   "address": "0x0002dc90",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "AIGroundVehicle::GetLookAhead(float)",
+   "return": "float"
+  },
+  {
+   "address": "0x0002dd80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "AIGroundVehicle::DriveToPointTraffic(COORD3 *, float)"
+  },
+  {
+   "address": "0x0002e0a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "AIGroundVehicle::DriveToPointSub(COORD3 *, float)"
+  },
+  {
+   "address": "0x0002e910",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::FireBullets(void)"
+  },
+  {
+   "address": "0x0002eb40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::FireRockets(void)"
+  },
+  {
+   "address": "0x0002ee00",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::FireMissiles(void)"
+  },
+  {
+   "address": "0x0002f0e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::DoWeaponUpdate(void)"
+  },
+  {
+   "address": "0x0002f190",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "AIGroundVehicle::Spawn(short)"
+  },
+  {
+   "address": "0x0002f4c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::DoTrafficStateUpdate(void)"
+  },
+  {
+   "address": "0x0002f610",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "AIGroundVehicle::DriveToPoint(COORD3 *, float)"
+  },
+  {
+   "address": "0x0002fde0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "AIGroundVehicle::CheckAgentRoadNetworkCollision(COORD3 *)"
+  },
+  {
+   "address": "0x000306b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "AIGroundVehicle::CheckAgentDirectCollision(COORD3 *)"
+  },
+  {
+   "address": "0x00030b80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "AIGroundVehicle::CheckTrafficCollision(COORD3 *)"
+  },
+  {
+   "address": "0x00030fb0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::DoMoveMode(void)"
+  },
+  {
+   "address": "0x00031750",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIGroundVehicle::Update(void)"
+  }
+ ]
+}

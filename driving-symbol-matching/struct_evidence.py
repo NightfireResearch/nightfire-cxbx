@@ -239,7 +239,15 @@ def main():
         stored = [v for v in vts["xbox"] if any(any(c <= int(str(st), 0) < e for c, e in own) for st in v.get("stores", []))]
         for v in stored:
             lines.append(f"Xbox vtable {v['address']} ({len(v['slots'])} slots) stored by its constructor")
-        if not stored:
+        known = {int(str(v["address"]), 0) for v in stored}
+        for c in ctors:   # direct stores of an .rdata address to [this] (vtables.json is incomplete)
+            for _, ins_ in dis(g.XBOX, c):
+                m = re.match(r"MOV dword ptr \[E[A-Z]{2}\],0x([0-9a-f]+)$", ins_)
+                if m and 0x189be0 <= int(m.group(1), 16) < 0x1b3da0 and int(m.group(1), 16) not in known:
+                    known.add(int(m.group(1), 16))
+                    lines.append(f"Xbox vtable 0x{int(m.group(1), 16):08x} stored by constructor {c:#x} "
+                                 "(not in vtables.json; slot count unknown)")
+        if not known:
             lines.append("No vtable stored by its constructor(s) (no vptr => no +4 shift; check subclasses)")
         ps2vt = [r for r in sheet if r.endswith(" virtual table")]
         lines.append(f"PS2 sheet virtual table row: {ps2vt[:1] or 'none'}")

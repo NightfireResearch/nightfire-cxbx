@@ -1,0 +1,864 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "RCamera",
+   "size": 192,
+   "fields": [
+    {
+     "offset": 16,
+     "type": "MATRIX4",
+     "name": "cameraMatrix",
+     "comment": "medium: RCamera 78430 identity-inits this+0x10 (0x116120); PS2 1a43d8 writes identity rows at 0x0-0x30. RWorldCamera::SetViewingTransform 97100/97190 LEA +0x10/+0x20/+0x30/+0x40 (PS2 1d5610 +0x0..+0x30); RPlayerCamera::RestartCamera copies identity i"
+    },
+    {
+     "offset": 80,
+     "type": "COORD4",
+     "name": "vec50",
+     "comment": "low: RCamera 78430 v4Init(this+0x50) (0x116210); PS2 1a43d8 sqc2 vf0,0x40. Name invented"
+    },
+    {
+     "offset": 96,
+     "type": "bool",
+     "name": "matrixDirty",
+     "comment": "low: byte = 0 in RCamera 78430, written by SetViewingTransform 97100/97190, set to 1 by RPlayerCamera::RestartCamera 88d70 after resetting the matrix; PS2 4-byte +0x50 (sw zero,0x50 in 1a43d8; SetViewingTransform W). Name invented"
+    },
+    {
+     "offset": 112,
+     "type": "MATRIX4",
+     "name": "matrix70",
+     "comment": "low: RCamera 78430 identity-inits this+0x70; PS2 1a43d8 identity rows 0x60-0x90. Name invented"
+    },
+    {
+     "offset": 176,
+     "type": "bool",
+     "name": "flagB0",
+     "comment": "low: byte = 1 in RCamera 78430; read by RPlayerCamera::UpdateCamera 877e0; PS2 4-byte +0xa0 = 1 (1a43d8), read by UpdateCamera 1b29e0. Name invented"
+    },
+    {
+     "offset": 180,
+     "type": "float",
+     "name": "fieldOfView",
+     "comment": "high: = 33.0 (0x42040000) in RCamera 78430 and RWorldCamera::RestartCamera 97ee0; RViewCamera ctor 96ae0 sets camera->+0xb4 and derives the LOD multiplier from it; written by RWorldCamera::SetCameraZoom 97710, GetZoomPercent etc; PS2 +0xa4 (swc1 in 1"
+    }
+   ],
+   "comment": "camera base (3-slot vtable 0x190350). Size 0xc0 from RViewCamera::RViewCamera 96ae0 (FastAlloc 0xc0 then RCamera::RCamera 78430). Xbox vptr at +0 then pad to 16 for the MATRIX4; PS2 vptr LAST at +0xa8 (RCamera ctor 1a43d8 sw v0,0xa8(a0)), so every RCamera field is +0x10 on Xbox (PS2 size 0xb0)."
+  },
+  {
+   "name": "RWorldCamera",
+   "size": 304,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "RCamera",
+     "name": "super_RCamera"
+    },
+    {
+     "offset": 192,
+     "type": "COORD4",
+     "name": "vecC0",
+     "comment": "low: RestartCamera 97ee0 v4Init(this+0xc0); SetViewingTransform 97100/97190 LEA; PS2 +0xb0 LEA/float (SetViewingTransform 1d5610, UpdateAnimationCam 1d61b8). Name invented"
+    },
+    {
+     "offset": 208,
+     "type": "COORD4",
+     "name": "vecD0",
+     "comment": "low: RestartCamera 97ee0 v4Init(this+0xd0); SetViewingTransform LEA; PS2 +0xc0. Name invented"
+    },
+    {
+     "offset": 224,
+     "type": "COORD4",
+     "name": "vecE0",
+     "comment": "low: RestartCamera 97ee0 v4Init(this+0xe0); PS2 +0xd0 w16 in AnchorRelativeCamera 1d65e0. Name invented"
+    },
+    {
+     "offset": 240,
+     "type": "uint",
+     "name": "modeChangeFlags",
+     "comment": "medium: RestartCamera 97ee0 and SetAnchor 97530 OR 1 into it; RPlayerCamera::RestartCamera sets it to 1; 13 RPlayerCamera methods touch it; PS2 +0xe0 (RestartCamera, SetAnchor, 19 RPlayerCamera methods). Name from the sheet's SetModeChangeFlag(unsign"
+    },
+    {
+     "offset": 244,
+     "type": "float",
+     "name": "zoomFov",
+     "comment": "low: = 33.0 in RestartCamera 97ee0; RPlayerCamera::UpdateWorldAnimationCam W; PS2 +0xe4 float (RestartCamera, TriggerAnimationCamera). Name invented"
+    },
+    {
+     "offset": 248,
+     "type": "float",
+     "name": "zoomFovTarget",
+     "comment": "low: = 33.0 in RestartCamera 97ee0; UpdateWorldAnimationCam R/W; PS2 +0xe8 float. Name invented"
+    },
+    {
+     "offset": 256,
+     "type": "COORD4",
+     "name": "vec100",
+     "comment": "low: RestartCamera 97ee0 v4Init(this+0x100); PS2 +0xf0. Name invented"
+    },
+    {
+     "offset": 272,
+     "type": "int",
+     "name": "currentAnimIndex",
+     "comment": "low: = 0 in RestartCamera 97ee0; LoadSingleAnimation 97770, UpdateAnimationCam 97aa0; PS2 +0x100 (LoadSingleAnimation, LoadSingleAnimationFromList, PlayCurrentAnimation). Name invented"
+    },
+    {
+     "offset": 276,
+     "type": "RAnimEngine::Handle *",
+     "name": "animHandle",
+     "comment": "high: zeroed in ctor 98070; RestartCamera 97ee0 destroys it (0x78200) and frees 0x40 (= RAnimEngine::Handle size); -> RAnimEngine::Handle::Stop; PS2 +0x104 -> Handle::IsSystemPlaying/~Handle"
+    },
+    {
+     "offset": 280,
+     "type": "void *",
+     "name": "cameraAnimList",
+     "comment": "medium: SetAnchor 97530 stores the anchor's CARP 'Cams' (0x43616d73) chunk data pointer here; LoadSingleAnimationFromList 97870 reads it; zeroed in ctor; PS2 +0x108 (SetAnchor, LoadSingleAnimationFromList). Name invented"
+    },
+    {
+     "offset": 284,
+     "type": "int",
+     "name": "cameraAnimCount",
+     "comment": "medium: SetAnchor 97530 stores the 'Cams' chunk count ([chunk+8]); zeroed in ctor; PS2 +0x10c. Name invented"
+    },
+    {
+     "offset": 288,
+     "type": "void *",
+     "name": "aiSplinePath",
+     "comment": "high: AISplinePath * (type not in Ghidra): LoadAISplinePathAnimation 977d0 news it, RestartCamera 97ee0 calls ~AISplinePath (0x35730) and frees; PS2 +0x110 same"
+    },
+    {
+     "offset": 292,
+     "type": "ActionQueue *",
+     "name": "cameraInputQueue",
+     "comment": "high: zeroed in ctor 98070; -> ActionQueue::GetAction/IsEmpty/PopAction/~ActionQueue in StartCameraInputReceiver 97620, ReceiveCameraInput 97690, ~RWorldCamera; PS2 +0x114 (Start/StopCameraInputReceiver). Name invented"
+    },
+    {
+     "offset": 296,
+     "type": "PhysicsObject *",
+     "name": "anchor",
+     "comment": "high: SetAnchor(PhysicsObject *) 97530 stores its argument here (cleared if invalid); read by all GetAnchor* accessors (97240-97fc0); PS2 +0x118 (GetAnchor* 1d5888..1d5ff8)"
+    }
+   ],
+   "comment": "camera anchored to a PhysicsObject, with animation/spline cams and an input queue. 0x130 (deleting dtor 97eb0). Derives from RCamera (ctor 98070 calls RCamera::RCamera 78430 then stores vtable 0x1924e4, 7 slots). Own fields start at +0xc0; PS2 = Xbox - 0x10 throughout (PS2 RCamera vptr at +0xa8, own fields from +0xb0, PS2 size 0x120)."
+  },
+  {
+   "name": "RViewCamera",
+   "size": 76,
+   "fields": [
+    {
+     "offset": 4,
+     "type": "RCamera *",
+     "name": "camera",
+     "comment": "high: ctor 96ae0 stores the RCamera* argument (or a new 0xc0 RCamera) here and sets camera->fieldOfView; PS2 +0x0 is returned by Camera() 1d50a8/1d50b0 and written by SetCamera"
+    },
+    {
+     "offset": 8,
+     "type": "int",
+     "name": "unknown8",
+     "comment": "low: = 2 in ctor 96ae0; SetRenderCamera 96fc0; PS2 +0x4 (ctor, SetRenderCamera). Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "int",
+     "name": "unknownC",
+     "comment": "low: = global [0x1f2d78] in ctor 96ae0; SetRenderCamera; PS2 +0x8. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "int",
+     "name": "viewId",
+     "comment": "medium: = -1 in ctor 96ae0; PS2 +0xc is Get/SetViewId 1d5168/1d5160 (RViewCamera::ViewId)"
+    },
+    {
+     "offset": 20,
+     "type": "int",
+     "name": "player",
+     "comment": "medium: = 0 in ctor 96ae0; PS2 +0x10 is Get/SetPlayer 1d51c8/1d51d0"
+    },
+    {
+     "offset": 24,
+     "type": "void *",
+     "name": "viewPort",
+     "comment": "high: EAGL::ViewPort * (type not in Ghidra): ctor 96ae0 stores the RenderContext::NewViewPort result; -> EAGL::ViewPort::BeginView/EndView/ClearViewPort/SetBackgroundColour; PS2 +0x14, ViewPort() accessor"
+    },
+    {
+     "offset": 28,
+     "type": "float",
+     "name": "screenXMin",
+     "comment": "medium: = 0 in ctor; SetExtents 96cc0/96d70, UpdateForResolution; PS2 +0x18 read by GetScreenXLimits 1d50d8 (pairs with +0x24)"
+    },
+    {
+     "offset": 32,
+     "type": "float",
+     "name": "screenYMin",
+     "comment": "medium: = 0 in ctor; SetExtents; PS2 +0x1c GetScreenYLimits/SetScreenYLimits"
+    },
+    {
+     "offset": 36,
+     "type": "float",
+     "name": "nearZPlane",
+     "comment": "medium: = 0.17 in ctor 96ae0; SetWorldTransformMode R; PS2 +0x20 GetNearZPlane 1d50f0"
+    },
+    {
+     "offset": 40,
+     "type": "float",
+     "name": "screenXMax",
+     "comment": "medium: = 1.0 in ctor; SetExtents; PS2 +0x24 (GetScreenXLimits)"
+    },
+    {
+     "offset": 44,
+     "type": "float",
+     "name": "screenYMax",
+     "comment": "medium: = 1.0 in ctor; SetExtents; PS2 +0x28 (GetScreenYLimits)"
+    },
+    {
+     "offset": 48,
+     "type": "float",
+     "name": "farZPlane",
+     "comment": "medium: = 3000.0 in ctor 96ae0; SetWorldTransformMode R; PS2 +0x2c GetFarZPlane 1d50f8"
+    },
+    {
+     "offset": 52,
+     "type": "float",
+     "name": "lodMultiplier",
+     "comment": "high: ctor 96ae0 computes it from the camera FOV; RefreshLODMultiplier 968b0 writes it; PS2 +0x30 GetLODMultiplier 1d5140"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "fillColour",
+     "comment": "high: = 0 in ctor; SetFillColour(unsigned int) 96ca0; PS2 +0x34 Get/SetFillColour"
+    },
+    {
+     "offset": 60,
+     "type": "bool",
+     "name": "active",
+     "comment": "high: byte = 0 in ctor; tested by Render/EndView/SetRenderCamera; PS2 4-byte +0x38 SetActive(bool) 1d5178"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "zBufferRangeA",
+     "comment": "medium: = 0xffffff in ctor 96ae0; SetZBufferRange(ulong,ulong) 96900 writes +0x40/+0x44; PS2 64-bit +0x40 (unsigned long is 64-bit on PS2). Which is near/far unknown; name invented"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "zBufferRangeB",
+     "comment": "medium: = 0 in ctor; SetZBufferRange 96900; PS2 64-bit +0x48. Name invented"
+    },
+    {
+     "offset": 72,
+     "type": "float",
+     "name": "guardBandSize",
+     "comment": "high: SetGuardBandSize(float) 96850; PS2 +0x50 Get/SetGuardBandSize"
+    }
+   ],
+   "comment": "a viewport bound to an RCamera. 0x4c (FastAlloc 76, deleting dtor 96c60). Xbox vptr at +0 (vtable 0x192444, 5 slots); PS2 vptr LAST at +0x54 (read by Render/~RViewCamera), so PS2 = Xbox - 4 up to +0x3c (bool active); the two PS2 64-bit unsigned longs (SetZBufferRange) are 32-bit on Xbox, so the tail shifts again (guard band PS2 +0x50 -> Xbox +0x48)."
+  },
+  {
+   "name": "RCameraSpline",
+   "size": 112,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "MATRIX4",
+     "name": "geometryMatrix",
+     "comment": "medium: ctor 7acd0 copies 16 dwords of the identity constant 0x1a17c0 here; BuildSpline 7aa20/BuildSplineEx 7a650 write +0x0..+0x3c; PS2 +0x0..+0x3c same (8-byte stores). Name invented"
+    },
+    {
+     "offset": 64,
+     "type": "COORD4",
+     "name": "vec40",
+     "comment": "low: ctor 7acd0 v4Init(this+0x40); BuildSpline LEA; PS2 +0x40 w16 (BuildSpline, EvaluateSpline). Name invented"
+    },
+    {
+     "offset": 80,
+     "type": "COORD4",
+     "name": "vec50",
+     "comment": "low: ctor v4Init(this+0x50); PS2 +0x50 w16. Name invented"
+    },
+    {
+     "offset": 96,
+     "type": "int",
+     "name": "splineType",
+     "comment": "medium: = 2 in ctor 7acd0; read by BuildSpline/EvaluateSpline/EvaluateTangent; PS2 +0x60 also read by GetBasisMatrix/GetTangentBasisMatrix (selects the basis). Name invented"
+    },
+    {
+     "offset": 100,
+     "type": "byte[4]",
+     "name": "pointListAllocator",
+     "comment": "low: start of the embedded point list (std::list<COORD4>): ctor passes this+0x64 to the head-node allocator 7a950; AddToSplinePtList/~RCameraSpline LEA it; PS2 +0x64 (FastFree)"
+    },
+    {
+     "offset": 104,
+     "type": "void *",
+     "name": "pointListHead",
+     "comment": "medium: ctor 7acd0 stores the new head node here; read by AddToSplinePtList 7ae00, ClearSplinePtList 7a9f0, BuildSpline, ~RCameraSpline"
+    },
+    {
+     "offset": 108,
+     "type": "uint",
+     "name": "pointListSize",
+     "comment": "high: = 0 in ctor; GetPointListSize 7a640 returns it; BuildSpline/BuildSplineEx read it"
+    }
+   ],
+   "comment": "cubic camera spline. 0x70 (FastAlloc 112 in RPlayerCamera ctor 89060). No vptr; offsets identical on both builds except the point list (MSVC std::list 12 bytes: allocator, head node, size)."
+  },
+  {
+   "name": "RPlayerCamera",
+   "size": 880,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "RWorldCamera",
+     "name": "super_RWorldCamera"
+    },
+    {
+     "offset": 304,
+     "type": "int",
+     "name": "cameraMode",
+     "comment": "medium: R/W in 23 methods incl. SetCameraModeByIndex, Next/PrevCameraMode, DirectorChangeCameraMode, GetZoomPercent; PS2 +0x120 (28). Name invented"
+    },
+    {
+     "offset": 308,
+     "type": "int",
+     "name": "previousCameraMode",
+     "comment": "low: DirectorChangeCameraMode, DoSmoothModeChange, SetLastSelectableCameraMode 894d0, UpdateTumbleCam; PS2 +0x124 same set. Name invented"
+    },
+    {
+     "offset": 312,
+     "type": "int",
+     "name": "lastSelectableCameraMode",
+     "comment": "low: DirectorChangeCameraMode, SetLastSelectableCameraMode 894d0; PS2 +0x128. Name invented"
+    },
+    {
+     "offset": 316,
+     "type": "uint",
+     "name": "transitionCount",
+     "comment": "medium: = 0 in RestartCamera 88d70; InitTransition 83d70, AbortCinematic, ResetCamera; PS2 +0x12c written by SetTransition(unsigned int,char)/ClearTransition/DeincrementTransition (inlined on Xbox). Name invented"
+    },
+    {
+     "offset": 320,
+     "type": "uint",
+     "name": "tumbleCamIndex",
+     "comment": "medium: = 0 in RestartCamera; SetTumbleCam(unsigned int) 88d10, ResetCamera; PS2 +0x130 SetTumbleCam/SetCollisionCam/UpdateTumbleCam. Name invented"
+    },
+    {
+     "offset": 324,
+     "type": "bool",
+     "name": "flag144",
+     "comment": "low: byte = 0 in ctor 89060; PS2 4-byte bool (+0x134 read by UpdateMomentumHeliCam, or +0x138). Name invented"
+    },
+    {
+     "offset": 325,
+     "type": "bool",
+     "name": "flag145",
+     "comment": "low: byte = 0 in ctor 89060; PS2 4-byte bool (+0x134/+0x138). Name invented"
+    },
+    {
+     "offset": 328,
+     "type": "int",
+     "name": "cameraType148",
+     "comment": "low: = 0 in RestartCamera 88d70; R/RW/W in SetAutoDriveCamera 88b10, UpdateCamera 877e0; PS2 +0x13c (SetAutoDriveCamera, UpdateCamera, TriggerAnimationCamera). Name invented"
+    },
+    {
+     "offset": 336,
+     "type": "int",
+     "name": "lockOnState",
+     "comment": "low: = 0 in RestartCamera 88d70; PS2 +0x140 (CameraLockOn, RestartCamera, UpdateAutoDriveCam). Mapping assumes Xbox +0x14c is unused/padding; name invented"
+    },
+    {
+     "offset": 352,
+     "type": "COORD4",
+     "name": "lockOnTarget",
+     "comment": "medium: RestartCamera v4Init(this+0x160); PS2 +0x150 w16/float in CameraLockOn(COORD4 *, COORD4 &, ...) and UpdateAutoDriveCam. Name invented"
+    },
+    {
+     "offset": 368,
+     "type": "int",
+     "name": "lockOnParam1",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x160 (CameraLockOn, UpdateAutoDriveCam). Name invented"
+    },
+    {
+     "offset": 372,
+     "type": "int",
+     "name": "lockOnParam2",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x164 (CameraLockOn, UpdateAutoDriveCam). Name invented"
+    },
+    {
+     "offset": 376,
+     "type": "bool",
+     "name": "autoDriveForwardLock",
+     "comment": "high: SetAutoDriveForwardLock(bool) 81930 writes the byte; = 0 in RestartCamera; PS2 4-byte +0x168 (SetAutoDriveForwardLock 1bd070)"
+    },
+    {
+     "offset": 384,
+     "type": "COORD4",
+     "name": "forwardAimVec",
+     "comment": "medium: RestartCamera copies matrix row +0x30 (forward) here (0x115c80); GetForwardAimVec4 81890, DirectorChangeCameraMode; PS2 +0x170 w16 (GetForwardAimVec4). Name invented"
+    },
+    {
+     "offset": 400,
+     "type": "MATRIX4",
+     "name": "aimMatrix",
+     "comment": "medium: RestartCamera copies cameraMatrix (+0x10) here (0x115c90); GetAimMatrix4 876b0 LEA; PS2 +0x180..+0x1b0 w16 (GetAimMatrix4, UpdateAutoDriveCam). Name invented"
+    },
+    {
+     "offset": 464,
+     "type": "float",
+     "name": "aimParam1d0",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x1c0 float (UpdateAutoDriveCam). Name invented"
+    },
+    {
+     "offset": 468,
+     "type": "float",
+     "name": "aimParam1d4",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x1c4 float. Name invented"
+    },
+    {
+     "offset": 472,
+     "type": "float",
+     "name": "aimParam1d8",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x1c8. Name invented"
+    },
+    {
+     "offset": 476,
+     "type": "float",
+     "name": "aimParam1dc",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x1cc. Name invented"
+    },
+    {
+     "offset": 480,
+     "type": "float",
+     "name": "aimPitch",
+     "comment": "low: = 0 in RestartCamera; InitAimZoom 81a70; PS2 +0x1d0 float read by GetAimMatrix4 1bcd10, InitAimZoom. Name invented"
+    },
+    {
+     "offset": 484,
+     "type": "float",
+     "name": "aimYaw",
+     "comment": "low: = 0 in RestartCamera; InitAimZoom; PS2 +0x1d4 (GetAimMatrix4, InitAimZoom). Name invented"
+    },
+    {
+     "offset": 488,
+     "type": "float",
+     "name": "targetAngleX",
+     "comment": "medium: float W in DirectorChangeCameraMode, RestartCamera, UpdateADWeaponAnims; PS2 +0x1d8 addr-taken (UpdateADTargetAngles(float &, float &) outputs). Name invented"
+    },
+    {
+     "offset": 492,
+     "type": "float",
+     "name": "targetAngleY",
+     "comment": "medium: as +0x1e8; PS2 +0x1dc addr-taken. Name invented"
+    },
+    {
+     "offset": 496,
+     "type": "float",
+     "name": "unknown1f0",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x1e0 float (UpdateAutoDriveCam). Name invented"
+    },
+    {
+     "offset": 500,
+     "type": "float",
+     "name": "unknown1f4",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x1e4 float. Name invented"
+    },
+    {
+     "offset": 504,
+     "type": "int",
+     "name": "adWeaponAnimState",
+     "comment": "low: = 0 in RestartCamera; UpdateADWeaponAnims 853e0 R/W; PS2 +0x1e8 (UpdateADWeaponAnims). Name invented"
+    },
+    {
+     "offset": 508,
+     "type": "bool",
+     "name": "adWeaponFlag",
+     "comment": "low: byte = 0 in RestartCamera; DirectorChangeCameraMode, UpdateADWeaponAnims; PS2 4-byte +0x1ec (also GetAutoDriveWeapTransform). Name invented"
+    },
+    {
+     "offset": 512,
+     "type": "int",
+     "name": "unknown200",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x1f0. Name invented"
+    },
+    {
+     "offset": 516,
+     "type": "int",
+     "name": "weaponFired",
+     "comment": "medium: = 0 in RestartCamera; WeaponFired(int) 81950 writes it; PS2 +0x1f4 (WeaponFired 1bd288). Name invented"
+    },
+    {
+     "offset": 520,
+     "type": "int",
+     "name": "spinState",
+     "comment": "low: = 0 in RestartCamera; InitSpin 819a0 W; PS2 +0x1f8. Name invented"
+    },
+    {
+     "offset": 528,
+     "type": "COORD4",
+     "name": "spinVec",
+     "comment": "low: RestartCamera v4Init(this+0x210); InitSpin writes +0x210/+0x214/+0x218 floats and +0x21c; PS2 +0x200 region. Name invented"
+    },
+    {
+     "offset": 544,
+     "type": "bool",
+     "name": "flag220",
+     "comment": "low: byte = 0 in RestartCamera; PS2 4-byte +0x210. Name invented"
+    },
+    {
+     "offset": 545,
+     "type": "bool",
+     "name": "flag221",
+     "comment": "low: byte = 0 in RestartCamera; PS2 4-byte +0x214. Name invented"
+    },
+    {
+     "offset": 548,
+     "type": "int",
+     "name": "collisionState",
+     "comment": "low: = 0 in RestartCamera; ResolveAllCollisions 86d00 W; PS2 +0x218 (ResolveAllCollisions). Name invented"
+    },
+    {
+     "offset": 552,
+     "type": "float",
+     "name": "unknown228",
+     "comment": "low: = 0 in RestartCamera; UpdateMomentumHeliCam, Update*AnimationCam; PS2 +0x21c float (10 methods). Name invented"
+    },
+    {
+     "offset": 556,
+     "type": "float",
+     "name": "transitionFactor",
+     "comment": "low: = 0 in RestartCamera; InitTransition 83d70, UpdateTransition 83e10; PS2 +0x220 (UpdateTransition). Name invented"
+    },
+    {
+     "offset": 560,
+     "type": "COORD4",
+     "name": "vec230",
+     "comment": "low: RestartCamera v4Init(this+0x230) then w (+0x23c) = 0; PS2 +0x23c W. Name invented"
+    },
+    {
+     "offset": 576,
+     "type": "COORD4",
+     "name": "vec240",
+     "comment": "low: RestartCamera v4Init(this+0x240) then +0x24c = 0; PS2 +0x240/+0x248 R float (UpdateDashboardCam). Name invented"
+    },
+    {
+     "offset": 592,
+     "type": "float",
+     "name": "dashboard250",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x250 float (UpdateDashboardCam). Name invented"
+    },
+    {
+     "offset": 596,
+     "type": "float",
+     "name": "dashboard254",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x254 float (UpdateDashboardCam). Name invented"
+    },
+    {
+     "offset": 600,
+     "type": "float",
+     "name": "unknown258",
+     "comment": "low: = 0 in RestartCamera; DirectorChangeCameraMode; PS2 +0x258 float (UpdateDashboardCam, UpdateMomentumHeliCam). Name invented"
+    },
+    {
+     "offset": 604,
+     "type": "float",
+     "name": "unknown25c",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x25c float. Name invented"
+    },
+    {
+     "offset": 608,
+     "type": "float",
+     "name": "unknown260",
+     "comment": "low: = 0 in RestartCamera; DirectorChangeCameraMode, UpdateRelativeAnimationCam; PS2 +0x260 float. Name invented"
+    },
+    {
+     "offset": 612,
+     "type": "int",
+     "name": "ellipse264",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x264 (UpdateEllipseCam). Name invented"
+    },
+    {
+     "offset": 616,
+     "type": "int",
+     "name": "ellipse268",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x268 (UpdateEllipseCam). Name invented"
+    },
+    {
+     "offset": 620,
+     "type": "int",
+     "name": "unknown26c",
+     "comment": "low: = 0 in RestartCamera; DirectorChangeCameraMode, Update*AnimationCam; PS2 +0x26c. Name invented"
+    },
+    {
+     "offset": 624,
+     "type": "int",
+     "name": "shakeType",
+     "comment": "medium: = 0 in RestartCamera; CheckForCameraShaking 873e0; PS2 +0x270 (ShakeCamera(int, float, COORD4 &, int), CheckForCameraShaking). Name invented"
+    },
+    {
+     "offset": 628,
+     "type": "float",
+     "name": "shakeAmount",
+     "comment": "medium: = 0 in RestartCamera; CheckForCameraShaking; PS2 +0x274 float (ShakeCamera). Name invented"
+    },
+    {
+     "offset": 632,
+     "type": "bool",
+     "name": "shaking",
+     "comment": "low: byte = 0 in RestartCamera; UpdateCamera R; PS2 4-byte +0x278 (ShakeCamera, CheckForCameraShaking, UpdateCamera). Name invented"
+    },
+    {
+     "offset": 633,
+     "type": "char",
+     "name": "transitionActive",
+     "comment": "low: byte = 0 in RestartCamera; InitTransition, ResetCamera; PS2 byte +0x27c (Set/ClearTransition). Name invented"
+    },
+    {
+     "offset": 634,
+     "type": "char",
+     "name": "transitionStep",
+     "comment": "low: byte = 0 in RestartCamera; InitTransition, UpdateTransition; PS2 byte +0x27d (SetTransition(unsigned int, char)/DeincrementTransition). Name invented"
+    },
+    {
+     "offset": 635,
+     "type": "char",
+     "name": "currentArm",
+     "comment": "low: byte = 0 in RestartCamera; UpdateCurrentArm 84680, UpdateMomentumHeliCam, UpdateTumbleCam; PS2 byte +0x27e same. Name invented"
+    },
+    {
+     "offset": 636,
+     "type": "char",
+     "name": "zoomState",
+     "comment": "low: byte = 0xff in RestartCamera; GetZoomPercent, InitAimZoom, InitWeaponChange, ToggleAutoDriveZoom; PS2 byte +0x27f same. Name invented"
+    },
+    {
+     "offset": 637,
+     "type": "char",
+     "name": "flag27d",
+     "comment": "low: byte = 0 in RestartCamera; PS2 byte +0x280. Name invented"
+    },
+    {
+     "offset": 656,
+     "type": "float",
+     "name": "unknown290",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x290 float (CameraLockOn, TriggerAnimationCamera). Name invented"
+    },
+    {
+     "offset": 660,
+     "type": "float",
+     "name": "unknown294",
+     "comment": "low: = 0 in RestartCamera; PS2 +0x294 float. Name invented"
+    },
+    {
+     "offset": 664,
+     "type": "float",
+     "name": "zoom298",
+     "comment": "low: InitAimZoom, SetupCameraZoom 80e80, ToggleAutoDriveZoom; PS2 +0x298 same. Name invented"
+    },
+    {
+     "offset": 668,
+     "type": "float",
+     "name": "zoom29c",
+     "comment": "low: SetupCameraZoom; PS2 +0x29c. Name invented"
+    },
+    {
+     "offset": 672,
+     "type": "float",
+     "name": "autoDriveRotationX",
+     "comment": "medium: = 0 in RestartCamera; SetAutoDriveRotationX(float) 847f0 (addr passed to 846d0); PS2 +0x2a0 float. Name invented"
+    },
+    {
+     "offset": 676,
+     "type": "float",
+     "name": "autoDriveRotationY",
+     "comment": "medium: = 0 in RestartCamera; SetAutoDriveRotationY(float) 84820; PS2 +0x2a4 float. Name invented"
+    },
+    {
+     "offset": 680,
+     "type": "bool",
+     "name": "autoDriveRotating",
+     "comment": "low: byte = 0 in RestartCamera; SetAutoDriveRotationX/Y; PS2 4-byte +0x2a8. Name invented"
+    },
+    {
+     "offset": 684,
+     "type": "float",
+     "name": "autoDriveZoom",
+     "comment": "medium: = 0 in RestartCamera; SetAutoDriveZoom(float) 816e0, ResetZoomSlope, SetCameraZoom, SetupCameraZoom; PS2 +0x2ac float. Name invented"
+    },
+    {
+     "offset": 688,
+     "type": "float",
+     "name": "zoom2b0",
+     "comment": "low: SetCameraZoom 83940, SetupCameraZoom; PS2 +0x2b0 float. Name invented"
+    },
+    {
+     "offset": 692,
+     "type": "float",
+     "name": "zoomSlope",
+     "comment": "low: = 1.0 in RestartCamera; ResetZoomSlope 81ad0, SetAutoDriveZoom, SetupCameraZoom; PS2 +0x2b4 float. Name invented"
+    },
+    {
+     "offset": 704,
+     "type": "COORD4",
+     "name": "upVector",
+     "comment": "low: RestartCamera v4Init(this+0x2c0) then y (+0x2c4) = 1.0; PS2 +0x2c0 w16 (UpdateMomentumHeliCam), +0x2c4 float. Name invented"
+    },
+    {
+     "offset": 720,
+     "type": "COORD4",
+     "name": "vec2d0",
+     "comment": "low: RestartCamera v4Init(this+0x2d0). Name invented"
+    },
+    {
+     "offset": 736,
+     "type": "COORD4",
+     "name": "transitionVec",
+     "comment": "low: RestartCamera v4Init(this+0x2e0); InitTransition 83d70 LEA; +0x2ec float written by InitTransition/UpdateTransition (PS2 +0x2ec float) is its w component or a separate float. Name invented"
+    },
+    {
+     "offset": 752,
+     "type": "COORD4",
+     "name": "cameraOffset",
+     "comment": "low: RestartCamera v4Init(this+0x2f0); VU0_v3add target in Update*AnimationCam; +0x2f4..+0x2fc written by UpdateAIPathAnimationCam; PS2 +0x2f0..+0x2fc same. Name invented"
+    },
+    {
+     "offset": 768,
+     "type": "COORD4",
+     "name": "fixedCamPosition",
+     "comment": "medium: RestartCamera v4Init(this+0x300); TriggerFixedCamera(COORD4 &, ...) 84850; PS2 +0x300 (TriggerFixedCamera, UpdateFixedCam). Name invented"
+    },
+    {
+     "offset": 784,
+     "type": "MATRIX4",
+     "name": "relativeAnimMatrix",
+     "comment": "medium: RestartCamera copies the identity constant 0x1a17c0 (16 dwords) here; UpdateRelativeAnimationCam uses +0x310 and +0x340 (VU0_MATRIX4_vect3rotate); PS2 +0x310..+0x348 8-byte stores (RestartCamera, UpdateRelativeAnimationCam). Name invented"
+    },
+    {
+     "offset": 848,
+     "type": "RCameraSpline *",
+     "name": "cameraSpline",
+     "comment": "high: ctor 89060 news 0x70 and calls RCameraSpline::RCameraSpline 7acd0; -> BuildSpline/EvaluateSpline/ClearSplinePtList; PS2 +0x350 same"
+    },
+    {
+     "offset": 852,
+     "type": "RPlayerCamState *",
+     "name": "camState",
+     "comment": "high: ctor news 0x34 and calls 89df0(this); -> RPlayerCamState::ResetState/AutoDriveCamInputHandler in 18 methods; PS2 +0x354 (23)"
+    },
+    {
+     "offset": 856,
+     "type": "RCameraIniLoader *",
+     "name": "iniLoader",
+     "comment": "medium: ctor news 1 byte and calls 78550(this); dtor calls dummyNullFunction on it; PS2 +0x358 -> RCameraIniLoader::~RCameraIniLoader in ~RPlayerCamera"
+    },
+    {
+     "offset": 860,
+     "type": "WCollider *",
+     "name": "collider",
+     "comment": "high: = 0 in ctor; RestartCamera destroys it (~WCollider be180) and frees 0x68 (= WCollider size); PS2 +0x35c -> ~WCollider (ResolveAllCollisions)"
+    },
+    {
+     "offset": 864,
+     "type": "WWorldPos *",
+     "name": "worldPos",
+     "comment": "high: ctor news 0x40 and calls WWorldPos::WWorldPos d2fd0; -> WWorldPos::FindClosestFace in GetSafeWRoadNavPosition 81110; PS2 +0x360 -> ~WWorldPos"
+    },
+    {
+     "offset": 868,
+     "type": "WRoadNav *",
+     "name": "roadNav",
+     "comment": "high: ctor news 0xc0 and calls ca090, then writes 3 to its first dword; -> WRoadNav::~WRoadNav; PS2 +0x364 -> WRoadNav::InitAtPoint/IncNavPosition"
+    },
+    {
+     "offset": 872,
+     "type": "RDirectorQueue *",
+     "name": "directorQueue",
+     "comment": "high: ctor news 0x14 and calls 7c380(this); -> RDirectorQueue::AppendData/ProcessDirectorLogic/RestartDirectorQueue in 13 methods; PS2 +0x368"
+    }
+   ],
+   "comment": "the player's driving camera (modes, auto-drive aiming, transitions, shake, animation cams). 0x370 (FastAlloc 880, deleting dtor 84a30); ctor 89060 calls RWorldCamera::RWorldCamera, stores vtable 0x1918ac (7 slots), then news its helper objects. Own fields from +0x130 (PS2 +0x120). Shifts: Xbox = PS2+0x10 to +0x140; two bytes +0x144/+0x145 (PS2 two 4-byte bools) give +0xc at +0x148; back to +0x10 from the COORD4 at +0x160 (alignment); two bools +0x220/+0x221 give +0xc again at +0x224; zero from the COORD4 at +0x230 onward (alignment); PS2 4-byte bool +0x278 vs Xbox byte shifts the char run +0x279..+0x27d by -3; identical from +0x290 to the end (+0x350..+0x36c pointers match)."
+  },
+  {
+   "name": "RPlayerCamState",
+   "size": 52,
+   "fields": [],
+   "comment": "FastAlloc 0x34 in RPlayerCamera ctor 89060, ctor 89df0(RPlayerCamera *)",
+   "if_missing": true
+  },
+  {
+   "name": "RCameraIniLoader",
+   "size": 1,
+   "fields": [],
+   "comment": "operator new(1) in RPlayerCamera ctor 89060, ctor 78550(RPlayerCamera *); empty class",
+   "if_missing": true
+  },
+  {
+   "name": "RDirectorQueue",
+   "size": 20,
+   "fields": [],
+   "comment": "FastAlloc 0x14 in RPlayerCamera ctor 89060, ctor 7c380(RPlayerCamera *)",
+   "if_missing": true
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x00078430",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RCamera::RCamera(void)",
+   "return": "RCamera *"
+  },
+  {
+   "address": "0x00078470",
+   "calling_convention": "__thiscall",
+   "return": "RCamera *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x000784a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RCamera::CreateMatrix4Inv(void)"
+  },
+  {
+   "address": "0x00078500",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RCamera::ConvertToRHCS(void)"
+  },
+  {
+   "address": "0x00078520",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "RCamera::SetMatrix4(MATRIX4 &)"
+  },
+  {
+   "address": "0x00078540",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RCamera::SetActive(bool)"
+  },
+  {
+   "address": "0x00096820",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RCamera::~RCamera(void)",
+   "return": "void"
+  }
+ ]
+}
