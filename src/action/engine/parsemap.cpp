@@ -40,7 +40,10 @@ typedef struct {
     float boundSphereRadius;
     _VECTOR extentMin;
     _VECTOR extentMax;
+    char name[32]; // unsure on size, at least 32 bytes long
 } block_entity_data;
+
+static_assert(sizeof(block_entity_data) == 0x54, "Bad size for block_entity_data");
 
 // AUTOGEN
 bool parsemap_parsenextblock(char param_1);
@@ -78,8 +81,8 @@ bool parsemap_parsemap(uint hashcode, bool secondPass) {
             do {
                 complete = parsemap_parsenextblock(secondPass);
             } while(!complete);
-            
-            
+
+
             ParseMap_State = 2;
             return true;
         }
@@ -112,7 +115,7 @@ void parsemap_block_entity_params(void) {
     // Load the given cel from the file
 
     celglist_tag* currentCelGlist = pCurrCelList;
-    
+
     block_entity_data* data = (block_entity_data*)FileNextBlock;
 
     currentCelGlist->applyFlagsToObject = data->applyFlagsToObject;
@@ -126,6 +129,9 @@ void parsemap_block_entity_params(void) {
     currentCelGlist->extentMax.x = data->extentMax.x;
     currentCelGlist->extentMax.y = data->extentMax.y;
     currentCelGlist->extentMax.z = data->extentMax.z;
+    // Unsure on the size, this is a null-terminated char array, contains a debug name
+    // for each object / script.
+    currentCelGlist->name = data->name;
 
     // If loading a hashcode-referenced piece of geometry, add it to the hashmap
     if(data->hashcode != 0xFFFFFFFF) {
@@ -242,12 +248,12 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
 
     // Almost all are just dependent on doCreation
     // Exceptions:
-    // - A few which are additionally dependent on singleplayer vs multiplayer 
+    // - A few which are additionally dependent on singleplayer vs multiplayer
     // - Searchlight
     //
     // I've implemented as per the disassembly, rather than breaking out the doCreation check.
     //
-    // A lookup table of creation functions doesn't work because a few of the cases do quirky things, 
+    // A lookup table of creation functions doesn't work because a few of the cases do quirky things,
     // like swapping order of args or requiring additional constants. A refactor could fix this.
     switch(type) {
 
@@ -279,7 +285,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if(doCreation)
                 Ladder_Create(&pos, &rot, lvl, celglist);
             return;
-        
+
         case Place_PlayerNewStartPos:
             if(doCreation && !MPSettings.isMultiplayer)
                 Player_AddNewStartPos(&pos, &rot, 1, lvl);
@@ -346,7 +352,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if(doCreation)
                 Monitor_Create(&pos, &rot, lvl, celglist);
             return;
-    
+
         case Place_FuseBox:
             if(doCreation)
                 FuseBox_Create(&pos, &rot, lvl, celglist);
@@ -391,7 +397,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if(doCreation)
                 Create_SpaceMissile(&pos, &rot, lvl);
             return;
-        
+
         case Place_Grapple:
             if(doCreation)
                 Grapple_Create(&pos, &rot, lvl, celglist);
@@ -425,9 +431,9 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
         case Place_Light:
             if(doCreation) {
                 Create_Light_Params * lightParams = (Create_Light_Params*)(lvl);
-                Light_Create(&pos, lightParams->r, lightParams->g, lightParams->b, 
+                Light_Create(&pos, lightParams->r, lightParams->g, lightParams->b,
                             (float)lightParams->maybeBrightness,
-                            lightParams->unknown1, -1, 0, 1.0f, 
+                            lightParams->unknown1, -1, 0, 1.0f,
                             lightParams->unknown2, lightParams->unknown3, lightParams->unknown4, lightParams->unknown5);
             }
             return;
@@ -498,12 +504,12 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if (doCreation)
                 Destroy_Create(&pos, &rot, lvl, celglist, (celglist_tag*)param_6);
             return;
-    
+
         case Place_SS:
             if(doCreation)
                 SS_Create(&pos, &rot, lvl, celglist);
             return;
-        
+
         case Place_Flicker:
             if(doCreation)
                 Flicker_Create(&pos, &rot, lvl, celglist);
@@ -548,17 +554,17 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if(doCreation)
                 Trigger_Touch(&pos, &rot, lvl, celglist);
             return;
-        
+
         case Place_TriggerMultiplexIn:
             if(doCreation)
                 Trigger_MultiplexIn(&pos, &rot, lvl, celglist);
             return;
-        
+
         case Place_TriggerMultiplexSIn:
             if(doCreation)
                 Trigger_MultiplexSIn(&pos, &rot, lvl, celglist);
             return;
-        
+
         case Place_TriggerMultiplexOut:
             if(doCreation)
                 Trigger_MultiplexOut(&pos, &rot, lvl, celglist);
@@ -629,7 +635,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if(doCreation)
                 CamSubject_Create(&pos, &rot, lvl, celglist);
             return;
-        
+
         case Place_Mine:
             if(doCreation)
                 Mine_Create(&pos, &rot, lvl, celglist);
