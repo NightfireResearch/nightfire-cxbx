@@ -52,9 +52,10 @@ You need a dump of your own Xbox disc. The game data is not in this repository a
   16:9 size). Both engines render their 640x480 into a backbuffer of that size; 0 turns it off.
 
 To compare against the emulator you also need cxbx-reloaded extracted somewhere, and `action_cxbx.exe` /
-`driving_cxbx.exe` will ask for its location the first time. `GraphicsBackend` and `AudioBackend` in
-`settings.ini` choose between CXBX's emulation and the native backends there; the standalone loaders always
-use the native ones.
+`driving_cxbx.exe` will ask for its location the first time. The backends follow the host: under those
+launchers the game draws and plays through CXBX's emulation, under `action.exe` and `driving.exe` through
+Direct3D 9 and XAudio2. (`settings.ini` once had `GraphicsBackend` and `AudioBackend` keys for this; they are
+ignored now.)
 
 Switching between the two engines, and between the parts of a driving mission, is a process relaunch: the
 game writes its launch data to `psiLaunch.bin`, the loader starts `action.exe` or `driving.exe` from beside
@@ -132,6 +133,17 @@ All three produce the same 32-bit Windows binaries, in `build/windows/Release/`,
 `build/linux/` respectively, and all three are built by CI. The cross builds are a build only - see
 `docs/macOS-D3D9-setup.md` for running the result on macOS, and `docs/macos-build.md` for the one
 functional difference (no XAudio2 reverb) and why clang rather than mingw's GCC.
+
+**Running a build.** The binaries read `settings.ini` from beside themselves (writing a default one the
+first time) and look for the disc at `DiscPath`, `../disc` by default. From a preset build that means
+`build/windows/disc` and so on, so either set `DiscPath` to wherever the disc is or copy the binaries next to
+it. The repository's own scripts and the docs' smoke tests use `Release/` in the repository root, beside
+`disc/`; on Windows an in-source configure builds straight there, alongside the preset build:
+
+```
+cmake -B . -A Win32
+cmake --build . --config Release --target driving drivinginject
+```
 
 The targets are `action` and `actioninject`, `driving` and `drivinginject`, and the two `_cxbx` launchers. A
 DLL is compiled with the shared backends in it, so a change under `src/common/` wants both injects rebuilt.

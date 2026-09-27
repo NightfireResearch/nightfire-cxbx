@@ -188,7 +188,9 @@ Ruled out: headroom itself is not the difference between the two modes, because 
 from the distance model - CXBX's DirectSound3D against X3DAudio plus our translated curve - and close range
 is exactly where those diverge most.
 
-How to settle it: find a spot with both casings and music, flip `AudioBackend`, and listen twice. Same
+How to settle it: find a spot with both casings and music, play it under `action_cxbx.exe` (CXBX's
+DirectSound) and `action.exe` (XAudio2), and listen twice. (This was once a flip of the `AudioBackend` key,
+which no longer exists: the backend follows the host.) Same
 relative balance in both modes means the effect is pre-existing. If 3D is hotter under `xaudio2`, the fix
 belongs in the distance curve, not in an unexplainable gain trim. Note also that CXBX is not a clean
 reference - its DirectSound has at least one outright bug (see the rewinding `Stop` above) - so "different

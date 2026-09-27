@@ -24,7 +24,7 @@ What replaces CXBX, each one a "seam" that replaces a library boundary with our 
 
 | Subsystem | Seam | Notes |
 |---|---|---|
-| Graphics | `Direct3D/d3dSeam.cpp` + `d3d9Backend.cpp` | Every D3D8/XGRAPHC entry point goes through `D3DSeamTraced` dispatch; with `GraphicsBackend=d3d9` nothing in the D3D8 library runs. NV2A vertex programs are translated to HLSL at runtime. |
+| Graphics | `Direct3D/d3dSeam.cpp` + `d3d9Backend.cpp` | Every D3D8/XGRAPHC entry point goes through `D3DSeamTraced` dispatch; with the native backend (always, under the standalone loader) nothing in the D3D8 library runs. NV2A vertex programs are translated to HLSL at runtime. |
 | Audio | `sound/dsndSeam.cpp` + `xaudio2Backend.cpp` | 2D and 3D voices, Xbox ADPCM, the mixbins collapsed onto stereo, X3DAudio with the game's own rolloff curve, I3DL2 reverb behind a submix. |
 | FMV audio | `sound/dsndStream.cpp` | The DirectSound stream path, which the video decoder calls directly rather than through any game function (4.4a). |
 | Input | `engine/psiInput.cpp` | Direct XInput; CXBX's controller emulation unused. |
@@ -245,7 +245,7 @@ its named callers are the statically linked CRT's own stdio locking (`__lock_fil
 One correction to the sketch below: `FUN_0010a6b0` is **not** "async reads for the streamer/decoder". It is a
 screen-capture path inside the D3D8 library - it works off `D3D_g_pDevice`, calls `GetBackBuffer2` and
 `D3D_KickOffAndWaitForIdle`, and its strings are "Unable to re-open movie cache file" and "Wait for image
-write timed out". It writes captured frames to a cache file, and with `GraphicsBackend=d3d9` the D3D8 device
+write timed out". It writes captured frames to a cache file, and with the native graphics backend the D3D8 device
 is never created, so it does not run at all.
 
 **The file path is now done.** `src/action/engine/XboxFile.cpp` replaces eleven functions, all of which turned
@@ -421,8 +421,10 @@ standalone, and reuse the D3D9 and audio backends as libraries.
 
 ## 5. Practical notes for agents
 
-- **Build** (from a PowerShell prompt in the repository root; the output is `Release/actioninject.dll`):
-  `& "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\MSBuild\Current\Bin\MSBuild.exe" nightfiRE.sln /t:actioninject /p:Configuration=Release /p:Platform=Win32 /m /v:m`.
+- **Build** (from the repository root; "Building" in the README has the presets and the cross builds).
+  For a build that runs straight away, configure in-source once (`cmake -B . -A Win32`), then
+  `cmake --build . --config Release --target actioninject`: the output is `Release/actioninject.dll`, beside
+  `disc/`. `cmake --build --preset windows --target actioninject` builds the same into `build/windows/Release/`.
   `tools/preprocess.py` runs as a pre-build step and needs a function name in `tools/functions_action.json`
   for every `AUTOINJECT` (or use `FUNC_AT(<address>)`).
 - **The tag must be the line immediately above the declaration.** `preprocess.py` reads the *next* line after

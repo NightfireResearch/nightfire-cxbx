@@ -239,7 +239,7 @@ weakens the conclusion that this is a Wine regression.
 ### Symbolising the backtrace
 
 Wine prints raw module offsets, such as `actioninject (+0x16643)`. The build emits
-`Release/actioninject.map` and `Release/action.map` alongside the binaries, which turn
+`actioninject.map` and `action.map` alongside the binaries, which turn
 those into function names - but mind the arithmetic, because getting it wrong silently
 names the wrong function:
 
