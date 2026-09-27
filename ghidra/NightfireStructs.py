@@ -109,6 +109,8 @@ for fname, d in docs:
         plan_protos.append((fname, p))
 for fname, t in plan_types:
     have = find_named(t["name"])
+    if t.get("if_missing") and have:
+        continue
     print("  type %-32s %s, %d bytes, %d fields (%s)" % (t["name"], "rebuild" if have else "create", t["size"],
                                                         len(t["fields"]), fname))
 print("  %d prototypes" % len(plan_protos))
@@ -119,11 +121,16 @@ elif askYesNo("Nightfire structs", "Apply %d types and %d prototypes? (Edit > Un
     # Pass 1: make sure every named struct exists (so fields can point at each other), at its size.
     for fname, t in plan_types:
         if find_named(t["name"]) is None:
-            dtm.addDataType(StructureDataType(CategoryPath("/"), t["name"], t["size"], dtm),
-                            DataTypeConflictHandler.KEEP_HANDLER)
+            # New namespaced types go in /<Namespace>/ as <leaf>, which decompiles as the plain leaf name.
+            parts = t["name"].split("::")
+            cat = CategoryPath("/" + "/".join(parts[:-1])) if len(parts) > 1 else CategoryPath("/")
+            dtm.addDataType(StructureDataType(cat, parts[-1], t["size"], dtm), DataTypeConflictHandler.KEEP_HANDLER)
+            t["_created"] = True
     errors = 0
-    # Pass 2: rebuild each in place.
+    # Pass 2: rebuild each in place ("if_missing" placeholders only when this run created them).
     for fname, t in plan_types:
+        if t.get("if_missing") and not t.get("_created"):
+            continue
         st = find_named(t["name"])
         try:
             st.deleteAll()

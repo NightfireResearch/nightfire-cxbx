@@ -1,0 +1,532 @@
+{
+ "classes": [
+  {
+   "name": "WTargetable",
+   "size": 80,
+   "base": null,
+   "vtable": null,
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 12,
+     "type": "COORD3",
+     "name": "position",
+     "confidence": "high",
+     "evidence": "ctor(x,y,z) stores args at +0/+4/+8; UpdatePosition copies rigid-body/AICharacter(+0x40)/AIVehicle position here; DistFromCamera/UpdateVisibility read it. PS2 +0x0 (no shift)"
+    },
+    {
+     "offset": "0xc",
+     "size": 1,
+     "type": "bool",
+     "name": "visible",
+     "confidence": "high",
+     "evidence": "UpdateVisibility: = !WCollisionMgr::StepCheckHitWorld(camera->this) within 240 units, else 0 (MOV byte); UpdateTargets needs it set. PS2 +0xc is a WORD (sw/lw) - PS2 bool is 4 bytes"
+    },
+    {
+     "offset": "0x10",
+     "size": 8,
+     "type": "float[2]",
+     "name": "screenPos",
+     "confidence": "high",
+     "evidence": "DistFromScreenPos/DistFromScreenCenter read +0x10/+0x14; UpdateTargets writes GetScreenPos/GetOffScreenPos result; MoveTargetingCursors copies to picker +0x8c. PS2 +0x10 (COORD2)"
+    },
+    {
+     "offset": "0x18",
+     "size": 1,
+     "type": "bool",
+     "name": "unknown18",
+     "confidence": "low",
+     "evidence": "only ever zeroed by the ctors (MOV byte [ESI+0x18],AL); PS2 CommonInit sw zero,0x18 (word bool). No reader found"
+    },
+    {
+     "offset": "0x1c",
+     "size": 12,
+     "type": "WSimpleZone",
+     "name": "zone",
+     "confidence": "high",
+     "evidence": "ctors zero 3 dwords then call WSimpleZone::SetPosition with ECX=this+0x1c (LEA ECX,[ESI+0x1c]; decompiler hides it) = round(pos*0.2) as int[3]; UpdateTargets: WSimpleZone::IsZoneInRange(this+0x1c,..). PS2 SetPosition(this+0x1c,this)"
+    },
+    {
+     "offset": "0x28",
+     "size": 4,
+     "type": "int",
+     "name": "updateCountdown",
+     "confidence": "high",
+     "evidence": "ctor = global counter & 3 (staggers targets); UpdateTargets decrements, reloads from +0x2c when <0, processes the target only at 0. PS2 +0x28"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "int",
+     "name": "updateInterval",
+     "confidence": "high",
+     "evidence": "ctor 0; UpdateTargets: incremented (max 6) while zone out of range, reset 0 when in range. PS2 +0x2c"
+    },
+    {
+     "offset": "0x30",
+     "size": 4,
+     "type": "int",
+     "name": "visibilityCountdown",
+     "confidence": "high",
+     "evidence": "ctor 5; UpdatePosition decrements, at <1 calls UpdateVisibility and resets to 5. PS2 +0x30"
+    },
+    {
+     "offset": "0x34",
+     "size": 4,
+     "type": "int",
+     "name": "ownerType",
+     "confidence": "high",
+     "evidence": "ctor overloads store 0 (xyz point), 1 (PhysicsObject), 2 (AICharacter), 3 (AIVehicle); UpdatePosition/GetVelocity/UpdateTargets switch on it; SteerMissile tests ==0. PS2 +0x34"
+    },
+    {
+     "offset": "0x38",
+     "size": 1,
+     "type": "bool",
+     "name": "isTemporary",
+     "confidence": "medium",
+     "evidence": "ctors 0; GetWorldTarget/AIVehicle GetTarget/EFireWeapon set 1 after construction; Missile ctor and SetTarget only AddReference when it is 0. PS2 +0x38 (word)"
+    },
+    {
+     "offset": "0x3c",
+     "size": 4,
+     "type": "int",
+     "name": "refCount",
+     "confidence": "high",
+     "evidence": "AddReference ++; RemoveReference -- then ~WTargetable+FastFree(0x50) at 0; ctor 1. PS2 +0x3c (refCnt)"
+    },
+    {
+     "offset": "0x40",
+     "size": 1,
+     "type": "bool",
+     "name": "enabled",
+     "confidence": "medium",
+     "evidence": "ctors set 1 (MOV byte [ESI+0x40],DL); UpdateTargets only lists targets with +0x40 && +0x0c. PS2 +0x40 (word, CommonInit sw 1)"
+    },
+    {
+     "offset": "0x41",
+     "size": 1,
+     "type": "bool",
+     "name": "onScreen",
+     "confidence": "high",
+     "evidence": "written only by WTargetPicker::UpdateTargets (= IsPointOnScreen, else off-screen pos used); GetSelectedTarget/CycleToNextTarget/CompareDistFromScreenPos/MoveTargetingCursors test it; never initialised by the ctors. PS2 +0x44 (word) - Xbox packs the two bools, so it is -3, not +4"
+    },
+    {
+     "offset": "0x44",
+     "size": 4,
+     "type": "void *",
+     "name": "owner",
+     "confidence": "high",
+     "evidence": "ctor arg for types 1-3: type1 PhysicsObject* (+0x48 flag bit0, +0x4a rigid-body index), type2 AICharacter* (pos +0x40, vtable slot 1 = alive test), type3 AIVehicle* (+0x10 kind, +0x68 active). Union by ownerType. PS2 +0x48"
+    },
+    {
+     "offset": "0x48",
+     "size": 8,
+     "type": "undefined",
+     "name": "tailPadding",
+     "confidence": "low",
+     "evidence": "never read or written by any WTargetable/WTargetPicker/caller function; PS2's last word +0x4c also untouched. Size 0x50 comes only from FastAlloc/FastFree(0x50) on both - probably tail padding to a 16-byte multiple (Xbox used 0x48, PS2 0x4c)"
+    }
+   ]
+  },
+  {
+   "name": "CARP::Instance",
+   "size": 64,
+   "base": null,
+   "vtable": null,
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 12,
+     "type": "float[3]",
+     "name": "axisX",
+     "confidence": "high",
+     "evidence": "rotation row 0; readers copy 16 dwords and then force +0x0c/+0x1c/+0x2c to 0 and +0x3c to 1.0 (GetTransform, Render, GetViewDistance, EnableTarget). EvaluateInstance negates it when flags bit7. PS2 identical"
+    },
+    {
+     "offset": "0xc",
+     "size": 1,
+     "type": "byte",
+     "name": "flags",
+     "confidence": "high",
+     "evidence": "DrawInstance/QuickDrawInstance skip if bit0 (hidden); UseInstanceList copies bit3 (dword read &8) to RSceneObj flags bit2 (world-root node); bit4 = has ProcAnimState (WWorld::GetProcAnimStateFromInstance, Handle::Create); bit7 = mirrored (EvaluateInstance, picks system id at articleDesc+0x1b); UseArticle clears bits 0,4. PS2 identical",
+     "bits": [
+      {
+       "bit": 0,
+       "name": "hidden",
+       "confidence": "high",
+       "evidence": "DrawInstance/QuickDrawInstance skip"
+      },
+      {
+       "bit": 3,
+       "name": "inRootNode",
+       "confidence": "medium",
+       "evidence": "UseInstanceList -> RSceneObj flags bit2, object placed in world-tree root"
+      },
+      {
+       "bit": 4,
+       "name": "hasProcAnimState",
+       "confidence": "high",
+       "evidence": "GetProcAnimStateFromInstance/GetSceneObjFromInstance require it; Handle::Create counts it"
+      },
+      {
+       "bit": 6,
+       "name": "unknown40",
+       "confidence": "low",
+       "evidence": "UseInstanceList tests (flags & 0x41)==0 on handle copies"
+      },
+      {
+       "bit": 7,
+       "name": "mirrored",
+       "confidence": "medium",
+       "evidence": "EvaluateInstance negates X column; selects articleDesc byte +0x1b instead of +0x1a"
+      }
+     ]
+    },
+    {
+     "offset": "0xd",
+     "size": 1,
+     "type": "byte",
+     "name": "procAnimType",
+     "confidence": "high",
+     "evidence": "GetInstanceMatrix calls gProcAnimFunc[byte +0xd]; EvaluateInstance: <100 = index into articleDesc->animInfo (16-byte CARP::AnimInfo); UseArticle sets 0xff. PS2 identical"
+    },
+    {
+     "offset": "0xe",
+     "size": 2,
+     "type": "ushort",
+     "name": "procAnimIndex",
+     "confidence": "high",
+     "evidence": "GetInstanceMatrix: state = +0xe * 0x20 + stateBase; WWorld::GetProcAnimStateFromInstance/GetSceneObjFromInstance index WWorld+0x24 by it; UseInstance writes it; EvaluateInstance uses it as a frame count. PS2 identical"
+    },
+    {
+     "offset": "0x10",
+     "size": 12,
+     "type": "float[3]",
+     "name": "axisY",
+     "confidence": "high",
+     "evidence": "rotation row 1 (see axisX)"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "void *",
+     "name": "articleDesc",
+     "confidence": "high",
+     "evidence": "resolved in place by CARP::InstanceResolver (TagReference at +0x1c, stride 0x40) for tags 'in  ','Cams','ci  '. Points to the 'as  ' record: +0 CARP::BaseDesc* (UseInstanceList baseDesc=**(inst+0x1c)), +4 CARP::Effect* (0x40 stride), +8 CARP::AnimInfo*, +0x1a/+0x1b system ids, +0x1c count, +0x1d draw pass, +0x1e drawLast. UseArticle falls back to the first 'as  ' tag when 0"
+    },
+    {
+     "offset": "0x20",
+     "size": 12,
+     "type": "float[3]",
+     "name": "axisZ",
+     "confidence": "high",
+     "evidence": "rotation row 2 (see axisX)"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknown2c",
+     "confidence": "low",
+     "evidence": "no reader found; zeroed in every transform copy like the other w slots"
+    },
+    {
+     "offset": "0x30",
+     "size": 12,
+     "type": "COORD3",
+     "name": "position",
+     "confidence": "high",
+     "evidence": "translation row: GetPosition, GetInstanceViewDistance (vec3distance(camera,+0x30)), WTriggerManager::Process(Instance&) centre, RSceneObj ctor/UpdatePosition WTree::FindNode sphere. PS2 GetPosition ldl/ldr +0x30..+0x38"
+    },
+    {
+     "offset": "0x3c",
+     "size": 4,
+     "type": "uint",
+     "name": "packedDimensions",
+     "confidence": "high",
+     "evidence": "CARP::Instance::SetDimensions(isBox,a,b,c) writes bits0-9=a, 10-19=b, 20-29=c (quantised, ceil(v/scale)), bit30=any>250 (selects scale table), bit31=isBox; GetBoundingRadius/GetViewDistance/Render decode (v&0x3ff)*scale[bit30]; FUN_0008d640/FUN_000cf1f0 decode bits10-19/20-29 when bit31. PS2 identical",
+     "bits": [
+      {
+       "bit": "0-9",
+       "name": "dim0 (radius when sphere)",
+       "confidence": "high",
+       "evidence": "SetDimensions arg1; GetBoundingRadius"
+      },
+      {
+       "bit": "10-19",
+       "name": "dim1",
+       "confidence": "high",
+       "evidence": "SetDimensions arg2; FUN_0008d640"
+      },
+      {
+       "bit": "20-29",
+       "name": "dim2",
+       "confidence": "high",
+       "evidence": "SetDimensions arg3; FUN_000cf1f0"
+      },
+      {
+       "bit": 30,
+       "name": "largeScale",
+       "confidence": "high",
+       "evidence": "set when any dim >250; indexes scale table"
+      },
+      {
+       "bit": 31,
+       "name": "isBox",
+       "confidence": "high",
+       "evidence": "GetBoundingRadius computes from baseDesc bbox when set; triggers use box collide"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "CARP::MapNode",
+   "size": 16,
+   "base": null,
+   "vtable": null,
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "CARP::MapNode *",
+     "name": "children",
+     "confidence": "high",
+     "evidence": "quadtree: array of 4 nodes at +0/+0x10/+0x20/+0x30 (WTree::FindNode, InitializeTree, WalkTree, WRender::FindVisibleTreeNodesAndCurtains); resolved in place by CARP::WorldNodeResolver ('wn  ' tag, 4 TagReferences 0x10 apart); null = leaf. PS2 identical"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "RSceneObj *",
+     "name": "firstSceneObj",
+     "confidence": "high",
+     "evidence": "SetMapNode/UseInstanceList link RSceneObj next/prev through it; DestroySceneObjectList/InitializeSceneObjectListLighting/GetNextSceneObjCullInfo walk it; InitializeTree zeroes it. PS2 +0x4"
+    },
+    {
+     "offset": "0x8",
+     "size": 2,
+     "type": "ushort",
+     "name": "curtainListOffset",
+     "confidence": "medium",
+     "evidence": "FindVisibleTreeNodesAndCurtains: ECX=node+u16[+8] (unscaled: self-relative byte offset to a ushort list), element=list[u16[+0xa]+i]*0x20 into WRender+0x34. PS2 lhu 0x8"
+    },
+    {
+     "offset": "0xa",
+     "size": 2,
+     "type": "ushort",
+     "name": "curtainListStart",
+     "confidence": "medium",
+     "evidence": "index into that ushort list (scaled by 2 in the asm). PS2 lhu 0xa"
+    },
+    {
+     "offset": "0xc",
+     "size": 1,
+     "type": "byte",
+     "name": "numCurtains",
+     "confidence": "medium",
+     "evidence": "loop count of the list above (Xbox MOV AL,[EDI+0xc]; PS2 lbu 0xc)"
+    },
+    {
+     "offset": "0xd",
+     "size": 1,
+     "type": "byte",
+     "name": "depth",
+     "confidence": "high",
+     "evidence": "InitializeTree stores depth; CheckContainment scales cell size by table[depth]. PS2 identical"
+    },
+    {
+     "offset": "0xe",
+     "size": 1,
+     "type": "byte",
+     "name": "cellX",
+     "confidence": "high",
+     "evidence": "InitializeTree: children get 2x/2x+1; CheckContainment centre x=(2*cellX+1)*halfCell. PS2 identical"
+    },
+    {
+     "offset": "0xf",
+     "size": 1,
+     "type": "byte",
+     "name": "cellZ",
+     "confidence": "high",
+     "evidence": "InitializeTree: children get 2z/2z+1; CheckContainment centre z. PS2 identical"
+    }
+   ]
+  },
+  {
+   "name": "CARP::BaseDesc",
+   "size": 100,
+   "base": null,
+   "vtable": null,
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "UGroup *",
+     "name": "model",
+     "confidence": "high",
+     "evidence": "SetVariation/GetViewDrawList/GetNumBones/GetBoneIndex/Reset/ConvertInstanceToLocal use *baseDesc as the model UGroup; resolved TagReference at +0 (resolver FUN_00118180 for tags 'Base' and 'pD  ')"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "uint",
+     "name": "flags",
+     "confidence": "medium",
+     "evidence": "InitializeLighting: flags & 0x2000 -> skip lighting (brightness 2.0). No other bit seen"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknown08",
+     "confidence": "low",
+     "evidence": "no reader found"
+    },
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "void *",
+     "name": "physicsAttributes",
+     "confidence": "medium",
+     "evidence": "resolved TagReference (FUN_00118180 +0xc); Smackable ctor uses it as the PhysicsObject AttributeSet data (default 'default' set when null): float +8 hit points, +0x18..+0x24 ASmackable sound params"
+    },
+    {
+     "offset": "0x10",
+     "size": 12,
+     "type": "COORD3",
+     "name": "bboxMin",
+     "confidence": "high",
+     "evidence": "GetBoundingDimensions/ComputeBoundingRadius/UseInstanceList: (max-min)*0.5 over +0x10..+0x18 vs +0x20..+0x28. PS2 identical"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "undefined4",
+     "name": "bboxMinW",
+     "confidence": "low",
+     "evidence": "never read (w slot of the box corner)"
+    },
+    {
+     "offset": "0x20",
+     "size": 12,
+     "type": "COORD3",
+     "name": "bboxMax",
+     "confidence": "high",
+     "evidence": "see bboxMin"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "undefined4",
+     "name": "bboxMaxW",
+     "confidence": "low",
+     "evidence": "never read"
+    },
+    {
+     "offset": "0x30",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknown30",
+     "confidence": "low",
+     "evidence": "no reader found"
+    },
+    {
+     "offset": "0x34",
+     "size": 4,
+     "type": "char *",
+     "name": "name",
+     "confidence": "medium",
+     "evidence": "resolver FUN_00118180 writes tag 'Name' (0x4e616d65) into +0x34 and then resolves it as a TagReference"
+    },
+    {
+     "offset": "0x38",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknown38",
+     "confidence": "low",
+     "evidence": "no reader found"
+    },
+    {
+     "offset": "0x3c",
+     "size": 4,
+     "type": "uint",
+     "name": "numCollisionPrims",
+     "confidence": "high",
+     "evidence": "RSceneObj::GetCollisionGeometry returns *(baseDesc+0x3c) through its out param and baseDesc+0x60 as the array. PS2 identical"
+    },
+    {
+     "offset": "0x40",
+     "size": 12,
+     "type": "COORD3",
+     "name": "damageBoxMin",
+     "confidence": "high",
+     "evidence": "CARP::BaseDesc::CalcDamageZone (ECX=baseDesc, from InitEffects asm MOV ECX,[EDI+0x10]) buckets a point against +0x40/+0x44/+0x48 and +0x50/+0x54/+0x58 and their midpoints. PS2 identical"
+    },
+    {
+     "offset": "0x4c",
+     "size": 4,
+     "type": "undefined4",
+     "name": "damageBoxMinW",
+     "confidence": "low",
+     "evidence": "never read"
+    },
+    {
+     "offset": "0x50",
+     "size": 12,
+     "type": "COORD3",
+     "name": "damageBoxMax",
+     "confidence": "high",
+     "evidence": "see damageBoxMin"
+    },
+    {
+     "offset": "0x5c",
+     "size": 4,
+     "type": "undefined4",
+     "name": "damageBoxMaxW",
+     "confidence": "low",
+     "evidence": "never read"
+    },
+    {
+     "offset": "0x60",
+     "size": 4,
+     "type": "undefined4",
+     "name": "collisionGeometry",
+     "confidence": "high",
+     "evidence": "start of a variable-length inline array (count at +0x3c): GetCollisionGeometry returns baseDesc+0x60. Element type not derived"
+    }
+   ],
+   "size_note": "variable length: fixed header 0x60 then numCollisionPrims inline collision primitives; 0x64 covers only the first word of that array"
+  }
+ ],
+ "vtable_slots": [],
+ "gotchas": [
+  "No vtable, so no +4 shift: WTargetable's ~WTargetable is non-virtual (RemoveReference calls it directly; PS2's delete-flag argument is just the GCC 2.95 dtor ABI, not a sign of a vtable). Fields 0x0-0x3c line up exactly between the builds. A script that applies +4 to every class that has a namespace of methods would be wrong for all four classes.",
+  "bool is 4 bytes on PS2 (GCC 2.95 EE: every bool is sw/lw) and 1 byte on Xbox. A single bool followed by padding stays put (+0x0c, +0x18, +0x38), but two adjacent bools get packed on Xbox: PS2 +0x40/+0x44 become Xbox +0x40/+0x41, and the PS2 +0x48 owner moves to Xbox +0x44. That is -3 and -4, not +4. Read the width from Xbox MOV byte vs dword, then re-pack; never copy PS2 offsets past the first bool pair.",
+  "The class size can't be computed from the fields. Both builds use FastAlloc/FastFree(0x50), but the last Xbox field ends at 0x48 (PS2 at 0x4c). Take the size from the alloc and free constants and leave the tail undefined. Don't invent a field there.",
+  "The decompiler drops thiscall ECX adjustments. In the ctors, `WSimpleZone::SetPosition(this)` is really ECX=this+0x1c (LEA ECX,[ESI+0x1c]) with `this` as the argument, so there is an embedded WSimpleZone at +0x1c. In InitEffects, `CARP::BaseDesc::CalcDamageZone(effect)` hides ECX=this->baseDesc. Calls like WTargetable::UpdatePosition()/DistFromScreenPos(pt) show no object at all. Take the receiver, and so the member type and offset, from the disassembly.",
+  "Ghidra prints offsets in element units of whatever type it guessed. In the Xbox ctor, `param_1_00[0xf]=1` is +0x3c, `*(undefined1*)(param_1_00+0x10)=1` is +0x40 and `*(undefined1*)(param_1_00+3)` is +0x0c. In the resolvers, CARP::TagReference is a 1-byte placeholder, so `this+0x34` really is +0x34 and `this+0x10` steps 16 bytes. But `pCVar5 + puVar2[2]` over CARP__Instance* scales by 64. Parse the disassembly, or scale by the pointee size.",
+  "The PS2 vector idioms corrupt widths. Vec3 copies are ldl/ldr 8-byte pairs plus a word. VU0 code loads 128 bits with lqc2 from a 12-byte position, which pulls the next field in as w: WTargetable +0x0c 'visible' shows up as field3 of the position in PS2 DistFromCamera. Width inference on PS2 would merge position+visible into one COORD4. Take widths from Xbox only.",
+  "CARP records are file data, identical on both builds. They have no vptr, no Vec3 padding difference and no byte swap (both little-endian). So neither the +4 rule nor the 'PS2 pads COORD3 to 16' rule applies. The PS2 offsets carry over 1:1 (checked for Instance +0x30/+0x3c, BaseDesc +0x10..+0x28/+0x3c/+0x40..+0x58/+0x60, MapNode +0x0/+0x4/+0x8/+0xa/+0xc..+0xf).",
+  "CARP::Instance looks like a MATRIX4 but isn't one. Every reader copies 16 dwords and then overwrites the w column (0,0,0,1), because the w slots hold non-float data: a flags byte, a byte and a ushort at +0x0c/+0x0d/+0x0e, a pointer at +0x1c and a packed bitfield at +0x3c. The existing Ghidra type (transform MATRIX4) makes the decompiler print `(uint)transform.mtx[3][3] & 0x3ff` and `mtx[1][3]` used as a pointer. A script that types by 'copied as 16 floats' will reproduce that mistake.",
+  "One offset can be read at several widths. Instance +0x0c is read as a dword (`mtx[0][3] & 8`) in UseInstanceList but as a byte elsewhere, and +0x0d (byte) and +0x0e (ushort) are separate fields. Use the narrowest width plus the neighbouring accesses, not the widest.",
+  "Pointer fields in file records only look like dwords until they are resolved in place. CARP::InitResolvers maps each tag to a resolver that runs TagReference::TagReference on specific offsets: Instance +0x1c (InstanceResolver, stride 0x40), BaseDesc +0x0/+0xc/+0x34 (FUN_00118180, which also first writes the tag 'Name' into +0x34), MapNode +0x0 (WorldNodeResolver, 4 x 0x10). Those resolvers are the best evidence for which words are pointers, and the record stride comes from their loops, since file records have no FastAlloc size.",
+  "Self-relative and file-relative offsets look like small integers. MapNode +0x8 is a ushort byte offset from the node itself to a ushort index list, and +0xa is an index into that list (only the *2 scale in the asm tells which is which). UGroup data pointers are relative when bit 1 of +4 is set. None of these should be typed as pointers.",
+  "Recursion turned into loops fakes linked lists. Xbox WTree::InitializeTree and WalkTree turn the 4th recursive call into a loop, `param_1 = *param_1 + 0x30`, which reads like a next-pointer walk through +0x30. It is actually children[3] of a 4 x 0x10 child array. Compare with PS2 InitializeTree (4 explicit recursive calls).",
+  "Names in a class namespace can be misleading. PS2 CARP::BaseDesc::CalcAdjacentZones is a lexicographical_compare over two char ranges (4 pointer args, no this), and PS2 RSceneObj::GetBaseDesc carries a bogus extra param. The RSceneObj pilot's 'baseDesc byte +0x1e==1 -> drawLast' is really Instance->articleDesc (+0x1c) byte +0x1e: UseInstanceList reads *(*(inst+0x1c)+0x1e). BaseDesc::CalcDamageZone's argument is a CARP::Effect, not a BaseDesc. Don't name fields from a namespace method unless its `this` is proven.",
+  "Some fields are only touched outside the class. WTargetable +0x41 onScreen is written only by WTargetPicker::UpdateTargets and never initialised by any ctor. +0x28/+0x2c get their meaning only in UpdateTargets. +0x38 is set only by callers after construction (GetWorldTarget, AIVehicle GetTarget, EFireWeapon) and tested by Missile/SetTarget. The picker reaches the objects through std::list nodes (node[2]), so a script has to follow data flow through container nodes and scan every class's code, not just WTargetable::*.",
+  "Some offsets are type-tag unions. WTargetable +0x44 is a PhysicsObject*, AICharacter* or AIVehicle* depending on +0x34 (1/2/3), and each branch reads different owner offsets (+0x48/+0x4a, +0x40 and vtable slot 1, +0x10/+0x68). Unioning the accesses would produce a nonsense owner struct. Type it void* and note the discriminator.",
+  "Bitfields: Instance +0x3c packs three 10-bit quantised dimensions, a scale-select bit and an isBox bit, all through dword masks. PS2 decompiles GetBoundingRadius as returning `&DAT_00386b80 + (v>>0x1c & 4)`, which is garbage. Derive bit semantics from the setter (CARP::Instance::SetDimensions) and not the decompiled getters.",
+  "RTTI isn't evidence of a vtable. PS2 has CARP::Instance_type_info_function ('Q24CARP8Instance') although Instance has no vptr: +0x3c is data on both builds, where GCC would put the vptr last.",
+  "Decompiler artifacts on null paths: Xbox GetWorldTarget shows `uRam00000038 = 1` on the FastAlloc-failed branch (the member store at +0x38 applied to a null result). An access scan must not turn that into a global or a separate object.",
+  "The same method can treat a field differently on each build. DistFromScreenCenter subtracts resX/2,resY/2 on Xbox but not on PS2 (PS2 screen coords are centred), and camera position is RCamera +0x40 on Xbox vs +0x30 on PS2. So comparing expressions across builds to confirm a field match has to tolerate per-platform constants, and must not treat the camera struct's shift as a shift of the target struct."
+ ],
+ "notes": [
+  "WTargetable has no base and no vtable; the targets-in-world list is a std::list<WTargetable*> held by WTargetPicker (+0x2c), and each node's third word points to the object.",
+  "Owner types: 0 = fixed point (ctor(x,y,z) 0xcd930: EnableTarget without physics, GetWorldTarget, EFireWeapon), 1 = PhysicsObject (0xcdba0: EnableTarget, EnableTargetBeacon, AIVehicle GetTarget, PBondCar, Simulate), 2 = AICharacter (0xcd9b0: AICharacterEnemyGround/Sunroof ctors), 3 = AIVehicle (0xcda20: AIHelicopter::EnableTargetBeacon).",
+  "WTargetPicker::GetSelectedTarget reading Xbox +0x41 against PS2 +0x44 is the bool-packing effect, not a vtable shift. Under the +4 rule it would have been +0x48.",
+  "The 'as  ' record that CARP::Instance+0x1c points to deserves its own struct (probably the article/model description): +0 CARP::BaseDesc*, +4 CARP::Effect* (0x40-byte effects, terminated by byte +0x14==0), +8 CARP::AnimInfo* (16-byte entries: +0 keyframe ptr, +8 ushort count, +0xf byte rate), +0xc TagReference, +0x1a/+0x1b system ids (Handle::Create copies them from animInfo +4/+6), +0x1c byte count of 8-byte entries at +0x20 (TagReference at +4), +0x1d draw pass (DrawInstance compares it with the pass to send to the translucent list), +0x1e drawLast. Resolver FUN_00118220.",
+  "World tree header at *(WWorld::fgWorld+0x1c): [0] root CARP::MapNode*, [7]/[8]/[9] origin x/y/z, [0xb] root cell size (RSceneObj ctor, UpdatePosition, GenerateCurtainsAndNodes).",
+  "RAnimEngine::Handle holds per-instance 64-byte copies of the CARP::Instance records at Handle+0x40*(i+1), so a script scanning accesses to 'Instance' offsets will also see them through Handle (flags byte at entry+0xc, +0xd, +0xe ushort, +0x1c articleDesc).",
+  "Every CARP layout was checked on PS2 at the same offsets: SetMapNode/InitializeTree/FindVisibleTreeNodesAndCurtains (MapNode), GetBoundingDimensions/GetCollisionGeometry/CalcDamageZone (BaseDesc), GetPosition/GetBoundingRadius/SetDimensions (Instance)."
+ ]
+}

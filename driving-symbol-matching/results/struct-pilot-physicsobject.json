@@ -1,0 +1,78 @@
+{
+ "classes": [
+  {
+   "name": "PhysicsObject",
+   "size": 108,
+   "base": null,
+   "vtable": "0x0018f9a0",
+   "fields": [
+    {"offset": "0x0", "size": 4, "type": "PhysicsObject_vtbl *", "name": "vtable", "confidence": "high",
+     "evidence": "all three ctors and the dtor store 0x18f9a0 at [ESI]; PS2 keeps the vptr at the END (+0x68, ctor 'sw v0,0x68(s0)' in the jal delay slot), hence the +4 shift of every PhysicsObject field"},
+    {"offset": "0x4", "size": 64, "type": "WWorldPos", "name": "worldPos", "confidence": "medium",
+     "evidence": "ctor 'LEA ECX,[ESI+0x4]; CALL 0xd2fd0 WWorldPos::WWorldPos', dtor 'LEA ECX,[ESI+0x4]; CALL 0xd3580' (~WWorldPos, folded/shown as dummyNullFunction); PS2 ctor/dtor pass this+0; size 0x40 = gap to +0x44 on both builds. A member, not a base: the vptr is stored BEFORE the WWorldPos ctor on both compilers. Name invented (no accessor)"},
+    {"offset": "0x44", "size": 4, "type": "PhysicsObjectType", "name": "type", "confidence": "high",
+     "evidence": "every ctor stores its type argument here (PHelicopter passes 10); PS2 +0x40 physicsObjectType"},
+    {"offset": "0x48", "size": 2, "type": "ushort", "name": "flags", "confidence": "high",
+     "evidence": "ctors write a WORD (0, or 1 for the SimpleRigidBody ctor 0x6f190, then |2 / |4 from two bool args); all readers test the BYTE: bit0 set = slot is a SimpleRigidBody, clear = RigidBody (GetMass/GetRadius/GetPosition/ReleaseRigidBodySlot). PS2 +0x44, always halfword"},
+    {"offset": "0x4a", "size": 2, "type": "short", "name": "rigidBodySlot", "confidence": "high",
+     "evidence": "= Simulation::AssignRigidBodySlot() in ctors, MOVSX'd into GetRigidBody/GetSimpleRigidBody/ReleaseRigidBodySlot; PS2 +0x46, and PS2 GetRigidBody/GetSimpleRigidBody(Ptr) read only this"},
+    {"offset": "0x4c", "size": 4, "type": "RSceneObj *", "name": "renderObject", "confidence": "high",
+     "evidence": "SetRenderObject stores it and calls RSceneObj::SetPhysics (back-pointer RSceneObj+0x28); Simulate/GetCollisionGeometry/GetCollisionBounds/PlayAnimation use it; dtor stops its anim handle (RSceneObj+0x2c, PS2 +0x28) and deletes it. PS2 +0x48 renderObject"},
+    {"offset": "0x50", "size": 4, "type": "ABaseSound *", "name": "audioObject", "confidence": "high",
+     "evidence": "SetAudioObject store (compare-then-store); PHelicopter passes an AHelicopter from ABaseSound::operator_new(0x310); dtor deletes via vtbl slot 0 (PS2: vptr at object+0xac, entry 1, flag 3). PS2 +0x4c (unnamed field68_0x4c)"},
+    {"offset": "0x54", "size": 4, "type": "IFeedback *", "name": "feedbackObject", "confidence": "high",
+     "evidence": "SetFeedbackObject store; dtor ~IFeedback + FastFree(p,4). PS2 +0x50 feedback"},
+    {"offset": "0x58", "size": 4, "type": "float *", "name": "hitPointLoc", "confidence": "high",
+     "evidence": "SetHitPointLoc stores a POINTER owned by the subclass; GetHitPoints returns *p or 1.0, LoseHitPoints/ApplyDamage decrement *p clamped at 0. PS2 +0x54 ptrHealth"},
+    {"offset": "0x5c", "size": 4, "type": "uint", "name": "ownerSig", "confidence": "high",
+     "evidence": "SetOwnerObject(PhysicsObject*) stores owner->GetSig() (a 4-byte signature, not the pointer), 0 if null; IsOwnedBy walks the chain via Simulation::FindPhysicsObjectSignature(+0x5c); SimpleRigidBody ctor 0x6f190 takes it by value. PS2 +0x58 ownerSig"},
+    {"offset": "0x60", "size": 4, "type": "AttributeSet", "name": "attributes", "confidence": "high",
+     "evidence": "LEA ECX,[ESI+0x60]; CALL AttributeSet::AttributeSet (copy or (char*,char*) overloads) / ~AttributeSet in dtor; AttributeSet is one pointer (collection, refcount at +0xc); ctor writes +0x64 next. PS2 +0x5c. Name invented"},
+    {"offset": "0x64", "size": 4, "type": "WCollider *", "name": "collider", "confidence": "high",
+     "evidence": "dtor ~WCollider + FastFree(p,0x68) then zeroes; CollideWithWorld (0xb1549) lazily FastAlloc(0x68,'WCollider')s it into owner+0x64. PS2 +0x60 (field76_0x60). Name invented"},
+    {"offset": "0x68", "size": 4, "type": "uint", "name": "unknown_68", "confidence": "low",
+     "evidence": "only zeroed by the ctors (PS2 +0x64 likewise); no reader found in the PhysicsObject methods or in 277 physics/subclass functions; could be a pointer"}
+   ]
+  }
+ ],
+ "vtable_slots": [
+  {"class": "PhysicsObject", "slot": 0, "function": "0x0006f7f0", "name": "PhysicsObject::scalar_deleting_destructor", "ps2": "entry 1 0x195568 ~PhysicsObject (GCC in-charge deleting dtor, FastFree(this,0x6c) when a1&1)"},
+  {"class": "PhysicsObject", "slot": 1, "function": "0x00017550", "name": "PhysicsObject::SetInShock", "ps2": "entry 2 0x195938 SetInShock (empty). The Xbox address is a COMDAT-folded empty 'dummyNullFunction' with 71 xrefs: do not rename that address"},
+  {"class": "PhysicsObject", "slot": 2, "function": "0x0006f780", "name": "PhysicsObject::ApplyDamage", "ps2": "entry 3 0x195940"},
+  {"class": "PhysicsObject", "slot": 3, "function": "0x0006f3e0", "name": "PhysicsObject::GetDamageZones", "ps2": "entry 4 0x195960"},
+  {"class": "PhysicsObject", "slot": 4, "function": "0x00131d35", "name": "PhysicsObject::Simulate (pure virtual: __pure_virtual)", "ps2": "entry 5 0x24c5d0 __pure_virtual; every subclass vtable has X::Simulate here. The body PhysicsObject::Simulate 0x6f4c0 (PS2 0x195aa8) exists and 11 subclass Simulates call it non-virtually"},
+  {"class": "PhysicsObject", "slot": 5, "function": "0x0006f660", "name": "PhysicsObject::DebugObject", "ps2": "entry 6 0x195d28"},
+  {"class": "PhysicsObject", "slot": 6, "function": "0x00097a90", "name": "PhysicsObject::ComputeImpulse", "ps2": "entry 7 0x195970 (empty). The Xbox body is 'RET 0x8', shared by 14 vtable refs including 0x18f598/0x1924fc outside the PhysicsObject family: probably COMDAT-folded"}
+ ],
+ "gotchas": [
+  "The +4 rule applies only to members of the class that INTRODUCES the vptr. Derived-class members are at the SAME offset on both builds, because GCC's base (size 0x6c including the trailing vptr at +0x68) is reused: PHelicopter's own fields are at 0x6c/0x70/0x74/0x78/0x7c/0x88/0x94..0xa8/0x12c/0x130/0x134 on both PS2 (0x193408) and Xbox (0x6d8f0). A script that shifts every PS2 offset by +4 for 'classes with a vtable' misplaces every subclass field",
+  "bool is 4 bytes on PS2 (GCC 2.95 MIPS) and 1 byte on MSVC, so the mapping drifts after bool members: PHelicopter PS2 'sw 1,0x138; sw 0,0x13c; swc1 2.0,0x140' vs Xbox 'byte 0x138=1; byte 0x139=0; float 0x13c=2.0'. The shift can change mid-class, not only at vectors",
+  "The Vec3-padding rule is not universal. WWorldPos keeps three xyz triples at a 16-byte stride (0x0/0x10/0x20) on BOTH builds (Xbox writes words 0-2, 4-6, 8-10) and is 0x40 on both. PHelicopter's COORD3s at 0x7c/0x88 are 12 bytes and unaligned (ldl/sdl) on PS2 too. Check each vector type against the Xbox code instead of applying a rule",
+  "Decompiler drops the ECX 'this' of calls whose callee has no thiscall prototype. In the ctor, 'WWorldPos::WWorldPos();' hides that the object is at this+4, and the dtor's ~WWorldPos(this+4) appears as 'dummyNullFunction()'. A decompile-text scanner never sees a member at +0x4; use disassembly (LEA ECX,[ESI+0x4]; CALL)",
+  "Decompiler offset spelling varies: '*(void **)(param_1 + 100)' (decimal) for +0x64, 'param_1_00[0x11]' as an int* index (=0x44), '*(short *)((int)param_1_00 + 0x4a)' as a byte offset, '(byte)param_1[0x48]' as char indexing on the 1-byte placeholder struct. A regex on '+ 0x..' misses +0x64 entirely; parse pcode or disassembly instead",
+  "Access width conflicts: Xbox ctors write flags as a WORD at +0x48 but every reader and OR uses a BYTE; PS2 is always halfword. 'Smallest access = size' gives byte, 'largest' gives ushort; the neighbouring short at +0x4a has its own word store, so there is nothing to merge. Prefer the ctor store width and the PS2 width",
+  "Getter names that do not read a field: GetMass, GetRadius, GetPosition, GetLinearVelocity and GetSig only read flags+rigidBodySlot, then return data from the Simulation rigid-body pool (RigidBody+0x4c/+0x7c/+0x10/+0x20, SimpleRigidBody+0x3c/+0x2c). A GetX->field-X rule would name +0x4a 'mass', 'radius' and 'position' at once. Require that the returned value IS the this-relative load",
+  "Setter parameter type differs from field type: SetOwnerObject(PhysicsObject*) stores owner->GetSig() (a uint signature), not the pointer, so the field is ownerSig:uint, not owner:PhysicsObject*. GetHitPoints returns float but the field is float* (hitPointLoc, returns *p or 1.0); SetHitPointLoc gives the right name, GetHitPoints the wrong type",
+  "Setters are not always a bare store: SetAudioObject/SetFeedbackObject compare first ('if (f != a) f = a'), and SetRenderObject also calls RSceneObj::SetPhysics on the old and new objects. Recognise a setter as 'the only this-relative store writes the argument unchanged', not as a one-instruction body",
+  "Hidden struct-return pointer shifts parameters: PS2 GetSig(this) decompiles with 'this' = the return buffer and the real object in a1 ('in_a1_lo + 0x44'), and Xbox GetSig returns via in_stack_00000004 with a garbage CONCAT44 return. A census of parameter-0 accesses puts field reads on the wrong object for any method that returns a small struct",
+  "Struct passed by value vs by reference: Xbox SimpleRigidBody ctor 0x6f190 takes the owner signature by value (param_4 -> +0x5c), PS2 0x195470 takes a pointer ('ownerSig = *param_4', caller passes sp+0x20). Parameter-to-field matching across builds must allow one level of indirection",
+  "Inlining differs between builds: Xbox ApplyDamage inlines LoseHitPoints (touches +0x58 directly), PS2 ApplyDamage just calls LoseHitPoints; PS2 SetHitPointLoc calls the empty ValidateHitPoints, Xbox does not. 'Method X accesses field Y' evidence does not carry across builds one to one",
+  "COMDAT/identical-code folding: Xbox vtable slot 1 (SetInShock) is 0x17550 'dummyNullFunction' (71 xrefs) and slot 6 (ComputeImpulse) is a shared 'RET 0x8' at 0x97a90 that vtables outside the family also use. Naming slot targets from PS2 would rename shared code. Only name slots whose target is referenced by this class family alone",
+  "Pure virtual with a body: PhysicsObject slot 4 is __pure_virtual (0x131d35 / PS2 0x24c5d0) but a named PhysicsObject::Simulate body exists (0x6f4c0) and is called non-virtually. A script that assumes 'every named virtual of the class appears in its own vtable' fails. The slot name has to come from the subclass vtables (X::Simulate)",
+  "Thunk functions decompile as their target: 0x62110 is 'JMP 0x6f680' but is named ~PhysicsObject and decompiles to the full destructor body, so it double-counts accesses. Skip functions whose body is a single JMP",
+  "Decompiled call arguments are displaced when 'this' is hidden: PHelicopter shows 'PhysicsObject::PhysicsObject(\"pvehicle\",param_1,10)', so the object is missing and every argument appears one position early. Map arguments to fields from the callee's own stores, not from call sites",
+  "Immediates that collide with offsets: WCollider is FastFree'd with size 0x68, the same number as the last PhysicsObject field offset, and ~PhysicsObject/scalar_deleting_destructor pass 0x6c (sizeof) to FastFree. Only this-relative memory operands count as field evidence",
+  "Size: the reliable source is the class's own deleting destructor (Xbox scalar_deleting_destructor 0x6f7f0 FastFree(this,0x6c); PS2 ~PhysicsObject FastFree(this,0x6c)). It agrees with the ctor's last store (+0x68, 4 bytes) and the first subclass field (PHelicopter +0x6c). A base class may have no FastAlloc site of its own, and each subclass deleting dtor passes its OWN size, so use the one in this class's own vtable slot 0",
+  "PS2 virtual calls use 8-byte vtable entries {short delta, short index, fn} with an 'obj + *(short*)(vt+8*k)' this-adjust: Xbox RSceneObj vcall +0x38 (slot 14) = PS2 +0x78/+0x7c (entry 15); +0x24 (slot 9) = PS2 +0x50/+0x54 (entry 10). The PS2 vptr offset inside the pointee also differs (RSceneObj +0x3c, ABaseSound +0xac), so pointee types inferred from vcall offsets need converting: Xbox slot = (PS2 off - 8)/8",
+  "PS2 auto-generated field names embed PS2 offsets (field68_0x4c, field_0x5c, field76_0x60, field77_0x64). Carrying them over verbatim puts wrong offsets into Xbox names. Rename to fieldNN_<xbox off> or use a real name",
+  "The Xbox methods take 'int param_1', or 'PhysicsObject *' typed as the 1-byte placeholder /PhysicsObject, not /auto_structs/PhysicsObject. The existing 108-byte auto struct has the right size but is applied nowhere, so the decompile shows no Xbox field names. Resolve which of the two same-named types the functions use before applying"
+ ],
+ "notes": [
+  "Size 0x6c (108) = existing /auto_structs/PhysicsObject size. Every PhysicsObject field is at PS2 offset + 4 (PS2: WWorldPos 0x0, type 0x40, flags 0x44, slot 0x46, render 0x48, audio 0x4c, feedback 0x50, hitPointLoc 0x54, ownerSig 0x58, AttributeSet 0x5c, WCollider* 0x60, ? 0x64, vptr 0x68). There is no break inside this class: its only vector-bearing member (WWorldPos) is the same size on both builds",
+  "Constructors: 0x6f070 = (AttributeSet&, type) copy overload (Smackable only); 0x6f100 = (char*,char*,type) RigidBody variant (flags=0, AssignRigidBodySlot(..,false)); 0x6f190 = (char*,char*,type,ownerSig,bool,bool) SimpleRigidBody variant (flags=1|2|4, AssignRigidBodySlot(..,true), ownerSig from arg), used by Explosion/Grenade/Human/Mine/Missile/Newton/PHelicopter/Sentry/Shell",
+  "flags bits: 0 = SimpleRigidBody slot; 1 and 2 = set from the two bool ctor args of 0x6f190 (meaning not determined)",
+  "Xbox 0x62110 (named ~PhysicsObject) is a JMP thunk to 0x6f680, called only from ~PVehicle; PVehicle's vtable slot 0 is labelled ~PVehicle rather than scalar_deleting_destructor",
+  "PS2 methods with no separate Xbox function: SetInShock (folded), ValidateHitPoints (inlined/folded), Debug, operator new/delete, GetRigidBody(Ptr)/GetSimpleRigidBody(Ptr) (inlined). PS2 PlayAnimation has two overloads, Xbox one",
+  "RSceneObj cross-checks: physics back-pointer at Xbox +0x28 (PS2 +0x24), anim handle at Xbox +0x2c (PS2 +0x28), consistent with the RSceneObj pilot's +4 rule"
+ ]
+}

@@ -175,7 +175,7 @@
     {
      "offset": "0x30",
      "size": 4,
-     "type": "RPathEngine::Handle *",
+     "type": "RPathEngine::RPathHandle *",
      "name": "pathHandle",
      "confidence": "high",
      "evidence": "ctor stores RPathEngine::GetPathHandle(instance); GetVelocity returns pathHandle+0x88 when there is no physics. PS2 GetPathHandle = lw PS2 +0x2c"
