@@ -122,6 +122,8 @@ def main():
                        "sheet": r["name"]})
         if a in returns:
             protos[-1]["return"] = returns[a]
+    # Hand-written prototypes (e.g. where the sheet signature is cut), for this class only
+    protos += [x for x in lay.get("extra_prototypes", []) if x.get("class") == cls]
     out = os.path.join(HERE, "results", "structs")
     os.makedirs(out, exist_ok=True)
     if protos_only:

@@ -1,0 +1,219 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000d3850",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "UGroup *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    }
+   ],
+   "sheet": "GGallery::GET_Canvas(UGroup *, char *)"
+  },
+  {
+   "address": "0x000d57a0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "GGallery::MGMT_MainShapeIndex(char *)"
+  },
+  {
+   "address": "0x000d5800",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GGallery::GET_Gallery(void)",
+   "return": "UGroup *"
+  },
+  {
+   "address": "0x000d5810",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "UGroup *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    },
+    {
+     "name": "param_4",
+     "type": "int"
+    }
+   ],
+   "sheet": "GGallery::GET_Puppet(UGroup *, char *, int, int)"
+  },
+  {
+   "address": "0x000d58f0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "GGallery::GET_Key(void *, int)"
+  },
+  {
+   "address": "0x000d5910",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "GGallery::Get_InterpolatedKey(GGallery::Keys *, GGallery::Keys"
+  },
+  {
+   "address": "0x000d5a00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GGallery::SPRITE_SetState(GGallery::Keys *)"
+  },
+  {
+   "address": "0x000d5a80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "GGallery::FONT_Load(char *)"
+  },
+  {
+   "address": "0x000d5ad0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "GGallery::FONT_Width(char *)"
+  },
+  {
+   "address": "0x000d5b00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "GGallery::FONT_Height(char *)"
+  },
+  {
+   "address": "0x000d5b30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GGallery::QUAD_SetState(GGallery::Keys *)"
+  },
+  {
+   "address": "0x000d5d20",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "GGallery::GGallery(char *)",
+   "return": "GGallery *"
+  },
+  {
+   "address": "0x000d5f50",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GGallery::BITMAP_Draw2D(GGallery::Keys *)"
+  },
+  {
+   "address": "0x000d61e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "GGallery::FONT_SetScale(float, float)"
+  },
+  {
+   "address": "0x000d66a0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "void *"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    }
+   ],
+   "sheet": "GGallery::LINE_Draw2DStrip(COORD4 *, EAGL::Colour *, int)"
+  },
+  {
+   "address": "0x000d6da0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GGallery::SPRITE_Flush(void)"
+  },
+  {
+   "address": "0x000d6e30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GGallery::~GGallery(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000d6eb0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GGallery::FONT_SetState(GGallery::Keys *)"
+  }
+ ]
+}

@@ -1,0 +1,633 @@
+{
+ "classes": [
+  {
+   "name": "SMissionManager",
+   "size": 7280,
+   "base": null,
+   "vtable": null,
+   "comment": "Singleton: SMissionManager::Construct b8ff0 does operator new(0x1c70) + ctor b8c30 and stores it in global 0x239220 (Destruct b9060 deletes it). No vptr. Xbox uses MSVC std::list (12 bytes) for objectives/messages/rule lists where PS2 uses bare pointers, so the Xbox front is larger; later bools pack to 1 byte.",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 12,
+     "type": "undefined4[3]",
+     "name": "objectiveList",
+     "confidence": "high",
+     "evidence": "MSVC std::list<SMissionObjective*> (alloc byte +0, _Myhead +4, _Mysize +8): ctor b8c30 calls node-alloc b8490 on this, stores head at +4 and 0 at +8; GetObjectiveByIndex b8460 / PassObjective / FailObjective / SetCurrentObjective walk [+4] and return node+8; dtor b8e70 erases (ce900) and frees the 12-byte head. PS2 +0x0 is a plain objective pointer (AddObjective/GetObjectiveByID). Name from PS2 sheet"
+    },
+    {
+     "offset": "0xc",
+     "size": 12,
+     "type": "undefined4[3]",
+     "name": "messageList",
+     "confidence": "medium",
+     "evidence": "second std::list: ctor b8c30 LEA +0xc, same head/size init; b89c0 (called from ClearState/dtor) frees node values of the list at +0xc. PS2 +0x4 is the message list (AddMessage/ClearMessageList). Name from PS2 sheet"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "int",
+     "name": "unk18",
+     "confidence": "low",
+     "evidence": "zeroed by ClearState b8a30 and dtor b8e70, R/W in Load b9140; PS2 +0x8 (ClearState/Load). Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "int",
+     "name": "currentStage",
+     "confidence": "medium",
+     "evidence": "zeroed by ClearState/dtor, R/W in Load and ProcessRules b8610 alongside +0x20; PS2 +0xc (ClearState/ProcessRules). Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 4,
+     "type": "int",
+     "name": "nextStage",
+     "confidence": "medium",
+     "evidence": "ChangeStage(int) b64b0 writes the arg here; ProcessRules b8610 reads it; Reset b8bf0/ClearState zero it. PS2 ChangeStage 206338 writes +0x10. Name invented"
+    },
+    {
+     "offset": "0x24",
+     "size": 4,
+     "type": "int",
+     "name": "unk24",
+     "confidence": "low",
+     "evidence": "ctor b8c30 zeroes, Load b9140 writes. Name invented"
+    },
+    {
+     "offset": "0x28",
+     "size": 4,
+     "type": "int",
+     "name": "unk28",
+     "confidence": "low",
+     "evidence": "Load b9140 writes. Name invented"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "void *",
+     "name": "playerProfile",
+     "confidence": "medium",
+     "evidence": "ctor stores &0x238f20 (a 0x2f8-byte global memset by the ctor; likely the UberBond of TallyScores(UberBond&)/ClearScoreBuffer(UberBond&)); ResetCharInfo b67f0 reads ints [+0x2c]+0x27c..0x2a8 for health/shield; read by GetEnemyAccuracyBoost/GlueFactor/CalcEndMissionScores/LoadWeaponSet. PS2 +0x1c same methods. Name invented"
+    },
+    {
+     "offset": "0x30",
+     "size": 12,
+     "type": "undefined4[3]",
+     "name": "globalRuleList",
+     "confidence": "medium",
+     "evidence": "SMissionRuleList (12-byte std::list): ctor inits like the lists above; dtor passes it to DestroyRuleList(SMissionRuleList&) b8900 then erases it; Load/ProcessRules read its head +0x34. PS2 +0x20. Name invented"
+    },
+    {
+     "offset": "0x3c",
+     "size": 768,
+     "type": "undefined4[192]",
+     "name": "stageRuleLists",
+     "confidence": "medium",
+     "evidence": "SMissionRuleList[64] of 12 bytes: ctor eh-vector-ctor(this+0x3c, 0xc, 0x40, 0x11cc10, 0x13540); dtor calls DestroyRuleList b8900 on each (stride 0xc, 64). PS2 +0x24 (64 x 4). Name invented"
+    },
+    {
+     "offset": "0x360",
+     "size": 200,
+     "type": "byte[200]",
+     "name": "timers",
+     "confidence": "high",
+     "evidence": "SMissionTimer[10], 0x14 each: ctor eh-vector-ctor(this+0x360, 0x14, 10, ctor b95d0, dtor d3580); ClearState/Reset call b95e0 and SMissionTimer::Reset b9ce0 per element. PS2 +0x150, 10 x 0x18. Typed as bytes (SMissionTimer not in Ghidra). Name invented"
+    },
+    {
+     "offset": "0x428",
+     "size": 4,
+     "type": "int",
+     "name": "unk428",
+     "confidence": "low",
+     "evidence": "ctor b8c30 sets -1. PS2 +0x240. Name invented"
+    },
+    {
+     "offset": "0x434",
+     "size": 64,
+     "type": "bool[64]",
+     "name": "magicCounterReached",
+     "confidence": "high",
+     "evidence": "IncMagicCounter b7a40 sets byte [this+idx+0x434]=1 when counter[idx] >= threshold[idx] (idx<0x40); ClearState zeroes 16 dwords from +0x434; single bytes 0x437..0x444, 0x44c written by cinematic/objective/Load code are elements. PS2 +0x3e4 (LEA in ClearState/IncMagicCounter). Name invented"
+    },
+    {
+     "offset": "0x474",
+     "size": 4,
+     "type": "int",
+     "name": "missionState",
+     "confidence": "medium",
+     "evidence": "Start b6380 / Stop b63a0 accessor; also Lose, ProcessRules, Reset, SkipCinematic; ctor zeroes. PS2 +0x34c same methods. Name invented"
+    },
+    {
+     "offset": "0x478",
+     "size": 1,
+     "type": "bool",
+     "name": "autoDrive",
+     "confidence": "medium",
+     "evidence": "SetAutoDrive(bool,bool) b64c0, SetDriveMissile; ctor zeroes byte. PS2 +0x350 (4-byte bool). Name invented"
+    },
+    {
+     "offset": "0x479",
+     "size": 1,
+     "type": "bool",
+     "name": "driveMissileActive",
+     "confidence": "low",
+     "evidence": "SetDriveMissile b80b0 / UpdateAutoDriveMissile b7ae0; ctor zeroes byte. PS2 +0x354. Name invented"
+    },
+    {
+     "offset": "0x47c",
+     "size": 4,
+     "type": "Missile *",
+     "name": "driveMissile",
+     "confidence": "high",
+     "evidence": "SetDriveMissile(Missile*) stores it; UpdateAutoDriveMissile passes it to Missile::SetTarget/SetUserSteerX/Y. PS2 +0x358 -> Missile::SetTarget. Name invented"
+    },
+    {
+     "offset": "0x480",
+     "size": 4,
+     "type": "float",
+     "name": "driveMissileF480",
+     "confidence": "low",
+     "evidence": "float, ctor zeroes, SetDriveMissile/UpdateAutoDriveMissile. PS2 +0x35c. Name invented"
+    },
+    {
+     "offset": "0x484",
+     "size": 4,
+     "type": "float",
+     "name": "driveMissileF484",
+     "confidence": "low",
+     "evidence": "as +0x480. PS2 +0x360. Name invented"
+    },
+    {
+     "offset": "0x488",
+     "size": 4,
+     "type": "float",
+     "name": "driveMissileF488",
+     "confidence": "low",
+     "evidence": "as +0x480. PS2 +0x364. Name invented"
+    },
+    {
+     "offset": "0x48c",
+     "size": 4,
+     "type": "float",
+     "name": "driveMissileF48c",
+     "confidence": "low",
+     "evidence": "as +0x480. PS2 +0x368. Name invented"
+    },
+    {
+     "offset": "0x490",
+     "size": 4,
+     "type": "ActionQueue *",
+     "name": "actionQueue",
+     "confidence": "high",
+     "evidence": "ctor: operator new(0x974, tag) + ctor 4f320; dtor calls 4f1b0 then sized free 0x974; UpdateAutoDriveMissile calls ActionQueue::IsEmpty/GetAction/PopAction, Reset ActionQueue::Flush. PS2 +0x36c -> ActionQueue::~ActionQueue. Name invented"
+    },
+    {
+     "offset": "0x494",
+     "size": 4,
+     "type": "int",
+     "name": "unk494",
+     "confidence": "low",
+     "evidence": "ResetCharInfo b67f0 writes 0. Name invented"
+    },
+    {
+     "offset": "0x498",
+     "size": 4,
+     "type": "int",
+     "name": "unk498",
+     "confidence": "low",
+     "evidence": "ResetCharInfo writes 100. Name invented"
+    },
+    {
+     "offset": "0x49c",
+     "size": 4,
+     "type": "float",
+     "name": "playerHealth",
+     "confidence": "medium",
+     "evidence": "ResetCharInfo: FILD profile+0x280 (or 10000.0), scaled by difficulty; BoostPlayerHealth b65f0, GetPlayerHealth(bool asProportion) b67d0 reads it with +0x4a0; UpdateCharInfo. PS2 GetPlayerHealth 206b20. Name invented"
+    },
+    {
+     "offset": "0x4a0",
+     "size": 4,
+     "type": "float",
+     "name": "playerMaxHealth",
+     "confidence": "medium",
+     "evidence": "ResetCharInfo: FILD profile+0x27c (or 10000.0); GetPlayerHealth divisor. Name invented"
+    },
+    {
+     "offset": "0x4a4",
+     "size": 4,
+     "type": "float",
+     "name": "playerShield",
+     "confidence": "medium",
+     "evidence": "ResetCharInfo: FILD profile+0x288 (default 0.0), clamped to maxShield; BoostPlayerShield b6640. Name invented"
+    },
+    {
+     "offset": "0x4a8",
+     "size": 4,
+     "type": "float",
+     "name": "playerMaxShield",
+     "confidence": "medium",
+     "evidence": "ResetCharInfo: FILD profile+0x284 (default 1000.0); cheat flags 0x244530 set it to 2x/3x/4x. Name invented"
+    },
+    {
+     "offset": "0x4ac",
+     "size": 48,
+     "type": "undefined4[12]",
+     "name": "charInfoSlots",
+     "confidence": "low",
+     "evidence": "ResetCharInfo writes two 6-dword records {int 1|2, 0, 1000.0f, 1000.0f, 0, 1000.0f} at +0x4ac and +0x4c4. PS2 +0x388..0x3b4 similar pattern. Name invented"
+    },
+    {
+     "offset": "0x4dc",
+     "size": 4,
+     "type": "int",
+     "name": "difficulty",
+     "confidence": "high",
+     "evidence": "ctor copies global 0x244514; switched on 0/1/2 in ctor and ResetCharInfo; read by GetEnemyAccuracyBoost/GetEnemyGlueFactor/RestoreLives/ShowMissionText. PS2 +0x3b8 same methods. Name invented"
+    },
+    {
+     "offset": "0x4e0",
+     "size": 4,
+     "type": "int",
+     "name": "shotsFired",
+     "confidence": "high",
+     "evidence": "IncShotsFired b66f0, IncShotsHit, ClearState zero, CalcEndMissionScores/TallyScores. PS2 +0x3bc. Name invented"
+    },
+    {
+     "offset": "0x4e4",
+     "size": 4,
+     "type": "int",
+     "name": "shotsHit",
+     "confidence": "medium",
+     "evidence": "IncShotsHit b6720, ClearState, CalcEndMissionScores/TallyScores (FPU use there, PS2 +0x3c0 lwc1: may be float). Name invented"
+    },
+    {
+     "offset": "0x4e8",
+     "size": 4,
+     "type": "int",
+     "name": "kills",
+     "confidence": "high",
+     "evidence": "IncKills b6770 accessor, Win, ClearState, TallyScores. PS2 +0x3c4. Name invented"
+    },
+    {
+     "offset": "0x4ec",
+     "size": 4,
+     "type": "float",
+     "name": "playerDamage",
+     "confidence": "medium",
+     "evidence": "IncPlayerDamage(float) b66c0, ClearState, TallyScores (float). PS2 +0x3c8. Name invented"
+    },
+    {
+     "offset": "0x4f0",
+     "size": 4,
+     "type": "int",
+     "name": "cinematicMode",
+     "confidence": "medium",
+     "evidence": "SetCinematicMode(int)/ClearCinematicMode/GoingToSkipCinematic/IsSkippingCinematic/Lose; ClearState zero. PS2 +0x3cc. (Evidence hint GHud::GetBlackFadePct is a this-alias artefact.) Name invented"
+    },
+    {
+     "offset": "0x4f4",
+     "size": 1,
+     "type": "bool",
+     "name": "skippingCinematic",
+     "confidence": "medium",
+     "evidence": "byte; SkipCinematic/GoingToSkipCinematic/IsSkippingCinematic/ClearCinematicMode; ClearState zero. PS2 +0x3d0 (4 bytes). Name invented"
+    },
+    {
+     "offset": "0x4f8",
+     "size": 4,
+     "type": "int",
+     "name": "unk4f8",
+     "confidence": "low",
+     "evidence": "ClearState zero, UpdateObjectiveSpecial. PS2 +0x3d4. Name invented"
+    },
+    {
+     "offset": "0x4fc",
+     "size": 4,
+     "type": "int",
+     "name": "unk4fc",
+     "confidence": "low",
+     "evidence": "ClearState zero, TallyScores. PS2 +0x3d8. Name invented"
+    },
+    {
+     "offset": "0x500",
+     "size": 4,
+     "type": "int",
+     "name": "unk500",
+     "confidence": "low",
+     "evidence": "ClearState zero, CalcEndMissionScores, TallyScores. PS2 +0x3dc. Name invented"
+    },
+    {
+     "offset": "0x504",
+     "size": 4,
+     "type": "int",
+     "name": "unk504",
+     "confidence": "low",
+     "evidence": "ClearState zero, IncPlayerDamage, UpdateCharInfo. PS2 +0x3e0. Name invented"
+    },
+    {
+     "offset": "0x508",
+     "size": 256,
+     "type": "int[64]",
+     "name": "magicCounters",
+     "confidence": "high",
+     "evidence": "IncMagicCounter b7a40: ++[this+idx*4+0x508] (idx<0x40); ClearState zeroes [ecx-0x100] while filling thresholds; +0x538/+0x540 are elements 12 and 14. PS2 +0x414/0x41c elements. Name invented"
+    },
+    {
+     "offset": "0x608",
+     "size": 256,
+     "type": "int[64]",
+     "name": "magicCounterThresholds",
+     "confidence": "high",
+     "evidence": "ClearState fills 64 ints at +0x608 (-1 or 2/3/4/6 via switch); IncMagicCounter compares counter >= [+idx*4+0x608]. PS2 +0x4e4. Name invented"
+    },
+    {
+     "offset": "0x708",
+     "size": 4,
+     "type": "int",
+     "name": "scoreTotal",
+     "confidence": "low",
+     "evidence": "AddScore b6e30, CompleteTimedAction, TallyScores, ClearState zero. PS2 +0x5e4. Name invented"
+    },
+    {
+     "offset": "0x70c",
+     "size": 4,
+     "type": "int",
+     "name": "unk70c",
+     "confidence": "low",
+     "evidence": "ClearState zero, TallyScores, Win. PS2 +0x5e8 (float). Name invented"
+    },
+    {
+     "offset": "0x710",
+     "size": 1,
+     "type": "bool",
+     "name": "unk710",
+     "confidence": "low",
+     "evidence": "ClearState: set from global byte 0x1e476c; if set magicCounterReached[24] (+0x44c)=1. PS2 +0x5ec. Name invented"
+    },
+    {
+     "offset": "0x714",
+     "size": 4,
+     "type": "int",
+     "name": "unk714",
+     "confidence": "low",
+     "evidence": "ClearState zero, IncShotsFired, IncShotsHit. PS2 +0x5f0. Name invented"
+    },
+    {
+     "offset": "0x718",
+     "size": 4,
+     "type": "int",
+     "name": "unk718",
+     "confidence": "low",
+     "evidence": "ctor zero, Load writes, ResetCharInfo caps health when >0. PS2 +0x5f4. Name invented"
+    },
+    {
+     "offset": "0x71c",
+     "size": 4,
+     "type": "int",
+     "name": "unk71c",
+     "confidence": "low",
+     "evidence": "address taken and read in UpdateObjectiveSpecial b81a0. PS2 +0x5f8. Name invented"
+    },
+    {
+     "offset": "0x720",
+     "size": 4,
+     "type": "int",
+     "name": "unk720",
+     "confidence": "low",
+     "evidence": "read in UpdateObjectiveSpecial. Name invented"
+    },
+    {
+     "offset": "0x724",
+     "size": 8,
+     "type": "int[2]",
+     "name": "unk724",
+     "confidence": "low",
+     "evidence": "ClearState zeroes 2 ints (loop i<2); UpdateObjectiveSpecial takes the address. PS2 +0x610. Name invented"
+    },
+    {
+     "offset": "0x734",
+     "size": 2,
+     "type": "bool[2]",
+     "name": "unk734",
+     "confidence": "low",
+     "evidence": "ClearState zeroes bytes +0x734+i in the same i<2 loop as +0x724. Name invented"
+    },
+    {
+     "offset": "0x738",
+     "size": 48,
+     "type": "int[12]",
+     "name": "scoreWeights",
+     "confidence": "medium",
+     "evidence": "ctor copies 12 dwords from global 0x244094..0x2440c4; TallyScores takes the address. PS2 +0x618. Name invented"
+    },
+    {
+     "offset": "0x768",
+     "size": 48,
+     "type": "int[12]",
+     "name": "scores",
+     "confidence": "medium",
+     "evidence": "per MissionScoreCategory: ClearState rep-stosd 12 dwords; CalcEndMissionScores writes +0x770..0x794; CompleteTimedAction +0x76c; TallyScores. PS2 +0x648 (AddScore; PS2 CalcEndMissionScores stores floats, so some entries may be float). Name invented"
+    },
+    {
+     "offset": "0x798",
+     "size": 4,
+     "type": "int",
+     "name": "currentObjective",
+     "confidence": "low",
+     "evidence": "the three SetObjective overloads b7f60/b7fb0/b8000 and UpdateObjectiveSpecial; ClearState zero. PS2 +0x678. Name invented"
+    },
+    {
+     "offset": "0x79c",
+     "size": 192,
+     "type": "byte[192]",
+     "name": "timedActions",
+     "confidence": "medium",
+     "evidence": "8 records of 0x18: ClearState clears the first byte of each; UpdateTimedActions takes +0x7b0 (=+0x14 of record 0). PS2 +0x67c (StartTimedAction/CompleteTimedAction). Name invented"
+    },
+    {
+     "offset": "0x85c",
+     "size": 5120,
+     "type": "byte[5120]",
+     "name": "sectionProfiles",
+     "confidence": "high",
+     "evidence": "64 records of 0x50: ctor and ClearState loop 0x40 x stride 0x50 clearing byte +0 and setting float +0x40=1000.0, +0x44/+0x48/+0x4c=0; StartSectionProfile takes the address. PS2 +0x73c (StartSectionProfile/ClearState), ending at 0x1b3c like Xbox 0x1c5c. Name invented"
+    },
+    {
+     "offset": "0x1c5c",
+     "size": 4,
+     "type": "int",
+     "name": "numSectionProfiles",
+     "confidence": "medium",
+     "evidence": "ClearState zero, StartSectionProfile R/W. PS2 +0x1b3c. Name invented"
+    },
+    {
+     "offset": "0x1c60",
+     "size": 4,
+     "type": "int",
+     "name": "currentSectionProfile",
+     "confidence": "medium",
+     "evidence": "ClearState -1, StartSectionProfile, Update. PS2 +0x1b40 (GetCurrentSectionProfile). Name invented"
+    },
+    {
+     "offset": "0x1c64",
+     "size": 4,
+     "type": "char *",
+     "name": "carType",
+     "confidence": "high",
+     "evidence": "GetCarType b6140 returns it; SetCarType b60a0 writes. PS2 +0x1b44 passed to strcasecmp. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "GGallery",
+   "size": 192,
+   "base": null,
+   "vtable": null,
+   "comment": "GHud ctor dab50 does operator new(0xc0) + GGallery::GGallery(char*) d5d20 and stores it at GHud+0x18. No vptr; offsets identical to PS2 up to +0xb0.",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "UGroup *",
+     "name": "gallery",
+     "confidence": "high",
+     "evidence": "ctor d5d20 stores the result of 117d60 (group load of the file); GET_Gallery d5800 returns it; GET_SomeThing -> UGroup::GetArray. PS2 +0x0. Name invented"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "void *",
+     "name": "fileData",
+     "confidence": "medium",
+     "evidence": "ctor stores the loaded file buffer; dtor d6e30 frees it (113f20) and zeroes. PS2 +0x4 -> MEM_free. Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 60,
+     "type": "void *[15]",
+     "name": "shapes",
+     "confidence": "medium",
+     "evidence": "ctor loop (ebx<0xf) news 0x4c-byte objects (ctor eca20) into [this+count*4+0x10]; dtor frees count of them (ecab0 + sized free 0x4c). PS2 +0x10 addr-taken. Name invented"
+    },
+    {
+     "offset": "0x4c",
+     "size": 4,
+     "type": "int",
+     "name": "numShapes",
+     "confidence": "high",
+     "evidence": "ctor zeroes and increments per shape; dtor loop bound. PS2 +0x4c. Name invented"
+    },
+    {
+     "offset": "0x50",
+     "size": 4,
+     "type": "uint",
+     "name": "colour",
+     "confidence": "medium",
+     "evidence": "ctor 0x7f7f7f7f; read by BITMAP/FONT/QUAD/SPRITE draw and SetState. PS2 +0x50. Name invented"
+    },
+    {
+     "offset": "0x60",
+     "size": 16,
+     "type": "COORD4",
+     "name": "stateVec60",
+     "confidence": "low",
+     "evidence": "ctor copies 16 bytes from 0x193e04; floats +0x64/+0x68 in FONT/QUAD/SPRITE_SetState and BITMAP_Draw2D. PS2 +0x60 (8-byte stores). Name invented"
+    },
+    {
+     "offset": "0x70",
+     "size": 16,
+     "type": "COORD4",
+     "name": "stateVec70",
+     "confidence": "low",
+     "evidence": "ctor copies 16 bytes from 0x193e14; address taken in the SetState methods. PS2 +0x70. Name invented"
+    },
+    {
+     "offset": "0x80",
+     "size": 16,
+     "type": "COORD4",
+     "name": "stateVec80",
+     "confidence": "low",
+     "evidence": "ctor copies 16 bytes from 0x193e24; floats +0x80/+0x84 in SPRITE_SetState/SPRITE_Draw2D/BITMAP_Draw2D. PS2 +0x80. Name invented"
+    },
+    {
+     "offset": "0x90",
+     "size": 4,
+     "type": "int",
+     "name": "unk90",
+     "confidence": "low",
+     "evidence": "ctor zero; FONT_SetState/SPRITE_SetState write. PS2 +0x90. Name invented"
+    },
+    {
+     "offset": "0xa0",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unkA0",
+     "confidence": "low",
+     "evidence": "ctor copies global 0x193dec. PS2 +0xa0 (8-byte store covering +0xa4). Name invented"
+    },
+    {
+     "offset": "0xa4",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unkA4",
+     "confidence": "low",
+     "evidence": "ctor copies global 0x193df0. Name invented"
+    },
+    {
+     "offset": "0xa8",
+     "size": 4,
+     "type": "void *",
+     "name": "font",
+     "confidence": "high",
+     "evidence": "FONT_Load/Draw/Width/Height/SetScale use it; dtor frees via 107b60. PS2 +0xa8 -> FONT_destroy/FONT_getrecta. Name invented"
+    },
+    {
+     "offset": "0xac",
+     "size": 4,
+     "type": "void *",
+     "name": "fontFileData",
+     "confidence": "medium",
+     "evidence": "FONT_Load writes; dtor frees via 117110. PS2 +0xac -> UFileLoader::FileFree. Name invented"
+    },
+    {
+     "offset": "0xb0",
+     "size": 1,
+     "type": "bool",
+     "name": "unkB0",
+     "confidence": "low",
+     "evidence": "byte; ctor zero, read by BITMAP_Draw2D/FONT_Draw/QUAD_Draw2D. PS2 +0xb0 (4 bytes). Name invented"
+    }
+   ]
+  }
+ ],
+ "vtable_slots": [],
+ "returns": {
+  "0xb6140": "char *",
+  "0xb67a0": "int",
+  "0xb65b0": "bool",
+  "0xb67d0": "float",
+  "0xb8c30": "SMissionManager *",
+  "0xb8ff0": "void",
+  "0xb9060": "void",
+  "0xb8a30": "void",
+  "0xb67f0": "void",
+  "0xb7a40": "void",
+  "0xb8960": "void",
+  "0xd5800": "UGroup *",
+  "0xd5d20": "GGallery *",
+  "0xd6e30": "void"
+ },
+ "skip_prototypes": [],
+ "notes": [
+  "0xb8960 is named SMissionManager::ClearMessageList but clears the list at +0x0 (objective list: GetObjectiveByIndex b8460, PassObjective, FailObjective, SetCurrentObjective all walk +0x4). It is most likely ClearObjectiveList (PS2 208b40); the unnamed 0xb89c0 (called right after it from ClearState and the dtor) clears the +0xc list and is probably the real ClearMessageList (PS2 208d20).",
+  "0xd3840 GGallery::GET_EffectsGallery reads this+0x1408, far past GGallery's 0xc0 bytes; it sits among GHud-area code (d3470 CULL_SetCanvas, d3850 GET_Canvas) and is probably another class's accessor (GHud?). +0x1408 left out of GGallery.",
+  "SMissionManager PS2->Xbox offsets: +0x10 at the start (PS2 bare pointers vs Xbox 12-byte std::list for +0x0/+0xc, +0x30 and 64 rule lists 4->12 bytes) grows to +0x210 by the timers (Xbox 0x360 vs PS2 0x150, 0x14 vs 0x18 each), then +0x128 from +0x474 (PS2 0x34c) to +0x124 from +0x4dc (packed bools at 0x478/0x479), ending +0x120 at the section profiles (0x85c vs 0x73c).",
+  "ActionQueue is allocated as 0x974 bytes with ctor 0x4f320 both by SMissionManager (+0x490) and GHud (global 0x23f448).",
+  "+0x2c points to global 0x238f20 (0x2f8 bytes, memset in the ctor, name/limits initialised); fields +0x27c..0x2a8 are health/shield ints per difficulty. Probably the UberBond of TallyScores(UberBond&); typed void *.",
+  "SMissionTimer (0x14), the timed-action record (0x18) and section-profile record (0x50) are typed as byte arrays; placeholders could be added once their layouts are known.",
+  "SMissionManager 0x1c68..0x1c70 and GGallery 0xb1..0xc0 have no observed accesses."
+ ]
+}

@@ -1,0 +1,49 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0008b850",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RGlareManager::Init(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000a9870",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RGlareManager::CreateUVsFromTexIDs(void)"
+  },
+  {
+   "address": "0x000a9c70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RGlareManager::RGlareManager(void)",
+   "return": "RGlareManager *"
+  },
+  {
+   "address": "0x000a9eb0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RGlareManager::Kill(void)"
+  },
+  {
+   "address": "0x000a9ed0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RGlareManager::Reset(void)"
+  },
+  {
+   "address": "0x000aa5d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RGlareManager::DrawGlares(bool)"
+  }
+ ]
+}

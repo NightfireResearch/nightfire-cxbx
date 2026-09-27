@@ -1,0 +1,1830 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "GHud",
+   "size": 1264,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "vtable",
+     "comment": "high: ctor dab50 and ~GHud dc420 store 0x1a06c0 (1 slot: scalar deleting dtor e00d0) at +0; PS2 vptr is last (+0x4f4, written in ctor 23ae30/dtor 23c560); Xbox own fields shifted +0x10 (vptr padded to 16)"
+    },
+    {
+     "offset": 16,
+     "type": "void *",
+     "name": "tar",
+     "comment": "high: ctor: FastAlloc(0x4c) + EAGL::TAR::TAR(eca20) stored +0x10; ~GHud calls TAR dtor ecab0 and frees 0x4c; PS2 +0x0 -> EAGL::TAR::~TAR. Intended type EAGL::TAR *"
+    },
+    {
+     "offset": 24,
+     "type": "GGallery *",
+     "name": "gallery",
+     "comment": "high: ctor: new(0xc0) + GGallery::GGallery(d5d20,\"hudNTSC.gal\"); ~GHud d6e30+free; this for GGallery::FONT_Draw/BITMAP_Draw2D etc in 17 methods; PS2 +0x8 (35 methods)"
+    },
+    {
+     "offset": 28,
+     "type": "UGroup *",
+     "name": "hudGallery",
+     "comment": "medium: ctor: GGallery::GET_Gallery() result, parent passed to the GET_Canvas calls; PS2 +0xc"
+    },
+    {
+     "offset": 32,
+     "type": "UGroup *",
+     "name": "hudBaseCanvas",
+     "comment": "medium: ctor: GET_Canvas(gallery,\"hud_base\") (sheet GET_Canvas(UGroup*,char*)); PS2 +0x10"
+    },
+    {
+     "offset": 36,
+     "type": "void *",
+     "name": "weaponPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"weapon\",3,..) -> +0x24; GGallery puppet handle; DrawWeapon dc990; PS2 +0x14 (shift +0x10)"
+    },
+    {
+     "offset": 40,
+     "type": "void *",
+     "name": "ammoPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"ammo\",3,..) -> +0x28; GGallery puppet handle; DrawWeapon dc990; PS2 +0x18 (shift +0x10)"
+    },
+    {
+     "offset": 44,
+     "type": "void *[7]",
+     "name": "irisPuppets",
+     "comment": "high: ctor loop sprintf(\"iris%d\",1..7) -> GET_Puppet -> +0x2c..+0x44 (LEA +0x2c); PS2 +0x1c addr-taken in DrawHealth"
+    },
+    {
+     "offset": 72,
+     "type": "void *[8]",
+     "name": "armPuppets",
+     "comment": "medium: ctor: +0x48 = GET_Puppet(\"a007\") then loop sprintf(\"arm%d\",1..7) -> +0x4c..+0x64; PS2 +0x38 addr-taken in DrawHealth treats a007 as element 0"
+    },
+    {
+     "offset": 104,
+     "type": "void *",
+     "name": "healthBorderPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"healthBorder\",3,..) -> +0x68; GGallery puppet handle; PS2 DrawHealth; PS2 +0x58 (shift +0x10)"
+    },
+    {
+     "offset": 132,
+     "type": "void *",
+     "name": "stylinPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"stylin\",3,..) -> +0x84; GGallery puppet handle; DrawStylin da540; PS2 +0x74 (shift +0x10)"
+    },
+    {
+     "offset": 136,
+     "type": "void *[6]",
+     "name": "gadgetPuppets",
+     "comment": "high: ctor loop sprintf(\"gadget%d\",0..5) -> +0x88..+0x9c (LEA +0x88); DrawGadget d9c50 reads +0x94; PS2 +0x78 addr-taken"
+    },
+    {
+     "offset": 160,
+     "type": "void *",
+     "name": "zoomLevelPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"zoomLevel\",3,..) -> +0xa0; GGallery puppet handle; PS2 DrawCrossHairs; PS2 +0x90 (shift +0x10)"
+    },
+    {
+     "offset": 164,
+     "type": "void *",
+     "name": "zoomCirclePuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"zoomCircle\",3,..) -> +0xa4; GGallery puppet handle; PS2 DrawCrossHairs; PS2 +0x94 (shift +0x10)"
+    },
+    {
+     "offset": 168,
+     "type": "void *",
+     "name": "statusPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_msg,\"status\",3,..) -> +0xa8; GGallery puppet handle; DrawMissionResult df2e0; PS2 +0x98 (shift +0x10)"
+    },
+    {
+     "offset": 172,
+     "type": "void *",
+     "name": "statusBackPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_msg,\"statusback\",3,..) -> +0xac; GGallery puppet handle; DrawMissionResult df2e0; PS2 +0x9c (shift +0x10)"
+    },
+    {
+     "offset": 184,
+     "type": "void *",
+     "name": "statusBackTopPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_msg,\"statusbacktop\",3,..) -> +0xb8; GGallery puppet handle; DrawMissionResult df2e0; PS2 +0xa8 (shift +0x10)"
+    },
+    {
+     "offset": 196,
+     "type": "void *",
+     "name": "statusBackBotPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_msg,\"statusbackbot\",3,..) -> +0xc4; GGallery puppet handle; DrawMissionResult df2e0; PS2 +0xb4 (shift +0x10)"
+    },
+    {
+     "offset": 176,
+     "type": "void *",
+     "name": "statusBackKey1",
+     "comment": "high: ctor: GGallery::GET_Key(GET_Puppet(hud_msg,\"statusback\",3,0,1)) (sheet GET_Key(void*,int)); DrawMissionResult df2e0; PS2 +0xa0"
+    },
+    {
+     "offset": 180,
+     "type": "void *",
+     "name": "statusBackKey2",
+     "comment": "high: ctor: GGallery::GET_Key(GET_Puppet(hud_msg,\"statusback\",3,0,2)) (sheet GET_Key(void*,int)); DrawMissionResult df2e0; PS2 +0xa4"
+    },
+    {
+     "offset": 188,
+     "type": "void *",
+     "name": "statusBackTopKey1",
+     "comment": "high: ctor: GGallery::GET_Key(GET_Puppet(hud_msg,\"statusbacktop\",3,0,1)) (sheet GET_Key(void*,int)); DrawMissionResult df2e0; PS2 +0xac"
+    },
+    {
+     "offset": 192,
+     "type": "void *",
+     "name": "statusBackTopKey2",
+     "comment": "high: ctor: GGallery::GET_Key(GET_Puppet(hud_msg,\"statusbacktop\",3,0,2)) (sheet GET_Key(void*,int)); DrawMissionResult df2e0; PS2 +0xb0"
+    },
+    {
+     "offset": 200,
+     "type": "void *",
+     "name": "statusBackBotKey1",
+     "comment": "high: ctor: GGallery::GET_Key(GET_Puppet(hud_msg,\"statusbackbot\",3,0,1)) (sheet GET_Key(void*,int)); DrawMissionResult df2e0; PS2 +0xb8"
+    },
+    {
+     "offset": 204,
+     "type": "void *",
+     "name": "statusBackBotKey2",
+     "comment": "high: ctor: GGallery::GET_Key(GET_Puppet(hud_msg,\"statusbackbot\",3,0,2)) (sheet GET_Key(void*,int)); DrawMissionResult df2e0; PS2 +0xbc"
+    },
+    {
+     "offset": 208,
+     "type": "void *",
+     "name": "buttonTxtPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_msg,\"buttonTxt\",3,..) -> +0xd0; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0xc0 (shift +0x10)"
+    },
+    {
+     "offset": 212,
+     "type": "void *",
+     "name": "controlsTriggerPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"XBOXFrSpItRT/XBOXSwRT/XBOXRT\",3,..) -> +0xd4; GGallery puppet handle; one of three by language branch; PS2 +0xc4 (shift +0x10)"
+    },
+    {
+     "offset": 216,
+     "type": "void *",
+     "name": "xboxAPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"XBOXA\",3,..) -> +0xd8; GGallery puppet handle; PS2 +0xc8 (shift +0x10)"
+    },
+    {
+     "offset": 220,
+     "type": "void *",
+     "name": "xboxXPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"XBOXX\",3,..) -> +0xdc; GGallery puppet handle; PS2 +0xcc (shift +0x10)"
+    },
+    {
+     "offset": 224,
+     "type": "void *",
+     "name": "xboxRTPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"XBOXRT\",3,..) -> +0xe0; GGallery puppet handle; DrawPauseMenu; PS2 +0xd0 (shift +0x10)"
+    },
+    {
+     "offset": 228,
+     "type": "UGroup *",
+     "name": "pauseErrCanvas",
+     "comment": "medium: ctor: GET_Canvas(gallery,\"paus_err\"); parent of +0xe8..+0xfc; PS2 +0xd4"
+    },
+    {
+     "offset": 232,
+     "type": "void *",
+     "name": "pauseErrText1Puppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(paus_err,\"text1\",3,..) -> +0xe8; GGallery puppet handle; DrawPauseErrors d93d0; PS2 +0xd8 (shift +0x10)"
+    },
+    {
+     "offset": 236,
+     "type": "void *",
+     "name": "pauseErrText2Puppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(paus_err,\"text2\",3,..) -> +0xec; GGallery puppet handle; DrawPauseErrors d93d0; PS2 +0xdc (shift +0x10)"
+    },
+    {
+     "offset": 240,
+     "type": "void *",
+     "name": "pauseErrText3Puppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(paus_err,\"text3\",3,..) -> +0xf0; GGallery puppet handle; DrawPauseErrors d93d0; PS2 +0xe0 (shift +0x10)"
+    },
+    {
+     "offset": 244,
+     "type": "void *",
+     "name": "pauseErrText4Puppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(paus_err,\"text4\",3,..) -> +0xf4; GGallery puppet handle; DrawPauseErrors d93d0; PS2 +0xe4 (shift +0x10)"
+    },
+    {
+     "offset": 248,
+     "type": "void *",
+     "name": "pauseErrQuad1Puppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(paus_err,\"quad1\",3,..) -> +0xf8; GGallery puppet handle; DrawPauseErrors; PS2 +0xe8 (shift +0x10)"
+    },
+    {
+     "offset": 252,
+     "type": "void *",
+     "name": "pauseErrQuad2Puppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(paus_err,\"quad2\",3,..) -> +0xfc; GGallery puppet handle; PS2 +0xec (shift +0x10)"
+    },
+    {
+     "offset": 256,
+     "type": "UGroup *",
+     "name": "pauseCanvas",
+     "comment": "medium: ctor: GET_Canvas(gallery,\"pauseN\"); parent of the pause-menu puppets; PS2 +0xf0"
+    },
+    {
+     "offset": 260,
+     "type": "void *[3]",
+     "name": "pausePagePuppets",
+     "comment": "high: ctor: GET_Puppet(pauseN,\"00\"/\"01\"/\"02\") -> +0x104/+0x108/+0x10c; DrawPauseMenu takes LEA +0x104; PS2 +0xf4 addr-taken"
+    },
+    {
+     "offset": 272,
+     "type": "void *",
+     "name": "continueMisPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"continueMis\",3,..) -> +0x110; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x100 (shift +0x10)"
+    },
+    {
+     "offset": 276,
+     "type": "void *",
+     "name": "restartMisPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"restartMis\",3,..) -> +0x114; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x104 (shift +0x10)"
+    },
+    {
+     "offset": 280,
+     "type": "void *",
+     "name": "quitMisPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"quitMis\",3,..) -> +0x118; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x108 (shift +0x10)"
+    },
+    {
+     "offset": 284,
+     "type": "void *",
+     "name": "missionPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"mission\",3,..) -> +0x11c; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x10c (shift +0x10)"
+    },
+    {
+     "offset": 288,
+     "type": "void *",
+     "name": "objectivesPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"objectives\",3,..) -> +0x120; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x110 (shift +0x10)"
+    },
+    {
+     "offset": 296,
+     "type": "void *",
+     "name": "controlsPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controls\",3,..) -> +0x128; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x118 (shift +0x10)"
+    },
+    {
+     "offset": 300,
+     "type": "void *",
+     "name": "scorePuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"score\",3,..) -> +0x12c; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x11c (shift +0x10)"
+    },
+    {
+     "offset": 304,
+     "type": "void *",
+     "name": "arrowPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"arrow\",3,..) -> +0x130; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x120 (shift +0x10)"
+    },
+    {
+     "offset": 308,
+     "type": "void *",
+     "name": "controlsArrowLPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsArrowL\",3,..) -> +0x134; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x124 (shift +0x10)"
+    },
+    {
+     "offset": 312,
+     "type": "void *",
+     "name": "controlsArrowRPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsArrowR\",3,..) -> +0x138; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x128 (shift +0x10)"
+    },
+    {
+     "offset": 316,
+     "type": "void *",
+     "name": "controlsGelLPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsGelL\",3,..) -> +0x13c; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x12c (shift +0x10)"
+    },
+    {
+     "offset": 320,
+     "type": "void *",
+     "name": "controlsGelMPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsGelM\",3,..) -> +0x140; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x130 (shift +0x10)"
+    },
+    {
+     "offset": 324,
+     "type": "void *",
+     "name": "controlsGelRPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsGelR\",3,..) -> +0x144; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x134 (shift +0x10)"
+    },
+    {
+     "offset": 328,
+     "type": "void *",
+     "name": "controlsHeaderPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsHeader\",3,..) -> +0x148; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x138 (shift +0x10)"
+    },
+    {
+     "offset": 332,
+     "type": "void *",
+     "name": "controlsDetailsPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsDetails\",3,..) -> +0x14c; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x13c (shift +0x10)"
+    },
+    {
+     "offset": 336,
+     "type": "void *",
+     "name": "controlsYAxisPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsYAxis\",3,..) -> +0x150; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x140 (shift +0x10)"
+    },
+    {
+     "offset": 340,
+     "type": "void *",
+     "name": "controlsInvertedPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsInverted\",3,..) -> +0x154; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x144 (shift +0x10)"
+    },
+    {
+     "offset": 360,
+     "type": "void *",
+     "name": "controlsXBOXAPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsXBOXA\",3,..) -> +0x168; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x158 (shift +0x10)"
+    },
+    {
+     "offset": 364,
+     "type": "void *",
+     "name": "controlsXBOXYPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsXBOXY\",3,..) -> +0x16c; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x15c (shift +0x10)"
+    },
+    {
+     "offset": 368,
+     "type": "void *",
+     "name": "controlsXBOXXPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsXBOXX\",3,..) -> +0x170; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x160 (shift +0x10)"
+    },
+    {
+     "offset": 372,
+     "type": "void *",
+     "name": "controlsXBOXBPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsXBOXB\",3,..) -> +0x174; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x164 (shift +0x10)"
+    },
+    {
+     "offset": 376,
+     "type": "void *",
+     "name": "controlsXBOXDHorPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsXBOXDHor\",3,..) -> +0x178; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x168 (shift +0x10)"
+    },
+    {
+     "offset": 380,
+     "type": "void *",
+     "name": "controlsXBOXDVertPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsXBOXDVert\",3,..) -> +0x17c; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x16c (shift +0x10)"
+    },
+    {
+     "offset": 384,
+     "type": "void *",
+     "name": "controlsXBOXLAPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsXBOXLA\",3,..) -> +0x180; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x170 (shift +0x10)"
+    },
+    {
+     "offset": 388,
+     "type": "void *",
+     "name": "controlsLeftTriggerPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsXBOXFrLeft/SpLeft/ItLeft/SwLeft/LT\",3,..) -> +0x184; GGallery puppet handle; language-dependent; DrawPauseMenu; PS2 +0x174 (shift +0x10)"
+    },
+    {
+     "offset": 392,
+     "type": "void *",
+     "name": "controlsXBOXBlackPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsXBOXBlack\",3,..) -> +0x188; GGallery puppet handle; PS2 +0x178 (shift +0x10)"
+    },
+    {
+     "offset": 396,
+     "type": "void *",
+     "name": "controlsXBOXRAPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsXBOXRA\",3,..) -> +0x18c; GGallery puppet handle; PS2 +0x17c (shift +0x10)"
+    },
+    {
+     "offset": 400,
+     "type": "void *",
+     "name": "controlsRightTriggerPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsXBOXFrSpItRight/SwRight/RT\",3,..) -> +0x190; GGallery puppet handle; language-dependent; PS2 +0x180 (shift +0x10)"
+    },
+    {
+     "offset": 404,
+     "type": "void *",
+     "name": "controlsXBOXWhitePuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"controlsXBOXWhite\",3,..) -> +0x194; GGallery puppet handle; PS2 +0x184 (shift +0x10)"
+    },
+    {
+     "offset": 408,
+     "type": "void *",
+     "name": "hintTitlePuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"hintTitle\",3,..) -> +0x198; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x188 (shift +0x10)"
+    },
+    {
+     "offset": 412,
+     "type": "void *",
+     "name": "hintTextPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"hintText\",3,..) -> +0x19c; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x18c (shift +0x10)"
+    },
+    {
+     "offset": 416,
+     "type": "void *",
+     "name": "hintQuitPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"hintQuit\",3,..) -> +0x1a0; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x190 (shift +0x10)"
+    },
+    {
+     "offset": 452,
+     "type": "void *",
+     "name": "objCheckPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"objCheck\",3,..) -> +0x1c4; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1b4 (shift +0x10)"
+    },
+    {
+     "offset": 456,
+     "type": "void *",
+     "name": "objBulletPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"objBullet\",3,..) -> +0x1c8; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1b8 (shift +0x10)"
+    },
+    {
+     "offset": 460,
+     "type": "void *",
+     "name": "continuePuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"continue\",3,..) -> +0x1cc; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1bc (shift +0x10)"
+    },
+    {
+     "offset": 464,
+     "type": "void *",
+     "name": "backPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"back\",3,..) -> +0x1d0; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1c0 (shift +0x10)"
+    },
+    {
+     "offset": 468,
+     "type": "void *",
+     "name": "invertPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"invert\",3,..) -> +0x1d4; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1c4 (shift +0x10)"
+    },
+    {
+     "offset": 472,
+     "type": "void *",
+     "name": "selectPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"select\",3,..) -> +0x1d8; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1c8 (shift +0x10)"
+    },
+    {
+     "offset": 476,
+     "type": "void *",
+     "name": "hintPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"hint\",3,..) -> +0x1dc; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1cc (shift +0x10)"
+    },
+    {
+     "offset": 480,
+     "type": "void *",
+     "name": "changepagePuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"changepage\",3,..) -> +0x1e0; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1d0 (shift +0x10)"
+    },
+    {
+     "offset": 484,
+     "type": "void *",
+     "name": "scrollPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"scroll\",3,..) -> +0x1e4; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1d4 (shift +0x10)"
+    },
+    {
+     "offset": 488,
+     "type": "void *",
+     "name": "scrollButXBOXPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"scrollButXBOX\",3,..) -> +0x1e8; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1d8 (shift +0x10)"
+    },
+    {
+     "offset": 492,
+     "type": "void *",
+     "name": "continueButXBOXPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"continueButXBOX\",3,..) -> +0x1ec; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1dc (shift +0x10)"
+    },
+    {
+     "offset": 496,
+     "type": "void *",
+     "name": "backButXBOXPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"backButXBOX\",3,..) -> +0x1f0; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1e0 (shift +0x10)"
+    },
+    {
+     "offset": 500,
+     "type": "void *",
+     "name": "invertButXBOXPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"invertButXBOX\",3,..) -> +0x1f4; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1e4 (shift +0x10)"
+    },
+    {
+     "offset": 504,
+     "type": "void *",
+     "name": "selectButXBOXPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"selectButXBOX\",3,..) -> +0x1f8; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1e8 (shift +0x10)"
+    },
+    {
+     "offset": 508,
+     "type": "void *",
+     "name": "changepageButXBOXPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"changepageButXBOX\",3,..) -> +0x1fc; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1ec (shift +0x10)"
+    },
+    {
+     "offset": 512,
+     "type": "void *",
+     "name": "scratchTxtPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"scratchTxt\",3,..) -> +0x200; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1f0 (shift +0x10)"
+    },
+    {
+     "offset": 516,
+     "type": "void *",
+     "name": "restartConfirmPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"restartConfirm\",3,..) -> +0x204; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1f4 (shift +0x10)"
+    },
+    {
+     "offset": 520,
+     "type": "void *",
+     "name": "quitConfirmPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"quitConfirm\",3,..) -> +0x208; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1f8 (shift +0x10)"
+    },
+    {
+     "offset": 524,
+     "type": "void *",
+     "name": "yesPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"yes\",3,..) -> +0x20c; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x1fc (shift +0x10)"
+    },
+    {
+     "offset": 528,
+     "type": "void *",
+     "name": "noPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(pauseN,\"no\",3,..) -> +0x210; GGallery puppet handle; DrawPauseMenu dd340; PS2 +0x200 (shift +0x10)"
+    },
+    {
+     "offset": 532,
+     "type": "void *",
+     "name": "blipPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"blip\",3,..) -> +0x214; GGallery puppet handle; PS2 +0x204 (shift +0x10)"
+    },
+    {
+     "offset": 536,
+     "type": "void *",
+     "name": "blipBondPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"blipBond\",3,..) -> +0x218; GGallery puppet handle; PS2 +0x208 (shift +0x10)"
+    },
+    {
+     "offset": 540,
+     "type": "void *",
+     "name": "blipEnemyPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"blipEnemy\",3,..) -> +0x21c; GGallery puppet handle; PS2 +0x20c (shift +0x10)"
+    },
+    {
+     "offset": 544,
+     "type": "void *",
+     "name": "blipPowerupPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"blipPowerup\",3,..) -> +0x220; GGallery puppet handle; PS2 +0x210 (shift +0x10)"
+    },
+    {
+     "offset": 548,
+     "type": "void *",
+     "name": "blipObjectivePuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"blipObjective\",3,..) -> +0x224; GGallery puppet handle; PS2 +0x214 (shift +0x10)"
+    },
+    {
+     "offset": 552,
+     "type": "void *",
+     "name": "rechargeBarPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"rechargeBar\",3,..) -> +0x228; GGallery puppet handle; PS2 +0x218 (shift +0x10)"
+    },
+    {
+     "offset": 556,
+     "type": "void *",
+     "name": "rdrarrowPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"rdrarrow\",3,..) -> +0x22c; GGallery puppet handle; PS2 +0x21c (shift +0x10)"
+    },
+    {
+     "offset": 560,
+     "type": "void *",
+     "name": "rdrarrowKey",
+     "comment": "high: ctor: GET_Key(GET_Puppet(hud_base,\"rdrarrow\",3,0,1)); PS2 +0x220 (DrawRadarArrow2D)"
+    },
+    {
+     "offset": 564,
+     "type": "void *",
+     "name": "rdrarrowbrdrPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"rdrarrowbrdr\",3,..) -> +0x234; GGallery puppet handle; PS2 +0x224 (shift +0x10)"
+    },
+    {
+     "offset": 568,
+     "type": "void *",
+     "name": "pulsePuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"pulse\",3,..) -> +0x238; GGallery puppet handle; PS2 +0x228 (shift +0x10)"
+    },
+    {
+     "offset": 572,
+     "type": "void *",
+     "name": "radarPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"radar\",3,..) -> +0x23c; GGallery puppet handle; PS2 +0x22c (shift +0x10)"
+    },
+    {
+     "offset": 576,
+     "type": "void *",
+     "name": "radarBorderPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"radar_border\",3,..) -> +0x240; GGallery puppet handle; PS2 +0x230 (shift +0x10)"
+    },
+    {
+     "offset": 580,
+     "type": "void *",
+     "name": "radarStencilPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"radar_stencil\",3,..) -> +0x244; GGallery puppet handle; PS2 +0x234 (shift +0x10)"
+    },
+    {
+     "offset": 584,
+     "type": "void *",
+     "name": "fbw1Puppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"fbw1\",3,..) -> +0x248; GGallery puppet handle; DrawFlyByWire d8ae0; PS2 +0x238 (shift +0x10)"
+    },
+    {
+     "offset": 588,
+     "type": "void *",
+     "name": "fbw2Puppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"fbw2\",3,..) -> +0x24c; GGallery puppet handle; DrawFlyByWire d8ae0; PS2 +0x23c (shift +0x10)"
+    },
+    {
+     "offset": 592,
+     "type": "void *",
+     "name": "fbw3Puppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"fbw3\",3,..) -> +0x250; GGallery puppet handle; DrawFlyByWire d8ae0; PS2 +0x240 (shift +0x10)"
+    },
+    {
+     "offset": 596,
+     "type": "void *",
+     "name": "fbw4Puppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"fbw4\",3,..) -> +0x254; GGallery puppet handle; DrawFlyByWire d8ae0; PS2 +0x244 (shift +0x10)"
+    },
+    {
+     "offset": 600,
+     "type": "void *",
+     "name": "guidedTxtPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"guidedtxt\",3,..) -> +0x258; GGallery puppet handle; PS2 +0x248 (shift +0x10)"
+    },
+    {
+     "offset": 604,
+     "type": "void *",
+     "name": "guidedDotPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"guideddot\",3,..) -> +0x25c; GGallery puppet handle; PS2 +0x24c (shift +0x10)"
+    },
+    {
+     "offset": 608,
+     "type": "void *",
+     "name": "autoAimTextPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"autoAimText\",3,..) -> +0x260; GGallery puppet handle; PS2 +0x250 (shift +0x10)"
+    },
+    {
+     "offset": 612,
+     "type": "void *",
+     "name": "autoAimDotPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"autoAimDot\",3,..) -> +0x264; GGallery puppet handle; PS2 +0x254 (shift +0x10)"
+    },
+    {
+     "offset": 616,
+     "type": "UGroup *",
+     "name": "hudMsgCanvas",
+     "comment": "medium: ctor: GET_Canvas(gallery,\"hud_msg\"); parent of status/objective puppets; PS2 +0x258"
+    },
+    {
+     "offset": 620,
+     "type": "void *",
+     "name": "txtPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_msg,\"txt\",3,..) -> +0x26c; GGallery puppet handle; PS2 +0x25c (shift +0x10)"
+    },
+    {
+     "offset": 624,
+     "type": "void *",
+     "name": "objCompTxtPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_msg,\"objcomptxt\",3,..) -> +0x270; GGallery puppet handle; PS2 +0x260 (shift +0x10)"
+    },
+    {
+     "offset": 628,
+     "type": "void *",
+     "name": "objNewTxtPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_msg,\"objnewtxt\",3,..) -> +0x274; GGallery puppet handle; PS2 +0x264 (shift +0x10)"
+    },
+    {
+     "offset": 632,
+     "type": "void *",
+     "name": "objObjTxtPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_msg,\"objobjtxt\",3,..) -> +0x278; GGallery puppet handle; PS2 +0x268 (shift +0x10)"
+    },
+    {
+     "offset": 636,
+     "type": "void *",
+     "name": "objBodyPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_msg,\"objbody\",3,..) -> +0x27c; GGallery puppet handle; PS2 +0x26c (shift +0x10)"
+    },
+    {
+     "offset": 640,
+     "type": "void *",
+     "name": "crossNormPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"crossNorm\",3,..) -> +0x280; GGallery puppet handle; crosshair draws; PS2 +0x270 (shift +0x10)"
+    },
+    {
+     "offset": 644,
+     "type": "void *",
+     "name": "crossZoomPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"crossZoom\",3,..) -> +0x284; GGallery puppet handle; crosshair draws; PS2 +0x274 (shift +0x10)"
+    },
+    {
+     "offset": 648,
+     "type": "void *",
+     "name": "crossTorpNormPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"crossTorpNorm\",3,..) -> +0x288; GGallery puppet handle; crosshair draws; PS2 +0x278 (shift +0x10)"
+    },
+    {
+     "offset": 652,
+     "type": "void *",
+     "name": "crossTorpRoamPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"crossTorpRoam\",3,..) -> +0x28c; GGallery puppet handle; crosshair draws; PS2 +0x27c (shift +0x10)"
+    },
+    {
+     "offset": 656,
+     "type": "void *",
+     "name": "crossTorpOffscreenPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"crossTorpOffscreen\",3,..) -> +0x290; GGallery puppet handle; crosshair draws; PS2 +0x280 (shift +0x10)"
+    },
+    {
+     "offset": 660,
+     "type": "void *",
+     "name": "targetZonePuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"TargetZone\",3,..) -> +0x294; GGallery puppet handle; PS2 +0x284 (shift +0x10)"
+    },
+    {
+     "offset": 664,
+     "type": "void *",
+     "name": "targetLockPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"TargetLock\",3,..) -> +0x298; GGallery puppet handle; PS2 +0x288 (shift +0x10)"
+    },
+    {
+     "offset": 668,
+     "type": "void *",
+     "name": "holePuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"hole\",3,..) -> +0x29c; GGallery puppet handle; PS2 +0x28c (shift +0x10)"
+    },
+    {
+     "offset": 676,
+     "type": "void *",
+     "name": "aredPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"ared\",3,..) -> +0x2a4; GGallery puppet handle; PS2 +0x294 (shift +0x10)"
+    },
+    {
+     "offset": 680,
+     "type": "void *",
+     "name": "radioactivePuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"radioactive\",3,..) -> +0x2a8; GGallery puppet handle; PS2 +0x298 (shift +0x10)"
+    },
+    {
+     "offset": 684,
+     "type": "void *",
+     "name": "ayellowPuppet",
+     "comment": "high: ctor dab50: GGallery::GET_Puppet(hud_base,\"ayellow\",3,..) -> +0x2ac; GGallery puppet handle; PS2 +0x29c (shift +0x10)"
+    },
+    {
+     "offset": 688,
+     "type": "bool",
+     "name": "paused",
+     "comment": "high: PauseOn dcae0 sets 1, PauseOff d9050 tests and clears; SetControllerUnplugged e00f0 calls PauseOn if clear; PS2 +0x2a0 (4-byte)"
+    },
+    {
+     "offset": 689,
+     "type": "bool",
+     "name": "controllerUnplugged",
+     "comment": "high: SetControllerUnplugged(bool) e00f0 compares/stores arg; PS2 +0x2a4"
+    },
+    {
+     "offset": 690,
+     "type": "bool",
+     "name": "autoDrive",
+     "comment": "high: SetAutoDrive(bool) d9040 writes; passed to InputConfigManager calls in PauseOn/PauseOff; PS2 +0x2a8"
+    },
+    {
+     "offset": 691,
+     "type": "bool",
+     "name": "unknownFlag2b3",
+     "comment": "low: Reset clears; name invented; PS2 +0x2ac"
+    },
+    {
+     "offset": 692,
+     "type": "int",
+     "name": "letterBoxMode",
+     "comment": "high: GetLetterBoxMode d9b90 returns it; LetterBoxOn/Off write; Reset=1; PS2 +0x2b0 (bools packed: shift now +4)"
+    },
+    {
+     "offset": 696,
+     "type": "float",
+     "name": "letterBoxPct",
+     "comment": "medium: float in LetterBoxOn/DrawLetterBox, Reset 0; PS2 +0x2b4; name invented"
+    },
+    {
+     "offset": 700,
+     "type": "float",
+     "name": "blinkingArrowAlpha",
+     "comment": "low: PauseOn sets 1.0; PS2 +0x2b8 DrawBlinkingArrow/PauseOn float; name invented"
+    },
+    {
+     "offset": 712,
+     "type": "int",
+     "name": "blinkingArrowState",
+     "comment": "low: PauseOn clears; PS2 +0x2c4 DrawBlinkingArrow/PauseOn; name invented"
+    },
+    {
+     "offset": 716,
+     "type": "int",
+     "name": "timerDigits",
+     "comment": "low: Reset=10, DrawTimer dc7d0; PS2 +0x2c8; name invented"
+    },
+    {
+     "offset": 748,
+     "type": "float",
+     "name": "stylinStep",
+     "comment": "medium: Stylin d7d60: const/frameRate(+0x4e0) stored here, also DrawStylin; PS2 +0x2e8; name invented"
+    },
+    {
+     "offset": 752,
+     "type": "int",
+     "name": "stylinActive",
+     "comment": "medium: Stylin sets 1, Reset 0, DrawStylin; PS2 +0x2ec; name invented"
+    },
+    {
+     "offset": 760,
+     "type": "int",
+     "name": "stylinTimer",
+     "comment": "low: Stylin/Reset set 0; PS2 +0x2f4; name invented"
+    },
+    {
+     "offset": 764,
+     "type": "int",
+     "name": "buttonMsgId",
+     "comment": "medium: TriggerButtonMsg da180 writes, KillButtonMessage/Reset clear; PS2 +0x2f8; name invented"
+    },
+    {
+     "offset": 768,
+     "type": "int",
+     "name": "buttonMsgSymbol",
+     "comment": "low: TriggerButtonMsg writes; PS2 +0x2fc -> GSystem::LOCALE_Symbol; name invented"
+    },
+    {
+     "offset": 772,
+     "type": "float",
+     "name": "buttonMsgTime",
+     "comment": "medium: float in TriggerButtonMsg/KillButtonMessage/DrawButtonMessage/TriggerObjectiveMsg; PS2 +0x300; name invented"
+    },
+    {
+     "offset": 776,
+     "type": "float",
+     "name": "buttonMsgAlpha",
+     "comment": "low: float, same methods; PS2 +0x304; name invented"
+    },
+    {
+     "offset": 780,
+     "type": "bool",
+     "name": "objectiveMsgFlag",
+     "comment": "low: TriggerObjectiveMsg/Reset byte; PS2 +0x308 (4-byte); name invented"
+    },
+    {
+     "offset": 781,
+     "type": "bool",
+     "name": "zoomCrossHairsFlag",
+     "comment": "low: DrawZoomingCrossHairs/Reset byte; PS2 +0x30c; offsets equal on both builds from +0x310"
+    },
+    {
+     "offset": 784,
+     "type": "int",
+     "name": "missionState",
+     "comment": "low: Reset=-1; PauseOn compares with 0x18577; SetMissionPassed/Failed, Render, DrawPauseMenu, PauseMenuMsgHandler; PS2 +0x310; name invented"
+    },
+    {
+     "offset": 788,
+     "type": "int",
+     "name": "missionResultState",
+     "comment": "low: 9 methods incl SetMissionPassed/Failed, DrawMissionResult, DrawBloodCurtain; PS2 +0x314; name invented"
+    },
+    {
+     "offset": 792,
+     "type": "float",
+     "name": "missionResultTime",
+     "comment": "low: float in SetMissionPassed/Failed/DrawMissionResult; PS2 +0x318; name invented"
+    },
+    {
+     "offset": 804,
+     "type": "float",
+     "name": "missionResultFade",
+     "comment": "low: float in Render/SetMissionPassed/Failed; PS2 +0x324; name invented"
+    },
+    {
+     "offset": 808,
+     "type": "undefined4",
+     "name": "damageFlash",
+     "comment": "low: TriggerDamageFlash(float) d87a0 and DrawScreenHits; PS2 +0x328; name invented"
+    },
+    {
+     "offset": 812,
+     "type": "undefined4",
+     "name": "damageFlashTimer",
+     "comment": "low: TriggerDamageFlash/DrawScreenHits; PS2 +0x32c; name invented"
+    },
+    {
+     "offset": 816,
+     "type": "int",
+     "name": "lavaDamageEffect",
+     "comment": "high: EnableLavaDamageEffect(bool) d7c30 writes, LavaDamageEffectEnabled d7c60 returns !=0; PS2 +0x330"
+    },
+    {
+     "offset": 844,
+     "type": "float",
+     "name": "blackFadePct",
+     "comment": "high: GetBlackFadePct d7d50 FLD; FadeIn/OutToBlack, DrawScreenFades; PS2 +0x34c"
+    },
+    {
+     "offset": 848,
+     "type": "bool",
+     "name": "blackFadeAnimating",
+     "comment": "high: GetBlackFadeAnimating d7d40 returns the byte; PS2 +0x350 (4-byte; +0x354 is the next field on both)"
+    },
+    {
+     "offset": 852,
+     "type": "int",
+     "name": "blackFadeStart",
+     "comment": "low: FadeInFromBlack/FadeOutToBlack/Reset; PS2 +0x354; name invented"
+    },
+    {
+     "offset": 856,
+     "type": "int",
+     "name": "blackFadeDuration",
+     "comment": "low: FadeIn/Out/Reset; PS2 +0x358; name invented"
+    },
+    {
+     "offset": 860,
+     "type": "float",
+     "name": "blackFadeTarget",
+     "comment": "low: float FadeIn/Out/Reset; PS2 +0x35c; name invented"
+    },
+    {
+     "offset": 864,
+     "type": "int",
+     "name": "missionMsgId",
+     "comment": "low: TriggerMissionMsg da030, Render, Reset; PS2 +0x360; name invented"
+    },
+    {
+     "offset": 876,
+     "type": "float",
+     "name": "hudAlpha",
+     "comment": "low: Reset sets 1.0f; PS2 +0x36c DrawHealth float; name invented"
+    },
+    {
+     "offset": 896,
+     "type": "float",
+     "name": "targetScreenX",
+     "comment": "medium: SetTarget d9f50 float, Reset; PS2 +0x380 (w8, COORD2 pair with +0x384), DrawEnemyTarget; name invented"
+    },
+    {
+     "offset": 900,
+     "type": "float",
+     "name": "targetScreenY",
+     "comment": "medium: see +0x380; PS2 +0x384"
+    },
+    {
+     "offset": 904,
+     "type": "int",
+     "name": "targetLockState",
+     "comment": "medium: SetTargetLockState d9fb0 R/W, Reset; PS2 +0x388"
+    },
+    {
+     "offset": 908,
+     "type": "float",
+     "name": "crossHairLockPct",
+     "comment": "low: float in SetTargetLockState/DrawZooming/FadingCrossHairs; PS2 +0x38c; name invented"
+    },
+    {
+     "offset": 912,
+     "type": "float",
+     "name": "crossHairFadePct",
+     "comment": "low: float, ctor zeroes, crosshair draws; PS2 +0x390; name invented"
+    },
+    {
+     "offset": 924,
+     "type": "void *",
+     "name": "targeting",
+     "comment": "medium: Reset frees the old one and allocates new(0xc) + ctor 12e0f0; ctor zeroes; PS2 +0x39c -> ATargeting::SetState. Intended type ATargeting *"
+    },
+    {
+     "offset": 948,
+     "type": "int",
+     "name": "objectiveMsgSymbol",
+     "comment": "medium: Reset=-1, TriggerObjectiveMsg/DrawObjectiveMessage; PS2 +0x3b4 -> GSystem::LOCALE_Symbol"
+    },
+    {
+     "offset": 964,
+     "type": "bool",
+     "name": "powerupTargetValid",
+     "comment": "low: Reset/UpdateTargets e1a90 byte; PS2 +0x3c4 DrawPowerupTarget; name invented"
+    },
+    {
+     "offset": 988,
+     "type": "bool",
+     "name": "objectiveTargetValid",
+     "comment": "low: Reset/UpdateTargets byte; PS2 +0x3dc DrawObjectiveTarget; name invented"
+    },
+    {
+     "offset": 1028,
+     "type": "int",
+     "name": "missionMsgSymbol",
+     "comment": "medium: Reset=-1, TriggerMissionMsg writes, DrawMessage da2e0 reads; PS2 +0x404"
+    },
+    {
+     "offset": 1032,
+     "type": "float",
+     "name": "missionMsgTime",
+     "comment": "low: float TriggerMissionMsg/DrawMessage; PS2 +0x408; name invented"
+    },
+    {
+     "offset": 1040,
+     "type": "bool",
+     "name": "missionMsgHidesHud",
+     "comment": "low: byte DrawHealth/DrawWeapon/TriggerMissionMsg; PS2 +0x410 (4-byte); name invented"
+    },
+    {
+     "offset": 1044,
+     "type": "int",
+     "name": "language",
+     "comment": "high: Reset stores GetLanguage() e30d0 result; PS2 +0x414"
+    },
+    {
+     "offset": 1048,
+     "type": "bool",
+     "name": "aimOn",
+     "comment": "high: AimOn d9ba0/AimOff d9bd0 write the byte; PS2 +0x418 read by IsAimOn 247d90"
+    },
+    {
+     "offset": 1052,
+     "type": "int",
+     "name": "gadgetId",
+     "comment": "medium: GadgetOn(int,float) d9bf0 writes, DrawGadget reads; PS2 +0x41c"
+    },
+    {
+     "offset": 1056,
+     "type": "float",
+     "name": "gadgetValue",
+     "comment": "medium: float GadgetOn/GadgetOff/DrawGadget/Reset; PS2 +0x420"
+    },
+    {
+     "offset": 1072,
+     "type": "bool",
+     "name": "levelLoadText",
+     "comment": "high: SetLevelLoadText d7c20 writes the byte, Reset clears; PS2 +0x430 (4-byte; following bools pack)"
+    },
+    {
+     "offset": 1073,
+     "type": "bool",
+     "name": "globalFlag244528",
+     "comment": "low: Reset: = (dword[0x244528]!=0); PS2 +0x434 DrawHealth; name invented"
+    },
+    {
+     "offset": 1074,
+     "type": "bool",
+     "name": "globalFlag24452c",
+     "comment": "low: Reset: = (dword[0x24452c]!=0); PS2 +0x438 DrawCrossHairs; name invented"
+    },
+    {
+     "offset": 1075,
+     "type": "bool",
+     "name": "pauseMenuFlag",
+     "comment": "low: PauseMenuMsgHandler/Render/Reset; PS2 +0x43c; name invented"
+    },
+    {
+     "offset": 1076,
+     "type": "bool",
+     "name": "cheatActivated",
+     "comment": "medium: CheatMsgHandler d9140 sets 1 on a matched code; Render/Reset; PS2 +0x440; name invented"
+    },
+    {
+     "offset": 1080,
+     "type": "int",
+     "name": "savedInputConfig",
+     "comment": "medium: PauseOn stores an InputConfigManager result (50180), PauseOff passes it back (50720); PS2 +0x444 (shift -0xc after bools pack)"
+    },
+    {
+     "offset": 1084,
+     "type": "float",
+     "name": "bloodCurtainTime",
+     "comment": "medium: Reset=-1.0f, TriggerBloodCurtain/DrawBloodCurtain/SetMissionFailed; PS2 +0x448"
+    },
+    {
+     "offset": 1088,
+     "type": "float",
+     "name": "screenWidth",
+     "comment": "high: Reset: FILD video width ([0x1ebff4]+0x40); GetScreenCoords/IsTargetPointOnScreen/DrawLetterBox; PS2 +0x44c"
+    },
+    {
+     "offset": 1092,
+     "type": "float",
+     "name": "screenHeight",
+     "comment": "high: Reset: FILD video height ([0x1ebff4]+0x44); PS2 +0x450"
+    },
+    {
+     "offset": 1096,
+     "type": "float",
+     "name": "screenCenterX",
+     "comment": "medium: Reset: width*const [0x189eb0]; GetCenter/DrawStylin/dbDrawTarget; PS2 +0x454"
+    },
+    {
+     "offset": 1100,
+     "type": "float",
+     "name": "screenCenterY",
+     "comment": "medium: Reset: height*const; PS2 +0x458"
+    },
+    {
+     "offset": 1108,
+     "type": "bool",
+     "name": "playerFlag454",
+     "comment": "low: Reset stores bool from b7300 on [0x239220]; AimOn/DrawHealth/DrawWeapon/DrawPauseMenu; PS2 +0x460 (4-byte); name invented"
+    },
+    {
+     "offset": 1112,
+     "type": "int",
+     "name": "timerValue",
+     "comment": "medium: TriggerTimerOn(int) d8800 writes arg, TriggerTimerOff/Reset=-1, DrawTimer; PS2 +0x464"
+    },
+    {
+     "offset": 1136,
+     "type": "int",
+     "name": "pauseMenuPage",
+     "comment": "low: PauseOn sets 0 or 5, DrawPauseMenu/PauseMenuMsgHandler/Render/SetMissionFailed; PS2 +0x480 (shift -0x10); name invented"
+    },
+    {
+     "offset": 1140,
+     "type": "int",
+     "name": "pauseMenuSelection",
+     "comment": "low: PauseOn sets 0/1; PS2 +0x484; name invented"
+    },
+    {
+     "offset": 1144,
+     "type": "int",
+     "name": "pauseControllerIndex",
+     "comment": "low: PauseOn: highest config index whose entry+0x10==1; PS2 +0x488; name invented"
+    },
+    {
+     "offset": 1160,
+     "type": "int",
+     "name": "pauseMenuState488",
+     "comment": "low: PauseOff clears; DrawPauseMenu/PauseMenuMsgHandler; PS2 +0x498; name invented"
+    },
+    {
+     "offset": 1164,
+     "type": "int",
+     "name": "controllerUnpluggedState",
+     "comment": "medium: SetControllerUnplugged sets 1/0; Draw reads; PS2 +0x49c"
+    },
+    {
+     "offset": 1180,
+     "type": "int[16]",
+     "name": "cheatInputBuffer",
+     "comment": "high: CheatMsgHandler shifts 15 dwords 0x4a0->0x49c (rep movsd) and stores the new input at +0x4d8; Reset/PauseOn clear 16 dwords; PS2 +0x4ac..+0x4e8"
+    },
+    {
+     "offset": 1248,
+     "type": "float",
+     "name": "frameRate",
+     "comment": "high: ctor sets 30/60/25 by GetFoundationVideoMode; Stylin divides by it; PS2 +0x4f0"
+    }
+   ],
+   "comment": "HUD singleton (global 0x23f44c, TheApp d7c10); constructed size 1264 (0x4f0). Xbox vptr at +0 padded to 16, so own fields sit +0x10 above PS2 (PS2 vptr last at +0x4f4, PS2 size 0x4f8) up to +0x2ac; 4-byte PS2 bools pack on Xbox at +0x2b0 (shift becomes +4), +0x30c (0), +0x430 (-0xc), +0x454 (-0x10). The 5-slot vtable 0x19ff84 is not GHud's: it belongs to a separate 0x4c-byte RViewCamera subclass allocated in the ctor (global 0x23f450). Most of +0x24..+0x2ac are GGallery puppet handles named by their gallery strings."
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x000d7c10",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "GHud::TheApp(void)",
+   "return": "GHud *"
+  },
+  {
+   "address": "0x000d7c20",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::SetLevelLoadText(void)"
+  },
+  {
+   "address": "0x000d7c30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "GHud::EnableLavaDamageEffect(bool)"
+  },
+  {
+   "address": "0x000d7c60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::LavaDamageEffectEnabled(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x000d7c70",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "GHud::FadeInFromBlack(int)"
+  },
+  {
+   "address": "0x000d7cd0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "GHud::FadeOutToBlack(int)"
+  },
+  {
+   "address": "0x000d7d40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::GetBlackFadeAnimating(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x000d7d50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::GetBlackFadePct(void)",
+   "return": "float"
+  },
+  {
+   "address": "0x000d7d60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::Stylin(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000d7d90",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "GHud::RadarRadiusInMeters(void)",
+   "return": "float"
+  },
+  {
+   "address": "0x000d7da0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::Reset(void)"
+  },
+  {
+   "address": "0x000d8170",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GHud::IsTargetPointOnScreen(COORD2 &)"
+  },
+  {
+   "address": "0x000d81d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawHealth(void)"
+  },
+  {
+   "address": "0x000d87a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "GHud::TriggerDamageFlash(float)"
+  },
+  {
+   "address": "0x000d87f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::TriggerBloodCurtain(void)"
+  },
+  {
+   "address": "0x000d8800",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "GHud::TriggerTimerOn(int)"
+  },
+  {
+   "address": "0x000d8810",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "GHud::TriggerTimerOff(int)"
+  },
+  {
+   "address": "0x000d8820",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawScreenHits(void)"
+  },
+  {
+   "address": "0x000d8970",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawScreenFades(void)"
+  },
+  {
+   "address": "0x000d8ae0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawFlyByWire(void)"
+  },
+  {
+   "address": "0x000d8c00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GHud::DrawZoomingCrossHairs(GGallery::Keys *)"
+  },
+  {
+   "address": "0x000d8ea0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GHud::DrawFadingCrossHairs(GGallery::Keys *)"
+  },
+  {
+   "address": "0x000d9040",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "GHud::SetAutoDrive(bool)"
+  },
+  {
+   "address": "0x000d9050",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::PauseOff(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000d90e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GHud::CheckCheatInput(GHud::CheatCode &)"
+  },
+  {
+   "address": "0x000d9140",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "GHud::CheatMsgHandler(int)"
+  },
+  {
+   "address": "0x000d9370",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "char *"
+    }
+   ],
+   "sheet": "GHud::GetCenter(GGallery::Keys *, float, char *)"
+  },
+  {
+   "address": "0x000d93d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawPauseErrors(void)"
+  },
+  {
+   "address": "0x000d9570",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "GHud::DrawBlinkingArrow(float, float)"
+  },
+  {
+   "address": "0x000d9b30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "GHud::LetterBoxOn(bool)"
+  },
+  {
+   "address": "0x000d9b70",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "GHud::LetterBoxOff(bool)"
+  },
+  {
+   "address": "0x000d9b90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::GetLetterBoxMode(void)",
+   "return": "int"
+  },
+  {
+   "address": "0x000d9ba0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::AimOn(void)"
+  },
+  {
+   "address": "0x000d9bd0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::AimOff(void)"
+  },
+  {
+   "address": "0x000d9bf0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "GHud::GadgetOn(int, float)"
+  },
+  {
+   "address": "0x000d9c30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::GadgetOff(void)"
+  },
+  {
+   "address": "0x000d9c50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawGadget(void)"
+  },
+  {
+   "address": "0x000d9e30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawLetterBox(void)"
+  },
+  {
+   "address": "0x000d9f50",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GHud::SetTarget(COORD2 &)"
+  },
+  {
+   "address": "0x000d9fb0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "GHud::SetTargetLockState(TargetLockState)"
+  },
+  {
+   "address": "0x000da030",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "GHud::TriggerMissionMsg(int, float)"
+  },
+  {
+   "address": "0x000da0a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    }
+   ],
+   "sheet": "GHud::TriggerObjectiveMsg(int, int, bool)"
+  },
+  {
+   "address": "0x000da180",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    },
+    {
+     "name": "param_4",
+     "type": "int"
+    },
+    {
+     "name": "param_5",
+     "type": "float"
+    }
+   ],
+   "sheet": "GHud::TriggerButtonMsg(char *, int, int, int, float)"
+  },
+  {
+   "address": "0x000da1d0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    },
+    {
+     "name": "param_3",
+     "type": "char *"
+    }
+   ],
+   "sheet": "GHud::GetButton(char *, char *, char *)"
+  },
+  {
+   "address": "0x000da260",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::KillButtonMessage(void)"
+  },
+  {
+   "address": "0x000da280",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "GHud::dbMessage(char *, int)"
+  },
+  {
+   "address": "0x000da2e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawMessage(void)"
+  },
+  {
+   "address": "0x000da540",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawStylin(void)"
+  },
+  {
+   "address": "0x000da8e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::dbDrawTarget(COORD2 *, char *, float, unsigned int, char"
+  },
+  {
+   "address": "0x000dab50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::GHud(void)",
+   "return": "GHud *"
+  },
+  {
+   "address": "0x000dc420",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::~GHud(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000dc4a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool *"
+    },
+    {
+     "name": "param_3",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GHud::GetScreenCoords(COORD3 *, bool *, COORD2 *)"
+  },
+  {
+   "address": "0x000dc590",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawBloodCurtain(void)"
+  },
+  {
+   "address": "0x000dc7d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawTimer(void)"
+  },
+  {
+   "address": "0x000dc990",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawWeapon(void)"
+  },
+  {
+   "address": "0x000dcae0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::PauseOn(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000dcc10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "GHud::PauseMenuMsgHandler(int)"
+  },
+  {
+   "address": "0x000dd340",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawPauseMenu(void)"
+  },
+  {
+   "address": "0x000dee80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "GHud::SetMissionPassed(bool)"
+  },
+  {
+   "address": "0x000deee0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "GHud::SetMissionFailed(bool)"
+  },
+  {
+   "address": "0x000def90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawButtonMessage(void)"
+  },
+  {
+   "address": "0x000df2e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawMissionResult(void)"
+  },
+  {
+   "address": "0x000dfc30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawObjectiveMessage(void)"
+  },
+  {
+   "address": "0x000e00d0",
+   "calling_convention": "__thiscall",
+   "return": "GHud *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x000e00f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "GHud::SetControllerUnplugged(bool)",
+   "return": "void"
+  },
+  {
+   "address": "0x000e0140",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::Render(void)"
+  },
+  {
+   "address": "0x000e0440",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::DrawCrossHairs(void)"
+  },
+  {
+   "address": "0x000e1970",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::Draw(void)"
+  },
+  {
+   "address": "0x000e1a90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GHud::UpdateTargets(void)"
+  }
+ ]
+}

@@ -1,0 +1,495 @@
+{
+ "classes": [
+  {
+   "name": "RVehicle",
+   "size": 880,
+   "base": "RSkeletalObj",
+   "vtable": "0x001922d0",
+   "comment": "render side of a vehicle. 0x370 (FastAlloc 880, deleting dtor 967f0 frees 0x370). Derives from RSkeletalObj (0xa0). RSceneObj's PS2 vptr is last, so own fields sit at the same offsets on both builds (PS2 ctor 1d2338 stores the vtable at +0x3c). +0x2e8..+0x327, +0x33c..+0x347, +0x36c left undefined.",
+   "fields": [
+    {
+     "offset": "0xa0",
+     "size": 64,
+     "type": "CARP::Instance",
+     "name": "instance",
+     "confidence": "high",
+     "evidence": "ctor 953e0 passes this+0xa0 to RSkeletalObj::RSkeletalObj (the CARP::Instance& the scene object keeps a pointer to, as RAutonomousObj +0x40) and later sets it to identity (call 116120 on the same pointer); PS2 ctor 1d2338 passes s0+0xa0 to the RSkeletalObj ctor and writes identity rows sq +0xa0/+0xb0/+0xc0 and sqc2 vf0 +0xd0. Same offset both builds"
+    },
+    {
+     "offset": "0xe0",
+     "size": 256,
+     "type": "COORD4[16]",
+     "name": "damageZones",
+     "confidence": "medium",
+     "evidence": "ComputeDamage 95a80 fills 16-byte entries from this+0xe0 per physics damage zone (x=raw word, y=float, z=y*k, w=0 or 255.0) and zeroes 16 of them when there is no physics (loop from +0xe4 stride 0x10, count 0x10); PS2 +0xe0 LEA in ComputeDamage/ResolveObjectData/SetPerObjectBuffers (fgSharedDamageBuffer). Name invented"
+    },
+    {
+     "offset": "0x1e0",
+     "size": 32,
+     "type": "COORD4[2]",
+     "name": "muzzleFlashPos",
+     "confidence": "medium",
+     "evidence": "RenderFX 95b60 loops 2x with EDI=this+0x1e0 stride 0x10 passing it to the muzzle-flash draw (a19d0/a1870); ctor sets w (+0x1ec,+0x1fc)=1.0; PS2 ctor swc1 1.0 at +0x1ec stride 0x10, RenderFX LEA +0x1e0. StartMuzzleFlash(COORD3&,COORD3&,..). Name invented"
+    },
+    {
+     "offset": "0x200",
+     "size": 32,
+     "type": "COORD4[2]",
+     "name": "muzzleFlashDir",
+     "confidence": "medium",
+     "evidence": "RenderFX passes EDI+0x20 (= this+0x200+i*0x10) as the second vector when type != 2; ctor zeroes w (+0x20c,+0x21c); PS2 RenderFX LEA +0x200, ctor sw zero +0x20c stride 0x10. Name invented"
+    },
+    {
+     "offset": "0x220",
+     "size": 8,
+     "type": "uint[2]",
+     "name": "muzzleFlashEndFrame",
+     "confidence": "medium",
+     "evidence": "RenderFX compares [ESI-0x10] (this+0x220+i*4) with frame counter 0x1f2a4c and draws while it is ahead; ctor zeroes +0x220/+0x224; PS2 same (ctor, StartMuzzleFlash LEA +0x220). Name invented"
+    },
+    {
+     "offset": "0x228",
+     "size": 8,
+     "type": "int[2]",
+     "name": "muzzleFlashType",
+     "confidence": "medium",
+     "evidence": "RenderFX reads [ESI-8] (this+0x228+i*4): ==2 selects a19d0, else it is passed to a1870; PS2 RenderFX LEA +0x228. Name invented"
+    },
+    {
+     "offset": "0x230",
+     "size": 8,
+     "type": "float[2]",
+     "name": "muzzleFlashScale",
+     "confidence": "medium",
+     "evidence": "RenderFX FMUL [ESI] with ESI=this+0x230 stride 4; PS2 RenderFX LEA +0x230. Name invented"
+    },
+    {
+     "offset": "0x238",
+     "size": 16,
+     "type": "undefined4[4]",
+     "name": "wheelData238",
+     "confidence": "low",
+     "evidence": "PS2 LEA +0x238 in ComputeWheels 1d2cb0/PostLoad 1d2648 (no Xbox access seen); 4 entries assumed from the following [4] arrays. Name invented"
+    },
+    {
+     "offset": "0x248",
+     "size": 16,
+     "type": "undefined4[4]",
+     "name": "wheelData248",
+     "confidence": "low",
+     "evidence": "ctor 953e0 zeroes 4 dwords (loop [EAX-0x10], EAX=this+0x258); PS2 ctor zero loop 4x from +0x248, LEA in ComputeWheels/PostLoad. Name invented"
+    },
+    {
+     "offset": "0x258",
+     "size": 16,
+     "type": "undefined4[4]",
+     "name": "wheelData258",
+     "confidence": "low",
+     "evidence": "ctor zeroes 4 dwords from +0x258 (same loop); PS2 same, LEA in ComputeWheels/PostLoad. Name invented"
+    },
+    {
+     "offset": "0x268",
+     "size": 64,
+     "type": "float[16]",
+     "name": "switchEffectIntensity",
+     "confidence": "medium",
+     "evidence": "ctor zeroes 16 dwords (loop [EAX-0x40], EAX=this+0x2a8) then sets elements 7,8,11-15 (+0x284..+0x2a4) to 1.0; PS2 swc1 floats at the same offsets, SetPerObjectBuffers 1d2b38 writes +0x28c/+0x290 floats and LEA +0x268 (fgSharedSwitchEffectBuffer). Name invented"
+    },
+    {
+     "offset": "0x2a8",
+     "size": 64,
+     "type": "int[16]",
+     "name": "switchEffectStartFrame",
+     "confidence": "medium",
+     "evidence": "ctor fills 16 dwords with -10000 (0xffffd8f0); SetPerObjectBuffers 95ff0 reads +0x2cc (index 9), PS2 1d2b38 reads +0x2cc/+0x2d0 (indices 9,10, matching the float writes at +0x28c/+0x290). Name invented"
+    },
+    {
+     "offset": "0x328",
+     "size": 4,
+     "type": "float",
+     "name": "wheelFloat328",
+     "confidence": "low",
+     "evidence": "ctor zeroes, ComputeWheels 96060 writes a float; PS2 same offset R/W float. Name invented"
+    },
+    {
+     "offset": "0x32c",
+     "size": 4,
+     "type": "float",
+     "name": "wheelFloat32c",
+     "confidence": "low",
+     "evidence": "ctor zeroes, ComputeWheels writes a float; PS2 same. Name invented"
+    },
+    {
+     "offset": "0x330",
+     "size": 4,
+     "type": "uint",
+     "name": "colourDissolveStartFrame",
+     "confidence": "medium",
+     "evidence": "StartColourDissolve 95e20 stores frame counter [0x1f2a4c] here; ctor zeroes; PS2 +0x330 same methods. Name invented"
+    },
+    {
+     "offset": "0x334",
+     "size": 4,
+     "type": "uint",
+     "name": "viewDrawListKey",
+     "confidence": "low",
+     "evidence": "SetViewDrawList 955b0 passes &this->+0x334 with its unsigned arg to RSceneObj helper 8db50 (in/out param); Render reads it; ctor zeroes; PS2 identical. Name invented"
+    },
+    {
+     "offset": "0x338",
+     "size": 4,
+     "type": "float",
+     "name": "wheelFloat338",
+     "confidence": "low",
+     "evidence": "ctor zeroes, ComputeWheels writes a float; PS2 same. Name invented"
+    },
+    {
+     "offset": "0x348",
+     "size": 4,
+     "type": "void *",
+     "name": "viewDrawList",
+     "confidence": "low",
+     "evidence": "SetViewDrawList 955b0 stores the result of 8db50 here; Render reads; ctor zeroes; PS2 same. Name invented"
+    },
+    {
+     "offset": "0x34c",
+     "size": 4,
+     "type": "void *",
+     "name": "colourDissolveData",
+     "confidence": "medium",
+     "evidence": "StartColourDissolve clears it, then finds the 'di  ' (0x64692020) chunk for variation byte +0x1d and stores its data pointer; PS2 Render/StartColourDissolve R/W. Name invented"
+    },
+    {
+     "offset": "0x350",
+     "size": 4,
+     "type": "void *",
+     "name": "shadowModel",
+     "confidence": "medium",
+     "evidence": "EAGL::Model * (type not in Ghidra): this for EAGL::Model::Draw in RenderShadow 95b30/RenderShadowGeometry 96410; ctor zeroes; PS2 PostLoad sets it. Name invented"
+    },
+    {
+     "offset": "0x354",
+     "size": 4,
+     "type": "void *",
+     "name": "shadowVolumeModel",
+     "confidence": "medium",
+     "evidence": "EAGL::Model *: Xbox ctor zeroes only; PS2 RenderShadowVolume 1d3d48 -> EAGL::Model::SetModelMatrix/Draw, set in PostLoad. Name invented"
+    },
+    {
+     "offset": "0x358",
+     "size": 4,
+     "type": "RVehicleParticle *",
+     "name": "particles",
+     "confidence": "high",
+     "evidence": "ctor FastAllocs 0x4c and constructs RVehicleParticle(PVehicle*) into it (only when the PVehicle arg is non-null); RenderFX calls UpdateCar(1), TriggerTurboBoostSmoke -> TriggerTireSmoke; PS2 same"
+    },
+    {
+     "offset": "0x35c",
+     "size": 4,
+     "type": "float",
+     "name": "empShootingIntensity",
+     "confidence": "medium",
+     "evidence": "RenderFX passes it to REmp::DrawShootingEffect (9bb30) when > 0; ctor zeroes; sheet has SetEMPShootingEffect(float); PS2 float. Name invented"
+    },
+    {
+     "offset": "0x360",
+     "size": 1,
+     "type": "bool",
+     "name": "empVictimEffect",
+     "confidence": "high",
+     "evidence": "SetEMPVictimEffect(bool) 959d0 stores the byte arg; RenderFX tests and clears it; PS2 4-byte +0x360"
+    },
+    {
+     "offset": "0x364",
+     "size": 4,
+     "type": "uint",
+     "name": "empVictimStartTime",
+     "confidence": "medium",
+     "evidence": "SetEMPVictimEffect stores global [0x234e34] here; PS2 +0x364 W in SetEMPVictimEffect. Name invented"
+    },
+    {
+     "offset": "0x368",
+     "size": 4,
+     "type": "void *",
+     "name": "empBolts",
+     "confidence": "high",
+     "evidence": "REmpBolts * (type not in Ghidra): -> REmpBolts::Draw in Render, created in TriggerEmpBolts, deleted in ~RVehicle; PS2 also SetIntensityEmpBolts/CancelEmpBolts/~REmpBolts"
+    }
+   ]
+  },
+  {
+   "name": "RVehicleParticle",
+   "size": 76,
+   "base": null,
+   "vtable": "0x001930b0",
+   "comment": "per-car particle effects (14 RParticleSystems). 0x4c (FastAlloc 76, deleting dtor a8220). Xbox vptr at +0, PS2 vptr last (+0x48), so PS2 = Xbox - 4.",
+   "fields": [
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "void *",
+     "name": "emitterParams",
+     "confidence": "medium",
+     "evidence": "ctor a6de0 __builtin_vec_new(0x380) = 14 blocks of 0x40 (each: +0x20 COORD3, +0x2c from table 0x193020, +0x30 COORD3, +0x3c = 0xff), each passed to an RParticleSystem ctor; dtor __builtin_delete; PS2 +0x0. Name invented"
+    },
+    {
+     "offset": "0x8",
+     "size": 56,
+     "type": "void *[14]",
+     "name": "particleSystems",
+     "confidence": "high",
+     "evidence": "RParticleSystem * each: ctor loops 14x (table 0x193020..0x193058) FastAlloc(0x70) + RParticleSystem ctor a2140, storing at this+0x8+i*4; UpdateCar/dtor LEA +0x8; PS2 +0x4. void * because RParticleSystem may not exist in Ghidra"
+    },
+    {
+     "offset": "0x40",
+     "size": 4,
+     "type": "PVehicle *",
+     "name": "vehicle",
+     "confidence": "high",
+     "evidence": "ctor stores its PVehicle* arg (RVehicleParticle(PVehicle*)); TriggerSparks/UpdateCar read; PS2 +0x3c"
+    },
+    {
+     "offset": "0x44",
+     "size": 4,
+     "type": "int",
+     "name": "tireSmoke",
+     "confidence": "medium",
+     "evidence": "ctor zeroes; TriggerTireSmoke(int) a6f10 writes; UpdateCar R/W; PS2 +0x40 (Reset clears it). Name invented"
+    },
+    {
+     "offset": "0x48",
+     "size": 4,
+     "type": "float",
+     "name": "intensity",
+     "confidence": "low",
+     "evidence": "ctor = 1.0; TriggerTireSmoke/UpdateCar write a float; PS2 +0x44 float. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "RShadowMap",
+   "size": 88,
+   "base": "RViewCamera",
+   "vtable": "0x00192fd4",
+   "comment": "singleton shadow render target. 0x58 (FastAlloc 88, deleting dtor a6670). RViewCamera is a BASE (ctor a5ac0 runs RViewCamera ctor on this, then overwrites +0 with 0x192fd4), plus a second base USingleton<RShadowMap> whose vptr is at +0x4c. PS2 RViewCamera is 0x58 (vptr last): USingleton vptr at PS2 +0x58, then PS2 = Xbox + 0x10 (PS2 +0x5c unaccessed).",
+   "fields": [
+    {
+     "offset": "0x4c",
+     "size": 4,
+     "type": "void *",
+     "name": "vtableUSingleton",
+     "confidence": "high",
+     "evidence": "second vptr: ctor a5ac0 stores USingleton vtable 0x18beb0 then RShadowMap's 0x192fc8 (sheet 'RShadowMap::USingleton virtual table'); dtor restores; PS2 +0x58 (0x392768). RShadowMap : RViewCamera, USingleton<RShadowMap>"
+    },
+    {
+     "offset": "0x50",
+     "size": 4,
+     "type": "void *",
+     "name": "privateData",
+     "confidence": "high",
+     "evidence": "RShadowMap::ShadowPrivateData * (type not in Ghidra, 0x60 bytes on both builds): ctor operator new(0x60) + ShadowPrivateData ctor a5a50; used by Begin/Clear/Draw/SetCamera; PS2 +0x60 (-> ~ShadowPrivateData, GetTexture/GetShadowMatrix)"
+    },
+    {
+     "offset": "0x54",
+     "size": 4,
+     "type": "void *",
+     "name": "savedViewPort",
+     "confidence": "high",
+     "evidence": "EAGL::ViewPort *: ctor copies RViewCamera::viewPort (+0x18) here before replacing +0x18 with a new render-target viewport; dtor restores; PS2 +0x64 = old +0x14. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "RReflection",
+   "size": 84,
+   "base": "RViewCamera",
+   "vtable": "0x001926a4",
+   "comment": "singleton reflection/env-map camera. 0x54 (FastAlloc 84, deleting dtor 99cc0). RViewCamera is a BASE (ctor 994c0 overwrites +0 with 0x1926a4; base fields +0x4 camera, +0x18 viewPort, +0x3c active used by Begin). PS2 own fields at +0x58/+0x5c = Xbox + 0xc.",
+   "fields": [
+    {
+     "offset": "0x4c",
+     "size": 4,
+     "type": "void *",
+     "name": "privateData",
+     "confidence": "high",
+     "evidence": "RReflection::ReflPrivateData * (type not in Ghidra; FastAlloc 0x280 on Xbox, 0x220 on PS2): ctor 994c0 constructs it (98b60), sets its +0x270 COORD4 to (1,0,0,1) and +0x114 = viewPort; read by 18 methods (accessors Texture/TextureSpecular/GetReflectionMatrix...); PS2 +0x58"
+    },
+    {
+     "offset": "0x50",
+     "size": 4,
+     "type": "float",
+     "name": "nearestSubmitDistance",
+     "confidence": "medium",
+     "evidence": "ctor = 1e8 (0x4cbebc20); PrivateSubmitSceneObj/DeregisterSceneObj/ResetSceneObjDistances write a float; PS2 +0x5c same value. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "RGlareManager",
+   "size": 13376,
+   "base": null,
+   "vtable": "0x001931e0",
+   "comment": "singleton: Init 8b850 FastAllocs 0x3440 (13376: the 'constructed' size is this class itself) and stores it in 0x208cb4 (fgThis). The ctor also stores the flare texture in global 0x208cb0. Offsets identical on PS2 (vptr at +0 there too).",
+   "fields": [
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "float",
+     "name": "drawFloat14",
+     "confidence": "low",
+     "evidence": "DrawGlares aa5d0 writes a float; no PS2 counterpart confirmed. Name invented"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "undefined4",
+     "name": "draw18",
+     "confidence": "low",
+     "evidence": "DrawGlares writes a dword. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 8192,
+     "type": "Glare[128]",
+     "name": "glares",
+     "confidence": "high",
+     "evidence": "AddGlare a9c10: count < 0x80, copies 16 dwords into this+0x20+count*0x40 and sets its +0xc to 1.0; 128*0x40 ends exactly at +0x2020; DrawGlares LEA +0x30; PS2 +0x20 LEA DrawGlares. Glare = 64-byte copy of CARP::GlareData"
+    },
+    {
+     "offset": "0x2020",
+     "size": 4,
+     "type": "int",
+     "name": "numGlares",
+     "confidence": "high",
+     "evidence": "AddGlare/AddModelGlare increment, Reset a9ed0 and ctor zero; PS2 +0x2020 also ClearGlares"
+    },
+    {
+     "offset": "0x2024",
+     "size": 1,
+     "type": "bool",
+     "name": "glaresEnabled",
+     "confidence": "high",
+     "evidence": "ctor = 1; AddGlare returns early when 0; PS2 4-byte +0x2024 set by EnableGlares(bool)"
+    },
+    {
+     "offset": "0x2040",
+     "size": 5120,
+     "type": "RGlareType[80]",
+     "name": "glareTypes",
+     "confidence": "high",
+     "evidence": "ctor registers 'Render:Glare' attributes with stride 0x40 and 'Glare ID' max 0x4f (80 entries) on this+0x2044..+0x2070 (element 0 fields); ctor loop 0x50x writes 2.0 at +0x2070 stride 0x40 and 0.3 at +0x28b0/+0x28f0/+0x2d70 (types 33,34,52); 0x2040+80*0x40 = 0x3440 = allocation size. PS2 identical offsets"
+    }
+   ]
+  },
+  {
+   "name": "RGlareType",
+   "size": 64,
+   "base": null,
+   "vtable": null,
+   "comment": "name invented: one of RGlareManager's 80 attribute-driven glare types (stride 0x40). +0x0, +0x8..+0x13, +0x34..+0x3f probably UVs from CreateUVsFromTexIDs (not checked).",
+   "if_missing": true,
+   "fields": [
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "float",
+     "name": "haloSpin",
+     "confidence": "high",
+     "evidence": "attribute 'Halo Spin' (0x1931ac) registered on RGlareManager+0x2044 via 3a1f0 (dbattrib_float)"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "float",
+     "name": "spikeSpin",
+     "confidence": "high",
+     "evidence": "'Spike Spin' on +0x2054 (float)"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "uint",
+     "name": "haloColour",
+     "confidence": "medium",
+     "evidence": "'Halo Col' on +0x2058 via 3d530 (colour attribute, default from 0x209d21)"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "uint",
+     "name": "spikeColour",
+     "confidence": "medium",
+     "evidence": "'Spike Col' on +0x205c via 3d530"
+    },
+    {
+     "offset": "0x20",
+     "size": 4,
+     "type": "float",
+     "name": "haloSize",
+     "confidence": "high",
+     "evidence": "'Halo Size' on +0x2060 (float, default 10.0)"
+    },
+    {
+     "offset": "0x24",
+     "size": 4,
+     "type": "float",
+     "name": "spikeSize",
+     "confidence": "high",
+     "evidence": "'Spike Size' on +0x2064 (float)"
+    },
+    {
+     "offset": "0x28",
+     "size": 1,
+     "type": "byte",
+     "name": "haloTex",
+     "confidence": "high",
+     "evidence": "'Halo Tex' on +0x2068 via 3a0f0 (dbattrib_u8, max 9); CreateUVsFromTexIDs reads it"
+    },
+    {
+     "offset": "0x2c",
+     "size": 1,
+     "type": "byte",
+     "name": "spikeTex",
+     "confidence": "high",
+     "evidence": "'Spike Tex' on +0x206c via 3a0f0 (dbattrib_u8)"
+    },
+    {
+     "offset": "0x30",
+     "size": 4,
+     "type": "float",
+     "name": "zBias",
+     "confidence": "high",
+     "evidence": "'Z Bias' on +0x2070 (float); ctor defaults 2.0 for all 80 types, 0.3 for 33/34/52"
+    }
+   ]
+  },
+  {
+   "name": "Glare",
+   "size": 64,
+   "if_missing": true,
+   "fields": []
+  }
+ ],
+ "vtable_slots": [],
+ "returns": {
+  "0x953e0": "RVehicle *",
+  "0xa6de0": "RVehicleParticle *",
+  "0xa5ac0": "RShadowMap *",
+  "0x994c0": "RReflection *",
+  "0xa9c70": "RGlareManager *",
+  "0x95a80": "void",
+  "0x95b60": "void",
+  "0x8b850": "void"
+ },
+ "skip_prototypes": [],
+ "notes": [
+  "RShadowMap and RReflection: RViewCamera is a base class, not an embedded member (the derived ctor overwrites the vptr at +0 after RViewCamera::RViewCamera runs on this). RShadowMap also inherits USingleton<RShadowMap> (second vptr at Xbox +0x4c: 0x18beb0 then 0x192fc8; PS2 +0x58). RReflection has no USingleton vtable on either build although it has fgThis/Get.",
+  "PS2 RShadowMap leaves +0x5c unaccessed between the USingleton vptr (+0x58) and privateData (+0x60); probably padding or an unused word on the GCC side. Xbox has no gap.",
+  "RVehicleParticle Xbox ctor a6de0 has a garbled 3-parameter signature in Ghidra; it takes one stack arg (RET 0x4), the PVehicle*.",
+  "RGlareManager AddGlare a9c10 is AddGlare(CARP::GlareData&, float) with the float unused (RET 0x8); 'Glare' in Ghidra signatures is the 64-byte GlareData copy. The Glare placeholder is 0x40; if a Glare type already exists with another size, use byte[8192] for glares[].",
+  "RGlareManager 'Glare ID' attribute (0x1931c4) is registered via 38190 with max 0x4f and current-index global 0x209d24; the per-type attributes pass stride 0x40, so they edit glareTypes[glareId].",
+  "RVehicle offsets match PS2 exactly (derived-class fields after a vptr-last base); the only width difference is bool +0x360 (1 byte Xbox, 4 bytes PS2).",
+  "RVehicle +0x238/+0x248/+0x258 arrays are named from PS2 ComputeWheels/PostLoad LEAs only; Xbox ComputeWheels 96060 was not disassembled.",
+  "RShadowMap::Init 8beb0 and RGlareManager::Init 8b850 sit in a block of subsystem Init functions far from their classes' other methods; 8b850 checked (FastAlloc 0x3440 + ctor + store fgThis), names look right."
+ ]
+}

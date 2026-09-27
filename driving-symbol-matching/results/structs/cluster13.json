@@ -1,0 +1,687 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "ABaseSound",
+   "size": 192,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "vtable",
+     "comment": "high: ctor 1bfa0 stores vtable 0x18a510 (4 slots); ~ABaseSound 11c6f0 restores it. PS2 vptr is LAST (+0xac, ctor 2fcdb0 / dtor 2fcb28); MSVC puts it first and pads to 0x10 because the class is 16-byte aligned"
+    },
+    {
+     "offset": 16,
+     "type": "COORD3",
+     "name": "position",
+     "comment": "high: ctor zeroes +0x10/14/18; AVehicle::Play 11f9b0 takes its address. PS2 +0x0 SetPosition/SetPV/IsPlaying (Xbox = PS2+0x10). Vectors sit on a 16-byte stride (pad dword +0x1c never written)"
+    },
+    {
+     "offset": 32,
+     "type": "COORD3",
+     "name": "velocity",
+     "comment": "high: ctor zeroes +0x20..0x28; AVehicle CalculateSpeed 11eb50/Play take its address. PS2 +0x10 Get/SetVelocity, SetPV"
+    },
+    {
+     "offset": 48,
+     "type": "COORD3",
+     "name": "forward",
+     "comment": "high: ctor sets (0,0,1): +0x30/34=0, +0x38=1.0. PS2 +0x20 Get/SetForward, SetOrientation"
+    },
+    {
+     "offset": 64,
+     "type": "COORD3",
+     "name": "right",
+     "comment": "high: ctor +0x40/44=0, +0x48=1.0. PS2 +0x30 Get/SetRight, SetOrientation"
+    },
+    {
+     "offset": 80,
+     "type": "COORD3",
+     "name": "up",
+     "comment": "high: ctor +0x50/54=0, +0x58=1.0. PS2 +0x40 Get/SetUp, SetOrientation"
+    },
+    {
+     "offset": 96,
+     "type": "COORD3",
+     "name": "cameraAim",
+     "comment": "medium: not touched by the Xbox ctor (accessors inlined on Xbox); PS2 +0x50 Get/SetCameraAim (not in the PS2 ctor either), +0x10 shift like the other vectors"
+    },
+    {
+     "offset": 108,
+     "type": "float",
+     "name": "minDistance",
+     "comment": "high: ctor = 3.0; PS2 +0x5c Get/SetMinDistance"
+    },
+    {
+     "offset": 112,
+     "type": "float",
+     "name": "maxDistance",
+     "comment": "high: ctor = 350.0; PS2 +0x60 Get/SetMaxDistance"
+    },
+    {
+     "offset": 116,
+     "type": "float",
+     "name": "maxDistanceSq",
+     "comment": "high: ctor = 122500.0 (350^2); PS2 +0x64 GetMaxDistanceSq, written by SetMaxDistance"
+    },
+    {
+     "offset": 120,
+     "type": "float",
+     "name": "falloff",
+     "comment": "high: ctor = 0; PS2 +0x68 Get/SetFalloff"
+    },
+    {
+     "offset": 124,
+     "type": "float",
+     "name": "volume",
+     "comment": "high: ctor = 1.0; PS2 +0x6c Get/SetVolume"
+    },
+    {
+     "offset": 128,
+     "type": "float",
+     "name": "pitch",
+     "comment": "high: ctor = 1.0; PS2 +0x70 Get/SetPitch"
+    },
+    {
+     "offset": 132,
+     "type": "float[3]",
+     "name": "unk84",
+     "comment": "low: ctor sets +0x84/88/8c = 1.0 (a scale triple?). PS2 +0x74/78 unseen, +0x7c addr-taken in ctor 2fcdb0. Name invented"
+    },
+    {
+     "offset": 144,
+     "type": "bool",
+     "name": "unk90",
+     "comment": "low: ctor writes byte 0; PS2 +0x80 4-byte write in ctor (bool shrink). Name invented"
+    },
+    {
+     "offset": 148,
+     "type": "AMix *",
+     "name": "mix",
+     "comment": "high: ctor stores AMix::Add(name) result; ~ABaseSound reads it. PS2 +0x84 GetMix/SetMix/GetVolume, -> AMix::Add"
+    },
+    {
+     "offset": 152,
+     "type": "uint",
+     "name": "viewSet",
+     "comment": "high: ctor: 0 then |= (view==4 ? global 0x243940 : 1<<view); PS2 +0x88 GetViewSet"
+    },
+    {
+     "offset": 156,
+     "type": "char[16]",
+     "name": "name",
+     "comment": "medium: GetName 11c710 returns this+0x9c (PS2 GetName +0x8c); length from the gap to +0xac"
+    },
+    {
+     "offset": 172,
+     "type": "float",
+     "name": "fade",
+     "comment": "high: GetFade 11c750 computes fadeStep/fadeSteps into +0xac and returns it; StartFade zeroes it. PS2 +0x9c"
+    },
+    {
+     "offset": 176,
+     "type": "int",
+     "name": "fadeStep",
+     "comment": "high: StartFade 11c720 zeroes, GetFade increments and compares with +0xb4. PS2 +0xa0. Name invented"
+    },
+    {
+     "offset": 180,
+     "type": "int",
+     "name": "fadeSteps",
+     "comment": "high: StartFade(int) stores its argument; GetFade divisor. PS2 +0xa4. Name invented"
+    },
+    {
+     "offset": 184,
+     "type": "bool",
+     "name": "fading",
+     "comment": "high: StartFade sets 1, GetFade clears when done; PS2 +0xa8 IsFading (4 bytes on PS2)"
+    }
+   ],
+   "comment": "Audio base class (ABaseSound(char *name, AView view)). 16-byte aligned: Xbox vptr padded to 0x10, every PS2 field +0x10 on Xbox; PS2 size 0xb0 with vptr last at +0xac. Size from deleting dtor 1c090 (0xc0)."
+  },
+  {
+   "name": "ASceneObj",
+   "size": 208,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "ABaseSound",
+     "name": "super_ABaseSound"
+    },
+    {
+     "offset": 192,
+     "type": "bool",
+     "name": "flagC0",
+     "comment": "low: ctor 12e190 zeroes bytes +0xc0..0xc5 and sets +0xc5=1; AVehicle::Play 11f9b0 reads +0xc0..0xc3. PS2 AVehicle::Play reads ints +0xb0..0xbc (bools 4 bytes on PS2). Name invented"
+    },
+    {
+     "offset": 193,
+     "type": "bool",
+     "name": "flagC1",
+     "comment": "low: as flagC0 (PS2 +0xb4). Name invented"
+    },
+    {
+     "offset": 194,
+     "type": "bool",
+     "name": "flagC2",
+     "comment": "low: as flagC0 (PS2 +0xb8). Name invented"
+    },
+    {
+     "offset": 195,
+     "type": "bool",
+     "name": "flagC3",
+     "comment": "low: as flagC0 (PS2 +0xbc). Name invented"
+    },
+    {
+     "offset": 196,
+     "type": "bool",
+     "name": "flagC4",
+     "comment": "low: ctor 12e190 writes 0. Name invented"
+    },
+    {
+     "offset": 197,
+     "type": "bool",
+     "name": "flagC5",
+     "comment": "low: ctor 12e190 writes 1. Name invented"
+    }
+   ],
+   "comment": "Positional sound object. Ctor 12e190 = ABaseSound(name, view 4) + six bytes +0xc0..0xc5. Size 0xd0 from AVehicle's first own field (+0xd0 vehicleType, same on PS2 where six 4-byte bools end at 0xc8, padded to 0xd0)."
+  },
+  {
+   "name": "AStream",
+   "size": 208,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "ABaseSound",
+     "name": "super_ABaseSound"
+    },
+    {
+     "offset": 192,
+     "type": "void *",
+     "name": "priv",
+     "comment": "high: AStreamPriv*: ctor new(0x128)+ctor 0x122190; every accessor (IsOver, GetFile, GetInternalVolume, GetLatency, Stop...) forwards to it. PS2 +0xb0 (-> AStreamPriv::~AStreamPriv)"
+    },
+    {
+     "offset": 196,
+     "type": "int",
+     "name": "timerFreq10",
+     "comment": "low: ctor = TIMER_getfrequency()*10. PS2 own fields +0xb4/0xb8/0xbc (Play, QueryTime); exact mapping unproved. Name invented"
+    },
+    {
+     "offset": 200,
+     "type": "int",
+     "name": "unkC8",
+     "comment": "low: ctor zeroes. Name invented"
+    },
+    {
+     "offset": 204,
+     "type": "int",
+     "name": "unkCC",
+     "comment": "low: ctor zeroes. Name invented"
+    }
+   ],
+   "comment": "Streamed sound; Xbox keeps almost all state in AStreamPriv (+0xc0). PS2's many ctor writes are the inlined ABaseSound ctor; only PS2 +0xb0..0xbc are AStream's own, mapping to Xbox +0xc0..0xcc. Size from alloc/deleting dtor 0xd0."
+  },
+  {
+   "name": "AMix",
+   "size": 80,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AMix *",
+     "name": "master",
+     "comment": "medium: ClearMaster/SetMaster write it; GetVolume recurses through it (-> AMix::GetVolume). PS2 +0x0 same. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "float",
+     "name": "volume",
+     "comment": "medium: Add 11d6a0 zeroes; GetVolume/Revert/SetTransition. PS2 +0x4. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "float",
+     "name": "targetVolume",
+     "comment": "low: Add zeroes; Revert/SetTransition write. PS2 +0x8. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "float",
+     "name": "unkC",
+     "comment": "low: Add sets -1.0; PS2 ctor +0xc. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "float",
+     "name": "presetVolume",
+     "comment": "medium: Add sets -1.0; GetPresetVolume 11ca90 touches it; PS2 +0x10 GetPresetVolume"
+    },
+    {
+     "offset": 20,
+     "type": "float",
+     "name": "transitionStart",
+     "comment": "low: GetVolume/Revert/SetTransition(float,int); PS2 +0x14. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "float",
+     "name": "transitionStep",
+     "comment": "low: as +0x14; PS2 +0x18. Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "bool",
+     "name": "inTransition",
+     "comment": "medium: byte on Xbox (Add, GetVolume, Revert, SetTransition); PS2 +0x1c 4-byte. Name invented"
+    },
+    {
+     "offset": 36,
+     "type": "int",
+     "name": "unk24",
+     "comment": "low: Add zeroes; PS2 ctor +0x24. Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "int",
+     "name": "unk28",
+     "comment": "low: Add zeroes; PS2 ctor +0x28. Name invented"
+    },
+    {
+     "offset": 44,
+     "type": "float",
+     "name": "unk2c",
+     "comment": "low: Add sets 1.0; PS2 ctor +0x2c float. Name invented"
+    }
+   ],
+   "comment": "Named mix group, allocated 0x50 and initialised inline by AMix::Add 11d6a0, kept in a name index (0x11d610 list, 0x125270 lookup). No vptr; PS2 offsets identical except bool +0x1c. +0x30..0x4f unseen."
+  },
+  {
+   "name": "ABank",
+   "size": 24,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "data",
+     "comment": "high: ctors set 0; bank file loaded via 0x1176d0 then decoded buffer stored; ~ABank frees (MEM_free/UMemory::Free). PS2 +0x0. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "int",
+     "name": "unk4",
+     "comment": "low: ctors set -1; Remove reads. PS2 +0x4 ctor. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "int",
+     "name": "handle",
+     "comment": "medium: ctors set -1; ctor passes &this+0x8 to 0x13cef0 (bank open, out-param); IsPatchPresent 125ec0 passes it to 0x13cf20. PS2 +0x8 addr-taken. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "int",
+     "name": "status",
+     "comment": "high: ctor stores the open result (7 = ok) or -0x13 when the file fails to load; PS2 +0xc Status() const"
+    },
+    {
+     "offset": 16,
+     "type": "AIndex",
+     "name": "index",
+     "comment": "high: ctors construct AIndex at +0x10 (0x1279e0 / 0x1276c0 with path+name); ~ABank -> AIndex::~AIndex. Size = 24 - 0x10"
+    }
+   ],
+   "comment": "Sound bank (allocated 24). No vptr, same offsets on PS2."
+  },
+  {
+   "name": "AVehicle",
+   "size": 496,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "ASceneObj",
+     "name": "super_ASceneObj"
+    },
+    {
+     "offset": 208,
+     "type": "int",
+     "name": "vehicleType",
+     "comment": "high: AVehicle::Play 11f9b0 reads +0xd0; PS2 +0xd0 Get/SetVehicleType (AVehicle::VehicleType enum). Same offset on both builds"
+    },
+    {
+     "offset": 212,
+     "type": "int[4]",
+     "name": "surfaces",
+     "comment": "high: ctor loop writes 1 to +0xd4..0xe0; Play/PlayCollision/PlayLanding read them. PS2 +0xd4 SetSurface(int,SurfaceType)/GetSurface/IsInAir (ASceneObj::SurfaceType)"
+    },
+    {
+     "offset": 228,
+     "type": "int[4]",
+     "name": "wheelOnGround",
+     "comment": "medium: ctor loop writes 1 to +0xe4..0xf0; GetAirborneWheels 11ebf0 counts zero entries of +0xe4[4]; PlayLanding takes its address. PS2 +0xe4 addr-taken in ctor. Name invented"
+    },
+    {
+     "offset": 244,
+     "type": "float[4]",
+     "name": "compression",
+     "comment": "medium: no Xbox access seen (accessors inlined/dropped); PS2 +0xf4 Get/SetCompression(float*), and the fields either side have identical offsets on both builds"
+    },
+    {
+     "offset": 260,
+     "type": "float",
+     "name": "frontSlipTarget",
+     "comment": "medium: Reset/Play write; PS2 +0x104 SetFrontSlip writes it (GetFrontSlip reads +0x10c). Name invented"
+    },
+    {
+     "offset": 264,
+     "type": "float",
+     "name": "backSlipTarget",
+     "comment": "medium: Reset/Play; PS2 +0x108 SetBackSlip. Name invented"
+    },
+    {
+     "offset": 268,
+     "type": "float",
+     "name": "frontSlip",
+     "comment": "high: Reset/Play; PS2 +0x10c GetFrontSlip"
+    },
+    {
+     "offset": 272,
+     "type": "float",
+     "name": "backSlip",
+     "comment": "high: Reset/Play; PS2 +0x110 GetBackSlip"
+    },
+    {
+     "offset": 276,
+     "type": "float",
+     "name": "skidMultiple",
+     "comment": "high: ctor 11e2e0 = 1.0; PS2 +0x114 Get/SetSkidMultiple, ctor"
+    },
+    {
+     "offset": 280,
+     "type": "float",
+     "name": "gas",
+     "comment": "high: Reset writes; PS2 +0x118 Get/SetGas"
+    },
+    {
+     "offset": 284,
+     "type": "float",
+     "name": "rpm",
+     "comment": "high: CalculateRpm/Reset; PS2 +0x11c Get/SetRpm"
+    },
+    {
+     "offset": 288,
+     "type": "float",
+     "name": "rpmBase",
+     "comment": "medium: CalculateRpm 11ec80 adds +0x120 into the result; Play/Reset. PS2 +0x120 CalculateRpm/GetRpm. Name invented"
+    },
+    {
+     "offset": 292,
+     "type": "float[6]",
+     "name": "unk124",
+     "comment": "low: floats +0x124..0x138 written by Reset and Play on both builds; roles unknown. Name invented"
+    },
+    {
+     "offset": 316,
+     "type": "float",
+     "name": "speed",
+     "comment": "high: CalculateSpeed 11eb50 writes, CalculateRpm reads (log curve); PS2 +0x13c GetSpeed"
+    },
+    {
+     "offset": 320,
+     "type": "float",
+     "name": "carSpeed",
+     "comment": "high: no Xbox access seen; PS2 +0x140 Get/SetCarSpeed"
+    },
+    {
+     "offset": 324,
+     "type": "float[3]",
+     "name": "unk144",
+     "comment": "low: Reset/Play write floats +0x144/148/14c on both builds. Name invented"
+    },
+    {
+     "offset": 336,
+     "type": "float",
+     "name": "landingForce",
+     "comment": "high: PlayLanding writes; PS2 +0x150 Get/SetLandingForce"
+    },
+    {
+     "offset": 340,
+     "type": "bool",
+     "name": "hornHonk",
+     "comment": "medium: Reset/Play byte; PS2 +0x154 (4-byte bool) HonkHorn. Xbox bools pack: PS2 +0x154..0x168 -> Xbox +0x154..0x159"
+    },
+    {
+     "offset": 341,
+     "type": "bool",
+     "name": "flag155",
+     "comment": "low: Reset/Play; PS2 +0x158. Name invented"
+    },
+    {
+     "offset": 342,
+     "type": "bool",
+     "name": "flag156",
+     "comment": "low: Reset/Play; PS2 +0x15c. Name invented"
+    },
+    {
+     "offset": 343,
+     "type": "bool",
+     "name": "boost",
+     "comment": "medium: Reset writes; PS2 +0x160 SetBoost/Reset"
+    },
+    {
+     "offset": 344,
+     "type": "bool",
+     "name": "ignition",
+     "comment": "medium: Reset writes; PS2 +0x164 Get/SetIgnition"
+    },
+    {
+     "offset": 345,
+     "type": "bool",
+     "name": "altVoiceSet",
+     "comment": "low: ctor writes 0, then 1 on one branch that creates a different voice at +0x1a4; PS2 +0x168 ctor. Name invented"
+    },
+    {
+     "offset": 348,
+     "type": "int[4]",
+     "name": "patchIds",
+     "comment": "medium: ctor fills +0x15c..0x168 with AIndex lookups (0x126d40) on bank +0x194; Play reads. PS2 +0x16c..0x178 (-0x10 after the bool packing). Name invented"
+    },
+    {
+     "offset": 364,
+     "type": "int[3]",
+     "name": "unk16c",
+     "comment": "low: Play/PlayCollision/Reset; PS2 +0x17c..0x184. Name invented"
+    },
+    {
+     "offset": 376,
+     "type": "short",
+     "name": "terrain",
+     "comment": "high: ctor/Reset word write; PS2 +0x188 w2 Get/SetTerrain(short)"
+    },
+    {
+     "offset": 378,
+     "type": "bool",
+     "name": "gasButton",
+     "comment": "low: no Xbox access; PS2 +0x18c Get/SetGasButton; placed by packing four PS2 bools after terrain so the steering floats land at +0x180/0x184 and gun at +0x188 (matches Xbox)"
+    },
+    {
+     "offset": 379,
+     "type": "bool",
+     "name": "brakeButton",
+     "comment": "low: as gasButton; PS2 +0x190"
+    },
+    {
+     "offset": 380,
+     "type": "bool",
+     "name": "xyTrigger",
+     "comment": "low: as gasButton; PS2 +0x194"
+    },
+    {
+     "offset": 381,
+     "type": "bool",
+     "name": "xyReleaseTrigger",
+     "comment": "low: as gasButton; PS2 +0x198"
+    },
+    {
+     "offset": 384,
+     "type": "float",
+     "name": "steeringPadX",
+     "comment": "low: no Xbox access; PS2 +0x19c GetSteeringPadX/SetSteering"
+    },
+    {
+     "offset": 388,
+     "type": "float",
+     "name": "steeringPadY",
+     "comment": "low: no Xbox access; PS2 +0x1a0 GetSteeringPadY/SetSteering"
+    },
+    {
+     "offset": 392,
+     "type": "void *",
+     "name": "gun",
+     "comment": "high: AGun*: ctor zeroes, ActivateGun sets, dtor -> AGun::~AGun. PS2 +0x1a4 GetGun"
+    },
+    {
+     "offset": 396,
+     "type": "void *",
+     "name": "turret",
+     "comment": "high: ATurret*: ActivateTurret, dtor -> ATurret::~ATurret. PS2 +0x1a8 GetTurret"
+    },
+    {
+     "offset": 400,
+     "type": "void *",
+     "name": "zoomer",
+     "comment": "high: AZoomObj*: ActivateZoom, dtor -> AZoomObj::~AZoomObj. PS2 +0x1ac GetZoomer"
+    },
+    {
+     "offset": 404,
+     "type": "ABank *",
+     "name": "bank",
+     "comment": "medium: ctor copies global 0x1d839c; used for AIndex lookups (0x126d40) that fill patchIds; PlayCollision reads. PS2 +0x1b0 -> AIndex::Lookup. Name invented"
+    },
+    {
+     "offset": 408,
+     "type": "void *[14]",
+     "name": "voices",
+     "comment": "high: 14 AVoice* (operator new 0x58 + ctor 0x123ca0 with a mix from +0x1e4/1e8/1ec) stored at +0x198..0x1cc; Play -> AVoice::Play; dtor frees. PS2 +0x1b4..0x1e8 (14 slots)"
+    },
+    {
+     "offset": 464,
+     "type": "void *",
+     "name": "unk1d0",
+     "comment": "low: ctor zeroes; dtor -> FUN_0011ec10. PS2 +0x1ec. Name invented"
+    },
+    {
+     "offset": 468,
+     "type": "void *",
+     "name": "carAlarm",
+     "comment": "medium: ACarAlarm*: ctor zeroes, Play/dtor. PS2 +0x1f0 -> ACarAlarm::Play, StartAlarm"
+    },
+    {
+     "offset": 472,
+     "type": "void *",
+     "name": "wind",
+     "comment": "high: AVehicleWind*: ActivateWind, dtor -> AVehicleWind::~AVehicleWind. PS2 +0x1f4 GetWind"
+    },
+    {
+     "offset": 476,
+     "type": "void *",
+     "name": "horn",
+     "comment": "medium: AHorn*: ChooseHorn, CalculateRpm/CalculateSpeed test it. PS2 +0x1f8 -> AHorn::Play"
+    },
+    {
+     "offset": 480,
+     "type": "AMix *",
+     "name": "asphaltMix",
+     "comment": "high: ctor = AMix::Get(name); PS2 +0x1fc GetAsphaltMix"
+    },
+    {
+     "offset": 484,
+     "type": "AMix *",
+     "name": "offRoadMix",
+     "comment": "high: ctor = AMix::Get; voices created with it; Play -> AMix::GetVolume. PS2 +0x200 GetOffRoadMix"
+    },
+    {
+     "offset": 488,
+     "type": "AMix *",
+     "name": "mix1e8",
+     "comment": "medium: ctor = AMix::Get; mix of most voices; Play -> AMix::GetVolume. PS2 +0x204. Name invented"
+    },
+    {
+     "offset": 492,
+     "type": "AMix *",
+     "name": "mix1ec",
+     "comment": "medium: ctor = AMix::Get; mix of voices +0x1c4..0x1cc; PS2 +0x208. Name invented"
+    }
+   ],
+   "comment": "Vehicle engine/skid/voice sounds. Fields +0xd0..0x150 have identical offsets on both builds; bool packing at +0x154 (6 PS2 ints -> 6 bytes) shifts everything after by -0x10, then 4 more bools after terrain by a further -0xc (total -0x1c from +0x188). Size from deleting dtor 120d50; PS2 0x20c."
+  },
+  {
+   "name": "AIndex",
+   "size": 8,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster13.json)",
+   "if_missing": true
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x0001bfa0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "ABaseSound::ABaseSound(char *, AView)"
+  },
+  {
+   "address": "0x0001c090",
+   "calling_convention": "__thiscall",
+   "return": "ABaseSound *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0011c6f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ABaseSound::~ABaseSound(void)"
+  },
+  {
+   "address": "0x0011c710",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ABaseSound::GetName(void) const",
+   "return": "char *"
+  },
+  {
+   "address": "0x0011c720",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "ABaseSound::StartFade(int)",
+   "return": "void"
+  },
+  {
+   "address": "0x0011c750",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ABaseSound::GetFade(void)",
+   "return": "float"
+  }
+ ]
+}
