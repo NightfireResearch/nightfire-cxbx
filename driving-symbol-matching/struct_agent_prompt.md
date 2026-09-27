@@ -17,6 +17,7 @@ How to read an evidence file: each "+0xNNN" row is one this-relative offset seen
 - MSVC std::vector on this build is 16 bytes (allocator, first, last, end), GCC's 12; MSVC tree 12 bytes.
 - Array lengths can differ between builds (Simulation: 64 rigid bodies on Xbox, 48 on PS2).
 - Size: deleting destructor FastFree size, allocation size, or pool stride. "constructed" sizes can include derived classes; several allocation sizes under one tag usually mean subclasses.
+- Singletons often derive from USingleton<T> (a vptr-only base, vtable 0x18beb0, restored last by the destructor). With a second base the extra vptr sits after the first base's fields (RShadowMap: RViewCamera base, USingleton vptr at +0x4c). Globals holding singletons found so far: WCollisionMgr 0x239a70, WGrid 0x23b3a0, WTargetPicker (object) 0x23e1b0, Simulation (object) 0x233ff0, SMissionManager 0x239220, SWeaponManager 0x23923c, GHud 0x23f44c, RLightning 0x200f4c, RLightManager 0x1ec260, RGlareManager 0x208cb4.
 - A vtable store after a constructor's body can be exception-handling cleanup of an embedded member (Missile/RMissileStreak).
 - PS2 methods returning a struct by value take `this` in a1 (result buffer in a0).
 - Accessors can mislead (some read a global pool); Xbox 64-bit fields show as dword pairs; decompiler text hides/garbles offsets: prefer disassembly.
