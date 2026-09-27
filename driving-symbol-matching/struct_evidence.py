@@ -121,9 +121,12 @@ def x86_accesses(a, xn, require_ecx=False):
 
 
 def mips_accesses(a, pn):
-    this = {"a0"}
     acc = []
     ins = dis(g.PS2, a)
+    # A method returning a struct by value gets the result buffer in a0 (returned in v0) and `this` in a1.
+    body = [s.lstrip("_") for _, s in ins]
+    by_value = any(re.match(r"(move|daddu|addu|or)\s+v0,a0(,zero)?$", s) for s in body) and any(re.search(r"\(a1\)$", s) for s in body)
+    this = {"a1"} if by_value else {"a0"}
     for i, (addr, s) in enumerate(ins):
         s2 = s.lstrip("_")
         m = MIPS_MEM.match(s2)

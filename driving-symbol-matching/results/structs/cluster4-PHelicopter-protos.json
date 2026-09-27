@@ -1,0 +1,72 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0006d8f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "COORD3"
+    },
+    {
+     "name": "param_4",
+     "type": "COORD3"
+    }
+   ],
+   "sheet": "PHelicopter::PHelicopter(char *, float, COORD3, COORD3)",
+   "return": "PHelicopter *"
+  },
+  {
+   "address": "0x0006dc30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PHelicopter::GetControllerInput(void)"
+  },
+  {
+   "address": "0x0006dd10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint *"
+    }
+   ],
+   "sheet": "PHelicopter::GetDamageZones(unsigned int &)",
+   "return": "DamageZone *"
+  },
+  {
+   "address": "0x0006dd30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PHelicopter::Simulate(void)"
+  },
+  {
+   "address": "0x0006e290",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PHelicopter::~PHelicopter(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0006e300",
+   "calling_convention": "__thiscall",
+   "return": "PHelicopter *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

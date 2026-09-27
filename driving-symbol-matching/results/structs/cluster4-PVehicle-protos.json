@@ -1,0 +1,119 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0006f810",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "PVehicle::GetNamedAttribs(char *)"
+  },
+  {
+   "address": "0x0006f840",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "AttributeSet *"
+    }
+   ],
+   "sheet": "PVehicle::CarPhysicsAttrib(AttributeSet &)"
+  },
+  {
+   "address": "0x0006f860",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "AttributeSet *"
+    }
+   ],
+   "sheet": "PVehicle::RenderNameAttrib(AttributeSet &)"
+  },
+  {
+   "address": "0x0006f8c0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "AttributeSet *"
+    }
+   ],
+   "sheet": "PVehicle::NumColoursAttrib(AttributeSet &)"
+  },
+  {
+   "address": "0x0006f900",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "PVehicle::PVehicle(char *)",
+   "return": "PVehicle *"
+  },
+  {
+   "address": "0x0006f930",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "PVehicle::InitializeGlobals(void)"
+  },
+  {
+   "address": "0x00071000",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "PVehicle::MissionEditorSwitch(bool, int)",
+   "return": "void"
+  },
+  {
+   "address": "0x00071050",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PVehicle::~PVehicle(void)"
+  },
+  {
+   "address": "0x00071880",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "PVehicle::GetNameCount(void)"
+  },
+  {
+   "address": "0x000718a0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "PVehicle::NameToIndex(char *)"
+  },
+  {
+   "address": "0x000718e0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "PVehicle::GetCarNames(void)"
+  },
+  {
+   "address": "0x00071900",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "PVehicle::Shutdown(void)"
+  }
+ ]
+}
