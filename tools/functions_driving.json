@@ -25956,24 +25956,24 @@
         "namespace": "InputDevice"
     },
     {
-        "name": "FUN_00050e80",
+        "name": "InputDevice::DeadZoneChop",
         "address": "0x00050e80",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "float *32",
+            "float",
+            "float"
         ],
-        "prototype_string": "undefined FUN_00050e80(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "void __cdecl DeadZoneChop(float * value, float low, float high)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[float *32 value@Stack[0x4]:4]",
+            "[float low@Stack[0x8]:4]",
+            "[float high@Stack[0xc]:4]"
         ],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "InputDevice"
     },
     {
         "name": "InputDevice::scalar_deleting_destructor",
@@ -26206,16 +26206,16 @@
         "namespace": "XBoxPadDevice"
     },
     {
-        "name": "FUN_00051d80",
+        "name": "XBoxPadDevice::~XBoxPadDevice",
         "address": "0x00051d80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00051d80()",
+        "prototype_string": "undefined ~XBoxPadDevice()",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "Global"
+        "namespace": "XBoxPadDevice"
     },
     {
         "name": "XBoxPadDevice::XBoxPadDevice",
@@ -26236,7 +26236,7 @@
         "namespace": "XBoxPadDevice"
     },
     {
-        "name": "XBoxPadDevice::~XBoxPadDevice",
+        "name": "XBoxPadDevice::scalar_deleting_destructor",
         "address": "0x00051e60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -26244,7 +26244,7 @@
         "param_types": [
             "undefined1"
         ],
-        "prototype_string": "undefined ~XBoxPadDevice(undefined1 param_1)",
+        "prototype_string": "undefined scalar_deleting_destructor(undefined1 param_1)",
         "parameters": [
             "[undefined1 param_1@Stack[0x4]:1]"
         ],
@@ -79888,42 +79888,42 @@
     {
         "name": "PAD_getdataptr",
         "address": "0x00108480",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "PadData *32",
         "param_types": [
-            "undefined4"
+            "int"
         ],
-        "prototype_string": "undefined PAD_getdataptr(undefined4 param_1)",
+        "prototype_string": "PadData * __cdecl PAD_getdataptr(int port)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[int port@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "IOModule::PAD_update",
+        "name": "PAD_update",
         "address": "0x00108490",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [],
-        "prototype_string": "undefined PAD_update()",
+        "prototype_string": "void __cdecl PAD_update(void)",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "IOModule"
+        "namespace": "Global"
     },
     {
-        "name": "IOModule::PAD_init",
+        "name": "PAD_init",
         "address": "0x001086c0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [],
-        "prototype_string": "undefined PAD_init()",
+        "prototype_string": "void __cdecl PAD_init(void)",
         "parameters": [],
         "is_thunk": false,
-        "namespace": "IOModule"
+        "namespace": "Global"
     },
     {
         "name": "MOUSE_setbounds",

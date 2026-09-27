@@ -628,6 +628,11 @@ def generate_layouts(side):
         if name in done:
             return
         assert name not in chain, f"structure {name} contains itself: {' -> '.join(chain + [name])}"
+        # An overlay class embedded by value in another (XBoxPadDevice's DeviceScalar[20]) is fine when the overlay
+        # has the structure's own name: the containing class uses our class, which its header defines first.
+        if name in overlay_sources and [c for g, _, c, _ in uses if g == name] == [name]:
+            done.add(name)
+            return
         assert name not in overlay_sources and name not in overlays, (
             f"{name} is used both by XBE_FIELDS in an overlay class and embedded by value in another Ghidra "
             f"structure; the embedded use needs the generated struct. Drop the overlay, or make the containing field "

@@ -7216,6 +7216,55 @@
   ]
  },
  {
+  "name": "DeviceScalar",
+  "category": "/",
+  "size": 52,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "type",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 32,
+    "name": "name",
+    "type": "char[32]",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 4,
+    "name": "previous",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 40,
+    "size": 4,
+    "name": "current",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 44,
+    "size": 4,
+    "name": "extra1",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 48,
+    "size": 4,
+    "name": "extra2",
+    "type": "float *",
+    "bitfield": false
+   }
+  ]
+ },
+ {
   "name": "DrawArray",
   "category": "/EAGL",
   "size": 76,
@@ -11057,6 +11106,62 @@
   ]
  },
  {
+  "name": "InputDevice",
+  "category": "/",
+  "size": 28,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "vtable",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "scalars",
+    "type": "DeviceScalar *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "previous",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "current",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "extra1",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "extra2",
+    "type": "float *",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "port",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
   "name": "InputToAction",
   "category": "/",
   "size": 16,
@@ -12751,6 +12856,90 @@
   ]
  },
  {
+  "name": "PadData",
+  "category": "/",
+  "size": 144,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 16,
+    "name": "sticks",
+    "type": "float[4]",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 2,
+    "name": "buttons",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 18,
+    "size": 8,
+    "name": "analog",
+    "type": "byte[8]",
+    "bitfield": false
+   },
+   {
+    "offset": 26,
+    "size": 2,
+    "name": "buttonsPressed",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 8,
+    "name": "analogPressed",
+    "type": "byte[8]",
+    "bitfield": false
+   },
+   {
+    "offset": 106,
+    "size": 2,
+    "name": "unknown6a",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 108,
+    "size": 2,
+    "name": "unknown6c",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 110,
+    "size": 26,
+    "name": "capabilities",
+    "type": "byte[26]",
+    "bitfield": false
+   },
+   {
+    "offset": 136,
+    "size": 4,
+    "name": "handle",
+    "type": "void *",
+    "bitfield": false
+   },
+   {
+    "offset": 140,
+    "size": 1,
+    "name": "inserted",
+    "type": "bool",
+    "bitfield": false
+   },
+   {
+    "offset": 141,
+    "size": 1,
+    "name": "removed",
+    "type": "bool",
+    "bitfield": false
+   }
+  ]
+ },
+ {
   "name": "PathInfo",
   "category": "/CARP",
   "size": 1,
@@ -13724,7 +13913,7 @@
     "offset": 0,
     "size": 4,
     "name": "vtable",
-    "type": "pointer",
+    "type": "void *",
     "bitfield": false
    },
    {
@@ -13759,7 +13948,7 @@
     "offset": 8228,
     "size": 1,
     "name": "enabled",
-    "type": "byte",
+    "type": "bool",
     "bitfield": false
    },
    {
@@ -23095,44 +23284,44 @@
   "fields": [
    {
     "offset": 0,
-    "size": 4,
-    "name": "field0_0x0",
-    "type": "undefined * *",
+    "size": 28,
+    "name": "super_InputDevice",
+    "type": "InputDevice",
     "bitfield": false
    },
    {
-    "offset": 4,
-    "size": 4,
-    "name": "field1_0x4",
-    "type": "undefined *",
+    "offset": 28,
+    "size": 1040,
+    "name": "scalarStorage",
+    "type": "DeviceScalar[20]",
     "bitfield": false
    },
    {
-    "offset": 8,
-    "size": 4,
-    "name": "field2_0x8",
-    "type": "undefined *",
+    "offset": 1068,
+    "size": 80,
+    "name": "previousValues",
+    "type": "float[20]",
     "bitfield": false
    },
    {
-    "offset": 12,
-    "size": 4,
-    "name": "field3_0xc",
-    "type": "undefined *",
+    "offset": 1148,
+    "size": 80,
+    "name": "currentValues",
+    "type": "float[20]",
     "bitfield": false
    },
    {
-    "offset": 16,
-    "size": 4,
-    "name": "field4_0x10",
-    "type": "undefined *",
+    "offset": 1228,
+    "size": 80,
+    "name": "extra1Values",
+    "type": "float[20]",
     "bitfield": false
    },
    {
-    "offset": 20,
-    "size": 4,
-    "name": "field5_0x14",
-    "type": "undefined *",
+    "offset": 1308,
+    "size": 80,
+    "name": "extra2Values",
+    "type": "float[20]",
     "bitfield": false
    }
   ]

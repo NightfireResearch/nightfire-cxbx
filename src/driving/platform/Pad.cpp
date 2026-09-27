@@ -39,7 +39,7 @@ typedef void (__cdecl *SyncTaskAddFn)(void *task, int a, int b);
 #define kPAD_updateOriginal ((void *)0x00108490)   // patched to jump to PAD_update below
 
 // AUTOINJECT
-PadData *PAD_getdataptr(int port) {
+PadData* PAD_getdataptr(int port) {
     return &gPads[port];
 }
 
