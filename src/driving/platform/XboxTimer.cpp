@@ -7,7 +7,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 // The tick source, which standalone becomes ours - docs/driving-engine-plan.md section 2.
 //
-// Timer_Init (0x0010ae50) asks for a periodic callback at the video refresh rate:
+// TIMER_init (0x0010ae50) asks for a periodic callback at the video refresh rate:
 //
 //     SysTimerHandle = timeSetEvent(1000 / freqHz, 0, TIMER_ontick, 0, TIME_PERIODIC);
 //
@@ -33,7 +33,7 @@
 // this even is step 4 of the plan's order of work, and is a measurement to make once the engine runs - not a
 // reason to change anything here.
 //
-// The one caller is Timer_Init, and nothing kills the timer afterwards (Timer_Active is set once and never
+// The one caller is TIMER_init, and nothing kills the timer afterwards (Timer_Active is set once and never
 // cleared), so there is no timeKillEvent to match.
 // ---------------------------------------------------------------------------------------------------------------
 

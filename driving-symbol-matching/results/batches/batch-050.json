@@ -1,0 +1,25 @@
+{
+ "batch": "050",
+ "program": "Driving.xbe",
+ "note": "Version Tracking round 4 review.",
+ "items": [
+  {
+   "xbox": "0x000b9eb0",
+   "expect": "FUN_000b9eb0",
+   "name": "SRuleHealth::CheckRule",
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "SRuleHealth::CheckRule (PS2 0x20a1f8). Version Tracking BSim candidate; sits between SRuleAmmo::CheckRule (0xb9db0) and SRuleTimer::CheckRule (0xba0f0) as on PS2, and like PS2 calls AIElementController::GetStats then reads the target's health (PS2 SMissionRuleTarget::GetHealth, inlined on Xbox through GetCarpElementTracking).",
+   "evidence": []
+  },
+  {
+   "xbox": "0x0010ae50",
+   "expect": "Timer_Init",
+   "name": "TIMER_init",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "TIMER_init (PS2 TIMER_init). Starts the periodic game tick (XAPILIB timeSetEvent at the video refresh rate on Xbox). Renamed from Timer_Init to the canonical spelling used by the rest of the TIMER_ family.",
+   "evidence": []
+  }
+ ]
+}

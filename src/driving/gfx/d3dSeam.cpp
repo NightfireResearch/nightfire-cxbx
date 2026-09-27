@@ -58,7 +58,7 @@ static XbeEntrySeam g_seam = { g_entries, sizeof(g_entries) / sizeof(g_entries[0
 // stack holds a dword - the conversion happens here, so the backend stays free of Xbox-isms it does not need.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The game's tick rate, as Timer_Init (0x0010ae50) left it: 50 on a PAL video mode, 60 on an NTSC one.
+// The game's tick rate, as TIMER_init (0x0010ae50) left it: 50 on a PAL video mode, 60 on an NTSC one.
 #define GameTimerFrequency (*(const uint32_t *)0x00242424u)
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -124,7 +124,7 @@ static uint32_t __stdcall Seam_Direct3D_CreateDevice(uint32_t adapter, uint32_t 
     // The backend paces Present to the refresh rate in the present parameters, standing in for the vertical
     // blank an Xbox Swap would have waited for. EAGL leaves that field zero unless the game asked for a
     // particular rate, which would mean no pacing at all - so where it is zero, the video mode's own rate is
-    // what it means, and that is the rate Timer_Init already derived.
+    // what it means, and that is the rate TIMER_init already derived.
     uint32_t *parameters = (uint32_t *)presentationParameters;
     // Word 4 is MultiSampleType. The NV2A's visibility tests count samples, not pixels, so the lens flare's
     // arithmetic depends on it (RLensFlareManager::DrawFlares, plan section 3).
