@@ -233,6 +233,8 @@ add_library(drivinginject SHARED
   src/driving/devtools/Teleport.cpp
   src/driving/engine/UFileLoader.cpp
   src/driving/engine/ActionQueue.cpp
+  src/driving/engine/InputDevice.cpp
+  src/driving/platform/Pad.cpp
   src/common/xboxPath.cpp
   src/driving/platform/XboxStartup.cpp
   src/driving/platform/XboxTimer.cpp

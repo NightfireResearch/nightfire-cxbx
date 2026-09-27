@@ -1,23 +1,29 @@
 {
- "generated": "Sun Sep 27 18:23:23 2026",
+ "generated": "Sun Sep 27 18:44:29 2026",
  "moves": [
   {
    "program": "Driving.xbe",
-   "address": "0x000a1ec0",
-   "name": "ActionRef::ActionRef",
-   "batch": "052"
+   "address": "0x00050e80",
+   "name": "InputDevice::DeadZoneChop",
+   "batch": "053"
   },
   {
    "program": "Driving.xbe",
-   "address": "0x0004f1c0",
-   "name": "ActionQueueRing::Push",
-   "batch": "052"
+   "address": "0x00108490",
+   "name": "PAD_update",
+   "batch": "053"
   },
   {
    "program": "Driving.xbe",
-   "address": "0x0004f2d0",
-   "name": "ActionQueueRing::ActionQueueRing",
-   "batch": "052"
+   "address": "0x001086c0",
+   "name": "PAD_init",
+   "batch": "053"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x00051d80",
+   "name": "XBoxPadDevice::~XBoxPadDevice",
+   "batch": "054"
   },
   {
    "program": "DRIVING.ELF",

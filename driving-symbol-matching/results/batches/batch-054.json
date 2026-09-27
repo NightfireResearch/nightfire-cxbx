@@ -1,0 +1,16 @@
+{
+ "batch": "054",
+ "program": "Driving.xbe",
+ "note": "Input layer, devices (second step).",
+ "items": [
+  {
+   "xbox": "0x00051d80",
+   "expect": "FUN_00051d80",
+   "name": "XBoxPadDevice::~XBoxPadDevice",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "XBoxPadDevice::~XBoxPadDevice: restores XBoxPadDevice's vtable (0x18db38) and tail-calls InputDevice::~InputDevice.",
+   "evidence": []
+  }
+ ]
+}

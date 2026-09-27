@@ -12,4 +12,9 @@ public:
     // Zero-fills the block and gives it back.
     // AUTOGEN
     static void Free(void *block);
+
+    // Gives back a block from the fixed-size pools, of the size it was allocated with (the sized operator delete
+    // every class's deleting destructor calls).
+    // AUTOGEN
+    static void FastFree(void *block, unsigned int size);
 };

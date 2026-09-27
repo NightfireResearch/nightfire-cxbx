@@ -1,0 +1,45 @@
+{
+ "batch": "053",
+ "program": "Driving.xbe",
+ "note": "Input layer, devices.",
+ "items": [
+  {
+   "xbox": "0x00050e80",
+   "expect": "FUN_00050e80",
+   "name": "InputDevice::DeadZoneChop",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "InputDevice::DeadZoneChop(float &, float, float) (static). Zeroes the value when it lies strictly between the two bounds; XBoxPadDevice::PollDevice applies it to the four stick axes with -0.4 and 0.4.",
+   "evidence": []
+  },
+  {
+   "xbox": "0x00051e60",
+   "expect": "XBoxPadDevice::~XBoxPadDevice",
+   "name": "XBoxPadDevice::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "XBoxPadDevice's scalar deleting destructor (vtable slot 0): runs the destructor (0x51d80) and, with flags bit 0, frees the 0x56c bytes through UMemory::FastFree. Was labelled ~XBoxPadDevice.",
+   "evidence": []
+  },
+  {
+   "xbox": "0x00108490",
+   "expect": "IOModule::PAD_update",
+   "name": "PAD_update",
+   "create": false,
+   "allow_duplicate": false,
+   "move_to_global": true,
+   "plate_base": "PAD_update (EA's input library, librealinputz; not an IOModule member). Polls XAPI for insertions and removals, opens and closes pads, and reads each open pad into its 0x90-byte record at 0x241c50 (+0x90 per port): stick floats with a 0.25 deadzone, buttons and newly pressed buttons, analogue bytes and their press edges. Registered as a SYNCTASK by PAD_init and also called by IOModule::Update.",
+   "evidence": []
+  },
+  {
+   "xbox": "0x001086c0",
+   "expect": "IOModule::PAD_init",
+   "name": "PAD_init",
+   "create": false,
+   "allow_duplicate": false,
+   "move_to_global": true,
+   "plate_base": "PAD_init (EA's input library, librealinputz; not an IOModule member). Once: clears the four pad records, opens every gamepad XGetDevices reports (handle and capabilities into its record), and adds PAD_update as a SYNCTASK.",
+   "evidence": []
+  }
+ ]
+}
