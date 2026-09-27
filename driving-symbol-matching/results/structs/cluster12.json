@@ -265,105 +265,49 @@
    "size": 13376,
    "fields": [
     {
+     "offset": 0,
+     "type": "void *",
+     "name": "vtable",
+     "comment": "high: restored: the layout src/driving/render/RGlareManager.cpp was written and tested against (DrawGlares indexes types from +0x2038; each GlareType starts with the halo GlareSprite u,v,uvSize,spin)"
+    },
+    {
      "offset": 20,
      "type": "float",
-     "name": "drawFloat14",
-     "comment": "low: DrawGlares aa5d0 writes a float; no PS2 counterpart confirmed. Name invented"
+     "name": "screenScale",
+     "comment": "high: restored: the layout src/driving/render/RGlareManager.cpp was written and tested against (DrawGlares indexes types from +0x2038; each GlareType starts with the halo GlareSprite u,v,uvSize,spin)"
     },
     {
      "offset": 24,
-     "type": "undefined4",
-     "name": "draw18",
-     "comment": "low: DrawGlares writes a dword. Name invented"
+     "type": "float",
+     "name": "farDepth",
+     "comment": "high: restored: the layout src/driving/render/RGlareManager.cpp was written and tested against (DrawGlares indexes types from +0x2038; each GlareType starts with the halo GlareSprite u,v,uvSize,spin)"
     },
     {
      "offset": 32,
      "type": "Glare[128]",
      "name": "glares",
-     "comment": "high: AddGlare a9c10: count < 0x80, copies 16 dwords into this+0x20+count*0x40 and sets its +0xc to 1.0; 128*0x40 ends exactly at +0x2020; DrawGlares LEA +0x30; PS2 +0x20 LEA DrawGlares. Glare = 64-byte copy of CARP::GlareData"
+     "comment": "high: restored: the layout src/driving/render/RGlareManager.cpp was written and tested against (DrawGlares indexes types from +0x2038; each GlareType starts with the halo GlareSprite u,v,uvSize,spin)"
     },
     {
      "offset": 8224,
      "type": "int",
-     "name": "numGlares",
-     "comment": "high: AddGlare/AddModelGlare increment, Reset a9ed0 and ctor zero; PS2 +0x2020 also ClearGlares"
+     "name": "glareCount",
+     "comment": "high: restored: the layout src/driving/render/RGlareManager.cpp was written and tested against (DrawGlares indexes types from +0x2038; each GlareType starts with the halo GlareSprite u,v,uvSize,spin)"
     },
     {
      "offset": 8228,
      "type": "bool",
-     "name": "glaresEnabled",
-     "comment": "high: ctor = 1; AddGlare returns early when 0; PS2 4-byte +0x2024 set by EnableGlares(bool)"
+     "name": "enabled",
+     "comment": "high: restored: the layout src/driving/render/RGlareManager.cpp was written and tested against (DrawGlares indexes types from +0x2038; each GlareType starts with the halo GlareSprite u,v,uvSize,spin)"
     },
     {
-     "offset": 8256,
-     "type": "RGlareType[80]",
-     "name": "glareTypes",
-     "comment": "high: ctor registers 'Render:Glare' attributes with stride 0x40 and 'Glare ID' max 0x4f (80 entries) on this+0x2044..+0x2070 (element 0 fields); ctor loop 0x50x writes 2.0 at +0x2070 stride 0x40 and 0.3 at +0x28b0/+0x28f0/+0x2d70 (types 33,34,52); 0x"
+     "offset": 8248,
+     "type": "GlareType[80]",
+     "name": "types",
+     "comment": "high: restored: the layout src/driving/render/RGlareManager.cpp was written and tested against (DrawGlares indexes types from +0x2038; each GlareType starts with the halo GlareSprite u,v,uvSize,spin)"
     }
    ],
-   "comment": "singleton: Init 8b850 FastAllocs 0x3440 (13376: the 'constructed' size is this class itself) and stores it in 0x208cb4 (fgThis). The ctor also stores the flare texture in global 0x208cb0. Offsets identical on PS2 (vptr at +0 there too)."
-  },
-  {
-   "name": "RGlareType",
-   "size": 64,
-   "fields": [
-    {
-     "offset": 4,
-     "type": "float",
-     "name": "haloSpin",
-     "comment": "high: attribute 'Halo Spin' (0x1931ac) registered on RGlareManager+0x2044 via 3a1f0 (dbattrib_float)"
-    },
-    {
-     "offset": 20,
-     "type": "float",
-     "name": "spikeSpin",
-     "comment": "high: 'Spike Spin' on +0x2054 (float)"
-    },
-    {
-     "offset": 24,
-     "type": "uint",
-     "name": "haloColour",
-     "comment": "medium: 'Halo Col' on +0x2058 via 3d530 (colour attribute, default from 0x209d21)"
-    },
-    {
-     "offset": 28,
-     "type": "uint",
-     "name": "spikeColour",
-     "comment": "medium: 'Spike Col' on +0x205c via 3d530"
-    },
-    {
-     "offset": 32,
-     "type": "float",
-     "name": "haloSize",
-     "comment": "high: 'Halo Size' on +0x2060 (float, default 10.0)"
-    },
-    {
-     "offset": 36,
-     "type": "float",
-     "name": "spikeSize",
-     "comment": "high: 'Spike Size' on +0x2064 (float)"
-    },
-    {
-     "offset": 40,
-     "type": "byte",
-     "name": "haloTex",
-     "comment": "high: 'Halo Tex' on +0x2068 via 3a0f0 (dbattrib_u8, max 9); CreateUVsFromTexIDs reads it"
-    },
-    {
-     "offset": 44,
-     "type": "byte",
-     "name": "spikeTex",
-     "comment": "high: 'Spike Tex' on +0x206c via 3a0f0 (dbattrib_u8)"
-    },
-    {
-     "offset": 48,
-     "type": "float",
-     "name": "zBias",
-     "comment": "high: 'Z Bias' on +0x2070 (float); ctor defaults 2.0 for all 80 types, 0.3 for 33/34/52"
-    }
-   ],
-   "comment": "name invented: one of RGlareManager's 80 attribute-driven glare types (stride 0x40). +0x0, +0x8..+0x13, +0x34..+0x3f probably UVs from CreateUVsFromTexIDs (not checked).",
-   "if_missing": true
+   "comment": "Restored to the verified layout (types: GlareType[80] at +0x2038); cluster12's first version put RGlareType[80] at +0x2040 and dropped the sprites' u/v/size."
   },
   {
    "name": "Glare",

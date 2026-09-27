@@ -6,6 +6,9 @@
 // PS2's VU0 code - and read and write four floats, keeping the destination's fourth; so every vector handed to
 // them is a 16-byte-aligned Vec4, as the originals' callers' locals are. All are __cdecl.
 
+// MATRIX4 is used by value here (locals built by BuildRotate), so its definition is asked of the generator.
+// XBE_NEEDS(MATRIX4)
+
 struct alignas(16) Vec4 {
     float x, y, z, w;
 };

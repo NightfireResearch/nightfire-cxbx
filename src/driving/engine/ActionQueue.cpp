@@ -1,5 +1,7 @@
 #include "ActionQueue.hpp"
 
+#include <stdio.h>
+
 // While this is 0, action 0x1f is not delivered to anyone (FeedQueue, 0x0004f371). Written elsewhere in the game.
 #define gAllowAction31 (*(int *)0x00234e34)
 
@@ -22,7 +24,7 @@ static void RingPush(ActionQueueRing *ring, const ActionData *action) {
 }
 
 // FUNC_AT(0x0004f320)
-ActionQueue *ActionQueue::Construct(char *name) {
+ActionQueue* ActionQueue::Construct(char *name) {
     (void)name;
     // ActionQueueRing's constructor (0x0004f2d0): every slot ActionData(0, 0, 0), and the ring empty.
     for (int i = 0; i < kRingCapacity; i++) {
@@ -77,7 +79,7 @@ void ActionQueue::Flush() {
 }
 
 // FUNC_AT(0x0004f290)
-ActionRef *ActionQueue::GetAction(ActionRef *result) {
+ActionRef* ActionQueue::GetAction(ActionRef *result) {
     result->data = ring.count > 0 ? &ring.items[ring.head] : nullptr;
     return result;
 }
@@ -109,6 +111,16 @@ void ActionQueueManager::FeedQueue(ActionData action) {
         return;
     for (ActionQueue **it = queuesFirst; it < queuesLast; it++)
         (*it)->ReceiveAction(&action);
+
+    // One log line the first time each action id is delivered: enough to see the input layer working (START in
+    // play is 0x47, pause) without a line per frame.
+    static bool seen[256];
+    unsigned id = (unsigned)action.action & 0xff;
+    if (!seen[id]) {
+        seen[id] = true;
+        printf("[input] action 0x%02x first delivered: value %.2f, source %d, to %d queues\n", action.action,
+               action.value, action.source, (int)(queuesLast - queuesFirst));
+    }
 }
 
 // AUTOINJECT

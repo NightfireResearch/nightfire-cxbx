@@ -29,6 +29,12 @@
   ],
   "constructed": []
  },
+ "AGun": {
+  "allocated": [],
+  "constructed": [
+   124
+  ]
+ },
  "AHelicopter": {
   "allocated": [
    784
@@ -57,10 +63,52 @@
    336
   ]
  },
+ "AICharacterEnemyDriver": {
+  "allocated": [],
+  "constructed": [
+   336
+  ]
+ },
+ "AICharacterEnemyGround": {
+  "allocated": [],
+  "constructed": [
+   448
+  ]
+ },
+ "AICharacterEnemySnow": {
+  "allocated": [],
+  "constructed": [
+   368
+  ]
+ },
+ "AICharacterEnemySunroof": {
+  "allocated": [],
+  "constructed": [
+   368
+  ]
+ },
+ "AICharacterEnemyWindow": {
+  "allocated": [],
+  "constructed": [
+   352
+  ]
+ },
  "AICharacterPassenger": {
   "allocated": [],
   "constructed": [
    336
+  ]
+ },
+ "AIElementController": {
+  "allocated": [],
+  "constructed": [
+   88
+  ]
+ },
+ "AISplinePath": {
+  "allocated": [],
+  "constructed": [
+   176
   ]
  },
  "AIndexMap": {
@@ -171,6 +219,12 @@
   ],
   "constructed": []
  },
+ "ATargeting": {
+  "allocated": [],
+  "constructed": [
+   12
+  ]
+ },
  "ATrafficVehicle": {
   "allocated": [
    576
@@ -188,6 +242,12 @@
    560
   ],
   "constructed": []
+ },
+ "AVehicleWind": {
+  "allocated": [],
+  "constructed": [
+   36
+  ]
  },
  "AVoice": {
   "allocated": [
@@ -225,6 +285,12 @@
   ],
   "constructed": []
  },
+ "ActCharacterInfo": {
+  "allocated": [],
+  "constructed": [
+   220
+  ]
+ },
  "ActCrossFadeBlendData": {
   "allocated": [
    304
@@ -242,6 +308,18 @@
    148
   ],
   "constructed": []
+ },
+ "ActGlobalPoseOverrideArray": {
+  "allocated": [],
+  "constructed": [
+   28
+  ]
+ },
+ "ActIKSolverArray": {
+  "allocated": [],
+  "constructed": [
+   24
+  ]
  },
  "ActModel": {
   "allocated": [
@@ -375,7 +453,9 @@
   "allocated": [
    28
   ],
-  "constructed": []
+  "constructed": [
+   28
+  ]
  },
  "DrawArray": {
   "allocated": [
@@ -387,19 +467,31 @@
   "allocated": [
    156
   ],
-  "constructed": []
+  "constructed": [
+   156
+  ]
  },
  "DynamicLoader": {
   "allocated": [
    28
   ],
-  "constructed": []
+  "constructed": [
+   28
+  ]
  },
  "DynamicModel": {
   "allocated": [
    88
   ],
-  "constructed": []
+  "constructed": [
+   88
+  ]
+ },
+ "EAICommand": {
+  "allocated": [],
+  "constructed": [
+   32
+  ]
  },
  "EChangeMaxTraffic": {
   "allocated": [],
@@ -411,6 +503,24 @@
   "allocated": [],
   "constructed": [
    8
+  ]
+ },
+ "ECollision": {
+  "allocated": [],
+  "constructed": [
+   88
+  ]
+ },
+ "EExit": {
+  "allocated": [],
+  "constructed": [
+   4
+  ]
+ },
+ "EForceNearPedRespawn": {
+  "allocated": [],
+  "constructed": [
+   12
   ]
  },
  "EGLRTShape": {
@@ -461,6 +571,12 @@
    12
   ]
  },
+ "EStopTimer": {
+  "allocated": [],
+  "constructed": [
+   8
+  ]
+ },
  "EventBuffer": {
   "allocated": [
    32768
@@ -497,11 +613,29 @@
   ],
   "constructed": []
  },
+ "GFXGallery": {
+  "allocated": [],
+  "constructed": [
+   5168
+  ]
+ },
  "GFXParticleSystems": {
   "allocated": [
    2048
   ],
   "constructed": []
+ },
+ "GGallery": {
+  "allocated": [],
+  "constructed": [
+   192
+  ]
+ },
+ "GGirlieMaterial": {
+  "allocated": [],
+  "constructed": [
+   208
+  ]
  },
  "GHud": {
   "allocated": [],
@@ -523,6 +657,12 @@
   ],
   "constructed": [
    6864
+  ]
+ },
+ "GeoPrimStateExtension": {
+  "allocated": [],
+  "constructed": [
+   76
   ]
  },
  "Grenade": {
@@ -554,6 +694,12 @@
    4
   ],
   "constructed": []
+ },
+ "IniFiles": {
+  "allocated": [],
+  "constructed": [
+   12
+  ]
  },
  "InputToAction": {
   "allocated": [
@@ -631,7 +777,9 @@
   "allocated": [
    48
   ],
-  "constructed": []
+  "constructed": [
+   48
+  ]
  },
  "RAutonomousObj": {
   "allocated": [
@@ -650,6 +798,12 @@
    192
   ],
   "constructed": []
+ },
+ "RCameraIniLoader": {
+  "allocated": [],
+  "constructed": [
+   1
+  ]
  },
  "RCameraSpline": {
   "allocated": [
@@ -686,6 +840,19 @@
    20
   ],
   "constructed": []
+ },
+ "RDirectorQueueData": {
+  "allocated": [],
+  "constructed": [
+   40,
+   48
+  ]
+ },
+ "REmpBolts": {
+  "allocated": [],
+  "constructed": [
+   556
+  ]
  },
  "RFog": {
   "allocated": [],
@@ -729,6 +896,12 @@
   ],
   "constructed": []
  },
+ "ROffscreenBuffer": {
+  "allocated": [],
+  "constructed": [
+   32
+  ]
+ },
  "RPartLibraryList": {
   "allocated": [
    45072
@@ -758,6 +931,13 @@
    4208
   ],
   "constructed": []
+ },
+ "RPathHandle": {
+  "allocated": [],
+  "constructed": [
+   12,
+   220
+  ]
  },
  "RPlayerCamState": {
   "allocated": [
@@ -841,6 +1021,12 @@
   ],
   "constructed": []
  },
+ "RStateManager": {
+  "allocated": [],
+  "constructed": [
+   20
+  ]
+ },
  "RTexList": {
   "allocated": [
    12
@@ -852,6 +1038,12 @@
    16
   ],
   "constructed": []
+ },
+ "RTextureContextManager": {
+  "allocated": [],
+  "constructed": [
+   8
+  ]
  },
  "RTyreTrack": {
   "allocated": [
@@ -895,13 +1087,17 @@
   "allocated": [
    640
   ],
-  "constructed": []
+  "constructed": [
+   640
+  ]
  },
  "RenderContext": {
   "allocated": [
    332
   ],
-  "constructed": []
+  "constructed": [
+   332
+  ]
  },
  "Rendermethod": {
   "allocated": [
@@ -937,6 +1133,96 @@
    32
   ],
   "constructed": []
+ },
+ "SRuleAlways": {
+  "allocated": [],
+  "constructed": [
+   12
+  ]
+ },
+ "SRuleAmmo": {
+  "allocated": [],
+  "constructed": [
+   28
+  ]
+ },
+ "SRuleCollision": {
+  "allocated": [],
+  "constructed": [
+   20
+  ]
+ },
+ "SRuleDamage": {
+  "allocated": [],
+  "constructed": [
+   28
+  ]
+ },
+ "SRuleDeath": {
+  "allocated": [],
+  "constructed": [
+   20
+  ]
+ },
+ "SRuleDifficulty": {
+  "allocated": [],
+  "constructed": [
+   16
+  ]
+ },
+ "SRuleHealth": {
+  "allocated": [],
+  "constructed": [
+   32
+  ]
+ },
+ "SRulePIP": {
+  "allocated": [],
+  "constructed": [
+   24
+  ]
+ },
+ "SRulePlayerDir": {
+  "allocated": [],
+  "constructed": [
+   28
+  ]
+ },
+ "SRuleProg": {
+  "allocated": [],
+  "constructed": [
+   16
+  ]
+ },
+ "SRuleProgCounter": {
+  "allocated": [],
+  "constructed": [
+   24
+  ]
+ },
+ "SRuleProperty": {
+  "allocated": [],
+  "constructed": [
+   28
+  ]
+ },
+ "SRuleRange": {
+  "allocated": [],
+  "constructed": [
+   32
+  ]
+ },
+ "SRuleSpeed": {
+  "allocated": [],
+  "constructed": [
+   32
+  ]
+ },
+ "SRuleTimer": {
+  "allocated": [],
+  "constructed": [
+   28
+  ]
  },
  "STL": {
   "allocated": [
@@ -984,6 +1270,12 @@
   ],
   "constructed": []
  },
+ "ShadowPrivateData": {
+  "allocated": [],
+  "constructed": [
+   96
+  ]
+ },
  "SharedData": {
   "allocated": [
    52
@@ -1024,7 +1316,9 @@
   "allocated": [
    76
   ],
-  "constructed": []
+  "constructed": [
+   76
+  ]
  },
  "TaskList": {
   "allocated": [
@@ -1036,7 +1330,9 @@
   "allocated": [
    212
   ],
-  "constructed": []
+  "constructed": [
+   212
+  ]
  },
  "UCarpNamespace": {
   "allocated": [
@@ -1068,6 +1364,12 @@
   ],
   "constructed": []
  },
+ "ViewPort": {
+  "allocated": [],
+  "constructed": [
+   416
+  ]
+ },
  "Viewport": {
   "allocated": [
    416
@@ -1079,6 +1381,12 @@
    104
   ],
   "constructed": []
+ },
+ "WCollisionMgr": {
+  "allocated": [],
+  "constructed": [
+   52
+  ]
  },
  "WGrid": {
   "allocated": [
