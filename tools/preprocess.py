@@ -200,7 +200,9 @@ def generate_auto_inject(side, ghidra_funcs):
         base = os.path.splitext(f[3])[0]
         for ext in (".h", ".hpp"):
             if os.path.exists(base + ext):
-                include = os.path.relpath(base + ext, "src").replace("\\", "/")
+                # Relative to the generated file's own folder (src/<side>), which every compiler searches for a
+                # quoted include; MSVC also searches the including file's folders, clang and GCC do not.
+                include = os.path.relpath(base + ext, f"src/{side}").replace("\\", "/")
                 if include not in headers:
                     headers.append(include)
                 break

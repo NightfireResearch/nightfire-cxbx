@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <string.h>
+#include <type_traits>
 
 // ---------------------------------------------------------------------------------------------------------------
 // Picking one overload by its type, and taking any function's address as a number.
@@ -16,8 +17,11 @@
 //
 // Of accepts a free function or static member of that signature in any of the three conventions, or a member
 // function of any class; overload resolution does the selecting. XbeAddress turns the result into the address
-// WriteJmpTo wants, which for a member-function pointer means reading it as a number - valid only for a 4-byte
-// member pointer, a class with single inheritance and no virtual bases, which the assert enforces. See
+// WriteJmpTo wants, which for a member-function pointer means reading it as a number. Under MSVC's ABI that is
+// valid only for a 4-byte member pointer, a class with single inheritance and no virtual bases, which the assert
+// enforces. The cross builds (clang for i686-w64-mingw32) use the Itanium C++ ABI instead, where every
+// member-function pointer is two words, {function, this-adjustment}; for a non-virtual method - and overlay
+// classes have no virtual methods - the first word is the function's address and the adjustment is 0. See
 // docs/driving-injection-framework.md.
 // ---------------------------------------------------------------------------------------------------------------
 
@@ -34,10 +38,20 @@ template <class R, class... A> struct XbeOverload<R(A...)> {
     template <class C> static auto Of(R (C::*f)(A...)) -> R (C::*)(A...) { return f; }
 };
 
+// Whether F is a function pointer, or a member-function pointer this file knows how to read and write.
+template <class F> constexpr bool XbeIsSimplePointer() {
+#ifdef _MSC_VER
+    return sizeof(F) == sizeof(size_t);
+#else
+    return sizeof(F) == sizeof(size_t) ||
+           (std::is_member_function_pointer<F>::value && sizeof(F) == 2 * sizeof(size_t));
+#endif
+}
+
 template <class F> inline size_t XbeAddress(F f) {
-    static_assert(sizeof(F) == sizeof(size_t), "not a plain function or single-inheritance member function pointer");
+    static_assert(XbeIsSimplePointer<F>(), "not a plain function or single-inheritance member function pointer");
     size_t address;
-    memcpy(&address, &f, sizeof(address));
+    memcpy(&address, &f, sizeof(address));   // the first word, in both ABIs
     return address;
 }
 
@@ -46,10 +60,11 @@ template <class F> inline size_t XbeAddress(F f) {
 // declaration's own calling convention. The type comes from the declaration (decltype of XbeOverload::Of), so
 // the compiler, not a hand-written cast, decides how the call is made.
 template <class F> inline F XbeOriginal(size_t address) {
-    static_assert(sizeof(F) == sizeof(size_t), "not a plain function or single-inheritance member function pointer - "
-                                               "is the class complete where this is used?");
+    static_assert(XbeIsSimplePointer<F>(), "not a plain function or single-inheritance member function pointer - "
+                                           "is the class complete where this is used?");
+    size_t words[2] = { address, 0 };   // the address, and (Itanium only) a this-adjustment of 0
     F f;
-    memcpy(&f, &address, sizeof(f));
+    memcpy(&f, words, sizeof(f));
     return f;
 }
 
