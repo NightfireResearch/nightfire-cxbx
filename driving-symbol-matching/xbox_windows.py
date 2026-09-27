@@ -56,6 +56,24 @@ def build():
           f"{sum(len(w['ps2']) for w in out)} PS2 names available")
 
 
+def packet_compact(w, i):
+    """Triage form: no bodies; the reviewer decompiles only what looks promising."""
+    from lib import features_cache
+    xn, pn = names(g.XBOX), names(g.PS2)
+    pset = set(pn.values())
+    fx, fp = features_cache.load(g.XBOX), features_cache.load(g.PS2)
+    cal = lambda prog, a: ", ".join(sorted({n for _, n in g.callers(prog, a)}))[:160]
+    out = [f"## window {i}: Xbox {w['x0']:#x} {xn[w['x0']]} .. {w['x1']:#x} {xn[w['x1']]}   (PS2 {w['p0']:#x} .. {w['p1']:#x})"]
+    for a in w["xbox"]:
+        f = fx.get(a, {})
+        out.append(f"  X {a:#x} insns {f.get('insns')} | callers: {cal(g.XBOX, a)} | chain: {' | '.join(chains(g.XBOX, a, pset)[:2])[:200]}"
+                   f" | callees: {', '.join(sorted(set(f.get('callees', []))))[:160]} | strings: {f.get('strings', [])[:3]}")
+    for p in w["ps2"]:
+        f = fp.get(p, {})
+        out.append(f"  P {p:#x} {pn[p]} insns {f.get('insns')} | callers: {cal(g.PS2, p)} | callees: {', '.join(sorted(set(f.get('callees', []))))[:160]}")
+    return chr(10).join(out)
+
+
 def packet(w, i):
     xn, pn = names(g.XBOX), names(g.PS2)
     xset, pset = set(xn.values()), set(pn.values())
@@ -93,8 +111,9 @@ def main():
         return
     with open(os.path.join(HERE, "data", "xbox-window-queue.json")) as f:
         q = json.load(f)
+    compact = "--compact" in sys.argv
     for i in range(int(sys.argv[1]), min(int(sys.argv[2]), len(q))):
-        print(packet(q[i], i))
+        print(packet_compact(q[i], i) if compact else packet(q[i], i))
         print("\n" + "=" * 100 + "\n")
 
 
