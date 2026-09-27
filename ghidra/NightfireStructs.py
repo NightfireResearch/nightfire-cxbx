@@ -23,6 +23,7 @@
 #                        "name": "vtable", "comment": "..."}], "comment": "..."}],
 #             "prototypes": [{"address": "0x8dc60", "calling_convention": "__thiscall" or null (keep),
 #                             "return": null (keep) or type, "params": [{"name": "m", "type": "MATRIX4 *"}]}]}
+#   or {"address": ..., "return": type, "return_only": true} to set just the return type.
 # Types: a name (as the Data Type Manager shows it, e.g. "CARP::Instance", "RAnimEngine::Handle"), then "*"s
 # and/or "[n]". A struct that exists is rebuilt in place (its references stay); a missing one is created in the
 # root category. Fields not listed stay undefined. It lists what it will do and asks first; one undoable step.
@@ -154,6 +155,11 @@ elif askYesNo("Nightfire structs", "Apply %d types and %d prototypes? (Edit > Un
             fn = getFunctionAt(addr)
             if fn is None:
                 raise Exception("no function")
+            if p.get("return_only"):
+                # keep the current parameters and calling convention; set only the return type
+                fn.setReturnType(resolve(p["return"]), SourceType.USER_DEFINED)
+                done += 1
+                continue
             sig = FunctionDefinitionDataType(fn.getName(), dtm)
             sig.setReturnType(resolve(p["return"]) if p.get("return") else fn.getReturnType())
             params = [ParameterDefinitionImpl(q["name"], resolve(q["type"]), None) for q in p["params"]]

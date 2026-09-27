@@ -225,6 +225,37 @@
     "USymbolTable"
    ],
    "notes": "Game/UI helpers and existing placeholders to fill in: ActionQueue (0x974 bytes, constructor 0x4f320; owned by PHelicopter, GHud, SMissionManager, SWeaponManager, RWorldCamera), SMissionTimer (0x14 bytes on Xbox, 10 of them at SMissionManager+0x360; PS2 0x18), RPlayerCamState (0x34 placeholder, RPlayerCamera+0x354), RDirectorQueue (0x14 placeholder, RPlayerCamera+0x368). USymbolTable: AttributeSystem+0x64 points to one. GFXGallery is related to GGallery (cluster16)."
+  },
+  {
+   "key": "cluster23",
+   "status": "done",
+   "evidence_kb": 67,
+   "classes": [
+    "EAGL::Transform",
+    "EAGL::DynamicModel",
+    "EAGL::RenderContext",
+    "EAGL::Model",
+    "EAGL::DrawArray",
+    "EAGL::DynamicLoader",
+    "EAGL::ViewPort",
+    "EAGL::Device",
+    "EAGL::TextureRenderContext"
+   ],
+   "notes": "EA's EAGL graphics library (evidence files are named EAGL_<Class>.md). Allocation sizes under their tags: DynamicModel 88, RenderContext 332, DrawArray 76, DynamicLoader 28, Device 28, TextureRenderContext 212; Transform, Model and ViewPort have none (find from constructors/allocations, or embedding). The Xbox EAGL is a port onto D3D, so Xbox-only members are expected (D3D device/surface pointers): say where the PS2 layout doesn't carry over. Several finished layouts refer to these types as void * or byte arrays (RRenderer +0x60/+0x64/+0x68 Device/RenderContext/ViewPort, RVehicle shadow models EAGL::Model, RGain's EAGL::DynamicModel at +0x70, RStateManager's EAGL::GeoPrimState array): note sizes that confirm or contradict those. Class names keep their namespace (\"EAGL::Model\")."
+  },
+  {
+   "key": "cluster24",
+   "status": "done",
+   "evidence_kb": 45,
+   "classes": [
+    "EAGLAnim::FnCompoundChannel",
+    "EAGLAnim::FnRunBlender",
+    "EAGLAnim::FnTurnBlender",
+    "EAGLAnim::FnDeltaF3",
+    "EAGLAnim::FnDeltaF1",
+    "EAGLAnim::FnDeltaQ"
+   ],
+   "notes": "EAGLAnim animation channel/blender classes (evidence files EAGLAnim_<Class>.md), all virtual. Sizes from destructors: FnCompoundChannel 0x18 (vtable 0x1a0be8, 18 slots), FnRunBlender 0x80 and FnTurnBlender 0x5c (both store 0x1a0c6c, a shared base's vtable, then their own 0x1a1504 / 0x1a14b4), FnDeltaF3/F1/Q 0x30 (vtables 0x1a12e8/0x1a1270/0x1a1450). Work out the shared base(s) (a common EAGLAnim channel base class; name it from the PS2 sheet's class names if the base's vtable/ctor is identifiable, else a placeholder). The 5 EAGLAnim channel functions split earlier (results/function-splits.json) may help. Class names keep their namespace (\"EAGLAnim::FnDeltaQ\")."
   }
  ],
  "not_packeted": {

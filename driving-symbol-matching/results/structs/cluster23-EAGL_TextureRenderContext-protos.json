@@ -1,0 +1,64 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000ee080",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::TextureRenderContext::GetCurrentViewPort(void) const",
+   "return": "EAGL::ViewPort *"
+  },
+  {
+   "address": "0x000f34b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::TextureRenderContext::NewViewPort(void)",
+   "return": "EAGL::ViewPort *"
+  },
+  {
+   "address": "0x000f3540",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "EAGL::TextureRenderContext::DeleteViewPort(EAGL::ViewPort *)"
+  },
+  {
+   "address": "0x000f35a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::TextureRenderContext::~TextureRenderContext(void)"
+  },
+  {
+   "address": "0x000f3600",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::TextureRenderContext::BeginFrame(void)"
+  },
+  {
+   "address": "0x000f3620",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::TextureRenderContext::EndFrame(void)"
+  },
+  {
+   "address": "0x000f3640",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    },
+    {
+     "name": "param_2",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGL::TextureRenderContext::GetSize(float &, float &) const"
+  }
+ ]
+}

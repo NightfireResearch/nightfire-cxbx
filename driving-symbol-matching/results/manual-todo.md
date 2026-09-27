@@ -28,6 +28,10 @@ other's names:
 Evidence: 0x23fb64 is written by NewRenderContext, DeleteRenderContext and SetCurrentRenderContext (0xe8a00),
 as PS2's render-context global 0x3485b0; 0x23fb68 only by SetCurrentTextureRenderContext (0xe8a10), reached
 from the texture render-target begin/end (RShadowMap::Begin, GrabBackBuffer). Rename via a temporary name.
+Independently confirmed since (27 Sept 2026): the globals pairing (results/globals/trial1-xbox.json) puts
+gpCurrentDevice at 0x23fb60, gpCurrentRenderContext at 0x23fb64 and gpCurrentTextureRenderContext at 0x23fb68,
+and the EAGL struct agent (cluster23) found Device at 0x23fb60 and the current RenderContext at 0x23fb64.
+NightfireGlobals.py skips these two because they already carry (swapped) names, so this stays a by-hand fix.
 
 ## 3. Delete stale secondary labels (Driving.xbe)
 
