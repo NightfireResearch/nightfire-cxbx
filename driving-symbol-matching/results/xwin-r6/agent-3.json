@@ -1,0 +1,1462 @@
+{
+ "verdicts": [
+  {
+   "item": "window 42",
+   "xbox": "0xeb7f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::TAR internals via D3D (Xbox-only); PS2 TAR::Lock/Unlock not identifiable among these",
+   "intermediates": []
+  },
+  {
+   "item": "window 42",
+   "xbox": "0xeb840",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::TAR internals via D3D (Xbox-only); PS2 TAR::Lock/Unlock not identifiable among these",
+   "intermediates": []
+  },
+  {
+   "item": "window 42",
+   "xbox": "0xeb880",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::TAR internals via D3D (Xbox-only); PS2 TAR::Lock/Unlock not identifiable among these",
+   "intermediates": []
+  },
+  {
+   "item": "window 42",
+   "xbox": "0xeb910",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::TAR internals via D3D (Xbox-only); PS2 TAR::Lock/Unlock not identifiable among these",
+   "intermediates": []
+  },
+  {
+   "item": "window 42",
+   "xbox": "0xeba80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::TAR internals via D3D (Xbox-only); PS2 TAR::Lock/Unlock not identifiable among these",
+   "intermediates": []
+  },
+  {
+   "item": "window 42",
+   "xbox": "0xebe00",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::TAR internals via D3D (Xbox-only); PS2 TAR::Lock/Unlock not identifiable among these",
+   "intermediates": []
+  },
+  {
+   "item": "window 42",
+   "xbox": "0xebee0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::TAR internals via D3D (Xbox-only); PS2 TAR::Lock/Unlock not identifiable among these",
+   "intermediates": []
+  },
+  {
+   "item": "window 42",
+   "xbox": "0xec000",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::TAR internals via D3D (Xbox-only); PS2 TAR::Lock/Unlock not identifiable among these",
+   "intermediates": []
+  },
+  {
+   "item": "window 42",
+   "xbox": "0xec420",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::TAR internals via D3D (Xbox-only); PS2 TAR::Lock/Unlock not identifiable among these",
+   "intermediates": []
+  },
+  {
+   "item": "window 42",
+   "xbox": "0xec530",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::TAR internals via D3D (Xbox-only); PS2 TAR::Lock/Unlock not identifiable among these",
+   "intermediates": []
+  },
+  {
+   "item": "window 42",
+   "xbox": "0xec610",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::TAR internals via D3D (Xbox-only); PS2 TAR::Lock/Unlock not identifiable among these",
+   "intermediates": []
+  },
+  {
+   "item": "window 42",
+   "xbox": "0xec6e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::TAR internals via D3D (Xbox-only); PS2 TAR::Lock/Unlock not identifiable among these",
+   "intermediates": []
+  },
+  {
+   "item": "window 42",
+   "xbox": "0xec8a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::TAR internals via D3D (Xbox-only); PS2 TAR::Lock/Unlock not identifiable among these",
+   "intermediates": []
+  },
+  {
+   "item": "window 43",
+   "xbox": "0xe79a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "fog param setter (+0x64); no PS2 name",
+   "intermediates": []
+  },
+  {
+   "item": "window 43",
+   "xbox": "0xe79e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "fog param setter (+0x68); no PS2 name",
+   "intermediates": []
+  },
+  {
+   "item": "window 43",
+   "xbox": "0xe7a20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "fog param setter (+0x6c); no PS2 name",
+   "intermediates": []
+  },
+  {
+   "item": "window 43",
+   "xbox": "0xe7a60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "fog param setter (+0x70); no PS2 name",
+   "intermediates": []
+  },
+  {
+   "item": "window 43",
+   "xbox": "0xe7aa0",
+   "ps2": "0x28cf98",
+   "name": "EAGL::RenderContextExtension::SetFogColour",
+   "verdict": "accept",
+   "why": "stores colour into ctx private +0x74 then sets FogColor render state; PS2 stores +0x84c and sends GS FOGCOL; called by RFog::SetFogParams with fog colour on both (PS2 SetFogParams calls SetFogColour); same RenderContextExtension window",
+   "intermediates": []
+  },
+  {
+   "item": "window 43",
+   "xbox": "0xe7ad0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox D3D/render-state helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 43",
+   "xbox": "0xe7b20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox D3D/render-state helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 43",
+   "xbox": "0xe7c60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox D3D/render-state helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 43",
+   "xbox": "0xe7c80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox D3D/render-state helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 43",
+   "xbox": "0xe7ca0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox D3D/render-state helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 43",
+   "xbox": "0xe7d70",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox D3D/render-state helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 43",
+   "xbox": "0xe7eb0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox D3D/render-state helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 43",
+   "xbox": "0xe8150",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox D3D/render-state helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x108ce0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x108d50",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x108d5c",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x108e70",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x109170",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x109230",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x109300",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x109400",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x109d90",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x109e60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x109f50",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x10a460",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x10a48d",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 44",
+   "xbox": "0x10a4ba",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox software vertex transform/math helper; no PS2 counterpart (PS2 uses VU)",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x144bc0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x144cc0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x144e20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x144e50",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x144f30",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x144fc0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x144ff0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x145020",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x1450b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x145160",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x145190",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x1451b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x145390",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x1453e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 45",
+   "xbox": "0x145410",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox mixer FX filter (init/process/modify via fn ptrs); no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8b50",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::Model helper with no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8b70",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::Model helper with no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8b90",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::Model helper with no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8bb0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::Model helper with no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8bc0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::Model helper with no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8be0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::Model helper with no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8bf0",
+   "ps2": "0x285780",
+   "name": "EAGL::Model::GetChild",
+   "verdict": "accept",
+   "why": "walks child lists +0xa4, +0xac, +0xa8 (next +0xb0, name +0xb4) with inline strcmp, returns node; identical order/offsets on PS2; EAGL::Model window",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8d00",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "links child into +0xa4 list; no PS2 name among candidates",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8d30",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::Model helper with no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8d60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::Model helper with no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8d90",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "removes named child from +0xa4/+0xac/+0xa8 lists; no such PS2 name among candidates",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8f60",
+   "ps2": "0x2858d8",
+   "name": "EAGL::Model::GetGeometry",
+   "verdict": "accept",
+   "why": "name loop over count +0x9c / names +0xa0 with inline strcmp, returns +0xc4 array + 4 + i*4; identical on PS2 (strcmp); EAGL::Model window",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8fe0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::Model helper with no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe8ff0",
+   "ps2": "0x285970",
+   "name": "EAGL::Model::SetModelMatrix",
+   "verdict": "accept",
+   "why": "copies 16 dwords (MATRIX4) to this+0xc on both (PS2 unaligned 64-byte copy to +0xc..+0x4c); called by Draw on both; EAGL::Model window",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe9010",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::Model helper with no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 46",
+   "xbox": "0xe90f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL::Model helper with no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8a580",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8a5b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8a640",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8a6d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8a760",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8a7f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8a890",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8a930",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8a9d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8aa20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8aa50",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8ad40",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8af60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8b110",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8b1a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc dispatcher; PS2 counterpart unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "window 47",
+   "xbox": "0x8b1c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "gProcAnimFunc table entry; PS2 table entries are unnamed statics",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x55f60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x55fa0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x55fe0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x56040",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x56080",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x56110",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x56150",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x56190",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x561f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x56230",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x56270",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x56320",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x56790",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x56b40",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x56b90",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x56f70",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 48",
+   "xbox": "0x57070",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/allocator helper (FastAlloc/FastFree cluster)",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37af0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37b00",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37b30",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37b50",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37df0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37ed0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37ef0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37f20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37f40",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37f70",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37f80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37fb0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37fc0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x37ff0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x38060",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x38080",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x380e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 49",
+   "xbox": "0x38130",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL/iostream helper; no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x133f50",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _chkstk",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134090",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x1342cf",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x1342d8",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x1342e1",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x13438b",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x13439d",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134470",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x1344c7",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134698",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134770",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x13478f",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134795",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _isctype-like CRT helper",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x1347b6",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x1347bc",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x1347c2",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x1347e4",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134815",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x1348bc",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134902",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x13498f",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134a40",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134a9b",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134ab8",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134ac8",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134c0b",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134e52",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x134f12",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x135196",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x13537b",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x135424",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x135484",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x13552b",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x13557d",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x13565b",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x135689",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x1356f2",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x135774",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x135880",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  },
+  {
+   "item": "window 50",
+   "xbox": "0x135889",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internal (EH/onexit/cfltcvt/chkstk/isctype); PS2 uses newlib",
+   "intermediates": []
+  }
+ ]
+}

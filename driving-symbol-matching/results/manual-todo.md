@@ -102,6 +102,14 @@ right; the labels are wrong (Symbol Table, or the listing's label at the entry):
   both platforms) - un-thunk and name it if you agree. UCharNamespace vtable 0x1a2238 has entries at 0x11a820 and
   0x11a850 with no function defined.
 
+- **Final triage (round 6) leads not yet applied** (identified by reviewers outside their packets, or held):
+  `CARP::PathInfo::GetKnotIndex` 0x119010 (PS2 0x2dae58); `AICharacterEnemySunroof::DoTilting` 0x20f40 (vtable slot
+  0x18ab1c; its callee 0x20f90 probably `VehicleIsAccelerating`); `AWorldSound::~AWorldSound` 0x12e090 and
+  `WSound::~WSound` 0xcc8f0; `EAGL::Profiler::Profiler` overloads 0xf5230/0xf5250 (sheet rows 6169/6170 share
+  0x299bd0 - check); the rest of the DebugIndexer vtable 0x18bd00 (0x37a90 destructor, 0x37b70 Increase, 0x37cb0
+  Decrease, 0x379f0 Increment, 0x37a00 Decrement, 0x38130 Axis2AsString, 0x37b50 Debounce). Held: `AWorldSound::
+  AWorldSound` 0xcc930, `RCARPFile::KillEAGLMaterials` 0x7aee0; 0xeb910 might be `EAGL::TAR::Lock`.
+
 ## 6. Namespace moves
 
 `python apply.py --pending-namespaces` lists the pending moves (including P022's ECameraLockOn::~ECameraLockOn and

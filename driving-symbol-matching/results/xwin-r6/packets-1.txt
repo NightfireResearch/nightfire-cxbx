@@ -1,0 +1,517 @@
+## window 0: Xbox 0x11cb80 AMix::Reset .. 0x11d310 URefCounter<AMix>::RemoveReference   (PS2 0x2f3450 .. 0x2f3ff0)
+  X 0x11cc10 insns 8 | callers: FUN_0015c8b0 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_000b8490 | strings: []
+  X 0x11cc30 insns 28 | callers: FUN_0011cc30, FUN_0011d290, FUN_0011d580 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0011cc30, FastFree | strings: []
+  X 0x11d290 insns 49 | callers: FUN_0011d580 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00019d80, FUN_0011cc30, FUN_0011cd30 | strings: []
+  P 0x2f3580 AMix::~AMix insns 17 | callers: Remove | callees: ClearMaster, FastFree
+  P 0x2f36f8 URefCounter<AMix>::URefCounter insns 25 | callers: Get | callees: FastAlloc
+  P 0x2f3760 URefCounter<AMix>::~URefCounter insns 31 | callers: FUN_002f2c88 | callees: FUN_002f3690, FastFree, __builtin_delete
+  P 0x2f3888 URefCounter<AMix>::GetReference insns 21 | callers: Add, Get | callees: FUN_002f37e0, strcpy
+
+====================================================================================================
+
+## window 1: Xbox 0x122580 AStream::Play .. 0x123230 URefCounter<AStream>::RemoveReference   (PS2 0x2e8c70 .. 0x2eaaf0)
+  X 0x122a90 insns 31 | callers: FUN_001230f0 | chain: FUN_001230f0@1230f0 <- FUN_00123380@123380 <- AStream::Event@1234d0 | callees: FUN_00013630, FUN_00013700, FUN_001325ad | strings: []
+  X 0x123070 insns 49 | callers: FUN_00123560, FUN_001235a0 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00019d80, FUN_00122500, FUN_00122b10 | strings: []
+  X 0x1230f0 insns 122 | callers: FUN_00123380 | chain: FUN_00123380@123380 <- AStream::Event@1234d0 | callees: FUN_000bfeb0, FUN_00122a90, FastAlloc, FastFree, maybe_memset_fromptr | strings: []
+  P 0x2e9968 AStream::IsQueueEmpty insns 6 | callers:  | callees: 
+  P 0x2e99c0 AStream::IsPreBuffered insns 3 | callers:  | callees: 
+  P 0x2e9ae0 AStream::Last insns 57 | callers:  | callees: FUN_002ea120, Next
+  P 0x2e9c38 AStream::GetState insns 3 | callers:  | callees: 
+  P 0x2e9d00 AStream::QueryTime insns 14 | callers:  | callees: 
+  P 0x2e9d38 AStream::QueryLibTime insns 17 | callers:  | callees: 
+  P 0x2ea1f8 URefCounter<AStream>::URefCounter insns 25 | callers: Get | callees: FastAlloc
+  P 0x2ea260 URefCounter<AStream>::~URefCounter insns 31 | callers: FUN_002e9550 | callees: FUN_002ea190, FastFree, __builtin_delete
+  P 0x2ea388 URefCounter<AStream>::GetReference insns 21 | callers: Create, Get, Remove | callees: FUN_002ea2e0, strcpy
+
+====================================================================================================
+
+## window 2: Xbox 0xb30c0 Simulation::UntrackAllInstances .. 0xb3fc0 Simulation::DeleteDeadObjects   (PS2 0x201730 .. 0x200600)
+  X 0xb3130 insns 31 | callers: FUN_000b3b80, FUN_000b4080 | chain: FUN_000b4080@b4080 <- Simulation::Simulation@b4fe0 | FUN_000b3b80@b3b80 <- std::vector<>::push_back@b4980 <- Simulation::SpawnPhysicsObject@b4e10 | callees: FUN_00013630, FUN_00013700, FUN_001325ad | strings: []
+  X 0xb3b80 insns 274 | callers: push_back | chain: std::vector<>::push_back@b4980 <- Simulation::SpawnPhysicsObject@b4e10 | std::vector<>::push_back@b4980 <- Simulation::TrackInstance@b4810 | callees: FUN_000ad630, FUN_000b2e40, FUN_000b3130, FUN_000bfeb0, FUN_000c1230, FUN_000c1290, FastAlloc, maybe_memset_fromptr, maybe_memset_ptr2 | strings: []
+  X 0xb3e40 insns 77 | callers: ~Simulation | chain: Simulation::~Simulation@b5310 | callees: FUN_000b2b10, FUN_000b3660 | strings: []
+  X 0xb3f00 insns 77 | callers: ~Simulation | chain: Simulation::~Simulation@b5310 | callees: FUN_000b2dc0, FUN_000b3390 | strings: []
+  P 0x200ca8 Simulation::DeleteInProgress insns 3 | callers:  | callees: 
+
+====================================================================================================
+
+## window 3: Xbox 0x1b3d0 ActWeaponDatabase::UseWeapon .. 0x1bbd0 URefCounter<ActWeaponDatabase::WeaponInfo>::AddReference   (PS2 0x1171b0 .. 0x117c50)
+  X 0x1b450 insns 28 | callers: FUN_0001b450, FUN_0001ba00, FUN_0001be60 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0001b450, FastFree | strings: []
+  X 0x1ba00 insns 49 | callers: FUN_0001be20, FUN_0001be60 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00019d80, FUN_0001b450, FUN_0001b4a0 | strings: []
+  X 0x1ba80 insns 47 | callers: ~ActWeaponDatabase | chain: ActWeaponDatabase::~ActWeaponDatabase@1bcb0 | callees: FUN_00019d80, FUN_0001b4a0 | strings: []
+  X 0x1baf0 insns 92 | callers: AddReference | chain: URefCounter<ActWeaponDatabase::WeaponInfo>::AddReference@1bbd0 | callees: FUN_0001b810, FUN_0011caa0, __stricmp | strings: []
+  P 0x1173d8 _Rb_tree<MapKey,_ActWeaponDatabase::WeaponInfo>::_M_erase insns 25 | callers: _M_erase, ~URefCounter | callees: FastFree, _M_erase
+  P 0x117440 URefCounter<ActWeaponDatabase::WeaponInfo>::URefCounter insns 25 | callers: Get | callees: FastAlloc
+  P 0x1174a8 URefCounter<ActWeaponDatabase::WeaponInfo>::~URefCounter insns 31 | callers: FUN_00116f60 | callees: FastFree, _M_erase, __builtin_delete
+  P 0x1175d0 URefCounter<ActWeaponDatabase::WeaponInfo>::GetReference insns 21 | callers: LoadWeapon, UnloadWeapon, UseWeapon | callees: FUN_00117528, strcpy
+
+====================================================================================================
+
+## window 4: Xbox 0x7ae00 RCameraSpline::AddToSplinePtList .. 0x7aef0 RCARPFileLoader::~RCARPFileLoader   (PS2 0x1a7cf8 .. 0x1a9d10)
+  X 0x7ae40 insns 12 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0007ae60, FastFree | strings: []
+  X 0x7ae70 insns 6 | callers: PostLoad | chain: RVehicle::PostLoad@955d0 | callees:  | strings: []
+  X 0x7aea0 insns 17 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: GetAddr | strings: ['Model']
+  X 0x7aee0 insns 5 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: Free | strings: []
+  P 0x1a7dd0 RCameraSpline::GetBasisMatrix insns 11 | callers: EvaluateSpline | callees: 
+  P 0x1a7e00 RCameraSpline::GetTangentBasisMatrix insns 11 | callers: EvaluateTangent | callees: 
+  P 0x1a7e30 RCameraSpline::Smooth insns 28 | callers:  | callees: 
+  P 0x1a7f58 RCameraSpline::BuildSpline insns 266 | callers: UpdateRelativeAnimationCam, UpdateWorldAnimationCam | callees: FindPointInList, clear
+  P 0x1a8848 _List_base<COORD4,_allocator<COORD4>_>::clear insns 25 | callers: BuildSpline, ClearSplinePtList, ~RCameraSpline | callees: FastFree
+  P 0x1a88e8 RCameraSpline::RCameraSpline_global_ctors insns 8 | callers:  | callees: FUN_001a88b0
+  P 0x1a94a8 EAGLNamespace::NameLookup insns 15 | callers:  | callees: GetAddr
+  P 0x1a94e8 RCARPFile::RCARPFile insns 16 | callers: LoadCARPFile | callees: 
+  P 0x1a9be0 RCARPFile::KillEAGLMaterials insns 9 | callers: KillGlobalRender | callees: Free
+
+====================================================================================================
+
+## window 5: Xbox 0x13810 ActActorDatabase::ShutDown .. 0x13c00 PrivateData::GetAnimation   (PS2 0x10b260 .. 0x10c1d8)
+  X 0x13840 insns 23 | callers: ??0_Locimp@locale@std@@AAE@_N@Z, ?clear@ios_base@std@@QAEXH_N@Z, FUN_0003d3b0, FUN_00130b80, FUN_00130bc0, InitAudioObject | chain: PBondCar::InitAudioObject@6cc20 | FUN_00130b80@130b80 <- FUN_00013580@13580 <- AGun::SetFirePatch@1296b0 | callees: FUN_00013630 | strings: []
+  X 0x13930 insns 32 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00013580, FUN_0013263c | strings: []
+  X 0x13ab0 insns 82 | callers: Init | chain: AICharacterHands::Init@22930 | callees: ActActor, FUN_000130e0, FUN_00013880, FastAlloc | strings: ['ActActor']
+  X 0x13ba0 insns 27 | callers: ActAnimationDatabase | chain: ActAnimationDatabase::ActAnimationDatabase@13f90 | callees: FileLoadz, MEM_size | strings: []
+  P 0x10b540 ActActorDatabase::ActActorDatabase insns 18 | callers: StartUp | callees: FastAlloc
+  P 0x10b778 ActActorDatabase::DrawAllWeapons insns 34 | callers: DrawActorWeapons | callees: DrawWeapons
+  P 0x10b8e8 lexicographical_compare<signed_char_*,_signed_char_*> insns 26 | callers:  | callees: 
+  P 0x10b950 __lexicographical_compare_3way<signed_char_*,_signed_char_*> insns 24 | callers:  | callees: 
+  P 0x10b9b0 _Rb_tree<LString,_LString>::_M_erase insns 25 | callers: FUN_00117308, FUN_0012ab68, FUN_0013fec8, FUN_00142cc0, FUN_001437a8, FUN_00143cd0, FUN_0015e680, FUN_0016ed60, FUN_00175478, FUN_0017a6f0, FUN_00183988, FUN_00 | callees: FastFree, _M_erase
+  P 0x10ba18 _Rb_tree<LString,_DebugItem_*>::_M_erase insns 25 | callers: FUN_00117370, FUN_0012abd0, FUN_0013ff30, FUN_00142d28, FUN_00143810, FUN_00143d38, FUN_0015e6e8, FUN_0016edc8, FUN_001754e0, FUN_0017a758, FUN_001839f0, FUN_00 | callees: FastFree, _M_erase
+  P 0x10ba80 _List_base<ActActor_*,_allocator<ActActor_*>_>::clear insns 25 | callers: ~ActActorDatabase | callees: FastFree
+  P 0x10bb20 AnimationController_type_info_function insns 16 | callers:  | callees: maybePrintTypeInfo
+  P 0x10bb60 AnimationController::operator_new insns 8 | callers:  | callees: FastAlloc
+  P 0x10bb80 AnimationController::operator_delete insns 7 | callers:  | callees: FastFree
+  P 0x10bba0 AnimationController::GetActPoser insns 2 | callers:  | callees: 
+  P 0x10bba8 StandardAnimationController::~StandardAnimationController insns 18 | callers:  | callees: FastFree, ~AnimationController
+  P 0x10bbf0 StandardAnimationController_type_info_function insns 30 | callers:  | callees: __rtti_si, maybePrintTypeInfo
+  P 0x10bc68 CrossFadeAnimationController::~CrossFadeAnimationController insns 18 | callers:  | callees: FastFree, ~AnimationController
+  P 0x10bcb0 CrossFadeAnimationController_type_info_function insns 30 | callers:  | callees: __rtti_si, maybePrintTypeInfo
+  P 0x10bd28 BlendedAnimationController::~BlendedAnimationController insns 18 | callers:  | callees: FastFree, ~AnimationController
+  P 0x10bd70 BlendedAnimationController_type_info_function insns 41 | callers:  | callees: __rtti_si, maybePrintTypeInfo
+  P 0x10be18 AimedAnimationController::~AimedAnimationController insns 18 | callers:  | callees: FastFree, ~AnimationController
+  P 0x10be60 AimedAnimationController_type_info_function insns 30 | callers:  | callees: __rtti_si, maybePrintTypeInfo
+  P 0x10bed8 AimedAnimationController::SetTarget insns 2 | callers:  | callees: 
+  P 0x10bee0 AimedAnimationController::GetCurrent insns 2 | callers:  | callees: 
+  P 0x10bee8 AimedShootingAnimationController_type_info_function insns 30 | callers:  | callees: __rtti_si, maybePrintTypeInfo
+  P 0x10bf60 AimedShootingAnimationController::SetTarget insns 2 | callers:  | callees: 
+  P 0x10bf68 AimedShootingAnimationController::GetCurrent insns 2 | callers:  | callees: 
+  P 0x10bf70 ActActorDatabase::fActorDatabase_global_ctors insns 8 | callers: __do_global_ctors | callees: FUN_0010bae8
+
+====================================================================================================
+
+## window 6: Xbox 0x13540 ActActorDatabase::~ActActorDatabase .. 0x13790 ActActorDatabase::StartUp   (PS2 0x10b588 .. 0x10b228)
+  X 0x13580 insns 72 | callers: FUN_00013630, FUN_000136d0, FUN_00013700, FUN_00013930, FUN_000e2ce0, SetFirePatch | chain: AGun::SetFirePatch@1296b0 | FUN_00013630@13630 <- AFingoDeath::AFingoDeath@129a30 | callees: FUN_00013300, FUN_00013480, FUN_00130b80 | strings: []
+  X 0x13630 insns 69 | callers: AFingoDeath, AGun, ASentry, ASnowMobile, AUltraLite, FUN_00013840, FUN_00013880, FUN_000178e0, FUN_00017c70, FUN_00019eb0, FUN_0001a220, FUN_0001b4a0, FUN_0001b | chain: AFingoDeath::AFingoDeath@129a30 | AGun::AGun@129550 | callees: FUN_00013300, FUN_00013580 | strings: []
+  X 0x136d0 insns 14 | callers: ??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z, FUN_0003cb00, FUN_0013133f | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00013580 | strings: []
+  X 0x13700 insns 28 | callers: FUN_00013880, FUN_000178e0, FUN_00017c70, FUN_00019eb0, FUN_0001a220, FUN_0001b4a0, FUN_0001b810, FUN_00034e50, FUN_000376a0, FUN_0004f490, FUN_000540a0, FUN_00 | chain: FUN_00013880@13880 <- ActActorDatabase::GetNewActorHandle@139c0 | FUN_00019eb0@19eb0 <- ActTextureDatabase::UnloadTexture@1a490 | callees: ??0exception@@QAE@XZ, FUN_00013580 | strings: []
+  X 0x13760 insns 11 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00013780, __builtin_delete | strings: []
+  P 0x10b540 ActActorDatabase::ActActorDatabase insns 18 | callers: StartUp | callees: FastAlloc
+
+====================================================================================================
+
+## window 7: Xbox 0x17840 ActModelDatabase::UseModel .. 0x18030 URefCounter<ActModelDatabase::ModelInfo>::AddReference   (PS2 0x111828 .. 0x1121f8)
+  X 0x17860 insns 28 | callers: FUN_00017860, FUN_00017e60, ~URefCounter | chain: URefCounter<ActModelDatabase::ModelInfo>::~URefCounter@182b0 | FUN_00017e60@17e60 <- URefCounter<ActModelDatabase::ModelInfo>::~URefCounter@182b0 | callees: FUN_00017860, FastFree | strings: []
+  X 0x178b0 insns 11 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_000178d0, __builtin_delete | strings: []
+  X 0x17e60 insns 49 | callers: FUN_00018270, ~URefCounter | chain: URefCounter<ActModelDatabase::ModelInfo>::~URefCounter@182b0 | callees: FUN_00017860, FUN_000178e0, FUN_00019d80 | strings: []
+  X 0x17ee0 insns 47 | callers: ~ActModelDatabase | chain: ActModelDatabase::~ActModelDatabase@18110 | callees: FUN_000178e0, FUN_00019d80 | strings: []
+  X 0x17f50 insns 92 | callers: AddReference | chain: URefCounter<ActModelDatabase::ModelInfo>::AddReference@18030 | callees: FUN_00017c70, FUN_0011caa0, __stricmp | strings: []
+  P 0x111850 ActModelDatabase::StopUsingModel insns 2 | callers: StopUsingResources | callees: 
+  P 0x111858 ActModelDatabase::UnloadModel insns 23 | callers: ~ActModelDatabase | callees: GetReference, RemoveReference, __builtin_delete, ~ActModel
+  P 0x1119e8 URefCounter<ActModelDatabase::ModelInfo>::URefCounter insns 25 | callers: Get | callees: FastAlloc
+  P 0x111b78 URefCounter<ActModelDatabase::ModelInfo>::GetReference insns 21 | callers: LoadModel, UnloadModel, UseModel | callees: FUN_00111ad0, strcpy
+
+====================================================================================================
+
+## window 8: Xbox 0x71050 PVehicle::~PVehicle .. 0x71880 PVehicle::GetNameCount   (PS2 0x198dc8 .. 0x1965b8)
+  X 0x71070 insns 28 | callers: FUN_00071070, FUN_00071630 | chain: FUN_00071630@71630 <- FUN_000716f0@716f0 <- PVehicle::Shutdown@71900 | callees: FUN_00071070, FastFree | strings: []
+  X 0x71560 insns 84 | callers: FUN_00071730, NameToIndex | chain: PVehicle::NameToIndex@718a0 | FUN_00071730@71730 <- PVehicle::GetCarNames@718e0 | callees: FUN_000710b0, FUN_00126bd0, __stricmp | strings: []
+  X 0x71630 insns 77 | callers: FUN_000716f0 | chain: FUN_000716f0@716f0 <- PVehicle::Shutdown@71900 | callees: FUN_00071070, FUN_00071290 | strings: []
+  X 0x716f0 insns 26 | callers: Shutdown | chain: PVehicle::Shutdown@71900 | callees: FUN_00071630, FastFree | strings: []
+  X 0x71730 insns 96 | callers: GetCarNames, GetNameCount, NameToIndex | chain: PVehicle::GetCarNames@718e0 | PVehicle::GetNameCount@71880 | callees: CountClassNames, FUN_00071560, GetClassNextName, WSoundMap, __builtin_new, __builtin_vec_new | strings: ['default', 'pvehicle']
+  P 0x1966b8 PVehicle::GetName insns 19 | callers:  | callees: FUN_00196350
+  P 0x1985c0 _Rb_tree<CStringKey,_unsigned_int>::_M_erase insns 25 | callers: Shutdown, _M_erase | callees: FastFree, _M_erase
+  P 0x198628 _Rb_tree<CStringKey,_unsigned_int>::lower_bound insns 29 | callers: FUN_00196350, NameToIndex | callees: strcasecmp
+  P 0x1986a0 _Rb_tree<CStringKey,_unsigned_int>::_M_insert insns 218 | callers: insert_unique | callees: FastAlloc, strcasecmp
+  P 0x198a08 _Rb_tree<CStringKey,_unsigned_int>::insert_unique insns 99 | callers: insert_unique | callees: _M_insert, strcasecmp
+  P 0x198b98 _Rb_tree<CStringKey,_unsigned_int>::insert_unique insns 126 | callers: FUN_00196350, NameToIndex | callees: _M_insert, insert_unique, strcasecmp
+
+====================================================================================================
+
+## window 9: Xbox 0x100be0 EAGLAnim::FnDeltaSingleQ::EvalSQTMasked .. 0x101f00 EAGLAnim::FnDeltaSingleQ::scalar_deleting_destructor   (PS2 0x268e40 .. 0x26b368)
+  X 0x101aa0 insns 45 | callers: EvalSQTMasked, FUN_00101c90 | chain: EAGLAnim::FnDeltaSingleQ::EvalSQTMasked@100be0 | FUN_00101c90@101c90 <- EAGLAnim::FnDeltaSingleQ::EvalSQTMasked@100be0 | callees:  | strings: []
+  X 0x101b50 insns 38 | callers: EvalSQTMasked | chain: EAGLAnim::FnDeltaSingleQ::EvalSQTMasked@100be0 | callees:  | strings: []
+  X 0x101be0 insns 51 | callers: EvalSQTMasked | chain: EAGLAnim::FnDeltaSingleQ::EvalSQTMasked@100be0 | callees:  | strings: []
+  X 0x101c90 insns 134 | callers: EvalSQTMasked | chain: EAGLAnim::FnDeltaSingleQ::EvalSQTMasked@100be0 | callees: FUN_000f7c90, FUN_000fde00, FUN_00101aa0 | strings: []
+  X 0x101e40 insns 58 | callers: EvalSQTMasked | chain: EAGLAnim::FnDeltaSingleQ::EvalSQTMasked@100be0 | EAGLAnim::FnDeltaQ::EvalSQTMasked@1034c0 | callees:  | strings: []
+  P 0x26b1a8 EAGLAnim::FnDeltaSingleQ_type_info_function insns 20 | callers:  | callees: EAGLAnim::FnAnimMemoryMap_type_info_function, __rtti_si
+  P 0x26b1f8 EAGLAnim::FnDeltaSingleQ::operator_new insns 10 | callers:  | callees: eagl_alloc
+  P 0x26b220 EAGLAnim::FnDeltaSingleQ::operator_new insns 9 | callers:  | callees: eagl_alloc
+  P 0x26b248 EAGLAnim::FnDeltaSingleQ::operator_delete insns 9 | callers:  | callees: eagl_free
+  P 0x26b270 EAGLAnim::FnDeltaSingleQ::operator_new_array insns 10 | callers:  | callees: eagl_alloc
+  P 0x26b298 EAGLAnim::FnDeltaSingleQ::operator_new_array insns 9 | callers:  | callees: eagl_alloc
+  P 0x26b2c0 EAGLAnim::FnDeltaSingleQ::operator_delete_array insns 9 | callers:  | callees: eagl_free
+
+====================================================================================================
+
+## window 10: Xbox 0xcc880 WSimpleZone::SetPosition .. 0xccad0 WSoundGroup::Start   (PS2 0x2273d8 .. 0x2278f8)
+  X 0xcc900 insns 12 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_000cc8f0, operator_delete | strings: []
+  X 0xcc930 insns 50 | callers: Add | chain: WSoundGroup::Add@cd370 | callees: ABaseSound, AVoice | strings: []
+  X 0xcca00 insns 12 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0012e090, operator_delete | strings: []
+  X 0xcca30 insns 37 | callers: FUN_000710b0, FUN_00071290, FUN_00094140, FUN_000944d0, FUN_0009c7a0, FUN_0009cc70, FUN_000a23c0, FUN_000a2660, FUN_000b31b0, FUN_000b3660, FUN_000c16e0, FUN_00 | chain: FUN_00094140@94140 <- RTextureContextManager::KillContext@94c90 | FUN_000a2660@a2660 <- RParticleSystemManager::Reset@a29c0 | callees:  | strings: []
+  X 0xcca90 insns 28 | callers: FUN_000cca90, FUN_000cd0d0 | chain: FUN_000cd0d0@cd0d0 <- FUN_000cd560@cd560 <- WSoundGroup::~WSoundGroup@cd630 | callees: FUN_000cca90, FastFree | strings: []
+  P 0x2274f0 WSimpleZone::IsPosInRange insns 17 | callers:  | callees: IsZoneInRange, SetPosition
+  P 0x227538 WSound::Update insns 2 | callers: Update | callees: 
+  P 0x227540 WSound::~WSound insns 21 | callers:  | callees: operator_delete, ~AWorldSound
+  P 0x227660 WSound_type_info_function insns 20 | callers:  | callees: AWorldSound_type_info_function, __rtti_si
+  P 0x2276b0 WSound::operator_new insns 8 | callers:  | callees: operator_new
+  P 0x2276d0 WSound::WSound insns 98 | callers:  | callees: AVoice, Add
+  P 0x227858 WSound::SetRenderPath insns 2 | callers:  | callees: 
+  P 0x227860 WSound::GetRenderPath insns 2 | callers:  | callees: 
+
+====================================================================================================
+
+## window 11: Xbox 0x21670 AICharacterEnemySunroof::DoDying .. 0x21b70 AICharacterEnemySunroof::PlayZoneInjuryAnim   (PS2 0x121400 .. 0x121dd8)
+  X 0x21710 insns 11 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: IsAnimationDone | strings: []
+  X 0x21740 insns 42 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00020f90, IsAnimationDone, SetNewAnimation | strings: []
+  X 0x217e0 insns 74 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: GetHitPoints, SetNewAnimation | strings: []
+  X 0x218f0 insns 81 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: GetPosition, GetRigidBody, VU0_v3distancesquare | strings: []
+  X 0x219e0 insns 131 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: GetPosition, GetRigidBody, GetWeaponPosition, atan_turns | strings: []
+  P 0x1214d0 AICharacterEnemySunroof::DoTilting insns 37 | callers:  | callees: GetRigidBody
+  P 0x121568 AICharacterEnemySunroof::DoRunning insns 15 | callers:  | callees: IsAnimationDone
+  P 0x1215a8 AICharacterEnemySunroof::DoLeaning insns 51 | callers:  | callees: IsAnimationDone, SetNewAnimation, VehicleIsAccelerating
+  P 0x121678 AICharacterEnemySunroof::DoDead insns 2 | callers:  | callees: 
+  P 0x121680 AICharacterEnemySunroof::HandleInterrupts insns 82 | callers:  | callees: GetHitPoints, SetNewAnimation
+  P 0x1217c8 AICharacterEnemySunroof::UpdateRotPos insns 18 | callers:  | callees: GetActorLocalPosOri, GetRotPos, VU0_MATRIX4_mult
+  P 0x121810 AICharacterEnemySunroof::GetVehiclePtr insns 2 | callers:  | callees: 
+  P 0x121818 AICharacterEnemySunroof::TargetIsInRange insns 105 | callers:  | callees: GetPosition, GetRigidBody
+  P 0x1219c0 AICharacterEnemySunroof::TargetIsAcquired insns 148 | callers:  | callees: GetPosition, GetRigidBody, GetWeaponPosition, atan2f
+  P 0x121c10 AICharacterEnemySunroof::VehicleIsAccelerating insns 114 | callers: DoArmed, DoLeaning | callees: GetRigidBody
+
+====================================================================================================
+
+## window 12: Xbox 0xf5280 EAGL::ProfilerRegion::ProcessRegions .. 0xf55a0 EAGL::DrawArray::SetGeoPrim   (PS2 0x299970 .. 0x299da8)
+  X 0xf52d0 insns 42 | callers: EndFrame | chain: EAGL::RenderContext::EndFrame@e6640 | callees: FUN_000f4f30, FUN_000f5480, ProcessRegions | strings: []
+  X 0xf5370 insns 70 | callers: DrawRegion | chain: EAGL::ProfilerRegion::DrawRegion@f4760 | callees: BuildMatrix, D3DDevice_Begin, FUN_000ef050, FUN_000f2270, FUN_000f39b0, FUN_000f4350, FUN_000f4380, FUN_000f43a0, Get, GetCurrentRenderContext, GetCurrentTextur | strings: []
+  X 0xf5440 insns 18 | callers: DrawRegion | chain: EAGL::ProfilerRegion::DrawRegion@f4760 | callees: D3DDevice_SetVertexData4f, D3DDevice_SetVertexDataColor | strings: []
+  X 0xf5480 insns 38 | callers: DAT_002406a8_dynamic_initializer, FUN_000f5230, FUN_000f5250, FUN_000f52d0 | chain: FUN_000f52d0@f52d0 <- EAGL::RenderContext::EndFrame@e6640 | callees:  | strings: []
+  X 0xf5500 insns 50 | callers: FUN_000e9aa0, FUN_000e9b40, FUN_000e9be0, FUN_000e9c90, FUN_000e9d40, FUN_000e9df0, Lock, SetNumVerts, SetParamName, Unlock | chain: EAGL::DynamicModel::Lock@e9f40 | EAGL::DynamicModel::SetNumVerts@ea080 | callees: DynamicModel | strings: ['EAGL::DynamicModel new']
+  P 0x299a00 EAGL::ProfilerRegion::ProcessInput insns 39 | callers:  | callees: TIMER_gettick
+  P 0x299aa0 EAGL::ProfilerRegion::ResetAllCycleCounts insns 15 | callers:  | callees: 
+  P 0x299ae0 EAGL::ProfilerRegion::AddRegionToList insns 5 | callers: FUN_00299588, ProfilerRegion | callees: 
+  P 0x299af8 EAGL::ProfilerRegion::RemoveRegionFromList insns 19 | callers: FUN_00299588, ~ProfilerRegion | callees: 
+  P 0x299b48 EAGL::Profiler::OpenProfileSection insns 15 | callers: FUN_00299588, Profiler | callees: 
+  P 0x299b88 EAGL::Profiler::CloseProfileSection insns 17 | callers: FUN_00299588, Profiler | callees: 
+  P 0x299bd0 EAGL::Profiler::Profiler insns 25 | callers: ProcessProfile | callees: CloseProfileSection, OpenProfileSection
+  P 0x299c38 EAGL::Profiler::Profiler insns 30 | callers:  | callees: CloseProfileSection, OpenProfileSection
+  P 0x299cb0 EAGL::Profiler::~Profiler insns 46 | callers: ProcessProfile | callees: eagl_free
+  P 0x299d68 EAGL::ProfilerRegion::gBufferHead_global_ctors insns 8 | callers:  | callees: FUN_00299588
+  P 0x299d88 EAGL::ProfilerRegion::gBufferHead_global_dtors insns 8 | callers:  | callees: FUN_00299588
+
+====================================================================================================
+
+## window 13: Xbox 0x102e30 EAGLAnim::DeltaQFastMinRange::UnQuantize .. 0x1032b0 EAGLAnim::FnDeltaQFast::scalar_deleting_destructor   (PS2 0x26cfb8 .. 0x26d468)
+  X 0x102fb0 insns 54 | callers: FUN_001021a0, FUN_00102280, FUN_001030c0, FUN_00103170, UpdateNextQs, UpdateNextQsMask | chain: FUN_001030c0@1030c0 <- EAGLAnim::FnDeltaQFast::EvalSQT@1029f0 | FUN_00103170@103170 <- EAGLAnim::FnDeltaQFast::EvalSQT@1029f0 | callees:  | strings: []
+  X 0x103060 insns 34 | callers: FUN_00103230 | chain: FUN_00103230@103230 <- FUN_001032e0@1032e0 <- EAGLAnim::FnDeltaQFast::SetAnimMemoryMap@102500 | callees:  | strings: []
+  X 0x1030c0 insns 61 | callers: EvalSQT | chain: EAGLAnim::FnDeltaQFast::EvalSQT@1029f0 | callees: FUN_00102fb0 | strings: []
+  X 0x103170 insns 67 | callers: EvalSQT | chain: EAGLAnim::FnDeltaQFast::EvalSQT@1029f0 | callees: FUN_00102fb0 | strings: []
+  X 0x103230 insns 45 | callers: FUN_001032e0 | chain: FUN_001032e0@1032e0 <- EAGLAnim::FnDeltaQFast::SetAnimMemoryMap@102500 | callees: FUN_00103060 | strings: []
+  P 0x26d0d8 EAGLAnim::DeltaQFastPhysical::UnQuantize insns 41 | callers: EvalSQT, EvalSQTMask, UpdateNextQs, UpdateNextQsMask | callees: 
+  P 0x26d180 EAGLAnim::DeltaQFast::GetConstBoneIdx insns 32 | callers: FUN_0026d538, SetAnimMemoryMap | callees: 
+  P 0x26d200 EAGLAnim::DeltaQFast::GetConstPhysical insns 37 | callers: FUN_0026d538, SetAnimMemoryMap | callees: 
+  P 0x26d298 EAGLAnim::FnDeltaQFast_type_info_function insns 20 | callers:  | callees: EAGLAnim::FnAnimMemoryMap_type_info_function, __rtti_si
+  P 0x26d2e8 EAGLAnim::FnDeltaQFast::operator_new insns 10 | callers:  | callees: eagl_alloc
+  P 0x26d310 EAGLAnim::FnDeltaQFast::operator_new insns 9 | callers:  | callees: eagl_alloc
+  P 0x26d338 EAGLAnim::FnDeltaQFast::operator_delete insns 9 | callers:  | callees: eagl_free
+  P 0x26d360 EAGLAnim::FnDeltaQFast::operator_new_array insns 10 | callers:  | callees: eagl_alloc
+  P 0x26d388 EAGLAnim::FnDeltaQFast::operator_new_array insns 9 | callers:  | callees: eagl_alloc
+  P 0x26d3b0 EAGLAnim::FnDeltaQFast::operator_delete_array insns 9 | callers:  | callees: eagl_free
+  P 0x26d3d8 EAGLAnim::FnDeltaQFast::operator_new insns 2 | callers:  | callees: 
+  P 0x26d3e0 EAGLAnim::FnDeltaQFast::operator_delete insns 2 | callers:  | callees: 
+  P 0x26d3e8 EAGLAnim::FnDeltaQFast::operator_new_array insns 2 | callers:  | callees: 
+  P 0x26d3f0 EAGLAnim::FnDeltaQFast::operator_delete_array insns 2 | callers:  | callees: 
+
+====================================================================================================
+
+## window 14: Xbox 0x10b870 FILESYS_existssync .. 0x10bbb0 ASYNCFILE_init   (PS2 0x2543d0 .. 0x2567f0)
+  X 0x10b8b0 insns 29 | callers: ASYNCFILE_cancel, ASYNCFILE_release, FUN_0010b920 | chain: ASYNCFILE_cancel@10bde0 | ASYNCFILE_release@10bd00 | callees: MUTEX_lock, MUTEX_unlock | strings: []
+  X 0x10b920 insns 35 | callers: FUN_0010b970, FUN_0010bae0 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0010b8b0, MUTEX_lock, MUTEX_unlock | strings: []
+  X 0x10b990 insns 66 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FILESYS_callbackop, FILESYS_close, FILESYS_completeop, FILESYS_read | strings: []
+  X 0x10ba40 insns 55 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FILESYS_callbackop, FILESYS_close, FILESYS_completeop, FILESYS_read | strings: ['ASYNCFILEBUF']
+  X 0x10bae0 insns 75 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FILESYS_callbackop, FILESYS_close, FILESYS_completeop, FILESYS_read, FILESYS_size, FUN_0010b920 | strings: []
+  P 0x254428 stricmp insns 27 | callers: BIG_locateentryz | callees: 
+  P 0x254498 BIG_typeofheader insns 32 | callers: BIG_count, BIG_locateentryz, BIG_sizeofheader, FILE_loadbigheader_internal, iFILE_addbigreadcallback | callees: 
+  P 0x254518 BIG_sizeofheader insns 36 | callers: BIG_getmetainfo, BIG_locateentryz, FILE_loadbigheader_internal, iFILE_addbigreadcallback | callees: BIG_typeofheader
+  P 0x2545a8 BIG_getmetainfo insns 75 | callers: BIG_locateentryz, BIG_version | callees: BIG_sizeofheader
+  P 0x2546d8 BIG_version insns 10 | callers:  | callees: BIG_getmetainfo
+  P 0x254700 BIG_locateentryz insns 349 | callers: BIG_locateentry, BIG_locateoffsetz, BIG_namez, BIG_pointerz, FILESYS_bypassqueuefileinfo, iFILE_ExecCommand | callees: BIG_getmetainfo, BIG_sizeofheader, BIG_typeofheader, stricmp, strlen
+  P 0x254c78 BIG_locateentry insns 7 | callers: BIG_locateoffset, BIG_name, BIG_pointer | callees: BIG_locateentryz
+  P 0x254c98 BIG_locateoffset insns 12 | callers: BIG_locate | callees: BIG_locateentry
+  P 0x254cc8 BIG_locateoffsetz insns 12 | callers: BIG_locatez | callees: BIG_locateentryz
+  P 0x254cf8 BIG_pointer insns 18 | callers:  | callees: BIG_locateentry
+  P 0x254d40 BIG_pointerz insns 18 | callers:  | callees: BIG_locateentryz
+  P 0x254d88 BIG_locate insns 12 | callers: BIG_locatemany | callees: BIG_locateoffset
+  P 0x254db8 BIG_locatez insns 12 | callers:  | callees: BIG_locateoffsetz
+  P 0x254de8 BIG_locatemany insns 36 | callers:  | callees: BIG_locate, strchr
+  P 0x254e78 BIG_count insns 35 | callers:  | callees: BIG_typeofheader
+  P 0x254f08 BIG_name insns 21 | callers:  | callees: BIG_locateentry, strcpy
+  P 0x254f60 BIG_namez insns 21 | callers:  | callees: BIG_locateentryz, strcpy
+  P 0x255048 readsectorB insns 56 | callers: CDVD_init, loaddirinfo | callees: FUN_00254fe0, sceCdDiskReady, sceCdGetError, sceCdInit, sceCdMmode, sceCdRead, sceCdSync
+  P 0x255128 CDVD_hashname insns 28 | callers: CDVD_open, loaddirinfo | callees: strlen
+  P 0x255198 loaddirinfo insns 134 | callers: CDVD_init, loaddirinfo | callees: CDVD_hashname, MEM_copy, loaddirinfo, memcpy, readsectorB, strcat, strcpy
+  P 0x255458 StartReadWithRetry insns 54 | callers: FUN_00255538 | callees: FUN_00254fe0, sceCdRead, sceCdSync
+  P 0x2556d0 CDVD_resettask insns 160 | callers: CDVD_watchdogtimeout | callees: FUN_00254fe0, MEM_copy, SignalSema, sceCdCallback, sceCdDiskReady, sceCdGetError, sceCdInit, sceCdInitEeCB, sceCdMmode, sceCdRead, sceCdSync
+  P 0x255958 CDVD_watchdogtimeout insns 15 | callers:  | callees: CDVD_resettask
+  P 0x255998 CDVD_init insns 208 | callers: FILESYS_initadr | callees: CreateSema, CreateThread, FlushCache, MEM_fill, SYNCTASK_add, StartThread, loaddirinfo, qsort, readsectorB, sceCdCallback, sceCdDiskReady, sceCdGetDiskType, sce
+  P 0x255cd8 CDVD_shutdown insns 22 | callers: FILESYS_restore | callees: DeleteSema, DeleteThread, SYNCTASK_del, TerminateThread, sceCdCallback, sceCdInit
+  P 0x255d30 CDVD_open insns 90 | callers: CDVD_getinfo, FILEDEV_open | callees: CDVD_hashname, bsearch
+  P 0x255e98 CDVD_read insns 164 | callers: FILEDEV_readreq | callees: MEM_copy, SignalSema, iFILE_CommandCompleteCallback
+  P 0x256128 CDVD_getattrfromhandle insns 27 | callers: FILEDEV_getsize | callees: strncpy
+  P 0x256198 CDVD_getinfo insns 20 | callers:  | callees: CDVD_open
+
+====================================================================================================
+
+## window 15: Xbox 0xfdec0 EAGLAnim::EulF3 .. 0xfe280 EAGLAnim::FnDeltaF1::FnDeltaF1   (PS2 0x2726a8 .. 0x2716b8)
+  X 0xfdf20 insns 22 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xfdf60 insns 17 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xfdf90 insns 19 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: EulF3, VU0_fastqslerp | strings: []
+  X 0xfdfd0 insns 0 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xfe060 insns 0 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  P 0x2717d8 EAGLAnim::FnDeltaF1::SetAnimMemoryMap insns 5 | callers:  | callees: 
+  P 0x2717f0 EAGLAnim::FnDeltaF1::GetLength insns 16 | callers:  | callees: 
+  P 0x2718c0 EAGLAnim::FnEventBlender::Eval insns 70 | callers:  | callees: 
+  P 0x2719d8 EAGLAnim::FnEventBlender_type_info_function insns 20 | callers:  | callees: EAGLAnim::FnAnim_type_info_function, __rtti_si
+  P 0x271a28 EAGLAnim::FnEventBlender::FnEventBlender insns 8 | callers:  | callees: 
+  P 0x271a48 EAGLAnim::FnEventBlender::~FnEventBlender insns 12 | callers:  | callees: operator_delete
+  P 0x271a78 EAGLAnim::FnEventBlender::operator_new insns 10 | callers:  | callees: eagl_alloc
+  P 0x271aa0 EAGLAnim::FnEventBlender::operator_new insns 9 | callers:  | callees: eagl_alloc
+  P 0x271ac8 EAGLAnim::FnEventBlender::operator_delete insns 9 | callers: ~FnEventBlender | callees: eagl_free
+  P 0x271af0 EAGLAnim::FnEventBlender::operator_new_array insns 10 | callers:  | callees: eagl_alloc
+  P 0x271b18 EAGLAnim::FnEventBlender::operator_new_array insns 9 | callers:  | callees: eagl_alloc
+  P 0x271b40 EAGLAnim::FnEventBlender::operator_delete_array insns 9 | callers:  | callees: eagl_free
+  P 0x271b68 EAGLAnim::FnEventBlender::operator_new insns 2 | callers:  | callees: 
+  P 0x271b70 EAGLAnim::FnEventBlender::operator_delete insns 2 | callers:  | callees: 
+  P 0x271b78 EAGLAnim::FnEventBlender::operator_new_array insns 2 | callers:  | callees: 
+  P 0x271b80 EAGLAnim::FnEventBlender::operator_delete_array insns 2 | callers:  | callees: 
+  P 0x271b88 EAGLAnim::FnEventBlender::GetTimeOffset insns 4 | callers:  | callees: 
+  P 0x271b98 EAGLAnim::FnEventBlender::GetAnim insns 4 | callers:  | callees: 
+  P 0x271ba8 EAGLAnim::FnEventBlender::Set insns 10 | callers:  | callees: 
+  P 0x271bd0 EAGLAnim::FnRawPoseChannel_type_info_function insns 20 | callers:  | callees: EAGLAnim::FnAnimMemoryMap_type_info_function, __rtti_si
+  P 0x271c60 EAGLAnim::FnRawPoseChannel::~FnRawPoseChannel insns 21 | callers:  | callees: operator_delete, ~FnAnimMemoryMap
+  P 0x271cb8 EAGLAnim::FnRawPoseChannel::operator_new insns 10 | callers:  | callees: eagl_alloc
+  P 0x271ce0 EAGLAnim::FnRawPoseChannel::operator_new insns 9 | callers:  | callees: eagl_alloc
+  P 0x271d08 EAGLAnim::FnRawPoseChannel::operator_delete insns 9 | callers: ~FnRawPoseChannel | callees: eagl_free
+  P 0x271d30 EAGLAnim::FnRawPoseChannel::operator_new_array insns 10 | callers:  | callees: eagl_alloc
+  P 0x271d58 EAGLAnim::FnRawPoseChannel::operator_new_array insns 9 | callers:  | callees: eagl_alloc
+  P 0x271d80 EAGLAnim::FnRawPoseChannel::operator_delete_array insns 9 | callers:  | callees: eagl_free
+  P 0x271da8 EAGLAnim::FnRawPoseChannel::operator_new insns 2 | callers:  | callees: 
+  P 0x271db0 EAGLAnim::FnRawPoseChannel::operator_delete insns 2 | callers:  | callees: 
+  P 0x271db8 EAGLAnim::FnRawPoseChannel::operator_new_array insns 2 | callers:  | callees: 
+  P 0x271dc0 EAGLAnim::FnRawPoseChannel::operator_delete_array insns 2 | callers:  | callees: 
+  P 0x271dc8 EAGLAnim::FnRawPoseChannel::GetRawPoseChannel insns 2 | callers:  | callees: 
+  P 0x271dd0 EAGLAnim::FnRawPoseChannel::GetRawPoseChannel insns 2 | callers:  | callees: 
+  P 0x271dd8 EAGLAnim::FnRawPoseChannel::SetInterp insns 2 | callers:  | callees: 
+  P 0x271de0 EAGLAnim::FnRawPoseChannel::IsInterp insns 2 | callers:  | callees: 
+  P 0x271e00 EAGLAnim::FnRawPoseChannel::GetNumFrames insns 3 | callers:  | callees: 
+  P 0x271e10 EAGLAnim::FnRawPoseChannel::GetNumBones insns 19 | callers:  | callees: 
+  P 0x271e60 EAGLAnim::FnRawPoseChannel::Eval insns 10 | callers:  | callees: Eval
+  P 0x271e88 EAGLAnim::FnRawPoseChannel::EvalSQT insns 10 | callers:  | callees: Eval
+  P 0x272088 EAGLAnim::RawPoseChannel::UnInit insns 112 | callers:  | callees: printf
+
+====================================================================================================
+
+## window 16: Xbox 0xbf2d0 WCollisionMgr::GetGroundCollision .. 0xbf8c0 WCollisionMgr::GetOBBObjectIntersection   (PS2 0x216b60 .. 0x218d10)
+  X 0xbf3a0 insns 42 | callers: GetWorldNormal, Simulate | chain: WCollisionMgr::GetWorldNormal@c0e00 | Newton::Simulate@60b70 | callees: VU0_v3distancesquare | strings: []
+  X 0xbf440 insns 12 | callers: FUN_000c2200 | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xbf460 insns 12 | callers: FUN_00056860, FUN_000c4980, FUN_00123f70 | chain: FUN_00056860@56860 <- FUN_00057460@57460 <- AttributeSystem::~AttributeSystem@592d0 | FUN_000c4980@c4980 <- FUN_000c52c0@c52c0 <- WCollisionMgr::~WCollisionMgr@c5460 | callees:  | strings: []
+  X 0xbf480 insns 20 | callers: FUN_000bf4c0, FindFaceInCInst | chain: WCollisionMgr::FindFaceInCInst@bffe0 | FUN_000bf4c0@bf4c0 <- WCollisionMgr::FindFaceInCInst@bffe0 | callees:  | strings: []
+  X 0xbf4c0 insns 146 | callers: FindFaceInCInst | chain: WCollisionMgr::FindFaceInCInst@bffe0 | callees: FUN_000beeb0, FUN_000bef30, FUN_000bf480, MakeMatrix, VU0_MATRIX4_vect3mult, VU0_v4sub | strings: []
+  X 0xbf680 insns 175 | callers: FindFaceInCInst | chain: WCollisionMgr::FindFaceInCInst@c01d0 | callees: FUN_000bd470, FUN_000beeb0, FindFaceInTriStrip, MakeMatrix, OrthoInverse, VU0_MATRIX4_mult, VU0_MATRIX4_vect3mult, VU0_v4sub | strings: []
+  P 0x216d30 WCollisionMgr::ClosestCollisionInfo insns 99 | callers: GetWorldNormal, Simulate | callees: 
+
+====================================================================================================
+
+## window 17: Xbox 0x29880 AIElementController::Update .. 0x29d60 AIGroundVehicle::Reset   (PS2 0x12bec8 .. 0x12ded8)
+  X 0x29c90 insns 9 | callers: DoTrafficStateUpdate | chain: AIGroundVehicle::DoTrafficStateUpdate@2f4c0 | callees:  | strings: []
+  X 0x29cb0 insns 9 | callers: DoTrafficStateUpdate | chain: AIGroundVehicle::DoTrafficStateUpdate@2f4c0 | callees:  | strings: []
+  X 0x29cd0 insns 9 | callers: DoAttackMode | chain: AIGroundVehicle::DoAttackMode@2bf40 | callees: Get | strings: []
+  X 0x29cf0 insns 15 | callers: DoAgentLogic, DoAgentStateUpdate | chain: AIHelicopter::DoAgentLogic@331c0 | AIGroundVehicle::DoAgentStateUpdate@2cd80 | callees: Get, GetSegmentLeftDrivableDist, GetSegmentRightDrivableDist | strings: []
+  X 0x29d20 insns 6 | callers: CheckAgentRoadNetworkCollision | chain: AIGroundVehicle::CheckAgentRoadNetworkCollision@2fde0 | callees: FUN_00133040 | strings: []
+  X 0x29d40 insns 6 | callers: CheckAgentRoadNetworkCollision | chain: AIGroundVehicle::CheckAgentRoadNetworkCollision@2fde0 | callees: FUN_0013310e | strings: []
+  P 0x12c448 AIElementController::EveryoneToSleep insns 30 | callers:  | callees: GoToSleep
+  P 0x12dc18 AIElementController::CompareInRangePrio insns 5 | callers: Update | callees: 
+  P 0x12dc40 AIElementController::GetElementTrackingCount insns 2 | callers: DrawRadar2DBlips, FireEMP | callees: 
+  P 0x12dc48 AIElementController::GetElementTracking insns 5 | callers: DrawRadar2DBlips, FireEMP | callees: 
+  P 0x12dd60 AIElementTracking::kLowestFreq_global_ctors insns 8 | callers:  | callees: FUN_0012dd28
+
+====================================================================================================
+
+## window 18: Xbox 0x80700 RPathEngine::CreatePathHandle .. 0x80a60 RPlayerCamera::Shutdown   (PS2 0x1b1c20 .. 0x1b2808)
+  X 0x80820 insns 17 | callers: DirectorChangeCameraMode, UpdateRelativeAnimationCam | chain: RPlayerCamera::DirectorChangeCameraMode@84130 | RPlayerCamera::UpdateRelativeAnimationCam@82840 | callees:  | strings: []
+  X 0x808c0 insns 12 | callers: DirectorChangeCameraMode | chain: RPlayerCamera::DirectorChangeCameraMode@84130 | callees: atan_turns | strings: []
+  X 0x808f0 insns 50 | callers: UpdateEllipseCam, UpdateMomentumHeliCam, UpdateTumbleCam | chain: RPlayerCamera::UpdateEllipseCam@886f0 | RPlayerCamera::UpdateMomentumHeliCam@87880 | callees: FUN_00115c80, VU0_v4scale, VU0_v4scaleadd, VU0_v4unitxyz | strings: []
+  X 0x80980 insns 36 | callers: UpdateAnimationCam, UpdateWorldAnimationCam | chain: RWorldCamera::UpdateAnimationCam@97aa0 | RPlayerCamera::UpdateWorldAnimationCam@82400 | callees: FUN_00115f30 | strings: []
+  X 0x809e0 insns 32 | callers: UpdateAnimationCam, UpdateRelativeAnimationCam | chain: RWorldCamera::UpdateAnimationCam@97aa0 | RPlayerCamera::UpdateRelativeAnimationCam@82840 | callees: FUN_00115c80, FUN_00115f30 | strings: []
+  X 0x80a30 insns 12 | callers: UpdateSplineCam | chain: RPlayerCamera::UpdateSplineCam@84a60 | callees: Get | strings: []
+  P 0x1b1fc8 RPathEngine::RPathHandle::FindChannelByName insns 7 | callers:  | callees: FindChannelIndex
+  P 0x1b1fe8 RPathEngine::RPathHandle::GetChannelName insns 19 | callers:  | callees: GetChannels, GetOffsetPtr
+  P 0x1b2038 RPathEngine::RPathHandle::ComputeChannel insns 8 | callers:  | callees: Evaluate
+  P 0x1b2360 CARP::PathInfo::GetChannels insns 2 | callers: FindChannelIndex, GetChannelName | callees: 
+  P 0x1b2368 CARP::PathInfo::GetOffsetPtr insns 2 | callers: FindChannelIndex, GetChannelName | callees: 
+
+====================================================================================================
+
+## window 19: Xbox 0xe9a80 EAGL::DynamicModel::SetModelMatrix .. 0xe9ea0 EAGL::DynamicModel::SetParamName   (PS2 0x286218 .. 0x286730)
+  X 0xe9aa0 insns 45 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_000f5500, SetGeoPrim, SetPrimitiveType | strings: ['EAGL::DrawArray new']
+  X 0xe9b40 insns 44 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_000f5500, GetIndexFromName, SetGeoPrim | strings: ['EAGL::DrawArray new']
+  X 0xe9be0 insns 50 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_000f5500, SetGeoPrim, SetVar | strings: ['EAGL::DrawArray new']
+  X 0xe9c90 insns 50 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_000f5500, SetGeoPrim, SetVar | strings: ['EAGL::DrawArray new']
+  X 0xe9d40 insns 50 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_000f5500, SetGeoPrim, SetVar | strings: ['EAGL::DrawArray new']
+  X 0xe9df0 insns 50 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_000f5500, SetGeoPrim, SetVar | strings: ['EAGL::DrawArray new']
+  P 0x2862a0 EAGL::DynamicModel::SetPrimitiveType insns 42 | callers:  | callees: DrawArray, SetGeoPrim, SetPrimitiveType, eagl_alloc
+  P 0x286348 EAGL::DynamicModel::GetIndexFromName insns 41 | callers:  | callees: DrawArray, GetIndexFromName, SetGeoPrim, eagl_alloc
+  P 0x2863f0 EAGL::DynamicModel::SetVar insns 51 | callers:  | callees: DrawArray, SetGeoPrim, SetVar, eagl_alloc
+  P 0x2864c0 EAGL::DynamicModel::SetVar insns 51 | callers:  | callees: DrawArray, SetGeoPrim, SetVar, eagl_alloc
+  P 0x286590 EAGL::DynamicModel::SetStream insns 51 | callers:  | callees: DrawArray, SetGeoPrim, SetVar, eagl_alloc
+  P 0x286660 EAGL::DynamicModel::SetStream insns 51 | callers:  | callees: DrawArray, SetGeoPrim, SetVar, eagl_alloc
+
+====================================================================================================
+
+## window 20: Xbox 0x76c20 __lower_bound<unsigned_char_*,_unsigned_char,_int> .. 0x774a0 RAnimEngine::Handle::IsSystemPlaying   (PS2 0x1a42c8 .. 0x1a2d10)
+  X 0x76c60 insns 44 | callers: FUN_000776d0, NumFrames, ProcessStimuli, SetFrame, SetFrameRate | chain: RAnimEngine::System::NumFrames@77a50 | RAnimEngine::System::ProcessStimuli@77720 | callees:  | strings: []
+  X 0x76cd0 insns 126 | callers: FUN_00076e40 | chain: FUN_00076e40@76e40 <- FUN_000780d0@780d0 <- RAnimEngine::Handle::Create@78210 | callees:  | strings: []
+  X 0x76e00 insns 29 | callers: FUN_000780d0 | chain: FUN_000780d0@780d0 <- RAnimEngine::Handle::Create@78210 | callees: FUN_00076bc0 | strings: []
+  X 0x76e40 insns 133 | callers: FUN_000780d0 | chain: FUN_000780d0@780d0 <- RAnimEngine::Handle::Create@78210 | callees: FUN_00076cd0 | strings: []
+  X 0x76f70 insns 54 | callers: FUN_000780d0 | chain: FUN_000780d0@780d0 <- RAnimEngine::Handle::Create@78210 | callees: FUN_00076980 | strings: []
+  X 0x76fe0 insns 379 | callers: Create | chain: RAnimEngine::Handle::Create@78210 | callees: CalcDamageZone, FUN_00118170, MEM_fill, __allshl | strings: []
+  P 0x1a2d40 RAnimEngine::Handle::GetSystemStartTick insns 10 | callers: GetActivationStatus | callees: FindSystem
+  P 0x1a2d68 RAnimEngine::Handle::GetSystemMaxTicks insns 10 | callers: GetActivationStatus | callees: FindSystem
+  P 0x1a2df0 RAnimEngine::Handle::GetSystemExists insns 8 | callers:  | callees: FindSystem
+  P 0x1a2e10 RAnimEngine::Handle::HideSystem insns 29 | callers:  | callees: FindSystem
+  P 0x1a2e88 RAnimEngine::Handle::ShowSystem insns 29 | callers:  | callees: FindSystem
+  P 0x1a3088 RAnimEngine::Handle::SetVerbose insns 14 | callers:  | callees: 
+  P 0x1a3c50 __push_heap<unsigned_char_*,_int,_unsigned_char> insns 22 | callers: __adjust_heap<unsigned_char_*,_int,_unsigned_char> | callees: 
+  P 0x1a3cb0 __adjust_heap<unsigned_char_*,_int,_unsigned_char> insns 38 | callers: __make_heap<unsigned_char_*,_unsigned_char,_int>, __partial_sort<unsigned_char_*,_unsigned_char>, sort_heap<unsigned_char_*> | callees: __push_heap<unsigned_char_*,_int,_unsigned_char>
+  P 0x1a3d48 __make_heap<unsigned_char_*,_unsigned_char,_int> insns 28 | callers: __partial_sort<unsigned_char_*,_unsigned_char> | callees: __adjust_heap<unsigned_char_*,_int,_unsigned_char>
+  P 0x1a3db8 sort_heap<unsigned_char_*> insns 37 | callers: __partial_sort<unsigned_char_*,_unsigned_char> | callees: __adjust_heap<unsigned_char_*,_int,_unsigned_char>
+  P 0x1a3e50 __partial_sort<unsigned_char_*,_unsigned_char> insns 39 | callers: __introsort_loop<unsigned_char_*,_unsigned_char,_int> | callees: __adjust_heap<unsigned_char_*,_int,_unsigned_char>, __make_heap<unsigned_char_*,_unsigned_char,_int>, sort_heap<unsigned_char_*>
+  P 0x1a3ef0 __unguarded_partition<unsigned_char_*,_unsigned_char> insns 29 | callers: __introsort_loop<unsigned_char_*,_unsigned_char,_int> | callees: 
+  P 0x1a3f68 __introsort_loop<unsigned_char_*,_unsigned_char,_int> insns 65 | callers: Create, __introsort_loop<unsigned_char_*,_unsigned_char,_int> | callees: __introsort_loop<unsigned_char_*,_unsigned_char,_int>, __partial_sort<unsigned_char_*,_unsigned_char>, __unguarded_partition<unsigned_char_*,_unsigned_char>
+  P 0x1a4070 __unguarded_linear_insert<unsigned_char_*,_unsigned_char> insns 12 | callers: __insertion_sort<unsigned_char_*>, __unguarded_insertion_sort_aux<unsigned_char_*,_unsigned_char> | callees: 
+  P 0x1a40a8 __insertion_sort<unsigned_char_*> insns 40 | callers: __final_insertion_sort<unsigned_char_*> | callees: __unguarded_linear_insert<unsigned_char_*,_unsigned_char>, memmove
+  P 0x1a4148 __unguarded_insertion_sort_aux<unsigned_char_*,_unsigned_char> insns 18 | callers: __final_insertion_sort<unsigned_char_*> | callees: __unguarded_linear_insert<unsigned_char_*,_unsigned_char>
+  P 0x1a4190 __final_insertion_sort<unsigned_char_*> insns 24 | callers: Create | callees: __insertion_sort<unsigned_char_*>, __unguarded_insertion_sort_aux<unsigned_char_*,_unsigned_char>
+  P 0x1a41f0 adjacent_find<unsigned_char_*> insns 19 | callers: unique<unsigned_char_*> | callees: 
+  P 0x1a4280 unique<unsigned_char_*> insns 17 | callers: Create | callees: FUN_001a4240, adjacent_find<unsigned_char_*>
+
+====================================================================================================
+
+## window 21: Xbox 0x58420 AttributeSet::LookupStruct .. 0x58cc0 AttributeSystem::GetCollection   (PS2 0x16a040 .. 0x16cc48)
+  X 0x58470 insns 47 | callers: GetCollection | chain: AttributeSystem::GetCollection@58cc0 | callees: FUN_0009c420, MakeString | strings: []
+  X 0x58510 insns 31 | callers: FUN_000585f0, GetCollection | chain: AttributeSystem::GetCollection@58cc0 | callees: FUN_0009c420 | strings: []
+  X 0x585b0 insns 26 | callers: FUN_00058c70 | chain: FUN_00058c70@58c70 <- FUN_00058fd0@58fd0 <- AttributeSystem::~AttributeSystem@592d0 | callees: FUN_000573a0, FastFree | strings: []
+  X 0x585f0 insns 51 | callers: FUN_000586a0 | chain: FUN_000586a0@586a0 <- FUN_00058880@58880 <- AttributeSystem::GetCollection@58cc0 | callees: FUN_00058510, FastAlloc | strings: []
+  X 0x58880 insns 111 | callers: GetCollection | chain: AttributeSystem::GetCollection@58cc0 | callees: FUN_00053130, FUN_000586a0, __stricmp | strings: []
+  X 0x58c70 insns 30 | callers: FUN_00058c70, FUN_00058fd0 | chain: FUN_00058fd0@58fd0 <- AttributeSystem::~AttributeSystem@592d0 | callees: FUN_000585b0, FUN_00058c70, FastFree | strings: []
+  P 0x16a0a8 AttributeSet::LookupBoolArray insns 28 | callers:  | callees: FindAttribute
+  P 0x16a118 AttributeSet::LookupIntArray insns 28 | callers:  | callees: FindAttribute
+  P 0x16a188 AttributeSet::LookupUIntArray insns 28 | callers:  | callees: FindAttribute
+  P 0x16a1f8 AttributeSet::LookupFloatArray insns 28 | callers:  | callees: FindAttribute
+  P 0x16a268 AttributeSet::LookupVectorArray insns 24 | callers:  | callees: FindAttribute
+  P 0x16a2c8 AttributeSet::LookupMatrixArray insns 24 | callers:  | callees: FindAttribute
+  P 0x16a328 AttributeSet::AddBool insns 71 | callers:  | callees: Alloc, Count, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16a448 AttributeSet::AddInt insns 71 | callers:  | callees: Alloc, Count, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16a568 AttributeSet::AddUInt insns 71 | callers:  | callees: Alloc, Count, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16a688 AttributeSet::AddFloat insns 72 | callers:  | callees: Alloc, Count, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16a7a8 AttributeSet::AddVector insns 97 | callers:  | callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16a930 AttributeSet::AddMatrix insns 97 | callers:  | callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16aab8 AttributeSet::AddString insns 83 | callers:  | callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16ac08 AttributeSet::AddSymbol insns 72 | callers:  | callees: Alloc, Count, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16ad28 AttributeSet::AddStruct insns 107 | callers:  | callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, InitializeExtensionType, LoadCollection, Size, Type
+  P 0x16aed8 AttributeSet::AddBoolArray insns 100 | callers:  | callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16b068 AttributeSet::AddIntArray insns 100 | callers:  | callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16b1f8 AttributeSet::AddUIntArray insns 100 | callers:  | callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16b388 AttributeSet::AddFloatArray insns 100 | callers:  | callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16b518 AttributeSet::AddVectorArray insns 100 | callers:  | callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16b6a8 AttributeSet::AddMatrixArray insns 100 | callers:  | callees: Alloc, Count, FUN_0016eeb0, FUN_0016f380, Free, LoadCollection, Size, Type
+  P 0x16b838 AttributeSet::Remove insns 358 | callers:  | callees: FUN_0016eeb0, FastFree, Free, LoadCollection, Size
+  P 0x16c5e8 Symbol_AttribByteOffsetParserFunc insns 32 | callers:  | callees: NameLookup
+  P 0x16cc20 AttributeSystem::Reset insns 2 | callers:  | callees: 
+
+====================================================================================================
+
+## window 22: Xbox 0xbe8b0 WCollisionInstance::MakeMatrix .. 0xbedd0 WCollisionMgr::SurfaceBumpHeight   (PS2 0x212ed0 .. 0x213618)
+  X 0xbe950 insns 75 | callers: GetBarrierList | chain: WCollisionMgr::GetBarrierList@c3880 | callees:  | strings: []
+  X 0xbea50 insns 67 | callers: CheckHitWindow | chain: WCollisionMgr::CheckHitWindow@c4d70 | callees:  | strings: []
+  X 0xbeb40 insns 19 | callers: CheckHitWindow | chain: WCollisionMgr::CheckHitWindow@c4d70 | callees:  | strings: []
+  X 0xbeb70 insns 30 | callers: CheckHitWindow | chain: WCollisionMgr::CheckHitWindow@c4d70 | callees:  | strings: []
+  X 0xbebd0 insns 81 | callers: FUN_000bef30, FindClosestFace, FindFaceInTriStrip | chain: WWorldPos::FindClosestFace@d31f0 | WCollisionMgr::FindFaceInTriStrip@bf0e0 | callees:  | strings: []
+  X 0xbecb0 insns 51 | callers: FUN_000bef30 | chain: FUN_000bef30@bef30 <- WCollisionMgr::FindFaceInCInst@bffe0 | FUN_000bef30@bef30 <- FUN_000bf4c0@bf4c0 <- WCollisionMgr::FindFaceInCInst@bffe0 | callees:  | strings: []
+  X 0xbed40 insns 51 | callers: FUN_000bef30 | chain: FUN_000bef30@bef30 <- WCollisionMgr::FindFaceInCInst@bffe0 | FUN_000bef30@bef30 <- FUN_000bf4c0@bf4c0 <- WCollisionMgr::FindFaceInCInst@bffe0 | callees:  | strings: []
+  P 0x2130f0 WCollisionObject::MakeMatrix_global_ctors insns 8 | callers:  | callees: FUN_002130b8
+
+====================================================================================================
+
+## window 23: Xbox 0xc57b0 WGrid::WGrid .. 0xc59f0 WGrid::Shutdown   (PS2 0x21c0f0 .. 0x21c678)
+  X 0xc5830 insns 34 | callers: FUN_000c59b0 | chain: FUN_000c59b0@c59b0 <- WGrid::Shutdown@c59f0 | callees: FastFree | strings: []
+  X 0xc5880 insns 16 | callers: FUN_000c5f10 | chain: FUN_000c5f10@c5f10 <- WGrid::AddGridNodeDynamicElement@c6d70 | callees: FastAlloc | strings: []
+  X 0xc58c0 insns 19 | callers: Init, UpdateTargets | chain: WGrid::Init@c5fc0 | DAudio::UpdateTargets@37750 | callees: FastAlloc | strings: []
+  X 0xc5900 insns 46 | callers: AddGridNodeDynamicElement | chain: WGrid::AddGridNodeDynamicElement@c6d70 | callees: FastFree | strings: []
+  X 0xc5970 insns 12 | callers: FUN_000c5f10 | chain: FUN_000c5f10@c5f10 <- WGrid::AddGridNodeDynamicElement@c6d70 | callees: FastAlloc | strings: []
+  X 0xc5990 insns 12 | callers: DAT_0023b3b0_dynamic_initializer, FUN_00037640 | chain: (no chain to a function named on both sides within 3 levels) | callees: FastAlloc | strings: []
+  X 0xc59b0 insns 30 | callers: Shutdown | chain: WGrid::Shutdown@c59f0 | callees: FUN_000c5830, FastFree | strings: []
+  P 0x21c1b0 WGrid::~WGrid insns 18 | callers: Shutdown | callees: Free
+
+====================================================================================================
+
+## window 24: Xbox 0xeeea0 EAGL::GeoPrimStateExtension::GeoPrimStateExtension .. 0xef480 EAGL::GeoPrimState::GeoPrimState   (PS2 0x283568 .. 0x283f28)
+  X 0xeef20 insns 4 | callers: FUN_00091680 | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xeef40 insns 4 | callers: FUN_00091d20 | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xeef80 insns 8 | callers: Debug, DrawSimpleShadow, FUN_00091db0, RenderBlock | chain: RRenderDebugViewScreenSpace::Debug@8b3c0 | RShadowMap::DrawSimpleShadow@a60f0 | callees:  | strings: []
+  X 0xeefc0 insns 4 | callers: FUN_00092080 | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xeefe0 insns 4 | callers: FUN_00092030 | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xef020 insns 4 | callers: FONTEAGL_startdraw | chain: EAGLFont::FONTEAGL_startdraw@ee920 | callees:  | strings: []
+  X 0xef050 insns 275 | callers: Begin, FONTEAGL_startdraw, FUN_000f5370, FUN_000f6320 | chain: EAGL::DrawTextured::Begin@14cf10 | EAGLFont::FONTEAGL_startdraw@ee920 | callees: D3DDevice_SetRenderState_CullMode, D3DDevice_SetRenderState_FillMode, D3DDevice_SetRenderState_Simple, D3DDevice_SetTexture, FUN_000e7430, Get, GetCurrentRender | strings: []
+  P 0x283708 EAGL::GeoPrimStateExtension::DumpState insns 427 | callers:  | callees: printf
+  P 0x283ed8 EAGL::GeoPrimState::~GeoPrimState insns 20 | callers: FUN_001cec88, FUN_001dac48, FUN_001dbbb0, FUN_001e3710, FUN_001e4a80, FUN_001e9ec8, FUN_001f26a8, FUN_001f4bb8, GetGeoPrimState, RuntimeAllocGeoPrimStateDestruc | callees: eagl_free, ~GeoPrimStateExtension
+
+====================================================================================================
+
+## window 25: Xbox 0xb2900 Simulation::GetTrackedInstanceList .. 0xb2b50 Simulation::SetStartConditions   (PS2 0x201978 .. 0x1fee68)
+  X 0xb2910 insns 3 | callers: ~ESetReflectiveObject | chain: ESetReflectiveObject::~ESetReflectiveObject@44450 | callees:  | strings: []
+  X 0xb2920 insns 38 | callers: CleanUpObjects, DeletePhysicsObject, FUN_00071290, FUN_00094140, FUN_0009cc70, FUN_000a2660, FUN_000b2e00, FUN_000b3660, FUN_000c24d0, FUN_000ccc20, FUN_0011962 | chain: Simulation::CleanUpObjects@b4750 | Simulation::DeletePhysicsObject@b4250 | callees:  | strings: []
+  X 0xb2980 insns 41 | callers: ~PhysicsObject | chain: PhysicsObject::~PhysicsObject@6f680 | callees: ~RigidBody, ~SimpleRigidBody | strings: []
+  X 0xb29f0 insns 37 | callers: FUN_00054460, FUN_00054c60, FUN_000a73c0, FUN_000a7690, FUN_000b3390, FUN_000b39a0 | chain: FUN_00054460@54460 <- FUN_00055390@55390 <- AttributeSystem::MakeString@55da0 | FUN_00054c60@54c60 <- FUN_00055620@55620 <- AttributeSystem::~AttributeSystem@592d0 | callees:  | strings: []
+  X 0xb2a50 insns 37 | callers: FUN_00054460, FUN_00054c60, FUN_000a73c0, FUN_000a7690, FUN_000b3390, FUN_000b39a0 | chain: FUN_00054460@54460 <- FUN_00055390@55390 <- AttributeSystem::MakeString@55da0 | FUN_00054c60@54c60 <- FUN_00055620@55620 <- AttributeSystem::~AttributeSystem@592d0 | callees:  | strings: []
+  X 0xb2ab0 insns 43 | callers: FUN_00055390, FUN_000a7870, FUN_000b4190 | chain: FUN_00055390@55390 <- AttributeSystem::MakeString@55da0 | FUN_000a7870@a7870 <- RVehicleParticle::UpdateCar@a7ac0 | callees:  | strings: []
+  X 0xb2b10 insns 28 | callers: FUN_000b2b10, FUN_000b3e40 | chain: FUN_000b3e40@b3e40 <- Simulation::~Simulation@b5310 | callees: FUN_000b2b10, FastFree | strings: []
+  P 0x1ff0f0 Simulation::ReleaseRigidBodySlot insns 55 | callers: ~PhysicsObject | callees: ~RigidBody, ~SimpleRigidBody
+  P 0x1ff1d0 Simulation::FindRigidBodySignature insns 12 | callers: FindSignature | callees: 
+  P 0x1ff200 Simulation::FindSimpleRigidBodySignature insns 12 | callers: FindSignature | callees: 
+  P 0x1ff2e8 Simulation::CopyRigidBodiesToScratchPad insns 28 | callers: ~ESimFrameUpdate | callees: DMA_ToScratchPad, ResetRigidBodySP
+  P 0x1ff358 Simulation::CopyRigidBodiesFromScratchPad insns 26 | callers: ~ESimFrameUpdate | callees: DMA_FromScratchPad
+  P 0x1ff3c0 Simulation::ReleaseScratchPad insns 2 | callers: ~ESimEndFrame | callees: 
+  P 0x1ff908 Simulation::ActivateCarObject insns 49 | callers:  | callees: GetRigidBody, _M_insert_aux, memmove, remove<PVehicle_**,_PVehicle_*>
+  P 0x1ff9d0 Simulation::DeactivateCarObject insns 48 | callers:  | callees: GetRigidBody, _M_insert_aux, memmove, remove<PVehicle_**,_PVehicle_*>
+  P 0x200ca8 Simulation::DeleteInProgress insns 3 | callers:  | callees: 
+
+====================================================================================================
+
+## window 26: Xbox 0xb2d30 Simulation::GetPlayerObject .. 0xb3000 Simulation::UntrackInstance   (PS2 0x201ae0 .. 0x201690)
+  X 0xb2d40 insns 47 | callers: Render | chain: RRenderHigh::Render@8bf30 | callees: GetSig | strings: []
+  X 0xb2dc0 insns 28 | callers: DeleteDeadObjects, FUN_000b2dc0, FUN_000b3f00 | chain: Simulation::DeleteDeadObjects@b3fc0 | FUN_000b3f00@b3f00 <- Simulation::~Simulation@b5310 | callees: FUN_000b2dc0, FastFree | strings: []
+  X 0xb2e40 insns 16 | callers: FUN_0004f510, FUN_0005c1a0, FUN_000a0020, FUN_000b3b80, FUN_000c1bf0, FUN_000c2c70, FUN_000c5be0, FUN_0011b820 | chain: FUN_000a0020@a0020 <- RLightning::AddRoundedBolt@a0500 | FUN_000c1bf0@c1bf0 <- WCollisionMgr::GetObjectListsGuts@c34c0 | callees:  | strings: []
+  X 0xb2e70 insns 29 | callers: FUN_000b2f60, UntrackInstance | chain: Simulation::UntrackInstance@b3000 | FUN_000b2f60@b2f60 <- Simulation::DeletePhysicsObject@b4250 | callees:  | strings: []
+  X 0xb2ef0 insns 43 | callers: DeletePhysicsObject | chain: Simulation::DeletePhysicsObject@b4250 | callees:  | strings: []
+  X 0xb2f60 insns 40 | callers: DeletePhysicsObject | chain: Simulation::DeletePhysicsObject@b4250 | callees: FUN_000b2e70 | strings: []
+  X 0xb2fc0 insns 22 | callers: DeletePhysicsObject | chain: Simulation::DeletePhysicsObject@b4250 | callees:  | strings: []
+  P 0x201980 Simulation::DeleteCarObject insns 7 | callers: GoToSleep | callees: DeletePhysicsObject
+  P 0x2019a0 Simulation::DeleteSmackableObject insns 7 | callers:  | callees: DeletePhysicsObject
+  P 0x2019c0 Simulation::DeleteHumanObject insns 7 | callers: GoToSleep | callees: DeletePhysicsObject
+  P 0x2019e0 Simulation::DeleteMissileObject insns 7 | callers: Simulate | callees: DeletePhysicsObject
+  P 0x201a00 Simulation::DeleteMineObject insns 7 | callers: CheckForProximity, CheckTimer, Simulate | callees: DeletePhysicsObject
+  P 0x201a20 Simulation::DeleteGrenadeObject insns 7 | callers: Simulate | callees: DeletePhysicsObject
+  P 0x201a40 Simulation::DeleteShellObject insns 7 | callers: Simulate | callees: DeletePhysicsObject
+  P 0x201a60 Simulation::DeleteExplosionObject insns 7 | callers: Simulate | callees: DeletePhysicsObject
+  P 0x201a80 Simulation::DeleteNewtonObject insns 7 | callers: CanSpawnSimpleRigidBody, Simulate | callees: DeletePhysicsObject
+  P 0x201aa0 Simulation::DeleteHelicopterObject insns 7 | callers: GoToSleep | callees: DeletePhysicsObject
+  P 0x201ac0 Simulation::DeleteSentryObject insns 7 | callers: ApplyDamage, ~EKillSentry | callees: DeletePhysicsObject
+
+====================================================================================================
+
