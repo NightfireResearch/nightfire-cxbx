@@ -1,0 +1,849 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "AICharacterPedestrian",
+   "size": 656,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AICharacter",
+     "name": "super_AICharacter"
+    },
+    {
+     "offset": 320,
+     "type": "int",
+     "name": "pedIndex",
+     "comment": "high: UpdateClosestPed 23ce0 skips fpPeds[i] (0x1dde98, count fgNumPeds 0x1dded8) when i == [ESI+0x140]; KillSelf/Recycle/HandleInterrupts/FindPointAgainstWall read; PS2 +0x150 (SetBuddy hint). Name invented"
+    },
+    {
+     "offset": 324,
+     "type": "WWorldPos *",
+     "name": "worldPos",
+     "comment": "medium: PreventFalling passes it as this to WWorldPos::FindClosestFace on both builds; PS2 +0x154. Name invented"
+    },
+    {
+     "offset": 328,
+     "type": "WCollider *",
+     "name": "collider",
+     "comment": "medium: ~AICharacterPedestrian/FindPointAgainstWall; WCollider::~WCollider hint on both builds (PS2 +0x158); the same hint on EnemyGround was doubtful (cluster7), so check before trusting the type"
+    },
+    {
+     "offset": 332,
+     "type": "int",
+     "name": "prevState",
+     "comment": "medium: DoWalking 270b0/DoStartled 27150/KillSelf store the old [+0x5c] state here just before writing a new one; PS2 +0x15c written by SetNewState. Name invented"
+    },
+    {
+     "offset": 336,
+     "type": "byte",
+     "name": "pedFlags",
+     "comment": "medium: byte bit tests: DoWalking TEST [+0x150],3, DoStartled TEST 2, KillSelf TEST 1 and clears it; PS2 +0x160 1-byte (a char on both builds, not a packed bool, so no shift). Name invented"
+    },
+    {
+     "offset": 337,
+     "type": "byte",
+     "name": "unknown151",
+     "comment": "low: not seen on Xbox; PS2 +0x161 1-byte R/W in DoDodging, next to pedFlags"
+    },
+    {
+     "offset": 340,
+     "type": "int",
+     "name": "buddyIndex",
+     "comment": "medium: KillSelf 24140 indexes the ped table with [ESI+0x154], resets the buddy's +0x14c/+0x150/+0x154/+0x19c, then overwrites this field; PS2 +0x164 (SetBuddy(int,int)). Name invented"
+    },
+    {
+     "offset": 344,
+     "type": "int",
+     "name": "unknown158",
+     "comment": "low: no Xbox access seen; PS2 +0x168 R/W in Recycle (uniform -0x10 shift)"
+    },
+    {
+     "offset": 348,
+     "type": "int",
+     "name": "currentAnim",
+     "comment": "medium: PlayAnim/DoDying/DoNeutral read; PS2 +0x16c passed to PlayAnim/PlayCrossFade. Name invented"
+    },
+    {
+     "offset": 352,
+     "type": "int",
+     "name": "closestPed",
+     "comment": "high: UpdateClosestPed 23ce0 stores the index it returns (-1 if none); PS2 +0x170"
+    },
+    {
+     "offset": 356,
+     "type": "float",
+     "name": "closestPedDist",
+     "comment": "high: UpdateClosestPed stores the best distance (init 9999.9 = 0x461c3f9a); PS2 +0x174 float"
+    },
+    {
+     "offset": 360,
+     "type": "int",
+     "name": "prevClosestPed",
+     "comment": "high: UpdateClosestPed copies +0x160 here first; PS2 +0x178"
+    },
+    {
+     "offset": 364,
+     "type": "float",
+     "name": "prevClosestPedDist",
+     "comment": "high: UpdateClosestPed copies +0x164 here first; PS2 +0x17c float"
+    },
+    {
+     "offset": 368,
+     "type": "COORD3",
+     "name": "fleeTarget",
+     "comment": "medium: DoStartled 27150 passes LEA [ESI+0x170] to SetTarget 23ba0 (missed by the scanner); PS2 +0x180 LEA in DoAvoiding/DoDodging/DoLeaning/DoStartled/Recycle. Name invented"
+    },
+    {
+     "offset": 384,
+     "type": "COORD3",
+     "name": "nextTarget",
+     "comment": "medium: DoWalking 270b0 copies +0x180..+0x188 into target +0x190; PS2 +0x190 written by Recycle. Name invented"
+    },
+    {
+     "offset": 400,
+     "type": "COORD3",
+     "name": "target",
+     "comment": "high: SetTarget(COORD3 &) / FaceTarget / ReachedTarget; FaceTarget writes +0x198 float; PS2 SetTarget +0x1a0..+0x1a8"
+    },
+    {
+     "offset": 412,
+     "type": "int",
+     "name": "stateTimer",
+     "comment": "low: zeroed by DoWalking/DoStartled/KillSelf/HandleInterrupts on every state change; PS2 +0x1ac (SetNewState, DoAvoiding). Name invented"
+    },
+    {
+     "offset": 416,
+     "type": "int",
+     "name": "unknown1a0",
+     "comment": "low: PlayAnim writes; PS2 +0x1b0 PlayAnim/PlayCrossFade/DoAvoiding/DoDodging"
+    },
+    {
+     "offset": 420,
+     "type": "float",
+     "name": "unknown1a4",
+     "comment": "low: UpdateRotPos/UpdateThreatRelativeDirection write float; PS2 +0x1b4"
+    },
+    {
+     "offset": 424,
+     "type": "float",
+     "name": "unknown1a8",
+     "comment": "low: UpdateRotPos writes float; PS2 +0x1b8"
+    },
+    {
+     "offset": 428,
+     "type": "float",
+     "name": "unknown1ac",
+     "comment": "low: KillSelf zeroes, HandleInterrupts/ThreatenedByVehicle write float; PS2 +0x1bc float"
+    },
+    {
+     "offset": 432,
+     "type": "float",
+     "name": "unknown1b0",
+     "comment": "low: KillSelf zeroes, HandleInterrupts writes; PS2 +0x1c0 float (KillSelf)"
+    },
+    {
+     "offset": 436,
+     "type": "bool",
+     "name": "active",
+     "comment": "medium: UpdateClosestPed only considers other peds whose byte +0x1b4 is set; MaintainHeading reads; PS2 +0x1c4 4-byte (next field keeps the -0x10 shift, so padded). Name invented"
+    },
+    {
+     "offset": 440,
+     "type": "int",
+     "name": "roadSegment",
+     "comment": "low: UpdateClosestPed compares other peds' +0x1b8 with its own (match or -1); KillSelf/MaintainHeading write; PS2 +0x1c8. Name invented (cf. fgLastSeg)"
+    },
+    {
+     "offset": 444,
+     "type": "int",
+     "name": "unknown1bc",
+     "comment": "low: UpdateThreatRelativeDirection reads; PS2 +0x1cc"
+    },
+    {
+     "offset": 448,
+     "type": "WRoadNav *",
+     "name": "walkNav",
+     "comment": "medium: MaintainHeading reads; PS2 +0x1d0 passed to WRoadNav::IncNavPosition, returned by GetWalkToNav. Name invented"
+    },
+    {
+     "offset": 452,
+     "type": "void *",
+     "name": "animController",
+     "comment": "medium: AnimationController * (PS2 +0x1d4 passed to AnimationController::GetCurrentFrame); PlayAnim writes. Type void * (size unknown), name invented"
+    },
+    {
+     "offset": 456,
+     "type": "float",
+     "name": "animSpeed",
+     "comment": "low: PlayAnim/UpdateAnimSpeed write float; PS2 +0x1d8 float. Name invented"
+    },
+    {
+     "offset": 460,
+     "type": "float",
+     "name": "unknown1cc",
+     "comment": "low: UpdateAnimSpeed writes; PS2 +0x1dc float"
+    },
+    {
+     "offset": 464,
+     "type": "COORD3",
+     "name": "unknown1d0",
+     "comment": "low: LEA in DoLeaning/FindPointAgainstWall; PS2 +0x1e0 (w8 + w4) written by FindPointAgainstWall"
+    },
+    {
+     "offset": 480,
+     "type": "COORD3",
+     "name": "wallPoint",
+     "comment": "low: FindPointAgainstWall LEA +0x1e0 and writes +0x1e4/+0x1e8; PS2 +0x1f0..+0x1f8 floats (DoLeaning, FindPointAgainstWall). Name invented"
+    },
+    {
+     "offset": 492,
+     "type": "int",
+     "name": "unknown1ec",
+     "comment": "low: DoLeaning writes; PS2 +0x1fc"
+    },
+    {
+     "offset": 496,
+     "type": "int",
+     "name": "unknown1f0",
+     "comment": "low: ThreatenedByVehicle writes; PS2 +0x200"
+    },
+    {
+     "offset": 500,
+     "type": "int",
+     "name": "unknown1f4",
+     "comment": "low: ThreatenedByVehicle R/W; PS2 +0x204 (also Recycle)"
+    },
+    {
+     "offset": 504,
+     "type": "int",
+     "name": "unknown1f8",
+     "comment": "low: ThreatenedByVehicle R/W; PS2 +0x208"
+    },
+    {
+     "offset": 508,
+     "type": "int",
+     "name": "unknown1fc",
+     "comment": "low: ThreatenedByVehicle/UpdateAnimSpeed R/W; PS2 +0x20c (DoTurning, Recycle)"
+    },
+    {
+     "offset": 512,
+     "type": "int",
+     "name": "unknown200",
+     "comment": "low: not seen on Xbox; PS2 +0x210 R/W in CheckVehicleThreat/DoDodging"
+    },
+    {
+     "offset": 516,
+     "type": "float",
+     "name": "unknown204",
+     "comment": "low: CheckVehicleThreat LEA; PS2 +0x214 LEA float"
+    },
+    {
+     "offset": 520,
+     "type": "float",
+     "name": "threatSide",
+     "comment": "low: DoStartled compares float +0x208 with a constant to pick a -/+0.25 lean; CheckVehicleThreat LEA; PS2 +0x218 LEA float. Name invented"
+    },
+    {
+     "offset": 524,
+     "type": "float",
+     "name": "unknown20c",
+     "comment": "low: CheckVehicleThreat/DoDodging/ThreatenedByVehicle/UpdateAnimSpeed float; PS2 +0x21c"
+    },
+    {
+     "offset": 528,
+     "type": "COORD3",
+     "name": "threatPos0",
+     "comment": "low: LEA in CheckVehicleThreat/DoDodging/SetNewTargetBasedOnThreat; PS2 +0x220 (w8 + w4). 16-byte stride to the next vector on both builds, +0x21c unaccessed. Name invented"
+    },
+    {
+     "offset": 544,
+     "type": "COORD3",
+     "name": "threatPos1",
+     "comment": "low: as threatPos0; PS2 +0x230..+0x238 floats"
+    },
+    {
+     "offset": 560,
+     "type": "COORD3",
+     "name": "threatPos2",
+     "comment": "low: LEA in CheckVehicleThreat/SetNewTargetBasedOnThreat; PS2 +0x240 (w8 + w4)"
+    },
+    {
+     "offset": 572,
+     "type": "float",
+     "name": "unknown23c",
+     "comment": "low: ThreatenedByVehicle writes; PS2 +0x24c float (DoDodging too)"
+    },
+    {
+     "offset": 576,
+     "type": "int",
+     "name": "unknown240",
+     "comment": "low: FindPointAgainstWall R/W; PS2 +0x250"
+    },
+    {
+     "offset": 580,
+     "type": "int",
+     "name": "unknown244",
+     "comment": "low: FindPointAgainstWall R/W; PS2 +0x254"
+    },
+    {
+     "offset": 584,
+     "type": "float",
+     "name": "unknown248",
+     "comment": "low: FindPointAgainstWall writes float; PS2 +0x258 float"
+    },
+    {
+     "offset": 588,
+     "type": "int",
+     "name": "unknown24c",
+     "comment": "low: DoStartled writes -1; DoDodging/DoLeaning write; PS2 +0x25c"
+    },
+    {
+     "offset": 592,
+     "type": "bool",
+     "name": "useAimTarget",
+     "comment": "medium: TargetIsInRange 24b30 uses COORD3 +0x260 when this byte is set, else Bond's rigid-body position; DoAiming R/W; PS2 +0x260 1-byte. Name invented"
+    },
+    {
+     "offset": 608,
+     "type": "COORD3",
+     "name": "aimTarget",
+     "comment": "medium: TargetIsInRange LEA +0x260; PS2 +0x270 (w8 + w4) in HandleInterrupts/Recycle/TargetIsInRange. Name invented"
+    },
+    {
+     "offset": 620,
+     "type": "int",
+     "name": "unknown26c",
+     "comment": "low: DoAiming R/W; PS2 +0x27c"
+    },
+    {
+     "offset": 624,
+     "type": "int",
+     "name": "unknown270",
+     "comment": "low: DoAiming R/W; PS2 +0x280"
+    },
+    {
+     "offset": 628,
+     "type": "float",
+     "name": "targetAngle",
+     "comment": "medium: TargetIsInRange stores the wrapped angle between facing and target; DoAiming writes; PS2 +0x284 float (same role as EnemySnow +0x154). Name invented"
+    },
+    {
+     "offset": 632,
+     "type": "float",
+     "name": "aimYaw",
+     "comment": "low: DoAiming R/W float; PS2 +0x288; by analogy with EnemySnow +0x158. Name invented"
+    },
+    {
+     "offset": 636,
+     "type": "float",
+     "name": "unknown27c",
+     "comment": "low: DoAiming R/W float; PS2 +0x28c LEA float (address taken: maybe the start of a float[2] as in EnemySnow +0x160)"
+    },
+    {
+     "offset": 640,
+     "type": "float",
+     "name": "unknown280",
+     "comment": "low: DoAiming writes float; PS2 +0x290 LEA float"
+    }
+   ],
+   "comment": "Pooled pedestrian (fpPeds 0x1dde98, 16 slots); size 0x290 from deleting destructor 24700 FastFree (PS2 probably 0x2a0). Own fields uniformly PS2 -0x10 (PS2 +0x150..+0x290 -> Xbox +0x140..+0x280); the chars at +0x150/+0x151 and bools at +0x1b4/+0x250 cause no further shift."
+  },
+  {
+   "name": "AICharacterEnemySnow",
+   "size": 368,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AICharacter",
+     "name": "super_AICharacter"
+    },
+    {
+     "offset": 320,
+     "type": "PVehicle *",
+     "name": "vehicle",
+     "comment": "high: ctor 1fd40 stores arg3 (ctor(MATRIX4 &, int, PVehicle *)); DoNeutral makes vtable calls on it; PhysicsObject::GetHitPoints hint; PS2 +0x150 (GetVehiclePtr)"
+    },
+    {
+     "offset": 324,
+     "type": "int",
+     "name": "leanDirection",
+     "comment": "low: ctor 0; DoNeutral writes 0 or 1 together with subState 0x15; DoLeaning reads; PS2 +0x154. Name invented"
+    },
+    {
+     "offset": 328,
+     "type": "int",
+     "name": "aimPitchDir",
+     "comment": "low: ctor 0; DoAiming XORs it with base +0x94 to choose the +/- step for aimPitch; PS2 +0x158. Name invented"
+    },
+    {
+     "offset": 332,
+     "type": "int",
+     "name": "aimTimer",
+     "comment": "medium: ctor 0; DoAiming increments it, compares with +0x150, resets; PS2 +0x15c. Name invented"
+    },
+    {
+     "offset": 336,
+     "type": "int",
+     "name": "aimTimerLimit",
+     "comment": "medium: ctor 0; DoAiming sets (random*0xb4)>>16 (0..180); PS2 +0x160. Name invented"
+    },
+    {
+     "offset": 340,
+     "type": "float",
+     "name": "targetAngle",
+     "comment": "medium: ctor 0; TargetIsInRange 20710 stores an angle (FST); DoAiming scales it; PS2 +0x164 float. Name invented"
+    },
+    {
+     "offset": 344,
+     "type": "float",
+     "name": "aimYaw",
+     "comment": "medium: ctor 0; DoAiming steps toward targetAngle, clamps to +/-90 (0x42b40000), passes to 0x114c60 (rotation builder); PS2 +0x168. Name invented"
+    },
+    {
+     "offset": 348,
+     "type": "float",
+     "name": "aimPitch",
+     "comment": "medium: ctor 0; DoAiming steps it, clamps to -70/+120; PS2 +0x16c. Name invented"
+    },
+    {
+     "offset": 352,
+     "type": "float[2]",
+     "name": "blendWeights",
+     "comment": "medium: ctor zero loop; DoAiming loop i<2: [+0x160+4i] += [+0x168+4i], clamp 0..1, passes &+0x160 to 0x11780 (actor blend); PS2 +0x170 LEA. Name invented"
+    },
+    {
+     "offset": 360,
+     "type": "float[2]",
+     "name": "blendRates",
+     "comment": "medium: added to blendWeights each frame, zeroed when clamped; DoAiming/DoArmed/DoNeutral/PlayZoneInjuryAnim write; PS2 +0x178 LEA/W, +0x17c. Name invented"
+    }
+   ],
+   "comment": "Snowmobile-riding enemy (ctor(MATRIX4 &, int weapon, PVehicle *), sets injuryZones 0x1b51d8); size 0x170 from dtor 1fdd0. Own fields uniformly PS2 -0x10."
+  },
+  {
+   "name": "AICharacterEnemySunroof",
+   "size": 368,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AICharacter",
+     "name": "super_AICharacter"
+    },
+    {
+     "offset": 320,
+     "type": "PVehicle *",
+     "name": "vehicle",
+     "comment": "high: ctor 210f0 stores arg4 and reads its word +0x4a (rigid body index) for Simulation::GetRigidBody; PhysicsObject::GetHitPoints hint; PS2 +0x150 (GetVehiclePtr)"
+    },
+    {
+     "offset": 336,
+     "type": "COORD3",
+     "name": "lastVehicleVelocity",
+     "comment": "medium: ctor copies GetRigidBody(vehicle)->velocity (+0x20) here; PS2 +0x160 (w8 + w4) written by ctor and DoTilting (VehicleIsAccelerating compares). Name invented"
+    },
+    {
+     "offset": 348,
+     "type": "int",
+     "name": "unknown15c",
+     "comment": "low: ctor 0; DoArmed/DoLeaning R/W; PS2 +0x16c also in VehicleIsAccelerating"
+    },
+    {
+     "offset": 352,
+     "type": "AICharacter *",
+     "name": "partnerA",
+     "comment": "medium: ctor 0; TargetIsInRange 218f0 dereferences [+0x160]+0xa8 (actor iterator) ->+8 ->byte +0x24, as for an AICharacter; DoInitial writes; PS2 +0x170. Name invented"
+    },
+    {
+     "offset": 356,
+     "type": "AICharacter *",
+     "name": "partnerB",
+     "comment": "medium: same pattern as +0x160; PS2 +0x174. Name invented"
+    },
+    {
+     "offset": 360,
+     "type": "WTargetable *",
+     "name": "targetable",
+     "comment": "high: ctor FastAlloc(0x50) then WTargetable ctor 0xcd9b0(this) and stores it; ~AICharacterEnemySunroof/DoDying call WTargetable::RemoveReference; PS2 +0x178 (its ~AICharacter hint is a folded dtor)"
+    }
+   ],
+   "comment": "Enemy in a car sunroof (ctor(MATRIX4 &, int weapon, int, PVehicle *), owns a WTargetable); size 0x170 from dtor 21230. Own fields uniformly PS2 -0x10; +0x144..+0x14f unaccessed on both builds."
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x000239d0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AICharacterPedestrian::GetPedBase(void)"
+  },
+  {
+   "address": "0x00023a90",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::GetRandomConvAnim(bool)"
+  },
+  {
+   "address": "0x00023ad0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::PedInRange(COORD3 &, float, bool)"
+  },
+  {
+   "address": "0x00023b70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::DoDead(void)"
+  },
+  {
+   "address": "0x00023ba0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::SetTarget(COORD3 &)"
+  },
+  {
+   "address": "0x00023bc0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::GetDegFromAng(float, bool)"
+  },
+  {
+   "address": "0x00023ce0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::UpdateClosestPed(bool)",
+   "return": "int"
+  },
+  {
+   "address": "0x00023e60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::UpdateThreatRelativeDirection(COORD3 &,"
+  },
+  {
+   "address": "0x00023f50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::~AICharacterPedestrian(void)"
+  },
+  {
+   "address": "0x00023fd0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AICharacterPedestrian::Destroy(void)"
+  },
+  {
+   "address": "0x00024060",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::LoadPedTextures(void)"
+  },
+  {
+   "address": "0x000240e0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AICharacterPedestrian::GetRandomPedTexture(void)"
+  },
+  {
+   "address": "0x00024140",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::KillSelf(bool)"
+  },
+  {
+   "address": "0x00024280",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::CheckVehicleThreat(PVehicle *, bool)"
+  },
+  {
+   "address": "0x00024700",
+   "calling_convention": "__thiscall",
+   "return": "AICharacterPedestrian *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00024730",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::ForceRecycle(int)"
+  },
+  {
+   "address": "0x00024870",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::UpdateRotPos(void)"
+  },
+  {
+   "address": "0x00024910",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::DoAiming(void)"
+  },
+  {
+   "address": "0x00024b30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::TargetIsInRange(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x00024c30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::FaceTarget(int)"
+  },
+  {
+   "address": "0x00024db0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::UpdateAnimSpeed(void)"
+  },
+  {
+   "address": "0x00024e50",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::ReachedTarget(bool)",
+   "return": "bool"
+  },
+  {
+   "address": "0x00024ee0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::FindClosestCar(float)"
+  },
+  {
+   "address": "0x00024f80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::FindPointAgainstWall(float)"
+  },
+  {
+   "address": "0x000253b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::PlayAnim(int, float)"
+  },
+  {
+   "address": "0x00025430",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::InvalidateFurthestPed(int)"
+  },
+  {
+   "address": "0x000254c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::Recycle(void)"
+  },
+  {
+   "address": "0x00025d10",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::PreventFalling(void)"
+  },
+  {
+   "address": "0x00025e00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::SetNewTargetBasedOnThreat(int)"
+  },
+  {
+   "address": "0x00025ef0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::DoNeutral(void)"
+  },
+  {
+   "address": "0x00025f40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::DoIdling(void)"
+  },
+  {
+   "address": "0x00025fc0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::DoDying(void)"
+  },
+  {
+   "address": "0x00026290",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::DoTurning(void)"
+  },
+  {
+   "address": "0x000263d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::DoLeaning(void)"
+  },
+  {
+   "address": "0x00026620",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::MaintainHeading(int)"
+  },
+  {
+   "address": "0x00026760",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::ThreatenedByVehicle(void)",
+   "return": "int"
+  },
+  {
+   "address": "0x00026800",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterPedestrian::Init(int)"
+  },
+  {
+   "address": "0x00026ed0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AICharacterPedestrian::Manage(void)"
+  },
+  {
+   "address": "0x000270b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::DoWalking(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00027150",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::DoStartled(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00027240",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::DoAvoiding(void)"
+  },
+  {
+   "address": "0x000274c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::DoDodging(void)"
+  },
+  {
+   "address": "0x00027800",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPedestrian::HandleInterrupts(void)"
+  }
+ ]
+}

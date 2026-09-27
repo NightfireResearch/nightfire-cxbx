@@ -1,21 +1,65 @@
 {
  "note": "Evidence packets for struct agents (prompt template: struct_agent_prompt.md). Status: ready / dispatched / done.",
  "packets": [
-  {"key": "cluster6", "status": "ready", "evidence_kb": 49,
-   "classes": ["AIVehicle", "AIHelicopter", "AIGroundVehicle"],
-   "notes": "AI vehicle controllers. AIHelicopter and AIGroundVehicle derive from AIVehicle (their constructors call AIVehicle::AIVehicle first). AIVehicle: vtable 0x18bb10 (5 slots), sizes 0xc0/0x80 seen in destructors; AIHelicopter 0x140, vtable 0x18b950. AIGroundVehicle has no size or vtable in its evidence: find its size from its deleting destructor or allocation (check by hand). AIGroundVehicle is large (98 offsets): prioritise."},
-  {"key": "cluster7", "status": "ready", "evidence_kb": 51,
-   "classes": ["AICharacter", "AICharacterBond", "AICharacterEnemyGround", "AICharacterHands", "AICharacterEnemyWindow"],
-   "notes": "AI characters, part 1: the base AICharacter (vtable 0x18a540, 33 slots; allocation sizes 336/352/368/448/656 under its tag are its subclasses; base size probably 0x140) and four subclasses (Bond 0x150, EnemyGround 0x1c0, Hands 0x160, EnemyWindow 0x160; 33-36 slot vtables). AICharacter's layout is the priority: cluster8 (Pedestrian, EnemySnow, EnemySunroof) builds on it."},
-  {"key": "cluster8", "status": "ready (after cluster7)", "evidence_kb": 42,
-   "classes": ["AICharacterPedestrian", "AICharacterEnemySnow", "AICharacterEnemySunroof"],
-   "notes": "AI characters, part 2: subclasses of AICharacter, whose layout is in results/struct-pilot-cluster7.json (read it first; list only these classes' own fields). Pedestrian 0x290 (vtable 0x18b470, 34 slots), EnemySnow 0x170, EnemySunroof 0x170."},
-  {"key": "cluster9", "status": "ready", "evidence_kb": 68,
-   "classes": ["RWorldCamera", "RViewCamera", "RCameraSpline", "RPlayerCamera"],
-   "notes": "Cameras. RPlayerCamera (0x370, allocated 880, vtable 0x1918ac) derives from RWorldCamera (0x130; constructor calls RCamera::RCamera first, so RWorldCamera derives from RCamera, not in this packet: add RCamera as a class if its extent is clear from RWorldCamera, else a placeholder). RViewCamera 0x4c (allocated 76). RCameraSpline allocated 112. RPlayerCamera is large (117 offsets): prioritise."},
-  {"key": "cluster10", "status": "ready", "evidence_kb": 35,
-   "classes": ["WCollisionMgr", "WRoadNav", "WTargetPicker", "WGrid"],
-   "notes": "World helpers. WRoadNav allocated 192, WGrid allocated 36 (UMemory::Alloc). WCollisionMgr and WTargetPicker may be singletons (no allocation under their tag): look for the global instance their callers pass as ECX and say so; size from the extent of accesses if nothing better."}
+  {
+   "key": "cluster6",
+   "status": "done",
+   "evidence_kb": 49,
+   "classes": [
+    "AIVehicle",
+    "AIHelicopter",
+    "AIGroundVehicle"
+   ],
+   "notes": "AI vehicle controllers. AIHelicopter and AIGroundVehicle derive from AIVehicle (their constructors call AIVehicle::AIVehicle first). AIVehicle: vtable 0x18bb10 (5 slots), sizes 0xc0/0x80 seen in destructors; AIHelicopter 0x140, vtable 0x18b950. AIGroundVehicle has no size or vtable in its evidence: find its size from its deleting destructor or allocation (check by hand). AIGroundVehicle is large (98 offsets): prioritise."
+  },
+  {
+   "key": "cluster7",
+   "status": "done",
+   "evidence_kb": 51,
+   "classes": [
+    "AICharacter",
+    "AICharacterBond",
+    "AICharacterEnemyGround",
+    "AICharacterHands",
+    "AICharacterEnemyWindow"
+   ],
+   "notes": "AI characters, part 1: the base AICharacter (vtable 0x18a540, 33 slots; allocation sizes 336/352/368/448/656 under its tag are its subclasses; base size probably 0x140) and four subclasses (Bond 0x150, EnemyGround 0x1c0, Hands 0x160, EnemyWindow 0x160; 33-36 slot vtables). AICharacter's layout is the priority: cluster8 (Pedestrian, EnemySnow, EnemySunroof) builds on it."
+  },
+  {
+   "key": "cluster8",
+   "status": "done",
+   "evidence_kb": 42,
+   "classes": [
+    "AICharacterPedestrian",
+    "AICharacterEnemySnow",
+    "AICharacterEnemySunroof"
+   ],
+   "notes": "AI characters, part 2: subclasses of AICharacter, whose layout is in results/struct-pilot-cluster7.json (read it first; list only these classes' own fields). Pedestrian 0x290 (vtable 0x18b470, 34 slots), EnemySnow 0x170, EnemySunroof 0x170."
+  },
+  {
+   "key": "cluster9",
+   "status": "done",
+   "evidence_kb": 68,
+   "classes": [
+    "RWorldCamera",
+    "RViewCamera",
+    "RCameraSpline",
+    "RPlayerCamera"
+   ],
+   "notes": "Cameras. RPlayerCamera (0x370, allocated 880, vtable 0x1918ac) derives from RWorldCamera (0x130; constructor calls RCamera::RCamera first, so RWorldCamera derives from RCamera, not in this packet: add RCamera as a class if its extent is clear from RWorldCamera, else a placeholder). RViewCamera 0x4c (allocated 76). RCameraSpline allocated 112. RPlayerCamera is large (117 offsets): prioritise."
+  },
+  {
+   "key": "cluster10",
+   "status": "done",
+   "evidence_kb": 35,
+   "classes": [
+    "WCollisionMgr",
+    "WRoadNav",
+    "WTargetPicker",
+    "WGrid"
+   ],
+   "notes": "World helpers. WRoadNav allocated 192, WGrid allocated 36 (UMemory::Alloc). WCollisionMgr and WTargetPicker may be singletons (no allocation under their tag): look for the global instance their callers pass as ECX and say so; size from the extent of accesses if nothing better."
+  }
  ],
  "not_packeted": {
   "AIVehicleController, AIRoadSpawn, WRoadNetwork": "no this-relative accesses in their own methods (globals or static namespaces); need a different approach",
