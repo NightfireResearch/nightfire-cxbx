@@ -1,0 +1,760 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "AVoice",
+   "size": 88,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AMix *",
+     "name": "mix",
+     "comment": "high: ctor 0x123ca0 stores its first argument (AMix &) at +0x0; Play reads it. PS2 ctor 0x2dd818 sw a1,0(s0)"
+    },
+    {
+     "offset": 4,
+     "type": "byte[84]",
+     "name": "views",
+     "comment": "medium: AVoice::View[3], 0x1c each: ctor calls the eh vector constructor iterator (0x13326e) on this+4 with size 0x1c, count 3, View ctor 0x123820 / dtor 0x123c50; dtor sites (ATrafficVehicle 0x12d300) use the same (0x1c,3). PS2 ctor loops 3 times wi"
+    }
+   ],
+   "comment": "Voice (group of three sound views). No vptr. Allocated 0x58 (operator new in AVehicle/ASubmersible/ATrafficVehicle ctors, ctor 0x123ca0); PS2 size 0x64 because AVoice::View is 0x20 on PS2 vs 0x1c on Xbox. Embedded by value three times in AHelicopter."
+  },
+  {
+   "name": "AIndex",
+   "size": 8,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "map",
+     "comment": "high: AIndexMap*: ctors 0x1276c0/0x1279e0 FastAlloc it; Lookup(int) 0x126d10 searches the tree at *(this) (head at map+4), Lookup(char*) 0x126d40 the tree at map+0xc (head at map+0x10); PS2 -> AIndexMap::~AIndexMap. No AIndexMap type yet"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "data",
+     "comment": "medium: ctors write, ~AIndex frees; PS2 +0x4 -> UMemory::Free. Name invented"
+    }
+   ],
+   "comment": "Name->patch index, embedded in ABank at +0x10. No vptr, same offsets on PS2."
+  },
+  {
+   "name": "WSoundGroup",
+   "size": 16,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "int",
+     "name": "unk0",
+     "comment": "low: ctor 0xcd5a0 zeroes; PS2 ctor 0x227868 +0x0. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "int",
+     "name": "unk4",
+     "comment": "low: ctor zeroes; PS2 +0x4. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "int",
+     "name": "unk8",
+     "comment": "low: ctor zeroes; PS2 +0x8. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "WSoundMap *",
+     "name": "soundMap",
+     "comment": "high: ctor allocates 0xc and builds an MSVC tree in it (allocator byte +0, head node from 0x94030 at +4 with self links, size +8 = 0), i.e. WSoundMap (evidence names WSoundMap::WSoundMap); used by Start/Add/End/Update/Clear. PS2 +0xc same"
+    }
+   ],
+   "comment": "World sound group, allocated 16. No vptr, same offsets on PS2."
+  },
+  {
+   "name": "AEngine",
+   "size": 36,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "vtable",
+     "comment": "high: ctor 0x12edd0 stores 0x1a3058; deleting dtor 0x12ef30 restores it. PS2 +0x20"
+    },
+    {
+     "offset": 4,
+     "type": "float",
+     "name": "unk4",
+     "comment": "low: Play 0x12ede0 float write; PS2 +0x0 Play float write. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "float",
+     "name": "unk8",
+     "comment": "low: Play float write; PS2 +0x4. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "float",
+     "name": "unkC",
+     "comment": "low: Play float write; PS2 +0x8. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "float",
+     "name": "unk10",
+     "comment": "low: Get 0x12f940 zeroes; PS2 +0xc not seen. Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "float",
+     "name": "unk14",
+     "comment": "low: Get zeroes, Play float write; PS2 +0x10 R/W float. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "float",
+     "name": "rate",
+     "comment": "low: Get stores constant/param_3 (FDIV by the float argument); Play float write; PS2 +0x14. Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "float",
+     "name": "unk1c",
+     "comment": "low: Get zeroes; Play R/W float; PS2 +0x18 R/W float. Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "AVehicle *",
+     "name": "vehicle",
+     "comment": "high: Get stores its AVehicle & argument at +0x20; Play reads it; PS2 +0x1c = GetVehicle (sheet AEngine::GetVehicle(void) const)"
+    }
+   ],
+   "comment": "Vehicle engine sound. Xbox vptr at +0 (vtable 0x1a3058, 2 slots), PS2 vptr LAST at +0x20 (ctor 2fa8d8 / dtor write +0x20): every PS2 field +4 on Xbox. Size 0x24 on both builds by that mapping (inferred; no allocation of a plain AEngine seen). AEngine::Get 0x12f940 allocates 0x54 and runs ctor 0x12fc60, i.e. a subclass."
+  },
+  {
+   "name": "ABasic",
+   "size": 240,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "ABaseSound",
+     "name": "super_ABaseSound"
+    },
+    {
+     "offset": 192,
+     "type": "AVoice *",
+     "name": "voice",
+     "comment": "medium: ctor 0x12fa40 zeroes; Play/Stop/~ABasic use it (Xbox -> FUN_0003f400); PS2 +0xb0 -> AVoice::Play. Name invented"
+    },
+    {
+     "offset": 196,
+     "type": "char[44]",
+     "name": "patchName",
+     "comment": "low: ctor sprintf(this+0xc4, 0x1a06f0, param_2); Play takes its address; PS2 +0xb4 addr-taken. Length = gap to size 0xf0. Name invented"
+    }
+   ],
+   "comment": "Simple sound: ABaseSound(name, view 4) + voice pointer + formatted name. Size 0xf0 from deleting dtor 0x12fc00 / allocation 240. ABaseSound fields are +0x10 on Xbox, so PS2 own fields +0xb0.. map to Xbox +0xc0.."
+  },
+  {
+   "name": "ASubmersible",
+   "size": 576,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AVehicle",
+     "name": "super_AVehicle"
+    },
+    {
+     "offset": 496,
+     "type": "char[16]",
+     "name": "name",
+     "comment": "medium: ctor strcpy of its char* argument into this+0x1f0; PS2 +0x210 addr-taken in ctor and GetName. Length from the gap to +0x200"
+    },
+    {
+     "offset": 512,
+     "type": "AVoice *",
+     "name": "voice200",
+     "comment": "high: ctor new(0x58)+AVoice ctor 0x123ca0 (second created); PlayCavitation -> AVoice::Play; dtor. PS2 +0x220. Name invented"
+    },
+    {
+     "offset": 516,
+     "type": "AVoice *",
+     "name": "voice204",
+     "comment": "high: as voice200 (third created); PS2 +0x224. Name invented"
+    },
+    {
+     "offset": 520,
+     "type": "AVoice *",
+     "name": "fanMotorVoice",
+     "comment": "high: first voice created in ctor; PlayFanMotors -> AVoice::Play; PS2 +0x228. Name invented"
+    },
+    {
+     "offset": 524,
+     "type": "int",
+     "name": "unk20c",
+     "comment": "low: ctor zeroes, PlayCavitation writes; PS2 +0x22c. Name invented"
+    },
+    {
+     "offset": 528,
+     "type": "int",
+     "name": "unk210",
+     "comment": "low: ctor zeroes, PlayServos writes; PS2 +0x230. Name invented"
+    },
+    {
+     "offset": 532,
+     "type": "short",
+     "name": "servo214",
+     "comment": "low: ctor zeroes; PlayServos R/W; PS2 +0x234 w2. Name invented"
+    },
+    {
+     "offset": 534,
+     "type": "short",
+     "name": "servo216",
+     "comment": "low: ctor zeroes; PlayServos R/W; PS2 +0x236 w2. Name invented"
+    },
+    {
+     "offset": 536,
+     "type": "short",
+     "name": "cavitation218",
+     "comment": "low: ctor zeroes; PlayCavitation R/W; PS2 +0x238 w2. Name invented"
+    },
+    {
+     "offset": 538,
+     "type": "short",
+     "name": "unk21a",
+     "comment": "low: ctor = 10; PS2 +0x23a w2. Name invented"
+    },
+    {
+     "offset": 540,
+     "type": "bool",
+     "name": "flag21c",
+     "comment": "low: ctor 0; PS2 +0x23c (4-byte). Name invented"
+    },
+    {
+     "offset": 541,
+     "type": "bool",
+     "name": "flag21d",
+     "comment": "low: ctor 0; PlayFanMotors R/W; PS2 +0x240. Name invented"
+    },
+    {
+     "offset": 542,
+     "type": "bool",
+     "name": "flag21e",
+     "comment": "low: ctor 1; PS2 +0x244. Name invented"
+    },
+    {
+     "offset": 543,
+     "type": "bool",
+     "name": "flag21f",
+     "comment": "low: ctor 0; PlayCavitation R/W; PS2 +0x248. Name invented"
+    },
+    {
+     "offset": 544,
+     "type": "bool",
+     "name": "flag220",
+     "comment": "low: ctor 0; PlayCavitation R/W; PS2 +0x24c. Name invented"
+    },
+    {
+     "offset": 548,
+     "type": "float",
+     "name": "unk224",
+     "comment": "low: ctor 0; PlayCavitation float write; PS2 +0x250 float. Name invented"
+    },
+    {
+     "offset": 552,
+     "type": "float",
+     "name": "unk228",
+     "comment": "low: ctor 0; PlayCavitation float write; PS2 +0x254 float. Name invented"
+    },
+    {
+     "offset": 556,
+     "type": "float",
+     "name": "unk22c",
+     "comment": "low: ctor = 0.06 (0x3d75c28f); PlayCavitation; PS2 +0x258 float. Name invented"
+    },
+    {
+     "offset": 560,
+     "type": "short",
+     "name": "creakLevel",
+     "comment": "high: SetCreakLevel(short,int) 0x12bb60 writes the short; PlayCreaks reads; ctor 0. PS2 +0x25c w2"
+    },
+    {
+     "offset": 564,
+     "type": "int",
+     "name": "creakParam",
+     "comment": "medium: SetCreakLevel writes the int argument; ctor 0. PS2 +0x260. Name invented"
+    },
+    {
+     "offset": 568,
+     "type": "int",
+     "name": "creak238",
+     "comment": "low: ctor 0; PlayCreaks R/W; PS2 +0x264. Name invented"
+    },
+    {
+     "offset": 572,
+     "type": "int",
+     "name": "creak23c",
+     "comment": "low: ctor 0; PlayCreaks R/W; PS2 +0x268. Name invented"
+    }
+   ],
+   "comment": "Submersible sounds. AVehicle subclass; own fields start at Xbox 0x1f0 / PS2 0x210 (+0x20 on PS2), with PS2 4-byte bools +0x23c..0x24c packing to bytes +0x21c..0x220 (then PS2 -0x2c). Size 0x240 from deleting dtor 0x12c4e0 / allocation 576. Ctor 0x12b960 also zeroes ABaseSound +0x70/+0x74 and sets vehicleType (+0xd0) = 4."
+  },
+  {
+   "name": "ASnowMobile",
+   "size": 608,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AVehicle",
+     "name": "super_AVehicle"
+    },
+    {
+     "offset": 496,
+     "type": "void *",
+     "name": "snowWind",
+     "comment": "high: AVehicleWind*: ctor new(0x24)+ctor 0x12e830; Play -> AVehicleWind::Play/Stop, dtor -> ~AVehicleWind. PS2 +0x210. Name invented"
+    },
+    {
+     "offset": 500,
+     "type": "AVoice *",
+     "name": "voice1f4",
+     "comment": "high: ctor new(0x58)+AVoice ctor with mix +0x210; PlayCarving -> AVoice::Play. PS2 +0x214. Name invented"
+    },
+    {
+     "offset": 504,
+     "type": "AVoice *",
+     "name": "voice1f8",
+     "comment": "high: as voice1f4; PS2 +0x218. Name invented"
+    },
+    {
+     "offset": 508,
+     "type": "AVoice *",
+     "name": "voice1fc",
+     "comment": "high: as voice1f4; PS2 +0x21c. Name invented"
+    },
+    {
+     "offset": 512,
+     "type": "AVoice *",
+     "name": "voice200",
+     "comment": "high: as voice1f4; PS2 +0x220. Name invented"
+    },
+    {
+     "offset": 516,
+     "type": "AVoice *",
+     "name": "motorVoice204",
+     "comment": "high: AVoice ctor with mix +0x214; PlayMotor -> AVoice::Play. PS2 +0x224. Name invented"
+    },
+    {
+     "offset": 520,
+     "type": "AVoice *",
+     "name": "motorVoice208",
+     "comment": "high: AVoice ctor with mix +0x214; PlayMotor/dtor. PS2 +0x228 -> AVoice::Play. Name invented"
+    },
+    {
+     "offset": 524,
+     "type": "AVoice *",
+     "name": "voice20c",
+     "comment": "medium: ctor zeroes; PlayMotor -> AVoice::Play; dtor. PS2 +0x22c. Name invented"
+    },
+    {
+     "offset": 528,
+     "type": "AMix *",
+     "name": "carvingMix",
+     "comment": "high: ctor = AMix::Get (0x11d720); mix of four voices; PlayCarving -> AMix::GetVolume. PS2 +0x230. Name invented"
+    },
+    {
+     "offset": 532,
+     "type": "AMix *",
+     "name": "motorMix",
+     "comment": "high: ctor = AMix::Get; mix of the two motor voices. PS2 +0x234. Name invented"
+    },
+    {
+     "offset": 536,
+     "type": "short",
+     "name": "unk218",
+     "comment": "low: ctor 0; PlayMotor/PlayCarving; PS2 +0x238 w2. Name invented"
+    },
+    {
+     "offset": 538,
+     "type": "bool",
+     "name": "flag21a",
+     "comment": "low: ctor 0; PlayMotor; PS2 +0x23c. Name invented"
+    },
+    {
+     "offset": 539,
+     "type": "bool",
+     "name": "flag21b",
+     "comment": "low: ctor 0; PlayMotor; PS2 +0x240. Name invented"
+    },
+    {
+     "offset": 540,
+     "type": "bool",
+     "name": "flag21c",
+     "comment": "low: ctor 0; PlayMotor; PS2 +0x244. Name invented"
+    },
+    {
+     "offset": 544,
+     "type": "float",
+     "name": "unk220",
+     "comment": "low: ctor 0; Play/PlayCarving float; PS2 +0x248. Name invented"
+    },
+    {
+     "offset": 548,
+     "type": "float",
+     "name": "unk224",
+     "comment": "low: ctor 0; Play/PlayCarving float; PS2 +0x24c. Name invented"
+    },
+    {
+     "offset": 552,
+     "type": "float",
+     "name": "unk228",
+     "comment": "low: PlayMotor float; PS2 +0x250. Name invented"
+    },
+    {
+     "offset": 556,
+     "type": "float",
+     "name": "unk22c",
+     "comment": "low: ctor 0x3df4ca92 (~0.1196); PlayCarving; PS2 +0x254. Name invented"
+    },
+    {
+     "offset": 560,
+     "type": "float",
+     "name": "unk230",
+     "comment": "low: ctor 0x3df4ccab; PlayCarving; PS2 +0x258. Name invented"
+    },
+    {
+     "offset": 564,
+     "type": "float",
+     "name": "unk234",
+     "comment": "low: ctor writes a loaded value; PS2 +0x25c float. Name invented"
+    },
+    {
+     "offset": 568,
+     "type": "float",
+     "name": "unk238",
+     "comment": "low: ctor, same value as +0x234; PS2 +0x260 float. Name invented"
+    },
+    {
+     "offset": 572,
+     "type": "float",
+     "name": "unk23c",
+     "comment": "low: ctor = 0x3d9fbe77 (0.078); PS2 +0x264 float. Name invented"
+    },
+    {
+     "offset": 576,
+     "type": "float",
+     "name": "unk240",
+     "comment": "low: ctor 0; PlayMotor float; PS2 +0x268. Name invented"
+    },
+    {
+     "offset": 580,
+     "type": "float",
+     "name": "unk244",
+     "comment": "low: ctor 0; PlayMotor/PlayCarving float; PS2 +0x26c. Name invented"
+    },
+    {
+     "offset": 584,
+     "type": "float",
+     "name": "unk248",
+     "comment": "low: ctor 0; PlayMotor float; PS2 +0x270. Name invented"
+    },
+    {
+     "offset": 588,
+     "type": "float",
+     "name": "unk24c",
+     "comment": "low: ctor 0; PlayMotor float; PS2 +0x274. Name invented"
+    },
+    {
+     "offset": 592,
+     "type": "float",
+     "name": "unk250",
+     "comment": "low: ctor = 0x3db851ec (0.09); PS2 +0x278 float. Name invented"
+    },
+    {
+     "offset": 596,
+     "type": "float",
+     "name": "unk254",
+     "comment": "low: ctor 0; PlayMotor float; PS2 +0x27c. Name invented"
+    }
+   ],
+   "comment": "Snowmobile sounds. AVehicle subclass; own fields Xbox 0x1f0.. = PS2 0x210.. (+0x20), with three PS2 4-byte bools (+0x23c..0x244) packing to bytes +0x21a..0x21c, so later fields are PS2 -0x28. Size 0x260 from deleting dtor 0x12b510 / allocation 608 (fields end 0x258, padded to 16)."
+  },
+  {
+   "name": "AHelicopter",
+   "size": 784,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AVehicle",
+     "name": "super_AVehicle"
+    },
+    {
+     "offset": 496,
+     "type": "AVoice",
+     "name": "rotorVoice",
+     "comment": "high: embedded AVoice: ctor 0x12c7f0 constructs it inline (eh vector ctor iterator on the views), Play passes &this+0x1f0 to AVoice::Play/Set; dtor destroys views at +0x1f4. PS2 +0x210 (AVoice 0x64 on PS2). Name invented"
+    },
+    {
+     "offset": 584,
+     "type": "AVoice",
+     "name": "voice248",
+     "comment": "high: embedded AVoice (views +0x24c destroyed in dtor); Play -> AVoice::Play. PS2 +0x274. Name invented"
+    },
+    {
+     "offset": 672,
+     "type": "AVoice",
+     "name": "voice2a0",
+     "comment": "high: embedded AVoice: ctor writes +0x2a0 (mix) and constructs views at +0x2a4; dtor. PS2 +0x2d8. Name invented"
+    },
+    {
+     "offset": 760,
+     "type": "float",
+     "name": "unk2f8",
+     "comment": "low: ctor/Play float; PS2 +0x33c float. Name invented"
+    },
+    {
+     "offset": 764,
+     "type": "float",
+     "name": "landingForce",
+     "comment": "medium: PlayLanding(float, COORD3&, COORD3&) 0x12c930 writes only this float; ctor/Play. PS2 +0x340. Name invented"
+    },
+    {
+     "offset": 768,
+     "type": "float",
+     "name": "pitchOffset",
+     "comment": "medium: ctor/Play float; PS2 +0x344 written by AHelicopter::AddPitch(float). Name invented"
+    }
+   ],
+   "comment": "Helicopter sounds (allocated 0x310 by PHelicopter's ctor). AVehicle subclass holding three AVoice objects by value (0x58 each on Xbox, 0x64 on PS2, so PS2 offsets drift +0x20, +0x2c, +0x38, +0x44). Fields end 0x304, padded to 0x310. Ctor writes ABaseSound +0x6c..0x74 (min/max distance)."
+  },
+  {
+   "name": "ATrafficVehicle",
+   "size": 576,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AVehicle",
+     "name": "super_AVehicle"
+    },
+    {
+     "offset": 496,
+     "type": "char[16]",
+     "name": "name",
+     "comment": "medium: ctor copies/sprintfs into this+0x1f0; GetName 0x12ce20 LEA +0x1f0; PS2 +0x210 GetName. Length from gap to +0x200"
+    },
+    {
+     "offset": 512,
+     "type": "AVoice *",
+     "name": "voice200",
+     "comment": "high: ctor new(0x58)+AVoice ctor; dtor 0x12d300 destroys views and frees 0x58. PS2 +0x220. Name invented"
+    },
+    {
+     "offset": 516,
+     "type": "AVoice *",
+     "name": "voice204",
+     "comment": "high: as voice200; PS2 +0x224. Name invented"
+    },
+    {
+     "offset": 520,
+     "type": "AVoice *",
+     "name": "voice208",
+     "comment": "high: as voice200; Play -> AVoice::Play; PS2 +0x228. Name invented"
+    },
+    {
+     "offset": 524,
+     "type": "ABaseSound *",
+     "name": "siren",
+     "comment": "medium: ctor zeroes; dtor calls its virtual deleting destructor (slot 0, arg 1); PS2 +0x22c used by ActivateSiren. Exact class unproved. Name invented"
+    },
+    {
+     "offset": 528,
+     "type": "float",
+     "name": "unk210",
+     "comment": "low: ctor 0; Play float; PS2 +0x230 float. Name invented"
+    },
+    {
+     "offset": 532,
+     "type": "float",
+     "name": "unk214",
+     "comment": "low: ctor 0; Play float; PS2 +0x234. Name invented"
+    },
+    {
+     "offset": 536,
+     "type": "float",
+     "name": "unk218",
+     "comment": "low: ctor 0; Play float; PS2 +0x238. Name invented"
+    },
+    {
+     "offset": 540,
+     "type": "bool",
+     "name": "countedA",
+     "comment": "low: dtor: if set (and +0x21d clear) decrements global 0x243b5c; PS2 +0x23c. Name invented"
+    },
+    {
+     "offset": 541,
+     "type": "bool",
+     "name": "countedB",
+     "comment": "low: dtor: if set decrements global 0x243b60; PS2 +0x240. Name invented"
+    },
+    {
+     "offset": 542,
+     "type": "bool",
+     "name": "flag21e",
+     "comment": "low: ctor 0; Play R/W; PS2 +0x244. Name invented"
+    },
+    {
+     "offset": 544,
+     "type": "short",
+     "name": "unk220",
+     "comment": "low: ctor 0; PlaySnowmobileSpecifics R/W; PS2 +0x248 w2. Name invented"
+    },
+    {
+     "offset": 546,
+     "type": "bool",
+     "name": "flag222",
+     "comment": "low: ctor 0; PlaySnowmobileSpecifics; PS2 +0x24c. Name invented"
+    },
+    {
+     "offset": 547,
+     "type": "bool",
+     "name": "flag223",
+     "comment": "low: ctor 0; PlaySnowmobileSpecifics; PS2 +0x250. Name invented"
+    },
+    {
+     "offset": 548,
+     "type": "float",
+     "name": "unk224",
+     "comment": "low: ctor 0x3df4ca92; PlaySnowmobileSpecifics; PS2 +0x254 (same constants as ASnowMobile +0x22c). Name invented"
+    },
+    {
+     "offset": 552,
+     "type": "float",
+     "name": "unk228",
+     "comment": "low: ctor 0x3df4ccab; PS2 +0x258. Name invented"
+    },
+    {
+     "offset": 556,
+     "type": "float",
+     "name": "unk22c",
+     "comment": "low: ctor writes a loaded value; PS2 +0x25c float. Name invented"
+    },
+    {
+     "offset": 560,
+     "type": "float",
+     "name": "unk230",
+     "comment": "low: ctor, same value; PS2 +0x260 float. Name invented"
+    },
+    {
+     "offset": 564,
+     "type": "float",
+     "name": "unk234",
+     "comment": "low: PlaySnowmobileSpecifics float; PS2 +0x264. Name invented"
+    },
+    {
+     "offset": 568,
+     "type": "float",
+     "name": "unk238",
+     "comment": "low: PlaySnowmobileSpecifics float; PS2 +0x268. Name invented"
+    }
+   ],
+   "comment": "Traffic car sounds (siren etc.). AVehicle subclass; Xbox 0x1f0.. = PS2 0x210.. (+0x20) up to +0x218, then PS2 4-byte bools +0x23c..0x244 pack into bytes +0x21c..0x21e and PS2 is -0x28 after. Size 0x240 from deleting dtor 0x12d400 / allocation 576."
+  },
+  {
+   "name": "WSoundMap",
+   "size": 12,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster19.json)",
+   "if_missing": true
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x00123a30",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AVoice::PlayVoices(void)"
+  },
+  {
+   "address": "0x00123be0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AVoice::View::Stop(void)"
+  },
+  {
+   "address": "0x00123c50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AVoice::View::~View(void)"
+  },
+  {
+   "address": "0x001243c0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AVoice::BuildMap(void)"
+  },
+  {
+   "address": "0x00124490",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AVoice::View::Push(void)"
+  },
+  {
+   "address": "0x001244d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "float"
+    },
+    {
+     "name": "param_5",
+     "type": "float"
+    }
+   ],
+   "sheet": "AVoice::View::Play(float, float, float, float, float)"
+  },
+  {
+   "address": "0x00124690",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "float"
+    },
+    {
+     "name": "param_5",
+     "type": "float"
+    },
+    {
+     "name": "param_6",
+     "type": "float"
+    }
+   ],
+   "sheet": "AVoice::Play(AView, float, float, float, float, float)"
+  }
+ ]
+}

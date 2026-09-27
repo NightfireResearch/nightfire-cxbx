@@ -1,0 +1,79 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0001fd30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySSnow::GetVehiclePtr(void)",
+   "return": "PVehicle *"
+  },
+  {
+   "address": "0x00020970",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySSnow::~AICharacterEnemySSnow(void)"
+  },
+  {
+   "address": "0x000209d0",
+   "calling_convention": "__thiscall",
+   "return": "AICharacterEnemySSnow *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00020a00",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySSnow::DoNeutral(void)"
+  },
+  {
+   "address": "0x00020a60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySSnow::DoAiming(void)"
+  },
+  {
+   "address": "0x00020b40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySSnow::DoDying(void)"
+  },
+  {
+   "address": "0x00020bb0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySSnow::HandleInterrupts(void)"
+  },
+  {
+   "address": "0x00020c30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySSnow::TargetIsInRange(void)"
+  },
+  {
+   "address": "0x00020c70",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterEnemySSnow::PlayZoneInjuryAnim(int, float, int)"
+  }
+ ]
+}

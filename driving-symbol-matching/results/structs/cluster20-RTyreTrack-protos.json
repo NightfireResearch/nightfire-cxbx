@@ -1,0 +1,76 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000abfc0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RTyreTrack::RTyreTrack(float, bool, bool)",
+   "return": "RTyreTrack *"
+  },
+  {
+   "address": "0x000ac050",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RTyreTrack::Init(void)"
+  },
+  {
+   "address": "0x000ac170",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "RTyreTrack::Break(int)"
+  },
+  {
+   "address": "0x000ac250",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RTyreTrack::Draw(void)"
+  },
+  {
+   "address": "0x000ac4c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "int"
+    },
+    {
+     "name": "param_5",
+     "type": "WWorldPos *"
+    }
+   ],
+   "sheet": "RTyreTrack::Add(COORD4 &, float, float, int, WWorldPos *)"
+  }
+ ]
+}

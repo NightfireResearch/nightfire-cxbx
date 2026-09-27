@@ -1,0 +1,27 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000a1070",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RMissileStreak::Init(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000a1330",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RMissileStreak::Draw(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000a1460",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RMissileStreak::Kill(void)",
+   "return": "void"
+  }
+ ]
+}

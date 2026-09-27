@@ -1,0 +1,67 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0008be40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSniperZoom::Init(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000a6810",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSniperZoom::~RSniperZoom(void)"
+  },
+  {
+   "address": "0x000a6870",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RSniperZoom::Kill(void)"
+  },
+  {
+   "address": "0x000a6890",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSniperZoom::Reset(void)"
+  },
+  {
+   "address": "0x000a68a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSniperZoom::GrabBackBuffer(void)"
+  },
+  {
+   "address": "0x000a69a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSniperZoom::RSniperZoom(void)",
+   "return": "RSniperZoom *"
+  },
+  {
+   "address": "0x000a6a50",
+   "calling_convention": "__thiscall",
+   "return": "RSniperZoom *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x000a6a80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSniperZoom::SetupVerts(void)"
+  },
+  {
+   "address": "0x000a6bc0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSniperZoom::Draw(void)"
+  }
+ ]
+}

@@ -1,0 +1,292 @@
+{
+ "classes": [
+  {
+   "name": "AIElementController",
+   "size": 88,
+   "base": null,
+   "vtable": null,
+   "comment": "Singleton managing CARP AI elements (sleep/wake, hench spawning). No vptr on either build; layout identical on Xbox and PS2 (+0x0..+0x54). Size 0x58 from Construct 285b0 (alloc 0x58, ctor 28190(UData *), result stored in fObj global 0x1ddee4).",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "int",
+     "name": "maxAwake",
+     "confidence": "low",
+     "evidence": "ctor 28190 = UData lookup 0x18b7b8 (0x58180) with default 0x20; Update reads; PS2 +0x0 same. Name invented"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "int",
+     "name": "maxHench",
+     "confidence": "medium",
+     "evidence": "ctor = UData lookup 0x18b7a4, default 6; OkToSpawnHench 286b0 returns numHench(+0x50) < +0x4; PS2 +0x4 same. Name invented"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "int",
+     "name": "maxInRange",
+     "confidence": "low",
+     "evidence": "ctor = UData lookup 0x18b790, default 0x10; Update reads; PS2 +0x8. Name invented"
+    },
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "void *",
+     "name": "elements",
+     "confidence": "medium",
+     "evidence": "ctor allocs numElements*0x100 and copies the UData element block into it (0x100-byte CARP::AIElement records: +0x44 type, +0x54 name, +0x7c count); CalcMightAsWellBeDead walks it with stride 0x100; PS2 +0xc (vec_delete, memcpy). CARP::AIElement not in Ghidra"
+    },
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "void *",
+     "name": "elementData",
+     "confidence": "medium",
+     "evidence": "ctor: UData+0xc (+UData base when flag 2 of UData+4 is set) = source element block; PS2 +0x10 same. Name invented"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "void *",
+     "name": "tracking",
+     "confidence": "medium",
+     "evidence": "ctor allocs numElements*0x50 into +0x14 and +0x18 and constructs a 0x50-byte AIElementTracking per element in place; GetCarpElementTracking reads; PS2 hints AIElementTracking::Update/~AIElementTracking, GetElementTracking. Type AIElementTracking * (not in Ghidra)"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "void *",
+     "name": "trackingAlloc",
+     "confidence": "medium",
+     "evidence": "same allocation as +0x14 (ctor stores both); PS2 ~AIElementController passes it to __builtin_vec_delete. Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 28,
+     "type": "int[7]",
+     "name": "stats",
+     "confidence": "medium",
+     "evidence": "GetStats 28620 returns this+0x1c (LEA) on both builds; Update writes +0x20..+0x34 (+0x34 float on both, PS2 +0x20/+0x2c float too); ends where +0x38 starts. Element types unverified; name from GetStats"
+    },
+    {
+     "offset": "0x38",
+     "size": 4,
+     "type": "int *",
+     "name": "sortIndices",
+     "confidence": "low",
+     "evidence": "ctor allocs numElements*4; Update R/W; PS2 +0x38 vec_delete. Name invented"
+    },
+    {
+     "offset": "0x3c",
+     "size": 4,
+     "type": "void *",
+     "name": "inRangeList",
+     "confidence": "medium",
+     "evidence": "ctor allocs numElements*8; Update passes it to qsort (CompareInRangePrio on PS2); PS2 +0x3c. Name invented"
+    },
+    {
+     "offset": "0x40",
+     "size": 4,
+     "type": "int",
+     "name": "numElements",
+     "confidence": "high",
+     "evidence": "ctor = UData+8, used for every allocation size and loop bound (CalcMightAsWellBeDead, EveryoneChill, ForceVehicleToSleep); PS2 +0x40, GetElementTrackingCount returns it"
+    },
+    {
+     "offset": "0x44",
+     "size": 4,
+     "type": "int",
+     "name": "numAwake",
+     "confidence": "low",
+     "evidence": "ctor 0; GoToSleep RW, Update R/W; PS2 +0x44. Name invented"
+    },
+    {
+     "offset": "0x48",
+     "size": 4,
+     "type": "int",
+     "name": "numAsleep",
+     "confidence": "low",
+     "evidence": "ctor 0; GoToSleep RW, Update R/W; PS2 +0x48. Name invented"
+    },
+    {
+     "offset": "0x4c",
+     "size": 4,
+     "type": "int",
+     "name": "numWakeUps",
+     "confidence": "low",
+     "evidence": "ctor 0; GoToSleep/WakeUp RW; PS2 +0x4c. Name invented"
+    },
+    {
+     "offset": "0x50",
+     "size": 4,
+     "type": "int",
+     "name": "numHench",
+     "confidence": "medium",
+     "evidence": "ctor 0; OkToSpawnHench compares with maxHench; Update writes; PS2 +0x50. Name invented"
+    },
+    {
+     "offset": "0x54",
+     "size": 4,
+     "type": "int",
+     "name": "numMightAsWellBeDead",
+     "confidence": "high",
+     "evidence": "CalcMightAsWellBeDead 28730 stores its count here; GetNumMightAsWellBeDead 287c0 returns it; ctor 0; PS2 +0x54 same"
+    }
+   ]
+  },
+  {
+   "name": "AICharacterEnemyDriver",
+   "size": 336,
+   "base": "AICharacter",
+   "vtable": "0x0018a788",
+   "comment": "Enemy driving a vehicle (ctor(MATRIX4 &, PVehicle *)). Size 0x150 from deleting dtor 1d650 FastFree (PS2 0x160). Own fields uniformly PS2 -0x10 (PS2 vptr at +0x140).",
+   "fields": [
+    {
+     "offset": "0x140",
+     "size": 4,
+     "type": "PVehicle *",
+     "name": "vehicle",
+     "confidence": "high",
+     "evidence": "ctor 1d5f0 stores arg2 (sheet ctor(MATRIX4 &, PVehicle *)); HandleInterrupts 1d840 uses [vehicle+0x4c] as the object for two bone-matrix lookups; PS2 +0x150 read by both GetRotPos"
+    },
+    {
+     "offset": "0x144",
+     "size": 4,
+     "type": "void *",
+     "name": "boneA",
+     "confidence": "low",
+     "evidence": "ctor 0; DoInitial writes; HandleInterrupts checks non-null and passes it to 0x8eca0 (ECX=[vehicle+0x4c]) with a MATRIX4 out; PS2 +0x154. Name and type invented"
+    },
+    {
+     "offset": "0x148",
+     "size": 4,
+     "type": "void *",
+     "name": "boneB",
+     "confidence": "low",
+     "evidence": "as boneA, second 0x8eca0 lookup in HandleInterrupts; PS2 +0x158. Name and type invented"
+    },
+    {
+     "offset": "0x14c",
+     "size": 4,
+     "type": "int",
+     "name": "idleAnimIndex",
+     "confidence": "medium",
+     "evidence": "ctor 0; DoNeutral 1d7f0 increments modulo 3 and indexes anim table 0x1b52b0 for stateParam +0x64; PS2 +0x15c. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "AICharacterEnemySSnow",
+   "size": 336,
+   "base": "AICharacter",
+   "vtable": "0x0018aa18",
+   "comment": "Snowmobile enemy variant (ctor(MATRIX4 &, int, PVehicle *)). Size 0x150 from deleting dtor 209d0 (PS2 0x160). Only +0x140 seen; +0x144..+0x14f unaccessed on Xbox.",
+   "fields": [
+    {
+     "offset": "0x140",
+     "size": 4,
+     "type": "PVehicle *",
+     "name": "vehicle",
+     "confidence": "high",
+     "evidence": "GetVehiclePtr 1fd30 returns [ECX+0x140]; PhysicsObject::GetHitPoints hint (DoAiming/DoNeutral/HandleInterrupts/PlayZoneInjuryAnim); PS2 +0x150 (GetVehiclePtr, GetRotPos, ctor)"
+    }
+   ]
+  },
+  {
+   "name": "AICharacterPassenger",
+   "size": 336,
+   "base": "AICharacter",
+   "vtable": "0x0018ae68",
+   "comment": "Vehicle passenger (ctor(MATRIX4 &, int)). Size 0x150 from deleting dtor 236d0 FastFree and constructed size 336 (PS2 0x160). Own fields PS2 -0x10.",
+   "fields": [
+    {
+     "offset": "0x140",
+     "size": 4,
+     "type": "int",
+     "name": "unknown140",
+     "confidence": "low",
+     "evidence": "ctor 23670 zeroes; no other Xbox access; PS2 +0x150 zeroed in ctor"
+    },
+    {
+     "offset": "0x144",
+     "size": 4,
+     "type": "int",
+     "name": "passengerType",
+     "confidence": "medium",
+     "evidence": "ctor stores its int arg and sets unknown88 = table 0x1b6004[arg]; DoNeutral 23890 sets stateParam +0x64 = table 0x1b5fdc[+0x144]; PS2 +0x154. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "ACharacter",
+   "size": 208,
+   "base": "ABaseSound",
+   "vtable": "0x0018a520",
+   "comment": "Speaking audio character (ACharacter(char *)), derived from ABaseSound (0xc0; PS2 0xb0 with its vptr last at +0xac, reused by ACharacter). Size 0xd0 from deleting dtor 1c110 / GetACharacter alloc 0xd0; +0xc4..+0xcf presumably alignment padding (ABaseSound is 16-byte aligned). Ctor overrides minDistance 3.0, maxDistance 25.0, maxDistanceSq 625.0 (Xbox +0x6c/70/74 = PS2 +0x5c/60/64).",
+   "fields": [
+    {
+     "offset": "0xc0",
+     "size": 4,
+     "type": "void *",
+     "name": "voice",
+     "confidence": "high",
+     "evidence": "ctor 1c0c0 zeroes [ESI+0xc0] after ABaseSound ctor 1bfa0; GetName 11dd00 builds the name from [voice+4]/[voice+8] or returns default string 0x1911bc; Say/Play pass it to AVoice::Play; ~ACharacter reads it; PS2 +0xb0 (ctor, GetName, IsTalking, Play, Say, dtor). Type AVoice * (no layout yet)"
+    }
+   ]
+  },
+  {
+   "name": "AnimationController",
+   "size": 24,
+   "base": null,
+   "vtable": "0x00189e04",
+   "comment": "Animation controller wrapping an ActPoser (PS2 ctor(ActAnimGroup *, ActPoser *, ?)). Xbox vtable 2 slots (restored by ~AnimationController 12610; its ctors are inlined into subclasses, no other xref to the vtable). Size low confidence: PS2 base is 0x18 (vptr last at +0x14) and Xbox needs at least 0x18. The 48/64-byte allocations under its tag are presumably subclasses. The Xbox member order differs from PS2 (poser at +0x14, PS2 +0x4); the other members are not located on Xbox.",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "void *",
+     "name": "vtable",
+     "confidence": "high",
+     "evidence": "~AnimationController 12610 stores 0x189e04 at [ECX]; PS2 vptr LAST at +0x14 (ctor 107338 sw v0,0x14(a0))"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "ActPoser *",
+     "name": "poser",
+     "confidence": "high",
+     "evidence": "GetCurrentFrame 11020 = [[+0x14]+8] (ActPoser.currentFrame); GetRemainingTime 11060 = totalFrames(+0x18)*secondsPerFrame(+0x2c) - secondsPerFrame*currentFrame; PS2 accessors and GetActPoser read +0x4 (ctor a2 = ActPoser *), pointee offsets +4 on PS2 as in the ActPoser layout"
+    }
+   ]
+  }
+ ],
+ "vtable_slots": [],
+ "returns": {
+  "0x00028620": "void *",
+  "0x000286b0": "bool",
+  "0x000287c0": "int",
+  "0x00028730": "void",
+  "0x0001d7f0": "void",
+  "0x0001d840": "void",
+  "0x00023890": "void",
+  "0x0011dd00": "char *",
+  "0x00011020": "float",
+  "0x00011040": "float",
+  "0x00011050": "float",
+  "0x00011060": "float",
+  "0x00012610": "void",
+  "0x0001fd30": "PVehicle *"
+ },
+ "skip_prototypes": [],
+ "notes": [
+  "AIElementController: no vptr and an identical Xbox/PS2 layout. Construct 285b0 allocates 0x58 and stores the object in fObj (0x1ddee4). The UData lookups at string 0x18b7b8/0x18b7a4/0x18b790 (defaults 0x20/6/0x10) fill +0x0/+0x4/+0x8; names there are guesses (reading those strings would settle them).",
+  "AIElementController element records are 0x100 bytes (CARP::AIElement copies) and AIElementTracking is 0x50 bytes; neither type is in Ghidra, so the arrays are typed void *.",
+  "AnimationController: Xbox and PS2 member order differ; the ActPoser pointer is at Xbox +0x14 vs PS2 +0x4 (PS2 +0x14 is the vptr). Size 0x18 is a lower bound from PS2. GetTotalFrames 11030 not checked (no return given). GetCurrentTime/GetTotalTime float returns inferred from PS2 GetRemainingTime subtracting their f0 results.",
+  "AICharacterEnemySSnow::GetVehiclePtr 1fd30 sits just before AICharacterEnemySnow's ctor 1fd40: likely a COMDAT-folded accessor shared with EnemySnow (both keep the vehicle at +0x140). Likewise AICharacterEnemyDriver::GetRotPos 20e30 (called by Driver HandleInterrupts as (this, MATRIX4 &)) lies in the EnemySSnow address range and may be folded code shared among subclasses.",
+  "ACharacter was a bare 0xd0 placeholder: its base is ABaseSound (ctor 1c0c0 calls ABaseSound ctor 1bfa0), and its only own field is voice (+0xc0). The +0x6c/+0x70/+0x74/+0x7c/+0x94 accesses in the evidence are ABaseSound members (min/max distance, volume, mix).",
+  "Ghidra calls: 21 (10 + 9 + 2 in three python runs)."
+ ]
+}

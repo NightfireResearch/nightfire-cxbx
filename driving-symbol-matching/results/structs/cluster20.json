@@ -1,0 +1,635 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "RFog",
+   "size": 28,
+   "fields": [
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "fogInfo",
+     "comment": "high: ctor 7d930 allocates a separate 0x1c-byte block and stores it here, then fills it: +0 1.0, +4 fog end (copied from +0x14), +8 density 0.000476, +0xc int 3 (mode), +0x10 colour 0x80856838, +0x14 5000.0, +0x18 scale 1.0; tuning-DB attribs bound t"
+    },
+    {
+     "offset": 8,
+     "type": "bool",
+     "name": "scaling",
+     "comment": "high: UpdateScale 7d8c0 tests byte +0x8 and clears it when the fade ends; ctor zeroes it. PS2 +0x8 is a 4-byte int (SetFogScale/UpdateScale). Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "int",
+     "name": "scaleEndFrame",
+     "comment": "medium: UpdateScale compares it with the frame counter global 0x1f2a4c and uses (end - now) as the remaining time; PS2 +0xc written by SetFogScale. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "float",
+     "name": "scaleRate",
+     "comment": "medium: UpdateScale: remaining * [+0x10] subtracted from +0x18 gives the current scale; PS2 SetFogScale(float,float) writes +0x10 float. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "float",
+     "name": "targetScale",
+     "comment": "medium: ctor sets 1.0; UpdateScale copies it into fogInfo+0x18 when the fade ends; PS2 +0x18 float in SetFogScale/UpdateScale. Name invented"
+    }
+   ],
+   "comment": "Singleton: RFog::Init 8b690 allocates 0x1c and stores the object in global 0x1ec004. No USingleton base (ctor 7d930 stores only its own vtable 0x191514, 3 slots). Fields sit at identical offsets on PS2 (vptr at +0 on both)."
+  },
+  {
+   "name": "RColorize",
+   "size": 96,
+   "fields": [
+    {
+     "offset": 16,
+     "type": "COORD4",
+     "name": "colourA",
+     "comment": "medium: SetEnabled 9a500 copies a 4-float vector (built by 14440) to +0x10 and the same value to +0x20; Draw LEAs it. PS2 +0x10/+0x18 as two 64-bit stores (SetEnabled/Draw). Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "COORD4",
+     "name": "colourB",
+     "comment": "medium: SetEnabled 9a500 copies the same vector here as +0x10; Draw LEAs it; PS2 +0x20/+0x28. Name invented"
+    },
+    {
+     "offset": 48,
+     "type": "int",
+     "name": "mode",
+     "comment": "high: SetEnabled(int) 9a500 stores the argument and switches on 0..3; PS2 Enabled 1d9368 returns mode!=0 and IRModeEnabled 1d9378 returns mode==1; ctor and Reset clear it. Name invented"
+    },
+    {
+     "offset": 52,
+     "type": "int",
+     "name": "motionBlurTimer",
+     "comment": "low: EnableMotionBlur 9a4d0 zeroes it, DisableMotionBlur/Draw touch it; PS2 +0x34 same methods. Name invented"
+    },
+    {
+     "offset": 56,
+     "type": "int",
+     "name": "brightnessChangeTime",
+     "comment": "medium: SetAreaBrightness 9a4a0 and SetEnabled store the game time global 0x234e34 here; ctor/Reset zero it. PS2 +0x38. Name invented"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "tintColour",
+     "comment": "medium: SetEnabled writes ARGB constants (0xff001010, 0xff282840, 0xff000000); Draw reads bytes +0x3d..+0x3f. PS2 +0x3c. Name invented"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "tintColour2",
+     "comment": "low: SetEnabled writes ARGB constants (same as +0x3c); PS2 +0x40. Name invented"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "tintColour3",
+     "comment": "low: SetEnabled writes 0xffff0050 / 0xff008080 / 0xff000000; PS2 +0x44. Name invented"
+    },
+    {
+     "offset": 72,
+     "type": "float",
+     "name": "areaBrightness",
+     "comment": "high: SetAreaBrightness 9a4a0 writes arg*arg*k here after saving the old value to +0x4c; PS2 GetAreaBrightness 1d8770 returns it. Name from PS2 sheet accessor"
+    },
+    {
+     "offset": 76,
+     "type": "float",
+     "name": "prevAreaBrightness",
+     "comment": "medium: SetAreaBrightness copies the previous +0x48 here before overwriting; SetEnabled loads a global float into it. PS2 +0x4c. Name invented"
+    },
+    {
+     "offset": 80,
+     "type": "float",
+     "name": "motionBlurAmount",
+     "comment": "high: EnableMotionBlur(float) 9a4d0 stores its argument here; ctor zeroes; PS2 EnableMotionBlur 1d9010 +0x50. Name invented"
+    },
+    {
+     "offset": 84,
+     "type": "float",
+     "name": "blastStrength",
+     "comment": "medium: PS2 SetBlastStrength(float) 1d9388 writes +0x54; Xbox Draw writes it (no Xbox SetBlastStrength). Name from PS2 sheet"
+    },
+    {
+     "offset": 88,
+     "type": "void *",
+     "name": "frontBuffer",
+     "comment": "medium: ctor 9a420 stores the result of EAGL::RenderContextExtension::GetFrontBuffer (e8270 on [0x1ebff4]+0x64); Draw reads it. Xbox only. Name invented"
+    }
+   ],
+   "comment": "Singleton: Init 8b770 allocates 0x60 and stores it in global 0x1f6898. No USingleton base. Offsets identical on PS2 (vptr at +0 on both); +0x4..+0xf is padding before the 16-byte colour vectors."
+  },
+  {
+   "name": "REmpBolts",
+   "size": 556,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "RVehicle *",
+     "name": "vehicle",
+     "comment": "high: ctor stores its RVehicle* argument; passed to RSceneObj::GetPosition/LocateFX in CreateVehicleBolt/CreateWorldBolt/Draw/FindAnchors on both builds. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "uint",
+     "name": "lastUpdateTime",
+     "comment": "medium: ctor copies game time global 0x234e34; Update 9d6b0 computes now - [+4] as elapsed. PS2 +4 in ctor/Update. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "uint",
+     "name": "startTime",
+     "comment": "low: ctor copies game time 0x234e34; PS2 +8 ctor. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "float",
+     "name": "intensity",
+     "comment": "low: ctor sets 1.0; PS2 +0xc float (PS2 RVehicle has SetIntensityEmpBolts). Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "void *",
+     "name": "anchors",
+     "comment": "medium: ctor zeroes; FindAnchors/TrySpawnBolt R/W; PS2 +0x10 freed with __builtin_vec_delete in ~REmpBolts, read by GetRandomAnchor. REmpBolts::Anchor array. Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "int",
+     "name": "numAnchors",
+     "comment": "medium: ctor zeroes; FindAnchors/TrySpawnBolt; PS2 +0x14 used by GetRandomAnchor(void). Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "undefined4[3]",
+     "name": "anchorTree",
+     "comment": "low: MSVC tree (12 bytes): ctor LEAs +0x18, writes a byte at +0x18, calls 9c420 (head-node alloc) and stores the head at +0x1c (node self-linked, isnil byte +0x19 set), size 0 at +0x20. PS2 +0x18 is a pointer freed with UMemory::FastFree (GetRandomAn"
+    },
+    {
+     "offset": 36,
+     "type": "undefined4[128]",
+     "name": "bolts",
+     "comment": "medium: 32 records of 16 bytes: Update 9d6b0 indexes [+0x228]*16+0x24, passes the first dword to RLightning (global 0x200f4c) 9f840 and compacts by copying the last record over dead ones; PS2 Update LEAs +0x24. Name invented"
+    },
+    {
+     "offset": 548,
+     "type": "uint",
+     "name": "numBolts",
+     "comment": "high: ctor zeroes; Update decrements it when a bolt dies and processes at most 8 per call; PS2 +0x224. Name invented"
+    },
+    {
+     "offset": 552,
+     "type": "uint",
+     "name": "boltCursor",
+     "comment": "medium: ctor zeroes; Update increments and wraps it to 0 at numBolts; PS2 +0x228. Name invented"
+    }
+   ],
+   "comment": "No vptr. Allocated 0x22c by RVehicle::TriggerEmpBolts 95a10 (stored at RVehicle+0x368); ctor 9dc90 REmpBolts(RVehicle*) is __thiscall RET 4. Scalar field offsets match PS2; the anchor container at +0x18 is an MSVC tree on Xbox but a FastFree'd pointer on PS2."
+  },
+  {
+   "name": "RParticulate",
+   "size": 4208,
+   "fields": [
+    {
+     "offset": 16,
+     "type": "COORD4[200]",
+     "name": "positions",
+     "comment": "high: _init a32b0 fills 16-byte records at +0x10,+0x20,... with random xyz in [-range,range] and w=1.0; Draw LEAs +0x10; count 200 from +0x1004. PS2 Update LEA +0x10. Name invented"
+    },
+    {
+     "offset": 3216,
+     "type": "uint[200]",
+     "name": "colours",
+     "comment": "high: ctor a3f30 memsets 0xc8 dwords at +0xc90; _init writes a packed ARGB (alpha from +0xfb4, rgb from +0xfc0..) per particle at +0xc90+4i; Draw LEAs it. PS2 +0xc90 LEA. Name invented"
+    },
+    {
+     "offset": 4016,
+     "type": "float",
+     "name": "range",
+     "comment": "medium: _init sets 70.0 and uses 2*range*rand - range for positions; Update writes; PS2 +0xfb0. Name invented"
+    },
+    {
+     "offset": 4020,
+     "type": "float",
+     "name": "alpha",
+     "comment": "medium: _init sets 25.0 and converts it (ftol) to the alpha byte of each colour; PS2 +0xfb4. Name invented"
+    },
+    {
+     "offset": 4032,
+     "type": "COORD4",
+     "name": "colour",
+     "comment": "medium: _init stores (0.3,0.4,0.55,0) as a 4-float block (LEA +0xfc0) and packs *255 into the particle colours; PS2 +0xfc0..+0xfc8 (64-bit accesses). Name invented"
+    },
+    {
+     "offset": 4048,
+     "type": "float",
+     "name": "unkFD0",
+     "comment": "low: _init sets 0.094; PS2 +0xfd0 float in Update/_init. Name invented"
+    },
+    {
+     "offset": 4052,
+     "type": "float",
+     "name": "unkFD4",
+     "comment": "low: _init sets 0.012; PS2 +0xfd4 float. Name invented"
+    },
+    {
+     "offset": 4056,
+     "type": "float",
+     "name": "unkFD8",
+     "comment": "low: _init sets 0.055; PS2 +0xfd8 float. Name invented"
+    },
+    {
+     "offset": 4060,
+     "type": "float",
+     "name": "unkFDC",
+     "comment": "low: _init sets 0.1, Update writes; PS2 +0xfdc float. Name invented"
+    },
+    {
+     "offset": 4064,
+     "type": "float",
+     "name": "unkFE0",
+     "comment": "low: _init sets 0.7; PS2 +0xfe0 float. Name invented"
+    },
+    {
+     "offset": 4092,
+     "type": "bool",
+     "name": "enabled",
+     "comment": "medium: ctor clears byte +0xffc; Draw/Update test it. PS2 +0xffc is addr-taken in LoadAttributes (a 4-byte attribute-bound flag). Name invented"
+    },
+    {
+     "offset": 4096,
+     "type": "int",
+     "name": "firstParticle",
+     "comment": "low: _init sets 0; Draw reads; PS2 +0x1000. Name invented"
+    },
+    {
+     "offset": 4100,
+     "type": "int",
+     "name": "numParticles",
+     "comment": "high: _init sets 200 (0xc8), matching the 200-entry arrays; Draw reads; PS2 +0x1004. Name invented"
+    },
+    {
+     "offset": 4112,
+     "type": "byte[96]",
+     "name": "material",
+     "comment": "medium: USimpleMaterial embedded: ctor calls USimpleMaterial::USimpleMaterial (11bb60) on this+0x1010, ~RParticulate calls ef490 on it; runs to the end of the 0x1070 object (type not in Ghidra). Name invented"
+    }
+   ],
+   "comment": "Singleton: Init 8bd60 allocates 0x1070 and stores it in global 0x201754; deleting dtor frees 0x1070. No USingleton base. 200 particles. Offsets identical on PS2."
+  },
+  {
+   "name": "RPostProcessing",
+   "size": 8,
+   "fields": [
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "privateData",
+     "comment": "high: ctor a49a0 allocates it (__builtin_new) and every method goes through it (Reset/Draw/GetSubsampledBackBuffer/GrabBackBuffer; dtor deletes); PS2 +4 same; PS2 sheet names RPostProcessing::PPPrivateData (DrawBlurPoly, ExtractAlphaInfo). Type not i"
+    }
+   ],
+   "comment": "Singleton: Init 8bc80 allocates 8 and stores it in global 0x20175c; deleting dtor frees 8. Just a vptr and a private-data pointer on both builds."
+  },
+  {
+   "name": "RSniperZoom",
+   "size": 3184,
+   "fields": [
+    {
+     "offset": 4,
+     "type": "bool",
+     "name": "enabled",
+     "comment": "high: ctor/Reset clear byte +4; GrabBackBuffer/Draw test it. PS2 +4 is 4 bytes (Enabled 1ede08 returns it, Show/Hide write it). Name from PS2 Enabled()"
+    },
+    {
+     "offset": 8,
+     "type": "uint",
+     "name": "showParam",
+     "comment": "medium: ctor/Reset store 0xff; PS2 Show(unsigned int) 1ede10 writes its argument to +8, SetupVerts reads it. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "byte[36]",
+     "name": "offscreenBuffer",
+     "comment": "high: ROffscreenBuffer embedded: ctor calls ROffscreenBuffer::ROffscreenBuffer(64,64,32,0,0) (7f610) on this+0xc, dtor calls ~ROffscreenBuffer; Draw reads +0x18 inside it. Ends at +0x30 on both builds (type not in Ghidra). Name invented"
+    },
+    {
+     "offset": 48,
+     "type": "byte[672]",
+     "name": "verts0",
+     "comment": "medium: vertex block: Draw/SetupVerts LEA +0x30; next block at +0x2d0 (0x2a0 apart); PS2 same offsets. Name invented"
+    },
+    {
+     "offset": 720,
+     "type": "byte[672]",
+     "name": "verts1",
+     "comment": "medium: Draw LEA +0x2d0; PS2 Draw/SetupVerts. Name invented"
+    },
+    {
+     "offset": 1392,
+     "type": "byte[672]",
+     "name": "verts2",
+     "comment": "medium: Draw LEA +0x570; PS2 Draw/SetupVerts. Name invented"
+    },
+    {
+     "offset": 2064,
+     "type": "byte[672]",
+     "name": "verts3",
+     "comment": "medium: Draw LEA +0x810; PS2 Draw/SetupVerts. Name invented"
+    },
+    {
+     "offset": 2736,
+     "type": "undefined4[42]",
+     "name": "indexBlock0",
+     "comment": "low: ctor memsets 0x2a dwords at +0xab0; Draw LEAs it; PS2 ctor/Draw. Name invented"
+    },
+    {
+     "offset": 2912,
+     "type": "undefined4[42]",
+     "name": "indexBlock1",
+     "comment": "low: ctor memsets 0x2a dwords at +0xb60; Draw/SetupVerts LEA it; PS2 same. Name invented"
+    },
+    {
+     "offset": 3088,
+     "type": "byte[96]",
+     "name": "material",
+     "comment": "medium: USimpleTexturedMaterial embedded: ctor calls 11bcd0 then state setters eecf0/eedc0/eecd0 on this+0xc10, dtor calls ef490; runs to the end of the object (type not in Ghidra). Name invented"
+    }
+   ],
+   "comment": "Singleton: Init 8be40 allocates 0xc70 and stores it in global 0x201818; deleting dtor frees 0xc70. No USingleton base. Offsets identical on PS2 up to +0xc10; PS2's material is larger (PS2 +0xc40 accessed)."
+  },
+  {
+   "name": "RDecalManager",
+   "size": 672,
+   "fields": [
+    {
+     "offset": 16,
+     "type": "byte[640]",
+     "name": "decalTable",
+     "comment": "medium: ctor 9acf0 memcpys 0x280 bytes of a loaded data file into this+0x10 (or memsets 0x280 bytes if the load fails); PS2 ctor LEAs +0x10 and AddDecal LEAs +0x54 (inside the table). Name invented"
+    },
+    {
+     "offset": 656,
+     "type": "int",
+     "name": "numDecals",
+     "comment": "low: PS2 ClearDecals 1dae58 writes +0x290 (no Xbox ClearDecals). Name invented"
+    },
+    {
+     "offset": 660,
+     "type": "int",
+     "name": "nextDecal",
+     "comment": "medium: ctor zeroes; AddDecal 9b070 R/W; PS2 +0x294 same. Name invented"
+    }
+   ],
+   "comment": "Singleton: Init 8b7e0 allocates 0x2a0 and stores it in global 0x1fe820. No USingleton base. Most decal state lives in globals (0x1f68b0: 8 decal buckets of 0x3c bytes, material 0x1ff7f0, vertex pools 0x1f6a20/0x1fa920). Offsets identical on PS2."
+  },
+  {
+   "name": "RGain",
+   "size": 300,
+   "fields": [
+    {
+     "offset": 4,
+     "type": "float[4]",
+     "name": "gain",
+     "comment": "high: ctor sets 1.0 x4; PS2 SetGain(float,float,float,float) 1df880 writes +4..+0x10; ctor stores &this+4 at +0x108 (shader binding). Name from PS2 SetGain"
+    },
+    {
+     "offset": 20,
+     "type": "float[4]",
+     "name": "offset",
+     "comment": "high: ctor zeroes x4; PS2 SetOffset(float x4) 1df898 writes +0x14..+0x20; ctor stores &this+0x14 at +0x110. Name from PS2 SetOffset"
+    },
+    {
+     "offset": 36,
+     "type": "byte[76]",
+     "name": "material",
+     "comment": "medium: material embedded: ctor calls ef480 on this+0x24 then render-state setters (eec70/eee60/eecf0/eecd0/eedc0/eecb0/eee20), dtor calls ef490 (the destructor also used on USimpleMaterial members). 0x4c bytes up to the DynamicModel. Name invented"
+    },
+    {
+     "offset": 112,
+     "type": "byte[88]",
+     "name": "model",
+     "comment": "high: EAGL::DynamicModel embedded: ctor calls DynamicModel ctor e9760 on this+0x70, dtor calls ~DynamicModel; Draw uses it; ctor calls e9890 on it with this+0xd8. Name invented"
+    },
+    {
+     "offset": 200,
+     "type": "undefined4[4]",
+     "name": "shaderConst",
+     "comment": "low: ctor zeroes +0xc8..+0xd4 and stores &this+0xc8 at +0xf0; Draw LEAs +0xc8. Name invented"
+    },
+    {
+     "offset": 216,
+     "type": "undefined4",
+     "name": "bindingHeader",
+     "comment": "low: ctor calls 9dd40 on this+0xd8 (start of a parameter-binding block running to the end, 0x54 bytes) and passes it to the DynamicModel (e9890); dtor calls f12c0 on it. Name invented"
+    },
+    {
+     "offset": 220,
+     "type": "int",
+     "name": "binding0Count",
+     "comment": "low: ctor sets 1; paired with +0xe0. Name invented"
+    },
+    {
+     "offset": 224,
+     "type": "void *",
+     "name": "binding0Material",
+     "comment": "low: ctor stores &this+0x24 (the material). Name invented"
+    },
+    {
+     "offset": 228,
+     "type": "undefined4",
+     "name": "binding0Extra",
+     "comment": "low: Draw writes. Name invented"
+    },
+    {
+     "offset": 232,
+     "type": "undefined4",
+     "name": "binding0Extra2",
+     "comment": "low: Draw writes. Name invented"
+    },
+    {
+     "offset": 236,
+     "type": "int",
+     "name": "binding1Count",
+     "comment": "low: ctor sets 1; paired with +0xf0. Name invented"
+    },
+    {
+     "offset": 240,
+     "type": "void *",
+     "name": "binding1Data",
+     "comment": "low: ctor stores &this+0xc8. Name invented"
+    },
+    {
+     "offset": 260,
+     "type": "int",
+     "name": "binding2Count",
+     "comment": "low: ctor sets 1; paired with +0x108. Name invented"
+    },
+    {
+     "offset": 264,
+     "type": "float *",
+     "name": "binding2Gain",
+     "comment": "low: ctor stores &this+4 (gain). Name invented"
+    },
+    {
+     "offset": 268,
+     "type": "int",
+     "name": "binding3Count",
+     "comment": "low: ctor sets 1; paired with +0x110. Name invented"
+    },
+    {
+     "offset": 272,
+     "type": "float *",
+     "name": "binding3Offset",
+     "comment": "low: ctor stores &this+0x14 (offset). Name invented"
+    },
+    {
+     "offset": 276,
+     "type": "undefined4[6]",
+     "name": "drawParams",
+     "comment": "low: Draw writes +0x114..+0x128 each frame. Name invented"
+    }
+   ],
+   "comment": "Singleton: Init 8bcf0 allocates 0x12c and stores it in global 0x200f20; deleting dtor frees 0x12c. No USingleton base. Gain/offset vectors match PS2 +4..+0x20; everything after is Xbox-only (material, EAGL::DynamicModel and a parameter-binding block)."
+  },
+  {
+   "name": "RTyreTrack",
+   "size": 2336,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "COORD4[128]",
+     "name": "points",
+     "comment": "medium: 64 segments x 32 bytes (two COORD4 each): ctor inits the last segment's pair via [maxSegments*32-0x20] and [-0x10] (VU0_v4Init); PS2 Add LEAs +4/+8 inside the first entries. Name invented"
+    },
+    {
+     "offset": 2048,
+     "type": "undefined4[64]",
+     "name": "segmentData",
+     "comment": "low: PS2 Break/Draw LEA +0x800, i.e. a 64-entry per-segment array after the points (element type unknown). Name invented"
+    },
+    {
+     "offset": 2304,
+     "type": "int",
+     "name": "head",
+     "comment": "medium: ctor zeroes; Add/Break/Draw R/W on both builds. Name invented"
+    },
+    {
+     "offset": 2308,
+     "type": "int",
+     "name": "count",
+     "comment": "medium: ctor zeroes; Add/Break/Draw R/W on both builds. Name invented"
+    },
+    {
+     "offset": 2312,
+     "type": "int",
+     "name": "unk908",
+     "comment": "low: ctor zeroes; Add/Break on both builds. Name invented"
+    },
+    {
+     "offset": 2316,
+     "type": "int",
+     "name": "unk90C",
+     "comment": "low: ctor zeroes; Add/Break/Draw on both builds. Name invented"
+    },
+    {
+     "offset": 2320,
+     "type": "float",
+     "name": "width",
+     "comment": "high: ctor stores its float argument; Add writes; PS2 +0x910 float (also Draw). Name invented"
+    },
+    {
+     "offset": 2324,
+     "type": "byte",
+     "name": "unk914",
+     "comment": "low: ctor clears; Add/Break R/W byte on both builds. Name invented"
+    },
+    {
+     "offset": 2325,
+     "type": "byte",
+     "name": "unk915",
+     "comment": "low: ctor clears; Add/Break/Draw byte on both builds. Name invented"
+    },
+    {
+     "offset": 2326,
+     "type": "byte",
+     "name": "maxSegments",
+     "comment": "high: ctor sets 0x40 if the first bool is true else 0x20 and uses it as the segment count (x32 bytes); Add/Break/Draw read. PS2 +0x916 byte. Name invented"
+    },
+    {
+     "offset": 2327,
+     "type": "bool",
+     "name": "flag917",
+     "comment": "medium: ctor stores the second bool argument; Add/Break read; PS2 +0x917 byte. Name invented"
+    }
+   ],
+   "comment": "No vptr; allocated 0x920 (2336). PBondCar::tyreTracks[4] (+0x74) point to these. Ctor abfc0 RTyreTrack(float width, bool, bool) __thiscall RET 0xc. Offsets identical on PS2 (+0x900..+0x917 match exactly)."
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x0007d790",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RFog::FogColour(void)"
+  },
+  {
+   "address": "0x0007d7a0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RFog::DisableFog(void)"
+  },
+  {
+   "address": "0x0007d820",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RFog::EnableFog(void)"
+  },
+  {
+   "address": "0x0007d840",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RFog::SetFogParams(void)"
+  },
+  {
+   "address": "0x0007d8c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RFog::UpdateScale(void)"
+  },
+  {
+   "address": "0x0007d930",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RFog::RFog(void)",
+   "return": "RFog *"
+  },
+  {
+   "address": "0x0007daa0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RFog::Kill(void)"
+  },
+  {
+   "address": "0x0007dac0",
+   "calling_convention": "__thiscall",
+   "return": "RFog *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0008b690",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RFog::Init(void)",
+   "return": "void"
+  }
+ ]
+}

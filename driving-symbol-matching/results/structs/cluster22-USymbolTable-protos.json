@@ -1,0 +1,65 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0011a950",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "uint *"
+    }
+   ],
+   "sheet": "USymbolTable::NameLookup(char *, unsigned int &) const"
+  },
+  {
+   "address": "0x0011b110",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "USymbolTable::RemoveNamespace(char *)"
+  },
+  {
+   "address": "0x0011b510",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "void *"
+    }
+   ],
+   "sheet": "USymbolTable::AddNamespace(char *, USymbolTable::Namespace *)"
+  },
+  {
+   "address": "0x0011b580",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "USymbolTable::USymbolTable(void)",
+   "return": "USymbolTable *"
+  },
+  {
+   "address": "0x0011b650",
+   "calling_convention": "__thiscall",
+   "return": "USymbolTable *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

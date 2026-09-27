@@ -1,0 +1,47 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00011020",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AnimationController::GetCurrentFrame(void)",
+   "return": "float"
+  },
+  {
+   "address": "0x00011030",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AnimationController::GetTotalFrames(void)"
+  },
+  {
+   "address": "0x00011040",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AnimationController::GetCurrentTime(void)",
+   "return": "float"
+  },
+  {
+   "address": "0x00011050",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AnimationController::GetTotalTime(void)",
+   "return": "float"
+  },
+  {
+   "address": "0x00011060",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AnimationController::GetRemainingTime(void)",
+   "return": "float"
+  },
+  {
+   "address": "0x00012610",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AnimationController::~AnimationController(void)",
+   "return": "void"
+  }
+ ]
+}

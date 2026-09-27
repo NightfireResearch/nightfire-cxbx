@@ -128,10 +128,108 @@
     "GGallery"
    ],
    "notes": "Game-flow singletons. SMissionManager: 'constructed' 7280 (0x1c70), 95 Xbox offsets; find its global instance. GGallery: no size in evidence (find it from allocation or the global's extent). Prioritise pointers, arrays and sheet-named members."
+  },
+  {
+   "key": "cluster17",
+   "status": "done",
+   "evidence_kb": 32,
+   "classes": [
+    "Mine",
+    "Grenade",
+    "Shell",
+    "Smackable",
+    "Newton",
+    "RayShell",
+    "RMissileStreak",
+    "RMissileCam"
+   ],
+   "notes": "Weapons and spawnable physics objects. Mine, Grenade, Shell, Smackable and Newton are probably PhysicsObject subclasses (Simulation::Spawn*Object create them; PhysicsObject is 0x6c, layout in struct-pilot-physicsobject.json; PHelicopter/Human/Sentry in clusters 4-5 show the pattern). RMissileStreak is an existing 0x650 placeholder deriving from RAutonomousObj (see cluster5 Missile, which embeds one at +0xa0): fill it in. RayShell and RMissileCam: work out their bases from their constructors."
+  },
+  {
+   "key": "cluster18",
+   "status": "done",
+   "evidence_kb": 28,
+   "classes": [
+    "AIElementController",
+    "AICharacterEnemyDriver",
+    "AICharacterEnemySSnow",
+    "AICharacterPassenger",
+    "ACharacter",
+    "AnimationController"
+   ],
+   "notes": "More AI characters. EnemyDriver, EnemySSnow and Passenger are presumably AICharacter subclasses (AICharacter is 0x140 on Xbox, 0x150 on PS2 with the PS2 vptr last; subclass fields sit 0x10 lower on Xbox; see struct-pilot-cluster7.json and cluster8). ACharacter is an existing 0xd0 placeholder (allocated by AICharacter::GetACharacter, constructor 0x1c0c0): fill it in. AIElementController and AnimationController: find bases and sizes."
+  },
+  {
+   "key": "cluster19",
+   "status": "done",
+   "evidence_kb": 37,
+   "classes": [
+    "ASubmersible",
+    "ASnowMobile",
+    "AHelicopter",
+    "ATrafficVehicle",
+    "AVoice",
+    "AEngine",
+    "AIndex",
+    "WSoundGroup",
+    "ABasic"
+   ],
+   "notes": "Audio objects. ASubmersible, ASnowMobile, AHelicopter and ATrafficVehicle are probably AVehicle or ASceneObj/ABaseSound subclasses (ABaseSound 0xc0, ASceneObj 0xd0, AVehicle 0x1f0; layouts in struct-pilot-cluster13.json: ABaseSound's vptr is padded to 0x10 on Xbox). AHelicopter is allocated by ABaseSound::operator_new(0x310) in PHelicopter's constructor. AIndex is an existing 8-byte placeholder (embedded in ABank at +0x10). AVoice: 14 of them hang off AVehicle."
+  },
+  {
+   "key": "cluster20",
+   "status": "done",
+   "evidence_kb": 33,
+   "classes": [
+    "RFog",
+    "RColorize",
+    "REmpBolts",
+    "RParticulate",
+    "RPostProcessing",
+    "RSniperZoom",
+    "RDecalManager",
+    "RGain",
+    "RTyreTrack"
+   ],
+   "notes": "Renderer effects, mostly singletons (check for USingleton bases and the global each Init stores). REmpBolts is referenced by RVehicle+0x368 (cluster12). RTyreTrack: PBondCar has tyreTracks[4] at +0x74 (cluster5). RGain's Xbox evidence (32 offsets) is much richer than PS2 (9): the Xbox implementation may differ."
+  },
+  {
+   "key": "cluster21",
+   "status": "done",
+   "evidence_kb": 35,
+   "classes": [
+    "RRenderer",
+    "RRenderHigh",
+    "WRender",
+    "RTextureContext",
+    "RTextureContextManager",
+    "RParticleSystemManager",
+    "RStateManager",
+    "WWorld"
+   ],
+   "notes": "Render infrastructure and the world. Mostly singletons or statics: find their globals. RParticleSystemManager: RVehicleParticle holds RParticleSystem pointers (cluster12). WWorld: WWorld::Open/Reset allocate the scene objects (RSceneObj etc.)."
+  },
+  {
+   "key": "cluster22",
+   "status": "done",
+   "evidence_kb": 37,
+   "classes": [
+    "GFXGallery",
+    "GSubtitles",
+    "InputConfigManager",
+    "ActionQueue",
+    "ActionQueueManager",
+    "SMissionTimer",
+    "RPlayerCamState",
+    "RDirectorQueue",
+    "USymbolTable"
+   ],
+   "notes": "Game/UI helpers and existing placeholders to fill in: ActionQueue (0x974 bytes, constructor 0x4f320; owned by PHelicopter, GHud, SMissionManager, SWeaponManager, RWorldCamera), SMissionTimer (0x14 bytes on Xbox, 10 of them at SMissionManager+0x360; PS2 0x18), RPlayerCamState (0x34 placeholder, RPlayerCamera+0x354), RDirectorQueue (0x14 placeholder, RPlayerCamera+0x368). USymbolTable: AttributeSystem+0x64 points to one. GFXGallery is related to GGallery (cluster16)."
   }
  ],
  "not_packeted": {
   "AIVehicleController, AIRoadSpawn, WRoadNetwork": "no this-relative accesses in their own methods (globals or static namespaces); need a different approach",
-  "RRenderWorldCamera, WTriggerManager": "2-4 offsets only; add to a packet if a neighbour needs them"
+  "RRenderWorldCamera, WTriggerManager": "2-4 offsets only; add to a packet if a neighbour needs them",
+  "AIZoneController, AFX, GFX, GLoadingScreen, RRenderSharedData, RParticleLibrary": "0-1 offsets in their own methods"
  }
 }

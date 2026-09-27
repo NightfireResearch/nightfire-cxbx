@@ -1,0 +1,49 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0001d640",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyDriver::~AICharacterEnemyDriver(void)"
+  },
+  {
+   "address": "0x0001d650",
+   "calling_convention": "__thiscall",
+   "return": "AICharacterEnemyDriver *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0001d680",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyDriver::DoInitial(void)"
+  },
+  {
+   "address": "0x0001d7f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyDriver::DoNeutral(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0001d840",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyDriver::HandleInterrupts(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0001d990",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyDriver::UpdateRotPos(void)"
+  }
+ ]
+}

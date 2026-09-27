@@ -1,0 +1,66 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0008bc80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPostProcessing::Init(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000a4550",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPostProcessing::Reset(void)"
+  },
+  {
+   "address": "0x000a4560",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPostProcessing::GetSubsampledBackBuffer(void)"
+  },
+  {
+   "address": "0x000a49a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPostProcessing::RPostProcessing(void)"
+  },
+  {
+   "address": "0x000a4eb0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RPostProcessing::Kill(void)"
+  },
+  {
+   "address": "0x000a4ed0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPostProcessing::Draw(void)"
+  },
+  {
+   "address": "0x000a4f70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPostProcessing::~RPostProcessing(void)"
+  },
+  {
+   "address": "0x000a5020",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPostProcessing::GrabBackBuffer(void)"
+  },
+  {
+   "address": "0x000a5060",
+   "calling_convention": "__thiscall",
+   "return": "RPostProcessing *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

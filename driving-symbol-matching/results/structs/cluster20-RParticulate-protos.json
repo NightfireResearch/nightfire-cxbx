@@ -1,0 +1,68 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0008bd60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RParticulate::Init(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000a3210",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RParticulate::LoadAttributes(void)"
+  },
+  {
+   "address": "0x000a3240",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RParticulate::~RParticulate(void)"
+  },
+  {
+   "address": "0x000a3290",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RParticulate::Kill(void)"
+  },
+  {
+   "address": "0x000a32b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RParticulate::_init(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000a3e60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RParticulate::Draw(void)"
+  },
+  {
+   "address": "0x000a3f30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RParticulate::RParticulate(void)",
+   "return": "RParticulate *"
+  },
+  {
+   "address": "0x000a3fa0",
+   "calling_convention": "__thiscall",
+   "return": "RParticulate *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x000a3fd0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RParticulate::Update(void)"
+  }
+ ]
+}

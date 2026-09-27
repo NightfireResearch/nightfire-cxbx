@@ -1,11 +1,17 @@
 {
- "generated": "Sun Sep 27 03:57:40 2026",
+ "generated": "Sun Sep 27 04:17:41 2026",
  "moves": [
   {
    "program": "Driving.xbe",
-   "address": "0x000b89c0",
-   "name": "SMissionManager::ClearMessageList",
-   "batch": "048"
+   "address": "0x00095080",
+   "name": "RTextureContextManager::RTextureContextManager",
+   "batch": "049"
+  },
+  {
+   "program": "Driving.xbe",
+   "address": "0x0008b5b0",
+   "name": "RStateManager::Init",
+   "batch": "049"
   },
   {
    "program": "DRIVING.ELF",

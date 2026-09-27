@@ -1,0 +1,114 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000e3180",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "GSubtitles::TheApp(void)"
+  },
+  {
+   "address": "0x000e3190",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GSubtitles::IsSubtitleDisplaying(void)"
+  },
+  {
+   "address": "0x000e34e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GSubtitles::GSubtitles(void)",
+   "return": "GSubtitles *"
+  },
+  {
+   "address": "0x000e3560",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "GSubtitles::SetupFMVSubtitles(unsigned int)"
+  },
+  {
+   "address": "0x000e3630",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GSubtitles::ClearSubtitles(void)"
+  },
+  {
+   "address": "0x000e36f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float *"
+    },
+    {
+     "name": "param_4",
+     "type": "float *"
+    }
+   ],
+   "sheet": "GSubtitles::GetWidthHeight(char *, float, float *, float *)"
+  },
+  {
+   "address": "0x000e3730",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GSubtitles::~GSubtitles(void)"
+  },
+  {
+   "address": "0x000e3790",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "GSubtitles::DisplaySubtitle(unsigned int, float)"
+  },
+  {
+   "address": "0x000e3840",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "GSubtitles::LoadSubtitles(char *)"
+  },
+  {
+   "address": "0x000e39b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GSubtitles::DrawSubtitles(void)"
+  },
+  {
+   "address": "0x000e3ad0",
+   "calling_convention": "__thiscall",
+   "return": "GSubtitles *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

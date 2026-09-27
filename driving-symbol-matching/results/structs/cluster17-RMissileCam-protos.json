@@ -1,0 +1,48 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0008bdd0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RMissileCam::Init(void)"
+  },
+  {
+   "address": "0x000a0a50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RMissileCam::RMissileCam(void)"
+  },
+  {
+   "address": "0x000a0b30",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RMissileCam::Kill(void)"
+  },
+  {
+   "address": "0x000a0b50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RMissileCam::Draw(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000a0df0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RMissileCam::~RMissileCam(void)"
+  },
+  {
+   "address": "0x000a0e70",
+   "calling_convention": "__thiscall",
+   "return": "RMissileCam *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

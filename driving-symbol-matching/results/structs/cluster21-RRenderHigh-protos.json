@@ -1,0 +1,67 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0008bac0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RRenderHigh::KillTrackRenderPostSim(void)"
+  },
+  {
+   "address": "0x0008bad0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderHigh::ReceiveCameraInput(void)"
+  },
+  {
+   "address": "0x0008bb10",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderHigh::RearrangeSplitScreens(void)"
+  },
+  {
+   "address": "0x0008bf30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderHigh::Render(void)"
+  },
+  {
+   "address": "0x0008c090",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderHigh::~RRenderHigh(void)"
+  },
+  {
+   "address": "0x0008c210",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderHigh::RRenderHigh(void)",
+   "return": "RRenderHigh *"
+  },
+  {
+   "address": "0x0008c3d0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RRenderHigh::InitGameRender(void)"
+  },
+  {
+   "address": "0x0008c740",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RRenderHigh::KillGameRender(void)"
+  },
+  {
+   "address": "0x0008c800",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RRenderHigh::InitTrackRenderPostSim(void)"
+  },
+  {
+   "address": "0x0008c840",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RRenderHigh::RestartTrackRender(void)"
+  }
+ ]
+}
