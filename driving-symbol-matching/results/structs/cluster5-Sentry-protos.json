@@ -1,0 +1,118 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00073150",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Sentry::~Sentry(void)"
+  },
+  {
+   "address": "0x00073330",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Sentry::GetTarget(void) const"
+  },
+  {
+   "address": "0x000733f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Sentry::Shoot(void)"
+  },
+  {
+   "address": "0x000734a0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "Sentry::AddMuzzleFlash(COORD4 &, COORD4 &)"
+  },
+  {
+   "address": "0x00073500",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "Sentry::DrawMuzzleFlashes(void)"
+  },
+  {
+   "address": "0x000735d0",
+   "calling_convention": "__thiscall",
+   "return": "Sentry *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00073600",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "float"
+    }
+   ],
+   "sheet": "Sentry::ComputeNewRotation(float, float, float, float) const"
+  },
+  {
+   "address": "0x00073730",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "Sentry::RotateSRB(float)"
+  },
+  {
+   "address": "0x000738b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "Sentry::RotateAnim(float)"
+  },
+  {
+   "address": "0x00074280",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "Sentry::TrackTarget(bool &)"
+  },
+  {
+   "address": "0x000744d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Sentry::Simulate(void)"
+  }
+ ]
+}

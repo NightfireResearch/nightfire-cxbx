@@ -1,0 +1,77 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0005dc60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Human::~Human(void)"
+  },
+  {
+   "address": "0x0005dcc0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Human::Activate(void)"
+  },
+  {
+   "address": "0x0005dce0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Human::Deactivate(void)"
+  },
+  {
+   "address": "0x0005dd00",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Human::Simulate(void)"
+  },
+  {
+   "address": "0x0005dd90",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_3",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_4",
+     "type": "int"
+    }
+   ],
+   "sheet": "Human::Human(HumanType, COORD3 &, COORD3 &, SimObjSig)",
+   "return": "Human *"
+  },
+  {
+   "address": "0x0005dea0",
+   "calling_convention": "__thiscall",
+   "return": "Human *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0005ded0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "AICharacter *"
+    }
+   ],
+   "sheet": "Human::SetAICharacter(AICharacter *)",
+   "return": "void"
+  }
+ ]
+}

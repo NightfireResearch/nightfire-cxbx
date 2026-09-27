@@ -1,0 +1,131 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000525d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AttributeSystem::SetCollectionSection(char *)",
+   "return": "void"
+  },
+  {
+   "address": "0x00053990",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AttributeSystem::CountClassNames(char *)",
+   "return": "int"
+  },
+  {
+   "address": "0x00053a40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AttributeSystem::GetClassNextName(char *, char *)"
+  },
+  {
+   "address": "0x00055da0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AttributeSystem::MakeString(char *)",
+   "return": "char *"
+  },
+  {
+   "address": "0x00057240",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AttributeSystem::RegisterExtensionField(AttributeType, char *,"
+  },
+  {
+   "address": "0x00057ee0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "AttributeSystem::LoadCollection(AttributeCollection *)"
+  },
+  {
+   "address": "0x00058cc0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AttributeSystem::GetCollection(char *, char *)"
+  },
+  {
+   "address": "0x00058e30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AttributeSystem::PrepareDatabase(void)"
+  },
+  {
+   "address": "0x00059090",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AttributeSystem::AttributeSystem(void)",
+   "return": "AttributeSystem *"
+  },
+  {
+   "address": "0x000592b0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AttributeSystem::Kill(void)"
+  },
+  {
+   "address": "0x000592d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AttributeSystem::~AttributeSystem(void)"
+  },
+  {
+   "address": "0x00059530",
+   "calling_convention": "__thiscall",
+   "return": "AttributeSystem *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00059550",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AttributeSystem::Init(void)"
+  }
+ ]
+}

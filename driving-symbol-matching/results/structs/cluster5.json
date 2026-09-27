@@ -1,0 +1,1982 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "CarControl",
+   "size": 32,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "float",
+     "name": "steering",
+     "comment": "high: SetCarControlSteering 65de0 writes PBondCar+0x240; PS2 193018 same"
+    },
+    {
+     "offset": 4,
+     "type": "float",
+     "name": "steeringVertical",
+     "comment": "high: SetCarControlSteeringVertical 65df0 -> +0x244 both builds"
+    },
+    {
+     "offset": 8,
+     "type": "float",
+     "name": "strafeVertical",
+     "comment": "high: SetCarControlStrafeVertical 65e10 -> +0x248 both builds"
+    },
+    {
+     "offset": 12,
+     "type": "float",
+     "name": "strafeHorizontal",
+     "comment": "high: SetCarControlStrafeHorizontal 65e00 -> +0x24c both builds"
+    },
+    {
+     "offset": 16,
+     "type": "float",
+     "name": "gas",
+     "comment": "high: SetCarControlGas 65e20 -> +0x250 both builds"
+    },
+    {
+     "offset": 20,
+     "type": "float",
+     "name": "brake",
+     "comment": "high: SetCarControlBrake 65e30 -> +0x254 both builds"
+    },
+    {
+     "offset": 24,
+     "type": "char",
+     "name": "gear",
+     "comment": "low: byte +0x258 written by InitializeCarControls; PS2 has SetCarControlGear (inline on Xbox) and GetCarControl copies it; name from the sheet, mapping inferred"
+    },
+    {
+     "offset": 25,
+     "type": "char",
+     "name": "handBrake",
+     "comment": "high: Set/GetCarControlHandBrake(char) 65e40/65e50 -> +0x259 both builds"
+    },
+    {
+     "offset": 26,
+     "type": "char",
+     "name": "firePrimary",
+     "comment": "high: SetCarControlFirePrimary(char) 65e60 -> +0x25a both builds"
+    },
+    {
+     "offset": 27,
+     "type": "char",
+     "name": "unknown1b",
+     "comment": "low: byte +0x25b written by InitializeCarControls/GetControllerInput both builds. Name invented"
+    }
+   ],
+   "comment": "0x20-byte car input block, embedded twice in PBondCar (+0x240 live, +0x3bc locked copy); same layout on both builds (char flags, no bools). Name invented from PBondCar::GetCarControl(void) const / LockCarControl"
+  },
+  {
+   "name": "PBondCar",
+   "size": 1056,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "PVehicle",
+     "name": "super_PVehicle"
+    },
+    {
+     "offset": 116,
+     "type": "void *[4]",
+     "name": "tyreTracks",
+     "comment": "high: GetTyreTrackPtr(int) 65f20: MOV EAX,[ECX+EAX*4+0x74]; InitTyreTracks writes +0x74..+0x80 on both builds; ~PBondCar/ResetCar/ControlTyreTracks use it. Element type (tyre track object) unknown. Name invented"
+    },
+    {
+     "offset": 144,
+     "type": "WHEEL_INFO1[4]",
+     "name": "wheels",
+     "comment": "medium: stride 0x40 x4: GetWheelRoadSurface 65ff0 reads byte [n<<6 + 0xbc] (wheel+0x2c), PS2 Simulate reads bytes +0xbc/+0xfc/+0x13c/+0x17c; +0x90 LEA in ctor/ResetCar/Process*Physics both builds; sheet AddWheelForces(WHEEL_INFO1*,...). Type name fro"
+    },
+    {
+     "offset": 400,
+     "type": "COORD4[4]",
+     "name": "wheelRoadNormal",
+     "comment": "high: GetWheelRoadNormal(int) 66010 returns this+(n+0x19)*16; GetWheelRoadHeight(int) 65fd0 reads float [n*16+0x19c], i.e. the w slot holds the road height; physics writes +0x19c/+0x1ac/+0x1bc/+0x1cc. PS2 +0x190/+0x19c LEA"
+    },
+    {
+     "offset": 464,
+     "type": "COORD4[4]",
+     "name": "wheelPos",
+     "comment": "high: GetWheelPos(int) 660d0 returns this+(n+0x1d)*16; physics writes w slots +0x1d4..+0x204; PS2 +0x1d0/+0x1d8 w8"
+    },
+    {
+     "offset": 528,
+     "type": "float[4]",
+     "name": "suspensionCompression",
+     "comment": "high: GetSuspensionCompression(int) 65fa0 FLD [ECX+n*4+0x210]; GetSuspensionCompression(void) 66060 returns this+0x210; IsWheelOnGround 66030 tests [n*4+0x210] != 0; PS2 0x193198/0x193228 same"
+    },
+    {
+     "offset": 544,
+     "type": "float[4]",
+     "name": "wheelSlip",
+     "comment": "high: GetCarWheelSlip(int) 66070 FLD [ECX+n*4+0x220]; PS2 floats +0x220..+0x22c in the physics methods"
+    },
+    {
+     "offset": 560,
+     "type": "float[2]",
+     "name": "wheelSpinAngle",
+     "comment": "low: GetCarWheelSpinAngle(char) 65f80 FLD [ECX+n*4+0x230], but +0x23c is the RigidBody pointer and +0x238 a separate float, so at most 2-3 entries (per axle?); PS2 InitializeCarVariables writes +0x230/+0x234. Length inferred"
+    },
+    {
+     "offset": 568,
+     "type": "float",
+     "name": "unknown238",
+     "comment": "low: Xbox integer store in ProcessPhysics/ProcessSimplePhysics/ProcessSnowmobilePhysics; PS2 float R/W incl. CalculateRPM. Name invented"
+    },
+    {
+     "offset": 572,
+     "type": "RigidBody *",
+     "name": "rigidBody",
+     "comment": "high: GetPhysics 61a50 reads +0x23c; passed as this to RigidBody::GetLocalAngularVelocity in 14 methods; PS2 +0x23c 16 methods. Name invented"
+    },
+    {
+     "offset": 576,
+     "type": "CarControl",
+     "name": "carControl",
+     "comment": "high: GetCarControl 65ec0 copies 8 dwords from this+0x240 (REP MOVSD) to the hidden result; PS2 GetCarControl copies +0x240/+0x248/+0x250/+0x258 as doublewords; setters listed in CarControl"
+    },
+    {
+     "offset": 608,
+     "type": "float",
+     "name": "unknown260",
+     "comment": "low: PS2 only: GetControllerInput writes float +0x260 (same offset expected on Xbox, not seen there). Name invented"
+    },
+    {
+     "offset": 612,
+     "type": "float",
+     "name": "unknown264",
+     "comment": "low: PS2 only: GetControllerInput writes float +0x264. Name invented"
+    },
+    {
+     "offset": 616,
+     "type": "float",
+     "name": "unknown268",
+     "comment": "low: PS2 only: InitializeCarVariables writes float +0x268. Name invented"
+    },
+    {
+     "offset": 620,
+     "type": "ActionQueue *",
+     "name": "actionQueue",
+     "comment": "high: FlushCarControls 62430 reads it; ~PBondCar calls ActionQueue::~ActionQueue on it; ctor inits; PS2 +0x26c also ActionQueue::IsEmpty. Name invented"
+    },
+    {
+     "offset": 624,
+     "type": "float",
+     "name": "yDrawModifier",
+     "comment": "low: PS2 GetyDrawModifier 0x193370 reads float +0x270 (inline on Xbox, no Xbox access seen). Name from sheet"
+    },
+    {
+     "offset": 628,
+     "type": "float",
+     "name": "carWheelSpeed",
+     "comment": "medium: PS2 GetCarWheelSpeed 0x193368 reads +0x274; Xbox float writes in ProcessPhysics/ProcessSimplePhysics/ProcessSplinePhysics. Name from sheet"
+    },
+    {
+     "offset": 632,
+     "type": "float",
+     "name": "unknown278",
+     "comment": "low: written by InitializeCarControls/GetControllerInput both builds (PS2 float, also Simulate). Name invented"
+    },
+    {
+     "offset": 636,
+     "type": "float",
+     "name": "unknown27c",
+     "comment": "low: as +0x278. Name invented"
+    },
+    {
+     "offset": 640,
+     "type": "float",
+     "name": "unknown280",
+     "comment": "low: InitializeCarControls both builds, PS2 GetControllerInput. Name invented"
+    },
+    {
+     "offset": 644,
+     "type": "float",
+     "name": "unknown284",
+     "comment": "low: as +0x280. Name invented"
+    },
+    {
+     "offset": 648,
+     "type": "float",
+     "name": "carSpeed",
+     "comment": "high: GetCarSpeed 65ef0 FLD +0x288; PS2 GetCarSpeed 0x193110 +0x288"
+    },
+    {
+     "offset": 652,
+     "type": "float",
+     "name": "carSteer",
+     "comment": "high: GetCarSteer 65f90 FLD +0x28c; PS2 GetCarSteer 0x193190"
+    },
+    {
+     "offset": 660,
+     "type": "int",
+     "name": "rocketBoost",
+     "comment": "low: EnableRocketBoost 62ee0, ProcessPhysics, ProcessSubmarinePhysics both builds. Name invented"
+    },
+    {
+     "offset": 664,
+     "type": "byte",
+     "name": "unknown298",
+     "comment": "low: byte R/W in ProcessPhysics/ProcessSimplePhysics/ProcessSnowmobilePhysics both builds. Name invented"
+    },
+    {
+     "offset": 665,
+     "type": "byte",
+     "name": "numWheelsOnGround",
+     "comment": "high: GetNumWheelsOnGround 65f60 reads byte +0x299; PS2 0x193160"
+    },
+    {
+     "offset": 666,
+     "type": "byte",
+     "name": "reverseTimer",
+     "comment": "low: PS2 GetReverseTimer 0x193378 reads byte +0x29a; Xbox ProcessPhysics/ProcessSubmarinePhysics R/W. Name from sheet"
+    },
+    {
+     "offset": 667,
+     "type": "byte",
+     "name": "carWheelSpin",
+     "comment": "low: PS2 SetCarWheelSpin 0x193358 writes byte +0x29b; Xbox ProcessPhysics reads. Name from sheet"
+    },
+    {
+     "offset": 668,
+     "type": "bool",
+     "name": "reversing",
+     "comment": "high: IsReversing 65fb0 reads byte +0x29c; PS2 0x1931a8"
+    },
+    {
+     "offset": 669,
+     "type": "bool",
+     "name": "inShock",
+     "comment": "high: InShock 65f40 reads, SetInShock 62740 writes byte +0x29d; PS2 0x193148"
+    },
+    {
+     "offset": 670,
+     "type": "bool",
+     "name": "againstWall",
+     "comment": "high: SetAgainstWallFlag 65fc0 writes byte +0x29e; PS2 0x1931b8"
+    },
+    {
+     "offset": 671,
+     "type": "byte",
+     "name": "unknown29f",
+     "comment": "low: byte in ProcessPhysics (PS2 also GetControllerInput). Name invented"
+    },
+    {
+     "offset": 672,
+     "type": "int[4]",
+     "name": "tyreState",
+     "comment": "medium: IsTyreShredded(char) 65f00 returns [ECX+n*4+0x2a0] == 0; ProcessSimplePhysics reads +0x2a0..+0x2ac; PS2 same plus InitializeCarVariables/ApplyDamage. Non-zero = intact tyre; name invented"
+    },
+    {
+     "offset": 689,
+     "type": "byte",
+     "name": "unknown2b1",
+     "comment": "low: byte in ProcessPhysics/TwoWheelStunt both builds. Name invented"
+    },
+    {
+     "offset": 690,
+     "type": "bool",
+     "name": "twoWheelMode",
+     "comment": "high: EnableTwoWheelStunt 62f50 writes, GetIsInTwoWheelMode 66090 reads byte +0x2b2; PS2 0x193248"
+    },
+    {
+     "offset": 691,
+     "type": "byte",
+     "name": "unknown2b3",
+     "comment": "low: byte in DisableTwoWheelStunt/ProcessPhysics both builds. Name invented"
+    },
+    {
+     "offset": 692,
+     "type": "float",
+     "name": "twoWheelStuntTimer",
+     "comment": "low: float in DisableTwoWheelStunt/TwoWheelStunt/ProcessPhysics both builds. Name invented"
+    },
+    {
+     "offset": 700,
+     "type": "float",
+     "name": "targetGas",
+     "comment": "high: SetTargetGas 65ea0 -> +0x2bc; PS2 0x1930b0"
+    },
+    {
+     "offset": 704,
+     "type": "float",
+     "name": "targetBrake",
+     "comment": "high: SetTargetBrake 65eb0 -> +0x2c0; PS2 0x1930b8"
+    },
+    {
+     "offset": 708,
+     "type": "float",
+     "name": "unknown2c4",
+     "comment": "low: InitializeCarControls/GetControllerInput both builds (PS2 float). Name invented"
+    },
+    {
+     "offset": 712,
+     "type": "int",
+     "name": "carClass",
+     "comment": "high: Get/SetCarClass 65dc0/65db0; ctor stores its CarClass arg; PS2 0x193000/0x193008"
+    },
+    {
+     "offset": 716,
+     "type": "char *",
+     "name": "carType",
+     "comment": "high: GetCarType 65da0; passed to __stricmp / GetCarColourVariation in ctor/ChangeCarType; PS2 strcasecmp/PVehicle::NameToIndex"
+    },
+    {
+     "offset": 720,
+     "type": "uint",
+     "name": "carColour",
+     "comment": "high: GetCarColour 65dd0; ctor stores the unsigned colour arg; PS2 0x193010"
+    },
+    {
+     "offset": 724,
+     "type": "byte",
+     "name": "unknown2d4",
+     "comment": "low: PS2 only: byte in GetControllerInput/InitializeCarVariables. Name invented"
+    },
+    {
+     "offset": 726,
+     "type": "bool",
+     "name": "subRolling",
+     "comment": "low: byte in ctor/ProcessSubmarinePhysics/RollSub 66140 both builds. Name invented"
+    },
+    {
+     "offset": 727,
+     "type": "byte",
+     "name": "unknown2d7",
+     "comment": "low: byte in AddWheelForces/ProcessPhysics (PS2 also CalculateRPM). Name invented"
+    },
+    {
+     "offset": 728,
+     "type": "byte",
+     "name": "unknown2d8",
+     "comment": "low: as +0x2d7. Name invented"
+    },
+    {
+     "offset": 729,
+     "type": "byte",
+     "name": "unknown2d9",
+     "comment": "low: byte in ProcessPhysics (PS2 also CalculateRPM). Name invented"
+    },
+    {
+     "offset": 730,
+     "type": "byte",
+     "name": "unknown2da",
+     "comment": "low: byte in AddWheelForces/ProcessPhysics both builds. Name invented"
+    },
+    {
+     "offset": 731,
+     "type": "byte",
+     "name": "landingFlag",
+     "comment": "low: byte in ImproveLanding/ProcessPhysics/ProcessSnowmobilePhysics both builds. Name invented"
+    },
+    {
+     "offset": 732,
+     "type": "float",
+     "name": "unknown2dc",
+     "comment": "low: ctor store (Xbox integer MOV of a constant); PS2 float in ctor/ApplyDamage. Name invented"
+    },
+    {
+     "offset": 736,
+     "type": "void *",
+     "name": "targetBeacon",
+     "comment": "high: WTargetable* (type not in the allowed list): Enable/DisableTargetBeacon, GetTargetBeacon 66170; ~PBondCar calls WTargetable::RemoveReference; PS2 +0x2e0 same"
+    },
+    {
+     "offset": 740,
+     "type": "void *",
+     "name": "aiGroundVehicle",
+     "comment": "high: AIGroundVehicle*: SetAIGroundVehicle 65d70 / GetAIGroundVehiclePtr 65d80; PS2 GetSplinePath calls AIVehicle::GetSplinePath on it; PS2 +0x2e4"
+    },
+    {
+     "offset": 744,
+     "type": "float",
+     "name": "unknown2e8",
+     "comment": "low: float in AddWheelForces/ProcessPhysics both builds. Name invented"
+    },
+    {
+     "offset": 748,
+     "type": "float",
+     "name": "unknown2ec",
+     "comment": "low: float in the wheel-force and physics methods both builds. Name invented"
+    },
+    {
+     "offset": 752,
+     "type": "DamageZone[16]",
+     "name": "damageZones",
+     "comment": "high: ResetDamage 62600 zeroes 16 x 8 bytes from this+0x2f0; GetDamageZones 62a40 returns this+0x2f0 (same pattern as PHelicopter+0xac); PS2 +0x2f0/+0x2f4 in ApplyDamage/SetVisualDamage"
+    },
+    {
+     "offset": 880,
+     "type": "float",
+     "name": "damageByPlayer",
+     "comment": "medium: AddDamageByPlayer 62660 / ResetDamage (0) both builds. Name invented"
+    },
+    {
+     "offset": 884,
+     "type": "byte",
+     "name": "damageByPlayerTimer",
+     "comment": "medium: GetDamageByPlayerTimer 65f70 reads byte +0x374; ResetDamage stores byte 0; PS2 byte +0x374"
+    },
+    {
+     "offset": 885,
+     "type": "bool",
+     "name": "unknown375",
+     "comment": "low: ctor-only byte; = PS2 4-byte +0x378 (ctor W). Start of the bool packing: PS2 +0x378..+0x380 are 4-byte bools. Name invented"
+    },
+    {
+     "offset": 886,
+     "type": "bool",
+     "name": "tyreBlowOutsDisabled",
+     "comment": "medium: DisableTyreBlowOuts 66080 writes byte +0x376, ApplyDamage reads; PS2 +0x37c (Enable/DisableTyreBlowOuts). Polarity inferred"
+    },
+    {
+     "offset": 887,
+     "type": "bool",
+     "name": "empActive",
+     "comment": "high: EmpActive 65ee0 reads byte +0x377; AttackWithEmp/ClearEMPState write; PS2 +0x380 (EmpActive 0x193108)"
+    },
+    {
+     "offset": 888,
+     "type": "int",
+     "name": "empTimer",
+     "comment": "low: AttackWithEmp/ClearEMPState/ctor both builds (PS2 +0x384). Name invented"
+    },
+    {
+     "offset": 892,
+     "type": "ABaseSound *",
+     "name": "audio",
+     "comment": "high: AVehicle* (an ABaseSound subclass: InitAudioObject uses ABaseSound::operator_new, AVehicle::ChooseHorn): GetAudio 65d50 / SetAudio 65d60; PS2 +0x388"
+    },
+    {
+     "offset": 896,
+     "type": "int",
+     "name": "turnSignal380",
+     "comment": "low: HandleTurnSignals/ctor; PS2 +0x38c (SignalLeft/SignalRight). Name invented"
+    },
+    {
+     "offset": 900,
+     "type": "int",
+     "name": "turnSignal384",
+     "comment": "low: HandleTurnSignals/ctor; PS2 +0x390. Name invented"
+    },
+    {
+     "offset": 904,
+     "type": "float",
+     "name": "turnSignalTimer388",
+     "comment": "low: float, HandleTurnSignals/ctor; PS2 +0x394. Name invented"
+    },
+    {
+     "offset": 908,
+     "type": "float",
+     "name": "turnSignalTimer38c",
+     "comment": "low: float, HandleTurnSignals; PS2 +0x398 (SignalLeft/Right). Name invented"
+    },
+    {
+     "offset": 912,
+     "type": "int",
+     "name": "turnSignal390",
+     "comment": "low: HandleTurnSignals/ctor; PS2 +0x39c. Name invented"
+    },
+    {
+     "offset": 916,
+     "type": "char[4]",
+     "name": "carToggleInfo",
+     "comment": "medium: FireLaser 62b70 reads byte +0x394, ctor writes +0x394..+0x397; PS2 GetCarToggleInfo 0x193360 returns this+0x3a0 (bytes +0x3a0..+0x3a3). Name from sheet"
+    },
+    {
+     "offset": 920,
+     "type": "int",
+     "name": "laserState",
+     "comment": "low: FireLaser writes +0x398; PS2 +0x3a4 (FireLaser/Simulate). Name invented"
+    },
+    {
+     "offset": 924,
+     "type": "bool[16]",
+     "name": "glareOn",
+     "comment": "high: GlareOn 62d00: byte [glare+this+0x39c] tested then set to 1 (GlareOff mirror); ResetDamage clears 4 dwords +0x39c..+0x3a8; PS2 GlareOn 0x18b328 uses int[glare] at +0x3a8 (lw/sw), so this array is 0x40 bytes on PS2 and 0x10 on Xbox"
+    },
+    {
+     "offset": 940,
+     "type": "int",
+     "name": "resetAvailable",
+     "comment": "high: GetResetAvailable 65d90 reads dword +0x3ac; PS2 +0x3e8 (GetResetAvailable 0x192ff0)"
+    },
+    {
+     "offset": 944,
+     "type": "COORD3",
+     "name": "resetPos",
+     "comment": "medium: LEA in ctor/ChangeCarType/ResetCar(bool); PS2 +0x3f0 (w8) + +0x3f8 in the same methods, 8-aligned with a 4-byte pad at PS2 +0x3ec. Name invented"
+    },
+    {
+     "offset": 956,
+     "type": "CarControl",
+     "name": "lockedCarControl",
+     "comment": "high: LockCarControlForever 65e70 takes this+0x3bc and writes +0x3dc; PS2 LockCarControl/LockCarControlForever copy 4 doublewords +0x3fc..+0x414 then +0x41c"
+    },
+    {
+     "offset": 988,
+     "type": "int",
+     "name": "carControlLocked",
+     "comment": "medium: LockCarControlForever writes it; PS2 +0x41c also UnlockCarControl/Simulate. Name invented"
+    },
+    {
+     "offset": 992,
+     "type": "float",
+     "name": "bob3e0",
+     "comment": "low: float in ProcessSimplePhysics/ProcessSubmarinePhysics; PS2 +0x420. Name invented"
+    },
+    {
+     "offset": 996,
+     "type": "float",
+     "name": "bobAngle3e4",
+     "comment": "low: float passed to sin_fractionalangle; PS2 +0x424. Name invented"
+    },
+    {
+     "offset": 1000,
+     "type": "float",
+     "name": "bobAngle3e8",
+     "comment": "low: float passed to sin_fractionalangle; PS2 +0x428. Name invented"
+    },
+    {
+     "offset": 1004,
+     "type": "float",
+     "name": "unknown3ec",
+     "comment": "low: ResetDamage stores 175.0f (0x442f0000); ctor LEA; PS2 +0x42c. Name invented"
+    },
+    {
+     "offset": 1008,
+     "type": "bool",
+     "name": "immunity",
+     "comment": "high: SetImmunity 660c0 writes byte; ApplyDamage reads; PS2 4-byte +0x430"
+    },
+    {
+     "offset": 1012,
+     "type": "undefined4",
+     "name": "shieldPointLoc",
+     "comment": "medium: SetShieldPointLoc 66020 writes; ApplyDamage reads; PS2 +0x434"
+    },
+    {
+     "offset": 1016,
+     "type": "float",
+     "name": "unknown3f8",
+     "comment": "low: InitializeCarControls; PS2 float +0x438 (also GetControllerInput). Name invented"
+    },
+    {
+     "offset": 1020,
+     "type": "bool",
+     "name": "oilSlick",
+     "comment": "high: SetOilSlick 65f50 writes byte +0x3fc; physics reads; PS2 byte +0x43c"
+    },
+    {
+     "offset": 1021,
+     "type": "byte",
+     "name": "unknown3fd",
+     "comment": "low: byte in ProcessPhysics; PS2 +0x43d. Name invented"
+    },
+    {
+     "offset": 1022,
+     "type": "byte",
+     "name": "unknown3fe",
+     "comment": "low: byte in ControlTyreTracks/ProcessPhysics/ProcessSplinePhysics; PS2 +0x43e. Name invented"
+    },
+    {
+     "offset": 1023,
+     "type": "bool",
+     "name": "scoreable",
+     "comment": "high: SetScoreable 65f30 writes byte +0x3ff, ctor inits; PS2 4-byte +0x440 (Get/SetScoreable)"
+    },
+    {
+     "offset": 1024,
+     "type": "float",
+     "name": "unknown400",
+     "comment": "low: InitializeCarControls/GetControllerInput; PS2 float +0x444. Name invented"
+    },
+    {
+     "offset": 1028,
+     "type": "float",
+     "name": "unknown404",
+     "comment": "low: InitializeCarControls; PS2 float +0x448. Name invented"
+    },
+    {
+     "offset": 1032,
+     "type": "bool",
+     "name": "unknown408",
+     "comment": "low: byte, ctor/ProcessSubmarinePhysics; PS2 byte +0x44c. Name invented"
+    },
+    {
+     "offset": 1033,
+     "type": "bool",
+     "name": "forceRollDirection",
+     "comment": "medium: ForceRollDirection 66130 writes byte +0x409; PS2 +0x44d"
+    },
+    {
+     "offset": 1034,
+     "type": "bool",
+     "name": "forceStop",
+     "comment": "high: GetForceStop 660e0 / ForceStopOn / ForceStopOff; PS2 +0x44e"
+    },
+    {
+     "offset": 1035,
+     "type": "bool",
+     "name": "rollSub",
+     "comment": "low: RollSub 66140 writes byte +0x40b (and +0x2d6); PS2 +0x44f. Name invented"
+    },
+    {
+     "offset": 1036,
+     "type": "int",
+     "name": "secondaryType",
+     "comment": "high: GetSecondaryType 66160; ctor; PS2 +0x450"
+    },
+    {
+     "offset": 1041,
+     "type": "bool",
+     "name": "wasInAir",
+     "comment": "high: Get/SetWasInAir 660a0/660b0 byte +0x411; PS2 4-byte +0x458"
+    }
+   ],
+   "comment": "player/AI car (also snowmobile/submarine/spline modes); 0x420 on Xbox (FastAlloc 1056), PS2 at least 0x45c. Own fields start at +0x74 = end of PVehicle. Offsets identical on both builds up to +0x374; then PS2 4-byte bools pack (shift -0xc from PS2 +0x384), the glare array shrinks from int[16] to bool[16] (-0x3c from PS2 +0x3e8), an alignment pad before resetPos vanishes (-0x40 from PS2 +0x3f0), and more bools pack (-0x41 at scoreable, -0x44 from PS2 +0x444, -0x47 at wasInAir)"
+  },
+  {
+   "name": "Missile",
+   "size": 1840,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "PhysicsObject",
+     "name": "super_PhysicsObject"
+    },
+    {
+     "offset": 108,
+     "type": "void *",
+     "name": "target",
+     "comment": "high: WTargetable*: SetTarget 5f680 writes; ~Missile calls WTargetable::RemoveReference; PS2 GetTarget 0x183b38 reads +0x6c"
+    },
+    {
+     "offset": 112,
+     "type": "COORD3",
+     "name": "steerVector",
+     "comment": "low: PS2 floats +0x70/+0x74/+0x78 R/W in ctor/SteerMissile; Xbox ctor writes +0x70 (integer) and +0x74/+0x78 (float). Name invented"
+    },
+    {
+     "offset": 124,
+     "type": "float",
+     "name": "unknown7c",
+     "comment": "low: ctor store; PS2 float. Name invented"
+    },
+    {
+     "offset": 128,
+     "type": "float",
+     "name": "steerTimer",
+     "comment": "low: written by ctor and both SetUserSteerX/SetUserSteerY on both builds. Name invented"
+    },
+    {
+     "offset": 132,
+     "type": "float",
+     "name": "unknown84",
+     "comment": "low: float, ctor/Render (PS2 also SteerMissile). Name invented"
+    },
+    {
+     "offset": 136,
+     "type": "float",
+     "name": "unknown88",
+     "comment": "low: float, ctor/CheckForCollision both builds. Name invented"
+    },
+    {
+     "offset": 140,
+     "type": "float",
+     "name": "unknown8c",
+     "comment": "low: float, ctor/Render (PS2 also Simulate). Name invented"
+    },
+    {
+     "offset": 144,
+     "type": "undefined4",
+     "name": "unknown90",
+     "comment": "low: ctor/CheckForCollision (PS2 also SteerMissile). Name invented"
+    },
+    {
+     "offset": 148,
+     "type": "undefined4",
+     "name": "unknown94",
+     "comment": "low: ctor/Render (PS2 also SteerMissile). Name invented"
+    },
+    {
+     "offset": 160,
+     "type": "RMissileStreak",
+     "name": "streak",
+     "comment": "high: ctor 'LEA ECX,[EBX+0xa0]' -> RMissileStreak::RMissileStreak, ~Missile destroys it; the ctor's EH cleanup (0x5f1e4) stores RAutonomousObj vtable 0x18a398, so RMissileStreak derives from RAutonomousObj; ctor writes its +0x8 (Missile+0xa8 = 1/2/pt"
+    },
+    {
+     "offset": 1776,
+     "type": "undefined4",
+     "name": "unknown6f0",
+     "comment": "low: ctor/Simulate/~Missile both builds. Name invented"
+    },
+    {
+     "offset": 1780,
+     "type": "int",
+     "name": "weaponType",
+     "comment": "high: PS2 GetWeaponType 0x183b20 reads +0x6f4; ctor stores the WeaponType arg; Xbox CheckForCollision/Render read it"
+    },
+    {
+     "offset": 1784,
+     "type": "float",
+     "name": "unknown6f8",
+     "comment": "low: ctor; PS2 float in SteerMissile. Name invented"
+    },
+    {
+     "offset": 1788,
+     "type": "float",
+     "name": "unknown6fc",
+     "comment": "low: ctor; PS2 float in SteerMissile. Name invented"
+    },
+    {
+     "offset": 1792,
+     "type": "float",
+     "name": "userSteerX",
+     "comment": "high: SetUserSteerX 5f600 writes float +0x700; PS2 0x181df0 same"
+    },
+    {
+     "offset": 1796,
+     "type": "float",
+     "name": "userSteerY",
+     "comment": "high: SetUserSteerY 5f640 writes float +0x704; PS2 0x181e30 same"
+    },
+    {
+     "offset": 1800,
+     "type": "bool",
+     "name": "unknown708",
+     "comment": "low: ctor byte; PS2 4-byte +0x708 (ctor/SteerMissile). Name invented"
+    },
+    {
+     "offset": 1801,
+     "type": "bool",
+     "name": "detonate",
+     "comment": "medium: ctor/CheckForCollision byte; = PS2 +0x70c (Detonate 0x183b28 sets it)"
+    },
+    {
+     "offset": 1802,
+     "type": "bool",
+     "name": "isDecaying",
+     "comment": "medium: ctor/CheckForCollision/Render/Simulate byte; = PS2 +0x710 (GetIsDecaying 0x183b40)"
+    },
+    {
+     "offset": 1804,
+     "type": "float",
+     "name": "unknown70c",
+     "comment": "low: float, ctor/Simulate; PS2 +0x714. Name invented"
+    },
+    {
+     "offset": 1808,
+     "type": "float",
+     "name": "unknown710",
+     "comment": "low: float, ctor/CheckForCollision; PS2 +0x718. Name invented"
+    },
+    {
+     "offset": 1812,
+     "type": "undefined4",
+     "name": "unknown714",
+     "comment": "low: ctor; PS2 +0x71c (SteerMissile). Name invented"
+    },
+    {
+     "offset": 1816,
+     "type": "float",
+     "name": "unknown718",
+     "comment": "low: ctor float; PS2 +0x720. Name invented"
+    },
+    {
+     "offset": 1820,
+     "type": "float",
+     "name": "unknown71c",
+     "comment": "low: ctor; PS2 float +0x724. Name invented"
+    },
+    {
+     "offset": 1824,
+     "type": "float",
+     "name": "unknown720",
+     "comment": "low: ctor; PS2 float +0x728. Name invented"
+    }
+   ],
+   "comment": "homing missile; 0x730 on Xbox (FastFree 0x730, alloc 1840). Embeds an RMissileStreak (0x650, an RAutonomousObj subclass) at +0xa0. Same offsets on both builds up to +0x704, then PS2 4-byte bools +0x708/+0x70c/+0x710 pack into Xbox bytes +0x708..+0x70a and later fields move by -8"
+  },
+  {
+   "name": "Sentry",
+   "size": 200,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "PhysicsObject",
+     "name": "super_PhysicsObject"
+    },
+    {
+     "offset": 108,
+     "type": "undefined4",
+     "name": "srbState",
+     "comment": "low: ctor/TrackTarget; PS2 +0x6c also RotateSRB (paired with +0x70 for RotateAnim). Name invented"
+    },
+    {
+     "offset": 112,
+     "type": "undefined4",
+     "name": "animState",
+     "comment": "low: ctor/TrackTarget; PS2 +0x70 also RotateAnim. Name invented"
+    },
+    {
+     "offset": 116,
+     "type": "float",
+     "name": "unknown74",
+     "comment": "low: float ctor; PS2 RotateSRB. Name invented"
+    },
+    {
+     "offset": 120,
+     "type": "float",
+     "name": "unknown78",
+     "comment": "low: float ctor; PS2 RotateAnim. Name invented"
+    },
+    {
+     "offset": 124,
+     "type": "float",
+     "name": "unknown7c",
+     "comment": "low: ctor; PS2 float RotateSRB. Name invented"
+    },
+    {
+     "offset": 128,
+     "type": "float",
+     "name": "unknown80",
+     "comment": "low: float ctor; PS2 RotateAnim. Name invented"
+    },
+    {
+     "offset": 132,
+     "type": "float",
+     "name": "unknown84",
+     "comment": "low: float ctor/TrackTarget both builds. Name invented"
+    },
+    {
+     "offset": 136,
+     "type": "float",
+     "name": "unknown88",
+     "comment": "low: float, address taken in ApplyDamage/Simulate both builds. Name invented"
+    },
+    {
+     "offset": 140,
+     "type": "float",
+     "name": "unknown8c",
+     "comment": "low: float ctor; PS2 ApplyDamage. Name invented"
+    },
+    {
+     "offset": 144,
+     "type": "float",
+     "name": "unknown90",
+     "comment": "low: float ctor; PS2 RotateSRB. Name invented"
+    },
+    {
+     "offset": 148,
+     "type": "float",
+     "name": "unknown94",
+     "comment": "low: float ctor; PS2 RotateAnim. Name invented"
+    },
+    {
+     "offset": 152,
+     "type": "float",
+     "name": "unknown98",
+     "comment": "low: ctor; PS2 float RotateAnim. Name invented"
+    },
+    {
+     "offset": 156,
+     "type": "bool",
+     "name": "unknown9c",
+     "comment": "low: ctor byte; PS2 4-byte +0x9c (RotateAnim). Name invented"
+    },
+    {
+     "offset": 157,
+     "type": "bool",
+     "name": "unknown9d",
+     "comment": "low: ctor/ApplyDamage byte; PS2 4-byte +0xa0 (ApplyDamage). Name invented"
+    },
+    {
+     "offset": 160,
+     "type": "undefined4",
+     "name": "unknownA0",
+     "comment": "low: ctor/Shoot/Simulate; PS2 +0xa4. Name invented"
+    },
+    {
+     "offset": 164,
+     "type": "undefined4",
+     "name": "unknownA4",
+     "comment": "low: RotateAnim/RotateSRB/ctor/Shoot/Simulate; PS2 +0xa8. Name invented"
+    },
+    {
+     "offset": 168,
+     "type": "undefined4",
+     "name": "unknownA8",
+     "comment": "low: ctor/Shoot; PS2 +0xac. Name invented"
+    },
+    {
+     "offset": 172,
+     "type": "undefined4",
+     "name": "unknownAc",
+     "comment": "low: ctor/TrackTarget; PS2 +0xb0. Name invented"
+    },
+    {
+     "offset": 176,
+     "type": "undefined4",
+     "name": "unknownB0",
+     "comment": "low: ctor/Simulate; PS2 +0xb4. Name invented"
+    },
+    {
+     "offset": 180,
+     "type": "undefined4",
+     "name": "unknownB4",
+     "comment": "low: ctor/Simulate; PS2 +0xb8. Name invented"
+    },
+    {
+     "offset": 184,
+     "type": "undefined4",
+     "name": "unknownB8",
+     "comment": "low: ctor/Shoot; PS2 +0xbc. Name invented"
+    },
+    {
+     "offset": 188,
+     "type": "undefined4",
+     "name": "unknownBc",
+     "comment": "low: ctor/Shoot/Simulate; PS2 +0xc0. Name invented"
+    },
+    {
+     "offset": 192,
+     "type": "undefined4",
+     "name": "targetState",
+     "comment": "low: GetTarget 73330/TrackTarget/Simulate/ctor; PS2 +0xc4 (GetTarget/AcquireTarget/TrackTarget). Name invented"
+    },
+    {
+     "offset": 196,
+     "type": "void *",
+     "name": "target",
+     "comment": "medium: WTargetable*: ~Sentry/Simulate call WTargetable::RemoveReference on it; PS2 +0xc8"
+    }
+   ],
+   "comment": "gun turret; 0xc8 on Xbox (FastFree 0xc8, alloc 200), PS2 0xcc. Same offsets up to +0x98; PS2 4-byte bools +0x9c/+0xa0 pack to Xbox +0x9c/+0x9d and every later field is PS2-4"
+  },
+  {
+   "name": "Human",
+   "size": 144,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "PhysicsObject",
+     "name": "super_PhysicsObject"
+    },
+    {
+     "offset": 108,
+     "type": "int",
+     "name": "humanType",
+     "comment": "medium: ctor stores its HumanType arg; ApplyDamage reads; PS2 GetHuman(void) const 0x17fbd0 reads +0x6c. Name invented"
+    },
+    {
+     "offset": 112,
+     "type": "void *",
+     "name": "aiCharacter",
+     "comment": "high: AICharacter*: SetAICharacter 5ded0; Simulate calls AICharacter::Execute on it; PS2 GetAICharacter 0x17fbd8 reads +0x70"
+    },
+    {
+     "offset": 116,
+     "type": "bool",
+     "name": "unknown74",
+     "comment": "low: byte in ctor/ApplyDamage; PS2 4-byte +0x74. Name invented"
+    },
+    {
+     "offset": 128,
+     "type": "COORD3",
+     "name": "damagePos",
+     "comment": "medium: Xbox ApplyDamage takes this+0x80; PS2 GetDamagePos 0x17fbe0 returns this+0x80, ApplyDamage writes +0x80 (w8)/+0x88"
+    },
+    {
+     "offset": 140,
+     "type": "bool",
+     "name": "insideVehicle",
+     "comment": "medium: ctor byte store; PS2 Get/SetInsideVehicle(bool) 0x17fbf0/0x17fbe8 use +0x8c"
+    }
+   ],
+   "comment": "pedestrian/character physics object; 0x90 on Xbox (FastFree 0x90, alloc 144). Same offsets on both builds; the bools at +0x74/+0x8c are 4 bytes on PS2, 1 on Xbox, without moving anything"
+  },
+  {
+   "name": "AttributeSet",
+   "size": 4,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "collection",
+     "comment": "high: AttributeCollection* (type not in the allowed list): ctor 58f00 stores the result of AttributeSystem::GetCollection/LoadCollection; copy ctor 52020 copies it; Name 52030 returns [[this]+0x14]; every Lookup/Add method reads +0x0 on both builds. "
+    }
+   ],
+   "comment": "handle onto a loaded attribute collection; one pointer, no vptr, 4 bytes on both builds (PhysicsObject embeds it at +0x60 with its next field at +0x64)"
+  },
+  {
+   "name": "AttributeSystem",
+   "size": 104,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "vtable",
+     "comment": "high: ctor 59090 and ~AttributeSystem 592d0 store vtable 0x18dc28 (3 slots); PS2 ctor 'sw v0,0x0(s1)'"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "extensionTypes",
+     "comment": "low: RegisterExtensionType/RegisterExtensionField/CreateExtensionAttribute; PS2 also GetExtensionTypeSize/Class/Name/InitializeExtensionType. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "int",
+     "name": "nextExtensionType",
+     "comment": "low: RMW in RegisterExtensionType; PS2 ctor stores 1. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "void *",
+     "name": "extensionParserMap",
+     "comment": "low: passed to FUN_00056f70 in ProcessDafiSection/RegisterExtensionField; sheet lists AttributeSystem::AttributeExtensionParserMap. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "void *",
+     "name": "unknown10",
+     "comment": "low: ctor/dtor only on both builds (heap container). Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "void *",
+     "name": "collections",
+     "comment": "low: passed to FUN_00052cd0/FUN_00058880 in GetCollection/CountClassNames/GetClassNextName; same on PS2. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "void *",
+     "name": "stringTable",
+     "comment": "low: ctor/dtor on Xbox; PS2 MakeString passes it to FUN_00172228. Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "void *",
+     "name": "unknown1c",
+     "comment": "low: ctor/dtor on Xbox; PS2 MakeString. Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "char[64]",
+     "name": "collectionSection",
+     "comment": "medium: SetCollectionSection 525d0 copies its string to this+0x20; LoadCollection reads; ctor zeroes the first byte (PS2 'sb zero,0x20'); size = gap to +0x60"
+    },
+    {
+     "offset": 96,
+     "type": "bool",
+     "name": "loadingEnabled",
+     "comment": "medium: byte R/W in LoadCollection/PrepareDatabase/ctor/dtor; PS2 LoadingEnabled 0x173968 reads 4-byte +0x60"
+    },
+    {
+     "offset": 97,
+     "type": "bool",
+     "name": "loadingDatabase",
+     "comment": "medium: byte in ctor/PrepareDatabase; PS2 LoadingDatabase 0x173970 reads +0x64 (ctor stores 1)"
+    },
+    {
+     "offset": 100,
+     "type": "void *",
+     "name": "symbolTable",
+     "comment": "medium: USymbolTable*: Xbox ctor stores 0; PS2 Get/SetSymbolTable 0x173960/0x173958 use +0x68 (ctor 0)"
+    }
+   ],
+   "comment": "singleton attribute database (constructed size 104). vptr at +0 on BOTH builds (PS2 ctor 0x16c668 stores its vtable at 0x0(s1)), so offsets agree up to +0x60; PS2 4-byte bools +0x60/+0x64 pack to Xbox +0x60/+0x61 and symbolTable moves PS2 +0x68 -> Xbox +0x64"
+  },
+  {
+   "name": "RMissileStreak",
+   "size": 1616,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster5.json)",
+   "if_missing": true
+  },
+  {
+   "name": "WHEEL_INFO1",
+   "size": 64,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster5.json)",
+   "if_missing": true
+  },
+  {
+   "name": "DamageZone",
+   "size": 8,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster5.json)",
+   "if_missing": true
+  },
+  {
+   "name": "ActionQueue",
+   "size": 2420,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster5.json)",
+   "if_missing": true
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x00061a50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetPhysics(void) const",
+   "return": "RigidBody *"
+  },
+  {
+   "address": "0x00061ae0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "PBondCar::InitializeBondCarGlobals(void)"
+  },
+  {
+   "address": "0x00062120",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::InitTyreTracks(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000623b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::InitializeCarControls(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00062430",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::FlushCarControls(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00062440",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "PBondCar::InitializeCarVariables(bool)",
+   "return": "void"
+  },
+  {
+   "address": "0x00062600",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::ResetDamage(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00062660",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "PBondCar::AddDamageByPlayer(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x000626e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetNumTires(void)"
+  },
+  {
+   "address": "0x00062740",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "PBondCar::SetInShock(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x00062a40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint *"
+    }
+   ],
+   "sheet": "PBondCar::GetDamageZones(unsigned int &)",
+   "return": "DamageZone *"
+  },
+  {
+   "address": "0x00062a60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::CalculateRPM(void)"
+  },
+  {
+   "address": "0x00062b70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::FireLaser(void)"
+  },
+  {
+   "address": "0x00062b90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::AttackWithEmp(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00062c40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetSplinePath(void)"
+  },
+  {
+   "address": "0x00062c60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "PBondCar::EnableTargetBeacon(bool)",
+   "return": "void"
+  },
+  {
+   "address": "0x00062cf0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::DisableTargetBeacon(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00062d00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "PBondCar::GlareOn(CarGlare)",
+   "return": "void"
+  },
+  {
+   "address": "0x00062d70",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "PBondCar::GlareOff(CarGlare)"
+  },
+  {
+   "address": "0x00062de0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::HandleTurnSignals(void)"
+  },
+  {
+   "address": "0x00062ec0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::ClearEMPState(void)"
+  },
+  {
+   "address": "0x00062ee0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::EnableRocketBoost(void)"
+  },
+  {
+   "address": "0x00062f50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::EnableTwoWheelStunt(void)"
+  },
+  {
+   "address": "0x00062f60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::DisableTwoWheelStunt(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00062fe0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::ImproveLanding(void)"
+  },
+  {
+   "address": "0x00063ad0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::ProcessSnowmobilePhysics(void)"
+  },
+  {
+   "address": "0x000644c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::ProcessSubmarinePhysics(void)"
+  },
+  {
+   "address": "0x00065740",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::ProcessSplinePhysics(void)"
+  },
+  {
+   "address": "0x00065ba0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::DebugObject(void)"
+  },
+  {
+   "address": "0x00065c70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::~PBondCar(void)"
+  },
+  {
+   "address": "0x00065d50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetAudio(void) const",
+   "return": "ABaseSound *"
+  },
+  {
+   "address": "0x00065d60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "PBondCar::SetAudio(AVehicle *)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065d70",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "PBondCar::SetAIGroundVehicle(AIGroundVehicle *)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065d80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetAIGroundVehiclePtr(void) const",
+   "return": "void *"
+  },
+  {
+   "address": "0x00065d90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetResetAvailable(void) const",
+   "return": "int"
+  },
+  {
+   "address": "0x00065da0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetCarType(void) const",
+   "return": "char *"
+  },
+  {
+   "address": "0x00065db0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "PBondCar::SetCarClass(CarClass)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065dc0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetCarClass(void) const",
+   "return": "int"
+  },
+  {
+   "address": "0x00065dd0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetCarColour(void) const",
+   "return": "uint"
+  },
+  {
+   "address": "0x00065de0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "PBondCar::SetCarControlSteering(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065df0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "PBondCar::SetCarControlSteeringVertical(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065e00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "PBondCar::SetCarControlStrafeHorizontal(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065e10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "PBondCar::SetCarControlStrafeVertical(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065e20",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "PBondCar::SetCarControlGas(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065e30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "PBondCar::SetCarControlBrake(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065e40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char"
+    }
+   ],
+   "sheet": "PBondCar::SetCarControlHandBrake(char)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065e50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetCarControlHandBrake(void)",
+   "return": "char"
+  },
+  {
+   "address": "0x00065e60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char"
+    }
+   ],
+   "sheet": "PBondCar::SetCarControlFirePrimary(char)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065e70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::LockCarControlForever(void)"
+  },
+  {
+   "address": "0x00065ea0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "PBondCar::SetTargetGas(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065eb0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "PBondCar::SetTargetBrake(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065ec0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetCarControl(void) const",
+   "return": "CarControl *"
+  },
+  {
+   "address": "0x00065ee0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::EmpActive(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x00065ef0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetCarSpeed(void) const",
+   "return": "float"
+  },
+  {
+   "address": "0x00065f00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char"
+    }
+   ],
+   "sheet": "PBondCar::IsTyreShredded(char) const",
+   "return": "bool"
+  },
+  {
+   "address": "0x00065f20",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "PBondCar::GetTyreTrackPtr(int)",
+   "return": "void *"
+  },
+  {
+   "address": "0x00065f30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "PBondCar::SetScoreable(bool)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065f40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::InShock(void) const",
+   "return": "bool"
+  },
+  {
+   "address": "0x00065f50",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char"
+    }
+   ],
+   "sheet": "PBondCar::SetOilSlick(char)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065f60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetNumWheelsOnGround(void)",
+   "return": "byte"
+  },
+  {
+   "address": "0x00065f70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetDamageByPlayerTimer(void)"
+  },
+  {
+   "address": "0x00065f80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char"
+    }
+   ],
+   "sheet": "PBondCar::GetCarWheelSpinAngle(char) const",
+   "return": "float"
+  },
+  {
+   "address": "0x00065f90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetCarSteer(void) const",
+   "return": "float"
+  },
+  {
+   "address": "0x00065fb0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::IsReversing(void) const",
+   "return": "bool"
+  },
+  {
+   "address": "0x00065fc0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char"
+    }
+   ],
+   "sheet": "PBondCar::SetAgainstWallFlag(char)",
+   "return": "void"
+  },
+  {
+   "address": "0x00065fd0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "PBondCar::GetWheelRoadHeight(int) const",
+   "return": "float"
+  },
+  {
+   "address": "0x00065ff0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "PBondCar::GetWheelRoadSurface(int) const",
+   "return": "byte"
+  },
+  {
+   "address": "0x00066010",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "PBondCar::GetWheelRoadNormal(int) const",
+   "return": "COORD4 *"
+  },
+  {
+   "address": "0x00066020",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    }
+   ],
+   "sheet": "PBondCar::SetShieldPointLoc(float *)",
+   "return": "void"
+  },
+  {
+   "address": "0x00066030",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char"
+    }
+   ],
+   "sheet": "PBondCar::IsWheelOnGround(char) const",
+   "return": "bool"
+  },
+  {
+   "address": "0x00066070",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "PBondCar::GetCarWheelSlip(int) const",
+   "return": "float"
+  },
+  {
+   "address": "0x00066080",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::DisableTyreBlowOuts(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00066090",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetIsInTwoWheelMode(void) const",
+   "return": "bool"
+  },
+  {
+   "address": "0x000660a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetWasInAir(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x000660b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "PBondCar::SetWasInAir(bool)",
+   "return": "void"
+  },
+  {
+   "address": "0x000660c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "PBondCar::SetImmunity(bool)",
+   "return": "void"
+  },
+  {
+   "address": "0x000660d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "PBondCar::GetWheelPos(int)",
+   "return": "COORD4 *"
+  },
+  {
+   "address": "0x000660e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetForceStop(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x000660f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char"
+    }
+   ],
+   "sheet": "PBondCar::ForceStopOn(char)"
+  },
+  {
+   "address": "0x00066110",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char"
+    }
+   ],
+   "sheet": "PBondCar::ForceStopOff(char)"
+  },
+  {
+   "address": "0x00066130",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char"
+    }
+   ],
+   "sheet": "PBondCar::ForceRollDirection(char)"
+  },
+  {
+   "address": "0x00066140",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char"
+    },
+    {
+     "name": "param_2",
+     "type": "char"
+    }
+   ],
+   "sheet": "PBondCar::RollSub(char, char)"
+  },
+  {
+   "address": "0x00066160",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetSecondaryType(void) const",
+   "return": "int"
+  },
+  {
+   "address": "0x00066170",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetTargetBeacon(void) const",
+   "return": "void *"
+  },
+  {
+   "address": "0x00066180",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "float"
+    }
+   ],
+   "sheet": "PBondCar::SetVisualDamage(float, float, float, float)"
+  },
+  {
+   "address": "0x00066640",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::GetControllerInput(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00066c90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::TwoWheelStunt(void)"
+  },
+  {
+   "address": "0x00066ee0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::ControlTyreTracks(void)"
+  },
+  {
+   "address": "0x00067bd0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::ProcessPhysics(void)"
+  },
+  {
+   "address": "0x000690a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::AddSimpleWheelForces(WHEEL_INFO1 *, COORD4 *, COORD4"
+  },
+  {
+   "address": "0x00069710",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::ProcessSimplePhysics(void)"
+  },
+  {
+   "address": "0x0006a460",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "PBondCar::ChangeCarType(char *, bool)",
+   "return": "void"
+  },
+  {
+   "address": "0x0006a840",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PBondCar::Simulate(void)"
+  },
+  {
+   "address": "0x0006cc20",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "PBondCar::InitAudioObject(CarClass)"
+  }
+ ]
+}
