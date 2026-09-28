@@ -68,7 +68,7 @@ int ** __cdecl psiFileLoadOrig(char *filename, unsigned short allocType, int *si
 
   if (SingleFileMode == '\0') {
     ppiVar1 = (int **)allocateAndLoadFileWithinArchive(filename,allocType,sizeOut);
-    printf("psiFileLoad in multi-file mode: %s is 0x%08x bytes starting at 0x%08x, type %04x\n", filename, *sizeOut, ppiVar1, allocType);
+    printf("psiFileLoad in multi-file mode: %s is 0x%08x bytes starting at 0x%p, type %04x\n", filename, *sizeOut, ppiVar1, allocType);
     dumpToFile(filename, (void*)ppiVar1, *sizeOut);
     return ppiVar1;
   }
@@ -132,7 +132,7 @@ int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOu
         return (int**)dirFileBuf;
 
     } else {
-      
+
       // In multi-file mode, we allocate memory for the file content, and return a pointer to it
 
       // Allocate memory to store the file content
@@ -154,7 +154,7 @@ int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOu
       if(sizeOut != NULL)
         *sizeOut = length;
       return (int**)fileContent;
-    
+
     }
 
 }

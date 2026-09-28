@@ -34,7 +34,7 @@ bool GS_IsPaused(short playerNum) {
   // A specific player?
   if(playerNum != -1)
     return MPGame.players[playerNum].paused;
-  
+
   // Any player?
   if(MPSettings.isMultiplayer) {
     for(uint i = 0; i < MPSettings.numPlayers; i++) {
@@ -80,7 +80,7 @@ void psiPostGame_Run(void) {} // No effect on XBox, does some PS2-specific stuff
 // Process the gameplay / update the state of the world and UI
 // AUTOINJECT
 void Game_Run(void) {
-  
+
   psiPreGame_Run();
   Input_Update();
 
@@ -101,7 +101,7 @@ void Game_Run(void) {
   MP_Update();
   if (ScriptCam == 0) {
 
-    if (!movieFinished()) 
+    if (!movieFinished())
       goto LAB_0006aafe;
 
     if (!GS_IsPaused(-1))
@@ -170,7 +170,7 @@ void Boot_GetPTPData(void **param_1,uint *param_2);
 void maybeBackgroundMovieCleanup(void);
 
 // AUTOINJECT
-void psiStopBackgroundMovie(void) { 
+void psiStopBackgroundMovie(void) {
     maybeBackgroundMovieCleanup();
     BGFMVPlaying = 0;
 }
@@ -291,13 +291,13 @@ HASHCODE GetLevelWithFmv(HASHCODE level) {
     case HT_Level_PowerStationA2:
       param_1 = 0x710000d;
       break;
-    case 0x700000e:
+    case HT_Level_Cut_Level1:
       param_1 = 0x710000e;
       break;
-    case 0x700000f:
+    case HT_Level_Cut_Level2:
       param_1 = 0x710000f;
       break;
-    case 0x7000010:
+    case HT_Level_Cut_Level3:
       param_1 = 0x7100010;
       break;
     case HT_Level_Tower2A:
@@ -337,10 +337,10 @@ HASHCODE GetLevelWithFmv(HASHCODE level) {
 void __cdecl GameFlow_PushState(int state, float param_2, uint param_3);
 
 // AUTOINJECT
-void GS_PauseGame(bool param_1) { 
+void GS_PauseGame(bool param_1) {
 
     GameState.SomeAlternatePauseState = param_1;
-    
+
     for(int i = 0; i < ARRAY_SIZE(MPGame.players); i++) {
         MPGame.players[i].paused = param_1;
     }
@@ -381,7 +381,7 @@ void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
           GameState.isMultiplayerLevel = 1;
           MP_setLoadingSkins();
         }
-        
+
         GameState.NextLevelHashcode = (skipFmv ? level : GetLevelWithFmv(level));
         GameFlow_PushState(3, 0.0, 0xff);
 
@@ -396,7 +396,7 @@ uint GameFlow_GetState(void) {
   return GameStateStack[StackIndex - 1];
 }
 
-void set_InhibitGameDrawIfRequired(void) { 
+void set_InhibitGameDrawIfRequired(void) {
   switch(GameFlow_GetState()) {
     case 1:
     case 3:
@@ -419,7 +419,7 @@ void set_InhibitGameDrawIfRequired(void) {
 }
 
 uint GameFlow_PopState(void)
-{ 
+{
   if (StackIndex != 0) {
     StackIndex--;
     set_InhibitGameDrawIfRequired();
@@ -562,7 +562,7 @@ void bootup_bootup(void) {
   memset(&MPGame, 0, sizeof(MPGame));
   memset(&GlobalVars, 0, sizeof(GlobalVars));
   memset(&PTPDATA, 0, sizeof(sNightFireShared_tag));
-  
+
   SoundInfo = 0;
 
   psiInitTimeIn100ths();
@@ -592,14 +592,14 @@ void bootup_bootup(void) {
   MPSettings.TripleDamageModifierProfessionalMode = 0;
   MPSettings.ShowTeamAndNameOverhead = 1;
   MPSettings.GameMode = GM_ARENA;
-  
+
   for(int i = 0; i < 10; i++) {
 
     MPSettings.Player[i].TeamId = (i & 1) ? MI6 : PHOENIX;
     MPSettings.Player[i].SkinNum = 0;
     MPSettings.Player[i].SomeField2 = 1;
     MPSettings.Player[i].HealthModifier = 0;
-  
+
     if(i < 4) {
       sprintf(MPSettings.Player[i].Name, "%s %d", Txt_BindLabel(PLAYER, 0), i + 1);
     } else {
@@ -621,7 +621,7 @@ void bootup_bootup(void) {
   CONST_UP_VECTOR.x = 0.0f;
   CONST_UP_VECTOR.y = 1.0f;
   CONST_UP_VECTOR.z = 0.0f;
-                          
+
   MAYBE_CONST_FORWARD_VECTOR.x = 1.0;
   MAYBE_CONST_FORWARD_VECTOR.y = 0.0;
   MAYBE_CONST_FORWARD_VECTOR.z = 0.0;
@@ -649,7 +649,7 @@ void GameFlow_Main(void) {
   byte bVar2;
   uint local_8;
   void *local_4;
-  
+
   GameState.NumFrames++;
 
   if ((sloflag == 0) && !GS_IsPaused(-1)) {

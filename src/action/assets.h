@@ -29,7 +29,7 @@ typedef enum {
     TEX_RADAR_BG = 0x3000088,
     TEX_FIRE_FOR_WOMAN = 0x30000DA,
     TEX_DISCOWOMAN = 0x30000DB,
-    
+
     ICON_DOSSIER_RECORDS = 0x300019B,
     ICON_DOSSIER_REWARDS = 0x300019C,
     ICON_DOSSIER_GADGETS = 0x30000C4,
@@ -81,7 +81,7 @@ typedef enum {
     ICON_DS_WEAPON_SUBMINES = 0x30000FF,
     ICON_DS_WEAPON_JUNGLECAR = 0x3000193,
     ICON_DS_WEAPON_JUNGLEPLANE = 0x3000192,
-        
+
     ICON_MPMAP_SKYRAIL = 0x03000086,
     ICON_MPMAP_FORTKNOX = 0x0300008b,
     ICON_MPMAP_SNOWBLIND = 0x030000ba,
@@ -119,6 +119,9 @@ typedef enum {
     HT_Level_TowerC = 0x700000B,
     HT_Level_PowerStationA1 = 0x700000C,
     HT_Level_PowerStationA2 = 0x700000D,
+    HT_Level_Cut_Level1 = 0x700000E,
+    HT_Level_Cut_Level2 = 0x700000F,
+    HT_Level_Cut_Level3 = 0x7000010,
     HT_Level_Tower2A = 0x7000011,
     HT_Level_Tower2B = 0x7000012,
     HT_Level_Tower2C = 0x7000013,
@@ -178,7 +181,7 @@ typedef enum {
     GFX_LittleNellie_Blades = 0x2000b4d,
     GFX_RCCar_Turret = 0x2000502,
     GFX_RCCar_Barrel = 0x2000505,
-    
+
     HT_Level_Driving_Paris = 0x9000001,
     HT_Level_Driving_Underwater = 0x9000002,
     HT_Level_Driving_JungleA = 0x9000003,
@@ -205,7 +208,7 @@ typedef enum {
     C_GCPAUSE = 0x10000028,
     C_NIS = 0x1000003e,
     C_KEYBOARD = 0x10000074,
-        
+
     // Player Mods ->
     //      Friendly Fire:      0x10000081
     //      Weapon Set:         0x10000084
@@ -225,7 +228,7 @@ typedef enum {
     SUB_C_MPENVIROMODS_EXPLOSIVESCENERY = 0x1000019b,
     SUB_C_MPENVIROMODS_GRAPPLE = 0x10000227,
     SUB_C_MPENVIROMODS_MINIVEHICLES = 0x10000228,
-        
+
     C_SBMPSCEN = 0x1000009c,
     C_KEYPAD = 0x100000ba,
     C_CHCHDUMMY = 0x100000bd,
@@ -264,7 +267,7 @@ typedef enum {
     C_CHCHCONTROLS = 0x1000021d,
     C_RBMPFINISH = 0x1000022a,
     C_RBMPCNAME = 0x1000022b,
-    
+
     // Pages: Groups of controls/components?
     P_MAIN = 0x40000002,
     P_START = 0x40000009,
