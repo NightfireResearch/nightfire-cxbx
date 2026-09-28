@@ -7050,6 +7050,34 @@
   ]
  },
  {
+  "name": "ConfigInfo",
+  "category": "/",
+  "size": 92,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 32,
+    "name": "fileName",
+    "type": "char[32]",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "defText",
+    "type": "char *",
+    "bitfield": false
+   },
+   {
+    "offset": 36,
+    "size": 56,
+    "name": "frontEndLocaleIDs",
+    "type": "int[14]",
+    "bitfield": false
+   }
+  ]
+ },
+ {
   "name": "DIRECTSOUNDBUFFER",
   "category": "/",
   "size": 512,
@@ -11086,7 +11114,7 @@
     "offset": 24,
     "size": 8,
     "name": "configInfos",
-    "type": "void *[2]",
+    "type": "ConfigInfo *[2]",
     "bitfield": false
    },
    {
@@ -11099,21 +11127,21 @@
    {
     "offset": 36,
     "size": 4,
-    "name": "stringToNumber",
-    "type": "void *",
+    "name": "frontEndNameLookup",
+    "type": "StringToNumber *",
     "bitfield": false
    },
    {
     "offset": 40,
     "size": 4,
-    "name": "masterFileData",
-    "type": "void *",
+    "name": "frontEndDefText",
+    "type": "char *",
     "bitfield": false
    },
    {
     "offset": 44,
     "size": 4,
-    "name": "defFileData",
+    "name": "unusedFileData",
     "type": "void *",
     "bitfield": false
    }
@@ -21052,6 +21080,41 @@
     "size": 2,
     "name": "highPass",
     "type": "ushort",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "StringToNumber",
+  "category": "/",
+  "size": 16,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "count",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "table",
+    "type": "StringToNumberEntry *",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "sortedByString",
+    "type": "StringToNumberEntry *",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "sortedByNumber",
+    "type": "StringToNumberEntry *",
     "bitfield": false
    }
   ]

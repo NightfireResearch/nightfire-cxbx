@@ -25430,13 +25430,17 @@
         "address": "0x0004ff50",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "InputConfigManager *"
+            "InputConfigManager *",
+            "ConfigInfo *32",
+            "char *32"
         ],
-        "prototype_string": "undefined __thiscall ParseDefFileForFrontEnd(void)",
+        "prototype_string": "void __thiscall ParseDefFileForFrontEnd(ConfigInfo * info, char * text)",
         "parameters": [
-            "[InputConfigManager * this@ECX:4 (auto)]"
+            "[InputConfigManager * this@ECX:4 (auto)]",
+            "[ConfigInfo *32 info@Stack[0x4]:4]",
+            "[char *32 text@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "InputConfigManager"
@@ -25446,11 +25450,11 @@
         "address": "0x00050080",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "InputConfigManager *"
         ],
-        "prototype_string": "undefined __thiscall Shutdown(void)",
+        "prototype_string": "void __thiscall Shutdown(void)",
         "parameters": [
             "[InputConfigManager * this@ECX:4 (auto)]"
         ],
@@ -25462,12 +25466,12 @@
         "address": "0x00050140",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "InputConfigManager *",
             "bool"
         ],
-        "prototype_string": "undefined __thiscall SetInverted(bool param_1)",
+        "prototype_string": "void __thiscall SetInverted(bool param_1)",
         "parameters": [
             "[InputConfigManager * this@ECX:4 (auto)]",
             "[bool param_1@Stack[0x4]:1]"
@@ -25494,15 +25498,17 @@
     {
         "name": "InputConfigManager::GetNumConfigs",
         "address": "0x00050170",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "int",
         "param_types": [
-            "undefined4"
+            "InputConfigManager *",
+            "int"
         ],
-        "prototype_string": "undefined GetNumConfigs(undefined4 param_1)",
+        "prototype_string": "int __thiscall GetNumConfigs(int type)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[InputConfigManager * this@ECX:4 (auto)]",
+            "[int type@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "InputConfigManager"
@@ -25510,15 +25516,17 @@
     {
         "name": "InputConfigManager::GetCurrentConfig",
         "address": "0x00050180",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "int",
         "param_types": [
-            "undefined4"
+            "InputConfigManager *",
+            "int"
         ],
-        "prototype_string": "undefined GetCurrentConfig(undefined4 param_1)",
+        "prototype_string": "int __thiscall GetCurrentConfig(int type)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[InputConfigManager * this@ECX:4 (auto)]",
+            "[int type@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "InputConfigManager"
@@ -25526,19 +25534,21 @@
     {
         "name": "InputConfigManager::GetLocaleID",
         "address": "0x000501a0",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "int",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4"
+            "InputConfigManager *",
+            "int",
+            "int",
+            "int"
         ],
-        "prototype_string": "undefined GetLocaleID(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "int __thiscall GetLocaleID(int type, int configIndex, int slot)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[InputConfigManager * this@ECX:4 (auto)]",
+            "[int type@Stack[0x4]:4]",
+            "[int configIndex@Stack[0x8]:4]",
+            "[int slot@Stack[0xc]:4]"
         ],
         "is_thunk": false,
         "namespace": "InputConfigManager"
@@ -25546,16 +25556,12 @@
     {
         "name": "InputConfigManager::Get",
         "address": "0x00050270",
-        "calling_convention": "__thiscall",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "InputConfigManager *32",
-        "param_types": [
-            "InputConfigManager *"
-        ],
-        "prototype_string": "InputConfigManager * __thiscall Get(void)",
-        "parameters": [
-            "[InputConfigManager * this@ECX:4 (auto)]"
-        ],
+        "param_types": [],
+        "prototype_string": "InputConfigManager * __cdecl Get(void)",
+        "parameters": [],
         "is_thunk": false,
         "namespace": "InputConfigManager"
     },
@@ -25564,12 +25570,12 @@
         "address": "0x000502d0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "InputConfigManager *",
             "char *32"
         ],
-        "prototype_string": "undefined __thiscall ParseMasterConfigFile(char * param_1)",
+        "prototype_string": "void __thiscall ParseMasterConfigFile(char * param_1)",
         "parameters": [
             "[InputConfigManager * this@ECX:4 (auto)]",
             "[char *32 param_1@Stack[0x4]:4]"
@@ -25596,17 +25602,19 @@
     {
         "name": "InputConfigManager::SetConfig",
         "address": "0x00050720",
-        "calling_convention": "unknown",
+        "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4"
+            "InputConfigManager *",
+            "int",
+            "int"
         ],
-        "prototype_string": "undefined SetConfig(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "void __thiscall SetConfig(int type, int index)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[InputConfigManager * this@ECX:4 (auto)]",
+            "[int type@Stack[0x4]:4]",
+            "[int index@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "InputConfigManager"
@@ -25730,12 +25738,12 @@
         "address": "0x00050a20",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "InputToAction *",
             "char *32"
         ],
-        "prototype_string": "undefined __thiscall LoadParseDefFile(char * param_1)",
+        "prototype_string": "void __thiscall LoadParseDefFile(char * param_1)",
         "parameters": [
             "[InputToAction * this@ECX:4 (auto)]",
             "[char *32 param_1@Stack[0x4]:4]"
@@ -88186,25 +88194,25 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00119ef0",
+        "name": "CompareByString",
         "address": "0x00119ef0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00119ef0()",
+        "prototype_string": "undefined CompareByString()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_00119f40",
+        "name": "CompareByNumber",
         "address": "0x00119f40",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00119f40()",
+        "prototype_string": "undefined CompareByNumber()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -88214,15 +88222,15 @@
         "address": "0x00119f50",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "void *32",
+        "return_type": "StringToNumber *32",
         "param_types": [
             "StringToNumber *",
-            "StringToNumberEntry *32"
+            "void *32"
         ],
-        "prototype_string": "void * __thiscall StringToNumber(StringToNumberEntry * param_1)",
+        "prototype_string": "StringToNumber * __thiscall StringToNumber(void * param_1)",
         "parameters": [
             "[StringToNumber * this@ECX:4 (auto)]",
-            "[StringToNumberEntry *32 param_1@Stack[0x4]:4]"
+            "[void *32 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "StringToNumber"
@@ -88264,12 +88272,12 @@
         "address": "0x0011a110",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "int",
         "param_types": [
             "StringToNumber *",
             "char *32"
         ],
-        "prototype_string": "undefined __thiscall ConvertStringToNumber(char * param_1)",
+        "prototype_string": "int __thiscall ConvertStringToNumber(char * param_1)",
         "parameters": [
             "[StringToNumber * this@ECX:4 (auto)]",
             "[char *32 param_1@Stack[0x4]:4]"
