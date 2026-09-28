@@ -14,15 +14,3 @@ public:
     // AUTOGEN
     void SetControllerUnplugged(bool unplugged);
 };
-
-// The control configurations (Ghidra: InputConfigManager, 0x30 bytes; a function-local static).
-class InputConfigManager {
-public:
-    // The one manager (0x00050270).
-    // AUTOGEN
-    static InputConfigManager *Get();
-
-    // Whether the player chose inverted controls (0x00050160).
-    // AUTOGEN
-    bool IsInverted();
-};

@@ -22,3 +22,10 @@ public:
     // AUTOGEN
     static void FastFree(void *block, unsigned int size);
 };
+
+// The game's operator new[] and operator delete[] (0x00114710, 0x001146e0; both __cdecl), for arrays the
+// originals allocate that way and free elsewhere. A class array's MSVC count cookie is the caller's to write.
+typedef void *(__cdecl *GameArrayNewFn)(unsigned int size);
+typedef void (__cdecl *GameArrayDeleteFn)(void *block);
+#define GameArrayNew ((GameArrayNewFn)0x00114710)
+#define GameArrayDelete ((GameArrayDeleteFn)0x001146e0)

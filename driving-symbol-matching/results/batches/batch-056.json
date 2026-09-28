@@ -1,0 +1,25 @@
+{
+ "batch": "056",
+ "program": "Driving.xbe",
+ "note": "Input configuration layer.",
+ "items": [
+  {
+   "xbox": "0x00119ef0",
+   "expect": "FUN_00119ef0",
+   "name": "StringToNumber::CompareByString",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_exact": "INVENTED NAME, not canonical: the PS2 build inlines this comparator. qsort comparator for StringToNumber's sorted copy: strcmp of the two entries' strings (-1/0/+1). Used only by StringToNumber::StringToNumber (0x119f50).",
+   "evidence": []
+  },
+  {
+   "xbox": "0x00119f40",
+   "expect": "FUN_00119f40",
+   "name": "StringToNumber::CompareByNumber",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_exact": "INVENTED NAME, not canonical: the PS2 build inlines this comparator. qsort comparator for StringToNumber's by-number copy: a->number - b->number. Used only by StringToNumber::StringToNumber (0x119f50).",
+   "evidence": []
+  }
+ ]
+}

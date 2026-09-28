@@ -1,0 +1,37 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00119f50",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "StringToNumber::StringToNumber(StringToNumberEntry *)",
+   "return": "StringToNumber *"
+  },
+  {
+   "address": "0x0011a020",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "StringToNumber::~StringToNumber(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0011a110",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "StringToNumber::ConvertStringToNumber(char *)",
+   "return": "int"
+  }
+ ]
+}

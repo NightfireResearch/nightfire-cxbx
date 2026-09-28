@@ -4,6 +4,7 @@
 
 #include "ActionQueue.hpp"
 #include "GameInterfaces.hpp"
+#include "InputConfigManager.hpp"
 #include "InputDevice.hpp"
 #include "UMemory.hpp"
 #include "../platform/Pad.hpp"

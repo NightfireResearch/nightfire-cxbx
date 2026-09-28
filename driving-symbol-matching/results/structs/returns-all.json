@@ -1318,6 +1318,16 @@
    "return_only": true
   },
   {
+   "address": "0x00119f50",
+   "return": "StringToNumber *",
+   "return_only": true
+  },
+  {
+   "address": "0x0011a020",
+   "return": "void",
+   "return_only": true
+  },
+  {
    "address": "0x0011b580",
    "return": "USymbolTable *",
    "return_only": true
