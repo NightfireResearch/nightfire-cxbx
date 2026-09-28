@@ -588,11 +588,22 @@ static_assert(offsetof(Create_ScriptPlayer_Params, scalePercent) == 0x54, "Bad o
 // Can't generate automatically - custom calling convention. scriptPlayer is expected in ESI by the original
 // function (located at 0x000c3e20), while obj stays a normal stack argument - see View_AddCels for another
 // example of this pattern.
+//
+// ESI is saved and restored around the call, the same as Script_Run does for EBX: our callers are ordinary C++,
+// and ESI is callee-saved, so the compiler may be holding something else in it across this call. A plain tail-jmp
+// returned with ESI pointing at the script player, and clang keeps the placement data in ESI across the call in
+// SP_CreateScriptPlayer - which then read the scale from 0x54 bytes into the script player (past its end), and
+// every entity whose script loaded at creation got a garbage scale: missing from the level, or gone once used.
 void __declspec(naked) SP_LoadScript(obj_tag *obj, SCRIPTPLAYER *scriptPlayer) {
     _asm {
-        mov esi, [esp + 8]
+        push esi
+        mov esi, [esp + 12]         // scriptPlayer
+        push dword ptr [esp + 8]    // obj
         mov eax, 0x000C3E20
-        jmp eax
+        call eax
+        add esp, 4
+        pop esi
+        ret
     }
 }
 

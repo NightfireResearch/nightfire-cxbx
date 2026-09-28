@@ -11,5 +11,6 @@ cmake_install.cmake
 **/.DS_Store
 .cmake
 .vscode
+.zed
 __pycache__
 Testing/

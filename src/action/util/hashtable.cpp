@@ -18,10 +18,10 @@ typedef struct{
 // UNINJECTABLE - custom calling convention
 hashtable_entry* hashtable_getentry(HASHCODE hashcode) {
 
-    uint32_t type = (hashcode >> 18);
+    uint32_t type = (hashcode >> 24);
     if(type > 7)
         type = 0;
-    
+
     uint lowerLimit = HashTypeRanges[type].lowerLimit;
     uint upperLimit = HashTypeRanges[type].upperLimit;
 
@@ -56,7 +56,7 @@ void* hashtable_getitem(HASHCODE hashcode) {
 
 // AUTOINJECT
 celglist_tag * hashtable_hashcode_to_celglist(HASHCODE hashcode) {
-    
+
     if(hashcode == 0xFFFFFFFF)
         return NULL;
 
@@ -109,7 +109,7 @@ bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc) {
     if(&sprInfo == NULL)
         return false;
 
-    sprOut->unknownDataMaybeTexPtr = sprInfo.unknownDataMaybeTexPtr;                                               
+    sprOut->unknownDataMaybeTexPtr = sprInfo.unknownDataMaybeTexPtr;
     sprOut->backupOnscreenWidth = sprInfo.defaultWidth;
     sprOut->backupOnscreenHeight = sprInfo.defaultHeight;
     sprOut->onscreenWidth = sprInfo.defaultWidth;
@@ -131,7 +131,7 @@ void hashtable_set_object_to_entity_gfx(obj_tag *obj, HASHCODE hc) {
 
     if((entry == NULL) || (entry->data == NULL))
         return;
-    
+
     Control_SetGList(obj, (celglist_tag*) entry->data);
-    
+
 }

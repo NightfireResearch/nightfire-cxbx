@@ -130,11 +130,18 @@ void View_CaptureSceneSub(byte mask, viewer_tag* viewer) {
 
 // Can't generate automatically - custom calling convention
 void __declspec(naked) View_AddCels(viewer_tag* viewer) {
-    // Custom wrapper - viewer pointer is expected in ESI by the original function, which is located at 0x000daa00
+    // Custom wrapper - viewer pointer is expected in ESI by the original function, which is located at 0x000daa00.
+    // ESI is callee-saved, so it is restored afterwards rather than handed back holding the viewer - see
+    // SP_LoadScript for what a tail-jmp here costs when the caller keeps something else in ESI.
     _asm {
-        mov esi, [esp + 4]
-        mov eax, 0x000DAA00         ; load address into EAX
-        jmp eax                     ; jump to original function
+        push esi
+        mov esi, [esp + 8]
+        push esi
+        mov eax, 0x000DAA00
+        call eax
+        add esp, 4
+        pop esi
+        ret
     }
 }
 

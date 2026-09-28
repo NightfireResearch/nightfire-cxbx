@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 project(nightfiRE LANGUAGES CXX)
 
@@ -14,6 +14,9 @@ endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Added for developers using IDEs that get confused (e.g. Zed) without this hint
+# file while using a linter (e.g. clangd).
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # On MinGW, "lib" will get prepended to libraries which will break out ability
 # to inject our DLL.
