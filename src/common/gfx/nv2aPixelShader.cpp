@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 // See the header for what this is. The definition's words, by index (the XDK's D3DPIXELSHADERDEF):
@@ -138,6 +139,36 @@ static uint32_t InputStageFor(uint32_t inputTexture, int stage) {
     }
 }
 
+// The combiner constants a program reads, declared one register each: "k[18]" in the generated body becomes
+// k18, bound to c18. Declaring the whole k[] array instead reserves 29 of ps_2_x's 32 float constant registers
+// and leaves three for the literals the compiler adds. Microsoft's compiler packs those four to a register
+// and fits; Wine's (vkd3d) does not, spills into c32, and CreatePixelShader then refuses the program -
+// "Shader using float constant 32 which is not supported" - so most surfaces drew with no shader at all.
+// Declaring only what is read leaves the rest free for the literals. The registers are the same as before,
+// so the upload of all NV2A_PS_K_COUNT constants from c0 is unchanged.
+static bool DeclareConstants(const char *body, char *out, size_t outSize) {
+    uint32_t used = 0;
+    for (const char *p = strstr(body, "k["); p != NULL; p = strstr(p + 2, "k[")) {
+        long n = strtol(p + 2, NULL, 10);
+        if (n >= 0 && n < NV2A_PS_K_COUNT)
+            used |= 1u << n;
+    }
+
+    Writer w = { out, outSize, 0, false };
+    for (int n = 0; n < NV2A_PS_K_COUNT; n++)
+        if (used & (1u << n))
+            w.printf("float4 k%d : register(c%d);\n", n, n);
+    const char *p = body;
+    for (const char *at = strstr(p, "k["); at != NULL; at = strstr(p, "k[")) {
+        char *end;
+        long n = strtol(at + 2, &end, 10);
+        w.printf("%.*sk%ld", (int)(at - p), p, n);
+        p = (*end == ']') ? end + 1 : end;
+    }
+    w.printf("%s", p);
+    return !w.overflow;
+}
+
 bool Nv2aPixelShader_Translate(const uint32_t def[60], char *hlsl, size_t hlslSize, Nv2aPixelShaderInfo *info) {
     memset(info, 0, sizeof(*info));
     uint32_t stages = def[DEF_COMBINER_COUNT] & 0xF;
@@ -171,10 +202,13 @@ bool Nv2aPixelShader_Translate(const uint32_t def[60], char *hlsl, size_t hlslSi
     bool finalUsesFogBlend = ((finalAbcd >> 24) & 0xF) == REG_FOG && ((finalAbcd >> 8) & 0xF) == REG_FOG;
     info->fogByHost = defaultFinal || finalUsesFogBlend;
 
-    Writer w = { hlsl, hlslSize, 0, false };
+    // The body first, with the constants as k[N]; DeclareConstants then writes it out with their declarations.
+    char *body = (char *)malloc(hlslSize);
+    if (body == NULL)
+        return false;
+    Writer w = { body, hlslSize, 0, false };
     w.printf("// NV2A register combiner program, %u stage%s\n", stages, stages == 1 ? "" : "s");
     w.printf("sampler s0 : register(s0);\nsampler s1 : register(s1);\nsampler s2 : register(s2);\nsampler s3 : register(s3);\n");
-    w.printf("float4 k[%d] : register(c0);\n", NV2A_PS_K_COUNT);
     w.printf("struct PS_IN { float4 v0 : COLOR0; float4 v1 : COLOR1; float4 tc0 : TEXCOORD0; float4 tc1 : TEXCOORD1; float4 tc2 : TEXCOORD2; float4 tc3 : TEXCOORD3; };\n");
     w.printf("float4 main(PS_IN i) : COLOR {\n");
     w.printf("    float4 v0 = i.v0, v1 = i.v1;\n");
@@ -283,7 +317,9 @@ bool Nv2aPixelShader_Translate(const uint32_t def[60], char *hlsl, size_t hlslSi
         else
             w.printf("    return saturate(float4(FA * FB + (1 - FA) * FC + FD, FG));\n}\n");
     }
-    return !w.overflow;
+    bool ok = !w.overflow && DeclareConstants(body, hlsl, hlslSize);
+    free(body);
+    return ok;
 }
 
 static void UnpackColour(uint32_t argb, float out[4]) {
