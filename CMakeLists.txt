@@ -326,6 +326,7 @@ add_library(drivinginject SHARED
   src/driving/engine/UFileLoader.cpp
   src/driving/engine/ActionQueue.cpp
   src/driving/engine/InputDevice.cpp
+  src/driving/engine/IOModule.cpp
   src/driving/platform/Pad.cpp
   src/common/xboxPath.cpp
   src/driving/platform/XboxStartup.cpp

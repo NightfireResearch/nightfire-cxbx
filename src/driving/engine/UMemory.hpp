@@ -13,6 +13,10 @@ public:
     // AUTOGEN
     static void Free(void *block);
 
+    // A block from the fixed-size pools, labelled `name` for the allocator's accounting (0x00114750).
+    // AUTOGEN
+    static void *FastAlloc(unsigned int size, const char *name);
+
     // Gives back a block from the fixed-size pools, of the size it was allocated with (the sized operator delete
     // every class's deleting destructor calls).
     // AUTOGEN

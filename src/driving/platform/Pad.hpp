@@ -15,8 +15,12 @@
 // The record for a port (0x00108480).
 PadData *PAD_getdataptr(int port);
 
-// Polls every port (0x00108490). A sync task, added by PAD_init; IOModule::Update calls it too.
+// Polls every port (0x00108490). PAD_init adds it as a sync task, but IOModule::Initialize removes that at once:
+// in practice IOModule::Update (src/driving/engine/IOModule.cpp) calls it, once an update.
 void PAD_update();
+
+// 1 when a pad is open on the port, else 0 (0x00108460). IOModule::CheckUnplugged asks it about the active port.
+int PAD_getpadtype(int port);
 
 // Once: clears the records, opens every pad that is plugged in, and adds PAD_update as a sync task (0x001086c0).
 void PAD_init();

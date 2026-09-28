@@ -56,7 +56,17 @@ public:
     // Zeroes *value if it lies strictly between low and high (0x00050e80).
     static void DeadZoneChop(float *value, float low, float high);
 
-    // Slot 3: how many controls the device has. Called through the device's own vtable.
+    // The virtual methods IOModule calls, each through the device's own vtable (so reaching XBoxPadDevice's).
+    // Slot 0: the scalar deleting destructor (flags bit 0: free the memory too).
+    // VIRTUAL(0)
+    InputDevice* Delete(unsigned int flags);
+    // Slot 1: names and types the controls.
+    // VIRTUAL(1)
+    void Initialize();
+    // Slot 2: reads the device's current values, last frame's becoming the previous ones.
+    // VIRTUAL(2)
+    void PollDevice();
+    // Slot 3: how many controls the device has.
     // VIRTUAL(3)
     int GetNumDeviceScalar();
 };

@@ -4453,26 +4453,6 @@
    "return": "void"
   },
   {
-   "address": "0x0004f170",
-   "calling_convention": "__thiscall",
-   "params": [
-    {
-     "name": "param_1",
-     "type": "int"
-    },
-    {
-     "name": "param_2",
-     "type": "float"
-    },
-    {
-     "name": "param_3",
-     "type": "int"
-    }
-   ],
-   "sheet": "ActionData::ActionData(int, float, int)",
-   "return": "ActionData *"
-  },
-  {
    "address": "0x0004f190",
    "calling_convention": "__cdecl",
    "params": [
@@ -4581,38 +4561,6 @@
    "sheet": "IFeedback::AddCollisionInfo(COLLISION_INFO &)"
   },
   {
-   "address": "0x000507a0",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "InputTable::InputTable(void)",
-   "return": "void *"
-  },
-  {
-   "address": "0x000507c0",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "InputTable::~InputTable(void)",
-   "return": "void"
-  },
-  {
-   "address": "0x000507e0",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "InputTable::GrowArrayForOneElement(void)"
-  },
-  {
-   "address": "0x00050860",
-   "calling_convention": "__thiscall",
-   "params": [
-    {
-     "name": "param_1",
-     "type": "void *"
-    }
-   ],
-   "sheet": "InputToAction::InputToAction(InputDevice *)",
-   "return": "void *"
-  },
-  {
    "address": "0x00050970",
    "calling_convention": "__cdecl",
    "params": [
@@ -4624,35 +4572,11 @@
    "sheet": "AdvanceFilePtr(char **)"
   },
   {
-   "address": "0x00050990",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "InputToAction::Reset(void)"
-  },
-  {
-   "address": "0x000509c0",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "InputToAction::~InputToAction(void)",
-   "return": "void"
-  },
-  {
-   "address": "0x00050a20",
-   "calling_convention": "__thiscall",
-   "params": [
-    {
-     "name": "param_1",
-     "type": "char *"
-    }
-   ],
-   "sheet": "InputToAction::LoadParseDefFile(char *)"
-  },
-  {
    "address": "0x00050b80",
    "calling_convention": "__thiscall",
    "params": [],
    "sheet": "DeviceScalar::DeviceScalar(void)",
-   "return": "void *"
+   "return": "DeviceScalar *"
   },
   {
    "address": "0x00050be0",
@@ -4721,7 +4645,7 @@
     }
    ],
    "sheet": "InputDevice::InputDevice(int)",
-   "return": "void *"
+   "return": "InputDevice *"
   },
   {
    "address": "0x00050e30",
@@ -4735,86 +4659,6 @@
    "calling_convention": "__thiscall",
    "params": [],
    "sheet": "InputDevice::DeviceHasChanged(void)"
-  },
-  {
-   "address": "0x00050ee0",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "IOModule::CheckUnplugged(void)"
-  },
-  {
-   "address": "0x00050f80",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "IOModule::CreateDevices(void)"
-  },
-  {
-   "address": "0x00051080",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "IOModule::Initialize(void)"
-  },
-  {
-   "address": "0x000510f0",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "IOModule::ReleaseAllButtons(void)"
-  },
-  {
-   "address": "0x00051250",
-   "calling_convention": "__thiscall",
-   "params": [
-    {
-     "name": "param_1",
-     "type": "void *"
-    },
-    {
-     "name": "param_2",
-     "type": "void *"
-    }
-   ],
-   "sheet": "IOModule::SendGameMessages(InputDevice *, InputToAction *)"
-  },
-  {
-   "address": "0x00051580",
-   "calling_convention": "__cdecl",
-   "params": [],
-   "sheet": "IOModule::GetIOModule(void)"
-  },
-  {
-   "address": "0x000515e0",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "IOModule::ReleaseDevices(void)"
-  },
-  {
-   "address": "0x00051650",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "IOModule::UpdateAllDevices(void)"
-  },
-  {
-   "address": "0x000516d0",
-   "calling_convention": "__cdecl",
-   "params": [],
-   "sheet": "IOModule::Update(void)"
-  },
-  {
-   "address": "0x00051710",
-   "calling_convention": "__thiscall",
-   "params": [
-    {
-     "name": "param_1",
-     "type": "bool"
-    }
-   ],
-   "sheet": "IOModule::EnableUpdating(bool)"
-  },
-  {
-   "address": "0x00051750",
-   "calling_convention": "__thiscall",
-   "params": [],
-   "sheet": "IOModule::Release(void)"
   },
   {
    "address": "0x00052020",
@@ -10855,7 +10699,7 @@
    "params": [
     {
      "name": "param_1",
-     "type": "void *"
+     "type": "StringToNumberEntry *"
     }
    ],
    "sheet": "StringToNumber::StringToNumber(StringToNumberEntry *)",

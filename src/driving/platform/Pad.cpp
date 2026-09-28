@@ -43,6 +43,11 @@ PadData* PAD_getdataptr(int port) {
     return &gPads[port];
 }
 
+// AUTOINJECT
+int PAD_getpadtype(int port) {
+    return gPads[port].handle != nullptr;
+}
+
 // A stick axis: the signed 16-bit reading centred and scaled to about -1 .. 1, and zero within 0.25 of the middle.
 // The original keeps the unrounded product on the x87 stack for the deadzone test; it has at most 41 significant
 // bits, so double holds it exactly.

@@ -258,6 +258,11 @@
    "return_only": true
   },
   {
+   "address": "0x0004f170",
+   "return": "ActionData *",
+   "return_only": true
+  },
+  {
    "address": "0x0004f1b0",
    "return": "void",
    "return_only": true
@@ -268,8 +273,38 @@
    "return_only": true
   },
   {
+   "address": "0x0004f2d0",
+   "return": "ActionQueueRing *",
+   "return_only": true
+  },
+  {
    "address": "0x00050160",
    "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x000507a0",
+   "return": "InputTable *",
+   "return_only": true
+  },
+  {
+   "address": "0x000507c0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00050860",
+   "return": "InputToAction *",
+   "return_only": true
+  },
+  {
+   "address": "0x000509c0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00050e80",
+   "return": "void",
    "return_only": true
   },
   {
@@ -770,6 +805,11 @@
   {
    "address": "0x000a1460",
    "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000a1ec0",
+   "return": "ActionRef *",
    "return_only": true
   },
   {
