@@ -10910,8 +10910,22 @@
    {
     "offset": 0,
     "size": 1,
-    "name": "field0_0x0",
-    "type": "undefined1",
+    "name": "updatingEnabled",
+    "type": "bool",
+    "bitfield": false
+   },
+   {
+    "offset": 1,
+    "size": 1,
+    "name": "resendAll",
+    "type": "bool",
+    "bitfield": false
+   },
+   {
+    "offset": 2,
+    "size": 1,
+    "name": "resyncDevices",
+    "type": "bool",
     "bitfield": false
    },
    {
@@ -10938,56 +10952,56 @@
    {
     "offset": 136,
     "size": 1,
-    "name": "field7_0x88",
-    "type": "undefined1",
+    "name": "padStable",
+    "type": "bool",
     "bitfield": false
    },
    {
     "offset": 140,
     "size": 4,
-    "name": "field11_0x8c",
-    "type": "undefined4",
+    "name": "checkUnpluggedCount",
+    "type": "int",
     "bitfield": false
    },
    {
     "offset": 144,
     "size": 1,
-    "name": "field12_0x90",
-    "type": "undefined1",
+    "name": "unpluggedMessageShown",
+    "type": "bool",
     "bitfield": false
    },
    {
     "offset": 145,
     "size": 1,
-    "name": "field13_0x91",
-    "type": "undefined1",
+    "name": "controllerUnplugged",
+    "type": "bool",
     "bitfield": false
    },
    {
     "offset": 148,
     "size": 4,
-    "name": "field16_0x94",
-    "type": "undefined4",
+    "name": "currentTick",
+    "type": "int",
     "bitfield": false
    },
    {
     "offset": 152,
     "size": 4,
-    "name": "field17_0x98",
-    "type": "undefined4",
+    "name": "unused98",
+    "type": "int",
     "bitfield": false
    },
    {
     "offset": 156,
     "size": 4,
-    "name": "someFrequency1",
+    "name": "repeatDelayTicks",
     "type": "int",
     "bitfield": false
    },
    {
     "offset": 160,
     "size": 4,
-    "name": "someFrequency2",
+    "name": "repeatIntervalTicks",
     "type": "int",
     "bitfield": false
    }
@@ -11162,6 +11176,69 @@
   ]
  },
  {
+  "name": "InputTable",
+  "category": "/",
+  "size": 60,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "count",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "capacity",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "entries",
+    "type": "InputTableEntry *",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 48,
+    "name": "inlineEntries",
+    "type": "InputTableEntry[4]",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "InputTableEntry",
+  "category": "/",
+  "size": 12,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "updateMethod",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "threshold",
+    "type": "float",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "action",
+    "type": "int",
+    "bitfield": false
+   }
+  ]
+ },
+ {
   "name": "InputToAction",
   "category": "/",
   "size": 16,
@@ -11169,29 +11246,29 @@
    {
     "offset": 0,
     "size": 4,
-    "name": "field0_0x0",
+    "name": "numTables",
     "type": "int",
     "bitfield": false
    },
    {
     "offset": 4,
     "size": 4,
-    "name": "field1_0x4",
-    "type": "int *",
+    "name": "tables",
+    "type": "InputTable *",
     "bitfield": false
    },
    {
     "offset": 8,
     "size": 4,
-    "name": "field2_0x8",
-    "type": "undefined4",
+    "name": "scalarNameLookup",
+    "type": "StringToNumber *",
     "bitfield": false
    },
    {
     "offset": 12,
     "size": 4,
-    "name": "field3_0xc",
-    "type": "int",
+    "name": "scalarNames",
+    "type": "StringToNumberEntry *",
     "bitfield": false
    }
   ]
@@ -20975,6 +21052,27 @@
     "size": 2,
     "name": "highPass",
     "type": "ushort",
+    "bitfield": false
+   }
+  ]
+ },
+ {
+  "name": "StringToNumberEntry",
+  "category": "/",
+  "size": 8,
+  "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "number",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 4,
+    "size": 4,
+    "name": "string",
+    "type": "char *",
     "bitfield": false
    }
   ]

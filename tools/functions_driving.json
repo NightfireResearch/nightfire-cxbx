@@ -24947,12 +24947,12 @@
             "float",
             "int"
         ],
-        "prototype_string": "ActionData * __thiscall ActionData(int param_1, float param_2, int param_3)",
+        "prototype_string": "ActionData * __thiscall ActionData(int action, float value, int source)",
         "parameters": [
             "[ActionData * this@ECX:4 (auto)]",
-            "[int param_1@Stack[0x4]:4]",
-            "[float param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]"
+            "[int action@Stack[0x4]:4]",
+            "[float value@Stack[0x8]:4]",
+            "[int source@Stack[0xc]:4]"
         ],
         "is_thunk": false,
         "namespace": "ActionData"
@@ -25616,11 +25616,11 @@
         "address": "0x000507a0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "void *32",
+        "return_type": "InputTable *32",
         "param_types": [
             "InputTable *"
         ],
-        "prototype_string": "void * __thiscall InputTable(void)",
+        "prototype_string": "InputTable * __thiscall InputTable(void)",
         "parameters": [
             "[InputTable * this@ECX:4 (auto)]"
         ],
@@ -25648,11 +25648,11 @@
         "address": "0x000507e0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "InputTable *"
         ],
-        "prototype_string": "undefined __thiscall GrowArrayForOneElement(void)",
+        "prototype_string": "void __thiscall GrowArrayForOneElement(void)",
         "parameters": [
             "[InputTable * this@ECX:4 (auto)]"
         ],
@@ -25664,12 +25664,12 @@
         "address": "0x00050860",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "void *32",
+        "return_type": "InputToAction *32",
         "param_types": [
             "InputToAction *",
             "void *32"
         ],
-        "prototype_string": "void * __thiscall InputToAction(void * param_1)",
+        "prototype_string": "InputToAction * __thiscall InputToAction(void * param_1)",
         "parameters": [
             "[InputToAction * this@ECX:4 (auto)]",
             "[void *32 param_1@Stack[0x4]:4]"
@@ -25748,11 +25748,11 @@
         "address": "0x00050b80",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "void *32",
+        "return_type": "DeviceScalar *32",
         "param_types": [
             "DeviceScalar *"
         ],
-        "prototype_string": "void * __thiscall DeviceScalar(void)",
+        "prototype_string": "DeviceScalar * __thiscall DeviceScalar(void)",
         "parameters": [
             "[DeviceScalar * this@ECX:4 (auto)]"
         ],
@@ -25910,12 +25910,12 @@
         "address": "0x00050e10",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "void *32",
+        "return_type": "InputDevice *32",
         "param_types": [
             "InputDevice *",
             "int"
         ],
-        "prototype_string": "void * __thiscall InputDevice(int param_1)",
+        "prototype_string": "InputDevice * __thiscall InputDevice(int param_1)",
         "parameters": [
             "[InputDevice * this@ECX:4 (auto)]",
             "[int param_1@Stack[0x4]:4]"
@@ -25996,11 +25996,11 @@
         "address": "0x00050ee0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "IOModule *"
         ],
-        "prototype_string": "undefined __thiscall CheckUnplugged(void)",
+        "prototype_string": "void __thiscall CheckUnplugged(void)",
         "parameters": [
             "[IOModule * this@ECX:4 (auto)]"
         ],
@@ -26012,11 +26012,11 @@
         "address": "0x00050f80",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "IOModule *"
         ],
-        "prototype_string": "undefined __thiscall CreateDevices(void)",
+        "prototype_string": "void __thiscall CreateDevices(void)",
         "parameters": [
             "[IOModule * this@ECX:4 (auto)]"
         ],
@@ -26044,11 +26044,11 @@
         "address": "0x000510f0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "IOModule *"
         ],
-        "prototype_string": "undefined __thiscall ReleaseAllButtons(void)",
+        "prototype_string": "void __thiscall ReleaseAllButtons(void)",
         "parameters": [
             "[IOModule * this@ECX:4 (auto)]"
         ],
@@ -26060,13 +26060,13 @@
         "address": "0x00051250",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "IOModule *",
             "void *32",
             "void *32"
         ],
-        "prototype_string": "undefined __thiscall SendGameMessages(void * param_1, void * param_2)",
+        "prototype_string": "void __thiscall SendGameMessages(void * param_1, void * param_2)",
         "parameters": [
             "[IOModule * this@ECX:4 (auto)]",
             "[void *32 param_1@Stack[0x4]:4]",
@@ -26080,7 +26080,7 @@
         "address": "0x00051580",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "IOModule *",
+        "return_type": "IOModule *32",
         "param_types": [],
         "prototype_string": "IOModule * __cdecl GetIOModule(void)",
         "parameters": [],
@@ -26092,11 +26092,11 @@
         "address": "0x000515e0",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "IOModule *"
         ],
-        "prototype_string": "undefined __thiscall ReleaseDevices(void)",
+        "prototype_string": "void __thiscall ReleaseDevices(void)",
         "parameters": [
             "[IOModule * this@ECX:4 (auto)]"
         ],
@@ -26108,11 +26108,11 @@
         "address": "0x00051650",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "IOModule *"
         ],
-        "prototype_string": "undefined __thiscall UpdateAllDevices(void)",
+        "prototype_string": "void __thiscall UpdateAllDevices(void)",
         "parameters": [
             "[IOModule * this@ECX:4 (auto)]"
         ],
@@ -26124,9 +26124,9 @@
         "address": "0x000516d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "int",
         "param_types": [],
-        "prototype_string": "undefined __cdecl Update(void)",
+        "prototype_string": "int __cdecl Update(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "IOModule"
@@ -26136,12 +26136,12 @@
         "address": "0x00051710",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "bool",
         "param_types": [
             "IOModule *",
             "bool"
         ],
-        "prototype_string": "undefined __thiscall EnableUpdating(bool param_1)",
+        "prototype_string": "bool __thiscall EnableUpdating(bool param_1)",
         "parameters": [
             "[IOModule * this@ECX:4 (auto)]",
             "[bool param_1@Stack[0x4]:1]"
@@ -26154,11 +26154,11 @@
         "address": "0x00051750",
         "calling_convention": "__thiscall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "IOModule *"
         ],
-        "prototype_string": "undefined __thiscall Release(void)",
+        "prototype_string": "void __thiscall Release(void)",
         "parameters": [
             "[IOModule * this@ECX:4 (auto)]"
         ],
@@ -79870,7 +79870,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00108460",
+        "name": "PAD_getpadtype",
         "address": "0x00108460",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -79878,7 +79878,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00108460(undefined4 param_1)",
+        "prototype_string": "undefined PAD_getpadtype(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -88217,12 +88217,12 @@
         "return_type": "void *32",
         "param_types": [
             "StringToNumber *",
-            "void *32"
+            "StringToNumberEntry *32"
         ],
-        "prototype_string": "void * __thiscall StringToNumber(void * param_1)",
+        "prototype_string": "void * __thiscall StringToNumber(StringToNumberEntry * param_1)",
         "parameters": [
             "[StringToNumber * this@ECX:4 (auto)]",
-            "[void *32 param_1@Stack[0x4]:4]"
+            "[StringToNumberEntry *32 param_1@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "StringToNumber"
