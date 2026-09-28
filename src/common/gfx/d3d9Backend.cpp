@@ -26,6 +26,10 @@
 
 #include "backendHost.h"   // the engine this is compiled into provides these three; see the header
 #include "nv2aPixelShader.h"
+#ifdef NF_FXAA
+#include "fxaa.h"   // experimental - see fxaa.cpp
+static bool g_fxaaEnabled = true;
+#endif
 
 int g_gfxBackend = GFX_BACKEND_CXBX;
 
@@ -730,6 +734,29 @@ static void BeginSceneIfNeeded(void) {
     }
 }
 
+#ifdef NF_FXAA
+// FXAA belongs on the 3D scene, not on the text and HUD drawn over it: run over a finished frame it treats
+// every glyph edge as an aliased edge and smears it. So it runs at the first screen-space draw (the immediate
+// quads and the immediate-mode path, which carry the text and the HUD) after some of the scene has reached the
+// backbuffer, and at Swap only for a frame that drew a scene and no overlay. A frame with no scene at all - a
+// menu, a movie - is left alone.
+static bool g_fxaaSceneDrawn = false, g_fxaaApplied = false;
+static void FxaaBeforeOverlay(void) {
+    if (!g_fxaaEnabled || g_fxaaApplied || !g_fxaaSceneDrawn || !g_targetIsBackBuffer || g_device == NULL)
+        return;
+    g_fxaaApplied = true;
+    bool wasInScene = g_inScene;
+    if (wasInScene) { g_device->EndScene(); g_inScene = false; }
+    Fxaa_Apply(g_device, g_backBufferSurface, D3D9Log);
+    if (wasInScene) BeginSceneIfNeeded();
+}
+#define FXAA_NOTE_SCENE_DRAW() do { if (g_targetIsBackBuffer) g_fxaaSceneDrawn = true; } while (0)
+#define FXAA_BEFORE_OVERLAY() FxaaBeforeOverlay()
+#else
+#define FXAA_NOTE_SCENE_DRAW() ((void)0)
+#define FXAA_BEFORE_OVERLAY() ((void)0)
+#endif
+
 uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWindow, uint32_t behaviorFlags,
                            void *pPresentationParameters, void **ppDevice) {
     (void)adapter; (void)deviceType; (void)hFocusWindow; (void)behaviorFlags;
@@ -760,6 +787,10 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
             height = (uint32_t)renderHeight;
         }
     }
+
+#ifdef NF_FXAA
+    g_fxaaEnabled = GetPrivateProfileIntA("Settings", "FXAA", 1, ".\\settings.ini") != 0;
+#endif
 
     if (g_xboxTextureStateTable == 0 || g_xboxRenderStateTable == 0)
         D3D9Log("[d3d9] the D3D8 state table addresses were never set - see g_xboxTextureStateTable\n");
@@ -1124,6 +1155,11 @@ void D3D9_Swap(uint32_t type) {
         g_dumpFrame = g_frameCount + 1; // the next frame gets dumped
         g_dumpRtCount = 0;
     }
+#ifdef NF_FXAA
+    if (g_fxaaEnabled && g_fxaaSceneDrawn && !g_fxaaApplied)   // a scene and no overlay; after the dumps, as ever
+        Fxaa_Apply(g_device, g_backBufferSurface, D3D9Log);
+    g_fxaaSceneDrawn = g_fxaaApplied = false;
+#endif
     HRESULT hr = g_device->Present(NULL, NULL, NULL, NULL);
     PaceFrame();
     if (hr == D3DERR_DEVICELOST) {
@@ -2366,6 +2402,9 @@ static void CaptureBackBufferInto(void *header) {
 
 static void ReleaseVisibilityQueries(void);
 static void ReleaseDefaultPoolResources(void) {
+#ifdef NF_FXAA
+    Fxaa_ReleaseDefaultPool();
+#endif
     if (g_readBackScaled != NULL) { g_readBackScaled->Release(); g_readBackScaled = NULL; }
     ReleaseIndexRing();
     ReleaseVertexRing();
@@ -2740,6 +2779,7 @@ void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, cons
     TraceDraw("indexed", primitiveType, vertexCount, minIndex, (uint32_t)maxIndex + 1);
     if (!PrepareShaderDraw(true, minIndex, (uint32_t)maxIndex + 1, &baseVertex))
         return;
+    FXAA_NOTE_SCENE_DRAW();
     g_device->SetIndices(g_indexRing);
     g_device->DrawIndexedPrimitive(type, baseVertex, minIndex, maxIndex - minIndex + 1, start, primCount);
     DumpAfterDraw();
@@ -2760,6 +2800,7 @@ void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t ve
     TraceDraw("direct", primitiveType, vertexCount, startVertex, startVertex + vertexCount);
     if (!PrepareShaderDraw(true, startVertex, startVertex + vertexCount, &baseVertex))
         return;
+    FXAA_NOTE_SCENE_DRAW();
     if (primitiveType == 8) {
         uint32_t start = 0;
         uint16_t *dst = startVertex + vertexCount <= 0x10000 ? LockIndexRing(primCount * 3, &start) : NULL;
@@ -2814,6 +2855,7 @@ static void DrawImmediateQuads(uint32_t vertexCount, const uint8_t *data, uint32
         g_quadIndicesBuilt = true;
     }
     if (vertexCount > 64 * 4) vertexCount = 64 * 4;
+    FXAA_BEFORE_OVERLAY();
     BeginSceneIfNeeded();
     ApplyTextureStageState(false); // first: it also works out the linear-texture coordinate scale used below
     const float *k = g_vertexConstants[103];
@@ -2903,6 +2945,7 @@ void D3D9_ImmediateEnd(void) {
     if (g_device == NULL || g_immediateCount == 0)
         return;
 
+    FXAA_BEFORE_OVERLAY();
     BeginSceneIfNeeded();
     TraceDraw("immediate", g_immediatePrimitive, g_immediateCount, 0, 0);
     ApplyTextureStageState(false);   // also fills in the coordinate scales linear textures need
@@ -2972,6 +3015,7 @@ void D3D9_DrawVerticesUP(uint32_t primitiveType, uint32_t vertexCount, void *pVe
     int baseVertex = 0;
     if (!PrepareShaderDraw(false, 0, 0, &baseVertex))
         return;
+    FXAA_NOTE_SCENE_DRAW();
     if (primitiveType == 8) {   // any other quad list: split into triangle pairs, as the stream paths do
         static uint16_t indices[0x4000 * 6 / 4];
         if (vertexCount > 0x4000)

@@ -119,6 +119,7 @@ add_library(actioninject SHARED
   src/action/engine/Direct3D/backendHost.cpp
   src/common/gfx/d3d9Backend.cpp
   src/common/gfx/nv2aPixelShader.cpp
+  src/common/gfx/fxaa.cpp
   src/action/game/Autoaim.cpp
   src/action/game/weapon_stats.cpp
   src/action/math/math.cpp
@@ -345,6 +346,7 @@ add_library(drivinginject SHARED
   src/common/xbeProfiler.cpp
   src/common/gfx/d3d9Backend.cpp
   src/common/gfx/nv2aPixelShader.cpp
+  src/common/gfx/fxaa.cpp
 )
 
 
@@ -357,6 +359,11 @@ target_compile_definitions(action_cxbx PRIVATE UNICODE _UNICODE IS_ACTION)
 target_compile_definitions(driving_cxbx PRIVATE UNICODE _UNICODE IS_DRIVING)
 target_compile_definitions(actioninject PRIVATE UNICODE _UNICODE)
 target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)
+# Experimental FXAA on the 3D scene, before the HUD and text (src/common/gfx/fxaa.cpp), in both engines;
+# FXAA=0 in settings.ini turns it off at run time. Remove these two lines and fxaa.cpp from both source lists
+# to take it out.
+target_compile_definitions(actioninject PRIVATE NF_FXAA)
+target_compile_definitions(drivinginject PRIVATE NF_FXAA)
 
 
 # Run preprocess.py before building actioninject and drivinginject. It writes the injection tables
