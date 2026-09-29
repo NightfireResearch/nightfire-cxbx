@@ -122,15 +122,15 @@
         "address": "0x00011440",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "int",
         "param_types": [
             "obj_tag *",
             "HASHCODE"
         ],
-        "prototype_string": "undefined4 __cdecl AnimObjectNew(obj_tag * param_1, HASHCODE param_2)",
+        "prototype_string": "int __cdecl AnimObjectNew(obj_tag * obj, HASHCODE skin)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[HASHCODE param_2@Stack[0x8]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[HASHCODE skin@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -161,9 +161,9 @@
             "obj_tag *",
             "int"
         ],
-        "prototype_string": "void __cdecl AnimObjectSetSleeveType(obj_tag * param_1, int sleeveNum)",
+        "prototype_string": "void __cdecl AnimObjectSetSleeveType(obj_tag * obj, int sleeveNum)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
+            "[obj_tag * obj@Stack[0x4]:4]",
             "[int sleeveNum@Stack[0x8]:4]"
         ],
         "is_thunk": false,
@@ -174,15 +174,15 @@
         "address": "0x00011920",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "obj_tag *",
         "param_types": [
             "obj_tag *",
             "uint"
         ],
-        "prototype_string": "undefined4 __cdecl AnimGetNDiscreteObj(obj_tag * param_1, uint param_2)",
+        "prototype_string": "obj_tag * __cdecl AnimGetNDiscreteObj(obj_tag * obj, uint n)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[uint n@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -197,10 +197,10 @@
             "obj_tag *",
             "uint"
         ],
-        "prototype_string": "bool __cdecl AnimObjectIsClose(obj_tag * param_1, uint param_2)",
+        "prototype_string": "bool __cdecl AnimObjectIsClose(obj_tag * obj, uint lodThreshold)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[uint lodThreshold@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -213,22 +213,22 @@
         "return_type": "void",
         "param_types": [
             "obj_tag *",
-            "obj_tag *",
+            "void *",
             "float",
             "float",
-            "char",
-            "char",
-            "undefined1"
+            "bool",
+            "bool",
+            "uchar"
         ],
-        "prototype_string": "void __cdecl AnimObjectSetHeadTracking(obj_tag * param_1, obj_tag * param_2, float param_3, float param_4, char param_5, char param_6, undefined1 param_7)",
+        "prototype_string": "void __cdecl AnimObjectSetHeadTracking(obj_tag * obj, void * target, float range, float rate, bool randomDelay, bool targetIsObj, uchar bone)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[obj_tag * param_2@Stack[0x8]:4]",
-            "[float param_3@Stack[0xc]:4]",
-            "[float param_4@Stack[0x10]:4]",
-            "[char param_5@Stack[0x14]:1]",
-            "[char param_6@Stack[0x18]:1]",
-            "[undefined1 param_7@Stack[0x1c]:1]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[void * target@Stack[0x8]:4]",
+            "[float range@Stack[0xc]:4]",
+            "[float rate@Stack[0x10]:4]",
+            "[bool randomDelay@Stack[0x14]:1]",
+            "[bool targetIsObj@Stack[0x18]:1]",
+            "[uchar bone@Stack[0x1c]:1]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -242,9 +242,9 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "bool __cdecl AnimObjectIsHeadTracking(obj_tag * param_1)",
+        "prototype_string": "bool __cdecl AnimObjectIsHeadTracking(obj_tag * obj)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -262,13 +262,13 @@
             "_MATRIX *",
             "int"
         ],
-        "prototype_string": "void __cdecl AnimObjectHeadTrack(obj_tag * gameObj, AnimObj * animObj, quaternion_tag * q, _MATRIX * param_4, int boneIdx)",
+        "prototype_string": "void __cdecl AnimObjectHeadTrack(obj_tag * obj, AnimObj * animObj, quaternion_tag * worldQuats, _MATRIX * boneMtxs, int bone)",
         "parameters": [
-            "[obj_tag * gameObj@Stack[0x4]:4]",
+            "[obj_tag * obj@Stack[0x4]:4]",
             "[AnimObj * animObj@Stack[0x8]:4]",
-            "[quaternion_tag * q@Stack[0xc]:4]",
-            "[_MATRIX * param_4@Stack[0x10]:4]",
-            "[int boneIdx@Stack[0x14]:4]"
+            "[quaternion_tag * worldQuats@Stack[0xc]:4]",
+            "[_MATRIX * boneMtxs@Stack[0x10]:4]",
+            "[int bone@Stack[0x14]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -280,21 +280,21 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
-            "int",
+            "obj_tag *",
+            "void *",
             "float",
-            "undefined4",
-            "char",
-            "undefined1"
+            "float",
+            "bool",
+            "uchar"
         ],
-        "prototype_string": "void __cdecl AnimObjectSetAiming(int param_1, int param_2, float param_3, undefined4 param_4, char param_5, undefined1 param_6)",
+        "prototype_string": "void __cdecl AnimObjectSetAiming(obj_tag * obj, void * target, float range, float rate, bool targetIsObj, uchar bone)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[float param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[char param_5@Stack[0x14]:1]",
-            "[undefined1 param_6@Stack[0x18]:1]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[void * target@Stack[0x8]:4]",
+            "[float range@Stack[0xc]:4]",
+            "[float rate@Stack[0x10]:4]",
+            "[bool targetIsObj@Stack[0x14]:1]",
+            "[uchar bone@Stack[0x18]:1]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -308,9 +308,9 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "bool __cdecl AnimObjectIsAiming(obj_tag * param_1)",
+        "prototype_string": "bool __cdecl AnimObjectIsAiming(obj_tag * obj)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -320,21 +320,21 @@
         "address": "0x000122e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "sAnimScript_tag *",
         "param_types": [
             "obj_tag *",
             "uint",
             "uint",
-            "undefined *",
-            "byte"
+            "void *",
+            "uint"
         ],
-        "prototype_string": "undefined4 __cdecl AnimListBuild(obj_tag * param_1, uint param_2, uint param_3, undefined * callback, byte param_5)",
+        "prototype_string": "sAnimScript_tag * __cdecl AnimListBuild(obj_tag * obj, uint mask, uint value, void * callback, uint mode)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[uint param_2@Stack[0x8]:4]",
-            "[uint param_3@Stack[0xc]:4]",
-            "[undefined * callback@Stack[0x10]:4]",
-            "[byte param_5@Stack[0x14]:1]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[uint mask@Stack[0x8]:4]",
+            "[uint value@Stack[0xc]:4]",
+            "[void * callback@Stack[0x10]:4]",
+            "[uint mode@Stack[0x14]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -384,9 +384,9 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "bool __cdecl AnimScriptIsStopped(obj_tag * param_1)",
+        "prototype_string": "bool __cdecl AnimScriptIsStopped(obj_tag * obj)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -401,10 +401,10 @@
             "obj_tag *",
             "int"
         ],
-        "prototype_string": "void __cdecl AnimScriptSetPlayDirection(obj_tag * param_1, int param_2)",
+        "prototype_string": "void __cdecl AnimScriptSetPlayDirection(obj_tag * obj, int dir)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[int dir@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -417,12 +417,12 @@
         "return_type": "void",
         "param_types": [
             "sAnimScript_tag *",
-            "undefined4"
+            "void *"
         ],
-        "prototype_string": "void __cdecl AnimScriptCallOnEvent(sAnimScript_tag * param_1, undefined4 param_2)",
+        "prototype_string": "void __cdecl AnimScriptCallOnEvent(sAnimScript_tag * script, void * onEvent)",
         "parameters": [
-            "[sAnimScript_tag * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[sAnimScript_tag * script@Stack[0x4]:4]",
+            "[void * onEvent@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -435,12 +435,12 @@
         "return_type": "void",
         "param_types": [
             "sAnimScript_tag *",
-            "undefined4"
+            "void *"
         ],
-        "prototype_string": "void __cdecl AnimScriptCallOnStop(sAnimScript_tag * param_1, undefined4 param_2)",
+        "prototype_string": "void __cdecl AnimScriptCallOnStop(sAnimScript_tag * script, void * onStop)",
         "parameters": [
-            "[sAnimScript_tag * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]"
+            "[sAnimScript_tag * script@Stack[0x4]:4]",
+            "[void * onStop@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -498,13 +498,13 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "int",
+            "sAnimScript_tag *",
             "char"
         ],
-        "prototype_string": "void __cdecl AnimScriptSetAnimRotation(int param_1, char param_2)",
+        "prototype_string": "void __cdecl AnimScriptSetAnimRotation(sAnimScript_tag * script, char on)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[char param_2@Stack[0x8]:1]"
+            "[sAnimScript_tag * script@Stack[0x4]:4]",
+            "[char on@Stack[0x8]:1]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -554,7 +554,7 @@
         "address": "0x00013070",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "obj_tag *",
             "uint",
@@ -562,11 +562,11 @@
             "_VECTOR *",
             "_MATRIX *"
         ],
-        "prototype_string": "undefined __cdecl AnimGetBoneWorldTrans(obj_tag * param_1, uint whichBoneMatrix, int maybeWhichDatum, _VECTOR * posOut, _MATRIX * mtxOut)",
+        "prototype_string": "void __cdecl AnimGetBoneWorldTrans(obj_tag * obj, uint which, int datumOffset, _VECTOR * posOut, _MATRIX * mtxOut)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[uint whichBoneMatrix@Stack[0x8]:4]",
-            "[int maybeWhichDatum@Stack[0xc]:4]",
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[uint which@Stack[0x8]:4]",
+            "[int datumOffset@Stack[0xc]:4]",
             "[_VECTOR * posOut@Stack[0x10]:4]",
             "[_MATRIX * mtxOut@Stack[0x14]:4]"
         ],
@@ -576,43 +576,23 @@
     {
         "name": "AnimGetBoneWorldTrans2",
         "address": "0x000131c0",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": true,
-        "return_type": "undefined",
+        "calling_convention": "__cdecl",
+        "has_custom_variable_storage": false,
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined1",
-            "undefined",
-            "undefined",
-            "undefined",
-            "undefined",
-            "undefined",
-            "undefined1",
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined1"
+            "obj_tag *",
+            "uint",
+            "int",
+            "_VECTOR *",
+            "_MATRIX *"
         ],
-        "prototype_string": "undefined AnimGetBoneWorldTrans2(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined1 param_5, undefined param_6, undefined param_7, undefined param_8, undefined param_9, undefined param_10, undefined1 param_11, undefined4 param_12, undefined4 param_13, undefined4 param_14, undefined1 param_15)",
+        "prototype_string": "void __cdecl AnimGetBoneWorldTrans2(obj_tag * obj, uint which, int datumOffset, _VECTOR * posOut, _MATRIX * mtxOut)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined1 param_5@Stack[0x14]:1]",
-            "[undefined param_6@Stack[0x18]:1]",
-            "[undefined param_7@Stack[0x1c]:1]",
-            "[undefined param_8@Stack[0x20]:1]",
-            "[undefined param_9@Stack[0x24]:1]",
-            "[undefined param_10@Stack[0x28]:1]",
-            "[undefined1 param_11@Stack[0x15]:1]",
-            "[undefined4 param_12@Stack[0x44]:4]",
-            "[undefined4 param_13@Stack[0x48]:4]",
-            "[undefined4 param_14@Stack[0x4c]:4]",
-            "[undefined1 param_15@Stack[0x74]:1]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[uint which@Stack[0x8]:4]",
+            "[int datumOffset@Stack[0xc]:4]",
+            "[_VECTOR * posOut@Stack[0x10]:4]",
+            "[_MATRIX * mtxOut@Stack[0x14]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -647,10 +627,10 @@
             "obj_tag *",
             "int"
         ],
-        "prototype_string": "int __cdecl AnimDatumGetIndex(obj_tag * param_1, int datumNum)",
+        "prototype_string": "int __cdecl AnimDatumGetIndex(obj_tag * obj, int datumId)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[int datumNum@Stack[0x8]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[int datumId@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -665,14 +645,14 @@
             "obj_tag *",
             "int",
             "HASHCODE",
-            "undefined1"
+            "uchar"
         ],
-        "prototype_string": "void __cdecl AnimDatumSetEntity(obj_tag * param_1, int datumNum, HASHCODE param_3, undefined1 param_4)",
+        "prototype_string": "void __cdecl AnimDatumSetEntity(obj_tag * obj, int datumId, HASHCODE entity, uchar frames)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[int datumNum@Stack[0x8]:4]",
-            "[HASHCODE param_3@Stack[0xc]:4]",
-            "[undefined1 param_4@Stack[0x10]:1]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[int datumId@Stack[0x8]:4]",
+            "[HASHCODE entity@Stack[0xc]:4]",
+            "[uchar frames@Stack[0x10]:1]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -746,9 +726,9 @@
         "param_types": [
             "HASHCODE"
         ],
-        "prototype_string": "void __cdecl AnimProcessSeqData(HASHCODE param_1)",
+        "prototype_string": "void __cdecl AnimProcessSeqData(HASHCODE hashcode)",
         "parameters": [
-            "[HASHCODE param_1@Stack[0x4]:4]"
+            "[HASHCODE hashcode@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -782,17 +762,17 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "_VECTOR *",
+            "float *",
             "sAnimSeq_tag *",
             "sAnimSkin_tag *",
             "float"
         ],
-        "prototype_string": "void __cdecl AnimFrameCopy(_VECTOR * param_1, sAnimSeq_tag * aSeq, sAnimSkin_tag * param_3, float param_4)",
+        "prototype_string": "void __cdecl AnimFrameCopy(float * out, sAnimSeq_tag * seq, sAnimSkin_tag * skin, float frame)",
         "parameters": [
-            "[_VECTOR * param_1@Stack[0x4]:4]",
-            "[sAnimSeq_tag * aSeq@Stack[0x8]:4]",
-            "[sAnimSkin_tag * param_3@Stack[0xc]:4]",
-            "[float param_4@Stack[0x10]:4]"
+            "[float * out@Stack[0x4]:4]",
+            "[sAnimSeq_tag * seq@Stack[0x8]:4]",
+            "[sAnimSkin_tag * skin@Stack[0xc]:4]",
+            "[float frame@Stack[0x10]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -835,10 +815,10 @@
             "HASHCODE",
             "char"
         ],
-        "prototype_string": "void __cdecl AnimLoadFile(HASHCODE param_1, char param_2)",
+        "prototype_string": "void __cdecl AnimLoadFile(HASHCODE hashcode, char noSeqProcess)",
         "parameters": [
-            "[HASHCODE param_1@Stack[0x4]:4]",
-            "[char param_2@Stack[0x8]:1]"
+            "[HASHCODE hashcode@Stack[0x4]:4]",
+            "[char noSeqProcess@Stack[0x8]:1]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -852,9 +832,9 @@
         "param_types": [
             "char"
         ],
-        "prototype_string": "void __cdecl AnimPreLoadInit(char param_1)",
+        "prototype_string": "void __cdecl AnimPreLoadInit(char keepSkeletons)",
         "parameters": [
-            "[char param_1@Stack[0x4]:1]"
+            "[char keepSkeletons@Stack[0x4]:1]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -884,7 +864,7 @@
         "address": "0x00015060",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "obj_tag *",
             "AnimObj *",
@@ -892,13 +872,13 @@
             "_MATRIX *",
             "int"
         ],
-        "prototype_string": "undefined __cdecl AnimObjectAimAt(obj_tag * param_1, AnimObj * param_2, quaternion_tag * param_3, _MATRIX * mtxList, int boneIdx)",
+        "prototype_string": "void __cdecl AnimObjectAimAt(obj_tag * obj, AnimObj * animObj, quaternion_tag * worldQuats, _MATRIX * boneMtxs, int bone)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[AnimObj * param_2@Stack[0x8]:4]",
-            "[quaternion_tag * param_3@Stack[0xc]:4]",
-            "[_MATRIX * mtxList@Stack[0x10]:4]",
-            "[int boneIdx@Stack[0x14]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[AnimObj * animObj@Stack[0x8]:4]",
+            "[quaternion_tag * worldQuats@Stack[0xc]:4]",
+            "[_MATRIX * boneMtxs@Stack[0x10]:4]",
+            "[int bone@Stack[0x14]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -947,10 +927,10 @@
             "obj_tag *",
             "sAnimScript_tag * *"
         ],
-        "prototype_string": "void __cdecl AnimScriptDelete(obj_tag * param_1, sAnimScript_tag * * param_2)",
+        "prototype_string": "void __cdecl AnimScriptDelete(obj_tag * obj, sAnimScript_tag * * pScript)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[sAnimScript_tag * * param_2@Stack[0x8]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[sAnimScript_tag * * pScript@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -958,17 +938,17 @@
     {
         "name": "AnimScriptAppend",
         "address": "0x00015c30",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "sAnimScript_tag *",
         "param_types": [
             "obj_tag *",
             "HASHCODE"
         ],
-        "prototype_string": "sAnimScript_tag * __stdcall AnimScriptAppend(obj_tag * param_1, HASHCODE param_2)",
+        "prototype_string": "sAnimScript_tag * __cdecl AnimScriptAppend(obj_tag * obj, HASHCODE hashcode)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[HASHCODE param_2@Stack[0x8]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[HASHCODE hashcode@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -1160,15 +1140,15 @@
         "address": "0x00016c20",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
+            "obj_tag *",
             "viewer_tag *"
         ],
-        "prototype_string": "undefined __cdecl AnimObjectDraw(undefined4 param_1, viewer_tag * param_2)",
+        "prototype_string": "void __cdecl AnimObjectDraw(obj_tag * obj, viewer_tag * viewer)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[viewer_tag * param_2@Stack[0x8]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[viewer_tag * viewer@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -1178,15 +1158,15 @@
         "address": "0x00017160",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "void",
+        "return_type": "sAnimScript_tag *",
         "param_types": [
             "obj_tag *",
             "HASHCODE"
         ],
-        "prototype_string": "void __cdecl AnimFacialAppend(obj_tag * param_1, HASHCODE animHashcode)",
+        "prototype_string": "sAnimScript_tag * __cdecl AnimFacialAppend(obj_tag * obj, HASHCODE hashcode)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[HASHCODE animHashcode@Stack[0x8]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[HASHCODE hashcode@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -1220,9 +1200,9 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl AnimListDelete(obj_tag * param_1)",
+        "prototype_string": "void __cdecl AnimListDelete(obj_tag * obj)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -1230,17 +1210,17 @@
     {
         "name": "AnimScriptAdd",
         "address": "0x00017220",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "sAnimScript_tag *",
         "param_types": [
             "obj_tag *",
             "HASHCODE"
         ],
-        "prototype_string": "sAnimScript_tag * __stdcall AnimScriptAdd(obj_tag * param_1, HASHCODE param_2)",
+        "prototype_string": "sAnimScript_tag * __cdecl AnimScriptAdd(obj_tag * obj, HASHCODE hashcode)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]",
-            "[HASHCODE param_2@Stack[0x8]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[HASHCODE hashcode@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -1346,9 +1326,9 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl AnimSetDeleteAll(obj_tag * param_1)",
+        "prototype_string": "void __cdecl AnimSetDeleteAll(obj_tag * obj)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -1406,9 +1386,9 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl AnimObjectDelete(obj_tag * param_1)",
+        "prototype_string": "void __cdecl AnimObjectDelete(obj_tag * obj)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -1486,9 +1466,9 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "bool __cdecl AnimObjectUpdate(obj_tag * param_1)",
+        "prototype_string": "bool __cdecl AnimObjectUpdate(obj_tag * obj)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -5646,9 +5626,9 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "bool __cdecl AnimObjectUpdate(obj_tag * param_1)",
+        "prototype_string": "bool __cdecl AnimObjectUpdate(obj_tag * obj)",
         "parameters": [
-            "[obj_tag * param_1@Stack[0x4]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]"
         ],
         "is_thunk": true,
         "namespace": "Global"
@@ -24974,13 +24954,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000753f0",
+        "name": "Menu_AllJoinedPlayersReady",
         "address": "0x000753f0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall FUN_000753f0(void)",
+        "prototype_string": "undefined4 __stdcall Menu_AllJoinedPlayersReady(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -25050,23 +25030,19 @@
     {
         "name": "Menu_UpdateMessageBox",
         "address": "0x000757d0",
-        "calling_convention": "__fastcall",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined4",
             "uint",
             "ushort",
             "byte"
         ],
-        "prototype_string": "void __fastcall Menu_UpdateMessageBox(undefined4 param_1_00, undefined4 param_2_00, uint managerNum, ushort param_4, byte param_5)",
+        "prototype_string": "void __cdecl Menu_UpdateMessageBox(uint managerNum, ushort param_2, byte param_3)",
         "parameters": [
-            "[undefined4 param_1_00@ECX:4]",
-            "[undefined4 param_2_00@EDX:4]",
             "[uint managerNum@Stack[0x4]:4]",
-            "[ushort param_4@Stack[0x8]:2]",
-            "[byte param_5@Stack[0xc]:1]"
+            "[ushort param_2@Stack[0x8]:2]",
+            "[byte param_3@Stack[0xc]:1]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -25170,7 +25146,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00075f40",
+        "name": "Menu_CodenameExists",
         "address": "0x00075f40",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -25178,7 +25154,7 @@
         "param_types": [
             "byte *"
         ],
-        "prototype_string": "uint __cdecl FUN_00075f40(byte * param_1)",
+        "prototype_string": "uint __cdecl Menu_CodenameExists(byte * param_1)",
         "parameters": [
             "[byte * param_1@Stack[0x4]:4]"
         ],
@@ -25296,7 +25272,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00076330",
+        "name": "Menu_ValidateCodename",
         "address": "0x00076330",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -25304,7 +25280,7 @@
         "param_types": [
             "char *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_00076330(char * param_1)",
+        "prototype_string": "undefined4 __cdecl Menu_ValidateCodename(char * param_1)",
         "parameters": [
             "[char * param_1@Stack[0x4]:4]"
         ],
@@ -25326,13 +25302,13 @@
     {
         "name": "Menu_SetupCredits",
         "address": "0x00076470",
-        "calling_convention": "default",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "CreditsEntry *",
         "param_types": [
             "uint *"
         ],
-        "prototype_string": "CreditsEntry * Menu_SetupCredits(uint * numLines_out)",
+        "prototype_string": "CreditsEntry * __cdecl Menu_SetupCredits(uint * numLines_out)",
         "parameters": [
             "[uint * numLines_out@Stack[0x4]:4]"
         ],
@@ -25532,21 +25508,19 @@
     {
         "name": "Menu_UpgradeCheat",
         "address": "0x0007cfb0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "ulonglong",
         "param_types": [
-            "undefined4",
-            "undefined4",
-            "undefined4",
-            "undefined1"
+            "ulonglong",
+            "uint",
+            "byte"
         ],
-        "prototype_string": "undefined Menu_UpgradeCheat(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined1 param_4)",
+        "prototype_string": "ulonglong __cdecl Menu_UpgradeCheat(ulonglong bonus, uint objId, byte count)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined1 param_4@Stack[0x10]:1]"
+            "[ulonglong bonus@Stack[0x4]:8]",
+            "[uint objId@Stack[0xc]:4]",
+            "[byte count@Stack[0x10]:1]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -25556,11 +25530,11 @@
         "address": "0x0007d110",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "bool",
+        "return_type": "ulonglong",
         "param_types": [
             "byte *"
         ],
-        "prototype_string": "bool __cdecl Menu_SpecialCodenameCheck(byte * param_1)",
+        "prototype_string": "ulonglong __cdecl Menu_SpecialCodenameCheck(byte * param_1)",
         "parameters": [
             "[byte * param_1@Stack[0x4]:4]"
         ],
@@ -25830,7 +25804,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Menu_CreateOptionBox",
+        "name": "Menu_CreateOptionBoxLabel",
         "address": "0x0007f3a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -25842,7 +25816,7 @@
             "char",
             "char"
         ],
-        "prototype_string": "void __cdecl Menu_CreateOptionBox(byte param_1, Action_TranslatedText param_2, undefined4 param_3, char param_4, char param_5)",
+        "prototype_string": "void __cdecl Menu_CreateOptionBoxLabel(byte param_1, Action_TranslatedText param_2, undefined4 param_3, char param_4, char param_5)",
         "parameters": [
             "[byte param_1@Stack[0x4]:1]",
             "[Action_TranslatedText param_2@Stack[0x8]:4]",
@@ -25948,13 +25922,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0007fd70",
+        "name": "Menu_StopFrontEndMusic",
         "address": "0x0007fd70",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_0007fd70(void)",
+        "prototype_string": "void __stdcall Menu_StopFrontEndMusic(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -28412,7 +28386,7 @@
     {
         "name": "P_CNNAME_Handler",
         "address": "0x0008ca10",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
@@ -28423,14 +28397,14 @@
             "int",
             "int"
         ],
-        "prototype_string": "bool __stdcall P_CNNAME_Handler(uchar param_1, M_CONTROL * param_2, uint param_3, uint param_4, int param_5, int param_6)",
+        "prototype_string": "bool __cdecl P_CNNAME_Handler(uchar managerNum, M_CONTROL * control, uint hashcode, uint message, int arg1, int arg2)",
         "parameters": [
-            "[uchar param_1@Stack[0x4]:1]",
-            "[M_CONTROL * param_2@Stack[0x8]:4]",
-            "[uint param_3@Stack[0xc]:4]",
-            "[uint param_4@Stack[0x10]:4]",
-            "[int param_5@Stack[0x14]:4]",
-            "[int param_6@Stack[0x18]:4]"
+            "[uchar managerNum@Stack[0x4]:1]",
+            "[M_CONTROL * control@Stack[0x8]:4]",
+            "[uint hashcode@Stack[0xc]:4]",
+            "[uint message@Stack[0x10]:4]",
+            "[int arg1@Stack[0x14]:4]",
+            "[int arg2@Stack[0x18]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -28646,7 +28620,7 @@
     {
         "name": "P_CREDITS_Handler",
         "address": "0x0008ded0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
@@ -28657,14 +28631,14 @@
             "int",
             "int"
         ],
-        "prototype_string": "bool __stdcall P_CREDITS_Handler(uchar param_1, M_CONTROL * param_2, uint param_3, uint param_4, int param_5, int param_6)",
+        "prototype_string": "bool __cdecl P_CREDITS_Handler(uchar managerNum, M_CONTROL * control, uint hashcode, uint message, int arg1, int arg2)",
         "parameters": [
-            "[uchar param_1@Stack[0x4]:1]",
-            "[M_CONTROL * param_2@Stack[0x8]:4]",
-            "[uint param_3@Stack[0xc]:4]",
-            "[uint param_4@Stack[0x10]:4]",
-            "[int param_5@Stack[0x14]:4]",
-            "[int param_6@Stack[0x18]:4]"
+            "[uchar managerNum@Stack[0x4]:1]",
+            "[M_CONTROL * control@Stack[0x8]:4]",
+            "[uint hashcode@Stack[0xc]:4]",
+            "[uint message@Stack[0x10]:4]",
+            "[int arg1@Stack[0x14]:4]",
+            "[int arg2@Stack[0x18]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -39088,9 +39062,9 @@
         "address": "0x000c6360",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "int",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall SFXMusicGetVolume(void)",
+        "prototype_string": "int __stdcall SFXMusicGetVolume(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -45944,17 +45918,17 @@
         "address": "0x000dd290",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
             "obj_tag *",
             "AnimObj *",
             "char"
         ],
-        "prototype_string": "undefined __cdecl psiBuildMatrixPalette(obj_tag * gameObj, AnimObj * animObj, char param_3)",
+        "prototype_string": "void __cdecl psiBuildMatrixPalette(obj_tag * obj, AnimObj * animObj, char buildPalette)",
         "parameters": [
-            "[obj_tag * gameObj@Stack[0x4]:4]",
+            "[obj_tag * obj@Stack[0x4]:4]",
             "[AnimObj * animObj@Stack[0x8]:4]",
-            "[char param_3@Stack[0xc]:1]"
+            "[char buildPalette@Stack[0xc]:1]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -46852,21 +46826,21 @@
     {
         "name": "psiDrawSkinObjectMatrix",
         "address": "0x000e0960",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "void",
         "param_types": [
-            "undefined4",
-            "undefined",
-            "undefined4",
-            "undefined4"
+            "celglist_tag *",
+            "_MATRIX *",
+            "obj_tag *",
+            "_MATRIX *"
         ],
-        "prototype_string": "undefined psiDrawSkinObjectMatrix(undefined4 param_1, undefined param_2, undefined4 param_3, undefined4 param_4)",
+        "prototype_string": "void __cdecl psiDrawSkinObjectMatrix(celglist_tag * glist, _MATRIX * unused, obj_tag * obj, _MATRIX * palette)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined param_2@<UNASSIGNED>]",
-            "[undefined4 param_3@<UNASSIGNED>]",
-            "[undefined4 param_4@<UNASSIGNED>]"
+            "[celglist_tag * glist@Stack[0x4]:4]",
+            "[_MATRIX * unused@Stack[0x8]:4]",
+            "[obj_tag * obj@Stack[0xc]:4]",
+            "[_MATRIX * palette@Stack[0x10]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"

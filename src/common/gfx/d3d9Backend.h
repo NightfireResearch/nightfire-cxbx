@@ -138,6 +138,11 @@ uint32_t D3D9_GetVisibilityTestResult(uint32_t index, uint32_t *result, uint64_t
 // (the driving engine's teleport, src/driving/devtools/Teleport.cpp) rather than dumping on a fixed interval.
 uint32_t D3D9_RequestDump(void);
 
+// Writes the next frame's backbuffer, and nothing else, to <name>.bmp (a path relative to the working
+// directory; the folder must exist) as it is presented. For debug tools taking a screenshot at a known moment,
+// such as the menu replay (src/action/devtools/MenuProbe.cpp). Returns the frame number it will be.
+uint32_t D3D9_RequestScreenshot(const char *name);
+
 // Writes "-- note" into the frame being dumped's draw trace (nothing when no frame is being dumped), so a debug
 // hook can mark which of the traced draws came from the game function it wraps.
 void D3D9_TraceNote(const char *note);

@@ -44,7 +44,7 @@ static_assert(offsetof(AnimState, animObj) == 0x58, "Offset of animObj wrong");
 
 void AnimObjectDelete(obj_tag* obj);
 void AnimLoadFile(HASHCODE hashcode, char param_2);
-uchar AnimGetBoneWorldTrans(obj_tag *param_1,uint whichBoneMatrix,int param_3,_VECTOR *param_4,_MATRIX *param_5);
+void AnimGetBoneWorldTrans(obj_tag *param_1,uint whichBoneMatrix,int param_3,_VECTOR *param_4,_MATRIX *param_5);
 bool AnimObjectIsClose(obj_tag* obj, uint unk);
 void AnimObjectDraw(obj_tag *obj, viewer_tag *viewer);
 void psiBuildMatrixPalette(obj_tag *gameObj, AnimObj *animObj, char param_3);

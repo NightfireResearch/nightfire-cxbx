@@ -87,6 +87,10 @@ add_library(actioninject SHARED
   src/dllmain.cpp
   src/inject_action.cpp
   src/inject.h
+  src/common/xbeOriginal.cpp
+  src/common/xbeRelocate.cpp
+  src/action/devtools/MenuProbe.cpp
+  src/action/devtools/SecretsShadow.cpp
   src/action/game.cpp
   src/action/main.cpp
   src/common/launchInfo.cpp
@@ -135,6 +139,10 @@ add_library(actioninject SHARED
   src/action/ui/ui.cpp
   src/action/ui/ui_dossier.cpp
   src/action/ui/ui_mp.cpp
+  src/action/ui/ui_credits.cpp
+  src/action/ui/ui_secrets.cpp
+  src/action/ui/ui_nightfire.cpp
+  src/action/ui/ui_codenames.cpp
   src/action/ui/ui_score.cpp
   src/action/ui/Menu.cpp
   src/action/autofunc.cpp

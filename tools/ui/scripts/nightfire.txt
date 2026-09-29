@@ -1,0 +1,48 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# The single player branch: NightFire -> codename -> difficulty wheel -> mission wheel -> dossier and back.
+press A                    # NightFire
+waitpage 0x40000025        # P_NFSELECT
+wait 100
+shot nfselect
+press A                    # the codename: a box while it loads
+waitpage 0x4000002f        # P_MESSAGEBOX
+wait 150
+press A
+waitpage 0x40000023        # P_NFDFCTY
+wait 100
+shot difficulty
+press DOWN
+wait 40
+shot difficulty_down
+press A
+waitpage 0x4000001c        # P_NFMAP
+wait 100
+shot map
+press DOWN
+wait 40
+shot map_down
+press UP
+wait 40
+press UP
+wait 40
+shot map_up2
+press Y                    # the dossier
+waitpage 0x4000002b        # P_DOSSIER
+wait 100
+shot dossier
+press B
+waitpage 0x4000001c
+wait 100
+shot map_again
+press B
+wait 120
+shot back
+quit

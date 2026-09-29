@@ -1,0 +1,18 @@
+# From a fresh boot (language page, intro movie, start page) to the main menu and its three branches.
+wait 1150            # language, the intro movie, then the start page until "Press START" shows
+shot start_page
+press START          # the save check (P_PARISENUM), then a movie (P_ESTHERO)
+wait 200
+press A              # skip the movie
+wait 200
+shot main_menu
+press DOWN
+wait 60
+shot main_down1
+press DOWN
+wait 60
+shot main_down2
+press DOWN
+wait 60
+shot main_down3
+quit

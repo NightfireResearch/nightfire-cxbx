@@ -42,6 +42,39 @@ void Menu_PlayIris(char param_1, uchar param_2, uint param_3);
 // AUTOGEN
 void Menu_ChangePageCloseIris(HASHCODE param_1, uchar param_2, uint param_3);
 
+// AUTOGEN
+void* Menu_Malloc(int size);
+
+// AUTOGEN
+void Menu_UnlockMPSkins(byte param_1);
+
+// AUTOGEN
+void __stdcall Menu_PrepareBots(void);
+
+// AUTOGEN
+void Menu_CreateOptionBox(byte managerNum, int **text, undefined4 type, char param_4, char param_5);
+
+// AUTOGEN
+M_ITEM* Menu_GetItemFromHash(M_ITEM *list, int hashcodeToMatch, uint numItems);
+
+// AUTOGEN
+undefined4 __stdcall Menu_GetLastController(void);
+
+// AUTOGEN
+void __stdcall Menu_RestartFrontEndLoop(void);
+
+// AUTOGEN
+void __stdcall Menu_StopFrontEndMusic(void);
+
+// AUTOGEN
+void Menu_UpdateMessageBox(uint managerNum, ushort param_2, byte param_3);
+
+// AUTOGEN
+undefined4 Menu_UpdateOptionBox(undefined4 *type);
+
+// AUTOGEN
+void Menu_CreateOptionBoxLabel(byte managerNum, Action_TranslatedText text, undefined4 type, char param_4, char param_5);
+
 typedef struct {
   M_CONTROL* control;
   uint dispatchOnFrameNum;
@@ -142,10 +175,10 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
     return;
 
   if (ctrl->type == ControlType_Scroll) {
-    ctrl->field_0x144 = 0;
+    ((M_SCROLL *)ctrl)->wrap = 0;
   }
 
-  const int last_item_idx = __Menu_SendMessage(ctrl,0x38,0,0);
+  const int last_item_idx = __Menu_SendMessage(ctrl,MessageType_GetMax,0,0);
 
   if (param_5 != 0) {
     if (maybeDoAnimation) {
@@ -161,7 +194,7 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
 
   if (descriptionLabel != 0) { 
 
-    if (*(HASHCODE *)(manager[managerNum].field158_0x1bc + 0x18) == P_MPBOTCHOOSE) {
+    if (manager[managerNum].currentPage->control.hashcode == P_MPBOTCHOOSE) {
 
       // Special case when on the MP bot selection menu
 
@@ -285,12 +318,12 @@ void Menu_AddItemsToControl(M_CONTROL *control, M_ITEM *itemList, ushort numItem
   if(itemList == NULL)
     return;
 
-  __Menu_SendMessage(control, MessageType_MaybeInitScroll, 0, 0);
+  __Menu_SendMessage(control, MessageType_ClearItems, 0, 0);
 
   for(int i = firstItemIdx; i < numItems; i++) {
     M_ITEM* item = &itemList[i];
     if(unlockEverything || menu_unlock_everything || item->enabled) {
-      __Menu_SendMessage(control, MessageType_AddTextToScroll, (int)Txt_BindLabel(item->title, 0), (int)item->identifier);
+      __Menu_SendMessage(control, MessageType_AddItem, (int)Txt_BindLabel(item->title, 0), (int)item->identifier);
     }
   }
 

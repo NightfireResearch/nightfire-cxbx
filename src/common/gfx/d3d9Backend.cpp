@@ -901,6 +901,14 @@ uint32_t D3D9_RequestDump(void) {
     g_dumpRequested = true;
     return g_frameCount + 1;
 }
+static char g_screenshotName[128];   // D3D9_RequestScreenshot: the next frame's backbuffer, alone, under this name
+static volatile bool g_screenshotRequested = false;
+
+uint32_t D3D9_RequestScreenshot(const char *name) {
+    snprintf(g_screenshotName, sizeof(g_screenshotName), "%s", name);
+    g_screenshotRequested = true;
+    return g_frameCount + 1;
+}
 static uint32_t DumpBurst(void);
 
 // DumpBurst=N in settings.ini: from the first frame that draws a level's worth of indexed geometry, the next
@@ -940,7 +948,7 @@ static bool TraceBurstFrame(uint32_t burstIndex) {
 static bool g_perDrawDump = false;    // this frame's draws each dump the backbuffer
 static uint32_t g_perDrawIndex = 0;
 
-static void DumpSurface(IDirect3DSurface9 *surface, const char *name);
+static void DumpSurface(IDirect3DSurface9 *surface, const char *name, bool alpha = true);
 static void DumpAfterDraw(void) {
     if (!g_perDrawDump || g_backBufferSurface == NULL)
         return;
@@ -1057,7 +1065,7 @@ static void DumpBoundTexture(const void *header, IDirect3DTexture9 *texture) {
     texture->UnlockRect(0);
 }
 
-static void DumpSurface(IDirect3DSurface9 *surface, const char *name) {
+static void DumpSurface(IDirect3DSurface9 *surface, const char *name, bool alpha) {
     D3DSURFACE_DESC desc;
     if (surface == NULL || FAILED(surface->GetDesc(&desc)))
         return;
@@ -1068,22 +1076,24 @@ static void DumpSurface(IDirect3DSurface9 *surface, const char *name) {
         D3DLOCKED_RECT lr;
         if (SUCCEEDED(sys->LockRect(&lr, NULL, D3DLOCK_READONLY))) {
             size_t rowBytes = (size_t)desc.Width * 3;
-            uint8_t *colour = (uint8_t*)malloc(rowBytes * desc.Height), *alpha = (uint8_t*)malloc(rowBytes * desc.Height);
-            if (colour != NULL && alpha != NULL) {
+            uint8_t *colour = (uint8_t*)malloc(rowBytes * desc.Height), *alphaBytes = (uint8_t*)malloc(rowBytes * desc.Height);
+            if (colour != NULL && alphaBytes != NULL) {
                 for (UINT y = 0; y < desc.Height; y++) {
                     const uint8_t *row = (const uint8_t*)lr.pBits + y * lr.Pitch;
                     for (UINT x = 0; x < desc.Width; x++) {
                         memcpy(colour + y * rowBytes + x * 3, row + x * 4, 3); // B, G, R as stored
-                        memset(alpha + y * rowBytes + x * 3, row[x * 4 + 3], 3);
+                        memset(alphaBytes + y * rowBytes + x * 3, row[x * 4 + 3], 3);
                     }
                 }
                 char path[128];
                 snprintf(path, sizeof(path), "%s.bmp", name);
                 WriteBmp24(path, desc.Width, desc.Height, colour, rowBytes);
-                snprintf(path, sizeof(path), "%s_alpha.bmp", name);
-                WriteBmp24(path, desc.Width, desc.Height, alpha, rowBytes);
+                if (alpha) {
+                    snprintf(path, sizeof(path), "%s_alpha.bmp", name);
+                    WriteBmp24(path, desc.Width, desc.Height, alphaBytes, rowBytes);
+                }
             }
-            free(colour); free(alpha);
+            free(colour); free(alphaBytes);
             sys->UnlockRect();
         }
     }
@@ -1120,6 +1130,10 @@ void D3D9_Swap(uint32_t type) {
     if (g_inScene) {
         g_device->EndScene();
         g_inScene = false;
+    }
+    if (g_screenshotRequested) {
+        g_screenshotRequested = false;
+        DumpSurface(g_backBufferSurface, g_screenshotName, false);
     }
     if (g_dumpFrame != 0) {
         char name[64];

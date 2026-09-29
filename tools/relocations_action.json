@@ -1,0 +1,62 @@
+[
+ {
+  "name": "sp_level",
+  "address": "0x17c580",
+  "size": 288
+ },
+ {
+  "name": "mp_level",
+  "address": "0x17c6a0",
+  "size": 192
+ },
+ {
+  "name": "difficulty",
+  "address": "0x17c760",
+  "size": 72
+ },
+ {
+  "name": "mp_scenario",
+  "address": "0x17c7a8",
+  "size": 312
+ },
+ {
+  "name": "mp_characters",
+  "address": "0x17c8e0",
+  "size": 696
+ },
+ {
+  "name": "mp_characters_small",
+  "address": "0x17cb98",
+  "size": 696
+ },
+ {
+  "name": "mp_options",
+  "address": "0x17ce50",
+  "size": 120
+ },
+ {
+  "name": "cn_options",
+  "address": "0x17cec8",
+  "size": 168
+ },
+ {
+  "name": "ds_options",
+  "address": "0x17cf70",
+  "size": 96
+ },
+ {
+  "name": "mp_bots",
+  "address": "0x17cfd0",
+  "size": 408
+ },
+ {
+  "name": "ds_weapons",
+  "address": "0x17d168",
+  "size": 648
+ },
+ {
+  "name": "ds_gadgets",
+  "address": "0x17d3f0",
+  "size": 336
+ }
+]
