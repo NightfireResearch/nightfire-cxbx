@@ -3,7 +3,7 @@
 
 #pragma pack(push, 1)
 typedef struct {
-	float q[4]; // wxyz order
+	float q[4]; // x, y, z, w - the scalar last (Quat_QuatToMat, Quat_AxisAngleToQuat)
 } quaternion_tag;
 
 typedef struct {

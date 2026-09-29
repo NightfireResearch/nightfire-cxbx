@@ -1,0 +1,1606 @@
+{
+ "program": "default.xbe",
+ "types": [
+  {
+   "name": "SkeletonInfo",
+   "size": 28,
+   "comment": "INVENTED NAME. A skeleton: a SKELnnnn entry of a level bundle, registered in SkeletonTable (0x1d7578) by AnimSkeletonProcess. Variable length: 16 + 12*numBones, padded to 32. No hierarchy - that is in each skin.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "short",
+     "name": "skeletonIdx",
+     "comment": "index into SkeletonTable; equals nnnn of SKELnnnn"
+    },
+    {
+     "offset": 2,
+     "type": "uchar",
+     "name": "numBones",
+     "comment": ""
+    },
+    {
+     "offset": 3,
+     "type": "uchar",
+     "name": "numTransBones",
+     "comment": "popcount(transMask) in every skeleton; no reader found"
+    },
+    {
+     "offset": 4,
+     "type": "uint[3]",
+     "name": "transMask",
+     "comment": "bit b: bone b has animated translation tracks (AnimFrameCopy 0x14013)"
+    },
+    {
+     "offset": 16,
+     "type": "_VECTOR[1]",
+     "name": "boneOffset",
+     "comment": "[numBones] default local translation, unscaled (AnimFrameCopy 0x13f7c)"
+    }
+   ]
+  },
+  {
+   "name": "AnimDatum",
+   "size": 36,
+   "comment": "INVENTED NAME. An attachment point on a skin (weapons, gadgets, effects); stride 0x24 in AnimDatumGetIndex.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "int",
+     "name": "id",
+     "comment": "matched by AnimDatumGetIndex / AnimGetBoneWorldTrans; weapon_data.whichBone holds such ids"
+    },
+    {
+     "offset": 4,
+     "type": "int",
+     "name": "bone",
+     "comment": "-1 = none, else a bone index"
+    },
+    {
+     "offset": 8,
+     "type": "_VECTOR",
+     "name": "t",
+     "comment": "bone-local position"
+    },
+    {
+     "offset": 20,
+     "type": "quaternion_tag",
+     "name": "q",
+     "comment": "bone-local rotation, x y z w"
+    }
+   ]
+  },
+  {
+   "name": "sAnimSkin_tag",
+   "size": 48,
+   "comment": "A skin (hashcode type 0x05), built by AnimProcessSkinData 0x144c0 from the file (Mem_Malloc(0x30), not zeroed). The hashtable slot is re-pointed here. PS2 is 0x40 (16-byte vector).",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "HASHCODE",
+     "name": "hashcode",
+     "comment": "written by AnimObjectNew, not at load"
+    },
+    {
+     "offset": 4,
+     "type": "celglist_tag * *",
+     "name": "riggedBody",
+     "comment": "[numRigged] skinned meshes (file hashcodes fixed up in place)"
+    },
+    {
+     "offset": 8,
+     "type": "celglist_tag * *",
+     "name": "discreteObj",
+     "comment": "[numDiscrete] rigid parts"
+    },
+    {
+     "offset": 12,
+     "type": "uchar *",
+     "name": "discreteBone",
+     "comment": "[numDiscrete] bone each rigid part hangs on"
+    },
+    {
+     "offset": 16,
+     "type": "_VECTOR",
+     "name": "skinScale",
+     "comment": "multiplies decoded translations (Glb_SkinScale 0x1d7794)"
+    },
+    {
+     "offset": 28,
+     "type": "AnimDatum *",
+     "name": "datums",
+     "comment": "[numDatums]; AnimPostLoadInit shares 0x05000007's table with skeletons 0/1"
+    },
+    {
+     "offset": 32,
+     "type": "uchar *",
+     "name": "bones",
+     "comment": "[numBones] bit7 = used by this skin, bits0-6 = parent (0x7f root)"
+    },
+    {
+     "offset": 36,
+     "type": "_MATRIX *",
+     "name": "invBind",
+     "comment": "[numBones] inverse bind: identity rotation, -bind position"
+    },
+    {
+     "offset": 40,
+     "type": "uchar",
+     "name": "numRigged",
+     "comment": ""
+    },
+    {
+     "offset": 41,
+     "type": "uchar",
+     "name": "numDiscrete",
+     "comment": ""
+    },
+    {
+     "offset": 42,
+     "type": "uchar",
+     "name": "numMorphs",
+     "comment": "22 on faces"
+    },
+    {
+     "offset": 43,
+     "type": "uchar",
+     "name": "numDatums",
+     "comment": ""
+    },
+    {
+     "offset": 44,
+     "type": "uchar",
+     "name": "skeletonNum",
+     "comment": "index into SkeletonTable"
+    }
+   ]
+  },
+  {
+   "name": "AnimObj",
+   "size": 152,
+   "comment": "Real tag: sAnimObject_tag. The animated part of an object, embedded at AnimState+0x58. Pose buffer is SoA: _VECTOR trans[numBones] then quaternion_tag quat[numBones] (xyzw), local, translations pre-scaled.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "headTrackTarget",
+     "comment": "obj_tag* if flags&0x40 else _VECTOR*"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "aimTarget",
+     "comment": "obj_tag* if flags&0x200 else _VECTOR*"
+    },
+    {
+     "offset": 8,
+     "type": "float[4]",
+     "name": "boundSphere",
+     "comment": "from the base sequence (AnimSeqSet)"
+    },
+    {
+     "offset": 24,
+     "type": "void *",
+     "name": "rootMotionCallback",
+     "comment": "(obj, animObj, _VECTOR *delta), AnimFrameResolve"
+    },
+    {
+     "offset": 28,
+     "type": "sAnimSkin_tag *",
+     "name": "skin",
+     "comment": ""
+    },
+    {
+     "offset": 32,
+     "type": "sAnimSet_tag *",
+     "name": "animSets",
+     "comment": "locomotion sets (AnimSetAppend), up to 4"
+    },
+    {
+     "offset": 36,
+     "type": "sAnimScript_tag *",
+     "name": "firstScript",
+     "comment": "list via script+0x44"
+    },
+    {
+     "offset": 40,
+     "type": "void *",
+     "name": "postPoseCallback",
+     "comment": "(obj, animObj, numBones, trans*, quats*), end of AnimFrameResolve"
+    },
+    {
+     "offset": 44,
+     "type": "celglist_tag * *",
+     "name": "datumGlist",
+     "comment": "[numDatums] entity drawn at each datum"
+    },
+    {
+     "offset": 48,
+     "type": "celglist_tag *",
+     "name": "sleeveGlist",
+     "comment": "replaces rigged body 0 when set (AnimObjectSetSleeveType)"
+    },
+    {
+     "offset": 52,
+     "type": "float *",
+     "name": "pose",
+     "comment": "numBones*28 bytes"
+    },
+    {
+     "offset": 56,
+     "type": "float *",
+     "name": "morphWeights",
+     "comment": "[numMorphs], AnimFacialBlend"
+    },
+    {
+     "offset": 60,
+     "type": "uchar *",
+     "name": "datumTimer",
+     "comment": "[numDatums] 0 hidden, 0xff always, else frames left"
+    },
+    {
+     "offset": 64,
+     "type": "_MATRIX *",
+     "name": "boneMtxs",
+     "comment": "[numBones] world matrices, psiBuildMatrixPalette"
+    },
+    {
+     "offset": 68,
+     "type": "_MATRIX *",
+     "name": "palette",
+     "comment": "[numBones] skinning matrices, bind space -> world"
+    },
+    {
+     "offset": 72,
+     "type": "obj_tag * *",
+     "name": "discreteObj",
+     "comment": "[numDiscrete] child objects"
+    },
+    {
+     "offset": 76,
+     "type": "uint",
+     "name": "lastUpdateFrame",
+     "comment": ""
+    },
+    {
+     "offset": 80,
+     "type": "uint",
+     "name": "flags",
+     "comment": "1 pose valid, 2 full character, 4 bones valid, 8 palette valid, 0x10/0x20/0x40 head track req/on/obj, 0x80/0x100/0x200 aim req/on/obj, 0x400 alt height, 0x1000-0x4000 aim state, 0x8000 inverse skin scale, 0x40000 mute script sfx/events"
+    },
+    {
+     "offset": 84,
+     "type": "float",
+     "name": "rootHeight",
+     "comment": ""
+    },
+    {
+     "offset": 88,
+     "type": "float",
+     "name": "heightOffset",
+     "comment": ""
+    },
+    {
+     "offset": 92,
+     "type": "float",
+     "name": "distanceThisTick",
+     "comment": "AnimSetUpdate (speed * set.b)"
+    },
+    {
+     "offset": 96,
+     "type": "float",
+     "name": "rootTravel",
+     "comment": "footstep accumulator input"
+    },
+    {
+     "offset": 100,
+     "type": "float",
+     "name": "distancePhase",
+     "comment": "AnimSet distance phase"
+    },
+    {
+     "offset": 104,
+     "type": "float",
+     "name": "headTrackRate",
+     "comment": ""
+    },
+    {
+     "offset": 108,
+     "type": "float",
+     "name": "aimRate",
+     "comment": ""
+    },
+    {
+     "offset": 112,
+     "type": "float",
+     "name": "headTrackRange2",
+     "comment": "squared"
+    },
+    {
+     "offset": 116,
+     "type": "float",
+     "name": "aimRange2",
+     "comment": "squared"
+    },
+    {
+     "offset": 120,
+     "type": "float",
+     "name": "headYaw",
+     "comment": ""
+    },
+    {
+     "offset": 124,
+     "type": "float",
+     "name": "aimYaw",
+     "comment": ""
+    },
+    {
+     "offset": 128,
+     "type": "float",
+     "name": "headPitch",
+     "comment": ""
+    },
+    {
+     "offset": 132,
+     "type": "float",
+     "name": "aimPitch",
+     "comment": ""
+    },
+    {
+     "offset": 136,
+     "type": "ushort",
+     "name": "poseBufSize",
+     "comment": "numBones*28"
+    },
+    {
+     "offset": 138,
+     "type": "ushort",
+     "name": "facialTimer",
+     "comment": "AnimFacialUpdate"
+    },
+    {
+     "offset": 140,
+     "type": "uchar",
+     "name": "headTrackTargetBone",
+     "comment": ""
+    },
+    {
+     "offset": 141,
+     "type": "uchar",
+     "name": "aimTargetBone",
+     "comment": ""
+    },
+    {
+     "offset": 142,
+     "type": "uchar",
+     "name": "headTrackHoldTimer",
+     "comment": ""
+    },
+    {
+     "offset": 143,
+     "type": "uchar",
+     "name": "lookMorphX",
+     "comment": "eye-look hint for morph channels 11-14"
+    },
+    {
+     "offset": 144,
+     "type": "uchar",
+     "name": "lookMorphY",
+     "comment": ""
+    },
+    {
+     "offset": 145,
+     "type": "uchar",
+     "name": "facialState",
+     "comment": "AnimFacialUpdate"
+    },
+    {
+     "offset": 148,
+     "type": "uchar[4]",
+     "name": "lod",
+     "comment": "per viewport: distance / zoom / 4, clamped (View_AddObjects)"
+    }
+   ]
+  },
+  {
+   "name": "AnimState",
+   "size": 240,
+   "comment": "obj_tag+0xB8. Mem_Malloc(0xf0) + zeroed in AnimObjectNew (PS2 0x120).",
+   "fields": [
+    {
+     "offset": 80,
+     "type": "ushort",
+     "name": "animFlags",
+     "comment": "bit0 weapon zoomed in, bit2 footstep this frame"
+    },
+    {
+     "offset": 82,
+     "type": "char",
+     "name": "currentWeaponId",
+     "comment": ""
+    },
+    {
+     "offset": 83,
+     "type": "char",
+     "name": "switchingToWeaponId",
+     "comment": ""
+    },
+    {
+     "offset": 84,
+     "type": "char",
+     "name": "prevHeldWeaponId",
+     "comment": ""
+    },
+    {
+     "offset": 88,
+     "type": "AnimObj",
+     "name": "animObj",
+     "comment": "sAnimObject_tag"
+    }
+   ]
+  },
+  {
+   "name": "sAnimScript_tag",
+   "size": 180,
+   "comment": "One playing animation script (a 0x06 file). Mem_Malloc(180) + zeroed in AnimScriptNew. PS2 0xC0, offsets +4 (64-byte matrix).",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "_MATRIX",
+     "name": "rotMtx",
+     "comment": "object rotation captured for anim-rotation mode (flag 0x20000)"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "magic",
+     "comment": "0x159f5ab2 alive, 0x983c4837 deleted"
+    },
+    {
+     "offset": 64,
+     "type": "sAnimScript_tag *",
+     "name": "prev",
+     "comment": ""
+    },
+    {
+     "offset": 68,
+     "type": "sAnimScript_tag *",
+     "name": "next",
+     "comment": ""
+    },
+    {
+     "offset": 72,
+     "type": "sAnimScript_tag *",
+     "name": "syncMaster",
+     "comment": "script this one follows (speed mode 2) / blends into"
+    },
+    {
+     "offset": 76,
+     "type": "sAnimSeq_tag *",
+     "name": "boneAnimSeq",
+     "comment": "pose buffer 28*numBones"
+    },
+    {
+     "offset": 80,
+     "type": "sAnimSeq_tag *",
+     "name": "morphAnimSeq",
+     "comment": "0x58 bytes = 22 weights; only if the skin has morphs"
+    },
+    {
+     "offset": 84,
+     "type": "void *",
+     "name": "boneMask",
+     "comment": "AnimFrameBlend 4th argument; non-zero = partial/overlay"
+    },
+    {
+     "offset": 88,
+     "type": "uchar *",
+     "name": "scriptData",
+     "comment": "the 0x06 file"
+    },
+    {
+     "offset": 92,
+     "type": "uchar *",
+     "name": "doneFlag",
+     "comment": ""
+    },
+    {
+     "offset": 96,
+     "type": "sAnimScript_tag * *",
+     "name": "ownerSlot",
+     "comment": "cleared on delete"
+    },
+    {
+     "offset": 100,
+     "type": "void *",
+     "name": "onDelete",
+     "comment": "(obj, animObj, script)"
+    },
+    {
+     "offset": 104,
+     "type": "void *",
+     "name": "onStop",
+     "comment": "(obj, animObj, script)"
+    },
+    {
+     "offset": 108,
+     "type": "void *",
+     "name": "onEvent",
+     "comment": "(obj, animObj, script, ushort param)"
+    },
+    {
+     "offset": 112,
+     "type": "HASHCODE",
+     "name": "hashcode",
+     "comment": ""
+    },
+    {
+     "offset": 116,
+     "type": "uint",
+     "name": "flags",
+     "comment": "see spec-script: 0x10000 step, 0x20000 anim rotation, 0x40000 facial-only, 0x100000/0x400000 blend out, 0x800000 ticked, 0x10000000 stopped, 0x20000000 just started, 0x40000000 wrapped, 0x80000000 loop"
+    },
+    {
+     "offset": 120,
+     "type": "uint",
+     "name": "firedMask",
+     "comment": "one bit per command"
+    },
+    {
+     "offset": 124,
+     "type": "uint",
+     "name": "groupTag",
+     "comment": "AnimSet tag; 0xe0000000 mood, 0xe0000001 blink, 0xe0000002 speech/cutscene"
+    },
+    {
+     "offset": 128,
+     "type": "uint",
+     "name": "timestamp",
+     "comment": "creation order (AnimScriptTimeStamp)"
+    },
+    {
+     "offset": 132,
+     "type": "float",
+     "name": "syncBlend",
+     "comment": ""
+    },
+    {
+     "offset": 136,
+     "type": "float",
+     "name": "targetPos",
+     "comment": "speed mode 3"
+    },
+    {
+     "offset": 140,
+     "type": "float",
+     "name": "curFrame",
+     "comment": "1..numFrames, 60 Hz"
+    },
+    {
+     "offset": 144,
+     "type": "float",
+     "name": "prevFrame",
+     "comment": ""
+    },
+    {
+     "offset": 148,
+     "type": "float",
+     "name": "speed",
+     "comment": "script frames per 60 Hz frame; sign = direction"
+    },
+    {
+     "offset": 152,
+     "type": "float",
+     "name": "weight",
+     "comment": "fadeTime/fadeLen"
+    },
+    {
+     "offset": 156,
+     "type": "float",
+     "name": "rotBaseYaw",
+     "comment": "8.0 = capture next tick"
+    },
+    {
+     "offset": 160,
+     "type": "float",
+     "name": "rotLastYaw",
+     "comment": ""
+    },
+    {
+     "offset": 164,
+     "type": "float",
+     "name": "fadeTime",
+     "comment": ""
+    },
+    {
+     "offset": 168,
+     "type": "float",
+     "name": "fadeLen",
+     "comment": "8.0 for AnimScriptAppendBlend"
+    },
+    {
+     "offset": 172,
+     "type": "short",
+     "name": "numFrames",
+     "comment": ""
+    },
+    {
+     "offset": 174,
+     "type": "uchar",
+     "name": "numCmds",
+     "comment": "low byte only"
+    },
+    {
+     "offset": 175,
+     "type": "uchar",
+     "name": "rate",
+     "comment": "60, unused"
+    },
+    {
+     "offset": 176,
+     "type": "uchar",
+     "name": "speedMode",
+     "comment": "0 normal, 1 distance, 2 sync to master, 3 seek"
+    },
+    {
+     "offset": 177,
+     "type": "uchar",
+     "name": "playMode",
+     "comment": "0 once, 1 loop, 2 ping-pong, 3 once then delete"
+    },
+    {
+     "offset": 178,
+     "type": "char",
+     "name": "fadeDir",
+     "comment": "+1 in, -1 out, 0 hold"
+    }
+   ]
+  },
+  {
+   "name": "sAnimSeq_tag",
+   "size": 144,
+   "comment": "A sequence being sampled for a script. Mem_Malloc(0x90) + zeroed in AnimSeqNew. PS2 0xB0.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "_VECTOR",
+     "name": "rootPrev",
+     "comment": "raw bone-0 translation at the last tick"
+    },
+    {
+     "offset": 12,
+     "type": "_VECTOR",
+     "name": "rootDelta",
+     "comment": "root motion this tick"
+    },
+    {
+     "offset": 24,
+     "type": "_VECTOR",
+     "name": "firstTrans",
+     "comment": "original bug: holds quat[0].xyz of the first decode"
+    },
+    {
+     "offset": 36,
+     "type": "_VECTOR",
+     "name": "transRelFirst",
+     "comment": ""
+    },
+    {
+     "offset": 48,
+     "type": "_VECTOR",
+     "name": "objPosAtSet",
+     "comment": ""
+    },
+    {
+     "offset": 60,
+     "type": "float[6]",
+     "name": "rootBox",
+     "comment": "from the file +0x20"
+    },
+    {
+     "offset": 84,
+     "type": "float[4]",
+     "name": "boundSphere",
+     "comment": "from the file +0x10"
+    },
+    {
+     "offset": 100,
+     "type": "void *",
+     "name": "distanceTable",
+     "comment": ""
+    },
+    {
+     "offset": 104,
+     "type": "float *",
+     "name": "pose",
+     "comment": "vec3[nb] + quat[nb], or float[numElems] for a morph sequence"
+    },
+    {
+     "offset": 108,
+     "type": "uint *",
+     "name": "unpakCache",
+     "comment": "numElems*8 bytes"
+    },
+    {
+     "offset": 112,
+     "type": "void *",
+     "name": "frameCallback",
+     "comment": "(obj, skin, seq), replaces AnimFrameSet"
+    },
+    {
+     "offset": 116,
+     "type": "sAnimRawSeq_tag *",
+     "name": "rawSeq",
+     "comment": ""
+    },
+    {
+     "offset": 120,
+     "type": "HASHCODE",
+     "name": "hashcode",
+     "comment": ""
+    },
+    {
+     "offset": 124,
+     "type": "uint",
+     "name": "flags",
+     "comment": "bits 0-3 from file (0-2 distance axes, 3 morph), 0x100000, 0x200000 cache, 0x2000000-0x8000000 zero root delta x/y/z"
+    },
+    {
+     "offset": 128,
+     "type": "float",
+     "name": "frame",
+     "comment": "1-based"
+    },
+    {
+     "offset": 132,
+     "type": "short",
+     "name": "startTime",
+     "comment": "in script frames"
+    },
+    {
+     "offset": 134,
+     "type": "short",
+     "name": "firstFrame",
+     "comment": ""
+    },
+    {
+     "offset": 136,
+     "type": "short",
+     "name": "lastFrame",
+     "comment": ""
+    },
+    {
+     "offset": 138,
+     "type": "short",
+     "name": "numFrames",
+     "comment": ""
+    },
+    {
+     "offset": 140,
+     "type": "uchar",
+     "name": "raw3e",
+     "comment": "copy of file +0x3e, no reader"
+    },
+    {
+     "offset": 141,
+     "type": "uchar",
+     "name": "skeletonNum",
+     "comment": ""
+    },
+    {
+     "offset": 142,
+     "type": "uchar",
+     "name": "numElems",
+     "comment": "morph count / cache size"
+    }
+   ]
+  },
+  {
+   "name": "sAnimRawSeq_tag",
+   "size": 64,
+   "comment": "A sequence file (hashcode type 0x04) header; tracks follow at +0x40. AnimProcessSeqData replaces the first three words. Tracks: u32 head (size | key0<<16), key words (len<<6 | mask), float polynomial coefficients in absolute time t = frame-1.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "uint *",
+     "name": "trackData",
+     "comment": "on disk: the hashcode"
+    },
+    {
+     "offset": 4,
+     "type": "uint",
+     "name": "trackDataSize",
+     "comment": ""
+    },
+    {
+     "offset": 8,
+     "type": "uint *",
+     "name": "cursor",
+     "comment": ""
+    },
+    {
+     "offset": 12,
+     "type": "uint",
+     "name": "flags",
+     "comment": "bits 0-2 distance axes, bit 3 morph (facial)"
+    },
+    {
+     "offset": 16,
+     "type": "float[4]",
+     "name": "boundSphere",
+     "comment": ""
+    },
+    {
+     "offset": 32,
+     "type": "float[6]",
+     "name": "rootBox",
+     "comment": "bone 0 translation box"
+    },
+    {
+     "offset": 56,
+     "type": "short",
+     "name": "numFrames",
+     "comment": ""
+    },
+    {
+     "offset": 58,
+     "type": "short",
+     "name": "numTracks",
+     "comment": "low byte = numElems"
+    },
+    {
+     "offset": 60,
+     "type": "uchar",
+     "name": "skeletonNum",
+     "comment": ""
+    },
+    {
+     "offset": 62,
+     "type": "uchar",
+     "name": "raw3e",
+     "comment": "equals skeletonNum in every file"
+    }
+   ]
+  },
+  {
+   "name": "sAnimSet_tag",
+   "size": 52,
+   "comment": "INVENTED NAME. A locomotion controller: walk/run scripts kept in step and blended by speed, plus a strafe overlay. Mem_Malloc(0x34) in AnimSetAppend / AnimTagAllocAndGetUnique.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "sAnimSet_tag *",
+     "name": "prev",
+     "comment": ""
+    },
+    {
+     "offset": 4,
+     "type": "sAnimSet_tag *",
+     "name": "next",
+     "comment": ""
+    },
+    {
+     "offset": 8,
+     "type": "uint",
+     "name": "walkTimestamp",
+     "comment": ""
+    },
+    {
+     "offset": 12,
+     "type": "uint",
+     "name": "blendTimestamp",
+     "comment": ""
+    },
+    {
+     "offset": 16,
+     "type": "sAnimScript_tag *",
+     "name": "blendScript",
+     "comment": ""
+    },
+    {
+     "offset": 20,
+     "type": "sAnimScript_tag *",
+     "name": "strafeScript",
+     "comment": ""
+    },
+    {
+     "offset": 24,
+     "type": "HASHCODE *",
+     "name": "speedList",
+     "comment": "[idle, walk.., run.., 0]"
+    },
+    {
+     "offset": 28,
+     "type": "HASHCODE *",
+     "name": "strafeList",
+     "comment": ""
+    },
+    {
+     "offset": 32,
+     "type": "uint",
+     "name": "tag",
+     "comment": "copied to scripts' groupTag"
+    },
+    {
+     "offset": 36,
+     "type": "float",
+     "name": "a",
+     "comment": "distance phase reset value"
+    },
+    {
+     "offset": 40,
+     "type": "float",
+     "name": "b",
+     "comment": "speed -> distance scale"
+    },
+    {
+     "offset": 44,
+     "type": "ushort",
+     "name": "idleTimer",
+     "comment": ""
+    },
+    {
+     "offset": 46,
+     "type": "char",
+     "name": "speedIndex",
+     "comment": ""
+    },
+    {
+     "offset": 47,
+     "type": "uchar",
+     "name": "strafeDir",
+     "comment": ""
+    },
+    {
+     "offset": 48,
+     "type": "uchar",
+     "name": "switchCooldown",
+     "comment": ""
+    },
+    {
+     "offset": 49,
+     "type": "uchar",
+     "name": "speedCount",
+     "comment": ""
+    },
+    {
+     "offset": 50,
+     "type": "uchar",
+     "name": "strafeCount",
+     "comment": ""
+    },
+    {
+     "offset": 51,
+     "type": "uchar",
+     "name": "oneShotState",
+     "comment": ""
+    }
+   ]
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x11050",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "data",
+     "type": "char *"
+    }
+   ]
+  },
+  {
+   "address": "0x14a20",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "hashcode",
+     "type": "HASHCODE"
+    },
+    {
+     "name": "noSeqProcess",
+     "type": "char"
+    }
+   ]
+  },
+  {
+   "address": "0x14b80",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "keepSkeletons",
+     "type": "char"
+    }
+   ]
+  },
+  {
+   "address": "0x138e0",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "hashcode",
+     "type": "HASHCODE"
+    }
+   ]
+  },
+  {
+   "address": "0x13e50",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "out",
+     "type": "float *"
+    },
+    {
+     "name": "seq",
+     "type": "sAnimSeq_tag *"
+    },
+    {
+     "name": "skin",
+     "type": "sAnimSkin_tag *"
+    },
+    {
+     "name": "frame",
+     "type": "float"
+    }
+   ]
+  },
+  {
+   "address": "0x11440",
+   "calling_convention": "__cdecl",
+   "return": "int",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "skin",
+     "type": "HASHCODE"
+    }
+   ]
+  },
+  {
+   "address": "0x17a60",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    }
+   ]
+  },
+  {
+   "address": "0x18690",
+   "calling_convention": "__cdecl",
+   "return": "bool",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    }
+   ]
+  },
+  {
+   "address": "0x16c20",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "viewer",
+     "type": "viewer_tag *"
+    }
+   ]
+  },
+  {
+   "address": "0xdd290",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "animObj",
+     "type": "AnimObj *"
+    },
+    {
+     "name": "buildPalette",
+     "type": "char"
+    }
+   ]
+  },
+  {
+   "address": "0x13070",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "which",
+     "type": "uint"
+    },
+    {
+     "name": "datumOffset",
+     "type": "int"
+    },
+    {
+     "name": "posOut",
+     "type": "_VECTOR *"
+    },
+    {
+     "name": "mtxOut",
+     "type": "_MATRIX *"
+    }
+   ]
+  },
+  {
+   "address": "0x131c0",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "which",
+     "type": "uint"
+    },
+    {
+     "name": "datumOffset",
+     "type": "int"
+    },
+    {
+     "name": "posOut",
+     "type": "_VECTOR *"
+    },
+    {
+     "name": "mtxOut",
+     "type": "_MATRIX *"
+    }
+   ]
+  },
+  {
+   "address": "0x11950",
+   "calling_convention": "__cdecl",
+   "return": "bool",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "lodThreshold",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x11920",
+   "calling_convention": "__cdecl",
+   "return": "obj_tag *",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "n",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x118f0",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "sleeveNum",
+     "type": "int"
+    }
+   ]
+  },
+  {
+   "address": "0x119a0",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "target",
+     "type": "void *"
+    },
+    {
+     "name": "range",
+     "type": "float"
+    },
+    {
+     "name": "rate",
+     "type": "float"
+    },
+    {
+     "name": "randomDelay",
+     "type": "bool"
+    },
+    {
+     "name": "targetIsObj",
+     "type": "bool"
+    },
+    {
+     "name": "bone",
+     "type": "uchar"
+    }
+   ]
+  },
+  {
+   "address": "0x11a80",
+   "calling_convention": "__cdecl",
+   "return": "bool",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    }
+   ]
+  },
+  {
+   "address": "0x12220",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "target",
+     "type": "void *"
+    },
+    {
+     "name": "range",
+     "type": "float"
+    },
+    {
+     "name": "rate",
+     "type": "float"
+    },
+    {
+     "name": "targetIsObj",
+     "type": "bool"
+    },
+    {
+     "name": "bone",
+     "type": "uchar"
+    }
+   ]
+  },
+  {
+   "address": "0x122b0",
+   "calling_convention": "__cdecl",
+   "return": "bool",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    }
+   ]
+  },
+  {
+   "address": "0x11aa0",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "animObj",
+     "type": "AnimObj *"
+    },
+    {
+     "name": "worldQuats",
+     "type": "quaternion_tag *"
+    },
+    {
+     "name": "boneMtxs",
+     "type": "_MATRIX *"
+    },
+    {
+     "name": "bone",
+     "type": "int"
+    }
+   ]
+  },
+  {
+   "address": "0x15060",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "animObj",
+     "type": "AnimObj *"
+    },
+    {
+     "name": "worldQuats",
+     "type": "quaternion_tag *"
+    },
+    {
+     "name": "boneMtxs",
+     "type": "_MATRIX *"
+    },
+    {
+     "name": "bone",
+     "type": "int"
+    }
+   ]
+  },
+  {
+   "address": "0xe0960",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "glist",
+     "type": "celglist_tag *"
+    },
+    {
+     "name": "unused",
+     "type": "_MATRIX *"
+    },
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "palette",
+     "type": "_MATRIX *"
+    }
+   ]
+  },
+  {
+   "address": "0x13590",
+   "calling_convention": "__cdecl",
+   "return": "int",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "datumId",
+     "type": "int"
+    }
+   ]
+  },
+  {
+   "address": "0x135d0",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "datumId",
+     "type": "int"
+    },
+    {
+     "name": "entity",
+     "type": "HASHCODE"
+    },
+    {
+     "name": "frames",
+     "type": "uchar"
+    }
+   ]
+  },
+  {
+   "address": "0x15b40",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "pScript",
+     "type": "sAnimScript_tag * *"
+    }
+   ]
+  },
+  {
+   "address": "0x15c30",
+   "calling_convention": "__cdecl",
+   "return": "sAnimScript_tag *",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "hashcode",
+     "type": "HASHCODE"
+    }
+   ]
+  },
+  {
+   "address": "0x17220",
+   "calling_convention": "__cdecl",
+   "return": "sAnimScript_tag *",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "hashcode",
+     "type": "HASHCODE"
+    }
+   ]
+  },
+  {
+   "address": "0x12780",
+   "calling_convention": "__cdecl",
+   "return": "bool",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    }
+   ]
+  },
+  {
+   "address": "0x127d0",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "dir",
+     "type": "int"
+    }
+   ]
+  },
+  {
+   "address": "0x12860",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "script",
+     "type": "sAnimScript_tag *"
+    },
+    {
+     "name": "onEvent",
+     "type": "void *"
+    }
+   ]
+  },
+  {
+   "address": "0x12870",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "script",
+     "type": "sAnimScript_tag *"
+    },
+    {
+     "name": "onStop",
+     "type": "void *"
+    }
+   ]
+  },
+  {
+   "address": "0x12a90",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "script",
+     "type": "sAnimScript_tag *"
+    },
+    {
+     "name": "on",
+     "type": "char"
+    }
+   ]
+  },
+  {
+   "address": "0x171e0",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    }
+   ]
+  },
+  {
+   "address": "0x17820",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    }
+   ]
+  },
+  {
+   "address": "0x17160",
+   "calling_convention": "__cdecl",
+   "return": "sAnimScript_tag *",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "hashcode",
+     "type": "HASHCODE"
+    }
+   ]
+  },
+  {
+   "address": "0x122e0",
+   "calling_convention": "__cdecl",
+   "return": "sAnimScript_tag *",
+   "params": [
+    {
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "name": "mask",
+     "type": "uint"
+    },
+    {
+     "name": "value",
+     "type": "uint"
+    },
+    {
+     "name": "callback",
+     "type": "void *"
+    },
+    {
+     "name": "mode",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}
