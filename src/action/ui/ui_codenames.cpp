@@ -9,7 +9,7 @@
 // The codename menu (P_CNMENU / C_SBCNOPTIONS): Secret Unlocks, the options pages, and saving the codename.
 
 // cn_options (ui.h). The last item's title is "Codenames" for a default codename, which cannot be saved, else "Save Codename".
-const M_ITEM cn_options_shipped[7] = {
+M_ITEM cn_options[7] = {
     {ICON_CNOPTIONS_SECRETUNLOCKS, SECRET_UNLOCKS, SECRET_UNLOCKS_DESC, 0, 1, TXT_NULL}, // Secret Unlocks
     {ICON_CNOPTIONS_CONTROLLER, CONTROLLER_SETUP, CONTROL_SCHEME_ACTION_DESC, 1, 1, TXT_NULL}, // Controller Setup
     {ICON_CNOPTIONS_CONTROLLER, CN_DRIVING_CONTROLLER, CONTROL_SCHEME_DRIVING_DESC, 2, 1, TXT_NULL}, // Driving Controller

@@ -137,6 +137,8 @@ typedef enum {
 #define RADIO_CLEAR(manager, radio) __Menu_Send(manager, radio, MessageType_ClearItems, 0, 0);
 #define RADIO_SELECT_ITEM(manager, radio, value) __Menu_Send(manager, radio, MessageType_SelectItemByValue, value, 0);
 #define RADIO_GET_VALUE(manager, radio) __Menu_Send(manager, radio, MessageType_GetSelectedItemValue, 0, 0)
+// An item's enabled flag as the game reads and writes it: its first byte.
+#define ITEM_ENABLED(item) (*(uchar *)&(item).enabled)
 #define RADIO_GET_VALUE_OF(radio) __Menu_SendMessage(radio, MessageType_GetSelectedItemValue, 0, 0)
 
 // Scrolls (the iris wheels among them)
@@ -268,35 +270,21 @@ typedef struct M_ITEM {
 
 #pragma pack(pop)
 
-// The menus' item lists (docs/ui/items.md), in the game's memory: the original code still run (unlocks,
-// cheats, upgrades) writes them. Each one's shipped contents are in the source as <name>_shipped, checked
-// against the game's at start (settings.ini MenuCheckLists); once nothing original writes a list, its
-// macro becomes a definition initialised from them.
-#define sp_level             (*(M_ITEM(*)[12])0x0017c580)   // ui_nightfire.cpp
-#define difficulty           (*(M_ITEM(*)[3])0x0017c760)   // ui_nightfire.cpp
-#define mp_level             (*(M_ITEM(*)[8])0x0017c6a0)   // ui_mp.cpp
-#define mp_scenario          (*(M_ITEM(*)[13])0x0017c7a8)   // ui_mp.cpp
-#define mp_characters        (*(M_ITEM(*)[29])0x0017c8e0)   // ui_mp.cpp
-#define mp_characters_small  (*(M_ITEM(*)[29])0x0017cb98)   // ui_mp.cpp
-#define mp_options           (*(M_ITEM(*)[5])0x0017ce50)   // ui_mp.cpp
-#define mp_bots              (*(M_ITEM(*)[17])0x0017cfd0)   // ui_mp.cpp
-#define cn_options           (*(M_ITEM(*)[7])0x0017cec8)   // ui_codenames.cpp
-#define ds_options           (*(M_ITEM(*)[4])0x0017cf70)   // ui_dossier.cpp
-#define ds_weapons           (*(M_ITEM(*)[27])0x0017d168)   // ui_dossier.cpp
-#define ds_gadgets           (*(M_ITEM(*)[14])0x0017d3f0)   // ui_dossier.cpp
-
-extern const M_ITEM sp_level_shipped[12];
-extern const M_ITEM difficulty_shipped[3];
-extern const M_ITEM mp_level_shipped[8];
-extern const M_ITEM mp_scenario_shipped[13];
-extern const M_ITEM mp_characters_shipped[29];
-extern const M_ITEM mp_characters_small_shipped[29];
-extern const M_ITEM mp_options_shipped[5];
-extern const M_ITEM mp_bots_shipped[17];
-extern const M_ITEM cn_options_shipped[7];
-extern const M_ITEM ds_options_shipped[4];
-extern const M_ITEM ds_weapons_shipped[27];
-extern const M_ITEM ds_gadgets_shipped[14];
+// The menus' item lists (docs/ui/items.md). Ours: every function that reads or writes them is reimplemented
+// (MenuUnlocks.cpp and the handlers), and nothing original refers to the game's copies any more - which
+// settings.ini MenuCheckLists compares with these at start.
+extern M_ITEM sp_level[12];               // ui_nightfire.cpp, the game's at 0x17c580
+extern M_ITEM difficulty[3];              // ui_nightfire.cpp, the game's at 0x17c760
+extern M_ITEM mp_level[8];                // ui_mp.cpp, the game's at 0x17c6a0
+extern M_ITEM mp_scenario[13];            // ui_mp.cpp, the game's at 0x17c7a8
+extern M_ITEM mp_characters[29];          // ui_mp.cpp, the game's at 0x17c8e0
+extern M_ITEM mp_characters_small[29];    // ui_mp.cpp, the game's at 0x17cb98
+extern M_ITEM mp_options[5];              // ui_mp.cpp, the game's at 0x17ce50
+extern M_ITEM mp_bots[17];                // ui_mp.cpp, the game's at 0x17cfd0
+extern M_ITEM cn_options[7];              // ui_codenames.cpp, the game's at 0x17cec8
+extern const M_ITEM ds_options[4];        // ui_dossier.cpp, the game's at 0x17cf70
+extern M_ITEM ds_weapons[27];             // ui_dossier.cpp, the game's at 0x17d168
+extern M_ITEM ds_gadgets[14];             // ui_dossier.cpp, the game's at 0x17d3f0
 
 bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int param_4, int param_5);
 
@@ -337,6 +325,8 @@ bool C_SBMPBTCHOOSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
 bool C_SBMPSCEN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 bool C_SBMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_MPDEBRIEFING_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 
 // ui_credits
 typedef struct CreditsEntry {

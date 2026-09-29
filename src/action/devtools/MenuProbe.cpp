@@ -6,6 +6,7 @@
 // MenuLog=on               every Handler_HandleMessage call: "[menu] f=<frame> m<manager> <control> msg=<type>
 //                          a=<arg1> b=<arg2> -> <result>" (tools/ui/menu_log.py names the hashcodes and types)
 // MenuLogSkip=0x3d,0x3e    message types left out of the log (per-frame ones, say)
+// MenuShadowTests=on      run the secret-code and unlock shadow tests at start, before the game (no display needed)
 // MenuCheckLists=on       compare the item lists' contents in our source with the game's, at start
 // MenuOriginal=0x40000030:0x8ded0,0x76470
 //                          run these as the original code, to compare a reimplementation with it: HASH:ADDR is a page
@@ -22,6 +23,8 @@
 //                          normal play cannot, such as P_FMVTEST 0x4000004f)
 //     focus HASH [ID]      put the cursor on a control (by id among several of that hashcode, e.g. a keyboard key)
 //     secretstest          compare the original secret-code check with ours (SecretsShadow.cpp)
+//     poke ADDR VALUE      write a dword into the game (to set up a state a page expects, e.g. a finished match)
+//     unlockstest          compare the original progress/unlock functions with ours (UnlocksShadow.cpp)
 //     quit                 end the process
 //   BTN: A B X Y BLACK WHITE LT RT START BACK UP DOWN LEFT RIGHT
 //
@@ -36,6 +39,7 @@
 #include "../ui/ui.h"
 #include "../ui/Manager.h"
 #include "SecretsShadow.h"
+#include "UnlocksShadow.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -90,7 +94,7 @@ static const char *const kButtonNames[] = { "A", "B", "X", "Y", "BLACK", "WHITE"
 static const unsigned short kDigitalBits[] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20 };   // UP..BACK
 
 struct Step {
-    enum { WAIT, HOLD, SHOT, LOG, QUIT, GOPAGE, SECRETSTEST, FOCUS, WAITPAGE } kind;
+    enum { WAIT, HOLD, SHOT, LOG, QUIT, GOPAGE, SECRETSTEST, FOCUS, WAITPAGE, UNLOCKSTEST, POKE } kind;
     int button;
     unsigned frames;
     char text[96];
@@ -158,6 +162,10 @@ static bool LoadScript(const char *path) {
             AddStep(s);
         } else if (_stricmp(cmd, "gopage") == 0 && n >= 2) {
             s.kind = Step::GOPAGE; s.frames = (unsigned)strtoul(a, NULL, 0); AddStep(s);
+        } else if (_stricmp(cmd, "poke") == 0 && n >= 3) {
+            s.kind = Step::POKE; s.frames = (unsigned)strtoul(a, NULL, 0); s.button = (int)strtoul(b, NULL, 0); AddStep(s);
+        } else if (_stricmp(cmd, "unlockstest") == 0) {
+            s.kind = Step::UNLOCKSTEST; AddStep(s);
         } else if (_stricmp(cmd, "secretstest") == 0) {
             s.kind = Step::SECRETSTEST; AddStep(s);
         } else if (_stricmp(cmd, "quit") == 0) {
@@ -216,6 +224,12 @@ static int ScriptFrame(void) {
             printf("[menuscript] f=%u gopage 0x%08x\n", g_frame, s.frames);
             Manager_SendMessage(&manager[0], MessageType_GoPage, (int)s.frames, 0);
             break;
+        case Step::POKE:
+            *(int *)(size_t)s.frames = s.button;
+            break;
+        case Step::UNLOCKSTEST:
+            UnlocksShadow_Run();
+            break;
         case Step::SECRETSTEST:
             SecretsShadow_Run();
             break;
@@ -273,22 +287,22 @@ static bool SettingOn(const char *key) {
     return _stricmp(v, "on") == 0 || strcmp(v, "1") == 0;
 }
 
-// The item lists' shipped contents as the source has them (<name>_shipped, ui.h) against the game's copies, before
-// the game has run: any difference is a mistake in the source, or a deliberate fix to be named.
+// The item lists in our source against the game's copies (which nothing uses any more), before the game has
+// run: any difference is a mistake in the source, or a deliberate fix to be named.
 static void CheckLists(void) {
     static const struct { const char *name; const void *ours; unsigned theirs, size; } lists[] = {
-        { "sp_level", sp_level_shipped, 0x17c580, sizeof(sp_level_shipped) },
-        { "mp_level", mp_level_shipped, 0x17c6a0, sizeof(mp_level_shipped) },
-        { "difficulty", difficulty_shipped, 0x17c760, sizeof(difficulty_shipped) },
-        { "mp_scenario", mp_scenario_shipped, 0x17c7a8, sizeof(mp_scenario_shipped) },
-        { "mp_characters", mp_characters_shipped, 0x17c8e0, sizeof(mp_characters_shipped) },
-        { "mp_characters_small", mp_characters_small_shipped, 0x17cb98, sizeof(mp_characters_small_shipped) },
-        { "mp_options", mp_options_shipped, 0x17ce50, sizeof(mp_options_shipped) },
-        { "cn_options", cn_options_shipped, 0x17cec8, sizeof(cn_options_shipped) },
-        { "ds_options", ds_options_shipped, 0x17cf70, sizeof(ds_options_shipped) },
-        { "mp_bots", mp_bots_shipped, 0x17cfd0, sizeof(mp_bots_shipped) },
-        { "ds_weapons", ds_weapons_shipped, 0x17d168, sizeof(ds_weapons_shipped) },
-        { "ds_gadgets", ds_gadgets_shipped, 0x17d3f0, sizeof(ds_gadgets_shipped) },
+        { "sp_level", sp_level, 0x17c580, sizeof(sp_level) },
+        { "mp_level", mp_level, 0x17c6a0, sizeof(mp_level) },
+        { "difficulty", difficulty, 0x17c760, sizeof(difficulty) },
+        { "mp_scenario", mp_scenario, 0x17c7a8, sizeof(mp_scenario) },
+        { "mp_characters", mp_characters, 0x17c8e0, sizeof(mp_characters) },
+        { "mp_characters_small", mp_characters_small, 0x17cb98, sizeof(mp_characters_small) },
+        { "mp_options", mp_options, 0x17ce50, sizeof(mp_options) },
+        { "cn_options", cn_options, 0x17cec8, sizeof(cn_options) },
+        { "ds_options", ds_options, 0x17cf70, sizeof(ds_options) },
+        { "mp_bots", mp_bots, 0x17cfd0, sizeof(mp_bots) },
+        { "ds_weapons", ds_weapons, 0x17d168, sizeof(ds_weapons) },
+        { "ds_gadgets", ds_gadgets, 0x17d3f0, sizeof(ds_gadgets) },
     };
     int bad = 0;
     for (const auto &l : lists) {
@@ -307,6 +321,12 @@ static void CheckLists(void) {
 void MenuProbe_Install(void) {
     if (SettingOn("MenuCheckLists"))
         CheckLists();
+    // The shadow tests need only the game's data, so they can run before it starts (and with no display): on the
+    // shipped state, as a fresh codename would have it.
+    if (SettingOn("MenuShadowTests")) {
+        SecretsShadow_Run();
+        UnlocksShadow_Run();
+    }
     g_logging = SettingOn("MenuLog");
     if (g_logging) {
         char skip[256] = "";

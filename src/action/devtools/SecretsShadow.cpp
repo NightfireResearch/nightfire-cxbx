@@ -12,8 +12,6 @@
 #include <stdio.h>
 #include <string.h>
 
-void Menu_SetBonus(uint lo, uint hi, byte param_3, char param_4);
-
 static const unsigned kSpecialCodenameCheck = 0x0007d110;
 static const unsigned kUpgradeCheat = 0x0007cfb0;
 static const unsigned kCodesFirst = 0x00160d90, kCodesEnd = 0x00160f68;   // the code strings in .rdata
@@ -27,15 +25,20 @@ struct State {
     uchar enabled[12];
 };
 
-static void Save(State *s) {
+// sp_level as the original code sees it (the game's copy, which nothing else uses now) or as ours does
+static M_ITEM *SpLevel(bool game) { return game ? (M_ITEM *)0x0017c580 : sp_level; }
+
+static void Save(State *s, bool game = false) {
     s->bonus = cn_bonus;
     for (int i = 0; i < 12; i++)
-        s->enabled[i] = *(uchar *)&sp_level[i].enabled;
+        s->enabled[i] = *(uchar *)&SpLevel(game)[i].enabled;
 }
 
 static void Load(const State *s) {
-    for (int i = 0; i < 12; i++)
-        *(uchar *)&sp_level[i].enabled = s->enabled[i];
+    for (int i = 0; i < 12; i++) {   // both copies: the original runs on the game's, ours on ours
+        *(uchar *)&SpLevel(false)[i].enabled = s->enabled[i];
+        *(uchar *)&SpLevel(true)[i].enabled = s->enabled[i];
+    }
     Menu_SetBonus((uint)s->bonus, (uint)(s->bonus >> 32), 0, 0);   // also rebuilds the upgrades from it
 }
 
@@ -86,7 +89,7 @@ void SecretsShadow_Run(void) {
                 theirs = ((CheckFn)kSpecialCodenameCheck)((byte *)code);
             }
             State after_theirs;
-            Save(&after_theirs);
+            Save(&after_theirs, true);
 
             Load(&starts[s]);
             uint64_t ours = Menu_SpecialCodenameCheck((byte *)code);

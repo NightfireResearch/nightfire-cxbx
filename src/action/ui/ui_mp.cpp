@@ -5,6 +5,9 @@
 #include "../game/mp/multiplayer.h"
 #include "../game/drone/BOT.h"
 #include "../engine/Text.h"
+#include "../input.h"
+#include "MenuManager.h"
+#include "../sound/SFX.h"
 #include "../game.h"
 #include "../util/Random.h"
 
@@ -13,7 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
-const M_ITEM mp_level_shipped[8] = {
+M_ITEM mp_level[8] = {
     {ICON_MPMAP_SKYRAIL,        MPMAP_SKYRAIL_NAME,        MPMAP_SKYRAIL_DESC,        HT_Level_SkyRail,       true, TXT_NULL},
     {ICON_MPMAP_FORTKNOX,       MPMAP_FORTKNOX_NAME,       MPMAP_FORTKNOX_DESC,       HT_Level_FortKnox,      true, TXT_NULL},
     {ICON_MPMAP_SNOWBLIND,      MPMAP_SNOWBLIND_NAME,      MPMAP_SNOWBLIND_DESC,      HT_Level_SnowBlind,     true, TXT_NULL},
@@ -24,7 +27,7 @@ const M_ITEM mp_level_shipped[8] = {
     {ICON_MPMAP_RAVINE,         MPMAP_RAVINE_NAME,         MPMAP_RAVINE_DESC,         HT_Level_Ravine,        true, TXT_NULL}
 };
 
-const M_ITEM mp_scenario_shipped[13] = {
+M_ITEM mp_scenario[13] = {
     {ICON_MPSCENARIO_QUICKGAME,     MPSCENARIO_QUICKGAME_NAME,  MPSCENARIO_QUICKGAME_DESC,  0x00000000, true,   MP_SCENARIO_LOCKED},
     {ICON_MPSCENARIO_ARENA,         MPSCENARIO_ARENA_NAME,      MPSCENARIO_ARENA_DESC,      0x00000001, true,   MP_SCENARIO_LOCKED},
     {ICON_MPSCENARIO_TEAMARENA,     MPSCENARIO_TEAMARENA_NAME,  MPSCENARIO_TEAMARENA_DESC,  0x20000002, true,   MP_SCENARIO_LOCKED},
@@ -41,7 +44,7 @@ const M_ITEM mp_scenario_shipped[13] = {
 };
 
 // The multiplayer characters (identifier = skin number). Items 12-28 are unlocked by rewards (Menu_UnlockMPSkins).
-const M_ITEM mp_characters_shipped[29] = {
+M_ITEM mp_characters[29] = {
     {ICON_MPCHAR_BOND, CHAR_BOND_FULLNAME, CHAR_BOND_DESC, 0, 1, CHARACTER_LOCKED}, // Bond
     {ICON_MPCHAR_DRAKE, CHAR_DRAKE_FULLNAME, CHAR_DRAKE_DESC, 1, 1, CHARACTER_LOCKED}, // Drake
     {ICON_MPCHAR_ROOK, CHAR_ROOK_FULLNAME, CHAR_ROOK_DESC, 2, 1, CHARACTER_LOCKED}, // Rook
@@ -74,7 +77,7 @@ const M_ITEM mp_characters_shipped[29] = {
 };
 
 // The same characters with small icons, for the bot and player setup pages; unlocked alongside mp_characters.
-const M_ITEM mp_characters_small_shipped[29] = {
+M_ITEM mp_characters_small[29] = {
     {ICON_MPCHAR_SMALL_BOND, CHAR_BOND_FULLNAME, CHAR_BOND_DESC, 0, 1, CHARACTER_LOCKED}, // Bond
     {ICON_MPCHAR_SMALL_DRAKE, CHAR_DRAKE_FULLNAME, CHAR_DRAKE_DESC, 1, 1, CHARACTER_LOCKED}, // Drake
     {ICON_MPCHAR_SMALL_ROOK, CHAR_ROOK_FULLNAME, CHAR_ROOK_DESC, 2, 1, CHARACTER_LOCKED}, // Rook
@@ -107,7 +110,7 @@ const M_ITEM mp_characters_small_shipped[29] = {
 };
 
 // The multiplayer setup wheel. P_MPOPTIONS disables AI Bots on Ravine.
-const M_ITEM mp_options_shipped[5] = {
+M_ITEM mp_options[5] = {
     {ICON_MPSCENARIO_QUICKGAME, MENU_CONTINUE, MP_START_DESC, 0, 1, TXT_NULL}, // Continue
     {ICON_MPOPTIONS_AIBOTS, MP_AIBOTS, MP_CFG_BOTS_DESC, 1, 1, NO_BOTS_ON_RAVINE}, // AI Bots
     {ICON_MPOPTIONS_RULES, MP_CFG_RULES, MP_GM_RULES_DESC, 2, 1, TXT_NULL}, // Game Rules
@@ -116,7 +119,7 @@ const M_ITEM mp_options_shipped[5] = {
 };
 
 // The bot wheel: Continue, then one item per bot slot; C_SBBOTS sets each icon to the bot's character.
-const M_ITEM mp_bots_shipped[17] = {
+M_ITEM mp_bots[17] = {
     {ICON_MPSCENARIO_QUICKGAME, MENU_CONTINUE, TXT_NULL, 0, 1, TXT_NULL}, // Continue
     {ICON_MPSCENARIO_ARENA, MP_CFG_BOT_1, TXT_NULL, 0, 1, TXT_NULL}, // Setup Bot 1
     {ICON_MPSCENARIO_ARENA, MP_CFG_BOT_2, TXT_NULL, 0, 1, TXT_NULL}, // Setup Bot 2
@@ -632,8 +635,36 @@ typedef enum {
 } JoinStep;
 #define mp_join_step (*(int(*)[4])0x00245698)
 
-// AUTOGEN
-ulonglong Menu_GetMPSkins(int managerNum, byte agent, char param_3);
+// Fills an agent's character radio on the join page with the characters it may have: unlocked, and - in a game
+// without teams - only a good one if no other agent has one (taken = true: never), or in a team game one of its
+// team's side, and a Bond only if no other agent is one. Selects the first; returns what that returns.
+// AUTOINJECT
+ulonglong Menu_GetMPSkins(int managerNum, byte agent, char taken) {
+    M_CONTROL *radio = (M_CONTROL *)__Menu_SendEx((byte)managerNum, C_RBMPSETUP, agent, MessageType_GetControl, 0, 0);
+    __Menu_SendMessage(radio, MessageType_ClearItems, 0, 0);
+    Menu_UnlockMPSkins(agent);
+    for (int i = 0; i < ARRAY_SIZE(mp_characters_small); i++) {
+        if (!menu_unlock_everything && !ITEM_ENABLED(mp_characters[i]))
+            continue;
+        uint skin = mp_characters_small[i].identifier;
+        bool good = BOT_getDefaultStats(skin)->isBad == 0;
+        if ((MPSettings.GameMode & TEAMGAME) == GM_QUICK) {
+            if (good) {
+                if (taken)
+                    continue;
+                if (mp_good_bot_taken != 0 && mp_good_bot_taken != agent + 1)
+                    continue;
+            }
+        } else {
+            if (good ? mp_join_slots[agent].team != MI6 : mp_join_slots[agent].team != PHOENIX)
+                continue;
+            if (IsBondSkin((int)mp_characters_small[i].identifier) && mp_bond_bot_taken != 0 && mp_bond_bot_taken != agent + 1)
+                continue;
+        }
+        __Menu_SendMessage(radio, MessageType_AddItem, (int)Txt_BindLabel(mp_characters_small[i].title, 0), mp_characters_small[i].identifier);
+    }
+    return (uint)__Menu_SendMessage(radio, MessageType_SelectIndex, 0, 0);
+}
 // AUTOGEN
 undefined4 __stdcall Menu_AllJoinedPlayersReady(void);
 
@@ -758,6 +789,310 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             *(int *)arg2 = -2;
         }
         break;
+    }
+    return true;
+}
+
+#define mp_debrief_text_count U8_AT(0x0025ed20)                  // the next of mp_debrief_text's strings
+#define mp_debrief_text       (*(char(*)[24][32])0x0025eaa0)     // the numbers on the debriefing
+#define mp_debrief_result     ((char *)0x0025e9a0)               // "<name> wins the match."
+
+// AUTOGEN
+undefined4 Menu_GetMPScore(byte participant);
+// AUTOGEN
+char* Menu_GetBotShortName(BotNum skin);
+
+static const char *DebriefNumber(int value) {
+    char *text = mp_debrief_text[mp_debrief_text_count];
+    sprintf(text, "%d", value);
+    return text;
+}
+
+// The debriefing after a match: the players and bots by score, four rows, and who won.
+// AUTOINJECT
+bool P_MPDEBRIEFING_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    if (message != MessageType_PageEnter)
+        return true;
+
+    // As the original lays them out: the four place labels, then {score, participant} per player and bot - the
+    // labels are read by place index, and a fifth place or later reads on into the scores.
+    int table[4 + 2 * 10] = { PLACE_1ST, PLACE_2ND, PLACE_3RD, PLACE_4TH };
+    int *place = &table[0];
+    int *entry = &table[4];   // entry[2k] score, entry[2k + 1] participant (players 0-3, bots 4 on)
+
+    mp_debrief_text_count = 0;
+    Menu_RestartFrontEndLoop();
+    uchar count = 0;
+    for (int p = 0; p < MPSettings.numPlayers; p++, count++) {
+        entry[count * 2 + 1] = p;
+        entry[count * 2] = Menu_GetMPScore((byte)p);
+    }
+    for (int p = 4; p < MPSettings.numBots + 4; p++, count++) {
+        entry[count * 2 + 1] = p;
+        entry[count * 2] = Menu_GetMPScore((byte)p);
+    }
+    // highest score first
+    bool swapped;
+    do {
+        swapped = false;
+        for (int i = 0; i < MPSettings.numPlayersAndBots - 1; i++)
+            if (entry[i * 2] < entry[i * 2 + 2]) {
+                int score = entry[i * 2], who = entry[i * 2 + 1];
+                entry[i * 2] = entry[i * 2 + 2];
+                entry[i * 2 + 1] = entry[i * 2 + 3];
+                entry[i * 2 + 2] = score;
+                entry[i * 2 + 3] = who;
+                swapped = true;
+            }
+    } while (swapped && MPSettings.numPlayersAndBots - 1 > 0);
+
+    // places: equal scores share one
+    int shown = 0;
+    for (int i = 0; i < MPSettings.numPlayersAndBots; i++) {
+        if (i > 0 && entry[i * 2] != entry[i * 2 - 2])
+            shown = i;
+        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_PLACE, i, MessageType_SetText, (int)Txt_BindLabel((Action_TranslatedText)place[shown], 0), 0);
+    }
+
+    static const HASHCODE row_controls[] = { SUB_P_MPDEBRIEFING_PLACE, SUB_P_MPDEBRIEFING_ICON, SUB_P_MPDEBRIEFING_NAME,
+        SUB_P_MPDEBRIEFING_POINTS, SUB_P_MPDEBRIEFING_VICTORIES, SUB_P_MPDEBRIEFING_DEATHS, SUB_P_MPDEBRIEFING_ROW_15B,
+        SUB_P_MPDEBRIEFING_TOTAL };
+    for (int row = 0; row < 4; row++) {
+        if (row >= MPSettings.numPlayersAndBots) {
+            __Menu_SendEx(managerNum, C_MPDBG, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+            for (HASHCODE c : row_controls)
+                __Menu_SendEx(managerNum, c, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+            continue;
+        }
+        __Menu_SendEx(managerNum, C_MPDBG, row, MessageType_SetState, CONTROL_STATE_SHOWN, 0);
+        for (HASHCODE c : row_controls)
+            __Menu_SendEx(managerNum, c, row, MessageType_SetState, CONTROL_STATE_INERT, 0);
+        int who = entry[row * 2 + 1];
+        M_ITEM *character = Menu_GetItemFromHash(mp_characters_small, MPSettings.Player[who].SkinNum, ARRAY_SIZE(mp_characters_small));
+        if (character != NULL)
+            __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_ICON, row, MessageType_SetIcon, character->iconHashcode, 0);
+        const char *name = who < 4 ? MPSettings.Player[who].Name : Menu_GetBotShortName((BotNum)MPSettings.Player[who].SkinNum);
+        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_NAME, row, MessageType_SetText, (int)name, 0);
+        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_POINTS, row, MessageType_SetText, (int)DebriefNumber((int)MPGame.players[who].points), 0);
+        mp_debrief_text_count++;
+        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_VICTORIES, row, MessageType_SetText, (int)DebriefNumber((int)MPGame.players[who].victories), 0);
+        mp_debrief_text_count++;
+        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_DEATHS, row, MessageType_SetText, (int)DebriefNumber((int)MPGame.players[who].deaths), 0);
+        mp_debrief_text_count++;
+        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_TOTAL, row, MessageType_SetText, (int)DebriefNumber((int)Menu_GetMPScore((byte)entry[row * 2 + 1])), 0);
+        mp_debrief_text_count++;
+    }
+
+    __Menu_Send(managerNum, SUB_P_MPDEBRIEFING_RESULT, MessageType_MemoSetOption282, 1, 0);
+    const char *result;
+    if ((MPSettings.GameMode & TEAMGAME) != GM_QUICK) {
+        float phoenix = MPGame.teamScore[PHOENIX], mi6 = MPGame.teamScore[MI6];
+        if (phoenix == mi6) {
+            result = Txt_BindLabel(MP_MATCH_DRAW, 0);
+        } else {
+            sprintf(mp_debrief_result, Txt_BindLabel(MP_X_WINS_THE_MATCH, 0), Txt_BindLabel(!(mi6 > phoenix) ? MP_TEAM_PHOENIX : MP_TEAM_MI6, 0));
+            result = mp_debrief_result;
+        }
+    } else {
+        if (entry[0] == entry[2])
+            sprintf(mp_debrief_result, Txt_BindLabel(MP_MATCH_DRAW, 0));   // as the original: the label is the format
+        else
+            sprintf(mp_debrief_result, Txt_BindLabel(MP_X_WINS_THE_MATCH, 0), MPSettings.Player[entry[1]].Name);
+        result = mp_debrief_result;
+    }
+    __Menu_Send(managerNum, SUB_P_MPDEBRIEFING_RESULT, MessageType_SetText, (int)result, 0);
+    return true;
+}
+
+// The confirm page's counts of rows used: MI6 (or everyone, without teams) and Phoenix, players and bots
+#define mp_confirm_mi6_players     U8_AT(0x0025e95b)
+#define mp_confirm_phoenix_players U8_AT(0x0025e95a)
+#define mp_confirm_mi6_bots        U8_AT(0x0025e959)
+#define mp_confirm_phoenix_bots    U8_AT(0x0025e958)
+#define mp_confirm_handicap_text   (*(char(*)[4][32])0x0025e8d8)
+#define mp_confirm_map_text        ((char *)0x0025e4d8)
+#define mp_confirm_scenario_text   ((char *)0x0025e518)
+#define mp_confirm_weapons_text    ((char *)0x0025e558)
+#define mp_confirm_points_text     ((char *)0x0025e598)
+#define mp_confirm_duration_text   ((char *)0x0025e5d8)
+#define mp_confirm_friendly_text   ((char *)0x0025e618)
+#define MP_UNLIMITED ((int)-1)     // MaxPoints / MaxDuration
+
+// AUTOGEN
+void __stdcall Menu_StoreMPSettings(void);
+
+// "<label> : <value>", the value looked up first, as the original does (a TXT_NULL value takes a heap string).
+static void ConfirmLine(char *out, Action_TranslatedText label, Action_TranslatedText value) {
+    const char *v = Txt_BindLabel(value, 0);
+    sprintf(out, "%s : %s", Txt_BindLabel(label, 0), v);
+}
+
+static Action_TranslatedText WeaponSetName(WeaponSet set) {
+    switch (set) {
+    case WEAPSET_NORMAL:      return MP_WEAPSET_NORMAL;
+    case WEAPSET_PISTOLS:     return MP_WEAPSET_PISTOLS;
+    case WEAPSET_AUTOMATIC:   return MP_WEAPSET_AUTOMATIC;
+    case WEAPSET_SNIPERS:     return MP_WEAPSET_SNIPERS;
+    case WEAPSET_EXPLOSIVES:  return MP_WEAPSET_EXPLOSIVES;
+    case WEAPSET_EXPLOSIVES2: return MP_WEAPSET_EXPLOSIVES2;
+    case WEAPSET_MI6:         return MP_WEAPSET_MI6;
+    case WEAPSET_PHOENIX:     return MP_WEAPSET_PHOENIX;
+    case WEAPSET_MODERN:      return MP_WEAPSET_MODERN;
+    case WEAPSET_STEALTHY:    return MP_WEAPSET_STEALTHY;
+    case WEAPSET_RANDOM:      return MP_RANDOM;
+    default:                  return TXT_NULL;
+    }
+}
+
+// The last page before a multiplayer match: who is playing, on which side, and the rules. A starts it.
+// AUTOINJECT
+bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    if (message == MessageType_Select) {
+        // The joined controllers become players 0, 1... in order: each one's controls setup and name move down to
+        // its player number, and its join slot is copied beside it. (As the original, a moved controller's port
+        // byte takes the old value of the slot it moves into, and player 3's the last one moved.)
+        Menu_StoreMPSettings();
+        MPJoinSlot slots[4];
+        memset(slots, 0, sizeof(slots));
+        for (int k = 0; k < 4; k++)
+            *(uchar *)&slots[k].field_0xc = (uchar)k;
+        uchar players = 0;
+        if (mp_join_slots[0].joined) {
+            slots[0] = mp_join_slots[0];
+            *(uchar *)&slots[0].field_0xc = 0;
+            players = 1;
+        }
+        uchar port3 = 0;
+        for (int k = 1; k < 4; k++) {
+            if (!mp_join_slots[k].joined) {
+                if (k == 3)
+                    port3 = *(uchar *)&slots[3].field_0xc;
+                continue;
+            }
+            memcpy(&PlayerInputs[players], &PlayerInputs[k], sizeof(PlayerInput));
+            memcpy(&MPSettings.Player[players], &MPSettings.Player[k], sizeof(MPSettings_PerPlayer));
+            uchar port = *(uchar *)&slots[players].field_0xc;
+            slots[players] = mp_join_slots[k];
+            if (k < 3)
+                *(uchar *)&slots[k].field_0xc = port;
+            else
+                port3 = port;
+            players++;
+        }
+        for (int p = 0; p < 3; p++) {
+            PlayerInputs[p].controllerPort = *(uchar *)&slots[p].field_0xc;
+            MPSettings.Player[p].SkinNum = slots[p].skin;
+            MPSettings.Player[p].TeamId = slots[p].team;
+        }
+        MPSettings.Player[3].TeamId = slots[3].team;
+        PlayerInputs[3].controllerPort = port3;
+        MPSettings.Player[3].SkinNum = slots[3].skin;
+        if ((int)MPSettings.MaxDuration != MP_UNLIMITED)
+            MPSettings.MaxDuration *= 60;   // minutes to seconds
+        MPSettings.ExplosiveSceneryEnabled &= 1;
+        MPSettings.numPlayers = players;
+        GameState.NextLevelHashcode = (HASHCODE)MPSettings.multiplayerLevelHashcode;
+        GameState.difficultyModifier = 1;
+        MPSettings.isMultiplayer = 1;
+        ResetMap_LevelToLoad((HASHCODE)MPSettings.multiplayerLevelHashcode, false, false);
+        GameFlow_PushState(7, 80.0f, 0xff);
+        SFXFadeDown(1);
+        MenuManager_Delete(managerNum);
+        return true;
+    }
+    if (message != MessageType_PageEnter)
+        return true;
+
+    mp_confirm_phoenix_bots = 0;
+    mp_confirm_mi6_bots = 0;
+    mp_confirm_phoenix_players = 0;
+    mp_confirm_mi6_players = 0;
+    for (uint row = 0; row < 4; row++) {
+        __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_MI6_NAME, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_PHOENIX_NAME, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_MI6_ICON, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_PHOENIX_ICON, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_MI6_HANDICAP, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_PHOENIX_HANDICAP, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+    }
+    bool teams = (MPSettings.GameMode & TEAMGAME) != GM_QUICK;
+    // column headings: "MI6" and (shown) "Phoenix" from the menu data, or one column of everyone "Playing"
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_HEADING_1, MessageType_SetText, (int)Txt_BindLabel(teams ? MP_TEAM_MI6 : MP_BOT_PLAYING, 0), 0);
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_HEADING_2, MessageType_SetState, teams ? CONTROL_STATE_INERT : CONTROL_STATE_HIDDEN, 0);
+
+    for (int i = 0; i < 4; i++) {
+        const MPJoinSlot *slot = &mp_join_slots[i];
+        if (!slot->joined)
+            continue;
+        HASHCODE name, icon, handicap;
+        uchar row;
+        if (slot->team == MI6 || !teams) {
+            name = SUB_P_MPCONFIRM_MI6_NAME; icon = SUB_P_MPCONFIRM_MI6_ICON; handicap = SUB_P_MPCONFIRM_MI6_HANDICAP;
+            row = mp_confirm_mi6_players++;
+        } else {
+            name = SUB_P_MPCONFIRM_PHOENIX_NAME; icon = SUB_P_MPCONFIRM_PHOENIX_ICON; handicap = SUB_P_MPCONFIRM_PHOENIX_HANDICAP;
+            row = mp_confirm_phoenix_players++;
+        }
+        __Menu_SendEx(managerNum, name, row, MessageType_SetState, CONTROL_STATE_INERT, 0);
+        __Menu_SendEx(managerNum, name, row, MessageType_SetText, (int)MPSettings.Player[i].Name, 0);
+        __Menu_SendEx(managerNum, handicap, row, MessageType_SetState, CONTROL_STATE_INERT, 0);
+        int h = MPSettings.Player[i].HealthModifier;
+        sprintf(mp_confirm_handicap_text[i], "%s%d", h >= 0 ? "+" : "", h);
+        __Menu_SendEx(managerNum, handicap, row, MessageType_SetText, (int)mp_confirm_handicap_text[i], 0);
+        if (Menu_GetItemFromHash(mp_characters_small, slot->skin, ARRAY_SIZE(mp_characters_small)) != NULL) {
+            __Menu_SendEx(managerNum, icon, row, MessageType_SetState, CONTROL_STATE_INERT, 0);
+            __Menu_SendEx(managerNum, icon, row, MessageType_SetIcon, mp_characters_small[slot->skin].iconHashcode, 0);
+        }
+    }
+
+    M_ITEM *map = Menu_GetItemFromHash(mp_level, MPSettings.multiplayerLevelHashcode, ARRAY_SIZE(mp_level));
+    ConfirmLine(mp_confirm_map_text, CFG_MAP, map != NULL ? map->title : TXT_NULL);
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_MAP, MessageType_SetText, (int)mp_confirm_map_text, 0);
+    M_ITEM *scenario = Menu_GetItemFromHash(mp_scenario, MPSettings.GameMode, ARRAY_SIZE(mp_scenario));
+    ConfirmLine(mp_confirm_scenario_text, CFG_SCENARIO, scenario != NULL ? scenario->title : TXT_NULL);
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_SCENARIO, MessageType_SetText, (int)mp_confirm_scenario_text, 0);
+    ConfirmLine(mp_confirm_weapons_text, CFG_WEAPON_SET, WeaponSetName(MPSettings.weaponSet));
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_WEAPONS, MessageType_SetText, (int)mp_confirm_weapons_text, 0);
+
+    // Points (lives for Top Agent, minutes held for King of the Hill)
+    if ((int)MPSettings.MaxPoints == MP_UNLIMITED) {
+        if (MPSettings.GameMode == GM_TOPAGENT)
+            ConfirmLine(mp_confirm_duration_text, CFG_LIVES, CFG_UNLIMITED);   // as the original: into the next line's buffer
+        else if (MPSettings.GameMode == GM_KOTH || MPSettings.GameMode == GM_TEAMKOTH)
+            ConfirmLine(mp_confirm_points_text, CFG_MINUTES, CFG_UNLIMITED);
+        else
+            ConfirmLine(mp_confirm_points_text, CFG_POINTS, CFG_UNLIMITED);
+    } else {
+        sprintf(mp_confirm_points_text, "%s : %d", Txt_BindLabel(MPSettings.GameMode == GM_TOPAGENT ? CFG_LIVES : CFG_POINTS, 0),
+                (int)MPSettings.MaxPoints);
+    }
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_POINTS, MessageType_SetText, (int)mp_confirm_points_text, 0);
+    if ((int)MPSettings.MaxDuration == MP_UNLIMITED)
+        ConfirmLine(mp_confirm_duration_text, CFG_DURATION, CFG_UNLIMITED);
+    else
+        sprintf(mp_confirm_duration_text, "%s : %d", Txt_BindLabel(CFG_DURATION, 0), (int)MPSettings.MaxDuration);
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_DURATION, MessageType_SetText, (int)mp_confirm_duration_text, 0);
+    ConfirmLine(mp_confirm_friendly_text, CFG_FRIENDLY_FIRE, MPSettings.FriendlyFire ? MP_ON : MP_OFF);
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_FRIENDLY_FIRE, MessageType_SetText, (int)mp_confirm_friendly_text, 0);
+
+    for (uint row = 0; row < 10; row++) {
+        __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_MI6_BOT, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_PHOENIX_BOT, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+    }
+    for (uint b = 0; b < (uchar)mpbots.NumBots; b++) {
+        const MPBOT *bot = &mpbots.bot[b];
+        HASHCODE icon = mp_characters_small[(uchar)bot->SkinNum].iconHashcode;
+        HASHCODE column = (HASHCODE)0;   // (a bot neither good nor bad: row 0 of nothing, as the original)
+        uint row = 0;
+        if (!teams || bot->isGood == 1) {
+            row = mp_confirm_mi6_bots++;
+            column = SUB_P_MPCONFIRM_MI6_BOT;
+        } else if (bot->isGood == 0) {
+            row = mp_confirm_phoenix_bots++;
+            column = SUB_P_MPCONFIRM_PHOENIX_BOT;
+        }
+        __Menu_SendEx(managerNum, column, row, MessageType_SetState, CONTROL_STATE_INERT, 0);
+        __Menu_SendEx(managerNum, column, row, MessageType_SetIcon, icon, 0);
     }
     return true;
 }

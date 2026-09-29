@@ -12,11 +12,9 @@ void Menu_PlayIris(char param_1, uchar param_2, uint param_3);
 void Menu_ChangePageCloseIris(HASHCODE param_1, uchar param_2, uint param_3);
 void Menu_UpdateWheel(uchar param_1, M_CONTROL *param_2, M_ITEM *param_3, HASHCODE param_4, HASHCODE param_5, HASHCODE param_6, HASHCODE param_7, bool param_8);
 bool Menu_SelectItemInControl(M_CONTROL* control, M_ITEM *list, ushort size, int idx);
-void Menu_UnlockMPSettings(void);
 void Menu_DeleteSprite(sprite* spr);
 void Menu_ClearStack(M_MANAGER *mgr);
 void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle);
-undefined4 Menu_GetObjectUpgradeLevel(uint param_1,byte param_2);
 void Menu_AddItemsToControl(M_CONTROL *control, M_ITEM *itemList, ushort numItems, ushort firstItemIdx, uchar unlockEverything);
 void Menu_ProcessDelayedMessages(void);
 void* Menu_Malloc(int size);
@@ -37,9 +35,35 @@ undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,
 bool Menu_IsBotGood(uint idx);
 void __stdcall Menu_PrepareBots(void);
 void Menu_CreateOptionBox(byte managerNum, int **text, undefined4 type, char param_4, char param_5);
-void Menu_UnlockMPSkins(byte param_1);
 bool Menu_HasMedal(HASHCODE hc, uint level, uchar maybePlayerNum);
 
+
+// Rewards (MenuUnlocks.cpp; docs/ui/secrets.md)
+#pragma pack(push, 1)
+typedef struct REWARDINFO_tag {
+    uint objType;       // REWARD_*
+    uint objId;
+    int upgradeLevel;   // for an upgrade: how many of that object's upgrade bits are set
+    bool hasMedal;      // the reward's bit is set in the bonus
+    char pad[3];
+} REWARDINFO_tag;
+#pragma pack(pop)
+static_assert(sizeof(REWARDINFO_tag) == 0x10, "REWARDINFO_tag is 0x10 bytes");
+
+#define REWARD_MP_CHARACTER 1
+#define REWARD_MP_SCENARIO  2
+#define REWARD_MP_MODIFIER  3
+#define REWARD_UPGRADE      4
+
+void PlrStarts_ProcessRewardCounter(ulong *bonus, HASHCODE hashcode, uint upgradeLevel, char set, REWARDINFO_tag *op);
+uint __stdcall Menu_GetNightfireStatus(void);
+void Menu_SetNightfireStatus(uint status);
+void Menu_SetBonus(uint lo, uint hi, byte player, char orIn);
+bool Menu_SetLevelBonus(int level, uint medal, byte player);
+undefined4 Menu_GetObjectUpgradeLevel(uint objId, byte player);
+void Menu_UnlockMPSkins(byte player);
+void Menu_UnlockMPSettings(void);
+ulonglong Menu_GetMPSkins(int managerNum, byte agent, char param_3);
 
 // The codename load/save in progress, which Menu_UpdateMessageBox runs from a page's update.
 #pragma pack(push, 1)

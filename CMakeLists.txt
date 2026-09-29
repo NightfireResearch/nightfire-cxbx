@@ -91,6 +91,7 @@ add_library(actioninject SHARED
   src/common/xbeRelocate.cpp
   src/action/devtools/MenuProbe.cpp
   src/action/devtools/SecretsShadow.cpp
+  src/action/devtools/UnlocksShadow.cpp
   src/action/game.cpp
   src/action/main.cpp
   src/common/launchInfo.cpp
@@ -143,6 +144,7 @@ add_library(actioninject SHARED
   src/action/ui/ui_secrets.cpp
   src/action/ui/ui_nightfire.cpp
   src/action/ui/ui_codenames.cpp
+  src/action/ui/MenuUnlocks.cpp
   src/action/ui/ui_score.cpp
   src/action/ui/Menu.cpp
   src/action/autofunc.cpp

@@ -15,7 +15,7 @@
 
 // The missions (sp_level, ui.h; these are its shipped contents). .enabled is the campaign's progress: set from the codename's save (Menu_SetNightfireStatus), by
 // finishing the mission before (Menu_SetLevelBonus) and by secret codes (Menu_SpecialCodenameCheck).
-const M_ITEM sp_level_shipped[12] = {
+M_ITEM sp_level[12] = {
     {ICON_SPMAP_PARISPRELUDE, SPMAP_PARISPRELUDE_NAME, SPMAP_PARISPRELUDE_DESC, HT_Level_Driving_Paris, 1, TXT_NULL},
     {ICON_SPMAP_EXCHANGE, SPMAP_EXCHANGE_NAME, SPMAP_EXCHANGE_DESC, HT_Level_CastleExterior, 1, TXT_NULL},
     {ICON_SPMAP_ALPINEESCAPE, SPMAP_ALPINEESCAPE_NAME, SPMAP_ALPINEESCAPE_DESC, HT_Level_Driving_SnowMobile, 0, SPMAP_LOCKED},
@@ -31,7 +31,7 @@ const M_ITEM sp_level_shipped[12] = {
 };
 
 // difficulty (ui.h): the identifier is GameState.difficultyModifier.
-const M_ITEM difficulty_shipped[3] = {
+M_ITEM difficulty[3] = {
     {ICON_DIFFICULTY_OPERATIVE, DIFFICULTY_OPERATIVE, DIFFICULTY_OPERATIVE_DESC, 1, 1, TXT_NULL},
     {ICON_DIFFICULTY_AGENT, DIFFICULTY_AGENT, DIFFICULTY_AGENT_DESC, 2, 1, TXT_NULL},
     {ICON_DIFFICULTY_00AGENT, DIFFICULTY_00AGENT, DIFFICULTY_00AGENT_DESC, 3, 1, TXT_NULL},

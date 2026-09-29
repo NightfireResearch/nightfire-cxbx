@@ -31,21 +31,23 @@ invented function names in Ghidra carry an "INVENTED NAME" plate comment.
 | File | What |
 |---|---|
 | `ui_nightfire.cpp` | `sp_level`, `difficulty`; P_NFMAP, C_SBNFMAP, P_NFDFCTY, C_SBNFDFCTY |
-| `ui_mp.cpp` | `mp_level`, `mp_scenario`, `mp_characters`, `mp_characters_small`, `mp_options`, `mp_bots`; P_MPMAP, C_SBMPMAP, P_MPSCENARIO, C_SBMPSCEN, P_MPOPTIONS, C_SBMPOPTIONS, P_MPBOTS, C_SBBOTS, P_MPBOTCHOOSE, C_SBMPBTCHOOSE, C_RBMPSETUP, P_MPPLAYERMODS, P_MPENVIROMODS |
+| `ui_mp.cpp` | `mp_level`, `mp_scenario`, `mp_characters`, `mp_characters_small`, `mp_options`, `mp_bots`; P_MPMAP, C_SBMPMAP, P_MPSCENARIO, C_SBMPSCEN, P_MPOPTIONS, C_SBMPOPTIONS, P_MPBOTS, C_SBBOTS, P_MPBOTCHOOSE, C_SBMPBTCHOOSE, C_RBMPSETUP, P_MPCONFIRM, P_MPDEBRIEFING, P_MPPLAYERMODS, P_MPENVIROMODS, Menu_GetMPSkins |
 | `ui_codenames.cpp` | `cn_options`; P_CNMENU, C_SBCNOPTIONS |
+| `MenuUnlocks.cpp` | the campaign's progress and rewards: missions open, bonus masks, upgrades, MP characters/scenarios unlocked |
 | `ui_secrets.cpp` | Menu_SpecialCodenameCheck, Menu_UpgradeCheat, P_CNNAME, C_KEYBOARD |
 | `ui_credits.cpp` | Menu_InitCredits, Menu_SetupCredits (from `CreditsData.inc`, generated from `data/credits.csv`), P_CREDITS |
 | `ui_dossier.cpp` | `ds_options`, `ds_weapons`, `ds_gadgets`; the dossier pages (earlier work) |
 
-The item lists stay in the game's memory, reached through address macros in `ui.h` (`sp_level` is
-`(*(M_ITEM(*)[12])0x0017c580)`), because original code still run - unlocking missions and characters, cheats,
-upgrades - writes them. Their shipped contents are in the source beside their handlers as `<name>_shipped`,
-checked against the game's at start (`MenuCheckLists`); once nothing original writes a list, its macro becomes a
-definition initialised from them. (An alternative was built and is not used: `// RELOCATE` on an array of ours plus
-`tools/data_refs.py` repoints every code reference at it - `src/common/xbeRelocate.h`.)
+The item lists are ours: arrays in the source beside their handlers. They lived in the game's memory, reached
+through address macros, until every function that refers to them was reimplemented - the handlers, and the
+progress/unlock functions in `MenuUnlocks.cpp` (Menu_Get/SetNightfireStatus, Menu_SetBonus, Menu_SetLevelBonus,
+Menu_GetObjectUpgradeLevel, Menu_UnlockMPSkins, Menu_UnlockMPSettings; Menu_GetMPSkins is in `ui_mp.cpp`). Nothing
+original refers to the game's copies now (every reference site checked against Ghidra), so the arrays are the
+definitions. A consequence for A/B runs: an original handler run with `MenuOriginal` reads the game's copy, which
+no longer changes. (An alternative was built and is not used: `// RELOCATE` on an array plus `tools/data_refs.py`
+repoints every code reference at it - `src/common/xbeRelocate.h`.)
 
-Not yet: P_MPDEBRIEFING and P_MPCONFIRM (the last two list users; they need a played match to test), and the
-handlers without lists (`handlers.md` step 2).
+Not yet: the handlers without lists (`handlers.md` step 2).
 
 ## Checking against the original
 
@@ -56,7 +58,9 @@ handlers without lists (`handlers.md` step 2).
   is timed from the page, whatever the boot took), `press`, `hold`, `focus <control> [id]`, `gopage <page>`,
   `shot <name>`, `log`, `secretstest`, `quit`.
 - `MenuOriginal=<hash>:<address>,<address>` runs those handlers or functions as the original code.
-- `MenuCheckLists=on` compares the lists' shipped contents in our source with the game's (all 12 identical).
+- `MenuCheckLists=on` compares the lists in our source with the game's copies (all 12 identical).
+- `MenuShadowTests=on` runs the shadow tests at start, before the game (no display needed): `SecretsShadow.cpp`
+  (every code, 224 runs) and `UnlocksShadow.cpp` (the seven progress/unlock functions over their inputs, 1440 runs).
 
 `tools/ui/run_menu.sh <script> [name]` runs a script from a fresh boot (language, intro, start page) in
 `build/menurun/<name>/`, with a copy of `Release/saves` so the start page leads to the main menu, and writes the

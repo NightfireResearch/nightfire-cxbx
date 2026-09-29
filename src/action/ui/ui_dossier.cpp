@@ -16,7 +16,7 @@ typedef enum {
 } UpgradeabilityType;
 
 // This array is not constant - it is modified for the custom branded shaver, and potentially for upgraded gadgets too?
-const M_ITEM ds_gadgets_shipped[14] = {
+M_ITEM ds_gadgets[14] = {
     {
         .iconHashcode = ICON_DS_GADGET_TASER,
         .title = GADGET_TASER_NAME,
@@ -132,7 +132,7 @@ const M_ITEM ds_gadgets_shipped[14] = {
 };
 
 // ds_options: 002e0af8 (PS2 EU), 0017cf70 (Xbox)
-const M_ITEM ds_options_shipped[4] = {
+const M_ITEM ds_options[4] = {
     {
         .iconHashcode = ICON_DOSSIER_RECORDS,
         .title = DOSSIER_RECORDS_NAME,
@@ -171,7 +171,7 @@ const M_ITEM ds_options_shipped[4] = {
 static_assert(sizeof(ds_options) == 0x18 * 4, "Size of ds_options is not as expected");
 
 // This array is not constant - it is modified for upgraded pistol
-const M_ITEM ds_weapons_shipped[27] = {
+M_ITEM ds_weapons[27] = {
     {
         .iconHashcode = ICON_DS_WEAPON_PP7,
         .title = WEAPON_PP7_NAME,

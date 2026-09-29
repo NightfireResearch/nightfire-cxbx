@@ -45,8 +45,6 @@ void Menu_ChangePageCloseIris(HASHCODE param_1, uchar param_2, uint param_3);
 // AUTOGEN
 void* Menu_Malloc(int size);
 
-// AUTOGEN
-void Menu_UnlockMPSkins(byte param_1);
 
 // AUTOGEN
 void __stdcall Menu_PrepareBots(void);
@@ -301,14 +299,10 @@ uint __Menu_Send(uchar param_1, HASHCODE param_2, uint param_3, int param_4, int
 // AUTOGEN
 bool Menu_SelectItemInControl(M_CONTROL* control, M_ITEM *list, ushort size, int idx);
 
-// AUTOGEN
-void Menu_UnlockMPSettings(void);
 
 // AUTOGEN
 void Menu_Free(void **data, undefined4 mallocFlags);
 
-// AUTOGEN
-undefined4 Menu_GetObjectUpgradeLevel(uint param_1,byte param_2);
 
 #define menu_unlock_everything U8_AT(0x0025d79e)
 

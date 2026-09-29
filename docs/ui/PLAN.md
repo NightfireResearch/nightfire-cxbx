@@ -46,14 +46,16 @@ text labels are named after their English string (tools/ui/text_bank.py reads th
 - [x] All 12 static lists (0x17c580-0x17d540) in the source, each next to its handlers, byte-identical to the
       shipped data (`MenuCheckLists`); the `mp_scenario` locked label fixed (0x1ab "Fixed Gun Emplacements" ->
       0x010000ab "This scenario is locked.").
-- [x] The lists are used in the game's memory (address macros in `ui.h`), since unlock code still run as the
-      original writes them; their contents are in the source as `<name>_shipped`, to become the definitions once
-      nothing original writes them. (`// RELOCATE` + `tools/data_refs.py`, repointing the code at our arrays, was
-      built and dropped in favour of this.)
+- [x] The lists are ours (arrays in the source): every function referring to them is reimplemented - the handlers
+      and `MenuUnlocks.cpp` - so nothing original touches the game's copies (every reference site checked in
+      Ghidra). Until then they were address macros into the game's memory. (`// RELOCATE` + `tools/data_refs.py`,
+      repointing the code at our arrays, was built and dropped in favour of that.)
 - [x] Reimplemented, and identical to the original in screenshots and messages: P_NFDFCTY, C_SBNFDFCTY, P_NFMAP,
       C_SBNFMAP, P_MPOPTIONS, P_MPBOTS, C_SBBOTS, P_CNMENU, C_SBCNOPTIONS.
-- [ ] Still to do: P_MPBOTCHOOSE, C_SBMPBTCHOOSE, C_SBMPSCEN, C_SBMPOPTIONS, C_RBMPSETUP, P_MPDEBRIEFING,
-      P_MPCONFIRM (and the non-list handlers in `docs/ui/handlers.md` step 2).
+- [x] Also P_MPBOTCHOOSE, C_SBMPBTCHOOSE, C_SBMPSCEN, C_SBMPOPTIONS, C_RBMPSETUP, P_MPDEBRIEFING, P_MPCONFIRM,
+      Menu_GetMPSkins (identical to the original in screenshots and messages), and the progress/unlock functions
+      (`UnlocksShadow.cpp`: 1440 runs against the originals, no differences).
+- [ ] The non-list handlers in `docs/ui/handlers.md` step 2.
 
 ### 6. Probes (separate compilation units, `src/action/devtools/`)
 - [x] `MenuProbe.cpp`: `MenuLog` (every handler message), `MenuScript` (replayed pad input: wait, waitpage,

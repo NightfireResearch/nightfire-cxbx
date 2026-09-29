@@ -378,9 +378,32 @@ typedef enum {
     SUB_C_SBBOTS_WHEEL_TEXT = 0x10000110,
     SUB_C_SBBOTS_ICON = 0x10000112,
     SUB_C_SBBOTS_IRIS = 0x10000113,
+    SUB_P_MPDEBRIEFING_PLACE = 0x10000156,      // by row (0-3): "1st"...
+    SUB_P_MPDEBRIEFING_ICON = 0x10000157,
+    SUB_P_MPDEBRIEFING_NAME = 0x10000158,
+    SUB_P_MPDEBRIEFING_POINTS = 0x10000159,     // MPGamePlayer.points
+    SUB_P_MPDEBRIEFING_DEATHS = 0x1000015a,     // MPGamePlayer.deaths
+    SUB_P_MPDEBRIEFING_ROW_15B = 0x1000015b,    // shown, never given text
+    SUB_P_MPDEBRIEFING_TOTAL = 0x1000015c,      // Menu_GetMPScore
     SUB_C_SBMPBTCHOOSE_IRIS = 0x1000018d,
     SUB_C_SBMPBTCHOOSE_WHEEL_TEXT = 0x1000018f,
     SUB_C_SBMPBTCHOOSE_ICON = 0x10000194,
+    SUB_P_MPCONFIRM_MAP = 0x1000022d,           // "Map : <map>"
+    SUB_P_MPCONFIRM_SCENARIO = 0x1000022e,
+    SUB_P_MPCONFIRM_WEAPONS = 0x1000022f,
+    SUB_P_MPCONFIRM_POINTS = 0x10000230,
+    SUB_P_MPCONFIRM_DURATION = 0x10000231,
+    SUB_P_MPCONFIRM_FRIENDLY_FIRE = 0x10000232,
+    SUB_P_MPCONFIRM_MI6_BOT = 0x10000233,       // by row: bot icons, MI6 side (or everyone, without teams)
+    SUB_P_MPCONFIRM_PHOENIX_BOT = 0x10000234,
+    SUB_P_MPCONFIRM_MI6_ICON = 0x10000235,      // by row: players, MI6 side (or everyone)
+    SUB_P_MPCONFIRM_PHOENIX_ICON = 0x10000236,
+    SUB_P_MPCONFIRM_MI6_NAME = 0x10000237,
+    SUB_P_MPCONFIRM_MI6_HANDICAP = 0x10000238,
+    SUB_P_MPCONFIRM_PHOENIX_NAME = 0x10000239,
+    SUB_P_MPCONFIRM_PHOENIX_HANDICAP = 0x1000023a,
+    SUB_P_MPCONFIRM_HEADING_2 = 0x1000023e,     // the Phoenix column's heading, hidden without teams
+    SUB_P_MPCONFIRM_HEADING_1 = 0x1000023f,     // "MI6", or "Playing" without teams
     SUB_C_RBMPSETUP_ICON = 0x100001a0,          // by agent (id 0-3)
     SUB_C_RBMPSETUP_TITLE = 0x100001a2,         // by agent: "Choose Team" / "Choose Character" / "Health Handicap"
     SUB_C_SBCNOPTIONS_ICON = 0x100001a5,
@@ -395,6 +418,8 @@ typedef enum {
     SUB_P_CREDITS_RIGHT_TEXT = 0x10000214,      // 26 labels (by id), the right column
     SUB_P_CREDITS_FADE = 0x10000215,            // the black overlay faded in at the end
     SUB_P_CREDITS_BACKGROUND = 0x1000023c,      // tinted darker once the game is complete
+    SUB_P_MPDEBRIEFING_RESULT = 0x1000023d,     // "<name> wins the match."
+    SUB_P_MPDEBRIEFING_VICTORIES = 0x10000240,  // MPGamePlayer.victories
     SUB_P_CNNAME_TITLE = 0x10000242,            // "Secret Unlocks" / "Enter a new codename"
 
     // Pages: Groups of controls/components?
@@ -606,6 +631,21 @@ typedef enum {
     MP_RC_HELI = 0x010002d9,
 
     TXT_YES = 0x00000181,
+    CFG_WEAPON_SET = 0x0000024d,               // "Weapon Set"
+    CFG_UNLIMITED = 0x000003ca,                // "Unlimited"
+    CFG_MAP = 0x000003d4,                      // "Map"
+    CFG_SCENARIO = 0x000003d5,                 // "Scenario"
+    CFG_DURATION = 0x000003d6,                 // "Duration"
+    CFG_LIVES = 0x000003d7,                    // "Lives"
+    CFG_POINTS = 0x000003d8,                   // "Points"
+    CFG_FRIENDLY_FIRE = 0x000003da,            // "Friendly Fire"
+    CFG_MINUTES = 0x010001de,                  // "Minutes"
+    PLACE_1ST = 0x01000297,                    // "1st"
+    PLACE_2ND = 0x01000298,
+    PLACE_3RD = 0x01000299,
+    PLACE_4TH = 0x0100029a,
+    MP_X_WINS_THE_MATCH = 0x0100029f,          // "%s wins the match."
+    MP_MATCH_DRAW = 0x010002a0,                // "Match was a draw"
     CFG_HEALTH_HANDICAP = 0x00000296,          // "Health Handicap"
     CFG_CHOOSE_TEAM = 0x0000037c,              // "Choose Team"
     CFG_CHOOSE_CHARACTER = 0x0000037d,         // "Choose Character"

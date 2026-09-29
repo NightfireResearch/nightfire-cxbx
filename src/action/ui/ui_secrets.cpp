@@ -10,22 +10,7 @@
 // secret mode, and a code typed on its keyboard is checked against a table of 52 when Done is pressed. The same
 // page and keyboard name a new codename otherwise.
 
-#pragma pack(push, 1)
-typedef struct REWARDINFO_tag {
-    uint objType;       // 4 = a weapon/gadget upgrade
-    uint objId;
-    int upgradeLevel;   // for an upgrade: how many of that object's upgrade bits are set
-    bool hasMedal;      // the reward's bit is set in the bonus
-    char pad[3];
-} REWARDINFO_tag;
-#pragma pack(pop)
 
-// AUTOGEN
-uint __stdcall Menu_GetNightfireStatus(void);
-// AUTOGEN
-void Menu_SetBonus(uint lo, uint hi, byte param_3, char param_4);
-// AUTOGEN
-void PlrStarts_ProcessRewardCounter(ulong *bonus, HASHCODE hashcode, uint upgradeLevel, char set, REWARDINFO_tag *op);
 // AUTOGEN
 void __stdcall PlrStats_ResetScoring(void);
 // AUTOGEN
@@ -184,7 +169,7 @@ uint64_t Menu_SpecialCodenameCheck(byte *code) {
         if (missions == 0)
             missions = 3;
         for (uint level = 0; level < ARRAY_SIZE(sp_level); level++)
-            *(uchar *)&sp_level[level].enabled = (missions >> level) & 1;
+            ITEM_ENABLED(sp_level[level]) = (missions >> level) & 1;
         Menu_SetBonus((uint)bonus, (uint)(bonus >> 32), 0, 0);
         return 1;
     }
