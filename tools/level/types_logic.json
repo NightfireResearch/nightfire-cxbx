@@ -1,0 +1,2088 @@
+{
+ "219": {
+  "name": "Door",
+  "create": "0x0002f640",
+  "create_name": "Door_Create",
+  "call": "Door_Create(&pos, &rot, lvl, celglist) cdecl; object size 0x74 (DOORINFO)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "movement",
+    "type": "enum",
+    "note": "obj->subState: 0 = swing door (path of 3 keys, closed pose = middle key, opens either way away from the player); 1/2 = slide/path door (closed = key 0, open = last key). Seen 0, 2",
+    "seen": "n=440 distinct=2 min=0x0 max=0x2: 0x2 x322, 0x0 x118"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "doorGroup",
+    "type": "u16",
+    "note": "DOORINFO+0x66: doors with the same non-zero group open/close together (double doors); DoorGroupsStates[group]",
+    "seen": "n=440 distinct=83 min=0x0 max=0x63: 0x0 x207, 0x6 x10, 0x5 x9, 0x1 x9, 0x2 x8, 0xa x7"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "stateSwitchChannel",
+    "type": "switch",
+    "note": "DOORINFO+0x62, two-way: door writes 1 while open/opening (and at create if it starts open), 0 when closed; channel going 1 opens it, 0 closes it",
+    "channelRole": "inout",
+    "seen": "n=440 distinct=10 min=0x0 max=0x82: 0x0 x431, 0x82 x1, 0x5 x1, 0x5a x1, 0x6 x1, 0x7 x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "unlockSwitchChannel",
+    "type": "switch",
+    "note": "DOORINFO+0x64: door is locked while this channel is 0 (plays lockedSound); on its 0->1 edge the door opens by itself once and the channel link is cleared. 200 (0xc8) on 51 doors: no placement writes channel 200 (only DroneAIVolume1 k0 also holds 200) - probably permanently locked 'Door_Locked_*' or set by a script",
+    "channelRole": "in",
+    "seen": "n=440 distinct=30 min=0x0 max=0xf9: 0x0 x350, 0xc8 x51, 0x31 x2, 0xc5 x2, 0x9 x2, 0x3c x2"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "flag_d9_8",
+    "type": "bool",
+    "note": "non-zero sets bit 0x8 of obj+0xd9; no reader found (confidence low)",
+    "seen": "n=440 distinct=2 min=0x0 max=0x1: 0x1 x293, 0x0 x147"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "openSound",
+    "type": "u16",
+    "note": "sound id (not a hashcode), 0 -> none (0xffff)",
+    "seen": "n=440 distinct=7 min=0x17 max=0xffff: 0xffff x267, 0x11d x74, 0x4c4 x51, 0x4d3 x32, 0x17 x14, 0x5e0 x1"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "closeSound",
+    "type": "u16",
+    "note": "sound id, 0 -> none",
+    "seen": "n=440 distinct=7 min=0x18 max=0xffff: 0xffff x268, 0x11c x75, 0x4c3 x51, 0x4c2 x31, 0x18 x12, 0x5e1 x2"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "lockedSound",
+    "type": "u16",
+    "note": "sound id played when locked / refused, 0 -> none",
+    "seen": "n=435 distinct=5 min=0x11d max=0xffff: 0xffff x315, 0x140 x70, 0x4d4 x43, 0x4cd x6, 0x11d x1"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "flagsA",
+    "type": "u32",
+    "note": "ORed with k9 into DOORINFO+0x6c: bit0 = smooth spline interpolation (else KeyFrame_Interp, linear); bit2 = starts open; bit5 = stays open (no auto-close after 6 s); bit1 always set (meaning unknown)",
+    "seen": "n=438 distinct=2 min=0x0 max=0x1: 0x1 x404, 0x0 x34"
+   },
+   {
+    "key": 9,
+    "offset": "0x50",
+    "name": "flagsB",
+    "type": "u32",
+    "note": "ORed with k8 (same bits); seen 2, 0x22, 0x24",
+    "seen": "n=438 distinct=3 min=0x2 max=0x24: 0x2 x417, 0x22 x19, 0x24 x2"
+   },
+   {
+    "key": 10,
+    "offset": "0x54",
+    "name": "oneWay",
+    "type": "u8",
+    "note": "DOORINFO+0x72: 1 = can only be opened from the side its forward (+z of obj mtx) points away from, 2 = the other side, 0 = both",
+    "seen": "n=440 distinct=2 min=0x0 max=0x1: 0x0 x439, 0x1 x1"
+   },
+   {
+    "key": 11,
+    "offset": "0x58",
+    "name": "playerCannotOpen",
+    "type": "bool",
+    "note": "DOORINFO+0x73: Action button (Player_Activate) does not open it; only channels/drones",
+    "seen": "n=425 distinct=2 min=0x0 max=0x1: 0x0 x417, 0x1 x8"
+   }
+  ],
+  "header": [
+   "pathKeyCount (+2 = placement+0x40)",
+   "pathDurationFrames (+4 = placement+0x42)",
+   "path (+8 = m_paths[placement+0x44])"
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "placement glist mesh (Control_SetGList). Its rest pose comes from the PATH, not from pos/rot: obj->mtx = Spline_Interp(path, t) with t = 0.5*(keys-1) for swing doors (the middle key) or 0 for slide doors (1.0*(keys-1) if 'starts open'). Paths are world-space keys {vec3 pos, quat xyzw} of 0x1c bytes. Doors with no path (placement+0x40 == 0, 57 doors) stay at pos/rot and can never move."
+  },
+  "transform": "control_create_object(pos, rot) then overwritten by the path pose when a path exists. placement pos == path key 0 in all 387 path doors; path quat == conjugate of the placement +0x24 quat (same rotation as the Euler rot).",
+  "confidence": "confirmed",
+  "count": {
+   "records": 444,
+   "in_map_pack": 440,
+   "in_object_packs": 4
+  }
+ },
+ "240": {
+  "name": "Pickup",
+  "create": "0x000a7380",
+  "create_name": "Pickup_Create",
+  "call": "Pickup_Create(&pos, &rot, NULL, celglist, (u16)k0, (u16)k1, k2, k3, k4, 1, (u16)k5, 0, k6) cdecl (checked in parsemap_create_dynamic_objects disassembly at 0xa4c56)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "pickupKind",
+    "type": "enum",
+    "note": "0 weapon, 1 ammo, 2 key (Player_EquipKey(k1)), 3 body armour, 4 message item (text k6), 5 special (clears player+0x818), 6 '007' Bond bonus (only created with a gold medal), 7..11 multiplayer weapon-set slot k0-7 (Pickup_CreateFromSet: model and weapon come from PickupMatrix[weaponSet][k0-7], not from the placement)",
+    "seen": "n=430 distinct=10 min=0x0 max=0xb: 0x0 x108, 0x3 x64, 0x6 x50, 0x1 x49, 0x8 x45, 0xa x37"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "weaponId",
+    "type": "u16",
+    "note": "weapon_data index (weapon / ammo type / key id). 0xffff -> nothing created",
+    "seen": "n=430 distinct=27 min=0x0 max=0x52: 0x6 x167, 0x12 x36, 0x2c x28, 0xa x25, 0x34 x25, 0x47 x21"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "amount",
+    "type": "u32",
+    "note": "PICKUPINFO+0x18 ammo count (weapon/ammo), armour amount",
+    "seen": "n=430 distinct=18 min=0x0 max=0x64: 0x0 x114, 0x32 x68, 0x5 x45, 0x3c x42, 0x1 x33, 0x19 x25"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "pickupSwitchChannel",
+    "type": "switch",
+    "note": "PICKUPINFO+0x20: set to 1 when picked up",
+    "channelRole": "out",
+    "seen": "n=430 distinct=5 min=0x0 max=0x4a: 0x0 x426, 0xd x1, 0x4a x1, 0x3f x1, 0x21 x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "pickupSound",
+    "type": "u16",
+    "note": "sound id, 0 -> none; overridden by the kind's default sound for kinds 0,1,3,6",
+    "seen": "n=430 distinct=6 min=0xf5 max=0xffff: 0x13f x160, 0xffff x155, 0x141 x57, 0xf5 x56, 0x110 x1, 0x410 x1"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "respawn",
+    "type": "u16",
+    "note": "0 = removed when taken; 0xffff = never consumed; else hidden and respawns after k5*10 seconds",
+    "seen": "n=430 distinct=10 min=0x0 max=0xffff: 0x0 x263, 0x3 x91, 0x4 x20, 0x2 x15, 0x6 x13, 0xffff x8"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "messageText",
+    "type": "u32",
+    "refers": "text label",
+    "note": "TXT label id shown for kind 4 (ids look like 0x02xxxxxx/0x05xxxxxx but are text ids, not hashcodes)",
+    "seen": "n=381 distinct=9 min=0x0 max=0x500006c: 0x0 x332, 0x200004a x25, 0x34d x12, 0x161 x7, 0x2000036 x1, 0x500005a x1"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "placement glist mesh (objGraphics = celglist), e.g. PICKUP_P99, 'Pickup 007'. Kinds 7..11 use the glist 'PICKUP' (no mesh): the real model is weapon_data[...].wpn3rdPersonGfx of the multiplayer weapon set - not knowable offline."
+  },
+  "transform": "Euler rot via control_create_object; position dropped onto the floor below with build_PointOnFloor (likely; exporter can keep pos)",
+  "confidence": "confirmed",
+  "count": {
+   "records": 489,
+   "in_map_pack": 375,
+   "in_object_packs": 114
+  }
+ },
+ "32": {
+  "name": "Breakable",
+  "create": "0x0001ffb0",
+  "create_name": "Break_Create",
+  "call": "Break_Create(&pos, &rot, celglist, lvl) cdecl - note argument order (glist before lvl)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "breakType",
+    "type": "enum",
+    "note": "2 = window/glass (shatters, Break_ShatterWindow), 1, 0 other",
+    "seen": "n=294 distinct=3 min=0x0 max=0x2: 0x2 x273, 0x1 x13, 0x0 x8"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "health",
+    "type": "u32",
+    "note": "converted to float; 0 = breaks on any hit",
+    "seen": "n=291 distinct=8 min=0x0 max=0x1e: 0x0 x169, 0x6 x32, 0x5 x29, 0x1e x18, 0x1 x16, 0x7 x16"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "damageFilter",
+    "type": "u32",
+    "note": "stored as ~k2 (bullet filter mask for Collide_FilterBullets); seen 0, 0x10, 0x20, 0x30, 0xf8",
+    "seen": "n=411 distinct=5 min=0x0 max=0xf8: 0x0 x345, 0x20 x44, 0x30 x20, 0xf8 x1, 0x10 x1"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "placement glist mesh (glass, bottles, windows)"
+  },
+  "transform": "control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used",
+  "confidence": "confirmed",
+  "count": {
+   "records": 445,
+   "in_map_pack": 427,
+   "in_object_packs": 18
+  }
+ },
+ "225": {
+  "name": "Destroy",
+  "create": "0x00020040",
+  "create_name": "Destroy_Create",
+  "call": "Destroy_Create(&pos, &rot, lvl, celglist, pCelList+(celEntityNum+1)) cdecl; not created in multiplayer without explosive scenery",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "destroyedSwitchChannel",
+    "type": "switch",
+    "note": "+0x12: set when destroyed (after k6 seconds delay)",
+    "channelRole": "out",
+    "seen": "n=189 distinct=21 min=0x0 max=0xfd: 0x0 x164, 0x4f x3, 0x29 x2, 0x1f x2, 0xdb x2, 0x48 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "smashSwitchChannel",
+    "type": "switch",
+    "note": "+0x10: when this channel becomes 1 the object destroys itself",
+    "channelRole": "in",
+    "seen": "n=189 distinct=29 min=0x0 max=0xf6: 0x0 x158, 0x1f x2, 0x52 x2, 0x53 x2, 0x13 x1, 0x89 x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "explosion",
+    "type": "u8",
+    "note": "+0x16: 0 none; 1 small (script 0x06000027, radius 4*r), 2 (0x0600004f, 2*r), >=3 (0x06000052, 3*r); k2*10 is passed as a further Explode_Create float",
+    "seen": "n=193 distinct=11 min=0x0 max=0x32: 0x4 x38, 0x3 x33, 0x7 x30, 0x1 x27, 0x0 x18, 0xa x17"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "health",
+    "type": "u32",
+    "note": "float health; 10000 = practically indestructible",
+    "seen": "n=193 distinct=8 min=0x0 max=0x2710: 0x0 x90, 0xa x35, 0x14 x32, 0x2710 x26, 0x64 x7, 0x28 x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "damageFilter",
+    "type": "u32",
+    "note": "stored as ~k4, bullet filter mask",
+    "seen": "n=193 distinct=7 min=0x0 max=0x200: 0x0 x125, 0xf8 x40, 0x200 x14, 0x20 x10, 0x10 x2, 0x8 x1"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "explosionDamage",
+    "type": "u32",
+    "note": "+8 = k5*0.01",
+    "seen": "n=193 distinct=12 min=0x0 max=0x3e8: 0x1f4 x42, 0x12c x35, 0x64 x30, 0xfa x30, 0xc8 x26, 0xa x13"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "destroyedDelay",
+    "type": "u32",
+    "note": "+0xc = -(k6*FRAME_RATE): seconds between destruction and destroyedSwitchChannel",
+    "seen": "n=193 distinct=6 min=0x0 max=0xa: 0x0 x176, 0x1 x8, 0x2 x4, 0x3 x3, 0x6 x1, 0xa x1"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "intact = placement glist; destroyed model = the entity's LOD-block alternative (celglist+0x34) if any, else pCelList[celEntityNum+1] (the next entity of the map pack, e.g. tv2 -> tv2_damaged); no destroyed model if the glist is hidden (flag 0x10)"
+  },
+  "transform": "control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used",
+  "confidence": "confirmed",
+  "count": {
+   "records": 197,
+   "in_map_pack": 189,
+   "in_object_packs": 8
+  }
+ },
+ "234": {
+  "name": "TriggerTouchOnce",
+  "create": "0x000d3380",
+  "create_name": "Trigger_TouchOnce",
+  "call": "Trigger_TouchOnce(&pos, &rot, lvl, celglist) -> remaps keys, kind 1, Trigger_Create 0xd26d0",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "outSwitchChannel",
+    "type": "switch",
+    "note": "set to 1 (latched) when the touch condition holds; object deleted afterwards if hidden",
+    "channelRole": "out",
+    "seen": "n=343 distinct=131 min=0x0 max=0xff: 0xbe x13, 0x7c x12, 0x4f x9, 0x16 x8, 0x25 x8, 0x34 x8"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "touchMask",
+    "type": "u32",
+    "note": "bitmask: 0x10 drone touches, 0x08 player touches, 0x04 player presses Action on it, 0x02 hit by a bullet, 0x01 extra condition (see note). Seen 8 (player) most, 4, 0x10, 2, 0x18",
+    "seen": "n=343 distinct=5 min=0x2 max=0x18: 0x8 x321, 0x4 x12, 0x10 x6, 0x2 x3, 0x18 x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "touchFilter0",
+    "type": "u16",
+    "note": "in[0]: 0 = none; 11 = requires a drone, 14 = requires the player, other = a specific drone id (drone+0xc4); with mask 2: bullet weapon id",
+    "seen": "n=338 distinct=1 min=0x0 max=0x0: 0x0 x338"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "touchFilter1",
+    "type": "u16",
+    "note": "in[1]",
+    "seen": "n=338 distinct=1 min=0x0 max=0x0: 0x0 x338"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "touchFilter2",
+    "type": "u16",
+    "note": "in[2]",
+    "seen": "n=338 distinct=2 min=0x0 max=0x1: 0x0 x337, 0x1 x1"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "touchFilter3",
+    "type": "u16",
+    "note": "in[3]",
+    "seen": "n=338 distinct=1 min=0x0 max=0x0: 0x0 x338"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "touchFilter4_or_enableChannel",
+    "type": "u16",
+    "note": "in[4]; with touchMask bit 0 it is instead a channel that must be 1",
+    "channelRole": "in",
+    "seen": "n=338 distinct=5 min=0x0 max=0x39: 0x0 x331, 0x39 x3, 0x34 x2, 0x33 x1, 0x15 x1"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "disableSwitchChannel",
+    "type": "switch",
+    "note": "trigger inactive while this channel is 1 (also copied into in[5])",
+    "channelRole": "in",
+    "seen": "n=329 distinct=20 min=0x0 max=0xd1: 0x0 x283, 0x79 x13, 0x2c x4, 0xb4 x4, 0x81 x3, 0x3a x3"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "hideWhenDisabled",
+    "type": "bool",
+    "note": "+0x36 (also copied into in[6])",
+    "seen": "n=338 distinct=2 min=0x0 max=0x1: 0x0 x330, 0x1 x8"
+   }
+  ],
+  "header": [
+   "pathKeyCount (+2 = placement+0x40)",
+   "pathDurationFrames (+4 = placement+0x42)",
+   "path (+8 = m_paths[placement+0x44])"
+  ],
+  "visual": {
+   "kind": "volume",
+   "detail": "volume: the glist entity's collision data (block 0x2e/0x2f of that entity) in entity-local space, placed by obj->mtx; entity bbox (entity params +0x1c/+0x28) is its bounding box; the entity is normally hidden (flag 0x10)"
+  },
+  "transform": "Euler rot + pos (View_RotTransMatrix) orient the collision volume; if a path is given the trigger moves along it, looping, one lap per pathDurationFrames",
+  "confidence": "confirmed",
+  "count": {
+   "records": 346,
+   "in_map_pack": 344,
+   "in_object_packs": 2
+  }
+ },
+ "235": {
+  "name": "TriggerTouch",
+  "create": "0x000d3310",
+  "create_name": "Trigger_Touch",
+  "call": "Trigger_Touch(&pos, &rot, lvl, celglist) -> kind 2, Trigger_Create",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "outSwitchChannel",
+    "type": "switch",
+    "note": "1 while touched, 0 otherwise (Trigger_Calc clears and re-evaluates every frame)",
+    "channelRole": "out",
+    "seen": "n=154 distinct=76 min=0x0 max=0xb2: 0x0 x15, 0xd x8, 0x40 x7, 0x78 x6, 0x7a x6, 0x21 x4"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "touchMask",
+    "type": "u32",
+    "note": "bitmask: 0x10 drone touches, 0x08 player touches, 0x04 player presses Action on it, 0x02 hit by a bullet, 0x01 extra condition (see note). Seen 8, 0x18, 0x10, 4",
+    "seen": "n=154 distinct=4 min=0x4 max=0x18: 0x8 x127, 0x18 x16, 0x10 x7, 0x4 x4"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "touchFilter0",
+    "type": "u16",
+    "note": "in[0], as TriggerTouchOnce (seen 11 = drone, 14 = player)",
+    "seen": "n=154 distinct=3 min=0x0 max=0xe: 0x0 x147, 0xb x6, 0xe x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "touchFilter1",
+    "type": "u16",
+    "note": "in[1] (one record has 0x0500004f)",
+    "seen": "n=154 distinct=2 min=0x0 max=0x500004f: 0x0 x153, 0x500004f x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "touchFilter2",
+    "type": "u16",
+    "note": "in[2]",
+    "seen": "n=154 distinct=1 min=0x0 max=0x0: 0x0 x154"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "touchFilter3",
+    "type": "u16",
+    "note": "in[3]",
+    "seen": "n=154 distinct=1 min=0x0 max=0x0: 0x0 x154"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "disableSwitchChannel",
+    "type": "switch",
+    "note": "trigger inactive while 1 (also in[4] / enable channel when touchMask bit0)",
+    "channelRole": "in",
+    "seen": "n=154 distinct=10 min=0x0 max=0x90: 0x0 x133, 0x3b x8, 0x19 x4, 0x37 x3, 0x63 x1, 0x8f x1"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "hideWhenDisabled",
+    "type": "bool",
+    "note": "+0x36 (also in[5])",
+    "seen": "n=170 distinct=2 min=0x0 max=0x1: 0x0 x151, 0x1 x19"
+   }
+  ],
+  "header": [
+   "pathKeyCount (+2 = placement+0x40)",
+   "pathDurationFrames (+4 = placement+0x42)",
+   "path (+8 = m_paths[placement+0x44])"
+  ],
+  "visual": {
+   "kind": "volume",
+   "detail": "volume: the glist entity's collision data (block 0x2e/0x2f of that entity) in entity-local space, placed by obj->mtx; entity bbox (entity params +0x1c/+0x28) is its bounding box; the entity is normally hidden (flag 0x10)"
+  },
+  "transform": "Euler rot + pos (View_RotTransMatrix) orient the collision volume; if a path is given the trigger moves along it, looping, one lap per pathDurationFrames",
+  "confidence": "confirmed",
+  "count": {
+   "records": 172,
+   "in_map_pack": 171,
+   "in_object_packs": 1
+  }
+ },
+ "220": {
+  "name": "Trigger",
+  "create": "0x000d26d0",
+  "create_name": "Trigger_Create",
+  "call": "Trigger_Create(&pos, &rot, lvl, celglist) cdecl; keys used directly (the other Trigger* types remap into this layout)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "triggerKind",
+    "type": "enum",
+    "note": "1 touch-once, 2 touch, 3 AND, 4 sequential AND, 5 fan-out, 10 load level, 12 OR, 13 movie. Seen 2",
+    "seen": "n=3 distinct=1 min=0x2 max=0x2: 0x2 x3"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "outSwitchChannel",
+    "type": "switch",
+    "note": "output channel (kind 10: level hashcode, kind 13: movie hashcode, kind 5: the input)",
+    "channelRole": "out",
+    "seen": "n=3 distinct=1 min=0x1b max=0x1b: 0x1b x3"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "in0",
+    "type": "u16",
+    "note": "input channel / touch filter",
+    "channelRole": "in",
+    "seen": "n=3 distinct=1 min=0x0 max=0x0: 0x0 x3"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "in1",
+    "type": "u16",
+    "channelRole": "in",
+    "seen": "n=3 distinct=1 min=0x0 max=0x0: 0x0 x3"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "in2",
+    "type": "u16",
+    "channelRole": "in",
+    "seen": "n=3 distinct=1 min=0x0 max=0x0: 0x0 x3"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "in3",
+    "type": "u16",
+    "channelRole": "in",
+    "seen": "n=3 distinct=1 min=0x0 max=0x0: 0x0 x3"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "in4",
+    "type": "u16",
+    "channelRole": "in",
+    "seen": "n=3 distinct=1 min=0x0 max=0x0: 0x0 x3"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "in5",
+    "type": "u16",
+    "channelRole": "in",
+    "seen": "n=3 distinct=1 min=0x0 max=0x0: 0x0 x3"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "in6",
+    "type": "u16",
+    "channelRole": "in",
+    "seen": "n=3 distinct=1 min=0x0 max=0x0: 0x0 x3"
+   },
+   {
+    "key": 9,
+    "offset": "0x50",
+    "name": "touchMask",
+    "type": "u32",
+    "note": "bitmask: 0x10 drone touches, 0x08 player touches, 0x04 player presses Action on it, 0x02 hit by a bullet, 0x01 extra condition (see note); 0 -> 2 (bullet)",
+    "seen": "n=3 distinct=1 min=0x0 max=0x0: 0x0 x3"
+   },
+   {
+    "key": 10,
+    "offset": "0x54",
+    "name": "disableSwitchChannel",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=3 distinct=1 min=0x0 max=0x0: 0x0 x3"
+   },
+   {
+    "key": 11,
+    "offset": "0x58",
+    "name": "hideWhenDisabled",
+    "type": "bool",
+    "seen": "n=3 distinct=1 min=0x0 max=0x0: 0x0 x3"
+   }
+  ],
+  "header": [
+   "pathKeyCount (+2 = placement+0x40)",
+   "pathDurationFrames (+4 = placement+0x42)",
+   "path (+8 = m_paths[placement+0x44])"
+  ],
+  "visual": {
+   "kind": "volume",
+   "detail": "volume: the glist entity's collision data (block 0x2e/0x2f of that entity) in entity-local space, placed by obj->mtx; entity bbox (entity params +0x1c/+0x28) is its bounding box; the entity is normally hidden (flag 0x10)"
+  },
+  "transform": "Euler rot + pos (View_RotTransMatrix) orient the collision volume; if a path is given the trigger moves along it, looping, one lap per pathDurationFrames",
+  "confidence": "confirmed",
+  "count": {
+   "records": 24,
+   "in_map_pack": 3,
+   "in_object_packs": 21
+  }
+ },
+ "236": {
+  "name": "TriggerMultiplexIn",
+  "create": "0x000d33f0",
+  "create_name": "Trigger_MultiplexIn",
+  "call": "kind 3 via Trigger_Create",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "outSwitchChannel",
+    "type": "switch",
+    "note": "= AND of all non-zero inputs (list ends at the first 0), re-evaluated every frame",
+    "channelRole": "out",
+    "seen": "n=46 distinct=42 min=0x1 max=0xdd: 0x64 x3, 0x66 x2, 0x65 x2, 0x99 x1, 0x4b x1, 0x3b x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "inSwitchChannel0",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=46 distinct=39 min=0x1 max=0xde: 0x4c x3, 0x48 x2, 0x4f x2, 0x56 x2, 0xe x2, 0x6 x2"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "inSwitchChannel1",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=46 distinct=40 min=0x0 max=0xde: 0x0 x5, 0x4e x2, 0x8 x2, 0x12 x1, 0x4a x1, 0x7f x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "inSwitchChannel2",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=46 distinct=17 min=0x0 max=0x88: 0x0 x30, 0x13 x1, 0x80 x1, 0x88 x1, 0x81 x1, 0x72 x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "inSwitchChannel3",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=46 distinct=5 min=0x0 max=0x85: 0x0 x42, 0x49 x1, 0x85 x1, 0x11 x1, 0x1a x1"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "inSwitchChannel4",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=46 distinct=1 min=0x0 max=0x0: 0x0 x46"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "inSwitchChannel5",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=46 distinct=1 min=0x0 max=0x0: 0x0 x46"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "unused7",
+    "type": "u32",
+    "note": "overwritten by the remap (lost); always 0",
+    "seen": "n=46 distinct=1 min=0x0 max=0x0: 0x0 x46"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "inSwitchChannel6",
+    "type": "switch",
+    "note": "left in place at +0x4c = in[6]",
+    "channelRole": "in",
+    "seen": "n=46 distinct=1 min=0x0 max=0x0: 0x0 x46"
+   }
+  ],
+  "visual": {
+   "kind": "none",
+   "detail": "invisible logic gate (glist 'MultiplexIn'/'Mutiplexor', hidden, no collision); position meaningless"
+  },
+  "transform": "unused",
+  "confidence": "confirmed",
+  "count": {
+   "records": 46,
+   "in_map_pack": 46,
+   "in_object_packs": 0
+  }
+ },
+ "237": {
+  "name": "TriggerMultiplexSIn",
+  "create": "0x000d34b0",
+  "create_name": "Trigger_MultiplexSIn",
+  "call": "kind 4 via Trigger_Create",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "outSwitchChannel",
+    "type": "switch",
+    "note": "= sequential AND: every input set, each no earlier than 4 frames before the previous one's set time (inputs must fire in order)",
+    "channelRole": "out",
+    "seen": "n=21 distinct=18 min=0x7 max=0x6a: 0x67 x2, 0x35 x2, 0x41 x2, 0x65 x1, 0x6a x1, 0x68 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "inSwitchChannel0",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=21 distinct=14 min=0x5 max=0x8c: 0x8c x7, 0x34 x2, 0x3d x1, 0x89 x1, 0x8b x1, 0x3b x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "inSwitchChannel1",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=21 distinct=21 min=0x6 max=0xa0: 0x3e x1, 0x8a x1, 0x8c x1, 0x3c x1, 0x84 x1, 0x86 x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "inSwitchChannel2",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=21 distinct=2 min=0x0 max=0x80: 0x0 x20, 0x80 x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "inSwitchChannel3",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=21 distinct=1 min=0x0 max=0x0: 0x0 x21"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "inSwitchChannel4",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=21 distinct=1 min=0x0 max=0x0: 0x0 x21"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "inSwitchChannel5",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=21 distinct=1 min=0x0 max=0x0: 0x0 x21"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "unused7",
+    "type": "u32",
+    "note": "overwritten by the remap (lost); always 0",
+    "seen": "n=21 distinct=1 min=0x0 max=0x0: 0x0 x21"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "inSwitchChannel6",
+    "type": "switch",
+    "note": "left in place at +0x4c = in[6]",
+    "channelRole": "in",
+    "seen": "n=21 distinct=1 min=0x0 max=0x0: 0x0 x21"
+   }
+  ],
+  "visual": {
+   "kind": "none",
+   "detail": "invisible logic gate (glist 'MultiplexIn'/'Mutiplexor', hidden, no collision); position meaningless"
+  },
+  "transform": "unused",
+  "confidence": "confirmed",
+  "count": {
+   "records": 21,
+   "in_map_pack": 21,
+   "in_object_packs": 0
+  }
+ },
+ "239": {
+  "name": "TriggerMultiplexOrIn",
+  "create": "0x000d3450",
+  "create_name": "Trigger_MultiplexOrIn",
+  "call": "kind 12 via Trigger_Create",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "outSwitchChannel",
+    "type": "switch",
+    "note": "= OR of the inputs",
+    "channelRole": "out",
+    "seen": "n=28 distinct=27 min=0xe max=0xe5: 0x11 x2, 0x22 x1, 0xa4 x1, 0xb3 x1, 0x46 x1, 0x13 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "inSwitchChannel0",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=28 distinct=27 min=0x8 max=0xda: 0x1f x2, 0x23 x1, 0xa3 x1, 0x44 x1, 0x50 x1, 0x3a x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "inSwitchChannel1",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=28 distinct=21 min=0x0 max=0xdf: 0x37 x4, 0x24 x2, 0x20 x2, 0x25 x2, 0x6 x2, 0xa2 x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "inSwitchChannel2",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=28 distinct=10 min=0x0 max=0xe5: 0x0 x18, 0x21 x2, 0x25 x1, 0xa1 x1, 0x52 x1, 0x38 x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "inSwitchChannel3",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=28 distinct=5 min=0x0 max=0x8c: 0x0 x23, 0x22 x2, 0x8c x1, 0x40 x1, 0x46 x1"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "inSwitchChannel4",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=28 distinct=4 min=0x0 max=0x4c: 0x0 x25, 0x24 x1, 0x41 x1, 0x4c x1"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "inSwitchChannel5",
+    "type": "switch",
+    "channelRole": "in",
+    "seen": "n=28 distinct=4 min=0x0 max=0x4d: 0x0 x25, 0x25 x1, 0x42 x1, 0x4d x1"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "unused7",
+    "type": "u32",
+    "note": "overwritten by the remap (lost); always 0",
+    "seen": "n=28 distinct=1 min=0x0 max=0x0: 0x0 x28"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "inSwitchChannel6",
+    "type": "switch",
+    "note": "left in place at +0x4c = in[6]",
+    "channelRole": "in",
+    "seen": "n=28 distinct=1 min=0x0 max=0x0: 0x0 x28"
+   }
+  ],
+  "visual": {
+   "kind": "none",
+   "detail": "invisible logic gate (glist 'MultiplexIn'/'Mutiplexor', hidden, no collision); position meaningless"
+  },
+  "transform": "unused",
+  "confidence": "confirmed",
+  "count": {
+   "records": 28,
+   "in_map_pack": 28,
+   "in_object_packs": 0
+  }
+ },
+ "238": {
+  "name": "TriggerMultiplexOut",
+  "create": "0x000d3500",
+  "create_name": "Trigger_MultiplexOut",
+  "call": "kind 5 via Trigger_Create",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "inSwitchChannel",
+    "type": "switch",
+    "note": "source: copied to every output each frame",
+    "channelRole": "in",
+    "seen": "n=5 distinct=5 min=0x8 max=0x54: 0xd x1, 0x32 x1, 0x54 x1, 0x8 x1, 0x41 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "outSwitchChannel0",
+    "type": "switch",
+    "channelRole": "out",
+    "seen": "n=5 distinct=5 min=0x4 max=0x64: 0x4 x1, 0x33 x1, 0x64 x1, 0x54 x1, 0x5a x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "outSwitchChannel1",
+    "type": "switch",
+    "channelRole": "out",
+    "seen": "n=5 distinct=3 min=0x0 max=0x64: 0x0 x3, 0x5 x1, 0x64 x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "outSwitchChannel2",
+    "type": "switch",
+    "channelRole": "out",
+    "seen": "n=5 distinct=1 min=0x0 max=0x0: 0x0 x5"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "outSwitchChannel3",
+    "type": "switch",
+    "channelRole": "out",
+    "seen": "n=5 distinct=1 min=0x0 max=0x0: 0x0 x5"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "outSwitchChannel4",
+    "type": "switch",
+    "channelRole": "out",
+    "seen": "n=5 distinct=1 min=0x0 max=0x0: 0x0 x5"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "outSwitchChannel5",
+    "type": "switch",
+    "channelRole": "out",
+    "seen": "n=5 distinct=1 min=0x0 max=0x0: 0x0 x5"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "unused7",
+    "type": "u32",
+    "note": "lost in the remap",
+    "seen": "n=5 distinct=1 min=0x0 max=0x0: 0x0 x5"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "outSwitchChannel6",
+    "type": "switch",
+    "channelRole": "out",
+    "seen": "n=5 distinct=1 min=0x0 max=0x0: 0x0 x5"
+   }
+  ],
+  "visual": {
+   "kind": "none",
+   "detail": "invisible logic gate (glist 'MultiplexIn'/'Mutiplexor', hidden, no collision); position meaningless"
+  },
+  "transform": "unused",
+  "confidence": "confirmed",
+  "count": {
+   "records": 5,
+   "in_map_pack": 5,
+   "in_object_packs": 0
+  }
+ },
+ "232": {
+  "name": "TriggerLoadLevel",
+  "create": "0x000d3260",
+  "create_name": "Trigger_LoadLevelCreate",
+  "call": "kind 10 via Trigger_Create, touchMask forced to 0xe",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "levelHashcode",
+    "type": "hash",
+    "refers": "level bundle 0x07",
+    "note": "07xxxxxx level bundle to load (15/16 exist; 0x07300013 does not)",
+    "seen": "n=16 distinct=13 min=0x7000002 max=0x7300013: 0x7000006 x2, 0x7000012 x2, 0x7000016 x2, 0x7000002 x1, 0x7000003 x1, 0x7000004 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "requiredSwitchChannel",
+    "type": "switch",
+    "note": "in[0]: if non-zero and 0, using it shows 'objectives incomplete'",
+    "channelRole": "in",
+    "seen": "n=16 distinct=7 min=0x0 max=0x54: 0x0 x10, 0x4c x1, 0x52 x1, 0x4a x1, 0x1c x1, 0x1e x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "autoActivateSwitchChannel",
+    "type": "switch",
+    "note": "in[1]: when 1, the load fires by itself; also selects which of k3/k4 is set",
+    "channelRole": "in",
+    "seen": "n=16 distinct=7 min=0x0 max=0x4e: 0x0 x9, 0x1f x2, 0x10 x1, 0x1d x1, 0x32 x1, 0x4e x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "setOnLoadSwitchChannel",
+    "type": "switch",
+    "note": "in[2]: set when loading (autoActivate channel 0)",
+    "channelRole": "out",
+    "seen": "n=16 distinct=4 min=0x0 max=0xce: 0x0 x13, 0x1e x1, 0x1f x1, 0xce x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "setOnLoadAltSwitchChannel",
+    "type": "switch",
+    "note": "in[3]: set when loading while the autoActivate channel is 1",
+    "channelRole": "out",
+    "seen": "n=16 distinct=2 min=0x0 max=0x1d: 0x0 x15, 0x1d x1"
+   }
+  ],
+  "visual": {
+   "kind": "volume",
+   "detail": "activated by the player pressing Action at it (Player_Activate -> Trigger_Activate) or by k2; kind 10 clears effect flag 0x10, so a glist with a mesh (e.g. 'Door_Gate8', 'DOOR_loadlevel') is drawn - a fake exit door. volume: the glist entity's collision data (block 0x2e/0x2f of that entity) in entity-local space, placed by obj->mtx; entity bbox (entity params +0x1c/+0x28) is its bounding box; the entity is normally hidden (flag 0x10)"
+  },
+  "transform": "control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used",
+  "confidence": "confirmed",
+  "count": {
+   "records": 16,
+   "in_map_pack": 16,
+   "in_object_packs": 0
+  }
+ },
+ "244": {
+  "name": "TriggerMoviePlayer",
+  "create": "0x000d32c0",
+  "create_name": "Trigger_MoviePlayer",
+  "call": "kind 13 via Trigger_Create (occurs in no level)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "movieHashcode",
+    "type": "hash",
+    "note": "GameState.MovieHashcode"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "touchMask",
+    "type": "u32",
+    "note": "bit 4: Action plays the movie"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "playSwitchChannel",
+    "type": "switch",
+    "note": "in[0]: when 1, cleared and the movie plays",
+    "channelRole": "in"
+   }
+  ],
+  "visual": {
+   "kind": "volume",
+   "detail": "volume: the glist entity's collision data (block 0x2e/0x2f of that entity) in entity-local space, placed by obj->mtx; entity bbox (entity params +0x1c/+0x28) is its bounding box; the entity is normally hidden (flag 0x10)"
+  },
+  "transform": "control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used",
+  "confidence": "likely",
+  "count": {
+   "records": 0,
+   "in_map_pack": 0,
+   "in_object_packs": 0
+  }
+ },
+ "217": {
+  "name": "ScriptPlayer",
+  "create": "0x000c4500",
+  "create_name": "SP_CreateScriptPlayer",
+  "call": "SP_CreateScriptPlayer(&pos, &rot, lvl, NULL, NULL, NULL) cdecl; not created when k0 == k1 == 0",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "script0",
+    "type": "hash",
+    "refers": "game script 0x06",
+    "note": "game script (bundle entry type 7, Script_Load 0xc1550); 0x06000000 = placeholder, resolves to nothing",
+    "seen": "n=189 distinct=116 min=0x6000000 max=0x6000a3b: 0x6000000 x17, 0x6000832 x16, 0x6000a3b x9, 0x6000909 x8, 0x600090c x7, 0x6000708 x4"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "script1",
+    "type": "hash",
+    "refers": "game script 0x06",
+    "note": "optional second script, alternates with script0",
+    "seen": "n=189 distinct=11 min=0x0 max=0x6000a2a: 0x0 x160, 0x6000a2a x9, 0x60008bc x6, 0x60008fb x4, 0x60008fe x4, 0x6000017 x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "script0Mode",
+    "type": "enum",
+    "note": "1 = play once at start, 8 = loop, 0x40 = loaded paused at frame 0 (waits for a trigger), 0 = not loaded until triggered",
+    "seen": "n=189 distinct=4 min=0x0 max=0x40: 0x40 x61, 0x8 x52, 0x1 x41, 0x0 x35"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "script1Mode",
+    "type": "enum",
+    "note": "same, for script1",
+    "seen": "n=189 distinct=4 min=0x0 max=0x40: 0x0 x137, 0x1 x44, 0x8 x7, 0x40 x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "dieAfterPlay",
+    "type": "bool",
+    "note": "+0x35: 1 = object deleted when the script ends; 0 = switch to the other script and wait for the next trigger",
+    "seen": "n=189 distinct=2 min=0x0 max=0x1: 0x1 x149, 0x0 x40"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "triggerMask",
+    "type": "u32",
+    "note": "+0x2e: 0x01 k6 channel is 1, 0x02 a script object shot (weapon k8 if non-zero), 0x04 unpaused (SP_UnPause, e.g. by a Switch), 0x08 player touches a script object, 0x10 drone touches. 0 -> nothing triggers it",
+    "seen": "n=189 distinct=4 min=0x0 max=0x4: 0x1 x110, 0x0 x56, 0x4 x19, 0x2 x4"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "switchChannel",
+    "type": "switch",
+    "note": "+0x30, two-way: cleared at create; a trigger source when mask bit0; written (1 when started, 0 on the second trigger) whenever triggered",
+    "channelRole": "inout",
+    "seen": "n=189 distinct=81 min=0x0 max=0xc0: 0x0 x76, 0x1 x4, 0x38 x3, 0x28 x3, 0x48 x3, 0x7c x3"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "damageToUnpause",
+    "type": "u32",
+    "note": "+0x14 float: accumulated hit damage that unpauses the script (0 = off)",
+    "seen": "n=183 distinct=3 min=0x0 max=0x78: 0x0 x158, 0x14 x24, 0x78 x1"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "bulletWeaponFilter",
+    "type": "u8",
+    "note": "+0x37: weapon id a hit must come from for mask bit 0x02 (0 = any)",
+    "seen": "n=183 distinct=2 min=0x0 max=0x4e: 0x0 x182, 0x4e x1"
+   },
+   {
+    "key": 9,
+    "offset": "0x50",
+    "name": "gateSwitchChannel",
+    "type": "switch",
+    "note": "+0x32: the player does nothing while this channel is 0",
+    "channelRole": "in",
+    "seen": "n=171 distinct=22 min=0x0 max=0xbf: 0x0 x141, 0xbf x2, 0x26 x2, 0x25 x2, 0x24 x2, 0x23 x2"
+   },
+   {
+    "key": 10,
+    "offset": "0x54",
+    "name": "scalePercent",
+    "type": "u32",
+    "note": "entity scale of the scripts, 100 = 1.0 (0 -> 1.0)",
+    "seen": "n=170 distinct=2 min=0x1e max=0x64: 0x64 x169, 0x1e x1"
+   }
+  ],
+  "visual": {
+   "kind": "script",
+   "detail": "no geometry of its own (objGraphics not set; the placement glist 'Script Player...' is an editor marker). What appears is created by the game script(s): its streams spawn/animate entities (hashcodes inside the 06 file), positioned relative to View_RotTransMatrix(rot, pos) of the placement"
+  },
+  "transform": "script matrix = View_RotTransMatrix(rot, pos)",
+  "confidence": "likely",
+  "count": {
+   "records": 195,
+   "in_map_pack": 172,
+   "in_object_packs": 23
+  }
+ },
+ "226": {
+  "name": "SS",
+  "create": "0x000cb180",
+  "create_name": "SS_Create",
+  "call": "SS_Create(&pos, &rot, lvl, celglist) cdecl; 'simple script' = a path-animated object; not created without a path (placement+0x40 == 0)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "mode",
+    "type": "enum",
+    "note": "+0x20/+0x22 state: 8 = loops along its path forever; 0x40 = waits for trigger, then plays the path once; 1 = playing at start; 0 = idle",
+    "seen": "n=100 distinct=4 min=0x0 max=0x40: 0x40 x93, 0x8 x4, 0x1 x2, 0x0 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "rearm",
+    "type": "bool",
+    "note": "+0x24: after reaching the end, 1 = waits for the next trigger (0x40), 0 = stops",
+    "seen": "n=100 distinct=2 min=0x0 max=0x1: 0x1 x59, 0x0 x41"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "triggerMask",
+    "type": "u32",
+    "note": "+0x1e: 0x10 drone / 0x08 player / 0x02 bullet touches the object, 0x04 Action (SS_Activate); bit 0x01 = do not write switchChannel",
+    "seen": "n=100 distinct=4 min=0x0 max=0x4: 0x2 x59, 0x1 x31, 0x4 x7, 0x0 x3"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "switchChannel",
+    "type": "switch",
+    "note": "+0x10, two-way: a 1 triggers it; when touched it writes 1 (unless mask bit0)",
+    "channelRole": "inout",
+    "seen": "n=100 distinct=17 min=0x0 max=0x89: 0x0 x50, 0x2b x14, 0xe x13, 0x58 x4, 0x59 x4, 0x39 x2"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "triggerSound",
+    "type": "u16",
+    "note": "sound id played when triggered, 0 -> none",
+    "seen": "n=100 distinct=6 min=0x0 max=0xffff: 0xffff x88, 0x24a x4, 0x11b x4, 0x1d6 x2, 0x248 x1, 0x0 x1"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "pauseAt",
+    "type": "u32",
+    "note": "+8: path time (frames) where playback pauses and waits for another trigger; 0 = none",
+    "seen": "n=100 distinct=5 min=0x0 max=0x3c: 0x0 x67, 0x1e x23, 0x3c x5, 0x2d x4, 0xf x1"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "splineInterp",
+    "type": "bool",
+    "note": "+0x26: 1 = Spline_Interp, 0 = KeyFrame_Interp",
+    "seen": "n=87 distinct=2 min=0x0 max=0x1: 0x1 x61, 0x0 x26"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "setCelShear",
+    "type": "bool",
+    "note": "+0x2a: writes its centre y into its cel's shearHeight (moving water/floor); always 0 in data",
+    "seen": "n=100 distinct=1 min=0x0 max=0x0: 0x0 x100"
+   }
+  ],
+  "header": [
+   "pathKeyCount",
+   "pathDurationFrames (0 -> 75)",
+   "path"
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "placement glist mesh (barrel rolls, lamps, cable car), moved along the placement path"
+  },
+  "transform": "initially pos/Euler rot (should equal path key 0); animated by the path",
+  "confidence": "confirmed",
+  "count": {
+   "records": 100,
+   "in_map_pack": 100,
+   "in_object_packs": 0
+  }
+ },
+ "228": {
+  "name": "Hurt",
+  "create": "0x0006c530",
+  "create_name": "Hurt_Create",
+  "call": "Hurt_Create(&pos, &rot, lvl, celglist) cdecl",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "hurtType",
+    "type": "u8",
+    "note": "Hurt_GetType (death/damage kind for the player); seen 6 (most), 1, 2, 4",
+    "seen": "n=57 distinct=4 min=0x1 max=0x6: 0x6 x52, 0x1 x2, 0x2 x2, 0x4 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "damage",
+    "type": "u32",
+    "note": "float damage per contact; 1000 = instant death",
+    "seen": "n=57 distinct=3 min=0x1 max=0x3e8: 0x3e8 x54, 0x32 x2, 0x1 x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "enableSwitchChannel",
+    "type": "switch",
+    "note": "if non-zero the hurt is off (effect flag 0x20) while the channel is 0, and armed by it",
+    "channelRole": "in",
+    "seen": "n=57 distinct=5 min=0x0 max=0xf3: 0x0 x53, 0x8d x1, 0xf3 x1, 0xcb x1, 0x12 x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "sound",
+    "type": "u16",
+    "note": "played at each lap of the path; 0 -> none (always 0xffff in data)",
+    "seen": "n=57 distinct=1 min=0xffff max=0xffff: 0xffff x57"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "armMask",
+    "type": "u16",
+    "note": "+0x16: when no channel, arm when touched by 0x10 drone / 0x08 player / 0x02 bullet; 0 = always armed",
+    "seen": "n=54 distinct=3 min=0x0 max=0x18: 0x1 x25, 0x0 x21, 0x18 x8"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "oneShotPath",
+    "type": "u8",
+    "note": "1 = after one pass along the path it becomes inert",
+    "seen": "n=57 distinct=2 min=0x0 max=0x1: 0x0 x45, 0x1 x12"
+   }
+  ],
+  "header": [
+   "pathKeyCount (+2 = placement+0x40)",
+   "pathDurationFrames (+4 = placement+0x42)",
+   "path (+8 = m_paths[placement+0x44])"
+  ],
+  "visual": {
+   "kind": "volume",
+   "detail": "damage volume: volume: the glist entity's collision data (block 0x2e/0x2f of that entity) in entity-local space, placed by obj->mtx; entity bbox (entity params +0x1c/+0x28) is its bounding box; the entity is normally hidden (flag 0x10) (a few Hurt glists are visible meshes, e.g. OBJECT_MissileFlame)"
+  },
+  "transform": "control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used; moves along the path while armed",
+  "confidence": "confirmed",
+  "count": {
+   "records": 57,
+   "in_map_pack": 57,
+   "in_object_packs": 0
+  }
+ },
+ "40": {
+  "name": "Sensor",
+  "create": "0x000d0630",
+  "create_name": "Sensor_Create",
+  "call": "Sensor_Create(&pos, &rot, lvl, celglist) cdecl; security camera (repo: src/action/game/obj/Sensor.cpp)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "beamModel",
+    "type": "hash",
+    "refers": "entity 0x02",
+    "note": "entity drawn as the view-cone beam (child object, scaled by k2), e.g. 0x02000360 Camera_Beam",
+    "seen": "n=49 distinct=2 min=0x0 max=0x2000360: 0x0 x33, 0x2000360 x16"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "viewConeAngle",
+    "type": "u32",
+    "note": "full cone angle in degrees (stored half-angle in half-degrees); seen 15, 5, 45",
+    "seen": "n=49 distinct=3 min=0x5 max=0x2d: 0x5 x24, 0xf x23, 0x2d x2"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "beamLength",
+    "type": "u32",
+    "note": "range, also the beam model scale; seen 5..7",
+    "seen": "n=49 distinct=3 min=0x5 max=0x7: 0x6 x26, 0x5 x16, 0x7 x7"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "alertSwitchChannel",
+    "type": "switch",
+    "note": "set when the player has been seen for 2 s",
+    "channelRole": "out",
+    "seen": "n=49 distinct=17 min=0x0 max=0x4d: 0x0 x33, 0x1d x1, 0x1e x1, 0x28 x1, 0x27 x1, 0x3e x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "disableSwitchChannel",
+    "type": "switch",
+    "note": "camera off while 1",
+    "channelRole": "in",
+    "seen": "n=49 distinct=5 min=0x0 max=0x78: 0x0 x31, 0x78 x12, 0x38 x2, 0x3c x2, 0x53 x2"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "notInCameraList",
+    "type": "bool",
+    "note": "0 = viewable from Monitors",
+    "seen": "n=49 distinct=1 min=0x0 max=0x0: 0x0 x49"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "cameraNumber",
+    "type": "u8",
+    "note": "matched by Monitor k0",
+    "seen": "n=49 distinct=7 min=0x0 max=0xa: 0x0 x25, 0xa x7, 0x2 x6, 0x3 x4, 0x1 x3, 0x4 x2"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "bodyModel",
+    "type": "hash",
+    "refers": "entity 0x02",
+    "note": "entity drawn as the camera body/hub (child object kept upright), e.g. 0x02000652 camera(a)-Hub",
+    "seen": "n=26 distinct=2 min=0x0 max=0x2000652: 0x2000652 x23, 0x0 x3"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "viewedSwitchChannel",
+    "type": "switch",
+    "note": "set while a Monitor shows this camera",
+    "channelRole": "out",
+    "seen": "n=26 distinct=1 min=0x0 max=0x0: 0x0 x26"
+   }
+  ],
+  "header": [
+   "pathKeyCount (+2 = placement+0x40)",
+   "pathDurationFrames (+4 = placement+0x42)",
+   "path (+8 = m_paths[placement+0x44])"
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "placement glist = the lens (moves); + body model k7 at pos (upright, facing the initial direction) + beam model k0 (child, hidden until active); the sweep path (keys = orientations) animates the lens; LOD alternative = destroyed"
+  },
+  "transform": "control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used; sweeps along the path",
+  "confidence": "confirmed",
+  "count": {
+   "records": 49,
+   "in_map_pack": 26,
+   "in_object_packs": 23
+  }
+ },
+ "41": {
+  "name": "Switch",
+  "create": "0x000cfbd0",
+  "create_name": "Switch_Create",
+  "call": "Switch_Create(&pos, &rot, lvl, celglist) cdecl (repo: Switch.cpp/Switch.h)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "switchChannel",
+    "type": "switch",
+    "note": "the channel this switch drives; initialised to k3; two-way (a channel change flips the switch)",
+    "channelRole": "inout",
+    "seen": "n=71 distinct=10 min=0x1 max=0xde: 0x1 x46, 0x61 x8, 0x7c x7, 0x7d x4, 0x37 x1, 0x3b x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "script",
+    "type": "hash",
+    "refers": "game script 0x06",
+    "note": "game script of the switch lever animation, played by an internal ScriptPlayer (mode 8, unpause-triggered)",
+    "seen": "n=71 distinct=6 min=0x0 max=0x60008ba: 0x0 x46, 0x600006f x21, 0x6000667 x1, 0x6000664 x1, 0x600066d x1, 0x60008ba x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "autoResetFrames",
+    "type": "u16",
+    "note": "flips back to the rest state this many frames later (0 = never)",
+    "seen": "n=71 distinct=1 min=0x0 max=0x0: 0x0 x71"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "restState",
+    "type": "u16",
+    "note": "initial state/channel value",
+    "seen": "n=71 distinct=1 min=0x0 max=0x0: 0x0 x71"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "oneShot",
+    "type": "u8",
+    "note": "stops reacting after the first use",
+    "seen": "n=71 distinct=2 min=0x0 max=0x1: 0x0 x49, 0x1 x22"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "gateSwitchChannel",
+    "type": "switch",
+    "note": "switch refuses while this channel is 1",
+    "channelRole": "in",
+    "seen": "n=25 distinct=3 min=0x0 max=0x8d: 0x0 x23, 0x3c x1, 0x8d x1"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "securitySystemItem",
+    "type": "u32",
+    "note": "if non-zero SSysItems[k6+1].switchChannel = k0 (alarm system link)",
+    "seen": "n=25 distinct=3 min=0x0 max=0x2: 0x0 x23, 0x1 x1, 0x2 x1"
+   }
+  ],
+  "visual": {
+   "kind": "script",
+   "detail": "objGraphics = NULL: the placement glist (e.g. 'alarmswitchplayer') is not drawn; the lever comes from the script k1 placed at pos/rot"
+  },
+  "transform": "script placed with View_RotTransMatrix(rot, pos)",
+  "confidence": "confirmed",
+  "count": {
+   "records": 71,
+   "in_map_pack": 25,
+   "in_object_packs": 46
+  }
+ },
+ "46": {
+  "name": "Lock",
+  "create": "0x000d13f0",
+  "create_name": "Lock_Create",
+  "call": "Lock_Create(&pos, &rot, lvl, celglist) cdecl",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "lockType",
+    "type": "enum",
+    "note": "0 = keypad (code from KeyCodes[k1] entered or decoded with the gadget, or key k1 held); 1 = laser-cut lock (worn down by bullet 0x4e/0x4f hits); 2 = key/code like 0",
+    "seen": "n=44 distinct=2 min=0x0 max=0x1: 0x1 x30, 0x0 x14"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "keyId",
+    "type": "u16",
+    "note": "key/keycode index (Player_EquipKey on unlock)",
+    "seen": "n=44 distinct=8 min=0x0 max=0x32: 0x0 x24, 0x2 x6, 0x1 x5, 0x5 x3, 0x4 x2, 0x3 x2"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "unused2",
+    "type": "u32",
+    "note": "+0xc; always 0",
+    "seen": "n=44 distinct=1 min=0x0 max=0x0: 0x0 x44"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "unlockSound",
+    "type": "u16",
+    "note": "0 -> none",
+    "seen": "n=44 distinct=1 min=0xffff max=0xffff: 0xffff x44"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "deniedSound",
+    "type": "u16",
+    "note": "0 -> none",
+    "seen": "n=44 distinct=1 min=0xffff max=0xffff: 0xffff x44"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "unlockedSwitchChannel",
+    "type": "switch",
+    "note": "set to 1 when unlocked; for type 0 the lock re-locks if the channel is cleared",
+    "channelRole": "inout",
+    "seen": "n=44 distinct=19 min=0x0 max=0xf9: 0x0 x23, 0x31 x2, 0x30 x2, 0xa x2, 0x86 x1, 0x87 x1"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "unlockedOnEasy",
+    "type": "bool",
+    "note": "starts unlocked at difficulty 1",
+    "seen": "n=21 distinct=2 min=0x0 max=0x1: 0x0 x14, 0x1 x7"
+   }
+  ],
+  "header": [
+   "pathKeyCount (+2 = placement+0x40)",
+   "pathDurationFrames (+4 = placement+0x42)",
+   "path (+8 = m_paths[placement+0x44])"
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "placement glist ('Lock - KeypadLocked', 'Lock - Laser', 'Lock - Key'); after unlocking it moves along its path (if any) then switches to its LOD alternative (KeypadLocked -> KeypadUnlocked)"
+  },
+  "transform": "control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used; with a path the initial matrix is path key 0",
+  "confidence": "confirmed",
+  "count": {
+   "records": 90,
+   "in_map_pack": 21,
+   "in_object_packs": 69
+  }
+ },
+ "48": {
+  "name": "Monitor",
+  "create": "0x000d0f10",
+  "create_name": "Monitor_Create",
+  "call": "Monitor_Create(&pos, &rot, lvl, celglist) cdecl",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "cameraNumber",
+    "type": "u16",
+    "note": "obj->subState: using it shows the Sensors whose cameraNumber (Sensor k6) matches",
+    "seen": "n=16 distinct=6 min=0x1 max=0xa: 0x2 x5, 0x3 x4, 0x1 x3, 0xa x2, 0x5 x1, 0x4 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "indestructible",
+    "type": "bool",
+    "note": "0 = health 1.0 (shot -> explodes, LOD alternative); non-zero = cannot be damaged",
+    "seen": "n=16 distinct=2 min=0x0 max=0x1: 0x1 x13, 0x0 x3"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "placement glist (console/TV); destroyed = LOD alternative"
+  },
+  "transform": "control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used",
+  "confidence": "confirmed",
+  "count": {
+   "records": 16,
+   "in_map_pack": 16,
+   "in_object_packs": 0
+  }
+ },
+ "49": {
+  "name": "FuseBox",
+  "create": "0x000cffb0",
+  "create_name": "FuseBox_Create",
+  "call": "FuseBox_Create(&pos, &rot, lvl, celglist) cdecl; creates SP_Create(pos, rot, k0, 0, 0x40, 0, obj, FUN_000cff50, info, 0)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "script",
+    "type": "hash",
+    "refers": "game script 0x06",
+    "note": "game script whose objects are the fuses; the script callback sorts them into two groups (<=10 each)",
+    "seen": "n=30 distinct=4 min=0x0 max=0x6000a1b: 0x0 x23, 0x6000a1b x5, 0x600004b x1, 0x60008ad x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "group0SwitchChannel",
+    "type": "switch",
+    "note": "set when every fuse of group 0 is shot out",
+    "channelRole": "out",
+    "seen": "n=30 distinct=8 min=0x0 max=0xd1: 0x0 x23, 0x39 x1, 0x89 x1, 0x22 x1, 0x87 x1, 0x88 x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "group1SwitchChannel",
+    "type": "switch",
+    "note": "set when group 1 is all shot out; if 0, shooting a group-1 fuse hurts the player (5) and cancels k3",
+    "channelRole": "out",
+    "seen": "n=30 distinct=7 min=0x0 max=0xe1: 0x0 x24, 0x37 x1, 0xe1 x1, 0x71 x1, 0xd8 x1, 0xe0 x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "group0SwitchChannel2",
+    "type": "switch",
+    "note": "second channel for group 0",
+    "channelRole": "out",
+    "seen": "n=7 distinct=7 min=0x0 max=0xd1: 0x67 x1, 0x0 x1, 0x22 x1, 0x87 x1, 0x88 x1, 0xd1 x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "group1SwitchChannel2",
+    "type": "switch",
+    "note": "second channel for group 1",
+    "channelRole": "out",
+    "seen": "n=7 distinct=7 min=0x0 max=0xe1: 0x37 x1, 0x0 x1, 0xe1 x1, 0x71 x1, 0xd8 x1, 0xe0 x1"
+   }
+  ],
+  "visual": {
+   "kind": "script",
+   "detail": "objGraphics = NULL; the fuses come from the script k0 at pos/rot. Records without keys (46 of 53) are in object packs, not level maps"
+  },
+  "transform": "script placed with View_RotTransMatrix(rot, pos)",
+  "confidence": "likely",
+  "count": {
+   "records": 53,
+   "in_map_pack": 7,
+   "in_object_packs": 46
+  }
+ },
+ "51": {
+  "name": "Hint",
+  "create": "0x000d30e0",
+  "create_name": "Hint_Create",
+  "call": "Hint_Create(&pos, &rot, lvl, celglist) cdecl; only when hints are enabled",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "textLabel",
+    "type": "u32",
+    "refers": "text label",
+    "note": "TXT label id of the message (0x01xxxxxx/0x02xxxxxx are text ids, not hashcodes)",
+    "seen": "n=49 distinct=27 min=0x10000fa max=0x2000058: 0x2000057 x14, 0x1000291 x6, 0x100020d x3, 0x2000009 x2, 0x2000021 x2, 0x2000056 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "sound",
+    "type": "u32",
+    "note": "Sound_PlayExt id when shown, 0 = none",
+    "seen": "n=49 distinct=1 min=0x0 max=0x0: 0x0 x49"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "difficulty",
+    "type": "u32",
+    "note": "0 all; 1..4 created when difficulty <= k2; 5/6/7 only on difficulty 1/2/3",
+    "seen": "n=49 distinct=4 min=0x0 max=0x5: 0x0 x39, 0x3 x6, 0x2 x3, 0x5 x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "enableSwitchChannel",
+    "type": "switch",
+    "note": "inactive until 1 (0 = always)",
+    "channelRole": "in",
+    "seen": "n=49 distinct=9 min=0x0 max=0xd1: 0x0 x39, 0x8c x3, 0x39 x1, 0x37 x1, 0x28 x1, 0x23 x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "killSwitchChannel",
+    "type": "switch",
+    "note": "deleted when 1",
+    "channelRole": "in",
+    "seen": "n=42 distinct=7 min=0x0 max=0x8c: 0x0 x22, 0x78 x11, 0x8c x3, 0x53 x3, 0x4f x1, 0x1e x1"
+   }
+  ],
+  "visual": {
+   "kind": "volume",
+   "detail": "shows the message once when the player touches it; volume: the glist entity's collision data (block 0x2e/0x2f of that entity) in entity-local space, placed by obj->mtx; entity bbox (entity params +0x1c/+0x28) is its bounding box; the entity is normally hidden (flag 0x10)"
+  },
+  "transform": "control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used",
+  "confidence": "confirmed",
+  "count": {
+   "records": 49,
+   "in_map_pack": 49,
+   "in_object_packs": 0
+  }
+ },
+ "65": {
+  "name": "InverterTrigger",
+  "create": "0x000d2d50",
+  "create_name": "InverterTrigger_Create",
+  "call": "InverterTrigger_Create(lvl) cdecl - no pos/rot/glist; object at the origin",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "inSwitchChannel",
+    "type": "switch",
+    "note": "curState",
+    "channelRole": "in",
+    "seen": "n=6 distinct=4 min=0xe max=0xb1: 0x85 x3, 0xb1 x1, 0x49 x1, 0xe x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "clearSwitchChannel",
+    "type": "switch",
+    "note": "forced to 0 every frame while the input is 1",
+    "channelRole": "out",
+    "seen": "n=6 distinct=6 min=0x22 max=0xd1: 0x37 x1, 0x87 x1, 0xb8 x1, 0x6f x1, 0x22 x1, 0xd1 x1"
+   }
+  ],
+  "visual": {
+   "kind": "none",
+   "detail": "invisible logic; placement pos unused"
+  },
+  "transform": "unused",
+  "confidence": "confirmed",
+  "count": {
+   "records": 6,
+   "in_map_pack": 6,
+   "in_object_packs": 0
+  }
+ },
+ "249": {
+  "name": "SoundTrigger",
+  "create": "0x000d2dc0",
+  "create_name": "SoundTrigger_Create",
+  "call": "SoundTrigger_Create(&pos, &rot, lvl, celglist) cdecl; not created when k0 == 0 or k2 in (0, 0xffff) or the difficulty filter fails",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "playSwitchChannel",
+    "type": "switch",
+    "note": "sound starts when 1 (channel-driven only - the glist is never touch-tested)",
+    "channelRole": "in",
+    "seen": "n=102 distinct=71 min=0x2 max=0xfb: 0x65 x6, 0x67 x4, 0x66 x3, 0x69 x3, 0x4d x3, 0x37 x3"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "oneShot",
+    "type": "bool",
+    "note": "1 = deleted after playing once",
+    "seen": "n=102 distinct=2 min=0x0 max=0x1: 0x1 x95, 0x0 x7"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "sound",
+    "type": "u16",
+    "note": "sound id",
+    "seen": "n=102 distinct=74 min=0xdb max=0xffff: 0x14d x11, 0xf1 x5, 0x14b x4, 0x2bf x4, 0x149 x2, 0xffff x2"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "is2D",
+    "type": "bool",
+    "note": "1 = Sound_PlayExt (non-positional), 0 = 3D at the object position",
+    "seen": "n=102 distinct=2 min=0x0 max=0x1: 0x1 x67, 0x0 x35"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "stopSwitchChannel",
+    "type": "switch",
+    "note": "stops the sound when 1",
+    "channelRole": "in",
+    "seen": "n=102 distinct=8 min=0x0 max=0xd1: 0x0 x95, 0x69 x1, 0xb1 x1, 0x1c x1, 0x6f x1, 0x22 x1"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "exclusive",
+    "type": "bool",
+    "note": "only one exclusive sound trigger plays at a time",
+    "seen": "n=102 distinct=2 min=0x0 max=0x1: 0x0 x59, 0x1 x43"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "difficulty",
+    "type": "u32",
+    "note": "as Hint k2",
+    "seen": "n=102 distinct=5 min=0x0 max=0x7: 0x0 x67, 0x1 x22, 0x3 x9, 0x7 x3, 0x6 x1"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "keepPlaying",
+    "type": "bool",
+    "note": "do not stop when the play channel drops",
+    "seen": "n=102 distinct=2 min=0x0 max=0x1: 0x0 x81, 0x1 x21"
+   }
+  ],
+  "visual": {
+   "kind": "sound",
+   "detail": "invisible; a 3D sound emitter at pos when is2D = 0"
+  },
+  "transform": "position only",
+  "confidence": "confirmed",
+  "count": {
+   "records": 102,
+   "in_map_pack": 102,
+   "in_object_packs": 0
+  }
+ },
+ "251": {
+  "name": "MusicTrigger",
+  "create": "0x000d2fe0",
+  "create_name": "MusicTrigger_Create",
+  "call": "MusicTrigger_Create(&pos, &rot, lvl, celglist) cdecl; not created when k0 == 0 or k2 == 0xff",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "triggerSwitchChannel",
+    "type": "switch",
+    "note": "when 1, Music_Event(k2, 2) is sent for 30 frames",
+    "channelRole": "in",
+    "seen": "n=15 distinct=13 min=0x5 max=0x8a: 0x4e x2, 0x9 x2, 0xd x1, 0x17 x1, 0x19 x1, 0x21 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "killSwitchChannel",
+    "type": "switch",
+    "note": "deleted when 1",
+    "channelRole": "in",
+    "seen": "n=15 distinct=2 min=0x0 max=0x96: 0x0 x14, 0x96 x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "musicEvent",
+    "type": "u32",
+    "note": "music event id",
+    "seen": "n=15 distinct=11 min=0x2 max=0xff: 0xd x4, 0x2 x2, 0x1f x1, 0x20 x1, 0x21 x1, 0x22 x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "oneShot",
+    "type": "bool",
+    "note": "deleted after firing",
+    "seen": "n=15 distinct=2 min=0x0 max=0x1: 0x0 x10, 0x1 x5"
+   }
+  ],
+  "visual": {
+   "kind": "none",
+   "detail": "invisible, channel-driven; position unused"
+  },
+  "transform": "unused",
+  "confidence": "confirmed",
+  "count": {
+   "records": 15,
+   "in_map_pack": 15,
+   "in_object_packs": 0
+  }
+ },
+ "231": {
+  "name": "ThirdCam",
+  "create": "0x000253c0",
+  "create_name": "ThirdCam_Create",
+  "call": "ThirdCam_Create(&pos, &rot, lvl, celglist) cdecl; registered in table 0x1dc700[k0]",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "cameraIndex",
+    "type": "u16",
+    "note": "slot in the third-person camera table",
+    "seen": "n=15 distinct=9 min=0x0 max=0xd: 0x3 x3, 0x1 x3, 0x2 x2, 0xa x2, 0x0 x1, 0x5 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "flag",
+    "type": "u8",
+    "note": "+0xa; seen 1",
+    "seen": "n=14 distinct=2 min=0x0 max=0x1: 0x1 x13, 0x0 x1"
+   }
+  ],
+  "header": [
+   "pathKeyCount",
+   "path"
+  ],
+  "visual": {
+   "kind": "path",
+   "detail": "third-person camera (wall hug, hand-over-hand, zipline): ThirdCam_GetPos(obj, f) = Spline_Interp(path, f*(keys-1)); the camera path is the thing to draw"
+  },
+  "transform": "pos/rot unused apart from the object; the path keys are world-space camera poses",
+  "confidence": "likely",
+  "count": {
+   "records": 15,
+   "in_map_pack": 14,
+   "in_object_packs": 1
+  }
+ },
+ "250": {
+  "name": "ThirdIcon",
+  "create": "0x000af440",
+  "create_name": "ThirdIcon_Create",
+  "call": "ThirdIcon_Create(&pos, &rot, lvl, celglist) cdecl",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "thirdPersonMode",
+    "type": "u32",
+    "note": "written to player+0x8ef while the player touches it (6 = shows 'press Action'; 2, 3 other modes)",
+    "seen": "n=42 distinct=3 min=0x2 max=0x6: 0x2 x22, 0x3 x15, 0x6 x5"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "enableSwitchChannel",
+    "type": "switch",
+    "note": "0 = active from the start, else active once 1",
+    "channelRole": "in",
+    "seen": "n=42 distinct=2 min=0x0 max=0x3c: 0x0 x41, 0x3c x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "killSwitchChannel",
+    "type": "switch",
+    "note": "deleted when 1",
+    "channelRole": "in",
+    "seen": "n=42 distinct=1 min=0x0 max=0x0: 0x0 x42"
+   }
+  ],
+  "visual": {
+   "kind": "volume",
+   "detail": "third-person action zone; volume: the glist entity's collision data (block 0x2e/0x2f of that entity) in entity-local space, placed by obj->mtx; entity bbox (entity params +0x1c/+0x28) is its bounding box; the entity is normally hidden (flag 0x10)"
+  },
+  "transform": "control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used",
+  "confidence": "likely",
+  "count": {
+   "records": 42,
+   "in_map_pack": 42,
+   "in_object_packs": 0
+  }
+ },
+ "253": {
+  "name": "CamSubject",
+  "create": "0x00025700",
+  "create_name": "CamSubject_Create",
+  "call": "CamSubject_Create(&pos, &rot, lvl, celglist) cdecl",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "photographedSwitchChannel",
+    "type": "switch",
+    "note": "set (and the object deleted) when hit by a bullet of weapon 0x54 (the spy camera)",
+    "channelRole": "out",
+    "seen": "n=4 distinct=2 min=0x1c max=0x1e: 0x1c x2, 0x1e x2"
+   }
+  ],
+  "visual": {
+   "kind": "volume",
+   "detail": "photo target; volume: the glist entity's collision data (block 0x2e/0x2f of that entity) in entity-local space, placed by obj->mtx; entity bbox (entity params +0x1c/+0x28) is its bounding box; the entity is normally hidden (flag 0x10)"
+  },
+  "transform": "control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used",
+  "confidence": "confirmed",
+  "count": {
+   "records": 4,
+   "in_map_pack": 4,
+   "in_object_packs": 0
+  }
+ }
+}

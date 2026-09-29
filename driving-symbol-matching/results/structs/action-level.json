@@ -1,0 +1,4247 @@
+{
+ "program": "default.xbe",
+ "types": [
+  {
+   "name": "TARGET_PLACEMENT",
+   "size": 76,
+   "comment": "A placement record (block 0x1a), 0x4C bytes followed by paramCount PlacementParams. docs/level/spec-world.md.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "ushort",
+     "name": "celEntityNum",
+     "comment": "entity index in the same file, used when glistHashcode is -1"
+    },
+    {
+     "offset": 4,
+     "type": "HASHCODE",
+     "name": "glistHashcode",
+     "comment": "-1: pCelList[celEntityNum]"
+    },
+    {
+     "offset": 8,
+     "type": "uint",
+     "name": "placementType",
+     "comment": "0x8000 static cel (0xc047 room, 0xc023 underwater room, 0x8019 object, 0x8017 water); 0x2000 without 0x8000 ignored; else Place_* object type"
+    },
+    {
+     "offset": 12,
+     "type": "_VECTOR",
+     "name": "pos",
+     "comment": ""
+    },
+    {
+     "offset": 24,
+     "type": "_VECTOR",
+     "name": "rot",
+     "comment": "Euler; static cels draw RotMatrixZYX, objects View_RotTransMatrix"
+    },
+    {
+     "offset": 36,
+     "type": "quaternion_tag",
+     "name": "quat",
+     "comment": "the INVERSE of the rot orientation (x y z w)"
+    },
+    {
+     "offset": 52,
+     "type": "_VECTOR",
+     "name": "scale",
+     "comment": "per-axis scale (AI volumes); (1,1,1) on every static"
+    },
+    {
+     "offset": 64,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "non-zero: uses a path"
+    },
+    {
+     "offset": 66,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": ""
+    },
+    {
+     "offset": 68,
+     "type": "ushort",
+     "name": "pathIndex",
+     "comment": "index into m_paths"
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "paramCount",
+     "comment": "PlacementParams that follow"
+    }
+   ]
+  },
+  {
+   "name": "PlacementParam",
+   "size": 8,
+   "comment": "One {key, value} parameter of a placement record.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "uint",
+     "name": "key",
+     "comment": "value goes to level_tag +0x2C + 4*key"
+    },
+    {
+     "offset": 4,
+     "type": "uint",
+     "name": "value",
+     "comment": ""
+    }
+   ]
+  },
+  {
+   "name": "level_tag",
+   "size": 176,
+   "comment": "What every placement Create function receives (parsemap_block_map_data_dynamic 0xa66f0): zeroed, a 0x2C-byte header, then the placement parameters as dwords at 0x2C + 4*key. Per-type layouts: level_tag_<Type>.",
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint[33]",
+     "name": "param",
+     "comment": "param[key]"
+    }
+   ]
+  },
+  {
+   "name": "level_tag_Drone",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "HASHCODE",
+     "name": "skin",
+     "comment": "key 0. THE CHARACTER: AnimObjectNew(obj, skin) in NDrone2_DefaultInit 0x417f0. 0x05000000 = the editor template record in the shared pack (no such skin: skip). Level 0x07000014 (EvilBase) remaps 0x050000b1 -> 0x0500008c (that skin is not in the bundle). On some difficulties a \"captain\" swaps the skin by drone class (0x5000038, 0x500002f, 0x5000006, 0x5000093, 0x50000b2) - export the placed skin. (refers: skin 0x05 (bundle entry type 3))"
+    },
+    {
+     "offset": 48,
+     "type": "HASHCODE",
+     "name": "playScript",
+     "comment": "key 1. Drone+0x450. 0x06000000 = none. When set, the drone enters DSTATE_PlayScript at start (or after key 3 fires) and plays this ANIMATION script (DroneAnim_SetScript); 0x06000892 / 0x0600089c are special (cleared, set drone class 0x1c/0x1b). A good candidate for the exported starting animation. (refers: anim script 0x06 (bundle entry type 5))"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "minDifficulty",
+     "comment": "key 2. Drone_Create returns NULL if key2 > GameState.difficultyModifier. 1 = always present; 2/3 only on harder settings - tag in the export."
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "waitSwitchChannel",
+     "comment": "key 3. Drone+0x118 waitingForSwitchNumber. Non-zero: the drone starts DISABLED and HIDDEN (NDrone2_Enable(0): effectFlags |= 0x30) in DSTATE_WaitSwitch until the channel is set. 0 = present at level start."
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "group",
+     "comment": "key 4. Drone+0x128 (NDrone2_SetupGroups 0x36e90 links drones by group). A DroneSpawner whose key1 equals this group removes these drones at level start and re-creates them later from their saved DIVars (same position). Also matched against DroneAIPoint key2 (NDrone2_ClosestAIPoint)."
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "mode",
+     "comment": "key 5. Drone+0x11c. <0x24: old fixed mode, index into the DroneModeSettings table 0x1776f8 (12 bytes: u8 class, u8 isCivilian(1 enemy,2 ally,3 civilian), f32 alertness, init fn) - 0 Normal 1 Guard 2 Retreater 3 Sniper 4 Stealth 5 Attacker 6 RunToPoint 7 Assassin 8 HostageKiller 9 Hostage 10 HostageTied 11 JustStand4Demo 12 DeleteMe 13 Civilian 14 CivilianScared 15 MissionFailer 16 Mayhew 17 Ninja 18 AlarmRaiser 19 SearchLight 20 Ambush 21 Zoe 22 PartyGirl 23 CivilianGuard 24 Interogator 25 CivDoorGuard 26 TruckDriver 27/28 CastleChatGuard1/2 29 SniperAlert 30 PartyGirlLooker 33 Bot (names from the PS2 table). >=0x24 (100 in all but one record): NEW behaviour block, keys 15-32 (NDrone2_DoModeSettingsNEW 0x41230)."
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "modeChangeSwitchChannel",
+     "comment": "key 6. Drone+0x119: when this channel is set, the drone changes mode: if key8 == 12 it is deleted, else it switches to attack mode (NDrone2_PreDroneControl)."
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "unknown7",
+     "comment": "key 7. Drone+0x12c, copied in NDrone2_CreateFromDIVars and DefaultInit; no reader found."
+    },
+    {
+     "offset": 76,
+     "type": "uint",
+     "name": "secondaryMode",
+     "comment": "key 8. Drone+0x11e; index into the mode table (0 / 101 = none, 100 = new-style). Used by key 6."
+    },
+    {
+     "offset": 80,
+     "type": "uint",
+     "name": "weapon",
+     "comment": "key 9. Held weapon at start: weapon_data variant index (0x18cfa0, stride 0x10c) -> animState.currentWeaponId. AnimObjectDraw draws weapon_data[w].wpn3rdPersonGfx (0x02 entity) at datum weapon_data[w].whichBone (docs/anim/spec-pose.md). 0 = default by skin (1, or 0 for 0x0500001e); 1 = unarmed. See weapon_gfx below. (refers: weapon variant -> 0x02 entity)"
+    },
+    {
+     "offset": 84,
+     "type": "uint",
+     "name": "drawWeapon",
+     "comment": "key 10. Drone+0x45: weapon the drone switches to when it draws (DroneWeap_ChangeWeapon on anim event 2); <=1 means it has none (DSTATE_DrawWeapon -> CivilianScared). Skins 0x05000026/0x05000066 force 6."
+    },
+    {
+     "offset": 88,
+     "type": "uint",
+     "name": "grenades",
+     "comment": "key 11. hi nibble = grenade kind (1->weapon 0x36, 2->0x35, 4->0x34, 5->0x3a+count, 6->0x6c, other -> none), lo nibble = count; Drone+0x850/0x852. EvilBase clamps kinds 0x35/0x36 to 0x34."
+    },
+    {
+     "offset": 92,
+     "type": "uint",
+     "name": "deathSwitchChannel",
+     "comment": "key 12. Drone+0x120: set when the drone dies (DroneFunc_SetDeathChannel). 99 = special: mission failed (killed civilian / cover blown)."
+    },
+    {
+     "offset": 96,
+     "type": "HASHCODE",
+     "name": "deathScript",
+     "comment": "key 13. Drone+0x858 special death/surrender animation script (DSTATE_SpecialDeath_Anim / Surrender_Anim); also records the start pos/rot. 0x0600021f is special. 0 = none. (refers: anim script 0x06 (entry type 5))"
+    },
+    {
+     "offset": 100,
+     "type": "uint",
+     "name": "combatRange",
+     "comment": "key 14. NDrone2_DefaultInit: sets the engage distances (1: 12-15 m, 2: 12-15/16, 3: 25-31 m, 4: 75-83 m sniper, 5: 12-16 close, other: 12-16/24)."
+    },
+    {
+     "offset": 104,
+     "type": "uint",
+     "name": "behaviourClass",
+     "comment": "key 15. NEW mode block start (behaviour_util_get 0x194d0 reads keys 15..): class/stats index (<0x11) -> Drone+0xab, behaviour_util_getStats(class) gives health, accuracy, etc."
+    },
+    {
+     "offset": 108,
+     "type": "uint",
+     "name": "behaviour1Mode",
+     "comment": "key 16. first behaviour mode (<6) -> Drone+0xac"
+    },
+    {
+     "offset": 112,
+     "type": "uint",
+     "name": "behaviour1Header",
+     "comment": "key 17. u16 word count (3) | u16 property count (0x5b = 91) << 16; always 0x005b0003"
+    },
+    {
+     "offset": 116,
+     "type": "uint",
+     "name": "behaviour1Props0",
+     "comment": "key 18. bits 0-31 of the first behaviour's 91 boolean properties (behaviour_util_getProperty(n))"
+    },
+    {
+     "offset": 120,
+     "type": "uint",
+     "name": "behaviour1Props1",
+     "comment": "key 19. properties 32-63"
+    },
+    {
+     "offset": 124,
+     "type": "uint",
+     "name": "behaviour1Props2",
+     "comment": "key 20. properties 64-90"
+    },
+    {
+     "offset": 128,
+     "type": "uint",
+     "name": "behaviour2Mode",
+     "comment": "key 21. second (alternative) behaviour mode (<6) -> Drone+0xad"
+    },
+    {
+     "offset": 132,
+     "type": "uint",
+     "name": "behaviour2Header",
+     "comment": "key 22. always 0x005b0003"
+    },
+    {
+     "offset": 136,
+     "type": "uint",
+     "name": "behaviour2Props0",
+     "comment": "key 23. second behaviour properties 0-31"
+    },
+    {
+     "offset": 140,
+     "type": "uint",
+     "name": "behaviour2Props1",
+     "comment": "key 24. properties 32-63"
+    },
+    {
+     "offset": 144,
+     "type": "uint",
+     "name": "behaviour2Props2",
+     "comment": "key 25. properties 64-90"
+    },
+    {
+     "offset": 148,
+     "type": "uint",
+     "name": "statsOverrideHeader",
+     "comment": "key 26. optional: 0x80010006 = 6 more words of bit-packed per-class stats (3 difficulty levels x 8 fields of 8,3,8,8,5,8,8,1 bits) written to the GLOBAL table 0x1d7830[class*3+difficulty]"
+    },
+    {
+     "offset": 152,
+     "type": "uint",
+     "name": "statsOverride0",
+     "comment": "key 27. bit-packed stats override data (see key 26)"
+    },
+    {
+     "offset": 156,
+     "type": "uint",
+     "name": "statsOverride1",
+     "comment": "key 28. bit-packed stats override data (see key 26)"
+    },
+    {
+     "offset": 160,
+     "type": "uint",
+     "name": "statsOverride2",
+     "comment": "key 29. bit-packed stats override data (see key 26)"
+    },
+    {
+     "offset": 164,
+     "type": "uint",
+     "name": "statsOverride3",
+     "comment": "key 30. bit-packed stats override data (see key 26)"
+    },
+    {
+     "offset": 168,
+     "type": "uint",
+     "name": "statsOverride4",
+     "comment": "key 31. bit-packed stats override data (see key 26)"
+    },
+    {
+     "offset": 172,
+     "type": "uint",
+     "name": "statsOverride5",
+     "comment": "key 32. bit-packed stats override data (see key 26)"
+    }
+   ],
+   "comment": "Placement type 15 (Drone) as Drone_Create reads it; confidence confirmed (skin, weapon, switches, transform); likely (behaviour block meaning); guess (key7). Object origin = pos exactly (not snapped), about 1.1 m above the floor (hip height: the exported skin glb has its feet at y = -1.16 in bind pose), so place the skin glb at pos with no y offset. rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type."
+  },
+  {
+   "name": "level_tag_Shooter",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "triggerSwitchChannel",
+     "comment": "key 0. -> obj curState"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "weapon",
+     "comment": "key 1. weapon_data variant fired from pos along the matrix dir (straight down for base 0x3b satchel)"
+    }
+   ],
+   "comment": "Placement type 210 (Shooter) as Shooter_Create reads it; confidence confirmed (keys), guess (visibility). control_create_object(pos, rot); rot.x tilts the firing direction"
+  },
+  {
+   "name": "level_tag_Car",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "unused",
+     "comment": "key 0. not read (always 0)"
+    }
+   ],
+   "comment": "Placement type 218 (Car) as Car_Create reads it; confidence confirmed (create), guess (which mode). Control_CreateObjEx(pos, rot) -> View_RotTransMatrix. rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type."
+  },
+  {
+   "name": "level_tag_Searchlight",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "part",
+     "comment": "key 0. 0 stand (OBJECT_SLightMount), 1 lamp head = master (OBJECT_SearchLight1), 2 projected spot: a white dynamic Light_Create(pos, range 500) and the object is moved 10000 away (glist not seen), 3 beam cone (OBJECT_SearchLightbeam*), 4 corona (SL_Corona)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "enableSwitchChannel",
+     "comment": "key 1. master only: lamp starts off (state 3, parts hidden) until set"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "disableSwitchChannel",
+     "comment": "key 2. master only"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "alertSwitchChannel",
+     "comment": "key 3. master only: set when the light spots Bond"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "sweepAngleADeg",
+     "comment": "key 4. master: sweep limits in degrees (min/max of keys 4,5) -> centre and half range"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "sweepAngleBDeg",
+     "comment": "key 5. see key 4"
+    }
+   ],
+   "comment": "Placement type 222 (Searchlight) as Searchlight_Create reads it; confidence confirmed. control_create_object(pos, rot). rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type."
+  },
+  {
+   "name": "level_tag_Creature",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "ushort",
+     "name": "kind",
+     "comment": "key 0. 0 = generic; 1 = fish (only in cels flagged 0xc023, else deleted)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "param1",
+     "comment": "key 1. float"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "param2",
+     "comment": "key 2. *0.01"
+    },
+    {
+     "offset": 56,
+     "type": "uchar",
+     "name": "param3",
+     "comment": "key 3. "
+    },
+    {
+     "offset": 60,
+     "type": "uchar",
+     "name": "param4",
+     "comment": "key 4. "
+    }
+   ],
+   "comment": "Placement type 224 (Creature) as Creature_Create reads it; confidence likely. rot via Quat_EulerToQuat"
+  },
+  {
+   "name": "level_tag_DroneCoverCorner",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "sideFlags",
+     "comment": "key 0. 1 -> flags 8, 2 -> flags 4, other -> 0xc (which side(s) of the corner can be used)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "standFlags",
+     "comment": "key 1. 1 -> 0x20, 2 -> 0x40, other -> 0x60"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "crouchFlags",
+     "comment": "key 2. 1 -> 0x80, 2 -> 0x100, other -> 0x180"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "coverAngleDeg",
+     "comment": "key 3. CoverNode+8 = deg to rad (0 -> 45 deg); always 46 in the data"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "enableSwitchChannel",
+     "comment": "key 4. usable only while this channel is set (0 = always) - Drone_IsCoverNodeUsable"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "disableSwitchChannel",
+     "comment": "key 5. unusable once this channel is set"
+    },
+    {
+     "offset": 68,
+     "type": "uchar",
+     "name": "unknown6",
+     "comment": "key 6. CoverNode+5 (0 -> 8); always 8"
+    },
+    {
+     "offset": 72,
+     "type": "uchar",
+     "name": "unknown7",
+     "comment": "key 7. CoverNode+6 (0 -> 8); always 8"
+    }
+   ],
+   "comment": "Placement type 229 (DroneCoverCorner) as Drone_CoverCornerNode reads it; confidence confirmed. pos + rot copied to the node; rot.y = the direction the cover faces (compared with atan2(dx,dz)). rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type."
+  },
+  {
+   "name": "level_tag_DroneCoverLow",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "kind",
+     "comment": "key 0. 2: anims chosen by keys 1/2 from {0x11,5,10,7,0x1d}; 1: anim 0x11/5; other: 0x11/10"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "anim1",
+     "comment": "key 1. index into {0x11,5,10,7,0x1d} (CoverNode+3), kind 2 only"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "anim2",
+     "comment": "key 2. same table (CoverNode+4), kind 2 only"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "flag2",
+     "comment": "key 3. 1 -> CoverNode flags |= 2 (kind 2 only)"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "enableSwitchChannel",
+     "comment": "key 4. usable only while set (0 = always)"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "disableSwitchChannel",
+     "comment": "key 5. unusable once set"
+    }
+   ],
+   "comment": "Placement type 230 (DroneCoverLow) as Drone_CoverLowNode reads it; confidence confirmed. rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type."
+  },
+  {
+   "name": "level_tag_DroneAIPoint",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "ushort",
+     "name": "pointId",
+     "comment": "key 0. point+6: the id a drone asks for (NDrone2_ClosestAIPoint(.., id, ..))"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "radius",
+     "comment": "key 1. point+0x14 as float (1..3)"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "group",
+     "comment": "key 2. point+0xc: preferred by drones whose group (Drone key4) matches"
+    }
+   ],
+   "comment": "Placement type 233 (DroneAIPoint) as Drone_AIPoint reads it; confidence confirmed (layout), likely (meanings). rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type."
+  },
+  {
+   "name": "level_tag_DroneSpawner",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "spawnMode",
+     "comment": "key 0. <=1: not created. 2 = keep topping up to key2 alive; 3 = next wave when all are dead"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "group",
+     "comment": "key 1. the Drone key4 group it owns; those drones are deleted at start and respawned from their own placements (DroneSpawner_SpawnDrone -> NDrone2_CreateFromDIVars)"
+    },
+    {
+     "offset": 52,
+     "type": "ushort",
+     "name": "maxAlive",
+     "comment": "key 2. +0xa, clamped to the group size (0 -> group size)"
+    },
+    {
+     "offset": 56,
+     "type": "ushort",
+     "name": "waves",
+     "comment": "key 3. +0xc, number of refills (0 -> 32000 = endless)"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "startSwitchChannel",
+     "comment": "key 4. +0xe: spawning starts when set (0 = at once)"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "stopSwitchChannel",
+     "comment": "key 5. +0x10: spawning stops (and the spawned drones are removed on most levels)"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "doneSwitchChannel",
+     "comment": "key 6. +0x12: set when all waves are used up and nobody is left"
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "abortSwitchChannel",
+     "comment": "key 7. +0x14: when set, stops after the current drones"
+    },
+    {
+     "offset": 76,
+     "type": "uint",
+     "name": "minPlayerDistance",
+     "comment": "key 8. +0x18 float metres (0 -> 10): only spawns this far from the player and out of sight"
+    }
+   ],
+   "comment": "Placement type 241 (DroneSpawner) as DroneSpawner_Create reads it; confidence confirmed. pos/rot stored on the object but not used for spawning (drones spawn at their own placements)"
+  },
+  {
+   "name": "level_tag_DroneAIVolume1",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "visibilityPercent",
+     "comment": "key 0. AI_VOLUME+0x18 = key0*0.01: multiplies how visible a target inside is (Drone_VisibilityForPosition; 50 = half, 200 = double)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "volumeType",
+     "comment": "key 1. 0 -> type 0 (visibility/shadow), 1 -> 2, 2 -> 1, 4 -> 3 (Drone_PointInAnyAIBox, astronaut combat). Type 4 (or level CastleExterior) also negates rot.z and raises pos.y by 1.5*scale.y"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "unknown2",
+     "comment": "key 2. AI_VOLUME+0x20 (0x06000000 or 0 in the data)"
+    },
+    {
+     "offset": 56,
+     "type": "uchar",
+     "name": "unknown3",
+     "comment": "key 3. AI_VOLUME+0x24"
+    },
+    {
+     "offset": 60,
+     "type": "ushort",
+     "name": "unknown4",
+     "comment": "key 4. AI_VOLUME+0x1e"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "unused5",
+     "comment": "key 5. not read"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "unused6",
+     "comment": "key 6. not read (1 in the data)"
+    }
+   ],
+   "comment": "Placement type 245 (DroneAIVolume1) as Drone_AIVolume_Create reads it; confidence confirmed (geometry), likely (types). control_create_object(pos, rot) -> View_RotTransMatrix; rot is general here (x and z up to 0.4 rad). The quat field is not a unit quaternion in half of these records (garbage) - ignore it. Note the box centre is the object origin, not the glist bbox centre (Intersect_PointOOBox with the half extents)."
+  },
+  {
+   "name": "level_tag_DroneAIVolume2",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "visibilityPercent",
+     "comment": "key 0. AI_VOLUME+0x18 = key0*0.01: multiplies how visible a target inside is (Drone_VisibilityForPosition; 50 = half, 200 = double)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "volumeType",
+     "comment": "key 1. 0 -> type 0 (visibility/shadow), 1 -> 2, 2 -> 1, 4 -> 3 (Drone_PointInAnyAIBox, astronaut combat). Type 4 (or level CastleExterior) also negates rot.z and raises pos.y by 1.5*scale.y"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "unknown2",
+     "comment": "key 2. AI_VOLUME+0x20 (0x06000000 or 0 in the data)"
+    },
+    {
+     "offset": 56,
+     "type": "uchar",
+     "name": "unknown3",
+     "comment": "key 3. AI_VOLUME+0x24"
+    },
+    {
+     "offset": 60,
+     "type": "ushort",
+     "name": "unknown4",
+     "comment": "key 4. AI_VOLUME+0x1e"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "unused5",
+     "comment": "key 5. not read"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "unused6",
+     "comment": "key 6. not read (1 in the data)"
+    }
+   ],
+   "comment": "Placement type 248 (DroneAIVolume2) as Drone_AIVolume_Create reads it; confidence confirmed: same create function; its only record has no keys. control_create_object(pos, rot) -> View_RotTransMatrix; rot is general here (x and z up to 0.4 rad). The quat field is not a unit quaternion in half of these records (garbage) - ignore it. Note the box centre is the object origin, not the glist bbox centre (Intersect_PointOOBox with the half extents)."
+  },
+  {
+   "name": "level_tag_Mine",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "explodeStrength",
+     "comment": "key 0. +0x18 float (80)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "explodeRadius",
+     "comment": "key 1. +0x1c float (10 / 15)"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "spinRate",
+     "comment": "key 2. *0.0002 rad per frame added to rot.y (0 in the data)"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "bobFrequency",
+     "comment": "key 3. *0.0002 (0)"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "bobAmplitude",
+     "comment": "key 4. *0.1 around pos.y (0)"
+    },
+    {
+     "offset": 64,
+     "type": "HASHCODE",
+     "name": "explosionScript",
+     "comment": "key 5. Explode_Create effect (refers: object script 0x06 (entry type 7))"
+    }
+   ],
+   "comment": "Placement type 254 (Mine) as Mine_Create reads it; confidence confirmed. control_create_object(pos, rot) -> View_RotTransMatrix(rot): general Euler (wall-mounted, x = +-pi/2)"
+  },
+  {
+   "name": "level_tag_PlayerNewStartPos",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "requiredSwitchChannel",
+     "comment": "key 0. start only used when this channel is set (0 = always); Player_Init re-checks it"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "unknown1",
+     "comment": "key 1. not read by Player_Init (0/1)"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "unknown2",
+     "comment": "key 2. not read by Player_Init; equals key0 where set (29/30/31)"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "startMovement",
+     "comment": "key 3. Player_Init (SP): 0 walk; 1 -> movement 3 (swim); 2 -> zero-G (movement 8, gravity off, script 0x06000a00); 3 -> crouch (movement 4, script 0x060009ff)"
+    }
+   ],
+   "comment": "Placement type 36 (PlayerNewStartPos) as Player_AddNewStartPos reads it; confidence confirmed. eye/body origin at pos; facing rot.y. rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type."
+  },
+  {
+   "name": "level_tag_MPSpawnPoint",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "team",
+     "comment": "key 0. 0 / 1 = team slots 0-31 / 32-63 in team games (ignored otherwise); 2 = never registered"
+    }
+   ],
+   "comment": "Placement type 37 (MPSpawnPoint) as MP_RegisterSpawnPoint reads it; confidence confirmed. spawn eye position = pos dropped to the floor (build_PointOnFloor, 3 m) + 1.6 y; facing = rot. rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type."
+  },
+  {
+   "name": "level_tag_MPObject",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "objectType",
+     "comment": "key 0. MPOBJECTTYPE and the game mode that creates it: 0 CTF flag, 1 CTF base (CTF); 2 uplink (Uplink); 3 demolition place; 4 espionage base, 5 blueprint (Blueprint); 6 GoldenEye key, 7 GoldenEye crystal; 8 protection place; 9 hill (KOTH / team KOTH). Types 3,5,6,7,8 only store a spawn matrix+glist"
+    },
+    {
+     "offset": 48,
+     "type": "ushort",
+     "name": "team",
+     "comment": "key 1. team / number (0,1; 2 = neutral)"
+    },
+    {
+     "offset": 52,
+     "type": "HASHCODE",
+     "name": "scriptPlayerScript",
+     "comment": "key 2. if non-zero: the object is hidden (|0x10) and a ScriptPlayer (SP_Create) plays this object script at the matrix instead (e.g. a waving flag) (refers: object script 0x06 (bundle entry type 7))"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "spParam3",
+     "comment": "key 3. SP_Create 5th arg (8 or 1)"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "spParam4",
+     "comment": "key 4. SP_Create 6th arg (0)"
+    },
+    {
+     "offset": 64,
+     "type": "HASHCODE",
+     "name": "spScript2",
+     "comment": "key 5. SP_Create 4th arg (second script) (refers: object script 0x06 (entry type 7))"
+    }
+   ],
+   "comment": "Placement type 38 (MPObject) as MP_RegisterMPObject reads it; confidence confirmed. RotMatrix(rot) (row-vector, m[k] = row k/4): row0 = (cz cy, sz cx + cz sy sx, sz sx - cz sy cx), row1 = (-sz cy, cz cx - sz sy sx, cz sx + sz sy cx), row2 = (sy, -cy sx, cy cx), translation pos. rot.x is 0 or pi in the data."
+  },
+  {
+   "name": "level_tag_GunTurret",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "ushort",
+     "name": "ceilingMounted",
+     "comment": "key 0. GT+0xdc: non-zero = hangs from the ceiling, aims along -up, health 0xffff; 0 = floor, aims along the matrix dir, health 200"
+    },
+    {
+     "offset": 48,
+     "type": "ushort",
+     "name": "unknown1",
+     "comment": "key 1. GT+0xde"
+    },
+    {
+     "offset": 52,
+     "type": "HASHCODE",
+     "name": "baseScript",
+     "comment": "key 2. Script_Load(key2, pos, rot) - first set of visible turret parts (refers: object script 0x06 (entry type 7))"
+    },
+    {
+     "offset": 56,
+     "type": "HASHCODE",
+     "name": "gunScript",
+     "comment": "key 3. Script_Load(key3, pos, rot) - second set (1000 in one record = no turret) (refers: object script 0x06 (entry type 7))"
+    },
+    {
+     "offset": 60,
+     "type": "ushort",
+     "name": "switchA",
+     "comment": "key 4. GT+0xd8 (switch channel?)"
+    },
+    {
+     "offset": 64,
+     "type": "ushort",
+     "name": "switchB",
+     "comment": "key 5. GT+0xda"
+    }
+   ],
+   "comment": "Placement type 39 (GunTurret) as GT_Create reads it; confidence confirmed (layout), likely (visual). Control_CreateObjEx(pos, rot). quat is passed but unused. rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type."
+  },
+  {
+   "name": "level_tag_AddNewStartPos2",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "requiredSwitchChannel",
+     "comment": "key 0. as type 36; always 0"
+    }
+   ],
+   "comment": "Placement type 45 (AddNewStartPos2) as Player_AddNewStartPos reads it; confidence likely (no reader found for disabled starts). rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type."
+  },
+  {
+   "name": "level_tag_Copter",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "mustBeZero",
+     "comment": "key 0. non-zero -> copter not created (path still made); 0 in the data"
+    },
+    {
+     "offset": 48,
+     "type": "ushort",
+     "name": "pathParam1",
+     "comment": "key 1. path+0x14"
+    },
+    {
+     "offset": 52,
+     "type": "ushort",
+     "name": "pathParam2",
+     "comment": "key 2. path+0x12"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "startFrame",
+     "comment": "key 3. clamped to frame count -> path+0x10"
+    },
+    {
+     "offset": 60,
+     "type": "HASHCODE",
+     "name": "bodyScript",
+     "comment": "key 4. object script played by a ScriptPlayer at pos/rot: THE VISIBLE HELICOPTER (refers: object script 0x06 (entry type 7))"
+    },
+    {
+     "offset": 64,
+     "type": "HASHCODE",
+     "name": "bodyScript2",
+     "comment": "key 5. SP_Create 4th arg (refers: object script 0x06 (entry type 7))"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "showSwitchChannel",
+     "comment": "key 6. hidden (SP_HideObj) until this channel is set (0 = visible)"
+    },
+    {
+     "offset": 72,
+     "type": "ushort",
+     "name": "param7",
+     "comment": "key 7. COPTER+0x72 (75/101/102)"
+    },
+    {
+     "offset": 76,
+     "type": "ushort",
+     "name": "param8",
+     "comment": "key 8. COPTER+0x74"
+    },
+    {
+     "offset": 80,
+     "type": "ushort",
+     "name": "param9",
+     "comment": "key 9. COPTER+0x76"
+    },
+    {
+     "offset": 84,
+     "type": "uint",
+     "name": "durationOverride",
+     "comment": "key 10. path speed base; 0 -> header +4"
+    }
+   ],
+   "comment": "Placement type 47 (Copter) as Copter_Create reads it; confidence confirmed (layout), likely (visual). control_create_object(pos, rot); general Euler (x up to 0.57, z to 0.54) - View_RotTransMatrix(rot); then driven along the path"
+  },
+  {
+   "name": "level_tag_GunImp",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "HASHCODE",
+     "name": "unused_barrelHash",
+     "comment": "key 0. NOT read on Xbox (equals the barrel of table entry 1 / 7) (refers: entity 0x02)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "unused1",
+     "comment": "key 1. NOT read"
+    }
+   ],
+   "comment": "Placement type 52 (GunImp) as GunImp_Create reads it; confidence confirmed. matrix = Quat_QuatToMat(quat) + pos; the engine quat has glTF semantics, so use the placement quat as-is (rot.y is 0 or pi here, so rot would agree)"
+  },
+  {
+   "name": "level_tag_PCQWorm",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "ushort",
+     "name": "keyCodeNum",
+     "comment": "key 0. "
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "switchChannel",
+     "comment": "key 1. set when hacked"
+    },
+    {
+     "offset": 52,
+     "type": "uchar",
+     "name": "param2",
+     "comment": "key 2. "
+    },
+    {
+     "offset": 56,
+     "type": "uchar",
+     "name": "param3",
+     "comment": "key 3. "
+    }
+   ],
+   "comment": "Placement type 53 (PCQWorm) as PCQWorm_Create reads it; confidence confirmed. Control_CreateObjEx(pos, rot). rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type."
+  },
+  {
+   "name": "level_tag_Sub",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "switchChannel",
+     "comment": "key 0. "
+    }
+   ],
+   "comment": "Placement type 54 (Sub) as Sub_Create reads it; confidence likely. path follower"
+  },
+  {
+   "name": "level_tag_MiniSub",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "param0",
+     "comment": "key 0. +0x14"
+    }
+   ],
+   "comment": "Placement type 55 (MiniSub) as MiniSub_Create reads it; confidence likely. Control_CreateObjEx(pos, rot)"
+  },
+  {
+   "name": "level_tag_SpaceLaser",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "HASHCODE",
+     "name": "scriptA",
+     "comment": "key 0. +0x18[0] (refers: object script 0x06)"
+    },
+    {
+     "offset": 48,
+     "type": "HASHCODE",
+     "name": "scriptB",
+     "comment": "key 1. +0x18[1] (refers: object script 0x06)"
+    },
+    {
+     "offset": 52,
+     "type": "HASHCODE",
+     "name": "scriptC",
+     "comment": "key 2. +0x20 (refers: object script 0x06)"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "countdown",
+     "comment": "key 3. float (165)"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "param4",
+     "comment": "key 4. float +0x2c (65)"
+    },
+    {
+     "offset": 64,
+     "type": "ushort",
+     "name": "param5",
+     "comment": "key 5. +0x38 (99)"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "otherSwitchChannel",
+     "comment": "key 6. 14"
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "someSwitchChannel",
+     "comment": "key 7. 19"
+    }
+   ],
+   "comment": "Placement type 56 (SpaceLaser) as Create_SpaceLaser reads it; confidence likely. rot zero"
+  },
+  {
+   "name": "level_tag_SpaceMissile",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "HASHCODE",
+     "name": "missileScript",
+     "comment": "key 0. Script_Load(key0, pos, rot) + Script_Play: the visible missile rig (refers: object script 0x06 (entry type 7))"
+    },
+    {
+     "offset": 48,
+     "type": "HASHCODE",
+     "name": "launchCouplerAnim",
+     "comment": "key 1.  (refers: object script 0x06)"
+    },
+    {
+     "offset": 52,
+     "type": "HASHCODE",
+     "name": "missileDeployAnim",
+     "comment": "key 2.  (refers: object script 0x06)"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "deployDelay",
+     "comment": "key 3. float"
+    },
+    {
+     "offset": 60,
+     "type": "ushort",
+     "name": "missileNum",
+     "comment": "key 4. 1-8"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "switchA",
+     "comment": "key 5. triggerSwitchOnSomeOtherState (199)"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "switchB",
+     "comment": "key 6. triggerSwitchOnSomeState (21-28)"
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "deployOnChannel",
+     "comment": "key 7. 19"
+    },
+    {
+     "offset": 76,
+     "type": "HASHCODE",
+     "name": "extraScript1",
+     "comment": "key 8. optional Script_Load"
+    },
+    {
+     "offset": 80,
+     "type": "HASHCODE",
+     "name": "extraScript2",
+     "comment": "key 9. optional"
+    },
+    {
+     "offset": 84,
+     "type": "HASHCODE",
+     "name": "extraScript3",
+     "comment": "key 10. optional"
+    },
+    {
+     "offset": 88,
+     "type": "HASHCODE",
+     "name": "extraScript4",
+     "comment": "key 11. optional"
+    }
+   ],
+   "comment": "Placement type 57 (SpaceMissile) as Create_SpaceMissile reads it; confidence confirmed. View_RotTransMatrix(rot, pos) inside Script_Load; rot is zero in all records"
+  },
+  {
+   "name": "level_tag_Apocalypse",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "triggerSwitchChannel",
+     "comment": "key 0. starts when set"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "durationSeconds",
+     "comment": "key 1. *60 frames; object deleted at the end"
+    },
+    {
+     "offset": 52,
+     "type": "ushort",
+     "name": "rumble",
+     "comment": "key 2. controller rumble strength (fades)"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "screenEffect",
+     "comment": "key 3. viewer apocalypseEffect (screen shake/tint)"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "flashBang",
+     "comment": "key 4. Player_SetFlashBang white-out"
+    }
+   ],
+   "comment": "Placement type 74 (Apocalypse) as Apocalypse_Create reads it; confidence confirmed (keys), guess (glist visibility). not relevant"
+  },
+  {
+   "name": "level_tag_ScriptPlayer",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "HASHCODE",
+     "name": "script0",
+     "comment": "key 0. game script (bundle entry type 7, Script_Load 0xc1550); 0x06000000 = placeholder, resolves to nothing (refers: game script 0x06)"
+    },
+    {
+     "offset": 48,
+     "type": "HASHCODE",
+     "name": "script1",
+     "comment": "key 1. optional second script, alternates with script0 (refers: game script 0x06)"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "script0Mode",
+     "comment": "key 2. 1 = play once at start, 8 = loop, 0x40 = loaded paused at frame 0 (waits for a trigger), 0 = not loaded until triggered"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "script1Mode",
+     "comment": "key 3. same, for script1"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "dieAfterPlay",
+     "comment": "key 4. +0x35: 1 = object deleted when the script ends; 0 = switch to the other script and wait for the next trigger"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "triggerMask",
+     "comment": "key 5. +0x2e: 0x01 k6 channel is 1, 0x02 a script object shot (weapon k8 if non-zero), 0x04 unpaused (SP_UnPause, e.g. by a Switch), 0x08 player touches a script object, 0x10 drone touches. 0 -> nothing triggers it"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "switchChannel",
+     "comment": "key 6. +0x30, two-way: cleared at create; a trigger source when mask bit0; written (1 when started, 0 on the second trigger) whenever triggered"
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "damageToUnpause",
+     "comment": "key 7. +0x14 float: accumulated hit damage that unpauses the script (0 = off)"
+    },
+    {
+     "offset": 76,
+     "type": "uchar",
+     "name": "bulletWeaponFilter",
+     "comment": "key 8. +0x37: weapon id a hit must come from for mask bit 0x02 (0 = any)"
+    },
+    {
+     "offset": 80,
+     "type": "uint",
+     "name": "gateSwitchChannel",
+     "comment": "key 9. +0x32: the player does nothing while this channel is 0"
+    },
+    {
+     "offset": 84,
+     "type": "uint",
+     "name": "scalePercent",
+     "comment": "key 10. entity scale of the scripts, 100 = 1.0 (0 -> 1.0)"
+    }
+   ],
+   "comment": "Placement type 217 (ScriptPlayer) as SP_CreateScriptPlayer reads it; confidence likely. script matrix = View_RotTransMatrix(rot, pos)"
+  },
+  {
+   "name": "level_tag_Door",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "movement",
+     "comment": "key 0. obj->subState: 0 = swing door (path of 3 keys, closed pose = middle key, opens either way away from the player); 1/2 = slide/path door (closed = key 0, open = last key). Seen 0, 2"
+    },
+    {
+     "offset": 48,
+     "type": "ushort",
+     "name": "doorGroup",
+     "comment": "key 1. DOORINFO+0x66: doors with the same non-zero group open/close together (double doors); DoorGroupsStates[group]"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "stateSwitchChannel",
+     "comment": "key 2. DOORINFO+0x62, two-way: door writes 1 while open/opening (and at create if it starts open), 0 when closed; channel going 1 opens it, 0 closes it"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "unlockSwitchChannel",
+     "comment": "key 3. DOORINFO+0x64: door is locked while this channel is 0 (plays lockedSound); on its 0->1 edge the door opens by itself once and the channel link is cleared. 200 (0xc8) on 51 doors: no placement writes channel 200 (only DroneAIVolume1 k0 also holds 200) - probably permanently locked 'Door_Locked_*' or set by a script"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "flag_d9_8",
+     "comment": "key 4. non-zero sets bit 0x8 of obj+0xd9; no reader found (confidence low)"
+    },
+    {
+     "offset": 64,
+     "type": "ushort",
+     "name": "openSound",
+     "comment": "key 5. sound id (not a hashcode), 0 -> none (0xffff)"
+    },
+    {
+     "offset": 68,
+     "type": "ushort",
+     "name": "closeSound",
+     "comment": "key 6. sound id, 0 -> none"
+    },
+    {
+     "offset": 72,
+     "type": "ushort",
+     "name": "lockedSound",
+     "comment": "key 7. sound id played when locked / refused, 0 -> none"
+    },
+    {
+     "offset": 76,
+     "type": "uint",
+     "name": "flagsA",
+     "comment": "key 8. ORed with k9 into DOORINFO+0x6c: bit0 = smooth spline interpolation (else KeyFrame_Interp, linear); bit2 = starts open; bit5 = stays open (no auto-close after 6 s); bit1 always set (meaning unknown)"
+    },
+    {
+     "offset": 80,
+     "type": "uint",
+     "name": "flagsB",
+     "comment": "key 9. ORed with k8 (same bits); seen 2, 0x22, 0x24"
+    },
+    {
+     "offset": 84,
+     "type": "uchar",
+     "name": "oneWay",
+     "comment": "key 10. DOORINFO+0x72: 1 = can only be opened from the side its forward (+z of obj mtx) points away from, 2 = the other side, 0 = both"
+    },
+    {
+     "offset": 88,
+     "type": "uint",
+     "name": "playerCannotOpen",
+     "comment": "key 11. DOORINFO+0x73: Action button (Player_Activate) does not open it; only channels/drones"
+    }
+   ],
+   "comment": "Placement type 219 (Door) as Door_Create reads it; confidence confirmed. control_create_object(pos, rot) then overwritten by the path pose when a path exists. placement pos == path key 0 in all 387 path doors; path quat == conjugate of the placement +0x24 quat (same rotation as the Euler rot)."
+  },
+  {
+   "name": "level_tag_Trigger",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "triggerKind",
+     "comment": "key 0. 1 touch-once, 2 touch, 3 AND, 4 sequential AND, 5 fan-out, 10 load level, 12 OR, 13 movie. Seen 2"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "outSwitchChannel",
+     "comment": "key 1. output channel (kind 10: level hashcode, kind 13: movie hashcode, kind 5: the input)"
+    },
+    {
+     "offset": 52,
+     "type": "ushort",
+     "name": "in0",
+     "comment": "key 2. input channel / touch filter"
+    },
+    {
+     "offset": 56,
+     "type": "ushort",
+     "name": "in1",
+     "comment": "key 3. "
+    },
+    {
+     "offset": 60,
+     "type": "ushort",
+     "name": "in2",
+     "comment": "key 4. "
+    },
+    {
+     "offset": 64,
+     "type": "ushort",
+     "name": "in3",
+     "comment": "key 5. "
+    },
+    {
+     "offset": 68,
+     "type": "ushort",
+     "name": "in4",
+     "comment": "key 6. "
+    },
+    {
+     "offset": 72,
+     "type": "ushort",
+     "name": "in5",
+     "comment": "key 7. "
+    },
+    {
+     "offset": 76,
+     "type": "ushort",
+     "name": "in6",
+     "comment": "key 8. "
+    },
+    {
+     "offset": 80,
+     "type": "uint",
+     "name": "touchMask",
+     "comment": "key 9. bitmask: 0x10 drone touches, 0x08 player touches, 0x04 player presses Action on it, 0x02 hit by a bullet, 0x01 extra condition (see note); 0 -> 2 (bullet)"
+    },
+    {
+     "offset": 84,
+     "type": "uint",
+     "name": "disableSwitchChannel",
+     "comment": "key 10. "
+    },
+    {
+     "offset": 88,
+     "type": "uint",
+     "name": "hideWhenDisabled",
+     "comment": "key 11. "
+    }
+   ],
+   "comment": "Placement type 220 (Trigger) as Trigger_Create reads it; confidence confirmed. Euler rot + pos (View_RotTransMatrix) orient the collision volume; if a path is given the trigger moves along it, looping, one lap per pathDurationFrames"
+  },
+  {
+   "name": "level_tag_Destroy",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "destroyedSwitchChannel",
+     "comment": "key 0. +0x12: set when destroyed (after k6 seconds delay)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "smashSwitchChannel",
+     "comment": "key 1. +0x10: when this channel becomes 1 the object destroys itself"
+    },
+    {
+     "offset": 52,
+     "type": "uchar",
+     "name": "explosion",
+     "comment": "key 2. +0x16: 0 none; 1 small (script 0x06000027, radius 4*r), 2 (0x0600004f, 2*r), >=3 (0x06000052, 3*r); k2*10 is passed as a further Explode_Create float"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "health",
+     "comment": "key 3. float health; 10000 = practically indestructible"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "damageFilter",
+     "comment": "key 4. stored as ~k4, bullet filter mask"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "explosionDamage",
+     "comment": "key 5. +8 = k5*0.01"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "destroyedDelay",
+     "comment": "key 6. +0xc = -(k6*FRAME_RATE): seconds between destruction and destroyedSwitchChannel"
+    }
+   ],
+   "comment": "Placement type 225 (Destroy) as Destroy_Create reads it; confidence confirmed. control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used"
+  },
+  {
+   "name": "level_tag_SS",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "mode",
+     "comment": "key 0. +0x20/+0x22 state: 8 = loops along its path forever; 0x40 = waits for trigger, then plays the path once; 1 = playing at start; 0 = idle"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "rearm",
+     "comment": "key 1. +0x24: after reaching the end, 1 = waits for the next trigger (0x40), 0 = stops"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "triggerMask",
+     "comment": "key 2. +0x1e: 0x10 drone / 0x08 player / 0x02 bullet touches the object, 0x04 Action (SS_Activate); bit 0x01 = do not write switchChannel"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "switchChannel",
+     "comment": "key 3. +0x10, two-way: a 1 triggers it; when touched it writes 1 (unless mask bit0)"
+    },
+    {
+     "offset": 60,
+     "type": "ushort",
+     "name": "triggerSound",
+     "comment": "key 4. sound id played when triggered, 0 -> none"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "pauseAt",
+     "comment": "key 5. +8: path time (frames) where playback pauses and waits for another trigger; 0 = none"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "splineInterp",
+     "comment": "key 6. +0x26: 1 = Spline_Interp, 0 = KeyFrame_Interp"
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "setCelShear",
+     "comment": "key 7. +0x2a: writes its centre y into its cel's shearHeight (moving water/floor); always 0 in data"
+    }
+   ],
+   "comment": "Placement type 226 (SS) as SS_Create reads it; confidence confirmed. initially pos/Euler rot (should equal path key 0); animated by the path"
+  },
+  {
+   "name": "level_tag_Hurt",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uchar",
+     "name": "hurtType",
+     "comment": "key 0. Hurt_GetType (death/damage kind for the player); seen 6 (most), 1, 2, 4"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "damage",
+     "comment": "key 1. float damage per contact; 1000 = instant death"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "enableSwitchChannel",
+     "comment": "key 2. if non-zero the hurt is off (effect flag 0x20) while the channel is 0, and armed by it"
+    },
+    {
+     "offset": 56,
+     "type": "ushort",
+     "name": "sound",
+     "comment": "key 3. played at each lap of the path; 0 -> none (always 0xffff in data)"
+    },
+    {
+     "offset": 60,
+     "type": "ushort",
+     "name": "armMask",
+     "comment": "key 4. +0x16: when no channel, arm when touched by 0x10 drone / 0x08 player / 0x02 bullet; 0 = always armed"
+    },
+    {
+     "offset": 64,
+     "type": "uchar",
+     "name": "oneShotPath",
+     "comment": "key 5. 1 = after one pass along the path it becomes inert"
+    }
+   ],
+   "comment": "Placement type 228 (Hurt) as Hurt_Create reads it; confidence confirmed. control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used; moves along the path while armed"
+  },
+  {
+   "name": "level_tag_ThirdCam",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "ushort",
+     "name": "cameraIndex",
+     "comment": "key 0. slot in the third-person camera table"
+    },
+    {
+     "offset": 48,
+     "type": "uchar",
+     "name": "flag",
+     "comment": "key 1. +0xa; seen 1"
+    }
+   ],
+   "comment": "Placement type 231 (ThirdCam) as ThirdCam_Create reads it; confidence likely. pos/rot unused apart from the object; the path keys are world-space camera poses"
+  },
+  {
+   "name": "level_tag_TriggerLoadLevel",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "HASHCODE",
+     "name": "levelHashcode",
+     "comment": "key 0. 07xxxxxx level bundle to load (15/16 exist; 0x07300013 does not) (refers: level bundle 0x07)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "requiredSwitchChannel",
+     "comment": "key 1. in[0]: if non-zero and 0, using it shows 'objectives incomplete'"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "autoActivateSwitchChannel",
+     "comment": "key 2. in[1]: when 1, the load fires by itself; also selects which of k3/k4 is set"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "setOnLoadSwitchChannel",
+     "comment": "key 3. in[2]: set when loading (autoActivate channel 0)"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "setOnLoadAltSwitchChannel",
+     "comment": "key 4. in[3]: set when loading while the autoActivate channel is 1"
+    }
+   ],
+   "comment": "Placement type 232 (TriggerLoadLevel) as Trigger_LoadLevelCreate reads it; confidence confirmed. control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used"
+  },
+  {
+   "name": "level_tag_TriggerTouchOnce",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "outSwitchChannel",
+     "comment": "key 0. set to 1 (latched) when the touch condition holds; object deleted afterwards if hidden"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "touchMask",
+     "comment": "key 1. bitmask: 0x10 drone touches, 0x08 player touches, 0x04 player presses Action on it, 0x02 hit by a bullet, 0x01 extra condition (see note). Seen 8 (player) most, 4, 0x10, 2, 0x18"
+    },
+    {
+     "offset": 52,
+     "type": "ushort",
+     "name": "touchFilter0",
+     "comment": "key 2. in[0]: 0 = none; 11 = requires a drone, 14 = requires the player, other = a specific drone id (drone+0xc4); with mask 2: bullet weapon id"
+    },
+    {
+     "offset": 56,
+     "type": "ushort",
+     "name": "touchFilter1",
+     "comment": "key 3. in[1]"
+    },
+    {
+     "offset": 60,
+     "type": "ushort",
+     "name": "touchFilter2",
+     "comment": "key 4. in[2]"
+    },
+    {
+     "offset": 64,
+     "type": "ushort",
+     "name": "touchFilter3",
+     "comment": "key 5. in[3]"
+    },
+    {
+     "offset": 68,
+     "type": "ushort",
+     "name": "touchFilter4_or_enableChannel",
+     "comment": "key 6. in[4]; with touchMask bit 0 it is instead a channel that must be 1"
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "disableSwitchChannel",
+     "comment": "key 7. trigger inactive while this channel is 1 (also copied into in[5])"
+    },
+    {
+     "offset": 76,
+     "type": "uint",
+     "name": "hideWhenDisabled",
+     "comment": "key 8. +0x36 (also copied into in[6])"
+    }
+   ],
+   "comment": "Placement type 234 (TriggerTouchOnce) as Trigger_TouchOnce reads it; confidence confirmed. Euler rot + pos (View_RotTransMatrix) orient the collision volume; if a path is given the trigger moves along it, looping, one lap per pathDurationFrames"
+  },
+  {
+   "name": "level_tag_TriggerTouch",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "outSwitchChannel",
+     "comment": "key 0. 1 while touched, 0 otherwise (Trigger_Calc clears and re-evaluates every frame)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "touchMask",
+     "comment": "key 1. bitmask: 0x10 drone touches, 0x08 player touches, 0x04 player presses Action on it, 0x02 hit by a bullet, 0x01 extra condition (see note). Seen 8, 0x18, 0x10, 4"
+    },
+    {
+     "offset": 52,
+     "type": "ushort",
+     "name": "touchFilter0",
+     "comment": "key 2. in[0], as TriggerTouchOnce (seen 11 = drone, 14 = player)"
+    },
+    {
+     "offset": 56,
+     "type": "ushort",
+     "name": "touchFilter1",
+     "comment": "key 3. in[1] (one record has 0x0500004f)"
+    },
+    {
+     "offset": 60,
+     "type": "ushort",
+     "name": "touchFilter2",
+     "comment": "key 4. in[2]"
+    },
+    {
+     "offset": 64,
+     "type": "ushort",
+     "name": "touchFilter3",
+     "comment": "key 5. in[3]"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "disableSwitchChannel",
+     "comment": "key 6. trigger inactive while 1 (also in[4] / enable channel when touchMask bit0)"
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "hideWhenDisabled",
+     "comment": "key 7. +0x36 (also in[5])"
+    }
+   ],
+   "comment": "Placement type 235 (TriggerTouch) as Trigger_Touch reads it; confidence confirmed. Euler rot + pos (View_RotTransMatrix) orient the collision volume; if a path is given the trigger moves along it, looping, one lap per pathDurationFrames"
+  },
+  {
+   "name": "level_tag_TriggerMultiplexIn",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "outSwitchChannel",
+     "comment": "key 0. = AND of all non-zero inputs (list ends at the first 0), re-evaluated every frame"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "inSwitchChannel0",
+     "comment": "key 1. "
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "inSwitchChannel1",
+     "comment": "key 2. "
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "inSwitchChannel2",
+     "comment": "key 3. "
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "inSwitchChannel3",
+     "comment": "key 4. "
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "inSwitchChannel4",
+     "comment": "key 5. "
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "inSwitchChannel5",
+     "comment": "key 6. "
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "unused7",
+     "comment": "key 7. overwritten by the remap (lost); always 0"
+    },
+    {
+     "offset": 76,
+     "type": "uint",
+     "name": "inSwitchChannel6",
+     "comment": "key 8. left in place at +0x4c = in[6]"
+    }
+   ],
+   "comment": "Placement type 236 (TriggerMultiplexIn) as Trigger_MultiplexIn reads it; confidence confirmed. unused"
+  },
+  {
+   "name": "level_tag_TriggerMultiplexSIn",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "outSwitchChannel",
+     "comment": "key 0. = sequential AND: every input set, each no earlier than 4 frames before the previous one's set time (inputs must fire in order)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "inSwitchChannel0",
+     "comment": "key 1. "
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "inSwitchChannel1",
+     "comment": "key 2. "
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "inSwitchChannel2",
+     "comment": "key 3. "
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "inSwitchChannel3",
+     "comment": "key 4. "
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "inSwitchChannel4",
+     "comment": "key 5. "
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "inSwitchChannel5",
+     "comment": "key 6. "
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "unused7",
+     "comment": "key 7. overwritten by the remap (lost); always 0"
+    },
+    {
+     "offset": 76,
+     "type": "uint",
+     "name": "inSwitchChannel6",
+     "comment": "key 8. left in place at +0x4c = in[6]"
+    }
+   ],
+   "comment": "Placement type 237 (TriggerMultiplexSIn) as Trigger_MultiplexSIn reads it; confidence confirmed. unused"
+  },
+  {
+   "name": "level_tag_TriggerMultiplexOut",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "inSwitchChannel",
+     "comment": "key 0. source: copied to every output each frame"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "outSwitchChannel0",
+     "comment": "key 1. "
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "outSwitchChannel1",
+     "comment": "key 2. "
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "outSwitchChannel2",
+     "comment": "key 3. "
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "outSwitchChannel3",
+     "comment": "key 4. "
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "outSwitchChannel4",
+     "comment": "key 5. "
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "outSwitchChannel5",
+     "comment": "key 6. "
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "unused7",
+     "comment": "key 7. lost in the remap"
+    },
+    {
+     "offset": 76,
+     "type": "uint",
+     "name": "outSwitchChannel6",
+     "comment": "key 8. "
+    }
+   ],
+   "comment": "Placement type 238 (TriggerMultiplexOut) as Trigger_MultiplexOut reads it; confidence confirmed. unused"
+  },
+  {
+   "name": "level_tag_TriggerMultiplexOrIn",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "outSwitchChannel",
+     "comment": "key 0. = OR of the inputs"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "inSwitchChannel0",
+     "comment": "key 1. "
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "inSwitchChannel1",
+     "comment": "key 2. "
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "inSwitchChannel2",
+     "comment": "key 3. "
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "inSwitchChannel3",
+     "comment": "key 4. "
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "inSwitchChannel4",
+     "comment": "key 5. "
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "inSwitchChannel5",
+     "comment": "key 6. "
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "unused7",
+     "comment": "key 7. overwritten by the remap (lost); always 0"
+    },
+    {
+     "offset": 76,
+     "type": "uint",
+     "name": "inSwitchChannel6",
+     "comment": "key 8. left in place at +0x4c = in[6]"
+    }
+   ],
+   "comment": "Placement type 239 (TriggerMultiplexOrIn) as Trigger_MultiplexOrIn reads it; confidence confirmed. unused"
+  },
+  {
+   "name": "level_tag_Pickup",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "pickupKind",
+     "comment": "key 0. 0 weapon, 1 ammo, 2 key (Player_EquipKey(k1)), 3 body armour, 4 message item (text k6), 5 special (clears player+0x818), 6 '007' Bond bonus (only created with a gold medal), 7..11 multiplayer weapon-set slot k0-7 (Pickup_CreateFromSet: model and weapon come from PickupMatrix[weaponSet][k0-7], not from the placement)"
+    },
+    {
+     "offset": 48,
+     "type": "ushort",
+     "name": "weaponId",
+     "comment": "key 1. weapon_data index (weapon / ammo type / key id). 0xffff -> nothing created"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "amount",
+     "comment": "key 2. PICKUPINFO+0x18 ammo count (weapon/ammo), armour amount"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "pickupSwitchChannel",
+     "comment": "key 3. PICKUPINFO+0x20: set to 1 when picked up"
+    },
+    {
+     "offset": 60,
+     "type": "ushort",
+     "name": "pickupSound",
+     "comment": "key 4. sound id, 0 -> none; overridden by the kind's default sound for kinds 0,1,3,6"
+    },
+    {
+     "offset": 64,
+     "type": "ushort",
+     "name": "respawn",
+     "comment": "key 5. 0 = removed when taken; 0xffff = never consumed; else hidden and respawns after k5*10 seconds"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "messageText",
+     "comment": "key 6. TXT label id shown for kind 4 (ids look like 0x02xxxxxx/0x05xxxxxx but are text ids, not hashcodes) (refers: text label)"
+    }
+   ],
+   "comment": "Placement type 240 (Pickup) as Pickup_Create reads it; confidence confirmed. Euler rot via control_create_object; position dropped onto the floor below with build_PointOnFloor (likely; exporter can keep pos)"
+  },
+  {
+   "name": "level_tag_TriggerMoviePlayer",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "HASHCODE",
+     "name": "movieHashcode",
+     "comment": "key 0. GameState.MovieHashcode"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "touchMask",
+     "comment": "key 1. bit 4: Action plays the movie"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "playSwitchChannel",
+     "comment": "key 2. in[0]: when 1, cleared and the movie plays"
+    }
+   ],
+   "comment": "Placement type 244 (TriggerMoviePlayer) as Trigger_MoviePlayer reads it; confidence likely. control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used"
+  },
+  {
+   "name": "level_tag_SoundTrigger",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "playSwitchChannel",
+     "comment": "key 0. sound starts when 1 (channel-driven only - the glist is never touch-tested)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "oneShot",
+     "comment": "key 1. 1 = deleted after playing once"
+    },
+    {
+     "offset": 52,
+     "type": "ushort",
+     "name": "sound",
+     "comment": "key 2. sound id"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "is2D",
+     "comment": "key 3. 1 = Sound_PlayExt (non-positional), 0 = 3D at the object position"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "stopSwitchChannel",
+     "comment": "key 4. stops the sound when 1"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "exclusive",
+     "comment": "key 5. only one exclusive sound trigger plays at a time"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "difficulty",
+     "comment": "key 6. as Hint k2"
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "keepPlaying",
+     "comment": "key 7. do not stop when the play channel drops"
+    }
+   ],
+   "comment": "Placement type 249 (SoundTrigger) as SoundTrigger_Create reads it; confidence confirmed. position only"
+  },
+  {
+   "name": "level_tag_ThirdIcon",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "thirdPersonMode",
+     "comment": "key 0. written to player+0x8ef while the player touches it (6 = shows 'press Action'; 2, 3 other modes)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "enableSwitchChannel",
+     "comment": "key 1. 0 = active from the start, else active once 1"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "killSwitchChannel",
+     "comment": "key 2. deleted when 1"
+    }
+   ],
+   "comment": "Placement type 250 (ThirdIcon) as ThirdIcon_Create reads it; confidence likely. control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used"
+  },
+  {
+   "name": "level_tag_MusicTrigger",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "triggerSwitchChannel",
+     "comment": "key 0. when 1, Music_Event(k2, 2) is sent for 30 frames"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "killSwitchChannel",
+     "comment": "key 1. deleted when 1"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "musicEvent",
+     "comment": "key 2. music event id"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "oneShot",
+     "comment": "key 3. deleted after firing"
+    }
+   ],
+   "comment": "Placement type 251 (MusicTrigger) as MusicTrigger_Create reads it; confidence confirmed. unused"
+  },
+  {
+   "name": "level_tag_CamSubject",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "photographedSwitchChannel",
+     "comment": "key 0. set (and the object deleted) when hit by a bullet of weapon 0x54 (the spy camera)"
+    }
+   ],
+   "comment": "Placement type 253 (CamSubject) as CamSubject_Create reads it; confidence confirmed. control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used"
+  },
+  {
+   "name": "level_tag_Breakable",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "breakType",
+     "comment": "key 0. 2 = window/glass (shatters, Break_ShatterWindow), 1, 0 other"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "health",
+     "comment": "key 1. converted to float; 0 = breaks on any hit"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "damageFilter",
+     "comment": "key 2. stored as ~k2 (bullet filter mask for Collide_FilterBullets); seen 0, 0x10, 0x20, 0x30, 0xf8"
+    }
+   ],
+   "comment": "Placement type 32 (Breakable) as Break_Create reads it; confidence confirmed. control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used"
+  },
+  {
+   "name": "level_tag_Sensor",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "HASHCODE",
+     "name": "beamModel",
+     "comment": "key 0. entity drawn as the view-cone beam (child object, scaled by k2), e.g. 0x02000360 Camera_Beam (refers: entity 0x02)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "viewConeAngle",
+     "comment": "key 1. full cone angle in degrees (stored half-angle in half-degrees); seen 15, 5, 45"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "beamLength",
+     "comment": "key 2. range, also the beam model scale; seen 5..7"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "alertSwitchChannel",
+     "comment": "key 3. set when the player has been seen for 2 s"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "disableSwitchChannel",
+     "comment": "key 4. camera off while 1"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "notInCameraList",
+     "comment": "key 5. 0 = viewable from Monitors"
+    },
+    {
+     "offset": 68,
+     "type": "uchar",
+     "name": "cameraNumber",
+     "comment": "key 6. matched by Monitor k0"
+    },
+    {
+     "offset": 72,
+     "type": "HASHCODE",
+     "name": "bodyModel",
+     "comment": "key 7. entity drawn as the camera body/hub (child object kept upright), e.g. 0x02000652 camera(a)-Hub (refers: entity 0x02)"
+    },
+    {
+     "offset": 76,
+     "type": "uint",
+     "name": "viewedSwitchChannel",
+     "comment": "key 8. set while a Monitor shows this camera"
+    }
+   ],
+   "comment": "Placement type 40 (Sensor) as Sensor_Create reads it; confidence confirmed. control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used; sweeps along the path"
+  },
+  {
+   "name": "level_tag_Switch",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "switchChannel",
+     "comment": "key 0. the channel this switch drives; initialised to k3; two-way (a channel change flips the switch)"
+    },
+    {
+     "offset": 48,
+     "type": "HASHCODE",
+     "name": "script",
+     "comment": "key 1. game script of the switch lever animation, played by an internal ScriptPlayer (mode 8, unpause-triggered) (refers: game script 0x06)"
+    },
+    {
+     "offset": 52,
+     "type": "ushort",
+     "name": "autoResetFrames",
+     "comment": "key 2. flips back to the rest state this many frames later (0 = never)"
+    },
+    {
+     "offset": 56,
+     "type": "ushort",
+     "name": "restState",
+     "comment": "key 3. initial state/channel value"
+    },
+    {
+     "offset": 60,
+     "type": "uchar",
+     "name": "oneShot",
+     "comment": "key 4. stops reacting after the first use"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "gateSwitchChannel",
+     "comment": "key 5. switch refuses while this channel is 1"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "securitySystemItem",
+     "comment": "key 6. if non-zero SSysItems[k6+1].switchChannel = k0 (alarm system link)"
+    }
+   ],
+   "comment": "Placement type 41 (Switch) as Switch_Create reads it; confidence confirmed. script placed with View_RotTransMatrix(rot, pos)"
+  },
+  {
+   "name": "level_tag_Lock",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "lockType",
+     "comment": "key 0. 0 = keypad (code from KeyCodes[k1] entered or decoded with the gadget, or key k1 held); 1 = laser-cut lock (worn down by bullet 0x4e/0x4f hits); 2 = key/code like 0"
+    },
+    {
+     "offset": 48,
+     "type": "ushort",
+     "name": "keyId",
+     "comment": "key 1. key/keycode index (Player_EquipKey on unlock)"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "unused2",
+     "comment": "key 2. +0xc; always 0"
+    },
+    {
+     "offset": 56,
+     "type": "ushort",
+     "name": "unlockSound",
+     "comment": "key 3. 0 -> none"
+    },
+    {
+     "offset": 60,
+     "type": "ushort",
+     "name": "deniedSound",
+     "comment": "key 4. 0 -> none"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "unlockedSwitchChannel",
+     "comment": "key 5. set to 1 when unlocked; for type 0 the lock re-locks if the channel is cleared"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "unlockedOnEasy",
+     "comment": "key 6. starts unlocked at difficulty 1"
+    }
+   ],
+   "comment": "Placement type 46 (Lock) as Lock_Create reads it; confidence confirmed. control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used; with a path the initial matrix is path key 0"
+  },
+  {
+   "name": "level_tag_Monitor",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "ushort",
+     "name": "cameraNumber",
+     "comment": "key 0. obj->subState: using it shows the Sensors whose cameraNumber (Sensor k6) matches"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "indestructible",
+     "comment": "key 1. 0 = health 1.0 (shot -> explodes, LOD alternative); non-zero = cannot be damaged"
+    }
+   ],
+   "comment": "Placement type 48 (Monitor) as Monitor_Create reads it; confidence confirmed. control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used"
+  },
+  {
+   "name": "level_tag_FuseBox",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "HASHCODE",
+     "name": "script",
+     "comment": "key 0. game script whose objects are the fuses; the script callback sorts them into two groups (<=10 each) (refers: game script 0x06)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "group0SwitchChannel",
+     "comment": "key 1. set when every fuse of group 0 is shot out"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "group1SwitchChannel",
+     "comment": "key 2. set when group 1 is all shot out; if 0, shooting a group-1 fuse hurts the player (5) and cancels k3"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "group0SwitchChannel2",
+     "comment": "key 3. second channel for group 0"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "group1SwitchChannel2",
+     "comment": "key 4. second channel for group 1"
+    }
+   ],
+   "comment": "Placement type 49 (FuseBox) as FuseBox_Create reads it; confidence likely. script placed with View_RotTransMatrix(rot, pos)"
+  },
+  {
+   "name": "level_tag_Hint",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "textLabel",
+     "comment": "key 0. TXT label id of the message (0x01xxxxxx/0x02xxxxxx are text ids, not hashcodes) (refers: text label)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "sound",
+     "comment": "key 1. Sound_PlayExt id when shown, 0 = none"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "difficulty",
+     "comment": "key 2. 0 all; 1..4 created when difficulty <= k2; 5/6/7 only on difficulty 1/2/3"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "enableSwitchChannel",
+     "comment": "key 3. inactive until 1 (0 = always)"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "killSwitchChannel",
+     "comment": "key 4. deleted when 1"
+    }
+   ],
+   "comment": "Placement type 51 (Hint) as Hint_Create reads it; confidence confirmed. control_create_object(pos, rot, NULL): obj->mtx = View_RotTransMatrix(rot, pos) (Euler, see doc); placement quat +0x24 not used"
+  },
+  {
+   "name": "level_tag_InverterTrigger",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "inSwitchChannel",
+     "comment": "key 0. curState"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "clearSwitchChannel",
+     "comment": "key 1. forced to 0 every frame while the input is 1"
+    }
+   ],
+   "comment": "Placement type 65 (InverterTrigger) as InverterTrigger_Create reads it; confidence confirmed. unused"
+  },
+  {
+   "name": "level_tag_Rotor",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "unused",
+     "comment": "key 0. passed as arg 4 but never read. Seen 0"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "switchChannel",
+     "comment": "key 1. byte; nonzero: spins only while switch_channels[k1] == 0 (polarity byte never set). Never present in the data -> always spins"
+    }
+   ],
+   "comment": "Placement type 113 (Rotor) as rotor_init reads it; confidence confirmed. pos + rot (object Euler, rot = start angles AND angular velocity per 1/60 s)"
+  },
+  {
+   "name": "level_tag_Cloud",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "int",
+     "name": "heightAboveCamera",
+     "comment": "key 0. int; layer y = camera y + k0 (drawn in the sky pass), player y + k0 in update. Seen 8"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "scrollX",
+     "comment": "key 1. *0.001 units per 1/60 s. Seen 15"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "scrollZ",
+     "comment": "key 2. *0.001 units per 1/60 s. Seen 2"
+    },
+    {
+     "offset": 56,
+     "type": "int",
+     "name": "wrapPeriod",
+     "comment": "key 3. int; x/z offsets wrap modulo k3 units. Seen 100"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "skySlot",
+     "comment": "key 4. sky slot (registered as a sky object, draw pass 1). Seen 3"
+    }
+   ],
+   "comment": "Placement type 212 (Cloud) as Cloud_Create reads it; confidence confirmed. rot used; pos replaced at runtime (player-relative)"
+  },
+  {
+   "name": "level_tag_RigidBody",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "mass",
+     "comment": "key 0. 0 -> 3. Seen 1,2,3,8,600"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "unused",
+     "comment": "key 1. never read by RB_Create; always 0"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "mode",
+     "comment": "key 2. RB_Init: 0 = free body with gravity; nonzero = hanging/pendulum body (no gravity, swings about the object origin); 3 = stiffer. Always 1 in the data"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "hasLight",
+     "comment": "key 3. byte; mode!=0 bodies create a psiLight that follows them - psiLight_Create returns 0 on Xbox, so no effect there. Seen 0,1"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "collisionSfx",
+     "comment": "key 4. SFX id, 0 -> 0xffff none. Always 65535"
+    }
+   ],
+   "comment": "Placement type 216 (RigidBody) as RB_Create reads it; confidence confirmed. pos + rot (object Euler)"
+  },
+  {
+   "name": "level_tag_Env",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "dropType",
+     "comment": "key 0. byte -> InitDrops: 0 snow (texture 0x03000045 point sprites, 4096 flakes), 1 rain (entity 0x02000290 'Raindrop' meshes, 64 drops, 128 in Tower A-C), 2 bubbles rising (texture 0x03000087, 2048), 255 none. Also: 0 enables breath puffs. Seen 0,1,2,255"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "unknown_40",
+     "comment": "key 1. byte, stored only when k0==0. Seen 0,1"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "unknown_42",
+     "comment": "key 2. byte. Seen 4,10"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "windStrength",
+     "comment": "key 3. *0.1 -> wind speed (gusting, Env_Update); wind direction = forward row of RotMatrix(rot). Seen 0,6,10"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "unknown_3c",
+     "comment": "key 4. byte; always 0"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "unknown_3d",
+     "comment": "key 5. byte; always 0"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "unknown_3e",
+     "comment": "key 6. byte; always 0"
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "unknown_f30",
+     "comment": "key 7. -> float; always 0"
+    },
+    {
+     "offset": 76,
+     "type": "uint",
+     "name": "unknown_f34",
+     "comment": "key 8. -> float; always 0"
+    },
+    {
+     "offset": 80,
+     "type": "uint",
+     "name": "hasSun",
+     "comment": "key 9. Seen 0,1 (PowerStation A1/A2)"
+    },
+    {
+     "offset": 84,
+     "type": "uint",
+     "name": "sunAzimuthDeg",
+     "comment": "key 10. Seen 182,302"
+    },
+    {
+     "offset": 88,
+     "type": "uint",
+     "name": "sunElevationDeg",
+     "comment": "key 11. Seen 25,19. SunVector = 1000*(sin a*cos e, -sin e, cos a*cos e) (a=k10 deg, e=k11 deg) points FROM the sun; the sun is at camera - SunVector (lens flare, HUD_UpdateLensFlarePane)"
+    }
+   ],
+   "comment": "Placement type 223 (Env) as Env_Create reads it; confidence likely. pos selects the cel; rot = wind direction (RotMatrix)"
+  },
+  {
+   "name": "level_tag_Flicker",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "smokeEnable",
+     "comment": "key 0. u16; nonzero: when the light is out, emits spark/smoke gas (entities 0x020002d1..d5 Sparkler_1..5) along the up vector. Seen 0xffffffff"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "darkSwitchOut",
+     "comment": "key 1. set to 1 while the light is out, 0 while lit. Seen 126"
+    }
+   ],
+   "comment": "Placement type 227 (Flicker) as Flicker_Create reads it; confidence confirmed. pos + rot (object Euler)"
+  },
+  {
+   "name": "level_tag_Emitter",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "HASHCODE",
+     "name": "particleConfig",
+     "comment": "key 0. Always 0x0c000004 in the data (orange sparks). Configs come from block 0x30 of the shared FX pack 0100002e (in every bundle). (refers: particle config 0x0c)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "duration",
+     "comment": "key 1. 0 = emit forever; 1 = one burst (each particle once); N = emit for N/60 s. Always 0 in the data"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "enableSwitch",
+     "comment": "key 2. Nonzero: emits only while switch_channels[k2] is set. Seen 0,78..201"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "disableSwitch",
+     "comment": "key 3. Nonzero: emits only while switch_channels[k3] is clear. Always 0"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "aliveSwitchOut",
+     "comment": "key 4. Set to 1 each frame while any particle is alive. Seen 0,141"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "pulsePeriod",
+     "comment": "key 5. k5/60 = P seconds; nonzero: emits for P/2 s, pauses P s, repeat. Seen 60..600"
+    }
+   ],
+   "comment": "Placement type 242 (Emitter) as Emitter_CreatePlist reads it; confidence confirmed. pos + quat (rot unused)"
+  },
+  {
+   "name": "level_tag_EnvTree",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "HASHCODE",
+     "name": "skin",
+     "comment": "key 0. AnimObjectNew(obj, k0). Always 0x05000003 (tree skin, present in bundles 07000001-04) (refers: skin 0x05)"
+    },
+    {
+     "offset": 48,
+     "type": "HASHCODE",
+     "name": "animScript",
+     "comment": "key 1. AnimScriptAdd; 0x0600008c is swapped for 0x0600008d with 50% chance; looped with a random start frame (except in level 0x07000043). Always 0x0600008c (refers: script 0x06)"
+    }
+   ],
+   "comment": "Placement type 243 (EnvTree) as Env_Tree_Create reads it; confidence confirmed. pos + rot (object Euler)"
+  },
+  {
+   "name": "level_tag_Ripples",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "radius",
+     "comment": "key 0. s16 units; rings spawn at pos + uniform(-k0..k0) in x and z. Seen 1..7 (0 with k1 0 -> 1)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "meanInterval",
+     "comment": "key 1. s16 frames at 60 Hz; each frame a ring spawns with probability 1/k1. Seen 1,2,10,30 (both 0 -> 30)"
+    }
+   ],
+   "comment": "Placement type 33 (Ripples) as Ripples_Create reads it; confidence confirmed. pos only"
+  },
+  {
+   "name": "level_tag_Ladder",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "unknown_2",
+     "comment": "key 1. u16 copied to ladder data +2. Always 0 in the data. Key 0 is never read (seen 0,2)."
+    }
+   ],
+   "comment": "Placement type 34 (Ladder) as Ladder_Create reads it; confidence confirmed. pos + rot (object Euler)"
+  },
+  {
+   "name": "level_tag_SkyObject",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "skySlot",
+     "comment": "key 0. u16 slot 0..20 (>=21 ignored). A later placement with the same slot (and same key 1) replaces the earlier one. Seen 0..18"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "isLightningFlash",
+     "comment": "key 1. byte. 0: normal sky glist. 1: glist is the flash image, drawn only during random lightning flashes (also drives Lightning bolts and thunder SFX). Seen 0,1 (Thunderhead)"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "flashIntervalMax",
+     "comment": "key 2. u16 seconds; next flash after Rand(k2*60) frames. Only with k1=1. Seen 24,30"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "flashDuration",
+     "comment": "key 3. u16 frames of flicker per flash. Seen 5,10"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "drawPass",
+     "comment": "key 4. byte. 1 = drawn first, before all objects (distant backdrop: mountains, towers); 0 = drawn after the opaque object list (skybox, moon, skyline). Seen 0,1"
+    }
+   ],
+   "comment": "Placement type 42 (SkyObject) as View_AddSkyObj reads it; confidence confirmed. rot via RotMatrix 0xd6560; pos only when glist flag 0x2 is clear; the camera position otherwise"
+  },
+  {
+   "name": "level_tag_Lightning",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "unknown_38",
+     "comment": "key 0. stored at data+0x38, not read by update. Always 0"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "group",
+     "comment": "key 1. u16. Points with the same group are joined: a new point pairs with an earlier one of the same group and owns an 8-segment bolt between them. Seen 1,2"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "unknown_3e",
+     "comment": "key 2. u16; always 0"
+    }
+   ],
+   "comment": "Placement type 44 (Lightning) as Lightning_Create reads it; confidence likely. pos only"
+  },
+  {
+   "name": "level_tag_DynamicObject",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "appearSwitch",
+     "comment": "key 0. u16. Nonzero: object starts hidden (effectFlags |= 0x30) until switch_channels[k0] is set, then its glist flags are restored. Seen 0,9..140"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "disappearSwitch",
+     "comment": "key 1. u16. When set: k3==0 -> object deleted; k3!=0 -> hidden while set, shown while clear. Seen 0,1,43..140"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "fadeDistance",
+     "comment": "key 2. s16. Nonzero: alpha = clamp((dist/k2 - 0.5)*2)*255 when the camera is closer than k2 (fades out as you approach; used by volumetric light shafts). Seen 0,9,13"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "toggleMode",
+     "comment": "key 3. byte. See key 1. Seen 0,1"
+    }
+   ],
+   "comment": "Placement type 59 (DynamicObject) as DynamicObject_Create reads it; confidence confirmed. pos + rot (object Euler)"
+  },
+  {
+   "name": "level_tag_Wire",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "wireId",
+     "comment": "key 0. u16 at data+2. Seen 1,2,3,10..13"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "wireType",
+     "comment": "key 1. u16 at data+0: 0 hand-over-hand wire, 1 inactive, 2 zipline (slide down). Seen 0,2"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "unknown_4",
+     "comment": "key 2. u16; always 0"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "onWireSwitch",
+     "comment": "key 3. u16; set while the player is on the wire (Player_Wire 0xafb50). Always 0"
+    }
+   ],
+   "comment": "Placement type 62 (Wire) as Wire_Create reads it; confidence confirmed. pos + (rot.x, rot.y, -rot.z) with the object Euler - Z IS NEGATED"
+  },
+  {
+   "name": "level_tag_CreepWall",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "unknown_0",
+     "comment": "key 0. u16 data+0. Seen 0,2"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "unknown_2",
+     "comment": "key 1. u16 data+2. Seen 1,3"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "unknown_4",
+     "comment": "key 2. u16 data+4. Always 0"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "unknown_6",
+     "comment": "key 3. u16 data+6. Always 113 (same channel as the WallHug_Blocker DynamicObjects' key 1 - probably a switch)"
+    }
+   ],
+   "comment": "Placement type 63 (CreepWall) as CreepWall_Create reads it; confidence likely. pos + rot (object Euler)"
+  },
+  {
+   "name": "level_tag_Light",
+   "size": 176,
+   "fields": [
+    {
+     "offset": 2,
+     "type": "ushort",
+     "name": "pathFrames",
+     "comment": "placement +0x40: frame count of the path; the header is filled only when non-zero"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "pathRate",
+     "comment": "placement +0x42"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "path",
+     "comment": "m_paths[placement +0x44] (a 0x19 block: 28-byte {vec3 pos, quat} frames)"
+    },
+    {
+     "offset": 44,
+     "type": "uint",
+     "name": "radius",
+     "comment": "key 0. range in units (m): affects objects within radius (+ object radius); d3dSetLight gets 1/radius. Seen 6,8"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "red",
+     "comment": "key 1. byte 0..255 (d3d colour = byte/256). Seen 127,255"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "green",
+     "comment": "key 2. Seen 121,127"
+    },
+    {
+     "offset": 56,
+     "type": "uint",
+     "name": "blue",
+     "comment": "key 3. Seen 103,127"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "switchChannel",
+     "comment": "key 4. u16; nonzero: on/off follows switch_channels[k4]. Always 0 (always on)"
+    },
+    {
+     "offset": 64,
+     "type": "uint",
+     "name": "flickerDuration",
+     "comment": "key 5. u16 frames; 0 = no flicker. Always 0"
+    },
+    {
+     "offset": 68,
+     "type": "uint",
+     "name": "flickerGap",
+     "comment": "key 6. u16 frames steady between flickers (random k6/2..). Always 0"
+    },
+    {
+     "offset": 72,
+     "type": "uint",
+     "name": "flickerMask",
+     "comment": "key 7. u16; on when (frame & mask) == mask during a flicker. Always 1"
+    },
+    {
+     "offset": 76,
+     "type": "uint",
+     "name": "flickerSfx",
+     "comment": "key 8. SFX played at each flicker start; 0 -> 0xffff none. 65535 or absent"
+    }
+   ],
+   "comment": "Placement type 78 (Light) as Light_Create reads it; confidence confirmed. pos only"
+  }
+ ],
+ "prototypes": []
+}
