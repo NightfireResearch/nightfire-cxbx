@@ -41,6 +41,10 @@ bool Settings_GetMouseLook(void);
 float Settings_GetMouseSensitivity(void);
 bool Settings_GetMouseInvertY(void);
 
+// settings.ini's [Settings] AnimShadowTest key (off by default): run the original animation functions beside
+// their reimplementations and report any difference - see engine/Anim.cpp.
+bool Settings_GetAnimShadowTest(void);
+
 // settings.ini's [Settings] DiscPath key: the host folder the Xbox D: drive resolves to, i.e. the one holding
 // eurocom\filesys.d00. Defaults to "../disc", relative to the working directory the executables run in. See
 // common/xboxPath.h for the drive-letter mapping this feeds.

@@ -49,6 +49,7 @@ struct Settings {
     bool mouseLook;        // see engine/mouseLook.h
     float mouseSensitivity;
     bool mouseInvertY;
+    bool animShadowTest; // see engine/Anim.cpp
     char discPath[240];  // where the game's disc data lives; see common/xboxPath.cpp
 };
 
@@ -130,6 +131,7 @@ static void LoadSettingsFile() {
     g_settings.mouseLook = true;
     g_settings.mouseSensitivity = 1.0f;
     g_settings.mouseInvertY = false;
+    g_settings.animShadowTest = false;
     strncpy(g_settings.discPath, "../disc", sizeof(g_settings.discPath) - 1);
     g_settings.discPath[sizeof(g_settings.discPath) - 1] = '\0';
 
@@ -187,6 +189,8 @@ static void LoadSettingsFile() {
             g_settings.mouseSensitivity = sensitivity;
         } else if (_stricmp(key, "MouseInvertY") == 0) {
             g_settings.mouseInvertY = (_stricmp(value, "on") == 0 || _stricmp(value, "1") == 0);
+        } else if (_stricmp(key, "AnimShadowTest") == 0) {
+            g_settings.animShadowTest = (_stricmp(value, "on") == 0 || _stricmp(value, "1") == 0);
         } else if (_stricmp(key, "DiscPath") == 0) {
             if (value[0] != '\0') {
                 strncpy(g_settings.discPath, value, sizeof(g_settings.discPath) - 1);
@@ -280,6 +284,10 @@ float Settings_GetMouseSensitivity(void) {
 
 bool Settings_GetMouseInvertY(void) {
     return GetSettings()->mouseInvertY;
+}
+
+bool Settings_GetAnimShadowTest(void) {
+    return GetSettings()->animShadowTest;
 }
 
 const char *Settings_GetDiscPath(void) {

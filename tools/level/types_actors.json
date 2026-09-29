@@ -1,0 +1,2168 @@
+{
+ "15": {
+  "name": "Drone",
+  "create": "0x0002fcf0",
+  "create_name": "Drone_Create",
+  "call": "Drone_Create(&pos, &rot, lvl) cdecl - the glist is NOT passed. Copies pos, rot and 0x84 bytes from lvl+0x2c (keys 0-32) into DIVars (+0x20); NDrone2_CreateFromDIVars 0x2fc50 -> NDrone2_CreateObj 0x3f940 (Drone_tag 0x978, DIVars at +0x874); the keys are consumed later by NDrone2_PostLoad_Init 0x42a90 -> NDrone2_DefaultInit 0x417f0.",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "skin",
+    "type": "hash",
+    "note": "THE CHARACTER: AnimObjectNew(obj, skin) in NDrone2_DefaultInit 0x417f0. 0x05000000 = the editor template record in the shared pack (no such skin: skip). Level 0x07000014 (EvilBase) remaps 0x050000b1 -> 0x0500008c (that skin is not in the bundle). On some difficulties a \"captain\" swaps the skin by drone class (0x5000038, 0x500002f, 0x5000006, 0x5000093, 0x50000b2) - export the placed skin.",
+    "refers": "skin 0x05 (bundle entry type 3)",
+    "seen": "n=556 distinct=47 min=0x5000000 max=0x50000ba: 0x5000008 x57, 0x5000087 x52, 0x500008c x35, 0x5000090 x32, 0x5000036 x28, 0x5000006 x26, 0x500003a x25, 0x5000004 x22"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "playScript",
+    "type": "hash",
+    "note": "Drone+0x450. 0x06000000 = none. When set, the drone enters DSTATE_PlayScript at start (or after key 3 fires) and plays this ANIMATION script (DroneAnim_SetScript); 0x06000892 / 0x0600089c are special (cleared, set drone class 0x1c/0x1b). A good candidate for the exported starting animation.",
+    "refers": "anim script 0x06 (bundle entry type 5)",
+    "seen": "n=556 distinct=10 min=0x6000000 max=0x60008ae: 0x6000000 x541, 0x6000892 x5, 0x60005e6 x3, 0x6000169 x1, 0x600011b x1, 0x6000124 x1, 0x6000126 x1, 0x600011d x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "minDifficulty",
+    "type": "u32",
+    "note": "Drone_Create returns NULL if key2 > GameState.difficultyModifier. 1 = always present; 2/3 only on harder settings - tag in the export.",
+    "seen": "n=556 distinct=3 min=0x1 max=0x3: 0x1 x474, 0x2 x64, 0x3 x18"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "waitSwitchChannel",
+    "type": "switch",
+    "note": "Drone+0x118 waitingForSwitchNumber. Non-zero: the drone starts DISABLED and HIDDEN (NDrone2_Enable(0): effectFlags |= 0x30) in DSTATE_WaitSwitch until the channel is set. 0 = present at level start.",
+    "seen": "n=556 distinct=87 min=0x0 max=0xfe: 0x0 x90, 0x6 x25, 0x1 x22, 0xd x18, 0x17 x16, 0x1b x16, 0xb x15, 0x15 x15",
+    "channelRole": "in"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "group",
+    "type": "u32",
+    "note": "Drone+0x128 (NDrone2_SetupGroups 0x36e90 links drones by group). A DroneSpawner whose key1 equals this group removes these drones at level start and re-creates them later from their saved DIVars (same position). Also matched against DroneAIPoint key2 (NDrone2_ClosestAIPoint).",
+    "seen": "n=556 distinct=20 min=0x0 max=0x1f: 0x0 x262, 0x1 x51, 0x2 x49, 0x3 x40, 0x4 x33, 0x5 x28, 0x6 x28, 0x7 x15"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "mode",
+    "type": "enum",
+    "note": "Drone+0x11c. <0x24: old fixed mode, index into the DroneModeSettings table 0x1776f8 (12 bytes: u8 class, u8 isCivilian(1 enemy,2 ally,3 civilian), f32 alertness, init fn) - 0 Normal 1 Guard 2 Retreater 3 Sniper 4 Stealth 5 Attacker 6 RunToPoint 7 Assassin 8 HostageKiller 9 Hostage 10 HostageTied 11 JustStand4Demo 12 DeleteMe 13 Civilian 14 CivilianScared 15 MissionFailer 16 Mayhew 17 Ninja 18 AlarmRaiser 19 SearchLight 20 Ambush 21 Zoe 22 PartyGirl 23 CivilianGuard 24 Interogator 25 CivDoorGuard 26 TruckDriver 27/28 CastleChatGuard1/2 29 SniperAlert 30 PartyGirlLooker 33 Bot (names from the PS2 table). >=0x24 (100 in all but one record): NEW behaviour block, keys 15-32 (NDrone2_DoModeSettingsNEW 0x41230).",
+    "seen": "n=556 distinct=2 min=0x0 max=0x64: 0x64 x555, 0x0 x1"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "modeChangeSwitchChannel",
+    "type": "switch",
+    "note": "Drone+0x119: when this channel is set, the drone changes mode: if key8 == 12 it is deleted, else it switches to attack mode (NDrone2_PreDroneControl).",
+    "seen": "n=556 distinct=14 min=0x0 max=0xff: 0x0 x470, 0x15 x23, 0x37 x19, 0x96 x17, 0x16 x10, 0x48 x7, 0xa4 x2, 0xff x2",
+    "channelRole": "in"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "unknown7",
+    "type": "u32",
+    "note": "Drone+0x12c, copied in NDrone2_CreateFromDIVars and DefaultInit; no reader found.",
+    "seen": "n=556 distinct=7 min=0x0 max=0x16: 0x0 x541, 0x4 x7, 0x2 x3, 0x6 x2, 0x1 x1, 0x15 x1, 0x16 x1"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "secondaryMode",
+    "type": "enum",
+    "note": "Drone+0x11e; index into the mode table (0 / 101 = none, 100 = new-style). Used by key 6.",
+    "seen": "n=556 distinct=3 min=0x0 max=0x65: 0x64 x553, 0x65 x2, 0x0 x1"
+   },
+   {
+    "key": 9,
+    "offset": "0x50",
+    "name": "weapon",
+    "type": "enum",
+    "note": "Held weapon at start: weapon_data variant index (0x18cfa0, stride 0x10c) -> animState.currentWeaponId. AnimObjectDraw draws weapon_data[w].wpn3rdPersonGfx (0x02 entity) at datum weapon_data[w].whichBone (docs/anim/spec-pose.md). 0 = default by skin (1, or 0 for 0x0500001e); 1 = unarmed. See weapon_gfx below.",
+    "refers": "weapon variant -> 0x02 entity",
+    "seen": "n=555 distinct=19 min=0x1 max=0x6e: 0x1 x97, 0x12 x63, 0x19 x58, 0xa x48, 0x1a x47, 0x1e x45, 0x14 x42, 0x1c x36"
+   },
+   {
+    "key": 10,
+    "offset": "0x54",
+    "name": "drawWeapon",
+    "type": "enum",
+    "note": "Drone+0x45: weapon the drone switches to when it draws (DroneWeap_ChangeWeapon on anim event 2); <=1 means it has none (DSTATE_DrawWeapon -> CivilianScared). Skins 0x05000026/0x05000066 force 6.",
+    "seen": "n=555 distinct=4 min=0x1 max=0x10: 0x1 x241, 0xa x239, 0xe x58, 0x10 x17"
+   },
+   {
+    "key": 11,
+    "offset": "0x58",
+    "name": "grenades",
+    "type": "u32",
+    "note": "hi nibble = grenade kind (1->weapon 0x36, 2->0x35, 4->0x34, 5->0x3a+count, 6->0x6c, other -> none), lo nibble = count; Drone+0x850/0x852. EvilBase clamps kinds 0x35/0x36 to 0x34.",
+    "seen": "n=555 distinct=11 min=0x0 max=0x51: 0x0 x480, 0x43 x30, 0x41 x12, 0x23 x12, 0x21 x8, 0x11 x5, 0x13 x2, 0x26 x2"
+   },
+   {
+    "key": 12,
+    "offset": "0x5c",
+    "name": "deathSwitchChannel",
+    "type": "switch",
+    "note": "Drone+0x120: set when the drone dies (DroneFunc_SetDeathChannel). 99 = special: mission failed (killed civilian / cover blown).",
+    "seen": "n=556 distinct=34 min=0x0 max=0xcb: 0x0 x468, 0x60 x34, 0x32 x6, 0x63 x4, 0x2a x3, 0x29 x3, 0x8 x3, 0x54 x2",
+    "channelRole": "out"
+   },
+   {
+    "key": 13,
+    "offset": "0x60",
+    "name": "deathScript",
+    "type": "hash",
+    "note": "Drone+0x858 special death/surrender animation script (DSTATE_SpecialDeath_Anim / Surrender_Anim); also records the start pos/rot. 0x0600021f is special. 0 = none.",
+    "refers": "anim script 0x06 (entry type 5)",
+    "seen": "n=556 distinct=7 min=0x0 max=0x6000a1c: 0x0 x550, 0x6000451 x1, 0x6000412 x1, 0x60003df x1, 0x6000a1c x1, 0x600021f x1, 0x6000220 x1"
+   },
+   {
+    "key": 14,
+    "offset": "0x64",
+    "name": "combatRange",
+    "type": "enum",
+    "note": "NDrone2_DefaultInit: sets the engage distances (1: 12-15 m, 2: 12-15/16, 3: 25-31 m, 4: 75-83 m sniper, 5: 12-16 close, other: 12-16/24).",
+    "seen": "n=556 distinct=6 min=0x0 max=0x5: 0x0 x321, 0x2 x93, 0x3 x54, 0x1 x48, 0x4 x34, 0x5 x6"
+   },
+   {
+    "key": 15,
+    "offset": "0x68",
+    "name": "behaviourClass",
+    "type": "u32",
+    "note": "NEW mode block start (behaviour_util_get 0x194d0 reads keys 15..): class/stats index (<0x11) -> Drone+0xab, behaviour_util_getStats(class) gives health, accuracy, etc.",
+    "seen": "n=555 distinct=13 min=0x1 max=0xf: 0x1 x152, 0x3 x100, 0x8 x94, 0x2 x73, 0x5 x40, 0xa x35, 0xd x34, 0xe x8"
+   },
+   {
+    "key": 16,
+    "offset": "0x6c",
+    "name": "behaviour1Mode",
+    "type": "u32",
+    "note": "first behaviour mode (<6) -> Drone+0xac",
+    "seen": "n=555 distinct=5 min=0x0 max=0x5: 0x0 x457, 0x2 x58, 0x3 x35, 0x4 x4, 0x5 x1"
+   },
+   {
+    "key": 17,
+    "offset": "0x70",
+    "name": "behaviour1Header",
+    "type": "u32",
+    "note": "u16 word count (3) | u16 property count (0x5b = 91) << 16; always 0x005b0003",
+    "seen": "n=555 distinct=1 min=0x5b0003 max=0x5b0003: 0x5b0003 x555"
+   },
+   {
+    "key": 18,
+    "offset": "0x74",
+    "name": "behaviour1Props0",
+    "type": "u32",
+    "note": "bits 0-31 of the first behaviour's 91 boolean properties (behaviour_util_getProperty(n))",
+    "seen": "n=555 distinct=57 min=0x0 max=0xf1dfc9e1: 0xa2929484 x94, 0xa0000000 x68, 0xf1dec8c1 x56, 0xa8d2e0c1 x46, 0xa196948e x45, 0x8883a080 x36, 0xf192e0c0 x35, 0x34929584 x20"
+   },
+   {
+    "key": 19,
+    "offset": "0x78",
+    "name": "behaviour1Props1",
+    "type": "u32",
+    "note": "properties 32-63",
+    "seen": "n=555 distinct=57 min=0x1 max=0xfcf377e5: 0xecf377e5 x67, 0xee738fe7 x53, 0xc4f005a1 x38, 0x8d730783 x35, 0xed739fe7 x30, 0xccf007a1 x26, 0xecf327e7 x25, 0xecf327e6 x22"
+   },
+   {
+    "key": 20,
+    "offset": "0x7c",
+    "name": "behaviour1Props2",
+    "type": "u32",
+    "note": "properties 64-90",
+    "seen": "n=555 distinct=35 min=0x0 max=0x48291637: 0x40291660 x166, 0x40291637 x137, 0x40280408 x39, 0x41f92c00 x37, 0x40291677 x35, 0x41b92400 x27, 0x402914e2 x21, 0x40280448 x16"
+   },
+   {
+    "key": 21,
+    "offset": "0x80",
+    "name": "behaviour2Mode",
+    "type": "u32",
+    "note": "second (alternative) behaviour mode (<6) -> Drone+0xad",
+    "seen": "n=555 distinct=4 min=0x0 max=0x5: 0x0 x410, 0x2 x58, 0x3 x44, 0x5 x43"
+   },
+   {
+    "key": 22,
+    "offset": "0x84",
+    "name": "behaviour2Header",
+    "type": "u32",
+    "note": "always 0x005b0003",
+    "seen": "n=555 distinct=1 min=0x5b0003 max=0x5b0003: 0x5b0003 x555"
+   },
+   {
+    "key": 23,
+    "offset": "0x88",
+    "name": "behaviour2Props0",
+    "type": "u32",
+    "note": "second behaviour properties 0-31",
+    "seen": "n=555 distinct=36 min=0x0 max=0xf1dec8c1: 0xa2929484 x110, 0xf1dec8c1 x93, 0xa196948e x55, 0x0 x52, 0xa8d2e0c1 x52, 0x8883a080 x36, 0x20000000 x32, 0xf192e0c0 x27"
+   },
+   {
+    "key": 24,
+    "offset": "0x8c",
+    "name": "behaviour2Props1",
+    "type": "u32",
+    "note": "properties 32-63",
+    "seen": "n=555 distinct=46 min=0x1 max=0xff728fd5: 0xecf377e5 x86, 0xecf327e7 x58, 0xee738fe7 x58, 0xed739fe7 x56, 0x1 x43, 0x8d730783 x36, 0xecf377e7 x26, 0xccb00013 x26"
+   },
+   {
+    "key": 25,
+    "offset": "0x90",
+    "name": "behaviour2Props2",
+    "type": "u32",
+    "note": "properties 64-90",
+    "seen": "n=555 distinct=25 min=0x0 max=0x60280000: 0x40291660 x184, 0x40291637 x147, 0x0 x43, 0x40280408 x39, 0x40291677 x27, 0x5800000 x26, 0x40280448 x19, 0x41b92400 x8"
+   },
+   {
+    "key": 26,
+    "offset": "0x94",
+    "name": "statsOverrideHeader",
+    "type": "u32",
+    "note": "optional: 0x80010006 = 6 more words of bit-packed per-class stats (3 difficulty levels x 8 fields of 8,3,8,8,5,8,8,1 bits) written to the GLOBAL table 0x1d7830[class*3+difficulty]",
+    "seen": "n=41 distinct=1 min=0x80010006 max=0x80010006: 0x80010006 x41"
+   },
+   {
+    "key": 27,
+    "offset": "0x98",
+    "name": "statsOverride0",
+    "type": "u32",
+    "note": "bit-packed stats override data (see key 26)",
+    "seen": "n=41 distinct=10 min=0x11e0083c max=0x23c0e204: 0x11e0500a x13, 0x11e06009 x5, 0x11e0083c x5, 0x12586108 x5, 0x11e0503c x4, 0x2348ca05 x3, 0x11e1903c x2, 0x2258b005 x2"
+   },
+   {
+    "key": 28,
+    "offset": "0x9c",
+    "name": "statsOverride1",
+    "type": "u32",
+    "note": "bit-packed stats override data (see key 26)",
+    "seen": "n=41 distinct=5 min=0x3c3c max=0x7878: 0x3c3c x29, 0x5a4b x6, 0x6969 x3, 0x4b4b x2, 0x7878 x1"
+   },
+   {
+    "key": 29,
+    "offset": "0xa0",
+    "name": "statsOverride2",
+    "type": "u32",
+    "note": "bit-packed stats override data (see key 26)",
+    "seen": "n=41 distinct=10 min=0x1a800950 max=0x2500e303: 0x1a805109 x13, 0x1a806108 x5, 0x1a800950 x5, 0x1b206207 x5, 0x1a805150 x4, 0x2460cb04 x3, 0x1a819150 x2, 0x2320b104 x2"
+   },
+   {
+    "key": 30,
+    "offset": "0xa4",
+    "name": "statsOverride3",
+    "type": "u32",
+    "note": "bit-packed stats override data (see key 26)",
+    "seen": "n=41 distinct=5 min=0x15050 max=0x1a0a0: 0x15050 x29, 0x17864 x6, 0x18c8c x3, 0x16464 x2, 0x1a0a0 x1"
+   },
+   {
+    "key": 31,
+    "offset": "0xa8",
+    "name": "statsOverride4",
+    "type": "u32",
+    "note": "bit-packed stats override data (see key 26)",
+    "seen": "n=41 distinct=10 min=0x1b200a64 max=0x2640e402: 0x1b205208 x13, 0x1b206207 x5, 0x1b200a64 x5, 0x1be86306 x5, 0x1b205264 x4, 0x2578cc03 x3, 0x1b219264 x2, 0x23e8b203 x2"
+   },
+   {
+    "key": 32,
+    "offset": "0xac",
+    "name": "statsOverride5",
+    "type": "u32",
+    "note": "bit-packed stats override data (see key 26)",
+    "seen": "n=41 distinct=5 min=0x6464 max=0xc8c8: 0x6464 x29, 0x967d x6, 0xafaf x3, 0x7d7d x2, 0xc8c8 x1"
+   }
+  ],
+  "header": [],
+  "visual": {
+   "kind": "skin",
+   "detail": "Animated character: skin key0 (0x05) + held weapon key9 (weapon_gfx). The placement glist (0x02000637 \"oDrone\", an editor marker, bbox y -1.08..0.19) is only required to exist; it is never drawn. Hidden at start when key3 != 0, when a DroneSpawner owns its group (key4), or when key2 > difficulty."
+  },
+  "transform": "Object origin = pos exactly (not snapped), about 1.1 m above the floor (hip height: the exported skin glb has its feet at y = -1.16 in bind pose), so place the skin glb at pos with no y offset. rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type.",
+  "start_anim": "If key1 != 0x06000000: that animation script (DSTATE_PlayScript). Otherwise the default stand/idle state (DroneAnim_SetAnimD anim state 0x11a; 0x1a5 for drone class 0xb, 0x82 for class 0x18) - anim-state ids, not hashcodes; resolving them needs the drone anim-set tables (not done).",
+  "weapon_gfx": {
+   "2": {
+    "base": 2,
+    "gfx": "0x020008b3",
+    "gfx_name": "Ppk_3rd_LOD0",
+    "whichBone": 64
+   },
+   "3": {
+    "base": 2,
+    "gfx": "0x020009cd",
+    "gfx_name": "Ppks_3rd_LOD0",
+    "whichBone": 64
+   },
+   "4": {
+    "base": 4,
+    "gfx": "0x020008b3",
+    "gfx_name": "Ppk_3rd_LOD0",
+    "whichBone": 64
+   },
+   "5": {
+    "base": 4,
+    "gfx": "0x020009cd",
+    "gfx_name": "Ppks_3rd_LOD0",
+    "whichBone": 64
+   },
+   "6": {
+    "base": 6,
+    "gfx": "0x0200025a",
+    "gfx_name": "Handgun_3rd_LOD0",
+    "whichBone": 64
+   },
+   "7": {
+    "base": 6,
+    "gfx": "0x020009c9",
+    "gfx_name": "P99s_3rd_LOD0",
+    "whichBone": 64
+   },
+   "8": {
+    "base": 8,
+    "gfx": "0x0200025a",
+    "gfx_name": "Handgun_3rd_LOD0",
+    "whichBone": 64
+   },
+   "9": {
+    "base": 8,
+    "gfx": "0x020009c9",
+    "gfx_name": "P99s_3rd_LOD0",
+    "whichBone": 64
+   },
+   "10": {
+    "base": 10,
+    "gfx": "0x020005f4",
+    "gfx_name": "Glock_3rd_LOD0",
+    "whichBone": 48
+   },
+   "11": {
+    "base": 10,
+    "gfx": "0x020005f4",
+    "gfx_name": "Glock_3rd_LOD0",
+    "whichBone": 48
+   },
+   "12": {
+    "base": 12,
+    "gfx": "0x020005f4",
+    "gfx_name": "Glock_3rd_LOD0",
+    "whichBone": 48
+   },
+   "13": {
+    "base": 13,
+    "gfx": "0x020005f4",
+    "gfx_name": "Glock_3rd_LOD0",
+    "whichBone": 48
+   },
+   "14": {
+    "base": 14,
+    "gfx": "0x020004b2",
+    "gfx_name": "Deagle_silver_3rd_LOD0",
+    "whichBone": 68
+   },
+   "15": {
+    "base": 14,
+    "gfx": "0x020004b2",
+    "gfx_name": "Deagle_silver_3rd_LOD0",
+    "whichBone": 68
+   },
+   "16": {
+    "base": 16,
+    "gfx": "0x020008aa",
+    "gfx_name": "Deagle_3rd_LOD0",
+    "whichBone": 68
+   },
+   "17": {
+    "base": 17,
+    "gfx": "0x020008ad",
+    "gfx_name": "Crossbow_3rd_LOD0",
+    "whichBone": 76
+   },
+   "18": {
+    "base": 18,
+    "gfx": "0x0200025c",
+    "gfx_name": "Smg_3rd_LOD0",
+    "whichBone": 4
+   },
+   "19": {
+    "base": 18,
+    "gfx": "0x0200025c",
+    "gfx_name": "Smg_3rd_LOD0",
+    "whichBone": 4
+   },
+   "20": {
+    "base": 20,
+    "gfx": "0x020009ce",
+    "gfx_name": "Mp5ks_3rd_LOD0",
+    "whichBone": 44
+   },
+   "21": {
+    "base": 20,
+    "gfx": "0x02000314",
+    "gfx_name": "Mp5k_3rd_LOD0",
+    "whichBone": 44
+   },
+   "22": {
+    "base": 22,
+    "gfx": "0x02000b44",
+    "gfx_name": "Sg5commando_nosight_3rd_LOD0",
+    "whichBone": 8
+   },
+   "23": {
+    "base": 22,
+    "gfx": "0x02000b44",
+    "gfx_name": "Sg5commando_nosight_3rd_LOD0",
+    "whichBone": 8
+   },
+   "24": {
+    "base": 25,
+    "gfx": "0x0200025d",
+    "gfx_name": "Rifle_3rd_LOD0",
+    "whichBone": 8
+   },
+   "25": {
+    "base": 25,
+    "gfx": "0x0200025d",
+    "gfx_name": "Rifle_3rd_LOD0",
+    "whichBone": 8
+   },
+   "26": {
+    "base": 26,
+    "gfx": "0x020007ef",
+    "gfx_name": "Hkoicw_3rd_LOD0",
+    "whichBone": 96
+   },
+   "27": {
+    "base": 26,
+    "gfx": "0x020007ef",
+    "gfx_name": "Hkoicw_3rd_LOD0",
+    "whichBone": 96
+   },
+   "28": {
+    "base": 28,
+    "gfx": "0x02000560",
+    "gfx_name": "Spas12_3rd_LOD0",
+    "whichBone": 12
+   },
+   "29": {
+    "base": 28,
+    "gfx": "0x02000560",
+    "gfx_name": "Spas12_3rd_LOD0",
+    "whichBone": 12
+   },
+   "30": {
+    "base": 30,
+    "gfx": "0x0200025b",
+    "gfx_name": "Sniper_3rd_LOD0",
+    "whichBone": 16
+   },
+   "31": {
+    "base": 30,
+    "gfx": "0x0200025b",
+    "gfx_name": "Sniper_3rd_LOD0",
+    "whichBone": 16
+   },
+   "32": {
+    "base": 32,
+    "gfx": "0x0200025b",
+    "gfx_name": "Sniper_3rd_LOD0",
+    "whichBone": 16
+   },
+   "33": {
+    "base": 32,
+    "gfx": "0x0200025b",
+    "gfx_name": "Sniper_3rd_LOD0",
+    "whichBone": 16
+   },
+   "34": {
+    "base": 34,
+    "gfx": "0x0200025b",
+    "gfx_name": "Sniper_3rd_LOD0",
+    "whichBone": 16
+   },
+   "35": {
+    "base": 34,
+    "gfx": "0x0200025b",
+    "gfx_name": "Sniper_3rd_LOD0",
+    "whichBone": 16
+   },
+   "36": {
+    "base": 36,
+    "gfx": "0x020008ac",
+    "gfx_name": "L96a1_white_3rd_LOD0",
+    "whichBone": 16
+   },
+   "37": {
+    "base": 36,
+    "gfx": "0x020008ac",
+    "gfx_name": "L96a1_white_3rd_LOD0",
+    "whichBone": 16
+   },
+   "38": {
+    "base": 38,
+    "gfx": "0x020008ac",
+    "gfx_name": "L96a1_white_3rd_LOD0",
+    "whichBone": 16
+   },
+   "39": {
+    "base": 38,
+    "gfx": "0x020008ac",
+    "gfx_name": "L96a1_white_3rd_LOD0",
+    "whichBone": 16
+   },
+   "40": {
+    "base": 40,
+    "gfx": "0x020008ac",
+    "gfx_name": "L96a1_white_3rd_LOD0",
+    "whichBone": 16
+   },
+   "41": {
+    "base": 40,
+    "gfx": "0x020008ac",
+    "gfx_name": "L96a1_white_3rd_LOD0",
+    "whichBone": 16
+   },
+   "42": {
+    "base": 42,
+    "gfx": "0x020008ab",
+    "gfx_name": "Grenade_launcher_3rd_LOD0",
+    "whichBone": 72
+   },
+   "43": {
+    "base": 42,
+    "gfx": "0x020008ab",
+    "gfx_name": "Grenade_launcher_3rd_LOD0",
+    "whichBone": 72
+   },
+   "44": {
+    "base": 44,
+    "gfx": "0x020004b1",
+    "gfx_name": "Rlaunch_3rd_LOD0",
+    "whichBone": 20
+   },
+   "45": {
+    "base": 44,
+    "gfx": "0x020004b1",
+    "gfx_name": "Rlaunch_3rd_LOD0",
+    "whichBone": 20
+   },
+   "46": {
+    "base": 46,
+    "gfx": "0x020004b1",
+    "gfx_name": "Rlaunch_3rd_LOD0",
+    "whichBone": 20
+   },
+   "47": {
+    "base": 46,
+    "gfx": "0x020004b1",
+    "gfx_name": "Rlaunch_3rd_LOD0",
+    "whichBone": 20
+   },
+   "48": {
+    "base": 48,
+    "gfx": "0x02000aca",
+    "gfx_name": "Torpedo_3rd_LOD0",
+    "whichBone": 20
+   },
+   "49": {
+    "base": 48,
+    "gfx": "0x02000aca",
+    "gfx_name": "Torpedo_3rd_LOD0",
+    "whichBone": 20
+   },
+   "50": {
+    "base": 51,
+    "gfx": "0x0200087a",
+    "gfx_name": "Beamlaser_3rd_LOD0",
+    "whichBone": 56
+   },
+   "51": {
+    "base": 51,
+    "gfx": "0x0200087a",
+    "gfx_name": "Beamlaser_3rd_LOD0",
+    "whichBone": 56
+   },
+   "52": {
+    "base": 52,
+    "gfx": "0x020002af",
+    "gfx_name": "Frag",
+    "whichBone": 64
+   },
+   "53": {
+    "base": 53,
+    "gfx": "0x02000726",
+    "gfx_name": "Grenade",
+    "whichBone": 64
+   },
+   "54": {
+    "base": 54,
+    "gfx": "0x0200071f",
+    "gfx_name": "Grenade",
+    "whichBone": 64
+   },
+   "55": {
+    "base": 55,
+    "gfx": "0x02000a6e",
+    "gfx_name": "Sticky_mine_3rd",
+    "whichBone": 64
+   },
+   "56": {
+    "base": 55,
+    "gfx": "0x02000a6e",
+    "gfx_name": "Sticky_mine_3rd",
+    "whichBone": 255
+   },
+   "57": {
+    "base": 55,
+    "gfx": "0x02000a6e",
+    "gfx_name": "Sticky_mine_3rd",
+    "whichBone": 255
+   },
+   "58": {
+    "base": 58,
+    "gfx": "0x0200074f",
+    "gfx_name": "Tripbomb_3rd",
+    "whichBone": 64
+   },
+   "59": {
+    "base": 59,
+    "gfx": "0x020007b3",
+    "gfx_name": "OBJECT_SatchelCharge",
+    "whichBone": 64
+   },
+   "60": {
+    "base": 59,
+    "gfx": "0x020007b3",
+    "gfx_name": "OBJECT_SatchelCharge",
+    "whichBone": 64
+   },
+   "61": {
+    "base": 59,
+    "gfx": "0x020007b3",
+    "gfx_name": "OBJECT_SatchelCharge",
+    "whichBone": 64
+   },
+   "62": {
+    "base": 59,
+    "gfx": "0x020007b3",
+    "gfx_name": "OBJECT_SatchelCharge",
+    "whichBone": 64
+   },
+   "63": {
+    "base": 59,
+    "gfx": "0x020007b3",
+    "gfx_name": "OBJECT_SatchelCharge",
+    "whichBone": 64
+   },
+   "64": {
+    "base": 59,
+    "gfx": "0x020007b3",
+    "gfx_name": "OBJECT_SatchelCharge",
+    "whichBone": 64
+   },
+   "65": {
+    "base": 65,
+    "gfx": "0x0200074a",
+    "gfx_name": "pen_body",
+    "whichBone": 64
+   },
+   "66": {
+    "base": 66,
+    "gfx": "0x020008ae",
+    "gfx_name": "Goldengun_3rd_LOD0",
+    "whichBone": 80
+   },
+   "67": {
+    "base": 67,
+    "gfx": "0x0200025a",
+    "gfx_name": "Handgun_3rd_LOD0",
+    "whichBone": 64
+   },
+   "68": {
+    "base": 68,
+    "gfx": "0x0200025a",
+    "gfx_name": "Handgun_3rd_LOD0",
+    "whichBone": 64
+   },
+   "69": {
+    "base": 69,
+    "gfx": "0x02000a44",
+    "gfx_name": "Hat",
+    "whichBone": 76
+   },
+   "70": {
+    "base": 70,
+    "gfx": "0x0200025a",
+    "gfx_name": "Handgun_3rd_LOD0",
+    "whichBone": 64
+   },
+   "82": {
+    "base": 82,
+    "gfx": "0x02000366",
+    "gfx_name": "Suitcase-Pickup",
+    "whichBone": 32
+   },
+   "83": {
+    "base": 83,
+    "gfx": "0x02000366",
+    "gfx_name": "Suitcase-Pickup",
+    "whichBone": 255
+   },
+   "89": {
+    "base": 89,
+    "gfx": "0x02000833",
+    "gfx_name": "Shaver_3rd",
+    "whichBone": 64
+   },
+   "90": {
+    "base": 89,
+    "gfx": "0x02000833",
+    "gfx_name": "Shaver_3rd",
+    "whichBone": 255
+   },
+   "91": {
+    "base": 91,
+    "gfx": "0x02000833",
+    "gfx_name": "Shaver_3rd",
+    "whichBone": 64
+   },
+   "92": {
+    "base": 91,
+    "gfx": "0x02000833",
+    "gfx_name": "Shaver_3rd",
+    "whichBone": 255
+   },
+   "99": {
+    "base": 99,
+    "gfx": "0x02000312",
+    "gfx_name": "Ninja_sword_3rd_LOD0",
+    "whichBone": 40
+   },
+   "106": {
+    "base": 106,
+    "gfx": "0x0200087a",
+    "gfx_name": "Beamlaser_3rd_LOD0",
+    "whichBone": 56
+   },
+   "109": {
+    "base": 109,
+    "gfx": "0x020004b1",
+    "gfx_name": "Rlaunch_3rd_LOD0",
+    "whichBone": 20
+   },
+   "110": {
+    "base": 110,
+    "gfx": "0x0200087a",
+    "gfx_name": "Beamlaser_3rd_LOD0",
+    "whichBone": 56
+   },
+   "111": {
+    "base": 111,
+    "gfx": "0x0200087a",
+    "gfx_name": "Beamlaser_3rd_LOD0",
+    "whichBone": 56
+   }
+  },
+  "confidence": "confirmed (skin, weapon, switches, transform); likely (behaviour block meaning); guess (key7)",
+  "records": 556
+ },
+ "229": {
+  "name": "DroneCoverCorner",
+  "create": "0x0002fe20",
+  "create_name": "Drone_CoverCornerNode",
+  "call": "Drone_CoverCornerNode(&pos, &rot, lvl) cdecl; appends a 0x78-byte CoverNode_tag (type 0 = corner) to the AI network",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "sideFlags",
+    "type": "enum",
+    "note": "1 -> flags 8, 2 -> flags 4, other -> 0xc (which side(s) of the corner can be used)",
+    "seen": "n=551 distinct=2 min=0x0 max=0x2: 0x0 x500, 0x2 x51"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "standFlags",
+    "type": "enum",
+    "note": "1 -> 0x20, 2 -> 0x40, other -> 0x60",
+    "seen": "n=551 distinct=2 min=0x0 max=0x2: 0x0 x549, 0x2 x2"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "crouchFlags",
+    "type": "enum",
+    "note": "1 -> 0x80, 2 -> 0x100, other -> 0x180",
+    "seen": "n=551 distinct=3 min=0x0 max=0x2: 0x0 x543, 0x2 x5, 0x1 x3"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "coverAngleDeg",
+    "type": "u32",
+    "note": "CoverNode+8 = deg to rad (0 -> 45 deg); always 46 in the data",
+    "seen": "n=551 distinct=1 min=0x2e max=0x2e: 0x2e x551"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "enableSwitchChannel",
+    "type": "switch",
+    "note": "usable only while this channel is set (0 = always) - Drone_IsCoverNodeUsable",
+    "seen": "n=551 distinct=1 min=0x0 max=0x0: 0x0 x551",
+    "channelRole": "in"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "disableSwitchChannel",
+    "type": "switch",
+    "note": "unusable once this channel is set",
+    "seen": "n=551 distinct=1 min=0x0 max=0x0: 0x0 x551",
+    "channelRole": "in"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "unknown6",
+    "type": "u8",
+    "note": "CoverNode+5 (0 -> 8); always 8",
+    "seen": "n=551 distinct=1 min=0x8 max=0x8: 0x8 x551"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "unknown7",
+    "type": "u8",
+    "note": "CoverNode+6 (0 -> 8); always 8",
+    "seen": "n=551 distinct=1 min=0x8 max=0x8: 0x8 x551"
+   }
+  ],
+  "visual": {
+   "kind": "none",
+   "detail": "AI data only; glist 0x02000641 \"Cover Corner Node\" is an editor marker, not created as an object"
+  },
+  "transform": "pos + rot copied to the node; rot.y = the direction the cover faces (compared with atan2(dx,dz)). rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type.",
+  "confidence": "confirmed",
+  "records": 552
+ },
+ "230": {
+  "name": "DroneCoverLow",
+  "create": "0x00030000",
+  "create_name": "Drone_CoverLowNode",
+  "call": "Drone_CoverLowNode(&pos, &rot, lvl) cdecl; CoverNode_tag type 1 (low cover)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "kind",
+    "type": "enum",
+    "note": "2: anims chosen by keys 1/2 from {0x11,5,10,7,0x1d}; 1: anim 0x11/5; other: 0x11/10",
+    "seen": "n=351 distinct=3 min=0x0 max=0x2: 0x2 x179, 0x0 x154, 0x1 x18"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "anim1",
+    "type": "enum",
+    "note": "index into {0x11,5,10,7,0x1d} (CoverNode+3), kind 2 only",
+    "seen": "n=351 distinct=3 min=0x0 max=0x2: 0x0 x165, 0x1 x118, 0x2 x68"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "anim2",
+    "type": "enum",
+    "note": "same table (CoverNode+4), kind 2 only",
+    "seen": "n=351 distinct=4 min=0x0 max=0x3: 0x2 x217, 0x1 x123, 0x0 x9, 0x3 x2"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "flag2",
+    "type": "bool",
+    "note": "1 -> CoverNode flags |= 2 (kind 2 only)",
+    "seen": "n=351 distinct=1 min=0x0 max=0x0: 0x0 x351"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "enableSwitchChannel",
+    "type": "switch",
+    "note": "usable only while set (0 = always)",
+    "seen": "n=351 distinct=1 min=0x0 max=0x0: 0x0 x351",
+    "channelRole": "in"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "disableSwitchChannel",
+    "type": "switch",
+    "note": "unusable once set",
+    "seen": "n=351 distinct=4 min=0x0 max=0xfd: 0x0 x348, 0xe x1, 0x2b x1, 0xfd x1",
+    "channelRole": "in"
+   }
+  ],
+  "visual": {
+   "kind": "none",
+   "detail": "AI data; glist 0x02000642 \"Cover Low Node\" is an editor marker"
+  },
+  "transform": "rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type.",
+  "confidence": "confirmed",
+  "records": 352
+ },
+ "233": {
+  "name": "DroneAIPoint",
+  "create": "0x00030190",
+  "create_name": "Drone_AIPoint",
+  "call": "Drone_AIPoint(&pos, &rot, lvl) cdecl; appends a 0x5c-byte AI point (table at *0x1e69b0, count 0x1e69ac) with an AI emitter",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "pointId",
+    "type": "u16",
+    "note": "point+6: the id a drone asks for (NDrone2_ClosestAIPoint(.., id, ..))",
+    "seen": "n=129 distinct=5 min=0x0 max=0x9: 0x2 x49, 0x0 x43, 0x8 x22, 0x9 x10, 0x1 x5"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "radius",
+    "type": "u32",
+    "note": "point+0x14 as float (1..3)",
+    "seen": "n=129 distinct=3 min=0x1 max=0x3: 0x1 x123, 0x2 x5, 0x3 x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "group",
+    "type": "u32",
+    "note": "point+0xc: preferred by drones whose group (Drone key4) matches",
+    "seen": "n=129 distinct=11 min=0x0 max=0x1f: 0x0 x102, 0x1 x8, 0x3 x5, 0x2 x4, 0x4 x3, 0x14 x2, 0x1f x1, 0x1e x1"
+   }
+  ],
+  "visual": {
+   "kind": "none",
+   "detail": "AI data; glist 0x0200063d \"AI_Point\" is an editor marker"
+  },
+  "transform": "rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type.",
+  "confidence": "confirmed (layout), likely (meanings)",
+  "records": 130
+ },
+ "245": {
+  "name": "DroneAIVolume1",
+  "create": "0x00030290",
+  "create_name": "Drone_AIVolume_Create",
+  "call": "Drone_AIVolume_Create(&pos, &rot, &placement.v34, lvl, celglist) cdecl; NULL glist -> nothing. Object 0xf4 (AI_VOLUME_tag) added to AIBoxList",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "visibilityPercent",
+    "type": "u32",
+    "note": "AI_VOLUME+0x18 = key0*0.01: multiplies how visible a target inside is (Drone_VisibilityForPosition; 50 = half, 200 = double)",
+    "seen": "never present"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "volumeType",
+    "type": "enum",
+    "note": "0 -> type 0 (visibility/shadow), 1 -> 2, 2 -> 1, 4 -> 3 (Drone_PointInAnyAIBox, astronaut combat). Type 4 (or level CastleExterior) also negates rot.z and raises pos.y by 1.5*scale.y",
+    "seen": "never present"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "unknown2",
+    "type": "u32",
+    "note": "AI_VOLUME+0x20 (0x06000000 or 0 in the data)",
+    "seen": "never present"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "unknown3",
+    "type": "u8",
+    "note": "AI_VOLUME+0x24",
+    "seen": "never present"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "unknown4",
+    "type": "u16",
+    "note": "AI_VOLUME+0x1e",
+    "seen": "never present"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "unused5",
+    "type": "u32",
+    "note": "not read",
+    "seen": "never present"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "unused6",
+    "type": "u32",
+    "note": "not read (1 in the data)",
+    "seen": "never present"
+   }
+  ],
+  "visual": {
+   "kind": "volume",
+   "detail": "oriented box: centre = obj position, orientation = obj matrix (pos/rot), half extents = |glist bboxMax-bboxMin|/2 * placement v34 (+0x34 is a per-axis SCALE here). effectFlags |= 0x30: never drawn. Glists 0x0200041a AI_ShadowVolume (bbox -1.5..1.5, y 0..3) / 0x0200063e AI_SoundVolume"
+  },
+  "transform": "control_create_object(pos, rot) -> View_RotTransMatrix; rot is general here (x and z up to 0.4 rad). The quat field is not a unit quaternion in half of these records (garbage) - ignore it. Note the box centre is the object origin, not the glist bbox centre (Intersect_PointOOBox with the half extents).",
+  "confidence": "confirmed (geometry), likely (types)",
+  "records": 225
+ },
+ "248": {
+  "name": "DroneAIVolume2",
+  "create": "0x00030290",
+  "create_name": "Drone_AIVolume_Create",
+  "call": "Drone_AIVolume_Create(&pos, &rot, &placement.v34, lvl, celglist) cdecl; NULL glist -> nothing. Object 0xf4 (AI_VOLUME_tag) added to AIBoxList",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "visibilityPercent",
+    "type": "u32",
+    "note": "AI_VOLUME+0x18 = key0*0.01: multiplies how visible a target inside is (Drone_VisibilityForPosition; 50 = half, 200 = double)",
+    "seen": "never present"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "volumeType",
+    "type": "enum",
+    "note": "0 -> type 0 (visibility/shadow), 1 -> 2, 2 -> 1, 4 -> 3 (Drone_PointInAnyAIBox, astronaut combat). Type 4 (or level CastleExterior) also negates rot.z and raises pos.y by 1.5*scale.y",
+    "seen": "never present"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "unknown2",
+    "type": "u32",
+    "note": "AI_VOLUME+0x20 (0x06000000 or 0 in the data)",
+    "seen": "never present"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "unknown3",
+    "type": "u8",
+    "note": "AI_VOLUME+0x24",
+    "seen": "never present"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "unknown4",
+    "type": "u16",
+    "note": "AI_VOLUME+0x1e",
+    "seen": "never present"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "unused5",
+    "type": "u32",
+    "note": "not read",
+    "seen": "never present"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "unused6",
+    "type": "u32",
+    "note": "not read (1 in the data)",
+    "seen": "never present"
+   }
+  ],
+  "visual": {
+   "kind": "volume",
+   "detail": "oriented box: centre = obj position, orientation = obj matrix (pos/rot), half extents = |glist bboxMax-bboxMin|/2 * placement v34 (+0x34 is a per-axis SCALE here). effectFlags |= 0x30: never drawn. Glists 0x0200041a AI_ShadowVolume (bbox -1.5..1.5, y 0..3) / 0x0200063e AI_SoundVolume"
+  },
+  "transform": "control_create_object(pos, rot) -> View_RotTransMatrix; rot is general here (x and z up to 0.4 rad). The quat field is not a unit quaternion in half of these records (garbage) - ignore it. Note the box centre is the object origin, not the glist bbox centre (Intersect_PointOOBox with the half extents).",
+  "confidence": "confirmed: same create function; its only record has no keys",
+  "records": 1
+ },
+ "241": {
+  "name": "DroneSpawner",
+  "create": "0x00030530",
+  "create_name": "DroneSpawner_Create",
+  "call": "DroneSpawner_Create(&pos, &rot, lvl) cdecl; object 0x3c (DroneSpawner_tag) registered in 0x1e56bc[group]; DroneSpawner_Init (from NDrone2_SetupGroups) takes over the group's drones",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "spawnMode",
+    "type": "enum",
+    "note": "<=1: not created. 2 = keep topping up to key2 alive; 3 = next wave when all are dead",
+    "seen": "n=79 distinct=2 min=0x2 max=0x3: 0x2 x64, 0x3 x15"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "group",
+    "type": "u32",
+    "note": "the Drone key4 group it owns; those drones are deleted at start and respawned from their own placements (DroneSpawner_SpawnDrone -> NDrone2_CreateFromDIVars)",
+    "seen": "n=79 distinct=17 min=0x0 max=0x14: 0x1 x14, 0x2 x14, 0x3 x10, 0x4 x8, 0x5 x8, 0x6 x8, 0x7 x5, 0x8 x2"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "maxAlive",
+    "type": "u16",
+    "note": "+0xa, clamped to the group size (0 -> group size)",
+    "seen": "n=79 distinct=7 min=0x0 max=0x7: 0x2 x22, 0x1 x22, 0x0 x15, 0x4 x8, 0x3 x6, 0x6 x4, 0x7 x2"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "waves",
+    "type": "u16",
+    "note": "+0xc, number of refills (0 -> 32000 = endless)",
+    "seen": "n=79 distinct=6 min=0x0 max=0x5: 0x1 x66, 0x3 x4, 0x2 x3, 0x0 x3, 0x4 x2, 0x5 x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "startSwitchChannel",
+    "type": "switch",
+    "note": "+0xe: spawning starts when set (0 = at once)",
+    "seen": "n=79 distinct=55 min=0x0 max=0xf6: 0x0 x8, 0x12 x3, 0x2c x3, 0x1 x3, 0xb x2, 0x2a x2, 0x6 x2, 0x4 x2",
+    "channelRole": "in"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "stopSwitchChannel",
+    "type": "switch",
+    "note": "+0x10: spawning stops (and the spawned drones are removed on most levels)",
+    "seen": "n=79 distinct=4 min=0x0 max=0x65: 0x0 x75, 0x54 x2, 0x16 x1, 0x65 x1",
+    "channelRole": "in"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "doneSwitchChannel",
+    "type": "switch",
+    "note": "+0x12: set when all waves are used up and nobody is left",
+    "seen": "n=79 distinct=4 min=0x0 max=0xc2: 0x0 x76, 0x27 x1, 0x7 x1, 0xc2 x1",
+    "channelRole": "out"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "abortSwitchChannel",
+    "type": "switch",
+    "note": "+0x14: when set, stops after the current drones",
+    "seen": "n=79 distinct=23 min=0x0 max=0xf1: 0x0 x46, 0xa0 x5, 0x1d x3, 0x4 x2, 0x15 x2, 0x2 x2, 0x13 x2, 0xd x2",
+    "channelRole": "in"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "minPlayerDistance",
+    "type": "u32",
+    "note": "+0x18 float metres (0 -> 10): only spawns this far from the player and out of sight",
+    "seen": "n=79 distinct=8 min=0x0 max=0xe: 0xa x22, 0x0 x20, 0x1 x18, 0x3 x10, 0x5 x6, 0x4 x1, 0x7 x1, 0xe x1"
+   }
+  ],
+  "visual": {
+   "kind": "none",
+   "detail": "invisible logic; glist 0x0200063c \"AI_DroneSpawner\" is an editor marker (object has no graphics)"
+  },
+  "transform": "pos/rot stored on the object but not used for spawning (drones spawn at their own placements)",
+  "confidence": "confirmed",
+  "records": 80
+ },
+ "36": {
+  "name": "PlayerNewStartPos",
+  "create": "0x000a98c0",
+  "create_name": "Player_AddNewStartPos",
+  "call": "single player only: Player_AddNewStartPos(&pos, &rot, 1 /*enabled*/, lvl) cdecl; copies the whole 0xb0 level_tag. Player_Start 0xae870 spawns Bond at the first enabled start whose key0 channel is set or 0 (fallback: the first enabled)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "requiredSwitchChannel",
+    "type": "switch",
+    "note": "start only used when this channel is set (0 = always); Player_Init re-checks it",
+    "seen": "n=27 distinct=4 min=0x0 max=0x1f: 0x0 x23, 0x1d x2, 0x1f x1, 0x1e x1",
+    "channelRole": "in"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "unknown1",
+    "type": "u32",
+    "note": "not read by Player_Init (0/1)",
+    "seen": "n=27 distinct=2 min=0x0 max=0x1: 0x0 x26, 0x1 x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "unknown2",
+    "type": "u32",
+    "note": "not read by Player_Init; equals key0 where set (29/30/31)",
+    "seen": "n=20 distinct=4 min=0x0 max=0x1f: 0x0 x16, 0x1d x2, 0x1f x1, 0x1e x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "startMovement",
+    "type": "enum",
+    "note": "Player_Init (SP): 0 walk; 1 -> movement 3 (swim); 2 -> zero-G (movement 8, gravity off, script 0x06000a00); 3 -> crouch (movement 4, script 0x060009ff)",
+    "seen": "n=23 distinct=3 min=0x0 max=0x3: 0x0 x20, 0x3 x2, 0x2 x1"
+   }
+  ],
+  "visual": {
+   "kind": "marker",
+   "detail": "Bond's start (first person: no character drawn); glist (Player1 etc.) is an editor marker"
+  },
+  "transform": "eye/body origin at pos; facing rot.y. rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type.",
+  "confidence": "confirmed",
+  "records": 35
+ },
+ "45": {
+  "name": "AddNewStartPos2",
+  "create": "0x000a98c0",
+  "create_name": "Player_AddNewStartPos",
+  "call": "single player only: Player_AddNewStartPos(&pos, &rot, 0 /*NOT enabled*/, lvl). Player_Start only considers enabled starts and nothing else reads the table, so these positions are never used on Xbox",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "requiredSwitchChannel",
+    "type": "switch",
+    "note": "as type 36; always 0",
+    "seen": "n=9 distinct=1 min=0x0 max=0x0: 0x0 x9",
+    "channelRole": "in"
+   }
+  ],
+  "visual": {
+   "kind": "marker",
+   "detail": "unused start position; glist \"PlayerStart\" is an editor marker"
+  },
+  "transform": "rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type.",
+  "confidence": "likely (no reader found for disabled starts)",
+  "records": 18
+ },
+ "37": {
+  "name": "MPSpawnPoint",
+  "create": "0x0009d2b0",
+  "create_name": "MP_RegisterSpawnPoint",
+  "call": "multiplayer only: MP_RegisterSpawnPoint(&pos, &rot, (u16)key0) cdecl",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "team",
+    "type": "enum",
+    "note": "0 / 1 = team slots 0-31 / 32-63 in team games (ignored otherwise); 2 = never registered",
+    "seen": "n=252 distinct=2 min=0x0 max=0x1: 0x0 x127, 0x1 x125"
+   }
+  ],
+  "visual": {
+   "kind": "marker",
+   "detail": "spawn point, nothing drawn; glist MPStart/MPStart1 is an editor marker"
+  },
+  "transform": "spawn eye position = pos dropped to the floor (build_PointOnFloor, 3 m) + 1.6 y; facing = rot. rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type.",
+  "confidence": "confirmed",
+  "records": 253
+ },
+ "38": {
+  "name": "MPObject",
+  "create": "0x000a2df0",
+  "create_name": "MP_RegisterMPObject",
+  "call": "multiplayer only: MP_RegisterMPObject(&pos, &rot, lvl, celglist) cdecl; matrix = RotMatrix(rot) 0xd6560 + pos; MP_CreateObject 0x000a1710 gets &key0..",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "objectType",
+    "type": "enum",
+    "note": "MPOBJECTTYPE and the game mode that creates it: 0 CTF flag, 1 CTF base (CTF); 2 uplink (Uplink); 3 demolition place; 4 espionage base, 5 blueprint (Blueprint); 6 GoldenEye key, 7 GoldenEye crystal; 8 protection place; 9 hill (KOTH / team KOTH). Types 3,5,6,7,8 only store a spawn matrix+glist",
+    "seen": "n=202 distinct=10 min=0x0 max=0x9: 0x5 x47, 0x6 x28, 0x7 x28, 0x2 x24, 0x4 x18, 0x0 x16, 0x1 x16, 0x9 x9"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "team",
+    "type": "u16",
+    "note": "team / number (0,1; 2 = neutral)",
+    "seen": "n=202 distinct=3 min=0x0 max=0x2: 0x2 x152, 0x1 x25, 0x0 x25"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "scriptPlayerScript",
+    "type": "hash",
+    "note": "if non-zero: the object is hidden (|0x10) and a ScriptPlayer (SP_Create) plays this object script at the matrix instead (e.g. a waving flag)",
+    "refers": "object script 0x06 (bundle entry type 7)",
+    "seen": "n=202 distinct=4 min=0x0 max=0x6000040: 0x0 x162, 0x600003c x24, 0x6000040 x8, 0x600003f x8"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "spParam3",
+    "type": "u32",
+    "note": "SP_Create 5th arg (8 or 1)",
+    "seen": "n=202 distinct=2 min=0x1 max=0x8: 0x8 x186, 0x1 x16"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "spParam4",
+    "type": "u32",
+    "note": "SP_Create 6th arg (0)",
+    "seen": "n=202 distinct=1 min=0x0 max=0x0: 0x0 x202"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "spScript2",
+    "type": "hash",
+    "note": "SP_Create 4th arg (second script)",
+    "refers": "object script 0x06 (entry type 7)",
+    "seen": "n=202 distinct=3 min=0x0 max=0x6000040: 0x0 x186, 0x600003f x8, 0x6000040 x8"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "placement glist (flags, bases, markers) unless key2 != 0, when a ScriptPlayer animates key2 instead (see the ScriptPlayer type). Only exists in the matching MP game mode."
+  },
+  "transform": "RotMatrix(rot) (row-vector, m[k] = row k/4): row0 = (cz cy, sz cx + cz sy sx, sz sx - cz sy cx), row1 = (-sz cy, cz cx - sz sy sx, cz sx + sz sy cx), row2 = (sy, -cy sx, cy cx), translation pos. rot.x is 0 or pi in the data.",
+  "confidence": "confirmed",
+  "records": 209
+ },
+ "218": {
+  "name": "Car",
+  "create": "0x000266f0",
+  "create_name": "Car_Create",
+  "call": "Car_Create(&pos, &rot, celglist) cdecl (lvl passed as a 4th arg by parsemap but not read). Not created in MP when MiniVehicles are off, in level Ravine, or beyond 8",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "unused",
+    "type": "u32",
+    "note": "not read (always 0)",
+    "seen": "n=28 distinct=1 min=0x0 max=0x0: 0x0 x28"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "placement glist = RC car body (0x020003d6 \"RCCar\"); Car_InitBits adds turret/barrel/body sub-objects. When MiniVehiclesEnabled is not 1 (or 3 and a coin flip) it becomes the heli: gfx 0x02000194 \"LittleNellie\" and y + 1.5. Occurs in MP maps (and 07000002)"
+  },
+  "transform": "Control_CreateObjEx(pos, rot) -> View_RotTransMatrix. rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type.",
+  "confidence": "confirmed (create), guess (which mode)",
+  "records": 31
+ },
+ "47": {
+  "name": "Copter",
+  "create": "0x0006ba90",
+  "create_name": "Copter_Create",
+  "call": "Copter_Create(&pos, &rot, lvl) cdecl; Copter_CreatePath(lvl) (EBX) first. Glist NOT used (objGraphics = NULL)",
+  "header": [
+   "+2 (placement+0x40) = path frame count",
+   "+4 (placement+0x42) = path duration base (used when key10 == 0)",
+   "+8 = m_paths[placement+0x44] path pointer"
+  ],
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "mustBeZero",
+    "type": "u32",
+    "note": "non-zero -> copter not created (path still made); 0 in the data",
+    "seen": "n=9 distinct=1 min=0x0 max=0x0: 0x0 x9"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "pathParam1",
+    "type": "u16",
+    "note": "path+0x14",
+    "seen": "n=9 distinct=3 min=0x0 max=0x3: 0x0 x4, 0x1 x4, 0x3 x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "pathParam2",
+    "type": "u16",
+    "note": "path+0x12",
+    "seen": "n=9 distinct=1 min=0x0 max=0x0: 0x0 x9"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "startFrame",
+    "type": "u32",
+    "note": "clamped to frame count -> path+0x10",
+    "seen": "n=9 distinct=3 min=0x0 max=0x2ac: 0x0 x7, 0x2ac x1, 0xd9 x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "bodyScript",
+    "type": "hash",
+    "note": "object script played by a ScriptPlayer at pos/rot: THE VISIBLE HELICOPTER",
+    "refers": "object script 0x06 (entry type 7)",
+    "seen": "n=9 distinct=5 min=0x0 max=0x60008bf: 0x0 x4, 0x6000046 x2, 0x6000051 x1, 0x60008bf x1, 0x60005bd x1"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "bodyScript2",
+    "type": "hash",
+    "note": "SP_Create 4th arg",
+    "refers": "object script 0x06 (entry type 7)",
+    "seen": "n=9 distinct=4 min=0x0 max=0x60008be: 0x0 x5, 0x6000047 x2, 0x6000050 x1, 0x60008be x1"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "showSwitchChannel",
+    "type": "switch",
+    "note": "hidden (SP_HideObj) until this channel is set (0 = visible)",
+    "seen": "n=9 distinct=5 min=0x0 max=0x42: 0x0 x5, 0x42 x1, 0x5 x1, 0x2a x1, 0x25 x1",
+    "channelRole": "in"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "param7",
+    "type": "u16",
+    "note": "COPTER+0x72 (75/101/102)",
+    "seen": "n=5 distinct=3 min=0x4b max=0x66: 0x4b x3, 0x66 x1, 0x65 x1"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "param8",
+    "type": "u16",
+    "note": "COPTER+0x74",
+    "seen": "n=5 distinct=2 min=0x0 max=0x64: 0x64 x3, 0x0 x2"
+   },
+   {
+    "key": 9,
+    "offset": "0x50",
+    "name": "param9",
+    "type": "u16",
+    "note": "COPTER+0x76",
+    "seen": "n=5 distinct=1 min=0x0 max=0x0: 0x0 x5"
+   },
+   {
+    "key": 10,
+    "offset": "0x54",
+    "name": "durationOverride",
+    "type": "u32",
+    "note": "path speed base; 0 -> header +4",
+    "seen": "n=5 distinct=1 min=0x0 max=0x0: 0x0 x5"
+   }
+  ],
+  "visual": {
+   "kind": "script",
+   "detail": "the helicopter is a ScriptPlayer playing object script key4 at pos/rot (then moved along the path); the placement glist (Helicopter-Body, Damaged_Hind) is never drawn by this code. 4 records have key4 = 0: nothing visible from them"
+  },
+  "transform": "control_create_object(pos, rot); general Euler (x up to 0.57, z to 0.54) - View_RotTransMatrix(rot); then driven along the path",
+  "confidence": "confirmed (layout), likely (visual)",
+  "records": 10
+ },
+ "39": {
+  "name": "GunTurret",
+  "create": "0x0009a200",
+  "create_name": "GT_Create",
+  "call": "GT_Create(&pos, &rot, &quat, lvl, celglist, NULL) cdecl; returns NULL unless key2 and key3 are non-zero and both scripts load",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "ceilingMounted",
+    "type": "u16",
+    "note": "GT+0xdc: non-zero = hangs from the ceiling, aims along -up, health 0xffff; 0 = floor, aims along the matrix dir, health 200",
+    "seen": "n=15 distinct=3 min=0x0 max=0x2: 0x1 x11, 0x0 x3, 0x2 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "unknown1",
+    "type": "u16",
+    "note": "GT+0xde",
+    "seen": "n=15 distinct=1 min=0x0 max=0x0: 0x0 x15"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "baseScript",
+    "type": "hash",
+    "note": "Script_Load(key2, pos, rot) - first set of visible turret parts",
+    "refers": "object script 0x06 (entry type 7)",
+    "seen": "n=15 distinct=3 min=0x0 max=0x6000045: 0x6000041 x11, 0x6000045 x3, 0x0 x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "gunScript",
+    "type": "hash",
+    "note": "Script_Load(key3, pos, rot) - second set (1000 in one record = no turret)",
+    "refers": "object script 0x06 (entry type 7)",
+    "seen": "n=15 distinct=3 min=0x3e8 max=0x6000044: 0x6000042 x11, 0x6000044 x3, 0x3e8 x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "switchA",
+    "type": "u16",
+    "note": "GT+0xd8 (switch channel?)",
+    "seen": "n=15 distinct=7 min=0x0 max=0x1c: 0x0 x4, 0x1c x3, 0x12 x2, 0xf x2, 0xe x2, 0x11 x1, 0x10 x1"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "switchB",
+    "type": "u16",
+    "note": "GT+0xda",
+    "seen": "n=14 distinct=2 min=0x0 max=0x4e: 0x0 x11, 0x4e x3"
+   }
+  ],
+  "visual": {
+   "kind": "script",
+   "detail": "placement glist is created but hidden (effectFlags |= 0x810); what you see are the objects of the two object scripts key2/key3 placed with View_RotTransMatrix(rot,pos)"
+  },
+  "transform": "Control_CreateObjEx(pos, rot). quat is passed but unused. rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type.",
+  "confidence": "confirmed (layout), likely (visual)",
+  "records": 17
+ },
+ "52": {
+  "name": "GunImp",
+  "create": "0x00026ba0",
+  "create_name": "GunImp_Create",
+  "call": "GunImp_Create(&pos, &quat, celglist) cdecl - uses the placement QUATERNION (Quat_QuatToMat) and ignores rot and lvl",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "unused_barrelHash",
+    "type": "hash",
+    "note": "NOT read on Xbox (equals the barrel of table entry 1 / 7)",
+    "refers": "entity 0x02",
+    "seen": "n=15 distinct=2 min=0x2000565 max=0x2000a3b: 0x2000a3b x14, 0x2000565 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "unused1",
+    "type": "u32",
+    "note": "NOT read",
+    "seen": "n=15 distinct=2 min=0x60 max=0x67: 0x60 x14, 0x67 x1"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "two objects at the same matrix: the placement glist (GunImpBase 0x02000566 / PowerStationGunImpBase 0x02000b51) and the barrel from table 0x163a3c (stride 0x1c) indexed by weapon set: single player uses entry 11 = 0x02000b50 PowerStationGunImpBarrel; MP uses MPSettings.weaponSet (0 RocketLauncherBarrel 0x02000b05, 1 50calBarrel 0x02000a3b, 2 MinigunBarrels 0x02000b06, 3 FAMAS 0x02000b08, 4 0x02000b05, 5/6 Grenadelauncher 0x02000b07, 7-10 GunImpBarrel 0x02000565)"
+  },
+  "transform": "matrix = Quat_QuatToMat(quat) + pos; the engine quat has glTF semantics, so use the placement quat as-is (rot.y is 0 or pi here, so rot would agree)",
+  "confidence": "confirmed",
+  "records": 17
+ },
+ "222": {
+  "name": "Searchlight",
+  "create": "0x0006da10",
+  "create_name": "Searchlight_Create",
+  "call": "Searchlight_Create(&pos, &rot, lvl, celglist) cdecl - called even when doCreation is 0. Parts within 3 m in the same cel are linked to the type-1 lamp",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "part",
+    "type": "enum",
+    "note": "0 stand (OBJECT_SLightMount), 1 lamp head = master (OBJECT_SearchLight1), 2 projected spot: a white dynamic Light_Create(pos, range 500) and the object is moved 10000 away (glist not seen), 3 beam cone (OBJECT_SearchLightbeam*), 4 corona (SL_Corona)",
+    "seen": "n=49 distinct=5 min=0x0 max=0x4: 0x1 x11, 0x0 x11, 0x4 x11, 0x3 x10, 0x2 x6"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "enableSwitchChannel",
+    "type": "switch",
+    "note": "master only: lamp starts off (state 3, parts hidden) until set",
+    "seen": "n=13 distinct=7 min=0x0 max=0xa4: 0x0 x7, 0xa4 x1, 0x61 x1, 0x40 x1, 0x3f x1, 0x3d x1, 0x3e x1",
+    "channelRole": "in"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "disableSwitchChannel",
+    "type": "switch",
+    "note": "master only",
+    "seen": "n=13 distinct=2 min=0x0 max=0x39: 0x0 x9, 0x39 x4",
+    "channelRole": "in"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "alertSwitchChannel",
+    "type": "switch",
+    "note": "master only: set when the light spots Bond",
+    "seen": "n=13 distinct=2 min=0x0 max=0x37: 0x0 x9, 0x37 x4",
+    "channelRole": "out"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "sweepAngleADeg",
+    "type": "u32",
+    "note": "master: sweep limits in degrees (min/max of keys 4,5) -> centre and half range",
+    "seen": "n=13 distinct=7 min=0x0 max=0x166: 0x0 x5, 0xfa x2, 0x23 x2, 0x163 x1, 0x166 x1, 0x26 x1, 0x2d x1"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "sweepAngleBDeg",
+    "type": "u32",
+    "note": "see key 4",
+    "seen": "n=13 distinct=7 min=0x0 max=0x159: 0x46 x3, 0x159 x2, 0x0 x2, 0x28 x2, 0x140 x2, 0x23 x1, 0x4a x1"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "each part draws its placement glist (from its own pack, glist -1) except part 2 which is a light; the head/beam rotate at run time"
+  },
+  "transform": "control_create_object(pos, rot). rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type.",
+  "confidence": "confirmed",
+  "records": 49
+ },
+ "254": {
+  "name": "Mine",
+  "create": "0x00069790",
+  "create_name": "Mine_Create",
+  "call": "Mine_Create(&pos, &rot, lvl, celglist) cdecl; object 0x24; Mine_Update 0x69870 spins/bobs it and explodes on contact",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "explodeStrength",
+    "type": "u32",
+    "note": "+0x18 float (80)",
+    "seen": "n=9 distinct=1 min=0x50 max=0x50: 0x50 x9"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "explodeRadius",
+    "type": "u32",
+    "note": "+0x1c float (10 / 15)",
+    "seen": "n=9 distinct=2 min=0xa max=0xf: 0xa x6, 0xf x3"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "spinRate",
+    "type": "u32",
+    "note": "*0.0002 rad per frame added to rot.y (0 in the data)",
+    "seen": "n=9 distinct=1 min=0x0 max=0x0: 0x0 x9"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "bobFrequency",
+    "type": "u32",
+    "note": "*0.0002 (0)",
+    "seen": "n=9 distinct=1 min=0x0 max=0x0: 0x0 x9"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "bobAmplitude",
+    "type": "u32",
+    "note": "*0.1 around pos.y (0)",
+    "seen": "n=9 distinct=1 min=0x0 max=0x0: 0x0 x9"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "explosionScript",
+    "type": "hash",
+    "note": "Explode_Create effect",
+    "refers": "object script 0x06 (entry type 7)",
+    "seen": "n=9 distinct=1 min=0x6000052 max=0x6000052: 0x6000052 x9"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "placement glist = the trip bomb (Tripbomb_3rd_long/short/Tiny), only in EvilSilo 07000015"
+  },
+  "transform": "control_create_object(pos, rot) -> View_RotTransMatrix(rot): general Euler (wall-mounted, x = +-pi/2)",
+  "confidence": "confirmed",
+  "records": 9
+ },
+ "57": {
+  "name": "SpaceMissile",
+  "create": "0x000cc4c0",
+  "create_name": "Create_SpaceMissile",
+  "call": "Create_SpaceMissile(&pos, &rot, lvl) cdecl; object has NO glist",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "missileScript",
+    "type": "hash",
+    "note": "Script_Load(key0, pos, rot) + Script_Play: the visible missile rig",
+    "refers": "object script 0x06 (entry type 7)",
+    "seen": "n=8 distinct=8 min=0x6000927 max=0x6000a30: 0x600092a x1, 0x600092b x1, 0x6000929 x1, 0x6000a30 x1, 0x6000927 x1, 0x600092c x1, 0x600092e x1, 0x600092d x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "launchCouplerAnim",
+    "type": "hash",
+    "note": "",
+    "refers": "object script 0x06",
+    "seen": "n=8 distinct=2 min=0x60007c6 max=0x60007e1: 0x60007c6 x4, 0x60007e1 x4"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "missileDeployAnim",
+    "type": "hash",
+    "note": "",
+    "refers": "object script 0x06",
+    "seen": "n=8 distinct=8 min=0x600091b max=0x6000925: 0x600091c x1, 0x6000920 x1, 0x6000921 x1, 0x6000922 x1, 0x600091b x1, 0x6000923 x1, 0x6000924 x1, 0x6000925 x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "deployDelay",
+    "type": "u32",
+    "note": "float",
+    "seen": "n=8 distinct=5 min=0x0 max=0x69: 0x69 x3, 0x3c x2, 0x28 x1, 0x14 x1, 0x0 x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "missileNum",
+    "type": "u16",
+    "note": "1-8",
+    "seen": "n=8 distinct=8 min=0x1 max=0x8: 0x1 x1, 0x2 x1, 0x3 x1, 0x4 x1, 0x5 x1, 0x6 x1, 0x7 x1, 0x8 x1"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "switchA",
+    "type": "switch",
+    "note": "triggerSwitchOnSomeOtherState (199)",
+    "seen": "n=8 distinct=1 min=0xc7 max=0xc7: 0xc7 x8",
+    "channelRole": "out"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "switchB",
+    "type": "switch",
+    "note": "triggerSwitchOnSomeState (21-28)",
+    "seen": "n=8 distinct=8 min=0x15 max=0x1c: 0x15 x1, 0x16 x1, 0x17 x1, 0x18 x1, 0x19 x1, 0x1a x1, 0x1b x1, 0x1c x1",
+    "channelRole": "out"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "deployOnChannel",
+    "type": "switch",
+    "note": "19",
+    "seen": "n=8 distinct=1 min=0x13 max=0x13: 0x13 x8",
+    "channelRole": "in"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "extraScript1",
+    "type": "hash",
+    "note": "optional Script_Load",
+    "seen": "n=8 distinct=1 min=0x0 max=0x0: 0x0 x8"
+   },
+   {
+    "key": 9,
+    "offset": "0x50",
+    "name": "extraScript2",
+    "type": "hash",
+    "note": "optional",
+    "seen": "n=8 distinct=1 min=0x0 max=0x0: 0x0 x8"
+   },
+   {
+    "key": 10,
+    "offset": "0x54",
+    "name": "extraScript3",
+    "type": "hash",
+    "note": "optional",
+    "seen": "n=8 distinct=1 min=0x0 max=0x0: 0x0 x8"
+   },
+   {
+    "key": 11,
+    "offset": "0x58",
+    "name": "extraScript4",
+    "type": "hash",
+    "note": "optional",
+    "seen": "n=8 distinct=1 min=0x0 max=0x0: 0x0 x8"
+   }
+  ],
+  "visual": {
+   "kind": "script",
+   "detail": "object script key0 at pos/rot; placement glist \"Missile Placement\" unused. SpaceStationD 0700001b"
+  },
+  "transform": "View_RotTransMatrix(rot, pos) inside Script_Load; rot is zero in all records",
+  "confidence": "confirmed",
+  "records": 8
+ },
+ "56": {
+  "name": "SpaceLaser",
+  "create": "0x000cc860",
+  "create_name": "Create_SpaceLaser",
+  "call": "Create_SpaceLaser(&pos, &rot, lvl) cdecl; no glist; scripts are loaded later by SpaceLaser_Update",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "scriptA",
+    "type": "hash",
+    "note": "+0x18[0]",
+    "refers": "object script 0x06",
+    "seen": "n=1 distinct=1 min=0x60007c0 max=0x60007c0: 0x60007c0 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "scriptB",
+    "type": "hash",
+    "note": "+0x18[1]",
+    "refers": "object script 0x06",
+    "seen": "n=1 distinct=1 min=0x60007c1 max=0x60007c1: 0x60007c1 x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "scriptC",
+    "type": "hash",
+    "note": "+0x20",
+    "refers": "object script 0x06",
+    "seen": "n=1 distinct=1 min=0x60007e3 max=0x60007e3: 0x60007e3 x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "countdown",
+    "type": "u32",
+    "note": "float (165)",
+    "seen": "n=1 distinct=1 min=0xa5 max=0xa5: 0xa5 x1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "param4",
+    "type": "u32",
+    "note": "float +0x2c (65)",
+    "seen": "n=1 distinct=1 min=0x41 max=0x41: 0x41 x1"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "param5",
+    "type": "u16",
+    "note": "+0x38 (99)",
+    "seen": "n=1 distinct=1 min=0x63 max=0x63: 0x63 x1"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "otherSwitchChannel",
+    "type": "switch",
+    "note": "14",
+    "seen": "n=1 distinct=1 min=0xe max=0xe: 0xe x1",
+    "channelRole": "in"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "someSwitchChannel",
+    "type": "switch",
+    "note": "19",
+    "seen": "n=1 distinct=1 min=0x13 max=0x13: 0x13 x1",
+    "channelRole": "in"
+   }
+  ],
+  "visual": {
+   "kind": "script",
+   "detail": "object scripts; placement glist \"BigLaserBeam Fire Marker\" unused. See src/action/game/obj/SpaceLaser.cpp"
+  },
+  "transform": "rot zero",
+  "confidence": "likely",
+  "records": 1
+ },
+ "74": {
+  "name": "Apocalypse",
+  "create": "0x000a4180",
+  "create_name": "Apocalypse_Create",
+  "call": "Apocalypse_Create(&pos, &rot, lvl, celglist) cdecl; Apocalypse_Update 0xa4200",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "triggerSwitchChannel",
+    "type": "switch",
+    "note": "starts when set",
+    "seen": "n=25 distinct=25 min=0x4 max=0xf6: 0x52 x1, 0xaf x1, 0x53 x1, 0xc9 x1, 0x5b x1, 0x20 x1, 0x14 x1, 0x13 x1",
+    "channelRole": "in"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "durationSeconds",
+    "type": "u32",
+    "note": "*60 frames; object deleted at the end",
+    "seen": "n=25 distinct=5 min=0x1 max=0xa: 0x2 x8, 0x1 x8, 0x3 x6, 0xa x2, 0x4 x1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "rumble",
+    "type": "u16",
+    "note": "controller rumble strength (fades)",
+    "seen": "n=25 distinct=8 min=0x14 max=0x50: 0x1e x9, 0x23 x7, 0x3c x3, 0x4b x2, 0x14 x1, 0x19 x1, 0x2d x1, 0x50 x1"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "screenEffect",
+    "type": "bool",
+    "note": "viewer apocalypseEffect (screen shake/tint)",
+    "seen": "n=25 distinct=2 min=0x0 max=0x1: 0x1 x17, 0x0 x8"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "flashBang",
+    "type": "bool",
+    "note": "Player_SetFlashBang white-out",
+    "seen": "n=25 distinct=2 min=0x0 max=0x1: 0x0 x23, 0x1 x2"
+   }
+  ],
+  "visual": {
+   "kind": "none",
+   "detail": "a screen/rumble effect; objGraphics = glist (Entity_Apocalypse / Apocalypse) but it is an editor marker; treat as invisible"
+  },
+  "transform": "not relevant",
+  "confidence": "confirmed (keys), guess (glist visibility)",
+  "records": 25
+ },
+ "53": {
+  "name": "PCQWorm",
+  "create": "0x000d0450",
+  "create_name": "PCQWorm_Create",
+  "call": "PCQWorm_Create(&pos, &rot, lvl, celglist) cdecl; a computer Bond hacks with the Q-Worm",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "keyCodeNum",
+    "type": "u16",
+    "note": "",
+    "seen": "n=6 distinct=4 min=0x0 max=0x5: 0x1 x2, 0x0 x2, 0x2 x1, 0x5 x1"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "switchChannel",
+    "type": "switch",
+    "note": "set when hacked",
+    "seen": "n=6 distinct=5 min=0x0 max=0x4c: 0x0 x2, 0x48 x1, 0x4c x1, 0x38 x1, 0x34 x1",
+    "channelRole": "out"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "param2",
+    "type": "u8",
+    "note": "",
+    "seen": "n=6 distinct=2 min=0x0 max=0x1: 0x1 x4, 0x0 x2"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "param3",
+    "type": "u8",
+    "note": "",
+    "seen": "n=6 distinct=2 min=0x0 max=0x1: 0x0 x4, 0x1 x2"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "placement glist = the computer"
+  },
+  "transform": "Control_CreateObjEx(pos, rot). rot is Euler radians; for these records only rot.y is ever non-zero (yaw). Engine object matrix = View_RotTransMatrix(rot,pos) 0xd92e0 = for yaw-only RotMatrixY(rot.y): model +z -> (sin y, 0, cos y), i.e. glTF rotation quaternion (0, sin(y/2), 0, cos(y/2)). The placement quat (+0x24) is the INVERSE of this (it equals (0,-sin(y/2),0,cos(y/2))) - do not use it for this type.",
+  "confidence": "confirmed",
+  "records": 6
+ },
+ "210": {
+  "name": "Shooter",
+  "create": "0x00069910",
+  "create_name": "Shooter_Create",
+  "call": "Shooter_Create(&pos, &rot, lvl, celglist) cdecl; Shooter_Update 0x69970 fires once when the channel is set, then deletes itself",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "triggerSwitchChannel",
+    "type": "switch",
+    "note": "-> obj curState",
+    "seen": "n=4 distinct=4 min=0xd max=0xfb: 0xd x1, 0xfb x1, 0x22 x1, 0x4f x1",
+    "channelRole": "in"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "weapon",
+    "type": "enum",
+    "note": "weapon_data variant fired from pos along the matrix dir (straight down for base 0x3b satchel)",
+    "seen": "n=4 distinct=3 min=0x34 max=0x3d: 0x3d x2, 0x36 x1, 0x34 x1"
+   }
+  ],
+  "visual": {
+   "kind": "none",
+   "detail": "objGraphics = glist \"ShootyBangBang\" (an editor marker, probably not meant to be seen); treat as invisible"
+  },
+  "transform": "control_create_object(pos, rot); rot.x tilts the firing direction",
+  "confidence": "confirmed (keys), guess (visibility)",
+  "records": 4
+ },
+ "58": {
+  "name": "Grapple",
+  "create": "0x000b0440",
+  "create_name": "Grapple_Create",
+  "call": "Grapple_Create(&pos, &rot, lvl, celglist) cdecl; no keys",
+  "fields": [],
+  "visual": {
+   "kind": "glist",
+   "detail": "placement glist = grapple point / pulley"
+  },
+  "transform": "control_create_object(pos, rot) -> View_RotTransMatrix(rot): general Euler",
+  "confidence": "confirmed",
+  "records": 56
+ },
+ "224": {
+  "name": "Creature",
+  "create": "0x0002e8c0",
+  "create_name": "Creature_Create",
+  "call": "Creature_Create(&pos, &rot, celglist, lvl) cdecl. NO placements in any level",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "kind",
+    "type": "u16",
+    "note": "0 = generic; 1 = fish (only in cels flagged 0xc023, else deleted)",
+    "seen": "never present"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "param1",
+    "type": "u32",
+    "note": "float",
+    "seen": "never present"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "param2",
+    "type": "u32",
+    "note": "*0.01",
+    "seen": "never present"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "param3",
+    "type": "u8",
+    "note": "",
+    "seen": "never present"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "param4",
+    "type": "u8",
+    "note": "",
+    "seen": "never present"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "placement glist; swims between waypoints"
+  },
+  "transform": "rot via Quat_EulerToQuat",
+  "confidence": "likely",
+  "records": 0
+ },
+ "54": {
+  "name": "Sub",
+  "create": "0x000cef20",
+  "create_name": "Sub_Create",
+  "call": "Sub_Create(&pos, &rot, lvl) cdecl. NO placements in any level",
+  "header": [
+   "+2 path frame count",
+   "+4 duration",
+   "+8 path pointer"
+  ],
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "switchChannel",
+    "type": "switch",
+    "note": "",
+    "seen": "never present"
+   }
+  ],
+  "visual": {
+   "kind": "skin",
+   "detail": "skin 0x05000068 with looping anim script 0x060006d9, plus a cyan light (45)"
+  },
+  "transform": "path follower",
+  "confidence": "likely",
+  "records": 0
+ },
+ "55": {
+  "name": "MiniSub",
+  "create": "0x0009bcd0",
+  "create_name": "MiniSub_Create",
+  "call": "MiniSub_Create(&pos, &rot, celglist, lvl) cdecl. NO placements in any level",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "param0",
+    "type": "u32",
+    "note": "+0x14",
+    "seen": "never present"
+   }
+  ],
+  "visual": {
+   "kind": "skin",
+   "detail": "skin 0x05000074 with looping anim script 0x06000741; glist unused"
+  },
+  "transform": "Control_CreateObjEx(pos, rot)",
+  "confidence": "likely",
+  "records": 0
+ }
+}

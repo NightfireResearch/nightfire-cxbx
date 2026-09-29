@@ -1,0 +1,794 @@
+{
+ "_about": "Placement types of the 'dressing' group (sky, lights, weather, particles, animated props). Decoded from the Xbox default.xbe (parsemap_create_dynamic_objects 0xa4bc0) and checked against the placements in all 32 level bundles. level_tag key k = dword at 0x2c + 4*k. All Create functions are __cdecl with the stack args shown. Object Euler rotation = View_RotTransMatrix 0xd92e0 (control_create_object with quat NULL); see docs/level/objects-dressing.md. Spec: docs/level/objects-dressing.md",
+ "_euler_objects": "View_RotTransMatrix(rot): m0=cz*cy m1=sz m2=-cz*sy | m4=sy*sx-sz*cy*cx m5=cz*cx m6=cy*sx+sz*sy*cx | m8=sy*cx+sz*cy*sx m9=-cz*sx m10=cy*cx-sz*sy*sx | m12..14=pos (row vectors: right, up, dir, pos)",
+ "_euler_sky": "RotMatrix(rot) 0xd6560: m0=cz*cy m4=-sz*cy m8=sy | m1=sz*cx+cz*sy*sx m5=cz*cx-sy*sx*sz m9=-cy*sx | m2=sz*sx-sy*cx*cz m6=cz*sx+sy*cx*sz m10=cy*cx",
+ "_glist_flags": "celglist applyFlagsToObject (entity +0x08), copied into obj effectFlags by most Create functions: 0x1 translucent (alpha list), 0x4 random +-5% scale jitter, 0x8 camera-facing billboard (roll = rot.z), 0x10 hidden, 0x2000 draw in the late (glare) list, 0x8000 never drawn. In View_DrawSky only: 0x2 = centred on the camera, 0x8 = camera rotation.",
+ "50": {
+  "name": "RainBox",
+  "create": "0x000a3a40",
+  "create_name": "RainBox_Create",
+  "call": "RainBox_Create(&pos, &rot, lvl, celglist)",
+  "fields": [],
+  "visual": {
+   "kind": "volume",
+   "detail": "Invisible precipitation volume: world AABB = pos + [glist bbMin, bbMax] (rotation ignored, RainBox_Clip 0xa3ab0). Rain/snow/bubbles (type from the level's Env key 0) only spawn inside rain boxes. Glists are 'Rainbox*'/'Effect_Snow_*' boxes, 0 or 12 tris, flag 0x30/0x10 hidden or no mesh - do not draw the glist."
+  },
+  "transform": "pos only (AABB offset); rot unused",
+  "confidence": "confirmed"
+ },
+ "252": {
+  "name": "Corona",
+  "create": "0x000a3e40",
+  "create_name": "Corona_Create",
+  "call": "Corona_Create(&pos, &rot, lvl, celglist)",
+  "fields": [],
+  "visual": {
+   "kind": "sprite",
+   "detail": "Glist is a 2-tri glow quad (corona_small, corona1, Corona_Glow2, Window_corona...) with flags 0x2d/0x229 = translucent + billboard (+0x4 jitter). Drawn camera-facing at pos with the glist's own texture, alpha fades in 16/frame while the camera has line of sight (Corona_Update 0xa3eb0), drawn in the late glare list. Export: the glist quad as a billboard (track-to-camera), additive/alpha material."
+  },
+  "transform": "pos; rot ignored when billboarded (only rot.z roll if nonzero)",
+  "confidence": "confirmed"
+ },
+ "59": {
+  "name": "DynamicObject",
+  "create": "0x000a4000",
+  "create_name": "DynamicObject_Create",
+  "call": "DynamicObject_Create(&pos, &rot, lvl, celglist)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "appearSwitch",
+    "type": "switch",
+    "note": "u16. Nonzero: object starts hidden (effectFlags |= 0x30) until switch_channels[k0] is set, then its glist flags are restored. Seen 0,9..140",
+    "channelRole": "in"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "disappearSwitch",
+    "type": "switch",
+    "note": "u16. When set: k3==0 -> object deleted; k3!=0 -> hidden while set, shown while clear. Seen 0,1,43..140",
+    "channelRole": "in"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "fadeDistance",
+    "type": "u32",
+    "note": "s16. Nonzero: alpha = clamp((dist/k2 - 0.5)*2)*255 when the camera is closer than k2 (fades out as you approach; used by volumetric light shafts). Seen 0,9,13"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "toggleMode",
+    "type": "bool",
+    "note": "byte. See key 1. Seen 0,1"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "Draws the placement glist (CONSOLE_Camera_*, OBJECT_RopeBarrier, endleveldoor, pallet stacks, *_volumetric light shafts (flags 0x221 translucent), WallHug blockers (flag 0x10 hidden)). Initially hidden when key 0 != 0."
+  },
+  "transform": "pos + rot (object Euler)",
+  "confidence": "confirmed"
+ },
+ "42": {
+  "name": "SkyObject",
+  "create": "0x000d9c60",
+  "create_name": "View_AddSkyObj",
+  "call": "View_AddSkyObj(u16 k0, celglist, &pos, &rot, NULL, byte k1, u16 k2, u16 k3, byte k4)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "skySlot",
+    "type": "u32",
+    "note": "u16 slot 0..20 (>=21 ignored). A later placement with the same slot (and same key 1) replaces the earlier one. Seen 0..18"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "isLightningFlash",
+    "type": "bool",
+    "note": "byte. 0: normal sky glist. 1: glist is the flash image, drawn only during random lightning flashes (also drives Lightning bolts and thunder SFX). Seen 0,1 (Thunderhead)"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "flashIntervalMax",
+    "type": "u32",
+    "note": "u16 seconds; next flash after Rand(k2*60) frames. Only with k1=1. Seen 24,30"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "flashDuration",
+    "type": "u32",
+    "note": "u16 frames of flicker per flash. Seen 5,10"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "drawPass",
+    "type": "enum",
+    "note": "byte. 1 = drawn first, before all objects (distant backdrop: mountains, towers); 0 = drawn after the opaque object list (skybox, moon, skyline). Seen 0,1"
+   }
+  ],
+  "visual": {
+   "kind": "sky",
+   "detail": "View_DrawSky 0xd9d60, unlit, no fog. Glist flag 0x2 set (skyboxes, moon, starfield: flags 0x222/0x22/0x23): drawn centred on the CAMERA position - place at world origin / follow camera. Flag 0x2 clear (mountains, Sky_Tower*, skyline buildings: 0x20/0x0): drawn at the placement pos (mostly 0,0,0 with the mesh modelled in world coordinates). Rotation = RotMatrix(rot) (sky Euler, NOT the object Euler) unless glist flag 0x8 (camera rotation). SpaceStationD (0x0700001b) spins the sky about X at 1/1440 rad per frame."
+  },
+  "transform": "rot via RotMatrix 0xd6560; pos only when glist flag 0x2 is clear; the camera position otherwise",
+  "confidence": "confirmed"
+ },
+ "242": {
+  "name": "Emitter",
+  "create": "0x00068470",
+  "create_name": "Emitter_CreatePlist",
+  "call": "mtx = Quat_QuatToMat(quat); mtx.pos = pos; Emitter_CreatePlist(&mtx, lvl) -> Emitter_Create 0x68290(hash k0, &pos, &up(mtx row1), duration, k2, k3, k4, k5/60)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "particleConfig",
+    "type": "hash",
+    "refers": "particle config 0x0c",
+    "note": "Always 0x0c000004 in the data (orange sparks). Configs come from block 0x30 of the shared FX pack 0100002e (in every bundle)."
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "duration",
+    "type": "u32",
+    "note": "0 = emit forever; 1 = one burst (each particle once); N = emit for N/60 s. Always 0 in the data"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "enableSwitch",
+    "type": "switch",
+    "note": "Nonzero: emits only while switch_channels[k2] is set. Seen 0,78..201",
+    "channelRole": "in"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "disableSwitch",
+    "type": "switch",
+    "note": "Nonzero: emits only while switch_channels[k3] is clear. Always 0",
+    "channelRole": "in"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "aliveSwitchOut",
+    "type": "switch",
+    "note": "Set to 1 each frame while any particle is alive. Seen 0,141",
+    "channelRole": "out"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "pulsePeriod",
+    "type": "u32",
+    "note": "k5/60 = P seconds; nonzero: emits for P/2 s, pauses P s, repeat. Seen 60..600"
+   }
+  ],
+  "visual": {
+   "kind": "particles",
+   "detail": "Placement glist 'ParticleEmmiter' is NOT drawn. Point-sprite particle system at pos; emission axis = up row of the placement QUATERNION (x,y,z,w) - e.g. q=(1,0,0,0) emits straight down. Config 0x0c000004: 20 particles max, 4 new per frame, texture 0x03000082, size 0.173, life 0.667 s (+-rand 0.017), speed 1+-2, pitch 0+-pi/2 (hemisphere about the axis), yaw random, gravity 0.612*9.8, colour (255,151,0,a255) -> (0,0,0,255) over life."
+  },
+  "transform": "pos + quat (rot unused)",
+  "confidence": "confirmed"
+ },
+ "33": {
+  "name": "Ripples",
+  "create": "0x000ce200",
+  "create_name": "Ripples_Create",
+  "call": "Ripples_Create(&pos, &rot, lvl, celglist)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "radius",
+    "type": "u32",
+    "note": "s16 units; rings spawn at pos + uniform(-k0..k0) in x and z. Seen 1..7 (0 with k1 0 -> 1)"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "meanInterval",
+    "type": "u32",
+    "note": "s16 frames at 60 Hz; each frame a ring spawns with probability 1/k1. Seen 1,2,10,30 (both 0 -> 30)"
+   }
+  ],
+  "visual": {
+   "kind": "particles",
+   "detail": "Invisible generator (glist 'RIPPLE_GEN', 0 tris). Spawns expanding water-ring gas objects using entity 0x02000129 'watereffect' at pos.y, scale 0.05..0.1, grey 127, fading. Export as an empty/marker or a small ring-particle system on the water surface."
+  },
+  "transform": "pos only",
+  "confidence": "confirmed"
+ },
+ "34": {
+  "name": "Ladder",
+  "create": "0x000aed30",
+  "create_name": "Ladder_Create",
+  "call": "Ladder_Create(&pos, &rot, lvl, celglist)",
+  "fields": [
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "unknown_2",
+    "type": "u32",
+    "note": "u16 copied to ladder data +2. Always 0 in the data. Key 0 is never read (seen 0,2)."
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "Draws the placement glist (Ladder, Ladder_small, OBJECT_Ladder...; effectFlags not copied from the glist, so drawn opaque). Some ladder glists have 0 tris (the rungs are in the static world); the glist bbox is the climb volume (Controls_StraddleTest, PlayerCollLadder 0xae930)."
+  },
+  "transform": "pos + rot (object Euler)",
+  "confidence": "confirmed"
+ },
+ "216": {
+  "name": "RigidBody",
+  "create": "0x000c0990",
+  "create_name": "RB_Create",
+  "call": "RB_Create(&pos, &rot, celglist, lvl)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "mass",
+    "type": "u32",
+    "note": "0 -> 3. Seen 1,2,3,8,600"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "unused",
+    "type": "u32",
+    "note": "never read by RB_Create; always 0"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "mode",
+    "type": "enum",
+    "note": "RB_Init: 0 = free body with gravity; nonzero = hanging/pendulum body (no gravity, swings about the object origin); 3 = stiffer. Always 1 in the data"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "hasLight",
+    "type": "bool",
+    "note": "byte; mode!=0 bodies create a psiLight that follows them - psiLight_Create returns 0 on Xbox, so no effect there. Seen 0,1"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "collisionSfx",
+    "type": "u32",
+    "note": "SFX id, 0 -> 0xffff none. Always 65535"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "Draws the placement glist (rb_redlamp, rb_greenlamp, kitchen-panswing*, bucketswing, OBJECT_WellBucket, concrete blocks). Hanging lamps/pans are modelled below their origin (bbox max y = 0): the origin is the pivot. Rest pose = placement transform."
+  },
+  "transform": "pos + rot (object Euler)",
+  "confidence": "confirmed"
+ },
+ "223": {
+  "name": "Env",
+  "create": "0x00068a30",
+  "create_name": "Env_Create",
+  "call": "Env_Create(&pos, &rot, celglist, lvl)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "dropType",
+    "type": "enum",
+    "note": "byte -> InitDrops: 0 snow (texture 0x03000045 point sprites, 4096 flakes), 1 rain (entity 0x02000290 'Raindrop' meshes, 64 drops, 128 in Tower A-C), 2 bubbles rising (texture 0x03000087, 2048), 255 none. Also: 0 enables breath puffs. Seen 0,1,2,255"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "unknown_40",
+    "type": "u32",
+    "note": "byte, stored only when k0==0. Seen 0,1"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "unknown_42",
+    "type": "u32",
+    "note": "byte. Seen 4,10"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "windStrength",
+    "type": "u32",
+    "note": "*0.1 -> wind speed (gusting, Env_Update); wind direction = forward row of RotMatrix(rot). Seen 0,6,10"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "unknown_3c",
+    "type": "u32",
+    "note": "byte; always 0"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "unknown_3d",
+    "type": "u32",
+    "note": "byte; always 0"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "unknown_3e",
+    "type": "u32",
+    "note": "byte; always 0"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "unknown_f30",
+    "type": "u32",
+    "note": "-> float; always 0"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "unknown_f34",
+    "type": "u32",
+    "note": "-> float; always 0"
+   },
+   {
+    "key": 9,
+    "offset": "0x50",
+    "name": "hasSun",
+    "type": "bool",
+    "note": "Seen 0,1 (PowerStation A1/A2)"
+   },
+   {
+    "key": 10,
+    "offset": "0x54",
+    "name": "sunAzimuthDeg",
+    "type": "u32",
+    "note": "Seen 182,302"
+   },
+   {
+    "key": 11,
+    "offset": "0x58",
+    "name": "sunElevationDeg",
+    "type": "u32",
+    "note": "Seen 25,19. SunVector = 1000*(sin a*cos e, -sin e, cos a*cos e) (a=k10 deg, e=k11 deg) points FROM the sun; the sun is at camera - SunVector (lens flare, HUD_UpdateLensFlarePane)"
+   }
+  ],
+  "visual": {
+   "kind": "none",
+   "detail": "Invisible marker (Rain_generator, SNOW_gen, Bubble_gen, Environment, Weather; hidden flags). Attaches an environment record to the room (cel) containing pos (first one per cel wins); the LAST Env created sets the level-wide drop type. Export: level properties (precipitation type, wind vector, optional sun = glTF directional light along SunVector)."
+  },
+  "transform": "pos selects the cel; rot = wind direction (RotMatrix)",
+  "confidence": "likely"
+ },
+ "243": {
+  "name": "EnvTree",
+  "create": "0x00068fc0",
+  "create_name": "Env_Tree_Create",
+  "call": "Env_Tree_Create(&pos, &rot, lvl)  (no glist)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "skin",
+    "type": "hash",
+    "refers": "skin 0x05",
+    "note": "AnimObjectNew(obj, k0). Always 0x05000003 (tree skin, present in bundles 07000001-04)"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "animScript",
+    "type": "hash",
+    "refers": "script 0x06",
+    "note": "AnimScriptAdd; 0x0600008c is swapped for 0x0600008d with 50% chance; looped with a random start frame (except in level 0x07000043). Always 0x0600008c"
+   }
+  ],
+  "visual": {
+   "kind": "skin",
+   "detail": "Animated (swaying) tree: skin 0x05000003 posed by script 0x0600008c/8d. The placement glist 'Tree' is NOT used. Export as the skinned model at pos/rot (bind pose or first frame)."
+  },
+  "transform": "pos + rot (object Euler)",
+  "confidence": "confirmed"
+ },
+ "113": {
+  "name": "Rotor",
+  "create": "0x000a88d0",
+  "create_name": "rotor_init",
+  "call": "rotor_init(&pos, &rot, celglist, 0, byte k0, byte k1)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "unused",
+    "type": "u32",
+    "note": "passed as arg 4 but never read. Seen 0"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "switchChannel",
+    "type": "switch",
+    "note": "byte; nonzero: spins only while switch_channels[k1] == 0 (polarity byte never set). Never present in the data -> always spins",
+    "channelRole": "in"
+   }
+  ],
+  "visual": {
+   "kind": "animated",
+   "detail": "Draws the placement glist (fans, office_N_hologram, rotating blades). Spin: every frame rotation += rot * (60/fps), i.e. the Euler rates are rot radians per 1/60 s (rot.y 0.035 -> 2.1 rad/s yaw; fanblades rot.x 0.349 -> 20.9 rad/s). rot is also the initial orientation."
+  },
+  "transform": "pos + rot (object Euler, rot = start angles AND angular velocity per 1/60 s)",
+  "confidence": "confirmed"
+ },
+ "44": {
+  "name": "Lightning",
+  "create": "0x000a3820",
+  "create_name": "Lightning_Create",
+  "call": "Lightning_Create(&pos, &rot, lvl)  (no glist)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "unknown_38",
+    "type": "u32",
+    "note": "stored at data+0x38, not read by update. Always 0"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "group",
+    "type": "u32",
+    "note": "u16. Points with the same group are joined: a new point pairs with an earlier one of the same group and owns an 8-segment bolt between them. Seen 1,2"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "unknown_3e",
+    "type": "u32",
+    "note": "u16; always 0"
+   }
+  ],
+  "visual": {
+   "kind": "effect",
+   "detail": "Invisible bolt end point (glist 'Lightning1' not drawn). During sky lightning flashes (SkyObject k1=1) a jagged bolt of entity 0x0200032c 'Lightning' is drawn between paired points. Only in HendersonA (0x07000001). Export: empties, optionally a polyline between group members."
+  },
+  "transform": "pos only",
+  "confidence": "likely"
+ },
+ "62": {
+  "name": "Wire",
+  "create": "0x000b03b0",
+  "create_name": "Wire_Create",
+  "call": "rot.z = -rot.z; Wire_Create(&pos, &rot, lvl, celglist)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "wireId",
+    "type": "u32",
+    "note": "u16 at data+2. Seen 1,2,3,10..13"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "wireType",
+    "type": "enum",
+    "note": "u16 at data+0: 0 hand-over-hand wire, 1 inactive, 2 zipline (slide down). Seen 0,2"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "unknown_4",
+    "type": "u32",
+    "note": "u16; always 0"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "onWireSwitch",
+    "type": "switch",
+    "note": "u16; set while the player is on the wire (Player_Wire 0xafb50). Always 0",
+    "channelRole": "out"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "Draws the placement glist (Wire, Wire_Cable, Zipline*: 8-60 tris). The usable line runs through the object centre along direction (spherical: yaw rot.y+pi/2, pitch rot.z), half length = object radius - 2."
+  },
+  "transform": "pos + (rot.x, rot.y, -rot.z) with the object Euler - Z IS NEGATED",
+  "confidence": "confirmed"
+ },
+ "78": {
+  "name": "Light",
+  "create": "0x0006d530",
+  "create_name": "Light_Create",
+  "call": "Light_Create(&pos, r=k1, g=k2, b=k3, radius=(float)(u32)k0, switch=k4, -1, 0, 1.0, k5, k6, k7, k8)  (no glist)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "radius",
+    "type": "u32",
+    "note": "range in units (m): affects objects within radius (+ object radius); d3dSetLight gets 1/radius. Seen 6,8"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "red",
+    "type": "u32",
+    "note": "byte 0..255 (d3d colour = byte/256). Seen 127,255"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "green",
+    "type": "u32",
+    "note": "Seen 121,127"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "blue",
+    "type": "u32",
+    "note": "Seen 103,127"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "switchChannel",
+    "type": "switch",
+    "note": "u16; nonzero: on/off follows switch_channels[k4]. Always 0 (always on)",
+    "channelRole": "in"
+   },
+   {
+    "key": 5,
+    "offset": "0x40",
+    "name": "flickerDuration",
+    "type": "u32",
+    "note": "u16 frames; 0 = no flicker. Always 0"
+   },
+   {
+    "key": 6,
+    "offset": "0x44",
+    "name": "flickerGap",
+    "type": "u32",
+    "note": "u16 frames steady between flickers (random k6/2..). Always 0"
+   },
+   {
+    "key": 7,
+    "offset": "0x48",
+    "name": "flickerMask",
+    "type": "u32",
+    "note": "u16; on when (frame & mask) == mask during a flicker. Always 1"
+   },
+   {
+    "key": 8,
+    "offset": "0x4c",
+    "name": "flickerSfx",
+    "type": "u32",
+    "note": "SFX played at each flicker start; 0 -> 0xffff none. 65535 or absent"
+   }
+  ],
+  "visual": {
+   "kind": "light",
+   "detail": "Point light (type 0) -> KHR_lights_punctual point: color = (k1,k2,k3)/255, range = k0. Placement glist 'oLightPoint' is only an editor marker (not drawn). Only 5 placements (HendersonA). Most of a level's lights are the map's block 0x26 'ambient radiators' (same light_tag, see the doc). In game these lights only light objects/characters whose effectFlags has 0x80; the world mesh is prelit."
+  },
+  "transform": "pos only",
+  "confidence": "confirmed"
+ },
+ "63": {
+  "name": "CreepWall",
+  "create": "0x000af3c0",
+  "create_name": "CreepWall_Create",
+  "call": "CreepWall_Create(&pos, &rot, lvl, celglist)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "unknown_0",
+    "type": "u32",
+    "note": "u16 data+0. Seen 0,2"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "unknown_2",
+    "type": "u32",
+    "note": "u16 data+2. Seen 1,3"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "unknown_4",
+    "type": "u32",
+    "note": "u16 data+4. Always 0"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "unknown_6",
+    "type": "u32",
+    "note": "u16 data+6. Always 113 (same channel as the WallHug_Blocker DynamicObjects' key 1 - probably a switch)"
+   }
+  ],
+  "visual": {
+   "kind": "volume",
+   "detail": "Invisible wall-hug (ledge creep) strip: glist 'Wall Hug *' has 0 tris, flags 0x50 (hidden), flat bbox (zero depth). The creep line runs through the object centre along local X (yaw rot.y+pi/2), half length = object radius (Player_CollCreepWall 0xaeda0)."
+  },
+  "transform": "pos + rot (object Euler)",
+  "confidence": "likely"
+ },
+ "43": {
+  "name": "LeafGen",
+  "create": "0x000ce180",
+  "create_name": "LeafGen_Create",
+  "call": "LeafGen_Create(&pos, &rot, lvl, celglist)",
+  "fields": [],
+  "visual": {
+   "kind": "particles",
+   "detail": "Invisible generator (glist 'Leaf_emmit', 0 tris, flags 0x30). About every 0.5 s spawns one falling leaf (entity 0x020002ca 'Leaf') at a random point in a cube of half-size = object radius around pos, drifting along rot.y (sin, cos)."
+  },
+  "transform": "pos; rot.y = drift direction",
+  "confidence": "confirmed"
+ },
+ "212": {
+  "name": "Cloud",
+  "create": "0x000a36f0",
+  "create_name": "Cloud_Create",
+  "call": "Cloud_Create(&pos, &rot, lvl, celglist)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "heightAboveCamera",
+    "type": "s32",
+    "note": "int; layer y = camera y + k0 (drawn in the sky pass), player y + k0 in update. Seen 8"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "scrollX",
+    "type": "u32",
+    "note": "*0.001 units per 1/60 s. Seen 15"
+   },
+   {
+    "key": 2,
+    "offset": "0x34",
+    "name": "scrollZ",
+    "type": "u32",
+    "note": "*0.001 units per 1/60 s. Seen 2"
+   },
+   {
+    "key": 3,
+    "offset": "0x38",
+    "name": "wrapPeriod",
+    "type": "s32",
+    "note": "int; x/z offsets wrap modulo k3 units. Seen 100"
+   },
+   {
+    "key": 4,
+    "offset": "0x3c",
+    "name": "skySlot",
+    "type": "u32",
+    "note": "sky slot (registered as a sky object, draw pass 1). Seen 3"
+   }
+  ],
+  "visual": {
+   "kind": "sky",
+   "detail": "Cloud layer plane (glist 'CloudLayerXR9', 400x400, 32 tris) that follows the player: x/z = player + scrolling offset, y = camera y + k0; drawn with the object's rot and scale in the sky pass. Only in CastleCourtyard (0x07000006). Export: the glist at (pos.x, typical ground height + k0, pos.z) or at the origin + k0."
+  },
+  "transform": "rot used; pos replaced at runtime (player-relative)",
+  "confidence": "confirmed"
+ },
+ "227": {
+  "name": "Flicker",
+  "create": "0x000cda40",
+  "create_name": "Flicker_Create",
+  "call": "Flicker_Create(&pos, &rot, lvl, celglist)",
+  "fields": [
+   {
+    "key": 0,
+    "offset": "0x2c",
+    "name": "smokeEnable",
+    "type": "u32",
+    "note": "u16; nonzero: when the light is out, emits spark/smoke gas (entities 0x020002d1..d5 Sparkler_1..5) along the up vector. Seen 0xffffffff"
+   },
+   {
+    "key": 1,
+    "offset": "0x30",
+    "name": "darkSwitchOut",
+    "type": "switch",
+    "note": "set to 1 while the light is out, 0 while lit. Seen 126",
+    "channelRole": "out"
+   }
+  ],
+  "visual": {
+   "kind": "glist",
+   "detail": "Draws the placement glist tinted by a psiLight's state. psiLight_Create returns 0 on Xbox, so on Xbox it is permanently lit (tint 255, no smoke). Only one placement (SnowBlind 0x07000029, glist 'Fuse boxs FX', 0 tris) - nothing visible."
+  },
+  "transform": "pos + rot (object Euler)",
+  "confidence": "confirmed"
+ },
+ "213": {
+  "name": "OneSided",
+  "create": "0x000db3e0",
+  "create_name": "OneSided_Create",
+  "call": "OneSided_Create(&pos, &rot, celglist)",
+  "fields": [],
+  "visual": {
+   "kind": "glist",
+   "detail": "Draws the placement glist only while the camera is on its back side: hidden when dot(dir row, pos - camera) < 0 (OneSided_Update 0xdb430). Occurs in no level."
+  },
+  "transform": "pos + rot (object Euler)",
+  "confidence": "confirmed"
+ },
+ "255": {
+  "name": "unknown255",
+  "create": null,
+  "create_name": null,
+  "call": "none: 255 > 254 -> the switch's range check jumps to the exit (0xa5c3f)",
+  "fields": [],
+  "visual": {
+   "kind": "none",
+   "detail": "No-op. 7 placements, all at pos (0,0,0), no keys, glists 'Unnamed' (empty, inverted 9999999 bbox; 0700000c/0d, 07000001 pack 010000a2), 'A1blockingpolys' (8 tris) and Elevator_Door_Slide_A/B (07000014) - unused editor leftovers. Skip."
+  },
+  "transform": "n/a",
+  "confidence": "confirmed"
+ },
+ "246": {
+  "name": "unknown246",
+  "create": null,
+  "create_name": null,
+  "call": "none: jump-table index 72 = default exit",
+  "fields": [],
+  "visual": {
+   "kind": "none",
+   "detail": "No-op. 1 placement (HendersonA pack 010000f3, origin): glist 0x0200063f 'AI_ViewCone' (0 tris, 40x2x20 bbox) - an editor gizmo. Skip."
+  },
+  "transform": "n/a",
+  "confidence": "confirmed"
+ },
+ "247": {
+  "name": "unknown247",
+  "create": null,
+  "create_name": null,
+  "call": "none: jump-table index 72 = default exit",
+  "fields": [],
+  "visual": {
+   "kind": "none",
+   "detail": "No-op. 1 placement (HendersonA pack 010000f3, origin): glist 0x02000640 'AI_ViewDist' (0 tris) - editor gizmo. Skip."
+  },
+  "transform": "n/a",
+  "confidence": "confirmed"
+ },
+ "221": {
+  "name": "unknown221",
+  "create": null,
+  "create_name": null,
+  "call": "none: jump-table index 72 = default exit",
+  "fields": [],
+  "visual": {
+   "kind": "none",
+   "detail": "No-op. 1 placement (HendersonA pack 01000166, origin, no keys): glist 0x02000634 'Drone' (124 tris) - template leftover. Skip."
+  },
+  "transform": "n/a",
+  "confidence": "confirmed"
+ }
+}

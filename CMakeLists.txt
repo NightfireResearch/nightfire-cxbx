@@ -87,12 +87,14 @@ add_library(actioninject SHARED
   src/dllmain.cpp
   src/inject_action.cpp
   src/inject.h
+  src/common/xbeOriginal.cpp
   src/action/game.cpp
   src/action/main.cpp
   src/common/launchInfo.cpp
   src/action/gfx/Sprite.cpp
   src/action/engine/AINetwork.cpp
   src/action/engine/Anim.cpp
+  src/action/devtools/AnimShadow.cpp
   src/action/engine/Camera.cpp
   src/action/engine/Collide.cpp
   src/action/engine/EDL.cpp

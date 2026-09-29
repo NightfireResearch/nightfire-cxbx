@@ -97,7 +97,9 @@ def resolve(spec):
     if dt is None:
         raise Exception("unknown type '%s'" % spec)
     for _ in range(stars):
-        dt = PointerDataType(dt, 4, dtm)
+        # Default-sized, not PointerDataType(dt, 4, dtm): a pointer given an explicit size is named "T *32",
+        # which is what the function export then reports as the parameter's type.
+        dt = PointerDataType(dt, dtm)
     for n in reversed(arrays):
         dt = ArrayDataType(dt, n, dt.getLength(), dtm)
     return dt

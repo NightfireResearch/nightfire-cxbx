@@ -1,6 +1,7 @@
 #include "inject.h"
 #include "common/xbeAbi.h"       // the generated table checks each patch against the binary with it
 #include "common/xbeOverload.h"  // and selects overloads with it
+#include "common/xbeOriginal.h"  // keeps what each jump overwrote, for shadow tests
 
 #include "action/math/math.h"
 #include "action/game.h"
@@ -23,6 +24,7 @@
 #include "action/game/obj/Switch.h"
 #include "action/game/obj/ScriptPlayer.h"
 #include "action/game/mp/multiplayer.h"
+#include "action/devtools/AnimShadow.h"
 
 #include "common/launchInfo.h"
 
@@ -47,6 +49,7 @@ void WriteJmpTo(size_t from, size_t to)
 {
   size_t relative = to - (from + 5);
 
+  XbeOriginal_Record((unsigned)from);
   WriteByte(from, 0xE9);
   WriteMemory(from + 1, &relative, sizeof(relative));
 }
@@ -174,5 +177,8 @@ void Inject()
   // This has the limitation that the DLL must be injected before the constructor is called otherwise it will have no effect
   void *ptrCtorWeaponDefinitionTable = (void *)&ctor_WeaponDefinitionTable;
   WriteMemory(0x0016313c, &ptrCtorWeaponDefinitionTable, 4);
+
+  // Test harnesses that stand in front of patched functions (off unless settings.ini asks for them)
+  AnimShadow_Install();
 
 }
