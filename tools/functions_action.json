@@ -1230,17 +1230,17 @@
         "address": "0x00017270",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "void",
+        "return_type": "sAnimScript_tag *",
         "param_types": [
-            "int",
-            "undefined4",
+            "obj_tag *",
+            "HASHCODE",
             "float"
         ],
-        "prototype_string": "void __cdecl AnimScriptAddSpeed(int param_1, undefined4 param_2, float param_3)",
+        "prototype_string": "sAnimScript_tag * __cdecl AnimScriptAddSpeed(obj_tag * obj, HASHCODE hashcode, float speed)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[float param_3@Stack[0xc]:4]"
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[HASHCODE hashcode@Stack[0x8]:4]",
+            "[float speed@Stack[0xc]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -1248,12 +1248,18 @@
     {
         "name": "AnimScriptAddReverse",
         "address": "0x000172a0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined AnimScriptAddReverse()",
-        "parameters": [],
+        "return_type": "sAnimScript_tag *",
+        "param_types": [
+            "obj_tag *",
+            "HASHCODE"
+        ],
+        "prototype_string": "sAnimScript_tag * __cdecl AnimScriptAddReverse(obj_tag * obj, HASHCODE hashcode)",
+        "parameters": [
+            "[obj_tag * obj@Stack[0x4]:4]",
+            "[HASHCODE hashcode@Stack[0x8]:4]"
+        ],
         "is_thunk": false,
         "namespace": "Global"
     },
@@ -35654,7 +35660,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000b70b0",
+        "name": "Player_ScopeOff",
         "address": "0x000b70b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -35662,7 +35668,7 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_000b70b0(obj_tag * param_1)",
+        "prototype_string": "void __cdecl Player_ScopeOff(obj_tag * param_1)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]"
         ],
@@ -35670,7 +35676,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000b7100",
+        "name": "Player_ResetZoom",
         "address": "0x000b7100",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -35678,7 +35684,7 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_000b7100(obj_tag * param_1)",
+        "prototype_string": "void __cdecl Player_ResetZoom(obj_tag * param_1)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]"
         ],
@@ -35692,11 +35698,11 @@
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "float"
+            "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Player_Zoom(float param_1)",
+        "prototype_string": "void __cdecl Player_Zoom(obj_tag * player)",
         "parameters": [
-            "[float param_1@Stack[0x4]:4]"
+            "[obj_tag * player@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"

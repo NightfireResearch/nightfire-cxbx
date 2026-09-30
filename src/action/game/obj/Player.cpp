@@ -525,32 +525,24 @@ void Player_WeaponChange(obj_tag *param_1, char param_2, char param_3);
 void Player_AutoAim(obj_tag *param_1);
 // AUTOGEN
 void Player_ClearAimInertia(obj_tag *param_1);
+// AnimScriptAdd, with the script's playback speed set (sAnimScript_tag +0x94) when it starts.
 // AUTOGEN
-void AnimScriptAddSpeed(int param_1, undefined4 param_2, float param_3);
+sAnimScript_tag* AnimScriptAddSpeed(obj_tag* obj, HASHCODE hashcode, float speed);
+// AnimScriptAdd, played backwards: raises the "reverse" flag at 0x001d7828 and tail-calls AnimScriptAdd.
+// AUTOGEN
+sAnimScript_tag* AnimScriptAddReverse(obj_tag* obj, HASHCODE hashcode);
 // Leaving the scope: target zoom back to 1x, view auto-levelling suppressed (aimAutoLevelState = 1), walk
-// animation reset, zoom motor sound stopped. Not a function on PS2 (inlined in Player_Weapon); a good name
-// would be Player_ScopeOff.
+// animation reset, zoom motor sound stopped. Not a function on PS2 (inlined in Player_Weapon), so the name is
+// invented.
 // AUTOGEN
-void FUN_000b70b0(obj_tag *param_1);
+void Player_ScopeOff(obj_tag *param_1);
 // Sets the zoom target and limit for the CURRENT weapon: 1x, or the zoom remembered for this weapon base when
 // the player's "remember zoom" option is on and the scope is up, clamped to weapon_data[].maxZoom. Also
-// inlined on PS2; a good name would be Player_ResetZoom.
+// inlined on PS2; the name is invented.
 // AUTOGEN
-void FUN_000b7100(obj_tag *param_1);
-
-// Ghidra's prototype for Player_Zoom takes a float, but the original pushes the obj_tag* (ESI) and the
-// function reads obj+0xb8/obj+0xbc from it - an AUTOGEN with Ghidra's type would convert the pointer to a
-// float. Called by address until the prototype is fixed in Ghidra; then this can become an AUTOGEN.
-static void PlayerZoom(obj_tag *player) {
-    reinterpret_cast<void (__cdecl *)(obj_tag *)>(0x000b7190)(player);
-}
-
-// AnimScriptAddReverse (0x000172a0) has no prototype in Ghidra ("undefined AnimScriptAddReverse()"). It is
-// `MOV byte [0x001d7828],1; JMP AnimScriptAdd` - it raises the "play backwards" flag and tail-calls
-// AnimScriptAdd(obj, script), so it takes AnimScriptAdd's two cdecl arguments. Its return value is unused here.
-static void AnimScriptAddReverse(obj_tag *obj, HASHCODE script) {
-    reinterpret_cast<void (__cdecl *)(obj_tag *, HASHCODE)>(0x000172a0)(obj, script);
-}
+void Player_ResetZoom(obj_tag *param_1);
+// AUTOGEN
+void Player_Zoom(obj_tag* player);
 
 static_assert(offsetof(weapon_definition_tag, offsetToNextAltFireVariant) == 0x05, "offsetToNextAltFireVariant");
 static_assert(offsetof(weapon_definition_tag, unk15) == 0x2e, "unk15");
@@ -646,7 +638,7 @@ void Player_Weapon(obj_tag *player) {
                 // Just asked for the scope: hold the bit off and play the bring-to-eye animation first
                 animNow->animFlags &= ~ANIMFLAG_SCOPED;
                 blData->weaponObject->curState = WEAPONSTATE_SCOPE_RAISE;
-                AnimScriptAddSpeed((int)blData->weaponObject, weapon_data[weaponId].someAnimHC2, 1.25f);
+                AnimScriptAddSpeed(blData->weaponObject, weapon_data[weaponId].someAnimHC2, 1.25f);
             }
             else if (blData->weaponObject->curState == WEAPONSTATE_IDLE) {
                 // Lowering. The upgraded camera drops back to the plain camera as it comes down.
@@ -657,7 +649,7 @@ void Player_Weapon(obj_tag *player) {
                     weapon = &weapon_data[player->animState->currentWeaponId];
                 }
                 if (weapon->someAnimHC != 0) {
-                    AnimScriptAddSpeed((int)blData->weaponObject, weapon->someAnimHC, 1.25f);
+                    AnimScriptAddSpeed(blData->weaponObject, weapon->someAnimHC, 1.25f);
                 }
                 else {
                     AnimScriptAddReverse(blData->weaponObject, weapon->someAnimHC2);
@@ -672,12 +664,12 @@ void Player_Weapon(obj_tag *player) {
     if ((animFlags & ANIMFLAG_SCOPED) != ((animFlags >> 1) & 1)) {
         anim2->animFlags = animFlags ^ ANIMFLAG_SCOPE_APPLIED;
         if (animFlags & ANIMFLAG_SCOPED) {
-            FUN_000b7100(player);
+            Player_ResetZoom(player);
             blData->aimAutoLevelState = 0;
             Player_ClearAimInertia(player); // inlined in the original
         }
         else {
-            FUN_000b70b0(player);
+            Player_ScopeOff(player);
         }
     }
 
@@ -696,7 +688,7 @@ void Player_Weapon(obj_tag *player) {
             short altWeapon = (short)anim3->currentWeaponId + (short)(signed char)weapon->offsetToNextAltFireVariant;
             if (Player_WeaponHasAmmo(blData, altWeapon)) {
                 player->animState->switchingToWeaponId = (char)altWeapon;
-                FUN_000b7100(player);
+                Player_ResetZoom(player);
             }
         }
         else if ((char)weapon->unk15 != 1) {
@@ -735,7 +727,7 @@ void Player_Weapon(obj_tag *player) {
         Player_WeaponChange(player, -1, changeMode);
     }
 
-    PlayerZoom(player);
+    Player_Zoom(player);
     Player_AutoAim(player);
 }
 
