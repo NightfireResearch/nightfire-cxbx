@@ -60,10 +60,12 @@ typedef struct BOT_vars_t {
     BOT_goal_t goals[2];            // 0x000
     BOT_stats_t stats;              // 0x078 - a copy of the bot's stats
     uchar _pad86[2];
-    uchar players[10][0x10];        // 0x088 - per player: last seen alive, distance², facing, flags (FUN_0001a660)
+    uchar players[10][0x10];        // 0x088 - per player: last seen alive, distanceï¿½, facing, flags (FUN_0001a660)
     _VECTOR opponentLastPos;        // 0x128
-    uchar weapons[114][0xc];        // 0x134 - per weapon: sqrt(range), rounds in clip, held (114 by the offsets around it;
-                                    //         the review counted 83 in use)
+    uchar weapons[114][0xc];        // 0x134 - per weapon id: sqrt(range), rounds in clip, held. One slot per id
+                                    //         (NUM_WEAPONS), but the bot code only walks ids 0-82 (BOTWEAP_CheckWeaponsLoaded,
+                                    //         BOTWEAP_listHeldLoadedWeapons stop at 0x53): 83 and up are gadgets
+                                    //         (camera, decryptor, Q-worm, ...) and vehicle / boss weapons
     short reserveAmmo[33];          // 0x68c
     uchar _pad6ce[2];
     obj_tag *attackers[16];         // 0x6d0 - cursor at attackerCursor
