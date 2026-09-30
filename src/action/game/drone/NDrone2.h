@@ -5,6 +5,8 @@
 #include "Drone.h"
 
 // From PS2, we can see a table of function pointers with this name, and NDrone2_ProcessStateMachine just runs one according to the drone's current state
+// Each name is that of the function in its slot of the PS2 table (NDrone2_StateFuncs at 0x0029c120; the names are the
+// developers' own, from the mangled symbols in the ELF's .strtab). The enum's own names are in no build.
 typedef enum {
     DSTATE_Global = 0,
     DSTATE_WaitSwitch,
@@ -41,11 +43,11 @@ typedef enum {
     DSTATE_AllyLeadWait,
     DSTATE_AllyLeadMissionWait,
     DSTATE_AllyLeadBondCombat,
-    DSTATE_AllyFollowDone,
+    DSTATE_AllyLeadDone, // 35
     DSTATE_AllyFollowInit,
     DSTATE_AllyFollow,
     DSTATE_AllyFollowWait,
-    DSTATE_UNKNOWN1, // AllyFollowDone duplicated?
+    DSTATE_AllyFollowDone, // 39
     DSTATE_AllyGoToGoalPosition, // 40
     DSTATE_SniperIdle,
     DSTATE_SniperAim,
@@ -145,7 +147,7 @@ typedef enum {
     DSTATE_RecoverFromScaryObject,
     DSTATE_RunToAlarm,
     DSTATE_PressAlarm,
-    DSTATE_DronePressAlarm,
+    DSTATE_DonePressAlarm, // 139
     DSTATE_RunForCover, // 140
     DSTATE_ElevatorJumper,
     DSTATE_AbseilInit,
@@ -177,7 +179,7 @@ typedef enum {
     DSTATE_NinjaAttackLongRange,
     DSTATE_NinjaAttackMidRange,
     DSTATE_NinjaAttackShortRange, // 170
-    DSTATE_NinjaGetTooCloseToPlayer,
+    DSTATE_NinjaGetCloseToPlayer, // 171
     DSTATE_NinjaSword,
     DSTATE_NinjaSomersault,
     DSTATE_NinjaBackflip,
