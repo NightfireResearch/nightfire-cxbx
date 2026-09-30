@@ -2007,31 +2007,80 @@
   "size": 14,
   "fields": [
    {
+    "offset": 0,
+    "size": 1,
+    "name": "accuracy",
+    "type": "uchar",
+    "bitfield": false
+   },
+   {
     "offset": 2,
     "size": 1,
     "name": "baseAggression",
-    "type": "undefined1",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 4,
-    "size": 1,
+    "size": 2,
     "name": "health",
-    "type": "undefined1",
+    "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 6,
+    "size": 1,
+    "name": "speed",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 7,
     "size": 1,
-    "name": "field7_0x7",
-    "type": "char",
+    "name": "reaction",
+    "type": "uchar",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 1,
+    "name": "recover",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 9,
     "size": 1,
     "name": "isBad",
-    "type": "char",
+    "type": "uchar",
+    "bitfield": false
+   },
+   {
+    "offset": 10,
+    "size": 1,
+    "name": "preferredWeaponClass",
+    "type": "uchar",
+    "bitfield": false
+   },
+   {
+    "offset": 11,
+    "size": 1,
+    "name": "personality",
+    "type": "uchar",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 1,
+    "name": "traitFlags",
+    "type": "uchar",
+    "bitfield": false
+   },
+   {
+    "offset": 13,
+    "size": 1,
+    "name": "editable",
+    "type": "uchar",
     "bitfield": false
    }
   ]
@@ -9364,9 +9413,9 @@
    },
    {
     "offset": 12,
-    "size": 1,
-    "name": "controllerPort",
-    "type": "uchar",
+    "size": 4,
+    "name": "field_0xc",
+    "type": "uint",
     "bitfield": false
    }
   ]
@@ -9798,9 +9847,16 @@
    },
    {
     "offset": 60,
-    "size": 16,
+    "size": 24,
     "name": "maybeBotPickupVisitTimes",
-    "type": "float[4]",
+    "type": "float[6]",
+    "bitfield": false
+   },
+   {
+    "offset": 84,
+    "size": 4,
+    "name": "unknown_0x54",
+    "type": "undefined4",
     "bitfield": false
    }
   ]
@@ -11749,13 +11805,6 @@
     "bitfield": false
    },
    {
-    "offset": 4,
-    "size": 4,
-    "name": "field1_0x4",
-    "type": "undefined4",
-    "bitfield": false
-   },
-   {
     "offset": 8,
     "size": 4,
     "name": "vtxCnt",
@@ -11779,15 +11828,15 @@
    {
     "offset": 20,
     "size": 4,
-    "name": "field5_0x14",
+    "name": "dataSize14",
     "type": "int",
     "bitfield": false
    },
    {
     "offset": 24,
     "size": 4,
-    "name": "field6_0x18",
-    "type": "undefined4",
+    "name": "dataSize18",
+    "type": "int",
     "bitfield": false
    },
    {
@@ -11795,13 +11844,6 @@
     "size": 4,
     "name": "maybeSkinned",
     "type": "int",
-    "bitfield": false
-   },
-   {
-    "offset": 32,
-    "size": 4,
-    "name": "field8_0x20",
-    "type": "undefined4",
     "bitfield": false
    },
    {
@@ -11835,14 +11877,14 @@
    {
     "offset": 84,
     "size": 4,
-    "name": "field45_0x54",
+    "name": "primitives",
     "type": "int",
     "bitfield": false
    },
    {
     "offset": 88,
     "size": 4,
-    "name": "field46_0x58",
+    "name": "afterPrimitives",
     "type": "int",
     "bitfield": false
    },
@@ -11850,13 +11892,6 @@
     "offset": 92,
     "size": 4,
     "name": "batchVtxBuffers",
-    "type": "int",
-    "bitfield": false
-   },
-   {
-    "offset": 96,
-    "size": 4,
-    "name": "field48_0x60",
     "type": "int",
     "bitfield": false
    }
@@ -17523,6 +17558,62 @@
   "category": "/",
   "size": 88,
   "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "magic",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 8,
+    "size": 4,
+    "name": "frameBytes",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 12,
+    "size": 4,
+    "name": "width",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 16,
+    "size": 4,
+    "name": "height",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 20,
+    "size": 4,
+    "name": "bitsPerPixel",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 24,
+    "size": 4,
+    "name": "levels",
+    "type": "uint",
+    "bitfield": false
+   },
+   {
+    "offset": 28,
+    "size": 4,
+    "name": "registerParam6",
+    "type": "int",
+    "bitfield": false
+   },
+   {
+    "offset": 32,
+    "size": 4,
+    "name": "formatType",
+    "type": "uint",
+    "bitfield": false
+   },
    {
     "offset": 36,
     "size": 4,
@@ -27489,6 +27580,13 @@
   "category": "/",
   "size": 8,
   "fields": [
+   {
+    "offset": 0,
+    "size": 4,
+    "name": "texIdx",
+    "type": "int",
+    "bitfield": false
+   },
    {
     "offset": 4,
     "size": 2,

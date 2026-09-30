@@ -23716,37 +23716,37 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000706d0",
+        "name": "Mem_FreeFront",
         "address": "0x000706d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000706d0()",
+        "prototype_string": "undefined Mem_FreeFront()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_00070750",
+        "name": "Mem_FreeBack",
         "address": "0x00070750",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_00070750(void)",
+        "prototype_string": "void __stdcall Mem_FreeBack(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_000707b0",
+        "name": "Mem_FreeMiddle",
         "address": "0x000707b0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000707b0()",
+        "prototype_string": "undefined Mem_FreeMiddle()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -45706,7 +45706,7 @@
         ],
         "prototype_string": "char __cdecl psiFileSetSingleFileMode(char mode)",
         "parameters": [
-            "[char mode@Stack[0x4]:4]"
+            "[char mode@Stack[0x4]:1]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -46550,13 +46550,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000dfce0",
+        "name": "psiGetNextSaveName",
         "address": "0x000dfce0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000dfce0()",
+        "prototype_string": "undefined psiGetNextSaveName()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -56252,13 +56252,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f54b0",
+        "name": "HUD_InitObjectiveStatusPaneWidth",
         "address": "0x000f54b0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f54b0()",
+        "prototype_string": "undefined HUD_InitObjectiveStatusPaneWidth()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -56276,13 +56276,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f54e0",
+        "name": "HUD_InitInfoStatusPaneWidth",
         "address": "0x000f54e0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f54e0()",
+        "prototype_string": "undefined HUD_InitInfoStatusPaneWidth()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -56300,13 +56300,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f5510",
+        "name": "HUD_InitPickupStatusPaneWidth",
         "address": "0x000f5510",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f5510()",
+        "prototype_string": "undefined HUD_InitPickupStatusPaneWidth()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"

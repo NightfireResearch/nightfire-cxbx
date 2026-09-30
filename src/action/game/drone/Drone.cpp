@@ -18,7 +18,7 @@ bool Drone_DCVfromOBJ(obj_tag* gameObj, DCVars_tag* dcVars) {
 
     dcVars->drone = drone;
     dcVars->gameObj = gameObj;
-    dcVars->aiStateMachine = &drone->aiStateMachine;
+    dcVars->aiStateMachine = &drone->sm;
     dcVars->cel = gameObj->inCel;
 
     return true;
@@ -28,7 +28,7 @@ bool Drone_DCVfromOBJ(obj_tag* gameObj, DCVars_tag* dcVars) {
 
 typedef struct {
     char baseObj[0x2c];
-    maybeSAnimSkin skinInfo;
+    DroneKeys keys;
 } DroneCreationData;
 
 
@@ -40,7 +40,7 @@ obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     if(Drone_bDisableSystem)
         return NULL;
 
-    if(create->skinInfo.minDifficultyLevelForDrone > GameState.difficultyModifier)
+    if(create->keys.minDifficulty > GameState.difficultyModifier)
         return NULL;
 
     DIVars_tag diVars;
@@ -49,11 +49,11 @@ obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     // Set up the DIVars info (this will then be copied again into the final locations as the drone itself is spawned)
     Vec_Copy(pos, &diVars.position);
     Vec_Copy(rot, &diVars.rotation);
-    memcpy(&diVars.skinInfo, &create->skinInfo,sizeof(maybeSAnimSkin));
+    memcpy(&diVars.keys, &create->keys, sizeof(DroneKeys));
 
     // These two are not needed? Already memset to zero...
     diVars.gameObj = NULL; 
-    diVars.someOtherThing = 0x0;
+    diVars.glist = 0x0;
     
     return NDrone2_CreateFromDIVars(&diVars);
 }

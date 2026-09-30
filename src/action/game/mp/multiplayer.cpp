@@ -184,7 +184,7 @@ void MP_CleanupMPObjExt(MP_OBJ_EXT *mp_obj) {
   if(mp_obj == NULL)
     return;
     
-  if(mpbots.NumBots && (mp_obj->aiEmitter).someDataPtr != NULL) {
+  if(mpbots.NumBots && (mp_obj->aiEmitter).data != NULL) {
     AINetwork_FreeEmitter(&mp_obj->aiEmitter);
   }
 
@@ -310,9 +310,9 @@ void MP_objectBeingDeleted(obj_tag* obj) {
     msg.createdFrame = GameState.NumFramesUnpaused;
     msg.handleOnFrame = GameState.NumFramesUnpaused;
     msg.msgType = 0x3d;
-    msg.param_a = 0xc5;
-    msg.param_b = 0;
-    msg.param_c = 0;
+    msg.scope = 0xc5;          // DSTATE_BotGlobal
+    msg.sender = 0;
+    msg.receiver = 0;          // broadcast
     msg.extraData = obj;
     Drone_SM_RouteMsg(&msg);
   }

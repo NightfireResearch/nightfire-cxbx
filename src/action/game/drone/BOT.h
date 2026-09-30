@@ -2,6 +2,7 @@
 #define BOT_H
 
 #include "../../actionhelpers.h"
+#include "../../engine/AINetwork.h"
 
 #pragma pack(push, 1)
 // A multiplayer bot's statistics: the defaults per character (BOT_getDefaultStats, 29 entries at 0x00163628, indexed by
@@ -29,6 +30,86 @@ static_assert(sizeof(BOT_stats_t) == 0xe, "BOT_stats_t size mismatch");
 static_assert(offsetof(BOT_stats_t, health) == 0x4, "BOT_stats_t health offset mismatch");
 static_assert(offsetof(BOT_stats_t, isBad) == 0x9, "BOT_stats_t isBad offset mismatch");
 static_assert(offsetof(BOT_stats_t, editable) == 0xd, "BOT_stats_t editable offset mismatch");
+
+// One of a bot's two goals (BOTSTATE_pickGoal): slot 0 a pickup, an opponent or a friend to guard, slot 1 the game
+// mode's objective. See docs/drone/bots-and-navigation/README.md 5.2 and 5.6.
+typedef struct BOT_goal_t {
+    CelPos_tag pos;             // 0x00
+    float timeBudget;           // 0x10
+    float startTime;            // 0x14 - MPGame.TimeIncPaused
+    float period;               // 0x18 - 5 x the frame rate
+    float weightHealth;         // 0x1c
+    float weightAmmo;           // 0x20
+    float weightWeapon;         // 0x24
+    float weightObjective;      // 0x28
+    void *target;               // 0x2c - MP_PICKUP*, the objective or the opponent
+    uint arriveOrNextState;     // 0x30
+    uchar flags;                // 0x34 - 1 complete
+    uchar kind;                 // 0x35 - 1 pickup, 2 objective, 3 object / opponent
+    uchar pickFlags;            // 0x36 - 2 single pass, 8 avoid the opponent's path, 0x20 ignore visit times
+    uchar maxEmitterDistance;   // 0x37
+    uchar lastRouteStatus;      // 0x38
+    uchar _pad39;
+    uchar subtype;              // 0x3a - 1 enemy flag, 2 own base, 3 GoldenEye ... 9 opponent
+    uchar _pad3b;
+} BOT_goal_t;
+
+// A bot player's state (six at 0x001d98e0, one per bot player 4..9; Drone_tag.botVars). Ghidra's type is 0x75f
+// bytes, too short.
+typedef struct BOT_vars_t {
+    BOT_goal_t goals[2];            // 0x000
+    BOT_stats_t stats;              // 0x078 - a copy of the bot's stats
+    uchar _pad86[2];
+    uchar players[10][0x10];        // 0x088 - per player: last seen alive, distance², facing, flags (FUN_0001a660)
+    _VECTOR opponentLastPos;        // 0x128
+    uchar weapons[114][0xc];        // 0x134 - per weapon: sqrt(range), rounds in clip, held (114 by the offsets around it;
+                                    //         the review counted 83 in use)
+    short reserveAmmo[33];          // 0x68c
+    uchar _pad6ce[2];
+    obj_tag *attackers[16];         // 0x6d0 - cursor at attackerCursor
+    float savedCombatRanges[3];     // 0x710 - drone+0xd0, 0xd4, 0xe0
+    float distraction;              // 0x71c
+    uint goalReturnState;           // 0x720 - the DSTATE to go back to after a goal
+    ushort savedState[2];           // 0x724
+    uint flags;                     // 0x728 - 2 recovering, 4 objective goal active
+    uint regenTimer;                // 0x72c - trait 0x10
+    uint _unknown730;
+    uint lastImpactFrame;           // 0x734
+    uint lastRouteFailFrame;        // 0x738
+    uint recoveryEndFrame;          // 0x73c
+    uint ammoRegenTimer;            // 0x740 - weapon 0x45 (skin 0x1a)
+    void *perPlayerSettings;        // 0x744 - MPSettings_PerPlayer
+    Drone_tag *drone;               // 0x748
+    obj_tag *guardFriend;           // 0x74c
+    short playerIndex;              // 0x750
+    short botIndex;                 // 0x752
+    short nearestNavNode;           // 0x754 - -1 each frame
+    ushort redirectState;           // 0x756 - where BOT_validateStateChange sends a refused change
+    uchar skin;                     // 0x758
+    uchar activeGoal;               // 0x759 - 0xff none
+    uchar stateClass;               // 0x75a
+    uchar visibilityCursor;         // 0x75b
+    uchar weapon;                   // 0x75c
+    uchar armour;                   // 0x75d
+    uchar nextWeapon;               // 0x75e
+    uchar preferredOpponent;        // 0x75f - player index, 0xff none
+    uchar attackerCursor;           // 0x760
+    uchar routeFailCount;           // 0x761
+    uchar lastPickup;               // 0x762 - never the same pickup twice in a row
+    uchar atObjective;              // 0x763
+    uchar beingGuarded;             // 0x764
+    uchar insideObjective;          // 0x765 - the protection / demolition object
+    uchar _pad766[2];
+} BOT_vars_t;
+
+static_assert(sizeof(BOT_goal_t) == 0x3c, "BOT_goal_t is 0x3c bytes");
+static_assert(sizeof(BOT_vars_t) == 0x768, "BOT_vars_t is 0x768 bytes");
+static_assert(offsetof(BOT_vars_t, players) == 0x88, "Wrong offset for BOT_vars_t.players");
+static_assert(offsetof(BOT_vars_t, weapons) == 0x134, "Wrong offset for BOT_vars_t.weapons");
+static_assert(offsetof(BOT_vars_t, reserveAmmo) == 0x68c, "Wrong offset for BOT_vars_t.reserveAmmo");
+static_assert(offsetof(BOT_vars_t, attackers) == 0x6d0, "Wrong offset for BOT_vars_t.attackers");
+static_assert(offsetof(BOT_vars_t, drone) == 0x748, "Wrong offset for BOT_vars_t.drone");
+static_assert(offsetof(BOT_vars_t, insideObjective) == 0x765, "Wrong offset for BOT_vars_t.insideObjective");
 
 #pragma pack(pop)
 

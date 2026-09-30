@@ -94,7 +94,10 @@ are** in the reimplementation: behaviour first, fixes later if ever, and then as
 
 One order across the three areas (each document has the detail for its own part):
 
-0. **Foundations.** Fix the header bugs; add the DMODE/DTYPE/message enums, the state-machine and message structs,
+0. **Foundations** (done, 30 Sept 2026: the structs and enums below in Drone.h, NDrone2.h, BOT.h and AINetwork.h;
+   `tools/drone_tables.py` generates DroneTables.h/.inc for the state, mode, type, behaviour-layout and bot-stats
+   tables, checked at start by devtools/DroneTablesCheck.cpp - the animation and bot state-class tables are left for
+   their steps). Fix the header bugs; add the DMODE/DTYPE/message enums, the state-machine and message structs,
    `DIVars` as 33 named keys, `Drone_tag` field by field with offset asserts, `BOT_stats_t`/`BOT_vars_t`, the AI
    path/bound structs. Write **`tools/drone_tables.py`** (in the style of `tools/uihandler.py`) to generate, and check
    against the XBE bytes: the state table (each entry the original address until that state is ours, switched over

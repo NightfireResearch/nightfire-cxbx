@@ -45,7 +45,7 @@ void DroneFunc_NotifyHostageSaved(uint numHostagesSaved) {
 // AUTOINJECT
 void DroneFunc_HostageSaved(DCVars_tag *dcVars) {
 
-    const int switchChannel = dcVars->drone->associatedSwitchChannel;
+    const int switchChannel = dcVars->drone->modeChangeSwitchChannel;
 
     // Already activated?
     if(switch_channels[switchChannel])
