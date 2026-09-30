@@ -57,7 +57,8 @@ for p in files:
         docs.append((os.path.basename(p), d))
 print("Program %s: %d struct files" % (currentProgram.getName(), len(docs)))
 
-ALIASES = {"byte": "byte", "ubyte": "byte", "bool": "bool", "char": "char", "short": "short", "ushort": "ushort",
+ALIASES = {"byte": "byte", "ubyte": "byte", "bool": "bool", "char": "char", "uchar": "uchar", "wchar_t": "wchar_t",
+           "short": "short", "ushort": "ushort",
            "int": "int", "uint": "uint", "long": "long", "ulong": "ulong", "longlong": "longlong",
            "ulonglong": "ulonglong", "float": "float", "double": "double", "void": "void",
            "unsigned int": "uint", "unsigned short": "ushort", "unsigned char": "uchar", "unsigned long": "ulong"}

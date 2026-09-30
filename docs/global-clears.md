@@ -141,6 +141,45 @@ fields (Hungarian prefixes) and cannot rename them back. It reads
 - **TextureInfo** (0x58 bytes), applied as `Tex` (`TextureInfo *[2048]`) and at 0x002ae4f8
   (`DefaultTextureInfo`).
 
-Still to identify: the untyped regions at 001e6184 and 001e6984 (now arrays inside NPCGlobals_t), 00245240,
-0029a14c, 0029b2d4, 0029d7a0, 002adf88, 002b0328, 002c54e8, 002c5528 and 002ff73c. Most cover several
-separately-used items, so a flat array would lose more than it adds.
+The same file also types the regions that were untyped. Each turned out to be one struct or array, or a few
+adjacent arrays; none is unrelated globals cleared together:
+
+- **NPCGlobals_t +0xb50 / +0xb54** (001e6180, 001e6184): `numAwarePoints` and `awarePoints`, a
+  `DroneAwarePoint_t[64]` (0x20 each: type, obj, pos, cel, radius). FUN_00030e70 is the PS2 build's
+  `Drone_BuildDynamicAwarePoints`: called from `Drone_InitComms`, it rebuilds the list every frame from
+  occluders and live explosive projectiles. `DroneFunc_HandleExplosives` sends message 0x21 (flee) to drones
+  within the radius of an explosive that can see it.
+- **NPCGlobals_t +0x1354** (001e6984): one `AIEmitter_tag`, `safetyEmitter`. `Drone_PostLoad_Init` allocates
+  it, and `DroneMove_FindSafetyFromScaryPosition` uses it as scratch to find a safe spot.
+- **00245240**: `mp_join_slots`, `MPJoinSlot[4]` (joined, ready, team, skin), one per controller on the
+  multiplayer join page. The "mpjoin" label was slot 0's `ready`. The field at +0xc is the controller port:
+  `Menu_AllJoinedPlayersReady` writes it, and `P_MPCONFIRM` copies it into `PlayerInputs[].controllerPort`.
+- **0029a14c**: `GMapSoundActive`, `char[50]`, one "playing" flag per map sound (HandleMapSoundAllocation).
+  The clear is 0x32 bytes: 12 dwords and a word. The name, and `GMapSoundHandle` (`DYNAMICSOUNDS *[50]` at
+  00299a20), come from the PS2 build.
+- **0029b2d4**: elements 1..32 of `huffman_bl_count`, which is `uint[33]` from 0029b2d0. `Inflate_huffman`
+  is zlib's inflate_table with MAX_BITS 32: it zeroes count[1..32] and counts 4-bit code lengths.
+- **0029d7a0**: `SkyObjList`, `SkyObj[21]` (0x34 each). `View_AddSkyObj` (placement type 42) fills a slot:
+  the sky model and its lightning-flash variant, position, rotation, and the flash and thunder timers.
+  `View_DrawSky` draws them, and `Env_Reset` clears them per level.
+- **002adf88**: `ParticleOverlayRing`, `ParticleOverlayBuffer[64]` (overlay slot, vertices, frames to live),
+  with its write index `ParticleOverlayRingNext` at 002adf80. `psiDrawParticleList` puts each particle
+  batch's vertices in an overlay buffer that must outlive the frame. FUN_000dcc60, called every frame from
+  `psiPreDraw`, frees each one three frames later. The PS2 build has no such ring.
+- **002b0328**: `FontCharToGlyph`, `uchar[256]`, filled with 0xff ("no glyph") rather than zero. Then
+  `FontGlyphU` and `FontGlyphV` (`int[256]` each) follow, and `FontTexture` at 002b0324: the built-in 6x6
+  font that `ShowFatalErrorScreen` draws with.
+- **002c54e8** and **002c5528**: `SaveNameWide` (`wchar_t[32]`) and `SaveNameAscii` (`char[32]`), the static
+  result buffers of FUN_000e3340 and FUN_000e3390, which convert save names between ASCII and wide for the
+  "u:\" save-game wrappers and `SaveEnum_GetNextEntry`. They have nothing to do with the vertex shader
+  handles that follow them.
+- **002ff73c**: `BackgroundMovie`, a `BackgroundMovieState` (0x34 bytes): the double-buffered 640x480 XMV
+  player (frame memory, texture slots, surfaces, decode and display index, `fmvDecoder`, `isPlaying`, the
+  sound stream). Typing it turns the `fmvDecoder` and `MovieSoundStreamHandle` labels into fields.
+  `maybeDecodeMpgAudio` is really the per-frame "decode and draw the movie" function.
+
+Function names these suggest, not yet applied in Ghidra: FUN_00030e70 = `Drone_BuildDynamicAwarePoints`,
+FUN_0004a620 = `AINetwork_SetLinksFlagInCircle`, FUN_0004a530 = `AINetwork_ClearLinkFlags`, FUN_0004a900 =
+`AINetwork_InitEmitter2` and FUN_0004a070 = `AINetwork_Emitter_GetNodeAtDistance`, all from the PS2 build.
+These are invented: FUN_00030e10 `Drone_AddDynamicAwarePoint`, FUN_000dcc60 `psiAgeParticleOverlayRing`,
+FUN_000e3340 `AsciiToWideSaveName` and FUN_000e3390 `WideToAsciiSaveName`.

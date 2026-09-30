@@ -698,16 +698,260 @@
      "type": "CoverNode_tag *"
     },
     {
+     "offset": "0xb50",
+     "name": "numAwarePoints",
+     "type": "uint",
+     "comment": "entries used in awarePoints (max 64)"
+    },
+    {
      "offset": "0xb54",
-     "name": "array_b54",
-     "type": "undefined1[2048]",
-     "comment": "FUN_00030e70 clears it"
+     "name": "awarePoints",
+     "type": "DroneAwarePoint_t[64]",
+     "comment": "rebuilt by Drone_BuildDynamicAwarePoints (FUN_00030e70)"
     },
     {
      "offset": "0x1354",
-     "name": "array_1354",
-     "type": "undefined4[10]",
-     "comment": "Drone_PostLoad_Init clears it"
+     "name": "safetyEmitter",
+     "type": "AIEmitter_tag",
+     "comment": "scratch emitter for DroneMove_FindSafetyFromScaryPosition; set up by Drone_PostLoad_Init"
+    }
+   ]
+  },
+  {
+   "name": "DroneAwarePoint_t",
+   "size": 32,
+   "comment": "Danger/awareness point rebuilt each frame by Drone_BuildDynamicAwarePoints; read by DroneFunc_HandleExplosives",
+   "fields": [
+    {
+     "offset": "0x0",
+     "name": "type",
+     "type": "uchar",
+     "comment": "0 occluder (unread), 1 projectile 0x36 (no effect), 2 explosive: drones in radius that see obj get message 0x21"
+    },
+    {
+     "offset": "0x8",
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "offset": "0xc",
+     "name": "pos",
+     "type": "_VECTOR"
+    },
+    {
+     "offset": "0x18",
+     "name": "cel",
+     "type": "cel_tag *"
+    },
+    {
+     "offset": "0x1c",
+     "name": "radius",
+     "type": "float",
+     "comment": "3, 8 or 12"
+    }
+   ]
+  },
+  {
+   "name": "MPJoinSlot",
+   "size": 16,
+   "comment": "One controller's place on the multiplayer join page (P_MPJOIN)",
+   "fields": [
+    {
+     "offset": "0x0",
+     "name": "joined",
+     "type": "bool"
+    },
+    {
+     "offset": "0x1",
+     "name": "ready",
+     "type": "bool"
+    },
+    {
+     "offset": "0x4",
+     "name": "team",
+     "type": "uint",
+     "comment": "MPTeam: 0 PHOENIX, 1 MI6"
+    },
+    {
+     "offset": "0x8",
+     "name": "skin",
+     "type": "uint",
+     "comment": "mp_characters identifier"
+    },
+    {
+     "offset": "0xc",
+     "name": "controllerPort",
+     "type": "uchar",
+     "comment": "set by Menu_AllJoinedPlayersReady; P_MPCONFIRM copies it to PlayerInputs[].controllerPort"
+    }
+   ]
+  },
+  {
+   "name": "ParticleOverlayBuffer",
+   "size": 12,
+   "comment": "One psiDrawParticleList draw: its overlay vertex buffer, kept alive 3 frames (FUN_000dcc60 releases it)",
+   "fields": [
+    {
+     "offset": "0x0",
+     "name": "overlaySlot",
+     "type": "int",
+     "comment": "Gfx.overlayQuads index; 0 = free"
+    },
+    {
+     "offset": "0x4",
+     "name": "vertexData",
+     "type": "void *",
+     "comment": "Mem_Malloc'd vertices, 0x24 bytes per particle"
+    },
+    {
+     "offset": "0x8",
+     "name": "framesToLive",
+     "type": "int",
+     "comment": "3 when drawn; released at <= 0"
+    }
+   ]
+  },
+  {
+   "name": "SkyObj",
+   "size": 52,
+   "comment": "Sky object slot: View_AddSkyObj (placement type 42) fills it, View_DrawSky draws it, Env_Reset clears it",
+   "fields": [
+    {
+     "offset": "0x0",
+     "name": "glist",
+     "type": "celglist_tag *"
+    },
+    {
+     "offset": "0x4",
+     "name": "flashGlist",
+     "type": "celglist_tag *",
+     "comment": "lightning-flash variant"
+    },
+    {
+     "offset": "0x8",
+     "name": "obj",
+     "type": "obj_tag *"
+    },
+    {
+     "offset": "0xc",
+     "name": "flashObj",
+     "type": "obj_tag *"
+    },
+    {
+     "offset": "0x10",
+     "name": "pos",
+     "type": "_VECTOR",
+     "comment": "ignored when glist flag 0x2 (drawn at the camera)"
+    },
+    {
+     "offset": "0x1c",
+     "name": "rot",
+     "type": "_VECTOR"
+    },
+    {
+     "offset": "0x28",
+     "name": "flashIntervalMax",
+     "type": "ushort",
+     "comment": "frames"
+    },
+    {
+     "offset": "0x2a",
+     "name": "flashDuration",
+     "type": "short",
+     "comment": "frames"
+    },
+    {
+     "offset": "0x2c",
+     "name": "flashTimer",
+     "type": "short",
+     "comment": "frames of the current flash left"
+    },
+    {
+     "offset": "0x2e",
+     "name": "flashCountdown",
+     "type": "short",
+     "comment": "frames to the next flash"
+    },
+    {
+     "offset": "0x30",
+     "name": "thunderCountdown",
+     "type": "short",
+     "comment": "frames to the thunder sound"
+    },
+    {
+     "offset": "0x32",
+     "name": "drawPass",
+     "type": "char",
+     "comment": "View_DrawSky pass"
+    }
+   ]
+  },
+  {
+   "name": "BackgroundMovieState",
+   "size": 52,
+   "comment": "Double-buffered 640x480 XMV background movie: BackgroundMoviePlayFile sets up, maybeDecodeMpgAudio decodes and draws each frame, maybeBackgroundMovieCleanup releases and clears",
+   "fields": [
+    {
+     "offset": "0x0",
+     "name": "frameMemory",
+     "type": "void *[2]",
+     "comment": "640*480*4 bytes each"
+    },
+    {
+     "offset": "0x8",
+     "name": "texture",
+     "type": "int[2]",
+     "comment": "RegisterTexture slots"
+    },
+    {
+     "offset": "0x10",
+     "name": "surface",
+     "type": "uint *[2]",
+     "comment": "level-0 surfaces (decode targets)"
+    },
+    {
+     "offset": "0x18",
+     "name": "decodeIndex",
+     "type": "int"
+    },
+    {
+     "offset": "0x1c",
+     "name": "displayIndex",
+     "type": "int"
+    },
+    {
+     "offset": "0x20",
+     "name": "fmvDecoder",
+     "type": "maybeVideoDecoder *"
+    },
+    {
+     "offset": "0x24",
+     "name": "isPlaying",
+     "type": "bool"
+    },
+    {
+     "offset": "0x25",
+     "name": "skipNextDecode",
+     "type": "bool",
+     "comment": "holds each new frame for two vsyncs"
+    },
+    {
+     "offset": "0x28",
+     "name": "soundStream",
+     "type": "DIRECTSOUNDSTREAM *",
+     "comment": "was MovieSoundStreamHandle"
+    },
+    {
+     "offset": "0x2c",
+     "name": "noFrameCount",
+     "type": "uint",
+     "comment": "write-only statistic"
+    },
+    {
+     "offset": "0x30",
+     "name": "newFrameCount",
+     "type": "uint",
+     "comment": "write-only statistic"
     }
    ]
   }
@@ -779,6 +1023,83 @@
    "address": "0x002ff778",
    "type": "undefined4[768]",
    "name": "LaunchInfoData"
+  },
+  {
+   "address": "0x00245240",
+   "type": "MPJoinSlot[4]",
+   "name": "mp_join_slots"
+  },
+  {
+   "address": "0x0029a14c",
+   "type": "char[50]",
+   "name": "GMapSoundActive",
+   "comment": "PS2 name; one flag per map sound (HandleMapSoundAllocation)"
+  },
+  {
+   "address": "0x00299a20",
+   "type": "DYNAMICSOUNDS *[50]",
+   "name": "GMapSoundHandle",
+   "comment": "PS2 name"
+  },
+  {
+   "address": "0x0029b2d0",
+   "type": "uint[33]",
+   "name": "huffman_bl_count",
+   "comment": "count[0..32] (MAX_BITS 32); Inflate_huffman clears [1..32]"
+  },
+  {
+   "address": "0x0029d7a0",
+   "type": "SkyObj[21]",
+   "name": "SkyObjList"
+  },
+  {
+   "address": "0x002adf80",
+   "type": "int",
+   "name": "ParticleOverlayRingNext"
+  },
+  {
+   "address": "0x002adf88",
+   "type": "ParticleOverlayBuffer[64]",
+   "name": "ParticleOverlayRing"
+  },
+  {
+   "address": "0x002b0324",
+   "type": "int",
+   "name": "FontTexture",
+   "comment": "the 6x6 debug font (ShowFatalErrorScreen)"
+  },
+  {
+   "address": "0x002b0328",
+   "type": "uchar[256]",
+   "name": "FontCharToGlyph",
+   "comment": "0xff = no glyph; xboxInitTextures fills it"
+  },
+  {
+   "address": "0x002b0428",
+   "type": "int[256]",
+   "name": "FontGlyphU"
+  },
+  {
+   "address": "0x002b0828",
+   "type": "int[256]",
+   "name": "FontGlyphV"
+  },
+  {
+   "address": "0x002c54e8",
+   "type": "wchar_t[32]",
+   "name": "SaveNameWide",
+   "comment": "static result of FUN_000e3340 (ASCII to wide save name)"
+  },
+  {
+   "address": "0x002c5528",
+   "type": "char[32]",
+   "name": "SaveNameAscii",
+   "comment": "static result of FUN_000e3390 (wide to ASCII save name)"
+  },
+  {
+   "address": "0x002ff73c",
+   "type": "BackgroundMovieState",
+   "name": "BackgroundMovie"
   }
  ]
 }
