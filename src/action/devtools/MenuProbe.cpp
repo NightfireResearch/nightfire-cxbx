@@ -24,6 +24,16 @@
 //     focus HASH [ID]      put the cursor on a control (by id among several of that hashcode, e.g. a keyboard key)
 //     secretstest          compare the original secret-code check with ours (SecretsShadow.cpp)
 //     poke ADDR VALUE      write a dword into the game (to set up a state a page expects, e.g. a finished match)
+//     seed                 put the random number generator back to its state at boot. Its sequence is fixed (it is
+//                          never seeded), but how many numbers have been drawn by a given poll frame depends on
+//                          how many frames were rendered, i.e. on timing: seed just before a step whose outcome is
+//                          random (the Quick Game's level, say) makes it the same on every run.
+//                          !!! WARNING: THIS DOES NOT MAKE A REPLAY DETERMINISTIC. !!!
+//                          !!! The game logic steps by real elapsed time, not a fixed tick per frame, so the   !!!
+//                          !!! number of random draws - and AI, physics, animation - still drift between runs  !!!
+//                          !!! from the moment after the seed. Two seeded runs of mp_start.txt load the same   !!!
+//                          !!! level, but the match itself differs within seconds (a bot kills you in one).    !!!
+//                          !!! Seed right before the random step, and screenshot as soon after it as you can.  !!!
 //     unlockstest          compare the original progress/unlock functions with ours (UnlocksShadow.cpp)
 //     quit                 end the process
 //   BTN: A B X Y BLACK WHITE LT RT START BACK UP DOWN LEFT RIGHT
@@ -166,6 +176,10 @@ static bool LoadScript(const char *path) {
             s.kind = Step::GOPAGE; s.frames = (unsigned)strtoul(a, NULL, 0); AddStep(s);
         } else if (_stricmp(cmd, "poke") == 0 && n >= 3) {
             s.kind = Step::POKE; s.frames = (unsigned)strtoul(a, NULL, 0); s.button = (int)strtoul(b, NULL, 0); AddStep(s);
+        } else if (_stricmp(cmd, "seed") == 0) {
+            // Rand_Random's two multiply-with-carry words (value in the low half, carry in the high), as the XBE has them
+            s.kind = Step::POKE; s.frames = 0x0018cdf8; s.button = (int)0x1f123bb5; AddStep(s);
+            s.kind = Step::POKE; s.frames = 0x0018cdfc; s.button = (int)0x159a55e5; AddStep(s);
         } else if (_stricmp(cmd, "unlockstest") == 0) {
             s.kind = Step::UNLOCKSTEST; AddStep(s);
         } else if (_stricmp(cmd, "secretstest") == 0) {

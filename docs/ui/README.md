@@ -56,7 +56,7 @@ Not yet: the handlers without lists (`handlers.md` step 2).
 - `MenuLog=on` logs every handler message; `MenuLogSkip=0x50,0x51` leaves out the per-frame ones.
 - `MenuScript=<file>` replays pad input from a script (`tools/ui/scripts/`): `wait`, `waitpage <page>` (so a run
   is timed from the page, whatever the boot took), `press`, `hold`, `focus <control> [id]`, `gopage <page>`,
-  `shot <name>`, `log`, `secretstest`, `poke <address> <value>`, `quit`.
+  `shot <name>`, `log`, `secretstest`, `poke <address> <value>`, `seed`, `quit`.
 - `MenuOriginal=<hash>:<address>,<address>` runs those handlers or functions as the original code.
 - `MenuCheckLists=on` compares the lists in our source with the game's copies (all 12 identical).
 - `MenuShadowTests=on` runs the shadow tests at start, before the game (no display needed): `SecretsShadow.cpp`
@@ -71,6 +71,16 @@ named log (`menu.log`, by `tools/ui/menu_log.py`) and PNG screenshots. With `ORI
 ways through the scripts in `tools/ui/scripts/`: identical screenshots and identical message logs (the one
 difference being the random map Quick Game picks). `devtools/SecretsShadow.cpp` feeds all 52 codes through the
 original and our code check from four starting states (224 runs, no differences).
+
+> **WARNING: replays are not deterministic in play, only in the menus.** The random number generator is never
+> seeded, so its sequence is fixed, but the game logic steps by real elapsed time rather than a fixed tick per
+> frame. How many random numbers have been drawn by a given poll frame therefore depends on how many frames were
+> rendered, and AI, physics and animation drift between runs too. The `seed` script command puts the generator back
+> to its boot state, which makes the *next* random choice repeatable (`mp_start.txt` uses it so Quick Game always
+> picks the same level) - but everything after it drifts again: two seeded runs of `mp_start.txt` load the same level
+> and then differ within seconds. Seed right before the random step, take in-level screenshots as soon after it as
+> possible, and do not expect pixel-identical shots from the middle of a match. Making play repeatable would need a
+> fixed-timestep mode.
 
 ## Ghidra
 

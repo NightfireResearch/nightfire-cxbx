@@ -23,6 +23,9 @@ wait 100
 press UP
 wait 40
 shot quickgame_item
+# !!! WARNING: seeding fixes the LEVEL only. The match after it is NOT repeatable: game logic runs on real
+# !!! elapsed time, so bots, spawns and physics drift between runs. Do not compare the 'match' shot pixel for pixel.
+seed                       # the Quick Game's level is random: the same one on every run
 press A
 waitpage 0x40000049 400    # P_MPCONFIRM
 wait 100
