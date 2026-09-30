@@ -78,7 +78,8 @@ void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t unknownMaybeAlignment)
 
     // If it's type Xbox, must be allocated in the first 64MB - video memory must be in this region
 
-    if(flags & 0xFF00 == 0x1200) { // Xbox memory type
+    // The type is the high byte of the flags (0x12 = malloc_Xbox in MemInfo's names)
+    if((flags & 0xFF00) == 0x1200) { // Xbox memory type
         return reinterpret_cast<void * (*)(uint, MallocFlags, uint)>(0x00070ae0)(size, flags, unknownMaybeAlignment);
     }
 
