@@ -213,6 +213,21 @@ static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
         }                                                                   \
     } while (0)
 
+// The GameCube build's debug checks, which the Xbox build compiled out: a printf and carry on, exactly as there
+// (docs/gamecube-checks.md lists them all, and which of our functions have them). The message is the GameCube's
+// own. NfWarnMuted (main.cpp) silences them, for the shadow tests that feed bad input on purpose.
+extern int NfWarnMuted;
+#define NF_WARN(...)                                                        \
+    do {                                                                    \
+        if (!NfWarnMuted)                                                   \
+            printf(__VA_ARGS__);                                            \
+    } while (0)
+#define NF_WARN_IF(cond, ...)                                               \
+    do {                                                                    \
+        if (cond)                                                           \
+            NF_WARN(__VA_ARGS__);                                           \
+    } while (0)
+
 
 
 typedef struct {

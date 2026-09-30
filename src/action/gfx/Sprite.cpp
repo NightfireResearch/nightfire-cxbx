@@ -147,6 +147,8 @@ sprite* Sprite_Create2(SpriteInfo *sprInfo) {
 
         if (sprInfo->textureHashcode != 0) {
             hashtable_set_sprite(spr, sprInfo->textureHashcode);
+        } else {
+            NF_WARN("Sprite With no texture set\n"); // GC check (0x8006637c)
         }
 
         spr->positionX = sprInfo->posX;

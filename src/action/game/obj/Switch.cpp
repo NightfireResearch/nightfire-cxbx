@@ -88,6 +88,8 @@ obj_tag* Switch_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
     switchData->scriptPlayer = scriptPlayer;
 
     if (scriptPlayer == NULL) {
+        NF_WARN("Unable to create switch at %f,%f,%f - check switch hashcodes\n", // GC check (0x800fb64c)
+                pos->x, pos->y, pos->z);
         // Matches the original exactly - it returns the object it just told control_delete_object to clean up
         control_delete_object(switchObj);
         return switchObj;

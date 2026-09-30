@@ -211,6 +211,7 @@ void MemShadow_Run(void) {
 
     mismatches = 0;
     reported = 0;
+    NfWarnMuted = 1; // it frees foreign pointers and shrinks free blocks on purpose
     static const uint32_t methods[] = {0, 1, 2, 3, 5};
     int steps = 4000;
     char ran[128] = "";
@@ -221,6 +222,7 @@ void MemShadow_Run(void) {
     }
     printf("[mem] Mem_Malloc/Mem_Free/Mem_Shrink, calls per method (%s): %d mismatches\n", ran, mismatches);
 
+    NfWarnMuted = 0;
     _aligned_free(ours);
     _aligned_free(theirs);
     PtrHeap = saved[0];

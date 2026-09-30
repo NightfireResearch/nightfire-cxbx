@@ -70,8 +70,10 @@ void PlrStat_LogBondBonus(uint playerNum) {
 // AUTOINJECT
 void PlrStat_LogEnemySurrender(uint playerNum) {
 
-    if(playerNum >= ARRAY_SIZE(PlrMissionStats))
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats)) {
+        NF_WARN("ERROR : Invalid Plr ID\n"); // GC check
         return;
+    }
 
     if(!PlrStat_OkToUpdate())
         return;
@@ -82,8 +84,10 @@ void PlrStat_LogEnemySurrender(uint playerNum) {
 // AUTOINJECT
 void PlrStat_LogEnemyDispatched(uint playerNum) {
 
-    if(playerNum >= ARRAY_SIZE(PlrMissionStats))
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats)) {
+        NF_WARN("ERROR : Invalid Plr ID\n"); // GC check
         return;
+    }
     
     if(!PlrStat_OkToUpdate())
         return;
@@ -94,8 +98,10 @@ void PlrStat_LogEnemyDispatched(uint playerNum) {
 // AUTOINJECT
 void PlrStat_LogEnemyDisabled(uint playerNum) {
 
-    if(playerNum >= ARRAY_SIZE(PlrMissionStats))
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats)) {
+        NF_WARN("ERROR : Invalid Plr ID\n"); // GC check
         return;
+    }
     
     if(!PlrStat_OkToUpdate())
         return;
@@ -106,8 +112,10 @@ void PlrStat_LogEnemyDisabled(uint playerNum) {
 // AUTOINJECT
 void PlrStat_LogEnemyDetectedPlayer(uint playerNum) {
 
-    if(playerNum >= ARRAY_SIZE(PlrMissionStats))
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats)) {
+        NF_WARN("ERROR : Invalid Plr ID\n"); // GC check
         return;
+    }
     
     if(!PlrStat_OkToUpdate())
         return;
@@ -118,8 +126,10 @@ void PlrStat_LogEnemyDetectedPlayer(uint playerNum) {
 // AUTOINJECT
 void PlrStat_LogHealth(float health, uint playerNum) {
 
-    if(playerNum >= ARRAY_SIZE(PlrMissionStats))
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats)) {
+        NF_WARN("ERROR : Invalid Plr ID\n"); // GC check
         return;
+    }
     
     if(!PlrStat_OkToUpdate())
         return;
@@ -130,8 +140,10 @@ void PlrStat_LogHealth(float health, uint playerNum) {
 // AUTOINJECT
 void PlarStat_LogTimerPause(uint playerNum) {
     
-    if (playerNum >= ARRAY_SIZE(PlrMissionStats))
+    if (playerNum >= ARRAY_SIZE(PlrMissionStats)) {
+        NF_WARN("ERROR : Invalid Plr ID\n"); // GC check
         return;
+    }
 
     PlrMissionStats[playerNum].timerPaused = 1;
 }
@@ -139,8 +151,10 @@ void PlarStat_LogTimerPause(uint playerNum) {
 // AUTOINJECT
 void PlarStat_LogTimerUnpause(uint playerNum) {
     
-    if (playerNum >= ARRAY_SIZE(PlrMissionStats))
+    if (playerNum >= ARRAY_SIZE(PlrMissionStats)) {
+        NF_WARN("ERROR : Invalid Plr ID\n"); // GC check
         return;
+    }
 
     PlrMissionStats[playerNum].timerPaused = 0;
 }
@@ -269,6 +283,7 @@ undefined4* PlrStat_GetScore(char playerNum) {
     }
     // (The original also tests the entry's address for NULL here, which it never is.)
     if (table == NULL) {
+        NF_WARN("ERROR : No scoring table found for level 0x%x\n", level); // GC check (0x800e6e14)
         return NULL;
     }
 
@@ -278,6 +293,7 @@ undefined4* PlrStat_GetScore(char playerNum) {
 
     if (table->isAction == 0) {
         if (NewScoresRef == NULL) {
+            NF_WARN("ERROR : No pointer to shared scoring data for level 0x%x\n", level); // GC check (0x800e6e14)
             return NULL;
         }
         // The driving engine's entries are {achieved, target, maxPoints}; its time is in seconds

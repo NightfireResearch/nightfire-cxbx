@@ -257,6 +257,9 @@ void psiCreateMapTextures(map_tag *mapptr) {
 
     for (uint i = 0; i < (uint)mapptr->numTexHeaderEntries; i++, NumXboxTexLoaded++) {
         TextureInfo *tex = mapptr->texHeaderData[i].textureInfo;
+        // The GameCube stops at 0x500 ("Too many textures headers, change max", fatal); here the limit is Tex[]'s
+        // 2048 slots, past which this would write over whatever follows it
+        NF_ASSERT(NumXboxTexLoaded < (int)ARRAY_SIZE(Tex), "Too many textures headers, change max");
         Tex[NumXboxTexLoaded] = tex;
         texData[i].texIdx = NumXboxTexLoaded;
         if (tex == NULL || tex == (TextureInfo *)-1) {

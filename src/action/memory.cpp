@@ -110,6 +110,10 @@ void Mem_Init(void) {
 // AUTOINJECT
 void Mem_PrintAllInfo(void) {
     Mem_Info();
+    // GC check (0x80057104): a block whose type byte is past the last allocation type has a corrupt header
+    MemBlock *end = Mem_HeapEnd();
+    for (MemBlock *block = Mem_HeapStart(); block < end; block = Mem_NextBlock(block))
+        NF_WARN_IF((block->flags >> 8) > 0x4f, "Mem type %d size %dk\n", block->flags >> 8, block->size >> 10);
 }
 
 // Chooses the free block Mem_Malloc will carve from: one of at least `need` bytes, by the current MallocMethod.
@@ -175,6 +179,10 @@ static MemBlock* Mem_FindFreeBlock(uint need) {
 // AUTOINJECT
 void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t alignment) {
 
+    // GC check (0x80056700): an allocation type past the last one MemInfo names, or nothing to allocate
+    NF_WARN_IF(((flags >> 8) & 0xff) > 0x4f || size == 0, "Mem_Malloc of bad type %d size %dk\n",
+               (flags >> 8) & 0xff, (int)size);
+
     if (alignment == 0)
         alignment = (uint32_t)flags & 0xff;
     uint mask = (alignment - 1) | 3;
@@ -184,6 +192,8 @@ void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t alignment) {
     MemBlock *block = Mem_FindFreeBlock(need);
     if (block == NULL) {
         Mem_PrintAllInfo();
+        NF_WARN("OUT OF MEMORY!\n"); // GC check (0x80056700)
+        NF_WARN("Trying to allocate %dk\n", (int)(size >> 10));
         return NULL;
     }
 
@@ -243,6 +253,8 @@ void Mem_Free(void **ptr) {
     char *data = (char *)*ptr;
     MemBlock *end = Mem_HeapEnd();
     if (data < (char *)Mem_HeapStart() || data > (char *)end) {
+        // GC check (0x80056534). The GameCube reports NULL too; that is freed quietly here, as callers do it
+        NF_WARN_IF(data != NULL, "Trying to free outside of heap %x\n", (uint)(uintptr_t)data);
         *ptr = NULL;
         return;
     }
@@ -349,8 +361,10 @@ static void Mem_FreeMiddle(char *data, uint numBytes, MemBlock *block, MemBlock 
 // FUNC_AT(00070850)
 void Mem_Shrink(void **ptr, uint numBytes) {
 
-    if (numBytes <= sizeof(MemBlock))
+    if (numBytes <= sizeof(MemBlock)) {
+        NF_WARN("Too small to shrink\n"); // GC check (0x80056e44)
         return;
+    }
 
     char *data = (char *)*ptr;
     MemBlock *end = Mem_HeapEnd();
@@ -364,6 +378,7 @@ void Mem_Shrink(void **ptr, uint numBytes) {
     // The original reads through a NULL block here, and faults
     NF_ASSERT(block != NULL, "Mem_Shrink: the pointer is not in the heap");
 
+    NF_WARN_IF(block->isFree, "already free\n"); // GC check (0x80056e44)
     if (!block->isFree) {
         char *blockData = (char *)(block + 1);
         if (data < blockData)
@@ -377,6 +392,8 @@ void Mem_Shrink(void **ptr, uint numBytes) {
                 Mem_FreeMiddle((char *)*ptr, numBytes, block, next);
             else if (partEnd == (char *)next)
                 Mem_FreeBack((char *)*ptr, block, next);
+            else
+                NF_WARN("Error in Free2End\n"); // GC check (0x80056e44): the part runs past the block's end
         }
     }
     *ptr = NULL;

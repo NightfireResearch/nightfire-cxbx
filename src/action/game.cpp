@@ -745,6 +745,10 @@ void GameFlow_Main(void) {
     GameFlow_PopState();
     SkipCodeFrame = '\0';
     break;
+  default:
+    // GC check (0x800515e8). 5 is a valid state that does nothing this frame
+    NF_WARN_IF(GameFlow_GetState() != 5, "Game state not valid %d\n", GameFlow_GetState());
+    break;
   }
 
   if (SkipCodeFrame == '\0') {

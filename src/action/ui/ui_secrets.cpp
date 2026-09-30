@@ -65,6 +65,8 @@ uint64_t Menu_UpgradeCheat(uint64_t bonus, uint objId, byte count) {
                         return bonus;
                 }
             }
+    // GC check (0x8011be74)
+    NF_WARN_IF(owned < count, "cheat to upgrade %d to level %d failed\n", objId, count);
     return bonus;
 }
 

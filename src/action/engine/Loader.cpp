@@ -178,6 +178,8 @@ bool LoaderLoad(int mode, uint fileHash, undefined4 unused, int variant) {
 
     switch (LoaderState) {
     case LOADER_OPEN: {
+        // GC check (0x8005c5ec): levels are 0x07xxxxxx (it loads the archive anyway)
+        NF_WARN_IF((fileHash & 0xff000000) != 0x07000000, "Loader : Invalid level 0x%x\n", fileHash);
         uint hash = fileHash & LOADER_VARIANT_MASK;
         if (variant != 0)
             hash |= (uint)(variant + LOADER_VARIANT_BASE) << LOADER_VARIANT_SHIFT; // may spill past bit 23, as in the original
@@ -195,6 +197,7 @@ bool LoaderLoad(int mode, uint fileHash, undefined4 unused, int variant) {
             return true;
         }
         // The state stays LOADER_OPEN: the next call tries again
+        NF_WARN("File %s not found\n", fileName); // GC check (0x8005c5ec)
         return false;
     }
 
@@ -306,6 +309,9 @@ bool LoaderProcess(void) {
 
     MemType = 0;
 
+    // GC check (0x8005c444): types this build has no loader for are skipped
+    NF_WARN_IF(DirFileType == 9 || DirFileType > 0x10, "Loader : Invalid file type %d\n", DirFileType);
+
     switch(DirFileType) {
         case 1:
           AnimPostLoadInit();
@@ -340,6 +346,8 @@ bool LoaderProcess(void) {
             LoadableFiles[LoadableIndex].hashcode = (HASHCODE) *dirFileBuf;
             LoadableFiles[LoadableIndex].loadableIdx = (char)dirFileBuf[1];
             LoadableIndex++;
+          } else {
+            NF_WARN("Too many loadable files\n"); // GC check (0x8005c13c)
           }
         }
         return true;

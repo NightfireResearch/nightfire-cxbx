@@ -285,6 +285,7 @@ void Player_Start(void) {
     }
 
     // No spawn point was active, return without spawning anything
+    NF_WARN_IF(player_start_positions_index > 0, "MAJOR PROBLEM\n"); // GC check (0x800debe8)
     return;
 
 }

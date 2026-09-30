@@ -124,8 +124,10 @@ static uint32_t SpawnPntTeamCount[2];
 // AUTOINJECT
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId) {
 
-  if(teamId == MPTeam::NO_TEAM)
+  if(teamId == MPTeam::NO_TEAM) {
+    NF_WARN("Spawn points MUST have team assoc. with them!\n"); // GC check (0x800d32a0)
     return;
+  }
 
   int startIdx = 0;
   int endIdx = 64;

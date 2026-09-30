@@ -44,8 +44,10 @@ HITDATA_tag* Coll_GetFreeHit(void) {
     if(node == NULL) {
 
         // Heap is empty and the maximum number of allocations has been reached  
-        if(HitAllocCnt > 1000)
+        if(HitAllocCnt > 1000) {
+            NF_WARN("Run out of hit datas!! Didn't forget to call Collide_FreeHitList\n"); // GC check (0x80105350)
             return NULL;
+        }
 
         // Heap is empty but we haven't reached the maximum number of allocations yet
         HitAllocCnt += 0x40;

@@ -195,6 +195,9 @@ static_assert(sizeof(block_coll_data_header) == 0x10, "Bad size for block_coll_d
 void parsemap_block_Coll_Data_New(void) {
 
     block_coll_data_header *header = (block_coll_data_header *)FileNextBlock;
+    // GC check (0x800595dc): the collision block versions this code reads (it parses on regardless)
+    NF_WARN_IF(header->identifier != 4 && header->identifier != COLL_BLOCK_OLD,
+               ">>>FATAL<<<< : COLLISION VERSION MIS-MATCH %d\n", header->identifier);
     ushort numCollBoxes = header->numCollBoxes;
     ushort countB = header->countB;
     uint sizeofC = (uint)header->countC * sizeof(collDataC);

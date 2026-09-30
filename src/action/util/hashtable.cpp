@@ -158,8 +158,10 @@ bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc) {
 
     hashtable_entry* entry = _hashtable_getentry(hc);
 
-    if(entry == NULL)
+    if(entry == NULL) {
+        NF_WARN("FYI : SPRITE HASHCODE %08x NOT FOUND\n", hc); // GC check (0x80051da4)
         return false;
+    }
 
     SpriteInfoFromHashmap sprInfo = *(SpriteInfoFromHashmap*)(entry->data);
 
