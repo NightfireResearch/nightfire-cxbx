@@ -10,8 +10,7 @@
 #include "../../game.h"
 
 // Switches are kept in their own list, initialised (oddly) from Sensor_Init alongside CameraList - see Sensor.cpp
-// XBE_GLOBAL(0x0029aab0, 0xc)
-#define SwitchList (*(LLISTINFO_tag*)0x0029aab0)
+extern LLISTINFO_tag SwitchList; // defined in Sensor.cpp
 
 // Stride confirmed via Switch_Create's raw disassembly; only the first byte (switchChannel) is understood so far.
 // Note this is addressed directly (index*8 + base), NOT via a +1 like Ghidra's decompiler shows for the one place

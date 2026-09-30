@@ -82,7 +82,7 @@ static uint credits_count;
 // XBE_GLOBAL(0x00161954, 0x5)
 #define credits_format_company ((const char *)0x00161954)
 // XBE_GLOBAL(0x0016195c, 0x5)
-#define credits_format_role    ((const char *)0x0016195c)
+static const char credits_format_role[] = "\xff\x03\xfe\x03"; // the renderer's formatting codes, byte for byte
 
 static const char *CreditsFormat(uchar style) {
     if (style == 1)

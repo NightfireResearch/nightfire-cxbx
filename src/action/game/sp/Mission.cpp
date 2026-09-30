@@ -19,53 +19,132 @@ static uint32_t MissionState = 0x5;
 
 // The objectives each mission part points at: still the game's own arrays (their status is written at run time).
 // XBE_GLOBAL(0x0017dc58, 0x18)
-#define Objectives_1_CastleExterior ((Objective*)0x0017dc58) // 1 objective(s)
+static Objective Objectives_1_CastleExterior[1] = {
+    {(Action_TranslatedText)0x04000000, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005b, 70, 0, 1, 69, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017dc70, 0x18)
-#define Objectives_1_CastleCourtyard ((Objective*)0x0017dc70) // 1 objective(s)
+static Objective Objectives_1_CastleCourtyard[1] = {
+    {(Action_TranslatedText)0x04000001, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005c, 2, 0, 1, 70, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017dc88, 0x30)
-#define Objectives_2_CastleIndoors ((Objective*)0x0017dc88) // 2 objective(s)
+static Objective Objectives_2_CastleIndoors[2] = {
+    {(Action_TranslatedText)0x04000002, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005d, 72, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000003, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005e, 73, 0, 1, 72, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017dcb8, 0x30)
-#define Objectives_2_CastleIndoors2 ((Objective*)0x0017dcb8) // 2 objective(s)
+static Objective Objectives_2_CastleIndoors2[2] = {
+    {(Action_TranslatedText)0x04000004, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005f, 74, 0, 1, 73, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000005, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000060, 75, 0, 1, 74, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017dce8, 0x18)
-#define Objectives_1_HendersonA ((Objective*)0x0017dce8) // 1 objective(s)
+static Objective Objectives_1_HendersonA[1] = {
+    {(Action_TranslatedText)0x04000006, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400000e, 71, 0, 0, 0, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017dd00, 0x48)
-#define Objectives_3_HendersonB ((Objective*)0x0017dd00) // 3 objective(s)
+static Objective Objectives_3_HendersonB[3] = {
+    {(Action_TranslatedText)0x04000007, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400000f, 72, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000008, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000010, 75, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000009, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000011, 77, 0, 1, 76, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017dd48, 0x48)
-#define Objectives_3_HendersonC ((Objective*)0x0017dd48) // 3 objective(s)
+static Objective Objectives_3_HendersonC[3] = {
+    {(Action_TranslatedText)0x0400000a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000012, 78, 0, 1, 77, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400000b, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000013, 81, 0, 1, 77, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400000c, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000014, 83, 0, 1, 82, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017dd90, 0x18)
-#define Objectives_1_HendersonD ((Objective*)0x0017dd90) // 1 objective(s)
+static Objective Objectives_1_HendersonD[1] = {
+    {(Action_TranslatedText)0x0400000d, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000015, 84, 0, 1, 83, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017dda8, 0x48)
-#define Objectives_3_TowerA ((Objective*)0x0017dda8) // 3 objective(s)
+static Objective Objectives_3_TowerA[3] = {
+    {(Action_TranslatedText)0x04000016, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000021, 97, 0, 0, 0, 2, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000017, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000022, 70, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000018, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000023, 71, 0, 1, 70, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017ddf0, 0x48)
-#define Objectives_3_TowerB ((Objective*)0x0017ddf0) // 3 objective(s)
+static Objective Objectives_3_TowerB[3] = {
+    {(Action_TranslatedText)0x04000019, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000024, 72, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000025, 73, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001b, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000026, 75, 0, 1, 74, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017de38, 0x78)
-#define Objectives_5_TowerC ((Objective*)0x0017de38) // 5 objective(s)
+static Objective Objectives_5_TowerC[5] = {
+    {(Action_TranslatedText)0x0400001c, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000027, 76, 0, 1, 75, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001d, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000028, 77, 0, 1, 75, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001e, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000029, 78, 0, 1, 77, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001f, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400002a, 89, 0, 1, 79, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000020, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400002b, 90, 0, 1, 89, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017deb0, 0x48)
-#define Objectives_3_PowerStationA1 ((Objective*)0x0017deb0) // 3 objective(s)
+static Objective Objectives_3_PowerStationA1[3] = {
+    {(Action_TranslatedText)0x0400002c, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000061, 27, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400002d, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000062, 28, 0, 1, 27, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400002e, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000063, 35, 0, 1, 28, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017def8, 0x48)
-#define Objectives_3_PowerStationA2 ((Objective*)0x0017def8) // 3 objective(s)
+static Objective Objectives_3_PowerStationA2[3] = {
+    {(Action_TranslatedText)0x0400002f, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000064, 29, 0, 1, 35, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000030, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000065, 30, 0, 1, 29, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000031, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000066, 31, 0, 1, 29, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017df40, 0x60)
-#define PowerStation_B1 ((Objective*)0x0017df40) // 4 objective(s)
+static Objective PowerStation_B1[4] = {
+    {(Action_TranslatedText)0x04000041, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 15, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000042, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 10, 0, 1, 7, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000043, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 11, 0, 1, 8, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000044, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 12, 0, 1, 9, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017dfa0, 0x18)
-#define PowerStation_B2 ((Objective*)0x0017dfa0) // 1 objective(s)
+static Objective PowerStation_B2[1] = {
+    {(Action_TranslatedText)0x04000045, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 0, 0, 1, 0, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017dfb8, 0x30)
-#define Tower_2A ((Objective*)0x0017dfb8) // 2 objective(s)
+static Objective Tower_2A[2] = {
+    {(Action_TranslatedText)0x04000035, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003b, 100, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000036, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003c, 72, 0, 0, 0, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017dfe8, 0x30)
-#define Tower_2B ((Objective*)0x0017dfe8) // 2 objective(s)
+static Objective Tower_2B[2] = {
+    {(Action_TranslatedText)0x04000037, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003d, 73, 0, 1, 72, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000038, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003e, 77, 0, 1, 73, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017e018, 0x18)
-#define Tower_2Elevator ((Objective*)0x0017e018) // 1 objective(s)
+static Objective Tower_2Elevator[1] = {
+    {(Action_TranslatedText)0x04000039, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003f, 74, 0, 1, 77, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017e030, 0x18)
-#define Tower_2C ((Objective*)0x0017e030) // 1 objective(s)
+static Objective Tower_2C[1] = {
+    {(Action_TranslatedText)0x0400003a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000040, 80, 0, 1, 74, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017e048, 0x48)
-#define Caves ((Objective*)0x0017e048) // 3 objective(s)
+static Objective Caves[3] = {
+    {(Action_TranslatedText)0x04000046, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 0, 0, 1, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000047, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 0, 0, 1, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000048, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 0, 0, 1, 0, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017e090, 0x78)
-#define Evil_Base ((Objective*)0x0017e090) // 5 objective(s)
+static Objective Evil_Base[5] = {
+    {(Action_TranslatedText)0x04000049, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000050, 71, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000051, 72, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004b, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000052, 74, 0, 1, 72, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004c, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000053, 84, 0, 1, 74, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000069, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400006a, -50, 0, 1, 84, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017e108, 0x18)
-#define Evil_Silo ((Objective*)0x0017e108) // 1 objective(s)
+static Objective Evil_Silo[1] = {
+    {(Action_TranslatedText)0x0400004d, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000054, -114, 0, 1, 75, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017e120, 0x30)
-#define EvilBase_ShuttleBay ((Objective*)0x0017e120) // 2 objective(s)
+static Objective EvilBase_ShuttleBay[2] = {
+    {(Action_TranslatedText)0x0400004e, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000055, -113, 0, 1, -114, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004f, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000056, -112, 0, 1, -113, 0, {0, 0, 0}, 0},
+};
 // XBE_GLOBAL(0x0017e150, 0x30)
-#define Space_Station_D ((Objective*)0x0017e150) // 2 objective(s)
+static Objective Space_Station_D[2] = {
+    {(Action_TranslatedText)0x04000059, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000067, 9, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400005a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000068, 11, 0, 1, 9, 0, {0, 0, 0}, 0},
+};
 
 // XBE_GLOBAL(0x0017e180, 0x3c0)
 static Mission MissionData[24] = {

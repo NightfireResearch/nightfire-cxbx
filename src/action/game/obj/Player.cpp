@@ -29,7 +29,7 @@ static uint32_t player_start_positions_index;
 // XBE_GLOBAL(0x002774cc, 0x4)
 static uint32_t player_start_position; // Unused - only ever written?
 // XBE_GLOBAL(0x002774d0, 0x17e8)
-#define player_start ((PlayerStartPosition*)(0x002774d0))
+static PlayerStartPosition player_start[0x1e];
 
 // AUTOINJECT
 void Player_ResetStartPos(void) {

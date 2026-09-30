@@ -194,7 +194,7 @@ void BackgroundMoviePlayFile(char *filename);
 
 
 // XBE_GLOBAL(0x002ae3f0, 0x100)
-#define BackgroundMovieFilename ((char*)(0x002ae3f0))
+static char BackgroundMovieFilename[0x100];
 // XBE_GLOBAL(0x002ae28c, 0x1)
 static uint8_t LoopingMovie;
 // XBE_GLOBAL(0x00194818, 0x4)

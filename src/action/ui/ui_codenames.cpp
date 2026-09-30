@@ -20,8 +20,8 @@ M_ITEM cn_options[7] = {
     {ICON_CNOPTIONS_SAVE, SAVE_CODENAME, ACCEPT_CHANGES_DESC, 6, 1, TXT_NULL}, // Save Codename
 };
 
-// XBE_GLOBAL(0x0025ed28, 0x48)
-#define cn_menu_title_text ((char *)0x0025ed28)  // "Edit <codename>"
+// XBE_GLOBAL(0x0025ed28, 0x40)
+static char cn_menu_title_text[0x40]; // "Edit <codename>"
 
 // AUTOGEN
 void Menu_UpdateDefaultCodename(byte param_1, byte slot);

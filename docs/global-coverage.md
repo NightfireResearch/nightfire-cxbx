@@ -59,7 +59,8 @@ static uint16_t NumTanks;
 The tag is what lets the tool keep checking it. `python tools/global_coverage.py --check` fails if any owned
 global still has a live reference: some original that can run is still reading or writing the game's copy,
 which our code no longer looks at. That happens when a function is un-replaced, or when a new `AUTOGEN` call
-brings an original back to life.
+brings an original back to life. It also fails if our own code still reaches into an owned global at the game's address: a second
+`#define` of it in another file (or of one of its fields) that was not converted with it, or a raw address.
 
 A table we define with the same values as the game's, which neither our code nor the game's ever writes (a
 lookup table, say), can be owned before every reader is replaced: add `readonly` to the tag.

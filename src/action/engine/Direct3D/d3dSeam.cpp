@@ -759,7 +759,7 @@ static uint8_t D3D8_ForceColorConstant67Update = 1; // forces a re-send even if 
 // function); Gfx.projMatrixCacheB is scaled in place by Gfx.fogScale and feeds the depth-clip-plane calculation.
 
 // XBE_GLOBAL(0x002c5548, 0x200)
-#define VtxShaderHandles ((void**)0x002C5548)            // not in the Gfx struct - a fixed array of created vertex-shader handles
+static void* VtxShaderHandles[0x80]; // not in the Gfx struct - a fixed array of created vertex-shader handles
 
 // Bit pattern for the fog constant's "avoid divide-by-zero" sentinel value - written as a raw uint32_t by the
 // original rather than a float literal, so reproduced bit-for-bit rather than approximated with a decimal one.
@@ -2427,7 +2427,13 @@ void maybeD3dShutdown(void) {
 #define D3D8_RS_0x40300_LastValue D3D8_TRACED("D3D8_RS_0x40300_LastValue", 0x00111AC0) // opaque, untraced; only ever written here
 #define D3D8_RS_DitherEnable D3D8_TRACED("D3D8_RS_DitherEnable", 0x00111AD4) // X_D3DRS_DITHERENABLE (render-state index 65), poked directly via D3D_SetRenderStateSimple
 // XBE_GLOBAL(0x001b5208, 0xd4)
-#define D3D8_ShaderConstantSubIndexTable ((int32_t*)0x001B5208) // untraced - ~53 ints, each added to 0x60 to form a shader-constant register index
+static const int32_t D3D8_ShaderConstantSubIndexTable[53] = { // untraced - ~53 ints, each added to 0x60 to form a shader-constant register index
+    -96, -93, -90, -87, -84, -81, -78, -75, -72, -69, -66, -63,
+    -60, -57, -54, -51, -48, -45, -42, -36, -33, -30, -27, -24,
+    -21, -18, -15, -12, -9, -6, -3, 30, 33, 36, 39, 42,
+    45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78,
+    81, 84, 87, 90, 93
+};
 
 // Per-texture-stage-like opaque D3D8-internal registers, four groups spaced 0x80 apart, written unconditionally
 // (given device ready) every time d3dSetup runs. Untraced overall meaning - ported verbatim from decompile
@@ -2706,7 +2712,7 @@ void psiBlurCharacterShadow(void) {
 // ---------------------------------------------------------------------------------------------------------------
 
 // XBE_GLOBAL(0x002ff468, 0xc)
-#define Gfx_BlurHistoryTextureSlots ((int32_t*)0x002FF468u) // not in the Gfx struct - a 3-entry round-robin of texture slots holding recent screen captures
+static int32_t Gfx_BlurHistoryTextureSlots[0x3]; // not in the Gfx struct - a 3-entry round-robin of texture slots holding recent screen captures
 // XBE_GLOBAL(0x002ff474, 0x4)
 static uint32_t Gfx_BlurHistoryIndex; // current round-robin index into the above (0, 1 or 2)
 
@@ -3155,23 +3161,182 @@ static_assert(sizeof(D3DPRESENT_PARAMETERS_Xbox) == 17 * 4, "Bad size for D3DPRE
 // declarations (selected by the shader index's low two bits) and each have their own function token array
 // (a 128-entry pointer table), plus the immediate-mode and overlay-quad shaders with dedicated handles.
 // XBE_GLOBAL(0x001b50e4, 0x18)
-#define VtxShaderDeclTokens_Plain    ((const void*)0x001B50E4u)
+static const uint32_t VtxShaderDeclTokens_Plain[6] = {
+    0x20000000, 0x40320000, 0x40160001, 0x40400002, 0x40220003, 0xffffffff
+};
 // XBE_GLOBAL(0x001b5100, 0x58)
-#define VtxShaderDeclTokens_Bit0     ((const void*)0x001B5100u)
+static const uint32_t VtxShaderDeclTokens_Bit0[22] = {
+    0x20000000, 0x40320000, 0x40160001, 0x40400002, 0x40220003, 0x20000001, 0x40350007, 0x20000002,
+    0x40350008, 0x20000003, 0x40350009, 0x20000004, 0x4035000a, 0x20000005, 0x4035000b, 0x20000006,
+    0x4035000c, 0x20000007, 0x4035000d, 0x20000008, 0x4035000e, 0xffffffff
+};
 // XBE_GLOBAL(0x001b5158, 0x1c)
-#define VtxShaderDeclTokens_Bit1     ((const void*)0x001B5158u)
+static const uint32_t VtxShaderDeclTokens_Bit1[7] = {
+    0x20000000, 0x40320000, 0x40160001, 0x40400002, 0x40220003, 0x40400004, 0xffffffff
+};
 // XBE_GLOBAL(0x001b5178, 0x5c)
-#define VtxShaderDeclTokens_Bit0And1 ((const void*)0x001B5178u)
+static const uint32_t VtxShaderDeclTokens_Bit0And1[23] = {
+    0x20000000, 0x40320000, 0x40160001, 0x40400002, 0x40220003, 0x40400004, 0x20000001, 0x40350007,
+    0x20000002, 0x40350008, 0x20000003, 0x40350009, 0x20000004, 0x4035000a, 0x20000005, 0x4035000b,
+    0x20000006, 0x4035000c, 0x20000007, 0x4035000d, 0x20000008, 0x4035000e, 0xffffffff
+};
 // XBE_GLOBAL(0x001b4d78, 0x200)
-#define VtxShaderFunctionTokenTable  ((const void* const*)0x001B4D78u) // 128 pointers
+static const void* const VtxShaderFunctionTokenTable[128] = {// 128 pointers // the programs stay in the game's data
+    (const void*)0x0019cd08,
+    (const void*)0x0019cdc0,
+    (const void*)0x0019cef8,
+    (const void*)0x0019d080,
+    (const void*)0x0019d288,
+    (const void*)0x0019d430,
+    (const void*)0x0019d658,
+    (const void*)0x0019d8f0,
+    (const void*)0x0019dc08,
+    (const void*)0x0019de60,
+    (const void*)0x0019e138,
+    (const void*)0x0019e480,
+    (const void*)0x0019e848,
+    (const void*)0x0019eb80,
+    (const void*)0x0019ef38,
+    (const void*)0x0019f360,
+    (const void*)0x0019f808,
+    (const void*)0x0019f920,
+    (const void*)0x0019fab8,
+    (const void*)0x0019fcc0,
+    (const void*)0x0019ff48,
+    (const void*)0x001a0140,
+    (const void*)0x001a03b8,
+    (const void*)0x001a06a0,
+    (const void*)0x001a0a08,
+    (const void*)0x001a0cb0,
+    (const void*)0x001a0fd8,
+    (const void*)0x001a1370,
+    (const void*)0x001a1788,
+    (const void*)0x001a1b10,
+    (const void*)0x001a1f08,
+    (const void*)0x001a2380,
+    (const void*)0x001a2878,
+    (const void*)0x001a2960,
+    (const void*)0x001a2ac8,
+    (const void*)0x001a2ca0,
+    (const void*)0x001a2ef8,
+    (const void*)0x001a30c0,
+    (const void*)0x001a3308,
+    (const void*)0x001a35c0,
+    (const void*)0x001a38f8,
+    (const void*)0x001a3b60,
+    (const void*)0x001a3e48,
+    (const void*)0x001a41b0,
+    (const void*)0x001a4598,
+    (const void*)0x001a48e0,
+    (const void*)0x001a4ca8,
+    (const void*)0x001a50f0,
+    (const void*)0x001a55b8,
+    (const void*)0x001a56f0,
+    (const void*)0x001a58a8,
+    (const void*)0x001a5ad0,
+    (const void*)0x001a5d78,
+    (const void*)0x001a5f90,
+    (const void*)0x001a6228,
+    (const void*)0x001a6530,
+    (const void*)0x001a68b8,
+    (const void*)0x001a6b70,
+    (const void*)0x001a6ea8,
+    (const void*)0x001a7260,
+    (const void*)0x001a7698,
+    (const void*)0x001a7a30,
+    (const void*)0x001a7e48,
+    (const void*)0x001a82e0,
+    (const void*)0x001a87f8,
+    (const void*)0x001a88e0,
+    (const void*)0x001a8a48,
+    (const void*)0x001a8c00,
+    (const void*)0x001a8e38,
+    (const void*)0x001a9010,
+    (const void*)0x001a9268,
+    (const void*)0x001a9530,
+    (const void*)0x001a9878,
+    (const void*)0x001a9af0,
+    (const void*)0x001a9de8,
+    (const void*)0x001aa150,
+    (const void*)0x001aa538,
+    (const void*)0x001aa890,
+    (const void*)0x001aac68,
+    (const void*)0x001ab0b0,
+    (const void*)0x001ab578,
+    (const void*)0x001ab6c0,
+    (const void*)0x001ab888,
+    (const void*)0x001abac0,
+    (const void*)0x001abd78,
+    (const void*)0x001abfa0,
+    (const void*)0x001ac248,
+    (const void*)0x001ac560,
+    (const void*)0x001ac8f8,
+    (const void*)0x001acbc0,
+    (const void*)0x001acf08,
+    (const void*)0x001ad2c0,
+    (const void*)0x001ad6f8,
+    (const void*)0x001adaa0,
+    (const void*)0x001adec8,
+    (const void*)0x001ae360,
+    (const void*)0x001ae878,
+    (const void*)0x001ae990,
+    (const void*)0x001aeb28,
+    (const void*)0x001aed30,
+    (const void*)0x001aefb8,
+    (const void*)0x001af1b0,
+    (const void*)0x001af428,
+    (const void*)0x001af710,
+    (const void*)0x001afa78,
+    (const void*)0x001afd10,
+    (const void*)0x001b0028,
+    (const void*)0x001b03b0,
+    (const void*)0x001b07b8,
+    (const void*)0x001b0b30,
+    (const void*)0x001b0f28,
+    (const void*)0x001b1390,
+    (const void*)0x001b1878,
+    (const void*)0x001b19e0,
+    (const void*)0x001b1bc8,
+    (const void*)0x001b1e20,
+    (const void*)0x001b20f8,
+    (const void*)0x001b2340,
+    (const void*)0x001b2608,
+    (const void*)0x001b2940,
+    (const void*)0x001b2cf8,
+    (const void*)0x001b2fe0,
+    (const void*)0x001b3348,
+    (const void*)0x001b3720,
+    (const void*)0x001b3b78,
+    (const void*)0x001b3f40,
+    (const void*)0x001b4388,
+    (const void*)0x001b4840
+};
 // XBE_GLOBAL(0x001b51d4, 0x14)
-#define ImmediateModeVtxShaderDecl   ((const void*)0x001B51D4u)
-// XBE_GLOBAL(0x001b4f78, 0x16c)
-#define ImmediateModeVtxShaderFunc   ((const void*)0x001B4F78u)
+static const uint32_t ImmediateModeVtxShaderDecl[5] = {
+    0x20000000, 0x40220000, 0x40400002, 0x40220003, 0xffffffff
+};
+// XBE_GLOBAL(0x001b4f78, 0x58)
+static const uint32_t ImmediateModeVtxShaderFunc[22] = { // header 0x00052078: 5 instructions, then a padding word
+    0x00052078, 0x00000000, 0x0020001b, 0x0836106c, 0x2070c800, 0x00000000, 0x002cc0aa, 0x0c36106c,
+    0x20703800, 0x00000000, 0x004ce41b, 0x0836186c, 0x2070f818, 0x00000000, 0x0020061b, 0x0836106c,
+    0x2070f848, 0x00000000, 0x002006aa, 0x0836106c, 0x20708829, 0x00000000
+};
 // XBE_GLOBAL(0x001b51e8, 0x20)
-#define OverlayVtxShaderDecl         ((const void*)0x001B51E8u)
+static const uint32_t OverlayVtxShaderDecl[8] = {
+    0x20000000, 0x40320000, 0x40320005, 0x40400002, 0x40120006, 0x4012000f, 0xffffffff, 0x00000000
+};
 // XBE_GLOBAL(0x001b4fd0, 0x114)
-#define OverlayVtxShaderFunc         ((const void*)0x001B4FD0u)
+static const uint32_t OverlayVtxShaderFunc[69] = { // header 0x00112078: 17 instructions
+    0x00112078, 0x00000000, 0x006d0caa, 0x0c361000, 0x28200ff8, 0x00000000, 0x002006bf, 0x0836106c,
+    0x21608828, 0x00000000, 0x00400000, 0x2400486c, 0x24300ff8, 0x00000000, 0x00400a1b, 0x0800486c,
+    0x2e400ff8, 0x00000000, 0x0060001b, 0x4436106c, 0x2e500ff8, 0x00000000, 0x004ce41b, 0x0836186c,
+    0x2070f818, 0x00000000, 0x00a0001b, 0x5436186c, 0x28600ff8, 0x00000000, 0x00a0201b, 0x5436186c,
+    0x24700ff8, 0x00000000, 0x00a0401b, 0x5436186c, 0x22600ff8, 0x00000000, 0x008d0055, 0x34aa1955,
+    0xd4600ff8, 0x00000000, 0x00ec001b, 0x6436186c, 0x20708800, 0x00000000, 0x00ec201b, 0x6436186c,
+    0x20704800, 0x00000000, 0x00ec401b, 0x6436186c, 0x20702800, 0x00000000, 0x04ec601b, 0x64361aab,
+    0x10121800, 0x00000000, 0x004d00aa, 0x1400186c, 0x20708830, 0x00000000, 0x0647401b, 0xc4361bff,
+    0x1078e800, 0x00000000, 0x0087601b, 0xc400286c, 0x3070e801
+};
 #define ImmediateModeVtxShaderHandleAddr ((void**)&Gfx_ImmediateModeVertexShader)
 #define OverlayVtxShaderHandleAddr       ((void**)&Gfx_OverlayVertexShaderHandle)
 

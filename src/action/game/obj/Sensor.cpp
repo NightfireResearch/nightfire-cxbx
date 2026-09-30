@@ -77,7 +77,7 @@ static_assert(sizeof(Create_Sensor_Params) == 0x50, "Wrong size for Create_Senso
 // XBE_GLOBAL(0x0029aabc, 0xc)
 #define CameraList (*(LLISTINFO_tag*)0x0029aabc)
 // XBE_GLOBAL(0x0029aab0, 0xc)
-#define SwitchList (*(LLISTINFO_tag*)0x0029aab0)
+LLISTINFO_tag SwitchList;
 
 // The map stores this angle in half-degrees; pi / 360 converts it to radians.
 static constexpr float HALF_DEGREES_TO_RADIANS = 0.008726646f;

@@ -155,6 +155,8 @@ def read_source():
                                      owned=False, tagged=False))
             if not line.lstrip().startswith("//"):
                 code = re.sub(r'"(\\.|[^"\\])*"', '""', line).split("//")[0]   # not inside strings
+                if re.fullmatch(r"\s*(0x[0-9a-fA-F]+u?,?\s*)+", code):
+                    continue   # a row of a data table (shader tokens, say), not addresses
                 for m in re.finditer(HEX, code):
                     a = int(m.group(1), 16)
                     if DATA_START <= a < DATA_END:
@@ -353,13 +355,27 @@ def main():
     def live_writes(g):
         return [x for x in g["refs"] if x[3] == "W" and status(x[2]) == "LIVE"]
     owned_bad = [g for g in sized if g["owned"] and g["live"] and (not g.get("readonly") or live_writes(g))]
+    # Our own code still reaching into an owned global at the game's address: a second #define of it (in another
+    # file, or of one of its fields) that was not converted with it, or a raw address. That code reads and writes
+    # the game's copy, which nothing else uses any more.
+    stale = []
+    for g in sized:
+        if not g["owned"]:
+            continue
+        for o in globals_:
+            if not o["owned"] and g["address"] <= o["address"] < g["address"] + g["size"]:
+                stale.append((g, "%s (%s:%d)" % (o["name"], o["file"], o["line"])))
+        for a, path, line, text in g["literals"]:
+            stale.append((g, "a raw address at %s:%d" % (path, line)))
     shared = [g for g in sized if g["owned"] and g["live"] and g not in owned_bad]
     if "--check" in flags:
         for g in owned_bad:
             print("OWNED BUT STILL IN USE: " + describe(g))
             for s in live_list(g):
                 print("    " + s)
-        sys.exit(1 if owned_bad else 0)
+        for g, what in stale:
+            print("OWNED BUT OUR CODE STILL USES THE GAME'S COPY: %s - %s" % (describe(g), what))
+        sys.exit(1 if owned_bad or stale else 0)
 
     if args:
         for g in sized + unsized:
@@ -392,6 +408,10 @@ def main():
     print("functions: %d replaced, %d dead, %d live; %d \"pointers\" inside code images and %d references hung "
           "on a MOV reg, imm ignored" % (
               len(replaced & set(funcs)), len(set(funcs) - replaced - live), len(live), len(ignored), spurious))
+    if stale:
+        print("\nOWNED, BUT OUR OWN CODE STILL REACHES THE GAME'S COPY:")
+        for g, what in stale:
+            print("  %-28s %s" % (g["name"], what))
     if owned_bad:
         print("\nOWNED BUT STILL IN USE - these read and write the game's copy, not ours:")
         for g in owned_bad:

@@ -359,27 +359,27 @@ static int16_t ctimer;
 // XBE_GLOBAL(0x00181598, 0x1c)
 #define MsgInfoStatusPane ((HUDPANECREATE_tag*)(0x00181598))
 // XBE_GLOBAL(0x0017fe8c, 0x1c)
-#define AirPane ((HUDPANECREATE_tag*)(0x0017fe8c))
+static HUDPANECREATE_tag AirPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b3a10 /* HUD_UpdateAirPane */, (SpriteInfo*)0x0017fe08 /* AirSprInfo */, 3, 0, 0, 0, 0};
 // XBE_GLOBAL(0x00180218, 0x1c)
-#define NightSightPane ((HUDPANECREATE_tag*)(0x00180218))
+static HUDPANECREATE_tag NightSightPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5e80 /* HUD_CreateShrink */, (HUDPANE_updateFunc)0x000b3da0 /* HUD_UpdateNightSightPane */, (SpriteInfo*)0x00180110 /* NightSightSprInfo */, 6, 0, 384, 0, 0};
 // XBE_GLOBAL(0x0018036c, 0x1c)
-#define LensFlarePane ((HUDPANECREATE_tag*)(0x0018036c))
+static HUDPANECREATE_tag LensFlarePane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b4330 /* HUD_UpdateLensFlarePane */, (SpriteInfo*)0x00180238 /* LensFlareSprInfo */, 7, 0, 0, 0, 0};
 // XBE_GLOBAL(0x00180690, 0x1c)
-#define RCCarPane ((HUDPANECREATE_tag*)(0x00180690))
+static HUDPANECREATE_tag RCCarPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5e80 /* HUD_CreateShrink */, (HUDPANE_updateFunc)0x000b3ff0 /* HUD_UpdateCarPane */, (SpriteInfo*)0x00180588 /* RCCarSprInfo */, 6, 0, 384, 0, 0};
 // XBE_GLOBAL(0x001800f4, 0x1c)
-#define CameraPane ((HUDPANECREATE_tag*)(0x001800f4))
+static HUDPANECREATE_tag CameraPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b3cc0 /* HUD_UpdateCameraPane */, (SpriteInfo*)0x0017ff68 /* CameraSprInfo */, 9, 1, 0, 0, 0};
 // XBE_GLOBAL(0x001807d4, 0x1c)
-#define XrayPane ((HUDPANECREATE_tag*)(0x001807d4))
+static HUDPANECREATE_tag XrayPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b3ee0 /* HUD_UpdateXRayPane */, (SpriteInfo*)0x001806f8 /* XraySprInfo */, 5, 0, 0, 0, 0};
 // XBE_GLOBAL(0x00180924, 0x1c)
-#define SecCamPane ((HUDPANECREATE_tag*)(0x00180924))
+static HUDPANECREATE_tag SecCamPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b3fa0 /* HUD_UpdateSecCamPane */, (SpriteInfo*)0x001807f0 /* SecCamSprInfo */, 7, 0, 0, 0, 0};
 // XBE_GLOBAL(0x00180a74, 0x1c)
-#define OICWPane ((HUDPANECREATE_tag*)(0x00180a74))
+static HUDPANECREATE_tag OICWPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b65b0 /* HUD_CreateOICWPane */, (HUDPANE_updateFunc)0x000b3ae0 /* HUD_UpdateOICWPane */, (SpriteInfo*)0x00180940 /* OICWSprInfo */, 7, 0, 384, 0, 0};
 // XBE_GLOBAL(0x00180b98, 0x1c)
-#define RoninPane ((HUDPANECREATE_tag*)(0x00180b98))
+static HUDPANECREATE_tag RoninPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5e80 /* HUD_CreateShrink */, (HUDPANE_updateFunc)0x000e0ec0 /* __profiling_or_debugging_hook_point */, (SpriteInfo*)0x00180a90 /* RoninSprInfo */, 6, 0, 384, 0, 0};
 // XBE_GLOBAL(0x00180cc0, 0x1c)
-#define LaserPane ((HUDPANECREATE_tag*)(0x00180cc0))
+static HUDPANECREATE_tag LaserPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5e80 /* HUD_CreateShrink */, (HUDPANE_updateFunc)0x000e0ec0 /* __profiling_or_debugging_hook_point */, (SpriteInfo*)0x00180bb8 /* LaserSprInfo */, 6, 0, 384, 0, 0};
 // XBE_GLOBAL(0x00180ec4, 0x1c)
-#define SpacePane ((HUDPANECREATE_tag*)(0x00180ec4))
+static HUDPANECREATE_tag SpacePane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b4090 /* HUD_UpdateSpacePane */, (SpriteInfo*)0x00180ce0 /* SpaceSprInfo */, 11, 0, 0, 0, 0};
 // XBE_GLOBAL(0x00181774, 0x1c)
 #define MsgPickupStatusPane ((HUDPANECREATE_tag*)(0x00181774))
 
@@ -566,22 +566,22 @@ HUDPANECREATE_tag* PaneList[] = {
 	MsgMissionStatusPane,
 	MsgObjectiveStatusPane,
 	MsgInfoStatusPane,
-	AirPane, // Oxygen/Swimming indicator?
+	&AirPane, // Oxygen/Swimming indicator?
 	&SightPane,
-	NightSightPane,
-	LensFlarePane,
+	&NightSightPane,
+	&LensFlarePane,
 	&RedeemerPane,
-	RCCarPane,
-	CameraPane,
+	&RCCarPane,
+	&CameraPane,
 	&BloodPane,
 	NULL,
 	NULL,
-	XrayPane,
-	SecCamPane,
-	OICWPane,
-	RoninPane,
-	LaserPane,
-	SpacePane,
+	&XrayPane,
+	&SecCamPane,
+	&OICWPane,
+	&RoninPane,
+	&LaserPane,
+	&SpacePane,
 	MsgPickupStatusPane
 };
 
@@ -589,38 +589,38 @@ static_assert(ARRAY_SIZE(PaneList) == NUM_PANES, "Bad size of pane list");
 
 
 // XBE_GLOBAL(0x00180fbc, 0x1c)
-#define MPAmmoPane ((HUDPANECREATE_tag*)(0x00180fbc))
+static HUDPANECREATE_tag MPAmmoPane = {640, 480, 0, 26, (HUDPANE_createFunc)0x000b6270 /* HUD_CreateAmmoPane */, (HUDPANE_updateFunc)0x000b1f90 /* HUD_UpdateAmmoPane */, (SpriteInfo*)0x00180f38 /* MPAmmoSprInfo */, 3, 4, 24, 0, 0};
 // XBE_GLOBAL(0x00181138, 0x1c)
-#define MPHealthPane ((HUDPANECREATE_tag*)(0x00181138))
+static HUDPANECREATE_tag MPHealthPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b6330 /* HUD_CreateMPHealthPane */, (HUDPANE_updateFunc)0x000b2870 /* HUD_UpdateMPHealthPane */, (SpriteInfo*)0x00180fd8 /* MPHealthSprInfo */, 8, 0, 384, 0, 0};
 // XBE_GLOBAL(0x00181180, 0x1c)
-#define MPMsgInfoStatusPane ((HUDPANECREATE_tag*)(0x00181180))
+static HUDPANECREATE_tag MPMsgInfoStatusPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b64d0 /* HUD_CreateInfoStatusPane */, (HUDPANE_updateFunc)0x000b3890 /* HUD_MPUpdateStatusPane */, (SpriteInfo*)0x00181154 /* MPInfoStatusSprInfo */, 1, 4, 384, 0, 0};
 // XBE_GLOBAL(0x001812d4, 0x1c)
-#define MPScorePane ((HUDPANECREATE_tag*)(0x001812d4))
+static HUDPANECREATE_tag MPScorePane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b67d0 /* HUD_CreateMPScorePane */, (HUDPANE_updateFunc)0x000b5190 /* HUD_MPUpdatePane */, (SpriteInfo*)0x001811a0 /* MPScoreInfo */, 7, 0, 384, 0, 0};
 // XBE_GLOBAL(0x001806d8, 0x1c)
-#define RadarPane ((HUDPANECREATE_tag*)(0x001806d8))
+static HUDPANECREATE_tag RadarPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b69e0 /* HUD_CreateRadar */, (HUDPANE_updateFunc)0x000b54d0 /* HUD_RadarUpdate */, (SpriteInfo*)0x001806ac /* RadarSprInfo */, 1, 28, 384, 0, 0};
 
 // XBE_GLOBAL(0x001812f0, 0x58)
 HUDPANECREATE_tag * MPPaneList[] = {
-	MPAmmoPane,
-	MPHealthPane,
+	&MPAmmoPane,
+	&MPHealthPane,
 	NULL,
 	NULL,
-	MPMsgInfoStatusPane,
+	&MPMsgInfoStatusPane,
 	NULL,
 	&SightPane,
 	NULL,
 	NULL,
 	&RedeemerPane,
-	RCCarPane,
+	&RCCarPane,
 	NULL,
 	&BloodPane,
-	MPScorePane,
-	RadarPane,
+	&MPScorePane,
+	&RadarPane,
 	NULL,
 	NULL,
-	OICWPane,
-	RoninPane,
-	LaserPane,
+	&OICWPane,
+	&RoninPane,
+	&LaserPane,
 	NULL,
 	NULL
 };

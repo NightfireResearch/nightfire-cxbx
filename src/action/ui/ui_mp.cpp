@@ -342,7 +342,7 @@ bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, 
 
 #define mp_editing_bot U8_AT(0x002456b2)                // the bot P_MPBOTCHOOSE / P_MPBOTSETUP are editing
 // XBE_GLOBAL(0x0025e960, 0x40)
-#define mp_bot_playing_text ((char *)0x0025e960)        // "Playing : Yes"
+static char mp_bot_playing_text[0x40]; // "Playing : Yes"
 
 // AUTOINJECT
 bool P_MPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
@@ -414,7 +414,7 @@ bool C_SBBOTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
 
 // P_MPBOTCHOOSE's own copy of mp_characters, with the characters this bot cannot have greyed out.
 // XBE_GLOBAL(0x00245338, 0x2b8)
-#define mp_stuff (*(M_ITEM(*)[29])0x00245338)
+static M_ITEM mp_stuff[29];
 // Who has the one-per-game characters: the editing bot's index + 10 (0 = nobody). In a game without teams only one
 // bot may be on MI6's side, and only one bot may be a Bond.
 #define mp_good_bot_taken U8_AT(0x002456b0)
@@ -486,8 +486,8 @@ bool C_SBMPBTCHOOSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
     return true;
 }
 
-// XBE_GLOBAL(0x0025e3d8, 0x1)
-#define mp_option_box_text ((char *)0x0025e3d8)
+// XBE_GLOBAL(0x0025e3d8, 0xff)
+static char mp_option_box_text[0xff];
 // XBE_GLOBAL(0x0025e4d7, 0x1)
 static uint8_t mp_bots_initialised;
 
@@ -808,7 +808,7 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 static uint8_t mp_debrief_text_count; // the next of mp_debrief_text's strings
 #define mp_debrief_text       (*(char(*)[24][32])0x0025eaa0)     // the numbers on the debriefing
 // XBE_GLOBAL(0x0025e9a0, 0x100)
-#define mp_debrief_result     ((char *)0x0025e9a0)               // "<name> wins the match."
+static char mp_debrief_result[0x100]; // "<name> wins the match."
 
 // AUTOGEN
 undefined4 Menu_GetMPScore(byte participant);
@@ -928,17 +928,17 @@ static uint8_t mp_confirm_mi6_bots;
 static uint8_t mp_confirm_phoenix_bots;
 #define mp_confirm_handicap_text   (*(char(*)[4][32])0x0025e8d8)
 // XBE_GLOBAL(0x0025e4d8, 0x40)
-#define mp_confirm_map_text        ((char *)0x0025e4d8)
+static char mp_confirm_map_text[0x40];
 // XBE_GLOBAL(0x0025e518, 0x40)
-#define mp_confirm_scenario_text   ((char *)0x0025e518)
+static char mp_confirm_scenario_text[0x40];
 // XBE_GLOBAL(0x0025e558, 0x40)
-#define mp_confirm_weapons_text    ((char *)0x0025e558)
+static char mp_confirm_weapons_text[0x40];
 // XBE_GLOBAL(0x0025e598, 0x40)
-#define mp_confirm_points_text     ((char *)0x0025e598)
+static char mp_confirm_points_text[0x40];
 // XBE_GLOBAL(0x0025e5d8, 0x40)
-#define mp_confirm_duration_text   ((char *)0x0025e5d8)
+static char mp_confirm_duration_text[0x40];
 // XBE_GLOBAL(0x0025e618, 0x40)
-#define mp_confirm_friendly_text   ((char *)0x0025e618)
+static char mp_confirm_friendly_text[0x40];
 #define MP_UNLIMITED ((int)-1)     // MaxPoints / MaxDuration
 
 // AUTOGEN

@@ -478,10 +478,12 @@ enum {
 // The I3DL2 reverb DSP program, and the 3D rolloff curve, both constant data in the XBE image. Referenced at
 // their addresses rather than copied, matching how the D3D seam reaches the game's own shader/vertex data.
 // XBE_GLOBAL(0x00194840, 0x6168)
-#define EffectsImage      ((const void *)0x00194840)
+static const unsigned char EffectsImage[0x6168] = {
+#include "EffectsImage.inc"
+};
 #define EffectsImageSize  0x6168u
 // XBE_GLOBAL(0x0019a9a8, 0x14)
-#define RolloffCurve      ((const float *)0x0019a9a8) // { 1.0, 0.5, 0.25, 0.125, 0.0 }
+static const float RolloffCurve[5] = {1.0f, 0.5f, 0.25f, 0.125f, 0.0f}; // { 1.0, 0.5, 0.25, 0.125, 0.0 }
 #define RolloffCurvePoints 5u
 
 // The original's own float constants for the volume table (0x0015d31c, 0x0015d3f8). Kept as floats because the

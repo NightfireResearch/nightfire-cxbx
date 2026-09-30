@@ -124,7 +124,7 @@ uint GetLanguage(void) {
 // shares one overflow buffer.
 #define StringHeap (*(char(*)[256][0x168])0x001fed80)
 // XBE_GLOBAL(0x00215598, 0x168)
-#define StringHeapOverflow ((char*)0x00215598)
+static char StringHeapOverflow[0x168];
 
 // Finds the next free heap string at or after StringHeapCnt, wrapping round, locks it with lockCount and
 // returns it emptied. The first scan compares only StringHeapCnt's low 16 bits against 256, the second the whole

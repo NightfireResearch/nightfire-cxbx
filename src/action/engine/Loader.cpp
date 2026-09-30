@@ -26,7 +26,7 @@ typedef struct {
 #pragma pack(pop)
 
 // XBE_GLOBAL(0x002791d0, 0x80)
-#define LoadableFiles (*(LoadableFile(*)[16])(0x002791d0))
+static LoadableFile LoadableFiles[16];
 
 // AUTOINJECT
 bool LoaderProcess(void) {
