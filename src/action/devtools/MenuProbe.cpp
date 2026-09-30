@@ -6,7 +6,7 @@
 // MenuLog=on               every Handler_HandleMessage call: "[menu] f=<frame> m<manager> <control> msg=<type>
 //                          a=<arg1> b=<arg2> -> <result>" (tools/ui/menu_log.py names the hashcodes and types)
 // MenuLogSkip=0x3d,0x3e    message types left out of the log (per-frame ones, say)
-// MenuShadowTests=on      run the secret-code and unlock shadow tests at start, before the game (no display needed)
+// MenuShadowTests=on      run the secret-code, unlock and weapon upgrade shadow tests at start, before the game (no display needed)
 // MenuCheckLists=on       compare the item lists' contents in our source with the game's, at start
 // MenuOriginal=0x40000030:0x8ded0,0x76470
 //                          run these as the original code, to compare a reimplementation with it: HASH:ADDR is a page
@@ -40,6 +40,7 @@
 #include "../ui/Manager.h"
 #include "SecretsShadow.h"
 #include "UnlocksShadow.h"
+#include "UpgradeShadow.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -326,6 +327,7 @@ void MenuProbe_Install(void) {
     if (SettingOn("MenuShadowTests")) {
         SecretsShadow_Run();
         UnlocksShadow_Run();
+        UpgradeShadow_Run();
     }
     g_logging = SettingOn("MenuLog");
     if (g_logging) {

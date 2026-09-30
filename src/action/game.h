@@ -358,6 +358,9 @@ typedef struct {
 
 static_assert(sizeof(weapon_definition_tag) == 0x10c, "Size of weapon_definition_tag not correct");
 static_assert(offsetof(weapon_definition_tag,someDistance) == 0x1c, "someDistance is in the wrong place");
+static_assert(offsetof(weapon_definition_tag, someFlags) == 0x68, "someFlags is in the wrong place");
+static_assert(offsetof(weapon_definition_tag, ammoType) == 0x90, "ammoType is in the wrong place");
+static_assert(offsetof(weapon_definition_tag, clipSizeOrCooldown) == 0x92, "clipSizeOrCooldown is in the wrong place");
 
 typedef struct {
     uint paused;

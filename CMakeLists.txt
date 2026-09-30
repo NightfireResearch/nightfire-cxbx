@@ -92,6 +92,7 @@ add_library(actioninject SHARED
   src/action/devtools/MenuProbe.cpp
   src/action/devtools/SecretsShadow.cpp
   src/action/devtools/UnlocksShadow.cpp
+  src/action/devtools/UpgradeShadow.cpp
   src/action/game.cpp
   src/action/main.cpp
   src/common/launchInfo.cpp

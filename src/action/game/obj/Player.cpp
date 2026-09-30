@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "../Upgrade.h"
 #include "../mp/multiplayer.h"
 #include "../view.h"
 #include "../../engine/viewer.h"
@@ -119,6 +120,44 @@ short Player_AmmoIndex(short weaponIndex) {
         weaponIndex = weapon_data[weaponIndex].weaponBaseNum;
     }
     return weaponIndex;
+}
+
+// Gives the player ammo for a weapon: fills an empty gun first, for weapons that load a clip (someFlags 0x10),
+// and puts the rest in the carried stock up to the ammo type's maximum. Returns how much was taken, loaded plus
+// stocked (only the low 16 bits mean anything - the original leaves the rest of EAX as it was). Nothing is taken
+// when the stock is already full, even if the gun is empty.
+//
+// The two sniper rifles' pickups (0x1f, 0x25) stand for whichever sniper the player's upgrade level gives: the
+// weapon after that one in weapon_data, which takes the same ammo.
+// AUTOINJECT
+uint Player_EquipAmmo(BLData *playerInfo, short weaponIndex, short amount) {
+    uchar sniperUpgrade = Upgrades[0][WUG_Sniper];
+    if (weaponIndex == 0x1f)
+        weaponIndex = (short)(UpgradedSnipers[sniperUpgrade] + 1);
+    if (weaponIndex == 0x25)
+        weaponIndex = (short)(UpgradedSilencedSnipers[sniperUpgrade] + 1);
+
+    weapon_definition_tag *weapon = &weapon_data[weaponIndex];
+    if (playerInfo->ammo[weapon->ammoType] >= ammo_data[weapon->ammoType].maybeMaxNumPerPlayer)
+        return 0;
+    if (amount == 0)
+        return 0;
+
+    short loaded = 0;
+    if ((weapon->someFlags & 0x10) && playerInfo->weaponStats[Player_AmmoIndex(weaponIndex)].clipOrCooldown == 0) {
+        loaded = (amount < weapon->clipSizeOrCooldown) ? amount : weapon->clipSizeOrCooldown;
+        playerInfo->weaponStats[Player_AmmoIndex(weaponIndex)].clipOrCooldown = loaded;
+        amount -= weapon->clipSizeOrCooldown;
+        if (amount <= 0)
+            return (ushort)loaded;
+    }
+
+    short before = playerInfo->ammo[weapon->ammoType];
+    playerInfo->ammo[weapon->ammoType] = before + amount;
+    short max = ammo_data[weapon->ammoType].maybeMaxNumPerPlayer;
+    if (playerInfo->ammo[weapon->ammoType] >= max)
+        playerInfo->ammo[weapon->ammoType] = max;
+    return (ushort)(playerInfo->ammo[weapon->ammoType] - (loaded + before));
 }
 
 // AUTOINJECT
@@ -476,4 +515,542 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
     auxVec_AddMulR32(&blData->movement, &direction, moveZ, &blData->movement);
     blData->movement.x = moveX;
     blData->rotationDelta.y = yaw;
+}
+
+// AUTOGEN
+bool Player_WeaponHasAmmo(BLData *param_1, short param_2);
+// AUTOGEN
+void Player_WeaponChange(obj_tag *param_1, char param_2, char param_3);
+// AUTOGEN
+void Player_AutoAim(obj_tag *param_1);
+// AUTOGEN
+void Player_ClearAimInertia(obj_tag *param_1);
+// AUTOGEN
+void AnimScriptAddSpeed(int param_1, undefined4 param_2, float param_3);
+// Leaving the scope: target zoom back to 1x, view auto-levelling suppressed (aimAutoLevelState = 1), walk
+// animation reset, zoom motor sound stopped. Not a function on PS2 (inlined in Player_Weapon); a good name
+// would be Player_ScopeOff.
+// AUTOGEN
+void FUN_000b70b0(obj_tag *param_1);
+// Sets the zoom target and limit for the CURRENT weapon: 1x, or the zoom remembered for this weapon base when
+// the player's "remember zoom" option is on and the scope is up, clamped to weapon_data[].maxZoom. Also
+// inlined on PS2; a good name would be Player_ResetZoom.
+// AUTOGEN
+void FUN_000b7100(obj_tag *param_1);
+
+// Ghidra's prototype for Player_Zoom takes a float, but the original pushes the obj_tag* (ESI) and the
+// function reads obj+0xb8/obj+0xbc from it - an AUTOGEN with Ghidra's type would convert the pointer to a
+// float. Called by address until the prototype is fixed in Ghidra; then this can become an AUTOGEN.
+static void PlayerZoom(obj_tag *player) {
+    reinterpret_cast<void (__cdecl *)(obj_tag *)>(0x000b7190)(player);
+}
+
+// AnimScriptAddReverse (0x000172a0) has no prototype in Ghidra ("undefined AnimScriptAddReverse()"). It is
+// `MOV byte [0x001d7828],1; JMP AnimScriptAdd` - it raises the "play backwards" flag and tail-calls
+// AnimScriptAdd(obj, script), so it takes AnimScriptAdd's two cdecl arguments. Its return value is unused here.
+static void AnimScriptAddReverse(obj_tag *obj, HASHCODE script) {
+    reinterpret_cast<void (__cdecl *)(obj_tag *, HASHCODE)>(0x000172a0)(obj, script);
+}
+
+static_assert(offsetof(weapon_definition_tag, offsetToNextAltFireVariant) == 0x05, "offsetToNextAltFireVariant");
+static_assert(offsetof(weapon_definition_tag, unk15) == 0x2e, "unk15");
+static_assert(offsetof(weapon_definition_tag, someFlags) == 0x68, "someFlags");
+static_assert(offsetof(weapon_definition_tag, someAnimHC2) == 0xb8, "someAnimHC2");
+static_assert(offsetof(weapon_definition_tag, someAnimHC) == 0xbc, "someAnimHC");
+
+// AnimState::animFlags bits. SCOPED is what the player asked for this frame (after the weapon has had its say);
+// SCOPE_APPLIED is what the zoom was last set up for, so the edge between them runs the enter/leave code once.
+#define ANIMFLAG_SCOPED        0x01
+#define ANIMFLAG_SCOPE_APPLIED 0x02
+
+// weapon_definition_tag::someFlags bits this function reads.
+// 0x40: a proper sighted scope - more weapon states knock it down (reload-like states 6-8 and 16), and the
+// alt-fire button does nothing while it is up (the sniper rifles, flags 0x408050/0x4080d0).
+#define WPNFLAG_SIGHTED_SCOPE      0x40
+// 0x8000: in weapon state 9 the scope may stay up if it already was, but cannot be raised.
+#define WPNFLAG_SCOPE_HOLD_STATE9  0x8000
+
+// Weapon object (BLData::weaponObject->curState) states set here: the bring-to-eye and lower-from-eye
+// animations of weapons that have one (someAnimHC2 non-zero).
+#define WEAPONSTATE_IDLE        0x00
+#define WEAPONSTATE_SCOPE_RAISE 0x0f
+#define WEAPONSTATE_SCOPE_LOWER 0x10
+
+// Player_WeaponChange's third argument: 0 cycles weapons, 1 cycles gadgets, 2 is the party-guest restricted
+// cycle used in CastleIndoors1 before channel 0x48 ("cover blown") is set.
+#define WEAPONCHANGE_WEAPONS   0
+#define WEAPONCHANGE_GADGETS   1
+#define WEAPONCHANGE_UNARMED   2
+
+// Player_Weapon runs every frame for the player: scope up/down (hold or toggle, per the player's option),
+// the scope's bring-to-eye animations, alt-fire (switching to the alt-fire variant, or cycling a fire-mode
+// counter), gadget and weapon cycling, CastleIndoors1's hand-over of the P2K, then zoom and auto-aim.
+// AUTOINJECT
+void Player_Weapon(obj_tag *player) {
+    AnimState *anim = player->animState;
+    BLData *blData = (BLData *)player->extraObjectData;
+    short subState = (short)player->subState;
+    char weaponId = anim->currentWeaponId;
+    player->renderType |= 0x20;
+    char playerNum = blData->playerNum;
+    weapon_definition_tag *weapon = &weapon_data[weaponId];
+
+    // No scope handling on a ladder whose first short is set, nor on a wire or while creeping.
+    bool handleScope;
+    if (subState == MovementType_Climb) {
+        handleScope = (((ObjData_Ladder *)blData->attachedToSpecialMovementItem->extraObjectData)->unknown0 == 0);
+    }
+    else {
+        handleScope = (subState <= 5) || (subState > 7); // not MovementType_Wire or MovementType_Creep
+    }
+
+    if (handleScope) {
+        char wasScoped = anim->animFlags & ANIMFLAG_SCOPED;
+
+        if (PlayerInputs[playerNum].manualAimToggle == 0) {
+            // Hold to aim: scoped exactly while the button is down
+            anim->animFlags &= ~ANIMFLAG_SCOPED;
+            if (Input_Action(playerNum, ACTION_AIM_ZOOM_SCOPE, 1)) {
+                player->animState->animFlags |= ANIMFLAG_SCOPED;
+            }
+        }
+        else {
+            // Toggle: flip on each press
+            if (Input_Action(playerNum, ACTION_AIM_ZOOM_SCOPE, 4)) {
+                player->animState->animFlags ^= ANIMFLAG_SCOPED;
+            }
+        }
+
+        // States in which the weapon forces the scope down (jump tables at 0x000bad0c/0x000bad28).
+        bool forceDown = false;
+        uint flags = weapon_data[weaponId].someFlags;
+        switch (blData->weaponObject->curState) {
+            case 1: case 2: case 3: case 4: case 10: case 13: case 14: case 15:
+                forceDown = true;
+                break;
+            case 6: case 7: case 8: case 16:
+                forceDown = (flags & WPNFLAG_SIGHTED_SCOPE) != 0;
+                break;
+            case 9:
+                forceDown = (flags & WPNFLAG_SIGHTED_SCOPE) && (flags & WPNFLAG_SCOPE_HOLD_STATE9) && !wasScoped;
+                break;
+        }
+        if (forceDown) {
+            player->animState->animFlags &= ~ANIMFLAG_SCOPED;
+        }
+
+        AnimState *animNow = player->animState;
+        char isScoped = animNow->animFlags & ANIMFLAG_SCOPED;
+        if ((isScoped != wasScoped) && (weapon_data[weaponId].someAnimHC2 != 0)) {
+            if (isScoped) {
+                // Just asked for the scope: hold the bit off and play the bring-to-eye animation first
+                animNow->animFlags &= ~ANIMFLAG_SCOPED;
+                blData->weaponObject->curState = WEAPONSTATE_SCOPE_RAISE;
+                AnimScriptAddSpeed((int)blData->weaponObject, weapon_data[weaponId].someAnimHC2, 1.25f);
+            }
+            else if (blData->weaponObject->curState == WEAPONSTATE_IDLE) {
+                // Lowering. The upgraded camera drops back to the plain camera as it comes down.
+                blData->weaponObject->curState = WEAPONSTATE_SCOPE_LOWER;
+                if (weapon->weaponVariantNum == Weap_Camera_Upgraded) {
+                    player->animState->currentWeaponId = Weap_Camera;
+                    player->animState->switchingToWeaponId = Weap_Camera;
+                    weapon = &weapon_data[player->animState->currentWeaponId];
+                }
+                if (weapon->someAnimHC != 0) {
+                    AnimScriptAddSpeed((int)blData->weaponObject, weapon->someAnimHC, 1.25f);
+                }
+                else {
+                    AnimScriptAddReverse(blData->weaponObject, weapon->someAnimHC2);
+                }
+            }
+        }
+    }
+
+    // Run the enter/leave-scope code on the edge
+    AnimState *anim2 = player->animState;
+    char animFlags = anim2->animFlags;
+    if ((animFlags & ANIMFLAG_SCOPED) != ((animFlags >> 1) & 1)) {
+        anim2->animFlags = animFlags ^ ANIMFLAG_SCOPE_APPLIED;
+        if (animFlags & ANIMFLAG_SCOPED) {
+            FUN_000b7100(player);
+            blData->aimAutoLevelState = 0;
+            Player_ClearAimInertia(player); // inlined in the original
+        }
+        else {
+            FUN_000b70b0(player);
+        }
+    }
+
+    // Alt-fire. The camera variants also take the fire button as alt-fire. Only the low byte of each result
+    // is kept (MOV BL,AL / OR BL,AL), as in the original.
+    uchar altFire = (uchar)Input_Action(playerNum, ACTION_ALTFIRE, 4);
+    if ((weapon->weaponVariantNum == Weap_Camera) || (weapon->weaponVariantNum == Weap_Camera_Upgraded)) {
+        altFire |= (uchar)Input_Action(playerNum, ACTION_FIRE, 4);
+    }
+    AnimState *anim3 = player->animState;
+    bool altFireBlocked = (anim3->animFlags & ANIMFLAG_SCOPED) &&
+                          (weapon_data[anim3->currentWeaponId].someFlags & WPNFLAG_SIGHTED_SCOPE);
+    if (!altFireBlocked && altFire && (blData->weaponObject->curState == WEAPONSTATE_IDLE)) {
+        if (weapon->offsetToNextAltFireVariant != 0) {
+            // The offset is signed: the alt-fire variant of a variant points back at it (0xff)
+            short altWeapon = (short)anim3->currentWeaponId + (short)(signed char)weapon->offsetToNextAltFireVariant;
+            if (Player_WeaponHasAmmo(blData, altWeapon)) {
+                player->animState->switchingToWeaponId = (char)altWeapon;
+                FUN_000b7100(player);
+            }
+        }
+        else if ((char)weapon->unk15 != 1) {
+            // No alt-fire variant: step this weapon's fire-mode counter, wrapping at unk15 (byte compare)
+            blData->weaponStats[anim3->currentWeaponId].fireModeIndex++;
+            char cur = player->animState->currentWeaponId;
+            if (blData->weaponStats[cur].fireModeIndex == (char)weapon->unk15) {
+                blData->weaponStats[cur].fireModeIndex = 0;
+            }
+        }
+    }
+
+    if (Input_Action(playerNum, ACTION_GADGET_NEXT, 4)) {
+        Player_WeaponChange(player, 1, WEAPONCHANGE_GADGETS);
+    }
+    else if (Input_Action(playerNum, ACTION_GADGET_PREV, 4)) {
+        Player_WeaponChange(player, -1, WEAPONCHANGE_GADGETS);
+    }
+
+    // CastleIndoors1: until channel 0x48 ("cover blown", see docs/switch-channels.md) Bond is a party guest and
+    // weapon cycling is restricted; on the frame it goes up he is handed his (upgraded) P2K. Upgrade_Weapon(6)
+    // is exactly the original's inlined UpgradedHandguns[Upgrades[0][WUG_Handgun]], truncated to a byte.
+    char changeMode = WEAPONCHANGE_WEAPONS;
+    if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1) {
+        if (switch_channels[0x48] == 0) {
+            changeMode = WEAPONCHANGE_UNARMED;
+        }
+        else if (switch_channels_prev[0x48] == 0) {
+            player->animState->switchingToWeaponId = (char)Upgrade_Weapon(6);
+        }
+    }
+    if (Input_Action(playerNum, ACTION_WEAPON_NEXT, 4)) {
+        Player_WeaponChange(player, 1, changeMode);
+    }
+    else if (Input_Action(playerNum, ACTION_WEAPON_PREV, 4)) {
+        Player_WeaponChange(player, -1, changeMode);
+    }
+
+    PlayerZoom(player);
+    Player_AutoAim(player);
+}
+
+// AUTOGEN
+obj_tag * WatchOrHands_Create(int * param_1);
+// AUTOGEN
+undefined4 FUN_000b6dd0(obj_tag * param_1, byte param_2);
+// AUTOGEN
+void Player_RamLoad(BLData * param_1, char param_2);
+// AUTOGEN
+void Player_RamSave(BLData * param_1);
+// AUTOGEN
+void Player_InitAmmoWeapons(obj_tag * param_1);
+// AUTOGEN
+undefined4 Player_EquipWeapon(BLData * param_1, short weaponNum, short param_3);
+// AUTOGEN
+void MP_EquipPlayer(obj_tag * param_1);
+
+// How far away autoaim will snap to a target, in its two bands. Player_InitWeapon sets them per game mode
+// and difficulty; the XBE's initial values (12, 18) are the same as the normal-difficulty ones.
+#define MAX_AUTO_AIM_DIST_NEAR (*(float *)0x00181a40)
+#define MAX_AUTO_AIM_DIST_MIDL (*(float *)0x00181a44)
+// The two hint flags the PS2 build calls CamHint and StickyHint; cleared at the start of every level.
+#define CamHint (*(uchar *)0x00279145)
+#define StickyHint (*(uchar *)0x00279144)
+
+// Ammo counts passed to Player_EquipWeapon. 999 is "as much as the ammo type allows" - Player_EquipWeapon
+// caps it; 0 is for gadgets that have no ammo.
+#define EQUIP_FULL_AMMO 999
+#define EQUIP_HANDGUN_AMMO 0x30
+
+// Unnamed weapons this function hands out (the numbers are weapon_data indices)
+#define Weap_Unnamed01 0x01 // given to the player on every single-player level, with no ammo
+#define Weap_Unnamed50 0x50 // a gadget (no ammo) given on most levels
+#define Weap_Unnamed59 0x59 // a gadget with separate definitions for 50Hz (0x59) and 60Hz (0x5b) video
+#define Weap_Unnamed5B 0x5b
+
+// Sets up the player's weapons at the start of a level: autoaim ranges, the weapon/hand objects, the sight and
+// muzzle flash, then the level's starting loadout. Levels that continue a mission (Henderson B-D, Castle
+// Courtyard, ...) first try Player_RamLoad to carry over what the player had at the end of the previous part,
+// and only hand out the level's own loadout if that did not give the player their handgun (the test for a
+// RamLoad that found nothing). Every level the switch does not list (hashes outside 0x7000001-0x700004a, the
+// test maps, and the multiplayer arenas' hashes) gets almost everything.
+//
+// The upgradeable weapons are resolved through Upgrade_Weapon, as the PS2 build does; the Xbox build has
+// those calls inlined as reads of the Upgraded* tables (which are ours), and Upgrade_Weapon is exactly that
+// lookup for these ids - player 0, no side effects.
+// AUTOINJECT
+void Player_InitWeapon(BLData *blData, obj_tag *player) {
+
+    if (MPSettings.isMultiplayer == 0) {
+        if (GameState.difficultyModifier == 2) {
+            MAX_AUTO_AIM_DIST_NEAR = 8.0f;
+            MAX_AUTO_AIM_DIST_MIDL = 14.0f;
+        } else if (GameState.difficultyModifier == 3) {
+            // The hardest difficulty has no autoaim at all
+            MAX_AUTO_AIM_DIST_NEAR = 0.0f;
+            MAX_AUTO_AIM_DIST_MIDL = 0.0f;
+        } else {
+            MAX_AUTO_AIM_DIST_NEAR = 12.0f;
+            MAX_AUTO_AIM_DIST_MIDL = 18.0f;
+        }
+    } else {
+        MAX_AUTO_AIM_DIST_NEAR = 10.0f;
+        MAX_AUTO_AIM_DIST_MIDL = 16.0f;
+    }
+
+    if (blData == NULL)
+        return;
+
+    blData->field_0xd8 = 0;
+    blData->field_0xdc = 0;
+    blData->crosshairOffsetX = 0.0f;
+    blData->crosshairOffsetY = 0.0f;
+    blData->field_0xd4 = 0;
+    blData->field_0xf2 = 0;
+
+    // The original pushes blData->playerNum as a second argument, but WatchOrHands_Create never reads it
+    blData->weaponObject = WatchOrHands_Create((int *)player);
+
+    blData->field_0x86c[0] = 0;
+    blData->field_0x86c[1] = 0;
+    blData->field_0x86c[2] = 0;
+    blData->field_0x86c[3] = 0;
+    blData->field_0x828 = 0;
+    blData->field_0x8bc = 0.0f;
+    blData->field_0x8c6 = 0;
+    blData->field_0x8e6 = 0;
+    blData->field_0x8e8 = 0;
+
+    FUN_000b6dd0(player, blData->playerNum); // creates blData->weaponRelatedObjs[]
+    Player_CreateSight(player, blData->playerNum);
+    Player_CreateMuzzleFlash(player, blData->playerNum);
+
+    uint laser = Upgrade_Weapon(0x4e);
+    uint handgun = Upgrade_Weapon(0x06);
+    uint sniper = Upgrade_Weapon(0x1e);
+    uint taser = Upgrade_Weapon(0x4a);
+    uint pda = Upgrade_Weapon(Weap_Decryptor);
+    uint dartGun = Upgrade_Weapon(0x43);
+
+    CamHint = 0;
+    StickyHint = 0;
+
+    short gadget = (VIDEO_FRAME_RATE != 50) ? Weap_Unnamed5B : Weap_Unnamed59;
+
+    player->animState->currentWeaponId = Weap_MaybeHandsOnlyOrLadder;
+    player->animState->prevHeldWeaponId = Weap_MaybeHandsOnlyOrLadder;
+    blData->aimAutoLevelState = 3;
+
+    if (MPSettings.isMultiplayer != 0) {
+        MP_EquipPlayer(player);
+        Player_CheckWeaponsLoaded(blData);
+        return;
+    }
+
+    // Each "continuing" level tries the RamLoad first and falls through to the loadout of the level that
+    // starts that mission if it did not restore the handgun (or, for Tower2, the weapon it starts with).
+    switch (GameState.CurrentLevelHashcode) {
+
+        case HT_Level_HendersonB:
+        case HT_Level_HendersonC:
+        case HT_Level_HendersonD:
+            Player_RamLoad(blData, 0);
+            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            if (blData->weaponStats[handgun].enabled)
+                break;
+            // fall through
+        case HT_Level_HendersonA:
+            Player_InitAmmoWeapons(player);
+            Player_EquipWeapon(blData, (short)handgun, EQUIP_HANDGUN_AMMO);
+            Player_EquipWeapon(blData, (short)taser, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, gadget, EQUIP_FULL_AMMO);
+            player->animState->switchingToWeaponId = (char)handgun;
+            break;
+
+        case HT_Level_CastleCourtyard:
+            Player_RamLoad(blData, 0);
+            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            if (blData->weaponStats[handgun].enabled)
+                break;
+            // fall through
+        case HT_Level_CastleExterior:
+            Player_InitAmmoWeapons(player);
+            Player_EquipWeapon(blData, (short)handgun, EQUIP_HANDGUN_AMMO);
+            Player_EquipWeapon(blData, (short)taser, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, Weap_Unnamed50, 0);
+            Player_EquipWeapon(blData, Weap_Camera, 0);
+            player->animState->switchingToWeaponId = (char)handgun;
+            break;
+
+        case HT_Level_CastleIndoors2:
+            Player_RamLoad(blData, 0);
+            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            if (blData->weaponStats[handgun].enabled)
+                break;
+            // fall through
+        case HT_Level_CastleIndoors1:
+            // Castle Indoors 1 RamLoads unconditionally (so a fall-through from Indoors 2 loads twice) - which
+            // keeps what the RamLoad restores besides the weapons - then re-arms the player and takes the armour away
+            Player_RamLoad(blData, 0);
+            Player_InitAmmoWeapons(player);
+            blData->armor = 0.0f;
+            Player_EquipWeapon(blData, (short)handgun, EQUIP_HANDGUN_AMMO);
+            Player_EquipWeapon(blData, (short)taser, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, Weap_Unnamed50, 0);
+            Player_EquipWeapon(blData, Weap_Camera, 0);
+            player->animState->switchingToWeaponId = Weap_Unnamed01;
+            break;
+
+        case HT_Level_TowerB:
+        case HT_Level_TowerC:
+            Player_RamLoad(blData, 0);
+            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            if (blData->weaponStats[handgun].enabled)
+                break;
+            // fall through
+        case HT_Level_TowerA:
+            Player_InitAmmoWeapons(player);
+            Player_EquipWeapon(blData, (short)handgun, EQUIP_HANDGUN_AMMO);
+            Player_EquipWeapon(blData, (short)taser, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, (short)pda, 0);
+            Player_EquipWeapon(blData, Weap_QWorm, 0);
+            Player_EquipWeapon(blData, Weap_Unnamed50, 0);
+            Player_EquipWeapon(blData, (short)dartGun, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, gadget, EQUIP_FULL_AMMO);
+            player->animState->switchingToWeaponId = (char)dartGun;
+            break;
+
+        case HT_Level_PowerStationA2:
+            Player_RamLoad(blData, 0);
+            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            if (blData->weaponStats[handgun].enabled)
+                break;
+            // fall through
+        case HT_Level_PowerStationA1:
+            Player_InitAmmoWeapons(player);
+            Player_EquipWeapon(blData, (short)handgun, EQUIP_HANDGUN_AMMO);
+            Player_EquipWeapon(blData, (short)sniper, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, (short)taser, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, Weap_Unnamed50, 0);
+            Player_EquipWeapon(blData, Weap_Camera, 0);
+            Player_EquipWeapon(blData, Weap_QWorm, 0);
+            player->animState->switchingToWeaponId = (char)sniper;
+            break;
+
+        case HT_Level_Tower2B:
+        case HT_Level_Tower2C:
+        case HT_Level_Tower2Elevator:
+            Player_RamLoad(blData, 0);
+            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            // Tower2 starts without the handgun, so its test is for the weapon it does start with
+            if (blData->weaponStats[0x10].enabled)
+                break;
+            // fall through
+        case HT_Level_Tower2A:
+            Player_InitAmmoWeapons(player);
+            Player_EquipWeapon(blData, 0x10, 7);
+            Player_EquipWeapon(blData, Weap_Unnamed50, 0);
+            player->animState->switchingToWeaponId = 0x10;
+            break;
+
+        case HT_Level_EvilSilo:
+        case HT_Level_EvilBaseC:
+        case 0x7000017:
+            Player_RamLoad(blData, 0);
+            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            if (blData->weaponStats[handgun].enabled)
+                break;
+            // fall through
+        case HT_Level_EvilBase:
+            Player_InitAmmoWeapons(player);
+            Player_EquipWeapon(blData, (short)handgun, EQUIP_HANDGUN_AMMO);
+            Player_EquipWeapon(blData, 0x11, 12);
+            Player_EquipWeapon(blData, 0x34, 5);
+            Player_EquipWeapon(blData, Weap_RemoteMine, 5);
+            Player_EquipWeapon(blData, (short)taser, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, Weap_Unnamed50, 0);
+            Player_EquipWeapon(blData, Weap_Camera, 0);
+            Player_EquipWeapon(blData, (short)pda, 0);
+            player->animState->switchingToWeaponId = 0x11;
+            break;
+
+        // The space station levels (0x7000018-0x700001a have no HT_Level_ names yet): no RamLoad, only weapon 0x33,
+        // and the armour set to 50
+        case 0x7000018:
+        case 0x7000019:
+        case 0x700001a:
+        case HT_Level_SpaceStationD:
+            Player_InitAmmoWeapons(player);
+            Player_EquipWeapon(blData, Weap_LaserBeamFromSamurai, EQUIP_FULL_AMMO);
+            player->animState->switchingToWeaponId = Weap_LaserBeamFromSamurai;
+            blData->armor = 50.0f;
+            break;
+
+        // Every other level: a debug-style arsenal of nearly everything, in the original's order
+        default:
+            Player_InitAmmoWeapons(player);
+            Player_EquipWeapon(blData, 0x06, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x12, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x18, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x46, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, Weap_RemoteMine, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x36, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x35, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x34, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x3a, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, Weap_Ronin, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x2c, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x2e, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, Weap_SubTorpedo, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x4a, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, Weap_Unnamed50, 0);
+            Player_EquipWeapon(blData, 0x1e, EQUIP_FULL_AMMO);
+            Player_EquipAmmo(blData, 0x1f, 10);
+            Player_EquipWeapon(blData, 0x24, EQUIP_FULL_AMMO);
+            Player_EquipAmmo(blData, 0x25, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x0e, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x10, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, Weap_Camera, 0);
+            Player_EquipWeapon(blData, 0x1c, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x15, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x0a, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x0d, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, Weap_Decryptor, 0);
+            Player_EquipWeapon(blData, Weap_QWorm, 0);
+            Player_EquipWeapon(blData, 0x41, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, Weap_Unnamed59, EQUIP_FULL_AMMO); // 0x59 whatever the video rate
+            Player_EquipWeapon(blData, Weap_Satchel, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x1a, EQUIP_FULL_AMMO);
+            Player_EquipAmmo(blData, 0x1b, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, Weap_LaserBeamFromSamurai, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x11, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x02, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x2a, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x42, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x43, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, Weap_OddjobHat, EQUIP_FULL_AMMO);
+            Player_EquipWeapon(blData, 0x16, EQUIP_FULL_AMMO);
+            player->animState->switchingToWeaponId = (char)handgun;
+            break;
+    }
+
+    // Every single-player level gets the laser (whatever the upgrade level makes it) and weapon 1
+    Player_EquipWeapon(blData, (short)laser, EQUIP_FULL_AMMO);
+    Player_EquipWeapon(blData, Weap_Unnamed01, 0);
+    Player_CheckWeaponsLoaded(blData);
+
+    // If the weapon chosen above did not survive (its model is not loaded, or the RamLoad picked something the
+    // player no longer has), fall back to weapon 1. The original reads weaponBaseNum as a 16-bit value; its
+    // high byte (field2_0x3) is zero in every entry of the table, so the char reads the same.
+    AnimState *anim = player->animState;
+    if (!blData->weaponStats[weapon_data[anim->switchingToWeaponId].weaponBaseNum].enabled)
+        anim->switchingToWeaponId = Weap_Unnamed01;
+
+    Player_RamSave(blData);
+    Player_CheckWeaponsLoaded(blData);
 }

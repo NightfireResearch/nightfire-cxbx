@@ -61,14 +61,14 @@ global still has a live reference: some original that can run is still reading o
 which our code no longer looks at. That happens when a function is un-replaced, or when a new `AUTOGEN` call
 brings an original back to life.
 
-A table we define with the same values as the game's, which neither our code nor the game's ever writes (the
-upgrade tables in `Upgrade.cpp`, say), can be owned before every reader is replaced: add `readonly` to the tag.
+A table we define with the same values as the game's, which neither our code nor the game's ever writes (a
+lookup table, say), can be owned before every reader is replaced: add `readonly` to the tag.
 Live originals reading their own identical copy are then listed as harmless rather than failing `--check`; a
 live write still fails it.
 
 ```c
 // XBE_GLOBAL(0x00181b14, 0x10) readonly
-uint UpgradedHandguns[4] = {
+uint UpgradedHandguns[4] = {     // (it was, until Player_InitWeapon and the other readers became ours)
 ```
 
 If the summary says **[has initial data]**, the XBE's file data for that range is not all zero: the game
