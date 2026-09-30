@@ -22502,11 +22502,11 @@
     {
         "name": "GetLanguage",
         "address": "0x0006d130",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined4",
+        "return_type": "uint",
         "param_types": [],
-        "prototype_string": "undefined4 __stdcall GetLanguage(void)",
+        "prototype_string": "uint __cdecl GetLanguage(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -30596,13 +30596,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0009bdf0",
+        "name": "Mission_FailLabel",
         "address": "0x0009bdf0",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "Action_TranslatedText",
         "param_types": [],
-        "prototype_string": "undefined FUN_0009bdf0()",
+        "prototype_string": "Action_TranslatedText __cdecl Mission_FailLabel(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -45700,13 +45700,13 @@
         "address": "0x000dca60",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "char",
         "param_types": [
-            "undefined1"
+            "char"
         ],
-        "prototype_string": "undefined __cdecl psiFileSetSingleFileMode(undefined1 param_1)",
+        "prototype_string": "char __cdecl psiFileSetSingleFileMode(char mode)",
         "parameters": [
-            "[undefined1 param_1@Stack[0x4]:1]"
+            "[char mode@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"

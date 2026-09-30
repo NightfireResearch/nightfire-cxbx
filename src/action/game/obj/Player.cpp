@@ -24,8 +24,11 @@ void Player_SetHealth(BLData *obj, float health);
 void Concat(float *param_1, float *param_2);
 
 
-#define player_start_positions_index U32_AT(0x002774c8)
-#define player_start_position U32_AT(0x002774cc) // Unused - only ever written?
+// XBE_GLOBAL(0x002774c8, 0x4)
+static uint32_t player_start_positions_index;
+// XBE_GLOBAL(0x002774cc, 0x4)
+static uint32_t player_start_position; // Unused - only ever written?
+// XBE_GLOBAL(0x002774d0, 0x17e8)
 #define player_start ((PlayerStartPosition*)(0x002774d0))
 
 // AUTOINJECT
@@ -748,8 +751,10 @@ void MP_EquipPlayer(obj_tag * param_1);
 
 // How far away autoaim will snap to a target, in its two bands. Player_InitWeapon sets them per game mode
 // and difficulty; the XBE's initial values (12, 18) are the same as the normal-difficulty ones.
-#define MAX_AUTO_AIM_DIST_NEAR (*(float *)0x00181a40)
-#define MAX_AUTO_AIM_DIST_MIDL (*(float *)0x00181a44)
+// XBE_GLOBAL(0x00181a40, 0x4)
+static float MAX_AUTO_AIM_DIST_NEAR = 12.0f;
+// XBE_GLOBAL(0x00181a44, 0x4)
+static float MAX_AUTO_AIM_DIST_MIDL = 18.0f;
 // The two hint flags the PS2 build calls CamHint and StickyHint; cleared at the start of every level.
 #define CamHint (*(uchar *)0x00279145)
 #define StickyHint (*(uchar *)0x00279144)

@@ -461,7 +461,8 @@ static_assert(sizeof(XboxAudioSystem) == 5312, "XboxAudioSystem must be 5312 byt
 
 #pragma pack(pop)
 
-#define AudioSys (*(XboxAudioSystem *)0x002ae598)
+// XBE_GLOBAL(0x002ae598, 0x14c0)
+static XboxAudioSystem AudioSys;
 
 // XboxVoice::flags. Set by the dsnd* entry points, acted on (and cleared) by dsndUpdateVoices.
 enum {
@@ -476,8 +477,10 @@ enum {
 
 // The I3DL2 reverb DSP program, and the 3D rolloff curve, both constant data in the XBE image. Referenced at
 // their addresses rather than copied, matching how the D3D seam reaches the game's own shader/vertex data.
+// XBE_GLOBAL(0x00194840, 0x6168)
 #define EffectsImage      ((const void *)0x00194840)
 #define EffectsImageSize  0x6168u
+// XBE_GLOBAL(0x0019a9a8, 0x14)
 #define RolloffCurve      ((const float *)0x0019a9a8) // { 1.0, 0.5, 0.25, 0.125, 0.0 }
 #define RolloffCurvePoints 5u
 

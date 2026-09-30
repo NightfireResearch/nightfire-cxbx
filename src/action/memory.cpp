@@ -8,11 +8,13 @@
 #define Addr_HeapByteSize 0x00223a88
 
 #define PtrHeap U32_AT(Addr_PtrHeap)
-#define PtrHeapEnd U32_AT(0x00223a84)
+// XBE_GLOBAL(0x00223a84, 0x4)
+static uint32_t PtrHeapEnd;
 #define HeapByteSize U32_AT(Addr_HeapByteSize)
 #define MallocMethod U32_AT(0x00223a7c)
 #define QuickBlock U32_AT(0x002237d8)
-#define MallocSize U32_AT(0x00223a8c)
+// XBE_GLOBAL(0x00223a8c, 0x4)
+static uint32_t MallocSize;
 
 // AUTOGEN
 void* allocateAligned0x1000(int a);
@@ -87,3 +89,130 @@ void Mem_Free(void **ptr);
 
 // AUTOGEN
 void Mem_Shrink(void **param_1,uint param_2);
+
+// What Mem_Info reports: a name and a byte count per allocation type, then totals (Ghidra's MemInfo). The names
+// are the game's own, as its initialised data has them.
+typedef struct {
+    const char *typeNames[0x50];
+    uint typeBytes[0x50];
+    uint bytesFree;
+    uint bytesMalloced;
+    uint unused[7];
+} MemInfo_t;
+static_assert(sizeof(MemInfo_t) == 0x2a4, "Bad size for MemInfo_t");
+// XBE_GLOBAL(0x0017c298, 0x2a4)
+static MemInfo_t MemInfo = {
+    {
+        "malloc_zero",
+        "malloc_celstructs",
+        "malloc_compplaneeq",
+        "malloc_entity_table",
+        "malloc_objs",
+        "malloc_viewerstructs",
+        "malloc_worldstructs",
+        "malloc_lightstructs",
+        "malloc_portalstructs",
+        "malloc_celgliststructs",
+        "malloc_map_header",
+        "malloc_textures",
+        "malloc_anim_distance_table",
+        "malloc_anim_frame_table",
+        "malloc_anim_frame_buffer",
+        "malloc_xyzmiscqzyx",
+        "malloc_temp_buffer",
+        "malloc_PS2_DMA_List",
+        "malloc_Xbox",
+        "malloc_SFXdata",
+        "malloc_scriptdata",
+        "malloc_bot_path1",
+        "malloc_Gamecube",
+        "malloc_parsefilebuffer",
+        "malloc_pathpointers",
+        "malloc_rigidbody",
+        "malloc_colldata",
+        "malloc_llist",
+        "malloc_anim_skin_data",
+        "malloc_anim_skel_data",
+        "malloc_anim_seq_data",
+        "malloc_anim_script_data",
+        "malloc_anim_skin_structs",
+        "malloc_anim_skinmat_structs",
+        "malloc_anim_altskin_structs",
+        "malloc_anim_seq_structs",
+        "malloc_anim_seq_data_buffers",
+        "malloc_anim_script_structs",
+        "malloc_anim_object_structs",
+        "malloc_plrhud",
+        "malloc_PS2_Object",
+        "malloc_PS2_File",
+        "malloc_PS2_Sprite",
+        "malloc_PS2_Texture",
+        "malloc_PS2_Palette",
+        "malloc_PS2_Particle",
+        "malloc_PS2_Clone",
+        "malloc_PC_Texture",
+        "malloc_PC_Mesh",
+        "malloc_Menu",
+        "malloc_shard",
+        "malloc_copter_path",
+        "malloc_drone_spawn_objs",
+        "malloc_drone_spawn_vars",
+        "malloc_lang_data",
+        "malloc_light_data",
+        "malloc_unpak_buffer",
+        "malloc_aram_buffer",
+        "malloc_anim_cache",
+        "malloc_anim_morph_data_buffers",
+        "malloc_anim_set_structs",
+        "malloc_anim_unpak_opt",
+        "malloc_anim_seq_hdr",
+        "malloc_physics",
+        "malloc_load_dir",
+        "malloc_load_data",
+        "malloc_game_particle",
+        "malloc_GC_Anim_Cache",
+        "malloc_GC_DL",
+        "malloc_GC_Skins",
+        "malloc_GC_PCList128",
+        "malloc_GC_BigBuffer",
+        "malloc_GC_AnimMatrix",
+        "malloc_GC_Card",
+        "malloc_GC_USB2EXI",
+        "malloc_GC_Texture",
+        "malloc_GC_Sound",
+        "malloc_bot_path2",
+        "malloc_bot_path3",
+        "malloc_null"
+    },
+};
+
+// A heap block's header, as far as Mem_Info reads it.
+typedef struct {
+    uint unknown0;
+    uint size;          // 0x4 - including this header; the next block follows it
+    uchar unknown8;
+    uchar type;         // 0x9 - the MallocFlags type byte
+    uchar unknownA;
+    uchar isFree;       // 0xb - Mem_Info counts only blocks with this clear
+} MemBlockHeader;
+
+// Counts the bytes in use per allocation type by walking the heap, and fills in MemInfo. The original then
+// passes it to an empty debug hook (0x000e0ec0).
+// AUTOINJECT
+void* Mem_Info(void) {
+    char *heap = (char *)(uintptr_t)PtrHeap;
+    char *end = heap + HeapByteSize - 0xc;
+    for (ushort type = 0; type <= 0x4f; type++) {
+        MemInfo.typeBytes[type] = 0;
+        for (char *p = heap; p < end; p += ((MemBlockHeader *)p)->size) {
+            MemBlockHeader *block = (MemBlockHeader *)p;
+            if (block->isFree == 0 && block->type == type)
+                MemInfo.typeBytes[type] += block->size;
+        }
+    }
+    MemInfo.bytesFree = HeapByteSize - MallocSize;
+    MemInfo.bytesMalloced = MallocSize;
+    for (int i = 0; i < 7; i++)
+        MemInfo.unused[i] = 0;
+    return &MemInfo;
+}

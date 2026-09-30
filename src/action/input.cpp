@@ -171,5 +171,16 @@ void Input_RumbleStart(ushort playerNum, int time, int intensity) {
 // AUTOGEN
 void Input_Init(void);
 
-// AUTOGEN
-void Input_Ready(void);
+extern uint8_t FreezeGame; // defined in game.cpp
+// An input event list beside it (entries of 0x18 bytes, 10 preallocated); nothing reimplemented reads it yet.
+// XBE_GLOBAL(0x001fec30, 0x18)
+static DLISTINFO_tag InputEventList;
+
+// Readies input for a level: unfreezes the game, clears every player's actions and resets the event list.
+// The original ends with a jump to an empty debug hook (0x000e0ec0, a bare RET).
+// AUTOINJECT
+void Input_Ready(void) {
+    FreezeGame = 0;
+    Input_ClearAllActions(-1);
+    DList_Init(&InputEventList, 0x18, 10);
+}

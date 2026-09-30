@@ -27,4 +27,6 @@ void __stdcall Text_FlushAllSubtitles(void);
 void Txt_UnlockString(char* text);
 void Txt_LockString(char* text);
 
+uint GetLanguage(void);
+
 #endif // TEXT_H_

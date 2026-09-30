@@ -27,7 +27,8 @@ static_assert(ARRAY_SIZE(credits_lines) == CREDITS_NUM_LINES, "the credits have 
 
 // The table, built on the first Menu_SetupCredits after Menu_InitCredits (the labels resolved in the language
 // then loaded) and kept.
-#define credits_table (*(CreditsEntry **)0x00224f68)
+// XBE_GLOBAL(0x00224f68, 0x4)
+static CreditsEntry * credits_table;
 
 // AUTOINJECT
 void __stdcall Menu_InitCredits(void) {
@@ -55,21 +56,32 @@ CreditsEntry* Menu_SetupCredits(uint *numLines_out) {
 }
 
 // The page's state
-#define credits_music_volume   (*(int *)0x0025ed7c)    // the music volume on entry, put back on leaving
-#define credits_fading         (*(uchar *)0x0025ed80)  // the exit has started
-#define credits_page_from      (*(HASHCODE *)0x0025ed84)
-#define credits_line           (*(uint *)0x0025ed88)   // the next line of the table to show
-#define credits_control_index  (*(uint *)0x0025ed8c)   // the next control pair to use
-#define credits                (*(CreditsEntry **)0x0025ed90)
-#define credits_frame          (*(uint *)0x0025ed94)
-#define credits_count          (*(uint *)0x0025ed98)
+// XBE_GLOBAL(0x0025ed7c, 0x4)
+static int credits_music_volume; // the music volume on entry, put back on leaving
+// XBE_GLOBAL(0x0025ed80, 0x1)
+static uchar credits_fading; // the exit has started
+// XBE_GLOBAL(0x0025ed84, 0x4)
+static HASHCODE credits_page_from;
+// XBE_GLOBAL(0x0025ed88, 0x4)
+static uint credits_line; // the next line of the table to show
+// XBE_GLOBAL(0x0025ed8c, 0x4)
+static uint credits_control_index; // the next control pair to use
+// XBE_GLOBAL(0x0025ed90, 0x4)
+static CreditsEntry * credits;
+// XBE_GLOBAL(0x0025ed94, 0x4)
+static uint credits_frame;
+// XBE_GLOBAL(0x0025ed98, 0x4)
+static uint credits_count;
 
 #define CREDITS_FRAMES_PER_LINE 14
 #define CREDITS_NUM_CONTROLS    26
 
 // Fonts per style: the name of the label's font plus these suffixes (MessageType_SetFont)
+// XBE_GLOBAL(0x0015eb18, 0x5)
 #define credits_format_name    ((const char *)0x0015eb18)
+// XBE_GLOBAL(0x00161954, 0x5)
 #define credits_format_company ((const char *)0x00161954)
+// XBE_GLOBAL(0x0016195c, 0x5)
 #define credits_format_role    ((const char *)0x0016195c)
 
 static const char *CreditsFormat(uchar style) {

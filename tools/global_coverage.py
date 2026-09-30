@@ -126,6 +126,11 @@ def read_source():
             struct_sizes["#" + m.group(1)] = int(m.group(2), 0)   # for array counts spelt as a macro
 
     globals_, literals = [], []
+    casts = []   # (name, path, line, text): &name cast to another pointer type
+    for path, lines in texts.items():
+        for i, line in enumerate(lines, 1):
+            for m in re.finditer(r"\(\s*[\w\s]+\*\s*\)\s*&\s*(\w+)\b(?!\s*(\.|\[|->))", line.split("//")[0]):
+                casts.append((m.group(1), rel(path), i, line.strip()))
     for path, lines in texts.items():
         tag = None
         for i, line in enumerate(lines, 1):
@@ -154,6 +159,7 @@ def read_source():
                     a = int(m.group(1), 16)
                     if DATA_START <= a < DATA_END:
                         literals.append((a, rel(path), i, line.strip()))
+    read_source.casts = casts
     return globals_, literals
 
 
@@ -406,6 +412,17 @@ def main():
                                   " +%d more" % more if more > 0 else ""))
     if limit and len(in_use) > limit:
         print("  ... %d more (--all)" % (len(in_use) - limit))
+    # A global whose address is cast to another pointer type is probably the start of something bigger - a list
+    # head used as if it were an object, say (DynamicObjList). Its size then comes from what the code does with it,
+    # not from its define, and owning it alone would break whatever lies beyond.
+    cast_names = {}
+    for name, path, line, text in read_source.casts:
+        cast_names.setdefault(name, []).append("%s:%d" % (path, line))
+    risky = [g for g in sized if g["name"] in cast_names and not g["live"]]
+    if risky:
+        print("\nAddress cast to another type - check it is not the start of something bigger before owning it:")
+        for g in risky:
+            print("  %-28s %s%s" % (g["name"], ", ".join(cast_names[g["name"]][:3]), "  [owned]" if g["owned"] else ""))
     overlapping = [g for g in sized if g["literals"] or g["inside"]]
     if overlapping:
         print("\nReached through a raw address or a second definition inside another global:")

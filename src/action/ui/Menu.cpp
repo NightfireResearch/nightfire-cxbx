@@ -6,6 +6,9 @@
 
 
 #include <stdio.h>
+
+// XBE_GLOBAL(0x0025d7de, 0x1)
+uint8_t cn_secret_mode;
 // Menu (Send, SendEx, SendMessage), Iris (Start, Play), Wheel etc
 
 
@@ -81,7 +84,9 @@ typedef struct {
   uint param3;
 } DelayedMessage;
 
-#define menu_delay_frame U32_AT(0x00224540)
+// XBE_GLOBAL(0x00224540, 0x4)
+static uint32_t menu_delay_frame;
+// XBE_GLOBAL(0x00223b40, 0xa00)
 #define menu_delay_msg (*(DelayedMessage(*)[128])(0x00223b40))
 
 // AUTOINJECT
@@ -144,7 +149,8 @@ bool Menu_IsBotGood(uint idx) {
 }
 
 // Size unclear
-#define buf_171 (*(char*)0x002250b8)
+// XBE_GLOBAL(0x002250b8, 0x100)
+static char buf_171[0x100];
 
 // AUTOINJECT
 void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHCODE param_4, HASHCODE param_5, HASHCODE descriptionLabel, HASHCODE param_7, bool maybeDoAnimation) {
@@ -205,8 +211,8 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
         pcVar4 = Txt_BindLabel(Menu_IsBotGood(itemList[idxMid].identifier) ? MP_TEAM_MI6 : MP_TEAM_PHOENIX, 0);
         pcVar5 = Txt_BindLabel(MP_TEAM, 0);
         pcVar6 = Txt_BindLabel(itemList[idxMid].description, 0);
-        sprintf(&buf_171, "%s\n%s : %s", pcVar6, pcVar5, pcVar4);
-        pcVar4 = &buf_171;
+        sprintf(buf_171, "%s\n%s : %s", pcVar6, pcVar5, pcVar4);
+        pcVar4 = buf_171;
       }
     }
 

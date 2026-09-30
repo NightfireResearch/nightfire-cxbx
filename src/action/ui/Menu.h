@@ -93,7 +93,7 @@ static_assert(sizeof(MENU_LS) == 0x48, "MENU_LS is 0x48 bytes");
 
 // The codename being edited
 #define cn_modified            U8_AT(0x0025d7dd)       // it has changes not yet saved
-#define cn_secret_mode         U8_AT(0x0025d7de)       // P_CNNAME was entered from the codename menu (Secret Unlocks)
+extern uint8_t cn_secret_mode; // P_CNNAME was entered from the codename menu (Secret Unlocks)
 
 #define LS_OPERATION_LOAD 0
 #define LS_OPERATION_SAVE 1
@@ -104,5 +104,7 @@ static_assert(sizeof(MENU_LS) == 0x48, "MENU_LS is 0x48 bytes");
 #define OPTIONBOX_BAD_CODENAME       6   // Menu_ValidateCodename's complaint
 #define OPTIONBOX_UNLOCK_SUCCESS     0xc // "Unlock successful"
 #define OPTIONBOX_LOSE_CHANGES       0xd // "Are you sure you want to exit and lose your changes?"
+
+extern uint8_t mp_explosive_scenery_unlocked; // defined in MenuUnlocks.cpp
 
 #endif // MENU_H

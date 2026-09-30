@@ -32,6 +32,7 @@ uint GameFlow_GetState(void);
 void GameFlow_PushState(int state, float param_2, uint param_3);
 void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv);
 void psiStopBackgroundMovie(void);
+void maybeStartBackgroundMovie(void);
 void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume);
 void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate);
 void GS_PauseGame(bool pause);

@@ -1,7 +1,9 @@
 #include "Collide.h"
+#include "../memory.h"
 
 #include <string.h>
 
+// XBE_GLOBAL(0x001ddc60, 0xc)
 #define HitHeap (*(LLISTINFO_tag*)0x001ddc60)
 
 // AUTOGEN
@@ -31,7 +33,8 @@ void Collide_FreeHitList(HITDATA_tag **hitList) {
 
 }
 
-#define HitAllocCnt U32_AT(0x001dec24)
+// XBE_GLOBAL(0x001dec24, 0x4)
+static uint32_t HitAllocCnt;
 
 // AUTOINJECT
 HITDATA_tag* Coll_GetFreeHit(void) {
@@ -126,3 +129,18 @@ float Collide_GetDamageNObjects(HITDATA_tag *hitDatas, obj_tag **objectList, ush
 //     Collide_Sort(hitData);
 
 // }
+
+// The triangle buffer beside the hit heap: TriAllocCnt entries of 12 bytes at TriHeap (Ghidra's names).
+#define TriAllocCnt U32_AT(0x001dec28)
+#define TriHeap (*(void**)0x001dec30)
+
+// Empties the hit heap (entries of 0x50 bytes, none preallocated - Coll_GetHit grows it 0x40 at a time) and
+// allocates a fresh, zeroed triangle buffer of 100 entries.
+// AUTOINJECT
+void Coll_ResetHitHeap(void) {
+    HitAllocCnt = 0;
+    LList_Init(&HitHeap, 0x50, 0);
+    TriAllocCnt = 100;
+    TriHeap = Mem_Malloc(0x4b0, (MallocFlags)0x1a04, 0);   // 100 * 12, as a constant in the original
+    memset(TriHeap, 0, TriAllocCnt * 12);
+}

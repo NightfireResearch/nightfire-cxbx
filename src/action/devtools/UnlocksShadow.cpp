@@ -39,7 +39,7 @@ static void Save(UnlockState *s, bool game = false) {
     for (int i = 0; i < 13; i++) s->scenarios[i] = ITEM_ENABLED(Scenarios(game)[i]);
     s->replace = U8_AT(0x0025d78d);
     s->earned = U8_AT(0x0025d78c);
-    s->scenery = U8_AT(0x002456a8);
+    s->scenery = game ? U8_AT(0x002456a8) : mp_explosive_scenery_unlocked;   // ours is our own variable now
     s->upgradeFlag = GameState.WeaponUpgradeRelated;
 }
 
@@ -54,7 +54,8 @@ static void Load(const UnlockState *s) {
     }
     U8_AT(0x0025d78d) = s->replace;
     U8_AT(0x0025d78c) = s->earned;
-    U8_AT(0x002456a8) = s->scenery;
+    U8_AT(0x002456a8) = s->scenery;   // both copies, as for the lists
+    mp_explosive_scenery_unlocked = s->scenery;
     GameState.WeaponUpgradeRelated = s->upgradeFlag;
 }
 

@@ -18,9 +18,12 @@ undefined4 Menu_ValidateCodename(char *name);
 // AUTOGEN
 uint Menu_CodenameExists(byte *name);
 
+// XBE_GLOBAL(0x00245200, 0x1)
 #define kbd_text               ((char *)0x00245200)    // the text being typed: 8 characters in secret mode
-#define kbd_clear_on_key       U8_AT(0x0017d608)       // the next key (other than Done) clears the text first
+// XBE_GLOBAL(0x0017d608, 0x1)
+static uint8_t kbd_clear_on_key = 1; // the next key (other than Done) clears the text first
 #define cn_bonus               (*(uint64_t *)0x0025d6e8) // the codename's rewards, a bit each (docs/ui/secrets.md)
+// XBE_GLOBAL(0x0025ed68, 0x8)
 #define kbd_accent_keys        ((ushort *)0x0025ed68)  // the strings of keys 100-103: A-umlaut, A-circumflex, AE, A-grave
 
 #define KEY_DELETE 1000

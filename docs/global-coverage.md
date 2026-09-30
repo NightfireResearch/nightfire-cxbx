@@ -71,6 +71,13 @@ live write still fails it.
 uint UpgradedHandguns[4] = {     // (it was, until Player_InitWeapon and the other readers became ours)
 ```
 
+A define only sizes the global by how our code reads it, and that can be less than the game uses. `DynamicObjList`
+(4 bytes by its define) is really the head of the object list, used as if it were an object:
+`control_add_object_to_list` is given its address and writes the next-object field at +0x14, which is
+`DynamicObjList_FirstObj`. Owned on its own it broke the level: objects were linked into our variable and the
+memory after it. The summary lists every global whose address is cast to another pointer type (**Address cast to
+another type**); check each before owning it.
+
 If the summary says **[has initial data]**, the XBE's file data for that range is not all zero: the game
 starts with values there, and our definition must be initialised with them.
 

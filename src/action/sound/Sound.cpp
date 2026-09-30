@@ -4,6 +4,7 @@
 #include "../util/DList.h"
 #include "../math/math.h"
 
+// XBE_GLOBAL(0x0029a128, 0x18)
 #define DynamicSoundList ((DLISTINFO_tag*)(0x0029a128))
 
 // AUTOINJECT

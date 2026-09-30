@@ -145,6 +145,7 @@ add_library(actioninject SHARED
   src/action/ui/ui_secrets.cpp
   src/action/ui/ui_nightfire.cpp
   src/action/ui/ui_codenames.cpp
+  src/action/ui/ui_cheats.cpp
   src/action/ui/MenuUnlocks.cpp
   src/action/ui/ui_score.cpp
   src/action/ui/Menu.cpp
@@ -157,6 +158,7 @@ add_library(actioninject SHARED
   src/action/game/mp/multiplayer.cpp
   src/action/game/obj/Break.cpp
   src/action/game/obj/Door.cpp
+  src/action/game/obj/Hint.cpp
   src/action/game/obj/build.cpp
   src/action/game/obj/car.cpp
   src/action/game/obj/control.cpp

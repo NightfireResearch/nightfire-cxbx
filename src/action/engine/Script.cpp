@@ -16,7 +16,8 @@
 #include "../input.h"
 
 // Two persistent letterbox-bar sprites, disabled (0xff) by Script_KillStream when a camera stream ends
-#define Borders (*(sprite*(*)[2])0x00279350)
+// XBE_GLOBAL(0x00279350, 0x8)
+static sprite* Borders[2];
 
 typedef enum ScriptCmd {
     ScriptCmd_EndScript=4,
@@ -458,4 +459,12 @@ void Script_Free(SCRIPTINFO *scriptInfo) {
     }
 
     Mem_Free((void**)&scriptInfo);
+}
+
+// No letterbox borders and no script camera yet.
+// AUTOINJECT
+void Script_Init(void) {
+    Borders[0] = NULL;
+    Borders[1] = NULL;
+    ScriptCam = (HASHCODE)0;
 }

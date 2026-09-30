@@ -733,15 +733,20 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 #define D3D8_TexStage1_0x98 D3D8_TRACED("D3D8_TexStage1_0x98", 0x00111898)
 #define D3D8_TexStage1_0x9c D3D8_TRACED("D3D8_TexStage1_0x9c", 0x0011189C)
 
-#define Gfx_FogColorCache   U32_AT(0x002FF450) // not in the Gfx struct - a separate global
+// XBE_GLOBAL(0x002ff450, 0x4)
+static uint32_t Gfx_FogColorCache; // not in the Gfx struct - a separate global
 
-#define Gfx_LastSwapTimestamp     DOUBLE_AT(0x002FF438) // not in the Gfx struct - a separate global
-#define Gfx_AccumulatedSwapTime   DOUBLE_AT(0x002FF440) // not in the Gfx struct - a separate global
-#define Gfx_AccumulatedSwapTimeReport DOUBLE_AT(0x002FF448) // not in the Gfx struct - the accumulator's value just before each reset, for reporting
+// XBE_GLOBAL(0x002ff438, 0x8)
+static double Gfx_LastSwapTimestamp; // not in the Gfx struct - a separate global
+// XBE_GLOBAL(0x002ff440, 0x8)
+static double Gfx_AccumulatedSwapTime; // not in the Gfx struct - a separate global
+// XBE_GLOBAL(0x002ff448, 0x8)
+static double Gfx_AccumulatedSwapTimeReport; // not in the Gfx struct - the accumulator's value just before each reset, for reporting
 
 // Shader constant 0x67: a packed 0xAARRGGBB colour, unpacked byte-by-byte through Gfx.u8ToFloat01 (a 256-entry
 // byte-to-[0,1]-float lookup table) into 4 shader-constant floats. Exact use (tint/ambient colour) untraced.
-#define D3D8_ForceColorConstant67Update U8_AT(0x001B52DC) // not in the Gfx struct - forces a re-send even if the cache matches (e.g. after a device reset)
+// XBE_GLOBAL(0x001b52dc, 0x1)
+static uint8_t D3D8_ForceColorConstant67Update = 1; // forces a re-send even if the cache matches (e.g. after a device reset)
 
 // Shader constant 0x66 (Gfx.fogConstant66): a fog {1/(far-near), near/(far-near)} pair, shared between the near
 // and far setters - whichever is called, both cached scaled values get re-read and the pair recomputed the same way.
@@ -753,6 +758,7 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 // Projection matrix: Gfx.projMatrixCacheA is write-only from here (presumably read by a not-yet-ported
 // function); Gfx.projMatrixCacheB is scaled in place by Gfx.fogScale and feeds the depth-clip-plane calculation.
 
+// XBE_GLOBAL(0x002c5548, 0x200)
 #define VtxShaderHandles ((void**)0x002C5548)            // not in the Gfx struct - a fixed array of created vertex-shader handles
 
 // Bit pattern for the fog constant's "avoid divide-by-zero" sentinel value - written as a raw uint32_t by the
@@ -928,14 +934,22 @@ void d3dSetupViewportDimensions(unsigned int viewportX, unsigned int viewportY, 
 // A render-target push/pop "stack" (single level, not truly nested): a nonzero textureSlot pushes that
 // texture's surface as the new render target (saving the current viewport/render-target/depth-stencil the
 // FIRST time this is pushed, not on every call); textureSlot==0 pops back to whatever was saved.
-#define Gfx_RenderTargetPushed U8_AT(0x002FF494)
-#define Gfx_SavedViewportX     U32_AT(0x002FF490)
-#define Gfx_SavedViewportY     U32_AT(0x002FF48C)
-#define Gfx_SavedViewportWidth U32_AT(0x002FF488)
-#define Gfx_SavedViewportHeight U32_AT(0x002FF484)
-#define Gfx_SavedRenderTarget  PTR_AT(0x002FF480)
-#define Gfx_SavedDepthStencil  PTR_AT(0x002FF47C)
-#define Gfx_CustomRenderTargetSurface PTR_AT(0x002FF478)
+// XBE_GLOBAL(0x002ff494, 0x1)
+static uint8_t Gfx_RenderTargetPushed;
+// XBE_GLOBAL(0x002ff490, 0x4)
+static uint32_t Gfx_SavedViewportX;
+// XBE_GLOBAL(0x002ff48c, 0x4)
+static uint32_t Gfx_SavedViewportY;
+// XBE_GLOBAL(0x002ff488, 0x4)
+static uint32_t Gfx_SavedViewportWidth;
+// XBE_GLOBAL(0x002ff484, 0x4)
+static uint32_t Gfx_SavedViewportHeight;
+// XBE_GLOBAL(0x002ff480, 0x4)
+static void* Gfx_SavedRenderTarget;
+// XBE_GLOBAL(0x002ff47c, 0x4)
+static void* Gfx_SavedDepthStencil;
+// XBE_GLOBAL(0x002ff478, 0x4)
+static void* Gfx_CustomRenderTargetSurface;
 
 // Releases *slot if non-NULL (preserving D3DResource_Release's actual refcount-style return value in
 // Gfx.d3dLastError, matching the original exactly) or just zeroes Gfx.d3dLastError if it was already NULL,
@@ -1736,7 +1750,8 @@ void d3dReleaseOverlayBuffer(int overlaySlot) {
 // scaled by the viewport's aspect-ratio-correction factor and clamped to [10,500]; the other two float/int
 // params feed shader constant 0x68 directly (their exact visual role wasn't traced further). Opaque
 // texture-stage-3 configuration registers below mirror d3dSetTextureStage1's own pattern, just for stage 3.
-#define Gfx_OverlayVertexShaderHandle U32_AT(0x002C5748) // not in the Gfx struct - a dedicated single handle, not part of VtxShaderHandles[]
+// XBE_GLOBAL(0x002c5748, 0x4)
+static uint32_t Gfx_OverlayVertexShaderHandle; // not in the Gfx struct - a dedicated single handle, not part of VtxShaderHandles[]
 
 #define D3D8_TexStage3_0x80 D3D8_TRACED("D3D8_TexStage3_0x80", 0x00111980)
 #define D3D8_TexStage3_0x88 D3D8_TRACED("D3D8_TexStage3_0x88", 0x00111988)
@@ -1851,7 +1866,8 @@ void d3dResetRenderTargetAndBuffers(void) {
 // maybeImmediateModePushItem
 // ---------------------------------------------------------------------------------------------------------------
 
-#define Gfx_ImmediateModeVertexShader PTR_AT(0x002C574Cu)  // untraced - a global holding a vertex-shader HANDLE value (must be dereferenced, not used as the handle itself), distinct from the VtxShaderHandles array drawShard/d3dDrawOverlayQuad use
+// XBE_GLOBAL(0x002c574c, 0x4)
+static void* Gfx_ImmediateModeVertexShader; // untraced - a global holding a vertex-shader HANDLE value (must be dereferenced, not used as the handle itself), distinct from the VtxShaderHandles array drawShard/d3dDrawOverlayQuad use
 
 // Carries Ghidra's own "type propagation algorithm not settling" decompiler-confidence warning, tied to a
 // loop-invariant (the texture-height reciprocal) that the original keeps resident on the x87 FPU register
@@ -2312,7 +2328,8 @@ void d3dSetViewMatrixFromRigidTransform(D3DMATRIX *rigidTransform) {
     Multiply4x4RowMajor(&Gfx.projMatrixCacheB, &inverted, &Gfx.viewMatrixCache);
 }
 
-#define Gfx_AuxRenderPassActive  U8_AT(0x002FF495)        // not in the Gfx struct (which ends at 0x002ff434) - a static "is a pass currently pushed?" latch, one byte past Gfx_RenderTargetPushed but a separate flag
+// XBE_GLOBAL(0x002ff495, 0x1)
+static uint8_t Gfx_AuxRenderPassActive; // not in the Gfx struct (which ends at 0x002ff434) - a static "is a pass currently pushed?" latch, one byte past Gfx_RenderTargetPushed but a separate flag
 
 // A single-level "auxiliary render pass" push/pop, used for rendering something (character shadows are the
 // likely case, going by the call pattern) into whatever d3dRenderTargetSetup's own single-level stack has
@@ -2409,6 +2426,7 @@ void maybeD3dShutdown(void) {
 #define D3D8_RS_AlphaBlendEnable D3D8_TRACED("D3D8_RS_AlphaBlendEnable", 0x00111ABC) // X_D3DRS_ALPHABLENDENABLE (render-state index 59); only ever written here
 #define D3D8_RS_0x40300_LastValue D3D8_TRACED("D3D8_RS_0x40300_LastValue", 0x00111AC0) // opaque, untraced; only ever written here
 #define D3D8_RS_DitherEnable D3D8_TRACED("D3D8_RS_DitherEnable", 0x00111AD4) // X_D3DRS_DITHERENABLE (render-state index 65), poked directly via D3D_SetRenderStateSimple
+// XBE_GLOBAL(0x001b5208, 0xd4)
 #define D3D8_ShaderConstantSubIndexTable ((int32_t*)0x001B5208) // untraced - ~53 ints, each added to 0x60 to form a shader-constant register index
 
 // Per-texture-stage-like opaque D3D8-internal registers, four groups spaced 0x80 apart, written unconditionally
@@ -2687,8 +2705,10 @@ void psiBlurCharacterShadow(void) {
 // psiBlurScreen
 // ---------------------------------------------------------------------------------------------------------------
 
+// XBE_GLOBAL(0x002ff468, 0xc)
 #define Gfx_BlurHistoryTextureSlots ((int32_t*)0x002FF468u) // not in the Gfx struct - a 3-entry round-robin of texture slots holding recent screen captures
-#define Gfx_BlurHistoryIndex U32_AT(0x002FF474u)             // current round-robin index into the above (0, 1 or 2)
+// XBE_GLOBAL(0x002ff474, 0x4)
+static uint32_t Gfx_BlurHistoryIndex; // current round-robin index into the above (0, 1 or 2)
 
 // Grabs the current backbuffer's pixel data (via its own known, fixed uncached-alias address - see below) into
 // a freshly (re)registered texture, replacing the oldest of 3 round-robin "history" slots, then draws it back
@@ -3134,17 +3154,26 @@ static_assert(sizeof(D3DPRESENT_PARAMETERS_Xbox) == 17 * 4, "Bad size for D3DPRE
 // Vertex shader source data (ROM, in the XBE's data section) - the 128 "main" shaders share one of four
 // declarations (selected by the shader index's low two bits) and each have their own function token array
 // (a 128-entry pointer table), plus the immediate-mode and overlay-quad shaders with dedicated handles.
+// XBE_GLOBAL(0x001b50e4, 0x18)
 #define VtxShaderDeclTokens_Plain    ((const void*)0x001B50E4u)
+// XBE_GLOBAL(0x001b5100, 0x58)
 #define VtxShaderDeclTokens_Bit0     ((const void*)0x001B5100u)
+// XBE_GLOBAL(0x001b5158, 0x1c)
 #define VtxShaderDeclTokens_Bit1     ((const void*)0x001B5158u)
+// XBE_GLOBAL(0x001b5178, 0x5c)
 #define VtxShaderDeclTokens_Bit0And1 ((const void*)0x001B5178u)
+// XBE_GLOBAL(0x001b4d78, 0x200)
 #define VtxShaderFunctionTokenTable  ((const void* const*)0x001B4D78u) // 128 pointers
+// XBE_GLOBAL(0x001b51d4, 0x14)
 #define ImmediateModeVtxShaderDecl   ((const void*)0x001B51D4u)
+// XBE_GLOBAL(0x001b4f78, 0x16c)
 #define ImmediateModeVtxShaderFunc   ((const void*)0x001B4F78u)
+// XBE_GLOBAL(0x001b51e8, 0x20)
 #define OverlayVtxShaderDecl         ((const void*)0x001B51E8u)
+// XBE_GLOBAL(0x001b4fd0, 0x114)
 #define OverlayVtxShaderFunc         ((const void*)0x001B4FD0u)
-#define ImmediateModeVtxShaderHandleAddr ((void**)0x002C574Cu) // = &Gfx_ImmediateModeVertexShader
-#define OverlayVtxShaderHandleAddr       ((void**)0x002C5748u) // = &Gfx_OverlayVertexShaderHandle
+#define ImmediateModeVtxShaderHandleAddr ((void**)&Gfx_ImmediateModeVertexShader)
+#define OverlayVtxShaderHandleAddr       ((void**)&Gfx_OverlayVertexShaderHandle)
 
 // What xboxInitGraphics asked the device for - read back by d3dGetDisplayMode below.
 static uint32_t g_d3dDisplayRefreshRate = 60;

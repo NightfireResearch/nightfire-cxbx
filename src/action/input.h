@@ -162,5 +162,6 @@ typedef struct {
 static_assert(sizeof(PlayerInput) == 0x158, "Bad size for PlayerInput");
 
 // PlayerInputs is an array of 4 PlayerInput structs, located at 001fe6d0
+// XBE_GLOBAL(0x001fe6d0, 0x560)
 #define PlayerInputs ((PlayerInput*)0x001fe6d0)
 

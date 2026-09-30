@@ -127,6 +127,7 @@ void __stdcall Xbox_XapiInitProcess(void) {
 #define CrtInitLocks         ((int (__cdecl *)(void))0x000f35b5u)
 #define CrtLockInitFailed    ((void (__cdecl *)(void))0x000f35feu)
 #define CrtFatalError        ((void (__cdecl *)(int code))0x000f28d4u)
+// XBE_GLOBAL(0x001d6538, 0x90)
 #define CrtDefaultLocaleInfo ((void *)0x001d6538u)
 
 // Offsets into _ptiddata, as the original writes them: the owning thread, the thread handle, an

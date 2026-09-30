@@ -24,9 +24,12 @@
 #define MAX_TANKS 8 // Locations defined on the map
 
 // Until we implement fully, use the in-game memory addresses
-#define Tanks (*(obj_tag*(*)[MAX_TANKS])0x001dc980) // the original Car_Init clears all 0x20 bytes
-#define NumTanks U16_AT(0x001dc798)
-#define TankSpawns (*(_MATRIX(*)[8])0x001dc7a0)
+// XBE_GLOBAL(0x001dc980, 0x20)
+static obj_tag* Tanks[MAX_TANKS]; // the original Car_Init clears all 0x20 bytes
+// XBE_GLOBAL(0x001dc798, 0x2)
+static uint16_t NumTanks;
+// XBE_GLOBAL(0x001dc7a0, 0x1e0)
+static _MATRIX TankSpawns[8];
 
 
 // WIP

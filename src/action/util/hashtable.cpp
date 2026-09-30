@@ -10,7 +10,9 @@ typedef struct{
 } HashTypeRange;
 #pragma pack(pop)
 
+// XBE_GLOBAL(0x001fe688, 0x20)
 #define HashTypeRanges (*(HashTypeRange(*)[8])0x001fe688)
+// XBE_GLOBAL(0x001f6680, 0x10)
 #define t_hashtable (*(hashtable_entry(*)[1000])0x001f6680)
 #define ht_insert_ind U32_AT(0x001fe680)
 #define m_nhti U32_AT(0x001fe684)

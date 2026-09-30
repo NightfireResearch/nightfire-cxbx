@@ -10,6 +10,7 @@
 #include "../../game.h"
 
 // Switches are kept in their own list, initialised (oddly) from Sensor_Init alongside CameraList - see Sensor.cpp
+// XBE_GLOBAL(0x0029aab0, 0xc)
 #define SwitchList (*(LLISTINFO_tag*)0x0029aab0)
 
 // Stride confirmed via Switch_Create's raw disassembly; only the first byte (switchChannel) is understood so far.
@@ -20,6 +21,7 @@ typedef struct {
     uchar unknown[7];
 } SSysItem;
 static_assert(sizeof(SSysItem) == 8, "Bad size for SSysItem");
+// XBE_GLOBAL(0x0029aad0, 0x28)
 #define SSysItems ((SSysItem*)0x0029aad0)
 
 #pragma pack(push, 1)

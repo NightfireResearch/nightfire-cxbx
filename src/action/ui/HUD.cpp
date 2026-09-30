@@ -81,7 +81,18 @@ static_assert(sizeof(CrosshairInfo) == 18, "CrosshairInfo size wrong");
 // 6: rectangle with arrow up through it
 // 7: 6 but with disallowed circle/strikethrough
 // 8: camera
-#define HUDCrossCoords (*(CrosshairInfo(*)[9])(0x00181348))
+// XBE_GLOBAL(0x00181348, 0xa2)
+static CrosshairInfo HUDCrossCoords[9] = {
+    {0, 0, 0, 0, {0}},
+    {1, 2, 29, 29, {0}},
+    {10, 11, 11, 11, {0}},
+    {31, 1, 14, 13, {0}},
+    {31, 15, 12, 16, {0}},
+    {45, 14, 18, 18, {0}},
+    {0, 30, 13, 16, {0}},
+    {17, 32, 21, 21, {0}},
+    {46, 1, 17, 10, {0}},
+};
 
 // UNINJECTABLE - custom calling convention
 void HUD_UpdateCrossHair(BLData *player,sprite *spr) {
@@ -333,25 +344,43 @@ void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *
 	
 }
 
-#define CrossHair (*(SpriteInfo*)0x0017f778)
-#define ttimer I16_AT(0x002790b8)
-#define ctimer I16_AT(0x002790bc)
+// XBE_GLOBAL(0x0017f778, 0x2c)
+static SpriteInfo CrossHair = {0xff0000ff, 0x7f7f7fff, 0x001f, 0x0800, 0, 0, 0, 0, 0, 0, 0, 0, (Action_TranslatedText)0xffffffff, NULL, (HASHCODE)0x03000026, 5, {0, 0, 0}};
+// XBE_GLOBAL(0x002790b8, 0x2)
+static int16_t ttimer;
+// XBE_GLOBAL(0x002790bc, 0x2)
+static int16_t ctimer;
 
 
+// XBE_GLOBAL(0x0017fea8, 0x1c)
 #define MsgMissionStatusPane ((HUDPANECREATE_tag*)(0x0017fea8))
+// XBE_GLOBAL(0x001813ec, 0x1c)
 #define MsgObjectiveStatusPane ((HUDPANECREATE_tag*)(0x001813ec))
+// XBE_GLOBAL(0x00181598, 0x1c)
 #define MsgInfoStatusPane ((HUDPANECREATE_tag*)(0x00181598))
+// XBE_GLOBAL(0x0017fe8c, 0x1c)
 #define AirPane ((HUDPANECREATE_tag*)(0x0017fe8c))
+// XBE_GLOBAL(0x00180218, 0x1c)
 #define NightSightPane ((HUDPANECREATE_tag*)(0x00180218))
+// XBE_GLOBAL(0x0018036c, 0x1c)
 #define LensFlarePane ((HUDPANECREATE_tag*)(0x0018036c))
+// XBE_GLOBAL(0x00180690, 0x1c)
 #define RCCarPane ((HUDPANECREATE_tag*)(0x00180690))
+// XBE_GLOBAL(0x001800f4, 0x1c)
 #define CameraPane ((HUDPANECREATE_tag*)(0x001800f4))
+// XBE_GLOBAL(0x001807d4, 0x1c)
 #define XrayPane ((HUDPANECREATE_tag*)(0x001807d4))
+// XBE_GLOBAL(0x00180924, 0x1c)
 #define SecCamPane ((HUDPANECREATE_tag*)(0x00180924))
+// XBE_GLOBAL(0x00180a74, 0x1c)
 #define OICWPane ((HUDPANECREATE_tag*)(0x00180a74))
+// XBE_GLOBAL(0x00180b98, 0x1c)
 #define RoninPane ((HUDPANECREATE_tag*)(0x00180b98))
+// XBE_GLOBAL(0x00180cc0, 0x1c)
 #define LaserPane ((HUDPANECREATE_tag*)(0x00180cc0))
+// XBE_GLOBAL(0x00180ec4, 0x1c)
 #define SpacePane ((HUDPANECREATE_tag*)(0x00180ec4))
+// XBE_GLOBAL(0x00181774, 0x1c)
 #define MsgPickupStatusPane ((HUDPANECREATE_tag*)(0x00181774))
 
 
@@ -559,10 +588,15 @@ HUDPANECREATE_tag* PaneList[] = {
 static_assert(ARRAY_SIZE(PaneList) == NUM_PANES, "Bad size of pane list");
 
 
+// XBE_GLOBAL(0x00180fbc, 0x1c)
 #define MPAmmoPane ((HUDPANECREATE_tag*)(0x00180fbc))
+// XBE_GLOBAL(0x00181138, 0x1c)
 #define MPHealthPane ((HUDPANECREATE_tag*)(0x00181138))
+// XBE_GLOBAL(0x00181180, 0x1c)
 #define MPMsgInfoStatusPane ((HUDPANECREATE_tag*)(0x00181180))
+// XBE_GLOBAL(0x001812d4, 0x1c)
 #define MPScorePane ((HUDPANECREATE_tag*)(0x001812d4))
+// XBE_GLOBAL(0x001806d8, 0x1c)
 #define RadarPane ((HUDPANECREATE_tag*)(0x001806d8))
 
 // XBE_GLOBAL(0x001812f0, 0x58)
@@ -652,8 +686,10 @@ void HUD_Init(BLData *player, obj_tag *obj) {
 	
 }
 
-#define OICW_timer I16_AT(0x002790b4)
-#define OICW_mode U8_AT(0x002790ae)
+// XBE_GLOBAL(0x002790b4, 0x2)
+static int16_t OICW_timer;
+// XBE_GLOBAL(0x002790ae, 0x1)
+static uint8_t OICW_mode;
 
 // AUTOINJECT
 void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *param_3,obj_tag *param_4) {
@@ -797,7 +833,6 @@ void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 }
 
 
-#define MissileDeploy (*(uchar(*)[8])(0x0029a28c))
 
 
 // AUTOINJECT

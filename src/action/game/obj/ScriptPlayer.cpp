@@ -15,7 +15,8 @@
 #include "../mp/multiplayer.h"
 
 // A fixed-size scratch buffer the original code reuses across calls to Collide_GetDamageNObjects - see SP_GetHitDamage
-#define HitObjList (*(obj_tag*(*)[64])0x00279410)
+// XBE_GLOBAL(0x00279410, 0x100)
+static obj_tag* HitObjList[64];
 
 // Playback state machine driven by SP_Update. The forward/reverse cycle is:
 //   NotStarted -> PlayingForward -> WaitingReverse -> PlayingReverse -> WaitingForward -> PlayingForward -> ...

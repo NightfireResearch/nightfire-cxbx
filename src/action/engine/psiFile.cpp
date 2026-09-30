@@ -53,7 +53,8 @@ void dumpToFile(char* gamefile, void* data, size_t len) {
     fclose(file);
 }
 
-#define SingleFileMode U8_AT(0x002adf70)
+// XBE_GLOBAL(0x002adf70, 0x1)
+static uint8_t SingleFileMode;
 #define DirFileLen U32_AT(0x00279174)
 #define dirFileBuf U32_AT(0x00279168)
 
@@ -157,4 +158,12 @@ int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOu
 
     }
 
+}
+
+// Switches between one file per asset and everything in one file; returns the previous mode.
+// AUTOINJECT
+char psiFileSetSingleFileMode(char mode) {
+    char previous = (char)SingleFileMode;
+    SingleFileMode = mode;
+    return previous;
 }

@@ -14,6 +14,7 @@
 short Control_Plr2Ind(obj_tag* a);
 
 #define NUM_SKINS 29 // unique characters
+// XBE_GLOBAL(0x001637c0, 0x1d0)
 #define MP_skins ((MP_skin*)0x001637c0)
 
 

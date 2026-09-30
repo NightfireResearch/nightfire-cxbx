@@ -144,4 +144,6 @@ void Script_FFwd(SCRIPTINFO *scriptInfo, char doFFwd);
 void Script_HideObj(SCRIPTINFO *scriptInfo, char hide);
 bool Script_IsDeathNIS(HASHCODE hashcode);
 void Script_KillStream(SCRIPTINFO *scriptInfo, SSTREAM *stream);
+void Script_Init(void);
+
 #endif // SCRIPT_H_

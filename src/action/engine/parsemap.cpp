@@ -19,11 +19,11 @@
 
 #define pCurrCelList (*(celglist_tag**)(0x00274c80))
 #define FileNextBlock (*(uint**)(0x00274c70))
-#define StartingNewMap BOOL8_AT(0x00274c68)
+// XBE_GLOBAL(0x00274c68, 0x1)
+static uint8_t StartingNewMap;
 #define m_pmap (*(map_tag**)0x00274b50)
 
 // Also used in Loader.cpp
-#define MemType U32_AT(0x00274c98)
 
 typedef struct block_header_tag {
     uint size;
@@ -51,11 +51,15 @@ bool parsemap_parsenextblock(char param_1);
 // AUTOGEN
 void parsemap_block_map_data_dynamic(block_header_tag *bh, uchar* param_2, uchar doCreation);
 
+// XBE_GLOBAL(0x00274b34, 0x8)
 #define DynamicBH (*(block_header_tag*)0x00274b34)
 #define DynamicPtr PTR_AT(0x00274c58)
-#define MapHashCode U32_AT(0x00274c88)
-#define ParseMap_State U32_AT(0x00274ca4)
-#define filename (*(char*)0x00274b58)
+// XBE_GLOBAL(0x00274c88, 0x4)
+static uint32_t MapHashCode;
+// XBE_GLOBAL(0x00274ca4, 0x4)
+static uint32_t ParseMap_State;
+// XBE_GLOBAL(0x00274b58, 0x100)
+static char filename[0x100];
 #define FileLastBlock U32_AT(0x00274c74)
 #define FileDiscard U32_AT(0x00274c78)
 
@@ -66,8 +70,8 @@ bool parsemap_parsemap(uint hashcode, bool secondPass) {
         case 0: {
             // Load the file into RAM?
             const char* filePath = "";
-            sprintf(&filename, "%s%8.8X.bin", filePath, hashcode);
-            psiFileLoadForParse(&filename);
+            sprintf(filename, "%s%8.8X.bin", filePath, hashcode);
+            psiFileLoadForParse(filename);
             MapHashCode = hashcode;
             DynamicBH.size = 0;
             DynamicPtr = NULL;

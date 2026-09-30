@@ -167,9 +167,13 @@ typedef short MallocFlags;
 #define glb_blokes (*(BLData*(*)[4])(0x002774b8))
 #define glb_players (*(obj_tag*(*)[4])(0x001f6654))
 
+// XBE_GLOBAL(0x0029d71c, 0xc)
 #define CONST_UP_VECTOR (*(_VECTOR*)0x0029d71c)
+// XBE_GLOBAL(0x0029d728, 0xc)
 #define CONST_ZERO_VECTOR (*((_VECTOR*)0x0029d728))
+// XBE_GLOBAL(0x001f6648, 0xc)
 #define GRAVITY_VECTOR (*((_VECTOR*)0x001f6648))
+// XBE_GLOBAL(0x0029d6d4, 0xc)
 #define MAYBE_CONST_FORWARD_VECTOR (*((_VECTOR*)0x0029d6d4))
 #define MAT_IDENTITY (*((_MATRIX*)0x0029d6e0))
 

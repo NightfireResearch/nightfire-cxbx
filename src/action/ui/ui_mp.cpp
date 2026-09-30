@@ -280,7 +280,7 @@ bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, 
 }
 
 // FIXME: this might be part of mp_stuff?
-#define enviromods_explosive_scenery_unlocked U8_AT(0x002456a8)
+#define enviromods_explosive_scenery_unlocked mp_explosive_scenery_unlocked
 
 // AUTOINJECT
 bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6) {
@@ -341,6 +341,7 @@ bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, 
 }
 
 #define mp_editing_bot U8_AT(0x002456b2)                // the bot P_MPBOTCHOOSE / P_MPBOTSETUP are editing
+// XBE_GLOBAL(0x0025e960, 0x40)
 #define mp_bot_playing_text ((char *)0x0025e960)        // "Playing : Yes"
 
 // AUTOINJECT
@@ -412,12 +413,14 @@ bool C_SBBOTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
 }
 
 // P_MPBOTCHOOSE's own copy of mp_characters, with the characters this bot cannot have greyed out.
+// XBE_GLOBAL(0x00245338, 0x2b8)
 #define mp_stuff (*(M_ITEM(*)[29])0x00245338)
 // Who has the one-per-game characters: the editing bot's index + 10 (0 = nobody). In a game without teams only one
 // bot may be on MI6's side, and only one bot may be a Bond.
 #define mp_good_bot_taken U8_AT(0x002456b0)
 #define mp_bond_bot_taken U8_AT(0x002456b1)
-#define mp_bot_default_stats (*(BOT_stats_t **)0x002456ac)   // the last stats copied into a bot
+// XBE_GLOBAL(0x002456ac, 0x4)
+static BOT_stats_t * mp_bot_default_stats; // the last stats copied into a bot
 
 static bool IsBondSkin(int skin) {
     return skin == 0 || skin == 0xc || skin == 0xe;
@@ -483,8 +486,10 @@ bool C_SBMPBTCHOOSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
     return true;
 }
 
+// XBE_GLOBAL(0x0025e3d8, 0x1)
 #define mp_option_box_text ((char *)0x0025e3d8)
-#define mp_bots_initialised U8_AT(0x0025e4d7)
+// XBE_GLOBAL(0x0025e4d7, 0x1)
+static uint8_t mp_bots_initialised;
 
 // A bot, ready to play as a character, with its default stats and the character's name as its player name.
 static void SetUpBot(int bot, uchar skin) {
@@ -799,8 +804,10 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
     return true;
 }
 
-#define mp_debrief_text_count U8_AT(0x0025ed20)                  // the next of mp_debrief_text's strings
+// XBE_GLOBAL(0x0025ed20, 0x1)
+static uint8_t mp_debrief_text_count; // the next of mp_debrief_text's strings
 #define mp_debrief_text       (*(char(*)[24][32])0x0025eaa0)     // the numbers on the debriefing
+// XBE_GLOBAL(0x0025e9a0, 0x100)
 #define mp_debrief_result     ((char *)0x0025e9a0)               // "<name> wins the match."
 
 // AUTOGEN
@@ -911,16 +918,26 @@ bool P_MPDEBRIEFING_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
 }
 
 // The confirm page's counts of rows used: MI6 (or everyone, without teams) and Phoenix, players and bots
-#define mp_confirm_mi6_players     U8_AT(0x0025e95b)
-#define mp_confirm_phoenix_players U8_AT(0x0025e95a)
-#define mp_confirm_mi6_bots        U8_AT(0x0025e959)
-#define mp_confirm_phoenix_bots    U8_AT(0x0025e958)
+// XBE_GLOBAL(0x0025e95b, 0x1)
+static uint8_t mp_confirm_mi6_players;
+// XBE_GLOBAL(0x0025e95a, 0x1)
+static uint8_t mp_confirm_phoenix_players;
+// XBE_GLOBAL(0x0025e959, 0x1)
+static uint8_t mp_confirm_mi6_bots;
+// XBE_GLOBAL(0x0025e958, 0x1)
+static uint8_t mp_confirm_phoenix_bots;
 #define mp_confirm_handicap_text   (*(char(*)[4][32])0x0025e8d8)
+// XBE_GLOBAL(0x0025e4d8, 0x40)
 #define mp_confirm_map_text        ((char *)0x0025e4d8)
+// XBE_GLOBAL(0x0025e518, 0x40)
 #define mp_confirm_scenario_text   ((char *)0x0025e518)
+// XBE_GLOBAL(0x0025e558, 0x40)
 #define mp_confirm_weapons_text    ((char *)0x0025e558)
+// XBE_GLOBAL(0x0025e598, 0x40)
 #define mp_confirm_points_text     ((char *)0x0025e598)
+// XBE_GLOBAL(0x0025e5d8, 0x40)
 #define mp_confirm_duration_text   ((char *)0x0025e5d8)
+// XBE_GLOBAL(0x0025e618, 0x40)
 #define mp_confirm_friendly_text   ((char *)0x0025e618)
 #define MP_UNLIMITED ((int)-1)     // MaxPoints / MaxDuration
 

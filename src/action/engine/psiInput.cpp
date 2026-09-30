@@ -5,6 +5,9 @@
 #include <string.h>
 #include <math.h>
 
+// XBE_GLOBAL(0x002ff498, 0x2a4)
+XboxInputs_struct XboxInputs;
+
 // ---------------------------------------------------------------------------------------------------------------
 // Real hardware polling - talks to the host's actual gamepads via Win32 XInput, instead of going through
 // CXBX's emulation of the original Xbox kernel's XAPILIB device layer (XInitDevices/XGetDevices/XInputOpen/
@@ -248,7 +251,7 @@ static float ApplyDeadzoneAndRescale(float raw, float threshold) {
 }
 
 // Real signature/behaviour: see the block comment above. Called once per frame by the original (untouched)
-// Input_Update, and again in a drain loop by the original (untouched) maybeInputShutdown to let rumble
+// Input_Update, and again in a drain loop by maybeInputShutdown to let rumble
 // motors spin down before handing off to another engine.
 //
 // AUTOINJECT
@@ -402,6 +405,7 @@ void psiInput_PollDevices(void) {
 }
 
 // Array of 4 uint32_t entries, all initialised to 0xFFFFFFFF
+// XBE_GLOBAL(0x0019481c, 0x10)
 #define controller_maybeRumbleTimeout ((int*)0x0019481c)
 
 // AUTOINJECT
@@ -538,6 +542,7 @@ void psiInputReset(void) {
 #define bSkipAttract U8_AT(0x0025d79d)
 
 // Array of 4x bool32
+// XBE_GLOBAL(0x0019482c, 0x10)
 #define controllerIsPresent ((unsigned int*)(0x0019482c))
 
 // AUTOINJECT
@@ -808,4 +813,42 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
 
     }
 
+}
+
+#define ERROR_IO_PENDING_XBOX 997
+
+// Before handing over to another engine: stops every controller's rumble and clears its sticks and buttons
+// (prevButtons all set, so nothing held now counts as a new press), then keeps polling until no connected
+// controller's rumble is still changing or its last feedback write is still in flight - at most a second.
+// AUTOINJECT
+void maybeInputShutdown(void) {
+    for (int i = 0; i < 4; i++) {
+        ControllerStateStruct *c = &XboxInputs.Controllers[i];
+        c->rumbleA = 0;
+        c->rumbleB = 0;
+        c->Joystick_LX = 0.0f;
+        c->Joystick_LY = 0.0f;
+        c->Joystick_RX = 0.0f;
+        c->Joystick_RY = 0.0f;
+        c->buttons = 0;
+        c->prevButtons = 0xffffffff;
+    }
+    double start = timestamp();
+    int pending;
+    do {
+        // Through the game's entry point (patched to ours) rather than straight to ours, as the original calls it:
+        // a test harness standing in front of psiInput_PollDevices (MenuProbe's scripted input, which also counts
+        // polls to time its scripts) then sees these polls too.
+        reinterpret_cast<void (*)(void)>(0x000e76a0)();
+        pending = 0;
+        for (int i = 0; i < 4; i++) {
+            ControllerStateStruct *c = &XboxInputs.Controllers[i];
+            if (c->controllerIndex == 0)
+                continue;
+            if (c->lastRumbleA != c->rumbleA || c->lastRumbleB != c->rumbleB)
+                pending++;
+            if (c->feedbackStatus == ERROR_IO_PENDING_XBOX)
+                pending++;
+        }
+    } while (pending != 0 && timestamp() - start <= 1000.0);
 }

@@ -41,7 +41,8 @@ M_ITEM difficulty[3] = {
 
 #define menu_unlock_everything U8_AT(0x0025d79e)
 // Counts up a few frames once a mission is picked (0 = none), so the loading panel shows before the load starts.
-#define nf_mission_countdown U8_AT(0x0025d7dc)
+// XBE_GLOBAL(0x0025d7dc, 0x1)
+static uint8_t nf_mission_countdown;
 
 // AUTOINJECT
 bool P_NFDFCTY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {

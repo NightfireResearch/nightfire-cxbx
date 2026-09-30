@@ -14,14 +14,21 @@ void Text_Update(void);
 // AUTOGEN
 void __stdcall Text_FlushAllSubtitles(void);
 
-#define Bank (*(const char***)0x00215588)
-#define BankData (*(void**)0x0021558c)
-#define NumEntries U32_AT(0x00215590)
-#define CurrentLanguage U32_AT(0x00215594)
-#define NumFixups U32_AT(0x00215580)
-#define FixupTable (*(uint**)0x001fec78)
+// XBE_GLOBAL(0x00215588, 0x4)
+static const char** Bank;
+// XBE_GLOBAL(0x0021558c, 0x4)
+static void* BankData;
+// XBE_GLOBAL(0x00215590, 0x4)
+static uint32_t NumEntries;
+// XBE_GLOBAL(0x00215594, 0x4)
+static uint32_t CurrentLanguage;
+// XBE_GLOBAL(0x00215580, 0x4)
+static uint32_t NumFixups;
+// XBE_GLOBAL(0x001fec78, 0x4)
+static uint* FixupTable;
 #define StringHeapLock (*(uint8_t(*)[256])0x001fec80) // a lock count per heap string (Txt_LockString, Txt_UnlockString)
-#define StringHeapCnt U32_AT(0x00215584)
+// XBE_GLOBAL(0x00215584, 0x4)
+static uint32_t StringHeapCnt;
 
 
 // AUTOINJECT
@@ -107,8 +114,46 @@ uint Txt_GetIndex(Action_TranslatedText tt) {
     return (int)FixupTable[(tt >> 24)] + (tt & 0xFFFFFF);
 }
 
-// AUTOGEN
-char* Txt_GetStringFromHeap(uchar index);
+// AUTOINJECT
+uint GetLanguage(void) {
+    return CurrentLanguage;
+}
+
+// 256 strings of 0x168 bytes that Txt_BindLabel and friends format into, each with a lock count
+// (StringHeapLock) - 0 means free. Handed out round-robin from StringHeapCnt; when none is free, everyone
+// shares one overflow buffer.
+#define StringHeap (*(char(*)[256][0x168])0x001fed80)
+// XBE_GLOBAL(0x00215598, 0x168)
+#define StringHeapOverflow ((char*)0x00215598)
+
+// Finds the next free heap string at or after StringHeapCnt, wrapping round, locks it with lockCount and
+// returns it emptied. The first scan compares only StringHeapCnt's low 16 bits against 256, the second the whole
+// value, as the original does.
+// AUTOINJECT
+char* Txt_GetStringFromHeap(uchar lockCount) {
+    uint start = StringHeapCnt;
+    uint found = 0x100;
+    for (ushort i = (ushort)start; i < 0x100; i++) {
+        if (StringHeapLock[i] == 0) {
+            found = i;
+            break;
+        }
+    }
+    if (found == 0x100) {
+        for (ushort i = 0; i < start; i++) {
+            if (StringHeapLock[i] == 0) {
+                found = i;
+                break;
+            }
+        }
+        if (found == 0x100)
+            return StringHeapOverflow;
+    }
+    StringHeapLock[found] = lockCount;
+    StringHeapCnt = found + 1;
+    StringHeap[found][0] = '\0';
+    return StringHeap[found];
+}
 
 // AUTOINJECT
 const char* Txt_BindLabel(Action_TranslatedText a, unsigned int b) {

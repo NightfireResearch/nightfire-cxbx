@@ -7,10 +7,12 @@
 // - a 64-bit mask per player (docs/ui/secrets.md, "How the bonus bits work") - which open multiplayer characters,
 // scenarios and gadget upgrades.
 
+// XBE_GLOBAL(0x0025d6e8, 0x20)
 #define menu_bonus              ((ulong *)0x0025d6e8)   // 4 players x {lo, hi}
 #define menu_bonus_replace      U8_AT(0x0025d78d)       // Menu_SetBonus always replaces, never ORs
 #define menu_level_bonus_earned U8_AT(0x0025d78c)       // Menu_SetLevelBonus gave a new reward
-#define mp_explosive_scenery_unlocked U8_AT(0x002456a8)
+// XBE_GLOBAL(0x002456a8, 0x1)
+uint8_t mp_explosive_scenery_unlocked;
 
 // AUTOGEN
 void PlrStarts_ProcessRewardCounter(ulong *bonus, HASHCODE hashcode, uint upgradeLevel, char set, REWARDINFO_tag *op);

@@ -82,7 +82,8 @@ void View_DrawGlist(celglist_tag* celglist, _VECTOR *translation, _VECTOR *rotat
 
 #define object_display_mask U32_AT(0x0029e80c)
 #define GfxList U32_AT(0x0029d79c)
-#define switch_ForceDrawAll U32_AT(0x001dfa18)
+// XBE_GLOBAL(0x001dfa18, 0x4)
+uint32_t switch_ForceDrawAll;
 
 // AUTOGEN
 void Vision_Init_Portal_Recurse(viewer_tag* viewer);
@@ -96,6 +97,7 @@ void vision_GetCamPos(_VECTOR* camPos);
 void Vision_Portal_Recurse(viewer_tag* viewer);
 
 
+// XBE_GLOBAL(0x0029dbf0, 0xc)
 #define CamPos (*(_VECTOR*)(0x0029dbf0))
 
 // Cannot autoinject - custom calling convention

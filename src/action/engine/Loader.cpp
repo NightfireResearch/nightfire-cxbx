@@ -9,7 +9,8 @@
 
 #include <stdio.h>
 
-#define MemType U32_AT(0x00274c98)
+// XBE_GLOBAL(0x00274c98, 0x4)
+uint32_t MemType;
 #define DirFileType U32_AT(0x00279184)
 #define DirFileHash ((HASHCODE)U32_AT(0x002791c8))
 #define dirFileBuf (*(uint**)(0x00279168))
@@ -24,6 +25,7 @@ typedef struct {
 } LoadableFile;
 #pragma pack(pop)
 
+// XBE_GLOBAL(0x002791d0, 0x80)
 #define LoadableFiles (*(LoadableFile(*)[16])(0x002791d0))
 
 // AUTOINJECT

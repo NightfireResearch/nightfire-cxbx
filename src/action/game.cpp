@@ -7,6 +7,7 @@
 #include "engine/Text.h"
 #include "engine/XboxSettings.h"
 #include "engine/Direct3D/GraphicsSystem.h" // Gfx
+#include "engine/Direct3D/d3dSeam.h" // the immediate-mode quads maybeStartBackgroundMovie draws
 
 #include <windows.h>
 
@@ -67,8 +68,10 @@ bool movieFinished(void) {
 }
 
 
-#define FreezeGame U8_AT(0x001fec48)
-#define sloflag U16_AT(0x001fec64)
+// XBE_GLOBAL(0x001fec48, 0x1)
+uint8_t FreezeGame;
+// XBE_GLOBAL(0x001fec64, 0x2)
+static uint16_t sloflag;
 // ScriptCam is defined in engine/Script.h (same address, HASHCODE-typed)
 #define switch_allowFreeze U32_AT(0x0025d79c)
 
@@ -139,19 +142,24 @@ LAB_0006aafe:
 
 #define StackIndex U16_AT(0x0017bfe8)
 #define glb_viewer_6 ((uint)glb_viewer[6])
-#define SkipCodeFrame U8_AT(0x001f6564)
+// XBE_GLOBAL(0x001f6564, 0x1)
+static uint8_t SkipCodeFrame;
 #define GameStateStack (*(uint (*)[64])0x0017bff0) // Not zero-initialised - first entry must be 1
 
+// XBE_GLOBAL(0x001f65dc, 0x30)
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
+// XBE_GLOBAL(0x001f6568, 0x18)
 #define GlobalVars (*((GlobalVars_t*)0x001f6568))
 #define PTPDATA (*((sNightFireShared_tag*)0x001d7e90))
 
 #define NewScoresRef PTR_AT(0x002790a0)
 
-#define HintsEnabled U32_AT(0x001f6618)
+// XBE_GLOBAL(0x001f6618, 0x4)
+uint32_t HintsEnabled;
 #define SubtitlesEnabled U32_AT(0x001f6614)
 
-#define SoundInfo U32_AT(0x001f65d8)
+// XBE_GLOBAL(0x001f65d8, 0x4)
+uint32_t SoundInfo;
 
 // Maybe hashcode of playing FMV
 #define BGFMVPlaying U32_AT(0x002ae288)
@@ -185,9 +193,12 @@ void BackgroundMovieSetVolume(int param_1);
 void BackgroundMoviePlayFile(char *filename);
 
 
+// XBE_GLOBAL(0x002ae3f0, 0x100)
 #define BackgroundMovieFilename ((char*)(0x002ae3f0))
-#define LoopingMovie U8_AT(0x002ae28c)
-#define BackgroundMovieVolume U32_AT(0x00194818)
+// XBE_GLOBAL(0x002ae28c, 0x1)
+static uint8_t LoopingMovie;
+// XBE_GLOBAL(0x00194818, 0x4)
+static uint32_t BackgroundMovieVolume = 0x64;
 
 // AUTOINJECT
 void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume) {
@@ -803,4 +814,33 @@ void mainloop(void) {
 
   GS_SetRefreshRate(refreshRate, refreshRate);
   GameFlow_Main();
+}
+
+// AUTOGEN
+bool __stdcall maybeDecodeMpgAudio(void);
+// AUTOGEN
+bool __stdcall maybeBackgroundMovieIsPlaying(void);
+
+// Keeps the background movie going, called every frame: decodes and draws the next frame, masks the top and
+// bottom 66 lines to black for 0x073a0048 (letterboxed), and when the movie ends either replays it (looping,
+// through psiStartBackgroundMovie's 'NPLY' "same file again") or stops it.
+// AUTOINJECT
+void maybeStartBackgroundMovie(void) {
+    if (BGFMVPlaying == 0)
+        return;
+    maybeDecodeMpgAudio();
+    if (BGFMVPlaying == 0x073a0048) {
+        maybeResetRenderState(1);
+        maybeImmediateModePushItem(0.0f, 0.0f, 640.0f, 66.0f, 0, 0, 0.0f, 0.0f, 0xff000000);
+        maybeImmediateModePushItem(0.0f, 414.0f, 640.0f, 66.0f, 0, 0, 0.0f, 0.0f, 0xff000000);
+        maybeImmediateModeFlush();
+    }
+    if (maybeBackgroundMovieIsPlaying())
+        return;
+    if (LoopingMovie != 0) {
+        psiStartBackgroundMovie((HASHCODE)0x4e504c59, LoopingMovie, BackgroundMovieVolume);
+        return;
+    }
+    maybeBackgroundMovieCleanup();
+    BGFMVPlaying = 0;
 }

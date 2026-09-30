@@ -141,6 +141,7 @@ typedef struct {
     MPBOT bot[6]; // FIXME: How many bots are there? Platform-specific? Enough memory for 10 on Xbox
 } MPBOTS;
 
+// XBE_GLOBAL(0x00245280, 0x6e)
 #define mpbots (*(MPBOTS*)0x00245280)
 
 // The four controllers' places on the join page (P_MPJOIN)
