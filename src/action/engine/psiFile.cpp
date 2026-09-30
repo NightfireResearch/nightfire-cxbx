@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include "../actionhelpers.h"
+#include "Loader.h"
 
 
 int allocateAndLoadFileWithinArchive(char* a, unsigned short b, int* c) {
@@ -55,8 +56,6 @@ void dumpToFile(char* gamefile, void* data, size_t len) {
 
 // XBE_GLOBAL(0x002adf70, 0x1)
 static uint8_t SingleFileMode;
-#define DirFileLen U32_AT(0x00279174)
-#define dirFileBuf U32_AT(0x00279168)
 
 
 
@@ -76,8 +75,8 @@ int ** __cdecl psiFileLoadOrig(char *filename, unsigned short allocType, int *si
   if (sizeOut != NULL) {
     *sizeOut = DirFileLen;
   }
-  printf("psiFileLoad in single-file mode: %s is 0x%08x bytes at the location pointed to by dirFileBuf(0x00279168), type %04x\n", filename, *sizeOut, allocType);
-  dumpToFile(filename, *(void**)0x00279168, *sizeOut);
+  printf("psiFileLoad in single-file mode: %s is 0x%08x bytes at the location pointed to by dirFileBuf, type %04x\n", filename, *sizeOut, allocType);
+  dumpToFile(filename, dirFileBuf, *sizeOut);
   return (int**)dirFileBuf;
 }
 

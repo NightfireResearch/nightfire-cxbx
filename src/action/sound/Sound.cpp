@@ -1,4 +1,6 @@
 #include "Sound.h"
+#include <string.h>
+#include <stdio.h>
 
 #include "SFX.h"
 #include "../util/DList.h"
@@ -236,10 +238,32 @@ static_assert(sizeof(MapSound) == 0x20, "Bad size for MapSound");
 static_assert(offsetof(MapSound, position) == 0x08, "Bad offset of MapSound.position");
 static_assert(offsetof(MapSound, radiusOuter) == 0x18, "Bad offset of MapSound.radiusOuter");
 
-// Still the game's: all three are written by Sound_LoadMapSounds (not reimplemented).
-#define GMapSounds (*(MapSound(*)[MAX_MAP_SOUNDS])0x00299ae8)
-#define GMapSoundActive (*(char(*)[MAX_MAP_SOUNDS])0x0029a14c)
-#define GNumMapSounds (*(int*)0x0029a284)
+static MapSound GMapSounds[MAX_MAP_SOUNDS];
+// XBE_GLOBAL(0x0029a14c, 0x32)
+static char GMapSoundActive[MAX_MAP_SOUNDS];
+// XBE_GLOBAL(0x0029a284, 0x4)
+static int GNumMapSounds;
+
+// Takes the level's map-sound block (parsemap_handle_block_id passes it): a count, then that many MapSounds.
+// Every sound starts inactive, so HandleMapSoundAllocation starts each one afresh once the listener is near.
+// GMapSoundHandle is not cleared, as in the original: a handle is only read while its sound is active.
+//
+// AUTOINJECT
+void Sound_LoadMapSounds(int *mapSoundBlock) {
+    int count = mapSoundBlock[0];
+
+    memset(GMapSoundActive, 0, sizeof(GMapSoundActive));
+
+    // OUR GUARD, not the original's. Neither the Xbox nor the PS2 build checks the count (no bounds check or
+    // getter survives in either): more than MAX_MAP_SOUNDS overran the array, in the original into
+    // DynamicSoundList, which follows it in memory - and would now overrun whatever the linker puts after ours.
+    // Stop there rather than corrupt memory. A count of zero or less copies nothing but is still stored, as in
+    // the original.
+    NF_ASSERT(count <= MAX_MAP_SOUNDS, "the level has more map sounds than GMapSounds has room for");
+    GNumMapSounds = count;
+    if (count > 0)
+        memcpy(GMapSounds, &mapSoundBlock[1], count * sizeof(MapSound));
+}
 
 // Written by Sound_UpdateListeners (not reimplemented), once per frame.
 #define GlobalListenerPos (*(_VECTOR*)0x0029a140)

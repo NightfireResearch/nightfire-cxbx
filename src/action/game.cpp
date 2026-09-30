@@ -154,7 +154,6 @@ static uint8_t SkipCodeFrame;
 #define GlobalVars (*((GlobalVars_t*)0x001f6568))
 #define PTPDATA (*((sNightFireShared_tag*)0x001d7e90))
 
-#define NewScoresRef PTR_AT(0x002790a0)
 
 // XBE_GLOBAL(0x001f6618, 0x4)
 uint32_t HintsEnabled;

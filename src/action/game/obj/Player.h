@@ -93,7 +93,11 @@ typedef struct BLData {
     // Armour, which Player_RamSave carries between the parts of a mission beside health. Player_InitWeapon
     // takes it away at the start of Castle Indoors 1 and sets it to 50 on the space station levels.
     float armor; // 0x840
-    char _pad_2c[0x860-0x840-4];
+    char _pad_2c[0x84c-0x844];
+    // HUD_UpdateHealthPane draws the armour and health bars at 4x this alpha, capped at 1, and sets it to 1 while
+    // the game is paused - so the bars fade in over its first quarter. (Its writers were not traced.)
+    float hudFadeIn; // 0x84c
+    char _pad_2c2[0x860-0x850];
     float lensFlareRelated; // 0x860
     char _pad_222222[0x86c-0x864];
     undefined4 field_0x86c[4]; // 0x86c-0x87b - zeroed by Player_InitWeapon
@@ -113,7 +117,10 @@ typedef struct BLData {
     short muzzleFlashRelated; // 0x8c8
     char _pad_23[0x8d2-0x8c8-2];
     short previousSubState; //0x8d2
-    char _pad_3[6];
+    char _pad_3[4];
+    // Frames left of the "Bond moment" icon (TEX_GOLD007BONUS, the health pane's sprite 16): it spins in while
+    // above 100, then sits at the top of the screen; HUD_UpdateHealthPane counts it down by FRAME_RATE_MUL.
+    short bondMomentTimer; // 0x8d8
     char someNightVisionThing;
     char _pad_33[3];
     char playerNum; // 0x8de
@@ -124,8 +131,17 @@ typedef struct BLData {
     char field_0x8e6; // 0x8e6 - zeroed by Player_InitWeapon
     char _pad_5b;
     char field_0x8e8; // 0x8e8 - zeroed by Player_InitWeapon
-    char _pad_5c[0x8f1-0x8e9];
+    char _pad_5c[0x8ef-0x8e9];
+    // The third-person action icon to show (index into HUD.cpp's ThirdIconSprites: grapple, wire, standing, ...),
+    // 0xff for none
+    uchar thirdIcon; // 0x8ef
+    char _pad_5d;
     char nightVisionActive; // 0x8f1
+    char _pad_5e[0x8f7-0x8f2];
+    // Which sides the player was last hit from (bits 0-3: the health pane's full-screen overlays 20-23) and how
+    // bright that flash still is; HUD_UpdateHealthPane fades it by FRAME_RATE_MUL a frame
+    uchar hitDirections; // 0x8f7
+    uchar hitDirectionFade; // 0x8f8
     // ...
 } BLData;
 
@@ -134,6 +150,11 @@ static_assert(offsetof(BLData, crosshairOffsetX) == 0xe0, "Offset of crosshairOf
 static_assert(offsetof(BLData, hudInfo) == 0x770, "Offset of hudInfo not correct");
 static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisionActive not correct");
 static_assert(offsetof(BLData, nightVisionTimer) == 0x8b0, "Offset of nightVisionTimer not correct");
+static_assert(offsetof(BLData, hudFadeIn) == 0x84c, "Offset of hudFadeIn not correct");
+static_assert(offsetof(BLData, bondMomentTimer) == 0x8d8, "Offset of bondMomentTimer not correct");
+static_assert(offsetof(BLData, thirdIcon) == 0x8ef, "Offset of thirdIcon not correct");
+static_assert(offsetof(BLData, hitDirections) == 0x8f7, "Offset of hitDirections not correct");
+static_assert(offsetof(BLData, hitDirectionFade) == 0x8f8, "Offset of hitDirectionFade not correct");
 static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisionActive not correct");
 
 
@@ -204,6 +225,7 @@ static_assert(sizeof(PlayerStartPosition) == 0xcc, "Bad size for PlayerStartPosi
 #pragma pack(pop)
 
 void Player_ResetStartPos(void);
+void __stdcall ReadTuningVars(void);
 void Player_ChangeState(obj_tag* obj, unsigned short newState);
 unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState); // Return the previous substate
 void Player_SetCamMode(BLData *param_1,unsigned short param_2);

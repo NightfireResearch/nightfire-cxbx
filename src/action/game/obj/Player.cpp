@@ -401,11 +401,11 @@ void Player_ViewClamping(obj_tag *player) {
 // value would unbalance the stack by 28 bytes. It returns its float in ST0, which is what MSVC expects.
 // ---------------------------------------------------------------------------------------------------------------
 
-// Tuning values the original passes straight through to AccelFunc0. Only the first has a name in the
-// symbols; the other two sit next to it in the same table and are read by address, as the original does.
-#define Ply_NoAimTurnSpeed_X FLOAT_AT(0x00181a70) // 0.04
-#define Ply_TurnAccelParamA  FLOAT_AT(0x00181a74) // 2.0
-#define Ply_TurnAccelParamB  FLOAT_AT(0x00181a78) // 120.0
+static float Plr_NoAimTurnSpeed_X = 0.04f;
+// XBE_GLOBAL(0x00181a74, 0x4)
+static float Plr_NoAimTurnSpeed_X_Mul = 2.0f;
+// XBE_GLOBAL(0x00181a78, 0x4)
+static float Plr_NoAimTurnSpeed_X_Steps = 120.0f;
 
 // False while dying or dead, and in the substates that move the player themselves (climbing, wire, creeping,
 // zipline). Called rather than reproduced, so that naming it in Ghidra later does not leave two copies.
@@ -498,8 +498,8 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
     float moveZ = forwards * speedScale;
     float moveX = sideways * speedScale;
 
-    float accel = TurnAccel(turn, &blData->turnAccelState, Ply_NoAimTurnSpeed_X,
-                            Ply_TurnAccelParamA, Ply_TurnAccelParamB, 0.05f, 0.95f);
+    float accel = TurnAccel(turn, &blData->turnAccelState, Plr_NoAimTurnSpeed_X,
+                            Plr_NoAimTurnSpeed_X_Mul, Plr_NoAimTurnSpeed_X_Steps, 0.05f, 0.95f);
     blData->turnAccelState = accel;
     float yaw = accel * FRAME_RATE_MUL * turn;
 
@@ -1050,4 +1050,271 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
 
     Player_RamSave(blData);
     Player_CheckWeaponsLoaded(blData);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+#define Plr_AimSpeed_X             FLOAT_AT(0x00181a48)
+#define Plr_AimSpeed_Y             FLOAT_AT(0x00181a4c)
+#define Plr_AimTurnSpeed_X         FLOAT_AT(0x00181a50)
+#define Plr_AimTurnSpeed_Y         FLOAT_AT(0x00181a54)
+#define Plr_ScopeSpeed_X           FLOAT_AT(0x00181a58)
+#define Plr_ScopeSpeed_X_Mul       FLOAT_AT(0x00181a5c)
+#define Plr_ScopeSpeed_X_Steps     FLOAT_AT(0x00181a60)
+#define Plr_ScopeSpeed_Y           FLOAT_AT(0x00181a64)
+#define Plr_ScopeSpeed_Y_Mul       FLOAT_AT(0x00181a68)
+#define Plr_ScopeSpeed_Y_Steps     FLOAT_AT(0x00181a6c)
+#define Plr_NoAimTurnSpeed_Y       FLOAT_AT(0x00181a7c)
+#define Plr_NoAimTurnSpeed_Y_Mul   FLOAT_AT(0x00181a80)
+#define Plr_NoAimTurnSpeed_Y_Steps FLOAT_AT(0x00181a84)
+
+// Health given back on continuing a mission, per difficulty (read by Player_RamLoad)
+#define ContinueHealthBoostEasy   FLOAT_AT(0x0017e680)
+#define ContinueHealthBoostMedium FLOAT_AT(0x0017e684)
+#define ContinueHealthBoostHard   FLOAT_AT(0x0017e688)
+
+// Autoaim (read by Check_AutoAim, and Autoaim_Range by Player_AutoAim). Autoaim_HardMul is in .bss, so it is
+// 0 until the first level loads anyway.
+#define Autoaim_Angle_H   FLOAT_AT(0x00181afc)
+#define Autoaim_Angle_V   FLOAT_AT(0x00181b00)
+#define Autoaim_Range     FLOAT_AT(0x00181b04)
+#define Autoaim_LockOnMul FLOAT_AT(0x00181b08)
+#define Autoaim_EasyMul   FLOAT_AT(0x00181b0c)
+#define Autoaim_NormalMul FLOAT_AT(0x00181b10)
+#define Autoaim_HardMul   FLOAT_AT(0x0027915c)
+
+// Damage the player takes, per difficulty and per body part (read by Player_HandlePain; the body-part ones also by
+// BOT_handlePain; all editable in the P_TWEAKS debug menu)
+#define Plr_DMod_Multi     FLOAT_AT(0x0017e8cc)
+#define Plr_DMod_Head      FLOAT_AT(0x0017e8d0)
+#define Plr_DMod_LowerLimb FLOAT_AT(0x0017e8d4)
+#define Plr_DMod_UpperLimb FLOAT_AT(0x0017e8d8)
+#define Plr_DMod_Easy      FLOAT_AT(0x0017e8dc)
+#define Plr_DMod_Normal    FLOAT_AT(0x0017e8e0)
+#define Plr_DMod_Hard      FLOAT_AT(0x0017e8e4)
+
+// Drones: damage they take and their armour (NDrone2_HitDamage, FUN_0003db50), their firing (DroneWeap_*,
+// Drone_ModBulletDamage) and their captains (NDrone2_DefaultInit). P_TWEAKS/P_TWEAKS2 edit most of them.
+#define DroneDamage_Easy                         FLOAT_AT(0x00164068)
+#define DroneDamage_Normal                       FLOAT_AT(0x0016406c)
+#define DroneDamage_Hard                         FLOAT_AT(0x00164070)
+#define DroneDamage_Head                         FLOAT_AT(0x00164074)
+#define DroneDamage_Legs                         FLOAT_AT(0x00164078)
+#define DroneDamage_Arms                         FLOAT_AT(0x0016407c)
+#define DroneDamage_Torso                        FLOAT_AT(0x00164080)
+#define DroneArmour_Helmet                       FLOAT_AT(0x00164084)
+#define DroneArmour_Combat                       FLOAT_AT(0x00164088)
+#define DroneArmour_Jacket                       FLOAT_AT(0x0016408c)
+#define DroneArmour_Vest                         FLOAT_AT(0x00164090)
+#define DroneFiring_BurstDelay_Min               FLOAT_AT(0x00164094)
+#define DroneFiring_BurstDelay_Normal            FLOAT_AT(0x00164098)
+#define DroneFiring_BurstDelay_Max               FLOAT_AT(0x0016409c)
+#define DroneFiring_BurstDelay_MinDist           FLOAT_AT(0x001640a0)
+#define DroneFiring_BurstDelay_MaxDist           FLOAT_AT(0x001640a4)
+#define DroneFiring_Accuracy_Easy                FLOAT_AT(0x001640a8)
+#define DroneFiring_Accuracy_Normal              FLOAT_AT(0x001640ac)
+#define DroneFiring_Accuracy_Hard                FLOAT_AT(0x001640b0)
+#define DroneFiring_NewSighting_TimeToHit        FLOAT_AT(0x001640b4)
+#define DroneFiring_TargetFirstMoved_TimeToHit   FLOAT_AT(0x001640b8)
+#define DroneFiring_TargetFirstMoved_Accuracy    FLOAT_AT(0x001640bc)
+#define DroneFiring_TargetMoving_Accuracy        FLOAT_AT(0x001640c0)
+#define DroneFiring_TargetFirstStopped_TimeToHit FLOAT_AT(0x001640c4)
+#define DroneFiring_TargetFirstStopped_Accuracy  FLOAT_AT(0x001640c8)
+#define DroneFiring_TooClose_Distance            FLOAT_AT(0x001640cc)
+#define DroneFiring_TooClose_Accuracy            FLOAT_AT(0x001640d0)
+#define DroneFiring_TooClose_Damage              FLOAT_AT(0x001640d4)
+#define DroneFiring_PlayerBackShot_Damage        FLOAT_AT(0x001640d8)
+#define DroneCaptain_Mod_BulletDamage            FLOAT_AT(0x001640dc)
+#define DroneCaptain_Mod_BulletAccuracy          FLOAT_AT(0x001640e0)
+#define DroneCaptain_Mod_Health                  FLOAT_AT(0x001640e4)
+
+// Level 0x700004C has no name in assets.h; it is scored like the late levels (the Ravine is 0x700004B).
+#define HT_Level_Unnamed4C 0x700004C
+
+// The drone settings most single-player levels start from (Henderson's, and the Evil Base's); the level cases
+// below override the few that differ. The original writes each level's full set, the compiler merging the common
+// stores - only the final values matter, since nothing reads them in between.
+static void SetStandardDroneTuning(void) {
+    DroneDamage_Easy = 1.5f;
+    DroneDamage_Normal = 1.0f;
+    DroneDamage_Hard = 0.8f;
+    DroneDamage_Head = 10.0f;
+    DroneDamage_Legs = 0.75f;
+    DroneDamage_Arms = 1.0f;
+    DroneDamage_Torso = 1.0f;
+    DroneArmour_Helmet = 1.0f;
+    DroneArmour_Combat = 0.25f;
+    DroneArmour_Jacket = 0.5f;
+    DroneArmour_Vest = 0.75f;
+    DroneFiring_BurstDelay_Min = 15.0f;
+    DroneFiring_BurstDelay_Normal = 45.0f;
+    DroneFiring_BurstDelay_Max = 60.0f;
+    DroneFiring_BurstDelay_MinDist = 4.0f;
+    DroneFiring_BurstDelay_MaxDist = 30.0f;
+    DroneFiring_Accuracy_Easy = 0.5f;
+    DroneFiring_Accuracy_Normal = 0.7f;
+    DroneFiring_Accuracy_Hard = 1.0f;
+    DroneFiring_NewSighting_TimeToHit = 2.0f;
+    DroneFiring_TargetFirstMoved_TimeToHit = 2.0f;
+    DroneFiring_TargetFirstMoved_Accuracy = 0.25f;
+    DroneFiring_TargetMoving_Accuracy = 0.75f;
+    DroneFiring_TargetFirstStopped_TimeToHit = 2.0f;
+    DroneFiring_TargetFirstStopped_Accuracy = 1.0f;
+    DroneFiring_TooClose_Distance = 3.0f;
+    DroneFiring_TooClose_Accuracy = 2.0f;
+    DroneFiring_TooClose_Damage = 2.0f;
+    DroneFiring_PlayerBackShot_Damage = 2.0f;
+    DroneCaptain_Mod_BulletDamage = 2.0f;
+    DroneCaptain_Mod_BulletAccuracy = 2.0f;
+    DroneCaptain_Mod_Health = 2.0f;
+}
+
+static void SetPlayerDamage(float easy, float normal, float hard) {
+    Plr_DMod_Easy = easy;
+    Plr_DMod_Normal = normal;
+    Plr_DMod_Hard = hard;
+}
+
+// Sets the game's difficulty tuning for the level being loaded (called from ResetMap_Load). Despite the name
+// nothing is read from a file: the values are all constants. The player's aiming, autoaim and continue-health
+// values are the same everywhere; the drones' damage, armour and accuracy and the player's damage taken are set
+// per level. Levels the switch does not list (the cut-scene levels, the test maps, multiplayer arenas, driving
+// levels) keep whatever the drone and player-damage values were - the XBE's initial values, the previous level's,
+// or what the P_TWEAKS debug menus set.
+// AUTOINJECT
+void __stdcall ReadTuningVars(void) {
+
+    Plr_AimSpeed_X = 0.1275f;
+    Plr_AimSpeed_Y = 0.136f;
+    Plr_AimTurnSpeed_X = 0.05f;
+    Plr_AimTurnSpeed_Y = 0.06f;
+    Plr_ScopeSpeed_X = 0.015f;
+    Plr_ScopeSpeed_X_Mul = 3.0f;
+    Plr_ScopeSpeed_X_Steps = 120.0f;
+    Plr_ScopeSpeed_Y = 0.011f;
+    Plr_ScopeSpeed_Y_Mul = 3.0f;
+    Plr_ScopeSpeed_Y_Steps = 120.0f;
+    Plr_NoAimTurnSpeed_X = 0.04f;
+    Plr_NoAimTurnSpeed_X_Mul = 2.0f;
+    Plr_NoAimTurnSpeed_X_Steps = 120.0f;
+    Plr_NoAimTurnSpeed_Y = 0.01f;
+    Plr_NoAimTurnSpeed_Y_Mul = 2.0f;
+    Plr_NoAimTurnSpeed_Y_Steps = 120.0f;
+
+    ContinueHealthBoostEasy = 50.0f;
+    ContinueHealthBoostMedium = 50.0f;
+    ContinueHealthBoostHard = 50.0f;
+
+    Autoaim_Angle_H = 0.12f;
+    Autoaim_Angle_V = 0.22f;
+    Autoaim_Range = 25.0f;
+    Autoaim_LockOnMul = 1.4f;
+    Autoaim_EasyMul = 1.9f;
+    Autoaim_NormalMul = 1.0f;
+    Autoaim_HardMul = 0.0f;   // no autoaim at all on the hardest difficulty
+
+    switch ((uint)GameState.CurrentLevelHashcode) {
+    case HT_Level_HendersonA:
+    case HT_Level_HendersonB:
+    case HT_Level_HendersonC:
+    case HT_Level_HendersonD:
+        SetStandardDroneTuning();
+        SetPlayerDamage(0.5f, 0.7f, 1.2f);
+        break;
+
+    case HT_Level_CastleExterior:
+    case HT_Level_CastleCourtyard:
+    case HT_Level_CastleIndoors1:
+    case HT_Level_CastleIndoors2:
+        SetStandardDroneTuning();
+        DroneFiring_Accuracy_Easy = 0.8f;
+        DroneFiring_Accuracy_Normal = 0.9f;
+        DroneFiring_Accuracy_Hard = 1.3f;
+        SetPlayerDamage(0.6f, 0.7f, 1.0f);
+        break;
+
+    case HT_Level_TowerA:
+    case HT_Level_TowerB:
+    case HT_Level_TowerC:
+        SetStandardDroneTuning();
+        DroneFiring_Accuracy_Easy = 0.8f;
+        DroneFiring_Accuracy_Normal = 1.0f;
+        DroneFiring_Accuracy_Hard = 1.0f;
+        SetPlayerDamage(0.6f, 0.8f, 1.0f);
+        break;
+
+    case HT_Level_PowerStationA1:
+    case HT_Level_PowerStationA2:
+        SetStandardDroneTuning();
+        DroneFiring_Accuracy_Easy = 0.6f;
+        DroneFiring_Accuracy_Normal = 0.8f;
+        DroneFiring_Accuracy_Hard = 1.2f;
+        // Drones are quick to hit a target that has just stopped, but only just (0.1 against 1.0 elsewhere)
+        DroneFiring_TargetFirstStopped_TimeToHit = 1.0f;
+        DroneFiring_TargetFirstStopped_Accuracy = 0.1f;
+        DroneCaptain_Mod_BulletDamage = 1.5f;
+        DroneCaptain_Mod_BulletAccuracy = 1.5f;
+        SetPlayerDamage(0.4f, 0.7f, 1.2f);
+        break;
+
+    case HT_Level_Tower2A:
+    case HT_Level_Tower2B:
+    case HT_Level_Tower2C:
+    case HT_Level_Tower2Elevator:
+        SetStandardDroneTuning();
+        DroneDamage_Normal = 1.2f;
+        DroneDamage_Hard = 1.0f;
+        DroneFiring_Accuracy_Easy = 0.7f;
+        DroneFiring_Accuracy_Normal = 0.8f;
+        DroneFiring_Accuracy_Hard = 1.0f;
+        SetPlayerDamage(0.5f, 0.6f, 1.0f);
+        break;
+
+    case HT_Level_EvilBase:
+    case HT_Level_EvilSilo:
+    case HT_Level_EvilBaseC:
+        SetStandardDroneTuning();
+        SetPlayerDamage(0.4f, 0.6f, 1.0f);
+        break;
+
+    case HT_Level_SpaceStationD:
+        SetStandardDroneTuning();
+        DroneDamage_Easy = 1.0f;
+        DroneDamage_Normal = 1.0f;
+        DroneDamage_Hard = 1.0f;
+        DroneFiring_Accuracy_Easy = 0.6f;
+        DroneFiring_Accuracy_Normal = 0.8f;
+        DroneFiring_Accuracy_Hard = 1.2f;
+        SetPlayerDamage(0.6f, 0.7f, 1.0f);
+        break;
+
+    case HT_Level_SpaceStation:
+    case HT_Level_Facility:
+    case HT_Level_Atlantis:
+    case HT_Level_SkyRail:
+    case HT_Level_SubPen:
+    case HT_Level_StealthShip:
+    case HT_Level_FortKnox:
+    case HT_Level_MissileSilo:
+    case HT_Level_SnowBlind:
+    case HT_Level_Ravine:
+    case HT_Level_Unnamed4C:
+        SetStandardDroneTuning();
+        DroneDamage_Easy = 2.0f;
+        DroneDamage_Normal = 1.5f;
+        DroneDamage_Hard = 0.5f;
+        DroneArmour_Helmet = 0.5f;
+        DroneFiring_Accuracy_Easy = 0.8f;
+        DroneFiring_Accuracy_Normal = 1.0f;
+        DroneFiring_Accuracy_Hard = 1.5f;
+        DroneFiring_TooClose_Distance = 4.0f;
+        // These levels set the body-part damage the player takes instead of the per-difficulty values
+        Plr_DMod_Multi = 4.0f;
+        Plr_DMod_Head = 4.0f;
+        Plr_DMod_LowerLimb = 0.8f;
+        Plr_DMod_UpperLimb = 0.8f;
+        break;
+
+    default:
+        break;
+    }
 }
