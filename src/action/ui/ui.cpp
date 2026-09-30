@@ -33,8 +33,6 @@ bool P_INTRO_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint para
 // AUTOGEN
 bool P_LANGUAGE_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool P_ATTRACT_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool P_NFRESULTS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool P_NFSTATS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);

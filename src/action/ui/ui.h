@@ -327,6 +327,7 @@ bool C_SBMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 bool P_MPDEBRIEFING_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_ATTRACT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 bool C_CHCHMUSIC_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 bool C_CHCHDRAWALL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 

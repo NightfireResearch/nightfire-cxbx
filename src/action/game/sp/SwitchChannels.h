@@ -12,7 +12,7 @@
 #define switch_channels_hold (*(char(*)[256])0x001df238)
 #define switch_channels_prev (*(char(*)[256])0x001dee38)
 #define switch_channels_time (*(uint32_t(*)[256])0x001df428)
-#define switch_channels_MusicVars (*(ushort(*)[256])0x001def38)
+extern ushort switch_channels_MusicVars[256]; // frames each channel has been on (DroneFunc_CheckAlarmRaised)
 
 void Init_SwitchChannels(void);
 

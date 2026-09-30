@@ -354,10 +354,11 @@ static int16_t ctimer;
 
 // XBE_GLOBAL(0x0017fea8, 0x1c)
 #define MsgMissionStatusPane ((HUDPANECREATE_tag*)(0x0017fea8))
+// Still the game's: HUD_UpdateStatusPane (original) compares a pane's create record with its address.
 // XBE_GLOBAL(0x001813ec, 0x1c)
 #define MsgObjectiveStatusPane ((HUDPANECREATE_tag*)(0x001813ec))
 // XBE_GLOBAL(0x00181598, 0x1c)
-#define MsgInfoStatusPane ((HUDPANECREATE_tag*)(0x00181598))
+static HUDPANECREATE_tag MsgInfoStatusPane = {160, 137, 0 /* HUD_InitInfoStatusPaneWidth */, 0, (HUDPANE_createFunc)0x000b64d0 /* HUD_CreateInfoStatusPane */, (HUDPANE_updateFunc)0x000b3250 /* HUD_UpdateStatusPane */, (SpriteInfo*)0x00181698 /* InfoStatusSprInfo */, 5, 4, 16, 0, 0};
 // XBE_GLOBAL(0x0017fe8c, 0x1c)
 static HUDPANECREATE_tag AirPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b3a10 /* HUD_UpdateAirPane */, (SpriteInfo*)0x0017fe08 /* AirSprInfo */, 3, 0, 0, 0, 0};
 // XBE_GLOBAL(0x00180218, 0x1c)
@@ -381,8 +382,47 @@ static HUDPANECREATE_tag LaserPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b
 // XBE_GLOBAL(0x00180ec4, 0x1c)
 static HUDPANECREATE_tag SpacePane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b4090 /* HUD_UpdateSpacePane */, (SpriteInfo*)0x00180ce0 /* SpaceSprInfo */, 11, 0, 0, 0, 0};
 // XBE_GLOBAL(0x00181774, 0x1c)
-#define MsgPickupStatusPane ((HUDPANECREATE_tag*)(0x00181774))
+static HUDPANECREATE_tag MsgPickupStatusPane = {160, 372, 0 /* HUD_InitPickupStatusPaneWidth */, 0, (HUDPANE_createFunc)0x000b6540 /* HUD_CreatePickupStatusPane */, (HUDPANE_updateFunc)0x000b3250 /* HUD_UpdateStatusPane */, (SpriteInfo*)0x001815b8 /* PickupStatusSprInfo */, 5, 4, 24, 0, 0};
 
+
+// The layout of each kind of Text_AddMsg message (its third argument): the font it is word-wrapped in and the
+// width it is wrapped to. PS2 name: TextMsgFormats. Entry 0 is empty; 5 (subtitles over a movie) wraps to 0.6 and
+// 0.4 of its width in two lines. Only read here.
+#pragma pack(push, 1)
+typedef struct TextMsgFormat {
+    const char *font;     // font data, handed to Font_WordWrapString
+    ushort wrapWidth;
+    ushort pad;
+} TextMsgFormat;
+#pragma pack(pop)
+static_assert(sizeof(TextMsgFormat) == 8, "TextMsgFormat is 8 bytes");
+// XBE_GLOBAL(0x0018ccf8, 0x38)
+#define TextMsgFormats (*(TextMsgFormat(*)[7])0x0018ccf8)
+
+#define TXTMSG_INFO      1   // e.g. a hostage's line (NDrone2_Hostage)
+#define TXTMSG_OBJECTIVE 2   // objective updates (Mission.cpp)
+#define TXTMSG_PICKUP    6
+
+// The three message panes are sized to the width their messages are wrapped to. That is not a constant, so the
+// compiler made each width a dynamic initialiser - these three, run by _cinit from the C++ initialiser table
+// (0x163114...) before main - and left the rest of each pane as plain data. On PS2 the whole of each pane is
+// built at run time in HUD.cpp's __static_initialization_and_destruction_0, from the same TextMsgFormats entries.
+// Each copies exactly the 16-bit width (MOV AX / MOV [pane+4],AX), nothing else.
+
+// FUNC_AT(000f54b0)
+void HUD_InitObjectiveStatusPaneWidth(void) {
+    MsgObjectiveStatusPane->width = (short)TextMsgFormats[TXTMSG_OBJECTIVE].wrapWidth;
+}
+
+// FUNC_AT(000f54e0)
+void HUD_InitInfoStatusPaneWidth(void) {
+    MsgInfoStatusPane.width = (short)TextMsgFormats[TXTMSG_INFO].wrapWidth;
+}
+
+// FUNC_AT(000f5510)
+void HUD_InitPickupStatusPaneWidth(void) {
+    MsgPickupStatusPane.width = (short)TextMsgFormats[TXTMSG_PICKUP].wrapWidth;
+}
 
 // AUTOGEN
 void HUD_CreateRedeemer(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj);
@@ -565,7 +605,7 @@ HUDPANECREATE_tag* PaneList[] = {
 	&HealthPane,
 	MsgMissionStatusPane,
 	MsgObjectiveStatusPane,
-	MsgInfoStatusPane,
+	&MsgInfoStatusPane,
 	&AirPane, // Oxygen/Swimming indicator?
 	&SightPane,
 	&NightSightPane,
@@ -582,7 +622,7 @@ HUDPANECREATE_tag* PaneList[] = {
 	&RoninPane,
 	&LaserPane,
 	&SpacePane,
-	MsgPickupStatusPane
+	&MsgPickupStatusPane
 };
 
 static_assert(ARRAY_SIZE(PaneList) == NUM_PANES, "Bad size of pane list");

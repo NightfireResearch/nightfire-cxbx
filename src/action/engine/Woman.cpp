@@ -1,10 +1,10 @@
 // RLE-encoded 1-bit image, combined with a scrolling fire texture, to create the pause menu background
 #include "Woman.h"
+#include "psiGraphics.h"
 
 #include "../memory.h"
 #include "../util/hashtable.h"
 
-#define MemoryForWoman (*(void**)0x002ae2dc) // Buffer containing the complete data
 #define pWoman (*(void**)0x002ae2e0) // Current point in the buffer to which we have decoded
 #define WomanFrame U32_AT(0x002ae2e4) // Frame number
 
@@ -31,16 +31,6 @@
 
 void* Texture_GetRawDataPtr(int texIdx); // reimplemented in Direct3D/d3dSeam.cpp
 
-typedef struct {
-    char _pad_1[0x24];
-    int numFrames;
-    int animSpeed;
-    char _pad_2[0x28];
-    int baseIdx;
-} TextureInfo;
-static_assert(sizeof(TextureInfo) == 0x58, "Bad size for TextureInfo"); // the default entry maybePsiResetResources clears
-
-#define Tex (*(TextureInfo*(*)[2048])0x002abe80)
 
 // AUTOGEN
 void psiDecompressWoman(void);

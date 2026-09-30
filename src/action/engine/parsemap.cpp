@@ -154,6 +154,99 @@ void parsemap_block_entity_params(void) {
 
 }
 
+// The header of the block currently being parsed, filled in by parsemap_parsenextblock (still original).
+#define CurrentBH (*(block_header_tag*)0x00274b40)
+
+// Running total of the "old style" (identifier 5) collision blocks' leading size word. Only this function touches it.
+// XBE_GLOBAL(0x00274ca0, 0x4)
+static uint32_t OldCollisionSize;
+
+// Collision block identifiers: 5 is the older layout, with 16 bytes (a size word and padding) before the data
+#define COLL_BLOCK_OLD 5
+
+// How far each collision box is grown on every side, so that a point exactly on a face counts as inside
+static const float kCollBoxInflate = 0.01f; // the original's float at 0x0015d31c
+
+#pragma pack(push, 1)
+typedef struct {
+    uint32_t size;          // 0x0 - block header
+    uint32_t identifier;    // 0x4 - 4, or COLL_BLOCK_OLD
+    ushort numCollBoxes;    // 0x8
+    ushort countB;          // 0xa
+    ushort countC;          // 0xc
+    ushort _pad;            // 0xe
+    // 0x10: the data - [countC] collDataC (64 bytes each), [numCollBoxes] COLLBOX_tag, [countB] collDataB
+    // (8 bytes each), then the rest ("D"). An identifier-5 block has 16 more bytes first, the first word of
+    // which is added to OldCollisionSize.
+} block_coll_data_header;
+#pragma pack(pop)
+
+static_assert(offsetof(block_coll_data_header, numCollBoxes) == 0x8, "Bad offset of numCollBoxes");
+static_assert(offsetof(block_coll_data_header, countC) == 0xc, "Bad offset of countC");
+static_assert(sizeof(block_coll_data_header) == 0x10, "Bad size for block_coll_data_header");
+
+// Points the current cel's collision data at the arrays inside the loaded block (no copying), allocating the
+// small COLLDATA_tag header the first time a cel gets collision.
+//
+// Quirk kept from the original (and the PS2 build): the loop meant to grow every box by kCollBoxInflate never
+// advances its pointer, so the FIRST box is grown numCollBoxes times over and the others not at all.
+//
+// The game's own heap allocator: the level heap, reclaimed with the level (our Mem_Malloc is malloc).
+static void* Mem_Malloc_Original(size_t size, MallocFlags flags, uint32_t align) {
+    return reinterpret_cast<void* (*)(size_t, MallocFlags, uint32_t)>(0x00070ae0)(size, flags, align);
+}
+
+// AUTOINJECT
+void parsemap_block_Coll_Data_New(void) {
+
+    block_coll_data_header *header = (block_coll_data_header *)FileNextBlock;
+    ushort numCollBoxes = header->numCollBoxes;
+    ushort countB = header->countB;
+    uint sizeofC = (uint)header->countC * sizeof(collDataC);
+
+    uchar *data = (uchar *)(header + 1);
+    if(header->identifier == COLL_BLOCK_OLD) {
+        OldCollisionSize += *(uint32_t *)data;
+        data += 0x10;
+    }
+
+    celglist_tag *cel = pCurrCelList;
+    if(cel->colldata == NULL) {
+        if(numCollBoxes == 0) {
+            // Returns before the MemStats update below
+            cel->colldata = NULL;
+            return;
+        }
+        // 0x18, not sizeof(COLLDATA_tag) (0x16): the original rounds the allocation up
+        cel->colldata = (COLLDATA_tag *)Mem_Malloc_Original(0x18, (MallocFlags)0x1a04, 0); // malloc_colldata, from the level heap
+    }
+
+    COLLDATA_tag *coll = cel->colldata;
+
+    coll->dataStartC = (collDataC *)data;
+    data += sizeofC;
+    coll->sizeofC = (short)sizeofC;     // a 16-bit field: truncated as in the original for countC >= 1024
+    coll->countB = (short)countB;
+    coll->collBoxes = (COLLBOX_tag *)data;
+    data += numCollBoxes * sizeof(COLLBOX_tag);
+    coll->numCollBoxes = numCollBoxes;
+    coll->dataStartB = (collDataB *)data;
+    coll->dataStartD = data + countB * sizeof(collDataB);
+
+    for(uint i = numCollBoxes; i != 0; i--) {
+        COLLBOX_tag *box = coll->collBoxes; // never advanced - see above
+        box->boundMax.x = box->boundMax.x + kCollBoxInflate;
+        box->boundMax.y = box->boundMax.y + kCollBoxInflate;
+        box->boundMax.z = box->boundMax.z + kCollBoxInflate;
+        box->boundMin.x = box->boundMin.x - kCollBoxInflate;
+        box->boundMin.y = box->boundMin.y - kCollBoxInflate;
+        box->boundMin.z = box->boundMin.z - kCollBoxInflate;
+    }
+
+    // Count the block, less its header word, as collision memory
+    MemStats[0] = MemStats[0] + CurrentBH.size - 4;
+}
+
 
 #pragma pack(push, 1)
 

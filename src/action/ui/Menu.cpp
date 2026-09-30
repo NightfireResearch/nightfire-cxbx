@@ -83,11 +83,12 @@ typedef struct {
   uint param2;
   uint param3;
 } DelayedMessage;
+static_assert(sizeof(DelayedMessage) == 0x14, "DelayedMessage is 0x14 bytes");
 
 // XBE_GLOBAL(0x00224540, 0x4)
 static uint32_t menu_delay_frame;
 // XBE_GLOBAL(0x00223b40, 0xa00)
-#define menu_delay_msg (*(DelayedMessage(*)[128])(0x00223b40))
+static DelayedMessage menu_delay_msg[128];
 
 // AUTOINJECT
 undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,int arg2,int arg3) {
@@ -137,6 +138,17 @@ void Menu_ProcessDelayedMessages(void) {
     }
   }
 
+}
+
+// Forgets every pending delayed message. Called by Manager_SendMessage when a page is opened as an overlay
+// (GoPage with flag 2), and by C_LBERROPTIONS_Handler. Only each slot's frame number is cleared, not the rest:
+// that is enough, because __Menu_SendDelayedMessage takes any slot whose frame is below menu_delay_frame and
+// Menu_ProcessDelayedMessages dispatches only on an exact match with the (already incremented) frame counter.
+// menu_delay_frame itself is left alone.
+// AUTOINJECT
+void __stdcall Menu_ClearDelayedMessages(void) {
+  for(int i = 0; i < ARRAY_SIZE(menu_delay_msg); i++)
+    menu_delay_msg[i].dispatchOnFrameNum = 0;
 }
 
 // AUTOGEN

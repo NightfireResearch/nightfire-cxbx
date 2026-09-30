@@ -74,6 +74,8 @@ typedef struct {
 static_assert(sizeof(GameState_t) == 0x58, "Bad size for GameState");
 
 #define GameState (*((GameState_t*)0x001f6580))
+// The hashcode of the background movie that is playing, 0 when none
+extern uint32_t BackgroundMovieHashcode;
 
 struct CheatInfo_t {
     undefined4 Immortal;

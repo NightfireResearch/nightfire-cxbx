@@ -26,7 +26,9 @@ static uint32_t CurrentLanguage;
 static uint32_t NumFixups;
 // XBE_GLOBAL(0x001fec78, 0x4)
 static uint* FixupTable;
-#define StringHeapLock (*(uint8_t(*)[256])0x001fec80) // a lock count per heap string (Txt_LockString, Txt_UnlockString)
+// A lock count per heap string (Txt_LockString, Txt_UnlockString); 0 = free.
+// XBE_GLOBAL(0x001fec80, 0x100)
+static uint8_t StringHeapLock[256];
 // XBE_GLOBAL(0x00215584, 0x4)
 static uint32_t StringHeapCnt;
 
@@ -189,8 +191,31 @@ void Txt_LanguageInit(void) {
 // AUTOGEN
 void Text_AddMsg(char param_1,char param_2,int param_3,const char *str,int param_5,short maybeDurationFrames);
 
-// AUTOGEN
-void Txt_UnlockString(char* text);
+// Which heap string a pointer falls in: the unsigned distance from the start of the heap in whole strings, so any
+// pointer into a string - not only its start - names that string, and one below the heap wraps round to a huge
+// index. Anything that is not in the heap (the overflow buffer, a text bank string, a literal) comes out 256 or
+// more. The original divides by 0x168 with a multiply by 0x6c16c16d; this is the same unsigned division.
+static uint Txt_HeapIndex(const char* text) {
+    return ((uint32_t)(uintptr_t)text - (uint32_t)(uintptr_t)&StringHeap[0][0]) / sizeof(StringHeap[0]);
+}
 
-// AUTOGEN
-void Txt_LockString(char* text);
+// Holds a heap string against reuse by Txt_GetStringFromHeap. The count is a byte and is not checked: the 256th
+// lock wraps it to 0, freeing the string, as in the original.
+// AUTOINJECT
+void Txt_LockString(char* text) {
+    if (text == NULL)
+        return;
+    uint i = Txt_HeapIndex(text);
+    if (i < 0x100)
+        StringHeapLock[i]++;
+}
+
+// Drops one lock; never takes a free string below 0.
+// AUTOINJECT
+void Txt_UnlockString(char* text) {
+    if (text == NULL)
+        return;
+    uint i = Txt_HeapIndex(text);
+    if (i < 0x100 && StringHeapLock[i] != 0)
+        StringHeapLock[i]--;
+}

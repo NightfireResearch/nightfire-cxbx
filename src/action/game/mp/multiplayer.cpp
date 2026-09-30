@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#define CurrentAssassinObjId (((obj_tag *)0x0026178c))
-#define AssassinTarget (((obj_tag *)0x00261788))
+#define CurrentAssassinObjId (*(obj_tag **)0x0026178c)
+#define AssassinTarget (*(obj_tag **)0x00261788)
 // AUTOGEN
 short Control_Plr2Ind(obj_tag* a);
 
@@ -115,8 +115,11 @@ bool MP_IsTarget(obj_tag *param_1) {
   return ((AssassinTarget != NULL) && (AssassinTarget == param_1));
 }
 
-#define SpawnPntCount U32_AT(0x00262f38)
-#define SpawnPntTeamCount (*(uint32_t(*)[3])0x00262968)
+// XBE_GLOBAL(0x00262f38, 0x4)
+static uint32_t SpawnPntCount;
+// By MPTeam; NO_TEAM spawn points are rejected. (0x00262970 after it is GoldenEyeKeyCount.)
+// XBE_GLOBAL(0x00262968, 0x8)
+static uint32_t SpawnPntTeamCount[2];
 
 // AUTOINJECT
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId) {
@@ -573,4 +576,114 @@ void MP_Update(void) {
   }
 
 
+}
+
+// AUTOGEN
+void __stdcall Pickup_MakeRandomWeaponSet(void);
+
+// One multiplayer weapon/ammo pickup slot (Ghidra's MP_PICKUP; 64 of them, 0x1600 bytes, from this clear)
+#pragma pack(push, 1)
+typedef struct {
+    obj_tag *gameObj;
+    CelPos_tag celPos;                  // 0x04
+    AIEmitter_tag aiEmitter;            // 0x14 so bots can path to it
+    float maybeBotPickupVisitTimes[6];  // 0x3c one per bot: MP_Pickup_Process ages all 6, MP_ResetBotPickupTimes
+                                        //      and BOTSTATE_pickGoal index it by bot
+    uint32_t unknown_0x54;              // 0x54 no reference in the XBE (MP_Init's clear aside)
+} MP_PICKUP;
+#pragma pack(pop)
+static_assert(sizeof(MP_PICKUP) == 0x58, "MP_PICKUP is wrong size");
+static_assert(offsetof(MP_PICKUP, aiEmitter) == 0x14, "Bad offset of MP_PICKUP.aiEmitter");
+
+#define MPpickups (*(MP_PICKUP(*)[64])0x00260078)
+#define PickupNextAddIndex U32_AT(0x0025fe30)
+#define PickupLastDeletedIdx (*(int*)0x00261b84) // -1 = none
+#define BluePrints (*(SpawnPlace(*)[8])0x00262458)
+#define BluePrintCount U16_AT(0x002637d4)
+#define GoldenEyeSpawns (*(SpawnPlace(*)[16])0x00262978)
+#define GoldenEyeKeyCount U16_AT(0x00262970)
+#define GoldenEyeNonKeyCount U16_AT(0x00262972)
+
+// Game mode bits (see MultiplayerGameMode): bit 29 is set by every team mode, bit 30 by KOTH, team KOTH and
+// uplink.
+#define GM_BIT_TEAMGAME 29
+#define GM_BIT_30 30
+
+// The time limit demolition and protection fall back to when MaxDuration is negative, in seconds
+#define MP_DEFAULT_OBJECTIVE_TIME_LIMIT 60.0f
+
+// Player slots in MPGame.players[] (10 on Xbox)
+#define MP_GAME_PLAYER_SLOTS 10
+
+// Reset values of the two per-player indices (MPGamePlayer notes -2 as possibly "the environment")
+#define MP_INJURER_NONE ((short)-2)
+#define MP_ASSASSIN_NONE ((short)-1)
+
+// Called at every level load. Clears all the per-match multiplayer state (spawn points, scenario objects,
+// pickups, scores) and sets up the timers from MPSettings - except when the level being loaded is the
+// front-end menu, so that the menus (the debriefing's scores, for one) still see the finished match.
+//
+// AUTOINJECT
+void MP_Init(void) {
+
+    if (GameState.NextLevelHashcode == HT_Level_Menu_Pre)
+        return;
+
+    Pickup_MakeRandomWeaponSet();
+
+    memset(&SpawnPoints, 0, sizeof(SpawnPoints));
+    SpawnPntTeamCount[PHOENIX] = 0;
+    memset(&MPObjects, 0, sizeof(MPObjects));
+    memset(&Flags, 0, sizeof(Flags));
+    memset(&Bases, 0, sizeof(Bases));
+    memset(&Uplinks, 0, sizeof(Uplinks));
+    memset(&DemolitionPlaces, 0, sizeof(DemolitionPlaces));
+    memset(&Demolition, 0, sizeof(Demolition));
+    memset(&ProtectionPlaces, 0, sizeof(ProtectionPlaces));
+    memset(&Protection, 0, sizeof(Protection));
+    memset(&GoldenEye, 0, sizeof(GoldenEye));
+    memset(&GoldenEyeSpawns, 0, sizeof(GoldenEyeSpawns));
+    memset(&BluePrints, 0, sizeof(BluePrints));
+    memset(&EsponageBase, 0, sizeof(EsponageBase));
+    AssassinTarget = NULL;
+    CurrentAssassinObjId = NULL;
+    memset(&Hill, 0, sizeof(Hill));
+    memset(&MPGame, 0, sizeof(MPGame));
+    // The original then clears MPGame.players[] (0x1e0 bytes) a second time; it is already zero.
+    SpawnPntTeamCount[MI6] = 0;
+    memset(&MPpickups, 0, sizeof(MPpickups));
+
+    uint gameMode = MPSettings.GameMode;
+    MPSettings.maybeIsTeamGame = (gameMode >> GM_BIT_TEAMGAME) & 1;
+    MPSettings.field53_0x190 = (gameMode >> GM_BIT_30) & 1;
+
+    SpawnPntCount = 0;
+    UplinkCount = 0;
+    DemolitionCount = 0;
+    ProtectionCount = 0;
+    GoldenEyeKeyCount = 0;
+    GoldenEyeNonKeyCount = 0;
+    BluePrintCount = 0;
+    PickupLastDeletedIdx = -1;
+    PickupNextAddIndex = 0;
+    MPSettings.numActivePickups = 0;
+
+    MPGame.restartScenarioTimeout = 0.0f;
+    MPGame.winStateTimeout = 0.0f;
+    MPGame.TimeLimit = (float)(int)MPSettings.MaxDuration; // FILD: a signed conversion
+    MPGame.TimeUnpaused = 0;
+    MPGame.TimeIncPaused = 0;
+    MPGame.unknown_maybe_capture_state = 0;
+    MPGame.unknown_maybe_unused = 0;
+
+    if ((gameMode == GM_DEMOLITION || gameMode == GM_PROTECTION) && MPGame.TimeLimit < 0.0f)
+        MPGame.TimeLimit = MP_DEFAULT_OBJECTIVE_TIME_LIMIT;
+
+    for (int i = 0; i < MP_GAME_PLAYER_SLOTS; i++) {
+        MPGame.players[i].maybeIdxOfLastInjurer = MP_INJURER_NONE;
+        MPGame.players[i].maybeIdxOfMyAssassin = MP_ASSASSIN_NONE;
+        // Top Agent starts everyone on the points limit
+        if (gameMode == GM_TOPAGENT)
+            MPGame.players[i].points = (float)(int)MPSettings.MaxPoints;
+    }
 }

@@ -1,9 +1,12 @@
 #include <string.h>
 #include <stdio.h>
 #include "actionhelpers.h"
+#include "memory.h"
+
+// XBE_GLOBAL(0x00223a60, 0x1c)
+uint32_t MemStats[7];
 #include <stdlib.h>
 
-#define MemStats (*(uint32_t(*)[7])0x00223a60) // Mem_Init clears all 0x1c bytes; parsemap_block_Coll_Data_New adds to [0]
 #define Addr_PtrHeap 0x00223a80
 #define Addr_HeapByteSize 0x00223a88
 

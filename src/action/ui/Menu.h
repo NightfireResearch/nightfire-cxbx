@@ -17,6 +17,7 @@ void Menu_ClearStack(M_MANAGER *mgr);
 void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle);
 void Menu_AddItemsToControl(M_CONTROL *control, M_ITEM *itemList, ushort numItems, ushort firstItemIdx, uchar unlockEverything);
 void Menu_ProcessDelayedMessages(void);
+void __stdcall Menu_ClearDelayedMessages(void);
 void* Menu_Malloc(int size);
 M_ITEM* Menu_GetItemFromHash(M_ITEM *list, int hashcodeToMatch, uint numItems);
 undefined4 __stdcall Menu_GetLastController(void);

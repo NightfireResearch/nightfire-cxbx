@@ -404,9 +404,9 @@ void psiInput_PollDevices(void) {
     }
 }
 
-// Array of 4 uint32_t entries, all initialised to 0xFFFFFFFF
+// Frames of rumble left per controller; -1 = none running. All -1 in the XBE's data.
 // XBE_GLOBAL(0x0019481c, 0x10)
-#define controller_maybeRumbleTimeout ((int*)0x0019481c)
+int controller_maybeRumbleTimeout[4] = {-1, -1, -1, -1};
 
 // AUTOINJECT
 bool psiInput_ControllerIsActive(uint i) {
@@ -520,7 +520,7 @@ void psiInput_ResetRumble(unsigned int i) {
     NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     psiInput_RumbleSetIntensity(i, 0, 0);
-    controller_maybeRumbleTimeout[i] = 0xffffffff;
+    controller_maybeRumbleTimeout[i] = -1;
 
 }
 
@@ -539,11 +539,13 @@ void psiInputReset(void) {
 
 }
 
-#define bSkipAttract U8_AT(0x0025d79d)
+// A controller was connected this frame: P_ATTRACT_Handler leaves the attract movie.
+// XBE_GLOBAL(0x0025d79d, 0x1)
+uint8_t bSkipAttract;
 
-// Array of 4x bool32
+// Array of 4x bool32: was each controller present on the last psiInput_MapInputs. All 1 in the XBE's data.
 // XBE_GLOBAL(0x0019482c, 0x10)
-#define controllerIsPresent ((unsigned int*)(0x0019482c))
+unsigned int controllerIsPresent[4] = {1, 1, 1, 1};
 
 // AUTOINJECT
 void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {

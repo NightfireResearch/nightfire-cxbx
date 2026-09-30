@@ -16,6 +16,9 @@
 
 #include <stdio.h>
 
+// XBE_GLOBAL(0x002ae288, 0x4)
+uint32_t BackgroundMovieHashcode;
+
 // Functions taking void and returning through registers are fine in either __cdecl or __stdcall
 // It's only when they take arguments that the calling convention matters
 
@@ -60,7 +63,6 @@ void GS_PausePlayer(char pause, ushort playerNum) {
 
 
 
-#define BackgroundMovieHashcode U32_AT(0x002ae288)
 
 // FUNC_AT(000dcd90)
 bool movieFinished(void) {
@@ -162,7 +164,6 @@ uint32_t HintsEnabled;
 uint32_t SoundInfo;
 
 // Maybe hashcode of playing FMV
-#define BGFMVPlaying U32_AT(0x002ae288)
 
 
 // AUTOGEN
@@ -181,7 +182,7 @@ void maybeBackgroundMovieCleanup(void);
 // AUTOINJECT
 void psiStopBackgroundMovie(void) {
     maybeBackgroundMovieCleanup();
-    BGFMVPlaying = 0;
+    BackgroundMovieHashcode = 0;
 }
 
 // AUTOGEN
@@ -226,14 +227,14 @@ void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume) {
   }
 
   maybeBackgroundMovieCleanup();
-  BGFMVPlaying = 0;
+  BackgroundMovieHashcode = 0;
 
   if (hashcode != 0x4e504c59) {
     LoopingMovie = (looping != 0);
     sprintf(BackgroundMovieFilename,"%08x.xmv",hashcode);
   }
   BackgroundMovieVolume = scaledVolume;
-  BGFMVPlaying = hashcode;
+  BackgroundMovieHashcode = hashcode;
   BackgroundMovieSetVolume(scaledVolume);
   printf("Playing background movie %s\n", BackgroundMovieFilename);
   BackgroundMoviePlayFile(BackgroundMovieFilename);
@@ -826,10 +827,10 @@ bool __stdcall maybeBackgroundMovieIsPlaying(void);
 // through psiStartBackgroundMovie's 'NPLY' "same file again") or stops it.
 // AUTOINJECT
 void maybeStartBackgroundMovie(void) {
-    if (BGFMVPlaying == 0)
+    if (BackgroundMovieHashcode == 0)
         return;
     maybeDecodeMpgAudio();
-    if (BGFMVPlaying == 0x073a0048) {
+    if (BackgroundMovieHashcode == 0x073a0048) {
         maybeResetRenderState(1);
         maybeImmediateModePushItem(0.0f, 0.0f, 640.0f, 66.0f, 0, 0, 0.0f, 0.0f, 0xff000000);
         maybeImmediateModePushItem(0.0f, 414.0f, 640.0f, 66.0f, 0, 0, 0.0f, 0.0f, 0xff000000);
@@ -842,5 +843,5 @@ void maybeStartBackgroundMovie(void) {
         return;
     }
     maybeBackgroundMovieCleanup();
-    BGFMVPlaying = 0;
+    BackgroundMovieHashcode = 0;
 }

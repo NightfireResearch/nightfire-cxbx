@@ -6,7 +6,86 @@
 // for NULL
 #include <stddef.h>
 
-#define SpriteList (*(DLISTINFO_tag*)0x0029aa98)
+#define MAX_SPRITES 0x200 // entries in SpriteList's pool, and so the most Sprite_BuildList can ever collect
+
+// The pool every sprite comes from. Sprite_InitLists, Sprite_Create and Sprite_Delete are its only users, all ours.
+// XBE_GLOBAL(0x0029aa98, 0x18)
+static DLISTINFO_tag SpriteList;
+
+// Sprite_BuildList's output, handed back to Game_Draw / LoadScreen_Draw, which pass it straight to
+// View_DrawSprites. Nothing else names it (PS2: SprActiveList).
+// XBE_GLOBAL(0x0029a298, 0x800)
+static sprite* SprActiveList[MAX_SPRITES];
+
+// Values of sprite::maybeEnabled with special meaning to the list builder
+#define SPRITE_HIDDEN 0xff          // never drawn
+#define SPRITE_FOREGROUND_MIN 50    // sorted to the front; see Sprite_BuildList
+
+// The sprite flag bits Sprite_BuildList clears on every sprite it collects (the low nibble of maybeFlags)
+#define SPRITE_FLAGS_KEEP_MASK 0xfff0
+
+// AUTOGEN
+void __cdecl QuickSort(void * list, uint maybeSize, uint param_3, COMP_FUNC compareType, undefined * customComparisonFunc);
+
+// AUTOINJECT
+void Sprite_InitLists(void) {
+    DList_Init(&SpriteList, sizeof(sprite), MAX_SPRITES);
+}
+
+// Collects the drawable sprites linked to one viewer into SprActiveList, sorts them, and returns the list.
+// A sprite is drawable when it is not hidden, belongs to this viewer, has a non-zero low byte in its colour
+// (the original tests colourTint & 0xff, whatever that byte means - probably alpha), and has something to draw:
+// text or a texture.
+//
+// *startOut is always 0 (View_DrawSprites takes it as the first index to draw). *lastForegroundOut is left at
+// the index of the LAST sprite, from the front of the sorted list, whose maybeEnabled is at least 50 - an index,
+// not a count, and 0 both when only the first sprite qualifies and when none does; the original has this
+// ambiguity and so does this. Both callers ignore it on Xbox.
+//
+// AUTOINJECT
+sprite** Sprite_BuildList(ushort viewer, undefined4 *startOut, uint *lastForegroundOut, uint *countOut) {
+
+    uint count = 0;
+
+    for(sprite *spr = (sprite *)SpriteList.activeList.head; spr != NULL; spr = (sprite *)spr->node.next) {
+
+        if(spr->maybeEnabled == SPRITE_HIDDEN)
+            continue;
+
+        // The original widens the byte to 16 bits and compares with the whole ushort, so a viewer above 255
+        // never matches
+        if((ushort)(uchar)spr->linkedViewer != viewer)
+            continue;
+
+        if((spr->colourTint & 0xff) == 0)
+            continue;
+
+        if(spr->text == NULL && spr->unknownDataMaybeTexPtr == 0)
+            continue;
+
+        spr->maybeFlags &= SPRITE_FLAGS_KEEP_MASK;
+        SprActiveList[count] = spr;
+        count++;
+    }
+
+    *startOut = 0;
+    *lastForegroundOut = 0;
+    *countOut = count;
+
+    if(count != 0) {
+        QuickSort(SprActiveList, count, sizeof(sprite*), Compare_Sprites, NULL);
+
+        // Signed compare in the original (JL): maybeEnabled is read as a signed char here, so 0x80-0xff count
+        // as below 50 - moot for 0xff, which never got into the list
+        for(uint i = 0; i < count; i++) {
+            if((signed char)SprActiveList[i]->maybeEnabled < SPRITE_FOREGROUND_MIN)
+                break;
+            *lastForegroundOut = i;
+        }
+    }
+
+    return SprActiveList;
+}
 
 
 // AUTOGEN

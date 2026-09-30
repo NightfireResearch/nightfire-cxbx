@@ -74,6 +74,23 @@ typedef void* ScriptPlayerCallback; // FIXME: Function pointer signature
 
 typedef short MallocFlags;
 
+// QuickSort's comparison selector (Ghidra's COMP_FUNC). Only Compare_CustomFunction uses QuickSort's last argument.
+typedef enum {
+    Compare_Sprites        = 0,
+    Compare_Unknown1       = 1, // Ghidra: Unknown1 - falls to QuickSort's default, CompLight
+    Compare_HitData        = 2,
+    Compare_DrawCels       = 3,
+    Compare_AlphaObj       = 4,
+    Compare_MsgTxt         = 5,
+    Compare_TargetObj      = 6,
+    Compare_MenuCtrl       = 7,
+    Compare_Strings        = 8,
+    Compare_BoxList        = 9,
+    Compare_CustomFunction = 10,
+    Compare_Force_U32      = 0x7FFFFFFF
+} COMP_FUNC;
+static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
+
 #include "main.h"
 #include "util/bin.h"
 #include "util/hashtable.h"

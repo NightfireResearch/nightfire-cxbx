@@ -136,6 +136,9 @@ typedef enum {
 #pragma pack(pop)
 
 extern XboxInputs_struct XboxInputs;
+extern uint8_t bSkipAttract;
+extern int controller_maybeRumbleTimeout[4];
+extern unsigned int controllerIsPresent[4];
 
 // Real signature: xboxInitInputDevices() - zeroes XboxInputs and marks it ready for polling. The original
 // also pre-opened every already-connected Xbox controller here via XAPILIB::XInputOpen; our replacement

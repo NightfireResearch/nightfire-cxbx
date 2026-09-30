@@ -234,6 +234,7 @@ void MP_SortOutWhoWon(void);
 void MP_Pickup_Process(void);
 void MP_CheckForEndCondition(void);
 void MP_RestartScenario(void);
+void MP_Init(void);
 obj_tag* MP_CreateObject(_MATRIX *mtx, unsigned short* data, celglist_tag *celgl);
 bool MP_ReSpawn(obj_tag* obj, ushort idx);
 
