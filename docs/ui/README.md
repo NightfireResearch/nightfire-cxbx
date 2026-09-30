@@ -56,11 +56,13 @@ Not yet: the handlers without lists (`handlers.md` step 2).
 - `MenuLog=on` logs every handler message; `MenuLogSkip=0x50,0x51` leaves out the per-frame ones.
 - `MenuScript=<file>` replays pad input from a script (`tools/ui/scripts/`): `wait`, `waitpage <page>` (so a run
   is timed from the page, whatever the boot took), `press`, `hold`, `focus <control> [id]`, `gopage <page>`,
-  `shot <name>`, `log`, `secretstest`, `quit`.
+  `shot <name>`, `log`, `secretstest`, `poke <address> <value>`, `quit`.
 - `MenuOriginal=<hash>:<address>,<address>` runs those handlers or functions as the original code.
 - `MenuCheckLists=on` compares the lists in our source with the game's copies (all 12 identical).
 - `MenuShadowTests=on` runs the shadow tests at start, before the game (no display needed): `SecretsShadow.cpp`
-  (every code, 224 runs) and `UnlocksShadow.cpp` (the seven progress/unlock functions over their inputs, 1440 runs).
+  (every code, 224 runs), `UnlocksShadow.cpp` (the seven progress/unlock functions over their inputs, 1440 runs),
+  `UpgradeShadow.cpp` (the weapon upgrade readers) and `MemShadow.cpp` (the heap allocator, ~19000 random calls
+  on two scratch heaps).
 
 `tools/ui/run_menu.sh <script> [name]` runs a script from a fresh boot (language, intro, start page) in
 `build/menurun/<name>/`, with a copy of `Release/saves` so the start page leads to the main menu, and writes the

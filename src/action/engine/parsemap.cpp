@@ -191,11 +191,6 @@ static_assert(sizeof(block_coll_data_header) == 0x10, "Bad size for block_coll_d
 // Quirk kept from the original (and the PS2 build): the loop meant to grow every box by kCollBoxInflate never
 // advances its pointer, so the FIRST box is grown numCollBoxes times over and the others not at all.
 //
-// The game's own heap allocator: the level heap, reclaimed with the level (our Mem_Malloc is malloc).
-static void* Mem_Malloc_Original(size_t size, MallocFlags flags, uint32_t align) {
-    return reinterpret_cast<void* (*)(size_t, MallocFlags, uint32_t)>(0x00070ae0)(size, flags, align);
-}
-
 // AUTOINJECT
 void parsemap_block_Coll_Data_New(void) {
 
@@ -218,7 +213,7 @@ void parsemap_block_Coll_Data_New(void) {
             return;
         }
         // 0x18, not sizeof(COLLDATA_tag) (0x16): the original rounds the allocation up
-        cel->colldata = (COLLDATA_tag *)Mem_Malloc_Original(0x18, (MallocFlags)0x1a04, 0); // malloc_colldata, from the level heap
+        cel->colldata = (COLLDATA_tag *)Mem_Malloc(0x18, (MallocFlags)0x1a04, 0); // malloc_colldata
     }
 
     COLLDATA_tag *coll = cel->colldata;
