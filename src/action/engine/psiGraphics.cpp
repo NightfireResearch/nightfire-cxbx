@@ -2,19 +2,15 @@
 
 #include "Direct3D/d3dhelpers.h"
 #include "Direct3D/d3dSeam.h" // d3dSetMatrix is reimplemented there now, not called through an AUTOGEN passthrough
-#include "Woman.h"                // after headers.md: MemoryForWoman
-#include "psiInput.h"             // after headers.md: controllerIsPresent, controller_maybeRumbleTimeout
+#include "Woman.h"                // MemoryForWoman
+#include "psiInput.h"             // controllerIsPresent, controller_maybeRumbleTimeout
 #include "../memory.h"            // Mem_Free
-#include "psiSave.h"              // after headers.md: psiInternalLoadingDataState
-#include "../game.h"              // GameState, timestamp(), and (after headers.md) BackgroundMovieHashcode
+#include "psiSave.h"              // psiInternalLoadingDataState
+#include "../game.h"              // GameState, timestamp(), BackgroundMovieHashcode
 #include <string.h>               // memset
 
 // AUTOGEN
 void RecurseAndDrawBoxes(int geom_idx);
-// AUTOGEN
-void psiCreateMapTextures(map_tag *mapptr);
-// AUTOGEN
-void psiCreateEntityGfx(celglist_tag *param_1,map_tag *param_2,uint param_3);
 
 
 // AUTOINJECT
@@ -81,38 +77,53 @@ void __stdcall maybeCleanupSystem(void);
 
 // Set here and consumed by the first psiPreDraw after the reset: it calls ConfigureGammaForLevel, turns
 // LevelLoadTime from the reset's timestamp into the load's duration, and zeroes TimeSpentLoadingFiles.
-#define LevelStartPending (*(char*)0x002adf30)
-// Set here and by psiCreateMapTextures/psiCreateEntityGfx; the next psiPreDraw does a WBINVD (writes the
-// whole CPU cache back) so the GPU sees the freshly loaded texture and vertex data.
-#define CacheFlushPending (*(char*)0x002adf31)
+// XBE_GLOBAL(0x002adf30, 0x1)
+static char LevelStartPending;
+// Set here and by psiCreateMapTextures/psiCreateEntityGfx; the next psiPreDraw did a WBINVD (writes the whole CPU
+// cache back) so the GPU saw the freshly loaded texture and vertex data. Only cleared now.
+// XBE_GLOBAL(0x002adf31, 0x1)
+static char CacheFlushPending;
 #define ScreenBlur (*(char*)0x002adf33)
 #define TimeSpentLoadingFiles (*(double*)0x002adf38)
-#define LevelLoadTime (*(double*)0x002adf40)
+// XBE_GLOBAL(0x002adf40, 0x8)
+static double LevelLoadTime;
 #define debug_scanmode (*(char*)0x001fec49)
 #define debug_clipmode (*(char*)0x001fec4a)
 
-// psiInternalLoadingDataState (0x002adf10) is psiSave.cpp's file-local define; headers.md moves it to psiSave.h.
-
 // Level-scoped graphics bookkeeping, all reset here. The first index of Tex[] and d3dGeometryObjs[] is the
-// default entry, so the counts restart at 1.
-#define d3dGeometryObjs (*(void*(*)[2048])0x002a0e68) // ModelData*; no ModelData type in src/action yet
+// default entry, so the counts restart at 1 (and start there: 1 in the XBE's data).
+#define d3dGeometryObjs (*(ModelData*(*)[2048])0x002a0e68)
 // XBE_GLOBAL(0x002ae4f8, 0x58)
 static TextureInfo DefaultTextureInfo;
-#define NumXboxEntityGfxsCreated (*(int*)0x00194808)
-#define NumXboxTexLoaded (*(int*)0x0019480c)
-#define FirstMapTexIdx (*(int*)0x00194810) // psiCreateMapTextures: NumXboxTexLoaded when the map's textures began
-#define NumXboxVtxsLoaded (*(int*)0x002adf24)
-#define EntityGfxStat_2adf20 (*(int*)0x002adf20) // psiCreateEntityGfx accumulates it; not yet identified
+// XBE_GLOBAL(0x00194808, 0x4)
+static int NumXboxEntityGfxsCreated = 1;
+// XBE_GLOBAL(0x0019480c, 0x4)
+static int NumXboxTexLoaded = 1;
+// XBE_GLOBAL(0x00194810, 0x4)
+static int FirstMapTexIdx = 1; // psiCreateMapTextures: NumXboxTexLoaded when the map's textures began
+// XBE_GLOBAL(0x002adf24, 0x4)
+static int NumXboxVtxsLoaded;
+// XBE_GLOBAL(0x002adf20, 0x4)
+static int EntityGfxStat_2adf20; // psiCreateEntityGfx accumulates it; not yet identified
 
-// Texture statistics psiCreateMapTextures keeps: a count and a byte total per texture format class.
-#define someTypeTexCount (*(int*)0x002ade84)   // formatType 1
-#define someTypeTexBytes (*(int*)0x002ade80)
-#define someOtherTexCount (*(int*)0x002a0e60)  // formatType 0 or >5, 8 bits per pixel
-#define someOtherTexBytes (*(int*)0x002adf04)
-#define someTexCount (*(int*)0x002abe7c)       // formatType 0 or >5, other depths
-#define someTexBytes (*(int*)0x002ade88)
-#define someThirdTexCount (*(int*)0x002adf08)  // formatType 2..5
-#define someThirdTexBytes (*(int*)0x002a0e64)
+// Texture statistics psiCreateMapTextures keeps: a count and a byte total per texture format class. Nothing reads
+// them (the debug output that did is compiled out).
+// XBE_GLOBAL(0x002ade84, 0x4)
+static int someTypeTexCount; // formatType 1
+// XBE_GLOBAL(0x002ade80, 0x4)
+static int someTypeTexBytes;
+// XBE_GLOBAL(0x002a0e60, 0x4)
+static int someOtherTexCount; // formatType 0 or >5, 8 bits per pixel
+// XBE_GLOBAL(0x002adf04, 0x4)
+static int someOtherTexBytes;
+// XBE_GLOBAL(0x002abe7c, 0x4)
+static int someTexCount; // formatType 0 or >5, other depths
+// XBE_GLOBAL(0x002ade88, 0x4)
+static int someTexBytes;
+// XBE_GLOBAL(0x002adf08, 0x4)
+static int someThirdTexCount; // formatType 2..5
+// XBE_GLOBAL(0x002a0e64, 0x4)
+static int someThirdTexBytes;
 
 // Called from ResetMap_Load at every level change: returns the psi layer (the Xbox platform glue) to its
 // just-booted state before the next level's data is loaded.
@@ -189,4 +200,168 @@ void maybePsiResetResources(void) {
         d3dSetLevelDirectionVector(1.0f, 0.0f, 0.0f);
         break;
     }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// psiPreDraw, psiCreateMapTextures, psiCreateEntityGfx
+// ---------------------------------------------------------------------------------------------------------------
+
+// AUTOGEN
+void __stdcall ConfigureGammaForLevel(void);
+
+// The start of every frame's drawing (from mainloop). The first frame after a level load sets the level's gamma and
+// turns LevelLoadTime into how long the load took. The cache flush psiCreateMapTextures and psiCreateEntityGfx ask
+// for was a WBINVD on the Xbox (so the GPU saw their data); it is patched out now (XboxStartup.cpp), so only the
+// request is cleared. Clears the colour only on the front end, then draws the background movie if one is playing.
+// AUTOINJECT
+void psiPreDraw(void) {
+    if (LevelStartPending) {
+        ConfigureGammaForLevel();
+        LevelLoadTime = timestamp() - LevelLoadTime;
+        TimeSpentLoadingFiles = 0.0;
+        LevelStartPending = 0;
+    }
+    if (CacheFlushPending)
+        CacheFlushPending = 0;
+    psiAgeParticleOverlayRing();
+    d3dBeginFrame();
+    d3dClear(0, GameState.CurrentLevelHashcode == HT_Level_Menu_Pre, true);
+    maybeStartBackgroundMovie();
+}
+
+// RegisterTexture's format for a texture: by depth for formatType 0, one of four for 2..5, else 3
+static int TextureInfo_Format(const TextureInfo *tex) {
+    switch (tex->formatType) {
+    case 0:
+        if (tex->bitsPerPixel == 4)
+            return 1;
+        return tex->bitsPerPixel == 8 ? 2 : 0;
+    case 2: return 4;
+    case 3: return 5;
+    case 4: return 6;
+    case 5: return 7;
+    default: return 3;
+    }
+}
+
+// Registers a map's textures: each header goes in the next Tex[] slot (FirstMapTexIdx is where the map's first went,
+// which psiCreateEntityGfx adds to the map's texture references), each frame of a texture of its own gets a
+// texture slot, and a "DT" duplicate takes the frames of the texture it names. Its animation rate becomes frames per
+// step at 60 a second. The Tex[] index, or 0 for an unusable header, goes in the map's texData.
+// AUTOINJECT
+void psiCreateMapTextures(map_tag *mapptr) {
+
+    texDataEntry *texData = mapptr->texData;
+    CacheFlushPending = 1;
+    FirstMapTexIdx = NumXboxTexLoaded;
+
+    for (uint i = 0; i < (uint)mapptr->numTexHeaderEntries; i++, NumXboxTexLoaded++) {
+        TextureInfo *tex = mapptr->texHeaderData[i].textureInfo;
+        Tex[NumXboxTexLoaded] = tex;
+        texData[i].texIdx = NumXboxTexLoaded;
+        if (tex == NULL || tex == (TextureInfo *)-1) {
+            texData[i].texIdx = 0;
+            continue;
+        }
+
+        uint magic = tex->magic;
+        bool duplicate = (magic & 0xffff0000) == TEXINFO_DUPLICATE;
+        if (magic != TEXINFO_MAGIC && !duplicate) {
+            // Not a texture: one frame, no slot
+            tex->animSpeed = 1;
+            tex->numFrames = 1;
+            tex->baseIdx = 0;
+            texData[i].texIdx = 0;
+            continue;
+        }
+
+        uint rate = (uint)tex->animSpeed;
+        tex->animSpeed = (rate >= 1 && rate < 60) ? (int)(60 / rate) : 1;
+        if (tex->numFrames == 0)
+            tex->animSpeed = 1;
+
+        int *frames = &tex->baseIdx;
+        if (duplicate) {
+            // The index is taken as Tex[index + 1] whatever FirstMapTexIdx is - right for the first map loaded after
+            // maybePsiResetResources, whose textures start at 1
+            TextureInfo *original = Tex[(magic & 0xffff) + 1];
+            for (int f = 0; f < tex->numFrames; f++)
+                frames[f] = (&original->baseIdx)[f];
+            continue;
+        }
+
+        int numFrames = tex->numFrames;
+        uint bytes = tex->frameBytes * numFrames;
+        if (tex->formatType == 1) {
+            someTypeTexCount++;
+            someTypeTexBytes += bytes;
+        } else if (tex->formatType >= 2 && tex->formatType <= 5) {
+            someThirdTexCount++;
+            someThirdTexBytes += bytes;
+        } else if (tex->bitsPerPixel == 8) {
+            someOtherTexCount++;
+            someOtherTexBytes += bytes;
+        } else {
+            someTexCount++;
+            someTexBytes += bytes;
+        }
+
+        char *pixels = (char *)(frames + numFrames);
+        for (int f = 0; f < tex->numFrames; f++) {
+            frames[f] = RegisterTexture(tex->width, tex->height, TextureInfo_Format(tex), tex->levels, pixels,
+                                        tex->registerParam6);
+            pixels += tex->frameBytes;
+        }
+    }
+}
+
+// A primitive's texture reference, from the map's numbering to Tex[]: 0xffff (none) becomes 0, anything else is
+// offset by where the map's textures start; a texture with no slot becomes 0 too. 16-bit, as in the original.
+static ushort MapTextureRef(ushort ref, int firstMapTex) {
+    ushort idx = (ref == 0xffff) ? 0 : (ushort)(ref + firstMapTex);
+    return Tex[idx]->baseIdx != 0 ? idx : 0;
+}
+
+// Registers an entity's geometry (see ModelData): its vertex and index buffers and, if it has any, its batch
+// vertices, then points its primitives' texture references at Tex[]. The cel's geom_idx, the ModelData's address
+// until now, becomes its index in d3dGeometryObjs - or 0 if it is not usable geometry.
+// AUTOINJECT
+void psiCreateEntityGfx(celglist_tag *param_1, map_tag *param_2, uint param_3) {
+
+    ModelData *model = (ModelData *)(uintptr_t)param_1->geom_idx;
+    CacheFlushPending = 1;
+    if (model == NULL || model->magicTag != MODELDATA_MAGIC || model->vtxCnt == 0 || model->idxCnt == 0 ||
+        model->primitiveCnt == 0 || model->dataSize14 == 0) {
+        param_1->geom_idx = 0;
+        return;
+    }
+
+    d3dGeometryObjs[NumXboxEntityGfxsCreated] = model;
+
+    uint data = (uint)(uintptr_t)model->data;
+    model->vtxBuffers = d3dCreateVertexBuffers(model->vtxCnt, data, model->maybeSkinned != 0, 0);
+    data += d3dGetVertexDataSize(model->vtxCnt, model->maybeSkinned != 0, 0);
+    model->idxBuffer = d3dCreateIndexBuffer(model->idxCnt, data);
+    data += d3dGetIndexDataSize(model->idxCnt);
+    model->afterPrimitives = data + model->primitiveCnt * 12;
+    model->primitives = data;
+
+    if (model->batchCnt != 0 && model->batchVtxCnt != 0) {
+        model->batchVtxBuffers = d3dCreateVertexBuffers(model->batchVtxCnt,
+                                                        model->afterPrimitives + model->maybeSkinned * 0x36, 0,
+                                                        model->batchCnt);
+        d3dGetVertexDataSize(model->batchVtxCnt, 0, model->batchCnt); // the original ignores this one's result
+    }
+
+    int firstMapTex = FirstMapTexIdx;
+    for (int p = 0; p < model->primitiveCnt; p++) {
+        ushort *refs = (ushort *)(uintptr_t)(model->primitives + p * 12);
+        refs[0] = MapTextureRef(refs[0], firstMapTex);
+        refs[1] = MapTextureRef(refs[1], firstMapTex);
+    }
+
+    param_1->geom_idx = NumXboxEntityGfxsCreated;
+    EntityGfxStat_2adf20 += model->dataSize14 - model->dataSize18;
+    NumXboxVtxsLoaded += model->vtxCnt;
+    NumXboxEntityGfxsCreated++;
 }
