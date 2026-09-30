@@ -197,6 +197,21 @@ def read_xbe():
     return nonzero, read, entry
 
 
+def touches_memory(address, read, md):
+    """False only for a reference hung on an instruction that cannot be using the address: MOV reg, imm where the
+    immediate is not a data address - it reads nothing and overwrites the register. Ghidra's analysis now and then
+    leaves a data reference on one (a MOV AL, 1 in C_RBMPCNAME_Handler pointed into ds_gadgets). Anything else is
+    kept, including PUSH reg, ADD reg, imm and CALL: Ghidra follows an address through a register by constant
+    propagation, and those references are real."""
+    from capstone import x86
+    code = read(address, 16)
+    for ins in md.disasm(code or b"", address, 1):
+        ops = ins.operands
+        return not (ins.mnemonic == "mov" and len(ops) == 2 and ops[0].type == x86.X86_OP_REG and
+                    ops[1].type == x86.X86_OP_IMM and not DATA_START <= (ops[1].imm & 0xFFFFFFFF) < DATA_END)
+    return True
+
+
 def direct_calls(funcs, read):
     """(caller, callee) for every direct CALL or JMP from one function's code to another's entry."""
     import capstone
@@ -277,9 +292,14 @@ def main():
     xrefs.sort()
     tos = [x[0] for x in xrefs]
     import bisect
+    import capstone
+    md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
+    md.detail = True
+    spurious = 0
     for g in sized:
         lo, hi = bisect.bisect_left(tos, g["address"]), bisect.bisect_left(tos, g["address"] + g["size"])
-        g["refs"] = xrefs[lo:hi]
+        g["refs"] = [x for x in xrefs[lo:hi] if x[2] is None or x[3] == "C" or touches_memory(x[1], read, md)]
+        spurious += hi - lo - len(g["refs"])
         g["initialised"] = nonzero(g["address"], g["size"])
         g["inside"] = [o["name"] for o in sized if o is not g and o["address"] <= g["address"] and
                        g["address"] + g["size"] <= o["address"] + o["size"] and o["size"] > g["size"]]
@@ -363,8 +383,9 @@ def main():
     in_use = [g for g in sized if not g["owned"] and g["live"]]
     print("%d globals: %d owned, %d ready to own, %d still used by game code, %d of unknown size" % (
         len(merged), len(owned), len(ready), len(in_use), len(unsized)))
-    print("functions: %d replaced, %d dead, %d live; %d \"pointers\" inside code images ignored" % (
-        len(replaced & set(funcs)), len(set(funcs) - replaced - live), len(live), len(ignored)))
+    print("functions: %d replaced, %d dead, %d live; %d \"pointers\" inside code images and %d references hung "
+          "on a MOV reg, imm ignored" % (
+              len(replaced & set(funcs)), len(set(funcs) - replaced - live), len(live), len(ignored), spurious))
     if owned_bad:
         print("\nOWNED BUT STILL IN USE - these read and write the game's copy, not ours:")
         for g in owned_bad:
