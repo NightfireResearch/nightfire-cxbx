@@ -178,8 +178,8 @@ adjacent arrays; none is unrelated globals cleared together:
   sound stream). Typing it turns the `fmvDecoder` and `MovieSoundStreamHandle` labels into fields.
   `maybeDecodeMpgAudio` is really the per-frame "decode and draw the movie" function.
 
-Function names these suggest, not yet applied in Ghidra: FUN_00030e70 = `Drone_BuildDynamicAwarePoints`,
+Function names applied in Ghidra (30 Sept 2026), each PS2 match checked against its body: FUN_00030e70 = `Drone_BuildDynamicAwarePoints`,
 FUN_0004a620 = `AINetwork_SetLinksFlagInCircle`, FUN_0004a530 = `AINetwork_ClearLinkFlags`, FUN_0004a900 =
 `AINetwork_InitEmitter2` and FUN_0004a070 = `AINetwork_Emitter_GetNodeAtDistance`, all from the PS2 build.
-These are invented: FUN_00030e10 `Drone_AddDynamicAwarePoint`, FUN_000dcc60 `psiAgeParticleOverlayRing`,
+These are invented, with "INVENTED NAME" plate comments: FUN_00030e10 `Drone_AddDynamicAwarePoint`, FUN_000dcc60 `psiAgeParticleOverlayRing`,
 FUN_000e3340 `AsciiToWideSaveName` and FUN_000e3390 `WideToAsciiSaveName`.
