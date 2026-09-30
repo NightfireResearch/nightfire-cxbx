@@ -12,8 +12,8 @@
 // reimplemented touches yet. Fields are named for what the reimplemented code in d3dSeam.cpp does with them;
 // Ghidra's names, where it has them, are in the comments.
 //
-// Until every function that touches it is ours, Gfx is the game's own copy (the #define at the bottom). After
-// that it can become a definition here.
+// Every function that touches it is ours (tools/global_coverage.py), so Gfx is our own, defined in d3dSeam.cpp;
+// the game's copy at 0x002c5750 is no longer used.
 
 // One of the 2048 texture slots RegisterTexture hands out. The first 20 bytes are opaque Xbox D3D8
 // texture-header internals (written by XGSetTextureHeader) that nothing here reads directly - only the
@@ -198,6 +198,6 @@ static_assert(offsetof(GraphicsSystem, miscModeFlags) == 0x39c54, "GraphicsSyste
 static_assert(offsetof(GraphicsSystem, auxSavedViewMatrix) == 0x39c64, "GraphicsSystem layout");
 static_assert(sizeof(GraphicsSystem) == 0x39ce4, "Bad size for GraphicsSystem"); // xboxInitGraphics' clear
 
-#define Gfx (*(GraphicsSystem *)0x002c5750)
+extern GraphicsSystem Gfx;
 
 #endif // GRAPHICSSYSTEM_H_

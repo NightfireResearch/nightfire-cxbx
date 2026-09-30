@@ -180,9 +180,6 @@ void psiStopBackgroundMovie(void) {
 int Language_Get(void);
 
 // AUTOGEN
-bool IsNotPalI(void);
-
-// AUTOGEN
 void BackgroundMovieSetVolume(int param_1);
 // AUTOGEN
 void BackgroundMoviePlayFile(char *filename);
@@ -539,7 +536,7 @@ void __profiling_or_debugging_hook_point(void) {
 }
 
 // Only used in these two functions, so no need to use the original location
-// #define INITIALISATION_TIME (*((double*)0x002adf48))
+// XBE_GLOBAL(0x002adf48, 0x8)
 double INITIALISATION_TIME;
 
 // AUTOINJECT
@@ -767,6 +764,28 @@ void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate) {
 // AUTOINJECT
 bool Graphics_IsPalI(void) {
   return Gfx.isPalI;
+}
+
+// The other region and video-mode flags xboxInitGraphics works out; each original is one MOV AL and a RET.
+
+// AUTOINJECT
+bool IsNotPalI(void) {
+  return Gfx.isNotPalI;
+}
+
+// AUTOINJECT
+bool Graphics_IsSomeGraphicsRegion(void) {
+  return Gfx.isNtscM;
+}
+
+// AUTOINJECT
+bool Graphics_IsWidescreen(void) {
+  return Gfx.isWidescreen;
+}
+
+// AUTOINJECT
+bool Graphics_IsSomeRegionBasedThing(void) {
+  return Gfx.videoModeBit3;
 }
 
 // AUTOINJECT

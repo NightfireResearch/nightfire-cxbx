@@ -107,7 +107,7 @@ function marked * is reimplemented.
 | 002b0c28 | 0x13a40 | FS_Init* | FileSystem | `FileSystem`, size asserted |
 | 002c54e8 | 0x40 | FUN_000e3340 | untyped | |
 | 002c5528 | 0x20 | FUN_000e3390 | untyped | |
-| 002c5750 | 0x39ce4 | xboxInitGraphics* | Gfx (GraphicsSystem, 0x39ce5) | `Gfx`, size and layout asserted |
+| 002c5750 | 0x39ce4 | xboxInitGraphics* | Gfx (GraphicsSystem, 0x39ce5) | **owned**: our `Gfx` (d3dSeam.cpp), tagged `XBE_GLOBAL` |
 | 002c6f84 | 0x54 | d3dSetup* | Gfx +0x1834..0x1887, the 21 render-state caches | through `Gfx` |
 | 002ff498 | 0x2a4 | xboxInitInputDevices* | XboxInputs | `XboxInputs`, size asserted |
 | 002ff73c | 0x34 | maybeBackgroundMovieCleanup | untyped, 9 items including fmvDecoder | |

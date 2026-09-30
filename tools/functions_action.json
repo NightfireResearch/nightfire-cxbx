@@ -49460,11 +49460,11 @@
     {
         "name": "Graphics_IsSomeGraphicsRegion",
         "address": "0x000e5f80",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "bool",
         "param_types": [],
-        "prototype_string": "undefined __stdcall Graphics_IsSomeGraphicsRegion(void)",
+        "prototype_string": "bool __cdecl Graphics_IsSomeGraphicsRegion(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -49472,11 +49472,11 @@
     {
         "name": "Graphics_IsWidescreen",
         "address": "0x000e5f90",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "bool",
         "param_types": [],
-        "prototype_string": "undefined __stdcall Graphics_IsWidescreen(void)",
+        "prototype_string": "bool __cdecl Graphics_IsWidescreen(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -49484,11 +49484,11 @@
     {
         "name": "Graphics_IsSomeRegionBasedThing",
         "address": "0x000e5fa0",
-        "calling_convention": "__stdcall",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
+        "return_type": "bool",
         "param_types": [],
-        "prototype_string": "undefined __stdcall Graphics_IsSomeRegionBasedThing(void)",
+        "prototype_string": "bool __cdecl Graphics_IsSomeRegionBasedThing(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"

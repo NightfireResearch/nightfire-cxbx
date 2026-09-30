@@ -565,6 +565,11 @@ static inline void *D3D_UncachedAliasOf(uint32_t address) {
     "allocator caller has appeared - see D3DSeamTableExhaustedWarning's comment in d3dSeam.cpp."
 #define D3DSEAM_VTX_IDX_LEAK_CONTEXT D3DSEAM_TABLE_LEAK_CONTEXT
 
+// The graphics layer's state (GraphicsSystem.h). The tag records where the game kept it, so
+// tools/global_coverage.py goes on checking that no original still uses that copy.
+// XBE_GLOBAL(0x002c5750, 0x39ce4)
+GraphicsSystem Gfx;
+
 // Gfx.textures (GraphicsSystem.h): D3DTextureSlotRaw, the 36-byte Xbox D3DTexture header plus Eurocom's bookkeeping.
 #define D3D_TEXTURE_TABLE_COUNT GFX_TEXTURE_SLOTS
 
