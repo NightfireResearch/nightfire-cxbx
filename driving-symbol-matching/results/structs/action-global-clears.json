@@ -1,0 +1,784 @@
+{
+ "program": "default.xbe",
+ "comment": "From the global clears audit (docs/global-clears.md): types sized by the memsets that clear them.",
+ "types": [
+  {
+   "name": "D3DTexture",
+   "size": 36,
+   "fields": [
+    {
+     "offset": "0x0",
+     "name": "field0_0x0",
+     "type": "undefined4"
+    },
+    {
+     "offset": "0x4",
+     "name": "field1_0x4",
+     "type": "undefined4"
+    },
+    {
+     "offset": "0x8",
+     "name": "field2_0x8",
+     "type": "undefined4"
+    },
+    {
+     "offset": "0xc",
+     "name": "field3_0xc",
+     "type": "uint"
+    },
+    {
+     "offset": "0x10",
+     "name": "field4_0x10",
+     "type": "undefined4"
+    },
+    {
+     "offset": "0x14",
+     "name": "baseTexture",
+     "type": "IDirect3DBaseTexture *",
+     "comment": "points at this slot once registered"
+    },
+    {
+     "offset": "0x18",
+     "name": "width",
+     "type": "ushort"
+    },
+    {
+     "offset": "0x1a",
+     "name": "height",
+     "type": "ushort"
+    },
+    {
+     "offset": "0x1c",
+     "name": "refCount",
+     "type": "ushort",
+     "comment": "ReleaseTexture frees only at 0"
+    },
+    {
+     "offset": "0x1e",
+     "name": "nonSwizzled",
+     "type": "ushort"
+    },
+    {
+     "offset": "0x20",
+     "name": "mipChainBytes",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "name": "D3DVertexBufferSlot",
+   "size": 36,
+   "comment": "Gfx.vertexBuffers; d3dCreateVertexBuffers",
+   "fields": [
+    {
+     "offset": "0x0",
+     "name": "header",
+     "type": "uint",
+     "comment": "1 once allocated"
+    },
+    {
+     "offset": "0x4",
+     "name": "dataPtr",
+     "type": "void *"
+    },
+    {
+     "offset": "0x8",
+     "name": "reserved08",
+     "type": "uint"
+    },
+    {
+     "offset": "0xc",
+     "name": "selfPtr",
+     "type": "void *",
+     "comment": "0 marks the slot free"
+    },
+    {
+     "offset": "0x10",
+     "name": "field10",
+     "type": "uint",
+     "comment": "single: unaligned data pointer; multi: vtxCnt"
+    },
+    {
+     "offset": "0x14",
+     "name": "byteSize",
+     "type": "uint"
+    },
+    {
+     "offset": "0x18",
+     "name": "field18",
+     "type": "byte",
+     "comment": "single: nonSwizzled != 0; multi: 0"
+    },
+    {
+     "offset": "0x1c",
+     "name": "field1c",
+     "type": "uint",
+     "comment": "single: 0; multi: streamCount"
+    },
+    {
+     "offset": "0x20",
+     "name": "alignedData",
+     "type": "void *"
+    }
+   ]
+  },
+  {
+   "name": "D3DIndexBufferSlot",
+   "size": 28,
+   "comment": "Gfx.indexBuffers; d3dCreateIndexBuffer",
+   "fields": [
+    {
+     "offset": "0x0",
+     "name": "header",
+     "type": "uint",
+     "comment": "0x10001 once allocated"
+    },
+    {
+     "offset": "0x4",
+     "name": "dataPtr",
+     "type": "void *"
+    },
+    {
+     "offset": "0x8",
+     "name": "reserved08",
+     "type": "uint"
+    },
+    {
+     "offset": "0xc",
+     "name": "selfPtr",
+     "type": "void *"
+    },
+    {
+     "offset": "0x10",
+     "name": "indexCount",
+     "type": "uint"
+    },
+    {
+     "offset": "0x14",
+     "name": "byteSize",
+     "type": "uint"
+    },
+    {
+     "offset": "0x18",
+     "name": "dataPtr2",
+     "type": "void *"
+    }
+   ]
+  },
+  {
+   "name": "D3DOverlayQuadSlot",
+   "size": 20,
+   "comment": "Gfx.overlayQuads; d3dRegisterOverlayBuffer",
+   "fields": [
+    {
+     "offset": "0x0",
+     "name": "header",
+     "type": "uint"
+    },
+    {
+     "offset": "0x4",
+     "name": "dataPtr",
+     "type": "void *"
+    },
+    {
+     "offset": "0x8",
+     "name": "reserved08",
+     "type": "uint"
+    },
+    {
+     "offset": "0xc",
+     "name": "dataPtrCopy",
+     "type": "void *",
+     "comment": "0 marks the slot free"
+    },
+    {
+     "offset": "0x10",
+     "name": "vertexCount",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "name": "GfxLightConstants",
+   "size": 144,
+   "comment": "four directional lights, vertex shader constants 0x69..0x71",
+   "fields": [
+    {
+     "offset": "0x0",
+     "name": "position",
+     "type": "float[4][4]",
+     "comment": "view space, w = 1"
+    },
+    {
+     "offset": "0x40",
+     "name": "colour",
+     "type": "float[4][4]",
+     "comment": "r, g, b (each /256)"
+    },
+    {
+     "offset": "0x80",
+     "name": "invRange",
+     "type": "float[4]"
+    }
+   ]
+  },
+  {
+   "name": "GraphicsSystem",
+   "size": 236772,
+   "comment": "Gfx: xboxInitGraphics clears 0xe739 dwords from 0x002c5750",
+   "fields": [
+    {
+     "offset": "0x0",
+     "name": "D3DLastError",
+     "type": "uint"
+    },
+    {
+     "offset": "0x4",
+     "name": "swapPending",
+     "type": "byte"
+    },
+    {
+     "offset": "0x8",
+     "name": "frameCounter",
+     "type": "uint"
+    },
+    {
+     "offset": "0xc",
+     "name": "state0x40358LastValue",
+     "type": "uint",
+     "comment": "last value sent through D3D8 method 0x40358"
+    },
+    {
+     "offset": "0x10",
+     "name": "IsPalI",
+     "type": "byte",
+     "comment": "misnamed: a copy of IsNotPalI (xboxInitGraphics)"
+    },
+    {
+     "offset": "0x11",
+     "name": "IsNotPalI",
+     "type": "byte",
+     "comment": "AV region != 3 (PAL-I)"
+    },
+    {
+     "offset": "0x12",
+     "name": "IsSomeGfxRegion",
+     "type": "byte",
+     "comment": "AV region == 1 (NTSC-M)"
+    },
+    {
+     "offset": "0x13",
+     "name": "IsWidescreen",
+     "type": "byte",
+     "comment": "video mode bit 0"
+    },
+    {
+     "offset": "0x14",
+     "name": "videoModeBit3",
+     "type": "byte",
+     "comment": "video mode bit 3, forced to 0 for PAL-I"
+    },
+    {
+     "offset": "0x18",
+     "name": "pushBuffersEnabled",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1c",
+     "name": "D3DDevice",
+     "type": "uint",
+     "comment": "the D3D8 device; 0 until xboxInitGraphics creates it"
+    },
+    {
+     "offset": "0x20",
+     "name": "immediateModeVertices",
+     "type": "float[256][6]",
+     "comment": "maybeImmediateModeFlush: 64 quads x 4 vertices x 6 floats"
+    },
+    {
+     "offset": "0x1820",
+     "name": "maybeImmediateModeItemCount",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1824",
+     "name": "viewportX",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1828",
+     "name": "viewportY",
+     "type": "uint"
+    },
+    {
+     "offset": "0x182c",
+     "name": "viewportWidth",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1830",
+     "name": "viewportHeight",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1834",
+     "name": "currentlyLoadedTexture",
+     "type": "uint",
+     "comment": "d3dSetup sets the 21 caches from here to colorConstant67Cache to -1"
+    },
+    {
+     "offset": "0x1838",
+     "name": "currentStreamBuffer",
+     "type": "uint"
+    },
+    {
+     "offset": "0x183c",
+     "name": "currentIndexBuffer",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1840",
+     "name": "fogModeFlag",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1844",
+     "name": "texStage1SlotCache",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1848",
+     "name": "texStage1Param2Cache",
+     "type": "uint"
+    },
+    {
+     "offset": "0x184c",
+     "name": "currentCullMode",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1850",
+     "name": "alphaRefCache",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1854",
+     "name": "depthMaskCache",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1858",
+     "name": "zFuncCache",
+     "type": "uint"
+    },
+    {
+     "offset": "0x185c",
+     "name": "deferredTexStateA",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1860",
+     "name": "deferredTexStateB",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1864",
+     "name": "shardUseAltShader",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1868",
+     "name": "deferredTexBorderColorCache",
+     "type": "uint"
+    },
+    {
+     "offset": "0x186c",
+     "name": "fogEnabledCache",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1870",
+     "name": "fogColorMasked",
+     "type": "uint",
+     "comment": "the colour D3D8 is told about"
+    },
+    {
+     "offset": "0x1874",
+     "name": "extraBlendA",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1878",
+     "name": "extraBlendB",
+     "type": "uint"
+    },
+    {
+     "offset": "0x187c",
+     "name": "extraBlendC",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1880",
+     "name": "zBiasActive",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1884",
+     "name": "colorConstant67Cache",
+     "type": "uint",
+     "comment": "packed 0xAARRGGBB, shader constant 0x67"
+    },
+    {
+     "offset": "0x1888",
+     "name": "indexBufferBytesUsed",
+     "type": "uint"
+    },
+    {
+     "offset": "0x188c",
+     "name": "vertexBufferBytesUsed",
+     "type": "uint"
+    },
+    {
+     "offset": "0x1890",
+     "name": "totalTextureBytesUsed",
+     "type": "uint"
+    },
+    {
+     "offset": "0x5898",
+     "name": "overlayQuads",
+     "type": "D3DOverlayQuadSlot[256]",
+     "comment": "d3dRegisterOverlayBuffer / d3dDrawOverlayQuad"
+    },
+    {
+     "offset": "0x6c98",
+     "name": "fallbackOverlayTexture",
+     "type": "uint",
+     "comment": "texture slot used when textureSlot == 0"
+    },
+    {
+     "offset": "0x6c9c",
+     "name": "textures",
+     "type": "D3DTexture[2048]",
+     "comment": "RegisterTexture slots"
+    },
+    {
+     "offset": "0x18c9c",
+     "name": "maybeImmediateModeBuffer",
+     "type": "float[64][9]",
+     "comment": "pending immediate-mode quads: rect, UV rect, colour"
+    },
+    {
+     "offset": "0x1959c",
+     "name": "vertexBuffers",
+     "type": "D3DVertexBufferSlot[2048]",
+     "comment": "d3dCreateVertexBuffers slots (was d3dstreamDataPtr at +0xc)"
+    },
+    {
+     "offset": "0x2b59c",
+     "name": "indexBuffers",
+     "type": "D3DIndexBufferSlot[2048]",
+     "comment": "d3dCreateIndexBuffer slots (was d3dIndexBuffers at +0xc)"
+    },
+    {
+     "offset": "0x3959c",
+     "name": "u8tofloat01",
+     "type": "float[256]"
+    },
+    {
+     "offset": "0x3999c",
+     "name": "projMatrixCacheA",
+     "type": "D3DMATRIX"
+    },
+    {
+     "offset": "0x399dc",
+     "name": "projMatrixCacheB",
+     "type": "D3DMATRIX",
+     "comment": "scaled by fogScale"
+    },
+    {
+     "offset": "0x39a1c",
+     "name": "secondaryBasisMatrix",
+     "type": "D3DMATRIX"
+    },
+    {
+     "offset": "0x39a5c",
+     "name": "matrix39a5c",
+     "type": "D3DMATRIX"
+    },
+    {
+     "offset": "0x39a9c",
+     "name": "viewMatrixCache",
+     "type": "D3DMATRIX"
+    },
+    {
+     "offset": "0x39adc",
+     "name": "d3dActiveMatrix",
+     "type": "D3DMATRIX"
+    },
+    {
+     "offset": "0x39b1c",
+     "name": "fogScale",
+     "type": "float"
+    },
+    {
+     "offset": "0x39b20",
+     "name": "lightDirtyMask",
+     "type": "uint",
+     "comment": "bit i = light i changed; d3dSetMatrix sets all"
+    },
+    {
+     "offset": "0x39b24",
+     "name": "lightEnabledMask",
+     "type": "uint",
+     "comment": "bit i = light i enabled"
+    },
+    {
+     "offset": "0x39b28",
+     "name": "levelDirectionDirty",
+     "type": "uint"
+    },
+    {
+     "offset": "0x39b2c",
+     "name": "lights",
+     "type": "GfxLightConstants",
+     "comment": "vertex shader constants 0x69..0x71"
+    },
+    {
+     "offset": "0x39bbc",
+     "name": "lightDirection",
+     "type": "uint[4][3]",
+     "comment": "per light, copied verbatim by d3dSetLight"
+    },
+    {
+     "offset": "0x39bec",
+     "name": "fogConstant66",
+     "type": "float[4]"
+    },
+    {
+     "offset": "0x39bfc",
+     "name": "fogScaledNear",
+     "type": "float"
+    },
+    {
+     "offset": "0x39c00",
+     "name": "fogScaledFar",
+     "type": "float"
+    },
+    {
+     "offset": "0x39c04",
+     "name": "fogNearFarDelta",
+     "type": "float"
+    },
+    {
+     "offset": "0x39c08",
+     "name": "streamStrideConstants",
+     "type": "float[8]",
+     "comment": "shader constant 0x73"
+    },
+    {
+     "offset": "0x39c28",
+     "name": "shaderConstant75",
+     "type": "float[4]",
+     "comment": "{0, 0, characterLightIntensity, 1 - characterLightIntensity}; Ghidra had characterLightIntensity"
+    },
+    {
+     "offset": "0x39c38",
+     "name": "levelDirectionViewSpace",
+     "type": "float[4]",
+     "comment": "shader constant 0x7b"
+    },
+    {
+     "offset": "0x39c48",
+     "name": "levelDirectionVector",
+     "type": "float[3]"
+    },
+    {
+     "offset": "0x39c54",
+     "name": "miscModeFlags",
+     "type": "uint"
+    },
+    {
+     "offset": "0x39c58",
+     "name": "miscResetFlag",
+     "type": "uint"
+    },
+    {
+     "offset": "0x39c5c",
+     "name": "auxRenderPassResult",
+     "type": "uint"
+    },
+    {
+     "offset": "0x39c60",
+     "name": "shadowBlurTargetB",
+     "type": "uint"
+    },
+    {
+     "offset": "0x39c64",
+     "name": "auxSavedViewMatrix",
+     "type": "D3DMATRIX"
+    },
+    {
+     "offset": "0x39ca4",
+     "name": "auxSavedProjMatrix",
+     "type": "D3DMATRIX"
+    }
+   ]
+  },
+  {
+   "name": "TextureInfo",
+   "size": 88,
+   "comment": "Tex[] entries; maybePsiResetResources clears the default one at 0x002ae4f8",
+   "fields": [
+    {
+     "offset": "0x24",
+     "name": "numFrames",
+     "type": "int"
+    },
+    {
+     "offset": "0x28",
+     "name": "animSpeed",
+     "type": "int"
+    },
+    {
+     "offset": "0x54",
+     "name": "baseIdx",
+     "type": "int"
+    }
+   ]
+  },
+  {
+   "name": "NPCGlobals_t",
+   "size": 5164,
+   "comment": "Drone_LevelReset clears all of it",
+   "fields": [
+    {
+     "offset": "0x0",
+     "name": "flag0",
+     "type": "bool",
+     "comment": "what Ghidra typed NPCGlobals as"
+    },
+    {
+     "offset": "0x4",
+     "name": "NDrone2List",
+     "type": "LLISTINFO_tag"
+    },
+    {
+     "offset": "0x148",
+     "name": "Drone_SomeDurationFrames",
+     "type": "undefined4"
+    },
+    {
+     "offset": "0x19c",
+     "name": "hostagesSaved",
+     "type": "uint"
+    },
+    {
+     "offset": "0x230",
+     "name": "NumDrones",
+     "type": "undefined2"
+    },
+    {
+     "offset": "0x250",
+     "name": "vector250",
+     "type": "_VECTOR"
+    },
+    {
+     "offset": "0x260",
+     "name": "vector260",
+     "type": "_VECTOR"
+    },
+    {
+     "offset": "0x288",
+     "name": "maybeAINetwork_NumCoverNodes",
+     "type": "undefined4"
+    },
+    {
+     "offset": "0x28c",
+     "name": "maybeAINetwork_CoverNodes",
+     "type": "CoverNode_tag *"
+    },
+    {
+     "offset": "0xb54",
+     "name": "array_b54",
+     "type": "undefined1[2048]",
+     "comment": "FUN_00030e70 clears it"
+    },
+    {
+     "offset": "0x1354",
+     "name": "array_1354",
+     "type": "undefined4[10]",
+     "comment": "Drone_PostLoad_Init clears it"
+    }
+   ]
+  }
+ ],
+ "data": [
+  {
+   "address": "0x002c5750",
+   "type": "GraphicsSystem",
+   "name": "Gfx"
+  },
+  {
+   "address": "0x001e5630",
+   "type": "NPCGlobals_t",
+   "name": "NPCGlobals"
+  },
+  {
+   "address": "0x00260078",
+   "type": "MP_PICKUP[64]",
+   "name": "MPpickups"
+  },
+  {
+   "address": "0x001dc980",
+   "type": "obj_tag *[8]",
+   "name": "Tanks"
+  },
+  {
+   "address": "0x002abe80",
+   "type": "TextureInfo *[2048]",
+   "name": "Tex"
+  },
+  {
+   "address": "0x002ae4f8",
+   "type": "TextureInfo",
+   "name": "DefaultTextureInfo",
+   "comment": "Tex[0] after maybePsiResetResources"
+  },
+  {
+   "address": "0x001fec80",
+   "type": "byte[256]",
+   "name": "StringHeapLock",
+   "comment": "a lock count per heap string"
+  },
+  {
+   "address": "0x00223a60",
+   "type": "undefined4[7]",
+   "name": "MemStats"
+  },
+  {
+   "address": "0x001df8c0",
+   "type": "undefined2[100]",
+   "name": "DoorGroupsStates"
+  },
+  {
+   "address": "0x00219790",
+   "type": "undefined1[4096]",
+   "name": "InBufData"
+  },
+  {
+   "address": "0x00224558",
+   "type": "undefined4[37]",
+   "name": "backup.135"
+  },
+  {
+   "address": "0x00263998",
+   "type": "undefined1[4096]",
+   "name": "DropState"
+  },
+  {
+   "address": "0x002ff778",
+   "type": "undefined4[768]",
+   "name": "LaunchInfoData"
+  }
+ ]
+}

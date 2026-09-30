@@ -121,18 +121,26 @@ the `ui-reimplementation` branch.
 
 ## For Ghidra
 
-These are corrections for the Ghidra types, which have not been applied:
+Applied through the MCP (30 Sept 2026): MPpickups `MP_PICKUP[64]`, Tanks `obj_tag *[8]`, StringHeapLock
+`byte[256]`, MemStats `undefined4[7]`, and sized arrays for the named-but-undersized DoorGroupsStates
+(`undefined2[100]`), InBufData and DropState (`undefined1[4096]`), backup.135 (`undefined4[37]`) and
+LaunchInfoData (`undefined4[768]`).
 
-- **GraphicsSystem** is 0x39ce4 bytes, not 0x39ce5. The `float[16]` at +0x39b38 is the w components of four
-  light positions: the light block is 36 floats at +0x39b2c (`GfxLightConstants` in `GraphicsSystem.h`).
-  The vertex-buffer slot table starts at +0x1959c, 0xc before `d3dstreamDataPtr`, and the index-buffer table
-  at +0x2b59c. Both are 2048 slots.
-- **MPpickups** should be `MP_PICKUP[64]` (0x1600 bytes), not `[2]`.
-- **NPCGlobals** is a 0x142c-byte struct, not a `bool`. `NDrone2List` (+0x4) and `NumDrones` (+0x230) are
-  fields of it.
-- **Tex** is `TextureInfo*[2048]`. **StringHeapLock** is `byte[256]`. **Tanks** is `obj_tag*[8]`.
-  **MemStats** is 0x1c bytes.
-- Named but undersized: DoorGroupsStates (0xc8), InBufData (0x1000), backup.135 (0x94), DropState
-  (0x1000), LaunchInfoData (0xc00).
-- Untyped: 001e6184, 001e6984, 00245240, 0029a14c, 0029b2d4, 0029d7a0, 002adf88, 002ae4f8, 002b0328,
-  002c54e8, 002c5528, 002ff73c.
+The struct work goes through `ghidra/NightfireStructs.py`, because this MCP server's struct tools rename
+fields (Hungarian prefixes) and cannot rename them back. It reads
+`driving-symbol-matching/results/structs/action-global-clears.json` when default.xbe is open:
+
+- **GraphicsSystem** rebuilt at 0x39ce4 bytes from `GraphicsSystem.h`, keeping Ghidra's own names where it
+  had them. The overlay-quad, vertex-buffer and index-buffer slot tables become arrays of new
+  `D3DOverlayQuadSlot`, `D3DVertexBufferSlot` and `D3DIndexBufferSlot` types. The `float[16]` at +0x39b38 is
+  gone: the light block is a `GfxLightConstants` at +0x39b2c. `characterLightIntensity` at +0x39c28 was the
+  start of shader constant 0x75, which holds the intensity in its third float.
+- **D3DTexture** gains refCount, nonSwizzled and mipChainBytes.
+- **NPCGlobals_t** (0x142c bytes) applied at NPCGlobals, with NDrone2List, NumDrones, the cover nodes and
+  hostagesSaved as fields.
+- **TextureInfo** (0x58 bytes), applied as `Tex` (`TextureInfo *[2048]`) and at 0x002ae4f8
+  (`DefaultTextureInfo`).
+
+Still to identify: the untyped regions at 001e6184 and 001e6984 (now arrays inside NPCGlobals_t), 00245240,
+0029a14c, 0029b2d4, 0029d7a0, 002adf88, 002b0328, 002c54e8, 002c5528 and 002ff73c. Most cover several
+separately-used items, so a flat array would lose more than it adds.

@@ -24,6 +24,9 @@
 #             "prototypes": [{"address": "0x8dc60", "calling_convention": "__thiscall" or null (keep),
 #                             "return": null (keep) or type, "params": [{"name": "m", "type": "MATRIX4 *"}]}]}
 #   or {"address": ..., "return": type, "return_only": true} to set just the return type.
+#             "data": [{"address": "0x260078", "type": "MP_PICKUP[64]", "name": "MPpickups" (optional)}]
+#   retypes a global: clears the listing over the new type's length, creates the data and, given a name, makes
+#   it the primary label. Applied after the types, so it can use one the same file defines.
 # Types: a name (as the Data Type Manager shows it, e.g. "CARP::Instance", "RAnimEngine::Handle"), then "*"s
 # and/or "[n]". A struct that exists is rebuilt in place (its references stay); a missing one is created in the
 # root category. Fields not listed stay undefined. It lists what it will do and asks first; one undoable step.
@@ -103,12 +106,14 @@ def resolve(spec):
     return dt
 
 
-plan_types, plan_protos = [], []
+plan_types, plan_protos, plan_data = [], [], []
 for fname, d in docs:
     for t in d.get("types", []):
         plan_types.append((fname, t))
     for p in d.get("prototypes", []):
         plan_protos.append((fname, p))
+    for g in d.get("data", []):
+        plan_data.append((fname, g))
 for fname, t in plan_types:
     have = find_named(t["name"])
     if t.get("if_missing") and have:
@@ -116,10 +121,12 @@ for fname, t in plan_types:
     print("  type %-32s %s, %d bytes, %d fields (%s)" % (t["name"], "rebuild" if have else "create", t["size"],
                                                         len(t["fields"]), fname))
 print("  %d prototypes" % len(plan_protos))
+for fname, g in plan_data:
+    print("  data %s %s%s (%s)" % (g["address"], g["type"], " as " + g["name"] if g.get("name") else "", fname))
 
-if not (plan_types or plan_protos):
+if not (plan_types or plan_protos or plan_data):
     print("Nothing to do")
-elif askYesNo("Nightfire structs", "Apply %d types and %d prototypes? (Edit > Undo reverts it)" % (len(plan_types), len(plan_protos))):
+elif askYesNo("Nightfire structs", "Apply %d types, %d prototypes and %d globals? (Edit > Undo reverts it)" % (len(plan_types), len(plan_protos), len(plan_data))):
     # Pass 1: make sure every named struct exists (so fields can point at each other), at its size.
     for fname, t in plan_types:
         if find_named(t["name"]) is None:
@@ -147,6 +154,22 @@ elif askYesNo("Nightfire structs", "Apply %d types and %d prototypes? (Edit > Un
         except Exception as ex:
             errors += 1
             print("  FAILED type %s: %s" % (t["name"], ex))
+    # Pass 2b: globals.
+    placed = 0
+    for fname, g in plan_data:
+        try:
+            addr = toAddr(g["address"])
+            dt = resolve(g["type"])
+            clearListing(addr, addr.add(dt.getLength() - 1))
+            createData(addr, dt)
+            if g.get("name"):
+                createLabel(addr, g["name"], True, SourceType.USER_DEFINED)
+            if g.get("comment"):
+                setEOLComment(addr, g["comment"])
+            placed += 1
+        except Exception as ex:
+            errors += 1
+            print("  FAILED data %s: %s" % (g["address"], ex))
     # Pass 3: prototypes. Return type and calling convention are kept unless given; 'this' comes from the
     # function's class namespace for __thiscall.
     done = 0
@@ -176,6 +199,6 @@ elif askYesNo("Nightfire structs", "Apply %d types and %d prototypes? (Edit > Un
         except Exception as ex:
             errors += 1
             print("  FAILED prototype %s: %s" % (p["address"], ex))
-    print("Applied %d types, %d prototypes, %d errors" % (len(plan_types), done, errors))
+    print("Applied %d types, %d prototypes, %d globals, %d errors" % (len(plan_types), done, placed, errors))
 else:
     print("Cancelled; nothing changed")
