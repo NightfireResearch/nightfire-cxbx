@@ -20,7 +20,7 @@ void __stdcall Text_FlushAllSubtitles(void);
 #define CurrentLanguage U32_AT(0x00215594)
 #define NumFixups U32_AT(0x00215580)
 #define FixupTable (*(uint**)0x001fec78)
-#define StringHeapLock (*(char**)0x001fec80)
+#define StringHeapLock (*(uint8_t(*)[256])0x001fec80) // a lock count per heap string (Txt_LockString, Txt_UnlockString)
 #define StringHeapCnt U32_AT(0x00215584)
 
 
@@ -133,7 +133,7 @@ const char* Txt_BindLabel(Action_TranslatedText a, unsigned int b) {
 
 // AUTOINJECT
 void Txt_LanguageInit(void) {
-    memset(&StringHeapLock,0,0x100);
+    memset(&StringHeapLock, 0, sizeof(StringHeapLock));
     StringHeapCnt = 0;
     BankData = NULL;
     Bank = NULL;

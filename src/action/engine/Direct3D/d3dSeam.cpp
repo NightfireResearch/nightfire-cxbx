@@ -1,5 +1,6 @@
 #include "d3dSeam.h"
 #include "d3dhelpers.h"
+#include "GraphicsSystem.h"
 #include "../../actionhelpers.h"
 #include "../XboxSettings.h" // GetVideoMode/XboxGetAVRegion, for xboxInitGraphics
 #include "../../../common/gfx/d3d9Backend.h"      // the native D3D9 backend the entry-point wrappers can dispatch to
@@ -299,9 +300,6 @@ D3DSEAM_TRACED_CALL_TYPE(__fastcall, Fast)
 #define D3DDevice_SetVertexShaderConstantNotInline_ADDR    0x00102760u
 #define D3DDevice_GetBackBuffer2_ADDR                       0x00103c50u
 
-#define Gfx_D3DLastError          U32_AT(0x002C5750) // Gfx.D3DLastError
-#define Gfx_TotalTextureBytesUsed U32_AT(0x002C6FE0) // Gfx.field6075_0x1890 - running total, informational only
-
 // D3DDevice_SetRenderState_CullMode(value) and D3DResource_Register(pTexture, data) are both plain __stdcall
 // functions taking their arguments on the stack in the normal way - confirmed via raw disassembly, unlike
 // D3DDevice_SetRenderState_Simple below.
@@ -567,27 +565,11 @@ static inline void *D3D_UncachedAliasOf(uint32_t address) {
     "allocator caller has appeared - see D3DSeamTableExhaustedWarning's comment in d3dSeam.cpp."
 #define D3DSEAM_VTX_IDX_LEAK_CONTEXT D3DSEAM_TABLE_LEAK_CONTEXT
 
-#define D3D_TEXTURE_TABLE_BASE  0x002CC3ECu // Gfx + 27804 (0x6c9c) - see GraphicsSystem's D3DTexture[2048] field
-#define D3D_TEXTURE_TABLE_COUNT 2048
-
-// Matches the 36-byte on-disk layout of the Xbox D3DTexture struct as used by this table. The first 20 bytes
-// are opaque Xbox D3D8 texture-header internals (written by XGSetTextureHeader below) that nothing here
-// reads directly - only the trailing bookkeeping fields Eurocom's own code touches are named.
-struct D3DTextureSlotRaw {
-    uint8_t  opaqueHeader[20];
-    void    *baseTexture;   // +0x14 - set to point at this same slot once registered (Xbox convention)
-    uint16_t width;         // +0x18
-    uint16_t height;        // +0x1a
-    uint16_t refCount;      // +0x1c - written 0 by RegisterTexture; FUN_000e4f00 (the slot-release function) tests it
-                             // == 0 before freeing, confirming it really is a refcount despite RegisterTexture
-                             // never incrementing it - nothing traced so far increments it either
-    uint16_t nonSwizzled;   // +0x1e - the "param_6 != 0" flag from the caller
-    uint32_t mipChainBytes; // +0x20 - total byte size of every mip level, written just below
-};
-static_assert(sizeof(D3DTextureSlotRaw) == 36, "Bad size for D3DTextureSlotRaw");
+// Gfx.textures (GraphicsSystem.h): D3DTextureSlotRaw, the 36-byte Xbox D3DTexture header plus Eurocom's bookkeeping.
+#define D3D_TEXTURE_TABLE_COUNT GFX_TEXTURE_SLOTS
 
 static D3DTextureSlotRaw *D3DTextureSlot(int index) {
-    return (D3DTextureSlotRaw*)(D3D_TEXTURE_TABLE_BASE + (unsigned)index * sizeof(D3DTextureSlotRaw));
+    return &Gfx.textures[index];
 }
 
 // AUTOINJECT
@@ -687,7 +669,7 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
         texSlot->height = (uint16_t)height;
         texSlot->refCount = 0;
         texSlot->nonSwizzled = (uint16_t)(param_6 != 0);
-        Gfx_TotalTextureBytesUsed += mipChainBytes;
+        Gfx.totalTextureBytesUsed += mipChainBytes;
 
         return slot;
     }
@@ -715,48 +697,23 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 // Render state wrappers
 // ---------------------------------------------------------------------------------------------------------------
 
-#define D3D_ZFuncCache          U32_AT(0x002C6FA8)
 #define D3D_ZFuncLastValue      U32_AT(0x00111AB4)
-#define D3D_AlphaRefCache       U32_AT(0x002C6FA0)
 #define D3D_AlphaRefLastValue   U32_AT(0x00111AC4)
-#define D3D_DepthMaskCache      U32_AT(0x002C6FA4)
 #define D3D_DepthMaskLastValue  U32_AT(0x00111AD0)
 #define D3D_CullModeLastValue   U32_AT(0x00111C4C)
-#define Gfx_CurrentCullMode     U32_AT(0x002C6F9C) // Gfx.currentCullMode - a separate "current mode" cache from D3D_CullModeLastValue above
 
-// Deferred-texture-state cache pair used by maybeResetRenderState/d3dSetup (matching field names) - and the
-// underlying D3D8-internal globals they drive once changed.
-#define Gfx_DeferredTexStateA U32_AT(0x002C6FAC) // Gfx.field6059_0x185c
-#define Gfx_DeferredTexStateB U32_AT(0x002C6FB0) // Gfx.field6060_0x1860
+// The D3D8-internal globals Gfx.deferredTexStateA/B (maybeResetRenderState, d3dSetup) drive once changed.
 #define D3D8_Stage0_AddressU D3D8_TRACED("D3D8_Stage0_AddressU", 0x001117D0) // D3D8::D3D_g_DeferredTextureState
 #define D3D8_Stage0_AddressV D3D8_TRACED("D3D8_Stage0_AddressV", 0x001117D4) // not in the Gfx struct - a separate D3D8-internal global
 
-// A trio of cache fields (matching field names in d3dSetup too) all set together, driving one opaque D3D8
-// register write (method 0x40358) - untraced meaning beyond that.
-#define Gfx_ExtraBlendA U32_AT(0x002C6FC4) // Gfx.field6068_0x1874
-#define Gfx_ExtraBlendB U32_AT(0x002C6FC8) // Gfx.field6069_0x1878
-#define Gfx_ExtraBlendC U32_AT(0x002C6FCC) // Gfx.field6070_0x187c
-
-// Gfx.D3DDevice (confirmed via get_struct_layout: GraphicsSystem+28) - the actual D3D8 device handle/pointer,
-// null until xboxInitGraphics has created it. Every function below that touches D3D8 guards on this exactly
-// like the original did, and no-ops (while still updating any cache) if it's not ready yet.
-#define D3D_DeviceReady U32_AT(0x002C576C)
-
-#define Gfx_ViewportX U32_AT(0x002C6F74) // Gfx.viewportX
-#define Gfx_ViewportY U32_AT(0x002C6F78) // Gfx.viewportY
-#define Gfx_ViewportWidth U32_AT(0x002C6F7C) // Gfx.viewportWidth
-#define Gfx_ViewportHeight U32_AT(0x002C6F80) // Gfx.viewportHeight
+// Gfx.d3dDevice is null until xboxInitGraphics has created the device. Every function below that touches D3D8
+// guards on it exactly like the original did, and no-ops (while still updating any cache) if it's not ready yet.
 
 // D3D8's own internal pushbuffer-dirty-flags word, and its own cached fog-enable flag - both plain globals
 // living inside the D3D8 library's static data (not the Gfx struct), poked directly by the original rather
 // than through an API call. Confirmed via raw disassembly to be ordinary memory, safe to preserve verbatim.
 #define D3D8_PushBufferDirtyFlags D3D8_TRACED("D3D8_PushBufferDirtyFlags", 0x001117CC)
 #define D3D8_RS_FogEnable D3D8_TRACED("D3D8_RS_FogEnable", 0x00111B40)
-
-#define Gfx_CurrentlyLoadedTexture U32_AT(0x002C6F84) // Gfx.currentlyLoadedTexture (stage 0)
-#define Gfx_TexStage1SlotCache     U32_AT(0x002C6F94) // Gfx.field6053_0x1844
-#define Gfx_TexStage1Param2Cache   U32_AT(0x002C6F98) // Gfx.field6054_0x1848
-#define Gfx_TexStage1ModeFlags     U32_AT(0x002FF3A4) // not in the Gfx struct - a separate global
 
 // Opaque D3D8-internal texture-stage-1 configuration registers, poked directly with fixed constants by the
 // original depending on whether a real texture or NULL is being bound to stage 1 - untraced meaning, ported
@@ -771,62 +728,26 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 #define D3D8_TexStage1_0x98 D3D8_TRACED("D3D8_TexStage1_0x98", 0x00111898)
 #define D3D8_TexStage1_0x9c D3D8_TRACED("D3D8_TexStage1_0x9c", 0x0011189C)
 
-#define Gfx_FogEnabledCache U32_AT(0x002C6FBC) // Gfx.field6063_0x186c
-#define Gfx_FogModeFlag     U32_AT(0x002C6F90) // Gfx.field6052_0x1840 - untraced meaning; see d3dSetFogEnable/Color
 #define Gfx_FogColorCache   U32_AT(0x002FF450) // not in the Gfx struct - a separate global
-#define Gfx_FogColorMasked  U32_AT(0x002C6FC0) // Gfx._6256_4_ - the colour D3D8 actually gets told about
 
-#define Gfx_SwapPending           U8_AT(0x002C5754)     // Gfx.field1_0x4
 #define Gfx_LastSwapTimestamp     DOUBLE_AT(0x002FF438) // not in the Gfx struct - a separate global
 #define Gfx_AccumulatedSwapTime   DOUBLE_AT(0x002FF440) // not in the Gfx struct - a separate global
 #define Gfx_AccumulatedSwapTimeReport DOUBLE_AT(0x002FF448) // not in the Gfx struct - the accumulator's value just before each reset, for reporting
 
-// Shader constant 0x67: a packed 0xAARRGGBB colour, unpacked byte-by-byte through Gfx.u8tofloat01 (a 256-entry
+// Shader constant 0x67: a packed 0xAARRGGBB colour, unpacked byte-by-byte through Gfx.u8ToFloat01 (a 256-entry
 // byte-to-[0,1]-float lookup table) into 4 shader-constant floats. Exact use (tint/ambient colour) untraced.
-#define Gfx_ColorConstant67Cache U32_AT(0x002C6FD4) // Gfx.field6072_0x1884
 #define D3D8_ForceColorConstant67Update U8_AT(0x001B52DC) // not in the Gfx struct - forces a re-send even if the cache matches (e.g. after a device reset)
-#define Gfx_U8ToFloat01(byteValue) (((float*)0x002FECEC)[(uint8_t)(byteValue)]) // Gfx.u8tofloat01[256]
 
-// Shader constant 0x66: a fog {1/(far-near), near/(far-near)} pair, shared between the near and far setters -
-// whichever is called, both cached scaled values get re-read and the pair recomputed the same way.
-#define Gfx_FogScale       FLOAT_AT(0x002FF26C) // not in the Gfx struct - a separate global, set elsewhere
-#define Gfx_FogScaledNear  FLOAT_AT(0x002FF34C)
-#define Gfx_FogScaledFar   FLOAT_AT(0x002FF350)
-#define Gfx_FogNearFarDelta FLOAT_AT(0x002FF354)
-#define Gfx_FogConstant66  ((float*)0x002FF33C) // [0] = 1/delta (or a sentinel if delta is ~0), [1] = [0]*scaledNear
+// Shader constant 0x66 (Gfx.fogConstant66): a fog {1/(far-near), near/(far-near)} pair, shared between the near
+// and far setters - whichever is called, both cached scaled values get re-read and the pair recomputed the same way.
+//
+// Shader constant 0x75 (Gfx.shaderConstant75): {0, 0, characterLightIntensity, 1-characterLightIntensity}. The
+// first two floats are zeroed once per frame by d3dBeginFrame; gfxSetCharacterLightIntensity only ever touches
+// the last two.
+//
+// Projection matrix: Gfx.projMatrixCacheA is write-only from here (presumably read by a not-yet-ported
+// function); Gfx.projMatrixCacheB is scaled in place by Gfx.fogScale and feeds the depth-clip-plane calculation.
 
-// Shader constant 0x75: {0, 0, characterLightIntensity, 1-characterLightIntensity}. The first two floats are
-// zeroed once per frame by d3dBeginFrame; gfxSetCharacterLightIntensity only ever touches the last two.
-#define Gfx_ShaderConstant75 ((float*)0x002FF378)
-#define Gfx_MiscModeFlags U32_AT(0x002FF3A4) // not in the Gfx struct - shared small state-flags word (also used by d3dSetTextureStage1's 0x20 bit; this function uses bit 0x10)
-
-// d3dBeginFrame-only globals - none of these are really part of the Gfx struct despite how Ghidra's own
-// decompile of this particular function mis-labelled a couple of them (it even flags the mismatch itself:
-// "WARNING: Globals starting with '_' overlap smaller symbols at the same address"). Verified via raw
-// disassembly instead of trusting that decompile's variable-to-field mapping here.
-#define Gfx_FrameCounter U32_AT(0x002C5758)          // Gfx.field5_0x8
-#define Gfx_MiscResetFlag U32_AT(0x002FF3A8)         // not in the Gfx struct - untraced meaning, always set to -1 here
-#define Gfx_CurrentStreamBuffer U32_AT(0x002C6F88)   // Gfx.currentStreamBuffer
-#define Gfx_CurrentIndexBuffer U32_AT(0x002C6F8C)    // Gfx.currentIndexBuffer
-
-// Projection matrix. Cache A is write-only from here (presumably read by a not-yet-ported function); cache B
-// is scaled in place by Gfx_FogScale and feeds the depth-clip-plane calculation - both confirmed via raw
-// disassembly, none of this is really "in" the Gfx struct despite how it reads in decompile.
-#define Gfx_ProjMatrixCacheA ((D3DMATRIX*)0x002FF0EC)
-#define Gfx_ProjMatrixCacheB ((D3DMATRIX*)0x002FF12C)
-
-#define Gfx_d3dActiveMatrix ((D3DMATRIX*)0x002FF22C) // Gfx.d3dActiveMatrix
-#define Gfx_MatrixGenFlag1 U32_AT(0x002FF270)        // untraced meaning - always set to -1 by d3dSetMatrix
-#define Gfx_MatrixGenFlag2 U32_AT(0x002FF278)        // ditto
-#define Gfx_ViewMatrixCache ((D3DMATRIX*)0x002FF1EC) // Gfx.field158568_0x39a9c - the "base" d3dSetMatrix combines the new matrix with
-#define Gfx_SecondaryBasisMatrix ((D3DMATRIX*)0x002FF16C) // Gfx.field158566_0x39a1c - feeds constant register 100's half-scaled 2x3 basis
-#define Gfx_LevelDirectionVector ((float*)0x002FF398u) // Gfx.field158786-788_0x39c48/4c/50 - {x,y,z}; untraced consumer (no reader found anywhere in the binary), written by both d3dSetup's own hardcoded (1,0,0) default and d3dSetLevelDirectionVector's mission-specific overrides
-
-#define Gfx_StreamStrideConstants ((float*)0x002FF358)  // Gfx.field_0x39c08 - 8 floats, shader constant 0x73
-#define Gfx_d3dstreamDataPtr ((void**)0x002DECF8)        // Gfx.d3dstreamDataPtr - array of stream-data pointers, stride 9 dwords per slot
-#define Gfx_StreamStrideRelated ((uint8_t*)0x002DED04)   // Gfx.d3dstreamStrideRelated - a byte flag inside the same 36-byte-per-slot struct as Gfx_d3dstreamDataPtr (offset +12), indexed in raw bytes
-#define Gfx_d3dIndexBuffers ((void**)0x002F0CF8)         // Gfx.d3dIndexBuffers - array of index-buffer pointers, stride 7 dwords per slot
-#define Gfx_ShardUseAltShader U32_AT(0x002C6FB4)         // Gfx.field6061_0x1864
 #define VtxShaderHandles ((void**)0x002C5548)            // not in the Gfx struct - a fixed array of created vertex-shader handles
 
 // Bit pattern for the fog constant's "avoid divide-by-zero" sentinel value - written as a raw uint32_t by the
@@ -883,53 +804,53 @@ static void Multiply4x4RowMajor(const D3DMATRIX *base, const D3DMATRIX *chain, D
 }
 
 static void RecomputeFogConstant66() {
-    float delta = Gfx_FogNearFarDelta;
+    float delta = Gfx.fogNearFarDelta;
     float invDelta = (delta <= -0.001f || delta >= 0.001f) ? (1.0f / delta) : BitsToFloat(0x4479ffff);
-    Gfx_FogConstant66[0] = invDelta;
-    Gfx_FogConstant66[1] = invDelta * Gfx_FogScaledNear;
+    Gfx.fogConstant66[0] = invDelta;
+    Gfx.fogConstant66[1] = invDelta * Gfx.fogScaledNear;
 }
 
 // AUTOINJECT
 void d3dSetRenderState(int enableDepthTest) {
-    if ((uint32_t)enableDepthTest == D3D_ZFuncCache)
+    if ((uint32_t)enableDepthTest == Gfx.zFuncCache)
         return;
-    D3D_ZFuncCache = (uint32_t)enableDepthTest;
+    Gfx.zFuncCache = (uint32_t)enableDepthTest;
 
-    if (D3D_DeviceReady != 0) {
+    if (Gfx.d3dDevice != 0) {
         // NV097_SET_DEPTH_FUNC. 0x207/0x203 are real OpenGL-style comparison-function constants
         // (GL_ALWAYS/GL_LEQUAL) - NV2A hardware registers reuse them directly.
         uint32_t glCompareFunc = (enableDepthTest == 0) ? 0x207u : 0x203u;
         D3D_SetRenderStateSimple(0x40354, glCompareFunc);
         D3D_ZFuncLastValue = glCompareFunc;
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // AUTOINJECT
 void d3dSetRenderState1(int alphaRef) {
-    if ((uint32_t)alphaRef == D3D_AlphaRefCache)
+    if ((uint32_t)alphaRef == Gfx.alphaRefCache)
         return;
-    D3D_AlphaRefCache = (uint32_t)alphaRef;
+    Gfx.alphaRefCache = (uint32_t)alphaRef;
 
-    if (D3D_DeviceReady != 0) {
+    if (Gfx.d3dDevice != 0) {
         D3D_SetRenderStateSimple(0x40340, (uint32_t)alphaRef); // NV097_SET_ALPHA_REF
         D3D_AlphaRefLastValue = (uint32_t)alphaRef;
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // AUTOINJECT
 void d3dSetRenderState2(int zWriteEnable) {
-    if ((uint32_t)zWriteEnable == D3D_DepthMaskCache)
+    if ((uint32_t)zWriteEnable == Gfx.depthMaskCache)
         return;
-    D3D_DepthMaskCache = (uint32_t)zWriteEnable;
+    Gfx.depthMaskCache = (uint32_t)zWriteEnable;
 
-    if (D3D_DeviceReady != 0) {
+    if (Gfx.d3dDevice != 0) {
         uint32_t mask = (zWriteEnable != 0) ? 1u : 0u;
         D3D_SetRenderStateSimple(0x4035c, mask); // NV097_SET_DEPTH_MASK
         D3D_DepthMaskLastValue = mask;
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // AUTOINJECT
@@ -966,7 +887,7 @@ void ConfigureGammaRamp(float gamma, float brightness, float contrast) {
         gammaRamp[512 + i] = byteValue;
     }
 
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetGammaRamp(0, gammaRamp);
 }
 
@@ -981,12 +902,12 @@ void d3dSetupViewportDimensions(unsigned int viewportX, unsigned int viewportY, 
     if ((int)viewportWidth < 2) viewportWidth = 2;
     if ((int)viewportHeight < 2) viewportHeight = 2;
 
-    Gfx_ViewportX = viewportX;
-    Gfx_ViewportY = viewportY;
-    Gfx_ViewportWidth = viewportWidth;
-    Gfx_ViewportHeight = viewportHeight;
+    Gfx.viewportX = viewportX;
+    Gfx.viewportY = viewportY;
+    Gfx.viewportWidth = viewportWidth;
+    Gfx.viewportHeight = viewportHeight;
 
-    if (D3D_DeviceReady != 0) {
+    if (Gfx.d3dDevice != 0) {
         D3DVIEWPORT viewport;
         viewport.X = viewportX;
         viewport.Y = viewportY;
@@ -996,7 +917,7 @@ void d3dSetupViewportDimensions(unsigned int viewportX, unsigned int viewportY, 
         viewport.MaxZ = 1.0f;
         D3DDevice_SetViewport(&viewport);
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // A render-target push/pop "stack" (single level, not truly nested): a nonzero textureSlot pushes that
@@ -1012,29 +933,29 @@ void d3dSetupViewportDimensions(unsigned int viewportX, unsigned int viewportY, 
 #define Gfx_CustomRenderTargetSurface PTR_AT(0x002FF478)
 
 // Releases *slot if non-NULL (preserving D3DResource_Release's actual refcount-style return value in
-// Gfx_D3DLastError, matching the original exactly) or just zeroes Gfx_D3DLastError if it was already NULL,
+// Gfx.d3dLastError, matching the original exactly) or just zeroes Gfx.d3dLastError if it was already NULL,
 // then clears *slot.
 static void ReleaseSavedSurface(void **slot) {
     if (*slot != NULL)
-        Gfx_D3DLastError = D3DResource_Release(*slot);
+        Gfx.d3dLastError = D3DResource_Release(*slot);
     else
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     *slot = NULL;
 }
 
 static void _d3dRenderTargetSetup(int textureSlot) {
     if (textureSlot != 0) {
         if (Gfx_RenderTargetPushed == 0) {
-            Gfx_ShaderConstant75[0] = 0.0f;
-            Gfx_ShaderConstant75[1] = 0.0f;
-            if (D3D_DeviceReady != 0)
-                D3DDevice_SetVertexShaderConstant1(0x75, Gfx_ShaderConstant75);
+            Gfx.shaderConstant75[0] = 0.0f;
+            Gfx.shaderConstant75[1] = 0.0f;
+            if (Gfx.d3dDevice != 0)
+                D3DDevice_SetVertexShaderConstant1(0x75, Gfx.shaderConstant75);
 
-            Gfx_SavedViewportX = Gfx_ViewportX;
-            Gfx_D3DLastError = 0;
-            Gfx_SavedViewportY = Gfx_ViewportY;
-            Gfx_SavedViewportWidth = Gfx_ViewportWidth;
-            Gfx_SavedViewportHeight = Gfx_ViewportHeight;
+            Gfx_SavedViewportX = Gfx.viewportX;
+            Gfx.d3dLastError = 0;
+            Gfx_SavedViewportY = Gfx.viewportY;
+            Gfx_SavedViewportWidth = Gfx.viewportWidth;
+            Gfx_SavedViewportHeight = Gfx.viewportHeight;
             Gfx_SavedRenderTarget = D3DDevice_GetRenderTarget2();
             Gfx_SavedDepthStencil = D3DDevice_GetDepthStencilSurface2();
         }
@@ -1052,11 +973,11 @@ static void _d3dRenderTargetSetup(int textureSlot) {
     if (Gfx_RenderTargetPushed == 0)
         return;
 
-    Gfx_ShaderConstant75[0] = 0.0f;
-    Gfx_ShaderConstant75[1] = 0.0f;
-    if (D3D_DeviceReady != 0)
-        D3DDevice_SetVertexShaderConstant1(0x75, Gfx_ShaderConstant75);
-    Gfx_D3DLastError = 0;
+    Gfx.shaderConstant75[0] = 0.0f;
+    Gfx.shaderConstant75[1] = 0.0f;
+    if (Gfx.d3dDevice != 0)
+        D3DDevice_SetVertexShaderConstant1(0x75, Gfx.shaderConstant75);
+    Gfx.d3dLastError = 0;
 
     D3DDevice_SetRenderTarget(Gfx_SavedRenderTarget, Gfx_SavedDepthStencil);
     d3dSetupViewportDimensions(Gfx_SavedViewportX, Gfx_SavedViewportY, Gfx_SavedViewportWidth, Gfx_SavedViewportHeight);
@@ -1090,9 +1011,9 @@ void d3dClear(unsigned int colour, bool clearTarget, bool clearZStencil) {
     if (clearTarget) flags = 0xf0;
     if (clearZStencil) flags |= 3;
 
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_Clear(0, NULL, flags, colour & 0xffffffu, 1.0f, 0);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -1108,27 +1029,27 @@ void d3dGetTextureSurfaceLevel0(int textureSlot) {
 
 // AUTOINJECT
 void d3dSetTextureStage0(int textureSlot) {
-    if (Gfx_CurrentlyLoadedTexture == (uint32_t)textureSlot)
+    if (Gfx.currentlyLoadedTexture == (uint32_t)textureSlot)
         return;
-    Gfx_CurrentlyLoadedTexture = (uint32_t)textureSlot;
+    Gfx.currentlyLoadedTexture = (uint32_t)textureSlot;
 
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetTexture(0, D3DTextureSlot(textureSlot)->baseTexture);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // AUTOINJECT
 void d3dSetTextureStage1(int textureSlot, int param2) {
-    if (Gfx_TexStage1SlotCache == (uint32_t)textureSlot && Gfx_TexStage1Param2Cache == (uint32_t)param2)
+    if (Gfx.texStage1SlotCache == (uint32_t)textureSlot && Gfx.texStage1Param2Cache == (uint32_t)param2)
         return;
-    Gfx_TexStage1Param2Cache = (uint32_t)param2;
-    Gfx_TexStage1SlotCache = (uint32_t)textureSlot;
+    Gfx.texStage1Param2Cache = (uint32_t)param2;
+    Gfx.texStage1SlotCache = (uint32_t)textureSlot;
 
-    bool deviceReady = (D3D_DeviceReady != 0);
+    bool deviceReady = (Gfx.d3dDevice != 0);
     void *baseTexture = NULL;
 
     if (textureSlot != 0) {
-        Gfx_TexStage1ModeFlags |= 0x20;
+        Gfx.miscModeFlags |= 0x20;
         if (deviceReady) {
             D3D8_PushBufferDirtyFlags |= 0x800;
             baseTexture = D3DTextureSlot(textureSlot)->baseTexture;
@@ -1141,7 +1062,7 @@ void d3dSetTextureStage1(int textureSlot, int param2) {
             D3D8_TexStage1_0x9c = 1;
         }
     } else {
-        Gfx_TexStage1ModeFlags &= ~0x20u;
+        Gfx.miscModeFlags &= ~0x20u;
         if (deviceReady) {
             D3D8_PushBufferDirtyFlags |= 0x800;
             D3D8_TexStage1_0x00 = 5;
@@ -1155,7 +1076,7 @@ void d3dSetTextureStage1(int textureSlot, int param2) {
         D3D8_TexStage1_0x08 = 2;
         D3DDevice_SetTexture(1, baseTexture); // always stage 1, in both branches - matches the original exactly
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // Frees a texture slot registered by RegisterTexture, no-opping if refCount is still nonzero. Also unbinds
@@ -1168,11 +1089,11 @@ void ReleaseTexture(int textureSlot) {
     if (texSlot->refCount != 0)
         return;
 
-    if (Gfx_CurrentlyLoadedTexture != 0) {
-        Gfx_CurrentlyLoadedTexture = 0;
-        if (D3D_DeviceReady != 0)
+    if (Gfx.currentlyLoadedTexture != 0) {
+        Gfx.currentlyLoadedTexture = 0;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetTexture(0, D3DTextureSlot(0)->baseTexture);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 
     d3dSetTextureStage1(0, 0);
@@ -1180,7 +1101,7 @@ void ReleaseTexture(int textureSlot) {
     if (texSlot->baseTexture != NULL)
         D3DResource_BlockUntilNotBusy(texSlot->baseTexture);
 
-    Gfx_TotalTextureBytesUsed -= texSlot->mipChainBytes;
+    Gfx.totalTextureBytesUsed -= texSlot->mipChainBytes;
     texSlot->baseTexture = NULL;
     texSlot->mipChainBytes = 0;
 }
@@ -1199,8 +1120,8 @@ void d3dMarkTexturePermanent(int textureSlot) {
 // AUTOINJECT
 void d3dSetFogEnable(int enable) {
     bool enabled = (enable != 0);
-    bool deviceReady = (D3D_DeviceReady != 0);
-    Gfx_FogEnabledCache = enabled;
+    bool deviceReady = (Gfx.d3dDevice != 0);
+    Gfx.fogEnabledCache = enabled;
 
     if (deviceReady) {
         D3D8_PushBufferDirtyFlags |= 0x2000;
@@ -1208,15 +1129,15 @@ void d3dSetFogEnable(int enable) {
     }
 
     if (enabled) {
-        // Gfx_FogModeFlag's exact meaning hasn't been traced - when set, it forces the fog colour actually
+        // Gfx.fogModeFlag's exact meaning hasn't been traced - when set, it forces the fog colour actually
         // sent to D3D8 to 0 rather than the real cached colour, matching the original's mask logic exactly.
-        uint32_t mask = (Gfx_FogModeFlag != 0) ? 0u : 0xFFFFFFFFu;
+        uint32_t mask = (Gfx.fogModeFlag != 0) ? 0u : 0xFFFFFFFFu;
         uint32_t maskedColor = Gfx_FogColorCache & mask;
-        Gfx_FogColorMasked = maskedColor;
+        Gfx.fogColorMasked = maskedColor;
         if (deviceReady)
             D3DDevice_SetRenderState_FogColor(maskedColor);
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // AUTOINJECT
@@ -1224,37 +1145,37 @@ void d3dSetFogColor(unsigned int colour) {
     uint32_t maskedInput = colour & 0xffffffu;
     Gfx_FogColorCache = maskedInput;
 
-    if (Gfx_FogEnabledCache == 1) {
-        uint32_t mask = (Gfx_FogModeFlag != 0) ? 0u : 0xFFFFFFFFu;
+    if (Gfx.fogEnabledCache == 1) {
+        uint32_t mask = (Gfx.fogModeFlag != 0) ? 0u : 0xFFFFFFFFu;
         uint32_t maskedColor = maskedInput & mask;
-        Gfx_FogColorMasked = maskedColor;
-        if (D3D_DeviceReady != 0)
+        Gfx.fogColorMasked = maskedColor;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetRenderState_FogColor(maskedColor);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 }
 
 // AUTOINJECT
 void d3dSetYuvEnable(int enable) {
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetRenderState_YuvEnable(enable != 0);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // AUTOINJECT
 void d3dSwap(void) {
-    if (Gfx_SwapPending == 0)
+    if (Gfx.swapPending == 0)
         return;
-    Gfx_SwapPending = 0;
+    Gfx.swapPending = 0;
 
     double now = timestamp();
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
     Gfx_AccumulatedSwapTime += (now - Gfx_LastSwapTimestamp);
     Gfx_LastSwapTimestamp = now;
 
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_Swap(0);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 
     Gfx_LastSwapTimestamp = timestamp(); // called again, unconditionally, matching the original exactly
     D3DSeamTraceEndFrame();
@@ -1266,42 +1187,42 @@ void d3dSwap(void) {
 
 // AUTOINJECT
 void d3dSetColorConstant67(unsigned int packedColour) {
-    if (D3D8_ForceColorConstant67Update == 0 && Gfx_ColorConstant67Cache == packedColour)
+    if (D3D8_ForceColorConstant67Update == 0 && Gfx.colorConstant67Cache == packedColour)
         return;
-    Gfx_ColorConstant67Cache = packedColour;
+    Gfx.colorConstant67Cache = packedColour;
     D3D8_ForceColorConstant67Update = 0;
 
     float constants[4];
-    constants[0] = Gfx_U8ToFloat01((packedColour >> 16) & 0xFF); // R
-    constants[1] = Gfx_U8ToFloat01((packedColour >> 8) & 0xFF);  // G
-    constants[2] = Gfx_U8ToFloat01(packedColour & 0xFF);         // B
-    constants[3] = Gfx_U8ToFloat01((packedColour >> 24) & 0xFF); // A
+    constants[0] = Gfx.u8ToFloat01[(packedColour >> 16) & 0xFF]; // R
+    constants[1] = Gfx.u8ToFloat01[(packedColour >> 8) & 0xFF];  // G
+    constants[2] = Gfx.u8ToFloat01[packedColour & 0xFF];         // B
+    constants[3] = Gfx.u8ToFloat01[(packedColour >> 24) & 0xFF]; // A
 
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetVertexShaderConstant1(0x67, constants);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // AUTOINJECT
 void d3dSetFogNear(float near_) {
-    Gfx_FogScaledNear = Gfx_FogScale * near_;
-    Gfx_FogNearFarDelta = Gfx_FogScaledFar - Gfx_FogScaledNear;
+    Gfx.fogScaledNear = Gfx.fogScale * near_;
+    Gfx.fogNearFarDelta = Gfx.fogScaledFar - Gfx.fogScaledNear;
     RecomputeFogConstant66();
 
-    if (D3D_DeviceReady != 0)
-        D3DDevice_SetVertexShaderConstant1(0x66, Gfx_FogConstant66);
-    Gfx_D3DLastError = 0;
+    if (Gfx.d3dDevice != 0)
+        D3DDevice_SetVertexShaderConstant1(0x66, Gfx.fogConstant66);
+    Gfx.d3dLastError = 0;
 }
 
 // AUTOINJECT
 void d3dSetFogFar(float far_) {
-    Gfx_FogScaledFar = Gfx_FogScale * far_;
-    Gfx_FogNearFarDelta = Gfx_FogScaledFar - Gfx_FogScaledNear;
+    Gfx.fogScaledFar = Gfx.fogScale * far_;
+    Gfx.fogNearFarDelta = Gfx.fogScaledFar - Gfx.fogScaledNear;
     RecomputeFogConstant66();
 
-    if (D3D_DeviceReady != 0)
-        D3DDevice_SetVertexShaderConstant1(0x66, Gfx_FogConstant66);
-    Gfx_D3DLastError = 0;
+    if (Gfx.d3dDevice != 0)
+        D3DDevice_SetVertexShaderConstant1(0x66, Gfx.fogConstant66);
+    Gfx.d3dLastError = 0;
 }
 
 // AUTOINJECT
@@ -1309,72 +1230,72 @@ void gfxSetCharacterLightIntensity(float intensity) {
     // Translated literally from the original's own comparison (matches its plate comment: sets the flag for
     // positive values or NaN, clears/clamps-to-zero for negative values or exact zero).
     if ((intensity < 0.0f) == (intensity == 0.0f)) {
-        Gfx_MiscModeFlags |= 0x10;
+        Gfx.miscModeFlags |= 0x10;
     } else {
         intensity = 0.0f;
-        Gfx_MiscModeFlags &= ~0x10u;
+        Gfx.miscModeFlags &= ~0x10u;
     }
-    Gfx_ShaderConstant75[2] = intensity;
-    Gfx_ShaderConstant75[3] = 1.0f - intensity;
+    Gfx.shaderConstant75[2] = intensity;
+    Gfx.shaderConstant75[3] = 1.0f - intensity;
 
-    if ((Gfx_MiscModeFlags & 0x10) != 0) {
-        if (D3D_DeviceReady != 0)
-            D3DDevice_SetVertexShaderConstant1(0x75, Gfx_ShaderConstant75);
-        Gfx_D3DLastError = 0;
+    if ((Gfx.miscModeFlags & 0x10) != 0) {
+        if (Gfx.d3dDevice != 0)
+            D3DDevice_SetVertexShaderConstant1(0x75, Gfx.shaderConstant75);
+        Gfx.d3dLastError = 0;
     }
 }
 
-// Per-frame reset, paired with d3dSwap (which clears Gfx_SwapPending; this sets it, and no-ops if a frame is
+// Per-frame reset, paired with d3dSwap (which clears Gfx.swapPending; this sets it, and no-ops if a frame is
 // already pending). Resets stream/index-buffer caches, the frame counter, and the first two floats of shader
 // constant 0x75 (gfxSetCharacterLightIntensity owns the other two).
 //
 // AUTOINJECT
 void d3dBeginFrame(void) {
-    if (Gfx_SwapPending != 0)
+    if (Gfx.swapPending != 0)
         return;
-    Gfx_SwapPending = 1;
+    Gfx.swapPending = 1;
 
     double now = timestamp();
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
     Gfx_AccumulatedSwapTimeReport = (now - Gfx_LastSwapTimestamp) + Gfx_AccumulatedSwapTime;
     Gfx_AccumulatedSwapTime = 0.0;
     Gfx_LastSwapTimestamp = now;
 
     Gfx_LastSwapTimestamp = timestamp(); // called again, unconditionally, matching d3dSwap's own pattern
 
-    Gfx_MiscResetFlag = 0xFFFFFFFFu;
-    Gfx_CurrentStreamBuffer = 0xFFFFFFFFu;
-    Gfx_CurrentIndexBuffer = 0xFFFFFFFFu;
-    Gfx_FrameCounter = Gfx_FrameCounter + 1;
-    Gfx_ShaderConstant75[0] = 0.0f;
-    Gfx_ShaderConstant75[1] = 0.0f;
+    Gfx.miscResetFlag = 0xFFFFFFFFu;
+    Gfx.currentStreamBuffer = 0xFFFFFFFFu;
+    Gfx.currentIndexBuffer = 0xFFFFFFFFu;
+    Gfx.frameCounter = Gfx.frameCounter + 1;
+    Gfx.shaderConstant75[0] = 0.0f;
+    Gfx.shaderConstant75[1] = 0.0f;
 
-    if (D3D_DeviceReady != 0)
-        D3DDevice_SetVertexShaderConstant1(0x75, Gfx_ShaderConstant75);
-    Gfx_D3DLastError = 0;
+    if (Gfx.d3dDevice != 0)
+        D3DDevice_SetVertexShaderConstant1(0x75, Gfx.shaderConstant75);
+    Gfx.d3dLastError = 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
 // Matrices and stream sources
 // ---------------------------------------------------------------------------------------------------------------
 
-// Sets the projection matrix, caches two copies of it, and derives Gfx_FogScale (also used by d3dSetFogNear/
+// Sets the projection matrix, caches two copies of it, and derives Gfx.fogScale (also used by d3dSetFogNear/
 // Far) plus the near/far depth-clip planes from it. Not yet named/traced beyond that - untraced why two
 // separate cached copies exist (cache A is never read again within this function).
 //
 // AUTOINJECT
 void d3dSetProjectionMatrix(D3DMATRIX *projMtx) {
-    memcpy(Gfx_ProjMatrixCacheA, projMtx, sizeof(D3DMATRIX));
-    memcpy(Gfx_ProjMatrixCacheB, projMtx, sizeof(D3DMATRIX));
+    memcpy(&Gfx.projMatrixCacheA, projMtx, sizeof(D3DMATRIX));
+    memcpy(&Gfx.projMatrixCacheB, projMtx, sizeof(D3DMATRIX));
 
-    D3DMATRIX *cacheB = Gfx_ProjMatrixCacheB;
+    D3DMATRIX *cacheB = &Gfx.projMatrixCacheB;
     float scaleBasis = (cacheB->f[14] + cacheB->f[15]) * ((cacheB->f[15] - cacheB->f[11]) / (cacheB->f[10] - cacheB->f[14]));
     if (scaleBasis == 0.0f)
         scaleBasis = 1.0f;
-    Gfx_FogScale = 16777215.0f / scaleBasis;
+    Gfx.fogScale = 16777215.0f / scaleBasis;
 
     for (int i = 0; i < 16; i++)
-        cacheB->f[i] *= Gfx_FogScale;
+        cacheB->f[i] *= Gfx.fogScale;
 
     // Ghidra's decompile shows this arg with a "(uint)" cast, but the actual instruction storing it (FSTP, not
     // FISTP) confirms it's a raw float bit-pattern reinterpreted as a uint for the call - not a value-
@@ -1402,19 +1323,19 @@ void d3dSetProjectionMatrix(D3DMATRIX *projMtx) {
 //
 // AUTOINJECT
 void d3dSetMatrix(D3DMATRIX *d3dMtx) {
-    memcpy(Gfx_d3dActiveMatrix, d3dMtx, sizeof(D3DMATRIX));
-    Gfx_MatrixGenFlag1 = 0xFFFFFFFFu;
-    Gfx_MatrixGenFlag2 = 0xFFFFFFFFu;
+    memcpy(&Gfx.activeMatrix, d3dMtx, sizeof(D3DMATRIX));
+    Gfx.lightDirtyMask = 0xFFFFFFFFu;
+    Gfx.levelDirectionDirty = 0xFFFFFFFFu;
 
     D3DMATRIX combined;
-    Multiply4x4RowMajor(Gfx_ViewMatrixCache, d3dMtx, &combined);
+    Multiply4x4RowMajor(&Gfx.viewMatrixCache, d3dMtx, &combined);
 
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetVertexShaderConstant4(0x60, &combined);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 
     D3DMATRIX secondaryBasis;
-    maybeD3DMATRIXcopy((undefined4 *)&secondaryBasis, (undefined4 *)Gfx_SecondaryBasisMatrix);
+    maybeD3DMATRIXcopy((undefined4 *)&secondaryBasis, (undefined4 *)&Gfx.secondaryBasisMatrix);
 
     float constants[8];
     constants[0] = secondaryBasis.f[0] * 0.5f;
@@ -1426,9 +1347,9 @@ void d3dSetMatrix(D3DMATRIX *d3dMtx) {
     constants[6] = secondaryBasis.f[9] * 0.5f;
     constants[7] = 0.5f;
 
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetVertexShaderConstantNotInline(100, constants, 8);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // Splits a world matrix into a translation-only matrix (forwarded to d3dSetMatrix) and a rotation-only 3x4
@@ -1452,9 +1373,9 @@ void d3dSetWorldMatrix(D3DMATRIX *worldMtx) {
     constants[7] = 0.0f;
     constants[11] = 0.0f;
 
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetVertexShaderConstantNotInline(0, constants, 0xc);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // Builds an inverse-model-view-projection-style matrix (shader constant 0x77) from a rigid-transform matrix
@@ -1480,13 +1401,13 @@ void maybeBuildAndSetModelViewProjectionMtx(D3DMATRIX *rigidTransform, D3DMATRIX
     maybeMtxApplyTransform(&tempMatrix, 0.5f, 0.5f, 0.0f);
     Multiply4x4RowMajor(&tempMatrix, &workingMatrix, &workingMatrix);
 
-    maybeD3DMATRIXcopy((undefined4 *)&tempMatrix, (undefined4 *)Gfx_ViewMatrixCache);
+    maybeD3DMATRIXcopy((undefined4 *)&tempMatrix, (undefined4 *)&Gfx.viewMatrixCache);
     maybeMtxInverse(&tempMatrix);
     Multiply4x4RowMajor(&workingMatrix, &tempMatrix, &workingMatrix);
 
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetVertexShaderConstant4(0x77, &workingMatrix);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // AUTOINJECT
@@ -1495,39 +1416,39 @@ void d3dSetStreamSources(int baseIndex, int stream1Offset, float stream1Stride, 
                           int stream5Offset, float stream5Stride, int stream6Offset, float stream6Stride,
                           int stream7Offset, float stream7Stride, int stream8Offset, float stream8Stride) {
     if (baseIndex == 0) {
-        Gfx_MiscModeFlags &= ~0x1u;
-        for (int stream = 1; stream <= 8 && D3D_DeviceReady != 0; stream++) {
+        Gfx.miscModeFlags &= ~0x1u;
+        for (int stream = 1; stream <= 8 && Gfx.d3dDevice != 0; stream++) {
             D3DDevice_SetStreamSource(stream, NULL, 6);
-            Gfx_D3DLastError = 0;
+            Gfx.d3dLastError = 0;
         }
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
         return;
     }
 
     // Strides are stored pre-scaled by a fixed 1/32768-ish constant, matching the original exactly.
-    Gfx_StreamStrideConstants[0] = stream1Stride * 3.051851e-05f;
-    Gfx_StreamStrideConstants[1] = stream2Stride * 3.051851e-05f;
-    Gfx_StreamStrideConstants[2] = stream3Stride * 3.051851e-05f;
-    Gfx_StreamStrideConstants[3] = stream4Stride * 3.051851e-05f;
-    Gfx_StreamStrideConstants[4] = stream5Stride * 3.051851e-05f;
-    Gfx_StreamStrideConstants[5] = stream6Stride * 3.051851e-05f;
-    Gfx_StreamStrideConstants[6] = stream7Stride * 3.051851e-05f;
-    Gfx_StreamStrideConstants[7] = stream8Stride * 3.051851e-05f;
+    Gfx.streamStrideConstants[0] = stream1Stride * 3.051851e-05f;
+    Gfx.streamStrideConstants[1] = stream2Stride * 3.051851e-05f;
+    Gfx.streamStrideConstants[2] = stream3Stride * 3.051851e-05f;
+    Gfx.streamStrideConstants[3] = stream4Stride * 3.051851e-05f;
+    Gfx.streamStrideConstants[4] = stream5Stride * 3.051851e-05f;
+    Gfx.streamStrideConstants[5] = stream6Stride * 3.051851e-05f;
+    Gfx.streamStrideConstants[6] = stream7Stride * 3.051851e-05f;
+    Gfx.streamStrideConstants[7] = stream8Stride * 3.051851e-05f;
 
-    if (D3D_DeviceReady != 0)
-        D3DDevice_SetVertexShaderConstantNotInline(0x73, Gfx_StreamStrideConstants, 8);
+    if (Gfx.d3dDevice != 0)
+        D3DDevice_SetVertexShaderConstantNotInline(0x73, Gfx.streamStrideConstants, 8);
 
-    Gfx_MiscModeFlags |= 0x1;
-    Gfx_D3DLastError = 0;
+    Gfx.miscModeFlags |= 0x1;
+    Gfx.d3dLastError = 0;
 
     int streamOffsets[8] = { stream1Offset, stream2Offset, stream3Offset, stream4Offset,
                               stream5Offset, stream6Offset, stream7Offset, stream8Offset };
-    for (int i = 0; i < 8 && D3D_DeviceReady != 0; i++) {
-        void *dataPtr = Gfx_d3dstreamDataPtr[(streamOffsets[i] + baseIndex) * 9];
+    for (int i = 0; i < 8 && Gfx.d3dDevice != 0; i++) {
+        void *dataPtr = Gfx.vertexBuffers[streamOffsets[i] + baseIndex].selfPtr;
         D3DDevice_SetStreamSource(i + 1, dataPtr, 6);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -1544,36 +1465,36 @@ static const uint16_t *g_d3dBoundIndexData = NULL;
 
 // AUTOINJECT
 void d3dBindBuffers(int streamBufferHandle, int indexBufferHandle) {
-    if (Gfx_CurrentStreamBuffer == (uint32_t)streamBufferHandle && Gfx_CurrentIndexBuffer == (uint32_t)indexBufferHandle)
+    if (Gfx.currentStreamBuffer == (uint32_t)streamBufferHandle && Gfx.currentIndexBuffer == (uint32_t)indexBufferHandle)
         return;
 
-    Gfx_CurrentStreamBuffer = (uint32_t)streamBufferHandle;
-    Gfx_MiscResetFlag = 0xFFFFFFFFu;
-    Gfx_CurrentIndexBuffer = (uint32_t)indexBufferHandle;
+    Gfx.currentStreamBuffer = (uint32_t)streamBufferHandle;
+    Gfx.miscResetFlag = 0xFFFFFFFFu;
+    Gfx.currentIndexBuffer = (uint32_t)indexBufferHandle;
 
     {
-        const uint32_t *indexBufferHeader = (const uint32_t*)Gfx_d3dIndexBuffers[(size_t)indexBufferHandle * 7];
+        const uint32_t *indexBufferHeader = (const uint32_t*)Gfx.indexBuffers[indexBufferHandle].selfPtr;
         g_d3dBoundIndexData = (indexBufferHeader != NULL) ? (const uint16_t*)(uintptr_t)indexBufferHeader[1] : NULL;
     }
 
-    uint8_t strideFlagByte = Gfx_StreamStrideRelated[(size_t)streamBufferHandle * 36];
+    uint8_t strideFlagByte = Gfx.vertexBuffers[streamBufferHandle].field18;
     if (strideFlagByte != 0)
-        Gfx_MiscModeFlags |= 0x2u;
+        Gfx.miscModeFlags |= 0x2u;
     else
-        Gfx_MiscModeFlags &= ~0x2u;
+        Gfx.miscModeFlags &= ~0x2u;
 
-    if (D3D_DeviceReady != 0) {
-        void *dataPtr = Gfx_d3dstreamDataPtr[(size_t)streamBufferHandle * 9];
+    if (Gfx.d3dDevice != 0) {
+        void *dataPtr = Gfx.vertexBuffers[streamBufferHandle].selfPtr;
         uint32_t stride = (strideFlagByte != 0) ? 0x20u : 0x1Cu;
         D3DDevice_SetStreamSource(0, dataPtr, stride);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
 
-        if (D3D_DeviceReady != 0) {
-            void *indexBuffer = Gfx_d3dIndexBuffers[(size_t)indexBufferHandle * 7];
+        if (Gfx.d3dDevice != 0) {
+            void *indexBuffer = Gfx.indexBuffers[indexBufferHandle].selfPtr;
             D3DDevice_SetIndices(indexBuffer, 0);
         }
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // Draws a "shard" - an ad-hoc, non-indexed triangle list built directly from a caller-supplied vertex buffer
@@ -1585,47 +1506,32 @@ void drawShard(void *data, int countTris) {
     if (countTris <= 0)
         return;
 
-    if (D3D_DeviceReady != 0) {
-        void *shaderHandle = VtxShaderHandles[(Gfx_ShardUseAltShader != 0) ? 64 : 0];
+    if (Gfx.d3dDevice != 0) {
+        void *shaderHandle = VtxShaderHandles[(Gfx.shardUseAltShader != 0) ? 64 : 0];
         D3DDevice_SetVertexShader(shaderHandle);
     }
-    Gfx_MiscResetFlag = 0xFFFFFFFFu;
-    Gfx_CurrentStreamBuffer = 0xFFFFFFFFu;
-    Gfx_CurrentIndexBuffer = 0xFFFFFFFFu;
-    Gfx_D3DLastError = 0;
+    Gfx.miscResetFlag = 0xFFFFFFFFu;
+    Gfx.currentStreamBuffer = 0xFFFFFFFFu;
+    Gfx.currentIndexBuffer = 0xFFFFFFFFu;
+    Gfx.d3dLastError = 0;
 
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_DrawVerticesUP(5, (uint32_t)countTris * 3, data, 0x1c);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
 // d3dCreateIndexBuffer
 // ---------------------------------------------------------------------------------------------------------------
 
-// No D3D8 calls at all - purely a linear-scan slot allocator and bookkeeping struct, matching RegisterTexture's
-// own free-slot-scan/alignment-shift pattern. "selfPtr" (+0xc) is what Gfx_d3dIndexBuffers[slot] resolves to -
-// they're literally the same struct field, confirmed by both this function's own write and d3dBindBuffers'
-// read landing on the identical address (0x2F0CEC + slot*28 + 0xc), not two separate tables.
-#define D3D_INDEX_BUFFER_TABLE_BASE  0x002F0CECu
-#define D3D_INDEX_BUFFER_TABLE_COUNT 2048
-
-struct D3DIndexBufferSlotRaw {
-    uint32_t header;     // +0x00 - always 0x10001 once allocated; 0 marks the slot free
-    void    *dataPtr;    // +0x04
-    uint32_t reserved08; // +0x08 - always 0; nothing else reads it as far as we've traced
-    void    *selfPtr;    // +0x0c - points back to this same slot's own header (Xbox convention, same as RegisterTexture's baseTexture)
-    uint32_t indexCount; // +0x10
-    uint32_t byteSize;   // +0x14 - indexCount * 2 (16-bit indices)
-    void    *dataPtr2;   // +0x18 - same value as dataPtr
-};
-static_assert(sizeof(D3DIndexBufferSlotRaw) == 28, "Bad size for D3DIndexBufferSlotRaw");
+// No D3D8 calls at all - purely a linear-scan slot allocator and bookkeeping struct (Gfx.indexBuffers,
+// D3DIndexBufferSlotRaw in GraphicsSystem.h), matching RegisterTexture's own free-slot-scan/alignment-shift
+// pattern. Its selfPtr (+0xc) is the field d3dBindBuffers reads, not a separate table.
+#define D3D_INDEX_BUFFER_TABLE_COUNT GFX_INDEX_BUFFER_SLOTS
 
 static D3DIndexBufferSlotRaw *D3DIndexBufferSlot(int index) {
-    return (D3DIndexBufferSlotRaw*)(D3D_INDEX_BUFFER_TABLE_BASE + (unsigned)index * sizeof(D3DIndexBufferSlotRaw));
+    return &Gfx.indexBuffers[index];
 }
-
-#define Gfx_IndexBufferBytesUsed U32_AT(0x002C6FD8) // Gfx.field6073_0x1888 - running total, informational only
 
 // AUTOINJECT
 int d3dCreateIndexBuffer(int indexCount, unsigned int data) {
@@ -1656,7 +1562,7 @@ int d3dCreateIndexBuffer(int indexCount, unsigned int data) {
         slotPtr->byteSize = byteSize;
         slotPtr->dataPtr2 = (void*)(uintptr_t)data;
 
-        Gfx_IndexBufferBytesUsed += byteSize;
+        Gfx.indexBufferBytesUsed += byteSize;
         return slot;
     }
 
@@ -1668,40 +1574,20 @@ int d3dCreateIndexBuffer(int indexCount, unsigned int data) {
 // d3dCreateVertexBuffers
 // ---------------------------------------------------------------------------------------------------------------
 
-// Shares the SAME 2048-slot, 36-byte-per-slot table as d3dSetStreamSources/d3dBindBuffers's
-// Gfx_d3dstreamDataPtr/Gfx_StreamStrideRelated (those are themselves individual fields within this same
-// struct - its base is 0xc bytes before Gfx_d3dstreamDataPtr's own base address, and the "is this slot free"
-// test both allocation paths use below is exactly the Gfx_d3dstreamDataPtr[slot] field being NULL).
+// Gfx.vertexBuffers (D3DVertexBufferSlotRaw in GraphicsSystem.h), the same 2048 slots d3dSetStreamSources and
+// d3dBindBuffers read (their selfPtr and field18). The "is this slot free" test both allocation paths use below
+// is selfPtr being NULL.
 //
 // Allocates either ONE slot (single buffer, streamCount <= 0) or a run of `streamCount` CONSECUTIVE free
 // slots (a multi-stream vertex-buffer set). Confirmed via raw disassembly that the two paths populate
 // meaningfully DIFFERENT subsets of the struct with different values at some of the SAME offsets (notably
 // +0x10, +0x18, +0x1c) - they are deliberately kept as two separate blocks below rather than unified into one
 // parameterised helper, to avoid blurring that real difference.
-#define D3D_VERTEX_BUFFER_TABLE_BASE  0x002DECECu
-#define D3D_VERTEX_BUFFER_TABLE_COUNT 2048
-
-struct D3DVertexBufferSlotRaw {
-    uint32_t header;     // +0x00 - Common; 1 once allocated. header&0x70000 never equals 0x20000 for this value,
-                          // so D3DResource_Register below never takes its pointer-masking branch (unlike
-                          // RegisterTexture's texture headers) - no "force the pointer back" workaround needed.
-    void    *dataPtr;    // +0x04 - Data; set BY D3DResource_Register itself (we zero it first, it adds data to that)
-    uint32_t reserved08; // +0x08 - always 0; nothing else reads it as far as we've traced
-    void    *selfPtr;    // +0x0c - Gfx_d3dstreamDataPtr[slot] IS this field; 0 marks the slot free
-    uint32_t field10;     // +0x10 - single-path: the ORIGINAL, unaligned data pointer; multi-path: vtxCnt
-    uint32_t byteSize;    // +0x14 - total byte size (both paths, same role, different formula)
-    uint8_t  field18;      // +0x18 - single-path: (nonSwizzled != 0); multi-path: always 0. Aliases Gfx_StreamStrideRelated[slot]
-    uint8_t  pad19, pad1a, pad1b;
-    uint32_t field1c;     // +0x1c - single-path: always 0; multi-path: streamCount (same value in every slot of the run)
-    void    *alignedData; // +0x20 - single-path ONLY; never written by the multi-path
-};
-static_assert(sizeof(D3DVertexBufferSlotRaw) == 36, "Bad size for D3DVertexBufferSlotRaw");
+#define D3D_VERTEX_BUFFER_TABLE_COUNT GFX_VERTEX_BUFFER_SLOTS
 
 static D3DVertexBufferSlotRaw *D3DVertexBufferSlot(int index) {
-    return (D3DVertexBufferSlotRaw*)(D3D_VERTEX_BUFFER_TABLE_BASE + (unsigned)index * sizeof(D3DVertexBufferSlotRaw));
+    return &Gfx.vertexBuffers[index];
 }
-
-#define Gfx_VertexBufferBytesUsed U32_AT(0x002C6FDC) // Gfx.field6074_0x188c - running total, informational only
 
 // AUTOINJECT
 int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzled, unsigned int streamCount) {
@@ -1751,7 +1637,7 @@ int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzl
             slotPtr->field18 = 0;
             slotPtr->field1c = streamCount;
 
-            Gfx_VertexBufferBytesUsed += perStreamBytes;
+            Gfx.vertexBufferBytesUsed += perStreamBytes;
             data += perStreamBytes;
         }
 
@@ -1792,7 +1678,7 @@ int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzl
     slotPtr->field1c = 0;
     slotPtr->alignedData = (void*)(uintptr_t)data;
 
-    Gfx_VertexBufferBytesUsed += totalBytes;
+    Gfx.vertexBufferBytesUsed += totalBytes;
     return slot;
 }
 
@@ -1800,27 +1686,13 @@ int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzl
 // d3dRegisterOverlayBuffer
 // ---------------------------------------------------------------------------------------------------------------
 
-// A separate, smaller (256-slot, 20-byte-per-slot) table from the texture/vertex/index-buffer ones above -
-// used by d3dDrawOverlayQuad (a reticle/crosshair-style textured-quad draw) to look up a small vertex buffer
-// by slot and draw it. The "is this slot free" test is at +0xc, not +0x00, matching the
-// same "check the self/data-pointer field, not the header" pattern already seen on the other tables - +0xc
-// here holds a copy of the caller's own data pointer (confirmed via raw disassembly: written directly from
-// the same value passed to D3DResource_Register as its data argument, not computed).
-#define D3D_OVERLAY_QUAD_TABLE_BASE  0x002CAFE8u
-#define D3D_OVERLAY_QUAD_TABLE_COUNT 256
-
-struct D3DOverlayQuadSlotRaw {
-    uint32_t header;     // +0x00 - 1 once allocated. header&0x70000 never equals 0x20000 for this value, so
-                          // D3DResource_Register never takes its pointer-masking branch here either.
-    void    *dataPtr;    // +0x04 - Data; set BY D3DResource_Register itself (we zero it first, it adds data to that)
-    uint32_t reserved08; // +0x08 - always 0; nothing else reads it as far as we've traced
-    void    *dataPtrCopy; // +0x0c - a copy of the caller's own data pointer; doubles as the "is this slot free" test
-    uint32_t vertexCount; // +0x10 - consumed by d3dDrawOverlayQuad's own D3DDevice_DrawVertices call
-};
-static_assert(sizeof(D3DOverlayQuadSlotRaw) == 20, "Bad size for D3DOverlayQuadSlotRaw");
+// Gfx.overlayQuads (D3DOverlayQuadSlotRaw in GraphicsSystem.h): a separate, smaller (256-slot) table from the
+// texture/vertex/index-buffer ones above, used by d3dDrawOverlayQuad (a reticle/crosshair-style textured-quad
+// draw) to look up a small vertex buffer by slot and draw it.
+#define D3D_OVERLAY_QUAD_TABLE_COUNT GFX_OVERLAY_QUAD_SLOTS
 
 static D3DOverlayQuadSlotRaw *D3DOverlayQuadSlot(int index) {
-    return (D3DOverlayQuadSlotRaw*)(D3D_OVERLAY_QUAD_TABLE_BASE + (unsigned)index * sizeof(D3DOverlayQuadSlotRaw));
+    return &Gfx.overlayQuads[index];
 }
 
 // AUTOINJECT
@@ -1859,7 +1731,6 @@ void d3dReleaseOverlayBuffer(int overlaySlot) {
 // scaled by the viewport's aspect-ratio-correction factor and clamped to [10,500]; the other two float/int
 // params feed shader constant 0x68 directly (their exact visual role wasn't traced further). Opaque
 // texture-stage-3 configuration registers below mirror d3dSetTextureStage1's own pattern, just for stage 3.
-#define Gfx_FallbackOverlayTexture U32_AT(0x002CC3E8) // Gfx.field27554_0x6c98 - used when textureSlot==0
 #define Gfx_OverlayVertexShaderHandle U32_AT(0x002C5748) // not in the Gfx struct - a dedicated single handle, not part of VtxShaderHandles[]
 
 #define D3D8_TexStage3_0x80 D3D8_TRACED("D3D8_TexStage3_0x80", 0x00111980)
@@ -1876,19 +1747,19 @@ void d3dDrawOverlayQuad(int overlaySlot, float sizeParam, int textureSlot, float
     if (overlaySlot == 0)
         return;
 
-    float aspectScale = 640.0f / (float)Gfx_ViewportWidth;
-    if (aspectScale <= 480.0f / (float)Gfx_ViewportHeight)
-        aspectScale = 480.0f / (float)Gfx_ViewportHeight;
+    float aspectScale = 640.0f / (float)Gfx.viewportWidth;
+    if (aspectScale <= 480.0f / (float)Gfx.viewportHeight)
+        aspectScale = 480.0f / (float)Gfx.viewportHeight;
     sizeParam = (sizeParam / aspectScale) * 5.0f;
     if (sizeParam < 10.0f) sizeParam = 10.0f;
     else if (sizeParam > 500.0f) sizeParam = 500.0f;
 
     if (textureSlot == 0)
-        textureSlot = (int)Gfx_FallbackOverlayTexture;
+        textureSlot = (int)Gfx.fallbackOverlayTexture;
 
-    if (D3D_DeviceReady != 0) {
+    if (Gfx.d3dDevice != 0) {
         D3DDevice_SetTexture(3, D3DTextureSlot(textureSlot)->baseTexture);
-        if (D3D_DeviceReady != 0) {
+        if (Gfx.d3dDevice != 0) {
             D3D8_PushBufferDirtyFlags |= 0x900;
             D3D8_TexStage3_0x88 = 0;
             D3D8_TexStage3_0x80 = 5;
@@ -1902,39 +1773,39 @@ void d3dDrawOverlayQuad(int overlaySlot, float sizeParam, int textureSlot, float
     }
 
     float constants[4];
-    constants[0] = Gfx_FogScale * sizeParam;
+    constants[0] = Gfx.fogScale * sizeParam;
     constants[1] = param4 * 0.5f;
     constants[2] = (float)param5;
     constants[3] = (float)(param5 * param5) * param4 * 0.5f;
-    Gfx_D3DLastError = 0;
-    if (D3D_DeviceReady != 0)
+    Gfx.d3dLastError = 0;
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetVertexShaderConstant1(0x68, constants);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 
     // These two share their cache fields with d3dSetRenderState/d3dSetRenderState2 (same addresses, confirmed
     // via raw disassembly) - calling them directly reuses the already-verified cache-check-and-call logic
     // rather than re-deriving the SetRenderState_Simple trampoline calls a second time.
-    d3dSetRenderState(1);   // D3D_ZFuncCache -> LEQUAL
-    d3dSetRenderState2(0);  // D3D_DepthMaskCache -> mask off
+    d3dSetRenderState(1);   // Gfx.zFuncCache -> LEQUAL
+    d3dSetRenderState2(0);  // Gfx.depthMaskCache -> mask off
 
-    if (D3D_DeviceReady != 0) {
+    if (Gfx.d3dDevice != 0) {
         D3DDevice_SetStreamSource(0, D3DOverlayQuadSlot(overlaySlot), 0x24);
-        Gfx_D3DLastError = 0;
-        if (D3D_DeviceReady != 0)
+        Gfx.d3dLastError = 0;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetVertexShader((void *)(uintptr_t)Gfx_OverlayVertexShaderHandle);
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 
-    Gfx_MiscResetFlag = 0xFFFFFFFFu;
-    Gfx_CurrentStreamBuffer = 0xFFFFFFFFu;
-    Gfx_CurrentIndexBuffer = 0xFFFFFFFFu;
+    Gfx.miscResetFlag = 0xFFFFFFFFu;
+    Gfx.currentStreamBuffer = 0xFFFFFFFFu;
+    Gfx.currentIndexBuffer = 0xFFFFFFFFu;
 
-    if (D3D_DeviceReady != 0) {
+    if (Gfx.d3dDevice != 0) {
         D3DDevice_DrawVertices(1, 0, D3DOverlayQuadSlot(overlaySlot)->vertexCount);
-        Gfx_D3DLastError = 0;
-        if (D3D_DeviceReady != 0) {
+        Gfx.d3dLastError = 0;
+        if (Gfx.d3dDevice != 0) {
             D3DDevice_SetTexture(3, NULL);
-            if (D3D_DeviceReady != 0) {
+            if (Gfx.d3dDevice != 0) {
                 D3D8_PushBufferDirtyFlags |= 0x900;
                 D3D8_TexStage3_0x80 = 1;
                 D3D8_TexStage3_0xba8 = 0;
@@ -1942,7 +1813,7 @@ void d3dDrawOverlayQuad(int overlaySlot, float sizeParam, int textureSlot, float
             }
         }
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // Resets the render target/texture-stage-1/current-texture/stream-buffer bindings to a clean default state -
@@ -1961,11 +1832,11 @@ void d3dResetRenderTargetAndBuffers(void) {
     _d3dRenderTargetSetup(0);
     d3dSetTextureStage1(0, 0);
 
-    if (Gfx_CurrentlyLoadedTexture != 0) {
-        Gfx_CurrentlyLoadedTexture = 0;
-        if (D3D_DeviceReady != 0)
+    if (Gfx.currentlyLoadedTexture != 0) {
+        Gfx.currentlyLoadedTexture = 0;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetTexture(0, D3DTextureSlot(0)->baseTexture);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 
     d3dBindBuffers(0, 0);
@@ -1975,11 +1846,7 @@ void d3dResetRenderTargetAndBuffers(void) {
 // maybeImmediateModePushItem
 // ---------------------------------------------------------------------------------------------------------------
 
-#define Gfx_ImmediateModeItemCount U32_AT(0x002C6F70) // Gfx.maybeImmediateModeItemCount
-#define Gfx_ImmediateModeBuffer ((float*)0x002DE3ECu)  // Gfx.maybeImmediateModeBuffer[64][9], stride 9 floats
-#define Gfx_ImmediateModeVertexBuffer ((float*)0x002C5770u) // Gfx.field20_0x20 - the actual vertex-buffer base passed to DrawVerticesUP; the transform loop below writes starting 2 floats in (Gfx.field22_0x28)
 #define Gfx_ImmediateModeVertexShader PTR_AT(0x002C574Cu)  // untraced - a global holding a vertex-shader HANDLE value (must be dereferenced, not used as the handle itself), distinct from the VtxShaderHandles array drawShard/d3dDrawOverlayQuad use
-#define Gfx_ZBiasActive U32_AT(0x002C6FD0)  // Gfx.field6071_0x1880 - defined again, identically, down by maybeResetRenderState; needed here too since this function comes first in the file
 
 // Carries Ghidra's own "type propagation algorithm not settling" decompiler-confidence warning, tied to a
 // loop-invariant (the texture-height reciprocal) that the original keeps resident on the x87 FPU register
@@ -1994,10 +1861,10 @@ void d3dResetRenderTargetAndBuffers(void) {
 //
 // AUTOINJECT
 void maybeImmediateModeFlush(void) {
-    if ((int32_t)Gfx_ImmediateModeItemCount < 1)
+    if ((int32_t)Gfx.immediateModeItemCount < 1)
         return;
 
-    D3DTextureSlotRaw *tex = D3DTextureSlot((int)Gfx_CurrentlyLoadedTexture);
+    D3DTextureSlotRaw *tex = D3DTextureSlot((int)Gfx.currentlyLoadedTexture);
     float fWidth = (float)(int16_t)tex->width;
     if (fWidth != 0.0f)
         fWidth = 1.0f / fWidth;
@@ -2009,10 +1876,10 @@ void maybeImmediateModeFlush(void) {
         fHeight = 1.0f;
     }
 
-    float *src = Gfx_ImmediateModeBuffer + 1;       // matches the original's pfVar14 = maybeImmediateModeBuffer[0]+1
-    float *dst = Gfx_ImmediateModeVertexBuffer + 2;  // matches the original's pfVar13 = &Gfx.field22_0x28
+    float *src = (&Gfx.immediateModeItems[0][0]) + 1;       // matches the original's pfVar14 = maybeImmediateModeBuffer[0]+1
+    float *dst = (&Gfx.immediateModeVertices[0][0]) + 2;  // matches the original's pfVar13 = &Gfx.field22_0x28
 
-    for (uint32_t i = 0; i < Gfx_ImmediateModeItemCount; i++) {
+    for (uint32_t i = 0; i < Gfx.immediateModeItemCount; i++) {
         float x0 = *(src - 1);
         float y0 = src[0];
         float xWidth = src[1];
@@ -2057,35 +1924,35 @@ void maybeImmediateModeFlush(void) {
         dst += 0x18;
     }
 
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetVertexShader(Gfx_ImmediateModeVertexShader);
 
-    Gfx_MiscResetFlag = 0xFFFFFFFFu;
-    Gfx_CurrentStreamBuffer = 0xFFFFFFFFu;
-    Gfx_CurrentIndexBuffer = 0xFFFFFFFFu;
-    Gfx_D3DLastError = 0;
+    Gfx.miscResetFlag = 0xFFFFFFFFu;
+    Gfx.currentStreamBuffer = 0xFFFFFFFFu;
+    Gfx.currentIndexBuffer = 0xFFFFFFFFu;
+    Gfx.d3dLastError = 0;
 
-    if (Gfx_ZBiasActive != 0) {
-        Gfx_ZBiasActive = 0;
-        if (D3D_DeviceReady != 0)
+    if (Gfx.zBiasActive != 0) {
+        Gfx.zBiasActive = 0;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetRenderState_ZBias(0);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 
-    if (D3D_DeviceReady != 0)
-        D3DDevice_DrawVerticesUP(8, Gfx_ImmediateModeItemCount * 4, Gfx_ImmediateModeVertexBuffer, 0x18);
+    if (Gfx.d3dDevice != 0)
+        D3DDevice_DrawVerticesUP(8, Gfx.immediateModeItemCount * 4, &Gfx.immediateModeVertices[0][0], 0x18);
 
-    Gfx_D3DLastError = 0;
-    Gfx_ImmediateModeItemCount = 0;
+    Gfx.d3dLastError = 0;
+    Gfx.immediateModeItemCount = 0;
 }
 
 // AUTOINJECT
 void maybeImmediateModePushItem(float param1, float param2, float param3, float param4, float param5,
                                  float param6, float param7, float param8, float param9) {
-    if (Gfx_ImmediateModeItemCount > 63)
+    if (Gfx.immediateModeItemCount > 63)
         maybeImmediateModeFlush();
 
-    float *item = Gfx_ImmediateModeBuffer + (size_t)Gfx_ImmediateModeItemCount * 9;
+    float *item = (&Gfx.immediateModeItems[0][0]) + (size_t)Gfx.immediateModeItemCount * 9;
     item[0] = param1;
     item[1] = param2;
     item[2] = param3;
@@ -2096,7 +1963,7 @@ void maybeImmediateModePushItem(float param1, float param2, float param3, float 
     item[7] = param8;
     item[8] = param9;
 
-    Gfx_ImmediateModeItemCount = Gfx_ImmediateModeItemCount + 1;
+    Gfx.immediateModeItemCount = Gfx.immediateModeItemCount + 1;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -2161,10 +2028,7 @@ void createProjectionMatrix(D3DMATRIX *mtxOut, float aspect, float fov, float pa
 // A simple, fixed 4-iteration loop (confirmed via raw disassembly - initially looked more complex from the
 // decompile alone, but it's genuinely straightforward): for each of 4 "slots", clears bit N in one bitmask and
 // sets bit N in another, zeros a 3-float entry, and once the first bitmask reaches zero, clears bits 2-3 of
-// Gfx_MiscModeFlags. Untraced overall purpose beyond "resets some per-slot transform-related cache state."
-#define Gfx_TransformCacheBitmaskA U32_AT(0x002FF274)
-#define Gfx_TransformCacheBitmaskB U32_AT(0x002FF270)
-#define Gfx_TransformCacheFloats ((float*)0x002FF2C0u) // 4 entries, stride 4 floats (16 bytes); only offsets -1,0,+1 (relative to each entry's base) are touched
+// Gfx.miscModeFlags - the same fields d3dDisableLight touches, for all four lights.
 
 // AUTOINJECT
 void d3dResetTransformCaches(void) {
@@ -2172,16 +2036,15 @@ void d3dResetTransformCaches(void) {
 
     for (int i = 0; i < 4; i++) {
         uint32_t bit = 1u << i;
-        Gfx_TransformCacheBitmaskA &= ~bit;
-        Gfx_TransformCacheBitmaskB |= bit;
+        Gfx.lightEnabledMask &= ~bit;
+        Gfx.lightDirtyMask |= bit;
 
-        float *entry = Gfx_TransformCacheFloats + (size_t)i * 4;
-        entry[-1] = 0.0f;
-        entry[0] = 0.0f;
-        entry[1] = 0.0f;
+        Gfx.lights.colour[i][0] = 0.0f;
+        Gfx.lights.colour[i][1] = 0.0f;
+        Gfx.lights.colour[i][2] = 0.0f;
 
-        if (Gfx_TransformCacheBitmaskA == 0)
-            Gfx_MiscModeFlags &= ~0xCu;
+        if (Gfx.lightEnabledMask == 0)
+            Gfx.miscModeFlags &= ~0xCu;
     }
 }
 
@@ -2199,61 +2062,61 @@ void d3dResetTransformCaches(void) {
 
 // AUTOINJECT
 void d3dSetupRenderStatesAndFog(int param1) {
-    if (Gfx_FogModeFlag == (uint32_t)param1) {
-        if (Gfx_FogEnabledCache != 1)
+    if (Gfx.fogModeFlag == (uint32_t)param1) {
+        if (Gfx.fogEnabledCache != 1)
             return;
-        uint32_t maskedColor = ((Gfx_FogModeFlag != 0) ? 0u : 0xFFFFFFFFu) & Gfx_FogColorCache;
-        Gfx_FogColorMasked = maskedColor;
-        if (D3D_DeviceReady == 0) {
-            Gfx_D3DLastError = 0;
+        uint32_t maskedColor = ((Gfx.fogModeFlag != 0) ? 0u : 0xFFFFFFFFu) & Gfx_FogColorCache;
+        Gfx.fogColorMasked = maskedColor;
+        if (Gfx.d3dDevice == 0) {
+            Gfx.d3dLastError = 0;
             return;
         }
         D3DDevice_SetRenderState_FogColor(maskedColor);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
         return;
     }
 
-    Gfx_FogModeFlag = (uint32_t)param1;
-    if (Gfx_FogEnabledCache == 1) {
+    Gfx.fogModeFlag = (uint32_t)param1;
+    if (Gfx.fogEnabledCache == 1) {
         uint32_t maskedColor = ((param1 != 0) ? 0u : 0xFFFFFFFFu) & Gfx_FogColorCache;
-        Gfx_FogColorMasked = maskedColor;
-        if (D3D_DeviceReady != 0)
+        Gfx.fogColorMasked = maskedColor;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetRenderState_FogColor(maskedColor);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 
     if (param1 == 1) {
-        if (D3D_DeviceReady == 0) {
-            Gfx_D3DLastError = 0;
+        if (Gfx.d3dDevice == 0) {
+            Gfx.d3dLastError = 0;
             return;
         }
         D3D_SetRenderStateSimple(0x40350, 0x8006);
         D3D8_RS_BlendOp = 0x8006;
     } else if (param1 != 2) {
-        if (D3D_DeviceReady == 0) {
-            Gfx_D3DLastError = 0;
+        if (Gfx.d3dDevice == 0) {
+            Gfx.d3dLastError = 0;
             return;
         }
         D3D_SetRenderStateSimple(0x40350, 0x8006);
         D3D8_RS_BlendOp = 0x8006;
-        Gfx_D3DLastError = 0;
-        if (D3D_DeviceReady == 0) {
-            Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
+        if (Gfx.d3dDevice == 0) {
+            Gfx.d3dLastError = 0;
             return;
         }
         D3D_SetRenderStateSimple(0x40344, 0x302);
-        Gfx_D3DLastError = 0;
-        if (D3D_DeviceReady == 0) {
-            Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
+        if (Gfx.d3dDevice == 0) {
+            Gfx.d3dLastError = 0;
             return;
         }
         D3D_SetRenderStateSimple(0x40348, 0x303);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
         return;
     } else {
         // param1 == 2
-        if (D3D_DeviceReady == 0) {
-            Gfx_D3DLastError = 0;
+        if (Gfx.d3dDevice == 0) {
+            Gfx.d3dLastError = 0;
             return;
         }
         D3D_SetRenderStateSimple(0x40350, 0x800b);
@@ -2261,22 +2124,19 @@ void d3dSetupRenderStatesAndFog(int param1) {
     }
 
     // Shared tail: only reached for param1==1 or param1==2.
-    Gfx_D3DLastError = 0;
-    if (D3D_DeviceReady != 0) {
+    Gfx.d3dLastError = 0;
+    if (Gfx.d3dDevice != 0) {
         D3D_SetRenderStateSimple(0x40344, 0x302);
-        Gfx_D3DLastError = 0;
-        if (D3D_DeviceReady != 0)
+        Gfx.d3dLastError = 0;
+        if (Gfx.d3dDevice != 0)
             D3D_SetRenderStateSimple(0x40348, 1);
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
 // maybeResetRenderState, maybeD3dShutdown
 // ---------------------------------------------------------------------------------------------------------------
-
-#define Gfx_ZBiasActive U32_AT(0x002C6FD0)  // Gfx.field6071_0x1880
-#define D3D8_State0x40358_LastValue U32_AT(0x002C575C) // Gfx+0xc (an untraced early-offset field) - shared with d3dSetup's own use of the same opaque method
 
 // Resets a batch of cached render state to known defaults - texture stage 0, the transform caches
 // (d3dResetTransformCaches), colour constant 0x67, fog, depth-test/depth-write (reusing our own
@@ -2288,18 +2148,18 @@ void d3dSetupRenderStatesAndFog(int param1) {
 //
 // AUTOINJECT
 void maybeResetRenderState(char param1) {
-    if (Gfx_CurrentlyLoadedTexture != 0) {
-        Gfx_CurrentlyLoadedTexture = 0;
-        if (D3D_DeviceReady != 0)
+    if (Gfx.currentlyLoadedTexture != 0) {
+        Gfx.currentlyLoadedTexture = 0;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetTexture(0, D3DTextureSlot(0)->baseTexture);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 
     d3dResetTransformCaches();
     d3dSetColorConstant67(0xFFFFFFFFu);
-    Gfx_FogEnabledCache = 0;
-    Gfx_D3DLastError = 0;
-    if (D3D_DeviceReady != 0) {
+    Gfx.fogEnabledCache = 0;
+    Gfx.d3dLastError = 0;
+    if (Gfx.d3dDevice != 0) {
         D3D8_PushBufferDirtyFlags |= 0x2000;
         D3D8_RS_FogEnable = 0;
     }
@@ -2308,20 +2168,20 @@ void maybeResetRenderState(char param1) {
     d3dSetRenderState2(resetValue);
     d3dSetRenderState(resetValue);
 
-    if (Gfx_ZBiasActive != 0) {
-        Gfx_ZBiasActive = 0;
-        if (D3D_DeviceReady != 0)
+    if (Gfx.zBiasActive != 0) {
+        Gfx.zBiasActive = 0;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetRenderState_ZBias(0);
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 
     d3dSetupRenderStatesAndFog(0);
 
-    if (Gfx_DeferredTexStateA != 1 || Gfx_DeferredTexStateB != 1) {
-        Gfx_DeferredTexStateA = 1;
-        Gfx_DeferredTexStateB = 1;
-        Gfx_D3DLastError = 0;
-        if (D3D_DeviceReady != 0) {
+    if (Gfx.deferredTexStateA != 1 || Gfx.deferredTexStateB != 1) {
+        Gfx.deferredTexStateA = 1;
+        Gfx.deferredTexStateB = 1;
+        Gfx.d3dLastError = 0;
+        if (Gfx.d3dDevice != 0) {
             D3D8_PushBufferDirtyFlags |= 1;
             D3D8_Stage0_AddressU = 1;
             D3D8_Stage0_AddressV = 1;
@@ -2330,23 +2190,23 @@ void maybeResetRenderState(char param1) {
 
     d3dSetTextureStage1(0, 0);
 
-    if (Gfx_CurrentCullMode != 1) {
-        Gfx_CurrentCullMode = 1;
-        if (D3D_DeviceReady != 0)
+    if (Gfx.currentCullMode != 1) {
+        Gfx.currentCullMode = 1;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetRenderState_CullMode(0x901);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 
     d3dSetRenderState1(1);
 
-    if (Gfx_ExtraBlendA != 1 || Gfx_ExtraBlendB != 1 || Gfx_ExtraBlendC != 1) {
-        Gfx_ExtraBlendA = 1;
-        Gfx_ExtraBlendB = 1;
-        Gfx_ExtraBlendC = 1;
-        D3D8_State0x40358_LastValue = 0x1010101;
-        if (D3D_DeviceReady != 0)
+    if (Gfx.extraBlendA != 1 || Gfx.extraBlendB != 1 || Gfx.extraBlendC != 1) {
+        Gfx.extraBlendA = 1;
+        Gfx.extraBlendB = 1;
+        Gfx.extraBlendC = 1;
+        Gfx.state0x40358LastValue = 0x1010101;
+        if (Gfx.d3dDevice != 0)
             D3D_SetRenderStateSimple(0x40358, 0x1010101);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 
     d3dBindBuffers(0, 0);
@@ -2356,7 +2216,6 @@ void maybeResetRenderState(char param1) {
 // d3dSetDeferredTextureState, d3dSetTextureWithBorderColor
 // ---------------------------------------------------------------------------------------------------------------
 
-#define Gfx_DeferredTexBorderColorCache U32_AT(0x002C6FB8) // Gfx.field6062_0x1868 - shares its "changed?" pair check with Gfx_ShardUseAltShader (field6061), which d3dSetTextureWithBorderColor also writes as a texture-slot cache
 
 // Caches a pair of "deferred texture state" values and, once changed, pushes them into the two D3D8-internal
 // globals as a {1 if nonzero, 3 if zero} encoding - untraced overall meaning, ported verbatim. Shares its cache
@@ -2364,11 +2223,11 @@ void maybeResetRenderState(char param1) {
 //
 // AUTOINJECT
 void d3dSetDeferredTextureState(int param1, int param2) {
-    if (Gfx_DeferredTexStateA != (uint32_t)param1 || Gfx_DeferredTexStateB != (uint32_t)param2) {
-        Gfx_DeferredTexStateA = (uint32_t)param1;
-        Gfx_DeferredTexStateB = (uint32_t)param2;
-        Gfx_D3DLastError = 0;
-        if (D3D_DeviceReady != 0) {
+    if (Gfx.deferredTexStateA != (uint32_t)param1 || Gfx.deferredTexStateB != (uint32_t)param2) {
+        Gfx.deferredTexStateA = (uint32_t)param1;
+        Gfx.deferredTexStateB = (uint32_t)param2;
+        Gfx.d3dLastError = 0;
+        if (Gfx.d3dDevice != 0) {
             D3D8_PushBufferDirtyFlags |= 1;
             D3D8_Stage0_AddressU = (param1 == 0) ? 3 : 1;
             D3D8_Stage0_AddressV = (param2 == 0) ? 3 : 1;
@@ -2378,50 +2237,50 @@ void d3dSetDeferredTextureState(int param1, int param2) {
 
 // Binds a texture (by slot, to stage 0) together with a border colour used for clamp-to-border wrapping - or,
 // with textureSlot 0, unbinds and restores the plain deferred-texture-state pair saved beforehand. Reuses
-// Gfx_ShardUseAltShader/Gfx_DeferredTexBorderColorCache as its own "did this change?" cache pair (same fields,
+// Gfx.shardUseAltShader/Gfx.deferredTexBorderColorCache as its own "did this change?" cache pair (same fields,
 // different call site - see their own comments).
 //
 // AUTOINJECT
 void d3dSetTextureWithBorderColor(int textureSlot, int borderColour) {
-    if (Gfx_ShardUseAltShader == (uint32_t)textureSlot && Gfx_DeferredTexBorderColorCache == (uint32_t)borderColour)
+    if (Gfx.shardUseAltShader == (uint32_t)textureSlot && Gfx.deferredTexBorderColorCache == (uint32_t)borderColour)
         return;
 
-    Gfx_ShardUseAltShader = (uint32_t)textureSlot;
-    Gfx_DeferredTexBorderColorCache = (uint32_t)borderColour;
+    Gfx.shardUseAltShader = (uint32_t)textureSlot;
+    Gfx.deferredTexBorderColorCache = (uint32_t)borderColour;
 
     if (textureSlot == 0) {
-        Gfx_MiscModeFlags &= 0xFFFFFFBFu;
+        Gfx.miscModeFlags &= 0xFFFFFFBFu;
 
-        if (Gfx_CurrentlyLoadedTexture != 0) {
-            Gfx_CurrentlyLoadedTexture = 0;
-            if (D3D_DeviceReady != 0)
+        if (Gfx.currentlyLoadedTexture != 0) {
+            Gfx.currentlyLoadedTexture = 0;
+            if (Gfx.d3dDevice != 0)
                 D3DDevice_SetTexture(0, D3DTextureSlot(0)->baseTexture);
-            Gfx_D3DLastError = 0;
+            Gfx.d3dLastError = 0;
         }
 
-        uint32_t savedA = Gfx_DeferredTexStateA;
-        uint32_t savedB = Gfx_DeferredTexStateB;
-        Gfx_DeferredTexStateA = 0xFFFFFFFFu;
-        Gfx_DeferredTexStateB = 0xFFFFFFFFu;
+        uint32_t savedA = Gfx.deferredTexStateA;
+        uint32_t savedB = Gfx.deferredTexStateB;
+        Gfx.deferredTexStateA = 0xFFFFFFFFu;
+        Gfx.deferredTexStateB = 0xFFFFFFFFu;
         d3dSetDeferredTextureState((int)savedA, (int)savedB);
         return;
     }
 
-    Gfx_MiscModeFlags |= 0x40;
-    Gfx_D3DLastError = 0;
-    if (D3D_DeviceReady != 0) {
+    Gfx.miscModeFlags |= 0x40;
+    Gfx.d3dLastError = 0;
+    if (Gfx.d3dDevice != 0) {
         D3D8_PushBufferDirtyFlags |= 1;
         D3D8_Stage0_AddressU = 4;
         D3D8_Stage0_AddressV = 4;
         D3DDevice_SetTextureState_BorderColor(0, (uint32_t)borderColour);
-        Gfx_D3DLastError = 0; // confirmed via raw disasm: only cleared here if the device was actually ready
+        Gfx.d3dLastError = 0; // confirmed via raw disasm: only cleared here if the device was actually ready
     }
 
-    if (Gfx_CurrentlyLoadedTexture != (uint32_t)textureSlot) {
-        Gfx_CurrentlyLoadedTexture = (uint32_t)textureSlot;
-        if (D3D_DeviceReady != 0)
+    if (Gfx.currentlyLoadedTexture != (uint32_t)textureSlot) {
+        Gfx.currentlyLoadedTexture = (uint32_t)textureSlot;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetTexture(0, D3DTextureSlot(textureSlot)->baseTexture);
-        Gfx_D3DLastError = 0; // ditto - only cleared when this inner block actually ran (confirmed via raw disasm)
+        Gfx.d3dLastError = 0; // ditto - only cleared when this inner block actually ran (confirmed via raw disasm)
     }
 }
 
@@ -2429,29 +2288,26 @@ void d3dSetTextureWithBorderColor(int textureSlot, int borderColour) {
 // d3dSetViewMatrixFromRigidTransform, d3dBeginEndAuxRenderPass
 // ---------------------------------------------------------------------------------------------------------------
 
-// Rebuilds Gfx_ViewMatrixCache from a rigid transform: caches the transform itself (Gfx_SecondaryBasisMatrix),
-// inverts a copy of it, then combines that inverse with Gfx_ProjMatrixCacheB (the "not yet ported" reader this
+// Rebuilds Gfx.viewMatrixCache from a rigid transform: caches the transform itself (Gfx.secondaryBasisMatrix),
+// inverts a copy of it, then combines that inverse with Gfx.projMatrixCacheB (the "not yet ported" reader this
 // cache's own comment anticipated - this is that reader) via Multiply4x4RowMajor rather than
 // maybeMultiplyMatrixChain (same alias-safety reasoning as d3dSetMatrix/maybeBuildAndSetModelViewProjectionMtx).
 //
 // AUTOINJECT
 void d3dSetViewMatrixFromRigidTransform(D3DMATRIX *rigidTransform) {
-    Gfx_MatrixGenFlag1 = 0xFFFFFFFFu;
-    Gfx_MatrixGenFlag2 = 0xFFFFFFFFu;
+    Gfx.lightDirtyMask = 0xFFFFFFFFu;
+    Gfx.levelDirectionDirty = 0xFFFFFFFFu;
 
-    memcpy(Gfx_SecondaryBasisMatrix, rigidTransform, sizeof(D3DMATRIX));
+    memcpy(&Gfx.secondaryBasisMatrix, rigidTransform, sizeof(D3DMATRIX));
 
     D3DMATRIX inverted;
-    memcpy(&inverted, Gfx_SecondaryBasisMatrix, sizeof(D3DMATRIX));
+    memcpy(&inverted, &Gfx.secondaryBasisMatrix, sizeof(D3DMATRIX));
     maybeInvertRigidTransform(&inverted);
 
-    Multiply4x4RowMajor(Gfx_ProjMatrixCacheB, &inverted, Gfx_ViewMatrixCache);
+    Multiply4x4RowMajor(&Gfx.projMatrixCacheB, &inverted, &Gfx.viewMatrixCache);
 }
 
-#define Gfx_AuxSavedViewMatrix   ((D3DMATRIX*)0x002FF3B4) // not in the Gfx struct - saves Gfx_SecondaryBasisMatrix across a d3dBeginEndAuxRenderPass(1, ...)/(0, ...) pair
-#define Gfx_AuxSavedProjMatrix   ((D3DMATRIX*)0x002FF3F4) // not in the Gfx struct - saves Gfx_ProjMatrixCacheA across the same pair
-#define Gfx_AuxRenderPassResult  U32_AT(0x002FF3AC)       // not in the Gfx struct - written by d3dInitShadowBlurTextures (once, at boot), only read/returned here
-#define Gfx_AuxRenderPassActive  U8_AT(0x002FF495)        // not in the Gfx struct - a static "is a pass currently pushed?" latch, one byte past Gfx_RenderTargetPushed but a separate flag
+#define Gfx_AuxRenderPassActive  U8_AT(0x002FF495)        // not in the Gfx struct (which ends at 0x002ff434) - a static "is a pass currently pushed?" latch, one byte past Gfx_RenderTargetPushed but a separate flag
 
 // A single-level "auxiliary render pass" push/pop, used for rendering something (character shadows are the
 // likely case, going by the call pattern) into whatever d3dRenderTargetSetup's own single-level stack has
@@ -2459,29 +2315,29 @@ void d3dSetViewMatrixFromRigidTransform(D3DMATRIX *rigidTransform) {
 // two floats (same fields d3dBeginFrame zeroes each frame), pushes the render target, clears it, then rebuilds
 // the view matrix from rigidTransform (rotation-only, via maybeTransposeRotationPart) combined with projMtx.
 // begin == 0 pops: restores the saved matrices and render target/viewport, but only if a pass is actually active
-// (matching the original's own latch check exactly). Returns Gfx_AuxRenderPassResult either way.
+// (matching the original's own latch check exactly). Returns Gfx.auxRenderPassResult either way.
 //
 // AUTOINJECT
 uint32_t d3dBeginEndAuxRenderPass(char begin, D3DMATRIX *rigidTransform, D3DMATRIX *projMtx) {
     if (begin != 0) {
         Gfx_AuxRenderPassActive = 1;
-        Gfx_ShaderConstant75[0] = 0.0f;
-        Gfx_ShaderConstant75[1] = 0.0f;
-        if (D3D_DeviceReady != 0)
-            D3DDevice_SetVertexShaderConstant1(0x75, Gfx_ShaderConstant75);
-        Gfx_D3DLastError = 0;
+        Gfx.shaderConstant75[0] = 0.0f;
+        Gfx.shaderConstant75[1] = 0.0f;
+        if (Gfx.d3dDevice != 0)
+            D3DDevice_SetVertexShaderConstant1(0x75, Gfx.shaderConstant75);
+        Gfx.d3dLastError = 0;
 
-        // Confirmed via raw disassembly: the original loads ESI from Gfx_AuxRenderPassResult (not a fixed 0/nonzero
+        // Confirmed via raw disassembly: the original loads ESI from Gfx.auxRenderPassResult (not a fixed 0/nonzero
         // constant) before this particular push - calling the real implementation directly with that same value,
         // per the naked-trampoline warning in d3dSeam.h (never call the public d3dRenderTargetSetup() from new code).
-        _d3dRenderTargetSetup((int)Gfx_AuxRenderPassResult);
+        _d3dRenderTargetSetup((int)Gfx.auxRenderPassResult);
 
-        if (D3D_DeviceReady != 0)
+        if (Gfx.d3dDevice != 0)
             D3DDevice_Clear(0, NULL, 0xf3, 0, 1.0f, 0);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
 
-        memcpy(Gfx_AuxSavedViewMatrix, Gfx_SecondaryBasisMatrix, sizeof(D3DMATRIX));
-        memcpy(Gfx_AuxSavedProjMatrix, Gfx_ProjMatrixCacheA, sizeof(D3DMATRIX));
+        memcpy(&Gfx.auxSavedViewMatrix, &Gfx.secondaryBasisMatrix, sizeof(D3DMATRIX));
+        memcpy(&Gfx.auxSavedProjMatrix, &Gfx.projMatrixCacheA, sizeof(D3DMATRIX));
 
         d3dSetProjectionMatrix(projMtx);
 
@@ -2490,25 +2346,25 @@ uint32_t d3dBeginEndAuxRenderPass(char begin, D3DMATRIX *rigidTransform, D3DMATR
         maybeTransposeRotationPart(&rotationOnly);
         d3dSetViewMatrixFromRigidTransform(&rotationOnly);
 
-        d3dSetMatrix(Gfx_d3dActiveMatrix);
-        return Gfx_AuxRenderPassResult;
+        d3dSetMatrix(&Gfx.activeMatrix);
+        return Gfx.auxRenderPassResult;
     }
 
     if (Gfx_AuxRenderPassActive != 0) {
         Gfx_AuxRenderPassActive = 0;
-        Gfx_ShaderConstant75[0] = 0.0f;
-        Gfx_ShaderConstant75[1] = 0.0f;
-        if (D3D_DeviceReady != 0)
-            D3DDevice_SetVertexShaderConstant1(0x75, Gfx_ShaderConstant75);
-        Gfx_D3DLastError = 0;
+        Gfx.shaderConstant75[0] = 0.0f;
+        Gfx.shaderConstant75[1] = 0.0f;
+        if (Gfx.d3dDevice != 0)
+            D3DDevice_SetVertexShaderConstant1(0x75, Gfx.shaderConstant75);
+        Gfx.d3dLastError = 0;
 
-        d3dSetProjectionMatrix(Gfx_AuxSavedProjMatrix);
-        d3dSetViewMatrixFromRigidTransform(Gfx_AuxSavedViewMatrix);
+        d3dSetProjectionMatrix(&Gfx.auxSavedProjMatrix);
+        d3dSetViewMatrixFromRigidTransform(&Gfx.auxSavedViewMatrix);
 
         _d3dRenderTargetSetup(0); // pop back to the saved render target
-        d3dSetupViewportDimensions(Gfx_ViewportX, Gfx_ViewportY, Gfx_ViewportWidth, Gfx_ViewportHeight);
+        d3dSetupViewportDimensions(Gfx.viewportX, Gfx.viewportY, Gfx.viewportWidth, Gfx.viewportHeight);
     }
-    return Gfx_AuxRenderPassResult;
+    return Gfx.auxRenderPassResult;
 }
 
 // Defined below psiBlurScreen (it needs that function's history-slot globals). Not an original function - see
@@ -2527,11 +2383,11 @@ static void d3dReleaseLevelResources(void);
 void maybeD3dShutdown(void) {
     maybeResetRenderState(1);
 
-    if (Gfx_CurrentlyLoadedTexture != 0) {
-        Gfx_CurrentlyLoadedTexture = 0;
-        if (D3D_DeviceReady != 0)
+    if (Gfx.currentlyLoadedTexture != 0) {
+        Gfx.currentlyLoadedTexture = 0;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetTexture(0, D3DTextureSlot(0)->baseTexture);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 
     d3dBindBuffers(0, 0);
@@ -2578,7 +2434,6 @@ void maybeD3dShutdown(void) {
 #define D3D8_Stage3_0x64 D3D8_TRACED("D3D8_Stage3_0x64", 0x00111964)
 #define D3D8_Stage3_0x68 D3D8_TRACED("D3D8_Stage3_0x68", 0x00111968)
 
-#define Gfx_BasisScaleDiag ((float*)0x002FF288) // Gfx.field158589_0x39b38 - untraced; 4 floats, stride 16 bytes, all reset to 1.0 by d3dSetup
 
 // One-time-per-call D3D8 device setup: resets the whole texture/stream/buffer cache block to -1, lazily enables
 // a handful of always-on render states (alpha-test/z-bias/misc/fog-mode/yuv-mode registers, Z-enable/normalize-
@@ -2590,45 +2445,45 @@ void maybeD3dShutdown(void) {
 // d3dSetRenderState[1/2]/d3dSetFogEnable/d3dSetColorConstant67/d3dSetTextureWithBorderColor/d3dSetTextureStage1/
 // d3dSetStreamSources exactly as the original calls them (not reimplemented separately here - see each of those
 // for what they do). The three d3dSetRenderState/1/2 calls reuse the EXACT SAME cache fields as this function's
-// own field6056/6057/6058 checks (D3D_AlphaRefCache/D3D_DepthMaskCache/D3D_ZFuncCache - confirmed via raw
+// own field6056/6057/6058 checks (Gfx.alphaRefCache/Gfx.depthMaskCache/Gfx.zFuncCache - confirmed via raw
 // disassembly, address-for-address), so calling them directly instead of hand-duplicating that logic is safe.
 //
 // AUTOINJECT
 void d3dSetup(void) {
-    for (int i = 0; i < 0x15; i++)
-        ((uint32_t*)0x002C6F84)[i] = 0xFFFFFFFFu; // Gfx.currentlyLoadedTexture and 20 more consecutive fields
+    for (uint32_t *cache = &Gfx.currentlyLoadedTexture; cache <= &Gfx.colorConstant67Cache; cache++)
+        *cache = 0xFFFFFFFFu; // the 21 render-state caches
 
-    d3dSetRenderState1(1); // field6056_0x1850 / D3D_AlphaRefCache - method 0x40340
+    d3dSetRenderState1(1); // field6056_0x1850 / Gfx.alphaRefCache - method 0x40340
 
-    if (D3D_DeviceReady != 0) {
+    if (Gfx.d3dDevice != 0) {
         D3D_SetRenderStateSimple(0x4033c, 0x206);
         D3D8_RS_0x4033c_LastValue = 0x206;
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
 
         D3D_SetRenderStateSimple(0x40304, 1);
         D3D8_RS_AlphaBlendEnable = 1;
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
 
         D3D_SetRenderStateSimple(0x40300, 1);
         D3D8_RS_0x40300_LastValue = 1;
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
 
         D3D_SetRenderStateSimple(0x40350, 0x8006);
         D3D8_RS_BlendOp = 0x8006;
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
 
         D3D_SetRenderStateSimple(0x40310, 1);
         D3D8_RS_DitherEnable = 1;
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
 
         D3DDevice_SetRenderState_ZEnable(2);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
 
         D3DDevice_SetRenderState_NormalizeNormals(1);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
 
         D3DDevice_SetRenderState_VertexBlend(0);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
 
         // Opaque per-stage D3D8-internal register baseline - untraced meaning, ported verbatim.
         D3D8_Stage0_0x08 = 2;
@@ -2666,75 +2521,75 @@ void d3dSetup(void) {
         U32_AT(0x00111B44) = 1;
         U32_AT(0x00111B54) = 0;
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetShaderConstantMode(1);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 
     D3DMATRIX projMtx;
     createProjectionMatrix(&projMtx, 1.3333334f, 75.0f, 0.0f, 1.0f, 1000.0f);
     d3dSetProjectionMatrix(&projMtx);
 
     float shaderConstant76[4] = { -96.0f, 1.0f, 256.0f, 1.0f / 256.0f };
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetVertexShaderConstant1(0x76, shaderConstant76);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 
     D3DMATRIX identity;
     d3dMatrixIdentity(&identity);
     for (int byteOffset = 0; byteOffset < 0xd4; byteOffset += 4) {
-        if (D3D_DeviceReady != 0) {
+        if (Gfx.d3dDevice != 0) {
             int constantIndex = *(int32_t*)((char*)D3D8_ShaderConstantSubIndexTable + byteOffset) + 0x60;
             D3DDevice_SetVertexShaderConstantNotInline(constantIndex, &identity, 0xc);
         }
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 
-    for (float *p = Gfx_BasisScaleDiag; p < (float*)0x002FF2C8; p += 4)
-        *p = 1.0f;
+    for (int i = 0; i < 4; i++)
+        Gfx.lights.position[i][3] = 1.0f;
 
     gfxSetCharacterLightIntensity(0.5f);
-    Gfx_MatrixGenFlag2 = 1;
-    Gfx_LevelDirectionVector[0] = 1.0f;
-    Gfx_LevelDirectionVector[1] = 0.0f;
-    Gfx_LevelDirectionVector[2] = 0.0f;
-    U32_AT(0x002FF344) = 0x4b7fffffu; // not in the Gfx struct - untraced, a very large float sentinel
+    Gfx.levelDirectionDirty = 1;
+    Gfx.levelDirectionVector[0] = 1.0f;
+    Gfx.levelDirectionVector[1] = 0.0f;
+    Gfx.levelDirectionVector[2] = 0.0f;
+    Gfx.fogConstant66[2] = BitsToFloat(0x4b7fffffu); // untraced; the original stores the raw bits
     d3dSetFogNear(10.0f);
     d3dSetFogFar(100.0f);
 
-    if (Gfx_CurrentCullMode != 1) {
-        Gfx_CurrentCullMode = 1;
-        if (D3D_DeviceReady != 0)
+    if (Gfx.currentCullMode != 1) {
+        Gfx.currentCullMode = 1;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetRenderState_CullMode(0x901);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 
     // The original hardcodes 480/640 here (the immediates Inject() used to patch at 0x000e6cd7/0x000e6ceb);
     // now taken from SCREEN_HEIGHT/SCREEN_WIDTH directly, same as xboxInitGraphics' backbuffer size.
-    Gfx_ViewportHeight = SCREEN_HEIGHT;
-    Gfx_ViewportX = 0;
-    Gfx_ViewportY = 0;
-    Gfx_ViewportWidth = SCREEN_WIDTH;
-    if (D3D_DeviceReady != 0) {
+    Gfx.viewportHeight = SCREEN_HEIGHT;
+    Gfx.viewportX = 0;
+    Gfx.viewportY = 0;
+    Gfx.viewportWidth = SCREEN_WIDTH;
+    if (Gfx.d3dDevice != 0) {
         D3DVIEWPORT viewport;
-        viewport.X = Gfx_ViewportX;
-        viewport.Y = Gfx_ViewportY;
-        viewport.Width = Gfx_ViewportWidth;
-        viewport.Height = Gfx_ViewportHeight;
+        viewport.X = Gfx.viewportX;
+        viewport.Y = Gfx.viewportY;
+        viewport.Width = Gfx.viewportWidth;
+        viewport.Height = Gfx.viewportHeight;
         viewport.MinZ = 0.0f;
         viewport.MaxZ = 1.0f;
         D3DDevice_SetViewport(&viewport);
     }
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 
     d3dResetTransformCaches();
 
-    if (Gfx_DeferredTexStateA != 1 || Gfx_DeferredTexStateB != 1) {
-        Gfx_DeferredTexStateA = 1;
-        Gfx_DeferredTexStateB = 1;
-        Gfx_D3DLastError = 0;
-        if (D3D_DeviceReady != 0) {
+    if (Gfx.deferredTexStateA != 1 || Gfx.deferredTexStateB != 1) {
+        Gfx.deferredTexStateA = 1;
+        Gfx.deferredTexStateB = 1;
+        Gfx.d3dLastError = 0;
+        if (Gfx.d3dDevice != 0) {
             D3D8_PushBufferDirtyFlags |= 1;
             D3D8_Stage0_AddressU = 1;
             D3D8_Stage0_AddressV = 1;
@@ -2742,20 +2597,20 @@ void d3dSetup(void) {
     }
 
     d3dSetupRenderStatesAndFog(0);
-    d3dSetRenderState2(1); // field6057_0x1854 / D3D_DepthMaskCache - method 0x4035c
-    d3dSetRenderState(1);  // field6058_0x1858 / D3D_ZFuncCache - method 0x40354
+    d3dSetRenderState2(1); // field6057_0x1854 / Gfx.depthMaskCache - method 0x4035c
+    d3dSetRenderState(1);  // field6058_0x1858 / Gfx.zFuncCache - method 0x40354
 
     d3dSetFogEnable(0);
     d3dSetColorConstant67(0xFFFFFFFFu);
 
-    if (Gfx_ExtraBlendA != 1 || Gfx_ExtraBlendB != 1 || Gfx_ExtraBlendC != 1) {
-        Gfx_ExtraBlendA = 1;
-        Gfx_ExtraBlendB = 1;
-        Gfx_ExtraBlendC = 1;
-        D3D8_State0x40358_LastValue = 0x1010101;
-        if (D3D_DeviceReady != 0)
+    if (Gfx.extraBlendA != 1 || Gfx.extraBlendB != 1 || Gfx.extraBlendC != 1) {
+        Gfx.extraBlendA = 1;
+        Gfx.extraBlendB = 1;
+        Gfx.extraBlendC = 1;
+        Gfx.state0x40358LastValue = 0x1010101;
+        if (Gfx.d3dDevice != 0)
             D3D_SetRenderStateSimple(0x40358, 0x1010101);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 
     d3dSetTextureWithBorderColor(0, 0);
@@ -2767,60 +2622,59 @@ void d3dSetup(void) {
 // psiBlurCharacterShadow
 // ---------------------------------------------------------------------------------------------------------------
 
-#define Gfx_ShadowBlurTargetB U32_AT(0x002FF3B0) // Gfx.field158792_0x39c60 - written by d3dInitShadowBlurTextures (once, at boot), only read here - the second of a texture-slot pair with Gfx_AuxRenderPassResult (the first)
 
 // Called (only ever from maybe_psiDrawShadow, not yet reimplemented) right after a shadow has been rendered
 // into the aux render target via d3dBeginEndAuxRenderPass(1, ...). First closes that render pass (begin=0,
 // NULL/NULL - restores the normal view/projection/viewport), then runs a two-pass box blur that ping-pongs
-// between two externally-chosen texture slots (Gfx_AuxRenderPassResult/Gfx_ShadowBlurTargetB, both maintained
+// between two externally-chosen texture slots (Gfx.auxRenderPassResult/Gfx.shadowBlurTargetB, both maintained
 // by d3dInitShadowBlurTextures): pass 1 renders a half-size (128x128 from a 256x256 UV rect) downsample from
-// Gfx_AuxRenderPassResult into Gfx_ShadowBlurTargetB; pass 2 renders a double-size (256x256 from a 128x128 UV
-// rect) upsample from Gfx_ShadowBlurTargetB back into Gfx_AuxRenderPassResult - the combination softens the
+// Gfx.auxRenderPassResult into Gfx.shadowBlurTargetB; pass 2 renders a double-size (256x256 from a 128x128 UV
+// rect) upsample from Gfx.shadowBlurTargetB back into Gfx.auxRenderPassResult - the combination softens the
 // shadow texture in place. Finally pops the render target back to the backbuffer and unbinds stage 0.
 //
 // AUTOINJECT
 void psiBlurCharacterShadow(void) {
     d3dBeginEndAuxRenderPass(0, NULL, NULL);
-    d3dSetRenderState1(1); // field6056_0x1850 / D3D_AlphaRefCache - method 0x40340, same reuse as d3dSetup
+    d3dSetRenderState1(1); // field6056_0x1850 / Gfx.alphaRefCache - method 0x40340, same reuse as d3dSetup
     d3dSetColorConstant67(0xFFFFFFFFu);
 
-    // Pass 1: downsample Gfx_AuxRenderPassResult -> Gfx_ShadowBlurTargetB.
-    _d3dRenderTargetSetup((int)Gfx_ShadowBlurTargetB);
-    if (Gfx_CurrentlyLoadedTexture != Gfx_AuxRenderPassResult) {
-        Gfx_CurrentlyLoadedTexture = Gfx_AuxRenderPassResult;
-        if (D3D_DeviceReady != 0) {
-            D3DDevice_SetTexture(0, D3DTextureSlot((int)Gfx_AuxRenderPassResult)->baseTexture);
-            Gfx_D3DLastError = 0;
+    // Pass 1: downsample Gfx.auxRenderPassResult -> Gfx.shadowBlurTargetB.
+    _d3dRenderTargetSetup((int)Gfx.shadowBlurTargetB);
+    if (Gfx.currentlyLoadedTexture != Gfx.auxRenderPassResult) {
+        Gfx.currentlyLoadedTexture = Gfx.auxRenderPassResult;
+        if (Gfx.d3dDevice != 0) {
+            D3DDevice_SetTexture(0, D3DTextureSlot((int)Gfx.auxRenderPassResult)->baseTexture);
+            Gfx.d3dLastError = 0;
         }
     }
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_Clear(0, NULL, 0xf3, 0, 1.0f, 0);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
     maybeImmediateModePushItem(0.0f, 0.0f, 128.0f, 128.0f, 0.0f, 0.0f, 256.0f, 256.0f, BitsToFloat(0xff808080u));
     maybeImmediateModeFlush();
 
-    // Pass 2: upsample Gfx_ShadowBlurTargetB -> Gfx_AuxRenderPassResult.
-    _d3dRenderTargetSetup((int)Gfx_AuxRenderPassResult);
-    if (Gfx_CurrentlyLoadedTexture != Gfx_ShadowBlurTargetB) {
-        Gfx_CurrentlyLoadedTexture = Gfx_ShadowBlurTargetB;
-        if (D3D_DeviceReady != 0) {
-            D3DDevice_SetTexture(0, D3DTextureSlot((int)Gfx_ShadowBlurTargetB)->baseTexture);
-            Gfx_D3DLastError = 0;
+    // Pass 2: upsample Gfx.shadowBlurTargetB -> Gfx.auxRenderPassResult.
+    _d3dRenderTargetSetup((int)Gfx.auxRenderPassResult);
+    if (Gfx.currentlyLoadedTexture != Gfx.shadowBlurTargetB) {
+        Gfx.currentlyLoadedTexture = Gfx.shadowBlurTargetB;
+        if (Gfx.d3dDevice != 0) {
+            D3DDevice_SetTexture(0, D3DTextureSlot((int)Gfx.shadowBlurTargetB)->baseTexture);
+            Gfx.d3dLastError = 0;
         }
     }
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_Clear(0, NULL, 0xf3, 0, 1.0f, 0);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
     maybeImmediateModePushItem(0.0f, 0.0f, 256.0f, 256.0f, 0.0f, 0.0f, 128.0f, 128.0f, BitsToFloat(0xff808080u));
     maybeImmediateModeFlush();
 
     // Pop back to the backbuffer and unbind stage 0.
     _d3dRenderTargetSetup(0);
-    if (Gfx_CurrentlyLoadedTexture != 0) {
-        Gfx_CurrentlyLoadedTexture = 0;
-        if (D3D_DeviceReady != 0)
+    if (Gfx.currentlyLoadedTexture != 0) {
+        Gfx.currentlyLoadedTexture = 0;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetTexture(0, D3DTextureSlot(0)->baseTexture);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 }
 
@@ -2870,7 +2724,7 @@ void psiBlurScreen(int blurIntensity) {
     for (;;) {
         if (D3DTextureSlot((int)textureSlot)->baseTexture == NULL) { slotFound = true; break; }
         textureSlot++;
-        if ((uintptr_t)&D3DTextureSlot((int)textureSlot)->baseTexture >= 0x002DE400u)
+        if (textureSlot >= GFX_TEXTURE_SLOTS) // the original bounds the scan by the address of the slot past the end
             break;
     }
     if (!slotFound || textureSlot >= D3D_TEXTURE_TABLE_COUNT)
@@ -2897,38 +2751,38 @@ void psiBlurScreen(int blurIntensity) {
         texSlot->height = 480;
         texSlot->refCount = 0;
         texSlot->nonSwizzled = 1;
-        Gfx_TotalTextureBytesUsed += registeredBytes;
+        Gfx.totalTextureBytesUsed += registeredBytes;
     }
 
     Gfx_BlurHistoryTextureSlots[Gfx_BlurHistoryIndex] = textureSlot;
 
-    if (Gfx_DeferredTexStateA != 0 || Gfx_DeferredTexStateB != 0) {
-        Gfx_DeferredTexStateA = 0;
-        Gfx_DeferredTexStateB = 0;
-        Gfx_D3DLastError = 0;
-        if (D3D_DeviceReady != 0) {
+    if (Gfx.deferredTexStateA != 0 || Gfx.deferredTexStateB != 0) {
+        Gfx.deferredTexStateA = 0;
+        Gfx.deferredTexStateB = 0;
+        Gfx.d3dLastError = 0;
+        if (Gfx.d3dDevice != 0) {
             D3D8_PushBufferDirtyFlags |= 1;
             D3D8_Stage0_AddressU = 3;
             D3D8_Stage0_AddressV = 3;
         }
     }
 
-    if (Gfx_CurrentlyLoadedTexture != (uint32_t)textureSlot) {
-        Gfx_CurrentlyLoadedTexture = (uint32_t)textureSlot;
-        if (D3D_DeviceReady != 0)
+    if (Gfx.currentlyLoadedTexture != (uint32_t)textureSlot) {
+        Gfx.currentlyLoadedTexture = (uint32_t)textureSlot;
+        if (Gfx.d3dDevice != 0)
             D3DDevice_SetTexture(0, D3DTextureSlot((int)textureSlot)->baseTexture);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
     }
 
     uint32_t blurColour = ((uint32_t)blurIntensity << 24) | 0x808080u;
     maybeImmediateModePushItem(0.0f, 0.0f, 640.0f, 480.0f, 0.0f, 0.0f, 640.0f, 480.0f, BitsToFloat(blurColour));
     maybeImmediateModeFlush();
 
-    if (Gfx_DeferredTexStateA != 1 || Gfx_DeferredTexStateB != 1) {
-        Gfx_DeferredTexStateA = 1;
-        Gfx_DeferredTexStateB = 1;
-        Gfx_D3DLastError = 0;
-        if (D3D_DeviceReady != 0) {
+    if (Gfx.deferredTexStateA != 1 || Gfx.deferredTexStateB != 1) {
+        Gfx.deferredTexStateA = 1;
+        Gfx.deferredTexStateB = 1;
+        Gfx.d3dLastError = 0;
+        if (Gfx.d3dDevice != 0) {
             D3D8_PushBufferDirtyFlags |= 1;
             D3D8_Stage0_AddressU = 1;
             D3D8_Stage0_AddressV = 1;
@@ -2981,7 +2835,7 @@ static void d3dReleaseLevelResources(void) {
         if (texSlot->baseTexture == NULL || texSlot->refCount != 0)
             continue;
         D3DResource_BlockUntilNotBusy(texSlot->baseTexture);
-        Gfx_TotalTextureBytesUsed -= texSlot->mipChainBytes;
+        Gfx.totalTextureBytesUsed -= texSlot->mipChainBytes;
         texSlot->baseTexture = NULL;
         texSlot->mipChainBytes = 0;
         texturesFreed++;
@@ -2994,7 +2848,7 @@ static void d3dReleaseLevelResources(void) {
         D3DVertexBufferSlotRaw *slotPtr = D3DVertexBufferSlot(slot);
         if (slotPtr->selfPtr == NULL)
             continue;
-        Gfx_VertexBufferBytesUsed -= slotPtr->byteSize;
+        Gfx.vertexBufferBytesUsed -= slotPtr->byteSize;
         memset(slotPtr, 0, sizeof(*slotPtr));
         vertexBuffersFreed++;
     }
@@ -3004,7 +2858,7 @@ static void d3dReleaseLevelResources(void) {
         D3DIndexBufferSlotRaw *slotPtr = D3DIndexBufferSlot(slot);
         if (slotPtr->header == 0)
             continue;
-        Gfx_IndexBufferBytesUsed -= slotPtr->byteSize;
+        Gfx.indexBufferBytesUsed -= slotPtr->byteSize;
         memset(slotPtr, 0, sizeof(*slotPtr));
         indexBuffersFreed++;
     }
@@ -3019,36 +2873,36 @@ static void d3dReleaseLevelResources(void) {
 
 // One-time (called only from xboxInitGraphics, alongside d3dSetup/d3dInitFallbackOverlayTexture) setup of the two
 // permanent, never-released (refCount forced to 1 below) render-target textures psiBlurCharacterShadow and
-// d3dBeginEndAuxRenderPass consume as Gfx_AuxRenderPassResult (256x256) and Gfx_ShadowBlurTargetB (128x128).
+// d3dBeginEndAuxRenderPass consume as Gfx.auxRenderPassResult (256x256) and Gfx.shadowBlurTargetB (128x128).
 //
 // AUTOINJECT
 void d3dInitShadowBlurTextures(void) {
     void *data = allocateAligned0x1000(0x40000);
-    Gfx_AuxRenderPassResult = (uint32_t)RegisterTexture(0x100, 0x100, 2, 1, data, 0);
-    d3dMarkTexturePermanent((int)Gfx_AuxRenderPassResult);
+    Gfx.auxRenderPassResult = (uint32_t)RegisterTexture(0x100, 0x100, 2, 1, data, 0);
+    d3dMarkTexturePermanent((int)Gfx.auxRenderPassResult);
 
     data = allocateAligned0x1000(0x10000);
-    Gfx_ShadowBlurTargetB = (uint32_t)RegisterTexture(0x80, 0x80, 2, 1, data, 0);
-    d3dMarkTexturePermanent((int)Gfx_ShadowBlurTargetB);
+    Gfx.shadowBlurTargetB = (uint32_t)RegisterTexture(0x80, 0x80, 2, 1, data, 0);
+    d3dMarkTexturePermanent((int)Gfx.shadowBlurTargetB);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
 // d3dSetLevelDirectionVector
 // ---------------------------------------------------------------------------------------------------------------
 
-// Sets Gfx_LevelDirectionVector plus the same "matrix needs regen" flag d3dSetMatrix/d3dSetViewMatrixFromRigid
-// Transform use (Gfx_MatrixGenFlag2, though those two always set it to -1, not 1 - a different value for a
+// Sets Gfx.levelDirectionVector plus the same "matrix needs regen" flag d3dSetMatrix/d3dSetViewMatrixFromRigid
+// Transform use (Gfx.levelDirectionDirty, though those two always set it to -1, not 1 - a different value for a
 // different purpose reusing the same flag). Only ever called from maybePsiResetResources (not yet
 // reimplemented) with one of 4 hardcoded axis vectors selected by GameState.NextLevelHashcode - looks like a
 // per-mission override of some directional value (lighting? wind/particle direction?), but no reader of
-// Gfx_LevelDirectionVector was found anywhere in the binary to confirm which.
+// Gfx.levelDirectionVector was found anywhere in the binary to confirm which.
 //
 // AUTOINJECT
 void d3dSetLevelDirectionVector(float x, float y, float z) {
-    Gfx_MatrixGenFlag2 = 1;
-    Gfx_LevelDirectionVector[0] = x;
-    Gfx_LevelDirectionVector[1] = y;
-    Gfx_LevelDirectionVector[2] = z;
+    Gfx.levelDirectionDirty = 1;
+    Gfx.levelDirectionVector[0] = x;
+    Gfx.levelDirectionVector[1] = y;
+    Gfx.levelDirectionVector[2] = z;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -3122,42 +2976,36 @@ void * d3dGetIndexBufferData(int indexSlot) {
 
 // Four directional-light slots, kept as cached shader-constant inputs. These are the same fields
 // d3dResetTransformCaches (which is really "disable all four lights", going by this) resets:
-// Gfx_TransformCacheBitmaskA/B are the enabled/dirty masks and Gfx_TransformCacheFloats the colours. Only
-// caller of both is psiLight_SetLights (not yet reimplemented). Whoever uploads these to the GPU hasn't been
-// traced - it isn't any function in this file.
-#define Gfx_LightEnabledMask Gfx_TransformCacheBitmaskA               // 0x002FF274 - bit i = light i enabled
-#define Gfx_LightDirtyMask   Gfx_TransformCacheBitmaskB               // 0x002FF270 - bit i = light i changed
-#define Gfx_LightColour(i)   (Gfx_TransformCacheFloats - 1 + (i) * 4) // 0x002FF2BC + 16*i: r, g, b (each /256)
-#define Gfx_LightInvRange    ((float*)0x002FF2FCu)                    // 4 floats: 1/range (1.0 if range <= 0)
-#define Gfx_LightDirection   ((uint32_t*)0x002FF30Cu)                 // 3 dwords per light, copied verbatim
+// Gfx.lightEnabledMask/lightDirtyMask and Gfx.lights.colour. Only
+// caller of both is psiLight_SetLights (not yet reimplemented). d3dsetVertexShaderConstant uploads them.
 
 // AUTOINJECT
 void d3dDisableLight(int lightIndex) {
     if (lightIndex >= 4)
         return;
     uint32_t bit = 1u << lightIndex;
-    Gfx_LightEnabledMask &= ~bit;
-    Gfx_LightDirtyMask |= bit;
-    float *colour = Gfx_LightColour(lightIndex);
+    Gfx.lightEnabledMask &= ~bit;
+    Gfx.lightDirtyMask |= bit;
+    float *colour = Gfx.lights.colour[lightIndex];
     colour[2] = 0.0f;
     colour[1] = 0.0f;
     colour[0] = 0.0f;
-    if (Gfx_LightEnabledMask == 0)
-        Gfx_MiscModeFlags &= ~0xCu;
+    if (Gfx.lightEnabledMask == 0)
+        Gfx.miscModeFlags &= ~0xCu;
 }
 
 // dirX/Y/Z are copied as raw dwords (floats, going by the consumers, but the original never interprets
-// them here). Sets Gfx_MiscModeFlags bit 0x4 for lights 0-1 and bit 0x8 for lights 2-3.
+// them here). Sets Gfx.miscModeFlags bit 0x4 for lights 0-1 and bit 0x8 for lights 2-3.
 //
 // AUTOINJECT
 void d3dSetLight(int lightIndex, uint32_t dirX, uint32_t dirY, uint32_t dirZ, float range, float r, float g, float b) {
     if (lightIndex >= 4)
         return;
     uint32_t bit = 1u << lightIndex;
-    Gfx_LightEnabledMask |= bit;
-    Gfx_LightDirtyMask |= bit;
+    Gfx.lightEnabledMask |= bit;
+    Gfx.lightDirtyMask |= bit;
 
-    uint32_t *dir = Gfx_LightDirection + lightIndex * 3;
+    uint32_t *dir = Gfx.lightDirection[lightIndex];
     dir[0] = dirX;
     dir[1] = dirY;
     dir[2] = dirZ;
@@ -3167,14 +3015,14 @@ void d3dSetLight(int lightIndex, uint32_t dirX, uint32_t dirY, uint32_t dirZ, fl
     float invRange = 1.0f;
     if (range > 0.0f)
         invRange = 1.0f / range;
-    Gfx_LightInvRange[lightIndex] = invRange;
+    Gfx.lights.invRange[lightIndex] = invRange;
 
-    float *colour = Gfx_LightColour(lightIndex);
+    float *colour = Gfx.lights.colour[lightIndex];
     colour[0] = r * 0.00390625f; // 1/256
     colour[1] = g * 0.00390625f;
     colour[2] = b * 0.00390625f;
 
-    Gfx_MiscModeFlags |= (lightIndex >= 2) ? 0x8u : 0x4u;
+    Gfx.miscModeFlags |= (lightIndex >= 2) ? 0x8u : 0x4u;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -3204,7 +3052,7 @@ static void d3dComputeSwizzleMasks(uint32_t *masks, uint32_t width, uint32_t hei
 }
 
 // One-time (xboxInitGraphics only) creation of the 8x8 swizzled A4R4G4B4 "soft dot" texture d3dDrawOverlayQuad
-// falls back to when given texture slot 0 (Gfx_FallbackOverlayTexture): white, with alpha = (1 - dist/sqrt(32))^3
+// falls back to when given texture slot 0 (Gfx.fallbackOverlayTexture): white, with alpha = (1 - dist/sqrt(32))^3
 // from the centre, clamped to [0,1] - i.e. a round radial fade. Marked permanent so level resets never free it.
 // Ported from raw disassembly: the decompiler shows the pow() arguments the wrong way round (it's pow(v, 3.0),
 // not pow(3.0, v) - the exponent is pushed last), the constant is 1/sqrt(32.0), the alpha byte is a plain
@@ -3237,8 +3085,8 @@ void d3dInitFallbackOverlayTexture(void) {
         yOffset = (yOffset - masks[4]) & masks[4];
     }
 
-    Gfx_FallbackOverlayTexture = (uint32_t)RegisterTexture(8, 8, 1, 1, pixels, 0);
-    d3dMarkTexturePermanent((int)Gfx_FallbackOverlayTexture);
+    Gfx.fallbackOverlayTexture = (uint32_t)RegisterTexture(8, 8, 1, 1, pixels, 0);
+    d3dMarkTexturePermanent((int)Gfx.fallbackOverlayTexture);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -3278,16 +3126,6 @@ struct D3DPRESENT_PARAMETERS_Xbox {
 };
 static_assert(sizeof(D3DPRESENT_PARAMETERS_Xbox) == 17 * 4, "Bad size for D3DPRESENT_PARAMETERS_Xbox");
 
-#define GFX_STRUCT_BASE   0x002C5750u
-#define GFX_STRUCT_DWORDS 59193u // the original's REP STOSD count: 0x39CE4 bytes, up to (not including) 0x002FF434
-
-#define Gfx_PushBuffersEnabled U32_AT(0x002C5768) // Gfx.pushBuffersEnabled
-#define Gfx_IsPalI             U8_AT(0x002C5760)  // Gfx.IsPalI - misnamed: it's a copy of IsNotPalI (see below)
-#define Gfx_IsNotPalI          U8_AT(0x002C5761)  // Gfx.IsNotPalI - AV region != 3 (PAL-I)
-#define Gfx_IsSomeGfxRegion    U8_AT(0x002C5762)  // Gfx.IsSomeGfxRegion - AV region == 1 (NTSC-M)
-#define Gfx_IsWidescreen       U8_AT(0x002C5763)  // Gfx.IsWidescreen - video mode bit 0
-#define Gfx_VideoModeBit3      U8_AT(0x002C5764)  // Gfx.field14_0x14 - video mode bit 3, forced to 0 for PAL-I
-
 // Vertex shader source data (ROM, in the XBE's data section) - the 128 "main" shaders share one of four
 // declarations (selected by the shader index's low two bits) and each have their own function token array
 // (a 128-entry pointer table), plus the immediate-mode and overlay-quad shaders with dedicated handles.
@@ -3302,7 +3140,6 @@ static_assert(sizeof(D3DPRESENT_PARAMETERS_Xbox) == 17 * 4, "Bad size for D3DPRE
 #define OverlayVtxShaderFunc         ((const void*)0x001B4FD0u)
 #define ImmediateModeVtxShaderHandleAddr ((void**)0x002C574Cu) // = &Gfx_ImmediateModeVertexShader
 #define OverlayVtxShaderHandleAddr       ((void**)0x002C5748u) // = &Gfx_OverlayVertexShaderHandle
-#define Gfx_D3DDeviceAddr                ((void**)0x002C576Cu) // = &D3D_DeviceReady (Gfx.D3DDevice)
 
 // What xboxInitGraphics asked the device for - read back by d3dGetDisplayMode below.
 static uint32_t g_d3dDisplayRefreshRate = 60;
@@ -3327,24 +3164,24 @@ void xboxInitGraphics(void) {
     // sets its own (src/driving/gfx/d3dSeam.cpp).
     g_xboxTextureStateTable = 0x001117D0u;
     g_xboxRenderStateTable = 0x001119D0u;
-    g_overlayTableBase = 0x002CAFE8u;
-    g_overlayTableEnd = g_overlayTableBase + 256u * 20u;
+    g_overlayTableBase = (uint32_t)(uintptr_t)&Gfx.overlayQuads[0];
+    g_overlayTableEnd = g_overlayTableBase + sizeof(Gfx.overlayQuads);
 
     g_gfxBackend = Settings_GetGraphicsBackend(); // decided once, before the first D3D8 entry point is touched
     printf("[d3dSeam] graphics backend: %s\n", g_gfxBackend == GFX_BACKEND_D3D9 ? "d3d9 (native)" : "cxbx (D3D8 HLE)");
 
-    memset((void*)GFX_STRUCT_BASE, 0, GFX_STRUCT_DWORDS * 4);
+    memset(&Gfx, 0, sizeof(Gfx));
 
     for (int i = 0; i < 256; i++)
-        Gfx_U8ToFloat01(i) = (float)i * (1.0f / 255.0f);
+        Gfx.u8ToFloat01[i] = (float)i * (1.0f / 255.0f);
 
-    Gfx_PushBuffersEnabled = D3D_ArePushBuffersSupported(0);
-    if (Gfx_PushBuffersEnabled != 0)
+    Gfx.pushBuffersEnabled = D3D_ArePushBuffersSupported(0);
+    if (Gfx.pushBuffersEnabled != 0)
         D3D_SetPushBufferSize(0x200000, 0x80000);
 
     D3DPRESENT_PARAMETERS_Xbox presentParams;
     memset(&presentParams, 0, sizeof(presentParams));
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
     presentParams.BackBufferCount = 1;
     presentParams.BackBufferWidth = SCREEN_WIDTH;
     presentParams.BackBufferHeight = SCREEN_HEIGHT;
@@ -3356,17 +3193,17 @@ void xboxInitGraphics(void) {
     presentParams.FullScreen_PresentationInterval = 0;
 
     uint32_t videoMode = GetVideoMode();
-    Gfx_IsNotPalI = (XboxGetAVRegion() != 3) ? 1 : 0;
-    Gfx_IsSomeGfxRegion = (XboxGetAVRegion() == 1) ? 1 : 0;
-    Gfx_IsWidescreen = (uint8_t)(videoMode & 1);
-    Gfx_VideoModeBit3 = (uint8_t)((videoMode >> 3) & 1);
-    Gfx_IsPalI = Gfx_IsNotPalI; // sic - see the comment above
-    if (Gfx_IsPalI == 0)
-        Gfx_VideoModeBit3 = 0;
-    presentParams.FullScreen_RefreshRateInHz = (Gfx_IsPalI != 0) ? 60 : 50;
-    if (Gfx_IsWidescreen != 0)
+    Gfx.isNotPalI = (XboxGetAVRegion() != 3) ? 1 : 0;
+    Gfx.isNtscM = (XboxGetAVRegion() == 1) ? 1 : 0;
+    Gfx.isWidescreen = (uint8_t)(videoMode & 1);
+    Gfx.videoModeBit3 = (uint8_t)((videoMode >> 3) & 1);
+    Gfx.isPalI = Gfx.isNotPalI; // sic - see the comment above
+    if (Gfx.isPalI == 0)
+        Gfx.videoModeBit3 = 0;
+    presentParams.FullScreen_RefreshRateInHz = (Gfx.isPalI != 0) ? 60 : 50;
+    if (Gfx.isWidescreen != 0)
         presentParams.Flags |= 0x10;
-    if (Gfx_VideoModeBit3 != 0)
+    if (Gfx.videoModeBit3 != 0)
         presentParams.Flags |= 0x40;
 
     // Remembered for d3dGetDisplayMode (the D3D8 GetDisplayMode replacement the video decoder ends up calling).
@@ -3374,10 +3211,10 @@ void xboxInitGraphics(void) {
     g_d3dDisplayFlags = presentParams.Flags;
     g_d3dDisplayFormat = presentParams.BackBufferFormat;
 
-    if (Gfx_PushBuffersEnabled == 0)
-        Gfx_D3DLastError = 0;
+    if (Gfx.pushBuffersEnabled == 0)
+        Gfx.d3dLastError = 0;
     else
-        Gfx_D3DLastError = Direct3D_CreateDevice(0, 1, NULL, 0x40, &presentParams, Gfx_D3DDeviceAddr);
+        Gfx.d3dLastError = Direct3D_CreateDevice(0, 1, NULL, 0x40, &presentParams, ((void**)&Gfx.d3dDevice));
 
     d3dInitFallbackOverlayTexture();
     d3dSetup();
@@ -3390,29 +3227,29 @@ void xboxInitGraphics(void) {
         else
             declaration = (i & 1) ? VtxShaderDeclTokens_Bit0And1 : VtxShaderDeclTokens_Bit1;
 
-        if (D3D_DeviceReady == 0)
-            Gfx_D3DLastError = 0;
+        if (Gfx.d3dDevice == 0)
+            Gfx.d3dLastError = 0;
         else
-            Gfx_D3DLastError = D3DDevice_CreateVertexShader(declaration, VtxShaderFunctionTokenTable[i], &VtxShaderHandles[i], 0);
+            Gfx.d3dLastError = D3DDevice_CreateVertexShader(declaration, VtxShaderFunctionTokenTable[i], &VtxShaderHandles[i], 0);
     }
 
-    if (D3D_DeviceReady == 0) {
-        Gfx_D3DLastError = 0;
+    if (Gfx.d3dDevice == 0) {
+        Gfx.d3dLastError = 0;
     } else {
-        Gfx_D3DLastError = D3DDevice_CreateVertexShader(ImmediateModeVtxShaderDecl, ImmediateModeVtxShaderFunc, ImmediateModeVtxShaderHandleAddr, 0);
-        if (D3D_DeviceReady == 0)
-            Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = D3DDevice_CreateVertexShader(ImmediateModeVtxShaderDecl, ImmediateModeVtxShaderFunc, ImmediateModeVtxShaderHandleAddr, 0);
+        if (Gfx.d3dDevice == 0)
+            Gfx.d3dLastError = 0;
         else
-            Gfx_D3DLastError = D3DDevice_CreateVertexShader(OverlayVtxShaderDecl, OverlayVtxShaderFunc, OverlayVtxShaderHandleAddr, 0);
+            Gfx.d3dLastError = D3DDevice_CreateVertexShader(OverlayVtxShaderDecl, OverlayVtxShaderFunc, OverlayVtxShaderHandleAddr, 0);
     }
 
     ConfigureGammaRamp(1.0f, 1.0f, 1.0f);
 
     for (int i = 0; i < 2; i++) {
         d3dBeginFrame();
-        if (D3D_DeviceReady != 0)
+        if (Gfx.d3dDevice != 0)
             D3DDevice_Clear(0, NULL, 0xF3, 0, 1.0f, 0);
-        Gfx_D3DLastError = 0;
+        Gfx.d3dLastError = 0;
         d3dSwap(); // the original inlines exactly d3dSwap's body here
     }
 }
@@ -3587,9 +3424,6 @@ void __stdcall d3dLockSurface(const uint32_t *surface, D3DLOCKED_RECT_Xbox *lock
 typedef void(__stdcall *D3DDevice_DrawIndexedVerticesFn)(uint32_t primitiveType, uint32_t vertexCount, const void *pIndexData);
 #define D3DDevice_DrawIndexedVertices (D3DSeamTraced("D3DDevice_DrawIndexedVertices", (D3DDevice_DrawIndexedVerticesFn)D3DDevice_DrawIndexedVertices_ADDR, D3D9_DrawIndexedVertices))
 
-#define Gfx_LightConstantBlock      ((float*)0x002FF27Cu) // 36 floats -> vertex shader constants 0x69..0x71: 4 x view-space light position (xyz, pad), then the 4 x colour and 4 x 1/range d3dSetLight fills in
-#define Gfx_LevelDirectionViewSpace ((float*)0x002FF388u) // 3 floats (+pad) -> vertex shader constant 0x7b
-#define Gfx_LevelDirectionDirty     Gfx_MatrixGenFlag2     // 0x002FF278 - set to 1 by d3dSetLevelDirectionVector, -1 by d3dSetMatrix
 
 // FUN_000e86c0 in the original: rotates a 3-vector by the upper-left 3x3 of a row-major 4x4 matrix, optionally
 // adding the translation column - i.e. a full point transform (translate != 0) or a direction transform.
@@ -3613,50 +3447,50 @@ static void TransformVector3(float *out, const float *m, const float *v, bool tr
 // FUNC_AT(000e4a50)
 void d3dsetVertexShaderConstant(void) {
     D3DMATRIX inverseActive;
-    memcpy(&inverseActive, Gfx_d3dActiveMatrix, sizeof(D3DMATRIX));
+    memcpy(&inverseActive, &Gfx.activeMatrix, sizeof(D3DMATRIX));
     maybeInvertRigidTransform(&inverseActive);
     const float *m = (const float*)&inverseActive;
 
     bool anyLight = false;
     for (int i = 0; i < 4; i++) {
-        if ((Gfx_LightDirtyMask & (1u << i)) != 0) {
-            TransformVector3(Gfx_LightConstantBlock + i * 4, m, (const float*)(Gfx_LightDirection + i * 3), true);
+        if ((Gfx.lightDirtyMask & (1u << i)) != 0) {
+            TransformVector3(Gfx.lights.position[i], m, (const float*)Gfx.lightDirection[i], true);
             anyLight = true;
         }
     }
     if (anyLight) {
-        if (D3D_DeviceReady != 0)
-            D3DDevice_SetVertexShaderConstantNotInline(0x69, Gfx_LightConstantBlock, 0x24);
-        Gfx_D3DLastError = 0;
+        if (Gfx.d3dDevice != 0)
+            D3DDevice_SetVertexShaderConstantNotInline(0x69, (float*)&Gfx.lights, 0x24);
+        Gfx.d3dLastError = 0;
     }
 
-    if (Gfx_LevelDirectionDirty != 0) {
-        TransformVector3(Gfx_LevelDirectionViewSpace, m, Gfx_LevelDirectionVector, false);
-        if (D3D_DeviceReady != 0)
-            D3DDevice_SetVertexShaderConstant1(0x7b, Gfx_LevelDirectionViewSpace);
-        Gfx_D3DLastError = 0;
+    if (Gfx.levelDirectionDirty != 0) {
+        TransformVector3(Gfx.levelDirectionViewSpace, m, Gfx.levelDirectionVector, false);
+        if (Gfx.d3dDevice != 0)
+            D3DDevice_SetVertexShaderConstant1(0x7b, Gfx.levelDirectionViewSpace);
+        Gfx.d3dLastError = 0;
     }
 
-    Gfx_LightDirtyMask = 0;
-    Gfx_LevelDirectionDirty = 0;
+    Gfx.lightDirtyMask = 0;
+    Gfx.levelDirectionDirty = 0;
 }
 
-// Selects the vertex shader permutation for the current mode flags (Gfx_MiscModeFlags is literally the index
+// Selects the vertex shader permutation for the current mode flags (Gfx.miscModeFlags is literally the index
 // into the 128 shaders xboxInitGraphics created - bit 0x2 = 0x20-byte vertex stride, 0x4/0x8 = two/four lights,
 // 0x10 and 0x20 set elsewhere in this file). The "four lights" bit subsumes "two lights", so 0x4 is dropped
-// when 0x8 is set. Gfx_MiscResetFlag caches the last-selected index; d3dBindBuffers/drawShard reset it to -1.
+// when 0x8 is set. Gfx.miscResetFlag caches the last-selected index; d3dBindBuffers/drawShard reset it to -1.
 //
 // FUNC_AT(000e4b30)
 void d3dsetVertexShader(void) {
-    uint32_t flags = Gfx_MiscModeFlags;
+    uint32_t flags = Gfx.miscModeFlags;
     if ((flags & 0x8u) != 0) {
         flags &= ~0x4u;
-        Gfx_MiscModeFlags = flags;
+        Gfx.miscModeFlags = flags;
     }
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetVertexShader(VtxShaderHandles[flags]);
-    Gfx_MiscResetFlag = Gfx_MiscModeFlags;
-    Gfx_D3DLastError = 0;
+    Gfx.miscResetFlag = Gfx.miscModeFlags;
+    Gfx.d3dLastError = 0;
 }
 
 // Uploads one 3x4 skinning matrix (12 floats) to the constant register the 53-entry table at 0x001B5208 maps
@@ -3666,9 +3500,9 @@ void d3dsetVertexShader(void) {
 void d3dSetSkinMatrix(const void *matrix3x4, uint32_t boneIndex) {
     if (boneIndex >= 0x35)
         return;
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_SetVertexShaderConstantNotInline((uint32_t)(D3D8_ShaderConstantSubIndexTable[boneIndex] + 0x60), (void*)matrix3x4, 0xc);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }
 
 // Draws one triangle strip of (indexCount + 2) vertices from the bound index buffer, starting at index
@@ -3678,11 +3512,11 @@ void d3dSetSkinMatrix(const void *matrix3x4, uint32_t boneIndex) {
 //
 // FUNC_AT(000e4b80)
 void d3dDrawIndexedVertices(int startIndex, int indexCount) {
-    if (Gfx_LightDirtyMask != 0 || Gfx_LevelDirectionDirty != 0)
+    if (Gfx.lightDirtyMask != 0 || Gfx.levelDirectionDirty != 0)
         d3dsetVertexShaderConstant();
-    if (Gfx_MiscResetFlag != Gfx_MiscModeFlags)
+    if (Gfx.miscResetFlag != Gfx.miscModeFlags)
         d3dsetVertexShader();
-    if (D3D_DeviceReady != 0)
+    if (Gfx.d3dDevice != 0)
         D3DDevice_DrawIndexedVertices(6 /* D3DPT_TRIANGLESTRIP */, (uint32_t)indexCount + 2, g_d3dBoundIndexData + startIndex);
-    Gfx_D3DLastError = 0;
+    Gfx.d3dLastError = 0;
 }

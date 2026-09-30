@@ -259,6 +259,17 @@ typedef enum {
 } DSTATE;
 
 
+// The NPC system's globals: one block that Drone_LevelReset clears whole (0x142c bytes). Only what our code uses
+// is named so far; Ghidra also has NDrone2List at +0x4, NumDrones at +0x230 and the AI network's cover nodes at
+// +0x288, and FUN_00030e70 and Drone_PostLoad_Init clear arrays at +0xb54 (0x800 bytes) and +0x1354 (0x28).
+typedef struct {
+    char _pad0[0x19c];
+    uint32_t hostagesSaved; // +0x19c
+    char _pad1[0x142c - 0x1a0];
+} NPCGlobals_t;
+static_assert(sizeof(NPCGlobals_t) == 0x142c, "Bad size for NPCGlobals_t");
+#define NPCGlobals (*(NPCGlobals_t *)0x001e5630)
+
 obj_tag* NDrone2_CreateFromDIVars(DIVars_tag *diVars);
 
 bool NDrone2_DSTATE_HostageDead(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);

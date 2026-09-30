@@ -3,7 +3,7 @@
 #include "actionhelpers.h"
 #include <stdlib.h>
 
-#define Addr_MemStats 0x00223a60
+#define MemStats (*(uint32_t(*)[7])0x00223a60) // Mem_Init clears all 0x1c bytes; parsemap_block_Coll_Data_New adds to [0]
 #define Addr_PtrHeap 0x00223a80
 #define Addr_HeapByteSize 0x00223a88
 
@@ -41,7 +41,7 @@ void Mem_Init(void) {
 
     void *puVar1;
 
-    memset((void*)Addr_MemStats, 0, 0x1c);
+    memset(&MemStats, 0, sizeof(MemStats));
 
     MallocMethod = 1;
 

@@ -6,6 +6,7 @@
 #include "ui/MenuManager.h"
 #include "engine/Text.h"
 #include "engine/XboxSettings.h"
+#include "engine/Direct3D/GraphicsSystem.h" // Gfx
 
 #include <windows.h>
 
@@ -137,7 +138,7 @@ LAB_0006aafe:
 }
 
 #define StackIndex U16_AT(0x0017bfe8)
-#define glb_viewer_6 U32_AT(0x001f6634)
+#define glb_viewer_6 ((uint)glb_viewer[6])
 #define SkipCodeFrame U8_AT(0x001f6564)
 #define GameStateStack (*(uint (*)[64])0x0017bff0) // Not zero-initialised - first entry must be 1
 
@@ -763,11 +764,9 @@ void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate) {
 
 }
 
-#define IsPalI U8_AT(0x002c5760)
-
 // AUTOINJECT
 bool Graphics_IsPalI(void) {
-  return IsPalI;
+  return Gfx.isPalI;
 }
 
 // AUTOINJECT

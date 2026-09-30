@@ -107,15 +107,16 @@ void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum) {
 
 }
 
-#define MissionFailConditionHit U8_AT(0x001df19b)
-#define MissionWinConditionHit U8_AT(0x001df19c)
-#define MissionFailTime U32_AT(0x001df5b4)
-#define MissionWinTime U32_AT(0x001df5b8)
+// Hard-coded switch channels (docs/switch-channels.md)
+#define MissionFailConditionHit switch_channels[0x63]
+#define MissionWinConditionHit switch_channels[0x64]
+#define MissionFailTime switch_channels_time[0x63]
+#define MissionWinTime switch_channels_time[0x64]
 
-#define FailedDueToAlarm U8_AT(0x001df199)
-#define FailedDueToKilledCivilian U8_AT(0x001df198)
-#define FailedDueToKikoEscape U8_AT(0x001df1b3)
-#define FailedDueToMissileLaunch U8_AT(0x001df1ff)
+#define FailedDueToAlarm switch_channels[0x61]
+#define FailedDueToKilledCivilian switch_channels[0x60]
+#define FailedDueToKikoEscape switch_channels[0x7b]
+#define FailedDueToMissileLaunch switch_channels[0xc7]
 
 // AUTOINJECT
 void Mission_MonitorObjectives(void) {
@@ -273,7 +274,7 @@ HASHCODE Mission_GetEndTo(HASHCODE level) {
 #define InternalState U32_AT(0x0017e540)
 #define FadeClr_147 U32_AT(0x0017e550)
 #define TimeOut_148 FLOAT_AT(0x0025fe28)
-#define PlayerHasFinishedDying U8_AT(0x001df19a)
+#define PlayerHasFinishedDying switch_channels[0x62]
 #define LevelToEndTo (*(HASHCODE*)0x0017e54c)
 
 // AUTOINJECT

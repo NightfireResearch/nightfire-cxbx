@@ -37,10 +37,10 @@ typedef struct {
     int animSpeed;
     char _pad_2[0x28];
     int baseIdx;
-    char unknown_size_padding[0x1234]; // FIXME: Don't currently know how big this is
 } TextureInfo;
+static_assert(sizeof(TextureInfo) == 0x58, "Bad size for TextureInfo"); // the default entry maybePsiResetResources clears
 
-#define Tex (*(TextureInfo**)0x002abe80)
+#define Tex (*(TextureInfo*(*)[2048])0x002abe80)
 
 // AUTOGEN
 void psiDecompressWoman(void);
@@ -77,7 +77,7 @@ void WIP(void){
 
     TextureInfo t;
     
-    t = Tex[FireIdx];
+    t = *Tex[FireIdx];
     int fireIdxBase = t.baseIdx;
     int fireFrames = t.numFrames;
     int fireAnimSpeed = t.animSpeed;
@@ -85,7 +85,7 @@ void WIP(void){
     void* FireData = Texture_GetRawDataPtr(fireTexIdx);
 
 
-    t = Tex[OutIdx];
+    t = *Tex[OutIdx];
     int outIdxBase = t.baseIdx;
     int outFrames = t.numFrames;
     int outAnimSpeed = t.animSpeed;

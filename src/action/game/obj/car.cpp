@@ -21,12 +21,13 @@
 
 #include "car.h"
 
+#define MAX_TANKS 8 // Locations defined on the map
+
 // Until we implement fully, use the in-game memory addresses
-#define Tanks ((obj_tag**)0x001dc980) // MAX_TANKS? entries
+#define Tanks (*(obj_tag*(*)[MAX_TANKS])0x001dc980) // the original Car_Init clears all 0x20 bytes
 #define NumTanks U16_AT(0x001dc798)
 #define TankSpawns (*(_MATRIX(*)[8])0x001dc7a0)
 
-#define MAX_TANKS 8 // Locations defined on the map
 
 // WIP
 void Car_CollisionHandler(obj_tag* me) {

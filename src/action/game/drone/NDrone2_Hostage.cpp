@@ -29,7 +29,7 @@ bool NDrone2_DSTATE_HostageDead(DCVars_tag* dcVars, Drone_tag *drone, obj_tag *g
     return false;
 }
 
-#define NUM_HOSTAGES_SAVED U32_AT(0x001e57cc)
+#define NUM_HOSTAGES_SAVED NPCGlobals.hostagesSaved
 
 #include <stdio.h>
 
