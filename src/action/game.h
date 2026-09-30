@@ -361,7 +361,10 @@ static_assert(offsetof(weapon_definition_tag,someDistance) == 0x1c, "someDistanc
 
 typedef struct {
     uint paused;
-    char unknown_pad[0x1c-4];
+    uint victories;         // the debriefing's "Victories"
+    uint deaths;            // the debriefing's "Deaths" (Ghidra: pointsScored)
+    char unknown_pad0[0x18-0xc];
+    float points;           // the debriefing's "Points"
     obj_tag* playerObj;
     short maybeIdxOfLastInjurer; // Index of who or what last dealt me damage? -2 = environment?
     short friendlyFireLabelTimer;
@@ -377,8 +380,7 @@ typedef struct {
   // Note that PS2 and Xbox have different number of entries in MPGame! PS2 has 8, Xbox has 10
   MPGamePlayer players[10];
   // Immediately following is more state related to MP game
-  uint unknown_1; // end conditions / debriefing / objective related
-  uint unknown_2; // end conditions / debriefing
+  float teamScore[2]; // by MPTeam: Phoenix, MI6 (MP_SortOutWhoWon, the debriefing)
   uint EndGameFlowState;
   uint unknown_3; // end conditions
   uint TimeUnpaused;

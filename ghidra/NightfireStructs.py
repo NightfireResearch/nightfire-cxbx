@@ -24,6 +24,9 @@
 #             "prototypes": [{"address": "0x8dc60", "calling_convention": "__thiscall" or null (keep),
 #                             "return": null (keep) or type, "params": [{"name": "m", "type": "MATRIX4 *"}]}]}
 #   or {"address": ..., "return": type, "return_only": true} to set just the return type.
+#  "enums": [{"name": "MessageType", "size": 4, "values": [{"name": "MessageType_SetText", "value": 24,
+#             "comment": "..."}], "comment": "..."}] - an enum that exists gets exactly these values (its
+#             references stay); a missing one is created in the root category.
 #             "data": [{"address": "0x260078", "type": "MP_PICKUP[64]", "name": "MPpickups" (optional)}]
 #   retypes a global: clears the listing over the new type's length, creates the data and, given a name, makes
 #   it the primary label. Applied after the types, so it can use one the same file defines.
@@ -37,7 +40,7 @@ import json
 import os
 import re
 
-from ghidra.program.model.data import (ArrayDataType, CategoryPath, DataTypeConflictHandler, PointerDataType,
+from ghidra.program.model.data import (ArrayDataType, CategoryPath, DataTypeConflictHandler, PointerDataType, EnumDataType,
                                        StructureDataType, Undefined1DataType, FunctionDefinitionDataType,
                                        ParameterDefinitionImpl)
 from ghidra.program.model.data import BuiltInDataTypeManager
@@ -101,16 +104,20 @@ def resolve(spec):
     if dt is None:
         raise Exception("unknown type '%s'" % spec)
     for _ in range(stars):
-        dt = PointerDataType(dt, 4, dtm)
+        # Default-sized, not PointerDataType(dt, 4, dtm): a pointer given an explicit size is named "T *32",
+        # which is what the function export then reports as the parameter's type.
+        dt = PointerDataType(dt, dtm)
     for n in reversed(arrays):
         dt = ArrayDataType(dt, n, dt.getLength(), dtm)
     return dt
 
 
-plan_types, plan_protos, plan_data = [], [], []
+plan_types, plan_protos, plan_enums, plan_data = [], [], [], []
 for fname, d in docs:
     for t in d.get("types", []):
         plan_types.append((fname, t))
+    for e in d.get("enums", []):
+        plan_enums.append((fname, e))
     for p in d.get("prototypes", []):
         plan_protos.append((fname, p))
     for g in d.get("data", []):
@@ -121,13 +128,33 @@ for fname, t in plan_types:
         continue
     print("  type %-32s %s, %d bytes, %d fields (%s)" % (t["name"], "rebuild" if have else "create", t["size"],
                                                         len(t["fields"]), fname))
+for fname, e in plan_enums:
+    print("  enum %-32s %s, %d values (%s)" % (e["name"], "rebuild" if find_named(e["name"]) else "create",
+                                            len(e["values"]), fname))
 print("  %d prototypes" % len(plan_protos))
 for fname, g in plan_data:
     print("  data %s %s%s (%s)" % (g["address"], g["type"], " as " + g["name"] if g.get("name") else "", fname))
 
-if not (plan_types or plan_protos or plan_data):
+if not (plan_types or plan_protos or plan_enums or plan_data):
     print("Nothing to do")
-elif askYesNo("Nightfire structs", "Apply %d types, %d prototypes and %d globals? (Edit > Undo reverts it)" % (len(plan_types), len(plan_protos), len(plan_data))):
+elif askYesNo("Nightfire structs", "Apply %d types, %d enums, %d prototypes and %d globals? (Edit > Undo reverts it)" % (len(plan_types), len(plan_enums), len(plan_protos), len(plan_data))):
+    errors = 0
+    # Pass 0: enums, first, so struct fields and prototypes can use them.
+    for fname, e in plan_enums:
+        try:
+            en = find_named(e["name"])
+            if en is None:
+                en = dtm.addDataType(EnumDataType(CategoryPath("/"), e["name"], e.get("size", 4), dtm),
+                                     DataTypeConflictHandler.KEEP_HANDLER)
+            for n in list(en.getNames()):
+                en.remove(n)
+            for v in e["values"]:
+                en.add(v["name"], int(str(v["value"]), 0), v.get("comment"))
+            if e.get("comment"):
+                en.setDescription(e["comment"])
+        except Exception as ex:
+            errors += 1
+            print("  FAILED enum %s: %s" % (e["name"], ex))
     # Pass 1: make sure every named struct exists (so fields can point at each other), at its size.
     for fname, t in plan_types:
         if find_named(t["name"]) is None:
@@ -136,7 +163,6 @@ elif askYesNo("Nightfire structs", "Apply %d types, %d prototypes and %d globals
             cat = CategoryPath("/" + "/".join(parts[:-1])) if len(parts) > 1 else CategoryPath("/")
             dtm.addDataType(StructureDataType(cat, parts[-1], t["size"], dtm), DataTypeConflictHandler.KEEP_HANDLER)
             t["_created"] = True
-    errors = 0
     # Pass 2: rebuild each in place ("if_missing" placeholders only when this run created them).
     for fname, t in plan_types:
         if t.get("if_missing") and not t.get("_created"):
@@ -200,6 +226,6 @@ elif askYesNo("Nightfire structs", "Apply %d types, %d prototypes and %d globals
         except Exception as ex:
             errors += 1
             print("  FAILED prototype %s: %s" % (p["address"], ex))
-    print("Applied %d types, %d prototypes, %d globals, %d errors" % (len(plan_types), done, placed, errors))
+    print("Applied %d types, %d enums, %d prototypes, %d globals, %d errors" % (len(plan_types), len(plan_enums), done, placed, errors))
 else:
     print("Cancelled; nothing changed")

@@ -1,0 +1,74 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# The multiplayer branch: join -> scenario wheel -> map wheel -> setup -> options wheel -> bots wheel.
+press DOWN
+wait 30
+press A                    # Multiplayer
+waitpage 0x40000019        # P_MPJOIN
+wait 100
+press A
+wait 120
+press A
+wait 120
+press A
+waitpage 0x4000001a        # P_MPSCENARIO
+wait 100
+shot scenario
+press DOWN
+wait 40
+shot scenario_down
+press A
+waitpage 0x40000013        # P_MPMAP
+wait 100
+shot map
+press A
+waitpage 0x40000051        # P_MPSETUP
+wait 100
+gopage 0x40000012          # P_MPOPTIONS (going on from the setup page takes every agent's choices)
+waitpage 0x40000012 400
+wait 100
+shot options
+press DOWN
+wait 40
+shot options_down          # AI Bots
+press A
+waitpage 0x40000027 400    # P_MPBOTS
+wait 100
+shot bots
+press DOWN
+wait 40
+shot bots_down
+press A                    # this bot: its character
+waitpage 0x4000003f 400    # P_MPBOTCHOOSE
+wait 100
+shot botchoose
+press DOWN
+wait 40
+shot botchoose_down
+press A                    # take the character: on to its setup
+waitpage 0x4000002c 400    # P_MPBOTSETUP
+wait 100
+shot botsetup
+press B
+waitpage 0x4000003f 400    # back to P_MPBOTCHOOSE
+wait 100
+press B
+waitpage 0x40000027 400    # P_MPBOTS
+wait 100
+shot bots_again
+press B
+waitpage 0x40000012 400    # P_MPOPTIONS
+wait 100
+press UP                   # Continue
+wait 40
+press A
+wait 120
+shot after_continue
+quit

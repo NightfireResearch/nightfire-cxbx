@@ -1,0 +1,2 @@
+# Shell scripts keep LF endings on every checkout (bash rejects CR), whatever core.autocrlf says.
+*.sh text eol=lf

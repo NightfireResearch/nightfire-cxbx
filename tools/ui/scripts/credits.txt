@@ -1,0 +1,18 @@
+# The credits (P_CREDITS), reached with a GoPage once the main menu is up: shots at fixed times after entering,
+# through to the fade-out and the page it returns to.
+wait 1700            # language, intro, start page (or the intro still playing: the GoPage works from either)
+log go
+gopage 0x40000030
+wait 300
+shot credits_0300
+wait 2700
+shot credits_3000
+wait 4000
+shot credits_7000
+wait 1100
+shot credits_8100
+wait 300
+shot credits_8400
+wait 300
+shot after_credits
+quit

@@ -47,6 +47,10 @@ typedef struct MatrixChainNode MatrixChainNode;
 typedef struct M_CONTROL M_CONTROL;
 typedef struct M_ITEM M_ITEM;
 typedef struct M_MANAGER M_MANAGER;
+typedef struct M_PAGE M_PAGE;
+typedef unsigned int BotNum;   // Ghidra's enum of the multiplayer characters: an mp_characters identifier
+typedef struct M_MESSAGE M_MESSAGE;
+typedef struct REWARDINFO_tag REWARDINFO_tag;
 typedef struct BOT_stats_t BOT_stats_t;
 typedef struct DLISTINFO_tag DLISTINFO_tag;
 typedef struct Drone_tag Drone_tag;

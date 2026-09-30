@@ -11,27 +11,15 @@ bool P_START_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint para
 // AUTOGEN
 bool P_NIS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool P_MPOPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool P_MPRULES_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool P_MPJOIN_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool P_CNSELECT_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool P_NFMAP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool P_CNMENU_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool P_CNNAME_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool P_CNCONTROLS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool P_NFDFCTY_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool P_NFSELECT_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool P_MPBOTS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool P_MPBOTSETUP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
@@ -39,13 +27,9 @@ bool P_CNOPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint 
 // AUTOGEN
 bool P_CNMPOPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool P_CREDITS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool P_CNAVOPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool P_INTRO_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool P_MPDEBRIEFING_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool P_LANGUAGE_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
@@ -57,8 +41,6 @@ bool P_NFSTATS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint pa
 // AUTOGEN
 bool P_NFBONUS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool P_MPBOTCHOOSE_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool P_ENDMISSION_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool P_ESTHERO_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
@@ -66,8 +48,6 @@ bool P_ESTHERO_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint pa
 bool P_TWEAKS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool P_TWEAKS2_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool P_MPCONFIRM_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool P_PARISENUM_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
@@ -92,8 +72,6 @@ bool C_GONIGHTFIRE_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uin
 bool C_GOMULTIPLAYER_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_GOCODENAMES_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_SBNFMAP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_LBPMMAP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
@@ -121,15 +99,9 @@ bool C_GCPAUSE_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint pa
 // AUTOGEN
 bool C_NIS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool C_KEYBOARD_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_SBMPSCEN_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool C_KEYPAD_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_CHCHDUMMY_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_SBNFDFCTY_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_CHCHALLOWFREEZE_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
@@ -139,11 +111,7 @@ bool C_RBDSRECORDS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uin
 // AUTOGEN
 bool C_RBDSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool C_SBMPBTCHOOSE_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool C_RBMPSTART_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_RBMPSETUP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_CHCHBRIGHT_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
@@ -159,15 +127,9 @@ bool C_CHCHHEALTH_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint
 // AUTOGEN
 bool C_SBCNSELECT_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool C_SBMPOPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool C_LBERROPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool C_SBCNOPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool C_CHCHDRAWALL_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_SBBOTS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_LBMSGOPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN

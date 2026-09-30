@@ -16,7 +16,6 @@ short Control_Plr2Ind(obj_tag* a);
 #define NUM_SKINS 29 // unique characters
 #define MP_skins ((MP_skin*)0x001637c0)
 
-#define mpbots (*(MPBOTS*)0x00245280)
 
 // AUTOINJECT
 void MP_setLoadingSkins(void) {
