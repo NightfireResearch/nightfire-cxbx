@@ -144,7 +144,7 @@ static bool CreatePersistent(IDirect3DDevice9 *device, FxaaLogFn log) {
     if (SUCCEEDED(hr)) hr = device->CreateStateBlock(D3DSBT_ALL, &g_saved);
     if (FAILED(hr)) { Fail(log, "creating the vertex declaration or state block", hr); return false; }
     if (log != NULL)
-        log("[d3d9] FXAA on (FXAA=0 in settings.ini to turn it off)\n");
+        log("[d3d9] FXAA on (AntiAliasing=1 in settings.ini; 0 turns it off)\n");
     return true;
 }
 

@@ -1,9 +1,9 @@
 #ifndef COMMON_GFX_FXAA_H_
 #define COMMON_GFX_FXAA_H_
 
-// Experimental FXAA on the 3D scene, before the HUD and text are drawn over it (see FxaaBeforeOverlay in
-// d3d9Backend.cpp). Built into both engines when NF_FXAA is defined (CMakeLists.txt); settings.ini's FXAA=0
-// turns it off at run time. See fxaa.cpp.
+// Experimental FXAA on the 3D scene, before the HUD and text are drawn over it (see AntiAliasBeforeOverlay in
+// d3d9Backend.cpp). Built into both engines when NF_ANTIALIASING is defined (CMakeLists.txt); it is
+// AntiAliasing=1 in settings.ini, the default. See fxaa.cpp.
 
 #include <d3d9.h>
 

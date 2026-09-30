@@ -375,11 +375,11 @@ target_compile_definitions(action_cxbx PRIVATE UNICODE _UNICODE IS_ACTION)
 target_compile_definitions(driving_cxbx PRIVATE UNICODE _UNICODE IS_DRIVING)
 target_compile_definitions(actioninject PRIVATE UNICODE _UNICODE)
 target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)
-# Experimental FXAA on the 3D scene, before the HUD and text (src/common/gfx/fxaa.cpp), in both engines;
-# FXAA=0 in settings.ini turns it off at run time. Remove these two lines and fxaa.cpp from both source lists
-# to take it out.
-target_compile_definitions(actioninject PRIVATE NF_FXAA)
-target_compile_definitions(drivinginject PRIVATE NF_FXAA)
+# Experimental post-process anti-aliasing on the 3D scene, before the HUD and text, in both engines. Chosen by
+# AntiAliasing in settings.ini: 0 off, 1 FXAA (src/common/gfx/fxaa.cpp, the default), 2 SMAA (not implemented
+# yet). Remove these two lines and fxaa.cpp from both source lists to take it out.
+target_compile_definitions(actioninject PRIVATE NF_ANTIALIASING)
+target_compile_definitions(drivinginject PRIVATE NF_ANTIALIASING)
 
 
 # Run preprocess.py before building actioninject and drivinginject. It writes the injection tables
