@@ -129,6 +129,7 @@ add_library(actioninject SHARED
   src/common/gfx/d3d9Backend.cpp
   src/common/gfx/nv2aPixelShader.cpp
   src/common/gfx/fxaa.cpp
+  src/common/gfx/textureReplace.cpp
   src/action/game/Autoaim.cpp
   src/action/game/weapon_stats.cpp
   src/action/math/math.cpp
@@ -363,6 +364,7 @@ add_library(drivinginject SHARED
   src/common/gfx/d3d9Backend.cpp
   src/common/gfx/nv2aPixelShader.cpp
   src/common/gfx/fxaa.cpp
+  src/common/gfx/textureReplace.cpp
 )
 
 

@@ -102,6 +102,19 @@ void D3D9_ImmediateColour(uint32_t reg, uint32_t colour);
 void D3D9_ImmediateTexCoord(uint32_t reg, float u, float v);
 void D3D9_ImmediateVertex(uint32_t reg, float x, float y, float z, float w);
 void D3D9_ImmediateEnd(void);
+
+// Texture dumping (textureReplace.cpp). A font's glyph boxes are written beside its dumped texture, for making
+// a replacement with tools/texture_replacement.py; false until the texture has been uploaded, so the caller
+// asks again. Positions and sizes are in the original texture's texels.
+struct D3D9FontGlyph {
+    uint16_t code;         // the character, in the game's single-byte encoding (texture_replacement.py: GAME_ENCODING)
+    uint16_t u, v, w, h;   // the glyph's box in the sheet
+    int16_t yOffset;       // where the box sits relative to the line
+    int16_t advance;       // the game's extra advance for the glyph
+};
+bool D3D9_DumpingTextures(void);
+bool D3D9_DescribeFont(const void *xboxTexture, const D3D9FontGlyph *glyphs, int count);
+
 void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, const void *pIndexData);
 void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t vertexCount);
 void D3D9_SetRenderTarget(void *pRenderTarget, void *pDepthStencil);

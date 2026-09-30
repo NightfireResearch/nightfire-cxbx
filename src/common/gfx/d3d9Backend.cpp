@@ -26,6 +26,7 @@
 
 #include "backendHost.h"   // the engine this is compiled into provides these three; see the header
 #include "nv2aPixelShader.h"
+#include "textureReplace.h"
 #ifdef NF_ANTIALIASING
 #include "fxaa.h"   // experimental - see fxaa.cpp
 // settings.ini [Settings] AntiAliasing: which post-process anti-aliasing runs over the 3D scene.
@@ -323,6 +324,9 @@ struct HostTexture {
     bool dirty;              // CPU wrote into the pixel data since the last upload
     bool renderTarget;       // lives in D3DPOOL_DEFAULT with D3DUSAGE_RENDERTARGET; never uploaded from CPU memory
     IDirect3DSurface9 *rtSurface; // level 0 of a render-target texture
+    uint64_t hash;           // of the source data, when textureReplace.cpp needs it (hashed says whether)
+    bool hashed;
+    bool replaced;           // the texture is a file from textures\ - never uploaded from the game's data
 };
 static HostTexture g_textures[2200];
 static int g_textureCount = 0;
@@ -368,6 +372,7 @@ static void ReleaseHostTexture(HostTexture *t) {
     if (t->texture != NULL) { t->texture->Release(); t->texture = NULL; }
     t->renderTarget = false;
     t->dirty = true;
+    t->hashed = t->replaced = false;
 }
 
 static void InvalidateHostBuffers(const void *obj);
@@ -504,6 +509,8 @@ void D3D9_SetPalette(uint32_t stage, const void *entries) {
 }
 
 // (Re)creates and/or uploads the host texture for an Xbox header. Returns NULL for formats not handled yet.
+static uint8_t *ReadLevel0Bgra(IDirect3DTexture9 *texture, UINT *widthOut, UINT *heightOut);
+
 static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
     const XboxPixelContainer *h = (const XboxPixelContainer*)headerPtr;
     HostTexture *t = FindOrAddHostTexture(headerPtr);
@@ -555,6 +562,38 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
         for (int i = 0; i < warnedCount; i++) if (warned[i] == xboxFormat) seen = true;
         if (!seen && warnedCount < 64) { warned[warnedCount++] = xboxFormat; D3D9Log("[d3d9] texture format 0x%02x not handled yet (%ux%u)\n", xboxFormat, width, height); }
         return NULL;
+    }
+
+    // Replacement (textureReplace.cpp): the source data's hash names the file. A replaced texture is checked
+    // again only when the game's data may have changed, and keeps the file while the hash still matches.
+    if (TextureReplace_Active()) {
+        size_t sourceBytes = linear ? (size_t)pitch * height
+                           : dxt ? (size_t)((width + 3) / 4) * ((height + 3) / 4) * (xboxFormat == XFMT_DXT1 ? 8 : 16)
+                           : (size_t)width * height * XboxFormatBitsPerPixel(xboxFormat) / 8;
+        uint64_t hash = TextureReplace_Hash(xboxFormat, width, height, XboxDataPointer(h->Data), sourceBytes);
+        bool sameData = t->hashed && t->hash == hash;
+        t->hash = hash;
+        t->hashed = true;
+        if (t->replaced && sameData && !rebuild) {
+            t->dirty = false;
+            t->uploadedFrame = g_frameCount;
+            return t->texture;
+        }
+        // Only new data can have a new file; a texture the game rewrites unchanged is not looked up each time.
+        IDirect3DTexture9 *replacement = (!sameData || rebuild) ? TextureReplace_Load(g_device, hash) : NULL;
+        if (replacement != NULL) {
+            if (t->texture != NULL) t->texture->Release();
+            t->texture = replacement;
+            t->format = h->Format; t->size = h->Size; t->data = h->Data;
+            t->replaced = true;
+            t->dirty = false;
+            t->uploadedFrame = g_frameCount;
+            return t->texture;
+        }
+        if (t->replaced) {   // the data no longer matches the file: back to the game's own
+            t->replaced = false;
+            rebuild = true;
+        }
     }
 
     if (rebuild) {
@@ -638,6 +677,12 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
     }
     t->dirty = false;
     t->uploadedFrame = g_frameCount;
+    if (rebuild && t->hashed && TextureReplace_Dumping()) {
+        UINT dumpWidth, dumpHeight;
+        uint8_t *bgra = ReadLevel0Bgra(t->texture, &dumpWidth, &dumpHeight);
+        TextureReplace_Dump(t->hash, dumpWidth, dumpHeight, bgra);
+        free(bgra);
+    }
     return t->texture;
 }
 
@@ -798,6 +843,8 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
             height = (uint32_t)renderHeight;
         }
     }
+
+    TextureReplace_Init(D3D9Log);
 
 #ifdef NF_ANTIALIASING
     g_antiAliasing = (int)GetPrivateProfileIntA("Settings", "AntiAliasing", AA_FXAA, ".\\settings.ini");
@@ -1031,22 +1078,15 @@ static void DecodeDxtBlock(const uint8_t *block, bool dxt1, bool dxt3, uint8_t r
     }
 }
 
-static void DumpBoundTexture(const void *header, IDirect3DTexture9 *texture) {
-    static const void *seen[64]; static int seenCount = 0; static uint32_t seenFrame = 0;
-    if (texture == NULL || header == NULL)
-        return;
-    if (seenFrame != g_dumpFrame) { seenFrame = g_dumpFrame; seenCount = 0; }
-    for (int i = 0; i < seenCount; i++) if (seen[i] == header) return;
-    if (seenCount >= (int)(sizeof(seen) / sizeof(seen[0]))) return;
-    seen[seenCount++] = header;
-    const XboxPixelContainer *h = (const XboxPixelContainer*)header;
+// Level 0 of a host texture as B, G, R, A bytes (malloc'd; the caller frees), whatever its format. NULL if it
+// cannot be read. Formats not decoded here come out magenta.
+static uint8_t *ReadLevel0Bgra(IDirect3DTexture9 *texture, UINT *widthOut, UINT *heightOut) {
     D3DSURFACE_DESC desc;
     D3DLOCKED_RECT lr;
-    if (FAILED(texture->GetLevelDesc(0, &desc)) || FAILED(texture->LockRect(0, &lr, NULL, D3DLOCK_READONLY)))
-        return;
-    size_t rowBytes = (size_t)desc.Width * 3;
-    uint8_t *colour = (uint8_t*)malloc(rowBytes * desc.Height), *alpha = (uint8_t*)malloc(rowBytes * desc.Height);
-    if (colour != NULL && alpha != NULL) {
+    if (texture == NULL || FAILED(texture->GetLevelDesc(0, &desc)) || FAILED(texture->LockRect(0, &lr, NULL, D3DLOCK_READONLY)))
+        return NULL;
+    uint8_t *out = (uint8_t*)malloc((size_t)desc.Width * desc.Height * 4);
+    if (out != NULL) {
         for (UINT y = 0; y < desc.Height; y++) {
             const uint8_t *row = (const uint8_t*)lr.pBits + y * lr.Pitch;
             for (UINT x = 0; x < desc.Width; x++) {
@@ -1070,15 +1110,43 @@ static void DumpBoundTexture(const void *header, IDirect3DTexture9 *texture) {
                     }
                     default: r = 255; g = 0; b = 255; break;   // not decoded here: magenta
                 }
-                colour[y * rowBytes + x * 3] = b; colour[y * rowBytes + x * 3 + 1] = g; colour[y * rowBytes + x * 3 + 2] = r;
-                memset(alpha + y * rowBytes + x * 3, a, 3);
+                uint8_t *px = out + ((size_t)y * desc.Width + x) * 4;
+                px[0] = b; px[1] = g; px[2] = r; px[3] = a;
             }
         }
+    }
+    texture->UnlockRect(0);
+    *widthOut = desc.Width;
+    *heightOut = desc.Height;
+    return out;
+}
+
+static void DumpBoundTexture(const void *header, IDirect3DTexture9 *texture) {
+    static const void *seen[64]; static int seenCount = 0; static uint32_t seenFrame = 0;
+    if (texture == NULL || header == NULL)
+        return;
+    if (seenFrame != g_dumpFrame) { seenFrame = g_dumpFrame; seenCount = 0; }
+    for (int i = 0; i < seenCount; i++) if (seen[i] == header) return;
+    if (seenCount >= (int)(sizeof(seen) / sizeof(seen[0]))) return;
+    seen[seenCount++] = header;
+    const XboxPixelContainer *h = (const XboxPixelContainer*)header;
+    UINT width, height;
+    uint8_t *bgra = ReadLevel0Bgra(texture, &width, &height);
+    if (bgra == NULL)
+        return;
+    size_t rowBytes = (size_t)width * 3;
+    uint8_t *colour = (uint8_t*)malloc(rowBytes * height), *alpha = (uint8_t*)malloc(rowBytes * height);
+    if (colour != NULL && alpha != NULL) {
+        for (size_t i = 0; i < (size_t)width * height; i++) {
+            size_t y = i / width, x = i % width;
+            memcpy(colour + y * rowBytes + x * 3, bgra + i * 4, 3);
+            memset(alpha + y * rowBytes + x * 3, bgra[i * 4 + 3], 3);
+        }
         char path[160];
-        snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x_%ux%u.bmp", g_dumpFrame, seenCount - 1, h->Format, h->Size, (unsigned)desc.Width, (unsigned)desc.Height);
-        WriteBmp24(path, desc.Width, desc.Height, colour, rowBytes);
-        snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x_%ux%u_alpha.bmp", g_dumpFrame, seenCount - 1, h->Format, h->Size, (unsigned)desc.Width, (unsigned)desc.Height);
-        WriteBmp24(path, desc.Width, desc.Height, alpha, rowBytes);
+        snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x_%ux%u.bmp", g_dumpFrame, seenCount - 1, h->Format, h->Size, (unsigned)width, (unsigned)height);
+        WriteBmp24(path, width, height, colour, rowBytes);
+        snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x_%ux%u_alpha.bmp", g_dumpFrame, seenCount - 1, h->Format, h->Size, (unsigned)width, (unsigned)height);
+        WriteBmp24(path, width, height, alpha, rowBytes);
         if (h->Size != 0) {   // linear: the game's memory as it stands, for trying other layouts on
             uint32_t pitch = ((h->Size >> 24) + 1) * 64, rows = ((h->Size >> 12) & 0xFFF) + 1;
             snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x.raw", g_dumpFrame, seenCount - 1, h->Format, h->Size);
@@ -1086,8 +1154,7 @@ static void DumpBoundTexture(const void *header, IDirect3DTexture9 *texture) {
             if (rf != NULL) { fwrite((const void*)(uintptr_t)h->Data, 1, (size_t)pitch * rows, rf); fclose(rf); }
         }
     }
-    free(colour); free(alpha);
-    texture->UnlockRect(0);
+    free(colour); free(alpha); free(bgra);
 }
 
 static void DumpSurface(IDirect3DSurface9 *surface, const char *name, bool alpha) {
@@ -2953,6 +3020,21 @@ static uint32_t g_immediatePrimitive = 0;
 static bool g_immediateOpen = false;
 static uint32_t g_immediateColour = 0xFFFFFFFFu;
 static float g_immediateU = 0.0f, g_immediateV = 0.0f;
+
+bool D3D9_DumpingTextures(void) {
+    return TextureReplace_Dumping();
+}
+
+bool D3D9_DescribeFont(const void *xboxTexture, const D3D9FontGlyph *glyphs, int count) {
+    HostTexture *t = xboxTexture != NULL ? FindHostTexture(xboxTexture) : NULL;
+    if (t == NULL || !t->hashed)
+        return false;   // not uploaded yet: asked again on a later glyph
+    const XboxPixelContainer *h = (const XboxPixelContainer*)xboxTexture;
+    uint32_t width = h->Size != 0 ? (h->Size & 0xFFF) + 1 : 1u << ((h->Format >> 20) & 0xF);
+    uint32_t height = h->Size != 0 ? ((h->Size >> 12) & 0xFFF) + 1 : 1u << ((h->Format >> 24) & 0xF);
+    TextureReplace_DumpFont(t->hash, width, height, glyphs, count);
+    return true;
+}
 
 void D3D9_ImmediateBegin(uint32_t primitiveType) {
     g_immediatePrimitive = primitiveType;

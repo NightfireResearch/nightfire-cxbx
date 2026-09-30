@@ -1,5 +1,6 @@
 #include "view.h"
 #include "../engine/psiSprite.h"
+#include "../../common/gfx/d3d9Backend.h"
 #include "../engine/viewer.h"
 #include <math.h>
 
@@ -197,8 +198,95 @@ void View_AddSkyObj(ushort param_1,celglist_tag *param_2,_VECTOR *param_3,_VECTO
 static_assert(ARRAY_SIZE(SprBuffList) == 64, "Sprite buffer number of entries incorrect");
 static_assert(sizeof(SPRITE_DRAW) == 0x30, "Sprite size incorrect");
 
+#ifdef _MSC_VER
+#include <intrin.h>
+#define CALLER_ADDRESS() ((uint32_t)(uintptr_t)_ReturnAddress())
+#else
+#define CALLER_ADDRESS() ((uint32_t)(uintptr_t)__builtin_return_address(0))
+#endif
+
+// The glyph call in __Font_DrawText (0x00069c50): the return address of its View_AddSprite, which copies the
+// font's sprite template into the slot straight after. (Its other call, at 0x00069e0a, is an image placed in
+// the text, which is not a glyph.) So a glyph's texture is known by the next call, which is when the font's
+// glyph boxes can go out beside the dumped texture (DumpTextures in settings.ini).
+#define FONT_GLYPH_CALL_RETURN 0x0006a14du
+static int s_pendingGlyph = -1;
+static const uint8_t *s_pendingFont = NULL;   // the font that glyph is from - by the next call it may not be current
+
+// A sprite's textureIndex selects one of the game's texture records; psiDrawSprites binds one of the record's
+// animation frames (count at +0x24, slots from +0x54) through d3dSetTextureStage0, which takes a slot in the
+// D3D texture table - and a slot's Xbox texture header is the slot itself (see D3DTextureSlotRaw in
+// engine/Direct3D/d3dSeam.cpp).
+#define TextureRecords         ((const uint8_t *const *)0x002abe80)
+#define TEXTURE_SLOT_TABLE     0x002cc3ecu
+#define TEXTURE_SLOT_SIZE      36u
+#define TEXTURE_SLOT_COUNT     2048u
+
+// The current font (__Font_DrawText's): its first and last character at +8 and +0xa, the number of glyphs at
+// +0xc, and at +0x10 a table of 24-byte glyph records sorted by character, whose layout FUN_00069a40 and
+// __Font_DrawText read - the box in the sheet at +0 (u, v, width, height), the vertical offset at +8, the
+// extra advance at +0xa and the character at +0x14. (The lookup's binary search starts one past the end;
+// the character range test before it is what keeps it from ever reading there.)
+#define CurrentFont (*(const uint8_t *const *)0x001f64b0)
+
+// With DumpTextures on, a font's glyph boxes go out beside its texture once, for making a replacement.
+static void DescribeFontOnce(const uint8_t *font, const void *xboxTexture) {
+    static const void *described[32];
+    static int describedCount = 0;
+    for (int i = 0; i < describedCount; i++)
+        if (described[i] == xboxTexture) return;
+    if (font == NULL || describedCount >= 32)
+        return;
+    uint16_t first = *(const uint16_t *)(font + 0x8), last = *(const uint16_t *)(font + 0xa);
+    uint32_t count = *(const uint32_t *)(font + 0xc);
+    const uint8_t *records = *(const uint8_t *const *)(font + 0x10);
+    if (records == NULL || count == 0 || count > 1024)
+        return;
+    static D3D9FontGlyph glyphs[1024];
+    int kept = 0;
+    for (uint32_t i = 0; i < count; i++) {
+        const uint8_t *g = records + i * 24;
+        uint16_t code = *(const uint16_t *)(g + 0x14);
+        if (code < first || code > last)
+            continue;
+        D3D9FontGlyph *out = &glyphs[kept++];
+        out->u = *(const uint16_t *)(g + 0x0);
+        out->v = *(const uint16_t *)(g + 0x2);
+        out->w = *(const uint16_t *)(g + 0x4);
+        out->h = *(const uint16_t *)(g + 0x6);
+        out->yOffset = *(const int16_t *)(g + 0x8);
+        out->advance = *(const int16_t *)(g + 0xa);
+        out->code = code;
+    }
+    if (D3D9_DescribeFont(xboxTexture, glyphs, kept))
+        described[describedCount++] = xboxTexture;
+}
+
+static void NoteGlyphTexture(const SPRITE_DRAW *glyph, const uint8_t *font) {
+    if (!D3D9_DumpingTextures() || glyph->textureIndex >= 0x1000)
+        return;
+    const uint8_t *record = TextureRecords[glyph->textureIndex];
+    if (record == NULL)
+        return;
+    uint32_t frames = *(const uint32_t *)(record + 0x24);
+    if (frames == 0 || frames > 8)
+        frames = 1;
+    for (uint32_t i = 0; i < frames; i++) {
+        uint32_t slot = *(const uint32_t *)(record + 0x54 + 4 * i);
+        if (slot == 0 || slot >= TEXTURE_SLOT_COUNT)
+            continue;
+        const void *header = (const void *)(uintptr_t)(TEXTURE_SLOT_TABLE + slot * TEXTURE_SLOT_SIZE);
+        DescribeFontOnce(font, header);
+    }
+}
+
 // AUTOINJECT
 SPRITE_DRAW * View_AddSprite(ushort someNum) {
+
+    if (s_pendingGlyph >= 0) {
+        NoteGlyphTexture(&SprBuffList[s_pendingGlyph], s_pendingFont);
+        s_pendingGlyph = -1;
+    }
 
     // Only ever appears to be called with someNum == 0.
     // Potentially intended to allocate multiple at the same time, but not correctly implemented (would need to increment SprCnt by a variable amount rather than just 1)?
@@ -211,6 +299,11 @@ SPRITE_DRAW * View_AddSprite(ushort someNum) {
     }
 
     // Return the buffer, starting at the number of sprites already buffered
+    uint32_t caller = CALLER_ADDRESS();
+    if (caller == FONT_GLYPH_CALL_RETURN) {
+        s_pendingGlyph = (int)SprCnt;
+        s_pendingFont = CurrentFont;
+    }
     return &SprBuffList[SprCnt++];
 }
 
