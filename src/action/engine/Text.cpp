@@ -31,6 +31,7 @@ void Txt_SetLanguage(tLANGUAGE languageId) {
 }
 
 // Order must match the order in the enum
+// XBE_GLOBAL(0x0017c1f4, 0x24)
 const char* LanguageFileNames[] = {
     "UKTxt.dat",
     "FRTxt.dat",

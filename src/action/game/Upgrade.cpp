@@ -1,5 +1,6 @@
 #include "../actionhelpers.h"
 
+// XBE_GLOBAL(0x00181b14, 0x10) readonly
 uint UpgradedHandguns[4] = {
     2,
     4,
@@ -7,6 +8,7 @@ uint UpgradedHandguns[4] = {
     8
 };
 
+// XBE_GLOBAL(0x00181b34, 0x10) readonly
 uint UpgradedSnipers[4] = {
     0x1e,
     0x20,
@@ -14,6 +16,7 @@ uint UpgradedSnipers[4] = {
     0x22
 };
 
+// XBE_GLOBAL(0x00181b44, 0x10) readonly
 uint UpgradedSilencedSnipers[4] = {
     0x24,
     0x26,
@@ -21,6 +24,7 @@ uint UpgradedSilencedSnipers[4] = {
     0x28
 };
 
+// XBE_GLOBAL(0x00181b74, 0x10) readonly
 uint UpgradedDartGuns[4] = {
     0x43,
     0x44,
@@ -28,6 +32,7 @@ uint UpgradedDartGuns[4] = {
     0x44
 };
 
+// XBE_GLOBAL(0x00181b54, 0x10) readonly
 uint UpgradedTasers[4] = {
     0x4a,
     0x4c,
@@ -35,6 +40,7 @@ uint UpgradedTasers[4] = {
     0x4c
 };
 
+// XBE_GLOBAL(0x00181b24, 0x10) readonly
 uint UpgradedLasers[4] = {
     0x4e,
     0x4f,
@@ -42,6 +48,7 @@ uint UpgradedLasers[4] = {
     0x4f
 };
 
+// XBE_GLOBAL(0x00181b64, 0x10) readonly
 uint UpgradedPDA[4] = {
     Weap_Decryptor,
     Weap_Decryptor_Upgraded,

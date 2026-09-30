@@ -24,6 +24,7 @@ void AnimObjectAimAt(obj_tag *param_1,AnimObj *param_2,quaternion_tag *param_3,_
     // target the player correctly.
 }
 
+// XBE_GLOBAL(0x001634c0, 0x20) readonly
 HASHCODE SleeveEnts_SleeveTable[] = {
     (HASHCODE) 0x020009d0, // Watch_BlackGloves
     (HASHCODE) 0x02000900, // Watch_BareHands

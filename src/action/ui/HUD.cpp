@@ -359,6 +359,7 @@ void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *
 void HUD_CreateRedeemer(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj);
 
 // TODO: Change from 640x480 to generic
+// XBE_GLOBAL(0x00180388, 0x1e4)
 SpriteInfo RedeemerSpriteInfo[] = {
 	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0500, 256, 	176, 	128, 			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5E, 5, 0, 0, 0}, // 0: Central reticle. The image is only 1/4 of the whole - repeats mirrored in H and V?
 	{0xffffff40, 0x7f7f7fff, 0x0022, 0x0100, 0,		0,		SCREEN_WIDTH, 	SCREEN_HEIGHT,	0, 	0, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_4A, 5, 0, 0, 0}, // 1: Static lines
@@ -373,6 +374,7 @@ SpriteInfo RedeemerSpriteInfo[] = {
 	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0500, 256, 	176, 	128,			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_59, 5, 0, 0, 0} // 10: Target designator on chopper. The image is only 1/4 of the whole - repeats mirrored in H and V?
 };
 
+// XBE_GLOBAL(0x0018056c, 0x1c)
 HUDPANECREATE_tag RedeemerPane = {
 	0,
 	0,
@@ -390,6 +392,7 @@ HUDPANECREATE_tag RedeemerPane = {
 
 
 
+// XBE_GLOBAL(0x0017f950, 0x58)
 SpriteInfo BloodSprInfo[] = {
 	{0x007f7fff, 0x7f7f7fff, 0x0009, 0x0200, 0, 	0, 		SCREEN_WIDTH, 	32,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_BLOOD_DRIP, 5, 0, 0, 0}, // Drippy edge
 	{0x007f7fff, 0x7f7f7fff, 0x0009, 0x0200, 0,		0,		SCREEN_WIDTH, 	64,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Colour fill
@@ -398,6 +401,7 @@ SpriteInfo BloodSprInfo[] = {
 // AUTOGEN
 void HUD_UpdateBloodPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
 
+// XBE_GLOBAL(0x0017f9a8, 0x1c)
 HUDPANECREATE_tag BloodPane = {
 	0,
 	0,
@@ -414,12 +418,14 @@ HUDPANECREATE_tag BloodPane = {
 };
 
 
+// XBE_GLOBAL(0x0017fec8, 0x84)
 SpriteInfo SightSprInfo[] = { // Left bar, Scope (square fitted to SCREEN_HEIGHT), Right bar
 	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0600, (SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	0, 		SCREEN_HEIGHT, 						SCREEN_HEIGHT,	0, 	0, 	0x1FF,	0x1FF, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_SNIPER_SCOPE, 5, 0, 0, 0}, // Scope graphic centre
 	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, 0,									0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill left
 	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, (SCREEN_WIDTH+SCREEN_HEIGHT)/2,	0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill right
 };
 
+// XBE_GLOBAL(0x0017ff4c, 0x1c)
 HUDPANECREATE_tag SightPane = {
 	0,
 	0,
@@ -457,6 +463,7 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
 // 	{0xffffffff, 0x7f7f7fff, 0x001f, 0x0900, 0,		0,		0,	0,	0,  0,	0,	0,	Action_TranslatedText_NULLVALUE, NULL, 			  TEX_CROSSHAIR_SAMURAI, 5, 0, 0, 0}
 // };
 
+// XBE_GLOBAL(0x0017f930, 0x1c)
 HUDPANECREATE_tag AmmoPane = {
 	SCREEN_WIDTH, // Anchor point in the bottom-right
 	SCREEN_HEIGHT,
@@ -503,6 +510,7 @@ void HUD_CreateHealthPane(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_ta
 // AUTOGEN
 void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
 
+// XBE_GLOBAL(0x0017fde8, 0x1c)
 HUDPANECREATE_tag HealthPane = {
 	50,
 	SCREEN_HEIGHT - 135,//345,
@@ -522,6 +530,7 @@ HUDPANECREATE_tag HealthPane = {
 };
 
 
+// XBE_GLOBAL(0x00180ee0, 0x58)
 HUDPANECREATE_tag* PaneList[] = {
 	&AmmoPane,
 	&HealthPane,
@@ -556,6 +565,7 @@ static_assert(ARRAY_SIZE(PaneList) == NUM_PANES, "Bad size of pane list");
 #define MPScorePane ((HUDPANECREATE_tag*)(0x001812d4))
 #define RadarPane ((HUDPANECREATE_tag*)(0x001806d8))
 
+// XBE_GLOBAL(0x001812f0, 0x58)
 HUDPANECREATE_tag * MPPaneList[] = {
 	MPAmmoPane,
 	MPHealthPane,
