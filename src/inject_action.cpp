@@ -28,6 +28,7 @@
 #include "action/game/drone/BOT.h"
 #include "action/game/drone/NDrone2.h"
 #include "action/game/drone/Behaviour.h"
+#include "action/gfx/LowLevel.h"
 #include "action/devtools/MenuProbe.h"
 
 #include "common/launchInfo.h"

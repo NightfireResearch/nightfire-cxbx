@@ -2850,8 +2850,8 @@ void psiBlurScreen(int blurIntensity) {
 //
 // Safe to do here because: maybeD3dShutdown has just unbound stages 0/1 and the stream/index buffers; the
 // heap holding all the freed resources' pixel/vertex data is about to be wiped by Mem_Init anyway; the
-// loading screen that stays up through the following level load draws only with DAT_002adf58 (permanent -
-// see ShowLoadProgressScreen), and the background-movie textures were already released by
+// loading screen that stays up through the following level load draws only with LoadingDotTexture (permanent -
+// see Graphics_Init_LowLevel in gfx/LowLevel.cpp), and the background-movie textures were already released by
 // maybeBackgroundMovieCleanup one call earlier. CXBX keys its host texture cache on (type, data address,
 // format, size) and periodically re-hashes contents, and it converts vertex/index buffers from Xbox memory
 // with content hashing at draw time - so reusing slot addresses can't hand back stale host resources.

@@ -101,6 +101,7 @@ add_library(actioninject SHARED
   src/action/main.cpp
   src/common/launchInfo.cpp
   src/action/gfx/Sprite.cpp
+  src/action/gfx/LowLevel.cpp
   src/action/engine/AINetwork.cpp
   src/action/engine/Anim.cpp
   src/action/engine/Camera.cpp

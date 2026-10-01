@@ -14,3 +14,15 @@ cmake_install.cmake
 .zed
 __pycache__
 Testing/
+
+# IDE files
+.vs/
+CMakeSettings.json
+
+# Local game data and dumps
+/disc/
+/dump_characters/
+/dump_levels/
+/dump_levels_collision/
+/collision_export/
+/Cxbx-Reloaded/
