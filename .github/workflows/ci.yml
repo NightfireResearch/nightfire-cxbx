@@ -69,6 +69,8 @@ jobs:
             build/macos/driving.exe
             build/macos/actioninject.dll
             build/macos/drivinginject.dll
+            build/macos/av*.dll
+            build/macos/FFmpeg-*.txt
             build/macos/action_cxbx.exe
             build/macos/driving_cxbx.exe
 
@@ -108,5 +110,7 @@ jobs:
             build/linux/driving.exe
             build/linux/actioninject.dll
             build/linux/drivinginject.dll
+            build/linux/av*.dll
+            build/linux/FFmpeg-*.txt
             build/linux/action_cxbx.exe
             build/linux/driving_cxbx.exe

@@ -104,6 +104,10 @@ All under `[Settings]` in `settings.ini`, read at startup:
 CMake and Python, plus a compiler. The game is a 32-bit x86 binary and the loader has to share its address
 space, so this cannot be built for x64 on any host.
 
+The movies play through a minimal FFmpeg (`docs/fmv.md`), whose DLLs and headers are committed in
+`third_party/ffmpeg-prebuilt` and copied beside the executables by the build. Nothing to do unless you change it:
+`tools/fmv/build_ffmpeg.sh` rebuilds it from the `third_party/ffmpeg` submodule.
+
 **On Windows**, with Visual Studio 2022:
 
 ```
@@ -130,7 +134,7 @@ cmake --build --preset linux
 ```
 
 All three produce the same 32-bit Windows binaries, in `build/windows/Release/`, `build/macos/` and
-`build/linux/` respectively, and all three are built by CI. The cross builds are a build only - see
+`build/linux/` respectively, with the FFmpeg DLLs and licence beside them, and all three are built by CI. The cross builds are a build only - see
 `docs/macOS-D3D9-setup.md` for running the result on macOS, and `docs/macos-build.md` for the one
 functional difference (no XAudio2 reverb) and why clang rather than mingw's GCC.
 

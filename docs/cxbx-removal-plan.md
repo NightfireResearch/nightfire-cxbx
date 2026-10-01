@@ -26,7 +26,7 @@ What replaces CXBX, each one a "seam" that replaces a library boundary with our 
 |---|---|---|
 | Graphics | `Direct3D/d3dSeam.cpp` + `d3d9Backend.cpp` | Every D3D8/XGRAPHC entry point goes through `D3DSeamTraced` dispatch; with the native backend (always, under the standalone loader) nothing in the D3D8 library runs. NV2A vertex programs are translated to HLSL at runtime. |
 | Audio | `sound/dsndSeam.cpp` + `xaudio2Backend.cpp` | 2D and 3D voices, Xbox ADPCM, the mixbins collapsed onto stereo, X3DAudio with the game's own rolloff curve, I3DL2 reverb behind a submix. |
-| FMV audio | `sound/dsndStream.cpp` | The DirectSound stream path, which the video decoder calls directly rather than through any game function (4.4a). |
+| FMV | `engine/Fmv.cpp` | The movies play through FFmpeg in place of the XBE's XMV decoder, which is no longer reached, and nor is its DirectSound stream (see `docs/fmv.md`; this replaced `sound/dsndStream.cpp`, 4.4a). |
 | Input | `engine/psiInput.cpp` | Direct XInput; CXBX's controller emulation unused. |
 | Settings (EEPROM) | `engine/XboxSettings.cpp` | `settings.ini` replaces `ExQueryNonVolatileSetting`. |
 | Saves | `engine/psiSave.cpp` | Plain files under `saves/`. |
@@ -53,7 +53,6 @@ later levels, pause and resume - none of that has been run standalone even once.
 | Gap | Where | Consequence |
 | --- | --- | --- |
 | 77 of 96 kernel imports | `src/loader/kernel.cpp` | Any code path not yet walked may need one. It stops with the name and the caller, so each is minutes of work - but the list is not closed until the game has been played through. |
-| 12 of the 16 DirectSound stream vtable slots | `sound/dsndStream.cpp` | Same shape: the decoder only uses four. An unused slot reports itself and stops rather than corrupting the stack. |
 | `DirectSoundUseFullHRTF`, `IDirectSound_DownloadEffectsImage` | `sound/dsndSeam.cpp` | Counted and ignored. The second is the I3DL2 reverb image, whose effect nobody has yet confirmed is audible at all. |
 | The physical-memory alias outside graphics (4.4) | `sound/dsndSeam.cpp`, unaudited | Sound-bank data reaches `SetBufferData` as an alias pointer, and `0xF0000000` (write-combined) has not been swept for. |
 | Engine switching is a manual restart | `common/launchInfo.cpp` | Pre-existing, not a regression: `XLaunchNewImageA` has always written `psiLaunch.bin` and then stopped, on both hosts. Standalone it could be automated by the loader re-executing itself with the other XBE - but not by mapping both, since they share a base address. |

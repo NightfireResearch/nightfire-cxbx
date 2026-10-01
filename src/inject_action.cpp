@@ -18,7 +18,6 @@
 #include "action/engine/psiSave.h"
 #include "action/engine/Direct3D/d3dSeam.h"
 #include "action/sound/dsndSeam.h"
-#include "action/sound/dsndStream.h"
 #include "action/game/view.h"
 #include "action/game/obj/car.h"
 #include "action/game/obj/Light.h"
@@ -28,6 +27,7 @@
 #include "action/game/drone/BOT.h"
 #include "action/game/drone/NDrone2.h"
 #include "action/game/drone/Behaviour.h"
+#include "action/engine/Fmv.h"
 #include "action/gfx/LowLevel.h"
 #include "action/devtools/MenuProbe.h"
 
@@ -69,9 +69,8 @@ void Inject()
 
   Inject_XboxStartup();
 
-  // The DirectSound stream entry points, but only when no emulator is hosting this process - see
-  // DSoundStream_InstallHooks. Under CXBX these addresses already carry CXBX's own patches.
-  DSoundStream_InstallHooks();
+  // FFmpeg, for the movies (engine/Fmv.cpp)
+  Fmv_Init();
 
 
   // Resolution beyond the original 640x480.

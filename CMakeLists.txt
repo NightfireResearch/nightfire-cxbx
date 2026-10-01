@@ -124,6 +124,7 @@ add_library(actioninject SHARED
   src/action/engine/XboxSettings.cpp
   src/common/xboxPath.cpp
   src/action/engine/XboxFile.cpp
+  src/action/engine/Fmv.cpp
   src/action/engine/XboxStartup.cpp
   src/action/engine/Direct3D/d3dhelpers.cpp
   src/action/engine/Direct3D/d3dSeam.cpp
@@ -194,7 +195,6 @@ add_library(actioninject SHARED
   src/action/sound/dsndSeam.cpp
   src/common/sound/xadpcm.cpp
   src/action/sound/xaudio2Backend.cpp
-  src/action/sound/dsndStream.cpp
   src/action/sound/music.cpp
   src/action/sound/SFX.cpp
   src/action/sound/Sound.cpp
@@ -213,6 +213,19 @@ else()
 endif()
 target_link_libraries(actioninject PRIVATE
   d3d9 d3dcompiler winmm ${XAUDIO2_LIB} xinput9_1_0 user32)
+
+# FMV playback through FFmpeg (src/action/engine/Fmv.cpp): the DLLs and headers in third_party/ffmpeg-prebuilt, built
+# from the third_party/ffmpeg submodule by tools/fmv/build_ffmpeg.sh and committed. The DLLs are loaded at run time
+# and copied beside the executables with FFmpeg's licence and build note, so the build output is complete.
+set(NF_FFMPEG_DIR ${CMAKE_SOURCE_DIR}/third_party/ffmpeg-prebuilt CACHE PATH "FFmpeg DLLs and headers")
+if(NOT EXISTS ${NF_FFMPEG_DIR}/include/libavformat/avformat.h)
+  message(FATAL_ERROR "No FFmpeg in ${NF_FFMPEG_DIR}: it is committed in third_party/ffmpeg-prebuilt, "
+                      "and tools/fmv/build_ffmpeg.sh rebuilds it")
+endif()
+target_include_directories(actioninject PRIVATE ${NF_FFMPEG_DIR}/include)
+file(GLOB NF_FFMPEG_FILES ${NF_FFMPEG_DIR}/bin/*.dll ${NF_FFMPEG_DIR}/FFmpeg-*.txt)
+add_custom_command(TARGET actioninject POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:actioninject>)
 
 # The standalone loader (stage B 4.2/4.3): maps the XBE itself and runs it in-process, with no emulator in
 # the process at all. This is "action.exe" - the canonical way to run the action engine - and the CXBX

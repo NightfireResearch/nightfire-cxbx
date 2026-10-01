@@ -7,6 +7,7 @@
 #include "engine/Text.h"
 #include "engine/XboxSettings.h"
 #include "engine/Direct3D/GraphicsSystem.h" // Gfx
+#include "engine/Fmv.h"
 #include "engine/Direct3D/d3dSeam.h" // the immediate-mode quads maybeStartBackgroundMovie draws
 
 #include <windows.h>
@@ -175,8 +176,6 @@ void __stdcall Boot_LoadPTPData(void);
 void __stdcall ResetMap_Load(void);
 // AUTOGEN
 void Boot_GetPTPData(void **param_1,uint *param_2);
-// AUTOGEN
-void maybeBackgroundMovieCleanup(void);
 
 // AUTOINJECT
 void psiStopBackgroundMovie(void) {
@@ -187,10 +186,6 @@ void psiStopBackgroundMovie(void) {
 // AUTOGEN
 int Language_Get(void);
 
-// AUTOGEN
-void BackgroundMovieSetVolume(int param_1);
-// AUTOGEN
-void BackgroundMoviePlayFile(char *filename);
 
 
 // XBE_GLOBAL(0x002ae3f0, 0x100)
@@ -820,10 +815,6 @@ void mainloop(void) {
   GameFlow_Main();
 }
 
-// AUTOGEN
-bool __stdcall maybeDecodeMpgAudio(void);
-// AUTOGEN
-bool __stdcall maybeBackgroundMovieIsPlaying(void);
 
 // Keeps the background movie going, called every frame: decodes and draws the next frame, masks the top and
 // bottom 66 lines to black for 0x073a0048 (letterboxed), and when the movie ends either replays it (looping,

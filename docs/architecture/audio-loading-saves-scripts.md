@@ -127,7 +127,7 @@ loads, so streams do not compete with a blocking load); the platform layer below
 
 `psi*` (0xe09c0-0xe0ed0, thin, still original) calls `dsnd*`/`xbox*` (0xe0f00-0xe1d80, ours), which is the XAudio2
 seam in `src/action/sound/dsndSeam.cpp` with `xaudio2Backend.cpp`. 29 DirectSound entry points, 192 static
-buffers, ADPCM decoded to PCM; streams from the XMV decoder go through `dsndStream.cpp`. Detail and measured call
+buffers, ADPCM decoded to PCM. Movie audio has its own XAudio2 voice in the FFmpeg player (`engine/Fmv.cpp`). Detail and measured call
 volumes: docs/audio-inventory.md. Note the name clash: the platform function at 0xe19c0 is also called `SFXUpdate`
 in Ghidra (it is the dsnd voice update), as is the engine one at 0xcad40.
 
@@ -141,10 +141,11 @@ chosen by language (0 default, 1/2/3 for languages 2, 3, 6), `maybeSFXCreateStre
 video frame, calls `DirectSoundDoWork` and draws the YUV quad). The folder test is `Graphics_IsPalI() ? "30_fps" :
 "25_fps"` as decompiled, which reads backwards; either the getter is misnamed or the folders are - unchecked.
 
-The decoder is Microsoft's XMV library linked into the XBE (lib.xmv: 60 functions, 157 KB, 0%). It runs natively
-today because `d3dSeam.cpp` hooks the four D3D8 entry points it calls and `dsndStream.cpp` hooks the DirectSound
-stream entry points; A/V sync depends on packets completing on XAudio2's buffer-end callback. Replacing it would
-take: a host XMV demuxer and decoder (FFmpeg has an XMV demuxer and WMV2-family video and ADPCM/WMA audio
+**Since replaced:** the five functions are now `engine/Fmv.cpp`, an FFmpeg player, and the XMV library (60 functions,
+157 KB) is no longer reached; see `docs/fmv.md`. The FMV subtitles are script-player scripts on the game's own
+clock, as before. What follows is the assessment from before the replacement. The decoder was Microsoft's XMV
+library linked into the XBE. It ran natively because `d3dSeam.cpp` hooked the four D3D8 entry points it called
+and `dsndStream.cpp` hooked the DirectSound stream entry points. Replacing it would take: a host XMV demuxer and decoder (FFmpeg has an XMV demuxer and WMV2-family video and ADPCM/WMA audio
 decoders - external knowledge, not tried on these files), or an offline transcode of the movies to a common format
 plus a small player; either way a replacement for the five `BackgroundMovie*` functions, the subtitle scripts
 (below) kept in step with the new clock, and `psiMovieFinished`/skip handling. Low value while the hooked decoder
