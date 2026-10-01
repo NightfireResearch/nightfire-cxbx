@@ -7,15 +7,32 @@ void Game_Run(void);
 void GameFlow_Main(void);
 bool movieFinished(void);
 bool Graphics_IsPalI(void);
+bool IsNotPalI(void);
+bool Graphics_IsSomeGraphicsRegion(void);
+bool Graphics_IsWidescreen(void);
+bool Graphics_IsSomeRegionBasedThing(void);
 void mainloop(void);
 void bootup_bootup(void);
 void psiInitTimeIn100ths(void);
 unsigned long long psiGetTimeIn100ths(void);
+
+// Milliseconds from a free-running host clock. Reimplemented rather than used from the image, because
+// the original divides the CPU's cycle counter by the Xbox's own 733 MHz - see game.cpp.
+double timestamp(void);
+
+// The XAPI's own performance counter pair, replaced for the same reason - see game.cpp. Patched by
+// address, so these names are ours and only the addresses matter. The parameter type is spelled by its
+// tag so that this header does not have to drag in windows.h, which collides with the Xbox-shaped
+// XINPUT structures elsewhere in the tree.
+union _LARGE_INTEGER;
+uint32_t __stdcall Xbox_QueryPerformanceCounter(union _LARGE_INTEGER *counter);
+uint32_t __stdcall Xbox_QueryPerformanceFrequency(union _LARGE_INTEGER *frequency);
 void Reset_MapLoadSettings(void);
 uint GameFlow_GetState(void);
 void GameFlow_PushState(int state, float param_2, uint param_3);
 void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv);
 void psiStopBackgroundMovie(void);
+void maybeStartBackgroundMovie(void);
 void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume);
 void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate);
 void GS_PauseGame(bool pause);
@@ -57,6 +74,8 @@ typedef struct {
 static_assert(sizeof(GameState_t) == 0x58, "Bad size for GameState");
 
 #define GameState (*((GameState_t*)0x001f6580))
+// The hashcode of the background movie that is playing, 0 when none
+extern uint32_t BackgroundMovieHashcode;
 
 struct CheatInfo_t {
     undefined4 Immortal;
@@ -133,7 +152,10 @@ typedef struct { /* PTP Data */
     };
     union {
         PTP_EA EACDataBuf;
-        char asBytes[1200];
+        // Named apart from the first union's asBytes. Both unions are anonymous, so their members are
+        // members of this struct, and MSVC tolerates the repeated name where every other compiler rejects
+        // it. Neither member is referenced anywhere - they record that each buffer is 1200 bytes.
+        char asBytesEAC[1200];
     };
     undefined4 Version;
     undefined4 SoundVol;
@@ -339,10 +361,16 @@ typedef struct {
 
 static_assert(sizeof(weapon_definition_tag) == 0x10c, "Size of weapon_definition_tag not correct");
 static_assert(offsetof(weapon_definition_tag,someDistance) == 0x1c, "someDistance is in the wrong place");
+static_assert(offsetof(weapon_definition_tag, someFlags) == 0x68, "someFlags is in the wrong place");
+static_assert(offsetof(weapon_definition_tag, ammoType) == 0x90, "ammoType is in the wrong place");
+static_assert(offsetof(weapon_definition_tag, clipSizeOrCooldown) == 0x92, "clipSizeOrCooldown is in the wrong place");
 
 typedef struct {
     uint paused;
-    char unknown_pad[0x1c-4];
+    uint victories;         // the debriefing's "Victories"
+    uint deaths;            // the debriefing's "Deaths" (Ghidra: pointsScored)
+    char unknown_pad0[0x18-0xc];
+    float points;           // the debriefing's "Points"
     obj_tag* playerObj;
     short maybeIdxOfLastInjurer; // Index of who or what last dealt me damage? -2 = environment?
     short friendlyFireLabelTimer;
@@ -358,8 +386,7 @@ typedef struct {
   // Note that PS2 and Xbox have different number of entries in MPGame! PS2 has 8, Xbox has 10
   MPGamePlayer players[10];
   // Immediately following is more state related to MP game
-  uint unknown_1; // end conditions / debriefing / objective related
-  uint unknown_2; // end conditions / debriefing
+  float teamScore[2]; // by MPTeam: Phoenix, MI6 (MP_SortOutWhoWon, the debriefing)
   uint EndGameFlowState;
   uint unknown_3; // end conditions
   uint TimeUnpaused;

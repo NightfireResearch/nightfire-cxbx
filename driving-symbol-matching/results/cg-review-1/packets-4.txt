@@ -1,0 +1,3535 @@
+## item 216: Xbox 0x0014b310 (FUN_0014b310)  <-  PS2 0x00305d38 STREAM_setpriority
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 2 anchor(s) place it by call position (2 as a 1:1 slot): RCMP::AV_PLAYER::GetFirstFrame, RCMP::AV_PLAYER::Init, size ratio 0.58; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RCMP::AV_PLAYER::GetFirstFrame@14cb00 | RCMP::AV_PLAYER::Init@14c430
+PS2 callers up to a shared name:  RCMP::AV_PLAYER::GetFirstFrame@3010c0 | RCMP::AV_PLAYER::Init@300b88
+Xbox callees: 
+PS2 callees:  FUN_00304e30
+--- Xbox
+void FUN_0014b310(int *param_1,int param_2,int param_3)
+{
+  if ((param_1 != (int *)0x0) && (param_1 = (int *)*param_1, *param_1 == 0x4d525453)) {
+    param_1[0x13] = param_2;
+    param_1[0x14] = param_3;
+  }
+  return;
+}
+--- PS2
+void STREAM_setpriority(long param_1,int param_2,int param_3)
+{
+  int iVar1;
+  int *local_40 [4];
+  undefined4 local_30;
+  undefined4 uStack_2c;
+  undefined4 local_20;
+  undefined4 uStack_1c;
+  undefined4 local_10;
+  undefined4 uStack_c;
+  iVar1 = FUN_00304e30(param_1,local_40,(undefined4 *)((uint)local_40 | 4));
+  if (iVar1 == 0) {
+    local_40[0][0xf] = param_2;
+    local_40[0][0x10] = param_3;
+  }
+  return;
+}
+
+====================================================================================================
+## item 217: Xbox 0x0008d440 (FUN_0008d440)  <-  PS2 0x001c6858 RRenderWorldCulling::Setup2dFrustrum
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): RPlayerViewCamera::ConfigureView, size ratio 0.83; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RPlayerViewCamera::ConfigureView@8a420
+PS2 callers up to a shared name:  RPlayerViewCamera::ConfigureView@1beba0
+Xbox callees: FUN_0008d370, FUN_00115c80, VU0_MATRIX4_transpose, VU0_MATRIX4_vect3rotate, VU0_MATRIX4setyrot, VU0_v4scaleadd, atan_turns
+PS2 callees:  InitializePlaneInfo, VU0_MATRIX4setyrot, atan2f
+--- Xbox
+void __thiscall
+FUN_0008d440(float *param_1_00,float *param_1,int param_2,float param_3,float param_4)
+{
+  float *pfVar1;
+  undefined4 uVar2;
+  undefined4 uVar3;
+  float *pfVar4;
+  float10 fVar5;
+  int local_64;
+  undefined1 local_50 [32];
+  float local_30 [2];
+  float local_28;
+  if ((param_1_00[0x1a] != param_4) || (param_1_00[0x19] != param_3)) {
+    FUN_0008d370(param_3,param_4);
+  }
+  param_1_00[0x27] = param_1[1];
+  uVar2 = *(undefined4 *)(param_2 + 0x20);
+  uVar3 = *(undefined4 *)(param_2 + 0x28);
+  pfVar1 = param_1_00 + 0x14;
+  FUN_00115c80(param_1,pfVar1);
+  fVar5 = (float10)atan_turns(uVar2,uVar3);
+  *param_1_00 = -param_1_00[0x1f];
+  param_1_00[2] = param_1_00[0x24];
+  param_1_00[6] = param_1_00[0x24];
+  param_1_00[8] = -param_1_00[0x1b];
+  param_1_00[1] = 0.0;
+  param_1_00[5] = 0.0;
+  param_1_00[9] = 0.0;
+  param_1_00[10] = -param_1_00[0x23];
+  param_1_00[0xd] = 0.0;
+    ...
+--- PS2
+void RRenderWorldCulling::Setup2dFrustrum
+               (float param_1,float param_2,undefined (*param_3) [16],undefined8 *param_4,
+               int param_5)
+{
+  undefined1 *puVar1;
+  uint uVar2;
+  uint uVar3;
+  undefined8 uVar4;
+  undefined (*pauVar5) [16];
+  ulong in_v0;
+  int iVar6;
+  ulong in_v1;
+  ulong uVar7;
+  undefined4 uVar8;
+  undefined4 uVar9;
+  undefined1 auVar10 [16];
+  float fVar11;
+  float fVar12;
+  float fVar13;
+  float fVar14;
+  float fVar15;
+  float fVar16;
+  float fVar17;
+  float fVar18;
+  float fVar19;
+  float fVar20;
+  undefined1 auVar21 [16];
+  undefined1 auVar22 [16];
+  undefined1 auVar23 [16];
+  undefined1 auVar24 [16];
+    ...
+
+====================================================================================================
+## item 218: Xbox 0x000fab10 (FUN_000fab10)  <-  PS2 0x00266d30 EAGLAnim::AttributeBlock::GetAttribute
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): EAGLAnim::FnCompoundChannel::UseFPS, size ratio 0.68; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: EAGLAnim::FnCompoundChannel::UseFPS@fafd0
+PS2 callers up to a shared name:  EAGLAnim::FnCompoundChannel::UseFPS@266a20
+Xbox callees: FUN_00106800
+PS2 callees:  
+--- Xbox
+undefined4 __thiscall FUN_000fab10(int *param_1,undefined2 param_2,undefined1 *param_3)
+{
+  char cVar1;
+  int iVar2;
+  undefined2 uStack_c;
+  undefined2 uStack_a;
+  undefined2 *puStack_8;
+  int *piStack_4;
+  puStack_8 = (undefined2 *)0xfab16;
+  piStack_4 = param_1;
+  iVar2 = (**(code **)(*param_1 + 0x38))();
+  if (iVar2 != 0) {
+    puStack_8 = &param_2;
+    piStack_4 = (int *)&uStack_c;
+    _uStack_c = CONCAT22((short)((uint)puStack_8 >> 0x10),param_2);
+    cVar1 = FUN_00106800();
+    if (cVar1 != '\0') {
+      *param_3 = (undefined1)param_2;
+      return 1;
+    }
+  }
+  return 0;
+}
+--- PS2
+bool EAGLAnim::AttributeBlock::GetAttribute(int *param_1,ushort *param_2,int *param_3)
+{
+  int *piVar1;
+  int iVar2;
+  int iVar3;
+  int iVar4;
+  iVar4 = 0;
+  iVar3 = *param_1 + -1;
+  iVar2 = iVar3;
+  if (-1 < iVar3) {
+    do {
+      iVar2 = iVar2 >> 1;
+      if (*(ushort *)(param_1 + iVar2 * 2 + 1) < *param_2) {
+        iVar4 = iVar2 + 1;
+      }
+      else {
+        iVar3 = iVar2 + -1;
+        if (*(ushort *)(param_1 + iVar2 * 2 + 1) <= *param_2) {
+          piVar1 = param_1 + iVar2 * 2 + 1;
+          goto LAB_00266d94;
+        }
+      }
+      iVar2 = iVar4 + iVar3;
+    } while (iVar4 <= iVar3);
+  }
+  piVar1 = (int *)0x0;
+LAB_00266d94:
+  if (piVar1 != (int *)0x0) {
+    *param_3 = piVar1[1];
+  }
+    ...
+
+====================================================================================================
+## item 219: Xbox 0x00019ad0 (FUN_00019ad0)  <-  PS2 0x00114aa8 ActSkeleton::BlendBones
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): ActPoser::DoMainPose, size ratio 0.89; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: ActPoser::DoMainPose@190b0
+PS2 callers up to a shared name:  ActPoser::DoMainPose@113b48
+Xbox callees: VU0_fastqslerp
+PS2 callees:  GetNumBones, VU0_fastqslerp
+--- Xbox
+void __thiscall
+FUN_00019ad0(int param_1_00,float param_1,int param_2,int param_3,int param_4,char param_5)
+{
+  int iVar1;
+  iVar1 = 0;
+  if (0 < *(int *)(*(int *)(param_1_00 + 8) + 8)) {
+    do {
+      VU0_fastqslerp(param_2 + 0x10,param_3 + 0x10,param_4 + 0x10,param_1);
+      if ((param_5 == '\x01') || (iVar1 == *(int *)(param_1_00 + 0x18))) {
+        *(float *)(param_4 + 0x20) =
+             (*(float *)(param_3 + 0x20) - *(float *)(param_2 + 0x20)) * param_1 +
+             *(float *)(param_2 + 0x20);
+        *(float *)(param_4 + 0x24) =
+             (*(float *)(param_3 + 0x24) - *(float *)(param_2 + 0x24)) * param_1 +
+             *(float *)(param_2 + 0x24);
+        *(float *)(param_4 + 0x28) =
+             (*(float *)(param_3 + 0x28) - *(float *)(param_2 + 0x28)) * param_1 +
+             *(float *)(param_2 + 0x28);
+      }
+      param_4 = param_4 + 0x30;
+      param_3 = param_3 + 0x30;
+      param_2 = param_2 + 0x30;
+      iVar1 = iVar1 + 1;
+    } while (iVar1 < *(int *)(*(int *)(param_1_00 + 8) + 8));
+  }
+  return;
+}
+--- PS2
+void ActSkeleton::BlendBones
+               (float param_1,int param_2,int param_3,int param_4,int param_5,int param_6)
+{
+  int iVar1;
+  int iVar2;
+  iVar2 = 0;
+  while( true ) {
+    iVar1 = GetNumBones(param_2);
+    if (iVar1 <= iVar2) break;
+    VU0_fastqslerp(param_1,(undefined (*) [16])(param_3 + 0x10),(undefined (*) [16])(param_4 + 0x10)
+                   ,(undefined (*) [16])(param_5 + 0x10));
+    if ((param_6 == 1) || (iVar2 == *(int *)(param_2 + 0x18))) {
+      *(float *)(param_5 + 0x20) =
+           *(float *)(param_3 + 0x20) +
+           param_1 * (*(float *)(param_4 + 0x20) - *(float *)(param_3 + 0x20));
+      *(float *)(param_5 + 0x24) =
+           *(float *)(param_3 + 0x24) +
+           param_1 * (*(float *)(param_4 + 0x24) - *(float *)(param_3 + 0x24));
+      *(float *)(param_5 + 0x28) =
+           *(float *)(param_3 + 0x28) +
+           param_1 * (*(float *)(param_4 + 0x28) - *(float *)(param_3 + 0x28));
+    }
+    param_5 = param_5 + 0x30;
+    param_4 = param_4 + 0x30;
+    param_3 = param_3 + 0x30;
+    iVar2 = iVar2 + 1;
+  }
+  return;
+}
+
+====================================================================================================
+## item 220: Xbox 0x000c5500 (FUN_000c5500)  <-  PS2 0x00213110 WCollisionMgr::WCollisionMgr
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): WCollisionMgr::Init, size ratio 1.06; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: WCollisionMgr::Init@c55b0
+PS2 callers up to a shared name:  WCollisionMgr::Init@2132b8
+Xbox callees: FUN_00053580, WSoundMap
+PS2 callees:  FastAlloc
+--- Xbox
+undefined4 * __fastcall FUN_000c5500(undefined4 *param_1)
+{
+  int iVar1;
+  int extraout_EAX;
+  undefined1 local_11;
+  undefined4 local_c;
+  code *pcStack_8;
+  undefined4 local_4;
+  local_4 = 0xffffffff;
+  pcStack_8 = FUN_001545cb;
+  *(undefined1 *)(param_1 + 5) = local_11;
+  iVar1 = FUN_00053580();
+  param_1[6] = iVar1;
+  *(undefined1 *)(iVar1 + 0x1d) = 1;
+  *(undefined4 *)(param_1[6] + 4) = param_1[6];
+  *(undefined4 *)param_1[6] = param_1[6];
+  *(undefined4 *)(param_1[6] + 8) = param_1[6];
+  param_1[7] = 0;
+  *(undefined1 *)(param_1 + 8) = local_11;
+  local_4 = 0;
+  WSoundMap::WSoundMap(param_1 + 8);
+  param_1[9] = extraout_EAX;
+  *(undefined1 *)(extraout_EAX + 0x15) = 1;
+  *(undefined4 *)(param_1[9] + 4) = param_1[9];
+  *(undefined4 *)param_1[9] = param_1[9];
+  *(undefined4 *)(param_1[9] + 8) = param_1[9];
+  param_1[10] = 0;
+  *param_1 = 0;
+  param_1[1] = 0;
+  param_1[2] = 0;
+    ...
+--- PS2
+undefined8 WCollisionMgr::WCollisionMgr(undefined8 param_1)
+{
+  void *pvVar1;
+  undefined4 *puVar2;
+  puVar2 = (undefined4 *)param_1;
+  puVar2[5] = 0;
+  pvVar1 = UMemory::FastAlloc(0x20,"STL");
+  puVar2[5] = pvVar1;
+  *(undefined1 *)(puVar2 + 7) = 0;
+  puVar2[6] = 0;
+  *(undefined4 *)puVar2[5] = 0;
+  *(undefined4 *)(puVar2[5] + 4) = 0;
+  *(undefined4 *)(puVar2[5] + 8) = puVar2[5];
+  *(undefined4 *)(puVar2[5] + 0xc) = puVar2[5];
+  puVar2[8] = 0;
+  pvVar1 = UMemory::FastAlloc(0x18,"STL");
+  puVar2[8] = pvVar1;
+  *(undefined1 *)(puVar2 + 10) = 0;
+  puVar2[9] = 0;
+  *(undefined4 *)puVar2[8] = 0;
+  *(undefined4 *)(puVar2[8] + 4) = 0;
+  *(undefined4 *)(puVar2[8] + 8) = puVar2[8];
+  *(undefined4 *)(puVar2[8] + 0xc) = puVar2[8];
+  puVar2[0xb] = 0xf0;
+  *puVar2 = 0;
+  puVar2[1] = 0;
+  puVar2[2] = 0;
+  puVar2[3] = 0;
+  puVar2[4] = 0;
+  puVar2[0xc] = 0;
+    ...
+
+====================================================================================================
+## item 221: Xbox 0x00012350 (FUN_00012350)  <-  PS2 0x0010afc0 ActActor::RotateActor
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 2 anchor(s) place it by call position (0 as a 1:1 slot): AICharacterEnemySSnow::DoAiming, AICharacterHands::Init, size ratio 0.98; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: AICharacterEnemySSnow::DoAiming@20a60 | AICharacterHands::Init@22930
+PS2 callers up to a shared name:  AICharacterEnemySSnow::DoAiming@120160 | AICharacterHands::Init@123950
+Xbox callees: FUN_00018bd0, VU0_MATRIX4_mult, cos_fractionalangle, sin_fractionalangle
+PS2 callees:  Rotate, VU0_MATRIX4_mult, cosf, sinf
+--- Xbox
+void __thiscall FUN_00012350(int param_1_00,undefined4 param_1)
+{
+  undefined (*pauVar1) [16];
+  float10 fVar2;
+  float10 fVar3;
+  float local_50 [3];
+  undefined4 local_44;
+  undefined4 local_40;
+  undefined4 local_3c;
+  undefined4 local_38;
+  undefined4 local_34;
+  float local_30;
+  undefined4 local_2c;
+  float local_28;
+  undefined4 local_24;
+  undefined4 local_20;
+  undefined4 local_1c;
+  undefined4 local_18;
+  undefined4 local_14;
+  FUN_00018bd0(param_1);
+  if (*(char *)(param_1_00 + 0x14) != '\0') {
+    fVar2 = (float10)cos_fractionalangle(param_1);
+    fVar3 = (float10)sin_fractionalangle(param_1);
+    local_50[2] = (float)-fVar3;
+    local_30 = (float)fVar3;
+    pauVar1 = (undefined (*) [16])(*(int *)(param_1_00 + 0xc) + 0x340);
+    local_18 = 0;
+    local_1c = 0;
+    local_20 = 0;
+    local_24 = 0;
+    ...
+--- PS2
+void ActActor::RotateActor(float param_1,int param_2)
+{
+  undefined (*pauVar1) [16];
+  float fVar2;
+  float local_70 [3];
+  undefined4 local_64;
+  undefined4 local_60;
+  undefined4 local_5c;
+  undefined4 local_58;
+  undefined4 local_54;
+  float local_50;
+  undefined4 local_4c;
+  float local_48;
+  undefined4 local_44;
+  undefined4 local_40;
+  undefined4 local_3c;
+  undefined4 local_38;
+  undefined4 local_34;
+  undefined4 local_30;
+  undefined4 uStack_2c;
+  undefined4 local_20;
+  undefined4 uStack_1c;
+  ActPoser::Rotate(param_1,*(int *)(param_2 + 4));
+  if (*(int *)(param_2 + 0x14) != 0) {
+    fVar2 = cosf(param_1 * 6.2831855);
+    local_50 = sinf(param_1 * 6.2831855);
+    local_70[2] = -local_50;
+    pauVar1 = (undefined (*) [16])(*(int *)(param_2 + 0xc) + 0x340);
+    local_70[1] = 0.0;
+    local_5c = 0x3f800000;
+    ...
+
+====================================================================================================
+## item 222: Xbox 0x00074770 (FUN_00074770)  <-  PS2 0x0019cd90 Shell::Shell
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): Simulation::SpawnShellObject, 1 shared strings, size ratio 0.87; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: Simulation::SpawnShellObject@b5c90
+PS2 callers up to a shared name:  Simulation::SpawnShellObject@1fffa8
+Xbox callees: FUN_000bce90, GetSimpleRigidBody, PhysicsObject, SimpleRigidBody, VU0_v4scale, __ftol2
+PS2 callees:  GetSimpleRigidBody, PhysicsObject, SimpleRigidBody, Util_GenerateMatrix
+--- Xbox
+undefined4 * __thiscall
+FUN_00074770(undefined4 *param_1_00,int param_1,undefined4 *param_2,undefined4 *param_3,
+            undefined4 param_4,undefined4 param_5,undefined4 param_6,undefined4 param_7)
+{
+  undefined4 *puVar1;
+  int iVar2;
+  undefined4 *puVar3;
+  float10 fVar4;
+  ulonglong uVar5;
+  undefined4 local_c0;
+  undefined4 local_bc;
+  undefined4 local_b8;
+  SimpleRigidBody *local_a8;
+  undefined4 *local_a4;
+  undefined4 local_a0 [16];
+  undefined1 local_60 [68];
+  undefined4 local_1c;
+  code *pcStack_18;
+  int local_14;
+  local_14 = 0xffffffff;
+  pcStack_18 = FUN_00152922;
+  local_a4 = param_1_00;
+  PhysicsObject::PhysicsObject("weapon","Shell",7);
+  param_1_00[0x1c] = param_5;
+  *param_1_00 = &PTR_scalar_deleting_destructor_0019006c;
+  param_1_00[0x1b] = param_1;
+  param_1_00[0x1d] = param_6;
+  param_1_00[0x23] = param_7;
+  local_c0 = *param_2;
+  local_bc = param_2[1];
+    ...
+--- PS2
+long __thiscall
+Shell::Shell(Shell *this,int param_1,undefined (*param_2) [12],undefined8 param_3,int param_4,
+            undefined (*param_5) [12],uint param_6,undefined4 *param_7,long param_8,
+            undefined8 param_9,ulong param_10)
+{
+  undefined1 *puVar1;
+  uint uVar2;
+  uint uVar3;
+  undefined4 uVar4;
+  ulong *puVar5;
+  PhysicsObject *pPVar6;
+  SimpleRigidBody *this_00;
+  int iVar7;
+  ulong uVar8;
+  undefined8 extraout_a3;
+  undefined8 extraout_t0;
+  float *extraout_t3_lo;
+  float fVar9;
+  undefined4 in_f13;
+  undefined4 in_f12;
+  undefined1 auVar10 [16];
+  undefined1 auVar11 [16];
+  undefined4 uVar12;
+  undefined4 in_stack_ffffff34;
+  undefined1 local_c0 [16];
+  undefined1 auStack_b0 [64];
+  undefined4 local_70;
+  undefined4 uStack_6c;
+  undefined4 local_60;
+  undefined4 uStack_5c;
+    ...
+
+====================================================================================================
+## item 223: Xbox 0x0014e070 (FUN_0014e070)  <-  PS2 0x00302b48 RCMP::CODEC_IDATA::CODEC_IDATA
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): RCMP::AV_PLAYER::GetFirstFrame, size ratio 1.67; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RCMP::AV_PLAYER::GetFirstFrame@14cb00
+PS2 callers up to a shared name:  RCMP::AV_PLAYER::GetFirstFrame@3010c0
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void __thiscall
+FUN_0014e070(undefined4 *param_1_00,undefined4 param_1,undefined4 param_2,undefined4 param_3,
+            undefined4 param_4)
+{
+  param_1_00[3] = param_4;
+  *param_1_00 = param_1;
+  param_1_00[1] = param_2;
+  param_1_00[2] = param_3;
+  return;
+}
+--- PS2
+undefined8
+RCMP::CODEC_IDATA::CODEC_IDATA
+          (undefined8 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
+          undefined4 param_5)
+{
+  undefined4 *puVar1;
+  puVar1 = (undefined4 *)param_1;
+  puVar1[3] = param_5;
+  *puVar1 = param_2;
+  puVar1[1] = param_3;
+  puVar1[2] = param_4;
+  return param_1;
+}
+
+====================================================================================================
+## item 224: Xbox 0x000147d0 (FUN_000147d0)  <-  PS2 0x0010d290 ActCharacter::EndShadow
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): ActCharacter::Draw, size ratio 3.5; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: ActCharacter::Draw@14c50
+PS2 callers up to a shared name:  ActCharacter::Draw@10d320
+Xbox callees: FUN_000e7890, Get, GetCurrentRenderContext
+PS2 callees:  
+--- Xbox
+void FUN_000147d0(void)
+{
+  EAGL::Device::Get();
+  EAGL::Device::GetCurrentRenderContext();
+  FUN_000e7890(0);
+  return;
+}
+--- PS2
+void ActCharacter::EndShadow(void)
+{
+  return;
+}
+
+====================================================================================================
+## item 225: Xbox 0x000cbcf0 (FUN_000cbcf0)  <-  PS2 0x00226f18 WRoadNav::ChangeLanes
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): AIGroundVehicle::DoAutoDriveUpdate, size ratio 1.62; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: AIGroundVehicle::CheckAgentRoadNetworkCollision@2fde0 | AIHelicopter::DoAgentLogic@331c0 | AIGroundVehicle::DoAutoDriveUpdate@2c9d0 | PBondCar::ResetCar@66390
+PS2 callers up to a shared name:  AIGroundVehicle::CheckAgentRoadNetworkCollision@135f70 | AIHelicopter::DoAgentLogic@139be8 | AIGroundVehicle::DoAutoDriveUpdate@131080 | PBondCar::ResetCar@187b00
+Xbox callees: FUN_0007a530, FUN_0007a650, FUN_000c96b0, FUN_000cb280, GetPointOnSegment
+PS2 callees:  BuildSplineEx, EvaluateSpline, Get, GetPointOnSegment, SetStartEndControls, SetStartEndPos
+--- Xbox
+void __thiscall FUN_000cbcf0(int param_1_00,float param_1,float param_2)
+{
+  int iVar1;
+  undefined4 uVar2;
+  int iVar3;
+  undefined4 local_20;
+  undefined4 local_1c;
+  undefined4 local_18;
+  if (0.0 < param_2) {
+    uVar2 = *(undefined4 *)(param_1_00 + 0xa0);
+    *(undefined4 *)(param_1_00 + 0x98) = uVar2;
+    *(float *)(param_1_00 + 0xa0) = param_1;
+    *(undefined4 *)(param_1_00 + 0x9c) = uVar2;
+    *(undefined4 *)(param_1_00 + 0xa4) = 0;
+    *(float *)(param_1_00 + 0xac) = param_2;
+    *(undefined4 *)(param_1_00 + 0xa8) = 0;
+    return;
+  }
+  if (*(float *)(param_1_00 + 0x98) != param_1) {
+    *(float *)(param_1_00 + 0x98) = param_1;
+    *(float *)(param_1_00 + 0x9c) = param_1;
+    *(float *)(param_1_00 + 0xa0) = param_1;
+    iVar3 = *(int *)(WRoadNetwork::fSegments + *(short *)(param_1_00 + 0x3e) * 4);
+    iVar1 = param_1_00 + 0x50;
+    FUN_000c96b0(iVar3,param_1,iVar1,1);
+    FUN_000c96b0(iVar3,param_1,param_1_00 + 0x60,0);
+    FUN_000cb280(iVar3,param_1_00 + 0x70,1);
+    FUN_000cb280(iVar3,param_1_00 + 0x80,0);
+    if ((*(byte *)(iVar3 + 0x51) & 0x40) != 0) {
+      FUN_0007a650(iVar1,param_1_00 + 0x70,param_1_00 + 0x60,param_1_00 + 0x80);
+    ...
+--- PS2
+void WRoadNav::ChangeLanes(float param_1,float param_2,int param_3)
+{
+  uint uVar1;
+  uint uVar2;
+  ulong *puVar3;
+  WRoadNetwork *pWVar4;
+  ulong uVar5;
+  undefined8 extraout_t1;
+  undefined8 extraout_t1_00;
+  ulong extraout_t2;
+  ulong extraout_t2_00;
+  undefined4 uVar6;
+  ulong auStack_40 [2];
+  undefined4 local_30;
+  undefined4 uStack_2c;
+  undefined4 local_20;
+  undefined4 uStack_1c;
+  undefined4 local_10;
+  undefined4 uStack_c;
+  if (0.0 < param_2) {
+    uVar6 = *(undefined4 *)(param_3 + 0xa0);
+    *(undefined4 *)(param_3 + 0xa8) = 0;
+    *(undefined4 *)(param_3 + 0x9c) = uVar6;
+    *(float *)(param_3 + 0xa0) = param_1;
+    *(float *)(param_3 + 0xac) = param_2;
+    *(undefined4 *)(param_3 + 0x98) = uVar6;
+    *(undefined4 *)(param_3 + 0xa4) = 0;
+  }
+  else if (*(float *)(param_3 + 0x98) != param_1) {
+    *(float *)(param_3 + 0x9c) = param_1;
+    ...
+
+====================================================================================================
+## item 226: Xbox 0x00037a70 (FUN_00037a70)  <-  PS2 0x001f5ce8 OBB::OBB
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): Missile::CheckForCollision, size ratio 1.0; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: Missile::CheckForCollision@5f6d0 | RayShell::CollideWithObjects@72190 | EWakeupSmackable::~EWakeupSmackable@46d10 | FUN_000b1ff0@b1ff0 <- Simulation::DetectCollisionsSRB@b2830
+PS2 callers up to a shared name:  Missile::CheckForCollision@182978 | RayShell::CollideWithObjects@1998c0 | EWakeupSmackable::~EWakeupSmackable@15de48 | SimpleRigidBody::CheckCollisions@1fd830 <- Simulation::DetectCollisionsSRB@2014b8
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+undefined4 __fastcall FUN_00037a70(undefined4 param_1)
+{
+  return param_1;
+}
+--- PS2
+undefined8 OBB::OBB(undefined8 param_1)
+{
+  return param_1;
+}
+
+====================================================================================================
+## item 227: Xbox 0x000e4ef0 (FUN_000e4ef0)  <-  PS2 0x00296e80 EAGL::ViewPort::SetViewMatrix
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 3 anchor(s) place it by call position (3 as a 1:1 slot): GOrthoHudView::DoRender, ROffscreenBuffer::ROffscreenBuffer, RRenderer::RRenderer, size ratio 0.62; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: GOrthoHudView::DoRender@e1ce0 | GLoadingScreen::InitLoadDots@e1f90 | ROffscreenBuffer::ROffscreenBuffer@7f610 | RRenderer::RRenderer@7d2a0 | RViewCamera::SetDeviceTransformMode@96a70 | RViewCamera::SetWorldTransformMode@96eb0 | FUN_000a5c90@a5c90 <- RShadowMap::Begin@a6050 | FUN_000a9680@a9680 <- ActWeapon::RenderShellCasings@1b020
+PS2 callers up to a shared name:  GOrthoHudView::DoRender@23aad0 | GLoadingScreen::InitLoadDots@247f00 | ROffscreenBuffer::ROffscreenBuffer@1b0608 | RRenderer::RRenderer@1ab9c0 | RReflection::Draw@1c1ec0 <- RRenderWorldCamera::DrawVehiclesAndDeferredSceneObjects@1c5eb0 | ROffscreenBuffer::Lock@1b0bd0 <- RSniperZoom::GrabBackBuffer@1ed5e0 | RShadowMap::SetCamera@1ebbe8 <- RShadowMap::Begin@1ec138 | RViewCamera::SetViewPortToDeviceTransformMode@1d4ab0 <- RViewCamera::SetDeviceTransformMode@1d4cb8
+Xbox callees: BeginView
+PS2 callees:  ReBegin
+--- Xbox
+void __thiscall FUN_000e4ef0(int param_1_00,undefined4 *param_1)
+{
+  char cVar1;
+  int iVar2;
+  undefined4 *puVar3;
+  cVar1 = *(char *)(param_1_00 + 0x188);
+  puVar3 = (undefined4 *)(param_1_00 + 0x80);
+  for (iVar2 = 0x10; iVar2 != 0; iVar2 = iVar2 + -1) {
+    *puVar3 = *param_1;
+    param_1 = param_1 + 1;
+    puVar3 = puVar3 + 1;
+  }
+  if (cVar1 != '\0') {
+    iVar2 = *(int *)(param_1_00 + 400);
+    *(undefined1 *)(iVar2 + 0x188) = 0;
+    if ((*(int *)(iVar2 + 4) != 0) && (*(int *)(iVar2 + 4) != 1)) {
+      EAGL::ViewPort::BeginView();
+    }
+    *(undefined4 *)(iVar2 + 4) = 0;
+    EAGL::ViewPort::BeginView();
+  }
+  return;
+}
+--- PS2
+void EAGL::ViewPort::SetViewMatrix
+               (int param_1,undefined8 param_2,ulong param_3,ulong param_4,ulong param_5,
+               ulong param_6)
+{
+  uint uVar1;
+  uint uVar2;
+  ulong *puVar3;
+  ulong in_v0;
+  ulong uVar4;
+  ulong in_v1;
+  ulong uVar5;
+  uint uVar6;
+  ulong uVar7;
+  ulong uVar8;
+  uVar6 = (uint)param_2;
+  uVar1 = uVar6 + 7 & 7;
+  uVar2 = uVar6 & 7;
+  uVar4 = (*(long *)((uVar6 + 7) - uVar1) << (7 - uVar1) * 8 |
+          in_v0 & 0xffffffffffffffffU >> (uVar1 + 1) * 8) & -1L << (8 - uVar2) * 8 |
+          *(ulong *)(uVar6 - uVar2) >> uVar2 * 8;
+  uVar1 = uVar6 + 0xf & 7;
+  uVar2 = uVar6 + 8 & 7;
+  uVar5 = (*(long *)((uVar6 + 0xf) - uVar1) << (7 - uVar1) * 8 |
+          in_v1 & 0xffffffffffffffffU >> (uVar1 + 1) * 8) & -1L << (8 - uVar2) * 8 |
+          *(ulong *)((uVar6 + 8) - uVar2) >> uVar2 * 8;
+  uVar1 = uVar6 + 0x17 & 7;
+  uVar2 = uVar6 + 0x10 & 7;
+  uVar7 = (*(long *)((uVar6 + 0x17) - uVar1) << (7 - uVar1) * 8 |
+          param_3 & 0xffffffffffffffffU >> (uVar1 + 1) * 8) & -1L << (8 - uVar2) * 8 |
+          *(ulong *)((uVar6 + 0x10) - uVar2) >> uVar2 * 8;
+    ...
+
+====================================================================================================
+## item 228: Xbox 0x000239b0 (FUN_000239b0)  <-  PS2 0x0012aa20 AICharacterPedestrian::SetNewState
+triage: tier CG-1:1 conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): AICharacterPedestrian::KillSelf, size ratio 1.5; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: AICharacterPedestrian::DoDying@25fc0 | AICharacterPedestrian::ForceRecycle@24730 | AICharacterPedestrian::HandleInterrupts@27800 | AICharacterPedestrian::KillSelf@24140 | AICharacterPedestrian::MaintainHeading@26620 | AICharacterPedestrian::Recycle@254c0
+PS2 callers up to a shared name:  AICharacterPedestrian::DoAvoiding@127a30 | AICharacterPedestrian::DoDodging@127d58 | AICharacterPedestrian::DoDying@1280c8 | AICharacterPedestrian::DoLeaning@1284e0 | AICharacterPedestrian::DoStartled@127908 | AICharacterPedestrian::DoTurning@1282e0 | AICharacterPedestrian::DoWalking@127840 | AICharacterPedestrian::HandleInterrupts@128cd8
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void FUN_000239b0(int param_1)
+{
+  char *pcVar1;
+  if ((-1 < param_1) && (param_1 < WRoadNetwork::numNodes)) {
+    pcVar1 = (char *)(*(int *)(WRoadNetwork::fRoads + param_1 * 4) + 0x2f);
+    *pcVar1 = *pcVar1 + -1;
+  }
+  return;
+}
+--- PS2
+   handler.
+   Batch: P011
+   [/symbol-matching] */
+void AICharacterPedestrian::SetNewState(int param_1,undefined4 param_2,undefined4 param_3)
+{
+  undefined4 uVar1;
+  uVar1 = *(undefined4 *)(param_1 + 0x4c);
+  *(undefined4 *)(param_1 + 0x4c) = param_2;
+  *(undefined4 *)(param_1 + 0x15c) = uVar1;
+  *(undefined4 *)(param_1 + 0x50) = param_3;
+  *(undefined4 *)(param_1 + 0x1ac) = 0;
+  return;
+}
+
+====================================================================================================
+## item 229: Xbox 0x000239b0 (FUN_000239b0)  <-  PS2 0x00126800 AICharacterPedestrian::GetSpecialPedInfo
+triage: tier CG-n:n conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): AICharacterPedestrian::HandleInterrupts, size ratio 1.5; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: AICharacterPedestrian::DoDying@25fc0 | AICharacterPedestrian::ForceRecycle@24730 | AICharacterPedestrian::HandleInterrupts@27800 | AICharacterPedestrian::KillSelf@24140 | AICharacterPedestrian::MaintainHeading@26620 | AICharacterPedestrian::Recycle@254c0
+PS2 callers up to a shared name:  AICharacterPedestrian::DoDying@1280c8 | AICharacterPedestrian::DoIdling@127798 | AICharacterPedestrian::DoNeutral@127708 | AICharacterPedestrian::GetRandomPedTexture@126768 | AICharacterPedestrian::HandleInterrupts@128cd8 | AICharacterPedestrian::LoadPedTextures@1265c0 | AICharacterPedestrian::Recycle@126c98
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void FUN_000239b0(int param_1)
+{
+  char *pcVar1;
+  if ((-1 < param_1) && (param_1 < WRoadNetwork::numNodes)) {
+    pcVar1 = (char *)(*(int *)(WRoadNetwork::fRoads + param_1 * 4) + 0x2f);
+    *pcVar1 = *pcVar1 + -1;
+  }
+  return;
+}
+--- PS2
+undefined * AICharacterPedestrian::GetSpecialPedInfo(int param_1)
+{
+  return &UNK_0036a2c8 + param_1 * 0x4c;
+}
+
+====================================================================================================
+## item 230: Xbox 0x0006f270 (FUN_0006f270)  <-  PS2 0x001956d8 PhysicsObject::GetRadius
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 2 anchor(s) place it by call position (2 as a 1:1 slot): RayShell::CollideWithObjects, RayShell::ConsiderVictim, size ratio 0.84; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RayShell::CollideWithObjects@72190 | RayShell::ConsiderVictim@71e40 | RayShell::RayShell@72e90 | EKickObject::~EKickObject@4c7f0
+PS2 callers up to a shared name:  RayShell::CollideWithObjects@1998c0 | RayShell::ConsiderVictim@19a548 | RayShell::RayShell@198e80 | EKickObject::~EKickObject@150390
+Xbox callees: GetRigidBody, GetSimpleRigidBody
+PS2 callees:  GetRigidBody, GetSimpleRigidBody
+--- Xbox
+float10 __fastcall FUN_0006f270(int param_1)
+{
+  int iVar1;
+  if ((~*(byte *)(param_1 + 0x48) & 1) != 0) {
+    iVar1 = Simulation::GetRigidBody(&Sim,(int)*(short *)(param_1 + 0x4a));
+    return (float10)*(float *)(iVar1 + 0x7c);
+  }
+  iVar1 = Simulation::GetSimpleRigidBody(&Sim,(int)*(short *)(param_1 + 0x4a));
+  return (float10)*(float *)(iVar1 + 0x2c);
+}
+--- PS2
+float __thiscall PhysicsObject::GetRadius(PhysicsObject *this)
+{
+  int iVar1;
+  float fVar2;
+  if (((this->flags ^ 1) & 1) == 0) {
+    iVar1 = Simulation::GetSimpleRigidBody((Simulation *)&Sim,(int)this->rigidBodySlot);
+    fVar2 = *(float *)(iVar1 + 0x2c);
+  }
+  else {
+    iVar1 = Simulation::GetRigidBody((Simulation *)&Sim,(int)this->rigidBodySlot);
+    fVar2 = *(float *)(iVar1 + 0x7c);
+  }
+  return fVar2;
+}
+
+====================================================================================================
+## item 231: Xbox 0x00094c90 (FUN_00094c90)  <-  PS2 0x001cfe40 RTextureContextManager::KillContext
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): RCARPFile::~RCARPFile, size ratio 0.14; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RCARPFile::~RCARPFile@7bff0
+PS2 callers up to a shared name:  RCARPFile::~RCARPFile@1a9c08
+Xbox callees: FUN_00094140
+PS2 callees:  FastFree
+--- Xbox
+void __thiscall FUN_00094c90(int param_1_00,int param_1)
+{
+  char cVar1;
+  int iVar2;
+  int *piVar3;
+  int iVar4;
+  int *piVar5;
+  int *piVar6;
+  int *piVar7;
+  iVar4 = param_1;
+  iVar2 = *(int *)(param_1_00 + 4);
+  piVar7 = *(int **)(iVar2 + 4);
+  piVar6 = (int *)*piVar7;
+  if (piVar6 != piVar7) {
+    do {
+      piVar7 = piVar6;
+      if (*(char *)((int)piVar6 + 0x15) == '\0') {
+        piVar7 = (int *)piVar6[2];
+        if (*(char *)((int)piVar7 + 0x15) == '\0') {
+          cVar1 = *(char *)(*piVar7 + 0x15);
+          piVar3 = (int *)*piVar7;
+          while (cVar1 == '\0') {
+            cVar1 = *(char *)(*piVar3 + 0x15);
+            piVar7 = piVar3;
+            piVar3 = (int *)*piVar3;
+          }
+        }
+        else {
+          cVar1 = *(char *)(piVar6[1] + 0x15);
+          piVar5 = (int *)piVar6[1];
+    ...
+--- PS2
+void RTextureContextManager::KillContext(int param_1,int param_2)
+{
+  int *piVar1;
+  int iVar2;
+  int iVar3;
+  int *piVar4;
+  int *piVar5;
+  int *piVar6;
+  int *piVar7;
+  int *piVar8;
+  int *piVar9;
+  int *piVar10;
+  int *piVar11;
+  int *local_a0;
+  piVar1 = *(int **)(param_1 + 4);
+  local_a0 = *(int **)(*piVar1 + 8);
+  if (local_a0 != (int *)*piVar1) {
+    do {
+      piVar7 = local_a0;
+      piVar5 = (int *)local_a0[3];
+      if (piVar5 == (int *)0x0) {
+        piVar5 = (int *)local_a0[1];
+        if (local_a0 == (int *)piVar5[3]) {
+          do {
+            local_a0 = piVar5;
+            piVar5 = (int *)local_a0[1];
+          } while (local_a0 == (int *)piVar5[3]);
+        }
+        if ((int *)local_a0[3] != piVar5) {
+          local_a0 = piVar5;
+    ...
+
+====================================================================================================
+## item 232: Xbox 0x0014dfc0 (FUN_0014dfc0)  <-  PS2 0x003029f0 RCMP::DECODER::GetFrame
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): RCMP::AV_PLAYER::GetFirstFrame, size ratio 0.72; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RCMP::AV_PLAYER::GetFirstFrame@14cb00 | FUN_0014c750@14c750 <- PlayMPC::Play@1308a0
+PS2 callers up to a shared name:  RCMP::AV_PLAYER::GetFirstFrame@3010c0 | RCMP::AV_PLAYER::GetFrame@301338 <- PlayMPC::Play@300298
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+undefined4 __fastcall FUN_0014dfc0(int param_1)
+{
+  undefined4 uVar1;
+  if ((*(int *)(param_1 + 0x18) == 0) && (*(int *)(param_1 + 4) == 0)) {
+    (**(code **)(param_1 + 0xc))(param_1,*(undefined4 *)(param_1 + 8),param_1 + 4);
+  }
+  if (*(int **)(param_1 + 0x18) == (int *)0x0) {
+    return 0;
+  }
+  uVar1 = (**(code **)(**(int **)(param_1 + 0x18) + 8))();
+  return uVar1;
+}
+--- PS2
+undefined8 RCMP::DECODER::GetFrame(undefined8 param_1,undefined8 param_2)
+{
+  int iVar1;
+  undefined8 uVar2;
+  int *piVar3;
+  piVar3 = (int *)param_1;
+  if (piVar3[5] == 0) {
+    if (*piVar3 == 0) {
+      (*(code *)piVar3[2])(param_1,piVar3[1],param_1);
+      iVar1 = piVar3[5];
+    }
+    else {
+      iVar1 = piVar3[5];
+    }
+    if (iVar1 == 0) {
+      return 0;
+    }
+  }
+  iVar1 = *(int *)piVar3[5];
+  uVar2 = (**(code **)(iVar1 + 0x1c))(piVar3[5] + (int)*(short *)(iVar1 + 0x18),param_2);
+  return uVar2;
+}
+
+====================================================================================================
+## item 233: Xbox 0x0012ceb0 (FUN_0012ceb0)  <-  PS2 0x002e5968 ATrafficVehicle::PlaySnowmobileSpecifics
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): ATrafficVehicle::Play, 7 shared strings, size ratio 0.35; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: ATrafficVehicle::Play@12d430
+PS2 callers up to a shared name:  ATrafficVehicle::Play@2e5598
+Xbox callees: FUN_000476f0, FUN_000478a0, FUN_0011dab0, GetAirborneWheels, GetVolume, Lookup, operator_new
+PS2 callees:  AVoice, Add, GetAirborneWheels, GetVolume, Lookup, operator_new, ~ABaseSound, ~View
+--- Xbox
+void __fastcall FUN_0012ceb0(int param_1)
+{
+  float fVar1;
+  undefined *puVar2;
+  short sVar3;
+  short sVar4;
+  undefined2 uVar5;
+  undefined4 uVar6;
+  undefined8 *puVar7;
+  float10 extraout_ST0;
+  float10 extraout_ST0_00;
+  float10 extraout_ST0_01;
+  float10 extraout_ST0_02;
+  float10 fVar8;
+  undefined4 uVar9;
+  char *pcVar10;
+  undefined4 local_1c;
+  code *pcStack_18;
+  undefined4 local_14;
+  local_14 = 0xffffffff;
+  pcStack_18 = FUN_001566af;
+  if ((*(short *)(param_1 + 0x220) != 0) &&
+     (sVar3 = AVehicle::GetAirborneWheels(), puVar2 = PTR_DAT_001d839c, sVar3 == 0)) {
+    fVar1 = (*(float *)(param_1 + 0x228) + *(float *)(param_1 + 0x224)) * 0.5;
+    if (fVar1 * 2.5 < *(float *)(param_1 + 0x238) != (fVar1 * 2.5 == *(float *)(param_1 + 0x238))) {
+      uVar6 = AIndex::Lookup(PTR_DAT_001d839c + 0x10,"SFX_heavy1");
+      uVar9 = *(undefined4 *)(puVar2 + 8);
+      pcVar10 = "Opponents";
+      AMix::GetVolume(*(AMix **)(param_1 + 0x94),(float10 *)"Opponents");
+      FUN_000476f0(uVar9,uVar6,param_1 + 0x10,param_1 + 0x20,
+    ...
+--- PS2
+void ATrafficVehicle::PlaySnowmobileSpecifics
+               (uint param_1,undefined8 param_2,ulong param_3,long param_4,undefined8 param_5,
+               ulong param_6)
+{
+  uint uVar1;
+  undefined4 uVar2;
+  ulong *puVar3;
+  undefined *puVar4;
+  int iVar5;
+  AMix **ppAVar6;
+  uint uVar7;
+  undefined8 *puVar8;
+  int iVar9;
+  AMix *pAVar10;
+  undefined4 *puVar11;
+  int iVar12;
+  ulong extraout_a0;
+  ulong extraout_a0_00;
+  ulong extraout_a0_01;
+  ulong uVar13;
+  ulong extraout_a1;
+  ulong extraout_a1_00;
+  ulong extraout_a2;
+  ulong extraout_a2_00;
+  ulong extraout_a2_01;
+  ulong extraout_a3;
+  ulong uVar14;
+  undefined1 *puVar15;
+  long lVar16;
+  float fVar17;
+    ...
+
+====================================================================================================
+## item 234: Xbox 0x0001d9f0 (FUN_0001d9f0)  <-  PS2 0x002a8038 memset
+triage: tier CG-n:n conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): WCollisionMgr::CheckHitWorld, size ratio 0.65; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: WCollisionMgr::CheckHitWorld@c3b40 | REmpBolts::CreateVehicleBolt@9c0e0 | AIHelicopter::DoAgentLogic@331c0 | AICharacterEnemyGround::DoRunning@1f180 | AICharacterEnemyGround::HandleInterrupts@1f3c0 | RScorchWorld::ScorchWorld@a50c0 | Grenade::Simulate@5d7d0 | Mine::Simulate@5e710
+PS2 callers up to a shared name:  WSoundGroup::Add@227d80 | RBulletStreak::Add@1d8048 | EAGL::DynamicModel::AddGeoPrim@2851f8 | RRenderWorldCamera::AddPlayerHeadlight@1c5f80 | RWorldCamera::AnchorCamera@1d6498 | PBondCar::ApplyDamage@189598 | Smackable::ApplyDamage@19e8c0 | PHelicopter::ApplyDamage@193938
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void __fastcall FUN_0001d9f0(undefined4 *param_1)
+{
+  int iVar1;
+  undefined4 *puVar2;
+  undefined4 *puVar3;
+  undefined4 local_20 [8];
+  *param_1 = DAT_001d4c00;
+  param_1[1] = DAT_001d4c04;
+  param_1[2] = DAT_001d4c08;
+  param_1[3] = DAT_001d4c0c;
+  puVar2 = local_20;
+  puVar3 = param_1 + 8;
+  for (iVar1 = 8; iVar1 != 0; iVar1 = iVar1 + -1) {
+    *puVar3 = *puVar2;
+    puVar2 = puVar2 + 1;
+    puVar3 = puVar3 + 1;
+  }
+  param_1[0x10] = 0;
+  param_1[0x11] = 0;
+  param_1[0x12] = 0;
+  *(undefined1 *)(param_1 + 0x14) = 0;
+  *(undefined1 *)((int)param_1 + 0x51) = 0;
+  *(undefined1 *)((int)param_1 + 0x52) = 0;
+  *(undefined1 *)((int)param_1 + 0x53) = 0;
+  *(undefined2 *)(param_1 + 0x15) = 0;
+  param_1[0x16] = 0;
+  return;
+}
+--- PS2
+undefined8 * memset(void *param_1,int value,uint numBytes)
+{
+  bool bVar1;
+  undefined1 auVar2 [16];
+  undefined8 *puVar3;
+  undefined8 in_t0_udw;
+  undefined1 auVar4 [16];
+  puVar3 = param_1;
+  if ((7 < numBytes) && (((uint)param_1 & 0xf) == 0)) {
+    auVar2._0_8_ = ((long)value & 0xffU) << 8 | (long)value & 0xffU;
+    auVar2._8_8_ = in_t0_udw;
+    auVar2 = _pcpyh(auVar2);
+    bVar1 = numBytes < 8;
+    if (0x1f < numBytes) {
+      auVar4 = _pcpyld(auVar2,auVar2);
+      do {
+        *(int *)puVar3 = auVar4._0_4_;
+        *(int *)((int)puVar3 + 4) = auVar4._4_4_;
+        *(int *)(puVar3 + 1) = auVar4._8_4_;
+        *(int *)((int)puVar3 + 0xc) = auVar4._12_4_;
+        numBytes = numBytes - 0x20;
+        *(int *)(puVar3 + 2) = auVar4._0_4_;
+        *(int *)((int)puVar3 + 0x14) = auVar4._4_4_;
+        *(int *)(puVar3 + 3) = auVar4._8_4_;
+        *(int *)((int)puVar3 + 0x1c) = auVar4._12_4_;
+        puVar3 = puVar3 + 4;
+      } while (0x1f < numBytes);
+      bVar1 = numBytes < 8;
+    }
+    while (!bVar1) {
+    ...
+
+====================================================================================================
+## item 235: Xbox 0x0009ac40 (FUN_0009ac40)  <-  PS2 0x0029fd38 EAGL::DynamicLoader::GetRegisteredVar
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 3 anchor(s) place it by call position (3 as a 1:1 slot): RDecalManager::RDecalManager, RMissileCam::RMissileCam, RMissileStreak::Init, size ratio 5.1; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RMissileStreak::Init@a1070 | RDecalManager::RDecalManager@9acf0 | RMissileCam::RMissileCam@a0a50 | FUN_0011bfe0@11bfe0 <- FUN_000d7770@d7770 <- GGirl::InitGirl@d7990 | FUN_0011bfe0@11bfe0 <- FUN_0011c0f0@11c0f0 <- RRenderer::RRenderer@7d2a0
+PS2 callers up to a shared name:  REmp::Init@1db038 | RMissileStreak::Init@1e3e28 | EAGL::DrawGouraud::DrawGouraud@29c588 <- EAGL::ProfilerRegion::DrawRegions@298928 | EAGL::DrawTextured::DrawTextured@29ccd8 <- PlayMPC::Play@300298 | RDebrisType::RDebrisType@1d9628 <- RDebris::RDebris@1d94a8 | UVolatileMaterial::Init@2cb670 <- InitAllSimpleMaterials@2cf2a8 <- RRenderer::RRenderer@1ab9c0 | USimpleMaterial::Init@2cf308 <- InitAllSimpleMaterials@2cf2a8 <- RRenderer::RRenderer@1ab9c0 | USimpleTexturedMaterial::Init@2cf6d8 <- InitAllSimpleMaterials@2cf2a8 <- RRenderer::RRenderer@1ab9c0
+Xbox callees: FUN_000e5cf0, FUN_000f1270, eagl_alloc
+PS2 callees:  Search
+--- Xbox
+undefined4 * __fastcall FUN_0009ac40(undefined4 *param_1)
+{
+  undefined4 uVar1;
+  undefined1 uStack_11;
+  int iStack_10;
+  undefined4 uStack_c;
+  code *pcStack_8;
+  undefined4 uStack_4;
+  uStack_4 = 0xffffffff;
+  pcStack_8 = FUN_0015358f;
+  iStack_10 = (*(code *)EAGLInternal::EAGLMalloc)(0x34,"EAGL::Rendermethod new");
+  uStack_4 = 0;
+  if (iStack_10 == 0) {
+    uVar1 = 0;
+  }
+  else {
+    uVar1 = FUN_000f1270(&DAT_00242de8);
+  }
+  *param_1 = uVar1;
+  uStack_4 = 0xffffffff;
+  param_1[2] = 0;
+  param_1[1] = 0;
+  param_1[4] = 0;
+  param_1[3] = 0;
+  param_1[6] = 0;
+  param_1[5] = 0;
+  uVar1 = FUN_000e5cf0("EAGL::ViewPort::gpModelViewProjectionMatrix",&uStack_11);
+  param_1[10] = 0;
+  param_1[9] = 0;
+  param_1[0xc] = 0;
+    ...
+--- PS2
+undefined4 EAGL::DynamicLoader::GetRegisteredVar(char *param_1,bool *param_2)
+{
+  undefined4 uVar1;
+  uVar1 = SymbolPool::Search((SymbolPool *)&varPool,param_1,param_2);
+  return uVar1;
+}
+
+====================================================================================================
+## item 236: Xbox 0x0008a520 (FUN_0008a520)  <-  PS2 0x001bef30 SetProcAnimXFormList
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): RSkeletalObj::SetProcAnimState, size ratio 1.0; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RSkeletalObj::SetProcAnimState@912b0
+PS2 callers up to a shared name:  RSkeletalObj::SetProcAnimState@1cd178
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void FUN_0008a520(undefined *param_1,undefined4 param_2)
+{
+  if (param_1 != (undefined *)0x0) {
+    PTR_DAT_001c41b8 = param_1;
+    DAT_001c41bc = param_2;
+    return;
+  }
+  PTR_DAT_001c41b8 = (undefined *)&DAT_00191940;
+  DAT_001c41bc = 1;
+  return;
+}
+--- PS2
+void SetProcAnimXFormList(long param_1,undefined4 param_2)
+{
+  if (param_1 != 0) {
+    PTR_DAT_00333a58 = (undefined *)param_1;
+    DAT_00333a5c = param_2;
+    return;
+  }
+  PTR_DAT_00333a58 = &DAT_00383430;
+  DAT_00333a5c = 1;
+  return;
+}
+
+====================================================================================================
+## item 237: Xbox 0x00119f50 (FUN_00119f50)  <-  PS2 0x002ceb18 StringToNumber::StringToNumber
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 2 anchor(s) place it by call position (2 as a 1:1 slot): InputConfigManager::InitAndPreload, InputToAction::InputToAction, 1 shared strings, size ratio 1.0; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: InputConfigManager::InitAndPreload@504d0 | InputToAction::InputToAction@50860
+PS2 callers up to a shared name:  InputConfigManager::InitAndPreload@1668a0 | InputToAction::InputToAction@167278
+Xbox callees: FUN_00132db0, FastAlloc
+PS2 callees:  FastAlloc, qsort
+--- Xbox
+int * __thiscall FUN_00119f50(int *param_1_00,int param_1)
+{
+  int *piVar1;
+  int *piVar2;
+  void *pvVar3;
+  int iVar4;
+  int iVar5;
+  piVar2 = (int *)(param_1 + 4);
+  iVar5 = 0;
+  iVar4 = *piVar2;
+  while (iVar4 != 0) {
+    piVar1 = piVar2 + 2;
+    piVar2 = piVar2 + 2;
+    iVar5 = iVar5 + 1;
+    iVar4 = *piVar1;
+  }
+  *param_1_00 = iVar5;
+  param_1_00[1] = param_1;
+  if (iVar5 < 0x1f) {
+    param_1_00[2] = 0;
+    param_1_00[3] = 0;
+    return param_1_00;
+  }
+  pvVar3 = UMemory::FastAlloc(iVar5 << 4,"StringToNumber");
+  param_1_00[3] = (int)((int)pvVar3 + iVar5 * 8);
+  param_1_00[2] = (int)pvVar3;
+  iVar4 = 0;
+  if (0 < *param_1_00) {
+    do {
+      iVar5 = param_1_00[2];
+    ...
+--- PS2
+undefined8 StringToNumber::StringToNumber(undefined8 param_1,uint param_2)
+{
+  uint uVar1;
+  ulong *puVar2;
+  void *pvVar3;
+  ulong uVar4;
+  uint uVar5;
+  int iVar6;
+  int iVar7;
+  uint *puVar8;
+  uint uVar9;
+  uVar9 = 0;
+  iVar7 = *(int *)(param_2 + 4);
+  uVar1 = param_2;
+  while (iVar7 != 0) {
+    uVar9 = uVar9 + 1;
+    iVar7 = *(int *)(uVar1 + 0xc);
+    uVar1 = uVar1 + 8;
+  }
+  puVar8 = (uint *)param_1;
+  *puVar8 = uVar9;
+  puVar8[1] = param_2;
+  if ((int)uVar9 < 0x1f) {
+    puVar8[2] = 0;
+    puVar8[3] = 0;
+  }
+  else {
+    pvVar3 = UMemory::FastAlloc((long)(int)(uVar9 << 4),"StringToNumber");
+    uVar4 = (ulong)(int)pvVar3;
+    puVar8[2] = (uint)pvVar3;
+    ...
+
+====================================================================================================
+## item 238: Xbox 0x000b8840 (FUN_000b8840)  <-  PS2 0x00208918 SMissionManager::FailObjective
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): EObjectiveFail::~EObjectiveFail, size ratio 1.26; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: EObjectiveFail::~EObjectiveFail@41040
+PS2 callers up to a shared name:  EObjectiveFail::~EObjectiveFail@1516f0
+Xbox callees: 
+PS2 callees:  GetObjectiveByID, logWarning
+--- Xbox
+void __thiscall FUN_000b8840(int param_1_00,int param_1)
+{
+  undefined4 *puVar1;
+  undefined4 *puVar2;
+  puVar1 = *(undefined4 **)(param_1_00 + 4);
+  if (puVar1 == (undefined4 *)0x0) {
+    puVar2 = (undefined4 *)0x0;
+  }
+  else {
+    puVar2 = (undefined4 *)*puVar1;
+  }
+  if (puVar2 != puVar1) {
+    while (*(int *)puVar2[2] != param_1) {
+      puVar2 = (undefined4 *)*puVar2;
+      if (puVar2 == puVar1) {
+        return;
+      }
+    }
+    if (puVar2[2] != 0) {
+      *(undefined4 *)(puVar2[2] + 0x10) = 3;
+    }
+  }
+  return;
+}
+--- PS2
+void SMissionManager::FailObjective(int *param_1,undefined8 param_2)
+{
+  int *piVar1;
+  piVar1 = GetObjectiveByID(param_1,(int)param_2);
+  if (piVar1 == (int *)0x0) {
+    logWarning("WARNING - Could not find objective (%d).  Objective not failed!\n",param_2);
+  }
+  else {
+    piVar1[4] = 3;
+  }
+  return;
+}
+
+====================================================================================================
+## item 239: Xbox 0x000a5530 (FUN_000a5530)  <-  PS2 0x001eb078 RScorchWorld::ScorchGround
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 2 anchor(s) place it by call position (0 as a 1:1 slot): ESpawnExplosion::~ESpawnExplosion, SWeaponManager::FireWeapon, size ratio 0.69; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: SWeaponManager::FireWeapon@bb2b0 | ESpawnExplosion::~ESpawnExplosion@4de70
+PS2 callers up to a shared name:  SWeaponManager::FireWeapon@20de20 | ESpawnExplosion::~ESpawnExplosion@15a098
+Xbox callees: FUN_0001b160, FUN_0009b070, FUN_000a5080, FindClosestFace, HeightAtPoint
+PS2 callees:  AddDecal, FindClosestFace, HeightAtPoint, memset, v3crossprod
+--- Xbox
+void FUN_000a5530(int param_1,float *param_2,float param_3,int param_4)
+{
+  float fVar1;
+  float fVar2;
+  float10 fVar3;
+  float10 fVar4;
+  float local_50;
+  float local_40;
+  float local_3c;
+  float local_38;
+  float local_34;
+  undefined4 local_30;
+  undefined4 local_2c;
+  undefined4 local_28;
+  undefined4 local_24;
+  undefined1 local_20 [4];
+  float local_1c;
+  WWorldPos::FindClosestFace(param_2,1);
+  if ((((*(byte *)(param_1 + 0x2d) & 2) == 0) && (*(char *)(param_1 + 0x2c) != '\x06')) &&
+     ((*(int *)(param_1 + 0x34) == 0 ||
+      (*(char *)(*(int *)(*(int *)(param_1 + 0x34) + 0x1c) + 0xc) == '\0')))) {
+    local_50 = param_3 * 0.5;
+    if (6.0 < local_50) {
+      local_50 = 6.0;
+    }
+    fVar3 = (float10)WWorldPos::HeightAtPoint(param_2,0);
+    fVar1 = param_2[1];
+    FUN_000a5080(local_20,0);
+    if ((0.95 <= local_1c) && (*(char *)(param_1 + 0x30) != '\0')) {
+      if (param_4 != 4) {
+    ...
+--- PS2
+void RScorchWorld::ScorchGround
+               (float param_1,float *param_2,ulong param_3,long param_4,undefined8 param_5,
+               undefined8 param_6)
+{
+  undefined1 *puVar1;
+  uint uVar2;
+  uint uVar3;
+  ulong uVar4;
+  ulong uVar5;
+  float *pfVar6;
+  ulong uVar7;
+  float fVar8;
+  float fVar9;
+  float fVar10;
+  float fVar11;
+  float fVar12;
+  float fVar13;
+  float local_d0;
+  float local_cc;
+  float local_c8;
+  undefined4 local_c4;
+  undefined1 local_c0 [8];
+  undefined1 local_b8 [8];
+  COORD3 local_b0;
+  COORD3 local_a0;
+  undefined4 local_90;
+  undefined4 uStack_8c;
+  undefined4 local_80;
+  undefined4 uStack_7c;
+  undefined4 local_70;
+    ...
+
+====================================================================================================
+## item 240: Xbox 0x0008e010 (FUN_0008e010)  <-  PS2 0x001c98a0 RSceneObj::ComputeBoundingRadius
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 2 anchor(s) place it by call position (2 as a 1:1 slot): RSceneObj::GetBoundingRadius, RSceneObj::ScaleBoundingRadius, size ratio 1.14; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RSceneObj::GetBoundingRadius@8f500 | RSceneObj::ScaleBoundingRadius@8f550
+PS2 callers up to a shared name:  RSceneObj::GetBoundingRadius@1c97d0 | RSceneObj::ScaleBoundingRadius@1c9858 | RSceneObj::UseInstanceList@1c7940
+Xbox callees: VU0_v3length
+PS2 callees:  GetBoundingDimensions
+--- Xbox
+void __fastcall FUN_0008e010(int param_1)
+{
+  int iVar1;
+  _VEC3 local_20 [2];
+  iVar1 = *(int *)(param_1 + 0x10);
+  local_20[0].x = (*(float *)(iVar1 + 0x20) - *(float *)(iVar1 + 0x10)) * 0.5;
+  local_20[0].y = (*(float *)(iVar1 + 0x24) - *(float *)(iVar1 + 0x14)) * 0.5;
+  local_20[0].z = (*(float *)(iVar1 + 0x28) - *(float *)(iVar1 + 0x18)) * 0.5;
+  VU0_v3length(local_20);
+  return;
+}
+--- PS2
+undefined4 RSceneObj::ComputeBoundingRadius(int param_1)
+{
+  undefined1 in_vf0 [16];
+  undefined1 auVar1 [16];
+  undefined1 auVar2 [16];
+  undefined1 auVar3 [16];
+  undefined4 uVar4;
+  undefined1 local_30 [16];
+  undefined4 local_20;
+  undefined4 uStack_1c;
+  undefined4 local_10;
+  undefined4 uStack_c;
+  GetBoundingDimensions(param_1,(float *)local_30);
+  auVar1 = _lqc2(local_30);
+  auVar2 = _vmul(auVar1,auVar1);
+  auVar3 = _qmtc2(0x3f800000);
+  _vmulabc(auVar1,auVar1);
+  _vmaddabc(auVar3,auVar2);
+  auVar1 = _vmaddbc(auVar3,auVar2);
+  _vsqrt(auVar1);
+  uVar4 = _vwaitq();
+  auVar1 = _vaddq(in_vf0,uVar4);
+  auVar1 = _qmfc2(auVar1._0_4_);
+  return auVar1._0_4_;
+}
+
+====================================================================================================
+## item 241: Xbox 0x00014880 (FUN_00014880)  <-  PS2 0x0024d010 dpsub
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): ECollision::~ECollision, size ratio 0.4; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: ECollision::~ECollision@49eb0
+PS2 callers up to a shared name:  FUN_001bc1e8@1bc1e8 <- RPlayerCamera::SetAutoDriveRotationX@1bc390 | FUN_001bc1e8@1bc1e8 <- RPlayerCamera::SetAutoDriveRotationY@1bc3c8 | AVehicleWind::Play@2feaa0 <- ASnowMobile::Play@2edd88 | AVehicleWind::Play@2feaa0 <- AVehicle::Play@2e1768 | FUN_002ad2e8@2ad2e8 <- _vfprintf_r@2abdd0 <- vfprintf@2abd58 | FUN_0031bf70@31bf70 <- AVehicle::CalculateRpm@2df8a0 <- ATrafficVehicle::Play@2e5598
+Xbox callees: 
+PS2 callees:  FUN_0024cd78, __pack_d, __unpack_d
+--- Xbox
+float * FUN_00014880(float *param_1,float *param_2)
+{
+  if (*param_1 <= *param_2) {
+    param_2 = param_1;
+  }
+  return param_2;
+}
+--- PS2
+void dpsub(ulong param_1,ulong param_2)
+{
+  undefined8 uVar1;
+  undefined4 auStack_90 [8];
+  undefined4 uStack_70;
+  uint local_6c;
+  undefined1 auStack_50 [32];
+  ulong local_30;
+  ulong local_28;
+  local_30 = param_1;
+  local_28 = param_2;
+  __unpack_d(&local_30,auStack_90);
+  __unpack_d(&local_28,&uStack_70);
+  local_6c = local_6c ^ 1;
+  uVar1 = FUN_0024cd78((long)(int)auStack_90,(long)(int)&uStack_70,(long)(int)auStack_50);
+  __pack_d((uint *)uVar1);
+  return;
+}
+
+====================================================================================================
+## item 242: Xbox 0x0007cf40 (FUN_0007cf40)  <-  PS2 0x001aad78 RDrawGroup::RDrawGroup
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): RRenderer::RRenderer, size ratio 1.78; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RRenderer::RRenderer@7d2a0
+PS2 callers up to a shared name:  RRenderer::RRenderer@1ab9c0
+Xbox callees: FastAlloc
+PS2 callees:  FastAlloc
+--- Xbox
+undefined4 * __fastcall FUN_0007cf40(undefined4 *param_1)
+{
+  void *pvVar1;
+  undefined4 local_c;
+  code *pcStack_8;
+  undefined4 uStack_4;
+  uStack_4 = 0xffffffff;
+  pcStack_8 = FUN_00152bdf;
+  pvVar1 = UMemory::FastAlloc(0x10,"RReverseDrawList");
+  if (pvVar1 != (void *)0x0) {
+    *(undefined4 *)((int)pvVar1 + 4) = 0;
+    *(undefined4 *)((int)pvVar1 + 8) = 0;
+    *(undefined4 *)((int)pvVar1 + 0xc) = 0;
+    *param_1 = pvVar1;
+    return param_1;
+  }
+  *param_1 = 0;
+  return param_1;
+}
+--- PS2
+undefined8 RDrawGroup::RDrawGroup(undefined8 param_1)
+{
+  undefined4 *puVar1;
+  puVar1 = UMemory::FastAlloc(0xc,"RReverseDrawList");
+  *puVar1 = 0;
+  puVar1[1] = 0;
+  puVar1[2] = 0;
+  *(undefined4 *)param_1 = puVar1;
+  return param_1;
+}
+
+====================================================================================================
+## item 243: Xbox 0x000eb220 (FUN_000eb220)  <-  PS2 0x0027e368 EAGL::TAR::SwapClut
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): EAGLInternal::RuntimeAllocTARConstructor, size ratio 19.29; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: EAGLInternal::RuntimeAllocTARConstructor@ecbe0 | EAGLInternal::TARConstructor@ed070
+PS2 callers up to a shared name:  EAGLInternal::RuntimeAllocTARConstructor@27af10
+Xbox callees: D3DDevice_CreatePalette2, D3DPalette_Lock2
+PS2 callees:  SwapClut
+--- Xbox
+uint __thiscall FUN_000eb220(int param_1_00,int *param_1)
+{
+  uint in_EAX;
+  uint uVar1;
+  undefined4 uVar2;
+  int iVar3;
+  undefined2 *puVar4;
+  undefined4 *puVar5;
+  if (param_1 == (int *)0x0) {
+    return in_EAX & 0xffffff00;
+  }
+  while ((char)*param_1 != '*') {
+    uVar1 = *param_1 >> 8;
+    if ((uVar1 == 0) || (param_1 = (int *)((int)param_1 + uVar1), param_1 == (int *)0x0)) {
+      return uVar1 & 0xffffff00;
+    }
+  }
+  uVar1 = param_1[3];
+  if ((uVar1 & 0x1000) == 0) {
+    param_1 = param_1 + 4;
+  }
+  else {
+    param_1 = (int *)(param_1[4] + (int)param_1);
+  }
+  *(int **)(param_1_00 + 0x3c) = param_1;
+  if (param_1 == (int *)0x0) {
+    return uVar1 & 0xffffff00;
+  }
+  if (*(int *)(param_1_00 + 0x38) == 0) {
+    uVar2 = D3D8::D3DDevice_CreatePalette2(0);
+    ...
+--- PS2
+undefined4 EAGL::TAR::SwapClut(int param_1,int *param_2)
+{
+  undefined4 uVar1;
+  uVar1 = TARExtension::SwapClut((int *)(param_1 + 4),param_2);
+  return uVar1;
+}
+
+====================================================================================================
+## item 244: Xbox 0x000eecf0 (FUN_000eecf0)  <-  PS2 0x0023eab0 GHud::IsFlyByWireOn
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): GHud::DrawBloodCurtain, size ratio 3.33; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RColorize::Draw@9a6e0 | RTyreTrack::Draw@ac250 | RSniperZoom::Draw@a6bc0 | RMissileCam::Draw@a0b50 | GHud::DrawBloodCurtain@dc590 | REmp::DrawShootingEffect@9bb30 | FUN_00076220@76220 <- RLensFlareManager::TestFlares@9e720 | FUN_0007f740@7f740 <- RPostProcessing::GrabBackBuffer@a5020
+PS2 callers up to a shared name:  GHud::Draw@23cf88 | GHud::DrawBloodCurtain@23e2c0 | GHud::SetTargetLockState@245800
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void __thiscall FUN_000eecf0(int param_1_00,undefined4 param_1)
+{
+  *(undefined4 *)(param_1_00 + 0x14) = param_1;
+  switch(param_1) {
+  case 0:
+    *(undefined4 *)(param_1_00 + 0x34) = 1;
+    *(undefined4 *)(param_1_00 + 0x38) = 0;
+    *(undefined4 *)(param_1_00 + 0x30) = 0x8006;
+    return;
+  case 1:
+    *(undefined4 *)(param_1_00 + 0x34) = 0x302;
+    *(undefined4 *)(param_1_00 + 0x38) = 0x303;
+    *(undefined4 *)(param_1_00 + 0x30) = 0x8006;
+    return;
+  case 2:
+    *(undefined4 *)(param_1_00 + 0x34) = 0x302;
+    *(undefined4 *)(param_1_00 + 0x38) = 1;
+    *(undefined4 *)(param_1_00 + 0x30) = 0x8006;
+    return;
+  case 3:
+    *(undefined4 *)(param_1_00 + 0x34) = 0x302;
+    *(undefined4 *)(param_1_00 + 0x38) = 0;
+    *(undefined4 *)(param_1_00 + 0x30) = 0x8006;
+    return;
+  case 4:
+    *(undefined4 *)(param_1_00 + 0x34) = 0x306;
+    *(undefined4 *)(param_1_00 + 0x38) = 0;
+    *(undefined4 *)(param_1_00 + 0x30) = 0x8006;
+    break;
+  case 5:
+    ...
+--- PS2
+bool GHud::IsFlyByWireOn(void)
+{
+  return (long)*(int *)(*(int *)(DAT_00333ed8 + 4) + 0x120) == (long)DAT_00333a0f;
+}
+
+====================================================================================================
+## item 245: Xbox 0x000a6a80 (FUN_000a6a80)  <-  PS2 0x001ed8d8 RSniperZoom::SetupVerts
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): RSniperZoom::Draw, size ratio 0.93; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RSniperZoom::Draw@a6bc0
+PS2 callers up to a shared name:  RSniperZoom::Draw@1ed650
+Xbox callees: FUN_000a68f0
+PS2 callees:  FUN_001ed7b0
+--- Xbox
+void __fastcall FUN_000a6a80(int param_1)
+{
+  float fVar1;
+  uint uVar2;
+  uint uVar3;
+  uint uVar4;
+  undefined4 local_18;
+  uint local_14;
+  uint *local_10;
+  local_10 = (uint *)(param_1 + 0xb60);
+  local_14 = 0;
+  do {
+    uVar2 = local_14 & 1;
+    if (uVar2 == 0) {
+      local_18 = DAT_001c50c0;
+    }
+    else {
+      local_18 = DAT_001c50bc;
+    }
+    fVar1 = (float)((int)local_14 / 2) * 0.05;
+    FUN_000a68f0(local_18,fVar1);
+    uVar4 = ((*(int *)(param_1 + 8) << 8 | DAT_001c50b8) << 8 | DAT_001c50b8) << 8 | DAT_001c50b8;
+    uVar3 = 0xffffff;
+    if (uVar2 != 0) {
+      uVar3 = uVar4;
+    }
+    local_10[-0x2c] = uVar3;
+    if (uVar2 == 0) {
+      local_18 = DAT_001c50bc;
+    }
+    ...
+--- PS2
+void RSniperZoom::SetupVerts(int param_1)
+{
+  int iVar1;
+  uint uVar2;
+  uint uVar3;
+  uint uVar4;
+  uint *puVar5;
+  uint uVar6;
+  float *pfVar7;
+  float *pfVar8;
+  float *pfVar9;
+  float fVar10;
+  float *local_c0;
+  pfVar8 = (float *)(param_1 + 0x570);
+  pfVar7 = (float *)(param_1 + 0x30);
+  uVar6 = 0;
+  puVar5 = (uint *)(param_1 + 0xb60);
+  pfVar9 = (float *)(param_1 + 0x2d0);
+  local_c0 = (float *)(param_1 + 0x810);
+  do {
+    uVar4 = uVar6 & 1;
+    fVar10 = DAT_003353fc;
+    if (uVar4 == 0) {
+      fVar10 = DAT_003353f8;
+    }
+    FUN_001ed7b0(fVar10,(float)((int)uVar6 / 2) / 20.0,pfVar7,pfVar8);
+    uVar3 = DAT_00335408 >> 1;
+    uVar3 = (*(uint *)(param_1 + 8) >> 1) << 0x18 | uVar3 << 0x10 | uVar3 << 8 | uVar3;
+    uVar2 = 0x7f7f7f;
+    if (uVar4 != 0) {
+    ...
+
+====================================================================================================
+## item 246: Xbox 0x00108c00 (FUN_00108c00)  <-  PS2 0x0025b220 MATRIX4_mult
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): RPlayerCamera::UpdateAutoDriveCam, size ratio 0.08; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RPlayerCamera::UpdateAutoDriveCam@857d0 | FUN_000853e0@853e0 <- RPlayerCamera::UpdateAutoDriveCam@857d0
+PS2 callers up to a shared name:  RPlayerCamera::UpdateAutoDriveCam@1b72f0 | WCollisionMgr::FindFaceInCInst@214c08 <- WWorldPos::FindClosestFace@232638 | RPlayerCamera::UpdateADWeaponAnims@1b62d0 <- RPlayerCamera::UpdateAutoDriveCam@1b72f0 | WCollisionMgr::FindFaceInCInst@214678 <- WCollisionMgr::FindFaceInCInst@214c08 <- WWorldPos::FindClosestFace@232638
+Xbox callees: FUN_00108d5c
+PS2 callees:  
+--- Xbox
+void FUN_00108c00(undefined4 param_1,undefined4 *param_2,undefined4 *param_3)
+{
+  int iVar1;
+  undefined4 *puVar2;
+  if (param_2 == param_3) {
+    puVar2 = &DAT_002420f0;
+    for (iVar1 = 0x10; iVar1 != 0; iVar1 = iVar1 + -1) {
+      *puVar2 = *param_2;
+      param_2 = param_2 + 1;
+      puVar2 = puVar2 + 1;
+    }
+  }
+  FUN_00108d5c();
+  FUN_00108d5c();
+  FUN_00108d5c();
+  FUN_00108d5c();
+  return;
+}
+--- PS2
+void MATRIX4_mult(float *param_1,float *param_2,float *param_3)
+{
+  uint uVar1;
+  ulong *puVar2;
+  float *pfVar3;
+  ulong local_40;
+  ulong local_38;
+  ulong local_30;
+  ulong local_28;
+  ulong local_20;
+  ulong local_18;
+  ulong local_10;
+  ulong local_8;
+  if ((param_3 == param_1) || (pfVar3 = param_3, param_3 == param_2)) {
+    pfVar3 = (float *)&local_40;
+  }
+  *pfVar3 = *param_1 * *param_2 + param_1[1] * param_2[4] + param_1[2] * param_2[8] +
+            param_1[3] * param_2[0xc];
+  pfVar3[1] = *param_1 * param_2[1] + param_1[1] * param_2[5] + param_1[2] * param_2[9] +
+              param_1[3] * param_2[0xd];
+  pfVar3[2] = *param_1 * param_2[2] + param_1[1] * param_2[6] + param_1[2] * param_2[10] +
+              param_1[3] * param_2[0xe];
+  pfVar3[3] = *param_1 * param_2[3] + param_1[1] * param_2[7] + param_1[2] * param_2[0xb] +
+              param_1[3] * param_2[0xf];
+  pfVar3[4] = param_1[4] * *param_2 + param_1[5] * param_2[4] + param_1[6] * param_2[8] +
+              param_1[7] * param_2[0xc];
+  pfVar3[5] = param_1[4] * param_2[1] + param_1[5] * param_2[5] + param_1[6] * param_2[9] +
+              param_1[7] * param_2[0xd];
+  pfVar3[6] = param_1[4] * param_2[2] + param_1[5] * param_2[6] + param_1[6] * param_2[10] +
+              param_1[7] * param_2[0xe];
+    ...
+
+====================================================================================================
+## item 247: Xbox 0x000d0ff0 (FUN_000d0ff0)  <-  PS2 0x0022f660 WVisCurtain::WVisCurtain
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): WRender::WRender, size ratio 1.67; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: WRender::WRender@c7a50
+PS2 callers up to a shared name:  WRender::WRender@21eae8
+Xbox callees: FUN_00115f50, FUN_00116090
+PS2 callees:  CalcRadius
+--- Xbox
+undefined4 * __thiscall FUN_000d0ff0(undefined4 *param_1_00,undefined4 *param_1,undefined4 *param_2)
+{
+  float10 fVar1;
+  undefined1 local_20 [28];
+  *param_1_00 = *param_1;
+  param_1_00[1] = param_1[1];
+  param_1_00[2] = param_1[2];
+  param_1_00[3] = param_1[3];
+  param_1_00[4] = *param_2;
+  param_1_00[5] = param_2[1];
+  param_1_00[6] = param_2[2];
+  param_1_00[7] = param_2[3];
+  FUN_00115f50(param_1_00,param_1_00 + 4,0x3f000000,local_20);
+  fVar1 = (float10)FUN_00116090(param_1_00,local_20);
+  param_1_00[3] = (float)fVar1;
+  return param_1_00;
+}
+--- PS2
+undefined8 WVisCurtain::WVisCurtain(undefined8 param_1,uint param_2,uint param_3)
+{
+  undefined *puVar1;
+  uint uVar2;
+  uint uVar3;
+  ulong *puVar4;
+  ulong in_v0;
+  ulong uVar5;
+  ulong in_v1;
+  ulong uVar6;
+  undefined (*pauVar7) [16];
+  uVar2 = param_2 + 7 & 7;
+  uVar3 = param_2 & 7;
+  uVar5 = (*(long *)((param_2 + 7) - uVar2) << (7 - uVar2) * 8 |
+          in_v0 & 0xffffffffffffffffU >> (uVar2 + 1) * 8) & -1L << (8 - uVar3) * 8 |
+          *(ulong *)(param_2 - uVar3) >> uVar3 * 8;
+  uVar2 = param_2 + 0xf & 7;
+  uVar3 = param_2 + 8 & 7;
+  uVar6 = (*(long *)((param_2 + 0xf) - uVar2) << (7 - uVar2) * 8 |
+          in_v1 & 0xffffffffffffffffU >> (uVar2 + 1) * 8) & -1L << (8 - uVar3) * 8 |
+          *(ulong *)((param_2 + 8) - uVar3) >> uVar3 * 8;
+  pauVar7 = (undefined (*) [16])param_1;
+  puVar1 = *pauVar7 + 7;
+  uVar2 = (uint)puVar1 & 7;
+  *(ulong *)(puVar1 + -uVar2) =
+       *(ulong *)(puVar1 + -uVar2) & -1L << (uVar2 + 1) * 8 | uVar5 >> (7 - uVar2) * 8;
+  uVar2 = (uint)pauVar7 & 7;
+  *(ulong *)((int)pauVar7 - uVar2) =
+       uVar5 << uVar2 * 8 |
+       *(ulong *)((int)pauVar7 - uVar2) & 0xffffffffffffffffU >> (8 - uVar2) * 8;
+    ...
+
+====================================================================================================
+## item 248: Xbox 0x000b8880 (FUN_000b8880)  <-  PS2 0x00208968 SMissionManager::SetCurrentObjective
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): EObjectiveSetCurrent::~EObjectiveSetCurrent, size ratio 1.26; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: EObjectiveSetCurrent::~EObjectiveSetCurrent@41220
+PS2 callers up to a shared name:  EObjectiveSetCurrent::~EObjectiveSetCurrent@1519c0
+Xbox callees: 
+PS2 callees:  GetObjectiveByID, logWarning
+--- Xbox
+void __thiscall FUN_000b8880(int param_1_00,int param_1)
+{
+  undefined4 *puVar1;
+  undefined4 *puVar2;
+  puVar1 = *(undefined4 **)(param_1_00 + 4);
+  if (puVar1 == (undefined4 *)0x0) {
+    puVar2 = (undefined4 *)0x0;
+  }
+  else {
+    puVar2 = (undefined4 *)*puVar1;
+  }
+  if (puVar2 != puVar1) {
+    while (*(int *)puVar2[2] != param_1) {
+      puVar2 = (undefined4 *)*puVar2;
+      if (puVar2 == puVar1) {
+        return;
+      }
+    }
+    if (puVar2[2] != 0) {
+      *(undefined4 *)(puVar2[2] + 0x10) = 1;
+    }
+  }
+  return;
+}
+--- PS2
+void SMissionManager::SetCurrentObjective(int *param_1,undefined8 param_2)
+{
+  int *piVar1;
+  piVar1 = GetObjectiveByID(param_1,(int)param_2);
+  if (piVar1 == (int *)0x0) {
+    logWarning("WARNING - Could not find objective (%d).  Objective not set as current!\n",param_2);
+  }
+  else {
+    piVar1[4] = 1;
+  }
+  return;
+}
+
+====================================================================================================
+## item 249: Xbox 0x00012420 (FUN_00012420)  <-  PS2 0x0010b098 ActActor::RotateActorX
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): AICharacterHands::Init, size ratio 0.98; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: AICharacterHands::Init@22930
+PS2 callers up to a shared name:  AICharacterHands::Init@123950
+Xbox callees: FUN_00018cf0, VU0_MATRIX4_mult, cos_fractionalangle, sin_fractionalangle
+PS2 callees:  RotateX, VU0_MATRIX4_mult, cosf, sinf
+--- Xbox
+void __thiscall FUN_00012420(int param_1_00,undefined4 param_1)
+{
+  undefined (*pauVar1) [16];
+  float10 fVar2;
+  float10 fVar3;
+  undefined4 local_50;
+  undefined4 local_4c;
+  undefined4 local_48;
+  undefined4 local_44;
+  undefined4 local_40;
+  float local_3c;
+  float local_38;
+  undefined4 local_34;
+  undefined4 local_30;
+  float local_2c;
+  float local_28;
+  undefined4 local_24;
+  undefined4 local_20;
+  undefined4 local_1c;
+  undefined4 local_18;
+  undefined4 local_14;
+  FUN_00018cf0(param_1);
+  if (*(char *)(param_1_00 + 0x14) != '\0') {
+    fVar2 = (float10)cos_fractionalangle(param_1);
+    fVar3 = (float10)sin_fractionalangle(param_1);
+    local_2c = (float)-fVar3;
+    local_38 = (float)fVar3;
+    pauVar1 = (undefined (*) [16])(*(int *)(param_1_00 + 0xc) + 0x340);
+    local_18 = 0;
+    local_1c = 0;
+    ...
+--- PS2
+void ActActor::RotateActorX(float param_1,int param_2)
+{
+  undefined (*pauVar1) [16];
+  float fVar2;
+  undefined4 local_70;
+  undefined4 local_6c;
+  undefined4 local_68;
+  undefined4 local_64;
+  undefined4 local_60;
+  float local_5c;
+  float local_58;
+  undefined4 local_54;
+  undefined4 local_50;
+  float local_4c;
+  float local_48;
+  undefined4 local_44;
+  undefined4 local_40;
+  undefined4 local_3c;
+  undefined4 local_38;
+  undefined4 local_34;
+  undefined4 local_30;
+  undefined4 uStack_2c;
+  undefined4 local_20;
+  undefined4 uStack_1c;
+  ActPoser::RotateX(param_1,*(int *)(param_2 + 4));
+  if (*(int *)(param_2 + 0x14) != 0) {
+    fVar2 = cosf(param_1 * 6.2831855);
+    local_58 = sinf(param_1 * 6.2831855);
+    local_4c = -local_58;
+    pauVar1 = (undefined (*) [16])(*(int *)(param_2 + 0xc) + 0x340);
+    ...
+
+====================================================================================================
+## item 250: Xbox 0x000e6640 (FUN_000e6640)  <-  PS2 0x0028af48 EAGL::RenderContext::EndFrame
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 4 anchor(s) place it by call position (4 as a 1:1 slot): GLoadingScreen::LoadAndDrawUnLoadingScreen, GLoadingScreen::Update, RRenderer::EndFrame, RRenderer::Flush, size ratio 2.82; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: GLoadingScreen::ClearToBlack@e2830 | RRenderer::EndFrame@7d5b0 | RRenderer::Flush@7d070 | GLoadingScreen::LoadAndDrawUnLoadingScreen@e2110 | PlayMPC::Play@1308a0 | GLoadingScreen::Update@e28a0
+PS2 callers up to a shared name:  GLoadingScreen::ClearToBlack@248ca0 | RRenderer::DoScreenCapture@1ac1f8 | RRenderer::EndFrame@1ac0c0 | RRenderer::Flush@1ac118 | GLoadingScreen::LoadAndDrawUnLoadingScreen@248110 | PlayMPC::Play@300298 | GLoadingScreen::Update@248d40 | GLoadingScreen::ClearFrameBuffers@249930 <- GLoadingScreen::InitLoadDots@247f00
+Xbox callees: D3DDevice_SetPixelShader, D3DDevice_SetRenderState_FogColor, D3DDevice_SetRenderState_Simple, D3DDevice_SetRenderState_StencilEnable, D3DDevice_SetRenderState_YuvEnable, D3DDevice_SetShaderConstantMode, D3DDevice_SetTexture, D3DDevice_SetVertexShader, D3DDevice_Swap, FUN_000f52d0, Get
+PS2 callees:  DoWaitVSync, ExecuteLists, Flush, InstallVBLHandler, ProcessProfile, ReadRects, RealSetupFrameBuffers, SwapAcc, SwapFrameRegs, WaitForDMACompletion
+--- Xbox
+void __fastcall FUN_000e6640(int param_1)
+{
+  bool bVar1;
+  undefined4 uVar2;
+  undefined4 uVar3;
+  float fVar4;
+  uint uVar5;
+  FUN_000f52d0();
+  if (DAT_0023ff80 == DAT_0023ff1c) {
+    D3D8::D3DDevice_SetTexture(0,0);
+    DAT_0023ff80 = 0;
+  }
+  if (DAT_0023ff84 == DAT_0023ff1c) {
+    D3D8::D3DDevice_SetTexture(1,0);
+    DAT_0023ff84 = 0;
+  }
+  if (DAT_0023ff88 == DAT_0023ff1c) {
+    D3D8::D3DDevice_SetTexture(2,0);
+    DAT_0023ff88 = 0;
+  }
+  if (DAT_0023ff8c == DAT_0023ff1c) {
+    D3D8::D3DDevice_SetTexture(3,0);
+    DAT_0023ff8c = 0;
+  }
+  if (*(int *)(param_1 + 0x10) != 0x11) {
+    D3D8::D3DDevice_SetRenderState_Simple();
+    _DAT_0017575c = 0;
+    D3D8::D3DDevice_SetRenderState_Simple();
+    _DAT_00175760 = 0.0;
+  }
+    ...
+--- PS2
+void EAGL::RenderContext::EndFrame(undefined8 param_1)
+{
+  bool bVar1;
+  int *piVar2;
+  code *pcVar3;
+  int iVar4;
+  iVar4 = (int)param_1;
+  EAGLInternal::RenderContextPrivate::InstallVBLHandler((undefined4 *)(iVar4 + 0x758));
+  Profiler::ProcessProfile();
+  if (*(int *)(iVar4 + 0x800) != 0) {
+    pcVar3 = *(code **)(iVar4 + 0x80c);
+    while( true ) {
+      if (pcVar3 != (code *)0x0) {
+        (*pcVar3)();
+      }
+      if (*(int *)(iVar4 + 0x800) == 0) break;
+      pcVar3 = *(code **)(iVar4 + 0x80c);
+    }
+  }
+  EAGLInternal::DmaMgr::WaitForDMACompletion((int)DAT_003485c0);
+  if (*(int *)(iVar4 + 0x804) != 0) {
+    EAGLInternal::RenderContextPrivate::RealSetupFrameBuffers(iVar4 + 0x758);
+  }
+  RenderContextExtension::ReadRects(param_1);
+  piVar2 = glbTexAlloc;
+  *(undefined4 *)(iVar4 + 0x750) = 0;
+  *(undefined4 *)(iVar4 + 0x754) = 0;
+  *(uint *)(iVar4 + 0x74c) = (uint)(*(int *)(iVar4 + 0x74c) == 0);
+  EAGLInternal::TexAlloc::Flush(piVar2);
+  EAGLInternal::DmaMgr::SwapAcc(DAT_003485c0);
+    ...
+
+====================================================================================================
+## item 251: Xbox 0x00098490 (FUN_00098490)  <-  PS2 0x001c1ad8 RReflection::TextureSpecular
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): RCARPFile::RegisterSymbols, size ratio 1.0; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RCARPFile::RegisterSymbols@7b020
+PS2 callers up to a shared name:  RCARPFile::RegisterSymbols@1a8930
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+undefined4 __fastcall FUN_00098490(int param_1)
+{
+  return *(undefined4 *)(*(int *)(param_1 + 0x4c) + 0x124);
+}
+--- PS2
+undefined4 RReflection::TextureSpecular(int param_1)
+{
+  return *(undefined4 *)(*(int *)(param_1 + 0x58) + 0xd0);
+}
+
+====================================================================================================
+## item 252: Xbox 0x00132db0 (FUN_00132db0)  <-  PS2 0x002a8198 qsort
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): AIElementController::Update, size ratio 0.36; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: AIElementController::Update@29880 | WTargetPicker::UpdateTargets@ce950 | FUN_00119f50@119f50 <- InputConfigManager::InitAndPreload@504d0 | FUN_00119f50@119f50 <- InputToAction::InputToAction@50860
+PS2 callers up to a shared name:  AIElementController::Update@12bec8 | WTargetPicker::UpdateTargets@22b318 | CDVD_init@255998 <- FILESYS_initadr@2523b0 | StringToNumber::StringToNumber@2ceb18 <- InputConfigManager::InitAndPreload@1668a0 | StringToNumber::StringToNumber@2ceb18 <- InputToAction::InputToAction@167278
+Xbox callees: _shortsort
+PS2 callees:  qsort
+--- Xbox
+void FUN_00132db0(undefined1 *param_1,uint param_2,uint param_3,code *param_4)
+{
+  undefined1 uVar1;
+  uint uVar2;
+  undefined1 *puVar3;
+  int iVar4;
+  undefined1 *puVar5;
+  undefined1 *puVar6;
+  undefined1 *puVar7;
+  undefined1 *local_100;
+  undefined1 *local_fc;
+  int local_f8;
+  uint uStack_f4;
+  undefined4 auStack_f0 [30];
+  undefined4 auStack_78 [30];
+  if ((param_2 < 2) || (param_3 == 0)) {
+    return;
+  }
+  local_f8 = 0;
+  local_100 = param_1;
+  local_fc = param_1 + (param_2 - 1) * param_3;
+LAB_00132df5:
+  while (uVar2 = (uint)((int)local_fc - (int)local_100) / param_3 + 1, 8 < uVar2) {
+    puVar3 = local_100 + (uVar2 >> 1) * param_3;
+    iVar4 = (*param_4)(local_100,puVar3);
+    if ((0 < iVar4) && (local_100 != puVar3)) {
+      puVar5 = puVar3;
+      uVar2 = param_3;
+      do {
+        uVar1 = puVar5[(int)local_100 - (int)puVar3];
+    ...
+--- PS2
+void qsort(undefined8 *param_1,uint param_2,ulong param_3,undefined8 param_4)
+{
+  undefined1 uVar1;
+  bool bVar2;
+  int iVar3;
+  bool bVar4;
+  long lVar5;
+  undefined8 *puVar6;
+  undefined8 uVar7;
+  undefined8 *puVar8;
+  int iVar9;
+  ulong uVar10;
+  ulong uVar11;
+  undefined8 *puVar12;
+  undefined8 *puVar13;
+  ulong uVar14;
+  undefined8 *puVar15;
+  undefined8 *puVar16;
+  uint uVar17;
+  code *pcVar18;
+  byte bVar19;
+  uint local_110;
+  int local_d8;
+  undefined8 *local_d4;
+  local_110 = param_2;
+  do {
+    bVar19 = 2;
+    if ((((uint)param_1 & 7) == 0) && ((param_3 & 7) == 0)) {
+      bVar19 = param_3 != 8;
+    }
+    ...
+
+====================================================================================================
+## item 253: Xbox 0x00094070 (FUN_00094070)  <-  PS2 0x001119e8 URefCounter<ActModelDatabase::ModelInfo>::URefCounter
+triage: tier CG-1:1 conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): URefCounter<ActModelDatabase::ModelInfo>::Get, size ratio 0.72; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: URefCounter<AFader>::Get@125c20 | URefCounter<RTextureContext>::Get@95150 | URefCounter<ActModelDatabase::ModelInfo>::Get@18340 | URefCounter<ABank>::Get@126880 | URefCounter<AMix>::Get@11d610 | URefCounter<AStream>::Get@123630 | URefCounter<ActTextureDatabase::TextureInfo>::Get@1a910 | URefCounter<ActWeaponDatabase::WeaponInfo>::Get@1bef0
+PS2 callers up to a shared name:  URefCounter<ActModelDatabase::ModelInfo>::Get@1128d0
+Xbox callees: FastAlloc
+PS2 callees:  FastAlloc
+--- Xbox
+void FUN_00094070(void)
+{
+  undefined4 *puVar1;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  if (puVar1 != (undefined4 *)0x0) {
+    *puVar1 = 0;
+  }
+  if (puVar1 + 1 != (undefined4 *)0x0) {
+    puVar1[1] = 0;
+  }
+  if (puVar1 + 2 != (undefined4 *)0x0) {
+    puVar1[2] = 0;
+  }
+  *(undefined1 *)(puVar1 + 0x25) = 1;
+  *(undefined1 *)((int)puVar1 + 0x95) = 0;
+  return;
+}
+--- PS2
+undefined8 URefCounter<ActModelDatabase::ModelInfo>::URefCounter(undefined8 param_1)
+{
+  undefined4 *puVar1;
+  int *piVar2;
+  piVar2 = (int *)param_1;
+  *piVar2 = 0;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  piVar2[1] = 0;
+  *piVar2 = (int)puVar1;
+  *(undefined1 *)(piVar2 + 2) = 0;
+  *puVar1 = 0;
+  *(undefined4 *)(*piVar2 + 4) = 0;
+  *(int *)(*piVar2 + 8) = *piVar2;
+  *(int *)(*piVar2 + 0xc) = *piVar2;
+  return param_1;
+}
+
+====================================================================================================
+## item 254: Xbox 0x00094070 (FUN_00094070)  <-  PS2 0x00115288 URefCounter<ActTextureDatabase::TextureInfo>::URefCounter
+triage: tier CG-1:1 conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): URefCounter<ActTextureDatabase::TextureInfo>::Get, size ratio 0.72; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: URefCounter<AFader>::Get@125c20 | URefCounter<RTextureContext>::Get@95150 | URefCounter<ActModelDatabase::ModelInfo>::Get@18340 | URefCounter<ABank>::Get@126880 | URefCounter<AMix>::Get@11d610 | URefCounter<AStream>::Get@123630 | URefCounter<ActTextureDatabase::TextureInfo>::Get@1a910 | URefCounter<ActWeaponDatabase::WeaponInfo>::Get@1bef0
+PS2 callers up to a shared name:  URefCounter<ActTextureDatabase::TextureInfo>::Get@116170
+Xbox callees: FastAlloc
+PS2 callees:  FastAlloc
+--- Xbox
+void FUN_00094070(void)
+{
+  undefined4 *puVar1;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  if (puVar1 != (undefined4 *)0x0) {
+    *puVar1 = 0;
+  }
+  if (puVar1 + 1 != (undefined4 *)0x0) {
+    puVar1[1] = 0;
+  }
+  if (puVar1 + 2 != (undefined4 *)0x0) {
+    puVar1[2] = 0;
+  }
+  *(undefined1 *)(puVar1 + 0x25) = 1;
+  *(undefined1 *)((int)puVar1 + 0x95) = 0;
+  return;
+}
+--- PS2
+undefined8 URefCounter<ActTextureDatabase::TextureInfo>::URefCounter(undefined8 param_1)
+{
+  undefined4 *puVar1;
+  int *piVar2;
+  piVar2 = (int *)param_1;
+  *piVar2 = 0;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  piVar2[1] = 0;
+  *piVar2 = (int)puVar1;
+  *(undefined1 *)(piVar2 + 2) = 0;
+  *puVar1 = 0;
+  *(undefined4 *)(*piVar2 + 4) = 0;
+  *(int *)(*piVar2 + 8) = *piVar2;
+  *(int *)(*piVar2 + 0xc) = *piVar2;
+  return param_1;
+}
+
+====================================================================================================
+## item 255: Xbox 0x00094070 (FUN_00094070)  <-  PS2 0x00117440 URefCounter<ActWeaponDatabase::WeaponInfo>::URefCounter
+triage: tier CG-1:1 conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): URefCounter<ActWeaponDatabase::WeaponInfo>::Get, size ratio 0.72; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: URefCounter<AFader>::Get@125c20 | URefCounter<RTextureContext>::Get@95150 | URefCounter<ActModelDatabase::ModelInfo>::Get@18340 | URefCounter<ABank>::Get@126880 | URefCounter<AMix>::Get@11d610 | URefCounter<AStream>::Get@123630 | URefCounter<ActTextureDatabase::TextureInfo>::Get@1a910 | URefCounter<ActWeaponDatabase::WeaponInfo>::Get@1bef0
+PS2 callers up to a shared name:  URefCounter<ActWeaponDatabase::WeaponInfo>::Get@1185f8
+Xbox callees: FastAlloc
+PS2 callees:  FastAlloc
+--- Xbox
+void FUN_00094070(void)
+{
+  undefined4 *puVar1;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  if (puVar1 != (undefined4 *)0x0) {
+    *puVar1 = 0;
+  }
+  if (puVar1 + 1 != (undefined4 *)0x0) {
+    puVar1[1] = 0;
+  }
+  if (puVar1 + 2 != (undefined4 *)0x0) {
+    puVar1[2] = 0;
+  }
+  *(undefined1 *)(puVar1 + 0x25) = 1;
+  *(undefined1 *)((int)puVar1 + 0x95) = 0;
+  return;
+}
+--- PS2
+undefined8 URefCounter<ActWeaponDatabase::WeaponInfo>::URefCounter(undefined8 param_1)
+{
+  undefined4 *puVar1;
+  int *piVar2;
+  piVar2 = (int *)param_1;
+  *piVar2 = 0;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  piVar2[1] = 0;
+  *piVar2 = (int)puVar1;
+  *(undefined1 *)(piVar2 + 2) = 0;
+  *puVar1 = 0;
+  *(undefined4 *)(*piVar2 + 4) = 0;
+  *(int *)(*piVar2 + 8) = *piVar2;
+  *(int *)(*piVar2 + 0xc) = *piVar2;
+  return param_1;
+}
+
+====================================================================================================
+## item 256: Xbox 0x00094070 (FUN_00094070)  <-  PS2 0x001d0938 URefCounter<RTextureContext>::URefCounter
+triage: tier CG-1:1 conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): URefCounter<RTextureContext>::Get, size ratio 0.72; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: URefCounter<AFader>::Get@125c20 | URefCounter<RTextureContext>::Get@95150 | URefCounter<ActModelDatabase::ModelInfo>::Get@18340 | URefCounter<ABank>::Get@126880 | URefCounter<AMix>::Get@11d610 | URefCounter<AStream>::Get@123630 | URefCounter<ActTextureDatabase::TextureInfo>::Get@1a910 | URefCounter<ActWeaponDatabase::WeaponInfo>::Get@1bef0
+PS2 callers up to a shared name:  URefCounter<RTextureContext>::Get@1d1e68
+Xbox callees: FastAlloc
+PS2 callees:  FastAlloc
+--- Xbox
+void FUN_00094070(void)
+{
+  undefined4 *puVar1;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  if (puVar1 != (undefined4 *)0x0) {
+    *puVar1 = 0;
+  }
+  if (puVar1 + 1 != (undefined4 *)0x0) {
+    puVar1[1] = 0;
+  }
+  if (puVar1 + 2 != (undefined4 *)0x0) {
+    puVar1[2] = 0;
+  }
+  *(undefined1 *)(puVar1 + 0x25) = 1;
+  *(undefined1 *)((int)puVar1 + 0x95) = 0;
+  return;
+}
+--- PS2
+undefined8 URefCounter<RTextureContext>::URefCounter(undefined8 param_1)
+{
+  undefined4 *puVar1;
+  int *piVar2;
+  piVar2 = (int *)param_1;
+  *piVar2 = 0;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  piVar2[1] = 0;
+  *piVar2 = (int)puVar1;
+  *(undefined1 *)(piVar2 + 2) = 0;
+  *puVar1 = 0;
+  *(undefined4 *)(*piVar2 + 4) = 0;
+  *(int *)(*piVar2 + 8) = *piVar2;
+  *(int *)(*piVar2 + 0xc) = *piVar2;
+  return param_1;
+}
+
+====================================================================================================
+## item 257: Xbox 0x00094070 (FUN_00094070)  <-  PS2 0x002f36f8 URefCounter<AMix>::URefCounter
+triage: tier CG-1:1 conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): URefCounter<AMix>::Get, size ratio 0.72; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: URefCounter<AFader>::Get@125c20 | URefCounter<RTextureContext>::Get@95150 | URefCounter<ActModelDatabase::ModelInfo>::Get@18340 | URefCounter<ABank>::Get@126880 | URefCounter<AMix>::Get@11d610 | URefCounter<AStream>::Get@123630 | URefCounter<ActTextureDatabase::TextureInfo>::Get@1a910 | URefCounter<ActWeaponDatabase::WeaponInfo>::Get@1bef0
+PS2 callers up to a shared name:  URefCounter<AMix>::Get@2f46e8
+Xbox callees: FastAlloc
+PS2 callees:  FastAlloc
+--- Xbox
+void FUN_00094070(void)
+{
+  undefined4 *puVar1;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  if (puVar1 != (undefined4 *)0x0) {
+    *puVar1 = 0;
+  }
+  if (puVar1 + 1 != (undefined4 *)0x0) {
+    puVar1[1] = 0;
+  }
+  if (puVar1 + 2 != (undefined4 *)0x0) {
+    puVar1[2] = 0;
+  }
+  *(undefined1 *)(puVar1 + 0x25) = 1;
+  *(undefined1 *)((int)puVar1 + 0x95) = 0;
+  return;
+}
+--- PS2
+undefined8 URefCounter<AMix>::URefCounter(undefined8 param_1)
+{
+  undefined4 *puVar1;
+  int *piVar2;
+  piVar2 = (int *)param_1;
+  *piVar2 = 0;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  piVar2[1] = 0;
+  *piVar2 = (int)puVar1;
+  *(undefined1 *)(piVar2 + 2) = 0;
+  *puVar1 = 0;
+  *(undefined4 *)(*piVar2 + 4) = 0;
+  *(int *)(*piVar2 + 8) = *piVar2;
+  *(int *)(*piVar2 + 0xc) = *piVar2;
+  return param_1;
+}
+
+====================================================================================================
+## item 258: Xbox 0x00094070 (FUN_00094070)  <-  PS2 0x002ea1f8 URefCounter<AStream>::URefCounter
+triage: tier CG-1:1 conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): URefCounter<AStream>::Get, size ratio 0.72; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: URefCounter<AFader>::Get@125c20 | URefCounter<RTextureContext>::Get@95150 | URefCounter<ActModelDatabase::ModelInfo>::Get@18340 | URefCounter<ABank>::Get@126880 | URefCounter<AMix>::Get@11d610 | URefCounter<AStream>::Get@123630 | URefCounter<ActTextureDatabase::TextureInfo>::Get@1a910 | URefCounter<ActWeaponDatabase::WeaponInfo>::Get@1bef0
+PS2 callers up to a shared name:  URefCounter<AStream>::Get@2eb750
+Xbox callees: FastAlloc
+PS2 callees:  FastAlloc
+--- Xbox
+void FUN_00094070(void)
+{
+  undefined4 *puVar1;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  if (puVar1 != (undefined4 *)0x0) {
+    *puVar1 = 0;
+  }
+  if (puVar1 + 1 != (undefined4 *)0x0) {
+    puVar1[1] = 0;
+  }
+  if (puVar1 + 2 != (undefined4 *)0x0) {
+    puVar1[2] = 0;
+  }
+  *(undefined1 *)(puVar1 + 0x25) = 1;
+  *(undefined1 *)((int)puVar1 + 0x95) = 0;
+  return;
+}
+--- PS2
+undefined8 URefCounter<AStream>::URefCounter(undefined8 param_1)
+{
+  undefined4 *puVar1;
+  int *piVar2;
+  piVar2 = (int *)param_1;
+  *piVar2 = 0;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  piVar2[1] = 0;
+  *piVar2 = (int)puVar1;
+  *(undefined1 *)(piVar2 + 2) = 0;
+  *puVar1 = 0;
+  *(undefined4 *)(*piVar2 + 4) = 0;
+  *(int *)(*piVar2 + 8) = *piVar2;
+  *(int *)(*piVar2 + 0xc) = *piVar2;
+  return param_1;
+}
+
+====================================================================================================
+## item 259: Xbox 0x00094070 (FUN_00094070)  <-  PS2 0x002f9998 URefCounter<AFader>::URefCounter
+triage: tier CG-1:1 conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): URefCounter<AFader>::Get, size ratio 0.72; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: URefCounter<AFader>::Get@125c20 | URefCounter<RTextureContext>::Get@95150 | URefCounter<ActModelDatabase::ModelInfo>::Get@18340 | URefCounter<ABank>::Get@126880 | URefCounter<AMix>::Get@11d610 | URefCounter<AStream>::Get@123630 | URefCounter<ActTextureDatabase::TextureInfo>::Get@1a910 | URefCounter<ActWeaponDatabase::WeaponInfo>::Get@1bef0
+PS2 callers up to a shared name:  URefCounter<AFader>::Get@2fa880
+Xbox callees: FastAlloc
+PS2 callees:  FastAlloc
+--- Xbox
+void FUN_00094070(void)
+{
+  undefined4 *puVar1;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  if (puVar1 != (undefined4 *)0x0) {
+    *puVar1 = 0;
+  }
+  if (puVar1 + 1 != (undefined4 *)0x0) {
+    puVar1[1] = 0;
+  }
+  if (puVar1 + 2 != (undefined4 *)0x0) {
+    puVar1[2] = 0;
+  }
+  *(undefined1 *)(puVar1 + 0x25) = 1;
+  *(undefined1 *)((int)puVar1 + 0x95) = 0;
+  return;
+}
+--- PS2
+undefined8 URefCounter<AFader>::URefCounter(undefined8 param_1)
+{
+  undefined4 *puVar1;
+  int *piVar2;
+  piVar2 = (int *)param_1;
+  *piVar2 = 0;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  piVar2[1] = 0;
+  *piVar2 = (int)puVar1;
+  *(undefined1 *)(piVar2 + 2) = 0;
+  *puVar1 = 0;
+  *(undefined4 *)(*piVar2 + 4) = 0;
+  *(int *)(*piVar2 + 8) = *piVar2;
+  *(int *)(*piVar2 + 0xc) = *piVar2;
+  return param_1;
+}
+
+====================================================================================================
+## item 260: Xbox 0x00094070 (FUN_00094070)  <-  PS2 0x002fda00 URefCounter<ABank>::URefCounter
+triage: tier CG-1:1 conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): URefCounter<ABank>::Get, size ratio 0.72; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: URefCounter<ActModelDatabase::ModelInfo>::Get@18340 | URefCounter<AFader>::Get@125c20 | URefCounter<ABank>::Get@126880 | URefCounter<AEngine>::Get@12f8b0 | URefCounter<ActTextureDatabase::TextureInfo>::Get@1a910 | URefCounter<ActWeaponDatabase::WeaponInfo>::Get@1bef0 | URefCounter<AMix>::Get@11d610 | URefCounter<RTextureContext>::Get@95150
+PS2 callers up to a shared name:  URefCounter<ABank>::Get@2fe928
+Xbox callees: FastAlloc
+PS2 callees:  FastAlloc
+--- Xbox
+void FUN_00094070(void)
+{
+  undefined4 *puVar1;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  if (puVar1 != (undefined4 *)0x0) {
+    *puVar1 = 0;
+  }
+  if (puVar1 + 1 != (undefined4 *)0x0) {
+    puVar1[1] = 0;
+  }
+  if (puVar1 + 2 != (undefined4 *)0x0) {
+    puVar1[2] = 0;
+  }
+  *(undefined1 *)(puVar1 + 0x25) = 1;
+  *(undefined1 *)((int)puVar1 + 0x95) = 0;
+  return;
+}
+--- PS2
+undefined8 URefCounter<ABank>::URefCounter(undefined8 param_1)
+{
+  undefined4 *puVar1;
+  int *piVar2;
+  piVar2 = (int *)param_1;
+  *piVar2 = 0;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  piVar2[1] = 0;
+  *piVar2 = (int)puVar1;
+  *(undefined1 *)(piVar2 + 2) = 0;
+  *puVar1 = 0;
+  *(undefined4 *)(*piVar2 + 4) = 0;
+  *(int *)(*piVar2 + 8) = *piVar2;
+  *(int *)(*piVar2 + 0xc) = *piVar2;
+  return param_1;
+}
+
+====================================================================================================
+## item 261: Xbox 0x00094070 (FUN_00094070)  <-  PS2 0x002fae20 URefCounter<AEngine>::URefCounter
+triage: tier CG-1:1 conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): URefCounter<AEngine>::Get, size ratio 0.72; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: URefCounter<ActModelDatabase::ModelInfo>::Get@18340 | URefCounter<AFader>::Get@125c20 | URefCounter<ABank>::Get@126880 | URefCounter<AEngine>::Get@12f8b0 | URefCounter<ActTextureDatabase::TextureInfo>::Get@1a910 | URefCounter<ActWeaponDatabase::WeaponInfo>::Get@1bef0 | URefCounter<AMix>::Get@11d610 | URefCounter<RTextureContext>::Get@95150
+PS2 callers up to a shared name:  URefCounter<AEngine>::Get@2fbd88
+Xbox callees: FastAlloc
+PS2 callees:  FastAlloc
+--- Xbox
+void FUN_00094070(void)
+{
+  undefined4 *puVar1;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  if (puVar1 != (undefined4 *)0x0) {
+    *puVar1 = 0;
+  }
+  if (puVar1 + 1 != (undefined4 *)0x0) {
+    puVar1[1] = 0;
+  }
+  if (puVar1 + 2 != (undefined4 *)0x0) {
+    puVar1[2] = 0;
+  }
+  *(undefined1 *)(puVar1 + 0x25) = 1;
+  *(undefined1 *)((int)puVar1 + 0x95) = 0;
+  return;
+}
+--- PS2
+undefined8 URefCounter<AEngine>::URefCounter(undefined8 param_1)
+{
+  undefined4 *puVar1;
+  int *piVar2;
+  piVar2 = (int *)param_1;
+  *piVar2 = 0;
+  puVar1 = UMemory::FastAlloc(0x98,"STL");
+  piVar2[1] = 0;
+  *piVar2 = (int)puVar1;
+  *(undefined1 *)(piVar2 + 2) = 0;
+  *puVar1 = 0;
+  *(undefined4 *)(*piVar2 + 4) = 0;
+  *(int *)(*piVar2 + 8) = *piVar2;
+  *(int *)(*piVar2 + 0xc) = *piVar2;
+  return param_1;
+}
+
+====================================================================================================
+## item 262: Xbox 0x0009eae0 (FUN_0009eae0)  <-  PS2 0x001e26a0 RLightning::Point::Update
+triage: tier CG-n:n conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): RLightning::Segment::Update, size ratio 1.38; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RLightning::Update@9fb90 | RLightning::Segment::Update@9f250
+PS2 callers up to a shared name:  RLightning::Segment::Update@1e29c8 | RLightning::Bolt::Update@1e2c58 <- RLightning::Update@1e0d60
+Xbox callees: VU0_v3add, VU0_v4scale
+PS2 callees:  GetRandomCoord
+--- Xbox
+void __thiscall FUN_0009eae0(undefined4 *param_1_00,int param_1)
+{
+  undefined4 *puVar1;
+  int iVar2;
+  uint *puVar3;
+  undefined1 local_30 [16];
+  undefined1 local_20 [28];
+  if (0 < param_1 - param_1_00[3]) {
+    VU0_v4scale(param_1_00 + 4,(float)(param_1 - param_1_00[3]),local_30);
+    iVar2 = RLightning::fgThis_RLightning;
+    puVar3 = (uint *)(RLightning::fgThis_RLightning + 0x650);
+    *puVar3 = *(int *)(RLightning::fgThis_RLightning + 0x650) + 5U & 0x3f;
+    VU0_v4scale((*puVar3 + 5) * 0x10 + iVar2,param_1_00[0xf],local_20);
+    puVar1 = param_1_00 + 8;
+    VU0_v3add(param_1_00,local_30,puVar1);
+    VU0_v3add(puVar1,local_20,puVar1);
+    return;
+  }
+  param_1_00[8] = *param_1_00;
+  param_1_00[9] = param_1_00[1];
+  param_1_00[10] = param_1_00[2];
+  return;
+}
+--- PS2
+void RLightning::Point::Update(ulong param_1,int param_2)
+{
+  undefined1 *puVar1;
+  uint uVar2;
+  uint uVar3;
+  undefined4 uVar4;
+  ulong *puVar5;
+  undefined1 (*pauVar6) [16];
+  ulong uVar7;
+  int iVar8;
+  undefined1 (*pauVar9) [16];
+  undefined1 auVar10 [16];
+  undefined1 auVar11 [16];
+  undefined1 auVar12 [16];
+  undefined1 local_40 [16];
+  undefined1 local_30 [16];
+  pauVar9 = (undefined1 (*) [16])param_1;
+  iVar8 = param_2 - *(int *)(*pauVar9 + 0xc);
+  if (iVar8 < 1) {
+    uVar2 = (uint)(*pauVar9 + 7) & 7;
+    uVar3 = (uint)pauVar9 & 7;
+    uVar7 = (*(long *)(*pauVar9 + 7 + -uVar2) << (7 - uVar2) * 8 |
+            param_1 & 0xffffffffffffffffU >> (uVar2 + 1) * 8) & -1L << (8 - uVar3) * 8 |
+            *(ulong *)((int)pauVar9 - uVar3) >> uVar3 * 8;
+    uVar4 = *(undefined4 *)(*pauVar9 + 8);
+    puVar1 = pauVar9[2] + 7;
+    uVar2 = (uint)puVar1 & 7;
+    *(ulong *)(puVar1 + -uVar2) =
+         *(ulong *)(puVar1 + -uVar2) & -1L << (uVar2 + 1) * 8 | uVar7 >> (7 - uVar2) * 8;
+    uVar2 = (uint)(pauVar9 + 2) & 7;
+    ...
+
+====================================================================================================
+## item 263: Xbox 0x0009eae0 (FUN_0009eae0)  <-  PS2 0x001e3238 RLightning::Bolt::~Bolt
+triage: tier CG-n:n conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): RLightning::Update, size ratio 1.14; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RLightning::Update@9fb90 | RLightning::Segment::Update@9f250
+PS2 callers up to a shared name:  RLightning::Update@1e0d60 | RLightning::ClearAllBolts@1e0f78 <- RLightning::Reset@1e0a70
+Xbox callees: VU0_v3add, VU0_v4scale
+PS2 callees:  __builtin_delete, __builtin_vec_delete, ~USimpleVec
+--- Xbox
+void __thiscall FUN_0009eae0(undefined4 *param_1_00,int param_1)
+{
+  undefined4 *puVar1;
+  int iVar2;
+  uint *puVar3;
+  undefined1 local_30 [16];
+  undefined1 local_20 [28];
+  if (0 < param_1 - param_1_00[3]) {
+    VU0_v4scale(param_1_00 + 4,(float)(param_1 - param_1_00[3]),local_30);
+    iVar2 = RLightning::fgThis_RLightning;
+    puVar3 = (uint *)(RLightning::fgThis_RLightning + 0x650);
+    *puVar3 = *(int *)(RLightning::fgThis_RLightning + 0x650) + 5U & 0x3f;
+    VU0_v4scale((*puVar3 + 5) * 0x10 + iVar2,param_1_00[0xf],local_20);
+    puVar1 = param_1_00 + 8;
+    VU0_v3add(param_1_00,local_30,puVar1);
+    VU0_v3add(puVar1,local_20,puVar1);
+    return;
+  }
+  param_1_00[8] = *param_1_00;
+  param_1_00[9] = param_1_00[1];
+  param_1_00[10] = param_1_00[2];
+  return;
+}
+--- PS2
+void RLightning::Bolt::~Bolt(long param_1,ulong param_2)
+{
+  int iVar1;
+  int iVar2;
+  int *piVar3;
+  int *piVar4;
+  piVar4 = (int *)param_1;
+  iVar2 = piVar4[2];
+  piVar3 = piVar4 + 2;
+  if (iVar2 != 0) {
+    iVar1 = *(int *)(iVar2 + -0x10) * 0x18 + iVar2;
+    if (iVar2 == iVar1) {
+      iVar2 = *piVar3;
+    }
+    else {
+      do {
+        iVar2 = iVar1 + -0x18;
+        USimpleVec<RLightning::Segment>::~USimpleVec((long)(iVar1 + -8),2);
+        if ((long)*(int *)(iVar1 + -0x10) == 0) {
+          *(undefined4 *)(iVar1 + -0x10) = 0;
+        }
+        else {
+          __builtin_vec_delete((long)*(int *)(iVar1 + -0x10));
+          *(undefined4 *)(iVar1 + -0x10) = 0;
+        }
+        *(undefined4 *)(iVar1 + -0xc) = 0;
+        iVar1 = iVar2;
+      } while (*piVar3 != iVar2);
+      iVar2 = *piVar3;
+    }
+    ...
+
+====================================================================================================
+## item 264: Xbox 0x00097100 (FUN_00097100)  <-  PS2 0x001d5610 RWorldCamera::SetViewingTransform
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): RPlayerCamera::UpdateBumperCam, size ratio 0.86; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RPlayerCamera::UpdateBumperCam@80b90 | RPlayerCamera::UpdateDashboardCam@81d10
+PS2 callers up to a shared name:  RPlayerCamera::UpdateBumperCam@1b3b40 | RPlayerCamera::UpdateDashboardCam@1b3ce0
+Xbox callees: FUN_00115c80, FUN_00115cc0, VU0_v4sub, VU0_v4unitcrossprodxyz, VU0_v4unitxyz
+PS2 callees:  
+--- Xbox
+void __thiscall FUN_00097100(int param_1_00,undefined4 param_1,int param_2)
+{
+  int iVar1;
+  iVar1 = param_1_00 + 0x30;
+  *(undefined1 *)(param_1_00 + 0x60) = 1;
+  VU0_v4sub(param_1_00 + 0xd0,param_1_00 + 0xc0,iVar1);
+  VU0_v4unitxyz(iVar1,iVar1);
+  VU0_v4unitcrossprodxyz(param_1,iVar1,param_1_00 + 0x10);
+  FUN_00115cc0(iVar1,param_1_00 + 0x10,param_1_00 + 0x20);
+  FUN_00115c80(param_1_00 + 0xc0,param_1_00 + 0x40);
+  *(undefined4 *)(param_1_00 + 0x3c) = 0;
+  *(undefined4 *)(param_1_00 + 0x2c) = 0;
+  *(undefined4 *)(param_1_00 + 0x1c) = 0;
+  *(undefined4 *)(param_1_00 + 0x4c) = 0x3f800000;
+  if (param_2 != 0) {
+    FUN_00115c80(param_2,param_1_00 + 0x50);
+  }
+  return;
+}
+--- PS2
+void RWorldCamera::SetViewingTransform
+               (undefined (*param_1) [16],undefined (*param_2) [16],long param_3)
+{
+  undefined4 *puVar1;
+  undefined4 uVar2;
+  undefined4 uVar3;
+  undefined1 in_vf0 [16];
+  undefined1 auVar4 [16];
+  undefined1 auVar5 [16];
+  undefined1 auVar6 [16];
+  undefined4 uVar7;
+  *(undefined4 *)param_1[5] = 1;
+  auVar4 = _lqc2(*(undefined1 (*) [16])(param_1 + 0xc));
+  auVar5 = _lqc2(*(undefined1 (*) [16])(param_1 + 0xb));
+  _lqc2(*(undefined1 (*) [16])(param_1 + 2));
+  auVar4 = _vsub(auVar4,auVar5);
+  auVar4 = _sqc2(auVar4);
+  *(undefined1 (*) [16])(param_1 + 2) = auVar4;
+  auVar4 = _lqc2(*(undefined1 (*) [16])(param_1 + 2));
+  _lqc2(*(undefined1 (*) [16])(param_1 + 2));
+  auVar5 = _vmul(auVar4,auVar4);
+  auVar6 = _qmtc2(0x3f800000);
+  _vmulabc(auVar4,auVar4);
+  _vmaddabc(auVar6,auVar5);
+  auVar5 = _vmaddbc(auVar6,auVar5);
+  _vrsqrt(in_vf0,auVar5);
+  uVar7 = _vwaitq();
+  auVar4 = _vmulq(auVar4,uVar7);
+  auVar4 = _sqc2(auVar4);
+  *(undefined1 (*) [16])(param_1 + 2) = auVar4;
+    ...
+
+====================================================================================================
+## item 265: Xbox 0x000ef490 (FUN_000ef490)  <-  PS2 0x00283ed8 EAGL::GeoPrimState::~GeoPrimState
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): RStateManager::GetGeoPrimState, size ratio 0.05; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: FUN_000982a0@982a0 <- RReflection::~RReflection@99590 | FUN_000a4690@a4690 <- RPostProcessing::~RPostProcessing@a4f70 | FUN_000f5b60@f5b60 <- PlayMPC::Play@1308a0
+PS2 callers up to a shared name:  RStateManager::GetGeoPrimState@1ce158 | EAGLInternal::RuntimeAllocGeoPrimStateDestructor@283e90
+Xbox callees: 
+PS2 callees:  eagl_free, ~GeoPrimStateExtension
+--- Xbox
+void FUN_000ef490(void)
+{
+  return;
+}
+--- PS2
+void EAGL::GeoPrimState::~GeoPrimState(long param_1,ulong param_2)
+{
+  GeoPrimStateExtension::~GeoPrimStateExtension(param_1,2);
+  if ((param_2 & 1) != 0) {
+    (*(code *)maybeEaglFree)(param_1,0x80);
+  }
+  return;
+}
+
+====================================================================================================
+## item 266: Xbox 0x000d5a80 (FUN_000d5a80)  <-  PS2 0x002378b8 GGallery::FONT_Load
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): GHud::GHud, size ratio 0.93; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: GHud::GHud@dab50
+PS2 callers up to a shared name:  GHud::GHud@23ae30
+Xbox callees: FONT_create, FONT_destroy, FileLoad, MEM_free
+PS2 callees:  FONT_create, FONT_destroy, FileFree, FileLoad
+--- Xbox
+void __thiscall FUN_000d5a80(int param_1_00,char *param_1)
+{
+  void *pvVar1;
+  undefined8 uVar2;
+  if (*(int *)(param_1_00 + 0xa8) != 0) {
+    FONT_destroy();
+  }
+  if (*(void **)(param_1_00 + 0xac) != (void *)0x0) {
+    MEM_free(*(void **)(param_1_00 + 0xac));
+  }
+  pvVar1 = UFileLoader::FileLoad(param_1,0);
+  *(void **)(param_1_00 + 0xac) = pvVar1;
+  uVar2 = FONT_create(pvVar1);
+  *(int *)(param_1_00 + 0xa8) = (int)uVar2;
+  return;
+}
+--- PS2
+void GGallery::FONT_Load(int param_1,char *param_2)
+{
+  void *pvVar1;
+  undefined8 uVar2;
+  if (*(int *)(param_1 + 0xa8) != 0) {
+    FONT_destroy();
+  }
+  if (*(void **)(param_1 + 0xac) != (void *)0x0) {
+    UFileLoader::FileFree(*(void **)(param_1 + 0xac));
+  }
+  pvVar1 = UFileLoader::FileLoad(param_2,0);
+  *(void **)(param_1 + 0xac) = pvVar1;
+  uVar2 = FONT_create((long)(int)pvVar1);
+  *(int *)(param_1 + 0xa8) = (int)uVar2;
+  return;
+}
+
+====================================================================================================
+## item 267: Xbox 0x00014bf0 (FUN_00014bf0)  <-  PS2 0x0010d1f0 ActCharacter::SetAlpha
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): ActActor::Update, size ratio 0.56; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: ActActor::Update@12840
+PS2 callers up to a shared name:  ActActor::Update@109140
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void __thiscall FUN_00014bf0(int param_1_00,float param_1)
+{
+  **(int **)(param_1_00 + 0x68) = (int)ROUND(param_1 * 255.0);
+  return;
+}
+--- PS2
+void ActCharacter::SetAlpha(ActCharacter *param_1,float param_2)
+{
+  float fVar1;
+  fVar1 = 0.5;
+  if (param_2 * 255.0 < 0.0) {
+    fVar1 = -0.5;
+  }
+  *(int *)param_1->alpha = (int)(fVar1 + param_2 * 255.0);
+  return;
+}
+
+====================================================================================================
+## item 268: Xbox 0x000f59f0 (FUN_000f59f0)  <-  PS2 0x0029c750 EAGL::DrawGouraud::InternalFlush
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): EAGL::ProfilerRegion::DrawRegions, size ratio 0.26; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: EAGL::ProfilerRegion::DrawRegion@f4760 | EAGL::ProfilerRegion::DrawRegions@f5020 | FUN_000f5370@f5370 <- EAGL::ProfilerRegion::DrawRegion@f4760
+PS2 callers up to a shared name:  EAGL::ProfilerRegion::DrawRegion@298d38 | EAGL::ProfilerRegion::DrawRegions@298928
+Xbox callees: D3DDevice_Begin, D3DDevice_End
+PS2 callees:  Draw, SetUpGeoPrim
+--- Xbox
+void __fastcall FUN_000f59f0(undefined4 *param_1)
+{
+  if (*(char *)(param_1 + 0x16) != '\0') {
+    D3D8::D3DDevice_End();
+    D3D8::D3DDevice_Begin(*param_1);
+  }
+  return;
+}
+--- PS2
+void EAGL::DrawGouraud::InternalFlush(int param_1,undefined8 param_2,ulong param_3,ulong param_4)
+{
+  int iVar1;
+  undefined8 extraout_a1;
+  ulong extraout_a2;
+  ulong extraout_a3;
+  int iVar2;
+  iVar1 = *(int *)(param_1 + 8);
+  if (iVar1 != 0) {
+    *(int *)(param_1 + 0x48) = iVar1;
+    if (*(int *)(param_1 + 0x24) == 0) {
+      iVar2 = 0;
+      *(int *)(param_1 + 0x28) = iVar1;
+      if (*(int *)(param_1 + 0x30) == 0) {
+        trap(7);
+      }
+      iVar1 = ((iVar1 - *(int *)(param_1 + 0x3c)) + -1) / *(int *)(param_1 + 0x30) + 1;
+      *(int *)(param_1 + 0x20) = iVar1;
+      if (0 < iVar1) {
+        do {
+          DrawArray::SetUpGeoPrim(param_1 + 0xc,iVar2);
+          iVar2 = iVar2 + 1;
+          DynamicModel::Draw(*(uint *)(param_1 + 0x10),extraout_a1,extraout_a2,extraout_a3);
+        } while (iVar2 < *(int *)(param_1 + 0x20));
+      }
+      *(undefined4 *)(param_1 + 0x40) = 0;
+    }
+    *(undefined4 *)(param_1 + 8) = 0;
+  }
+  return;
+    ...
+
+====================================================================================================
+## item 269: Xbox 0x000f3c90 (FUN_000f3c90)  <-  PS2 0x002a9508 strcmp
+triage: tier CG-1:1 conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): EAGL::SymbolPool::Search, size ratio 0.28; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: EAGL::SymbolPool::RemoveSymbol@f3e50 | EAGL::SymbolPool::Search@f3fa0
+PS2 callers up to a shared name:  AIElementController::AIElementController@12b8b0 | ActAnimationDatabase::ActAnimationDatabase@10c2b0 | StringToNumber::BinarySearch@2cedf0 | Bond_LoadingScreen@173ee8 | GFXGallery::CANVAS_Draw@234818 | EAGL::Model::Call@285ec0 | GHud::CheatMsgHandler@241bb8 | StringToNumber::ConvertStringToNumber@2cec98
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+uint __thiscall FUN_000f3c90(int param_1_00,char *param_1)
+{
+  char *pcVar1;
+  char cVar2;
+  uint uVar3;
+  uVar3 = 0;
+  cVar2 = *param_1;
+  while (cVar2 != '\0') {
+    pcVar1 = param_1 + 1;
+    uVar3 = uVar3 ^ uVar3 << 5 ^ (int)cVar2;
+    param_1 = param_1 + 1;
+    cVar2 = *pcVar1;
+  }
+  return uVar3 % *(uint *)(param_1_00 + 4);
+}
+--- PS2
+int strcmp(char *param_1,char *param_2)
+{
+  byte bVar1;
+  undefined1 auVar2 [16];
+  undefined1 auVar3 [16];
+  char cVar4;
+  ulong uVar5;
+  undefined8 in_a0_udw;
+  undefined8 in_a2_udw;
+  undefined1 auVar6 [16];
+  undefined8 in_a3_udw;
+  undefined1 auVar7 [16];
+  undefined1 auVar8 [16];
+  undefined1 auVar9 [16];
+  undefined1 auVar10 [16];
+  if ((((uint)param_1 | (uint)param_2) & 7) == 0) {
+    auVar7._8_8_ = in_a3_udw;
+    auVar7._0_8_ = 0x101010101010101;
+    auVar6._8_8_ = in_a2_udw;
+    auVar6._0_8_ = 0x8080808080808080;
+    if ((((uint)param_1 | (uint)param_2) & 0xf) == 0) {
+      auVar9 = _pcpyld(auVar7,auVar7);
+      auVar10 = _pcpyld(auVar6,auVar6);
+      auVar7 = _psubw(*(undefined1 (*) [16])param_2,*(undefined1 (*) [16])param_1);
+      auVar8._8_8_ = in_a0_udw;
+      auVar8._0_8_ = (long)(int)param_1;
+      auVar6 = _pcpyud(auVar7,auVar8);
+      if (auVar6._0_8_ == 0 && auVar7._0_8_ == 0) {
+        auVar6 = *(undefined1 (*) [16])param_1;
+        do {
+    ...
+
+====================================================================================================
+## item 270: Xbox 0x00099610 (FUN_00099610)  <-  PS2 0x001c1930 RReflection::SetReflectivity
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): RRenderSharedData::SendPerCarInstance, size ratio 3.38; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RRenderSharedData::SendPerCarInstance@7e310
+PS2 callers up to a shared name:  RRenderSharedData::SendPerCarInstance@1adea8
+Xbox callees: GetPosition
+PS2 callees:  SetupGifState
+--- Xbox
+void __thiscall FUN_00099610(int param_1_00,int param_1)
+{
+  byte bVar1;
+  undefined4 local_c;
+  undefined4 local_8;
+  undefined4 local_4;
+  bVar1 = *(byte *)(param_1 + 0x1c);
+  RSceneObj::GetPosition(&local_c);
+  *(undefined4 *)(*(int *)(param_1_00 + 0x4c) + 0x180) = local_c;
+  *(undefined4 *)(*(int *)(param_1_00 + 0x4c) + 0x184) = local_8;
+  *(undefined4 *)(*(int *)(param_1_00 + 0x4c) + 0x188) = local_4;
+  *(undefined4 *)(*(int *)(param_1_00 + 0x4c) + 0x18c) =
+       *(undefined4 *)(*(int *)(*(int *)(param_1_00 + 0x4c) + 0xa0) + 0x70 + (uint)bVar1 * 0x80);
+  return;
+}
+--- PS2
+void RReflection::SetReflectivity(int param_1,int param_2)
+{
+  SetupGifState(param_1,(uint)*(byte *)(param_2 + 0x18),0);
+  return;
+}
+
+====================================================================================================
+## item 271: Xbox 0x0011ec10 (FUN_0011ec10)  <-  PS2 0x002e5148 ATurret::~ATurret
+triage: tier CG-n:n conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): AVehicle::~AVehicle, size ratio 0.37; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: AVehicle::~AVehicle@120a10
+PS2 callers up to a shared name:  APlayerTank::~APlayerTank@2f1128 | ASentry::~ASentry@2effe8 | AVehicle::~AVehicle@2e2b60
+Xbox callees: ??_M@YGXPAXIHP6EX0@Z@Z
+PS2 callees:  FastFree, ~View
+--- Xbox
+void __fastcall FUN_0011ec10(int param_1)
+{
+  undefined4 local_c;
+  code *pcStack_8;
+  undefined4 local_4;
+  pcStack_8 = FUN_00155a1b;
+  local_4 = 0;
+  ___M_YGXPAXIHP6EX0_Z_Z(param_1 + 0x68,0x1c,3,AVoice::View::~View);
+  local_4 = 0xffffffff;
+  ___M_YGXPAXIHP6EX0_Z_Z(param_1 + 0x10,0x1c,3,AVoice::View::~View);
+  return;
+}
+--- PS2
+void ATurret::~ATurret(undefined8 param_1,ulong param_2)
+{
+  void *pvVar1;
+  long lVar2;
+  int iVar3;
+  long lVar4;
+  pvVar1 = *(void **)((int)(void *)param_1 + 8);
+  if (pvVar1 != (void *)0x0) {
+    lVar2 = (long)((int)pvVar1 + 4);
+    if ((lVar2 != 0) && (lVar2 != (int)pvVar1 + 100)) {
+      for (iVar3 = (int)pvVar1 + 0x44; AVoice::View::~View((long)iVar3,0), lVar2 != iVar3;
+          iVar3 = iVar3 + -0x20) {
+      }
+    }
+    UMemory::FastFree(pvVar1,100);
+  }
+  pvVar1 = *(void **)((int)(void *)param_1 + 0xc);
+  if (pvVar1 != (void *)0x0) {
+    lVar2 = (long)((int)pvVar1 + 4);
+    if ((lVar2 != 0) && (lVar2 != (int)pvVar1 + 100)) {
+      for (iVar3 = (int)pvVar1 + 0x44; AVoice::View::~View((long)iVar3,0), lVar2 != iVar3;
+          iVar3 = iVar3 + -0x20) {
+      }
+    }
+    UMemory::FastFree(pvVar1,100);
+  }
+  pvVar1 = *(void **)((int)(void *)param_1 + 4);
+  lVar2 = (long)((int)pvVar1 + 4);
+  if (pvVar1 != (void *)0x0) {
+    if ((lVar2 != 0) && (lVar2 != (int)pvVar1 + 100)) {
+    ...
+
+====================================================================================================
+## item 272: Xbox 0x000b2780 (FUN_000b2780)  <-  PS2 0x001ff230 Simulation::FindSignature
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): Simulation::FindPhysicsObjectSignature, size ratio 1.47; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: Simulation::FindPhysicsObjectSignature@b27d0
+PS2 callers up to a shared name:  Simulation::FindPhysicsObjectSignature@1ff280
+Xbox callees: 
+PS2 callees:  FindRigidBodySignature, FindSimpleRigidBodySignature
+--- Xbox
+uint __thiscall FUN_000b2780(int param_1_00,uint param_1,char *param_2)
+{
+  char cVar1;
+  uint uVar2;
+  uint uVar3;
+  cVar1 = -(char)((int)param_1 >> 0x1f);
+  *param_2 = cVar1;
+  if (cVar1 == '\0') {
+    uVar2 = param_1 >> 0x18 & 0x7f;
+    if (param_1 == 0) {
+      return 0xffffffff;
+    }
+    uVar3 = *(uint *)(param_1_00 + 0x30 + uVar2 * 4);
+  }
+  else {
+    uVar2 = param_1 >> 0x18 & 0x7f;
+    if (param_1 == 0) {
+      return 0xffffffff;
+    }
+    uVar3 = *(uint *)(param_1_00 + 0x130 + uVar2 * 4);
+  }
+  if (uVar3 != param_1) {
+    return 0xffffffff;
+  }
+  return uVar2;
+}
+--- PS2
+uint __thiscall Simulation::FindSignature(Simulation *this,int param_1,bool *param_2)
+{
+  int iVar1;
+  uint uVar2;
+  undefined4 local_20 [4];
+  undefined4 local_10;
+  undefined4 uStack_c;
+  iVar1 = *(int *)param_1;
+  *(int *)param_2 = -(iVar1 >> 0x1f);
+  if (-(iVar1 >> 0x1f) == 0) {
+    local_20[0] = *(undefined4 *)param_1;
+    uVar2 = FindRigidBodySignature(this,(int)local_20);
+  }
+  else {
+    local_20[0] = *(undefined4 *)param_1;
+    uVar2 = FindSimpleRigidBodySignature(this,(int)local_20);
+  }
+  return uVar2;
+}
+
+====================================================================================================
+## item 273: Xbox 0x000f3750 (FUN_000f3750)  <-  PS2 0x00292240 EAGL::TextureRenderContextExtension::TextureRenderContextExtension
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): EAGL::TextureRenderContext::TextureRenderContext, size ratio 1.33; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: EAGL::TextureRenderContext::TextureRenderContext@f3450
+PS2 callers up to a shared name:  EAGL::TextureRenderContext::TextureRenderContext@292358
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void __thiscall FUN_000f3750(undefined4 *param_1_00,undefined4 param_1)
+{
+  *param_1_00 = param_1;
+  return;
+}
+--- PS2
+void EAGL::TextureRenderContextExtension::TextureRenderContextExtension
+               (undefined4 *param_1,undefined4 param_2)
+{
+  *param_1 = param_2;
+  return;
+}
+
+====================================================================================================
+## item 274: Xbox 0x0008dc60 (FUN_0008dc60)  <-  PS2 0x001c9190 RSceneObj::GetTransform
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 3 anchor(s) place it by call position (3 as a 1:1 slot): RVehicle::Render, RVehicle::RenderDeferredEffects, Simulation::SpawnSmackableObject, size ratio 0.38; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: ActWeapon::ManualRender@1ae70 | RVehicle::Render@965e0 | RVehicle::RenderDeferredEffects@96770 | Newton::SpawnFromEvent@61310 | Simulation::SpawnSmackableObject@b57b0 | ActWeapon::StartMuzzleFlash@1b270 | FUN_0009ebf0@9ebf0 <- RLightning::Bolt::Draw@9f6b0 | FUN_000a9680@a9680 <- ActWeapon::RenderShellCasings@1b020
+PS2 callers up to a shared name:  RSceneObj::DecayEffects@1ca340 | RSceneObj::EnableTarget@1c8998 | RSceneObj::GetInstancePosition@1c9368 | RSceneObj::GetViewDistance@1cb000 | ActWeapon::ManualRender@1169c8 | RSceneObj::RSceneObj@1c7098 | RSceneObj::Render@1c85f8 | RVehicle::Render@1d35d8
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void __thiscall FUN_0008dc60(int param_1_00,undefined4 *param_1)
+{
+  int iVar1;
+  undefined4 *puVar2;
+  undefined4 *puVar3;
+  puVar2 = *(undefined4 **)(param_1_00 + 0xc);
+  puVar3 = param_1;
+  for (iVar1 = 0x10; iVar1 != 0; iVar1 = iVar1 + -1) {
+    *puVar3 = *puVar2;
+    puVar2 = puVar2 + 1;
+    puVar3 = puVar3 + 1;
+  }
+  param_1[3] = 0;
+  param_1[7] = 0;
+  param_1[0xb] = 0;
+  param_1[0xf] = 0x3f800000;
+  return;
+}
+--- PS2
+void __thiscall RSceneObj::GetTransform(RSceneObj *this,MATRIX4 *transform)
+{
+  undefined1 *puVar1;
+  float *pfVar2;
+  uint uVar3;
+  uint uVar4;
+  int *piVar5;
+  ulong *puVar6;
+  ulong in_v1;
+  ulong uVar7;
+  ulong uVar8;
+  ulong in_a2;
+  ulong uVar9;
+  ulong in_a3;
+  ulong uVar10;
+  piVar5 = this->field2_0x8;
+  uVar3 = (int)piVar5 + 7U & 7;
+  uVar4 = (uint)piVar5 & 7;
+  uVar7 = (*(long *)(((int)piVar5 + 7U) - uVar3) << (7 - uVar3) * 8 |
+          in_v1 & 0xffffffffffffffffU >> (uVar3 + 1) * 8) & -1L << (8 - uVar4) * 8 |
+          *(ulong *)((int)piVar5 - uVar4) >> uVar4 * 8;
+  uVar3 = (int)piVar5 + 0xfU & 7;
+  uVar4 = (uint)(piVar5 + 2) & 7;
+  uVar8 = (*(long *)(((int)piVar5 + 0xfU) - uVar3) << (7 - uVar3) * 8 |
+          (long)(int)this & 0xffffffffffffffffU >> (uVar3 + 1) * 8) & -1L << (8 - uVar4) * 8 |
+          *(ulong *)((int)(piVar5 + 2) - uVar4) >> uVar4 * 8;
+  uVar3 = (int)piVar5 + 0x17U & 7;
+  uVar4 = (uint)(piVar5 + 4) & 7;
+  uVar9 = (*(long *)(((int)piVar5 + 0x17U) - uVar3) << (7 - uVar3) * 8 |
+          in_a2 & 0xffffffffffffffffU >> (uVar3 + 1) * 8) & -1L << (8 - uVar4) * 8 |
+    ...
+
+====================================================================================================
+## item 275: Xbox 0x000968b0 (FUN_000968b0)  <-  PS2 0x001d44c8 RViewCamera::RefreshLODMultiplier
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): RPlayerViewCamera::ConfigureView, size ratio 0.64; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RPlayerViewCamera::ConfigureView@8a420
+PS2 callers up to a shared name:  RPlayerViewCamera::ConfigureView@1beba0 | RViewCamera::RViewCamera@1d40f0 | RViewCamera::SetExtents@1d4468 <- RRenderDebugViewPerspective::PreRender@1c2e08 | RViewCamera::SetExtents@1d4420 <- RRenderHigh::RearrangeSplitScreens@1c4c10 <- RRenderHigh::PushPlayerView@1c4ad8
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void __fastcall FUN_000968b0(int param_1)
+{
+  *(float *)(param_1 + 0x34) =
+       *(float *)(*(int *)(param_1 + 4) + 0xb4) * 0.030303031 *
+       (*(float *)(param_1 + 0x28) - *(float *)(param_1 + 0x1c)) * 0.0025;
+  return;
+}
+--- PS2
+void __thiscall RViewCamera::RefreshLODMultiplier(RViewCamera *this)
+{
+  this->lodMultiplier =
+       (((float)this->camera->field33_0xa4 / 33.0) / 400.0) * (this->xMax - this->xMin);
+  return;
+}
+
+====================================================================================================
+## item 276: Xbox 0x0008da60 (FUN_0008da60)  <-  PS2 0x001c85c8 RSceneObj::RenderAllDeferredEffects
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): RRenderWorldCamera::DrawEffects, size ratio 1.33; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RRenderWorldCamera::DrawEffects@8cf10
+PS2 callers up to a shared name:  RRenderWorldCamera::DrawEffects@1c5928
+Xbox callees: 
+PS2 callees:  RenderArray
+--- Xbox
+void __thiscall FUN_0008da60(void)
+{
+  uint uVar1;
+  uint uVar2;
+  uVar1 = DAT_001f1cf4;
+  uVar2 = 0;
+  if (DAT_001f1cf4 != 0) {
+    do {
+      (**(code **)(*(int *)(&DAT_001f1d00)[uVar2] + 0x14))();
+      uVar2 = uVar2 + 1;
+    } while (uVar2 < uVar1);
+  }
+  return;
+}
+--- PS2
+void RSceneObj::RenderAllDeferredEffects(void)
+{
+  RenderArray(0,1,DAT_003c8324,(int *)&DAT_00425040);
+  return;
+}
+
+====================================================================================================
+## item 277: Xbox 0x00022770 (FUN_00022770)  <-  PS2 0x002a9508 strcmp
+triage: tier CG-1:1 conflict, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): RCARPFile::RegisterSymbols, size ratio 0.27; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: (no chain to a function named on both sides within 3 levels)
+PS2 callers up to a shared name:  AIElementController::AIElementController@12b8b0 | ActAnimationDatabase::ActAnimationDatabase@10c2b0 | StringToNumber::BinarySearch@2cedf0 | Bond_LoadingScreen@173ee8 | GFXGallery::CANVAS_Draw@234818 | EAGL::Model::Call@285ec0 | GHud::CheatMsgHandler@241bb8 | StringToNumber::ConvertStringToNumber@2cec98
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void FUN_00022770(undefined4 param_1,undefined4 param_2,int param_3,code *param_4)
+{
+  if (-1 < param_3 + -1) {
+    do {
+      (*param_4)();
+      param_3 = param_3 + -1;
+    } while (param_3 != 0);
+  }
+  return;
+}
+--- PS2
+int strcmp(char *param_1,char *param_2)
+{
+  byte bVar1;
+  undefined1 auVar2 [16];
+  undefined1 auVar3 [16];
+  char cVar4;
+  ulong uVar5;
+  undefined8 in_a0_udw;
+  undefined8 in_a2_udw;
+  undefined1 auVar6 [16];
+  undefined8 in_a3_udw;
+  undefined1 auVar7 [16];
+  undefined1 auVar8 [16];
+  undefined1 auVar9 [16];
+  undefined1 auVar10 [16];
+  if ((((uint)param_1 | (uint)param_2) & 7) == 0) {
+    auVar7._8_8_ = in_a3_udw;
+    auVar7._0_8_ = 0x101010101010101;
+    auVar6._8_8_ = in_a2_udw;
+    auVar6._0_8_ = 0x8080808080808080;
+    if ((((uint)param_1 | (uint)param_2) & 0xf) == 0) {
+      auVar9 = _pcpyld(auVar7,auVar7);
+      auVar10 = _pcpyld(auVar6,auVar6);
+      auVar7 = _psubw(*(undefined1 (*) [16])param_2,*(undefined1 (*) [16])param_1);
+      auVar8._8_8_ = in_a0_udw;
+      auVar8._0_8_ = (long)(int)param_1;
+      auVar6 = _pcpyud(auVar7,auVar8);
+      if (auVar6._0_8_ == 0 && auVar7._0_8_ == 0) {
+        auVar6 = *(undefined1 (*) [16])param_1;
+        do {
+    ...
+
+====================================================================================================
+## item 278: Xbox 0x0005e8c0 (FUN_0005e8c0)  <-  PS2 0x00180bc8 Missile::Missile
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): Simulation::SpawnMissileObject, 8 shared strings, size ratio 0.7; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: Simulation::SpawnMissileObject@b5950
+PS2 callers up to a shared name:  Simulation::SpawnMissileObject@1ffc40
+Xbox callees: AddReference, FUN_00040070, FUN_000bce90, FUN_000cdfd0, FUN_00114b30, FUN_00127a70, FastAlloc, FindPhysicsObjectSignature, GetPlayerObject, GetSimpleRigidBody, Lookup, PhysicsObject, RMissileStreak, RSceneObj, SetRenderObject, SimpleRigidBody, VU0_MATRIX4_mult, VU0_MATRIX4setyrot, VU0_v3distancesquare, VU0_v4unitxyz, __ftol2, __stricmp, operator_new, v3dotprod, v3scale
+PS2 callees:  ASound, AddReference, BytesToCoord, FastAlloc, FindPhysicsObjectSignature, GetPlayerObject, GetSimpleRigidBody, GetWorldTarget, Lookup, PhysicsObject, RMissileStreak, RSceneObj, SetRenderObject, SimRandom_Generate, SimpleRigidBody, Util_GenerateMatrix, VU0_MATRIX4_mult, VU0_MATRIX4setyrot, operator_new, strcasecmp, v3scale
+--- Xbox
+PhysicsObject * __thiscall
+FUN_0005e8c0(PhysicsObject *param_1_00,int param_1,float param_2,float *param_3,undefined4 *param_4,
+            uint param_5,undefined4 param_6,undefined4 param_7,int param_8)
+{
+  undefined *puVar1;
+  undefined4 *puVar2;
+  float *pfVar3;
+  int *piVar4;
+  char *pcVar5;
+  undefined4 uVar6;
+  int iVar7;
+  undefined4 *puVar8;
+  undefined4 *puVar9;
+  bool bVar10;
+  float10 fVar11;
+  ulonglong uVar12;
+  float fVar13;
+  char *pcVar14;
+  float *local_fc;
+  char *local_f8;
+  float local_f4;
+  float local_f0;
+  float local_ec;
+  float local_e8;
+  SimpleRigidBody *local_d4;
+  float local_d0 [4];
+  float local_c0;
+  float local_bc;
+  float local_b4;
+  PhysicsObject *local_a4;
+    ...
+--- PS2
+ulong __thiscall
+Missile::Missile(Missile *this,int weaponType,float param_2,COORD3 *param_3,COORD3 *param_4,
+                uint *simObjSig)
+{
+  undefined1 *puVar1;
+  ulong *puVar2;
+  Simulation **ppSVar3;
+  undefined *puVar4;
+  Simulation *this_00;
+  int iVar5;
+  int iVar6;
+  uint uVar7;
+  uint uVar8;
+  SimpleRigidBody *this_01;
+  int iVar9;
+  int *carpInstance;
+  undefined8 *puVar10;
+  undefined8 uVar11;
+  ulong uVar12;
+  WTargetable *this_02;
+  long lVar13;
+  undefined8 extraout_a2;
+  ulong extraout_a2_00;
+  char *pcVar14;
+  undefined8 extraout_a3;
+  ulong extraout_a3_00;
+  ulong extraout_a3_01;
+  ulong extraout_a3_02;
+  ulong extraout_a3_03;
+  ulong extraout_a3_04;
+    ...
+
+====================================================================================================
+## item 279: Xbox 0x0002a760 (FUN_0002a760)  <-  PS2 0x00130f98 AIGroundVehicle::DisengageAutoDrive
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): EControlToPlayer::~EControlToPlayer, size ratio 0.75; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: EControlToPlayer::~EControlToPlayer@4a890
+PS2 callers up to a shared name:  EControlToPlayer::~EControlToPlayer@14ad18
+Xbox callees: GetPhysicsObject, SetSplinePath
+PS2 callees:  GetPhysicsObject, SetAttackMode, SetNavigateMode
+--- Xbox
+void __fastcall FUN_0002a760(int param_1)
+{
+  int *piVar1;
+  piVar1 = (int *)AIVehicle::GetPhysicsObject();
+  (**(code **)(*piVar1 + 0x44))(0);
+  piVar1 = (int *)AIVehicle::GetPhysicsObject();
+  (**(code **)(*piVar1 + 0x54))();
+  *(undefined4 *)(param_1 + 0x80) = 1;
+  *(undefined4 *)(param_1 + 0x94) = 1;
+  *(undefined4 *)(param_1 + 0x88) = 1;
+  AIVehicle::SetSplinePath(0);
+  **(undefined4 **)(param_1 + 100) = 0;
+  *(undefined4 *)(param_1 + 0x178) = 0;
+  return;
+}
+--- PS2
+void AIGroundVehicle::DisengageAutoDrive
+               (int param_1,undefined8 param_2,undefined8 param_3,ulong param_4,ulong param_5,
+               undefined8 param_6,ulong param_7)
+{
+  int iVar1;
+  undefined8 extraout_a2;
+  ulong extraout_a3;
+  undefined8 extraout_a3_00;
+  undefined8 extraout_t0;
+  ulong extraout_t0_00;
+  undefined8 extraout_t1;
+  ulong extraout_t2;
+  iVar1 = AIVehicle::GetPhysicsObject(param_1);
+  (**(code **)(*(int *)(iVar1 + 0x68) + 0x94))(iVar1 + *(short *)(*(int *)(iVar1 + 0x68) + 0x90),0);
+  iVar1 = AIVehicle::GetPhysicsObject(param_1);
+  (**(code **)(*(int *)(iVar1 + 0x68) + 0xb4))(iVar1 + *(short *)(*(int *)(iVar1 + 0x68) + 0xb0));
+  *(undefined4 *)(param_1 + 0x70) = 1;
+  SetAttackMode(param_1,1,extraout_a2,extraout_a3,extraout_t0);
+  SetNavigateMode(param_1,1,0,extraout_a3_00,extraout_t0_00,extraout_t1,extraout_t2);
+  *(undefined4 *)(param_1 + 0x1a4) = 0;
+  return;
+}
+
+====================================================================================================
+## item 280: Xbox 0x0009f8b0 (FUN_0009f8b0)  <-  PS2 0x001e3438 USimpleVec<RLightning::Segment>::~USimpleVec
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 2 anchor(s) place it by call position (1 as a 1:1 slot): RLightning::AddBolt, RLightning::BuildNewSegment, size ratio 1.23; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RLightning::AddBolt@a0400 | RLightning::AddRoundedBolt@a0500 | RLightning::BuildNewSegment@9f970
+PS2 callers up to a shared name:  RLightning::AddBolt@1e1010 | RLightning::AddRoundedBolt@1e1280 | RLightning::BuildNewSegment@1e18e0 | RLightning::Bolt::~Bolt@1e3238 <- RLightning::Update@1e0d60 | RLightning::Bolt::~Bolt@1e3238 <- RLightning::ClearAllBolts@1e0f78 <- RLightning::Reset@1e0a70
+Xbox callees: ??_L@YGXPAXIHP6EX0@Z1@Z, ??_M@YGXPAXIHP6EX0@Z@Z, __builtin_delete, __builtin_vec_new
+PS2 callees:  __builtin_delete, __builtin_vec_delete, ~USimpleVec
+--- Xbox
+void __thiscall FUN_0009f8b0(int *param_1_00,int param_1)
+{
+  int iVar1;
+  int *piVar2;
+  undefined4 local_c;
+  code *pcStack_8;
+  undefined4 local_4;
+  local_4 = 0xffffffff;
+  pcStack_8 = FUN_0015383b;
+  iVar1 = *param_1_00;
+  if (iVar1 != 0) {
+    ___M_YGXPAXIHP6EX0_Z_Z(iVar1,0x18,*(undefined4 *)(iVar1 + -4),FUN_0009f7e0);
+    __builtin_delete(iVar1 + -4);
+  }
+  *param_1_00 = 0;
+  param_1_00[1] = param_1;
+  piVar2 = __builtin_vec_new(param_1 * 0x18 + 4);
+  local_4 = 0;
+  if (piVar2 != (int *)0x0) {
+    *piVar2 = param_1;
+    ___L_YGXPAXIHP6EX0_Z1_Z(piVar2 + 1,0x18,param_1,&LAB_0009f7c0,FUN_0009f7e0);
+    *param_1_00 = (int)(piVar2 + 1);
+    return;
+  }
+  *param_1_00 = 0;
+  return;
+}
+--- PS2
+void USimpleVec<RLightning::Segment>::~USimpleVec(long param_1,ulong param_2)
+{
+  int iVar1;
+  int iVar2;
+  int *piVar3;
+  piVar3 = (int *)param_1;
+  iVar2 = *piVar3;
+  if (iVar2 != 0) {
+    iVar1 = *(int *)(iVar2 + -0x10) * 0x18 + iVar2;
+    if (iVar2 == iVar1) {
+      iVar2 = *piVar3;
+    }
+    else {
+      do {
+        iVar2 = iVar1 + -0x18;
+        ~USimpleVec((long)(iVar1 + -8),2);
+        if ((long)*(int *)(iVar1 + -0x10) == 0) {
+          *(undefined4 *)(iVar1 + -0x10) = 0;
+        }
+        else {
+          __builtin_vec_delete((long)*(int *)(iVar1 + -0x10));
+          *(undefined4 *)(iVar1 + -0x10) = 0;
+        }
+        *(undefined4 *)(iVar1 + -0xc) = 0;
+        iVar1 = iVar2;
+      } while (*piVar3 != iVar2);
+      iVar2 = *piVar3;
+    }
+    __builtin_vec_delete((long)(iVar2 + -0x10));
+  }
+    ...
+
+====================================================================================================
+## item 281: Xbox 0x00081940 (FUN_00081940)  <-  PS2 0x001bd198 RPlayerCamera::SetControlToCPU
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 2 anchor(s) place it by call position (2 as a 1:1 slot): EControlToSpline::~EControlToSpline, EEndControlToSpline::~EEndControlToSpline, size ratio 1.33; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: EControlToCPU::~EControlToCPU@4a820 | EControlToPlayer::~EControlToPlayer@4a890 | EControlToSpline::~EControlToSpline@4a920 | EEndControlToSpline::~EEndControlToSpline@4abc0
+PS2 callers up to a shared name:  EControlToCPU::~EControlToCPU@14ac38 | EControlToPlayer::~EControlToPlayer@14ad18 | EControlToSpline::~EControlToSpline@14ae60 | EEndControlToSpline::~EEndControlToSpline@14c110
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void __thiscall FUN_00081940(int param_1_00,undefined1 param_1)
+{
+  *(undefined1 *)(*(int *)(param_1_00 + 0x354) + 7) = param_1;
+  return;
+}
+--- PS2
+void RPlayerCamera::SetControlToCPU(int param_1,undefined4 param_2)
+{
+  *(undefined4 *)(*(int *)(param_1 + 0x354) + 0x10) = param_2;
+  return;
+}
+
+====================================================================================================
+## item 282: Xbox 0x0007d840 (FUN_0007d840)  <-  PS2 0x001ac978 RFog::SetFogParams
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): RFog::RFog, size ratio 0.93; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RFog::RFog@7d930 | FUN_0007d8c0@7d8c0 <- RRenderHigh::Render@8bf30
+PS2 callers up to a shared name:  RFog::RFog@1ac668 | RFog::UpdateScale@1acb50 <- RRenderHigh::StopFrameRender@1c3d58 <- RRenderHigh::Render@1c3c10
+Xbox callees: FUN_000e79a0, FUN_000e79e0, FUN_000e7a20, FUN_000e7a60, FUN_000e7aa0
+PS2 callees:  CalcFogEnd, SetFogColour
+--- Xbox
+void __fastcall FUN_0007d840(int param_1)
+{
+  int iVar1;
+  iVar1 = *(int *)(param_1 + 4);
+  *(float *)(iVar1 + 4) = *(float *)(iVar1 + 0x18) * *(float *)(iVar1 + 0x14);
+  FUN_000e7a60(*(undefined4 *)(*(int *)(param_1 + 4) + 8));
+  FUN_000e79e0(**(undefined4 **)(param_1 + 4));
+  FUN_000e7a20(*(undefined4 *)(*(int *)(param_1 + 4) + 4));
+  FUN_000e7aa0(*(undefined4 *)(*(int *)(param_1 + 4) + 0x10));
+  FUN_000e79a0(*(undefined4 *)(*(int *)(param_1 + 4) + 0xc));
+  return;
+}
+--- PS2
+void __thiscall RFog::SetFogParams(RFog *this)
+{
+  float *pfVar1;
+  uint uVar2;
+  RRenderer *pRVar3;
+  CalcFogEnd(this);
+  pRVar3 = RRenderer::fgRenderer;
+  *(undefined4 *)this->fogInfo = ((undefined4 *)this->fogInfo)[4];
+  *(undefined4 *)(this->fogInfo + 4) = 0;
+  *(undefined4 *)(this->fogInfo + 8) = *(undefined4 *)(this->fogInfo + 0x14);
+  pfVar1 = (float *)this->fogInfo;
+  pfVar1[3] = (pfVar1[6] * 255.0) / (pfVar1[2] - *pfVar1);
+  uVar2 = *(uint *)(this->fogInfo + 0x20);
+  EAGL::RenderContextExtension::SetFogColour
+            (pRVar3->renderContext,
+             (long)(int)((uVar2 & 0xff) << 0x10) | (long)(int)uVar2 & 0xff00U |
+             (long)(int)(uVar2 >> 0x10) & 0xffU | (long)(int)uVar2 & 0xffffffffff000000U);
+  return;
+}
+
+====================================================================================================
+## item 283: Xbox 0x000d9b70 (FUN_000d9b70)  <-  PS2 0x00244ec8 GHud::LetterBoxOff
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): ELetterBoxOff::~ELetterBoxOff, size ratio 1.0; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: ELetterBoxOff::~ELetterBoxOff@40b40
+PS2 callers up to a shared name:  ELetterBoxOff::~ELetterBoxOff@150ce8
+Xbox callees: 
+PS2 callees:  
+--- Xbox
+void __thiscall FUN_000d9b70(int param_1_00,char param_1)
+{
+  *(uint *)(param_1_00 + 0x2b4) = (uint)(param_1 == '\0') * 2 + 1;
+  return;
+}
+--- PS2
+void GHud::LetterBoxOff(int param_1,long param_2)
+{
+  if (param_2 != 0) {
+    *(undefined4 *)(param_1 + 0x2b0) = 1;
+    return;
+  }
+  *(undefined4 *)(param_1 + 0x2b0) = 3;
+  return;
+}
+
+====================================================================================================
+## item 284: Xbox 0x00057240 (FUN_00057240)  <-  PS2 0x0016e590 AttributeSystem::RegisterExtensionField
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): PhysicsNamespace::PhysicsNamespace, size ratio 0.26; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: PVehicle::InitializeGlobals@6f930 | PhysicsNamespace::PhysicsNamespace@6ee90
+PS2 callers up to a shared name:  PVehicle::InitializeGlobals@1968f8 | PhysicsNamespace::PhysicsNamespace@194e18
+Xbox callees: FUN_00055200, FUN_000552d0, FUN_00056f70
+PS2 callees:  AttributeExtensionParserMap, FUN_0016fe98, FUN_0016ff10, FUN_00170608, FastAlloc, FastFree, _Rb_tree<unsigned_int,_pair<unsigned_int,_AttributeExtension>,, insert_unique, strcasecmp
+--- Xbox
+void FUN_00057240(char *param_1,char *param_2,undefined4 param_3,undefined4 param_4,
+                 undefined4 param_5,undefined4 param_6,undefined4 param_7)
+{
+  char *pcVar1;
+  int *piVar2;
+  undefined1 local_2c [8];
+  undefined1 local_24 [8];
+  char *local_1c;
+  undefined4 local_18;
+  undefined4 local_14;
+  undefined4 local_10;
+  undefined4 local_c;
+  undefined4 local_8;
+  char *local_4;
+  pcVar1 = param_1;
+  local_18 = 0;
+  local_14 = 0;
+  local_c = 0;
+  local_8 = 0;
+  local_1c = param_1;
+  local_10 = 0xffffffff;
+  piVar2 = (int *)FUN_000552d0(local_2c,&local_1c);
+  param_1 = *(char **)(*piVar2 + 0x20);
+  FUN_00056f70(&param_1);
+  local_1c = param_2;
+  local_18 = param_3;
+  local_14 = param_4;
+  local_10 = param_5;
+  local_c = param_6;
+  local_8 = param_7;
+    ...
+--- PS2
+void __thiscall
+AttributeSystem::RegisterExtensionField
+          (AttributeSystem *this,int *param_1,int *paramName,undefined4 param_3,undefined4 param_4,
+          undefined4 param_5,int *param_6,int *param_7)
+{
+  int **ppiVar1;
+  bool bVar2;
+  int iVar3;
+  int *local_160 [4];
+  int *local_150 [4];
+  int *local_140 [4];
+  int *local_130;
+  undefined4 local_12c;
+  undefined4 local_128;
+  undefined4 local_124;
+  int *local_120;
+  int *local_11c;
+  int *local_118;
+  int *local_110;
+  undefined4 local_10c;
+  undefined4 local_108;
+  int *local_104;
+  int *local_100;
+  int *local_fc;
+  int local_f8;
+  undefined4 local_f4;
+  undefined4 *local_f0;
+  int local_ec;
+  undefined1 local_e8;
+  int *local_e0;
+    ...
+
+====================================================================================================
+## item 285: Xbox 0x000be180 (FUN_000be180)  <-  PS2 0x00211988 WCollider::~WCollider
+triage: tier CG-n:n, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (0 as a 1:1 slot): Grenade::Simulate, size ratio 0.91; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: AIHelicopter::DoAgentLogic@331c0 | AICharacterPedestrian::FindPointAgainstWall@24f80 | AICharacterEnemyGround::HandleInterrupts@1f3c0 | RPlayerCamera::RestartCamera@88d70 | Grenade::Simulate@5d7d0 | AICharacterEnemyGround::~AICharacterEnemyGround@1dea0 | AICharacterPedestrian::~AICharacterPedestrian@23f50 | PhysicsObject::~PhysicsObject@6f680
+PS2 callers up to a shared name:  AIHelicopter::DoAgentLogic@139be8 | AICharacterPedestrian::FindPointAgainstWall@12a4a0 | AICharacterEnemyGround::HandleInterrupts@11c640 | RPlayerCamera::RestartCamera@1bbc90 | Grenade::Simulate@17e8b8 | AICharacterEnemyGround::~AICharacterEnemyGround@11b768 | AICharacterPedestrian::~AICharacterPedestrian@125b48 | PhysicsObject::~PhysicsObject@195568
+Xbox callees: FUN_000bdd40, FastFree
+PS2 callees:  Clear, FastFree
+--- Xbox
+void __fastcall FUN_000be180(int param_1)
+{
+  void *pvVar1;
+  undefined4 local_c;
+  code *pcStack_8;
+  int local_4;
+  pcStack_8 = FUN_00154391;
+  local_4 = 2;
+  FUN_000bdd40();
+  pvVar1 = *(void **)(param_1 + 0x54);
+  local_4._0_1_ = 1;
+  if (pvVar1 != (void *)0x0) {
+    UMemory::FastFree(pvVar1,(*(int *)(param_1 + 0x5c) - (int)pvVar1 >> 3) << 3);
+  }
+  *(undefined4 *)(param_1 + 0x54) = 0;
+  *(undefined4 *)(param_1 + 0x58) = 0;
+  *(undefined4 *)(param_1 + 0x5c) = 0;
+  pvVar1 = *(void **)(param_1 + 0x44);
+  local_4 = (uint)local_4._1_3_ << 8;
+  if (pvVar1 != (void *)0x0) {
+    UMemory::FastFree(pvVar1,((*(int *)(param_1 + 0x4c) - (int)pvVar1) / 0x28) * 0x28);
+  }
+  *(undefined4 *)(param_1 + 0x44) = 0;
+  *(undefined4 *)(param_1 + 0x48) = 0;
+  *(undefined4 *)(param_1 + 0x4c) = 0;
+  pvVar1 = *(void **)(param_1 + 0x34);
+  local_4 = 0xffffffff;
+  if (pvVar1 != (void *)0x0) {
+    UMemory::FastFree(pvVar1,(*(int *)(param_1 + 0x3c) - (int)pvVar1 >> 3) << 3);
+  }
+    ...
+--- PS2
+void __thiscall WCollider::~WCollider(WCollider *this)
+{
+  int iVar1;
+  uint uVar2;
+  void *pvVar3;
+  ulong in_a1;
+  Clear((int)this);
+  uVar2 = this->field42_0x48;
+  if (uVar2 < (uint)this->field43_0x4c) {
+    do {
+      uVar2 = uVar2 + 8;
+    } while (uVar2 < (uint)this->field43_0x4c);
+    pvVar3 = (void *)this->field42_0x48;
+  }
+  else {
+    pvVar3 = (void *)this->field42_0x48;
+  }
+  iVar1 = this->field44_0x50 - (int)pvVar3 >> 3;
+  if (iVar1 != 0) {
+    UMemory::FastFree(pvVar3,(long)(iVar1 << 3));
+  }
+  for (uVar2 = this->field39_0x3c; uVar2 < (uint)this->field40_0x40; uVar2 = uVar2 + 0x28) {
+  }
+  pvVar3 = (void *)this->field39_0x3c;
+  iVar1 = (this->field41_0x44 - (int)pvVar3) * -0x33333333 >> 3;
+  if (iVar1 != 0) {
+    UMemory::FastFree(pvVar3,(long)(iVar1 * 0x28));
+  }
+  uVar2 = this->field36_0x30;
+  if (uVar2 < (uint)this->field37_0x34) {
+    ...
+
+====================================================================================================
+## item 286: Xbox 0x000aadc0 (FUN_000aadc0)  <-  PS2 0x001f29d8 RParticleSystem::RParticle::ResetParticle
+triage: tier CG-1:1, PS2 distance to Xbox neighbours None, + 1 anchor(s) place it by call position (1 as a 1:1 slot): RParticleSystem::Update, size ratio 0.94; VT: call graph (callgraph.py)
+Xbox callers up to a shared name: RParticleSystem::Update@a1f00 | FUN_000a1c60@a1c60 <- Shell::ApplyWorldEffects@749b0
+PS2 callers up to a shared name:  RParticleSystem::Update@1e65c0 | RParticleSystemManager::CreateParticles@1e6330 <- Shell::ApplyWorldEffects@19d5a8
+Xbox callees: FUN_000f3990, FUN_00114e40, GetCurrentViewPort, VU0_v3add, VU0_v4scale, __ftol2, atan_turns
+PS2 callees:  FUN_00297480, GetCurrentViewPort, TransformPoint, atan2f
+--- Xbox
+void __thiscall
+FUN_000aadc0(float *param_1_00,float *param_1,float *param_2,int param_3,undefined4 *param_4,
+            float *param_5,float *param_6,float param_7,float param_8)
+{
+  float fVar1;
+  char cVar2;
+  uint uVar3;
+  undefined4 uVar4;
+  byte bVar5;
+  float *pfVar6;
+  float10 fVar7;
+  ulonglong uVar8;
+  undefined1 local_95;
+  float *local_94;
+  float local_90;
+  float local_74;
+  undefined4 local_70;
+  undefined4 local_6c;
+  undefined4 local_68;
+  undefined4 local_60;
+  undefined4 local_5c;
+  undefined4 local_58;
+  undefined1 local_50 [16];
+  undefined4 local_40;
+  undefined4 local_3c;
+  undefined4 local_38;
+  float local_30;
+  float local_2c;
+  float local_28;
+  undefined4 local_24;
+    ...
+--- PS2
+void RParticleSystem::RParticle::ResetParticle
+               (float param_1,float param_2,float *param_3,uint param_4,float *param_5,int param_6,
+               uint param_7,long param_8,float *param_9)
+{
+  undefined1 *puVar1;
+  char cVar2;
+  uint uVar3;
+  undefined4 uVar4;
+  undefined4 uVar5;
+  undefined4 uVar6;
+  ulong *puVar7;
+  undefined1 auVar8 [16];
+  byte bVar9;
+  int iVar10;
+  MATRIX4 *pMVar11;
+  ulong in_v0;
+  ulong uVar12;
+  undefined1 uVar13;
+  uint uVar14;
+  float *pfVar15;
+  float fVar16;
+  float fVar17;
+  float fVar18;
+  float fVar19;
+  undefined1 auVar20 [16];
+  undefined1 auVar21 [16];
+  undefined1 auVar22 [16];
+  undefined1 local_100 [16];
+  undefined1 local_f0 [8];
+  undefined4 uStack_e8;
+    ...
+
+====================================================================================================

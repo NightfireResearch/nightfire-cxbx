@@ -1,0 +1,1506 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00011020",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00011030",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00011650",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000116a0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00012140",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x000121f0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00012610",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00012c30",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00012ca0",
+   "return": "ActActor *",
+   "return_only": true
+  },
+  {
+   "address": "0x00012ec0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00014700",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00014bf0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00015770",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00018550",
+   "return": "ActPoser *",
+   "return_only": true
+  },
+  {
+   "address": "0x00019580",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000198b0",
+   "return": "ActSkeleton *",
+   "return_only": true
+  },
+  {
+   "address": "0x00019c60",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0001abd0",
+   "return": "ActWeapon *",
+   "return_only": true
+  },
+  {
+   "address": "0x0001acc0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0001adc0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0001bfa0",
+   "return": "ABaseSound *",
+   "return_only": true
+  },
+  {
+   "address": "0x0001c0c0",
+   "return": "ACharacter *",
+   "return_only": true
+  },
+  {
+   "address": "0x0001c1d0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0001c5b0",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x0001c870",
+   "return": "AICharacter *",
+   "return_only": true
+  },
+  {
+   "address": "0x0001cbb0",
+   "return": "AICharacterBond *",
+   "return_only": true
+  },
+  {
+   "address": "0x0001cbf0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0001d640",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0001dc50",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x0001dc80",
+   "return": "AICharacterEnemyGround *",
+   "return_only": true
+  },
+  {
+   "address": "0x0001dea0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0001fc70",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00020970",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00020ec0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00021d40",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000227a0",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00022820",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00022830",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x00023670",
+   "return": "AICharacterPassenger *",
+   "return_only": true
+  },
+  {
+   "address": "0x000236c0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00023bc0",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00023f50",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00028190",
+   "return": "AIElementController *",
+   "return_only": true
+  },
+  {
+   "address": "0x0002bd40",
+   "return": "AIGroundVehicle *",
+   "return_only": true
+  },
+  {
+   "address": "0x0002be70",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0002dc90",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x000321d0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00032a20",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00032a60",
+   "return": "AIHelicopter *",
+   "return_only": true
+  },
+  {
+   "address": "0x000357b0",
+   "return": "AIVehicle *",
+   "return_only": true
+  },
+  {
+   "address": "0x00035b40",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0004f170",
+   "return": "ActionData *",
+   "return_only": true
+  },
+  {
+   "address": "0x0004f1b0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0004f220",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x0004f2d0",
+   "return": "ActionQueueRing *",
+   "return_only": true
+  },
+  {
+   "address": "0x00050160",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x000507a0",
+   "return": "InputTable *",
+   "return_only": true
+  },
+  {
+   "address": "0x000507c0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00050860",
+   "return": "InputToAction *",
+   "return_only": true
+  },
+  {
+   "address": "0x000509c0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00050e80",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00057a40",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000582c0",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00059090",
+   "return": "AttributeSystem *",
+   "return_only": true
+  },
+  {
+   "address": "0x000592d0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0005cc80",
+   "return": "SimRandom *",
+   "return_only": true
+  },
+  {
+   "address": "0x0005d4f0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0005dc60",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0005dd90",
+   "return": "Human *",
+   "return_only": true
+  },
+  {
+   "address": "0x0005e180",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0005e480",
+   "return": "Mine *",
+   "return_only": true
+  },
+  {
+   "address": "0x0005f350",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0005f600",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0005f640",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00060b60",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00062ec0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00062f50",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00065c70",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00065ef0",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00065f00",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x00065f80",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00065f90",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00065fb0",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x00065fd0",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00066070",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00066080",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0006d8f0",
+   "return": "PHelicopter *",
+   "return_only": true
+  },
+  {
+   "address": "0x0006e290",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0006f240",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x0006f270",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x0006f450",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x0006f470",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0006f5b0",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x0006f680",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0006f900",
+   "return": "PVehicle *",
+   "return_only": true
+  },
+  {
+   "address": "0x00071050",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00071960",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00073150",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00073600",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00074660",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00074770",
+   "return": "Shell *",
+   "return_only": true
+  },
+  {
+   "address": "0x00075300",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00078430",
+   "return": "RCamera *",
+   "return_only": true
+  },
+  {
+   "address": "0x00078500",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0007a9b0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0007acd0",
+   "return": "RCameraSpline *",
+   "return_only": true
+  },
+  {
+   "address": "0x0007c380",
+   "return": "RDirectorQueue *",
+   "return_only": true
+  },
+  {
+   "address": "0x0007c3b0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0007d2a0",
+   "return": "RRenderer *",
+   "return_only": true
+  },
+  {
+   "address": "0x0007d670",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0007d930",
+   "return": "RFog *",
+   "return_only": true
+  },
+  {
+   "address": "0x0007e430",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x0007e8c0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0007f010",
+   "return": "RLightManager *",
+   "return_only": true
+  },
+  {
+   "address": "0x0007fed0",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x000816e0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00081ad0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00081bf0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00089060",
+   "return": "RPlayerCamera *",
+   "return_only": true
+  },
+  {
+   "address": "0x00089df0",
+   "return": "RPlayerCamState *",
+   "return_only": true
+  },
+  {
+   "address": "0x0008c090",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0008c210",
+   "return": "RRenderHigh *",
+   "return_only": true
+  },
+  {
+   "address": "0x0008db30",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0008db40",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0008dce0",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x0008eec0",
+   "return": "RSceneObj *",
+   "return_only": true
+  },
+  {
+   "address": "0x000905a0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00092f50",
+   "return": "RStateManager *",
+   "return_only": true
+  },
+  {
+   "address": "0x000930a0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00093dd0",
+   "return": "RTextureContext *",
+   "return_only": true
+  },
+  {
+   "address": "0x00095290",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000953e0",
+   "return": "RVehicle *",
+   "return_only": true
+  },
+  {
+   "address": "0x000959f0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00095c60",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00096060",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00096430",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00096820",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00096830",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00096ae0",
+   "return": "RViewCamera *",
+   "return_only": true
+  },
+  {
+   "address": "0x000975d0",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x000979f0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00097a90",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00098070",
+   "return": "RWorldCamera *",
+   "return_only": true
+  },
+  {
+   "address": "0x000982a0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00098b60",
+   "return": "void *",
+   "return_only": true
+  },
+  {
+   "address": "0x000994c0",
+   "return": "RReflection *",
+   "return_only": true
+  },
+  {
+   "address": "0x00099590",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0009a420",
+   "return": "RColorize *",
+   "return_only": true
+  },
+  {
+   "address": "0x0009a4f0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0009acf0",
+   "return": "RDecalManager *",
+   "return_only": true
+  },
+  {
+   "address": "0x0009b3c0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0009dc90",
+   "return": "REmpBolts *",
+   "return_only": true
+  },
+  {
+   "address": "0x0009de00",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0009dfe0",
+   "return": "RGain *",
+   "return_only": true
+  },
+  {
+   "address": "0x0009f4c0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0009f840",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x0009fec0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000a02e0",
+   "return": "RLightning *",
+   "return_only": true
+  },
+  {
+   "address": "0x000a0a50",
+   "return": "RMissileCam *",
+   "return_only": true
+  },
+  {
+   "address": "0x000a0df0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000a1460",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000a1ec0",
+   "return": "ActionRef *",
+   "return_only": true
+  },
+  {
+   "address": "0x000a2f00",
+   "return": "RParticleSystemManager *",
+   "return_only": true
+  },
+  {
+   "address": "0x000a31e0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000a3240",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000a3f30",
+   "return": "RParticulate *",
+   "return_only": true
+  },
+  {
+   "address": "0x000a49a0",
+   "return": "RPostProcessing *",
+   "return_only": true
+  },
+  {
+   "address": "0x000a4f70",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000a5a50",
+   "return": "void *",
+   "return_only": true
+  },
+  {
+   "address": "0x000a5ac0",
+   "return": "RShadowMap *",
+   "return_only": true
+  },
+  {
+   "address": "0x000a5c10",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000a6810",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000a69a0",
+   "return": "RSniperZoom *",
+   "return_only": true
+  },
+  {
+   "address": "0x000a6de0",
+   "return": "RVehicleParticle *",
+   "return_only": true
+  },
+  {
+   "address": "0x000a79f0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000a8430",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000a9c70",
+   "return": "RGlareManager *",
+   "return_only": true
+  },
+  {
+   "address": "0x000a9ed0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000abfc0",
+   "return": "RTyreTrack *",
+   "return_only": true
+  },
+  {
+   "address": "0x000adc80",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000b1e10",
+   "return": "SimpleRigidBody *",
+   "return_only": true
+  },
+  {
+   "address": "0x000b1e90",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000b1fe0",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x000b2620",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000b2c40",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x000b47a0",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x000b4fe0",
+   "return": "Simulation *",
+   "return_only": true
+  },
+  {
+   "address": "0x000b5310",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000b7290",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x000b72c0",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x000b8c30",
+   "return": "SMissionManager *",
+   "return_only": true
+  },
+  {
+   "address": "0x000b8e70",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000b9060",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000b96a0",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x000b9ce0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000bad40",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000bb220",
+   "return": "SWeaponManager *",
+   "return_only": true
+  },
+  {
+   "address": "0x000be180",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000c5460",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000c5500",
+   "return": "WCollisionMgr *",
+   "return_only": true
+  },
+  {
+   "address": "0x000c56d0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000c57b0",
+   "return": "WGrid *",
+   "return_only": true
+  },
+  {
+   "address": "0x000c7a50",
+   "return": "WRender *",
+   "return_only": true
+  },
+  {
+   "address": "0x000ca090",
+   "return": "WRoadNav *",
+   "return_only": true
+  },
+  {
+   "address": "0x000ca100",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000cd5a0",
+   "return": "WSoundGroup *",
+   "return_only": true
+  },
+  {
+   "address": "0x000cd630",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000cd660",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000cd920",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000d1230",
+   "return": "WWorld *",
+   "return_only": true
+  },
+  {
+   "address": "0x000d1610",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000d2fd0",
+   "return": "WWorldPos *",
+   "return_only": true
+  },
+  {
+   "address": "0x000d44b0",
+   "return": "GFXGallery *",
+   "return_only": true
+  },
+  {
+   "address": "0x000d5170",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000d5ad0",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x000d5b00",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x000d5d20",
+   "return": "GGallery *",
+   "return_only": true
+  },
+  {
+   "address": "0x000d6e30",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000d7c20",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000d7d50",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x000d7d60",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000d7d90",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x000d8810",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000dab50",
+   "return": "GHud *",
+   "return_only": true
+  },
+  {
+   "address": "0x000dc420",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000e3190",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x000e34e0",
+   "return": "GSubtitles *",
+   "return_only": true
+  },
+  {
+   "address": "0x000e3730",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000e49a0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000e4a10",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x000e50c0",
+   "return": "EAGL::Device *",
+   "return_only": true
+  },
+  {
+   "address": "0x000e50e0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000e6380",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000e6a60",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000e6aa0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000e8600",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000e8740",
+   "return": "EAGL::RenderContext *",
+   "return_only": true
+  },
+  {
+   "address": "0x000e8ff0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000e9760",
+   "return": "EAGL::DynamicModel *",
+   "return_only": true
+  },
+  {
+   "address": "0x000e9a80",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000ea720",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000f19a0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000f35a0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000f3600",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000f3620",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000f5c30",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000f70b0",
+   "return": "EAGLAnim::FnCompoundChannel *",
+   "return_only": true
+  },
+  {
+   "address": "0x000f72e0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000faa80",
+   "return": "EAGLAnim::FnAnimMemoryMap *",
+   "return_only": true
+  },
+  {
+   "address": "0x000faaa0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000fab60",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000fe280",
+   "return": "EAGLAnim::FnDeltaF1 *",
+   "return_only": true
+  },
+  {
+   "address": "0x000ff210",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x000ff280",
+   "return": "EAGLAnim::FnDeltaF3 *",
+   "return_only": true
+  },
+  {
+   "address": "0x00100910",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x001033b0",
+   "return": "EAGLAnim::FnDeltaQ *",
+   "return_only": true
+  },
+  {
+   "address": "0x001033f0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x001042d0",
+   "return": "EAGLAnim::FnTurnBlender *",
+   "return_only": true
+  },
+  {
+   "address": "0x00104310",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00105000",
+   "return": "EAGLAnim::FnRunBlender *",
+   "return_only": true
+  },
+  {
+   "address": "0x00105050",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00105670",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00105e00",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00119f50",
+   "return": "StringToNumber *",
+   "return_only": true
+  },
+  {
+   "address": "0x0011a020",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0011b580",
+   "return": "USymbolTable *",
+   "return_only": true
+  },
+  {
+   "address": "0x0011c6f0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0011c750",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x0011ca90",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x0011da20",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0011dd30",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0011e2e0",
+   "return": "AVehicle *",
+   "return_only": true
+  },
+  {
+   "address": "0x00120a10",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00121f40",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x00121f50",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x00121f60",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x00121f70",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x00121f80",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x00122020",
+   "return": "float",
+   "return_only": true
+  },
+  {
+   "address": "0x00122370",
+   "return": "AStream *",
+   "return_only": true
+  },
+  {
+   "address": "0x00122450",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00123c50",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00125ef0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x00127a40",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0012a890",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0012b5f0",
+   "return": "ASnowMobile *",
+   "return_only": true
+  },
+  {
+   "address": "0x0012b960",
+   "return": "ASubmersible *",
+   "return_only": true
+  },
+  {
+   "address": "0x0012be30",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0012c7f0",
+   "return": "AHelicopter *",
+   "return_only": true
+  },
+  {
+   "address": "0x0012c930",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0012cac0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0012cb90",
+   "return": "ATrafficVehicle *",
+   "return_only": true
+  },
+  {
+   "address": "0x0012ce10",
+   "return": "bool",
+   "return_only": true
+  },
+  {
+   "address": "0x0012d300",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0012e190",
+   "return": "ASceneObj *",
+   "return_only": true
+  },
+  {
+   "address": "0x0012e1e0",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0012edd0",
+   "return": "AEngine *",
+   "return_only": true
+  },
+  {
+   "address": "0x0012fa40",
+   "return": "ABasic *",
+   "return_only": true
+  },
+  {
+   "address": "0x0012fb80",
+   "return": "void",
+   "return_only": true
+  },
+  {
+   "address": "0x0012fc30",
+   "return": "void",
+   "return_only": true
+  }
+ ]
+}

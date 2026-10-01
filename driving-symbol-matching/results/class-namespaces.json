@@ -1,0 +1,670 @@
+{
+ "Driving.xbe": [
+  {
+   "path": "ABasic",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterEnemy",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterEnemyGround",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterEnemySSnow",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterEnemySnow",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AICharacterEnemyWindow",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AIGroundVehicle",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AISplinePath",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ALimitedSound",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AOneShotSound",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ASmackable",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ASound",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "AVehicleWind",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "AZoomObj",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActGlobalPoseOverrideArray",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActIKSolverArray",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "ActionData",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "AnimationController",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "CARP::AISpline",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "CARP::BaseDesc",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "CARP::Instance",
+   "evidence": [
+    "type_info"
+   ]
+  },
+  {
+   "path": "CARP::PathInfo",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "EAGL::DrawArray",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::DrawGouraud",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::DrawTextured",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::GeoPrimStateExtension",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::ProfilerRegion",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::ProfilerRegion::History",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "EAGL::RenderContextExtension",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGL::TextureRenderContextExtension",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGLAnim::DeltaQFastPhysical",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnDeltaChan",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLAnim::FnKeyDeltaChan",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "EAGLInternal::DevicePrivate",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "EAGLInternal::RenderContextPrivate",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "EAGLInternal::TextureRenderContextPrivate",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "EAGLInternal::ViewPortPrivate",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "EAGLNamespace",
+   "evidence": [
+    "const method",
+    "constructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ECameraLockOn",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "GFXGallery",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "GGirlieMaterial",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "GOrthoHudView",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "GSubtitleSplitter",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "InputDevice",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "Mine",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "OBB",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RAutonomousObj",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RCMP::CHUNK",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "RCMP::CODEC_IDATA",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "RCMP::DECODER",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RCMP::RCMP_SYSTEM",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RDebrisType",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RDirectorQueueData",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RLightning::Bolt",
+   "evidence": [
+    "destructor"
+   ]
+  },
+  {
+   "path": "RMovableParticleSystem",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "ROffscreenBuffer",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "RParticleSystem",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RParticleSystem::RParticleCreator",
+   "evidence": [
+    "constructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RPathEngine::RPathHandle",
+   "evidence": [
+    "const method",
+    "constructor"
+   ]
+  },
+  {
+   "path": "RPlayerViewCamera",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "RRenderWorldCulling",
+   "evidence": [
+    "constructor"
+   ]
+  },
+  {
+   "path": "RShadowMap::ShadowPrivateData",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "SRuleAlways",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleAmmo",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleCollision",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleDamage",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleDeath",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleDifficulty",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleHealth",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRulePIP",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRulePlayerDir",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleProg",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleProgCounter",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleProperty",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleSpeed",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "SRuleTimer",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "TextFile",
+   "evidence": [
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "UCharNamespace",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "USingleton",
+   "evidence": [
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "WCollider",
+   "evidence": [
+    "const method",
+    "constructor",
+    "destructor"
+   ]
+  },
+  {
+   "path": "WCollisionInstance",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "WCollisionObject",
+   "evidence": [
+    "const method"
+   ]
+  },
+  {
+   "path": "WSound",
+   "evidence": [
+    "constructor",
+    "destructor",
+    "type_info",
+    "vtable"
+   ]
+  },
+  {
+   "path": "WVisCurtain",
+   "evidence": [
+    "constructor"
+   ]
+  }
+ ],
+ "DRIVING.ELF": []
+}

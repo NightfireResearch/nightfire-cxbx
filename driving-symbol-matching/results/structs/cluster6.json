@@ -1,0 +1,943 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "AIVehicle",
+   "size": 128,
+   "fields": [
+    {
+     "offset": 16,
+     "type": "int",
+     "name": "vehicleType",
+     "comment": "high: ctor 357b0 and dtor 35b90 write +0x10=0; PS2 GetVehicleType 13e3d8 lw 0x0(a0) (PS2 +0x0; vptr last on PS2)"
+    },
+    {
+     "offset": 20,
+     "type": "PhysicsObject *",
+     "name": "physicsObject",
+     "comment": "high: GetPhysicsObject 35840 returns [ecx+0x14], SetPhysicsObject 35850; GetPosition passes it to PhysicsObject::GetPosition; PS2 +0x4"
+    },
+    {
+     "offset": 32,
+     "type": "MATRIX4",
+     "name": "rotPos",
+     "comment": "high: ctor 357b0 copies 0x10 dwords from 0x1d4c10 (identity) to this+0x20; GetRotPos 35a20 builds it at this+0x20; GetPosition 359e0 writes its translation row +0x50/54/58 and returns this+0x50; PS2 +0x10 (ctor sd 0x10..0x48, GetPosition +0x40). Name"
+    },
+    {
+     "offset": 96,
+     "type": "void *",
+     "name": "splinePath",
+     "comment": "high: AISplinePath* (new'd in SetSplinePath 35860, ~AISplinePath in dtor); GetSplinePath 359d0 returns it; PS2 +0x50 (GetSplinePath 13e0b0)"
+    },
+    {
+     "offset": 100,
+     "type": "WRoadNav *",
+     "name": "driveToNav",
+     "comment": "high: ctor FastAlloc 0xc0 + WRoadNav::WRoadNav stored at +0x64; dtor ~WRoadNav + FastFree 0xc0; PS2 +0x54 GetDriveToNav"
+    },
+    {
+     "offset": 104,
+     "type": "bool",
+     "name": "active",
+     "comment": "high: ctor/dtor write byte 0; PS2 +0x58 Set/IsActive(bool) (4-byte bool on PS2)"
+    },
+    {
+     "offset": 105,
+     "type": "bool",
+     "name": "validCommand",
+     "comment": "medium: byte R/W in AIHelicopter/AIGroundVehicle Reset/EngageSplinePath/Update; PS2 +0x5c Set/ValidCommand(bool), touched by the same PS2 methods"
+    },
+    {
+     "offset": 108,
+     "type": "int",
+     "name": "controllerIdx",
+     "comment": "medium: written by AIHelicopter::Reset 32280 and AIGroundVehicle::Reset 29d60; PS2 +0x60 Get/SetControllerIdx(int), also written by the PS2 Resets"
+    }
+   ],
+   "comment": "AI vehicle controller base (5-slot vtable). Xbox: vptr +0, padded to 16 (class is 16-aligned for the MATRIX4), own fields from +0x10; PS2 vptr LAST at +0x6c (ctor/dtor sw), fields from +0. Net PS2->Xbox shift +0x10. Size 0x80 from FastFree in deleting dtor 35b90 (the 0xc0 FastFree is the owned WRoadNav)."
+  },
+  {
+   "name": "AIHelicopter",
+   "size": 320,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AIVehicle",
+     "name": "super_AIVehicle"
+    },
+    {
+     "offset": 128,
+     "type": "int",
+     "name": "type",
+     "comment": "medium: AIHelicopter::EType; PS2 +0x70 Get/SetType; Xbox accessors inlined (no hit), placed by the uniform +0x10 PS2->Xbox shift"
+    },
+    {
+     "offset": 132,
+     "type": "int",
+     "name": "navigateMode",
+     "comment": "high: AICommandType::ENavigate; 6 methods (Engage/DisengageSplinePath, ManeuverToPos, ControlMoveState...); PS2 +0x74 Get/SetNavigateMode"
+    },
+    {
+     "offset": 136,
+     "type": "int",
+     "name": "targetMode",
+     "comment": "medium: AICommandType::ETarget; NewState/Reset/Update; PS2 +0x78 Get/SetTargetMode"
+    },
+    {
+     "offset": 140,
+     "type": "int",
+     "name": "attackMode",
+     "comment": "high: AICommandType::EAttackMode; FireBullets, DoAgentLogic...; PS2 +0x7c Get/SetAttackMode"
+    },
+    {
+     "offset": 144,
+     "type": "float",
+     "name": "unknown90",
+     "comment": "low: W in NewState/Reset; PS2 +0x80 float R/W (ControlMoveState) (name invented)"
+    },
+    {
+     "offset": 148,
+     "type": "float",
+     "name": "unknown94",
+     "comment": "low: W in NewState/Reset; PS2 +0x84 float R/W (ControlMoveState) (name invented)"
+    },
+    {
+     "offset": 152,
+     "type": "WTargetable *",
+     "name": "targetBeacon",
+     "comment": "high: ctor 32a60 zeroes it; Enable/DisableTargetBeacon; passed to WTargetable::RemoveReference; PS2 +0x88 GetTargetBeacon"
+    },
+    {
+     "offset": 156,
+     "type": "WRoadNav *",
+     "name": "roadNav",
+     "comment": "high: ctor 32a60 FastAlloc 0xc0 + WRoadNav ctor -> +0x9c; ManeuverToPos InitAtPoint; ~WRoadNav in dtor; PS2 +0x8c (name invented)"
+    },
+    {
+     "offset": 160,
+     "type": "COORD3",
+     "name": "attackedPosition",
+     "comment": "high: LEA +0xa0 in NewState/Reset; PS2 +0x90 (sd 0x90 + sw 0x98) SetAttackedPosition(COORD3&)"
+    },
+    {
+     "offset": 172,
+     "type": "AIGroundVehicle *",
+     "name": "primaryTarget",
+     "comment": "high: passed to AIVehicle::GetPhysicsObject; PS2 +0x9c Get/SetPrimaryTarget(AIGroundVehicle*)"
+    },
+    {
+     "offset": 176,
+     "type": "COORD3",
+     "name": "targetPosition",
+     "comment": "high: LEA +0xb0 DoAgentLogic/NewState/Update; PS2 +0xa0 (sd a0 + sw a8) SetTargetPosition(COORD3&)"
+    },
+    {
+     "offset": 188,
+     "type": "float",
+     "name": "unknownBc",
+     "comment": "low: W in Reset; PS2 +0xac float R/W (name invented)"
+    },
+    {
+     "offset": 192,
+     "type": "COORD3",
+     "name": "directionToTarget",
+     "comment": "medium: LEA +0xc0 in GetDirectionToTarget 31910/Reset; PS2 +0xb0 (sd b0 + sw b8) (name invented)"
+    },
+    {
+     "offset": 204,
+     "type": "float",
+     "name": "unknownCc",
+     "comment": "low: float W NewState/Reset; PS2 +0xbc float (name invented)"
+    },
+    {
+     "offset": 208,
+     "type": "COORD3",
+     "name": "unknownD0",
+     "comment": "low: LEA +0xd0 NewState/Reset; PS2 +0xc0 (sd c0, c4) (name invented)"
+    },
+    {
+     "offset": 220,
+     "type": "int",
+     "name": "unknownDc",
+     "comment": "low: W Reset; PS2 +0xcc (name invented)"
+    },
+    {
+     "offset": 224,
+     "type": "char",
+     "name": "unknownE0",
+     "comment": "low: byte W Reset; PS2 +0xd0 byte (name invented)"
+    },
+    {
+     "offset": 225,
+     "type": "char",
+     "name": "unknownE1",
+     "comment": "low: byte W Reset; PS2 +0xd1 (name invented)"
+    },
+    {
+     "offset": 226,
+     "type": "char",
+     "name": "unknownE2",
+     "comment": "low: byte W Reset; PS2 +0xd2 (name invented)"
+    },
+    {
+     "offset": 227,
+     "type": "char",
+     "name": "unknownE3",
+     "comment": "low: byte W Reset; PS2 +0xd3 (name invented)"
+    },
+    {
+     "offset": 228,
+     "type": "short",
+     "name": "unknownE4",
+     "comment": "low: short W Reset; PS2 +0xd4 short (name invented)"
+    },
+    {
+     "offset": 230,
+     "type": "char",
+     "name": "unknownE6",
+     "comment": "low: byte ManeuverToPos/NewState/Reset; PS2 +0xd6 (name invented)"
+    },
+    {
+     "offset": 231,
+     "type": "char",
+     "name": "unknownE7",
+     "comment": "low: byte W Reset; PS2 +0xd7 (name invented)"
+    },
+    {
+     "offset": 232,
+     "type": "int",
+     "name": "unknownE8",
+     "comment": "low: W NewState/Reset; PS2 +0xd8 (name invented)"
+    },
+    {
+     "offset": 236,
+     "type": "char",
+     "name": "unknownEc",
+     "comment": "low: byte FireBullets/NewState/Reset; PS2 +0xdc (name invented)"
+    },
+    {
+     "offset": 237,
+     "type": "char",
+     "name": "unknownEd",
+     "comment": "low: byte NewState/Reset; PS2 +0xdd (name invented)"
+    },
+    {
+     "offset": 238,
+     "type": "char",
+     "name": "proximityDestructFlag",
+     "comment": "low: byte DoProximityDestruct/Reset; PS2 +0xde (name invented)"
+    },
+    {
+     "offset": 256,
+     "type": "COORD3",
+     "name": "heliBulletDir",
+     "comment": "high: LEA +0x100 Reset; PS2 +0xf0 floats (FireRockets) GetHeliBulletDir"
+    },
+    {
+     "offset": 268,
+     "type": "char",
+     "name": "unknown10c",
+     "comment": "low: byte W Reset; PS2 +0xfc (name invented)"
+    },
+    {
+     "offset": 269,
+     "type": "char",
+     "name": "unknown10d",
+     "comment": "low: byte DoAgentLogic/Reset; PS2 +0xfd (name invented)"
+    },
+    {
+     "offset": 270,
+     "type": "char",
+     "name": "unknown10e",
+     "comment": "low: byte Reset; PS2 +0xfe (FireBullets) (name invented)"
+    },
+    {
+     "offset": 272,
+     "type": "short",
+     "name": "bulletCount",
+     "comment": "low: short FireBullets/NewState/Reset; PS2 +0x100 (name invented)"
+    },
+    {
+     "offset": 274,
+     "type": "short",
+     "name": "rocketCount",
+     "comment": "low: short FireRockets/NewState/Reset; PS2 +0x102 (name invented)"
+    },
+    {
+     "offset": 288,
+     "type": "COORD3",
+     "name": "heliTargetPosition",
+     "comment": "high: LEA +0x120 Reset; PS2 +0x110 (sd 110 + sw 118) GetHeliTargetPosition, FireBullets"
+    },
+    {
+     "offset": 300,
+     "type": "float",
+     "name": "unknown12c",
+     "comment": "low: float W NewState/Reset; PS2 +0x11c float (name invented)"
+    },
+    {
+     "offset": 304,
+     "type": "float",
+     "name": "fireTimer",
+     "comment": "low: float FireBullets/FireRockets/NewState/Reset; PS2 +0x120 float (name invented)"
+    }
+   ],
+   "comment": "Derived from AIVehicle; own fields from Xbox +0x80 (PS2 +0x70), uniform +0x10 shift (no bool packing: all flags are 1-byte on both). Size 0x140 from deleting dtor 35df0."
+  },
+  {
+   "name": "AIGroundVehicle",
+   "size": 624,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AIVehicle",
+     "name": "super_AIVehicle"
+    },
+    {
+     "offset": 128,
+     "type": "int",
+     "name": "type",
+     "comment": "high: AIGroundVehicle::EType; ctor 2bd40 zeroes it, 11 methods; PS2 +0x70 Get/SetType"
+    },
+    {
+     "offset": 132,
+     "type": "AIVehicle *",
+     "name": "linkedVehicle",
+     "comment": "low: R/W DoAgentStateUpdate/Reset; PS2 +0x74 passed to AIVehicle::GetPhysicsObject (name invented)"
+    },
+    {
+     "offset": 136,
+     "type": "int",
+     "name": "navigateMode",
+     "comment": "high: SetNavigateMode 2a0d0; PS2 +0x78 GetNavigateMode"
+    },
+    {
+     "offset": 140,
+     "type": "int",
+     "name": "unknown8c",
+     "comment": "low: W DoAgentStateUpdate; PS2 +0x7c (name invented)"
+    },
+    {
+     "offset": 144,
+     "type": "int",
+     "name": "targetMode",
+     "comment": "high: SetTargetMode 2a2c0, GetTargetPos 2a3c0; PS2 +0x80 GetTargetMode"
+    },
+    {
+     "offset": 148,
+     "type": "int",
+     "name": "attackMode",
+     "comment": "high: SetAttackMode etc; PS2 +0x84 Get/SetAttackMode"
+    },
+    {
+     "offset": 152,
+     "type": "void *",
+     "name": "aiCommand",
+     "comment": "high: CARP::AICommand*; W Reset; PS2 +0x88 Get/SetAICommand"
+    },
+    {
+     "offset": 156,
+     "type": "float",
+     "name": "unknown9c",
+     "comment": "low: float DoAttackMode/Reset; PS2 +0x8c float (name invented)"
+    },
+    {
+     "offset": 160,
+     "type": "short",
+     "name": "unknownA0",
+     "comment": "low: short DoTrafficStateUpdate/Reset/UnSpawn; PS2 +0x90 (name invented)"
+    },
+    {
+     "offset": 164,
+     "type": "int",
+     "name": "updateState",
+     "comment": "high: EUpdateState; 8 methods; PS2 +0x94 Get/SetUpdateState (137f68 lw 0x94)"
+    },
+    {
+     "offset": 168,
+     "type": "uchar[64]",
+     "name": "laneWeights",
+     "comment": "low: LEA +0xa8 Reset; PS2 +0x98 addr-taken in Get*LaneWeights/GetBestWeightedLane with byte writes up to +0xd7; length from extent to laneWeightWidth (name invented)"
+    },
+    {
+     "offset": 232,
+     "type": "uchar",
+     "name": "laneWeightWidth",
+     "comment": "high: byte GetBestWeightedLane/Reset; PS2 +0xd8 Get/SetLaneWeightWidth(unsigned char)"
+    },
+    {
+     "offset": 233,
+     "type": "bool",
+     "name": "collisionInfoFlag",
+     "comment": "low: BarriersInPath 2aaf0 reads/clears byte +0xe9; PS2 +0xdc (4 bytes) Add/ClearCollisionInfo (name invented)"
+    },
+    {
+     "offset": 234,
+     "type": "char",
+     "name": "collisionInfoCount",
+     "comment": "low: BarriersInPath compares byte +0xea with 6; PS2 +0xe0 byte AddCollisionInfo/BarriersInPath (name invented)"
+    },
+    {
+     "offset": 235,
+     "type": "bool",
+     "name": "unknownEb",
+     "comment": "low: byte DoTrafficStateUpdate/Reset/Spawn; PS2 +0xe4 (4 bytes, same methods) (name invented)"
+    },
+    {
+     "offset": 236,
+     "type": "int",
+     "name": "collNavStamp1",
+     "comment": "low: GetCollNav 2b210 reads then writes +0xec; PS2 +0xe8 (sd, 8 bytes) (name invented)"
+    },
+    {
+     "offset": 240,
+     "type": "WRoadNav *",
+     "name": "collNav1",
+     "comment": "high: ctor 2bd40 FastAlloc 0xc0 + WRoadNav; GetCollNav may return it; PS2 +0xf0 (name invented)"
+    },
+    {
+     "offset": 244,
+     "type": "int",
+     "name": "collNavStamp2",
+     "comment": "low: GetCollNav reads/writes +0xf4; PS2 +0xf8 (sd) (name invented)"
+    },
+    {
+     "offset": 248,
+     "type": "WRoadNav *",
+     "name": "collNav2",
+     "comment": "high: ctor WRoadNav; GetCollNav InitAtPoint/ReverseNavDirection; PS2 +0x100 (name invented)"
+    },
+    {
+     "offset": 252,
+     "type": "int",
+     "name": "heliCollNavStamp",
+     "comment": "low: GetHeliCollNav 2b0c0 reads/writes +0xfc; PS2 +0x108 (sd) (name invented)"
+    },
+    {
+     "offset": 256,
+     "type": "WRoadNav *",
+     "name": "heliCollNav",
+     "comment": "high: ctor WRoadNav; GetHeliCollNav returns [esi+0x100]; PS2 +0x110 (name invented)"
+    },
+    {
+     "offset": 260,
+     "type": "WRoadNav *",
+     "name": "agentNav",
+     "comment": "medium: ctor WRoadNav; DoAgentStateUpdate InitAtPoint; PS2 +0x114 (name invented)"
+    },
+    {
+     "offset": 264,
+     "type": "char",
+     "name": "isSub",
+     "comment": "high: byte DriveToPoint/UpdateNavPos; PS2 +0x118 Get/SetIsSub(char)"
+    },
+    {
+     "offset": 265,
+     "type": "char",
+     "name": "useCeilingFloor",
+     "comment": "high: byte DriveToPoint(Sub); PS2 +0x119 SetUseCeilingFloor(char)"
+    },
+    {
+     "offset": 268,
+     "type": "float",
+     "name": "ceiling",
+     "comment": "high: float DriveToPoint/Reset; PS2 +0x11c SetCeiling(float)"
+    },
+    {
+     "offset": 272,
+     "type": "float",
+     "name": "floor",
+     "comment": "high: float; PS2 +0x120 SetFloor(float)"
+    },
+    {
+     "offset": 276,
+     "type": "float",
+     "name": "unknown114",
+     "comment": "low: float DriveToPoint/Reset; PS2 +0x124 (SetNavigateMode) (name invented)"
+    },
+    {
+     "offset": 280,
+     "type": "float",
+     "name": "unknown118",
+     "comment": "low: float DriveToPoint/Reset; PS2 +0x128 (SetNavigateMode) (name invented)"
+    },
+    {
+     "offset": 284,
+     "type": "char",
+     "name": "hasTurret",
+     "comment": "high: byte DoWeaponUpdate/Reset; PS2 +0x12c Get/SetHasTurret"
+    },
+    {
+     "offset": 285,
+     "type": "char",
+     "name": "hasMachineGuns",
+     "comment": "high: PS2 +0x12d Get/SetHasMachineGuns; Xbox byte W Reset"
+    },
+    {
+     "offset": 286,
+     "type": "char",
+     "name": "hasRockets",
+     "comment": "high: PS2 +0x12e Get/SetHasRockets"
+    },
+    {
+     "offset": 287,
+     "type": "char",
+     "name": "hasMissiles",
+     "comment": "high: PS2 +0x12f Get/SetHasMissiles"
+    },
+    {
+     "offset": 288,
+     "type": "char",
+     "name": "accuracy",
+     "comment": "high: PS2 +0x130 Get/SetAccuracy (byte)"
+    },
+    {
+     "offset": 289,
+     "type": "char",
+     "name": "damage",
+     "comment": "high: PS2 +0x131 Get/SetDamage (byte)"
+    },
+    {
+     "offset": 292,
+     "type": "float",
+     "name": "recSpeedOffset",
+     "comment": "high: W Reset; PS2 +0x134 Get/SetRecSpeedOffset"
+    },
+    {
+     "offset": 296,
+     "type": "float",
+     "name": "speedLimit",
+     "comment": "high: PS2 +0x138 SetSpeedLimit(float)"
+    },
+    {
+     "offset": 300,
+     "type": "float",
+     "name": "speedScaler",
+     "comment": "high: PS2 +0x13c SetSpeedScaler(float)"
+    },
+    {
+     "offset": 304,
+     "type": "bool",
+     "name": "reversing",
+     "comment": "medium: byte DriveToPointSub/Reset; PS2 +0x140 (4-byte bool) GetReversing"
+    },
+    {
+     "offset": 308,
+     "type": "int",
+     "name": "unknown134",
+     "comment": "low: DoAgentStateUpdate/Reset; PS2 +0x144 (name invented)"
+    },
+    {
+     "offset": 312,
+     "type": "int",
+     "name": "unknown138",
+     "comment": "low: DoAgentStateUpdate/Reset; PS2 +0x148 (name invented)"
+    },
+    {
+     "offset": 316,
+     "type": "float",
+     "name": "ramFreq",
+     "comment": "high: float; PS2 +0x14c SetRamFreq(float)"
+    },
+    {
+     "offset": 320,
+     "type": "float",
+     "name": "leadScaler",
+     "comment": "high: PS2 +0x150 SetLeadScaler(float)"
+    },
+    {
+     "offset": 324,
+     "type": "char",
+     "name": "collAvoidance",
+     "comment": "high: byte; PS2 +0x154 SetCollAvoidance(char)"
+    },
+    {
+     "offset": 325,
+     "type": "char",
+     "name": "recordedGlue",
+     "comment": "high: byte W Reset; PS2 +0x158 SetRecordedGlue(char)"
+    },
+    {
+     "offset": 328,
+     "type": "int",
+     "name": "unknown148",
+     "comment": "low: DoAgentStateUpdate/DoAutoDriveUpdate; PS2 +0x15c (name invented)"
+    },
+    {
+     "offset": 332,
+     "type": "bool",
+     "name": "steeringDisabled",
+     "comment": "medium: byte W Reset; PS2 +0x160 Disable/Enable/DisabledSteering (name invented)"
+    },
+    {
+     "offset": 334,
+     "type": "short",
+     "name": "unknown14e",
+     "comment": "low: short DoAgentStateUpdate/DoPlayerLogic; PS2 +0x164 (name invented)"
+    },
+    {
+     "offset": 336,
+     "type": "bool",
+     "name": "beenInSmoke",
+     "comment": "high: byte; PS2 +0x168 GetBeenInSmoke"
+    },
+    {
+     "offset": 337,
+     "type": "bool",
+     "name": "beenInOil",
+     "comment": "high: byte; PS2 +0x16c GetBeenInOil"
+    },
+    {
+     "offset": 338,
+     "type": "char",
+     "name": "disabled",
+     "comment": "high: byte DoAttackMode/DoMoveMode/DoWeaponUpdate; PS2 +0x170 SetDisabled(char)"
+    },
+    {
+     "offset": 340,
+     "type": "int",
+     "name": "trackState",
+     "comment": "medium: PS2 +0x174 ResetTrackState (name invented)"
+    },
+    {
+     "offset": 344,
+     "type": "bool",
+     "name": "minSimUpdate",
+     "comment": "high: byte DriveToPointTraffic/Spawn/UpdateNavPos; PS2 +0x178 Get/SetMinSimUpdate"
+    },
+    {
+     "offset": 348,
+     "type": "COORD3",
+     "name": "minSimPos",
+     "comment": "high: LEA UpdateNavPos; PS2 +0x17c GetMinSimPos"
+    },
+    {
+     "offset": 360,
+     "type": "COORD3",
+     "name": "minSimDir",
+     "comment": "high: LEA UpdateNavPos; PS2 +0x188 GetMinSimDir"
+    },
+    {
+     "offset": 372,
+     "type": "bool",
+     "name": "unknown174",
+     "comment": "low: CheckTrafficCollision/UpdateNavPos; PS2 +0x194 (name invented)"
+    },
+    {
+     "offset": 373,
+     "type": "bool",
+     "name": "unknown175",
+     "comment": "low: CheckTrafficCollision; PS2 +0x198 (name invented)"
+    },
+    {
+     "offset": 374,
+     "type": "bool",
+     "name": "unknown176",
+     "comment": "low: CheckTrafficCollision/DriveToPointTraffic; PS2 +0x19c (name invented)"
+    },
+    {
+     "offset": 375,
+     "type": "bool",
+     "name": "forceFullUpdate",
+     "comment": "medium: byte Update/Reset; PS2 +0x1a0 ForceFullUpdate"
+    },
+    {
+     "offset": 376,
+     "type": "AIVehicle *",
+     "name": "primaryTarget",
+     "comment": "high: -> AIVehicle::GetPosition (GetTargetPos 2a3c0); PS2 +0x1a4 Set/GetPrimaryTarget (138160/138168)"
+    },
+    {
+     "offset": 380,
+     "type": "COORD3",
+     "name": "targetPos",
+     "comment": "high: GetTargetPos returns this+0x17c when no primaryTarget; SetTargetMode; PS2 +0x1a8"
+    },
+    {
+     "offset": 400,
+     "type": "COORD3",
+     "name": "unknown190",
+     "comment": "low: LEA DoAgentStateUpdate/DoAttackMode; PS2 +0x1c0 (name invented)"
+    },
+    {
+     "offset": 412,
+     "type": "bool",
+     "name": "unknown19c",
+     "comment": "low: PS2 +0x1cc (FireBullets/ResetTrackState) (name invented)"
+    },
+    {
+     "offset": 416,
+     "type": "float",
+     "name": "unknown1a0",
+     "comment": "low: float; PS2 +0x1d0 (name invented)"
+    },
+    {
+     "offset": 432,
+     "type": "COORD3",
+     "name": "unknown1b0",
+     "comment": "low: LEA UpdateNavPos; PS2 +0x1e0 floats (name invented)"
+    },
+    {
+     "offset": 448,
+     "type": "COORD3",
+     "name": "unknown1c0",
+     "comment": "low: LEA DoMoveMode; PS2 +0x1f0 (name invented)"
+    },
+    {
+     "offset": 460,
+     "type": "short",
+     "name": "unknown1cc",
+     "comment": "low: PS2 +0x1fc short (name invented)"
+    },
+    {
+     "offset": 464,
+     "type": "void *",
+     "name": "defaultTarget",
+     "comment": "high: W SetTargetMode/Reset; PS2 +0x200 Get/SetDefaultTarget"
+    },
+    {
+     "offset": 468,
+     "type": "void *",
+     "name": "secondaryTarget",
+     "comment": "high: CARP::AIElement*; SetSecondaryTarget 2a380; PS2 +0x204"
+    },
+    {
+     "offset": 472,
+     "type": "void *",
+     "name": "currentTarget",
+     "comment": "low: SetTargetMode/TurnTurret; PS2 +0x208 (Fire*, DoAttackMode) (name invented)"
+    },
+    {
+     "offset": 476,
+     "type": "bool",
+     "name": "unknown1dc",
+     "comment": "low: PS2 +0x20c (name invented)"
+    },
+    {
+     "offset": 480,
+     "type": "COORD3",
+     "name": "unknown1e0",
+     "comment": "low: LEA DoAgentStateUpdate/DoAutoDriveUpdate; PS2 +0x210 (name invented)"
+    },
+    {
+     "offset": 492,
+     "type": "bool",
+     "name": "unknown1ec",
+     "comment": "low: PS2 +0x21c (ResetTrackState) (name invented)"
+    },
+    {
+     "offset": 496,
+     "type": "float",
+     "name": "minDistToTarget",
+     "comment": "high: float; PS2 +0x220 Get/SetMinDistToTarget"
+    },
+    {
+     "offset": 500,
+     "type": "char",
+     "name": "weaponsActive",
+     "comment": "high: byte DoWeaponUpdate; PS2 +0x224 SetWeaponsActive"
+    },
+    {
+     "offset": 502,
+     "type": "short",
+     "name": "bulletCount",
+     "comment": "low: PS2 +0x226 FireBullets (name invented)"
+    },
+    {
+     "offset": 504,
+     "type": "float",
+     "name": "rateOfFire",
+     "comment": "high: W Reset; PS2 +0x228 SetRateOfFire(float)"
+    },
+    {
+     "offset": 508,
+     "type": "short",
+     "name": "rocketCount",
+     "comment": "low: PS2 +0x22c FireRockets (name invented)"
+    },
+    {
+     "offset": 510,
+     "type": "char",
+     "name": "unknown1fe",
+     "comment": "low: PS2 +0x22e FireRockets (name invented)"
+    },
+    {
+     "offset": 512,
+     "type": "short",
+     "name": "unknown200",
+     "comment": "low: PS2 +0x230 (name invented)"
+    },
+    {
+     "offset": 514,
+     "type": "char",
+     "name": "unknown202",
+     "comment": "low: PS2 +0x232 (name invented)"
+    },
+    {
+     "offset": 516,
+     "type": "float",
+     "name": "turretAngle",
+     "comment": "high: PS2 +0x234 GetTurretAngle, TurnTurret"
+    },
+    {
+     "offset": 520,
+     "type": "bool",
+     "name": "unknown208",
+     "comment": "low: PS2 +0x238 (Fire*, TurnTurret) (name invented)"
+    },
+    {
+     "offset": 528,
+     "type": "COORD3",
+     "name": "bulletDir",
+     "comment": "high: LEA Reset; PS2 +0x240 GetBulletDir"
+    },
+    {
+     "offset": 544,
+     "type": "COORD3",
+     "name": "rocketDir",
+     "comment": "high: LEA Reset; PS2 +0x250 GetRocketDir"
+    },
+    {
+     "offset": 556,
+     "type": "short",
+     "name": "dirOverrideTimer",
+     "comment": "high: PS2 +0x25c SetDirOverrideTimer"
+    },
+    {
+     "offset": 558,
+     "type": "char",
+     "name": "reverseOverride",
+     "comment": "high: PS2 +0x260 SetReverseOverride"
+    },
+    {
+     "offset": 560,
+     "type": "short",
+     "name": "stuckTimer",
+     "comment": "medium: UpdateStuck/DoAutoDriveUpdate; PS2 +0x264 CancelStuck (name invented)"
+    },
+    {
+     "offset": 562,
+     "type": "bool",
+     "name": "stuck",
+     "comment": "medium: UpdateStuck; PS2 +0x268 CancelStuck (name invented)"
+    },
+    {
+     "offset": 576,
+     "type": "COORD3",
+     "name": "stuckPos",
+     "comment": "low: LEA UpdateStuck; PS2 +0x270 (name invented)"
+    },
+    {
+     "offset": 588,
+     "type": "bool",
+     "name": "unknown24c",
+     "comment": "low: PS2 +0x27c (name invented)"
+    },
+    {
+     "offset": 592,
+     "type": "COORD3",
+     "name": "spawnPos",
+     "comment": "high: LEA Spawn; PS2 +0x280 GetSpawnPos"
+    },
+    {
+     "offset": 604,
+     "type": "bool",
+     "name": "canSpawn",
+     "comment": "high: PS2 +0x28c SetCanSpawn(bool)"
+    },
+    {
+     "offset": 608,
+     "type": "int",
+     "name": "spawnTimer",
+     "comment": "high: Spawn/UnSpawn; PS2 +0x290 SetSpawnTimer(int)"
+    }
+   ],
+   "comment": "Derived from AIVehicle; ctor 2bd40 stores vtable 0x18b8d4 (the evidence file missed it). Size 0x270 from array ctors (eh vector ctor stride 0x270): globals 0x1de940 [2], 0x1dee20 [20], heap array in AIVehicle Init 35c10. PS2->Xbox shift +0x10 up to +0xe8, then 4-byte PS2 bools pack to 1 byte and 8-byte PS2 slots before the WRoadNav pointers become 4, giving -0x10 from +0x108 and -0x2c/-0x30 later."
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x000357b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIVehicle::AIVehicle(void)"
+  },
+  {
+   "address": "0x00035840",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIVehicle::GetPhysicsObject(void)",
+   "return": "PhysicsObject *"
+  },
+  {
+   "address": "0x00035850",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "PhysicsObject *"
+    }
+   ],
+   "sheet": "AIVehicle::SetPhysicsObject(PhysicsObject *)"
+  },
+  {
+   "address": "0x00035860",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "AIVehicle::SetSplinePath(CARP::AISpline *)"
+  },
+  {
+   "address": "0x00035930",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "AIVehicle::SetNextSplinePath(CARP::AISpline *)"
+  },
+  {
+   "address": "0x000359d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIVehicle::GetSplinePath(void)",
+   "return": "void *"
+  },
+  {
+   "address": "0x000359e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIVehicle::GetPosition(void)",
+   "return": "COORD3 *"
+  },
+  {
+   "address": "0x00035a20",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIVehicle::GetRotPos(void)"
+  },
+  {
+   "address": "0x00035b40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIVehicle::~AIVehicle(void)"
+  },
+  {
+   "address": "0x00035b90",
+   "calling_convention": "__thiscall",
+   "return": "AIVehicle *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,289 @@
+{
+ "batch": "P018",
+ "program": "DRIVING.ELF",
+ "applied": "Sat Sep 26 00:12:27 2026",
+ "items": [
+  {
+   "xbox": "0x0024fd78",
+   "old_name": "FUN_0024fd78",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0024fd78 from 'FUN_0024fd78' to 'set_terminate'",
+      "warnings": [
+       "Function name 'set_terminate' \u2014 main part 'set_terminate' is not PascalCase. Expected: SetTerminate",
+       "Function name 'set_terminate' \u2014 main part 'set_terminate' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0024fd78",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "set_terminate",
+   "ok": true
+  },
+  {
+   "xbox": "0x00317dc8",
+   "old_name": "FUN_00317dc8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00317dc8 from 'FUN_00317dc8' to 'SNDMIXI_initfx'",
+      "warnings": [
+       "Function name 'SNDMIXI_initfx' \u2014 main part 'SNDMIXI_initfx' is not PascalCase. Expected: SndmixiInitfx",
+       "Function name 'SNDMIXI_initfx' \u2014 main part 'SNDMIXI_initfx' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00317dc8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SNDMIXI_initfx",
+   "ok": true
+  },
+  {
+   "xbox": "0x00167c78",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00167c78",
+      "function_name": "FUN_00167c78",
+      "entry_point": "00167c78",
+      "body_size": 92,
+      "message": "Function created successfully at 00167c78"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00167c78 from 'FUN_00167c78' to 'DeadZoneScale'",
+      "warnings": [
+       "Function name 'DeadZoneScale' does not start with a recognized verb. First word 'Dead' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00167c78",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DeadZoneScale",
+   "ok": true
+  },
+  {
+   "xbox": "0x002d3dd8",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "002d3dd8",
+      "function_name": "FUN_002d3dd8",
+      "entry_point": "002d3dd8",
+      "body_size": 84,
+      "message": "Function created successfully at 002d3dd8"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002d3dd8 from 'FUN_002d3dd8' to 'CalcPlaneY'",
+      "warnings": [
+       "Function name 'CalcPlaneY' does not start with a recognized verb. First word 'Calc' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002d3dd8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "CalcPlaneY",
+   "ok": true
+  },
+  {
+   "xbox": "0x0026ba08",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0026ba08",
+      "function_name": "FUN_0026ba08",
+      "entry_point": "0026ba08",
+      "body_size": 164,
+      "message": "Function created successfully at 0026ba08"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0026ba08 from 'FUN_0026ba08' to 'QuatMultXxYxZ'",
+      "warnings": [
+       "Function name 'QuatMultXxYxZ' does not start with a recognized verb. First word 'Quat' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0026ba08",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "QuatMultXxYxZ",
+   "ok": true
+  },
+  {
+   "xbox": "0x0025f5a8",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0025f5a8",
+      "function_name": "FUN_0025f5a8",
+      "entry_point": "0025f5a8",
+      "body_size": 112,
+      "message": "Function created successfully at 0025f5a8"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0025f5a8 from 'FUN_0025f5a8' to 'CLIP_setflags2'",
+      "warnings": [
+       "Function name 'CLIP_setflags2' \u2014 main part 'CLIP_setflags2' is not PascalCase. Expected: ClipSetflags2",
+       "Function name 'CLIP_setflags2' \u2014 main part 'CLIP_setflags2' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0025f5a8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "CLIP_setflags2",
+   "ok": true
+  },
+  {
+   "xbox": "0x002beb20",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "002beb20",
+      "function_name": "FUN_002beb20",
+      "entry_point": "002beb20",
+      "body_size": 48,
+      "message": "Function created successfully at 002beb20"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002beb20 from 'FUN_002beb20' to 'sceDeci2ExReqSend'",
+      "warnings": [
+       "Function name 'sceDeci2ExReqSend' \u2014 main part 'sceDeci2ExReqSend' is not PascalCase. Expected: Scedeci2exreqsend"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002beb20",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "sceDeci2ExReqSend",
+   "ok": true
+  }
+ ]
+}

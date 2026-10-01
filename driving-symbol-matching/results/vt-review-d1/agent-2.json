@@ -1,0 +1,601 @@
+{
+ "verdicts": [
+  {
+   "item": 58,
+   "xbox": "0x7af50",
+   "current": "GlobalSymbolTable::Kill",
+   "ps2": "0x1a9e68",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body deletes fgThis and nulls it, callee RemoveNamespace (= current-name PS2 Kill 0x1a9f40); proposed Init allocates and calls AddNamespace, so it is the opposite function (Data Reference pairing).",
+   "intermediates": []
+  },
+  {
+   "item": 59,
+   "xbox": "0x13d820",
+   "current": "dsndMixProcess",
+   "ps2": "0x30dc58",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox-only DirectSound mixer step (GetCurrentPosition + MIX_audio); it is a callee of Xbox SNDDRV_thread@13d980, so it is not SNDDRV_thread itself.",
+   "intermediates": []
+  },
+  {
+   "item": 60,
+   "xbox": "0x96a70",
+   "current": "RViewCamera::SetDeviceTransformMode",
+   "ps2": "0x1d4d30",
+   "name": "",
+   "verdict": "keep",
+   "why": "PS2 SetDeviceTransformMode 0x1d4cb8 and SetUnitTransformMode 0x1d4d30 are byte-identical; MSVC folded them and Xbox SetRenderCamera calls 0x96a70 for both mode 0 and mode 1, so the mode-0 name stays.",
+   "intermediates": []
+  },
+  {
+   "item": 61,
+   "xbox": "0xb4250",
+   "current": "Simulation::DeleteSomeObject",
+   "ps2": "0x200f18",
+   "name": "Simulation::DeletePhysicsObject",
+   "verdict": "accept",
+   "why": "Same body as PS2 DeletePhysicsObject: multimap lookup by type, deleted-set insert, then switch(type 1..0xb) removing from the per-type vectors (two vectors for case 1, as on PS2); Xbox callers are PS2's DeleteXObject wrappers inlined. Invented name replaced.",
+   "intermediates": []
+  },
+  {
+   "item": 62,
+   "xbox": "0x8cb90",
+   "current": "RRenderWorldCamera::DrawFinalStaticWorldGeometry",
+   "ps2": "0x1c5c20",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body SetZWritesEnable(0)/EnableFog/SendPerViewPort/DrawPass(..,0,0,2)/DisableFog/SetZWritesEnable(1) = PS2 DrawFinalStaticWorldGeometry 0x1c5d08 line for line; proposed DrawStaticWorldGeometry uses alpha writes + DrawWorld.",
+   "intermediates": []
+  },
+  {
+   "item": 63,
+   "xbox": "0x8cfa0",
+   "current": "RRenderWorldCamera::DoRender",
+   "ps2": "0x1c5d08",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body calls PerformCulling, DrawStaticWorldGeometry, DrawActors ... DrawFinalStaticWorldGeometry = PS2 DoRender 0x1c55d8; proposed is its callee.",
+   "intermediates": []
+  },
+  {
+   "item": 64,
+   "xbox": "0x24060",
+   "current": "AICharacterPedestrian::LoadPedTextures",
+   "ps2": "0x126768",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox loops LoadCharacter over the ped table (0x70 stride) = PS2 LoadPedTextures 0x1265c0; proposed GetRandomPedTexture returns one texture, no loop.",
+   "intermediates": []
+  },
+  {
+   "item": 65,
+   "xbox": "0x12ca0",
+   "current": "ActActor::ActActor",
+   "ps2": "0x108248",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body initialises every field and allocates ActCharacter/ActPoser/ActAnimGroup/WWorldPos = PS2 constructor 0x108038; ChangeActor only swaps the character.",
+   "intermediates": []
+  },
+  {
+   "item": 66,
+   "xbox": "0x13c180",
+   "current": "SNDSTRM_purge",
+   "ps2": "0x309088",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body (stop pktplay, sndctrl=-1, STREAM_kill, free buffers, move nodes a->b) = PS2 SNDSTRM_purge 0x3097e0; SNDSTRMI_service is a different routine.",
+   "intermediates": []
+  },
+  {
+   "item": 67,
+   "xbox": "0x1449c0",
+   "current": "SNDPLATFORM_timemult",
+   "ps2": "0x30f2d0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox calls MIX_settimemult = PS2 SNDPLATFORM_timemult 0x30f218; setdistortlevel is the sibling that calls MIX_setdistortlevel.",
+   "intermediates": []
+  },
+  {
+   "item": 68,
+   "xbox": "0xb6720",
+   "current": "SMissionManager::IncShotsHit",
+   "ps2": "0x2068b8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body (shotsHit<limit, time/10 check, ++shotsHit) = PS2 IncShotsHit 0x206900; IncPlayerDamage adds a float.",
+   "intermediates": []
+  },
+  {
+   "item": 69,
+   "xbox": "0x12f940",
+   "current": "AEngine::Get",
+   "ps2": "0x2f9740",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body GetReference, else new(0x54) ARaceEngine and add = PS2 AEngine::Get 0x2faae8; AFader::Remove deletes.",
+   "intermediates": []
+  },
+  {
+   "item": 70,
+   "xbox": "0x140200",
+   "current": "maybeGetFreeSndKey",
+   "ps2": "0x30b980",
+   "name": "SNDBANKI_findfreekey",
+   "verdict": "accept",
+   "why": "Same loop: bump a static key skipping 0, rescan the voices for an active voice holding it; called from SNDBANKI_playpatch on both sides. Invented name replaced.",
+   "intermediates": []
+  },
+  {
+   "item": 71,
+   "xbox": "0x13bc20",
+   "current": "SNDSTRMI_parseheader",
+   "ps2": "0x308f30",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body does SNDI_patchtohdr/calcdatarate/SNDPKTPLAY_start = PS2 SNDSTRMI_parseheader 0x308a60; parsechunk is the small dispatcher that calls it (inlined into Xbox SNDSTRMI_service).",
+   "intermediates": []
+  },
+  {
+   "item": 72,
+   "xbox": "0xd3aa0",
+   "current": "GGallery::CULL_Start",
+   "ps2": "0x234198",
+   "name": "GFXGallery::CULL_Start",
+   "verdict": "accept",
+   "why": "Identical two-store body (+0x1424, +0x142c = 0), same caller PerformCulling; the Xbox already files the neighbouring CULL_/CANVAS_ functions under GFXGallery, so only the namespace was wrong.",
+   "intermediates": []
+  },
+  {
+   "item": 73,
+   "xbox": "0x13d090",
+   "current": "SNDSYS_getops",
+   "ps2": "0x307108",
+   "name": "SNDSYS_getopts",
+   "verdict": "accept",
+   "why": "Same body (one-time SNDPLATFORM_outputcaps, NUM_BANKS=0x10, 0x5a, copy opts), same callers SNDSYSI_init/ASystem::SetOpts; the current name is a typo of the canonical one.",
+   "intermediates": []
+  },
+  {
+   "item": 74,
+   "xbox": "0x10a830",
+   "current": "THREAD_setprio",
+   "ps2": "0x261638",
+   "name": "THREAD_setpriority",
+   "verdict": "accept",
+   "why": "Neither the current nor the VT name: body is PS2 THREAD_setpriority 0x261638 (handle 0 = current global, -1 = self, else *(h+4), then set priority). Xbox order THREAD_iscurrent/this/THREAD_testexit matches PS2 iscurrent/getpriority/setpriority/testexit. VT's THREAD_createparam creates the thread.",
+   "intermediates": []
+  },
+  {
+   "item": 75,
+   "xbox": "0xf3a70",
+   "current": "EAGL::ConstructorPool::FindConstructor",
+   "ps2": "0x29e1d0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox passes ECX (this) unchanged to SymbolPool::Search = PS2 FindConstructor 0x29e1a8 (Search on this); FindDestructor searches this+0x14 and is Xbox 0xf3a90, called right after it in RunConstructors.",
+   "intermediates": []
+  },
+  {
+   "item": 76,
+   "xbox": "0x1443f0",
+   "current": "SFILTER_unpack_unknown4_init",
+   "ps2": "0x317240",
+   "name": "SFILTER_timestretchinit",
+   "verdict": "accept",
+   "why": "Field-for-field identical ([0]=filter, [8]=packet handle or -1, [7]=p+6, [9]=1.0, [0xb]=byte<<1, [0xc]=SNDI_getb(4)), same caller MIX_playinit; Xbox neighbour order timestretchratio/filter/init matches PS2 setratio/timestretch/init.",
+   "intermediates": [
+    {
+     "xbox": "0x144340",
+     "ps2": "0x317130",
+     "name": "SFILTER_timestretch",
+     "why": "the filter function pointer SFILTER_timestretchinit stores in slot 0 (currently SFILTER_unpack_unknown4)"
+    }
+   ]
+  },
+  {
+   "item": 77,
+   "xbox": "0x132cb0",
+   "current": "strstr",
+   "ps2": "0x2a9508",
+   "name": "",
+   "verdict": "keep",
+   "why": "MSVC CRT strstr (needle scan) vs newlib strcmp: a CRT/newlib false pair.",
+   "intermediates": []
+  },
+  {
+   "item": 78,
+   "xbox": "0x108750",
+   "current": "maybe_MOUSE_setstate",
+   "ps2": "0x2598e0",
+   "name": "MOUSE_setbounds",
+   "verdict": "accept",
+   "why": "Same body: stores params 1,2,4,5 to four globals, param 3 unused; same caller FeatureManager::Init. Invented name replaced.",
+   "intermediates": []
+  },
+  {
+   "item": 79,
+   "xbox": "0x145c10",
+   "current": "SFILTER_unpack_unknown2_init",
+   "ps2": "0x316178",
+   "name": "SFILTER_unpackxapfinit",
+   "verdict": "accept",
+   "why": "Matches xapfinit, not its siblings: getmastervoice->packet handle, getsamplechan, zeroes +0x20/+0x28/+0x30, copies param+0xc, new CEAXABLKDecf(0xa8); xafinit/xalfinit have other layouts and are already named on Xbox (0x145f50/0x145e40).",
+   "intermediates": [
+    {
+     "xbox": "0x145ab0",
+     "ps2": "0x315fe8",
+     "name": "SFILTER_unpackxapf",
+     "why": "function pointer stored in slot 0 by SFILTER_unpackxapfinit (currently SFILTER_unpack_unknown2)"
+    },
+    {
+     "xbox": "0x145bf0",
+     "ps2": "0x316158",
+     "name": "SFILTER_unpackxapfrestore",
+     "why": "function pointer stored in slot 1 by SFILTER_unpackxapfinit (currently SFILTER_unpack_unknown2b)"
+    }
+   ]
+  },
+  {
+   "item": 80,
+   "xbox": "0x125270",
+   "current": "URefCounter::GetReference",
+   "ps2": "0x2f9b28",
+   "name": "",
+   "verdict": "keep",
+   "why": "The Xbox copy is shared by AMix/AStream/AEngine/ABank/AFader callers (MSVC folded the identical template instances); URefCounter<AFader> would mislabel it, so the generic name is right.",
+   "intermediates": []
+  },
+  {
+   "item": 81,
+   "xbox": "0xe3fd0",
+   "current": "GSystem::CURATOR_Init",
+   "ps2": "0x24afe0",
+   "name": "CURATOR_Init",
+   "verdict": "accept",
+   "why": "Same function with FILE_Init (sprintf workingDir) and RANDOM_Startup inlined, then GFX::Init/GetLanguage/LOCALE_LoadLanguage; same caller Bond_StartUpSystem. The PS2 canonical name is in the global namespace, like Xbox CURATOR_Shutdown.",
+   "intermediates": []
+  },
+  {
+   "item": 82,
+   "xbox": "0x8a4f0",
+   "current": "doProceduralAnimation",
+   "ps2": "0x1beee0",
+   "name": "GetInstanceMatrix",
+   "verdict": "accept",
+   "why": "Identical dispatch through a table indexed by byte +0xd with p4 + ushort(+0xe)*0x20; same 4 named callers (DrawInstance, QuickDrawInstance, GetInstancePosition, TransformMatrixByInstancePosition). Invented name replaced.",
+   "intermediates": []
+  },
+  {
+   "item": 83,
+   "xbox": "0x97060",
+   "current": "RViewCamera::Render",
+   "ps2": "0x1d4570",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body is vcall/SetRenderCamera (BeginView inlined)/vcall/EndView/vcall = PS2 Render 0x1d4500; proposed BeginView is its callee.",
+   "intermediates": []
+  },
+  {
+   "item": 84,
+   "xbox": "0xd5800",
+   "current": "GGallery::GET_HUDGallery",
+   "ps2": "0x236b58",
+   "name": "GGallery::GET_Gallery",
+   "verdict": "accept",
+   "why": "return *this, same caller GHud::GHud, and it sits just before GET_Puppet on both sides (PS2 GET_Gallery 0x236b58 precedes GET_Puppet). Invented name replaced.",
+   "intermediates": []
+  },
+  {
+   "item": 85,
+   "xbox": "0x96eb0",
+   "current": "RViewCamera::SetWorldTransformMode",
+   "ps2": "0x1d4d30",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body builds a perspective projection (ConvertToRHCS, ApplyPerspectiveFunction, 4:3/16:9) = PS2 SetWorldTransformMode 0x1d4878; proposed unit mode is orthographic.",
+   "intermediates": []
+  },
+  {
+   "item": 86,
+   "xbox": "0x71880",
+   "current": "PVehicle::GetCarNames",
+   "ps2": "0x1965b8",
+   "name": "PVehicle::GetNameCount",
+   "verdict": "accept",
+   "why": "Checks init flag 0x1e7ac0 and returns 0x1e7ac8 (flag+8) = PS2 GetNameCount (checks 0x332098, returns 0x3320a0); PS2 GetCarNames returns flag+4 instead. Order GetNameCount then NameToIndex matches on both sides.",
+   "intermediates": []
+  },
+  {
+   "item": 87,
+   "xbox": "0x37620",
+   "current": "Draw",
+   "ps2": "0x141768",
+   "name": "DAudio::Draw",
+   "verdict": "accept",
+   "why": "Same body (if gDAudio InfoDraw; if mixer flag MixerDraw), same caller RRenderDebugViewScreenSpace::DoRender; bare 'Draw' gets its class. The 27 'Draw' hits in src/driving are unrelated substrings; nothing there references 0x37620.",
+   "intermediates": []
+  },
+  {
+   "item": 88,
+   "xbox": "0xb6640",
+   "current": "SMissionManager::BoostPlayerHealth",
+   "ps2": "0x206850",
+   "name": "SMissionManager::BoostPlayerShield",
+   "verdict": "accept",
+   "why": "Xbox has BoostPlayerHealth twice: 0xb65f0 (fields 0x49c/0x4a0, called by ~EPowerUpHealth) and 0xb6640 (0x4a4/0x4a8, called by ~EPowerUpShield, which plays SFX_pickuparmor); PS2 order is Health then Shield.",
+   "intermediates": []
+  },
+  {
+   "item": 89,
+   "xbox": "0xd47a0",
+   "current": "GGallery::CANVAS_Add",
+   "ps2": "0x234d80",
+   "name": "GFXGallery::CANVAS_Add",
+   "verdict": "accept",
+   "why": "All 4 named callees shared, plus 'EXCEEDED MAX GFX!' and STICKY_GetNewIndex; GFXGallery is the class of the neighbouring Xbox CANVAS_* functions, so this is a namespace fix.",
+   "intermediates": []
+  },
+  {
+   "item": 90,
+   "xbox": "0x13c060",
+   "current": "SNDSTRMI_queue",
+   "ps2": "0x309088",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body (range check, -8/-0xd, STREAM_queuefile/queuemem with 'SCEl', pop/pushtail node) = PS2 SNDSTRMI_queue 0x3095d0.",
+   "intermediates": []
+  },
+  {
+   "item": 91,
+   "xbox": "0x8be40",
+   "current": "RSniperZoom::Init",
+   "ps2": "0x1eddb8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox is Init with operator_new (FastAlloc 'RSniperZoom') inlined, storing fgThis_RSniperZoom = PS2 Init 0x1edd48.",
+   "intermediates": []
+  },
+  {
+   "item": 92,
+   "xbox": "0xd5a00",
+   "current": "GGallery::SPRITE_SetState",
+   "ps2": "0x237ca8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox copies key fields to this+0x60.. = PS2 SPRITE_SetState 0x2386c8; FONT_Width calls FONT_getrecta.",
+   "intermediates": []
+  },
+  {
+   "item": 93,
+   "xbox": "0x1086c0",
+   "current": "IOModule::GetIOModule",
+   "ps2": "0x259980",
+   "name": "PAD_init",
+   "verdict": "accept",
+   "why": "Body is pad init (once flag, MEM_fill 0x240, open 4 ports, SYNCTASK_add(PAD_update)) = PS2 PAD_init, which also does SYNCTASK_add(PAD_update); PS2 GetIOModule is a singleton getter. Same caller IOModule::Initialize.",
+   "intermediates": []
+  },
+  {
+   "item": 94,
+   "xbox": "0x13e0c0",
+   "current": "SNDPLATFORM_set3dpos",
+   "ps2": "0x30f0c8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox uses SNDI_aztospkrvol/SetMixBinVolumes (azimuth to speaker volumes) = PS2 set3dpos 0x30fb18's role; setdrylevel toggles FX-send bits.",
+   "intermediates": []
+  },
+  {
+   "item": 95,
+   "xbox": "0x13d5e0",
+   "current": "dsndMixInit",
+   "ps2": "0x30ddf8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox-only DirectSound buffer setup, called by Xbox SNDPLATFORM_init@13dc50, so it is not SNDPLATFORM_init itself. src/driving cites dsndMixInit in comments.",
+   "intermediates": []
+  },
+  {
+   "item": 96,
+   "xbox": "0xb72f0",
+   "current": "SMissionManager::ProgrammerDefinedEvent",
+   "ps2": "0x208568",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox stores 1 = PS2 ProgrammerDefinedEvent 0x208540; ClearProgrammerEvent stores 0.",
+   "intermediates": []
+  },
+  {
+   "item": 97,
+   "xbox": "0x516d0",
+   "current": "IOModule::Tick",
+   "ps2": "0x168060",
+   "name": "IOModule::Update",
+   "verdict": "accept",
+   "why": "Same body: if enabled, PAD_update, TIMER_gettick -> field, CheckUnplugged, UpdateAllDevices unless flag. Invented 'Tick' replaced; the name is currently held wrongly by 0x108490 (see intermediate - rename that first).",
+   "intermediates": [
+    {
+     "xbox": "0x108490",
+     "ps2": "0x25a4a8",
+     "name": "PAD_update",
+     "why": "currently 'IOModule::Update'; it is the first call in IOModule::Update and the SYNCTASK_add callback in PAD_init, which are exactly PS2 PAD_update's two uses (XGetDeviceChanges/port poll). src/driving/platform/XboxInput.cpp comments call it 'IOModule::Update' (comments only)."
+    }
+   ]
+  },
+  {
+   "item": 98,
+   "xbox": "0x117b50",
+   "current": "UGroup::DataLocateTag",
+   "ps2": "0x2d51f0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox tests flag &8 and bounds with count at +8 = PS2 DataLocateTag 0x2d5a10; GroupLocateTag tests &0x10 and has no +8 term.",
+   "intermediates": []
+  },
+  {
+   "item": 99,
+   "xbox": "0xd9050",
+   "current": "GHud::PauseOff",
+   "ps2": "0x241048",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body (if paused: KillGirl, clear, SetConfig, new EResume) = PS2 PauseOff 0x2411a0; PauseOn creates EPause.",
+   "intermediates": []
+  },
+  {
+   "item": 100,
+   "xbox": "0x13e8c0",
+   "current": "SNDPKTPLAY_overhead",
+   "ps2": "0x3099d0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox SNDSTRM_overheadtap (0x13c610) already exists and calls this function; this is its packet-player size helper (PS2 FUN_00311660's role), not overheadtap.",
+   "intermediates": []
+  },
+  {
+   "item": 101,
+   "xbox": "0x116f70",
+   "current": "AttemptBigFileSize",
+   "ps2": "0x2d7288",
+   "name": "UFileLoader::AttemptBigFileSize",
+   "verdict": "accept",
+   "why": "Same body ('|' + name, FILE_unpacksizez else FILE_sizez), same caller UFileLoader::FileSize; adds the class like its Xbox siblings AttemptBigFileExists/Load.",
+   "intermediates": []
+  },
+  {
+   "item": 102,
+   "xbox": "0x35ef0",
+   "current": "AIVehicleController::GetTrafficVehiclePtr",
+   "ps2": "0x13ecb0",
+   "name": "AIVehicleController::GetHelicopter",
+   "verdict": "accept",
+   "why": "Returns pointer-global + i*0x140. That global 0x1de908 is used by UpdateHelicopters/ApproveAdditionalHelicopterSpawn; the stride matches helicopter 0x130 (+0x10), not traffic 0x2a0 (a static array). It sits after FindAgentGroundVehiclePtr like PS2 GetHelicopter, and its caller SWeaponManager::Update calls GetHelicopter on PS2. GetHelicopterPtr is an identical twin with no PS2 callers.",
+   "intermediates": []
+  },
+  {
+   "item": 103,
+   "xbox": "0x51770",
+   "current": "XBoxPadDevice::Initialize",
+   "ps2": "0x168b08",
+   "name": "",
+   "verdict": "keep",
+   "why": "Platform twin: Xbox button names (AButtonA/B/X/Y/Black) vs PS2's; the Xbox class is XBoxPadDevice, and PS2PadDevice does not exist on Xbox.",
+   "intermediates": []
+  },
+  {
+   "item": 104,
+   "xbox": "0x58180",
+   "current": "AttributeSet::LookupInt",
+   "ps2": "0x169d80",
+   "name": "",
+   "verdict": "keep",
+   "why": "Returns in EAX (no FPU), and Xbox order LookupBool/LookupInt/LookupUInt/LookupFloat matches PS2 exactly; LookupFloat is 0x582c0.",
+   "intermediates": []
+  },
+  {
+   "item": 105,
+   "xbox": "0x7bc90",
+   "current": "RRenderHigh::InitGlobalRender",
+   "ps2": "0x1a9ac8",
+   "name": "RCARPFile::LoadEAGLMaterials",
+   "verdict": "accept",
+   "why": "Body loads data\\render\\eaglrm.o etc. into DynamicLoaders = PS2 LoadEAGLMaterials. The real Xbox RRenderHigh::InitGlobalRender is 0x8baa0, a single JMP to this function (PS2 InitGlobalRender just calls LoadEAGLMaterials); two Xbox functions currently share the name.",
+   "intermediates": []
+  },
+  {
+   "item": 106,
+   "xbox": "0x132270",
+   "current": "_memmove",
+   "ps2": "0x2a7f34",
+   "name": "",
+   "verdict": "keep",
+   "why": "MSVC CRT memmove vs newlib memmove: a CRT pair, so the CRT symbol stays.",
+   "intermediates": []
+  },
+  {
+   "item": 107,
+   "xbox": "0x10dae0",
+   "current": "loadfileatom",
+   "ps2": "0x257290",
+   "name": "FILE_loadat_internal",
+   "verdict": "accept",
+   "why": "Same body (size<=0 -> 0x7fffffff, FILESYS_opensync, read, closesync with p1-1); passed as a parameter by FILE_loadat and FILE_loadatz on both sides and sits just before them. Invented name replaced.",
+   "intermediates": []
+  },
+  {
+   "item": 108,
+   "xbox": "0xb6720",
+   "current": "SMissionManager::IncShotsHit",
+   "ps2": "0x206960",
+   "name": "",
+   "verdict": "keep",
+   "why": "Same Xbox function as item 68: body = PS2 IncShotsHit 0x206900; IncKills adds to a counter clamped at 0.",
+   "intermediates": []
+  },
+  {
+   "item": 109,
+   "xbox": "0x5bc70",
+   "current": "std::list<>::erase",
+   "ps2": "0x17a270",
+   "name": "Schedule::RemoveTask",
+   "verdict": "accept",
+   "why": "Same body: scan 8 bucket lists for the taskNumber, unlink, FastFree(0x1c), return true; same callers Schedule::RunTasks and ~EPathSFXUpdate. Placeholder name replaced.",
+   "intermediates": []
+  },
+  {
+   "item": 110,
+   "xbox": "0xe1ce0",
+   "current": "someHudType_DoRender",
+   "ps2": "0x23aad0",
+   "name": "GOrthoHudView::DoRender",
+   "verdict": "accept",
+   "why": "All 8 named callees shared (SPRITE_Flush, DrawBloodCurtain, DrawBox x2, SetDepthTestMethod, SetZWritesEnable, DrawLetterBox, BuildScale/BuildTranslate/VU0_MATRIX4_mult). Invented name replaced.",
+   "intermediates": []
+  },
+  {
+   "item": 111,
+   "xbox": "0xd0a30",
+   "current": "RayShell::Process",
+   "ps2": "0x22def0",
+   "name": "WTriggerManager::Process",
+   "verdict": "accept",
+   "why": "Xbox WTriggerManager::Update calls four Process overloads and this is the 4th, as PS2 0x22def0 is the 4th in PS2 Update; both use GetActiveRayShell/FindNodes/SetTriggerHittingRayShell/FireEvents. Overload name, like Xbox 0xd04a0/0xd0630/0xd0810.",
+   "intermediates": []
+  },
+  {
+   "item": 112,
+   "xbox": "0xe89e0",
+   "current": "EAGL::Device::GetCurrentTextureRenderContext",
+   "ps2": "0x287728",
+   "name": "EAGL::Device::GetCurrentRenderContext",
+   "verdict": "accept",
+   "why": "The getter/global pair is swapped. The global this reads (0x23fb64) is written by NewRenderContext, DeleteRenderContext and SetCurrentRenderContext 0xe8a00, exactly like PS2 0x3485b0 (render context). It has 8 callers incl. FONTEAGL_startdraw, and address order e89e0/e89f0/e8a00/e8a10 = PS2 GetRC/GetTRC/SetRC/SetTRC. Swap with item 113.",
+   "intermediates": []
+  },
+  {
+   "item": 113,
+   "xbox": "0xe89f0",
+   "current": "EAGL::Device::GetCurrentRenderContext",
+   "ps2": "0x287738",
+   "name": "EAGL::Device::GetCurrentTextureRenderContext",
+   "verdict": "accept",
+   "why": "Reads 0x23fb68, whose only writer is 0xe8a10. 0xe8a10 is reached only from RShadowMap::Begin/GrabBackBuffer (TextureRenderContext Begin/EndFrame), like PS2 0x3485b4. 3 callers incl. Draw, like PS2's single-caller texture getter. Swap with item 112.",
+   "intermediates": []
+  },
+  {
+   "item": 114,
+   "xbox": "0xe8a10",
+   "current": "FUN_000e8a10",
+   "ps2": "0x287758",
+   "name": "EAGLInternal::DevicePrivate::SetCurrentTextureRenderContext",
+   "verdict": "accept",
+   "why": "Writes 0x23fb68 (the texture RC global, see 113), called only from the texture-render-context begin/end helpers 0xf3600/0xf3620 (RShadowMap::Begin, GrabBackBuffer), and follows SetCurrentRenderContext 0xe8a00 as on PS2.",
+   "intermediates": []
+  }
+ ]
+}

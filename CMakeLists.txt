@@ -1,15 +1,41 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 project(nightfiRE LANGUAGES CXX)
 
+# tools/preprocess.py runs as a pre-build step. "python" is not a command on every host - macOS has only
+# "python3" - so ask CMake for an interpreter rather than assuming a name.
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+# Building for Windows from something that is not Windows. Everything guarded by this is a MinGW-ism that
+# exists only to reproduce what MSVC does by default; see docs/macos-build.md for why each one is needed.
+if(CMAKE_CROSSCOMPILING)
+  message(STATUS "Cross-compiling for Windows with ${CMAKE_CXX_COMPILER_ID} (${CMAKE_CXX_COMPILER_TARGET})")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Added for developers using IDEs that get confused (e.g. Zed) without this hint
+# file while using a linter (e.g. clangd).
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # On MinGW, "lib" will get prepended to libraries which will break out ability
 # to inject our DLL.
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 set(CMAKE_IMPORT_LIBRARY_PREFIX "")
+
+# MinGW links its C++ and GCC support libraries dynamically by default, which would make every binary here
+# depend on libstdc++-6.dll and libgcc_s_*.dll sitting beside it. MSVC builds carry no such companions, and
+# a DLL that cannot find them fails to load with a bare "error 126", so link them in instead.
+if(MINGW)
+  # -pthread rather than naming the library: statically linked libstdc++ and libgcc both call into
+  # winpthreads, and the driver appends them after everything CMake writes, so a -lpthread placed among
+  # the target's own libraries would come too early to resolve either. -pthread lets the driver put it
+  # where it belongs. -static is what makes that the archive: without it the linker takes
+  # libwinpthread.dll.a first and the binary needs libwinpthread-1.dll at load time. The system and DirectX
+  # libraries are unaffected, since mingw ships them only as import archives.
+  add_link_options(-static -static-libgcc -static-libstdc++ -pthread)
+endif()
 
 # Statically link UCRT, improves ability to run on XP when compiled with v141_xp
 #set(CMAKE_CXX_FLAGS_RELEASE "/MT")
@@ -29,14 +55,18 @@ set(LAUNCHWRAPPER
   src/cxbx/cxbxbinding.h
 )
 
-add_executable(action WIN32 ${LAUNCHWRAPPER})
-add_executable(driving WIN32 ${LAUNCHWRAPPER})
+# The CXBX-hosted launchers. Both carry the suffix, including driving_cxbx, which has no standalone
+# counterpart yet: the point of the name is to say that it still needs cxbx-reloaded, which a plain
+# "driving.exe" beside a standalone "action.exe" would quietly deny. action_cxbx is kept as the reference to
+# bisect the standalone path against; both go when CXBX does. See docs/driving-engine-plan.md.
+add_executable(action_cxbx WIN32 ${LAUNCHWRAPPER})
+add_executable(driving_cxbx WIN32 ${LAUNCHWRAPPER})
 
-target_link_libraries(action PRIVATE
+target_link_libraries(action_cxbx PRIVATE
   shlwapi
 )
 
-target_link_libraries(driving PRIVATE
+target_link_libraries(driving_cxbx PRIVATE
   shlwapi
 )
 
@@ -45,7 +75,7 @@ target_link_libraries(driving PRIVATE
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 # We aren't currently loading the XBE on our end, so this is unnecessary
-#target_link_options(action PRIVATE
+#target_link_options(action_cxbx PRIVATE
 #  /INCREMENTAL:NO
 #  /BASE:0x10000
 #  /FIXED
@@ -57,6 +87,16 @@ add_library(actioninject SHARED
   src/dllmain.cpp
   src/inject_action.cpp
   src/inject.h
+  src/common/xbeOriginal.cpp
+  src/common/xbeRelocate.cpp
+  src/action/devtools/MenuProbe.cpp
+  src/action/devtools/SecretsShadow.cpp
+  src/action/devtools/UnlocksShadow.cpp
+  src/action/devtools/UpgradeShadow.cpp
+  src/action/devtools/MemShadow.cpp
+  src/action/devtools/ScoreShadow.cpp
+  src/action/devtools/DroneTablesCheck.cpp
+  src/action/devtools/DroneShadow.cpp
   src/action/game.cpp
   src/action/main.cpp
   src/common/launchInfo.cpp
@@ -72,14 +112,25 @@ add_library(actioninject SHARED
   src/action/engine/parsemap.cpp
   src/action/engine/psiFile.cpp
   src/action/engine/psiGraphics.cpp
+  src/action/engine/mouseLook.cpp
   src/action/engine/psiInput.cpp
   src/action/engine/psiLight.cpp
   src/action/engine/psiSave.cpp
+  src/action/engine/Script.cpp
   src/action/engine/Text.cpp
   src/action/engine/Vision.cpp
   src/action/engine/Woman.cpp
   src/action/engine/XboxSettings.cpp
+  src/common/xboxPath.cpp
+  src/action/engine/XboxFile.cpp
+  src/action/engine/XboxStartup.cpp
   src/action/engine/Direct3D/d3dhelpers.cpp
+  src/action/engine/Direct3D/d3dSeam.cpp
+  src/action/engine/Direct3D/backendHost.cpp
+  src/common/gfx/d3d9Backend.cpp
+  src/common/gfx/nv2aPixelShader.cpp
+  src/common/gfx/fxaa.cpp
+  src/common/gfx/textureReplace.cpp
   src/action/game/Autoaim.cpp
   src/action/game/weapon_stats.cpp
   src/action/math/math.cpp
@@ -95,17 +146,27 @@ add_library(actioninject SHARED
   src/action/ui/ui.cpp
   src/action/ui/ui_dossier.cpp
   src/action/ui/ui_mp.cpp
+  src/action/ui/ui_credits.cpp
+  src/action/ui/ui_secrets.cpp
+  src/action/ui/ui_nightfire.cpp
+  src/action/ui/ui_codenames.cpp
+  src/action/ui/ui_cheats.cpp
+  src/action/ui/MenuUnlocks.cpp
   src/action/ui/ui_score.cpp
   src/action/ui/Menu.cpp
   src/action/autofunc.cpp
   src/action/game/Upgrade.cpp
   src/action/game/view.cpp
+  src/action/game/drone/BOT.cpp
+  src/action/game/drone/Behaviour.cpp
   src/action/game/drone/Drone.cpp
+  src/action/game/drone/DroneSM.cpp
   src/action/game/drone/NDrone2.cpp
   src/action/game/drone/NDrone2_Hostage.cpp
   src/action/game/mp/multiplayer.cpp
   src/action/game/obj/Break.cpp
   src/action/game/obj/Door.cpp
+  src/action/game/obj/Hint.cpp
   src/action/game/obj/build.cpp
   src/action/game/obj/car.cpp
   src/action/game/obj/control.cpp
@@ -124,14 +185,154 @@ add_library(actioninject SHARED
   src/action/game/obj/Sensor.cpp
   src/action/game/obj/SpaceLaser.cpp
   src/action/game/obj/SpaceMissile.cpp
+  src/action/game/obj/Switch.cpp
   src/action/game/sp/Locks.cpp
   src/action/game/sp/Mission.cpp
   src/action/game/sp/PlayerStats.cpp
   src/action/game/sp/SwitchChannels.cpp
+  src/action/sound/dsndSeam.cpp
+  src/common/sound/xadpcm.cpp
+  src/action/sound/xaudio2Backend.cpp
+  src/action/sound/dsndStream.cpp
   src/action/sound/music.cpp
   src/action/sound/SFX.cpp
   src/action/sound/Sound.cpp
 )
+
+# The seams' native backends (common/gfx/d3d9Backend.cpp, sound/xaudio2Backend.cpp)
+#
+# xinput9_1_0 and user32 come from #pragma comment(lib) in the sources, which only MSVC's linker acts on -
+# GNU ld ignores it silently - so they are named here as well. That is a harmless duplicate under MSVC.
+# The XAudio2 import library is "xaudio2" in the Windows SDK; mingw-w64 ships per-version libraries and
+# has no such alias, so the 2.9 one (Windows 10's, which is what the backend targets) is named instead.
+if(MINGW)
+  set(XAUDIO2_LIB xaudio2_9)
+else()
+  set(XAUDIO2_LIB xaudio2)
+endif()
+target_link_libraries(actioninject PRIVATE
+  d3d9 d3dcompiler winmm ${XAUDIO2_LIB} xinput9_1_0 user32)
+
+# The standalone loader (stage B 4.2/4.3): maps the XBE itself and runs it in-process, with no emulator in
+# the process at all. This is "action.exe" - the canonical way to run the action engine - and the CXBX
+# launcher above is the one that now carries a suffix. Linked with /FIXED and no ASLR because the XBE is full
+# of absolute addresses and has to land at its own base; see src/loader/loadermain.cpp.
+add_executable(action
+  # reserve.cpp must stay first: its array has to be the first thing in .text so that the XBE, copied over
+  # the start of the image, lands on the array rather than on the loader's own code. Xbe_Map checks this.
+  src/loader/reserve.cpp
+  src/loader/loadermain.cpp
+  src/loader/xbe.cpp
+  src/loader/kernel.cpp
+  src/loader/file.cpp
+  src/common/xboxPath.cpp
+  # The same icon the other executables carry. A .rc contributes nothing to .text, so it does not disturb
+  # the ordering the reservation array depends on.
+  src/res/res.rc
+)
+# /BASE plus /FIXED is how the loader gets the XBE's address range at all: the kernel maps the executable at
+# its preferred base before anything else exists in the process, which is the only way to be there first.
+# VirtualAlloc cannot do it, even into a suspended process - see src/loader/reserve.cpp.
+# /SAFESEH:NO because the mapped XBE ends up inside this image's address range, so every SEH handler the
+# game registers looks to Windows like one of this executable's - and would be rejected for not being in its
+# table of safe handlers.
+# /NXCOMPAT:NO because an Xbox title's memory is all executable and this one means it: EAGL compiles its
+# render methods into allocated memory and calls them, which under DEP faults the moment a model draws
+# ("tried to access <heap address>, protection PAGE_READWRITE"). Marking the image as not DEP-aware turns
+# DEP off for the process, which is the console's own model; the loader's memory shims hand out executable
+# pages to match (src/loader/kernel.cpp).
+#
+# A function because both loaders - this one and "driving" below - are linked exactly the same way.
+function(nightfire_loader_link target)
+  if(MSVC)
+    target_link_options(${target} PRIVATE
+      /BASE:0x10000 /FIXED /DYNAMICBASE:NO /SAFESEH:NO /NXCOMPAT:NO /INCREMENTAL:NO)
+  else()
+    # The same things GNU ld's way. --disable-reloc-section is /FIXED: with no relocation directory the
+    # image cannot be moved. There is no equivalent of /SAFESEH:NO and none is needed, because MinGW does
+    # not emit the table of safe handlers that option exists to switch off. /INCREMENTAL has no counterpart
+    # either.
+    #
+    # And no /NXCOMPAT:NO. This build runs under Wine, which answers an image that is not DEP-aware by making
+    # every page in the process executable - Wine's and DXVK's own included - and under Rosetta a write to an
+    # executable page costs a fault and a flush of translated code. That took the action engine from 50 fps to
+    # 11 and the driving engine to under one. The loader's memory shims (src/loader/kernel.cpp) already hand
+    # the game executable pages, which is all EAGL needs; the process-wide switch only ever added the cost.
+    #
+    # --stack sets MSVC's default. GNU ld's is 2 MB, and every thread in the process - the game's, D3D's, the
+    # driver's, XAudio2's - reserves its stack at the size in the executable's header, so under the default
+    # they took twice the address space. Most of them land below 0x10000000, which is where the game's
+    # contiguous memory has to be (see MmAllocateContiguousMemoryEx in src/loader/kernel.cpp), and with 2 MB
+    # stacks it ran out: the action engine crashed at its first movie.
+    target_link_options(${target} PRIVATE
+      -Wl,--image-base,0x10000 -Wl,--disable-dynamicbase -Wl,--disable-reloc-section
+      -Wl,--stack,0x100000)
+  endif()
+
+  # MinGW links its C runtime's startup objects ahead of the target's own, which would put mainCRTStartup
+  # inside the range the XBE is copied over - the loader would run, then return into memory it had already
+  # overwritten. -nostartfiles drops them from the front and they are named again below, after our objects,
+  # so that reserve.cpp's array really is the first thing in .text. tools/check_loader_image.py enforces the
+  # result, because nothing about this fails at build time.
+  if(MINGW)
+    target_link_options(${target} PRIVATE -nostartfiles)
+    # The compiler knows where its startup objects are; asking beats hardcoding a sysroot layout. It needs
+    # the same --sysroot the compile flags carry, or it answers with the bare filename it was given.
+    separate_arguments(nf_cxx_flags NATIVE_COMMAND "${CMAKE_CXX_FLAGS}")
+    foreach(crt crt2.o crtbegin.o crtend.o)
+      execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} --target=${CMAKE_CXX_COMPILER_TARGET} ${nf_cxx_flags}
+                -print-file-name=${crt}
+        OUTPUT_VARIABLE crt_path OUTPUT_STRIP_TRAILING_WHITESPACE)
+      if(NOT EXISTS "${crt_path}")
+        message(FATAL_ERROR "could not locate the MinGW startup object ${crt}: got '${crt_path}'")
+      endif()
+      target_link_libraries(${target} PRIVATE "${crt_path}")
+    endforeach()
+  endif()
+
+  # winmm for the millisecond clock behind KeTickCount (src/loader/kernel.cpp).
+  target_link_libraries(${target} PRIVATE winmm)
+endfunction()
+
+nightfire_loader_link(action)
+
+# Symbol maps for both binaries that appear in crash backtraces.
+#
+# When a fault escapes the loader's own handler - which happens if the corruption is bad enough that the
+# exception cannot be dispatched at all - the host prints raw module offsets instead, as Wine did with
+# "actioninject (+0x16643)". Without a map that offset names nothing. The maps are written beside the
+# binaries, cost nothing at runtime and are not shipped in the executable, so there is no reason not to.
+if(MSVC)
+  target_link_options(action PRIVATE /MAP)
+  target_link_options(actioninject PRIVATE /MAP)
+else()
+  target_link_options(action PRIVATE -Wl,-Map,action.map)
+  target_link_options(actioninject PRIVATE -Wl,-Map,actioninject.map)
+endif()
+
+# The same loader, pointed at Driving.xbe and drivinginject.dll - step 1 of docs/driving-engine-plan.md
+# section 7. Nothing in the loader was ever specific to the action engine: both XBEs have base 0x10000, the
+# reservation array spans the larger of the two, and the kernel imports are the same shape. Only the two
+# default file names differ, and IS_DRIVING is what picks them; both are still overridable on the command
+# line. This is the "driving.exe" the plan reserved the name for.
+add_executable(driving
+  # reserve.cpp first, for the same reason as the action loader above.
+  src/loader/reserve.cpp
+  src/loader/loadermain.cpp
+  src/loader/xbe.cpp
+  src/loader/kernel.cpp
+  src/loader/file.cpp
+  src/common/xboxPath.cpp
+  src/res/res.rc
+)
+target_compile_definitions(driving PRIVATE IS_DRIVING)
+nightfire_loader_link(driving)
+if(MSVC)
+  target_link_options(driving PRIVATE /MAP)
+else()
+  target_link_options(driving PRIVATE -Wl,-Map,driving.map)
+endif()
 
 add_library(drivinginject SHARED
   src/dllmain.cpp
@@ -144,18 +345,62 @@ add_library(drivinginject SHARED
   src/driving/memory.cpp
   src/driving/EventManager.cpp
   src/driving/Scheduler.cpp
-  src/driving/engine/FileNameList.cpp
+  src/driving/render/RGlareManager.cpp
+  src/driving/render/RSceneObj.cpp
+  src/driving/devtools/Teleport.cpp
   src/driving/engine/UFileLoader.cpp
+  src/driving/engine/ActionQueue.cpp
+  src/driving/engine/InputDevice.cpp
+  src/driving/engine/IOModule.cpp
+  src/driving/engine/InputMapping.cpp
+  src/driving/engine/InputConfigManager.cpp
+  src/driving/engine/StringToNumber.cpp
+  src/driving/platform/Pad.cpp
+  src/common/xboxPath.cpp
+  src/driving/platform/XboxStartup.cpp
+  src/driving/platform/XboxTimer.cpp
+  src/driving/platform/XboxInput.cpp
+  src/driving/platform/LaunchOptions.cpp
+  src/driving/gfx/backendHost.cpp
+  src/driving/gfx/d3dSeam.cpp
+  src/driving/sound/dsndSeam.cpp
+  src/driving/sound/xaudio2Driving.cpp
+  src/common/sound/xadpcm.cpp
+  src/common/xbeEntrySeam.cpp
+  src/common/xbeProfiler.cpp
+  src/common/gfx/d3d9Backend.cpp
+  src/common/gfx/nv2aPixelShader.cpp
+  src/common/gfx/fxaa.cpp
+  src/common/gfx/textureReplace.cpp
 )
 
 
-target_compile_definitions(action PRIVATE UNICODE _UNICODE IS_ACTION)
-target_compile_definitions(driving PRIVATE UNICODE _UNICODE IS_DRIVING)
+# winmm for the multimedia timer the game's tick now comes from (src/driving/platform/XboxTimer.cpp);
+# d3d9/d3dcompiler for the shared graphics backend the D3D8 seam dispatches to.
+# XAUDIO2_LIB is xaudio2 or xaudio2_9 - see actioninject above.
+target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
+
+target_compile_definitions(action_cxbx PRIVATE UNICODE _UNICODE IS_ACTION)
+target_compile_definitions(driving_cxbx PRIVATE UNICODE _UNICODE IS_DRIVING)
 target_compile_definitions(actioninject PRIVATE UNICODE _UNICODE)
 target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)
+# Experimental post-process anti-aliasing on the 3D scene, before the HUD and text, in both engines. Chosen by
+# AntiAliasing in settings.ini: 0 off, 1 FXAA (src/common/gfx/fxaa.cpp, the default), 2 SMAA (not implemented
+# yet). Remove these two lines and fxaa.cpp from both source lists to take it out.
+target_compile_definitions(actioninject PRIVATE NF_ANTIALIASING)
+target_compile_definitions(drivinginject PRIVATE NF_ANTIALIASING)
 
 
-# Run preprocess.py before building actioninject and drivinginject
-add_custom_command(TARGET actioninject PRE_BUILD
-                   COMMAND python tools/preprocess.py
-                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+# Run preprocess.py before building actioninject and drivinginject. It writes the injection tables
+# (src/*/autogenerated_injections.inc) and the generated wrappers that autofunc.cpp and the UI handler
+# switch are built from, all of which are #included by sources in those two targets.
+#
+# This is a target rather than a PRE_BUILD command on purpose: PRE_BUILD is only honoured by the Visual
+# Studio generators, and everywhere else CMake quietly downgrades it to PRE_LINK - which runs after the
+# compilation that needed the generated files, so the build uses whatever the previous run left behind.
+add_custom_target(preprocess
+                  COMMAND ${Python3_EXECUTABLE} tools/preprocess.py
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                  COMMENT "Generating injection tables (tools/preprocess.py)")
+add_dependencies(actioninject preprocess)
+add_dependencies(drivinginject preprocess)

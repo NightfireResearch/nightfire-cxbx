@@ -1,0 +1,1110 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "SMissionManager",
+   "size": 7280,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined4[3]",
+     "name": "objectiveList",
+     "comment": "high: MSVC std::list<SMissionObjective*> (alloc byte +0, _Myhead +4, _Mysize +8): ctor b8c30 calls node-alloc b8490 on this, stores head at +4 and 0 at +8; GetObjectiveByIndex b8460 / PassObjective / FailObjective / SetCurrentObjective walk [+4] and "
+    },
+    {
+     "offset": 12,
+     "type": "undefined4[3]",
+     "name": "messageList",
+     "comment": "medium: second std::list: ctor b8c30 LEA +0xc, same head/size init; b89c0 (called from ClearState/dtor) frees node values of the list at +0xc. PS2 +0x4 is the message list (AddMessage/ClearMessageList). Name from PS2 sheet"
+    },
+    {
+     "offset": 24,
+     "type": "int",
+     "name": "unk18",
+     "comment": "low: zeroed by ClearState b8a30 and dtor b8e70, R/W in Load b9140; PS2 +0x8 (ClearState/Load). Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "int",
+     "name": "currentStage",
+     "comment": "medium: zeroed by ClearState/dtor, R/W in Load and ProcessRules b8610 alongside +0x20; PS2 +0xc (ClearState/ProcessRules). Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "int",
+     "name": "nextStage",
+     "comment": "medium: ChangeStage(int) b64b0 writes the arg here; ProcessRules b8610 reads it; Reset b8bf0/ClearState zero it. PS2 ChangeStage 206338 writes +0x10. Name invented"
+    },
+    {
+     "offset": 36,
+     "type": "int",
+     "name": "unk24",
+     "comment": "low: ctor b8c30 zeroes, Load b9140 writes. Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "int",
+     "name": "unk28",
+     "comment": "low: Load b9140 writes. Name invented"
+    },
+    {
+     "offset": 44,
+     "type": "void *",
+     "name": "playerProfile",
+     "comment": "medium: ctor stores &0x238f20 (a 0x2f8-byte global memset by the ctor; likely the UberBond of TallyScores(UberBond&)/ClearScoreBuffer(UberBond&)); ResetCharInfo b67f0 reads ints [+0x2c]+0x27c..0x2a8 for health/shield; read by GetEnemyAccuracyBoost/Gl"
+    },
+    {
+     "offset": 48,
+     "type": "undefined4[3]",
+     "name": "globalRuleList",
+     "comment": "medium: SMissionRuleList (12-byte std::list): ctor inits like the lists above; dtor passes it to DestroyRuleList(SMissionRuleList&) b8900 then erases it; Load/ProcessRules read its head +0x34. PS2 +0x20. Name invented"
+    },
+    {
+     "offset": 60,
+     "type": "undefined4[192]",
+     "name": "stageRuleLists",
+     "comment": "medium: SMissionRuleList[64] of 12 bytes: ctor eh-vector-ctor(this+0x3c, 0xc, 0x40, 0x11cc10, 0x13540); dtor calls DestroyRuleList b8900 on each (stride 0xc, 64). PS2 +0x24 (64 x 4). Name invented"
+    },
+    {
+     "offset": 864,
+     "type": "byte[200]",
+     "name": "timers",
+     "comment": "high: SMissionTimer[10], 0x14 each: ctor eh-vector-ctor(this+0x360, 0x14, 10, ctor b95d0, dtor d3580); ClearState/Reset call b95e0 and SMissionTimer::Reset b9ce0 per element. PS2 +0x150, 10 x 0x18. Typed as bytes (SMissionTimer not in Ghidra). Name i"
+    },
+    {
+     "offset": 1064,
+     "type": "int",
+     "name": "unk428",
+     "comment": "low: ctor b8c30 sets -1. PS2 +0x240. Name invented"
+    },
+    {
+     "offset": 1076,
+     "type": "bool[64]",
+     "name": "magicCounterReached",
+     "comment": "high: IncMagicCounter b7a40 sets byte [this+idx+0x434]=1 when counter[idx] >= threshold[idx] (idx<0x40); ClearState zeroes 16 dwords from +0x434; single bytes 0x437..0x444, 0x44c written by cinematic/objective/Load code are elements. PS2 +0x3e4 (LEA "
+    },
+    {
+     "offset": 1140,
+     "type": "int",
+     "name": "missionState",
+     "comment": "medium: Start b6380 / Stop b63a0 accessor; also Lose, ProcessRules, Reset, SkipCinematic; ctor zeroes. PS2 +0x34c same methods. Name invented"
+    },
+    {
+     "offset": 1144,
+     "type": "bool",
+     "name": "autoDrive",
+     "comment": "medium: SetAutoDrive(bool,bool) b64c0, SetDriveMissile; ctor zeroes byte. PS2 +0x350 (4-byte bool). Name invented"
+    },
+    {
+     "offset": 1145,
+     "type": "bool",
+     "name": "driveMissileActive",
+     "comment": "low: SetDriveMissile b80b0 / UpdateAutoDriveMissile b7ae0; ctor zeroes byte. PS2 +0x354. Name invented"
+    },
+    {
+     "offset": 1148,
+     "type": "Missile *",
+     "name": "driveMissile",
+     "comment": "high: SetDriveMissile(Missile*) stores it; UpdateAutoDriveMissile passes it to Missile::SetTarget/SetUserSteerX/Y. PS2 +0x358 -> Missile::SetTarget. Name invented"
+    },
+    {
+     "offset": 1152,
+     "type": "float",
+     "name": "driveMissileF480",
+     "comment": "low: float, ctor zeroes, SetDriveMissile/UpdateAutoDriveMissile. PS2 +0x35c. Name invented"
+    },
+    {
+     "offset": 1156,
+     "type": "float",
+     "name": "driveMissileF484",
+     "comment": "low: as +0x480. PS2 +0x360. Name invented"
+    },
+    {
+     "offset": 1160,
+     "type": "float",
+     "name": "driveMissileF488",
+     "comment": "low: as +0x480. PS2 +0x364. Name invented"
+    },
+    {
+     "offset": 1164,
+     "type": "float",
+     "name": "driveMissileF48c",
+     "comment": "low: as +0x480. PS2 +0x368. Name invented"
+    },
+    {
+     "offset": 1168,
+     "type": "ActionQueue *",
+     "name": "actionQueue",
+     "comment": "high: ctor: operator new(0x974, tag) + ctor 4f320; dtor calls 4f1b0 then sized free 0x974; UpdateAutoDriveMissile calls ActionQueue::IsEmpty/GetAction/PopAction, Reset ActionQueue::Flush. PS2 +0x36c -> ActionQueue::~ActionQueue. Name invented"
+    },
+    {
+     "offset": 1172,
+     "type": "int",
+     "name": "unk494",
+     "comment": "low: ResetCharInfo b67f0 writes 0. Name invented"
+    },
+    {
+     "offset": 1176,
+     "type": "int",
+     "name": "unk498",
+     "comment": "low: ResetCharInfo writes 100. Name invented"
+    },
+    {
+     "offset": 1180,
+     "type": "float",
+     "name": "playerHealth",
+     "comment": "medium: ResetCharInfo: FILD profile+0x280 (or 10000.0), scaled by difficulty; BoostPlayerHealth b65f0, GetPlayerHealth(bool asProportion) b67d0 reads it with +0x4a0; UpdateCharInfo. PS2 GetPlayerHealth 206b20. Name invented"
+    },
+    {
+     "offset": 1184,
+     "type": "float",
+     "name": "playerMaxHealth",
+     "comment": "medium: ResetCharInfo: FILD profile+0x27c (or 10000.0); GetPlayerHealth divisor. Name invented"
+    },
+    {
+     "offset": 1188,
+     "type": "float",
+     "name": "playerShield",
+     "comment": "medium: ResetCharInfo: FILD profile+0x288 (default 0.0), clamped to maxShield; BoostPlayerShield b6640. Name invented"
+    },
+    {
+     "offset": 1192,
+     "type": "float",
+     "name": "playerMaxShield",
+     "comment": "medium: ResetCharInfo: FILD profile+0x284 (default 1000.0); cheat flags 0x244530 set it to 2x/3x/4x. Name invented"
+    },
+    {
+     "offset": 1196,
+     "type": "undefined4[12]",
+     "name": "charInfoSlots",
+     "comment": "low: ResetCharInfo writes two 6-dword records {int 1|2, 0, 1000.0f, 1000.0f, 0, 1000.0f} at +0x4ac and +0x4c4. PS2 +0x388..0x3b4 similar pattern. Name invented"
+    },
+    {
+     "offset": 1244,
+     "type": "int",
+     "name": "difficulty",
+     "comment": "high: ctor copies global 0x244514; switched on 0/1/2 in ctor and ResetCharInfo; read by GetEnemyAccuracyBoost/GetEnemyGlueFactor/RestoreLives/ShowMissionText. PS2 +0x3b8 same methods. Name invented"
+    },
+    {
+     "offset": 1248,
+     "type": "int",
+     "name": "shotsFired",
+     "comment": "high: IncShotsFired b66f0, IncShotsHit, ClearState zero, CalcEndMissionScores/TallyScores. PS2 +0x3bc. Name invented"
+    },
+    {
+     "offset": 1252,
+     "type": "int",
+     "name": "shotsHit",
+     "comment": "medium: IncShotsHit b6720, ClearState, CalcEndMissionScores/TallyScores (FPU use there, PS2 +0x3c0 lwc1: may be float). Name invented"
+    },
+    {
+     "offset": 1256,
+     "type": "int",
+     "name": "kills",
+     "comment": "high: IncKills b6770 accessor, Win, ClearState, TallyScores. PS2 +0x3c4. Name invented"
+    },
+    {
+     "offset": 1260,
+     "type": "float",
+     "name": "playerDamage",
+     "comment": "medium: IncPlayerDamage(float) b66c0, ClearState, TallyScores (float). PS2 +0x3c8. Name invented"
+    },
+    {
+     "offset": 1264,
+     "type": "int",
+     "name": "cinematicMode",
+     "comment": "medium: SetCinematicMode(int)/ClearCinematicMode/GoingToSkipCinematic/IsSkippingCinematic/Lose; ClearState zero. PS2 +0x3cc. (Evidence hint GHud::GetBlackFadePct is a this-alias artefact.) Name invented"
+    },
+    {
+     "offset": 1268,
+     "type": "bool",
+     "name": "skippingCinematic",
+     "comment": "medium: byte; SkipCinematic/GoingToSkipCinematic/IsSkippingCinematic/ClearCinematicMode; ClearState zero. PS2 +0x3d0 (4 bytes). Name invented"
+    },
+    {
+     "offset": 1272,
+     "type": "int",
+     "name": "unk4f8",
+     "comment": "low: ClearState zero, UpdateObjectiveSpecial. PS2 +0x3d4. Name invented"
+    },
+    {
+     "offset": 1276,
+     "type": "int",
+     "name": "unk4fc",
+     "comment": "low: ClearState zero, TallyScores. PS2 +0x3d8. Name invented"
+    },
+    {
+     "offset": 1280,
+     "type": "int",
+     "name": "unk500",
+     "comment": "low: ClearState zero, CalcEndMissionScores, TallyScores. PS2 +0x3dc. Name invented"
+    },
+    {
+     "offset": 1284,
+     "type": "int",
+     "name": "unk504",
+     "comment": "low: ClearState zero, IncPlayerDamage, UpdateCharInfo. PS2 +0x3e0. Name invented"
+    },
+    {
+     "offset": 1288,
+     "type": "int[64]",
+     "name": "magicCounters",
+     "comment": "high: IncMagicCounter b7a40: ++[this+idx*4+0x508] (idx<0x40); ClearState zeroes [ecx-0x100] while filling thresholds; +0x538/+0x540 are elements 12 and 14. PS2 +0x414/0x41c elements. Name invented"
+    },
+    {
+     "offset": 1544,
+     "type": "int[64]",
+     "name": "magicCounterThresholds",
+     "comment": "high: ClearState fills 64 ints at +0x608 (-1 or 2/3/4/6 via switch); IncMagicCounter compares counter >= [+idx*4+0x608]. PS2 +0x4e4. Name invented"
+    },
+    {
+     "offset": 1800,
+     "type": "int",
+     "name": "scoreTotal",
+     "comment": "low: AddScore b6e30, CompleteTimedAction, TallyScores, ClearState zero. PS2 +0x5e4. Name invented"
+    },
+    {
+     "offset": 1804,
+     "type": "int",
+     "name": "unk70c",
+     "comment": "low: ClearState zero, TallyScores, Win. PS2 +0x5e8 (float). Name invented"
+    },
+    {
+     "offset": 1808,
+     "type": "bool",
+     "name": "unk710",
+     "comment": "low: ClearState: set from global byte 0x1e476c; if set magicCounterReached[24] (+0x44c)=1. PS2 +0x5ec. Name invented"
+    },
+    {
+     "offset": 1812,
+     "type": "int",
+     "name": "unk714",
+     "comment": "low: ClearState zero, IncShotsFired, IncShotsHit. PS2 +0x5f0. Name invented"
+    },
+    {
+     "offset": 1816,
+     "type": "int",
+     "name": "unk718",
+     "comment": "low: ctor zero, Load writes, ResetCharInfo caps health when >0. PS2 +0x5f4. Name invented"
+    },
+    {
+     "offset": 1820,
+     "type": "int",
+     "name": "unk71c",
+     "comment": "low: address taken and read in UpdateObjectiveSpecial b81a0. PS2 +0x5f8. Name invented"
+    },
+    {
+     "offset": 1824,
+     "type": "int",
+     "name": "unk720",
+     "comment": "low: read in UpdateObjectiveSpecial. Name invented"
+    },
+    {
+     "offset": 1828,
+     "type": "int[2]",
+     "name": "unk724",
+     "comment": "low: ClearState zeroes 2 ints (loop i<2); UpdateObjectiveSpecial takes the address. PS2 +0x610. Name invented"
+    },
+    {
+     "offset": 1844,
+     "type": "bool[2]",
+     "name": "unk734",
+     "comment": "low: ClearState zeroes bytes +0x734+i in the same i<2 loop as +0x724. Name invented"
+    },
+    {
+     "offset": 1848,
+     "type": "int[12]",
+     "name": "scoreWeights",
+     "comment": "medium: ctor copies 12 dwords from global 0x244094..0x2440c4; TallyScores takes the address. PS2 +0x618. Name invented"
+    },
+    {
+     "offset": 1896,
+     "type": "int[12]",
+     "name": "scores",
+     "comment": "medium: per MissionScoreCategory: ClearState rep-stosd 12 dwords; CalcEndMissionScores writes +0x770..0x794; CompleteTimedAction +0x76c; TallyScores. PS2 +0x648 (AddScore; PS2 CalcEndMissionScores stores floats, so some entries may be float). Name in"
+    },
+    {
+     "offset": 1944,
+     "type": "int",
+     "name": "currentObjective",
+     "comment": "low: the three SetObjective overloads b7f60/b7fb0/b8000 and UpdateObjectiveSpecial; ClearState zero. PS2 +0x678. Name invented"
+    },
+    {
+     "offset": 1948,
+     "type": "byte[192]",
+     "name": "timedActions",
+     "comment": "medium: 8 records of 0x18: ClearState clears the first byte of each; UpdateTimedActions takes +0x7b0 (=+0x14 of record 0). PS2 +0x67c (StartTimedAction/CompleteTimedAction). Name invented"
+    },
+    {
+     "offset": 2140,
+     "type": "byte[5120]",
+     "name": "sectionProfiles",
+     "comment": "high: 64 records of 0x50: ctor and ClearState loop 0x40 x stride 0x50 clearing byte +0 and setting float +0x40=1000.0, +0x44/+0x48/+0x4c=0; StartSectionProfile takes the address. PS2 +0x73c (StartSectionProfile/ClearState), ending at 0x1b3c like Xbox"
+    },
+    {
+     "offset": 7260,
+     "type": "int",
+     "name": "numSectionProfiles",
+     "comment": "medium: ClearState zero, StartSectionProfile R/W. PS2 +0x1b3c. Name invented"
+    },
+    {
+     "offset": 7264,
+     "type": "int",
+     "name": "currentSectionProfile",
+     "comment": "medium: ClearState -1, StartSectionProfile, Update. PS2 +0x1b40 (GetCurrentSectionProfile). Name invented"
+    },
+    {
+     "offset": 7268,
+     "type": "char *",
+     "name": "carType",
+     "comment": "high: GetCarType b6140 returns it; SetCarType b60a0 writes. PS2 +0x1b44 passed to strcasecmp. Name invented"
+    }
+   ],
+   "comment": "Singleton: SMissionManager::Construct b8ff0 does operator new(0x1c70) + ctor b8c30 and stores it in global 0x239220 (Destruct b9060 deletes it). No vptr. Xbox uses MSVC std::list (12 bytes) for objectives/messages/rule lists where PS2 uses bare pointers, so the Xbox front is larger; later bools pack to 1 byte."
+  },
+  {
+   "name": "GGallery",
+   "size": 192,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "UGroup *",
+     "name": "gallery",
+     "comment": "high: ctor d5d20 stores the result of 117d60 (group load of the file); GET_Gallery d5800 returns it; GET_SomeThing -> UGroup::GetArray. PS2 +0x0. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "fileData",
+     "comment": "medium: ctor stores the loaded file buffer; dtor d6e30 frees it (113f20) and zeroes. PS2 +0x4 -> MEM_free. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "void *[15]",
+     "name": "shapes",
+     "comment": "medium: ctor loop (ebx<0xf) news 0x4c-byte objects (ctor eca20) into [this+count*4+0x10]; dtor frees count of them (ecab0 + sized free 0x4c). PS2 +0x10 addr-taken. Name invented"
+    },
+    {
+     "offset": 76,
+     "type": "int",
+     "name": "numShapes",
+     "comment": "high: ctor zeroes and increments per shape; dtor loop bound. PS2 +0x4c. Name invented"
+    },
+    {
+     "offset": 80,
+     "type": "uint",
+     "name": "colour",
+     "comment": "medium: ctor 0x7f7f7f7f; read by BITMAP/FONT/QUAD/SPRITE draw and SetState. PS2 +0x50. Name invented"
+    },
+    {
+     "offset": 96,
+     "type": "COORD4",
+     "name": "stateVec60",
+     "comment": "low: ctor copies 16 bytes from 0x193e04; floats +0x64/+0x68 in FONT/QUAD/SPRITE_SetState and BITMAP_Draw2D. PS2 +0x60 (8-byte stores). Name invented"
+    },
+    {
+     "offset": 112,
+     "type": "COORD4",
+     "name": "stateVec70",
+     "comment": "low: ctor copies 16 bytes from 0x193e14; address taken in the SetState methods. PS2 +0x70. Name invented"
+    },
+    {
+     "offset": 128,
+     "type": "COORD4",
+     "name": "stateVec80",
+     "comment": "low: ctor copies 16 bytes from 0x193e24; floats +0x80/+0x84 in SPRITE_SetState/SPRITE_Draw2D/BITMAP_Draw2D. PS2 +0x80. Name invented"
+    },
+    {
+     "offset": 144,
+     "type": "int",
+     "name": "unk90",
+     "comment": "low: ctor zero; FONT_SetState/SPRITE_SetState write. PS2 +0x90. Name invented"
+    },
+    {
+     "offset": 160,
+     "type": "undefined4",
+     "name": "unkA0",
+     "comment": "low: ctor copies global 0x193dec. PS2 +0xa0 (8-byte store covering +0xa4). Name invented"
+    },
+    {
+     "offset": 164,
+     "type": "undefined4",
+     "name": "unkA4",
+     "comment": "low: ctor copies global 0x193df0. Name invented"
+    },
+    {
+     "offset": 168,
+     "type": "void *",
+     "name": "font",
+     "comment": "high: FONT_Load/Draw/Width/Height/SetScale use it; dtor frees via 107b60. PS2 +0xa8 -> FONT_destroy/FONT_getrecta. Name invented"
+    },
+    {
+     "offset": 172,
+     "type": "void *",
+     "name": "fontFileData",
+     "comment": "medium: FONT_Load writes; dtor frees via 117110. PS2 +0xac -> UFileLoader::FileFree. Name invented"
+    },
+    {
+     "offset": 176,
+     "type": "bool",
+     "name": "unkB0",
+     "comment": "low: byte; ctor zero, read by BITMAP_Draw2D/FONT_Draw/QUAD_Draw2D. PS2 +0xb0 (4 bytes). Name invented"
+    }
+   ],
+   "comment": "GHud ctor dab50 does operator new(0xc0) + GGallery::GGallery(char*) d5d20 and stores it at GHud+0x18. No vptr; offsets identical to PS2 up to +0xb0."
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x000b60a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::SetCarType(void)"
+  },
+  {
+   "address": "0x000b6140",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::GetCarType(void)",
+   "return": "char *"
+  },
+  {
+   "address": "0x000b6160",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::LoadWeaponSet(void)"
+  },
+  {
+   "address": "0x000b6380",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::Start(void)"
+  },
+  {
+   "address": "0x000b63a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::Stop(void)"
+  },
+  {
+   "address": "0x000b63c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::RestoreLives(void)"
+  },
+  {
+   "address": "0x000b63f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "SMissionManager::ClearScoreBuffer(UberBond &)"
+  },
+  {
+   "address": "0x000b64b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::ChangeStage(int)"
+  },
+  {
+   "address": "0x000b64c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "SMissionManager::SetAutoDrive(bool, bool)"
+  },
+  {
+   "address": "0x000b6590",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::GoingToSkipCinematic(void)"
+  },
+  {
+   "address": "0x000b65b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::IsSkippingCinematic(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x000b65f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "SMissionManager::BoostPlayerHealth(float)"
+  },
+  {
+   "address": "0x000b6640",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "SMissionManager::BoostPlayerShield(float)"
+  },
+  {
+   "address": "0x000b66c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "SMissionManager::IncPlayerDamage(float)"
+  },
+  {
+   "address": "0x000b66f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::IncShotsFired(int)"
+  },
+  {
+   "address": "0x000b6720",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "SMissionManager::IncShotsHit(bool)"
+  },
+  {
+   "address": "0x000b6770",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::IncKills(int)"
+  },
+  {
+   "address": "0x000b67a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::GetMagicCounter(int) const",
+   "return": "int"
+  },
+  {
+   "address": "0x000b67b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::SetMagicCounterThreshold(int, int)"
+  },
+  {
+   "address": "0x000b67d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "SMissionManager::GetPlayerHealth(bool) const",
+   "return": "float"
+  },
+  {
+   "address": "0x000b67f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::ResetCharInfo(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000b6b20",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::UpdateCharInfo(void)"
+  },
+  {
+   "address": "0x000b6bd0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "int"
+    },
+    {
+     "name": "param_5",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::StartTimedAction(int, float, float, int, int)"
+  },
+  {
+   "address": "0x000b6c50",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::ClearObjective(MissionObjectiveType)"
+  },
+  {
+   "address": "0x000b6c70",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::GetCurrObjective(MissionObjectiveType)"
+  },
+  {
+   "address": "0x000b6cc0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::GetObjectiveComment(MissionObjectiveType)"
+  },
+  {
+   "address": "0x000b6cd0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::GetObjectiveArrowHeight(MissionObjectiveType)"
+  },
+  {
+   "address": "0x000b6e30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::AddScore(MissionScoreCategory, int)"
+  },
+  {
+   "address": "0x000b6e80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::CalcEndMissionScores(void)"
+  },
+  {
+   "address": "0x000b7260",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::GetEnemyAccuracyBoost(void)"
+  },
+  {
+   "address": "0x000b7290",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::GetEnemyGlueFactor(void)"
+  },
+  {
+   "address": "0x000b72c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::ShowMissionText(int, int)"
+  },
+  {
+   "address": "0x000b72f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    }
+   ],
+   "sheet": "SMissionManager::ProgrammerDefinedEvent(int, char *)"
+  },
+  {
+   "address": "0x000b7300",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::CheckProgrammerEvent(int)"
+  },
+  {
+   "address": "0x000b7310",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::ClearProgrammerEvent(int)"
+  },
+  {
+   "address": "0x000b7320",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "SMissionManager::StartSectionProfile(char *)"
+  },
+  {
+   "address": "0x000b7470",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "SMissionManager::TallyScores(UberBond &, bool)"
+  },
+  {
+   "address": "0x000b7950",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::ClearCinematicMode(int)"
+  },
+  {
+   "address": "0x000b79d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::SkipCinematic(void)"
+  },
+  {
+   "address": "0x000b7a40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::IncMagicCounter(int)",
+   "return": "void"
+  },
+  {
+   "address": "0x000b7ac0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::SetMagicCounter(int, int)"
+  },
+  {
+   "address": "0x000b7ae0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::UpdateAutoDriveMissile(void)"
+  },
+  {
+   "address": "0x000b7de0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::CompleteTimedAction(int)"
+  },
+  {
+   "address": "0x000b7f10",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::UpdateTimedActions(void)"
+  },
+  {
+   "address": "0x000b8090",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::InitPlayerCar(void)"
+  },
+  {
+   "address": "0x000b80b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "SMissionManager::SetDriveMissile(Missile *)"
+  },
+  {
+   "address": "0x000b8160",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::SetCinematicMode(int)"
+  },
+  {
+   "address": "0x000b81a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::UpdateObjectiveSpecial(void)"
+  },
+  {
+   "address": "0x000b8460",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "SMissionManager::GetObjectiveByIndex(unsigned int)"
+  },
+  {
+   "address": "0x000b84b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::Win(void)"
+  },
+  {
+   "address": "0x000b8580",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::Lose(void)"
+  },
+  {
+   "address": "0x000b85d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionManager::CallStage(int)"
+  },
+  {
+   "address": "0x000b8610",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::ProcessRules(void)"
+  },
+  {
+   "address": "0x000b8680",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::Update(void)"
+  },
+  {
+   "address": "0x000b87f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "SMissionManager::PassObjective(unsigned int)"
+  },
+  {
+   "address": "0x000b8840",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "SMissionManager::FailObjective(unsigned int)"
+  },
+  {
+   "address": "0x000b8880",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "SMissionManager::SetCurrentObjective(unsigned int)"
+  },
+  {
+   "address": "0x000b88c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "SMissionManager::SetIncompleteObjective(unsigned int)"
+  },
+  {
+   "address": "0x000b8900",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "SMissionManager::DestroyRuleList(SMissionRuleList &)"
+  },
+  {
+   "address": "0x000b8960",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::ClearObjectiveList(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000b8a30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::ClearState(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000b8bf0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::Reset(void)"
+  },
+  {
+   "address": "0x000b8c30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::SMissionManager(void)",
+   "return": "SMissionManager *"
+  },
+  {
+   "address": "0x000b8e70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::~SMissionManager(void)"
+  },
+  {
+   "address": "0x000b8ff0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionManager::Construct(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000b9060",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "SMissionManager::Destruct(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000b9140",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "void *"
+    }
+   ],
+   "sheet": "SMissionManager::Load(UData *, UData *)"
+  }
+ ]
+}

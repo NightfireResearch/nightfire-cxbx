@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include "../actionhelpers.h"
+#include "Loader.h"
 
 
 int allocateAndLoadFileWithinArchive(char* a, unsigned short b, int* c) {
@@ -53,9 +54,8 @@ void dumpToFile(char* gamefile, void* data, size_t len) {
     fclose(file);
 }
 
-#define SingleFileMode U8_AT(0x002adf70)
-#define DirFileLen U32_AT(0x00279174)
-#define dirFileBuf U32_AT(0x00279168)
+// XBE_GLOBAL(0x002adf70, 0x1)
+static uint8_t SingleFileMode;
 
 
 
@@ -68,15 +68,15 @@ int ** __cdecl psiFileLoadOrig(char *filename, unsigned short allocType, int *si
 
   if (SingleFileMode == '\0') {
     ppiVar1 = (int **)allocateAndLoadFileWithinArchive(filename,allocType,sizeOut);
-    printf("psiFileLoad in multi-file mode: %s is 0x%08x bytes starting at 0x%08x, type %04x\n", filename, *sizeOut, ppiVar1, allocType);
+    printf("psiFileLoad in multi-file mode: %s is 0x%08x bytes starting at 0x%p, type %04x\n", filename, *sizeOut, ppiVar1, allocType);
     dumpToFile(filename, (void*)ppiVar1, *sizeOut);
     return ppiVar1;
   }
   if (sizeOut != NULL) {
     *sizeOut = DirFileLen;
   }
-  printf("psiFileLoad in single-file mode: %s is 0x%08x bytes at the location pointed to by dirFileBuf(0x00279168), type %04x\n", filename, *sizeOut, allocType);
-  dumpToFile(filename, *(void**)0x00279168, *sizeOut);
+  printf("psiFileLoad in single-file mode: %s is 0x%08x bytes at the location pointed to by dirFileBuf, type %04x\n", filename, *sizeOut, allocType);
+  dumpToFile(filename, dirFileBuf, *sizeOut);
   return (int**)dirFileBuf;
 }
 
@@ -132,7 +132,7 @@ int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOu
         return (int**)dirFileBuf;
 
     } else {
-      
+
       // In multi-file mode, we allocate memory for the file content, and return a pointer to it
 
       // Allocate memory to store the file content
@@ -154,7 +154,15 @@ int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOu
       if(sizeOut != NULL)
         *sizeOut = length;
       return (int**)fileContent;
-    
+
     }
 
+}
+
+// Switches between one file per asset and everything in one file; returns the previous mode.
+// AUTOINJECT
+char psiFileSetSingleFileMode(char mode) {
+    char previous = (char)SingleFileMode;
+    SingleFileMode = mode;
+    return previous;
 }

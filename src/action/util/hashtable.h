@@ -13,6 +13,9 @@ typedef struct {
 celglist_tag * hashtable_hashcode_to_celglist(HASHCODE hashcode);
 void hashtable_set_object_to_entity_gfx(obj_tag *obj, HASHCODE hashcode);
 void hashtable_additem(HASHCODE hashcode, void* data);
+// The injected adaptor for the original's register convention: its hashcode is read from EDI, not from the
+// argument, so C++ must never call this. Call _hashtable_getentry (file-local to hashtable.cpp) instead.
+hashtable_entry* hashtable_getentry(HASHCODE hashcode);
 void* hashtable_getitem(HASHCODE hashcode);
 void hashtable_modify(HASHCODE hashcode, void* newData);
 int hashtable_get_hashtype_count(uint hashtype);

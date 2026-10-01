@@ -1,41 +1,112 @@
 name: CI
 
-on: push
+# Pushes to any branch, and pull requests - the latter so that a PR from a fork is built too, which a push
+# trigger alone never sees. A PR from a branch in this repository is therefore built twice; if that becomes
+# annoying, restrict the push trigger to the default branch rather than dropping either one.
+on:
+  push:
+  pull_request:
 
 jobs:
-  build:
-    #name:
+  # The native build, with MSVC. Pinned to the 2022 generator to match the runner image; the game is a
+  # 32-bit x86 binary and the loader has to share its address space, so Win32 is not a choice. Both of
+  # those live in CMakePresets.json now, so this runs the same two commands the README gives a person.
+  windows:
     runs-on: windows-2022
-
     steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
-        with:
-          submodules: 'true'
+      - uses: actions/checkout@v7
 
-      #- name: Install vc141_xp
-      #  run: |
-      #    Start-Process "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" -ArgumentList 'modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise" --quiet --add Microsoft.VisualStudio.Component.WinXP' -Wait -PassThru
-
-      - name: Create Build Folder
-        run: |
-          cmake -E make_directory ${{ runner.workspace }}/build
-
-      - name: Configure CMake
-        shell: bash
-        working-directory: ${{ runner.workspace }}/build
-        run: |
-          cmake $GITHUB_WORKSPACE -G "Visual Studio 17 2022" -A Win32
-          # cmake $GITHUB_WORKSPACE -G "Visual Studio 16 2019" -T v141_xp -A Win32
+      - name: Configure
+        run: cmake --preset windows
 
       - name: Build
-        working-directory: ${{ runner.workspace }}/build
-        shell: bash
-        run: |
-          cmake --build . --config Release
+        run: cmake --build --preset windows
 
-      - name: Upload Installer Artifact to GitHub
-        uses: actions/upload-artifact@v4
+      # action.exe only works because it is the image at the XBE's base address - linked at 0x10000, large
+      # enough to span the XBE, with ASLR off, and with its own code above the XBE's end. Those are link
+      # options, and losing one of them fails at runtime rather than at build time, so without this a broken
+      # loader would be published happily.
+      - name: Check the loader was linked correctly
+        run: python tools/check_loader_image.py build/windows/Release/action.exe
+
+      # The same loader, linked the same way, carrying Driving.xbe. That XBE is the smaller of the two, so
+      # the default size check (the action engine's) is the stricter one and needs no argument.
+      - name: Check the driving loader was linked correctly
+        run: python tools/check_loader_image.py build/windows/Release/driving.exe
+
+      - uses: actions/upload-artifact@v7
         with:
-          #name: ${{ env.PKGNAME }}-Installer
-          path: ${{ runner.workspace }}/build/Release
+          name: nightfire-cxbx-Release
+          path: build/windows/Release
+
+  # The cross build: clang with the mingw-w64 sysroot, producing the same Windows binaries from macOS. It
+  # is here to keep that path working rather than to ship from - see docs/macos-build.md for what differs.
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install the cross toolchain
+        run: brew install mingw-w64 ninja
+
+      - name: Configure
+        run: cmake --preset macos
+
+      - name: Build
+        run: cmake --build --preset macos
+
+      - name: Check the loader was linked correctly
+        run: python3 tools/check_loader_image.py build/macos/action.exe
+
+      - name: Check the driving loader was linked correctly
+        run: python3 tools/check_loader_image.py build/macos/driving.exe
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nightfire-cxbx-macos-cross
+          path: |
+            build/macos/action.exe
+            build/macos/driving.exe
+            build/macos/actioninject.dll
+            build/macos/drivinginject.dll
+            build/macos/action_cxbx.exe
+            build/macos/driving_cxbx.exe
+
+  # The same cross build from Linux, with the distribution's mingw-w64 in place of Homebrew's. The toolchain
+  # file is shared with macOS and finds the /usr sysroot by itself. Pinned to 26.04 because the build needs
+  # mingw-w64 13 or later for x3daudio.h, and ubuntu-latest is still 24.04, whose mingw-w64 is 11.
+  linux:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+
+      # g++-mingw-w64-i686 rather than just the headers and CRT: the build links libstdc++ and libgcc
+      # statically, and those come with the GCC cross compiler. It pulls in binutils-mingw-w64-i686 for
+      # i686-w64-mingw32-ld and -windres.
+      - name: Install the cross toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang g++-mingw-w64-i686 ninja-build
+
+      - name: Configure
+        run: cmake --preset linux
+
+      - name: Build
+        run: cmake --build --preset linux
+
+      - name: Check the loader was linked correctly
+        run: python3 tools/check_loader_image.py build/linux/action.exe
+
+      - name: Check the driving loader was linked correctly
+        run: python3 tools/check_loader_image.py build/linux/driving.exe
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nightfire-cxbx-linux-cross
+          path: |
+            build/linux/action.exe
+            build/linux/driving.exe
+            build/linux/actioninject.dll
+            build/linux/drivinginject.dll
+            build/linux/action_cxbx.exe
+            build/linux/driving_cxbx.exe

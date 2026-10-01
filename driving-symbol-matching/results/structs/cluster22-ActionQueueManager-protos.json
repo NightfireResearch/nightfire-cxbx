@@ -1,0 +1,56 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0004f360",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "ActionQueueManager::FeedQueue(ActionData)",
+   "return": "void"
+  },
+  {
+   "address": "0x0004f3b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActionQueueManager::FlushAllQueues(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0004f440",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ActionQueueManager::UnRegisterQueue(ActionQueue *)",
+   "return": "void"
+  },
+  {
+   "address": "0x0004f7d0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "ActionQueueManager::GetActionQueueManager(void)",
+   "return": "ActionQueueManager *"
+  },
+  {
+   "address": "0x0004f8a0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ActionQueueManager::RegisterQueue(ActionQueue *)",
+   "return": "void"
+  }
+ ]
+}

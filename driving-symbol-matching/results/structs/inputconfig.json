@@ -1,0 +1,358 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "InputConfigManager",
+   "size": 48,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "bool",
+     "name": "initialised",
+     "comment": "high: Get 0x50287 MOV byte [0x1e455c],0; InitAndPreload 0x5067a MOV byte [EDI],1; Shutdown 0x50131 MOV byte [ECX],BL(0). No Xbox reader in scope. PS2 +0x0 int."
+    },
+    {
+     "offset": 4,
+     "type": "int",
+     "name": "currentConfigType",
+     "comment": "high: InputConfigManager::ConfigType (PS2 name): 0 Driving, 1 POV; Get stores 2 (GetCurrentConfig's 'current' sentinel). SetConfig 0x50730 stores arg1; InitAndPreload 0x5067d stores 0; GetCurrentConfig 0x50189 reads it when arg==2; RPlayerCamera::Cam"
+    },
+    {
+     "offset": 8,
+     "type": "int[2]",
+     "name": "currentConfig",
+     "comment": "high: Index into configInfos[type]. InitAndPreload loads [0]=[0x2445a4], [1]=[0x24451c] and resets >= numConfigs to 0; SetConfig 0x50735 stores arg2 unless it is -1; GetCurrentConfig returns [ECX+EAX*4+8]."
+    },
+    {
+     "offset": 16,
+     "type": "int[2]",
+     "name": "numConfigs",
+     "comment": "high: ParseMasterConfigFile 0x5036d ('Driving' N) and 0x503f8 ('POV' N), via atol; GetNumConfigs 0x50174 returns [ECX+i*4+0x10]; loop bound in Shutdown and InitAndPreload."
+    },
+    {
+     "offset": 24,
+     "type": "ConfigInfo *[2]",
+     "name": "configInfos",
+     "comment": "high: operator new[](N*0x5c) 0x114710 in ParseMasterConfigFile (stored 0x503ab/0x50431); operator delete[] 0x1146e0 in Shutdown 0x5011b; GetLocaleID, SetConfig and InitAndPreload index [+0x18+type*4] + idx*0x5c."
+    },
+    {
+     "offset": 32,
+     "type": "bool",
+     "name": "inverted",
+     "comment": "high: SetInverted 0x50144 MOV [ECX+0x20],AL; IsInverted 0x50160 MOV AL,[ECX+0x20]; InitAndPreload 0x5069a = ([0x2445b4] != 0). Get does not initialise it (bss zero). PS2 +0x20 int."
+    },
+    {
+     "offset": 36,
+     "type": "StringToNumber *",
+     "name": "frontEndNameLookup",
+     "comment": "high: InitAndPreload 0x50612 = new StringToNumber(0x1b6f58) (FastAlloc 0x10 'StringToNumber'); used by ParseDefFileForFrontEnd 0x4ffe6; destroyed, FastFree'd (0x10) and zeroed at 0x5065c-0x50677. Get zeroes it (0x1e4580). Name invented."
+    },
+    {
+     "offset": 40,
+     "type": "char *",
+     "name": "frontEndDefText",
+     "comment": "high: InitAndPreload 0x50520 = UFileLoader::FileLoad(\"data/Control/FrontEnd.def\", 0); parsed first by every mapping load (InitAndPreload 0x506f3, SetConfig 0x50782); FileFree'd by Shutdown 0x500e2. Get zeroes it (0x1e4584). The earlier name 'masterFi"
+    },
+    {
+     "offset": 44,
+     "type": "void *",
+     "name": "unusedFileData",
+     "comment": "medium: Only Get (zeroes 0x1e4588) and Shutdown (FileFree if non-NULL, 0x500fd) touch it; nothing in scope writes it (the same on PS2). Name invented."
+    }
+   ],
+   "comment": "Function-local static at 0x1e455c, guard dword 0x1e458c bit 0 (directly after the object, proving 0x30). Get 0x50270 inlines the PS2 constructor (PS2 0x166508) and registers no atexit. PS2 stores initialised/inverted as ints; Xbox writes and reads them as bytes."
+  },
+  {
+   "name": "ConfigInfo",
+   "size": 92,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "char[32]",
+     "name": "fileName",
+     "comment": "high: ParseMasterConfigFile 0x50454 copies the token byte by byte (an unbounded strcpy) to record+0; InitAndPreload appends it to \"data/Control/\" (0x5056e). Byte 0 zeroed at 0x5039c. The size is the distance to +0x20."
+    },
+    {
+     "offset": 32,
+     "type": "char *",
+     "name": "defText",
+     "comment": "high: InitAndPreload 0x505a5 = FileLoad(path, 0); passed to ParseDefFileForFrontEnd (0x50633) and LoadParseDefFile (0x506d9, 0x50768); Shutdown FileFree's and zeroes it (0x500a5-0x500b9)."
+    },
+    {
+     "offset": 36,
+     "type": "int[14]",
+     "name": "frontEndLocaleIDs",
+     "comment": "high: Zeroed by REP STOSD with ECX=0xe from +0x24 (0x50395). ParseDefFileForFrontEnd 0x50005 stores atol(value) at +0x24+slot*4. GetLocaleID 0x501ba reads [rec + (idx*0x17+slot)*4 + 0x24]. Slots come from table 0x1b6f58: 0 ButtonA, 1 ButtonB, 2 Butto"
+    }
+   ],
+   "comment": "PS2 name (ParseDefFileForFrontEnd(ConfigInfo *, char *)). Arrays are allocated with operator new[](N*0x5c), with no cookie and no ctor: ParseMasterConfigFile zeroes fileName[0], defText and the 14 locale ids itself."
+  },
+  {
+   "name": "StringToNumber",
+   "size": 16,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "int",
+     "name": "count",
+     "comment": "high: ctor 0x119f72 = the number of entries before the first NULL .string; dtor FastFree size count<<4; BinarySearch hi = count-1; bound of the linear search."
+    },
+    {
+     "offset": 4,
+     "type": "StringToNumberEntry *",
+     "name": "table",
+     "comment": "high: ctor 0x119f74 = arg; the linear ConvertStringToNumber path 0x11a142."
+    },
+    {
+     "offset": 8,
+     "type": "StringToNumberEntry *",
+     "name": "sortedByString",
+     "comment": "high: ctor 0x119f95 = the FastAlloc block, or 0 when count < 31 (0x119ffc); ConvertStringToNumber tests it to choose binary search (0x11a112) and returns [it+idx*8]; BinarySearch reads [+8]+idx*8+4; the dtor frees it."
+    },
+    {
+     "offset": 12,
+     "type": "StringToNumberEntry *",
+     "name": "sortedByNumber",
+     "comment": "high: ctor 0x119f90 = block + count*8, sorted with 0x119f40; 0 when count < 31. Nothing in scope reads it (PS2 ConvertNumberToString/BinarySearch(int))."
+    }
+   ],
+   "comment": "SupportPS2.lib UStringToNum. Built over a caller-owned StringToNumberEntry table ending in string==NULL. A table of 31 or more entries gets two sorted copies in one FastAlloc(count*16, \"StringToNumber\") block: one sorted by string (0x119ef0, strcmp on .string) and one by number (0x119f40, a.number - b.number). Smaller tables are searched linearly. Instances: 0x1e23e0 (actions, 0x1b6ba0, 117 entries, sorted), 0x1e4590 (update methods, 0x1b6fd0, 10 entries, linear), InputToAction::scalarNameLookup (20 pad scalars, linear), InputConfigManager::frontEndNameLookup (0x1b6f58, 14 entries, linear)."
+  },
+  {
+   "name": "StringToNumberEntry",
+   "size": 8,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "int",
+     "name": "number",
+     "comment": "high: ConvertStringToNumber returns [entry+0]; InputToAction ctor 0x508f3 stores i."
+    },
+    {
+     "offset": 4,
+     "type": "char *",
+     "name": "string",
+     "comment": "high: The ctor counts until [entry+4]==0; the comparators and BinarySearch read +4."
+    }
+   ],
+   "comment": "{number, string}. The table ends at the first entry whose string is NULL; that entry's number is ignored."
+  },
+  {
+   "name": "InputTable",
+   "size": 60,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "int",
+     "name": "count",
+     "comment": "high: ctor 0; Reset 0x509a3 zeroes it; LoadParseDefFile INC [ESI] 0x50b6a; Grow copies count entries."
+    },
+    {
+     "offset": 4,
+     "type": "int",
+     "name": "capacity",
+     "comment": "high: ctor 4; Grow += 4 (0x507eb); LoadParseDefFile grows when count >= capacity (0x50b47); the dtor frees capacity*0xc."
+    },
+    {
+     "offset": 8,
+     "type": "InputTableEntry *",
+     "name": "entries",
+     "comment": "high: ctor = this+0xc; Grow = FastAlloc(capacity*0xc, \"TableEntries\"); the dtor frees it if != this+0xc."
+    },
+    {
+     "offset": 12,
+     "type": "InputTableEntry[4]",
+     "name": "inlineEntries",
+     "comment": "high: ctor LEA ECX,[EAX+0xc]; 0x3c-0xc = 4*0xc."
+    }
+   ],
+   "comment": "Checked again: ctor 0x507a0, dtor 0x507c0, GrowArrayForOneElement 0x507e0, AddTableEntry inlined in LoadParseDefFile 0x50b31-0x50b6a, Clear inlined in InputToAction::Reset 0x50990."
+  },
+  {
+   "name": "InputTableEntry",
+   "size": 12,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "int",
+     "name": "updateMethod",
+     "comment": "high: LoadParseDefFile 0x50b62 stores the method index (0..9, table 0x1b6fd0); the default is 0."
+    },
+    {
+     "offset": 4,
+     "type": "float",
+     "name": "threshold",
+     "comment": "high: 0x50b64: 0.5f (0x3f000000) for methods 3/4, otherwise 0, then overridden by sscanf(\"%f\")."
+    },
+    {
+     "offset": 8,
+     "type": "int",
+     "name": "action",
+     "comment": "high: 0x50b67: getActionID(first token), which is 0x75 when the name is unknown."
+    }
+   ],
+   "comment": "PS2 InputTable::AddTableEntry(InputTableEntry &)."
+  },
+  {
+   "name": "InputToAction",
+   "size": 16,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "int",
+     "name": "numTables",
+     "comment": "high: ctor = device->GetNumDeviceScalar() (vtable slot 3); Reset loop bound."
+    },
+    {
+     "offset": 4,
+     "type": "InputTable *",
+     "name": "tables",
+     "comment": "high: operator new[](n*0x3c+4) with a count cookie at [-4]; LoadParseDefFile indexes tables + scalarIndex*0x3c."
+    },
+    {
+     "offset": 8,
+     "type": "StringToNumber *",
+     "name": "scalarNameLookup",
+     "comment": "high: FastAlloc(0x10, \"StringToNumber\") + ctor over scalarNames; LoadParseDefFile 0x50abb ConvertStringToNumber(scalar token)."
+    },
+    {
+     "offset": 12,
+     "type": "StringToNumberEntry *",
+     "name": "scalarNames",
+     "comment": "high: FastAlloc(n*8+8, \"StringToNumberEntry\"): {i, &device->scalars[i].name} (the inline char[32] at DeviceScalar+4), then {0, NULL}."
+    }
+   ],
+   "comment": "Checked against 0x50860/0x509c0/0x50990/0x50a20; unchanged from iomodule-structs.json."
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x00050080",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "InputConfigManager::Shutdown(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00050140",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "InputConfigManager::SetInverted(bool)",
+   "return": "void"
+  },
+  {
+   "address": "0x00050160",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "InputConfigManager::IsInverted(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x000502d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "InputConfigManager::ParseMasterConfigFile(char *)",
+   "return": "void"
+  },
+  {
+   "address": "0x000504d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "InputConfigManager::InitAndPreload(void)",
+   "return": "void"
+  },
+  {
+   "class": "InputConfigManager",
+   "address": "0x00050270",
+   "calling_convention": "__cdecl",
+   "return": "InputConfigManager *",
+   "params": []
+  },
+  {
+   "class": "InputConfigManager",
+   "address": "0x0004ff50",
+   "calling_convention": "__thiscall",
+   "return": "void",
+   "params": [
+    {
+     "name": "info",
+     "type": "ConfigInfo *"
+    },
+    {
+     "name": "text",
+     "type": "char *"
+    }
+   ]
+  },
+  {
+   "class": "InputConfigManager",
+   "address": "0x00050720",
+   "calling_convention": "__thiscall",
+   "return": "void",
+   "params": [
+    {
+     "name": "type",
+     "type": "int"
+    },
+    {
+     "name": "index",
+     "type": "int"
+    }
+   ]
+  },
+  {
+   "class": "InputConfigManager",
+   "address": "0x00050170",
+   "calling_convention": "__thiscall",
+   "return": "int",
+   "params": [
+    {
+     "name": "type",
+     "type": "int"
+    }
+   ]
+  },
+  {
+   "class": "InputConfigManager",
+   "address": "0x00050180",
+   "calling_convention": "__thiscall",
+   "return": "int",
+   "params": [
+    {
+     "name": "type",
+     "type": "int"
+    }
+   ]
+  },
+  {
+   "class": "InputConfigManager",
+   "address": "0x000501a0",
+   "calling_convention": "__thiscall",
+   "return": "int",
+   "params": [
+    {
+     "name": "type",
+     "type": "int"
+    },
+    {
+     "name": "configIndex",
+     "type": "int"
+    },
+    {
+     "name": "slot",
+     "type": "int"
+    }
+   ]
+  }
+ ]
+}

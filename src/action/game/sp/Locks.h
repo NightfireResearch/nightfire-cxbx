@@ -9,6 +9,7 @@ typedef struct {
     bool discovered;
 } KeyCodeEntry;
 
+// XBE_GLOBAL(0x0029aaf8, 0xff)
 #define KeyCodes (*(KeyCodeEntry (*)[51])0x0029aaf8)
 
 

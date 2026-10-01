@@ -1,0 +1,57 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00023670",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterPassenger::AICharacterPassenger(MATRIX4 &, int)"
+  },
+  {
+   "address": "0x000236c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPassenger::~AICharacterPassenger(void)"
+  },
+  {
+   "address": "0x000236d0",
+   "calling_convention": "__thiscall",
+   "return": "AICharacterPassenger *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00023700",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AICharacterPassenger::Init(void)"
+  },
+  {
+   "address": "0x00023890",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPassenger::DoNeutral(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000238c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterPassenger::HandleInterrupts(void)"
+  }
+ ]
+}

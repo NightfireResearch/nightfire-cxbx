@@ -1,0 +1,193 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00098210",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::GetReflectionMapWarpageData(void)"
+  },
+  {
+   "address": "0x00098220",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RReflection::EnableReflectionMapWarpage(bool)"
+  },
+  {
+   "address": "0x000982a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::ReflPrivateData::~ReflPrivateData(void)"
+  },
+  {
+   "address": "0x00098340",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RReflection::Kill(void)"
+  },
+  {
+   "address": "0x00098360",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "RReflection::SetReflectiveSpecularStrength(int, float)"
+  },
+  {
+   "address": "0x00098410",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "RReflection::GetReflectionData2(char *)"
+  },
+  {
+   "address": "0x00098470",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::GetReflectionCarPos(void)"
+  },
+  {
+   "address": "0x00098480",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::TextureWeaponEnvMap(void)"
+  },
+  {
+   "address": "0x00098490",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::TextureSpecular(void)"
+  },
+  {
+   "address": "0x000984a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::Texture(void)"
+  },
+  {
+   "address": "0x000984b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::GetReflectionMatrix(void)"
+  },
+  {
+   "address": "0x000984c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::Begin(void)"
+  },
+  {
+   "address": "0x00098520",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "RSceneObj *"
+    }
+   ],
+   "sheet": "RReflection::PrivateSubmitSceneObj(float, RSceneObj *)"
+  },
+  {
+   "address": "0x000986a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "RSceneObj *"
+    }
+   ],
+   "sheet": "RReflection::DeregisterSceneObj(RSceneObj *)"
+  },
+  {
+   "address": "0x00098850",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RReflection::SceneObjRender(EAGL::ViewPort &)"
+  },
+  {
+   "address": "0x000988a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::ResetSceneObjDistances(void)"
+  },
+  {
+   "address": "0x00098b60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::ReflPrivateData::ReflPrivateData(void)"
+  },
+  {
+   "address": "0x000993e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::InitPostSim(void)"
+  },
+  {
+   "address": "0x000994c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::RReflection(void)",
+   "return": "RReflection *"
+  },
+  {
+   "address": "0x00099590",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::~RReflection(void)"
+  },
+  {
+   "address": "0x00099610",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "RSceneObj *"
+    }
+   ],
+   "sheet": "RReflection::SetReflectivity(RSceneObj *)"
+  },
+  {
+   "address": "0x00099c50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RReflection::Init(void)"
+  },
+  {
+   "address": "0x00099cc0",
+   "calling_convention": "__thiscall",
+   "return": "RReflection *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

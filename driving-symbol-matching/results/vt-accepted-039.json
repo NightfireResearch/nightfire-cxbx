@@ -1,0 +1,116 @@
+[
+ {
+  "xbox": "0x001173a0",
+  "name": "UFileLoader::Startup",
+  "ps2": "0x002d6e98",
+  "why": "windowed review: called by Bond_StartUpSystem on both platforms; clears three global std::lists (0x108-byte nodes), as PS2 UFileLoader::Startup clears 0x355c98/ca0/ca8. Was the guess maybeMemcardSavefileRelated"
+ },
+ {
+  "xbox": "0x11a810",
+  "name": "UCharNamespace::~UCharNamespace",
+  "ps2": "0x2cdcc0",
+  "why": "Version Tracking candidate, body review: vtable-reset-only dtor for vtable 0x1a2238 (same as UCharNamespace ctor), called from atexit thunk 15ce40 registered in GlobalSymbolTable::Init; PS2 ~UCharNamespace resets vtable_UCharNamespace (+delete flag)"
+ },
+ {
+  "xbox": "0x125f50",
+  "name": "_Rb_tree<MapKey,_ABank>::_M_erase",
+  "ps2": "0x2fd998",
+  "why": "Version Tracking candidate, body review: recursive map-node erase freeing 0x98-byte nodes, called by URefCounter<ABank> dtor (1267f0) exactly as PS2 ~URefCounter<ABank> calls _M_erase (FastFree 0x98); callers all ABank-local, not folded"
+ },
+ {
+  "xbox": "0x1267f0",
+  "name": "URefCounter<ABank>::~URefCounter",
+  "ps2": "0x2fda68",
+  "why": "on the caller chain of _Rb_tree<MapKey,_ABank>::_M_erase, body review: clears map via 125f50, frees 0x98 header node; called from atexit thunk 15d2f0 like PS2 ~URefCounter from global dtor FUN_002fd178"
+ },
+ {
+  "xbox": "0x7a8a0",
+  "name": "FindPointInList",
+  "ps2": "0x1a7ea0",
+  "why": "Version Tracking candidate, body review: walks COORD4 list comparing x,y,z at node+8/+c/+10, counts < size, returns iterator via out-param; called from BuildSpline (7aa20) as PS2 FindPointInList from BuildSpline"
+ },
+ {
+  "xbox": "0x7aa20",
+  "name": "RCameraSpline::BuildSpline",
+  "ps2": "0x1a7f58",
+  "why": "on the caller chain of FindPointInList, body review: callers UpdateRelative/WorldAnimationCam on both sides; calls FindPointInList + list clear like PS2"
+ },
+ {
+  "xbox": "0x7a9f0",
+  "name": "RCameraSpline::ClearSplinePtList",
+  "ps2": "0x1a7cd8",
+  "why": "on the caller chain of FindPointInList, body review: clears list at this+0x64 (PS2 field_0x64); callers DirectorChangeCameraMode + UpdateRelativeAnimationCam on both sides"
+ },
+ {
+  "xbox": "0xd7b40",
+  "name": "GGirlieMaterial::~GGirlieMaterial",
+  "ps2": "0x23a618",
+  "why": "Version Tracking candidate, body review: resets vtable 0x19fe78 (the vtable GGirlieMaterial ctor d7770 installs), then ~TAR+free of TAR and UMemory::Free of buffer, like PS2 ~GGirlieMaterial (fields +0x10 shifted); non-deleting body"
+ },
+ {
+  "xbox": "0xd7bb0",
+  "name": "GGirlieMaterial::scalar_deleting_destructor",
+  "ps2": "0x23a618",
+  "why": "Version Tracking candidate, body review: sole slot of GGirlieMaterial vtable 0x19fe78: calls d7b40 then delete if flag&1"
+ },
+ {
+  "xbox": "0xd7bf0",
+  "name": "GOrthoHudView::PreRender",
+  "ps2": "0x23aa40",
+  "why": "Version Tracking candidate, body review: SetOrthographic(0.5,10.0) as PS2 PreRender; sits in GOrthoHudView vtable 0x19ff84 right before PostRender (daac0) and DoRender (e1ce0)"
+ },
+ {
+  "xbox": "0x102060",
+  "name": "EAGLAnim::FnDeltaQFast::UpdateNextQs",
+  "ps2": "0x26c4f8",
+  "why": "Version Tracking candidate, body review: called only from EvalSQT; same structure and offsets (+0x28 frame cache, +0x10/+0x24/+0x30 buffers, count at DeltaQFast+6, shift at +0x10), UnQuantize loop in else-branch"
+ },
+ {
+  "xbox": "0x102f00",
+  "name": "EAGLAnim::DeltaQFastPhysical::UnQuantize",
+  "ps2": "0x26d0d8",
+  "why": "on the caller chain of EAGLAnim::FnDeltaQFast::UpdateNextQs, body review: (ushort*,COORD4&) unpack x/y/z>>4 and low nibbles *0.0004884005 -1.0; callers EvalSQT, UpdateNextQs, UpdateNextQsMask, EvalSQTMask as on PS2"
+ },
+ {
+  "xbox": "0x102510",
+  "name": "EAGLAnim::FnDeltaQFast::EvalSQTMask",
+  "ps2": "0x26c6e8",
+  "why": "on the caller chain of EAGLAnim::FnDeltaQFast::UpdateNextQs, body review: called only from EvalSQT; calls UpdateNextQsMask (102370), UnQuantize and two unnamed statics (=PS2 FUN_0026d998/FUN_0026db20), as PS2 EvalSQTMask"
+ },
+ {
+  "xbox": "0x102370",
+  "name": "EAGLAnim::FnDeltaQFast::UpdateNextQsMask",
+  "ps2": "0x26ccf8",
+  "why": "Version Tracking candidate, body review: UpdateNextQs body plus bone-mask test (mask[bone>>5] & 1<<(bone&31)) with bone idx table at DeltaQFast+0xc; called from EvalSQTMask; identical to PS2"
+ },
+ {
+  "xbox": "0xf7c40",
+  "name": "EAGLAnim::MemoryPoolManager::NewBlockByIdx",
+  "ps2": "0x2656b8",
+  "why": "Version Tracking candidate, body review: per-index free list (22 entries = gFreeList 88 bytes), carve from pool cursor with size from ushort table when empty; same as PS2 NewBlockByIdx"
+ },
+ {
+  "xbox": "0xf7cd0",
+  "name": "EAGLAnim::MemoryPoolManager::ResetPool",
+  "ps2": "0x265788",
+  "why": "Version Tracking candidate, body review: cursor=base, clear 256-entry and 22-entry free lists; tail-called by faa40 (ResetMemoryPool) as PS2 ResetPool by ResetMemoryPool"
+ },
+ {
+  "xbox": "0xa2290",
+  "name": "RParticleSystem::SetSystem",
+  "ps2": "0x1e5fa0",
+  "why": "Version Tracking candidate, body review: called by RVehicleParticle::UpdateCar on both; same tag compare at [+0x44/+0x34]+0x2c, _particlePercent256*[+0xc]>>8, emit-rate calc from +0x3c/+0x40/+0x44 (CalcEmitVal and FindSystemViaTag inlined)"
+ },
+ {
+  "xbox": "0xa2350",
+  "name": "RParticleSystem::RParticleCreator::Create",
+  "ps2": "0x1e6028",
+  "why": "Version Tracking candidate, body review: only referenced from a data slot (creator vtable) on both; FastAlloc(0x70,\"RParticleSystem\") then RParticleSystem ctor(...,1), identical"
+ },
+ {
+  "xbox": "0x000f7d00",
+  "name": "EAGLAnim::MemoryPoolManager::Init",
+  "ps2": null,
+  "why": "windowed review (PS2 FUN_00265800 unnamed; sheet row 6374): sheet row 6374 Init(unsigned int): PS2 FUN_00265800 stores size, EAGLMalloc(size,\"EAGLAnim Memory Pool\"), resets lists; callers InitInternal + ~ERestart on both sides. PS2 is FUN_ (named via sheet row)"
+ }
+]

@@ -1,0 +1,894 @@
+[
+ {
+  "xbox": "0x00032af0",
+  "name": "AIHelicopter::ControlMoveState",
+  "ps2": "0x00139380",
+  "why": "Version Tracking candidate, body review: Called where ControlMoveState is called in AIHelicopter::DoAgentLogic (after the GetRigidBody triple, and 3x in the attack branch next to FireRockets); callees GetSplinePath/PathForwardRoadSegment/IncNavPosition/SetOrientMat/GetScalarVelocity agree"
+ },
+ {
+  "xbox": "0x00090b90",
+  "name": "RSkeletalObj::RSkeletalObj",
+  "ps2": "0x001cc568",
+  "why": "Version Tracking candidate, body review: First call in RVehicle::RVehicle on both sides; RSceneObj base ctor, then new vtable and zeroed matrix rows with w=-1.0 (0xbf800000)"
+ },
+ {
+  "xbox": "0x000ba690",
+  "name": "SRulePlayerDir::CheckRule",
+  "ps2": "0x0020ac70",
+  "why": "Version Tracking candidate, body review: Identical body: target type 4, SMissionRuleTarget::GetPos, player rigid body +0x10, GetMatrix, v4sub/unit/dot/cross, acos*57.295776, sign flip on cross.y, CompareWithinDegrees(min,max) with fields shifted -8"
+ },
+ {
+  "xbox": "0x000ba430",
+  "name": "SMissionRuleTarget::GetMatrix",
+  "ps2": "0x00209958",
+  "why": "on the caller chain of SRulePlayerDir::CheckRule, body review: Called in the same place in SRulePlayerDir::CheckRule, returning bool, before the direction maths"
+ },
+ {
+  "xbox": "0x000b9ad0",
+  "name": "CompareWithinDegrees",
+  "ps2": "0x0020abe0",
+  "why": "on the caller chain of SRulePlayerDir::CheckRule, body review: Same body: (a-min) wrapped +360 <180 and (max-a) wrapped <180; last call in CheckRule"
+ },
+ {
+  "xbox": "0x00081700",
+  "name": "RPlayerCamera::ToggleAutoDriveZoom",
+  "ps2": "0x001bc4c0",
+  "why": "Version Tracking candidate, body review: Identical body (bool: +0x298 from zoom table +0x58 by char +0x27c/0x27f, else camera-mode table +0xc); last call in RPlayerCamState::AimRelease on both sides after ResetZoomSlope"
+ },
+ {
+  "xbox": "0x00081ad0",
+  "name": "RPlayerCamera::ResetZoomSlope",
+  "ps2": "0x001bd4a0",
+  "why": "on the caller chain of RPlayerCamera::ToggleAutoDriveZoom, body review: Call just before ToggleAutoDriveZoom in AimRelease; identical body: +0x2ac=0, +0x2b4=1.0"
+ },
+ {
+  "xbox": "0x0002f0e0",
+  "name": "AIGroundVehicle::DoWeaponUpdate",
+  "ps2": "0x00130050",
+  "why": "Version Tracking candidate, body review: Same position in AIGroundVehicle::Update (after the 3rd DoAttackMode, before DoMoveMode); body: hitpoints>0, flags, TurnTurret if +0x11c, weapon type 10->rockets, 9->bullets, else three flag-gated fires"
+ },
+ {
+  "xbox": "0x0002eb40",
+  "name": "AIGroundVehicle::FireRockets",
+  "ps2": "0x0012fa28",
+  "why": "on the caller chain of AIGroundVehicle::DoWeaponUpdate, body review: DoWeaponUpdate weapon type 10 / second flag branch; size 202 vs 204 instr"
+ },
+ {
+  "xbox": "0x0002e910",
+  "name": "AIGroundVehicle::FireBullets",
+  "ps2": "0x0012f730",
+  "why": "on the caller chain of AIGroundVehicle::DoWeaponUpdate, body review: DoWeaponUpdate weapon type 9 / first flag branch"
+ },
+ {
+  "xbox": "0x0002ee00",
+  "name": "AIGroundVehicle::FireMissiles",
+  "ps2": "0x0012fd58",
+  "why": "on the caller chain of AIGroundVehicle::DoWeaponUpdate, body review: DoWeaponUpdate third flag branch (last call)"
+ },
+ {
+  "xbox": "0x0002c6e0",
+  "name": "AIGroundVehicle::TurnTurret",
+  "ps2": "0x0012f170",
+  "why": "on the caller chain of AIGroundVehicle::DoWeaponUpdate, body review: DoWeaponUpdate first call gated on turret flag"
+ },
+ {
+  "xbox": "0x0002c9d0",
+  "name": "AIGroundVehicle::DoAutoDriveUpdate",
+  "ps2": "0x00131080",
+  "why": "on the caller chain of AIGroundVehicle::DoWeaponUpdate, body review: Update: sits after the first UpdateStuck as on PS2; 281 vs 290 instr"
+ },
+ {
+  "xbox": "0x0002cd80",
+  "name": "AIGroundVehicle::DoAgentStateUpdate",
+  "ps2": "0x00131770",
+  "why": "on the caller chain of AIGroundVehicle::DoWeaponUpdate, body review: Update: after the second UpdateStuck, before DoAttackMode/DoWeaponUpdate as on PS2; 934 vs 1060 instr"
+ },
+ {
+  "xbox": "0x000d7d40",
+  "name": "GHud::GetBlackFadeAnimating",
+  "ps2": "0x0023c810",
+  "why": "Version Tracking candidate, body review: Returns field +0x350; the call after GetBlackFadePct in SMissionManager::ClearCinematicMode (TheApp/getter pairs then FadeInFromBlack) on both sides"
+ },
+ {
+  "xbox": "0x000d7d50",
+  "name": "GHud::GetBlackFadePct",
+  "ps2": "0x0023c818",
+  "why": "on the caller chain of GHud::GetBlackFadeAnimating, body review: Float return of +0x34c (PS2 lwc1 f0,0x34c); first TheApp/getter pair in ClearCinematicMode"
+ },
+ {
+  "xbox": "0x000228e0",
+  "name": "AICharacterHands::GetRotPos",
+  "ps2": "0x00123878",
+  "why": "Version Tracking candidate, body review: Same unique body: copy 16 dwords of the matrix to the MATRIX4&, then player rigid body +0x20..0x28 to the COORD3; both passed as a callback from AICharacterHands::Init (Xbox 0x22930, already named)",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0x000b8090",
+  "name": "SMissionManager::InitPlayerCar",
+  "ps2": "0x00205a90",
+  "why": "Version Tracking candidate, body review: Only first call in Xbox 0xba990 (then GetPlayerObject, LookupInt, same as PS2 SWeaponManager::SetPlayerCar); body is the player object's virtual taking &this->currentShield"
+ },
+ {
+  "xbox": "0x000ba990",
+  "name": "SWeaponManager::SetPlayerCar",
+  "ps2": "0x0020bf80",
+  "why": "on the caller chain of SMissionManager::InitPlayerCar, body review: Callee sequence InitPlayerCar/GetPlayerObject/AttributeSet::LookupInt identical; callers GameLoop_StartUp and ~ERestart match"
+ },
+ {
+  "xbox": "0x00097aa0",
+  "name": "RWorldCamera::UpdateAnimationCam",
+  "ps2": "0x001d61b8",
+  "why": "Version Tracking candidate, body review: Same body: GetFirstSystemInstance, IsSystemPlaying, frame*rate/60, fastqslerp + quattom4, flag 2 branch, position lerp into +0xc0 (PS2 +0xb0), flag 1 mirror, w=1.0, SetCameraZoom(33.0,1.5)"
+ },
+ {
+  "xbox": "0x000776a0",
+  "name": "RAnimEngine::Handle::GetFirstSystemInstance",
+  "ps2": "0x001a3040",
+  "why": "on the caller chain of RWorldCamera::UpdateAnimationCam, body review: First call in UpdateAnimationCam; same body: index lookup, -1 -> 0 else this+0x40+i*0x40"
+ },
+ {
+  "xbox": "0x000e4f70",
+  "name": "EAGL::Device::Init",
+  "ps2": "0x00286e18",
+  "why": "Version Tracking candidate, body review: Call right after EAGL::Device::Device and before NewRenderContext in RRenderer::RRenderer; body registers the same ConstructorPool types (EAGL::TAR, Model, GeoPrimState, TAR) and calls SymbolInit; PS2 extra is platform DMA/VIF setup"
+ },
+ {
+  "xbox": "0x00027240",
+  "name": "AICharacterPedestrian::DoAvoiding",
+  "ps2": "0x00127a30",
+  "why": "Version Tracking candidate, body review: Call sequence matches DoAvoiding: FindPointAgainstWall(3.2)->SetNewState, PlayAnim, random Say, target -250*dir, FaceTarget(3); state 1 FindPointAgainstWall/PreventFalling/PlayAnim; state 2 PlayAnim+SetTarget; state 3 SetNewState; tail FaceTarget(2)/MaintainHeading(2)"
+ },
+ {
+  "xbox": "0x00024f80",
+  "name": "AICharacterPedestrian::FindPointAgainstWall",
+  "ps2": "0x0012a4a0",
+  "why": "on the caller chain of AICharacterPedestrian::DoAvoiding, body review: Both FindPointAgainstWall positions in DoAvoiding (first call and in state 1); 302 vs 276 instr"
+ },
+ {
+  "xbox": "0x00024910",
+  "name": "AICharacterPedestrian::DoAiming",
+  "ps2": "0x00128860",
+  "why": "Version Tracking candidate, body review: Same body: aim-yaw step 3.0 toward -360*x with 1.5 dead zone, clamp +-80, blend clamp 0..1, SimRandom*0xb4 timers, rate 0.1/-0.1, BuildRotate then SetGlobalPoseOverride; fields shift -0x10 (0x278 vs 0x288)"
+ },
+ {
+  "xbox": "0x0006dc30",
+  "name": "PHelicopter::GetControllerInput",
+  "ps2": "0x00193818",
+  "why": "Version Tracking candidate, body review: Identical ActionQueue loop: actions 0x4b-0x4e into +0x98/+0x94/+0x9c/+0xa0 with -0.2..0.2 dead zone, same offsets"
+ },
+ {
+  "xbox": "0x0006dd30",
+  "name": "PHelicopter::Simulate",
+  "ps2": "0x001942e8",
+  "why": "on the caller chain of PHelicopter::GetControllerInput, body review: Only caller of PHelicopter::GetControllerInput on both sides; 369 vs 412 instr"
+ },
+ {
+  "xbox": "0x0005e180",
+  "name": "Mine::~Mine",
+  "ps2": "0x0017ff48",
+  "why": "Version Tracking candidate, body review: Sets the vtable followed by the 'Mine' string (slot 0 = deleting dtor 0x5e6e0), unregisters/removes the WTargetable, ~PhysicsObject; MSVC non-deleting variant"
+ },
+ {
+  "xbox": "0x0005e480",
+  "name": "Mine::Mine",
+  "ps2": "0x0017fc18",
+  "why": "on the caller chain of Mine::~Mine, body review: The only other reference to the Mine vtable at 0x18ee28; 177 vs 204 instr"
+ },
+ {
+  "xbox": "0x000c36a0",
+  "name": "WCollisionMgr::GetObjectLists",
+  "ps2": "0x00218150",
+  "why": "found reviewing (rejected) candidate WCollisionMgr::GetInstanceList, body review: Second collision query in CheckHitWorld on both sides; same centre/radius-from-box body"
+ },
+ {
+  "xbox": "0x000b5b80",
+  "name": "Simulation::SpawnGrenadeObject",
+  "ps2": "0x001ffea8",
+  "why": "Version Tracking candidate, body review: CanSpawnSimpleRigidBody, FastAlloc(0x6e0,'Grenade'), Grenade::Grenade, SpawnPhysicsObject; called where SpawnGrenadeObject is in EFireWeapon::~EFireWeapon, after the shell/RayShell block"
+ },
+ {
+  "xbox": "0x000b5950",
+  "name": "Simulation::SpawnMissileObject",
+  "ps2": "0x001ffc40",
+  "why": "on the caller chain of Simulation::SpawnGrenadeObject, body review: The four spawn calls followed by UseInstance/SetDriveMissile in ~EFireWeapon, same pattern as PS2"
+ },
+ {
+  "xbox": "0x000b5c90",
+  "name": "Simulation::SpawnShellObject",
+  "ps2": "0x001fffa8",
+  "why": "on the caller chain of Simulation::SpawnGrenadeObject, body review: The two calls after FastAlloc in the shell block of ~EFireWeapon, before RayShell"
+ },
+ {
+  "xbox": "0x000b5a70",
+  "name": "Simulation::SpawnMineObject",
+  "ps2": "0x001ffd70",
+  "why": "on the caller chain of Simulation::SpawnGrenadeObject, body review: The call after SpawnGrenadeObject/GetSimpleRigidBody, followed by UseInstance, as on PS2"
+ },
+ {
+  "xbox": "0x0012c730",
+  "name": "APlayerTank::~APlayerTank",
+  "ps2": "0x002f1128",
+  "why": "found reviewing (rejected) candidate AFingoDeath::~AFingoDeath, body review: Shares the vtable with APlayerTank::APlayerTank; View array + member ATurret dtor + ~AVehicle shape"
+ },
+ {
+  "xbox": "0x00035130",
+  "name": "AIRoadSpawn::GetRandomTrafficSpawn",
+  "ps2": "0x0013ca60",
+  "why": "Version Tracking candidate, body review: Same call sequence: RefreshSpawnData, random segment, road Get x2, GetTrafficSpawnPointOnSegment, static WRoadNav+atexit, InitAtSegment, player/vehicle proximity loop; only caller AIGroundVehicle::Spawn, same position"
+ },
+ {
+  "xbox": "0x00034ed0",
+  "name": "AIRoadSpawn::RefreshSpawnData",
+  "ps2": "0x0013d618",
+  "why": "on the caller chain of AIRoadSpawn::GetRandomTrafficSpawn, body review: First call in GetRandomTrafficSpawn; 180 vs 184 instr"
+ },
+ {
+  "xbox": "0x00034860",
+  "name": "AIRoadSpawn::GetTrafficSpawnPointOnSegment",
+  "ps2": "0x0013c5e8",
+  "why": "on the caller chain of AIRoadSpawn::GetRandomTrafficSpawn, body review: Called with the same four out-params before the static WRoadNav in GetRandomTrafficSpawn"
+ },
+ {
+  "xbox": "0x000cb900",
+  "name": "WRoadNav::InitAtSegment",
+  "ps2": "0x002257c0",
+  "why": "on the caller chain of AIRoadSpawn::GetRandomTrafficSpawn, body review: Called after the static WRoadNav in GetRandomTrafficSpawn and after it in AIGroundVehicle::Spawn on both sides"
+ },
+ {
+  "xbox": "0x00034a70",
+  "name": "AIRoadSpawn::TrafficRespawnAvailable",
+  "ps2": "0x0013c860",
+  "why": "on the caller chain of AIRoadSpawn::GetRandomTrafficSpawn, body review: Early call in AIGroundVehicle::Spawn after AIRoadSpawn::Get, as on PS2; 100 vs 118 instr"
+ },
+ {
+  "xbox": "0x00089200",
+  "name": "RPlayerCamera::SetOldCameraMode",
+  "ps2": "0x001bb340",
+  "why": "Version Tracking candidate, body review: Only call in RPlayerCamera::SetLastSelectableCameraMode on both sides; builds a temp RPlayerCamera, SetAnchor, GetAnchorMatrix4, several SetCameraModeByIndex, ~RPlayerCamera"
+ },
+ {
+  "xbox": "0x00021260",
+  "name": "AICharacterEnemySunroof::DoInitial",
+  "ps2": "0x00120d98",
+  "why": "found reviewing (rejected) candidate AICharacterEnemySunroof::DoUnarming, body review: Sunroof vtable 0x18aac0 slot 7 (MSVC has no type_info slot) = PS2 slot 8; same body including the buddy loop"
+ },
+ {
+  "xbox": "0x000a1b50",
+  "name": "RMuzzleFlash::Init",
+  "ps2": "0x001e5488",
+  "why": "Version Tracking candidate, body review: Called where RMuzzleFlash::Init is in InitGameRender (after RSniperZoom register, before RMissileStreak/RReflection/REmp); body InitPOVLayer, texture loop, then a 26-entry swap-negate loop plus colour fill"
+ },
+ {
+  "xbox": "0x000a14b0",
+  "name": "RMuzzleFlash::InitPOVLayer",
+  "ps2": "0x001e4b48",
+  "why": "on the caller chain of RMuzzleFlash::Init, body review: First call in RMuzzleFlash::Init on both sides; PS2 inlines VU code"
+ },
+ {
+  "xbox": "0x000a1070",
+  "name": "RMissileStreak::Init",
+  "ps2": "0x001e3e28",
+  "why": "on the caller chain of RMuzzleFlash::Init, body review: Next call after RMuzzleFlash::Init in InitGameRender, before RReflection::Init; 178 vs 221 instr"
+ },
+ {
+  "xbox": "0x00092d20",
+  "name": "RStateManager::GetGeoPrimState",
+  "ps2": "0x001ce158",
+  "why": "Version Tracking candidate, body review: Same body: GeoPrimState set-up, ParseFirstStateTag collect/apply loops, map find, on miss copy into the pool, strncpy name 0xf, insert, return +0xc/+0x10; the Xbox state block is 0x4c, not 0x80"
+ },
+ {
+  "xbox": "0x0011a750",
+  "name": "UCarpNamespace::ParseNameAndTag",
+  "ps2": "0x002cdbd0",
+  "why": "Version Tracking candidate, body review: Same body: '{' -> decode tag and empty name; else copy, strstr '::' (no match -> 0,0), decode tag, strstr '}::' -> atol"
+ },
+ {
+  "xbox": "0x001177b0",
+  "name": "UDataGroupDecodeTag",
+  "ps2": "0x002d4090",
+  "why": "on the caller chain of UCarpNamespace::ParseNameAndTag, body review: Both decode calls in ParseNameAndTag; 57 vs 57 instr"
+ },
+ {
+  "xbox": "0x00072190",
+  "name": "RayShell::CollideWithObjects",
+  "ps2": "0x001998c0",
+  "why": "Version Tracking candidate, body review: Called twice from Xbox 0x72e90 = RayShell::RayShell (itself called by ~EFireWeapon); callees GetOrderedBody, IsOwnedBy, GetSimpleRigidBody, GetPosition, GetPlayerObject, GetRigidBody, GetOBBObjectIntersection, GetSig, ConsiderVictim in PS2 order"
+ },
+ {
+  "xbox": "0x00072e90",
+  "name": "RayShell::RayShell",
+  "ps2": "0x00198e80",
+  "why": "on the caller chain of RayShell::CollideWithObjects, body review: Called by ~EFireWeapon after the shell FastAlloc on both sides; CollideWithObjects x2, CollideWithWorld x2, Fire, AddNewRayShellForTriggerCheck in PS2 order"
+ },
+ {
+  "xbox": "0x00072790",
+  "name": "RayShell::CollideWithWorld",
+  "ps2": "0x00199f88",
+  "why": "on the caller chain of RayShell::CollideWithObjects, body review: The two calls after CollideWithObjects in RayShell::RayShell; 270 vs 278 instr"
+ },
+ {
+  "xbox": "0x00072d60",
+  "name": "RayShell::Fire",
+  "ps2": "0x0019a3e0",
+  "why": "on the caller chain of RayShell::CollideWithObjects, body review: The call after CollideWithWorld in RayShell::RayShell"
+ },
+ {
+  "xbox": "0x00071d80",
+  "name": "RayShell::AddNewRayShellForTriggerCheck",
+  "ps2": "0x001997e0",
+  "why": "on the caller chain of RayShell::CollideWithObjects, body review: The call after Fire in RayShell::RayShell"
+ },
+ {
+  "xbox": "0x00071e40",
+  "name": "RayShell::ConsiderVictim",
+  "ps2": "0x0019a548",
+  "why": "on the caller chain of RayShell::CollideWithObjects, body review: Called after GetSig at the end of CollideWithObjects on both sides"
+ },
+ {
+  "xbox": "0x000b27d0",
+  "name": "Simulation::FindPhysicsObjectSignature",
+  "ps2": "0x001ff280",
+  "why": "on the caller chain of RayShell::CollideWithObjects, body review: Called before IsOwnedBy in RayShell::RayShell and CollideWithObjects on both sides; 20 vs 26 instr"
+ },
+ {
+  "xbox": "0x00020870",
+  "name": "AICharacterEnemySnow::PlayZoneInjuryAnim",
+  "ps2": "0x0011f9a8",
+  "why": "Version Tracking candidate, body review: Matches Snow: threshold, states 0xf/0x16, HGrunt only, random*5 anim table, vehicle flag +0x152 set on death, -0.05/-0.03 at +0x168/+0x16c (PS2 +0x178/+0x17c)"
+ },
+ {
+  "xbox": "0x00021b70",
+  "name": "AICharacterEnemySunroof::PlayZoneInjuryAnim",
+  "ps2": "0x00121dd8",
+  "why": "found reviewing (rejected) candidate AICharacterEnemySunroof::PlayZoneInjuryAnim, body review: Sunroof vtable slot 6 = PS2 slot 7; HDeath, 4-entry per-zone table count loop, anim set 9"
+ },
+ {
+  "xbox": "0x0001ff90",
+  "name": "AICharacterEnemySnow::DoArmed",
+  "ps2": "0x0011e9a0",
+  "why": "Version Tracking candidate, body review: Identical to Snow::DoArmed: vcall 0x84 false -> state 0xd with table anim, -0.05/-0.03; else timer, state 0xb, ammo-1, random*5 anim gated by the second vcall"
+ },
+ {
+  "xbox": "0x00022680",
+  "name": "AICharacterEnemyWindow::PlayZoneInjuryAnim",
+  "ps2": "0x00123298",
+  "why": "Version Tracking candidate, body review: Matches Window: HDeath/HGrunt with random*2 into two adjacent 2-entry tables (Xbox 0x1b5dfc/0x1b5e04, PS2 0x3274a0/0x3274a8), crossfade 0.25; placed after Window::DoNeutral"
+ },
+ {
+  "xbox": "0x000210f0",
+  "name": "AICharacterEnemySunroof::AICharacterEnemySunroof",
+  "ps2": "0x00120b70",
+  "why": "Version Tracking candidate, body review: AICharacter ctor, Sunroof vtable, vehicle ptr + rigid body +0x20, clamp to 1..2, matrix copy, WTargetable alloc, 1 -> 0x19/0xb/0x19 else 10/11; called where the Sunroof ctor is in AIElementController::WakeUp"
+ },
+ {
+  "xbox": "0x00093390",
+  "name": "RTextureContext::Unload",
+  "ps2": "0x001cf0f8",
+  "why": "Version Tracking candidate, body review: Sole caller is the unnamed RTextureContext deleting destructor 0x93e80 (vtable store, then this call, frees 0x10), the same position as PS2 ~RTextureContext; body: walks the texture map deleting TARs, Free(+8), then clears the tree"
+ },
+ {
+  "xbox": "0x00093e80",
+  "name": "RTextureContext::scalar_deleting_destructor",
+  "ps2": "0x001cf010",
+  "why": "on the caller chain of RTextureContext::Unload, body review: Stores the RTextureContext vtable, calls Unload, frees the tree header (+0xc), then FastFree(this,0x10) if the flag is set: same body as PS2 ~RTextureContext, delete-flag form"
+ },
+ {
+  "xbox": "0x000d6e30",
+  "name": "GGallery::~GGallery",
+  "ps2": "0x00236a00",
+  "why": "Version Tracking candidate, body review: Called on the gallery member in GHud::~GHud on both builds, followed by delete; same body: MEM_free(+4), TAR loop over +0x10 for count +0x4c, FONT_destroy if +0xa8, free +0xac. No delete flag, so this is the plain ~GGallery"
+ },
+ {
+  "xbox": "0x0014b340",
+  "name": "STREAM_setgreedystate",
+  "ps2": "0x00305df8",
+  "why": "Version Tracking candidate, body review: Sole call from STREAM_setgreedylevel on both builds, on a change in greediness; stores the state, then FILESYS_priorityop if state!=0 and mode==1. Offsets consistently +0x10 (handle lookup 'STRM' inlined on Xbox)"
+ },
+ {
+  "xbox": "0x001224d0",
+  "name": "AStream::DecodeError",
+  "ps2": "0x002e9350",
+  "why": "found reviewing (rejected) candidate AStream::Stop, body review: Called from AStream::Play as on PS2; takes the error code (adds 0x13 = leftover of the -0x13..-1 message switch), then the Stop body (queue purge + Next), as PS2 DecodeError ends with Stop()"
+ },
+ {
+  "xbox": "0x00108480",
+  "name": "PAD_getdataptr",
+  "ps2": "0x00259b78",
+  "why": "Version Tracking candidate, body review: Returns base + port*record size (0x90 Xbox vs 0x20 PS2) of the pad data table; called from IOModule::PollDevice and PlayMPC::Play on both builds"
+ },
+ {
+  "xbox": "0x00024ee0",
+  "name": "AICharacterPedestrian::FindClosestCar",
+  "ps2": "0x00129c88",
+  "why": "Version Tracking candidate, body review: Same loop over the playerPhysicsObject vehicle list keeping the nearest within the float limit (position +0x40 vs +0x30); sole caller 0x26760 is PS2 AICharacterPedestrian::ThreatenedByVehicle (FindClosestCar(1000.0) call there)"
+ },
+ {
+  "xbox": "0x00026760",
+  "name": "AICharacterPedestrian::ThreatenedByVehicle",
+  "ps2": "0x00129bc8",
+  "why": "on the caller chain of AICharacterPedestrian::FindClosestCar, body review: Same body: time gate +4, <100 check, FindClosestCar(1000.0), CheckVehicleThreat(car,1), reset to 999.0 on no threat, then UpdateAnimSpeed; offsets -0x10"
+ },
+ {
+  "xbox": "0x00024280",
+  "name": "AICharacterPedestrian::CheckVehicleThreat",
+  "ps2": "0x00129d80",
+  "why": "on the caller chain of AICharacterPedestrian::FindClosestCar, body review: Second call in ThreatenedByVehicle on both, (car,1) args; vehicle rigid-body relative position threat test returning 0/1/3"
+ },
+ {
+  "xbox": "0x00024db0",
+  "name": "AICharacterPedestrian::UpdateAnimSpeed",
+  "ps2": "0x00129868",
+  "why": "on the caller chain of AICharacterPedestrian::FindClosestCar, body review: Last call in ThreatenedByVehicle on both; scales animation time by distance to the threat (15.0/2.0 limits) via SetTimeScale"
+ },
+ {
+  "xbox": "0x00098070",
+  "name": "RWorldCamera::RWorldCamera",
+  "ps2": "0x001d5450",
+  "why": "Version Tracking candidate, body review: Called from RPlayerCamera::RPlayerCamera on both; RCamera base ctor, six fields zeroed, own vtable, then RestartCamera: same sequence"
+ },
+ {
+  "xbox": "0x000720d0",
+  "name": "RayShell::AddFlash",
+  "ps2": "0x0019abb8",
+  "why": "Version Tracking candidate, body review: Same body: count<8, FindPhysicsObjectSignature, not the player, type 4 or 0xb, dedup loop over 16-byte flash entries, append signature+position; callers are the RayShell file (from ~EFireWeapon chain as PS2 CollideWithWorld/Fire)"
+ },
+ {
+  "xbox": "0x00125db0",
+  "name": "ABank::ABank",
+  "ps2": "0x002fd418",
+  "why": "Version Tracking candidate, body review: Genuine PS2 overload: 0x2fd418 is ABank::ABank(void) (zero +0, -1 +4/+8, AIndex() on +0x10); the existing Xbox ABank::ABank at 0x125dd0 is the (char*, bool) overload that loads the bank file",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0x000e4f50",
+  "name": "eagl_alloc",
+  "ps2": "0x002871f0",
+  "why": "Version Tracking candidate, body review: Thin wrapper around malloc used through the EAGL allocator pointer (AddGeoPrim, ActSkeleton, SymbolPool::AddSymbol, ScratchBuffer::AllocateBuffer callers as PS2)"
+ },
+ {
+  "xbox": "0x000e4f60",
+  "name": "eagl_free",
+  "ps2": "0x00287210",
+  "why": "found reviewing (rejected) candidate eagl_free, body review: Adjacent wrapper that calls the CRT free (0x1331dc) and is called through the same EAGL allocator pointer as PS2 eagl_free (AddGeoPrim, TAR deletes via maybeEaglFree)"
+ },
+ {
+  "xbox": "0x000f5730",
+  "name": "EAGL::DrawArray::GetNameFromIndex",
+  "ps2": "0x0029c230",
+  "why": "Version Tracking candidate, body review: Returns entry i of the name table at (**(this+8))+0x20; the neighbours 0xf56c0 (strcmp over the same table -> index or -1) and 0xf5750 (stores that index at +0x2c) are PS2 GetIndexFromName/SetParamName in the same order; the table stride differs per build (4 vs 8) but is consistent within each"
+ },
+ {
+  "xbox": "0x000f56c0",
+  "name": "EAGL::DrawArray::GetIndexFromName",
+  "ps2": "0x0029c1a0",
+  "why": "on the caller chain of EAGL::DrawArray::GetNameFromIndex, body review: Inlined strcmp over the name table for count +0x10, returns index or -1, as PS2; directly precedes GetNameFromIndex on both"
+ },
+ {
+  "xbox": "0x000f5750",
+  "name": "EAGL::DrawArray::SetParamName",
+  "ps2": "0x0029c250",
+  "why": "on the caller chain of EAGL::DrawArray::GetNameFromIndex, body review: Calls GetIndexFromName, stores the result at +0x2c, returns !=-1: same as PS2 SetParamName (+0x2c)"
+ },
+ {
+  "xbox": "0x0008d9f0",
+  "name": "RSceneObj::RenderAllNormal",
+  "ps2": "0x001c8558",
+  "why": "found reviewing (rejected) candidate RRenderWorldCamera::DrawSceneObjects, body review: At the RenderAllNormal position inside the inlined DrawSceneObjects in Xbox DoRender; body = reflection distance reset + render loop over the normal visible list (0x1f1d80), as PS2"
+ },
+ {
+  "xbox": "0x0008cc70",
+  "name": "RRenderWorldCamera::DrawVehiclesAndDeferredSceneObjects",
+  "ps2": "0x001c5eb0",
+  "why": "Version Tracking candidate, body review: Called in DoRender right after DrawTyreTracks, the same position as PS2; body: EnableAlphaWrites, EnableFog, SetVehiclesAllowed(1) saving old, Lock, RenderAllDrawLast, DisableAlphaWrites, FlushDrawLists, UnLock, restore, DisableFog (reflection draw moved elsewhere on Xbox)"
+ },
+ {
+  "xbox": "0x0007e1a0",
+  "name": "RRenderSharedData::SetVehiclesAllowed",
+  "ps2": "0x001adc48",
+  "why": "on the caller chain of RRenderWorldCamera::DrawVehiclesAndDeferredSceneObjects, body review: Swaps a global flag and returns the old value; called with 1 and then the saved value around the deferred draw as PS2"
+ },
+ {
+  "xbox": "0x0008da30",
+  "name": "RSceneObj::RenderAllDrawLast",
+  "ps2": "0x001c8598",
+  "why": "on the caller chain of RRenderWorldCamera::DrawVehiclesAndDeferredSceneObjects, body review: Render loop over the draw-last visible list (0x1f1d00, filled by SetNowVisible when flag bit 3 is set), at the RenderAllDrawLast position"
+ },
+ {
+  "xbox": "0x000b5d50",
+  "name": "Simulation::SpawnExplosionObject",
+  "ps2": "0x00200200",
+  "why": "Version Tracking candidate, body review: CanSpawnSimpleRigidBody(pos, force>500.0), FastAlloc(0x98,\"Explosion\"), Explosion ctor, SpawnPhysicsObject; callers ~ESpawnExplosion and ~ESpawnForceEffect on both"
+ },
+ {
+  "xbox": "0x000817f0",
+  "name": "RPlayerCamera::PauseOff",
+  "ps2": "0x001bcb88",
+  "why": "Version Tracking candidate, body review: Called in EResume::~EResume after the resume flag store and before the player vcall, the PauseOff position on PS2; body tests the camera-mode table byte 3 and calls SetCameraLookBack (0x814c0) like PS2"
+ },
+ {
+  "xbox": "0x000814c0",
+  "name": "RPlayerCamera::SetCameraLookBack",
+  "ps2": "0x001bc048",
+  "why": "on the caller chain of RPlayerCamera::PauseOff, body review: Same body: mode-table byte 3 -> store flag + dirty bit 2, else clear on false for five mode indices; callers PauseOff and DriveCamInputHandler x2 as PS2"
+ },
+ {
+  "xbox": "0x00121150",
+  "name": "ASoundManager::Resume",
+  "ps2": "0x002ec6d8",
+  "why": "on the caller chain of RPlayerCamera::PauseOff, body review: At the ASoundManager::Resume position in EResume::~EResume; clears per-sound pause flags, AFX::Resume, fgIsPaused=0, restores the Music/Effects mix volumes"
+ },
+ {
+  "xbox": "0x0011d610",
+  "name": "URefCounter<AMix>::Get",
+  "ps2": "0x002f46e8",
+  "why": "Version Tracking candidate, body review: Function-static singleton: guard bit, construct the map, atexit, return the static; callers AMix::Add/Clear/Get/SetMaster and the Remove helper as PS2"
+ },
+ {
+  "xbox": "0x000819a0",
+  "name": "RPlayerCamera::InitSpin",
+  "ps2": "0x001bd338",
+  "why": "found reviewing (rejected) candidate RPlayerCamera::SetAutoDriveRotationY, body review: Case 0x32 call in AutoDriveCamInputHandler as PS2; same constants 0x24, 0x3f7fc19f (cos) and 0.04361939 scale of the anchor matrix row"
+ },
+ {
+  "xbox": "0x00084820",
+  "name": "RPlayerCamera::SetAutoDriveRotationY",
+  "ps2": "0x001bc3c8",
+  "why": "found reviewing (rejected) candidate RPlayerCamera::SetAutoDriveRotationY, body review: Called in cases 0x2c/0x2f as PS2; SetAutoDriveRotation(v) stored at +0x2a4, then the shared helper, returns +0x2a8"
+ },
+ {
+  "xbox": "0x000847f0",
+  "name": "RPlayerCamera::SetAutoDriveRotationX",
+  "ps2": "0x001bc390",
+  "why": "found reviewing (rejected) candidate RPlayerCamera::SetAutoDriveRotationY, body review: Called in cases 0x2d/0x2e/0x30/0x31 as PS2; same body storing at +0x2a0"
+ },
+ {
+  "xbox": "0x000816e0",
+  "name": "RPlayerCamera::SetAutoDriveZoom",
+  "ps2": "0x001bc4a0",
+  "why": "found reviewing (rejected) candidate RPlayerCamera::SetAutoDriveRotationY, body review: Called in cases 0x34-0x36 as PS2; +0x2b4=1.0, +0x2ac=global*arg, identical"
+ },
+ {
+  "xbox": "0x0010cdc0",
+  "name": "FILESYS_open",
+  "ps2": "0x00252c00",
+  "why": "found reviewing (rejected) candidate FILESYS_open, body review: Called by FILESYS_opensync (and the AV player/stream queue paths) as PS2 FILESYS_open; allocs a request, copies the file name, queues and executes it"
+ },
+ {
+  "xbox": "0x0001f3c0",
+  "name": "AICharacterEnemyGround::HandleInterrupts",
+  "ps2": "0x0011c640",
+  "why": "Version Tracking candidate, body review: Slot 30 of the Xbox AICharacterEnemyGround vtable 0x18a840 (36 slots; DoWandering/DoAiming/DoFiring at 11/17/18), same slot as PS2 0x368648; callees ThreatenedByVehicle, HeightAtPoint, FindClosestFace, Say, crossfade agree"
+ },
+ {
+  "xbox": "0x0001d840",
+  "name": "AICharacterEnemyDriver::HandleInterrupts",
+  "ps2": "0x0011aff8",
+  "why": "Version Tracking candidate, body review: Slot 30 of the Xbox driver vtable 0x18a788 (33 slots, slots 10-29 null as PS2 AICharacterEnemyDriver); body: two LocateFX on +0x144/+0x148, GetRotPos, OrthoInverse, two matrix mults, SetIKInfoArray"
+ },
+ {
+  "xbox": "0x00036060",
+  "name": "AIVehicleController::IntersectionGreenLight",
+  "ps2": "0x0013efc8",
+  "why": "Version Tracking candidate, body review: Sole caller CheckTrafficCollision on both; path-handle loop with the height difference <5.0 and distance^2 <2500.0 tests"
+ },
+ {
+  "xbox": "0x0008dbc0",
+  "name": "RSceneObj::SetNowVisible",
+  "ps2": "0x001c8c70",
+  "why": "Version Tracking candidate, body review: Same body: visible flag and capacity check, then append to the draw-last list if flag bit 3, else the normal list (the lists RenderAllDrawLast/RenderAllNormal walk); called from ActWeapon::ManualRender on both"
+ },
+ {
+  "xbox": "0x0005d7d0",
+  "name": "Grenade::Simulate",
+  "ps2": "0x0017e8b8",
+  "why": "Version Tracking candidate, body review: Slot 4 of vtable 0x18ed98, which Grenade::Grenade (0x5d5c0) stores; PS2 Grenade vtable slot 4 is Simulate. Callees HeightAtPoint/FindClosestFace/SetOrientation/m4toquat are Grenade's"
+ },
+ {
+  "xbox": "0x00080b90",
+  "name": "RPlayerCamera::UpdateBumperCam",
+  "ps2": "0x001b3b40",
+  "why": "Version Tracking candidate, body review: CameraLoader LoadFile stores it as the update callback for the \"Bumper\" camera type; body matches PS2 (mode table byte 4 index, alt row when look-back, anchor matrix/position, rotate+add offset)"
+ },
+ {
+  "xbox": "0x00081d10",
+  "name": "RPlayerCamera::UpdateDashboardCam",
+  "ps2": "0x001b3ce0",
+  "why": "found reviewing (rejected) candidate RPlayerCamera::UpdateBumperCam, body review: Update callback registered for the \"Dashboard\" camera string in LoadFile; callees BuildRotationMat4/VU0_MATRIX4_mult/GetAnchor* agree with PS2 UpdateDashboardCam"
+ },
+ {
+  "xbox": "0x00035470",
+  "name": "AIRoadSpawn::GetRandomPedSpawn",
+  "ps2": "0x0013d3f0",
+  "why": "Version Tracking candidate, body review: Called from AICharacterPedestrian::Recycle on both; *out=-1, RefreshSpawnData(0,75.0,150.0), mission-manager check, up to 10 random segment picks with the flag tests, then GetPedSpawnPointOnSegment"
+ },
+ {
+  "xbox": "0x00034960",
+  "name": "AIRoadSpawn::GetPedSpawnPointOnSegment",
+  "ps2": "0x0013cf08",
+  "why": "on the caller chain of AIRoadSpawn::GetRandomPedSpawn, body review: Identical body: segment lookup, random t *1.5258789e-05, random lane from bytes +0x52/+0x53; the tail call of GetRandomPedSpawn on both"
+ },
+ {
+  "xbox": "0x0008c8e0",
+  "name": "RRenderWorldCamera::RRenderWorldCamera",
+  "ps2": "0x001c5358",
+  "why": "Version Tracking candidate, body review: RViewCamera base ctor, own vtable, LensFlareManager Enable(1), global=1, SetGuardBandSize(4.0): same sequence"
+ },
+ {
+  "xbox": "0x0009e1f0",
+  "name": "RLensFlareManager::Enable",
+  "ps2": "0x001dfd98",
+  "why": "on the caller chain of RRenderWorldCamera::RRenderWorldCamera, body review: One-line store to (this+4)->enable field; sole call in the RRenderWorldCamera ctor as PS2 (sole caller there too)"
+ },
+ {
+  "xbox": "0x00096850",
+  "name": "RViewCamera::SetGuardBandSize",
+  "ps2": "0x001d4298",
+  "why": "on the caller chain of RRenderWorldCamera::RRenderWorldCamera, body review: Stores the guard band size at +0x48 and passes it on to the viewport; called with 4.0 in the ctor as PS2"
+ },
+ {
+  "xbox": "0x0006e330",
+  "name": "PHelicopter::ApplyDamage",
+  "ps2": "0x00193938",
+  "why": "Version Tracking candidate, body review: Slot 2 of the PHelicopter vtable 0x18f8bc (stored by PHelicopter::PHelicopter), the ApplyDamage slot in PS2 0x37a4e8; 14/17 named callees shared"
+ },
+ {
+  "xbox": "0x000d8820",
+  "name": "GHud::DrawScreenHits",
+  "ps2": "0x0023e7b8",
+  "why": "Version Tracking candidate, body review: First call after SPRITE_Flush in GOrthoHudView::DoRender (hud on) on both; body: hit counters +0x328/+0x32c, SPRITE_SetState/Draw2D"
+ },
+ {
+  "xbox": "0x000d8970",
+  "name": "GHud::DrawScreenFades",
+  "ps2": "0x0023e930",
+  "why": "on the caller chain of GHud::DrawScreenHits, body review: Next call in GOrthoHudView::DoRender after DrawScreenHits as PS2; same fade update: +0x350 active, (time-start)*rate+base into +0x34c clamped 0..1, global fade value"
+ },
+ {
+  "xbox": "0x0001ea60",
+  "name": "AICharacterEnemyGround::PlayZoneInjuryAnim",
+  "ps2": "0x0011d9f0",
+  "why": "Version Tracking candidate, body review: Slot 6 of the Xbox AICharacterEnemyGround vtable 0x18a840 = PS2 slot 6 PlayZoneInjuryAnim; 2 shared strings, default zone 3, hit point scale check"
+ },
+ {
+  "xbox": "0x000718e0",
+  "name": "PVehicle::GetCarNames",
+  "ps2": "0x00196708",
+  "why": "Version Tracking candidate, body review: Checks and returns the same global (0x1e7ac4) after lazy init, as PS2 GetCarNames checks and returns 0x33209c; callers RShadowMap::LoadAttributes and ReflPrivateData on both"
+ },
+ {
+  "xbox": "0x0010ce60",
+  "name": "FILESYS_close",
+  "ps2": "0x00252cb8",
+  "why": "Version Tracking candidate, body review: Called by FILESYS_closesync with (handle, cb, 0) then waitop/completeop, as PS2; allocates a request, sets the handle, queues and executes it; also used by the stream queue path as PS2"
+ },
+ {
+  "xbox": "0x000b9db0",
+  "name": "SRuleAmmo::CheckRule",
+  "ps2": "0x00209ec0",
+  "why": "Version Tracking candidate, body review: Slot 1 of 2-slot SRule vtable 0x193630 (object size 0x1c); only SRule CheckRule on PS2 that reads WeaponManager (weapon record stride 0x54, ammo at +0x18); same above/below threshold edge logic, offsets -8"
+ },
+ {
+  "xbox": "0x000b9d90",
+  "name": "SRuleAmmo::scalar_deleting_destructor",
+  "ps2": "0x00209e68",
+  "why": "on the caller chain of SRuleAmmo::CheckRule, body review: Slot 0 of the same vtable; base destructor then FastFree(this,0x1c) on the flag, PS2 slot 0 is ~SRuleAmmo"
+ },
+ {
+  "xbox": "0x000b6770",
+  "name": "SMissionManager::IncKills",
+  "ps2": "0x00206960",
+  "why": "Version Tracking candidate, body review: Same body (field += n, clamp at 0; 0x3c4 -> 0x4e8, the +0x124 SMissionManager shift); all 5 named callers agree; sits between IncShotsHit and GetMagicCounter as on PS2"
+ },
+ {
+  "xbox": "0x00020c70",
+  "name": "AICharacterEnemySSnow::PlayZoneInjuryAnim",
+  "ps2": "0x00120500",
+  "why": "Version Tracking candidate, body review: Slot 6 of the SSnow vtable (Xbox 0x18aa18 base / PS2 0x368c20); body has HGrunt/HDeath, the crossfade table and the IS_SNOWMOBILE lookup like PS2 SSnow"
+ },
+ {
+  "xbox": "0x000f5020",
+  "name": "EAGL::ProfilerRegion::DrawRegions",
+  "ps2": "0x00298928",
+  "why": "Version Tracking candidate, body review: Same body: lazy ViewPort + \"EAGL::DrawGouraud new\", BeginView, 3 passes over the region list (0x11c>0x1f / 0.5 test, DrawRegion, y+=34), flush, EndView, timer page counter"
+ },
+ {
+  "xbox": "0x000f5280",
+  "name": "EAGL::ProfilerRegion::ProcessRegions",
+  "ps2": "0x00299970",
+  "why": "on the caller chain of EAGL::ProfilerRegion::DrawRegions, body review: Exact: per-region call over the list at +0x124, frame count wraps at 0x1f, then DrawRegions if enabled; only caller of 0xf5020"
+ },
+ {
+  "xbox": "0x00081930",
+  "name": "RPlayerCamera::SetAutoDriveForwardLock",
+  "ps2": "0x001bd070",
+  "why": "Version Tracking candidate, body review: Called at the same two positions in EAutoDriveSteering::~EAutoDriveSteering (1 after HideHands, 0 after ShowHands); one-field setter"
+ },
+ {
+  "xbox": "0x00097770",
+  "name": "RWorldCamera::LoadSingleAnimation",
+  "ps2": "0x001d6778",
+  "why": "Version Tracking candidate, body review: Frees old handle (inlined ~Handle), Handle::Create(1,..), GetInstanceSystemID into 0x110, returns handle!=0; caller DirectorChangeCameraMode agrees; RWorldCamera order SetCameraZoom, this, ..., LoadSingleAnimationFromList matches"
+ },
+ {
+  "xbox": "0x000b8580",
+  "name": "SMissionManager::Lose",
+  "ps2": "0x00205bf0",
+  "why": "found reviewing (rejected) candidate SMissionManager::SetCinematicMode, body review: Sets the state field to 4 then, when skipping a cinematic, ClearCinematicMode(-1) and the global = cinematic mode (inlined SetCinematicMode(0)); only caller ~EPlayerLose; right after Win"
+ },
+ {
+  "xbox": "0x0001da80",
+  "name": "AICharacterEnemyGround::AvoidThreat",
+  "ps2": "0x0011d608",
+  "why": "Version Tracking candidate, body review: Same flow and constants: mission flag, +0x13c, state==1, random<0.01, forward-aim vs direction dot >= 0.707, stretched-sphere ray (radius*1.25), random side byte, 0.5 tests; unique PS2 name, distance 1"
+ },
+ {
+  "xbox": "0x00090660",
+  "name": "RSceneObj::UseInstanceList",
+  "ps2": "0x001c7940",
+  "why": "Version Tracking candidate, body review: Same body start (close, name or \"<<unknown>>\", zero fields, delete old list...); callers Newton::Newton, UseArticle and UseInstance agree"
+ },
+ {
+  "xbox": "0x00090820",
+  "name": "RSceneObj::UseInstance",
+  "ps2": "0x001c7b60",
+  "why": "on the caller chain of RSceneObj::UseInstanceList, body review: Clamps the index to +0x1c, calls UseInstanceList(.., \"<<fragment1>>\"), copies the matrix, sets 0x4d/0x4e by the 0x10 flag; same as PS2 overload 0x1c7b60",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0x000b9950",
+  "name": "SRuleProg::CheckRule",
+  "ps2": "0x0020a420",
+  "why": "Version Tracking candidate, body review: Slot 1 of the SRuleProg vtable (Xbox 0x193600, set by ctor 0xb9900 / PS2 0x397b30 after ~SRuleProg); the only caller of CheckProgrammerEvent besides Reset on both sides"
+ },
+ {
+  "xbox": "0x000287d0",
+  "name": "AIElementController::GoToSleep",
+  "ps2": "0x0012c740",
+  "why": "Version Tracking candidate, body review: Callers agree: AIElementController::Update, AIElementTracking::Update and ForceVehicleToSleep (whose 6 callers all agree); state==1 / 0x44 / 0x40&1 structure; delete helpers merged on Xbox"
+ },
+ {
+  "xbox": "0x000289f0",
+  "name": "AIElementController::ForceVehicleToSleep",
+  "ps2": "0x0012da78",
+  "why": "on the caller chain of AIElementController::GoToSleep, body review: Loops the 0x100-byte element array for state 1/1 and matching vehicle, then GoToSleep; all 6 named callers agree"
+ },
+ {
+  "xbox": "0x00027800",
+  "name": "AICharacterPedestrian::HandleInterrupts",
+  "ps2": "0x00128cd8",
+  "why": "found reviewing (rejected) candidate AICharacterPedestrian::KillSelf, body review: Same flow: state!=0x16, AIRoadSpawn::Get+PedRespawnAvailable -> (inlined) KillSelf, special ped info, frame&3 gate, vcall, ThreatenedByVehicle/FindPointAgainstWall(3.2) state table (0x15, 0x11, 0xf, 6, 7), zone loop"
+ },
+ {
+  "xbox": "0x00034d30",
+  "name": "AIRoadSpawn::PedRespawnAvailable",
+  "ps2": "0x0013d228",
+  "why": "found reviewing (rejected) candidate AICharacterPedestrian::KillSelf, body review: Called by pedestrian HandleInterrupts with the position right after AIRoadSpawn::Get, before the inlined KillSelf; sits after TrafficRespawnPosCheck in the AIRoadSpawn block"
+ },
+ {
+  "xbox": "0x0001fcf0",
+  "name": "AICharacterEnemySnow::HandleInterrupts",
+  "ps2": "0x0011f468",
+  "why": "Version Tracking candidate, body review: Slot 30 of the Snow vtable (Xbox 0x18a9c0 / PS2 0x368a48, slot 17 = DoAiming and 6 = PlayZoneInjuryAnim line up too); body vcall, hit points <= 0 and state not 0xf/0x16 -> 0xf"
+ },
+ {
+  "xbox": "0x000324d0",
+  "name": "AIHelicopter::FireBullets",
+  "ps2": "0x00138b88",
+  "why": "Version Tracking candidate, body review: Caller AIHelicopter::DoAgentLogic agrees; body same with +0x10 shift (0x7c/0xdc/0x100/0x120 -> 0x8c/0xec/0x110/0x130), 5.0 / -0.05 tests, IsSystemPlaying/ProcessStimuli; the AIGroundVehicle overload is 0x2e910"
+ },
+ {
+  "xbox": "0x00074670",
+  "name": "Shell::ApplyWorldDamage",
+  "ps2": "0x0019ddb8",
+  "why": "Version Tracking candidate, body review: Same body: scorch unless 0x52 / 'p' / 0x51&2, then render instance -> scene obj -> ProcessStimuli 0x16/0x15/0x14/0x13 at 500/250/50/10; caller Missile::CheckForCollision agrees"
+ },
+ {
+  "xbox": "0x000a50c0",
+  "name": "RScorchWorld::ScorchWorld",
+  "ps2": "0x001ea8e8",
+  "why": "on the caller chain of Shell::ApplyWorldDamage, body review: Called at the scorch position in ApplyWorldDamage with (.., obj, obj+0x10, ..) as PS2; only caller"
+ },
+ {
+  "xbox": "0x000fbb60",
+  "name": "EAGLAnim::FnKeyQuatChan::EvalSQT",
+  "ps2": "0x00275228",
+  "why": "Version Tracking candidate, body review: Of the 14 PS2 EvalSQT only FnKeyQuatChan and FnKeyLerpChan call DecompressValues; Xbox calls DecompressValues plus 0xfbd10 (the slerp FnPoseBlender::EvalSQT also uses, PS2 VU0_fastqslerp), not DecompressValuesIndexed"
+ },
+ {
+  "xbox": "0x00097930",
+  "name": "RWorldCamera::PlayCurrentAnimation",
+  "ps2": "0x001d6970",
+  "why": "Version Tracking candidate, body review: Same body: handle 0x114 null -> false, ProcessStimuli(id,8,..,2), return IsSystemPlaying; follows LoadSingleAnimationFromList as on PS2"
+ },
+ {
+  "xbox": "0x000c8490",
+  "name": "WRender::DrawWorldAtPoint",
+  "ps2": "0x0021fa58",
+  "why": "found reviewing (rejected) candidate WRender::DrawPass, body review: After DrawWorld; SimpleDrawVisibleTreeNodes around a point, distance-filtered instance list, insertion sort, QuickDrawInstance loop, as PS2 (Xbox adds an RSky::Draw)"
+ },
+ {
+  "xbox": "0x000d8ea0",
+  "name": "GHud::DrawFadingCrossHairs",
+  "ps2": "0x0023f080",
+  "why": "Version Tracking candidate, body review: Last call in GHud::DrawCrossHairs (this->TargetLock) on both sides; no BuildRotate/MATRIX4_mult (the Zooming one has them), uses 0x38c/0x390 like PS2"
+ },
+ {
+  "xbox": "0x0008a310",
+  "name": "RPlayerCamState::AimZoom",
+  "ps2": "0x001be570",
+  "why": "Version Tracking candidate, body review: Same body: not aiming and no cinematic -> aiming=1, InitAimZoom, zero 4 fields, SetAutoDriveRotationX(0)/Y, player flag=1, GHud::AimOn"
+ },
+ {
+  "xbox": "0x00081a70",
+  "name": "RPlayerCamera::InitAimZoom",
+  "ps2": "0x001bd440",
+  "why": "on the caller chain of RPlayerCamState::AimZoom, body review: Called at InitAimZoom's position; body zeroes two fields and reads the zoom table entry +0x58 like PS2"
+ },
+ {
+  "xbox": "0x00081540",
+  "name": "RPlayerCamera::SetAutoDriveRotation",
+  "ps2": "0x001bc0e0",
+  "why": "on the caller chain of RPlayerCamState::AimZoom, body review: First call of both SetAutoDriveRotationX and Y, as on PS2"
+ },
+ {
+  "xbox": "0x0011ddb0",
+  "name": "ACharacter::Play",
+  "ps2": "0x002fc130",
+  "why": "Version Tracking candidate, body review: Follows ACharacter::Say (0x11dad0) as on PS2; AVoice::Play with volume*0x7c*param, voice-done check, free the voice (FastFree) and clear 0xc0"
+ },
+ {
+  "xbox": "0x0007a6d0",
+  "name": "RCameraSpline::EvaluateSpline",
+  "ps2": "0x001a8440",
+  "why": "Version Tracking candidate, body review: Callers are the two animation-cam updates (0x82400/0x82840) that also call PlayCurrentAnimation, as PS2 0x1a8440's callers UpdateWorld/RelativeAnimationCam; basis choice, MATRIX4_mult, slerp/quattom4 path; the other overload 0x1a85d0 is called by WRoadNav",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0x0011a5c0",
+  "name": "DAFI_getsectionindex",
+  "ps2": "0x002d9a38",
+  "why": "Version Tracking candidate, body review: Same body: null name -> *p, else strcasecmp over p[1] names at p+2; caller DAFI_setsection agrees (getkeyindex reads 0x1f48 offsets)"
+ },
+ {
+  "xbox": "0x00020090",
+  "name": "AICharacterEnemySnow::DoAiming",
+  "ps2": "0x0011ead0",
+  "why": "Version Tracking candidate, body review: Slot 17 of the Snow vtable (Xbox 0x18a98c / PS2 0x3689e0), vcall gate, BuildRotate/MATRIX4_mult pose overrides as PS2"
+ },
+ {
+  "xbox": "0x000b66c0",
+  "name": "SMissionManager::IncPlayerDamage",
+  "ps2": "0x002068b8",
+  "why": "Version Tracking candidate, body review: Same body with the +0x124 shift (0x3cc/0x3c8/0x3e0 -> 0x4f0/0x4ec/0x504); caller PBondCar::ApplyDamage agrees; between BoostPlayerShield and IncShotsFired as on PS2"
+ },
+ {
+  "xbox": "0x000224f0",
+  "name": "AICharacterEnemySnow::TargetIsAcquired",
+  "ps2": "0x0011f768",
+  "why": "found reviewing (rejected) candidate AICharacterHands::GetRotPos, body review: Slot 35 of the Snow vtable; same body (vehicle target or player position, atan difference wrapped to +-0.5, side flag, +-1/180 turn window). MSVC folded an identical copy used by a second vtable 0x18abf4"
+ },
+ {
+  "xbox": "0x0005e400",
+  "name": "Mine::CheckTimer",
+  "ps2": "0x00180620",
+  "why": "found reviewing (rejected) candidate Mine::CheckTimer, body review: Exact: rigid body, --timer, <1 -> forward vector, SpawnExplosion, delete; called by Mine::Simulate for type 4 as on PS2"
+ },
+ {
+  "xbox": "0x0005e200",
+  "name": "Mine::CheckForProximity",
+  "ps2": "0x001802e0",
+  "why": "found reviewing (rejected) candidate Mine::CheckTimer, body review: Called by Mine::Simulate for types 5/7 at the CheckForProximity position"
+ },
+ {
+  "xbox": "0x0005e710",
+  "name": "Mine::Simulate",
+  "ps2": "0x0017ffc8",
+  "why": "Version Tracking candidate, body review: In the Mine vtable (0x18ee38; ctor sets 0x18ee28); once-only 0x84 setup, type 4 -> CheckTimer, 5/7 -> proximity, PhysicsObject::Simulate, type 7 CheckHitWorld as PS2"
+ },
+ {
+  "xbox": "0x000274c0",
+  "name": "AICharacterPedestrian::DoDodging",
+  "ps2": "0x00127d58",
+  "why": "Version Tracking candidate, body review: State machine matches: 0 -> 0x24c=-1, threat target, MPed/FPed say; 1 -> anim 0x15/0x16, +2; 2 -> ThreatenedByVehicle, 0x15/0x16; 3 -> PreventFalling<5, wall 3.2, count<0x19, 7.5 test, anim 0x19/4; 4 -> state 3, anim 0x1b/5"
+ }
+]

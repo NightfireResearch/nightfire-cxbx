@@ -1,0 +1,103 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00020ec0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySunroof::~AICharacterEnemySunroof(void)"
+  },
+  {
+   "address": "0x00021230",
+   "calling_convention": "__thiscall",
+   "return": "AICharacterEnemySunroof *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00021260",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySunroof::DoInitial(void)"
+  },
+  {
+   "address": "0x00021300",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySunroof::DoNeutral(void)"
+  },
+  {
+   "address": "0x000213c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySunroof::DoArmed(void)"
+  },
+  {
+   "address": "0x00021630",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySunroof::DoUnarming(void)"
+  },
+  {
+   "address": "0x00021670",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySunroof::DoDying(void)"
+  },
+  {
+   "address": "0x00021710",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySunroof::DoRunning(void)"
+  },
+  {
+   "address": "0x00021740",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySunroof::DoLeaning(void)"
+  },
+  {
+   "address": "0x000217e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySunroof::HandleInterrupts(void)"
+  },
+  {
+   "address": "0x000218f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySunroof::TargetIsInRange(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x000219e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySunroof::TargetIsAcquired(void)"
+  },
+  {
+   "address": "0x00021b70",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterEnemySunroof::PlayZoneInjuryAnim(int, float, int)"
+  }
+ ]
+}

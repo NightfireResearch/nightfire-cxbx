@@ -158,6 +158,15 @@ void* UFileLoader::FileLoad(char *rawPath, int param_2, bool param_3) {
     return loadedFile;
 }
 
+// The two-argument overload (0x001176b0), which the original writes as exactly this. It has to be replaced in
+// its own right: the three-argument replacement used to be patched over both, and read a third argument from
+// the stack of callers that had pushed two.
+//
+// AUTOINJECT
+void* UFileLoader::FileLoad(char *rawPath, int flags) {
+    return FileLoad(rawPath, flags, true);
+}
+
 // AUTOINJECT
 void* UFileLoader::FileLoadz(char * fname, int flags) {
     return FileLoad(fname, flags, false);

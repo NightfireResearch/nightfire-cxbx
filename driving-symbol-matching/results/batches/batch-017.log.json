@@ -1,0 +1,106 @@
+{
+ "batch": "017",
+ "program": "Driving.xbe",
+ "applied": "Sat Sep 26 07:17:38 2026",
+ "items": [
+  {
+   "xbox": "0x00047ed0",
+   "old_name": "~EInsertObjective",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00047ed0 from '~EInsertObjective' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00047ed0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x00048680",
+   "old_name": "~EBeginDownloadCode",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00048680 from '~EBeginDownloadCode' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00048680",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x00048700",
+   "old_name": "~EForceNearPedRespawn",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00048700 from '~EForceNearPedRespawn' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00048700",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  }
+ ]
+}

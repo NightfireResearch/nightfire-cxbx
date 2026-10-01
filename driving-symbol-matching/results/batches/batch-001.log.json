@@ -1,0 +1,310 @@
+{
+ "batch": "001",
+ "applied": "Fri Sep 25 14:41:05 2026",
+ "items": [
+  {
+   "xbox": "0x0001cc00",
+   "old_name": "FUN_0001cc00",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0001cc00 from 'FUN_0001cc00' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001cc00",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001cbf0",
+   "old_name": "FUN_0001cbf0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0001cbf0 from 'FUN_0001cbf0' to '~AICharacterBond'",
+      "warnings": [
+       "Function name '~AICharacterBond' \u2014 main part '~AICharacterBond' is not PascalCase. Expected: ~aicharacterbond"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001cbf0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~AICharacterBond",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001d090",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0001d090",
+      "function_name": "FUN_0001d090",
+      "entry_point": "0001d090",
+      "body_size": 46,
+      "message": "Function created successfully at 0001d090"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0001d090 from 'FUN_0001d090' to 'DoNeutral'",
+      "warnings": [
+       "Function name 'DoNeutral' does not start with a recognized verb. First word 'Do' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/vague_verb - Verb 'Do' is Tier 3 (vague). Function names starting with Tier 3 verbs require at least 2 specifier tokens after the verb. Got 1 specifier(s) in 'DoNeutral'."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001d090",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DoNeutral",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001d0c0",
+   "old_name": "FUN_0001d0c0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0001d0c0 from 'FUN_0001d0c0' to 'DoInitial'",
+      "warnings": [
+       "Function name 'DoInitial' does not start with a recognized verb. First word 'Do' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/vague_verb - Verb 'Do' is Tier 3 (vague). Function names starting with Tier 3 verbs require at least 2 specifier tokens after the verb. Got 1 specifier(s) in 'DoInitial'."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001d0c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DoInitial",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001d0e0",
+   "old_name": "FUN_0001d0e0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0001d0e0 from 'FUN_0001d0e0' to 'DoArming'",
+      "warnings": [
+       "Function name 'DoArming' does not start with a recognized verb. First word 'Do' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/vague_verb - Verb 'Do' is Tier 3 (vague). Function names starting with Tier 3 verbs require at least 2 specifier tokens after the verb. Got 1 specifier(s) in 'DoArming'."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001d0e0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DoArming",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001d1c0",
+   "old_name": "FUN_0001d1c0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0001d1c0 from 'FUN_0001d1c0' to 'DoFiring'",
+      "warnings": [
+       "Function name 'DoFiring' does not start with a recognized verb. First word 'Do' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/vague_verb - Verb 'Do' is Tier 3 (vague). Function names starting with Tier 3 verbs require at least 2 specifier tokens after the verb. Got 1 specifier(s) in 'DoFiring'."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001d1c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DoFiring",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001d2a0",
+   "old_name": "FUN_0001d2a0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0001d2a0 from 'FUN_0001d2a0' to 'HandleInterrupts'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_quality/vague_verb - Verb 'Handle' is Tier 3 (vague). Function names starting with Tier 3 verbs require at least 2 specifier tokens after the verb. Got 1 specifier(s) in 'HandleInterrupts'."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001d2a0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "HandleInterrupts",
+   "ok": true
+  },
+  {
+   "xbox": "0x00023950",
+   "old_name": "FUN_00023950",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00023950 from 'FUN_00023950' to 'UpdateRotPos'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'UpdateRotPos' shares the same token set as existing function 'Update' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00023950",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "UpdateRotPos",
+   "ok": true
+  },
+  {
+   "xbox": "0x0005b870",
+   "old_name": "FUN_0005b870",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0005b870 from 'FUN_0005b870' to 'OptionParser'",
+      "warnings": [
+       "Function name 'OptionParser' does not start with a recognized verb. First word 'Option' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0005b870",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "OptionParser",
+   "ok": true
+  }
+ ]
+}

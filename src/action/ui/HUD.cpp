@@ -1,4 +1,5 @@
 #include "HUD.h"
+#include <math.h>
 #include "../input.h"
 #include "../game/mp/multiplayer.h"
 #include "../game/obj/bullet.h"
@@ -81,7 +82,18 @@ static_assert(sizeof(CrosshairInfo) == 18, "CrosshairInfo size wrong");
 // 6: rectangle with arrow up through it
 // 7: 6 but with disallowed circle/strikethrough
 // 8: camera
-#define HUDCrossCoords (*(CrosshairInfo(*)[9])(0x00181348))
+// XBE_GLOBAL(0x00181348, 0xa2)
+static CrosshairInfo HUDCrossCoords[9] = {
+    {0, 0, 0, 0, {0}},
+    {1, 2, 29, 29, {0}},
+    {10, 11, 11, 11, {0}},
+    {31, 1, 14, 13, {0}},
+    {31, 15, 12, 16, {0}},
+    {45, 14, 18, 18, {0}},
+    {0, 30, 13, 16, {0}},
+    {17, 32, 21, 21, {0}},
+    {46, 1, 17, 10, {0}},
+};
 
 // UNINJECTABLE - custom calling convention
 void HUD_UpdateCrossHair(BLData *player,sprite *spr) {
@@ -333,32 +345,94 @@ void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *
 	
 }
 
-#define CrossHair (*(SpriteInfo*)0x0017f778)
-#define ttimer I16_AT(0x002790b8)
-#define ctimer I16_AT(0x002790bc)
+// XBE_GLOBAL(0x0017f778, 0x2c)
+static SpriteInfo CrossHair = {0xff0000ff, 0x7f7f7fff, 0x001f, 0x0800, 0, 0, 0, 0, 0, 0, 0, 0, (Action_TranslatedText)0xffffffff, NULL, (HASHCODE)0x03000026, 5, {0, 0, 0}};
+// XBE_GLOBAL(0x002790b8, 0x2)
+static int16_t ttimer;
+// XBE_GLOBAL(0x002790bc, 0x2)
+static int16_t ctimer;
 
 
-#define MsgMissionStatusPane ((HUDPANECREATE_tag*)(0x0017fea8))
-#define MsgObjectiveStatusPane ((HUDPANECREATE_tag*)(0x001813ec))
-#define MsgInfoStatusPane ((HUDPANECREATE_tag*)(0x00181598))
-#define AirPane ((HUDPANECREATE_tag*)(0x0017fe8c))
-#define NightSightPane ((HUDPANECREATE_tag*)(0x00180218))
-#define LensFlarePane ((HUDPANECREATE_tag*)(0x0018036c))
-#define RCCarPane ((HUDPANECREATE_tag*)(0x00180690))
-#define CameraPane ((HUDPANECREATE_tag*)(0x001800f4))
-#define XrayPane ((HUDPANECREATE_tag*)(0x001807d4))
-#define SecCamPane ((HUDPANECREATE_tag*)(0x00180924))
-#define OICWPane ((HUDPANECREATE_tag*)(0x00180a74))
-#define RoninPane ((HUDPANECREATE_tag*)(0x00180b98))
-#define LaserPane ((HUDPANECREATE_tag*)(0x00180cc0))
-#define SpacePane ((HUDPANECREATE_tag*)(0x00180ec4))
-#define MsgPickupStatusPane ((HUDPANECREATE_tag*)(0x00181774))
+// The mission-status pane: "mission failed" banners and the like (message type 3), with the reason for the
+// failure (Mission_FailLabel) as its second line. Its sprite info (3 sprites) is still the game's.
+// XBE_GLOBAL(0x0017fea8, 0x1c)
+static HUDPANECREATE_tag MsgMissionStatusPane = {0, 167, 640, 103, (HUDPANE_createFunc)0x000b6450 /* HUD_CreateMissionStatusPane */, HUD_UpdateStatusPane, (SpriteInfo*)0x00181408 /* mission status sprites */, 3, 4, 16, 0, 0};
+// The objective pane (message type 2): its width is 0 in the XBE and filled in before main by
+// HUD_InitObjectiveStatusPaneWidth, like the info and pickup panes. Its sprite info (6 sprites) is still the game's.
+// XBE_GLOBAL(0x001813ec, 0x1c)
+static HUDPANECREATE_tag MsgObjectiveStatusPane = {160, 0, 0 /* HUD_InitObjectiveStatusPaneWidth */, 0, (HUDPANE_createFunc)0x000b6490 /* HUD_CreateObjectiveStatusPane */, HUD_UpdateStatusPane, (SpriteInfo*)0x00181490 /* objective status sprites */, 6, 4, 16, 0, 0};
+// XBE_GLOBAL(0x00181598, 0x1c)
+static HUDPANECREATE_tag MsgInfoStatusPane = {160, 137, 0 /* HUD_InitInfoStatusPaneWidth */, 0, (HUDPANE_createFunc)0x000b64d0 /* HUD_CreateInfoStatusPane */, HUD_UpdateStatusPane, (SpriteInfo*)0x00181698 /* InfoStatusSprInfo */, 5, 4, 16, 0, 0};
+// XBE_GLOBAL(0x0017fe8c, 0x1c)
+static HUDPANECREATE_tag AirPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b3a10 /* HUD_UpdateAirPane */, (SpriteInfo*)0x0017fe08 /* AirSprInfo */, 3, 0, 0, 0, 0};
+// XBE_GLOBAL(0x00180218, 0x1c)
+static HUDPANECREATE_tag NightSightPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5e80 /* HUD_CreateShrink */, (HUDPANE_updateFunc)0x000b3da0 /* HUD_UpdateNightSightPane */, (SpriteInfo*)0x00180110 /* NightSightSprInfo */, 6, 0, 384, 0, 0};
+// XBE_GLOBAL(0x0018036c, 0x1c)
+static HUDPANECREATE_tag LensFlarePane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b4330 /* HUD_UpdateLensFlarePane */, (SpriteInfo*)0x00180238 /* LensFlareSprInfo */, 7, 0, 0, 0, 0};
+// XBE_GLOBAL(0x00180690, 0x1c)
+static HUDPANECREATE_tag RCCarPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5e80 /* HUD_CreateShrink */, (HUDPANE_updateFunc)0x000b3ff0 /* HUD_UpdateCarPane */, (SpriteInfo*)0x00180588 /* RCCarSprInfo */, 6, 0, 384, 0, 0};
+// XBE_GLOBAL(0x001800f4, 0x1c)
+static HUDPANECREATE_tag CameraPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b3cc0 /* HUD_UpdateCameraPane */, (SpriteInfo*)0x0017ff68 /* CameraSprInfo */, 9, 1, 0, 0, 0};
+// XBE_GLOBAL(0x001807d4, 0x1c)
+static HUDPANECREATE_tag XrayPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b3ee0 /* HUD_UpdateXRayPane */, (SpriteInfo*)0x001806f8 /* XraySprInfo */, 5, 0, 0, 0, 0};
+// XBE_GLOBAL(0x00180924, 0x1c)
+static HUDPANECREATE_tag SecCamPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b3fa0 /* HUD_UpdateSecCamPane */, (SpriteInfo*)0x001807f0 /* SecCamSprInfo */, 7, 0, 0, 0, 0};
+// XBE_GLOBAL(0x00180a74, 0x1c)
+static HUDPANECREATE_tag OICWPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b65b0 /* HUD_CreateOICWPane */, (HUDPANE_updateFunc)0x000b3ae0 /* HUD_UpdateOICWPane */, (SpriteInfo*)0x00180940 /* OICWSprInfo */, 7, 0, 384, 0, 0};
+// XBE_GLOBAL(0x00180b98, 0x1c)
+static HUDPANECREATE_tag RoninPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5e80 /* HUD_CreateShrink */, (HUDPANE_updateFunc)0x000e0ec0 /* __profiling_or_debugging_hook_point */, (SpriteInfo*)0x00180a90 /* RoninSprInfo */, 6, 0, 384, 0, 0};
+// XBE_GLOBAL(0x00180cc0, 0x1c)
+static HUDPANECREATE_tag LaserPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5e80 /* HUD_CreateShrink */, (HUDPANE_updateFunc)0x000e0ec0 /* __profiling_or_debugging_hook_point */, (SpriteInfo*)0x00180bb8 /* LaserSprInfo */, 6, 0, 384, 0, 0};
+// XBE_GLOBAL(0x00180ec4, 0x1c)
+static HUDPANECREATE_tag SpacePane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b5c30 /* HUD_CreateDefault */, (HUDPANE_updateFunc)0x000b4090 /* HUD_UpdateSpacePane */, (SpriteInfo*)0x00180ce0 /* SpaceSprInfo */, 11, 0, 0, 0, 0};
+// XBE_GLOBAL(0x00181774, 0x1c)
+static HUDPANECREATE_tag MsgPickupStatusPane = {160, 372, 0 /* HUD_InitPickupStatusPaneWidth */, 0, (HUDPANE_createFunc)0x000b6540 /* HUD_CreatePickupStatusPane */, HUD_UpdateStatusPane, (SpriteInfo*)0x001815b8 /* PickupStatusSprInfo */, 5, 4, 24, 0, 0};
 
+
+// The layout of each kind of Text_AddMsg message (its third argument): the font it is word-wrapped in and the
+// width it is wrapped to. PS2 name: TextMsgFormats. Entry 0 is empty; 5 (subtitles over a movie) wraps to 0.6 and
+// 0.4 of its width in two lines. Only read here.
+#pragma pack(push, 1)
+typedef struct TextMsgFormat {
+    const char *font;     // font data, handed to Font_WordWrapString
+    ushort wrapWidth;
+    ushort pad;
+} TextMsgFormat;
+#pragma pack(pop)
+static_assert(sizeof(TextMsgFormat) == 8, "TextMsgFormat is 8 bytes");
+// XBE_GLOBAL(0x0018ccf8, 0x38)
+#define TextMsgFormats (*(TextMsgFormat(*)[7])0x0018ccf8)
+
+#define TXTMSG_INFO      1   // e.g. a hostage's line (NDrone2_Hostage)
+#define TXTMSG_OBJECTIVE 2   // objective updates (Mission.cpp)
+#define TXTMSG_PICKUP    6
+
+// The three message panes are sized to the width their messages are wrapped to. That is not a constant, so the
+// compiler made each width a dynamic initialiser - these three, run by _cinit from the C++ initialiser table
+// (0x163114...) before main - and left the rest of each pane as plain data. On PS2 the whole of each pane is
+// built at run time in HUD.cpp's __static_initialization_and_destruction_0, from the same TextMsgFormats entries.
+// Each copies exactly the 16-bit width (MOV AX / MOV [pane+4],AX), nothing else.
+
+// FUNC_AT(000f54b0)
+void HUD_InitObjectiveStatusPaneWidth(void) {
+    MsgObjectiveStatusPane.width = (short)TextMsgFormats[TXTMSG_OBJECTIVE].wrapWidth;
+}
+
+// FUNC_AT(000f54e0)
+void HUD_InitInfoStatusPaneWidth(void) {
+    MsgInfoStatusPane.width = (short)TextMsgFormats[TXTMSG_INFO].wrapWidth;
+}
+
+// FUNC_AT(000f5510)
+void HUD_InitPickupStatusPaneWidth(void) {
+    MsgPickupStatusPane.width = (short)TextMsgFormats[TXTMSG_PICKUP].wrapWidth;
+}
 
 // AUTOGEN
 void HUD_CreateRedeemer(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj);
 
 // TODO: Change from 640x480 to generic
+// XBE_GLOBAL(0x00180388, 0x1e4)
 SpriteInfo RedeemerSpriteInfo[] = {
 	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0500, 256, 	176, 	128, 			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5E, 5, 0, 0, 0}, // 0: Central reticle. The image is only 1/4 of the whole - repeats mirrored in H and V?
 	{0xffffff40, 0x7f7f7fff, 0x0022, 0x0100, 0,		0,		SCREEN_WIDTH, 	SCREEN_HEIGHT,	0, 	0, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_4A, 5, 0, 0, 0}, // 1: Static lines
@@ -373,6 +447,7 @@ SpriteInfo RedeemerSpriteInfo[] = {
 	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0500, 256, 	176, 	128,			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_59, 5, 0, 0, 0} // 10: Target designator on chopper. The image is only 1/4 of the whole - repeats mirrored in H and V?
 };
 
+// XBE_GLOBAL(0x0018056c, 0x1c)
 HUDPANECREATE_tag RedeemerPane = {
 	0,
 	0,
@@ -390,6 +465,7 @@ HUDPANECREATE_tag RedeemerPane = {
 
 
 
+// XBE_GLOBAL(0x0017f950, 0x58)
 SpriteInfo BloodSprInfo[] = {
 	{0x007f7fff, 0x7f7f7fff, 0x0009, 0x0200, 0, 	0, 		SCREEN_WIDTH, 	32,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_BLOOD_DRIP, 5, 0, 0, 0}, // Drippy edge
 	{0x007f7fff, 0x7f7f7fff, 0x0009, 0x0200, 0,		0,		SCREEN_WIDTH, 	64,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Colour fill
@@ -398,6 +474,7 @@ SpriteInfo BloodSprInfo[] = {
 // AUTOGEN
 void HUD_UpdateBloodPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
 
+// XBE_GLOBAL(0x0017f9a8, 0x1c)
 HUDPANECREATE_tag BloodPane = {
 	0,
 	0,
@@ -414,12 +491,14 @@ HUDPANECREATE_tag BloodPane = {
 };
 
 
+// XBE_GLOBAL(0x0017fec8, 0x84)
 SpriteInfo SightSprInfo[] = { // Left bar, Scope (square fitted to SCREEN_HEIGHT), Right bar
 	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0600, (SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	0, 		SCREEN_HEIGHT, 						SCREEN_HEIGHT,	0, 	0, 	0x1FF,	0x1FF, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_SNIPER_SCOPE, 5, 0, 0, 0}, // Scope graphic centre
 	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, 0,									0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill left
 	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, (SCREEN_WIDTH+SCREEN_HEIGHT)/2,	0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill right
 };
 
+// XBE_GLOBAL(0x0017ff4c, 0x1c)
 HUDPANECREATE_tag SightPane = {
 	0,
 	0,
@@ -457,6 +536,7 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
 // 	{0xffffffff, 0x7f7f7fff, 0x001f, 0x0900, 0,		0,		0,	0,	0,  0,	0,	0,	Action_TranslatedText_NULLVALUE, NULL, 			  TEX_CROSSHAIR_SAMURAI, 5, 0, 0, 0}
 // };
 
+// XBE_GLOBAL(0x0017f930, 0x1c)
 HUDPANECREATE_tag AmmoPane = {
 	SCREEN_WIDTH, // Anchor point in the bottom-right
 	SCREEN_HEIGHT,
@@ -475,8 +555,46 @@ HUDPANECREATE_tag AmmoPane = {
 	0
 };
 
-#define ThirdIconTimer U16_AT(0x002790b0)
-#define CrouchIconTimer U16_AT(0x002790ac)
+// Frames left of the third-person icon's fade after the icon goes away (BLData.thirdIcon back to 0xff)
+// XBE_GLOBAL(0x002790b0, 0x2)
+static int16_t ThirdIconTimer;
+// Frames left of the "standing up" icon after the player stops crouching
+// XBE_GLOBAL(0x002790ac, 0x2)
+static int16_t CrouchIconTimer;
+
+// Written by the menu's coordinates cheat (C_CHCHCOORDS_Handler) and read by HUD_UpdateMPHealthPane, both still
+// the game's
+#define switch_SHOW_COORDS (*(int*)0x001df9dc)
+
+// The health pane's sprites (HealthSprInfo, 0x0017f9c8, 24 entries)
+#define HEALTH_ARMOUR_FIRST     0   // 0-7: the armour bar's segments
+#define HEALTH_NUM_ARMOUR       8
+#define HEALTH_HEALTH_FIRST     8   // 8-14: the health bar's segments
+#define HEALTH_NUM_HEALTH       7
+#define HEALTH_BACKING          15  // the tinted panel behind both bars
+#define HEALTH_NUM_BARS         16  // 0-15, hidden together when a full-screen pane is up
+#define HEALTH_BOND_MOMENT      16  // TEX_GOLD007BONUS, spun in at the top of the screen
+#define HEALTH_COORDS           17  // the coordinates cheat's text
+#define HEALTH_THIRD_ICON       18  // what the player can do here (grapple, wire, ...)
+#define HEALTH_CROUCH_ICON      19
+#define HEALTH_HIT_FIRST        20  // 20-23: full-screen red hit-direction overlays, one per BLData.hitDirections bit
+#define HEALTH_NUM_HIT          4
+
+// The health bar's colour by how much is left (the alpha byte is filled in per segment)
+#define HEALTH_COLOUR_HIGH  0x52a88b00
+#define HEALTH_COLOUR_MID   0xc6984e00
+#define HEALTH_COLOUR_LOW   0x9d191200
+
+#define HUD_ICON_ON         0x1d    // maybeEnabled of a shown icon
+#define HUD_HIT_ON          0x1e
+
+// The third-person icons, indexed by BLData.thirdIcon
+static const HASHCODE ThirdIconSprites[7] = {
+    (HASHCODE)0x03000064, (HASHCODE)0x03000065, ICON_GRAPPLE, ICON_WIRE,
+    (HASHCODE)0x03000068, (HASHCODE)0x03000069, ICON_STANDING
+};
+#define ICON_CROUCHING  ((HASHCODE)0x03000173)
+#define ICON_UNCROUCH   ((HASHCODE)0x03000174)
 
 // AUTOINJECT
 void HUD_CreateHealthPane(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj) { 
@@ -500,9 +618,197 @@ void HUD_CreateHealthPane(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_ta
 
 }
 
-// AUTOGEN
-void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
+// The single-player armour and health bars, the red hit-direction flashes, the 007 "Bond moment" icon, the
+// coordinates cheat's readout, the third-person action icon and the crouch icon.
+// AUTOINJECT
+void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
 
+    // Read before the enabled test, as the original does
+    sprite *backing = pane->spriteList[HEALTH_BACKING];
+    sprite *bondMoment = pane->spriteList[HEALTH_BOND_MOMENT];
+    sprite *coords = pane->spriteList[HEALTH_COORDS];
+    sprite *thirdIcon = pane->spriteList[HEALTH_THIRD_ICON];
+    sprite *crouchIcon = pane->spriteList[HEALTH_CROUCH_ICON];
+
+    if (!pane->enabled)
+        return;
+
+    for (int i = 0; i < HEALTH_NUM_HIT; i++)
+        pane->spriteList[HEALTH_HIT_FIRST + i]->maybeEnabled = 0xff;
+
+    // Flash the sides the player was hit from, fading by a frame's worth each frame
+    uchar fade = (uchar)blData->hitDirectionFade;
+    if (fade != 0) {
+        for (int i = 0; i < HEALTH_NUM_HIT; i++) {
+            if (blData->hitDirections & (1 << i)) {
+                pane->spriteList[HEALTH_HIT_FIRST + i]->maybeEnabled = HUD_HIT_ON;
+                pane->spriteList[HEALTH_HIT_FIRST + i]->colourTint = (uint)(uchar)blData->hitDirectionFade | 0xff000000;
+            }
+        }
+        double faded = (double)(int)(uchar)blData->hitDirectionFade - (double)FRAME_RATE_MUL;
+        if (faded < 0.0)
+            faded = 0.0;
+        blData->hitDirectionFade = (uchar)(int)faded;
+    }
+
+    // Armour in bar segments: 50 armour fills all 8. Stored as a float, as the original does.
+    float armourSegments = blData->armor * 0.16f;
+
+    // The bars fade in over a quarter of hudFadeIn's rise; always fully shown while paused
+    if (GS_IsPaused(-1))
+        blData->hudFadeIn = 1.0f;
+    float alpha = blData->hudFadeIn * 4.0f;
+    if (alpha > 1.0f)
+        alpha = 1.0f;
+
+    // No bars under a full-screen view: camera, OICW, Ronin, security camera, Sentinel missile, RC car
+    HUDINFO_tag *hud = blData->hudInfo;
+    if (!hud->pane[Camera].enabled && !hud->pane[OICW].enabled && !hud->pane[Ronin].enabled &&
+        !hud->pane[SecCam].enabled && !hud->pane[Redeemer].enabled && !hud->pane[RCCar].enabled) {
+
+        // The x87 products below are exact (or all but) in double; float would round them differently.
+        for (ushort i = 0; i < HEALTH_NUM_ARMOUR; i++) {
+            if (armourSegments == 0.0f) {
+                pane->spriteList[HEALTH_ARMOUR_FIRST + i]->maybeEnabled = 0xff;
+            } else {
+                // Full segments brighter than empty ones; the first (the armour icon) always full
+                float brightness = ((float)i < armourSegments) ? 0.75f : 0.35f;
+                if (i == 0)
+                    brightness = 1.0f;
+                sprite *s = pane->spriteList[HEALTH_ARMOUR_FIRST + i];
+                s->maybeEnabled = (uchar)pane->base->spriteInfo[HEALTH_ARMOUR_FIRST + i].maybeEnabled;
+                s = pane->spriteList[HEALTH_ARMOUR_FIRST + i];
+                uchar a = (uchar)(int)((double)alpha * (double)brightness * 255.0);
+                s->colourTint = (s->colourTint & 0xffffff00) | a;
+            }
+        }
+
+        // Health in segments: 100 fills 7. Kept at x87 precision (exact in double) as the original keeps it on
+        // the FPU stack.
+        float health = blData->health;
+        if (health < 0.0f)
+            health = 0.0f;
+        else if (health > 100.0f)
+            health = 100.0f;
+        double healthSegments = (double)health * (double)0.07f;
+
+        uint colour = HEALTH_COLOUR_HIGH;
+        if (healthSegments < 4.0)
+            colour = HEALTH_COLOUR_MID;
+        if (healthSegments < 2.0)
+            colour = HEALTH_COLOUR_LOW;
+
+        for (ushort i = 0; i < HEALTH_NUM_HEALTH; i++) {
+            pane->spriteList[HEALTH_HEALTH_FIRST + i]->maybeEnabled =
+                (uchar)pane->base->spriteInfo[HEALTH_HEALTH_FIRST + i].maybeEnabled;
+            float brightness = (healthSegments > (double)i) ? 0.55f : 0.15f;
+            // Nearly dead: the first segment blinks, half a second on and off
+            if (i == 0 && healthSegments < 0.5)
+                brightness = (GameState.NumFramesUnpaused % 30 < 15) ? 0.55f : 0.15f;
+            uchar a = (uchar)(int)((double)alpha * (double)brightness * 255.0);
+            pane->spriteList[HEALTH_HEALTH_FIRST + i]->colourTint = (uint)a | colour;
+        }
+
+        // The panel behind the bars. The original keeps 16 bits of the conversion here, not 8.
+        if (backing != NULL)
+            backing->colourTint = (uint)(ushort)(int)((double)alpha * 140.0) | colour;
+
+    } else {
+        for (int i = 0; i < HEALTH_NUM_BARS; i++)
+            pane->spriteList[i]->maybeEnabled = 0xff;
+    }
+
+    // The Bond moment icon: spins in (a squashed, flipping card) over the first 100 frames of its 200, then sits
+    // still until the timer runs out
+    if (bondMoment != NULL) {
+        bondMoment->linkedViewer = (glb_viewer[4] != NULL && glb_viewer[4]->field25_0x29 != 0) ? 4 : 5;
+
+        if (blData->bondMomentTimer <= 0) {
+            blData->bondMomentTimer = 0;
+            bondMoment->maybeEnabled = 0xff;
+        } else {
+            bondMoment->positionX = 320;
+            bondMoment->positionY = 80;
+            short t = blData->bondMomentTimer;
+            if (t > 100) {
+                // On the x87: all extended precision, the cosine by FCOS
+                double scale = (double)(200 - t) * (double)0.01f;
+                double flip = cos((double)(t * 4 - 400) * (double)0.03141593f);
+                ushort height = (ushort)bondMoment->backupOnscreenHeight;
+                bondMoment->onscreenHeight = (short)(int)((double)height * fabs(flip) * scale);
+                // Upside down while the card shows its back
+                bondMoment->spritesheetHeight = (flip < 0.0) ? (short)-height : (short)height;
+                bondMoment->onscreenWidth = (short)(int)((double)(ushort)bondMoment->backupOnscreenWidth * scale);
+            }
+            bondMoment->maybeEnabled = 0;
+            blData->bondMomentTimer = (short)(int)((double)blData->bondMomentTimer - (double)FRAME_RATE_MUL);
+        }
+    }
+
+    // The coordinates cheat
+    if (coords != NULL) {
+        if (switch_SHOW_COORDS != 0) {
+            coords->maybeEnabled = HUD_ICON_ON;
+            sprintf(coords->text, "%.2f %.2f %.2f\nFPS %.2f\n", (double)obj->position.x, (double)obj->position.y,
+                    (double)obj->position.z, (double)_FRAME_RATE);
+            Sprite_SetText(coords, coords->text);
+        } else {
+            coords->maybeEnabled = 0xff;
+        }
+    }
+
+    // The third-person icon: shown while BLData.thirdIcon names one, then fades out over half a second
+    if (thirdIcon != NULL) {
+        uchar icon = (uchar)blData->thirdIcon;
+        bool shown = false;
+        if (icon != 0xff) {
+            // No bounds check, as in the original (whose table is on the stack)
+            if (hashtable_set_sprite(thirdIcon, ThirdIconSprites[icon])) {
+                thirdIcon->maybeEnabled = HUD_ICON_ON;
+                thirdIcon->positionX = 528;
+                thirdIcon->positionY = 48;
+                thirdIcon->colourTint = 0x7f7f7fff;
+                ThirdIconTimer = (int16_t)(int)((double)_FRAME_RATE * 0.5);
+                shown = true;
+            }
+        } else if (ThirdIconTimer != 0) {
+            thirdIcon->maybeEnabled = HUD_ICON_ON;
+            uchar a = (uchar)(int)((double)(ThirdIconTimer * 255) / ((double)_FRAME_RATE * 0.5));
+            thirdIcon->colourTint = (uint)a | 0x7f7f7f00;
+            ThirdIconTimer--;
+            shown = true;
+        }
+        if (!shown)
+            thirdIcon->maybeEnabled = 0xff;
+    }
+
+    // The crouch icon: on while crouching, then the "stand up" icon for a second, fading over the last half
+    if (crouchIcon != NULL) {
+        if (obj->subState == MovementType_Crouch) {
+            hashtable_set_sprite(crouchIcon, ICON_CROUCHING);
+            crouchIcon->positionX = 48;
+            crouchIcon->positionY = 48;
+            crouchIcon->maybeEnabled = HUD_ICON_ON;
+            crouchIcon->colourTint = 0x7f7f7fff;
+            CrouchIconTimer = (int16_t)(int)_FRAME_RATE;
+            return;
+        }
+        if (CrouchIconTimer != 0) {
+            hashtable_set_sprite(crouchIcon, ICON_UNCROUCH);
+            crouchIcon->maybeEnabled = HUD_ICON_ON;
+            uchar a = 0xff;
+            double half = (double)_FRAME_RATE * 0.5;
+            if ((double)CrouchIconTimer < half)
+                a = (uchar)(int)((double)(CrouchIconTimer * 255) / half);
+            crouchIcon->colourTint = (uint)a | 0x7f7f7f00;
+            CrouchIconTimer--;
+            return;
+        }
+        crouchIcon->maybeEnabled = 0xff;
+    }
+}
+
+// XBE_GLOBAL(0x0017fde8, 0x1c)
 HUDPANECREATE_tag HealthPane = {
 	50,
 	SCREEN_HEIGHT - 135,//345,
@@ -522,61 +828,68 @@ HUDPANECREATE_tag HealthPane = {
 };
 
 
+// XBE_GLOBAL(0x00180ee0, 0x58)
 HUDPANECREATE_tag* PaneList[] = {
 	&AmmoPane,
 	&HealthPane,
-	MsgMissionStatusPane,
-	MsgObjectiveStatusPane,
-	MsgInfoStatusPane,
-	AirPane, // Oxygen/Swimming indicator?
+	&MsgMissionStatusPane,
+	&MsgObjectiveStatusPane,
+	&MsgInfoStatusPane,
+	&AirPane, // Oxygen/Swimming indicator?
 	&SightPane,
-	NightSightPane,
-	LensFlarePane,
+	&NightSightPane,
+	&LensFlarePane,
 	&RedeemerPane,
-	RCCarPane,
-	CameraPane,
+	&RCCarPane,
+	&CameraPane,
 	&BloodPane,
 	NULL,
 	NULL,
-	XrayPane,
-	SecCamPane,
-	OICWPane,
-	RoninPane,
-	LaserPane,
-	SpacePane,
-	MsgPickupStatusPane
+	&XrayPane,
+	&SecCamPane,
+	&OICWPane,
+	&RoninPane,
+	&LaserPane,
+	&SpacePane,
+	&MsgPickupStatusPane
 };
 
 static_assert(ARRAY_SIZE(PaneList) == NUM_PANES, "Bad size of pane list");
 
 
-#define MPAmmoPane ((HUDPANECREATE_tag*)(0x00180fbc))
-#define MPHealthPane ((HUDPANECREATE_tag*)(0x00181138))
-#define MPMsgInfoStatusPane ((HUDPANECREATE_tag*)(0x00181180))
-#define MPScorePane ((HUDPANECREATE_tag*)(0x001812d4))
-#define RadarPane ((HUDPANECREATE_tag*)(0x001806d8))
+// XBE_GLOBAL(0x00180fbc, 0x1c)
+static HUDPANECREATE_tag MPAmmoPane = {640, 480, 0, 26, (HUDPANE_createFunc)0x000b6270 /* HUD_CreateAmmoPane */, (HUDPANE_updateFunc)0x000b1f90 /* HUD_UpdateAmmoPane */, (SpriteInfo*)0x00180f38 /* MPAmmoSprInfo */, 3, 4, 24, 0, 0};
+// XBE_GLOBAL(0x00181138, 0x1c)
+static HUDPANECREATE_tag MPHealthPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b6330 /* HUD_CreateMPHealthPane */, (HUDPANE_updateFunc)0x000b2870 /* HUD_UpdateMPHealthPane */, (SpriteInfo*)0x00180fd8 /* MPHealthSprInfo */, 8, 0, 384, 0, 0};
+// XBE_GLOBAL(0x00181180, 0x1c)
+static HUDPANECREATE_tag MPMsgInfoStatusPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b64d0 /* HUD_CreateInfoStatusPane */, (HUDPANE_updateFunc)0x000b3890 /* HUD_MPUpdateStatusPane */, (SpriteInfo*)0x00181154 /* MPInfoStatusSprInfo */, 1, 4, 384, 0, 0};
+// XBE_GLOBAL(0x001812d4, 0x1c)
+static HUDPANECREATE_tag MPScorePane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b67d0 /* HUD_CreateMPScorePane */, (HUDPANE_updateFunc)0x000b5190 /* HUD_MPUpdatePane */, (SpriteInfo*)0x001811a0 /* MPScoreInfo */, 7, 0, 384, 0, 0};
+// XBE_GLOBAL(0x001806d8, 0x1c)
+static HUDPANECREATE_tag RadarPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b69e0 /* HUD_CreateRadar */, (HUDPANE_updateFunc)0x000b54d0 /* HUD_RadarUpdate */, (SpriteInfo*)0x001806ac /* RadarSprInfo */, 1, 28, 384, 0, 0};
 
+// XBE_GLOBAL(0x001812f0, 0x58)
 HUDPANECREATE_tag * MPPaneList[] = {
-	MPAmmoPane,
-	MPHealthPane,
+	&MPAmmoPane,
+	&MPHealthPane,
 	NULL,
 	NULL,
-	MPMsgInfoStatusPane,
+	&MPMsgInfoStatusPane,
 	NULL,
 	&SightPane,
 	NULL,
 	NULL,
 	&RedeemerPane,
-	RCCarPane,
+	&RCCarPane,
 	NULL,
 	&BloodPane,
-	MPScorePane,
-	RadarPane,
+	&MPScorePane,
+	&RadarPane,
 	NULL,
 	NULL,
-	OICWPane,
-	RoninPane,
-	LaserPane,
+	&OICWPane,
+	&RoninPane,
+	&LaserPane,
 	NULL,
 	NULL
 };
@@ -642,8 +955,10 @@ void HUD_Init(BLData *player, obj_tag *obj) {
 	
 }
 
-#define OICW_timer I16_AT(0x002790b4)
-#define OICW_mode U8_AT(0x002790ae)
+// XBE_GLOBAL(0x002790b4, 0x2)
+static int16_t OICW_timer;
+// XBE_GLOBAL(0x002790ae, 0x1)
+static uint8_t OICW_mode;
 
 // AUTOINJECT
 void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *param_3,obj_tag *param_4) {
@@ -787,7 +1102,6 @@ void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 }
 
 
-#define MissileDeploy (*(uchar(*)[8])(0x0029a28c))
 
 
 // AUTOINJECT
@@ -1015,4 +1329,278 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 
 	Scrl++;
 
+}
+
+// AUTOGEN
+bool __cdecl Text_UpdateMsg(char param_1, TXTMSG_TYPE txtmsg_type, TXT_MSG **param_3);
+
+// The four extra items HUD_CreateDefault allocates for each message pane (numExtraItems = 4), as the
+// HUD_Create*StatusPane functions fill them in.
+typedef struct StatusPaneData {
+    TXT_MSG *msg;       // the message on show, NULL for none - Text_UpdateMsg's in/out argument
+    int state;          // STATUS_* below
+    int msgType;        // the Text_AddMsg type this pane shows: 1 info, 2 objective, 3 mission, 6 pickup
+    int shrinkStep;     // pixels the bar sprite loses per frame while closing: 16, or 32 for the mission pane
+} StatusPaneData;
+static_assert(sizeof(StatusPaneData) == 4 * sizeof(void*), "StatusPaneData is the pane's four extra items");
+
+// The life of a message on a status pane. PS2 has no names for these.
+#define STATUS_IDLE     0   // nothing shown; wait for a message of this pane's type
+#define STATUS_OPEN     1   // the bar (sprite 2) springs to full width
+#define STATUS_SHOW     2   // put the message's text (or picture) on the pane
+#define STATUS_HOLD     3   // fade in/out with the message's timer until Text_UpdateMsg moves on
+#define STATUS_CLOSE    4   // the bar shrinks away, then back to STATUS_IDLE
+
+// The sprite colours the message text is drawn in.
+#define STATUS_TEXT_COLOUR      0x7d6d59ff
+#define STATUS_HEADING_COLOUR   0x785a14ff  // "NEW OBJECTIVE" / "OBJECTIVE COMPLETE"
+
+// The objective heading's state, shared by every objective pane (only player 0 has one in practice). PS2 names
+// (function-local statics of HUD_UpdateStatusPane there). Only HUD_UpdateStatusPane touches any of them.
+// XBE_GLOBAL(0x002790d0, 0x1)
+static bool IsNew;          // the objective message is a new objective
+// XBE_GLOBAL(0x002790d1, 0x1)
+static bool IsComplete;     // the objective message is "objective complete"
+// XBE_GLOBAL(0x002790c0, 0x4)
+static int ObjectiveSFXTriggered2;  // ObjectiveSFXPlayMe2nd has been played (or is not wanted)
+// XBE_GLOBAL(0x002790c4, 0x4)
+static int ObjectiveSFXTriggered1;  // ObjectiveSFXPlayMe1st has been played (or is not wanted)
+// XBE_GLOBAL(0x002790c8, 0x4)
+static Action_SFX ObjectiveSFXPlayMe2nd;    // played as the heading appears
+// XBE_GLOBAL(0x002790cc, 0x4)
+static Action_SFX ObjectiveSFXPlayMe1st;    // played once the heading starts to flash
+
+// Set the low (alpha) byte of a sprite's colour and keep the rest; the original writes that byte alone.
+static void StatusPane_SetAlpha(sprite *spr, uint alpha) {
+    spr->colourTint = (spr->colourTint & 0xffffff00) | alpha;
+}
+
+// Centre the bar sprite (sprite 2) on the pane's sprite-2 layout, as wide as it is now. All 16-bit arithmetic.
+static void StatusPane_CentreBar(HUDPANE_tag *pane, sprite *bar) {
+    SpriteInfo *layout = &pane->base->spriteInfo[2];
+    bar->positionX = (short)((layout->onscreenWidth >> 1) - (bar->onscreenWidth >> 1) + layout->posX);
+}
+
+// The update function of the four message panes (mission, objective, info, pickup): takes the next message of the
+// pane's type off Text's queue, opens a bar, shows the message, fades it with the message's timer, and shrinks the
+// bar away again. The objective pane also puts up a flashing "NEW OBJECTIVE" / "OBJECTIVE COMPLETE" heading with
+// its sounds.
+// AUTOINJECT
+void HUD_UpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
+
+    if (!pane->enabled)
+        return;
+
+    StatusPaneData *data = (StatusPaneData*)pane->extraItems;
+    ushort numSprites = (ushort)pane->numSprites;
+    sprite **sprites = pane->spriteList;
+
+    // Sprite 2 is the bar and is always read; 3 and 4 are the bar's end caps, 5 an extra line, where the pane
+    // has that many sprites.
+    sprite *bar = sprites[2];
+    sprite *leftCap = (numSprites > 3) ? sprites[3] : NULL;
+    sprite *rightCap = (numSprites > 4) ? sprites[4] : NULL;
+    sprite *extra = (numSprites > 5) ? sprites[5] : NULL;
+
+    sprite *text = sprites[0];
+    // The mission pane's second line: why the mission failed
+    sprite *failText = (pane->base == &MsgMissionStatusPane) ? sprites[1] : NULL;
+    // The objective pane's heading - the same sprite as extra above
+    sprite *heading = (pane->base == &MsgObjectiveStatusPane) ? sprites[5] : NULL;
+
+    TXT_MSG *msg = data->msg;
+
+    switch (data->state) {
+
+        case STATUS_IDLE:
+            // Hide everything (numSprites is read again each time round, as the original does)
+            if (numSprites != 0) {
+                ushort i = 0;
+                do {
+                    pane->spriteList[i]->maybeEnabled = 0xff;
+                    i++;
+                } while (i < (ushort)pane->numSprites);
+            }
+            if (text != NULL)
+                StatusPane_SetAlpha(text, 0);
+            if (extra != NULL)
+                StatusPane_SetAlpha(extra, 0);
+
+            if (Text_UpdateMsg(blData->playerNum, (TXTMSG_TYPE)data->msgType, &data->msg) && data->msg != NULL) {
+                // A message for us: start the bar at zero width in the middle of its space
+                if (bar != NULL) {
+                    SpriteInfo *layout = &pane->base->spriteInfo[2];
+                    bar->onscreenWidth = 0;
+                    bar->positionX = (short)((layout->onscreenWidth >> 1) + layout->posX);
+                }
+                data->state = STATUS_OPEN;
+            }
+            return;
+
+        case STATUS_OPEN:
+            if (bar == NULL) {
+                data->state = STATUS_SHOW;
+            } else {
+                bar->onscreenWidth = pane->base->spriteInfo[2].onscreenWidth;
+                StatusPane_CentreBar(pane, bar);
+                data->state = STATUS_SHOW;
+            }
+            // The caps hug the bar. bar is not checked for NULL here, as in the original; every pane with caps
+            // has a bar.
+            if (leftCap != NULL)
+                leftCap->positionX = bar->positionX - leftCap->onscreenWidth;
+            if (rightCap != NULL)
+                rightCap->positionX = bar->onscreenWidth + bar->positionX;
+            return;
+
+        case STATUS_SHOW:
+            if (failText != NULL)
+                failText->colourTint = STATUS_TEXT_COLOUR;
+            if (text != NULL)
+                text->colourTint = STATUS_TEXT_COLOUR;
+            if (extra != NULL)
+                StatusPane_SetAlpha(extra, 0xff);
+
+            // A message can be a picture instead of text (Text_AddMsg's fifth argument)
+            if (msg->spriteHash != HASHCODE_NONE) {
+                hashtable_set_sprite(text, msg->spriteHash);
+                text->text = NULL;
+                data->state = STATUS_HOLD;
+                return;
+            }
+
+            if (msg->type == 2) {
+                // An objective: is it "objective complete" or a new one? Decides the heading and its sounds.
+                // The flags are set before the label is fetched, as in the original.
+                const char *label;
+                if (strcmp(msg->text, Txt_BindLabel(TXT_NOTIF_OBJECTIVE_COMPLETE, 0)) == 0) {
+                    IsComplete = true;
+                    IsNew = false;
+                    label = Txt_BindLabel(TXT_NOTIF_OBJECTIVE_COMPLETE, 0);
+                } else {
+                    IsComplete = false;
+                    IsNew = true;
+                    label = Txt_BindLabel(TXT_NOTIF_OBJECTIVE_NEW, 0);
+                }
+                // Only the text pointer is replaced (not its length) before the format is redone - as the original.
+                heading->text = (char*)label;
+                Sprite_SetFmt(heading, heading->maybeClippedString);
+
+                if (text != NULL)
+                    text->colourTint = 0;   // the message itself waits until the heading has had its say
+
+                if (IsNew) {
+                    ObjectiveSFXPlayMe1st = SFX_MENU_MISSION_UPDATE;
+                    ObjectiveSFXPlayMe2nd = SFX_MENU_NEW_OBJECTIVE;
+                    ObjectiveSFXTriggered1 = 0;
+                    ObjectiveSFXTriggered2 = 0;
+                } else {
+                    ObjectiveSFXTriggered2 = 1;
+                    if (IsComplete) {
+                        ObjectiveSFXPlayMe1st = SFX_MENU_OBJECTIVE_COMPLETE;
+                        ObjectiveSFXTriggered1 = 0;
+                    } else {
+                        ObjectiveSFXTriggered1 = 1;
+                    }
+                }
+            }
+
+            Sprite_SetText(text, msg->text);
+            Sprite_SetText(failText, (char*)Txt_BindLabel(Mission_FailLabel(), 0));   // NULL-safe
+
+            // A negative timer is a message on its way out (Text_AddMsg sets -1 on objectives when a mission
+            // banner arrives): keep it hidden
+            if (msg->timer < 0.0f) {
+                text->colourTint = 0;
+                if (failText != NULL)
+                    failText->colourTint = 0;
+            }
+            data->state = STATUS_HOLD;
+            return;
+
+        case STATUS_HOLD:
+            if (msg != NULL) {
+                StatusPane_SetAlpha(text, 0xff);
+                if (failText != NULL)
+                    StatusPane_SetAlpha(failText, 0xff);
+
+                if (msg->type == 2) {
+                    // x87 sums: exact in double. The heading shows for the first 240 (new) or 120 (complete)
+                    // frames of the message's life, then flashes (20 frames on, 20 off) for the rest of it
+                    // while the message text shows.
+                    if ((IsNew && (double)msg->timer + 60.0 > 300.0) ||
+                        (IsComplete && (double)msg->timer + 60.0 > 180.0)) {
+                        text->colourTint = 0;
+                        if (failText != NULL)
+                            failText->colourTint = 0;
+                        heading->colourTint = (fmodf(msg->timer, 40.0f) < 20.0f) ? STATUS_HEADING_COLOUR : 0;
+                        heading->unknown1 = 0;
+                        text->unknown1 = 0;
+                        if (failText != NULL)
+                            failText->unknown1 = 0;
+                        if (ScriptCam == 0 && ObjectiveSFXTriggered1 == 0) {
+                            Sound_PlayExt(ObjectiveSFXPlayMe1st, 100.0f, 0, 0);
+                            ObjectiveSFXTriggered1 = 1;
+                        }
+                    } else {
+                        if (ObjectiveSFXTriggered2 == 0) {
+                            Sound_PlayExt(ObjectiveSFXPlayMe2nd, 100.0f, 0, 0);
+                            ObjectiveSFXTriggered2 = 1;
+                        }
+                        heading->colourTint = STATUS_HEADING_COLOUR;
+                        text->colourTint = IsComplete ? 0 : STATUS_TEXT_COLOUR;
+                        if (failText != NULL)
+                            failText->colourTint = STATUS_TEXT_COLOUR;
+                        heading->unknown1 = 0xff;
+                        text->unknown1 = IsComplete ? 0 : 0xff;
+                        if (failText != NULL)
+                            failText->unknown1 = 0xff;
+                    }
+                }
+
+                // Fade out over the last 15 frames. timer * 17 is exact in double, as on the x87.
+                if (msg->timer >= 0.0f && msg->timer < 15.0f) {
+                    text->colourTint = (text->colourTint & 0xffffff00) | (uint)(int)((double)msg->timer * 17.0);
+                    if (failText != NULL)
+                        failText->colourTint = (failText->colourTint & 0xffffff00) | (uint)(int)((double)msg->timer * 17.0);
+                }
+                if (msg->timer < 0.0f) {
+                    text->colourTint = 0;
+                    if (failText != NULL)
+                        failText->colourTint = 0;
+                }
+                if (msg->type == 2 && IsComplete)
+                    text->colourTint = 0;   // "objective complete" is said by the heading alone
+            }
+
+            // When the message is done: the next one straight away, or close the bar if there is none
+            if (Text_UpdateMsg(blData->playerNum, (TXTMSG_TYPE)data->msgType, &data->msg))
+                data->state = (data->msg == NULL) ? STATUS_CLOSE : STATUS_SHOW;
+            return;
+
+        case STATUS_CLOSE:
+            if (text != NULL)
+                StatusPane_SetAlpha(text, 0);
+            if (failText != NULL)
+                StatusPane_SetAlpha(failText, 0);
+            if (extra != NULL)
+                StatusPane_SetAlpha(extra, 0);
+
+            if (bar == NULL) {
+                data->state = STATUS_IDLE;
+            } else {
+                bar->onscreenWidth -= (short)data->shrinkStep;
+                StatusPane_CentreBar(pane, bar);
+                if (bar->onscreenWidth <= 0)
+                    data->state = STATUS_IDLE;
+            }
+            if (leftCap != NULL)
+                leftCap->positionX = bar->positionX - leftCap->onscreenWidth;
+            if (rightCap != NULL)
+                rightCap->positionX = bar->onscreenWidth + bar->positionX;
+            return;
+
+        default:
+            return;
+    }
 }

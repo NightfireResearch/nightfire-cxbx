@@ -1,0 +1,1455 @@
+{
+ "ABank": {
+  "allocated": [
+   24
+  ],
+  "constructed": []
+ },
+ "ABasic": {
+  "allocated": [
+   240
+  ],
+  "constructed": []
+ },
+ "ACharacter": {
+  "allocated": [
+   208
+  ],
+  "constructed": []
+ },
+ "AFader": {
+  "allocated": [
+   4
+  ],
+  "constructed": []
+ },
+ "AFingoDeath": {
+  "allocated": [
+   512
+  ],
+  "constructed": []
+ },
+ "AGun": {
+  "allocated": [],
+  "constructed": [
+   124
+  ]
+ },
+ "AHelicopter": {
+  "allocated": [
+   784
+  ],
+  "constructed": []
+ },
+ "AHorn": {
+  "allocated": [],
+  "constructed": [
+   112
+  ]
+ },
+ "AICharacter": {
+  "allocated": [
+   336,
+   352,
+   368,
+   448,
+   656
+  ],
+  "constructed": []
+ },
+ "AICharacterBond": {
+  "allocated": [],
+  "constructed": [
+   336
+  ]
+ },
+ "AICharacterEnemyDriver": {
+  "allocated": [],
+  "constructed": [
+   336
+  ]
+ },
+ "AICharacterEnemyGround": {
+  "allocated": [],
+  "constructed": [
+   448
+  ]
+ },
+ "AICharacterEnemySnow": {
+  "allocated": [],
+  "constructed": [
+   368
+  ]
+ },
+ "AICharacterEnemySunroof": {
+  "allocated": [],
+  "constructed": [
+   368
+  ]
+ },
+ "AICharacterEnemyWindow": {
+  "allocated": [],
+  "constructed": [
+   352
+  ]
+ },
+ "AICharacterPassenger": {
+  "allocated": [],
+  "constructed": [
+   336
+  ]
+ },
+ "AIElementController": {
+  "allocated": [],
+  "constructed": [
+   88
+  ]
+ },
+ "AISplinePath": {
+  "allocated": [],
+  "constructed": [
+   176
+  ]
+ },
+ "AIndexMap": {
+  "allocated": [
+   24
+  ],
+  "constructed": []
+ },
+ "AListener": {
+  "allocated": [],
+  "constructed": [
+   128
+  ]
+ },
+ "AMenuSoundPriv": {
+  "allocated": [
+   288
+  ],
+  "constructed": []
+ },
+ "AMix": {
+  "allocated": [
+   80
+  ],
+  "constructed": []
+ },
+ "AOneShotSound": {
+  "allocated": [
+   288
+  ],
+  "constructed": []
+ },
+ "APlayerHeli": {
+  "allocated": [
+   528
+  ],
+  "constructed": []
+ },
+ "APlayerTank": {
+  "allocated": [
+   528
+  ],
+  "constructed": []
+ },
+ "APlayerVehicle": {
+  "allocated": [
+   544
+  ],
+  "constructed": []
+ },
+ "ARaceEngine": {
+  "allocated": [],
+  "constructed": [
+   84
+  ]
+ },
+ "ASentry": {
+  "allocated": [
+   352
+  ],
+  "constructed": []
+ },
+ "ASmackable": {
+  "allocated": [
+   240
+  ],
+  "constructed": []
+ },
+ "ASnowMobile": {
+  "allocated": [
+   608
+  ],
+  "constructed": []
+ },
+ "ASound": {
+  "allocated": [
+   288
+  ],
+  "constructed": []
+ },
+ "ASoundList": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "AStream": {
+  "allocated": [
+   208
+  ],
+  "constructed": []
+ },
+ "AStreamPriv": {
+  "allocated": [
+   296
+  ],
+  "constructed": []
+ },
+ "ASubmersible": {
+  "allocated": [
+   576
+  ],
+  "constructed": []
+ },
+ "ASystem": {
+  "allocated": [
+   8
+  ],
+  "constructed": []
+ },
+ "ATargeting": {
+  "allocated": [],
+  "constructed": [
+   12
+  ]
+ },
+ "ATrafficVehicle": {
+  "allocated": [
+   576
+  ],
+  "constructed": []
+ },
+ "ATurret": {
+  "allocated": [
+   20
+  ],
+  "constructed": []
+ },
+ "AUltraLite": {
+  "allocated": [
+   560
+  ],
+  "constructed": []
+ },
+ "AVehicleWind": {
+  "allocated": [],
+  "constructed": [
+   36
+  ]
+ },
+ "AVoice": {
+  "allocated": [
+   88
+  ],
+  "constructed": []
+ },
+ "AZoomObj": {
+  "allocated": [
+   16
+  ],
+  "constructed": []
+ },
+ "ActActor": {
+  "allocated": [
+   80
+  ],
+  "constructed": []
+ },
+ "ActAnimGroup": {
+  "allocated": [
+   32
+  ],
+  "constructed": []
+ },
+ "ActAnimationDatabase": {
+  "allocated": [
+   4
+  ],
+  "constructed": []
+ },
+ "ActCharacter": {
+  "allocated": [
+   132
+  ],
+  "constructed": []
+ },
+ "ActCharacterInfo": {
+  "allocated": [],
+  "constructed": [
+   220
+  ]
+ },
+ "ActCrossFadeBlendData": {
+  "allocated": [
+   304
+  ],
+  "constructed": []
+ },
+ "ActEventResolver": {
+  "allocated": [
+   4
+  ],
+  "constructed": []
+ },
+ "ActEvents": {
+  "allocated": [
+   148
+  ],
+  "constructed": []
+ },
+ "ActGlobalPoseOverrideArray": {
+  "allocated": [],
+  "constructed": [
+   28
+  ]
+ },
+ "ActIKSolverArray": {
+  "allocated": [],
+  "constructed": [
+   24
+  ]
+ },
+ "ActModel": {
+  "allocated": [
+   76
+  ],
+  "constructed": []
+ },
+ "ActModelDatabase": {
+  "allocated": [
+   176
+  ],
+  "constructed": []
+ },
+ "ActPoser": {
+  "allocated": [
+   112,
+   220
+  ],
+  "constructed": []
+ },
+ "ActSkeleton": {
+  "allocated": [
+   36
+  ],
+  "constructed": []
+ },
+ "ActSkeletonDatabase": {
+  "allocated": [
+   36
+  ],
+  "constructed": []
+ },
+ "ActTextureDatabase": {
+  "allocated": [
+   172
+  ],
+  "constructed": []
+ },
+ "ActWeapon": {
+  "allocated": [
+   368
+  ],
+  "constructed": []
+ },
+ "ActWeaponAux": {
+  "allocated": [
+   4
+  ],
+  "constructed": []
+ },
+ "ActWeaponDatabase": {
+  "allocated": [
+   64
+  ],
+  "constructed": []
+ },
+ "ActionQueue": {
+  "allocated": [
+   2420
+  ],
+  "constructed": []
+ },
+ "AnimationController": {
+  "allocated": [
+   48,
+   64
+  ],
+  "constructed": []
+ },
+ "AttributeCollectionMap": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "AttributeEditConfigMap": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "AttributeExtensionClassMap": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "AttributeExtensionTypeMap": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "AttributeStoreBlockList": {
+  "allocated": [
+   16
+  ],
+  "constructed": []
+ },
+ "AttributeStringSet": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "AttributeSystem": {
+  "allocated": [],
+  "constructed": [
+   104
+  ]
+ },
+ "D3DTexture": {
+  "allocated": [
+   20
+  ],
+  "constructed": []
+ },
+ "DTuningFile": {
+  "allocated": [],
+  "constructed": [
+   272
+  ]
+ },
+ "DeadObjList": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "Device": {
+  "allocated": [
+   28
+  ],
+  "constructed": [
+   28
+  ]
+ },
+ "DrawArray": {
+  "allocated": [
+   76
+  ],
+  "constructed": []
+ },
+ "DrawGouraud": {
+  "allocated": [
+   156
+  ],
+  "constructed": [
+   156
+  ]
+ },
+ "DynamicLoader": {
+  "allocated": [
+   28
+  ],
+  "constructed": [
+   28
+  ]
+ },
+ "DynamicModel": {
+  "allocated": [
+   88
+  ],
+  "constructed": [
+   88
+  ]
+ },
+ "EAICommand": {
+  "allocated": [],
+  "constructed": [
+   32
+  ]
+ },
+ "EChangeMaxTraffic": {
+  "allocated": [],
+  "constructed": [
+   8
+  ]
+ },
+ "EChangeStage": {
+  "allocated": [],
+  "constructed": [
+   8
+  ]
+ },
+ "ECollision": {
+  "allocated": [],
+  "constructed": [
+   88
+  ]
+ },
+ "EExit": {
+  "allocated": [],
+  "constructed": [
+   4
+  ]
+ },
+ "EForceNearPedRespawn": {
+  "allocated": [],
+  "constructed": [
+   12
+  ]
+ },
+ "EGLRTShape": {
+  "allocated": [
+   20
+  ],
+  "constructed": []
+ },
+ "EGLRTZShape": {
+  "allocated": [
+   20
+  ],
+  "constructed": []
+ },
+ "EPause": {
+  "allocated": [],
+  "constructed": [
+   4
+  ]
+ },
+ "ERestart": {
+  "allocated": [],
+  "constructed": [
+   4
+  ]
+ },
+ "EResume": {
+  "allocated": [],
+  "constructed": [
+   4
+  ]
+ },
+ "ESetTimer": {
+  "allocated": [],
+  "constructed": [
+   16
+  ]
+ },
+ "EStartTimedAction": {
+  "allocated": [],
+  "constructed": [
+   24
+  ]
+ },
+ "EStartTimer": {
+  "allocated": [],
+  "constructed": [
+   12
+  ]
+ },
+ "EStopTimer": {
+  "allocated": [],
+  "constructed": [
+   8
+  ]
+ },
+ "EventBuffer": {
+  "allocated": [
+   32768
+  ],
+  "constructed": []
+ },
+ "Explosion": {
+  "allocated": [
+   152
+  ],
+  "constructed": []
+ },
+ "FailedStreams": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "FnAnimFactory": {
+  "allocated": [
+   1
+  ],
+  "constructed": []
+ },
+ "FunctionEntry": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "GFXCanvas": {
+  "allocated": [
+   73728
+  ],
+  "constructed": []
+ },
+ "GFXGallery": {
+  "allocated": [],
+  "constructed": [
+   5168
+  ]
+ },
+ "GFXParticleSystems": {
+  "allocated": [
+   2048
+  ],
+  "constructed": []
+ },
+ "GGallery": {
+  "allocated": [],
+  "constructed": [
+   192
+  ]
+ },
+ "GGirlieMaterial": {
+  "allocated": [],
+  "constructed": [
+   208
+  ]
+ },
+ "GHud": {
+  "allocated": [],
+  "constructed": [
+   1264
+  ]
+ },
+ "GeoPrim": {
+  "allocated": [
+   44,
+   60,
+   124
+  ],
+  "constructed": []
+ },
+ "GeoPrimState": {
+  "allocated": [
+   76
+  ],
+  "constructed": [
+   6864
+  ]
+ },
+ "GeoPrimStateExtension": {
+  "allocated": [],
+  "constructed": [
+   76
+  ]
+ },
+ "Grenade": {
+  "allocated": [
+   1760
+  ],
+  "constructed": []
+ },
+ "HashPointer": {
+  "allocated": [
+   1064
+  ],
+  "constructed": []
+ },
+ "Human": {
+  "allocated": [
+   144
+  ],
+  "constructed": []
+ },
+ "IDirect3DVertexBuffer8": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "IFeedback": {
+  "allocated": [
+   4
+  ],
+  "constructed": []
+ },
+ "IniFiles": {
+  "allocated": [],
+  "constructed": [
+   12
+  ]
+ },
+ "InputToAction": {
+  "allocated": [
+   16
+  ],
+  "constructed": []
+ },
+ "LightBlock": {
+  "allocated": [
+   112
+  ],
+  "constructed": []
+ },
+ "Mine": {
+  "allocated": [
+   136
+  ],
+  "constructed": []
+ },
+ "Missile": {
+  "allocated": [
+   1840
+  ],
+  "constructed": []
+ },
+ "Namespacelist": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "Newton": {
+  "allocated": [
+   144
+  ],
+  "constructed": []
+ },
+ "OBB": {
+  "allocated": [
+   176
+  ],
+  "constructed": []
+ },
+ "PBondCar": {
+  "allocated": [
+   1056
+  ],
+  "constructed": []
+ },
+ "PHelicopter": {
+  "allocated": [
+   320
+  ],
+  "constructed": []
+ },
+ "PhysicsNamespace": {
+  "allocated": [],
+  "constructed": [
+   4
+  ]
+ },
+ "PhysicsObjMap": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "PixelShader": {
+  "allocated": [
+   4
+  ],
+  "constructed": []
+ },
+ "Priv": {
+  "allocated": [
+   48
+  ],
+  "constructed": [
+   48
+  ]
+ },
+ "RAutonomousObj": {
+  "allocated": [
+   128
+  ],
+  "constructed": []
+ },
+ "RCARPFile": {
+  "allocated": [
+   56
+  ],
+  "constructed": []
+ },
+ "RCamera": {
+  "allocated": [
+   192
+  ],
+  "constructed": []
+ },
+ "RCameraIniLoader": {
+  "allocated": [],
+  "constructed": [
+   1
+  ]
+ },
+ "RCameraSpline": {
+  "allocated": [
+   112
+  ],
+  "constructed": []
+ },
+ "RColorize": {
+  "allocated": [],
+  "constructed": [
+   96
+  ]
+ },
+ "RDebris": {
+  "allocated": [
+   144
+  ],
+  "constructed": []
+ },
+ "RDebrisType": {
+  "allocated": [
+   6864
+  ],
+  "constructed": []
+ },
+ "RDecalManager": {
+  "allocated": [],
+  "constructed": [
+   672
+  ]
+ },
+ "RDirectorQueue": {
+  "allocated": [
+   20
+  ],
+  "constructed": []
+ },
+ "RDirectorQueueData": {
+  "allocated": [],
+  "constructed": [
+   40,
+   48
+  ]
+ },
+ "REmpBolts": {
+  "allocated": [],
+  "constructed": [
+   556
+  ]
+ },
+ "RFog": {
+  "allocated": [],
+  "constructed": [
+   28
+  ]
+ },
+ "RGain": {
+  "allocated": [
+   300
+  ],
+  "constructed": []
+ },
+ "RGlareManager": {
+  "allocated": [],
+  "constructed": [
+   13376
+  ]
+ },
+ "RLensFlareManager": {
+  "allocated": [],
+  "constructed": [
+   8
+  ]
+ },
+ "RLightManager": {
+  "allocated": [],
+  "constructed": [
+   1008
+  ]
+ },
+ "RLightning": {
+  "allocated": [],
+  "constructed": [
+   1792
+  ]
+ },
+ "RMissileCam": {
+  "allocated": [
+   28
+  ],
+  "constructed": []
+ },
+ "ROffscreenBuffer": {
+  "allocated": [],
+  "constructed": [
+   32
+  ]
+ },
+ "RPartLibraryList": {
+  "allocated": [
+   45072
+  ],
+  "constructed": []
+ },
+ "RPartSysList": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "RParticleSystem": {
+  "allocated": [
+   112
+  ],
+  "constructed": []
+ },
+ "RParticleSystemManager": {
+  "allocated": [
+   65584
+  ],
+  "constructed": []
+ },
+ "RParticulate": {
+  "allocated": [
+   4208
+  ],
+  "constructed": []
+ },
+ "RPathHandle": {
+  "allocated": [],
+  "constructed": [
+   12,
+   220
+  ]
+ },
+ "RPlayerCamState": {
+  "allocated": [
+   52
+  ],
+  "constructed": []
+ },
+ "RPlayerCamera": {
+  "allocated": [
+   880
+  ],
+  "constructed": [
+   76
+  ]
+ },
+ "RPlayerViewCamera": {
+  "allocated": [
+   76
+  ],
+  "constructed": []
+ },
+ "RPostProcessing": {
+  "allocated": [
+   8
+  ],
+  "constructed": []
+ },
+ "RReflection": {
+  "allocated": [
+   84
+  ],
+  "constructed": []
+ },
+ "RRenderDebugViewPerspective": {
+  "allocated": [
+   80
+  ],
+  "constructed": []
+ },
+ "RRenderDebugViewScreenSpace": {
+  "allocated": [
+   76
+  ],
+  "constructed": []
+ },
+ "RRenderHUDView": {
+  "allocated": [
+   76
+  ],
+  "constructed": []
+ },
+ "RRenderer": {
+  "allocated": [
+   144
+  ],
+  "constructed": []
+ },
+ "RReverseDrawList": {
+  "allocated": [
+   16
+  ],
+  "constructed": []
+ },
+ "RSceneObj": {
+  "allocated": [
+   64
+  ],
+  "constructed": [
+   128
+  ]
+ },
+ "RShadowMap": {
+  "allocated": [
+   88
+  ],
+  "constructed": []
+ },
+ "RSniperZoom": {
+  "allocated": [
+   3184
+  ],
+  "constructed": []
+ },
+ "RStateManager": {
+  "allocated": [],
+  "constructed": [
+   20
+  ]
+ },
+ "RTexList": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "RTextureContext": {
+  "allocated": [
+   16
+  ],
+  "constructed": []
+ },
+ "RTextureContextManager": {
+  "allocated": [],
+  "constructed": [
+   8
+  ]
+ },
+ "RTyreTrack": {
+  "allocated": [
+   2336
+  ],
+  "constructed": []
+ },
+ "RVehicle": {
+  "allocated": [
+   880
+  ],
+  "constructed": []
+ },
+ "RVehicleParticle": {
+  "allocated": [
+   76
+  ],
+  "constructed": []
+ },
+ "RViewCamera": {
+  "allocated": [
+   76
+  ],
+  "constructed": [
+   76
+  ]
+ },
+ "RWater": {
+  "allocated": [],
+  "constructed": [
+   288
+  ]
+ },
+ "RayShell": {
+  "allocated": [
+   224
+  ],
+  "constructed": []
+ },
+ "ReflPrivateData": {
+  "allocated": [
+   640
+  ],
+  "constructed": [
+   640
+  ]
+ },
+ "RenderContext": {
+  "allocated": [
+   332
+  ],
+  "constructed": [
+   332
+  ]
+ },
+ "Rendermethod": {
+  "allocated": [
+   52
+  ],
+  "constructed": []
+ },
+ "RigidBodyTable": {
+  "allocated": [
+   96256
+  ],
+  "constructed": []
+ },
+ "RuntimeAllocDestructorEntry": {
+  "allocated": [
+   16
+  ],
+  "constructed": []
+ },
+ "SMissionManager": {
+  "allocated": [],
+  "constructed": [
+   7280
+  ]
+ },
+ "SMissionRule": {
+  "allocated": [
+   12,
+   16,
+   20,
+   24,
+   28,
+   32
+  ],
+  "constructed": []
+ },
+ "SRuleAlways": {
+  "allocated": [],
+  "constructed": [
+   12
+  ]
+ },
+ "SRuleAmmo": {
+  "allocated": [],
+  "constructed": [
+   28
+  ]
+ },
+ "SRuleCollision": {
+  "allocated": [],
+  "constructed": [
+   20
+  ]
+ },
+ "SRuleDamage": {
+  "allocated": [],
+  "constructed": [
+   28
+  ]
+ },
+ "SRuleDeath": {
+  "allocated": [],
+  "constructed": [
+   20
+  ]
+ },
+ "SRuleDifficulty": {
+  "allocated": [],
+  "constructed": [
+   16
+  ]
+ },
+ "SRuleHealth": {
+  "allocated": [],
+  "constructed": [
+   32
+  ]
+ },
+ "SRulePIP": {
+  "allocated": [],
+  "constructed": [
+   24
+  ]
+ },
+ "SRulePlayerDir": {
+  "allocated": [],
+  "constructed": [
+   28
+  ]
+ },
+ "SRuleProg": {
+  "allocated": [],
+  "constructed": [
+   16
+  ]
+ },
+ "SRuleProgCounter": {
+  "allocated": [],
+  "constructed": [
+   24
+  ]
+ },
+ "SRuleProperty": {
+  "allocated": [],
+  "constructed": [
+   28
+  ]
+ },
+ "SRuleRange": {
+  "allocated": [],
+  "constructed": [
+   32
+  ]
+ },
+ "SRuleSpeed": {
+  "allocated": [],
+  "constructed": [
+   32
+  ]
+ },
+ "SRuleTimer": {
+  "allocated": [],
+  "constructed": [
+   28
+  ]
+ },
+ "STL": {
+  "allocated": [
+   12,
+   16,
+   20,
+   24,
+   28,
+   32,
+   36,
+   40,
+   44,
+   48,
+   52,
+   56,
+   64,
+   68,
+   152,
+   220,
+   264
+  ],
+  "constructed": []
+ },
+ "SWeaponManager": {
+  "allocated": [],
+  "constructed": [
+   384
+  ]
+ },
+ "Schedule": {
+  "allocated": [],
+  "constructed": [
+   44
+  ]
+ },
+ "Scheduler": {
+  "allocated": [],
+  "constructed": [
+   36
+  ]
+ },
+ "Sentry": {
+  "allocated": [
+   200
+  ],
+  "constructed": []
+ },
+ "ShadowPrivateData": {
+  "allocated": [],
+  "constructed": [
+   96
+  ]
+ },
+ "SharedData": {
+  "allocated": [
+   52
+  ],
+  "constructed": []
+ },
+ "Shell": {
+  "allocated": [
+   144
+  ],
+  "constructed": []
+ },
+ "SimRandom": {
+  "allocated": [
+   16
+  ],
+  "constructed": []
+ },
+ "Smackable": {
+  "allocated": [
+   136
+  ],
+  "constructed": []
+ },
+ "StandardAnimationController": {
+  "allocated": [],
+  "constructed": [
+   48
+  ]
+ },
+ "StringToNumber": {
+  "allocated": [
+   16
+  ],
+  "constructed": []
+ },
+ "TAR": {
+  "allocated": [
+   76
+  ],
+  "constructed": [
+   76
+  ]
+ },
+ "TaskList": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "TextureRenderContext": {
+  "allocated": [
+   212
+  ],
+  "constructed": [
+   212
+  ]
+ },
+ "UCarpNamespace": {
+  "allocated": [
+   12
+  ],
+  "constructed": []
+ },
+ "USimpleMaterial": {
+  "allocated": [],
+  "constructed": [
+   96
+  ]
+ },
+ "USimpleTexturedMaterial": {
+  "allocated": [],
+  "constructed": [
+   96
+  ]
+ },
+ "USymbolTable": {
+  "allocated": [
+   8
+  ],
+  "constructed": []
+ },
+ "VertexShader": {
+  "allocated": [
+   4
+  ],
+  "constructed": []
+ },
+ "ViewPort": {
+  "allocated": [],
+  "constructed": [
+   416
+  ]
+ },
+ "Viewport": {
+  "allocated": [
+   416
+  ],
+  "constructed": []
+ },
+ "WCollider": {
+  "allocated": [
+   104
+  ],
+  "constructed": []
+ },
+ "WCollisionMgr": {
+  "allocated": [],
+  "constructed": [
+   52
+  ]
+ },
+ "WGrid": {
+  "allocated": [
+   36
+  ],
+  "constructed": []
+ },
+ "WRender": {
+  "allocated": [],
+  "constructed": [
+   224
+  ]
+ },
+ "WRoadNav": {
+  "allocated": [
+   192
+  ],
+  "constructed": []
+ },
+ "WSound": {
+  "allocated": [
+   352
+  ],
+  "constructed": []
+ },
+ "WSoundGroup": {
+  "allocated": [
+   16
+  ],
+  "constructed": []
+ },
+ "WSoundMap": {
+  "allocated": [
+   12
+  ],
+  "constructed": [
+   12
+  ]
+ },
+ "WTargetable": {
+  "allocated": [
+   80
+  ],
+  "constructed": []
+ },
+ "WWorld": {
+  "allocated": [],
+  "constructed": [
+   60
+  ]
+ },
+ "WWorldPos": {
+  "allocated": [
+   64
+  ],
+  "constructed": [
+   916
+  ]
+ },
+ "XBoxPadDevice": {
+  "allocated": [
+   1388
+  ],
+  "constructed": []
+ }
+}

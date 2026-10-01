@@ -1,0 +1,281 @@
+{
+ "verdicts": [
+  {
+   "item": 30,
+   "xbox": "0x286b0",
+   "ps2": "0x12c5d0",
+   "name": "AIElementController::OkToSpawnHench",
+   "verdict": "accept",
+   "why": "identical body (+0x50 < +4); both called from ~EActivateAIElement and ~EMaybeActivateAIElement",
+   "intermediates": []
+  },
+  {
+   "item": 31,
+   "xbox": "0x2f190",
+   "ps2": "0x132808",
+   "name": "AIGroundVehicle::Spawn",
+   "verdict": "accept",
+   "why": "same flow: +0x178/+0x158 flag picks rigid body vs +0x54/+100 pos, respawn-available check, state 0xc and rigid body +0x6e==2 -> UnSpawn, AIVehicleController::Get, param vs global short",
+   "intermediates": []
+  },
+  {
+   "item": 32,
+   "xbox": "0x34600",
+   "ps2": "0x13b2a8",
+   "name": "AIHelicopter::DoProximityDestruct",
+   "verdict": "accept",
+   "why": "8/10 callees agree (GetHitPoints->LoseHitPoints, ProcessStimuli, ProgrammerDefinedEvent, GetPlayerObject); same flag-clear-and-return-1 shape",
+   "intermediates": []
+  },
+  {
+   "item": 33,
+   "xbox": "0x8dc90",
+   "ps2": "0x1c9230",
+   "name": "RSceneObj::GetPosition",
+   "verdict": "accept",
+   "why": "copies vec3 at (*(this+ptr))+0x30..0x38; 4 callers each side incl. REmpBolts::Draw direct, TrySpawnBolt/UpdateTargets vs unnamed Xbox equivalents",
+   "intermediates": []
+  },
+  {
+   "item": 34,
+   "xbox": "0x286d0",
+   "ps2": "0x12c608",
+   "name": "AIElementController::RedirectCarpElement",
+   "verdict": "accept",
+   "why": "identical: (id - global[+0x10])>>8, abs, *0x100 + this[+0xc]; 26 shared callers incl. SetSecondaryTarget and EPathUtil",
+   "intermediates": []
+  },
+  {
+   "item": 35,
+   "xbox": "0x876b0",
+   "ps2": "0x1bcd10",
+   "name": "RPlayerCamera::GetAimMatrix4",
+   "verdict": "accept",
+   "why": "same (1,1)->matrix slot, (0,1)->other slot early returns (consistent +0x10 shift), then player rigid body matrix build + VU0_MATRIX4_mult",
+   "intermediates": []
+  },
+  {
+   "item": 36,
+   "xbox": "0x8e900",
+   "ps2": "0x1ca7a0",
+   "name": "RSceneObj::DamageEffects",
+   "verdict": "accept",
+   "why": "same loop over numEffects (+0x1f), mask +0x28, ushort mask array +0x18, ToggleEffect(on,index,effect,-1.0), sets bit on",
+   "intermediates": []
+  },
+  {
+   "item": 37,
+   "xbox": "0x10afd0",
+   "ps2": "0x260748",
+   "name": "PRINT_restore",
+   "verdict": "accept",
+   "why": "identical flag clear; sole call in UMemory::Shutdown at the same position (first, before DeleteClass)",
+   "intermediates": []
+  },
+  {
+   "item": 38,
+   "xbox": "0x8e7d0",
+   "ps2": "0x1ca640",
+   "name": "RSceneObj::SuppressEffects",
+   "verdict": "accept",
+   "why": "same 64-bit mask at +0x38 test, flag param, loop over numEffects with three bit tests and ushort mask match; FindEffectByID callee",
+   "intermediates": []
+  },
+  {
+   "item": 39,
+   "xbox": "0xce950",
+   "ps2": "0x22b318",
+   "name": "WTargetPicker::UpdateTargets",
+   "verdict": "accept",
+   "why": "caller RRenderWorldCamera::DrawStaticWorldGeometry both; callees GetRigidBody/GetHitPoints/GetScreenPos agree; player rigid body first then target list walk",
+   "intermediates": []
+  },
+  {
+   "item": 40,
+   "xbox": "0x1143b0",
+   "ps2": "0x2cb1f8",
+   "name": "MEM_initblock",
+   "verdict": "accept",
+   "why": "identical: magic 0x424d, same field stores, returns size+0x10; callers MEM_resize and MEM_alloc family agree",
+   "intermediates": []
+  },
+  {
+   "item": 41,
+   "xbox": "0xd3ab0",
+   "ps2": "0x2341a8",
+   "name": "GFXGallery::CULL_GetNextCanvas",
+   "verdict": "accept",
+   "why": "identical constants: +0x141c/+0x1424 bound, +0x408 table, 5.0f (0x40a00000) twice, 0.75f, post-increment return",
+   "intermediates": []
+  },
+  {
+   "item": 42,
+   "xbox": "0xe3630",
+   "ps2": "0x24a870",
+   "name": "GSubtitles::ClearSubtitles",
+   "verdict": "accept",
+   "why": "zeroes three fields (consistent +4 shift), inlined splitter Reset (delete +0x20, zero) and ClearFrames; callers GHud::Reset and ~ESetVideo agree",
+   "intermediates": []
+  },
+  {
+   "item": 43,
+   "xbox": "0x6244d",
+   "ps2": "0x187350",
+   "name": "PBondCar::InitializeCarVariables",
+   "verdict": "reject",
+   "why": "bad function boundary: 0x6244d is the tail of Xbox 0x62440, which is already named InitializeCarVariables (callers PBondCar/ResetCar/ChangeCarType reach 0x62440); the split-off tail should be merged, not named",
+   "intermediates": []
+  },
+  {
+   "item": 44,
+   "xbox": "0x8a390",
+   "ps2": "0x1be660",
+   "name": "RPlayerCamState::AimRelease",
+   "verdict": "accept",
+   "why": "same shape: guard flag, if aiming clear player field + GHud::TheApp()->AimOff, clear three flags, ResetZoomSlope, ToggleAutoDriveZoom(flag)",
+   "intermediates": []
+  },
+  {
+   "item": 45,
+   "xbox": "0x1073a0",
+   "ps2": "0x2580c0",
+   "name": "FONT_getrecta",
+   "verdict": "reject",
+   "why": "Xbox is a printf-style wrapper (_chkstk 0x2000 buffer, vsprintf, then draw wrapper) = FONT_drawtextfa, not FONT_getrecta; its callers InfoDraw/MixerDraw/LoadAndDrawUnLoadingScreen/Update are exactly PS2 FONT_drawtextfa callers",
+   "intermediates": []
+  },
+  {
+   "item": 46,
+   "xbox": "0x7f540",
+   "ps2": "0x1aede8",
+   "name": "RLightManager::FinishLights",
+   "verdict": "accept",
+   "why": "same MEM_copy/MEM_fill 0x80, zero two counters, +100 -> +0x68, +0x60=0; RRenderHigh::Render chain agrees (StopFrameRender inlined on Xbox)",
+   "intermediates": []
+  },
+  {
+   "item": 47,
+   "xbox": "0xd9ad0",
+   "ps2": "0x2446d8",
+   "name": "GHud::DrawFont",
+   "verdict": "accept",
+   "why": "FONT_SetState, SetScale(s,s), LOCALE_Symbol fallback, store +0x50, FONT_Draw; caller DrawPauseMenu both",
+   "intermediates": []
+  },
+  {
+   "item": 48,
+   "xbox": "0x89e10",
+   "ps2": "0x1be038",
+   "name": "RPlayerCamState::AutoDriveCamInputHandler",
+   "verdict": "accept",
+   "why": "globalAdvanceFrame==3 flag, mission state 4 early return, switch cases 0x21-0x23 and 0x2c with same handling",
+   "intermediates": []
+  },
+  {
+   "item": 49,
+   "xbox": "0xb6380",
+   "ps2": "0x205ac8",
+   "name": "SMissionManager::Start",
+   "verdict": "accept",
+   "why": "state !=3 && !=4 -> 1 (PS2 unsigned range form); callers WWorld::Open, WWorld::Reset, ~EResume agree",
+   "intermediates": []
+  },
+  {
+   "item": 50,
+   "xbox": "0x2a380",
+   "ps2": "0x12e770",
+   "name": "AIGroundVehicle::SetSecondaryTarget",
+   "verdict": "accept",
+   "why": "store target, RedirectCarpElement (Xbox FUN_286d0, item 34), type +0x48==1 and sub-type ==1 -> store +0x50; caller ~EAICommand both",
+   "intermediates": []
+  },
+  {
+   "item": 51,
+   "xbox": "0xd0d50",
+   "ps2": "0x22f408",
+   "name": "InitActiveCurtainList",
+   "verdict": "accept",
+   "why": "single global=0; only such callee of WRender::GenerateCurtainsAndNodes on both sides (other callees FindVisible.../UploadCullingMicrocode->dummy)",
+   "intermediates": []
+  },
+  {
+   "item": 52,
+   "xbox": "0x1ee60",
+   "ps2": "0x11b908",
+   "name": "AICharacterEnemyGround::DoWandering",
+   "verdict": "accept",
+   "why": "same state==0 / anim-done / virtual check, SimRandom*3>>16 table pick, SetNewAnimation(0x11), same table layout",
+   "intermediates": []
+  },
+  {
+   "item": 53,
+   "xbox": "0xd2c20",
+   "ps2": "0x231af0",
+   "name": "WWorldMath::IntersectSegPlane",
+   "verdict": "accept",
+   "why": "identical math: two v3sub, two dots, t=d1/d2, lerp, 0<=t<=1 test; chains reach Newton::Simulate and Missile::CheckForCollision via collision helpers",
+   "intermediates": []
+  },
+  {
+   "item": 54,
+   "xbox": "0xd7c60",
+   "ps2": "0x23c718",
+   "name": "GHud::LavaDamageEffectEnabled",
+   "verdict": "accept",
+   "why": "same field +0x330 != 0 (unchanged offset); sole caller SWeaponManager::Update both",
+   "intermediates": []
+  },
+  {
+   "item": 55,
+   "xbox": "0x3da90",
+   "ps2": "0x145d00",
+   "name": "EPathUtil_GetFromInstanceOrAI",
+   "verdict": "accept",
+   "why": "same instance->GetSceneObjFromInstance / AI->RedirectCarpElement(+0x48==1,+0x44==1)->GetSplinePath+0x60 / player path; 8 identical ~EPath*Static callers",
+   "intermediates": []
+  },
+  {
+   "item": 56,
+   "xbox": "0x27cb0",
+   "ps2": "0x12b100",
+   "name": "AIElementTracking::SetWakeRange",
+   "verdict": "accept",
+   "why": "identical: if >0 store +0x10 and +0x14 = r+20.0; caller ~EAIElementSetWakeRange both",
+   "intermediates": []
+  },
+  {
+   "item": 57,
+   "xbox": "0xf1500",
+   "ps2": "0x293500",
+   "name": "EAGL::Transform::PostMult",
+   "verdict": "accept",
+   "why": "this = this*m: Xbox mult(out,a,b) into temp then copy (no in-place on x86), PS2 mult(a,b,out) with out=this; Xbox callers are the FnPoseBlender Eval/EvalSQT bodies (+0x70/+0x78 blend window) as on PS2",
+   "intermediates": []
+  },
+  {
+   "item": 58,
+   "xbox": "0x14c8f0",
+   "ps2": "0x300a80",
+   "name": "RCMP::AV_PLAYER::AV_PLAYER",
+   "verdict": "accept",
+   "why": "zero +0x60 then Init; caller chain PlayMPC::Init (Xbox FUN_1307d0, same plaympc_alloc 0x68) <- ~ESetVideo / RunTheGame agrees",
+   "intermediates": [
+    {
+     "xbox": "0x1307d0",
+     "ps2": "0x3001d0",
+     "name": "PlayMPC::Init",
+     "why": "if arg!=0, plaympc_alloc(glbMissionManager,0x68,...) in two flag branches, AV_PLAYER ctor with flag, store +0x14 and +0x1c; callers ~ESetVideo and RunTheGame path agree"
+    }
+   ]
+  },
+  {
+   "item": 59,
+   "xbox": "0x11c830",
+   "ps2": "0x2fcad8",
+   "name": "ABaseSound::operator_delete",
+   "verdict": "accept",
+   "why": "list<ABaseSound*>::remove(this) (Xbox FUN_11c7c0 list walk freeing 0xc nodes) then FastFree; Xbox callers include ~AStream as on PS2",
+   "intermediates": []
+  }
+ ]
+}

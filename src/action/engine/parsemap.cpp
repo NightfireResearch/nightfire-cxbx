@@ -19,11 +19,11 @@
 
 #define pCurrCelList (*(celglist_tag**)(0x00274c80))
 #define FileNextBlock (*(uint**)(0x00274c70))
-#define StartingNewMap BOOL8_AT(0x00274c68)
+// XBE_GLOBAL(0x00274c68, 0x1)
+static uint8_t StartingNewMap;
 #define m_pmap (*(map_tag**)0x00274b50)
 
 // Also used in Loader.cpp
-#define MemType U32_AT(0x00274c98)
 
 typedef struct block_header_tag {
     uint size;
@@ -40,7 +40,10 @@ typedef struct {
     float boundSphereRadius;
     _VECTOR extentMin;
     _VECTOR extentMax;
+    char name[32]; // unsure on size, at least 32 bytes long
 } block_entity_data;
+
+static_assert(sizeof(block_entity_data) == 0x54, "Bad size for block_entity_data");
 
 // AUTOGEN
 bool parsemap_parsenextblock(char param_1);
@@ -48,11 +51,15 @@ bool parsemap_parsenextblock(char param_1);
 // AUTOGEN
 void parsemap_block_map_data_dynamic(block_header_tag *bh, uchar* param_2, uchar doCreation);
 
+// XBE_GLOBAL(0x00274b34, 0x8)
 #define DynamicBH (*(block_header_tag*)0x00274b34)
 #define DynamicPtr PTR_AT(0x00274c58)
-#define MapHashCode U32_AT(0x00274c88)
-#define ParseMap_State U32_AT(0x00274ca4)
-#define filename (*(char*)0x00274b58)
+// XBE_GLOBAL(0x00274c88, 0x4)
+static uint32_t MapHashCode;
+// XBE_GLOBAL(0x00274ca4, 0x4)
+static uint32_t ParseMap_State;
+// XBE_GLOBAL(0x00274b58, 0x100)
+static char filename[0x100];
 #define FileLastBlock U32_AT(0x00274c74)
 #define FileDiscard U32_AT(0x00274c78)
 
@@ -63,8 +70,8 @@ bool parsemap_parsemap(uint hashcode, bool secondPass) {
         case 0: {
             // Load the file into RAM?
             const char* filePath = "";
-            sprintf(&filename, "%s%8.8X.bin", filePath, hashcode);
-            psiFileLoadForParse(&filename);
+            sprintf(filename, "%s%8.8X.bin", filePath, hashcode);
+            psiFileLoadForParse(filename);
             MapHashCode = hashcode;
             DynamicBH.size = 0;
             DynamicPtr = NULL;
@@ -78,8 +85,8 @@ bool parsemap_parsemap(uint hashcode, bool secondPass) {
             do {
                 complete = parsemap_parsenextblock(secondPass);
             } while(!complete);
-            
-            
+
+
             ParseMap_State = 2;
             return true;
         }
@@ -112,7 +119,7 @@ void parsemap_block_entity_params(void) {
     // Load the given cel from the file
 
     celglist_tag* currentCelGlist = pCurrCelList;
-    
+
     block_entity_data* data = (block_entity_data*)FileNextBlock;
 
     currentCelGlist->applyFlagsToObject = data->applyFlagsToObject;
@@ -126,6 +133,9 @@ void parsemap_block_entity_params(void) {
     currentCelGlist->extentMax.x = data->extentMax.x;
     currentCelGlist->extentMax.y = data->extentMax.y;
     currentCelGlist->extentMax.z = data->extentMax.z;
+    // Unsure on the size, this is a null-terminated char array, contains a debug name
+    // for each object / script.
+    currentCelGlist->name = data->name;
 
     // If loading a hashcode-referenced piece of geometry, add it to the hashmap
     if(data->hashcode != 0xFFFFFFFF) {
@@ -142,6 +152,97 @@ void parsemap_block_entity_params(void) {
 
     pCurrCelList++;
 
+}
+
+// The header of the block currently being parsed, filled in by parsemap_parsenextblock (still original).
+#define CurrentBH (*(block_header_tag*)0x00274b40)
+
+// Running total of the "old style" (identifier 5) collision blocks' leading size word. Only this function touches it.
+// XBE_GLOBAL(0x00274ca0, 0x4)
+static uint32_t OldCollisionSize;
+
+// Collision block identifiers: 5 is the older layout, with 16 bytes (a size word and padding) before the data
+#define COLL_BLOCK_OLD 5
+
+// How far each collision box is grown on every side, so that a point exactly on a face counts as inside
+static const float kCollBoxInflate = 0.01f; // the original's float at 0x0015d31c
+
+#pragma pack(push, 1)
+typedef struct {
+    uint32_t size;          // 0x0 - block header
+    uint32_t identifier;    // 0x4 - 4, or COLL_BLOCK_OLD
+    ushort numCollBoxes;    // 0x8
+    ushort countB;          // 0xa
+    ushort countC;          // 0xc
+    ushort _pad;            // 0xe
+    // 0x10: the data - [countC] collDataC (64 bytes each), [numCollBoxes] COLLBOX_tag, [countB] collDataB
+    // (8 bytes each), then the rest ("D"). An identifier-5 block has 16 more bytes first, the first word of
+    // which is added to OldCollisionSize.
+} block_coll_data_header;
+#pragma pack(pop)
+
+static_assert(offsetof(block_coll_data_header, numCollBoxes) == 0x8, "Bad offset of numCollBoxes");
+static_assert(offsetof(block_coll_data_header, countC) == 0xc, "Bad offset of countC");
+static_assert(sizeof(block_coll_data_header) == 0x10, "Bad size for block_coll_data_header");
+
+// Points the current cel's collision data at the arrays inside the loaded block (no copying), allocating the
+// small COLLDATA_tag header the first time a cel gets collision.
+//
+// Quirk kept from the original (and the PS2 build): the loop meant to grow every box by kCollBoxInflate never
+// advances its pointer, so the FIRST box is grown numCollBoxes times over and the others not at all.
+//
+// AUTOINJECT
+void parsemap_block_Coll_Data_New(void) {
+
+    block_coll_data_header *header = (block_coll_data_header *)FileNextBlock;
+    // GC check (0x800595dc): the collision block versions this code reads (it parses on regardless)
+    NF_WARN_IF(header->identifier != 4 && header->identifier != COLL_BLOCK_OLD,
+               ">>>FATAL<<<< : COLLISION VERSION MIS-MATCH %d\n", header->identifier);
+    ushort numCollBoxes = header->numCollBoxes;
+    ushort countB = header->countB;
+    uint sizeofC = (uint)header->countC * sizeof(collDataC);
+
+    uchar *data = (uchar *)(header + 1);
+    if(header->identifier == COLL_BLOCK_OLD) {
+        OldCollisionSize += *(uint32_t *)data;
+        data += 0x10;
+    }
+
+    celglist_tag *cel = pCurrCelList;
+    if(cel->colldata == NULL) {
+        if(numCollBoxes == 0) {
+            // Returns before the MemStats update below
+            cel->colldata = NULL;
+            return;
+        }
+        // 0x18, not sizeof(COLLDATA_tag) (0x16): the original rounds the allocation up
+        cel->colldata = (COLLDATA_tag *)Mem_Malloc(0x18, (MallocFlags)0x1a04, 0); // malloc_colldata
+    }
+
+    COLLDATA_tag *coll = cel->colldata;
+
+    coll->dataStartC = (collDataC *)data;
+    data += sizeofC;
+    coll->sizeofC = (short)sizeofC;     // a 16-bit field: truncated as in the original for countC >= 1024
+    coll->countB = (short)countB;
+    coll->collBoxes = (COLLBOX_tag *)data;
+    data += numCollBoxes * sizeof(COLLBOX_tag);
+    coll->numCollBoxes = numCollBoxes;
+    coll->dataStartB = (collDataB *)data;
+    coll->dataStartD = data + countB * sizeof(collDataB);
+
+    for(uint i = numCollBoxes; i != 0; i--) {
+        COLLBOX_tag *box = coll->collBoxes; // never advanced - see above
+        box->boundMax.x = box->boundMax.x + kCollBoxInflate;
+        box->boundMax.y = box->boundMax.y + kCollBoxInflate;
+        box->boundMax.z = box->boundMax.z + kCollBoxInflate;
+        box->boundMin.x = box->boundMin.x - kCollBoxInflate;
+        box->boundMin.y = box->boundMin.y - kCollBoxInflate;
+        box->boundMin.z = box->boundMin.z - kCollBoxInflate;
+    }
+
+    // Count the block, less its header word, as collision memory
+    MemStats[0] = MemStats[0] + CurrentBH.size - 4;
 }
 
 
@@ -242,12 +343,12 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
 
     // Almost all are just dependent on doCreation
     // Exceptions:
-    // - A few which are additionally dependent on singleplayer vs multiplayer 
+    // - A few which are additionally dependent on singleplayer vs multiplayer
     // - Searchlight
     //
     // I've implemented as per the disassembly, rather than breaking out the doCreation check.
     //
-    // A lookup table of creation functions doesn't work because a few of the cases do quirky things, 
+    // A lookup table of creation functions doesn't work because a few of the cases do quirky things,
     // like swapping order of args or requiring additional constants. A refactor could fix this.
     switch(type) {
 
@@ -257,9 +358,17 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             return;
 
         case Place_Breakable:
-            // Some logging / blank function also if the type is 2? 
+            // Some logging / blank function also if the type is 2?
+            //
+            // Deliberately calling the ORIGINAL, untouched compiled Break_Create here instead of our own
+            // (Break.cpp's) - that reimplementation is known-incomplete (Break_Kill is an unfinished no-op
+            // stub) and was causing real breakable-object resource leaks (never releasing vertex/index buffer
+            // slots) that exhausted their shared 2048-slot table on revisiting an already-played segment,
+            // leading to a crash. Break_Create is called directly here (not via the AUTOINJECT hook), so it
+            // doesn't route through the original bytes on its own - this raw-address call bypasses our C++
+            // implementation entirely until Break_Kill/the rest of that system is completed.
             if(doCreation)
-                Break_Create(&pos, &rot, celglist, lvl);
+                ((obj_tag*(__cdecl*)(_VECTOR*, _VECTOR*, celglist_tag*, void*))0x0001ffb0)(&pos, &rot, celglist, lvl);
             return;
 
         case Place_Ripples:
@@ -271,7 +380,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if(doCreation)
                 Ladder_Create(&pos, &rot, lvl, celglist);
             return;
-        
+
         case Place_PlayerNewStartPos:
             if(doCreation && !MPSettings.isMultiplayer)
                 Player_AddNewStartPos(&pos, &rot, 1, lvl);
@@ -338,7 +447,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if(doCreation)
                 Monitor_Create(&pos, &rot, lvl, celglist);
             return;
-    
+
         case Place_FuseBox:
             if(doCreation)
                 FuseBox_Create(&pos, &rot, lvl, celglist);
@@ -383,7 +492,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if(doCreation)
                 Create_SpaceMissile(&pos, &rot, lvl);
             return;
-        
+
         case Place_Grapple:
             if(doCreation)
                 Grapple_Create(&pos, &rot, lvl, celglist);
@@ -417,9 +526,9 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
         case Place_Light:
             if(doCreation) {
                 Create_Light_Params * lightParams = (Create_Light_Params*)(lvl);
-                Light_Create(&pos, lightParams->r, lightParams->g, lightParams->b, 
+                Light_Create(&pos, lightParams->r, lightParams->g, lightParams->b,
                             (float)lightParams->maybeBrightness,
-                            lightParams->unknown1, -1, 0, 1.0f, 
+                            lightParams->unknown1, -1, 0, 1.0f,
                             lightParams->unknown2, lightParams->unknown3, lightParams->unknown4, lightParams->unknown5);
             }
             return;
@@ -490,12 +599,12 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if (doCreation)
                 Destroy_Create(&pos, &rot, lvl, celglist, (celglist_tag*)param_6);
             return;
-    
+
         case Place_SS:
             if(doCreation)
                 SS_Create(&pos, &rot, lvl, celglist);
             return;
-        
+
         case Place_Flicker:
             if(doCreation)
                 Flicker_Create(&pos, &rot, lvl, celglist);
@@ -540,17 +649,17 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if(doCreation)
                 Trigger_Touch(&pos, &rot, lvl, celglist);
             return;
-        
+
         case Place_TriggerMultiplexIn:
             if(doCreation)
                 Trigger_MultiplexIn(&pos, &rot, lvl, celglist);
             return;
-        
+
         case Place_TriggerMultiplexSIn:
             if(doCreation)
                 Trigger_MultiplexSIn(&pos, &rot, lvl, celglist);
             return;
-        
+
         case Place_TriggerMultiplexOut:
             if(doCreation)
                 Trigger_MultiplexOut(&pos, &rot, lvl, celglist);
@@ -621,7 +730,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if(doCreation)
                 CamSubject_Create(&pos, &rot, lvl, celglist);
             return;
-        
+
         case Place_Mine:
             if(doCreation)
                 Mine_Create(&pos, &rot, lvl, celglist);

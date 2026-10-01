@@ -1,0 +1,107 @@
+[
+ {
+  "row": 5598,
+  "ps2": "0x0024eea8",
+  "why": "__get_eh_context: returns (*get_eh_context)(), between new_eh_context and __get_eh_info"
+ },
+ {
+  "row": 5604,
+  "ps2": "0x0024f288",
+  "why": "__get_eh_table_version: 'jr ra; lh v0,6(a0)' (lang.version); not a Ghidra function; the name currently on 0x24f650 is wrong"
+ },
+ {
+  "row": 5606,
+  "ps2": "0x0024f650",
+  "why": "__unwinding_cleanup: empty jr ra called from throw_helper, currently misnamed __get_eh_table_version; sheet 0x338 = 8 + throw_helper 0x330"
+ },
+ {
+  "row": 5611,
+  "ps2": "0x0024fd78",
+  "why": "set_terminate: swaps __terminate_func (0x33bfb4); not a Ghidra function"
+ },
+ {
+  "row": 5612,
+  "ps2": "0x0024fd88",
+  "why": "set_unexpected: swaps __unexpected_func; not a Ghidra function"
+ },
+ {
+  "row": 5613,
+  "ps2": "0x0024fd98",
+  "why": "unexpected(): calls through __unexpected_func; Ghidra function also swallows __cp_exception_info at 0x24fdb0"
+ },
+ {
+  "row": 5624,
+  "ps2": "0x00250228",
+  "why": "__throw_bad_cast: function start inside FUN_00250070's body, references the bad_cast dtor at 0x250288; not a Ghidra function"
+ },
+ {
+  "row": 5625,
+  "ps2": "0x002502a8",
+  "why": "__throw_bad_typeid: function start inside FUN_00250070's body, references the bad_typeid dtor at 0x250308; not a Ghidra function"
+ },
+ {
+  "row": 5802,
+  "ps2": "0x002858d8",
+  "why": "EAGL::Model::GetGeometry(char*): strcmp over name list at +0xa0, returns slot in +0xc4 array; sits right after GetChild"
+ },
+ {
+  "row": 5991,
+  "ps2": "0x002913b0",
+  "why": "EAGLInternal::RenderContextPrivate::EAGLVBL_end: sync; ei; return 0; not a Ghidra function (inside EAGLVBL_start's range)"
+ },
+ {
+  "row": 5992,
+  "ps2": "0x002913c0",
+  "why": "EAGL::RenderContextExtension::SetFrameRate(int): stores 60/rate at +0x874, the threshold EAGLVBL_start tests; not a Ghidra function"
+ },
+ {
+  "row": 6051,
+  "ps2": "0x00295410",
+  "why": "EAGL::Transform::BuildRotate: sin/cos of angle*pi/180, normalised axis, identity on zero angle - matches AUF; called by AppendRotate/PrependRotate"
+ },
+ {
+  "row": 6052,
+  "ps2": "0x002934e0",
+  "why": "EAGL::Transform::PostMult(Transform&, Transform*): MultMatrix(this, a, out) wrapper"
+ },
+ {
+  "row": 6124,
+  "ps2": "0x00297468",
+  "why": "EAGL::ViewPort::GetProjectionType: 'lw v0,0x18(a0)', right after GetFrustum; not a Ghidra function"
+ },
+ {
+  "row": 6125,
+  "ps2": "0x00297470",
+  "why": "EAGL::ViewPort::SetBackgroundColour: stores at +0x1c, called from SetFillColour; Ghidra function spans the getter too"
+ },
+ {
+  "row": 6126,
+  "ps2": "0x00297478",
+  "why": "EAGL::ViewPort::GetBackgroundColour: loads +0x1c; not a separate Ghidra function"
+ },
+ {
+  "row": 6170,
+  "ps2": "0x00299c38",
+  "why": "EAGL::Profiler::Profiler(ProfilerRegion&, bool): stores region, if bool closes the current section and opens this one (sheet currently places 6169 and 6170 both at 0x299bd0)"
+ },
+ {
+  "row": 6173,
+  "ps2": "0x00299d68",
+  "why": "global constructors keyed to EAGL::ProfilerRegion::gBufferHead: ctors-table stub calling static init (1,0xffff)"
+ },
+ {
+  "row": 6407,
+  "ps2": "0x00266410",
+  "why": "EAGLAnim::FnCompoundChannel::~FnCompoundChannel: vtable slot 1, sets vtable, frees child anims and block, ~FnAnimMemoryMap, free 0x1c"
+ },
+ {
+  "row": 6408,
+  "ps2": "0x00266518",
+  "why": "EAGLAnim::FnCompoundChannel::SetAnimMemoryMap: sets +0xc and frees existing children, in the SetAnimMemoryMap vtable slot 0x3af0cc; AUF same shape"
+ },
+ {
+  "row": 6516,
+  "ps2": "0x0026b958",
+  "why": "EAGLAnim::FnDeltaSingleQ::GetLength(float&) const: in the GetLength vtable slot (0x3afb0c), writes frame count as float, returns 1"
+ }
+]

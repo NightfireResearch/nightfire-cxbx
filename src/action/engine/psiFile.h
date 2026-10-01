@@ -5,4 +5,6 @@ int psiFileOpen(char* param_1);
 int ** psiFileLoad(char *filename, unsigned short allocType, int *sizeOut);
 void psiFileLoadForParse(char *param_1);
 
+char psiFileSetSingleFileMode(char mode);
+
 #endif // PSIFILE_H_

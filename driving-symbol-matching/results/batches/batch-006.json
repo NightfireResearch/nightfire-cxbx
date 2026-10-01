@@ -1,0 +1,4932 @@
+{
+ "batch": "006",
+ "program": "Driving.xbe",
+ "note": "Undo Version Tracking's copied PS2 plates; hand-checked name fixes.",
+ "items": [
+  {
+   "xbox": "0x000472c0",
+   "expect": "E007Logo::~E007Logo",
+   "name": "E007Logo::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls E007Logo's destructor (0x0003db80, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess E007Logo::~E007Logo"
+   ]
+  },
+  {
+   "xbox": "0x00047390",
+   "expect": "EAIElementFireOff::~EAIElementFireOff",
+   "name": "EAIElementFireOff::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAIElementFireOff's destructor (0x0003dd70, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAIElementFireOff::~EAIElementFireOff"
+   ]
+  },
+  {
+   "xbox": "0x000473b0",
+   "expect": "EAIElementFireOn::~EAIElementFireOn",
+   "name": "EAIElementFireOn::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAIElementFireOn's destructor (0x0003de30, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAIElementFireOn::~EAIElementFireOn"
+   ]
+  },
+  {
+   "xbox": "0x000473d0",
+   "expect": "EAIElementSetAccuracy::~EAIElementSetAccuracy",
+   "name": "EAIElementSetAccuracy::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAIElementSetAccuracy's destructor (0x0003def0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAIElementSetAccuracy::~EAIElementSetAccuracy"
+   ]
+  },
+  {
+   "xbox": "0x000473f0",
+   "expect": "EAIElementSetCharParams::~EAIElementSetCharParams",
+   "name": "EAIElementSetCharParams::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAIElementSetCharParams's destructor (0x0003dfb0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAIElementSetCharParams::~EAIElementSetCharParams"
+   ]
+  },
+  {
+   "xbox": "0x00047410",
+   "expect": "EAIElementSetNonScoreable::~EAIElementSetNonScoreable",
+   "name": "EAIElementSetNonScoreable::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAIElementSetNonScoreable's destructor (0x0003e0a0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAIElementSetNonScoreable::~EAIElementSetNonScoreable"
+   ]
+  },
+  {
+   "xbox": "0x00047430",
+   "expect": "EAIElementSetVehicleParams::~EAIElementSetVehicleParams",
+   "name": "EAIElementSetVehicleParams::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAIElementSetVehicleParams's destructor (0x0003e180, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAIElementSetVehicleParams::~EAIElementSetVehicleParams"
+   ]
+  },
+  {
+   "xbox": "0x00047450",
+   "expect": "EAIElementSetWakeRange::~EAIElementSetWakeRange",
+   "name": "EAIElementSetWakeRange::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAIElementSetWakeRange's destructor (0x0003e210, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAIElementSetWakeRange::~EAIElementSetWakeRange"
+   ]
+  },
+  {
+   "xbox": "0x00047470",
+   "expect": "EAIUpdate::~EAIUpdate",
+   "name": "EAIUpdate::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAIUpdate's destructor (0x0003e2b0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAIUpdate::~EAIUpdate"
+   ]
+  },
+  {
+   "xbox": "0x00047490",
+   "expect": "EAbortCinematic::~EAbortCinematic",
+   "name": "EAbortCinematic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAbortCinematic's destructor (0x0003e340, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAbortCinematic::~EAbortCinematic"
+   ]
+  },
+  {
+   "xbox": "0x000474b0",
+   "expect": "EActorMuzzleFlash::~EActorMuzzleFlash",
+   "name": "EActorMuzzleFlash::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EActorMuzzleFlash's destructor (0x0003e410, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EActorMuzzleFlash::~EActorMuzzleFlash"
+   ]
+  },
+  {
+   "xbox": "0x000474f0",
+   "expect": "EAddScoreAction::~EAddScoreAction",
+   "name": "EAddScoreAction::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAddScoreAction's destructor (0x0003e520, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAddScoreAction::~EAddScoreAction"
+   ]
+  },
+  {
+   "xbox": "0x00047510",
+   "expect": "EAnimUpdate::~EAnimUpdate",
+   "name": "EAnimUpdate::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAnimUpdate's destructor (0x0003e620, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAnimUpdate::~EAnimUpdate"
+   ]
+  },
+  {
+   "xbox": "0x00047530",
+   "expect": "EAutoDrive::~EAutoDrive",
+   "name": "EAutoDrive::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAutoDrive's destructor (0x0003e730, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAutoDrive::~EAutoDrive"
+   ]
+  },
+  {
+   "xbox": "0x00047550",
+   "expect": "EAwardHitToPlayer::~EAwardHitToPlayer",
+   "name": "EAwardHitToPlayer::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAwardHitToPlayer's destructor (0x0003e800, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAwardHitToPlayer::~EAwardHitToPlayer"
+   ]
+  },
+  {
+   "xbox": "0x00047570",
+   "expect": "EAwardKillToPlayer::~EAwardKillToPlayer",
+   "name": "EAwardKillToPlayer::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAwardKillToPlayer's destructor (0x0003e870, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAwardKillToPlayer::~EAwardKillToPlayer"
+   ]
+  },
+  {
+   "xbox": "0x00047590",
+   "expect": "EButtonMsgOff::~EButtonMsgOff",
+   "name": "EButtonMsgOff::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EButtonMsgOff's destructor (0x0003e940, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EButtonMsgOff::~EButtonMsgOff"
+   ]
+  },
+  {
+   "xbox": "0x000475b0",
+   "expect": "EButtonMsgOn::~EButtonMsgOn",
+   "name": "EButtonMsgOn::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EButtonMsgOn's destructor (0x0003e9b0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EButtonMsgOn::~EButtonMsgOn"
+   ]
+  },
+  {
+   "xbox": "0x000475d0",
+   "expect": "ECall911::~ECall911",
+   "name": "ECall911::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ECall911's destructor (0x0003ea60, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ECall911::~ECall911"
+   ]
+  },
+  {
+   "xbox": "0x000475f0",
+   "expect": "ECallStage::~ECallStage",
+   "name": "ECallStage::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ECallStage's destructor (0x0003eae0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ECallStage::~ECallStage"
+   ]
+  },
+  {
+   "xbox": "0x00047630",
+   "expect": "ECameraShake::~ECameraShake",
+   "name": "ECameraShake::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ECameraShake's destructor (0x0003ecc0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ECameraShake::~ECameraShake"
+   ]
+  },
+  {
+   "xbox": "0x00047650",
+   "expect": "ECameraUpdate::~ECameraUpdate",
+   "name": "ECameraUpdate::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ECameraUpdate's destructor (0x0003ed70, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ECameraUpdate::~ECameraUpdate"
+   ]
+  },
+  {
+   "xbox": "0x00047670",
+   "expect": "ECameraZoom::~ECameraZoom",
+   "name": "ECameraZoom::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ECameraZoom's destructor (0x0003ee00, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ECameraZoom::~ECameraZoom"
+   ]
+  },
+  {
+   "xbox": "0x00047690",
+   "expect": "EChangeCarCameraView::~EChangeCarCameraView",
+   "name": "EChangeCarCameraView::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EChangeCarCameraView's destructor (0x0003ef10, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EChangeCarCameraView::~EChangeCarCameraView"
+   ]
+  },
+  {
+   "xbox": "0x000476b0",
+   "expect": "EClearBitMagicCounter::~EClearBitMagicCounter",
+   "name": "EClearBitMagicCounter::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EClearBitMagicCounter's destructor (0x0003f260, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EClearBitMagicCounter::~EClearBitMagicCounter"
+   ]
+  },
+  {
+   "xbox": "0x000476d0",
+   "expect": "EClearProgrammerEvent::~EClearProgrammerEvent",
+   "name": "EClearProgrammerEvent::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EClearProgrammerEvent's destructor (0x0003f300, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EClearProgrammerEvent::~EClearProgrammerEvent"
+   ]
+  },
+  {
+   "xbox": "0x00047930",
+   "expect": "EDeactivateAIElement::~EDeactivateAIElement",
+   "name": "EDeactivateAIElement::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EDeactivateAIElement's destructor (0x0003f470, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EDeactivateAIElement::~EDeactivateAIElement"
+   ]
+  },
+  {
+   "xbox": "0x00047950",
+   "expect": "EDisablePowerUp::~EDisablePowerUp",
+   "name": "EDisablePowerUp::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EDisablePowerUp's destructor (0x0003f550, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EDisablePowerUp::~EDisablePowerUp"
+   ]
+  },
+  {
+   "xbox": "0x00047970",
+   "expect": "EDisableTrigger::~EDisableTrigger",
+   "name": "EDisableTrigger::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EDisableTrigger's destructor (0x0003f610, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EDisableTrigger::~EDisableTrigger"
+   ]
+  },
+  {
+   "xbox": "0x000479b0",
+   "expect": "EDisplayText::~EDisplayText",
+   "name": "EDisplayText::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EDisplayText's destructor (0x0003f690, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EDisplayText::~EDisplayText"
+   ]
+  },
+  {
+   "xbox": "0x000479d0",
+   "expect": "EDropMine::~EDropMine",
+   "name": "EDropMine::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EDropMine's destructor (0x0003f720, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EDropMine::~EDropMine"
+   ]
+  },
+  {
+   "xbox": "0x000479f0",
+   "expect": "EEnablePowerUp::~EEnablePowerUp",
+   "name": "EEnablePowerUp::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EEnablePowerUp's destructor (0x0003f7f0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EEnablePowerUp::~EEnablePowerUp"
+   ]
+  },
+  {
+   "xbox": "0x00047a10",
+   "expect": "EEnableTrigger::~EEnableTrigger",
+   "name": "EEnableTrigger::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EEnableTrigger's destructor (0x0003f8c0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EEnableTrigger::~EEnableTrigger"
+   ]
+  },
+  {
+   "xbox": "0x00047a30",
+   "expect": "EEndCameraAnim::~EEndCameraAnim",
+   "name": "EEndCameraAnim::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EEndCameraAnim's destructor (0x0003f900, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EEndCameraAnim::~EEndCameraAnim"
+   ]
+  },
+  {
+   "xbox": "0x00047a50",
+   "expect": "EEndMission::~EEndMission",
+   "name": "EEndMission::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EEndMission's destructor (0x0003fab0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EEndMission::~EEndMission"
+   ]
+  },
+  {
+   "xbox": "0x00047a70",
+   "expect": "EExit::~EExit",
+   "name": "EExit::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EExit's destructor (0x0003fb80, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EExit::~EExit"
+   ]
+  },
+  {
+   "xbox": "0x00047a90",
+   "expect": "EFESimFrameUpdate::~EFESimFrameUpdate",
+   "name": "EFESimFrameUpdate::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EFESimFrameUpdate's destructor (0x0003fc10, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EFESimFrameUpdate::~EFESimFrameUpdate"
+   ]
+  },
+  {
+   "xbox": "0x00047ab0",
+   "expect": "EFireEventList::~EFireEventList",
+   "name": "EFireEventList::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EFireEventList's destructor (0x0003fca0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EFireEventList::~EFireEventList"
+   ]
+  },
+  {
+   "xbox": "0x00047ad0",
+   "expect": "EFireRandomTrigger::~EFireRandomTrigger",
+   "name": "EFireRandomTrigger::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EFireRandomTrigger's destructor (0x0003fd40, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EFireRandomTrigger::~EFireRandomTrigger"
+   ]
+  },
+  {
+   "xbox": "0x00047af0",
+   "expect": "EFireTriggerSpeedCondition::~EFireTriggerSpeedCondition",
+   "name": "EFireTriggerSpeedCondition::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EFireTriggerSpeedCondition's destructor (0x0003ff60, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EFireTriggerSpeedCondition::~EFireTriggerSpeedCondition"
+   ]
+  },
+  {
+   "xbox": "0x00047b10",
+   "expect": "EGadgetOff::~EGadgetOff",
+   "name": "EGadgetOff::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EGadgetOff's destructor (0x00040200, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EGadgetOff::~EGadgetOff"
+   ]
+  },
+  {
+   "xbox": "0x00047b30",
+   "expect": "EGadgetOn::~EGadgetOn",
+   "name": "EGadgetOn::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EGadgetOn's destructor (0x00040270, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EGadgetOn::~EGadgetOn"
+   ]
+  },
+  {
+   "xbox": "0x00047b50",
+   "expect": "EHideInstance::~EHideInstance",
+   "name": "EHideInstance::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EHideInstance's destructor (0x00040300, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EHideInstance::~EHideInstance"
+   ]
+  },
+  {
+   "xbox": "0x00047b70",
+   "expect": "EHideInstanceStatic::~EHideInstanceStatic",
+   "name": "EHideInstanceStatic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EHideInstanceStatic's destructor (0x00040340, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EHideInstanceStatic::~EHideInstanceStatic"
+   ]
+  },
+  {
+   "xbox": "0x00047e50",
+   "expect": "EIncMagicCounter::~EIncMagicCounter",
+   "name": "EIncMagicCounter::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EIncMagicCounter's destructor (0x000404c0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EIncMagicCounter::~EIncMagicCounter"
+   ]
+  },
+  {
+   "xbox": "0x00047e70",
+   "expect": "EInflictDamage::~EInflictDamage",
+   "name": "EInflictDamage::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EInflictDamage's destructor (0x00040530, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EInflictDamage::~EInflictDamage"
+   ]
+  },
+  {
+   "xbox": "0x00047e90",
+   "expect": "EInfraRedOff::~EInfraRedOff",
+   "name": "EInfraRedOff::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EInfraRedOff's destructor (0x000405f0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EInfraRedOff::~EInfraRedOff"
+   ]
+  },
+  {
+   "xbox": "0x00047eb0",
+   "expect": "EInfraRedOn::~EInfraRedOn",
+   "name": "EInfraRedOn::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EInfraRedOn's destructor (0x00040660, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EInfraRedOn::~EInfraRedOn"
+   ]
+  },
+  {
+   "xbox": "0x00047ef0",
+   "expect": "EKickAIElement::~EKickAIElement",
+   "name": "EKickAIElement::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EKickAIElement's destructor (0x00040710, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EKickAIElement::~EKickAIElement"
+   ]
+  },
+  {
+   "xbox": "0x00047f10",
+   "expect": "EKillObject::~EKillObject",
+   "name": "EKillObject::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EKillObject's destructor (0x00040960, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EKillObject::~EKillObject"
+   ]
+  },
+  {
+   "xbox": "0x00047f30",
+   "expect": "EKillSentry::~EKillSentry",
+   "name": "EKillSentry::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EKillSentry's destructor (0x00040a30, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EKillSentry::~EKillSentry"
+   ]
+  },
+  {
+   "xbox": "0x00047f50",
+   "expect": "ELavaHaze::~ELavaHaze",
+   "name": "ELavaHaze::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ELavaHaze's destructor (0x00040ac0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ELavaHaze::~ELavaHaze"
+   ]
+  },
+  {
+   "xbox": "0x00047f70",
+   "expect": "ELetterBoxOff::~ELetterBoxOff",
+   "name": "ELetterBoxOff::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ELetterBoxOff's destructor (0x00040b40, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ELetterBoxOff::~ELetterBoxOff"
+   ]
+  },
+  {
+   "xbox": "0x00047f90",
+   "expect": "ELetterBoxOn::~ELetterBoxOn",
+   "name": "ELetterBoxOn::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ELetterBoxOn's destructor (0x00040bd0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ELetterBoxOn::~ELetterBoxOn"
+   ]
+  },
+  {
+   "xbox": "0x00047fb0",
+   "expect": "EMuzzleFlash::~EMuzzleFlash",
+   "name": "EMuzzleFlash::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EMuzzleFlash's destructor (0x00040cb0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EMuzzleFlash::~EMuzzleFlash"
+   ]
+  },
+  {
+   "xbox": "0x00047fd0",
+   "expect": "ENuclearBlast::~ENuclearBlast",
+   "name": "ENuclearBlast::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ENuclearBlast's destructor (0x00040e50, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ENuclearBlast::~ENuclearBlast"
+   ]
+  },
+  {
+   "xbox": "0x00047ff0",
+   "expect": "EObjectiveAdd::~EObjectiveAdd",
+   "name": "EObjectiveAdd::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EObjectiveAdd's destructor (0x00040f10, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EObjectiveAdd::~EObjectiveAdd"
+   ]
+  },
+  {
+   "xbox": "0x00048010",
+   "expect": "EObjectiveDisplayText::~EObjectiveDisplayText",
+   "name": "EObjectiveDisplayText::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EObjectiveDisplayText's destructor (0x00040fb0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EObjectiveDisplayText::~EObjectiveDisplayText"
+   ]
+  },
+  {
+   "xbox": "0x00048030",
+   "expect": "EObjectiveFail::~EObjectiveFail",
+   "name": "EObjectiveFail::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EObjectiveFail's destructor (0x00041040, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EObjectiveFail::~EObjectiveFail"
+   ]
+  },
+  {
+   "xbox": "0x00048050",
+   "expect": "EObjectiveInsert::~EObjectiveInsert",
+   "name": "EObjectiveInsert::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EObjectiveInsert's destructor (0x000410e0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EObjectiveInsert::~EObjectiveInsert"
+   ]
+  },
+  {
+   "xbox": "0x00048070",
+   "expect": "EObjectivePass::~EObjectivePass",
+   "name": "EObjectivePass::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EObjectivePass's destructor (0x00041180, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EObjectivePass::~EObjectivePass"
+   ]
+  },
+  {
+   "xbox": "0x00048090",
+   "expect": "EObjectiveSetCurrent::~EObjectiveSetCurrent",
+   "name": "EObjectiveSetCurrent::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EObjectiveSetCurrent's destructor (0x00041220, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EObjectiveSetCurrent::~EObjectiveSetCurrent"
+   ]
+  },
+  {
+   "xbox": "0x000480b0",
+   "expect": "EObjectiveSetIncomplete::~EObjectiveSetIncomplete",
+   "name": "EObjectiveSetIncomplete::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EObjectiveSetIncomplete's destructor (0x000412c0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EObjectiveSetIncomplete::~EObjectiveSetIncomplete"
+   ]
+  },
+  {
+   "xbox": "0x000480d0",
+   "expect": "EPathChangeThrottleDynamic::~EPathChangeThrottleDynamic",
+   "name": "EPathChangeThrottleDynamic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathChangeThrottleDynamic's destructor (0x00041380, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathChangeThrottleDynamic::~EPathChangeThrottleDynamic"
+   ]
+  },
+  {
+   "xbox": "0x000480f0",
+   "expect": "EPathChangeThrottleStatic::~EPathChangeThrottleStatic",
+   "name": "EPathChangeThrottleStatic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathChangeThrottleStatic's destructor (0x00041450, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathChangeThrottleStatic::~EPathChangeThrottleStatic"
+   ]
+  },
+  {
+   "xbox": "0x00048110",
+   "expect": "EPathMultiplyThrottleDynamic::~EPathMultiplyThrottleDynamic",
+   "name": "EPathMultiplyThrottleDynamic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathMultiplyThrottleDynamic's destructor (0x00041520, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathMultiplyThrottleDynamic::~EPathMultiplyThrottleDynamic"
+   ]
+  },
+  {
+   "xbox": "0x00048130",
+   "expect": "EPathMultiplyThrottleStatic::~EPathMultiplyThrottleStatic",
+   "name": "EPathMultiplyThrottleStatic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathMultiplyThrottleStatic's destructor (0x00041600, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathMultiplyThrottleStatic::~EPathMultiplyThrottleStatic"
+   ]
+  },
+  {
+   "xbox": "0x00048150",
+   "expect": "EPathSFX::~EPathSFX",
+   "name": "EPathSFX::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSFX's destructor (0x000416e0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSFX::~EPathSFX"
+   ]
+  },
+  {
+   "xbox": "0x000482c0",
+   "expect": "EPathSetAccelDelayDynamic::~EPathSetAccelDelayDynamic",
+   "name": "EPathSetAccelDelayDynamic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSetAccelDelayDynamic's destructor (0x00041890, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSetAccelDelayDynamic::~EPathSetAccelDelayDynamic"
+   ]
+  },
+  {
+   "xbox": "0x000482e0",
+   "expect": "EPathSetAccelDelayStatic::~EPathSetAccelDelayStatic",
+   "name": "EPathSetAccelDelayStatic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSetAccelDelayStatic's destructor (0x00041930, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSetAccelDelayStatic::~EPathSetAccelDelayStatic"
+   ]
+  },
+  {
+   "xbox": "0x00048300",
+   "expect": "EPathSetAccelerationDynamic::~EPathSetAccelerationDynamic",
+   "name": "EPathSetAccelerationDynamic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSetAccelerationDynamic's destructor (0x000419c0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSetAccelerationDynamic::~EPathSetAccelerationDynamic"
+   ]
+  },
+  {
+   "xbox": "0x00048320",
+   "expect": "EPathSetAccelerationStatic::~EPathSetAccelerationStatic",
+   "name": "EPathSetAccelerationStatic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSetAccelerationStatic's destructor (0x00041a60, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSetAccelerationStatic::~EPathSetAccelerationStatic"
+   ]
+  },
+  {
+   "xbox": "0x00048340",
+   "expect": "EPathSetDesiredThrottleDynamic::~EPathSetDesiredThrottleDynamic",
+   "name": "EPathSetDesiredThrottleDynamic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSetDesiredThrottleDynamic's destructor (0x00041af0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSetDesiredThrottleDynamic::~EPathSetDesiredThrottleDynamic"
+   ]
+  },
+  {
+   "xbox": "0x00048360",
+   "expect": "EPathSetDesiredThrottleStatic::~EPathSetDesiredThrottleStatic",
+   "name": "EPathSetDesiredThrottleStatic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSetDesiredThrottleStatic's destructor (0x00041b90, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSetDesiredThrottleStatic::~EPathSetDesiredThrottleStatic"
+   ]
+  },
+  {
+   "xbox": "0x00048380",
+   "expect": "EPathSetRunningDynamic::~EPathSetRunningDynamic",
+   "name": "EPathSetRunningDynamic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSetRunningDynamic's destructor (0x00041c20, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSetRunningDynamic::~EPathSetRunningDynamic"
+   ]
+  },
+  {
+   "xbox": "0x000483a0",
+   "expect": "EPathSetRunningStatic::~EPathSetRunningStatic",
+   "name": "EPathSetRunningStatic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSetRunningStatic's destructor (0x00041cc0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSetRunningStatic::~EPathSetRunningStatic"
+   ]
+  },
+  {
+   "xbox": "0x000483c0",
+   "expect": "EPathSetThrottleDynamic::~EPathSetThrottleDynamic",
+   "name": "EPathSetThrottleDynamic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSetThrottleDynamic's destructor (0x00041d60, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSetThrottleDynamic::~EPathSetThrottleDynamic"
+   ]
+  },
+  {
+   "xbox": "0x000483e0",
+   "expect": "EPathSetThrottleStatic::~EPathSetThrottleStatic",
+   "name": "EPathSetThrottleStatic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSetThrottleStatic's destructor (0x00041e00, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSetThrottleStatic::~EPathSetThrottleStatic"
+   ]
+  },
+  {
+   "xbox": "0x00048400",
+   "expect": "EPathSetTimeDynamic::~EPathSetTimeDynamic",
+   "name": "EPathSetTimeDynamic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSetTimeDynamic's destructor (0x00041e90, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSetTimeDynamic::~EPathSetTimeDynamic"
+   ]
+  },
+  {
+   "xbox": "0x00048420",
+   "expect": "EPathSetTimeStatic::~EPathSetTimeStatic",
+   "name": "EPathSetTimeStatic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSetTimeStatic's destructor (0x00041f40, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSetTimeStatic::~EPathSetTimeStatic"
+   ]
+  },
+  {
+   "xbox": "0x00048440",
+   "expect": "EPause::~EPause",
+   "name": "EPause::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPause's destructor (0x00042060, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPause::~EPause"
+   ]
+  },
+  {
+   "xbox": "0x00048460",
+   "expect": "EPlayActorEffect::~EPlayActorEffect",
+   "name": "EPlayActorEffect::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPlayActorEffect's destructor (0x000420f0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPlayActorEffect::~EPlayActorEffect"
+   ]
+  },
+  {
+   "xbox": "0x00048480",
+   "expect": "EPlayCameraAnim::~EPlayCameraAnim",
+   "name": "EPlayCameraAnim::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPlayCameraAnim's destructor (0x000421e0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPlayCameraAnim::~EPlayCameraAnim"
+   ]
+  },
+  {
+   "xbox": "0x000484a0",
+   "expect": "EPlayCameraSpline::~EPlayCameraSpline",
+   "name": "EPlayCameraSpline::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPlayCameraSpline's destructor (0x00042350, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPlayCameraSpline::~EPlayCameraSpline"
+   ]
+  },
+  {
+   "xbox": "0x000484c0",
+   "expect": "EPlayEffect::~EPlayEffect",
+   "name": "EPlayEffect::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPlayEffect's destructor (0x00042500, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPlayEffect::~EPlayEffect"
+   ]
+  },
+  {
+   "xbox": "0x000484e0",
+   "expect": "EPlayGiottoEffect::~EPlayGiottoEffect",
+   "name": "EPlayGiottoEffect::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPlayGiottoEffect's destructor (0x00042750, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPlayGiottoEffect::~EPlayGiottoEffect"
+   ]
+  },
+  {
+   "xbox": "0x00048500",
+   "expect": "EPlayPOVDeath::~EPlayPOVDeath",
+   "name": "EPlayPOVDeath::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPlayPOVDeath's destructor (0x00042840, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPlayPOVDeath::~EPlayPOVDeath"
+   ]
+  },
+  {
+   "xbox": "0x00048520",
+   "expect": "EPlaySound::~EPlaySound",
+   "name": "EPlaySound::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPlaySound's destructor (0x000428d0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPlaySound::~EPlaySound"
+   ]
+  },
+  {
+   "xbox": "0x00048620",
+   "expect": "EPlaySystemAnim::~EPlaySystemAnim",
+   "name": "EPlaySystemAnim::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPlaySystemAnim's destructor (0x000429d0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPlaySystemAnim::~EPlaySystemAnim"
+   ]
+  },
+  {
+   "xbox": "0x00048640",
+   "expect": "EPowerUp::~EPowerUp",
+   "name": "EPowerUp::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPowerUp's destructor (0x00042be0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPowerUp::~EPowerUp"
+   ]
+  },
+  {
+   "xbox": "0x00048660",
+   "expect": "EPowerUpAmmo::~EPowerUpAmmo",
+   "name": "EPowerUpAmmo::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPowerUpAmmo's destructor (0x00042d20, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPowerUpAmmo::~EPowerUpAmmo"
+   ]
+  },
+  {
+   "xbox": "0x000486a0",
+   "expect": "EPowerUpMultiDamage::~EPowerUpMultiDamage",
+   "name": "EPowerUpMultiDamage::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPowerUpMultiDamage's destructor (0x00042e90, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPowerUpMultiDamage::~EPowerUpMultiDamage"
+   ]
+  },
+  {
+   "xbox": "0x000486c0",
+   "expect": "EPowerUpShield::~EPowerUpShield",
+   "name": "EPowerUpShield::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPowerUpShield's destructor (0x00042ee0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPowerUpShield::~EPowerUpShield"
+   ]
+  },
+  {
+   "xbox": "0x000486e0",
+   "expect": "EPowerUpTimer::~EPowerUpTimer",
+   "name": "EPowerUpTimer::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPowerUpTimer's destructor (0x00042fa0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPowerUpTimer::~EPowerUpTimer"
+   ]
+  },
+  {
+   "xbox": "0x00048720",
+   "expect": "EProfileMissionSection::~EProfileMissionSection",
+   "name": "EProfileMissionSection::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EProfileMissionSection's destructor (0x00043070, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EProfileMissionSection::~EProfileMissionSection"
+   ]
+  },
+  {
+   "xbox": "0x00048740",
+   "expect": "ERandomExplosion::~ERandomExplosion",
+   "name": "ERandomExplosion::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ERandomExplosion's destructor (0x000430e0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ERandomExplosion::~ERandomExplosion"
+   ]
+  },
+  {
+   "xbox": "0x00048760",
+   "expect": "EReleaseStream::~EReleaseStream",
+   "name": "EReleaseStream::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EReleaseStream's destructor (0x00043290, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EReleaseStream::~EReleaseStream"
+   ]
+  },
+  {
+   "xbox": "0x00048780",
+   "expect": "ERenderFrame::~ERenderFrame",
+   "name": "ERenderFrame::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ERenderFrame's destructor (0x000432e0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ERenderFrame::~ERenderFrame"
+   ]
+  },
+  {
+   "xbox": "0x000487a0",
+   "expect": "EResetAudioMix::~EResetAudioMix",
+   "name": "EResetAudioMix::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EResetAudioMix's destructor (0x00043390, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EResetAudioMix::~EResetAudioMix"
+   ]
+  },
+  {
+   "xbox": "0x000487c0",
+   "expect": "ERevertAudioMix::~ERevertAudioMix",
+   "name": "ERevertAudioMix::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ERevertAudioMix's destructor (0x000434c0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ERevertAudioMix::~ERevertAudioMix"
+   ]
+  },
+  {
+   "xbox": "0x000487e0",
+   "expect": "ERollSub::~ERollSub",
+   "name": "ERollSub::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ERollSub's destructor (0x00043560, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ERollSub::~ERollSub"
+   ]
+  },
+  {
+   "xbox": "0x00048820",
+   "expect": "EScaleFieldOfView::~EScaleFieldOfView",
+   "name": "EScaleFieldOfView::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EScaleFieldOfView's destructor (0x00043670, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EScaleFieldOfView::~EScaleFieldOfView"
+   ]
+  },
+  {
+   "xbox": "0x00048840",
+   "expect": "EScaleFog::~EScaleFog",
+   "name": "EScaleFog::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EScaleFog's destructor (0x000436b0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EScaleFog::~EScaleFog"
+   ]
+  },
+  {
+   "xbox": "0x00048860",
+   "expect": "EScheduleEvent::~EScheduleEvent",
+   "name": "EScheduleEvent::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EScheduleEvent's destructor (0x00043740, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EScheduleEvent::~EScheduleEvent"
+   ]
+  },
+  {
+   "xbox": "0x00048880",
+   "expect": "ESentryMuzzleFlash::~ESentryMuzzleFlash",
+   "name": "ESentryMuzzleFlash::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESentryMuzzleFlash's destructor (0x000437d0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESentryMuzzleFlash::~ESentryMuzzleFlash"
+   ]
+  },
+  {
+   "xbox": "0x000488a0",
+   "expect": "ESetAFXMode::~ESetAFXMode",
+   "name": "ESetAFXMode::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetAFXMode's destructor (0x000438d0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetAFXMode::~ESetAFXMode"
+   ]
+  },
+  {
+   "xbox": "0x000488c0",
+   "expect": "ESetAreaBrightness::~ESetAreaBrightness",
+   "name": "ESetAreaBrightness::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetAreaBrightness's destructor (0x00043960, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetAreaBrightness::~ESetAreaBrightness"
+   ]
+  },
+  {
+   "xbox": "0x000488e0",
+   "expect": "ESetAudioMix::~ESetAudioMix",
+   "name": "ESetAudioMix::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetAudioMix's destructor (0x00043a00, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetAudioMix::~ESetAudioMix"
+   ]
+  },
+  {
+   "xbox": "0x00048900",
+   "expect": "ESetAutoDriveCamOff::~ESetAutoDriveCamOff",
+   "name": "ESetAutoDriveCamOff::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetAutoDriveCamOff's destructor (0x00043af0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetAutoDriveCamOff::~ESetAutoDriveCamOff"
+   ]
+  },
+  {
+   "xbox": "0x00048920",
+   "expect": "ESetAutoDriveCamOn::~ESetAutoDriveCamOn",
+   "name": "ESetAutoDriveCamOn::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetAutoDriveCamOn's destructor (0x00043ba0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetAutoDriveCamOn::~ESetAutoDriveCamOn"
+   ]
+  },
+  {
+   "xbox": "0x00048940",
+   "expect": "ESetAutoDriveCamOnMovie::~ESetAutoDriveCamOnMovie",
+   "name": "ESetAutoDriveCamOnMovie::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetAutoDriveCamOnMovie's destructor (0x00043c60, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetAutoDriveCamOnMovie::~ESetAutoDriveCamOnMovie"
+   ]
+  },
+  {
+   "xbox": "0x00048960",
+   "expect": "ESetAvoidZone::~ESetAvoidZone",
+   "name": "ESetAvoidZone::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetAvoidZone's destructor (0x00043d50, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetAvoidZone::~ESetAvoidZone"
+   ]
+  },
+  {
+   "xbox": "0x00048980",
+   "expect": "ESetBitMagicCounter::~ESetBitMagicCounter",
+   "name": "ESetBitMagicCounter::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetBitMagicCounter's destructor (0x00043e20, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetBitMagicCounter::~ESetBitMagicCounter"
+   ]
+  },
+  {
+   "xbox": "0x000489a0",
+   "expect": "ESetCollisionGeometry::~ESetCollisionGeometry",
+   "name": "ESetCollisionGeometry::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetCollisionGeometry's destructor (0x00043ec0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetCollisionGeometry::~ESetCollisionGeometry"
+   ]
+  },
+  {
+   "xbox": "0x000489c0",
+   "expect": "ESetCullDistanceFactor::~ESetCullDistanceFactor",
+   "name": "ESetCullDistanceFactor::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetCullDistanceFactor's destructor (0x00043fa0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetCullDistanceFactor::~ESetCullDistanceFactor"
+   ]
+  },
+  {
+   "xbox": "0x000489e0",
+   "expect": "ESetFrameAnimationTime::~ESetFrameAnimationTime",
+   "name": "ESetFrameAnimationTime::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetFrameAnimationTime's destructor (0x00043fe0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetFrameAnimationTime::~ESetFrameAnimationTime"
+   ]
+  },
+  {
+   "xbox": "0x00048a00",
+   "expect": "ESetJumpGravity::~ESetJumpGravity",
+   "name": "ESetJumpGravity::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetJumpGravity's destructor (0x00044040, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetJumpGravity::~ESetJumpGravity"
+   ]
+  },
+  {
+   "xbox": "0x00048a20",
+   "expect": "ESetMagicCounter::~ESetMagicCounter",
+   "name": "ESetMagicCounter::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetMagicCounter's destructor (0x00044070, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetMagicCounter::~ESetMagicCounter"
+   ]
+  },
+  {
+   "xbox": "0x00048a40",
+   "expect": "ESetMagicCounterThreshold::~ESetMagicCounterThreshold",
+   "name": "ESetMagicCounterThreshold::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetMagicCounterThreshold's destructor (0x00044100, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetMagicCounterThreshold::~ESetMagicCounterThreshold"
+   ]
+  },
+  {
+   "xbox": "0x00048a60",
+   "expect": "ESetMissionMessage::~ESetMissionMessage",
+   "name": "ESetMissionMessage::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetMissionMessage's destructor (0x00044190, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetMissionMessage::~ESetMissionMessage"
+   ]
+  },
+  {
+   "xbox": "0x00048a80",
+   "expect": "ESetNextPath::~ESetNextPath",
+   "name": "ESetNextPath::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetNextPath's destructor (0x00044250, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetNextPath::~ESetNextPath"
+   ]
+  },
+  {
+   "xbox": "0x00048aa0",
+   "expect": "ESetObjective::~ESetObjective",
+   "name": "ESetObjective::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetObjective's destructor (0x000442e0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetObjective::~ESetObjective"
+   ]
+  },
+  {
+   "xbox": "0x00048ac0",
+   "expect": "ESetRecordedGameTime::~ESetRecordedGameTime",
+   "name": "ESetRecordedGameTime::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetRecordedGameTime's destructor (0x00044400, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetRecordedGameTime::~ESetRecordedGameTime"
+   ]
+  },
+  {
+   "xbox": "0x00048ae0",
+   "expect": "ESetReflectiveObject::~ESetReflectiveObject",
+   "name": "ESetReflectiveObject::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetReflectiveObject's destructor (0x00044450, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetReflectiveObject::~ESetReflectiveObject"
+   ]
+  },
+  {
+   "xbox": "0x00048b00",
+   "expect": "ESetRenderVariation::~ESetRenderVariation",
+   "name": "ESetRenderVariation::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetRenderVariation's destructor (0x00044510, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetRenderVariation::~ESetRenderVariation"
+   ]
+  },
+  {
+   "xbox": "0x00048b20",
+   "expect": "ESetSimRate::~ESetSimRate",
+   "name": "ESetSimRate::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetSimRate's destructor (0x00044610, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetSimRate::~ESetSimRate"
+   ]
+  },
+  {
+   "xbox": "0x00048b40",
+   "expect": "ESetSpecialWeapon::~ESetSpecialWeapon",
+   "name": "ESetSpecialWeapon::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetSpecialWeapon's destructor (0x00044660, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetSpecialWeapon::~ESetSpecialWeapon"
+   ]
+  },
+  {
+   "xbox": "0x00048b60",
+   "expect": "ESetSubtitle::~ESetSubtitle",
+   "name": "ESetSubtitle::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetSubtitle's destructor (0x00044760, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetSubtitle::~ESetSubtitle"
+   ]
+  },
+  {
+   "xbox": "0x00048b80",
+   "expect": "ESetTimer::~ESetTimer",
+   "name": "ESetTimer::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetTimer's destructor (0x000448b0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetTimer::~ESetTimer"
+   ]
+  },
+  {
+   "xbox": "0x00048ba0",
+   "expect": "ESetVideo::~ESetVideo",
+   "name": "ESetVideo::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetVideo's destructor (0x00044970, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetVideo::~ESetVideo"
+   ]
+  },
+  {
+   "xbox": "0x00048bc0",
+   "expect": "ESetWaypoint::~ESetWaypoint",
+   "name": "ESetWaypoint::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetWaypoint's destructor (0x00044c20, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetWaypoint::~ESetWaypoint"
+   ]
+  },
+  {
+   "xbox": "0x00048be0",
+   "expect": "EShowInstance::~EShowInstance",
+   "name": "EShowInstance::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EShowInstance's destructor (0x00044d00, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EShowInstance::~EShowInstance"
+   ]
+  },
+  {
+   "xbox": "0x00048c00",
+   "expect": "EShowInstanceStatic::~EShowInstanceStatic",
+   "name": "EShowInstanceStatic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EShowInstanceStatic's destructor (0x00044d40, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EShowInstanceStatic::~EShowInstanceStatic"
+   ]
+  },
+  {
+   "xbox": "0x00048c20",
+   "expect": "ESimEndFrame::~ESimEndFrame",
+   "name": "ESimEndFrame::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESimEndFrame's destructor (0x00044df0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESimEndFrame::~ESimEndFrame"
+   ]
+  },
+  {
+   "xbox": "0x00048c40",
+   "expect": "ESpawnDramaticSmackable::~ESpawnDramaticSmackable",
+   "name": "ESpawnDramaticSmackable::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESpawnDramaticSmackable's destructor (0x00044e80, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESpawnDramaticSmackable::~ESpawnDramaticSmackable"
+   ]
+  },
+  {
+   "xbox": "0x00048c60",
+   "expect": "ESpawnExplosionStatic::~ESpawnExplosionStatic",
+   "name": "ESpawnExplosionStatic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESpawnExplosionStatic's destructor (0x00045120, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESpawnExplosionStatic::~ESpawnExplosionStatic"
+   ]
+  },
+  {
+   "xbox": "0x00048c80",
+   "expect": "ESpawnForceEffect::~ESpawnForceEffect",
+   "name": "ESpawnForceEffect::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESpawnForceEffect's destructor (0x000453a0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESpawnForceEffect::~ESpawnForceEffect"
+   ]
+  },
+  {
+   "xbox": "0x00048ca0",
+   "expect": "ESpawnSentry::~ESpawnSentry",
+   "name": "ESpawnSentry::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESpawnSentry's destructor (0x00045880, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESpawnSentry::~ESpawnSentry"
+   ]
+  },
+  {
+   "xbox": "0x00048cc0",
+   "expect": "ESpawnSimplePhysics::~ESpawnSimplePhysics",
+   "name": "ESpawnSimplePhysics::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESpawnSimplePhysics's destructor (0x000459b0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESpawnSimplePhysics::~ESpawnSimplePhysics"
+   ]
+  },
+  {
+   "xbox": "0x00048d00",
+   "expect": "ESpawnTraffic::~ESpawnTraffic",
+   "name": "ESpawnTraffic::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESpawnTraffic's destructor (0x00045d70, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESpawnTraffic::~ESpawnTraffic"
+   ]
+  },
+  {
+   "xbox": "0x00048d20",
+   "expect": "EStartEffect::~EStartEffect",
+   "name": "EStartEffect::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EStartEffect's destructor (0x00046050, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EStartEffect::~EStartEffect"
+   ]
+  },
+  {
+   "xbox": "0x00048d40",
+   "expect": "EStopEffect::~EStopEffect",
+   "name": "EStopEffect::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EStopEffect's destructor (0x00046380, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EStopEffect::~EStopEffect"
+   ]
+  },
+  {
+   "xbox": "0x00048d60",
+   "expect": "EStopSoundPos::~EStopSoundPos",
+   "name": "EStopSoundPos::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EStopSoundPos's destructor (0x00046540, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EStopSoundPos::~EStopSoundPos"
+   ]
+  },
+  {
+   "xbox": "0x00048d80",
+   "expect": "EStopTimedAction::~EStopTimedAction",
+   "name": "EStopTimedAction::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EStopTimedAction's destructor (0x000465b0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EStopTimedAction::~EStopTimedAction"
+   ]
+  },
+  {
+   "xbox": "0x00048da0",
+   "expect": "ESuppressEffect::~ESuppressEffect",
+   "name": "ESuppressEffect::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESuppressEffect's destructor (0x00046720, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESuppressEffect::~ESuppressEffect"
+   ]
+  },
+  {
+   "xbox": "0x00048dc0",
+   "expect": "ESwitchEffectOff::~ESwitchEffectOff",
+   "name": "ESwitchEffectOff::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESwitchEffectOff's destructor (0x00046850, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESwitchEffectOff::~ESwitchEffectOff"
+   ]
+  },
+  {
+   "xbox": "0x00048de0",
+   "expect": "ESwitchEffectOn::~ESwitchEffectOn",
+   "name": "ESwitchEffectOn::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESwitchEffectOn's destructor (0x000468f0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESwitchEffectOn::~ESwitchEffectOn"
+   ]
+  },
+  {
+   "xbox": "0x00048e00",
+   "expect": "ESwitchStingerChannel::~ESwitchStingerChannel",
+   "name": "ESwitchStingerChannel::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESwitchStingerChannel's destructor (0x00046990, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESwitchStingerChannel::~ESwitchStingerChannel"
+   ]
+  },
+  {
+   "xbox": "0x00048e20",
+   "expect": "ETargetBeaconOnOff::~ETargetBeaconOnOff",
+   "name": "ETargetBeaconOnOff::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ETargetBeaconOnOff's destructor (0x00046a10, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ETargetBeaconOnOff::~ETargetBeaconOnOff"
+   ]
+  },
+  {
+   "xbox": "0x00048e40",
+   "expect": "ETimerDrawOff::~ETimerDrawOff",
+   "name": "ETimerDrawOff::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ETimerDrawOff's destructor (0x00046ae0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ETimerDrawOff::~ETimerDrawOff"
+   ]
+  },
+  {
+   "xbox": "0x00048e60",
+   "expect": "ETimerDrawOn::~ETimerDrawOn",
+   "name": "ETimerDrawOn::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ETimerDrawOn's destructor (0x00046b60, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ETimerDrawOn::~ETimerDrawOn"
+   ]
+  },
+  {
+   "xbox": "0x00048e80",
+   "expect": "EUnloadWeapon::~EUnloadWeapon",
+   "name": "EUnloadWeapon::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EUnloadWeapon's destructor (0x00046c20, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EUnloadWeapon::~EUnloadWeapon"
+   ]
+  },
+  {
+   "xbox": "0x0004c7d0",
+   "expect": "EHitWindow::~EHitWindow",
+   "name": "EHitWindow::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EHitWindow's destructor (0x00047b90, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EHitWindow::~EHitWindow"
+   ]
+  },
+  {
+   "xbox": "0x0004cda0",
+   "expect": "EPathSFXUpdate::~EPathSFXUpdate",
+   "name": "EPathSFXUpdate::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPathSFXUpdate's destructor (0x00048170, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPathSFXUpdate::~EPathSFXUpdate"
+   ]
+  },
+  {
+   "xbox": "0x0004cf30",
+   "expect": "EPlaySoundPos::~EPlaySoundPos",
+   "name": "EPlaySoundPos::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPlaySoundPos's destructor (0x00048540, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPlaySoundPos::~EPlaySoundPos"
+   ]
+  },
+  {
+   "xbox": "0x0004ea60",
+   "expect": "EAICommand::~EAICommand",
+   "name": "EAICommand::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAICommand's destructor (0x00048ec0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAICommand::~EAICommand"
+   ]
+  },
+  {
+   "xbox": "0x0004ea80",
+   "expect": "EActivateAIElement::~EActivateAIElement",
+   "name": "EActivateAIElement::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EActivateAIElement's destructor (0x000495d0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EActivateAIElement::~EActivateAIElement"
+   ]
+  },
+  {
+   "xbox": "0x0004eaa0",
+   "expect": "EAudioUpdate::~EAudioUpdate",
+   "name": "EAudioUpdate::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAudioUpdate's destructor (0x00049790, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAudioUpdate::~EAudioUpdate"
+   ]
+  },
+  {
+   "xbox": "0x0004eac0",
+   "expect": "EAutoDriveSpeedChange::~EAutoDriveSpeedChange",
+   "name": "EAutoDriveSpeedChange::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAutoDriveSpeedChange's destructor (0x00049a80, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAutoDriveSpeedChange::~EAutoDriveSpeedChange"
+   ]
+  },
+  {
+   "xbox": "0x0004eae0",
+   "expect": "EAutoDriveSteering::~EAutoDriveSteering",
+   "name": "EAutoDriveSteering::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EAutoDriveSteering's destructor (0x00049ae0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EAutoDriveSteering::~EAutoDriveSteering"
+   ]
+  },
+  {
+   "xbox": "0x0004eb00",
+   "expect": "EBashCarAlongObjectAxis::~EBashCarAlongObjectAxis",
+   "name": "EBashCarAlongObjectAxis::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EBashCarAlongObjectAxis's destructor (0x00049b90, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EBashCarAlongObjectAxis::~EBashCarAlongObjectAxis"
+   ]
+  },
+  {
+   "xbox": "0x0004eb20",
+   "expect": "ECinematicCamera::~ECinematicCamera",
+   "name": "ECinematicCamera::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ECinematicCamera's destructor (0x00049d40, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ECinematicCamera::~ECinematicCamera"
+   ]
+  },
+  {
+   "xbox": "0x0004eb60",
+   "expect": "EControlToCPU::~EControlToCPU",
+   "name": "EControlToCPU::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EControlToCPU's destructor (0x0004a820, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EControlToCPU::~EControlToCPU"
+   ]
+  },
+  {
+   "xbox": "0x0004eb80",
+   "expect": "EControlToPlayer::~EControlToPlayer",
+   "name": "EControlToPlayer::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EControlToPlayer's destructor (0x0004a890, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EControlToPlayer::~EControlToPlayer"
+   ]
+  },
+  {
+   "xbox": "0x0004eba0",
+   "expect": "EControlToSpline::~EControlToSpline",
+   "name": "EControlToSpline::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EControlToSpline's destructor (0x0004a920, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EControlToSpline::~EControlToSpline"
+   ]
+  },
+  {
+   "xbox": "0x0004ebc0",
+   "expect": "ECustomTransition::~ECustomTransition",
+   "name": "ECustomTransition::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ECustomTransition's destructor (0x0004a9d0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ECustomTransition::~ECustomTransition"
+   ]
+  },
+  {
+   "xbox": "0x0004ebe0",
+   "expect": "EDamagePlayer::~EDamagePlayer",
+   "name": "EDamagePlayer::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EDamagePlayer's destructor (0x0004aad0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EDamagePlayer::~EDamagePlayer"
+   ]
+  },
+  {
+   "xbox": "0x0004ec00",
+   "expect": "EEndCarStop::~EEndCarStop",
+   "name": "EEndCarStop::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EEndCarStop's destructor (0x0004ab60, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EEndCarStop::~EEndCarStop"
+   ]
+  },
+  {
+   "xbox": "0x0004ec20",
+   "expect": "EEndControlToSpline::~EEndControlToSpline",
+   "name": "EEndControlToSpline::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EEndControlToSpline's destructor (0x0004abc0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EEndControlToSpline::~EEndControlToSpline"
+   ]
+  },
+  {
+   "xbox": "0x0004ec40",
+   "expect": "EFireWeapon::~EFireWeapon",
+   "name": "EFireWeapon::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EFireWeapon's destructor (0x0004ac40, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EFireWeapon::~EFireWeapon"
+   ]
+  },
+  {
+   "xbox": "0x0004ec60",
+   "expect": "EForceCarStop::~EForceCarStop",
+   "name": "EForceCarStop::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EForceCarStop's destructor (0x0004c770, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EForceCarStop::~EForceCarStop"
+   ]
+  },
+  {
+   "xbox": "0x0004ec80",
+   "expect": "EKickObject::~EKickObject",
+   "name": "EKickObject::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EKickObject's destructor (0x0004c7f0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EKickObject::~EKickObject"
+   ]
+  },
+  {
+   "xbox": "0x0004eca0",
+   "expect": "EKillAIElement::~EKillAIElement",
+   "name": "EKillAIElement::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EKillAIElement's destructor (0x0004ca20, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EKillAIElement::~EKillAIElement"
+   ]
+  },
+  {
+   "xbox": "0x0004ecc0",
+   "expect": "EMaybeActivateAIElement::~EMaybeActivateAIElement",
+   "name": "EMaybeActivateAIElement::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EMaybeActivateAIElement's destructor (0x0004cbc0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EMaybeActivateAIElement::~EMaybeActivateAIElement"
+   ]
+  },
+  {
+   "xbox": "0x0004ece0",
+   "expect": "EPlayCarCameraAnim::~EPlayCarCameraAnim",
+   "name": "EPlayCarCameraAnim::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPlayCarCameraAnim's destructor (0x0004cdc0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPlayCarCameraAnim::~EPlayCarCameraAnim"
+   ]
+  },
+  {
+   "xbox": "0x0004ed00",
+   "expect": "EPlayerLose::~EPlayerLose",
+   "name": "EPlayerLose::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPlayerLose's destructor (0x0004cf50, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPlayerLose::~EPlayerLose"
+   ]
+  },
+  {
+   "xbox": "0x0004ed20",
+   "expect": "EPlayerSetImmunity::~EPlayerSetImmunity",
+   "name": "EPlayerSetImmunity::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPlayerSetImmunity's destructor (0x0004d1e0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPlayerSetImmunity::~EPlayerSetImmunity"
+   ]
+  },
+  {
+   "xbox": "0x0004ed40",
+   "expect": "EPlayerWin::~EPlayerWin",
+   "name": "EPlayerWin::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPlayerWin's destructor (0x0004d240, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPlayerWin::~EPlayerWin"
+   ]
+  },
+  {
+   "xbox": "0x0004ed60",
+   "expect": "EPowerUpHealth::~EPowerUpHealth",
+   "name": "EPowerUpHealth::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EPowerUpHealth's destructor (0x0004d3d0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EPowerUpHealth::~EPowerUpHealth"
+   ]
+  },
+  {
+   "xbox": "0x0004ed80",
+   "expect": "EResetPlayerCar::~EResetPlayerCar",
+   "name": "EResetPlayerCar::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EResetPlayerCar's destructor (0x0004d460, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EResetPlayerCar::~EResetPlayerCar"
+   ]
+  },
+  {
+   "xbox": "0x0004eda0",
+   "expect": "EResetPlayerCarPos::~EResetPlayerCarPos",
+   "name": "EResetPlayerCarPos::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EResetPlayerCarPos's destructor (0x0004d4c0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EResetPlayerCarPos::~EResetPlayerCarPos"
+   ]
+  },
+  {
+   "xbox": "0x0004edc0",
+   "expect": "ERestart::~ERestart",
+   "name": "ERestart::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ERestart's destructor (0x0004d620, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ERestart::~ERestart"
+   ]
+  },
+  {
+   "xbox": "0x0004ede0",
+   "expect": "EResume::~EResume",
+   "name": "EResume::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EResume's destructor (0x0004d7c0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EResume::~EResume"
+   ]
+  },
+  {
+   "xbox": "0x0004ee00",
+   "expect": "ESetAutoDriveCamOffMovie::~ESetAutoDriveCamOffMovie",
+   "name": "ESetAutoDriveCamOffMovie::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetAutoDriveCamOffMovie's destructor (0x0004d850, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetAutoDriveCamOffMovie::~ESetAutoDriveCamOffMovie"
+   ]
+  },
+  {
+   "xbox": "0x0004ee20",
+   "expect": "ESetCreakLevel::~ESetCreakLevel",
+   "name": "ESetCreakLevel::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetCreakLevel's destructor (0x0004d930, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetCreakLevel::~ESetCreakLevel"
+   ]
+  },
+  {
+   "xbox": "0x0004ee40",
+   "expect": "ESetNextAISpline::~ESetNextAISpline",
+   "name": "ESetNextAISpline::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetNextAISpline's destructor (0x0004d9d0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetNextAISpline::~ESetNextAISpline"
+   ]
+  },
+  {
+   "xbox": "0x0004ee60",
+   "expect": "ESetRecSpeedOffset::~ESetRecSpeedOffset",
+   "name": "ESetRecSpeedOffset::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetRecSpeedOffset's destructor (0x0004da70, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetRecSpeedOffset::~ESetRecSpeedOffset"
+   ]
+  },
+  {
+   "xbox": "0x0004ee80",
+   "expect": "ESetSubRollDirection::~ESetSubRollDirection",
+   "name": "ESetSubRollDirection::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetSubRollDirection's destructor (0x0004db10, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetSubRollDirection::~ESetSubRollDirection"
+   ]
+  },
+  {
+   "xbox": "0x0004eea0",
+   "expect": "ESetTerrain::~ESetTerrain",
+   "name": "ESetTerrain::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetTerrain's destructor (0x0004db70, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetTerrain::~ESetTerrain"
+   ]
+  },
+  {
+   "xbox": "0x0004eec0",
+   "expect": "ESetVisualDamage::~ESetVisualDamage",
+   "name": "ESetVisualDamage::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESetVisualDamage's destructor (0x0004dbd0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESetVisualDamage::~ESetVisualDamage"
+   ]
+  },
+  {
+   "xbox": "0x0004eee0",
+   "expect": "EShake::~EShake",
+   "name": "EShake::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EShake's destructor (0x0004dcb0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EShake::~EShake"
+   ]
+  },
+  {
+   "xbox": "0x0004ef00",
+   "expect": "ESimFrameUpdate::~ESimFrameUpdate",
+   "name": "ESimFrameUpdate::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESimFrameUpdate's destructor (0x0004dd10, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESimFrameUpdate::~ESimFrameUpdate"
+   ]
+  },
+  {
+   "xbox": "0x0004ef20",
+   "expect": "ESpawnExplosion::~ESpawnExplosion",
+   "name": "ESpawnExplosion::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ESpawnExplosion's destructor (0x0004de70, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ESpawnExplosion::~ESpawnExplosion"
+   ]
+  },
+  {
+   "xbox": "0x0004ef40",
+   "expect": "EStartMission::~EStartMission",
+   "name": "EStartMission::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EStartMission's destructor (0x0004e860, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EStartMission::~EStartMission"
+   ]
+  },
+  {
+   "xbox": "0x0004f110",
+   "expect": "ETwoWheelsOff::~ETwoWheelsOff",
+   "name": "ETwoWheelsOff::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ETwoWheelsOff's destructor (0x0004e9c0, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ETwoWheelsOff::~ETwoWheelsOff"
+   ]
+  },
+  {
+   "xbox": "0x0004f130",
+   "expect": "ETwoWheelsOn::~ETwoWheelsOn",
+   "name": "ETwoWheelsOn::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls ETwoWheelsOn's destructor (0x0004ea10, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess ETwoWheelsOn::~ETwoWheelsOn"
+   ]
+  },
+  {
+   "xbox": "0x0004f150",
+   "expect": "EStreamEvent::~EStreamEvent",
+   "name": "EStreamEvent::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "calls EStreamEvent's destructor (0x0004ef60, the old Process) then Event::operator_delete when flag bit 1 is set: MSVC scalar deleting destructor. Was the guess EStreamEvent::~EStreamEvent"
+   ]
+  },
+  {
+   "xbox": "0x0003db80",
+   "expect": "E007Logo::Process",
+   "name": "E007Logo::~E007Logo",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 E007Logo::~E007Logo (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess E007Logo::Process",
+    "PS2 0x00145f00"
+   ]
+  },
+  {
+   "xbox": "0x0003dd70",
+   "expect": "EAIElementFireOff::Process",
+   "name": "EAIElementFireOff::~EAIElementFireOff",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAIElementFireOff::~EAIElementFireOff (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAIElementFireOff::Process",
+    "PS2 0x001469f8"
+   ]
+  },
+  {
+   "xbox": "0x0003de30",
+   "expect": "EAIElementFireOn::Process",
+   "name": "EAIElementFireOn::~EAIElementFireOn",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAIElementFireOn::~EAIElementFireOn (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAIElementFireOn::Process",
+    "PS2 0x00146b48"
+   ]
+  },
+  {
+   "xbox": "0x0003def0",
+   "expect": "EAIElementSetAccuracy::Process",
+   "name": "EAIElementSetAccuracy::~EAIElementSetAccuracy",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAIElementSetAccuracy::~EAIElementSetAccuracy (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAIElementSetAccuracy::Process",
+    "PS2 0x00146ca8"
+   ]
+  },
+  {
+   "xbox": "0x0003dfb0",
+   "expect": "EAIElementSetCharParams::Process",
+   "name": "EAIElementSetCharParams::~EAIElementSetCharParams",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAIElementSetCharParams::~EAIElementSetCharParams (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAIElementSetCharParams::Process",
+    "PS2 0x00146df8"
+   ]
+  },
+  {
+   "xbox": "0x0003e0a0",
+   "expect": "EAIElementSetNonScoreable::Process",
+   "name": "EAIElementSetNonScoreable::~EAIElementSetNonScoreable",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAIElementSetNonScoreable::~EAIElementSetNonScoreable (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAIElementSetNonScoreable::Process",
+    "PS2 0x00146f68"
+   ]
+  },
+  {
+   "xbox": "0x0003e180",
+   "expect": "EAIElementSetVehicleParams::Process",
+   "name": "EAIElementSetVehicleParams::~EAIElementSetVehicleParams",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAIElementSetVehicleParams::~EAIElementSetVehicleParams (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAIElementSetVehicleParams::Process",
+    "PS2 0x001470e8"
+   ]
+  },
+  {
+   "xbox": "0x0003e210",
+   "expect": "EAIElementSetWakeRange::Process",
+   "name": "EAIElementSetWakeRange::~EAIElementSetWakeRange",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAIElementSetWakeRange::~EAIElementSetWakeRange (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAIElementSetWakeRange::Process",
+    "PS2 0x001471e0"
+   ]
+  },
+  {
+   "xbox": "0x0003e2b0",
+   "expect": "EAIUpdate::Process",
+   "name": "EAIUpdate::~EAIUpdate",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAIUpdate::~EAIUpdate (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAIUpdate::Process",
+    "PS2 0x001472e0"
+   ]
+  },
+  {
+   "xbox": "0x0003e340",
+   "expect": "EAbortCinematic::Process",
+   "name": "EAbortCinematic::~EAbortCinematic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAbortCinematic::~EAbortCinematic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAbortCinematic::Process",
+    "PS2 0x001475e8"
+   ]
+  },
+  {
+   "xbox": "0x0003e410",
+   "expect": "EActorMuzzleFlash::Process",
+   "name": "EActorMuzzleFlash::~EActorMuzzleFlash",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EActorMuzzleFlash::~EActorMuzzleFlash (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EActorMuzzleFlash::Process",
+    "PS2 0x001479c0"
+   ]
+  },
+  {
+   "xbox": "0x0003e520",
+   "expect": "EAddScoreAction::Process",
+   "name": "EAddScoreAction::~EAddScoreAction",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAddScoreAction::~EAddScoreAction (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAddScoreAction::Process",
+    "PS2 0x00147b80"
+   ]
+  },
+  {
+   "xbox": "0x0003e620",
+   "expect": "EAnimUpdate::Process",
+   "name": "EAnimUpdate::~EAnimUpdate",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAnimUpdate::~EAnimUpdate (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAnimUpdate::Process",
+    "PS2 0x00147d60"
+   ]
+  },
+  {
+   "xbox": "0x0003e730",
+   "expect": "EAutoDrive::Process",
+   "name": "EAutoDrive::~EAutoDrive",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAutoDrive::~EAutoDrive (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAutoDrive::Process",
+    "PS2 0x00148220"
+   ]
+  },
+  {
+   "xbox": "0x0003e800",
+   "expect": "EAwardHitToPlayer::Process",
+   "name": "EAwardHitToPlayer::~EAwardHitToPlayer",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAwardHitToPlayer::~EAwardHitToPlayer (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAwardHitToPlayer::Process",
+    "PS2 0x00148540"
+   ]
+  },
+  {
+   "xbox": "0x0003e870",
+   "expect": "EAwardKillToPlayer::Process",
+   "name": "EAwardKillToPlayer::~EAwardKillToPlayer",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAwardKillToPlayer::~EAwardKillToPlayer (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAwardKillToPlayer::Process",
+    "PS2 0x00148600"
+   ]
+  },
+  {
+   "xbox": "0x0003e940",
+   "expect": "EButtonMsgOff::Process",
+   "name": "EButtonMsgOff::~EButtonMsgOff",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EButtonMsgOff::~EButtonMsgOff (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EButtonMsgOff::Process",
+    "PS2 0x00148ad8"
+   ]
+  },
+  {
+   "xbox": "0x0003e9b0",
+   "expect": "EButtonMsgOn::Process",
+   "name": "EButtonMsgOn::~EButtonMsgOn",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EButtonMsgOn::~EButtonMsgOn (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EButtonMsgOn::Process",
+    "PS2 0x00148b98"
+   ]
+  },
+  {
+   "xbox": "0x0003ea60",
+   "expect": "ECall911::Process",
+   "name": "ECall911::~ECall911",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ECall911::~ECall911 (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ECall911::Process",
+    "PS2 0x00148c98"
+   ]
+  },
+  {
+   "xbox": "0x0003eae0",
+   "expect": "ECallStage::Process",
+   "name": "ECallStage::~ECallStage",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ECallStage::~ECallStage (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ECallStage::Process",
+    "PS2 0x00148d50"
+   ]
+  },
+  {
+   "xbox": "0x0003ecc0",
+   "expect": "ECameraShake::Process",
+   "name": "ECameraShake::~ECameraShake",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ECameraShake::~ECameraShake (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ECameraShake::Process",
+    "PS2 0x00149118"
+   ]
+  },
+  {
+   "xbox": "0x0003ed70",
+   "expect": "ECameraUpdate::Process",
+   "name": "ECameraUpdate::~ECameraUpdate",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ECameraUpdate::~ECameraUpdate (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ECameraUpdate::Process",
+    "PS2 0x00149240"
+   ]
+  },
+  {
+   "xbox": "0x0003ee00",
+   "expect": "ECameraZoom::Process",
+   "name": "ECameraZoom::~ECameraZoom",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ECameraZoom::~ECameraZoom (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ECameraZoom::Process",
+    "PS2 0x00149338"
+   ]
+  },
+  {
+   "xbox": "0x0003ef10",
+   "expect": "EChangeCarCameraView::Process",
+   "name": "EChangeCarCameraView::~EChangeCarCameraView",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EChangeCarCameraView::~EChangeCarCameraView (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EChangeCarCameraView::Process",
+    "PS2 0x00149528"
+   ]
+  },
+  {
+   "xbox": "0x0003f260",
+   "expect": "EClearBitMagicCounter::Process",
+   "name": "EClearBitMagicCounter::~EClearBitMagicCounter",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EClearBitMagicCounter::~EClearBitMagicCounter (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EClearBitMagicCounter::Process",
+    "PS2 0x00149ba8"
+   ]
+  },
+  {
+   "xbox": "0x0003f300",
+   "expect": "EClearProgrammerEvent::Process",
+   "name": "EClearProgrammerEvent::~EClearProgrammerEvent",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EClearProgrammerEvent::~EClearProgrammerEvent (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EClearProgrammerEvent::Process",
+    "PS2 0x00149c88"
+   ]
+  },
+  {
+   "xbox": "0x0003f470",
+   "expect": "EDeactivateAIElement::Process",
+   "name": "EDeactivateAIElement::~EDeactivateAIElement",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EDeactivateAIElement::~EDeactivateAIElement (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EDeactivateAIElement::Process",
+    "PS2 0x0014b510"
+   ]
+  },
+  {
+   "xbox": "0x0003f550",
+   "expect": "EDisablePowerUp::Process",
+   "name": "EDisablePowerUp::~EDisablePowerUp",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EDisablePowerUp::~EDisablePowerUp (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EDisablePowerUp::Process",
+    "PS2 0x0014b630"
+   ]
+  },
+  {
+   "xbox": "0x0003f610",
+   "expect": "EDisableTrigger::Process",
+   "name": "EDisableTrigger::~EDisableTrigger",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EDisableTrigger::~EDisableTrigger (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EDisableTrigger::Process",
+    "PS2 0x0014b790"
+   ]
+  },
+  {
+   "xbox": "0x0003f690",
+   "expect": "EDisplayText::Process",
+   "name": "EDisplayText::~EDisplayText",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EDisplayText::~EDisplayText (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EDisplayText::Process",
+    "PS2 0x0014b8f8"
+   ]
+  },
+  {
+   "xbox": "0x0003f720",
+   "expect": "EDropMine::Process",
+   "name": "EDropMine::~EDropMine",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EDropMine::~EDropMine (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EDropMine::Process",
+    "PS2 0x0014b9c8"
+   ]
+  },
+  {
+   "xbox": "0x0003f7f0",
+   "expect": "EEnablePowerUp::Process",
+   "name": "EEnablePowerUp::~EEnablePowerUp",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EEnablePowerUp::~EEnablePowerUp (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EEnablePowerUp::Process",
+    "PS2 0x0014bb58"
+   ]
+  },
+  {
+   "xbox": "0x0003f8c0",
+   "expect": "EEnableTrigger::Process",
+   "name": "EEnableTrigger::~EEnableTrigger",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EEnableTrigger::~EEnableTrigger (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EEnableTrigger::Process",
+    "PS2 0x0014bcd8"
+   ]
+  },
+  {
+   "xbox": "0x0003f900",
+   "expect": "EEndCameraAnim::Process",
+   "name": "EEndCameraAnim::~EEndCameraAnim",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EEndCameraAnim::~EEndCameraAnim (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EEndCameraAnim::Process",
+    "PS2 0x0014bdb8"
+   ]
+  },
+  {
+   "xbox": "0x0003fab0",
+   "expect": "EEndMission::Process",
+   "name": "EEndMission::~EEndMission",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EEndMission::~EEndMission (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EEndMission::Process",
+    "PS2 0x0014c260"
+   ]
+  },
+  {
+   "xbox": "0x0003fb80",
+   "expect": "EExit::Process",
+   "name": "EExit::~EExit",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EExit::~EExit (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EExit::Process",
+    "PS2 0x0014c370"
+   ]
+  },
+  {
+   "xbox": "0x0003fc10",
+   "expect": "EFESimFrameUpdate::Process",
+   "name": "EFESimFrameUpdate::~EFESimFrameUpdate",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EFESimFrameUpdate::~EFESimFrameUpdate (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EFESimFrameUpdate::Process",
+    "PS2 0x0014c440"
+   ]
+  },
+  {
+   "xbox": "0x0003fca0",
+   "expect": "EFireEventList::Process",
+   "name": "EFireEventList::~EFireEventList",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EFireEventList::~EFireEventList (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EFireEventList::Process",
+    "PS2 0x0014c568"
+   ]
+  },
+  {
+   "xbox": "0x0003fd40",
+   "expect": "EFireRandomTrigger::Process",
+   "name": "EFireRandomTrigger::~EFireRandomTrigger",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EFireRandomTrigger::~EFireRandomTrigger (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EFireRandomTrigger::Process",
+    "PS2 0x0014c688"
+   ]
+  },
+  {
+   "xbox": "0x0003ff60",
+   "expect": "EFireTriggerSpeedCondition::Process",
+   "name": "EFireTriggerSpeedCondition::~EFireTriggerSpeedCondition",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EFireTriggerSpeedCondition::~EFireTriggerSpeedCondition (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EFireTriggerSpeedCondition::Process",
+    "PS2 0x0014c8c8"
+   ]
+  },
+  {
+   "xbox": "0x00040200",
+   "expect": "EGadgetOff::Process",
+   "name": "EGadgetOff::~EGadgetOff",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EGadgetOff::~EGadgetOff (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EGadgetOff::Process",
+    "PS2 0x0014efe8"
+   ]
+  },
+  {
+   "xbox": "0x00040270",
+   "expect": "EGadgetOn::Process",
+   "name": "EGadgetOn::~EGadgetOn",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EGadgetOn::~EGadgetOn (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EGadgetOn::Process",
+    "PS2 0x0014f0a0"
+   ]
+  },
+  {
+   "xbox": "0x00040300",
+   "expect": "EHideInstance::Process",
+   "name": "EHideInstance::~EHideInstance",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EHideInstance::~EHideInstance (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EHideInstance::Process",
+    "PS2 0x0014f168"
+   ]
+  },
+  {
+   "xbox": "0x00040340",
+   "expect": "EHideInstanceStatic::Process",
+   "name": "EHideInstanceStatic::~EHideInstanceStatic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EHideInstanceStatic::~EHideInstanceStatic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EHideInstanceStatic::Process",
+    "PS2 0x0014f218"
+   ]
+  },
+  {
+   "xbox": "0x000404c0",
+   "expect": "EIncMagicCounter::Process",
+   "name": "EIncMagicCounter::~EIncMagicCounter",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EIncMagicCounter::~EIncMagicCounter (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EIncMagicCounter::Process",
+    "PS2 0x0014fc50"
+   ]
+  },
+  {
+   "xbox": "0x00040530",
+   "expect": "EInflictDamage::Process",
+   "name": "EInflictDamage::~EInflictDamage",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EInflictDamage::~EInflictDamage (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EInflictDamage::Process",
+    "PS2 0x0014fd20"
+   ]
+  },
+  {
+   "xbox": "0x000405f0",
+   "expect": "EInfraRedOff::Process",
+   "name": "EInfraRedOff::~EInfraRedOff",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EInfraRedOff::~EInfraRedOff (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EInfraRedOff::Process",
+    "PS2 0x0014fe78"
+   ]
+  },
+  {
+   "xbox": "0x00040660",
+   "expect": "EInfraRedOn::Process",
+   "name": "EInfraRedOn::~EInfraRedOn",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EInfraRedOn::~EInfraRedOn (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EInfraRedOn::Process",
+    "PS2 0x0014ff28"
+   ]
+  },
+  {
+   "xbox": "0x00040710",
+   "expect": "EKickAIElement::Process",
+   "name": "EKickAIElement::~EKickAIElement",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EKickAIElement::~EKickAIElement (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EKickAIElement::Process",
+    "PS2 0x00150080"
+   ]
+  },
+  {
+   "xbox": "0x00040960",
+   "expect": "EKillObject::Process",
+   "name": "EKillObject::~EKillObject",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EKillObject::~EKillObject (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EKillObject::Process",
+    "PS2 0x001509c8"
+   ]
+  },
+  {
+   "xbox": "0x00040a30",
+   "expect": "EKillSentry::Process",
+   "name": "EKillSentry::~EKillSentry",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EKillSentry::~EKillSentry (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EKillSentry::Process",
+    "PS2 0x00150b18"
+   ]
+  },
+  {
+   "xbox": "0x00040ac0",
+   "expect": "ELavaHaze::Process",
+   "name": "ELavaHaze::~ELavaHaze",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ELavaHaze::~ELavaHaze (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ELavaHaze::Process",
+    "PS2 0x00150c20"
+   ]
+  },
+  {
+   "xbox": "0x00040b40",
+   "expect": "ELetterBoxOff::Process",
+   "name": "ELetterBoxOff::~ELetterBoxOff",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ELetterBoxOff::~ELetterBoxOff (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ELetterBoxOff::Process",
+    "PS2 0x00150ce8"
+   ]
+  },
+  {
+   "xbox": "0x00040bd0",
+   "expect": "ELetterBoxOn::Process",
+   "name": "ELetterBoxOn::~ELetterBoxOn",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ELetterBoxOn::~ELetterBoxOn (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ELetterBoxOn::Process",
+    "PS2 0x00150dc8"
+   ]
+  },
+  {
+   "xbox": "0x00040cb0",
+   "expect": "EMuzzleFlash::Process",
+   "name": "EMuzzleFlash::~EMuzzleFlash",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EMuzzleFlash::~EMuzzleFlash (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EMuzzleFlash::Process",
+    "PS2 0x001511e0"
+   ]
+  },
+  {
+   "xbox": "0x00040e50",
+   "expect": "ENuclearBlast::Process",
+   "name": "ENuclearBlast::~ENuclearBlast",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ENuclearBlast::~ENuclearBlast (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ENuclearBlast::Process",
+    "PS2 0x00151408"
+   ]
+  },
+  {
+   "xbox": "0x00040f10",
+   "expect": "EObjectiveAdd::Process",
+   "name": "EObjectiveAdd::~EObjectiveAdd",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EObjectiveAdd::~EObjectiveAdd (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EObjectiveAdd::Process",
+    "PS2 0x00151538"
+   ]
+  },
+  {
+   "xbox": "0x00040fb0",
+   "expect": "EObjectiveDisplayText::Process",
+   "name": "EObjectiveDisplayText::~EObjectiveDisplayText",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EObjectiveDisplayText::~EObjectiveDisplayText (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EObjectiveDisplayText::Process",
+    "PS2 0x00151618"
+   ]
+  },
+  {
+   "xbox": "0x00041040",
+   "expect": "EObjectiveFail::Process",
+   "name": "EObjectiveFail::~EObjectiveFail",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EObjectiveFail::~EObjectiveFail (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EObjectiveFail::Process",
+    "PS2 0x001516f0"
+   ]
+  },
+  {
+   "xbox": "0x000410e0",
+   "expect": "EObjectiveInsert::Process",
+   "name": "EObjectiveInsert::~EObjectiveInsert",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EObjectiveInsert::~EObjectiveInsert (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EObjectiveInsert::Process",
+    "PS2 0x001517e8"
+   ]
+  },
+  {
+   "xbox": "0x00041180",
+   "expect": "EObjectivePass::Process",
+   "name": "EObjectivePass::~EObjectivePass",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EObjectivePass::~EObjectivePass (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EObjectivePass::Process",
+    "PS2 0x001518d0"
+   ]
+  },
+  {
+   "xbox": "0x00041220",
+   "expect": "EObjectiveSetCurrent::Process",
+   "name": "EObjectiveSetCurrent::~EObjectiveSetCurrent",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EObjectiveSetCurrent::~EObjectiveSetCurrent (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EObjectiveSetCurrent::Process",
+    "PS2 0x001519c0"
+   ]
+  },
+  {
+   "xbox": "0x000412c0",
+   "expect": "EObjectiveSetIncomplete::Process",
+   "name": "EObjectiveSetIncomplete::~EObjectiveSetIncomplete",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EObjectiveSetIncomplete::~EObjectiveSetIncomplete (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EObjectiveSetIncomplete::Process",
+    "PS2 0x00151aa8"
+   ]
+  },
+  {
+   "xbox": "0x00041380",
+   "expect": "EPathChangeThrottleDynamic::Process",
+   "name": "EPathChangeThrottleDynamic::~EPathChangeThrottleDynamic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathChangeThrottleDynamic::~EPathChangeThrottleDynamic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathChangeThrottleDynamic::Process",
+    "PS2 0x00151c88"
+   ]
+  },
+  {
+   "xbox": "0x00041450",
+   "expect": "EPathChangeThrottleStatic::Process",
+   "name": "EPathChangeThrottleStatic::~EPathChangeThrottleStatic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathChangeThrottleStatic::~EPathChangeThrottleStatic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathChangeThrottleStatic::Process",
+    "PS2 0x00151dc0"
+   ]
+  },
+  {
+   "xbox": "0x00041520",
+   "expect": "EPathMultiplyThrottleDynamic::Process",
+   "name": "EPathMultiplyThrottleDynamic::~EPathMultiplyThrottleDynamic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathMultiplyThrottleDynamic::~EPathMultiplyThrottleDynamic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathMultiplyThrottleDynamic::Process",
+    "PS2 0x00151f38"
+   ]
+  },
+  {
+   "xbox": "0x00041600",
+   "expect": "EPathMultiplyThrottleStatic::Process",
+   "name": "EPathMultiplyThrottleStatic::~EPathMultiplyThrottleStatic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathMultiplyThrottleStatic::~EPathMultiplyThrottleStatic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathMultiplyThrottleStatic::Process",
+    "PS2 0x00152078"
+   ]
+  },
+  {
+   "xbox": "0x000416e0",
+   "expect": "EPathSFX::Process",
+   "name": "EPathSFX::~EPathSFX",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSFX::~EPathSFX (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSFX::Process",
+    "PS2 0x00152200"
+   ]
+  },
+  {
+   "xbox": "0x00041890",
+   "expect": "EPathSetAccelDelayDynamic::Process",
+   "name": "EPathSetAccelDelayDynamic::~EPathSetAccelDelayDynamic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSetAccelDelayDynamic::~EPathSetAccelDelayDynamic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSetAccelDelayDynamic::Process",
+    "PS2 0x00152770"
+   ]
+  },
+  {
+   "xbox": "0x00041930",
+   "expect": "EPathSetAccelDelayStatic::Process",
+   "name": "EPathSetAccelDelayStatic::~EPathSetAccelDelayStatic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSetAccelDelayStatic::~EPathSetAccelDelayStatic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSetAccelDelayStatic::Process",
+    "PS2 0x00152860"
+   ]
+  },
+  {
+   "xbox": "0x000419c0",
+   "expect": "EPathSetAccelerationDynamic::Process",
+   "name": "EPathSetAccelerationDynamic::~EPathSetAccelerationDynamic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSetAccelerationDynamic::~EPathSetAccelerationDynamic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSetAccelerationDynamic::Process",
+    "PS2 0x00152998"
+   ]
+  },
+  {
+   "xbox": "0x00041a60",
+   "expect": "EPathSetAccelerationStatic::Process",
+   "name": "EPathSetAccelerationStatic::~EPathSetAccelerationStatic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSetAccelerationStatic::~EPathSetAccelerationStatic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSetAccelerationStatic::Process",
+    "PS2 0x00152a88"
+   ]
+  },
+  {
+   "xbox": "0x00041af0",
+   "expect": "EPathSetDesiredThrottleDynamic::Process",
+   "name": "EPathSetDesiredThrottleDynamic::~EPathSetDesiredThrottleDynamic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSetDesiredThrottleDynamic::~EPathSetDesiredThrottleDynamic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSetDesiredThrottleDynamic::Process",
+    "PS2 0x00152bc0"
+   ]
+  },
+  {
+   "xbox": "0x00041b90",
+   "expect": "EPathSetDesiredThrottleStatic::Process",
+   "name": "EPathSetDesiredThrottleStatic::~EPathSetDesiredThrottleStatic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSetDesiredThrottleStatic::~EPathSetDesiredThrottleStatic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSetDesiredThrottleStatic::Process",
+    "PS2 0x00152cb0"
+   ]
+  },
+  {
+   "xbox": "0x00041c20",
+   "expect": "EPathSetRunningDynamic::Process",
+   "name": "EPathSetRunningDynamic::~EPathSetRunningDynamic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSetRunningDynamic::~EPathSetRunningDynamic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSetRunningDynamic::Process",
+    "PS2 0x00152de8"
+   ]
+  },
+  {
+   "xbox": "0x00041cc0",
+   "expect": "EPathSetRunningStatic::Process",
+   "name": "EPathSetRunningStatic::~EPathSetRunningStatic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSetRunningStatic::~EPathSetRunningStatic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSetRunningStatic::Process",
+    "PS2 0x00152ed8"
+   ]
+  },
+  {
+   "xbox": "0x00041d60",
+   "expect": "EPathSetThrottleDynamic::Process",
+   "name": "EPathSetThrottleDynamic::~EPathSetThrottleDynamic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSetThrottleDynamic::~EPathSetThrottleDynamic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSetThrottleDynamic::Process",
+    "PS2 0x00153010"
+   ]
+  },
+  {
+   "xbox": "0x00041e00",
+   "expect": "EPathSetThrottleStatic::Process",
+   "name": "EPathSetThrottleStatic::~EPathSetThrottleStatic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSetThrottleStatic::~EPathSetThrottleStatic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSetThrottleStatic::Process",
+    "PS2 0x00153100"
+   ]
+  },
+  {
+   "xbox": "0x00041e90",
+   "expect": "EPathSetTimeDynamic::Process",
+   "name": "EPathSetTimeDynamic::~EPathSetTimeDynamic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSetTimeDynamic::~EPathSetTimeDynamic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSetTimeDynamic::Process",
+    "PS2 0x00153238"
+   ]
+  },
+  {
+   "xbox": "0x00041f40",
+   "expect": "EPathSetTimeStatic::Process",
+   "name": "EPathSetTimeStatic::~EPathSetTimeStatic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSetTimeStatic::~EPathSetTimeStatic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSetTimeStatic::Process",
+    "PS2 0x00153340"
+   ]
+  },
+  {
+   "xbox": "0x00042060",
+   "expect": "EPause::Process",
+   "name": "EPause::~EPause",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPause::~EPause (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPause::Process",
+    "PS2 0x00153488"
+   ]
+  },
+  {
+   "xbox": "0x000420f0",
+   "expect": "EPlayActorEffect::Process",
+   "name": "EPlayActorEffect::~EPlayActorEffect",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPlayActorEffect::~EPlayActorEffect (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPlayActorEffect::Process",
+    "PS2 0x00153560"
+   ]
+  },
+  {
+   "xbox": "0x000421e0",
+   "expect": "EPlayCameraAnim::Process",
+   "name": "EPlayCameraAnim::~EPlayCameraAnim",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPlayCameraAnim::~EPlayCameraAnim (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPlayCameraAnim::Process",
+    "PS2 0x00153700"
+   ]
+  },
+  {
+   "xbox": "0x00042350",
+   "expect": "EPlayCameraSpline::Process",
+   "name": "EPlayCameraSpline::~EPlayCameraSpline",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPlayCameraSpline::~EPlayCameraSpline (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPlayCameraSpline::Process",
+    "PS2 0x001539a8"
+   ]
+  },
+  {
+   "xbox": "0x00042500",
+   "expect": "EPlayEffect::Process",
+   "name": "EPlayEffect::~EPlayEffect",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPlayEffect::~EPlayEffect (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPlayEffect::Process",
+    "PS2 0x00153f80"
+   ]
+  },
+  {
+   "xbox": "0x00042750",
+   "expect": "EPlayGiottoEffect::Process",
+   "name": "EPlayGiottoEffect::~EPlayGiottoEffect",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPlayGiottoEffect::~EPlayGiottoEffect (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPlayGiottoEffect::Process",
+    "PS2 0x001543e8"
+   ]
+  },
+  {
+   "xbox": "0x00042840",
+   "expect": "EPlayPOVDeath::Process",
+   "name": "EPlayPOVDeath::~EPlayPOVDeath",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPlayPOVDeath::~EPlayPOVDeath (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPlayPOVDeath::Process",
+    "PS2 0x00154570"
+   ]
+  },
+  {
+   "xbox": "0x000428d0",
+   "expect": "EPlaySound::Process",
+   "name": "EPlaySound::~EPlaySound",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPlaySound::~EPlaySound (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPlaySound::Process",
+    "PS2 0x00154658"
+   ]
+  },
+  {
+   "xbox": "0x000429d0",
+   "expect": "EPlaySystemAnim::Process",
+   "name": "EPlaySystemAnim::~EPlaySystemAnim",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPlaySystemAnim::~EPlaySystemAnim (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPlaySystemAnim::Process",
+    "PS2 0x00154ad8"
+   ]
+  },
+  {
+   "xbox": "0x00042be0",
+   "expect": "EPowerUp::Process",
+   "name": "EPowerUp::~EPowerUp",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPowerUp::~EPowerUp (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPowerUp::Process",
+    "PS2 0x001554c0"
+   ]
+  },
+  {
+   "xbox": "0x00042d20",
+   "expect": "EPowerUpAmmo::Process",
+   "name": "EPowerUpAmmo::~EPowerUpAmmo",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPowerUpAmmo::~EPowerUpAmmo (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPowerUpAmmo::Process",
+    "PS2 0x001556b8"
+   ]
+  },
+  {
+   "xbox": "0x00042e90",
+   "expect": "EPowerUpMultiDamage::Process",
+   "name": "EPowerUpMultiDamage::~EPowerUpMultiDamage",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPowerUpMultiDamage::~EPowerUpMultiDamage (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPowerUpMultiDamage::Process",
+    "PS2 0x00155a70"
+   ]
+  },
+  {
+   "xbox": "0x00042ee0",
+   "expect": "EPowerUpShield::Process",
+   "name": "EPowerUpShield::~EPowerUpShield",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPowerUpShield::~EPowerUpShield (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPowerUpShield::Process",
+    "PS2 0x00155b20"
+   ]
+  },
+  {
+   "xbox": "0x00042fa0",
+   "expect": "EPowerUpTimer::Process",
+   "name": "EPowerUpTimer::~EPowerUpTimer",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPowerUpTimer::~EPowerUpTimer (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPowerUpTimer::Process",
+    "PS2 0x00155c40"
+   ]
+  },
+  {
+   "xbox": "0x00043070",
+   "expect": "EProfileMissionSection::Process",
+   "name": "EProfileMissionSection::~EProfileMissionSection",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EProfileMissionSection::~EProfileMissionSection (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EProfileMissionSection::Process",
+    "PS2 0x00155dc0"
+   ]
+  },
+  {
+   "xbox": "0x000430e0",
+   "expect": "ERandomExplosion::Process",
+   "name": "ERandomExplosion::~ERandomExplosion",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ERandomExplosion::~ERandomExplosion (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ERandomExplosion::Process",
+    "PS2 0x00155ea8"
+   ]
+  },
+  {
+   "xbox": "0x00043290",
+   "expect": "EReleaseStream::Process",
+   "name": "EReleaseStream::~EReleaseStream",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EReleaseStream::~EReleaseStream (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EReleaseStream::Process",
+    "PS2 0x001560d8"
+   ]
+  },
+  {
+   "xbox": "0x000432e0",
+   "expect": "ERenderFrame::Process",
+   "name": "ERenderFrame::~ERenderFrame",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ERenderFrame::~ERenderFrame (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ERenderFrame::Process",
+    "PS2 0x001561b8"
+   ]
+  },
+  {
+   "xbox": "0x00043390",
+   "expect": "EResetAudioMix::Process",
+   "name": "EResetAudioMix::~EResetAudioMix",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EResetAudioMix::~EResetAudioMix (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EResetAudioMix::Process",
+    "PS2 0x001562c8"
+   ]
+  },
+  {
+   "xbox": "0x000434c0",
+   "expect": "ERevertAudioMix::Process",
+   "name": "ERevertAudioMix::~ERevertAudioMix",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ERevertAudioMix::~ERevertAudioMix (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ERevertAudioMix::Process",
+    "PS2 0x00156a58"
+   ]
+  },
+  {
+   "xbox": "0x00043560",
+   "expect": "ERollSub::Process",
+   "name": "ERollSub::~ERollSub",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ERollSub::~ERollSub (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ERollSub::Process",
+    "PS2 0x00156b50"
+   ]
+  },
+  {
+   "xbox": "0x00043670",
+   "expect": "EScaleFieldOfView::Process",
+   "name": "EScaleFieldOfView::~EScaleFieldOfView",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EScaleFieldOfView::~EScaleFieldOfView (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EScaleFieldOfView::Process",
+    "PS2 0x00156d20"
+   ]
+  },
+  {
+   "xbox": "0x000436b0",
+   "expect": "EScaleFog::Process",
+   "name": "EScaleFog::~EScaleFog",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EScaleFog::~EScaleFog (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EScaleFog::Process",
+    "PS2 0x00156dd8"
+   ]
+  },
+  {
+   "xbox": "0x00043740",
+   "expect": "EScheduleEvent::Process",
+   "name": "EScheduleEvent::~EScheduleEvent",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EScheduleEvent::~EScheduleEvent (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EScheduleEvent::Process",
+    "PS2 0x00156ea8"
+   ]
+  },
+  {
+   "xbox": "0x000437d0",
+   "expect": "ESentryMuzzleFlash::Process",
+   "name": "ESentryMuzzleFlash::~ESentryMuzzleFlash",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESentryMuzzleFlash::~ESentryMuzzleFlash (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESentryMuzzleFlash::Process",
+    "PS2 0x00156fb0"
+   ]
+  },
+  {
+   "xbox": "0x000438d0",
+   "expect": "ESetAFXMode::Process",
+   "name": "ESetAFXMode::~ESetAFXMode",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetAFXMode::~ESetAFXMode (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetAFXMode::Process",
+    "PS2 0x00157130"
+   ]
+  },
+  {
+   "xbox": "0x00043960",
+   "expect": "ESetAreaBrightness::Process",
+   "name": "ESetAreaBrightness::~ESetAreaBrightness",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetAreaBrightness::~ESetAreaBrightness (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetAreaBrightness::Process",
+    "PS2 0x00157208"
+   ]
+  },
+  {
+   "xbox": "0x00043a00",
+   "expect": "ESetAudioMix::Process",
+   "name": "ESetAudioMix::~ESetAudioMix",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetAudioMix::~ESetAudioMix (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetAudioMix::Process",
+    "PS2 0x00157308"
+   ]
+  },
+  {
+   "xbox": "0x00043af0",
+   "expect": "ESetAutoDriveCamOff::Process",
+   "name": "ESetAutoDriveCamOff::~ESetAutoDriveCamOff",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetAutoDriveCamOff::~ESetAutoDriveCamOff (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetAutoDriveCamOff::Process",
+    "PS2 0x00157460"
+   ]
+  },
+  {
+   "xbox": "0x00043ba0",
+   "expect": "ESetAutoDriveCamOn::Process",
+   "name": "ESetAutoDriveCamOn::~ESetAutoDriveCamOn",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetAutoDriveCamOn::~ESetAutoDriveCamOn (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetAutoDriveCamOn::Process",
+    "PS2 0x001576e8"
+   ]
+  },
+  {
+   "xbox": "0x00043c60",
+   "expect": "ESetAutoDriveCamOnMovie::Process",
+   "name": "ESetAutoDriveCamOnMovie::~ESetAutoDriveCamOnMovie",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetAutoDriveCamOnMovie::~ESetAutoDriveCamOnMovie (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetAutoDriveCamOnMovie::Process",
+    "PS2 0x00157838"
+   ]
+  },
+  {
+   "xbox": "0x00043d50",
+   "expect": "ESetAvoidZone::Process",
+   "name": "ESetAvoidZone::~ESetAvoidZone",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetAvoidZone::~ESetAvoidZone (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetAvoidZone::Process",
+    "PS2 0x001579b8"
+   ]
+  },
+  {
+   "xbox": "0x00043e20",
+   "expect": "ESetBitMagicCounter::Process",
+   "name": "ESetBitMagicCounter::~ESetBitMagicCounter",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetBitMagicCounter::~ESetBitMagicCounter (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetBitMagicCounter::Process",
+    "PS2 0x00157af8"
+   ]
+  },
+  {
+   "xbox": "0x00043ec0",
+   "expect": "ESetCollisionGeometry::Process",
+   "name": "ESetCollisionGeometry::~ESetCollisionGeometry",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetCollisionGeometry::~ESetCollisionGeometry (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetCollisionGeometry::Process",
+    "PS2 0x00157be0"
+   ]
+  },
+  {
+   "xbox": "0x00043fa0",
+   "expect": "ESetCullDistanceFactor::Process",
+   "name": "ESetCullDistanceFactor::~ESetCullDistanceFactor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetCullDistanceFactor::~ESetCullDistanceFactor (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetCullDistanceFactor::Process",
+    "PS2 0x00157ec0"
+   ]
+  },
+  {
+   "xbox": "0x00043fe0",
+   "expect": "ESetFrameAnimationTime::Process",
+   "name": "ESetFrameAnimationTime::~ESetFrameAnimationTime",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetFrameAnimationTime::~ESetFrameAnimationTime (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetFrameAnimationTime::Process",
+    "PS2 0x00157f78"
+   ]
+  },
+  {
+   "xbox": "0x00044040",
+   "expect": "ESetJumpGravity::Process",
+   "name": "ESetJumpGravity::~ESetJumpGravity",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetJumpGravity::~ESetJumpGravity (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetJumpGravity::Process",
+    "PS2 0x00158050"
+   ]
+  },
+  {
+   "xbox": "0x00044070",
+   "expect": "ESetMagicCounter::Process",
+   "name": "ESetMagicCounter::~ESetMagicCounter",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetMagicCounter::~ESetMagicCounter (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetMagicCounter::Process",
+    "PS2 0x001580f8"
+   ]
+  },
+  {
+   "xbox": "0x00044100",
+   "expect": "ESetMagicCounterThreshold::Process",
+   "name": "ESetMagicCounterThreshold::~ESetMagicCounterThreshold",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetMagicCounterThreshold::~ESetMagicCounterThreshold (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetMagicCounterThreshold::Process",
+    "PS2 0x001581c8"
+   ]
+  },
+  {
+   "xbox": "0x00044190",
+   "expect": "ESetMissionMessage::Process",
+   "name": "ESetMissionMessage::~ESetMissionMessage",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetMissionMessage::~ESetMissionMessage (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetMissionMessage::Process",
+    "PS2 0x00158298"
+   ]
+  },
+  {
+   "xbox": "0x00044250",
+   "expect": "ESetNextPath::Process",
+   "name": "ESetNextPath::~ESetNextPath",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetNextPath::~ESetNextPath (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetNextPath::Process",
+    "PS2 0x00158508"
+   ]
+  },
+  {
+   "xbox": "0x000442e0",
+   "expect": "ESetObjective::Process",
+   "name": "ESetObjective::~ESetObjective",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetObjective::~ESetObjective (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetObjective::Process",
+    "PS2 0x00158648"
+   ]
+  },
+  {
+   "xbox": "0x00044400",
+   "expect": "ESetRecordedGameTime::Process",
+   "name": "ESetRecordedGameTime::~ESetRecordedGameTime",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetRecordedGameTime::~ESetRecordedGameTime (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetRecordedGameTime::Process",
+    "PS2 0x00158938"
+   ]
+  },
+  {
+   "xbox": "0x00044450",
+   "expect": "ESetReflectiveObject::Process",
+   "name": "ESetReflectiveObject::~ESetReflectiveObject",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetReflectiveObject::~ESetReflectiveObject (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetReflectiveObject::Process",
+    "PS2 0x001589f0"
+   ]
+  },
+  {
+   "xbox": "0x00044510",
+   "expect": "ESetRenderVariation::Process",
+   "name": "ESetRenderVariation::~ESetRenderVariation",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetRenderVariation::~ESetRenderVariation (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetRenderVariation::Process",
+    "PS2 0x00158b88"
+   ]
+  },
+  {
+   "xbox": "0x00044610",
+   "expect": "ESetSimRate::Process",
+   "name": "ESetSimRate::~ESetSimRate",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetSimRate::~ESetSimRate (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetSimRate::Process",
+    "PS2 0x00158d28"
+   ]
+  },
+  {
+   "xbox": "0x00044660",
+   "expect": "ESetSpecialWeapon::Process",
+   "name": "ESetSpecialWeapon::~ESetSpecialWeapon",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetSpecialWeapon::~ESetSpecialWeapon (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetSpecialWeapon::Process",
+    "PS2 0x00158df0"
+   ]
+  },
+  {
+   "xbox": "0x00044760",
+   "expect": "ESetSubtitle::Process",
+   "name": "ESetSubtitle::~ESetSubtitle",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetSubtitle::~ESetSubtitle (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetSubtitle::Process",
+    "PS2 0x00158fc0"
+   ]
+  },
+  {
+   "xbox": "0x000448b0",
+   "expect": "ESetTimer::Process",
+   "name": "ESetTimer::~ESetTimer",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetTimer::~ESetTimer (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetTimer::Process",
+    "PS2 0x001591f8"
+   ]
+  },
+  {
+   "xbox": "0x00044970",
+   "expect": "ESetVideo::Process",
+   "name": "ESetVideo::~ESetVideo",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetVideo::~ESetVideo (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetVideo::Process",
+    "PS2 0x001592d8"
+   ]
+  },
+  {
+   "xbox": "0x00044c20",
+   "expect": "ESetWaypoint::Process",
+   "name": "ESetWaypoint::~ESetWaypoint",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetWaypoint::~ESetWaypoint (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetWaypoint::Process",
+    "PS2 0x00159840"
+   ]
+  },
+  {
+   "xbox": "0x00044d00",
+   "expect": "EShowInstance::Process",
+   "name": "EShowInstance::~EShowInstance",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EShowInstance::~EShowInstance (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EShowInstance::Process",
+    "PS2 0x00159a88"
+   ]
+  },
+  {
+   "xbox": "0x00044d40",
+   "expect": "EShowInstanceStatic::Process",
+   "name": "EShowInstanceStatic::~EShowInstanceStatic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EShowInstanceStatic::~EShowInstanceStatic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EShowInstanceStatic::Process",
+    "PS2 0x00159b38"
+   ]
+  },
+  {
+   "xbox": "0x00044df0",
+   "expect": "ESimEndFrame::Process",
+   "name": "ESimEndFrame::~ESimEndFrame",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESimEndFrame::~ESimEndFrame (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESimEndFrame::Process",
+    "PS2 0x00159c68"
+   ]
+  },
+  {
+   "xbox": "0x00044e80",
+   "expect": "ESpawnDramaticSmackable::Process",
+   "name": "ESpawnDramaticSmackable::~ESpawnDramaticSmackable",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESpawnDramaticSmackable::~ESpawnDramaticSmackable (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESpawnDramaticSmackable::Process",
+    "PS2 0x00159ec8"
+   ]
+  },
+  {
+   "xbox": "0x00045120",
+   "expect": "ESpawnExplosionStatic::Process",
+   "name": "ESpawnExplosionStatic::~ESpawnExplosionStatic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESpawnExplosionStatic::~ESpawnExplosionStatic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESpawnExplosionStatic::Process",
+    "PS2 0x0015b010"
+   ]
+  },
+  {
+   "xbox": "0x000453a0",
+   "expect": "ESpawnForceEffect::Process",
+   "name": "ESpawnForceEffect::~ESpawnForceEffect",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESpawnForceEffect::~ESpawnForceEffect (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESpawnForceEffect::Process",
+    "PS2 0x0015b2f8"
+   ]
+  },
+  {
+   "xbox": "0x00045880",
+   "expect": "ESpawnSentry::Process",
+   "name": "ESpawnSentry::~ESpawnSentry",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESpawnSentry::~ESpawnSentry (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESpawnSentry::Process",
+    "PS2 0x0015b900"
+   ]
+  },
+  {
+   "xbox": "0x000459b0",
+   "expect": "ESpawnSimplePhysics::Process",
+   "name": "ESpawnSimplePhysics::~ESpawnSimplePhysics",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESpawnSimplePhysics::~ESpawnSimplePhysics (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESpawnSimplePhysics::Process",
+    "PS2 0x0015bae0"
+   ]
+  },
+  {
+   "xbox": "0x00045d70",
+   "expect": "ESpawnTraffic::Process",
+   "name": "ESpawnTraffic::~ESpawnTraffic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESpawnTraffic::~ESpawnTraffic (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESpawnTraffic::Process",
+    "PS2 0x0015c080"
+   ]
+  },
+  {
+   "xbox": "0x00046050",
+   "expect": "EStartEffect::Process",
+   "name": "EStartEffect::~EStartEffect",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EStartEffect::~EStartEffect (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EStartEffect::Process",
+    "PS2 0x0015c520"
+   ]
+  },
+  {
+   "xbox": "0x00046380",
+   "expect": "EStopEffect::Process",
+   "name": "EStopEffect::~EStopEffect",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EStopEffect::~EStopEffect (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EStopEffect::Process",
+    "PS2 0x0015cb80"
+   ]
+  },
+  {
+   "xbox": "0x00046540",
+   "expect": "EStopSoundPos::Process",
+   "name": "EStopSoundPos::~EStopSoundPos",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EStopSoundPos::~EStopSoundPos (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EStopSoundPos::Process",
+    "PS2 0x0015cd90"
+   ]
+  },
+  {
+   "xbox": "0x000465b0",
+   "expect": "EStopTimedAction::Process",
+   "name": "EStopTimedAction::~EStopTimedAction",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EStopTimedAction::~EStopTimedAction (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EStopTimedAction::Process",
+    "PS2 0x0015ce68"
+   ]
+  },
+  {
+   "xbox": "0x00046720",
+   "expect": "ESuppressEffect::Process",
+   "name": "ESuppressEffect::~ESuppressEffect",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESuppressEffect::~ESuppressEffect (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESuppressEffect::Process",
+    "PS2 0x0015d320"
+   ]
+  },
+  {
+   "xbox": "0x00046850",
+   "expect": "ESwitchEffectOff::Process",
+   "name": "ESwitchEffectOff::~ESwitchEffectOff",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESwitchEffectOff::~ESwitchEffectOff (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESwitchEffectOff::Process",
+    "PS2 0x0015d538"
+   ]
+  },
+  {
+   "xbox": "0x000468f0",
+   "expect": "ESwitchEffectOn::Process",
+   "name": "ESwitchEffectOn::~ESwitchEffectOn",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESwitchEffectOn::~ESwitchEffectOn (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESwitchEffectOn::Process",
+    "PS2 0x0015d650"
+   ]
+  },
+  {
+   "xbox": "0x00046990",
+   "expect": "ESwitchStingerChannel::Process",
+   "name": "ESwitchStingerChannel::~ESwitchStingerChannel",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESwitchStingerChannel::~ESwitchStingerChannel (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESwitchStingerChannel::Process",
+    "PS2 0x0015d760"
+   ]
+  },
+  {
+   "xbox": "0x00046a10",
+   "expect": "ETargetBeaconOnOff::Process",
+   "name": "ETargetBeaconOnOff::~ETargetBeaconOnOff",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ETargetBeaconOnOff::~ETargetBeaconOnOff (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ETargetBeaconOnOff::Process",
+    "PS2 0x0015d888"
+   ]
+  },
+  {
+   "xbox": "0x00046ae0",
+   "expect": "ETimerDrawOff::Process",
+   "name": "ETimerDrawOff::~ETimerDrawOff",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ETimerDrawOff::~ETimerDrawOff (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ETimerDrawOff::Process",
+    "PS2 0x0015d9f8"
+   ]
+  },
+  {
+   "xbox": "0x00046b60",
+   "expect": "ETimerDrawOn::Process",
+   "name": "ETimerDrawOn::~ETimerDrawOn",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ETimerDrawOn::~ETimerDrawOn (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ETimerDrawOn::Process",
+    "PS2 0x0015dab8"
+   ]
+  },
+  {
+   "xbox": "0x00046c20",
+   "expect": "EUnloadWeapon::Process",
+   "name": "EUnloadWeapon::~EUnloadWeapon",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EUnloadWeapon::~EUnloadWeapon (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EUnloadWeapon::Process",
+    "PS2 0x0015dcf8"
+   ]
+  },
+  {
+   "xbox": "0x00047b90",
+   "expect": "EHitWindow::Process",
+   "name": "EHitWindow::~EHitWindow",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EHitWindow::~EHitWindow (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EHitWindow::Process",
+    "PS2 0x0014f480"
+   ]
+  },
+  {
+   "xbox": "0x00048170",
+   "expect": "EPathSFXUpdate::Process",
+   "name": "EPathSFXUpdate::~EPathSFXUpdate",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPathSFXUpdate::~EPathSFXUpdate (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPathSFXUpdate::Process",
+    "PS2 0x00152440"
+   ]
+  },
+  {
+   "xbox": "0x00048540",
+   "expect": "EPlaySoundPos::Process",
+   "name": "EPlaySoundPos::~EPlaySoundPos",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPlaySoundPos::~EPlaySoundPos (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPlaySoundPos::Process",
+    "PS2 0x00154798"
+   ]
+  },
+  {
+   "xbox": "0x00048ec0",
+   "expect": "EAICommand::Process",
+   "name": "EAICommand::~EAICommand",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAICommand::~EAICommand (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAICommand::Process",
+    "PS2 0x00145ff8"
+   ]
+  },
+  {
+   "xbox": "0x000495d0",
+   "expect": "EActivateAIElement::Process",
+   "name": "EActivateAIElement::~EActivateAIElement",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EActivateAIElement::~EActivateAIElement (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EActivateAIElement::Process",
+    "PS2 0x001476b8"
+   ]
+  },
+  {
+   "xbox": "0x00049790",
+   "expect": "EAudioUpdate::Process",
+   "name": "EAudioUpdate::~EAudioUpdate",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAudioUpdate::~EAudioUpdate (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAudioUpdate::Process",
+    "PS2 0x00147e30"
+   ]
+  },
+  {
+   "xbox": "0x00049a80",
+   "expect": "EAutoDriveSpeedChange::Process",
+   "name": "EAutoDriveSpeedChange::~EAutoDriveSpeedChange",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAutoDriveSpeedChange::~EAutoDriveSpeedChange (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAutoDriveSpeedChange::Process",
+    "PS2 0x001482f8"
+   ]
+  },
+  {
+   "xbox": "0x00049ae0",
+   "expect": "EAutoDriveSteering::Process",
+   "name": "EAutoDriveSteering::~EAutoDriveSteering",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EAutoDriveSteering::~EAutoDriveSteering (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EAutoDriveSteering::Process",
+    "PS2 0x001483d0"
+   ]
+  },
+  {
+   "xbox": "0x00049b90",
+   "expect": "EBashCarAlongObjectAxis::Process",
+   "name": "EBashCarAlongObjectAxis::~EBashCarAlongObjectAxis",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EBashCarAlongObjectAxis::~EBashCarAlongObjectAxis (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EBashCarAlongObjectAxis::Process",
+    "PS2 0x001486d8"
+   ]
+  },
+  {
+   "xbox": "0x00049d40",
+   "expect": "ECinematicCamera::Process",
+   "name": "ECinematicCamera::~ECinematicCamera",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ECinematicCamera::~ECinematicCamera (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ECinematicCamera::Process",
+    "PS2 0x00149910"
+   ]
+  },
+  {
+   "xbox": "0x0004a820",
+   "expect": "EControlToCPU::Process",
+   "name": "EControlToCPU::~EControlToCPU",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EControlToCPU::~EControlToCPU (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EControlToCPU::Process",
+    "PS2 0x0014ac38"
+   ]
+  },
+  {
+   "xbox": "0x0004a890",
+   "expect": "EControlToPlayer::Process",
+   "name": "EControlToPlayer::~EControlToPlayer",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EControlToPlayer::~EControlToPlayer (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EControlToPlayer::Process",
+    "PS2 0x0014ad18"
+   ]
+  },
+  {
+   "xbox": "0x0004a920",
+   "expect": "EControlToSpline::Process",
+   "name": "EControlToSpline::~EControlToSpline",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EControlToSpline::~EControlToSpline (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EControlToSpline::Process",
+    "PS2 0x0014ae60"
+   ]
+  },
+  {
+   "xbox": "0x0004a9d0",
+   "expect": "ECustomTransition::Process",
+   "name": "ECustomTransition::~ECustomTransition",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ECustomTransition::~ECustomTransition (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ECustomTransition::Process",
+    "PS2 0x0014b020"
+   ]
+  },
+  {
+   "xbox": "0x0004aad0",
+   "expect": "EDamagePlayer::Process",
+   "name": "EDamagePlayer::~EDamagePlayer",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EDamagePlayer::~EDamagePlayer (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EDamagePlayer::Process",
+    "PS2 0x0014b3e0"
+   ]
+  },
+  {
+   "xbox": "0x0004ab60",
+   "expect": "EEndCarStop::Process",
+   "name": "EEndCarStop::~EEndCarStop",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EEndCarStop::~EEndCarStop (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EEndCarStop::Process",
+    "PS2 0x0014c048"
+   ]
+  },
+  {
+   "xbox": "0x0004abc0",
+   "expect": "EEndControlToSpline::Process",
+   "name": "EEndControlToSpline::~EEndControlToSpline",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EEndControlToSpline::~EEndControlToSpline (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EEndControlToSpline::Process",
+    "PS2 0x0014c110"
+   ]
+  },
+  {
+   "xbox": "0x0004ac40",
+   "expect": "EFireWeapon::Process",
+   "name": "EFireWeapon::~EFireWeapon",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EFireWeapon::~EFireWeapon (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EFireWeapon::Process",
+    "PS2 0x0014ca60"
+   ]
+  },
+  {
+   "xbox": "0x0004c770",
+   "expect": "EForceCarStop::Process",
+   "name": "EForceCarStop::~EForceCarStop",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EForceCarStop::~EForceCarStop (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EForceCarStop::Process",
+    "PS2 0x0014ede0"
+   ]
+  },
+  {
+   "xbox": "0x0004c7f0",
+   "expect": "EKickObject::Process",
+   "name": "EKickObject::~EKickObject",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EKickObject::~EKickObject (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EKickObject::Process",
+    "PS2 0x00150390"
+   ]
+  },
+  {
+   "xbox": "0x0004ca20",
+   "expect": "EKillAIElement::Process",
+   "name": "EKillAIElement::~EKillAIElement",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EKillAIElement::~EKillAIElement (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EKillAIElement::Process",
+    "PS2 0x00150748"
+   ]
+  },
+  {
+   "xbox": "0x0004cbc0",
+   "expect": "EMaybeActivateAIElement::Process",
+   "name": "EMaybeActivateAIElement::~EMaybeActivateAIElement",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EMaybeActivateAIElement::~EMaybeActivateAIElement (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EMaybeActivateAIElement::Process",
+    "PS2 0x00150ec8"
+   ]
+  },
+  {
+   "xbox": "0x0004cdc0",
+   "expect": "EPlayCarCameraAnim::Process",
+   "name": "EPlayCarCameraAnim::~EPlayCarCameraAnim",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPlayCarCameraAnim::~EPlayCarCameraAnim (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPlayCarCameraAnim::Process",
+    "PS2 0x00153c48"
+   ]
+  },
+  {
+   "xbox": "0x0004cf50",
+   "expect": "EPlayerLose::Process",
+   "name": "EPlayerLose::~EPlayerLose",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPlayerLose::~EPlayerLose (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPlayerLose::Process",
+    "PS2 0x00154cb0"
+   ]
+  },
+  {
+   "xbox": "0x0004d1e0",
+   "expect": "EPlayerSetImmunity::Process",
+   "name": "EPlayerSetImmunity::~EPlayerSetImmunity",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPlayerSetImmunity::~EPlayerSetImmunity (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPlayerSetImmunity::Process",
+    "PS2 0x001550d8"
+   ]
+  },
+  {
+   "xbox": "0x0004d240",
+   "expect": "EPlayerWin::Process",
+   "name": "EPlayerWin::~EPlayerWin",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPlayerWin::~EPlayerWin (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPlayerWin::Process",
+    "PS2 0x001551b8"
+   ]
+  },
+  {
+   "xbox": "0x0004d3d0",
+   "expect": "EPowerUpHealth::Process",
+   "name": "EPowerUpHealth::~EPowerUpHealth",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EPowerUpHealth::~EPowerUpHealth (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EPowerUpHealth::Process",
+    "PS2 0x001558d0"
+   ]
+  },
+  {
+   "xbox": "0x0004d460",
+   "expect": "EResetPlayerCar::Process",
+   "name": "EResetPlayerCar::~EResetPlayerCar",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EResetPlayerCar::~EResetPlayerCar (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EResetPlayerCar::Process",
+    "PS2 0x00156390"
+   ]
+  },
+  {
+   "xbox": "0x0004d4c0",
+   "expect": "EResetPlayerCarPos::Process",
+   "name": "EResetPlayerCarPos::~EResetPlayerCarPos",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EResetPlayerCarPos::~EResetPlayerCarPos (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EResetPlayerCarPos::Process",
+    "PS2 0x00156460"
+   ]
+  },
+  {
+   "xbox": "0x0004d620",
+   "expect": "ERestart::Process",
+   "name": "ERestart::~ERestart",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ERestart::~ERestart (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ERestart::Process",
+    "PS2 0x001566b0"
+   ]
+  },
+  {
+   "xbox": "0x0004d7c0",
+   "expect": "EResume::Process",
+   "name": "EResume::~EResume",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EResume::~EResume (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EResume::Process",
+    "PS2 0x001568f0"
+   ]
+  },
+  {
+   "xbox": "0x0004d850",
+   "expect": "ESetAutoDriveCamOffMovie::Process",
+   "name": "ESetAutoDriveCamOffMovie::~ESetAutoDriveCamOffMovie",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetAutoDriveCamOffMovie::~ESetAutoDriveCamOffMovie (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetAutoDriveCamOffMovie::Process",
+    "PS2 0x00157540"
+   ]
+  },
+  {
+   "xbox": "0x0004d930",
+   "expect": "ESetCreakLevel::Process",
+   "name": "ESetCreakLevel::~ESetCreakLevel",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetCreakLevel::~ESetCreakLevel (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetCreakLevel::Process",
+    "PS2 0x00157cf8"
+   ]
+  },
+  {
+   "xbox": "0x0004d9d0",
+   "expect": "ESetNextAISpline::Process",
+   "name": "ESetNextAISpline::~ESetNextAISpline",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetNextAISpline::~ESetNextAISpline (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetNextAISpline::Process",
+    "PS2 0x00158370"
+   ]
+  },
+  {
+   "xbox": "0x0004da70",
+   "expect": "ESetRecSpeedOffset::Process",
+   "name": "ESetRecSpeedOffset::~ESetRecSpeedOffset",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetRecSpeedOffset::~ESetRecSpeedOffset (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetRecSpeedOffset::Process",
+    "PS2 0x001587f8"
+   ]
+  },
+  {
+   "xbox": "0x0004db10",
+   "expect": "ESetSubRollDirection::Process",
+   "name": "ESetSubRollDirection::~ESetSubRollDirection",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetSubRollDirection::~ESetSubRollDirection (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetSubRollDirection::Process",
+    "PS2 0x00158ee0"
+   ]
+  },
+  {
+   "xbox": "0x0004db70",
+   "expect": "ESetTerrain::Process",
+   "name": "ESetTerrain::~ESetTerrain",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetTerrain::~ESetTerrain (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetTerrain::Process",
+    "PS2 0x001590b8"
+   ]
+  },
+  {
+   "xbox": "0x0004dbd0",
+   "expect": "ESetVisualDamage::Process",
+   "name": "ESetVisualDamage::~ESetVisualDamage",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESetVisualDamage::~ESetVisualDamage (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESetVisualDamage::Process",
+    "PS2 0x00159660"
+   ]
+  },
+  {
+   "xbox": "0x0004dcb0",
+   "expect": "EShake::Process",
+   "name": "EShake::~EShake",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EShake::~EShake (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EShake::Process",
+    "PS2 0x001599c8"
+   ]
+  },
+  {
+   "xbox": "0x0004dd10",
+   "expect": "ESimFrameUpdate::Process",
+   "name": "ESimFrameUpdate::~ESimFrameUpdate",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESimFrameUpdate::~ESimFrameUpdate (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESimFrameUpdate::Process",
+    "PS2 0x00159d10"
+   ]
+  },
+  {
+   "xbox": "0x0004de70",
+   "expect": "ESpawnExplosion::Process",
+   "name": "ESpawnExplosion::~ESpawnExplosion",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ESpawnExplosion::~ESpawnExplosion (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ESpawnExplosion::Process",
+    "PS2 0x0015a098"
+   ]
+  },
+  {
+   "xbox": "0x0004e860",
+   "expect": "EStartMission::Process",
+   "name": "EStartMission::~EStartMission",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EStartMission::~EStartMission (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EStartMission::Process",
+    "PS2 0x0015c738"
+   ]
+  },
+  {
+   "xbox": "0x0004e9c0",
+   "expect": "ETwoWheelsOff::Process",
+   "name": "ETwoWheelsOff::~ETwoWheelsOff",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ETwoWheelsOff::~ETwoWheelsOff (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ETwoWheelsOff::Process",
+    "PS2 0x0015db78"
+   ]
+  },
+  {
+   "xbox": "0x0004ea10",
+   "expect": "ETwoWheelsOn::Process",
+   "name": "ETwoWheelsOn::~ETwoWheelsOn",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 ETwoWheelsOn::~ETwoWheelsOn (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess ETwoWheelsOn::Process",
+    "PS2 0x0015dc38"
+   ]
+  },
+  {
+   "xbox": "0x0004ef60",
+   "expect": "EStreamEvent::Process",
+   "name": "EStreamEvent::~EStreamEvent",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "event classes act in their destructors: same body as PS2 EStreamEvent::~EStreamEvent (does the event's work, then resets the vtable to Event's) without the deleting part. Was the guess EStreamEvent::Process",
+    "PS2 0x0015d000"
+   ]
+  }
+ ]
+}

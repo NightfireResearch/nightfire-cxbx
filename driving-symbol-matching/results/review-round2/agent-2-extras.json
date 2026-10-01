@@ -1,0 +1,7 @@
+[
+ {
+  "row": 3890,
+  "ps2": "0x001d8048",
+  "why": "RBulletStreak::Add(COORD3&,COORD3&,StreakType): wrapper called from DrawTracers/DrawBulletStreaks that calls the COORD4 Add at 0x1d7d78, as AUF's COORD3 overload does."
+ }
+]

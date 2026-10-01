@@ -1,0 +1,165 @@
+{
+ "batch": "034",
+ "program": "Driving.xbe",
+ "note": "Compiler-generated exception handling: frame handlers and unwind funclets (xbox_eh.py).",
+ "items": [
+  {
+   "xbox": "0x001506c8",
+   "expect": "FUN_001506c8",
+   "name": "~URefCounter_Frame_Handler_1506c8",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1a8c5c; JMP __CxxFrameHandler; installed by ~URefCounter (0x182b0)"
+   ]
+  },
+  {
+   "xbox": "0x001506c0",
+   "expect": "FUN_001506c0",
+   "name": "~URefCounter_Unwind_0_1506c0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of ~URefCounter's FuncInfo 0x1a8c5c (frame handler 0x1506c8); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00150828",
+   "expect": "FUN_00150828",
+   "name": "~URefCounter_Frame_Handler_150828",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1a8e00; JMP __CxxFrameHandler; installed by ~URefCounter (0x1a880)"
+   ]
+  },
+  {
+   "xbox": "0x00150820",
+   "expect": "FUN_00150820",
+   "name": "~URefCounter_Unwind_0_150820",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of ~URefCounter's FuncInfo 0x1a8e00 (frame handler 0x150828); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x001518a8",
+   "expect": "FUN_001518a8",
+   "name": "~AOneShotSound_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1ac304; JMP __CxxFrameHandler; installed by ~AOneShotSound (0x478a0)"
+   ]
+  },
+  {
+   "xbox": "0x001518a0",
+   "expect": "FUN_001518a0",
+   "name": "~AOneShotSound_Unwind_0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of ~AOneShotSound's FuncInfo 0x1ac304 (frame handler 0x1518a8); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00151d4c",
+   "expect": "FUN_00151d4c",
+   "name": "ProcessDafiSection_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1ad06c; JMP __CxxFrameHandler; installed by ProcessDafiSection (0x57a80)"
+   ]
+  },
+  {
+   "xbox": "0x00153448",
+   "expect": "FUN_00153448",
+   "name": "~ReflPrivateData_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1aeba8; JMP __CxxFrameHandler; installed by ~ReflPrivateData (0x982a0)"
+   ]
+  },
+  {
+   "xbox": "0x00153410",
+   "expect": "FUN_00153410",
+   "name": "~ReflPrivateData_Unwind_0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of ~ReflPrivateData's FuncInfo 0x1aeba8 (frame handler 0x153448); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x0015341e",
+   "expect": "FUN_0015341e",
+   "name": "~ReflPrivateData_Unwind_1",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 1 of the unwind map of ~ReflPrivateData's FuncInfo 0x1aeba8 (frame handler 0x153448); destroys a local when unwinding from state 1"
+   ]
+  },
+  {
+   "xbox": "0x0015342c",
+   "expect": "FUN_0015342c",
+   "name": "~ReflPrivateData_Unwind_2",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 2 of the unwind map of ~ReflPrivateData's FuncInfo 0x1aeba8 (frame handler 0x153448); destroys a local when unwinding from state 2"
+   ]
+  },
+  {
+   "xbox": "0x0015343a",
+   "expect": "FUN_0015343a",
+   "name": "~ReflPrivateData_Unwind_3",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 3 of the unwind map of ~ReflPrivateData's FuncInfo 0x1aeba8 (frame handler 0x153448); destroys a local when unwinding from state 3"
+   ]
+  },
+  {
+   "xbox": "0x001537f8",
+   "expect": "FUN_001537f8",
+   "name": "~Bolt_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1af03c; JMP __CxxFrameHandler; installed by ~Bolt (0x9f4c0)"
+   ]
+  },
+  {
+   "xbox": "0x001543cb",
+   "expect": "FUN_001543cb",
+   "name": "GetWorldNormal_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b0abc; JMP __CxxFrameHandler; installed by GetWorldNormal (0xc0e00)"
+   ]
+  },
+  {
+   "xbox": "0x00155082",
+   "expect": "FUN_00155082",
+   "name": "DrawGouraud_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1f84; JMP __CxxFrameHandler; installed by DrawGouraud (0xf58b0)"
+   ]
+  }
+ ]
+}

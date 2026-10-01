@@ -1,0 +1,215 @@
+{
+ "batch": "005",
+ "program": "Driving.xbe",
+ "note": "Undo Version Tracking's copied PS2 plates; hand-checked name fixes.",
+ "items": [
+  {
+   "xbox": "0x00018030",
+   "expect": "FUN_00018030",
+   "name": "URefCounter<ActModelDatabase::ModelInfo>::AddReference",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "call order in ActModelDatabase::LoadModel (its only caller); copies the name, looks it up with a stricmp tree find, as PS2 AddReference",
+    "PS2 0x001121f8"
+   ]
+  },
+  {
+   "xbox": "0x00021d50",
+   "expect": "FUN_00021d50",
+   "name": "AICharacterEnemyGround::AICharacterEnemyGround",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "call order in AIElementController::WakeUp; AICharacter base constructor, copies a MATRIX4 argument, sets the class vtable (PS2 signature takes MATRIX4 &, int)",
+    "PS2 0x0011b518"
+   ]
+  },
+  {
+   "xbox": "0x00031850",
+   "expect": "FUN_00031850",
+   "name": "AIHelicopter::EnableTargetBeacon",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "last call in RegisterHelicopter, as on PS2; allocates a WTargetable when none; next to AIHelicopter::DisableTargetBeacon (0x318d0)",
+    "PS2 0x00138528"
+   ]
+  },
+  {
+   "xbox": "0x00035850",
+   "expect": "FUN_00035850",
+   "name": "AIVehicle::SetPhysicsObject",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "second call in RegisterHelicopter, as on PS2: a one-field setter; its 6 callers are all AIVehicleController registration code",
+    "PS2 0x0013dfd0"
+   ]
+  },
+  {
+   "xbox": "0x00036180",
+   "expect": "FUN_00036180",
+   "name": "AIVehicleController::ApproveAdditionalHelicopterSpawn",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "first call in RegisterHelicopter, as on PS2; counts helicopter slots against the controller's limit",
+    "PS2 0x0013f488"
+   ]
+  },
+  {
+   "xbox": "0x00036660",
+   "expect": "FUN_00036660",
+   "name": "AIVehicleController::RegisterHelicopter",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "body is PS2 RegisterHelicopter: ApproveAdditionalHelicopterSpawn, SetPhysicsObject, +0x134 = it, type 2, then EnableTargetBeacon(false) unless flagged. Called from WakeUp where PS2 calls the one-line wrapper RegisterSimHeli, which MSVC inlined",
+    "PS2 0x0013fa28"
+   ]
+  },
+  {
+   "xbox": "0x0003dcd0",
+   "expect": "FUN_0003dcd0",
+   "name": "EAICommand::EAICommand",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "stores its seven arguments and vtable_EAICommand, field for field as PS2",
+    "PS2 0x00145fc8"
+   ]
+  },
+  {
+   "xbox": "0x00055cf0",
+   "expect": "FUN_00055cf0",
+   "name": "AttributeValue::ComputeBytes",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "same switch on type codes -9..-1 with the same shifts as PS2; called by AttributeValue::Alloc",
+    "PS2 0x00173bb0"
+   ]
+  },
+  {
+   "xbox": "0x000cdfb0",
+   "expect": "FUN_000cdfb0",
+   "name": "WTargetPicker::GetSelectedTarget",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "call order in SWeaponManager::FireWeapon; returns the current target if its selected flag is set, else null, as PS2",
+    "PS2 0x0022af38"
+   ]
+  },
+  {
+   "xbox": "0x000d98d0",
+   "expect": "FUN_000d98d0",
+   "name": "GHud::DrawFontAndShadow",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "call order in GHud::DrawTimer; LOCALE_Symbol when no text, draws at (x+1, y+1) in the shadow colour and then at (x, y), as PS2",
+    "PS2 0x00244398"
+   ]
+  },
+  {
+   "xbox": "0x000f3450",
+   "expect": "FUN_000f3450",
+   "name": "EAGL::TextureRenderContext::TextureRenderContext",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "call order in EAGL::DeviceExtension::NewTextureRenderContext; two base/member constructors then stores the device argument, as PS2",
+    "PS2 0x00292358"
+   ]
+  },
+  {
+   "xbox": "0x00108340",
+   "expect": "FUN_00108340",
+   "name": "SHAPE_type",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "call order in SHAPE_createat; a switch mapping format codes to shape types, as PS2 (the codes are platform formats)",
+    "PS2 0x00260148"
+   ]
+  },
+  {
+   "xbox": "0x0010db40",
+   "expect": "FUN_0010db40",
+   "name": "FILE_loadat",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "called by UFileLoader::FileLoadAt as on PS2; packs (name, address, size, 1, 0) and runs FILESYS_atomic, as PS2 FILE_loadat",
+    "PS2 0x00257328"
+   ]
+  },
+  {
+   "xbox": "0x00116fc0",
+   "expect": "FUN_00116fc0",
+   "name": "UFileLoader::FileLoadAt",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "call order in IniFiles::IniFiles; builds the path (LookupAbsolutePath inlined: / to \\) then FILE_loadat, as PS2",
+    "PS2 0x002d7448"
+   ]
+  },
+  {
+   "xbox": "0x0011c5c0",
+   "expect": "FUN_0011c5c0",
+   "name": "EncryptDecrypt",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "call order in IniFiles::IniFiles; the same key table (0x359, 0xbb7, 0xeb7, ...) as PS2 and AUF EncryptDecrypt",
+    "PS2 0x002d9210"
+   ]
+  },
+  {
+   "xbox": "0x00127dc0",
+   "expect": "FUN_00127dc0",
+   "name": "AZoomObj::AZoomObj",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "call order in AVehicle::ActivateZoom; AMix::Get(\"Weapons Init\"), then an AVoice, as PS2",
+    "PS2 0x002dc500"
+   ]
+  }
+ ]
+}

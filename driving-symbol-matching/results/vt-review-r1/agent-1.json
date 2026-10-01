@@ -1,0 +1,660 @@
+{
+ "verdicts": [
+  {
+   "item": 60,
+   "xbox": "0x001251f0",
+   "ps2": "0x002f9798",
+   "name": "AFader::QueuePrimary",
+   "verdict": "accept",
+   "why": "Both are this->priv->Event tail thunks (mov ecx,[ecx]; jmp / lw a0,0(a0); jal); called right after AFader::Get(\"SpeechVsAmbience\") in ~E007Logo on both sides",
+   "intermediates": [
+    {
+     "xbox": "0x00124ca0",
+     "ps2": "0x002f8e00",
+     "name": "AFader::Priv::Event",
+     "why": "sole jmp target of the agreed QueuePrimary thunk; AMix Speech/NIS fade body"
+    }
+   ]
+  },
+  {
+   "item": 61,
+   "xbox": "0x000a0e90",
+   "ps2": "0x001e43e0",
+   "name": "RMissileStreak::Update",
+   "verdict": "accept",
+   "why": "Missile::Render calls it in the field_0x70a!=0 branch with no position arg on both sides (other branch calls the Update(pos) overload); identical ++[+4] body",
+   "intermediates": [
+    {
+     "xbox": "0x000a0ea0",
+     "ps2": "0x001e4640",
+     "name": "RMissileStreak::Update",
+     "why": "other branch of the same site in Missile::Render; same <0x60 count / +2 step body"
+    },
+    {
+     "xbox": "0x000a1330",
+     "ps2": "0x001e4258",
+     "name": "RMissileStreak::Draw",
+     "why": "called last in Missile::Render unless weaponType is 2 or 0x1e, same on both sides"
+    },
+    {
+     "xbox": "0x0007e6f0",
+     "ps2": "0x001afba8",
+     "name": "RHighLevelLightManager::AddMissile",
+     "why": "same call position in Missile::Render; body matches (+0xe4 count <2, +0x110/+0x114 compare)"
+    }
+   ]
+  },
+  {
+   "item": 62,
+   "xbox": "0x000cf490",
+   "ps2": "0x0022cad8",
+   "name": "WTrigger::UpdateRotPos",
+   "verdict": "accept",
+   "why": "Same body: y - [5]*0.5, flag 0x11 ==1 -> 3, 0.55 scale, then AddGridNodeDynamicElement with index (this - manager)>>6",
+   "intermediates": []
+  },
+  {
+   "item": 63,
+   "xbox": "0x0001c1d0",
+   "ps2": "0x00118900",
+   "name": "AICharacter::~AICharacter",
+   "verdict": "accept",
+   "why": "Stores vtable_AICharacter, destroys owned object, KillActorByHandle(actor); called by all four AICharacter subclass destructors on both sides (Xbox lacks the deleting part)",
+   "intermediates": []
+  },
+  {
+   "item": 64,
+   "xbox": "0x00035a20",
+   "ps2": "0x0013e120",
+   "name": "AIVehicle::GetRotPos",
+   "verdict": "accept",
+   "why": "Same simple/full rigid-body branch with GetSimpleRigidBody/GetRigidBody, VU0_quattom4, MATRIX4_multxlate; callers agree via GoToSleep/SyncRuleInfo chains",
+   "intermediates": []
+  },
+  {
+   "item": 65,
+   "xbox": "0x00017840",
+   "ps2": "0x00111828",
+   "name": "ActModelDatabase::UseModel",
+   "verdict": "accept",
+   "why": "Identical: return *GetReference(*this, arg+0x4c); sole caller ActCharacter::ChangeCharacter on both",
+   "intermediates": []
+  },
+  {
+   "item": 66,
+   "xbox": "0x000c4510",
+   "ps2": "0x00217588",
+   "name": "WCollisionMgr::GetInstanceList",
+   "verdict": "accept",
+   "why": "Builds a local vector and calls GetInstanceListGuts; callers RWindow::DrawBrokenWindows and WWorldPos::FindClosestFace agree",
+   "intermediates": [
+    {
+     "xbox": "0x000c43c0",
+     "ps2": "0x00217228",
+     "name": "WCollisionMgr::GetInstanceListGuts",
+     "why": "the only callee doing the work in the agreed GetInstanceList; grid-node walk with octagonal 0.25 distance test"
+    }
+   ]
+  },
+  {
+   "item": 67,
+   "xbox": "0x00021300",
+   "ps2": "0x00120e80",
+   "name": "AICharacterEnemySunroof::DoNeutral",
+   "verdict": "accept",
+   "why": "Same sequence: state=8, flag=1, Human::Activate, stimulus (0x13,8,time,2), anim table indexed by type, SetNewAnimation",
+   "intermediates": [
+    {
+     "xbox": "0x00077d70",
+     "ps2": "0x001a27a0",
+     "name": "RAnimEngine::Handle::ProcessStimuli",
+     "why": "same call (0x13,8,time,2); body scales time by rate*60, finds system, calls System::ProcessStimuli"
+    },
+    {
+     "xbox": "0x000ced50",
+     "ps2": "0x0022afa8",
+     "name": "WTargetPicker::RegisterTarget",
+     "why": "same guarded call on the target field; body walks list for duplicate then adds a reference"
+    }
+   ]
+  },
+  {
+   "item": 68,
+   "xbox": "0x00118cc0",
+   "ps2": "0x002dac58",
+   "name": "CARP::Instance::SetDimensions",
+   "verdict": "accept",
+   "why": "Identical bitfield packing at +0x3c, 250.0 threshold, ceil+ftol into 10-bit fields",
+   "intermediates": []
+  },
+  {
+   "item": 69,
+   "xbox": "0x00096ca0",
+   "ps2": "0x001d42c0",
+   "name": "RViewCamera::SetFillColour",
+   "verdict": "accept",
+   "why": "Stores colour then forwards to viewport SetBackgroundColour; sole caller RRenderHigh::RRenderHigh on both",
+   "intermediates": []
+  },
+  {
+   "item": 70,
+   "xbox": "0x0006f2a0",
+   "ps2": "0x00195728",
+   "name": "PhysicsObject::ApplyForces",
+   "verdict": "accept",
+   "why": "Same flag split: ResolveForce/ResolveTorque on rigid body vs scale by 0.0033333334/mass and accelerate simple body; five agreeing callers",
+   "intermediates": []
+  },
+  {
+   "item": 71,
+   "xbox": "0x0007e1b0",
+   "ps2": "0x001adc58",
+   "name": "RRenderSharedData::MarkAsDirty",
+   "verdict": "accept",
+   "why": "Clears RRenderSharedData fgLastUploadedCar (checked in SendPerCarInstance); sole caller RVehicle::Render on both",
+   "intermediates": []
+  },
+  {
+   "item": 72,
+   "xbox": "0x000b1f00",
+   "ps2": "0x001fd5f8",
+   "name": "SimpleRigidBody::SetOrientMat",
+   "verdict": "accept",
+   "why": "Wrapper over VU0_m4toquat(this,mat); callers Human::SetAICharacter, Human::Simulate and Sentry RotateSRB chain agree",
+   "intermediates": []
+  },
+  {
+   "item": 73,
+   "xbox": "0x00141710",
+   "ps2": "0x003128a0",
+   "name": "SNDMIXI_volramp",
+   "verdict": "accept",
+   "why": "Same vtable call (0x10, globals, 0) and NUM_MIXES loop with interpolatemix; sole caller MIX_audioslice",
+   "intermediates": []
+  },
+  {
+   "item": 74,
+   "xbox": "0x00062fe0",
+   "ps2": "0x0018bb90",
+   "name": "PBondCar::ImproveLanding",
+   "verdict": "accept",
+   "why": "Callers ProcessPhysics, ProcessSimplePhysics and snowmobile-physics chain agree; GetRigidBody, MATRIX4_mult, m4toquat callees",
+   "intermediates": []
+  },
+  {
+   "item": 75,
+   "xbox": "0x0007a280",
+   "ps2": "0x001a7360",
+   "name": "RCameraMath::BuildRotationMat4",
+   "verdict": "accept",
+   "why": "BuildRotationQuat into temp then VU0_quattom4; callers GetAimMatrix4 and SteerMissile agree",
+   "intermediates": [
+    {
+     "xbox": "0x0007a1e0",
+     "ps2": "0x001a72b8",
+     "name": "RCameraMath::BuildRotationQuat",
+     "why": "sole helper of the agreed BuildRotationMat4; half-angle sin scale of axis, cos into w, normalise"
+    }
+   ]
+  },
+  {
+   "item": 76,
+   "xbox": "0x000c6d70",
+   "ps2": "0x0021cad0",
+   "name": "WGrid::AddGridNodeDynamicElement",
+   "verdict": "accept",
+   "why": "Called from WTrigger::UpdateRotPos (item 62) and the UpdateDynamicNodes chain on both sides; FindNodes + vector alloc/free",
+   "intermediates": []
+  },
+  {
+   "item": 77,
+   "xbox": "0x000e3790",
+   "ps2": "0x0024a1f0",
+   "name": "GSubtitles::DisplaySubtitle",
+   "verdict": "accept",
+   "why": "Skip-cinematic check then clear, else store id/time, Reset splitter, LOCALE_Symbol, WordWrap 0x34; sole caller ~ESetSubtitle (Xbox inlines ClearSubtitles and Init)",
+   "intermediates": [
+    {
+     "xbox": "0x000b6590",
+     "ps2": "0x00206788",
+     "name": "SMissionManager::GoingToSkipCinematic",
+     "why": "first call of DisplaySubtitle on both; two-field non-zero test"
+    },
+    {
+     "xbox": "0x000e33e0",
+     "ps2": "0x0024acc0",
+     "name": "GSubtitleSplitter::Reset",
+     "why": "same body: delete each line up to count at +0x50, zero +0x50/+0x58/+0x5c"
+    },
+    {
+     "xbox": "0x000e31a0",
+     "ps2": "0x0024a9c0",
+     "name": "GSubtitleSplitter::WordWrap",
+     "why": "called with (text,0x34,splitter) in DisplaySubtitle/Init on both; result stored to +0x50"
+    }
+   ]
+  },
+  {
+   "item": 78,
+   "xbox": "0x000baf60",
+   "ps2": "0x0020d9f0",
+   "name": "SWeaponManager::UpdateTurret",
+   "verdict": "accept",
+   "why": "\"HAS_TURRET\" LookupBool on player, GetSelectedTarget, acos of dot product; caller SWeaponManager::Update",
+   "intermediates": []
+  },
+  {
+   "item": 79,
+   "xbox": "0x00022cc0",
+   "ps2": "0x00123f90",
+   "name": "AICharacterHands::ChangeWeapon",
+   "verdict": "accept",
+   "why": "Clamp 1..7, state==2 check, anim table -1 test, state 1/8, weapon model swap and SetNewAnimation; same structure",
+   "intermediates": []
+  },
+  {
+   "item": 80,
+   "xbox": "0x0009a3b0",
+   "ps2": "0x001d8048",
+   "name": "RBulletStreak::Add",
+   "verdict": "accept",
+   "why": "Widens two 3-vectors to w=1 and forwards to the other Add overload; callers DrawBulletStreaks and DrawTracers chain agree",
+   "intermediates": [
+    {
+     "xbox": "0x00071a60",
+     "ps2": "0x001993e8",
+     "name": "RayShell::DrawTracers",
+     "why": "Xbox caller path to DrawBulletStreaks mirrors PS2 DrawTracers; also calls ClearTracers (item 87) as on PS2"
+    }
+   ]
+  },
+  {
+   "item": 81,
+   "xbox": "0x000959f0",
+   "ps2": "0x001d2bf0",
+   "name": "RVehicle::TriggerTurboBoostSmoke",
+   "verdict": "accept",
+   "why": "if (this+0x358) TriggerTireSmoke; sole caller PBondCar::EnableRocketBoost",
+   "intermediates": [
+    {
+     "xbox": "0x000a6f10",
+     "ps2": "0x001eece8",
+     "name": "RVehicleParticle::TriggerTireSmoke",
+     "why": "same body: time+arg store, 2.0/arg (fields shifted +4)"
+    }
+   ]
+  },
+  {
+   "item": 82,
+   "xbox": "0x000984a0",
+   "ps2": "0x001c1af8",
+   "name": "RReflection::GetReflectionState",
+   "verdict": "reject",
+   "why": "Xbox RegisterSymbols calls it for GAME::ReflectionMap and GAME::SphereMap (PS2: RReflection::Texture); it loads a field whereas GetReflectionState returns an address, and Xbox EnvMapState2C uses dummyGetNullValue",
+   "intermediates": [
+    {
+     "xbox": "0x000984a0",
+     "ps2": "0x001c1ae8",
+     "name": "RReflection::Texture",
+     "why": "called at the ReflectionMap and SphereMap positions in RegisterSymbols on both sides; both load a field of the object at +0x4c/+0x58"
+    }
+   ]
+  },
+  {
+   "item": 83,
+   "xbox": "0x00074280",
+   "ps2": "0x0019bf70",
+   "name": "Sentry::TrackTarget",
+   "verdict": "accept",
+   "why": "Sole caller Sentry::Simulate; calls RotateSRB (0x73730) as on PS2; GetInstancePosition, rigid-body target math",
+   "intermediates": [
+    {
+     "xbox": "0x00073730",
+     "ps2": "0x0019c398",
+     "name": "Sentry::RotateSRB",
+     "why": "called from Sentry::Sentry and TrackTarget on both; first checks anim system state == 4 -> return 0"
+    }
+   ]
+  },
+  {
+   "item": 84,
+   "xbox": "0x00062a60",
+   "ps2": "0x0018aa88",
+   "name": "PBondCar::CalculateRPM",
+   "verdict": "accept",
+   "why": "Speed from rigid-body velocity; physics+0xc0==1 -> *100, no wheels on ground -> gas*7000; callers Simulate and RVehicle::UpdatePosition",
+   "intermediates": []
+  },
+  {
+   "item": 85,
+   "xbox": "0x00012840",
+   "ps2": "0x0010abe0",
+   "name": "ActActor::SetWeaponVelocity",
+   "verdict": "reject",
+   "why": "Xbox function is ActActor::Update (size 4.3x): SetCurrentActor, alpha fade *0.75, DoSkeletonPose, weapon-bone loop; it calls SetWeaponVelocity",
+   "intermediates": [
+    {
+     "xbox": "0x00012840",
+     "ps2": "0x00109140",
+     "name": "ActActor::Update",
+     "why": "same body as PS2 ActActor::Update; sole caller loops the actor list like ActActorDatabase::UpdateAll"
+    },
+    {
+     "xbox": "0x00013060",
+     "ps2": "0x0010b800",
+     "name": "ActActorDatabase::UpdateAll",
+     "why": "skips when frame advance == 3 and calls ActActor::Update per list node, as PS2; chain reaches ~ESimFrameUpdate on both"
+    }
+   ]
+  },
+  {
+   "item": 86,
+   "xbox": "0x000da0a0",
+   "ps2": "0x00245910",
+   "name": "GHud::TriggerObjectiveMsg",
+   "verdict": "accept",
+   "why": "Same fields 0x314/0x3b0/0x3b4/0x3bc, 5.0 timer, AMenuSound::Trigger SFX_misstatus; four objective event callers agree",
+   "intermediates": []
+  },
+  {
+   "item": 87,
+   "xbox": "0x000719a0",
+   "ps2": "0x00199358",
+   "name": "RayShell::ClearTracers",
+   "verdict": "accept",
+   "why": "Loop over tracers removing those with time < arg (DeleteTracer inlined, 0x20 stride); callers RayShell::Reset and DrawTracers agree",
+   "intermediates": []
+  },
+  {
+   "item": 88,
+   "xbox": "0x000e2710",
+   "ps2": "0x002488e8",
+   "name": "GLoadingScreen::DrawDots",
+   "verdict": "accept",
+   "why": "Two loops of 6 sprites from x=30, y=330.0, step width+5; caller GLoadingScreen::Update",
+   "intermediates": [
+    {
+     "xbox": "0x00076250",
+     "ps2": "0x0019f960",
+     "name": "Draw::DrawSprite",
+     "why": "only callee of DrawDots on both sides; wrapper filling a default UV/colour block and forwarding"
+    }
+   ]
+  },
+  {
+   "item": 89,
+   "xbox": "0x000ba7f0",
+   "ps2": "0x0020bdf8",
+   "name": "SWeaponManager::SortWeaponList",
+   "verdict": "accept",
+   "why": "Same weapon-list build loop with mission flag and 0x16 split, current/excluded weapon tests",
+   "intermediates": []
+  },
+  {
+   "item": 90,
+   "xbox": "0x0009d9a0",
+   "ps2": "0x001dc750",
+   "name": "REmpBolts::FindAnchors",
+   "verdict": "accept",
+   "why": "Called from the REmpBolts constructor reached from TriggerEmpBolts/AttackWithEmp on both sides; string compares over model nodes",
+   "intermediates": [
+    {
+     "xbox": "0x0009dc90",
+     "ps2": "0x001dbcb8",
+     "name": "REmpBolts::REmpBolts",
+     "why": "constructed after new(0x22c) in TriggerEmpBolts on both sides; stores owner, time twice, 1.0f"
+    }
+   ]
+  },
+  {
+   "item": 91,
+   "xbox": "0x00098470",
+   "ps2": "0x001c1b08",
+   "name": "RReflection::GetReflectionStateGlass",
+   "verdict": "reject",
+   "why": "Xbox RegisterSymbols calls it only for GAME::ReflectionCarPos; Xbox EnvMapState2G does not call it",
+   "intermediates": [
+    {
+     "xbox": "0x00098470",
+     "ps2": "0x001c28a0",
+     "name": "RReflection::GetReflectionCarPos",
+     "why": "unique call position (GAME::ReflectionCarPos) in RegisterSymbols; note PS2 body is a stub returning 0 while Xbox returns object+0x180"
+    }
+   ]
+  },
+  {
+   "item": 92,
+   "xbox": "0x0010a7a0",
+   "ps2": "0x002612f8",
+   "name": "THREAD_destroy",
+   "verdict": "accept",
+   "why": "~IFeedback calls it after the THREAD_testexit/SYNCTASK_run loop and before SIGNAL_destroy on both sides; -1 check and handle close",
+   "intermediates": [
+    {
+     "xbox": "0x0010a8f0",
+     "ps2": "0x002616b0",
+     "name": "THREAD_testexit",
+     "why": "loop condition before THREAD_destroy in ~IFeedback; GetExitCodeThread != STILL_ACTIVE"
+    },
+    {
+     "xbox": "0x0010a720",
+     "ps2": "0x00261bc0",
+     "name": "SIGNAL_destroy",
+     "why": "last call in ~IFeedback on both; closes the handle"
+    }
+   ]
+  },
+  {
+   "item": 93,
+   "xbox": "0x00035e90",
+   "ps2": "0x0013ec08",
+   "name": "AIVehicleController::FindAgentGroundVehiclePtr",
+   "verdict": "accept",
+   "why": "Loop over agent vehicles comparing GetPhysicsObject to arg; callers PBondCar::Simulate and ~EKillObject agree",
+   "intermediates": []
+  },
+  {
+   "item": 94,
+   "xbox": "0x0007afe0",
+   "ps2": "0x001aa028",
+   "name": "RegisterCallback::Resolve",
+   "verdict": "accept",
+   "why": "Walks the 16-entry callback list until one returns non-zero; caller ResolveEAGLReferences",
+   "intermediates": []
+  },
+  {
+   "item": 95,
+   "xbox": "0x0007e310",
+   "ps2": "0x001adea8",
+   "name": "RRenderSharedData::SendPerCarInstance",
+   "verdict": "accept",
+   "why": "fgLastUploadedCar check/store, SetLightingModel(0), ClearSharedBuffers, GetShadowBrightness; same callee set",
+   "intermediates": []
+  },
+  {
+   "item": 96,
+   "xbox": "0x0007c9e0",
+   "ps2": "0x001aad50",
+   "name": "RDrawElement::Draw",
+   "verdict": "reject",
+   "why": "Xbox function is RDrawGroup::FlushDrawLists: loops elements with 0x50 stride calling DrawGroupDrawInstance (Draw inlined), then clears the vector (size 4.7x)",
+   "intermediates": [
+    {
+     "xbox": "0x0007c9e0",
+     "ps2": "0x001aaea8",
+     "name": "RDrawGroup::FlushDrawLists",
+     "why": "element loop with 0x50 stride then vector reset; reached via the RRenderer::FlushDrawLists thunk"
+    },
+    {
+     "xbox": "0x0007d020",
+     "ps2": "0x001abfa0",
+     "name": "RRenderer::FlushDrawLists",
+     "why": "identical thunk: load this+0x10 and call RDrawGroup::FlushDrawLists"
+    }
+   ]
+  },
+  {
+   "item": 97,
+   "xbox": "0x00029d60",
+   "ps2": "0x0012ded8",
+   "name": "AIGroundVehicle::Reset",
+   "verdict": "accept",
+   "why": "Road-nav reset, SetSplinePath(0)-style call, SetPhysicsObject(0), field clears with 0xffff short; called from the constructor and via vtable on both",
+   "intermediates": []
+  },
+  {
+   "item": 98,
+   "xbox": "0x00134470",
+   "ps2": "0x002a9030",
+   "name": "_sprintf_r",
+   "verdict": "reject",
+   "why": "Xbox function is MSVC CRT _snprintf (buffer, count, _IOWRT|_IOSTRG=0x42, _flsbuf when full); PS2 is newlib reentrant sprintf with different arguments",
+   "intermediates": []
+  },
+  {
+   "item": 99,
+   "xbox": "0x00095a10",
+   "ps2": "0x001d2c18",
+   "name": "RVehicle::TriggerEmpBolts",
+   "verdict": "accept",
+   "why": "if (this+0x368==0) new(0x22c) REmpBolts(this); sole caller PBondCar::AttackWithEmp",
+   "intermediates": [
+    {
+     "xbox": "0x0009dc90",
+     "ps2": "0x001dbcb8",
+     "name": "REmpBolts::REmpBolts",
+     "why": "constructor called on the new(0x22c) result on both sides"
+    }
+   ]
+  },
+  {
+   "item": 100,
+   "xbox": "0x00122450",
+   "ps2": "0x002e8c00",
+   "name": "AStream::~AStream",
+   "verdict": "accept",
+   "why": "Complete-object destructor (vtable_AStream, stop, free priv 0x128, ~ABaseSound); 0x122550, currently named ~AStream, is the MSVC scalar deleting wrapper that calls it",
+   "intermediates": []
+  },
+  {
+   "item": 101,
+   "xbox": "0x0010b030",
+   "ps2": "0x002609d0",
+   "name": "PRINT_setchannelstate",
+   "verdict": "accept",
+   "why": "UMemory::Init calls it as (0,1) then (0xe,1) after setdevicestate(1,0),(2,1) and setchannelname(0xe,\"NFSPrintf\"), same order on both",
+   "intermediates": [
+    {
+     "xbox": "0x0010b050",
+     "ps2": "0x00260648",
+     "name": "PRINT_init",
+     "why": "called first in UMemory::Init's PRINT block and guarded by the init flag in each PRINT_ function"
+    },
+    {
+     "xbox": "0x0010aff0",
+     "ps2": "0x002608b0",
+     "name": "PRINT_setdevicestate",
+     "why": "called (1,0),(2,1) at the same place in UMemory::Init"
+    },
+    {
+     "xbox": "0x0010b1a0",
+     "ps2": "0x00260a60",
+     "name": "PRINT_setchannelname",
+     "why": "called (0xe,\"NFSPrintf\") at the same place in UMemory::Init"
+    }
+   ]
+  },
+  {
+   "item": 102,
+   "xbox": "0x00050180",
+   "ps2": "0x00166d90",
+   "name": "InputConfigManager::GetCurrentConfig",
+   "verdict": "accept",
+   "why": "Identical: arg==2 -> use current index at +4, return table[+8+i*4]; caller GHud::PauseOn",
+   "intermediates": []
+  },
+  {
+   "item": 103,
+   "xbox": "0x000e3390",
+   "ps2": "0x0024ac58",
+   "name": "GSubtitleSplitter::Init",
+   "verdict": "accept",
+   "why": "Same fields +0x50..+0x60, WordWrap(text,0x34,this), flag picks sim time vs TIMER_gettick",
+   "intermediates": []
+  },
+  {
+   "item": 104,
+   "xbox": "0x00082e00",
+   "ps2": "0x001b6848",
+   "name": "RPlayerCamera::UpdateADTargetAngles",
+   "verdict": "accept",
+   "why": "Called in the same branch of UpdateAutoDriveCam on both (after the /33 scale, when the +0x24 flag is clear) with two out-params; GetSelectedTarget",
+   "intermediates": [
+    {
+     "xbox": "0x000857d0",
+     "ps2": "0x001b72f0",
+     "name": "RPlayerCamera::UpdateAutoDriveCam",
+     "why": "sole caller of UpdateADTargetAngles on both sides; same branch structure around the call"
+    }
+   ]
+  },
+  {
+   "item": 105,
+   "xbox": "0x000d14e0",
+   "ps2": "0x00230c48",
+   "name": "WWorld::GetProcAnimStateFromInstance",
+   "verdict": "accept",
+   "why": "Identical range check on instance array (0x40 stride), flag 0x10, index*0x20 into state array; caller Smackable::Smackable",
+   "intermediates": []
+  },
+  {
+   "item": 106,
+   "xbox": "0x0007ff50",
+   "ps2": "0x001b1898",
+   "name": "RPathEngine::RPathHandle::GetPosition",
+   "verdict": "accept",
+   "why": "Identical *this+0x30; 8 callers each, all path users (WWorld::Open, ~EPathSFXUpdate, ProcessSplinePhysics chain), no sign of folding",
+   "intermediates": []
+  },
+  {
+   "item": 107,
+   "xbox": "0x00125ef0",
+   "ps2": "0x002fd868",
+   "name": "ABank::~ABank",
+   "verdict": "accept",
+   "why": "If data: SNDbankremove(handle), UMemory::Free(data), then ~AIndex; ABank::Load / GameLoop_CleanUp chains agree",
+   "intermediates": []
+  },
+  {
+   "item": 108,
+   "xbox": "0x000734a0",
+   "ps2": "0x0019c890",
+   "name": "Sentry::AddMuzzleFlash",
+   "verdict": "accept",
+   "why": "Append to 8-entry 0x20-stride global array: pos, dir, 5.0f; caller ~ESentryMuzzleFlash",
+   "intermediates": []
+  },
+  {
+   "item": 109,
+   "xbox": "0x00022f10",
+   "ps2": "0x00124348",
+   "name": "AICharacterHands::DoIdling",
+   "verdict": "accept",
+   "why": "Same three-way branch: flag -> Reload, globals differ -> vtable call, else IsAnimationDone -> idle anim from table",
+   "intermediates": [
+    {
+     "xbox": "0x00022e20",
+     "ps2": "0x00124170",
+     "name": "AICharacterHands::Reload",
+     "why": "same body: state==2 -> state 0xc, reload anim table, SetNewAnimation, flag 0 else flag 1"
+    },
+    {
+     "xbox": "0x00012140",
+     "ps2": "0x0010ac58",
+     "name": "ActActor::IsAnimationDone",
+     "why": "same body: state not 2/3 and time+rate*... >= length-1"
+    }
+   ]
+  }
+ ]
+}

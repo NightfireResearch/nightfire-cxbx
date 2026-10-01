@@ -1,0 +1,16 @@
+{
+ "batch": "048",
+ "program": "Driving.xbe",
+ "note": "Struct cluster16: the real ClearMessageList.",
+ "items": [
+  {
+   "xbox": "0x000b89c0",
+   "expect": "FUN_000b89c0",
+   "name": "SMissionManager::ClearMessageList",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "SMissionManager::ClearMessageList(void) (PS2 0x208d20). Walks and frees the message list at this+0xc (Xbox MSVC std::list), called right after ClearObjectiveList (0xb8960, which clears +0x0).",
+   "evidence": []
+  }
+ ]
+}

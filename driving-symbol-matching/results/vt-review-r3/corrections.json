@@ -1,0 +1,4 @@
+{"verdicts": [
+ {"item": "374c", "xbox": "0x00123870", "ps2": "0x002dd698", "name": "AVoice::Set", "verdict": "accept",
+  "why": "loop over the voice's view slots storing (bank, index), with View::Restart's SNDstop/-1 reset inlined, as PS2 AVoice::Set; callers AVoice ctor, AHelicopter, Play, GFXGallery::PARTICLE_Add as on PS2. Was the VT match AVoice::View::Restart"}
+]}

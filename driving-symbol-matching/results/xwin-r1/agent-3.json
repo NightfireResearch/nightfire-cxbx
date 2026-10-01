@@ -1,0 +1,312 @@
+{
+ "verdicts": [
+  {
+   "item": "60.1",
+   "xbox": "0x11b540",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL-generated std::map/_Tree destructor (erase all + FastFree head 0x18) inside UCarpNamespace dtors; PS2 USymbolTable::~USymbolTable is a class dtor with vtable - not this",
+   "intermediates": []
+  },
+  {
+   "item": "61.1",
+   "xbox": "0x11da20",
+   "ps2": "0x2f3328",
+   "name": "AMix::ClearMaster",
+   "verdict": "accept",
+   "why": "AMix::SetMaster calls it (and inlines a copy) as PS2 SetMaster->ClearMaster; body = if(master){Remove(master) inlined: Get/RemoveReference, last ref -> inlined ~AMix recursing into ClearMaster + FastFree 0x50; master=0}",
+   "intermediates": []
+  },
+  {
+   "item": "62.1",
+   "xbox": "0x125230",
+   "ps2": "0x2f9808",
+   "name": "AFader::Call911",
+   "verdict": "accept",
+   "why": "ECall911::~ECall911 -> AFader::Get(\"SpeechVsAmbience\") -> this on both; Priv::Call911 inlined via *this: stricmp(priv+4,\"city\") then flag sets, as PS2 Priv::Call911",
+   "intermediates": []
+  },
+  {
+   "item": "63.1",
+   "xbox": "0x144710",
+   "ps2": "0x317510",
+   "name": "SFILTER_rsf",
+   "verdict": "accept",
+   "why": "function pointer stored in slot 0 by SFILTER_rsfinit on both sides; resampler body: pitch 0x10000 test, 4-sample carry state, source filter call via +8",
+   "intermediates": []
+  },
+  {
+   "item": "64.1",
+   "xbox": "0x112d0",
+   "ps2": "0x108610",
+   "name": "ActActor::Fire",
+   "verdict": "accept",
+   "why": "ECX=*this (actCharacter), PlayEvent(0,10), RET 0x10 (4 float args) = PS2 Fire(this,4 floats){PlayEvent(actCharacter,0,10)}; callee 0x14740 is ActCharacter::PlayEvent (identical body)",
+   "intermediates": [
+    {
+     "item": "64.i1",
+     "xbox": "0x14740",
+     "ps2": "0x10d258",
+     "name": "ActCharacter::PlayEvent",
+     "verdict": "accept",
+     "why": "only callee of ActActor::Fire (0x112d0) on both sides; body identical: this->[idx*4+0x24] non-null -> forward event to ActWeapon::PlayEvent",
+     "intermediates": []
+    },
+    {
+     "item": "64.i2",
+     "xbox": "0x1add0",
+     "ps2": "0x1166a8",
+     "name": "ActWeapon::PlayEvent",
+     "verdict": "accept",
+     "why": "only callee of ActCharacter::PlayEvent on both sides; RAnimEngine::Handle::ProcessStimuli(this->anim, event, global, 1); anim field +0x2c Xbox / +0x68 PS2 (same shift as ActWeapon::SpawnWeapon)",
+     "intermediates": []
+    }
+   ]
+  },
+  {
+   "item": "65.1",
+   "xbox": "0x147f0",
+   "ps2": "0x10da98",
+   "name": "ActCharacter::SpawnWeapon",
+   "verdict": "accept",
+   "why": "called by ActActor::SpawnWeapon (0x11ff0) on both; forwards 4 args to ActWeapon::SpawnWeapon(this->weapons[idx at +0x24])",
+   "intermediates": [
+    {
+     "item": "65.i1",
+     "xbox": "0x11ff0",
+     "ps2": "0x10aa58",
+     "name": "ActActor::SpawnWeapon",
+     "verdict": "accept",
+     "why": "only caller of ActCharacter::SpawnWeapon on both sides; body same: pos/ori from +0xc object (+0x230/+0x220), (pos-prev)*20 velocity, optional callback *0.6, two m4toquat of +0x280/+0x200, angvel 0.05, SpawnWeapon(0,...)",
+     "intermediates": []
+    },
+    {
+     "item": "65.i2",
+     "xbox": "0x1adf0",
+     "ps2": "0x1166d0",
+     "name": "ActWeapon::SpawnWeapon",
+     "verdict": "accept",
+     "why": "only callee of ActCharacter::SpawnWeapon on both sides; Simulation::SpawnNewtonObject with pi (0x40490fd0), 4.0, this->model+0x40 and byte +0x1c",
+     "intermediates": []
+    }
+   ]
+  },
+  {
+   "item": "66.1",
+   "xbox": "0x16a30",
+   "ps2": "0x110098",
+   "name": "ActIK::Solve",
+   "verdict": "accept",
+   "why": "PS2 FUN_00110098 = sheet row 208 ActIK::Solve(EAGL::Transform&, COORD4&, Transform&, Transform&, Transform&, ...) (row 207 ActIK::Solve at 0x10ff20 +376 = 0x110098); ActIKSolver::Solve calls it with ik, T1[ik+4], this+0x20, T2[ik+4/8/0xc], optional +0x30 (row-207 wrapper inlined); body: ik +0x10/+0x14 lengths, 180/pi, +0x18..0x20, param6+0x30, final MATRIX4 mult; overload, name unused on Xbox",
+   "intermediates": []
+  },
+  {
+   "item": "67.1",
+   "xbox": "0x19870",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "generic vec3 lerp called only from EAGLAnim::FnPoseBlender::EvalSQT (4 call sites); inline helper, likely folded, no PS2 function; window candidates ActSkeleton::GetStillPose do not match",
+   "intermediates": []
+  },
+  {
+   "item": "68.1",
+   "xbox": "0x22770",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC compiler-generated vector constructor iterator (count loop calling a function pointer), many unrelated callers",
+   "intermediates": []
+  },
+  {
+   "item": "69.1",
+   "xbox": "0x2be70",
+   "ps2": "0x12de30",
+   "name": "AIGroundVehicle::~AIGroundVehicle",
+   "verdict": "accept",
+   "why": "non-deleting dtor: sets AIGroundVehicle vtable, four WRoadNav members (~WRoadNav + FastFree 0xc0) then AIVehicle::~AIVehicle, as PS2; called from AIVehicleController::Shutdown and EH unwind",
+   "intermediates": []
+  },
+  {
+   "item": "70.1",
+   "xbox": "0x4f1c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "ring-buffer push helper called by ActionQueue::ReceiveAction; PS2 ReceiveAction has the push inlined (no callees) and no PS2 function carries it",
+   "intermediates": []
+  },
+  {
+   "item": "71.1",
+   "xbox": "0x4fbc0",
+   "ps2": "0x165bc8",
+   "name": "IFeedback::Update",
+   "verdict": "accept",
+   "why": "called from the undefined Xbox thread loop at 0x4fe10 (wait -> Update -> test stop flag) = PS2 IFeedback::Thread->Update; same per-port rumble loop: enabled/gSuperEasy checks, *100/*125, 0xff clamps, jolt table indexed by counter and counter>>1, counter++; XInputSetState in place of PAD_setactuator",
+   "intermediates": []
+  },
+  {
+   "item": "72.1",
+   "xbox": "0x5bdc0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL std::list destructor (clear + FastFree head 0x1c) used by ~Schedule; PS2 candidates EmptiestBucket/Schedule_SimRate::Process do not match",
+   "intermediates": []
+  },
+  {
+   "item": "73.1",
+   "xbox": "0x75f60",
+   "ps2": "0x19f9c8",
+   "name": "Draw::DrawSprite",
+   "verdict": "accept",
+   "why": "PS2 FUN_0019f9c8 = sheet row 2860 Draw::DrawSprite(float,float,float,float,EAGL::Colour,COORD4*,...) overload (row 2859 DrawSprite 0x19f960+104 = 0x19f9c8, next row DrawBox at 0x19fe08); callers identical: DrawSprite wrapper, DrawBackground, DrawBloodCurtain, SPRITE_Draw2D, MakeCopy",
+   "intermediates": []
+  },
+  {
+   "item": "74.1",
+   "xbox": "0x7e190",
+   "ps2": "0x1ada20",
+   "name": "RRenderSharedData::Init",
+   "verdict": "accept",
+   "why": "third call in RRenderHigh::InitTrackRenderPostSim on both (after WRender::Init, RReflection::InitPostSim, before RVehicle::InitSharedBuffers); Xbox keeps only the tail vehiclesAllowed=0 (the global SetVehiclesAllowed swaps), PS2-only GeoPrim setup dropped",
+   "intermediates": []
+  },
+  {
+   "item": "75.1",
+   "xbox": "0x7f740",
+   "ps2": "0x1b07e8",
+   "name": "ROffscreenBuffer::MakeCopy",
+   "verdict": "accept",
+   "why": "called by RPostProcessing::GrabBackBuffer on both; Begin inlined, SetDepthTestMethod, SetZDepthNear, GetSize * int param, DrawSprite(0,0,w,h,col,uv,tex) with w/h at +0x14/+0x18 (PS2 +0x10/+0x14), End",
+   "intermediates": []
+  },
+  {
+   "item": "76.1",
+   "xbox": "0x8c370",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "function-local static singleton accessor (guard bit, zero 3 words, atexit); PS2 counterpart FUN_001c3bb8 at the same call position in InitTrackRenderPostSim is an unnamed static with no sheet row",
+   "intermediates": []
+  },
+  {
+   "item": "77.1",
+   "xbox": "0x8e0c0",
+   "ps2": "0x1c9980",
+   "name": "RSceneObj::GetBoneIndex",
+   "verdict": "accept",
+   "why": "called by RVehicle::PostLoad on both; DataLocateTag('Skel')/GetArray, loop over 0x20-byte bone records name at +0x1c, strcmp (inlined on Xbox) -> index+1",
+   "intermediates": []
+  },
+  {
+   "item": "78.1",
+   "xbox": "0x8e2d0",
+   "ps2": "0x1c9e38",
+   "name": "RSceneObj::GetCollisionInfo",
+   "verdict": "accept",
+   "why": "called by Newton::SpawnFromEvent on both; collision-info timestamp check, average by count, else __builtin_delete and clear, fallback to transform position",
+   "intermediates": []
+  },
+  {
+   "item": "79.1",
+   "xbox": "0x8f050",
+   "ps2": "0x1c8788",
+   "name": "RSceneObj::InitializeLighting",
+   "verdict": "accept",
+   "why": "only callee of RSceneObj::InitializeSceneObjectListLighting (list walk) on both; PS2 FUN_001c8788 is sheet row 3521 RSceneObj::InitializeLighting (row at 0x1c8760 size 576 covers the atexit dtor of its static WWorldPos + this body); same body: flag 0x2000, static WWorldPos, FindClosestFace, GetShadowBrightness*1.4 else RLightManager field",
+   "intermediates": []
+  },
+  {
+   "item": "80.1",
+   "xbox": "0x92c60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::erase(first,last) helper used by ~RStateManager; PS2 Debug/NameLookup do not match",
+   "intermediates": []
+  },
+  {
+   "item": "81.1",
+   "xbox": "0x93d90",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL std::map/_Tree destructor (erase + FastFree head 0x24) called from a scalar_deleting_destructor; not RTextureContext::~RTextureContext (no vtable/Unload)",
+   "intermediates": []
+  },
+  {
+   "item": "82.1",
+   "xbox": "0x95c60",
+   "ps2": "0x1d3440",
+   "name": "RVehicle::GetNeedlePos",
+   "verdict": "accept",
+   "why": "called by RVehicle::UpdatePosition on both; 16-byte table rows: clamp to [min,max], normalise, *scale + offset",
+   "intermediates": []
+  },
+  {
+   "item": "83.1",
+   "xbox": "0x968e0",
+   "ps2": "0x1d4628",
+   "name": "RViewCamera::EndView",
+   "verdict": "accept",
+   "why": "ViewPort::EndView, isActive(+0x3c)=0, RRenderer::EndView - identical to PS2 EndView",
+   "intermediates": []
+  },
+  {
+   "item": "84.1",
+   "xbox": "0x972c0",
+   "ps2": "0x1d5940",
+   "name": "RWorldCamera::GetAnchorAcceleration",
+   "verdict": "accept",
+   "why": "called by RPlayerCamera::UpdateDashboardCam on both; IsAnchorValid inlined, rigid body +0x60 dotted with orientation rows 0 and 2 (y=0), scaled by 1/mass +0x4c - the linear variant (angular reads +0x70, 3 rows)",
+   "intermediates": []
+  },
+  {
+   "item": "85.1",
+   "xbox": "0x98360",
+   "ps2": "0x1c1760",
+   "name": "RReflection::SetReflectiveSpecularStrength",
+   "verdict": "accept",
+   "why": "called by RRenderSharedData::SendPerCarInstance on both; store to [data+0xa0] + idx*0x80 + 0x6c",
+   "intermediates": []
+  },
+  {
+   "item": "86.1",
+   "xbox": "0x984c0",
+   "ps2": "0x1c1e10",
+   "name": "RReflection::Begin",
+   "verdict": "accept",
+   "why": "RReflection-file function called by the Xbox reflection draw (0x99ce0); as PS2 Begin: BeginFrame on the reflection target, RRenderer BeginView, this active flag =1 (Xbox +0x3c, PS2 +0x38; the inlined End that follows clears the same flag, as PS2 End clears +0x38), copies camera position into renderer +0x30..0x3c and sets w=1.0",
+   "intermediates": []
+  },
+  {
+   "item": "87.1",
+   "xbox": "0x9ebf0",
+   "ps2": "0x1e27c0",
+   "name": "RLightning::ControlPoint::CalcWorldPos",
+   "verdict": "accept",
+   "why": "called by RLightning::Bolt::Draw on both; if sceneobj(+0x50): GetTransform or LocateFX(+0x54) then transform +0x20 into +0x30, else copy",
+   "intermediates": []
+  },
+  {
+   "item": "88.1",
+   "xbox": "0xa4ee0",
+   "ps2": "0x1ea4d0",
+   "name": "RPostProcessing::PPPrivateData::ExtractAlphaInfo",
+   "verdict": "accept",
+   "why": "second call in RPostProcessing::GrabBackBuffer on both, on this->+4 (PPPrivateData) right after ROffscreenBuffer::MakeCopy; PS2 body is an empty stub, Xbox implements it (D3D lock of the copy; uses the +0x11c flag PS2 GrabBackBuffer reads)",
+   "intermediates": []
+  },
+  {
+   "item": "89.1",
+   "xbox": "0xd3b30",
+   "ps2": "0x234258",
+   "name": "GFXGallery::CULL_SetCanvas",
+   "verdict": "accept",
+   "why": "called by GGallery::CULL_SetCanvas on both; canvas = [+0x1414] + [+0x408+i*4]*0x90, bit 0x400 of +0x6c set, 0x800/0x1000 logic, count +0x142c++",
+   "intermediates": []
+  }
+ ]
+}

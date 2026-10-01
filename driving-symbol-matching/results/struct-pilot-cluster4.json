@@ -1,0 +1,523 @@
+{
+ "classes": [
+  {
+   "name": "RigidBody",
+   "size": 128,
+   "base": null,
+   "vtable": null,
+   "comment": "full rigid body state, pooled 64x at Simulation+0x1c with stride 0x80; no vptr; identical offsets on PS2 and Xbox (PS2 vectors are 16-byte slots whose w slots hold scalars; Xbox keeps the same slots)",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 16,
+     "type": "COORD4",
+     "name": "orientation",
+     "confidence": "high",
+     "evidence": "quaternion: SetOrientation(COORD4&) ad330 writes +0x0..+0xc; UpdatePositionAndOrientation b0ec0 R/W; ctor calls VU0_m4toquat. PS2 +0x0/+0x8 w8 in SetOrientation 1f85c0. Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 12,
+     "type": "COORD3",
+     "name": "position",
+     "confidence": "high",
+     "evidence": "addr-taken -> VU0_v4sub in ResetObject/ctor/CollideWith*; PS2 +0x10 same set incl. UpdateZonalInfo. Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "float",
+     "name": "bodyTensorX",
+     "confidence": "medium",
+     "evidence": "w slot of the position vector; PS2 GetBodyTensorMatrix4 1f7a80 reads exactly +0x1c/+0x2c/+0x3c; Xbox written in ctor/ResetObject, read in SetOrientation and UpdatePositionAndOrientation (world tensor rebuild). Tensor or inverse unknown; name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 12,
+     "type": "COORD3",
+     "name": "velocity",
+     "confidence": "high",
+     "evidence": "PS2 GetLocalVelocity 1f82e8 transforms +0x20 by the info matrix; Xbox GetLocalxxx ad220 does the same with +0x20; zeroed by ForceToSleep/ControlSleep"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "float",
+     "name": "bodyTensorY",
+     "confidence": "medium",
+     "evidence": "see bodyTensorX; PS2 GetBodyTensorMatrix4 reads +0x2c"
+    },
+    {
+     "offset": "0x30",
+     "size": 12,
+     "type": "COORD3",
+     "name": "angularVelocity",
+     "confidence": "medium",
+     "evidence": "zeroed by ForceToSleep/ControlSleep, used by GenerateImpulse/ResolveLeverForces on both builds; by elimination (+0x20 velocity, +0x40 momentum, +0x50 angular momentum). Xbox GetLocalyyy ad270 probably reads it (not checked)"
+    },
+    {
+     "offset": "0x3c",
+     "size": 4,
+     "type": "float",
+     "name": "bodyTensorZ",
+     "confidence": "medium",
+     "evidence": "see bodyTensorX; PS2 GetBodyTensorMatrix4 reads +0x3c"
+    },
+    {
+     "offset": "0x40",
+     "size": 12,
+     "type": "COORD3",
+     "name": "momentum",
+     "confidence": "high",
+     "evidence": "PS2 GetLocalMomentum 1f81b8 transforms +0x40; ApplyHeavyFriction ad170 damps +0x40 and +0x50"
+    },
+    {
+     "offset": "0x4c",
+     "size": 4,
+     "type": "float",
+     "name": "mass",
+     "confidence": "medium",
+     "evidence": "w slot; read by ResolveMassScaledForce/Force4/Torque4 (PS2) and ResolveMassScaledTorque4 ad470, InitLevers, GenerateImpulse. Could be inverse mass; name invented"
+    },
+    {
+     "offset": "0x50",
+     "size": 12,
+     "type": "COORD3",
+     "name": "angularMomentum",
+     "confidence": "high",
+     "evidence": "SetAngularMomentum ad310 writes +0x50 (via 116240 with the info matrix); ModifyAngularMomentum, ApplyAngularDamping; Xbox GetLocalzzz ad1d0 transforms +0x50 (so it is GetLocalAngularMomentum)"
+    },
+    {
+     "offset": "0x5c",
+     "size": 4,
+     "type": "RigidBodyInfo *",
+     "name": "info",
+     "confidence": "high",
+     "evidence": "pointer to this body's 0x500-byte entry at Simulation+0x24 (ctor calls Simulation::GetRigidBodyInfo); first member is the orientation MATRIX4 (PS2 lq 0x0..0x30 then transpose; Xbox -> VU0_MATRIX4_vect3mult); 20+ readers on both builds. Name invented"
+    },
+    {
+     "offset": "0x60",
+     "size": 12,
+     "type": "COORD3",
+     "name": "force",
+     "confidence": "high",
+     "evidence": "force accumulator: ResolveForce ad3f0 adds the argument to +0x60 (115ab0); ctor/ApplyInitialForcesAndTorques reset it; PS2 +0x60 w8 +0x68 w4. Name invented"
+    },
+    {
+     "offset": "0x6c",
+     "size": 1,
+     "type": "byte",
+     "name": "flags6c",
+     "confidence": "low",
+     "evidence": "byte R/W in ApplyAngularDamping/ApplyInitialForcesAndTorques/ControlSleep/ResetObject/ctor on both builds; meaning unknown, name invented"
+    },
+    {
+     "offset": "0x6d",
+     "size": 1,
+     "type": "byte",
+     "name": "flags6d",
+     "confidence": "low",
+     "evidence": "byte R/W in 14 methods (damage, collisions, sleep) on both builds; meaning unknown, name invented"
+    },
+    {
+     "offset": "0x6e",
+     "size": 1,
+     "type": "byte",
+     "name": "sleepState",
+     "confidence": "medium",
+     "evidence": "ResolveForce: if ==3 ignore the force, else set 2; written by ForceToSleep/ResetObject; PS2 byte +0x6e in the same methods. 3 looks like asleep/frozen, 2 awake. Name invented"
+    },
+    {
+     "offset": "0x6f",
+     "size": 1,
+     "type": "char",
+     "name": "ownerIndex",
+     "confidence": "high",
+     "evidence": "GetOwner ad100: MOVSX [ECX+0x6f] then loads [idx*4+0x2342a0] (owner table); PS2 GetOwner lb +0x6f. Name invented"
+    },
+    {
+     "offset": "0x70",
+     "size": 12,
+     "type": "COORD3",
+     "name": "torque",
+     "confidence": "high",
+     "evidence": "torque accumulator: ResolveTorque/ResolveMassScaledTorque4 -> VU0_v4scaleadd on +0x70; reset in ctor/ApplyInitialForcesAndTorques; PS2 +0x70 w8 +0x78 w4. Name invented"
+    },
+    {
+     "offset": "0x7c",
+     "size": 4,
+     "type": "uint",
+     "name": "stateFlags",
+     "confidence": "medium",
+     "evidence": "ResolveForce ad3f0 clears bit 1 (AND ~2) as a dword; byte accesses elsewhere; the gatherer also tags it float; PS2 lw/sw +0x7c. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "SimpleRigidBody",
+   "size": 64,
+   "base": null,
+   "vtable": null,
+   "comment": "point-mass body pooled at Simulation+0x20, stride 0x40; no vptr; same offsets on both builds. Ctor args (Xbox b1e10, as called from the PHelicopter ctor): (int ownerIdx, int type, COORD3& pos, COORD3& vel, COORD3& accel, MATRIX4* orient, float radius, float f8)",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 16,
+     "type": "COORD4",
+     "name": "orientation",
+     "confidence": "high",
+     "evidence": "SetOrientation b1f10 writes +0x0..+0xc; ctor converts its MATRIX4* arg with VU0_m4toquat(this,..); PS2 +0x0/+0x8 w8. Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 12,
+     "type": "COORD3",
+     "name": "position",
+     "confidence": "high",
+     "evidence": "ctor copies arg3 COORD3 to +0x10; UpdatePosition writes +0x10..+0x18; CheckCollisions LEA; PS2 same. Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 1,
+     "type": "byte",
+     "name": "bodyType",
+     "confidence": "low",
+     "evidence": "ctor stores arg2 byte (PHelicopter passes 8); PS2 +0x1c w[1,4] in ctor/CheckCollisions. Name invented"
+    },
+    {
+     "offset": "0x1d",
+     "size": 1,
+     "type": "char",
+     "name": "ownerIndex",
+     "confidence": "high",
+     "evidence": "ctor stores arg1; GetOwner b1ea0: MOVSX [ECX+0x1d] then [idx*4+0x2343a0] (owner table, 0x100 after RigidBody's); PS2 GetOwner lb +0x1d. Name invented"
+    },
+    {
+     "offset": "0x1e",
+     "size": 2,
+     "type": "ushort",
+     "name": "flags",
+     "confidence": "high",
+     "evidence": "ctor WORD 0; PHelicopter ctor ORs 0x108; NeedsCollisionCheck reads the low byte, SetCanHitTrigger RMWs the high byte (+0x1f); PS2 halfword +0x1e in all of these. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 12,
+     "type": "COORD3",
+     "name": "velocity",
+     "confidence": "high",
+     "evidence": "ctor copies arg4; GetScalarVelocity b1f30 = VU0_v3length(this+0x20); Accelerate/UpdatePosition write it; PS2 same. Name invented"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "float",
+     "name": "radius",
+     "confidence": "low",
+     "evidence": "ctor stores arg7 (PHelicopter passes 3.0f); read by CheckCollisions on both builds, so probably a collision radius. Name invented"
+    },
+    {
+     "offset": "0x30",
+     "size": 12,
+     "type": "COORD3",
+     "name": "acceleration",
+     "confidence": "low",
+     "evidence": "ctor copies arg5 (zero vector from PHelicopter); UpdatePosition takes its address; PS2 +0x30 w8 +0x38 w4. Name invented"
+    },
+    {
+     "offset": "0x3c",
+     "size": 4,
+     "type": "float",
+     "name": "unknown3c",
+     "confidence": "low",
+     "evidence": "ctor stores arg8 (PHelicopter passes 500.0f); PS2 swc1 +0x3c in ctor only. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "SimRandom",
+   "size": 16,
+   "base": null,
+   "vtable": null,
+   "comment": "LCG-style random generator, Simulation's first member; same layout on both builds",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "uint",
+     "name": "state",
+     "confidence": "medium",
+     "evidence": "Reset 5ccb0 sets 0xf874af01 then iterates state=(seed*state)&0xffff seed%50 times; read by SimRandom_Generate. Name invented"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "uint",
+     "name": "lastProduct",
+     "confidence": "low",
+     "evidence": "Reset stores 0 or the last unmasked seed*state product; Generate R/W. Name invented"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "uint",
+     "name": "seed",
+     "confidence": "high",
+     "evidence": "ctor 5cc80 and PS2 SetSeed(unsigned int) 17dba8 write +0x8; Reset reads it. Name invented"
+    },
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "uint",
+     "name": "counter",
+     "confidence": "low",
+     "evidence": "Reset stores 0 or seed%50 (iteration count); Generate RMW. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "PVehicle",
+   "size": 116,
+   "base": "PhysicsObject",
+   "vtable": "0x0018fa00",
+   "comment": "abstract vehicle base with an 83-slot vtable; size is a minimum (no deleting destructor or allocation size seen); the subclass (PBondCar) adds the rest. Own fields at the same offsets on both builds (vptr lives in PhysicsObject)",
+   "fields": [
+    {
+     "offset": "0x6c",
+     "size": 4,
+     "type": "uint",
+     "name": "missionEditorOnMask",
+     "confidence": "medium",
+     "evidence": "ctor 6f900 zeroes it; MissionEditorSwitch(bool on,int bit) 71000: on -> |= 1<<bit; off -> &= 0 (compiled as AND with 0<<bit). PS2 +0x6c same methods. Name invented"
+    },
+    {
+     "offset": "0x70",
+     "size": 4,
+     "type": "uint",
+     "name": "missionEditorOffMask",
+     "confidence": "medium",
+     "evidence": "mirror of +0x6c: on -> cleared (AND 0), off -> |= 1<<bit; ctor zeroes. PS2 +0x70. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "PHelicopter",
+   "size": 320,
+   "base": "PhysicsObject",
+   "vtable": "0x0018f8bc",
+   "comment": "helicopter physics object; 0x140 on Xbox (FastFree size in 6e300, allocated 320), PS2 0x144: identical offsets up to +0x134, then two PS2 4-byte bools at +0x138/+0x13c pack into bytes +0x138/+0x139 on Xbox and the trailing float moves from PS2 +0x140 to Xbox +0x13c. Owns a SimpleRigidBody in the Simulation pool (slot = PhysicsObject rigidBodySlot +0x4a)",
+   "fields": [
+    {
+     "offset": "0x6c",
+     "size": 4,
+     "type": "int",
+     "name": "heliClass",
+     "confidence": "low",
+     "evidence": "ctor stores 1; Simulate R/W; PS2 +0x6c same. Sheet has GetHeliClass(void); mapping unconfirmed, name from sheet"
+    },
+    {
+     "offset": "0x70",
+     "size": 4,
+     "type": "float",
+     "name": "roll",
+     "confidence": "low",
+     "evidence": "ctor 0, written in Simulate; PS2 float. Sheet GetRoll/SetRoll; could be +0x74 instead"
+    },
+    {
+     "offset": "0x74",
+     "size": 4,
+     "type": "float",
+     "name": "unknown74",
+     "confidence": "low",
+     "evidence": "ctor 0, written in Simulate; PS2 float. Name invented"
+    },
+    {
+     "offset": "0x78",
+     "size": 4,
+     "type": "float",
+     "name": "unknown78",
+     "confidence": "low",
+     "evidence": "ctor stores 1.0f; PS2 float W in ctor only. Name invented"
+    },
+    {
+     "offset": "0x7c",
+     "size": 12,
+     "type": "COORD3",
+     "name": "targetPos",
+     "confidence": "high",
+     "evidence": "ctor copies the second COORD3 argument here; PS2 SetTargetPos(COORD3) 194b98 writes +0x7c w8/+0x84 w4"
+    },
+    {
+     "offset": "0x88",
+     "size": 12,
+     "type": "COORD3",
+     "name": "destPos",
+     "confidence": "high",
+     "evidence": "ctor copies the same COORD3 here; PS2 SetDestPos(COORD3) 194bd8 writes +0x88 w8/+0x90 w4"
+    },
+    {
+     "offset": "0x94",
+     "size": 4,
+     "type": "float",
+     "name": "controlGas",
+     "confidence": "low",
+     "evidence": "four control floats zeroed in ctor and written by GetControllerInput on both builds; assignment follows the sheet order (Gas, Strafe, Steer, Altitude) and is unverified"
+    },
+    {
+     "offset": "0x98",
+     "size": 4,
+     "type": "float",
+     "name": "controlStrafe",
+     "confidence": "low",
+     "evidence": "see controlGas"
+    },
+    {
+     "offset": "0x9c",
+     "size": 4,
+     "type": "float",
+     "name": "controlSteer",
+     "confidence": "low",
+     "evidence": "see controlGas"
+    },
+    {
+     "offset": "0xa0",
+     "size": 4,
+     "type": "float",
+     "name": "controlAltitude",
+     "confidence": "low",
+     "evidence": "see controlGas"
+    },
+    {
+     "offset": "0xa4",
+     "size": 4,
+     "type": "ActionQueue *",
+     "name": "actionQueue",
+     "confidence": "high",
+     "evidence": "ctor 0; GetControllerInput calls ActionQueue::IsEmpty/GetAction/PopAction on it; ~PHelicopter 6e290 calls ~ActionQueue then FastFree(p,0x974). PS2 +0xa4 same. Name invented"
+    },
+    {
+     "offset": "0xa8",
+     "size": 1,
+     "type": "bool",
+     "name": "unknownA8",
+     "confidence": "low",
+     "evidence": "byte, ctor 0, Simulate R/W; PS2 byte at +0xa8 too (padding keeps +0xac aligned). Name invented"
+    },
+    {
+     "offset": "0xac",
+     "size": 128,
+     "type": "DamageZone[16]",
+     "name": "damageZones",
+     "confidence": "high",
+     "evidence": "ctor zeroes 16 x 8-byte entries from +0xac (loop ECX=0x10, stride 8) up to +0x12c; GetDamageZones(uint& n) 6dd10 sets n=16 and returns this+0xac; PS2 ApplyDamage takes +0xac/+0xb0. Name invented"
+    },
+    {
+     "offset": "0x12c",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknown12c",
+     "confidence": "low",
+     "evidence": "ctor 0; Simulate R/W; PS2 +0x12c also ApplyDamage. Name invented (AIHelicopter pointer from the sheet is a candidate)"
+    },
+    {
+     "offset": "0x130",
+     "size": 4,
+     "type": "float",
+     "name": "unknown130",
+     "confidence": "low",
+     "evidence": "ctor -1.0f; PS2 +0x130 float in ApplyDamage (damage timer?). Name invented"
+    },
+    {
+     "offset": "0x134",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknown134",
+     "confidence": "low",
+     "evidence": "ctor 0 (twice); Simulate R/W; PS2 +0x134 ApplyDamage/Simulate. Name invented (AIHelicopter pointer is a candidate)"
+    },
+    {
+     "offset": "0x138",
+     "size": 1,
+     "type": "bool",
+     "name": "scoreable",
+     "confidence": "low",
+     "evidence": "ctor 1; PS2 4-byte bool at +0x138 (ApplyDamage R/W). Sheet Get/SetScoreable(bool); mapping unconfirmed"
+    },
+    {
+     "offset": "0x139",
+     "size": 1,
+     "type": "bool",
+     "name": "proximityDestructEnabled",
+     "confidence": "low",
+     "evidence": "ctor sets it from an AttributeSet bool (580e0); when false the render object's bounding radius is scaled by 3.0 (8f550); PS2 +0x13c bool. Sheet GetProximityDestructEnabled; mapping inferred"
+    },
+    {
+     "offset": "0x13c",
+     "size": 4,
+     "type": "float",
+     "name": "destructDistance",
+     "confidence": "low",
+     "evidence": "ctor 2.0f then an AttributeSet float (582c0, FSTP); PS2 float at +0x140. Sheet GetDestructDistance; mapping inferred"
+    }
+   ]
+  },
+  {
+   "name": "RigidBodyInfo",
+   "size": 1280,
+   "if_missing": true,
+   "fields": []
+  },
+  {
+   "name": "ActionQueue",
+   "size": 2420,
+   "if_missing": true,
+   "fields": []
+  },
+  {
+   "name": "DamageZone",
+   "size": 8,
+   "if_missing": true,
+   "fields": []
+  }
+ ],
+ "vtable_slots": [],
+ "returns": {
+  "0x000b0b20": "RigidBody *",
+  "0x000ad100": "PhysicsObject *",
+  "0x000ad310": "void",
+  "0x000ad170": "void",
+  "0x000ad3f0": "void",
+  "0x000ad1d0": "COORD3 *",
+  "0x000ad220": "COORD3 *",
+  "0x000ad270": "COORD3 *",
+  "0x000adc80": "void",
+  "0x000b1e10": "SimpleRigidBody *",
+  "0x000b1ea0": "PhysicsObject *",
+  "0x000b1f30": "float",
+  "0x000b1fe0": "bool",
+  "0x000b1e90": "void",
+  "0x000b25c0": "void",
+  "0x0005cc80": "SimRandom *",
+  "0x0005cc90": "uint",
+  "0x0005ccb0": "void",
+  "0x0006f900": "PVehicle *",
+  "0x00071000": "void",
+  "0x0006d8f0": "PHelicopter *",
+  "0x0006dd10": "DamageZone *",
+  "0x0006e290": "void"
+ },
+ "skip_prototypes": [],
+ "notes": [
+  "RigidBody and SimpleRigidBody have no vptr and identical offsets on both builds: PS2 uses 16-byte vector slots and puts scalars (tensor diagonal, mass, info pointer, flag bytes) in the w slots; Xbox keeps the same slots.",
+  "Xbox RigidBody GetLocalxxx (0xad220) reads +0x20 = PS2 GetLocalVelocity; GetLocalzzz (0xad1d0) reads +0x50 = GetLocalAngularMomentum. GetLocalyyy (0xad270, not checked) is GetLocalMomentum (+0x40) or GetLocalAngularVelocity (+0x30). They return their hidden result pointer (EAX = arg), so the return is given as COORD3 *; PS2 returns COORD3 by value.",
+  "RigidBody/SimpleRigidBody GetOwner return entries of global tables 0x2342a0 / 0x2343a0 (0x100 apart = 64 RigidBody owners then SimpleRigidBody owners), indexed by a signed byte; PhysicsObject * inferred from InitLevers(PhysicsObject *, ...).",
+  "RigidBody +0x7c is tagged float by the gatherer but ResolveForce treats it as an integer bitmask (AND ~2); typed uint.",
+  "PVehicle::MissionEditorSwitch compiles 'mask &= 0<<bit' (XOR EDX,EDX; SHL; AND), i.e. it clears the whole other mask: probably a source bug (missing ~).",
+  "PVehicle size 0x74 is a lower bound only: no FastFree/allocation size under its tag, and subclass code is not scanned.",
+  "PHelicopter: Xbox 0x140, PS2 0x144: bools at PS2 +0x138/+0x13c pack to Xbox +0x138/+0x139; destructDistance moves PS2 +0x140 -> Xbox +0x13c. All earlier fields at the same offsets.",
+  "PHelicopter ctor 6d8f0 calls 0x6f190 (a PhysicsObject constructor variant, descriptor 0x18e54c, arg 10) rather than 0x6f100 used by PVehicle; it gets the SimpleRigidBody via 0xb2730 on Simulation 0x233ff0 (likely Simulation::GetSimpleRigidBody(slot)) and calls SimpleRigidBody::SimpleRigidBody(slot, 8, &destPos, &vel, zero, &mtx, 3.0f, 500.0f).",
+  "PHelicopter control floats +0x94..+0xa0, roll/heliClass, scoreable/proximityDestructEnabled and the +0x12c/+0x134 fields are named from the sheet's accessor list by guesswork (low); the inline accessors are not separate functions on Xbox.",
+  "SimRandom::Reset (0x5ccb0) is typed uint in Ghidra but EAX is only a leftover product; PS2 Reset(void): given as void.",
+  "Placeholders: RigidBodyInfo (0x500, Simulation+0x24 entry, starts with a MATRIX4), ActionQueue (0x974 from the FastFree in ~PHelicopter), DamageZone (8 bytes, 16 per helicopter)."
+ ]
+}

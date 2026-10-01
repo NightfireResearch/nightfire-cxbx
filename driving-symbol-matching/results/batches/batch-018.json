@@ -1,0 +1,166 @@
+{
+ "batch": "018",
+ "program": "Driving.xbe",
+ "skip_refused_creates": true,
+ "note": "Probable vtable pairs (one class-specific slot agreeing).",
+ "items": [
+  {
+   "xbox": "0x0001c110",
+   "expect": "FUN_0001c110",
+   "name": "ACharacter::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ACharacter slot 0 (PS2 002fc268, row 9094, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "probable vtable pair: its class-specific slot is already named alike on both platforms"
+   ]
+  },
+  {
+   "xbox": "0x000474d0",
+   "expect": "EAddObjective::~EAddObjective",
+   "name": "EAddObjective::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAddObjective slot 0 (PS2 00147af8, row 1210, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "probable vtable pair: its class-specific slot is already named alike on both platforms",
+    "was EAddObjective::~EAddObjective"
+   ]
+  },
+  {
+   "xbox": "0x00047990",
+   "expect": "EDisplayObjectiveText::~EDisplayObjectiveText",
+   "name": "EDisplayObjectiveText::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EDisplayObjectiveText slot 0 (PS2 0014b868, row 1315, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "probable vtable pair: its class-specific slot is already named alike on both platforms",
+    "was EDisplayObjectiveText::~EDisplayObjectiveText"
+   ]
+  },
+  {
+   "xbox": "0x00048800",
+   "expect": "ESapphirePole::~ESapphirePole",
+   "name": "ESapphirePole::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ESapphirePole slot 0 (PS2 00156cb0, row 1615, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "probable vtable pair: its class-specific slot is already named alike on both platforms",
+    "was ESapphirePole::~ESapphirePole"
+   ]
+  },
+  {
+   "xbox": "0x00048ce0",
+   "expect": "ESpawnSmackable::~ESpawnSmackable",
+   "name": "ESpawnSmackable::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ESpawnSmackable slot 0 (PS2 0015bbf8, row 1762, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "probable vtable pair: its class-specific slot is already named alike on both platforms",
+    "was ESpawnSmackable::~ESpawnSmackable"
+   ]
+  },
+  {
+   "xbox": "0x000a1ed0",
+   "expect": "FUN_000a1ed0",
+   "name": "RMovableParticleSystem::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RMovableParticleSystem slot 0 (PS2 001e61a0, row 4113, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "probable vtable pair: its class-specific slot is already named alike on both platforms"
+   ]
+  },
+  {
+   "xbox": "0x000b9e90",
+   "expect": "FUN_000b9e90",
+   "name": "SRuleRange::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "SRuleRange slot 0 (PS2 0020a598, row 4705, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "probable vtable pair: its class-specific slot is already named alike on both platforms"
+   ]
+  },
+  {
+   "xbox": "0x000b9f40",
+   "expect": "FUN_000b9f40",
+   "name": "SRuleProgCounter::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "SRuleProgCounter slot 0 (PS2 0020af20, row 4724, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "probable vtable pair: its class-specific slot is already named alike on both platforms"
+   ]
+  },
+  {
+   "xbox": "0x000b9f60",
+   "expect": "FUN_000b9f60",
+   "name": "SRuleProg::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "SRuleProg slot 0 (PS2 0020a3c8, row 4699, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "probable vtable pair: its class-specific slot is already named alike on both platforms"
+   ]
+  },
+  {
+   "xbox": "0x00045a70",
+   "expect": "ESpawnSmackable::Process",
+   "name": "ESpawnSmackable::~ESpawnSmackable",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by ESpawnSmackable::scalar_deleting_destructor (0x00048ce0) and stores ESpawnSmackable's vtable",
+    "probable vtable pair: its class-specific slot is already named alike on both platforms",
+    "was ESpawnSmackable::Process"
+   ]
+  },
+  {
+   "xbox": "0x0011dd00",
+   "expect": "FUN_0011dd00",
+   "name": "ACharacter::GetName",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ACharacter slot 2 (PS2 002fc318, row 9095, ghidra)",
+    "probable vtable pair: its class-specific slot is already named alike on both platforms"
+   ]
+  },
+  {
+   "xbox": "0x0011dd30",
+   "expect": "FUN_0011dd30",
+   "name": "ACharacter::~ACharacter",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by ACharacter::scalar_deleting_destructor (0x0001c110) and stores ACharacter's vtable",
+    "probable vtable pair: its class-specific slot is already named alike on both platforms"
+   ]
+  }
+ ]
+}

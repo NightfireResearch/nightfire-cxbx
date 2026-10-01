@@ -1,0 +1,598 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "ActionQueue",
+   "size": 2420,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "ActionQueueManager *",
+     "name": "manager",
+     "comment": "high: ctor 4f320 stores GetActionQueueManager() result; ~ActionQueue 4f1b0 passes [this] as ECX to UnRegisterQueue 4f440. PS2 +0x0 (Initialize/~ActionQueue). Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "int",
+     "name": "count",
+     "comment": "high: IsEmpty 4f220 returns [+4]==0; PopAction 4f250 decrements when >0; GetAction 4f290 tests >0; Flush 4f280 zeroes; buffer ctor 4f2d0 zeroes. PS2 +0x4 IsEmpty. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "int",
+     "name": "tail",
+     "comment": "medium: ring write index: 4f2d0/ctor/Flush set -1; advanced by ReceiveAction's helper 4f1c0. PS2 +0x8 Flush. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "int",
+     "name": "head",
+     "comment": "high: ring read index: GetAction reads entry at this+0x14+head*0xc; PopAction head++ and wraps to 0 when > capacity-1; Flush zeroes. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "int",
+     "name": "capacity",
+     "comment": "high: 4f2d0 stores 0xc8 (200); PopAction reads it for the wrap. Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "ActionData[200]",
+     "name": "actions",
+     "comment": "high: 4f2d0 constructs 200 x 12-byte entries (4f170(0,0,0)) from this+0x14 to 0x974; GetAction copies one out via a1ec0. PS2 ctors LEA +0x14. Name invented"
+    }
+   ],
+   "comment": "No vptr. Manager pointer + an embedded fixed ring buffer of 200 ActionData (12 bytes each). Ctor 4f320 runs the buffer ctor 4f2d0 on this+4 (loop of 200 x 4f170 over +0x14, stride 0xc), then GetActionQueueManager and RegisterQueue(this). Allocated with operator new(0x974) by PHelicopter/PBondCar/SWeaponManager/SMissionManager/RWorldCamera. Offsets identical on PS2."
+  },
+  {
+   "name": "ActionQueueManager",
+   "size": 16,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined4",
+     "name": "queuesAllocator",
+     "comment": "medium: MSVC vector allocator slot; never read (4f7d0 zeroes only +4..+0xc). Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "ActionQueue **",
+     "name": "queuesFirst",
+     "comment": "high: FeedQueue 4f360 / FlushAllQueues 4f3b0 / UnRegisterQueue 4f440 iterate [+4]..[+8], each element passed as ECX to ReceiveAction/Flush. PS2 +0x0. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "ActionQueue **",
+     "name": "queuesLast",
+     "comment": "high: loop end; UnRegisterQueue shifts the tail down and does [+8]-=4. PS2 +0x4. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "ActionQueue **",
+     "name": "queuesEnd",
+     "comment": "medium: capacity end, zeroed in 4f7d0; used by the push_back helper 4f830 (RegisterQueue 4f8a0). PS2 +0x8 read by RegisterQueue. Name invented"
+    }
+   ],
+   "comment": "Function-local static at 0x1e23f0 (guard byte 0x1e2400, atexit 0x15cde0) returned by GetActionQueueManager 4f7d0. Just an MSVC std::vector<ActionQueue*> (16 bytes); PS2 GCC vector is 12 bytes at +0."
+  },
+  {
+   "name": "SMissionTimer",
+   "size": 20,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "bool",
+     "name": "active",
+     "comment": "high: Start b9600 only acts when 0, then sets 1; GetValue b9630 tests it (else returns +8); Stop b9ce0. PS2 +0x0 (IsActive 209d40). Name from PS2 IsActive"
+    },
+    {
+     "offset": 1,
+     "type": "bool",
+     "name": "ticking",
+     "comment": "high: SetTicking(bool) b96b0 writes; GetValue tests it before the per-second tick sound. PS2 +0x4 SetTicking"
+    },
+    {
+     "offset": 4,
+     "type": "int",
+     "name": "startTime",
+     "comment": "high: Start stores global tick 0x234e34; GetValue computes (now - [+4]). PS2 +0x8. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "int",
+     "name": "baseValue",
+     "comment": "high: GetValue adds it (and returns it when inactive); Reset b95e0 / Increment b9620 / Stop write it. PS2 +0xc (Reset/Increment). Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "int",
+     "name": "direction",
+     "comment": "high: Start(int) writes the arg; GetValue multiplies elapsed by it; IsReverse b96a0 reads it. PS2 +0x10 (Start/IsReverse). Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "int",
+     "name": "lastSeconds",
+     "comment": "medium: GetValue: value / ticks-per-second (0x234e2c) compared with [+0x10]; plays sound 0x1935c8 and stores when changed and >0. PS2 +0x14. Name invented"
+    }
+   ],
+   "comment": "No vptr. 10 of them embedded at SMissionManager+0x360. PS2 is 0x18: the two leading bools are 4 bytes each on PS2 and pack into +0/+1 on Xbox, so Xbox = PS2 - 4 from +4 on."
+  },
+  {
+   "name": "RPlayerCamState",
+   "size": 52,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "RPlayerCamera *",
+     "name": "camera",
+     "comment": "high: ctor 89df0 stores its RPlayerCamera* arg; passed as ECX to RPlayerCamera::InitAimZoom/InitSpin/NextCameraMode etc. PS2 +0x0; sheet RPlayerCamState(RPlayerCamera *)"
+    },
+    {
+     "offset": 4,
+     "type": "bool",
+     "name": "initialised",
+     "comment": "medium: ResetState 89b70: if 0 it only sets [+4]=1 and returns, else resets the rest. PS2 +0x4. Name invented"
+    },
+    {
+     "offset": 5,
+     "type": "bool",
+     "name": "flag5",
+     "comment": "low: ResetState/ResetStateForAnimation clear; DriveCamInputHandler. PS2 +0x8. Name invented"
+    },
+    {
+     "offset": 6,
+     "type": "bool",
+     "name": "flag6",
+     "comment": "low: ResetState clears; DriveCamInputHandler R/W. PS2 +0xc. Name invented"
+    },
+    {
+     "offset": 7,
+     "type": "bool",
+     "name": "flag7",
+     "comment": "low: ResetState clears; DriveCamInputHandler R/W. PS2 +0x10. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "bool",
+     "name": "flag8",
+     "comment": "low: ResetState clears; DriveCamInputHandler R/W. PS2 +0x14. Name invented"
+    },
+    {
+     "offset": 9,
+     "type": "bool",
+     "name": "autoDriveMode",
+     "comment": "low: ResetState sets = (global 0x234e24 == 3); read by (Auto)DriveCamInputHandler. PS2 +0x18. Name invented"
+    },
+    {
+     "offset": 11,
+     "type": "bool",
+     "name": "aimFlagB",
+     "comment": "low: ResetState clears; AimZoom/AimRelease write. PS2 +0x20. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "bool",
+     "name": "aiming",
+     "comment": "low: ResetState clears; AimZoom/AimRelease/AutoDriveCamInputHandler R/W. PS2 +0x24. Name invented"
+    },
+    {
+     "offset": 13,
+     "type": "bool",
+     "name": "aimFlagD",
+     "comment": "low: ResetState clears; AimZoom/AutoDrive write. PS2 +0x28. Name invented"
+    },
+    {
+     "offset": 14,
+     "type": "bool",
+     "name": "aimFlagE",
+     "comment": "low: ResetState clears; AimRelease/AutoDrive R/W. PS2 +0x2c. Name invented"
+    },
+    {
+     "offset": 15,
+     "type": "bool",
+     "name": "aimFlagF",
+     "comment": "low: ResetState clears; AimRelease/AutoDrive R/W. PS2 +0x30. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "float",
+     "name": "zoom10",
+     "comment": "medium: ResetState zeroes; AimZoom/AutoDriveCamInputHandler R/W. PS2 +0x34 float. Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "float",
+     "name": "zoom14",
+     "comment": "medium: as +0x10. PS2 +0x38 float. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "float",
+     "name": "zoom18",
+     "comment": "medium: ResetState zeroes; AimZoom/AutoDrive. PS2 +0x3c float. Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "float",
+     "name": "zoom1c",
+     "comment": "medium: ResetState zeroes; AimZoom/AutoDrive. PS2 +0x40 float. Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "bool",
+     "name": "flag20",
+     "comment": "low: ResetState/ResetStateForAnimation clear. PS2 +0x44. Name invented"
+    },
+    {
+     "offset": 36,
+     "type": "int",
+     "name": "unk24",
+     "comment": "low: ResetState zeroes. PS2 +0x4c. Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "int",
+     "name": "unk28",
+     "comment": "low: ResetState zeroes. PS2 +0x50. Name invented"
+    },
+    {
+     "offset": 44,
+     "type": "bool",
+     "name": "flag2c",
+     "comment": "low: ResetState clears (byte). PS2 +0x54. Name invented"
+    },
+    {
+     "offset": 48,
+     "type": "int",
+     "name": "unk30",
+     "comment": "low: ResetState zeroes. PS2 +0x58. Name invented"
+    }
+   ],
+   "comment": "No vptr; FastAlloc 0x34 by RPlayerCamera ctor, stored at RPlayerCamera+0x354. PS2 is 0x5c: every bool is 4 bytes there and 1 byte on Xbox, so the flag block +4..+0xf on Xbox is PS2 +4..+0x30 (PS2 +0x1c unseen => Xbox +0xa unseen). Mapping Xbox->PS2: +0x10..+0x1c -> +0x34..+0x40, +0x20 -> +0x44, +0x24/+0x28 -> +0x4c/+0x50, +0x2c -> +0x54, +0x30 -> +0x58."
+  },
+  {
+   "name": "RDirectorQueue",
+   "size": 20,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined4",
+     "name": "queueAllocator",
+     "comment": "medium: MSVC list allocator slot, never accessed. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "queueHead",
+     "comment": "high: ctor 7c380 stores the sentinel node from 7c2c0 (FastAlloc 0x30, next/prev = self); AppendData 7c6a0 links a new node before it; ~RDirectorQueue frees. PS2 +0x0 (-> FastFree). Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "int",
+     "name": "queueSize",
+     "comment": "high: ctor zeroes; list size bumped by 7c5f0(1) in AppendData; ProcessDirectorLogic reads. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "RPlayerCamera *",
+     "name": "camera",
+     "comment": "high: ctor stores its arg; ProcessDirectorLogic passes it to RPlayerCamera::DirectorChangeCameraMode/DirectorSetAnchor/GetMaxTumble. PS2 +0x4; sheet RDirectorQueue(RPlayerCamera *)"
+    },
+    {
+     "offset": 16,
+     "type": "byte",
+     "name": "flags",
+     "comment": "medium: bitfield: ctor clears bit0 (AND 0xfe); RestartDirectorQueue writes, ProcessDirectorLogic R/W. PS2 +0x8 (4-byte). Name invented"
+    }
+   ],
+   "comment": "No vptr; FastAlloc 0x14 by RPlayerCamera ctor, stored at RPlayerCamera+0x368. Xbox holds an MSVC std::list<RDirectorQueueData> (12 bytes: allocator, head, size) where PS2 has a bare 4-byte node pointer, so Xbox = PS2 + 8 after it."
+  },
+  {
+   "name": "USymbolTable",
+   "size": 8,
+   "fields": [
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "namespaces",
+     "comment": "high: ctor 11b580 FastAlloc(0xc), builds an empty tree (head node from 94030, isnil byte +0x15, size 0) and stores it here; AddNamespace/RemoveNamespace/NameLookup use it via 11a880/11aba0/11b4d0. PS2 +0x0 in all methods. Name invented"
+    }
+   ],
+   "comment": "1-slot vtable (deleting dtor 11b650). PS2 puts the vptr last (+4) and the map pointer at +0; Xbox vptr +0, map pointer +4. The namespace map is a heap-allocated 12-byte MSVC tree (map<name, Namespace*>): ctor FastAllocs 0xc, deleting dtor frees 0xc then 8."
+  },
+  {
+   "name": "InputConfigManager",
+   "size": 48,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "bool",
+     "name": "initialised",
+     "comment": "medium: Get 50270 zeroes the byte at 0x1e455c; PS2 +0x0 written by ctor/InitAndPreload/Shutdown. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "int",
+     "name": "currentConfigType",
+     "comment": "medium: Get initialises to 2; GetCurrentConfig 50180 / SetConfig 50720 R/W. PS2 +0x4. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "int[2]",
+     "name": "currentConfig",
+     "comment": "low: Get zeroes 0x1e4564/68; PS2 LEA +0x8 in InitAndPreload/SetConfig: per-ConfigType array. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "int[2]",
+     "name": "numConfigs",
+     "comment": "low: Get zeroes 0x1e456c/70; LEA +0x10 in InitAndPreload/ParseMasterConfigFile/Shutdown; PS2 same plus +0x14 write in ParseMasterConfigFile; likely read by GetNumConfigs(ConfigType) (indexed). Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "void *[2]",
+     "name": "configInfos",
+     "comment": "low: Get zeroes 0x1e4574/78; PS2 LEA +0x18 in ctor/InitAndPreload/ParseMasterConfigFile/Shutdown, +0x1c written by ParseMasterConfigFile: per-type ConfigInfo arrays. Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "bool",
+     "name": "inverted",
+     "comment": "high: SetInverted(bool) 50140 writes byte, IsInverted 50160 reads. PS2 +0x20"
+    },
+    {
+     "offset": 36,
+     "type": "void *",
+     "name": "stringToNumber",
+     "comment": "medium: ParseDefFileForFrontEnd passes it to StringToNumber::ConvertStringToNumber; PS2 +0x24 -> ~StringToNumber. Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "void *",
+     "name": "masterFileData",
+     "comment": "medium: InitAndPreload/SetConfig R/W; PS2 +0x28 -> UFileLoader::FileFree in Shutdown. Name invented"
+    },
+    {
+     "offset": 44,
+     "type": "void *",
+     "name": "defFileData",
+     "comment": "low: Get zeroes 0x1e4588; PS2 +0x2c -> UFileLoader::FileFree. Name invented"
+    }
+   ],
+   "comment": "Function-local static at 0x1e455c (guard 0x1e458c = this+0x30) returned by Get 50270. No vptr; offsets same as PS2 (PS2 bools are 4 bytes but each is followed by a 4-aligned int)."
+  },
+  {
+   "name": "GFXGallery",
+   "size": 5168,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined4[256]",
+     "name": "stickyEntries",
+     "comment": "low: not accessed directly on Xbox (indexed); PS2 STICKY_GetNewIndex/ReleaseAllIndexes touch +0x0/+0xc. Name invented"
+    },
+    {
+     "offset": 1024,
+     "type": "int",
+     "name": "numSticky",
+     "comment": "medium: ctor/PurgeAllEffects zero it; STICKY_GetNewIndex/UpdateAllIndexes LEA/W. PS2 +0x400 STICKY_UpdateAllIndexes. Name invented"
+    },
+    {
+     "offset": 1028,
+     "type": "int",
+     "name": "unk404",
+     "comment": "low: ctor and dtor zero. Name invented"
+    },
+    {
+     "offset": 1032,
+     "type": "undefined4[512]",
+     "name": "canvasSlots",
+     "comment": "low: LEA in CANVAS_PurgeSceneObjEffects/FRAME_Draw/PurgeAllEffects (512 x 4 up to +0xc08; matches maxCanvases 0x200). PS2 +0x408 same. Name invented"
+    },
+    {
+     "offset": 3080,
+     "type": "int[512]",
+     "name": "freeCanvasStack",
+     "comment": "medium: ctor fills +0xc08.. with 0x1ff down to 0 (512 ints): a free-index stack; PurgeAllEffects LEA. PS2 +0xc08. Name invented"
+    },
+    {
+     "offset": 5128,
+     "type": "UGroup *",
+     "name": "gallery",
+     "comment": "medium: ctor stores 117d60(fileData,1) result; PS2 GET_Gallery 2339e0 returns +0x1408. Name from GET_Gallery"
+    },
+    {
+     "offset": 5132,
+     "type": "void *",
+     "name": "galleryFileData",
+     "comment": "medium: ctor stores the loaded file (e3c20) passed to 117d60; dtor frees. PS2 +0x140c -> UMemory::Free. Name invented"
+    },
+    {
+     "offset": 5136,
+     "type": "void *",
+     "name": "keyBuffer",
+     "comment": "medium: ctor allocates 0x800 (tag 0x193d24) and memsets it; dtor frees. PS2 +0x1410 -> MEM_fill/Free. Name invented"
+    },
+    {
+     "offset": 5140,
+     "type": "void *",
+     "name": "canvases",
+     "comment": "high: ctor allocates 0x12000 (= 0x200 canvases x 0x90, tag 0x193d18) and memsets; used by 11 CANVAS_*/CULL_*/FRAME_Draw methods. PS2 +0x1414 same. Name invented (GFXGallery::Canvas array)"
+    },
+    {
+     "offset": 5144,
+     "type": "int",
+     "name": "numParticleLibrarySystems",
+     "comment": "medium: ctor zeroes; PS2 GET_NumParticleLibrarySystems 234190 returns +0x1418"
+    },
+    {
+     "offset": 5148,
+     "type": "int",
+     "name": "numCanvases",
+     "comment": "medium: ctor zeroes; CANVAS_Add/FRAME_Draw/PurgeAllEffects/CULL_GetNextCanvas R/W. PS2 +0x141c. Name invented"
+    },
+    {
+     "offset": 5152,
+     "type": "int",
+     "name": "maxCanvases",
+     "comment": "medium: ctor stores 0x200; CANVAS_Add/FRAME_Draw/PurgeAllEffects. PS2 +0x1420. Name invented"
+    },
+    {
+     "offset": 5156,
+     "type": "int",
+     "name": "cullIndex",
+     "comment": "medium: CULL_Start/CULL_GetNextCanvas iterator; ctor zeroes. PS2 +0x1424. Name invented"
+    },
+    {
+     "offset": 5160,
+     "type": "int",
+     "name": "unk1428",
+     "comment": "low: ctor zeroes; FRAME_Draw RW. PS2 +0x1428. Name invented"
+    },
+    {
+     "offset": 5164,
+     "type": "int",
+     "name": "cullCount",
+     "comment": "low: ctor zeroes; CULL_Start/CULL_SetCanvas R/W. PS2 +0x142c. Name invented"
+    }
+   ],
+   "comment": "No vptr. d33f0 (Init) does operator new(0x1430) + ctor d44b0(name) and stores it in global 0x23f320. Offsets identical on PS2 (+0x400..+0x142c)."
+  },
+  {
+   "name": "GSubtitles",
+   "size": 144,
+   "fields": [
+    {
+     "offset": 4,
+     "type": "bool",
+     "name": "displaying",
+     "comment": "medium: DisplaySubtitle/DrawSubtitles/SetupFMVSubtitles R/W byte. PS2 +0x0. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "float",
+     "name": "displayTime",
+     "comment": "medium: ctor zeroes; FP writes in ClearSubtitles/DisplaySubtitle(uint,float)/DrawSubtitles. PS2 +0x4 float. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "int",
+     "name": "currentSubtitle",
+     "comment": "low: ctor zeroes; ClearSubtitles/DisplaySubtitle/DrawSubtitles/SetupFMVSubtitles. PS2 +0x8. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "void *",
+     "name": "font",
+     "comment": "high: ctor stores FONT_create(fileData) (107b40); DrawFont/GetWidthHeight use it; dtor. PS2 +0xc -> FONT_destroy. Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "void *",
+     "name": "fontFileData",
+     "comment": "high: ctor stores UFileLoader::FileLoad(0x1a0678) (1176b0); dtor. PS2 +0x10 -> FileFree. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "float",
+     "name": "screenWidth",
+     "comment": "high: ctor FILD [0x1ebff4]+0x40 -> float; DrawSubtitles. PS2 +0x14 float. Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "float",
+     "name": "screenHeight",
+     "comment": "high: ctor FILD [0x1ebff4]+0x44 -> float; DrawSubtitles. PS2 +0x18 float. Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "void *",
+     "name": "frames",
+     "comment": "medium: ctor zeroes; ClearSubtitles/DisplaySubtitle/SetupFMVSubtitles/dtor. PS2 +0x1c -> __builtin_vec_delete (ClearFrames/UnloadSubtitles). Name invented"
+    },
+    {
+     "offset": 36,
+     "type": "int",
+     "name": "numFrames",
+     "comment": "low: ctor zeroes; same methods. PS2 +0x20. Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "int",
+     "name": "unk28",
+     "comment": "low: ctor zeroes; SetupFMVSubtitles. PS2 +0x24 (LoadSubtitles/SetupFMVSubtitles). Name invented"
+    },
+    {
+     "offset": 44,
+     "type": "void *",
+     "name": "currentText",
+     "comment": "medium: ctor zeroes; IsSubtitleDisplaying e3190 reads it; ClearSubtitles/DisplaySubtitle/DrawSubtitles. PS2 +0x28 (GSystem::LOCALE_Symbol result passed to GSubtitleSplitter::Init). Name invented"
+    },
+    {
+     "offset": 48,
+     "type": "GSubtitleSplitter",
+     "name": "splitter",
+     "comment": "medium: LEA +0x30 passed as this to GSubtitleSplitter::Reset in 5 methods. PS2 +0x2c. Size inferred. Name invented"
+    }
+   ],
+   "comment": "1-slot vtable (scalar deleting dtor e3ad0). Constructed in RunTheGame (call at 0x5ad4e; no allocation seen); ctor e34e0 stores this in global 0x23f828 (fTheApp). PS2 vptr is LAST (+0x90), so Xbox fields are PS2 + 4. Size inferred: PS2 0x94 (splitter +0x2c..+0x90, vptr +0x90); Xbox ctor writes up to +0x8c. Embedded GSubtitleSplitter at +0x30 taken as 0x60 on Xbox (0x64 on PS2, one bool packed); the ctor writes at +0x80/+0x88/+0x8c are then its inlined member inits."
+  },
+  {
+   "name": "ActionData",
+   "size": 12,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster22.json)",
+   "if_missing": true
+  },
+  {
+   "name": "GSubtitleSplitter",
+   "size": 96,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster22.json)",
+   "if_missing": true
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x0004f1b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActionQueue::~ActionQueue(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0004f220",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActionQueue::IsEmpty(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x0004f230",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ActionQueue::ReceiveAction(ActionData &)",
+   "return": "bool"
+  },
+  {
+   "address": "0x0004f250",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActionQueue::PopAction(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0004f280",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActionQueue::Flush(void)",
+   "return": "void"
+  }
+ ]
+}

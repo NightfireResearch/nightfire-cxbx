@@ -28,6 +28,11 @@ obj_tag * rotor_init(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, ushort par
     }
 
     build_LinkToRoom(gameObj, 0, glb_world);
+
+    // Falling off the end of a non-void function is undefined behaviour; MSVC left gameObj in EAX
+    // and the caller got the right answer by luck. Nothing on the boot path reaches this, so it
+    // was never the hang - but it is the same bug as the one in FS_StateMachineIterate.
+    return gameObj;
 }
 
 // AUTOINJECT

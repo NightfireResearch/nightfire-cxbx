@@ -1,0 +1,266 @@
+{
+ "note": "Evidence packets for struct agents (prompt template: struct_agent_prompt.md). Status: ready / dispatched / done.",
+ "packets": [
+  {
+   "key": "cluster6",
+   "status": "done",
+   "evidence_kb": 49,
+   "classes": [
+    "AIVehicle",
+    "AIHelicopter",
+    "AIGroundVehicle"
+   ],
+   "notes": "AI vehicle controllers. AIHelicopter and AIGroundVehicle derive from AIVehicle (their constructors call AIVehicle::AIVehicle first). AIVehicle: vtable 0x18bb10 (5 slots), sizes 0xc0/0x80 seen in destructors; AIHelicopter 0x140, vtable 0x18b950. AIGroundVehicle has no size or vtable in its evidence: find its size from its deleting destructor or allocation (check by hand). AIGroundVehicle is large (98 offsets): prioritise."
+  },
+  {
+   "key": "cluster7",
+   "status": "done",
+   "evidence_kb": 51,
+   "classes": [
+    "AICharacter",
+    "AICharacterBond",
+    "AICharacterEnemyGround",
+    "AICharacterHands",
+    "AICharacterEnemyWindow"
+   ],
+   "notes": "AI characters, part 1: the base AICharacter (vtable 0x18a540, 33 slots; allocation sizes 336/352/368/448/656 under its tag are its subclasses; base size probably 0x140) and four subclasses (Bond 0x150, EnemyGround 0x1c0, Hands 0x160, EnemyWindow 0x160; 33-36 slot vtables). AICharacter's layout is the priority: cluster8 (Pedestrian, EnemySnow, EnemySunroof) builds on it."
+  },
+  {
+   "key": "cluster8",
+   "status": "done",
+   "evidence_kb": 42,
+   "classes": [
+    "AICharacterPedestrian",
+    "AICharacterEnemySnow",
+    "AICharacterEnemySunroof"
+   ],
+   "notes": "AI characters, part 2: subclasses of AICharacter, whose layout is in results/struct-pilot-cluster7.json (read it first; list only these classes' own fields). Pedestrian 0x290 (vtable 0x18b470, 34 slots), EnemySnow 0x170, EnemySunroof 0x170."
+  },
+  {
+   "key": "cluster9",
+   "status": "done",
+   "evidence_kb": 68,
+   "classes": [
+    "RWorldCamera",
+    "RViewCamera",
+    "RCameraSpline",
+    "RPlayerCamera"
+   ],
+   "notes": "Cameras. RPlayerCamera (0x370, allocated 880, vtable 0x1918ac) derives from RWorldCamera (0x130; constructor calls RCamera::RCamera first, so RWorldCamera derives from RCamera, not in this packet: add RCamera as a class if its extent is clear from RWorldCamera, else a placeholder). RViewCamera 0x4c (allocated 76). RCameraSpline allocated 112. RPlayerCamera is large (117 offsets): prioritise."
+  },
+  {
+   "key": "cluster10",
+   "status": "done",
+   "evidence_kb": 35,
+   "classes": [
+    "WCollisionMgr",
+    "WRoadNav",
+    "WTargetPicker",
+    "WGrid"
+   ],
+   "notes": "World helpers. WRoadNav allocated 192, WGrid allocated 36 (UMemory::Alloc). WCollisionMgr and WTargetPicker may be singletons (no allocation under their tag): look for the global instance their callers pass as ECX and say so; size from the extent of accesses if nothing better."
+  },
+  {
+   "key": "cluster11",
+   "status": "done",
+   "evidence_kb": 46,
+   "classes": [
+    "ActActor",
+    "ActPoser",
+    "ActCharacter",
+    "ActWeapon",
+    "ActSkeleton"
+   ],
+   "notes": "Actor/animation system (Act*). Allocation sizes under their tags: ActActor 80, ActPoser 112 and 220 (two variants or a subclass), ActCharacter 132, ActSkeleton 36. ActWeapon is 0x170 with vtable 0x18a440 (20 slots) and derives from RSceneObj (its constructor calls RSceneObj::RSceneObj first; RSceneObj layout is in struct-pilot-rsceneobj.json, 0x40 on both builds with the vptr handling described there). Relationships between ActActor, ActPoser and ActCharacter (base or member?) should be worked out from their constructors."
+  },
+  {
+   "key": "cluster12",
+   "status": "done",
+   "evidence_kb": 33,
+   "classes": [
+    "RVehicle",
+    "RVehicleParticle",
+    "RShadowMap",
+    "RReflection",
+    "RGlareManager"
+   ],
+   "notes": "Renderer objects. RVehicle 0x370 (vtable 0x1922d0, 19 slots) derives from RSkeletalObj (0xa0; layout in struct-pilot-rsceneobj.json). RShadowMap 0x58 and RReflection 0x54 both call RViewCamera::RViewCamera first (RViewCamera 0x4c, layout in struct-pilot-cluster9.json): check whether RViewCamera is a base or an embedded member (RViewCamera has its own vtable 0x192444; theirs are 0x192fd4 and 0x1926a4). RVehicleParticle 0x4c (vtable 0x1930b0). RGlareManager: vtable 0x1931e0, 'constructed' size 13376 may be a container of it rather than itself."
+  },
+  {
+   "key": "cluster13",
+   "status": "done",
+   "evidence_kb": 40,
+   "classes": [
+    "ABaseSound",
+    "AStream",
+    "AMix",
+    "ABank",
+    "AVehicle"
+   ],
+   "notes": "Audio. ABaseSound 0xc0 (vtable 0x18a510, 4 slots) is the base; AStream 0xd0 derives from it (vtable 0x1a2910). AMix allocated 80, ABank allocated 24. AVehicle 0x1f0 (vtable 0x1a2680) derives from ASceneObj (not in this packet; its constructor is the first call: work out ASceneObj's extent from where AVehicle's own fields begin and add ASceneObj as a class or placeholder). An ABaseSound placeholder may already exist in Ghidra: your full layout replaces it. AStream's Xbox evidence is thin (5 offsets vs 34 PS2): the Xbox build may use a different streaming implementation; say so if the PS2 fields don't map."
+  },
+  {
+   "key": "cluster14",
+   "status": "done",
+   "evidence_kb": 34,
+   "classes": [
+    "RLightning",
+    "RLightManager",
+    "SWeaponManager"
+   ],
+   "notes": "Effects/lighting and the weapon manager. RLightning: vtable 0x192d20 (3 slots), 'constructed' 1792, constructor starts with UVolatileMaterial::UVolatileMaterial (an embedded member or base: check). RLightManager: vtable 0x191628, 'constructed' 1008. SWeaponManager: 'constructed' 384, probably a singleton (look for the global its callers pass as ECX). Sizes need confirming from destructors or allocation sites."
+  },
+  {
+   "key": "cluster15",
+   "status": "done",
+   "evidence_kb": 49,
+   "classes": [
+    "GHud"
+   ],
+   "notes": "The HUD, one large class (269 Xbox offsets): 'constructed' size 1264 (0x4f0), vtables 0x19ff84 (5 slots) and 0x1a06c0 (1 slot; possibly an embedded interface or member object). Probably a singleton: find the global. Prioritise size, vtable(s), pointer and sub-object fields and sheet-named members; leave unclear gauges undefined."
+  },
+  {
+   "key": "cluster16",
+   "status": "done",
+   "evidence_kb": 41,
+   "classes": [
+    "SMissionManager",
+    "GGallery"
+   ],
+   "notes": "Game-flow singletons. SMissionManager: 'constructed' 7280 (0x1c70), 95 Xbox offsets; find its global instance. GGallery: no size in evidence (find it from allocation or the global's extent). Prioritise pointers, arrays and sheet-named members."
+  },
+  {
+   "key": "cluster17",
+   "status": "done",
+   "evidence_kb": 32,
+   "classes": [
+    "Mine",
+    "Grenade",
+    "Shell",
+    "Smackable",
+    "Newton",
+    "RayShell",
+    "RMissileStreak",
+    "RMissileCam"
+   ],
+   "notes": "Weapons and spawnable physics objects. Mine, Grenade, Shell, Smackable and Newton are probably PhysicsObject subclasses (Simulation::Spawn*Object create them; PhysicsObject is 0x6c, layout in struct-pilot-physicsobject.json; PHelicopter/Human/Sentry in clusters 4-5 show the pattern). RMissileStreak is an existing 0x650 placeholder deriving from RAutonomousObj (see cluster5 Missile, which embeds one at +0xa0): fill it in. RayShell and RMissileCam: work out their bases from their constructors."
+  },
+  {
+   "key": "cluster18",
+   "status": "done",
+   "evidence_kb": 28,
+   "classes": [
+    "AIElementController",
+    "AICharacterEnemyDriver",
+    "AICharacterEnemySSnow",
+    "AICharacterPassenger",
+    "ACharacter",
+    "AnimationController"
+   ],
+   "notes": "More AI characters. EnemyDriver, EnemySSnow and Passenger are presumably AICharacter subclasses (AICharacter is 0x140 on Xbox, 0x150 on PS2 with the PS2 vptr last; subclass fields sit 0x10 lower on Xbox; see struct-pilot-cluster7.json and cluster8). ACharacter is an existing 0xd0 placeholder (allocated by AICharacter::GetACharacter, constructor 0x1c0c0): fill it in. AIElementController and AnimationController: find bases and sizes."
+  },
+  {
+   "key": "cluster19",
+   "status": "done",
+   "evidence_kb": 37,
+   "classes": [
+    "ASubmersible",
+    "ASnowMobile",
+    "AHelicopter",
+    "ATrafficVehicle",
+    "AVoice",
+    "AEngine",
+    "AIndex",
+    "WSoundGroup",
+    "ABasic"
+   ],
+   "notes": "Audio objects. ASubmersible, ASnowMobile, AHelicopter and ATrafficVehicle are probably AVehicle or ASceneObj/ABaseSound subclasses (ABaseSound 0xc0, ASceneObj 0xd0, AVehicle 0x1f0; layouts in struct-pilot-cluster13.json: ABaseSound's vptr is padded to 0x10 on Xbox). AHelicopter is allocated by ABaseSound::operator_new(0x310) in PHelicopter's constructor. AIndex is an existing 8-byte placeholder (embedded in ABank at +0x10). AVoice: 14 of them hang off AVehicle."
+  },
+  {
+   "key": "cluster20",
+   "status": "done",
+   "evidence_kb": 33,
+   "classes": [
+    "RFog",
+    "RColorize",
+    "REmpBolts",
+    "RParticulate",
+    "RPostProcessing",
+    "RSniperZoom",
+    "RDecalManager",
+    "RGain",
+    "RTyreTrack"
+   ],
+   "notes": "Renderer effects, mostly singletons (check for USingleton bases and the global each Init stores). REmpBolts is referenced by RVehicle+0x368 (cluster12). RTyreTrack: PBondCar has tyreTracks[4] at +0x74 (cluster5). RGain's Xbox evidence (32 offsets) is much richer than PS2 (9): the Xbox implementation may differ."
+  },
+  {
+   "key": "cluster21",
+   "status": "done",
+   "evidence_kb": 35,
+   "classes": [
+    "RRenderer",
+    "RRenderHigh",
+    "WRender",
+    "RTextureContext",
+    "RTextureContextManager",
+    "RParticleSystemManager",
+    "RStateManager",
+    "WWorld"
+   ],
+   "notes": "Render infrastructure and the world. Mostly singletons or statics: find their globals. RParticleSystemManager: RVehicleParticle holds RParticleSystem pointers (cluster12). WWorld: WWorld::Open/Reset allocate the scene objects (RSceneObj etc.)."
+  },
+  {
+   "key": "cluster22",
+   "status": "done",
+   "evidence_kb": 37,
+   "classes": [
+    "GFXGallery",
+    "GSubtitles",
+    "InputConfigManager",
+    "ActionQueue",
+    "ActionQueueManager",
+    "SMissionTimer",
+    "RPlayerCamState",
+    "RDirectorQueue",
+    "USymbolTable"
+   ],
+   "notes": "Game/UI helpers and existing placeholders to fill in: ActionQueue (0x974 bytes, constructor 0x4f320; owned by PHelicopter, GHud, SMissionManager, SWeaponManager, RWorldCamera), SMissionTimer (0x14 bytes on Xbox, 10 of them at SMissionManager+0x360; PS2 0x18), RPlayerCamState (0x34 placeholder, RPlayerCamera+0x354), RDirectorQueue (0x14 placeholder, RPlayerCamera+0x368). USymbolTable: AttributeSystem+0x64 points to one. GFXGallery is related to GGallery (cluster16)."
+  },
+  {
+   "key": "cluster23",
+   "status": "done",
+   "evidence_kb": 67,
+   "classes": [
+    "EAGL::Transform",
+    "EAGL::DynamicModel",
+    "EAGL::RenderContext",
+    "EAGL::Model",
+    "EAGL::DrawArray",
+    "EAGL::DynamicLoader",
+    "EAGL::ViewPort",
+    "EAGL::Device",
+    "EAGL::TextureRenderContext"
+   ],
+   "notes": "EA's EAGL graphics library (evidence files are named EAGL_<Class>.md). Allocation sizes under their tags: DynamicModel 88, RenderContext 332, DrawArray 76, DynamicLoader 28, Device 28, TextureRenderContext 212; Transform, Model and ViewPort have none (find from constructors/allocations, or embedding). The Xbox EAGL is a port onto D3D, so Xbox-only members are expected (D3D device/surface pointers): say where the PS2 layout doesn't carry over. Several finished layouts refer to these types as void * or byte arrays (RRenderer +0x60/+0x64/+0x68 Device/RenderContext/ViewPort, RVehicle shadow models EAGL::Model, RGain's EAGL::DynamicModel at +0x70, RStateManager's EAGL::GeoPrimState array): note sizes that confirm or contradict those. Class names keep their namespace (\"EAGL::Model\")."
+  },
+  {
+   "key": "cluster24",
+   "status": "done",
+   "evidence_kb": 45,
+   "classes": [
+    "EAGLAnim::FnCompoundChannel",
+    "EAGLAnim::FnRunBlender",
+    "EAGLAnim::FnTurnBlender",
+    "EAGLAnim::FnDeltaF3",
+    "EAGLAnim::FnDeltaF1",
+    "EAGLAnim::FnDeltaQ"
+   ],
+   "notes": "EAGLAnim animation channel/blender classes (evidence files EAGLAnim_<Class>.md), all virtual. Sizes from destructors: FnCompoundChannel 0x18 (vtable 0x1a0be8, 18 slots), FnRunBlender 0x80 and FnTurnBlender 0x5c (both store 0x1a0c6c, a shared base's vtable, then their own 0x1a1504 / 0x1a14b4), FnDeltaF3/F1/Q 0x30 (vtables 0x1a12e8/0x1a1270/0x1a1450). Work out the shared base(s) (a common EAGLAnim channel base class; name it from the PS2 sheet's class names if the base's vtable/ctor is identifiable, else a placeholder). The 5 EAGLAnim channel functions split earlier (results/function-splits.json) may help. Class names keep their namespace (\"EAGLAnim::FnDeltaQ\")."
+  }
+ ],
+ "not_packeted": {
+  "AIVehicleController, AIRoadSpawn, WRoadNetwork": "no this-relative accesses in their own methods (globals or static namespaces); need a different approach",
+  "RRenderWorldCamera, WTriggerManager": "2-4 offsets only; add to a packet if a neighbour needs them",
+  "AIZoneController, AFX, GFX, GLoadingScreen, RRenderSharedData, RParticleLibrary": "0-1 offsets in their own methods"
+ }
+}

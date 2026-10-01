@@ -9,6 +9,7 @@ public:
     static void* AttemptBigFileLoad(char *param_1, undefined4 param_2);
     static void AddFileToRequestList(char* fname);
     static void* FileLoad(char *rawPath, int flags, bool param_3);
+    static void* FileLoad(char *rawPath, int flags);   // the two-argument overload, 0x001176b0
     static void* FileLoadz(char *rawPath, int flags);
 };
 

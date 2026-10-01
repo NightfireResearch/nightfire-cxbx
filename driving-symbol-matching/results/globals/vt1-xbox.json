@@ -1,0 +1,1745 @@
+{
+ "program": "Driving.xbe",
+ "labels": [
+  {
+   "address": "0x0018a510",
+   "name": "ABaseSound::vftable",
+   "comment": "vtable stored by ABaseSound's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a3060",
+   "name": "ABasic::vftable",
+   "comment": "vtable stored by ABasic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018a520",
+   "name": "ACharacter::vftable",
+   "comment": "vtable stored by ACharacter's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a3058",
+   "name": "AEngine::vftable",
+   "comment": "vtable stored by AEngine's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2b60",
+   "name": "AFingoDeath::vftable",
+   "comment": "vtable stored by AFingoDeath's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2e58",
+   "name": "AHelicopter::vftable",
+   "comment": "vtable stored by AHelicopter's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018a540",
+   "name": "AICharacter::vftable",
+   "comment": "vtable stored by AICharacter's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018a688",
+   "name": "AICharacterBond::vftable",
+   "comment": "vtable stored by AICharacterBond's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018a788",
+   "name": "AICharacterEnemyDriver::vftable",
+   "comment": "vtable stored by AICharacterEnemyDriver's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018a840",
+   "name": "AICharacterEnemyGround::vftable",
+   "comment": "vtable stored by AICharacterEnemyGround's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018aa18",
+   "name": "AICharacterEnemySSnow::vftable",
+   "comment": "vtable stored by AICharacterEnemySSnow's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018a948",
+   "name": "AICharacterEnemySnow::vftable",
+   "comment": "vtable stored by AICharacterEnemySnow's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018aac0",
+   "name": "AICharacterEnemySunroof::vftable",
+   "comment": "vtable stored by AICharacterEnemySunroof's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018ab68",
+   "name": "AICharacterEnemyWindow::vftable",
+   "comment": "vtable stored by AICharacterEnemyWindow's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018ad28",
+   "name": "AICharacterHands::vftable",
+   "comment": "vtable stored by AICharacterHands's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018ae68",
+   "name": "AICharacterPassenger::vftable",
+   "comment": "vtable stored by AICharacterPassenger's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018b470",
+   "name": "AICharacterPedestrian::vftable",
+   "comment": "vtable stored by AICharacterPedestrian's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018b950",
+   "name": "AIHelicopter::vftable",
+   "comment": "vtable stored by AIHelicopter's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018bb10",
+   "name": "AIVehicle::vftable",
+   "comment": "vtable stored by AIVehicle's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a250c",
+   "name": "AMenuSoundPriv::vftable",
+   "comment": "vtable stored by AMenuSoundPriv's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c840",
+   "name": "AOneShotSound::vftable",
+   "comment": "vtable stored by AOneShotSound's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2b14",
+   "name": "APlayerHeli::vftable",
+   "comment": "vtable stored by APlayerHeli's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2e28",
+   "name": "APlayerTank::vftable",
+   "comment": "vtable stored by APlayerTank's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2abc",
+   "name": "APlayerVehicle::vftable",
+   "comment": "vtable stored by APlayerVehicle's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a310c",
+   "name": "ARaceEngine::vftable",
+   "comment": "vtable stored by ARaceEngine's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2f80",
+   "name": "ASceneObj::vftable",
+   "comment": "vtable stored by ASceneObj's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2f08",
+   "name": "ASentry::vftable",
+   "comment": "vtable stored by ASentry's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2f38",
+   "name": "ASmackable::vftable",
+   "comment": "vtable stored by ASmackable's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2c40",
+   "name": "ASnowMobile::vftable",
+   "comment": "vtable stored by ASnowMobile's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2a7c",
+   "name": "ASound::vftable",
+   "comment": "vtable stored by ASound's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2910",
+   "name": "AStream::vftable",
+   "comment": "vtable stored by AStream's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2d44",
+   "name": "ASubmersible::vftable",
+   "comment": "vtable stored by ASubmersible's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2ed8",
+   "name": "ATrafficVehicle::vftable",
+   "comment": "vtable stored by ATrafficVehicle's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2bc4",
+   "name": "AUltraLite::vftable",
+   "comment": "vtable stored by AUltraLite's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2680",
+   "name": "AVehicle::vftable",
+   "comment": "vtable stored by AVehicle's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018a440",
+   "name": "ActWeapon::vftable",
+   "comment": "vtable stored by ActWeapon's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00189e04",
+   "name": "AnimationController::vftable",
+   "comment": "vtable stored by AnimationController's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018dc28",
+   "name": "AttributeSystem::vftable",
+   "comment": "vtable stored by AttributeSystem's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00189e14",
+   "name": "CrossFadeAnimationController::vftable",
+   "comment": "vtable stored by CrossFadeAnimationController's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c3b0",
+   "name": "E007Logo::vftable",
+   "comment": "vtable stored by E007Logo's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a1130",
+   "name": "EAGLAnim::FnAnimMemoryMap::vftable",
+   "comment": "vtable stored by EAGLAnim::FnAnimMemoryMap's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a0be8",
+   "name": "EAGLAnim::FnCompoundChannel::vftable",
+   "comment": "vtable stored by EAGLAnim::FnCompoundChannel's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a0e58",
+   "name": "EAGLAnim::FnDeltaChan::vftable",
+   "comment": "vtable stored by EAGLAnim::FnDeltaChan's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a1270",
+   "name": "EAGLAnim::FnDeltaF1::vftable",
+   "comment": "vtable stored by EAGLAnim::FnDeltaF1's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a12e8",
+   "name": "EAGLAnim::FnDeltaF3::vftable",
+   "comment": "vtable stored by EAGLAnim::FnDeltaF3's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a1060",
+   "name": "EAGLAnim::FnDeltaLerpChan::vftable",
+   "comment": "vtable stored by EAGLAnim::FnDeltaLerpChan's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a1450",
+   "name": "EAGLAnim::FnDeltaQ::vftable",
+   "comment": "vtable stored by EAGLAnim::FnDeltaQ's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a13e0",
+   "name": "EAGLAnim::FnDeltaQFast::vftable",
+   "comment": "vtable stored by EAGLAnim::FnDeltaQFast's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a10a8",
+   "name": "EAGLAnim::FnDeltaQuatChan::vftable",
+   "comment": "vtable stored by EAGLAnim::FnDeltaQuatChan's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a1360",
+   "name": "EAGLAnim::FnDeltaSingleQ::vftable",
+   "comment": "vtable stored by EAGLAnim::FnDeltaSingleQ's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a0d80",
+   "name": "EAGLAnim::FnKeyDeltaChan::vftable",
+   "comment": "vtable stored by EAGLAnim::FnKeyDeltaChan's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a0dc8",
+   "name": "EAGLAnim::FnKeyLerpChan::vftable",
+   "comment": "vtable stored by EAGLAnim::FnKeyLerpChan's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a0e10",
+   "name": "EAGLAnim::FnKeyQuatChan::vftable",
+   "comment": "vtable stored by EAGLAnim::FnKeyQuatChan's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a0fd0",
+   "name": "EAGLAnim::FnPhaseChan::vftable",
+   "comment": "vtable stored by EAGLAnim::FnPhaseChan's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a0edc",
+   "name": "EAGLAnim::FnPoseBlender::vftable",
+   "comment": "vtable stored by EAGLAnim::FnPoseBlender's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a0f18",
+   "name": "EAGLAnim::FnPoseMirror::vftable",
+   "comment": "vtable stored by EAGLAnim::FnPoseMirror's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a0cf0",
+   "name": "EAGLAnim::FnRawEventChannel::vftable",
+   "comment": "vtable stored by EAGLAnim::FnRawEventChannel's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a0d38",
+   "name": "EAGLAnim::FnRawLinearChannel::vftable",
+   "comment": "vtable stored by EAGLAnim::FnRawLinearChannel's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a0ca8",
+   "name": "EAGLAnim::FnRawPoseChannel::vftable",
+   "comment": "vtable stored by EAGLAnim::FnRawPoseChannel's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a1018",
+   "name": "EAGLAnim::FnRawStateChan::vftable",
+   "comment": "vtable stored by EAGLAnim::FnRawStateChan's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a1504",
+   "name": "EAGLAnim::FnRunBlender::vftable",
+   "comment": "vtable stored by EAGLAnim::FnRunBlender's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a14b4",
+   "name": "EAGLAnim::FnTurnBlender::vftable",
+   "comment": "vtable stored by EAGLAnim::FnTurnBlender's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c3d0",
+   "name": "EAICommand::vftable",
+   "comment": "vtable stored by EAICommand's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c3d4",
+   "name": "EAIElementFireOff::vftable",
+   "comment": "vtable stored by EAIElementFireOff's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c3d8",
+   "name": "EAIElementFireOn::vftable",
+   "comment": "vtable stored by EAIElementFireOn's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c3dc",
+   "name": "EAIElementSetAccuracy::vftable",
+   "comment": "vtable stored by EAIElementSetAccuracy's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c3e0",
+   "name": "EAIElementSetCharParams::vftable",
+   "comment": "vtable stored by EAIElementSetCharParams's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c3e4",
+   "name": "EAIElementSetNonScoreable::vftable",
+   "comment": "vtable stored by EAIElementSetNonScoreable's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c3e8",
+   "name": "EAIElementSetVehicleParams::vftable",
+   "comment": "vtable stored by EAIElementSetVehicleParams's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c3ec",
+   "name": "EAIElementSetWakeRange::vftable",
+   "comment": "vtable stored by EAIElementSetWakeRange's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c3f0",
+   "name": "EAIUpdate::vftable",
+   "comment": "vtable stored by EAIUpdate's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c3f4",
+   "name": "EAbortCinematic::vftable",
+   "comment": "vtable stored by EAbortCinematic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c3f8",
+   "name": "EActivateAIElement::vftable",
+   "comment": "vtable stored by EActivateAIElement's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c40c",
+   "name": "EActorMuzzleFlash::vftable",
+   "comment": "vtable stored by EActorMuzzleFlash's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c414",
+   "name": "EAddScoreAction::vftable",
+   "comment": "vtable stored by EAddScoreAction's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c438",
+   "name": "EAnimUpdate::vftable",
+   "comment": "vtable stored by EAnimUpdate's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c444",
+   "name": "EAudioUpdate::vftable",
+   "comment": "vtable stored by EAudioUpdate's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c448",
+   "name": "EAutoDrive::vftable",
+   "comment": "vtable stored by EAutoDrive's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c44c",
+   "name": "EAutoDriveSpeedChange::vftable",
+   "comment": "vtable stored by EAutoDriveSpeedChange's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c450",
+   "name": "EAutoDriveSteering::vftable",
+   "comment": "vtable stored by EAutoDriveSteering's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c454",
+   "name": "EAwardHitToPlayer::vftable",
+   "comment": "vtable stored by EAwardHitToPlayer's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c458",
+   "name": "EAwardKillToPlayer::vftable",
+   "comment": "vtable stored by EAwardKillToPlayer's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c45c",
+   "name": "EBashCarAlongObjectAxis::vftable",
+   "comment": "vtable stored by EBashCarAlongObjectAxis's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c464",
+   "name": "EButtonMsgOff::vftable",
+   "comment": "vtable stored by EButtonMsgOff's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c468",
+   "name": "EButtonMsgOn::vftable",
+   "comment": "vtable stored by EButtonMsgOn's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c46c",
+   "name": "ECall911::vftable",
+   "comment": "vtable stored by ECall911's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c470",
+   "name": "ECallStage::vftable",
+   "comment": "vtable stored by ECallStage's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c474",
+   "name": "ECameraLockOn::vftable",
+   "comment": "vtable stored by ECameraLockOn's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c478",
+   "name": "ECameraShake::vftable",
+   "comment": "vtable stored by ECameraShake's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c47c",
+   "name": "ECameraUpdate::vftable",
+   "comment": "vtable stored by ECameraUpdate's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c480",
+   "name": "ECameraZoom::vftable",
+   "comment": "vtable stored by ECameraZoom's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c484",
+   "name": "EChangeCarCameraView::vftable",
+   "comment": "vtable stored by EChangeCarCameraView's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c488",
+   "name": "EChangeMaxTraffic::vftable",
+   "comment": "vtable stored by EChangeMaxTraffic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c48c",
+   "name": "EChangeStage::vftable",
+   "comment": "vtable stored by EChangeStage's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c490",
+   "name": "ECinematicCamera::vftable",
+   "comment": "vtable stored by ECinematicCamera's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c494",
+   "name": "EClearBitMagicCounter::vftable",
+   "comment": "vtable stored by EClearBitMagicCounter's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c498",
+   "name": "EClearProgrammerEvent::vftable",
+   "comment": "vtable stored by EClearProgrammerEvent's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c49c",
+   "name": "ECollision::vftable",
+   "comment": "vtable stored by ECollision's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4a0",
+   "name": "EControlToCPU::vftable",
+   "comment": "vtable stored by EControlToCPU's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4a4",
+   "name": "EControlToPlayer::vftable",
+   "comment": "vtable stored by EControlToPlayer's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4a8",
+   "name": "EControlToSpline::vftable",
+   "comment": "vtable stored by EControlToSpline's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4bc",
+   "name": "ECustomTransition::vftable",
+   "comment": "vtable stored by ECustomTransition's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4c0",
+   "name": "EDamagePlayer::vftable",
+   "comment": "vtable stored by EDamagePlayer's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4c4",
+   "name": "EDeactivateAIElement::vftable",
+   "comment": "vtable stored by EDeactivateAIElement's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4c8",
+   "name": "EDisablePowerUp::vftable",
+   "comment": "vtable stored by EDisablePowerUp's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4cc",
+   "name": "EDisableTrigger::vftable",
+   "comment": "vtable stored by EDisableTrigger's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4d4",
+   "name": "EDisplayText::vftable",
+   "comment": "vtable stored by EDisplayText's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4d8",
+   "name": "EDropMine::vftable",
+   "comment": "vtable stored by EDropMine's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4dc",
+   "name": "EEnablePowerUp::vftable",
+   "comment": "vtable stored by EEnablePowerUp's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4e0",
+   "name": "EEnableTrigger::vftable",
+   "comment": "vtable stored by EEnableTrigger's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4e4",
+   "name": "EEndCameraAnim::vftable",
+   "comment": "vtable stored by EEndCameraAnim's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4e8",
+   "name": "EEndCarStop::vftable",
+   "comment": "vtable stored by EEndCarStop's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4ec",
+   "name": "EEndControlToSpline::vftable",
+   "comment": "vtable stored by EEndControlToSpline's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4f0",
+   "name": "EEndMission::vftable",
+   "comment": "vtable stored by EEndMission's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c4fc",
+   "name": "EExit::vftable",
+   "comment": "vtable stored by EExit's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c500",
+   "name": "EFESimFrameUpdate::vftable",
+   "comment": "vtable stored by EFESimFrameUpdate's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c508",
+   "name": "EFireEventList::vftable",
+   "comment": "vtable stored by EFireEventList's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c50c",
+   "name": "EFireRandomTrigger::vftable",
+   "comment": "vtable stored by EFireRandomTrigger's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c510",
+   "name": "EFireTriggerSpeedCondition::vftable",
+   "comment": "vtable stored by EFireTriggerSpeedCondition's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c520",
+   "name": "EFireWeapon::vftable",
+   "comment": "vtable stored by EFireWeapon's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c524",
+   "name": "EForceCarStop::vftable",
+   "comment": "vtable stored by EForceCarStop's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c528",
+   "name": "EForceNearPedRespawn::vftable",
+   "comment": "vtable stored by EForceNearPedRespawn's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c52c",
+   "name": "EGadgetOff::vftable",
+   "comment": "vtable stored by EGadgetOff's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c530",
+   "name": "EGadgetOn::vftable",
+   "comment": "vtable stored by EGadgetOn's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c534",
+   "name": "EHideInstance::vftable",
+   "comment": "vtable stored by EHideInstance's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c538",
+   "name": "EHideInstanceStatic::vftable",
+   "comment": "vtable stored by EHideInstanceStatic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c53c",
+   "name": "EHitWindow::vftable",
+   "comment": "vtable stored by EHitWindow's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c540",
+   "name": "EIncMagicCounter::vftable",
+   "comment": "vtable stored by EIncMagicCounter's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c544",
+   "name": "EInflictDamage::vftable",
+   "comment": "vtable stored by EInflictDamage's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c548",
+   "name": "EInfraRedOff::vftable",
+   "comment": "vtable stored by EInfraRedOff's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c54c",
+   "name": "EInfraRedOn::vftable",
+   "comment": "vtable stored by EInfraRedOn's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c554",
+   "name": "EKickAIElement::vftable",
+   "comment": "vtable stored by EKickAIElement's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c55c",
+   "name": "EKickObject::vftable",
+   "comment": "vtable stored by EKickObject's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c560",
+   "name": "EKillAIElement::vftable",
+   "comment": "vtable stored by EKillAIElement's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c564",
+   "name": "EKillObject::vftable",
+   "comment": "vtable stored by EKillObject's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c568",
+   "name": "EKillSentry::vftable",
+   "comment": "vtable stored by EKillSentry's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c56c",
+   "name": "ELavaHaze::vftable",
+   "comment": "vtable stored by ELavaHaze's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c570",
+   "name": "ELetterBoxOff::vftable",
+   "comment": "vtable stored by ELetterBoxOff's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c574",
+   "name": "ELetterBoxOn::vftable",
+   "comment": "vtable stored by ELetterBoxOn's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c578",
+   "name": "EMaybeActivateAIElement::vftable",
+   "comment": "vtable stored by EMaybeActivateAIElement's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c57c",
+   "name": "EMuzzleFlash::vftable",
+   "comment": "vtable stored by EMuzzleFlash's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c580",
+   "name": "ENuclearBlast::vftable",
+   "comment": "vtable stored by ENuclearBlast's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c584",
+   "name": "EObjectiveAdd::vftable",
+   "comment": "vtable stored by EObjectiveAdd's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c588",
+   "name": "EObjectiveDisplayText::vftable",
+   "comment": "vtable stored by EObjectiveDisplayText's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c58c",
+   "name": "EObjectiveFail::vftable",
+   "comment": "vtable stored by EObjectiveFail's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c590",
+   "name": "EObjectiveInsert::vftable",
+   "comment": "vtable stored by EObjectiveInsert's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c594",
+   "name": "EObjectivePass::vftable",
+   "comment": "vtable stored by EObjectivePass's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c598",
+   "name": "EObjectiveSetCurrent::vftable",
+   "comment": "vtable stored by EObjectiveSetCurrent's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c59c",
+   "name": "EObjectiveSetIncomplete::vftable",
+   "comment": "vtable stored by EObjectiveSetIncomplete's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5a8",
+   "name": "EPathChangeThrottleDynamic::vftable",
+   "comment": "vtable stored by EPathChangeThrottleDynamic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5ac",
+   "name": "EPathChangeThrottleStatic::vftable",
+   "comment": "vtable stored by EPathChangeThrottleStatic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5b0",
+   "name": "EPathMultiplyThrottleDynamic::vftable",
+   "comment": "vtable stored by EPathMultiplyThrottleDynamic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5b4",
+   "name": "EPathMultiplyThrottleStatic::vftable",
+   "comment": "vtable stored by EPathMultiplyThrottleStatic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5b8",
+   "name": "EPathSFX::vftable",
+   "comment": "vtable stored by EPathSFX's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5cc",
+   "name": "EPathSFXUpdate::vftable",
+   "comment": "vtable stored by EPathSFXUpdate's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5d0",
+   "name": "EPathSetAccelDelayDynamic::vftable",
+   "comment": "vtable stored by EPathSetAccelDelayDynamic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5d4",
+   "name": "EPathSetAccelDelayStatic::vftable",
+   "comment": "vtable stored by EPathSetAccelDelayStatic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5d8",
+   "name": "EPathSetAccelerationDynamic::vftable",
+   "comment": "vtable stored by EPathSetAccelerationDynamic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5dc",
+   "name": "EPathSetAccelerationStatic::vftable",
+   "comment": "vtable stored by EPathSetAccelerationStatic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5e0",
+   "name": "EPathSetDesiredThrottleDynamic::vftable",
+   "comment": "vtable stored by EPathSetDesiredThrottleDynamic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5e4",
+   "name": "EPathSetDesiredThrottleStatic::vftable",
+   "comment": "vtable stored by EPathSetDesiredThrottleStatic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5e8",
+   "name": "EPathSetRunningDynamic::vftable",
+   "comment": "vtable stored by EPathSetRunningDynamic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5ec",
+   "name": "EPathSetRunningStatic::vftable",
+   "comment": "vtable stored by EPathSetRunningStatic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5f0",
+   "name": "EPathSetThrottleDynamic::vftable",
+   "comment": "vtable stored by EPathSetThrottleDynamic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5f4",
+   "name": "EPathSetThrottleStatic::vftable",
+   "comment": "vtable stored by EPathSetThrottleStatic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5f8",
+   "name": "EPathSetTimeDynamic::vftable",
+   "comment": "vtable stored by EPathSetTimeDynamic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c5fc",
+   "name": "EPathSetTimeStatic::vftable",
+   "comment": "vtable stored by EPathSetTimeStatic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c600",
+   "name": "EPause::vftable",
+   "comment": "vtable stored by EPause's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c604",
+   "name": "EPlayActorEffect::vftable",
+   "comment": "vtable stored by EPlayActorEffect's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c608",
+   "name": "EPlayCameraAnim::vftable",
+   "comment": "vtable stored by EPlayCameraAnim's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c60c",
+   "name": "EPlayCameraSpline::vftable",
+   "comment": "vtable stored by EPlayCameraSpline's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c610",
+   "name": "EPlayCarCameraAnim::vftable",
+   "comment": "vtable stored by EPlayCarCameraAnim's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c614",
+   "name": "EPlayEffect::vftable",
+   "comment": "vtable stored by EPlayEffect's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c618",
+   "name": "EPlayGiottoEffect::vftable",
+   "comment": "vtable stored by EPlayGiottoEffect's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c61c",
+   "name": "EPlayPOVDeath::vftable",
+   "comment": "vtable stored by EPlayPOVDeath's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c620",
+   "name": "EPlaySound::vftable",
+   "comment": "vtable stored by EPlaySound's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c630",
+   "name": "EPlaySoundPos::vftable",
+   "comment": "vtable stored by EPlaySoundPos's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c634",
+   "name": "EPlaySystemAnim::vftable",
+   "comment": "vtable stored by EPlaySystemAnim's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c638",
+   "name": "EPlayerLose::vftable",
+   "comment": "vtable stored by EPlayerLose's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c63c",
+   "name": "EPlayerSetImmunity::vftable",
+   "comment": "vtable stored by EPlayerSetImmunity's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c640",
+   "name": "EPlayerWin::vftable",
+   "comment": "vtable stored by EPlayerWin's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c644",
+   "name": "EPowerUp::vftable",
+   "comment": "vtable stored by EPowerUp's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c654",
+   "name": "EPowerUpAmmo::vftable",
+   "comment": "vtable stored by EPowerUpAmmo's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c66c",
+   "name": "EPowerUpHealth::vftable",
+   "comment": "vtable stored by EPowerUpHealth's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c674",
+   "name": "EPowerUpMultiDamage::vftable",
+   "comment": "vtable stored by EPowerUpMultiDamage's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c678",
+   "name": "EPowerUpShield::vftable",
+   "comment": "vtable stored by EPowerUpShield's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c68c",
+   "name": "EPowerUpTimer::vftable",
+   "comment": "vtable stored by EPowerUpTimer's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c694",
+   "name": "EProfileMissionSection::vftable",
+   "comment": "vtable stored by EProfileMissionSection's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c698",
+   "name": "ERandomExplosion::vftable",
+   "comment": "vtable stored by ERandomExplosion's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c69c",
+   "name": "EReleaseStream::vftable",
+   "comment": "vtable stored by EReleaseStream's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6a0",
+   "name": "ERenderFrame::vftable",
+   "comment": "vtable stored by ERenderFrame's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6a4",
+   "name": "EResetAudioMix::vftable",
+   "comment": "vtable stored by EResetAudioMix's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6a8",
+   "name": "EResetPlayerCar::vftable",
+   "comment": "vtable stored by EResetPlayerCar's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6ac",
+   "name": "EResetPlayerCarPos::vftable",
+   "comment": "vtable stored by EResetPlayerCarPos's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6b4",
+   "name": "EResume::vftable",
+   "comment": "vtable stored by EResume's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6b8",
+   "name": "ERevertAudioMix::vftable",
+   "comment": "vtable stored by ERevertAudioMix's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6bc",
+   "name": "ERollSub::vftable",
+   "comment": "vtable stored by ERollSub's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6c4",
+   "name": "EScaleFieldOfView::vftable",
+   "comment": "vtable stored by EScaleFieldOfView's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6c8",
+   "name": "EScaleFog::vftable",
+   "comment": "vtable stored by EScaleFog's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6cc",
+   "name": "EScheduleEvent::vftable",
+   "comment": "vtable stored by EScheduleEvent's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6d0",
+   "name": "ESentryMuzzleFlash::vftable",
+   "comment": "vtable stored by ESentryMuzzleFlash's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6d4",
+   "name": "ESetAFXMode::vftable",
+   "comment": "vtable stored by ESetAFXMode's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6d8",
+   "name": "ESetAreaBrightness::vftable",
+   "comment": "vtable stored by ESetAreaBrightness's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6dc",
+   "name": "ESetAudioMix::vftable",
+   "comment": "vtable stored by ESetAudioMix's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6e0",
+   "name": "ESetAutoDriveCamOff::vftable",
+   "comment": "vtable stored by ESetAutoDriveCamOff's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6e4",
+   "name": "ESetAutoDriveCamOffMovie::vftable",
+   "comment": "vtable stored by ESetAutoDriveCamOffMovie's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6e8",
+   "name": "ESetAutoDriveCamOn::vftable",
+   "comment": "vtable stored by ESetAutoDriveCamOn's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6f0",
+   "name": "ESetAutoDriveCamOnMovie::vftable",
+   "comment": "vtable stored by ESetAutoDriveCamOnMovie's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6f4",
+   "name": "ESetAvoidZone::vftable",
+   "comment": "vtable stored by ESetAvoidZone's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6f8",
+   "name": "ESetBitMagicCounter::vftable",
+   "comment": "vtable stored by ESetBitMagicCounter's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c6fc",
+   "name": "ESetCollisionGeometry::vftable",
+   "comment": "vtable stored by ESetCollisionGeometry's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c700",
+   "name": "ESetCreakLevel::vftable",
+   "comment": "vtable stored by ESetCreakLevel's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c70c",
+   "name": "ESetFrameAnimationTime::vftable",
+   "comment": "vtable stored by ESetFrameAnimationTime's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c714",
+   "name": "ESetMagicCounter::vftable",
+   "comment": "vtable stored by ESetMagicCounter's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c718",
+   "name": "ESetMagicCounterThreshold::vftable",
+   "comment": "vtable stored by ESetMagicCounterThreshold's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c71c",
+   "name": "ESetMissionMessage::vftable",
+   "comment": "vtable stored by ESetMissionMessage's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c720",
+   "name": "ESetNextAISpline::vftable",
+   "comment": "vtable stored by ESetNextAISpline's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c724",
+   "name": "ESetNextPath::vftable",
+   "comment": "vtable stored by ESetNextPath's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c728",
+   "name": "ESetObjective::vftable",
+   "comment": "vtable stored by ESetObjective's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c72c",
+   "name": "ESetRecSpeedOffset::vftable",
+   "comment": "vtable stored by ESetRecSpeedOffset's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c730",
+   "name": "ESetRecordedGameTime::vftable",
+   "comment": "vtable stored by ESetRecordedGameTime's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c734",
+   "name": "ESetReflectiveObject::vftable",
+   "comment": "vtable stored by ESetReflectiveObject's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c738",
+   "name": "ESetRenderVariation::vftable",
+   "comment": "vtable stored by ESetRenderVariation's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c73c",
+   "name": "ESetSimRate::vftable",
+   "comment": "vtable stored by ESetSimRate's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c740",
+   "name": "ESetSpecialWeapon::vftable",
+   "comment": "vtable stored by ESetSpecialWeapon's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c744",
+   "name": "ESetSubRollDirection::vftable",
+   "comment": "vtable stored by ESetSubRollDirection's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c748",
+   "name": "ESetSubtitle::vftable",
+   "comment": "vtable stored by ESetSubtitle's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c74c",
+   "name": "ESetTerrain::vftable",
+   "comment": "vtable stored by ESetTerrain's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c750",
+   "name": "ESetTimer::vftable",
+   "comment": "vtable stored by ESetTimer's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c754",
+   "name": "ESetVideo::vftable",
+   "comment": "vtable stored by ESetVideo's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7a0",
+   "name": "ESetVisualDamage::vftable",
+   "comment": "vtable stored by ESetVisualDamage's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7a4",
+   "name": "ESetWaypoint::vftable",
+   "comment": "vtable stored by ESetWaypoint's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7a8",
+   "name": "EShake::vftable",
+   "comment": "vtable stored by EShake's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7ac",
+   "name": "EShowInstance::vftable",
+   "comment": "vtable stored by EShowInstance's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7b0",
+   "name": "EShowInstanceStatic::vftable",
+   "comment": "vtable stored by EShowInstanceStatic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7b4",
+   "name": "ESimEndFrame::vftable",
+   "comment": "vtable stored by ESimEndFrame's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7b8",
+   "name": "ESimFrameUpdate::vftable",
+   "comment": "vtable stored by ESimFrameUpdate's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7bc",
+   "name": "ESpawnDramaticSmackable::vftable",
+   "comment": "vtable stored by ESpawnDramaticSmackable's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7c0",
+   "name": "ESpawnExplosion::vftable",
+   "comment": "vtable stored by ESpawnExplosion's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7c4",
+   "name": "ESpawnExplosionStatic::vftable",
+   "comment": "vtable stored by ESpawnExplosionStatic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7c8",
+   "name": "ESpawnForceEffect::vftable",
+   "comment": "vtable stored by ESpawnForceEffect's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7e0",
+   "name": "ESpawnSentry::vftable",
+   "comment": "vtable stored by ESpawnSentry's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7e4",
+   "name": "ESpawnSimplePhysics::vftable",
+   "comment": "vtable stored by ESpawnSimplePhysics's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7e8",
+   "name": "ESpawnSmackable::vftable",
+   "comment": "vtable stored by ESpawnSmackable's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7ec",
+   "name": "ESpawnTraffic::vftable",
+   "comment": "vtable stored by ESpawnTraffic's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7f0",
+   "name": "EStartEffect::vftable",
+   "comment": "vtable stored by EStartEffect's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7f4",
+   "name": "EStartMission::vftable",
+   "comment": "vtable stored by EStartMission's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7f8",
+   "name": "EStartTimedAction::vftable",
+   "comment": "vtable stored by EStartTimedAction's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c7fc",
+   "name": "EStartTimer::vftable",
+   "comment": "vtable stored by EStartTimer's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c800",
+   "name": "EStopEffect::vftable",
+   "comment": "vtable stored by EStopEffect's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c804",
+   "name": "EStopSoundPos::vftable",
+   "comment": "vtable stored by EStopSoundPos's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c808",
+   "name": "EStopTimedAction::vftable",
+   "comment": "vtable stored by EStopTimedAction's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c80c",
+   "name": "EStopTimer::vftable",
+   "comment": "vtable stored by EStopTimer's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c810",
+   "name": "EStreamEvent::vftable",
+   "comment": "vtable stored by EStreamEvent's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c814",
+   "name": "ESuppressEffect::vftable",
+   "comment": "vtable stored by ESuppressEffect's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c818",
+   "name": "ESwitchEffectOff::vftable",
+   "comment": "vtable stored by ESwitchEffectOff's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c81c",
+   "name": "ESwitchEffectOn::vftable",
+   "comment": "vtable stored by ESwitchEffectOn's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c820",
+   "name": "ESwitchStingerChannel::vftable",
+   "comment": "vtable stored by ESwitchStingerChannel's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c824",
+   "name": "ETargetBeaconOnOff::vftable",
+   "comment": "vtable stored by ETargetBeaconOnOff's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c828",
+   "name": "ETimerDrawOff::vftable",
+   "comment": "vtable stored by ETimerDrawOff's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c82c",
+   "name": "ETimerDrawOn::vftable",
+   "comment": "vtable stored by ETimerDrawOn's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c830",
+   "name": "ETwoWheelsOff::vftable",
+   "comment": "vtable stored by ETwoWheelsOff's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c834",
+   "name": "ETwoWheelsOn::vftable",
+   "comment": "vtable stored by ETwoWheelsOn's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c838",
+   "name": "EUnloadWeapon::vftable",
+   "comment": "vtable stored by EUnloadWeapon's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018c83c",
+   "name": "EWakeupSmackable::vftable",
+   "comment": "vtable stored by EWakeupSmackable's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018ed58",
+   "name": "Explosion::vftable",
+   "comment": "vtable stored by Explosion's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0019fe78",
+   "name": "GGirlieMaterial::vftable",
+   "comment": "vtable stored by GGirlieMaterial's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a08b8",
+   "name": "GSubtitles::vftable",
+   "comment": "vtable stored by GSubtitles's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018ed98",
+   "name": "Grenade::vftable",
+   "comment": "vtable stored by Grenade's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018edf4",
+   "name": "Human::vftable",
+   "comment": "vtable stored by Human's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a0998",
+   "name": "IniFiles::vftable",
+   "comment": "vtable stored by IniFiles's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018d9fc",
+   "name": "InputDevice::vftable",
+   "comment": "vtable stored by InputDevice's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018ee28",
+   "name": "Mine::vftable",
+   "comment": "vtable stored by Mine's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018eef8",
+   "name": "Missile::vftable",
+   "comment": "vtable stored by Missile's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018ef7c",
+   "name": "Newton::vftable",
+   "comment": "vtable stored by Newton's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018f580",
+   "name": "PBondCar::vftable",
+   "comment": "vtable stored by PBondCar's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018f8bc",
+   "name": "PHelicopter::vftable",
+   "comment": "vtable stored by PHelicopter's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018fa00",
+   "name": "PVehicle::vftable",
+   "comment": "vtable stored by PVehicle's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018f8fc",
+   "name": "PhysicsNamespace::vftable",
+   "comment": "vtable stored by PhysicsNamespace's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018f9a0",
+   "name": "PhysicsObject::vftable",
+   "comment": "vtable stored by PhysicsObject's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a7730",
+   "name": "RCMP::DECODER::vftable",
+   "comment": "vtable stored by RCMP::DECODER's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001927c8",
+   "name": "RColorize::vftable",
+   "comment": "vtable stored by RColorize's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00192838",
+   "name": "RDecalManager::vftable",
+   "comment": "vtable stored by RDecalManager's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00191514",
+   "name": "RFog::vftable",
+   "comment": "vtable stored by RFog's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00192bdc",
+   "name": "RGain::vftable",
+   "comment": "vtable stored by RGain's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001931e0",
+   "name": "RGlareManager::vftable",
+   "comment": "vtable stored by RGlareManager's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00192bf4",
+   "name": "RLensFlareManager::vftable",
+   "comment": "vtable stored by RLensFlareManager's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00191628",
+   "name": "RLightManager::vftable",
+   "comment": "vtable stored by RLightManager's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00192d20",
+   "name": "RLightning::vftable",
+   "comment": "vtable stored by RLightning's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00192d38",
+   "name": "RMissileCam::vftable",
+   "comment": "vtable stored by RMissileCam's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00192da8",
+   "name": "RParticleSystem::vftable",
+   "comment": "vtable stored by RParticleSystem's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00192e54",
+   "name": "RParticulate::vftable",
+   "comment": "vtable stored by RParticulate's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001918ac",
+   "name": "RPlayerCamera::vftable",
+   "comment": "vtable stored by RPlayerCamera's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00191910",
+   "name": "RPlayerViewCamera::vftable",
+   "comment": "vtable stored by RPlayerViewCamera's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00192ec4",
+   "name": "RPostProcessing::vftable",
+   "comment": "vtable stored by RPostProcessing's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001926a4",
+   "name": "RReflection::vftable",
+   "comment": "vtable stored by RReflection's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001919a0",
+   "name": "RRenderDebugViewPerspective::vftable",
+   "comment": "vtable stored by RRenderDebugViewPerspective's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001919b4",
+   "name": "RRenderDebugViewScreenSpace::vftable",
+   "comment": "vtable stored by RRenderDebugViewScreenSpace's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00191aa8",
+   "name": "RRenderHUDView::vftable",
+   "comment": "vtable of the RRenderHUDView object RRenderHigh's constructor builds inline (at RRenderHigh+0x28); Version Tracking agrees"
+  },
+  {
+   "address": "0x00191b2c",
+   "name": "RRenderWorldCamera::vftable",
+   "comment": "vtable stored by RRenderWorldCamera's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00191be0",
+   "name": "RSceneObj::vftable",
+   "comment": "vtable stored by RSceneObj's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00192fd4",
+   "name": "RShadowMap::vftable",
+   "comment": "vtable stored by RShadowMap's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00191c78",
+   "name": "RSkeletalObj::vftable",
+   "comment": "vtable stored by RSkeletalObj's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00193008",
+   "name": "RSniperZoom::vftable",
+   "comment": "vtable stored by RSniperZoom's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001921b4",
+   "name": "RTextureContextManager::vftable",
+   "comment": "vtable stored by RTextureContextManager's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001922d0",
+   "name": "RVehicle::vftable",
+   "comment": "vtable stored by RVehicle's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001930b0",
+   "name": "RVehicleParticle::vftable",
+   "comment": "vtable stored by RVehicleParticle's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00192444",
+   "name": "RViewCamera::vftable",
+   "comment": "vtable stored by RViewCamera's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001930b8",
+   "name": "RWater::vftable",
+   "comment": "vtable stored by RWater's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001924e4",
+   "name": "RWorldCamera::vftable",
+   "comment": "vtable stored by RWorldCamera's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018ffe4",
+   "name": "RayShell::vftable",
+   "comment": "vtable stored by RayShell's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001935e0",
+   "name": "SRuleAlways::vftable",
+   "comment": "vtable stored by SRuleAlways's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00193630",
+   "name": "SRuleAmmo::vftable",
+   "comment": "vtable stored by SRuleAmmo's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00193620",
+   "name": "SRuleCollision::vftable",
+   "comment": "vtable stored by SRuleCollision's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001935e8",
+   "name": "SRuleDamage::vftable",
+   "comment": "vtable stored by SRuleDamage's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001935f0",
+   "name": "SRuleDeath::vftable",
+   "comment": "vtable stored by SRuleDeath's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00193610",
+   "name": "SRuleDifficulty::vftable",
+   "comment": "vtable stored by SRuleDifficulty's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00193638",
+   "name": "SRuleHealth::vftable",
+   "comment": "vtable stored by SRuleHealth's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001935f8",
+   "name": "SRulePIP::vftable",
+   "comment": "vtable stored by SRulePIP's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00193618",
+   "name": "SRulePlayerDir::vftable",
+   "comment": "vtable stored by SRulePlayerDir's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00193600",
+   "name": "SRuleProg::vftable",
+   "comment": "vtable stored by SRuleProg's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00193628",
+   "name": "SRuleProgCounter::vftable",
+   "comment": "vtable stored by SRuleProgCounter's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00193608",
+   "name": "SRuleProperty::vftable",
+   "comment": "vtable stored by SRuleProperty's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00193640",
+   "name": "SRuleRange::vftable",
+   "comment": "vtable stored by SRuleRange's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00193648",
+   "name": "SRuleSpeed::vftable",
+   "comment": "vtable stored by SRuleSpeed's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00193650",
+   "name": "SRuleTimer::vftable",
+   "comment": "vtable stored by SRuleTimer's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018ea0c",
+   "name": "Schedule::vftable",
+   "comment": "vtable stored by Schedule's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00190034",
+   "name": "Sentry::vftable",
+   "comment": "vtable stored by Sentry's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0019006c",
+   "name": "Shell::vftable",
+   "comment": "vtable stored by Shell's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00190248",
+   "name": "Smackable::vftable",
+   "comment": "vtable stored by Smackable's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00189e0c",
+   "name": "StandardAnimationController::vftable",
+   "comment": "vtable stored by StandardAnimationController's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2244",
+   "name": "UCarpNamespace::vftable",
+   "comment": "vtable stored by UCarpNamespace's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x001a2240",
+   "name": "USymbolTable::vftable",
+   "comment": "vtable stored by USymbolTable's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x0018db38",
+   "name": "XBoxPadDevice::vftable",
+   "comment": "vtable stored by XBoxPadDevice's constructor/destructor (data/vtables.json)"
+  },
+  {
+   "address": "0x00243a77",
+   "name": "ASoundManager::fMissionOver",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x00355e88"
+  },
+  {
+   "address": "0x001ca200",
+   "name": "WTriggerManager::fgIterCount",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x0033aa98"
+  },
+  {
+   "address": "0x001dde44",
+   "name": "AICharacterPedestrian::fgPedVoiceDelay",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x003c8250"
+  },
+  {
+   "address": "0x00243b10",
+   "name": "URefCounter<ABank>::initialised",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x003562c8"
+  },
+  {
+   "address": "0x00244ef8",
+   "name": "SNDserverclients",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x00357410"
+  },
+  {
+   "address": "0x001f1cf0",
+   "name": "RSceneObj::fgCachedDrawInfo",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x00333f34"
+  },
+  {
+   "address": "0x001f2588",
+   "name": "RSceneObj::fgNumVisibleDrawLastObjs",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x003c8324"
+  },
+  {
+   "address": "0x001f1cf8",
+   "name": "RSceneObj::fgNumVisibleObjs",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x003c8320"
+  },
+  {
+   "address": "0x00242fc8",
+   "name": "objHeapClass",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x00355b30"
+  },
+  {
+   "address": "0x001d48c8",
+   "name": "UMemory::fgFastBlocks",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x00355b38"
+  },
+  {
+   "address": "0x001de920",
+   "name": "AIVehicleController::fPreselectedUsedTrafficTypes",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x0032b756"
+  },
+  {
+   "address": "0x00243a5c",
+   "name": "ASoundManager::fgFailedStreams",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x00355dc4"
+  },
+  {
+   "address": "0x001e4768",
+   "name": "gDVD",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x0032e68c"
+  },
+  {
+   "address": "0x001c4aa0",
+   "name": "RMissileCam::fFrameName",
+   "comment": "Version Tracking Implied Match (AVAILABLE) with PS2 0x00334d78"
+  }
+ ]
+}

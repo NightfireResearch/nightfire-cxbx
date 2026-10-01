@@ -1,0 +1,200 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0006f240",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PhysicsObject::GetMass(void) const"
+  },
+  {
+   "address": "0x0006f270",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PhysicsObject::GetRadius(void) const"
+  },
+  {
+   "address": "0x0006f2a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "PhysicsObject::ApplyForces(COORD3 &, COORD3 &)"
+  },
+  {
+   "address": "0x0006f330",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PhysicsObject::GetPosition(void) const"
+  },
+  {
+   "address": "0x0006f360",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PhysicsObject::GetLinearVelocity(void) const"
+  },
+  {
+   "address": "0x0006f390",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PhysicsObject::GetSig(void) const"
+  },
+  {
+   "address": "0x0006f3e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint *"
+    }
+   ],
+   "sheet": "PhysicsObject::GetDamageZones(unsigned int &)"
+  },
+  {
+   "address": "0x0006f3f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "RSceneObj *"
+    }
+   ],
+   "sheet": "PhysicsObject::SetRenderObject(RSceneObj *)"
+  },
+  {
+   "address": "0x0006f430",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "PhysicsObject::SetAudioObject(ASceneObj *)"
+  },
+  {
+   "address": "0x0006f440",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "IFeedback *"
+    }
+   ],
+   "sheet": "PhysicsObject::SetFeedbackObject(IFeedback *)"
+  },
+  {
+   "address": "0x0006f450",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PhysicsObject::GetHitPoints(void)"
+  },
+  {
+   "address": "0x0006f470",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "PhysicsObject::LoseHitPoints(float)"
+  },
+  {
+   "address": "0x0006f4c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PhysicsObject::Simulate(void)"
+  },
+  {
+   "address": "0x0006f520",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "PhysicsObject::GetCollisionBounds(COORD4 &) const"
+  },
+  {
+   "address": "0x0006f580",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "PhysicsObject *"
+    }
+   ],
+   "sheet": "PhysicsObject::SetOwnerObject(PhysicsObject *)"
+  },
+  {
+   "address": "0x0006f5b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "PhysicsObject *"
+    }
+   ],
+   "sheet": "PhysicsObject::IsOwnedBy(PhysicsObject *)"
+  },
+  {
+   "address": "0x0006f660",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PhysicsObject::DebugObject(void)"
+  },
+  {
+   "address": "0x0006f680",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "PhysicsObject::~PhysicsObject(void)"
+  },
+  {
+   "address": "0x0006f7e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    }
+   ],
+   "sheet": "PhysicsObject::SetHitPointLoc(float *)"
+  },
+  {
+   "address": "0x0006f7f0",
+   "calling_convention": "__thiscall",
+   "return": "PhysicsObject *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00097a90",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "PhysicsObject::ComputeImpulse(COORD3 &, COORD3 &)"
+  }
+ ]
+}

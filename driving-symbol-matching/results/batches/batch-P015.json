@@ -1,0 +1,2405 @@
+{
+ "batch": "P015",
+ "program": "DRIVING.ELF",
+ "note": "Names accepted by reading function bodies (review.py). 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x0024ccd8",
+   "expect": "FUN_0024ccd8",
+   "name": "__unpack_d",
+   "sheet_name": "__unpack_d",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5536, body review: corrected from 0x0024cd78: 0x24ccd8 decodes a double into class/sign/exp/fraction and is called by every dp* routine; 0x24cd78 is the static _fpadd_parts (only dpadd/dpsub call it), folded into this sheet row"
+   ]
+  },
+  {
+   "xbox": "0x0024d9b0",
+   "expect": "FUN_0024d9b0",
+   "name": "__unpack_f",
+   "sheet_name": "__unpack_f",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5550, body review: corrected from 0x0024da40: 0x24d9b0 decodes a float (exp 0xff, bias 0x7f) and is called by every fp* routine; 0x24da40 is static _fpadd_parts called only by fpadd/fpsub"
+   ]
+  },
+  {
+   "xbox": "0x0024e8b0",
+   "expect": "FUN_0024e8b0",
+   "name": "__class_type_info::dcast",
+   "sheet_name": "__class_type_info::dcast(type_info &, int, void *, type_info *,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5574, body review: walks the base-class list calling each base's dcast through its vtable after a type_info== check, with ambiguity check - __class_type_info::dcast"
+   ]
+  },
+  {
+   "xbox": "0x0024eaf8",
+   "expect": "FUN_0024eaf8",
+   "name": "__class_type_info::~__class_type_info",
+   "sheet_name": "__class_type_info::~__class_type_info(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5577, body review: calls ~type_info, referenced from a type_info vtable, sits right after the __class_type_info type_info function"
+   ]
+  },
+  {
+   "xbox": "0x0024eb88",
+   "expect": "FUN_0024eb88",
+   "name": "__si_type_info::~__si_type_info",
+   "sheet_name": "__si_type_info::~__si_type_info(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5580, body review: calls ~type_info, referenced from a vtable, sits right after the __si_type_info type_info function"
+   ]
+  },
+  {
+   "xbox": "0x0024ec30",
+   "expect": "FUN_0024ec30",
+   "name": "bad_typeid::~bad_typeid",
+   "sheet_name": "bad_typeid::~bad_typeid(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5584, body review: resets vtable and optionally deletes; referenced from inside __throw_bad_typeid (0x250308) and a vtable; precedes bad_typeid type_info function"
+   ]
+  },
+  {
+   "xbox": "0x0024ecc8",
+   "expect": "FUN_0024ecc8",
+   "name": "bad_cast::~bad_cast",
+   "sheet_name": "bad_cast::~bad_cast(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5587, body review: resets vtable and optionally deletes; referenced from inside __throw_bad_cast (0x250288); precedes bad_cast type_info function"
+   ]
+  },
+  {
+   "xbox": "0x0024ee48",
+   "expect": "FUN_0024ee48",
+   "name": "__empty",
+   "sheet_name": "__empty",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5597, body review: corrected from 0x0024ee50: 0x24ee48 is an 8-byte empty jr ra; 0x24ee50 is static new_eh_context (malloc 0x18/__terminate/memset) folded into this row (8+0x58=0x60)"
+   ]
+  },
+  {
+   "xbox": "0x0024eed0",
+   "expect": "FUN_0024eed0",
+   "name": "__get_eh_info",
+   "sheet_name": "__get_eh_info",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5599, body review: corrected from 0x0024ef20 (static eh_context_static): 0x24eed0 returns (*get_eh_context)()+8 (&eh->info) and is called by every __cp_* exception routine; 0x28+0x28+0x68 of statics = sheet 0xb8"
+   ]
+  },
+  {
+   "xbox": "0x0024ef88",
+   "expect": "FUN_0024ef88",
+   "name": "__get_dynamic_handler_chain",
+   "sheet_name": "__get_dynamic_handler_chain",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5600, body review: returns (*get_eh_context)()+4, the dynamic_handler_chain field that eh_context_static initialises"
+   ]
+  },
+  {
+   "xbox": "0x0024fd50",
+   "expect": "FUN_0024fd50",
+   "name": "terminate",
+   "sheet_name": "terminate(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5609, body review: calls through the __terminate_func pointer (initially __default_terminate) and is called by __eh_alloc/__cp_pop_exception etc."
+   ]
+  },
+  {
+   "xbox": "0x0024fd68",
+   "expect": "FUN_0024fd68",
+   "name": "__default_unexpected",
+   "sheet_name": "__default_unexpected(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5610, body review: calls terminate() and is the initial value of the unexpected-handler pointer (DATA 0x33c5ac); Ghidra's body also swallows set_terminate"
+   ]
+  },
+  {
+   "xbox": "0x00250070",
+   "expect": "FUN_00250070",
+   "name": "__check_eh_spec",
+   "sheet_name": "__check_eh_spec",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5623, body review: loops over the spec list with __throw_type_match_rtti, calls unexpected() and throws bad_exception (retail range also holds __throw_bad_cast/typeid)"
+   ]
+  },
+  {
+   "xbox": "0x00251188",
+   "expect": "FUN_00251188",
+   "name": "__frame_state_for",
+   "sheet_name": "__frame_state_for",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5641, body review: find_fde + extract_cie_info + execute_cfa_insn loop into a memset 0x2f8 frame state, called from __throw/__rethrow"
+   ]
+  },
+  {
+   "xbox": "0x002514f8",
+   "expect": "FUN_002514f8",
+   "name": "bad_alloc::what",
+   "sheet_name": "bad_alloc::what(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5645, body review: returns \"bad_alloc\", referenced from a vtable, precedes the bad_alloc type_info function"
+   ]
+  },
+  {
+   "xbox": "0x00251a78",
+   "expect": "FUN_00251a78",
+   "name": "__is_pointer",
+   "sheet_name": "__is_pointer(void *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5650, body review: __dynamic_cast of a type_info to __pointer_type_info, returns non-null test"
+   ]
+  },
+  {
+   "xbox": "0x0027d088",
+   "expect": "FUN_0027d088",
+   "name": "EAGL::TARExtension::SwapClut",
+   "sheet_name": "EAGL::TARExtension::SwapClut(SHAPE *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5694, body review: EAGL::TAR::SwapClut(SHAPE*) calls it with (this+4, shape); finds the CLUT chunk in the shape and re-inits the TAR image"
+   ]
+  },
+  {
+   "xbox": "0x0027f480",
+   "expect": "FUN_0027f480",
+   "name": "EAGLInternal::Image::Init",
+   "sheet_name": "EAGLInternal::Image::Init(char *, int, int, int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5760, body review: takes (this, data, w, h, format, flags), clears fields, switches on pixel format, calls BuildChains; called from TARExtension::Init and SwapClut"
+   ]
+  },
+  {
+   "xbox": "0x0027f850",
+   "expect": "FUN_0027f850",
+   "name": "EAGLInternal::Image::BuildChains",
+   "sheet_name": "EAGLInternal::Image::BuildChains(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5761, body review: allocates 'PreBuilt Texture Chain' and fills the image-upload DMA tags"
+   ]
+  },
+  {
+   "xbox": "0x00285608",
+   "expect": "FUN_00285608",
+   "name": "EAGL::Model::VariableTable::find_end",
+   "sheet_name": "EAGL::Model::VariableTable::find_end(char *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5789, body review: searches the variable table backwards with strncasecmp, returns end if none - find_end; sits before ModelConstructor"
+   ]
+  },
+  {
+   "xbox": "0x00285780",
+   "expect": "FUN_00285780",
+   "name": "EAGL::Model::GetChild",
+   "sheet_name": "EAGL::Model::GetChild(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5798, body review: corrected from 0x002858d8 (a strcmp lookup returning a geometry slot, probably GetGeometry): 0x285780 walks the three child-model lists (+0xa4/+0xac/+0xa8) strcmp'ing names"
+   ]
+  },
+  {
+   "xbox": "0x002869c0",
+   "expect": "FUN_002869c0",
+   "name": "EAGL::Model::VariableTable::find_first",
+   "sheet_name": "EAGL::Model::VariableTable::find_first(char *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5835, body review: forward strncasecmp search of the variable table returning first match or end - find_first"
+   ]
+  },
+  {
+   "xbox": "0x00286c68",
+   "expect": "FUN_00286c68",
+   "name": "EAGLInternal::ProfileDMDraw_global_ctors",
+   "sheet_name": "global constructors keyed to EAGLInternal::ProfileDMDraw",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5838, body review: ctors-table entry (DATA 0x36301c) calling the file's static init with (1,0xffff)"
+   ]
+  },
+  {
+   "xbox": "0x00289548",
+   "expect": "FUN_00289548",
+   "name": "EAGLInternal::DMA_To_VIF1_SourceChain",
+   "sheet_name": "EAGLInternal::DMA_To_VIF1_SourceChain(unsigned long *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5912, body review: writes VIF1 TADR and CHCR in chain mode (0x105) from (addr, flags) - source-chain DMA to VIF1"
+   ]
+  },
+  {
+   "xbox": "0x002910d8",
+   "expect": "FUN_002910d8",
+   "name": "EAGL::RenderContextExtension::ReadImageDuringFrame",
+   "sheet_name": "EAGL::RenderContextExtension::ReadImageDuringFrame(EAGL::TAR *,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5973, body review: reads the TAR's image dims/format and forwards to ReadRectDuringFrame"
+   ]
+  },
+  {
+   "xbox": "0x00291208",
+   "expect": "FUN_00291208",
+   "name": "EAGL::RenderContextExtension::SetDXPos",
+   "sheet_name": "EAGL::RenderContextExtension::SetDXPos(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5982, body review: stores int at context+0x76c; GetDXPos reads the same field; called from RRenderer"
+   ]
+  },
+  {
+   "xbox": "0x00291218",
+   "expect": "FUN_00291218",
+   "name": "EAGL::RenderContextExtension::GetDXPos",
+   "sheet_name": "EAGL::RenderContextExtension::GetDXPos(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5983, body review: returns context+0x76c, the field SetDXPos writes"
+   ]
+  },
+  {
+   "xbox": "0x00291228",
+   "expect": "FUN_00291228",
+   "name": "EAGL::RenderContextExtension::SetDYPos",
+   "sheet_name": "EAGL::RenderContextExtension::SetDYPos(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5984, body review: stores int at context+0x770 next to the DX field; called from RRenderer right after SetDXPos"
+   ]
+  },
+  {
+   "xbox": "0x00291258",
+   "expect": "FUN_00291258",
+   "name": "EAGL::RenderContextExtension::SetTRCCalledEndFrame",
+   "sheet_name": "EAGL::RenderContextExtension::SetTRCCalledEndFrame(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5987, body review: stores flag at context+0x878, called from BeginFrame and EndFrame"
+   ]
+  },
+  {
+   "xbox": "0x00291338",
+   "expect": "FUN_00291338",
+   "name": "EAGLInternal::RenderContextPrivate::EAGLVBL_start",
+   "sheet_name": "EAGLInternal::RenderContextPrivate::EAGLVBL_start(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5990, body review: VBL handler passed by InstallVBLHandler: bumps VBL count, when due swaps frame regs and ExecuteLists, then EI"
+   ]
+  },
+  {
+   "xbox": "0x002913e8",
+   "expect": "FUN_002913e8",
+   "name": "EAGL::RenderContextExtension::SetVBLKick",
+   "sheet_name": "EAGL::RenderContextExtension::SetVBLKick(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5993, body review: stores bool at +0x7fc and returns 1, called from RRenderer; sits just before SetZWritesEnable"
+   ]
+  },
+  {
+   "xbox": "0x00291ce8",
+   "expect": "FUN_00291ce8",
+   "name": "EAGL::TextureRenderContextExtension::SetRenderMask",
+   "sheet_name": "EAGL::TextureRenderContextExtension::SetRenderMask(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6021, body review: stores mask at +0x38 and emits a FRAME_1 (0x4c) GS register with FBMSK in the high word"
+   ]
+  },
+  {
+   "xbox": "0x00291e88",
+   "expect": "FUN_00291e88",
+   "name": "EAGL::TextureRenderContextExtension::SetAlphaCorrection",
+   "sheet_name": "EAGL::TextureRenderContextExtension::SetAlphaCorrection(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6022, body review: emits the FBA_1 (0x4a) GS register from the argument - alpha correction"
+   ]
+  },
+  {
+   "xbox": "0x00291fe8",
+   "expect": "FUN_00291fe8",
+   "name": "EAGL::TextureRenderContextExtension::DisableZWrite",
+   "sheet_name": "EAGL::TextureRenderContextExtension::DisableZWrite(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6023, body review: stores flag at +0x3c and emits ZBUF_1 (0x4e) with ZMSK bit 32; called from SetZWritesEnable"
+   ]
+  },
+  {
+   "xbox": "0x00293500",
+   "expect": "FUN_00293500",
+   "name": "EAGL::Transform::PostMult",
+   "sheet_name": "EAGL::Transform::PostMult(EAGL::Transform &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6053, body review: MultMatrix(this, m, this), same as AUF PostMult(const Transform&)"
+   ]
+  },
+  {
+   "xbox": "0x00293520",
+   "expect": "FUN_00293520",
+   "name": "EAGL::Transform::BuildScale",
+   "sheet_name": "EAGL::Transform::BuildScale(float, float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6054, body review: four floats written to the diagonal, zeros elsewhere - BuildScale"
+   ]
+  },
+  {
+   "xbox": "0x00294030",
+   "expect": "FUN_00294030",
+   "name": "EAGL::Transform::Inverse",
+   "sheet_name": "EAGL::Transform::Inverse(EAGL::Transform *) const",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6068, body review: calls Invert(this, out) - const Inverse(Transform*)"
+   ]
+  },
+  {
+   "xbox": "0x00294188",
+   "expect": "FUN_00294188",
+   "name": "EAGL::Transform::ElementMinor",
+   "sheet_name": "EAGL::Transform::ElementMinor(EAGL::Transform &, int, int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6072, body review: copies the minor skipping row/col, sign by (row+col) parity, times Determinant(minor,3)"
+   ]
+  },
+  {
+   "xbox": "0x002944e0",
+   "expect": "FUN_002944e0",
+   "name": "EAGL::Transform::AppendRotate",
+   "sheet_name": "EAGL::Transform::AppendRotate(float, float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6076, body review: BuildRotate (0x295410) into a temp then MultMatrix(this,temp,this)"
+   ]
+  },
+  {
+   "xbox": "0x002949a0",
+   "expect": "FUN_002949a0",
+   "name": "EAGL::Transform::PrependRotate",
+   "sheet_name": "EAGL::Transform::PrependRotate(float, float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6084, body review: BuildRotate (0x295410) into a temp then PreMult"
+   ]
+  },
+  {
+   "xbox": "0x00294f28",
+   "expect": "FUN_00294f28",
+   "name": "EAGL::Transform::OrthoInverse",
+   "sheet_name": "EAGL::Transform::OrthoInverse(EAGL::Transform *) const",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6092, body review: writes transposed rotation and -t*R translation to the output matrix"
+   ]
+  },
+  {
+   "xbox": "0x00296f58",
+   "expect": "FUN_00296f58",
+   "name": "EAGL::ViewPort::EndView",
+   "sheet_name": "EAGL::ViewPort::EndView(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6112, body review: clears the active flag and calls BeginView unless state is 0/1, then state=0 - same shape as AUF EndView"
+   ]
+  },
+  {
+   "xbox": "0x00296fa8",
+   "expect": "FUN_00296fa8",
+   "name": "EAGL::ViewPortExtension::ViewPortExtension",
+   "sheet_name": "EAGL::ViewPortExtension::ViewPortExtension(EAGL::ViewPort *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6115, body review: *this = viewport; called from the ViewPort ctor; identical to AUF body"
+   ]
+  },
+  {
+   "xbox": "0x002985d0",
+   "expect": "FUN_002985d0",
+   "name": "EAGL::VU0_SQTquattom4",
+   "sheet_name": "EAGL::VU0_SQTquattom4(COORD4 &, COORD4 &, COORD4 &, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6143, body review: VU0 quat-to-matrix scaled by arg1 with translation arg3 stored to the MATRIX4 - SQTquattom4"
+   ]
+  },
+  {
+   "xbox": "0x00299458",
+   "expect": "FUN_00299458",
+   "name": "EAGL::Profiler::ProcessProfile",
+   "sheet_name": "EAGL::Profiler::ProcessProfile(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6156, body review: corrected from 0x00299588 (the file's static init, called with (1,0xffff)): 0x299458 is called from EndFrame, builds a Profiler on the global region and runs ProcessRegion per region, like AUF"
+   ]
+  },
+  {
+   "xbox": "0x002998e8",
+   "expect": "FUN_002998e8",
+   "name": "EAGL::ProfilerRegion::~ProfilerRegion",
+   "sheet_name": "EAGL::ProfilerRegion::~ProfilerRegion(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6160, body review: RemoveRegionFromList then optional delete - same as AUF ~ProfilerRegion"
+   ]
+  },
+  {
+   "xbox": "0x0029b6b8",
+   "expect": "FUN_0029b6b8",
+   "name": "EAGL::DrawClipTextured::Init",
+   "sheet_name": "EAGL::DrawClipTextured::Init(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6187, body review: body identical to DrawTextured::Init (buffer allocs and attribute lookups) and sits just before DrawClipTextured::Begin"
+   ]
+  },
+  {
+   "xbox": "0x0029f478",
+   "expect": "FUN_0029f478",
+   "name": "EAGL::DynamicLoader::GetSymbol",
+   "sheet_name": "EAGL::DynamicLoader::GetSymbol(int) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6275, body review: corrected from 0x0029f5b0 (an ELF-hash name lookup, dlsym-like): 0x29f478 indexes the symbol table by int and returns name/address/flags like AUF GetSymbol"
+   ]
+  },
+  {
+   "xbox": "0x002659a8",
+   "expect": "FUN_002659a8",
+   "name": "EAGLAnim::FnCompoundChannel::EvalEvent",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::EvalEvent(float, float, EAGLAnim::",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6409, body review: in the vtable slot used by base EvalEvent (0x26dff8) elsewhere; lazily builds children then ORs each child's EvalEvent(float,float,...)"
+   ]
+  },
+  {
+   "xbox": "0x00265b28",
+   "expect": "FUN_00265b28",
+   "name": "EAGLAnim::FnCompoundChannel::EvalSQT",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::EvalSQT(float, float *, EAGLAnim::",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6410, body review: occupies the EvalSQT slot of the FnCompoundChannel vtable (slot where other vtables hold base stub 0x26dfe0)"
+   ]
+  },
+  {
+   "xbox": "0x00265c90",
+   "expect": "FUN_00265c90",
+   "name": "EAGLAnim::FnCompoundChannel::EvalWeights",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::EvalWeights(float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6411, body review: occupies the EvalWeights slot of the FnCompoundChannel vtable (base stub 0x26e000 slot)"
+   ]
+  },
+  {
+   "xbox": "0x00265df8",
+   "expect": "FUN_00265df8",
+   "name": "EAGLAnim::FnCompoundChannel::EvalVel2D",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::EvalVel2D(float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6412, body review: occupies the EvalVel2D slot of the FnCompoundChannel vtable (base stub 0x26dff0 slot)"
+   ]
+  },
+  {
+   "xbox": "0x00265f60",
+   "expect": "FUN_00265f60",
+   "name": "EAGLAnim::FnCompoundChannel::EvalState",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::EvalState(float, EAGLAnim::State *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6413, body review: occupies the EvalState slot of the FnCompoundChannel vtable (base stub 0x26e008 slot)"
+   ]
+  },
+  {
+   "xbox": "0x002660c8",
+   "expect": "FUN_002660c8",
+   "name": "EAGLAnim::FnCompoundChannel::GetPhaseChan",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::GetPhaseChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6414, body review: occupies the GetPhaseChan slot of the FnCompoundChannel vtable (base stub 0x26e018 slot)"
+   ]
+  },
+  {
+   "xbox": "0x00267178",
+   "expect": "FUN_00267178",
+   "name": "EAGLAnim::FnRawStateChan::operator_new",
+   "sheet_name": "EAGLAnim::FnRawStateChan::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6451, body review: eagl_alloc(size, \"EAGLAnim::FnRawStateChan new\")"
+   ]
+  },
+  {
+   "xbox": "0x002671a0",
+   "expect": "FUN_002671a0",
+   "name": "EAGLAnim::FnRawStateChan::operator_new",
+   "sheet_name": "EAGLAnim::FnRawStateChan::operator new(unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6452, body review: eagl_alloc(size, name) in the class's operator new/delete run"
+   ]
+  },
+  {
+   "xbox": "0x002671c8",
+   "expect": "FUN_002671c8",
+   "name": "EAGLAnim::FnRawStateChan::operator_delete",
+   "sheet_name": "EAGLAnim::FnRawStateChan::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6453, body review: eagl_free between new(char*) and new[] in the class's operator run"
+   ]
+  },
+  {
+   "xbox": "0x002671f0",
+   "expect": "FUN_002671f0",
+   "name": "EAGLAnim::FnRawStateChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnRawStateChan::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6454, body review: eagl_alloc(size, \"EAGLAnim::FnRawStateChan new[]\")"
+   ]
+  },
+  {
+   "xbox": "0x00267218",
+   "expect": "FUN_00267218",
+   "name": "EAGLAnim::FnRawStateChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnRawStateChan::operator new [](unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6455, body review: eagl_alloc(size, name) right after new[]"
+   ]
+  },
+  {
+   "xbox": "0x00267240",
+   "expect": "FUN_00267240",
+   "name": "EAGLAnim::FnRawStateChan::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnRawStateChan::operator delete [](void *, unsigned i",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6456, body review: eagl_free after new[](char*), before the FnRawStateChan ctor"
+   ]
+  },
+  {
+   "xbox": "0x00268ab8",
+   "expect": "FUN_00268ab8",
+   "name": "EAGLAnim::FnDeltaQ::operator_new",
+   "sheet_name": "EAGLAnim::FnDeltaQ::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6484, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaQ new\")"
+   ]
+  },
+  {
+   "xbox": "0x00268ae0",
+   "expect": "FUN_00268ae0",
+   "name": "EAGLAnim::FnDeltaQ::operator_new",
+   "sheet_name": "EAGLAnim::FnDeltaQ::operator new(unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6485, body review: eagl_alloc(size, name) in the FnDeltaQ operator run"
+   ]
+  },
+  {
+   "xbox": "0x00268b08",
+   "expect": "FUN_00268b08",
+   "name": "EAGLAnim::FnDeltaQ::operator_delete",
+   "sheet_name": "EAGLAnim::FnDeltaQ::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6486, body review: eagl_free between new(char*) and new[]"
+   ]
+  },
+  {
+   "xbox": "0x00268b30",
+   "expect": "FUN_00268b30",
+   "name": "EAGLAnim::FnDeltaQ::operator_new_array",
+   "sheet_name": "EAGLAnim::FnDeltaQ::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6487, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaQ new[]\")"
+   ]
+  },
+  {
+   "xbox": "0x00268b58",
+   "expect": "FUN_00268b58",
+   "name": "EAGLAnim::FnDeltaQ::operator_new_array",
+   "sheet_name": "EAGLAnim::FnDeltaQ::operator new [](unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6488, body review: eagl_alloc(size, name) right after new[]"
+   ]
+  },
+  {
+   "xbox": "0x00268b80",
+   "expect": "FUN_00268b80",
+   "name": "EAGLAnim::FnDeltaQ::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnDeltaQ::operator delete [](void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6489, body review: eagl_free after new[](char*), before the FnDeltaQ ctor"
+   ]
+  },
+  {
+   "xbox": "0x0026b1f8",
+   "expect": "FUN_0026b1f8",
+   "name": "EAGLAnim::FnDeltaSingleQ::operator_new",
+   "sheet_name": "EAGLAnim::FnDeltaSingleQ::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6503, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaSingleQ new\")"
+   ]
+  },
+  {
+   "xbox": "0x0026b220",
+   "expect": "FUN_0026b220",
+   "name": "EAGLAnim::FnDeltaSingleQ::operator_new",
+   "sheet_name": "EAGLAnim::FnDeltaSingleQ::operator new(unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6504, body review: eagl_alloc(size, name) in the FnDeltaSingleQ operator run"
+   ]
+  },
+  {
+   "xbox": "0x0026b248",
+   "expect": "FUN_0026b248",
+   "name": "EAGLAnim::FnDeltaSingleQ::operator_delete",
+   "sheet_name": "EAGLAnim::FnDeltaSingleQ::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6505, body review: eagl_free between new(char*) and new[]"
+   ]
+  },
+  {
+   "xbox": "0x0026b270",
+   "expect": "FUN_0026b270",
+   "name": "EAGLAnim::FnDeltaSingleQ::operator_new_array",
+   "sheet_name": "EAGLAnim::FnDeltaSingleQ::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6506, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaSingleQ new[]\")"
+   ]
+  },
+  {
+   "xbox": "0x0026b298",
+   "expect": "FUN_0026b298",
+   "name": "EAGLAnim::FnDeltaSingleQ::operator_new_array",
+   "sheet_name": "EAGLAnim::FnDeltaSingleQ::operator new [](unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6507, body review: eagl_alloc(size, name) right after new[]"
+   ]
+  },
+  {
+   "xbox": "0x0026b2c0",
+   "expect": "FUN_0026b2c0",
+   "name": "EAGLAnim::FnDeltaSingleQ::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnDeltaSingleQ::operator delete [](void *, unsigned i",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6508, body review: eagl_free after new[](char*), before the FnDeltaSingleQ ctor"
+   ]
+  },
+  {
+   "xbox": "0x0026b950",
+   "expect": "FUN_0026b950",
+   "name": "EAGLAnim::FnDeltaSingleQ::SetAnimMemoryMap",
+   "sheet_name": "EAGLAnim::FnDeltaSingleQ::SetAnimMemoryMap(EAGLAnim::AnimMemory",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6515, body review: stores the map at +0xc and sits in the same vtable slot (0x3afb64) as FnCompoundChannel::SetAnimMemoryMap (0x266518, slot 0x3af0cc)"
+   ]
+  },
+  {
+   "xbox": "0x0026bbc8",
+   "expect": "FUN_0026bbc8",
+   "name": "EAGLAnim::FnDeltaQFast::SetAnimMemoryMap",
+   "sheet_name": "EAGLAnim::FnDeltaQFast::SetAnimMemoryMap(EAGLAnim::AnimMemoryMa",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6523, body review: Stores the memory map, fetches ConstBoneIdx/ConstPhysical, allocates the +0x10/+0x20/+0x2c buffers and UnQuantizes min-ranges: SetAnimMemoryMap."
+   ]
+  },
+  {
+   "xbox": "0x0026bd08",
+   "expect": "FUN_0026bd08",
+   "name": "EAGLAnim::FnDeltaQFast::EvalSQT",
+   "sheet_name": "EAGLAnim::FnDeltaQFast::EvalSQT(float, float *, EAGLAnim::BoneM",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6524, body review: (time, out, mask) evaluator that delegates to the Mask variant when mask!=0 and calls UpdateNextQs (0x26c4f8): EvalSQT."
+   ]
+  },
+  {
+   "xbox": "0x0026c4f8",
+   "expect": "FUN_0026c4f8",
+   "name": "EAGLAnim::FnDeltaQFast::UpdateNextQs",
+   "sheet_name": "EAGLAnim::FnDeltaQFast::UpdateNextQs(EAGLAnim::DeltaQFast *, in",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6525, body review: Called only from EvalSQT; (this, DeltaQFast*, int frame, ...) rebuilds the next quaternion buffer via UnQuantize/delta add: UpdateNextQs."
+   ]
+  },
+  {
+   "xbox": "0x0026c6e8",
+   "expect": "FUN_0026c6e8",
+   "name": "EAGLAnim::FnDeltaQFast::EvalSQTMask",
+   "sheet_name": "EAGLAnim::FnDeltaQFast::EvalSQTMask(float, float *, EAGLAnim::B",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6526, body review: Masked twin of EvalSQT (tracks mask at +0x3c) called from it and calling UpdateNextQsMask: EvalSQTMask."
+   ]
+  },
+  {
+   "xbox": "0x0026fea0",
+   "expect": "FUN_0026fea0",
+   "name": "EAGLAnim::FnDeltaF3::operator_new",
+   "sheet_name": "EAGLAnim::FnDeltaF3::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6613, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaF3 new\")."
+   ]
+  },
+  {
+   "xbox": "0x0026fec8",
+   "expect": "FUN_0026fec8",
+   "name": "EAGLAnim::FnDeltaF3::operator_new",
+   "sheet_name": "EAGLAnim::FnDeltaF3::operator new(unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6614, body review: eagl_alloc(size, name) passthrough directly after operator new(unsigned) in the standard new/new(char*)/delete/new[]/new[](char*)/delete[] run."
+   ]
+  },
+  {
+   "xbox": "0x0026fef0",
+   "expect": "FUN_0026fef0",
+   "name": "EAGLAnim::FnDeltaF3::operator_delete",
+   "sheet_name": "EAGLAnim::FnDeltaF3::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6615, body review: eagl_free tail call in the delete slot of the FnDeltaF3 operator run."
+   ]
+  },
+  {
+   "xbox": "0x0026ff18",
+   "expect": "FUN_0026ff18",
+   "name": "EAGLAnim::FnDeltaF3::operator_new_array",
+   "sheet_name": "EAGLAnim::FnDeltaF3::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6616, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaF3 new[]\")."
+   ]
+  },
+  {
+   "xbox": "0x0026ff40",
+   "expect": "FUN_0026ff40",
+   "name": "EAGLAnim::FnDeltaF3::operator_new_array",
+   "sheet_name": "EAGLAnim::FnDeltaF3::operator new [](unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6617, body review: eagl_alloc(size, name) directly after new[] in the FnDeltaF3 operator run."
+   ]
+  },
+  {
+   "xbox": "0x0026ff68",
+   "expect": "FUN_0026ff68",
+   "name": "EAGLAnim::FnDeltaF3::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnDeltaF3::operator delete [](void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6618, body review: eagl_free in the delete[] slot, followed by FnDeltaF3::FnDeltaF3."
+   ]
+  },
+  {
+   "xbox": "0x00272248",
+   "expect": "FUN_00272248",
+   "name": "EAGLAnim::RawPoseChannel::Eval",
+   "sheet_name": "EAGLAnim::RawPoseChannel::Eval(float, float *, bool, EAGLAnim::",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6692, body review: Same shape as AUF RawPoseChannel::Eval: integer frame, interpolates channel functions when fraction!=0 and interp flag set, else calls EvalFrame (0x2724d8)."
+   ]
+  },
+  {
+   "xbox": "0x00272ae8",
+   "expect": "FUN_00272ae8",
+   "name": "EAGLAnim::QuatF4Interp",
+   "sheet_name": "EAGLAnim::QuatF4Interp(float, float *&, float *&, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6698, body review: Matches AUF QuatF4Interp: reads 4 floats from each stream into qt0/out then slerps (VU0_fastqslerp)."
+   ]
+  },
+  {
+   "xbox": "0x002759e0",
+   "expect": "FUN_002759e0",
+   "name": "EAGLAnim::FnDeltaQuatChan::operator_new",
+   "sheet_name": "EAGLAnim::FnDeltaQuatChan::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6773, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaQuatChan new\")."
+   ]
+  },
+  {
+   "xbox": "0x00275a08",
+   "expect": "FUN_00275a08",
+   "name": "EAGLAnim::FnDeltaQuatChan::operator_new",
+   "sheet_name": "EAGLAnim::FnDeltaQuatChan::operator new(unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6774, body review: eagl_alloc(size, name) after FnDeltaQuatChan operator new in the operator run."
+   ]
+  },
+  {
+   "xbox": "0x00275a30",
+   "expect": "FUN_00275a30",
+   "name": "EAGLAnim::FnDeltaQuatChan::operator_delete",
+   "sheet_name": "EAGLAnim::FnDeltaQuatChan::operator delete(void *, unsigned int",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6775, body review: eagl_free in the delete slot of the FnDeltaQuatChan operator run."
+   ]
+  },
+  {
+   "xbox": "0x00275a58",
+   "expect": "FUN_00275a58",
+   "name": "EAGLAnim::FnDeltaQuatChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnDeltaQuatChan::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6776, body review: eagl_alloc(size, \"EAGLAnim::FnDeltaQuatChan new[]\")."
+   ]
+  },
+  {
+   "xbox": "0x00275a80",
+   "expect": "FUN_00275a80",
+   "name": "EAGLAnim::FnDeltaQuatChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnDeltaQuatChan::operator new [](unsigned int, char *",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6777, body review: eagl_alloc(size, name) after new[] in the FnDeltaQuatChan operator run."
+   ]
+  },
+  {
+   "xbox": "0x00275aa8",
+   "expect": "FUN_00275aa8",
+   "name": "EAGLAnim::FnDeltaQuatChan::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnDeltaQuatChan::operator delete [](void *, unsigned",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6778, body review: eagl_free in the delete[] slot, followed by the FnDeltaQuatChan ctor."
+   ]
+  },
+  {
+   "xbox": "0x00276658",
+   "expect": "FUN_00276658",
+   "name": "EAGLAnim::FnKeyDeltaChan::GetLength",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::GetLength(float &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6827, body review: corrected from 0x276538 (that is the FnKeyDeltaChan deleting dtor, dtor slot of vtable 0x3b2440); 0x276658 sits in the GetLength vtable slot, writes last key time to float& and returns 1, like AUF."
+   ]
+  },
+  {
+   "xbox": "0x00276688",
+   "expect": "FUN_00276688",
+   "name": "EAGLAnim::FnKeyDeltaChan::EvalToPrevValues",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::EvalToPrevValues(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6828, body review: corrected from 0x2765c0 (that is SetAnimMemoryMap, shared vtable slot); 0x276688(this,int n) runs DecompressValues from the last frame up to n and stores n at +0x10: EvalToPrevValues."
+   ]
+  },
+  {
+   "xbox": "0x002775d8",
+   "expect": "FUN_002775d8",
+   "name": "EAGLAnim::FnPhaseChan::operator_new",
+   "sheet_name": "EAGLAnim::FnPhaseChan::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6839, body review: eagl_alloc(size, \"EAGLAnim::FnPhaseChan new\")."
+   ]
+  },
+  {
+   "xbox": "0x00277600",
+   "expect": "FUN_00277600",
+   "name": "EAGLAnim::FnPhaseChan::operator_new",
+   "sheet_name": "EAGLAnim::FnPhaseChan::operator new(unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6840, body review: eagl_alloc(size, name) after FnPhaseChan operator new in the operator run."
+   ]
+  },
+  {
+   "xbox": "0x00277628",
+   "expect": "FUN_00277628",
+   "name": "EAGLAnim::FnPhaseChan::operator_delete",
+   "sheet_name": "EAGLAnim::FnPhaseChan::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6841, body review: eagl_free in the delete slot of the FnPhaseChan operator run."
+   ]
+  },
+  {
+   "xbox": "0x00277650",
+   "expect": "FUN_00277650",
+   "name": "EAGLAnim::FnPhaseChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnPhaseChan::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6842, body review: eagl_alloc(size, \"EAGLAnim::FnPhaseChan new[]\")."
+   ]
+  },
+  {
+   "xbox": "0x00277678",
+   "expect": "FUN_00277678",
+   "name": "EAGLAnim::FnPhaseChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnPhaseChan::operator new [](unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6843, body review: eagl_alloc(size, name) after new[] in the FnPhaseChan operator run."
+   ]
+  },
+  {
+   "xbox": "0x002776a0",
+   "expect": "FUN_002776a0",
+   "name": "EAGLAnim::FnPhaseChan::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnPhaseChan::operator delete [](void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6844, body review: eagl_free in the delete[] slot, followed by the FnPhaseChan ctor."
+   ]
+  },
+  {
+   "xbox": "0x002776e8",
+   "expect": "FUN_002776e8",
+   "name": "EAGLAnim::FnPhaseChan::FnPhaseChan",
+   "sheet_name": "EAGLAnim::FnPhaseChan::FnPhaseChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6849, body review: Calls FnAnimMemoryMap ctor then installs vtable_EAGLAnim__FnPhaseChan and zeroes fields, as the AUF ctor."
+   ]
+  },
+  {
+   "xbox": "0x00253678",
+   "expect": "FUN_00253678",
+   "name": "FILESYS_getcurrentpath",
+   "sheet_name": "FILESYS_getcurrentpath",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6950, body review: strncpy(out, current-path global, 0x100), right after FILESYS_setcurrentpath: getcurrentpath."
+   ]
+  },
+  {
+   "xbox": "0x00253ba8",
+   "expect": "FUN_00253ba8",
+   "name": "FILESYS_bypassqueuefileinfo",
+   "sheet_name": "FILESYS_bypassqueuefileinfo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6953, body review: Same body as AUF FILESYS_bypassqueuefileinfo ('|' split, FILEDEV_open/getsize, BIG_locateentryz)."
+   ]
+  },
+  {
+   "xbox": "0x00254f08",
+   "expect": "FUN_00254f08",
+   "name": "BIG_name",
+   "sheet_name": "BIG_name",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6978, body review: BIG_locateentry then strcpy name to out (or empty string): BIG_name."
+   ]
+  },
+  {
+   "xbox": "0x00254f60",
+   "expect": "FUN_00254f60",
+   "name": "BIG_namez",
+   "sheet_name": "BIG_namez",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6979, body review: corrected from 0x254fe0 (a CreateSema/SetAlarm/WaitSema delay helper); 0x254f60 is the BIG_name twin calling BIG_locateentryz."
+   ]
+  },
+  {
+   "xbox": "0x00255198",
+   "expect": "FUN_00255198",
+   "name": "loaddirinfo",
+   "sheet_name": "loaddirinfo(int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6983, body review: Recursive ISO9660 directory walker (readsectorB, builds path, recurses into subdirs, CDVD_hashname), called from CDVD_init with (sector,count)."
+   ]
+  },
+  {
+   "xbox": "0x00255458",
+   "expect": "FUN_00255458",
+   "name": "StartReadWithRetry",
+   "sheet_name": "StartReadWithRetry(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6984, body review: corrected from 0x255538 (the CD thread loop, a thread entry from CDVD_init); 0x255458 retries the sector read up to 3 times with a delay and sets error flags: StartReadWithRetry."
+   ]
+  },
+  {
+   "xbox": "0x00256198",
+   "expect": "FUN_00256198",
+   "name": "CDVD_getinfo",
+   "sheet_name": "CDVD_getinfo(char *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6992, body review: CDVD_open(name) then returns a pointer to that file's directory info entry; last public function of the object before ASYNCFILE (second arg unused)."
+   ]
+  },
+  {
+   "xbox": "0x00257f88",
+   "expect": "FUN_00257f88",
+   "name": "FONT_installdriverextensions",
+   "sheet_name": "FONT_installdriverextensions",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7032, body review: corrected from 0x257fb0 (a static case-swap helper); 0x257f88 copies a size-prefixed extension table into the font driver global, right after FONT_installdriver."
+   ]
+  },
+  {
+   "xbox": "0x00259040",
+   "expect": "FUN_00259040",
+   "name": "FONT_drawtextfa",
+   "sheet_name": "FONT_drawtextfa",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7044, body review: Formats fmt+varargs into a stack buffer then FONT_drawtexta, as AUF FONT_drawtextfa."
+   ]
+  },
+  {
+   "xbox": "0x00259140",
+   "expect": "FUN_00259140",
+   "name": "FONT_getkern",
+   "sheet_name": "FONT_getkern",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7046, body review: Looks up a (char,next) kerning pair in the font's kern table via bsearch helpers and returns the byte adjustment; called from drawtextx/getrectx."
+   ]
+  },
+  {
+   "xbox": "0x002592a0",
+   "expect": "FUN_002592a0",
+   "name": "LOCALE_setstate",
+   "sheet_name": "LOCALE_setstate",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7049, body review: corrected from 0x2592e0 (static string-id bsearch used by LOCALE_getstr); 0x2592a0 writes state 0 into +0xe, the mirror of LOCALE_getstate case 0."
+   ]
+  },
+  {
+   "xbox": "0x0025a098",
+   "expect": "FUN_0025a098",
+   "name": "PAD_getactuator",
+   "sheet_name": "PAD_getactuator",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7084, body review: Returns the actuator byte for (pad, index) if the pad's actuator flag is set."
+   ]
+  },
+  {
+   "xbox": "0x0025a538",
+   "expect": "FUN_0025a538",
+   "name": "PAD_isstable",
+   "sheet_name": "PAD_isstable",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7086, body review: Queries pad state for port/slot, returns state=='c' (stable), resets on failure; callers CheckUnplugged/~EResume."
+   ]
+  },
+  {
+   "xbox": "0x0025f470",
+   "expect": "FUN_0025f470",
+   "name": "CLIP_setflags4",
+   "sheet_name": "CLIP_setflags4",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7150, body review: Computes outcode bits from x,y,z,w against clip bounds (reads 4 components): setflags4."
+   ]
+  },
+  {
+   "xbox": "0x0025f4f8",
+   "expect": "FUN_0025f4f8",
+   "name": "CLIP_setflags3",
+   "sheet_name": "CLIP_setflags3",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7151, body review: Outcode from x,y,z only (3 components), next to setflags4: setflags3."
+   ]
+  },
+  {
+   "xbox": "0x0025f618",
+   "expect": "FUN_0025f618",
+   "name": "CLIP_setclipparameters",
+   "sheet_name": "CLIP_setclipparameters",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7153, body review: corrected from 0x25f8f0 (a SHAPE size calculator); 0x25f618 takes x,y,w,h,near,far and writes the clip bound globals (0x3c81dc..f4) that setflags4 reads."
+   ]
+  },
+  {
+   "xbox": "0x00260090",
+   "expect": "FUN_00260090",
+   "name": "SHAPE_longname",
+   "sheet_name": "SHAPE_longname",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7173, body review: Walks shape attribute chunks looking for 'p', identical to AUF SHAPE_longname."
+   ]
+  },
+  {
+   "xbox": "0x00260748",
+   "expect": "FUN_00260748",
+   "name": "PRINT_restore",
+   "sheet_name": "PRINT_restore",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7189, body review: corrected from 0x260760 (the print/vsprintf device dispatcher used by PRINT_string); 0x260748 clears the initialised flag, like AUF PRINT_restore."
+   ]
+  },
+  {
+   "xbox": "0x00314fb0",
+   "expect": "FUN_00314fb0",
+   "name": "decode16x87",
+   "sheet_name": "decode16x87",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7408, body review: Converts s16 samples to floats (vector path with unaligned fallback SNDI_s16tofunaligned), called by the SFILTER_unpack* functions: decode16x87."
+   ]
+  },
+  {
+   "xbox": "0x00315180",
+   "expect": "FUN_00315180",
+   "name": "readsamples",
+   "sheet_name": "readsamples(UTALKSTATE *, int, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7411, body review: Same bit-reader structure as AUF readsamples (param_2==0 path with 2-bit/1-bit codes, discardbits), called from decodemut."
+   ]
+  },
+  {
+   "xbox": "0x00315f38",
+   "expect": "FUN_00315f38",
+   "name": "SFILTER_unpackxalfinit",
+   "sheet_name": "SFILTER_unpackxalfinit(void *, UNPACKINITPARAMS *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7422, body review: Installs SFILTER_unpackxalf/restore, creates CEAXABLKDecf, sets getframe to unpackgetframexalf: unpackxalfinit."
+   ]
+  },
+  {
+   "xbox": "0x00316178",
+   "expect": "FUN_00316178",
+   "name": "SFILTER_unpackxapfinit",
+   "sheet_name": "SFILTER_unpackxapfinit(void *, UNPACKINITPARAMS *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7425, body review: Installs unpackxapf/restore, getmastervoice/voicetopackethandle/getsamplechan as in AUF unpackxapfinit."
+   ]
+  },
+  {
+   "xbox": "0x00316998",
+   "expect": "FUN_00316998",
+   "name": "SFILTER_createSOURCE",
+   "sheet_name": "SFILTER_createSOURCE(SRCSTATE *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7437, body review: One-arg state initialiser used for filter type 0 (source) in SNDMIXI_initfx2's switch, right after SFILTER_initSOURCE."
+   ]
+  },
+  {
+   "xbox": "0x00317c38",
+   "expect": "FUN_00317c38",
+   "name": "SNDMIXI_restorefx2",
+   "sheet_name": "SNDMIXI_restorefx2(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7452, body review: Calls each fx filter's restore callback, frees them and the fx tables, clears fx globals; called from MIX_restorereverb."
+   ]
+  },
+  {
+   "xbox": "0x002a8bbc",
+   "expect": "FUN_002a8bbc",
+   "name": "srand",
+   "sheet_name": "srand",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7558, body review: Stores seed into _impure_ptr+0x58 (rand's state), right before rand: srand."
+   ]
+  },
+  {
+   "xbox": "0x002a8f60",
+   "expect": "FUN_002a8f60",
+   "name": "_init_signal",
+   "sheet_name": "_init_signal",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7567, body review: _init_signal_r(_impure_ptr) wrapper."
+   ]
+  },
+  {
+   "xbox": "0x002a8f84",
+   "expect": "FUN_002a8f84",
+   "name": "__sigtramp",
+   "sheet_name": "__sigtramp",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7568, body review: __sigtramp_r(_impure_ptr, sig) wrapper."
+   ]
+  },
+  {
+   "xbox": "0x002aaed8",
+   "expect": "FUN_002aaed8",
+   "name": "strtol",
+   "sheet_name": "strtol",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7595, body review: corrected from 0x2aaf58 (that is __sbprintf, a vfiprintf buffering helper); 0x2aaed8 is _strtol_r(_impure_ptr, s, end, base)."
+   ]
+  },
+  {
+   "xbox": "0x002ab088",
+   "expect": "FUN_002ab088",
+   "name": "_vfiprintf_r",
+   "sheet_name": "_vfiprintf_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7598, body review: The vfiprintf engine: called from vfiprintf, 'bug in vfprintf: bad base', '(null)', hex digits."
+   ]
+  },
+  {
+   "xbox": "0x002b4f38",
+   "expect": "FUN_002b4f38",
+   "name": "sceDevVif1GetCnd",
+   "sheet_name": "sceDevVif1GetCnd",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7710, body review: Decodes REG_VIF1_STAT into a 0-4 condition code; used by sceDevVif1Pause/Continue: GetCnd."
+   ]
+  },
+  {
+   "xbox": "0x002b5370",
+   "expect": "FUN_002b5370",
+   "name": "sceDmaPutEnv",
+   "sheet_name": "sceDmaPutEnv",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7717, body review: corrected from 0x2b5280 (that is sceDmaReset, which calls this); 0x2b5370 validates a sceDmaEnv struct and writes DMAC_CTRL/PCR etc.: sceDmaPutEnv."
+   ]
+  },
+  {
+   "xbox": "0x002b5bc0",
+   "expect": "FUN_002b5bc0",
+   "name": "sceDmaWatch",
+   "sheet_name": "sceDmaWatch",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7727, body review: (chan, addr, mode, timeout): polls chan MADR against addr, 'libdma: sync timeout' on expiry: sceDmaWatch."
+   ]
+  },
+  {
+   "xbox": "0x002b7448",
+   "expect": "FUN_002b7448",
+   "name": "close",
+   "sheet_name": "close",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7882, body review: Returns -1 stub called only by _close_r (0x2b2150), which is called by __sclose (0x2b1b40)."
+   ]
+  },
+  {
+   "xbox": "0x002b7458",
+   "expect": "FUN_002b7458",
+   "name": "lseek",
+   "sheet_name": "lseek",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7884, body review: Returns -1 stub called only by _lseek_r (0x2b2208), which __swrite (0x2b1a58) calls for append mode."
+   ]
+  },
+  {
+   "xbox": "0x002b79f8",
+   "expect": "FUN_002b79f8",
+   "name": "InitThread",
+   "sheet_name": "InitThread",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7903, body review: Creates sema and helper thread for deferred i* kernel calls, starts it and changes priority: libkernl InitThread."
+   ]
+  },
+  {
+   "xbox": "0x002b7be8",
+   "expect": "FUN_002b7be8",
+   "name": "iSuspendThread",
+   "sheet_name": "iSuspendThread",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7906, body review: syscall -0x2f (iSuspendThread) with self-suspend deferred to the helper thread via iSignalSema."
+   ]
+  },
+  {
+   "xbox": "0x002b80e0",
+   "expect": "FUN_002b80e0",
+   "name": "sceTtyInit",
+   "sheet_name": "sceTtyInit",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7910, body review: FlushCache, sceDeci2Open, initialises tty buffers; called from read/write."
+   ]
+  },
+  {
+   "xbox": "0x002b8b48",
+   "expect": "FUN_002b8b48",
+   "name": "sceSifGetSreg",
+   "sheet_name": "sceSifGetSreg",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7916, body review: Returns sreg table entry [index], used by sceSifInitRpc."
+   ]
+  },
+  {
+   "xbox": "0x002b8e48",
+   "expect": "FUN_002b8e48",
+   "name": "sceSifSetCmdBuffer",
+   "sheet_name": "sceSifSetCmdBuffer",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7921, body review: Sets cmd handler buffer and size globals and returns the old buffer; called from SNDPLATFORM_init."
+   ]
+  },
+  {
+   "xbox": "0x002b8ea8",
+   "expect": "FUN_002b8ea8",
+   "name": "sceSifRemoveCmdHandler",
+   "sheet_name": "sceSifRemoveCmdHandler",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7924, body review: corrected from 0x2b8ed0 (internal _sceSifSendCmd core); 0x2b8ea8 clears the handler slot for cmd (system table if negative), mirror of AddCmdHandler 0x2b8e78."
+   ]
+  },
+  {
+   "xbox": "0x002b9048",
+   "expect": "FUN_002b9048",
+   "name": "isceSifSendCmd",
+   "sheet_name": "isceSifSendCmd",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7926, body review: corrected from 0x2b9088 (the SIF cmd interrupt handler); 0x2b9048 calls the send-cmd core with flag 1 (isceSifSetDma path)."
+   ]
+  },
+  {
+   "xbox": "0x002b9400",
+   "expect": "FUN_002b9400",
+   "name": "sceSifExitRpc",
+   "sheet_name": "sceSifExitRpc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7929, body review: Calls sceSifExitCmd (0x2b8e10, currently misnamed DisableDmac) then clears the rpc-initialised flag."
+   ]
+  },
+  {
+   "xbox": "0x002b9cd0",
+   "expect": "FUN_002b9cd0",
+   "name": "sceSifSetRpcQueue",
+   "sheet_name": "sceSifSetRpcQueue",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7934, body review: (queue, thread id) under DIntr: initialises queue and appends it to the global queue list."
+   ]
+  },
+  {
+   "xbox": "0x002b9e38",
+   "expect": "FUN_002b9e38",
+   "name": "sceSifRemoveRpc",
+   "sheet_name": "sceSifRemoveRpc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7936, body review: (sd, queue) unlinks sd from the queue's server list (+0x38 next) under DIntr."
+   ]
+  },
+  {
+   "xbox": "0x002ba180",
+   "expect": "FUN_002ba180",
+   "name": "sceSifRpcLoop",
+   "sheet_name": "sceSifRpcLoop",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7940, body review: corrected from 0x2ba318 (a fileio IOP-to-EE data command handler); 0x2ba180 loops sceSifGetNextRequest/SleepThread/sceSifExecRequest."
+   ]
+  },
+  {
+   "xbox": "0x002ba7f8",
+   "expect": "FUN_002ba7f8",
+   "name": "scePowerOffHandler",
+   "sheet_name": "scePowerOffHandler",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7942, body review: corrected from 0x2ba758 (a SignalSema unlock helper); 0x2ba7f8 is the SIF cmd handler sceFsInit registers for 0x80000013, invoking the stored callback(arg) then EI, directly before sceFsInit."
+   ]
+  },
+  {
+   "xbox": "0x002ba828",
+   "expect": "FUN_002ba828",
+   "name": "sceFsInit",
+   "sheet_name": "sceFsInit",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7943, body review: sceSifInitRpc, registers fileio cmd handlers, binds the fileio RPC server and calls it: sceFsInit (called lazily from sceOpen)."
+   ]
+  },
+  {
+   "xbox": "0x002beab0",
+   "expect": "FUN_002beab0",
+   "name": "sceDeci2ExRecv",
+   "sheet_name": "sceDeci2ExRecv",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8008, body review: Deci2Call(-5, args) wrapper in the Deci2 run (1 Open, 2 Close, 3 ReqSend, 4 Poll, -5, -6, -7, -8 ExLock): ExRecv."
+   ]
+  },
+  {
+   "xbox": "0x002beae8",
+   "expect": "FUN_002beae8",
+   "name": "sceDeci2ExSend",
+   "sheet_name": "sceDeci2ExSend",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8009, body review: Deci2Call(-6, ...) between ExRecv (-5) and ExReqSend (-7); called from the tty write path"
+   ]
+  },
+  {
+   "xbox": "0x002bed18",
+   "expect": "FUN_002bed18",
+   "name": "InitTLBFunctions",
+   "sheet_name": "InitTLBFunctions",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8016, body review: corrected from 0x2becb0 (a syscall 0x5a stub); 0x2bed18 is exactly 0xb8, calls SetSyscall/GetEntryAddress stubs and copies handler code to kernel memory"
+   ]
+  },
+  {
+   "xbox": "0x002c72a8",
+   "expect": "FUN_002c72a8",
+   "name": "sceMcWrite",
+   "sheet_name": "sceMcWrite",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8085, body review: libmc RPC function 6 copying unaligned head bytes of the write buffer; called by writeFile"
+   ]
+  },
+  {
+   "xbox": "0x002c77c8",
+   "expect": "FUN_002c77c8",
+   "name": "sceMcGetDir",
+   "sheet_name": "sceMcGetDir",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8089, body review: libmc RPC 0xd with path, flags, max entries and table write-back (64-byte entries); called by getNumSlotsAvailable etc."
+   ]
+  },
+  {
+   "xbox": "0x002c81a8",
+   "expect": "FUN_002c81a8",
+   "name": "sceMcGetEntSpace",
+   "sheet_name": "sceMcGetEntSpace",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8097, body review: libmc RPC 0x12 taking (port, slot, path), last before sceMtapInit; matches sceMcGetEntSpace signature"
+   ]
+  },
+  {
+   "xbox": "0x002c8728",
+   "expect": "FUN_002c8728",
+   "name": "sceMtapGetModVersion",
+   "sheet_name": "sceMtapGetModVersion",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8104, body review: corrected from 0x2c8790 (a libpad sceSifSetDma helper); 0x2c8728 does an RPC on the mtap client and returns the version word"
+   ]
+  },
+  {
+   "xbox": "0x002c88a8",
+   "expect": "FUN_002c88a8",
+   "name": "scePadInit",
+   "sheet_name": "scePadInit",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8106, body review: binds padman RPC servers 0x80000100/0x80000101 and checks module version with the libpad mismatch strings"
+   ]
+  },
+  {
+   "xbox": "0x002c8ed8",
+   "expect": "FUN_002c8ed8",
+   "name": "scePadGetState",
+   "sheet_name": "scePadGetState",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8112, body review: corrected from 0x2c8f88 (sets reqState byte); 0x2c8ed8 returns state byte +0x70, mapping STABLE with reqState BUSY to EXECCMD"
+   ]
+  },
+  {
+   "xbox": "0x002c9568",
+   "expect": "FUN_002c9568",
+   "name": "scePadSetActAlign",
+   "sheet_name": "scePadSetActAlign",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8121, body review: padman RPC command 8 with port, slot and a 6-byte align array"
+   ]
+  },
+  {
+   "xbox": "0x002c9808",
+   "expect": "FUN_002c9808",
+   "name": "scePadEnterPressMode",
+   "sheet_name": "scePadEnterPressMode",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8123, body review: calls the SetButtonInfo RPC helper with mask 0xfff (enter press mode)"
+   ]
+  },
+  {
+   "xbox": "0x002ca1a0",
+   "expect": "FUN_002ca1a0",
+   "name": "_snProfDisableInt",
+   "sheet_name": "_snProfDisableInt",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8140, body review: corrected from 0x2ca380; 0x2ca1a0 clears Status bit 0x8000 (mirror of _snProfEnableInt) and is called by snProfDisableInt"
+   ]
+  },
+  {
+   "xbox": "0x002ca740",
+   "expect": "FUN_002ca740",
+   "name": "MEM_tailsize",
+   "sheet_name": "MEM_tailsize(char *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8146, body review: corrected from 0x2ca760 (the static block allocator); 0x2ca740 returns memclass[x&0x3f]+0x30 like AUF MEM_tailsize, called by alloc/MEM_free/MEM_resize"
+   ]
+  },
+  {
+   "xbox": "0x002cdcf0",
+   "expect": "FUN_002cdcf0",
+   "name": "UCharNamespace::NameLookup",
+   "sheet_name": "UCharNamespace::NameLookup(char *, unsigned int &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8213, body review: strlen(name)+1 into size ref, returns name: identical to AUF NameLookup"
+   ]
+  },
+  {
+   "xbox": "0x002cea68",
+   "expect": "FUN_002cea68",
+   "name": "UCarpNamespace::operator_new",
+   "sheet_name": "UCarpNamespace::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8229, body review: FastAlloc(size, \"UCarpNamespace\")"
+   ]
+  },
+  {
+   "xbox": "0x002cea88",
+   "expect": "FUN_002cea88",
+   "name": "UCarpNamespace::operator_delete",
+   "sheet_name": "UCarpNamespace::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8230, body review: corrected from 0x2ceaa8 (Namespace type_info function); 0x2cea88 is FastFree(p, size) right after operator new"
+   ]
+  },
+  {
+   "xbox": "0x002d2b00",
+   "expect": "FUN_002d2b00",
+   "name": "CalculateBoundsAndSphere",
+   "sheet_name": "CalculateBoundsAndSphere(unsigned int, COORD4 *, UTransform &,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8336, body review: computes min/max bounds over count points (1e9 sentinels) then a sphere via sqrtf"
+   ]
+  },
+  {
+   "xbox": "0x002d3f60",
+   "expect": "FUN_002d3f60",
+   "name": "kZeroCoord3_global_ctors",
+   "sheet_name": "global constructors keyed to kZeroCoord3",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8347, body review: ctors-table entry calling helper(1, 0xffff)"
+   ]
+  },
+  {
+   "xbox": "0x002d3f80",
+   "expect": "FUN_002d3f80",
+   "name": "kZeroCoord3_global_dtors",
+   "sheet_name": "global destructors keyed to kZeroCoord3",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8348, body review: dtors-table entry calling helper(0, 0xffff)"
+   ]
+  },
+  {
+   "xbox": "0x002d4688",
+   "expect": "FUN_002d4688",
+   "name": "UData::EndianPrepareMembers",
+   "sheet_name": "UData::EndianPrepareMembers(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8359, body review: byte-swaps members and calls PrepareBitField (0x2d8870, exact sheet size 0x170); precedes UData::UData"
+   ]
+  },
+  {
+   "xbox": "0x002d4790",
+   "expect": "FUN_002d4790",
+   "name": "UData::EndianUnprepareMembers",
+   "sheet_name": "UData::EndianUnprepareMembers(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8360, body review: identical twin calling UnprepareBitField (0x2d89e0, exact sheet size 0x208)"
+   ]
+  },
+  {
+   "xbox": "0x002d9bd0",
+   "expect": "FUN_002d9bd0",
+   "name": "DAFI_getvaluebyindex",
+   "sheet_name": "DAFI_getvaluebyindex(_DAFI_ *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8531, body review: returns value table entry (+0x2eec, keys at +0x1f4c) by index; called by DAFI_getvalue with the key index"
+   ]
+  },
+  {
+   "xbox": "0x002de7c8",
+   "expect": "FUN_002de7c8",
+   "name": "_List_base<AVoice::View_*,_allocator<AVoice::View_*>_>::clear",
+   "sheet_name": "_List_base<AVoice::View *, allocator<AVoice::View *> >::clear(v",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8666, body review: corrected from 0x2de830 (static init); 0x2de7c8 walks the list freeing 0xc nodes and resets the sentinel; 0x68+0x108 = sheet 0x170"
+   ]
+  },
+  {
+   "xbox": "0x002de998",
+   "expect": "FUN_002de998",
+   "name": "AViewSet::fgDefault_global_ctors",
+   "sheet_name": "global constructors keyed to AViewSet::fgDefault",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8670, body review: ctors-table entry calling helper 0x2de978(1, 0xffff)"
+   ]
+  },
+  {
+   "xbox": "0x002e3c90",
+   "expect": "FUN_002e3c90",
+   "name": "AUltraLite::PlayMotor",
+   "sheet_name": "AUltraLite::PlayMotor(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8744, body review: vtable entry adjusting motor pitch/volume from speed and calling Play/GetVolume, directly after AUltraLite::Play"
+   ]
+  },
+  {
+   "xbox": "0x002e5148",
+   "expect": "FUN_002e5148",
+   "name": "ATurret::~ATurret",
+   "sheet_name": "ATurret::~ATurret(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8752, body review: frees three AVoice::View arrays then the object (0x1c): same shape as AUF ATurret dtor; called by ~AVehicle and ~ASentry"
+   ]
+  },
+  {
+   "xbox": "0x002e8450",
+   "expect": "FUN_002e8450",
+   "name": "ASubmersible::GetName",
+   "sheet_name": "ASubmersible::GetName(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8781, body review: occupies the GetName slot (after IsOneShot) of the ASubmersible vtable, returns this+0x210"
+   ]
+  },
+  {
+   "xbox": "0x002ed040",
+   "expect": "FUN_002ed040",
+   "name": "ARegisterSound::Register",
+   "sheet_name": "ARegisterSound::Register(int, int, void (*)(void *, int, void *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8854, body review: stores (type, callback) into the static table by id; called by the ARegisterSound ctor"
+   ]
+  },
+  {
+   "xbox": "0x002ed060",
+   "expect": "FUN_002ed060",
+   "name": "ARegisterSound::LookupSound",
+   "sheet_name": "ARegisterSound::LookupSound(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8855, body review: corrected from 0x2ed090 (lexicographical_compare); 0x2ed060 returns the table callback by id"
+   ]
+  },
+  {
+   "xbox": "0x002ed078",
+   "expect": "FUN_002ed078",
+   "name": "ARegisterSound::LookupSoundDynamicDataType",
+   "sheet_name": "ARegisterSound::LookupSoundDynamicDataType(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8856, body review: corrected from 0x2ed0f8 (lexicographical_compare_3way); 0x2ed078 returns the table type word by id"
+   ]
+  },
+  {
+   "xbox": "0x002ed158",
+   "expect": "FUN_002ed158",
+   "name": "_List_base<ABaseSound_*,_allocator<ABaseSound_*>_>::clear",
+   "sheet_name": "_List_base<ABaseSound *, allocator<ABaseSound *> >::clear(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8857, body review: list clear freeing 0xc nodes; ASoundManager::Shutdown uses it on the list of playing sounds (vtable at +0xac)"
+   ]
+  },
+  {
+   "xbox": "0x002ed1c0",
+   "expect": "FUN_002ed1c0",
+   "name": "_List_base<char_*,_allocator<char_*>_>::clear",
+   "sheet_name": "_List_base<char *, allocator<char *> >::clear(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8858, body review: list clear on the second ASoundManager list (Shutdown and Restart), after the ABaseSound* one"
+   ]
+  },
+  {
+   "xbox": "0x002ed778",
+   "expect": "FUN_002ed778",
+   "name": "ASound::operator_new",
+   "sheet_name": "ASound::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8865, body review: ABaseSound::operator new(size, \"ASound\")"
+   ]
+  },
+  {
+   "xbox": "0x002ee768",
+   "expect": "FUN_002ee768",
+   "name": "ASnowMobile::PlayCarving",
+   "sheet_name": "ASnowMobile::PlayCarving(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8872, body review: called by ASnowMobile::Play, plays SFX_tiressnow carve and landing sounds; directly after PlayMotor"
+   ]
+  },
+  {
+   "xbox": "0x002effe8",
+   "expect": "FUN_002effe8",
+   "name": "ASentry::~ASentry",
+   "sheet_name": "ASentry::~ASentry(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8889, body review: corrected from 0x2f01c8 (basic_string replace); 0x2effe8 sets vtable_ASentry, ~AGun, ~ATurret, ~ASceneObj, delete 0x120"
+   ]
+  },
+  {
+   "xbox": "0x002f0730",
+   "expect": "FUN_002f0730",
+   "name": "ASceneObj::IsStillActive",
+   "sheet_name": "ASceneObj::IsStillActive(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8898, body review: return-0 stub in the IsStillActive vtable slot (before the overridden IsTracked/IsAirborne of AUltraLite/APlayerTank); same as AUF"
+   ]
+  },
+  {
+   "xbox": "0x002f0738",
+   "expect": "FUN_002f0738",
+   "name": "ASceneObj::IsTracked",
+   "sheet_name": "ASceneObj::IsTracked(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8899, body review: return-0 stub in the vtable slot that AUltraLite/APlayerTank override with their IsTracked"
+   ]
+  },
+  {
+   "xbox": "0x002f0740",
+   "expect": "FUN_002f0740",
+   "name": "ASceneObj::IsAirborne",
+   "sheet_name": "ASceneObj::IsAirborne(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8900, body review: return-0 stub in the vtable slot that AUltraLite overrides with IsAirborne"
+   ]
+  },
+  {
+   "xbox": "0x002f0cd0",
+   "expect": "FUN_002f0cd0",
+   "name": "APlayerVehicle::GetName",
+   "sheet_name": "APlayerVehicle::GetName(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8916, body review: GetName slot of the APlayerVehicle vtable returning an inline name buffer (this+0x210; AUF this+0x140)"
+   ]
+  },
+  {
+   "xbox": "0x002f1128",
+   "expect": "FUN_002f1128",
+   "name": "APlayerTank::~APlayerTank",
+   "sheet_name": "APlayerTank::~APlayerTank(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8922, body review: sets vtable_APlayerTank, frees View array, ~ATurret, ~AVehicle, delete 0x240: AUF shape"
+   ]
+  },
+  {
+   "xbox": "0x002f1ae8",
+   "expect": "FUN_002f1ae8",
+   "name": "APlayerHeli::~APlayerHeli",
+   "sheet_name": "APlayerHeli::~APlayerHeli(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8929, body review: sets vtable_APlayerHeli, frees View arrays, ~AVehicle, delete; from its vtable"
+   ]
+  },
+  {
+   "xbox": "0x002f2a50",
+   "expect": "FUN_002f2a50",
+   "name": "AOneShotSound::AOneShotSound",
+   "sheet_name": "AOneShotSound::AOneShotSound(int, int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8939, body review: AOneShotSound ctor shape (ABaseSound vtable, AMix::Add(name), AVoice ctor) with name as 4th arg, i.e. (int, int, char *)"
+   ]
+  },
+  {
+   "xbox": "0x002f2c68",
+   "expect": "FUN_002f2c68",
+   "name": "AOneShotSound::operator_new",
+   "sheet_name": "AOneShotSound::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8944, body review: ABaseSound::operator new(size, \"AOneShotSound\")"
+   ]
+  },
+  {
+   "xbox": "0x002f9610",
+   "expect": "FUN_002f9610",
+   "name": "AFader::~AFader",
+   "sheet_name": "AFader::~AFader(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9051, body review: deletes Priv then FastFree(this, 4) on flag; called by AFader::Remove"
+   ]
+  },
+  {
+   "xbox": "0x002f9808",
+   "expect": "FUN_002f9808",
+   "name": "AFader::Call911",
+   "sheet_name": "AFader::Call911(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9059, body review: forwards to AFader::Priv::Call911(*this); called by ~ECall911"
+   ]
+  },
+  {
+   "xbox": "0x002f9828",
+   "expect": "FUN_002f9828",
+   "name": "AFader::Update",
+   "sheet_name": "AFader::Update(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9060, body review: forwards to AFader::Priv::Update(*this) exactly like AUF; called by ~EAudioUpdate"
+   ]
+  },
+  {
+   "xbox": "0x002fafb0",
+   "expect": "FUN_002fafb0",
+   "name": "URefCounter<AEngine>::GetReference",
+   "sheet_name": "URefCounter<AEngine>::GetReference(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9083, body review: copies the name key, finds it in the map and returns element+0x94 or 0"
+   ]
+  },
+  {
+   "xbox": "0x002fb630",
+   "expect": "FUN_002fb630",
+   "name": "URefCounter<AEngine>::AddReference",
+   "sheet_name": "URefCounter<AEngine>::AddReference(char *, AEngine *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9086, body review: finds the name; if absent inserts a new element storing the AEngine* at +0x94; then increments refcount +0x90"
+   ]
+  },
+  {
+   "xbox": "0x002fb718",
+   "expect": "FUN_002fb718",
+   "name": "URefCounter<AEngine>::RemoveReference",
+   "sheet_name": "URefCounter<AEngine>::RemoveReference(AEngine *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9087, body review: walks the map for element+0x94 == pointer, decrements refcount and erases the node at zero; called by Remove"
+   ]
+  },
+  {
+   "xbox": "0x002fd998",
+   "expect": "FUN_002fd998",
+   "name": "_Rb_tree<MapKey,_ABank>::_M_erase",
+   "sheet_name": "_Rb_tree<MapKey, pair<MapKey, MapElement<ABank> >, _Select1st<p",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9160, body review: recursive right, walk left, FastFree 0x98 nodes; called by ~URefCounter<ABank>"
+   ]
+  },
+  {
+   "xbox": "0x002fe2f8",
+   "expect": "FUN_002fe2f8",
+   "name": "URefCounter<ABank>::RemoveReference",
+   "sheet_name": "URefCounter<ABank>::RemoveReference(ABank *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9168, body review: same RemoveReference shape as the AEngine one (refcount +0x90, pointer +0x94, erase); called by ABank Remove"
+   ]
+  },
+  {
+   "xbox": "0x002fedd8",
+   "expect": "FUN_002fedd8",
+   "name": "AVehicleWind::~AVehicleWind",
+   "sheet_name": "AVehicleWind::~AVehicleWind(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9175, body review: frees the voice View array then deletes; called from ~AVehicle and ~ASnowMobile, right after AVehicleWind::Stop"
+   ]
+  },
+  {
+   "xbox": "0x00301fe0",
+   "expect": "FUN_00301fe0",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::~EAGL_VD_PS2_SINGLE_BUFFERD",
+   "sheet_name": "EAGL_VD_PS2_SINGLE_BUFFERD::~EAGL_VD_PS2_SINGLE_BUFFERD(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9227, body review: sets vtable_EAGL_VD_PS2_SINGLE_BUFFERD, frees frame textures and TARs, releases decoder frame, sets base vtable, frees"
+   ]
+  },
+  {
+   "xbox": "0x00302590",
+   "expect": "FUN_00302590",
+   "name": "RCMP::VIDEO_DRIVER::~VIDEO_DRIVER",
+   "sheet_name": "RCMP::VIDEO_DRIVER::~VIDEO_DRIVER(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9233, body review: base-class dtor: sets the VIDEO_DRIVER vtable (0x3c6f50, also set by the derived dtor) and deletes on flag"
+   ]
+  },
+  {
+   "xbox": "0x003026b0",
+   "expect": "FUN_003026b0",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator_new",
+   "sheet_name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9237, body review: allocator call with (size) via plaympc_alloc; identical twin of new[] at 0x3026f0, first after the type_info function as in the sheet"
+   ]
+  },
+  {
+   "xbox": "0x003026f0",
+   "expect": "FUN_003026f0",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator_new_array",
+   "sheet_name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9238, body review: identical allocator twin following operator new (0x3026b0); sizes 0x40/0x40 exact, then the (size, char *, ...) variants at 0x302730/0x302760"
+   ]
+  },
+  {
+   "xbox": "0x00302800",
+   "expect": "FUN_00302800",
+   "name": "RCMP::RCMP_SYSTEM::RCMP_SYSTEM",
+   "sheet_name": "RCMP::RCMP_SYSTEM::RCMP_SYSTEM(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9247, body review: sets vtable_RCMP__RCMP_SYSTEM and zeroes fields; the rcmp_sys static initialiser calls it on 0x3562d0"
+   ]
+  },
+  {
+   "xbox": "0x00302b28",
+   "expect": "FUN_00302b28",
+   "name": "RCMP::CODEC_IDATA::CODEC_IDATA",
+   "sheet_name": "RCMP::CODEC_IDATA::CODEC_IDATA(void)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9259, body review: zeroes three fields and sets [3]=2; called by DECODER::DECODER on its embedded CODEC_IDATA member"
+   ]
+  },
+  {
+   "xbox": "0x00302b48",
+   "expect": "FUN_00302b48",
+   "name": "RCMP::CODEC_IDATA::CODEC_IDATA",
+   "sheet_name": "RCMP::CODEC_IDATA::CODEC_IDATA(RCMP::STREAMER *, void (*)(RCMP:",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9260, body review: corrected from 0x302b60 (rcmp_sys static init helper); 0x302b48 stores four args (streamer, callback, ...) into the object; 0x18+0x48 = sheet 0x60"
+   ]
+  },
+  {
+   "xbox": "0x00302c58",
+   "expect": "FUN_00302c58",
+   "name": "RCMP::DECODER::operator_new",
+   "sheet_name": "RCMP::DECODER::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9264, body review: allocator call via plaympc_alloc(size), first after the DECODER type_info function; twin of new[]"
+   ]
+  },
+  {
+   "xbox": "0x00302c98",
+   "expect": "FUN_00302c98",
+   "name": "RCMP::DECODER::operator_new_array",
+   "sheet_name": "RCMP::DECODER::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9265, body review: identical allocator twin following DECODER operator new"
+   ]
+  },
+  {
+   "xbox": "0x00302dc0",
+   "expect": "FUN_00302dc0",
+   "name": "RCMP::rcmp_sys_global_ctors",
+   "sheet_name": "global constructors keyed to RCMP::rcmp_sys",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9276, body review: ctors-table entry calling helper(1, 0xffff) which constructs RCMP_SYSTEM at rcmp_sys"
+   ]
+  },
+  {
+   "xbox": "0x00302de0",
+   "expect": "FUN_00302de0",
+   "name": "RCMP::rcmp_sys_global_dtors",
+   "sheet_name": "global destructors keyed to RCMP::rcmp_sys",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9277, body review: dtors-table entry calling helper(0, 0xffff)"
+   ]
+  },
+  {
+   "xbox": "0x00302e00",
+   "expect": "FUN_00302e00",
+   "name": "RCMP::RCMP_SYSTEM::SetREALDefaults",
+   "sheet_name": "RCMP::RCMP_SYSTEM::SetREALDefaults(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9278, body review: sets alloc/free hooks to MEM_allocalign/MEM_free (REAL defaults); called by PlayMPC"
+   ]
+  },
+  {
+   "xbox": "0x003038e8",
+   "expect": "FUN_003038e8",
+   "name": "PS2_SONY_CODEC_INTERNAL::operator_new",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9296, body review: allocator call via plaympc_alloc(size), first after the PS2_SONY_CODEC_INTERNAL type_info function"
+   ]
+  },
+  {
+   "xbox": "0x00303928",
+   "expect": "FUN_00303928",
+   "name": "PS2_SONY_CODEC_INTERNAL::operator_new_array",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9297, body review: identical allocator twin following PS2_SONY_CODEC_INTERNAL operator new"
+   ]
+  },
+  {
+   "xbox": "0x00304e10",
+   "expect": "FUN_00304e10",
+   "name": "FILESYS_delete",
+   "sheet_name": "FILESYS_delete",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9334, body review: corrected from 0x304e18 (called by StartResize); 0x304e10 return-0 stub is called by StartDelete"
+   ]
+  },
+  {
+   "xbox": "0x00304e18",
+   "expect": "FUN_00304e18",
+   "name": "FILESYS_resize",
+   "sheet_name": "FILESYS_resize",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9335, body review: corrected from 0x304e20 (called by Resize); 0x304e18 return-0 stub is called by StartResize"
+   ]
+  },
+  {
+   "xbox": "0x00304e20",
+   "expect": "FUN_00304e20",
+   "name": "FILESYS_resizesync",
+   "sheet_name": "FILESYS_resizesync",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9336, body review: corrected from 0x304e28 (called by Delete/FileDeleteSync); 0x304e20 return-0 stub is called by Resize"
+   ]
+  },
+  {
+   "xbox": "0x00323e98",
+   "expect": "FUN_00323e98",
+   "name": "REF_decode",
+   "sheet_name": "REF_decode(void *, void *, int *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9633, body review: RefPack decoder: parses the 0x8000/0x100 flag header and 3/4-byte size then runs the literal/copy opcode loop into dest"
+   ]
+  },
+  {
+   "xbox": "0x003244d0",
+   "expect": "FUN_003244d0",
+   "name": "sceIpuSync",
+   "sheet_name": "sceIpuSync",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9637, body review: mode 0 spins while IPU_CTRL busy bit set, mode 1 returns the busy bit"
+   ]
+  }
+ ]
+}

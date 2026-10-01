@@ -1,0 +1,245 @@
+{
+ "verdicts": [
+  {
+   "item": "0.1",
+   "xbox": "0x117840",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "UGroup::DataLocateFirst/DataLocateTag/GroupLocateTag call it on Xbox; on PS2 they call the unnamed wrappers FUN_002d4268/FUN_002d4288, which call the unnamed binary search FUN_002d4178. That search is a static helper with no sheet symbol (it falls inside UDataGroupDecodeTag's extent), so there is no name to give.",
+   "intermediates": []
+  },
+  {
+   "item": "1.1",
+   "xbox": "0xcc840",
+   "ps2": "0x2274a0",
+   "name": "WSimpleZone::IsZoneInRange",
+   "verdict": "accept",
+   "why": "WTargetPicker::UpdateTargets: after WTargetable::UpdatePosition, Xbox calls cc840(this+0x1c, table[...]) and PS2 calls IsZoneInRange(zone, +0x1c, table[...]). Bodies are identical: 1<<n bias on the x/y/z differences, OR'd, then >>(n+1)==0. Xbox sits just before WSimpleZone::SetPosition.",
+   "intermediates": []
+  },
+  {
+   "item": "2.1",
+   "xbox": "0x1c600",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Float min(a,b): one body shared by unrelated callers (AIHelicopter, AIGroundVehicle, TwoWheelStunt...). The PS2 callers ControlMoveState/DoAgentLogic make no such call because it is inlined there. Xbox-only template/helper instance.",
+   "intermediates": []
+  },
+  {
+   "item": "2.2",
+   "xbox": "0x1c620",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Float max(a,b): same as 2.1. A shared helper that PS2 inlines everywhere.",
+   "intermediates": []
+  },
+  {
+   "item": "3.1",
+   "xbox": "0x11c380",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "UVolatileMaterial::Init allocates 0x3c 'EAGL::GeoPrim new' and calls this. It is the GeoPrim constructor (Rendermethod alloc, GetRegisteredVar gpModelViewProjectionMatrix). PS2 Init calls GetRegisteredVar directly, so the constructor is inlined there, and no PS2 GeoPrim::GeoPrim symbol exists.",
+   "intermediates": []
+  },
+  {
+   "item": "4.1",
+   "xbox": "0x104eb0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Quaternion-rotate-vector helper (w=1.0 output) called from both AlignVel functions and ComputeRootQ-like callers. PS2 FnRunBlender/FnTurnBlender::AlignVel inline the quaternion math (see batch 009/022 notes). It is a TU-local copy of an inline, possibly VU0_v4quatrotate, but not provable.",
+   "intermediates": []
+  },
+  {
+   "item": "4.2",
+   "xbox": "0x104fa0",
+   "ps2": "0x27aa10",
+   "name": "EAGLAnim::FnTurnBlender::scalar_deleting_destructor",
+   "verdict": "accept",
+   "why": "The first entry of the Xbox vtable at 0x1a14b4. The PS2 FnTurnBlender vtable 0x3b3300 (set by the FnTurnBlender ctor) has type_info 0x27a850 then 0x27aa10, which is unnamed in Ghidra; the sheet row '~FnTurnBlender(void)' has no address. Both reset the vptr to FnTurnBlender, ScratchBuffer free if +0x1c, pool-free +0xc, vptr=FnAnim, then free 0x5c if flag&1. Xbox splits the body into 0x104310.",
+   "intermediates": [
+    {
+     "xbox": "0x104310",
+     "ps2": "0x27aa10",
+     "name": "EAGLAnim::FnTurnBlender::~FnTurnBlender",
+     "why": "Non-deleting body called only by 0x104fa0: vptr=FnTurnBlender, ScratchBuffer::FreeBuffer if [7], pool free [3], vptr=FnAnim, the same as the PS2 0x27aa10 body without the delete."
+    }
+   ]
+  },
+  {
+   "item": "5.1",
+   "xbox": "0x507a0",
+   "ps2": "0x167098",
+   "name": "InputTable::InputTable",
+   "verdict": "accept",
+   "why": "InputToAction::InputToAction passes it as the vector-constructor ctor for an array of 0x3c-byte InputTables. Body is identical to PS2: [0]=0, [1]=4, [2]=&[3].",
+   "intermediates": []
+  },
+  {
+   "item": "5.2",
+   "xbox": "0x507c0",
+   "ps2": "0x1670b8",
+   "name": "InputTable::~InputTable",
+   "verdict": "accept",
+   "why": "The vector-ctor/dtor helpers in InputToAction::InputToAction and ~InputToAction pass it as the element destructor (0x3c elements). Body: FastFree([2], [1]*0xc) if [2] != &[3], the same as PS2 without the delete flag, so it is the plain destructor.",
+   "intermediates": []
+  },
+  {
+   "item": "6.1",
+   "xbox": "0x7eed0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "The only callee of RLightManager::RefreshLightBlocks (4 light blocks, BuildRotate x2 + TransformPoint). The PS2 counterpart is the unnamed static FUN_001b0038, which lies inside the sheet extent of DisablePositionalLighting (0x1affd0+0x180), so there is no symbol.",
+   "intermediates": []
+  },
+  {
+   "item": "7.1",
+   "xbox": "0x95ce0",
+   "ps2": "0x1d38d8",
+   "name": "RVehicle::StartMuzzleFlash",
+   "verdict": "accept",
+   "why": "RVehicle::TriggerFX case 8 -> this. PS2 TriggerFX -> StartMuzzleFlash. Same timer check at +0x220+i*4 against the frame counter, then set to counter+5, copies two COORD3s, the HAS_TURRET LookupBool, fx 0x2d -> type 4 and rand*1.5258789e-05+3.0, else types 3/4 or 2 with 0.2*rand+0.6, fields +0x228/+0x230 identical.",
+   "intermediates": []
+  },
+  {
+   "item": "8.1",
+   "xbox": "0xea480",
+   "ps2": "0x284d88",
+   "name": "EAGL::Model::MorphModel",
+   "verdict": "accept",
+   "why": "EAGL::Model::Call: Xbox inlines strcmp(name,'Morph') then calls ea480, and PS2 Call calls MorphModel on 'Morph'. Both walk the +0xd4 morph table, match names against the +0xb8 list, decode bits 0x1c/0x1e of the header with a 0xfffffff length, dst = [2]*(+0xc0)+[3], and dispatch to 3 per-type morph routines.",
+   "intermediates": [
+    {
+     "xbox": "0xe96c0",
+     "ps2": "0x285f48",
+     "name": "EAGL::Model::ClearMorphModel",
+     "why": "Model::Call's 'ClearMorph' branch on both. It walks the +0xb8 list and copies n=(short)*(hw>>1) bytes from dst-off to dst, or to dst+off*(+0xc0) if bit 1 is set. It is the PS2 memcpy loop, inlined as rep movs on Xbox."
+    }
+   ]
+  },
+  {
+   "item": "9.1",
+   "xbox": "0x27c80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "AIElementController::WakeUp after SpawnHumanObject: sets aichar+0x78=p, +0x80=*p. PS2 WakeUp does the same stores inline (+0x68/+0x70). It is an inline header setter with no PS2 symbol.",
+   "intermediates": []
+  },
+  {
+   "item": "9.2",
+   "xbox": "0x27ca0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "RVehicle::PostLoad: returns UData data pointer (+0xc, +this if flag 2). No PS2 symbol, inlined in PS2 PostLoad. It differs from UGroup::GetArray (no *0x10) and from UData::ResolveOffsets (that one writes back).",
+   "intermediates": []
+  },
+  {
+   "item": "10.1",
+   "xbox": "0xba620",
+   "ps2": "0x20a788",
+   "name": "SRuleSpeed::CheckRule",
+   "verdict": "accept",
+   "why": "No xref (vtable not typed). It sits in the SRule file between SRuleRange::CheckRule and SRulePlayerDir::CheckRule. Body is the same as PS2 SRuleSpeed::CheckRule with offsets -8: type==3 -> GetStats(+0x10 or +0xc by dir), else SMissionRuleTarget::GetSpeed; threshold compare with the previous value then store the previous value.",
+   "intermediates": []
+  },
+  {
+   "item": "11.1",
+   "xbox": "0x62d70",
+   "ps2": "0x18b408",
+   "name": "PBondCar::GlareOff",
+   "verdict": "accept",
+   "why": "Called twice (3,4) at the start of 0x62de0 and from Simulate, the same as PS2 GlareOff from HandleTurnSignals/Simulate. It mirrors the named Xbox GlareOn: if state[i]==1, virtual call (2, 1<<(i+0x10), 0, g, g, -1.0) then (0xc, i, ...), state=0. GlareOn uses 0 and 0xb.",
+   "intermediates": []
+  },
+  {
+   "item": "11.2",
+   "xbox": "0x62de0",
+   "ps2": "0x18b580",
+   "name": "PBondCar::HandleTurnSignals",
+   "verdict": "accept",
+   "why": "Called from PBondCar::Simulate on both. GlareOff(3), GlareOff(4); signal state (PS2 +0x39c, Xbox +0x390) 1/2 compares +0x398/+0x240 (Xbox +0x38c/+0x240) and clears; blink = (frame - start) % period > period*(1-duty); then virtual GlareOn(3 or 4). Offsets are shifted -0xc consistently.",
+   "intermediates": []
+  },
+  {
+   "item": "12.1",
+   "xbox": "0x14dfa0",
+   "ps2": "0x3029b0",
+   "name": "RCMP::DECODER::GetFrameRate",
+   "verdict": "accept",
+   "why": "PlayMPC::Play -> 0x14cd00 (= AV_PLAYER::IsTimeForDecode) -> this, the same path as PS2 PlayMPC::Play -> IsTimeForDecode -> GetFrameRate. Body: if codec (+0x18 Xbox / +0x14 PS2) is null return 0.0, else codec vtable slot 4 (Xbox +0x10, PS2 +0x28/0x2c) returning a float.",
+   "intermediates": [
+    {
+     "xbox": "0x14cd00",
+     "ps2": "0x301390",
+     "name": "RCMP::AV_PLAYER::IsTimeForDecode",
+     "why": "Called only from PlayMPC::Play on both. Body: audio time + [0x40], times GetFrameRate()*0.001, stored at +0x48, return (float)[0x44]+1.0 <= that. Offsets are identical."
+    }
+   ]
+  },
+  {
+   "item": "13.1",
+   "xbox": "0x1252f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::map _Erase (recursive node free, 0x98 nodes) for URefCounter<AFader>'s map. It is an STL internal; the PS2 SGI equivalents (e.g. FUN_002f9930) are unnamed and different routines.",
+   "intermediates": []
+  },
+  {
+   "item": "13.2",
+   "xbox": "0x125340",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::map erase(iterator) with rebalancing, from RemoveReference. STL internal, no PS2 name.",
+   "intermediates": []
+  },
+  {
+   "item": "13.3",
+   "xbox": "0x1256b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::map _Insert (red-black insert), via 0x125990 from AddReference. STL internal, no PS2 name.",
+   "intermediates": []
+  },
+  {
+   "item": "13.4",
+   "xbox": "0x1258a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::map erase(first,last)/clear, called from map destructors 0x125b50/0x125b90. STL internal, no PS2 name.",
+   "intermediates": []
+  },
+  {
+   "item": "14.1",
+   "xbox": "0xf3ab0",
+   "ps2": "0x29e1f8",
+   "name": "EAGL::RuntimeAllocConstructorPool::~RuntimeAllocConstructorPool",
+   "verdict": "accept",
+   "why": "The atexit stub 0x15d150 calls it with ECX=0x23fbb8. That global is used by Xbox DynamicLoader::Resolve (with RuntimeAllocConstructorPool::FindConstructor/Destructor), matching PS2 0x348b28, which PS2 _global_ctor_dtor destroys with ~RuntimeAllocConstructorPool. Body: ~SymbolPool on this, this+0x14, this+0x14, this, exactly like PS2. There is no delete flag, so it is the plain destructor. It also sits in the PS2 slot between ConstructorPool::FindDestructor and RuntimeAllocConstructorPool::RemoveType.",
+   "intermediates": [
+    {
+     "xbox": "0xf3bf0",
+     "ps2": "0x29e0a0",
+     "name": "EAGL::ConstructorPool::~ConstructorPool",
+     "why": "The atexit stub 0x15d140 calls it with ECX=0x23fbe0. That global is used by RunConstructors/InitInternal/ShutDown, which is PS2 0x348b00, the ConstructorPool destroyed by ~ConstructorPool. Same 4x ~SymbolPool body, no delete flag."
+    },
+    {
+     "xbox": "0xf41d0",
+     "ps2": "0x29dcb0",
+     "name": "EAGL::SymbolPool::~SymbolPool",
+     "why": "The atexit stub 0x15d130 on SymbolPool global 0x23fb8c, and the 4x callee of both pool destructors. Body: Empty() then eagl_free([2], [1]<<2) and [2]=0, the same as PS2 without the delete flag."
+    }
+   ]
+  }
+ ]
+}

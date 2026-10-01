@@ -1,0 +1,308 @@
+## window 42: Xbox 0xeb790 EAGL::TAR::GetShape .. 0xecab0 EAGL::TAR::~TAR   (PS2 0x27e338 .. 0x27e238)
+  X 0xeb7f0 insns 24 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: D3DDevice_SetPalette, D3DResource_BlockUntilNotBusy, D3DResource_Release | strings: []
+  X 0xeb840 insns 17 | callers: FUN_000ebe00 | chain: FUN_000ebe00@ebe00 <- FUN_000ec000@ec000 <- EAGL::TAR::TAR@eca20 | FUN_000ebe00@ebe00 <- FUN_000ec420@ec420 <- EAGL::TAR::SwapShape@ecbc0 | callees:  | strings: []
+  X 0xeb880 insns 47 | callers: FUN_000ec420, FUN_000ec530, ~TAR | chain: EAGL::TAR::~TAR@ecab0 | FUN_000ec420@ec420 <- EAGL::TAR::SwapShape@ecbc0 | callees: D3DResource_Release, MmFreeContiguousMemory | strings: []
+  X 0xeb910 insns 124 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: D3DResource_Release, D3DSurface_GetDesc, D3DSurface_LockRect, D3DTexture_GetSurfaceLevel2, FUN_0015d3bd, Get | strings: []
+  X 0xeba80 insns 242 | callers: FUN_000ec000 | chain: FUN_000ec000@ec000 <- EAGL::TAR::TAR@eca20 | FUN_000ec000@ec000 <- FUN_000ec420@ec420 <- EAGL::TAR::SwapShape@ecbc0 | callees: D3DDevice_SetTexture, D3DResource_BlockUntilNotBusy, D3DResource_Register, FUN_001082a0, FUN_0010e7e9, FUN_00178fb8, MmFreeContiguousMemory, XGSetTextureHeader | strings: ['D3DTexture']
+  X 0xebe00 insns 91 | callers: FUN_000ec000, FUN_000ec420 | chain: FUN_000ec000@ec000 <- EAGL::TAR::TAR@eca20 | FUN_000ec420@ec420 <- EAGL::TAR::SwapShape@ecbc0 | callees: FUN_000eb840, FUN_001082d0, FUN_001082f0 | strings: []
+  X 0xebee0 insns 85 | callers: FUN_000ec610, FUN_000ec6e0, FUN_000ec8a0, FUN_0014d340 | chain: FUN_000ec610@ec610 <- EAGL::RenderContextExtension::GetBackBuffer@e8350 | FUN_000ec610@ec610 <- EAGL::RenderContextExtension::GetFrontBuffer@e8270 | callees:  | strings: ['EAGL::TARPrivate::SharedData new']
+  X 0xec000 insns 332 | callers: FUN_000ec420, TAR | chain: EAGL::TAR::TAR@eca20 | FUN_000ec420@ec420 <- EAGL::TAR::SwapShape@ecbc0 | callees: D3DDevice_CreatePalette2, D3DPalette_Lock2, FUN_000eb070, FUN_000eba80, FUN_000ebe00, SHAPE_depth | strings: []
+  X 0xec420 insns 94 | callers: SwapShape | chain: EAGL::TAR::SwapShape@ecbc0 | callees: D3DDevice_SetTexture, D3DResource_BlockUntilNotBusy, FUN_000eb880, FUN_000ebe00, FUN_000ec000 | strings: ['EAGL::TARPrivate::SharedData new']
+  X 0xec530 insns 75 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: D3DDevice_SetPalette, D3DDevice_SetTexture, D3DResource_BlockUntilNotBusy, FUN_000eb880 | strings: []
+  X 0xec610 insns 62 | callers: GetBackBuffer, GetFrontBuffer, ROffscreenBuffer, SetupFrameBuffers | chain: EAGL::RenderContextExtension::GetBackBuffer@e8350 | EAGL::RenderContextExtension::GetFrontBuffer@e8270 | callees: FUN_000ebee0, Get2DSurfaceDesc | strings: ['EAGL::TAR new']
+  X 0xec6e0 insns 140 | callers: ROffscreenBuffer, ShadowPrivateData | chain: ROffscreenBuffer::ROffscreenBuffer@7f610 | RShadowMap::ShadowPrivateData::ShadowPrivateData@a5a50 | callees: D3DDevice_CreateTexture2, FUN_000ebee0 | strings: ['EAGL::TAR new', 'EGLRTShape']
+  X 0xec8a0 insns 122 | callers: ROffscreenBuffer, ShadowPrivateData | chain: ROffscreenBuffer::ROffscreenBuffer@7f610 | RShadowMap::ShadowPrivateData::ShadowPrivateData@a5a50 | callees: D3D_CreateStandAloneSurface, FUN_000ebee0 | strings: ['EAGL::TAR new', 'EGLRTZShape']
+  P 0x27e2f0 EAGL::TAR::Lock insns 10 | callers: DoFlare, Lock | callees: FUN_0027e7c0
+  P 0x27e318 EAGL::TAR::Unlock insns 7 | callers: UnLockAll, Unlock, ~ShadowPrivateData | callees: FUN_0027ee70
+
+====================================================================================================
+
+## window 43: Xbox 0xe7900 EAGL::RenderContextExtension::SetRenderMask .. 0xe8270 EAGL::RenderContextExtension::GetFrontBuffer   (PS2 0x28cde8 .. 0x291178)
+  X 0xe79a0 insns 10 | callers: SetFogParams | chain: RFog::SetFogParams@7d840 | callees:  | strings: []
+  X 0xe79e0 insns 13 | callers: SetFogParams | chain: RFog::SetFogParams@7d840 | callees:  | strings: []
+  X 0xe7a20 insns 13 | callers: SetFogParams | chain: RFog::SetFogParams@7d840 | callees:  | strings: []
+  X 0xe7a60 insns 13 | callers: SetFogParams | chain: RFog::SetFogParams@7d840 | callees:  | strings: []
+  X 0xe7aa0 insns 10 | callers: SetFogParams | chain: RFog::SetFogParams@7d840 | callees: D3DDevice_SetRenderState_FogColor | strings: []
+  X 0xe7ad0 insns 18 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: D3DDevice_PersistDisplay, D3DDevice_Reset | strings: []
+  X 0xe7b20 insns 18 | callers: RRenderer | chain: RRenderer::RRenderer@7d2a0 | callees: D3DDevice_PersistDisplay, D3DDevice_Reset | strings: []
+  X 0xe7c60 insns 8 | callers: TestFlares | chain: RLensFlareManager::TestFlares@9e720 | callees: D3DDevice_BeginVisibilityTest | strings: []
+  X 0xe7c80 insns 10 | callers: TestFlares | chain: RLensFlareManager::TestFlares@9e720 | callees: D3DDevice_EndVisibilityTest | strings: []
+  X 0xe7ca0 insns 28 | callers: DrawFlares | chain: RLensFlareManager::DrawFlares@9e540 | callees: D3DDevice_GetVisibilityTestResult | strings: []
+  X 0xe7d70 insns 4 | callers: Render | chain: RRenderHigh::Render@8bf30 | callees:  | strings: []
+  X 0xe7eb0 insns 10 | callers: FONTEAGL_startdraw | chain: EAGLFont::FONTEAGL_startdraw@ee920 | callees:  | strings: []
+  X 0xe8150 insns 17 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0010e02b | strings: []
+  P 0x28cf98 EAGL::RenderContextExtension::SetFogColour insns 92 | callers: DisableFog, EnableFog, SetFogParams | callees: Close
+  P 0x28d108 EAGL::RenderContextExtension::SetDitherMatrix insns 196 | callers:  | callees: 
+  P 0x28d418 EAGL::RenderContextExtension::SetPAMarkerData insns 83 | callers:  | callees: Close
+  P 0x28d568 EAGL::RenderContextExtension::MoveRG2BA insns 452 | callers: DoDepthOfField, DoFog | callees: Close
+  P 0x28dc78 EAGL::RenderContextExtension::FogSprite insns 282 | callers: DoFog | callees: Close
+  P 0x28e0e0 EAGL::RenderContextExtension::SetClutFog insns 296 | callers:  | callees: FUN_00306f58, GetFogDensity, GetFogEnd, GetFogStart, MEM_free, SHAPE_create, TAR, eagl_alloc, powf, printf
+  P 0x28e580 EAGL::RenderContextExtension::FogTexSprite insns 436 | callers: DoFog | callees: Close, Use
+  P 0x28ec50 EAGL::RenderContextExtension::SetDepthOfFieldClut insns 87 | callers:  | callees: FUN_00306f58, MEM_free, SHAPE_create, TAR, eagl_alloc
+  P 0x28edb0 EAGL::RenderContextExtension::DoDepthOfField insns 446 | callers:  | callees: Close, MoveRG2BA, Use
+  P 0x28f4a8 EAGL::RenderContextExtension::DoFlare insns 1470 | callers:  | callees: Close, FUN_0027ed78, FUN_0027eea0, FUN_0027eec8, Lock, Use, __fixunssfdi, ~TAR
+  P 0x290d08 EAGL::RenderContext::GetFrontBufferDepth insns 2 | callers:  | callees: 
+  P 0x290d18 EAGL::RenderContext::GetBackBufferDepth insns 2 | callers:  | callees: 
+  P 0x290d28 EAGL::RenderContext::GetZBufferDepth insns 2 | callers:  | callees: 
+  P 0x290d38 EAGL::RenderContext::GetSyncToVBL insns 2 | callers: ClearFrameBuffers | callees: 
+  P 0x290d40 EAGL::RenderContext::SetDitherEnable insns 3 | callers:  | callees: 
+  P 0x290d50 EAGL::RenderContext::GetDitherEnable insns 4 | callers:  | callees: 
+  P 0x290d60 EAGL::RenderContextExtension::RenderContextExtension insns 8 | callers: RenderContext | callees: 
+  P 0x290d80 EAGL::RenderContextExtension::~RenderContextExtension insns 9 | callers: ~RenderContext | callees: __builtin_delete
+  P 0x290da8 EAGLInternal::RenderContextPrivate::RenderContextPrivate insns 58 | callers: RenderContext | callees: FlickerFilter, FrameBuffer, Screen, Video
+  P 0x290e90 EAGLInternal::RenderContextPrivate::Screen::Screen insns 9 | callers: RenderContextPrivate | callees: 
+  P 0x290eb8 EAGLInternal::RenderContextPrivate::FrameBuffer::FrameBuffer insns 19 | callers: RenderContextPrivate | callees: 
+  P 0x290f08 EAGLInternal::RenderContextPrivate::FlickerFilter::FlickerFilter insns 14 | callers: RenderContextPrivate | callees: 
+  P 0x290f40 EAGLInternal::RenderContextPrivate::Video::Video insns 12 | callers: RenderContextPrivate | callees: 
+  P 0x290f70 EAGL::RenderContextExtension::TakeSnapShot insns 27 | callers: DoScreenCapture | callees: ReadRectAtEndOfFrame
+  P 0x290fe0 EAGL::RenderContextExtension::ReadRectAtEndOfFrame insns 38 | callers: TakeSnapShot, TestFlares | callees: 
+  P 0x291078 EAGL::RenderContextExtension::ReadRects insns 23 | callers: EndFrame | callees: ReadRect
+  P 0x2910d8 EAGL::RenderContextExtension::ReadImageDuringFrame insns 22 | callers:  | callees: ReadRectDuringFrame
+  P 0x291130 EAGL::RenderContextExtension::GetZBufferInfo insns 7 | callers: TestFlares | callees: 
+  P 0x291150 EAGL::RenderContextExtension::GetBackBufferInfo insns 10 | callers:  | callees: 
+
+====================================================================================================
+
+## window 44: Xbox 0x108c00 MATRIX4_mult .. 0x10a4de v3crossprod   (PS2 0x25b220 .. 0x25a8e8)
+  X 0x108ce0 insns 39 | callers: CheckHitWindow | chain: WCollisionMgr::CheckHitWindow@c4d70 | callees:  | strings: []
+  X 0x108d50 insns 3 | callers: CheckHitWindow | chain: WCollisionMgr::CheckHitWindow@c4d70 | callees:  | strings: []
+  X 0x108d5c insns 52 | callers: MATRIX4_mult | chain: MATRIX4_mult@108c00 | callees:  | strings: []
+  X 0x108e70 insns 77 | callers: UpdateSpringMassSystem | chain: RSkeletalObj::UpdateSpringMassSystem@90cf0 | callees: FUN_001087b0, v3unit | strings: []
+  X 0x109170 insns 56 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x109230 insns 62 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x109300 insns 72 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x109400 insns 77 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x109d90 insns 59 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x109e60 insns 66 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x109f50 insns 84 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x10a460 insns 20 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x10a48d insns 20 | callers: v3sub | chain: v3sub@108b50 | callees:  | strings: []
+  X 0x10a4ba insns 16 | callers: VEC3_Dot | chain: VEC3_Dot@1089e0 <- WWorldMath::IntersectSegPlane@d2c20 | VEC3_Dot@1089e0 <- RGlareManager::AddModelGlare@a9aa0 <- DrawGroupDrawEffects@7dcb0 | callees:  | strings: []
+  P 0x25aa00 v3dot insns 20 | callers:  | callees: 
+  P 0x25aa50 v3directed insns 18 | callers:  | callees: v3scale, v3unit
+  P 0x25aa98 MATRIX4_multxrot insns 82 | callers:  | callees: cosf, sinf
+  P 0x25abe0 MATRIX4_multyrot insns 82 | callers:  | callees: cosf, sinf
+  P 0x25ad28 MATRIX4_multzrot insns 82 | callers:  | callees: cosf, sinf
+  P 0x25afd8 MATRIX4_multproj insns 45 | callers:  | callees: 
+  P 0x25b198 MATRIX4_transpose insns 33 | callers:  | callees: 
+
+====================================================================================================
+
+## window 45: Xbox 0x144af0 MIX_setlowpass .. 0x1454d0 SFILTER_createHPFFIR8   (PS2 0x3141e8 .. 0x3168a8)
+  X 0x144bc0 insns 81 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: SNDMEMI_alloc, SNDMEMI_free | strings: []
+  X 0x144cc0 insns 15 | callers: SNDMIXI_initfx | chain: SNDMIXI_initfx@142fc0 | callees:  | strings: []
+  X 0x144e20 insns 13 | callers: SNDMIXI_initfx | chain: SNDMIXI_initfx@142fc0 | callees:  | strings: []
+  X 0x144e50 insns 70 | callers: FUN_00144f30 | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x144f30 insns 57 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00144e50 | strings: []
+  X 0x144fc0 insns 12 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: SNDMEMI_free | strings: []
+  X 0x144ff0 insns 13 | callers: SNDMIXI_initfx | chain: SNDMIXI_initfx@142fc0 | callees:  | strings: []
+  X 0x145020 insns 47 | callers: SNDMIXI_initfx | chain: SNDMIXI_initfx@142fc0 | callees: FUN_001465a0, SNDMEMI_alloc, SNDMEMI_free, memclr | strings: []
+  X 0x1450b0 insns 68 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x145160 insns 12 | callers: SNDMIXI_initfx | chain: SNDMIXI_initfx@142fc0 | callees:  | strings: []
+  X 0x145190 insns 6 | callers: SNDMIXI_initfx | chain: SNDMIXI_initfx@142fc0 | callees:  | strings: []
+  X 0x1451b0 insns 164 | callers: FUN_00145390 | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x145390 insns 40 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_001451b0 | strings: []
+  X 0x1453e0 insns 14 | callers: SNDMIXI_initfx | chain: SNDMIXI_initfx@142fc0 | callees:  | strings: []
+  X 0x145410 insns 60 | callers: SNDMIXI_initfx | chain: SNDMIXI_initfx@142fc0 | callees: FUN_001465c0, FUN_00146640 | strings: []
+  P 0x3144c0 SFILTER_destroy insns 11 | callers:  | callees: 
+  P 0x3144f0 SFILTER_cleanup insns 31 | callers: SFILTER_cleanup | callees: SFILTER_cleanup
+  P 0x314638 SFILTER_disconnect insns 55 | callers:  | callees: 
+  P 0x3147e0 SFILTER_unpackgetframemtf insns 2 | callers:  | callees: 
+  P 0x314b58 SFILTER_unpackfgetframe insns 2 | callers:  | callees: 
+  P 0x314c60 SFILTER_unpacklfgetframe insns 2 | callers:  | callees: 
+  P 0x314ef8 SNDI_s16tofunaligned insns 46 | callers: decode16x87 | callees: 
+  P 0x315130 discardbits insns 20 | callers: readsamples | callees: 
+  P 0x315180 readsamples insns 144 | callers: decodemut | callees: FUN_003150c8, discardbits
+  P 0x315c30 SFILTER_unpackgetframexaf insns 2 | callers:  | callees: 
+  P 0x315c38 SFILTER_unpackxafrestore insns 7 | callers:  | callees: ~CEAXABLKDecf
+  P 0x315ce8 SND::CEAXABLKDecf::~CEAXABLKDecf insns 7 | callers: SFILTER_unpackxafrestore, SFILTER_unpackxalfrestore, SFILTER_unpackxapfrestore | callees: operator_delete
+  P 0x315f10 SFILTER_unpackgetframexalf insns 2 | callers:  | callees: 
+  P 0x315f18 SFILTER_unpackxalfrestore insns 7 | callers:  | callees: ~CEAXABLKDecf
+  P 0x316224 mtfilter5900 insns 235 | callers: FUN_00315550 | callees: 
+  P 0x3165d0 SFILTER_ft16 insns 62 | callers:  | callees: 
+
+====================================================================================================
+
+## window 46: Xbox 0xe8b40 EAGLInternal::ModelDestructor .. 0xe9170 EAGL::Model::GetTARList   (PS2 0x2856d0 .. 0x285a48)
+  X 0xe8b50 insns 8 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xe8b70 insns 7 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xe8b90 insns 8 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xe8bb0 insns 2 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xe8bc0 insns 6 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xe8be0 insns 2 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xe8bf0 insns 109 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xe8d00 insns 11 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xe8d30 insns 11 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xe8d60 insns 11 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xe8d90 insns 180 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xe8f60 insns 54 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xe8fe0 insns 2 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0xe8ff0 insns 9 | callers: Draw | chain: ActCharacter::Draw@14c50 | callees:  | strings: []
+  X 0xe9010 insns 89 | callers: FUN_000e90f0 | chain: (no chain to a function named on both sides within 3 levels) | callees: SHAPE_longname, SHAPE_name | strings: []
+  X 0xe90f0 insns 51 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_000e9010, SwapShape | strings: []
+  P 0x285780 EAGL::Model::GetChild insns 55 | callers:  | callees: strcmp
+  P 0x2858d8 EAGL::Model::GetGeometry insns 35 | callers:  | callees: strcmp
+  P 0x285970 EAGL::Model::SetModelMatrix insns 34 | callers: Draw, RenderShadowVolume | callees: 
+
+====================================================================================================
+
+## window 47: Xbox 0x8a550 SetProcAnimParamList .. 0x8b2b0 RRandom::StartUp   (PS2 0x1bef90 .. 0x1c08c0)
+  X 0x8a580 insns 16 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x8a5b0 insns 34 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x8a640 insns 51 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: BuildRotate, VU0_MATRIX4_mult | strings: []
+  X 0x8a6d0 insns 51 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: BuildRotate, VU0_MATRIX4_mult | strings: []
+  X 0x8a760 insns 51 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: BuildRotate, VU0_MATRIX4_mult | strings: []
+  X 0x8a7f0 insns 56 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: BuildRotate, VU0_MATRIX4_mult | strings: []
+  X 0x8a890 insns 56 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: BuildRotate, VU0_MATRIX4_mult | strings: []
+  X 0x8a930 insns 56 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: BuildRotate, VU0_MATRIX4_mult | strings: []
+  X 0x8a9d0 insns 30 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: VU0_MATRIX4_mult | strings: []
+  X 0x8aa20 insns 19 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x8aa50 insns 189 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: VU0_v3add, VU0_v4sub, VU0_v4unitcrossprodxyz, VU0_v4unitxyz | strings: []
+  X 0x8ad40 insns 134 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0013310e, VU0_MATRIX4_mult, VU0_MATRIX4setzrot, VU0_v3add, VU0_v4sub, VU0_v4unitcrossprodxyz, VU0_v4unitxyz | strings: []
+  X 0x8af60 insns 128 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00115c80, FUN_00115e70, FUN_0013310e, VU0_MATRIX4Init, VU0_MATRIX4_mult, VU0_v4Init, VU0_v4unitcrossprodxyz, cos_fractionalangle, sin_fractionalangle | strings: []
+  X 0x8b110 insns 50 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: BuildRotate, VU0_MATRIX4_mult | strings: []
+  X 0x8b1a0 insns 9 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x8b1c0 insns 78 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: BuildScale, VU0_MATRIX4_mult | strings: []
+  P 0x1befc8 GetProcAnimParameter insns 14 | callers: FUN_001bf4d8, FUN_001bf538, FUN_001bf598, FUN_001c04f0 | callees: 
+  P 0x1bf000 SetFEAnimation insns 10 | callers:  | callees: SetProcAnimParamList
+  P 0x1bf028 SetFEXform insns 7 | callers:  | callees: SetProcAnimXFormList
+  P 0x1c0898 GetInstanceMatrix_global_ctors insns 8 | callers:  | callees: FUN_001c0828
+  P 0x1c08b8 RRandom::CleanUp insns 2 | callers: Render_KillLibRender | callees: 
+
+====================================================================================================
+
+## window 48: Xbox 0x55f20 String_AttribByteOffsetParserFunc .. 0x570c0 AttributeSystem::CreateExtensionAttribute   (PS2 0x16c2b8 .. 0x16dd20)
+  X 0x55f60 insns 26 | callers: FUN_00151ca8 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_000559d0, FastFree | strings: []
+  X 0x55fa0 insns 26 | callers: FUN_00056b40 | chain: FUN_00056b40@56b40 <- FUN_00057460@57460 <- AttributeSystem::~AttributeSystem@592d0 | callees: FUN_000559d0, FastFree | strings: []
+  X 0x55fe0 insns 34 | callers: CreateExtensionAttribute, FUN_00056320, FUN_000572e0 | chain: AttributeSystem::CreateExtensionAttribute@570c0 | FUN_000572e0@572e0 <- AttributeSystem::ProcessDafiSection@57a80 | callees: Alloc | strings: []
+  X 0x56040 insns 26 | callers: AttributeSystem__CreateExtensionAttribute_Unwind_0, AttributeSystem__ProcessDafiSection_Unwind_0, AttributeSystem__ProcessDafiSection_Unwind_1, AttributeSystem_ | chain: FUN_00057520@57520 <- AttributeSystem::ProcessDafiSection@57a80 | FUN_00057650@57650 <- AttributeSystem::ProcessDafiSection@57a80 | callees: ComputeBytes, FastFree | strings: []
+  X 0x56080 insns 55 | callers: FUN_00057520, FUN_00057650, FUN_00057780, FUN_000578b0, ProcessDafiSection | chain: AttributeSystem::ProcessDafiSection@57a80 | FUN_00057520@57520 <- AttributeSystem::ProcessDafiSection@57a80 | callees: Alloc, ComputeBytes, FastFree | strings: []
+  X 0x56110 insns 22 | callers: ProcessDafiSection | chain: AttributeSystem::ProcessDafiSection@57a80 | callees: Alloc | strings: []
+  X 0x56150 insns 22 | callers: ProcessDafiSection | chain: AttributeSystem::ProcessDafiSection@57a80 | callees: Alloc | strings: []
+  X 0x56190 insns 31 | callers: CreateExtensionAttribute | chain: AttributeSystem::CreateExtensionAttribute@570c0 | callees: Alloc, FUN_00055b80 | strings: []
+  X 0x561f0 insns 26 | callers: AttributeSystem__CreateExtensionAttribute_Unwind_1, FUN_00151ce8 | chain: (no chain to a function named on both sides within 3 levels) | callees: ComputeBytes, FastFree | strings: []
+  X 0x56230 insns 26 | callers: FUN_00057070 | chain: FUN_00057070@57070 <- AttributeSet::SetName@58f40 | FUN_00057070@57070 <- AttributeSet::~AttributeSet@57a40 | callees: ComputeBytes, FastFree | strings: []
+  X 0x56270 insns 49 | callers: FUN_000563d0 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00055c60, FastAlloc | strings: []
+  X 0x56320 insns 49 | callers: FUN_000565b0 | chain: FUN_000565b0@565b0 <- FUN_00056b90@56b90 <- AttributeSystem::CreateExtensionAttribute@570c0 | callees: FUN_00055fe0, FastAlloc | strings: []
+  X 0x56790 insns 84 | callers: FUN_00056f70 | chain: FUN_00056f70@56f70 <- AttributeSystem::ProcessDafiSection@57a80 | FUN_00056f70@56f70 <- AttributeSystem::RegisterExtensionField@57240 | callees: FUN_000563d0, FUN_00123930, __stricmp | strings: []
+  X 0x56b40 insns 30 | callers: FUN_00056b40, FUN_00057460 | chain: FUN_00057460@57460 <- AttributeSystem::~AttributeSystem@592d0 | callees: FUN_00055fa0, FUN_00056b40, FastFree | strings: []
+  X 0x56b90 insns 84 | callers: CreateExtensionAttribute, FUN_000572e0 | chain: AttributeSystem::CreateExtensionAttribute@570c0 | FUN_000572e0@572e0 <- AttributeSystem::ProcessDafiSection@57a80 | callees: FUN_000526c0, FUN_000565b0, __stricmp | strings: []
+  X 0x56f70 insns 80 | callers: ProcessDafiSection, RegisterExtensionField | chain: AttributeSystem::ProcessDafiSection@57a80 | AttributeSystem::RegisterExtensionField@57240 | callees: FUN_000536c0, FUN_000559d0, FUN_00055c60, FUN_00056790, FastFree | strings: []
+  X 0x57070 insns 30 | callers: FUN_00057070, FUN_000573a0, FUN_000579e0, SetName, ~AttributeSet, ~AttributeSystem | chain: AttributeSet::SetName@58f40 | AttributeSet::~AttributeSet@57a40 | callees: FUN_00056230, FUN_00057070, FastFree | strings: []
+  P 0x16c5e8 Symbol_AttribByteOffsetParserFunc insns 32 | callers:  | callees: NameLookup
+  P 0x16cc20 AttributeSystem::Reset insns 2 | callers:  | callees: 
+  P 0x16d0d8 AttributeSystem::FindCollection insns 22 | callers: AttributeSet, SetName, SetParent | callees: GetCollection, LoadCollection
+
+====================================================================================================
+
+## window 49: Xbox 0x37ad0 dbendindex .. 0x38160 DebugData::GetDeindexedPtr   (PS2 0x142be8 .. 0x141e40)
+  X 0x37af0 insns 4 | callers: FID_conflict:??1istrstream@std@@UAE@XZ_Unwind_0_156b45, FUN_00150fba | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x37b00 insns 19 | callers: FUN_00037b00, FUN_00037b70, FUN_00037cb0, FUN_00038490, FUN_000384c0, FUN_000395d0, FUN_000396d0, FUN_0003a3f0, dbattrib_bool, dbattrib_float, dbattrib_s8, dbat | chain: dbattrib_bool@3a2f0 | dbattrib_float@3a1f0 | callees: FUN_00037b00 | strings: []
+  X 0x37b30 insns 11 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00037ae0, __builtin_delete | strings: []
+  X 0x37b50 insns 9 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x37df0 insns 59 | callers: FUN_00037ff0 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00130c3c, FUN_00130ed2, FUN_00130f8f, FUN_001331dc, __builtin_delete | strings: []
+  X 0x37ed0 insns 7 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00130c00 | strings: []
+  X 0x37ef0 insns 22 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00130c00 | strings: []
+  X 0x37f20 insns 7 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0013143d | strings: []
+  X 0x37f40 insns 22 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0013143d | strings: []
+  X 0x37f70 insns 2 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x37f80 insns 16 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x37fb0 insns 2 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x37fc0 insns 16 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x37ff0 insns 32 | callers: FUN_000385f0 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00037df0, __builtin_new | strings: []
+  X 0x38060 insns 11 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00038080, __builtin_delete | strings: []
+  X 0x38080 insns 21 | callers: FUN_00038060 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_001331dc, __builtin_delete | strings: []
+  X 0x380e0 insns 25 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x38130 insns 13 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  P 0x141e98 maybe_DebugIndexer__DebugIndexer insns 20 | callers: dbindex | callees: FUN_00142d90
+  P 0x141ee8 dbattrib_i32 insns 103 | callers:  | callees: FindIndexedItem, FindItem, GetDeindexedPtr
+  P 0x142238 dbattrib_u32 insns 88 | callers:  | callees: FindIndexedItem, FindItem, GetDeindexedPtr, sscanf
+  P 0x142548 dbattrib_f insns 88 | callers: ReflPrivateData | callees: FindIndexedItem, FindItem, GetDeindexedPtr, sscanf
+
+====================================================================================================
+
+## window 50: Xbox 0x133e84 atof .. 0x135bed vfprintf   (PS2 0x2a7290 .. 0x2abd58)
+  X 0x133f50 insns 27 | callers: FONT_drawtextfa, FUN_000997d0, FUN_00099990, FUN_0010b110, FUN_0010ece5, FUN_00137671, LoadFile | chain: FONT_drawtextfa@1073a0 | RCameraIniLoader::LoadFile@78770 | callees:  | strings: []
+  X 0x134090 insns 14 | callers: __nh_malloc | chain: __nh_malloc@1340b7 <- _malloc@1340e3 <- eagl_alloc@e4f50 | callees: FUN_0010fe2d, FUN_00111d01 | strings: []
+  X 0x1342cf insns 4 | callers: __onexit | chain: __onexit@132a43 <- atexit@132a7b | callees: FUN_001364d8 | strings: []
+  X 0x1342d8 insns 4 | callers: FUN_00132a75 | chain: FUN_00132a75@132a75 <- __onexit@132a43 <- atexit@132a7b | callees: FUN_0013644a | strings: []
+  X 0x1342e1 insns 60 | callers: FUN_0013438b | chain: FUN_0013438b@13438b <- FUN_0013566d@13566d <- __pure_virtual@131d35 | callees: FUN_001359f5, FUN_001363cc, FUN_0013644a, FUN_001364d8 | strings: []
+  X 0x13438b insns 9 | callers: FUN_0013566d, _abort, _raise | chain: FUN_0013566d@13566d <- __pure_virtual@131d35 | FUN_0013566d@13566d <- FUN_00139817@139817 <- vfprintf@135bed | callees: FUN_001342e1 | strings: []
+  X 0x13439d insns 29 | callers: FUN_001356f2, FUN_00135889 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0010fe2d, FUN_00111d01, __callnewh | strings: []
+  X 0x134470 insns 37 | callers: XMountUtilityDrive | chain: (no chain to a function named on both sides within 3 levels) | callees: __flsbuf, vfprintf | strings: []
+  X 0x1344c7 insns 46 | callers: XapiMapLetterToDirectory | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00138a47, __flsbuf | strings: []
+  X 0x134698 insns 67 | callers: FUN_00136c1f | chain: (no chain to a function named on both sides within 3 levels) | callees: __sptype | strings: []
+  X 0x134770 insns 10 | callers: ??0_Locimp@locale@std@@AAE@_N@Z, ??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z, ??1strstreambuf@std@@UAE@XZ, ?clear@ | chain: FID_conflict:??1istrstream@std@@UAE@XZ@131ae1 <- FUN_00039db0@39db0 <- dbattrib_s8@39ff0 | FID_conflict:??1istrstream@std@@UAE@XZ@131ae1 <- FUN_00039e40@39e40 <- dbattrib_u8@3a0f0 | callees:  | strings: []
+  X 0x13478f insns 2 | callers: FUN_00130c3c | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x134795 insns 10 | callers: FUN_00130c00, FUN_0013143d, FUN_001327f9, FUN_0013348d, FUN_001336e9, FUN_001347e4, FUN_00135196, FUN_00137671, FUN_0013844c, FUN_0013a3e0, __forcdecpt, __hexto | chain: FUN_001327f9@1327f9 <- ActAnimationDatabase::ActAnimationDatabase@13f90 | FUN_001327f9@1327f9 <- ActCharacterInfo::ActCharacterInfo@15260 | callees:  | strings: []
+  X 0x1347b6 insns 2 | callers: FUN_00130c3c, FUN_00131c31 | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x1347bc insns 2 | callers: FUN_00130c3c, FUN_00131c31 | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x1347c2 insns 14 | callers: FUN_00130ed2, FUN_00130f8f | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x1347e4 insns 19 | callers: FUN_0013143d, FUN_001336e9 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00134795 | strings: []
+  X 0x134815 insns 81 | callers: __onexit_lk | chain: __onexit_lk@13299b <- __onexit@132a43 <- atexit@132a7b | callees: FUN_0010fe2d, FUN_001126ac, FUN_001331dc, FUN_001348bc, FUN_001364d8, __SEH_epilog, __SEH_prolog, __callnewh, _malloc | strings: []
+  X 0x1348bc insns 4 | callers: FUN_00134815 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0013644a | strings: []
+  X 0x134902 insns 56 | callers: FUN_00134f12 | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x13498f insns 45 | callers: ?CatchIt@@YAXPAUEHExceptionRecord@@PAUEHRegistrationNode@@PAU_CONTEXT@@PAXPBU_s_FuncInfo@@PBU_s_HandlerType@@PBU_s_CatchableType@@PBU_s_TryBlockMapEntry@@H1E@Z, | chain: (no chain to a function named on both sides within 3 levels) | callees: ?_inconsistency@@YAXXZ, FUN_00134a40, FUN_001356f2, __CallSettingFrame@12, __SEH_epilog, __SEH_prolog | strings: []
+  X 0x134a40 insns 7 | callers: FUN_0013498f | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_001356f2 | strings: []
+  X 0x134a9b insns 14 | callers: ?BuildCatchObject@@YAXPAUEHExceptionRecord@@PAXPBU_s_HandlerType@@PBU_s_CatchableType@@@Z | chain: (no chain to a function named on both sides within 3 levels) | callees:  | strings: []
+  X 0x134ab8 insns 6 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_001356f2 | strings: []
+  X 0x134ac8 insns 45 | callers: ?CatchIt@@YAXPAUEHExceptionRecord@@PAUEHRegistrationNode@@PAU_CONTEXT@@PAXPBU_s_FuncInfo@@PBU_s_HandlerType@@PBU_s_CatchableType@@PBU_s_TryBlockMapEntry@@H1E@Z | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00131f0c, FUN_00131fa1, FUN_00134c0b, FUN_001356f2, __SEH_epilog, __SEH_prolog | strings: []
+  X 0x134c0b insns 33 | callers: FUN_00134ac8 | chain: (no chain to a function named on both sides within 3 levels) | callees: ?_FindAndUnlinkFrame@@YAXPAUFrameInfo@@@Z, FUN_00131f34, FUN_001356f2, ___DestructExceptionObject, __abnormal_termination | strings: []
+  X 0x134e52 insns 74 | callers: FUN_00134f12 | chain: (no chain to a function named on both sides within 3 levels) | callees: ?CatchIt@@YAXPAUEHExceptionRecord@@PAUEHRegistrationNode@@PAU_CONTEXT@@PAXPBU_s_FuncInfo@@PBU_s_HandlerType@@PBU_s_CatchableType@@PBU_s_TryBlockMapEntry@@H1E@Z, | strings: []
+  X 0x134f12 insns 162 | callers: ___InternalCxxFrameHandler | chain: (no chain to a function named on both sides within 3 levels) | callees: ?CatchIt@@YAXPAUEHExceptionRecord@@PAUEHRegistrationNode@@PAU_CONTEXT@@PAXPBU_s_FuncInfo@@PBU_s_HandlerType@@PBU_s_CatchableType@@PBU_s_TryBlockMapEntry@@H1E@Z, | strings: []
+  X 0x135196 insns 72 | callers: __Stod | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00133664, FUN_00134795, FUN_0013847c | strings: []
+  X 0x13537b insns 75 | callers: FUN_00135424, FUN_0013557d | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00135358 | strings: []
+  X 0x135424 insns 41 | callers: __cfltcvt | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0013537b, FUN_00139678, FUN_001397b1 | strings: []
+  X 0x135484 insns 70 | callers: FUN_0013552b, FUN_0013557d | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00135358 | strings: []
+  X 0x13552b insns 34 | callers: __cfltcvt | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_00135484, FUN_00139678, FUN_001397b1 | strings: []
+  X 0x13557d insns 62 | callers: __cfltcvt | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0013537b, FUN_00135484, FUN_00139678, FUN_001397b1 | strings: []
+  X 0x13565b insns 6 | callers: FUN_00131d28 | chain: (no chain to a function named on both sides within 3 levels) | callees: __controlfp | strings: []
+  X 0x135689 insns 14 | callers: ?_inconsistency@@YAXXZ, FUN_00134f12 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_001356f2, __SEH_prolog | strings: []
+  X 0x1356f2 insns 41 | callers: ?_FindAndUnlinkFrame@@YAXPAUFrameInfo@@@Z, FUN_00131f0c, FUN_00131f34, FUN_00131ff2, FUN_00133664, FUN_0013366d, FUN_0013498f, FUN_00134a40, FUN_00134ab8, FUN_0 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0010ecd8, FUN_0013439d, FUN_0013566d | strings: []
+  X 0x135774 insns 90 | callers:  | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_001331dc, FUN_00135880, FUN_001364d8, __SEH_epilog, __SEH_prolog | strings: []
+  X 0x135880 insns 4 | callers: FUN_00135774 | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0013644a | strings: []
+  X 0x135889 insns 30 | callers: _rtinit | chain: (no chain to a function named on both sides within 3 levels) | callees: FUN_0010ecd8, FUN_0013439d, FUN_00136421, XRegisterThreadNotifyRoutine, __mtinitlocks | strings: []
+  P 0x2a72b0 atoi insns 10 | callers: Bool_AttribByteOffsetParserFunc, InitLoadScreen, Int_AttribByteOffsetParserFunc, LoadSubtitles, ParseDefFileForFrontEnd, ParseMasterConfigFile, ParseNameAndTag, | callees: strtol
+  P 0x2a72d8 bsearch insns 53 | callers: CDVD_open, FUN_002592e0 | callees: 
+  P 0x2a73b0 fiprintf insns 13 | callers: __assert | callees: vfiprintf
+  P 0x2a73e8 malloc insns 10 | callers: FUN_0024e4f8, FUN_0024ee50, FUN_00250978, FUN_00250ca8, FUN_002d05f8, __eh_alloc, __register_frame, __register_frame_table, atexit, eagl_alloc | callees: _malloc_r
+  P 0x2a7410 free insns 4 | callers: FUN_0024e480, FUN_0024e620, FUN_00250640, FUN_00250ca8, FUN_002d0638, KillScript, __deregister_frame, __deregister_frame_info, __eh_free, eagl_free | callees: FUN_002afb58
+  P 0x2a7678 _malloc_r insns 478 | callers: FUN_002af838, FUN_002b0548, FUN_002b1db8, FUN_002b2090, _init_signal_r, _realloc_r, malloc | callees: FUN_002a7420, __malloc_lock, __malloc_unlock
+  P 0x2a7df0 memcmp insns 37 | callers: FUN_001ce6c0, FUN_001ce758, FUN_002ba9f0, FUN_002bd958, SNDSTRMI_parseheader, insert_unique | callees: 
+  P 0x2a7e84 memcpy insns 44 | callers: AIElementController, ClearMorphModel, DAFI_open, DecompressValues, FUN_00137e28, FUN_0013bc50, FUN_0015e750, FUN_001771b8, FUN_00177260, FUN_00192c18, FUN_00192 | callees: 
+  P 0x2a7f34 memmove insns 65 | callers: ActivateCarObject, ClearAllBolts, CollideWithWorld, DeactivateCarObject, DeletePhysicsObject, FUN_00165a18, FUN_00177260, FUN_00192cc0, FUN_001df338, FUN_00202e | callees: 
+  P 0x2a8038 memset insns 48 | callers: Add, AddGeoPrim, AddPlayerHeadlight, AnchorCamera, AnchorRelativeCamera, ApplyDamage, ApplyInitialForcesAndTorques, BITMAP_Draw2D, BarriersInPath, CANVAS_Add, C | callees: 
+  P 0x2a80f8 __malloc_lock insns 2 | callers: FUN_002afb58, FUN_002afe78, _malloc_r, _realloc_r | callees: 
+  P 0x2a8100 __malloc_unlock insns 2 | callers: FUN_002afb58, FUN_002afe78, _malloc_r, _realloc_r | callees: 
+  P 0x2a8108 _printf_r insns 15 | callers:  | callees: _vfprintf_r
+  P 0x2a8bbc srand insns 5 | callers:  | callees: 
+  P 0x2a8bd0 rand insns 12 | callers: NormalizedRandomNumber, Util_GaussRandom, noise_init | callees: 
+  P 0x2a8c00 _sbrk_r insns 23 | callers: FUN_002a7420, FUN_002afe78 | callees: sbrk
+  P 0x2a8c60 _init_signal_r insns 28 | callers: __sigtramp_r, _init_signal, _raise_r, _signal_r | callees: _malloc_r
+  P 0x2a8cd0 _signal_r insns 35 | callers: signal | callees: _init_signal_r
+  P 0x2a8d60 _raise_r insns 60 | callers: raise | callees: _getpid_r, _init_signal_r, _kill_r
+  P 0x2a8e50 __sigtramp_r insns 46 | callers: __sigtramp | callees: _init_signal_r
+  P 0x2a8f08 raise insns 10 | callers: abort | callees: _raise_r
+  P 0x2a8f30 signal insns 11 | callers:  | callees: _signal_r
+  P 0x2a8f60 _init_signal insns 9 | callers:  | callees: _init_signal_r
+  P 0x2a8f84 __sigtramp insns 11 | callers:  | callees: __sigtramp_r
+  P 0x2a8fb0 _kill_r insns 23 | callers: _raise_r | callees: kill
+  P 0x2a9010 _getpid_r insns 7 | callers: _raise_r | callees: getpid
+  P 0x2a9030 _sprintf_r insns 26 | callers:  | callees: vfprintf
+  P 0x2a9198 strcasecmp insns 45 | callers: APlayerVehicle, ATrafficVehicle, AddSnowmobileForces, ApplyInitialForcesAndTorques, AutoDriveCamInputHandler, Bool_AttribByteOffsetParserFunc, Call911, ChangeCa | callees: 
+  P 0x2a9508 strcmp insns 81 | callers: AIElementController, ActAnimationDatabase, BinarySearch, Bond_LoadingScreen, CANVAS_Draw, Call, CheatMsgHandler, CompileCommand, ConvertStringToNumber, Draw, Dr | callees: 
+  P 0x2a964c strcpy insns 69 | callers: ABank, AIndex, APlayerVehicle, AStreamPriv, ASubmersible, ATrafficVehicle, ActCharacterInfo, AddFile, AddReference, AddSymbol, ApplicationMemoryHeapConfig, AsSt | callees: 
+  P 0x2a9760 strlen insns 78 | callers: AFingoDeath, AGun, AIndex, ASentry, ASnowMobile, AUltraLite, ActAnimationDatabase, ActCharacterInfo, AddSymbol, AsciiString2Sjis, BIG_locateentryz, CDVD_hashnam | callees: 
+  P 0x2a9898 strncasecmp insns 85 | callers: AIElementController, ActAnimationDatabase, AttackWithEmp, CDVD_init, FILEDEV_resolvename, FILESYS_addbig, FILESYS_setcurrentpath, FILE_save, FILE_savez, FindAnc | callees: 
+  P 0x2a9a50 strncpy insns 111 | callers: AIndex, AsString, CDVD_getattrfromhandle, FILESYS_bypassqueuefileinfo, FILESYS_exists, FILESYS_getcurrentpath, FILESYS_open, FindString, GetFullString, GetGeoPr | callees: 
+  P 0x2a9c80 maybe_strtod_r insns 959 | callers: strtod | callees: FUN_002b07b8, FUN_002b0860, FUN_002b09a8, FUN_002b0c38, FUN_002b0c70, FUN_002b0ea0, FUN_002b0fa0, FUN_002b1118, FUN_002b1180, FUN_002b1310, FUN_002b1528, FUN_00
+  P 0x2aab80 strtod insns 11 | callers: atof, strtodf | callees: maybe_strtod_r
+  P 0x2aabb0 strtodf insns 9 | callers:  | callees: dptofp, strtod
+  P 0x2aac00 strtok_r insns 39 | callers: strtok | callees: 
+  P 0x2aaca0 _strtol_r insns 142 | callers: strtol | callees: __muldi3, __udivdi3, __umoddi3
+  P 0x2aaed8 strtol insns 13 | callers: atoi | callees: _strtol_r
+  P 0x2ab010 vfiprintf insns 30 | callers: FUN_002aaf58, fiprintf | callees: FUN_002af9a8, _vfiprintf_r
+  P 0x2ab088 _vfiprintf_r insns 753 | callers: vfiprintf | callees: FUN_002aaf10, FUN_002aaf58, FUN_002ae1e0, FUN_002b0698, FUN_002b06d4, __udivdi3, __umoddi3, strlen
+
+====================================================================================================
+

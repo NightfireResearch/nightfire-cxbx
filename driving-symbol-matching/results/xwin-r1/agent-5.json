@@ -1,0 +1,343 @@
+{
+ "verdicts": [
+  {
+   "item": "120.1",
+   "xbox": "0x94d10",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL _Tree insert (multimap insert-equal descent + _Insert 944d0) called from NewContext; PS2 GetReference/lower_bound are SGI STL - different routine",
+   "intermediates": []
+  },
+  {
+   "item": "121.1",
+   "xbox": "0xa8fa0",
+   "ps2": "0x1d9bb8",
+   "name": "RDebrisType::Add",
+   "verdict": "accept",
+   "why": "DEBRIS_Draw->RDebris::Add(a9260)->this; body: slot-count cap, copy pos/vel 16B, random unit vector via LCG *1.5258789e-05, lifetime, colour word store, count++ (Xbox cap 0x80 vs PS2 0x40)",
+   "intermediates": [
+    {
+     "xbox": "0xa9680",
+     "ps2": "0x1d95b8",
+     "name": "RDebris::DrawShellCasings",
+     "verdict": "accept",
+     "why": "ActWeapon::RenderShellCasings tail-calls it with ECX=RDebris global at the same site PS2 calls DrawShellCasings (PS2 body is empty stub); Xbox body adds casings via RDebrisType::Add then RDebrisType::Draw"
+    }
+   ]
+  },
+  {
+   "item": "122.1",
+   "xbox": "0xa9260",
+   "ps2": "0x1d95e8",
+   "name": "RDebris::Add",
+   "verdict": "accept",
+   "why": "sole caller GFXGallery::DEBRIS_Draw on both; if(last arg) RDebrisType::Add(this->types[idx], ..., global) - disasm ECX=[ECX+EDX*4] matches PS2 param_2[param_3]",
+   "intermediates": []
+  },
+  {
+   "item": "123.1",
+   "xbox": "0xad0e0",
+   "ps2": "0x1f6ac8",
+   "name": "RigidBody::ResetRigidBodySP",
+   "verdict": "accept",
+   "why": "~ESimFrameUpdate calls DeleteDeadObjects, CopyRigidBodiesToScratchPad(thunk b2810->ad0e0), AdvanceStep, SimulateGame on both; body zeroes SP global (written by InitRigidBodySystem both) +0x390 dword and byte (+0x399 vs +0x39c)",
+   "intermediates": [
+    {
+     "xbox": "0xb2810",
+     "ps2": "0x1ff2e8",
+     "name": "Simulation::CopyRigidBodiesToScratchPad",
+     "verdict": "accept",
+     "why": "Ghidra thunk (single JMP to ResetRigidBodySP) called 2nd in ~ESimFrameUpdate, same position as PS2 CopyRigidBodiesToScratchPad; currently a thunk_FUN_ entry"
+    }
+   ]
+  },
+  {
+   "item": "124.1",
+   "xbox": "0xad110",
+   "ps2": "0x1f7c00",
+   "name": "RigidBody::GetOrientToGround",
+   "verdict": "accept",
+   "why": "caller PBondCar::Simulate (PS2 Simulate); body [+0x5c]: 0x10*0 + 0x14*1 + 0x18*0 identical",
+   "intermediates": []
+  },
+  {
+   "item": "125.1",
+   "xbox": "0xbae50",
+   "ps2": "0x20bff0",
+   "name": "SWeaponManager::SetSpecialWeapon",
+   "verdict": "accept",
+   "why": "sole caller ~ESetSpecialWeapon both; stores 2 args (+0x70/+0x74 vs +0x80/+0x84), clears slot[+8]*0x54+0x18 if !=-1, special case param==2",
+   "intermediates": []
+  },
+  {
+   "item": "126.1",
+   "xbox": "0xce900",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::list erase(first,last) (FastFree 0xc node, --size); shared STL helper with 9 unrelated callers",
+   "intermediates": []
+  },
+  {
+   "item": "127.1",
+   "xbox": "0xf5c80",
+   "ps2": "0x29c2e8",
+   "name": "EAGL::DrawArray::SetVar",
+   "verdict": "accept",
+   "why": "SetVar(char*,...) overload: GetIndexFromName then SetVar(int,...) f5770 - PS2 inlines the strcmp name lookup then calls SetVar(int) 0x29c3b0",
+   "intermediates": [
+    {
+     "xbox": "0xf5770",
+     "ps2": "0x29c3b0",
+     "name": "EAGL::DrawArray::SetVar",
+     "verdict": "accept",
+     "why": "SetVar(int,...) overload called from SetVar(char*) f5c80; flag if last!=-1, idx!=-1 stores ptr at [+0xc]+idx*8 (PS2 alignment PrintMessage absent)"
+    }
+   ]
+  },
+  {
+   "item": "128.1",
+   "xbox": "0x113b10",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "static sentinel helper called twice from checksentinel 0x4246 branch; PS2 counterpart FUN_002cb290 has no name",
+   "intermediates": []
+  },
+  {
+   "item": "129.1",
+   "xbox": "0x1462b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "hand-written SSE resampler kernel installed as funcPtr2 by Xbox SFILTER_rsfinit; PS2 rsfinit sets only SFILTER_rsf - Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "130.1",
+   "xbox": "0x1c0c0",
+   "ps2": "0x2fc468",
+   "name": "ACharacter::ACharacter",
+   "verdict": "accept",
+   "why": "AICharacter::GetACharacter: operator_new(\"ACharacter\") then this ctor; ABaseSound base ctor, vtable 0x18a520 slot0 = ACharacter::scalar_deleting_destructor, min/max dist 3.0/25.0/625.0 = PS2 0x40400000/0x41c80000/0x441c4000",
+   "intermediates": []
+  },
+  {
+   "item": "131.1",
+   "xbox": "0x71000",
+   "ps2": "0x1984b8",
+   "name": "PVehicle::MissionEditorSwitch",
+   "verdict": "accept",
+   "why": "callers ~ESwitchEffectOff/~ESwitchEffectOn on both; sets/clears bit n in +0x6c/+0x70 by bool",
+   "intermediates": []
+  },
+  {
+   "item": "132.1",
+   "xbox": "0x75c40",
+   "ps2": "0x19f478",
+   "name": "ColourConvertXBoxToPS2",
+   "verdict": "accept",
+   "why": "same RGB->YIQ->RGB algorithm: /255, Y*1.0811-0.075 clamp, I/Q*1.115, clamps, round*255, keep alpha (PS2 helpers FUN_0019eff8/f270 inlined); callers are static-init colour constants; Xbox build keeps ARGB order",
+   "intermediates": []
+  },
+  {
+   "item": "133.1",
+   "xbox": "0x7f9f0",
+   "ps2": "0x1b0f68",
+   "name": "RPathEngine::RPathHandle::RPathHandle",
+   "verdict": "accept",
+   "why": "copy-ctor overload (RPathHandle&): list node create (FastAlloc 0xdc) in AddInstanceList/CreatePathHandle; copies 0xd4 bytes but zeroes +0xb0/+0xb4 exactly as PS2 0x1b0f68 (sw zero 0xb0/0xb4)",
+   "intermediates": []
+  },
+  {
+   "item": "134.1",
+   "xbox": "0x95f90",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "dissolve factor helper called twice by SetPerObjectBuffers; PS2 counterpart FUN_001d2ac0 is unnamed (ComputeDissolve is an empty stub called from Render)",
+   "intermediates": []
+  },
+  {
+   "item": "135.1",
+   "xbox": "0xa60b0",
+   "ps2": "0x1ec2d8",
+   "name": "RShadowMap::Draw",
+   "verdict": "accept",
+   "why": "RVehicle::RenderShadow: if(+0x350) Draw(fgThis_RShadowMap, this, light+0x10) else ClearShadowMap(fgThis) - identical on both; Xbox body renders projected shadow (Begin/RenderShadowGeometry/EndFrame)",
+   "intermediates": [
+    {
+     "xbox": "0xa5960",
+     "ps2": "0x1ec1f8",
+     "name": "RShadowMap::ClearShadowMap",
+     "verdict": "accept",
+     "why": "else-branch of RVehicle::RenderShadow with ECX=fgThis_RShadowMap, same as PS2; SetupFrameBuffers/BeginFrame/BeginView/ClearViewPort(7)/EndView/EndFrame"
+    }
+   ]
+  },
+  {
+   "item": "136.1",
+   "xbox": "0xbd3e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "inline v4sub + inverse-length-squared helper of Util_CollideRayWithSphere (bd500); PS2 CollideRayWithSphere has no callees (inlined)",
+   "intermediates": [
+    {
+     "xbox": "0xbd500",
+     "ps2": "0x211098",
+     "name": "Util_CollideRayWithSphere",
+     "verdict": "accept",
+     "why": "callers RayShell::CollideWithObjects, ~EWakeupSmackable, bd5d0 = PS2 set; distsq vs r^2, unit dir, scaleadd 1000.0 (0x447a0000 in PS2 too)"
+    },
+    {
+     "xbox": "0xbd5d0",
+     "ps2": "0x211280",
+     "name": "Util_CollideRayWithStretchedSphere",
+     "verdict": "accept",
+     "why": "callers AvoidThreat, CollideWithObjects as PS2; 1/stretch scales y of dir/points, calls RayWithSphere, rescales hit y"
+    }
+   ]
+  },
+  {
+   "item": "137.1",
+   "xbox": "0xd8170",
+   "ps2": "0x23d9c8",
+   "name": "GHud::IsTargetPointOnScreen",
+   "verdict": "accept",
+   "why": "caller GetScreenCoords both; 9.5 margins vs screen w/h fields (+0x440/+0x444 vs +0x44c/+0x450)",
+   "intermediates": []
+  },
+  {
+   "item": "138.1",
+   "xbox": "0xd9a50",
+   "ps2": "0x244600",
+   "name": "GHud::DrawFont",
+   "verdict": "accept",
+   "why": "multi-line overload (char**,count): FONT_SetState, SetScale(s,s), +0x50 colour, FONT_Height, loop FONT_Draw y+=h+5.0; caller DrawPauseMenu; d9ad0 is the other overload 0x2446d8",
+   "intermediates": []
+  },
+  {
+   "item": "139.1",
+   "xbox": "0x10dbe0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "FILESYS_atomic callback of Xbox FILE_save (open/write/close); PS2 FILE_save does host0: path I/O directly, no internal callback",
+   "intermediates": []
+  },
+  {
+   "item": "140.1",
+   "xbox": "0x1296b0",
+   "ps2": "0x2f7188",
+   "name": "AGun::SetFirePatch",
+   "verdict": "accept",
+   "why": "identical caller set AFingoDeath/ASentry/ASnowMobile/AUltraLite/InitAudioObject; callees AVoice/FastAlloc/FastFree/Lookup",
+   "intermediates": []
+  },
+  {
+   "item": "141.1",
+   "xbox": "0x145720",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "one-pole LPF inner loop split out of SFILTER_lpfRC on Xbox; PS2 SFILTER_lpfRC has it inline (no callees)",
+   "intermediates": []
+  },
+  {
+   "item": "142.1",
+   "xbox": "0x12620",
+   "ps2": "0x10bc68",
+   "name": "CrossFadeAnimationController::scalar_deleting_destructor",
+   "verdict": "accept",
+   "why": "slot of vtable 0x189e14 set by CrossFade ctor (after CrossFade::Update 0x111a0); ~AnimationController + FastFree 0x40 (PS2 0x30; Standard 0x30 vs 0x20 - consistent +0x10)",
+   "intermediates": []
+  },
+  {
+   "item": "143.1",
+   "xbox": "0x5d3f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "triangle-normal inline helper (cross, unit, flip up, clamp 0.9999) with 8 callers; PS2 callers call v3crossprod inline - no PS2 function",
+   "intermediates": []
+  },
+  {
+   "item": "144.1",
+   "xbox": "0x6ec80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "attribute-set wrapper ctor (AttributeSet(\"smackable\"), 100.0/500.0 defaults) called by Smackable ctor; PS2 Smackable calls AttributeSet directly, fields inlined - no named counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "145.1",
+   "xbox": "0xb5310",
+   "ps2": "0x1feae0",
+   "name": "Simulation::~Simulation",
+   "verdict": "accept",
+   "why": "called from atexit stub of the global Sim (PS2 FUN_00204a08); UntrackAllInstances, simRandom delete, UMemory::Free(+0x18), map/vector teardown; no delete flag",
+   "intermediates": []
+  },
+  {
+   "item": "146.1",
+   "xbox": "0x100800",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "FnDeltaF3 frame-data address helper called by EvalSQT/EvalSQTMask; inlined on PS2, no named counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "147.1",
+   "xbox": "0x23f20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "std::vector<T(0x28)>::size() inline helper",
+   "intermediates": []
+  },
+  {
+   "item": "148.1",
+   "xbox": "0x86d00",
+   "ps2": "0x1b9198",
+   "name": "RPlayerCamera::ResolveAllCollisions",
+   "verdict": "accept",
+   "why": "called by the 3 camera updates (87880/88380/886f0 = MomentumHeli/Tumble/Ellipse, same order and callee sets) exactly as PS2; callees CheckObjectCollisions, InRegion, WCollider/~WCollider, GetAnchorMatrix4, FastAlloc",
+   "intermediates": [
+    {
+     "xbox": "0x87880",
+     "ps2": "0x1b2b48",
+     "name": "RPlayerCamera::UpdateMomentumHeliCam",
+     "verdict": "accept",
+     "why": "camera update fn ptr set in LoadFile; calls ResolveAllCollisions(86d00), GetAnchorMatrix4, GetAnchorSpeed, DoSmoothModeChange like PS2; order Heli<Tumble<Ellipse matches PS2"
+    },
+    {
+     "xbox": "0x88380",
+     "ps2": "0x1b3788",
+     "name": "RPlayerCamera::UpdateTumbleCam",
+     "verdict": "accept",
+     "why": "callees AnchorCamera, DoSmoothModeChange, GetAnchorLinearVelocity/Position/Speed, SetCameraZoom, SetViewingTransform, ResolveAllCollisions - same set as PS2 Tumble (no GetAnchorMatrix4)"
+    },
+    {
+     "xbox": "0x886f0",
+     "ps2": "0x1b4c30",
+     "name": "RPlayerCamera::UpdateEllipseCam",
+     "verdict": "accept",
+     "why": "callees incl. InitTransition, GetAnchorMatrix4, ResolveAllCollisions, UpdateTransition-like 83e10, as PS2 Ellipse"
+    }
+   ]
+  },
+  {
+   "item": "149.1",
+   "xbox": "0x9ac40",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "EAGL GeoPrimState-style default ctor (RenderMethod alloc + gpModelViewProjectionMatrix); PS2 default ctor FUN_00283eb0 is unnamed (named 0x283f28 is the copy ctor)",
+   "intermediates": []
+  }
+ ]
+}

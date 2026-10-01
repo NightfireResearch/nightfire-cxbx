@@ -5,11 +5,19 @@
 #include "game/mp/multiplayer.h" // for MPSettings
 #include "ui/MenuManager.h"
 #include "engine/Text.h"
+#include "engine/XboxSettings.h"
+#include "engine/Direct3D/GraphicsSystem.h" // Gfx
+#include "engine/Direct3D/d3dSeam.h" // the immediate-mode quads maybeStartBackgroundMovie draws
+
+#include <windows.h>
 
 #include <cstring>
 #include <cstdio>
 
 #include <stdio.h>
+
+// XBE_GLOBAL(0x002ae288, 0x4)
+uint32_t BackgroundMovieHashcode;
 
 // Functions taking void and returning through registers are fine in either __cdecl or __stdcall
 // It's only when they take arguments that the calling convention matters
@@ -31,7 +39,7 @@ bool GS_IsPaused(short playerNum) {
   // A specific player?
   if(playerNum != -1)
     return MPGame.players[playerNum].paused;
-  
+
   // Any player?
   if(MPSettings.isMultiplayer) {
     for(uint i = 0; i < MPSettings.numPlayers; i++) {
@@ -55,7 +63,6 @@ void GS_PausePlayer(char pause, ushort playerNum) {
 
 
 
-#define BackgroundMovieHashcode U32_AT(0x002ae288)
 
 // FUNC_AT(000dcd90)
 bool movieFinished(void) {
@@ -63,9 +70,11 @@ bool movieFinished(void) {
 }
 
 
-#define FreezeGame U8_AT(0x001fec48)
-#define sloflag U16_AT(0x001fec64)
-#define ScriptCam U32_AT(0x001f6678)
+// XBE_GLOBAL(0x001fec48, 0x1)
+uint8_t FreezeGame;
+// XBE_GLOBAL(0x001fec64, 0x2)
+static uint16_t sloflag;
+// ScriptCam is defined in engine/Script.h (same address, HASHCODE-typed)
 #define switch_allowFreeze U32_AT(0x0025d79c)
 
 
@@ -77,7 +86,7 @@ void psiPostGame_Run(void) {} // No effect on XBox, does some PS2-specific stuff
 // Process the gameplay / update the state of the world and UI
 // AUTOINJECT
 void Game_Run(void) {
-  
+
   psiPreGame_Run();
   Input_Update();
 
@@ -98,7 +107,7 @@ void Game_Run(void) {
   MP_Update();
   if (ScriptCam == 0) {
 
-    if (!movieFinished()) 
+    if (!movieFinished())
       goto LAB_0006aafe;
 
     if (!GS_IsPaused(-1))
@@ -134,23 +143,26 @@ LAB_0006aafe:
 }
 
 #define StackIndex U16_AT(0x0017bfe8)
-#define glb_viewer_6 U32_AT(0x001f6634)
-#define SkipCodeFrame U8_AT(0x001f6564)
+#define glb_viewer_6 ((uint)glb_viewer[6])
+// XBE_GLOBAL(0x001f6564, 0x1)
+static uint8_t SkipCodeFrame;
 #define GameStateStack (*(uint (*)[64])0x0017bff0) // Not zero-initialised - first entry must be 1
 
+// XBE_GLOBAL(0x001f65dc, 0x30)
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
+// XBE_GLOBAL(0x001f6568, 0x18)
 #define GlobalVars (*((GlobalVars_t*)0x001f6568))
 #define PTPDATA (*((sNightFireShared_tag*)0x001d7e90))
 
-#define NewScoresRef PTR_AT(0x002790a0)
 
-#define HintsEnabled U32_AT(0x001f6618)
+// XBE_GLOBAL(0x001f6618, 0x4)
+uint32_t HintsEnabled;
 #define SubtitlesEnabled U32_AT(0x001f6614)
 
-#define SoundInfo U32_AT(0x001f65d8)
+// XBE_GLOBAL(0x001f65d8, 0x4)
+uint32_t SoundInfo;
 
 // Maybe hashcode of playing FMV
-#define BGFMVPlaying U32_AT(0x002ae288)
 
 
 // AUTOGEN
@@ -167,16 +179,13 @@ void Boot_GetPTPData(void **param_1,uint *param_2);
 void maybeBackgroundMovieCleanup(void);
 
 // AUTOINJECT
-void psiStopBackgroundMovie(void) { 
+void psiStopBackgroundMovie(void) {
     maybeBackgroundMovieCleanup();
-    BGFMVPlaying = 0;
+    BackgroundMovieHashcode = 0;
 }
 
 // AUTOGEN
 int Language_Get(void);
-
-// AUTOGEN
-bool IsNotPalI(void);
 
 // AUTOGEN
 void BackgroundMovieSetVolume(int param_1);
@@ -184,9 +193,12 @@ void BackgroundMovieSetVolume(int param_1);
 void BackgroundMoviePlayFile(char *filename);
 
 
-#define BackgroundMovieFilename ((char*)(0x002ae3f0))
-#define LoopingMovie U8_AT(0x002ae28c)
-#define BackgroundMovieVolume U32_AT(0x00194818)
+// XBE_GLOBAL(0x002ae3f0, 0x100)
+static char BackgroundMovieFilename[0x100];
+// XBE_GLOBAL(0x002ae28c, 0x1)
+static uint8_t LoopingMovie;
+// XBE_GLOBAL(0x00194818, 0x4)
+static uint32_t BackgroundMovieVolume = 0x64;
 
 // AUTOINJECT
 void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume) {
@@ -214,14 +226,14 @@ void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume) {
   }
 
   maybeBackgroundMovieCleanup();
-  BGFMVPlaying = 0;
+  BackgroundMovieHashcode = 0;
 
   if (hashcode != 0x4e504c59) {
     LoopingMovie = (looping != 0);
     sprintf(BackgroundMovieFilename,"%08x.xmv",hashcode);
   }
   BackgroundMovieVolume = scaledVolume;
-  BGFMVPlaying = hashcode;
+  BackgroundMovieHashcode = hashcode;
   BackgroundMovieSetVolume(scaledVolume);
   printf("Playing background movie %s\n", BackgroundMovieFilename);
   BackgroundMoviePlayFile(BackgroundMovieFilename);
@@ -288,13 +300,13 @@ HASHCODE GetLevelWithFmv(HASHCODE level) {
     case HT_Level_PowerStationA2:
       param_1 = 0x710000d;
       break;
-    case 0x700000e:
+    case HT_Level_Cut_Level1:
       param_1 = 0x710000e;
       break;
-    case 0x700000f:
+    case HT_Level_Cut_Level2:
       param_1 = 0x710000f;
       break;
-    case 0x7000010:
+    case HT_Level_Cut_Level3:
       param_1 = 0x7100010;
       break;
     case HT_Level_Tower2A:
@@ -334,10 +346,10 @@ HASHCODE GetLevelWithFmv(HASHCODE level) {
 void __cdecl GameFlow_PushState(int state, float param_2, uint param_3);
 
 // AUTOINJECT
-void GS_PauseGame(bool param_1) { 
+void GS_PauseGame(bool param_1) {
 
     GameState.SomeAlternatePauseState = param_1;
-    
+
     for(int i = 0; i < ARRAY_SIZE(MPGame.players); i++) {
         MPGame.players[i].paused = param_1;
     }
@@ -378,7 +390,7 @@ void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
           GameState.isMultiplayerLevel = 1;
           MP_setLoadingSkins();
         }
-        
+
         GameState.NextLevelHashcode = (skipFmv ? level : GetLevelWithFmv(level));
         GameFlow_PushState(3, 0.0, 0xff);
 
@@ -393,7 +405,7 @@ uint GameFlow_GetState(void) {
   return GameStateStack[StackIndex - 1];
 }
 
-void set_InhibitGameDrawIfRequired(void) { 
+void set_InhibitGameDrawIfRequired(void) {
   switch(GameFlow_GetState()) {
     case 1:
     case 3:
@@ -416,7 +428,7 @@ void set_InhibitGameDrawIfRequired(void) {
 }
 
 uint GameFlow_PopState(void)
-{ 
+{
   if (StackIndex != 0) {
     StackIndex--;
     set_InhibitGameDrawIfRequired();
@@ -432,8 +444,96 @@ void GameFlow_QuickPushState(uint state) {
     set_InhibitGameDrawIfRequired();
 }
 
-// AUTOGEN
-double timestamp(void);
+// ---------------------------------------------------------------------------------------------------------------
+// Eurocom's frame-timing helper. The original is four instructions and they are worth reading, because the
+// reason this is reimplemented is in them:
+//
+//     rdtsc                        ; the CPU's cycle counter
+//     imul  3 / idiv 2200          ; 2200/3 = 733.333 - the Xbox's 733 MHz Pentium III, baked in
+//     fmul  0.001                  ; microseconds to milliseconds
+//
+// The divisor is the console's own clock speed. Run that on a host CPU and the instruction returns the host's
+// counter, so the clock comes out fast by exactly the ratio of the two clock speeds - measured at 6.41x on a
+// 4.7 GHz part, and a different number on every machine it runs on. Everything timed by it ran that much fast:
+// psiGetTimeIn100ths, psiSFXGetTimer, the streaming timeouts in FS_AllocateAndLoadBlocking, and the pulsing
+// glow on pickups and usable doors, which is what led here.
+//
+// CXBX never had the problem because it rewrites every rdtsc in the image and emulates it at the Xbox's rate
+// (Cxbx-Reloaded/src/core/kernel/support/PatchRdtsc.cpp). The standalone loader executes the instruction
+// natively, so the arithmetic has to be corrected here instead.
+//
+// QueryPerformanceCounter rather than rdtsc scaled by a measured CPU frequency: it is already the fixed-rate
+// monotonic counter that measuring rdtsc would be trying to approximate, and it does not drift when the CPU
+// changes speed. Every caller takes a difference between two of these, so the epoch is arbitrary and only the
+// rate matters - which is just as well, since the original counted from power-on and this counts from the
+// first call.
+//
+// Two rdtsc sites remain in the image and are deliberately not touched here. QueryPerformanceCounter at
+// 0x000f53d4 is the XBE's own, and is wrong in the same way for anything that calls it. FUN_0010afe0 is a bare
+// rdtsc used by the XBE's NV2A driver to timestamp vblank interrupts and predict the next one; that layer
+// talks to real graphics hardware registers and does not run at all behind the D3D9 backend.
+//
+// AUTOINJECT
+double timestamp(void) {
+
+  static LARGE_INTEGER frequency = { 0 };
+  static LARGE_INTEGER origin = { 0 };
+
+  if (frequency.QuadPart == 0) {
+    LARGE_INTEGER f, o;
+    if (!QueryPerformanceFrequency(&f) || f.QuadPart == 0) {
+      f.QuadPart = 10000000; // the usual value; being wrong beats dividing by zero
+    }
+    QueryPerformanceCounter(&o);
+    origin = o;
+    frequency = f; // published last, so nothing can see a frequency without an origin to go with it
+  }
+
+  LARGE_INTEGER now;
+  QueryPerformanceCounter(&now);
+  long long ticks = now.QuadPart - origin.QuadPart;
+
+  // Split rather than (ticks * 1000000) / frequency, which overflows a 64-bit multiply after a few days of
+  // uptime. Microseconds first, then scaled, to keep the original's quantisation - it truncated to whole
+  // microseconds before converting to milliseconds and callers may compare small differences.
+  long long micros = (ticks / frequency.QuadPart) * 1000000
+                   + ((ticks % frequency.QuadPart) * 1000000) / frequency.QuadPart;
+  return (double)micros * 0.001;
+}
+
+
+// The same fault one layer down, in the XAPI the game links against. These two are a matched pair and the
+// original is self-consistent only on a real console:
+//
+//     QueryPerformanceCounter   (000f53d0)  returns the raw cycle counter
+//     QueryPerformanceFrequency (000f53e1)  returns the literal 0x2bb5c755 = 733,333,333
+//
+// i.e. the counter is whatever the CPU is running at, and the frequency is a hard-coded claim that it is a
+// 733 MHz Xbox. Anything dividing one by the other therefore gets time that passes too fast by the ratio of
+// the real clock to that constant - the same 6.41x that made pickups pulse wrongly, arrived at by a different
+// route. The XMV video decoder is the caller that matters: maybeXmvDecoderCreate asks for the frequency once,
+// stores frequency/1000 as ticks-per-millisecond, and maybeXmvDecoderUpdate divides counter deltas by it to
+// decide when each frame of a background movie is due.
+//
+// Replacing both with the host's own pair keeps them consistent with each other, which is the only property
+// the callers actually depend on - none of them assumes any particular frequency, they all ask. Patched by
+// address rather than by name because the names collide with the Win32 functions being called here.
+//
+// Both are __stdcall taking one pointer and returning 1 in EAX, confirmed from the image: each ends RET 4.
+
+// FUNC_AT(000f53d0)
+uint32_t __stdcall Xbox_QueryPerformanceCounter(LARGE_INTEGER *counter) {
+  QueryPerformanceCounter(counter);
+  return 1;
+}
+
+// FUNC_AT(000f53e1)
+uint32_t __stdcall Xbox_QueryPerformanceFrequency(LARGE_INTEGER *frequency) {
+  if (!QueryPerformanceFrequency(frequency)) {
+    frequency->QuadPart = 10000000; // as in timestamp() above: being wrong beats a divide by zero
+  }
+  return 1;
+}
 
 // AUTOGEN
 void __stdcall PlrStat_Init(void);
@@ -447,7 +547,7 @@ void __profiling_or_debugging_hook_point(void) {
 }
 
 // Only used in these two functions, so no need to use the original location
-// #define INITIALISATION_TIME (*((double*)0x002adf48))
+// XBE_GLOBAL(0x002adf48, 0x8)
 double INITIALISATION_TIME;
 
 // AUTOINJECT
@@ -471,7 +571,7 @@ void bootup_bootup(void) {
   memset(&MPGame, 0, sizeof(MPGame));
   memset(&GlobalVars, 0, sizeof(GlobalVars));
   memset(&PTPDATA, 0, sizeof(sNightFireShared_tag));
-  
+
   SoundInfo = 0;
 
   psiInitTimeIn100ths();
@@ -501,14 +601,14 @@ void bootup_bootup(void) {
   MPSettings.TripleDamageModifierProfessionalMode = 0;
   MPSettings.ShowTeamAndNameOverhead = 1;
   MPSettings.GameMode = GM_ARENA;
-  
+
   for(int i = 0; i < 10; i++) {
 
     MPSettings.Player[i].TeamId = (i & 1) ? MI6 : PHOENIX;
     MPSettings.Player[i].SkinNum = 0;
     MPSettings.Player[i].SomeField2 = 1;
     MPSettings.Player[i].HealthModifier = 0;
-  
+
     if(i < 4) {
       sprintf(MPSettings.Player[i].Name, "%s %d", Txt_BindLabel(PLAYER, 0), i + 1);
     } else {
@@ -530,7 +630,7 @@ void bootup_bootup(void) {
   CONST_UP_VECTOR.x = 0.0f;
   CONST_UP_VECTOR.y = 1.0f;
   CONST_UP_VECTOR.z = 0.0f;
-                          
+
   MAYBE_CONST_FORWARD_VECTOR.x = 1.0;
   MAYBE_CONST_FORWARD_VECTOR.y = 0.0;
   MAYBE_CONST_FORWARD_VECTOR.z = 0.0;
@@ -558,13 +658,14 @@ void GameFlow_Main(void) {
   byte bVar2;
   uint local_8;
   void *local_4;
-  
+
   GameState.NumFrames++;
 
   if ((sloflag == 0) && !GS_IsPaused(-1)) {
     GameState.NumFramesUnpaused = GameState.NumFramesUnpaused + 1;
     GameState.VideoFrames += VIDEO_FRAME_RATE / FRAME_RATE_INT;
   }
+
 
   // vestigial logic, value never read?
   bVar2 = (byte)GameState.NumFrames & 0x3f;
@@ -644,6 +745,10 @@ void GameFlow_Main(void) {
     GameFlow_PopState();
     SkipCodeFrame = '\0';
     break;
+  default:
+    // GC check (0x800515e8). 5 is a valid state that does nothing this frame
+    NF_WARN_IF(GameFlow_GetState() != 5, "Game state not valid %d\n", GameFlow_GetState());
+    break;
   }
 
   if (SkipCodeFrame == '\0') {
@@ -671,16 +776,75 @@ void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate) {
 
 }
 
-#define IsPalI U8_AT(0x002c5760)
-
 // AUTOINJECT
 bool Graphics_IsPalI(void) {
-  return IsPalI;
+  return Gfx.isPalI;
+}
+
+// The other region and video-mode flags xboxInitGraphics works out; each original is one MOV AL and a RET.
+
+// AUTOINJECT
+bool IsNotPalI(void) {
+  return Gfx.isNotPalI;
+}
+
+// AUTOINJECT
+bool Graphics_IsSomeGraphicsRegion(void) {
+  return Gfx.isNtscM;
+}
+
+// AUTOINJECT
+bool Graphics_IsWidescreen(void) {
+  return Gfx.isWidescreen;
+}
+
+// AUTOINJECT
+bool Graphics_IsSomeRegionBasedThing(void) {
+  return Gfx.videoModeBit3;
 }
 
 // AUTOINJECT
 void mainloop(void) {
-  int refreshRate = Graphics_IsPalI() ? 50 : 60;
+  // Fixed: this was backwards (50 for PAL, 60 otherwise) relative to the original's own formula at this
+  // exact spot ("(-(uint)(cVar1 != 0) & 10) + 50", i.e. 60 when Graphics_IsPalI() is true, 50 otherwise) -
+  // confirmed against the raw disassembly of both this function and xboxInitGraphics's matching refresh-
+  // rate calculation, which agree with each other and disagree with the ternary this used to have here.
+  // Despite the name, Graphics_IsPalI() reads true for everywhere except the PAL-I region specifically.
+  int refreshRate = Graphics_IsPalI() ? 60 : 50;
+
+  int fpsOverride = Settings_GetFPSOverride();
+  if (fpsOverride > 0)
+    refreshRate = fpsOverride;
+
   GS_SetRefreshRate(refreshRate, refreshRate);
   GameFlow_Main();
+}
+
+// AUTOGEN
+bool __stdcall maybeDecodeMpgAudio(void);
+// AUTOGEN
+bool __stdcall maybeBackgroundMovieIsPlaying(void);
+
+// Keeps the background movie going, called every frame: decodes and draws the next frame, masks the top and
+// bottom 66 lines to black for 0x073a0048 (letterboxed), and when the movie ends either replays it (looping,
+// through psiStartBackgroundMovie's 'NPLY' "same file again") or stops it.
+// AUTOINJECT
+void maybeStartBackgroundMovie(void) {
+    if (BackgroundMovieHashcode == 0)
+        return;
+    maybeDecodeMpgAudio();
+    if (BackgroundMovieHashcode == 0x073a0048) {
+        maybeResetRenderState(1);
+        maybeImmediateModePushItem(0.0f, 0.0f, 640.0f, 66.0f, 0, 0, 0.0f, 0.0f, 0xff000000);
+        maybeImmediateModePushItem(0.0f, 414.0f, 640.0f, 66.0f, 0, 0, 0.0f, 0.0f, 0xff000000);
+        maybeImmediateModeFlush();
+    }
+    if (maybeBackgroundMovieIsPlaying())
+        return;
+    if (LoopingMovie != 0) {
+        psiStartBackgroundMovie((HASHCODE)0x4e504c59, LoopingMovie, BackgroundMovieVolume);
+        return;
+    }
+    maybeBackgroundMovieCleanup();
+    BackgroundMovieHashcode = 0;
 }

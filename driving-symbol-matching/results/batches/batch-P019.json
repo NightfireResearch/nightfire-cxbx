@@ -1,0 +1,4991 @@
+{
+ "batch": "P019",
+ "program": "DRIVING.ELF",
+ "skip_refused_creates": true,
+ "note": "Windowed body review: renames of unnamed functions, then creations at addresses directly after a jr $ra (+ padding). 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x00109500",
+   "expect": "FUN_00109500",
+   "name": "ActActor::Draw",
+   "sheet_name": "ActActor::Draw(RViewCamera *, bool, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 60: window review: Called from DrawAll; draw-actor body with GetShadowTriangle, DrawWeapons, SetWeaponsTransformToWorldSpace, same shape as AUF ActActor::Draw."
+   ]
+  },
+  {
+   "xbox": "0x0010bf60",
+   "expect": "FUN_0010bf60",
+   "name": "AimedShootingAnimationController::SetTarget",
+   "sheet_name": "AimedShootingAnimationController::SetTarget(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 118: window review: 8-byte setter storing a float (swc1 $f12) at +0x20, paired with the GetCurrent float getter that follows; sheet size 0x80 shrank in retail."
+   ]
+  },
+  {
+   "xbox": "0x0010bf68",
+   "expect": "FUN_0010bf68",
+   "name": "AimedShootingAnimationController::GetCurrent",
+   "sheet_name": "AimedShootingAnimationController::GetCurrent(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 119: window review: 8-byte float getter (lwc1 +0x24), exact sheet size, directly after SetTarget."
+   ]
+  },
+  {
+   "xbox": "0x0010bf70",
+   "expect": "FUN_0010bf70",
+   "name": "ActActorDatabase::fActorDatabase_global_ctors",
+   "sheet_name": "global constructors keyed to ActActorDatabase::fActorDatabase",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 120: window review: Global ctor calling static-init helper (1,0xffff), in ctor table 0x362df4."
+   ]
+  },
+  {
+   "xbox": "0x0010bf90",
+   "expect": "FUN_0010bf90",
+   "name": "BankInfo::Load",
+   "sheet_name": "BankInfo::Load(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 121: window review: Builds data\\actors\\anims\\ paths, FileLoadz, 'EAGL::DynamicLoader new', GetSymbolResolver - same as AUF BankInfo::Load."
+   ]
+  },
+  {
+   "xbox": "0x0010c110",
+   "expect": "FUN_0010c110",
+   "name": "PrivateData::LoadBank",
+   "sheet_name": "PrivateData::LoadBank(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 122: window review: Loops bank names with strcmp, calls BankInfo::Load and counts loaded banks; called from ActAnimationDatabase ctor."
+   ]
+  },
+  {
+   "xbox": "0x0010c1d8",
+   "expect": "FUN_0010c1d8",
+   "name": "PrivateData::GetAnimation",
+   "sheet_name": "PrivateData::GetAnimation(int, int, EAGLAnim::AnimMemoryMap **,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 123: window review: Same body as AUF ActAnimationDatabase::GetAnimation (+0x440 table, ==-1 check, vtable call); the public wrapper forwards to it."
+   ]
+  },
+  {
+   "xbox": "0x0010c5e0",
+   "expect": "FUN_0010c5e0",
+   "name": "ActAnimationDatabase::GetAnimation",
+   "sheet_name": "ActAnimationDatabase::GetAnimation(int, int, EAGLAnim::AnimMemo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 126: window review: Public GetAnimation(int,int,**,**) forwarding *this to the private GetAnimation; called from ChangeAnimation."
+   ]
+  },
+  {
+   "xbox": "0x0010c788",
+   "expect": "FUN_0010c788",
+   "name": "EAGLAnim::FnDefaultAnimBank::GetNumAnims",
+   "sheet_name": "EAGLAnim::FnDefaultAnimBank::GetNumAnims(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 130: window review: FnDefaultAnimBank vtable slot (0x36403c) returning bank->count, AUF GetNumAnims same shape (offset differs). Ghidra body overruns and swallows GetAnim(int) 0x10c798 and GetAnimName(int) 0x10c7b0."
+   ]
+  },
+  {
+   "xbox": "0x00112c18",
+   "expect": "FUN_00112c18",
+   "name": "ActPoser::GetWeaponBonePosOri",
+   "sheet_name": "ActPoser::GetWeaponBonePosOri(int, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 248: window review: Copies bone matrix poser->+0x100 + boneIndex*0x40 (index from the skeleton weapon-bone table) like AUF; called from Update and GetWeaponRange."
+   ]
+  },
+  {
+   "xbox": "0x00112cc0",
+   "expect": "FUN_00112cc0",
+   "name": "ActPoser::ChangeAnimationOrigin",
+   "sheet_name": "ActPoser::ChangeAnimationOrigin(COORD3 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 249: window review: Called from ActActor::ChangeAnimationOrigin; writes COORD3 into data+0x30, identical to AUF."
+   ]
+  },
+  {
+   "xbox": "0x00112ce8",
+   "expect": "FUN_00112ce8",
+   "name": "ActPoser::GetAnimationOrigin",
+   "sheet_name": "ActPoser::GetAnimationOrigin(COORD3 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 250: window review: Called from GetAnimationOrigin; reads COORD3 from data+0x30."
+   ]
+  },
+  {
+   "xbox": "0x00112d10",
+   "expect": "FUN_00112d10",
+   "name": "ActPoser::SetAnimationOrigin",
+   "sheet_name": "ActPoser::SetAnimationOrigin(COORD3 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 251: window review: Called from SetAnimationOrigin; writes origin then calls CalculateFinalCorrectionMatrix."
+   ]
+  },
+  {
+   "xbox": "0x00112d50",
+   "expect": "FUN_00112d50",
+   "name": "ActPoser::GetInitialTbOu",
+   "sheet_name": "ActPoser::GetInitialTbOu(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 252: window review: Called from GetInitialTrOu; copies the matrix at data+0 out."
+   ]
+  },
+  {
+   "xbox": "0x00112d80",
+   "expect": "FUN_00112d80",
+   "name": "ActPoser::SetInitialTbOu",
+   "sheet_name": "ActPoser::SetInitialTbOu(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 253: window review: Called from SetInitialTrOu; copies matrix in then recalculates the correction matrix."
+   ]
+  },
+  {
+   "xbox": "0x00112dc0",
+   "expect": "FUN_00112dc0",
+   "name": "ActPoser::Rotate",
+   "sheet_name": "ActPoser::Rotate(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 254: window review: Called from RotateActor; builds Y rotation from cos/sin(2pi*f), multiplies, recalcs (AUF Rotate)."
+   ]
+  },
+  {
+   "xbox": "0x00112ef0",
+   "expect": "FUN_00112ef0",
+   "name": "ActPoser::RotateX",
+   "sheet_name": "ActPoser::RotateX(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 255: window review: Called from RotateActorX; X-axis variant of Rotate."
+   ]
+  },
+  {
+   "xbox": "0x00113020",
+   "expect": "FUN_00113020",
+   "name": "ActPoser::CalculateFinalCorrectionMatrix",
+   "sheet_name": "ActPoser::CalculateFinalCorrectionMatrix(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 256: window review: 0x48 exact; two VU0_MATRIX4_mult on poser data, called by every Set*/Rotate."
+   ]
+  },
+  {
+   "xbox": "0x00113068",
+   "expect": "FUN_00113068",
+   "name": "ActPoser::SnapMatrixLevelWithGround",
+   "sheet_name": "ActPoser::SnapMatrixLevelWithGround(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 257: window review: 0x90 exact; zeroes the Y of the forward row and renormalises (level with ground); called only from CalcSnapAndCorrectionMatrices."
+   ]
+  },
+  {
+   "xbox": "0x001130f8",
+   "expect": "FUN_001130f8",
+   "name": "ActPoser::CalcSnapAndCorrectionMatrices",
+   "sheet_name": "ActPoser::CalcSnapAndCorrectionMatrices(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 258: window review: Copies matrix to data, calls SnapMatrixLevelWithGround and CalculateFinalCorrectionMatrix, like AUF."
+   ]
+  },
+  {
+   "xbox": "0x001133d0",
+   "expect": "FUN_001133d0",
+   "name": "ActPoser::SetNormalAnimation",
+   "sheet_name": "ActPoser::SetNormalAnimation(ActAnimGroup *, float)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 259: window review: Sets mode=1, anim group, times from float*rate like AUF SetNormalAnimation."
+   ]
+  },
+  {
+   "xbox": "0x00113430",
+   "expect": "FUN_00113430",
+   "name": "ActPoser::SetNormalAnimation",
+   "sheet_name": "ActPoser::SetNormalAnimation(ActAnimGroup *, float, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 260: window review: 0x40 exact; calls SetNormalAnimation(grp,f) then CalcSnapAndCorrectionMatrices; called from Standard/AimedAnimationController."
+   ]
+  },
+  {
+   "xbox": "0x00113470",
+   "expect": "FUN_00113470",
+   "name": "ActPoser::SetupCrossFadeBlend",
+   "sheet_name": "ActPoser::SetupCrossFadeBlend(float, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 261: window review: FastAlloc 'ActCrossFadeBlendData', builds ActAnimGroup; AUF SetupCrossFadeBlend shape."
+   ]
+  },
+  {
+   "xbox": "0x00113760",
+   "expect": "FUN_00113760",
+   "name": "ActPoser::SetCrossFadeBlendAnimation",
+   "sheet_name": "ActPoser::SetCrossFadeBlendAnimation(ActAnimGroup *, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 262: window review: mode=1, grp, time 0, then CalcSnap; AUF SetCrossFadeBlendAnimation shape; called by the CrossFade controllers."
+   ]
+  },
+  {
+   "xbox": "0x001137f0",
+   "expect": "FUN_001137f0",
+   "name": "ActPoser::FinishCrossFadeBlend",
+   "sheet_name": "ActPoser::FinishCrossFadeBlend(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 263: window review: Picks the blend end frame, calls SetNormalAnimation then ShutdownCrossFadeBlend; called from AdvanceTime."
+   ]
+  },
+  {
+   "xbox": "0x00113898",
+   "expect": "FUN_00113898",
+   "name": "ActPoser::ShutdownCrossFadeBlend",
+   "sheet_name": "ActPoser::ShutdownCrossFadeBlend(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 264: window review: Destroys the crossfade data's ActAnimGroup and frees the block (FastFree/vec_delete)."
+   ]
+  },
+  {
+   "xbox": "0x00113908",
+   "expect": "FUN_00113908",
+   "name": "ActPoser::CalcCrossFadeTimes",
+   "sheet_name": "ActPoser::CalcCrossFadeTimes(float &, float &, float &, float &",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 265: window review: Five float& outputs from crossfade data +0x114/+0x118, same as AUF CalcCrossFadeTimes."
+   ]
+  },
+  {
+   "xbox": "0x00113a38",
+   "expect": "FUN_00113a38",
+   "name": "ActPoser::SetManualAnimation",
+   "sheet_name": "ActPoser::SetManualAnimation(ActAnimGroup *, ActPoserManualPara",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 266: window review: mode=3 (manual), grp, time 0, CalcSnap - AUF SetManualAnimation; called from AimedShootingAnimationController."
+   ]
+  },
+  {
+   "xbox": "0x00113ae8",
+   "expect": "FUN_00113ae8",
+   "name": "ActPoser::DoSkeletonPose",
+   "sheet_name": "ActPoser::DoSkeletonPose(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 267: window review: Orchestrates DoMainPose, DoIK, global overrides and TransformLocalPoseToWorldPose."
+   ]
+  },
+  {
+   "xbox": "0x00113b48",
+   "expect": "FUN_00113b48",
+   "name": "ActPoser::DoMainPose",
+   "sheet_name": "ActPoser::DoMainPose(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 268: window review: Large pose builder starting with ActSkeleton::GetStillPose and BlendBones, AUF DoMainPose shape."
+   ]
+  },
+  {
+   "xbox": "0x00114180",
+   "expect": "FUN_00114180",
+   "name": "ActPoser::DoIK",
+   "sheet_name": "ActPoser::DoIK(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 269: window review: 0x68 exact; loops ActIKSolverArray::Solve."
+   ]
+  },
+  {
+   "xbox": "0x001141e8",
+   "expect": "FUN_001141e8",
+   "name": "ActPoser::TransformLocalPoseToWorldPose",
+   "sheet_name": "ActPoser::TransformLocalPoseToWorldPose(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 270: window review: Calls the skeleton local-to-world transform (0x262508) on poser transforms; called around IK/overrides."
+   ]
+  },
+  {
+   "xbox": "0x00114218",
+   "expect": "FUN_00114218",
+   "name": "ActPoser::Skin",
+   "sheet_name": "ActPoser::Skin(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 271: window review: Calls PoseSkin-like 0x2634f8 with skeleton, transforms and the fSkinnedTransforms global, as AUF Skin; called from ActActor::Draw."
+   ]
+  },
+  {
+   "xbox": "0x00114250",
+   "expect": "FUN_00114250",
+   "name": "ActPoser::DoEventPose",
+   "sheet_name": "ActPoser::DoEventPose(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 272: window review: Starts with the (t1==t0 && t0==0) -> -0.0001 guard and mode switch, as AUF DoEventPose; called from Update."
+   ]
+  },
+  {
+   "xbox": "0x001143b8",
+   "expect": "FUN_001143b8",
+   "name": "ActPoser::DoInitialPoses",
+   "sheet_name": "ActPoser::DoInitialPoses(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 273: window review: 0x38 exact; saves time, zeroes it, runs the pose, restores - AUF DoInitialPoses; called from SetStartPosOri."
+   ]
+  },
+  {
+   "xbox": "0x001143f0",
+   "expect": "FUN_001143f0",
+   "name": "ActPoser::GetWeaponRange",
+   "sheet_name": "ActPoser::GetWeaponRange(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 274: window review: Only callee of ActActor::GetWeaponRange; poses and measures the weapon bone angle (v3angle)."
+   ]
+  },
+  {
+   "xbox": "0x001145c0",
+   "expect": "FUN_001145c0",
+   "name": "ActPoser::AdvanceTime",
+   "sheet_name": "ActPoser::AdvanceTime(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 275: window review: If mode!=3 advance by frame step, finish crossfade when mode==2 - AUF AdvanceTime."
+   ]
+  },
+  {
+   "xbox": "0x001146b8",
+   "expect": "FUN_001146b8",
+   "name": "ActPoser::FrameStep",
+   "sheet_name": "ActPoser::FrameStep(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 276: window review: 0x18 exact; returns the rate*speed*scale product used as the frame step in AdvanceTime."
+   ]
+  },
+  {
+   "xbox": "0x001146d0",
+   "expect": "FUN_001146d0",
+   "name": "ActPoser::GetCurrentFrame",
+   "sheet_name": "ActPoser::GetCurrentFrame(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 277: window review: 0x8; returns current frame (+0xc), called by AdvanceTime."
+   ]
+  },
+  {
+   "xbox": "0x001146d8",
+   "expect": "FUN_001146d8",
+   "name": "ActPoser::GetTotalAnimFrames",
+   "sheet_name": "ActPoser::GetTotalAnimFrames(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 278: window review: Returns total frames (+0x1c), compared against the step in AdvanceTime; order after GetCurrentFrame."
+   ]
+  },
+  {
+   "xbox": "0x001146e0",
+   "expect": "FUN_001146e0",
+   "name": "ActPoser::ActPoser_global_ctors",
+   "sheet_name": "global constructors keyed to ActPoser::ActPoser(ActSkeleton *,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 279: window review: Global ctor calling the ActPoser static-init helper (1,0xffff)."
+   ]
+  },
+  {
+   "xbox": "0x00114700",
+   "expect": "FUN_00114700",
+   "name": "ActSkeleton::StartUp",
+   "sheet_name": "ActSkeleton::StartUp(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 280: window review: Zeroes the skinned-transform buffer globals; called from ActSkeletonDatabase ctor."
+   ]
+  },
+  {
+   "xbox": "0x00114718",
+   "expect": "FUN_00114718",
+   "name": "ActSkeleton::ShutDown",
+   "sheet_name": "ActSkeleton::ShutDown(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 281: window review: 0x48 exact; vec_delete buffer and UnRegisterVar('EAGLAnimationBuffer'); called from ~ActSkeletonDatabase."
+   ]
+  },
+  {
+   "xbox": "0x00115148",
+   "expect": "FUN_00115148",
+   "name": "ActTextureDatabase::StopUsingTexture",
+   "sheet_name": "ActTextureDatabase::StopUsingTexture(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 301: window review: Empty stub called from StopUsingResources; AUF StopUsingTexture is also empty."
+   ]
+  },
+  {
+   "xbox": "0x00119b98",
+   "expect": "FUN_00119b98",
+   "name": "AICharacterBond::GetRotPos",
+   "sheet_name": "AICharacterBond::GetRotPos(int, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 450: window review: Copies player rigid-body matrix and position, no COORD3 output - the (int, MATRIX4&) overload; callers HandleInterrupts/UpdateRotPos."
+   ]
+  },
+  {
+   "xbox": "0x0011aa10",
+   "expect": "FUN_0011aa10",
+   "name": "AICharacterBond::GetRotPos_global_ctors",
+   "sheet_name": "global constructors keyed to AICharacterBond::GetRotPos(int, MA",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 466: window review: Global ctor calling the Bond-file static-init helper, ctor table 0x362e10."
+   ]
+  },
+  {
+   "xbox": "0x0011aa30",
+   "expect": "FUN_0011aa30",
+   "name": "AICharacterEnemyDriver::GetRotPos",
+   "sheet_name": "AICharacterEnemyDriver::GetRotPos(int, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 467: window review: GetRigidBody of car +0x150, copies matrix+pos, no COORD3 write (2-arg overload)."
+   ]
+  },
+  {
+   "xbox": "0x0011ab50",
+   "expect": "FUN_0011ab50",
+   "name": "AICharacterEnemyDriver::GetRotPos",
+   "sheet_name": "AICharacterEnemyDriver::GetRotPos(int, MATRIX4 &, COORD3 &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 468: window review: Same plus writes rigid-body velocity to the COORD3 param (3-arg overload); WakeUp passes it as a pointer."
+   ]
+  },
+  {
+   "xbox": "0x0011aca8",
+   "expect": "FUN_0011aca8",
+   "name": "AICharacterEnemyDriver::AICharacterEnemyDriver",
+   "sheet_name": "AICharacterEnemyDriver::AICharacterEnemyDriver(MATRIX4 &, PVehi",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 469: window review: Calls AICharacter ctor and installs vtable_AICharacterEnemyDriver; called from WakeUp."
+   ]
+  },
+  {
+   "xbox": "0x0011fc80",
+   "expect": "FUN_0011fc80",
+   "name": "AICharacterEnemySnow::GetRotPos_global_ctors",
+   "sheet_name": "global constructors keyed to AICharacterEnemySnow::GetRotPos(in",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 540: window review: Global ctor calling static-init helper, ctor table 0x362e1c."
+   ]
+  },
+  {
+   "xbox": "0x001208d8",
+   "expect": "FUN_001208d8",
+   "name": "AICharacterEnemySSnow::GetRotPos_global_ctors",
+   "sheet_name": "global constructors keyed to AICharacterEnemySSnow::GetRotPos(i",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 558: window review: Global ctor calling static-init helper, ctor table 0x362e20."
+   ]
+  },
+  {
+   "xbox": "0x00122238",
+   "expect": "FUN_00122238",
+   "name": "AICharacterEnemyWindow::GetRotPos",
+   "sheet_name": "AICharacterEnemyWindow::GetRotPos(int, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 587: window review: 2-arg GetRotPos (car +0x150 rigid body, no COORD3)."
+   ]
+  },
+  {
+   "xbox": "0x00122358",
+   "expect": "FUN_00122358",
+   "name": "AICharacterEnemyWindow::GetRotPos",
+   "sheet_name": "AICharacterEnemyWindow::GetRotPos(int, MATRIX4 &, COORD3 &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 588: window review: 3-arg GetRotPos (writes COORD3); WakeUp passes it as a pointer."
+   ]
+  },
+  {
+   "xbox": "0x001237d0",
+   "expect": "FUN_001237d0",
+   "name": "AICharacterHands::GetAimFraction",
+   "sheet_name": "AICharacterHands::GetAimFraction(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 612: window review: Static: returns fgHandObj->+0x160 or 0.0; called from DrawCrossHairs."
+   ]
+  },
+  {
+   "xbox": "0x00124f58",
+   "expect": "FUN_00124f58",
+   "name": "AICharacterHands::fgHandObj_global_ctors",
+   "sheet_name": "global constructors keyed to AICharacterHands::fgHandObj",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 640: window review: Global ctor calling the hands static-init helper (1,0xffff); Ghidra body also swallows the maths helpers the sheet size includes."
+   ]
+  },
+  {
+   "xbox": "0x001251b0",
+   "expect": "FUN_001251b0",
+   "name": "AICharacterPassenger::GetRotPos",
+   "sheet_name": "AICharacterPassenger::GetRotPos(int, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 642: window review: Player rigid-body matrix copy, no COORD3 write (2-arg); caller UpdateRotPos."
+   ]
+  },
+  {
+   "xbox": "0x001252d8",
+   "expect": "FUN_001252d8",
+   "name": "AICharacterPassenger::GetRotPos",
+   "sheet_name": "AICharacterPassenger::GetRotPos(int, MATRIX4 &, COORD3 &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 643: window review: Writes COORD3 as well (3-arg); Init passes it as a pointer."
+   ]
+  },
+  {
+   "xbox": "0x0012ab00",
+   "expect": "FUN_0012ab00",
+   "name": "_List_base<WGridNodeElem,_allocator<WGridNodeElem>_>::clear",
+   "sheet_name": "_List_base<WGridNodeElem, allocator<WGridNodeElem> >::clear(voi",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 713: window review: Walks the circular list freeing 0x10-byte nodes then resets the head - list clear; called from Shutdown."
+   ]
+  },
+  {
+   "xbox": "0x0013be00",
+   "expect": "FUN_0013be00",
+   "name": "AIHelicopter::GetSimHeli",
+   "sheet_name": "AIHelicopter::GetSimHeli(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 904: window review: 0x20 exact; forwards to AIVehicle::GetPhysicsObject (the sim heli)."
+   ]
+  },
+  {
+   "xbox": "0x0013be20",
+   "expect": "FUN_0013be20",
+   "name": "AIHelicopter::SetSimHeli",
+   "sheet_name": "AIHelicopter::SetSimHeli(PHelicopter *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 905: window review: 0x20; forwards to AIVehicle::SetPhysicsObject. Ghidra body (0x88) swallows the accessors after it."
+   ]
+  },
+  {
+   "xbox": "0x0013e420",
+   "expect": "FUN_0013e420",
+   "name": "AIVehicle::AIVehicle_global_ctors",
+   "sheet_name": "global constructors keyed to AIVehicle::AIVehicle(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 959: window review: Global ctor calling the AIVehicle static-init helper; Ghidra body swallows the maths helpers the sheet size includes."
+   ]
+  },
+  {
+   "xbox": "0x001447b0",
+   "expect": "FUN_001447b0",
+   "name": "TextFile::Printf",
+   "sheet_name": "TextFile::Printf(char *,...)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1152: window review: 0x80 exact; varargs format then strlen + FILESYS_writesync on the file handle."
+   ]
+  },
+  {
+   "xbox": "0x00144830",
+   "expect": "FUN_00144830",
+   "name": "TextFile::Print",
+   "sheet_name": "TextFile::Print(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1153: window review: 0x58 exact; strlen + FILESYS_writesync, advances the offset; called from DTuningFile Output."
+   ]
+  },
+  {
+   "xbox": "0x00144888",
+   "expect": "FUN_00144888",
+   "name": "TextFile::TextFile",
+   "sheet_name": "TextFile::TextFile(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1154: window review: 0x48 exact; zeroes fields and FILESYS_opensync; called from OpenForWrite."
+   ]
+  },
+  {
+   "xbox": "0x001448d0",
+   "expect": "FUN_001448d0",
+   "name": "TextFile::~TextFile",
+   "sheet_name": "TextFile::~TextFile(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1155: window review: FILESYS_closesync if open, delete if flag; called from ~DTuningFile and Close."
+   ]
+  },
+  {
+   "xbox": "0x0016ec80",
+   "expect": "FUN_0016ec80",
+   "name": "AttributeSystem::ConfigEditParameters",
+   "sheet_name": "AttributeSystem::ConfigEditParameters(char *, char *, int, int,",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2233: window review: Empty stub called after each Int field registration in InitializeGlobals (e.g. NUM_BLEND_STEPS with 1,200) - the int,int overload."
+   ]
+  },
+  {
+   "xbox": "0x001755b8",
+   "expect": "FUN_001755b8",
+   "name": "UberBond::IsLoaderPresent",
+   "sheet_name": "UberBond::IsLoaderPresent(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2312: window review: 0x10 exact; returns bool byte UberBond+0x4b4, tested on 0x100000 before choosing the cdrom0 or host0 BASE.ELF path."
+   ]
+  },
+  {
+   "xbox": "0x001755c8",
+   "expect": "FUN_001755c8",
+   "name": "UberBond::IsLoadedFromCDOrDVD",
+   "sheet_name": "UberBond::IsLoadedFromCDOrDVD(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2313: window review: 0x8 exact; returns UberBond+0xa20, tested after IsLoaderPresent before choosing the cdrom0 path."
+   ]
+  },
+  {
+   "xbox": "0x001755d0",
+   "expect": "FUN_001755d0",
+   "name": "gDMix_global_ctors",
+   "sheet_name": "global constructors keyed to gDMix",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2315: window review: Global ctor calling static-init helper, ctor table 0x362e7c."
+   ]
+  },
+  {
+   "xbox": "0x00180970",
+   "expect": "FUN_00180970",
+   "name": "Mine::Mine_global_ctors",
+   "sheet_name": "global constructors keyed to Mine::Mine(WeaponType, COORD3 &, C",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2507: window review: Global ctor calling the Mine static-init helper, ctor table 0x362e98; the sheet size includes the maths helpers after it."
+   ]
+  },
+  {
+   "xbox": "0x00185398",
+   "expect": "FUN_00185398",
+   "name": "Newton::Newton_global_ctors",
+   "sheet_name": "global constructors keyed to Newton::Newton(COORD3 &, COORD3 &,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2536: window review: Global ctor calling the Newton static-init helper, ctor table 0x362ea0; maths helpers follow."
+   ]
+  },
+  {
+   "xbox": "0x00198428",
+   "expect": "FUN_00198428",
+   "name": "PVehicle::Shutdown",
+   "sheet_name": "PVehicle::Shutdown(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2769: window review: 0x90 exact; frees PVehicle globals and the name map (_M_erase); called from GameLoop_CleanUp."
+   ]
+  },
+  {
+   "xbox": "0x001984b8",
+   "expect": "FUN_001984b8",
+   "name": "PVehicle::MissionEditorSwitch",
+   "sheet_name": "PVehicle::MissionEditorSwitch(bool, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2770: window review: 0x108 exact; bool picks which bitmask (+0x6c/+0x70) gets bit n; called from the ESwitchEffectOn/Off dtors."
+   ]
+  },
+  {
+   "xbox": "0x001985c0",
+   "expect": "FUN_001985c0",
+   "name": "_Rb_tree<CStringKey,_unsigned_int>::_M_erase",
+   "sheet_name": "_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, _Select1st",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2771: window review: Recurses right (+0xc), walks left (+8), FastFree 0x18 nodes."
+   ]
+  },
+  {
+   "xbox": "0x00198628",
+   "expect": "FUN_00198628",
+   "name": "_Rb_tree<CStringKey,_unsigned_int>::lower_bound",
+   "sheet_name": "_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, _Select1st",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2772: window review: 0x78 exact; strcasecmp descent keeping the last not-less node, no final equality test."
+   ]
+  },
+  {
+   "xbox": "0x001986a0",
+   "expect": "FUN_001986a0",
+   "name": "_Rb_tree<CStringKey,_unsigned_int>::_M_insert",
+   "sheet_name": "_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, _Select1st",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2773: window review: FastAlloc 0x18 'STL' node, links left/right by strcasecmp and rebalances."
+   ]
+  },
+  {
+   "xbox": "0x00198a08",
+   "expect": "FUN_00198a08",
+   "name": "_Rb_tree<CStringKey,_unsigned_int>::insert_unique",
+   "sheet_name": "_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, _Select1st",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2774: window review: 0x190 exact; descent, decrement iterator, compare, _M_insert or return the existing node."
+   ]
+  },
+  {
+   "xbox": "0x00198b98",
+   "expect": "FUN_00198b98",
+   "name": "_Rb_tree<CStringKey,_unsigned_int>::insert_unique",
+   "sheet_name": "_Rb_tree<CStringKey, pair<CStringKey, unsigned int>, _Select1st",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2775: window review: Hinted insert: checks the position against leftmost/rightmost then falls back to insert_unique."
+   ]
+  },
+  {
+   "xbox": "0x00199f88",
+   "expect": "FUN_00199f88",
+   "name": "RayShell::CollideWithWorld",
+   "sheet_name": "RayShell::CollideWithWorld(float &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2795: window review: WWorldPos ctor, CheckHitWorld/Window, float& param, SpawnExplosion - AUF CollideWithWorld shape; called from RayShell."
+   ]
+  },
+  {
+   "xbox": "0x0019a710",
+   "expect": "FUN_0019a710",
+   "name": "RayShell::DamagePhysicsObject",
+   "sheet_name": "RayShell::DamagePhysicsObject(SimObjSig, COORD3 &, COORD3 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2798: window review: FindPhysicsObjectSignature then the damage vtable call, as AUF DamagePhysicsObject; called from Fire."
+   ]
+  },
+  {
+   "xbox": "0x001a4720",
+   "expect": "FUN_001a4720",
+   "name": "RCamera::RCamera_global_ctors",
+   "sheet_name": "global constructors keyed to RCamera::RCamera(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2967: window review: Global ctor calling the RCamera static-init helper, ctor table 0x362ed4; maths helpers follow."
+   ]
+  },
+  {
+   "xbox": "0x001a4978",
+   "expect": "FUN_001a4978",
+   "name": "RCameraIniLoader::RCameraIniLoader",
+   "sheet_name": "RCameraIniLoader::RCameraIniLoader(RPlayerCamera *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2969: window review: Stores the RPlayerCamera* into a static (fPlayerCam) exactly as AUF; called from the RPlayerCamera ctor."
+   ]
+  },
+  {
+   "xbox": "0x001a4988",
+   "expect": "FUN_001a4988",
+   "name": "RCameraIniLoader::~RCameraIniLoader",
+   "sheet_name": "RCameraIniLoader::~RCameraIniLoader(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2970: window review: Deletes if the flag bit is set, as AUF; called from ~RPlayerCamera."
+   ]
+  },
+  {
+   "xbox": "0x001a7020",
+   "expect": "FUN_001a7020",
+   "name": "RCameraIniLoader::kMaxTumble_global_ctors",
+   "sheet_name": "global constructors keyed to RCameraIniLoader::kMaxTumble",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2974: window review: Global ctor calling the kMaxTumble static-init helper, ctor table 0x362ed8."
+   ]
+  },
+  {
+   "xbox": "0x001a8848",
+   "expect": "FUN_001a8848",
+   "name": "_List_base<COORD4,_allocator<COORD4>_>::clear",
+   "sheet_name": "_List_base<COORD4, allocator<COORD4> >::clear(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3004: window review: List clear freeing 0x18-byte nodes (8 + COORD4); called from ClearSplinePtList, ~RCameraSpline, BuildSpline."
+   ]
+  },
+  {
+   "xbox": "0x001a88e8",
+   "expect": "FUN_001a88e8",
+   "name": "RCameraSpline::RCameraSpline_global_ctors",
+   "sheet_name": "global constructors keyed to RCameraSpline::RCameraSpline(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3005: window review: Global ctor calling the RCameraSpline static-init helper, ctor table 0x362ee0."
+   ]
+  },
+  {
+   "xbox": "0x001aa450",
+   "expect": "FUN_001aa450",
+   "name": "fgReflStretch_global_ctors",
+   "sheet_name": "global constructors keyed to fgReflStretch",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3030: window review: Global ctor calling static-init helper, ctor table 0x362ee4; maths helpers follow."
+   ]
+  },
+  {
+   "xbox": "0x001abf98",
+   "expect": "FUN_001abf98",
+   "name": "RRenderer::BeginView",
+   "sheet_name": "RRenderer::BeginView(RViewCamera &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3063: window review: Stores the view camera at +4, identical to AUF BeginView; caller BeginView."
+   ]
+  },
+  {
+   "xbox": "0x001abfa0",
+   "expect": "FUN_001abfa0",
+   "name": "RRenderer::FlushDrawLists",
+   "sheet_name": "RRenderer::FlushDrawLists(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3064: window review: Calls RDrawGroup::FlushDrawLists(this->+0x10), identical to AUF."
+   ]
+  },
+  {
+   "xbox": "0x001abfc0",
+   "expect": "FUN_001abfc0",
+   "name": "RRenderer::ClearDrawLists",
+   "sheet_name": "RRenderer::ClearDrawLists(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3065: window review: Calls RDrawGroup::ClearDrawLists(this->+0x10)."
+   ]
+  },
+  {
+   "xbox": "0x001abfe8",
+   "expect": "FUN_001abfe8",
+   "name": "RRenderer::EndView",
+   "sheet_name": "RRenderer::EndView(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3067: window review: Returns +4 and clears it, identical to AUF EndView."
+   ]
+  },
+  {
+   "xbox": "0x001abff8",
+   "expect": "FUN_001abff8",
+   "name": "RRenderer::EnterReflection",
+   "sheet_name": "RRenderer::EnterReflection(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3068: window review: 0x18 exact; points the current draw group (+0x10) at the reflection group (+0xc) and increments a depth counter."
+   ]
+  },
+  {
+   "xbox": "0x001ae138",
+   "expect": "FUN_001ae138",
+   "name": "DrawTest",
+   "sheet_name": "DrawTest(RSceneObj &, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3125: window review: Unreferenced debug routine taking (obj,int): builds a 12x12 quad at the object's rigid-body position and draws it with USimpleTexturedMaterial."
+   ]
+  },
+  {
+   "xbox": "0x001b1838",
+   "expect": "FUN_001b1838",
+   "name": "RPathEngine::RPathHandle::SetNextPath",
+   "sheet_name": "RPathEngine::RPathHandle::SetNextPath(CARP::PathInfo *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3194: window review: Sets +0x9c; callers AISplinePath::SetNext, ~ESetNextPath, LoadAISplinePathAnimation."
+   ]
+  },
+  {
+   "xbox": "0x001b1840",
+   "expect": "FUN_001b1840",
+   "name": "RPathEngine::RPathHandle::GetParametricDuration",
+   "sheet_name": "RPathEngine::RPathHandle::GetParametricDuration(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3195: window review: 0x10 exact; returns *(float*)(current path at +0x98); callers are the EPathSetTime events."
+   ]
+  },
+  {
+   "xbox": "0x001b1850",
+   "expect": "FUN_001b1850",
+   "name": "RPathEngine::RPathHandle::SetRunning",
+   "sheet_name": "RPathEngine::RPathHandle::SetRunning(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3196: window review: 8-byte bool setter (+0xcc) like AUF SetRunning; called from the path throttle events."
+   ]
+  },
+  {
+   "xbox": "0x001cd178",
+   "expect": "FUN_001cd178",
+   "name": "RSkeletalObj::SetProcAnimState",
+   "sheet_name": "RSkeletalObj::SetProcAnimState(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3618: window review: Referenced from two vtables; calls SetProcAnimXFormList and SetProcAnimParamList."
+   ]
+  },
+  {
+   "xbox": "0x001d1df0",
+   "expect": "FUN_001d1df0",
+   "name": "RTextureContextManager::Init",
+   "sheet_name": "RTextureContextManager::Init(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3688: window review: new(8), RTextureContextManager ctor, store to fgThis."
+   ]
+  },
+  {
+   "xbox": "0x001d1e28",
+   "expect": "FUN_001d1e28",
+   "name": "RTextureContextManager::Kill",
+   "sheet_name": "RTextureContextManager::Kill(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3689: window review: If fgThis, virtual delete - same as AUF Kill."
+   ]
+  },
+  {
+   "xbox": "0x001d5838",
+   "expect": "FUN_001d5838",
+   "name": "RWorldCamera::IsAnchorValid",
+   "sheet_name": "RWorldCamera::IsAnchorValid(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3799: window review: Validates the anchor (+0x118) and clears it if the object is gone; called first by every anchor getter."
+   ]
+  },
+  {
+   "xbox": "0x001d5888",
+   "expect": "FUN_001d5888",
+   "name": "RWorldCamera::GetAnchorSpeed",
+   "sheet_name": "RWorldCamera::GetAnchorSpeed(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3800: window review: Rigid-body velocity magnitude or SimpleRigidBody::GetScalarVelocity, as AUF GetAnchorSpeed."
+   ]
+  },
+  {
+   "xbox": "0x001d5940",
+   "expect": "FUN_001d5940",
+   "name": "RWorldCamera::GetAnchorAcceleration",
+   "sheet_name": "RWorldCamera::GetAnchorAcceleration(COORD4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3801: window review: COORD4& output built from rigid body +0x60 times orientation - acceleration; before the angular variant."
+   ]
+  },
+  {
+   "xbox": "0x001d5a58",
+   "expect": "FUN_001d5a58",
+   "name": "RWorldCamera::GetAnchorAngularAcceleration",
+   "sheet_name": "RWorldCamera::GetAnchorAngularAcceleration(COORD4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3802: window review: Same shape as GetAnchorAcceleration reading +0x70 - angular acceleration."
+   ]
+  },
+  {
+   "xbox": "0x001d5b90",
+   "expect": "FUN_001d5b90",
+   "name": "RWorldCamera::GetAnchorMatrix4",
+   "sheet_name": "RWorldCamera::GetAnchorMatrix4(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3803: window review: Rigid-body matrix or RecalcOrientMat into a static, identity fallback - AUF GetAnchorMatrix4."
+   ]
+  },
+  {
+   "xbox": "0x001d5cd0",
+   "expect": "FUN_001d5cd0",
+   "name": "RWorldCamera::GetAnchorPosition",
+   "sheet_name": "RWorldCamera::GetAnchorPosition(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3804: window review: Returns rigid body +0x10 (either body type), as AUF GetAnchorPosition."
+   ]
+  },
+  {
+   "xbox": "0x001d5d50",
+   "expect": "FUN_001d5d50",
+   "name": "RWorldCamera::GetAnchorLinearVelocity",
+   "sheet_name": "RWorldCamera::GetAnchorLinearVelocity(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3805: window review: Returns rigid body +0x20 (spline-path branch added), as AUF GetAnchorLinearVelocity."
+   ]
+  },
+  {
+   "xbox": "0x001de640",
+   "expect": "FUN_001de640",
+   "name": "REmpBolts::kSnapToBoundingBox_global_ctors",
+   "sheet_name": "global constructors keyed to REmpBolts::kSnapToBoundingBox",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3967: window review: 0x20 ctor calling the static-init helper (1,0xffff), DATA-referenced from the ctors table; Ghidra body 0x30 includes the next 0x10 function."
+   ]
+  },
+  {
+   "xbox": "0x001df4a0",
+   "expect": "FUN_001df4a0",
+   "name": "vector<RFlock_*,_allocator<RFlock_*>_>::_M_insert_aux",
+   "sheet_name": "vector<RFlock *, allocator<RFlock *> >::_M_insert_aux(RFlock **",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3992: window review: Pointer-vector _M_insert_aux called only from RFlockManager addFlock."
+   ]
+  },
+  {
+   "xbox": "0x001df738",
+   "expect": "FUN_001df738",
+   "name": "RFlockManager::Init",
+   "sheet_name": "RFlockManager::Init(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3995: window review: new(0x10) + RFlockManager ctor stored to singleton 0x334d48."
+   ]
+  },
+  {
+   "xbox": "0x001df770",
+   "expect": "FUN_001df770",
+   "name": "RFlockManager::Kill",
+   "sheet_name": "RFlockManager::Kill(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3996: window review: If singleton non-null, call its virtual deleting destructor (vtable+0xc, flag 3) - same shape as AUF Kill."
+   ]
+  },
+  {
+   "xbox": "0x001dfb88",
+   "expect": "FUN_001dfb88",
+   "name": "RGain::Init",
+   "sheet_name": "RGain::Init(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4007: window review: operator_new(0x24) + RGain ctor stored to fgThis_RGain."
+   ]
+  },
+  {
+   "xbox": "0x001dfbc0",
+   "expect": "FUN_001dfbc0",
+   "name": "RGain::Kill",
+   "sheet_name": "RGain::Kill(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4008: window review: Deletes fgThis_RGain via its virtual deleting dtor, like AUF Kill."
+   ]
+  },
+  {
+   "xbox": "0x001e0870",
+   "expect": "FUN_001e0870",
+   "name": "RLensFlareManager::Init",
+   "sheet_name": "RLensFlareManager::Init(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4022: window review: new(8) + RLensFlareManager ctor stored to fgThis_RLensFlareManager."
+   ]
+  },
+  {
+   "xbox": "0x001e08a8",
+   "expect": "FUN_001e08a8",
+   "name": "RLensFlareManager::Kill",
+   "sheet_name": "RLensFlareManager::Kill(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4023: window review: Deletes fgThis_RLensFlareManager via its virtual dtor; matches AUF Kill."
+   ]
+  },
+  {
+   "xbox": "0x001e82f8",
+   "expect": "FUN_001e82f8",
+   "name": "_Rb_tree<unsigned_int,_RParticleSystem_*>::find",
+   "sheet_name": "_Rb_tree<unsigned int, pair<unsigned int, RParticleSystem *>, _",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 4136: window review: Tree find (lower_bound walk, key compare, else end) on the RParticleSystem* map; callers AddOrRefresh/GetSystem; 0x68 exact, just before the placed _M_insert 0x1e8360."
+   ]
+  },
+  {
+   "xbox": "0x001ea4d0",
+   "expect": "FUN_001ea4d0",
+   "name": "RPostProcessing::PPPrivateData::ExtractAlphaInfo",
+   "sheet_name": "RPostProcessing::PPPrivateData::ExtractAlphaInfo(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4199: window review: Empty stub called at the end of GrabBackBuffer with a0 = this->private (PPPrivateData*), right after the back-buffer copy; extraction compiled out."
+   ]
+  },
+  {
+   "xbox": "0x001ed228",
+   "expect": "FUN_001ed228",
+   "name": "RSky::Draw_global_ctors",
+   "sheet_name": "global constructors keyed to RSky::Draw(CARP::Instance *, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4239: window review: TU global ctor: calls static-init helper (1,0xffff), DATA-referenced from the ctors table; the sheet 0x258 had the init inlined."
+   ]
+  },
+  {
+   "xbox": "0x001f13f0",
+   "expect": "FUN_001f13f0",
+   "name": "_Rb_tree<WCollisionInstance_*,_WCollisionInstance>::find",
+   "sheet_name": "_Rb_tree<WCollisionInstance *, pair<WCollisionInstance *, WColl",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 4296: window review: Tree find on a pointer-keyed map called from RWindow::DrawBrokenWindows; only tree function in the window (sheet 0xa0 vs 0x68, as row 4143)."
+   ]
+  },
+  {
+   "xbox": "0x001f6518",
+   "expect": "FUN_001f6518",
+   "name": "Replay_StoreInput",
+   "sheet_name": "Replay_StoreInput(float *, float *, float *, char)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4351: window review: First of four consecutive empty stubs after the TU global ctor; the sheet row is itself an 0x8 empty stub."
+   ]
+  },
+  {
+   "xbox": "0x001f6520",
+   "expect": "FUN_001f6520",
+   "name": "Replay_RetreiveInput",
+   "sheet_name": "Replay_RetreiveInput(float *, float *, float *, char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4352: window review: Second stub, 0x8 \"return 0\" - a Retreive function returning a value; sheet also 0x8."
+   ]
+  },
+  {
+   "xbox": "0x001f6528",
+   "expect": "FUN_001f6528",
+   "name": "Replay_StoreMiletone",
+   "sheet_name": "Replay_StoreMiletone(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4353: window review: Third empty 0x8 stub; sheet also 0x8."
+   ]
+  },
+  {
+   "xbox": "0x001fd170",
+   "expect": "FUN_001fd170",
+   "name": "RigidBody::ForceToSleep",
+   "sheet_name": "RigidBody::ForceToSleep(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4411: window review: Called twice from ControlSleep; zeroes velocities/forces and sets the sleep flag (+0x6e = 1)."
+   ]
+  },
+  {
+   "xbox": "0x001fdf40",
+   "expect": "FUN_001fdf40",
+   "name": "SimpleRigidBody::SimpleRigidBody_global_ctors",
+   "sheet_name": "global constructors keyed to SimpleRigidBody::SimpleRigidBody(i",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4432: window review: TU global ctor calling helper(1,0xffff), DATA ref from the ctors table."
+   ]
+  },
+  {
+   "xbox": "0x00204ac0",
+   "expect": "FUN_00204ac0",
+   "name": "operator<_global_dtors",
+   "sheet_name": "global destructors keyed to operator<(PhysicsObjMapIterator &,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4559: window review: Global dtor: calls helper(0,0xffff) which runs ~Simulation; DATA ref from the dtors table."
+   ]
+  },
+  {
+   "xbox": "0x00209130",
+   "expect": "FUN_00209130",
+   "name": "_List_base<SMissionObjective_*,_allocator<SMissionObjective_*>",
+   "sheet_name": "_List_base<SMissionObjective *, allocator<SMissionObjective *>",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4654: window review: List clear freeing 0xc nodes, called from ClearObjectiveList and ~SMissionManager."
+   ]
+  },
+  {
+   "xbox": "0x00209200",
+   "expect": "FUN_00209200",
+   "name": "_List_base<SMissionRule_*,_allocator<SMissionRule_*>_>::clear",
+   "sheet_name": "_List_base<SMissionRule *, allocator<SMissionRule *> >::clear(v",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4656: window review: List clear called from DestroyRuleList and ~SMissionManager."
+   ]
+  },
+  {
+   "xbox": "0x002092d8",
+   "expect": "FUN_002092d8",
+   "name": "MissionSectionProfile::Clear",
+   "sheet_name": "MissionSectionProfile::Clear(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4657: window review: 0x20 exact: resets a small profile struct (zeros, 1000.0f) and is called from the SMissionManager ctor."
+   ]
+  },
+  {
+   "xbox": "0x002092f8",
+   "expect": "FUN_002092f8",
+   "name": "gPlayerCanNeverLose_global_ctors",
+   "sheet_name": "global constructors keyed to gPlayerCanNeverLose",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4658: window review: TU global ctor calling helper(1,0xffff), DATA ref from the ctors table."
+   ]
+  },
+  {
+   "xbox": "0x002104a8",
+   "expect": "FUN_002104a8",
+   "name": "Util_Step",
+   "sheet_name": "Util_Step(float, float, float)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 4782: window review: Float step toward target with clamp, same as AUF Util_Step; real size 0x48 (Ghidra body 0x68 swallows Util_Ramp)."
+   ]
+  },
+  {
+   "xbox": "0x00211758",
+   "expect": "FUN_00211758",
+   "name": "Util_ApplyVariance",
+   "sheet_name": "Util_ApplyVariance(float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4802: window review: x + x*variance*Util_GaussRandom(); callers Respawn/AddRoundedBolt."
+   ]
+  },
+  {
+   "xbox": "0x002127f0",
+   "expect": "FUN_002127f0",
+   "name": "WCollider::GetWorldNormal",
+   "sheet_name": "WCollider::GetWorldNormal(COORD4 *, WCollisionMgr::WorldCollisi",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4814: window review: WCollider method forwarding to WCollisionMgr::GetWorldNormal with the this+0x30/0x3c ranges."
+   ]
+  },
+  {
+   "xbox": "0x00212bf0",
+   "expect": "FUN_00212bf0",
+   "name": "WCollider::WCollider_global_ctors",
+   "sheet_name": "global constructors keyed to WCollider::WCollider(COORD3 &, flo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4819: window review: TU global ctor calling helper(1,0xffff), DATA ref."
+   ]
+  },
+  {
+   "xbox": "0x00212c10",
+   "expect": "FUN_00212c10",
+   "name": "WCollisionObject::MakeMatrix",
+   "sheet_name": "WCollisionObject::MakeMatrix(MATRIX4 &, bool) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4820: window review: Copies the 0x40 world instance matrix indexed by the ushort at +0x24, same as AUF WCollisionObject::MakeMatrix."
+   ]
+  },
+  {
+   "xbox": "0x00212cc8",
+   "expect": "FUN_00212cc8",
+   "name": "WCollisionInstance::GetRenderInstance",
+   "sheet_name": "WCollisionInstance::GetRenderInstance(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4821: window review: Returns fgWorld instance array + ushort(+0x1a)*0x40 (the render instance), just before WCollisionInstance::GetName which uses the same index."
+   ]
+  },
+  {
+   "xbox": "0x0021e650",
+   "expect": "FUN_0021e650",
+   "name": "WGridNode::TotalSize",
+   "sheet_name": "WGridNode::TotalSize(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4899: window review: Only candidate: computes 0x10 + 2*sum of four byte counts at +4 (a node size in bytes), right after the grid ctors; sheet 0x3a0 is much larger."
+   ]
+  },
+  {
+   "xbox": "0x00220b10",
+   "expect": "FUN_00220b10",
+   "name": "__final_insertion_sort<InstanceAndDistance_*,_bool",
+   "sheet_name": "void __final_insertion_sort<InstanceAndDistance *, bool (*)(Ins",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4928: window review: Threshold 16 elements: insertion_sort on the first 16 then the unguarded aux (__final_insertion_sort); called from DrawPass/DrawWorldAtPoint."
+   ]
+  },
+  {
+   "xbox": "0x00229ce8",
+   "expect": "FUN_00229ce8",
+   "name": "WTargetable::fTargetsInWorld_global_ctors",
+   "sheet_name": "global constructors keyed to WTargetable::fTargetsInWorld",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5041: window review: TU global ctor calling helper(1,0xffff), DATA ref; the sheet 0x258 had the init inlined."
+   ]
+  },
+  {
+   "xbox": "0x0022c008",
+   "expect": "FUN_0022c008",
+   "name": "_List_base<WTargetable_*,_allocator<WTargetable_*>_>::clear",
+   "sheet_name": "_List_base<WTargetable *, allocator<WTargetable *> >::clear(voi",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5075: window review: List clear called from ~WTargetPicker and ClearAllTargets."
+   ]
+  },
+  {
+   "xbox": "0x0022c070",
+   "expect": "FUN_0022c070",
+   "name": "list<WTargetable_*,_allocator<WTargetable_*>_>::remove",
+   "sheet_name": "list<WTargetable *, allocator<WTargetable *> >::remove(WTargeta",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5076: window review: list::remove(value): walks nodes, unlinks and frees matches; called from UnregisterTarget."
+   ]
+  },
+  {
+   "xbox": "0x0022f3c0",
+   "expect": "FUN_0022f3c0",
+   "name": "WTriggerManager::fgTriggerManager_global_ctors",
+   "sheet_name": "global constructors keyed to WTriggerManager::fgTriggerManager",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5105: window review: TU global ctor calling helper(1,0xffff), DATA ref."
+   ]
+  },
+  {
+   "xbox": "0x0022f3e0",
+   "expect": "FUN_0022f3e0",
+   "name": "UploadCullingMicrocode",
+   "sheet_name": "UploadCullingMicrocode(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5106: window review: 0x28 exact: VU0_UploadMicrocode(culling code, flag, flag); called from GenerateCurtainsAndNodes."
+   ]
+  },
+  {
+   "xbox": "0x0022f408",
+   "expect": "FUN_0022f408",
+   "name": "InitActiveCurtainList",
+   "sheet_name": "InitActiveCurtainList(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5107: window review: Sets the curtain count global 0x33aa9c to 0, like AUF InitActiveCurtainList; called from GenerateCurtainsAndNodes; real size 0x10."
+   ]
+  },
+  {
+   "xbox": "0x0022f428",
+   "expect": "FUN_0022f428",
+   "name": "WVisCurtain::CalcRadius",
+   "sheet_name": "WVisCurtain::CalcRadius(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5109: window review: Midpoint of the two corners and distance -> radius; called by both WVisCurtain ctors; real size 0x70."
+   ]
+  },
+  {
+   "xbox": "0x0022f4a0",
+   "expect": "FUN_0022f4a0",
+   "name": "AddCurtain",
+   "sheet_name": "AddCurtain(WVisCurtain *, COORD4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5111: window review: 0x108 exact; count < 0x3f guard like AUF AddCurtain; called from FindVisibleTreeNodesAndCurtains."
+   ]
+  },
+  {
+   "xbox": "0x0022f5a8",
+   "expect": "FUN_0022f5a8",
+   "name": "IsVisibleAgainstCurtains",
+   "sheet_name": "IsVisibleAgainstCurtains(COORD4 &, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5112: window review: (float, COORD4&) VU0 curtain test returning visible; 0x40 real size; called by CullModule and AddCurtain."
+   ]
+  },
+  {
+   "xbox": "0x0022f620",
+   "expect": "FUN_0022f620",
+   "name": "WVisCurtain::WVisCurtain",
+   "sheet_name": "WVisCurtain::WVisCurtain(float, float, float, float, float, flo",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5114: window review: 0x40 exact: stores six floats into this then CalcRadius."
+   ]
+  },
+  {
+   "xbox": "0x0022f660",
+   "expect": "FUN_0022f660",
+   "name": "WVisCurtain::WVisCurtain",
+   "sheet_name": "WVisCurtain::WVisCurtain(COORD4 &, COORD4 &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5115: window review: 0x70 real size: copies two COORD4 into this then CalcRadius; called from WRender."
+   ]
+  },
+  {
+   "xbox": "0x0022f6d8",
+   "expect": "FUN_0022f6d8",
+   "name": "FasterSegmentIntersect",
+   "sheet_name": "FasterSegmentIntersect(COORD4 *, COORD4 *, COORD4 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5117: window review: 0x110 exact; 2D segment intersection with a zero-determinant early out, matches AUF."
+   ]
+  },
+  {
+   "xbox": "0x00231ff8",
+   "expect": "FUN_00231ff8",
+   "name": "WWorldMath::Quatern_Interpolate",
+   "sheet_name": "WWorldMath::Quatern_Interpolate(COORD4 *, COORD4 *, COORD3 *, C",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5144: window review: Lerps two quaternions (4 floats) then calls Quatern_VecInterpolate; real size 0x90."
+   ]
+  },
+  {
+   "xbox": "0x00236718",
+   "expect": "FUN_00236718",
+   "name": "NULL_SOUND_ID_global_ctors",
+   "sheet_name": "global constructors keyed to NULL_SOUND_ID",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5232: window review: TU global ctor calling helper(1,0xffff), DATA ref."
+   ]
+  },
+  {
+   "xbox": "0x002377d8",
+   "expect": "FUN_002377d8",
+   "name": "GGallery::FONT_SetState",
+   "sheet_name": "GGallery::FONT_SetState(GGallery::Keys *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5253: window review: 0xc8 exact: copies Keys translation/quat/colour/font into gallery state then FONT_SetScale, like AUF FONT_SetState; many HUD callers."
+   ]
+  },
+  {
+   "xbox": "0x00237e88",
+   "expect": "FUN_00237e88",
+   "name": "GGallery::LINE_Draw2D",
+   "sheet_name": "GGallery::LINE_Draw2D(GGallery::Keys *, GGallery::Lines *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5263: window review: (Keys*, Lines*): uses Keys+0x30 when Lines is null, MATH_TransformPoints then DrawLine."
+   ]
+  },
+  {
+   "xbox": "0x0023a7e8",
+   "expect": "FUN_0023a7e8",
+   "name": "GGirl::fCurrentTexture_global_ctors",
+   "sheet_name": "global constructors keyed to GGirl::fCurrentTexture",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5301: window review: TU global ctor calling helper 0x23a758(1,0xffff), DATA ref."
+   ]
+  },
+  {
+   "xbox": "0x00244828",
+   "expect": "FUN_00244828",
+   "name": "GHud::DrawRadar2DBlips",
+   "sheet_name": "GHud::DrawRadar2DBlips(COORD2 &, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5371: window review: Radar blip drawing over tracked instances with DrawMapIndicator; called from DrawQRadarBlips."
+   ]
+  },
+  {
+   "xbox": "0x00244c00",
+   "expect": "FUN_00244c00",
+   "name": "GHud::DrawRadar2DPulse",
+   "sheet_name": "GHud::DrawRadar2DPulse(COORD2 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5372: window review: Empty 0x8 stub called from DrawQRadarPulse; sheet also 0x8."
+   ]
+  },
+  {
+   "xbox": "0x002477a0",
+   "expect": "FUN_002477a0",
+   "name": "GHud::dbDrawTarget",
+   "sheet_name": "GHud::dbDrawTarget(COORD2 *, char *, float, unsigned int, char",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5409: window review: Draws label text and a sprite at a COORD2 with FONT_Draw/SPRITE_Draw2D, right after DrawTarget; called from DrawTargets."
+   ]
+  },
+  {
+   "xbox": "0x00249260",
+   "expect": "FUN_00249260",
+   "name": "GLoadingScreen::DrawDebugMessage",
+   "sheet_name": "GLoadingScreen::DrawDebugMessage(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5433: window review: Empty stub called from GLoadingScreen::Update behind a debug flag, right after FadeToBlack."
+   ]
+  },
+  {
+   "xbox": "0x00249268",
+   "expect": "FUN_00249268",
+   "name": "GLoadingScreen::Print",
+   "sheet_name": "GLoadingScreen::Print(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5434: window review: 0x2c0 exact; message append/printf_err, called by Status and PrintVAList."
+   ]
+  },
+  {
+   "xbox": "0x00249528",
+   "expect": "FUN_00249528",
+   "name": "GLoadingScreen::PrintChannel",
+   "sheet_name": "GLoadingScreen::PrintChannel(PRINTCHANNEL, char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5435: window review: 0x20 exact: ignores the channel and calls Print(text)."
+   ]
+  },
+  {
+   "xbox": "0x00283fc8",
+   "expect": "FUN_00283fc8",
+   "name": "EAGL::GeoPrimState::SetPrimitiveType",
+   "sheet_name": "EAGL::GeoPrimState::SetPrimitiveType(EAGL::PrimitiveType)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5777: window review: 0x40 real size: maps PrimitiveType through a byte table, -1 -> return 0, else sets the low 3 bits (GS PRIM) of +0x10."
+   ]
+  },
+  {
+   "xbox": "0x00284038",
+   "expect": "FUN_00284038",
+   "name": "EAGL::GeoPrimState::SetDepthTestMethod",
+   "sheet_name": "EAGL::GeoPrimState::SetDepthTestMethod(EAGL::DepthTestMethod)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5779: window review: 0x50 real size: maps DepthTestMethod through a table into bits 17-18 (GS ZTST) of +0x30."
+   ]
+  },
+  {
+   "xbox": "0x002840c0",
+   "expect": "FUN_002840c0",
+   "name": "EAGL::Model::RemoveModel",
+   "sheet_name": "EAGL::Model::RemoveModel(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5781: window review: Searches the child-model list at this+0xa4 by name (+0xb4) with strcmp and unlinks the match."
+   ]
+  },
+  {
+   "xbox": "0x00285ba0",
+   "expect": "FUN_00285ba0",
+   "name": "EAGL::Model::PS2SetOverlay",
+   "sheet_name": "EAGL::Model::PS2SetOverlay(char *, EAGL::Overlay *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5809: window review: (name, overlay): finds the TAR list by name at this+0xbc and applies the overlay to each shape."
+   ]
+  },
+  {
+   "xbox": "0x00285ca8",
+   "expect": "FUN_00285ca8",
+   "name": "EAGL::Model::Patch",
+   "sheet_name": "EAGL::Model::Patch(EAGL::Variation *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5813: window review: 0x48 real size: null check, count, then *(ptr) = value pairs, like AUF Patch; called from Model::Draw."
+   ]
+  },
+  {
+   "xbox": "0x00285e88",
+   "expect": "FUN_00285e88",
+   "name": "EAGL::Model::~Model",
+   "sheet_name": "EAGL::Model::~Model(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5816: window review: Deleting-dtor tail freeing 0xdc bytes when flag&1."
+   ]
+  },
+  {
+   "xbox": "0x00291130",
+   "expect": "FUN_00291130",
+   "name": "EAGL::RenderContextExtension::GetZBufferInfo",
+   "sheet_name": "EAGL::RenderContextExtension::GetZBufferInfo(int *, int *) cons",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5974: window review: 0x20 real size: writes two ints from render context +0x780/+0x794 to out params; called from TestFlares."
+   ]
+  },
+  {
+   "xbox": "0x00291178",
+   "expect": "FUN_00291178",
+   "name": "EAGL::RenderContextExtension::GetFrontBuffer",
+   "sheet_name": "EAGL::RenderContextExtension::GetFrontBuffer(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5976: window review: Returns context +0x838; called from the RPostProcessing ctor."
+   ]
+  },
+  {
+   "xbox": "0x00291188",
+   "expect": "FUN_00291188",
+   "name": "EAGL::RenderContextExtension::GetBackBuffer",
+   "sheet_name": "EAGL::RenderContextExtension::GetBackBuffer(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5977: window review: Returns context +0x83c (real size 0x10); called from the RPostProcessing ctor."
+   ]
+  },
+  {
+   "xbox": "0x00293750",
+   "expect": "FUN_00293750",
+   "name": "EAGL::Transform::BuildAimedTrans",
+   "sheet_name": "EAGL::Transform::BuildAimedTrans(COORD3 *, COORD3 *, EAGL::Tran",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6060: window review: 0x140 exact; builds a basis from two v3unitcrossprod calls into axis slots chosen by args."
+   ]
+  },
+  {
+   "xbox": "0x00293890",
+   "expect": "FUN_00293890",
+   "name": "EAGL::Transform::BuildSRT",
+   "sheet_name": "EAGL::Transform::BuildSRT(float, float, float, float, float, fl",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6061: window review: Scale + sin/cos of three angles in degrees + translation; real size 0x1a8 exact."
+   ]
+  },
+  {
+   "xbox": "0x00293aa0",
+   "expect": "FUN_00293aa0",
+   "name": "EAGL::Transform::BuildMatrix",
+   "sheet_name": "EAGL::Transform::BuildMatrix(MATRIX4 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6063: window review: Copies a MATRIX4 into this (real size 0x88), like AUF BuildMatrix; callers BeginView/Model::Draw."
+   ]
+  },
+  {
+   "xbox": "0x00294580",
+   "expect": "FUN_00294580",
+   "name": "EAGL::Transform::AppendRotTrans",
+   "sheet_name": "EAGL::Transform::AppendRotTrans(MATRIX3 *, COORD4 *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6078: window review: MATRIX3 + 4-float translation into a temp then matrix multiply."
+   ]
+  },
+  {
+   "xbox": "0x00294620",
+   "expect": "FUN_00294620",
+   "name": "EAGL::Transform::AppendRotTrans",
+   "sheet_name": "EAGL::Transform::AppendRotTrans(MATRIX3 *, COORD3 *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6079: window review: MATRIX3 + 3-float translation (w=1) into a temp then multiply."
+   ]
+  },
+  {
+   "xbox": "0x002946e0",
+   "expect": "FUN_002946e0",
+   "name": "EAGL::Transform::AppendQuatTrans",
+   "sheet_name": "EAGL::Transform::AppendQuatTrans(COORD4 *, COORD4 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6081: window review: Quaternion -> matrix plus translation into a temp, then multiply (Append side)."
+   ]
+  },
+  {
+   "xbox": "0x00294a40",
+   "expect": "FUN_00294a40",
+   "name": "EAGL::Transform::PrependRotTrans",
+   "sheet_name": "EAGL::Transform::PrependRotTrans(MATRIX3 *, COORD4 *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6086: window review: MATRIX3 + 4-float translation then PreMult."
+   ]
+  },
+  {
+   "xbox": "0x00294ad8",
+   "expect": "FUN_00294ad8",
+   "name": "EAGL::Transform::PrependRotTrans",
+   "sheet_name": "EAGL::Transform::PrependRotTrans(MATRIX3 *, COORD3 *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6087: window review: MATRIX3 + 3-float translation then PreMult."
+   ]
+  },
+  {
+   "xbox": "0x00294b98",
+   "expect": "FUN_00294b98",
+   "name": "EAGL::Transform::PrependQuatTrans",
+   "sheet_name": "EAGL::Transform::PrependQuatTrans(COORD4 *, COORD4 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6089: window review: Quaternion + translation into a temp then PreMult."
+   ]
+  },
+  {
+   "xbox": "0x002950b0",
+   "expect": "FUN_002950b0",
+   "name": "EAGL::Transform::BuildSQT",
+   "sheet_name": "EAGL::Transform::BuildSQT(float, float, float, float, float, fl",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6094: window review: Scale*quaternion matrix + translation, real size 0xd8 exact; callers include EvalSQT."
+   ]
+  },
+  {
+   "xbox": "0x00295238",
+   "expect": "FUN_00295238",
+   "name": "EAGL::Transform::ReplaceRotate",
+   "sheet_name": "EAGL::Transform::ReplaceRotate(float, float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6096: window review: Angle in degrees, sin/cos, rewrites only the rotation part (identity when the angle is 0)."
+   ]
+  },
+  {
+   "xbox": "0x002953a0",
+   "expect": "FUN_002953a0",
+   "name": "MultMatrix",
+   "sheet_name": "MultMatrix(MATRIX4 *, MATRIX4 *, MATRIX4 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6097: window review: 0x20 real size: straight call to the matrix multiply 0x297c60."
+   ]
+  },
+  {
+   "xbox": "0x00296f98",
+   "expect": "FUN_00296f98",
+   "name": "EAGL::ViewPort::SetGuardBandScale",
+   "sheet_name": "EAGL::ViewPort::SetGuardBandScale(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6113: window review: Stores a float at viewport +400; called from SetGuardBandSize."
+   ]
+  },
+  {
+   "xbox": "0x00297700",
+   "expect": "FUN_00297700",
+   "name": "EAGL::VU0_quatstoangvel",
+   "sheet_name": "EAGL::VU0_quatstoangvel(COORD3 &, COORD4 &, COORD4 &, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6131: window review: 0x4a8 exact; largest-component quaternion maths with a float and three vector args."
+   ]
+  },
+  {
+   "xbox": "0x00297c60",
+   "expect": "FUN_00297c60",
+   "name": "EAGL::VU0_MATRIX4_mult",
+   "sheet_name": "EAGL::VU0_MATRIX4_mult(MATRIX4 &, MATRIX4 &, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6134: window review: 0x78 real size: VU0 4x4 multiply; called by all the Transform Append/Mult functions."
+   ]
+  },
+  {
+   "xbox": "0x00299970",
+   "expect": "FUN_00299970",
+   "name": "EAGL::ProfilerRegion::ProcessRegions",
+   "sheet_name": "EAGL::ProfilerRegion::ProcessRegions(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6162: window review: 0x90 exact: ProcessRegion on every region in the list, then DrawRegions, bumps the frame count."
+   ]
+  },
+  {
+   "xbox": "0x00299a00",
+   "expect": "FUN_00299a00",
+   "name": "EAGL::ProfilerRegion::ProcessInput",
+   "sheet_name": "EAGL::ProfilerRegion::ProcessInput(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6163: window review: 0xa0 real size: TIMER_gettick-based input/refresh counter with the uint arg as period."
+   ]
+  },
+  {
+   "xbox": "0x0029c0f8",
+   "expect": "FUN_0029c0f8",
+   "name": "EAGL::DrawArray::SetPrimitiveType",
+   "sheet_name": "EAGL::DrawArray::SetPrimitiveType(EAGL::PrimitiveType)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6195: window review: 0xa8 exact: switch on PrimitiveType setting +0x30 etc., like AUF SetPrimitiveType."
+   ]
+  },
+  {
+   "xbox": "0x0029c1a0",
+   "expect": "FUN_0029c1a0",
+   "name": "EAGL::DrawArray::GetIndexFromName",
+   "sheet_name": "EAGL::DrawArray::GetIndexFromName(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6196: window review: strcmp over the name table returning index or -1, like AUF; called from DynamicModel GetIndexFromName."
+   ]
+  },
+  {
+   "xbox": "0x0029c250",
+   "expect": "FUN_0029c250",
+   "name": "EAGL::DrawArray::SetParamName",
+   "sheet_name": "EAGL::DrawArray::SetParamName(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6198: window review: Looks up a name, stores the index at +0x2c (-1 if missing), returns found."
+   ]
+  },
+  {
+   "xbox": "0x0029c2e8",
+   "expect": "FUN_0029c2e8",
+   "name": "EAGL::DrawArray::SetVar",
+   "sheet_name": "EAGL::DrawArray::SetVar(char *, void *, int, int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6199: window review: Finds the var index by name then calls SetVar(int,...) 0x29c3b0."
+   ]
+  },
+  {
+   "xbox": "0x0029c3b0",
+   "expect": "FUN_0029c3b0",
+   "name": "EAGL::DrawArray::SetVar",
+   "sheet_name": "EAGL::DrawArray::SetVar(int, void *, int, int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6200: window review: Alignment check with the \"User Var ... not aligned\" message then stores pointer/stride, like AUF SetVar."
+   ]
+  },
+  {
+   "xbox": "0x0029c488",
+   "expect": "FUN_0029c488",
+   "name": "EAGL::DrawArray::Lock",
+   "sheet_name": "EAGL::DrawArray::Lock(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6201: window review: 0x18 exact: sets +0x34 and +0x18 to 1; called from DynamicModel Lock."
+   ]
+  },
+  {
+   "xbox": "0x0029c4a0",
+   "expect": "FUN_0029c4a0",
+   "name": "EAGL::DrawArray::Unlock",
+   "sheet_name": "EAGL::DrawArray::Unlock(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6202: window review: 0x10 exact: clears +0x18; called from Unlock and the Draw* destructors."
+   ]
+  },
+  {
+   "xbox": "0x0029c4b0",
+   "expect": "FUN_0029c4b0",
+   "name": "EAGL::DrawArray::Draw",
+   "sheet_name": "EAGL::DrawArray::Draw(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6203: window review: 0xa8 exact: batches the count into a SetUpGeoPrim + DynamicModel::Draw loop, like AUF Draw."
+   ]
+  },
+  {
+   "xbox": "0x0029c558",
+   "expect": "FUN_0029c558",
+   "name": "EAGL::DrawArray::SetNumVerts",
+   "sheet_name": "EAGL::DrawArray::SetNumVerts(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6204: window review: 0x10 exact: stores the vertex count at +0x3c; called from SetNumVerts."
+   ]
+  },
+  {
+   "xbox": "0x0029c568",
+   "expect": "FUN_0029c568",
+   "name": "EAGL::DrawArray::SetLocalMatrix",
+   "sheet_name": "EAGL::DrawArray::SetLocalMatrix(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6205: window review: 0x20 exact: forwards to DynamicModel::SetModelMatrix of the member at +4."
+   ]
+  },
+  {
+   "xbox": "0x0029c588",
+   "expect": "FUN_0029c588",
+   "name": "EAGL::DrawGouraud::DrawGouraud",
+   "sheet_name": "EAGL::DrawGouraud::DrawGouraud(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6206: window review: 0xf0 exact: zero-init, allocs DynamicModel, registers gpModelViewProjectionMatrix; first of four Draw* class blocks; called from DrawRegions."
+   ]
+  },
+  {
+   "xbox": "0x0029c678",
+   "expect": "FUN_0029c678",
+   "name": "EAGL::DrawGouraud::~DrawGouraud",
+   "sheet_name": "EAGL::DrawGouraud::~DrawGouraud(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6207: window review: 0xd8 exact: frees the 0xc00/0x300 buffers, ~GeoPrimState, ~DynamicModel."
+   ]
+  },
+  {
+   "xbox": "0x0029c750",
+   "expect": "FUN_0029c750",
+   "name": "EAGL::DrawGouraud::InternalFlush",
+   "sheet_name": "EAGL::DrawGouraud::InternalFlush(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6208: window review: 0xb0 exact: flushes pending verts via SetUpGeoPrim/Draw, like AUF InternalFlush."
+   ]
+  },
+  {
+   "xbox": "0x0029c800",
+   "expect": "FUN_0029c800",
+   "name": "EAGL::DrawGouraud::End",
+   "sheet_name": "EAGL::DrawGouraud::End(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6209: window review: 0xc8 exact: flush plus the strip-type special case, like AUF End."
+   ]
+  },
+  {
+   "xbox": "0x0029c8c8",
+   "expect": "FUN_0029c8c8",
+   "name": "EAGL::DrawGouraud::SetState",
+   "sheet_name": "EAGL::DrawGouraud::SetState(EAGL::GeoPrimState &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6210: window review: 0x40 exact: GeoPrimState assign at +0x80 then SetPrimitiveType."
+   ]
+  },
+  {
+   "xbox": "0x0029c908",
+   "expect": "FUN_0029c908",
+   "name": "EAGL::DrawGouraud::GetState",
+   "sheet_name": "EAGL::DrawGouraud::GetState(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6211: window review: 0x8: return this+0x80."
+   ]
+  },
+  {
+   "xbox": "0x0029c910",
+   "expect": "FUN_0029c910",
+   "name": "EAGL::DrawGouraud::SetModelMatrix",
+   "sheet_name": "EAGL::DrawGouraud::SetModelMatrix(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6212: window review: 0x20: forwards SetModelMatrix to the DynamicModel at +0x10."
+   ]
+  },
+  {
+   "xbox": "0x0029c930",
+   "expect": "FUN_0029c930",
+   "name": "EAGL::DrawClipGouraud::DrawClipGouraud",
+   "sheet_name": "EAGL::DrawClipGouraud::DrawClipGouraud(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6213: window review: Second identical Draw* block, ctor 0xf0."
+   ]
+  },
+  {
+   "xbox": "0x0029ca20",
+   "expect": "FUN_0029ca20",
+   "name": "EAGL::DrawClipGouraud::~DrawClipGouraud",
+   "sheet_name": "EAGL::DrawClipGouraud::~DrawClipGouraud(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6214: window review: Second block dtor 0xd8."
+   ]
+  },
+  {
+   "xbox": "0x0029caf8",
+   "expect": "FUN_0029caf8",
+   "name": "EAGL::DrawClipGouraud::InternalFlush",
+   "sheet_name": "EAGL::DrawClipGouraud::InternalFlush(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6215: window review: Second block InternalFlush 0xb0."
+   ]
+  },
+  {
+   "xbox": "0x0029cba8",
+   "expect": "FUN_0029cba8",
+   "name": "EAGL::DrawClipGouraud::End",
+   "sheet_name": "EAGL::DrawClipGouraud::End(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6216: window review: Second block End 0xc8."
+   ]
+  },
+  {
+   "xbox": "0x0029cc70",
+   "expect": "FUN_0029cc70",
+   "name": "EAGL::DrawClipGouraud::SetState",
+   "sheet_name": "EAGL::DrawClipGouraud::SetState(EAGL::GeoPrimState &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6217: window review: Second block SetState 0x40 (Ghidra body 0x48 includes GetState)."
+   ]
+  },
+  {
+   "xbox": "0x0029ccb8",
+   "expect": "FUN_0029ccb8",
+   "name": "EAGL::DrawClipGouraud::SetModelMatrix",
+   "sheet_name": "EAGL::DrawClipGouraud::SetModelMatrix(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6219: window review: Second block SetModelMatrix 0x20."
+   ]
+  },
+  {
+   "xbox": "0x0029ccd8",
+   "expect": "FUN_0029ccd8",
+   "name": "EAGL::DrawTextured::DrawTextured",
+   "sheet_name": "EAGL::DrawTextured::DrawTextured(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6220: window review: Third block ctor 0xf8 (extra texture buffer slot); called from Play."
+   ]
+  },
+  {
+   "xbox": "0x0029cdd0",
+   "expect": "FUN_0029cdd0",
+   "name": "EAGL::DrawTextured::~DrawTextured",
+   "sheet_name": "EAGL::DrawTextured::~DrawTextured(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6221: window review: Third block dtor 0xf0 frees three buffers; called from Play."
+   ]
+  },
+  {
+   "xbox": "0x0029cec0",
+   "expect": "FUN_0029cec0",
+   "name": "EAGL::DrawTextured::InternalFlush",
+   "sheet_name": "EAGL::DrawTextured::InternalFlush(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6222: window review: Third block InternalFlush 0xb0."
+   ]
+  },
+  {
+   "xbox": "0x0029cf70",
+   "expect": "FUN_0029cf70",
+   "name": "EAGL::DrawTextured::End",
+   "sheet_name": "EAGL::DrawTextured::End(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6223: window review: Third block End 0xc8."
+   ]
+  },
+  {
+   "xbox": "0x0029d038",
+   "expect": "FUN_0029d038",
+   "name": "EAGL::DrawTextured::SetState",
+   "sheet_name": "EAGL::DrawTextured::SetState(EAGL::GeoPrimState &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6224: window review: Third block SetState 0x40 (state at +0x90)."
+   ]
+  },
+  {
+   "xbox": "0x0029d080",
+   "expect": "FUN_0029d080",
+   "name": "EAGL::DrawTextured::SetModelMatrix",
+   "sheet_name": "EAGL::DrawTextured::SetModelMatrix(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6226: window review: Third block SetModelMatrix 0x20."
+   ]
+  },
+  {
+   "xbox": "0x0029d1d8",
+   "expect": "FUN_0029d1d8",
+   "name": "EAGL::DrawClipTextured::DrawClipTextured",
+   "sheet_name": "EAGL::DrawClipTextured::DrawClipTextured(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6227: window review: Fourth block ctor 0xf8."
+   ]
+  },
+  {
+   "xbox": "0x0029d2d0",
+   "expect": "FUN_0029d2d0",
+   "name": "EAGL::DrawClipTextured::~DrawClipTextured",
+   "sheet_name": "EAGL::DrawClipTextured::~DrawClipTextured(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6228: window review: Fourth block dtor 0xf0."
+   ]
+  },
+  {
+   "xbox": "0x0029d3c0",
+   "expect": "FUN_0029d3c0",
+   "name": "EAGL::DrawClipTextured::InternalFlush",
+   "sheet_name": "EAGL::DrawClipTextured::InternalFlush(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6229: window review: Fourth block InternalFlush 0xb0."
+   ]
+  },
+  {
+   "xbox": "0x0029d470",
+   "expect": "FUN_0029d470",
+   "name": "EAGL::DrawClipTextured::End",
+   "sheet_name": "EAGL::DrawClipTextured::End(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6230: window review: Fourth block End 0xc8."
+   ]
+  },
+  {
+   "xbox": "0x0029d538",
+   "expect": "FUN_0029d538",
+   "name": "EAGL::DrawClipTextured::SetState",
+   "sheet_name": "EAGL::DrawClipTextured::SetState(EAGL::GeoPrimState &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6231: window review: Fourth block SetState 0x40."
+   ]
+  },
+  {
+   "xbox": "0x0029d580",
+   "expect": "FUN_0029d580",
+   "name": "EAGL::DrawClipTextured::SetModelMatrix",
+   "sheet_name": "EAGL::DrawClipTextured::SetModelMatrix(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6233: window review: Fourth block SetModelMatrix 0x20."
+   ]
+  },
+  {
+   "xbox": "0x0029d6d8",
+   "expect": "FUN_0029d6d8",
+   "name": "EAGL::Print",
+   "sheet_name": "EAGL::Print(char *,...)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6234: window review: 0x78 exact: varargs to printHandler or vfprintf(stderr)."
+   ]
+  },
+  {
+   "xbox": "0x002656b8",
+   "expect": "FUN_002656b8",
+   "name": "EAGLAnim::MemoryPoolManager::NewBlockByIdx",
+   "sheet_name": "EAGLAnim::MemoryPoolManager::NewBlockByIdx(unsigned short)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6399: window review: Same shape as AUF NewBlockByIdx: per-index free list at 0x343d68, carve from pool when empty, block size from 0x343d28 table."
+   ]
+  },
+  {
+   "xbox": "0x00265788",
+   "expect": "FUN_00265788",
+   "name": "EAGLAnim::MemoryPoolManager::ResetPool",
+   "sheet_name": "EAGLAnim::MemoryPoolManager::ResetPool(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6400: window review: Resets pool cursor to base and clears both free-list tables; called by ResetMemoryPool, matching AUF ResetPool."
+   ]
+  },
+  {
+   "xbox": "0x00268cb0",
+   "expect": "FUN_00268cb0",
+   "name": "EAGLAnim::FnDeltaQ::InitBuffersAsRequired",
+   "sheet_name": "EAGLAnim::FnDeltaQ::InitBuffersAsRequired(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6495: window review: Non-virtual FnDeltaQ helper that lazily allocates buffers (FUN_00265728) and caches DeltaQ::GetConstBoneIdx/GetConstPhysical."
+   ]
+  },
+  {
+   "xbox": "0x00268d88",
+   "expect": "FUN_00268d88",
+   "name": "EAGLAnim::FnDeltaQ::SetAnimMemoryMap",
+   "sheet_name": "EAGLAnim::FnDeltaQ::SetAnimMemoryMap(EAGLAnim::AnimMemoryMap *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6496: window review: FnDeltaQ vtable 0x3af810 SetAnimMemoryMap slot (same slot as in FnDeltaF1's vtable): stores map at +0xc."
+   ]
+  },
+  {
+   "xbox": "0x00268d90",
+   "expect": "FUN_00268d90",
+   "name": "EAGLAnim::FnDeltaQ::GetLength",
+   "sheet_name": "EAGLAnim::FnDeltaQ::GetLength(float &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6497: window review: FnDeltaQ vtable GetLength slot: writes frame count to *param_2 and returns 1."
+   ]
+  },
+  {
+   "xbox": "0x00268dd0",
+   "expect": "FUN_00268dd0",
+   "name": "EAGLAnim::FnDeltaQ::Eval",
+   "sheet_name": "EAGLAnim::FnDeltaQ::Eval(float, float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6498: window review: FnDeltaQ vtable Eval slot (slot 3, between UseFPS and GetLength)."
+   ]
+  },
+  {
+   "xbox": "0x00268e08",
+   "expect": "FUN_00268e08",
+   "name": "EAGLAnim::FnDeltaQ::EvalSQT",
+   "sheet_name": "EAGLAnim::FnDeltaQ::EvalSQT(float, float *, EAGLAnim::BoneMask",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6499: window review: FnDeltaQ vtable EvalSQT slot (between FindMatchTime and FnAnim::EvalPhase)."
+   ]
+  },
+  {
+   "xbox": "0x0026b368",
+   "expect": "FUN_0026b368",
+   "name": "EAGLAnim::FnDeltaSingleQ::~FnDeltaSingleQ",
+   "sheet_name": "EAGLAnim::FnDeltaSingleQ::~FnDeltaSingleQ(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6500: window review: Slot 1 (dtor) of FnDeltaSingleQ vtable 0x3afae0 (slot 0 = FnDeltaSingleQ type_info); stores FnDeltaSingleQ vtable, frees 3 buffers, frees 0x30. NOTE: lies after the type_info at 0x26b368, outside this window's address range."
+   ]
+  },
+  {
+   "xbox": "0x002717d8",
+   "expect": "FUN_002717d8",
+   "name": "EAGLAnim::FnDeltaF1::SetAnimMemoryMap",
+   "sheet_name": "EAGLAnim::FnDeltaF1::SetAnimMemoryMap(EAGLAnim::AnimMemoryMap *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6646: window review: FnDeltaF1 vtable 0x3b1180 SetAnimMemoryMap slot: stores map at +0xc, resets cached indices."
+   ]
+  },
+  {
+   "xbox": "0x002717f0",
+   "expect": "FUN_002717f0",
+   "name": "EAGLAnim::FnDeltaF1::GetLength",
+   "sheet_name": "EAGLAnim::FnDeltaF1::GetLength(float &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6647: window review: FnDeltaF1 vtable GetLength slot: frame count into *param_2, returns 1."
+   ]
+  },
+  {
+   "xbox": "0x00271830",
+   "expect": "FUN_00271830",
+   "name": "EAGLAnim::FnDeltaF1::Eval",
+   "sheet_name": "EAGLAnim::FnDeltaF1::Eval(float, float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6648: window review: FnDeltaF1 vtable Eval slot (slot 3)."
+   ]
+  },
+  {
+   "xbox": "0x00271860",
+   "expect": "FUN_00271860",
+   "name": "EAGLAnim::FnDeltaF1::EvalWeights",
+   "sheet_name": "EAGLAnim::FnDeltaF1::EvalWeights(float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6649: window review: FnDeltaF1 vtable EvalWeights slot (the FnAnim::EvalWeights position in base vtables)."
+   ]
+  },
+  {
+   "xbox": "0x00271890",
+   "expect": "FUN_00271890",
+   "name": "EAGLAnim::FnDeltaF1::EvalVel2D",
+   "sheet_name": "EAGLAnim::FnDeltaF1::EvalVel2D(float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6650: window review: FnDeltaF1 vtable EvalVel2D slot (the FnAnim::EvalVel2D position)."
+   ]
+  },
+  {
+   "xbox": "0x002718c0",
+   "expect": "FUN_002718c0",
+   "name": "EAGLAnim::FnEventBlender::Eval",
+   "sheet_name": "EAGLAnim::FnEventBlender::Eval(float, float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6651: window review: Eval slot of FnEventBlender vtable 0x3b1570 (slot 0 = ~FnEventBlender); blends two child anims by time window like AUF."
+   ]
+  },
+  {
+   "xbox": "0x00275670",
+   "expect": "FUN_00275670",
+   "name": "EAGLAnim::FnDeltaLerpChan::~FnDeltaLerpChan",
+   "sheet_name": "EAGLAnim::FnDeltaLerpChan::~FnDeltaLerpChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6758: window review: Slot 1 of FnDeltaLerpChan vtable 0x3b2580 (slot 0 = FnDeltaLerpChan type_info); inlined base dtor stores FnDeltaChan vtable, frees 0x18."
+   ]
+  },
+  {
+   "xbox": "0x00275b80",
+   "expect": "FUN_00275b80",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_new",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6785: window review: eagl_alloc with string 'EAGLAnim::FnKeyDeltaChan new'."
+   ]
+  },
+  {
+   "xbox": "0x00275ba8",
+   "expect": "FUN_00275ba8",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_new",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::operator new(unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6786: window review: eagl_alloc with the caller's name, between the 'new' and 'new[]' string anchors."
+   ]
+  },
+  {
+   "xbox": "0x00275bd0",
+   "expect": "FUN_00275bd0",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_delete",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6787: window review: eagl_free, between the 'new' and 'new[]' string anchors."
+   ]
+  },
+  {
+   "xbox": "0x00275bf8",
+   "expect": "FUN_00275bf8",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6788: window review: eagl_alloc with string 'EAGLAnim::FnKeyDeltaChan new[]'."
+   ]
+  },
+  {
+   "xbox": "0x00275c20",
+   "expect": "FUN_00275c20",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::operator new [](unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6789: window review: eagl_alloc with the caller's name, after the 'new[]' anchor."
+   ]
+  },
+  {
+   "xbox": "0x00275c48",
+   "expect": "FUN_00275c48",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::operator delete [](void *, unsigned i",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6790: window review: eagl_free, after the 'new[]' anchor."
+   ]
+  },
+  {
+   "xbox": "0x00275c70",
+   "expect": "FUN_00275c70",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_new",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::operator new(unsigned int, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6791: window review: Returns param_2 (placement new); block pattern ret/empty/ret/empty matches new/delete/new[]/delete[], order decides new vs new[]."
+   ]
+  },
+  {
+   "xbox": "0x00275c78",
+   "expect": "FUN_00275c78",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_delete",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::operator delete(void *, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6792: window review: Empty 8-byte stub (placement delete); pattern plus order only."
+   ]
+  },
+  {
+   "xbox": "0x00275c80",
+   "expect": "FUN_00275c80",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::operator new [](unsigned int, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6793: window review: Returns param_2 (placement new[]); pattern plus order only."
+   ]
+  },
+  {
+   "xbox": "0x00275c88",
+   "expect": "FUN_00275c88",
+   "name": "EAGLAnim::FnKeyDeltaChan::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::operator delete [](void *, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6794: window review: Empty 8-byte stub (placement delete[]); pattern plus order only."
+   ]
+  },
+  {
+   "xbox": "0x00275c90",
+   "expect": "FUN_00275c90",
+   "name": "EAGLAnim::FnKeyDeltaChan::FnKeyDeltaChan",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::FnKeyDeltaChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6795: window review: Constructor storing vtable 0x3b2440, whose slot 0 is FnKeyDeltaChan type_info and slot 1 ~FnKeyDeltaChan; no callers (abstract base)."
+   ]
+  },
+  {
+   "xbox": "0x00275cd0",
+   "expect": "FUN_00275cd0",
+   "name": "EAGLAnim::FnKeyLerpChan::~FnKeyLerpChan",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::~FnKeyLerpChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6796: window review: Slot 1 of FnKeyLerpChan vtable 0x3b23a0 (slot 0 = FnKeyLerpChan type_info); inlined FnKeyDeltaChan dtor as in AUF."
+   ]
+  },
+  {
+   "xbox": "0x00275de0",
+   "expect": "FUN_00275de0",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_new",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6798: window review: eagl_alloc with string 'EAGLAnim::FnKeyLerpChan new'."
+   ]
+  },
+  {
+   "xbox": "0x00275e08",
+   "expect": "FUN_00275e08",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_new",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::operator new(unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6799: window review: eagl_alloc with the caller's name, between the 'new' and 'new[]' string anchors."
+   ]
+  },
+  {
+   "xbox": "0x00275e30",
+   "expect": "FUN_00275e30",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_delete",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6800: window review: eagl_free, between the 'new' and 'new[]' string anchors."
+   ]
+  },
+  {
+   "xbox": "0x00275e58",
+   "expect": "FUN_00275e58",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6801: window review: eagl_alloc with string 'EAGLAnim::FnKeyLerpChan new[]'."
+   ]
+  },
+  {
+   "xbox": "0x00275e80",
+   "expect": "FUN_00275e80",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::operator new [](unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6802: window review: eagl_alloc with the caller's name, after the 'new[]' anchor."
+   ]
+  },
+  {
+   "xbox": "0x00275ea8",
+   "expect": "FUN_00275ea8",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::operator delete [](void *, unsigned in",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6803: window review: eagl_free, after the 'new[]' anchor."
+   ]
+  },
+  {
+   "xbox": "0x00275ed0",
+   "expect": "FUN_00275ed0",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_new",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::operator new(unsigned int, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6804: window review: Returns param_2 (placement new); block pattern ret/empty/ret/empty matches new/delete/new[]/delete[], order decides new vs new[]."
+   ]
+  },
+  {
+   "xbox": "0x00275ed8",
+   "expect": "FUN_00275ed8",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_delete",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::operator delete(void *, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6805: window review: Empty 8-byte stub (placement delete); pattern plus order only."
+   ]
+  },
+  {
+   "xbox": "0x00275ee0",
+   "expect": "FUN_00275ee0",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::operator new [](unsigned int, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6806: window review: Returns param_2 (placement new[]); pattern plus order only."
+   ]
+  },
+  {
+   "xbox": "0x00275ee8",
+   "expect": "FUN_00275ee8",
+   "name": "EAGLAnim::FnKeyLerpChan::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::operator delete [](void *, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6807: window review: Empty 8-byte stub (placement delete[]); pattern plus order only."
+   ]
+  },
+  {
+   "xbox": "0x00275ef0",
+   "expect": "FUN_00275ef0",
+   "name": "EAGLAnim::FnKeyLerpChan::FnKeyLerpChan",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::FnKeyLerpChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6808: window review: Constructor storing FnKeyLerpChan vtable 0x3b23a0 (also used by NewFnAnim), as AUF ctor."
+   ]
+  },
+  {
+   "xbox": "0x00275f38",
+   "expect": "FUN_00275f38",
+   "name": "EAGLAnim::FnKeyQuatChan::~FnKeyQuatChan",
+   "sheet_name": "EAGLAnim::FnKeyQuatChan::~FnKeyQuatChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6809: window review: Slot 1 of FnKeyQuatChan vtable 0x3b2300 (slot 0 = FnKeyQuatChan type_info); inlined FnKeyDeltaChan dtor."
+   ]
+  },
+  {
+   "xbox": "0x00277758",
+   "expect": "FUN_00277758",
+   "name": "EAGLAnim::FnPhaseChan::SetAnimMemoryMap",
+   "sheet_name": "EAGLAnim::FnPhaseChan::SetAnimMemoryMap(EAGLAnim::AnimMemoryMap",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6852: window review: Same body as AUF FnPhaseChan::SetAnimMemoryMap: store map, count from +6, flag bits 8/0x10/0x20/0x40 select 1/2/4/8."
+   ]
+  },
+  {
+   "xbox": "0x002777b8",
+   "expect": "FUN_002777b8",
+   "name": "EAGLAnim::FnRunBlender::~FnRunBlender",
+   "sheet_name": "EAGLAnim::FnRunBlender::~FnRunBlender(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6853: window review: Stores FnRunBlender vtable, releases child anims and scratch buffer (FreeBuffer) as AUF dtor."
+   ]
+  },
+  {
+   "xbox": "0x002779e0",
+   "expect": "FUN_002779e0",
+   "name": "EAGLAnim::FnRunBlender::EvalSQT",
+   "sheet_name": "EAGLAnim::FnRunBlender::EvalSQT(float, float *, EAGLAnim::BoneM",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6854: window review: FnRunBlender vtable EvalSQT slot; calls SetWeight(0) when uninitialised, then cycle alignment, like AUF EvalSQT."
+   ]
+  },
+  {
+   "xbox": "0x00277c08",
+   "expect": "FUN_00277c08",
+   "name": "EAGLAnim::FnRunBlender::SetWeight",
+   "sheet_name": "EAGLAnim::FnRunBlender::SetWeight(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6855: window review: Clamps weight index to count-2 and creates anims via NewFnAnim; called by EvalSQT/EvalVel2D, as AUF SetWeight."
+   ]
+  },
+  {
+   "xbox": "0x002781c8",
+   "expect": "FUN_002781c8",
+   "name": "EAGLAnim::FnRunBlender::SetAnims",
+   "sheet_name": "EAGLAnim::FnRunBlender::SetAnims(EAGLAnim::Skeleton *, int, EAG",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6856: window review: Takes skeleton (+0x34) and count, allocates scratch buffers and creates child FnAnims."
+   ]
+  },
+  {
+   "xbox": "0x00278b48",
+   "expect": "FUN_00278b48",
+   "name": "EAGLAnim::FnRunBlender::AlignVel",
+   "sheet_name": "EAGLAnim::FnRunBlender::AlignVel(float *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6861: window review: Rotates a 2D vector by the quaternion at +0x58; called from EvalVel2D."
+   ]
+  },
+  {
+   "xbox": "0x0027a448",
+   "expect": "FUN_0027a448",
+   "name": "EAGLAnim::FnTurnBlender::AlignVel",
+   "sheet_name": "EAGLAnim::FnTurnBlender::AlignVel(float *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6898: window review: Rotates a 2D vector by the quaternion at +0x48; called from FnTurnBlender EvalVel2D."
+   ]
+  },
+  {
+   "xbox": "0x00259560",
+   "expect": "FUN_00259560",
+   "name": "MOUSE_init",
+   "sheet_name": "MOUSE_init",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7063: window review: Initialises mouse globals (position, dims 0x200 x 0x1c0, clears 0x21c state), calls the pad init; size 0x90 exact."
+   ]
+  },
+  {
+   "xbox": "0x002595f0",
+   "expect": "FUN_002595f0",
+   "name": "MOUSE_restore",
+   "sheet_name": "MOUSE_restore",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7064: window review: 8-byte function clearing one global right after MOUSE_init; size 0x8 exact."
+   ]
+  },
+  {
+   "xbox": "0x002a73b0",
+   "expect": "FUN_002a73b0",
+   "name": "fiprintf",
+   "sheet_name": "fiprintf",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7542: window review: Varargs wrapper calling vfiprintf, called from __assert."
+   ]
+  },
+  {
+   "xbox": "0x002a73e8",
+   "expect": "FUN_002a73e8",
+   "name": "malloc",
+   "sheet_name": "malloc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7545: window review: _malloc_r(_impure_ptr, n); 0x28 exact."
+   ]
+  },
+  {
+   "xbox": "0x002a7410",
+   "expect": "FUN_002a7410",
+   "name": "free",
+   "sheet_name": "free",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7546: window review: Calls _free_r(_impure_ptr, p); sheet 0x268 = this 0x10 + the static extend-top 0x258."
+   ]
+  },
+  {
+   "xbox": "0x002b2268",
+   "expect": "FUN_002b2268",
+   "name": "_read_r",
+   "sheet_name": "_read_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7640: window review: errno=0; read(); on -1 copies errno into the reent struct: newlib _read_r."
+   ]
+  },
+  {
+   "xbox": "0x002b22c8",
+   "expect": "FUN_002b22c8",
+   "name": "_realloc_r",
+   "sheet_name": "_realloc_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7651: window review: realloc(NULL) -> _malloc_r, malloc lock/unlock, memcpy; sheet 0x598 = 0x570 + 0x28 alarm helper."
+   ]
+  },
+  {
+   "xbox": "0x002b2860",
+   "expect": "FUN_002b2860",
+   "name": "sceCdDelayThread",
+   "sheet_name": "sceCdDelayThread",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7653: window review: CreateSema, SetAlarm, WaitSema, DeleteSema; 0x68 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b28c8",
+   "expect": "FUN_002b28c8",
+   "name": "sceCdCallback",
+   "sheet_name": "sceCdCallback",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7654: window review: Swaps in the CD callback under DIntr/EIntr, returns the old one; 0x58 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b2920",
+   "expect": "FUN_002b2920",
+   "name": "_sceCd_cd_callback",
+   "sheet_name": "_sceCd_cd_callback",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7655: window review: Interrupt-side CD callback: records status, iSignalSema; 0xa0 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b29c0",
+   "expect": "FUN_002b29c0",
+   "name": "_Cdvd_cbLoop",
+   "sheet_name": "_Cdvd_cbLoop",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7656: window review: Callback thread loop with the 'sceCdCbfunc=' string; 0xc0 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b2a80",
+   "expect": "FUN_002b2a80",
+   "name": "sceCdInitEeCB",
+   "sheet_name": "sceCdInitEeCB",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7657: window review: Creates/starts the callback thread (body 0xd4, sheet 0xd8)."
+   ]
+  },
+  {
+   "xbox": "0x002b2d10",
+   "expect": "FUN_002b2d10",
+   "name": "sceCdPOffCallback",
+   "sheet_name": "sceCdPOffCallback",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7659: window review: Sets power-off callback and arg under DIntr, installs the SIF handler on first use; span 0x118 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b2e28",
+   "expect": "FUN_002b2e28",
+   "name": "sceCdSearchFile",
+   "sheet_name": "sceCdSearchFile",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7660: window review: Strings 'Libcdvd bind err CdSearchFile', 'search name %s'."
+   ]
+  },
+  {
+   "xbox": "0x002b3128",
+   "expect": "FUN_002b3128",
+   "name": "_sceCd_ncmd_prechk",
+   "sheet_name": "_sceCd_ncmd_prechk",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7661: window review: 'Ncmd fail sema cur_cmd' string; N-command precheck."
+   ]
+  },
+  {
+   "xbox": "0x002b3298",
+   "expect": "FUN_002b3298",
+   "name": "sceCdNcmdDiskReady",
+   "sheet_name": "sceCdNcmdDiskReady",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7662: window review: ncmd_prechk(2) then RPC 0xe returning the ready state; 0x98 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b3330",
+   "expect": "FUN_002b3330",
+   "name": "sceCdSync",
+   "sheet_name": "sceCdSync",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7663: window review: 'N cmd wait' polling loop."
+   ]
+  },
+  {
+   "xbox": "0x002b33d0",
+   "expect": "FUN_002b33d0",
+   "name": "sceCdSyncS",
+   "sheet_name": "sceCdSyncS",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7664: window review: 'S cmd wait' polling loop."
+   ]
+  },
+  {
+   "xbox": "0x002b3440",
+   "expect": "FUN_002b3440",
+   "name": "_sceCd_scmd_prechk",
+   "sheet_name": "_sceCd_scmd_prechk",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7665: window review: 'Scmd fail sema cur_cmd' string; S-command precheck."
+   ]
+  },
+  {
+   "xbox": "0x002b35b0",
+   "expect": "FUN_002b35b0",
+   "name": "sceCdInit",
+   "sheet_name": "sceCdInit",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7666: window review: 'Libcdvd bind err %d CD_Init' and 'Libcdvd Exit' strings; 0x2e0 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b3890",
+   "expect": "FUN_002b3890",
+   "name": "sceCdDiskReady",
+   "sheet_name": "sceCdDiskReady",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7667: window review: 'DiskReady 0' / 'DiskReady ended' strings; 0x1f8 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b3a88",
+   "expect": "FUN_002b3a88",
+   "name": "sceCdMmode",
+   "sheet_name": "sceCdMmode",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7668: window review: S-command 0x22 with one argument (media mode); 0xc8 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b3b50",
+   "expect": "FUN_002b3b50",
+   "name": "sceCdRead",
+   "sheet_name": "sceCdRead",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7669: window review: 'call cdread cmd' / 'cdread end' strings."
+   ]
+  },
+  {
+   "xbox": "0x002b3d30",
+   "expect": "FUN_002b3d30",
+   "name": "sceCdGetToc",
+   "sheet_name": "sceCdGetToc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7670: window review: N-command into a 0x810-byte buffer (TOC); 0x290 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b3fc0",
+   "expect": "FUN_002b3fc0",
+   "name": "sceCdStop",
+   "sheet_name": "sceCdStop",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7671: window review: N-command with async callback after the disk-ready check; 0xb0 exact, in sheet order."
+   ]
+  },
+  {
+   "xbox": "0x002b4070",
+   "expect": "FUN_002b4070",
+   "name": "sceCdGetDiskType",
+   "sheet_name": "sceCdGetDiskType",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7672: window review: S-command RPC 3 returning one word; 0x98 exact, in sheet order."
+   ]
+  },
+  {
+   "xbox": "0x002b4108",
+   "expect": "FUN_002b4108",
+   "name": "sceCdGetError",
+   "sheet_name": "sceCdGetError",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7673: window review: S-command RPC 4 returning -1 on failure; sheet 0xb0 = 0x98 + 0x18 static VU0 helper."
+   ]
+  },
+  {
+   "xbox": "0x002b41b8",
+   "expect": "FUN_002b41b8",
+   "name": "sceDevVu0Reset",
+   "sheet_name": "sceDevVu0Reset",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7675: window review: Sets FBRST bit 1 (VU0 reset) with ctc2; 0x18 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b41d0",
+   "expect": "FUN_002b41d0",
+   "name": "sceDevVu0Pause",
+   "sheet_name": "sceDevVu0Pause",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7676: window review: If VU0 is running, sets the FBRST force-break bit; 0x60 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b4230",
+   "expect": "FUN_002b4230",
+   "name": "sceDevVu0Continue",
+   "sheet_name": "sceDevVu0Continue",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7677: window review: If stopped, Exec(GetTpc()); body 0x50 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b4340",
+   "expect": "FUN_002b4340",
+   "name": "sceDevVu0Exec",
+   "sheet_name": "sceDevVu0Exec",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7682: window review: ctc2 CMSAR0 + vcallmsr; 0x10 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b4350",
+   "expect": "FUN_002b4350",
+   "name": "sceDevVu0GetTpc",
+   "sheet_name": "sceDevVu0GetTpc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7683: window review: Reads TPC (cfc2) & 0xffff; 0x10 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b4360",
+   "expect": "FUN_002b4360",
+   "name": "sceDevVu0GetCnd",
+   "sheet_name": "sceDevVu0GetCnd",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7684: window review: Saves VU0 control registers into buffer +0x200; 0xe0 exact."
+   ]
+  },
+  {
+   "xbox": "0x002b4440",
+   "expect": "FUN_002b4440",
+   "name": "sceDevVu0PutCnd",
+   "sheet_name": "sceDevVu0PutCnd",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7685: window review: Restores VU0 state from the buffer (repeated lqc2); span 0x228 exact including the following helpers."
+   ]
+  },
+  {
+   "xbox": "0x002b4b98",
+   "expect": "FUN_002b4b98",
+   "name": "sceDevVif0Continue",
+   "sheet_name": "sceDevVif0Continue",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7700: window review: If VIF0 is stalled, writes FBRST=8 (STC); 0x40 slot."
+   ]
+  },
+  {
+   "xbox": "0x002b7848",
+   "expect": "FUN_002b7848",
+   "name": "InitAlarm",
+   "sheet_name": "InitAlarm",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7901: window review: Starts right after iDisableDmac's 0x88 span and ends at InitThread (0x1b0 exact); called by _InitSys just before InitThread."
+   ]
+  },
+  {
+   "xbox": "0x002b9678",
+   "expect": "FUN_002b9678",
+   "name": "sceSifGetOtherData",
+   "sheet_name": "sceSifGetOtherData",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7930: window review: Allocates a packet, fills src/dst/size, sends the SIF cmd and waits; span 0x258 exact from the end of sceSifExitRpc."
+   ]
+  },
+  {
+   "xbox": "0x002be718",
+   "expect": "FUN_002be718",
+   "name": "_InitSys",
+   "sheet_name": "_InitSys",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7996: window review: Calls sema init, InitAlarm, InitThread, InitExecPS2, InitTLBFunctions; called from entry."
+   ]
+  },
+  {
+   "xbox": "0x002be828",
+   "expect": "FUN_002be828",
+   "name": "InitExecPS2",
+   "sheet_name": "InitExecPS2",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7998: window review: Third init call of _InitSys (OSD config, syscall patching); sheet span 0xb8 ends at 0x2be8e0."
+   ]
+  },
+  {
+   "xbox": "0x002c8cf0",
+   "expect": "FUN_002c8cf0",
+   "name": "scePadPortClose",
+   "sheet_name": "scePadPortClose",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8109: window review: If the port is open, RPC close command (0xe) and clears the open flag; span 0x118 including the static frame helper."
+   ]
+  },
+  {
+   "xbox": "0x002c9078",
+   "expect": "FUN_002c9078",
+   "name": "scePadInfoAct",
+   "sheet_name": "scePadInfoAct",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8116: window review: Checks the pad is stable, returns the actuator count (+0x6a) for -1 or per-actuator info; body 0x120 exact."
+   ]
+  },
+  {
+   "xbox": "0x002cb2f8",
+   "expect": "FUN_002cb2f8",
+   "name": "checksentinel",
+   "sheet_name": "checksentinel(MEMBLOCK *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8162: window review: Same logic as AUF checksentinel: 'BS'/'BF'/'BM' tags, 0x8000/0x4000 flags, 'BEND' sentinel, error codes 1-4."
+   ]
+  },
+  {
+   "xbox": "0x002d0aa8",
+   "expect": "FUN_002d0aa8",
+   "name": "rrandom",
+   "sheet_name": "rrandom(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8307: window review: random() scaled to a float in [0,1), as AUF rrandom."
+   ]
+  },
+  {
+   "xbox": "0x002d0b08",
+   "expect": "FUN_002d0b08",
+   "name": "BytesToCoord",
+   "sheet_name": "BytesToCoord(unsigned int, COORD3 *, COORD3 *, COORD3 *, COORD3",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8308: window review: Unpacks 3 colour bytes into a COORD3 scaled by 1/255."
+   ]
+  },
+  {
+   "xbox": "0x002d0c48",
+   "expect": "FUN_002d0c48",
+   "name": "BytesToCoord",
+   "sheet_name": "BytesToCoord(unsigned int, COORD4 *, COORD4 *, COORD4 *, COORD4",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8309: window review: Unpacks 4 bytes into a COORD4 scaled by 1/255, as AUF BytesToCoord(COORD4)."
+   ]
+  },
+  {
+   "xbox": "0x002d0db8",
+   "expect": "FUN_002d0db8",
+   "name": "ValidateMatrix",
+   "sheet_name": "ValidateMatrix(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8310: window review: Tests a matrix's rows (dpcmp); 0x198 exact."
+   ]
+  },
+  {
+   "xbox": "0x002d0f50",
+   "expect": "FUN_002d0f50",
+   "name": "BuildSRT",
+   "sheet_name": "BuildSRT(MATRIX4 &, float, float, float, float, float, float, f",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8311: window review: Angles/360, floorf, VU0 sin/cos into a matrix from scale/rotation/translation floats; 0x1d8 exact."
+   ]
+  },
+  {
+   "xbox": "0x002d2ec8",
+   "expect": "FUN_002d2ec8",
+   "name": "CalculateXZConvexHull",
+   "sheet_name": "CalculateXZConvexHull(unsigned int, COORD4 *, COORD4 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8338: window review: At the sheet's exact address; allocates point arrays and uses PTDir to build a convex hull."
+   ]
+  },
+  {
+   "xbox": "0x002d8368",
+   "expect": "FUN_002d8368",
+   "name": "UFileLoader::m_bInitialized_global_ctors",
+   "sheet_name": "global constructors keyed to UFileLoader::m_bInitialized",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8471: window review: Calls the static init with (1, 0xffff); in the ctor list."
+   ]
+  },
+  {
+   "xbox": "0x002d8388",
+   "expect": "FUN_002d8388",
+   "name": "UFileLoader::m_bInitialized_global_dtors",
+   "sheet_name": "global destructors keyed to UFileLoader::m_bInitialized",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8472: window review: Calls the static init with (0, 0xffff); in the dtor list."
+   ]
+  },
+  {
+   "xbox": "0x002d8c38",
+   "expect": "FUN_002d8c38",
+   "name": "DecompressQuaternion",
+   "sheet_name": "DecompressQuaternion(unsigned int *, COORD4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8498: window review: Masked ints -> xyzrottom3 -> m3toquat."
+   ]
+  },
+  {
+   "xbox": "0x002d8d58",
+   "expect": "FUN_002d8d58",
+   "name": "CompressQuaternion",
+   "sheet_name": "CompressQuaternion(COORD4 &, unsigned int *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8499: window review: quattom3 -> m3toxyzrot -> rounded masked ints."
+   ]
+  },
+  {
+   "xbox": "0x002d8e78",
+   "expect": "FUN_002d8e78",
+   "name": "GetIntBitField",
+   "sheet_name": "GetIntBitField(void *, unsigned int, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8500: window review: Reads an n-bit field at a bit offset; 0x78 exact."
+   ]
+  },
+  {
+   "xbox": "0x002d8ef0",
+   "expect": "FUN_002d8ef0",
+   "name": "SetIntBitField",
+   "sheet_name": "SetIntBitField(unsigned int, void *, unsigned int, unsigned int",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8501: window review: Writes an n-bit field at a bit offset; 0x98 exact."
+   ]
+  },
+  {
+   "xbox": "0x002d8f88",
+   "expect": "FUN_002d8f88",
+   "name": "GetFloatBitField",
+   "sheet_name": "GetFloatBitField(void *, unsigned int, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8502: window review: GetIntBitField / (2^n-1) as a float."
+   ]
+  },
+  {
+   "xbox": "0x002d9000",
+   "expect": "FUN_002d9000",
+   "name": "SetFloatBitField",
+   "sheet_name": "SetFloatBitField(float, void *, unsigned int, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8503: window review: float*(2^n-1) -> SetIntBitField."
+   ]
+  },
+  {
+   "xbox": "0x002d9070",
+   "expect": "FUN_002d9070",
+   "name": "LString::SplitAtFirstOccurence",
+   "sheet_name": "LString::SplitAtFirstOccurence(int, LString *, LString *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8505: window review: Scans from a start index for a char and splits into two LStrings."
+   ]
+  },
+  {
+   "xbox": "0x002d90e8",
+   "expect": "FUN_002d90e8",
+   "name": "LString::SplitAtLastOccurence",
+   "sheet_name": "LString::SplitAtLastOccurence(int, LString *, LString *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8506: window review: Scans backwards for a char and splits."
+   ]
+  },
+  {
+   "xbox": "0x002d9178",
+   "expect": "FUN_002d9178",
+   "name": "LString::SplitAtIndex",
+   "sheet_name": "LString::SplitAtIndex(int, LString *, LString *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8507: window review: Splits into two LStrings at an index."
+   ]
+  },
+  {
+   "xbox": "0x002d91c0",
+   "expect": "FUN_002d91c0",
+   "name": "LString::AsString",
+   "sheet_name": "LString::AsString(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8508: window review: strncpy into a static buffer and terminates; called by Name()."
+   ]
+  },
+  {
+   "xbox": "0x002d9210",
+   "expect": "FUN_002d9210",
+   "name": "EncryptDecrypt",
+   "sheet_name": "EncryptDecrypt(char *, int, char *, char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8509: window review: Key table 0x359, 0xbb7, ... as AUF EncryptDecrypt; called from IniFiles."
+   ]
+  },
+  {
+   "xbox": "0x002e67e0",
+   "expect": "FUN_002e67e0",
+   "name": "ATrafficVehicle::GetName",
+   "sheet_name": "ATrafficVehicle::GetName(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8758: window review: ATrafficVehicle vtable slot after IsOneShot; returns this+name offset like AUF GetName."
+   ]
+  },
+  {
+   "xbox": "0x002e6a20",
+   "expect": "FUN_002e6a20",
+   "name": "ATrafficVehicle::IsTracked",
+   "sheet_name": "ATrafficVehicle::IsTracked(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8761: window review: ATrafficVehicle vtable 0x3c2e38 slot where the other vtables hold ASceneObj::IsTracked; returns state==5."
+   ]
+  },
+  {
+   "xbox": "0x002e7018",
+   "expect": "FUN_002e7018",
+   "name": "UDevCons::AbortMessage",
+   "sheet_name": "UDevCons::AbortMessage(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8773: window review: 8-byte empty function right before the ASubmersible ctor, passed as the error callback in ASystem::SetOpts."
+   ]
+  },
+  {
+   "xbox": "0x002f45e0",
+   "expect": "FUN_002f45e0",
+   "name": "_List_base<AMix_*,_allocator<AMix_*>_>::clear",
+   "sheet_name": "_List_base<AMix *, allocator<AMix *> >::clear(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8974: window review: Walks the list freeing 0xc nodes; used by Clear and the gList static init."
+   ]
+  },
+  {
+   "xbox": "0x00306cb8",
+   "expect": "FUN_00306cb8",
+   "name": "SHAPE_destroy",
+   "sheet_name": "SHAPE_destroy",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9367: window review: Clears *shape and calls MEM_free; called by frame destructors; at the sheet's exact address."
+   ]
+  },
+  {
+   "xbox": "0x00306e28",
+   "expect": "FUN_00306e28",
+   "name": "SHAPE_loadfile",
+   "sheet_name": "SHAPE_loadfile",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9369: window review: Calls loader 0x306ce0 with a2=1, as AUF SHAPE_loadfile."
+   ]
+  },
+  {
+   "xbox": "0x00306e48",
+   "expect": "FUN_00306e48",
+   "name": "SHAPE_loadfilez",
+   "sheet_name": "SHAPE_loadfilez",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9370: window review: Calls the loader with a2=0, as AUF SHAPE_loadfilez."
+   ]
+  },
+  {
+   "xbox": "0x00306e68",
+   "expect": "FUN_00306e68",
+   "name": "SHAPE_version",
+   "sheet_name": "SHAPE_version",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9371: window review: Parses a 3-digit version from header bytes 0xd..0xf; 0x88 exact."
+   ]
+  },
+  {
+   "xbox": "0x003245a0",
+   "expect": "FUN_003245a0",
+   "name": "sceIpuInit",
+   "sheet_name": "sceIpuInit",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9639: window review: Stops IPU DMA, restores the FIFO, IPU_CTRL reset, IPU_CMD=0; sheet address and size 0x238 exact."
+   ]
+  },
+  {
+   "xbox": "0x00122210",
+   "expect": "(none)",
+   "name": "AICharacterEnemySunroof::GetCarPtr",
+   "sheet_name": "AICharacterEnemySunroof::GetCarPtr(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 585: window review: Not a function yet: 8 bytes after the type_info fn, 'jr ra; lw v0,0x150(a0)' returns the car pointer the GetRotPos pair uses."
+   ]
+  },
+  {
+   "xbox": "0x001237f0",
+   "expect": "(none)",
+   "name": "AICharacterHands::GetRotPos",
+   "sheet_name": "AICharacterHands::GetRotPos(int, MATRIX4 &)",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 613: window review: Not a function yet (inside 0x1237d0 body): 0x88 exact, copies a 64-byte matrix like AUF and like the placed 3-arg sibling at 0x123878."
+   ]
+  },
+  {
+   "xbox": "0x00124f30",
+   "expect": "(none)",
+   "name": "AICharacterHands::SetZoomButton",
+   "sheet_name": "AICharacterHands::SetZoomButton(bool)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 637: window review: Not a function yet: static, stores the bool arg to global 0x3276e0; 0x10 exact."
+   ]
+  },
+  {
+   "xbox": "0x00124f40",
+   "expect": "(none)",
+   "name": "AICharacterHands::Get",
+   "sheet_name": "AICharacterHands::Get(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 638: window review: Not a function yet: static, returns fgHandObj (0x327670, the global GetAimFraction reads); 0x10 exact."
+   ]
+  },
+  {
+   "xbox": "0x00124f50",
+   "expect": "(none)",
+   "name": "AICharacterHands::AreVisible",
+   "sheet_name": "AICharacterHands::AreVisible(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 639: window review: Not a function yet: 8-byte member getter (+0x164) between Get and the global ctor."
+   ]
+  },
+  {
+   "xbox": "0x0013bdc0",
+   "expect": "(none)",
+   "name": "AIHelicopter::GetType",
+   "sheet_name": "AIHelicopter::GetType(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 896: window review: Not a function yet: lw +0x70 getter, paired with the setter 8 bytes on."
+   ]
+  },
+  {
+   "xbox": "0x0013bdc8",
+   "expect": "(none)",
+   "name": "AIHelicopter::SetType",
+   "sheet_name": "AIHelicopter::SetType(AIHelicopter::EType)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 897: window review: Not a function yet: sw +0x70 setter."
+   ]
+  },
+  {
+   "xbox": "0x0013bdd0",
+   "expect": "(none)",
+   "name": "AIHelicopter::GetNavigateMode",
+   "sheet_name": "AIHelicopter::GetNavigateMode(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 898: window review: Not a function yet: lw +0x74 getter."
+   ]
+  },
+  {
+   "xbox": "0x0013bdd8",
+   "expect": "(none)",
+   "name": "AIHelicopter::SetNavigateMode",
+   "sheet_name": "AIHelicopter::SetNavigateMode(AICommandType::ENavigate)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 899: window review: Not a function yet: sw +0x74 setter."
+   ]
+  },
+  {
+   "xbox": "0x0013bde0",
+   "expect": "(none)",
+   "name": "AIHelicopter::GetTargetMode",
+   "sheet_name": "AIHelicopter::GetTargetMode(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 900: window review: Not a function yet: lw +0x78 getter."
+   ]
+  },
+  {
+   "xbox": "0x0013bde8",
+   "expect": "(none)",
+   "name": "AIHelicopter::SetTargetMode",
+   "sheet_name": "AIHelicopter::SetTargetMode(AICommandType::ETarget)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 901: window review: Not a function yet: sw +0x78 setter."
+   ]
+  },
+  {
+   "xbox": "0x0013bdf0",
+   "expect": "(none)",
+   "name": "AIHelicopter::GetAttackMode",
+   "sheet_name": "AIHelicopter::GetAttackMode(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 902: window review: Not a function yet: lw +0x7c getter."
+   ]
+  },
+  {
+   "xbox": "0x0013bdf8",
+   "expect": "(none)",
+   "name": "AIHelicopter::SetAttackMode",
+   "sheet_name": "AIHelicopter::SetAttackMode(AICommandType::EAttackMode)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 903: window review: Not a function yet: sw +0x7c setter."
+   ]
+  },
+  {
+   "xbox": "0x0013be40",
+   "expect": "(none)",
+   "name": "AIHelicopter::SetAttackedPosition",
+   "sheet_name": "AIHelicopter::SetAttackedPosition(COORD3 &)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 906: window review: Not a function yet: 0x20, copies a COORD3 into +0x90."
+   ]
+  },
+  {
+   "xbox": "0x0013be60",
+   "expect": "(none)",
+   "name": "AIHelicopter::SetTargetPosition",
+   "sheet_name": "AIHelicopter::SetTargetPosition(COORD3 &)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 907: window review: Not a function yet: 0x20, copies a COORD3 into +0xa0."
+   ]
+  },
+  {
+   "xbox": "0x0013be80",
+   "expect": "(none)",
+   "name": "AIHelicopter::GetHeliTargetPosition",
+   "sheet_name": "AIHelicopter::GetHeliTargetPosition(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 908: window review: Not a function yet: returns this+0x110."
+   ]
+  },
+  {
+   "xbox": "0x0013be88",
+   "expect": "(none)",
+   "name": "AIHelicopter::GetHeliBulletDir",
+   "sheet_name": "AIHelicopter::GetHeliBulletDir(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 909: window review: Not a function yet: returns this+0xf0."
+   ]
+  },
+  {
+   "xbox": "0x0013be90",
+   "expect": "(none)",
+   "name": "AIHelicopter::GetTargetBeacon",
+   "sheet_name": "AIHelicopter::GetTargetBeacon(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 910: window review: Not a function yet: lw +0x88 getter."
+   ]
+  },
+  {
+   "xbox": "0x0013be98",
+   "expect": "(none)",
+   "name": "AIHelicopter::SetPrimaryTarget",
+   "sheet_name": "AIHelicopter::SetPrimaryTarget(AIGroundVehicle *)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 911: window review: Not a function yet: sw +0x9c setter, paired with GetPrimaryTarget reading +0x9c."
+   ]
+  },
+  {
+   "xbox": "0x0013bea0",
+   "expect": "(none)",
+   "name": "AIHelicopter::GetPrimaryTarget",
+   "sheet_name": "AIHelicopter::GetPrimaryTarget(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 912: window review: Not a function yet: lw +0x9c getter, just before AIHelicopter_global_ctors."
+   ]
+  },
+  {
+   "xbox": "0x0013e3d8",
+   "expect": "(none)",
+   "name": "AIVehicle::GetVehicleType",
+   "sheet_name": "AIVehicle::GetVehicleType(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 950: window review: Not a function yet: lw +0 getter, paired with the setter after it."
+   ]
+  },
+  {
+   "xbox": "0x0013e3e0",
+   "expect": "(none)",
+   "name": "AIVehicle::SetVehicleType",
+   "sheet_name": "AIVehicle::SetVehicleType(AIVehicle::EVehicleType)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 951: window review: Not a function yet: sw +0 setter."
+   ]
+  },
+  {
+   "xbox": "0x0013e3e8",
+   "expect": "(none)",
+   "name": "AIVehicle::GetDriveToNav",
+   "sheet_name": "AIVehicle::GetDriveToNav(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 952: window review: Not a function yet: lw +0x54 getter."
+   ]
+  },
+  {
+   "xbox": "0x0013e3f0",
+   "expect": "(none)",
+   "name": "AIVehicle::SetActive",
+   "sheet_name": "AIVehicle::SetActive(bool)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 953: window review: Not a function yet: sw +0x58, paired with IsActive."
+   ]
+  },
+  {
+   "xbox": "0x0013e3f8",
+   "expect": "(none)",
+   "name": "AIVehicle::IsActive",
+   "sheet_name": "AIVehicle::IsActive(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 954: window review: Not a function yet: lw +0x58."
+   ]
+  },
+  {
+   "xbox": "0x0013e400",
+   "expect": "(none)",
+   "name": "AIVehicle::SetValidCommand",
+   "sheet_name": "AIVehicle::SetValidCommand(bool)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 955: window review: Not a function yet: sw +0x5c, paired with ValidCommand."
+   ]
+  },
+  {
+   "xbox": "0x0013e408",
+   "expect": "(none)",
+   "name": "AIVehicle::ValidCommand",
+   "sheet_name": "AIVehicle::ValidCommand(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 956: window review: Not a function yet: lw +0x5c."
+   ]
+  },
+  {
+   "xbox": "0x0013e410",
+   "expect": "(none)",
+   "name": "AIVehicle::GetControllerIdx",
+   "sheet_name": "AIVehicle::GetControllerIdx(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 957: window review: Not a function yet: lw +0x60, paired with the setter."
+   ]
+  },
+  {
+   "xbox": "0x0013e418",
+   "expect": "(none)",
+   "name": "AIVehicle::SetControllerIdx",
+   "sheet_name": "AIVehicle::SetControllerIdx(int)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 958: window review: Not a function yet: sw +0x60."
+   ]
+  },
+  {
+   "xbox": "0x0016ec40",
+   "expect": "(none)",
+   "name": "AttributeSystem::GetMetrics",
+   "sheet_name": "AttributeSystem::GetMetrics(unsigned int &, unsigned int &, uns",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2229: window review: Not a function yet: right after InitializeExtensionType, zeroes eight unsigned int& outputs (a1..t3 and a stack arg) - metrics stubbed to 0."
+   ]
+  },
+  {
+   "xbox": "0x0019efd0",
+   "expect": "(none)",
+   "name": "Smackable::GetTrigger",
+   "sheet_name": "Smackable::GetTrigger(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2845: window review: Not a function yet: 'jr ra; lw v0,0x7c(a0)' const getter between the real operator delete (0x19efb0) and the global ctor."
+   ]
+  },
+  {
+   "xbox": "0x001a4698",
+   "expect": "(none)",
+   "name": "RCamera::GetVelocity4",
+   "sheet_name": "RCamera::GetVelocity4(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2954: window review: Not a function yet: returns this+0x40 (velocity), 4-vector form first."
+   ]
+  },
+  {
+   "xbox": "0x001a46a0",
+   "expect": "(none)",
+   "name": "RCamera::GetVelocity",
+   "sheet_name": "RCamera::GetVelocity(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2955: window review: Not a function yet: returns this+0x40 (COORD3 form)."
+   ]
+  },
+  {
+   "xbox": "0x001a46a8",
+   "expect": "(none)",
+   "name": "RCamera::SetViewAngle",
+   "sheet_name": "RCamera::SetViewAngle(float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2956: window review: Not a function yet: 0x28 exact; stores the float to +0xa4 when > 2.0."
+   ]
+  },
+  {
+   "xbox": "0x001a46d0",
+   "expect": "(none)",
+   "name": "RCamera::GetViewAngle",
+   "sheet_name": "RCamera::GetViewAngle(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2957: window review: Not a function yet: lwc1 +0xa4, the field SetViewAngle writes."
+   ]
+  },
+  {
+   "xbox": "0x001a46d8",
+   "expect": "(none)",
+   "name": "RCamera::IsActive",
+   "sheet_name": "RCamera::IsActive(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2958: window review: Not a function yet: lw +0xa0 getter."
+   ]
+  },
+  {
+   "xbox": "0x001a46e0",
+   "expect": "(none)",
+   "name": "RCamera::GetPosition4",
+   "sheet_name": "RCamera::GetPosition4(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2959: window review: Not a function yet: returns this+0x30 (matrix row 3 = position)."
+   ]
+  },
+  {
+   "xbox": "0x001a46e8",
+   "expect": "(none)",
+   "name": "RCamera::GetPosition3",
+   "sheet_name": "RCamera::GetPosition3(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2960: window review: Not a function yet: returns this+0x30."
+   ]
+  },
+  {
+   "xbox": "0x001a46f0",
+   "expect": "(none)",
+   "name": "RCamera::GetForwardVec4",
+   "sheet_name": "RCamera::GetForwardVec4(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2961: window review: Not a function yet: returns this+0x20 (row 2 = forward)."
+   ]
+  },
+  {
+   "xbox": "0x001a46f8",
+   "expect": "(none)",
+   "name": "RCamera::GetForwardVec3",
+   "sheet_name": "RCamera::GetForwardVec3(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2962: window review: Not a function yet: returns this+0x20."
+   ]
+  },
+  {
+   "xbox": "0x001a4700",
+   "expect": "(none)",
+   "name": "RCamera::GetUpVec4",
+   "sheet_name": "RCamera::GetUpVec4(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2963: window review: Not a function yet: returns this+0x10 (row 1 = up)."
+   ]
+  },
+  {
+   "xbox": "0x001a4708",
+   "expect": "(none)",
+   "name": "RCamera::GetUpVec3",
+   "sheet_name": "RCamera::GetUpVec3(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2964: window review: Not a function yet: returns this+0x10."
+   ]
+  },
+  {
+   "xbox": "0x001a4710",
+   "expect": "(none)",
+   "name": "RCamera::GetRightVec4",
+   "sheet_name": "RCamera::GetRightVec4(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2965: window review: Not a function yet: returns this (row 0 = right)."
+   ]
+  },
+  {
+   "xbox": "0x001a4718",
+   "expect": "(none)",
+   "name": "RCamera::GetRightVec3",
+   "sheet_name": "RCamera::GetRightVec3(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2966: window review: Not a function yet: returns this."
+   ]
+  },
+  {
+   "xbox": "0x001abf80",
+   "expect": "(none)",
+   "name": "RRenderer::CalculateCompensatedDepthBias",
+   "sheet_name": "RRenderer::CalculateCompensatedDepthBias(float, float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3062: window review: Not a function yet: 0x18 exact float maths on (f12,f13) storing to *a0, right after ConfigureRes."
+   ]
+  },
+  {
+   "xbox": "0x001b1830",
+   "expect": "(none)",
+   "name": "RPathEngine::RPathHandle::SetCurrentPath",
+   "sheet_name": "RPathEngine::RPathHandle::SetCurrentPath(CARP::PathInfo *)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3193: window review: Not a function yet: sw a1,+0x98 - the path pointer GetParametricDuration dereferences."
+   ]
+  },
+  {
+   "xbox": "0x001b1858",
+   "expect": "(none)",
+   "name": "RPathEngine::RPathHandle::SetSpeed",
+   "sheet_name": "RPathEngine::RPathHandle::SetSpeed(float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3197: window review: Not a function yet: swc1 f12,+0xa4 float setter right before the placed SetThrottle."
+   ]
+  },
+  {
+   "xbox": "0x001c6298",
+   "expect": "(none)",
+   "name": "ActActorDatabase::SetActorCull",
+   "sheet_name": "ActActorDatabase::SetActorCull(int, bool, float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3483: window review: Not a function yet (inside the static-init body): 8-byte setter storing a1 at +0x54, passed as the set-cull callback by PerformCulling next to the ActActorDatabase getter."
+   ]
+  },
+  {
+   "xbox": "0x001d1de0",
+   "expect": "(none)",
+   "name": "RTextureContextManager::Get",
+   "sheet_name": "RTextureContextManager::Get(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3687: window review: Not a function yet (Ghidra folds it into type_info): returns fgThis at 0x333fe4, the global Init writes."
+   ]
+  },
+  {
+   "xbox": "0x001de660",
+   "expect": "(none)",
+   "name": "RFlockGoal::RFlockGoal",
+   "sheet_name": "RFlockGoal::RFlockGoal(RFlock *)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3968: window review: Hidden 0x10 function inside the 0x1de640 body: stores a1 into *this and returns this, directly before ~RFlockGoal at 0x1de670; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x001df728",
+   "expect": "(none)",
+   "name": "RFlockManager::Get",
+   "sheet_name": "RFlockManager::Get(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3994: window review: Hidden 0x10 function between the type_info fn and Init: returns the singleton pointer 0x334d48 that Init sets; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x001dfb78",
+   "expect": "(none)",
+   "name": "RGain::Get",
+   "sheet_name": "RGain::Get(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4006: window review: Hidden 0x10 function after the type_info fn: returns RGain::fgThis_RGain (0x334d4c); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x001e0860",
+   "expect": "(none)",
+   "name": "RLensFlareManager::Get",
+   "sheet_name": "RLensFlareManager::Get(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4021: window review: Hidden 0x10 function after the type_info fn: returns fgThis_RLensFlareManager (0x334d50); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00210480",
+   "expect": "(none)",
+   "name": "Util_Step",
+   "sheet_name": "Util_Step(int, int, int)",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 4781: window review: Hidden 0x28 function after the SWeaponManager ctor: integer version of AUF Util_Step (step a toward b by c, clamp); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x002104f0",
+   "expect": "(none)",
+   "name": "Util_Ramp",
+   "sheet_name": "Util_Ramp(float, float, float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4783: window review: Hidden 0x20 function inside the 0x2104a8 body: a*t + b*(1-t) ramp just before Util_Bound; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00220bc0",
+   "expect": "(none)",
+   "name": "InstanceAndDistance::lessThanByInstance",
+   "sheet_name": "InstanceAndDistance::lessThanByInstance(InstanceAndDistance &,",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4929: window review: Hidden 0x10 function inside the 0x220b88 body: a->inst < b->inst; its address is passed as the comparator by DrawPass/DrawWorldAtPoint; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00220bd0",
+   "expect": "(none)",
+   "name": "InstanceAndDistance::greaterThanByDistance",
+   "sheet_name": "InstanceAndDistance::greaterThanByDistance(InstanceAndDistance",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4930: window review: Hidden 0x24 function right after it: returns b->dist < a->dist (float at +4); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x0022f418",
+   "expect": "(none)",
+   "name": "GetCurtainCount",
+   "sheet_name": "GetCurtainCount(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5108: window review: Hidden 0x10 function in the 0x22f408 body: returns the curtain count global; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x0022f498",
+   "expect": "(none)",
+   "name": "TestCurtains",
+   "sheet_name": "TestCurtains(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5110: window review: Hidden empty 0x8 stub between CalcRadius and AddCurtain; the sheet row is also an 0x8 stub."
+   ]
+  },
+  {
+   "xbox": "0x0022f5e8",
+   "expect": "(none)",
+   "name": "CheckPositionAgainstActiveCurtains",
+   "sheet_name": "CheckPositionAgainstActiveCurtains(COORD4 &)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5113: window review: Hidden 0x38 function in the 0x22f5a8 body: same curtain test with only a COORD4 arg; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x0022f6d0",
+   "expect": "(none)",
+   "name": "WVisCurtain::Draw",
+   "sheet_name": "WVisCurtain::Draw(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5116: window review: Hidden empty 0x8 stub after the COORD4 ctor; the sheet row is also 0x8."
+   ]
+  },
+  {
+   "xbox": "0x00232088",
+   "expect": "(none)",
+   "name": "WWorldMath::Quatern_QuatToMat",
+   "sheet_name": "WWorldMath::Quatern_QuatToMat(COORD4 *, MATRIX3 *)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5145: window review: Hidden 0xa0 function inside the 0x231ff8 body: quaternion -> 3x3 matrix (x2 products, 1 - ...); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00237d18",
+   "expect": "(none)",
+   "name": "GGallery::LINE_SetState",
+   "sheet_name": "GGallery::LINE_SetState(GGallery::Keys *)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5261: window review: Hidden 0x78 function after FONT_Height (exact size): copies Keys fields into gallery state at +0x60 like FONT_SetState; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00237d90",
+   "expect": "(none)",
+   "name": "GGallery::LINE_Draw2D",
+   "sheet_name": "GGallery::LINE_Draw2D(float, float, GGallery::Lines *)",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5262: window review: Hidden 0xf8 function next (exact size), line drawing; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x0023a7d0",
+   "expect": "(none)",
+   "name": "GGirlieMaterial::GetShape",
+   "sheet_name": "GGirlieMaterial::GetShape(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5298: window review: Hidden 0x8 getter after the type_info fn: return *(this+0); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x0023a7d8",
+   "expect": "(none)",
+   "name": "GGirlieMaterial::GetTexture",
+   "sheet_name": "GGirlieMaterial::GetTexture(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5299: window review: Hidden 0x8 getter: return *(this+0x10); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x0023a7e0",
+   "expect": "(none)",
+   "name": "GGirlieMaterial::GetMaterial",
+   "sheet_name": "GGirlieMaterial::GetMaterial(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5300: window review: Hidden 0x8 getter: return *(this+0x20); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00244790",
+   "expect": "(none)",
+   "name": "GHud::GetHelpIconAndTextSpacing",
+   "sheet_name": "GHud::GetHelpIconAndTextSpacing(int, float, float, float, float",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5370: window review: Hidden 0x98 function (exact) inside the 0x2446d8 body (0xb8 + 0x98 = 0x150): loops over a count writing float spacing outputs; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00244c08",
+   "expect": "(none)",
+   "name": "GHud::DrawRadar2D",
+   "sheet_name": "GHud::DrawRadar2D(COORD2 &, bool, bool)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5373: window review: Hidden second empty 0x8 stub inside the 0x244c00 body, before DrawRadarArrow2D; sheet also 0x8."
+   ]
+  },
+  {
+   "xbox": "0x002514d8",
+   "expect": "(none)",
+   "name": "set_new_handler",
+   "sheet_name": "set_new_handler(void (*)(void))",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5642: window review: Hidden 0x10 function after 0x251360: swaps the global new-handler pointer and returns the old one; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x002514e8",
+   "expect": "(none)",
+   "name": "operator_new_array",
+   "sheet_name": "operator new [](unsigned int, void *)",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5643: window review: Hidden 0x8 function: return a1 (placement new); first of two identical, needs creating."
+   ]
+  },
+  {
+   "xbox": "0x002514f0",
+   "expect": "(none)",
+   "name": "operator_new",
+   "sheet_name": "operator new(unsigned int, void *)",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5644: window review: Hidden 0x8 function: return a1 (placement new), just before bad_alloc::what; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00284008",
+   "expect": "(none)",
+   "name": "EAGL::GeoPrimState::GetPrimitiveType",
+   "sheet_name": "EAGL::GeoPrimState::GetPrimitiveType(EAGL::PrimitiveType &) con",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5778: window review: Hidden 0x30 function (exact): reads the low 3 bits of +0x10, maps back through a table, stores to out; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00284088",
+   "expect": "(none)",
+   "name": "EAGL::GeoPrimState::GetDepthTestMethod",
+   "sheet_name": "EAGL::GeoPrimState::GetDepthTestMethod(EAGL::DepthTestMethod &)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5780: window review: Hidden 0x38 function (exact): reads bits 17-18 of +0x30, maps back, stores to out; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00285c80",
+   "expect": "(none)",
+   "name": "EAGL::Model::IsOn",
+   "sheet_name": "EAGL::Model::IsOn(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5810: window review: Hidden 0x10 function in the 0x285ba0 body: return this+0xc8 != 0; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00285c90",
+   "expect": "(none)",
+   "name": "EAGL::Model::On",
+   "sheet_name": "EAGL::Model::On(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5811: window review: Hidden 0x10 function: this+0xc8 = 1; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00285ca0",
+   "expect": "(none)",
+   "name": "EAGL::Model::Off",
+   "sheet_name": "EAGL::Model::Off(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5812: window review: Hidden 0x8 function: this+0xc8 = 0; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00285cf0",
+   "expect": "(none)",
+   "name": "EAGL::Model::Model",
+   "sheet_name": "EAGL::Model::Model(EAGL::Model &)",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5814: window review: Hidden 0x100 function (exact): copies another Model field by field, returns this; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00285df0",
+   "expect": "(none)",
+   "name": "EAGL::Model::Model",
+   "sheet_name": "EAGL::Model::Model(void)",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5815: window review: Hidden 0x98 function (exact): zero-initialises a Model with 1.0 scale entries; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00285eb8",
+   "expect": "(none)",
+   "name": "EAGL::Model::Link",
+   "sheet_name": "EAGL::Model::Link(EAGL::Morph *)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5817: window review: Hidden 0x8 function: this+0xd4 = morph, just before Model::Call; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00286a58",
+   "expect": "(none)",
+   "name": "EAGL::Model::Variable::IsModifiable",
+   "sheet_name": "EAGL::Model::Variable::IsModifiable(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5836: window review: Hidden 0x10 function after find_first: return (flags(+6) & 3) != 0; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00286a68",
+   "expect": "(none)",
+   "name": "EAGL::Model::Variable::CopyData",
+   "sheet_name": "EAGL::Model::Variable::CopyData(void *, void *, int)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5837: window review: Hidden 0xa0 function: copies n bytes src->dst in 32/8/1-byte chunks; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00291150",
+   "expect": "(none)",
+   "name": "EAGL::RenderContextExtension::GetBackBufferInfo",
+   "sheet_name": "EAGL::RenderContextExtension::GetBackBufferInfo(int *, int *, i",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5975: window review: Hidden 0x28 function (exact) in the 0x291130 body: writes three ints (+0x77c/+0x790/+0x788) to out params; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00291198",
+   "expect": "(none)",
+   "name": "EAGL::RenderContextExtension::GetZBuffer",
+   "sheet_name": "EAGL::RenderContextExtension::GetZBuffer(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5978: window review: Hidden 0x10 function in the 0x291188 body: returns context +0x840; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x002935b8",
+   "expect": "(none)",
+   "name": "EAGL::Transform::BuildIdentity",
+   "sheet_name": "EAGL::Transform::BuildIdentity(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6056: window review: Hidden 0x50 function (exact) after BuildTranslate: identity matrix; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00293608",
+   "expect": "(none)",
+   "name": "EAGL::Transform::BuildZero",
+   "sheet_name": "EAGL::Transform::BuildZero(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6057: window review: Hidden 0x50 function (exact): zero matrix with w=1; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00293658",
+   "expect": "(none)",
+   "name": "EAGL::Transform::BuildRotTrans",
+   "sheet_name": "EAGL::Transform::BuildRotTrans(MATRIX3 *, COORD4 *)",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6058: window review: Hidden 0x78 function: copies MATRIX3 rows plus a 4-float COORD4 translation; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x002936d0",
+   "expect": "(none)",
+   "name": "EAGL::Transform::BuildRotTrans",
+   "sheet_name": "EAGL::Transform::BuildRotTrans(MATRIX3 *, COORD3 *)",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6059: window review: Hidden 0x80 function: MATRIX3 rows plus a 3-float translation and w=1.0; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00293a38",
+   "expect": "(none)",
+   "name": "EAGL::Transform::ExtractRotTrans",
+   "sheet_name": "EAGL::Transform::ExtractRotTrans(MATRIX3 *, COORD3 *) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6062: window review: Hidden 0x68 function: copies this rotation rows to a MATRIX3 and the translation to a COORD3; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00293c20",
+   "expect": "(none)",
+   "name": "EAGL::Transform::TransformPoints",
+   "sheet_name": "EAGL::Transform::TransformPoints(unsigned int, COORD3 *, unsign",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6064: window review: Hidden 0x120 function (exact): point-array transform, COORD3 source with a stride arg; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00293d40",
+   "expect": "(none)",
+   "name": "EAGL::Transform::TransformPoints",
+   "sheet_name": "EAGL::Transform::TransformPoints(unsigned int, COORD3 *, COORD4",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6065: window review: Hidden 0x108 function (exact): COORD3 source to COORD4 dest; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00293e48",
+   "expect": "(none)",
+   "name": "EAGL::Transform::TransformPoints",
+   "sheet_name": "EAGL::Transform::TransformPoints(unsigned int, COORD4 *, unsign",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6066: window review: Hidden 0x100 function (exact): COORD4 source with a stride arg; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00293f48",
+   "expect": "(none)",
+   "name": "EAGL::Transform::TransformPoints",
+   "sheet_name": "EAGL::Transform::TransformPoints(unsigned int, COORD4 *, COORD3",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6067: window review: Hidden 0xe8 function (exact): COORD4 source to COORD3 dest; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00294518",
+   "expect": "(none)",
+   "name": "EAGL::Transform::AppendTranslate",
+   "sheet_name": "EAGL::Transform::AppendTranslate(float, float, float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6077: window review: Hidden 0x68 function (exact) after AppendRotate: translate matrix on the stack then multiply; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x002949d8",
+   "expect": "(none)",
+   "name": "EAGL::Transform::PrependTranslate",
+   "sheet_name": "EAGL::Transform::PrependTranslate(float, float, float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6085: window review: Hidden 0x68 function (exact) after PrependRotate: translate matrix then PreMult; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00295010",
+   "expect": "(none)",
+   "name": "EAGL::Transform::OrthoInverse",
+   "sheet_name": "EAGL::Transform::OrthoInverse(void)",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6093: window review: Hidden 0xa0 function (exact) after OrthoInverse(Transform*) const: in-place transpose and translation negation; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00295188",
+   "expect": "(none)",
+   "name": "EAGL::Transform::BuildQT",
+   "sheet_name": "EAGL::Transform::BuildQT(float, float, float, float, float, flo",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6095: window review: Hidden 0xb0 function (exact) in the 0x2950b0 body: quaternion matrix + translation without scale; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00297488",
+   "expect": "(none)",
+   "name": "EAGL::ViewPort::GetProjectionMatrix",
+   "sheet_name": "EAGL::ViewPort::GetProjectionMatrix(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6128: window review: Hidden 0x8 accessor after GetViewMatrix: return this+0x20; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00297490",
+   "expect": "(none)",
+   "name": "EAGL::ViewPort::GetViewProjectionMatrix",
+   "sheet_name": "EAGL::ViewPort::GetViewProjectionMatrix(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6129: window review: Hidden 0x8 accessor: return this+0xa0 (AUF returns +0x9c); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00297498",
+   "expect": "(none)",
+   "name": "EAGL::VU0_m4toquat",
+   "sheet_name": "EAGL::VU0_m4toquat(MATRIX4 &, COORD4 &)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6130: window review: Hidden 0x268 function (exact, three returns): matrix diagonal/trace -> quaternion; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00297ba8",
+   "expect": "(none)",
+   "name": "EAGL::VU0_MATRIX3x4_mult",
+   "sheet_name": "EAGL::VU0_MATRIX3x4_mult(MATRIX4 &, MATRIX4 &, MATRIX4 &)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6132: window review: Hidden 0x50 VU0 lqc2 matrix multiply (exact); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00297bf8",
+   "expect": "(none)",
+   "name": "EAGL::VU0_MATRIX3x4_multtrans",
+   "sheet_name": "EAGL::VU0_MATRIX3x4_multtrans(MATRIX4 &, MATRIX4 &, MATRIX4 &)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6133: window review: Hidden VU0 matrix multiply variant, 0x68 by returns (sheet 0x70); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00297cd8",
+   "expect": "(none)",
+   "name": "EAGL::VU0_MATRIX4_multb",
+   "sheet_name": "EAGL::VU0_MATRIX4_multb(MATRIX4 &, MATRIX4 &, MATRIX4 &)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6135: window review: Hidden 0xa8 VU0 multiply with operands swapped (exact); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00297d80",
+   "expect": "(none)",
+   "name": "EAGL::VU0_Sin",
+   "sheet_name": "EAGL::VU0_Sin(float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6136: window review: Hidden 0xc8 function (exact): range-reduced polynomial sine on turns; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00297e48",
+   "expect": "(none)",
+   "name": "EAGL::VU0_Cos",
+   "sheet_name": "EAGL::VU0_Cos(float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6137: window review: Hidden 0xd8 function (exact): adds 0.25 then the same sine polynomial; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00297f20",
+   "expect": "(none)",
+   "name": "EAGL::VU0_MATRIX4setxrot",
+   "sheet_name": "EAGL::VU0_MATRIX4setxrot(MATRIX4 &, float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6138: window review: Hidden 0x1c8 function (exact), first of three identical rotation-matrix builders; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x002980e8",
+   "expect": "(none)",
+   "name": "EAGL::VU0_MATRIX4setyrot",
+   "sheet_name": "EAGL::VU0_MATRIX4setyrot(MATRIX4 &, float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6139: window review: Hidden 0x1c8 function (exact), second rotation builder; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x002982b0",
+   "expect": "(none)",
+   "name": "EAGL::VU0_MATRIX4setzrot",
+   "sheet_name": "EAGL::VU0_MATRIX4setzrot(MATRIX4 &, float)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6140: window review: Hidden 0x1c8 function (exact), third rotation builder, before VU0_fastqslerp; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00299798",
+   "expect": "(none)",
+   "name": "EAGL::ProfilerRegion::History::History",
+   "sheet_name": "EAGL::ProfilerRegion::History::History(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6157: window review: Hidden 0x40 function (exact) after the gBufferHead static helper: zeroes +0x80/+0x104 and a 32-entry loop, like the AUF History ctor; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x002997d8",
+   "expect": "(none)",
+   "name": "EAGL::ProfilerRegion::History::SetHistoryValue",
+   "sheet_name": "EAGL::ProfilerRegion::History::SetHistoryValue(unsigned int, fl",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6158: window review: Hidden 0x90 function (exact): writes a value into a slot and updates the +0x80 total; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00299930",
+   "expect": "(none)",
+   "name": "EAGL::ProfilerRegion::ClearAllRegionsHighWaterMarks",
+   "sheet_name": "EAGL::ProfilerRegion::ClearAllRegionsHighWaterMarks(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6161: window review: Hidden 0x40 function (exact) after ~ProfilerRegion: walks the region list clearing +0x114; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00299aa0",
+   "expect": "(none)",
+   "name": "EAGL::ProfilerRegion::ResetAllCycleCounts",
+   "sheet_name": "EAGL::ProfilerRegion::ResetAllCycleCounts(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6164: window review: Hidden 0x40 function (exact): walks the region list clearing +0x110; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x0029c230",
+   "expect": "(none)",
+   "name": "EAGL::DrawArray::GetNameFromIndex",
+   "sheet_name": "EAGL::DrawArray::GetNameFromIndex(int)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6197: window review: Hidden 0x20 function (exact) in the 0x29c1a0 body: returns the name table entry [index*8]; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x0029ccb0",
+   "expect": "(none)",
+   "name": "EAGL::DrawClipGouraud::GetState",
+   "sheet_name": "EAGL::DrawClipGouraud::GetState(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6218: window review: Hidden 0x8 function: return this+0x80; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x0029d078",
+   "expect": "(none)",
+   "name": "EAGL::DrawTextured::GetState",
+   "sheet_name": "EAGL::DrawTextured::GetState(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6225: window review: Hidden 0x8 function: return this+0x90; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x0029d578",
+   "expect": "(none)",
+   "name": "EAGL::DrawClipTextured::GetState",
+   "sheet_name": "EAGL::DrawClipTextured::GetState(void)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6232: window review: Hidden 0x8 function: return this+0x90; needs creating."
+   ]
+  }
+ ]
+}

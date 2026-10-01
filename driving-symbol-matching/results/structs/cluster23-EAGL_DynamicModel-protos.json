@@ -1,0 +1,135 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000e9760",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::DynamicModel::DynamicModel(void)",
+   "return": "EAGL::DynamicModel *"
+  },
+  {
+   "address": "0x000e9890",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "EAGL::DynamicModel::AddGeoPrim(EAGL::GeoPrim *)"
+  },
+  {
+   "address": "0x000e9990",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::DynamicModel::DrawNoTransform(void)"
+  },
+  {
+   "address": "0x000e99e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::DynamicModel::Draw(void)"
+  },
+  {
+   "address": "0x000e9a80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "EAGL::DynamicModel::SetModelMatrix(MATRIX4 &)"
+  },
+  {
+   "address": "0x000e9aa0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "EAGL::DynamicModel::SetPrimitiveType(int, EAGL::PrimitiveType)"
+  },
+  {
+   "address": "0x000e9b40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    }
+   ],
+   "sheet": "EAGL::DynamicModel::GetIndexFromName(int, char *)"
+  },
+  {
+   "address": "0x000e9ea0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    }
+   ],
+   "sheet": "EAGL::DynamicModel::SetParamName(int, char *)"
+  },
+  {
+   "address": "0x000e9f40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "EAGL::DynamicModel::Lock(int)"
+  },
+  {
+   "address": "0x000e9fe0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "EAGL::DynamicModel::Unlock(int)"
+  },
+  {
+   "address": "0x000ea080",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "EAGL::DynamicModel::SetNumVerts(int, int)"
+  },
+  {
+   "address": "0x000ea720",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::DynamicModel::~DynamicModel(void)"
+  }
+ ]
+}

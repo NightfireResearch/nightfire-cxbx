@@ -1,0 +1,300 @@
+{
+ "batch": "P021",
+ "program": "DRIVING.ELF",
+ "applied": "Sat Sep 26 01:08:45 2026",
+ "items": [
+  {
+   "xbox": "0x0016ec40",
+   "old_name": "FUN_0016ec40",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0016ec40 from 'FUN_0016ec40' to 'GetMetrics'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetMetrics' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0016ec40",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetMetrics",
+   "ok": true
+  },
+  {
+   "xbox": "0x00232088",
+   "old_name": "FUN_00232088",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00232088 from 'FUN_00232088' to 'Quatern_QuatToMat'",
+      "warnings": [
+       "Function name 'Quatern_QuatToMat' \u2014 main part 'Quatern_QuatToMat' is not PascalCase. Expected: QuaternQuattomat",
+       "Function name 'Quatern_QuatToMat' \u2014 main part 'Quatern_QuatToMat' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'Quatern_QuatToMat' does not start with a recognized verb. First word 'Quatern_' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00232088",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Quatern_QuatToMat",
+   "ok": true
+  },
+  {
+   "xbox": "0x00237d18",
+   "old_name": "FUN_00237d18",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00237d18 from 'FUN_00237d18' to 'LINE_SetState'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_quality/weak_noun_only - Name 'LINE_SetState' uses only weak nouns (Data, Info, Stuff, ...) after the verb. These add no semantic information."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00237d18",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "LINE_SetState",
+   "ok": true
+  },
+  {
+   "xbox": "0x00291150",
+   "old_name": "FUN_00291150",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00291150 from 'FUN_00291150' to 'GetBackBufferInfo'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetBackBufferInfo' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00291150",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetBackBufferInfo",
+   "ok": true
+  },
+  {
+   "xbox": "0x00291198",
+   "old_name": "FUN_00291198",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00291198 from 'FUN_00291198' to 'GetZBuffer'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetZBuffer' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00291198",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetZBuffer",
+   "ok": true
+  },
+  {
+   "xbox": "0x00293a38",
+   "old_name": "FUN_00293a38",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00293a38 from 'FUN_00293a38' to 'ExtractRotTrans'",
+      "warnings": [
+       "Function name 'ExtractRotTrans' does not start with a recognized verb. First word 'Extract' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00293a38",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ExtractRotTrans",
+   "ok": true
+  },
+  {
+   "xbox": "0x00295188",
+   "old_name": "FUN_00295188",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00295188 from 'FUN_00295188' to 'BuildQT'",
+      "warnings": [
+       "Function name 'BuildQT' is too short (main part 'BuildQT' is 7 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'BuildQT' shares the same token set as existing function 'BuildSQT' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00295188",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "BuildQT",
+   "ok": true
+  },
+  {
+   "xbox": "0x00297ba8",
+   "old_name": "FUN_00297ba8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00297ba8 from 'FUN_00297ba8' to 'VU0_MATRIX3x4_mult'",
+      "warnings": [
+       "Function name 'VU0_MATRIX3x4_mult' \u2014 main part 'VU0_MATRIX3x4_mult' is not PascalCase. Expected: Vu0Matrix3x4Mult",
+       "Function name 'VU0_MATRIX3x4_mult' \u2014 main part 'VU0_MATRIX3x4_mult' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00297ba8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "VU0_MATRIX3x4_mult",
+   "ok": true
+  },
+  {
+   "xbox": "0x00297cd8",
+   "old_name": "FUN_00297cd8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00297cd8 from 'FUN_00297cd8' to 'VU0_MATRIX4_multb'",
+      "warnings": [
+       "Function name 'VU0_MATRIX4_multb' \u2014 main part 'VU0_MATRIX4_multb' is not PascalCase. Expected: Vu0Matrix4Multb",
+       "Function name 'VU0_MATRIX4_multb' \u2014 main part 'VU0_MATRIX4_multb' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00297cd8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "VU0_MATRIX4_multb",
+   "ok": true
+  }
+ ]
+}

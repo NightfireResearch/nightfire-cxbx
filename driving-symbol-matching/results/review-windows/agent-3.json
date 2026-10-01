@@ -1,0 +1,1757 @@
+[
+ {
+  "window": 129,
+  "row": 6399,
+  "ps2": "0x002656b8",
+  "verdict": "accept",
+  "why": "Same shape as AUF NewBlockByIdx: per-index free list at 0x343d68, carve from pool when empty, block size from 0x343d28 table."
+ },
+ {
+  "window": 129,
+  "row": 6400,
+  "ps2": "0x00265788",
+  "verdict": "accept",
+  "why": "Resets pool cursor to base and clears both free-list tables; called by ResetMemoryPool, matching AUF ResetPool."
+ },
+ {
+  "window": 130,
+  "row": 6495,
+  "ps2": "0x00268cb0",
+  "verdict": "accept",
+  "why": "Non-virtual FnDeltaQ helper that lazily allocates buffers (FUN_00265728) and caches DeltaQ::GetConstBoneIdx/GetConstPhysical."
+ },
+ {
+  "window": 130,
+  "row": 6496,
+  "ps2": "0x00268d88",
+  "verdict": "accept",
+  "why": "FnDeltaQ vtable 0x3af810 SetAnimMemoryMap slot (same slot as in FnDeltaF1's vtable): stores map at +0xc."
+ },
+ {
+  "window": 130,
+  "row": 6497,
+  "ps2": "0x00268d90",
+  "verdict": "accept",
+  "why": "FnDeltaQ vtable GetLength slot: writes frame count to *param_2 and returns 1."
+ },
+ {
+  "window": 130,
+  "row": 6498,
+  "ps2": "0x00268dd0",
+  "verdict": "accept",
+  "why": "FnDeltaQ vtable Eval slot (slot 3, between UseFPS and GetLength)."
+ },
+ {
+  "window": 130,
+  "row": 6499,
+  "ps2": "0x00268e08",
+  "verdict": "accept",
+  "why": "FnDeltaQ vtable EvalSQT slot (between FindMatchTime and FnAnim::EvalPhase)."
+ },
+ {
+  "window": 130,
+  "row": 6500,
+  "ps2": "0x0026b368",
+  "verdict": "accept",
+  "why": "Slot 1 (dtor) of FnDeltaSingleQ vtable 0x3afae0 (slot 0 = FnDeltaSingleQ type_info); stores FnDeltaSingleQ vtable, frees 3 buffers, frees 0x30. NOTE: lies after the type_info at 0x26b368, outside this window's address range."
+ },
+ {
+  "window": 131,
+  "row": 6646,
+  "ps2": "0x002717d8",
+  "verdict": "accept",
+  "why": "FnDeltaF1 vtable 0x3b1180 SetAnimMemoryMap slot: stores map at +0xc, resets cached indices."
+ },
+ {
+  "window": 131,
+  "row": 6647,
+  "ps2": "0x002717f0",
+  "verdict": "accept",
+  "why": "FnDeltaF1 vtable GetLength slot: frame count into *param_2, returns 1."
+ },
+ {
+  "window": 131,
+  "row": 6648,
+  "ps2": "0x00271830",
+  "verdict": "accept",
+  "why": "FnDeltaF1 vtable Eval slot (slot 3)."
+ },
+ {
+  "window": 131,
+  "row": 6649,
+  "ps2": "0x00271860",
+  "verdict": "accept",
+  "why": "FnDeltaF1 vtable EvalWeights slot (the FnAnim::EvalWeights position in base vtables)."
+ },
+ {
+  "window": 131,
+  "row": 6650,
+  "ps2": "0x00271890",
+  "verdict": "accept",
+  "why": "FnDeltaF1 vtable EvalVel2D slot (the FnAnim::EvalVel2D position)."
+ },
+ {
+  "window": 131,
+  "row": 6651,
+  "ps2": "0x002718c0",
+  "verdict": "accept",
+  "why": "Eval slot of FnEventBlender vtable 0x3b1570 (slot 0 = ~FnEventBlender); blends two child anims by time window like AUF."
+ },
+ {
+  "window": 132,
+  "row": 6701,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Only one masked SQT blend (0x272e60: two BoneMasks, qslerp+lerp) survives; cannot tell BlendQ from masked Blend (size ratio slightly favours BlendQ)."
+ },
+ {
+  "window": 132,
+  "row": 6702,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "See row 6701: 0x272e60 is one of BlendQ/masked Blend, the other is gone; the body does not decide it."
+ },
+ {
+  "window": 133,
+  "row": 6756,
+  "ps2": "0x00275660",
+  "verdict": "accept",
+  "why": "Already named operator_new_array: 8-byte placement new[] (jr ra; move v0,a1), in placement-block order."
+ },
+ {
+  "window": 133,
+  "row": 6757,
+  "ps2": "0x00275668",
+  "verdict": "accept",
+  "why": "Already named operator_delete_array: empty 8-byte placement delete[], last of the placement block."
+ },
+ {
+  "window": 133,
+  "row": 6758,
+  "ps2": "0x00275670",
+  "verdict": "accept",
+  "why": "Slot 1 of FnDeltaLerpChan vtable 0x3b2580 (slot 0 = FnDeltaLerpChan type_info); inlined base dtor stores FnDeltaChan vtable, frees 0x18."
+ },
+ {
+  "window": 134,
+  "row": 6785,
+  "ps2": "0x00275b80",
+  "verdict": "accept",
+  "why": "eagl_alloc with string 'EAGLAnim::FnKeyDeltaChan new'."
+ },
+ {
+  "window": 134,
+  "row": 6786,
+  "ps2": "0x00275ba8",
+  "verdict": "accept",
+  "why": "eagl_alloc with the caller's name, between the 'new' and 'new[]' string anchors."
+ },
+ {
+  "window": 134,
+  "row": 6787,
+  "ps2": "0x00275bd0",
+  "verdict": "accept",
+  "why": "eagl_free, between the 'new' and 'new[]' string anchors."
+ },
+ {
+  "window": 134,
+  "row": 6788,
+  "ps2": "0x00275bf8",
+  "verdict": "accept",
+  "why": "eagl_alloc with string 'EAGLAnim::FnKeyDeltaChan new[]'."
+ },
+ {
+  "window": 134,
+  "row": 6789,
+  "ps2": "0x00275c20",
+  "verdict": "accept",
+  "why": "eagl_alloc with the caller's name, after the 'new[]' anchor."
+ },
+ {
+  "window": 134,
+  "row": 6790,
+  "ps2": "0x00275c48",
+  "verdict": "accept",
+  "why": "eagl_free, after the 'new[]' anchor."
+ },
+ {
+  "window": 134,
+  "row": 6791,
+  "ps2": "0x00275c70",
+  "verdict": "accept",
+  "why": "Returns param_2 (placement new); block pattern ret/empty/ret/empty matches new/delete/new[]/delete[], order decides new vs new[]."
+ },
+ {
+  "window": 134,
+  "row": 6792,
+  "ps2": "0x00275c78",
+  "verdict": "accept",
+  "why": "Empty 8-byte stub (placement delete); pattern plus order only."
+ },
+ {
+  "window": 134,
+  "row": 6793,
+  "ps2": "0x00275c80",
+  "verdict": "accept",
+  "why": "Returns param_2 (placement new[]); pattern plus order only."
+ },
+ {
+  "window": 134,
+  "row": 6794,
+  "ps2": "0x00275c88",
+  "verdict": "accept",
+  "why": "Empty 8-byte stub (placement delete[]); pattern plus order only."
+ },
+ {
+  "window": 134,
+  "row": 6795,
+  "ps2": "0x00275c90",
+  "verdict": "accept",
+  "why": "Constructor storing vtable 0x3b2440, whose slot 0 is FnKeyDeltaChan type_info and slot 1 ~FnKeyDeltaChan; no callers (abstract base)."
+ },
+ {
+  "window": 134,
+  "row": 6796,
+  "ps2": "0x00275cd0",
+  "verdict": "accept",
+  "why": "Slot 1 of FnKeyLerpChan vtable 0x3b23a0 (slot 0 = FnKeyLerpChan type_info); inlined FnKeyDeltaChan dtor as in AUF."
+ },
+ {
+  "window": 135,
+  "row": 6798,
+  "ps2": "0x00275de0",
+  "verdict": "accept",
+  "why": "eagl_alloc with string 'EAGLAnim::FnKeyLerpChan new'."
+ },
+ {
+  "window": 135,
+  "row": 6799,
+  "ps2": "0x00275e08",
+  "verdict": "accept",
+  "why": "eagl_alloc with the caller's name, between the 'new' and 'new[]' string anchors."
+ },
+ {
+  "window": 135,
+  "row": 6800,
+  "ps2": "0x00275e30",
+  "verdict": "accept",
+  "why": "eagl_free, between the 'new' and 'new[]' string anchors."
+ },
+ {
+  "window": 135,
+  "row": 6801,
+  "ps2": "0x00275e58",
+  "verdict": "accept",
+  "why": "eagl_alloc with string 'EAGLAnim::FnKeyLerpChan new[]'."
+ },
+ {
+  "window": 135,
+  "row": 6802,
+  "ps2": "0x00275e80",
+  "verdict": "accept",
+  "why": "eagl_alloc with the caller's name, after the 'new[]' anchor."
+ },
+ {
+  "window": 135,
+  "row": 6803,
+  "ps2": "0x00275ea8",
+  "verdict": "accept",
+  "why": "eagl_free, after the 'new[]' anchor."
+ },
+ {
+  "window": 135,
+  "row": 6804,
+  "ps2": "0x00275ed0",
+  "verdict": "accept",
+  "why": "Returns param_2 (placement new); block pattern ret/empty/ret/empty matches new/delete/new[]/delete[], order decides new vs new[]."
+ },
+ {
+  "window": 135,
+  "row": 6805,
+  "ps2": "0x00275ed8",
+  "verdict": "accept",
+  "why": "Empty 8-byte stub (placement delete); pattern plus order only."
+ },
+ {
+  "window": 135,
+  "row": 6806,
+  "ps2": "0x00275ee0",
+  "verdict": "accept",
+  "why": "Returns param_2 (placement new[]); pattern plus order only."
+ },
+ {
+  "window": 135,
+  "row": 6807,
+  "ps2": "0x00275ee8",
+  "verdict": "accept",
+  "why": "Empty 8-byte stub (placement delete[]); pattern plus order only."
+ },
+ {
+  "window": 135,
+  "row": 6808,
+  "ps2": "0x00275ef0",
+  "verdict": "accept",
+  "why": "Constructor storing FnKeyLerpChan vtable 0x3b23a0 (also used by NewFnAnim), as AUF ctor."
+ },
+ {
+  "window": 135,
+  "row": 6809,
+  "ps2": "0x00275f38",
+  "verdict": "accept",
+  "why": "Slot 1 of FnKeyQuatChan vtable 0x3b2300 (slot 0 = FnKeyQuatChan type_info); inlined FnKeyDeltaChan dtor."
+ },
+ {
+  "window": 136,
+  "row": 6852,
+  "ps2": "0x00277758",
+  "verdict": "accept",
+  "why": "Same body as AUF FnPhaseChan::SetAnimMemoryMap: store map, count from +6, flag bits 8/0x10/0x20/0x40 select 1/2/4/8."
+ },
+ {
+  "window": 136,
+  "row": 6853,
+  "ps2": "0x002777b8",
+  "verdict": "accept",
+  "why": "Stores FnRunBlender vtable, releases child anims and scratch buffer (FreeBuffer) as AUF dtor."
+ },
+ {
+  "window": 136,
+  "row": 6854,
+  "ps2": "0x002779e0",
+  "verdict": "accept",
+  "why": "FnRunBlender vtable EvalSQT slot; calls SetWeight(0) when uninitialised, then cycle alignment, like AUF EvalSQT."
+ },
+ {
+  "window": 136,
+  "row": 6855,
+  "ps2": "0x00277c08",
+  "verdict": "accept",
+  "why": "Clamps weight index to count-2 and creates anims via NewFnAnim; called by EvalSQT/EvalVel2D, as AUF SetWeight."
+ },
+ {
+  "window": 136,
+  "row": 6856,
+  "ps2": "0x002781c8",
+  "verdict": "accept",
+  "why": "Takes skeleton (+0x34) and count, allocates scratch buffers and creates child FnAnims."
+ },
+ {
+  "window": 137,
+  "row": 6860,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "The window's only function rotates a 2D velocity (AlignVel); no quaternion-align routine left, so it was inlined."
+ },
+ {
+  "window": 137,
+  "row": 6861,
+  "ps2": "0x00278b48",
+  "verdict": "accept",
+  "why": "Rotates a 2D vector by the quaternion at +0x58; called from EvalVel2D."
+ },
+ {
+  "window": 138,
+  "row": 6897,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "The window's only function is the 2D-velocity rotation (AlignVel); AlignRootQ was inlined."
+ },
+ {
+  "window": 138,
+  "row": 6898,
+  "ps2": "0x0027a448",
+  "verdict": "accept",
+  "why": "Rotates a 2D vector by the quaternion at +0x48; called from FnTurnBlender EvalVel2D."
+ },
+ {
+  "window": 139,
+  "row": 7055,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No keyboard code in retail: every function between FONT_getcharacter and the mouse block is taken by MOUSE_init/restore/setstate."
+ },
+ {
+  "window": 139,
+  "row": 7056,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No keyboard code in retail: every function between FONT_getcharacter and the mouse block is taken by MOUSE_init/restore/setstate."
+ },
+ {
+  "window": 139,
+  "row": 7057,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No keyboard code in retail: every function between FONT_getcharacter and the mouse block is taken by MOUSE_init/restore/setstate."
+ },
+ {
+  "window": 139,
+  "row": 7058,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No keyboard code in retail: every function between FONT_getcharacter and the mouse block is taken by MOUSE_init/restore/setstate."
+ },
+ {
+  "window": 139,
+  "row": 7059,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No keyboard code in retail: every function between FONT_getcharacter and the mouse block is taken by MOUSE_init/restore/setstate."
+ },
+ {
+  "window": 139,
+  "row": 7060,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No keyboard code in retail: every function between FONT_getcharacter and the mouse block is taken by MOUSE_init/restore/setstate."
+ },
+ {
+  "window": 139,
+  "row": 7061,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No keyboard code in retail: every function between FONT_getcharacter and the mouse block is taken by MOUSE_init/restore/setstate."
+ },
+ {
+  "window": 139,
+  "row": 7062,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No keyboard code in retail: every function between FONT_getcharacter and the mouse block is taken by MOUSE_init/restore/setstate."
+ },
+ {
+  "window": 139,
+  "row": 7063,
+  "ps2": "0x00259560",
+  "verdict": "accept",
+  "why": "Initialises mouse globals (position, dims 0x200 x 0x1c0, clears 0x21c state), calls the pad init; size 0x90 exact."
+ },
+ {
+  "window": 139,
+  "row": 7064,
+  "ps2": "0x002595f0",
+  "verdict": "accept",
+  "why": "8-byte function clearing one global right after MOUSE_init; size 0x8 exact."
+ },
+ {
+  "window": 139,
+  "row": 7065,
+  "ps2": "0x002595f8",
+  "verdict": "accept",
+  "why": "Currently named maybe_MOUSE_init; switch on option id setting mouse state values, 0x70 exact; the existing names in this block are shifted by two."
+ },
+ {
+  "window": 140,
+  "row": 7155,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Entry stub at 0x25f7a4 (0x14: move t9,ra; jal 0x25f6a0; j loop), not a Ghidra function; create by hand."
+ },
+ {
+  "window": 140,
+  "row": 7156,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Entry stub at 0x25f7b8 (0x14: move t9,ra; jal 0x25f6a0; j loop), not a Ghidra function; create by hand."
+ },
+ {
+  "window": 140,
+  "row": 7157,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Entry stub at 0x25f7cc (0x14: move t9,ra; jal 0x25f6a0; j loop), not a Ghidra function; create by hand."
+ },
+ {
+  "window": 140,
+  "row": 7158,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Entry stub at 0x25f7e0 (0x14: move t9,ra; jal 0x25f6a0; j loop), not a Ghidra function; create by hand."
+ },
+ {
+  "window": 140,
+  "row": 7159,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Entry stub at 0x25f7f4 (0x14: move t9,ra; jal 0x25f6a0; j loop), not a Ghidra function; create by hand."
+ },
+ {
+  "window": 140,
+  "row": 7160,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Entry stub at 0x25f808 (0x14: move t9,ra; jal 0x25f6a0; j loop), not a Ghidra function; create by hand."
+ },
+ {
+  "window": 140,
+  "row": 7161,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Entry stub at 0x25f81c (0x14: move t9,ra; jal 0x25f6a0; j loop), not a Ghidra function; create by hand."
+ },
+ {
+  "window": 140,
+  "row": 7162,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Entry stub at 0x25f830 (its span covers the VU0 loop at 0x25f844), not a Ghidra function; create by hand."
+ },
+ {
+  "window": 141,
+  "row": 7535,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No candidate: the window holds only fiprintf, malloc, free and malloc's extend-top helper."
+ },
+ {
+  "window": 141,
+  "row": 7537,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No candidate: the window holds only fiprintf, malloc, free and malloc's extend-top helper."
+ },
+ {
+  "window": 141,
+  "row": 7538,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No candidate: the window holds only fiprintf, malloc, free and malloc's extend-top helper."
+ },
+ {
+  "window": 141,
+  "row": 7539,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No candidate: the window holds only fiprintf, malloc, free and malloc's extend-top helper."
+ },
+ {
+  "window": 141,
+  "row": 7540,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No candidate: the window holds only fiprintf, malloc, free and malloc's extend-top helper."
+ },
+ {
+  "window": 141,
+  "row": 7541,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No candidate: the window holds only fiprintf, malloc, free and malloc's extend-top helper."
+ },
+ {
+  "window": 141,
+  "row": 7542,
+  "ps2": "0x002a73b0",
+  "verdict": "accept",
+  "why": "Varargs wrapper calling vfiprintf, called from __assert."
+ },
+ {
+  "window": 141,
+  "row": 7543,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Only one fprintf-style wrapper exists and it calls vfiprintf (fiprintf)."
+ },
+ {
+  "window": 141,
+  "row": 7544,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No candidate in the window."
+ },
+ {
+  "window": 141,
+  "row": 7545,
+  "ps2": "0x002a73e8",
+  "verdict": "accept",
+  "why": "_malloc_r(_impure_ptr, n); 0x28 exact."
+ },
+ {
+  "window": 141,
+  "row": 7546,
+  "ps2": "0x002a7410",
+  "verdict": "accept",
+  "why": "Calls _free_r(_impure_ptr, p); sheet 0x268 = this 0x10 + the static extend-top 0x258."
+ },
+ {
+  "window": 142,
+  "row": 7620,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7621,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7622,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7623,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7624,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7625,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7626,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7627,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7628,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7629,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7630,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7631,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7632,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7633,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7634,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7635,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7636,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7637,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7638,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7639,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _lseek_r and _read_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7640,
+  "ps2": "0x002b2268",
+  "verdict": "accept",
+  "why": "errno=0; read(); on -1 copies errno into the reent struct: newlib _read_r."
+ },
+ {
+  "window": 142,
+  "row": 7642,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _read_r and _realloc_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7643,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _read_r and _realloc_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7644,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _read_r and _realloc_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7645,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _read_r and _realloc_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7646,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _read_r and _realloc_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7647,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _read_r and _realloc_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7648,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _read_r and _realloc_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7649,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _read_r and _realloc_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7650,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No function between _read_r and _realloc_r in retail."
+ },
+ {
+  "window": 142,
+  "row": 7651,
+  "ps2": "0x002b22c8",
+  "verdict": "accept",
+  "why": "realloc(NULL) -> _malloc_r, malloc lock/unlock, memcpy; sheet 0x598 = 0x570 + 0x28 alarm helper."
+ },
+ {
+  "window": 142,
+  "row": 7653,
+  "ps2": "0x002b2860",
+  "verdict": "accept",
+  "why": "CreateSema, SetAlarm, WaitSema, DeleteSema; 0x68 exact."
+ },
+ {
+  "window": 142,
+  "row": 7654,
+  "ps2": "0x002b28c8",
+  "verdict": "accept",
+  "why": "Swaps in the CD callback under DIntr/EIntr, returns the old one; 0x58 exact."
+ },
+ {
+  "window": 142,
+  "row": 7655,
+  "ps2": "0x002b2920",
+  "verdict": "accept",
+  "why": "Interrupt-side CD callback: records status, iSignalSema; 0xa0 exact."
+ },
+ {
+  "window": 142,
+  "row": 7656,
+  "ps2": "0x002b29c0",
+  "verdict": "accept",
+  "why": "Callback thread loop with the 'sceCdCbfunc=' string; 0xc0 exact."
+ },
+ {
+  "window": 142,
+  "row": 7657,
+  "ps2": "0x002b2a80",
+  "verdict": "accept",
+  "why": "Creates/starts the callback thread (body 0xd4, sheet 0xd8)."
+ },
+ {
+  "window": 142,
+  "row": 7658,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2b2b58 (copies unaligned head/tail bytes then jumps to _sceCd_cd_callback; passed by sceCdRead) is not a Ghidra function; create by hand."
+ },
+ {
+  "window": 142,
+  "row": 7659,
+  "ps2": "0x002b2d10",
+  "verdict": "accept",
+  "why": "Sets power-off callback and arg under DIntr, installs the SIF handler on first use; span 0x118 exact."
+ },
+ {
+  "window": 142,
+  "row": 7660,
+  "ps2": "0x002b2e28",
+  "verdict": "accept",
+  "why": "Strings 'Libcdvd bind err CdSearchFile', 'search name %s'."
+ },
+ {
+  "window": 142,
+  "row": 7661,
+  "ps2": "0x002b3128",
+  "verdict": "accept",
+  "why": "'Ncmd fail sema cur_cmd' string; N-command precheck."
+ },
+ {
+  "window": 142,
+  "row": 7662,
+  "ps2": "0x002b3298",
+  "verdict": "accept",
+  "why": "ncmd_prechk(2) then RPC 0xe returning the ready state; 0x98 exact."
+ },
+ {
+  "window": 142,
+  "row": 7663,
+  "ps2": "0x002b3330",
+  "verdict": "accept",
+  "why": "'N cmd wait' polling loop."
+ },
+ {
+  "window": 142,
+  "row": 7664,
+  "ps2": "0x002b33d0",
+  "verdict": "accept",
+  "why": "'S cmd wait' polling loop."
+ },
+ {
+  "window": 142,
+  "row": 7665,
+  "ps2": "0x002b3440",
+  "verdict": "accept",
+  "why": "'Scmd fail sema cur_cmd' string; S-command precheck."
+ },
+ {
+  "window": 142,
+  "row": 7666,
+  "ps2": "0x002b35b0",
+  "verdict": "accept",
+  "why": "'Libcdvd bind err %d CD_Init' and 'Libcdvd Exit' strings; 0x2e0 exact."
+ },
+ {
+  "window": 142,
+  "row": 7667,
+  "ps2": "0x002b3890",
+  "verdict": "accept",
+  "why": "'DiskReady 0' / 'DiskReady ended' strings; 0x1f8 exact."
+ },
+ {
+  "window": 142,
+  "row": 7668,
+  "ps2": "0x002b3a88",
+  "verdict": "accept",
+  "why": "S-command 0x22 with one argument (media mode); 0xc8 exact."
+ },
+ {
+  "window": 142,
+  "row": 7669,
+  "ps2": "0x002b3b50",
+  "verdict": "accept",
+  "why": "'call cdread cmd' / 'cdread end' strings."
+ },
+ {
+  "window": 142,
+  "row": 7670,
+  "ps2": "0x002b3d30",
+  "verdict": "accept",
+  "why": "N-command into a 0x810-byte buffer (TOC); 0x290 exact."
+ },
+ {
+  "window": 142,
+  "row": 7671,
+  "ps2": "0x002b3fc0",
+  "verdict": "accept",
+  "why": "N-command with async callback after the disk-ready check; 0xb0 exact, in sheet order."
+ },
+ {
+  "window": 142,
+  "row": 7672,
+  "ps2": "0x002b4070",
+  "verdict": "accept",
+  "why": "S-command RPC 3 returning one word; 0x98 exact, in sheet order."
+ },
+ {
+  "window": 142,
+  "row": 7673,
+  "ps2": "0x002b4108",
+  "verdict": "accept",
+  "why": "S-command RPC 4 returning -1 on failure; sheet 0xb0 = 0x98 + 0x18 static VU0 helper."
+ },
+ {
+  "window": 142,
+  "row": 7675,
+  "ps2": "0x002b41b8",
+  "verdict": "accept",
+  "why": "Sets FBRST bit 1 (VU0 reset) with ctc2; 0x18 exact."
+ },
+ {
+  "window": 142,
+  "row": 7676,
+  "ps2": "0x002b41d0",
+  "verdict": "accept",
+  "why": "If VU0 is running, sets the FBRST force-break bit; 0x60 exact."
+ },
+ {
+  "window": 142,
+  "row": 7677,
+  "ps2": "0x002b4230",
+  "verdict": "accept",
+  "why": "If stopped, Exec(GetTpc()); body 0x50 exact."
+ },
+ {
+  "window": 142,
+  "row": 7678,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2b4280 (sets/clears FBRST D bit, 0x30) is not a Ghidra function; create by hand."
+ },
+ {
+  "window": 142,
+  "row": 7679,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2b42b0 (sets/clears FBRST T bit, 0x30) is not a Ghidra function; create by hand."
+ },
+ {
+  "window": 142,
+  "row": 7680,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2b42e0 (returns FBRST bit 2, 0x10) is not a Ghidra function; create by hand."
+ },
+ {
+  "window": 142,
+  "row": 7681,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2b42f0 (returns FBRST bit 3, 0x10) is not a Ghidra function; 0x2b4300 after it is a static state helper."
+ },
+ {
+  "window": 142,
+  "row": 7682,
+  "ps2": "0x002b4340",
+  "verdict": "accept",
+  "why": "ctc2 CMSAR0 + vcallmsr; 0x10 exact."
+ },
+ {
+  "window": 142,
+  "row": 7683,
+  "ps2": "0x002b4350",
+  "verdict": "accept",
+  "why": "Reads TPC (cfc2) & 0xffff; 0x10 exact."
+ },
+ {
+  "window": 142,
+  "row": 7684,
+  "ps2": "0x002b4360",
+  "verdict": "accept",
+  "why": "Saves VU0 control registers into buffer +0x200; 0xe0 exact."
+ },
+ {
+  "window": 142,
+  "row": 7685,
+  "ps2": "0x002b4440",
+  "verdict": "accept",
+  "why": "Restores VU0 state from the buffer (repeated lqc2); span 0x228 exact including the following helpers."
+ },
+ {
+  "window": 143,
+  "row": 7700,
+  "ps2": "0x002b4b98",
+  "verdict": "accept",
+  "why": "If VIF0 is stalled, writes FBRST=8 (STC); 0x40 slot."
+ },
+ {
+  "window": 143,
+  "row": 7701,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2b4bd8 (writes VIF0_ERR 0x10003820, 0x20) is not a Ghidra function; create by hand."
+ },
+ {
+  "window": 144,
+  "row": 7711,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2b5160 (writes quadwords to the VIF1 FIFO 0x10005000 while there is space) is not a Ghidra function."
+ },
+ {
+  "window": 144,
+  "row": 7712,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2b51c0 (reads the VIF1 FIFO) is not a Ghidra function."
+ },
+ {
+  "window": 144,
+  "row": 7714,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2b5258 (id<10 ? channel table[id] : 0, 0x28) is not a Ghidra function; 0x2b5220 is a static memclear."
+ },
+ {
+  "window": 145,
+  "row": 7901,
+  "ps2": "0x002b7848",
+  "verdict": "accept",
+  "why": "Starts right after iDisableDmac's 0x88 span and ends at InitThread (0x1b0 exact); called by _InitSys just before InitThread."
+ },
+ {
+  "window": 146,
+  "row": 7930,
+  "ps2": "0x002b9678",
+  "verdict": "accept",
+  "why": "Allocates a packet, fills src/dst/size, sends the SIF cmd and waits; span 0x258 exact from the end of sceSifExitRpc."
+ },
+ {
+  "window": 146,
+  "row": 7931,
+  "ps2": "0x002b98d0",
+  "verdict": "accept",
+  "why": "Currently named maybeLibcdvd_bind; 0x1d0 exact, ends at sceSifCallRpc."
+ },
+ {
+  "window": 147,
+  "row": 7995,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Sheet puts _setup at 0x2be6f8 (syscall 0x74 + table lookup, 0x20), inside no Ghidra function; create by hand."
+ },
+ {
+  "window": 147,
+  "row": 7996,
+  "ps2": "0x002be718",
+  "verdict": "accept",
+  "why": "Calls sema init, InitAlarm, InitThread, InitExecPS2, InitTLBFunctions; called from entry."
+ },
+ {
+  "window": 147,
+  "row": 7998,
+  "ps2": "0x002be828",
+  "verdict": "accept",
+  "why": "Third init call of _InitSys (OSD config, syscall patching); sheet span 0xb8 ends at 0x2be8e0."
+ },
+ {
+  "window": 147,
+  "row": 8000,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2be8e0 (calls the _InitTLB thunk then the ExecPS2 syscall, 0x60) is not a Ghidra function."
+ },
+ {
+  "window": 148,
+  "row": 8020,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Syscall stub iSetTLBEntry (syscall -0x56) at 0x2bee30, not a Ghidra function; create by hand."
+ },
+ {
+  "window": 148,
+  "row": 8021,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Syscall stub GetTLBEntry (0x57) at 0x2bee40, not a Ghidra function; create by hand."
+ },
+ {
+  "window": 148,
+  "row": 8022,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Syscall stub iGetTLBEntry (-0x57) at 0x2bee50, not a Ghidra function; create by hand."
+ },
+ {
+  "window": 148,
+  "row": 8023,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Syscall stub ProbeTLBEntry (0x58) at 0x2bee60, not a Ghidra function; create by hand."
+ },
+ {
+  "window": 148,
+  "row": 8024,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Syscall stub iProbeTLBEntry (-0x58) at 0x2bee70, not a Ghidra function; create by hand."
+ },
+ {
+  "window": 148,
+  "row": 8025,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Syscall stub ExpandScratchPad (0x59) at 0x2bee80, not a Ghidra function; create by hand."
+ },
+ {
+  "window": 149,
+  "row": 8109,
+  "ps2": "0x002c8cf0",
+  "verdict": "accept",
+  "why": "If the port is open, RPC close command (0xe) and clears the open flag; span 0x118 including the static frame helper."
+ },
+ {
+  "window": 149,
+  "row": 8110,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2c8e08 (if open, returns frame +0x58, 0x50) is not a Ghidra function."
+ },
+ {
+  "window": 150,
+  "row": 8113,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2c8f50 (state<8 ? strcpy(table[state]) : empty, 0x38) is not a Ghidra function; 0x2c8f88 is a static setter."
+ },
+ {
+  "window": 151,
+  "row": 8115,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2c9040 (req<4 ? strcpy(table[req]) : empty) is not a Ghidra function."
+ },
+ {
+  "window": 151,
+  "row": 8116,
+  "ps2": "0x002c9078",
+  "verdict": "accept",
+  "why": "Checks the pad is stable, returns the actuator count (+0x6a) for -1 or per-actuator info; body 0x120 exact."
+ },
+ {
+  "window": 151,
+  "row": 8117,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2c9198 (returns the combination count +0x6b or bytes 0x40..0x43) is not a Ghidra function."
+ },
+ {
+  "window": 152,
+  "row": 8129,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Retail has no 8-byte stub after scePcStop; the span is 0x18 shorter than the sheet's."
+ },
+ {
+  "window": 152,
+  "row": 8130,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "The two functions here are the SN profiler's register save/restore asm (called by profiler handler 0x2c9f3c), not IsDebuggerRunning."
+ },
+ {
+  "window": 153,
+  "row": 8162,
+  "ps2": "0x002cb2f8",
+  "verdict": "accept",
+  "why": "Same logic as AUF checksentinel: 'BS'/'BF'/'BM' tags, 0x8000/0x4000 flags, 'BEND' sentinel, error codes 1-4."
+ },
+ {
+  "window": 154,
+  "row": 8256,
+  "ps2": "0x002cfd68",
+  "verdict": "accept",
+  "why": "Currently named GetSomeGlobalFileRelatedObject; returns objHeapClass, called by __builtin_new; the 0x10 slot just before GetMemVectors."
+ },
+ {
+  "window": 155,
+  "row": 8307,
+  "ps2": "0x002d0aa8",
+  "verdict": "accept",
+  "why": "random() scaled to a float in [0,1), as AUF rrandom."
+ },
+ {
+  "window": 155,
+  "row": 8308,
+  "ps2": "0x002d0b08",
+  "verdict": "accept",
+  "why": "Unpacks 3 colour bytes into a COORD3 scaled by 1/255."
+ },
+ {
+  "window": 155,
+  "row": 8309,
+  "ps2": "0x002d0c48",
+  "verdict": "accept",
+  "why": "Unpacks 4 bytes into a COORD4 scaled by 1/255, as AUF BytesToCoord(COORD4)."
+ },
+ {
+  "window": 155,
+  "row": 8310,
+  "ps2": "0x002d0db8",
+  "verdict": "accept",
+  "why": "Tests a matrix's rows (dpcmp); 0x198 exact."
+ },
+ {
+  "window": 155,
+  "row": 8311,
+  "ps2": "0x002d0f50",
+  "verdict": "accept",
+  "why": "Angles/360, floorf, VU0 sin/cos into a matrix from scale/rotation/translation floats; 0x1d8 exact."
+ },
+ {
+  "window": 156,
+  "row": 8337,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2d2e30 (point-to-line distance squared, 0x98) is not a Ghidra function; create by hand."
+ },
+ {
+  "window": 156,
+  "row": 8338,
+  "ps2": "0x002d2ec8",
+  "verdict": "accept",
+  "why": "At the sheet's exact address; allocates point arrays and uses PTDir to build a convex hull."
+ },
+ {
+  "window": 157,
+  "row": 8467,
+  "ps2": "0x002d7bb0",
+  "verdict": "accept",
+  "method": "clear",
+  "why": "Walks a circular list freeing 0x108-byte nodes; used on the FileLoadRequest lists in Startup and the static init."
+ },
+ {
+  "window": 157,
+  "row": 8468,
+  "ps2": "0x002d7cc0",
+  "verdict": "accept",
+  "method": "_M_copy",
+  "why": "Recursive node copy (0x14 nodes, string refcount copy), called by the UFileFind copy constructor; 0x178 exact."
+ },
+ {
+  "window": 157,
+  "row": 8469,
+  "ps2": "0x002d7e38",
+  "verdict": "accept",
+  "method": "_M_erase",
+  "why": "Recurses right, walks left, releases the string rep and frees the 0x14 node."
+ },
+ {
+  "window": 157,
+  "row": 8470,
+  "ps2": "0x002d8238",
+  "verdict": "accept",
+  "why": "Already named UFileFind::UFileFind; copies the tree via _M_copy from another UFileFind; 0x130 exact."
+ },
+ {
+  "window": 157,
+  "row": 8471,
+  "ps2": "0x002d8368",
+  "verdict": "accept",
+  "why": "Calls the static init with (1, 0xffff); in the ctor list."
+ },
+ {
+  "window": 157,
+  "row": 8472,
+  "ps2": "0x002d8388",
+  "verdict": "accept",
+  "why": "Calls the static init with (0, 0xffff); in the dtor list."
+ },
+ {
+  "window": 158,
+  "row": 8497,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x2d8be8 (sets mask 0x355cb8 and scales 0x421ad0/4 from a bit count) is not a Ghidra function."
+ },
+ {
+  "window": 158,
+  "row": 8498,
+  "ps2": "0x002d8c38",
+  "verdict": "accept",
+  "why": "Masked ints -> xyzrottom3 -> m3toquat."
+ },
+ {
+  "window": 158,
+  "row": 8499,
+  "ps2": "0x002d8d58",
+  "verdict": "accept",
+  "why": "quattom3 -> m3toxyzrot -> rounded masked ints."
+ },
+ {
+  "window": 158,
+  "row": 8500,
+  "ps2": "0x002d8e78",
+  "verdict": "accept",
+  "why": "Reads an n-bit field at a bit offset; 0x78 exact."
+ },
+ {
+  "window": 158,
+  "row": 8501,
+  "ps2": "0x002d8ef0",
+  "verdict": "accept",
+  "why": "Writes an n-bit field at a bit offset; 0x98 exact."
+ },
+ {
+  "window": 158,
+  "row": 8502,
+  "ps2": "0x002d8f88",
+  "verdict": "accept",
+  "why": "GetIntBitField / (2^n-1) as a float."
+ },
+ {
+  "window": 158,
+  "row": 8503,
+  "ps2": "0x002d9000",
+  "verdict": "accept",
+  "why": "float*(2^n-1) -> SetIntBitField."
+ },
+ {
+  "window": 158,
+  "row": 8504,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "No candidate: SetFloatBitField is followed directly by the LString split functions."
+ },
+ {
+  "window": 158,
+  "row": 8505,
+  "ps2": "0x002d9070",
+  "verdict": "accept",
+  "why": "Scans from a start index for a char and splits into two LStrings."
+ },
+ {
+  "window": 158,
+  "row": 8506,
+  "ps2": "0x002d90e8",
+  "verdict": "accept",
+  "why": "Scans backwards for a char and splits."
+ },
+ {
+  "window": 158,
+  "row": 8507,
+  "ps2": "0x002d9178",
+  "verdict": "accept",
+  "why": "Splits into two LStrings at an index."
+ },
+ {
+  "window": 158,
+  "row": 8508,
+  "ps2": "0x002d91c0",
+  "verdict": "accept",
+  "why": "strncpy into a static buffer and terminates; called by Name()."
+ },
+ {
+  "window": 158,
+  "row": 8509,
+  "ps2": "0x002d9210",
+  "verdict": "accept",
+  "why": "Key table 0x359, 0xbb7, ... as AUF EncryptDecrypt; called from IniFiles."
+ },
+ {
+  "window": 158,
+  "row": 8511,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Channel-print debug code compiled out; the two remaining functions are DAFI_open's static line helpers."
+ },
+ {
+  "window": 158,
+  "row": 8512,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Channel-print debug code compiled out; the two remaining functions are DAFI_open's static line helpers."
+ },
+ {
+  "window": 158,
+  "row": 8513,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Channel-print debug code compiled out; the two remaining functions are DAFI_open's static line helpers."
+ },
+ {
+  "window": 158,
+  "row": 8514,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Channel-print debug code compiled out; the two remaining functions are DAFI_open's static line helpers."
+ },
+ {
+  "window": 158,
+  "row": 8515,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Channel-print debug code compiled out; the two remaining functions are DAFI_open's static line helpers."
+ },
+ {
+  "window": 158,
+  "row": 8516,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Channel-print debug code compiled out; the two remaining functions are DAFI_open's static line helpers."
+ },
+ {
+  "window": 158,
+  "row": 8517,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Channel-print debug code compiled out; the two remaining functions are DAFI_open's static line helpers."
+ },
+ {
+  "window": 158,
+  "row": 8518,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Channel-print debug code compiled out; the two remaining functions are DAFI_open's static line helpers."
+ },
+ {
+  "window": 159,
+  "row": 8558,
+  "ps2": "0x002dbfa0",
+  "verdict": "accept",
+  "why": "Already named __lower_bound<float*,float,int>; 0x58 exact."
+ },
+ {
+  "window": 159,
+  "row": 8559,
+  "ps2": "0x002dbff8",
+  "verdict": "accept",
+  "method": "_M_erase",
+  "why": "Recurses right, walks left, frees 0x18 nodes; span 0x158 including the static init."
+ },
+ {
+  "window": 160,
+  "row": 8758,
+  "ps2": "0x002e67e0",
+  "verdict": "accept",
+  "why": "ATrafficVehicle vtable slot after IsOneShot; returns this+name offset like AUF GetName."
+ },
+ {
+  "window": 161,
+  "row": 8760,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Only one function in the window and it is IsTracked."
+ },
+ {
+  "window": 161,
+  "row": 8761,
+  "ps2": "0x002e6a20",
+  "verdict": "accept",
+  "why": "ATrafficVehicle vtable 0x3c2e38 slot where the other vtables hold ASceneObj::IsTracked; returns state==5."
+ },
+ {
+  "window": 161,
+  "row": 8762,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Only one function in the window and it is IsTracked."
+ },
+ {
+  "window": 161,
+  "row": 8763,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Only one function in the window and it is IsTracked."
+ },
+ {
+  "window": 162,
+  "row": 8773,
+  "ps2": "0x002e7018",
+  "verdict": "accept",
+  "why": "8-byte empty function right before the ASubmersible ctor, passed as the error callback in ASystem::SetOpts."
+ },
+ {
+  "window": 163,
+  "row": 8829,
+  "ps2": "0x002eb0e0",
+  "verdict": "accept",
+  "why": "Map reallocation with memmove; 0x1d0 exact, called by _M_push_back_aux."
+ },
+ {
+  "window": 163,
+  "row": 8830,
+  "ps2": "0x002eb2b0",
+  "verdict": "accept",
+  "why": "Allocates a node and calls the map reallocation; called from Event; 0x228 exact."
+ },
+ {
+  "window": 163,
+  "row": 8831,
+  "ps2": "0x002eb4d8",
+  "verdict": "accept",
+  "why": "Currently maybeDequeStreamEntry; frees 0x1c8 node buffers (6 x 0x4c entries); 0x168 exact."
+ },
+ {
+  "window": 164,
+  "row": 8974,
+  "ps2": "0x002f45e0",
+  "verdict": "accept",
+  "method": "clear",
+  "why": "Walks the list freeing 0xc nodes; used by Clear and the gList static init."
+ },
+ {
+  "window": 165,
+  "row": 9021,
+  "ps2": "0x002f7c80",
+  "verdict": "accept",
+  "why": "Already named AGun_global_ctors (0x20)."
+ },
+ {
+  "window": 166,
+  "row": 9176,
+  "ps2": "0x002ff020",
+  "verdict": "accept",
+  "why": "Already named gMaxVolume_global_ctors (0x20)."
+ },
+ {
+  "window": 167,
+  "row": 9367,
+  "ps2": "0x00306cb8",
+  "verdict": "accept",
+  "why": "Clears *shape and calls MEM_free; called by frame destructors; at the sheet's exact address."
+ },
+ {
+  "window": 167,
+  "row": 9369,
+  "ps2": "0x00306e28",
+  "verdict": "accept",
+  "why": "Calls loader 0x306ce0 with a2=1, as AUF SHAPE_loadfile."
+ },
+ {
+  "window": 167,
+  "row": 9370,
+  "ps2": "0x00306e48",
+  "verdict": "accept",
+  "why": "Calls the loader with a2=0, as AUF SHAPE_loadfilez."
+ },
+ {
+  "window": 167,
+  "row": 9371,
+  "ps2": "0x00306e68",
+  "verdict": "accept",
+  "why": "Parses a 3-digit version from header bytes 0xd..0xf; 0x88 exact."
+ },
+ {
+  "window": 168,
+  "row": 9550,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Retail here uses the mpeg2 reference header parser: 0x304080 is picture_header, 0x304260 extension_and_user_data; no sequence-init routine."
+ },
+ {
+  "window": 169,
+  "row": 9639,
+  "ps2": "0x003245a0",
+  "verdict": "accept",
+  "why": "Stops IPU DMA, restores the FIFO, IPU_CTRL reset, IPU_CMD=0; sheet address and size 0x238 exact."
+ },
+ {
+  "window": 169,
+  "row": 9640,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x3247d8 (__register_frame_info(0x363120, 0x4222c0), in the ctor list) is not a Ghidra function."
+ },
+ {
+  "window": 169,
+  "row": 9641,
+  "ps2": null,
+  "verdict": "defer",
+  "why": "Code at 0x3247f0 (deregisters the frame, in the dtor list) is not a Ghidra function."
+ },
+ {
+  "window": 169,
+  "row": 9642,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "<default> label, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9643,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "VU0 DMA chain (DMAtag/VIF data after the last function), not code."
+ },
+ {
+  "window": 169,
+  "row": 9644,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "VU0 DMA chain (DMAtag/VIF data after the last function), not code."
+ },
+ {
+  "window": 169,
+  "row": 9645,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "VU0 DMA chain (DMAtag/VIF data after the last function), not code."
+ },
+ {
+  "window": 169,
+  "row": 9647,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9648,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9649,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9651,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9654,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9655,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9656,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9657,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9658,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9659,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9660,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9663,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9664,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9667,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9668,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9669,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ },
+ {
+  "window": 169,
+  "row": 9670,
+  "ps2": null,
+  "verdict": "absent",
+  "why": "Static data member or table, not a function."
+ }
+]

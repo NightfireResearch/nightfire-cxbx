@@ -1,0 +1,44 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00050860",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "InputToAction::InputToAction(InputDevice *)",
+   "return": "InputToAction *"
+  },
+  {
+   "address": "0x00050990",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "InputToAction::Reset(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000509c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "InputToAction::~InputToAction(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00050a20",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "InputToAction::LoadParseDefFile(char *)",
+   "return": "void"
+  }
+ ]
+}

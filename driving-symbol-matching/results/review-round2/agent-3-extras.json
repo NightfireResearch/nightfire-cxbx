@@ -1,0 +1,57 @@
+[
+ {
+  "row": 4626,
+  "ps2": "0x00208428",
+  "why": "SMissionManager::GetEnemyAccuracyBoost: returns an int by difficulty like AUF's and is called from ~EFireWeapon as in AUF."
+ },
+ {
+  "row": 4624,
+  "ps2": "0x002083e8",
+  "why": "SMissionManager::GetScore(category): unfunctioned code after CalcEndMissionScores body: sll/addu/lw 0x648(a0) (score array lookup)."
+ },
+ {
+  "row": 4625,
+  "ps2": "0x002083f8",
+  "why": "SMissionManager::GetScoreTotal: unfunctioned loop summing 12 ints from +0x648, directly after GetScore."
+ },
+ {
+  "row": 4780,
+  "ps2": "0x00210460",
+  "why": "global constructors keyed to SWeaponManager::fWeaponSortOrder: ctors-table stub (DATA 0x362fc0) calling 0x20f2b8(1,0xffff); currently misnamed Util_Step in Ghidra."
+ },
+ {
+  "row": 5133,
+  "ps2": "0x00231418",
+  "why": "WWorldMath::CalcBoundingBox: code 0x231418-0x231548 is not a Ghidra function; stub 0x2313f8 has Ghidra size 0x150 but is 0x20, leaving exactly 0x130 = sheet size."
+ },
+ {
+  "row": 5132,
+  "ps2": "0x002313f8",
+  "why": "global constructors keyed to WWorld::SetTrackName: ctors-table stub (DATA 0x362fec) calling 0x2313c0(1,0xffff)."
+ },
+ {
+  "row": 5222,
+  "ps2": "0x00235720",
+  "why": "GFXGallery::CANVAS_Suppress: sets suppress bit in canvas flags; called from SuppressEffect."
+ },
+ {
+  "row": 5223,
+  "ps2": "0x00235750",
+  "why": "GFXGallery::CANVAS_SetIntensity: writes the float to every element of the canvas; called from SetIntensity."
+ },
+ {
+  "row": 5264,
+  "ps2": "0x00238028",
+  "why": "GGallery::LINE_Draw2DStrip(COORD4*,Colour*,int): static USimpleMaterial, sets vertex and colour pointers, Draw(count)."
+ },
+ {
+  "row": 5504,
+  "ps2": "0x0024bd70",
+  "why": "IniFiles::WriteInteger: second of three empty stubs after FindSection."
+ },
+ {
+  "row": 5505,
+  "ps2": "0x0024bd78",
+  "why": "IniFiles::WriteString: third of three empty stubs after FindSection."
+ }
+]

@@ -1,0 +1,34 @@
+{
+ "batch": "046",
+ "program": "Driving.xbe",
+ "note": "Struct cluster4: RigidBody GetLocal placeholders matched by the vector each reads.",
+ "items": [
+  {
+   "xbox": "0x000ad220",
+   "expect": "RigidBody::GetLocalxxx",
+   "name": "RigidBody::GetLocalVelocity",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "RigidBody::GetLocalVelocity(void) (PS2 0x1f82e8). Rotates the vector at this+0x20 into body space with the per-body info matrix (this+0x5c) and returns it by value (hidden result pointer). PS2 GetLocalVelocity reads the same offset (lqc2 vf1,0x20(a1); a0 is the result). Was placeholder-named GetLocalxxx.",
+   "evidence": []
+  },
+  {
+   "xbox": "0x000ad270",
+   "expect": "RigidBody::GetLocalyyy",
+   "name": "RigidBody::GetLocalAngularVelocity",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "RigidBody::GetLocalAngularVelocity(void) (PS2 0x1f8380). Rotates the vector at this+0x30 into body space with the per-body info matrix (this+0x5c) and returns it by value (hidden result pointer). PS2 GetLocalAngularVelocity reads the same offset (lqc2 vf1,0x30(a1); a0 is the result). Was placeholder-named GetLocalyyy.",
+   "evidence": []
+  },
+  {
+   "xbox": "0x000ad1d0",
+   "expect": "RigidBody::GetLocalzzz",
+   "name": "RigidBody::GetLocalAngularMomentum",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "RigidBody::GetLocalAngularMomentum(void) (PS2 0x1f8250). Rotates the vector at this+0x50 into body space with the per-body info matrix (this+0x5c) and returns it by value (hidden result pointer). PS2 GetLocalAngularMomentum reads the same offset (lqc2 vf1,0x50(a1); a0 is the result). Was placeholder-named GetLocalzzz.",
+   "evidence": []
+  }
+ ]
+}

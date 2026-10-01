@@ -1,0 +1,428 @@
+{
+ "verdicts": [
+  {
+   "item": "0.1",
+   "xbox": "0x357a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Inline flag accessor (~[+0x48]&1) called from RVehicle::PostLoad; PS2 RVehicle::PostLoad inlines it and no PS2 function in or near the window has this body",
+   "intermediates": []
+  },
+  {
+   "item": "1.1",
+   "xbox": "0xcd740",
+   "ps2": "0x2299b0",
+   "name": "WTargetable::GetVelocity",
+   "verdict": "accept",
+   "why": "Called from Missile::SteerMissile as PS2 GetVelocity is; same callees (GetPhysicsObject, GetRigidBody/GetSimpleRigidBody switch on type field +0x34)",
+   "intermediates": []
+  },
+  {
+   "item": "2.1",
+   "xbox": "0x14700",
+   "ps2": "0x10d188",
+   "name": "ActCharacter::~ActCharacter",
+   "verdict": "accept",
+   "why": "Called from ActActor::~ActActor; same body: delete +0x68 (alpha), StopUsingResources, ~ActCharacterInfo on +0x20 then FastFree; no delete flag on Xbox",
+   "intermediates": []
+  },
+  {
+   "item": "3.1",
+   "xbox": "0x1adc0",
+   "ps2": "0x116678",
+   "name": "ActWeapon::SetEventDynamicData",
+   "verdict": "accept",
+   "why": "Same body: RSceneObj::SetEventDynamicData(this) then stores this to a global (PS2 DAT_0032e73c); sits just before ActWeapon::PlayEvent as on PS2",
+   "intermediates": []
+  },
+  {
+   "item": "4.1",
+   "xbox": "0xbd470",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Closest-point-on-segment helper (clamp t to 0..1) called by Util_CollideRayWithSphere and collision code; PS2 Util_CollideRayWithSphere has no callees (inlined) and no PS2 function in the window has this body",
+   "intermediates": []
+  },
+  {
+   "item": "5.1",
+   "xbox": "0x11930",
+   "ps2": "0x109ad8",
+   "name": "VU0_quatstoangvel",
+   "verdict": "accept",
+   "why": "Called from ActActor::SpawnWeapon next to VU0_m4toquat as on PS2; same body: pick largest |q component| (0..3) then switch with the same quaternion-derivative formulas / dt (PS2 in soft doubles)",
+   "intermediates": []
+  },
+  {
+   "item": "6.1",
+   "xbox": "0x18ac0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Destructor of the crossfade data block (ActAnimGroup at +0x11c, delete +0x104); PS2 inlines it in ActPoser::ShutdownCrossFadeBlend, which Xbox inlines into FinishCrossFadeBlend/~ActPoser (FastFree 0x130 there) - no PS2 name for this struct dtor",
+   "intermediates": []
+  },
+  {
+   "item": "7.1",
+   "xbox": "0x82400",
+   "ps2": "0x1b53c0",
+   "name": "RPlayerCamera::UpdateWorldAnimationCam",
+   "verdict": "accept",
+   "why": "Registered in RCameraIniLoader::LoadFile for mode string \"WorldAnim\" (next to RelativeAnim->UpdateRelativeAnimationCam); callees match PS2 (EvaluateSpline, GetPointListSize, GetAnchorPosition, PlayCurrentAnimation, UpdateAnimationCam, VU0_m4toquat, VU0_quattom4)",
+   "intermediates": []
+  },
+  {
+   "item": "8.1",
+   "xbox": "0xbad00",
+   "ps2": "0x20ea20",
+   "name": "SWeaponManager::StartNuclearSequence",
+   "verdict": "accept",
+   "why": "Called from ENuclearBlast::~ENuclearBlast as PS2 is; same body: flag=1, start tick = now+rate, copy COORD3, store float (Xbox +0x44/+0x5c/+0x50/+0x60 = PS2 +0x54/+0x6c/+0x60/+0x70, shift -0x10)",
+   "intermediates": []
+  },
+  {
+   "item": "9.1",
+   "xbox": "0x5ca80",
+   "ps2": "0x17c788",
+   "name": "Noise::Noise1",
+   "verdict": "accept",
+   "why": "Same callers (CheckForCameraShaking, RParticulate::Update, UpdateMomentumHeliCam, ~EFireWeapon); same body: x-(-10000), smoothstep 3-2t, permutation table lookups",
+   "intermediates": []
+  },
+  {
+   "item": "10.1",
+   "xbox": "0x5cc80",
+   "ps2": "0x17db68",
+   "name": "SimRandom::SimRandom",
+   "verdict": "accept",
+   "why": "Called from Simulation::Simulation; identical body: [this+8]=0x75bcd15 (123456789), returns this",
+   "intermediates": []
+  },
+  {
+   "item": "11.1",
+   "xbox": "0x982a0",
+   "ps2": "0x1c12c8",
+   "name": "RReflection::ReflPrivateData::~ReflPrivateData",
+   "verdict": "accept",
+   "why": "Called from RReflection::~RReflection just before FastFree of the private block, where PS2 ~RReflection calls ~ReflPrivateData; delete [+0xa0] and two (empty on Xbox) GeoPrimState dtors match; Xbox has viewport members in place of PS2 TARs; ctor already named ReflPrivateData on Xbox; no delete flag",
+   "intermediates": []
+  },
+  {
+   "item": "12.1",
+   "xbox": "0x9f7e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Element destructor (0x18-byte RLightning::Segment: USimpleVec at +0x10, delete +8) passed to the eh-vector iterator; PS2 inlines Segment's dtor into USimpleVec<Segment>::~USimpleVec - no PS2 name",
+   "intermediates": [
+    {
+     "xbox": "0x9f870",
+     "ps2": "0x1e3438",
+     "name": "USimpleVec<RLightning::Segment>::~USimpleVec",
+     "verdict": "accept",
+     "why": "Destroys the 0x18-byte element array (element dtor 0x9f7e0 = inlined loop on PS2), frees it, zeroes both fields; called from the element dtor on its +0x10 member exactly as PS2's recursive call on +0x10; no delete flag"
+    },
+    {
+     "xbox": "0x9f4c0",
+     "ps2": "0x1e3238",
+     "name": "RLightning::Bolt::~Bolt",
+     "verdict": "accept",
+     "why": "Called from RLightning::ClearAllBolts/Update; same body as PS2 Bolt::~Bolt: destroy USimpleVec<Segment> at +8, delete [+0], zero +0/+4"
+    }
+   ]
+  },
+  {
+   "item": "13.1",
+   "xbox": "0xe9a70",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MOV EAX,ECX; RET - trivial return-this getter (likely linker-folded), no PS2 body to confirm",
+   "intermediates": []
+  },
+  {
+   "item": "14.1",
+   "xbox": "0xf5640",
+   "ps2": "0x29c0f8",
+   "name": "EAGL::DrawArray::SetPrimitiveType",
+   "verdict": "accept",
+   "why": "Same body shape: switch on primitive type sets +0x30 to 0/1/2/-1, then if != -1 sets +0x24/+0x28/+0x20, stores type at +0, returns success bool; case values are platform enums (D3D vs PS2)",
+   "intermediates": []
+  },
+  {
+   "item": "15.1",
+   "xbox": "0x1139c1",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Quaternion multiply (4 outputs incl. w) called from DEBRIS_Draw/~EPlayEffect/~ESpawnExplosion; PS2 VU0_v4quatrotate/v3quatrotate are vector rotations (xyz only), and PS2 ~EPlayEffect inlines its quat multiply - no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "16.1",
+   "xbox": "0x780d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL introsort loop (recursive, <0x21 threshold -> insertion sort) used by RAnimEngine::Handle::Create; STL helper, SGI STL routine differs - leave unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "17.1",
+   "xbox": "0xbce50",
+   "ps2": "0x210510",
+   "name": "Util_Bound",
+   "verdict": "accept",
+   "why": "Same callers (DriveToPoint, DriveToPointSub, RigidBody::GenerateImpulse); identical body: x>max -> r, x<-max -> -r, else x; follows Util_Step as on PS2 (Util_Ramp between)",
+   "intermediates": []
+  },
+  {
+   "item": "18.1",
+   "xbox": "0xe9410",
+   "ps2": "0x284c40",
+   "name": "EAGL::Model::Optimize",
+   "verdict": "accept",
+   "why": "Called from EAGLInternal::ModelConstructor as PS2 Optimize is; same body: walks the list at +0xcc, 0xffff markers, sets 0x10000000 flag, calls a per-entry test and compacts entries",
+   "intermediates": []
+  },
+  {
+   "item": "19.1",
+   "xbox": "0x1fd40",
+   "ps2": "0x11e490",
+   "name": "AICharacterEnemySnow::AICharacterEnemySnow",
+   "verdict": "accept",
+   "why": "Constructor installing the vtable whose slot 0 is AICharacterEnemySnow::scalar_deleting_destructor; AICharacter::AICharacter then +0x140 = arg and zeroing +0x144..+0x154 as PS2 ctor; called from AIElementController::WakeUp",
+   "intermediates": []
+  },
+  {
+   "item": "20.1",
+   "xbox": "0x9ff80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL vector Xlen: builds \"vector<T> too long\" length_error and throws (called from the vector insert helper) - STL helper, leave unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "21.1",
+   "xbox": "0x89010",
+   "ps2": "0x1bd2b8",
+   "name": "RPlayerCamera::AbortCinematic",
+   "verdict": "accept",
+   "why": "Called from EAbortCinematic::~EAbortCinematic where PS2 calls AbortCinematic; same body: clear cinematic flag (Xbox +0x13c = PS2 +0x12c, +0x10), clear director queue at +0x368, zero two fields in the +0x354 block",
+   "intermediates": []
+  },
+  {
+   "item": "22.1",
+   "xbox": "0xe85b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only D3D teardown (D3DResource_Release on (*this)+0x11c, no callers); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "23.1",
+   "xbox": "0x1032e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Buffer-setup half of FnDeltaQFast::SetAnimMemoryMap (Xbox SetAnimMemoryMap stores +0xc then calls it); PS2 SetAnimMemoryMap has this code inline, no separate PS2 function (FnDeltaQ::InitBuffersAsRequired differs: lazy guard, one buffer)",
+   "intermediates": [
+    {
+     "xbox": "0x102e30",
+     "ps2": "0x26cfb8",
+     "name": "EAGLAnim::DeltaQFastMinRange::UnQuantize",
+     "verdict": "accept",
+     "why": "Called in the per-bone loop of the SetAnimMemoryMap helper where PS2 SetAnimMemoryMap calls DeltaQFastMinRange::UnQuantize(src, dst+i*0x20); same body: 8 ushorts * 3.0518e-05 (0x38000080), first four minus 1.0"
+    }
+   ]
+  },
+  {
+   "item": "24.1",
+   "xbox": "0x58fd0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL _Tree::erase(first,last) used by ~AttributeSystem (root/header check, _Erase, node walk) - STL helper, leave unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "25.1",
+   "xbox": "0xe6c00",
+   "ps2": "0x28bb30",
+   "name": "EAGL::RenderContext::SetupFrameBuffers",
+   "verdict": "accept",
+   "why": "Call position in RRenderer::RRenderer: after SetSize and the three buffer-depth setters, immediately before FeatureManager::Init, exactly where PS2 calls RenderContext::SetupFrameBuffers; Xbox body is the D3D framebuffer setup (GetBackBuffer/GetDepthStencilSurface/Clear/PersistDisplay) - platform body, position-based",
+   "intermediates": [
+    {
+     "xbox": "0xe6aa0",
+     "ps2": "0x290d00",
+     "name": "EAGL::RenderContext::SetFrontBufferDepth",
+     "verdict": "accept",
+     "why": "RRenderer ctor calls SetSize then (0x10),(0x20),(0x20) exactly as PS2 SetFront/SetBack/SetZBufferDepth; empty on Xbox (RET 4) but its only caller is RRenderer and it sits after RenderContext::SetSize/GetSize like PS2 file order"
+    },
+    {
+     "xbox": "0xe6ac0",
+     "ps2": "0x290d10",
+     "name": "EAGL::RenderContext::SetBackBufferDepth",
+     "verdict": "accept",
+     "why": "Second depth call (0x20) in RRenderer ctor; body maps depth 16/32 to a D3D format and stores depth"
+    },
+    {
+     "xbox": "0xe6b10",
+     "ps2": "0x290d20",
+     "name": "EAGL::RenderContext::SetZBufferDepth",
+     "verdict": "accept",
+     "why": "Third depth call (0x20) in RRenderer ctor; body stores depth 0/16/32 and D3D depth format 0x2c/0x2a (D16/D24S8)"
+    }
+   ]
+  },
+  {
+   "item": "26.1",
+   "xbox": "0xba150",
+   "ps2": "0x209390",
+   "name": "SMissionRule::Instantiate",
+   "verdict": "accept",
+   "why": "Called from SMissionManager::Load; same 15-case factory switch: FastAlloc(size,\"SMissionRule\") + rule ctor per type (Xbox sizes = PS2 - 8)",
+   "intermediates": [
+    {
+     "xbox": "0xb96c0",
+     "ps2": "0x209d60",
+     "name": "SRuleAlways::SRuleAlways",
+     "verdict": "accept",
+     "why": "Case 0 ctor in SMissionRule::Instantiate (PS2 case 0 = SRuleAlways)"
+    },
+    {
+     "xbox": "0xb9d20",
+     "ps2": "0x209df8",
+     "name": "SRuleAmmo::SRuleAmmo",
+     "verdict": "accept",
+     "why": "Case 1 ctor; installs vtable whose CheckRule slot is SRuleAmmo::CheckRule"
+    },
+    {
+     "xbox": "0xb9700",
+     "ps2": "0x209f38",
+     "name": "SRuleDamage::SRuleDamage",
+     "verdict": "accept",
+     "why": "Case 2 ctor; vtable CheckRule slot = SRuleDamage::CheckRule"
+    },
+    {
+     "xbox": "0xb9e10",
+     "ps2": "0x20a128",
+     "name": "SRuleHealth::SRuleHealth",
+     "verdict": "accept",
+     "why": "Case 4 ctor in the factory (PS2 case 4 = SRuleHealth), own vtable 0x193638"
+    },
+    {
+     "xbox": "0xb9f80",
+     "ps2": "0x20a520",
+     "name": "SRuleRange::SRuleRange",
+     "verdict": "accept",
+     "why": "Case 7 ctor; vtable CheckRule slot = SRuleRange::CheckRule"
+    },
+    {
+     "xbox": "0xba000",
+     "ps2": "0x20a6b8",
+     "name": "SRuleSpeed::SRuleSpeed",
+     "verdict": "accept",
+     "why": "Case 8 ctor in the factory (PS2 case 8 = SRuleSpeed). Constructor only - its CheckRule slot (0xba620) deliberately left alone"
+    },
+    {
+     "xbox": "0xba080",
+     "ps2": "0x20a858",
+     "name": "SRuleTimer::SRuleTimer",
+     "verdict": "accept",
+     "why": "Case 9 ctor; vtable CheckRule slot = SRuleTimer::CheckRule"
+    },
+    {
+     "xbox": "0xb9960",
+     "ps2": "0x20a448",
+     "name": "SRuleProperty::SRuleProperty",
+     "verdict": "accept",
+     "why": "Case 10 ctor in the factory (PS2 case 10 = SRuleProperty)"
+    },
+    {
+     "xbox": "0xb9b30",
+     "ps2": "0x20ae18",
+     "name": "SRuleCollision::SRuleCollision",
+     "verdict": "accept",
+     "why": "Case 11 ctor in the factory (PS2 case 11 = SRuleCollision)"
+    },
+    {
+     "xbox": "0xb9a50",
+     "ps2": "0x20ab28",
+     "name": "SRulePlayerDir::SRulePlayerDir",
+     "verdict": "accept",
+     "why": "Case 12 ctor; vtable CheckRule slot = SRulePlayerDir::CheckRule"
+    },
+    {
+     "xbox": "0xb99d0",
+     "ps2": "0x20aa20",
+     "name": "SRuleDifficulty::SRuleDifficulty",
+     "verdict": "accept",
+     "why": "Case 13 ctor in the factory (PS2 case 13 = SRuleDifficulty)"
+    },
+    {
+     "xbox": "0xb9b90",
+     "ps2": "0x20aec8",
+     "name": "SRuleProgCounter::SRuleProgCounter",
+     "verdict": "accept",
+     "why": "Case 14 ctor; vtable slots = SRuleProgCounter sdd/CheckRule"
+    }
+   ]
+  },
+  {
+   "item": "27.1",
+   "xbox": "0x132a75",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT one-line wrapper (calls lock helper 0x1342d8) used by __onexit - CRT internal, newlib has no counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "28.1",
+   "xbox": "0xb9c50",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Threshold-crossing test (direction flag, threshold, last value) called by SRuleTimer::CheckRule; PS2 SRuleTimer::CheckRule has this logic inline (its only callees are SMissionTimer::IsActive/GetValue) - no PS2 function",
+   "intermediates": []
+  },
+  {
+   "item": "29.1",
+   "xbox": "0x970a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Float floor-to-int helper (__ftol2, minus one for negatives) called by RWorldCamera::UpdateAnimationCam; PS2 UpdateAnimationCam inlines it - no PS2 name",
+   "intermediates": []
+  },
+  {
+   "item": "30.1",
+   "xbox": "0xfe110",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Interpolating branch of RawPoseChannel::Eval (walks channel function table with frame i/i+1, bone mask) split out on Xbox; PS2 RawPoseChannel::Eval has it inline - no PS2 function",
+   "intermediates": [
+    {
+     "xbox": "0xfdd40",
+     "ps2": "0x272248",
+     "name": "EAGLAnim::RawPoseChannel::Eval",
+     "verdict": "accept",
+     "why": "Same body as PS2 Eval: int frame, <0 -> EvalFrame(0), fraction!=0 && interp flag -> interpolate (0xfe110), else EvalFrame(frame); calls 0xfdc20 and 0xfe110"
+    },
+    {
+     "xbox": "0xfdc20",
+     "ps2": "0x2724d8",
+     "name": "EAGLAnim::RawPoseChannel::EvalFrame",
+     "verdict": "accept",
+     "why": "Called only from RawPoseChannel::Eval for whole frames; same body as PS2 EvalFrame: walks channel function table per bone (stride 0x30, +0x10), masked bones skip data by 3 floats for EulF3/TranF3, 4 for QuatF4"
+    }
+   ]
+  }
+ ]
+}

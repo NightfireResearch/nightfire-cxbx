@@ -1,0 +1,1559 @@
+{
+ "classes": [
+  {
+   "name": "CarControl",
+   "size": 32,
+   "base": null,
+   "vtable": null,
+   "comment": "0x20-byte car input block, embedded twice in PBondCar (+0x240 live, +0x3bc locked copy); same layout on both builds (char flags, no bools). Name invented from PBondCar::GetCarControl(void) const / LockCarControl",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "float",
+     "name": "steering",
+     "confidence": "high",
+     "evidence": "SetCarControlSteering 65de0 writes PBondCar+0x240; PS2 193018 same"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "float",
+     "name": "steeringVertical",
+     "confidence": "high",
+     "evidence": "SetCarControlSteeringVertical 65df0 -> +0x244 both builds"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "float",
+     "name": "strafeVertical",
+     "confidence": "high",
+     "evidence": "SetCarControlStrafeVertical 65e10 -> +0x248 both builds"
+    },
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "float",
+     "name": "strafeHorizontal",
+     "confidence": "high",
+     "evidence": "SetCarControlStrafeHorizontal 65e00 -> +0x24c both builds"
+    },
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "float",
+     "name": "gas",
+     "confidence": "high",
+     "evidence": "SetCarControlGas 65e20 -> +0x250 both builds"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "float",
+     "name": "brake",
+     "confidence": "high",
+     "evidence": "SetCarControlBrake 65e30 -> +0x254 both builds"
+    },
+    {
+     "offset": "0x18",
+     "size": 1,
+     "type": "char",
+     "name": "gear",
+     "confidence": "low",
+     "evidence": "byte +0x258 written by InitializeCarControls; PS2 has SetCarControlGear (inline on Xbox) and GetCarControl copies it; name from the sheet, mapping inferred"
+    },
+    {
+     "offset": "0x19",
+     "size": 1,
+     "type": "char",
+     "name": "handBrake",
+     "confidence": "high",
+     "evidence": "Set/GetCarControlHandBrake(char) 65e40/65e50 -> +0x259 both builds"
+    },
+    {
+     "offset": "0x1a",
+     "size": 1,
+     "type": "char",
+     "name": "firePrimary",
+     "confidence": "high",
+     "evidence": "SetCarControlFirePrimary(char) 65e60 -> +0x25a both builds"
+    },
+    {
+     "offset": "0x1b",
+     "size": 1,
+     "type": "char",
+     "name": "unknown1b",
+     "confidence": "low",
+     "evidence": "byte +0x25b written by InitializeCarControls/GetControllerInput both builds. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "PBondCar",
+   "size": 1056,
+   "base": "PVehicle",
+   "vtable": "0x0018f580",
+   "comment": "player/AI car (also snowmobile/submarine/spline modes); 0x420 on Xbox (FastAlloc 1056), PS2 at least 0x45c. Own fields start at +0x74 = end of PVehicle. Offsets identical on both builds up to +0x374; then PS2 4-byte bools pack (shift -0xc from PS2 +0x384), the glare array shrinks from int[16] to bool[16] (-0x3c from PS2 +0x3e8), an alignment pad before resetPos vanishes (-0x40 from PS2 +0x3f0), and more bools pack (-0x41 at scoreable, -0x44 from PS2 +0x444, -0x47 at wasInAir)",
+   "fields": [
+    {
+     "offset": "0x74",
+     "size": 16,
+     "type": "void *[4]",
+     "name": "tyreTracks",
+     "confidence": "high",
+     "evidence": "GetTyreTrackPtr(int) 65f20: MOV EAX,[ECX+EAX*4+0x74]; InitTyreTracks writes +0x74..+0x80 on both builds; ~PBondCar/ResetCar/ControlTyreTracks use it. Element type (tyre track object) unknown. Name invented"
+    },
+    {
+     "offset": "0x90",
+     "size": 256,
+     "type": "WHEEL_INFO1[4]",
+     "name": "wheels",
+     "confidence": "medium",
+     "evidence": "stride 0x40 x4: GetWheelRoadSurface 65ff0 reads byte [n<<6 + 0xbc] (wheel+0x2c), PS2 Simulate reads bytes +0xbc/+0xfc/+0x13c/+0x17c; +0x90 LEA in ctor/ResetCar/Process*Physics both builds; sheet AddWheelForces(WHEEL_INFO1*,...). Type name from the sheet, size inferred"
+    },
+    {
+     "offset": "0x190",
+     "size": 64,
+     "type": "COORD4[4]",
+     "name": "wheelRoadNormal",
+     "confidence": "high",
+     "evidence": "GetWheelRoadNormal(int) 66010 returns this+(n+0x19)*16; GetWheelRoadHeight(int) 65fd0 reads float [n*16+0x19c], i.e. the w slot holds the road height; physics writes +0x19c/+0x1ac/+0x1bc/+0x1cc. PS2 +0x190/+0x19c LEA"
+    },
+    {
+     "offset": "0x1d0",
+     "size": 64,
+     "type": "COORD4[4]",
+     "name": "wheelPos",
+     "confidence": "high",
+     "evidence": "GetWheelPos(int) 660d0 returns this+(n+0x1d)*16; physics writes w slots +0x1d4..+0x204; PS2 +0x1d0/+0x1d8 w8"
+    },
+    {
+     "offset": "0x210",
+     "size": 16,
+     "type": "float[4]",
+     "name": "suspensionCompression",
+     "confidence": "high",
+     "evidence": "GetSuspensionCompression(int) 65fa0 FLD [ECX+n*4+0x210]; GetSuspensionCompression(void) 66060 returns this+0x210; IsWheelOnGround 66030 tests [n*4+0x210] != 0; PS2 0x193198/0x193228 same"
+    },
+    {
+     "offset": "0x220",
+     "size": 16,
+     "type": "float[4]",
+     "name": "wheelSlip",
+     "confidence": "high",
+     "evidence": "GetCarWheelSlip(int) 66070 FLD [ECX+n*4+0x220]; PS2 floats +0x220..+0x22c in the physics methods"
+    },
+    {
+     "offset": "0x230",
+     "size": 8,
+     "type": "float[2]",
+     "name": "wheelSpinAngle",
+     "confidence": "low",
+     "evidence": "GetCarWheelSpinAngle(char) 65f80 FLD [ECX+n*4+0x230], but +0x23c is the RigidBody pointer and +0x238 a separate float, so at most 2-3 entries (per axle?); PS2 InitializeCarVariables writes +0x230/+0x234. Length inferred"
+    },
+    {
+     "offset": "0x238",
+     "size": 4,
+     "type": "float",
+     "name": "unknown238",
+     "confidence": "low",
+     "evidence": "Xbox integer store in ProcessPhysics/ProcessSimplePhysics/ProcessSnowmobilePhysics; PS2 float R/W incl. CalculateRPM. Name invented"
+    },
+    {
+     "offset": "0x23c",
+     "size": 4,
+     "type": "RigidBody *",
+     "name": "rigidBody",
+     "confidence": "high",
+     "evidence": "GetPhysics 61a50 reads +0x23c; passed as this to RigidBody::GetLocalAngularVelocity in 14 methods; PS2 +0x23c 16 methods. Name invented"
+    },
+    {
+     "offset": "0x240",
+     "size": 32,
+     "type": "CarControl",
+     "name": "carControl",
+     "confidence": "high",
+     "evidence": "GetCarControl 65ec0 copies 8 dwords from this+0x240 (REP MOVSD) to the hidden result; PS2 GetCarControl copies +0x240/+0x248/+0x250/+0x258 as doublewords; setters listed in CarControl"
+    },
+    {
+     "offset": "0x260",
+     "size": 4,
+     "type": "float",
+     "name": "unknown260",
+     "confidence": "low",
+     "evidence": "PS2 only: GetControllerInput writes float +0x260 (same offset expected on Xbox, not seen there). Name invented"
+    },
+    {
+     "offset": "0x264",
+     "size": 4,
+     "type": "float",
+     "name": "unknown264",
+     "confidence": "low",
+     "evidence": "PS2 only: GetControllerInput writes float +0x264. Name invented"
+    },
+    {
+     "offset": "0x268",
+     "size": 4,
+     "type": "float",
+     "name": "unknown268",
+     "confidence": "low",
+     "evidence": "PS2 only: InitializeCarVariables writes float +0x268. Name invented"
+    },
+    {
+     "offset": "0x26c",
+     "size": 4,
+     "type": "ActionQueue *",
+     "name": "actionQueue",
+     "confidence": "high",
+     "evidence": "FlushCarControls 62430 reads it; ~PBondCar calls ActionQueue::~ActionQueue on it; ctor inits; PS2 +0x26c also ActionQueue::IsEmpty. Name invented"
+    },
+    {
+     "offset": "0x270",
+     "size": 4,
+     "type": "float",
+     "name": "yDrawModifier",
+     "confidence": "low",
+     "evidence": "PS2 GetyDrawModifier 0x193370 reads float +0x270 (inline on Xbox, no Xbox access seen). Name from sheet"
+    },
+    {
+     "offset": "0x274",
+     "size": 4,
+     "type": "float",
+     "name": "carWheelSpeed",
+     "confidence": "medium",
+     "evidence": "PS2 GetCarWheelSpeed 0x193368 reads +0x274; Xbox float writes in ProcessPhysics/ProcessSimplePhysics/ProcessSplinePhysics. Name from sheet"
+    },
+    {
+     "offset": "0x278",
+     "size": 4,
+     "type": "float",
+     "name": "unknown278",
+     "confidence": "low",
+     "evidence": "written by InitializeCarControls/GetControllerInput both builds (PS2 float, also Simulate). Name invented"
+    },
+    {
+     "offset": "0x27c",
+     "size": 4,
+     "type": "float",
+     "name": "unknown27c",
+     "confidence": "low",
+     "evidence": "as +0x278. Name invented"
+    },
+    {
+     "offset": "0x280",
+     "size": 4,
+     "type": "float",
+     "name": "unknown280",
+     "confidence": "low",
+     "evidence": "InitializeCarControls both builds, PS2 GetControllerInput. Name invented"
+    },
+    {
+     "offset": "0x284",
+     "size": 4,
+     "type": "float",
+     "name": "unknown284",
+     "confidence": "low",
+     "evidence": "as +0x280. Name invented"
+    },
+    {
+     "offset": "0x288",
+     "size": 4,
+     "type": "float",
+     "name": "carSpeed",
+     "confidence": "high",
+     "evidence": "GetCarSpeed 65ef0 FLD +0x288; PS2 GetCarSpeed 0x193110 +0x288"
+    },
+    {
+     "offset": "0x28c",
+     "size": 4,
+     "type": "float",
+     "name": "carSteer",
+     "confidence": "high",
+     "evidence": "GetCarSteer 65f90 FLD +0x28c; PS2 GetCarSteer 0x193190"
+    },
+    {
+     "offset": "0x294",
+     "size": 4,
+     "type": "int",
+     "name": "rocketBoost",
+     "confidence": "low",
+     "evidence": "EnableRocketBoost 62ee0, ProcessPhysics, ProcessSubmarinePhysics both builds. Name invented"
+    },
+    {
+     "offset": "0x298",
+     "size": 1,
+     "type": "byte",
+     "name": "unknown298",
+     "confidence": "low",
+     "evidence": "byte R/W in ProcessPhysics/ProcessSimplePhysics/ProcessSnowmobilePhysics both builds. Name invented"
+    },
+    {
+     "offset": "0x299",
+     "size": 1,
+     "type": "byte",
+     "name": "numWheelsOnGround",
+     "confidence": "high",
+     "evidence": "GetNumWheelsOnGround 65f60 reads byte +0x299; PS2 0x193160"
+    },
+    {
+     "offset": "0x29a",
+     "size": 1,
+     "type": "byte",
+     "name": "reverseTimer",
+     "confidence": "low",
+     "evidence": "PS2 GetReverseTimer 0x193378 reads byte +0x29a; Xbox ProcessPhysics/ProcessSubmarinePhysics R/W. Name from sheet"
+    },
+    {
+     "offset": "0x29b",
+     "size": 1,
+     "type": "byte",
+     "name": "carWheelSpin",
+     "confidence": "low",
+     "evidence": "PS2 SetCarWheelSpin 0x193358 writes byte +0x29b; Xbox ProcessPhysics reads. Name from sheet"
+    },
+    {
+     "offset": "0x29c",
+     "size": 1,
+     "type": "bool",
+     "name": "reversing",
+     "confidence": "high",
+     "evidence": "IsReversing 65fb0 reads byte +0x29c; PS2 0x1931a8"
+    },
+    {
+     "offset": "0x29d",
+     "size": 1,
+     "type": "bool",
+     "name": "inShock",
+     "confidence": "high",
+     "evidence": "InShock 65f40 reads, SetInShock 62740 writes byte +0x29d; PS2 0x193148"
+    },
+    {
+     "offset": "0x29e",
+     "size": 1,
+     "type": "bool",
+     "name": "againstWall",
+     "confidence": "high",
+     "evidence": "SetAgainstWallFlag 65fc0 writes byte +0x29e; PS2 0x1931b8"
+    },
+    {
+     "offset": "0x29f",
+     "size": 1,
+     "type": "byte",
+     "name": "unknown29f",
+     "confidence": "low",
+     "evidence": "byte in ProcessPhysics (PS2 also GetControllerInput). Name invented"
+    },
+    {
+     "offset": "0x2a0",
+     "size": 16,
+     "type": "int[4]",
+     "name": "tyreState",
+     "confidence": "medium",
+     "evidence": "IsTyreShredded(char) 65f00 returns [ECX+n*4+0x2a0] == 0; ProcessSimplePhysics reads +0x2a0..+0x2ac; PS2 same plus InitializeCarVariables/ApplyDamage. Non-zero = intact tyre; name invented"
+    },
+    {
+     "offset": "0x2b1",
+     "size": 1,
+     "type": "byte",
+     "name": "unknown2b1",
+     "confidence": "low",
+     "evidence": "byte in ProcessPhysics/TwoWheelStunt both builds. Name invented"
+    },
+    {
+     "offset": "0x2b2",
+     "size": 1,
+     "type": "bool",
+     "name": "twoWheelMode",
+     "confidence": "high",
+     "evidence": "EnableTwoWheelStunt 62f50 writes, GetIsInTwoWheelMode 66090 reads byte +0x2b2; PS2 0x193248"
+    },
+    {
+     "offset": "0x2b3",
+     "size": 1,
+     "type": "byte",
+     "name": "unknown2b3",
+     "confidence": "low",
+     "evidence": "byte in DisableTwoWheelStunt/ProcessPhysics both builds. Name invented"
+    },
+    {
+     "offset": "0x2b4",
+     "size": 4,
+     "type": "float",
+     "name": "twoWheelStuntTimer",
+     "confidence": "low",
+     "evidence": "float in DisableTwoWheelStunt/TwoWheelStunt/ProcessPhysics both builds. Name invented"
+    },
+    {
+     "offset": "0x2bc",
+     "size": 4,
+     "type": "float",
+     "name": "targetGas",
+     "confidence": "high",
+     "evidence": "SetTargetGas 65ea0 -> +0x2bc; PS2 0x1930b0"
+    },
+    {
+     "offset": "0x2c0",
+     "size": 4,
+     "type": "float",
+     "name": "targetBrake",
+     "confidence": "high",
+     "evidence": "SetTargetBrake 65eb0 -> +0x2c0; PS2 0x1930b8"
+    },
+    {
+     "offset": "0x2c4",
+     "size": 4,
+     "type": "float",
+     "name": "unknown2c4",
+     "confidence": "low",
+     "evidence": "InitializeCarControls/GetControllerInput both builds (PS2 float). Name invented"
+    },
+    {
+     "offset": "0x2c8",
+     "size": 4,
+     "type": "int",
+     "name": "carClass",
+     "confidence": "high",
+     "evidence": "Get/SetCarClass 65dc0/65db0; ctor stores its CarClass arg; PS2 0x193000/0x193008"
+    },
+    {
+     "offset": "0x2cc",
+     "size": 4,
+     "type": "char *",
+     "name": "carType",
+     "confidence": "high",
+     "evidence": "GetCarType 65da0; passed to __stricmp / GetCarColourVariation in ctor/ChangeCarType; PS2 strcasecmp/PVehicle::NameToIndex"
+    },
+    {
+     "offset": "0x2d0",
+     "size": 4,
+     "type": "uint",
+     "name": "carColour",
+     "confidence": "high",
+     "evidence": "GetCarColour 65dd0; ctor stores the unsigned colour arg; PS2 0x193010"
+    },
+    {
+     "offset": "0x2d4",
+     "size": 1,
+     "type": "byte",
+     "name": "unknown2d4",
+     "confidence": "low",
+     "evidence": "PS2 only: byte in GetControllerInput/InitializeCarVariables. Name invented"
+    },
+    {
+     "offset": "0x2d6",
+     "size": 1,
+     "type": "bool",
+     "name": "subRolling",
+     "confidence": "low",
+     "evidence": "byte in ctor/ProcessSubmarinePhysics/RollSub 66140 both builds. Name invented"
+    },
+    {
+     "offset": "0x2d7",
+     "size": 1,
+     "type": "byte",
+     "name": "unknown2d7",
+     "confidence": "low",
+     "evidence": "byte in AddWheelForces/ProcessPhysics (PS2 also CalculateRPM). Name invented"
+    },
+    {
+     "offset": "0x2d8",
+     "size": 1,
+     "type": "byte",
+     "name": "unknown2d8",
+     "confidence": "low",
+     "evidence": "as +0x2d7. Name invented"
+    },
+    {
+     "offset": "0x2d9",
+     "size": 1,
+     "type": "byte",
+     "name": "unknown2d9",
+     "confidence": "low",
+     "evidence": "byte in ProcessPhysics (PS2 also CalculateRPM). Name invented"
+    },
+    {
+     "offset": "0x2da",
+     "size": 1,
+     "type": "byte",
+     "name": "unknown2da",
+     "confidence": "low",
+     "evidence": "byte in AddWheelForces/ProcessPhysics both builds. Name invented"
+    },
+    {
+     "offset": "0x2db",
+     "size": 1,
+     "type": "byte",
+     "name": "landingFlag",
+     "confidence": "low",
+     "evidence": "byte in ImproveLanding/ProcessPhysics/ProcessSnowmobilePhysics both builds. Name invented"
+    },
+    {
+     "offset": "0x2dc",
+     "size": 4,
+     "type": "float",
+     "name": "unknown2dc",
+     "confidence": "low",
+     "evidence": "ctor store (Xbox integer MOV of a constant); PS2 float in ctor/ApplyDamage. Name invented"
+    },
+    {
+     "offset": "0x2e0",
+     "size": 4,
+     "type": "void *",
+     "name": "targetBeacon",
+     "confidence": "high",
+     "evidence": "WTargetable* (type not in the allowed list): Enable/DisableTargetBeacon, GetTargetBeacon 66170; ~PBondCar calls WTargetable::RemoveReference; PS2 +0x2e0 same"
+    },
+    {
+     "offset": "0x2e4",
+     "size": 4,
+     "type": "void *",
+     "name": "aiGroundVehicle",
+     "confidence": "high",
+     "evidence": "AIGroundVehicle*: SetAIGroundVehicle 65d70 / GetAIGroundVehiclePtr 65d80; PS2 GetSplinePath calls AIVehicle::GetSplinePath on it; PS2 +0x2e4"
+    },
+    {
+     "offset": "0x2e8",
+     "size": 4,
+     "type": "float",
+     "name": "unknown2e8",
+     "confidence": "low",
+     "evidence": "float in AddWheelForces/ProcessPhysics both builds. Name invented"
+    },
+    {
+     "offset": "0x2ec",
+     "size": 4,
+     "type": "float",
+     "name": "unknown2ec",
+     "confidence": "low",
+     "evidence": "float in the wheel-force and physics methods both builds. Name invented"
+    },
+    {
+     "offset": "0x2f0",
+     "size": 128,
+     "type": "DamageZone[16]",
+     "name": "damageZones",
+     "confidence": "high",
+     "evidence": "ResetDamage 62600 zeroes 16 x 8 bytes from this+0x2f0; GetDamageZones 62a40 returns this+0x2f0 (same pattern as PHelicopter+0xac); PS2 +0x2f0/+0x2f4 in ApplyDamage/SetVisualDamage"
+    },
+    {
+     "offset": "0x370",
+     "size": 4,
+     "type": "float",
+     "name": "damageByPlayer",
+     "confidence": "medium",
+     "evidence": "AddDamageByPlayer 62660 / ResetDamage (0) both builds. Name invented"
+    },
+    {
+     "offset": "0x374",
+     "size": 1,
+     "type": "byte",
+     "name": "damageByPlayerTimer",
+     "confidence": "medium",
+     "evidence": "GetDamageByPlayerTimer 65f70 reads byte +0x374; ResetDamage stores byte 0; PS2 byte +0x374"
+    },
+    {
+     "offset": "0x375",
+     "size": 1,
+     "type": "bool",
+     "name": "unknown375",
+     "confidence": "low",
+     "evidence": "ctor-only byte; = PS2 4-byte +0x378 (ctor W). Start of the bool packing: PS2 +0x378..+0x380 are 4-byte bools. Name invented"
+    },
+    {
+     "offset": "0x376",
+     "size": 1,
+     "type": "bool",
+     "name": "tyreBlowOutsDisabled",
+     "confidence": "medium",
+     "evidence": "DisableTyreBlowOuts 66080 writes byte +0x376, ApplyDamage reads; PS2 +0x37c (Enable/DisableTyreBlowOuts). Polarity inferred"
+    },
+    {
+     "offset": "0x377",
+     "size": 1,
+     "type": "bool",
+     "name": "empActive",
+     "confidence": "high",
+     "evidence": "EmpActive 65ee0 reads byte +0x377; AttackWithEmp/ClearEMPState write; PS2 +0x380 (EmpActive 0x193108)"
+    },
+    {
+     "offset": "0x378",
+     "size": 4,
+     "type": "int",
+     "name": "empTimer",
+     "confidence": "low",
+     "evidence": "AttackWithEmp/ClearEMPState/ctor both builds (PS2 +0x384). Name invented"
+    },
+    {
+     "offset": "0x37c",
+     "size": 4,
+     "type": "ABaseSound *",
+     "name": "audio",
+     "confidence": "high",
+     "evidence": "AVehicle* (an ABaseSound subclass: InitAudioObject uses ABaseSound::operator_new, AVehicle::ChooseHorn): GetAudio 65d50 / SetAudio 65d60; PS2 +0x388"
+    },
+    {
+     "offset": "0x380",
+     "size": 4,
+     "type": "int",
+     "name": "turnSignal380",
+     "confidence": "low",
+     "evidence": "HandleTurnSignals/ctor; PS2 +0x38c (SignalLeft/SignalRight). Name invented"
+    },
+    {
+     "offset": "0x384",
+     "size": 4,
+     "type": "int",
+     "name": "turnSignal384",
+     "confidence": "low",
+     "evidence": "HandleTurnSignals/ctor; PS2 +0x390. Name invented"
+    },
+    {
+     "offset": "0x388",
+     "size": 4,
+     "type": "float",
+     "name": "turnSignalTimer388",
+     "confidence": "low",
+     "evidence": "float, HandleTurnSignals/ctor; PS2 +0x394. Name invented"
+    },
+    {
+     "offset": "0x38c",
+     "size": 4,
+     "type": "float",
+     "name": "turnSignalTimer38c",
+     "confidence": "low",
+     "evidence": "float, HandleTurnSignals; PS2 +0x398 (SignalLeft/Right). Name invented"
+    },
+    {
+     "offset": "0x390",
+     "size": 4,
+     "type": "int",
+     "name": "turnSignal390",
+     "confidence": "low",
+     "evidence": "HandleTurnSignals/ctor; PS2 +0x39c. Name invented"
+    },
+    {
+     "offset": "0x394",
+     "size": 4,
+     "type": "char[4]",
+     "name": "carToggleInfo",
+     "confidence": "medium",
+     "evidence": "FireLaser 62b70 reads byte +0x394, ctor writes +0x394..+0x397; PS2 GetCarToggleInfo 0x193360 returns this+0x3a0 (bytes +0x3a0..+0x3a3). Name from sheet"
+    },
+    {
+     "offset": "0x398",
+     "size": 4,
+     "type": "int",
+     "name": "laserState",
+     "confidence": "low",
+     "evidence": "FireLaser writes +0x398; PS2 +0x3a4 (FireLaser/Simulate). Name invented"
+    },
+    {
+     "offset": "0x39c",
+     "size": 16,
+     "type": "bool[16]",
+     "name": "glareOn",
+     "confidence": "high",
+     "evidence": "GlareOn 62d00: byte [glare+this+0x39c] tested then set to 1 (GlareOff mirror); ResetDamage clears 4 dwords +0x39c..+0x3a8; PS2 GlareOn 0x18b328 uses int[glare] at +0x3a8 (lw/sw), so this array is 0x40 bytes on PS2 and 0x10 on Xbox"
+    },
+    {
+     "offset": "0x3ac",
+     "size": 4,
+     "type": "int",
+     "name": "resetAvailable",
+     "confidence": "high",
+     "evidence": "GetResetAvailable 65d90 reads dword +0x3ac; PS2 +0x3e8 (GetResetAvailable 0x192ff0)"
+    },
+    {
+     "offset": "0x3b0",
+     "size": 12,
+     "type": "COORD3",
+     "name": "resetPos",
+     "confidence": "medium",
+     "evidence": "LEA in ctor/ChangeCarType/ResetCar(bool); PS2 +0x3f0 (w8) + +0x3f8 in the same methods, 8-aligned with a 4-byte pad at PS2 +0x3ec. Name invented"
+    },
+    {
+     "offset": "0x3bc",
+     "size": 32,
+     "type": "CarControl",
+     "name": "lockedCarControl",
+     "confidence": "high",
+     "evidence": "LockCarControlForever 65e70 takes this+0x3bc and writes +0x3dc; PS2 LockCarControl/LockCarControlForever copy 4 doublewords +0x3fc..+0x414 then +0x41c"
+    },
+    {
+     "offset": "0x3dc",
+     "size": 4,
+     "type": "int",
+     "name": "carControlLocked",
+     "confidence": "medium",
+     "evidence": "LockCarControlForever writes it; PS2 +0x41c also UnlockCarControl/Simulate. Name invented"
+    },
+    {
+     "offset": "0x3e0",
+     "size": 4,
+     "type": "float",
+     "name": "bob3e0",
+     "confidence": "low",
+     "evidence": "float in ProcessSimplePhysics/ProcessSubmarinePhysics; PS2 +0x420. Name invented"
+    },
+    {
+     "offset": "0x3e4",
+     "size": 4,
+     "type": "float",
+     "name": "bobAngle3e4",
+     "confidence": "low",
+     "evidence": "float passed to sin_fractionalangle; PS2 +0x424. Name invented"
+    },
+    {
+     "offset": "0x3e8",
+     "size": 4,
+     "type": "float",
+     "name": "bobAngle3e8",
+     "confidence": "low",
+     "evidence": "float passed to sin_fractionalangle; PS2 +0x428. Name invented"
+    },
+    {
+     "offset": "0x3ec",
+     "size": 4,
+     "type": "float",
+     "name": "unknown3ec",
+     "confidence": "low",
+     "evidence": "ResetDamage stores 175.0f (0x442f0000); ctor LEA; PS2 +0x42c. Name invented"
+    },
+    {
+     "offset": "0x3f0",
+     "size": 1,
+     "type": "bool",
+     "name": "immunity",
+     "confidence": "high",
+     "evidence": "SetImmunity 660c0 writes byte; ApplyDamage reads; PS2 4-byte +0x430"
+    },
+    {
+     "offset": "0x3f4",
+     "size": 4,
+     "type": "undefined4",
+     "name": "shieldPointLoc",
+     "confidence": "medium",
+     "evidence": "SetShieldPointLoc 66020 writes; ApplyDamage reads; PS2 +0x434"
+    },
+    {
+     "offset": "0x3f8",
+     "size": 4,
+     "type": "float",
+     "name": "unknown3f8",
+     "confidence": "low",
+     "evidence": "InitializeCarControls; PS2 float +0x438 (also GetControllerInput). Name invented"
+    },
+    {
+     "offset": "0x3fc",
+     "size": 1,
+     "type": "bool",
+     "name": "oilSlick",
+     "confidence": "high",
+     "evidence": "SetOilSlick 65f50 writes byte +0x3fc; physics reads; PS2 byte +0x43c"
+    },
+    {
+     "offset": "0x3fd",
+     "size": 1,
+     "type": "byte",
+     "name": "unknown3fd",
+     "confidence": "low",
+     "evidence": "byte in ProcessPhysics; PS2 +0x43d. Name invented"
+    },
+    {
+     "offset": "0x3fe",
+     "size": 1,
+     "type": "byte",
+     "name": "unknown3fe",
+     "confidence": "low",
+     "evidence": "byte in ControlTyreTracks/ProcessPhysics/ProcessSplinePhysics; PS2 +0x43e. Name invented"
+    },
+    {
+     "offset": "0x3ff",
+     "size": 1,
+     "type": "bool",
+     "name": "scoreable",
+     "confidence": "high",
+     "evidence": "SetScoreable 65f30 writes byte +0x3ff, ctor inits; PS2 4-byte +0x440 (Get/SetScoreable)"
+    },
+    {
+     "offset": "0x400",
+     "size": 4,
+     "type": "float",
+     "name": "unknown400",
+     "confidence": "low",
+     "evidence": "InitializeCarControls/GetControllerInput; PS2 float +0x444. Name invented"
+    },
+    {
+     "offset": "0x404",
+     "size": 4,
+     "type": "float",
+     "name": "unknown404",
+     "confidence": "low",
+     "evidence": "InitializeCarControls; PS2 float +0x448. Name invented"
+    },
+    {
+     "offset": "0x408",
+     "size": 1,
+     "type": "bool",
+     "name": "unknown408",
+     "confidence": "low",
+     "evidence": "byte, ctor/ProcessSubmarinePhysics; PS2 byte +0x44c. Name invented"
+    },
+    {
+     "offset": "0x409",
+     "size": 1,
+     "type": "bool",
+     "name": "forceRollDirection",
+     "confidence": "medium",
+     "evidence": "ForceRollDirection 66130 writes byte +0x409; PS2 +0x44d"
+    },
+    {
+     "offset": "0x40a",
+     "size": 1,
+     "type": "bool",
+     "name": "forceStop",
+     "confidence": "high",
+     "evidence": "GetForceStop 660e0 / ForceStopOn / ForceStopOff; PS2 +0x44e"
+    },
+    {
+     "offset": "0x40b",
+     "size": 1,
+     "type": "bool",
+     "name": "rollSub",
+     "confidence": "low",
+     "evidence": "RollSub 66140 writes byte +0x40b (and +0x2d6); PS2 +0x44f. Name invented"
+    },
+    {
+     "offset": "0x40c",
+     "size": 4,
+     "type": "int",
+     "name": "secondaryType",
+     "confidence": "high",
+     "evidence": "GetSecondaryType 66160; ctor; PS2 +0x450"
+    },
+    {
+     "offset": "0x411",
+     "size": 1,
+     "type": "bool",
+     "name": "wasInAir",
+     "confidence": "high",
+     "evidence": "Get/SetWasInAir 660a0/660b0 byte +0x411; PS2 4-byte +0x458"
+    }
+   ]
+  },
+  {
+   "name": "Missile",
+   "size": 1840,
+   "base": "PhysicsObject",
+   "vtable": "0x0018eef8",
+   "comment": "homing missile; 0x730 on Xbox (FastFree 0x730, alloc 1840). Embeds an RMissileStreak (0x650, an RAutonomousObj subclass) at +0xa0. Same offsets on both builds up to +0x704, then PS2 4-byte bools +0x708/+0x70c/+0x710 pack into Xbox bytes +0x708..+0x70a and later fields move by -8",
+   "fields": [
+    {
+     "offset": "0x6c",
+     "size": 4,
+     "type": "void *",
+     "name": "target",
+     "confidence": "high",
+     "evidence": "WTargetable*: SetTarget 5f680 writes; ~Missile calls WTargetable::RemoveReference; PS2 GetTarget 0x183b38 reads +0x6c"
+    },
+    {
+     "offset": "0x70",
+     "size": 12,
+     "type": "COORD3",
+     "name": "steerVector",
+     "confidence": "low",
+     "evidence": "PS2 floats +0x70/+0x74/+0x78 R/W in ctor/SteerMissile; Xbox ctor writes +0x70 (integer) and +0x74/+0x78 (float). Name invented"
+    },
+    {
+     "offset": "0x7c",
+     "size": 4,
+     "type": "float",
+     "name": "unknown7c",
+     "confidence": "low",
+     "evidence": "ctor store; PS2 float. Name invented"
+    },
+    {
+     "offset": "0x80",
+     "size": 4,
+     "type": "float",
+     "name": "steerTimer",
+     "confidence": "low",
+     "evidence": "written by ctor and both SetUserSteerX/SetUserSteerY on both builds. Name invented"
+    },
+    {
+     "offset": "0x84",
+     "size": 4,
+     "type": "float",
+     "name": "unknown84",
+     "confidence": "low",
+     "evidence": "float, ctor/Render (PS2 also SteerMissile). Name invented"
+    },
+    {
+     "offset": "0x88",
+     "size": 4,
+     "type": "float",
+     "name": "unknown88",
+     "confidence": "low",
+     "evidence": "float, ctor/CheckForCollision both builds. Name invented"
+    },
+    {
+     "offset": "0x8c",
+     "size": 4,
+     "type": "float",
+     "name": "unknown8c",
+     "confidence": "low",
+     "evidence": "float, ctor/Render (PS2 also Simulate). Name invented"
+    },
+    {
+     "offset": "0x90",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknown90",
+     "confidence": "low",
+     "evidence": "ctor/CheckForCollision (PS2 also SteerMissile). Name invented"
+    },
+    {
+     "offset": "0x94",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknown94",
+     "confidence": "low",
+     "evidence": "ctor/Render (PS2 also SteerMissile). Name invented"
+    },
+    {
+     "offset": "0xa0",
+     "size": 1616,
+     "type": "RMissileStreak",
+     "name": "streak",
+     "confidence": "high",
+     "evidence": "ctor 'LEA ECX,[EBX+0xa0]' -> RMissileStreak::RMissileStreak, ~Missile destroys it; the ctor's EH cleanup (0x5f1e4) stores RAutonomousObj vtable 0x18a398, so RMissileStreak derives from RAutonomousObj; ctor writes its +0x8 (Missile+0xa8 = 1/2/ptr). Size = gap to +0x6f0 on both builds. Name invented"
+    },
+    {
+     "offset": "0x6f0",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknown6f0",
+     "confidence": "low",
+     "evidence": "ctor/Simulate/~Missile both builds. Name invented"
+    },
+    {
+     "offset": "0x6f4",
+     "size": 4,
+     "type": "int",
+     "name": "weaponType",
+     "confidence": "high",
+     "evidence": "PS2 GetWeaponType 0x183b20 reads +0x6f4; ctor stores the WeaponType arg; Xbox CheckForCollision/Render read it"
+    },
+    {
+     "offset": "0x6f8",
+     "size": 4,
+     "type": "float",
+     "name": "unknown6f8",
+     "confidence": "low",
+     "evidence": "ctor; PS2 float in SteerMissile. Name invented"
+    },
+    {
+     "offset": "0x6fc",
+     "size": 4,
+     "type": "float",
+     "name": "unknown6fc",
+     "confidence": "low",
+     "evidence": "ctor; PS2 float in SteerMissile. Name invented"
+    },
+    {
+     "offset": "0x700",
+     "size": 4,
+     "type": "float",
+     "name": "userSteerX",
+     "confidence": "high",
+     "evidence": "SetUserSteerX 5f600 writes float +0x700; PS2 0x181df0 same"
+    },
+    {
+     "offset": "0x704",
+     "size": 4,
+     "type": "float",
+     "name": "userSteerY",
+     "confidence": "high",
+     "evidence": "SetUserSteerY 5f640 writes float +0x704; PS2 0x181e30 same"
+    },
+    {
+     "offset": "0x708",
+     "size": 1,
+     "type": "bool",
+     "name": "unknown708",
+     "confidence": "low",
+     "evidence": "ctor byte; PS2 4-byte +0x708 (ctor/SteerMissile). Name invented"
+    },
+    {
+     "offset": "0x709",
+     "size": 1,
+     "type": "bool",
+     "name": "detonate",
+     "confidence": "medium",
+     "evidence": "ctor/CheckForCollision byte; = PS2 +0x70c (Detonate 0x183b28 sets it)"
+    },
+    {
+     "offset": "0x70a",
+     "size": 1,
+     "type": "bool",
+     "name": "isDecaying",
+     "confidence": "medium",
+     "evidence": "ctor/CheckForCollision/Render/Simulate byte; = PS2 +0x710 (GetIsDecaying 0x183b40)"
+    },
+    {
+     "offset": "0x70c",
+     "size": 4,
+     "type": "float",
+     "name": "unknown70c",
+     "confidence": "low",
+     "evidence": "float, ctor/Simulate; PS2 +0x714. Name invented"
+    },
+    {
+     "offset": "0x710",
+     "size": 4,
+     "type": "float",
+     "name": "unknown710",
+     "confidence": "low",
+     "evidence": "float, ctor/CheckForCollision; PS2 +0x718. Name invented"
+    },
+    {
+     "offset": "0x714",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknown714",
+     "confidence": "low",
+     "evidence": "ctor; PS2 +0x71c (SteerMissile). Name invented"
+    },
+    {
+     "offset": "0x718",
+     "size": 4,
+     "type": "float",
+     "name": "unknown718",
+     "confidence": "low",
+     "evidence": "ctor float; PS2 +0x720. Name invented"
+    },
+    {
+     "offset": "0x71c",
+     "size": 4,
+     "type": "float",
+     "name": "unknown71c",
+     "confidence": "low",
+     "evidence": "ctor; PS2 float +0x724. Name invented"
+    },
+    {
+     "offset": "0x720",
+     "size": 4,
+     "type": "float",
+     "name": "unknown720",
+     "confidence": "low",
+     "evidence": "ctor; PS2 float +0x728. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "Sentry",
+   "size": 200,
+   "base": "PhysicsObject",
+   "vtable": "0x00190034",
+   "comment": "gun turret; 0xc8 on Xbox (FastFree 0xc8, alloc 200), PS2 0xcc. Same offsets up to +0x98; PS2 4-byte bools +0x9c/+0xa0 pack to Xbox +0x9c/+0x9d and every later field is PS2-4",
+   "fields": [
+    {
+     "offset": "0x6c",
+     "size": 4,
+     "type": "undefined4",
+     "name": "srbState",
+     "confidence": "low",
+     "evidence": "ctor/TrackTarget; PS2 +0x6c also RotateSRB (paired with +0x70 for RotateAnim). Name invented"
+    },
+    {
+     "offset": "0x70",
+     "size": 4,
+     "type": "undefined4",
+     "name": "animState",
+     "confidence": "low",
+     "evidence": "ctor/TrackTarget; PS2 +0x70 also RotateAnim. Name invented"
+    },
+    {
+     "offset": "0x74",
+     "size": 4,
+     "type": "float",
+     "name": "unknown74",
+     "confidence": "low",
+     "evidence": "float ctor; PS2 RotateSRB. Name invented"
+    },
+    {
+     "offset": "0x78",
+     "size": 4,
+     "type": "float",
+     "name": "unknown78",
+     "confidence": "low",
+     "evidence": "float ctor; PS2 RotateAnim. Name invented"
+    },
+    {
+     "offset": "0x7c",
+     "size": 4,
+     "type": "float",
+     "name": "unknown7c",
+     "confidence": "low",
+     "evidence": "ctor; PS2 float RotateSRB. Name invented"
+    },
+    {
+     "offset": "0x80",
+     "size": 4,
+     "type": "float",
+     "name": "unknown80",
+     "confidence": "low",
+     "evidence": "float ctor; PS2 RotateAnim. Name invented"
+    },
+    {
+     "offset": "0x84",
+     "size": 4,
+     "type": "float",
+     "name": "unknown84",
+     "confidence": "low",
+     "evidence": "float ctor/TrackTarget both builds. Name invented"
+    },
+    {
+     "offset": "0x88",
+     "size": 4,
+     "type": "float",
+     "name": "unknown88",
+     "confidence": "low",
+     "evidence": "float, address taken in ApplyDamage/Simulate both builds. Name invented"
+    },
+    {
+     "offset": "0x8c",
+     "size": 4,
+     "type": "float",
+     "name": "unknown8c",
+     "confidence": "low",
+     "evidence": "float ctor; PS2 ApplyDamage. Name invented"
+    },
+    {
+     "offset": "0x90",
+     "size": 4,
+     "type": "float",
+     "name": "unknown90",
+     "confidence": "low",
+     "evidence": "float ctor; PS2 RotateSRB. Name invented"
+    },
+    {
+     "offset": "0x94",
+     "size": 4,
+     "type": "float",
+     "name": "unknown94",
+     "confidence": "low",
+     "evidence": "float ctor; PS2 RotateAnim. Name invented"
+    },
+    {
+     "offset": "0x98",
+     "size": 4,
+     "type": "float",
+     "name": "unknown98",
+     "confidence": "low",
+     "evidence": "ctor; PS2 float RotateAnim. Name invented"
+    },
+    {
+     "offset": "0x9c",
+     "size": 1,
+     "type": "bool",
+     "name": "unknown9c",
+     "confidence": "low",
+     "evidence": "ctor byte; PS2 4-byte +0x9c (RotateAnim). Name invented"
+    },
+    {
+     "offset": "0x9d",
+     "size": 1,
+     "type": "bool",
+     "name": "unknown9d",
+     "confidence": "low",
+     "evidence": "ctor/ApplyDamage byte; PS2 4-byte +0xa0 (ApplyDamage). Name invented"
+    },
+    {
+     "offset": "0xa0",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknownA0",
+     "confidence": "low",
+     "evidence": "ctor/Shoot/Simulate; PS2 +0xa4. Name invented"
+    },
+    {
+     "offset": "0xa4",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknownA4",
+     "confidence": "low",
+     "evidence": "RotateAnim/RotateSRB/ctor/Shoot/Simulate; PS2 +0xa8. Name invented"
+    },
+    {
+     "offset": "0xa8",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknownA8",
+     "confidence": "low",
+     "evidence": "ctor/Shoot; PS2 +0xac. Name invented"
+    },
+    {
+     "offset": "0xac",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknownAc",
+     "confidence": "low",
+     "evidence": "ctor/TrackTarget; PS2 +0xb0. Name invented"
+    },
+    {
+     "offset": "0xb0",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknownB0",
+     "confidence": "low",
+     "evidence": "ctor/Simulate; PS2 +0xb4. Name invented"
+    },
+    {
+     "offset": "0xb4",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknownB4",
+     "confidence": "low",
+     "evidence": "ctor/Simulate; PS2 +0xb8. Name invented"
+    },
+    {
+     "offset": "0xb8",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknownB8",
+     "confidence": "low",
+     "evidence": "ctor/Shoot; PS2 +0xbc. Name invented"
+    },
+    {
+     "offset": "0xbc",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknownBc",
+     "confidence": "low",
+     "evidence": "ctor/Shoot/Simulate; PS2 +0xc0. Name invented"
+    },
+    {
+     "offset": "0xc0",
+     "size": 4,
+     "type": "undefined4",
+     "name": "targetState",
+     "confidence": "low",
+     "evidence": "GetTarget 73330/TrackTarget/Simulate/ctor; PS2 +0xc4 (GetTarget/AcquireTarget/TrackTarget). Name invented"
+    },
+    {
+     "offset": "0xc4",
+     "size": 4,
+     "type": "void *",
+     "name": "target",
+     "confidence": "medium",
+     "evidence": "WTargetable*: ~Sentry/Simulate call WTargetable::RemoveReference on it; PS2 +0xc8"
+    }
+   ]
+  },
+  {
+   "name": "Human",
+   "size": 144,
+   "base": "PhysicsObject",
+   "vtable": "0x0018edf4",
+   "comment": "pedestrian/character physics object; 0x90 on Xbox (FastFree 0x90, alloc 144). Same offsets on both builds; the bools at +0x74/+0x8c are 4 bytes on PS2, 1 on Xbox, without moving anything",
+   "fields": [
+    {
+     "offset": "0x6c",
+     "size": 4,
+     "type": "int",
+     "name": "humanType",
+     "confidence": "medium",
+     "evidence": "ctor stores its HumanType arg; ApplyDamage reads; PS2 GetHuman(void) const 0x17fbd0 reads +0x6c. Name invented"
+    },
+    {
+     "offset": "0x70",
+     "size": 4,
+     "type": "void *",
+     "name": "aiCharacter",
+     "confidence": "high",
+     "evidence": "AICharacter*: SetAICharacter 5ded0; Simulate calls AICharacter::Execute on it; PS2 GetAICharacter 0x17fbd8 reads +0x70"
+    },
+    {
+     "offset": "0x74",
+     "size": 1,
+     "type": "bool",
+     "name": "unknown74",
+     "confidence": "low",
+     "evidence": "byte in ctor/ApplyDamage; PS2 4-byte +0x74. Name invented"
+    },
+    {
+     "offset": "0x80",
+     "size": 12,
+     "type": "COORD3",
+     "name": "damagePos",
+     "confidence": "medium",
+     "evidence": "Xbox ApplyDamage takes this+0x80; PS2 GetDamagePos 0x17fbe0 returns this+0x80, ApplyDamage writes +0x80 (w8)/+0x88"
+    },
+    {
+     "offset": "0x8c",
+     "size": 1,
+     "type": "bool",
+     "name": "insideVehicle",
+     "confidence": "medium",
+     "evidence": "ctor byte store; PS2 Get/SetInsideVehicle(bool) 0x17fbf0/0x17fbe8 use +0x8c"
+    }
+   ]
+  },
+  {
+   "name": "AttributeSet",
+   "size": 4,
+   "base": null,
+   "vtable": null,
+   "comment": "handle onto a loaded attribute collection; one pointer, no vptr, 4 bytes on both builds (PhysicsObject embeds it at +0x60 with its next field at +0x64)",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "void *",
+     "name": "collection",
+     "confidence": "high",
+     "evidence": "AttributeCollection* (type not in the allowed list): ctor 58f00 stores the result of AttributeSystem::GetCollection/LoadCollection; copy ctor 52020 copies it; Name 52030 returns [[this]+0x14]; every Lookup/Add method reads +0x0 on both builds. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "AttributeSystem",
+   "size": 104,
+   "base": null,
+   "vtable": "0x0018dc28",
+   "comment": "singleton attribute database (constructed size 104). vptr at +0 on BOTH builds (PS2 ctor 0x16c668 stores its vtable at 0x0(s1)), so offsets agree up to +0x60; PS2 4-byte bools +0x60/+0x64 pack to Xbox +0x60/+0x61 and symbolTable moves PS2 +0x68 -> Xbox +0x64",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "void *",
+     "name": "vtable",
+     "confidence": "high",
+     "evidence": "ctor 59090 and ~AttributeSystem 592d0 store vtable 0x18dc28 (3 slots); PS2 ctor 'sw v0,0x0(s1)'"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "void *",
+     "name": "extensionTypes",
+     "confidence": "low",
+     "evidence": "RegisterExtensionType/RegisterExtensionField/CreateExtensionAttribute; PS2 also GetExtensionTypeSize/Class/Name/InitializeExtensionType. Name invented"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "int",
+     "name": "nextExtensionType",
+     "confidence": "low",
+     "evidence": "RMW in RegisterExtensionType; PS2 ctor stores 1. Name invented"
+    },
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "void *",
+     "name": "extensionParserMap",
+     "confidence": "low",
+     "evidence": "passed to FUN_00056f70 in ProcessDafiSection/RegisterExtensionField; sheet lists AttributeSystem::AttributeExtensionParserMap. Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "void *",
+     "name": "unknown10",
+     "confidence": "low",
+     "evidence": "ctor/dtor only on both builds (heap container). Name invented"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "void *",
+     "name": "collections",
+     "confidence": "low",
+     "evidence": "passed to FUN_00052cd0/FUN_00058880 in GetCollection/CountClassNames/GetClassNextName; same on PS2. Name invented"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "void *",
+     "name": "stringTable",
+     "confidence": "low",
+     "evidence": "ctor/dtor on Xbox; PS2 MakeString passes it to FUN_00172228. Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "void *",
+     "name": "unknown1c",
+     "confidence": "low",
+     "evidence": "ctor/dtor on Xbox; PS2 MakeString. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 64,
+     "type": "char[64]",
+     "name": "collectionSection",
+     "confidence": "medium",
+     "evidence": "SetCollectionSection 525d0 copies its string to this+0x20; LoadCollection reads; ctor zeroes the first byte (PS2 'sb zero,0x20'); size = gap to +0x60"
+    },
+    {
+     "offset": "0x60",
+     "size": 1,
+     "type": "bool",
+     "name": "loadingEnabled",
+     "confidence": "medium",
+     "evidence": "byte R/W in LoadCollection/PrepareDatabase/ctor/dtor; PS2 LoadingEnabled 0x173968 reads 4-byte +0x60"
+    },
+    {
+     "offset": "0x61",
+     "size": 1,
+     "type": "bool",
+     "name": "loadingDatabase",
+     "confidence": "medium",
+     "evidence": "byte in ctor/PrepareDatabase; PS2 LoadingDatabase 0x173970 reads +0x64 (ctor stores 1)"
+    },
+    {
+     "offset": "0x64",
+     "size": 4,
+     "type": "void *",
+     "name": "symbolTable",
+     "confidence": "medium",
+     "evidence": "USymbolTable*: Xbox ctor stores 0; PS2 Get/SetSymbolTable 0x173960/0x173958 use +0x68 (ctor 0)"
+    }
+   ]
+  },
+  {
+   "name": "RMissileStreak",
+   "size": 1616,
+   "if_missing": true,
+   "fields": []
+  },
+  {
+   "name": "WHEEL_INFO1",
+   "size": 64,
+   "if_missing": true,
+   "fields": []
+  },
+  {
+   "name": "DamageZone",
+   "size": 8,
+   "if_missing": true,
+   "fields": []
+  },
+  {
+   "name": "ActionQueue",
+   "size": 2420,
+   "if_missing": true,
+   "fields": []
+  }
+ ],
+ "vtable_slots": [],
+ "returns": {
+  "0x00061a50": "RigidBody *",
+  "0x00062120": "void",
+  "0x000623b0": "void",
+  "0x00062430": "void",
+  "0x00062440": "void",
+  "0x00062600": "void",
+  "0x00062660": "void",
+  "0x00062740": "void",
+  "0x00062a40": "DamageZone *",
+  "0x00062b90": "void",
+  "0x00062c60": "void",
+  "0x00062cf0": "void",
+  "0x00062d00": "void",
+  "0x00062f60": "void",
+  "0x00065d50": "ABaseSound *",
+  "0x00065d60": "void",
+  "0x00065d70": "void",
+  "0x00065d80": "void *",
+  "0x00065d90": "int",
+  "0x00065da0": "char *",
+  "0x00065db0": "void",
+  "0x00065dc0": "int",
+  "0x00065dd0": "uint",
+  "0x00065de0": "void",
+  "0x00065df0": "void",
+  "0x00065e00": "void",
+  "0x00065e10": "void",
+  "0x00065e20": "void",
+  "0x00065e30": "void",
+  "0x00065e40": "void",
+  "0x00065e50": "char",
+  "0x00065e60": "void",
+  "0x00065ea0": "void",
+  "0x00065eb0": "void",
+  "0x00065ec0": "CarControl *",
+  "0x00065ee0": "bool",
+  "0x00065ef0": "float",
+  "0x00065f00": "bool",
+  "0x00065f20": "void *",
+  "0x00065f30": "void",
+  "0x00065f40": "bool",
+  "0x00065f50": "void",
+  "0x00065f60": "byte",
+  "0x00065f80": "float",
+  "0x00065f90": "float",
+  "0x00065fa0": "float",
+  "0x00065fb0": "bool",
+  "0x00065fc0": "void",
+  "0x00065fd0": "float",
+  "0x00065ff0": "byte",
+  "0x00066010": "COORD4 *",
+  "0x00066020": "void",
+  "0x00066030": "bool",
+  "0x00066060": "float *",
+  "0x00066070": "float",
+  "0x00066080": "void",
+  "0x00066090": "bool",
+  "0x000660a0": "bool",
+  "0x000660b0": "void",
+  "0x000660c0": "void",
+  "0x000660d0": "COORD4 *",
+  "0x000660e0": "bool",
+  "0x00066160": "int",
+  "0x00066170": "void *",
+  "0x00066640": "void",
+  "0x0006a460": "void",
+  "0x0006d350": "PBondCar *",
+  "0x0005e8c0": "Missile *",
+  "0x0005f600": "void",
+  "0x0005f640": "void",
+  "0x0005f680": "void",
+  "0x00073a90": "Sentry *",
+  "0x0005dd90": "Human *",
+  "0x0005ded0": "void",
+  "0x00052020": "AttributeSet *",
+  "0x00058f00": "AttributeSet *",
+  "0x00052030": "char *",
+  "0x000580e0": "bool",
+  "0x00058180": "int",
+  "0x00058220": "uint",
+  "0x000582c0": "float",
+  "0x000583a0": "char *",
+  "0x000583e0": "char *",
+  "0x00058f40": "void",
+  "0x00059090": "AttributeSystem *",
+  "0x00055da0": "char *",
+  "0x00053990": "int",
+  "0x000525d0": "void"
+ },
+ "skip_prototypes": [],
+ "notes": [
+  "PVehicle's real extent is 0x74 (the cluster4 lower bound is exact): PBondCar's first own field is the tyre-track pointer array at +0x74 (GetTyreTrackPtr 65f20 indexes [ECX+n*4+0x74], PS2 InitTyreTracks writes +0x74..+0x80), and PS2 PBondCar::Simulate reads the PVehicle masks at +0x6c/+0x70. No PVehicle update needed.",
+  "PBondCar PS2->Xbox drift: identical to +0x374; PS2 4-byte bools +0x378/+0x37c/+0x380 -> Xbox bytes +0x375/+0x376/+0x377 (shift -0xc from PS2 +0x384); glare array PS2 int[16] at +0x3a8 (GlareOn 0x18b328 lw/sw at +0x3a8+4n) vs Xbox bool[16] at +0x39c (GlareOn 62d00 byte [n+this+0x39c]; ResetDamage clears 16 bytes) (shift -0x3c from PS2 +0x3e8); PS2 pad at +0x3ec before the 8-aligned COORD3 at +0x3f0 (shift -0x40); PS2 bools +0x430 (immunity; Xbox pads after it), +0x440 (scoreable -> Xbox +0x3ff, -0x41), then -0x44 from PS2 +0x444, and wasInAir PS2 +0x458 -> Xbox +0x411 (-0x47; Xbox +0x410 is probably the PS2 +0x454 bool). Xbox +0x412..+0x41f unaccounted.",
+  "PBondCar wheel data comes from the indexed accessors, which the gatherer does not list: +0x90 4x0x40 wheel records (road surface byte at +0x2c), +0x190 COORD4[4] road normal with road height in w, +0x1d0 COORD4[4] wheel positions, +0x210 float[4] suspension compression, +0x220 float[4] wheel slip, +0x230 wheel spin angle. GetCarWheelSpinAngle's array can hold at most 3 floats before the RigidBody pointer at +0x23c; given as float[2] with +0x238 separate.",
+  "CarControl (0x20) is a new struct inferred from GetCarControl 65ec0 (REP MOVSD 8 dwords from this+0x240 into the hidden result, returning it) and LockCarControlForever (LEA this+0x3bc, then +0x3dc); PS2 copies the same 0x20 bytes as 4 doublewords. The Xbox accessor returns its hidden result pointer, so 'CarControl *' is given as its return.",
+  "PBondCar::GetPhysics 0x61a50 lies away from the other inline accessors (0x65d50..) and is 0x90 bytes long, yet the gatherer found only a +0x23c read; its return type RigidBody * comes from the pointer hints, not from reading the body. Worth a look: it may be misnamed.",
+  "PBondCar ForceStopOn/ForceStopOff (660f0/66110) only read +0x40a according to the gatherer despite their names (0x20 bytes each); not checked, no return types given.",
+  "PBondCar::IsTyreShredded 65f00 returns (tyreState[n] == 0): non-zero means an intact tyre.",
+  "Missile: vtable 0x18a398 (RAutonomousObj) is stored at 0x5f1e4, past the ctor body, into [EAX]: the EH cleanup that destroys the embedded RMissileStreak at +0xa0 when the ctor throws. So RMissileStreak derives from RAutonomousObj (0x80) and is 0x650 bytes (gap +0xa0..+0x6f0 on both builds). Missile's own vtable is 0x18eef8.",
+  "AttributeSystem keeps its vptr at +0 on PS2 as well (ctor 0x16c668 'sw v0,0x0(s1)' with v0 = 0x374bb8; dtor also writes +0), unlike PhysicsObject, so there is no +4 shift for its fields; only the bool packing at +0x60 changes offsets. Its containers (+0x4/+0xc/+0x10/+0x14/+0x18/+0x1c) are heap-allocated in the ctor (PS2 allocates 0xc-byte rb_tree headers), so they are pointers on both builds.",
+  "AttributeSet::Name 52030 is MOV EAX,[ECX]; MOV EAX,[EAX+0x14]: the name lives in the collection (+0x14); the set itself is one pointer. Lookup* returns follow the sheet names (Bool/Int/UInt/Float/String/ValidString).",
+  "Pointer fields whose types are not in the allowed list are typed void * with the intended type in the evidence: WTargetable* (PBondCar+0x2e0, Missile+0x6c, Sentry+0xc4), AIGroundVehicle* (PBondCar+0x2e4), AICharacter* (Human+0x70), AttributeCollection* (AttributeSet+0), USymbolTable* (AttributeSystem+0x64); PBondCar audio is AVehicle*, typed as its base ABaseSound *.",
+  "Sentry: the PS2 target pointer is at +0xc8 (the gatherer hint '-> PhysicsObject::~PhysicsObject' there is spurious); the Xbox equivalent +0xc4 calls WTargetable::RemoveReference.",
+  "Human: +0x75..+0x7f unexplained; since damagePos is at +0x80 on Xbox too (not packed down to +0x78), there is likely another member in +0x78..+0x7f.",
+  "Placeholders: RMissileStreak 0x650, WHEEL_INFO1 0x40 (sheet name from AddWheelForces(WHEEL_INFO1*,...)), DamageZone 8, ActionQueue 0x974."
+ ]
+}

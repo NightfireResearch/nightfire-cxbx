@@ -1,0 +1,48 @@
+{
+ "batch": "017",
+ "program": "Driving.xbe",
+ "note": "Folded event scalar deleting destructors: convention fix.",
+ "items": [
+  {
+   "xbox": "0x00047ed0",
+   "expect": "EInsertObjective::~EInsertObjective",
+   "name": "EInsertObjective::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [
+    "EStartTimedAction::scalar_deleting_destructor"
+   ],
+   "evidence": [
+    "takes the delete flag: MSVC scalar deleting destructor, folded by the linker across several event classes' vtables (slot 0). Was EInsertObjective::~EInsertObjective"
+   ]
+  },
+  {
+   "xbox": "0x00048680",
+   "expect": "EBeginDownloadCode::~EBeginDownloadCode",
+   "name": "EBeginDownloadCode::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [
+    "EChangeMaxTraffic::scalar_deleting_destructor",
+    "EChangeStage::~EChangeStage",
+    "EStopTimer::~EStopTimer"
+   ],
+   "evidence": [
+    "takes the delete flag: MSVC scalar deleting destructor, folded by the linker across several event classes' vtables (slot 0). Was EBeginDownloadCode::~EBeginDownloadCode"
+   ]
+  },
+  {
+   "xbox": "0x00048700",
+   "expect": "EForceNearPedRespawn::~EForceNearPedRespawn",
+   "name": "EForceNearPedRespawn::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [
+    "EStartTimer::~EStartTimer"
+   ],
+   "evidence": [
+    "takes the delete flag: MSVC scalar deleting destructor, folded by the linker across several event classes' vtables (slot 0). Was EForceNearPedRespawn::~EForceNearPedRespawn"
+   ]
+  }
+ ]
+}

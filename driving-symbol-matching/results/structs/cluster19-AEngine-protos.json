@@ -1,0 +1,61 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0012edd0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AEngine::AEngine(void)",
+   "return": "AEngine *"
+  },
+  {
+   "address": "0x0012ede0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "AEngine::Play(APath &)"
+  },
+  {
+   "address": "0x0012ef30",
+   "calling_convention": "__thiscall",
+   "return": "AEngine *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0012f940",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "void *"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    }
+   ],
+   "sheet": "AEngine::Get(char *, AVehicle &, float)",
+   "return": "AEngine *"
+  },
+  {
+   "address": "0x0012f9e0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AEngine::RemoveAll(void)"
+  }
+ ]
+}

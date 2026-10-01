@@ -1,0 +1,171 @@
+[
+ {
+  "xbox": "0x00018030",
+  "ps2": "0x001121f8",
+  "name": "URefCounter<ActModelDatabase::ModelInfo>::AddReference",
+  "votes": [
+   "000181a0"
+  ],
+  "conflict": false,
+  "strings": null,
+  "callees": 0.0,
+  "size": 1.17,
+  "verdict": "doubtful"
+ },
+ {
+  "xbox": "0x00021d50",
+  "ps2": "0x0011b518",
+  "name": "AICharacterEnemyGround::AICharacterEnemyGround",
+  "votes": [
+   "00028bb0"
+  ],
+  "conflict": false,
+  "strings": 0.0,
+  "callees": 1.0,
+  "size": 0.17,
+  "verdict": "mixed"
+ },
+ {
+  "xbox": "0x00036660",
+  "ps2": "0x0013f2e8",
+  "name": "AIVehicleController::RegisterSimHeli",
+  "votes": [
+   "00028bb0"
+  ],
+  "conflict": false,
+  "strings": null,
+  "callees": null,
+  "size": 2.86,
+  "verdict": "no evidence"
+ },
+ {
+  "xbox": "0x0003dcd0",
+  "ps2": "0x00145fc8",
+  "name": "EAICommand::EAICommand",
+  "votes": [
+   "00028bb0"
+  ],
+  "conflict": false,
+  "strings": null,
+  "callees": null,
+  "size": 1.42,
+  "verdict": "size only"
+ },
+ {
+  "xbox": "0x00055cf0",
+  "ps2": "0x00173bb0",
+  "name": "AttributeValue::ComputeBytes",
+  "votes": [
+   "00055ec0"
+  ],
+  "conflict": false,
+  "strings": null,
+  "callees": null,
+  "size": 1.39,
+  "verdict": "size only"
+ },
+ {
+  "xbox": "0x00094070",
+  "ps2": "0x002f9998",
+  "name": "URefCounter<AFader>::URefCounter",
+  "votes": [
+   "00125c20"
+  ],
+  "conflict": false,
+  "strings": null,
+  "callees": 1.0,
+  "size": 0.72,
+  "verdict": "ok"
+ },
+ {
+  "xbox": "0x000cdfb0",
+  "ps2": "0x0022af38",
+  "name": "WTargetPicker::GetSelectedTarget",
+  "votes": [
+   "000bb2b0"
+  ],
+  "conflict": false,
+  "strings": null,
+  "callees": null,
+  "size": 1.14,
+  "verdict": "size only"
+ },
+ {
+  "xbox": "0x000d98d0",
+  "ps2": "0x00244398",
+  "name": "GHud::DrawFontAndShadow",
+  "votes": [
+   "000dc7d0"
+  ],
+  "conflict": false,
+  "strings": null,
+  "callees": 1.0,
+  "size": 0.84,
+  "verdict": "ok"
+ },
+ {
+  "xbox": "0x000f3450",
+  "ps2": "0x00292358",
+  "name": "EAGL::TextureRenderContext::TextureRenderContext",
+  "votes": [
+   "000e8970"
+  ],
+  "conflict": false,
+  "strings": null,
+  "callees": null,
+  "size": 1.28,
+  "verdict": "size only"
+ },
+ {
+  "xbox": "0x00108340",
+  "ps2": "0x00260148",
+  "name": "SHAPE_type",
+  "votes": [
+   "00108000"
+  ],
+  "conflict": false,
+  "strings": null,
+  "callees": null,
+  "size": 1.47,
+  "verdict": "size only"
+ },
+ {
+  "xbox": "0x00116fc0",
+  "ps2": "0x002d7448",
+  "name": "UFileLoader::FileLoadAt",
+  "votes": [
+   "000e4030"
+  ],
+  "conflict": false,
+  "strings": null,
+  "callees": null,
+  "size": 1.18,
+  "verdict": "size only"
+ },
+ {
+  "xbox": "0x0011c5c0",
+  "ps2": "0x002d9210",
+  "name": "EncryptDecrypt",
+  "votes": [
+   "000e4030"
+  ],
+  "conflict": false,
+  "strings": null,
+  "callees": 0.5,
+  "size": 0.75,
+  "verdict": "ok"
+ },
+ {
+  "xbox": "0x00127dc0",
+  "ps2": "0x002dc500",
+  "name": "AZoomObj::AZoomObj",
+  "votes": [
+   "0011ea80"
+  ],
+  "conflict": false,
+  "strings": 1.0,
+  "callees": 1.0,
+  "size": 1.23,
+  "verdict": "ok"
+ }
+]

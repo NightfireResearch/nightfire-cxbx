@@ -1,0 +1,68 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0012a890",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ASnowMobile::~ASnowMobile(void)"
+  },
+  {
+   "address": "0x0012aa10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ASnowMobile::PlayMotor(APath &)"
+  },
+  {
+   "address": "0x0012b060",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ASnowMobile::PlayCarving(APath &)"
+  },
+  {
+   "address": "0x0012b510",
+   "calling_convention": "__thiscall",
+   "return": "ASnowMobile *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0012b540",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ASnowMobile::Play(APath &)"
+  },
+  {
+   "address": "0x0012b5f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "ASnowMobile::ASnowMobile(char *)",
+   "return": "ASnowMobile *"
+  }
+ ]
+}

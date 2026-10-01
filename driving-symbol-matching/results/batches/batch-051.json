@@ -1,0 +1,25 @@
+{
+ "batch": "051",
+ "program": "Driving.xbe",
+ "note": "Struct cluster23: the two EAGL GetCurrentViewPort functions had each other's class.",
+ "items": [
+  {
+   "xbox": "0x000ee080",
+   "expect": "EAGL::TextureRenderContext::GetCurrentViewPort",
+   "name": "EAGL::RenderContext::GetCurrentViewPort",
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "EAGL::RenderContext::GetCurrentViewPort (void) const. Returns [this+0x138], RenderContext's current viewport; sits between RenderContext::NewViewPort (0xee010) and DeleteViewPort (0xee0a0). Was filed under TextureRenderContext (swapped with 0xf3520).",
+   "evidence": []
+  },
+  {
+   "xbox": "0x000f3520",
+   "expect": "EAGL::RenderContext::GetCurrentViewPort",
+   "name": "EAGL::TextureRenderContext::GetCurrentViewPort",
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "EAGL::TextureRenderContext::GetCurrentViewPort (void) const. Returns [this+0x24], TextureRenderContext's current viewport; sits between TextureRenderContext::NewViewPort (0xf34b0) and DeleteViewPort (0xf3540). Was filed under RenderContext (swapped with 0xee080).",
+   "evidence": []
+  }
+ ]
+}

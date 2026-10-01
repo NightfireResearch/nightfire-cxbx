@@ -1,0 +1,122 @@
+[
+ {
+  "row": 6519,
+  "ps2": "0x0026ba08",
+  "why": "QuatMultXxYxZ: 4-arg quat product using only x/w of arg0, y/w of arg1, z/w of arg2 (not yet a Ghidra function)"
+ },
+ {
+  "row": 6520,
+  "ps2": "0x0026bab0",
+  "why": "QuatMultXxQ: uses x/w of arg0 and full arg1 (not yet a Ghidra function)"
+ },
+ {
+  "row": 6521,
+  "ps2": "0x0026bb40",
+  "why": "QuatMultQxZ: full arg0, z/w of arg1 (not yet a Ghidra function)"
+ },
+ {
+  "row": 6522,
+  "ps2": "0x0026d468",
+  "why": "~FnDeltaQFast: dtor slot of vtable 0x3afe80, frees the +0x10/+0x20/+0x2c buffers SetAnimMemoryMap allocates, eagl_free(this,0x40)"
+ },
+ {
+  "row": 6693,
+  "ps2": "0x002724d8",
+  "why": "RawPoseChannel::EvalFrame(int,float*,mask): called from Eval for integer frames"
+ },
+ {
+  "row": 6694,
+  "ps2": "0x002726a8",
+  "why": "EAGLAnim::EulF3: reads 3 euler degrees from stream, builds quat with sin/cos"
+ },
+ {
+  "row": 6695,
+  "ps2": "0x002727f0",
+  "why": "EAGLAnim::QuatF4: copies 4 floats from stream (not yet a Ghidra function)"
+ },
+ {
+  "row": 6696,
+  "ps2": "0x00272838",
+  "why": "EAGLAnim::TranF3: copies 3 floats to out+0x10 (not yet a Ghidra function)"
+ },
+ {
+  "row": 6699,
+  "ps2": "0x00272ba8",
+  "why": "EAGLAnim::TranF3Interp: lerps 3 floats into out+0x10 (not yet a Ghidra function)"
+ },
+ {
+  "row": 6743,
+  "ps2": "0x00276538",
+  "why": "~FnKeyDeltaChan: dtor slot of the vtable at 0x3b2440 whose type_info is FnKeyDeltaChan (Ghidra's vtable label in the body says FnDeltaQuatChan); sheet row is far from this retail position"
+ },
+ {
+  "row": 6744,
+  "ps2": "0x002765c0",
+  "why": "FnKeyDeltaChan::SetAnimMemoryMap: SetAnimMemoryMap slot shared by the key-chan vtables, stores map and (re)allocates buffer"
+ },
+ {
+  "row": 7152,
+  "ps2": "0x0025f5a8",
+  "why": "CLIP_setflags2: outcode from x,y only, right after setflags3 (not yet a Ghidra function)"
+ },
+ {
+  "row": 7259,
+  "ps2": "0x00307c00",
+  "why": "SNDMEMI_constrain(unsigned*,int*): clamps size to heap end"
+ },
+ {
+  "row": 7453,
+  "ps2": "0x00317dc8",
+  "why": "SNDMIXI_initfx(int): prologue directly after restorefx2 (0x190); Ghidra's 0x630 retail size = 0x190+0x4a0 (not yet a Ghidra function)"
+ },
+ {
+  "row": 7576,
+  "ps2": "0x002b1a58",
+  "why": "__swrite: _lseek_r if __SAPP then _write_r"
+ },
+ {
+  "row": 7578,
+  "ps2": "0x002b1b40",
+  "why": "__sclose: _close_r(fp->_data)"
+ },
+ {
+  "row": 7608,
+  "ps2": "0x002b2150",
+  "why": "_close_r: errno-wrapping call to close stub"
+ },
+ {
+  "row": 7619,
+  "ps2": "0x002b2208",
+  "why": "_lseek_r: errno-wrapping call to lseek stub"
+ },
+ {
+  "row": 7715,
+  "ps2": "0x002b5280",
+  "why": "sceDmaReset: clears channels and DMAC_STAT, PutEnv(zeroed env), optional enable"
+ },
+ {
+  "row": 7920,
+  "ps2": "0x002b8e10",
+  "why": "sceSifExitCmd: DisableDmac+RemoveDmacHandler+clear init flag; currently WRONGLY named DisableDmac"
+ },
+ {
+  "row": 7923,
+  "ps2": "0x002b8e78",
+  "why": "sceSifAddCmdHandler(cmd, fn, data)"
+ },
+ {
+  "row": 7925,
+  "ps2": "0x002b9008",
+  "why": "sceSifSendCmd: send-cmd core with flag 0"
+ },
+ {
+  "row": 7935,
+  "ps2": "0x002b9d68",
+  "why": "sceSifRegisterRpc: 7-arg prologue right after SetRpcQueue (Ghidra retail size 0x168 = 0x98+0xd0) (not yet a Ghidra function)"
+ },
+ {
+  "row": 8010,
+  "ps2": "0x002beb20",
+  "why": "sceDeci2ExReqSend: Deci2Call(-7) after ExSend (not yet a Ghidra function)"
+ }
+]

@@ -1,0 +1,192 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00071930",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RayShell::GetNumActiveRayShells(void)",
+   "return": "int"
+  },
+  {
+   "address": "0x00071940",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "RayShell::GetActiveRayShell(int)",
+   "return": "void *"
+  },
+  {
+   "address": "0x00071960",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RayShell::ClearActiveRayShells(void)"
+  },
+  {
+   "address": "0x00071970",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "RayShell::SetTriggerHittingRayShell(int)",
+   "return": "void"
+  },
+  {
+   "address": "0x00071980",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RayShell::GetTriggerHittingRayShell(void)",
+   "return": "void *"
+  },
+  {
+   "address": "0x000719a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "RayShell::ClearTracers(int)"
+  },
+  {
+   "address": "0x00071a60",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RayShell::DrawTracers(void)"
+  },
+  {
+   "address": "0x00071c80",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RayShell::DrawFlashes(void)"
+  },
+  {
+   "address": "0x00071d40",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RayShell::Reset(void)"
+  },
+  {
+   "address": "0x00071d80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RayShell::AddNewRayShellForTriggerCheck(float)"
+  },
+  {
+   "address": "0x00071e40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_3",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_4",
+     "type": "float"
+    }
+   ],
+   "sheet": "RayShell::ConsiderVictim(SimObjSig, COORD3 &, COORD3 &, float)"
+  },
+  {
+   "address": "0x00071fb0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RayShell::StaticStoreTracer(COORD3 &, COORD3 &, int, RSceneObj"
+  },
+  {
+   "address": "0x000720d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "RayShell::AddFlash(SimObjSig, COORD3 &)"
+  },
+  {
+   "address": "0x00072160",
+   "calling_convention": "__thiscall",
+   "return": "RayShell *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00072190",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RayShell::CollideWithObjects(void)"
+  },
+  {
+   "address": "0x00072790",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    }
+   ],
+   "sheet": "RayShell::CollideWithWorld(float &)"
+  },
+  {
+   "address": "0x00072ba0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_3",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "RayShell::DamagePhysicsObject(SimObjSig, COORD3 &, COORD3 &)"
+  },
+  {
+   "address": "0x00072d60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    }
+   ],
+   "sheet": "RayShell::Fire(float &)"
+  }
+ ]
+}

@@ -1,0 +1,563 @@
+{
+ "verdicts": [
+  {
+   "item": 0,
+   "xbox": "0x552d0",
+   "ps2": "0x171f50",
+   "name": "_Rb_tree<unsigned_int,_pair<unsigned_int,_AttributeExtension>,",
+   "verdict": "accept",
+   "why": "insert_unique(value) returning pair<iterator,bool>: descend comparing key vs node key, if leftmost -> _M_insert, else decrement and compare, bool at +4; no hint arg, so it is the 171f50 overload not the hint one at 172090 (MSVC operator[] calls it, hence extra Xbox callers)",
+   "intermediates": []
+  },
+  {
+   "item": 1,
+   "xbox": "0x3eb50",
+   "ps2": "0x148e30",
+   "name": "~ECameraLockOn",
+   "verdict": "accept",
+   "why": "Event dtor doing the work: vtable set, offset ([7],[5],[6]), elem/trigger/wheel/henchman branches via RedirectCarpElement (+0x44==1, 4 wheels, +0x7c count, +0x50 GetPosition), CameraLockOn(...,[8],[9]), vtable_Event; Xbox is the non-deleting ECameraLockOn::~ECameraLockOn",
+   "intermediates": [
+    {
+     "xbox": "0x47610",
+     "ps2": "0x148e30",
+     "name": "ECameraLockOn::scalar_deleting_destructor",
+     "why": "calls 0x3eb50 then Event::operator_delete(this,0x28) on flag&1 - PS2 size 0x28 matches"
+    }
+   ]
+  },
+  {
+   "item": 2,
+   "xbox": "0xcb280",
+   "ps2": "0x226788",
+   "name": "WRoadNav::SetStartEndControls",
+   "verdict": "reject",
+   "why": "SetStartEndControls is inlined on Xbox: InitAtPoint calls cb280(seg,this+0x1c,1) then cb280(seg,this+0x20,0) - cb280 is the per-end SetControlPos",
+   "intermediates": [
+    {
+     "xbox": "0xcb280",
+     "ps2": "0x226538",
+     "name": "WRoadNav::SetControlPos",
+     "why": "(seg, out, bool start): picks node by seg+0xc+idx*2 (flipped by this+0x3c), called twice with 1/0 at the slot where PS2 SetStartEndControls calls SetControlPos(..,+0x70,1)/(..,+0x80,0)"
+    }
+   ]
+  },
+  {
+   "item": 3,
+   "xbox": "0x10c980",
+   "ps2": "0x252688",
+   "name": "FILESYS_callbackop",
+   "verdict": "accept",
+   "why": "same API at same slot in ASYNCFILE_load (handle, callback): Xbox platform FILESYS finds the op by handle, stores callback or calls it at once with (handle,status,value) if complete - PS2 stores callback and calls it if op done; FILESYS_readsync/writesync helper callers also match",
+   "intermediates": []
+  },
+  {
+   "item": 4,
+   "xbox": "0x10d870",
+   "ps2": "0x257110",
+   "name": "FILE_loadsize_internal",
+   "verdict": "reject",
+   "why": "Xbox body only opensync/sizesync/closesync and returns size; it is the FILESYS_atomic callback of FILE_sizez (0x10d8c0) = PS2 FUN_00256f00 (FILE_size/FILE_sizez internal, unnamed); PS2 loadsize_internal mallocs and reads",
+   "intermediates": []
+  },
+  {
+   "item": 5,
+   "xbox": "0xc96b0",
+   "ps2": "0x226a28",
+   "name": "WRoadNav::SetStartEndPos",
+   "verdict": "reject",
+   "why": "SetStartEndPos is inlined on Xbox: InitAtPoint calls c96b0(seg,dist,pos,1) then c96b0(seg,dist,pos2,0) - c96b0 is the per-end SetBoundPos",
+   "intermediates": [
+    {
+     "xbox": "0xc96b0",
+     "ps2": "0x2267d8",
+     "name": "WRoadNav::SetBoundPos",
+     "why": "(seg, float, COORD3&, bool): node by seg+0xc+idx*2 flipped on this+0x3c, direction +0x20/+0x30 negated by end, scale by float, add node pos - PS2 SetBoundPos(WRoadSegment&, float, COORD3&, bool)"
+    }
+   ]
+  },
+  {
+   "item": 6,
+   "xbox": "0x18cf0",
+   "ps2": "0x112ef0",
+   "name": "ActPoser::RotateX",
+   "verdict": "accept",
+   "why": "cos/sin of fractional angle into X-rotation matrix (sin idx 6, -sin idx 9), negate first row when this+1==1 before/after VU0_MATRIX4_mult on +0x24 matrix; CalculateFinalCorrectionMatrix inlined as the two trailing mults",
+   "intermediates": []
+  },
+  {
+   "item": 7,
+   "xbox": "0xcda90",
+   "ps2": "0x2296d8",
+   "name": "WTargetable::UpdatePosition",
+   "verdict": "accept",
+   "why": "type +0x34: 1 RigidBody/SimpleRigidBody by flag bit0 copy pos, 2 +0x40 pos y+0.2, 3 AIVehicle::GetPosition +1.5 if type 2; SetPosition; countdown +0x30 reset to 5 with UpdateVisibility",
+   "intermediates": [
+    {
+     "xbox": "0xcd670",
+     "ps2": "0x229870",
+     "name": "WTargetable::UpdateVisibility",
+     "why": "called at UpdatePosition's countdown slot; camera pos vs target distance <=240 then StepCheckHitWorld sets visible byte - same as PS2"
+    }
+   ]
+  },
+  {
+   "item": 8,
+   "xbox": "0x37750",
+   "ps2": "0x140760",
+   "name": "DAudio::UpdateTargets",
+   "verdict": "accept",
+   "why": "AListener from camera, clear target list, walk fgSoundList: radius>0, any of 3 volumes>0, GHud::GetScreenCoords, distance<radius, name via vfunc, push AudioTarget node - identical flow",
+   "intermediates": [
+    {
+     "xbox": "0xdc4a0",
+     "ps2": "0x23d568",
+     "name": "GHud::GetScreenCoords",
+     "why": "called at GetScreenCoords slot in DAudio/GHud::UpdateTargets (both callers match PS2): out flag=0, viewport matrix x point, depth>=0.01, scale by +0x440/+0x444 (PS2 +0x44c/+0x450), IsTargetPointOnScreen check, write COORD2"
+    }
+   ]
+  },
+  {
+   "item": 9,
+   "xbox": "0x92690",
+   "ps2": "0x2a7df0",
+   "name": "memcmp",
+   "verdict": "reject",
+   "why": "Xbox body is MSVC _Tree insert ('map/set<T> too long' check, node buy/rebalance) - not memcmp; STL pairing artefact",
+   "intermediates": []
+  },
+  {
+   "item": 10,
+   "xbox": "0x112e0",
+   "ps2": "0x108638",
+   "name": "ActActor::CalculateMatrices",
+   "verdict": "accept",
+   "why": "same flow: if +0x14==0 and flag and !arg, pos +0x130 vs +0x384 dist^2>0.04 -> FindClosestFace/HeightAtPoint -> +0x390; copy +0x300->+0x80, +0xb4 += height, then matrix copies/scaling by +0x34",
+   "intermediates": []
+  },
+  {
+   "item": 11,
+   "xbox": "0x117cb0",
+   "ps2": "0x2d61b0",
+   "name": "UGroup::ResolveOffsets",
+   "verdict": "accept",
+   "why": "GetArray inlined (flag&2 relative offset *0x10), clear flag 2, recurse over (flags>>5) child groups, then UData::ResolveOffsets inlined over +8 data entries",
+   "intermediates": []
+  },
+  {
+   "item": 12,
+   "xbox": "0x12e8f0",
+   "ps2": "0x2feaa0",
+   "name": "AVehicleWind::Play",
+   "verdict": "accept",
+   "why": "same oscillator: [3]+=dt*[4], [5]+=dt*[6], bounds 1.0/0.4 -> rrandom*-/+0.02-/+0.002, 2.8/1.0 bounds, speed>5 *0.2 clamp 1, AVoice::Play",
+   "intermediates": []
+  },
+  {
+   "item": 13,
+   "xbox": "0x94070",
+   "ps2": "0x1cb400",
+   "name": "URefCounter<RCARPFile>::URefCounter",
+   "verdict": "reject",
+   "why": "Xbox body (FastAlloc(0x98,'STL') head node init, no this) is called by 8 different URefCounter<T>::Get - folded/shared allocator, not the RCARPFile ctor",
+   "intermediates": []
+  },
+  {
+   "item": 14,
+   "xbox": "0xda2e0",
+   "ps2": "0x2469b8",
+   "name": "GHud::DrawMessage",
+   "verdict": "accept",
+   "why": "+0x408 timer / +0x40c fade (/0.5 == x2) clearing +0x410, LOCALE_Symbol(+0x404), GetCenter(1.2f), FONT_SetState/SetScale(1.2)/Width/Height, QUAD_Draw2D, DrawFontAndShadow in same order",
+   "intermediates": []
+  },
+  {
+   "item": 15,
+   "xbox": "0x784a0",
+   "ps2": "0x1a4468",
+   "name": "RCamera::CreateMatrix4Inv",
+   "verdict": "accept",
+   "why": "dirty flag (+0x60 vs +0x50) cleared, 3x3 transpose into inverse (+0x10->+0x70 vs +0->+0x60), translation *-1 rotated into +0xa0 (vs +0x90) - consistent +0x10 shift",
+   "intermediates": [
+    {
+     "xbox": "0x116b70",
+     "ps2": "0x2cc498",
+     "name": "VU0_MATRIX4_3x3transpose",
+     "why": "only callee at the transpose slot of CreateMatrix4Inv (sole caller on both sides); swaps the 3x3 elements, copies the rest when src!=dst"
+    }
+   ]
+  },
+  {
+   "item": 16,
+   "xbox": "0x28a40",
+   "ps2": "0x12daf0",
+   "name": "AIElementController::SyncRuleInfo",
+   "verdict": "accept",
+   "why": "+0x48==1; +0x44==0 -> copy matrix from +0x50 object, +0x44==1 -> AIVehicle::GetRotPos, both gated by +0x40 bit0 clear; 16-dword copy into rule",
+   "intermediates": []
+  },
+  {
+   "item": 17,
+   "xbox": "0x1b160",
+   "ps2": "0x2a8038",
+   "name": "memset",
+   "verdict": "reject",
+   "why": "Xbox body is fabsf (return -x if x<0) - unrelated to memset",
+   "intermediates": []
+  },
+  {
+   "item": 18,
+   "xbox": "0xce620",
+   "ps2": "0x22aab0",
+   "name": "WTargetPicker::UpdateSelection",
+   "verdict": "accept",
+   "why": "identical: +0xa4==1 clears +0x28, validate selection in +0x30 list (+0x70 count), aim point camera*1000 or car+fwd*175, CheckHitWorld if +0xc0, screen pos or res/2, DistFromScreenPos vs radius^2",
+   "intermediates": []
+  },
+  {
+   "item": 19,
+   "xbox": "0x20ec0",
+   "ps2": "0x120d18",
+   "name": "AICharacterEnemySunroof::~AICharacterEnemySunroof",
+   "verdict": "accept",
+   "why": "Sunroof vtable 0x18aac0 (same as ctor 0x210f0), UnregisterTarget(target), clear target+0x34, RemoveReference, ~AICharacter; Xbox is the non-deleting dtor",
+   "intermediates": [
+    {
+     "xbox": "0x21230",
+     "ps2": "0x120d18",
+     "name": "AICharacterEnemySunroof::scalar_deleting_destructor",
+     "why": "calls 0x20ec0 then FastFree(this,0x170) on flag&1 (PS2 frees 0x180)"
+    }
+   ]
+  },
+  {
+   "item": 20,
+   "xbox": "0x18bd0",
+   "ps2": "0x112dc0",
+   "name": "ActPoser::Rotate",
+   "verdict": "accept",
+   "why": "cos/sin into Y-rotation matrix (-sin idx 2, sin idx 8), same negate-row guard around VU0_MATRIX4_mult, CalculateFinalCorrectionMatrix inlined; sibling of item 6 at the RotateActor slot",
+   "intermediates": []
+  },
+  {
+   "item": 21,
+   "xbox": "0x117ef0",
+   "ps2": "0x2db478",
+   "name": "CARP::RotateSplineAboutBase",
+   "verdict": "accept",
+   "why": "four matrices: translations (+0x30) of a,b,c; sub, TransformPoint by c, add back, add (c-b); result = a x c with translation row written to out[3]",
+   "intermediates": []
+  },
+  {
+   "item": 22,
+   "xbox": "0x974e0",
+   "ps2": "0x1d5e38",
+   "name": "RWorldCamera::GetAnchorResetAvailable",
+   "verdict": "accept",
+   "why": "IsAnchorValid inlined (anchor +0x128 vs +0x118, type/flag/index<0x40 check, clears anchor if invalid), then if +0x44==1 returns vfunc (x86 +0x30 == GCC +0x6c slot)",
+   "intermediates": []
+  },
+  {
+   "item": 23,
+   "xbox": "0xbabb0",
+   "ps2": "0x20e678",
+   "name": "SWeaponManager::GetWeaponFromSystem",
+   "verdict": "accept",
+   "why": "scan 32 rows x 8 ints of weapon system table, stop row at 0, return row index on match else -1",
+   "intermediates": []
+  },
+  {
+   "item": 24,
+   "xbox": "0x2a690",
+   "ps2": "0x130e88",
+   "name": "AIGroundVehicle::EngageAutoDrive",
+   "verdict": "accept",
+   "why": "phys vfuncs (set 1, reset), mode=2, SetAttackMode(0xf) inlined as +0x94=0xf, SetNavigateMode(4), clear field, pos+fwd from rigid body, *nav=4, WRoadNav::InitAtPoint(pos,fwd,0)",
+   "intermediates": []
+  },
+  {
+   "item": 25,
+   "xbox": "0x9ef00",
+   "ps2": "0x1e2320",
+   "name": "RLightning::AdvanceBoltDraw",
+   "verdict": "reject",
+   "why": "Xbox body is JitterStripPoints (random coord *scale +/- around point into 2 strip points w=1, random colour alpha scaled and clamped); AdvanceBoltDraw (call + index+=2) is inlined into callers",
+   "intermediates": [
+    {
+     "xbox": "0x9ef00",
+     "ps2": "0x1e1fe8",
+     "name": "RLightning::JitterStripPoints",
+     "why": "(point, COORD4* out, colours): random coord scaled, out[0]=p+r, out[1]=p-r, w=1.0, colour alpha scaled and clamped, both colours set; called from Segment::Draw, Bolt::Draw and the BeginBoltDraw slot like PS2"
+    }
+   ]
+  },
+  {
+   "item": 26,
+   "xbox": "0x7a650",
+   "ps2": "0x1a8380",
+   "name": "RCameraSpline::BuildSplineEx",
+   "verdict": "accept",
+   "why": "if point-list size<2 (Xbox size +0x6c, PS2 counts list +0x64): clear +0x60 and copy 4 control points into +0/+0x10/+0x20/+0x30 with w=0; same WRoadNav callers",
+   "intermediates": []
+  },
+  {
+   "item": 27,
+   "xbox": "0x95290",
+   "ps2": "0x1d0600",
+   "name": "RTextureContextManager::~RTextureContextManager",
+   "verdict": "accept",
+   "why": "vtable set, clear global, walk context map: Get, RemoveReference, delete context via vfunc if last ref, free map head and map, base vtable USingleton; non-deleting",
+   "intermediates": [
+    {
+     "xbox": "0x95360",
+     "ps2": "0x1d0600",
+     "name": "RTextureContextManager::scalar_deleting_destructor",
+     "why": "calls 0x95290 then __builtin_delete on flag&1"
+    },
+    {
+     "xbox": "0x94d80",
+     "ps2": "0x1d1708",
+     "name": "URefCounter<RTextureContext>::RemoveReference",
+     "why": "called at RemoveReference slot in the dtor loop; walk map for element==ptr, decrement refcount, erase at zero, return bool - same shape as named URefCounter<RCARPFile>::RemoveReference"
+    }
+   ]
+  },
+  {
+   "item": 28,
+   "xbox": "0xd57a0",
+   "ps2": "0x236ac8",
+   "name": "GGallery::MGMT_MainShapeIndex",
+   "verdict": "accept",
+   "why": "loop shapes from count-1 down, SHAPE_name into 4-char buf + NUL, compare to \"MAIN\" (inlined strcmp), return index else 0",
+   "intermediates": []
+  },
+  {
+   "item": 29,
+   "xbox": "0xce900",
+   "ps2": "0x209200",
+   "name": "_List_base<SMissionRule_*,_allocator<SMissionRule_*>_>::clear",
+   "verdict": "reject",
+   "why": "Xbox body is a generic MSVC list erase(first,last) of 0xc nodes shared by AMix, ASoundManager, ActActorDatabase, SMissionManager - folded STL helper",
+   "intermediates": []
+  },
+  {
+   "item": 30,
+   "xbox": "0xb6cc0",
+   "ps2": "0x2077d8",
+   "name": "SMissionManager::GetObjectiveComment",
+   "verdict": "accept",
+   "why": "return this[0x72c+i*4] vs PS2 this[0x608+i*4] - SMissionManager +0x124 shift; same GHud::UpdateTargets slot",
+   "intermediates": []
+  },
+  {
+   "item": 31,
+   "xbox": "0xb6d40",
+   "ps2": "0x207958",
+   "name": "SMissionManager::IsObjectiveVisibleToUser",
+   "verdict": "accept",
+   "why": "returns visible[i] at 0x734 vs PS2 0x610 (+0x124; bool array on Xbox), directly after the comment array as on PS2",
+   "intermediates": []
+  },
+  {
+   "item": 32,
+   "xbox": "0xbdd40",
+   "ps2": "0x212368",
+   "name": "WCollider::Clear",
+   "verdict": "accept",
+   "why": "if valid flag (0x60 vs 0x54): delete per-entry objects of 8-byte vector, then clear vectors of 8/0x28/8-byte elements (Xbox 0x34/0x44/0x54, PS2 0x30/0x3c/0x48 - MSVC 4-word vectors), clear flag",
+   "intermediates": []
+  },
+  {
+   "item": 33,
+   "xbox": "0xc8ef0",
+   "ps2": "0x221f20",
+   "name": "WRoadNetwork::GetSegmentLaneIndex",
+   "verdict": "accept",
+   "why": "GetSegmentLaneType inlined (0x10/0x20/0x800 flags), lane table, loop 1..5 until |x|<w+2.5, clamp by seg+0x52/+0x53 lane counts, negate for x<0, write width",
+   "intermediates": []
+  },
+  {
+   "item": 34,
+   "xbox": "0x2a9e0",
+   "ps2": "0x1330d0",
+   "name": "AIGroundVehicle::DrivableVec",
+   "verdict": "accept",
+   "why": "WWorldPos local, distance<=200 then build ray (w=1) and CheckHitWorld, result 0/1 -> true, destroy WWorldPos",
+   "intermediates": []
+  },
+  {
+   "item": 35,
+   "xbox": "0x361c0",
+   "ps2": "0x13f618",
+   "name": "AIVehicleController::RegisterPlayerGroundVehicle",
+   "verdict": "accept",
+   "why": "ApproveAdditionalPlayerGroundVehicleSpawn inlined (free slot scan), SetPhysicsObject, vfunc, flags=1, SetAttackMode(1), SetNavigateMode(1,0), byte=3, *nav=0, vfunc -> +0xbc byte copied",
+   "intermediates": []
+  },
+  {
+   "item": 36,
+   "xbox": "0xe9260",
+   "ps2": "0x2848b0",
+   "name": "EAGL::Model::DrawInstances",
+   "verdict": "accept",
+   "why": "if +200: per instance with enable flag set variation, MEM_copy each stream, model matrix from +0xc*0x40, BuildMatrix/PrependMatrix, walk +0xcc command list (0xffff -> call, +0xc4 visibility skip)",
+   "intermediates": []
+  },
+  {
+   "item": 37,
+   "xbox": "0x7ae00",
+   "ps2": "0x1a7cf8",
+   "name": "RCameraSpline::AddToSplinePtList",
+   "verdict": "accept",
+   "why": "push_back COORD4 onto list at +0x68 (PS2 +0x64): buy node, inc size, link at end; sole caller TriggerAnimationCamera on both",
+   "intermediates": []
+  },
+  {
+   "item": 38,
+   "xbox": "0x977d0",
+   "ps2": "0x1d67f0",
+   "name": "RWorldCamera::LoadAISplinePathAnimation",
+   "verdict": "accept",
+   "why": "if path (+0x120 vs +0x110) null new(0xb0)+AISplinePath ctor else Reset, then path+0x60 SetNextPath(0), return 1",
+   "intermediates": [
+    {
+     "xbox": "0x7fec0",
+     "ps2": "0x1b1838",
+     "name": "RPathEngine::RPathHandle::SetNextPath",
+     "why": "*(this+0x9c)=arg on both; callers LoadAISplinePathAnimation, ~ESetNextPath and the AISplinePath::SetNext slot match PS2's 3 callers; sits in the named RPathHandle setter run 0x7fed0.."
+    }
+   ]
+  },
+  {
+   "item": 39,
+   "xbox": "0xf6fc0",
+   "ps2": "0x283ed8",
+   "name": "EAGL::GeoPrimState::~GeoPrimState",
+   "verdict": "reject",
+   "why": "Xbox body releases a D3D vertex shader (unset current, DeleteVertexShader); callers ~DrawTextured/RenderMethodDestructor differ from PS2's GetGeoPrimState/RuntimeAlloc...Destructor - platform code at unrelated slot",
+   "intermediates": []
+  },
+  {
+   "item": 40,
+   "xbox": "0xf7010",
+   "ps2": "0x29c4a0",
+   "name": "EAGL::DrawArray::Unlock",
+   "verdict": "reject",
+   "why": "Xbox body releases a D3D pixel shader; PS2 Unlock just zeroes +0x18 and returns 1 - unrelated",
+   "intermediates": []
+  },
+  {
+   "item": 41,
+   "xbox": "0x66ee0",
+   "ps2": "0x18bf08",
+   "name": "PBondCar::ControlTyreTracks",
+   "verdict": "accept",
+   "why": "4 wheels: track ptr, surface 11 or no load or vfunc -> Break; else strength (1 or |vel|), pos+vel*0.0333 (0x3d088889), copy wheel matrix, RTyreTrack::Add",
+   "intermediates": [
+    {
+     "xbox": "0xac170",
+     "ps2": "0x1f5a48",
+     "name": "RTyreTrack::Break",
+     "why": "Break slot in ControlTyreTracks; ring indices +0x900/+0x904/+0x90c by +0x916, clear +0x914/+0x915, colour table +0x800 with cases 3/9/8 and +0x917"
+    },
+    {
+     "xbox": "0xac4c0",
+     "ps2": "0x1f5550",
+     "name": "RTyreTrack::Add",
+     "why": "Add slot; +0x917 && count: prev point distance <0.5 early out, clear +0x915, strength vs 0.75 - same as PS2"
+    }
+   ]
+  },
+  {
+   "item": 42,
+   "xbox": "0xbd820",
+   "ps2": "0x2126d0",
+   "name": "WCollider::InRegion",
+   "verdict": "accept",
+   "why": "Validate, flags (+0x64 vs +0x5c) contain mask, r=+0x2c-radius>=0, distsq(point,+0x20)<r^2 - the (float, COORD4*, uint) overload",
+   "intermediates": [
+    {
+     "xbox": "0xbd750",
+     "ps2": "0x2124b8",
+     "name": "WCollider::Validate",
+     "why": "valid flag then two vector walks comparing cached ids (vectors +0x34/+0x54 vs +0x30/+0x48, like Clear); callers are the two InRegion overloads on both sides"
+    },
+    {
+     "xbox": "0xbd7b0",
+     "ps2": "0x212640",
+     "name": "WCollider::InRegion",
+     "why": "genuine PS2 overload InRegion(COORD4*, uint): Validate, flags mask, both points param[0] and param[1] within +0x2c radius of +0x20"
+    }
+   ]
+  },
+  {
+   "item": 43,
+   "xbox": "0x127ed0",
+   "ps2": "0x2dc5a0",
+   "name": "AZoomObj::InTheZone",
+   "verdict": "accept",
+   "why": "on enter (+0xc==0): AMix::Get/SetTransition(10) over the same 37 named mixes in the same order; on leave AMix::Reset(10); only logWarning dropped",
+   "intermediates": []
+  },
+  {
+   "item": 44,
+   "xbox": "0x7a9b0",
+   "ps2": "0x1a7c80",
+   "name": "RCameraSpline::~RCameraSpline",
+   "verdict": "accept",
+   "why": "clear point list at +0x68 (PS2 +0x64), FastFree head 0x18, zero; non-deleting dtor (PS2 has delete flag); callers ~RPlayerCamera/~WRoadNav match",
+   "intermediates": []
+  },
+  {
+   "item": 45,
+   "xbox": "0x13c80",
+   "ps2": "0x1abf98",
+   "name": "RRenderer::BeginView",
+   "verdict": "reject",
+   "why": "one-line *(this+4)=arg setter with a vtable DATA ref and a virtual call from BankInfo::Load - linker-folded body shared with other classes",
+   "intermediates": []
+  },
+  {
+   "item": 46,
+   "xbox": "0x12f5b0",
+   "ps2": "0x2fab90",
+   "name": "AEngine::Remove",
+   "verdict": "reject",
+   "why": "Xbox body is the refcount map walk (element==ptr, decrement, erase, return bool) - URefCounter<AEngine>::RemoveReference; AEngine::Remove is inlined into RemoveAll (which does the delete vfunc itself)",
+   "intermediates": [
+    {
+     "xbox": "0x12f5b0",
+     "ps2": "0x2fb718",
+     "name": "URefCounter<AEngine>::RemoveReference",
+     "why": "find by pointer, decrement refcount, erase node at zero, return bool; called from RemoveAll where PS2 Remove calls RemoveReference"
+    }
+   ]
+  },
+  {
+   "item": 47,
+   "xbox": "0xc8eb0",
+   "ps2": "0x221e98",
+   "name": "WRoadNetwork::GetSegmentLaneType",
+   "verdict": "accept",
+   "why": "flags +0x50: 0x10 -> 3, 0x20&0x800 -> 2, 0x800 -> 1, else 0 - exact",
+   "intermediates": []
+  },
+  {
+   "item": 48,
+   "xbox": "0xb2b50",
+   "ps2": "0x1fee68",
+   "name": "Simulation::SetStartConditions",
+   "verdict": "accept",
+   "why": "GetWorldHeightAtPoint(pos) (0 if miss), y=h+1.0, Util_GenerateMatrix(dir), GetRigidBody inlined (idx<<7), RigidBody::ResetObject(matrix,pos); callers EResetPlayerCarPos/EStartMission match",
+   "intermediates": []
+  },
+  {
+   "item": 49,
+   "xbox": "0xb6cd0",
+   "ps2": "0x2077e8",
+   "name": "SMissionManager::GetObjectiveArrowHeight",
+   "verdict": "accept",
+   "why": "type[i] (0x724 vs 0x600, +0x124): 1 -> obj+0x14 float, 3 -> RedirectCarpElement, +0x44==1 and +0xfc -> model height *0.25, else 0",
+   "intermediates": []
+  }
+ ]
+}

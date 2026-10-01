@@ -1,0 +1,85 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000fe280",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnDeltaF1::FnDeltaF1(void)",
+   "return": "EAGLAnim::FnDeltaF1 *"
+  },
+  {
+   "address": "0x000fe2b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnDeltaF1::Eval(float, float, float *)"
+  },
+  {
+   "address": "0x000feaa0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnDeltaF1::EvalWeights(float, float *)"
+  },
+  {
+   "address": "0x000feac0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnDeltaF1::EvalVel2D(float, float *)"
+  },
+  {
+   "address": "0x000feae0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnDeltaF1::InitBuffersAsRequired(void)"
+  },
+  {
+   "address": "0x000ff1e0",
+   "calling_convention": "__thiscall",
+   "return": "EAGLAnim::FnDeltaF1 *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x000ff210",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnDeltaF1::~FnDeltaF1(void)"
+  }
+ ]
+}

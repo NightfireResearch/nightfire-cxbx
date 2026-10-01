@@ -1,0 +1,69 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00093390",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RTextureContext::Unload(void)"
+  },
+  {
+   "address": "0x00093b20",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    },
+    {
+     "name": "param_2",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RTextureContext::FindWithoutOwning(unsigned int, unsigned int)"
+  },
+  {
+   "address": "0x00093c70",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    },
+    {
+     "name": "param_2",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RTextureContext::Find(unsigned int, unsigned int) const"
+  },
+  {
+   "address": "0x00093dd0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RTextureContext::RTextureContext(char *, unsigned int)",
+   "return": "RTextureContext *"
+  },
+  {
+   "address": "0x00093e80",
+   "calling_convention": "__thiscall",
+   "return": "RTextureContext *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

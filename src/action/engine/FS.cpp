@@ -90,6 +90,7 @@ struct FileOperationXbox {
 
 #define FileSystem (*(FileSystem_t*)0x002b0c28)
 
+// XBE_GLOBAL(0x002c4668, 0xa00)
 #define XboxFileOperations ((FileOperationXbox*)0x002c4668)
 
 
@@ -158,8 +159,8 @@ int maybeToLower(int characterIn);
 // AUTOGEN
 int openOrCreateFile(char *nameRelated,char shareAccess); // "shareAccess" might actually be "createIfNotExists"
 
-// AUTOGEN
-int readFromFileBlocking(HANDLE fileHandle, void* buffer, ULONG len, undefined4 *error_code, IO_STATUS_BLOCK *param_5);
+// readFromFileBlocking is now ours (engine/XboxFile.cpp, a plain ReadFile), so it is no longer AUTOGEN'd -
+// that would generate a second definition of a function we inject over.
 
 void call_maybeReadFile(void *fileOut, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 idx) {
     __asm {
@@ -282,12 +283,24 @@ void FS_ReadFromActualFile(undefined4 len, void *fileOut, undefined4 offsetLow, 
 // AUTOINJECT
 bool FS_StateMachineIterate(void) {
 
+    // Reap any operation that has finished, before deciding there is nothing to do. This call is what
+    // completes a deferred read - the name says so - and it has to happen even in the FINISHED state,
+    // because that is exactly the state the machine sits in while it waits for one.
+    //
+    // Taking it after the early-out below, or behind the short-circuit in the condition, hangs the game:
+    // ShowLoadProgressScreen (0x000dc8a0) spins on this function, the read it is waiting for is never
+    // reaped, the state stays FLSM_FINISHED and the loading screen never ends. That reproduces reliably
+    // in the macOS cross build; the last MSVC build to hand does not show it, so the two compilers land
+    // differently on what is a latent bug either way. Worth checking against the original at 0x000e2d90
+    // in Ghidra, which is the reference for what this should do.
+    bool opInProgress = FS_OpInProgressWithCleanup();
+
     if(FileSystem.maybeFileLoadState == FLSM_FINISHED)
         return false;
 
     // If no operation is in progress, but we're not in the FINISHED state, we need to set up
     // the next operation.
-    if((FileSystem.maybeFileLoadState == FLSM_BEGIN_LOADING) || !FS_OpInProgressWithCleanup()) {
+    if((FileSystem.maybeFileLoadState == FLSM_BEGIN_LOADING) || !opInProgress) {
 
         uint32_t crc;
 
@@ -332,6 +345,12 @@ bool FS_StateMachineIterate(void) {
         return true;
 
     }
+
+    // An operation is still in progress, so the state machine has not finished and the caller has to
+    // come back. Falling off the end here is undefined behaviour: MSVC happened to leave the right value
+    // in EAX and got away with it, and clang does not - the file loader then never completes and the
+    // game spins before it can load anything. See docs/macos-build.md.
+    return true;
 }
 
 // AUTOINJECT

@@ -1,0 +1,786 @@
+{
+ "batch": "P001",
+ "program": "DRIVING.ELF",
+ "applied": "Fri Sep 25 17:47:58 2026",
+ "items": [
+  {
+   "xbox": "0x001184b8",
+   "old_name": "New",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001184b8 from 'New' to 'operator_new'",
+      "warnings": [
+       "Function name 'operator_new' \u2014 main part 'operator_new' is not PascalCase. Expected: OperatorNew",
+       "Function name 'operator_new' \u2014 main part 'operator_new' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001184b8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "operator_new",
+   "ok": true
+  },
+  {
+   "xbox": "0x00119560",
+   "old_name": "new",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00119560 from 'new' to 'operator_new'",
+      "warnings": [
+       "Function name 'operator_new' \u2014 main part 'operator_new' is not PascalCase. Expected: OperatorNew",
+       "Function name 'operator_new' \u2014 main part 'operator_new' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00119560",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "operator_new",
+   "ok": true
+  },
+  {
+   "xbox": "0x00119580",
+   "old_name": "delete",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00119580 from 'delete' to 'operator_delete'",
+      "warnings": [
+       "Function name 'operator_delete' \u2014 main part 'operator_delete' is not PascalCase. Expected: OperatorDelete",
+       "Function name 'operator_delete' \u2014 main part 'operator_delete' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00119580",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "operator_delete",
+   "ok": true
+  },
+  {
+   "xbox": "0x0017e4f0",
+   "old_name": "_ctor",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0017e4f0 from '_ctor' to 'operator_new'",
+      "warnings": [
+       "Function name 'operator_new' \u2014 main part 'operator_new' is not PascalCase. Expected: OperatorNew",
+       "Function name 'operator_new' \u2014 main part 'operator_new' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0017e4f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "operator_new",
+   "ok": true
+  },
+  {
+   "xbox": "0x002e9688",
+   "old_name": "Event",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002e9688 from 'Event' to 'Get'",
+      "warnings": [
+       "Function name 'Get' is too short (main part 'Get' is 3 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Get' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Get' shares the same token set as existing function 'GetCurrentFrame' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002e9688",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Get",
+   "ok": true
+  },
+  {
+   "xbox": "0x0024edf0",
+   "old_name": "__pure_virtual",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0024edf0 from '__pure_virtual' to '__terminate'",
+      "warnings": [
+       "Function name '__terminate' \u2014 main part '__terminate' is not PascalCase. Expected: Terminate",
+       "Function name '__terminate' \u2014 main part '__terminate' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0024edf0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__terminate",
+   "ok": true
+  },
+  {
+   "xbox": "0x0024ede0",
+   "old_name": "FUN_0024ede0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0024ede0 from 'FUN_0024ede0' to '__default_terminate'",
+      "warnings": [
+       "Function name '__default_terminate' \u2014 main part '__default_terminate' is not PascalCase. Expected: DefaultTerminate",
+       "Function name '__default_terminate' \u2014 main part '__default_terminate' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0024ede0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__default_terminate",
+   "ok": true
+  },
+  {
+   "xbox": "0x00253590",
+   "old_name": "setBaseDirectory",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00253590 from 'setBaseDirectory' to 'FILESYS_setcurrentpath'",
+      "warnings": [
+       "Function name 'FILESYS_setcurrentpath' \u2014 main part 'FILESYS_setcurrentpath' is not PascalCase. Expected: FilesysSetcurrentpath",
+       "Function name 'FILESYS_setcurrentpath' \u2014 main part 'FILESYS_setcurrentpath' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00253590",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "FILESYS_setcurrentpath",
+   "ok": true
+  },
+  {
+   "xbox": "0x00260818",
+   "old_name": "someDebugPrint",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00260818 from 'someDebugPrint' to 'PRINT_string'",
+      "warnings": [
+       "Function name 'PRINT_string' \u2014 main part 'PRINT_string' is not PascalCase. Expected: PrintString",
+       "Function name 'PRINT_string' \u2014 main part 'PRINT_string' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00260818",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PRINT_string",
+   "ok": true
+  },
+  {
+   "xbox": "0x0030d938",
+   "old_name": "strcat",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0030d938 from 'strcat' to 'SNDDRV_strcat'",
+      "warnings": [
+       "Function name 'SNDDRV_strcat' \u2014 main part 'SNDDRV_strcat' is not PascalCase. Expected: SnddrvStrcat",
+       "Function name 'SNDDRV_strcat' \u2014 main part 'SNDDRV_strcat' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0030d938",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SNDDRV_strcat",
+   "ok": true
+  },
+  {
+   "xbox": "0x00312b00",
+   "old_name": "SNDMEMI_free",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00312b00 from 'SNDMEMI_free' to 'SNDI_Delete'",
+      "warnings": [
+       "Function name 'SNDI_Delete' is too short (main part 'Delete' is 6 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'SNDI_Delete' has only one token. Function names need at least one specifier after the verb."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00312b00",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SNDI_Delete",
+   "ok": true
+  },
+  {
+   "xbox": "0x003037f0",
+   "old_name": "someLibraryAssert",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x003037f0 from 'someLibraryAssert' to 'Error'",
+      "warnings": [
+       "Function name 'Error' is too short (main part 'Error' is 5 chars, minimum 8).",
+       "Function name 'Error' does not start with a recognized verb. First word 'Error' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Error' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Error' shares the same token set as existing function 'DecodeError' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x003037f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Error",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b71e0",
+   "old_name": "sceResettyinit",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002b71e0 from 'sceResettyinit' to 'sceResetttyinit'",
+      "warnings": [
+       "Function name 'sceResetttyinit' \u2014 main part 'sceResetttyinit' is not PascalCase. Expected: Sceresetttyinit"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b71e0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "sceResetttyinit",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b6a40",
+   "old_name": "AddIntcHandler2",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002b6a40 from 'AddIntcHandler2' to 'AddIntcHandler'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'AddIntcHandler' shares the same token set as existing function 'Add' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b6a40",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "AddIntcHandler",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b6a80",
+   "old_name": "AddDmacHandler",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002b6a80 from 'AddDmacHandler' to 'AddDmacHandler2'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'AddDmacHandler2' shares the same token set as existing function 'Add' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b6a80",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "AddDmacHandler2",
+   "ok": true
+  },
+  {
+   "xbox": "0x00165bc8",
+   "old_name": "Update",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00165bc8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Update",
+   "ok": true
+  },
+  {
+   "xbox": "0x00208a00",
+   "old_name": "maybeFindObjective",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00208a00 from 'maybeFindObjective' to 'GetObjectiveByID'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetObjectiveByID' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00208a00",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetObjectiveByID",
+   "ok": true
+  },
+  {
+   "xbox": "0x00228b70",
+   "old_name": "wSoundGroup_dtor",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00228b70 from 'wSoundGroup_dtor' to '~WSoundGroup'",
+      "warnings": [
+       "Function name '~WSoundGroup' \u2014 main part '~WSoundGroup' is not PascalCase. Expected: ~wsoundgroup"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00228b70",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~WSoundGroup",
+   "ok": true
+  },
+  {
+   "xbox": "0x0017a7c0",
+   "old_name": "_M_insert_aux",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0017a7c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "_M_insert_aux",
+   "ok": true
+  },
+  {
+   "xbox": "0x0017a928",
+   "old_name": "List_TaskRecord_Clear",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0017a928",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "List_TaskRecord_Clear",
+   "ok": true
+  },
+  {
+   "xbox": "0x0029fd60",
+   "old_name": "ModelType_global_ctors",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0029fd60",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ModelType_global_ctors",
+   "ok": true
+  },
+  {
+   "xbox": "0x0029fd80",
+   "old_name": "ModelType_global_dtors",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0029fd80",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ModelType_global_dtors",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b6990",
+   "old_name": "ResumeIntrDispatch",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b6990",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ResumeIntrDispatch",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b69c0",
+   "old_name": "ResumeT3IntrDispatch",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b69c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ResumeT3IntrDispatch",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b6d20",
+   "old_name": "SetupThread",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b6d20",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetupThread",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b6d30",
+   "old_name": "SetupHeap",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b6d30",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetupHeap",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b70e0",
+   "old_name": "SetSyscall",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b70e0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetSyscall",
+   "ok": true
+  }
+ ]
+}

@@ -1,0 +1,960 @@
+{
+ "batch": "004",
+ "program": "Driving.xbe",
+ "applied": "Sat Sep 26 03:10:40 2026",
+ "items": [
+  {
+   "xbox": "0x00016ec0",
+   "old_name": "GetSymbolResolver",
+   "old_plate": "[symbol-matching]\nCanonical name: ActManager::GetSymbolResolver\nSymbol file name: ActManager::GetSymbolResolver(void)\nClass: ActManager\nEvidence: sheet row 215, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00016ec0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetSymbolResolver",
+   "ok": true
+  },
+  {
+   "xbox": "0x000181a0",
+   "old_name": "LoadModel",
+   "old_plate": "[symbol-matching]\nCanonical name: ActModelDatabase::LoadModel\nSymbol file name: ActModelDatabase::LoadModel(ActCharacterInfo &)\nClass: ActModelDatabase\nEvidence: sheet row 230, placed by infill-count\nBatch: P003\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000181a0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "LoadModel",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001ab50",
+   "old_name": "Load",
+   "old_plate": "[symbol-matching]\nCanonical name: ActWeaponAux::Load\nSymbol file name: ActWeaponAux::Load(char *)\nClass: ActWeaponAux\nEvidence: sheet row 314, placed by infill-count\nBatch: P003\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001ab50",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Load",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001d090",
+   "old_name": "DoNeutral",
+   "old_plate": "[symbol-matching]\nCanonical name: AICharacterBond::DoNeutral\nClass: AICharacterBond\nEvidence: AICharacterBond slot 8 (PS2 0011a318, row 457, infill-exact-run)\nBatch: 001\n[/symbol-matching]\n[symbol-matching]\nCanonical name: AICharacterBond::DoNeutral\nSymbol file name: AICharacterBond::DoNeutral(void)\nClass: AICharacterBond\nEvidence: sheet row 457, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001d090",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DoNeutral",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001d0c0",
+   "old_name": "DoInitial",
+   "old_plate": "[symbol-matching]\nCanonical name: AICharacterBond::DoInitial\nIdentical code folded by the linker; also: AICharacterBond::DoIdling, AICharacterPassenger::DoInitial, AICharacterPassenger::DoIdling\nClass: AICharacterBond\nEvidence: AICharacterBond slot 7 (PS2 0011a2e0, row 456, infill-exact-run)\nEvidence: AICharacterBond slot 9 (PS2 0011a360, row 458, infill-exact-run)\nEvidence: AICharacterPassenger slot 7 (PS2 00125790, row 648, infill-exact-run)\nEvidence: AICharacterPassenger slot 9 (PS2 00125810, row 650, infill-exact-run)\nBatch: 001\n[/symbol-matching]\n[symbol-matching]\nCanonical name: AICharacterBond::DoInitial\nSymbol file name: AICharacterBond::DoInitial(void)\nClass: AICharacterBond\nEvidence: sheet row 456, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001d0c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DoInitial",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001d0e0",
+   "old_name": "DoArming",
+   "old_plate": "[symbol-matching]\nCanonical name: AICharacterBond::DoArming\nClass: AICharacterBond\nEvidence: AICharacterBond slot 15 (PS2 0011a398, row 459, infill-exact-run)\nBatch: 001\n[/symbol-matching]\n[symbol-matching]\nCanonical name: AICharacterBond::DoArming\nSymbol file name: AICharacterBond::DoArming(void)\nClass: AICharacterBond\nEvidence: sheet row 459, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001d0e0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DoArming",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001d1c0",
+   "old_name": "DoFiring",
+   "old_plate": "[symbol-matching]\nCanonical name: AICharacterBond::DoFiring\nClass: AICharacterBond\nEvidence: AICharacterBond slot 18 (PS2 0011a4a0, row 460, infill-exact-run)\nBatch: 001\n[/symbol-matching]\n[symbol-matching]\nCanonical name: AICharacterBond::DoFiring\nSymbol file name: AICharacterBond::DoFiring(void)\nClass: AICharacterBond\nEvidence: sheet row 460, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001d1c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DoFiring",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001d2a0",
+   "old_name": "HandleInterrupts",
+   "old_plate": "[symbol-matching]\nCanonical name: AICharacterBond::HandleInterrupts\nClass: AICharacterBond\nEvidence: AICharacterBond slot 30 (PS2 0011a5b8, row 461, infill-exact-run)\nBatch: 001\n[/symbol-matching]\n[symbol-matching]\nCanonical name: AICharacterBond::HandleInterrupts\nSymbol file name: AICharacterBond::HandleInterrupts(void)\nClass: AICharacterBond\nEvidence: sheet row 461, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001d2a0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "HandleInterrupts",
+   "ok": true
+  },
+  {
+   "xbox": "0x00021630",
+   "old_name": "DoUnarming",
+   "old_plate": "[symbol-matching]\nCanonical name: AICharacterEnemySunroof::DoUnarming\nSymbol file name: AICharacterEnemySunroof::DoUnarming(void)\nClass: AICharacterEnemySunroof\nEvidence: sheet row 570, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00021630",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DoUnarming",
+   "ok": true
+  },
+  {
+   "xbox": "0x00022c30",
+   "old_name": "ShowHands",
+   "old_plate": "[symbol-matching]\nCanonical name: AICharacterHands::ShowHands\nSymbol file name: AICharacterHands::ShowHands(void)\nClass: AICharacterHands\nEvidence: sheet row 619, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00022c30",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ShowHands",
+   "ok": true
+  },
+  {
+   "xbox": "0x00022c50",
+   "old_name": "HideHands",
+   "old_plate": "[symbol-matching]\nCanonical name: AICharacterHands::HideHands\nSymbol file name: AICharacterHands::HideHands(void)\nClass: AICharacterHands\nEvidence: sheet row 620, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00022c50",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "HideHands",
+   "ok": true
+  },
+  {
+   "xbox": "0x00023950",
+   "old_name": "UpdateRotPos",
+   "old_plate": "[symbol-matching]\nCanonical name: AICharacterBond::UpdateRotPos\nClass: AICharacterBond\nEvidence: AICharacterBond slot 32 (PS2 0011a858, row 462: sheet order after HandleInterrupts; retail size differs)\nEvidence: body: GetRotPos into a local matrix, then MATRIX4 multiply into this+0x10, as PS2 0x11a858\nEvidence: also at slot 32 of the Xbox vtable 0x0018aee8 (AICharacterPassenger?), not yet named\nBatch: 001\n[/symbol-matching]\n[symbol-matching]\nCanonical name: AICharacterBond::UpdateRotPos\nSymbol file name: AICharacterBond::UpdateRotPos(void)\nClass: AICharacterBond\nEvidence: sheet row 462, body review: Gets the player rot/pos (FUN_00119b98), then GetActorLocalPosOri and VU0_MATRIX4_mult, as in the AUF UpdateRotPos; referenced from the vtable.\nBatch: P011\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00023950",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "UpdateRotPos",
+   "ok": true
+  },
+  {
+   "xbox": "0x000248b0",
+   "old_name": "SetActor",
+   "old_plate": "[symbol-matching]\nCanonical name: AICharacterPedestrian::SetActor\nSymbol file name: AICharacterPedestrian::SetActor(_List_iterator<ActActor *, ActA\nClass: AICharacterPedestrian\nEvidence: sheet row 690, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000248b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetActor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000318d0",
+   "old_name": "DisableTargetBeacon",
+   "old_plate": "[symbol-matching]\nCanonical name: AIHelicopter::DisableTargetBeacon\nSymbol file name: AIHelicopter::DisableTargetBeacon(void)\nClass: AIHelicopter\nEvidence: sheet row 879, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000318d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DisableTargetBeacon",
+   "ok": true
+  },
+  {
+   "xbox": "0x000349e0",
+   "old_name": "Shutdown",
+   "old_plate": "[symbol-matching]\nCanonical name: AIRoadSpawn::Shutdown\nSymbol file name: AIRoadSpawn::Shutdown(void)\nClass: AIRoadSpawn\nEvidence: sheet row 922, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000349e0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Shutdown",
+   "ok": true
+  },
+  {
+   "xbox": "0x000359d0",
+   "old_name": "GetSplinePath",
+   "old_plate": "[symbol-matching]\nCanonical name: AIVehicle::GetSplinePath\nSymbol file name: AIVehicle::GetSplinePath(void)\nClass: AIVehicle\nEvidence: sheet row 944, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000359d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetSplinePath",
+   "ok": true
+  },
+  {
+   "xbox": "0x00035ef0",
+   "old_name": "GetTrafficVehiclePtr",
+   "old_plate": "[symbol-matching]\nCanonical name: AIVehicleController::GetTrafficVehiclePtr\nSymbol file name: AIVehicleController::GetTrafficVehiclePtr(int)\nClass: AIVehicleController\nEvidence: sheet row 970, placed by infill-exact\nBatch: P003\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00035ef0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetTrafficVehiclePtr",
+   "ok": true
+  },
+  {
+   "xbox": "0x00037a10",
+   "old_name": "PlayCollision",
+   "old_plate": "[symbol-matching]\nCanonical name: ASceneObj::PlayCollision\nClass: ASceneObj\nEvidence: ASentry slot 5 (PS2 002f05b0, row 8894, infill-exact)\nBatch: 002\n[/symbol-matching]\n[symbol-matching]\nCanonical name: ASceneObj::PlayCollision\nSymbol file name: ASceneObj::PlayCollision(float, COORD3 &, COORD3 &, ASceneObj::\nClass: ASceneObj\nEvidence: sheet row 8894, placed by infill-exact\nBatch: P003\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00037a10",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PlayCollision",
+   "ok": true
+  },
+  {
+   "xbox": "0x00055f20",
+   "old_name": "String_AttribByteOffsetParserFunc",
+   "old_plate": "[symbol-matching]\nCanonical name: String_AttribByteOffsetParserFunc\nSymbol file name: String_AttribByteOffsetParserFunc(char *, char *, unsigned int,\nEvidence: sheet row 2206, placed by infill-count\nBatch: P006\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00055f20",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "String_AttribByteOffsetParserFunc",
+   "ok": true
+  },
+  {
+   "xbox": "0x0005a650",
+   "old_name": "GameLoop_StartUsingMainBigFile",
+   "old_plate": "[symbol-matching]\nCanonical name: GameLoop_StartUsingMainBigFile\nEvidence: opens %s.viv and calls StartUsingBigFile, as PS2 0x175a28 (GameLoop_StartUsingMainBigFile)\nBatch: 003\n[/symbol-matching]\n[symbol-matching]\nCanonical name: GameLoop_StartUsingMainBigFile\nEvidence: opens %s.viv and calls StartUsingBigFile, called at start-up; 0x90 as the sheet says (row 2331)\nBatch: P008\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0005a650",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GameLoop_StartUsingMainBigFile",
+   "ok": true
+  },
+  {
+   "xbox": "0x0005b870",
+   "old_name": "OptionParser",
+   "old_plate": "[symbol-matching]\nCanonical name: OptionParser::OptionParser\nClass: OptionParser\nEvidence: body: same as PS2 0x1790f8 step for step (key at a line start, skip ' =#([', length to newline, trim ']' ')')\nEvidence: PS2 0x1790f8 = row 2364 by exact retail sizes after deleteSysFiles\nBatch: 001\n[/symbol-matching]\n[symbol-matching]\nCanonical name: OptionParser::OptionParser\nSymbol file name: OptionParser::OptionParser(char *, char *)\nClass: OptionParser\nEvidence: sheet row 2364, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0005b870",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "OptionParser",
+   "ok": true
+  },
+  {
+   "xbox": "0x00076200",
+   "old_name": "SetNormalBlendMode",
+   "old_plate": "[symbol-matching]\nCanonical name: Draw::SetNormalBlendMode\nSymbol file name: Draw::SetNormalBlendMode(EAGL::GeoPrimState &)\nClass: Draw\nEvidence: sheet row 2876, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00076200",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetNormalBlendMode",
+   "ok": true
+  },
+  {
+   "xbox": "0x00076a60",
+   "old_name": "EvaluateInstance",
+   "old_plate": "[symbol-matching]\nCanonical name: RAnimEngine::EvaluateInstance\nSymbol file name: RAnimEngine::EvaluateInstance(CARP::Instance &, MATRIX4 &)\nClass: RAnimEngine\nEvidence: sheet row 2918, body review: Matches AUF RAnimEngine::EvaluateInstance (keyframe index, qslerp, quattom4, translation lerp).\nBatch: P012\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00076a60",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "EvaluateInstance",
+   "ok": true
+  },
+  {
+   "xbox": "0x00077b60",
+   "old_name": "Shutdown",
+   "old_plate": "[symbol-matching]\nCanonical name: RAnimEngine::Shutdown\nSymbol file name: RAnimEngine::Shutdown(void)\nClass: RAnimEngine\nEvidence: zeroes the active-system count (row 2883)\nBatch: P013\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00077b60",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Shutdown",
+   "ok": true
+  },
+  {
+   "xbox": "0x00078190",
+   "old_name": "Init",
+   "old_plate": "[symbol-matching]\nCanonical name: RAnimEngine::Init\nSymbol file name: RAnimEngine::Init(void)\nClass: RAnimEngine\nEvidence: zeroes the engine's last-update tick (0x333604) and active-system count (0x333600) that Update uses (row 2882)\nBatch: P013\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00078190",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Init",
+   "ok": true
+  },
+  {
+   "xbox": "0x0007cae0",
+   "old_name": "~RDrawGroup",
+   "old_plate": "[symbol-matching]\nCanonical name: RDrawGroup::~RDrawGroup\nSymbol file name: RDrawGroup::~RDrawGroup(void)\nClass: RDrawGroup\nEvidence: sheet row 3044, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0007cae0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RDrawGroup",
+   "ok": true
+  },
+  {
+   "xbox": "0x0007dcb0",
+   "old_name": "DrawGroupDrawEffects",
+   "old_plate": "INVENTED NAME, not canonical: this helper is absent from the debug-symbol spreadsheet (probably static). Named for what it does: walks the draw group's effect nodes - glares (type 2) to RGlareManager::AddModelGlare, type 6 to a null function, anything else \"Unhandled effect type\". Called by DrawGroupDrawInstance and DrawInstance. PS2 counterpart 0x001ad1a0. Previously mislabelled DrawGroupDrawInstance (that is 0x0007ddd0). Xbox: takes the group in EAX.\nINVENTED NAME, not canonical: this helper is absent from the debug-symbol spreadsheet (probably static). Named for what it does: walks the draw group's effect nodes - glares (type 2) to RGlareManager's model-glare add, type 6 to a null function, anything else \"Unhandled effect type\". Called by DrawGroupDrawInstance and DrawInstance. Xbox counterpart 0x0007dcb0. Previously mislabelled DrawGroupDrawInstance (that is 0x001ad3e8).",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0007dcb0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DrawGroupDrawEffects",
+   "ok": true
+  },
+  {
+   "xbox": "0x0007dd50",
+   "old_name": "DrawGroupDrawModel",
+   "old_plate": "INVENTED NAME, not canonical: this helper is absent from the debug-symbol spreadsheet (probably static). Named for what it does: picks the draw group's level-of-detail model by view distance, runs the per-instance vector callback, and draws the model with the instance matrix (fog off if the group asks). Called by DrawGroupDrawInstance, DrawInstance and QuickDrawInstance. PS2 counterpart 0x001ad2e0. Xbox: takes the group in EDI and the instance in EDX.\nINVENTED NAME, not canonical: this helper is absent from the debug-symbol spreadsheet (probably static). Named for what it does: picks the draw group's level-of-detail model by view distance, runs the per-instance vector callback, and draws the model with the instance matrix (fog off if the group asks). Called by DrawGroupDrawInstance, DrawInstance and QuickDrawInstance. Xbox counterpart 0x0007dd50.",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0007dd50",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DrawGroupDrawModel",
+   "ok": true
+  },
+  {
+   "xbox": "0x0007e1f0",
+   "old_name": "SendPerWorldInstance",
+   "old_plate": "[symbol-matching]\nCanonical name: RRenderSharedData::SendPerWorldInstance\nSymbol file name: RRenderSharedData::SendPerWorldInstance(CARP::Instance &, void\nClass: RRenderSharedData\nEvidence: sheet row 3121, placed by infill-count\nBatch: P006\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0007e1f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SendPerWorldInstance",
+   "ok": true
+  },
+  {
+   "xbox": "0x0007e200",
+   "old_name": "GetShadowBrightness",
+   "old_plate": "[symbol-matching]\nCanonical name: RRenderSharedData::GetShadowBrightness\nSymbol file name: RRenderSharedData::GetShadowBrightness(COORD3, unsigned int)\nClass: RRenderSharedData\nEvidence: sheet row 3122, placed by infill-count\nBatch: P006\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0007e200",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetShadowBrightness",
+   "ok": true
+  },
+  {
+   "xbox": "0x0007ffa0",
+   "old_name": "GetFirstPathHandle",
+   "old_plate": "[symbol-matching]\nCanonical name: RPathEngine::GetFirstPathHandle\nSymbol file name: RPathEngine::GetFirstPathHandle(void)\nClass: RPathEngine\nEvidence: sheet row 3211, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0007ffa0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetFirstPathHandle",
+   "ok": true
+  },
+  {
+   "xbox": "0x0007ffc0",
+   "old_name": "GetNextPathHandle",
+   "old_plate": "[symbol-matching]\nCanonical name: RPathEngine::GetNextPathHandle\nSymbol file name: RPathEngine::GetNextPathHandle(void)\nClass: RPathEngine\nEvidence: sheet row 3212, body review: Advances the static path-handle iterator and returns the handle or 0 at list end, like AUF GetNextPathHandle.\nBatch: P012\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0007ffc0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetNextPathHandle",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008b2b0",
+   "old_name": "StartUp",
+   "old_plate": "[symbol-matching]\nCanonical name: RRandom::StartUp\nSymbol file name: RRandom::StartUp(unsigned int)\nClass: RRandom\nEvidence: sheet row 3371, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008b2b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "StartUp",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008b8c0",
+   "old_name": "Init",
+   "old_plate": "[symbol-matching]\nCanonical name: RLensFlareManager::Init\nSymbol file name: RLensFlareManager::Init(void)\nClass: RLensFlareManager\nEvidence: sheet row 4022: window review: new(8) + RLensFlareManager ctor stored to fgThis_RLensFlareManager.\nBatch: P019\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008b8c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Init",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008bcf0",
+   "old_name": "Init",
+   "old_plate": "[symbol-matching]\nCanonical name: RGain::Init\nSymbol file name: RGain::Init(void)\nClass: RGain\nEvidence: sheet row 4007: window review: operator_new(0x24) + RGain ctor stored to fgThis_RGain.\nBatch: P019\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008bcf0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Init",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008beb0",
+   "old_name": "operator_new",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0008beb0 from 'operator_new' to 'Init'",
+      "warnings": [
+       "Function name 'Init' is too short (main part 'Init' is 4 chars, minimum 8).",
+       "Function name 'Init' does not start with a recognized verb. First word 'Init' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Init' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Init' shares the same token set as existing function 'ActManagerInit' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008beb0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Init",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008c8d0",
+   "old_name": "SetActorCull",
+   "old_plate": "[symbol-matching]\nCanonical name: ActActorDatabase::SetActorCull\nSymbol file name: ActActorDatabase::SetActorCull(int, bool, float)\nClass: ActActorDatabase\nEvidence: sheet row 3483: window review: Not a function yet (inside the static-init body): 8-byte setter storing a1 at +0x54, passed as the set-cull callback by PerformCulling next to the ActActorDatabase getter.\nBatch: P019\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008c8d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetActorCull",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008d6d0",
+   "old_name": "ResolveObjectData",
+   "old_plate": "[symbol-matching]\nCanonical name: RSceneObj::ResolveObjectData\nSymbol file name: RSceneObj::ResolveObjectData(char *, bool &)\nClass: RSceneObj\nEvidence: sheet row 3496, body review: *flag=0; return 0 - identical to AUF, vtable-referenced.\nBatch: P012\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008d6d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ResolveObjectData",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008d860",
+   "old_name": "GetNextSceneObjCullInfo",
+   "old_plate": "[symbol-matching]\nCanonical name: RSceneObj::GetNextSceneObjCullInfo\nSymbol file name: RSceneObj::GetNextSceneObjCullInfo(COORD4 &, float &, bool &, f\nClass: RSceneObj\nEvidence: sheet row 3512, placed by infill-count\nBatch: P003\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008d860",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetNextSceneObjCullInfo",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008dce0",
+   "old_name": "GetRenderOffset",
+   "old_plate": "[symbol-matching]\nCanonical name: RSceneObj::GetRenderOffset\nClass: RSceneObj\nEvidence: RSceneObj slot 9 (PS2 001c92f8, row 3537, infill-exact)\nBatch: 002\n[/symbol-matching]\n[symbol-matching]\nCanonical name: RSceneObj::GetRenderOffset\nSymbol file name: RSceneObj::GetRenderOffset(void) const\nClass: RSceneObj\nEvidence: sheet row 3537, placed by infill-exact\nBatch: P003\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008dce0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetRenderOffset",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008e1f0",
+   "old_name": "AddCollisionInfo",
+   "old_plate": "[symbol-matching]\nCanonical name: RSceneObj::AddCollisionInfo\nSymbol file name: RSceneObj::AddCollisionInfo(COORD4 &, COORD4 &)\nClass: RSceneObj\nEvidence: sheet row 3557, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008e1f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "AddCollisionInfo",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008f000",
+   "old_name": "SetSceneObjectCull",
+   "old_plate": "[symbol-matching]\nCanonical name: RSceneObj::SetSceneObjectCull\nSymbol file name: RSceneObj::SetSceneObjectCull(int, bool, float)\nClass: RSceneObj\nEvidence: sheet row 3513, placed by infill-count\nBatch: P003\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008f000",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetSceneObjectCull",
+   "ok": true
+  },
+  {
+   "xbox": "0x00096c60",
+   "old_name": "~RViewCamera",
+   "old_plate": "[symbol-matching]\nCanonical name: RViewCamera::scalar_deleting_destructor\nClass: RViewCamera\nEvidence: RViewCamera slot 0 (PS2 001d4238, row 3735, sheet)\nEvidence: vtable slot 0 on MSVC is the scalar deleting destructor\nBatch: 002\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "error": "Failed to execute rename on Swing thread: A symbol named scalar_deleting_destructor already exists at this address!"
+     }
+    ]
+   ],
+   "new_name": "~RViewCamera",
+   "ok": false
+  }
+ ]
+}

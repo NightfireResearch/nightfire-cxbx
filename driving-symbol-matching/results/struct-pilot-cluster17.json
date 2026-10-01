@@ -1,0 +1,588 @@
+{
+ "classes": [
+  {
+   "name": "RMissileStreak",
+   "size": 1616,
+   "base": null,
+   "vtable": null,
+   "comment": "Missile/grenade smoke streak: a count, a frame counter, a streak type and a ring of up to 100 COORD4 points. NO vptr and NOT an RAutonomousObj subclass (ctor 0xed310 only zeroes +0/+4/+8; Update reads +0 as a count). Embedded at Missile+0xa0 and Grenade+0x70; size = gap to the next field in both (0x650 = 0x10 + 100*16). Same offsets on PS2 (no vptr there either)",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "int",
+     "name": "numPoints",
+     "confidence": "high",
+     "evidence": "ctor 0xed310 zeroes; Update(COORD4&) 0xa0ea0 caps it at 0x60 and adds 2 every other frame, indexes points[] by it; Draw 0xa1330 needs >3; PS2 +0x0 in both ctors/Reset/Update/Draw. Name invented"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "int",
+     "name": "frameCount",
+     "confidence": "high",
+     "evidence": "Update() 0xa0e90 is just 'INC [ECX+0x4]'; Update(COORD4&) tests its low bit and increments; Draw uses it for the start index; PS2 Update 0x1e43e0 same. Name invented"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "int",
+     "name": "streakType",
+     "confidence": "high",
+     "evidence": "indexes float tables 0x1c4b00/0x1c4b0c and the static renderer table 0x201250[3] in Update/Draw; Missile ctor writes 1/2 here (Missile+0xa8); PS2 ctor RMissileStreak(StreakType) 0x1e4218 stores its arg at +0x8"
+    },
+    {
+     "offset": "0x10",
+     "size": 1600,
+     "type": "COORD4[100]",
+     "name": "points",
+     "confidence": "medium",
+     "evidence": "Update writes 16-byte records at this+0x10+i*16 (LEA EDI,[ESI+0x10]; +0x14/+0x18 floats); Draw passes this+(start+1)*16 to the renderer; PS2 Update LEAs +0x10/+0x14/+0x18. Count 100 fills the 0x650 gap (numPoints max 0x61). Name invented"
+    }
+   ]
+  },
+  {
+   "name": "Mine",
+   "size": 136,
+   "base": "PhysicsObject",
+   "vtable": "0x0018ee28",
+   "comment": "proximity mine; FastFree 0x88. Ctor uses the SimpleRigidBody PhysicsObject ctor 0x6f190 (type 5) and news an RAutonomousObj (0x80, vtable 0x18a398 stored inline) as its render object via SetRenderObject 0x6f3f0. PhysicsObject vptr is at PS2 +0x68, so Mine's own fields share offsets on both builds; PS2 bools +0x7c/+0x84 are 4 bytes but padded, no shift",
+   "fields": [
+    {
+     "offset": "0x6c",
+     "size": 4,
+     "type": "float",
+     "name": "proximityRadius",
+     "confidence": "medium",
+     "evidence": "ctor stores float 3.0/2.5/1.0 by weapon type; PS2 +0x6c float R/W in CheckForProximity/ctor. Name invented"
+    },
+    {
+     "offset": "0x70",
+     "size": 4,
+     "type": "int",
+     "name": "weaponType",
+     "confidence": "high",
+     "evidence": "ctor stores WeaponType arg1 ([EBP+8]); PS2 GetWeaponType 0x180860 reads +0x70"
+    },
+    {
+     "offset": "0x74",
+     "size": 4,
+     "type": "int",
+     "name": "timer",
+     "confidence": "medium",
+     "evidence": "ctor: frame-rate global 0x234e2c * 30 (or *6, or 0) by type; CheckTimer RW both builds. Name invented"
+    },
+    {
+     "offset": "0x78",
+     "size": 4,
+     "type": "int",
+     "name": "startFrame",
+     "confidence": "low",
+     "evidence": "ctor: 0x234e2c + 0x234e34 (rate + current frame); PS2 +0x78 CheckForProximity/ctor. Name invented"
+    },
+    {
+     "offset": "0x7c",
+     "size": 1,
+     "type": "bool",
+     "name": "hit",
+     "confidence": "medium",
+     "evidence": "ctor byte 0; ApplyDamage 0x5e3e0 writes only this byte, Simulate reads; PS2 +0x7c 4-byte (ApplyDamage/BlowUp/Simulate). Name invented"
+    },
+    {
+     "offset": "0x80",
+     "size": 4,
+     "type": "void *",
+     "name": "target",
+     "confidence": "medium",
+     "evidence": "WTargetable*: ctor zeroes, ~Mine calls WTargetable::RemoveReference on it; PS2 +0x80 R/W ctor/dtor. Name invented"
+    },
+    {
+     "offset": "0x84",
+     "size": 1,
+     "type": "bool",
+     "name": "armed",
+     "confidence": "low",
+     "evidence": "ctor byte 0; Simulate reads/writes; PS2 +0x84 4-byte. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "Grenade",
+   "size": 1760,
+   "base": "PhysicsObject",
+   "vtable": "0x0018ed98",
+   "comment": "thrown grenade; FastFree 0x6e0. PhysicsObject ctor 0x6f190 (type 8), embeds an RMissileStreak at +0x70, render object is a new RAutonomousObj (0x80). Offsets identical on PS2 (PS2 +0x6d4 is a 4-byte bool; Xbox byte, then padding to 0x6e0)",
+   "fields": [
+    {
+     "offset": "0x70",
+     "size": 1616,
+     "type": "RMissileStreak",
+     "name": "streak",
+     "confidence": "high",
+     "evidence": "ctor 'LEA ECX,[EBX+0x70]; CALL 0xed310 RMissileStreak::RMissileStreak'; Render/~Grenade pass this+0x70 to Draw/Update; PS2 LEA +0x70. Size = gap to +0x6c0. Name invented"
+    },
+    {
+     "offset": "0x6c0",
+     "size": 4,
+     "type": "int",
+     "name": "weaponType",
+     "confidence": "high",
+     "evidence": "ctor stores arg1; PS2 GetWeaponType 0x17f280 reads +0x6c0"
+    },
+    {
+     "offset": "0x6c4",
+     "size": 4,
+     "type": "float",
+     "name": "unknown6c4",
+     "confidence": "low",
+     "evidence": "ctor stores 0.5f; PS2 float write. Name invented"
+    },
+    {
+     "offset": "0x6c8",
+     "size": 4,
+     "type": "int",
+     "name": "timer",
+     "confidence": "medium",
+     "evidence": "ctor: frame-rate 0x234e2c * 3; Simulate RW; PS2 CheckTimer R/W. Name invented"
+    },
+    {
+     "offset": "0x6cc",
+     "size": 4,
+     "type": "int",
+     "name": "startFrame",
+     "confidence": "low",
+     "evidence": "ctor: current frame 0x234e34 + 5; Simulate RW. Name invented"
+    },
+    {
+     "offset": "0x6d0",
+     "size": 4,
+     "type": "int",
+     "name": "unknown6d0",
+     "confidence": "low",
+     "evidence": "ctor zeroes; Simulate RW both builds. Name invented"
+    },
+    {
+     "offset": "0x6d4",
+     "size": 1,
+     "type": "bool",
+     "name": "blowUp",
+     "confidence": "medium",
+     "evidence": "ctor byte 0; Simulate RW; PS2 +0x6d4 4-byte used by BlowUp/CheckForProximity/CheckTimer. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "Shell",
+   "size": 144,
+   "base": "PhysicsObject",
+   "vtable": "0x0019006c",
+   "comment": "physical projectile (rocket/shell); FastFree 0x90. Ctor(WeaponType, COORD3& pos, COORD3& vel, SimObjSig owner, float, float, int) uses PhysicsObject ctor 0x6f190 (type 7, owner sig = arg4). Same offsets on PS2 (PhysicsObject vptr last on PS2)",
+   "fields": [
+    {
+     "offset": "0x6c",
+     "size": 4,
+     "type": "int",
+     "name": "weaponType",
+     "confidence": "high",
+     "evidence": "ctor stores arg1 and compares it with 0x10; PS2 +0x6c ctor/Simulate. Sheet GetWeaponType (inlined)"
+    },
+    {
+     "offset": "0x70",
+     "size": 4,
+     "type": "float",
+     "name": "unknown70",
+     "confidence": "medium",
+     "evidence": "ctor stores float arg5 ([EBP+0x18]); float in Simulate both builds. Name invented"
+    },
+    {
+     "offset": "0x74",
+     "size": 4,
+     "type": "float",
+     "name": "unknown74",
+     "confidence": "medium",
+     "evidence": "ctor stores arg6 ([EBP+0x1c]); float in Simulate both builds. Name invented"
+    },
+    {
+     "offset": "0x78",
+     "size": 4,
+     "type": "int",
+     "name": "lifetime",
+     "confidence": "medium",
+     "evidence": "ctor: __ftol2(frame rate * random/const) -> integer frames; Simulate RW. PS2 +0x78 shows as float there. Name invented"
+    },
+    {
+     "offset": "0x80",
+     "size": 12,
+     "type": "COORD3",
+     "name": "velocity",
+     "confidence": "medium",
+     "evidence": "ctor copies the second COORD3& arg ([EBP+0x10]) into +0x80..+0x88; Simulate LEAs it; PS2 +0x80 w8 addr-taken + +0x88. Name invented"
+    },
+    {
+     "offset": "0x8c",
+     "size": 4,
+     "type": "int",
+     "name": "streakType",
+     "confidence": "low",
+     "evidence": "ctor stores int arg7; if > -1 it indexes a 24-byte table at 0x1f2e30 for a float; PS2 +0x8c ctor write. Sheet has Shell::GetStreakType (inlined). Name invented"
+    }
+   ]
+  },
+  {
+   "name": "Smackable",
+   "size": 136,
+   "base": "PhysicsObject",
+   "vtable": "0x00190248",
+   "comment": "breakable/pushable prop; FastFree 0x88. Ctor(RSceneObj*, WTrigger*, COORD3&, uint) uses the AttributeSet-copy PhysicsObject ctor 0x6f070 (type 2). Same offsets on PS2",
+   "fields": [
+    {
+     "offset": "0x6c",
+     "size": 4,
+     "type": "uint",
+     "name": "unknown6c",
+     "confidence": "low",
+     "evidence": "ctor stores arg4 (unsigned per sheet); Simulate RW both builds. Name invented"
+    },
+    {
+     "offset": "0x70",
+     "size": 4,
+     "type": "int",
+     "name": "timer",
+     "confidence": "low",
+     "evidence": "ctor: __ftol2(frame rate * const); Simulate RW both builds. Name invented"
+    },
+    {
+     "offset": "0x74",
+     "size": 4,
+     "type": "float",
+     "name": "hitPoints",
+     "confidence": "high",
+     "evidence": "ctor = info->+0x8 (minus a damage scale), then SetHitPointLoc(this+0x74) (0x6f7e0); ApplyDamage/GoToSleep LEA it; PS2 float addr-taken"
+    },
+    {
+     "offset": "0x78",
+     "size": 4,
+     "type": "void *",
+     "name": "smackableInfo",
+     "confidence": "medium",
+     "evidence": "ctor: sceneObj->+0x10->+0xc or a static default object at 0x1e9294; its +0x4/+0x8/+0xc/+0x18..+0x24 are read (hit points, audio params). Type unknown. Name invented"
+    },
+    {
+     "offset": "0x7c",
+     "size": 4,
+     "type": "void *",
+     "name": "trigger",
+     "confidence": "high",
+     "evidence": "WTrigger*: ctor stores arg2; GoToSleep calls WTrigger::UpdateRotPos on it; PS2 GetTrigger 0x19efd0 reads +0x7c"
+    },
+    {
+     "offset": "0x80",
+     "size": 4,
+     "type": "void *",
+     "name": "unknown80",
+     "confidence": "low",
+     "evidence": "ctor = lookup 0xd14e0 on global 0x23f310 keyed by the scene object's instance; its +0x4 low byte scales hit points; GoToSleep RW. Name invented"
+    },
+    {
+     "offset": "0x84",
+     "size": 4,
+     "type": "ABaseSound *",
+     "name": "audio",
+     "confidence": "high",
+     "evidence": "ctor allocates an ASmackable (0xf0, ctor 0x12d8b0), stores it here and passes it to SetAudioObject 0x6f430; ~Smackable calls ASmackable::Detatch; PS2 +0x84 -> SetAudioObject. Real type ASmackable*"
+    }
+   ]
+  },
+  {
+   "name": "Newton",
+   "size": 144,
+   "base": "PhysicsObject",
+   "vtable": "0x0018ef7c",
+   "comment": "spawned physics debris (Newton::SpawnFromEvent); alloc 144 (no deleting-dtor FastFree seen). PhysicsObject ctor 0x6f190 (type 9); render object a new RAutonomousObj. Same offsets on PS2",
+   "fields": [
+    {
+     "offset": "0x6c",
+     "size": 4,
+     "type": "float",
+     "name": "hitPoints",
+     "confidence": "high",
+     "evidence": "ctor stores arg*const and calls SetHitPointLoc(this+0x6c) (0x6f7e0); PS2 float addr-taken"
+    },
+    {
+     "offset": "0x70",
+     "size": 4,
+     "type": "int",
+     "name": "lifetime",
+     "confidence": "medium",
+     "evidence": "ctor: __ftol2(frame rate * float arg [EBP+0x24]); Simulate RW; PS2 +0x70. Name invented"
+    },
+    {
+     "offset": "0x74",
+     "size": 4,
+     "type": "int",
+     "name": "unknown74",
+     "confidence": "low",
+     "evidence": "ctor zeroes; PS2 same. Name invented"
+    },
+    {
+     "offset": "0x80",
+     "size": 16,
+     "type": "COORD4",
+     "name": "spawnVector",
+     "confidence": "medium",
+     "evidence": "ctor copies the second COORD3& arg into +0x80..+0x88 and writes 1.0 to +0x8c; Simulate LEAs it; PS2 w8 +0x80/+0x88. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "RayShell",
+   "size": 224,
+   "base": null,
+   "vtable": "0x0018ffe4",
+   "comment": "hit-scan bullet; FastFree 0xe0. Own vptr (1 slot, deleting dtor), no base. PS2 keeps the vptr LAST (+0xcc, ctor/dtor), and Xbox pads its vptr to 0x10 (16-byte vector members), so every field is PS2+0x10. The ctor fires the ray (CollideWithObjects/CollideWithWorld/Fire loop) and ends by calling its own deleting dtor: instances never outlive construction",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "void *",
+     "name": "vtable",
+     "confidence": "high",
+     "evidence": "ctor stores 0x18ffe4 at [ESI]; the ctor's last act is 'CALL [vtbl+0](1)' (self-delete); PS2 vptr at +0xcc"
+    },
+    {
+     "offset": "0x10",
+     "size": 12,
+     "type": "COORD3",
+     "name": "origin",
+     "confidence": "high",
+     "evidence": "ctor copies COORD3& arg3 here; CollideWith*/Fire LEA it; PS2 +0x0 floats. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 12,
+     "type": "COORD3",
+     "name": "position",
+     "confidence": "medium",
+     "evidence": "ctor copies +0x10 here per iteration and advances it (0x115ab0); PS2 +0x10. Name invented"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "float",
+     "name": "damage",
+     "confidence": "medium",
+     "evidence": "ctor stores float arg9 and doubles it when the owner is the player and cheat flag 0x1000 of 0x244530 is set; read by DamagePhysicsObject; PS2 +0x1c float. Name invented"
+    },
+    {
+     "offset": "0x30",
+     "size": 12,
+     "type": "COORD3",
+     "name": "direction",
+     "confidence": "high",
+     "evidence": "ctor normalises COORD3& arg4 into +0x30 (0x115e20); VU0_v4scale on it; PS2 +0x20. Name invented"
+    },
+    {
+     "offset": "0x40",
+     "size": 12,
+     "type": "COORD3",
+     "name": "startDirection",
+     "confidence": "low",
+     "evidence": "ctor copies +0x30 here; PS2 +0x30. Name invented"
+    },
+    {
+     "offset": "0x4c",
+     "size": 4,
+     "type": "float",
+     "name": "range",
+     "confidence": "medium",
+     "evidence": "ctor = min(float arg8, const 0x18ffd8) (RayShell::kMaxRange); Fire/CollideWithWorld; PS2 +0x3c float. Name invented"
+    },
+    {
+     "offset": "0x50",
+     "size": 12,
+     "type": "COORD3",
+     "name": "unknown50",
+     "confidence": "low",
+     "evidence": "ctor copies COORD3& arg5; PS2 +0x40. Name invented"
+    },
+    {
+     "offset": "0x5c",
+     "size": 4,
+     "type": "int",
+     "name": "shellType",
+     "confidence": "low",
+     "evidence": "ctor stores int arg1 (sheet RayShell(int, SimObjSig, ...)); CollideWithWorld/DamagePhysicsObject read; PS2 +0x4c. Name invented"
+    },
+    {
+     "offset": "0x60",
+     "size": 4,
+     "type": "int",
+     "name": "numVictims",
+     "confidence": "medium",
+     "evidence": "ctor zeroes before CollideWithObjects and treats >0 as 'hit something'; ConsiderVictim/Fire write; PS2 +0x50. Name invented"
+    },
+    {
+     "offset": "0x64",
+     "size": 4,
+     "type": "uint",
+     "name": "ownerSig",
+     "confidence": "high",
+     "evidence": "ctor stores SimObjSig arg2 and resolves it with Simulation::FindPhysicsObjectSignature then PhysicsObject::IsOwnedBy; LEA'd by the collision methods; PS2 +0x54"
+    },
+    {
+     "offset": "0x70",
+     "size": 12,
+     "type": "COORD3",
+     "name": "victim0Point",
+     "confidence": "low",
+     "evidence": "ConsiderVictim/Fire LEA and fill; PS2 +0x60 (w8 + w4). Name invented"
+    },
+    {
+     "offset": "0x80",
+     "size": 12,
+     "type": "COORD3",
+     "name": "victim0Normal",
+     "confidence": "low",
+     "evidence": "ConsiderVictim/Fire LEA; PS2 +0x70. Name invented"
+    },
+    {
+     "offset": "0x8c",
+     "size": 4,
+     "type": "uint",
+     "name": "victim0Sig",
+     "confidence": "medium",
+     "evidence": "ctor zeroes; ctor passes it to FindPhysicsObjectSignature; ConsiderVictim/Fire; PS2 +0x7c. Name invented"
+    },
+    {
+     "offset": "0x90",
+     "size": 4,
+     "type": "float",
+     "name": "victim0Distance",
+     "confidence": "medium",
+     "evidence": "ctor: range = +0x90 - object radius; float in ConsiderVictim/Fire/CollideWithWorld; PS2 +0x80. Name invented"
+    },
+    {
+     "offset": "0xa0",
+     "size": 12,
+     "type": "COORD3",
+     "name": "victim1Point",
+     "confidence": "low",
+     "evidence": "ConsiderVictim/Fire LEA; PS2 +0x90. Name invented"
+    },
+    {
+     "offset": "0xb0",
+     "size": 12,
+     "type": "COORD3",
+     "name": "victim1Normal",
+     "confidence": "low",
+     "evidence": "ConsiderVictim LEA; PS2 +0xa0. Name invented"
+    },
+    {
+     "offset": "0xbc",
+     "size": 4,
+     "type": "uint",
+     "name": "victim1Sig",
+     "confidence": "low",
+     "evidence": "ctor zeroes; ConsiderVictim/Fire; PS2 +0xac. Name invented"
+    },
+    {
+     "offset": "0xc0",
+     "size": 4,
+     "type": "float",
+     "name": "victim1Distance",
+     "confidence": "low",
+     "evidence": "float in ConsiderVictim/Fire; PS2 +0xb0. Name invented"
+    },
+    {
+     "offset": "0xd0",
+     "size": 4,
+     "type": "undefined4",
+     "name": "unknownD0",
+     "confidence": "low",
+     "evidence": "ctor stores arg12 ([EBP+0x34]); read by CollideWithWorld/DamagePhysicsObject/Fire; PS2 +0xc0. Name invented"
+    },
+    {
+     "offset": "0xd4",
+     "size": 4,
+     "type": "undefined4",
+     "name": "tracerArg0",
+     "confidence": "low",
+     "evidence": "ctor stores arg6 ([EBP+0x1c]); PS2 +0xc4 read by StoreTracer and passed on to StaticStoreTracer(COORD3&, COORD3&, int, RSceneObj*, ...). Name invented"
+    },
+    {
+     "offset": "0xd8",
+     "size": 4,
+     "type": "undefined4",
+     "name": "tracerArg1",
+     "confidence": "low",
+     "evidence": "ctor stores arg7 ([EBP+0x20]); PS2 +0xc8 passed by StoreTracer to StaticStoreTracer. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "RMissileCam",
+   "size": 28,
+   "base": "USingleton",
+   "vtable": "0x00192d38",
+   "comment": "missile-camera overlay singleton (PS2 fgThis_RMissileCam); FastFree 0x1c. USingleton base: ~RMissileCam 0xa0df0 restores 0x18beb0 last. Same offsets on PS2",
+   "fields": [
+    {
+     "offset": "0x4",
+     "size": 12,
+     "type": "void *[3]",
+     "name": "frameTextures",
+     "confidence": "medium",
+     "evidence": "ctor loop over 3 names (0x1c4aa0..0x1c4aac) stores RTextureContext::FindOrCreateTexture results at +0x4/+0x8/+0xc; Draw picks [this+4+(frame%3)*4]; dtor zeroes all three; PS2 LEA +0x4/+0xc. Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 1,
+     "type": "bool",
+     "name": "visible",
+     "confidence": "high",
+     "evidence": "ctor byte 0; Draw returns early when clear; PS2 Show/Hide write +0x10 (4-byte bool). Name invented"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "uint",
+     "name": "alpha",
+     "confidence": "medium",
+     "evidence": "Draw shifts it into the top byte of the vertex colour (| 0x808080); PS2 Show(unsigned) writes +0x14. Name invented"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "void *",
+     "name": "renderer",
+     "confidence": "medium",
+     "evidence": "ctor news a 0x3c-byte object (ctor 0x9ac40, same type as RMissileStreak's static renderers at 0x201250); Draw fills its fields; dtor frees its +0 member (0x34 bytes, dtor 0xf12c0) and then it (0x3c). Name invented"
+    }
+   ]
+  }
+ ],
+ "vtable_slots": [],
+ "returns": {
+  "0x71930": "int",
+  "0x71940": "void *",
+  "0x71980": "void *",
+  "0x71970": "void",
+  "0xa0e90": "void",
+  "0xa0ea0": "void",
+  "0xa1070": "void",
+  "0xa1330": "void",
+  "0xa1460": "void",
+  "0xa0b50": "void"
+ },
+ "skip_prototypes": [],
+ "notes": [
+  "RMissileStreak is NOT an RAutonomousObj subclass (correcting cluster5's Missile note and placeholder comment): its ctor 0xed310 is 'MOV [EAX],0; MOV [EAX+4],0; MOV [EAX+8],0; RET' with no vtable, Update 0xa0ea0 reads +0 as a point count capped at 0x60, and no PS2 vtable row exists. The 0x18a398 (RAutonomousObj) stores in the Missile/Grenade/Mine/Newton ctors are the inline ctor of the separately new'd 0x80-byte RAutonomousObj render object (FastAlloc 0x80 tag 0x18c3fc, identity matrix copied to +0x40, RSceneObj ctor 0x8eec0, vtable store, then SetRenderObject 0x6f3f0); Missile's 'EH cleanup' store at 0x5f1e4 is most likely that same pattern (not re-checked).",
+  "RMissileStreak::Init 0xa1070 and Kill 0xa1460 are static (no this): they build/free three 0x3c-byte streak renderers in the global table 0x201250[3] (indexed by streakType) plus vertex/colour tables at 0x200fb0/0x2012a0/0x2012f0.",
+  "RMissileStreak: point count 100 is inferred from the 0x650 size (0x10 header + 100*16); the code caps numPoints at 0x61.",
+  "RayShell ctor 0x72e90 ends with 'MOV EDX,[ESI]; PUSH 1; CALL [EDX]' = scalar deleting destructor: a RayShell deletes itself once fired. The two victim records (+0x70..+0x93, +0xa0..+0xc3) could be an array of a small struct (COORD3 point, COORD3 normal, sig, distance, padded to 0x30); listed as flat fields. RayShell has its own vptr as field 0 (base null).",
+  "RayShell::GetActiveRayShell 0x71940 / GetTriggerHittingRayShell 0x71980 return pointers into a static array of 0x30-byte records at 0x1e8570 (fActiveRayShells), not RayShell objects; typed void *. GetNumActiveRayShells reads 0x1e84e4; SetTriggerHittingRayShell writes 0x1c3df4 (fTriggerHittingRayShellIndex, -1 = none).",
+  "RMissileCam::Init 0x8bdd0 sits far from the other RMissileCam methods (0xa0a50..0xa0e70); not checked.",
+  "PhysicsObject ctor variants used: 0x6f190 (SimpleRigidBody) with types Mine 5, Shell 7, Grenade 8, Newton 9; 0x6f070 (AttributeSet copy) with type 2 for Smackable. 0x6f7e0 = SetHitPointLoc, 0x6f3f0 = SetRenderObject, 0x6f430 = SetAudioObject.",
+  "Newton has no scalar_deleting_destructor with a FastFree size in the evidence; size 0x90 from the allocation size 144."
+ ]
+}

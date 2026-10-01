@@ -1,0 +1,88 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0005f350",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Missile::~Missile(void)"
+  },
+  {
+   "address": "0x0005f3d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "Missile::Render(bool)"
+  },
+  {
+   "address": "0x0005f600",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "Missile::SetUserSteerX(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x0005f640",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "Missile::SetUserSteerY(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x0005f680",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "WTargetable *"
+    }
+   ],
+   "sheet": "Missile::SetTarget(WTargetable *)",
+   "return": "void"
+  },
+  {
+   "address": "0x0005f6a0",
+   "calling_convention": "__thiscall",
+   "return": "Missile *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0005f6d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Missile::CheckForCollision(void)"
+  },
+  {
+   "address": "0x00060110",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Missile::SteerMissile(void)"
+  },
+  {
+   "address": "0x00060a30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Missile::Simulate(void)"
+  }
+ ]
+}

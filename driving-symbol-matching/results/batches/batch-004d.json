@@ -1,0 +1,29 @@
+{
+ "batch": "004d",
+ "program": "Driving.xbe",
+ "note": "GFXGallery namespace for two VT names",
+ "items": [
+  {
+   "xbox": "0x000d4b90",
+   "expect": "DEBRIS_Draw",
+   "name": "GFXGallery::DEBRIS_Draw",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00235810; VT left it outside the GFXGallery namespace"
+   ]
+  },
+  {
+   "xbox": "0x000d51e0",
+   "expect": "CANVAS_Draw",
+   "name": "GFXGallery::CANVAS_Draw",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00234818; VT left it outside the GFXGallery namespace"
+   ]
+  }
+ ]
+}

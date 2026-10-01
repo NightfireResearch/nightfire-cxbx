@@ -1,0 +1,2189 @@
+{
+ "batch": "015",
+ "program": "Driving.xbe",
+ "skip_refused_creates": true,
+ "note": "Names from paired vtables (vtables.py + propose_vtables.py, 294 certain pairs).",
+ "items": [
+  {
+   "xbox": "0x00048ea0",
+   "expect": "EWakeupSmackable::~EWakeupSmackable",
+   "name": "EWakeupSmackable::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "vtable slot 0; calls the destructor then Event::operator_delete(this, 0x3c) when flag bit 1 is set (was EWakeupSmackable::~EWakeupSmackable)"
+   ]
+  },
+  {
+   "xbox": "0x00046d10",
+   "expect": "EWakeupSmackable::Process",
+   "name": "EWakeupSmackable::~EWakeupSmackable",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "event classes act in their destructors: called by the scalar deleting destructor 0x48ea0 and stores EWakeupSmackable's vtable (the batch 006 pattern) (was EWakeupSmackable::Process)"
+   ]
+  },
+  {
+   "xbox": "0x00078470",
+   "expect": "RCamera::~RCamera",
+   "name": "RCamera::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "vtable slot 0 of the paired RCamera vtable; takes the delete flag and frees 0xc0 when bit 1 is set (was RCamera::~RCamera)"
+   ]
+  },
+  {
+   "xbox": "0x000e4240",
+   "expect": "IniFiles::~IniFiles",
+   "name": "IniFiles::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "vtable slot 0 of the paired IniFiles vtable; takes the delete flag (was IniFiles::~IniFiles)"
+   ]
+  },
+  {
+   "xbox": "0x000f7340",
+   "expect": "EAGLAnim::FnAnim::~FnAnim",
+   "name": "EAGLAnim::FnAnim::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "vtable slot 0 of the paired FnAnim vtable; takes the delete flag, deletes when bit 1 is set (was EAGLAnim::FnAnim::~FnAnim)"
+   ]
+  },
+  {
+   "xbox": "0x001008e0",
+   "expect": "EAGLAnim::FnDeltaF3::~FnDeltaF3",
+   "name": "EAGLAnim::FnDeltaF3::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "vtable slot 0 of the paired FnDeltaF3 vtable; calls the destructor then frees 0x30 when flag bit 1 is set (was EAGLAnim::FnDeltaF3::~FnDeltaF3)"
+   ]
+  },
+  {
+   "xbox": "0x0001c5e0",
+   "expect": "(none)",
+   "name": "AICharacterEnemy::NeedsToReload",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 34 (PS2 00119270, row 380, ghidra)",
+    "AICharacterEnemySSnow slot 34 (PS2 00119270, row 380, ghidra)",
+    "AICharacterHands slot 34 (PS2 00119270, row 380, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001ca50",
+   "expect": "(none)",
+   "name": "AICharacterEnemy::TargetIsInRange",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 33 (PS2 001191e8, row 379, ghidra)",
+    "AICharacterHands slot 33 (PS2 001191e8, row 379, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001ca90",
+   "expect": "FUN_0001ca90",
+   "name": "AICharacterEnemy::TargetIsAcquired",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySSnow slot 35 (PS2 00119290, row 381, resolved)",
+    "AICharacterHands slot 35 (PS2 00119290, row 381, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001d7f0",
+   "expect": "(none)",
+   "name": "AICharacterEnemyDriver::DoNeutral",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyDriver slot 8 (PS2 0011af60, row 472, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001d990",
+   "expect": "FUN_0001d990",
+   "name": "AICharacterEnemyDriver::UpdateRotPos",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [
+    "AICharacterEnemySSnow::UpdateRotPos"
+   ],
+   "evidence": [
+    "AICharacterEnemyDriver slot 32 (PS2 0011b128, row 475, resolved)",
+    "AICharacterEnemySSnow slot 32 (PS2 00120428, row 553, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001da60",
+   "expect": "(none)",
+   "name": "AICharacterEnemyGround::DoDodging",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 14 (PS2 0011bb78, row 486, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001da70",
+   "expect": "(none)",
+   "name": "AICharacterEnemyGround::DoTilting",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 23 (PS2 0011c2a0, row 495, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001dc50",
+   "expect": "(none)",
+   "name": "AICharacterEnemyGround::GetZoneHitPointScale",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 5 (PS2 0011d9b0, row 504, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001de80",
+   "expect": "(none)",
+   "name": "AICharacterEnemyGround::IsAlive",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 1 (PS2 0011e150, row 511, sheet)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001dea0",
+   "expect": "FUN_0001dea0",
+   "name": "AICharacterEnemyGround::~AICharacterEnemyGround",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by AICharacterEnemyGround::scalar_deleting_destructor (0x0001df40) and stores AICharacterEnemyGround's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001df40",
+   "expect": "FUN_0001df40",
+   "name": "AICharacterEnemyGround::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 0 (PS2 0011b768, row 480, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001df70",
+   "expect": "FUN_0001df70",
+   "name": "AICharacterEnemyGround::DoInitial",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 7 (PS2 0011b800, row 481, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001dfc0",
+   "expect": "FUN_0001dfc0",
+   "name": "AICharacterEnemyGround::DoNeutral",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 8 (PS2 0011b860, row 482, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001e010",
+   "expect": "FUN_0001e010",
+   "name": "AICharacterEnemyGround::DoAvoiding",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 12 (PS2 0011bad8, row 485, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001e070",
+   "expect": "FUN_0001e070",
+   "name": "AICharacterEnemyGround::DoArming",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [
+    "AICharacterEnemyGround::DoReloading",
+    "AICharacterEnemyGround::DoHurting"
+   ],
+   "evidence": [
+    "AICharacterEnemyGround slot 15 (PS2 0011bbb8, row 487, ghidra)",
+    "AICharacterEnemyGround slot 19 (PS2 0011c160, row 491, ghidra)",
+    "AICharacterEnemyGround slot 21 (PS2 0011c1d0, row 493, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001e090",
+   "expect": "(none)",
+   "name": "AICharacterEnemyGround::DoArmed",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 16 (PS2 0011bbf0, row 488, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001e380",
+   "expect": "(none)",
+   "name": "AICharacterEnemyGround::DoDying",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 22 (PS2 0011c208, row 494, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001e400",
+   "expect": "(none)",
+   "name": "AICharacterEnemyGround::UpdateRotPos",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 32 (PS2 0011cd10, row 499, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001f180",
+   "expect": "FUN_0001f180",
+   "name": "AICharacterEnemyGround::DoRunning",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 27 (PS2 0011c2c0, row 496, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001f8f0",
+   "expect": "FUN_0001f8f0",
+   "name": "AICharacterEnemyGround::TargetIsAcquired",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyGround slot 35 (PS2 0011cd68, row 500, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0001fd30",
+   "expect": "(none)",
+   "name": "AICharacterEnemySSnow::GetVehiclePtr",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySSnow slot 3 (PS2 00120470, row 554, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00020970",
+   "expect": "FUN_00020970",
+   "name": "AICharacterEnemySSnow::~AICharacterEnemySSnow",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by AICharacterEnemySSnow::scalar_deleting_destructor (0x000209d0) and stores AICharacterEnemySSnow's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000209d0",
+   "expect": "FUN_000209d0",
+   "name": "AICharacterEnemySSnow::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySSnow slot 0 (PS2 00120010, row 544, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00020a60",
+   "expect": "(none)",
+   "name": "AICharacterEnemySSnow::DoAiming",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySSnow slot 17 (PS2 00120160, row 548, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00020b40",
+   "expect": "(none)",
+   "name": "AICharacterEnemySSnow::DoDying",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySSnow slot 22 (PS2 001202e0, row 550, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00020bb0",
+   "expect": "FUN_00020bb0",
+   "name": "AICharacterEnemySSnow::HandleInterrupts",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySSnow slot 30 (PS2 00120370, row 552, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00020c30",
+   "expect": "(none)",
+   "name": "AICharacterEnemySSnow::TargetIsInRange",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySSnow slot 33 (PS2 00120478, row 555, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00022820",
+   "expect": "FUN_00022820",
+   "name": "AICharacterHands::~AICharacterHands",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by AICharacterHands::scalar_deleting_destructor (0x000228b0) and stores AICharacterHands's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000228b0",
+   "expect": "FUN_000228b0",
+   "name": "AICharacterHands::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterHands slot 0 (PS2 00123ea0, row 618, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00022e70",
+   "expect": "FUN_00022e70",
+   "name": "AICharacterHands::DoNeutral",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterHands slot 8 (PS2 00124240, row 627, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00022fb0",
+   "expect": "(none)",
+   "name": "AICharacterHands::DoArmed",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterHands slot 16 (PS2 00124440, row 630, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000230a0",
+   "expect": "(none)",
+   "name": "AICharacterHands::DoAiming",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterHands slot 17 (PS2 00124570, row 631, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00023170",
+   "expect": "(none)",
+   "name": "AICharacterHands::DoFiring",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterHands slot 18 (PS2 00124650, row 632, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00023230",
+   "expect": "(none)",
+   "name": "AICharacterHands::DoReloading",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterHands slot 19 (PS2 00124770, row 633, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000232b0",
+   "expect": "FUN_000232b0",
+   "name": "AICharacterHands::UpdateRotPos",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterHands slot 32 (PS2 00124848, row 635, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00023890",
+   "expect": "(none)",
+   "name": "AICharacterPassenger::DoNeutral",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterPassenger slot 8 (PS2 001257c8, row 649, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000238c0",
+   "expect": "(none)",
+   "name": "AICharacterPassenger::HandleInterrupts",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterPassenger slot 30 (PS2 00125860, row 654, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00024870",
+   "expect": "FUN_00024870",
+   "name": "AICharacterPedestrian::UpdateRotPos",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterPedestrian slot 32 (PS2 00128788, row 689, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00024b30",
+   "expect": "FUN_00024b30",
+   "name": "AICharacterPedestrian::TargetIsInRange",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterPedestrian slot 33 (PS2 00128b28, row 692, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00025fc0",
+   "expect": "FUN_00025fc0",
+   "name": "AICharacterPedestrian::DoDying",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterPedestrian slot 22 (PS2 001280c8, row 685, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00027150",
+   "expect": "(none)",
+   "name": "AICharacterPedestrian::DoStartled",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterPedestrian slot 13 (PS2 00127908, row 682, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00035b90",
+   "expect": "FUN_00035b90",
+   "name": "AIVehicle::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AIVehicle slot 0 (PS2 0013df50, row 939, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00035df0",
+   "expect": "FUN_00035df0",
+   "name": "AIHelicopter::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AIHelicopter slot 0 (PS2 00138280, row 876, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0005d4f0",
+   "expect": "FUN_0005d4f0",
+   "name": "Grenade::~Grenade",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by Grenade::scalar_deleting_destructor (0x0005d7a0) and stores Grenade's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0005d7a0",
+   "expect": "FUN_0005d7a0",
+   "name": "Grenade::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "Grenade slot 0 (PS2 0017e7b0, row 2469, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00061050",
+   "expect": "(none)",
+   "name": "Newton::ApplyDamage",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "Newton slot 2 (PS2 001847e0, row 2531, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0006dd10",
+   "expect": "(none)",
+   "name": "PHelicopter::GetDamageZones",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "PHelicopter slot 3 (PS2 001942d8, row 2666, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00074660",
+   "expect": "FUN_00074660",
+   "name": "Shell::~Shell",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by Shell::scalar_deleting_destructor (0x00074980) and stores Shell's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00074980",
+   "expect": "FUN_00074980",
+   "name": "Shell::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "Shell slot 0 (PS2 0019d028, row 2826, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000877e0",
+   "expect": "(none)",
+   "name": "RPlayerCamera::UpdateCamera",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RPlayerCamera slot 3 (PS2 001b29e0, row 3230, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0008a410",
+   "expect": "FUN_0008a410",
+   "name": "RPlayerViewCamera::~RPlayerViewCamera",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by RPlayerViewCamera::scalar_deleting_destructor (0x0008a4d0) and stores RPlayerViewCamera's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0008a4d0",
+   "expect": "FUN_0008a4d0",
+   "name": "RPlayerViewCamera::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RPlayerViewCamera slot 0 (PS2 001beb48, row 3356, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0008b4d0",
+   "expect": "FUN_0008b4d0",
+   "name": "RRenderDebugViewPerspective::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RRenderDebugViewPerspective slot 0 (PS2 001c3758, row 3424, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0008e1a0",
+   "expect": "FUN_0008e1a0",
+   "name": "RSceneObj::GetVelocity",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RSceneObj slot 13 (PS2 001c9c78, row 3556, ghidra)",
+    "RSkeletalObj slot 13 (PS2 001c9c78, row 3556, ghidra)",
+    "RVehicle slot 13 (PS2 001c9c78, row 3556, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00090c10",
+   "expect": "FUN_00090c10",
+   "name": "RSkeletalObj::~RSkeletalObj",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by RSkeletalObj::scalar_deleting_destructor (0x000912d0) and stores RSkeletalObj's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000912b0",
+   "expect": "FUN_000912b0",
+   "name": "RSkeletalObj::SetProcAnimState",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RSkeletalObj slot 10 (PS2 001cd178, row 3618, resolved)",
+    "RVehicle slot 10 (PS2 001cd178, row 3618, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000912d0",
+   "expect": "FUN_000912d0",
+   "name": "RSkeletalObj::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RSkeletalObj slot 0 (PS2 001cc640, row 3613, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000959b0",
+   "expect": "FUN_000959b0",
+   "name": "RVehicle::TriggerIlluminate",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RVehicle slot 12 (PS2 001d2aa0, row 3702, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00095cc0",
+   "expect": "(none)",
+   "name": "RVehicle::GetRenderOffset",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RVehicle slot 9 (PS2 001d38a8, row 3719, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00095ed0",
+   "expect": "(none)",
+   "name": "RVehicle::TriggerFX",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RVehicle slot 15 (PS2 001d3c28, row 3722, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00097690",
+   "expect": "(none)",
+   "name": "RWorldCamera::ReceiveCameraInput",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RPlayerCamera slot 5 (PS2 001d6128, row 3813, ghidra)",
+    "RWorldCamera slot 5 (PS2 001d6128, row 3813, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00099590",
+   "expect": "FUN_00099590",
+   "name": "RReflection::~RReflection",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by RReflection::scalar_deleting_destructor (0x00099cc0) and stores RReflection's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00099cc0",
+   "expect": "FUN_00099cc0",
+   "name": "RReflection::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RReflection slot 0 (PS2 001c16c8, row 3378, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0009af70",
+   "expect": "FUN_0009af70",
+   "name": "RDecalManager::Reset",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RDecalManager slot 1 (PS2 001da558, row 3929, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0009b450",
+   "expect": "FUN_0009b450",
+   "name": "RDecalManager::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RDecalManager slot 0 (PS2 001da310, row 3924, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0009de80",
+   "expect": "FUN_0009de80",
+   "name": "RGain::Kill",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RGain slot 2 (PS2 001dfbc0, row 4008, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0009e1d0",
+   "expect": "FUN_0009e1d0",
+   "name": "RLensFlareManager::Kill",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RLensFlareManager slot 2 (PS2 001e08a8, row 4023, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000a0000",
+   "expect": "FUN_000a0000",
+   "name": "RLightning::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RLightning slot 0 (PS2 001e09d0, row 4026, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000f70f0",
+   "expect": "FUN_000f70f0",
+   "name": "EAGLAnim::FnCompoundChannel::GetTargetCheckSum",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 1 (PS2 00266390, row 6427, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000f7140",
+   "expect": "FUN_000f7140",
+   "name": "EAGLAnim::FnCompoundChannel::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 0 (PS2 00266410, row 6407, resolved)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000f72f0",
+   "expect": "FUN_000f72f0",
+   "name": "EAGLAnim::FnAnim::GetTargetCheckSum",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnPoseMirror slot 1 (PS2 0026dfb8, row 6584, ghidra)",
+    "EAGLAnim::FnAnim slot 1 (PS2 0026dfb8, row 6584, ghidra)",
+    "EAGLAnim::FnRunBlender slot 1 (PS2 0026dfb8, row 6584, ghidra)",
+    "EAGLAnim::FnTurnBlender slot 1 (PS2 0026dfb8, row 6584, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000f7300",
+   "expect": "FUN_000f7300",
+   "name": "EAGLAnim::FnAnim::GetLength",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnPoseMirror slot 4 (PS2 0026dfd0, row 6587, ghidra)",
+    "EAGLAnim::FnRawEventChannel slot 4 (PS2 0026dfd0, row 6587, ghidra)",
+    "EAGLAnim::FnAnimMemoryMap slot 4 (PS2 0026dfd0, row 6587, ghidra)",
+    "EAGLAnim::FnAnim slot 4 (PS2 0026dfd0, row 6587, ghidra)",
+    "EAGLAnim::FnRunBlender slot 4 (PS2 0026dfd0, row 6587, ghidra)",
+    "EAGLAnim::FnTurnBlender slot 4 (PS2 0026dfd0, row 6587, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000f7320",
+   "expect": "FUN_000f7320",
+   "name": "EAGLAnim::FnAnim::EvalEvent",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnPoseMirror slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnRawLinearChannel slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnRawStateChan slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnDeltaQ slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnDeltaSingleQ slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnDeltaQFast slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnAnimMemoryMap slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnAnim slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnDeltaF3 slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnDeltaF1 slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnKeyQuatChan slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnKeyLerpChan slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnDeltaQuatChan slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnDeltaLerpChan slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnPhaseChan slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnRunBlender slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "EAGLAnim::FnTurnBlender slot 9 (PS2 0026dff8, row 6592, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000f7b50",
+   "expect": "FUN_000f7b50",
+   "name": "EAGLAnim::FnPhaseChan::GetPhaseChan",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnPhaseChan slot 13 (PS2 00277730, row 6850, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000f7b80",
+   "expect": "FUN_000f7b80",
+   "name": "EAGLAnim::FnRawStateChan::GetLength",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnRawStateChan slot 4 (PS2 00267328, row 6463, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000f7ba0",
+   "expect": "FUN_000f7ba0",
+   "name": "EAGLAnim::FnRawStateChan::Eval",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnRawStateChan slot 3 (PS2 00267348, row 6464, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000f7bc0",
+   "expect": "FUN_000f7bc0",
+   "name": "EAGLAnim::FnRawStateChan::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnRawStateChan slot 0 (PS2 002672c8, row 6462, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000f7bf0",
+   "expect": "FUN_000f7bf0",
+   "name": "EAGLAnim::FnRawStateChan::~FnRawStateChan",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by EAGLAnim::FnRawStateChan::scalar_deleting_destructor (0x000f7bc0) and stores EAGLAnim::FnRawStateChan's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000f8290",
+   "expect": "FUN_000f8290",
+   "name": "EAGLAnim::FnKeyLerpChan::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [
+    "EAGLAnim::FnKeyQuatChan::~FnKeyQuatChan"
+   ],
+   "evidence": [
+    "EAGLAnim::FnKeyQuatChan slot 0 (PS2 00275f38, row 6809, resolved)",
+    "EAGLAnim::FnKeyLerpChan slot 0 (PS2 00275cd0, row 6796, resolved)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000f82d0",
+   "expect": "FUN_000f82d0",
+   "name": "EAGLAnim::FnPhaseChan::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnPhaseChan slot 0 (PS2 00277538, row 6837, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000faac0",
+   "expect": "FUN_000faac0",
+   "name": "EAGLAnim::FnAnimMemoryMap::GetAnimMemoryMap",
+   "create": false,
+   "allow_duplicate": true,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnRawLinearChannel slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnRawEventChannel slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnCompoundChannel slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnRawStateChan slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnDeltaQ slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnDeltaSingleQ slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnDeltaQFast slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnAnimMemoryMap slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnDeltaF3 slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnDeltaF1 slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnKeyQuatChan slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnKeyLerpChan slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnDeltaQuatChan slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnDeltaLerpChan slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "EAGLAnim::FnPhaseChan slot 17 (PS2 0026dd58, row 6556, sheet)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000faad0",
+   "expect": "FUN_000faad0",
+   "name": "EAGLAnim::FnAnimMemoryMap::GetAnimMemoryMap",
+   "create": false,
+   "allow_duplicate": true,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnRawLinearChannel slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnRawEventChannel slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnCompoundChannel slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnRawStateChan slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnDeltaQ slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnDeltaSingleQ slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnDeltaQFast slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnAnimMemoryMap slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnDeltaF3 slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnDeltaF1 slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnKeyQuatChan slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnKeyLerpChan slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnDeltaQuatChan slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnDeltaLerpChan slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "EAGLAnim::FnPhaseChan slot 16 (PS2 0026dd50, row 6555, infill-exact)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fab60",
+   "expect": "FUN_000fab60",
+   "name": "EAGLAnim::FnCompoundChannel::~FnCompoundChannel",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by EAGLAnim::FnCompoundChannel::scalar_deleting_destructor (0x000f7140) and stores EAGLAnim::FnCompoundChannel's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fac00",
+   "expect": "FUN_000fac00",
+   "name": "EAGLAnim::FnCompoundChannel::SetAnimMemoryMap",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 15 (PS2 00266518, row 6408, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fac70",
+   "expect": "FUN_000fac70",
+   "name": "EAGLAnim::FnCompoundChannel::EvalEvent",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 9 (PS2 002659a8, row 6409, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000facf0",
+   "expect": "FUN_000facf0",
+   "name": "EAGLAnim::FnCompoundChannel::EvalSQT",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 6 (PS2 00265b28, row 6410, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fad60",
+   "expect": "FUN_000fad60",
+   "name": "EAGLAnim::FnCompoundChannel::EvalWeights",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 10 (PS2 00265c90, row 6411, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fadc0",
+   "expect": "FUN_000fadc0",
+   "name": "EAGLAnim::FnCompoundChannel::EvalVel2D",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 8 (PS2 00265df8, row 6412, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fae20",
+   "expect": "FUN_000fae20",
+   "name": "EAGLAnim::FnCompoundChannel::EvalState",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 11 (PS2 00265f60, row 6413, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fae80",
+   "expect": "FUN_000fae80",
+   "name": "EAGLAnim::FnCompoundChannel::FindTime",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 12 (PS2 00266820, row 6435, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000faf00",
+   "expect": "FUN_000faf00",
+   "name": "EAGLAnim::FnCompoundChannel::EvalPhase",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 7 (PS2 00266910, row 6436, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000faf90",
+   "expect": "FUN_000faf90",
+   "name": "EAGLAnim::FnCompoundChannel::GetPhaseChan",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 13 (PS2 002660c8, row 6414, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fafd0",
+   "expect": "FUN_000fafd0",
+   "name": "EAGLAnim::FnCompoundChannel::UseFPS",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 2 (PS2 00266a20, row 6438, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fb040",
+   "expect": "FUN_000fb040",
+   "name": "EAGLAnim::FnCompoundChannel::GetAttributes",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 14 (PS2 002665e8, row 6432, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fb0a0",
+   "expect": "FUN_000fb0a0",
+   "name": "EAGLAnim::FnCompoundChannel::Eval",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnCompoundChannel slot 3 (PS2 002666b8, row 6434, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fb110",
+   "expect": "FUN_000fb110",
+   "name": "EAGLAnim::FnAnim::GetAttributes",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnPoseMirror slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnRawLinearChannel slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnRawEventChannel slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnRawStateChan slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnDeltaQ slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnDeltaSingleQ slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnDeltaQFast slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnAnimMemoryMap slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnAnim slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnDeltaF3 slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnDeltaF1 slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnKeyQuatChan slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnKeyLerpChan slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnDeltaQuatChan slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnDeltaLerpChan slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnPhaseChan slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnRunBlender slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "EAGLAnim::FnTurnBlender slot 14 (PS2 0026e4d8, row 6608, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fb630",
+   "expect": "FUN_000fb630",
+   "name": "EAGLAnim::FnDeltaLerpChan::EvalWeights",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaLerpChan slot 10 (PS2 002764d8, row 6825, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fb650",
+   "expect": "FUN_000fb650",
+   "name": "EAGLAnim::FnDeltaLerpChan::EvalVel2D",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaLerpChan slot 8 (PS2 00276508, row 6826, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fba00",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnKeyLerpChan::Eval",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnKeyLerpChan slot 3 (PS2 002767c0, row 6830, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fbb40",
+   "expect": "FUN_000fbb40",
+   "name": "EAGLAnim::FnKeyQuatChan::Eval",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnKeyQuatChan slot 3 (PS2 002767f0, row 6831, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fbe10",
+   "expect": "FUN_000fbe10",
+   "name": "EAGLAnim::FnKeyDeltaChan::GetLength",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnKeyQuatChan slot 4 (PS2 00276658, row 6827, resolved)",
+    "EAGLAnim::FnKeyLerpChan slot 4 (PS2 00276658, row 6827, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fd4a0",
+   "expect": "FUN_000fd4a0",
+   "name": "EAGLAnim::FnPhaseChan::GetLength",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnPhaseChan slot 4 (PS2 00277738, row 6851, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fd4c0",
+   "expect": "FUN_000fd4c0",
+   "name": "EAGLAnim::FnPhaseChan::Eval",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnPhaseChan slot 3 (PS2 00277360, row 6836, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fd670",
+   "expect": "FUN_000fd670",
+   "name": "EAGLAnim::FnPhaseChan::SetAnimMemoryMap",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnPhaseChan slot 15 (PS2 00277758, row 6852, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fd840",
+   "expect": "FUN_000fd840",
+   "name": "EAGLAnim::FnRawStateChan::EvalState",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnRawStateChan slot 11 (PS2 00266f48, row 6448, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fe2b0",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaF1::Eval",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaF1 slot 3 (PS2 00271830, row 6648, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000feaa0",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaF1::EvalWeights",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaF1 slot 10 (PS2 00271860, row 6649, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000feac0",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaF1::EvalVel2D",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaF1 slot 8 (PS2 00271890, row 6650, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000febd0",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaF1::EvalSQT",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaF1 slot 6 (PS2 002701b8, row 6630, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000ff2b0",
+   "expect": "FUN_000ff2b0",
+   "name": "EAGLAnim::FnDeltaF3::Eval",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaF3 slot 3 (PS2 00270128, row 6627, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000ffce0",
+   "expect": "FUN_000ffce0",
+   "name": "EAGLAnim::FnDeltaF3::EvalWeights",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaF3 slot 10 (PS2 00270158, row 6628, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000ffd00",
+   "expect": "FUN_000ffd00",
+   "name": "EAGLAnim::FnDeltaF3::EvalVel2D",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaF3 slot 8 (PS2 00270188, row 6629, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x000fff10",
+   "expect": "FUN_000fff10",
+   "name": "EAGLAnim::FnDeltaF3::EvalSQT",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaF3 slot 6 (PS2 0026e4e0, row 6609, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00100880",
+   "expect": "FUN_00100880",
+   "name": "EAGLAnim::FnDeltaF3::SetAnimMemoryMap",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [
+    "EAGLAnim::FnDeltaF1::SetAnimMemoryMap"
+   ],
+   "evidence": [
+    "EAGLAnim::FnDeltaF3 slot 15 (PS2 002700d0, row 6625, ghidra)",
+    "EAGLAnim::FnDeltaF1 slot 15 (PS2 002717d8, row 6646, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x001008a0",
+   "expect": "FUN_001008a0",
+   "name": "EAGLAnim::FnDeltaF3::GetLength",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [
+    "EAGLAnim::FnDeltaF1::GetLength"
+   ],
+   "evidence": [
+    "EAGLAnim::FnDeltaF3 slot 4 (PS2 002700e8, row 6626, ghidra)",
+    "EAGLAnim::FnDeltaF1 slot 4 (PS2 002717f0, row 6647, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00100910",
+   "expect": "FUN_00100910",
+   "name": "EAGLAnim::FnDeltaF3::~FnDeltaF3",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by EAGLAnim::FnDeltaF3::scalar_deleting_destructor (0x001008e0) and stores EAGLAnim::FnDeltaF3's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x001009c0",
+   "expect": "FUN_001009c0",
+   "name": "EAGLAnim::FnDeltaSingleQ::~FnDeltaSingleQ",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by EAGLAnim::FnDeltaSingleQ::scalar_deleting_destructor (0x00101f00) and stores EAGLAnim::FnDeltaSingleQ's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00100a20",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaSingleQ::SetAnimMemoryMap",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaSingleQ slot 15 (PS2 0026b950, row 6515, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00100a30",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaSingleQ::GetLength",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaSingleQ slot 4 (PS2 0026b958, row 6516, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00100a80",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaSingleQ::Eval",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaSingleQ slot 3 (PS2 0026b998, row 6517, infill-count)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00100aa0",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaSingleQ::EvalSQT",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaSingleQ slot 6 (PS2 0026b9d0, row 6518, infill-count)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00100be0",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaSingleQ::EvalSQTMasked",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaSingleQ slot 18 (PS2 00268e40, row 6501, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00101f00",
+   "expect": "FUN_00101f00",
+   "name": "EAGLAnim::FnDeltaSingleQ::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaSingleQ slot 0 (PS2 0026b368, row 6500, resolved)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00101f90",
+   "expect": "FUN_00101f90",
+   "name": "EAGLAnim::FnDeltaQFast::~FnDeltaQFast",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by EAGLAnim::FnDeltaQFast::scalar_deleting_destructor (0x001032b0) and stores EAGLAnim::FnDeltaQFast's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00102500",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaQFast::SetAnimMemoryMap",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaQFast slot 15 (PS2 0026bbc8, row 6523, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x001029f0",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaQFast::EvalSQT",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaQFast slot 6 (PS2 0026bd08, row 6524, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x001032b0",
+   "expect": "FUN_001032b0",
+   "name": "EAGLAnim::FnDeltaQFast::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaQFast slot 0 (PS2 0026d468, row 6522, resolved)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00103420",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaQ::SetAnimMemoryMap",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaQ slot 15 (PS2 00268d88, row 6496, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00103430",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaQ::GetLength",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaQ slot 4 (PS2 00268d90, row 6497, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00103480",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaQ::Eval",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaQ slot 3 (PS2 00268dd0, row 6498, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x001034a0",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaQ::EvalSQT",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaQ slot 6 (PS2 00268e08, row 6499, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x001034c0",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnDeltaQ::EvalSQTMasked",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnDeltaQ slot 18 (PS2 00267938, row 6478, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00104bf0",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnTurnBlender::EvalSQT",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnTurnBlender slot 6 (PS2 00279aa0, row 6892, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00105780",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnRunBlender::EvalPhase",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnRunBlender slot 7 (PS2 00279498, row 6884, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00105790",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnRunBlender::FindMatchTime",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnRunBlender slot 5 (PS2 00278698, row 6858, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00106050",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnRunBlender::EvalSQT",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnRunBlender slot 6 (PS2 002779e0, row 6854, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x001061f0",
+   "expect": "(none)",
+   "name": "EAGLAnim::FnRunBlender::EvalVel2D",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnRunBlender slot 8 (PS2 00278450, row 6857, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00106300",
+   "expect": "FUN_00106300",
+   "name": "EAGLAnim::FnRunBlender::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "EAGLAnim::FnRunBlender slot 0 (PS2 002777b8, row 6853, resolved)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0011aa80",
+   "expect": "(none)",
+   "name": "UCarpNamespace::NameLookup",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "UCarpNamespace slot 0 (PS2 002cda80, row 8209, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x001285f0",
+   "expect": "FUN_001285f0",
+   "name": "APlayerVehicle::~APlayerVehicle",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by APlayerVehicle::scalar_deleting_destructor (0x00128670) and stores APlayerVehicle's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00128670",
+   "expect": "FUN_00128670",
+   "name": "APlayerVehicle::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "APlayerVehicle slot 0 (PS2 002f0c18, row 8915, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x001286a0",
+   "expect": "(none)",
+   "name": "APlayerVehicle::Play",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "APlayerVehicle slot 3 (PS2 002f0900, row 8914, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00128d10",
+   "expect": "(none)",
+   "name": "APlayerHeli::Play",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "APlayerHeli slot 3 (PS2 002f16b8, row 8928, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x001290e0",
+   "expect": "FUN_001290e0",
+   "name": "APlayerHeli::~APlayerHeli",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by APlayerHeli::scalar_deleting_destructor (0x00129220) and stores APlayerHeli's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00129220",
+   "expect": "FUN_00129220",
+   "name": "APlayerHeli::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "APlayerHeli slot 0 (PS2 002f1ae8, row 8929, resolved)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00129820",
+   "expect": "(none)",
+   "name": "AFingoDeath::SetRechargePercent",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AFingoDeath slot 9 (PS2 002f8d10, row 9040, sheet)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00129b00",
+   "expect": "(none)",
+   "name": "AUltraLite::Play",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AUltraLite slot 3 (PS2 002e3c40, row 8743, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x00129cd0",
+   "expect": "(none)",
+   "name": "AUltraLite::PlayMotor",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AUltraLite slot 9 (PS2 002e3c90, row 8744, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012a890",
+   "expect": "FUN_0012a890",
+   "name": "ASnowMobile::~ASnowMobile",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by ASnowMobile::scalar_deleting_destructor (0x0012b510) and stores ASnowMobile's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012b510",
+   "expect": "FUN_0012b510",
+   "name": "ASnowMobile::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ASnowMobile slot 0 (PS2 002edb08, row 8869, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012b540",
+   "expect": "(none)",
+   "name": "ASnowMobile::Play",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ASnowMobile slot 3 (PS2 002edd88, row 8870, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012be30",
+   "expect": "FUN_0012be30",
+   "name": "ASubmersible::~ASubmersible",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by ASubmersible::scalar_deleting_destructor (0x0012c4e0) and stores ASubmersible's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012c4e0",
+   "expect": "FUN_0012c4e0",
+   "name": "ASubmersible::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ASubmersible slot 0 (PS2 002e7210, row 8775, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012c510",
+   "expect": "(none)",
+   "name": "ASubmersible::Play",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ASubmersible slot 3 (PS2 002e7358, row 8776, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012c640",
+   "expect": "(none)",
+   "name": "APlayerTank::Play",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "APlayerTank slot 3 (PS2 002f1000, row 8921, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012c7c0",
+   "expect": "FUN_0012c7c0",
+   "name": "APlayerTank::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "APlayerTank slot 0 (PS2 002f1128, row 8922, resolved)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012ce10",
+   "expect": "(none)",
+   "name": "ATrafficVehicle::IsTracked",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ATrafficVehicle slot 7 (PS2 002e6a20, row 8761, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012ce20",
+   "expect": "(none)",
+   "name": "ATrafficVehicle::GetName",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [
+    "ASubmersible::GetName",
+    "APlayerVehicle::GetName"
+   ],
+   "evidence": [
+    "ATrafficVehicle slot 2 (PS2 002e67e0, row 8758, resolved)",
+    "ASubmersible slot 2 (PS2 002e8450, row 8781, resolved)",
+    "APlayerVehicle slot 2 (PS2 002f0cd0, row 8916, resolved)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012d300",
+   "expect": "FUN_0012d300",
+   "name": "ATrafficVehicle::~ATrafficVehicle",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by ATrafficVehicle::scalar_deleting_destructor (0x0012d400) and stores ATrafficVehicle's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012d400",
+   "expect": "FUN_0012d400",
+   "name": "ATrafficVehicle::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ATrafficVehicle slot 0 (PS2 002e6640, row 8757, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012d430",
+   "expect": "(none)",
+   "name": "ATrafficVehicle::Play",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ATrafficVehicle slot 3 (PS2 002e5598, row 8754, ghidra)",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012d750",
+   "expect": "FUN_0012d750",
+   "name": "ASentry::~ASentry",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by ASentry::scalar_deleting_destructor (0x0012d7c0) and stores ASentry's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012d7c0",
+   "expect": "FUN_0012d7c0",
+   "name": "ASentry::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ASentry slot 0 (PS2 002effe8, row 8889, resolved)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012e1e0",
+   "expect": "FUN_0012e1e0",
+   "name": "ASceneObj::~ASceneObj",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by ASceneObj::scalar_deleting_destructor (0x0012e1f0) and stores ASceneObj's vtable",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012e1f0",
+   "expect": "FUN_0012e1f0",
+   "name": "ASceneObj::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ASceneObj slot 0 (PS2 002f05c0, row 8896, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  },
+  {
+   "xbox": "0x0012ef30",
+   "expect": "(none)",
+   "name": "AEngine::scalar_deleting_destructor",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AEngine slot 1 (PS2 002faa90, row 9075, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables: 594 slots already named alike on both platforms, 10 differing (destructor conventions / folding)"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,126 @@
+{
+ "batch": "P013",
+ "program": "DRIVING.ELF",
+ "note": "Fixes from body review round 2: two wrong P004 names, a wrong pre-existing RAnimEngine pair, and the functions around them (some created). 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x001a1af8",
+   "expect": "Shutdown",
+   "name": "FUN_001a1af8",
+   "evidence": [
+    "not Shutdown: deactivates one animation system by index; called by Stop and Update. Real Shutdown is 0x1a1a00"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x001a1a10",
+   "expect": "Init",
+   "name": "RAnimEngine::Update",
+   "evidence": [
+    "converts elapsed time to frames and updates the active systems, as AUF's RAnimEngine::Update; called from the anim-update event (row 2884). Was named Init"
+   ],
+   "create": false,
+   "sheet_name": "RAnimEngine::Update(unsigned int)"
+  },
+  {
+   "xbox": "0x0019e0b8",
+   "expect": "operator_delete",
+   "name": "Shell::Shell_global_ctors",
+   "evidence": [
+    "referenced from the ctors table, calls the Shell static-init helper: the static initialiser (row 2835). Batch P004 had named it operator_delete"
+   ],
+   "create": false,
+   "sheet_name": "global constructors keyed to Shell::Shell(WeaponType, COORD3 &,"
+  },
+  {
+   "xbox": "0x0019f8b0",
+   "expect": "DrawLineMeshC",
+   "name": "Draw::SetZDepth",
+   "evidence": [
+    "stores its float argument to the draw z-depth global (0x3335cc); called before drawing by Draw, TestFlares, DrawFont (row 2854). Batch P004 had named it DrawLineMeshC"
+   ],
+   "create": false,
+   "sheet_name": "Draw::SetZDepth(float)"
+  },
+  {
+   "xbox": "0x0019e088",
+   "expect": "FUN_0019e088",
+   "name": "Shell::operator_delete",
+   "evidence": [
+    "FastFree(p, size) directly after Shell::operator new (row 2832)"
+   ],
+   "create": false,
+   "sheet_name": "Shell::operator delete(void *, unsigned int)"
+  },
+  {
+   "xbox": "0x0019f8c0",
+   "expect": "(none)",
+   "name": "Draw::SetZDepthFar",
+   "evidence": [
+    "stores 9.99f to the z-depth global (row 2855, after SetZDepth)"
+   ],
+   "create": true,
+   "sheet_name": "Draw::SetZDepthFar(void)"
+  },
+  {
+   "xbox": "0x0019f8d8",
+   "expect": "FUN_0019f8d8",
+   "name": "Draw::SetZDepthNear",
+   "evidence": [
+    "stores 1.0f to the z-depth global (row 2856)"
+   ],
+   "create": false,
+   "sheet_name": "Draw::SetZDepthNear(void)"
+  },
+  {
+   "xbox": "0x0019f8f0",
+   "expect": "(none)",
+   "name": "Draw::DrawLineMesh",
+   "evidence": [
+    "line-mesh draw through the prim helper 0x19f850 (row 2857)"
+   ],
+   "create": true,
+   "sheet_name": "Draw::DrawLineMesh(int, COORD4 *, EAGL::Colour)"
+  },
+  {
+   "xbox": "0x0019f938",
+   "expect": "(none)",
+   "name": "Draw::DrawLineMeshC",
+   "evidence": [
+    "passes vertices and a colour array to the prim helper 0x19f850 with the colour flag set (row 2858)"
+   ],
+   "create": true,
+   "sheet_name": "Draw::DrawLineMeshC(int, COORD4 *, EAGL::Colour *)"
+  },
+  {
+   "xbox": "0x001a19c8",
+   "expect": "FUN_001a19c8",
+   "name": "Draw::squareUV_global_ctors",
+   "evidence": [
+    "ctors-table stub calling the static-init helper 0x1a1970(1, 0xffff) (row 2881)"
+   ],
+   "create": false,
+   "sheet_name": "global constructors keyed to Draw::squareUV"
+  },
+  {
+   "xbox": "0x001a19e8",
+   "expect": "(none)",
+   "name": "RAnimEngine::Init",
+   "evidence": [
+    "zeroes the engine's last-update tick (0x333604) and active-system count (0x333600) that Update uses (row 2882)"
+   ],
+   "create": true,
+   "sheet_name": "RAnimEngine::Init(void)"
+  },
+  {
+   "xbox": "0x001a1a00",
+   "expect": "(none)",
+   "name": "RAnimEngine::Shutdown",
+   "evidence": [
+    "zeroes the active-system count (row 2883)"
+   ],
+   "create": true,
+   "sheet_name": "RAnimEngine::Shutdown(void)"
+  }
+ ]
+}

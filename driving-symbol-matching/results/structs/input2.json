@@ -1,0 +1,245 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "DeviceScalar",
+   "size": 52,
+   "comment": "One control of an input device (a stick axis, an analogue or a digital button). InitializeDeviceScalar(DeviceScalarType, char *, ...) at 0x50ba0.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "int",
+     "name": "type",
+     "comment": "DeviceScalarType: 0 stick axis, 1 analogue button, 2 digital button"
+    },
+    {
+     "offset": 4,
+     "type": "char[32]",
+     "name": "name",
+     "comment": "ALX, AButtonA, DButtonStart..."
+    },
+    {
+     "offset": 36,
+     "type": "float *",
+     "name": "previous",
+     "comment": "last frame's value, in the device's previous array"
+    },
+    {
+     "offset": 40,
+     "type": "float *",
+     "name": "current",
+     "comment": "this frame's value, in the device's current array"
+    },
+    {
+     "offset": 44,
+     "type": "float *",
+     "name": "extra1",
+     "comment": "name invented: third per-device array, zeroed and not read by the pad device"
+    },
+    {
+     "offset": 48,
+     "type": "float *",
+     "name": "extra2",
+     "comment": "name invented: fourth per-device array"
+    }
+   ]
+  },
+  {
+   "name": "InputDevice",
+   "size": 28,
+   "comment": "Base of the input devices (vtable 0x18d9fc; XBoxPadDevice on Xbox). The derived class points the arrays at its own storage.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "vtable"
+    },
+    {
+     "offset": 4,
+     "type": "DeviceScalar *",
+     "name": "scalars"
+    },
+    {
+     "offset": 8,
+     "type": "float *",
+     "name": "previous"
+    },
+    {
+     "offset": 12,
+     "type": "float *",
+     "name": "current"
+    },
+    {
+     "offset": 16,
+     "type": "float *",
+     "name": "extra1"
+    },
+    {
+     "offset": 20,
+     "type": "float *",
+     "name": "extra2"
+    },
+    {
+     "offset": 24,
+     "type": "int",
+     "name": "port",
+     "comment": "the constructor's argument; PollDevice reads PAD_getdataptr(port)"
+    }
+   ]
+  },
+  {
+   "name": "XBoxPadDevice",
+   "size": 1388,
+   "comment": "An Xbox gamepad as an InputDevice: 20 DeviceScalars (4 stick axes, 8 analogue buttons, 8 digital) and their value arrays. vtable 0x18db38.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "InputDevice",
+     "name": "super_InputDevice"
+    },
+    {
+     "offset": 28,
+     "type": "DeviceScalar[20]",
+     "name": "scalarStorage"
+    },
+    {
+     "offset": 1068,
+     "type": "float[20]",
+     "name": "previousValues"
+    },
+    {
+     "offset": 1148,
+     "type": "float[20]",
+     "name": "currentValues"
+    },
+    {
+     "offset": 1228,
+     "type": "float[20]",
+     "name": "extra1Values"
+    },
+    {
+     "offset": 1308,
+     "type": "float[20]",
+     "name": "extra2Values"
+    }
+   ]
+  },
+  {
+   "name": "PadData",
+   "size": 144,
+   "comment": "NAME INVENTED: one pad's record in EA's input library, four at 0x241c50 (PAD_getdataptr), filled by PAD_update.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "float[4]",
+     "name": "sticks",
+     "comment": "LX, LY, RX, RY: (raw + 0.5) / 32767.5, 0 inside 0.25"
+    },
+    {
+     "offset": 16,
+     "type": "ushort",
+     "name": "buttons",
+     "comment": "XINPUT wButtons"
+    },
+    {
+     "offset": 18,
+     "type": "byte[8]",
+     "name": "analog",
+     "comment": "A, B, X, Y, black, white, left trigger, right trigger (0..255)"
+    },
+    {
+     "offset": 26,
+     "type": "ushort",
+     "name": "buttonsPressed",
+     "comment": "buttons down this poll and not the last"
+    },
+    {
+     "offset": 28,
+     "type": "byte[8]",
+     "name": "analogPressed",
+     "comment": "1 when the analogue button went above 1 this poll"
+    },
+    {
+     "offset": 106,
+     "type": "ushort",
+     "name": "unknown6a",
+     "comment": "zeroed when the pad is removed"
+    },
+    {
+     "offset": 108,
+     "type": "ushort",
+     "name": "unknown6c",
+     "comment": "zeroed when the pad is removed"
+    },
+    {
+     "offset": 110,
+     "type": "byte[26]",
+     "name": "capabilities",
+     "comment": "XInputGetCapabilities output"
+    },
+    {
+     "offset": 136,
+     "type": "void *",
+     "name": "handle",
+     "comment": "XInputOpen handle, 0 when no pad"
+    },
+    {
+     "offset": 140,
+     "type": "bool",
+     "name": "inserted",
+     "comment": "inserted at the last poll"
+    },
+    {
+     "offset": 141,
+     "type": "bool",
+     "name": "removed",
+     "comment": "removed at the last poll"
+    }
+   ]
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x00050e80",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "value",
+     "type": "float *"
+    },
+    {
+     "name": "low",
+     "type": "float"
+    },
+    {
+     "name": "high",
+     "type": "float"
+    }
+   ]
+  },
+  {
+   "address": "0x00108480",
+   "calling_convention": "__cdecl",
+   "return": "PadData *",
+   "params": [
+    {
+     "name": "port",
+     "type": "int"
+    }
+   ]
+  },
+  {
+   "address": "0x00108490",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": []
+  },
+  {
+   "address": "0x001086c0",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": []
+  }
+ ]
+}

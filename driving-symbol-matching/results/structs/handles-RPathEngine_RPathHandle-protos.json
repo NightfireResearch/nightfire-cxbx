@@ -1,0 +1,128 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0007fbc0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPathEngine::RPathHandle::Update(float)"
+  },
+  {
+   "address": "0x0007fec0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "CARP::PathInfo *"
+    }
+   ],
+   "sheet": "RPathEngine::RPathHandle::SetNextPath(CARP::PathInfo *)"
+  },
+  {
+   "address": "0x0007fed0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPathEngine::RPathHandle::GetParametricDuration(void) const"
+  },
+  {
+   "address": "0x0007fee0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RPathEngine::RPathHandle::SetRunning(bool)"
+  },
+  {
+   "address": "0x0007fef0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPathEngine::RPathHandle::SetThrottle(float)"
+  },
+  {
+   "address": "0x0007ff00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPathEngine::RPathHandle::SetDesiredThrottle(float)"
+  },
+  {
+   "address": "0x0007ff10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPathEngine::RPathHandle::SetAcceleration(float)"
+  },
+  {
+   "address": "0x0007ff20",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RPathEngine::RPathHandle::SetAccelDelay(unsigned int)"
+  },
+  {
+   "address": "0x0007ff30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPathEngine::RPathHandle::SetParametricTime(float)"
+  },
+  {
+   "address": "0x0007ff50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPathEngine::RPathHandle::GetPosition(void) const"
+  },
+  {
+   "address": "0x0007ff60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "RPathEngine::RPathHandle::GetOrientMat(MATRIX4 &) const"
+  },
+  {
+   "address": "0x00080130",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPathEngine::RPathHandle::Init(float)"
+  }
+ ]
+}

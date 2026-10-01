@@ -84,6 +84,7 @@ typedef enum {
 
 
 bool parsemap_parsemap(uint hashcode, bool param_2);
+void parsemap_block_Coll_Data_New(void);
 void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl, ObjectPlacementType type, celglist_tag* celglist, void* a, void* b, char doCreation);
 
 

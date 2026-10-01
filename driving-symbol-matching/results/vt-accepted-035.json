@@ -1,0 +1,425 @@
+[
+ {
+  "xbox": "0xaea40",
+  "name": "RigidBody::ScaleObjObjForces",
+  "ps2": "0x1f9b40",
+  "why": "Version Tracking candidate, body review: only caller ResolveCollision on both; identical body: max of two |v+0x20| lengths, v+0x40 -/+ forces scaled by 1/+0x4c, 0.5 threshold, (x-0.5)*2*1.5+1.5, +0x5c->+0x4fd flags"
+ },
+ {
+  "xbox": "0xbd7b0",
+  "name": "WCollider::InRegion",
+  "ps2": "0x212540",
+  "why": "on the caller chain of RigidBody::ScaleObjObjForces, body review: overload InRegion(COORD4*,uint) (sheet row 4812): Validate, flags +0x64(PS2 +0x5c) mask, r=+0x2c squared, both box corners p[0],p[1] distsq to +0x20 < r^2; called by box-Refresh 0xbe420=PS2 FUN_00211c98 which calls this overload",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0x14e000",
+  "name": "RCMP::DECODER::ReleaseFrame",
+  "ps2": "0x302a70",
+  "why": "on the caller chain of RigidBody::ScaleObjObjForces, body review: follows GetFrame in both file orders; body = codec(+0x18, PS2 +0x14) vslot 5 (Xbox +0x14, PS2 entry +0x34)"
+ },
+ {
+  "xbox": "0x14e010",
+  "name": "RCMP::DECODER::GetChunk",
+  "ps2": "0x302aa0",
+  "why": "on the caller chain of RigidBody::ScaleObjObjForces, body review: next in order; same body: if pending chunk (+4, PS2 +0) take and clear, else call fnptr +0xc(PS2 +8)(this,+8,&out)"
+ },
+ {
+  "xbox": "0x14e040",
+  "name": "RCMP::DECODER::ReleaseChunk",
+  "ps2": "0x302ae8",
+  "why": "on the caller chain of RigidBody::ScaleObjObjForces, body review: next in order, before CHUNK::CHUNK on both; body calls fnptr +0x10(PS2 +0xc)(this,+8(PS2 +4),arg); shares caller 0x14e730 with GetChunk (PS2 both called by mpegNodata)"
+ },
+ {
+  "xbox": "0xbe2d0",
+  "name": "WCollider::PrepareRegion",
+  "ps2": "0x211ed0",
+  "why": "on the caller chain of RigidBody::ScaleObjObjForces, body review: called by both Refresh overloads on both; body: flags(+0x64/PS2 +0x5c)&8 -> reserve 100, GetInstanceList(...,1); &4 -> GetInstanceList(...,0), reserve 0x15 x 0x28-byte barrier entries, GetBarrierList, sets done flag"
+ },
+ {
+  "xbox": "0xc34c0",
+  "name": "WCollisionMgr::GetObjectListsGuts",
+  "ps2": "0x217e30",
+  "why": "on the caller chain of RigidBody::ScaleObjObjForces, body review: called by both GetObjectLists on both platforms (Xbox c36a0/c37c0, PS2 218150/218440); body: per grid node cell loop, dist = max+0.25*min vs radius+r, 0x30-byte objects at +0x10, flag +0x20"
+ },
+ {
+  "xbox": "0xe9f40",
+  "name": "EAGL::DynamicModel::Lock",
+  "ps2": "0x2867d8",
+  "why": "on the caller chain of RigidBody::ScaleObjObjForces, body review: same wrapper as PS2: lazily allocate DrawArray (\"EAGL::DrawArray new\"), SetGeoPrim, then DrawArray::Lock; order SetParamName,Lock,Unlock,SetNumVerts matches PS2"
+ },
+ {
+  "xbox": "0xe9fe0",
+  "name": "EAGL::DynamicModel::Unlock",
+  "ps2": "0x286878",
+  "why": "on the caller chain of RigidBody::ScaleObjObjForces, body review: same lazy-alloc wrapper, then DrawArray::Unlock (0xf57e0)"
+ },
+ {
+  "xbox": "0xea080",
+  "name": "EAGL::DynamicModel::SetNumVerts",
+  "ps2": "0x286918",
+  "why": "on the caller chain of RigidBody::ScaleObjObjForces, body review: same lazy-alloc wrapper, then DrawArray::SetNumVerts(n) (0xf57f0)"
+ },
+ {
+  "xbox": "0xe9ea0",
+  "name": "EAGL::DynamicModel::SetParamName",
+  "ps2": "0x286730",
+  "why": "on the caller chain of RigidBody::ScaleObjObjForces, body review: same lazy-alloc wrapper, then DrawArray::SetParamName; precedes Lock as on PS2 (0xe9d40/0xe9df0 are the SetVar pair but which overload is which is unclear - left)"
+ },
+ {
+  "xbox": "0xaf960",
+  "name": "RigidBody::ResolveWorldOBBCollision",
+  "ps2": "0x1fade8",
+  "why": "Version Tracking candidate, body review: only caller CollideWithWorld on both; same body: +0x6d<4 clamp +-0.5 of y*0.1, contact rec fields 0x48=1/0x4a=0x10/0x4c=6/0x4e=0x10, 5.0/25.0 tests, +0x5c->+0x4fc/+0x4fd, *0.25, 1.25 ratio"
+ },
+ {
+  "xbox": "0xf40a0",
+  "name": "EAGL::SymbolPool::Empty",
+  "ps2": "0x29dee0",
+  "why": "Version Tracking candidate, body review: called by ~SymbolPool; same body as PS2 Empty: frees each hash entry (strlen+5), zero count, frees 0xc-byte free-list nodes via +0x10 chain"
+ },
+ {
+  "xbox": "0xf3c70",
+  "name": "EAGL::SymbolPool::SymbolPool",
+  "ps2": "0x29dc90",
+  "why": "Version Tracking candidate, body review: identical to PS2 ctor: [0]=0,[1]=symbolPoolDefaultSize global,[2]=0,[4]=0; called from global ctor functions on both"
+ },
+ {
+  "xbox": "0xbe620",
+  "name": "WCollider::WCollider",
+  "ps2": "0x2118b8",
+  "why": "Version Tracking candidate, body review: second WCollider ctor overload (genuine PS2 overload; other is Xbox 0xbe540=PS2 0x2117e8): same init as 0xbe540 but +0x61 bool fixed 0, flags param stored +0x64(PS2 +0x5c), then calls box-Refresh 0xbe420 = PS2 FUN_00211c98 (InRegion(box)/Clear/centre=half sum/distance)",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0x14df50",
+  "name": "RCMP::DECODER::ChooseCodec",
+  "ps2": "0x3028e8",
+  "why": "Version Tracking candidate, body review: called from AV_PLAYER::GetRCMPChunk before FreeChosenCodec; same body: this+0x18(PS2 +0x14)=codec, this+4(PS2 +0)=chunk, codec vslot 1(this)"
+ },
+ {
+  "xbox": "0xb7f60",
+  "name": "SMissionManager::SetObjective",
+  "ps2": "0x2075a8",
+  "why": "Version Tracking candidate, body review: ~ESetObjective/~ESetWaypoint call it for param[1] on both (PS2 0x158690 jal 0x2075a8); body: type=1 at +0x724(PS2 +0x600), ptr +0x71c(PS2 +0x5f8), clear +0x734(+0x610), time to +0x798(+0x678) (+0x124/+0x120 shift); null -> ClearObjective (inlined on Xbox)",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xb7fb0",
+  "name": "SMissionManager::SetObjective",
+  "ps2": "0x207600",
+  "why": "Version Tracking candidate, body review: dtor call for param[2] (PS2 jal 0x207600); identical to 0x2075a8 overload with type=2 (li a0,0x2)",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xb8000",
+  "name": "SMissionManager::SetObjective",
+  "ps2": "0x207658",
+  "why": "Version Tracking candidate, body review: dtor call for param[3] (PS2 jal 0x207658); type=3 then RedirectCarpElement, +0x44==1,+0x48==1,+0x77==0,+0xfc vcall - same checks in PS2 disassembly",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xc3880",
+  "name": "WCollisionMgr::GetBarrierList",
+  "ps2": "0x219a50",
+  "why": "Version Tracking candidate, body review: called from WCollider::PrepareRegion (0xbe2d0 = PS2 0x211ed0 which calls GetBarrierList 0x219a50); body: per instance MakeMatrix, OrthoInverse once, transform barrier ends, swap y min/max, push 0x28-byte entries",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0x84a60",
+  "name": "RPlayerCamera::UpdateSplineCam",
+  "ps2": "0x1b4430",
+  "why": "Version Tracking candidate, body review: camera config LoadFile registers it as handler for mode string \"Spline\"; callees match PS2 (IncNavPosition, ReverseNavDirection, InitAtPoint, GetAnchor*, DoSmoothModeChange...)"
+ },
+ {
+  "xbox": "0x85160",
+  "name": "RPlayerCamera::UpdateFixedCam",
+  "ps2": "0x1b5120",
+  "why": "Version Tracking candidate, body review: LoadFile registers it for mode string \"Fixed\"; callees match PS2 UpdateFixedCam (AnchorCamera, DoSmoothModeChange, InitTransition, SetCameraZoom, SetViewingTransform, UpdateTransition)"
+ },
+ {
+  "xbox": "0x853e0",
+  "name": "RPlayerCamera::UpdateADWeaponAnims",
+  "ps2": "0x1b62d0",
+  "why": "Version Tracking candidate, body review: called by UpdateAutoDriveCam on both; body: GetRigidBody(player) matrix, arm index -1 -> FindAutoDriveArmInd, quattom4 of arm table, MATRIX4_mult, fastqslerp - same as PS2"
+ },
+ {
+  "xbox": "0xf57d0",
+  "name": "EAGL::DrawArray::Lock",
+  "ps2": "0x29c488",
+  "why": "Version Tracking candidate, body review: only caller is DynamicModel::Lock wrapper 0xe9f40 (= PS2 0x2867d8 which calls 0x29c488); body sets +0x18=1 and +0x34=1 as PS2; same order Lock,Unlock,..,SetLocalMatrix"
+ },
+ {
+  "xbox": "0xf57e0",
+  "name": "EAGL::DrawArray::Unlock",
+  "ps2": "0x29c4a0",
+  "why": "Version Tracking candidate, body review: only caller DynamicModel::Unlock wrapper 0xe9fe0 (= PS2 0x286878 calling 0x29c4a0); body +0x18=0, return 1 as PS2"
+ },
+ {
+  "xbox": "0xf57f0",
+  "name": "EAGL::DrawArray::SetNumVerts",
+  "ps2": "0x29c558",
+  "why": "Version Tracking candidate, body review: only caller DynamicModel::SetNumVerts wrapper 0xea080 (= PS2 0x286918 calling 0x29c558); body store arg (+0x38, PS2 +0x3c), return 1; sits just before SetLocalMatrix on both"
+ },
+ {
+  "xbox": "0x731e0",
+  "name": "Sentry::ComputeTargetAngle",
+  "ps2": "0x19bb50",
+  "why": "Version Tracking candidate, body review: Only callee of Sentry::TrackTarget that is not named; axis switch 0/1/2 zeroing one component, sign from param_3[axis]>0, unit/dot/acos, *1/2pi, 1-x, wrap <0 - as PS2"
+ },
+ {
+  "xbox": "0x73330",
+  "name": "Sentry::GetTarget",
+  "ps2": "0x19bea0",
+  "why": "Version Tracking candidate, body review: Sole caller EFireWeapon::~EFireWeapon on both; target sig at +0xc0 (PS2 +0xc4), FastAlloc + WTargetable ctor, return 0 when no target"
+ },
+ {
+  "xbox": "0x733f0",
+  "name": "Sentry::Shoot",
+  "ps2": "0x19c7a8",
+  "why": "Version Tracking candidate, body review: Called by Sentry::Simulate; GetSystemState on anim handles +0xa4/+0xa8 (PS2 +0xa8/+0xac) !=4, stimulus 8 if [+0xbc]==0 (PS2 +0xc0), then stimulus 10 ... - same body"
+ },
+ {
+  "xbox": "0xf72e0",
+  "name": "EAGLAnim::FnAnim::~FnAnim",
+  "ps2": "0x26df80",
+  "why": "Version Tracking candidate, body review: Stores vtable_EAGLAnim::FnAnim only (no field init as in PS2 ctor); called by FnAnim::scalar_deleting_destructor and derived deleting dtors (f7790 etc.) - base destructor, PS2 ~FnAnim"
+ },
+ {
+  "xbox": "0x1b180",
+  "name": "RAutonomousObj::scalar_deleting_destructor",
+  "ps2": "0x118360",
+  "why": "Version Tracking candidate, body review: Slot 0 of vtable 0x18a398 set on FastAlloc(0x80,'RAutonomousObj') objects (Grenade/Mine/Missile/Newton); ~RSceneObj + FastFree(this,0x80) under delete flag = PS2 RAutonomousObj::~RAutonomousObj (FastFree 0x80), also in ActWeapon's file on PS2"
+ },
+ {
+  "xbox": "0x1b1b0",
+  "name": "ActWeapon::scalar_deleting_destructor",
+  "ps2": "0x116410",
+  "why": "Version Tracking candidate, body review: Slot 0 of ActWeapon vtable 0x18a440 (referenced by ActWeapon ctor/dtor); ~ActWeapon + FastFree(this,0x170) (PS2 ActWeapon::operator_delete inlined)"
+ },
+ {
+  "xbox": "0xf2c80",
+  "name": "EAGL::Transform::PrependScale",
+  "ps2": "0x294940",
+  "why": "Version Tracking candidate, body review: Builds diag(sx,sy,sz,sw) matrix and pre-multiplies (mult(out,tmp,this)); PS2 PrependScale 4 floats + PreMult; order Scale,Translate,RotTrans before PrependMatrix as on PS2"
+ },
+ {
+  "xbox": "0xf2d40",
+  "name": "EAGL::Transform::PrependTranslate",
+  "ps2": "0x2949d8",
+  "why": "Version Tracking candidate, body review: Identity with (x,y,z,1) translation row pre-multiplied; PS2 PrependTranslate 3 floats + PreMult (PrependRotate inlined/absent on Xbox)"
+ },
+ {
+  "xbox": "0xf2e00",
+  "name": "EAGL::Transform::PrependRotTrans",
+  "ps2": "0x294a40",
+  "why": "Version Tracking candidate, body review: BuildRotTrans(MATRIX3,COORD4) (w copied from trans[3]) then pre-multiply = PS2 PrependRotTrans(MATRIX3*, COORD4*) overload (the COORD3 one sets w=1.0); immediately precedes PrependMatrix as on PS2",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xf1660",
+  "name": "EAGL::Transform::BuildRotTrans",
+  "ps2": "0x293658",
+  "why": "on the caller chain of EAGL::Transform::PrependRotTrans, body review: MATRIX3 rows + 4-float COORD4 translation (w copied) = PS2 BuildRotTrans(MATRIX3*, COORD4*) sheet row 6058; followed by COORD3 overload then BuildAimedTrans in same order as PS2",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xf16d0",
+  "name": "EAGL::Transform::BuildRotTrans",
+  "ps2": "0x2936d0",
+  "why": "on the caller chain of EAGL::Transform::PrependRotTrans, body review: MATRIX3 rows + 3-float translation, w=1.0 = PS2 BuildRotTrans(MATRIX3*, COORD3*) sheet row 6059 (overload); sits just before named BuildAimedTrans as on PS2",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xf2ea0",
+  "name": "EAGL::Transform::PrependQuatTrans",
+  "ps2": "0x294b98",
+  "why": "on the caller chain of EAGL::Transform::PrependRotTrans, body review: Directly after PrependMatrix (as on PS2): quat->matrix3, BuildRotTrans(COORD4), pre-multiply; PS2 PrependQuatTrans inlines the quat conversion then PreMult"
+ },
+ {
+  "xbox": "0xe6aa0",
+  "name": "EAGL::RenderContext::SetFrontBufferDepth",
+  "ps2": "0x290d00",
+  "why": "Version Tracking candidate, body review: RRenderer::RRenderer calls it 1st of 3 with 0x10 right after SetSize, as PS2 RRenderer calls SetFrontBufferDepth(0x10); empty on Xbox"
+ },
+ {
+  "xbox": "0xe6ac0",
+  "name": "EAGL::RenderContext::SetBackBufferDepth",
+  "ps2": "0x290d10",
+  "why": "Version Tracking candidate, body review: RRenderer 2nd call with 0x20 = PS2 SetBackBufferDepth(0x20); body picks 16/32-bit colour format"
+ },
+ {
+  "xbox": "0xe6b10",
+  "name": "EAGL::RenderContext::SetZBufferDepth",
+  "ps2": "0x290d20",
+  "why": "Version Tracking candidate, body review: RRenderer 3rd call with 0x20 = PS2 SetZBufferDepth(0x20); body handles depth 0/16/32 (z formats)"
+ },
+ {
+  "xbox": "0xa2100",
+  "name": "RParticleLibrary::FindSystemViaTag",
+  "ps2": "0x1e8008",
+  "why": "Version Tracking candidate, body review: Shell::ApplyWorldEffects calls it with this=RParticleSystemManager::fManager+8 and tag 'SPKB' (PS2 passes fManager+8 to RParticleLibrary::FindSystemViaTag); body = inlined RPartLibraryData::FindSystemViaTag: map at *this+0xb008, find tag, fall back to leftmost node value"
+ },
+ {
+  "xbox": "0x80f50",
+  "name": "PointDir",
+  "ps2": "0x1b8f80",
+  "why": "Version Tracking candidate, body review: called only by PointInTriangle(80fe0); axis 2/1/else 2D cross-product body identical to PS2 PointDir"
+ },
+ {
+  "xbox": "0x80fe0",
+  "name": "PointInTriangle",
+  "ps2": "0x1b9020",
+  "why": "Version Tracking candidate, body review: RPlayerCamera::ResolveAllCollisions -> it -> PointDir, same as PS2 ResolveAllCollisions -> PointInTriangle -> PointDir"
+ },
+ {
+  "xbox": "0x81110",
+  "name": "RPlayerCamera::GetSafeWRoadNavPosition",
+  "ps2": "0x1b9ab8",
+  "why": "Version Tracking candidate, body review: same body: out = (+0x364)->x,y-in,z,1.0; FindClosestFace; if (+0x360)->+0x30 plane normal then GetPlaneY else copy +0x364 pos"
+ },
+ {
+  "xbox": "0x105ef0",
+  "name": "EAGLAnim::FnRunBlender::ComputeBeginRootQ",
+  "ps2": "0x279960",
+  "why": "Version Tracking candidate, body review: FnTurnBlender::BlendBeginFacing(104870) calls it twice as PS2 BlendBeginFacing calls ComputeBeginRootQ; passes frames 0,0 like PS2 body (eval at frame 0 for +0x18 and +0x1c anims)"
+ },
+ {
+  "xbox": "0x104870",
+  "name": "EAGLAnim::FnTurnBlender::BlendBeginFacing",
+  "ps2": "0x27a520",
+  "why": "on the caller chain of EAGLAnim::FnRunBlender::ComputeBeginRootQ, body review: FnTurnBlender::AlignCycleBeginEnd 3rd callee; calls ComputeBeginRootQ x2, fastqslerp, printf 'Facing: %g %g' as PS2"
+ },
+ {
+  "xbox": "0x104a40",
+  "name": "EAGLAnim::FnTurnBlender::BlendEndFacing",
+  "ps2": "0x27a6b8",
+  "why": "on the caller chain of EAGLAnim::FnRunBlender::ComputeBeginRootQ, body review: FnTurnBlender::AlignCycleBeginEnd 4th callee; calls ComputeEndRootQ x2, fastqslerp, printf 'Facing' as PS2"
+ },
+ {
+  "xbox": "0x105f10",
+  "name": "EAGLAnim::FnRunBlender::ComputeEndRootQ",
+  "ps2": "0x278ff0",
+  "why": "Version Tracking candidate, body review: called twice by FnTurnBlender::BlendEndFacing like PS2; frames = numFrames-1 of anims at +0x10[+0x30] and [+0x30+1], same as PS2 body"
+ },
+ {
+  "xbox": "0x7f5a0",
+  "name": "ROffscreenBuffer::~ROffscreenBuffer",
+  "ps2": "0x1b0798",
+  "why": "Version Tracking candidate, body review: called by ~RPostProcessing and ~RSniperZoom (same callers as PS2 ~ROffscreenBuffer); body DeleteViewPort(this+8) = PS2 DeleteViewPort(this[0],this[1]) with +4 shift; no delete flag on Xbox"
+ },
+ {
+  "xbox": "0x4f440",
+  "name": "ActionQueueManager::UnRegisterQueue",
+  "ps2": "0x1657c0",
+  "why": "Version Tracking candidate, body review: sole callee of ActionQueue::~ActionQueue as on PS2; body scans queue vector for param, memmove-erases and decrements end, same as PS2"
+ },
+ {
+  "xbox": "0xa6f70",
+  "name": "RVehicleParticle::TriggerSparks",
+  "ps2": "0x1eed18",
+  "why": "Version Tracking candidate, body review: callers RVehicle::TriggerFX and RVehicleParticle::UpdateCar exactly as PS2; body: entry=idx*0x40, +0x3c = rigid-body id clamped 0xff, GetRigidBody, pos minus body +0x10/+0x14/+0x18 with y offset - same as PS2"
+ },
+ {
+  "xbox": "0xfb890",
+  "name": "EAGLAnim::FnKeyDeltaChan::~FnKeyDeltaChan",
+  "ps2": "0x276538",
+  "why": "Version Tracking candidate, body review: non-deleting dtor: stores vtable 0x1a0d80 (FnKeyDeltaChan: GetLength fbe10, slot 15 = shared SetAnimMemoryMap), frees +0x14 buffer to the free-list table, calls ~FnAnimMemoryMap; PS2 0x276538 same body; only caller f76b0 is the deleting wrapper"
+ },
+ {
+  "xbox": "0xf76b0",
+  "name": "EAGLAnim::FnKeyDeltaChan::scalar_deleting_destructor",
+  "ps2": "0x276538",
+  "why": "on the caller chain of EAGLAnim::FnKeyDeltaChan::~FnKeyDeltaChan, body review: dtor slot of FnKeyDeltaChan vtable 0x1a0d80 (= PS2 vtable 0x3b2440 slot ~FnKeyDeltaChan); calls fb890 then eagl free(0x18) on flag&1"
+ },
+ {
+  "xbox": "0xc31f0",
+  "name": "WCollisionMgr::GetInstanceListGuts",
+  "ps2": "0x217768",
+  "why": "Version Tracking candidate, body review: overload: CheckHitWorld->GetInstanceList(c3410)->c31f0 as PS2 CheckHitWorld->GetInstanceList 0x217c88->GetInstanceListGuts 0x217768 (other overload 0x217228 = Xbox c43c0); body: ++counter +4, v4sub segment, min/max y, per-node instance walk, MakeMatrix+OrthoInverse, radius^2 test, flags&3 splits into two lists",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0x1456e0",
+  "name": "SFILTER_initSOURCE",
+  "ps2": "0x316980",
+  "why": "Version Tracking candidate, body review: identical body: p[0]=src fn (Xbox LAB_001456b0 = SFILTER_src, not a defined function), p[1]=0, p[7]=arg; sits right before SFILTER_createSOURCE as on PS2; called from 0x143862 (not in a defined function; PS2 caller SNDMIXI_modlapifxadd)"
+ },
+ {
+  "xbox": "0x000be420",
+  "name": "WCollider::Refresh",
+  "ps2": null,
+  "allow_duplicate": true,
+  "why": "windowed review (PS2 function unnamed in Ghidra; name from its sheet row, placed by vtable slot / call position): sheet row 4807 WCollider::Refresh(COORD4 *) (PS2 FUN_00211c98, between ctor/dtor rows and Refresh(COORD3&,float) 0x211e18, size fits); called by box ctor 0xbe620 (PS2 0x2118b8 calls 0x211c98); body: InRegion(box) else Clear, centre=(a+b)*0.5, radius=distance, copies, *1.1, PrepareRegion"
+ },
+ {
+  "xbox": "0x000c37c0",
+  "name": "WCollisionMgr::GetObjectLists",
+  "ps2": null,
+  "allow_duplicate": true,
+  "why": "windowed review (PS2 function unnamed in Ghidra; name from its sheet row, placed by vtable slot / call position): sheet row 4853 second GetObjectLists overload (PS2 FUN_00218440, next after row 4852 at 0x218150, 552 vs 600 bytes); both called only from RigidBody::CollideWithWorld; body: reserve 0x40 node vector, FindNodes(centre,radius), reserve 0x10 on both lists, GetObjectListsGuts, free"
+ },
+ {
+  "xbox": "0x000fb670",
+  "name": "EAGLAnim::FnDeltaQuatChan::Eval",
+  "ps2": null,
+  "allow_duplicate": false,
+  "why": "windowed review (PS2 function unnamed in Ghidra; name from its sheet row, placed by vtable slot / call position): Eval slot (3) of Xbox vtable 0x1a10a8 (dtor FnDeltaQuatChan::scalar_deleting_destructor, default EvalVel2D) = PS2 FnDeltaQuatChan vtable 0x3b24e4 Eval slot FUN_00274d30 = sheet row 6741; bodies identical: clamp key, DecompressValues, DecompressValuesIndexed stride 4, else copy 4 words per index"
+ },
+ {
+  "xbox": "0x000fb440",
+  "name": "EAGLAnim::FnDeltaLerpChan::Eval",
+  "ps2": null,
+  "allow_duplicate": false,
+  "why": "windowed review (PS2 function unnamed in Ghidra; name from its sheet row, placed by vtable slot / call position): Eval slot of FnDeltaLerpChan vtable 0x1a1060 (holds FnDeltaLerpChan::EvalVel2D/EvalWeights) = PS2 0x3b2584 Eval slot FUN_00276398, sheet row 6739; same body with stride 1"
+ },
+ {
+  "xbox": "0x000fb530",
+  "name": "EAGLAnim::FnDeltaLerpChan::EvalSQT",
+  "ps2": null,
+  "allow_duplicate": false,
+  "why": "windowed review (PS2 function unnamed in Ghidra; name from its sheet row, placed by vtable slot / call position): EvalSQT slot of FnDeltaLerpChan vtable 0x1a1060 = PS2 0x3b2584 EvalSQT slot FUN_00274bf0, sheet row 6740; stride-1 DecompressValuesIndexed, returns 1"
+ },
+ {
+  "xbox": "0x000fb780",
+  "name": "EAGLAnim::FnDeltaQuatChan::EvalSQT",
+  "ps2": null,
+  "allow_duplicate": false,
+  "why": "windowed review (PS2 function unnamed in Ghidra; name from its sheet row, placed by vtable slot / call position): EvalSQT slot (6) of FnDeltaQuatChan vtable 0x1a10a8 = PS2 0x3b24e4 EvalSQT slot FUN_00274e88 = sheet row 6742; same body as Eval but returns 1, stride 4"
+ },
+ {
+  "xbox": "0x000fb360",
+  "name": "EAGLAnim::FnDeltaChan::~FnDeltaChan",
+  "ps2": null,
+  "allow_duplicate": false,
+  "why": "windowed review (PS2 function unnamed in Ghidra; name from its sheet row, placed by vtable slot / call position): non-deleting dtor storing FnDeltaChan vtable 0x1a0e58; PS2 FnDeltaChan vtable 0x3b2624 dtor slot FUN_00276200 (stores vtable_EAGLAnim::FnDeltaChan), sheet row 6737"
+ },
+ {
+  "xbox": "0x000f7740",
+  "name": "EAGLAnim::FnDeltaChan::scalar_deleting_destructor",
+  "ps2": null,
+  "allow_duplicate": false,
+  "why": "windowed review (PS2 function unnamed in Ghidra; name from its sheet row, placed by vtable slot / call position): dtor slot of Xbox FnDeltaChan vtable 0x1a0e58; calls fb360 then free(0x18) on flag&1; PS2 FUN_00276200, sheet row 6737"
+ },
+ {
+  "xbox": "0x000fb390",
+  "name": "EAGLAnim::FnDeltaChan::SetAnimMemoryMap",
+  "ps2": null,
+  "allow_duplicate": false,
+  "why": "windowed review (PS2 function unnamed in Ghidra; name from its sheet row, placed by vtable slot / call position): slot 15 shared by the FnDeltaChan/FnDeltaLerpChan/FnDeltaQuatChan vtables on both platforms (PS2 FUN_00276288 in 0x3b2624/0x3b2584/0x3b24e4), sheet row 6738; identical body (realloc +0x14 by key count, +0xc=map, +0x10=-1)"
+ },
+ {
+  "xbox": "0x000f7770",
+  "name": "EAGLAnim::FnDeltaChan::GetLength",
+  "ps2": null,
+  "allow_duplicate": false,
+  "why": "windowed review (PS2 function unnamed in Ghidra; name from its sheet row, placed by vtable slot / call position): GetLength slot shared by the same three Delta vtables on both platforms (PS2 FUN_002761e0 xrefs 0x3b250c/0x3b25ac/0x3b264c), sheet row 6823; *out=(float)keycount(+0xc->+8), return 1"
+ },
+ {
+  "xbox": "0x000fb8c0",
+  "name": "EAGLAnim::FnKeyDeltaChan::SetAnimMemoryMap",
+  "ps2": null,
+  "allow_duplicate": false,
+  "why": "windowed review (PS2 function unnamed in Ghidra; name from its sheet row, placed by vtable slot / call position): slot 15 (after GetAttributes) shared by FnKeyDeltaChan/FnKeyLerpChan/FnKeyQuatChan vtables on Xbox (0x1a0dbc/e04/e4c) as PS2 FUN_002765c0 in 0x3b2440/0x3b23a4/0x3b2304; sheet row 6744 (right after ~FnKeyDeltaChan row 6743, same retail order); identical body"
+ }
+]

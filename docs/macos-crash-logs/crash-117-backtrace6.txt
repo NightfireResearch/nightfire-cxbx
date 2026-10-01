@@ -1,0 +1,146 @@
+Unhandled exception: page fault on read access to 0x00000308 in wow64 32-bit code (0x7a84bb2f).
+Register dump:
+ CS:0107 SS:0023 DS:0023 ES:0023 FS:0117 GS:0023
+ EIP:7a84bb2f ESP:01b2fe4c EBP:01b2fea4 EFLAGS:00000206(   - --  I   - -P- )
+ EAX:000002e4 EBX:00ff1758 ECX:01b2fec4 EDX:00000000
+ ESI:00000002 EDI:00000002
+Stack dump:
+0x01b2fe4c:  01b2fe68 00000000 00000000 97789e92
+0x01b2fe5c:  00000000 00000000 000002e4 00000000
+0x01b2fe6c:  00000000 01b2ff1c 000d886e 06c9a910
+0x01b2fe7c:  06c9a904 7aaba5c0 7aace428 01b2fea4
+0x01b2fe8c:  7a84bc20 01b2fe4c 06c9a84c 01b2ff1c
+0x01b2fe9c:  06c9a910 00000000 01b2fec8 7aba36d9
+0022: sel=0117 base=7ffb2000 limit=00000fff 32-bit rw-
+Backtrace:
+=>0 0x7a84bb2f in d3d9 (+0xbb2f) (0x01b2fea4)
+  1 0x7aba36d9 in actioninject (+0x136d9) (0x01b2fec8)
+  2 0x7ab9dddb in actioninject (+0xdddb) (0x01b2fee8)
+  3 0x000dd1c0 in action (+0xcd1c0) (0x01b2ff38)
+  4 0x7ab95028 in actioninject (+0x5028) (0x01b2ff68)
+  5 0x7bdfd667 in ntdll (+0x4d667) (0x01b2ff7c)
+  6 0x7bdfe024 in ntdll (+0x4e024) (0x01b2ffec)
+0x7a84bb2f d3d9+0xbb2f: movl 0x24(%eax), %eax
+Modules:
+Module  Address                 Debug info      Name (42 modules)
+PE         10000-  38e000       --none--        action
+PE-Wine 77f00000-77f53000       Deferred        cfgmgr32
+PE-Wine 77f70000-78087000       Deferred        setupapi
+PE-Wine 780a0000-780c3000       Deferred        hid
+PE-Wine 780e0000-78101000       Deferred        xinput1_4
+PE-Wine 78120000-78132000       Deferred        version
+PE-Wine 78150000-781ed000       Deferred        mmdevapi
+PE-Wine 78200000-782fd000       Deferred        winevulkan
+PE-Wine 78310000-78320000       Deferred        vulkan-1
+PE-Wine 78330000-7839d000       Deferred        uxtheme
+PE-Wine 783b0000-783c7000       Deferred        winemac
+PE-Wine 783e0000-783ef000       Deferred        xinput9_1_0
+PE-Wine 78400000-78489000       Deferred        mfreadwrite
+PE-Wine 784a0000-784bf000       Deferred        rtworkq
+PE-Wine 784d0000-786ca000       Deferred        oleaut32
+PE-Wine 786e0000-7874c000       Deferred        propsys
+PE-Wine 78760000-78891000       Deferred        mfplat
+PE-Wine 788b0000-78985000       Deferred        xaudio2_9
+PE-Wine 789a0000-789e7000       Deferred        msacm32
+PE-Wine 78a00000-78a42000       Deferred        coml2
+PE-Wine 78a60000-78a78000       Deferred        cryptbase
+PE-Wine 78a90000-78c0e000       Deferred        rpcrt4
+PE-Wine 78c20000-78d12000       Deferred        combase
+PE-Wine 78d30000-78f67000       Deferred        ole32
+PE-Wine 78f80000-790a4000       Deferred        winmm
+PE-Wine 790c0000-793e7000       Deferred        opengl32
+PE-Wine 79400000-7a788000       Deferred        wined3d
+PE-Wine 7a7a0000-7a830000       Deferred        d3dcompiler_47
+PE      7a840000-7ab7c000       COFF            d3d9
+PE      7ab90000-7ac05000       --none--        actioninject
+PE-Wine 7ac20000-7ac6d000       Deferred        imm32
+PE-Wine 7ac80000-7ac8f000       Deferred        vcruntime140
+PE-Wine 7aca0000-7acd9000       Deferred        win32u
+PE-Wine 7acf0000-7aeea000       Deferred        msvcrt
+PE-Wine 7af00000-7b177000       Deferred        ucrtbase
+PE-Wine 7b190000-7b1e0000       Deferred        sechost
+PE-Wine 7b1f0000-7b299000       Deferred        advapi32
+PE-Wine 7b2b0000-7b41c000       Deferred        gdi32
+PE-Wine 7b430000-7b800000       Deferred        user32
+PE-Wine 7b810000-7bc35000       Deferred        kernelbase
+PE-Wine 7bc50000-7bd6c000       Deferred        kernel32
+PE-Wine 7bdb0000-7bfe2000       Dwarf-4         ntdll
+Threads:
+process  tid      prio    name (all IDs are in hex)
+00000020 start.exe
+	00000024    0     
+00000038 services.exe
+	0000003c    0     
+	00000040    0     
+	0000004c    0     
+	00000070    0     
+	00000088    0     
+	000000a0    0     
+	000000cc    0     
+	000000ec    0     
+	000000f8    0     
+00000044 winedevice.exe
+	00000048    0     
+	00000054    0     
+	00000058    0     
+	0000005c    0     
+	00000060    0     
+	00000064    0     
+	00000094    0     
+00000068 plugplay.exe
+	0000006c    0     
+	00000074    0     
+	00000078    0     
+	0000007c    0     
+	000000bc    0     
+	000000c0    0     
+	0000013c    0     
+00000080 svchost.exe
+	00000084    0     
+	0000008c    0     
+	00000090    0     
+00000098 winedevice.exe
+	0000009c    0     
+	000000a4    0     
+	000000a8    0     
+	000000ac    0     
+	000000b0    0     
+	000000b4    0     
+	000000b8    0     
+	000000c8    0     
+000000d0 (D) Z:\Users\charlie\Downloads\nightfire-cxbx-Release(2)\action.exe
+	000000d4    0     
+	00000118    0 <== 
+	0000011c    0     
+	00000120    0     
+	00000124    0     
+	0000012c    0     
+	00000130   15     
+	00000134    0     
+	00000138    0     
+	00000140   -2     
+	00000144   -2     
+	00000148   -2     
+	0000014c   -2     
+	00000150   -2     
+	00000154   -2     
+	00000158   -2     
+	00000164    0     
+000000d8 explorer.exe
+	000000dc    0     
+	000000e0    0     
+	000000e4    0     
+	000000e8    0     
+000000f0 rpcss.exe
+	000000f4    0     
+	00000100    0     
+	00000104    0     
+	00000108    0     
+	0000010c    0     
+	00000110    0     
+System information:
+    Wine build: wine-11.7
+    Platform: x86_64 (guest: i386)
+    Version: Windows 10
+    Host system: Darwin
+    Host version: 25.6.0

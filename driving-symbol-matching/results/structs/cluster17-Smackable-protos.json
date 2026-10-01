@@ -1,0 +1,35 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00075300",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Smackable::~Smackable(void)"
+  },
+  {
+   "address": "0x00075370",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Smackable::GoToSleep(void)"
+  },
+  {
+   "address": "0x00075420",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Smackable::Simulate(void)"
+  },
+  {
+   "address": "0x00075530",
+   "calling_convention": "__thiscall",
+   "return": "Smackable *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

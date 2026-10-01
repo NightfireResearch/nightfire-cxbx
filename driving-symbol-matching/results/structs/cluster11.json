@@ -1,0 +1,1013 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "ActActor",
+   "size": 80,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "ActCharacter *",
+     "name": "character",
+     "comment": "high: ctor 12ca0 stores new(0x84)->ActCharacter::ActCharacter 150a0 at +0; PS2 108038 same at +0 (10cc60). Draw/DrawWeapons/Fire/TurnShadowsOff call ActCharacter methods on it"
+    },
+    {
+     "offset": 4,
+     "type": "ActPoser *",
+     "name": "poser",
+     "comment": "high: ctor: new(0x70)->ActPoser::ActPoser 18550 -> +4; PS2 new(0x74)->112928 -> +4. SetTimeScale 12180 writes poser+0x34"
+    },
+    {
+     "offset": 8,
+     "type": "ActAnimGroup *",
+     "name": "animGroup",
+     "comment": "medium: ctor: new(0x20)->14360(-1,-1) -> +8 (PS2 10c888 -> +8); dtor passes it to ~ActAnimGroup; SetNewAnimation/SetNewCrossFadeAnimation use it"
+    },
+    {
+     "offset": 12,
+     "type": "WWorldPos *",
+     "name": "worldPos",
+     "comment": "high: ctor: new(0x394)->WWorldPos::WWorldPos d2fd0 -> +0xc; PS2 232180 -> +0xc; HeightAtPoint/FindClosestFace called on it"
+    },
+    {
+     "offset": 16,
+     "type": "void *",
+     "name": "matrixCallback",
+     "comment": "medium: ctor arg5 -> +0x10 on both builds; sheet arg5 is a void (*)(int, MATRIX4...) callback; read by CalculateMatrices/SpawnWeapon/Update with +0x18 as its int. Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "bool",
+     "name": "hasMatrixCallback",
+     "comment": "medium: ctor: = (arg5 != 0); PS2 +0x14 word. Passed as ActPoser ctor bool arg4 (ActPoser+0) and negated to ActCharacter ctor (ActCharacter+0x6c). Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "int",
+     "name": "callbackId",
+     "comment": "medium: ctor arg1 (int) -> +0x18 on both builds; used alongside +0x10 in CalculateMatrices/SpawnWeapon/Update. Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "bool[2]",
+     "name": "hasWeapon",
+     "comment": "medium: ctor: +0x1c = (weapon name arg3 non-empty), +0x1d = (arg4 non-empty); PS2 words +0x1c/+0x20 (Xbox bools pack from here). arg3/arg4 become the ActCharacter weapon names (ActCharacter weapons +0x24/+0x28). Name invented"
+    },
+    {
+     "offset": 30,
+     "type": "bool[2]",
+     "name": "showWeapon",
+     "comment": "medium: ctor copies +0x1c/+0x1d here; PS2 words +0x24 (addr-taken, indexed)/+0x28; read by Draw/DrawWeapons, DropWeapon writes. Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "int",
+     "name": "currentAnimation",
+     "comment": "low: ctor zero; SetNewAnimation/SetNewCrossFadeAnimation write, Update/~ActActor read; PS2 +0x2c (all SetNew*Animation). Name invented"
+    },
+    {
+     "offset": 36,
+     "type": "bool",
+     "name": "drawEnabled",
+     "comment": "low: ctor =1; Draw/DrawWeapons/SetupFOVConversion; PS2 +0x30 word =1. Name invented"
+    },
+    {
+     "offset": 37,
+     "type": "bool",
+     "name": "mirrored",
+     "comment": "low: ctor =0, no other Xbox use; PS2 +0x34 =0; PS2 has SetMirrored(bool) (absent on Xbox). Name guessed"
+    },
+    {
+     "offset": 38,
+     "type": "bool",
+     "name": "flag26",
+     "comment": "low: ctor =1, CalculateMatrices reads; PS2 +0x38 =1. Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "float",
+     "name": "updateTime0",
+     "comment": "low: ctor 0, Update writes float; PS2 +0x3c. Name invented"
+    },
+    {
+     "offset": 44,
+     "type": "float",
+     "name": "updateTime1",
+     "comment": "low: ctor 0, Update writes float; PS2 +0x40. Name invented"
+    },
+    {
+     "offset": 48,
+     "type": "bool",
+     "name": "poserFlag",
+     "comment": "low: ctor arg7 (byte) -> +0x30; PS2 t3 -> +0x44. Passed as ActPoser ctor bool arg3 (ActPoser+1, read by Rotate/RotateX/DoMainPose/CalcSnapAndCorrectionMatrices). Name invented"
+    },
+    {
+     "offset": 52,
+     "type": "float",
+     "name": "scaleFactor",
+     "comment": "high: ctor passes &+0x34,&+0x38 to ActCharacter::GetScaleFactors(float&,float&) 14c20; PS2 &+0x48,&+0x4c to 10d298; then worldPos+0x300 set from +0x34"
+    },
+    {
+     "offset": 56,
+     "type": "float",
+     "name": "baseScaleFactor",
+     "comment": "medium: second GetScaleFactors out (PS2 +0x4c; cf. GetBaseScaleFactor); addr-taken in ChangeAnimationOrigin/SetAnimationOrigin/InitializeMatrices"
+    },
+    {
+     "offset": 60,
+     "type": "float",
+     "name": "field3c",
+     "comment": "low: ctor 0, CalculateMatrices writes float; PS2 +0x50. Name invented"
+    },
+    {
+     "offset": 64,
+     "type": "bool",
+     "name": "flag40",
+     "comment": "low: ctor =1 only; PS2 +0x54 =1. Name invented"
+    },
+    {
+     "offset": 68,
+     "type": "int",
+     "name": "drawMode",
+     "comment": "low: ctor =3; Draw/DrawWeapons (byte and dword reads); PS2 +0x58 =3. Name invented"
+    },
+    {
+     "offset": 72,
+     "type": "float",
+     "name": "fovScale",
+     "comment": "low: ctor 1.0f; Draw; PS2 +0x5c 1.0f, SetupFOVConversion. Name invented"
+    },
+    {
+     "offset": 76,
+     "type": "bool",
+     "name": "fovConversion",
+     "comment": "low: ctor 0; Draw/DrawWeapons/SetupFOVConversion; PS2 +0x60 word. Name invented"
+    }
+   ],
+   "comment": "Top-level animated actor (0x50 Xbox, 0x64 PS2): owns an ActCharacter, ActPoser, ActAnimGroup and WWorldPos by pointer (members, no inheritance). No vptr. Offsets equal up to +0x18, then Xbox bools pack (Xbox +0x1c.. = PS2 +0x1c..+0x60 with per-field shifts)."
+  },
+  {
+   "name": "ActPoser",
+   "size": 112,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "bool",
+     "name": "hasMatrixCallback",
+     "comment": "medium: ctor arg4 -> +0 (PS2 t0 -> +0 word); ActActor passes its +0x14. CalcSnapAndCorrectionMatrices reads. Name invented"
+    },
+    {
+     "offset": 1,
+     "type": "bool",
+     "name": "poserFlag",
+     "comment": "low: ctor arg3 -> +1 (PS2 a3 -> +4 word); ActActor passes its +0x30; Rotate/RotateX/DoMainPose/DoSkeletonPose read. Xbox = PS2-4 from here on (bools pack). Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "ActSkeleton *",
+     "name": "skeleton",
+     "comment": "high: ctor arg1 -> +4 (PS2 +8); GetNumBones/BlendBones/GetStillPose called on it; sheet ActPoser(ActSkeleton*, ActEvents*, bool, bool)"
+    },
+    {
+     "offset": 8,
+     "type": "float",
+     "name": "currentFrame",
+     "comment": "medium: SetNormalAnimation 18fe0: +8 = +0xc = time*fps; PS2 +0xc read by GetCurrentFrame"
+    },
+    {
+     "offset": 12,
+     "type": "float",
+     "name": "startFrame",
+     "comment": "low: SetNormalAnimation writes the same value as +8; PS2 +0x10. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "float",
+     "name": "previousFrame",
+     "comment": "low: SetNormalAnimation: +8 - timeScale*dt*fps, clamped >= 0; PS2 +0x14. Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "float",
+     "name": "endFrame",
+     "comment": "low: SetNormalAnimation: = *(float*)anim; PS2 +0x18. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "float",
+     "name": "totalFrames",
+     "comment": "medium: SetNormalAnimation: = *(float*)anim; PS2 +0x1c read by GetTotalAnimFrames"
+    },
+    {
+     "offset": 28,
+     "type": "ActAnimGroup *",
+     "name": "currentAnim",
+     "comment": "medium: SetNormalAnimation(ActAnimGroup*,...) stores arg1 here; PS2 +0x20"
+    },
+    {
+     "offset": 32,
+     "type": "void *",
+     "name": "events",
+     "comment": "medium: ctor arg2 (ActEvents*) -> +0x20; PS2 +0x24; DoEventPose. Type ActEvents unknown"
+    },
+    {
+     "offset": 36,
+     "type": "ActPoserMatrices *",
+     "name": "matrices",
+     "comment": "medium: ctor: new(0x10c), block+0x108 = skeleton->GetNumBones(), +0x100/+0x104 = alloc(numBones*64); PS2 +0x28 same. GetInitialTbOu MatrixCopy from it (MATRIX4 at its +0). Type name invented"
+    },
+    {
+     "offset": 40,
+     "type": "float",
+     "name": "framesPerSecond",
+     "comment": "medium: ctor 20.0f (PS2 +0x2c); SetNormalAnimation multiplies time by it. Name invented"
+    },
+    {
+     "offset": 44,
+     "type": "float",
+     "name": "secondsPerFrame",
+     "comment": "medium: ctor 0.05f (PS2 +0x30). Name invented"
+    },
+    {
+     "offset": 48,
+     "type": "float",
+     "name": "deltaTime",
+     "comment": "low: ctor copies float global(0x1dd9cc)->+0x18 (PS2 +0x34); SetNormalAnimation dt term. Name invented"
+    },
+    {
+     "offset": 52,
+     "type": "float",
+     "name": "timeScale",
+     "comment": "high: ctor 1.0f (PS2 +0x38); ActActor::SetTimeScale 12180 writes poser+0x34"
+    },
+    {
+     "offset": 56,
+     "type": "COORD4 *",
+     "name": "offsetVec",
+     "comment": "low: ctor: new(0x10) zero-filled (PS2 +0x3c); freed in dtor. Name invented"
+    },
+    {
+     "offset": 60,
+     "type": "COORD4 *",
+     "name": "scaleVec",
+     "comment": "low: ctor: new(0x10) filled with 1.0f (PS2 +0x40, -> __builtin_delete). Name invented"
+    },
+    {
+     "offset": 64,
+     "type": "ActAnimGroup *",
+     "name": "blendAnim",
+     "comment": "low: ctor 0 (PS2 +0x44); cross-fade methods (SetCrossFadeBlendAnimation/FinishCrossFadeBlend/CalcCrossFadeTimes). Type guessed"
+    },
+    {
+     "offset": 68,
+     "type": "ActIKSolverArray *",
+     "name": "ikSolvers",
+     "comment": "high: ctor new(0x18)->159b0; DoIK calls ActIKSolverArray::Solve; PS2 +0x48"
+    },
+    {
+     "offset": 72,
+     "type": "ActGlobalPoseOverrideArray *",
+     "name": "globalPoseOverrides",
+     "comment": "high: ctor new(0x1c)->15a10; DoSkeletonPose -> DoGlobalOverrides; PS2 +0x4c"
+    },
+    {
+     "offset": 76,
+     "type": "bool",
+     "name": "flag4c",
+     "comment": "low: ctor 0; DoMainPose; PS2 +0x50 word. Name invented"
+    },
+    {
+     "offset": 80,
+     "type": "int",
+     "name": "animMode",
+     "comment": "medium: ctor 0; SetNormalAnimation sets 1; PS2 +0x54 (SetManualAnimation too). Name invented"
+    },
+    {
+     "offset": 84,
+     "type": "float[7]",
+     "name": "manualParams",
+     "comment": "low: read by DoMainPose (+0x54..+0x64) and DoEventPose (+0x68,+0x6c); PS2 +0x58..+0x70 written by SetManualAnimation(ActAnimGroup*, ActPoserManualParams...). Name invented"
+    }
+   ],
+   "comment": "Animation poser (0x70 Xbox, 0x74 PS2). Two leading bools pack into 4 bytes on Xbox (8 on PS2), so Xbox = PS2 - 4 from +4. The 220-byte allocation under its tag is ActCharacterInfo, not an ActPoser variant."
+  },
+  {
+   "name": "ActCharacter",
+   "size": 132,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "modelDatabase",
+     "comment": "high: ctor arg -> +0 both builds; ActModelDatabase::UseModel on it (ChangeCharacter 14a50)"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "textureDatabase",
+     "comment": "high: ctor -> +4; ActTextureDatabase::UseTexture (19e30) on it"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "weaponDatabase",
+     "comment": "high: ctor -> +8; ActWeaponDatabase::UseWeapon (1b3d0)/StopUsingWeapon"
+    },
+    {
+     "offset": 12,
+     "type": "void *",
+     "name": "model",
+     "comment": "high: ChangeCharacter: = modelDb->UseModel(info) (17840); ActModel::SetTexture in Draw; PS2 same"
+    },
+    {
+     "offset": 16,
+     "type": "void *[3]",
+     "name": "textures",
+     "comment": "medium: ChangeCharacter: +0x10/+0x14/+0x18 = UseTexture(info+0x50/+0x54/+0x58) when non-null; same offsets PS2. Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "void *",
+     "name": "defaultTexture",
+     "comment": "medium: ChangeCharacter: = UseTexture(string at 0x189fd8). Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "ActCharacterInfo *",
+     "name": "info",
+     "comment": "high: ChangeCharacter: FastAlloc(0xdc, tag 0x189ddc)->15260, freed via 15600 + FastFree(0xdc); ~ActCharacterInfo hint; PS2 +0x20"
+    },
+    {
+     "offset": 36,
+     "type": "ActWeapon *[2]",
+     "name": "weapons",
+     "comment": "high: ChangeCharacter: +0x24/+0x28 = weaponDb->UseWeapon(name) 1b3d0; CalculateMuzzleFlashIntensity indexes [this+i*4+0x24]; PS2 +0x24 addr-taken"
+    },
+    {
+     "offset": 44,
+     "type": "char[30]",
+     "name": "weaponName0",
+     "comment": "medium: ChangeCharacter strcpy of weapon name 1 (or 11-byte default at 0x189fe0) into +0x2c; PS2 same; second name at +0x4a gives the 30-byte length"
+    },
+    {
+     "offset": 74,
+     "type": "char[30]",
+     "name": "weaponName1",
+     "comment": "medium: strcpy of weapon name 2 into +0x4a both builds"
+    },
+    {
+     "offset": 104,
+     "type": "void *",
+     "name": "shadowTriangle",
+     "comment": "medium: ctor new(0x60) (int 255, 3x0.05f, 1.0f; PS2 inits with 1.0/0.3 via 10de10/10de58); GetShadowTriangle/SetAlpha/Draw/dtor use it; PS2 +0x68. Type unknown"
+    },
+    {
+     "offset": 108,
+     "type": "bool",
+     "name": "noMatrixCallback",
+     "comment": "low: ctor byte arg -> +0x6c; PS2 word +0x6c; ActActor passes !hasMatrixCallback; Draw reads. Name invented"
+    },
+    {
+     "offset": 112,
+     "type": "float",
+     "name": "muzzleFlashIntensity",
+     "comment": "high: CalculateMuzzleFlashIntensity 15010: 0 for -1, else += weapon->CurrentMuzzleFlashStrength(), clamped; PS2 +0x70"
+    },
+    {
+     "offset": 116,
+     "type": "COORD4",
+     "name": "muzzleFlashPos",
+     "comment": "high: CalculateMuzzleFlashIntensity copies 16 bytes from weapon+0x124; PS2 two 8-byte stores +0x74/+0x7c; ends at size 0x84"
+    }
+   ],
+   "comment": "Character model/texture/weapon binding (0x84 on both builds; identical offsets)."
+  },
+  {
+   "name": "ActWeapon",
+   "size": 368,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "RAutonomousObj",
+     "name": "super_RAutonomousObj"
+    },
+    {
+     "offset": 128,
+     "type": "void *",
+     "name": "aux",
+     "comment": "high: ctor arg1 (ActWeaponAux*) -> +0x80 both builds; UGroup tag 'Arti' looked up from it"
+    },
+    {
+     "offset": 132,
+     "type": "ActShellCasing[8]",
+     "name": "shellCasings",
+     "comment": "medium: StartMuzzleFlash 1b270 scans 8 entries stride 0x14 at +0x90 (expire frame), writes COORD3 at +0x84+i*20 and float at +0x94+i*20; ctor zeroes +0x90 stride 0x14 x8 (PS2 same loop). Struct name invented"
+    },
+    {
+     "offset": 292,
+     "type": "COORD4",
+     "name": "muzzleFlashPos",
+     "comment": "high: StartMuzzleFlash writes 16 bytes at +0x124; ActCharacter copies it; PS2 8-byte stores +0x124/+0x12c"
+    },
+    {
+     "offset": 308,
+     "type": "int",
+     "name": "muzzleFlashEndFrame",
+     "comment": "high: StartMuzzleFlash = frameCounter(0x234e34)+7; CurrentMuzzleFlashStrength (+0x134 - frame)*k; PS2 same"
+    },
+    {
+     "offset": 312,
+     "type": "uint",
+     "name": "flags",
+     "comment": "high: ctor = arg2 | 1 (sheet ActWeapon(ActWeaponAux*, unsigned int)); SetOwner sets/clears bit 1; PS2 same"
+    },
+    {
+     "offset": 316,
+     "type": "MATRIX4 *",
+     "name": "worldTransform0",
+     "comment": "medium: ctor 0; SetTransformToWorldSpace(MATRIX4&,MATRIX4&)/TransformToWorldSpace; PS2 TransformPoint/MatrixToWorldSpace use it, dtor deletes. Name invented"
+    },
+    {
+     "offset": 320,
+     "type": "MATRIX4 *",
+     "name": "worldTransform1",
+     "comment": "medium: as +0x13c, the second matrix. Name invented"
+    },
+    {
+     "offset": 324,
+     "type": "PhysicsObject *",
+     "name": "owner",
+     "comment": "high: SetOwner(PhysicsObject*) 1ad70 stores arg here; PS2 116608 same"
+    },
+    {
+     "offset": 336,
+     "type": "COORD3",
+     "name": "velocity",
+     "comment": "medium: ctor zeroes +0x150/+0x154/+0x158 (PS2 float stores); PS2 GetVelocity returns &+0x150"
+    },
+    {
+     "offset": 348,
+     "type": "int",
+     "name": "field15c",
+     "comment": "low: ctor 0 both builds (henchInfo/tracerType candidates). Name invented"
+    },
+    {
+     "offset": 352,
+     "type": "int",
+     "name": "field160",
+     "comment": "low: ctor 0 both builds. Name invented"
+    },
+    {
+     "offset": 356,
+     "type": "int",
+     "name": "field164",
+     "comment": "low: ctor 0 both builds. Name invented"
+    }
+   ],
+   "comment": "Derives from RAutonomousObj (ctor copies identity to +0x40 and passes it as the CARP::Instance to RSceneObj::RSceneObj, the inlined RAutonomousObj pattern; ctor unwind calls ~RAutonomousObj 0x1aa70). Own fields from +0x80 have the same offsets on both builds. 0x148-0x14f and 0x168-0x16f unaccounted."
+  },
+  {
+   "name": "ActSkeleton",
+   "size": 36,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "fileData",
+     "comment": "high: ctor = UFileLoader::FileLoadz(name) 1176d0; PS2 -> UMemory::FastFree in dtor"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "loader",
+     "comment": "high: ctor new(0x1c)->EAGL::DynamicLoader ctor e62f0; GetAddr/Release/~DynamicLoader; PS2 +4"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "skeletonData",
+     "comment": "medium: loader GetAddr result (EAGLAnim skeleton); its +8 is numBones (GetNumBones); PS2 +8"
+    },
+    {
+     "offset": 12,
+     "type": "float *",
+     "name": "stillPose",
+     "comment": "medium: alloc numBones*48, filled by fa340; returned by GetStillPose(void); PS2 vec_delete"
+    },
+    {
+     "offset": 16,
+     "type": "float *",
+     "name": "poseBuffer",
+     "comment": "low: alloc numBones*48; PS2 vec_delete. Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "MATRIX4 *",
+     "name": "boneMatrices",
+     "comment": "low: alloc numBones*64; PS2 vec_delete. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "int",
+     "name": "rootBone",
+     "comment": "high: ctor looks up symbol 'Root.Root' (0x18a33c), -1 if missing; PS2 BlendBones reads +0x18"
+    },
+    {
+     "offset": 28,
+     "type": "int",
+     "name": "weaponBone",
+     "comment": "high: 'Root.Weapon' (0x18a330), fallback 'Root.RWeapon' (0x18a314)"
+    },
+    {
+     "offset": 32,
+     "type": "int",
+     "name": "clipBone",
+     "comment": "high: 'Root.Clip' (0x18a324)"
+    }
+   ],
+   "comment": "Skeleton loaded via EAGL DynamicLoader; same layout on both builds."
+  },
+  {
+   "name": "ActCharacterInfo",
+   "size": 220,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster11.json)",
+   "if_missing": true
+  },
+  {
+   "name": "ActAnimGroup",
+   "size": 32,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster11.json)",
+   "if_missing": true
+  },
+  {
+   "name": "ActIKSolverArray",
+   "size": 24,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster11.json)",
+   "if_missing": true
+  },
+  {
+   "name": "ActGlobalPoseOverrideArray",
+   "size": 28,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster11.json)",
+   "if_missing": true
+  },
+  {
+   "name": "ActPoserMatrices",
+   "size": 268,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster11.json)",
+   "if_missing": true
+  },
+  {
+   "name": "ActShellCasing",
+   "size": 20,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster11.json)",
+   "if_missing": true
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x000112c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "ActActor::GetBoneIndex(char *)"
+  },
+  {
+   "address": "0x000112d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "float"
+    }
+   ],
+   "sheet": "ActActor::Fire(float, float, float, float)"
+  },
+  {
+   "address": "0x000112e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "ActActor::CalculateMatrices(bool)"
+  },
+  {
+   "address": "0x00011650",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "ActActor::GetActorLocalPosOri(MATRIX4 &)"
+  },
+  {
+   "address": "0x00011670",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "ActActor::GetActorWorldPosition(COORD4 &)"
+  },
+  {
+   "address": "0x000116a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    }
+   ],
+   "sheet": "ActActor::GetWeaponPosition(MATRIX4 &, bool, int)"
+  },
+  {
+   "address": "0x000116d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int *"
+    },
+    {
+     "name": "param_3",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_4",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "ActActor::CreateIKs(int, int *, COORD4 *, bool *)"
+  },
+  {
+   "address": "0x000116e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ActActor::SetIKInfoArray(int, ActIKSolveInfo *)"
+  },
+  {
+   "address": "0x00011760",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int *"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    }
+   ],
+   "sheet": "ActActor::CreateGlobalPoseOverrides(int, int *, bool)"
+  },
+  {
+   "address": "0x00011770",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "MATRIX4 *"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    }
+   ],
+   "sheet": "ActActor::SetGlobalPoseOverride(int, MATRIX4 &, float)"
+  },
+  {
+   "address": "0x00011780",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "MATRIX4 *"
+    },
+    {
+     "name": "param_3",
+     "type": "float *"
+    }
+   ],
+   "sheet": "ActActor::SetGlobalPoseOverrides(int, MATRIX4 *, float *)"
+  },
+  {
+   "address": "0x00011790",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ActActor::SetupFOVConversion(RViewCamera *)"
+  },
+  {
+   "address": "0x000118a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "ActActor::DrawWeapons(RViewCamera *, bool)"
+  },
+  {
+   "address": "0x00011ff0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActActor::SpawnWeapon(void)"
+  },
+  {
+   "address": "0x00012140",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActActor::IsAnimationDone(void)"
+  },
+  {
+   "address": "0x00012180",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "ActActor::SetTimeScale(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x00012190",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "ActActor::ChangeAnimationOrigin(COORD3 &)"
+  },
+  {
+   "address": "0x000121f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "ActActor::GetAnimationOrigin(COORD3 &)"
+  },
+  {
+   "address": "0x00012220",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "ActActor::SetAnimationOrigin(COORD3 &)"
+  },
+  {
+   "address": "0x00012280",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "ActActor::CurrentPositionRotateY(float)"
+  },
+  {
+   "address": "0x00012350",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "ActActor::RotateActor(float)"
+  },
+  {
+   "address": "0x00012420",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "ActActor::RotateActorX(float)"
+  },
+  {
+   "address": "0x000124f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "ActActor::SetSuppressAnimationTranslation(bool)"
+  },
+  {
+   "address": "0x00012570",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActActor::TurnShadowsOff(void)"
+  },
+  {
+   "address": "0x00012640",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "ActActor::SetNewAnimation(int, int)"
+  },
+  {
+   "address": "0x000126e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    }
+   ],
+   "sheet": "ActActor::SetNewCrossFadeAnimation(int, int, float)"
+  },
+  {
+   "address": "0x000127a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "ActActor::InitializeMatrices(MATRIX4 &)"
+  },
+  {
+   "address": "0x00012840",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActActor::Update(void)"
+  },
+  {
+   "address": "0x000129c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    }
+   ],
+   "sheet": "ActActor::Draw(RViewCamera *, bool, bool)"
+  },
+  {
+   "address": "0x00012c30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "ActActor::DropWeapon(float)"
+  },
+  {
+   "address": "0x00012ec0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActActor::~ActActor(void)"
+  },
+  {
+   "class": "ActActor",
+   "address": "0x00012ca0",
+   "calling_convention": "__thiscall",
+   "return": "ActActor *",
+   "params": [
+    {
+     "name": "id",
+     "type": "int"
+    },
+    {
+     "name": "character",
+     "type": "char *"
+    },
+    {
+     "name": "weapon1",
+     "type": "char *"
+    },
+    {
+     "name": "weapon2",
+     "type": "char *"
+    },
+    {
+     "name": "callback",
+     "type": "void *"
+    },
+    {
+     "name": "transform",
+     "type": "MATRIX4 *"
+    },
+    {
+     "name": "flag",
+     "type": "bool"
+    }
+   ],
+   "sheet": "ActActor::ActActor(int, char *, char *, char *, void (*)(int, M... (cut; 7 args, RET 0x1c)"
+  }
+ ]
+}

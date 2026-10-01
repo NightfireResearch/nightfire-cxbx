@@ -1,0 +1,684 @@
+{
+ "verdicts": [
+  {
+   "item": 0,
+   "xbox": "0x000a1870",
+   "current": "RMuzzleFlash::Draw",
+   "ps2": "0x001e5808",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body (cross-product basis, 3 matrix mults, 0.25 scale, Sentry::DrawMuzzleFlashes caller) matches PS2 RMuzzleFlash::Draw 0x1e55f0; DrawPOV (BuildTranslate/BuildScale/globalAdvanceFrame==3) is Xbox 0xa19d0",
+   "intermediates": []
+  },
+  {
+   "item": 1,
+   "xbox": "0x0010d160",
+   "current": "FILESYS_atomic",
+   "ps2": "0x002526d8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body = set priority, call fn ptr, restore, exec command: PS2 FILESYS_atomic 0x253508; priorityop is a list re-sort",
+   "intermediates": []
+  },
+  {
+   "item": 2,
+   "xbox": "0x0010b1a0",
+   "current": "PRINT_setchannelname",
+   "ps2": "0x00260968",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox stores one name per 2-word slot like PS2 PRINT_setchannelname; setdevicename stores 2 values in 3-word slots",
+   "intermediates": []
+  },
+  {
+   "item": 3,
+   "xbox": "0x00145ab0",
+   "current": "SFILTER_unpackxapf",
+   "ps2": "0x00314d60",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox calls SND::CEAXABLKDecf::Decode with 0x2c/0x30/0x34 fields exactly as PS2 SFILTER_unpackxapf 0x315fe8; unpackpf uses decode16x87",
+   "intermediates": []
+  },
+  {
+   "item": 4,
+   "xbox": "0x00145ab0",
+   "current": "SFILTER_unpackxapf",
+   "ps2": "0x00314958",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox calls CEAXABLKDecf::Decode (XA decoder) like PS2 SFILTER_unpackxapf; unpackmtpf (0xd70 field, decodemut) is Xbox 0x145830",
+   "intermediates": []
+  },
+  {
+   "item": 5,
+   "xbox": "0x000e89e0",
+   "current": "EAGL::Device::GetCurrentRenderContext",
+   "ps2": "0x00287738",
+   "name": "",
+   "verdict": "keep",
+   "why": "Callers of Xbox 0xe89e0 (Model::Draw, DrawRegions, FONTEAGL_startdraw, ActCharacter) match PS2 GetCurrentRenderContext's wide caller set; the Xbox data label name is the likely misnomer",
+   "intermediates": []
+  },
+  {
+   "item": 6,
+   "xbox": "0x000ba390",
+   "current": "SMissionRuleTarget::GetSpeed",
+   "ps2": "0x00209820",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body takes GetRigidBody velocity length for the player: PS2 SMissionRuleTarget::GetSpeed 0x209758; GetHealth reads mission-manager health",
+   "intermediates": []
+  },
+  {
+   "item": 7,
+   "xbox": "0x0001ee60",
+   "current": "AICharacterEnemyGround::DoWandering",
+   "ps2": "0x0011e9a0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body matches PS2 DoWandering 0x11b908 line for line (state 0x11, SimRandom*3 table, 14.5 threshold, GetAngleToTarget, CurrentPositionRotateY)",
+   "intermediates": []
+  },
+  {
+   "item": 8,
+   "xbox": "0x0001ee60",
+   "current": "AICharacterEnemyGround::DoWandering",
+   "ps2": "0x0011bbf0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body matches PS2 DoWandering 0x11b908 line for line (state 0x11, SimRandom*3 table, 14.5 threshold); DoArmed differs",
+   "intermediates": []
+  },
+  {
+   "item": 9,
+   "xbox": "0x000e89f0",
+   "current": "EAGL::Device::GetCurrentTextureRenderContext",
+   "ps2": "0x00287728",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox 0xe89f0 has only Model::Draw / profiler callers, matching PS2 GetCurrentTextureRenderContext's narrow caller set; pair with 0xe89e0 (item 5) stays as is",
+   "intermediates": []
+  },
+  {
+   "item": 10,
+   "xbox": "0x00132192",
+   "current": "printf",
+   "ps2": "0x002a9030",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body locks stdout, _stbuf/_ftbuf, vfprintf to stdout: MSVC printf, not newlib _sprintf_r",
+   "intermediates": []
+  },
+  {
+   "item": 11,
+   "xbox": "0x00132192",
+   "current": "printf",
+   "ps2": "0x002a9098",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body writes to stdout (DAT_001d8b80 FILE): printf, not sprintf",
+   "intermediates": []
+  },
+  {
+   "item": 12,
+   "xbox": "0x001461f0",
+   "current": "SFILTER_unpackf",
+   "ps2": "0x00314c68",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body identical to PS2 SFILTER_unpackf 0x314b60 (end-of-data -1, memclr tail); unpacklf is the looping variant",
+   "intermediates": []
+  },
+  {
+   "item": 13,
+   "xbox": "0x00125d60",
+   "current": "AFader::Remove",
+   "ps2": "0x002f9710",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body gets reference, removes it, frees AFader (FastFree 0x30): PS2 AFader::Remove 0x2f9740; Get has no free",
+   "intermediates": []
+  },
+  {
+   "item": 14,
+   "xbox": "0x00113f20",
+   "current": "MEM_free",
+   "ps2": "0x002cafa8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body reads both -4 and -8 links and has many free-style callers (destructors, Shutdown): PS2 MEM_free 0x2cad80, not MEM_resize",
+   "intermediates": []
+  },
+  {
+   "item": 15,
+   "xbox": "0x0003d9c0",
+   "current": "DTuningFile::OpenForRead",
+   "ps2": "0x001444d8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body news a Reader (inlined Reader ctor) and sets fields 0x108/0x10c: PS2 DTuningFile::OpenForRead 0x144338",
+   "intermediates": []
+  },
+  {
+   "item": 16,
+   "xbox": "0x000e28a0",
+   "current": "GLoadingScreen::Update",
+   "ps2": "0x0024a598",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body is the loading-screen render (BeginFrame/ClearViewPort/DrawBackground/DrawDots): GLoadingScreen::Update, not subtitles",
+   "intermediates": []
+  },
+  {
+   "item": 17,
+   "xbox": "0x000e28a0",
+   "current": "GLoadingScreen::Update",
+   "ps2": "0x0024a6d0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body is the loading-screen render (DrawDots, DrawBackground), caller LoadScreenSystemTaskCallback: GLoadingScreen::Update",
+   "intermediates": []
+  },
+  {
+   "item": 18,
+   "xbox": "0x00098380",
+   "current": "RReflection::LightingProps",
+   "ps2": "0x001c1840",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body checks 'Character' and 'Dynamic Objects' like PS2 RReflection::LightingProps 0x1c1778; GetReflectionData2 has no 'Dynamic Objects'",
+   "intermediates": []
+  },
+  {
+   "item": 19,
+   "xbox": "0x0013d7d0",
+   "current": "dsndMixStop",
+   "ps2": "0x0030e430",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body stops/releases DirectSound mix buffers - Xbox-only platform code; PS2 SNDPLATFORM_restore (thread/sema teardown) corresponds to its caller",
+   "intermediates": []
+  },
+  {
+   "item": 20,
+   "xbox": "0x0013cf20",
+   "current": "SNDbankpatpresent",
+   "ps2": "0x003086c8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body returns getppatch!=0 with no play: PS2 SNDbankpatpresent 0x3085d0; caller ABank::IsPatchPresent",
+   "intermediates": []
+  },
+  {
+   "item": 21,
+   "xbox": "0x0005dd00",
+   "current": "Human::Simulate",
+   "ps2": "0x0017ffc8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body = aiCharacter execute + SetOrientMat + copy position + PhysicsObject::Simulate: PS2 Human::Simulate 0x17f980, not Mine",
+   "intermediates": []
+  },
+  {
+   "item": 22,
+   "xbox": "0x00123c50",
+   "current": "AVoice::View::~View",
+   "ps2": "0x002ddc80",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body = list remove if 0x17, SNDstop, nothing else (no 0x16 write, no restart state): PS2 AVoice::View::~View 0x2de0b8 without delete flag",
+   "intermediates": []
+  },
+  {
+   "item": 23,
+   "xbox": "0x001340f5",
+   "current": "maybe_snprintf",
+   "ps2": "0x002a9030",
+   "name": "",
+   "verdict": "keep",
+   "why": "MSVC _vsnprintf-style CRT helper (va_list arg, size-limited, _flsbuf); newlib _sprintf_r is CRT-vs-newlib confusion",
+   "intermediates": []
+  },
+  {
+   "item": 24,
+   "xbox": "0x000da8e0",
+   "current": "GHud::dbDrawTarget",
+   "ps2": "0x002476b8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body is large (LINE_Draw2DStrip, FONT_Width, called from DAudio::DrawTargets), size ratio 2.2 vs the small PS2 DrawTarget: matches PS2 GHud::dbDrawTarget 0x2477a0",
+   "intermediates": []
+  },
+  {
+   "item": 25,
+   "xbox": "0x00144a30",
+   "current": "SFILTER_add",
+   "ps2": "0x00312f40",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body = alloc filter, init via param, addtofilterlist: identical to PS2 SFILTER_add 0x3142e0",
+   "intermediates": []
+  },
+  {
+   "item": 26,
+   "xbox": "0x0007f540",
+   "current": "RLightManager::FinishLights",
+   "ps2": "0x001affd0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body calls RHighLevelLightManager::Process then copy/fill/reset fields: PS2 RLightManager::FinishLights 0x1aede8",
+   "intermediates": []
+  },
+  {
+   "item": 27,
+   "xbox": "0x00123be0",
+   "current": "AVoice::View::Stop",
+   "ps2": "0x002de060",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body clears 0x16, list remove, SNDstop, then restart-flag logic on +8: PS2 AVoice::View::Stop 0x2ddc80; Restart only stops",
+   "intermediates": []
+  },
+  {
+   "item": 28,
+   "xbox": "0x00123be0",
+   "current": "AVoice::View::Stop",
+   "ps2": "0x002de0b8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body has the Stop-only 0x16/+8/0x19 logic; ~View is Xbox 0x123c50 (item 22)",
+   "intermediates": []
+  },
+  {
+   "item": 29,
+   "xbox": "0x0007de30",
+   "current": "DrawInstance",
+   "ps2": "0x001ad3e8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body uses GetInstanceMatrix, matrix mult, *65536 fixed-point: PS2 DrawInstance 0x1ad498; DrawGroupDrawInstance is the small callee-side function",
+   "intermediates": []
+  },
+  {
+   "item": 30,
+   "xbox": "0x0005b870",
+   "current": "OptionParser::OptionParser",
+   "ps2": "0x00179738",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body zeroes two fields then strstr loop over options (batch 001 vtable-paired): PS2 OptionParser::OptionParser 0x1790f8; FindString is 4x smaller",
+   "intermediates": []
+  },
+  {
+   "item": 31,
+   "xbox": "0x00141910",
+   "current": "MIX_playinit",
+   "ps2": "0x003142e0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body is the big per-mix init (unpacker/rsf/lpf/hpf/timestretch, type 7/8/9/10): PS2 MIX_playinit 0x312f40",
+   "intermediates": []
+  },
+  {
+   "item": 32,
+   "xbox": "0x001237d0",
+   "current": "AStream::Get",
+   "ps2": "0x002e96b8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body is Get+GetReference only: PS2 AStream::Get 0x2e9688; Remove is Xbox 0x1237f0",
+   "intermediates": []
+  },
+  {
+   "item": 33,
+   "xbox": "0x000d3450",
+   "current": "GGallery::CULL_GetNextCanvas",
+   "ps2": "0x232d58",
+   "name": "GFX::CULL_GetNextCanvas",
+   "verdict": "accept",
+   "why": "Xbox body forwards to GFXGallery::CULL_GetNextCanvas(global gallery) exactly like PS2 GFX::CULL_GetNextCanvas; no PS2 GGallery::CULL_GetNextCanvas exists and Xbox neighbours are GFX:: (0xd34c0 GFX::Update)",
+   "intermediates": []
+  },
+  {
+   "item": 34,
+   "xbox": "0x000a3210",
+   "current": "RParticulates::LoadAttributes",
+   "ps2": "0x1e9b38",
+   "name": "RParticulate::LoadAttributes",
+   "verdict": "accept",
+   "why": "Same body as PS2 RParticulate::LoadAttributes ('Enable Particulate', +0xffc); PS2 has no RParticulates class and Xbox neighbours 0xa3240.. are RParticulate::",
+   "intermediates": []
+  },
+  {
+   "item": 35,
+   "xbox": "0x001237f0",
+   "current": "AStream::Remove",
+   "ps2": "0x002e9688",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body gets, removes, virtual-deletes the stream: PS2 AStream::Remove 0x2e96b8",
+   "intermediates": []
+  },
+  {
+   "item": 36,
+   "xbox": "0x0009acf0",
+   "current": "RDecalManager::RDecalManager",
+   "ps2": "0x001da3b0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox ctor sets RDecalManager vtable and inlines LoadData (decal.dat); size ratio 3.1 = inlined callee",
+   "intermediates": []
+  },
+  {
+   "item": 37,
+   "xbox": "0x00012fd0",
+   "current": "ActActorDatabase::DrawAll",
+   "ps2": "0x001c5870",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body iterates the actor list calling ActActor::Draw: PS2 ActActorDatabase::DrawAll 0x10b6e0; DrawActors is a one-line wrapper (inlined)",
+   "intermediates": []
+  },
+  {
+   "item": 38,
+   "xbox": "0x00145830",
+   "current": "SFILTER_unpackmtpf",
+   "ps2": "0x00315fe8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body uses 0xd70 channel field, decodemut/initmut like PS2 SFILTER_unpackmtpf 0x314958",
+   "intermediates": []
+  },
+  {
+   "item": 39,
+   "xbox": "0x0013c840",
+   "current": "SNDSTRM_lowpass",
+   "ps2": "0x00309978",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body sets lowPass and calls SNDCTRL_lowpass: PS2 SNDSTRM_lowpass 0x309ea8",
+   "intermediates": []
+  },
+  {
+   "item": 40,
+   "xbox": "0x00132767",
+   "current": "sprintf",
+   "ps2": "0x002a9030",
+   "name": "",
+   "verdict": "keep",
+   "why": "MSVC sprintf (0x7fffffff count, _flsbuf) with the PS2 sprintf caller set (ABasic, DTuningFile, DoScreenCapture...); _sprintf_r is the newlib reentrant variant",
+   "intermediates": []
+  },
+  {
+   "item": 41,
+   "xbox": "0x0013bb50",
+   "current": "SNDSTRMI_framescallback",
+   "ps2": "0x00308910",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body is the frames loop (0x11c request, 0x14/0x18/0x1c counters) with removerequest inlined/called: PS2 SNDSTRMI_framescallback 0x3089a0",
+   "intermediates": []
+  },
+  {
+   "item": 42,
+   "xbox": "0x00075e80",
+   "current": "Draw::Init",
+   "ps2": "0x19f768",
+   "name": "SimpleDraw::Init",
+   "verdict": "accept",
+   "why": "Xbox body news USimpleMaterial/USimpleTexturedMaterial into SimpleDraw::fMat/fTexMat = PS2 SimpleDraw::Init 0x19f768; Draw::Init is the Xbox jmp thunk 0x75f20 (called from Render_InitLibRender as PS2 0x19f800 is), which keeps Draw::Init",
+   "intermediates": []
+  },
+  {
+   "item": 43,
+   "xbox": "0x0014c790",
+   "current": "RCMP::AV_PLAYER::Pause",
+   "ps2": "0x00301498",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body = audio SetSpeed(0) + timer update + speed field 0 = inlined SetSpeed(param,0): PS2 AV_PLAYER::Pause 0x301548 (SetSpeed takes a clamped arg)",
+   "intermediates": []
+  },
+  {
+   "item": 44,
+   "xbox": "0x00050a20",
+   "current": "InputToAction::LoadParseDefFile",
+   "ps2": "0x00166788",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body uses getActionID, sscanf, GrowArrayForOneElement (table build) like PS2 InputToAction::LoadParseDefFile 0x1674d0; ParseDefFileForFrontEnd is Xbox 0x4ff50 (item 63)",
+   "intermediates": []
+  },
+  {
+   "item": 45,
+   "xbox": "0x0007e860",
+   "current": "RLightManager::DisablePositionalLighting",
+   "ps2": "0x001aede8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body = set flag, copy/fill positional lights to/from save buffer: PS2 RLightManager::DisablePositionalLighting 0x1affd0",
+   "intermediates": []
+  },
+  {
+   "item": 46,
+   "xbox": "0x000ca530",
+   "current": "WRoadNav::CalcNextSegmentLane",
+   "ps2": "0x002235c8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body has the 4-arg Lane signature with GetAttachedDirectionalSegment, matching PS2 CalcNextSegmentLane 0x223f98; Random has 3 args and GetSegmentForwardVector",
+   "intermediates": []
+  },
+  {
+   "item": 47,
+   "xbox": "0x00018550",
+   "current": "ActPoser::ActPoser",
+   "ps2": "0x0010eeb8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox ctor sets ActPoser fields (20.0, 0.05, 1.0) and inlines the IK array creation: PS2 ActPoser::ActPoser 0x112928",
+   "intermediates": []
+  },
+  {
+   "item": 48,
+   "xbox": "0x00018550",
+   "current": "ActPoser::ActPoser",
+   "ps2": "0x0010f140",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox ctor sets ActPoser fields (20.0, 0.05, 1.0) and inlines CreateGlobalPoseOverrides: PS2 ActPoser::ActPoser 0x112928",
+   "intermediates": []
+  },
+  {
+   "item": 49,
+   "xbox": "0x00128470",
+   "current": "ASystem::Shutdown",
+   "ps2": "0x002e6e80",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body tests fgSystem, inlines ~ASystem, clears fgSystem: PS2 ASystem::Shutdown 0x2e6ee0",
+   "intermediates": []
+  },
+  {
+   "item": 50,
+   "xbox": "0x00141630",
+   "current": "SNDMIX_setmasterlowpass",
+   "ps2": "0x003141e8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body loops over all mixes with a separate LPF array (master lowpass); PS2 SNDMIX_setmasterlowpass is a stub, MIX_setlowpass is per-mix with filter-list ops Xbox lacks",
+   "intermediates": []
+  },
+  {
+   "item": 51,
+   "xbox": "0x0008beb0",
+   "current": "RShadowMap::Init",
+   "ps2": "0x001ecda8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body allocs 'RShadowMap', runs ctor, stores global = PS2 RShadowMap::Init 0x1ecd38 with operator_new inlined",
+   "intermediates": []
+  },
+  {
+   "item": 52,
+   "xbox": "0x0007df10",
+   "current": "QuickDrawInstance",
+   "ps2": "0x001ad3e8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body uses GetInstanceMatrix + GetInstanceViewDistance with world callers (RSky, WRender): PS2 QuickDrawInstance 0x1ad618",
+   "intermediates": []
+  },
+  {
+   "item": 53,
+   "xbox": "0x001424c0",
+   "current": "SNDPLATFORM_packetplay",
+   "ps2": "0x0030ff78",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body is packet (buffer) play with SetBufferData, caller SNDPKTPLAY_start: PS2 SNDPLATFORM_packetplay 0x319100",
+   "intermediates": []
+  },
+  {
+   "item": 54,
+   "xbox": "0x0008e580",
+   "current": "RSceneObj::DecayEffects",
+   "ps2": "0x001cacb8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body starts with an instance-position distance-squared test (28900) before toggling effects, like PS2 DecayEffects 0x1ca340; StopFX has no distance test",
+   "intermediates": []
+  },
+  {
+   "item": 55,
+   "xbox": "0x0008e580",
+   "current": "RSceneObj::DecayEffects",
+   "ps2": "0x001ca7a0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body has the distance test and caller RenderEffects: PS2 DecayEffects 0x1ca340, not DamageEffects (param mask)",
+   "intermediates": []
+  },
+  {
+   "item": 56,
+   "xbox": "0x00030b80",
+   "current": "AIGroundVehicle::CheckTrafficCollision",
+   "ps2": "0x00132d80",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox caller DoMoveMode matches PS2 CheckTrafficCollision's caller; callees IntersectionGreenLight/GetSegmentOppNode/GetOwner match PS2 0x1377c8; DoTrafficStateUpdate is called by Update",
+   "intermediates": []
+  },
+  {
+   "item": 57,
+   "xbox": "0x0009b2d0",
+   "current": "RDecalManager::DrawDecals",
+   "ps2": "0x001db6f0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body is the decal fade/draw loop over the decal tables, caller DrawEffects: PS2 RDecalManager::DrawDecals 0x1da978",
+   "intermediates": []
+  },
+  {
+   "item": 58,
+   "xbox": "0x0009b2d0",
+   "current": "RDecalManager::DrawDecals",
+   "ps2": "0x001db848",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body is the decal fade/draw loop, caller RRenderWorldCamera::DrawEffects: DrawDecals, not REmp",
+   "intermediates": []
+  },
+  {
+   "item": 59,
+   "xbox": "0x0011a950",
+   "current": "USymbolTable::NameLookup",
+   "ps2": "0x002cdbd0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body splits at '::' then looks up the namespace table: PS2 USymbolTable::NameLookup 0x2cd5e0; ParseNameAndTag handles '{' tags",
+   "intermediates": []
+  },
+  {
+   "item": 60,
+   "xbox": "0x0003d470",
+   "current": "dbattrib_floatrgb",
+   "ps2": "0x00141ee8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body parses indexed items via ParseData into COORD4 per index, caller RLightManager ctor: PS2 dbattrib_floatrgb 0x143878",
+   "intermediates": []
+  },
+  {
+   "item": 61,
+   "xbox": "0x0009bb30",
+   "current": "REmp::DrawShootingEffect",
+   "ps2": "0x001da978",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body = alpha from (1-t), BuildScale, matrix mult, caller RVehicle::RenderFX: PS2 REmp::DrawShootingEffect 0x1db848",
+   "intermediates": []
+  },
+  {
+   "item": 62,
+   "xbox": "0x0009bb30",
+   "current": "REmp::DrawShootingEffect",
+   "ps2": "0x001db6f0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body uses BuildScale/VU0_MATRIX4_mult and (1-t) alpha like PS2 DrawShootingEffect; DrawTargetEffect has no scale matrix",
+   "intermediates": []
+  },
+  {
+   "item": 63,
+   "xbox": "0x0004ff50",
+   "current": "InputConfigManager::ParseDefFileForFrontEnd",
+   "ps2": "0x001674d0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body = AdvanceFilePtr loop, 'FRONTEND' flag, ConvertStringToNumber + atol into +0x24 table: PS2 InputConfigManager::ParseDefFileForFrontEnd 0x166788",
+   "intermediates": []
+  },
+  {
+   "item": 64,
+   "xbox": "0x000ca120",
+   "current": "WRoadNav::CalcNextSegmentDirection",
+   "ps2": "0x00222060",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body is the nav-direction chooser (dot products, -2.0 best score) called from IncNavPosition: PS2 CalcNextSegmentDirection 0x223a30; GetSegmentLaneWeights is a network helper",
+   "intermediates": []
+  },
+  {
+   "item": 65,
+   "xbox": "0x0009fd20",
+   "current": "RLightning::Draw",
+   "ps2": "0x001e2c58",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body = Update, sim-synced random seeds, reset bolt rendering, draw bolts, RenderBolts: PS2 RLightning::Draw 0x1e0eb0 with helpers inlined",
+   "intermediates": []
+  },
+  {
+   "item": 66,
+   "xbox": "0x00093dd0",
+   "current": "RTextureContext::RTextureContext",
+   "ps2": "0x001cf0c0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox ctor sets vtable/fields and allocs 'RTexList' (Load inlined): PS2 RTextureContext::RTextureContext 0x1cef60",
+   "intermediates": []
+  },
+  {
+   "item": 67,
+   "xbox": "0x000a19d0",
+   "current": "RMuzzleFlash::DrawPOV",
+   "ps2": "0x001e55f0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Xbox body = BuildTranslate, BuildScale, ZWrites off, frame==3 texture pick: PS2 RMuzzleFlash::DrawPOV 0x1e5808; Draw is Xbox 0xa1870",
+   "intermediates": []
+  }
+ ]
+}

@@ -1,0 +1,3244 @@
+{
+ "batch": "023",
+ "program": "Driving.xbe",
+ "note": "Undo Version Tracking's copied PS2 plates; hand-checked name fixes.",
+ "items": [
+  {
+   "xbox": "0x00080520",
+   "expect": "FUN_00080520",
+   "name": "RPathEngine::AddInstanceList",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Singleton list of path handles; two passes over instances (flag 0x10, type 2, +0xc set, +0x10 zero then nonzero) building handles, then Init on each - same as PS2",
+    "PS2 0x001b1988"
+   ]
+  },
+  {
+   "xbox": "0x0007fb00",
+   "expect": "FUN_0007fb00",
+   "name": "RPathEngine::RPathHandle::RPathHandle",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of RPathEngine::AddInstanceList, body review: (Instance&, ProcAnim&) ctor: [0]=instance, [1]=anim, zero vec at 0x88, copies instance matrix; first call in each AddInstanceList pass",
+    "PS2 0x1b1110"
+   ]
+  },
+  {
+   "xbox": "0x0001ae30",
+   "expect": "FUN_0001ae30",
+   "name": "ActWeapon::CurrentMuzzleFlashStrength",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Returns (field 0x134 - sim frame) / 7 (x0.142857) or 0; identical",
+    "PS2 0x00116948"
+   ]
+  },
+  {
+   "xbox": "0x0002e580",
+   "expect": "FUN_0002e580",
+   "name": "GetCollisionStopPoint",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Rigid body pos (0x10..0x18), unit dir to target, dot minus dist minus 1.5*body[0x5c]+0x4c8, clamp 0, scale-add; identical",
+    "PS2 0x00135978"
+   ]
+  },
+  {
+   "xbox": "0x00149d80",
+   "expect": "FUN_00149d80",
+   "name": "SND::decodexac",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: XA ADPCM block decode: param[1..4] state, 0x1c-byte blocks, nibble shift/filter tables; same algorithm",
+    "PS2 0x00318900"
+   ]
+  },
+  {
+   "xbox": "0x0001a5e0",
+   "expect": "FUN_0001a5e0",
+   "name": "URefCounter<ActTextureDatabase::TextureInfo>::AddReference",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: URefCounter AddReference template: copy name, map find with stricmp, insert new, set +0x90, ++refcount +0x8c; same shape as named ModelInfo instantiation 0x18030, sole call in LoadTexture",
+    "PS2 0x00115a98"
+   ]
+  },
+  {
+   "xbox": "0x000e6b60",
+   "expect": "FUN_000e6b60",
+   "name": "EAGL::RenderContext::SetSyncToVBL",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Xbox EAGL implementation: stores bool at +0x2c and maps it to D3D presentation interval (false = immediate); sits exactly where PS2 RRenderer ctor calls SetSyncToVBL (after SetTexelsAreOffset, before GetFoundationVideoMode/InitAllSimpleMaterials)",
+    "PS2 0x00290d30"
+   ]
+  },
+  {
+   "xbox": "0x0007cf40",
+   "expect": "FUN_0007cf40",
+   "name": "RDrawGroup::RDrawGroup",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of EAGL::RenderContext::SetSyncToVBL, body review: FastAlloc \"RReverseDrawList\", zero 3 fields, store in this; called twice at start of RRenderer ctor as on PS2",
+    "PS2 0x1aad78"
+   ]
+  },
+  {
+   "xbox": "0x00098470",
+   "expect": "FUN_00098470",
+   "name": "RReflection::GetReflectionCarPos",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Registered under the string \"GAME::ReflectionCarPos\" in RegisterSymbols on both sides; PS2 is a stub returning 0, Xbox returns this->+0x4c + 0x180",
+    "PS2 0x001c28a0"
+   ]
+  },
+  {
+   "xbox": "0x00090130",
+   "expect": "FUN_00090130",
+   "name": "URefCounter<RCARPFile>::RemoveReference",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Map walk matching key [0x24] (PS2 [0x25]), decrement refcount [0x23] (PS2 [0x24]), erase and return 1 at zero; same shape as named URefCounter<AMix>::RemoveReference, called from RSceneObj purge/unload",
+    "PS2 0x001cbcf8"
+   ]
+  },
+  {
+   "xbox": "0x00077560",
+   "expect": "FUN_00077560",
+   "name": "RAnimEngine::Handle::GetFirstSystemInstanceIndex",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: FindSystem inlined (binary search via FUN_00076c20), returns instance byte +0x1e or -1; same",
+    "PS2 0x001a2f00"
+   ]
+  },
+  {
+   "xbox": "0x0011b390",
+   "expect": "FUN_0011b390",
+   "name": "UCarpNamespace::AddCarpFile",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Adds \"<<Root>>\", \"<<Map>>\" (tag 'Map '), \"<<Shared>>\" (tag 'Shar') namespaces then iterates the group; identical strings and tags",
+    "PS2 0x002cd8c0"
+   ]
+  },
+  {
+   "xbox": "0x00098480",
+   "expect": "FUN_00098480",
+   "name": "RReflection::TextureWeaponEnvMap",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Registered under \"GAME::WeaponReflectionMap\" in RegisterSymbols on both sides; one-line getter *(*(this+0x4c)+0x11c) vs PS2 *(*(this+0x58)+200)",
+    "PS2 0x001c1ac8"
+   ]
+  },
+  {
+   "xbox": "0x0011ec80",
+   "expect": "FUN_0011ec80",
+   "name": "AVehicle::CalculateRpm",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: vcall check then log(speed)*1000 when speed>1; else gear loop i<10 with 15.0*i thresholds; same fields",
+    "PS2 0x002df8a0"
+   ]
+  },
+  {
+   "xbox": "0x000347f0",
+   "expect": "FUN_000347f0",
+   "name": "AIRoadSpawn::Init",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: If fgRoadSpawn null: new(1), store sim frame, fill 0x32 dwords with -1, flag=1; identical",
+    "PS2 0x0013c4d8"
+   ]
+  },
+  {
+   "xbox": "0x000a32b0",
+   "expect": "FUN_000a32b0",
+   "name": "RParticulate::_init",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same constants at 0xfb0..0xfe0 (70.0, 0.3/0.4/0.55, 0x3dc08312...), same LCG, 1.5258789e-05 scaling, packed ARGB per particle; Xbox drops the GeoPrim setup",
+    "PS2 0x001e9290"
+   ]
+  },
+  {
+   "xbox": "0x0007cfa0",
+   "expect": "FUN_0007cfa0",
+   "name": "RDrawGroup::AddToTranslucentList",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Xbox is MOV ECX,[ECX]; JMP vector push_back (0x50-byte elements); PS2 derefs *param_1 and inlines vector<RDrawElement> push_back/_M_insert_aux; only unnamed call in DrawInstance (PS2 has a second copy at 0x1ab148 with the same symbol)",
+    "PS2 0x001ab050"
+   ]
+  },
+  {
+   "xbox": "0x00016ed0",
+   "expect": "FUN_00016ed0",
+   "name": "ActManager::SetIRMode",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: One-shot guard flag, copies 0x1c dwords of RLightManager +0xec into two buffers, sets 1.0 colours; same as PS2 SetIRMode",
+    "PS2 0x00110cf8"
+   ]
+  },
+  {
+   "xbox": "0x000522b0",
+   "expect": "FUN_000522b0",
+   "name": "Float_AttribByteOffsetParserFunc",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Tokenise on ',' ';' into 32-byte buffer, atof into float array at param_4+param_8 up to param_5 count; tokenizer inlined on Xbox",
+    "PS2 0x0016c1d0"
+   ]
+  },
+  {
+   "xbox": "0x0001c2b0",
+   "expect": "FUN_0001c2b0",
+   "name": "AICharacter::Execute",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Two vcalls, damped velocity (1-rcp*0.5, -rcp*13), FindClosestFace/HeightAtPoint with 0.35 ground clamp and 0.25/-0.3 bounce, then state switch over vcalls; identical",
+    "PS2 0x00118af0"
+   ]
+  },
+  {
+   "xbox": "0x0006f4d0",
+   "expect": "FUN_0006f4d0",
+   "name": "PhysicsObject::GetCollisionGeometry",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: If +0x4c (PS2 +0x48) null zero outputs, else out=-vcall(), return RSceneObj::GetCollisionGeometry; identical",
+    "PS2 0x00195ae0"
+   ]
+  },
+  {
+   "xbox": "0x0008e060",
+   "expect": "FUN_0008e060",
+   "name": "RSceneObj::GetCollisionGeometry",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of PhysicsObject::GetCollisionGeometry, body review: out=*(this->+0x10 + 0x3c), return +0x60 (PS2 +0xc); called from item 22",
+    "PS2 0x1c98f8"
+   ]
+  },
+  {
+   "xbox": "0x0008d760",
+   "expect": "FUN_0008d760",
+   "name": "RSceneObj::SetVariation",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Tag 0x696e2020 / param|0x696e0000 lookup via DataLocateTag/GetArray on +0x10 (PS2 +0xc); same",
+    "PS2 0x001c7d78"
+   ]
+  },
+  {
+   "xbox": "0x000c95a0",
+   "expect": "FUN_000c95a0",
+   "name": "WRoadNav::ReverseNavDirection",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Flips bool +0x3c, negates dir 0x30..0x38, swaps 0x50/0x60 and 0x70/0x80 triples, 0x40 = |1-x|; same",
+    "PS2 0x00225358"
+   ]
+  },
+  {
+   "xbox": "0x000840b0",
+   "expect": "FUN_000840b0",
+   "name": "RPlayerCamera::PrevCameraMode",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Checks mode table entry (+5 flag or 0x100), steps index backwards (i-1)%count skipping disabled, SetCameraModeByIndex; +0x130 vs +0x120",
+    "PS2 0x001ba6b0"
+   ]
+  },
+  {
+   "xbox": "0x001179f0",
+   "expect": "FUN_001179f0",
+   "name": "UGroup::DataCountType",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Walk group entries, mask tag with 0x2020 when flag bit set, count equal to param; same",
+    "PS2 0x002d5700"
+   ]
+  },
+  {
+   "xbox": "0x00127a70",
+   "expect": "FUN_00127a70",
+   "name": "ASound::ASound",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: ABaseSound base (inlined on PS2) then vtable ASound, AVoice at +0x94, sets two floats to 1.0 at the end; callers ~EPathSFX and missile ctor match",
+    "PS2 0x002ed3d0"
+   ]
+  },
+  {
+   "xbox": "0x00080130",
+   "expect": "FUN_00080130",
+   "name": "RPathEngine::RPathHandle::Init",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Called once per handle in AddInstanceList's last loop; 60.0*param time scale, zero vector at 0x88, 1.0 scales, flag bit 15, VU0_MATRIX4_mult; matches PS2 Init",
+    "PS2 0x001b1258"
+   ]
+  },
+  {
+   "xbox": "0x000e9760",
+   "expect": "FUN_000e9760",
+   "name": "EAGL::DynamicModel::DynamicModel",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Identity 4x4 at 0..0x3c plus zeroed 0x40..0x50; identical, 2 1:1 slots",
+    "PS2 0x00286018"
+   ]
+  },
+  {
+   "xbox": "0x000160e0",
+   "expect": "FUN_000160e0",
+   "name": "EAGL::Transform::TransformPoint",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Affine point transform with in-place (src==dst) branch; rows 0/4/8 + translation 0xc; same",
+    "PS2 0x00293170"
+   ]
+  },
+  {
+   "xbox": "0x00019040",
+   "expect": "FUN_00019040",
+   "name": "ActPoser::SetCrossFadeBlendAnimation",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Sets anim ptr, state 1->2, frame fields, 0.0*rate, clamp <0, reads +0x10c, CalcSnapAndCorrectionMatrices; offsets -4 consistently",
+    "PS2 0x00113760"
+   ]
+  },
+  {
+   "xbox": "0x0008eb60",
+   "expect": "FUN_0008eb60",
+   "name": "RSceneObj::StopFX",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Loops effects (byte +0x1f, stride 0x40, 64-bit mask +0x20) turning each active one off; PS2 calls ToggleEffect(false), Xbox inlines it (clear bit, GFX::Purge); only unnamed call in Missile::Simulate",
+    "PS2 0x001cacb8"
+   ]
+  },
+  {
+   "xbox": "0x000a8ae0",
+   "expect": "FUN_000a8ae0",
+   "name": "_Rb_tree<WCollisionInstance_*,_WCollisionInstance>::find",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Tree lower_bound on uint key then key check -> end or node; std find, the only map lookup in DrawBrokenWindows",
+    "PS2 0x001f13f0"
+   ]
+  },
+  {
+   "xbox": "0x0009ec70",
+   "expect": "FUN_0009ec70",
+   "name": "RLightning::MidPoint::Respawn",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Three GaussRandom offsets scaled by [0x10] plus param_2 on y, random coord from RLightning table, ApplyVariance, rcpRate scale; GetRandomCoord inlined on Xbox",
+    "PS2 0x001e28b8"
+   ]
+  },
+  {
+   "xbox": "0x00116cc0",
+   "expect": "FUN_00116cc0",
+   "name": "VU0_MATRIX4setzrot",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Zero 16 floats, [0]=[5]=cos, [1]=sin, [4]=-sin, [10]=[15]=1; z rotation, args (out,angle) swapped as usual",
+    "PS2 0x002cc610"
+   ]
+  },
+  {
+   "xbox": "0x00092b40",
+   "expect": "FUN_00092b40",
+   "name": "_Rb_tree<StateRef,_StateRef>::insert_unique",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Tree insert_unique returning (iterator,bool) with byte-compare key (Xbox 0x4c bytes, PS2 memcmp 0x80 - platform state size); find sibling is FUN_00092540",
+    "PS2 0x001ceaf0"
+   ]
+  },
+  {
+   "xbox": "0x000bab20",
+   "expect": "FUN_000bab20",
+   "name": "SWeaponManager::GetNextSecondaryType",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Sort list if count 0, find current weapon index (FindSortedSecondary inlined), return list[(i+1)%count]; count +0x178 vs +0x188, list +0xf8 vs +0x108",
+    "PS2 0x0020d608"
+   ]
+  },
+  {
+   "xbox": "0x000e8350",
+   "expect": "FUN_000e8350",
+   "name": "EAGL::RenderContextExtension::GetBackBuffer",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Xbox EAGL implementation: lazily wraps back-buffer surface +0x114 in a texture +0x124/+0x12c; sibling FUN_000e8270 does the same for front buffer +0x110; order matches PS2 RPostProcessing ctor (GetFrontBuffer then GetBackBuffer, PS2 +0x838/+0x83c)",
+    "PS2 0x00291188"
+   ]
+  },
+  {
+   "xbox": "0x00011650",
+   "expect": "FUN_00011650",
+   "name": "ActActor::GetActorLocalPosOri",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Copies 4x4 matrix from (*(this+0xc))+0x100; PS2 same offset, 3 anchors",
+    "PS2 0x00108d48"
+   ]
+  },
+  {
+   "xbox": "0x0008dcb0",
+   "expect": "FUN_0008dcb0",
+   "name": "RSceneObj::SetTransform",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: If +0x28 (PS2 +0x24) zero: copy 4 rows xyz into transform, vcall(1); 3 1:1 slots",
+    "PS2 0x001c9258"
+   ]
+  },
+  {
+   "xbox": "0x000d39f0",
+   "expect": "FUN_000d39f0",
+   "name": "GFXGallery::GET_EffectPosQuat",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Index < 0x200, entry = index*0x90 + [0x1414], else default pos/quat (w=1); identical",
+    "PS2 0x00233f88"
+   ]
+  },
+  {
+   "xbox": "0x0001bbd0",
+   "expect": "FUN_0001bbd0",
+   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::AddReference",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same URefCounter AddReference template as item 4/ModelInfo 0x18030 with its own insert helper FUN_0001baf0; sole call in LoadWeapon",
+    "PS2 0x00117c50"
+   ]
+  },
+  {
+   "xbox": "0x0010b6f0",
+   "expect": "FUN_0010b6f0",
+   "name": "FILESYS_readsync",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Xbox passes ECX=0x10ceb0 (read op) to the shared sync helper FUN_0010b5f0, exactly as named FILESYS_writesync passes 0x10cf20; PS2 readsync passes FILESYS_read to FUN_00254108",
+    "PS2 0x00254218"
+   ]
+  },
+  {
+   "xbox": "0x0010ceb0",
+   "expect": "FUN_0010ceb0",
+   "name": "FILESYS_read",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of FILESYS_readsync, body review: Op function passed by the readsync wrapper (writesync passes 0x10cf20); sits between named FILESYS_close and FILESYS_size",
+    "PS2 0x252d60"
+   ]
+  },
+  {
+   "xbox": "0x000b6d50",
+   "expect": "FUN_000b6d50",
+   "name": "SMissionManager::CheckObjectiveVisibleToUser",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: If arg 0: GetCurrObjective(0), camera pos, distance <= 200, StepCheckHitWorld; same",
+    "PS2 0x00207968"
+   ]
+  },
+  {
+   "xbox": "0x000b6c70",
+   "expect": "FUN_000b6c70",
+   "name": "SMissionManager::GetCurrObjective",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of SMissionManager::CheckObjectiveVisibleToUser, body review: type at +0x724+i*4 (PS2 +0x600, SMissionManager +0x124): 1 -> element, 3 -> RedirectCarpElement + sync, +0x30",
+    "PS2 0x207748"
+   ]
+  },
+  {
+   "xbox": "0x00028630",
+   "expect": "FUN_00028630",
+   "name": "AIElementController::EveryoneChill",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: For each of +0x40 elements (stride 0x100): type 1, +0x77 clear, +0xfc actor: vcalls (0),(0),(1), get vehicle, SetAttackMode(1), SetNavigateMode(1,0); identical",
+    "PS2 0x0012c4c0"
+   ]
+  },
+  {
+   "xbox": "0x000116a0",
+   "expect": "FUN_000116a0",
+   "name": "ActActor::GetWeaponPosition",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Copies 4x4 matrix from base+0x200+idx*0x40 ((idx+8)*0x40 on Xbox); 5 1:1 slots",
+    "PS2 0x00108ec8"
+   ]
+  },
+  {
+   "xbox": "0x0001fac0",
+   "expect": "FUN_0001fac0",
+   "name": "AICharacterEnemySnow::GetRotPos",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: If +0x11c set copy matrix 0xd0, else rigid body [0x5c] rotation + pos 0x10..0x18, w=1; 2-arg overload",
+    "PS2 0x0011e198"
+   ]
+  },
+  {
+   "xbox": "0x000a5c90",
+   "expect": "FUN_000a5c90",
+   "name": "RShadowMap::SetCamera",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Callees agree (GetRigidBody, GetBoundingDimensions, BuildScale/Translate, VU0_MATRIX4_mult); shadow camera setup in RShadowMap::Begin slot",
+    "PS2 0x001ebbe8"
+   ]
+  },
+  {
+   "xbox": "0x00076330",
+   "expect": "FUN_00076330",
+   "name": "Draw::DrawBatchedTexturedQuad",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Batched quad buffer keyed by texture param_7, flush via USimpleTexturedMaterial::Draw when texture changes or batch full; same logic (batch limit 0x78 vs 0x44)",
+    "PS2 0x001a0ff0"
+   ]
+  },
+  {
+   "xbox": "0x000a2140",
+   "expect": "FUN_000a2140",
+   "name": "RParticleSystem::RParticleSystem",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same ctor constants (5.0 at +0x1c, 0x1e, 1.0), system looked up by tag param[0xb] in fManager+8 map, then init data; FindSystemViaTag inlined",
+    "PS2 0x001e5e10"
+   ]
+  },
+  {
+   "xbox": "0x000e8600",
+   "expect": "FUN_000e8600",
+   "name": "EAGL::RenderContext::~RenderContext",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Xbox EAGL implementation: loops DeleteViewPort until list empty, releases D3D resources; sole unnamed call from DeleteRenderContext, PS2 destructor has the same DeleteViewPort loop",
+    "PS2 0x00290c08"
+   ]
+  },
+  {
+   "xbox": "0x0009b070",
+   "expect": "FUN_0009b070",
+   "name": "RDecalManager::AddDecal",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Decal slot +0x294 (0x60 stride), type +0x54 + idx*0x50 (default 1), +0x58 byte; identical layout",
+    "PS2 0x001da6c8"
+   ]
+  },
+  {
+   "xbox": "0x000d34b0",
+   "expect": "FUN_000d34b0",
+   "name": "GFX::PurgeAllEffects",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Xbox is MOV ECX,[glbGfxGallery]; JMP FUN_000d45f0 = PS2 GFX::PurgeAllEffects calling GFXGallery::PurgeAllEffects(glbGfxGallery)",
+    "PS2 0x00232df0"
+   ]
+  },
+  {
+   "xbox": "0x000d45f0",
+   "expect": "FUN_000d45f0",
+   "name": "GFXGallery::PurgeAllEffects",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of GFX::PurgeAllEffects, body review: Loops +0x141c effects via +0x408 index table, 0x90 stride at +0x1414, clears +0x1c, frees 0x40-stride sub-array at +0x54",
+    "PS2 0x2337f8"
+   ]
+  },
+  {
+   "xbox": "0x000d93d0",
+   "expect": "FUN_000d93d0",
+   "name": "GHud::DrawPauseErrors",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Quad + font title/messages from LOCALE 0x139x strings; exact slot in GHud::Draw between DrawSubtitles and DrawPauseMenu; Xbox controller messages replace PS2 multitap ones",
+    "PS2 0x00241f40"
+   ]
+  },
+  {
+   "xbox": "0x0011c0f0",
+   "expect": "FUN_0011c0f0",
+   "name": "InitAllSimpleMaterials",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Calls the three material Init functions in order; allocation sizes (0x2c, 0x3c, 0x3c) match USimpleMaterial/USimpleTexturedMaterial/UVolatileMaterial",
+    "PS2 0x002cf2a8"
+   ]
+  },
+  {
+   "xbox": "0x0011bee0",
+   "expect": "FUN_0011bee0",
+   "name": "USimpleMaterial::Init",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of InitAllSimpleMaterials, body review: First call; allocates 0x2c GeoPrims like PS2 USimpleMaterial::Init",
+    "PS2 0x2cf308"
+   ]
+  },
+  {
+   "xbox": "0x0011bfe0",
+   "expect": "FUN_0011bfe0",
+   "name": "USimpleTexturedMaterial::Init",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of InitAllSimpleMaterials, body review: Second call; 0x3c GeoPrims into DAT_00243710, the table DrawBatchedTexturedQuad hands to USimpleTexturedMaterial::Draw",
+    "PS2 0x2cf6d8"
+   ]
+  },
+  {
+   "xbox": "0x0011c430",
+   "expect": "FUN_0011c430",
+   "name": "UVolatileMaterial::Init",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of InitAllSimpleMaterials, body review: Third call; 0x3c GeoPrims, same order as PS2 InitAllSimpleMaterials",
+    "PS2 0x2cb670"
+   ]
+  },
+  {
+   "xbox": "0x000c7330",
+   "expect": "FUN_000c7330",
+   "name": "WRender::FindVisibleTreeNodesAndCurtains",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Recursive quadtree walk, frustum test with radius*1.414, pushes node, IsInFrustum2d, curtains; same",
+    "PS2 0x0021ef68"
+   ]
+  },
+  {
+   "xbox": "0x0001fb70",
+   "expect": "FUN_0001fb70",
+   "name": "AICharacterEnemySnow::GetRotPos",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: 3-arg GetRotPos overload (PS2 0x11e2f0): matrix as item 53 plus velocity out (+0x110..+0x118 or rigid body +0x20)",
+    "PS2 0x0011e2f0"
+   ]
+  },
+  {
+   "xbox": "0x00095ff0",
+   "expect": "FUN_00095ff0",
+   "name": "RVehicle::SetPerObjectBuffers",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Two fn calls into +0x28c/+0x290, copy 16 dwords from +0x268 at stride 0x10, MEM_copy 0x100 from +0xe0; identical",
+    "PS2 0x001d2b38"
+   ]
+  },
+  {
+   "xbox": "0x000c9130",
+   "expect": "FUN_000c9130",
+   "name": "WRoadNav::Reset",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Zeroes the nav struct fields (+0, +4 byte, vectors 0x10..0x88, flags); 3 1:1 slots",
+    "PS2 0x002233d0"
+   ]
+  },
+  {
+   "xbox": "0x0012b060",
+   "expect": "FUN_0012b060",
+   "name": "ASnowMobile::PlayCarving",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Snowmobile landing sounds: same Lookup strings SFX_heavy1/SFX_med2/SFX_tiressnow with 'Landings' mix, GetAirborneWheels; 1:1 slot in ASnowMobile::Play",
+    "PS2 0x002ee768"
+   ]
+  },
+  {
+   "xbox": "0x000da540",
+   "expect": "FUN_000da540",
+   "name": "GHud::DrawStylin",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same state machine: state 1->2 with timer reset to 3.0, 100/x rate, offsets shift consistently (0x2ec/0x2f0 vs 0x2e8/0x2ec), SPRITE_SetState/Draw2D + cos",
+    "PS2 0x002472b0"
+   ]
+  },
+  {
+   "xbox": "0x0008a550",
+   "expect": "FUN_0008a550",
+   "name": "SetProcAnimParamList",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Identical body: store list ptr+count, null -> default table and count 1",
+    "PS2 0x001bef90"
+   ]
+  },
+  {
+   "xbox": "0x000124f0",
+   "expect": "FUN_000124f0",
+   "name": "ActActor::SetSuppressAnimationTranslation",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Stores flag at [this+4]+0x4c (PS2 +0x50), world pos from actor+0x170, gets origin, keeps y, sets origin; GetActorWorldPosition/GetAnimationOrigin inlined",
+    "PS2 0x0010b180"
+   ]
+  },
+  {
+   "xbox": "0x00018780",
+   "expect": "FUN_00018780",
+   "name": "ActPoser::GetAnimationOrigin",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of ActActor::SetSuppressAnimationTranslation, body review: called on this->+4 in the GetAnimationOrigin slot; copies COORD3 from [+0x24]+0x30..0x38 as PS2 [+0x28]+0x30",
+    "PS2 0x112ce8"
+   ]
+  },
+  {
+   "xbox": "0x00012220",
+   "expect": "FUN_00012220",
+   "name": "ActActor::SetAnimationOrigin",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of ActActor::SetSuppressAnimationTranslation, body review: scales xyz by member, calls poser setter, writes body +0x370/374/378 when flag set - identical to PS2",
+    "PS2 0x10adf8"
+   ]
+  },
+  {
+   "xbox": "0x00018b30",
+   "expect": "FUN_00018b30",
+   "name": "ActPoser::SetAnimationOrigin",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of ActActor::SetSuppressAnimationTranslation, body review: called from ActActor::SetAnimationOrigin in the poser-setter slot; writes [+0x24]+0x30..0x38, mirror of the getter",
+    "PS2 0x112d10"
+   ]
+  },
+  {
+   "xbox": "0x00084030",
+   "expect": "FUN_00084030",
+   "name": "RPlayerCamera::NextCameraMode",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same cycle-to-next-enabled camera mode loop over mode table (stride 0x18 vs 0x1c), guard against current index, then SetCameraModeByIndex",
+    "PS2 0x001ba5c0"
+   ]
+  },
+  {
+   "xbox": "0x00012610",
+   "expect": "FUN_00012610",
+   "name": "AnimationController::~AnimationController",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Base dtor: only sets the AnimationController vtable (pure_virtual first); called by StandardAnimationController deleting dtor and a sibling deleting dtor; Xbox has no delete flag",
+    "PS2 0x00107358"
+   ]
+  },
+  {
+   "xbox": "0x00145760",
+   "expect": "FUN_00145760",
+   "name": "MIXI_reverbblock",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same reverb comb loop: buffer ptrs from p[0]/p[1] into p[3], feedback p[4]/p[5], lowpass p[6..8], 1e-30 denormal bias",
+    "PS2 0x00318840"
+   ]
+  },
+  {
+   "xbox": "0x00071fb0",
+   "expect": "FUN_00071fb0",
+   "name": "RayShell::StaticStoreTracer",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing (rejected) candidate RayShell::StoreTracer, body review: same globals layout: <0x40 guard, start/end copy, sim time, type, two extra words, dist^2>4 then offset start by 2*unit dir",
+    "PS2 0x19a9b8"
+   ]
+  },
+  {
+   "xbox": "0x00129470",
+   "expect": "FUN_00129470",
+   "name": "AGun::~AGun",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Frees +0xc object holding 3 AVoice::View (0x1c vs 0x20 each, 0x58 vs 0x64 total) then releases string members; called from ~ASentry and ~AVehicle on both",
+    "PS2 0x002f7078"
+   ]
+  },
+  {
+   "xbox": "0x000c4d70",
+   "expect": "FUN_000c4d70",
+   "name": "WCollisionMgr::CheckHitWindow",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: 2 anchors 1:1; EHitWindow + OrthoInverse + vect3mult + operator_new shared, large collision routine of matching size",
+    "PS2 0x002153b0"
+   ]
+  },
+  {
+   "xbox": "0x000347e0",
+   "expect": "FUN_000347e0",
+   "name": "AIRoadSpawn::Get",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Returns global fgRoadSpawn, as the PS2 getter; 3 anchors 1:1",
+    "PS2 0x0013c4c8"
+   ]
+  },
+  {
+   "xbox": "0x00096900",
+   "expect": "FUN_00096900",
+   "name": "RViewCamera::SetZBufferRange",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Stores zMin/zMax at +0x40/+0x44 then inlined UpdateForResolution (viewport from resolution * rect)",
+    "PS2 0x001d4660"
+   ]
+  },
+  {
+   "xbox": "0x0008ec20",
+   "expect": "FUN_0008ec20",
+   "name": "RSceneObj::LookupFXHandle",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Loops model FX nodes (count byte +0x1f), type 7 and id match, inlined strcmp on name at +0x18; +0x2c vs +0x28",
+    "PS2 0x001cad58"
+   ]
+  },
+  {
+   "xbox": "0x00055a90",
+   "expect": "FUN_00055a90",
+   "name": "AttributeSystem::RegisterExtensionType",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Takes id from counter at +8, builds entry and inserts into map, increments +8, returns id - PS2 same",
+    "PS2 0x0016e508"
+   ]
+  },
+  {
+   "xbox": "0x00114fe0",
+   "expect": "FUN_00114fe0",
+   "name": "Inverse",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Determinant check against +-1e-05 then cofactor inverse; callers ActActor::Draw/SetupFOVConversion match",
+    "PS2 0x002d1b70"
+   ]
+  },
+  {
+   "xbox": "0x00114f00",
+   "expect": "FUN_00114f00",
+   "name": "Determinant4x4",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of Inverse, body review: only callee of Inverse on both sides; full 4x4 cofactor determinant",
+    "PS2 0x2d1a50"
+   ]
+  },
+  {
+   "xbox": "0x0004f230",
+   "expect": "FUN_0004f230",
+   "name": "ActionQueue::ReceiveAction",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Pushes action into ring buffer at this+4 (index wrap, count cap) and returns 1; PS2 inlines the same push",
+    "PS2 0x001654d8"
+   ]
+  },
+  {
+   "xbox": "0x0007ff60",
+   "expect": "FUN_0007ff60",
+   "name": "RPathEngine::RPathHandle::GetOrientMat",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Copies 4x4 matrix from *this, zeroes translation and w column, [15]=1.0 exactly as PS2",
+    "PS2 0x001b18a8"
+   ]
+  },
+  {
+   "xbox": "0x000d5910",
+   "expect": "FUN_000d5910",
+   "name": "GGallery::Get_InterpolatedKey",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Lerps 3 floats + int 4th between keys, copies remaining fields and short at +0x20 from the first key",
+    "PS2 0x002370e8"
+   ]
+  },
+  {
+   "xbox": "0x00011780",
+   "expect": "FUN_00011780",
+   "name": "ActActor::SetGlobalPoseOverrides",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Thunk: ECX=[[this+4]+0x48] jmp to array SetGlobalPoseOverrides (PS2 [[this+4]+0x4c]); 4 anchors",
+    "PS2 0x00109120"
+   ]
+  },
+  {
+   "xbox": "0x00015d00",
+   "expect": "FUN_00015d00",
+   "name": "ActGlobalPoseOverrideArray::SetGlobalPoseOverrides",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of ActActor::SetGlobalPoseOverrides, body review: loops count at *this, per-bone setter with matrix ptr advancing by 0x40 - identical",
+    "PS2 0x10f620"
+   ]
+  },
+  {
+   "xbox": "0x0003f370",
+   "expect": "FUN_0003f370",
+   "name": "ECollision::ECollision",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Copies by-value event struct (0x54 bytes) into this+4 and sets the ECollision vtable (0x18c49c, also used by ~ECollision)",
+    "PS2 0x00149d30"
+   ]
+  },
+  {
+   "xbox": "0x00031a50",
+   "expect": "FUN_00031a50",
+   "name": "AIHelicopter::FireRockets",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: GetPhysicsObject/GetHitPoints>0, +0x130 check, short countdown +0x112 (PS2 +0x120/+0x102), distance/direction then fire; 1:1",
+    "PS2 0x001387a0"
+   ]
+  },
+  {
+   "xbox": "0x000570c0",
+   "expect": "FUN_000570c0",
+   "name": "AttributeSystem::CreateExtensionAttribute",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Find-or-insert extension type in map, lookup attribute by name, else alloc AttributeValue, init extension, insert, free temps; returns node+0x10 (PS2 +0x14)",
+    "PS2 0x0016dd20"
+   ]
+  },
+  {
+   "xbox": "0x0001c230",
+   "expect": "FUN_0001c230",
+   "name": "AICharacter::GetACharacter",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Lazy-creates ACharacter sound at +0xa4 (PS2 +0x94) via operator_new 'ACharacter' and AMix 'Characters'; 10 anchors",
+    "PS2 0x00118988"
+   ]
+  },
+  {
+   "xbox": "0x000f3790",
+   "expect": "FUN_000f3790",
+   "name": "EAGLInternal::TextureRenderContextPrivate::TextureRenderContextPrivate",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Second sub-object ctor in TextureRenderContext ctor (this+4, owner) after the extension ctor, as PS2 (this+8, owner); stores owner, zeroes members",
+    "PS2 0x00292278"
+   ]
+  },
+  {
+   "xbox": "0x000f3750",
+   "expect": "FUN_000f3750",
+   "name": "EAGL::TextureRenderContextExtension::TextureRenderContextExtension",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of EAGLInternal::TextureRenderContextPrivate::TextureRenderContextPrivate, body review: first call in TextureRenderContext ctor with (this,this); body *this=owner as PS2",
+    "PS2 0x292240"
+   ]
+  },
+  {
+   "xbox": "0x00020e30",
+   "expect": "FUN_00020e30",
+   "name": "AICharacterEnemyDriver::GetRotPos",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Copies rigid body matrix then position from Sim.GetRigidBody(short id) with w=1.0; Xbox copy is ICF-folded with byte-identical AICharacterEnemyWindow::GetRotPos; Driver kept (2 anchors)",
+    "PS2 0x0011aa30"
+   ]
+  },
+  {
+   "xbox": "0x00014760",
+   "expect": "FUN_00014760",
+   "name": "ActCharacter::StartShadow",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Called right before Model::Draw in the shadow pass of ActCharacter::Draw on both sides; Xbox sets stencil state (PS2 empty stub)",
+    "PS2 0x0010d288"
+   ]
+  },
+  {
+   "xbox": "0x000147d0",
+   "expect": "FUN_000147d0",
+   "name": "ActCharacter::EndShadow",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of ActCharacter::StartShadow, body review: called right after the shadow Model::Draw on both sides; disables the stencil enabled by StartShadow",
+    "PS2 0x10d290"
+   ]
+  },
+  {
+   "xbox": "0x00117d60",
+   "expect": "FUN_00117d60",
+   "name": "UGroup::Deserialize",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Identical: if flag, ResolveOffsets; return this",
+    "PS2 0x002d4ce0"
+   ]
+  },
+  {
+   "xbox": "0x000f34b0",
+   "expect": "FUN_000f34b0",
+   "name": "EAGL::TextureRenderContext::NewViewPort",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: EAGLMalloc(0x1a0,'EAGL::Viewport new'), construct, link into list head (+0x28 / next +0x18c vs PS2 +0x44 / +0x194)",
+    "PS2 0x00292418"
+   ]
+  },
+  {
+   "xbox": "0x00023ce0",
+   "expect": "FUN_00023ce0",
+   "name": "AICharacterPedestrian::UpdateClosestPed",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Closest ped search: 9999.9 start, skips own index, same group or -1, copies previous position fields",
+    "PS2 0x001299d0"
+   ]
+  },
+  {
+   "xbox": "0x000f36e0",
+   "expect": "FUN_000f36e0",
+   "name": "EAGL::TextureRenderContext::SetupFrameBuffers",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same slot after NewTextureRenderContext in ROffscreenBuffer ctor and ShadowPrivateData ctor; (trc, colour, optional depth) fills format/size fields, returns 1; platform-specific body of the same EAGL method",
+    "PS2 0x00291af0"
+   ]
+  },
+  {
+   "xbox": "0x000d5d20",
+   "expect": "FUN_000d5d20",
+   "name": "GGallery::GGallery",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: GHud ctor slot, shared strings, FILE_FullPathname/DataLocateTag/GetArray/Deserialize sequence and default colours",
+    "PS2 0x00236738"
+   ]
+  },
+  {
+   "xbox": "0x000c0890",
+   "expect": "FUN_000c0890",
+   "name": "WCollisionMgr::GetBarrierNormal",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: 1:1 in CheckHitWorld; OrthoInverse + vect3mult + segment intersect over barrier, returns bool and normal",
+    "PS2 0x00219630"
+   ]
+  },
+  {
+   "xbox": "0x00076c20",
+   "expect": "FUN_00076c20",
+   "name": "__lower_bound<unsigned_char_*,_unsigned_char,_int>",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing (rejected) candidate RAnimEngine::Handle::FindSystem, body review: halving search on byte array returning first >= key; sole callee of FindSystem on PS2",
+    "PS2 0x1a42c8"
+   ]
+  },
+  {
+   "xbox": "0x00035740",
+   "expect": "FUN_00035740",
+   "name": "AISplinePath::Reset",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Identical: +0x4c from path +0x40, RPathHandle Init with sim time, [+0x60]+0xd0 = path+0x44, GetApplyTransform into +0x70",
+    "PS2 0x0013dcc0"
+   ]
+  },
+  {
+   "xbox": "0x001193c0",
+   "expect": "FUN_001193c0",
+   "name": "CARP::AISpline::GetApplyTransform",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of AISplinePath::Reset, body review: +0x6c flag / +0x40 check then compute transform, else identity copy - as PS2",
+    "PS2 0x2db690"
+   ]
+  },
+  {
+   "xbox": "0x00050db0",
+   "expect": "FUN_00050db0",
+   "name": "DeviceScalar::isCenteredTransition",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same predicate: *[+0x28] within +-v and *[+0x24] outside, returning bool",
+    "PS2 0x00167b18"
+   ]
+  },
+  {
+   "xbox": "0x0007f870",
+   "expect": "FUN_0007f870",
+   "name": "ROffscreenBuffer::MakeTexCopy",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Draws sprite copy then N offset sprites from a +-1 table scaled by param with alpha 0xff/(i+2); Begin/End inlined",
+    "PS2 0x001b09c8"
+   ]
+  },
+  {
+   "xbox": "0x0012dc50",
+   "expect": "FUN_0012dc50",
+   "name": "ASmackable::Detatch",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Checks +0xd0 sound, loaded-mask test over 2 entries, sets flag +0xec else virtual delete",
+    "PS2 0x002efc80"
+   ]
+  },
+  {
+   "xbox": "0x000ca100",
+   "expect": "FUN_000ca100",
+   "name": "WRoadNav::~WRoadNav",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing (rejected) candidate AIVehicle::~AIVehicle, body review: deletes spline at +0x90 as PS2; every caller then frees 0xc0 = PS2 WRoadNav size",
+    "PS2 0x223380"
+   ]
+  },
+  {
+   "xbox": "0x00035b40",
+   "expect": "FUN_00035b40",
+   "name": "AIVehicle::~AIVehicle",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing (rejected) candidate AIVehicle::~AIVehicle, body review: sets vtable, deletes spline path, zeroes two fields, deletes WRoadNav (0xc0) - same sequence as PS2; base dtor call at end of ~AIHelicopter",
+    "PS2 0x13df50"
+   ]
+  },
+  {
+   "xbox": "0x0014e090",
+   "expect": "FUN_0014e090",
+   "name": "RCMP::DECODER::DECODER",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Sets DECODER vtable, copies 16-byte codec descriptor, zeroes decoder ptr and state (vtable moved to front: PS2 +0x14 -> Xbox +0x18); object size 0x1c on both",
+    "PS2 0x00302820"
+   ]
+  },
+  {
+   "xbox": "0x000be540",
+   "expect": "FUN_000be540",
+   "name": "WCollider::WCollider",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Initialises three COORD3 from the zero vector with w=0, zero fields, bool param at +0x61; 2 anchors 1:1",
+    "PS2 0x002117e8"
+   ]
+  },
+  {
+   "xbox": "0x000fbd10",
+   "expect": "FUN_000fbd10",
+   "name": "EAGL::VU0_fastqslerp",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Fast quaternion lerp choosing sign by hemisphere then normalise; separate EAGL copy (global VU0_fastqslerp already at 0x116630), called by EAGLAnim only",
+    "PS2 0x00298478"
+   ]
+  },
+  {
+   "xbox": "0x000b87f0",
+   "expect": "FUN_000b87f0",
+   "name": "SMissionManager::PassObjective",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Inlined GetObjectiveByID list walk, sets status 2, adds points into glbMissionManager+0x768 (inlined AddScore)",
+    "PS2 0x002088b8"
+   ]
+  },
+  {
+   "xbox": "0x000bf210",
+   "expect": "FUN_000bf210",
+   "name": "WCollisionMgr::GetWorldHeightAtPoint",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: WWorldPos + FindClosestFace, GetPlaneY into out param, return found; PS2 callers via inlined AdjustEffectPosition/SetStartConditions",
+    "PS2 0x002151b8"
+   ]
+  },
+  {
+   "xbox": "0x00098210",
+   "expect": "FUN_00098210",
+   "name": "RReflection::GetReflectionMapWarpageData",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: String-keyed slot 'GAME::FishEyeParams' in RegisterSymbols on both; Xbox returns reflection data +0x270 (PS2 stub returns 0)",
+    "PS2 0x001c2898"
+   ]
+  },
+  {
+   "xbox": "0x00098490",
+   "expect": "FUN_00098490",
+   "name": "RReflection::TextureSpecular",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of RReflection::GetReflectionMapWarpageData, body review: 'GAME::ReflectionMap1' and 'GAME::SpecularMap' slots on both",
+    "PS2 0x1c1ad8"
+   ]
+  },
+  {
+   "xbox": "0x000bce90",
+   "expect": "FUN_000bce90",
+   "name": "Util_GenerateMatrix",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Normalise dir, cross with up (0,1,0), normalise, second cross, write rows and identity translation; 3 anchors 1:1",
+    "PS2 0x00210540"
+   ]
+  },
+  {
+   "xbox": "0x00036990",
+   "expect": "FUN_00036990",
+   "name": "AIVehicleController::RegisterSimCarList",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Iterates player physics object list and registers each by type (RegisterSimCar inlined as switch on virtual type)",
+    "PS2 0x0013f1c8"
+   ]
+  },
+  {
+   "xbox": "0x0005ca40",
+   "expect": "FUN_0005ca40",
+   "name": "Float_COORD4toCOORD3",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Copies three floats src->dst; 2 anchors 1:1 and the GetDirectLaneWeights caller path agrees",
+    "PS2 0x0017b900"
+   ]
+  },
+  {
+   "xbox": "0x000baad0",
+   "expect": "FUN_000baad0",
+   "name": "SWeaponManager::GetPreviousSecondaryType",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Sorts if count +0x178==0, finds current in list +0xf8 (PS2 +0x188/+0x108), returns previous with modulo wrap",
+    "PS2 0x0020d598"
+   ]
+  },
+  {
+   "xbox": "0x0007e620",
+   "expect": "FUN_0007e620",
+   "name": "RHighLevelLightManager::AddExplosion",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same size buckets 800/400/200/100 -> 4..0 then light slot search",
+    "PS2 0x001afa88"
+   ]
+  },
+  {
+   "xbox": "0x0014c750",
+   "expect": "FUN_0014c750",
+   "name": "RCMP::AV_PLAYER::GetFrame",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Stores time +0x48, float->uint, decoder(+0x64) GetFrame, stores current frame number +0x44",
+    "PS2 0x00301338"
+   ]
+  },
+  {
+   "xbox": "0x0014dfc0",
+   "expect": "FUN_0014dfc0",
+   "name": "RCMP::DECODER::GetFrame",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of RCMP::AV_PLAYER::GetFrame, body review: ECX=[this+0x64] in GetFrame slot; lazy codec open via callback then vcall - as PS2",
+    "PS2 0x3029f0"
+   ]
+  },
+  {
+   "xbox": "0x0014df90",
+   "expect": "FUN_0014df90",
+   "name": "RCMP::DECODER::GetCurrentFrameNumber",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of RCMP::AV_PLAYER::GetFrame, body review: next call on same decoder; null check on codec (+0x18 vs +0x14) then vcall",
+    "PS2 0x302970"
+   ]
+  },
+  {
+   "xbox": "0x000cc100",
+   "expect": "FUN_000cc100",
+   "name": "WRoadNav::InitAtPoint",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: FindClosestSegmentInd, GetPointOnSegment, left/right drivable dist, GetLinePointIntersect shared; 4 anchors",
+    "PS2 0x00225c48"
+   ]
+  },
+  {
+   "xbox": "0x00036b20",
+   "expect": "FUN_00036b20",
+   "name": "AIZoneController::InZone",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Zone table stride 0x1c, active byte, distance^2 minus radius vs per-type threshold",
+    "PS2 0x00140218"
+   ]
+  },
+  {
+   "xbox": "0x000984b0",
+   "expect": "FUN_000984b0",
+   "name": "RReflection::GetReflectionMatrix",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: String-keyed slot 'GAME::ReflMatrix' in RegisterSymbols on both; Xbox returns reflection data +0x140 (PS2 stub returns 0)",
+    "PS2 0x001c28a8"
+   ]
+  },
+  {
+   "xbox": "0x0011c210",
+   "expect": "FUN_0011c210",
+   "name": "UVolatileMaterial::UVolatileMaterial",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: GeoPrimState ctor, transparency/state setters, zero 4 dwords (+0x50.. vs +0x80..); 1:1 in RLightning ctor",
+    "PS2 0x002cb860"
+   ]
+  },
+  {
+   "xbox": "0x0012f9e0",
+   "expect": "FUN_0012f9e0",
+   "name": "AEngine::RemoveAll",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Loops while engine list non-empty, removes head element (+0x90 vs +0x94) and deletes it; Remove inlined",
+    "PS2 0x002fabe8"
+   ]
+  },
+  {
+   "xbox": "0x000f5b60",
+   "expect": "FUN_000f5b60",
+   "name": "EAGL::DrawTextured::~DrawTextured",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Destructor of the DrawTextured local in PlayMPC::Play (also in its unwind funclet): frees vertex/pixel shaders made by Init, then ~GeoPrimState",
+    "PS2 0x0029cdd0"
+   ]
+  },
+  {
+   "xbox": "0x000f5a10",
+   "expect": "FUN_000f5a10",
+   "name": "EAGL::DrawTextured::DrawTextured",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of EAGL::DrawTextured::~DrawTextured, body review: constructs the same local in PlayMPC::Play before Init; GeoPrimState ctor",
+    "PS2 0x29ccd8"
+   ]
+  },
+  {
+   "xbox": "0x000f5a30",
+   "expect": "FUN_000f5a30",
+   "name": "EAGL::DrawTextured::Init",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of EAGL::DrawTextured::~DrawTextured, body review: called right after the ctor on the local; sets prim states, allocates shaders",
+    "PS2 0x29ae48"
+   ]
+  },
+  {
+   "xbox": "0x00096060",
+   "expect": "FUN_00096060",
+   "name": "RVehicle::ComputeWheels",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same offsets +0x328/+0x32c/+0x338, clamps 0.075/0.1, factors 0.07/0.15, per-wheel setyrot",
+    "PS2 0x001d2cb0"
+   ]
+  },
+  {
+   "xbox": "0x00023ba0",
+   "expect": "FUN_00023ba0",
+   "name": "AICharacterPedestrian::SetTarget",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: State 4 of DoDodging calls it on this+0x170 exactly where PS2 calls SetTarget(&field) under (flags&3); body stores a 12-byte vector at +0x190 (PS2 +0x1a0) and state 0 inlines the same store; the rival 0x116090 is a 2D distance",
+    "PS2 0x00129098"
+   ]
+  },
+  {
+   "xbox": "0x001440b0",
+   "expect": "FUN_001440b0",
+   "name": "stretchframesneeded",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same fields +0x38/+0x30/+0x2c/+0x24, frame loop doubling the count and calling the stretch helper; only caller SFILTER_timestretch",
+    "PS2 0x00316e28"
+   ]
+  },
+  {
+   "xbox": "0x0010bc40",
+   "expect": "FUN_0010bc40",
+   "name": "ASYNCFILE_load",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Takes a free node, fills [2..6],[9],[10]=param_2,[0xb], FILESYS_open(name,1,100,node), stores [7] - same field order as PS2",
+    "PS2 0x002569a8"
+   ]
+  },
+  {
+   "xbox": "0x000bd250",
+   "expect": "FUN_000bd250",
+   "name": "Util_PerturbVector",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Two Util_GaussRandom draws scaled by param, setyrot + rotate, then z-rotation (FUN_00116cc0) + rotate, result vector copied out",
+    "PS2 0x00210c10"
+   ]
+  },
+  {
+   "xbox": "0x000b9ac0",
+   "expect": "FUN_000b9ac0",
+   "name": "SMissionRule::~SMissionRule",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Non-deleting base dtor: only stores vtable 0x1935c0, called from 6 SRule* scalar_deleting_destructors (4 votes, all 1:1); PS2 same vtable store (+0x10 GCC layout) plus delete flag",
+    "PS2 0x00209360"
+   ]
+  },
+  {
+   "xbox": "0x00116c20",
+   "expect": "FUN_00116c20",
+   "name": "VU0_MATRIX4setxrot",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: cos/sin of angle, zero 16 floats, [5]=[10]=cos, [6]=sin, [9]=-sin, [0]=[15]=1 - x-rotation exactly",
+    "PS2 0x002cc510"
+   ]
+  },
+  {
+   "xbox": "0x000d5b70",
+   "expect": "FUN_000d5b70",
+   "name": "GGallery::QUAD_Interpolate",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Copy, then four COLOR_Interpolate calls on words 0-3 and linear lerp of words 4..0xb, same (a,b,out,t) roles as PS2",
+    "PS2 0x00238518"
+   ]
+  },
+  {
+   "xbox": "0x000e3c30",
+   "expect": "FUN_000e3c30",
+   "name": "GSystem::COLOR_Interpolate",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of GGallery::QUAD_Interpolate, body review: Per-byte lerp of 4 channels of two packed colours by t; the 4 calls in QUAD_Interpolate like PS2",
+    "PS2 0x0024b4a8"
+   ]
+  },
+  {
+   "xbox": "0x0007efb0",
+   "expect": "FUN_0007efb0",
+   "name": "RLightManager::RefreshLightBlocks",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Loop of 4 light-block rebuilds then +0x84/+0x94(1.0)/+0xa4 and +0xf4/+0x104(1.0)/+0x114 - PS2's +0x88/0x98/0xa8/0xf8/0x108/0x118 shifted -4",
+    "PS2 0x001b0158"
+   ]
+  },
+  {
+   "xbox": "0x000be8b0",
+   "expect": "FUN_000be8b0",
+   "name": "WCollisionInstance::MakeMatrix",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Copies row0, zeroes w, (flags&3)==0 -> (0,1,0) else cross product into row1, row2 copied, optional translation row else identity - PS2 MakeMatrix exactly",
+    "PS2 0x00212ed0"
+   ]
+  },
+  {
+   "xbox": "0x00050d50",
+   "expect": "FUN_00050d50",
+   "name": "DeviceScalar::isDownTransitionThreshold",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Returns 1 iff param <= *[+0x28] and param > *[+0x24] - identical comparison chain and fields",
+    "PS2 0x00167a98"
+   ]
+  },
+  {
+   "xbox": "0x0008dcf0",
+   "expect": "FUN_0008dcf0",
+   "name": "RSceneObj::GetInstanceSystemID",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Bounds check against byte +0x1c of the instance table, (idx+1)*0x40 entry, byte at ptr+0x1a+(flag>>7) - same as PS2 (table ptr +0x2c vs +0x28)",
+    "PS2 0x001c9328"
+   ]
+  },
+  {
+   "xbox": "0x00090280",
+   "expect": "FUN_00090280",
+   "name": "URefCounter<RCARPFile>::AddReference",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: URefCounter template body: copy name, map lower_bound + stricmp, insert on miss, refcount; callers RSceneObj::Load/PreLoad on both",
+    "PS2 0x001cbc10"
+   ]
+  },
+  {
+   "xbox": "0x00036bb0",
+   "expect": "FUN_00036bb0",
+   "name": "AIZoneController::RegisterZone",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Zone-type count check, scan of 30 x 0x1c zone slots tracking the first free, InZone test, then fill free slot (type, pos, radius, short) and bump count",
+    "PS2 0x001402f8"
+   ]
+  },
+  {
+   "xbox": "0x0012ea60",
+   "expect": "FUN_0012ea60",
+   "name": "AVehicleWind::~AVehicleWind",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Frees the View array at +8 (FastFree 0x58 vs PS2 100); in ~AVehicle it is called in the AVehicleWind slot (+0x1d8, after the +0x1d4 View array) matching PS2 order",
+    "PS2 0x002fedd8"
+   ]
+  },
+  {
+   "xbox": "0x00094ed0",
+   "expect": "FUN_00094ed0",
+   "name": "URefCounter<RTextureContext>::AddReference",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same URefCounter::AddReference template body (copy name, map find, stricmp, insert); caller RTextureContextManager::NewContext on both sides",
+    "PS2 0x001d1148"
+   ]
+  },
+  {
+   "xbox": "0x000ad1a0",
+   "expect": "FUN_000ad1a0",
+   "name": "RigidBody::ModifyAngularMomentum",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Transforms param by matrix at +0x5c (vect3mult) then adds into +0x50 - PS2 VU0 sequence identical",
+    "PS2 0x001f8168"
+   ]
+  },
+  {
+   "xbox": "0x00050c70",
+   "expect": "FUN_00050c70",
+   "name": "DeviceScalar::isDownTransition",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Type==2: *[10]==1.0 && *[9]==0.0; else *[10]>=0.5 && *[9]<0.5 - same constants and fields",
+    "PS2 0x001678f8"
+   ]
+  },
+  {
+   "xbox": "0x000eca20",
+   "expect": "FUN_000eca20",
+   "name": "EAGL::TAR::TAR",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Constructor filling the TAR extension fields then calling the Init helper with the data arg; 7 anchors (4 as 1:1 slots) incl. LoadTexture, GHud, GLoadingScreen",
+    "PS2 0x0027e1e8"
+   ]
+  },
+  {
+   "xbox": "0x0002b0c0",
+   "expect": "FUN_0002b0c0",
+   "name": "AIGroundVehicle::GetHeliCollNav",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Timer at +0xfc (PS2 +0x108) +0xf vs sim frame, pos + 0.25*vel, nav type=5, InitAtPoint with rigid-body dir, dot with param and ReverseNavDirection if <0, returns nav",
+    "PS2 0x00135018"
+   ]
+  },
+  {
+   "xbox": "0x000644c0",
+   "expect": "FUN_000644c0",
+   "name": "PBondCar::ProcessSubmarinePhysics",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Only 1:1 slot in PBondCar::Simulate with a shared string; calls ModifyAngularMomentum (0xad1a0) and setxrot (0x116c20) as PS2 does",
+    "PS2 0x00190f88"
+   ]
+  },
+  {
+   "xbox": "0x0001c9c0",
+   "expect": "FUN_0001c9c0",
+   "name": "AICharacter::MoveToPoint",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: GetActorWorldPosition - GetAnimationOrigin, param - that, bool arg keeps/clears y, SetAnimationOrigin; actor via [this+0xa8]+8 (PS2 +0x98)",
+    "PS2 0x00119140"
+   ]
+  },
+  {
+   "xbox": "0x00011670",
+   "expect": "FUN_00011670",
+   "name": "ActActor::GetActorWorldPosition",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of AICharacter::MoveToPoint, body review: Copies 4 words from [this+0xc]+0x170 - same as PS2",
+    "PS2 0x00108e98"
+   ]
+  },
+  {
+   "xbox": "0x000121f0",
+   "expect": "FUN_000121f0",
+   "name": "ActActor::GetAnimationOrigin",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of AICharacter::MoveToPoint, body review: ActPoser::GetAnimationOrigin then scale by +0x34 (PS2 +0x48)",
+    "PS2 0x0010ad90"
+   ]
+  },
+  {
+   "xbox": "0x000d7770",
+   "expect": "FUN_000d7770",
+   "name": "GGirlieMaterial::GGirlieMaterial",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: GGirlieMaterial ctor: vtable, the same run of 0/1.0 field inits, TAR and SHAPE_create callees; shared string with PS2",
+    "PS2 0x0023a488"
+   ]
+  },
+  {
+   "xbox": "0x00084850",
+   "expect": "FUN_00084850",
+   "name": "RPlayerCamera::TriggerFixedCamera",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Index bounds vs camera count, scan entries with type 0x10 (stride 0x18) counting down, store 4-word vector, SetCameraModeByIndex",
+    "PS2 0x001bcab8"
+   ]
+  },
+  {
+   "xbox": "0x000e4900",
+   "expect": "FUN_000e4900",
+   "name": "EAGL::ViewPort::SetOrthographic",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Resets projection to identity then ortho matrix from render/texture context size with (near,far) args and marks projection type; callers DrawRegions, ROffscreenBuffer, ~ESetVideo, RunTheGame path on both",
+    "PS2 0x00295db8"
+   ]
+  },
+  {
+   "xbox": "0x0009a4d0",
+   "expect": "FUN_0009a4d0",
+   "name": "RColorize::EnableMotionBlur",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Stores param at +0x50 and zeroes +0x34 - identical",
+    "PS2 0x001d9010"
+   ]
+  },
+  {
+   "xbox": "0x00114e40",
+   "expect": "FUN_00114e40",
+   "name": "TransformPoint",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Full 4-component matrix*vector (FUN_00116280 uses v[0..3]) = PS2 COORD4 overload at 0x2d1920; Xbox MATRIX4_TransformPoint 0x114e20 is the COORD3 one",
+    "PS2 0x002d1920"
+   ]
+  },
+  {
+   "xbox": "0x000c5380",
+   "expect": "FUN_000c5380",
+   "name": "WCollisionMgr::Restart",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Clears the tree at +0x18, walks the map at +0x24 setting node.key+0x1c = node.value, clears it - PS2 +0x14/+0x20 map with the same key+0x1c = value store",
+    "PS2 0x002134a8"
+   ]
+  },
+  {
+   "xbox": "0x00035680",
+   "expect": "FUN_00035680",
+   "name": "AISplinePath::AISplinePath",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Identity copy, bytes 0x40=2/0x41=0xfa/0xc=0x10/0xd=0xff, +0x4c=spline+0x40, +0x58=0.5, CreatePathHandle -> +0x60, handle+0xd0=spline+0x44, GetApplyTransform(+0x70) - identical",
+    "PS2 0x0013da80"
+   ]
+  },
+  {
+   "xbox": "0x00080700",
+   "expect": "FUN_00080700",
+   "name": "RPathEngine::CreatePathHandle",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of AISplinePath::AISplinePath, body review: (this, this+0x40, sim time) result stored at +0x60 exactly where PS2 calls CreatePathHandle",
+    "PS2 0x001b1c20"
+   ]
+  },
+  {
+   "xbox": "0x00011770",
+   "expect": "FUN_00011770",
+   "name": "ActActor::SetGlobalPoseOverride",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: mov ecx,[[ecx+4]+0x48]; jmp ActGlobalPoseOverrideArray::SetGlobalPoseOverride - PS2 passes [[this+4]+0x4c]",
+    "PS2 0x00109100"
+   ]
+  },
+  {
+   "xbox": "0x00015b40",
+   "expect": "FUN_00015b40",
+   "name": "ActGlobalPoseOverrideArray::SetGlobalPoseOverride",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of ActActor::SetGlobalPoseOverride, body review: Copies matrix to [+8]+i*0x40, sets flag in [+0x18], if +0x14==0 swaps/negates rows, stores float in [+0xc]; tail-jump target of SetGlobalPoseOverride",
+    "PS2 0x0010f378"
+   ]
+  },
+  {
+   "xbox": "0x00052170",
+   "expect": "FUN_00052170",
+   "name": "Int_AttribByteOffsetParserFunc",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Comma/semicolon tokenizer into 16-byte buffer, atoi per token into dest+offset; only caller LookupInt (identical sibling of 189, split by caller)",
+    "PS2 0x0016c010"
+   ]
+  },
+  {
+   "xbox": "0x0001ad00",
+   "expect": "FUN_0001ad00",
+   "name": "ActWeapon::SetTransformToWorldSpace",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Lazily new(0x40) at +0x13c and +0x140, copy both matrices - identical fields",
+    "PS2 0x00116498"
+   ]
+  },
+  {
+   "xbox": "0x0012f700",
+   "expect": "FUN_0012f700",
+   "name": "URefCounter<AEngine>::AddReference",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same URefCounter::AddReference template body; only caller AEngine::Get",
+    "PS2 0x002fb630"
+   ]
+  },
+  {
+   "xbox": "0x000b8900",
+   "expect": "FUN_000b8900",
+   "name": "SMissionManager::DestroyRuleList",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing (rejected) candidate SMissionManager::Unload, body review: Deletes each rule of a list via deleting dtor then clears; called for +0x30 and 64 lists in ~SMissionManager like PS2 Unload's 0x20 + 64",
+    "PS2 0x00206280"
+   ]
+  },
+  {
+   "xbox": "0x0012e250",
+   "expect": "FUN_0012e250",
+   "name": "ATurret::~ATurret",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Frees the View arrays at +8, +0xc, +4 in that order (FastFree 0x58) - PS2 ATurret order 8, 0xc, 4; ~AVehicle frees it with size 0x14 in the turret slot; ATurret::ATurret at 0x12e220 adjacent",
+    "PS2 0x002e5148"
+   ]
+  },
+  {
+   "xbox": "0x00128330",
+   "expect": "FUN_00128330",
+   "name": "AZoomObj::~AZoomObj",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing (rejected) candidate AZoomObj::~AZoomObj, body review: Frees only the View array at +4; ~AVehicle frees it with FastFree 0x10 = PS2 AZoomObj size, zoomer slot after turret",
+    "PS2 0x002dcbb0"
+   ]
+  },
+  {
+   "xbox": "0x0014b380",
+   "expect": "FUN_0014b380",
+   "name": "STREAM_taphandle",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Checks 'STRM' magic, 0<idx<=count, returns table-0x10+idx*0x10 - PS2 same with count/table fields shifted",
+    "PS2 0x00305e58"
+   ]
+  },
+  {
+   "xbox": "0x001192d0",
+   "expect": "FUN_001192d0",
+   "name": "CARP::PathInfo::EvaluateMatrix",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: -1 check at +0x10 -> copy translation row of the matrix and zero outputs, else evaluate by flag bit, then the +0xc channel; callers RPathHandle::Update/Init and GetApplyTransform",
+    "PS2 0x002db370"
+   ]
+  },
+  {
+   "xbox": "0x00052210",
+   "expect": "FUN_00052210",
+   "name": "UInt_AttribByteOffsetParserFunc",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same tokenizer/atoi body as the Int variant; only caller LookupUInt",
+    "PS2 0x0016c0f0"
+   ]
+  },
+  {
+   "xbox": "0x00115600",
+   "expect": "FUN_00115600",
+   "name": "FindOBBIntersect",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Unit dir, sign-matched box extents, per-axis ratios with 0.0001 guard, 3 iterations with 0x4e6e6b28 sentinel and +0.1 tolerance - identical",
+    "PS2 0x002d3950"
+   ]
+  },
+  {
+   "xbox": "0x000cf0f0",
+   "expect": "FUN_000cf0f0",
+   "name": "WTree::InitializeTree",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Self-recursive over 4 children at +0/+0x10/+0x20/+0x30 with depth+1 and doubled x/y, fields +0xd/+0xe/+0xf and [1]=0",
+    "PS2 0x0022c730"
+   ]
+  },
+  {
+   "xbox": "0x000762d0",
+   "expect": "FUN_000762d0",
+   "name": "Draw::DrawQuad",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Builds a 4-entry colour array from param_2 and draws the quad (DrawQuadC inlined into USimpleMaterial::Draw)",
+    "PS2 0x001a0450"
+   ]
+  },
+  {
+   "xbox": "0x000b3fc0",
+   "expect": "FUN_000b3fc0",
+   "name": "Simulation::DeleteDeadObjects",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Sets the delete flag global to 1, walks dead objects, EndMissileCamera if it is the missile target, deleting dtor, then clears the container",
+    "PS2 0x00200600"
+   ]
+  },
+  {
+   "xbox": "0x0012e190",
+   "expect": "FUN_0012e190",
+   "name": "ASceneObj::ASceneObj",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: ABaseSound base ctor then ASceneObj fields and vtable 0x1a2f80 (shared with ASceneObj::~ASceneObj); called from ASentry, AVehicle, ASmackable ctors",
+    "PS2 0x002f0480"
+   ]
+  },
+  {
+   "xbox": "0x000a7ac0",
+   "expect": "FUN_000a7ac0",
+   "name": "RVehicleParticle::UpdateCar",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: bool arg: off -> clear 14 emitters; on -> clamp vehicle id to 0xff into 5 blocks, per-wheel loop with surface types, 3.66 offset, insert into the active set",
+    "PS2 0x001ee4a0"
+   ]
+  },
+  {
+   "xbox": "0x0012d8b0",
+   "expect": "FUN_0012d8b0",
+   "name": "ASmackable::ASmackable",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: ASceneObj base, vtable, three params stored, AVoice alloc ('AVoice') with (id>>7, id&0x7f) when id>=0",
+    "PS2 0x002ef6f0"
+   ]
+  },
+  {
+   "xbox": "0x000d9c50",
+   "expect": "FUN_000d9c50",
+   "name": "GHud::DrawGadget",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: +0x420>0, index +0x41c<6 selects key set, smoothstep of +0x424/0.5, +0x428 alpha, SPRITE_SetState/Draw2D",
+    "PS2 0x00244f88"
+   ]
+  },
+  {
+   "xbox": "0x0009d2d0",
+   "expect": "FUN_0009d2d0",
+   "name": "REmpBolts::GetRandomAnchor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: map[key] (operator[] out of line) then LCG pick (seed*mult & 0xffff, >>8, *count >>16) from the anchor vector",
+    "PS2 0x001dcd00"
+   ]
+  },
+  {
+   "xbox": "0x000fd730",
+   "expect": "FUN_000fd730",
+   "name": "EAGLAnim::FnRawStateChan::Decode",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Walks channel descriptors at +0xc (count byte +8, entries from +10), switch on top 3 bits pulling 1/2/.. bits from the stream",
+    "PS2 0x00266dc8"
+   ]
+  },
+  {
+   "xbox": "0x00081890",
+   "expect": "FUN_00081890",
+   "name": "RPlayerCamera::GetForwardAimVec4",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: t==1 -> +0x180, t==0 -> +0x30, else lerp into a static vector - PS2 +0x170/+0x20 (shift +0x10)",
+    "PS2 0x001bcca0"
+   ]
+  },
+  {
+   "xbox": "0x00090cf0",
+   "expect": "FUN_00090cf0",
+   "name": "RSkeletalObj::UpdateSpringMassSystem",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Only call inside RSkeletalObj::UpdatePosition's bone loop on both sides, same argument set (rigid body, bone, spring data, axis, angle...)",
+    "PS2 0x001cc9b0"
+   ]
+  },
+  {
+   "xbox": "0x0001cc30",
+   "expect": "FUN_0001cc30",
+   "name": "AICharacterBond::GetRotPos",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Copies player rigid-body rotation matrix (+0x5c) and position (+0x10..0x18), w=1",
+    "PS2 0x00119b98"
+   ]
+  },
+  {
+   "xbox": "0x0011c7c0",
+   "expect": "FUN_0011c7c0",
+   "name": "list<AVoice::View_*,_allocator<AVoice::View_*>_>::remove",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: list<T*>::remove body (unlink, FastFree 0xc, --size); ICF-folded for all pointer lists, name taken from the 2-vote AVoice::View instantiation",
+    "PS2 0x002de738"
+   ]
+  },
+  {
+   "xbox": "0x000b1ff0",
+   "expect": "FUN_000b1ff0",
+   "name": "SimpleRigidBody::CheckCollisions",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Callee set matches: GetSimpleRigidBody, GetCollisionBounds, CheckOBBOverlap, Float_COORD3toCOORD4, VU0_quattom4; only caller DetectCollisionsSRB",
+    "PS2 0x001fd830"
+   ]
+  },
+  {
+   "xbox": "0x000126e0",
+   "expect": "FUN_000126e0",
+   "name": "ActActor::SetNewCrossFadeAnimation",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: +0x50==1 guard (PS2 +0x54), delete old controller, FastAlloc 'AnimationController', CrossFade ctor with (+8,+4,args,0,[+0xc]+0x380); next to SetNewAnimation 0x12640",
+    "PS2 0x00107d08"
+   ]
+  },
+  {
+   "xbox": "0x00011110",
+   "expect": "FUN_00011110",
+   "name": "CrossFadeAnimationController::CrossFadeAnimationController",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of ActActor::SetNewCrossFadeAnimation, body review: Sets vtable 0x189e14 (slot 0 = CrossFadeAnimationController::Update 0x111a0), SetupCrossFadeBlend, ChangeAnimation",
+    "PS2 0x001074b0"
+   ]
+  },
+  {
+   "xbox": "0x000c7270",
+   "expect": "FUN_000c7270",
+   "name": "DistanceCheck2d",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: pos - camera, dot with 2D view dir globals, 2D distance minus radius global, returns 0/1/2 by +-param - same as PS2",
+    "PS2 0x0021e9f0"
+   ]
+  },
+  {
+   "xbox": "0x00125a70",
+   "expect": "FUN_00125a70",
+   "name": "URefCounter<AFader>::AddReference",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same URefCounter::AddReference template body; only caller AFader::Create",
+    "PS2 0x002fa1a8"
+   ]
+  },
+  {
+   "xbox": "0x0014b310",
+   "expect": "FUN_0014b310",
+   "name": "STREAM_setpriority",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: After a handle check, stores the two args at +0x4c/+0x50, where PS2 uses +0x3c/+0x40 (a consistent +0x10 shift); Xbox checks the 'STRM' magic inline where PS2 validates through FUN_00304e30.",
+    "PS2 0x305d38"
+   ]
+  },
+  {
+   "xbox": "0x0008d440",
+   "expect": "FUN_0008d440",
+   "name": "RRenderWorldCulling::Setup2dFrustrum",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Both call InitializePlaneInfo only when the fov/dist fields (+0x64/+0x68) differ, then atan of pos x/z, setyrot, rotate 5 planes, and the ABS(+0x24)*-0.2 scaleadd; Xbox transposes at the end.",
+    "PS2 0x1c6858"
+   ]
+  },
+  {
+   "xbox": "0x0008d370",
+   "expect": "FUN_0008d370",
+   "name": "RRenderWorldCulling::InitializePlaneInfo",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of RRenderWorldCulling::Setup2dFrustrum, body review: Same body: stores fov/dist at +0x64/+0x68, cos/sin(fov*1/360) to +0x6c/+0x8c, length, then +0x80/+0x84=0, +0x88=dist*0.5, and normalised +0x7c/+0x90. Its only callers are Setup2dFrustrum and the ctor, as on PS2.",
+    "PS2 0x1c6b70"
+   ]
+  },
+  {
+   "xbox": "0x0008d420",
+   "expect": "FUN_0008d420",
+   "name": "RRenderWorldCulling::RRenderWorldCulling",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of RRenderWorldCulling::Setup2dFrustrum, body review: The PS2 ctor(float,float) is InitializePlaneInfo(a,b) and return this. Xbox 0x8d420 is identical and is the other caller of 0x8d370.",
+    "PS2 0x1c6588"
+   ]
+  },
+  {
+   "xbox": "0x001067c0",
+   "expect": "FUN_001067c0",
+   "name": "EAGLAnim::AttributeBlock::FindAttribute",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing (rejected) candidate EAGLAnim::AttributeBlock::GetAttribute, body review: Same binary search over the count at [0] and ushort ids at +4 stride 8; returns the entry pointer or 0.",
+    "PS2 0x266cc8"
+   ]
+  },
+  {
+   "xbox": "0x00106800",
+   "expect": "FUN_00106800",
+   "name": "EAGLAnim::AttributeBlock::GetAttribute",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing (rejected) candidate EAGLAnim::AttributeBlock::GetAttribute, body review: FindAttribute(id), then on a hit *out = entry[1] and return true. This matches PS2 0x266d30 (the inline-search overload that stores piVar1[1]), not the memcpy overload at 0x266ba0.",
+    "PS2 0x266d30"
+   ]
+  },
+  {
+   "xbox": "0x00019ad0",
+   "expect": "FUN_00019ad0",
+   "name": "ActSkeleton::BlendBones",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same per-bone loop: VU0_fastqslerp at +0x10, then a lerp of +0x20/+0x24/+0x28 when flag==1 or index==[+0x18], with stride 0x30. Xbox inlines GetNumBones as [[+8]+8].",
+    "PS2 0x114aa8"
+   ]
+  },
+  {
+   "xbox": "0x000c5500",
+   "expect": "FUN_000c5500",
+   "name": "WCollisionMgr::WCollisionMgr",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same ctor: two STL trees at +0x18/+0x24 (PS2 +0x14/+0x20), [0..4]=0, [0xb]=0xf0 and [0xc]=0 on both.",
+    "PS2 0x213110"
+   ]
+  },
+  {
+   "xbox": "0x00012350",
+   "expect": "FUN_00012350",
+   "name": "ActActor::RotateActor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Calls Poser::Rotate(angle) first, then if flag +0x14 builds a y-rotation from cos/sin into the matrix at [+0xc]+0x340 via VU0_MATRIX4_mult, as PS2.",
+    "PS2 0x10afc0"
+   ]
+  },
+  {
+   "xbox": "0x00074770",
+   "expect": "FUN_00074770",
+   "name": "Shell::Shell",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: PhysicsObject(\"weapon\",\"Shell\",7) base ctor and a SimpleRigidBody set-up from the same args, as PS2 Shell::Shell. It is the only 1:1 slot in SpawnShellObject.",
+    "PS2 0x19cd90"
+   ]
+  },
+  {
+   "xbox": "0x0014e070",
+   "expect": "FUN_0014e070",
+   "name": "RCMP::CODEC_IDATA::CODEC_IDATA",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Identical 4-field ctor with the same store order ([3]=p4, [0]=p1, [1]=p2, [2]=p3) that returns this; the only caller on both sides is GetFirstFrame.",
+    "PS2 0x302b48"
+   ]
+  },
+  {
+   "xbox": "0x000cbcf0",
+   "expect": "FUN_000cbcf0",
+   "name": "WRoadNav::ChangeLanes",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same fields: if p2>0 it sets +0x98/+0x9c from +0xa0, then +0xa0=p1, +0xa4=0, +0xa8=0, +0xac=p2; otherwise it rebuilds lane splines from fSegments[+0x3e].",
+    "PS2 0x226f18"
+   ]
+  },
+  {
+   "xbox": "0x00037a70",
+   "expect": "FUN_00037a70",
+   "name": "OBB::OBB",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Trivial ctor (mov eax,ecx; ret), but the caller set is identical on both sides: Missile::CheckForCollision, RayShell::CollideWithObjects, ~EWakeupSmackable, and CheckCollisions (Xbox 0xb1ff0). There are no other callers, so it has not been folded.",
+    "PS2 0x1f5ce8"
+   ]
+  },
+  {
+   "xbox": "0x000e4ef0",
+   "expect": "FUN_000e4ef0",
+   "name": "EAGL::ViewPort::SetViewMatrix",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Copies the 16-dword matrix into +0x80; if the flag at +0x188 is set, re-begins the view (BeginView), which is PS2's ReBegin. Xbox and PS2 share 3 anchors in 1:1 slots and the same caller set.",
+    "PS2 0x296e80"
+   ]
+  },
+  {
+   "xbox": "0x0006f270",
+   "expect": "FUN_0006f270",
+   "name": "PhysicsObject::GetRadius",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same body: flag bit 0 selects GetRigidBody()->+0x7c or GetSimpleRigidBody()->+0x2c, using the rigid-body slot at +0x4a.",
+    "PS2 0x1956d8"
+   ]
+  },
+  {
+   "xbox": "0x00094c90",
+   "expect": "FUN_00094c90",
+   "name": "RTextureContextManager::KillContext",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Walks the map at this+4 and erases every node whose value equals the arg (Xbox node value +0x10 = PS2 +0x14). Xbox calls the erase as 0x94140 where PS2 inlines the rb-erase and FastFree(0x18).",
+    "PS2 0x1cfe40"
+   ]
+  },
+  {
+   "xbox": "0x0012ceb0",
+   "expect": "FUN_0012ceb0",
+   "name": "ATrafficVehicle::PlaySnowmobileSpecifics",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: The SFX_heavy1 / \"Opponents\" GetVolume / Lookup sound strings are shared (7 strings), with the airborne-wheels gate and the +0x220..+0x238 fields; it is the 1:1 slot in ATrafficVehicle::Play.",
+    "PS2 0x2e5968"
+   ]
+  },
+  {
+   "xbox": "0x000e5cf0",
+   "expect": "FUN_000e5cf0",
+   "name": "EAGL::DynamicLoader::GetRegisteredVar",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing (rejected) candidate EAGL::DynamicLoader::GetRegisteredVar, body review: Body is SymbolPool::Search(&varPool, name, found) (ecx=0x23fb8c). It sits right after RegisterVar (0xe5cc0) and UnRegisterVar (0xe5ce0), the PS2 order, and is called by 0x9ac40 with 'EAGL::ViewPort::gpModelViewProjectionMatrix' as PS2 DrawGouraud does.",
+    "PS2 0x29fd38"
+   ]
+  },
+  {
+   "xbox": "0x0008a520",
+   "expect": "FUN_0008a520",
+   "name": "SetProcAnimXFormList",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Identical: if p1 is non-null, set the global list pointer and count; else the default list with count 1.",
+    "PS2 0x1bef30"
+   ]
+  },
+  {
+   "xbox": "0x00119f50",
+   "expect": "FUN_00119f50",
+   "name": "StringToNumber::StringToNumber",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same: counts the null-terminated 8-byte table, stores count/table, and if the count is >= 0x1f allocates count<<4 with FastAlloc(\"StringToNumber\") and sorts with qsort.",
+    "PS2 0x2ceb18"
+   ]
+  },
+  {
+   "xbox": "0x000b8840",
+   "expect": "FUN_000b8840",
+   "name": "SMissionManager::FailObjective",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Xbox inlines GetObjectiveByID (a list walk matching *entry==id) and sets objective+0x10 = 3, as PS2 piVar1[4]=3; logWarning is stripped in the release build. The sibling (item 248) sets 1.",
+    "PS2 0x208918"
+   ]
+  },
+  {
+   "xbox": "0x000a5530",
+   "expect": "FUN_000a5530",
+   "name": "RScorchWorld::ScorchGround",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same flow: FindClosestFace, early-outs on face flag +0x2d&2, type 6 and +0x34 material, radius = min(size*0.5, 6.0), HeightAtPoint, normal y >= 0.95, then 4 neighbour height probes (<0.15).",
+    "PS2 0x1eb078"
+   ]
+  },
+  {
+   "xbox": "0x0008e010",
+   "expect": "FUN_0008e010",
+   "name": "RSceneObj::ComputeBoundingRadius",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Xbox inlines GetBoundingDimensions as the half extents ((max-min)*0.5 from [+0x10] +0x10..+0x28), then takes the vector length, as PS2 (dims, then length with VU0).",
+    "PS2 0x1c98a0"
+   ]
+  },
+  {
+   "xbox": "0x000eb220",
+   "expect": "FUN_000eb220",
+   "name": "EAGL::TAR::SwapClut",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Called in RuntimeAllocTARConstructor's CLUTNAME branch after the shape_ symbol lookup, where PS2 calls TAR::SwapClut. Like PS2 TARExtension::SwapClut (inlined here), it locates the '*' clut chunk with the same +0x1000 flag relative-offset logic, then uploads it to a D3D palette instead of re-initialising the GS image.",
+    "PS2 0x27e368"
+   ]
+  },
+  {
+   "xbox": "0x000a6a80",
+   "expect": "FUN_000a6a80",
+   "name": "RSniperZoom::SetupVerts",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same loop over the verts at +0xb60: alternating radii from two globals, (i/2)*0.05 (PS2 /20.0), a helper call, alpha from [+8]<<24 and white 0xffffff/0x7f7f7f.",
+    "PS2 0x1ed8d8"
+   ]
+  },
+  {
+   "xbox": "0x00108c00",
+   "expect": "FUN_00108c00",
+   "name": "MATRIX4_mult",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: A 4x4 matrix multiply: copies to the temp at 0x2420f0 when the operands alias, then 4 row calls (hand-written FPU asm rows), as PS2 MATRIX4_mult with its alias temp. It sits in the Xbox MATRIX4_* asm group (multxlate 0x108840, multscale 0x108900).",
+    "PS2 0x25b220"
+   ]
+  },
+  {
+   "xbox": "0x000d0ff0",
+   "expect": "FUN_000d0ff0",
+   "name": "WVisCurtain::WVisCurtain",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Copies two COORD4 refs into [0..3]/[4..7] and sets [3] = distance from p1 to the 0.5 midpoint: CalcRadius inlined. This is the (COORD4&,COORD4&) overload 0x22f660 (the other ctor, 0x22f620, takes six floats).",
+    "PS2 0x22f660"
+   ]
+  },
+  {
+   "xbox": "0x000b8880",
+   "expect": "FUN_000b8880",
+   "name": "SMissionManager::SetCurrentObjective",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Twin of item 238: inlined GetObjectiveByID then objective+0x10 = 1, as PS2 SetCurrentObjective piVar1[4]=1.",
+    "PS2 0x208968"
+   ]
+  },
+  {
+   "xbox": "0x00012420",
+   "expect": "FUN_00012420",
+   "name": "ActActor::RotateActorX",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same as RotateActor (item 221) but calls Poser::RotateX and builds an x-rotation from cos/sin, applied to [+0xc]+0x340.",
+    "PS2 0x10b098"
+   ]
+  },
+  {
+   "xbox": "0x000e6640",
+   "expect": "FUN_000e6640",
+   "name": "EAGL::RenderContext::EndFrame",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Platform EndFrame (texture unbinds, render state resets, D3DDevice_Swap where PS2 waits on DMA and swaps buffers). The PS2 and Xbox callers match in 4 anchors, all 1:1 slots: RRenderer::EndFrame/Flush and GLoadingScreen x2.",
+    "PS2 0x28af48"
+   ]
+  },
+  {
+   "xbox": "0x00132db0",
+   "expect": "FUN_00132db0",
+   "name": "qsort",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: MSVC CRT qsort (median-of-three with _shortsort for spans of 8 or fewer); the same routine as newlib qsort under the same name. The caller set matches: AIElementController::Update, WTargetPicker::UpdateTargets, and StringToNumber (0x119f50, item 237).",
+    "PS2 0x2a8198"
+   ]
+  },
+  {
+   "xbox": "0x0009eae0",
+   "expect": "FUN_0009eae0",
+   "name": "RLightning::Point::Update",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Point update: if t-[+0xc] > 0, pos+vel*dt plus a random coord scaled by [+0x3c] (GetRandomCoord inlined: the table index at fgThis+0x650 advances by 5, &0x3f) into +0x20; else copies pos to +0x20. The early-out matches PS2.",
+    "PS2 0x1e26a0"
+   ]
+  },
+  {
+   "xbox": "0x00097100",
+   "expect": "FUN_00097100",
+   "name": "RWorldCamera::SetViewingTransform",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same offsets shifted +0x10: flag (PS2 +0x50 / Xbox +0x60) = 1, dir = (+0xd0)-(+0xc0) (PS2 +0xc0-+0xb0) normalised, cross products for the up/right rows, w column 0/1, optional copy of arg 2.",
+    "PS2 0x1d5610"
+   ]
+  },
+  {
+   "xbox": "0x000d5a80",
+   "expect": "FUN_000d5a80",
+   "name": "GGallery::FONT_Load",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Identical: FONT_destroy if +0xa8 is set, frees the old buffer at +0xac (MEM_free where PS2 uses FileFree), FileLoad(name), FONT_create into +0xa8.",
+    "PS2 0x2378b8"
+   ]
+  },
+  {
+   "xbox": "0x00014bf0",
+   "expect": "FUN_00014bf0",
+   "name": "ActCharacter::SetAlpha",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: *[+0x68] = round(alpha*255), as PS2 *this->alpha = (int)(a*255 +- 0.5).",
+    "PS2 0x10d1f0"
+   ]
+  },
+  {
+   "xbox": "0x000f59f0",
+   "expect": "FUN_000f59f0",
+   "name": "EAGL::DrawGouraud::InternalFlush",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Called after the region loop in ProfilerRegion::DrawRegions and from DrawRegion, as PS2 InternalFlush (the same 2 callers). The Xbox flush is platform code: if the batch is open (+0x58), D3DDevice_End then Begin(prim).",
+    "PS2 0x29c750"
+   ]
+  },
+  {
+   "xbox": "0x000f3c90",
+   "expect": "FUN_000f3c90",
+   "name": "EAGL::SymbolPool::HashFunction",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing (rejected) candidate strcmp, body review: Identical hash loop (h = h ^ h<<5 ^ c) and return h % this->[+4]; its callers are Search and RemoveSymbol.",
+    "PS2 0x29dd20"
+   ]
+  },
+  {
+   "xbox": "0x00099610",
+   "expect": "FUN_00099610",
+   "name": "RReflection::SetReflectivity",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: First call in SendPerCarInstance's 'car changed' block on both. Uses the same reflectivity table ([+0x4c/+0x58]->+0xa0 + idx*0x80, indexed by the car byte at +0x1c/+0x18) and writes shader constants (car pos at +0x180) where PS2 builds GIF state.",
+    "PS2 0x1c1930"
+   ]
+  },
+  {
+   "xbox": "0x000b2780",
+   "expect": "FUN_000b2780",
+   "name": "Simulation::FindSignature",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Signature lookup: the sign bit selects the table (+0x30 rigid / +0x130 simple, i.e. FindRigidBodySignature/FindSimpleRigidBodySignature inlined), sets *isSimple, index = sig>>24 & 0x7f, returns the index only when the stored signature matches.",
+    "PS2 0x1ff230"
+   ]
+  },
+  {
+   "xbox": "0x0008dc60",
+   "expect": "FUN_0008dc60",
+   "name": "RSceneObj::GetTransform",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Copies the 4x4 from [+0xc] (PS2 this+8) and forces the w column to 0,0,0,1, as PS2. Xbox and PS2 share 3 anchors in 1:1 slots.",
+    "PS2 0x1c9190"
+   ]
+  },
+  {
+   "xbox": "0x000968b0",
+   "expect": "FUN_000968b0",
+   "name": "RViewCamera::RefreshLODMultiplier",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: lodMultiplier (+0x34) = camera->[+0xb4] * (1/33) * (xMax-xMin) * (1/400), the same constants as PS2 (/33 /400).",
+    "PS2 0x1d44c8"
+   ]
+  },
+  {
+   "xbox": "0x0008da60",
+   "expect": "FUN_0008da60",
+   "name": "RSceneObj::RenderAllDeferredEffects",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Loops the same draw-last list as RSceneObj::RenderAllDrawLast (0x1f1cf4/0x1f1d00), calling vtable slot 5 (+0x14), where PS2 RenderArray(0,1,...) calls slot 5 (0x30/0x34) on the same list as RenderAllDrawLast.",
+    "PS2 0x1c85c8"
+   ]
+  },
+  {
+   "xbox": "0x0005e8c0",
+   "expect": "FUN_0005e8c0",
+   "name": "Missile::Missile",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: 8 shared strings; the same callee set (FindPhysicsObjectSignature, GetSimpleRigidBody, RMissileStreak, SetRenderObject, AddReference, stricmp/strcasecmp); the 1:1 slot in SpawnMissileObject.",
+    "PS2 0x180bc8"
+   ]
+  },
+  {
+   "xbox": "0x0002a760",
+   "expect": "FUN_0002a760",
+   "name": "AIGroundVehicle::DisengageAutoDrive",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same sequence: GetPhysicsObject->vslot 17 (Xbox +0x44 / PS2 +0x90/0x94) with 0, then vslot 21 (+0x54 / +0xb0/0xb4). The SetAttackMode/SetNavigateMode effects are inlined as flag stores, then SetSplinePath(0), and +0x178 (PS2 +0x1a4) = 0.",
+    "PS2 0x130f98"
+   ]
+  },
+  {
+   "xbox": "0x00081940",
+   "expect": "FUN_00081940",
+   "name": "RPlayerCamera::SetControlToCPU",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Single store into the sub-object at [+0x354] (a byte at +7 where PS2 stores an int at +0x10), with the same 4 caller dtors on both sides and the same arguments (EControlToCPU 1, EControlToPlayer 0, EControlToSpline 1, EEndControlToSpline 0).",
+    "PS2 0x1bd198"
+   ]
+  },
+  {
+   "xbox": "0x0007d840",
+   "expect": "FUN_0007d840",
+   "name": "RFog::SetFogParams",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Last call of RFog::RFog on both. It inlines CalcFogEnd (end = scale*base, [+4] = [+0x18]*[+0x14]), then pushes start/end/density/mode/colour through 5 render-state setters where PS2 builds the GS fog and calls SetFogColour.",
+    "PS2 0x1ac978"
+   ]
+  },
+  {
+   "xbox": "0x0007d8c0",
+   "expect": "FUN_0007d8c0",
+   "name": "RFog::UpdateScale",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "on the caller chain of RFog::SetFogParams, body review: Same body: if the flag at +8 is set, scale = base(+0x18) - (count(+0xc) - frame)*rate(+0x10), or snaps to the base and clears the flag, then CalcFogEnd (inlined) and SetFogParams (0x7d840). Called from RRenderHigh::Render, as PS2 via StopFrameRender.",
+    "PS2 0x1acb50"
+   ]
+  },
+  {
+   "xbox": "0x000d9b70",
+   "expect": "FUN_000d9b70",
+   "name": "GHud::LetterBoxOff",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: +0x2b4 (PS2 +0x2b0) = arg ? 1 : 3; a +4 shift.",
+    "PS2 0x244ec8"
+   ]
+  },
+  {
+   "xbox": "0x00057240",
+   "expect": "FUN_00057240",
+   "name": "AttributeSystem::RegisterExtensionField",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Called as (type, \"MASS\"/\"HITPOINTS\"/\"DESCRIPTION\"/..., parser, offset, 1, 0, 0) in PhysicsNamespace::PhysicsNamespace, with arguments identical to PS2 RegisterExtensionField. The body looks up the type map, then inserts the field record.",
+    "PS2 0x16e590"
+   ]
+  },
+  {
+   "xbox": "0x000be180",
+   "expect": "FUN_000be180",
+   "name": "WCollider::~WCollider",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Calls Clear, then frees three vectors with the same element sizes (8, 0x28, 8) at +0x54/+0x44/+0x34 (PS2 +0x48/+0x3c/+0x30) in the same order.",
+    "PS2 0x211988"
+   ]
+  },
+  {
+   "xbox": "0x000aadc0",
+   "expect": "FUN_000aadc0",
+   "name": "RParticleSystem::RParticle::ResetParticle",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking candidate, body review: Same particle reset: position jitter with the 16-bit LCG random (*1/32768 range), velocity from emitter dirs +0x30/+0x20 scaled by random ranges, optional 1/60 inherited velocity, life/size bytes, atan and GetCurrentViewPort use.",
+    "PS2 0x1f29d8"
+   ]
+  }
+ ]
+}

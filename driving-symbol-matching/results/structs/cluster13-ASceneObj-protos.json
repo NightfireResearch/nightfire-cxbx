@@ -1,0 +1,34 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0012e190",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "ASceneObj::ASceneObj(char *)"
+  },
+  {
+   "address": "0x0012e1e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ASceneObj::~ASceneObj(void)"
+  },
+  {
+   "address": "0x0012e1f0",
+   "calling_convention": "__thiscall",
+   "return": "ASceneObj *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

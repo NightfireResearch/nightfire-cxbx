@@ -3,14 +3,14 @@
 #include "../../engine/Camera.h"
 #include "../mp/multiplayer.h"
 #include "object.h"
-#include "player.h"
+#include "Player.h"
 #include "../../math/math.h"
 #include "../view.h"
 #include "../../sound/Sound.h"
 #include "../../util/hashtable.h"
 #include "../../util/Random.h"
 #include "../../input.h"
-#include "../../Sound/Sound.h"
+#include "../../sound/Sound.h"
 
 #include "build.h"
 #include "Explode.h"
@@ -21,12 +21,16 @@
 
 #include "car.h"
 
-// Until we implement fully, use the in-game memory addresses
-#define Tanks ((obj_tag**)0x001dc980) // MAX_TANKS? entries
-#define NumTanks U16_AT(0x001dc798)
-#define TankSpawns (*(_MATRIX(*)[8])0x001dc7a0)
-
 #define MAX_TANKS 8 // Locations defined on the map
+
+// Until we implement fully, use the in-game memory addresses
+// XBE_GLOBAL(0x001dc980, 0x20)
+static obj_tag* Tanks[MAX_TANKS]; // the original Car_Init clears all 0x20 bytes
+// XBE_GLOBAL(0x001dc798, 0x2)
+static uint16_t NumTanks;
+// XBE_GLOBAL(0x001dc7a0, 0x1e0)
+static _MATRIX TankSpawns[8];
+
 
 // WIP
 void Car_CollisionHandler(obj_tag* me) {

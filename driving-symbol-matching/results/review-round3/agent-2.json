@@ -1,0 +1,494 @@
+[
+ {
+  "row": 6522,
+  "ps2": "0x0026b9d0",
+  "verdict": "reject",
+  "why": "Body is a this-adjusting thunk forwarding a vtable call (EvalSQT slot of another class's vtable at 0x3afb1c), not a destructor; real ~FnDeltaQFast is 0x26d468 (see extras)."
+ },
+ {
+  "row": 6523,
+  "ps2": "0x0026bbc8",
+  "verdict": "accept",
+  "why": "Stores the memory map, fetches ConstBoneIdx/ConstPhysical, allocates the +0x10/+0x20/+0x2c buffers and UnQuantizes min-ranges: SetAnimMemoryMap."
+ },
+ {
+  "row": 6524,
+  "ps2": "0x0026bd08",
+  "verdict": "accept",
+  "why": "(time, out, mask) evaluator that delegates to the Mask variant when mask!=0 and calls UpdateNextQs (0x26c4f8): EvalSQT."
+ },
+ {
+  "row": 6525,
+  "ps2": "0x0026c4f8",
+  "verdict": "accept",
+  "why": "Called only from EvalSQT; (this, DeltaQFast*, int frame, ...) rebuilds the next quaternion buffer via UnQuantize/delta add: UpdateNextQs."
+ },
+ {
+  "row": 6526,
+  "ps2": "0x0026c6e8",
+  "verdict": "accept",
+  "why": "Masked twin of EvalSQT (tracks mask at +0x3c) called from it and calling UpdateNextQsMask: EvalSQTMask."
+ },
+ {
+  "row": 6613,
+  "ps2": "0x0026fea0",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, \"EAGLAnim::FnDeltaF3 new\")."
+ },
+ {
+  "row": 6614,
+  "ps2": "0x0026fec8",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, name) passthrough directly after operator new(unsigned) in the standard new/new(char*)/delete/new[]/new[](char*)/delete[] run."
+ },
+ {
+  "row": 6615,
+  "ps2": "0x0026fef0",
+  "verdict": "accept",
+  "why": "eagl_free tail call in the delete slot of the FnDeltaF3 operator run."
+ },
+ {
+  "row": 6616,
+  "ps2": "0x0026ff18",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, \"EAGLAnim::FnDeltaF3 new[]\")."
+ },
+ {
+  "row": 6617,
+  "ps2": "0x0026ff40",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, name) directly after new[] in the FnDeltaF3 operator run."
+ },
+ {
+  "row": 6618,
+  "ps2": "0x0026ff68",
+  "verdict": "accept",
+  "why": "eagl_free in the delete[] slot, followed by FnDeltaF3::FnDeltaF3."
+ },
+ {
+  "row": 6692,
+  "ps2": "0x00272248",
+  "verdict": "accept",
+  "why": "Same shape as AUF RawPoseChannel::Eval: integer frame, interpolates channel functions when fraction!=0 and interp flag set, else calls EvalFrame (0x2724d8)."
+ },
+ {
+  "row": 6698,
+  "ps2": "0x00272ae8",
+  "verdict": "accept",
+  "why": "Matches AUF QuatF4Interp: reads 4 floats from each stream into qt0/out then slerps (VU0_fastqslerp)."
+ },
+ {
+  "row": 6773,
+  "ps2": "0x002759e0",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, \"EAGLAnim::FnDeltaQuatChan new\")."
+ },
+ {
+  "row": 6774,
+  "ps2": "0x00275a08",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, name) after FnDeltaQuatChan operator new in the operator run."
+ },
+ {
+  "row": 6775,
+  "ps2": "0x00275a30",
+  "verdict": "accept",
+  "why": "eagl_free in the delete slot of the FnDeltaQuatChan operator run."
+ },
+ {
+  "row": 6776,
+  "ps2": "0x00275a58",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, \"EAGLAnim::FnDeltaQuatChan new[]\")."
+ },
+ {
+  "row": 6777,
+  "ps2": "0x00275a80",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, name) after new[] in the FnDeltaQuatChan operator run."
+ },
+ {
+  "row": 6778,
+  "ps2": "0x00275aa8",
+  "verdict": "accept",
+  "why": "eagl_free in the delete[] slot, followed by the FnDeltaQuatChan ctor."
+ },
+ {
+  "row": 6827,
+  "ps2": "0x00276658",
+  "verdict": "accept",
+  "why": "corrected from 0x276538 (that is the FnKeyDeltaChan deleting dtor, dtor slot of vtable 0x3b2440); 0x276658 sits in the GetLength vtable slot, writes last key time to float& and returns 1, like AUF."
+ },
+ {
+  "row": 6828,
+  "ps2": "0x00276688",
+  "verdict": "accept",
+  "why": "corrected from 0x2765c0 (that is SetAnimMemoryMap, shared vtable slot); 0x276688(this,int n) runs DecompressValues from the last frame up to n and stores n at +0x10: EvalToPrevValues."
+ },
+ {
+  "row": 6839,
+  "ps2": "0x002775d8",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, \"EAGLAnim::FnPhaseChan new\")."
+ },
+ {
+  "row": 6840,
+  "ps2": "0x00277600",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, name) after FnPhaseChan operator new in the operator run."
+ },
+ {
+  "row": 6841,
+  "ps2": "0x00277628",
+  "verdict": "accept",
+  "why": "eagl_free in the delete slot of the FnPhaseChan operator run."
+ },
+ {
+  "row": 6842,
+  "ps2": "0x00277650",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, \"EAGLAnim::FnPhaseChan new[]\")."
+ },
+ {
+  "row": 6843,
+  "ps2": "0x00277678",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, name) after new[] in the FnPhaseChan operator run."
+ },
+ {
+  "row": 6844,
+  "ps2": "0x002776a0",
+  "verdict": "accept",
+  "why": "eagl_free in the delete[] slot, followed by the FnPhaseChan ctor."
+ },
+ {
+  "row": 6849,
+  "ps2": "0x002776e8",
+  "verdict": "accept",
+  "why": "Calls FnAnimMemoryMap ctor then installs vtable_EAGLAnim__FnPhaseChan and zeroes fields, as the AUF ctor."
+ },
+ {
+  "row": 6950,
+  "ps2": "0x00253678",
+  "verdict": "accept",
+  "why": "strncpy(out, current-path global, 0x100), right after FILESYS_setcurrentpath: getcurrentpath."
+ },
+ {
+  "row": 6952,
+  "ps2": "0x00253ba0",
+  "verdict": "defer",
+  "why": "Empty 8-byte stub placed by order only."
+ },
+ {
+  "row": 6953,
+  "ps2": "0x00253ba8",
+  "verdict": "accept",
+  "why": "Same body as AUF FILESYS_bypassqueuefileinfo ('|' split, FILEDEV_open/getsize, BIG_locateentryz)."
+ },
+ {
+  "row": 6978,
+  "ps2": "0x00254f08",
+  "verdict": "accept",
+  "why": "BIG_locateentry then strcpy name to out (or empty string): BIG_name."
+ },
+ {
+  "row": 6979,
+  "ps2": "0x00254f60",
+  "verdict": "accept",
+  "why": "corrected from 0x254fe0 (a CreateSema/SetAlarm/WaitSema delay helper); 0x254f60 is the BIG_name twin calling BIG_locateentryz."
+ },
+ {
+  "row": 6983,
+  "ps2": "0x00255198",
+  "verdict": "accept",
+  "why": "Recursive ISO9660 directory walker (readsectorB, builds path, recurses into subdirs, CDVD_hashname), called from CDVD_init with (sector,count)."
+ },
+ {
+  "row": 6984,
+  "ps2": "0x00255458",
+  "verdict": "accept",
+  "why": "corrected from 0x255538 (the CD thread loop, a thread entry from CDVD_init); 0x255458 retries the sector read up to 3 times with a delay and sets error flags: StartReadWithRetry."
+ },
+ {
+  "row": 6992,
+  "ps2": "0x00256198",
+  "verdict": "accept",
+  "why": "CDVD_open(name) then returns a pointer to that file's directory info entry; last public function of the object before ASYNCFILE (second arg unused)."
+ },
+ {
+  "row": 7032,
+  "ps2": "0x00257f88",
+  "verdict": "accept",
+  "why": "corrected from 0x257fb0 (a static case-swap helper); 0x257f88 copies a size-prefixed extension table into the font driver global, right after FONT_installdriver."
+ },
+ {
+  "row": 7044,
+  "ps2": "0x00259040",
+  "verdict": "accept",
+  "why": "Formats fmt+varargs into a stack buffer then FONT_drawtexta, as AUF FONT_drawtextfa."
+ },
+ {
+  "row": 7046,
+  "ps2": "0x00259140",
+  "verdict": "accept",
+  "why": "Looks up a (char,next) kerning pair in the font's kern table via bsearch helpers and returns the byte adjustment; called from drawtextx/getrectx."
+ },
+ {
+  "row": 7049,
+  "ps2": "0x002592a0",
+  "verdict": "accept",
+  "why": "corrected from 0x2592e0 (static string-id bsearch used by LOCALE_getstr); 0x2592a0 writes state 0 into +0xe, the mirror of LOCALE_getstate case 0."
+ },
+ {
+  "row": 7084,
+  "ps2": "0x0025a098",
+  "verdict": "accept",
+  "why": "Returns the actuator byte for (pad, index) if the pad's actuator flag is set."
+ },
+ {
+  "row": 7086,
+  "ps2": "0x0025a538",
+  "verdict": "accept",
+  "why": "Queries pad state for port/slot, returns state=='c' (stable), resets on failure; callers CheckUnplugged/~EResume."
+ },
+ {
+  "row": 7150,
+  "ps2": "0x0025f470",
+  "verdict": "accept",
+  "why": "Computes outcode bits from x,y,z,w against clip bounds (reads 4 components): setflags4."
+ },
+ {
+  "row": 7151,
+  "ps2": "0x0025f4f8",
+  "verdict": "accept",
+  "why": "Outcode from x,y,z only (3 components), next to setflags4: setflags3."
+ },
+ {
+  "row": 7152,
+  "ps2": "0x0025f8c0",
+  "verdict": "reject",
+  "why": "Candidate is a SHAPE_type/SHAPE_depth helper; the real CLIP_setflags2 (x,y only) is unanalysed code at 0x25f5a8 (see extras)."
+ },
+ {
+  "row": 7153,
+  "ps2": "0x0025f618",
+  "verdict": "accept",
+  "why": "corrected from 0x25f8f0 (a SHAPE size calculator); 0x25f618 takes x,y,w,h,near,far and writes the clip bound globals (0x3c81dc..f4) that setflags4 reads."
+ },
+ {
+  "row": 7162,
+  "ps2": "0x0025fa20",
+  "verdict": "reject",
+  "why": "Candidate maps bit depth 4/8 to palette size 16/256; unrelated to RMPASM_xformi."
+ },
+ {
+  "row": 7173,
+  "ps2": "0x00260090",
+  "verdict": "accept",
+  "why": "Walks shape attribute chunks looking for 'p', identical to AUF SHAPE_longname."
+ },
+ {
+  "row": 7189,
+  "ps2": "0x00260748",
+  "verdict": "accept",
+  "why": "corrected from 0x260760 (the print/vsprintf device dispatcher used by PRINT_string); 0x260748 clears the initialised flag, like AUF PRINT_restore."
+ },
+ {
+  "row": 7257,
+  "ps2": "0x00307c00",
+  "verdict": "reject",
+  "why": "Candidate clamps *size so *addr+*size fits the sound heap: it is SNDMEMI_constrain(unsigned*,int*) (row 7259, see extras), not SNDMEM_display."
+ },
+ {
+  "row": 7408,
+  "ps2": "0x00314fb0",
+  "verdict": "accept",
+  "why": "Converts s16 samples to floats (vector path with unaligned fallback SNDI_s16tofunaligned), called by the SFILTER_unpack* functions: decode16x87."
+ },
+ {
+  "row": 7411,
+  "ps2": "0x00315180",
+  "verdict": "accept",
+  "why": "Same bit-reader structure as AUF readsamples (param_2==0 path with 2-bit/1-bit codes, discardbits), called from decodemut."
+ },
+ {
+  "row": 7422,
+  "ps2": "0x00315f38",
+  "verdict": "accept",
+  "why": "Installs SFILTER_unpackxalf/restore, creates CEAXABLKDecf, sets getframe to unpackgetframexalf: unpackxalfinit."
+ },
+ {
+  "row": 7425,
+  "ps2": "0x00316178",
+  "verdict": "accept",
+  "why": "Installs unpackxapf/restore, getmastervoice/voicetopackethandle/getsamplechan as in AUF unpackxapfinit."
+ },
+ {
+  "row": 7437,
+  "ps2": "0x00316998",
+  "verdict": "accept",
+  "why": "One-arg state initialiser used for filter type 0 (source) in SNDMIXI_initfx2's switch, right after SFILTER_initSOURCE."
+ },
+ {
+  "row": 7452,
+  "ps2": "0x00317c38",
+  "verdict": "accept",
+  "why": "Calls each fx filter's restore callback, frees them and the fx tables, clears fx globals; called from MIX_restorereverb."
+ },
+ {
+  "row": 7558,
+  "ps2": "0x002a8bbc",
+  "verdict": "accept",
+  "why": "Stores seed into _impure_ptr+0x58 (rand's state), right before rand: srand."
+ },
+ {
+  "row": 7567,
+  "ps2": "0x002a8f60",
+  "verdict": "accept",
+  "why": "_init_signal_r(_impure_ptr) wrapper."
+ },
+ {
+  "row": 7568,
+  "ps2": "0x002a8f84",
+  "verdict": "accept",
+  "why": "__sigtramp_r(_impure_ptr, sig) wrapper."
+ },
+ {
+  "row": 7595,
+  "ps2": "0x002aaed8",
+  "verdict": "accept",
+  "why": "corrected from 0x2aaf58 (that is __sbprintf, a vfiprintf buffering helper); 0x2aaed8 is _strtol_r(_impure_ptr, s, end, base)."
+ },
+ {
+  "row": 7598,
+  "ps2": "0x002ab088",
+  "verdict": "accept",
+  "why": "The vfiprintf engine: called from vfiprintf, 'bug in vfprintf: bad base', '(null)', hex digits."
+ },
+ {
+  "row": 7710,
+  "ps2": "0x002b4f38",
+  "verdict": "accept",
+  "why": "Decodes REG_VIF1_STAT into a 0-4 condition code; used by sceDevVif1Pause/Continue: GetCnd."
+ },
+ {
+  "row": 7711,
+  "ps2": "0x002b5220",
+  "verdict": "reject",
+  "why": "Candidate is a static byte-zeroing loop used by sceDmaReset; not VIF1 FIFO code."
+ },
+ {
+  "row": 7717,
+  "ps2": "0x002b5370",
+  "verdict": "accept",
+  "why": "corrected from 0x2b5280 (that is sceDmaReset, which calls this); 0x2b5370 validates a sceDmaEnv struct and writes DMAC_CTRL/PCR etc.: sceDmaPutEnv."
+ },
+ {
+  "row": 7727,
+  "ps2": "0x002b5bc0",
+  "verdict": "accept",
+  "why": "(chan, addr, mode, timeout): polls chan MADR against addr, 'libdma: sync timeout' on expiry: sceDmaWatch."
+ },
+ {
+  "row": 7882,
+  "ps2": "0x002b7448",
+  "verdict": "accept",
+  "why": "Returns -1 stub called only by _close_r (0x2b2150), which is called by __sclose (0x2b1b40)."
+ },
+ {
+  "row": 7884,
+  "ps2": "0x002b7458",
+  "verdict": "accept",
+  "why": "Returns -1 stub called only by _lseek_r (0x2b2208), which __swrite (0x2b1a58) calls for append mode."
+ },
+ {
+  "row": 7903,
+  "ps2": "0x002b79f8",
+  "verdict": "accept",
+  "why": "Creates sema and helper thread for deferred i* kernel calls, starts it and changes priority: libkernl InitThread."
+ },
+ {
+  "row": 7906,
+  "ps2": "0x002b7be8",
+  "verdict": "accept",
+  "why": "syscall -0x2f (iSuspendThread) with self-suspend deferred to the helper thread via iSignalSema."
+ },
+ {
+  "row": 7910,
+  "ps2": "0x002b80e0",
+  "verdict": "accept",
+  "why": "FlushCache, sceDeci2Open, initialises tty buffers; called from read/write."
+ },
+ {
+  "row": 7916,
+  "ps2": "0x002b8b48",
+  "verdict": "accept",
+  "why": "Returns sreg table entry [index], used by sceSifInitRpc."
+ },
+ {
+  "row": 7921,
+  "ps2": "0x002b8e48",
+  "verdict": "accept",
+  "why": "Sets cmd handler buffer and size globals and returns the old buffer; called from SNDPLATFORM_init."
+ },
+ {
+  "row": 7924,
+  "ps2": "0x002b8ea8",
+  "verdict": "accept",
+  "why": "corrected from 0x2b8ed0 (internal _sceSifSendCmd core); 0x2b8ea8 clears the handler slot for cmd (system table if negative), mirror of AddCmdHandler 0x2b8e78."
+ },
+ {
+  "row": 7926,
+  "ps2": "0x002b9048",
+  "verdict": "accept",
+  "why": "corrected from 0x2b9088 (the SIF cmd interrupt handler); 0x2b9048 calls the send-cmd core with flag 1 (isceSifSetDma path)."
+ },
+ {
+  "row": 7929,
+  "ps2": "0x002b9400",
+  "verdict": "accept",
+  "why": "Calls sceSifExitCmd (0x2b8e10, currently misnamed DisableDmac) then clears the rpc-initialised flag."
+ },
+ {
+  "row": 7934,
+  "ps2": "0x002b9cd0",
+  "verdict": "accept",
+  "why": "(queue, thread id) under DIntr: initialises queue and appends it to the global queue list."
+ },
+ {
+  "row": 7936,
+  "ps2": "0x002b9e38",
+  "verdict": "accept",
+  "why": "(sd, queue) unlinks sd from the queue's server list (+0x38 next) under DIntr."
+ },
+ {
+  "row": 7940,
+  "ps2": "0x002ba180",
+  "verdict": "accept",
+  "why": "corrected from 0x2ba318 (a fileio IOP-to-EE data command handler); 0x2ba180 loops sceSifGetNextRequest/SleepThread/sceSifExecRequest."
+ },
+ {
+  "row": 7942,
+  "ps2": "0x002ba7f8",
+  "verdict": "accept",
+  "why": "corrected from 0x2ba758 (a SignalSema unlock helper); 0x2ba7f8 is the SIF cmd handler sceFsInit registers for 0x80000013, invoking the stored callback(arg) then EI, directly before sceFsInit."
+ },
+ {
+  "row": 7943,
+  "ps2": "0x002ba828",
+  "verdict": "accept",
+  "why": "sceSifInitRpc, registers fileio cmd handlers, binds the fileio RPC server and calls it: sceFsInit (called lazily from sceOpen)."
+ },
+ {
+  "row": 8001,
+  "ps2": "0x002be940",
+  "verdict": "accept",
+  "why": "Wrapper running the library shutdown thunk then the LoadExecPS2 syscall stub (which Ghidra already names LoadExecPS2), before Exit/ExecOSD."
+ },
+ {
+  "row": 8008,
+  "ps2": "0x002beab0",
+  "verdict": "accept",
+  "why": "Deci2Call(-5, args) wrapper in the Deci2 run (1 Open, 2 Close, 3 ReqSend, 4 Poll, -5, -6, -7, -8 ExLock): ExRecv."
+ }
+]

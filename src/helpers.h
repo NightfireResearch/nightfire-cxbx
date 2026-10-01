@@ -12,6 +12,7 @@
 #define U8_AT(x) (*((uint8_t*)x))
 #define BOOL8_AT(x) (*((uint8_t*)x))
 #define FLOAT_AT(x) (*((float*)x))
+#define DOUBLE_AT(x) (*((double*)x))
 #define PTR_AT(x) (*((void**)x))
 
 typedef unsigned char   undefined;

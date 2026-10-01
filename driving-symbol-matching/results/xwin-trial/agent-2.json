@@ -1,0 +1,229 @@
+{
+ "verdicts": [
+  {
+   "item": "15.1",
+   "xbox": "0x50b80",
+   "ps2": "0x167768",
+   "name": "DeviceScalar::DeviceScalar",
+   "verdict": "accept",
+   "why": "XBoxPadDevice ctor <- IOModule::CreateDevices calls it as PS2PadDevice calls DeviceScalar::DeviceScalar; body identical (+0=0, +4 byte=0, +0x24..+0x30=0)",
+   "intermediates": []
+  },
+  {
+   "item": "16.1",
+   "xbox": "0x6ee10",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "placement-ctor callback passed to RegisterExtensionType('smackable','PhysicsData',0x2c) in PhysicsNamespace ctor; PS2 counterpart FUN_00194cd0 is unnamed on PS2",
+   "intermediates": [
+    {
+     "xbox": "0x52350",
+     "ps2": "0x16c328",
+     "name": "Vector_AttribByteOffsetParserFunc",
+     "why": "parser for the MOMENT field in PhysicsNamespace ctor on both sides; body: ';'-token loop into 128-byte buffer, default 16 bytes, Float_AttribByteOffsetParserFunc(...,4,...), result {-6,count,ptr}"
+    }
+   ]
+  },
+  {
+   "item": "17.1",
+   "xbox": "0x119440",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL std::map _Tree::_Insert helper under insert_one; PS2 uses AddUDataTagResolver/SGI tree - different routines",
+   "intermediates": []
+  },
+  {
+   "item": "17.2",
+   "xbox": "0x119620",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL _Tree::erase(iterator) with rebalance + FastFree(node); no PS2 equivalent routine",
+   "intermediates": []
+  },
+  {
+   "item": "17.3",
+   "xbox": "0x1199b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL _Tree::erase(first,last) (clear-all fast path via _Erase 0x118e90); no PS2 equivalent routine",
+   "intermediates": []
+  },
+  {
+   "item": "18.1",
+   "xbox": "0x42ae0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "placement ctor callback (TagReference at +0xc,+0x10) referenced from a data table; PS2 counterpart FUN_00154c28 is identical but unnamed on PS2 (EPlayerLose::EPlayerLose is inlined into GetEventName on Xbox)",
+   "intermediates": []
+  },
+  {
+   "item": "19.1",
+   "xbox": "0x975d0",
+   "ps2": "0x1d5fa8",
+   "name": "RWorldCamera::GetAnchorRenderOffset",
+   "verdict": "accept",
+   "why": "caller FUN_00082840 (camera update with GetAnchorMatrix4/UpdateAnimationCam/PlayCurrentAnimation/EvaluateSpline = PS2 RPlayerCamera::UpdateRelativeAnimationCam, a caller of GetAnchorRenderOffset); body: IsAnchorValid inlined on anchor +0x128 (PS2 +0x118, +0x10), virtual slot 9 on anchor+0x4c (PS2 +0x48, GCC vtable +0x54), float return, 0.0 when invalid",
+   "intermediates": []
+  },
+  {
+   "item": "20.1",
+   "xbox": "0x8d120",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "4-row x/z matrix transform minus translation called from Xbox QuadtreeFrustrumCheck2d (0x8d250); PS2 inlines the same arithmetic into RRenderWorldCulling::QuadtreeFrustrumCheck2d - no PS2 function",
+   "intermediates": [
+    {
+     "xbox": "0x8d250",
+     "ps2": "0x1c66c8",
+     "name": "RRenderWorldCulling::QuadtreeFrustrumCheck2d",
+     "why": "sole caller-side callee of WRender::FindVisibleTreeNodesAndCurtains besides IsInFrustum2d on both; body: plane test at +0x40..+0x4c vs radius, 4-row x/z transform, classify returning 0/1/2 - identical"
+    }
+   ]
+  },
+  {
+   "item": "21.1",
+   "xbox": "0xb97f0",
+   "ps2": "0x20a060",
+   "name": "SRuleDeath::SRuleDeath",
+   "verdict": "accept",
+   "why": "SMissionRule::Instantiate (Xbox FUN_000ba150 <- SMissionManager::Load) case 3 = SRuleDeath on PS2; SMissionRule base inlined then vtable 0x1935f0 + SMissionRuleTarget(type +0x10, id +0x14) at +0xc; Xbox alloc 0x14 vs PS2 0x1c (vptr layout -8)",
+   "intermediates": []
+  },
+  {
+   "item": "21.2",
+   "xbox": "0xb9850",
+   "ps2": "0x20a108",
+   "name": "SRuleDeath::CheckRule",
+   "verdict": "accept",
+   "why": "slot 1 of SRuleDeath vtable 0x1935f0 (built by the case-3 ctor); body = SMissionRuleTarget::GetHealth inlined (type 0: glbMissionManager+0x49c = PS2 +0x378 (+0x124); type 4: GetCarpElementTracking(...)+0x1c->+0x4c = PS2 +0x20) then ==0",
+   "intermediates": []
+  },
+  {
+   "item": "21.3",
+   "xbox": "0xb98a0",
+   "ps2": "0x20a2c8",
+   "name": "SRulePIP::SRulePIP",
+   "verdict": "accept",
+   "why": "Instantiate case 5 = SRulePIP; copies def +0x10,+0x14,+0x18 exactly like PS2; vtable 0x1935f8 whose CheckRule slot is StubError (return 1 = PS2 SRulePIP::CheckRule); alloc 0x18 vs PS2 0x20",
+   "intermediates": []
+  },
+  {
+   "item": "21.4",
+   "xbox": "0xb9900",
+   "ps2": "0x20a380",
+   "name": "SRuleProg::SRuleProg",
+   "verdict": "accept",
+   "why": "Instantiate case 6 = SRuleProg; copies def +0x10 like PS2; vtable 0x193600 whose slot 1 is the already named SRuleProg::CheckRule 0xb9950; alloc 0x10 vs PS2 0x18",
+   "intermediates": []
+  },
+  {
+   "item": "22.1",
+   "xbox": "0x105bd0",
+   "ps2": "0x278d80",
+   "name": "EAGLAnim::FnRunBlender::BlendFacing",
+   "verdict": "accept",
+   "why": "called twice from FnRunBlender::AlignCycleBeginEnd with (0,0,out) then (frames-1,frames-1,out) exactly as PS2 calls BlendFacing; body: GetScratchBuffer, virtual on +0x18 anim, if weight +0x28 != 0 then FUN_000fa340(=PS2 FUN_00262aa8) + virtual on +0x1c + VU0_fastqslerp, quat->2D facing, returns bool",
+   "intermediates": []
+  },
+  {
+   "item": "23.1",
+   "xbox": "0x3e400",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "trivial getter return this+0x28 used 4x in RVehicle::PostLoad; PS2 PostLoad reads param+0x24 inline - no PS2 function",
+   "intermediates": []
+  },
+  {
+   "item": "24.1",
+   "xbox": "0x76930",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL std::_Push_heap on unsigned char (sort helper under Handle::Create); SGI STL on PS2 - different routine",
+   "intermediates": []
+  },
+  {
+   "item": "24.2",
+   "xbox": "0x76980",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL std::_Rotate (gcd cycle) on unsigned char, used by insertion sort under Handle::Create; STL helper",
+   "intermediates": []
+  },
+  {
+   "item": "25.1",
+   "xbox": "0x88d10",
+   "ps2": "0x1bbbf8",
+   "name": "RPlayerCamera::SetTumbleCam",
+   "verdict": "accept",
+   "why": "called from RDirectorQueue::ProcessDirectorLogic as PS2 SetTumbleCam; body identical: store arg at +0x140 (PS2 +0x130), clear director queue +0x368, if mode +0x130 (PS2 +0x120) != global 0x1c4194 (PS2 0x333a08; SetPauseCamera's 0x1c419a/0x333a0e is 6 bytes on in both) SetCameraModeByIndex(global,0,...)",
+   "intermediates": []
+  },
+  {
+   "item": "26.1",
+   "xbox": "0xd3ed0",
+   "ps2": "0x235520",
+   "name": "GFXGallery::CANVAS_PurgeSceneObj",
+   "verdict": "accept",
+   "why": "sole callee of GFXGallery::CANVAS_Purge (h-1) and per-slot callee of CANVAS_PurgeSceneObjEffects on both sides; body identical: stride 0x90 into +0x1414, flag 0x800 test, virtual getter copy to +0x40, +0x4c=0, set 0x1000|0x800, +0x5c=+0x3c, loop over +0x6e children, +0x50=0",
+   "intermediates": [
+    {
+     "xbox": "0xd4b30",
+     "ps2": "0x235490",
+     "name": "GFXGallery::CANVAS_PurgeSceneObjEffects",
+     "why": "loops +0x408 slot list to count +0x141c, calls CANVAS_PurgeSceneObj where slot +0x50 == arg; identical to PS2"
+    },
+    {
+     "xbox": "0xd3490",
+     "ps2": "0x232dc8",
+     "name": "GFX::PurgeSceneObjEffects",
+     "why": "mov ecx,[glbGfxGallery]; call CANVAS_PurgeSceneObjEffects(arg) - PS2 wrapper identical; callers RSceneObj Load/UseInstanceList/dtor (PS2 KillEffects inlined)"
+    }
+   ]
+  },
+  {
+   "item": "27.1",
+   "xbox": "0xab460",
+   "ps2": "0x1f3188",
+   "name": "RParticleLibrary::MungeDataForPlatform",
+   "verdict": "accept",
+   "why": "tail call of RParticleLibrary::MungeData as on PS2; body: copy struct if src!=dst, +0x5c=max(+0x34,+0x38), flag2 -> +0x44=99999, same 'lifeTime of %d is too large. Capping at 255' printf, +0x30=1/life, +0xc*0.5, flag 0x20 size tweak, +0x54 deg->rad, colour scaling (platform constants differ, as the name says)",
+   "intermediates": []
+  },
+  {
+   "item": "27.2",
+   "xbox": "0xab650",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only particle quad builder (BuildRotate, writes vertex/uv/colour arrays) called from RenderBlock; PS2 RenderBlock has no matching callee (VU path)",
+   "intermediates": []
+  },
+  {
+   "item": "28.1",
+   "xbox": "0x11b4d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL _Tree destructor body (erase all via 0x11ae70, FastFree head node 0x18, zero); STL helper",
+   "intermediates": []
+  },
+  {
+   "item": "29.1",
+   "xbox": "0x124e30",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "sole callee of AFader::SetSecondary(char*); PS2 counterpart is FUN_002f9090 (identical: if +0x38, strcmp name, 'Off' test, strcpy, set flags) but unnamed on PS2 - probably the Priv::SetSecondary(char*) overload, not shown by the sheet",
+   "intermediates": []
+  }
+ ]
+}

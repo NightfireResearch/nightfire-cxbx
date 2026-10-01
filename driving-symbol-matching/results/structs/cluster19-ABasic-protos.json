@@ -1,0 +1,61 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0012fa40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    }
+   ],
+   "sheet": "ABasic::ABasic(char *, char *)",
+   "return": "ABasic *"
+  },
+  {
+   "address": "0x0012fa90",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ABasic::Play(APath &)"
+  },
+  {
+   "address": "0x0012fb80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ABasic::~ABasic(void)"
+  },
+  {
+   "address": "0x0012fc00",
+   "calling_convention": "__thiscall",
+   "return": "ABasic *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0012fc30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ABasic::Stop(APath &)"
+  }
+ ]
+}

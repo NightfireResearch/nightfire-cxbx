@@ -1,0 +1,329 @@
+{
+ "batch": "016",
+ "program": "Driving.xbe",
+ "skip_refused_creates": true,
+ "note": "Paired vtables, second pass.",
+ "items": [
+  {
+   "xbox": "0x0001fc70",
+   "expect": "FUN_0001fc70",
+   "name": "AICharacterEnemySnow::~AICharacterEnemySnow",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by AICharacterEnemySnow::scalar_deleting_destructor (0x0001fdd0) and stores AICharacterEnemySnow's vtable",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x0001fcd0",
+   "expect": "(none)",
+   "name": "AICharacterEnemySnow::DoTilting",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySnow slot 23 (PS2 0011f268, row 529, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x0001fdd0",
+   "expect": "FUN_0001fdd0",
+   "name": "AICharacterEnemySnow::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySnow slot 0 (PS2 0011e5b8, row 516, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x0001fe00",
+   "expect": "(none)",
+   "name": "AICharacterEnemySnow::DoNeutral",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySnow slot 8 (PS2 0011e770, row 520, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x000203c0",
+   "expect": "(none)",
+   "name": "AICharacterEnemySnow::DoDying",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySnow slot 22 (PS2 0011efd8, row 528, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x000205b0",
+   "expect": "FUN_000205b0",
+   "name": "AICharacterEnemySnow::DoRunning",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySnow slot 27 (PS2 0011f2c8, row 530, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x000205e0",
+   "expect": "(none)",
+   "name": "AICharacterEnemySnow::DoLeaning",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySnow slot 28 (PS2 0011f308, row 531, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x000206d0",
+   "expect": "FUN_000206d0",
+   "name": "AICharacterEnemySnow::UpdateRotPos",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySnow slot 32 (PS2 0011f4d8, row 534, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x00020710",
+   "expect": "FUN_00020710",
+   "name": "AICharacterEnemySnow::TargetIsInRange",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemySnow slot 33 (PS2 0011f528, row 536, resolved)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x00021600",
+   "expect": "FUN_00021600",
+   "name": "AICharacterEnemyWindow::DoFiring",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyWindow slot 18 (PS2 00122be0, row 598, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x00021d40",
+   "expect": "FUN_00021d40",
+   "name": "AICharacterEnemyWindow::~AICharacterEnemyWindow",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by AICharacterEnemyWindow::scalar_deleting_destructor (0x00021dc0) and stores AICharacterEnemyWindow's vtable",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x00021dc0",
+   "expect": "FUN_00021dc0",
+   "name": "AICharacterEnemyWindow::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyWindow slot 0 (PS2 001225a8, row 590, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x00021df0",
+   "expect": "FUN_00021df0",
+   "name": "AICharacterEnemySnow::SetActor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [
+    "AICharacterEnemyWindow::SetActor"
+   ],
+   "evidence": [
+    "AICharacterEnemySnow slot 2 (PS2 0011e610, row 517, ghidra)",
+    "AICharacterEnemyWindow slot 2 (PS2 00122600, row 591, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x00022010",
+   "expect": "FUN_00022010",
+   "name": "AICharacterEnemyWindow::DoArming",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyWindow slot 15 (PS2 001228d0, row 595, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x00022150",
+   "expect": "FUN_00022150",
+   "name": "AICharacterEnemyWindow::DoAiming",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyWindow slot 17 (PS2 00122a68, row 597, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x00022280",
+   "expect": "FUN_00022280",
+   "name": "AICharacterEnemyWindow::DoUnarming",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyWindow slot 20 (PS2 00122c30, row 599, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x000222c0",
+   "expect": "FUN_000222c0",
+   "name": "AICharacterEnemyWindow::DoDying",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyWindow slot 22 (PS2 00122cc0, row 601, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x00022310",
+   "expect": "FUN_00022310",
+   "name": "AICharacterEnemyWindow::HandleInterrupts",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyWindow slot 30 (PS2 00122d28, row 603, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x000223a0",
+   "expect": "FUN_000223a0",
+   "name": "AICharacterEnemyWindow::TargetIsInRange",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "AICharacterEnemyWindow slot 33 (PS2 00122e20, row 606, resolved)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x00050e40",
+   "expect": "FUN_00050e40",
+   "name": "InputDevice::DeviceHasChanged",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "InputDevice slot 4 (PS2 00167bc8, row 2125, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x00050eb0",
+   "expect": "FUN_00050eb0",
+   "name": "InputDevice::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "InputDevice slot 0 (PS2 00167b98, row 2124, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x0005e3e0",
+   "expect": "(none)",
+   "name": "Mine::ApplyDamage",
+   "create": true,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "Mine slot 2 (PS2 001805f8, row 2500, ghidra)",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x0005e6e0",
+   "expect": "FUN_0005e6e0",
+   "name": "Mine::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "Mine slot 0 (PS2 0017ff48, row 2497, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x00072160",
+   "expect": "FUN_00072160",
+   "name": "RayShell::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "RayShell slot 0 (PS2 00199200, row 2779, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x0012fb80",
+   "expect": "FUN_0012fb80",
+   "name": "ABasic::~ABasic",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "called by ABasic::scalar_deleting_destructor (0x0012fc00) and stores ABasic's vtable",
+    "paired vtables, second pass after batch 015"
+   ]
+  },
+  {
+   "xbox": "0x0012fc00",
+   "expect": "FUN_0012fc00",
+   "name": "ABasic::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "ABasic slot 0 (PS2 002fc848, row 9103, sheet)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor",
+    "paired vtables, second pass after batch 015"
+   ]
+  }
+ ]
+}

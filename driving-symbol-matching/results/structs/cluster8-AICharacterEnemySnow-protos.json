@@ -1,0 +1,110 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0001fc70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySnow::~AICharacterEnemySnow(void)"
+  },
+  {
+   "address": "0x0001fcd0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySnow::DoTilting(void)"
+  },
+  {
+   "address": "0x0001fcf0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySnow::HandleInterrupts(void)"
+  },
+  {
+   "address": "0x0001fdd0",
+   "calling_convention": "__thiscall",
+   "return": "AICharacterEnemySnow *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0001fe00",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySnow::DoNeutral(void)"
+  },
+  {
+   "address": "0x0001ff90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySnow::DoArmed(void)"
+  },
+  {
+   "address": "0x00020090",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySnow::DoAiming(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000203c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySnow::DoDying(void)"
+  },
+  {
+   "address": "0x000205b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySnow::DoRunning(void)"
+  },
+  {
+   "address": "0x000205e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySnow::DoLeaning(void)"
+  },
+  {
+   "address": "0x000206d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySnow::UpdateRotPos(void)"
+  },
+  {
+   "address": "0x00020710",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySnow::TargetIsInRange(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x00020870",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterEnemySnow::PlayZoneInjuryAnim(int, float, int)"
+  },
+  {
+   "address": "0x000224f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemySnow::TargetIsAcquired(void)"
+  }
+ ]
+}

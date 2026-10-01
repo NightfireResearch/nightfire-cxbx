@@ -1,0 +1,175 @@
+{
+ "batch": "036",
+ "program": "Driving.xbe",
+ "applied": "Sun Sep 27 00:06:17 2026",
+ "items": [
+  {
+   "xbox": "0x00154358",
+   "old_name": "FUN_00154358",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154358 from 'FUN_00154358' to 'PrepareRegion_Frame_Handler'",
+      "warnings": [
+       "Function name 'PrepareRegion_Frame_Handler' \u2014 main part 'PrepareRegion_Frame_Handler' is not PascalCase. Expected: PrepareregionFrameHandler",
+       "Function name 'PrepareRegion_Frame_Handler' \u2014 main part 'PrepareRegion_Frame_Handler' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'PrepareRegion_Frame_Handler' does not start with a recognized verb. First word 'Prepare' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154358",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PrepareRegion_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154d55",
+   "old_name": "FUN_00154d55",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154d55 from 'FUN_00154d55' to 'SetParamName_Frame_Handler'",
+      "warnings": [
+       "Function name 'SetParamName_Frame_Handler' \u2014 main part 'SetParamName_Frame_Handler' is not PascalCase. Expected: SetparamnameFrameHandler",
+       "Function name 'SetParamName_Frame_Handler' \u2014 main part 'SetParamName_Frame_Handler' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154d55",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetParamName_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154d6e",
+   "old_name": "FUN_00154d6e",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154d6e from 'FUN_00154d6e' to 'Lock_Frame_Handler'",
+      "warnings": [
+       "Function name 'Lock_Frame_Handler' \u2014 main part 'Lock_Frame_Handler' is not PascalCase. Expected: LockFrameHandler",
+       "Function name 'Lock_Frame_Handler' \u2014 main part 'Lock_Frame_Handler' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'Lock_Frame_Handler' does not start with a recognized verb. First word 'Lock_' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154d6e",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Lock_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154d87",
+   "old_name": "FUN_00154d87",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154d87 from 'FUN_00154d87' to 'Unlock_Frame_Handler'",
+      "warnings": [
+       "Function name 'Unlock_Frame_Handler' \u2014 main part 'Unlock_Frame_Handler' is not PascalCase. Expected: UnlockFrameHandler",
+       "Function name 'Unlock_Frame_Handler' \u2014 main part 'Unlock_Frame_Handler' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'Unlock_Frame_Handler' does not start with a recognized verb. First word 'Unlock_' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154d87",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Unlock_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154da0",
+   "old_name": "FUN_00154da0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154da0 from 'FUN_00154da0' to 'SetNumVerts_Frame_Handler'",
+      "warnings": [
+       "Function name 'SetNumVerts_Frame_Handler' \u2014 main part 'SetNumVerts_Frame_Handler' is not PascalCase. Expected: SetnumvertsFrameHandler",
+       "Function name 'SetNumVerts_Frame_Handler' \u2014 main part 'SetNumVerts_Frame_Handler' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154da0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetNumVerts_Frame_Handler",
+   "ok": true
+  }
+ ]
+}

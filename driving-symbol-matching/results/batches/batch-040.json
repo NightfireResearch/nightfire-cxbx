@@ -1,0 +1,49 @@
+{
+ "batch": "040",
+ "program": "Driving.xbe",
+ "note": "Compiler-generated exception handling: frame handlers and unwind funclets (xbox_eh.py).",
+ "items": [
+  {
+   "xbox": "0x0015396f",
+   "expect": "FUN_0015396f",
+   "name": "Create_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1af27c; JMP __CxxFrameHandler; installed by Create (0xa2350)"
+   ]
+  },
+  {
+   "xbox": "0x00153960",
+   "expect": "FUN_00153960",
+   "name": "Create_Unwind_0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of Create's FuncInfo 0x1af27c (frame handler 0x15396f); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00155e98",
+   "expect": "FUN_00155e98",
+   "name": "~URefCounter_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b2ef0; JMP __CxxFrameHandler; installed by ~URefCounter (0x1267f0)"
+   ]
+  },
+  {
+   "xbox": "0x00155e90",
+   "expect": "FUN_00155e90",
+   "name": "~URefCounter_Unwind_0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of ~URefCounter's FuncInfo 0x1b2ef0 (frame handler 0x155e98); destroys a local when unwinding from state 0"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,502 @@
+{
+ "batch": "034",
+ "program": "Driving.xbe",
+ "applied": "Sat Sep 26 23:43:07 2026",
+ "items": [
+  {
+   "xbox": "0x001506c8",
+   "old_name": "FUN_001506c8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001506c8 from 'FUN_001506c8' to '~URefCounter_Frame_Handler_1506c8'",
+      "warnings": [
+       "Function name '~URefCounter_Frame_Handler_1506c8' \u2014 main part '~URefCounter_Frame_Handler_1506c8' is not PascalCase. Expected: ~urefcounterFrameHandler1506c8",
+       "Function name '~URefCounter_Frame_Handler_1506c8' \u2014 main part '~URefCounter_Frame_Handler_1506c8' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001506c8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~URefCounter_Frame_Handler_1506c8",
+   "ok": true
+  },
+  {
+   "xbox": "0x001506c0",
+   "old_name": "FUN_001506c0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001506c0 from 'FUN_001506c0' to '~URefCounter_Unwind_0_1506c0'",
+      "warnings": [
+       "Function name '~URefCounter_Unwind_0_1506c0' \u2014 main part '~URefCounter_Unwind_0_1506c0' is not PascalCase. Expected: ~urefcounterUnwind01506c0",
+       "Function name '~URefCounter_Unwind_0_1506c0' \u2014 main part '~URefCounter_Unwind_0_1506c0' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001506c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~URefCounter_Unwind_0_1506c0",
+   "ok": true
+  },
+  {
+   "xbox": "0x00150828",
+   "old_name": "FUN_00150828",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00150828 from 'FUN_00150828' to '~URefCounter_Frame_Handler_150828'",
+      "warnings": [
+       "Function name '~URefCounter_Frame_Handler_150828' \u2014 main part '~URefCounter_Frame_Handler_150828' is not PascalCase. Expected: ~urefcounterFrameHandler150828",
+       "Function name '~URefCounter_Frame_Handler_150828' \u2014 main part '~URefCounter_Frame_Handler_150828' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00150828",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~URefCounter_Frame_Handler_150828",
+   "ok": true
+  },
+  {
+   "xbox": "0x00150820",
+   "old_name": "FUN_00150820",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00150820 from 'FUN_00150820' to '~URefCounter_Unwind_0_150820'",
+      "warnings": [
+       "Function name '~URefCounter_Unwind_0_150820' \u2014 main part '~URefCounter_Unwind_0_150820' is not PascalCase. Expected: ~urefcounterUnwind0150820",
+       "Function name '~URefCounter_Unwind_0_150820' \u2014 main part '~URefCounter_Unwind_0_150820' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00150820",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~URefCounter_Unwind_0_150820",
+   "ok": true
+  },
+  {
+   "xbox": "0x001518a8",
+   "old_name": "FUN_001518a8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001518a8 from 'FUN_001518a8' to '~AOneShotSound_Frame_Handler'",
+      "warnings": [
+       "Function name '~AOneShotSound_Frame_Handler' \u2014 main part '~AOneShotSound_Frame_Handler' is not PascalCase. Expected: ~aoneshotsoundFrameHandler",
+       "Function name '~AOneShotSound_Frame_Handler' \u2014 main part '~AOneShotSound_Frame_Handler' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001518a8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~AOneShotSound_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x001518a0",
+   "old_name": "FUN_001518a0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001518a0 from 'FUN_001518a0' to '~AOneShotSound_Unwind_0'",
+      "warnings": [
+       "Function name '~AOneShotSound_Unwind_0' \u2014 main part '~AOneShotSound_Unwind_0' is not PascalCase. Expected: ~aoneshotsoundUnwind0",
+       "Function name '~AOneShotSound_Unwind_0' \u2014 main part '~AOneShotSound_Unwind_0' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001518a0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~AOneShotSound_Unwind_0",
+   "ok": true
+  },
+  {
+   "xbox": "0x00151d4c",
+   "old_name": "FUN_00151d4c",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00151d4c from 'FUN_00151d4c' to 'ProcessDafiSection_Frame_Handler'",
+      "warnings": [
+       "Function name 'ProcessDafiSection_Frame_Handler' \u2014 main part 'ProcessDafiSection_Frame_Handler' is not PascalCase. Expected: ProcessdafisectionFrameHandler",
+       "Function name 'ProcessDafiSection_Frame_Handler' \u2014 main part 'ProcessDafiSection_Frame_Handler' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00151d4c",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ProcessDafiSection_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x00153448",
+   "old_name": "FUN_00153448",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00153448 from 'FUN_00153448' to '~ReflPrivateData_Frame_Handler'",
+      "warnings": [
+       "Function name '~ReflPrivateData_Frame_Handler' \u2014 main part '~ReflPrivateData_Frame_Handler' is not PascalCase. Expected: ~reflprivatedataFrameHandler",
+       "Function name '~ReflPrivateData_Frame_Handler' \u2014 main part '~ReflPrivateData_Frame_Handler' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00153448",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~ReflPrivateData_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x00153410",
+   "old_name": "FUN_00153410",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00153410 from 'FUN_00153410' to '~ReflPrivateData_Unwind_0'",
+      "warnings": [
+       "Function name '~ReflPrivateData_Unwind_0' \u2014 main part '~ReflPrivateData_Unwind_0' is not PascalCase. Expected: ~reflprivatedataUnwind0",
+       "Function name '~ReflPrivateData_Unwind_0' \u2014 main part '~ReflPrivateData_Unwind_0' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00153410",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~ReflPrivateData_Unwind_0",
+   "ok": true
+  },
+  {
+   "xbox": "0x0015341e",
+   "old_name": "FUN_0015341e",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0015341e from 'FUN_0015341e' to '~ReflPrivateData_Unwind_1'",
+      "warnings": [
+       "Function name '~ReflPrivateData_Unwind_1' \u2014 main part '~ReflPrivateData_Unwind_1' is not PascalCase. Expected: ~reflprivatedataUnwind1",
+       "Function name '~ReflPrivateData_Unwind_1' \u2014 main part '~ReflPrivateData_Unwind_1' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0015341e",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~ReflPrivateData_Unwind_1",
+   "ok": true
+  },
+  {
+   "xbox": "0x0015342c",
+   "old_name": "FUN_0015342c",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0015342c from 'FUN_0015342c' to '~ReflPrivateData_Unwind_2'",
+      "warnings": [
+       "Function name '~ReflPrivateData_Unwind_2' \u2014 main part '~ReflPrivateData_Unwind_2' is not PascalCase. Expected: ~reflprivatedataUnwind2",
+       "Function name '~ReflPrivateData_Unwind_2' \u2014 main part '~ReflPrivateData_Unwind_2' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0015342c",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~ReflPrivateData_Unwind_2",
+   "ok": true
+  },
+  {
+   "xbox": "0x0015343a",
+   "old_name": "FUN_0015343a",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0015343a from 'FUN_0015343a' to '~ReflPrivateData_Unwind_3'",
+      "warnings": [
+       "Function name '~ReflPrivateData_Unwind_3' \u2014 main part '~ReflPrivateData_Unwind_3' is not PascalCase. Expected: ~reflprivatedataUnwind3",
+       "Function name '~ReflPrivateData_Unwind_3' \u2014 main part '~ReflPrivateData_Unwind_3' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0015343a",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~ReflPrivateData_Unwind_3",
+   "ok": true
+  },
+  {
+   "xbox": "0x001537f8",
+   "old_name": "FUN_001537f8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001537f8 from 'FUN_001537f8' to '~Bolt_Frame_Handler'",
+      "warnings": [
+       "Function name '~Bolt_Frame_Handler' \u2014 main part '~Bolt_Frame_Handler' is not PascalCase. Expected: ~boltFrameHandler",
+       "Function name '~Bolt_Frame_Handler' \u2014 main part '~Bolt_Frame_Handler' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001537f8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~Bolt_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x001543cb",
+   "old_name": "FUN_001543cb",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001543cb from 'FUN_001543cb' to 'GetWorldNormal_Frame_Handler'",
+      "warnings": [
+       "Function name 'GetWorldNormal_Frame_Handler' \u2014 main part 'GetWorldNormal_Frame_Handler' is not PascalCase. Expected: GetworldnormalFrameHandler",
+       "Function name 'GetWorldNormal_Frame_Handler' \u2014 main part 'GetWorldNormal_Frame_Handler' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001543cb",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetWorldNormal_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x00155082",
+   "old_name": "FUN_00155082",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00155082 from 'FUN_00155082' to 'DrawGouraud_Frame_Handler'",
+      "warnings": [
+       "Function name 'DrawGouraud_Frame_Handler' \u2014 main part 'DrawGouraud_Frame_Handler' is not PascalCase. Expected: DrawgouraudFrameHandler",
+       "Function name 'DrawGouraud_Frame_Handler' \u2014 main part 'DrawGouraud_Frame_Handler' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00155082",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DrawGouraud_Frame_Handler",
+   "ok": true
+  }
+ ]
+}

@@ -1,0 +1,17 @@
+{
+ "batch": "044",
+ "program": "Driving.xbe",
+ "note": "Invented name for the vehicle inertia helper misnamed RSceneObj::Load.",
+ "items": [
+  {
+   "xbox": "0x000bd030",
+   "expect": "RSceneObj::Load",
+   "name": "ComputeInverseInertia",
+   "create": false,
+   "allow_duplicate": false,
+   "move_to_global": true,
+   "plate_exact": "INVENTED NAME, not canonical: no PS2 symbol found for this function. Named for what it does: computes the diagonal inverse inertia tensor of a rigid body from its mass (arg 2) and dimensions (args 3-5) into the three floats at arg 1 - cylinder formula (0.25/0.08333 terms) for one dimension <= 4.0, box formula (mass/3) otherwise. Called by PBondCar::PBondCar, PBondCar::ProcessPhysics and PBondCar::ChangeCarType. Was misnamed RSceneObj::Load (the real RSceneObj::Load is 0x90a60).",
+   "evidence": []
+  }
+ ]
+}

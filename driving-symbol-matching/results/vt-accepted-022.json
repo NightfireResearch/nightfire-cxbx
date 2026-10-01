@@ -1,0 +1,140 @@
+[
+ {
+  "xbox": "0x11050",
+  "name": "AnimationController::GetTotalTime",
+  "ps2": "0x1073c0",
+  "why": "found reviewing (rejected) candidate AnimationController::GetTotalTime, body review: frame+0x18*frame+0x2c = PS2 0x1c*0x30; called from DoAiming on both sides"
+ },
+ {
+  "xbox": "0x11020",
+  "name": "AnimationController::GetCurrentFrame",
+  "ps2": "0x107388",
+  "why": "Version Tracking candidate, body review: FLD [frame+8] = PS2 lwc1 frame+0xc (layout -4: 0xc/0x1c/0x30 -> 8/0x18/0x2c, cf. named GetTotalFrames 0x11030); same 4 callers DoAiming/DoFiring/DoLeaning/DoWandering"
+ },
+ {
+  "xbox": "0x11040",
+  "name": "AnimationController::GetCurrentTime",
+  "ps2": "0x1073a8",
+  "why": "Version Tracking candidate, body review: frame+0x2c*frame+8 = PS2 0x30*0xc; sits between GetTotalFrames and GetTotalTime, called by DoAiming on both"
+ },
+ {
+  "xbox": "0x11060",
+  "name": "AnimationController::GetRemainingTime",
+  "ps2": "0x1073d8",
+  "why": "Version Tracking candidate, body review: PROPOSED GetTotalTime REJECTED; body is (0x18*0x2c) - (0x2c*8) = GetTotalTime - GetCurrentTime inlined = PS2 GetRemainingTime 0x1073d8; DoAiming calls 11020/11040/11050/11060 as PS2 calls CurrentFrame/CurrentTime/TotalTime/RemainingTime"
+ },
+ {
+  "xbox": "0x23e60",
+  "name": "AICharacterPedestrian::UpdateThreatRelativeDirection",
+  "ps2": "0x12a398",
+  "why": "Version Tracking candidate, body review: Same sole caller CheckVehicleThreat; atan(dx,dz)-heading, wrap +-0.5, GetDegFromAng(a,1)->out1, a*360 (GetDegFromAng(a,0) inlined)->out2, GetSimpleRigidBody+GetForwardVector"
+ },
+ {
+  "xbox": "0x23bc0",
+  "name": "AICharacterPedestrian::GetDegFromAng",
+  "ps2": "0x129298",
+  "why": "on the caller chain of AICharacterPedestrian::UpdateThreatRelativeDirection, body review: a*360, snap to 45-degree steps at +-22.5/67.5/... when flag set; same on PS2"
+ },
+ {
+  "xbox": "0x81a20",
+  "name": "RPlayerCamera::InitWeaponChange",
+  "ps2": "0x1bd3c8",
+  "why": "Version Tracking candidate, body review: Identical: node type==0x200 -> FindAutoDriveArmInd, compare/set arm byte, flag|=1, store previous to global; both called from AutoDriveCamInputHandler beside InitSpin"
+ },
+ {
+  "xbox": "0x81af0",
+  "name": "RPlayerCamera::GetMaxTumble",
+  "ps2": "0x1bd4b8",
+  "why": "Version Tracking candidate, body review: Returns RCameraIniLoader::kMaxTumble; sole shared caller RDirectorQueue::ProcessDirectorLogic"
+ },
+ {
+  "xbox": "0x96960",
+  "name": "RViewCamera::AspectRatio",
+  "ps2": "0x1d4688",
+  "why": "Version Tracking candidate, body review: Identical widescreen flag ? k*1.7777778 : k*1.3333333; caller WTargetPicker::GetScreenPos on both"
+ },
+ {
+  "xbox": "0xfb050",
+  "name": "EAGLAnim::FnCompoundChannel::InitSubChannels",
+  "ps2": "0x2665f8",
+  "why": "Version Tracking candidate, body review: Allocs count*4 at +0x10 then NewFnAnim per sub-channel in reverse; Xbox callers are all FnCompoundChannel Eval* methods (PS2 has no recorded callers)"
+ },
+ {
+  "xbox": "0xfb930",
+  "name": "EAGLAnim::FnKeyDeltaChan::EvalToPrevValues",
+  "ps2": "0x276688",
+  "why": "Version Tracking candidate, body review: DecompressValues(0, n, +0x10, arg, +0x14, +0x14) then +0x10=arg; the sibling DecompressValues callers (fb400<->276320 etc.) have bounds branches, this is the unique straight one"
+ },
+ {
+  "xbox": "0xfe2d0",
+  "name": "EAGLAnim::FnDeltaF1::EvalSQTMask",
+  "ps2": "0x270a30",
+  "why": "Version Tracking candidate, body review: FnDeltaF1::EvalSQT calls exactly two helpers on both sides (EvalSQTMask, InitBuffersAsRequired); size ratio 1.01"
+ },
+ {
+  "xbox": "0xfeae0",
+  "name": "EAGLAnim::FnDeltaF1::InitBuffersAsRequired",
+  "ps2": "0x2713f0",
+  "why": "Version Tracking candidate, body review: Allocs n*4, n*4, n*16 (F1 sizes; F3 uses n*16,n*16,n*0x30), same 1.5259022e-05 scaling loop; caller FnDeltaF1::EvalSQT on both"
+ },
+ {
+  "xbox": "0xff2d0",
+  "name": "EAGLAnim::FnDeltaF3::EvalSQTMask",
+  "ps2": "0x26eff0",
+  "why": "Version Tracking candidate, body review: Large mask evaluator called by FnDeltaF3::EvalSQT on both sides (other callee is InitBuffersAsRequired, item 28); size ratio 0.96"
+ },
+ {
+  "xbox": "0xffd20",
+  "name": "EAGLAnim::FnDeltaF3::InitBuffersAsRequired",
+  "ps2": "0x26fc80",
+  "why": "Version Tracking candidate, body review: Allocs n*16, n*16, n*0x30 as PS2 F3; same dequantise loop; caller FnDeltaF3::EvalSQT on both"
+ },
+ {
+  "xbox": "0x1051c0",
+  "name": "EAGLAnim::FnRunBlender::SetWeight",
+  "ps2": "0x277c08",
+  "why": "Version Tracking candidate, body review: clamp idx to [0,count-2], frac to +0x28, compare with +0x30 and swap/NewFnAnim sub-anims; called by FnRunBlender EvalSQT and EvalVel2D on both (FnTurnBlender::SetWeight is 0x1043b0)"
+ },
+ {
+  "xbox": "0x105670",
+  "name": "EAGLAnim::FnRunBlender::CycleTime",
+  "ps2": "0x2793c8",
+  "why": "Version Tracking candidate, body review: Identical wrap-into-[a,b) float code; called from FnRunBlender::EvalSQT"
+ },
+ {
+  "xbox": "0x105710",
+  "name": "EAGLAnim::FnRunBlender::ComputeCycleIdx",
+  "ps2": "0x279440",
+  "why": "Version Tracking candidate, body review: Identical cycle-index code; adjacent to CycleTime on both; called from FnRunBlender::EvalSQT"
+ },
+ {
+  "xbox": "0x105a60",
+  "name": "EAGLAnim::FnRunBlender::AlignVel",
+  "ps2": "0x278b48",
+  "why": "Version Tracking candidate, body review: Rotates the 2D velocity by the quaternion at +0x58 (Xbox via helper 0x104eb0, PS2 inlined); sole caller FnRunBlender::EvalVel2D on both"
+ },
+ {
+  "xbox": "0x105ab0",
+  "name": "EAGLAnim::FnRunBlender::BlendVel",
+  "ps2": "0x278c20",
+  "why": "Version Tracking candidate, body review: Vcall on sub-anim +0x20, if weight +0x28==0 copy, else lerp and rescale by blended speed magnitude; sole caller FnRunBlender::EvalVel2D on both"
+ },
+ {
+  "xbox": "0x120db0",
+  "name": "ASoundManager::NormalizedRandomNumber",
+  "ps2": "0x2ece10",
+  "why": "Version Tracking candidate, body review: Polar Box-Muller with cached second value and static flag, rand() in [-1,1]; sole shared caller ASubmersible::PlayCreaks"
+ },
+ {
+  "xbox": "0x14a450",
+  "name": "SHAPE_loadfile",
+  "ps2": "0x306e28",
+  "why": "Version Tracking candidate, body review: Calls shape loader 0x14a370 with flag 1 while named SHAPE_loadfilez 0x14a470 passes 0 (AUF: loadfile a2=1); sits just before loadfilez as on PS2; ShapeFileLoad calls both"
+ },
+ {
+  "xbox": "0x14a490",
+  "name": "SHAPE_version",
+  "ps2": "0x306e68",
+  "why": "Version Tracking candidate, body review: Parses 3-digit version from header bytes 0xc..0xf identically; called from the shape loader after the magic check on both sides"
+ }
+]

@@ -1,0 +1,109 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000e8bf0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "EAGL::Model::GetChild(char *)"
+  },
+  {
+   "address": "0x000e8f60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "EAGL::Model::GetGeometry(char *)"
+  },
+  {
+   "address": "0x000e8ff0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "EAGL::Model::SetModelMatrix(MATRIX4 &)"
+  },
+  {
+   "address": "0x000e9170",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "EAGL::Model::GetTARList(char *) const"
+  },
+  {
+   "address": "0x000e9260",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    }
+   ],
+   "sheet": "EAGL::Model::DrawInstances(EAGL::InstanceArray *, int, int)"
+  },
+  {
+   "address": "0x000e9410",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::Model::Optimize(void)"
+  },
+  {
+   "address": "0x000e96c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::Model::ClearMorphModel(void)"
+  },
+  {
+   "address": "0x000ea210",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "EAGL::Model::Draw(MATRIX4 &)"
+  },
+  {
+   "address": "0x000ea480",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::Model::MorphModel(void)"
+  },
+  {
+   "address": "0x000ea7b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "EAGL::Model::Call(char *)"
+  }
+ ]
+}

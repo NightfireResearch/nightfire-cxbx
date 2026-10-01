@@ -1,0 +1,331 @@
+{
+ "verdicts": [
+  {
+   "item": "30.1",
+   "xbox": "0x7ca60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL vector _Xlen helper: builds 'vector<T> too long' length_error and throws; called only from the Xbox vector<0x50-byte> insert (FUN_0007cb00); compiler/STL code, not RDrawGroup::ClearDrawLists",
+   "intermediates": []
+  },
+  {
+   "item": "31.1",
+   "xbox": "0x7e520",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Body = PS2 FUN_001af708 (flicker intensity: frame-time*rate, floor, 0.4/0.5/0.6/2.5 shaping, flags 0x800/0x4000), same call position in AddDynamicLightEffect; but PS2 0x1af708 is an unlisted static inside sheet row 3146 NumPositionalLightsAffecting's extent (0x1af638+0x288=0x1af8c0=row 3147) - no name to give",
+   "intermediates": []
+  },
+  {
+   "item": "32.1",
+   "xbox": "0x81460",
+   "ps2": "0x1bbf70",
+   "name": "RPlayerCamera::DoSmoothModeChange",
+   "verdict": "accept",
+   "why": "Called from UpdateAutoDriveCam and 6 other Update*Cam on both; body identical: flag 8 -> false, flag 4 -> true, then two mode indices (+0x130/+0x134 vs +0x120/+0x124, +0x10) < count and table[i].byte2 > 0",
+   "intermediates": []
+  },
+  {
+   "item": "33.1",
+   "xbox": "0x81740",
+   "ps2": "0x1bc9f0",
+   "name": "RPlayerCamera::TriggerCarAnimationCamera",
+   "verdict": "accept",
+   "why": "Only callers ~EPlayCarCameraAnim and ~EPlayPOVDeath on both; body: ResetStateForAnimation, new(0x28) RDirectorQueueData(..., flags|0x44, 0, ...), hand to queue, delete",
+   "intermediates": []
+  },
+  {
+   "item": "34.1",
+   "xbox": "0x83190",
+   "ps2": "0x1b6c60",
+   "name": "RPlayerCamera::LimitPitchYaw",
+   "verdict": "accept",
+   "why": "Sole caller UpdateAutoDriveCam on both; body identical: 5-entry arm-limit loop over +0xa4/+0xb8 (PS2 +0xac/+0xc0, -8), four asin-derived limits, 0..1 interpolation clamps, +-0.5 / +-1.0 yaw wrap, returns clamped flag",
+   "intermediates": []
+  },
+  {
+   "item": "35.1",
+   "xbox": "0x8b330",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Compiler-generated copy assignment (0x10 dwords, fields to 0xb4) called from PreRender; PS2 DoRender is an empty vtable stub with no counterpart here",
+   "intermediates": []
+  },
+  {
+   "item": "36.1",
+   "xbox": "0x8ddf0",
+   "ps2": "0x1c9498",
+   "name": "RSceneObj::TransformPointByInstancePosition",
+   "verdict": "accept",
+   "why": "Twin of named TransformMatrixByInstancePosition (identity or instance matrix with cleared translation, GetInstanceMatrix, MATRIX4_mult, same byte return) but then transforms a point in place and calls a vtable fn on it when the flag is set - as PS2 0x1c9498; sits between GetInstancePosition and TransformMatrixByInstancePosition on both",
+   "intermediates": []
+  },
+  {
+   "item": "37.1",
+   "xbox": "0x953a0",
+   "ps2": "0x1d1ef8",
+   "name": "RTimeData::Update",
+   "verdict": "accept",
+   "why": "Body identical: fTime = frame counter, float copy, float * rate (same globals as RTimeData::Init and the flicker fn); called once per frame at render start (Xbox RRenderHigh::Render with StartFrameRender inlined, PS2 StartFrameRender); follows RTimeData::Init on both",
+   "intermediates": []
+  },
+  {
+   "item": "38.1",
+   "xbox": "0x97190",
+   "ps2": "0x1d5700",
+   "name": "RWorldCamera::SetViewingTransform",
+   "verdict": "accept",
+   "why": "Second overload, sheet row 3798 SetViewingTransform(COORD4 &, COORD4 &, COORD4 *, ...) (PS2 FUN_001d5700 = 0x1d5610+0xf0, +0x138 = IsAnchorValid); body = first overload plus two scale-adds of param vectors before normalising, same +0x10 offsets; caller UpdateDashboardCam on both. Not IsAnchorValid (inlined on Xbox)",
+   "intermediates": []
+  },
+  {
+   "item": "39.1",
+   "xbox": "0xa2e20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "RPartLibraryList constructor (zeroes, builds tree header at +0xb004), outlined by MSVC from the RParticleLibrary ctor; PS2 inlines it; not ~RParticleLibrary",
+   "intermediates": []
+  },
+  {
+   "item": "40.1",
+   "xbox": "0xadc80",
+   "ps2": "0x1f77e0",
+   "name": "RigidBody::~RigidBody",
+   "verdict": "accept",
+   "why": "Simulation::ReleaseRigidBodySlot (Xbox FUN_000b2980, caller ~PhysicsObject) non-simple branch calls it on both; body: +0x6d=0, free 16 WWorldPos pointers at (+0x5c)+0x380.., +0x5c=0; no delete flag on Xbox",
+   "intermediates": []
+  },
+  {
+   "item": "41.1",
+   "xbox": "0xb1e90",
+   "ps2": "0x1fd4d8",
+   "name": "SimpleRigidBody::~SimpleRigidBody",
+   "verdict": "accept",
+   "why": "ReleaseRigidBodySlot simple branch on both; body MEM_fill(this,0,0x40); no delete flag on Xbox",
+   "intermediates": []
+  },
+  {
+   "item": "42.1",
+   "xbox": "0xb67b0",
+   "ps2": "0x206b00",
+   "name": "SMissionManager::SetMagicCounterThreshold",
+   "verdict": "accept",
+   "why": "Sole caller ~ESetMagicCounterThreshold on both; if idx<0x40 store at +0x608+idx*4 (PS2 +0x4e4, the +0x124 SMissionManager shift)",
+   "intermediates": []
+  },
+  {
+   "item": "43.1",
+   "xbox": "0xb9620",
+   "ps2": "0x209c78",
+   "name": "SMissionTimer::Increment",
+   "verdict": "accept",
+   "why": "Sole caller ~EPowerUpTimer on both; counter += arg; between Start and GetValue on both",
+   "intermediates": []
+  },
+  {
+   "item": "44.1",
+   "xbox": "0xbd1e0",
+   "ps2": "0x210b60",
+   "name": "Util_PerturbVector",
+   "verdict": "accept",
+   "why": "Overload (float, float, COORD3 &), sheet row 4790, PS2 Ghidra name Util_PerturbVector; caller ~EFireWeapon on both; body: setyrot(a), rotate vec, setzrot(b), rotate, copy out. The random overload (COORD3 &, float) is already Xbox 0xbd250 / PS2 0x210c10. Not Util_EulerToQuat",
+   "intermediates": []
+  },
+  {
+   "item": "45.1",
+   "xbox": "0xc0660",
+   "ps2": "0x219328",
+   "name": "WCollisionMgr::GetClosestIntersectingBarrier",
+   "verdict": "accept",
+   "why": "Body identical: best=1e38, per-barrier segment intersect (direct, or via instance MakeMatrix/vect3mult and OrthoInverse), max+0.25*min metric, 10-word barrier copy into result, result+0x53=2",
+   "intermediates": []
+  },
+  {
+   "item": "46.1",
+   "xbox": "0xc5460",
+   "ps2": "0x2131e8",
+   "name": "WCollisionMgr::~WCollisionMgr",
+   "verdict": "accept",
+   "why": "Only call in WCollisionMgr::Shutdown before delete on both; body clears two trees (+0x24 node 0x18, +0x18 node 0x20) and FastFrees the headers; no delete flag on Xbox",
+   "intermediates": []
+  },
+  {
+   "item": "47.1",
+   "xbox": "0xc99f0",
+   "ps2": "0x227058",
+   "name": "WRoadNav::UpdateLaneChange",
+   "verdict": "accept",
+   "why": "Sole caller IncNavPosition on both; body identical: if +0x98!=+0xa0, t+=dt at +0xa8, frac +0xa4 = t/+0xac, lerp +0x9c->+0xa0 or snap, returns 1",
+   "intermediates": []
+  },
+  {
+   "item": "48.1",
+   "xbox": "0xcd8d0",
+   "ps2": "0x229b88",
+   "name": "WTargetable::DistFromScreenCenter",
+   "verdict": "accept",
+   "why": "Called twice by comparator FUN_000ce050, slot 0 of the comparator table {ce050, CompareDistFromScreenPos, ce0a0} = PS2 {CompareDistFromScreenCenter, CompareDistFromScreenPos, CompareDistFromCamera}; squared 2D distance of +0x10/+0x14 from the screen centre (Xbox subtracts resX/2, resY/2)",
+   "intermediates": [
+    {
+     "item": "48.i1",
+     "xbox": "0xce050",
+     "ps2": "0x22b150",
+     "name": "WTargetPicker::CompareDistFromScreenCenter",
+     "verdict": "accept",
+     "why": "Comparator table slot 0 on both (Xbox 0x1ca35c, PS2 0x33aa38), next to named CompareDistFromScreenPos; calls DistFromScreenCenter twice, returns sign of the difference",
+     "intermediates": []
+    },
+    {
+     "item": "48.i2",
+     "xbox": "0xce0a0",
+     "ps2": "0x22b2a0",
+     "name": "WTargetPicker::CompareDistFromCamera",
+     "verdict": "accept",
+     "why": "Comparator table slot 2 on both; calls DistFromCamera(0) twice, returns sign of the difference",
+     "intermediates": []
+    },
+    {
+     "item": "48.i3",
+     "xbox": "0xcd840",
+     "ps2": "0x229ae8",
+     "name": "WTargetable::DistFromCamera",
+     "verdict": "accept",
+     "why": "Called only by CompareDistFromCamera on both; squared distance from camera[idx] (RRenderHigh::fgThis+4+idx*8) position (+0x40 vs PS2 +0x30) to this",
+     "intermediates": []
+    }
+   ]
+  },
+  {
+   "item": "49.1",
+   "xbox": "0xd42a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Not GLARE_Interpolate. Body = PS2 FUN_00235ed0 (look up UGroup key in +0x1410/+0x1418 cache, else copy 0x2c-dword Particles, scale by 127/127/360, RParticleLibrary::AddSystem, cache it), called from the same draw fn (Xbox FUN_000d4f90 = PS2 FUN_002360c0). Fits sheet row 5229 PARTICLE_Add(UGroup *, Particles *), but that name is already on Xbox 0xd43a0 / PS2 0x2363b0, whose body is AMix 'Giotto' sound code (probably really SOUND_Play) - conflict, left for review",
+   "intermediates": []
+  },
+  {
+   "item": "50.1",
+   "xbox": "0xd9c30",
+   "ps2": "0x244f70",
+   "name": "GHud::GadgetOff",
+   "verdict": "accept",
+   "why": "Sole caller ~EGadgetOff on both (GadgetOn <- ~EGadgetOn); zeroes +0x420/+0x424/+0x428/+0x42c, identical offsets",
+   "intermediates": []
+  },
+  {
+   "item": "51.1",
+   "xbox": "0xe4220",
+   "ps2": "0x24bd40",
+   "name": "IniFiles::FindSection",
+   "verdict": "accept",
+   "why": "Caller LoadFile (camera ini loader) on both; body: DAFI_getsectionindex(this->dafi, name) >= 0, as PS2 FindSection (sheet row 5502, outside the window list); not GetValue (DAFI_getvalue, inlined on Xbox)",
+   "intermediates": []
+  },
+  {
+   "item": "52.1",
+   "xbox": "0xf3760",
+   "ps2": "0x292250",
+   "name": "EAGL::TextureRenderContextExtension::~TextureRenderContextExtension",
+   "verdict": "accept",
+   "why": "Empty body, single xref: called last in ~TextureRenderContext (Xbox FUN_000f35a0) after the DeleteViewPort loop, exactly as PS2 ~TextureRenderContext calls ~TextureRenderContextExtension; no delete flag on Xbox",
+   "intermediates": [
+    {
+     "item": "52.i1",
+     "xbox": "0xf35a0",
+     "ps2": "0x2923a0",
+     "name": "EAGL::TextureRenderContext::~TextureRenderContext",
+     "verdict": "accept",
+     "why": "Loops DeleteViewPort while list head (+0x28, PS2 +0x44) non-null, then ~TextureRenderContextExtension, as PS2; no delete flag (caller FUN_000e8ad0 frees)",
+     "intermediates": []
+    },
+    {
+     "item": "52.i2",
+     "xbox": "0xf3540",
+     "ps2": "0x292470",
+     "name": "EAGL::TextureRenderContext::DeleteViewPort",
+     "verdict": "accept",
+     "why": "Unlinks the viewport from the list (next at +0x18c, PS2 +0x194) and frees it; called from ~TextureRenderContext and the offscreen buffer / reflection / shadow-map destructors on both",
+     "intermediates": []
+    }
+   ]
+  },
+  {
+   "item": "53.1",
+   "xbox": "0xfb960",
+   "ps2": "0x2766e0",
+   "name": "EAGLAnim::FnKeyDeltaChan::FindLowerKey",
+   "verdict": "accept",
+   "why": "Between EvalToPrevValues and Eval on both; body identical: ushort key-time table at (+0xc)+8, start from cached +0x10 - 1, walk down/up to bracket int(t), limit (+0xc)+0xc - 2; only FindLowerKey in the sheet",
+   "intermediates": []
+  },
+  {
+   "item": "54.1",
+   "xbox": "0x1033f0",
+   "ps2": "0x268c28",
+   "name": "EAGLAnim::FnDeltaQ::~FnDeltaQ",
+   "verdict": "accept",
+   "why": "Sheet row 6477 (PS2 Ghidra FUN_00268c28): FnDeltaQ vtable slot 0 on both (Xbox 0x1a1450 -> FUN_00104200 -> this; PS2 0x3af814); sets FnDeltaQ vtable, returns +0x20 buffer to its size-class free list, ~FnAnimMemoryMap; Xbox copy non-deleting. Not InitBuffersAsRequired",
+   "intermediates": [
+    {
+     "item": "54.i1",
+     "xbox": "0x104200",
+     "ps2": "0x268c28",
+     "name": "EAGLAnim::FnDeltaQ::scalar_deleting_destructor",
+     "verdict": "accept",
+     "why": "FnDeltaQ vtable slot 0 (Xbox 0x1a1450) = PS2 slot 0x268c28 (sheet row 6477 ~FnDeltaQ): ~FnDeltaQ then eagl free(this, 0x30) if flag&1",
+     "intermediates": []
+    }
+   ]
+  },
+  {
+   "item": "55.1",
+   "xbox": "0x107e60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Mip-chain byte-size helper = PS2 static FUN_0025f8f0 (callers SHAPE_createsize/createat on both), which has no sheet row (creates.o statics before SHAPE_createsize) - no name; not SHAPE_locate",
+   "intermediates": []
+  },
+  {
+   "item": "56.1",
+   "xbox": "0x10d870",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "FILESYS_atomic callback for FILE_sizez (open/size/close sync) = PS2 FUN_00256f00, an unlisted static inside sheet row 7003 FILE_exists's extent (0x256ee0+0x90 = 0x256f70) - no name; not FILE_size (inlined into FILE_sizez on Xbox)",
+   "intermediates": []
+  },
+  {
+   "item": "57.1",
+   "xbox": "0x114840",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Memory-vtable alloc-and-clear entry (ApplicationMemoryHeapConfig, vtable alloc, MEM_fill), referenced from data 0x1d4838; nearest PS2 analogue FUN_002cfed8 is an unlisted static inside UMemory::FastFree's sheet extent and does not clear - no name; not UMemory_meminitadr",
+   "intermediates": []
+  },
+  {
+   "item": "58.1",
+   "xbox": "0x11a5b0",
+   "ps2": "0x2d9a30",
+   "name": "DAFI_getsectioncount",
+   "verdict": "accept",
+   "why": "Returns [arg+4] on both; caller LoadFile on both; sits just before DAFI_getsectionindex on both",
+   "intermediates": []
+  },
+  {
+   "item": "59.1",
+   "xbox": "0x11a650",
+   "ps2": "0x2d9ae8",
+   "name": "DAFI_getkeycount",
+   "verdict": "accept",
+   "why": "Returns [arg+0x1f48] on both (identical offset); between DAFI_getsectionbyindex and DAFI_getkeyindex on both; caller ProcessDafiSection (Xbox FUN_00057a80)",
+   "intermediates": []
+  }
+ ]
+}

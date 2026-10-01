@@ -1,0 +1,43 @@
+{
+ "batch": "052",
+ "program": "Driving.xbe",
+ "note": "Input layer, action queues: the helpers ActionQueue uses.",
+ "items": [
+  {
+   "xbox": "0x0004f170",
+   "expect": "ActionData",
+   "name": "ActionData::ActionData",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "ActionData::ActionData(int, float, int) (PS2 0x165188). Stores its first argument (the action id) at +0, the third at +4 and the float at +8.",
+   "evidence": []
+  },
+  {
+   "xbox": "0x000a1ec0",
+   "expect": "FUN_000a1ec0",
+   "name": "ActionRef::ActionRef",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "ActionRef::ActionRef(ActionData *): the 4-byte handle ActionQueue::GetAction returns - it stores the pointer. Its body (store one dword, return this) is generic enough that other 4-byte constructors may be folded onto it.",
+   "evidence": []
+  },
+  {
+   "xbox": "0x0004f1c0",
+   "expect": "FUN_0004f1c0",
+   "name": "ActionQueueRing::Push",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_exact": "INVENTED NAME, not canonical: the ring buffer inside ActionQueue has no PS2 symbol (the PS2 build inlines it). Appends an ActionData at the tail (wrapping at capacity); when the ring is full the oldest action is dropped (head advances, count stays at capacity). Called by ActionQueue::ReceiveAction on this+4.",
+   "evidence": []
+  },
+  {
+   "xbox": "0x0004f2d0",
+   "expect": "FUN_0004f2d0",
+   "name": "ActionQueueRing::ActionQueueRing",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_exact": "INVENTED NAME, not canonical: the ring buffer inside ActionQueue has no PS2 symbol (the PS2 build inlines it). Constructs the 200 ActionData slots (0, 0, 0) and sets count 0, tail -1, head 0, capacity 200. Called by ActionQueue's constructor on this+4.",
+   "evidence": []
+  }
+ ]
+}

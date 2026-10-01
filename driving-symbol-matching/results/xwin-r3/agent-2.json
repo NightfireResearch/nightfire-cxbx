@@ -1,0 +1,333 @@
+{
+ "verdicts": [
+  {
+   "item": "17.1",
+   "xbox": "0x1a840",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "std::map/_Tree destructor body (erase root + FastFree head 0x98), only called by the SEH unwind funclet 0x150820 of 0x1a880; STL member dtor, no PS2 row",
+   "intermediates": []
+  },
+  {
+   "item": "17.2",
+   "xbox": "0x1a880",
+   "ps2": "0x1152f0",
+   "name": "URefCounter<ActTextureDatabase::TextureInfo>::~URefCounter",
+   "verdict": "accept",
+   "why": "atexit-registered from URefCounter<TextureInfo>::Get (static instance); body = clear map (size!=0 erase, reset head links) then FastFree(head,0x98) exactly as PS2 ~URefCounter (map head +4/size +8 on Xbox vs +0/+4 PS2); same pattern as Model 0x182b0",
+   "intermediates": []
+  },
+  {
+   "item": "18.1",
+   "xbox": "0x1d530",
+   "ps2": "0x11ab50",
+   "name": "AICharacterEnemyDriver::GetRotPos",
+   "verdict": "accept",
+   "why": "3-arg overload (int, MATRIX4&, COORD3&): GetRigidBody(car+0x140 ->+0x4a) copies matrix + pos w=1 and velocity +0x20..0x28 to 3rd arg, as PS2 0x11ab50 (+0x150/+0x46); passed as pointer from WakeUp like PS2; 2-arg overload already 0x20e30. Genuine overload. Note: likely ICF-shared with other drivers' 3-arg GetRotPos (5 WakeUp refs)",
+   "intermediates": []
+  },
+  {
+   "item": "18.2",
+   "xbox": "0x1d5f0",
+   "ps2": "0x11aca8",
+   "name": "AICharacterEnemyDriver::AICharacterEnemyDriver",
+   "verdict": "accept",
+   "why": "ctor: AICharacter ctor, installs vtable 0x18a788 whose slot 0 is AICharacterEnemyDriver::scalar_deleting_destructor 0x1d650, stores param at +0x140 (PS2 same), called from WakeUp as PS2",
+   "intermediates": []
+  },
+  {
+   "item": "19.1",
+   "xbox": "0x7a530",
+   "ps2": "0x1a85d0",
+   "name": "RCameraSpline::EvaluateSpline",
+   "verdict": "accept",
+   "why": "GetSegmentCurveStep calls it after BuildSplineEx exactly where PS2 0x222d40 calls EvaluateSpline(float,COORD4&); body t^3,t^2,t,1 x basis (0x190cf0/0x190d30 by type) -> point, w=1, *0.5 if type==1, as PS2 0x1a85d0. Genuine overload (other overload 0x7a6d0 = PS2 0x1a8440)",
+   "intermediates": []
+  },
+  {
+   "item": "19.2",
+   "xbox": "0x7a5c0",
+   "ps2": "0x1a86a8",
+   "name": "RCameraSpline::EvaluateTangent",
+   "verdict": "accept",
+   "why": "UpdateNavPos calls it on both sides (PS2 UpdateNavPos -> EvaluateTangent); tangent basis matrix (0x190d70/0x190db0), cubic weights, normalise xyz, w=1 as PS2",
+   "intermediates": []
+  },
+  {
+   "item": "20.1",
+   "xbox": "0xb6c30",
+   "ps2": "0x207720",
+   "name": "SMissionManager::SetObjectiveComment",
+   "verdict": "accept",
+   "why": "called from ~ESetObjective both sides; this[0x72c + i*4] = v vs PS2 0x608 + i*4 (SMissionManager +0x124 shift)",
+   "intermediates": []
+  },
+  {
+   "item": "20.2",
+   "xbox": "0xb6c50",
+   "ps2": "0x207730",
+   "name": "SMissionManager::ClearObjective",
+   "verdict": "accept",
+   "why": "called from ~ESetObjective/~ESetWaypoint both sides; clears visible flag and +0x724+i*4 (PS2 +0x600+i*4, +0x124 shift)",
+   "intermediates": []
+  },
+  {
+   "item": "21.1",
+   "xbox": "0xd2860",
+   "ps2": "0x231548",
+   "name": "WWorldMath::SegmentIntersect",
+   "verdict": "accept",
+   "why": "callers GetBarrierNormal/GetClosestIntersectingBarrier on both sides, calls v3sub; 2D segment/segment cross-product intersection with 3 args as PS2",
+   "intermediates": []
+  },
+  {
+   "item": "21.2",
+   "xbox": "0xd29e0",
+   "ps2": "0x231720",
+   "name": "WWorldMath::IntersectCircle",
+   "verdict": "accept",
+   "why": "9-arg circle/segment test called from GetClosestIntersectingCylObject (Xbox 0xc0440, see intermediate); identical radius^2 endpoint checks, quadratic discriminant, sqrt, 1/(2a), roots in [0,1]",
+   "intermediates": [
+    {
+     "item": "21.x",
+     "xbox": "0xc0440",
+     "ps2": "0x218af0",
+     "name": "WCollisionMgr::GetClosestIntersectingCylObject",
+     "verdict": "accept",
+     "why": "sits before GetClosestIntersectingOBBObject/Barrier as on PS2; loops object vector calling IntersectCircle, best distance init 1e38, as PS2",
+     "intermediates": []
+    }
+   ]
+  },
+  {
+   "item": "22.1",
+   "xbox": "0xf5230",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "profiler scope ctor (*this=region; start rdtsc timer via 0xf5480); no caller; PS2 range has no such function (ProfilerRegion ctor body differs) - Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "22.2",
+   "xbox": "0xf5250",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "profiler scope ctor with enable flag (same 0xf5480 rdtsc start); no caller; no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "23.1",
+   "xbox": "0x10a920",
+   "ps2": "0x2617a8",
+   "name": "THREAD_exit",
+   "verdict": "accept",
+   "why": "ExitThread(0) no-return wrapper called at the end of IFeedback's thread loop (Xbox 0x4fbc0), as PS2 THREAD_exit (ExitDeleteThread) is called from IFeedback Thread; sits after THREAD_testexit as PS2 testexit..exit",
+   "intermediates": []
+  },
+  {
+   "item": "23.2",
+   "xbox": "0x10a930",
+   "ps2": "0x2611f0",
+   "name": "THREAD_create",
+   "verdict": "accept",
+   "why": "called by IFeedback ctor on both sides; startup block {flag, func, funcP=0} with no user param (entry 0x10a730 calls func() when set) = PS2 THREAD_create (createparam with param=0). NAME CLASH: Xbox 0x10a9c0 currently carries THREAD_create but stores {flag,0,func,param} = THREAD_createparam - see intermediate; needs user review",
+   "intermediates": [
+    {
+     "item": "23.x",
+     "xbox": "0x10a9c0",
+     "ps2": "0x261220",
+     "name": "THREAD_createparam",
+     "verdict": "accept",
+     "why": "RENAME of existing Xbox 'THREAD_create': startup block has func in the param-taking slot plus user param (entry calls funcP(param)), versus 0x10a930 with no param; PS2 THREAD_create is a wrapper passing param=0 to THREAD_createparam",
+     "intermediates": []
+    }
+   ]
+  },
+  {
+   "item": "24.1",
+   "xbox": "0x1167f0",
+   "ps2": "0x2cbc50",
+   "name": "VU0_v4quatrotate",
+   "verdict": "accept",
+   "why": "DEBRIS_Draw calls it on both sides (PS2 DEBRIS_Draw -> VU0_v4quatrotate); q*v*q^-1 cross/dot form, writes xyz and keeps out.w as PS2 .xyz sqc2 of loaded a2",
+   "intermediates": []
+  },
+  {
+   "item": "24.2",
+   "xbox": "0x1169a0",
+   "ps2": "0x2cbcf8",
+   "name": "VU0_v4quatrotate_xlate",
+   "verdict": "accept",
+   "why": "4-arg: same quaternion rotate then adds translation xyz, keeps w, as PS2 v4quatrotate_xlate; called from the CANVAS helper 0xd4f90 as PS2 from CANVAS helper FUN_002360c0",
+   "intermediates": []
+  },
+  {
+   "item": "25.1",
+   "xbox": "0x18270",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "std::map/_Tree destructor (erase + FastFree head), only called from unwind funclet 0x1506c0 of 0x182b0; STL member dtor",
+   "intermediates": []
+  },
+  {
+   "item": "25.2",
+   "xbox": "0x182b0",
+   "ps2": "0x111a50",
+   "name": "URefCounter<ActModelDatabase::ModelInfo>::~URefCounter",
+   "verdict": "accept",
+   "why": "atexit-registered from URefCounter<ModelInfo>::Get (xref 0x183a4 via 0x15cd20); clear map then FastFree(head,0x98) as PS2 ~URefCounter",
+   "intermediates": []
+  },
+  {
+   "item": "26.1",
+   "xbox": "0x96cc0",
+   "ps2": "0x1d4420",
+   "name": "RViewCamera::SetExtents",
+   "verdict": "accept",
+   "why": "(xMin,yMin,w,h) sets +0x1c/+0x20/+0x28/+0x2c, inlined RefreshLODMultiplier (+0x34 = lod*..) and UpdateForResolution (resolution scaled viewport); called from RearrangeSplitScreens (Xbox 0x8bb10) as PS2",
+   "intermediates": [
+    {
+     "item": "26.x",
+     "xbox": "0x8bb10",
+     "ps2": "0x1c4c10",
+     "name": "RRenderHigh::RearrangeSplitScreens",
+     "verdict": "accept",
+     "why": "sits after ReceiveCameraInput as PS2; called from PushPlayerView/Render(PopPlayerView); per-player-count row/column char tables, loops calling SetExtents(float x4) as PS2 RearrangeSplitScreens -> SetExtents",
+     "intermediates": []
+    }
+   ]
+  },
+  {
+   "item": "26.2",
+   "xbox": "0x96d70",
+   "ps2": "0x1d4468",
+   "name": "RViewCamera::SetExtents",
+   "verdict": "accept",
+   "why": "SetExtents(RViewCamera*): copies other's extents +0x1c..0x30, LOD multiplier, UpdateForResolution; caller PreRender both sides. Genuine overload",
+   "intermediates": []
+  },
+  {
+   "item": "27.1",
+   "xbox": "0xbd690",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "= PS2 FUN_00211ac8 (unnamed static): called by WCollider::Refresh (Xbox 0xbe4b0) at the same position (after Clear/set pos, before PrepareRegion), same radius*1.1 / clamped-length*1.1 body; PS2 has no name to give",
+   "intermediates": [
+    {
+     "item": "27.x",
+     "xbox": "0xbe4b0",
+     "ps2": "0x211e18",
+     "name": "WCollider::Refresh",
+     "verdict": "accept",
+     "why": "callers CollideWithWorld and WCollider ctor both sides; InRegion, if outside: Clear, store pos+radius, FUN_bd690 (=PS2 FUN_00211ac8), PrepareRegion; then store current pos/radius, as PS2 Refresh",
+     "intermediates": []
+    },
+    {
+     "item": "27.y",
+     "xbox": "0xbe2d0",
+     "ps2": "0x211ed0",
+     "name": "WCollider::PrepareRegion",
+     "verdict": "accept",
+     "why": "last call in Refresh on both sides (callers Refresh + one other static, as PS2 Refresh + FUN_00211c98); builds instance/barrier lists via GetInstanceList, FastFree",
+     "intermediates": []
+    }
+   ]
+  },
+  {
+   "item": "27.2",
+   "xbox": "0xbd730",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "allocator deallocate helper FastFree(p, n*0x28) - STL/shared helper",
+   "intermediates": []
+  },
+  {
+   "item": "28.1",
+   "xbox": "0x130780",
+   "ps2": "0x300110",
+   "name": "PlayMPC::PlayMPC",
+   "verdict": "accept",
+   "why": "callers ~ESetVideo both sides; stores p1,p2 at +0/+4, clears +8(short)/+0xc/+0x10/+0x14, p3 at +0x18, SetREALDefaults(&plaympc_alloc) then global = p4, identical to PS2",
+   "intermediates": [
+    {
+     "item": "28.x",
+     "xbox": "0x14df10",
+     "ps2": "0x302e00",
+     "name": "RCMP::RCMP_SYSTEM::SetREALDefaults",
+     "verdict": "accept",
+     "why": "only callee of PlayMPC ctor on both sides; sets alloc/free hooks to MEM_allocalign/MEM_free and third field 0 (Xbox +4/+8/+0xc, vtable at +0)",
+     "intermediates": []
+    }
+   ]
+  },
+  {
+   "item": "28.2",
+   "xbox": "0x1307c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "one-line (*plaympc_free)() called only from PlayMPC::Init unwind funclets - EH cleanup/operator-delete helper; PS2 neighbours FUN_003000f8/FUN_00300108 are unnamed and differ",
+   "intermediates": []
+  },
+  {
+   "item": "29.1",
+   "xbox": "0x12c30",
+   "ps2": "0x109a08",
+   "name": "ActActor::DropWeapon",
+   "verdict": "accept",
+   "why": "follows ActActor::Draw as PS2 DropWeapon follows Draw/DrawWeapons; body identical: t<0.95 -> flag=1; t<1.95 && flag==1 -> SpawnWeapon (ActActor::SpawnWeapon 0x11ff0 = PS2 0x10aa58, whose only caller is DropWeapon); flag=0 (flag +0x1e byte vs PS2 +0x24 int)",
+   "intermediates": []
+  },
+  {
+   "item": "29.2",
+   "xbox": "0x12c80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "std::string _Eos(size) (store size, NUL at SSO buf or heap ptr by capacity>15) - MSVC STL helper",
+   "intermediates": []
+  },
+  {
+   "item": "30.1",
+   "xbox": "0x2dc90",
+   "ps2": "0x132f80",
+   "name": "AIGroundVehicle::GetLookAhead",
+   "verdict": "accept",
+   "why": "called from DoMoveMode both sides; rigid body pos, speed length, target (+0x64 vs PS2 +0x54) direction normalised, returns max(speed*0.35, body+0x4c8 + 7.5) - same constants 0x3eb3/0x40f0/+0x4c8 on PS2",
+   "intermediates": []
+  },
+  {
+   "item": "30.2",
+   "xbox": "0x2dd80",
+   "ps2": "0x133ab0",
+   "name": "AIGroundVehicle::DriveToPointTraffic",
+   "verdict": "accept",
+   "why": "called from DoMoveMode both sides; same constant set (-0.2, 0.5, 5.0, 7.5, 0.05, 1.0), Util_Bound steering, repeated vehicle virtual control calls, as PS2",
+   "intermediates": []
+  },
+  {
+   "item": "31.1",
+   "xbox": "0x4f8c0",
+   "ps2": "0x165fb0",
+   "name": "IFeedback::ApplyJolt",
+   "verdict": "accept",
+   "why": "callers AddCollisionInfo, ~EFireWeapon, ~EShake, ~ESpawnExplosion identical on both sides; t<=0.25 -> t*1020 / 8 else 255 / min(t*32,24); update port +0x10/+0x14/+0x18 if larger, identical",
+   "intermediates": []
+  },
+  {
+   "item": "31.2",
+   "xbox": "0x4f960",
+   "ps2": "0x1660f0",
+   "name": "IFeedback::SetRumble",
+   "verdict": "accept",
+   "why": "caller ~EFireWeapon both sides; port[7]=round(a*255), port[8]=round(b*60), identical",
+   "intermediates": []
+  }
+ ]
+}

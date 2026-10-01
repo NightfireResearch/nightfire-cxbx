@@ -39,4 +39,6 @@ void Collide_FilterBullets(HITDATA_tag **hitData, ushort flags);
 float Collide_GetDamageNObjects(HITDATA_tag *hitDatas, obj_tag **objectList, ushort *objectListCountOut, ushort maxObjectsInList);
 bool Intersect_ConeSphere(_VECTOR *coneApex, float *coneDirection, float coneCos, float coneSin, _VECTOR *sphereCenter);
 
+void Coll_ResetHitHeap(void);
+
 #endif // COLLIDE_H

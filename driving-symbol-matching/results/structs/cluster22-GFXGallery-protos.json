@@ -1,0 +1,214 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000d39d0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "UGroup *"
+    }
+   ],
+   "sheet": "GFXGallery::GET_FirstIdleKey(UGroup *)"
+  },
+  {
+   "address": "0x000d39f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_3",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "GFXGallery::GET_EffectPosQuat(int, COORD4 &, COORD4 &)"
+  },
+  {
+   "address": "0x000d3aa0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GFXGallery::CULL_Start(void)"
+  },
+  {
+   "address": "0x000d3b30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    }
+   ],
+   "sheet": "GFXGallery::CULL_SetCanvas(int, bool, float)"
+  },
+  {
+   "address": "0x000d3bc0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "GFXGallery::STICKY_GetNewIndex(int)"
+  },
+  {
+   "address": "0x000d3c30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GFXGallery::STICKY_UpdateAllIndexes(void)"
+  },
+  {
+   "address": "0x000d3ce0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "GFXGallery::GET_StickyEffectPos(unsigned int, COORD4 &)"
+  },
+  {
+   "address": "0x000d3d90",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GFXGallery::CANVAS_HasStopped(GFXGallery::Canvas &)"
+  },
+  {
+   "address": "0x000d3ed0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "GFXGallery::CANVAS_PurgeSceneObj(int)"
+  },
+  {
+   "address": "0x000d4010",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GFXGallery::CANVAS_Purge(GiottoHandle *)"
+  },
+  {
+   "address": "0x000d4030",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GFXGallery::CANVAS_Suppress(GiottoHandle *)"
+  },
+  {
+   "address": "0x000d4050",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "GFXGallery::CANVAS_SetIntensity(GiottoHandle *, float)"
+  },
+  {
+   "address": "0x000d43a0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "UGroup *"
+    },
+    {
+     "name": "param_2",
+     "type": "void *"
+    }
+   ],
+   "sheet": "GFXGallery::PARTICLE_Add(UGroup *, GFXGallery::Particles *)"
+  },
+  {
+   "address": "0x000d44b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "GFXGallery::GFXGallery(char *)",
+   "return": "GFXGallery *"
+  },
+  {
+   "address": "0x000d45f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GFXGallery::PurgeAllEffects(void)"
+  },
+  {
+   "address": "0x000d4b30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "RSceneObj *"
+    }
+   ],
+   "sheet": "GFXGallery::CANVAS_PurgeSceneObjEffects(RSceneObj *)"
+  },
+  {
+   "address": "0x000d5170",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GFXGallery::~GFXGallery(void)"
+  },
+  {
+   "address": "0x000d51e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GFXGallery::CANVAS_Draw(GFXGallery::Canvas &, COORD4 &, COORD4"
+  },
+  {
+   "address": "0x000d55f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "GFXGallery::FRAME_Draw(void)"
+  }
+ ]
+}

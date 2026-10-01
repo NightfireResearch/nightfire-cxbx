@@ -1,4 +1,4 @@
-#include "inflate.h"
+#include "Inflate.h"
 
 #include <string.h>
 

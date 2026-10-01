@@ -1,0 +1,500 @@
+[
+ {
+  "row": 5536,
+  "ps2": "0x0024ccd8",
+  "verdict": "accept",
+  "why": "corrected from 0x0024cd78: 0x24ccd8 decodes a double into class/sign/exp/fraction and is called by every dp* routine; 0x24cd78 is the static _fpadd_parts (only dpadd/dpsub call it), folded into this sheet row"
+ },
+ {
+  "row": 5550,
+  "ps2": "0x0024d9b0",
+  "verdict": "accept",
+  "why": "corrected from 0x0024da40: 0x24d9b0 decodes a float (exp 0xff, bias 0x7f) and is called by every fp* routine; 0x24da40 is static _fpadd_parts called only by fpadd/fpsub"
+ },
+ {
+  "row": 5562,
+  "ps2": "0x0024e440",
+  "verdict": "accept",
+  "why": "corrected from 0x0024e4f8 (operator new throwing bad_alloc): 0x24e440 unpacks a float via __unpack_f then __make_dp = fptodp; it currently carries the guessed name maybe_float2double"
+ },
+ {
+  "row": 5574,
+  "ps2": "0x0024e8b0",
+  "verdict": "accept",
+  "why": "walks the base-class list calling each base's dcast through its vtable after a type_info== check, with ambiguity check - __class_type_info::dcast"
+ },
+ {
+  "row": 5577,
+  "ps2": "0x0024eaf8",
+  "verdict": "accept",
+  "why": "calls ~type_info, referenced from a type_info vtable, sits right after the __class_type_info type_info function"
+ },
+ {
+  "row": 5580,
+  "ps2": "0x0024eb88",
+  "verdict": "accept",
+  "why": "calls ~type_info, referenced from a vtable, sits right after the __si_type_info type_info function"
+ },
+ {
+  "row": 5584,
+  "ps2": "0x0024ec30",
+  "verdict": "accept",
+  "why": "resets vtable and optionally deletes; referenced from inside __throw_bad_typeid (0x250308) and a vtable; precedes bad_typeid type_info function"
+ },
+ {
+  "row": 5587,
+  "ps2": "0x0024ecc8",
+  "verdict": "accept",
+  "why": "resets vtable and optionally deletes; referenced from inside __throw_bad_cast (0x250288); precedes bad_cast type_info function"
+ },
+ {
+  "row": 5597,
+  "ps2": "0x0024ee48",
+  "verdict": "accept",
+  "why": "corrected from 0x0024ee50: 0x24ee48 is an 8-byte empty jr ra; 0x24ee50 is static new_eh_context (malloc 0x18/__terminate/memset) folded into this row (8+0x58=0x60)"
+ },
+ {
+  "row": 5599,
+  "ps2": "0x0024eed0",
+  "verdict": "accept",
+  "why": "corrected from 0x0024ef20 (static eh_context_static): 0x24eed0 returns (*get_eh_context)()+8 (&eh->info) and is called by every __cp_* exception routine; 0x28+0x28+0x68 of statics = sheet 0xb8"
+ },
+ {
+  "row": 5600,
+  "ps2": "0x0024ef88",
+  "verdict": "accept",
+  "why": "returns (*get_eh_context)()+4, the dynamic_handler_chain field that eh_context_static initialises"
+ },
+ {
+  "row": 5605,
+  "ps2": "0x0024f290",
+  "verdict": "accept",
+  "why": "corrected from 0x0024f658 (static throw_helper, called by __throw/__rethrow): 0x24f290 is 'jr ra; lh v0,4(a0)' = table->lang.language; not yet a Ghidra function; 0x24f650 wrongly carries __get_eh_table_version"
+ },
+ {
+  "row": 5609,
+  "ps2": "0x0024fd50",
+  "verdict": "accept",
+  "why": "calls through the __terminate_func pointer (initially __default_terminate) and is called by __eh_alloc/__cp_pop_exception etc."
+ },
+ {
+  "row": 5610,
+  "ps2": "0x0024fd68",
+  "verdict": "accept",
+  "why": "calls terminate() and is the initial value of the unexpected-handler pointer (DATA 0x33c5ac); Ghidra's body also swallows set_terminate"
+ },
+ {
+  "row": 5614,
+  "ps2": "0x0024fdb0",
+  "verdict": "accept",
+  "why": "corrected from 0x0024fd68 (__default_unexpected): 0x24fdb0 returns (*__get_eh_info())+8; not yet a Ghidra function (inside FUN_0024fd98); fits 0x28 before __cp_eh_info"
+ },
+ {
+  "row": 5623,
+  "ps2": "0x00250070",
+  "verdict": "accept",
+  "why": "loops over the spec list with __throw_type_match_rtti, calls unexpected() and throws bad_exception (retail range also holds __throw_bad_cast/typeid)"
+ },
+ {
+  "row": 5641,
+  "ps2": "0x00251188",
+  "verdict": "accept",
+  "why": "find_fde + extract_cie_info + execute_cfa_insn loop into a memset 0x2f8 frame state, called from __throw/__rethrow"
+ },
+ {
+  "row": 5645,
+  "ps2": "0x002514f8",
+  "verdict": "accept",
+  "why": "returns \"bad_alloc\", referenced from a vtable, precedes the bad_alloc type_info function"
+ },
+ {
+  "row": 5650,
+  "ps2": "0x00251a78",
+  "verdict": "accept",
+  "why": "__dynamic_cast of a type_info to __pointer_type_info, returns non-null test"
+ },
+ {
+  "row": 5694,
+  "ps2": "0x0027d088",
+  "verdict": "accept",
+  "why": "EAGL::TAR::SwapClut(SHAPE*) calls it with (this+4, shape); finds the CLUT chunk in the shape and re-inits the TAR image"
+ },
+ {
+  "row": 5760,
+  "ps2": "0x0027f480",
+  "verdict": "accept",
+  "why": "takes (this, data, w, h, format, flags), clears fields, switches on pixel format, calls BuildChains; called from TARExtension::Init and SwapClut"
+ },
+ {
+  "row": 5761,
+  "ps2": "0x0027f850",
+  "verdict": "accept",
+  "why": "allocates 'PreBuilt Texture Chain' and fills the image-upload DMA tags"
+ },
+ {
+  "row": 5789,
+  "ps2": "0x00285608",
+  "verdict": "accept",
+  "why": "searches the variable table backwards with strncasecmp, returns end if none - find_end; sits before ModelConstructor"
+ },
+ {
+  "row": 5798,
+  "ps2": "0x00285780",
+  "verdict": "accept",
+  "why": "corrected from 0x002858d8 (a strcmp lookup returning a geometry slot, probably GetGeometry): 0x285780 walks the three child-model lists (+0xa4/+0xac/+0xa8) strcmp'ing names"
+ },
+ {
+  "row": 5835,
+  "ps2": "0x002869c0",
+  "verdict": "accept",
+  "why": "forward strncasecmp search of the variable table returning first match or end - find_first"
+ },
+ {
+  "row": 5838,
+  "ps2": "0x00286c68",
+  "verdict": "accept",
+  "why": "ctors-table entry (DATA 0x36301c) calling the file's static init with (1,0xffff)"
+ },
+ {
+  "row": 5839,
+  "ps2": "0x00286c88",
+  "verdict": "reject",
+  "why": "0x286c88 is an empty jr ra called directly (twice) from EAGL::Model::Call, not a destructor stub; no dtors stub follows the ctor"
+ },
+ {
+  "row": 5912,
+  "ps2": "0x00289548",
+  "verdict": "accept",
+  "why": "writes VIF1 TADR and CHCR in chain mode (0x105) from (addr, flags) - source-chain DMA to VIF1"
+ },
+ {
+  "row": 5973,
+  "ps2": "0x002910d8",
+  "verdict": "accept",
+  "why": "reads the TAR's image dims/format and forwards to ReadRectDuringFrame"
+ },
+ {
+  "row": 5982,
+  "ps2": "0x00291208",
+  "verdict": "accept",
+  "why": "stores int at context+0x76c; GetDXPos reads the same field; called from RRenderer"
+ },
+ {
+  "row": 5983,
+  "ps2": "0x00291218",
+  "verdict": "accept",
+  "why": "returns context+0x76c, the field SetDXPos writes"
+ },
+ {
+  "row": 5984,
+  "ps2": "0x00291228",
+  "verdict": "accept",
+  "why": "stores int at context+0x770 next to the DX field; called from RRenderer right after SetDXPos"
+ },
+ {
+  "row": 5987,
+  "ps2": "0x00291258",
+  "verdict": "accept",
+  "why": "stores flag at context+0x878, called from BeginFrame and EndFrame"
+ },
+ {
+  "row": 5990,
+  "ps2": "0x00291338",
+  "verdict": "accept",
+  "why": "VBL handler passed by InstallVBLHandler: bumps VBL count, when due swaps frame regs and ExecuteLists, then EI"
+ },
+ {
+  "row": 5993,
+  "ps2": "0x002913e8",
+  "verdict": "accept",
+  "why": "stores bool at +0x7fc and returns 1, called from RRenderer; sits just before SetZWritesEnable"
+ },
+ {
+  "row": 6021,
+  "ps2": "0x00291ce8",
+  "verdict": "accept",
+  "why": "stores mask at +0x38 and emits a FRAME_1 (0x4c) GS register with FBMSK in the high word"
+ },
+ {
+  "row": 6022,
+  "ps2": "0x00291e88",
+  "verdict": "accept",
+  "why": "emits the FBA_1 (0x4a) GS register from the argument - alpha correction"
+ },
+ {
+  "row": 6023,
+  "ps2": "0x00291fe8",
+  "verdict": "accept",
+  "why": "stores flag at +0x3c and emits ZBUF_1 (0x4e) with ZMSK bit 32; called from SetZWritesEnable"
+ },
+ {
+  "row": 6051,
+  "ps2": "0x002934e0",
+  "verdict": "reject",
+  "why": "0x2934e0 is a MultMatrix(a,b,c) wrapper = PostMult(Transform&, Transform*); the real BuildRotate is 0x295410 (sin/cos of degree angle, normalised axis, matches AUF), see extras"
+ },
+ {
+  "row": 6053,
+  "ps2": "0x00293500",
+  "verdict": "accept",
+  "why": "MultMatrix(this, m, this), same as AUF PostMult(const Transform&)"
+ },
+ {
+  "row": 6054,
+  "ps2": "0x00293520",
+  "verdict": "accept",
+  "why": "four floats written to the diagonal, zeros elsewhere - BuildScale"
+ },
+ {
+  "row": 6068,
+  "ps2": "0x00294030",
+  "verdict": "accept",
+  "why": "calls Invert(this, out) - const Inverse(Transform*)"
+ },
+ {
+  "row": 6072,
+  "ps2": "0x00294188",
+  "verdict": "accept",
+  "why": "copies the minor skipping row/col, sign by (row+col) parity, times Determinant(minor,3)"
+ },
+ {
+  "row": 6076,
+  "ps2": "0x002944e0",
+  "verdict": "accept",
+  "why": "BuildRotate (0x295410) into a temp then MultMatrix(this,temp,this)"
+ },
+ {
+  "row": 6084,
+  "ps2": "0x002949a0",
+  "verdict": "accept",
+  "why": "BuildRotate (0x295410) into a temp then PreMult"
+ },
+ {
+  "row": 6092,
+  "ps2": "0x00294f28",
+  "verdict": "accept",
+  "why": "writes transposed rotation and -t*R translation to the output matrix"
+ },
+ {
+  "row": 6112,
+  "ps2": "0x00296f58",
+  "verdict": "accept",
+  "why": "clears the active flag and calls BeginView unless state is 0/1, then state=0 - same shape as AUF EndView"
+ },
+ {
+  "row": 6115,
+  "ps2": "0x00296fa8",
+  "verdict": "accept",
+  "why": "*this = viewport; called from the ViewPort ctor; identical to AUF body"
+ },
+ {
+  "row": 6123,
+  "ps2": "0x00297440",
+  "verdict": "accept",
+  "why": "corrected from 0x00297470 (a +0x1c setter, SetBackgroundColour): 0x297440 copies four floats +0x110..+0x11c to four refs; not yet a Ghidra function (inside ~ViewPort's body)"
+ },
+ {
+  "row": 6131,
+  "ps2": "0x00297480",
+  "verdict": "reject",
+  "why": "0x297480 just returns this+0x60 (a matrix getter); VU0_quatstoangvel is already named at 0x109ad8"
+ },
+ {
+  "row": 6143,
+  "ps2": "0x002985d0",
+  "verdict": "accept",
+  "why": "VU0 quat-to-matrix scaled by arg1 with translation arg3 stored to the MATRIX4 - SQTquattom4"
+ },
+ {
+  "row": 6156,
+  "ps2": "0x00299458",
+  "verdict": "accept",
+  "why": "corrected from 0x00299588 (the file's static init, called with (1,0xffff)): 0x299458 is called from EndFrame, builds a Profiler on the global region and runs ProcessRegion per region, like AUF"
+ },
+ {
+  "row": 6160,
+  "ps2": "0x002998e8",
+  "verdict": "accept",
+  "why": "RemoveRegionFromList then optional delete - same as AUF ~ProfilerRegion"
+ },
+ {
+  "row": 6172,
+  "ps2": "0x00299d68",
+  "verdict": "reject",
+  "why": "0x299d68 is the ctors-table stub (DATA 0x363024) calling static init with (1,0xffff) = global constructors keyed to gBufferHead; no InternalProfiler dtor found"
+ },
+ {
+  "row": 6186,
+  "ps2": "0x0029b6b8",
+  "verdict": "reject",
+  "why": "0x29b6b8 is a copy of DrawTextured::Init (allocs SingleDraw Coord/Colour/STQ bufs, looks up Parameters/Coordinates/Colours) = DrawClipTextured::Init, not SetTexture"
+ },
+ {
+  "row": 6187,
+  "ps2": "0x0029b6b8",
+  "verdict": "accept",
+  "why": "body identical to DrawTextured::Init (buffer allocs and attribute lookups) and sits just before DrawClipTextured::Begin"
+ },
+ {
+  "row": 6275,
+  "ps2": "0x0029f478",
+  "verdict": "accept",
+  "why": "corrected from 0x0029f5b0 (an ELF-hash name lookup, dlsym-like): 0x29f478 indexes the symbol table by int and returns name/address/flags like AUF GetSymbol"
+ },
+ {
+  "row": 6407,
+  "ps2": "0x002659a8",
+  "verdict": "reject",
+  "why": "0x2659a8 sits in the EvalEvent vtable slot and evaluates child anims; the real dtor is 0x266410 (vtable slot 1, frees children, ~FnAnimMemoryMap), see extras"
+ },
+ {
+  "row": 6409,
+  "ps2": "0x002659a8",
+  "verdict": "accept",
+  "why": "in the vtable slot used by base EvalEvent (0x26dff8) elsewhere; lazily builds children then ORs each child's EvalEvent(float,float,...)"
+ },
+ {
+  "row": 6410,
+  "ps2": "0x00265b28",
+  "verdict": "accept",
+  "why": "occupies the EvalSQT slot of the FnCompoundChannel vtable (slot where other vtables hold base stub 0x26dfe0)"
+ },
+ {
+  "row": 6411,
+  "ps2": "0x00265c90",
+  "verdict": "accept",
+  "why": "occupies the EvalWeights slot of the FnCompoundChannel vtable (base stub 0x26e000 slot)"
+ },
+ {
+  "row": 6412,
+  "ps2": "0x00265df8",
+  "verdict": "accept",
+  "why": "occupies the EvalVel2D slot of the FnCompoundChannel vtable (base stub 0x26dff0 slot)"
+ },
+ {
+  "row": 6413,
+  "ps2": "0x00265f60",
+  "verdict": "accept",
+  "why": "occupies the EvalState slot of the FnCompoundChannel vtable (base stub 0x26e008 slot)"
+ },
+ {
+  "row": 6414,
+  "ps2": "0x002660c8",
+  "verdict": "accept",
+  "why": "occupies the GetPhaseChan slot of the FnCompoundChannel vtable (base stub 0x26e018 slot)"
+ },
+ {
+  "row": 6451,
+  "ps2": "0x00267178",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, \"EAGLAnim::FnRawStateChan new\")"
+ },
+ {
+  "row": 6452,
+  "ps2": "0x002671a0",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, name) in the class's operator new/delete run"
+ },
+ {
+  "row": 6453,
+  "ps2": "0x002671c8",
+  "verdict": "accept",
+  "why": "eagl_free between new(char*) and new[] in the class's operator run"
+ },
+ {
+  "row": 6454,
+  "ps2": "0x002671f0",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, \"EAGLAnim::FnRawStateChan new[]\")"
+ },
+ {
+  "row": 6455,
+  "ps2": "0x00267218",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, name) right after new[]"
+ },
+ {
+  "row": 6456,
+  "ps2": "0x00267240",
+  "verdict": "accept",
+  "why": "eagl_free after new[](char*), before the FnRawStateChan ctor"
+ },
+ {
+  "row": 6484,
+  "ps2": "0x00268ab8",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, \"EAGLAnim::FnDeltaQ new\")"
+ },
+ {
+  "row": 6485,
+  "ps2": "0x00268ae0",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, name) in the FnDeltaQ operator run"
+ },
+ {
+  "row": 6486,
+  "ps2": "0x00268b08",
+  "verdict": "accept",
+  "why": "eagl_free between new(char*) and new[]"
+ },
+ {
+  "row": 6487,
+  "ps2": "0x00268b30",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, \"EAGLAnim::FnDeltaQ new[]\")"
+ },
+ {
+  "row": 6488,
+  "ps2": "0x00268b58",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, name) right after new[]"
+ },
+ {
+  "row": 6489,
+  "ps2": "0x00268b80",
+  "verdict": "accept",
+  "why": "eagl_free after new[](char*), before the FnDeltaQ ctor"
+ },
+ {
+  "row": 6503,
+  "ps2": "0x0026b1f8",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, \"EAGLAnim::FnDeltaSingleQ new\")"
+ },
+ {
+  "row": 6504,
+  "ps2": "0x0026b220",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, name) in the FnDeltaSingleQ operator run"
+ },
+ {
+  "row": 6505,
+  "ps2": "0x0026b248",
+  "verdict": "accept",
+  "why": "eagl_free between new(char*) and new[]"
+ },
+ {
+  "row": 6506,
+  "ps2": "0x0026b270",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, \"EAGLAnim::FnDeltaSingleQ new[]\")"
+ },
+ {
+  "row": 6507,
+  "ps2": "0x0026b298",
+  "verdict": "accept",
+  "why": "eagl_alloc(size, name) right after new[]"
+ },
+ {
+  "row": 6508,
+  "ps2": "0x0026b2c0",
+  "verdict": "accept",
+  "why": "eagl_free after new[](char*), before the FnDeltaSingleQ ctor"
+ },
+ {
+  "row": 6515,
+  "ps2": "0x0026b950",
+  "verdict": "accept",
+  "why": "stores the map at +0xc and sits in the same vtable slot (0x3afb64) as FnCompoundChannel::SetAnimMemoryMap (0x266518, slot 0x3af0cc)"
+ }
+]

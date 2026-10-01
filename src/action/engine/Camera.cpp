@@ -6,7 +6,8 @@
 
 #include <math.h>
 
-#define ScreenBlankerState U32_AT(0x001dc740)
+// XBE_GLOBAL(0x001dc740, 0x4)
+static uint32_t ScreenBlankerState;
 #define IsWidescreen U32_AT(0x001f6610)
 
 // This doesn't seem to be written to anywhere - a constant that was incorrectly not marked as such?

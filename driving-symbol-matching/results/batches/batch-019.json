@@ -1,0 +1,85 @@
+{
+ "batch": "019",
+ "program": "Driving.xbe",
+ "note": "Undo Version Tracking's copied PS2 plates; hand-checked name fixes.",
+ "items": [
+  {
+   "xbox": "0x000d3450",
+   "expect": "GGallery::CULL_GetNextCanvas",
+   "name": "GFX::CULL_GetNextCanvas",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Xbox body forwards to GFXGallery::CULL_GetNextCanvas(global gallery) exactly like PS2 GFX::CULL_GetNextCanvas; no PS2 GGallery::CULL_GetNextCanvas exists and Xbox neighbours are GFX:: (0xd34c0 GFX::Update) (was GGallery::CULL_GetNextCanvas)",
+    "PS2 0x232d58"
+   ]
+  },
+  {
+   "xbox": "0x000a3210",
+   "expect": "RParticulates::LoadAttributes",
+   "name": "RParticulate::LoadAttributes",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same body as PS2 RParticulate::LoadAttributes ('Enable Particulate', +0xffc); PS2 has no RParticulates class and Xbox neighbours 0xa3240.. are RParticulate:: (was RParticulates::LoadAttributes)",
+    "PS2 0x1e9b38"
+   ]
+  },
+  {
+   "xbox": "0x00075e80",
+   "expect": "Draw::Init",
+   "name": "SimpleDraw::Init",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Xbox body news USimpleMaterial/USimpleTexturedMaterial into SimpleDraw::fMat/fTexMat = PS2 SimpleDraw::Init 0x19f768; Draw::Init is the Xbox jmp thunk 0x75f20 (called from Render_InitLibRender as PS2 0x19f800 is), which keeps Draw::Init (was Draw::Init)",
+    "PS2 0x19f768"
+   ]
+  },
+  {
+   "xbox": "0x000ed2d0",
+   "expect": "EAGLInternal::TARDestructor",
+   "name": "EAGLInternal::RuntimeAllocTARDestructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Xbox body loops count x ~TAR then frees count*0x50 = PS2 RuntimeAllocTARDestructor (count x 0x60); EAGL::Device::Init registers 0xed2d0 in runtimeAllocConstructorPool 'EAGL::TAR' (PS2 same slot), while Xbox 0xed2b0 (single ~TAR) is the ConstructorPool TARDestructor (was EAGLInternal::TARDestructor)",
+    "PS2 0x27e108"
+   ]
+  },
+  {
+   "xbox": "0x000ecbe0",
+   "expect": "EAGLInternal::TARConstructor",
+   "name": "EAGLInternal::RuntimeAllocTARConstructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing EAGLInternal::TARDestructor / EAGLInternal::RuntimeAllocTARDestructor: EAGL::Device::Init registers 0xecbe0 with 0xed2d0 in runtimeAllocConstructorPool 'EAGL::TAR' (PS2 pairs RuntimeAllocTARConstructor 0x27af10 / RuntimeAllocTARDestructor 0x27e108 in that slot); it currently carries a duplicate 'EAGLInternal::TARConstructor' (the ConstructorPool one is 0xed070) (was EAGLInternal::TARConstructor)",
+    "PS2 0x27af10"
+   ]
+  },
+  {
+   "xbox": "0x0013d3e0",
+   "expect": "SNDREAL_systemtasak",
+   "name": "SNDREAL_systemtask",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: current name is a typo with no PS2 counterpart; body (SNDSYS_service; return 0) is identical to PS2 SNDREAL_systemtask (was SNDREAL_systemtasak)",
+    "PS2 0x3077c0"
+   ]
+  }
+ ]
+}

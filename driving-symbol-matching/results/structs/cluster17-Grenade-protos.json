@@ -1,0 +1,40 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0005d4f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Grenade::~Grenade(void)"
+  },
+  {
+   "address": "0x0005d550",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "Grenade::Render(bool)"
+  },
+  {
+   "address": "0x0005d7a0",
+   "calling_convention": "__thiscall",
+   "return": "Grenade *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0005d7d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Grenade::Simulate(void)"
+  }
+ ]
+}

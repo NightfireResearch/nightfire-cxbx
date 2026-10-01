@@ -1,0 +1,761 @@
+{
+ "verdicts": [
+  {
+   "item": 80,
+   "xbox": "0x001503b0",
+   "ps2": "0x002de060",
+   "name": "AVoice::View::Restart",
+   "verdict": "reject",
+   "why": "Xbox stub only enters/leaves the critical section and returns 0; no SNDstop or handle test",
+   "intermediates": []
+  },
+  {
+   "item": 81,
+   "xbox": "0x00133e84",
+   "ps2": "0x002a7290",
+   "name": "atof",
+   "verdict": "accept",
+   "why": "Xbox body is MSVC CRT atof exactly (skip isspace via _ctype&8, strlen, _fltin, return dval at +0x10); callers share RCameraIniLoader::LoadFile, IniFiles::ReadFloat, RuntimeAllocTARConstructor; size ratio is MSVC's inline strtod path, and it is the same library function on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 82,
+   "xbox": "0x0009c3a0",
+   "ps2": "0x00179738",
+   "name": "OptionParser::FindString",
+   "verdict": "reject",
+   "why": "Xbox is a vector-of-pointers copy-assign, not a string search",
+   "intermediates": []
+  },
+  {
+   "item": 83,
+   "xbox": "0x0009c3a0",
+   "ps2": "0x002d89e0",
+   "name": "UnprepareBitField",
+   "verdict": "reject",
+   "why": "Xbox is a vector copy-assign; unrelated to bit-field unpacking",
+   "intermediates": []
+  },
+  {
+   "item": 84,
+   "xbox": "0x0009eae0",
+   "ps2": "0x001e1f88",
+   "name": "RLightning::GetRandomCoord",
+   "verdict": "reject",
+   "why": "Xbox is a Point/Segment update that inlines the random coord lookup; caller/callee confusion",
+   "intermediates": []
+  },
+  {
+   "item": 85,
+   "xbox": "0x00058cc0",
+   "ps2": "0x0016d0d8",
+   "name": "AttributeSystem::FindCollection",
+   "verdict": "reject",
+   "why": "Xbox FUN_00058cc0 is AttributeSystem::GetCollection (recursive 'default' lookup, called by PrepareDatabase); FindCollection is inlined on Xbox",
+   "intermediates": [
+    {
+     "xbox": "0x58cc0",
+     "ps2": "0x16cc48",
+     "name": "AttributeSystem::GetCollection",
+     "why": "recursive 'default' fallback, called by PrepareDatabase and itself exactly as PS2 GetCollection; MakeString + map find + insert"
+    }
+   ]
+  },
+  {
+   "item": 86,
+   "xbox": "0x001160c0",
+   "ps2": "0x0022ca68",
+   "name": "WTrigger::TestDirection",
+   "verdict": "reject",
+   "why": "Xbox is xz distance squared, PS2 is a dot-product sign test",
+   "intermediates": []
+  },
+  {
+   "item": 87,
+   "xbox": "0x0014a470",
+   "ps2": "0x00306e48",
+   "name": "SHAPE_loadfilez",
+   "verdict": "accept",
+   "why": "PS2 AttemptBigFileShapeLoad calls SHAPE_loadfilez and FileLoadShapeDirectFromDisk calls SHAPE_loadfile+SHAPE_loadfilez, both wrapping FUN_00306ce0; Xbox AttemptBigFileShapeLoad calls only FUN_0014a470 and ShapeFileLoad calls 14a450+14a470, both wrapping FUN_0014a370 - call position identifies 14a470 as the z variant; far distance is library block placement",
+   "intermediates": []
+  },
+  {
+   "item": 88,
+   "xbox": "0x0009fdc0",
+   "ps2": "0x001e0f78",
+   "name": "RLightning::ClearAllBolts",
+   "verdict": "accept",
+   "why": "RLightning::Reset on both sides calls CalcRandomTables, this bolt-clear routine and delete; body loops the Bolt pointer vector destroying each Bolt (~Bolt+delete) then empties the vector; distance 1",
+   "intermediates": []
+  },
+  {
+   "item": 89,
+   "xbox": "0x00013840",
+   "ps2": "0x002a9760",
+   "name": "strlen",
+   "verdict": "reject",
+   "why": "Xbox is a std::string-from-cstr constructor, not strlen",
+   "intermediates": []
+  },
+  {
+   "item": 90,
+   "xbox": "0x0010e9b9",
+   "ps2": "0x002b6d70",
+   "name": "DeleteSema",
+   "verdict": "reject",
+   "why": "Xbox is XAPI CloseHandle (NtClose), platform code",
+   "intermediates": []
+  },
+  {
+   "item": 91,
+   "xbox": "0x00115f30",
+   "ps2": "0x0023eab0",
+   "name": "GHud::IsFlyByWireOn",
+   "verdict": "reject",
+   "why": "Xbox is a vec4 scale; unrelated getter",
+   "intermediates": []
+  },
+  {
+   "item": 92,
+   "xbox": "0x0011b390",
+   "ps2": "0x002cd768",
+   "name": "UCarpNamespace::RootName",
+   "verdict": "reject",
+   "why": "Xbox is the namespace builder that inlines the Root/Map/Shared name strings; caller vs callee",
+   "intermediates": []
+  },
+  {
+   "item": 93,
+   "xbox": "0x0011b390",
+   "ps2": "0x002cd758",
+   "name": "UCarpNamespace::ShareName",
+   "verdict": "reject",
+   "why": "Xbox is the namespace builder that inlines the name strings; caller vs callee",
+   "intermediates": []
+  },
+  {
+   "item": 94,
+   "xbox": "0x00116440",
+   "ps2": "0x002cbb28",
+   "name": "VU0_MATRIX3x4_mult",
+   "verdict": "accept",
+   "why": "Xbox body is exactly a 3x4 matrix multiply (rows 0-2 of a*b, w column zeroed, (a,b,out) order); identical caller set (RigidBody::RigidBody, Missile::SteerMissile, RigidBody::ResetObject = FUN_000adcd0 whose callers match 6/6); size ratio is VU0 vs unrolled x87",
+   "intermediates": []
+  },
+  {
+   "item": 95,
+   "xbox": "0x0014a370",
+   "ps2": "0x00306b18",
+   "name": "FILE_loadpack",
+   "verdict": "reject",
+   "why": "Xbox FUN_0014a370 corresponds to PS2 FUN_00306ce0 (common worker of SHAPE_loadfile/z), not FILE_loadpack",
+   "intermediates": []
+  },
+  {
+   "item": 96,
+   "xbox": "0x0007f5b0",
+   "ps2": "0x001c58c8",
+   "name": "RRenderWorldCamera::DrawActorsPOV",
+   "verdict": "reject",
+   "why": "Xbox clears the viewport; no DrawAll/FlushDrawLists",
+   "intermediates": []
+  },
+  {
+   "item": 97,
+   "xbox": "0x00011650",
+   "ps2": "0x00119b98",
+   "name": "AICharacterBond::GetRotPos",
+   "verdict": "reject",
+   "why": "Xbox is a generic matrix copy used by all AICharacter UpdateRotPos variants; PS2 reads the player rigid body",
+   "intermediates": []
+  },
+  {
+   "item": 98,
+   "xbox": "0x000eee20",
+   "ps2": "0x001a0fb8",
+   "name": "Draw::SetAdditiveBlendMode",
+   "verdict": "reject",
+   "why": "generic setter; no blend-mode fields",
+   "intermediates": []
+  },
+  {
+   "item": 99,
+   "xbox": "0x0010b5f0",
+   "ps2": "0x00323928",
+   "name": "UFileHandler::Wait",
+   "verdict": "reject",
+   "why": "different structure (callback + wait loop vs handler Wait)",
+   "intermediates": []
+  },
+  {
+   "item": 100,
+   "xbox": "0x000f6220",
+   "ps2": "0x002919b0",
+   "name": "EAGL::TextureRenderContext::EndFrame",
+   "verdict": "reject",
+   "why": "Xbox pushes vertex shader constants; not TextureRenderContext::EndFrame",
+   "intermediates": []
+  },
+  {
+   "item": 101,
+   "xbox": "0x000f6220",
+   "ps2": "0x00291858",
+   "name": "EAGL::TextureRenderContext::BeginFrame",
+   "verdict": "reject",
+   "why": "Xbox pushes vertex shader constants; not BeginFrame",
+   "intermediates": []
+  },
+  {
+   "item": 102,
+   "xbox": "0x0014df50",
+   "ps2": "0x00303ac8",
+   "name": "RCMP::PS2_SONY_CODEC_is_chunk_for_codec",
+   "verdict": "reject",
+   "why": "Xbox is a codec setter with a virtual call, PS2 is a chunk-tag test",
+   "intermediates": []
+  },
+  {
+   "item": 103,
+   "xbox": "0x000f5440",
+   "ps2": "0x0029c750",
+   "name": "EAGL::DrawGouraud::InternalFlush",
+   "verdict": "reject",
+   "why": "Xbox is D3D immediate-mode vertex submit, platform code",
+   "intermediates": []
+  },
+  {
+   "item": 104,
+   "xbox": "0x00053b40",
+   "ps2": "0x002a964c",
+   "name": "strcpy",
+   "verdict": "reject",
+   "why": "Xbox is a map find, not strcpy",
+   "intermediates": []
+  },
+  {
+   "item": 105,
+   "xbox": "0x0010cae0",
+   "ps2": "0x002536a0",
+   "name": "iFILE_ExecCommand",
+   "verdict": "reject",
+   "why": "Xbox is the FILESYS worker-thread initialiser, not the command executor",
+   "intermediates": []
+  },
+  {
+   "item": 106,
+   "xbox": "0x00115c20",
+   "ps2": "0x00201a00",
+   "name": "Simulation::DeleteMineObject",
+   "verdict": "reject",
+   "why": "Xbox is v3 length squared",
+   "intermediates": []
+  },
+  {
+   "item": 107,
+   "xbox": "0x000adcd0",
+   "ps2": "0x0022b720",
+   "name": "WTargetPicker::SlerpTowardsTarget",
+   "verdict": "reject",
+   "why": "Xbox FUN_000adcd0 is RigidBody::ResetObject (callers match 6/6, calls VU0_MATRIX3x4_mult), not SlerpTowardsTarget",
+   "intermediates": [
+    {
+     "xbox": "0xadcd0",
+     "ps2": "0x1f7880",
+     "name": "RigidBody::ResetObject",
+     "why": "identical 6-caller set (DoMoveMode, DoSplinePathUpdate, 2x ResetCar, UnSpawn, SetStartConditions<-EResetPlayerCarPos) and calls VU0_MATRIX3x4_mult"
+    }
+   ]
+  },
+  {
+   "item": 108,
+   "xbox": "0x000f7d70",
+   "ps2": "0x00264af0",
+   "name": "EAGLAnim::MemoryPoolManager::InitAnimMemoryMap",
+   "verdict": "accept",
+   "why": "switch on channel type: case 0 -> RawPoseChannel::InitAnimMemoryMap, case 0xf -> FUN_000faf60 which calls back into this function exactly like PS2 CompoundChannel::InitAnimMemoryMap; sole callee of AnimBank::Constructor on both sides",
+   "intermediates": [
+    {
+     "xbox": "0xfaf60",
+     "ps2": "0x2669c8",
+     "name": "EAGLAnim::CompoundChannel::InitAnimMemoryMap",
+     "why": "case 0xf target of MemoryPoolManager::InitAnimMemoryMap; its only caller is that dispatcher and it calls back into it, as PS2 0x2669c8 does"
+    }
+   ]
+  },
+  {
+   "item": 109,
+   "xbox": "0x0011bee0",
+   "ps2": "0x00299da8",
+   "name": "EAGL::DrawArray::SetGeoPrim",
+   "verdict": "reject",
+   "why": "Xbox is a static GeoPrim/DynamicModel pool initialiser",
+   "intermediates": []
+  },
+  {
+   "item": 110,
+   "xbox": "0x00052010",
+   "ps2": "0x0024bae8",
+   "name": "IniFiles::~IniFiles",
+   "verdict": "reject",
+   "why": "no callers on either side and Xbox lacks the MEM_free/vtable/delete; not compelling",
+   "intermediates": []
+  },
+  {
+   "item": 111,
+   "xbox": "0x000f7d50",
+   "ps2": "0x002658a8",
+   "name": "EAGLAnim::MemoryPoolManager::Cleanup",
+   "verdict": "accept",
+   "why": "eagl_free(pool,size) one-liner, but the caller set is exact and distinctive: callee of both EAGLAnim::ShutDown (alongside FreeScratchBuffers, RemoveType, eagl_free) and ERestart::~ERestart on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 112,
+   "xbox": "0x000beff0",
+   "ps2": "0x0025a938",
+   "name": "v3unitcrossprod",
+   "verdict": "reject",
+   "why": "Xbox is a triangle face-normal helper that inlines the cross/unit; caller vs callee",
+   "intermediates": []
+  },
+  {
+   "item": 113,
+   "xbox": "0x000997d0",
+   "ps2": "0x001c5ca8",
+   "name": "RRenderWorldCamera::DrawTranslucentStaticWorldGeometry",
+   "verdict": "reject",
+   "why": "Xbox function is a larger render pass with DrawWorldAtPoint and z-write state; not compelling",
+   "intermediates": []
+  },
+  {
+   "item": 114,
+   "xbox": "0x000997d0",
+   "ps2": "0x001c5e50",
+   "name": "RRenderWorldCamera::DrawSceneObjects",
+   "verdict": "reject",
+   "why": "Xbox function is a larger render pass; not DrawSceneObjects",
+   "intermediates": []
+  },
+  {
+   "item": 115,
+   "xbox": "0x00115ba0",
+   "ps2": "0x002a8bd0",
+   "name": "rand",
+   "verdict": "reject",
+   "why": "Xbox is sqrt",
+   "intermediates": []
+  },
+  {
+   "item": 116,
+   "xbox": "0x000b8900",
+   "ps2": "0x00208d20",
+   "name": "SMissionManager::ClearMessageList",
+   "verdict": "reject",
+   "why": "Xbox FUN_000b8900 deletes via virtual dtor and is called from Load; the real ClearMessageList is FUN_000b8960 (item 146)",
+   "intermediates": []
+  },
+  {
+   "item": 117,
+   "xbox": "0x00081610",
+   "ps2": "0x001bc400",
+   "name": "RPlayerCamera::CameraLockOn",
+   "verdict": "accept",
+   "why": "same field writes (0x290,0x294,0x2a0,0x2a4,0x2a8 = 0, 0x2b4 = 1.0f, camstate flag via +0x354) and same lock/unlock branch; callers ~EPlayerLose, ~EPlayerWin and ~ECameraLockOn (Xbox FUN_0003eb50) on both; distance 1",
+   "intermediates": []
+  },
+  {
+   "item": 118,
+   "xbox": "0x0010ecd8",
+   "ps2": "0x002b6c50",
+   "name": "GetThreadId",
+   "verdict": "reject",
+   "why": "Xbox is an XAPI stub (GetCurrentThreadId-like), platform code",
+   "intermediates": []
+  },
+  {
+   "item": 119,
+   "xbox": "0x000c4d70",
+   "ps2": "0x002a8038",
+   "name": "memset",
+   "verdict": "reject",
+   "why": "Xbox is a large collision routine",
+   "intermediates": []
+  },
+  {
+   "item": 120,
+   "xbox": "0x00116090",
+   "ps2": "0x0013c4c8",
+   "name": "AIRoadSpawn::Get",
+   "verdict": "reject",
+   "why": "Xbox is xz distance",
+   "intermediates": []
+  },
+  {
+   "item": 121,
+   "xbox": "0x00133aee",
+   "ps2": "0x0024e440",
+   "name": "fptodp",
+   "verdict": "reject",
+   "why": "Xbox is MSVC vsprintf",
+   "intermediates": []
+  },
+  {
+   "item": 122,
+   "xbox": "0x00114e40",
+   "ps2": "0x0022caa8",
+   "name": "WTrigger::TestDirection",
+   "verdict": "reject",
+   "why": "generic argument-swapping thunk",
+   "intermediates": []
+  },
+  {
+   "item": 123,
+   "xbox": "0x000e7d70",
+   "ps2": "0x0024c490",
+   "name": "__floatdisf",
+   "verdict": "reject",
+   "why": "generic setter",
+   "intermediates": []
+  },
+  {
+   "item": 124,
+   "xbox": "0x00018410",
+   "ps2": "0x002d89e0",
+   "name": "UnprepareBitField",
+   "verdict": "reject",
+   "why": "Xbox is a struct copy-assign",
+   "intermediates": []
+  },
+  {
+   "item": 125,
+   "xbox": "0x000f65c0",
+   "ps2": "0x002919b0",
+   "name": "EAGL::TextureRenderContext::EndFrame",
+   "verdict": "reject",
+   "why": "Xbox is a D3D state helper; not EndFrame",
+   "intermediates": []
+  },
+  {
+   "item": 126,
+   "xbox": "0x000f65c0",
+   "ps2": "0x00291858",
+   "name": "EAGL::TextureRenderContext::BeginFrame",
+   "verdict": "reject",
+   "why": "Xbox is a D3D state helper; not BeginFrame",
+   "intermediates": []
+  },
+  {
+   "item": 127,
+   "xbox": "0x000c27a0",
+   "ps2": "0x0022f030",
+   "name": "WTriggerManager::CheckCollide",
+   "verdict": "reject",
+   "why": "Xbox is an STL vector reserve",
+   "intermediates": []
+  },
+  {
+   "item": 128,
+   "xbox": "0x0014a5f0",
+   "ps2": "0x003232c8",
+   "name": "UFileHandler::UFileHandler",
+   "verdict": "reject",
+   "why": "different field layout; Xbox is a generic file-op struct init",
+   "intermediates": []
+  },
+  {
+   "item": 129,
+   "xbox": "0x001314ae",
+   "ps2": "0x00179738",
+   "name": "OptionParser::FindString",
+   "verdict": "reject",
+   "why": "Xbox is CRT stream overflow/putc",
+   "intermediates": []
+  },
+  {
+   "item": 130,
+   "xbox": "0x001314ae",
+   "ps2": "0x002d89e0",
+   "name": "UnprepareBitField",
+   "verdict": "reject",
+   "why": "Xbox is CRT stream overflow/putc",
+   "intermediates": []
+  },
+  {
+   "item": 131,
+   "xbox": "0x0008dc60",
+   "ps2": "0x001d3438",
+   "name": "RVehicle::DrawWireframeCollisionBox",
+   "verdict": "reject",
+   "why": "Xbox copies a matrix; PS2 is an empty debug stub",
+   "intermediates": []
+  },
+  {
+   "item": 132,
+   "xbox": "0x000b9c50",
+   "ps2": "0x00209d40",
+   "name": "SMissionTimer::IsActive",
+   "verdict": "reject",
+   "why": "Xbox is a timer crossing test, PS2 a trivial getter",
+   "intermediates": []
+  },
+  {
+   "item": 133,
+   "xbox": "0x0011c430",
+   "ps2": "0x00299da8",
+   "name": "EAGL::DrawArray::SetGeoPrim",
+   "verdict": "reject",
+   "why": "Xbox is a static GeoPrim pool initialiser",
+   "intermediates": []
+  },
+  {
+   "item": 134,
+   "xbox": "0x0001bbd0",
+   "ps2": "0x002a964c",
+   "name": "strcpy",
+   "verdict": "reject",
+   "why": "Xbox is a weapon-database map insert",
+   "intermediates": []
+  },
+  {
+   "item": 135,
+   "xbox": "0x000d5a80",
+   "ps2": "0x0024a290",
+   "name": "GSubtitles::LoadFont",
+   "verdict": "reject",
+   "why": "Xbox loads the font on GHud (called from GHud::GHud with loading.xfn), PS2 on GSubtitles; different class, uncertain",
+   "intermediates": []
+  },
+  {
+   "item": 136,
+   "xbox": "0x000898d0",
+   "ps2": "0x001bc890",
+   "name": "RPlayerCamera::TriggerAIPathAnimationCamera",
+   "verdict": "accept",
+   "why": "identical sequence: 0x42040000 defaults, param_5 > 2.0 check, ResetStateForAnimation, 0x2ac=0, 0x2b4=1.0, 0x290/0x294/0x2a0/0x2a4/0x2a8 cleared, global flag cleared; sole caller ~EPlayCameraSpline on both; distance 1",
+   "intermediates": []
+  },
+  {
+   "item": 137,
+   "xbox": "0x00098220",
+   "ps2": "0x001c28b0",
+   "name": "RReflection::EnableReflectionMapWarpage",
+   "verdict": "accept",
+   "why": "sole callee of RRenderWorldCamera::PreRender on both sides; the PS2 version is an empty stub (no warp on PS2) while Xbox implements the bool enable/disable of the reflection warp params; distance 29",
+   "intermediates": []
+  },
+  {
+   "item": 138,
+   "xbox": "0x000f3c90",
+   "ps2": "0x002a9508",
+   "name": "strcmp",
+   "verdict": "reject",
+   "why": "Xbox is a string hash for SymbolPool",
+   "intermediates": []
+  },
+  {
+   "item": 139,
+   "xbox": "0x000f3c90",
+   "ps2": "0x002a9760",
+   "name": "strlen",
+   "verdict": "reject",
+   "why": "Xbox is a string hash for SymbolPool",
+   "intermediates": []
+  },
+  {
+   "item": 140,
+   "xbox": "0x00090430",
+   "ps2": "0x001cc4f0",
+   "name": "URefCounter<RCARPFile>::Get",
+   "verdict": "accept",
+   "why": "function-local static singleton with atexit, the URefCounter<T>::Get shape; callers match RSceneObj::Load/PreLoad/PurgePreloaded/~RSceneObj (Close inlined), and PS2 RSceneObj::Load calls only this one URefCounter Get",
+   "intermediates": []
+  },
+  {
+   "item": 141,
+   "xbox": "0x00013ba0",
+   "ps2": "0x002a9760",
+   "name": "strlen",
+   "verdict": "reject",
+   "why": "Xbox is an ActAnimationDatabase lookup-table constructor",
+   "intermediates": []
+  },
+  {
+   "item": 142,
+   "xbox": "0x00013ba0",
+   "ps2": "0x001cf0c0",
+   "name": "RTextureContext::Load",
+   "verdict": "reject",
+   "why": "Xbox is an ActAnimationDatabase lookup-table constructor",
+   "intermediates": []
+  },
+  {
+   "item": 143,
+   "xbox": "0x00013ba0",
+   "ps2": "0x001444d8",
+   "name": "DTuningFile::Reader::Reader",
+   "verdict": "reject",
+   "why": "Xbox is an ActAnimationDatabase lookup-table constructor",
+   "intermediates": []
+  },
+  {
+   "item": 144,
+   "xbox": "0x000a1e60",
+   "ps2": "0x001e8090",
+   "name": "RParticleLibrary::MungeData",
+   "verdict": "reject",
+   "why": "Xbox FUN_000a1e60 is the inner MungeData overload (PS2 0x1e80b0: lifetime-cap printf then MungeDataForPlatform), not the outer wrapper at 0x1e8090",
+   "intermediates": [
+    {
+     "xbox": "0xa1e60",
+     "ps2": "0x1e80b0",
+     "name": "RParticleLibrary::MungeData",
+     "why": "same lifetime>255 printf cap and 0.75 scale then tail call to the platform munge; the inner overload called by the wrapper"
+    }
+   ]
+  },
+  {
+   "item": 145,
+   "xbox": "0x00123230",
+   "ps2": "0x002eaaf0",
+   "name": "URefCounter<AStream>::RemoveReference",
+   "verdict": "accept",
+   "why": "sole map-walk callee of AStream::Remove (alongside Get/GetReference) on both; walks the map for the matching key, decrements the refcount and erases at zero (node offsets shifted one word by STL node layout); distance 1",
+   "intermediates": []
+  },
+  {
+   "item": 146,
+   "xbox": "0x000b8960",
+   "ps2": "0x00208d20",
+   "name": "SMissionManager::ClearMessageList",
+   "verdict": "accept",
+   "why": "callers SMissionManager::ClearState and ~SMissionManager on both; list at this+4 as on PS2, each element plain-deleted then the list cleared; sibling ClearObjectiveList is the other Xbox ClearState callee FUN_000b89c0 (list at +0x10)",
+   "intermediates": []
+  },
+  {
+   "item": 147,
+   "xbox": "0x000ce620",
+   "ps2": "0x00123878",
+   "name": "AICharacterHands::GetRotPos",
+   "verdict": "reject",
+   "why": "Xbox is a WTargetPicker target scan",
+   "intermediates": []
+  },
+  {
+   "item": 148,
+   "xbox": "0x0007eed0",
+   "ps2": "0x001f03b0",
+   "name": "RWater::UpdateData",
+   "verdict": "reject",
+   "why": "Xbox builds rotation tables in RLightManager; unrelated",
+   "intermediates": []
+  },
+  {
+   "item": 149,
+   "xbox": "0x0014e1e0",
+   "ps2": "0x002613f8",
+   "name": "THREAD_yieldticks",
+   "verdict": "reject",
+   "why": "Xbox is a MAD codec frame allocator",
+   "intermediates": []
+  },
+  {
+   "item": 150,
+   "xbox": "0x0014e1e0",
+   "ps2": "0x0017bc18",
+   "name": "Math_v3unitAbort",
+   "verdict": "reject",
+   "why": "Xbox is a MAD codec frame allocator",
+   "intermediates": []
+  },
+  {
+   "item": 151,
+   "xbox": "0x000aca70",
+   "ps2": "0x001f5eb0",
+   "name": "OBB::CheckOBBOverlap",
+   "verdict": "accept",
+   "why": "identical 5-caller set (WTriggerManager::CheckCollide, Missile::CheckForCollision, RayShell::CollideWithObjects, ~EWakeupSmackable, SimpleRigidBody::CheckCollisions<-DetectCollisionsSRB); same swap-the-two-boxes separating-axis loop; distance 1",
+   "intermediates": []
+  },
+  {
+   "item": 152,
+   "xbox": "0x00115c80",
+   "ps2": "0x001b9e58",
+   "name": "RPlayerCamera::ClearTransition",
+   "verdict": "reject",
+   "why": "Xbox is a vec4 copy",
+   "intermediates": []
+  },
+  {
+   "item": 153,
+   "xbox": "0x000d7bd0",
+   "ps2": "0x00241200",
+   "name": "GHud::CanToggleInvert",
+   "verdict": "reject",
+   "why": "Xbox tests a mode field for 1 or 4, PS2 tests autoDrive; semantics differ",
+   "intermediates": []
+  },
+  {
+   "item": 154,
+   "xbox": "0x000f43a0",
+   "ps2": "0x002919b0",
+   "name": "EAGL::TextureRenderContext::EndFrame",
+   "verdict": "reject",
+   "why": "Xbox is a D3D vertex-shader-constant helper",
+   "intermediates": []
+  },
+  {
+   "item": 155,
+   "xbox": "0x000f43a0",
+   "ps2": "0x00291858",
+   "name": "EAGL::TextureRenderContext::BeginFrame",
+   "verdict": "reject",
+   "why": "Xbox is a D3D vertex-shader-constant helper",
+   "intermediates": []
+  },
+  {
+   "item": 156,
+   "xbox": "0x00114a80",
+   "ps2": "0x002dd790",
+   "name": "AVoice::AVoice",
+   "verdict": "reject",
+   "why": "Xbox is BytesToCoord (item 157)",
+   "intermediates": []
+  },
+  {
+   "item": 157,
+   "xbox": "0x00114a80",
+   "ps2": "0x002d0b08",
+   "name": "BytesToCoord",
+   "verdict": "accept",
+   "why": "same body (unpack 0xRRGGBB to floats, scale by 1/255 0x3b808081, optional add/mul/add vectors); identical 5-caller set; distance 1",
+   "intermediates": []
+  },
+  {
+   "item": 158,
+   "xbox": "0x00052040",
+   "ps2": "0x0016be88",
+   "name": "Bool_AttribByteOffsetParserFunc",
+   "verdict": "accept",
+   "why": "same tokenizer on ',' ';' into a 16-byte buffer then case-insensitive compare to true/false/on/off else atoi!=0, result header 0xfffffffe; sole parser callee of AttributeSet::LookupBool on both",
+   "intermediates": []
+  },
+  {
+   "item": 159,
+   "xbox": "0x000eb910",
+   "ps2": "0x002919b0",
+   "name": "EAGL::TextureRenderContext::EndFrame",
+   "verdict": "reject",
+   "why": "Xbox is a D3D surface lock routine",
+   "intermediates": []
+  },
+  {
+   "item": 160,
+   "xbox": "0x000eb910",
+   "ps2": "0x00291858",
+   "name": "EAGL::TextureRenderContext::BeginFrame",
+   "verdict": "reject",
+   "why": "Xbox is a D3D surface lock routine",
+   "intermediates": []
+  }
+ ]
+}

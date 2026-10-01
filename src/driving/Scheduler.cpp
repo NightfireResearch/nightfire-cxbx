@@ -2,66 +2,108 @@
 
 #include "Scheduler.hpp"
 #include "EventManager.hpp"
+#include "devtools/Teleport.h"
 
+#include <windows.h>
+#include <cmath>
 #include <cstdio>
 
+// The game's clock: ticks at the video refresh rate (50 Hz PAL), from the timer callback - see
+// src/driving/platform/XboxTimer.cpp and docs/driving-engine-plan.md, section 2.
 #define Clock U32_AT(0x001e5204)
 
-// Schedule::RunTasks is a thiscall at 0x0005bce0. We want to call it with a function pointer
-using RunTasksFunc = void(__thiscall*)(void*, int, unsigned short);
-RunTasksFunc Schedule__RunTasks = (RunTasksFunc)0x0005bce0;
+// The fraction of a simulation tick carried from one call to the next - the one deliberate departure from the
+// original, below. Always in [0, 1).
+static double g_pendingTicks = 0.0;
 
+// Runs one simulation tick: every simulation schedule at every priority, then the events they raised; on the last
+// tick of the call, the per-frame schedule (rendering among it) and its events too.
+static void RunTick(Scheduler *scheduler, int tick, bool last, bool *teleportDone) {
+    // The original iterates listOfSchedules, which the Scheduler's constructor fills with exactly these three and
+    // nothing else adds to. Each schedule's own Process (slot 1 of its vtable) picks which of its buckets the tick
+    // runs - every tick, tick & 1, tick & 3 - so this does not need to know which is which.
+    Schedule *const simulation[] = { scheduler->s_SimRate, scheduler->s_halfSimRate, scheduler->s_quarterSimRate };
+    for (int priority = 0; priority < 8; priority++)
+        for (Schedule *schedule : simulation)
+            schedule->Process(tick, (unsigned short)priority);
 
+    // Debug teleport (F8/F9, or Teleport= in settings.ini): once a call, before the events, because this is where
+    // the game's own EResetPlayerCarPos event runs.
+    if (!*teleportDone) {
+        Teleport_Tick();
+        *teleportDone = true;
+    }
+    EventManager::RunEvents();
 
-void Scheduler::Run(int i) {
+    if (last) {
+        for (int priority = 0; priority < 8; priority++)
+            scheduler->s_oncePerGameLoop->Process(tick, (unsigned short)priority);
+        EventManager::RunEvents();
+    }
+}
 
-  unsigned int now = Clock;
+// Scheduler::Run (0x0005ba80), called once per pass of the game loop. As the original:
+//
+//   - The simulation advances by the ticks the clock has moved since the last call, scaled by timeScale (1 normally;
+//     2 with the speed cheat; whatever an ESetSimRate event sets, up to 4, for slow or fast motion), and runs them
+//     one at a time. With oneTickPerRun set it advances at most one tick a call, clock or not.
+//   - A step of 12 ticks or more - a stall, such as a load - is not simulated at all: the time is dropped, so the
+//     game does not lurch forward to catch up.
+//   - With cinematicModeSkipping set (the mission manager sets it while a cinematic is being skipped), it runs
+//     ticks as fast as it can until the flag clears, with the per-frame schedule only every fourth tick.
+//   - The per-frame schedule, which renders, runs only on a call that simulates at least one tick.
+//
+// The departure: the original truncates elapsed * timeScale to whole ticks and then sets lastTickCount to the
+// clock, so the fraction is lost every time. The clock usually moves one tick per call, which makes that loss the
+// whole of the effect - a timeScale of 0.75 or 0.9 ran one tick every two (half speed), 0.3 one in four, and 1.5
+// no faster than 1. Here the fraction is carried to the next call instead, so a slow or fast motion runs at the
+// rate it asks for. Slow motion still lowers the frame rate, as in the original, because rendering only happens on
+// a call that simulates a tick; smoothing that would need interpolation between ticks.
+//
+// AUTOINJECT
+void Scheduler::Run(int unused) {
+    (void)unused;
+    const int now = (int)Clock;
+    bool teleportDone = false;
 
-  //printf("Running scheduler, time is %i, schedule list is %08x\n", now, this->listOfSchedules);
+    if (!this->cinematicModeSkipping) {
+        int elapsed = now - this->lastTickCount;
+        if (this->oneTickPerRun && elapsed != 0)
+            elapsed = 1;
+        if (elapsed <= 0) {
+            // Nothing to simulate until the clock moves (every 20 ms at 50 Hz). The console spun here - the game
+            // loop has no sleep - which on a PC holds a core at 100% for nothing; a millisecond's yield changes
+            // nothing about the game (winmm's 1 ms timer period makes it a millisecond).
+            Sleep(1);
+            return;
+        }
 
-  // If we're on the same tick, early return
-//   if(this->lastTickCount == now) {
-//     printf("Already ran this tick\n");
-//     return;
-//   }
+        g_pendingTicks += elapsed * (double)this->timeScale;
+        int ticks = (int)std::floor(g_pendingTicks);
+        g_pendingTicks -= ticks;
 
-  // TODO: Handle cinematic mode
-  // TODO: Frame skipping for performance
+        if (ticks >= 12) {
+            g_pendingTicks = 0.0;   // the stall guard drops the time, fraction and all
+        } else if (ticks == 0) {
+            Sleep(1);   // slow motion, and not yet a whole tick: as above
+        } else {
+            for (int k = 1; k <= ticks; k++)
+                RunTick(this, this->lastTickCount + k, k == ticks, &teleportDone);
+        }
+        this->lastTickCount = now;
+        return;
+    }
 
-  // Schedules are virtual - would need to use vtable to determine where the true Process function is. It's the second function in the vtable.
-  // Process is very basic - it just calls RunTasks, but with minor tweaks to run at half or quarter speed in the case of s_halfSimRate or s_quarterSimRate
-
-  // It looks like the structure is:
-  // 1. Run each of the simulation schedules by iterating the list. The list likely just consists of (s_SimRate, s_halfSimRate, s_quarterSimRate) though! (8 times)
-  // 2. Run the generated events
-  // 3. Run the per-frame schedules (8 times)
-  // 4. Run the generated events
-
-  // Instead of re-implementing the list iteration and vtable lookup, we can simplify and just call RunTasks directly. Less flexible, but easier
-
-  for(int i = 0; i < 8; i++) {
-
-    int tickNum = this->lastTickCount;
-    
-    // Run SimRate
-    Schedule__RunTasks(this->s_SimRate, 0, i);
-
-    // Run halfSimRate
-    Schedule__RunTasks(this->s_halfSimRate, tickNum & 1, i);
-
-    // Run quarterSimRate
-    Schedule__RunTasks(this->s_quarterSimRate, tickNum & 3, i);
-  }
-  
-  EventManager__RunEvents();
-
-  for(int i = 0; i < 8; i++) {
-    // Run per-frame schedules
-    Schedule__RunTasks(this->s_oncePerGameLoop, 0, i);
-  }
-  
-  EventManager__RunEvents();
-
-  this->lastTickCount++;
-
+    // Skipping a cinematic: simulate flat out until the mission manager clears the flag, drawing every fourth tick.
+    int tick = this->lastTickCount;
+    int untilDraw = 4;
+    do {
+        tick++;
+        bool draw = --untilDraw < 1;
+        if (draw)
+            untilDraw = 4;
+        RunTick(this, tick, draw, &teleportDone);
+    } while (this->cinematicModeSkipping);
+    g_pendingTicks = 0.0;
+    this->lastTickCount = now;
 }

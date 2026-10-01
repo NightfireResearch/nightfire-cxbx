@@ -1,0 +1,4 @@
+{"verdicts": [
+ {"item": "100c", "xbox": "0x00122550", "ps2": null, "name": "AStream::scalar_deleting_destructor", "verdict": "accept",
+  "why": "calls AStream's destructor (0x122450) then ABaseSound::operator_delete(this, 0xd0) when flag bit 1 is set: MSVC scalar deleting destructor. Was named ~AStream"}
+]}
