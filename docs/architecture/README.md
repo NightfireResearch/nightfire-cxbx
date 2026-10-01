@@ -70,7 +70,7 @@ known but important pieces are unread; **thin** means the shape itself is still 
 | Saves (`LS_*`, 20) | 0% | good | the save masks the menus pass; whether codename deletion works |
 | Scripting (57) | 53% | partial | the data inside each command; the `SSTREAM` fields; needs a script dumper to test against |
 | Eurocom's Xbox layer (272) | 55% (66%) | good | the FMV player (5 functions) and the file/save code |
-| XDK libraries (1,227) | 51% | n/a | D3D, XPP done; DSOUND and XMV kept alive only by the FMV player |
+| XDK libraries (1,227) | 74% | n/a | D3D, DSOUND, XPP done; XMV (the FMV decoder) is the last one running |
 
 ## Unknowns that cut across subsystems
 
@@ -112,5 +112,5 @@ By payoff against risk, drawn from the notes:
 6. **Last: the centres everything hangs off.** `Player_Update` and `Player_CollisionHandler`, and `Game_Draw` once
    the viewers' roles are settled.
 7. **Separately, the FMV player.** Replacing its five functions with a host decoder (or transcoding the movies)
-   retires the last of DSOUND and XMV, about 310 library functions. It works today through the seams, so it is
+   retires XMV, the last XDK library the game runs (60 functions, 157 KB). It works today through the seams, so it is
    only urgent once the XBE's code has to go entirely.
