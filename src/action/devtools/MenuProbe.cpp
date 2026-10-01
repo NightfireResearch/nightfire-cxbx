@@ -55,6 +55,7 @@
 #include "MemShadow.h"
 #include "ScoreShadow.h"
 #include "DroneTablesCheck.h"
+#include "DroneShadow.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -350,6 +351,7 @@ void MenuProbe_Install(void) {
         UpgradeShadow_Run();
         MemShadow_Run();
         ScoreShadow_Run();
+        DroneShadow_Run();
     }
     g_logging = SettingOn("MenuLog");
     if (g_logging) {

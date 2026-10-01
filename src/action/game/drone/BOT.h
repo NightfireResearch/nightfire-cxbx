@@ -115,7 +115,31 @@ static_assert(offsetof(BOT_vars_t, insideObjective) == 0x765, "Wrong offset for 
 
 #pragma pack(pop)
 
+// What BOTSTATE_getStateType says a bot DSTATE is (docs/drone/bots-and-navigation/README.md 5.5). NDrone2_DSTATE_BotGlobal
+// runs the goal and combat checks for classes 3..9, 12 and 13; Drone_SM_RouteMsgDCV, DroneWeap_FireWeapon and
+// NDrone2_DealWithObjHit test for ATTACK, IMPACT and DEATH. 11 is not used.
+typedef enum {
+    BOTSTATE_CLASS_NONE = 0,        // not a bot state
+    BOTSTATE_CLASS_INIT = 1,        // BotInit, BotRespawn
+    BOTSTATE_CLASS_GLOBAL = 2,      // BotGlobal
+    BOTSTATE_CLASS_PERSONALITY = 3, // BotCollector .. BotAssassin
+    BOTSTATE_CLASS_ATTACK = 4,      // BotAttack .. BotAttackUnarmed
+    BOTSTATE_CLASS_MOVE = 5,        // BotStuck, BotAlertToPosition, BotGotoGoalPosition
+    BOTSTATE_CLASS_ALERTED = 6,     // BotSeenOpponent, BotSeenDroneShot, BotHeardNoise
+    BOTSTATE_CLASS_IMPACT = 7,      // BotImpactBullet/Explosive/Punch/StunGrenade
+    BOTSTATE_CLASS_DOOR = 8,        // BotDoorOpen
+    BOTSTATE_CLASS_IDLE = 9,        // BotIdle
+    BOTSTATE_CLASS_DEATH = 10,      // BotDeathAnim, BotDeathByExplosion, BotDead
+    BOTSTATE_CLASS_COVER = 12,      // BotCoverRunTo .. BotCoverLeaveNow
+    BOTSTATE_CLASS_GUARD = 13,      // BotGuardFriendIdle, BotGuardFriendFollow
+} BOTSTATE_CLASS;
+
 BOT_stats_t* BOT_getDefaultStats(uint identifier);
 bool BOT_respawn(obj_tag* gameObj, int playerNum, char param_3);
+// Both return in ST0; BOT_getAggressionMul's value is not rounded to a float (see BOT.cpp)
+double BOT_getAggressionMul(Drone_tag *drone);
+float BOT_getMovementSpeedMul(Drone_tag *drone);
+bool BOT_getMovePossibility(Drone_tag *drone, int odds);
+uint BOTSTATE_getStateType(uint state);   // a BOTSTATE_CLASS
 
 #endif

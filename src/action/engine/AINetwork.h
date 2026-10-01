@@ -162,6 +162,8 @@ static_assert(sizeof(AIEmitter_tag) == 0x28, "AIEmitter_tag is wrong size");
 // XBE_GLOBAL(0x00275ae0, 0xc80)
 #define AIBounds (*(AIBound_tag(*)[50])0x00275ae0)
 
-void AINetwork_FreeEmitter(AIEmitter_tag *param_1);
+uchar AINetwork_RouteIsValid(AIRoute_tag *route);
+void AINetwork_AllocEmitter(AIEmitter_tag *emitter, uint size);
+void AINetwork_FreeEmitter(AIEmitter_tag *emitter);
 
 #endif // AINETWORK_H_

@@ -22458,6 +22458,18 @@
         "namespace": "Global"
     },
     {
+        "name": "Input_ProcessEvents",
+        "address": "0x0006cd20",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": false,
+        "return_type": "undefined",
+        "param_types": [],
+        "prototype_string": "undefined Input_ProcessEvents()",
+        "parameters": [],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
         "name": "Input_Ready",
         "address": "0x0006ce90",
         "calling_convention": "__cdecl",

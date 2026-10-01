@@ -57,6 +57,7 @@ typedef struct Drone_tag Drone_tag;
 typedef struct DIVars_tag DIVars_tag;
 typedef struct DCVars_tag DCVars_tag;
 typedef struct MsgObject MsgObject;
+typedef struct StateMachineInfo_tag StateMachineInfo_tag;
 typedef struct AnimObj AnimObj;
 typedef struct block_header_tag block_header_tag;
 typedef struct TARGET_PLACEMENT TARGET_PLACEMENT;

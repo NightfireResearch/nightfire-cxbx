@@ -3,7 +3,6 @@
 
 #include "string.h"
 
-#define Drone_bDisableSystem U8_AT(0x001dfa2a)
 
 // AUTOINJECT
 bool Drone_DCVfromOBJ(obj_tag* gameObj, DCVars_tag* dcVars) {

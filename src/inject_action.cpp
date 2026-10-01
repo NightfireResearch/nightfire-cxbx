@@ -25,6 +25,9 @@
 #include "action/game/obj/Switch.h"
 #include "action/game/obj/ScriptPlayer.h"
 #include "action/game/mp/multiplayer.h"
+#include "action/game/drone/BOT.h"
+#include "action/game/drone/NDrone2.h"
+#include "action/game/drone/Behaviour.h"
 #include "action/devtools/MenuProbe.h"
 
 #include "common/launchInfo.h"

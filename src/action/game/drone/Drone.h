@@ -58,6 +58,10 @@ typedef struct DIVars_tag {
     DroneKeys keys;         // 0x20
 } DIVars_tag;
 
+// Drone_tag.sightFlags
+#define DRONE_SIGHT_SEES_OPPONENT 4     // registered the opponent after the reaction time (DroneVision_HaveOpponentSight)
+#define DRONE_SIGHT_REACTED 8           // has reacted to a first sighting: DroneFunc_ReactionTime is 0 from then on
+
 // One drone (the obj_tag's extraObjectData), 0x978 bytes. Only the fields docs/drone/architecture/README.md 4.3 is
 // sure of are named; A3-drone-fields.md lists every offset the code touches.
 typedef struct Drone_tag {
@@ -123,7 +127,12 @@ typedef struct Drone_tag {
     char _pad134[0x138 - 0x134];
     float playerDistance[4];        // 0x138 - PreDroneControl
     obj_tag *opponent;              // 0x148
-    char _pad14c[0x3d4 - 0x14c];
+    char _pad14c[0x168 - 0x14c];
+    float distanceToTarget;         // 0x168 - to the opponent (Drone_GetOpponentInfo)
+    char _pad16c[0x1c8 - 0x16c];
+    uint sightFlags;                // 0x1c8 - DRONE_SIGHT_*: 4 sees its opponent (DroneVision_HaveOpponentSight), 8 has
+                                    //         reacted to its first sighting (set with message 0xf; also by HostageIdle)
+    char _pad1cc[0x3d4 - 0x1cc];
     uint *currentBehaviour;         // 0x3d4 - behaviour1 or behaviour2
     uint behaviour1[3];             // 0x3d8 - behaviour property words (behaviour_util_*)
     uint behaviour2[3];             // 0x3e4
@@ -135,8 +144,12 @@ typedef struct Drone_tag {
     float prevAlertness;            // 0x404
     float alertness;                // 0x408 - 1.0 = starts alerted
     char _pad40c[0x418 - 0x40c];
-    uchar alertStatus;              // 0x418
-    char _pad419[0x440 - 0x419];
+    uchar alertStatus;              // 0x418 - Drone_AlertStatusSet
+    uchar prevAlertStatus;          // 0x419 - the status before the last change
+    uchar alertStatusChanged;       // 0x41a - set to 1 on a change (only Drone_AlertStatusSet writes it)
+    char _pad41b;
+    uint alertStatusChangedFrame;   // 0x41c - GameState.NumFramesUnpaused at the last change
+    char _pad420[0x440 - 0x420];
     void *animCallback1;            // 0x440
     void *animCallback2;            // 0x444
     char _pad448[0x450 - 0x448];
@@ -193,10 +206,17 @@ static_assert(offsetof(Drone_tag, processFunction) == 0x114, "Wrong offset for p
 static_assert(offsetof(Drone_tag, modeChangeSwitchChannel) == 0x119, "Wrong offset for modeChangeSwitchChannel");
 static_assert(offsetof(Drone_tag, key7) == 0x12c, "Wrong offset for key7");
 static_assert(offsetof(Drone_tag, opponent) == 0x148, "Wrong offset for opponent");
+static_assert(offsetof(Drone_tag, distanceToTarget) == 0x168, "Wrong offset for distanceToTarget");
+static_assert(offsetof(Drone_tag, accuracy) == 0x98, "Wrong offset for accuracy");
+static_assert(offsetof(Drone_tag, speed) == 0x9a, "Wrong offset for speed");
 static_assert(offsetof(Drone_tag, currentBehaviour) == 0x3d4, "Wrong offset for currentBehaviour");
 static_assert(offsetof(Drone_tag, flags) == 0x3f4, "Wrong offset for flags");
 static_assert(offsetof(Drone_tag, alertness) == 0x408, "Wrong offset for alertness");
 static_assert(offsetof(Drone_tag, alertStatus) == 0x418, "Wrong offset for alertStatus");
+static_assert(offsetof(Drone_tag, sightFlags) == 0x1c8, "Wrong offset for sightFlags");
+static_assert(offsetof(Drone_tag, prevAlertStatus) == 0x419, "Wrong offset for prevAlertStatus");
+static_assert(offsetof(Drone_tag, alertStatusChanged) == 0x41a, "Wrong offset for alertStatusChanged");
+static_assert(offsetof(Drone_tag, alertStatusChangedFrame) == 0x41c, "Wrong offset for alertStatusChangedFrame");
 static_assert(offsetof(Drone_tag, playScript) == 0x450, "Wrong offset for playScript");
 static_assert(offsetof(Drone_tag, animEndState) == 0x492, "Wrong offset for animEndState");
 static_assert(offsetof(Drone_tag, initialState) == 0x49e, "Wrong offset for initialState");
@@ -208,9 +228,16 @@ static_assert(offsetof(Drone_tag, timerA) == 0x918, "Wrong offset for timerA");
 static_assert(offsetof(Drone_tag, stateScratch) == 0x930, "Wrong offset for stateScratch");
 static_assert(offsetof(Drone_tag, botVars) == 0x974, "Wrong offset for botVars");
 
+// Set by Drone_InitComms / ResetMap_GameInit (still the game's); while set, no drones are created and
+// Drone_SM_SendMsg / Drone_Message send nothing.
+#define Drone_bDisableSystem (*(uchar *)0x001dfa2a)
+
 bool Drone_DCVfromOBJ(obj_tag* obj, DCVars_tag *dcVars);
 obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 void Drone_SM_RouteMsg(MsgObject *msg);
+// Not a reimplementation: a cdecl shim onto the original dispatcher at 0x4e410, which takes dcVars in ESI
+// (DroneSM.cpp).
+void Drone_SM_RouteMsgDCV(DCVars_tag *dcVars, MsgObject *msg);
 void Drone_EnableAll(char enable, HASHCODE hashcode);
 
 #endif // DRONE_H_
