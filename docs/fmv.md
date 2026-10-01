@@ -12,25 +12,27 @@ library or DirectSound. There is no fallback to the original decoder.
 
 ## FFmpeg
 
-FFmpeg is the `third_party/ffmpeg` submodule, pinned at release 8.0.3. 8.0 is the first release with a dedicated Xbox
-IMA ADPCM decoder. `tools/fmv/build_ffmpeg.sh` builds it into `build/ffmpeg`:
+FFmpeg is release 8.0.3, the first release with a dedicated Xbox IMA ADPCM decoder. The built DLLs and their
+headers are committed in `third_party/ffmpeg-prebuilt`, with FFmpeg's licence and a README that records the source
+commit and the exact configuration. The source is the `third_party/ffmpeg` submodule, FFmpeg's own repository at
+that release, unmodified. A normal build never builds FFmpeg; after moving the submodule or changing the
+configuration, rebuild and commit the result:
 
 ```
 git submodule update --init third_party/ffmpeg
 sh tools/fmv/build_ffmpeg.sh
 ```
 
-It produces three 32-bit Windows DLLs (`avutil-60`, `avcodec-62`, `avformat-62`, about 2.2 MB together). They are
+The build is three 32-bit Windows DLLs (`avutil-60`, `avcodec-62`, `avformat-62`, about 2.2 MB together). They are
 cut down to the XMV demuxer and the WMV2 and Xbox ADPCM decoders, are LGPL only with no GPL parts, and depend only on
 `kernel32` and `msvcrt`. The script builds natively where the i686 mingw-w64 compiler, `make` and `nasm` are present
 (CI, Linux, macOS), and in the `nf-cross` Docker image otherwise (Windows). It also switches the submodule to LF line
 endings if a Windows checkout gave its scripts CRLF ones.
 
-CMake requires `build/ffmpeg` (or `NF_FFMPEG_DIR`). It copies the DLLs, FFmpeg's licence and a note of where the
-source is next to the executables. CI builds FFmpeg once per submodule commit in its own job (cached) and hands it to
-the Windows, macOS and Linux builds, so every artifact is complete: the only thing a player supplies is the game
-disc. That is how the LGPL is met: dynamic linking, the licence shipped alongside, and the exact source and
-configuration in this repository.
+CMake compiles against the headers and copies the DLLs, the licence and the README next to the executables, so every
+build and CI artifact is complete: the only thing a player supplies is the game disc. That is how the LGPL is met:
+dynamic linking, the licence shipped alongside, and the exact source and configuration in this repository. (CI used to
+build FFmpeg itself, but that took over ten minutes on its runners.)
 
 The game loads the DLLs at startup (`Fmv_Init`). If they are missing it says so and exits.
 

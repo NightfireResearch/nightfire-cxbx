@@ -104,15 +104,9 @@ All under `[Settings]` in `settings.ini`, read at startup:
 CMake and Python, plus a compiler. The game is a 32-bit x86 binary and the loader has to share its address
 space, so this cannot be built for x64 on any host.
 
-**FFmpeg first.** The movies play through a minimal FFmpeg (`docs/fmv.md`), a submodule built into
-`build/ffmpeg` before the main build. On Windows the script uses the `nf-cross` Docker image. Elsewhere it builds
-natively, and needs the i686 mingw-w64 compiler, `make` and `nasm` (`brew install mingw-w64 nasm` on macOS,
-`sudo apt install g++-mingw-w64-i686 make nasm` on Debian/Ubuntu):
-
-```
-git submodule update --init third_party/ffmpeg
-sh tools/fmv/build_ffmpeg.sh
-```
+The movies play through a minimal FFmpeg (`docs/fmv.md`), whose DLLs and headers are committed in
+`third_party/ffmpeg-prebuilt` and copied beside the executables by the build. Nothing to do unless you change it:
+`tools/fmv/build_ffmpeg.sh` rebuilds it from the `third_party/ffmpeg` submodule.
 
 **On Windows**, with Visual Studio 2022:
 

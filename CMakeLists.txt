@@ -214,13 +214,13 @@ endif()
 target_link_libraries(actioninject PRIVATE
   d3d9 d3dcompiler winmm ${XAUDIO2_LIB} xinput9_1_0 user32)
 
-# FMV playback through FFmpeg (src/action/engine/Fmv.cpp): the third_party/ffmpeg submodule, built into build/ffmpeg
-# by tools/fmv/build_ffmpeg.sh (CI does the same). The DLLs are loaded at run time and copied beside the executables
-# with FFmpeg's licence, so the build output is complete.
-set(NF_FFMPEG_DIR ${CMAKE_SOURCE_DIR}/build/ffmpeg CACHE PATH "FFmpeg built by tools/fmv/build_ffmpeg.sh")
+# FMV playback through FFmpeg (src/action/engine/Fmv.cpp): the DLLs and headers in third_party/ffmpeg-prebuilt, built
+# from the third_party/ffmpeg submodule by tools/fmv/build_ffmpeg.sh and committed. The DLLs are loaded at run time
+# and copied beside the executables with FFmpeg's licence and build note, so the build output is complete.
+set(NF_FFMPEG_DIR ${CMAKE_SOURCE_DIR}/third_party/ffmpeg-prebuilt CACHE PATH "FFmpeg DLLs and headers")
 if(NOT EXISTS ${NF_FFMPEG_DIR}/include/libavformat/avformat.h)
-  message(FATAL_ERROR "FFmpeg is not built: run 'git submodule update --init third_party/ffmpeg' and then "
-                      "'sh tools/fmv/build_ffmpeg.sh' (or point NF_FFMPEG_DIR at a build of it)")
+  message(FATAL_ERROR "No FFmpeg in ${NF_FFMPEG_DIR}: it is committed in third_party/ffmpeg-prebuilt, "
+                      "and tools/fmv/build_ffmpeg.sh rebuilds it")
 endif()
 target_include_directories(actioninject PRIVATE ${NF_FFMPEG_DIR}/include)
 file(GLOB NF_FFMPEG_FILES ${NF_FFMPEG_DIR}/bin/*.dll ${NF_FFMPEG_DIR}/FFmpeg-*.txt)
