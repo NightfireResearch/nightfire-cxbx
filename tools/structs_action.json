@@ -28144,41 +28144,41 @@
     "offset": 5,
     "size": 1,
     "name": "offsetToNextAltFireVariant",
-    "type": "uchar",
+    "type": "char",
     "bitfield": false
    },
    {
     "offset": 6,
     "size": 1,
-    "name": "maybeFlags",
-    "type": "undefined1",
+    "name": "botWeaponClass",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 8,
     "size": 4,
-    "name": "maybeExplodeRange",
+    "name": "explodeRadius",
     "type": "float",
     "bitfield": false
    },
    {
     "offset": 12,
     "size": 4,
-    "name": "maybeExplodeStrength",
+    "name": "damage",
     "type": "float",
     "bitfield": false
    },
    {
     "offset": 16,
     "size": 2,
-    "name": "field8_0x10",
+    "name": "damageClass",
     "type": "ushort",
     "bitfield": false
    },
    {
     "offset": 20,
     "size": 4,
-    "name": "autoaimRelated",
+    "name": "autoAimStrength",
     "type": "float",
     "bitfield": false
    },
@@ -28186,98 +28186,84 @@
     "offset": 24,
     "size": 1,
     "name": "numBulletsPerShot",
-    "type": "undefined1",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 28,
     "size": 4,
-    "name": "someDistance",
+    "name": "range",
     "type": "float",
     "bitfield": false
    },
    {
     "offset": 32,
     "size": 4,
-    "name": "bulletTrailTimeRelated",
+    "name": "projectileSpeed",
     "type": "float",
     "bitfield": false
    },
    {
     "offset": 36,
     "size": 4,
-    "name": "maybeAccuracyRelated",
+    "name": "baseSpread",
     "type": "float",
     "bitfield": false
    },
    {
     "offset": 40,
-    "size": 2,
-    "name": "indexIntoSomePlayerAmmoArray",
-    "type": "short",
-    "bitfield": false
-   },
-   {
-    "offset": 42,
-    "size": 2,
-    "name": "maybeUnused",
-    "type": "short",
+    "size": 4,
+    "name": "shotsPerTrigger",
+    "type": "short[2]",
     "bitfield": false
    },
    {
     "offset": 44,
     "size": 2,
-    "name": "droneBulletBurstTimeRelated",
+    "name": "droneBurstLength",
     "type": "short",
     "bitfield": false
    },
    {
     "offset": 46,
-    "size": 2,
-    "name": "unk15",
-    "type": "short",
+    "size": 1,
+    "name": "numFireModes",
+    "type": "char",
     "bitfield": false
    },
    {
     "offset": 48,
-    "size": 4,
-    "name": "fireModePrimary",
-    "type": "Action_TranslatedText",
-    "bitfield": false
-   },
-   {
-    "offset": 52,
-    "size": 4,
-    "name": "fireModeSecondary",
-    "type": "Action_TranslatedText",
+    "size": 8,
+    "name": "fireModeName",
+    "type": "Action_TranslatedText[2]",
     "bitfield": false
    },
    {
     "offset": 56,
     "size": 4,
-    "name": "weaponNameLongSp",
+    "name": "nameLong",
     "type": "Action_TranslatedText",
     "bitfield": false
    },
    {
     "offset": 60,
     "size": 4,
-    "name": "weaponNameShortMp",
+    "name": "nameShort",
     "type": "Action_TranslatedText",
     "bitfield": false
    },
    {
     "offset": 64,
     "size": 4,
-    "name": "someDurationRelatedToFiring",
+    "name": "refireDelay",
     "type": "int",
     "bitfield": false
    },
    {
     "offset": 68,
-    "size": 4,
-    "name": "unk17",
-    "type": "uint",
+    "size": 2,
+    "name": "bulletSpawnFrame",
+    "type": "ushort",
     "bitfield": false
    },
    {
@@ -28297,49 +28283,49 @@
    {
     "offset": 80,
     "size": 1,
-    "name": "whichBone",
-    "type": "byte",
+    "name": "weaponDatum",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 81,
     "size": 1,
-    "name": "muzzleFlashMaybeBrightnessMin",
-    "type": "undefined1",
+    "name": "muzzleFlashAlphaMin",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 82,
     "size": 1,
-    "name": "muzzleFlashMaybeBrightnessMax",
-    "type": "undefined1",
+    "name": "muzzleFlashAlphaMax",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 84,
     "size": 1,
     "name": "muzzleFlash_b",
-    "type": "undefined1",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 85,
     "size": 1,
     "name": "muzzleFlash_g",
-    "type": "undefined1",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 86,
     "size": 1,
     "name": "muzzleFlash_r",
-    "type": "undefined1",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 88,
     "size": 4,
-    "name": "muzzleFlashBrightness",
+    "name": "muzzleLightRadius",
     "type": "float",
     "bitfield": false
    },
@@ -28353,56 +28339,63 @@
    {
     "offset": 96,
     "size": 2,
-    "name": "animDatumRelated",
+    "name": "fireSound3rdPerson",
     "type": "ushort",
+    "bitfield": false
+   },
+   {
+    "offset": 100,
+    "size": 1,
+    "name": "unk64",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 104,
     "size": 4,
-    "name": "someFlags",
-    "type": "undefined4",
+    "name": "weaponFlags",
+    "type": "uint",
     "bitfield": false
    },
    {
     "offset": 108,
     "size": 4,
-    "name": "flagsForSwooshAndCasing",
+    "name": "projectileFlags",
     "type": "uint",
     "bitfield": false
    },
    {
     "offset": 112,
     "size": 4,
-    "name": "someFlagsRelatedToExplosiveTimer",
+    "name": "impactFlags",
     "type": "uint",
     "bitfield": false
    },
    {
     "offset": 116,
     "size": 2,
-    "name": "unk18",
+    "name": "swooshInterval",
     "type": "short",
     "bitfield": false
    },
    {
     "offset": 118,
     "size": 2,
-    "name": "swooshRelated",
+    "name": "swooshLifetime",
     "type": "short",
     "bitfield": false
    },
    {
     "offset": 120,
-    "size": 2,
+    "size": 1,
     "name": "casingDelayFrames",
-    "type": "short",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 122,
     "size": 2,
-    "name": "unk19",
+    "name": "effectDurationFrames",
     "type": "short",
     "bitfield": false
    },
@@ -28416,15 +28409,15 @@
    {
     "offset": 128,
     "size": 4,
-    "name": "wpn3rdPersonGfx",
+    "name": "worldModelGfx",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 132,
-    "size": 4,
-    "name": "weaponAnimationSet",
-    "type": "uint",
+    "size": 1,
+    "name": "animSet",
+    "type": "uchar",
     "bitfield": false
    },
    {
@@ -28437,7 +28430,7 @@
    {
     "offset": 140,
     "size": 4,
-    "name": "cameraSwingAmt",
+    "name": "scopeSway",
     "type": "float",
     "bitfield": false
    },
@@ -28451,14 +28444,14 @@
    {
     "offset": 145,
     "size": 1,
-    "name": "cooldownTimerIncreaseAmount",
-    "type": "uint8_t",
+    "name": "ammoPerShot",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 146,
     "size": 2,
-    "name": "clipSizeOrCooldown",
+    "name": "clipSize",
     "type": "short",
     "bitfield": false
    },
@@ -28466,146 +28459,125 @@
     "offset": 148,
     "size": 1,
     "name": "rumble",
-    "type": "uint8_t",
-    "bitfield": false
-   },
-   {
-    "offset": 149,
-    "size": 1,
-    "name": "_pad1",
-    "type": "uint8_t",
-    "bitfield": false
-   },
-   {
-    "offset": 150,
-    "size": 1,
-    "name": "_pad2",
-    "type": "uint8_t",
-    "bitfield": false
-   },
-   {
-    "offset": 151,
-    "size": 1,
-    "name": "_pad3",
-    "type": "uint8_t",
+    "type": "uchar",
     "bitfield": false
    },
    {
     "offset": 152,
     "size": 4,
-    "name": "accuracyModifierSomehow",
+    "name": "spreadPerShot",
     "type": "float",
     "bitfield": false
    },
    {
     "offset": 156,
     "size": 4,
-    "name": "unk22",
+    "name": "unk9c",
     "type": "float",
     "bitfield": false
    },
    {
     "offset": 160,
     "size": 4,
-    "name": "animScriptTag",
+    "name": "animIdle",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 164,
     "size": 4,
-    "name": "someAnimhc3",
+    "name": "animReload",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 168,
     "size": 4,
-    "name": "someAnimHsh",
+    "name": "animReloadStart",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 172,
     "size": 4,
-    "name": "maybeAnAnimScript",
+    "name": "animReloadEnd",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 176,
     "size": 4,
-    "name": "maybeWeaponFireAnimHashcode2",
+    "name": "animFire",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 180,
     "size": 4,
-    "name": "maybeWeaponFireAnimHashcode",
+    "name": "animFireAlt",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 184,
     "size": 4,
-    "name": "someAnimHC2",
+    "name": "animScopeIn",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 188,
     "size": 4,
-    "name": "someAnimHC",
+    "name": "animScopeOut",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 192,
     "size": 4,
-    "name": "animationHashcode",
+    "name": "animRaise",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 196,
     "size": 4,
-    "name": "animSpeedRelated",
+    "name": "animLower",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 200,
     "size": 4,
-    "name": "field79_0xc8",
+    "name": "animModeSwitch",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 204,
     "size": 4,
-    "name": "anotherAnimScriptTag",
+    "name": "animFidget",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 208,
     "size": 4,
-    "name": "field81_0xd0",
+    "name": "animRelax",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 212,
     "size": 4,
-    "name": "field82_0xd4",
+    "name": "animRelaxEnd",
     "type": "HASHCODE",
     "bitfield": false
    },
    {
     "offset": 216,
     "size": 4,
-    "name": "animationScript",
+    "name": "animLowerRelaxed",
     "type": "HASHCODE",
     "bitfield": false
    },
@@ -28619,36 +28591,36 @@
    {
     "offset": 224,
     "size": 12,
-    "name": "animRelated1",
+    "name": "viewOffset",
     "type": "float[3]",
     "bitfield": false
    },
    {
     "offset": 236,
     "size": 12,
-    "name": "animRelated2",
+    "name": "viewOffsetAlt",
     "type": "float[3]",
     "bitfield": false
    },
    {
     "offset": 248,
     "size": 12,
-    "name": "casingSpawnPos",
+    "name": "casingEjectVelocity",
     "type": "float[3]",
     "bitfield": false
    },
    {
     "offset": 260,
     "size": 4,
-    "name": "multiplayerWeaponFiredCallback",
-    "type": "undefined4",
+    "name": "onFired",
+    "type": "void *",
     "bitfield": false
    },
    {
     "offset": 264,
     "size": 4,
-    "name": "someCallback",
-    "type": "undefined4",
+    "name": "onImpact",
+    "type": "void *",
     "bitfield": false
    }
   ]

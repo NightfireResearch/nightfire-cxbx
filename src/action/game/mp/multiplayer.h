@@ -151,7 +151,8 @@ typedef struct {
     char pad[2];
     MPTeam team;        // 0x04
     uint skin;          // 0x08 an mp_characters identifier
-    uint field_0xc;
+    uchar controllerPort; // 0x0c the controller's port, which P_MPCONFIRM hands to PlayerInputs[].controllerPort
+    uchar _pad0d[3];
 } MPJoinSlot;
 static_assert(sizeof(MPJoinSlot) == 0x10, "MPJoinSlot is wrong size");
 

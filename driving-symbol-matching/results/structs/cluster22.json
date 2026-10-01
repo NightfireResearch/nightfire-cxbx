@@ -2,49 +2,6 @@
  "program": "Driving.xbe",
  "types": [
   {
-   "name": "ActionQueue",
-   "size": 2420,
-   "fields": [
-    {
-     "offset": 0,
-     "type": "ActionQueueManager *",
-     "name": "manager",
-     "comment": "high: ctor 4f320 stores GetActionQueueManager() result; ~ActionQueue 4f1b0 passes [this] as ECX to UnRegisterQueue 4f440. PS2 +0x0 (Initialize/~ActionQueue). Name invented"
-    },
-    {
-     "offset": 4,
-     "type": "int",
-     "name": "count",
-     "comment": "high: IsEmpty 4f220 returns [+4]==0; PopAction 4f250 decrements when >0; GetAction 4f290 tests >0; Flush 4f280 zeroes; buffer ctor 4f2d0 zeroes. PS2 +0x4 IsEmpty. Name invented"
-    },
-    {
-     "offset": 8,
-     "type": "int",
-     "name": "tail",
-     "comment": "medium: ring write index: 4f2d0/ctor/Flush set -1; advanced by ReceiveAction's helper 4f1c0. PS2 +0x8 Flush. Name invented"
-    },
-    {
-     "offset": 12,
-     "type": "int",
-     "name": "head",
-     "comment": "high: ring read index: GetAction reads entry at this+0x14+head*0xc; PopAction head++ and wraps to 0 when > capacity-1; Flush zeroes. Name invented"
-    },
-    {
-     "offset": 16,
-     "type": "int",
-     "name": "capacity",
-     "comment": "high: 4f2d0 stores 0xc8 (200); PopAction reads it for the wrap. Name invented"
-    },
-    {
-     "offset": 20,
-     "type": "ActionData[200]",
-     "name": "actions",
-     "comment": "high: 4f2d0 constructs 200 x 12-byte entries (4f170(0,0,0)) from this+0x14 to 0x974; GetAction copies one out via a1ec0. PS2 ctors LEA +0x14. Name invented"
-    }
-   ],
-   "comment": "No vptr. Manager pointer + an embedded fixed ring buffer of 200 ActionData (12 bytes each). Ctor 4f320 runs the buffer ctor 4f2d0 on this+4 (loop of 200 x 4f170 over +0x14, stride 0xc), then GetActionQueueManager and RegisterQueue(this). Allocated with operator new(0x974) by PHelicopter/PBondCar/SWeaponManager/SMissionManager/RWorldCamera. Offsets identical on PS2."
-  },
-  {
    "name": "ActionQueueManager",
    "size": 16,
    "fields": [

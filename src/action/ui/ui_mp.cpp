@@ -978,32 +978,32 @@ bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
         MPJoinSlot slots[4];
         memset(slots, 0, sizeof(slots));
         for (int k = 0; k < 4; k++)
-            *(uchar *)&slots[k].field_0xc = (uchar)k;
+            slots[k].controllerPort = (uchar)k;
         uchar players = 0;
         if (mp_join_slots[0].joined) {
             slots[0] = mp_join_slots[0];
-            *(uchar *)&slots[0].field_0xc = 0;
+            slots[0].controllerPort = 0;
             players = 1;
         }
         uchar port3 = 0;
         for (int k = 1; k < 4; k++) {
             if (!mp_join_slots[k].joined) {
                 if (k == 3)
-                    port3 = *(uchar *)&slots[3].field_0xc;
+                    port3 = slots[3].controllerPort;
                 continue;
             }
             memcpy(&PlayerInputs[players], &PlayerInputs[k], sizeof(PlayerInput));
             memcpy(&MPSettings.Player[players], &MPSettings.Player[k], sizeof(MPSettings_PerPlayer));
-            uchar port = *(uchar *)&slots[players].field_0xc;
+            uchar port = slots[players].controllerPort;
             slots[players] = mp_join_slots[k];
             if (k < 3)
-                *(uchar *)&slots[k].field_0xc = port;
+                slots[k].controllerPort = port;
             else
                 port3 = port;
             players++;
         }
         for (int p = 0; p < 3; p++) {
-            PlayerInputs[p].controllerPort = *(uchar *)&slots[p].field_0xc;
+            PlayerInputs[p].controllerPort = slots[p].controllerPort;
             MPSettings.Player[p].SkinNum = slots[p].skin;
             MPSettings.Player[p].TeamId = slots[p].team;
         }

@@ -782,7 +782,7 @@
      "offset": "0xc",
      "name": "controllerPort",
      "type": "uchar",
-     "comment": "set by Menu_AllJoinedPlayersReady; P_MPCONFIRM copies it to PlayerInputs[].controllerPort"
+     "comment": "the controller port: Menu_AllJoinedPlayersReady writes it, P_MPCONFIRM copies it into PlayerInputs[].controllerPort"
     }
    ]
   },
