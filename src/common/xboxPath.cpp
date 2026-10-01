@@ -1,5 +1,6 @@
 #include "xboxPath.h"
 
+#include <windows.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -7,17 +8,58 @@
 
 // See xboxPath.h for what this is and which drives map where.
 
-// Where D: is. The loader has no settings file and wants the default; the action engine sets this from
-// settings.ini before anything opens a file. Kept here rather than read from a settings header, because this
-// file is compiled into the loader as well, and the loader has no settings to read.
-static const char *g_discRoot = "../disc";
+#define DEFAULT_DISC_ROOT "../disc"
+
+// Where D: is, as an absolute path. Empty until it is set or first asked for, when the default is resolved.
+// This file is compiled into both the loader and the inject DLL, and each has its own copy; both set it from
+// the same settings.ini key, and resolve it the same way, so they agree.
+static char g_discRoot[MAX_PATH];
+
+// A relative path is taken relative to the folder the executables are in, not the working directory, so the
+// disc is found however the game was started. That folder is found from the module this code is in - the
+// loader, or the inject DLL beside it - rather than from the process, because under CXBX the process is CXBX's
+// own executable, which lives somewhere else. Should that fail, the path is left relative to the working
+// directory, which is what it was before and is still right when the game is started from its own folder.
+static void ResolveAgainstOwnFolder(const char *path, char *out, size_t outSize) {
+    char joined[MAX_PATH * 2];
+    bool absolute = path[0] == '/' || path[0] == '\\' || (path[0] != '\0' && path[1] == ':');
+
+    char exe[MAX_PATH];
+    DWORD length = 0;
+    HMODULE self = NULL;
+    if (!absolute && GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                        GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                        (LPCSTR)&ResolveAgainstOwnFolder, &self))
+        length = GetModuleFileNameA(self, exe, sizeof(exe));
+    char *lastSeparator = NULL;
+    if (length > 0 && length < sizeof(exe)) {
+        for (char *p = exe; *p != '\0'; p++) {
+            if (*p == '\\' || *p == '/')
+                lastSeparator = p;
+        }
+    }
+
+    if (lastSeparator != NULL) {
+        lastSeparator[1] = '\0';
+        snprintf(joined, sizeof(joined), "%s%s", exe, path);
+    } else {
+        snprintf(joined, sizeof(joined), "%s", path);
+    }
+
+    // Folds the "..", so that logs and the paths built on it say where the disc really is.
+    DWORD full = GetFullPathNameA(joined, (DWORD)outSize, out, NULL);
+    if (full == 0 || full >= outSize)
+        snprintf(out, outSize, "%s", joined);
+}
 
 void Xbox_SetDiscRoot(const char *path) {
     if (path != NULL && path[0] != '\0')
-        g_discRoot = path;
+        ResolveAgainstOwnFolder(path, g_discRoot, sizeof(g_discRoot));
 }
 
 const char *Xbox_GetDiscRoot(void) {
+    if (g_discRoot[0] == '\0')
+        ResolveAgainstOwnFolder(DEFAULT_DISC_ROOT, g_discRoot, sizeof(g_discRoot));
     return g_discRoot;
 }
 

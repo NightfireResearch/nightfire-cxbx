@@ -11,6 +11,7 @@
 #include "../common/renderWindow.h"
 #include "../res/resource.h"
 #include "../common/console.h"
+#include "../common/xboxPath.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The standalone loader - stage B steps 4.2 and 4.3 of docs/cxbx-removal-plan.md, replacing cxbxr-ldr.exe.
@@ -446,10 +447,33 @@ static HWND CreateRenderWindow(int width, int height) {
     return window;
 }
 
+// settings.ini's DiscPath, read here because the game's own file I/O comes through this executable's kernel
+// shims (file.cpp), which resolve D: with this executable's copy of xboxPath.cpp. The action inject DLL sets its
+// own copy from the same key, which does not reach these. Read the way the action engine's parser reads it
+// (XboxSettings.cpp): a ';' or '#' starts a comment anywhere on the line, and trailing whitespace goes.
+// settings.ini itself is read from the working directory, like every other key.
+static void ApplyDiscPathSetting(void) {
+    char value[MAX_PATH];
+    GetPrivateProfileStringA("Settings", "DiscPath", "", value, sizeof(value), ".\\settings.ini");
+    value[strcspn(value, ";#")] = '\0';
+    size_t length = strlen(value);
+    while (length > 0 && (value[length - 1] == ' ' || value[length - 1] == '\t'))
+        value[--length] = '\0';
+    Xbox_SetDiscRoot(value);
+
+    // A missing disc does not fail where it happens: the game's file system fails to open its first archive
+    // without saying so, and the game faults a little later on what it did not load.
+    const char *root = Xbox_GetDiscRoot();
+    if (GetFileAttributesA(root) == INVALID_FILE_ATTRIBUTES)
+        printf("[loader] D: is %s, which does not exist - set DiscPath in settings.ini\n", root);
+    else
+        printf("[loader] D: is %s\n", root);
+}
+
 // Kept in one place because the useful failure message is "where did you look", not "not found".
 static bool FindXbe(char *out, size_t outSize) {
     char candidates[3][MAX_PATH];
-    snprintf(candidates[0], sizeof(candidates[0]), "../disc/%s", LOADER_XBE_NAME);
+    snprintf(candidates[0], sizeof(candidates[0]), "%s/%s", Xbox_GetDiscRoot(), LOADER_XBE_NAME);
     snprintf(candidates[1], sizeof(candidates[1]), "disc/%s", LOADER_XBE_NAME);
     snprintf(candidates[2], sizeof(candidates[2]), "%s", LOADER_XBE_NAME);
 
@@ -465,7 +489,7 @@ static bool FindXbe(char *out, size_t outSize) {
     printf("[loader] could not find %s. Looked for:\n", LOADER_XBE_NAME);
     for (size_t i = 0; i < sizeof(candidates) / sizeof(candidates[0]); i++)
         printf("[loader]   %s\n", candidates[i]);
-    printf("[loader] (relative to the working directory, which is %s)\n", cwd);
+    printf("[loader] (the first from DiscPath; the others relative to the working directory, which is %s)\n", cwd);
     return false;
 }
 
@@ -489,6 +513,8 @@ int main(int argc, char **argv) {
             break;
         positional[positionals++] = argv[i];
     }
+
+    ApplyDiscPathSetting();
 
     char xbePath[MAX_PATH];
     if (positional[0] != NULL)

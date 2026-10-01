@@ -42,8 +42,8 @@ float Settings_GetMouseSensitivity(void);
 bool Settings_GetMouseInvertY(void);
 
 // settings.ini's [Settings] DiscPath key: the host folder the Xbox D: drive resolves to, i.e. the one holding
-// eurocom\filesys.d00. Defaults to "../disc", relative to the working directory the executables run in. See
-// common/xboxPath.h for the drive-letter mapping this feeds.
+// eurocom\filesys.d00. Defaults to "../disc". This is the value as written; a relative one is resolved against
+// the executable's folder by Xbox_SetDiscRoot. See common/xboxPath.h for the drive-letter mapping this feeds.
 const char *Settings_GetDiscPath(void);
 
 #endif // XBOXSETTINGS_H_

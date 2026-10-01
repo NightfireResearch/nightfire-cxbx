@@ -193,11 +193,14 @@ setup, including the Wine 11.5 pin. A cross-built `action.exe` has been run that
 claims `0x00010000..0x0030b660` as its own image, resolves all 96 kernel imports, loads the injected DLL,
 brings up Direct3D 9 on the M2 Max and XAudio2, and reaches the game's own `Mem_Init`.
 
-**`driving.exe` needs a `disc` folder beside the build folder, whatever `settings.ini` says.** Only the action
-side reads `DiscPath` (`inject_action.cpp`); the driving side keeps the default, `../disc` relative to the working
-directory, so `build/macos/driving.exe` reads `build/disc`. A symlink to the real disc folder will do. Passing
-the XBE's path on the command line is not enough: the loader finds the XBE, but the game's own file system still
-looks under `../disc`, fails to open `misc.viv` without saying so, and faults a moment later at `0x000e52ee`,
-reading `0x30`, just after `Loading file data\render\eaglrm.o`. The tell is that the log goes from `Opening
-misc.viv` to `Init Global Render` with no `*** misc.viv found, and being used! ***` in between. This bites a
-fresh checkout or worktree, which has no `build/disc` until you make one.
+**Where the disc is.** Both loaders take it from `DiscPath` in `settings.ini`, which is read from the working
+directory. A relative `DiscPath` is relative to the folder the executables are in, not the working directory,
+and the default is `../disc` - so `build/macos/driving.exe` with no setting reads `build/disc`, wherever it was
+started from. Under Wine an absolute path is a Windows one, `Z:\Users\...`. The loader says where it looked
+first thing (`[loader] D: is ...`), and says so plainly when that folder does not exist.
+
+Until 1 October 2026 only the action engine read `DiscPath`, and `driving.exe` always used `../disc` from the
+working directory. If an older build fails on the disc, the symptom is a fault at `0x000e52ee`, reading `0x30`,
+just after `Loading file data\render\eaglrm.o`: the game's file system failed to open `misc.viv` without saying
+so. The log goes from `Opening misc.viv` to `Init Global Render` with no `*** misc.viv found, and being used! ***`
+in between.

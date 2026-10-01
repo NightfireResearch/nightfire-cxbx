@@ -11,7 +11,7 @@
 // whichever directory the XBE it was handed lives in). Replacing the file I/O with Win32 calls means doing that
 // resolution ourselves, and this is the one place it happens.
 //
-//   d:\...   the game disc         -> the DiscPath setting, "../disc" by default
+//   d:\...   the game disc         -> the DiscPath setting, "../disc" from the executables' folder by default
 //   t:\...   the title's persistent data - the chosen language and the like -> "tdata/"
 //   u:\...   the title's saved games, which is what the profile list enumerates -> "saves/"
 //   z:\...   the per-boot cache partition, scratch space the game expects to be able to write and re-read,
@@ -28,12 +28,14 @@
 // result would not fit, in which case out is left as an empty string.
 bool Xbox_ResolvePath(const char *xboxPath, char *out, size_t outSize);
 
-// The host directory D: resolves to. Defaults to "../disc" - which, with the working directory being the one
-// the executables live in, is a "disc" folder beside it. The action engine overrides it from settings.ini's
-// DiscPath; the standalone loader, which has no settings file, takes the default.
+// The host directory D: resolves to, as an absolute path. Defaults to "../disc" relative to the executables'
+// folder: a "disc" folder beside the one the executables are in. settings.ini's DiscPath overrides it, and
+// both the loader (loadermain.cpp, for the game's own file I/O through its kernel shims) and the action inject
+// DLL (inject_action.cpp, for XboxFile.cpp) set it from there, each in its own copy of this file.
 const char *Xbox_GetDiscRoot(void);
 
-// Sets it. Call before anything opens a file; a null or empty path leaves the default in place.
+// Sets it. A relative path is relative to the executables' folder, not the working directory. Call before
+// anything opens a file; a null or empty path leaves the default in place.
 void Xbox_SetDiscRoot(const char *path);
 
 #endif // COMMON_XBOXPATH_H_
