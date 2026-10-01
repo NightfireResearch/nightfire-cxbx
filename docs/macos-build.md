@@ -192,3 +192,12 @@ Building and running are separate problems on macOS. See `docs/macOS-D3D9-setup.
 setup, including the Wine 11.5 pin. A cross-built `action.exe` has been run that way: it maps the XBE,
 claims `0x00010000..0x0030b660` as its own image, resolves all 96 kernel imports, loads the injected DLL,
 brings up Direct3D 9 on the M2 Max and XAudio2, and reaches the game's own `Mem_Init`.
+
+**`driving.exe` needs a `disc` folder beside the build folder, whatever `settings.ini` says.** Only the action
+side reads `DiscPath` (`inject_action.cpp`); the driving side keeps the default, `../disc` relative to the working
+directory, so `build/macos/driving.exe` reads `build/disc`. A symlink to the real disc folder will do. Passing
+the XBE's path on the command line is not enough: the loader finds the XBE, but the game's own file system still
+looks under `../disc`, fails to open `misc.viv` without saying so, and faults a moment later at `0x000e52ee`,
+reading `0x30`, just after `Loading file data\render\eaglrm.o`. The tell is that the log goes from `Opening
+misc.viv` to `Init Global Render` with no `*** misc.viv found, and being used! ***` in between. This bites a
+fresh checkout or worktree, which has no `build/disc` until you make one.
