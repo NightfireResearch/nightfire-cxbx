@@ -8,12 +8,6 @@
 #include <string.h>
 #include <deque>
 
-extern "C" {
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libavutil/avutil.h>
-}
-
 #include "../actionhelpers.h"
 #include "../memory.h"
 #include "../game.h"
@@ -23,6 +17,8 @@ extern "C" {
 #include "../sound/dsndSeam.h"
 #include "../../common/gfx/d3d9Backend.h"
 #include "../../common/xboxPath.h"
+#include "../../common/fmv/Ffmpeg.h"
+#include "../../common/fmv/FmvAudio.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // FMV playback through FFmpeg.
@@ -33,7 +29,7 @@ extern "C" {
 //
 // The movies are WMV2 video (640x480, 25 fps) with Xbox IMA ADPCM audio - one stereo track, or four (one per
 // language). FFmpeg's xmv demuxer and wmv2/adpcm_ima_xbox decoders read them exactly. FFmpeg is a minimal LGPL
-// build of the third_party/ffmpeg submodule (tools/fmv/build_ffmpeg.sh, and CI), loaded at startup (Fmv_Init).
+// build (third_party/ffmpeg-prebuilt), loaded at startup (Fmv_Init, through common/fmv/Ffmpeg.cpp).
 //
 // What the game expects of the five, from the originals (0x000e8a00-0x000e8cf0):
 //   - BackgroundMoviePlayFile(name): opens d:\eurocom\25_fps\<name> (30_fps on a PAL-60 TV), insists on 640x480,
@@ -56,72 +52,10 @@ extern "C" {
 #define FMV_FRAME_BYTES      0x12c000        // what the original allocates per frame (twice a YUY2 frame)
 #define FMV_FRAME_ALIGN      0x80
 #define FMV_FORMAT_YUY2      9               // RegisterTexture's format type for Xbox YUY2
-#define FMV_AUDIO_AHEAD      0.5             // seconds of audio kept queued
-#define FMV_AUDIO_CHUNK      4096            // sample frames per XAudio2 buffer
-
-// ---------------------------------------------------------------------------------------------------------------
-// FFmpeg, loaded at run time
-// ---------------------------------------------------------------------------------------------------------------
-
-static struct {
-    decltype(&avformat_open_input)            open_input;
-    decltype(&avformat_find_stream_info)      find_stream_info;
-    decltype(&avformat_close_input)           close_input;
-    decltype(&av_read_frame)                  read_frame;
-    decltype(&avcodec_find_decoder)           find_decoder;
-    decltype(&avcodec_alloc_context3)         alloc_context3;
-    decltype(&avcodec_parameters_to_context)  parameters_to_context;
-    decltype(&avcodec_open2)                  open2;
-    decltype(&avcodec_send_packet)            send_packet;
-    decltype(&avcodec_receive_frame)          receive_frame;
-    decltype(&avcodec_free_context)           free_context;
-    decltype(&av_packet_alloc)                packet_alloc;
-    decltype(&av_packet_free)                 packet_free;
-    decltype(&av_packet_unref)                packet_unref;
-    decltype(&av_frame_alloc)                 frame_alloc;
-    decltype(&av_frame_free)                  frame_free;
-    decltype(&av_log_set_level)               log_set_level;
-} ff;
-
-static bool LoadFFmpeg(void) {
-    HMODULE avutil = LoadLibraryA("avutil-60.dll");
-    HMODULE avcodec = LoadLibraryA("avcodec-62.dll");
-    HMODULE avformat = LoadLibraryA("avformat-62.dll");
-    if (avutil == NULL || avcodec == NULL || avformat == NULL)
-        return false;
-    bool ok = true;
-#define FF_LOAD(module, field, name) \
-    if ((*(FARPROC *)&ff.field = GetProcAddress(module, name)) == NULL) { printf("[fmv] %s missing\n", name); ok = false; }
-    FF_LOAD(avformat, open_input, "avformat_open_input");
-    FF_LOAD(avformat, find_stream_info, "avformat_find_stream_info");
-    FF_LOAD(avformat, close_input, "avformat_close_input");
-    FF_LOAD(avformat, read_frame, "av_read_frame");
-    FF_LOAD(avcodec, find_decoder, "avcodec_find_decoder");
-    FF_LOAD(avcodec, alloc_context3, "avcodec_alloc_context3");
-    FF_LOAD(avcodec, parameters_to_context, "avcodec_parameters_to_context");
-    FF_LOAD(avcodec, open2, "avcodec_open2");
-    FF_LOAD(avcodec, send_packet, "avcodec_send_packet");
-    FF_LOAD(avcodec, receive_frame, "avcodec_receive_frame");
-    FF_LOAD(avcodec, free_context, "avcodec_free_context");
-    FF_LOAD(avcodec, packet_alloc, "av_packet_alloc");
-    FF_LOAD(avcodec, packet_free, "av_packet_free");
-    FF_LOAD(avcodec, packet_unref, "av_packet_unref");
-    FF_LOAD(avutil, frame_alloc, "av_frame_alloc");
-    FF_LOAD(avutil, frame_free, "av_frame_free");
-    FF_LOAD(avutil, log_set_level, "av_log_set_level");
-#undef FF_LOAD
-    if (ok)
-        ff.log_set_level(AV_LOG_ERROR);
-    return ok;
-}
 
 // ---------------------------------------------------------------------------------------------------------------
 // The player
 // ---------------------------------------------------------------------------------------------------------------
-
-struct AudioChunk {
-    int16_t *samples;
-};
 
 static struct {
     AVFormatContext *format;
@@ -141,16 +75,7 @@ static struct {
     double nextFrameTime;                    // seconds: the timestamp of the next frame to show
     double timeBase;                         // seconds per video timestamp unit
 
-    IXAudio2SourceVoice *voice;
-    std::deque<AudioChunk> chunks;           // submitted, in order, freed once played
-    int16_t *pending;                        // the chunk being filled
-    int pendingFrames;
-    int channels, sampleRate;
-    bool voiceStarted;
-    LARGE_INTEGER wallStart;
-    bool audioDrained;                       // the audio has played out: the clock carries on from the wall clock
-    double drainedAt;
-    LARGE_INTEGER drainedWall;
+    FmvAudio audio_;                         // the voice and the clock (common/fmv/FmvAudio.cpp)
 
     bool isPlaying;
 } M;
@@ -164,62 +89,15 @@ static int MovieVolume = 100;
 int Language_Get(void);
 
 static void ApplyVolume(void) {
-    if (M.voice == NULL)
-        return;
     int32_t millibels = DSound_VolumeMillibels(MovieVolume);
-    M.voice->SetVolume(millibels <= -10000 ? 0.0f : powf(10.0f, (float)millibels / 2000.0f));
-}
-
-// Frees the audio chunks the voice has finished with (it plays them in order)
-static void ReapChunks(void) {
-    if (M.voice == NULL)
-        return;
-    XAUDIO2_VOICE_STATE state;
-    M.voice->GetState(&state, XAUDIO2_VOICE_NOSAMPLESPLAYED);
-    while (M.chunks.size() > state.BuffersQueued) {
-        free(M.chunks.front().samples);
-        M.chunks.pop_front();
-    }
-}
-
-static void SubmitPending(void) {
-    if (M.pending == NULL || M.pendingFrames == 0)
-        return;
-    XAUDIO2_BUFFER buffer = {};
-    buffer.AudioBytes = (UINT32)(M.pendingFrames * M.channels * sizeof(int16_t));
-    buffer.pAudioData = (const BYTE *)M.pending;
-    if (SUCCEEDED(M.voice->SubmitSourceBuffer(&buffer))) {
-        M.chunks.push_back({M.pending});
-    } else {
-        free(M.pending);
-    }
-    M.pending = NULL;
-    M.pendingFrames = 0;
-}
-
-// Interleaves a decoded audio frame into the pending chunk, submitting it when full
-static void QueueAudioFrame(const AVFrame *frame) {
-    bool planar = frame->format == AV_SAMPLE_FMT_S16P;
-    for (int i = 0; i < frame->nb_samples; i++) {
-        if (M.pending == NULL) {
-            M.pending = (int16_t *)malloc(FMV_AUDIO_CHUNK * M.channels * sizeof(int16_t));
-            M.pendingFrames = 0;
-        }
-        for (int c = 0; c < M.channels; c++) {
-            int16_t s = planar ? ((const int16_t *)frame->extended_data[c])[i]
-                               : ((const int16_t *)frame->extended_data[0])[i * M.channels + c];
-            M.pending[M.pendingFrames * M.channels + c] = s;
-        }
-        if (++M.pendingFrames == FMV_AUDIO_CHUNK)
-            SubmitPending();
-    }
+    M.audio_.SetVolume(millibels <= -10000 ? 0.0f : powf(10.0f, (float)millibels / 2000.0f));
 }
 
 static void DecodeAudioPacket(AVPacket *packet) {
     if (ff.send_packet(M.audio, packet) < 0)
         return;
     while (ff.receive_frame(M.audio, M.frame) == 0)
-        QueueAudioFrame(M.frame);
+        M.audio_.Queue(M.frame);
 }
 
 // Reads one packet: audio goes straight to the voice, video is kept for when a frame is due. False at the end.
@@ -228,10 +106,9 @@ static bool ReadPacket(void) {
         return false;
     if (ff.read_frame(M.format, M.packet) < 0) {
         M.demuxEnded = true;
-        if (M.audio != NULL) {
+        if (M.audio != NULL)
             DecodeAudioPacket(NULL);       // drain
-            SubmitPending();
-        }
+        M.audio_.Finish();
         return false;
     }
     if (M.packet->stream_index == M.videoStream) {
@@ -247,43 +124,9 @@ static bool ReadPacket(void) {
     return true;
 }
 
-static double QueuedAudioSeconds(void) {
-    if (M.voice == NULL)
-        return 1e9;
-    XAUDIO2_VOICE_STATE state;
-    M.voice->GetState(&state, XAUDIO2_VOICE_NOSAMPLESPLAYED);
-    return (double)state.BuffersQueued * FMV_AUDIO_CHUNK / M.sampleRate;
-}
-
 static void KeepAudioFed(void) {
-    ReapChunks();
-    while (M.voice != NULL && QueuedAudioSeconds() < FMV_AUDIO_AHEAD && ReadPacket()) {
+    while (M.audio_.WantsMore() && ReadPacket()) {
     }
-}
-
-static double SecondsSince(const LARGE_INTEGER &start) {
-    LARGE_INTEGER now, freq;
-    QueryPerformanceCounter(&now);
-    QueryPerformanceFrequency(&freq);
-    return (double)(now.QuadPart - start.QuadPart) / freq.QuadPart;
-}
-
-// The playback clock, in seconds: the audio played, or the wall clock without audio. Once the audio has played out
-// (a track shorter than the video) the wall clock carries on from there, or the video would stop with it.
-static double Clock(void) {
-    if (M.voice == NULL || !M.voiceStarted)
-        return SecondsSince(M.wallStart);
-    if (M.audioDrained)
-        return M.drainedAt + SecondsSince(M.drainedWall);
-    XAUDIO2_VOICE_STATE state;
-    M.voice->GetState(&state);
-    double t = (double)state.SamplesPlayed / M.sampleRate;
-    if (M.demuxEnded && state.BuffersQueued == 0 && M.pending == NULL) {
-        M.audioDrained = true;
-        M.drainedAt = t;
-        QueryPerformanceCounter(&M.drainedWall);
-    }
-    return t;
 }
 
 // 4:2:0 planar to the game's YUY2 (Y0 U Y1 V), straight into the texture's memory
@@ -355,15 +198,7 @@ static bool OpenDecoder(int stream, AVCodecContext **out) {
 
 // AUTOINJECT
 void maybeBackgroundMovieCleanup(void) {
-    if (M.voice != NULL) {
-        M.voice->DestroyVoice();          // synchronous: no buffer is read after this returns
-        M.voice = NULL;
-    }
-    for (AudioChunk &c : M.chunks)
-        free(c.samples);
-    M.chunks.clear();
-    free(M.pending);
-    M.pending = NULL;
+    M.audio_.Close();
     for (AVPacket *p : M.videoPackets)
         ff.packet_free(&p);
     M.videoPackets.clear();
@@ -381,8 +216,7 @@ void maybeBackgroundMovieCleanup(void) {
         M.frameMemory[i] = NULL;
     }
     M.audioStream = M.videoStream = -1;
-    M.demuxEnded = M.videoEnded = M.haveFrame = M.voiceStarted = M.isPlaying = M.audioDrained = false;
-    M.pendingFrames = M.channels = M.sampleRate = 0;
+    M.demuxEnded = M.videoEnded = M.haveFrame = M.isPlaying = false;
 }
 
 // AUTOINJECT
@@ -444,22 +278,13 @@ void BackgroundMoviePlayFile(char *filename) {
     M.frame = ff.frame_alloc();
 
     if (M.audioStream >= 0 && OpenDecoder(M.audioStream, &M.audio)) {
-        M.channels = M.audio->ch_layout.nb_channels;
-        M.sampleRate = M.audio->sample_rate;
-        WAVEFORMATEX wfx = {};
-        wfx.wFormatTag = WAVE_FORMAT_PCM;
-        wfx.nChannels = (WORD)M.channels;
-        wfx.nSamplesPerSec = (DWORD)M.sampleRate;
-        wfx.wBitsPerSample = 16;
-        wfx.nBlockAlign = (WORD)(M.channels * 2);
-        wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
-        IXAudio2 *device = XA2_GetDevice();
-        if (device == NULL || FAILED(device->CreateSourceVoice(&M.voice, &wfx))) {
-            M.voice = NULL;
+        if (M.audio_.Open(XA2_GetDevice(), M.audio->ch_layout.nb_channels, M.audio->sample_rate, NULL, 0))
+            ApplyVolume();
+        else
             ff.free_context(&M.audio);
-        }
-        ApplyVolume();
     }
+    if (M.audio == NULL)
+        M.audio_.Finish();                 // no audio: the clock is the wall clock
 
     // The first frame before returning, as the original does; the audio starts with it
     M.nextFrameTime = 0.0;
@@ -469,11 +294,7 @@ void BackgroundMoviePlayFile(char *filename) {
         return;
     }
     PresentFrame();
-    if (M.voice != NULL) {
-        M.voice->Start();
-        M.voiceStarted = true;
-    }
-    QueryPerformanceCounter(&M.wallStart);
+    M.audio_.Start();
     M.isPlaying = true;
 }
 
@@ -484,7 +305,7 @@ bool __stdcall maybeDecodeMpgAudio(void) {
 
     KeepAudioFed();
     // Every frame now due is decoded; only the last of them is shown
-    double now = Clock();
+    double now = M.audio_.Clock();
     bool due = false;
     while (!M.videoEnded && now >= M.nextFrameTime && DecodeVideoFrame()) {
         due = true;
@@ -513,12 +334,8 @@ bool __stdcall maybeDecodeMpgAudio(void) {
     d3dSetYuvEnable(0);
 
     // Ended once the last frame has been shown and the audio has played out
-    if (M.videoEnded) {
-        ReapChunks();
-        bool audioDone = M.voice == NULL || (M.demuxEnded && M.chunks.empty());
-        if (audioDone)
-            M.isPlaying = false;
-    }
+    if (M.videoEnded && M.audio_.PlayedOut())
+        M.isPlaying = false;
     return M.isPlaying;
 }
 
@@ -534,11 +351,5 @@ void BackgroundMovieSetVolume(int volume) {
 }
 
 void Fmv_Init(void) {
-    if (LoadFFmpeg())
-        return;
-    printf("[fmv] the FFmpeg DLLs (avutil-60, avcodec-62, avformat-62) are missing\n");
-    MessageBoxA(NULL, "The FFmpeg DLLs (avutil-60.dll, avcodec-62.dll, avformat-62.dll) are missing from the game's "
-                "folder. They are built by tools/fmv/build_ffmpeg.sh and come with every release.",
-                "Nightfire", MB_ICONERROR | MB_OK);
-    ExitProcess(1);
+    Ffmpeg_Require();
 }

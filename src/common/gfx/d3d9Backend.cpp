@@ -2991,6 +2991,84 @@ static void DrawImmediateQuads(uint32_t vertexCount, const uint8_t *data, uint32
 }
 
 // ---------------------------------------------------------------------------------------------------------------
+// A movie frame, from a movie player of ours (the driving engine's src/driving/engine/PlayMPC.cpp).
+//
+// A picture in host memory, drawn as one quad into the frame being built, with state of its own: no game texture,
+// shader or render state is involved, and a state block puts the device back as it was, so the game's cached
+// view of the state stays true. The texture is managed-pool, so it survives a device reset by itself.
+// ---------------------------------------------------------------------------------------------------------------
+
+static IDirect3DTexture9 *g_movieTexture = NULL;
+static UINT g_movieWidth = 0, g_movieHeight = 0;
+static IDirect3DStateBlock9 *g_movieState = NULL;
+
+void D3D9_DrawMovieFrame(const void *pixels, uint32_t width, uint32_t height, uint32_t pitch,
+                         float x0, float y0, float x1, float y1) {
+    if (g_device == NULL || pixels == NULL)
+        return;
+    if (g_movieTexture == NULL || g_movieWidth != width || g_movieHeight != height) {
+        if (g_movieTexture != NULL)
+            g_movieTexture->Release();
+        g_movieTexture = NULL;
+        if (FAILED(g_device->CreateTexture(width, height, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_MANAGED, &g_movieTexture, NULL)))
+            return;
+        g_movieWidth = width;
+        g_movieHeight = height;
+    }
+    D3DLOCKED_RECT locked;
+    if (FAILED(g_movieTexture->LockRect(0, &locked, NULL, 0)))
+        return;
+    for (uint32_t y = 0; y < height; y++)
+        memcpy((uint8_t *)locked.pBits + (size_t)y * locked.Pitch, (const uint8_t *)pixels + (size_t)y * pitch, width * 4);
+    g_movieTexture->UnlockRect(0);
+
+    if (g_movieState == NULL && FAILED(g_device->CreateStateBlock(D3DSBT_ALL, &g_movieState)))
+        return;
+    AA_BEFORE_OVERLAY();
+    BeginSceneIfNeeded();
+    g_movieState->Capture();
+
+    float scaleX = ScalingTarget() ? g_renderScaleX : 1.0f, scaleY = ScalingTarget() ? g_renderScaleY : 1.0f;
+    struct { float x, y, z, rhw, u, v; } quad[4] = {
+        { x0 * scaleX - 0.5f, y0 * scaleY - 0.5f, 0.0f, 1.0f, 0.0f, 0.0f },
+        { x1 * scaleX - 0.5f, y0 * scaleY - 0.5f, 0.0f, 1.0f, 1.0f, 0.0f },
+        { x0 * scaleX - 0.5f, y1 * scaleY - 0.5f, 0.0f, 1.0f, 0.0f, 1.0f },
+        { x1 * scaleX - 0.5f, y1 * scaleY - 0.5f, 0.0f, 1.0f, 1.0f, 1.0f },
+    };
+    g_device->SetVertexShader(NULL);
+    g_device->SetPixelShader(NULL);
+    g_device->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+    g_device->SetTexture(0, g_movieTexture);
+    g_device->SetTexture(1, NULL);
+    g_device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+    g_device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    g_device->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+    g_device->SetTextureStageState(0, D3DTSS_TEXCOORDINDEX, 0);
+    g_device->SetTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
+    g_device->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+    g_device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+    g_device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+    g_device->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+    g_device->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+    g_device->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+    g_device->SetSamplerState(0, D3DSAMP_SRGBTEXTURE, FALSE);
+    g_device->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
+    g_device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+    g_device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+    g_device->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
+    g_device->SetRenderState(D3DRS_STENCILENABLE, FALSE);
+    g_device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    g_device->SetRenderState(D3DRS_FOGENABLE, FALSE);
+    g_device->SetRenderState(D3DRS_LIGHTING, FALSE);
+    g_device->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    g_device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
+    g_device->SetRenderState(D3DRS_COLORWRITEENABLE, 0xf);
+    g_device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(quad[0]));
+
+    g_movieState->Apply();
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // Immediate mode.
 //
 // The Xbox lets a game submit vertices one attribute at a time: D3DDevice_Begin(primitiveType), then

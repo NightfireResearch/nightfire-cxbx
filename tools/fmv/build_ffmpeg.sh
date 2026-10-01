@@ -1,7 +1,8 @@
 #!/bin/sh
 # Rebuilds the minimal FFmpeg the FMV player (src/action/engine/Fmv.cpp) needs, from the third_party/ffmpeg submodule,
-# into third_party/ffmpeg-prebuilt: 32-bit Windows DLLs with just the XMV demuxer, the WMV2 video decoder and the
-# Xbox IMA ADPCM audio decoder, their headers, FFmpeg's licence and a note of how they were built. LGPL (no GPL parts),
+# into third_party/ffmpeg-prebuilt: 32-bit Windows DLLs with just what the movies need - the action engine's XMV
+# demuxer, WMV2 video and Xbox IMA ADPCM audio, and the driving engine's EA Madcow video and EA-XA R1 audio (its
+# player walks the chunks itself) - their headers, FFmpeg's licence and a note of how they were built. LGPL (no GPL parts),
 # no other dependencies.
 #
 # The result is committed, so a normal build never runs this (CI did, and an FFmpeg build takes over ten minutes
@@ -32,7 +33,7 @@ fi
 # The configuration, also written into the README beside the DLLs
 OPTIONS='--target-os=mingw32 --arch=x86 --cross-prefix=i686-w64-mingw32- --enable-cross-compile
     --enable-shared --disable-static --disable-programs --disable-doc --disable-network --disable-autodetect
-    --disable-everything --enable-protocol=file --enable-demuxer=xmv --enable-decoder=wmv2,adpcm_ima_xbox,adpcm_ima_wav
+    --disable-everything --enable-protocol=file --enable-demuxer=xmv --enable-decoder=wmv2,adpcm_ima_xbox,adpcm_ima_wav,eamad,adpcm_ea_r1
     --disable-avdevice --disable-avfilter --disable-swscale --disable-swresample
     --enable-w32threads --extra-ldflags=-static-libgcc'
 
