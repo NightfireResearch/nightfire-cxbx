@@ -209,6 +209,15 @@ static void ApplyMatrix(DrivingVoice *v) {
         voice->SetOutputMatrix(NULL, v->channels, OUTPUT_CHANNELS, matrix);
 }
 
+IXAudio2 *DrivingAudio_GetDevice(void) {
+    return g_xaudio;
+}
+
+void DrivingAudio_StereoFold(float matrix[12]) {
+    for (uint32_t speaker = 0; speaker < 6; speaker++)
+        MixBinToStereo(speaker, &matrix[speaker * 2], &matrix[speaker * 2 + 1]);
+}
+
 DrivingVoice *DrivingAudio_CreateVoice(uint32_t sampleRate, uint16_t formatTag, uint16_t channels,
                                        uint16_t blockAlign, uint16_t bitsPerSample) {
     if (g_xaudio == NULL)

@@ -87,6 +87,12 @@ void D3D9_ResourceRegister(void *pResource, uint32_t data);
 void D3D9_NotifyTextureModified(void *pTextureOrSurface); // CPU wrote into the pixel data (decoder, intro effect)
 void D3D9_SetTexture(uint32_t stage, void *pTexture);
 
+// Draws a picture of ours (X8R8G8B8 rows, `pitch` bytes apart) as a quad from (x0, y0) to (x1, y1) in the game's
+// screen coordinates, into the frame being built, with state of its own that it puts back afterwards. For the movie
+// players, whose frames are not the game's textures.
+void D3D9_DrawMovieFrame(const void *pixels, uint32_t width, uint32_t height, uint32_t pitch,
+                         float x0, float y0, float x1, float y1);
+
 // The palette bound to a texture stage: 256 (or fewer) A8R8G8B8 entries, or null for none. Paletted textures
 // are expanded through it at upload, since D3D9 has no equivalent of the NV2A's palette hardware.
 void D3D9_SetPalette(uint32_t stage, const void *entries);

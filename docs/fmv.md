@@ -24,7 +24,8 @@ sh tools/fmv/build_ffmpeg.sh
 ```
 
 The build is three 32-bit Windows DLLs (`avutil-60`, `avcodec-62`, `avformat-62`, about 2.2 MB together). They are
-cut down to the XMV demuxer and the WMV2 and Xbox ADPCM decoders, are LGPL only with no GPL parts, and depend only on
+cut down to the XMV demuxer and the WMV2 and Xbox ADPCM decoders for the action engine, and the EA Madcow and
+EA-XA R1 decoders for the driving engine, are LGPL only with no GPL parts, and depend only on
 `kernel32` and `msvcrt`. The script builds natively where the i686 mingw-w64 compiler, `make` and `nasm` are present
 (CI, Linux, macOS), and in the `nf-cross` Docker image otherwise (Windows). It also switches the submodule to LF line
 endings if a Windows checkout gave its scripts CRLF ones.
@@ -58,8 +59,9 @@ are unaffected.
 
 ## The driving engine
 
-The driving engine's movies are a different case, mapped in [driving-fmv.md](driving-fmv.md). They are 48 EA Madcow
-`.mad` files (12 movies in four languages) inside `driving/misc.viv`, an EA BIG archive. They carry 5.1 EA-XA audio
-and are played by EA's own player library in `Driving.xbe`. FFmpeg decodes the video (`eamad`), but its `ea` demuxer
-rejects six-channel audio. The `adpcm_ea_r1` decoder handles it once the file is split into packets ourselves, so
-nothing is wrong with the decoders, only with the demuxer's channel limit.
+The driving engine's movies also play through FFmpeg, in `src/driving/engine/PlayMPC.cpp`. It is mapped and described
+in [driving-fmv.md](driving-fmv.md). They are 48 EA Madcow `.mad` files (12 movies in four languages) inside
+`driving/misc.viv`, an EA BIG archive, with 5.1 EA-XA audio. They were played by EA's own player library in
+`Driving.xbe`. FFmpeg's `ea` demuxer rejects six-channel audio, so the player walks the chunks itself and uses only the
+`eamad` and `adpcm_ea_r1` decoders. It draws through the backend's `D3D9_DrawMovieFrame`. It shares the DLL loader and
+the audio queue and clock (`src/common/fmv/`) with the action engine's player.

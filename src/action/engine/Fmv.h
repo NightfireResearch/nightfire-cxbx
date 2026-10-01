@@ -3,7 +3,7 @@
 
 // FMV playback through FFmpeg, in place of the XMV decoder linked into the XBE. See Fmv.cpp and docs/fmv.md.
 
-// Loads the FFmpeg DLLs; stops the game with a message if they are missing. Once, at startup.
+// Loads the FFmpeg DLLs (common/fmv/Ffmpeg.cpp); stops the game with a message if they are missing. Once, at startup.
 void Fmv_Init(void);
 
 // The game's five movie functions (0x000e8a00-0x000e8cf0)

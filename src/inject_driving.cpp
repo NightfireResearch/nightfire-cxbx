@@ -9,6 +9,7 @@
 #include "driving/platform/XboxInput.h"
 #include "driving/platform/LaunchOptions.h"
 #include "driving/sound/dsndSeam.h"
+#include "common/fmv/Ffmpeg.h"
 #include "common/launchInfo.h"
 #include "common/xbeAbi.h"        // the generated table checks each patch against the binary with it
 #include "common/xbeOverload.h"   // and selects overloads with it
@@ -86,6 +87,9 @@ void Inject()
   // The sound seam: DirectSound's lower half programs the console's audio hardware, which standalone is
   // unmapped memory. Silent for now; see src/driving/sound/dsndSeam.cpp.
   Inject_DsndSeam();
+
+  // FFmpeg, for the movies (driving/engine/PlayMPC.cpp)
+  Ffmpeg_Require();
 
   // WriteBytes(0x0005ad78, NOP, 5); // Bypass intro cutscene
 

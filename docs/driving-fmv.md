@@ -1,7 +1,8 @@
 # FMV playback in the driving engine
 
 A scoping study, written October 2026, for moving the driving engine's movies onto FFmpeg the way the action
-engine's were moved (`docs/fmv.md`, `src/action/engine/Fmv.cpp`). Nothing here has been implemented. Addresses
+engine's were moved (`docs/fmv.md`, `src/action/engine/Fmv.cpp`). It has since been implemented, in
+`src/driving/engine/PlayMPC.cpp`; [As built](#as-built) at the end says where that differs from the plan below. Addresses
 are `Driving.xbe`'s. Each claim says what it rests on: **disassembly** (read with capstone from
 `disc/Driving.xbe`), **decompile** (Ghidra), **file** (the data on the disc), **test** (run here), or
 **inference**. Names marked "(invented name)" are not in Ghidra or the PS2 symbols.
@@ -334,3 +335,35 @@ About two to three days: half a day for the BIG lookup, chunk walker and decoder
 the 6-channel voice and its downmix, and the rest for frame comparison, skip and subtitle checks against the
 original. The FFmpeg build change is small. The biggest uncertainty is the EAGL drawing, which has no
 precedent in `src/driving` yet.
+
+## As built
+
+`PlayMPC::Init` and `PlayMPC::Play` are ours (`src/driving/engine/PlayMPC.cpp`, `AUTOINJECT`, ABI-checked: `this` in
+`ECX`, 12 bytes popped each). The constructor and destructor stay original: our `Init` leaves the player pointer at
++0x14 null, so the destructor has nothing to free. Nothing reaches the RCMP library, the MAD codec, the MMX converter
+or EA's `STREAM`/`SNDSTRM` path for movies any more.
+
+Where it differs from the plan above:
+
+- **The picture goes to the backend, not EAGL.** `D3D9_DrawMovieFrame` (`src/common/gfx/d3d9Backend.cpp`) uploads the
+  frame to a texture of its own and draws one quad, saving and restoring the device state around it. The frame around
+  the picture is still the game's own, through `AUTOGEN` calls (`src/driving/render/RenderState.hpp`):
+  `RenderContext::BeginFrame`/`EndFrame`/`GetSize`, `ViewPort::BeginView`/`ClearViewPort(7)`/`EndView`, and
+  `0x000e4340`, which turned out to set the viewport's rectangle and depth range (`SetRect(0, 0, width, height, 0.01,
+  1.0)`). The subtitle callback draws between them as before. The colour is 32-bit, converted from FFmpeg's 4:2:0
+  (BT.601), with no 565 dithering.
+- **The audio header comes after the first video chunk**, so `Play` reads ahead until it has seen the `SCHl` (or 16
+  video packets) before starting the clock. A late header would have created a voice after the clock started. The
+  header begins `PT`, the platform (7) and a zero, not `PT\0\0`. FFmpeg's demuxer checks only the `P`.
+- **The shared parts are in `src/common/fmv/`:** `Ffmpeg.cpp` loads the DLLs, for both engines. `FmvAudio.cpp` is the
+  audio queue and the clock (samples played, with the wall clock once the audio has run out), and the action engine's
+  player now uses it too. The 5.1 voice is folded to stereo with `DrivingAudio_StereoFold`, the gains the mixer rings
+  get.
+- **The FFmpeg build** gained `eamad` and `adpcm_ea_r1`. `avcodec-62.dll` grew by 14 KB.
+
+Checked in the running game. `jc_intro` (mission 7) plays at 25 fps on the audio clock: 6 channels at 48 kHz, half a
+second queued throughout. It ends on time, and the level loads after it. With subtitles turned on, the caller's
+callback (0x000e3ab0) draws its lines at the `.sub` file's frames over our picture. Subtitles are off by default (byte
+0x001e476d), and then the caller passes no callback, as before. START during `paris_intro` (mission 1) skips it and
+the level loads. The volume is EA's 0-127 taken as a linear amplitude, since the curve EA's mixer applies is not
+mapped. The frames have not been compared pixel by pixel with EA's decoder.

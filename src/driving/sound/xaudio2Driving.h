@@ -39,6 +39,16 @@ struct DrivingVoice;
 // keeps its silent bookkeeping.
 bool DrivingAudio_Start(void);
 
+// The XAudio2 device itself (its mastering voice is stereo at 48 kHz), or null if audio did not start. The movie
+// player (src/driving/engine/PlayMPC.cpp) makes its own 5.1 voice on it, folded to stereo with the same gains as the
+// mixbins below (DrivingAudio_StereoFold).
+struct IXAudio2;
+IXAudio2 *DrivingAudio_GetDevice(void);
+
+// Where each of the six 5.1 speakers (FL, FR, C, LFE, BL, BR) lands on the stereo output: matrix[speaker * 2] left,
+// matrix[speaker * 2 + 1] right - the levels the six mixer rings get, which is how the game's own audio sounds.
+void DrivingAudio_StereoFold(float matrix[12]);
+
 // A voice for a buffer of this format. formatTag is WAVE_FORMAT_PCM or WAVE_FORMAT_XBOX_ADPCM (0x69).
 DrivingVoice *DrivingAudio_CreateVoice(uint32_t sampleRate, uint16_t formatTag, uint16_t channels,
                                        uint16_t blockAlign, uint16_t bitsPerSample);

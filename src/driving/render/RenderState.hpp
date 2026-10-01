@@ -13,6 +13,34 @@ public:
     // Turns depth writes on or off (0x000e73f0).
     // AUTOGEN
     uint8_t SetZWritesEnable(uint8_t enable);
+
+    // Starts and finishes a frame: EndFrame presents it (0x000e6610, 0x000e6640).
+    // AUTOGEN
+    void BeginFrame();
+    // AUTOGEN
+    void EndFrame();
+
+    // The size of the screen in the renderer's coordinates (0x000e6a80).
+    // AUTOGEN
+    void GetSize(float *width, float *height);
+};
+
+// A view onto a render context: its rectangle, depth range and projection (Ghidra: EAGL::ViewPort).
+class ViewPort {
+public:
+    // Sets the rectangle, clamped to the screen, and the depth range (0x000e4340, unnamed in Ghidra).
+    // AUTOGEN(0x000e4340)
+    void SetRect(float x, float y, float width, float height, float nearZ, float farZ);
+
+    // Brackets drawing into the view (0x000e4be0, 0x000e49a0).
+    // AUTOGEN
+    void BeginView();
+    // AUTOGEN
+    void EndView();
+
+    // Clears the view; PlayMPC::Play passes 7, by inference colour, depth and stencil (0x000e49d0).
+    // AUTOGEN
+    void ClearViewPort(int flags);
 };
 
 // A primitive's render state (Ghidra: EAGL::GeoPrimState).
