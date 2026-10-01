@@ -56,8 +56,8 @@ are unaffected.
 
 ## The driving engine
 
-The driving engine's movies are a different case, so nothing here applies to them yet. They are 12 EA Madcow `.mad`
-files with EA ADPCM audio (an EA SCHl stream), packed inside `driving/misc.viv` (an EA BIG archive). They are decoded
-by EA's own player code inside `Driving.xbe`'s `.text`; there is no XDK movie library. FFmpeg decodes both formats
-(the `ea` demuxer, the `eamad` and `adpcm_ea` decoders), so the same build could be extended. That still needs the
-driving engine's movie functions mapped, and the archive read in memory, first.
+The driving engine's movies are a different case, mapped in [driving-fmv.md](driving-fmv.md). They are 48 EA Madcow
+`.mad` files (12 movies in four languages) inside `driving/misc.viv`, an EA BIG archive. They carry 5.1 EA-XA audio
+and are played by EA's own player library in `Driving.xbe`. FFmpeg decodes the video (`eamad`), but its `ea` demuxer
+rejects six-channel audio. The `adpcm_ea_r1` decoder handles it once the file is split into packets ourselves, so
+nothing is wrong with the decoders, only with the demuxer's channel limit.
