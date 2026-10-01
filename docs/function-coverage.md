@@ -18,7 +18,7 @@ Every function Ghidra knows (`tools/functions_action.json`, 3,999 of them) is
   called, and library code the seams have cut off;
 - **live**: original code that still runs.
 
-**Done** is replaced plus dead: what no longer needs reimplementing. The plain replaced count, 612 of 3,999 (15%), is
+**Done** is replaced plus dead: what no longer needs reimplementing. The plain replaced count, 613 of 3,999 (15%), is
 the figure quoted so far. Replaced includes the startup layer's own patches of XAPI entry points (`WriteJump` in
 `engine/XboxStartup.cpp`).
 
@@ -61,12 +61,12 @@ most of it is already settled (75% done, 89% by bytes):
   (`__ftol2`, `sprintf`, `fmodf`, `memcpy`), which game code calls everywhere. Those go away by themselves as game
   functions become ours, because our compiler brings its own. About 35 are XAPI and kernel wrappers (files,
   threads, timers, memory). The rest (about 155) are unnamed.
-- **Eurocom's Xbox layer (272): 55% done, 66% by bytes.** Graphics, input and the sound backend are mostly ours.
-  What is left is the file and save code (28 live), the FMV player (5), and the game-facing halves of the sound
+- **Eurocom's Xbox layer (272): 57% done, 68% by bytes.** Graphics, input and the sound backend are mostly ours.
+  What is left is the file and save code (28 live) and the game-facing halves of the sound
   and draw layers (`psiSFX*`, `psiDraw*`), which belong with their callers.
 
-So the work that matters is the game code above the surface: **2,500 functions, 19% done (16% by bytes), about
-720 KB still original.**
+So the work that matters is the game code above the surface: **2,500 functions, 19% done (21% by bytes), about
+677 KB still original.**
 
 ## By subsystem
 
@@ -80,7 +80,7 @@ So the work that matters is the game code above the surface: **2,500 functions, 
 | **objects** | 204 | 30 | 2 | 172 | **16%** | 61 | 13% |
 | **effects** | 56 | 0 | 0 | 56 | **0%** | 19 | 0% |
 | **mp** | 77 | 17 | 1 | 59 | **23%** | 27 | 13% |
-| **engine** | 555 | 199 | 6 | 350 | **37%** | 178 | 19% |
+| **engine** | 555 | 200 | 6 | 349 | **37%** | 178 | 43% |
 | engine.anim | 80 | 3 | 1 | 76 | 5% | 34 | 5% |
 | engine.camera | 37 | 7 | 0 | 30 | 19% | 8 | 21% |
 | engine.collision | 42 | 5 | 0 | 37 | 12% | 18 | 3% |
@@ -93,7 +93,7 @@ So the work that matters is the game code above the surface: **2,500 functions, 
 | engine.physics | 19 | 0 | 0 | 19 | 0% | 4 | 0% |
 | engine.savestate | 20 | 0 | 0 | 20 | 0% | 4 | 0% |
 | engine.script | 55 | 29 | 1 | 25 | 55% | 14 | 40% |
-| engine.static | 11 | 3 | 0 | 8 | 27% | 44 | 0% |
+| engine.static | 11 | 4 | 0 | 7 | 36% | 44 | 100% |
 | engine.text | 17 | 8 | 0 | 9 | 47% | 3 | 28% |
 | engine.util | 71 | 36 | 3 | 32 | 55% | 11 | 51% |
 | engine.world | 14 | 2 | 0 | 12 | 14% | 3 | 6% |
@@ -116,36 +116,36 @@ So the work that matters is the game code above the surface: **2,500 functions, 
 | lib.xapi | 343 | 32 | 59 | 252 | 27% | 48 | 32% |
 | lib.xmv | 60 | 0 | 60 | 0 | 100% | 157 | 100% |
 | lib.xpp | 177 | 0 | 177 | 0 | 100% | 23 | 100% |
-| **game code (above)** | 2500 | 441 | 25 | 2034 | **19%** | 858 | 16% |
+| **game code (above)** | 2500 | 442 | 25 | 2033 | **19%** | 858 | 21% |
 | **platform + libraries** | 1499 | 171 | 954 | 374 | **75%** | 470 | 89% |
-| **everything** | 3999 | 612 | 979 | 2408 | **40%** | 1328 | 42% |
+| **everything** | 3999 | 613 | 979 | 2407 | **40%** | 1328 | 45% |
 
 ## Where the remaining game code is
 
-Of the 720 KB of game code still original:
+Of the 677 KB of game code still original:
 
 | Subsystem | Live KB | Share |
 |---|--:|--:|
-| ai.drones | 209 | 29% |
-| ui.frontend | 107 | 15% |
-| player | 65 | 9% |
-| objects | 53 | 7% |
-| engine.static | 44 | 6% |
-| engine.anim | 32 | 4% |
+| ai.drones | 209 | 31% |
+| ui.frontend | 107 | 16% |
+| player | 65 | 10% |
+| objects | 53 | 8% |
+| engine.anim | 32 | 5% |
 | audio | 28 | 4% |
 | mp | 23 | 3% |
 | ai.bots | 21 | 3% |
 | effects | 19 | 3% |
-| everything else | 121 | 17% |
+| engine.collision | 17 | 3% |
+| everything else | 104 | 15% |
 
 - **The drones are the single largest block**, nearly a third of what is left. 192 of their 694 functions are the
   state functions (`NDrone2_DSTATE_*`), dispatched through the state table; `docs/drone/` maps the system.
-- **`engine.static` is one function.** `WeaponDataTableInit` (0xf5530) is a 44 KB static initialiser that builds
-  the weapon table in code, one store at a time. It is the weapon data, so a generated table would retire it
-  (the user's WeaponData sheet, dumped from the PS2 build, is the reference for it).
+- **`engine.static` is done by bytes.** Its one big function, `WeaponDataTableInit` (0xf5530), a 44 KB static
+  initialiser that built the weapon table one store at a time, is now ours: `tools/weapon_table.py` generates the
+  table from the XBE and `docs/weapons.md` names every field. The seven small initialisers left are trivial.
 - **The front end** is large but shallow: 300 functions, many of them page and control handlers. `docs/ui/` covers it.
 
-The largest single live functions are, after `WeaponDataTableInit`: `C_GCPAUSE_Handler` (5.0 KB), `NDrone2_DefaultInit`
+The largest single live functions are `C_GCPAUSE_Handler` (5.0 KB), `NDrone2_DefaultInit`
 (4.8 KB), `NDrone2_DSTATE_BotGlobal` (4.1 KB), `List_SendMessage` (4.0 KB), `Player_WeaponFiring` (3.8 KB),
 `Car_Update` (3.4 KB), `Manager_SendMessage` (3.4 KB), `Player_SetWeaponAnimObj` (3.2 KB) and `P_TWEAKS_Handler` (3.2 KB).
 
