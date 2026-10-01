@@ -38,7 +38,14 @@ Each reference into a global comes from a function that is
 
 Liveness follows the call graph (Ghidra's calls, plus every direct CALL/JMP found by disassembling each
 function, since Ghidra misses a few) from the XBE's entry point. Other starting points are every original our code
-still calls (`AUTOGEN`), every function whose address sits in data, and every function with no known caller.
+still calls (`AUTOGEN`), every function whose address sits in data, every function with no known caller, and
+every original our code calls by address: cast to a function pointer, or loaded into a register in inline asm
+(`mov eax, 0x...` then `call eax`). Without that such a function can look dead once the code that used to
+reference it is ours, and the globals it touches ownable when they are not: that is how `InputEventList` (walked
+at the end of the original `Input_Update`, whose body ours calls) and `Borders` (created by the original
+`Script_CameraStart`, reached through the original `Script_Run`) were owned too early; both of those functions are
+ours now. Other raw function addresses in the source are not counted: many are patch targets or plain
+constants.
 Ghidra may have missed an indirect call, so those count as live rather than risk calling a live function
 dead. A reference from data rather than from code (a pointer stored in a table) counts as live unless the table
 holding it is itself unused: the game's copy of a table we own, or one nothing live reads. That is how the

@@ -165,6 +165,28 @@ def read_source():
     return globals_, literals
 
 
+def functions_our_code_points_at(funcs):
+    """Originals our code calls by address: a function's address cast to a function pointer
+    (reinterpret_cast<void (*)(void)>(0x...), (int (*)(char*))(0x...)) or loaded into a register in inline asm
+    (mov eax, 0x... then call eax). The game's own reference to such a function may have been in code we replaced,
+    so without this it could look dead and the globals it touches ownable when they are not - as InputEventList
+    and Borders once were. Any other raw function address in the source is not counted: many are patch targets
+    or plain constants."""
+    cast = re.compile(r"\(\s*(?:__cdecl|__stdcall|__fastcall|__thiscall)?\s*\*\s*\)")
+    asm = re.compile(r"\bmov\s+e[abcd]x\s*,\s*0x([0-9a-fA-F]{5,8})\b")
+    out = set()
+    for path in source_files():
+        for line in open(path, encoding="utf-8", errors="replace"):
+            code = re.sub(r'"(\\.|[^"\\])*"', '""', line).split("//")[0]
+            hits = [m.group(1) for m in asm.finditer(code)]
+            if cast.search(code):
+                hits += [m.group(1) for m in re.finditer(HEX, code)]
+            for h in hits:
+                if int(h, 16) in funcs:
+                    out.add(int(h, 16))
+    return out
+
+
 def originals_we_call():
     """Entry points of originals our code still calls: every AUTOGEN declaration outside the test code."""
     names = set()
@@ -271,6 +293,7 @@ def main():
     for caller, callee in direct_calls(funcs, read):
         edges[caller].add(callee)
         referenced.add(callee)
+    roots |= functions_our_code_points_at(funcs)            # e.g. Drone_SM_InitObject storing 0x4e180
     roots |= {f for f in funcs if f not in referenced}       # no known caller: assume something reaches it
     live, work = set(), [f for f in roots if f not in replaced]
     while work:

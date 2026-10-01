@@ -48,7 +48,8 @@ void Input_Update(void) {
     // hook is precisely what stops running in menus. See engine/mouseLook.h.
     MouseLook_Update();
 
-    // Game functions - poll, compensate stick, map from keys to actions
+    // Game functions - poll, compensate stick, map from keys to actions (the original's own body, which ends in
+    // Input_ProcessEvents)
     void (*funcPtr)(void) = (void (*)(void))(0x0006cf50);
     funcPtr();
 
@@ -172,9 +173,77 @@ void Input_RumbleStart(ushort playerNum, int time, int intensity) {
 void Input_Init(void);
 
 extern uint8_t FreezeGame; // defined in game.cpp
-// An input event list beside it (entries of 0x18 bytes, 10 preallocated); nothing reimplemented reads it yet.
+// An input event list beside it (entries of 0x18 bytes, 10 preallocated), walked by Input_ProcessEvents at the end of
+// every Input_Update. Nothing in the game adds to it, so it is always empty.
 // XBE_GLOBAL(0x001fec30, 0x18)
 static DLISTINFO_tag InputEventList;
+
+// An input event (0x18 bytes, from InputEventList's pool): watches player 0's actions and flips *target when they
+// happen - either a sequence (the actions pressed one after another) or, for an analog event, the product of the
+// actions' values passing 0.3. INVENTED NAMES, not canonical: nothing creates one, so they come from the walker alone.
+#pragma pack(push, 1)
+typedef struct InputEvent {
+    LLNODE_tag node;
+    ushort progress;        // 0x08 - how far along a sequence it is
+    ushort count;           // 0x0a - actions in the sequence / in the product
+    ushort analog;          // 0x0c - 0: a sequence
+    ushort armed;           // 0x0e - analog: set once it has fired, until the product drops back under 0.0002
+    uint *actions;          // 0x10 - GameActions_tag ids
+    uint *target;           // 0x14 - flipped (0 <-> 1) each time the event completes
+} InputEvent;
+#pragma pack(pop)
+static_assert(sizeof(InputEvent) == 0x18, "InputEvent is InputEventList's entry size");
+
+#define ACTION_HELD 1               // PlayerInput.actions bits the walker tests
+#define ACTION_PRESSED 4
+
+// Whether player 0's action is pressed right now and has a value (in hundredths) that is not 0 in its low 16 bits
+static bool Input_EventActionOn(uint action) {
+    if (!(PlayerInputs[0].actions[action] & ACTION_PRESSED))
+        return false;
+    // in double, as the x87 multiplies it, then truncated (__ftol2) and only the low 16 bits tested
+    return (short)(int64_t)((double)PlayerInputs[0].fChannels[action] * (double)100.0f) != 0;
+}
+
+// Runs every input event (the tail of Input_Update: the original jumps here from its end). INVENTED NAME, not
+// canonical (FUN_0006cd20).
+// FUNC_AT(0006cd20)
+void Input_ProcessEvents(void) {
+    for (InputEvent *ev = (InputEvent *)InputEventList.activeList.head; ev != NULL; ev = (InputEvent *)ev->node.next) {
+        if (ev->analog != 0) {
+            // The product of the held actions' values (a released one counts 0): fires once past 0.3, re-arms
+            // under 0.0002. The x87 keeps the product at double precision.
+            double product = 1.0;
+            for (ushort i = 0; i < ev->count; i++) {
+                uint action = ev->actions[i];
+                product *= (PlayerInputs[0].actions[action] & ACTION_HELD) ? PlayerInputs[0].fChannels[action] : 0.0f;
+            }
+            double magnitude = product < 0.0 ? -product : product;
+            if (magnitude > (double)0.3f) {
+                if (ev->armed == 0)
+                    *ev->target = (*ev->target == 0);
+                ev->armed = 1;
+            } else if (magnitude < (double)0.0002f) {
+                ev->armed = 0;
+            }
+            continue;
+        }
+
+        // A sequence: the next action advances it; the previous one pressed again (with byte +0x154 set) starts over
+        ushort progress = ev->progress;
+        int previous = progress - 1;
+        previous = previous < 0 ? 0 : (previous > ev->count ? ev->count : previous);
+        if (Input_EventActionOn(ev->actions[progress])) {
+            ev->progress = progress + 1;
+        } else if (Input_EventActionOn(ev->actions[(ushort)previous]) && PlayerInputs[0].field141_0x154) {   // +0x154, meaning unknown
+            ev->progress = 0;
+        }
+        if (ev->progress >= ev->count) {
+            *ev->target = (*ev->target == 0);
+            ev->progress = 0;
+        }
+    }
+}
 
 // Readies input for a level: unfreezes the game, clears every player's actions and resets the event list.
 // The original ends with a jump to an empty debug hook (0x000e0ec0, a bare RET).
