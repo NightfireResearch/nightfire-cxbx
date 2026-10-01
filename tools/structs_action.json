@@ -9413,9 +9413,9 @@
    },
    {
     "offset": 12,
-    "size": 4,
-    "name": "field_0xc",
-    "type": "uint",
+    "size": 1,
+    "name": "controllerPort",
+    "type": "uchar",
     "bitfield": false
    }
   ]
