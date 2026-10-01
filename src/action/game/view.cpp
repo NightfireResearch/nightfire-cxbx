@@ -2,6 +2,7 @@
 #include "../engine/psiSprite.h"
 #include "../../common/gfx/d3d9Backend.h"
 #include "../engine/viewer.h"
+#include "../engine/Direct3D/GraphicsSystem.h"
 #include <math.h>
 
 #include <stdio.h>
@@ -215,12 +216,9 @@ static const uint8_t *s_pendingFont = NULL;   // the font that glyph is from - b
 
 // A sprite's textureIndex selects one of the game's texture records; psiDrawSprites binds one of the record's
 // animation frames (count at +0x24, slots from +0x54) through d3dSetTextureStage0, which takes a slot in the
-// D3D texture table - and a slot's Xbox texture header is the slot itself (see D3DTextureSlotRaw in
-// engine/Direct3D/d3dSeam.cpp).
+// D3D texture table, Gfx.textures - and a slot's Xbox texture header is the slot itself (see D3DTextureSlotRaw in
+// engine/Direct3D/GraphicsSystem.h). Gfx is ours, so the table is not at the game's address any more.
 #define TextureRecords         ((const uint8_t *const *)0x002abe80)
-#define TEXTURE_SLOT_TABLE     0x002cc3ecu
-#define TEXTURE_SLOT_SIZE      36u
-#define TEXTURE_SLOT_COUNT     2048u
 
 // The current font (__Font_DrawText's): its first and last character at +8 and +0xa, the number of glyphs at
 // +0xc, and at +0x10 a table of 24-byte glyph records sorted by character, whose layout FUN_00069a40 and
@@ -273,9 +271,9 @@ static void NoteGlyphTexture(const SPRITE_DRAW *glyph, const uint8_t *font) {
         frames = 1;
     for (uint32_t i = 0; i < frames; i++) {
         uint32_t slot = *(const uint32_t *)(record + 0x54 + 4 * i);
-        if (slot == 0 || slot >= TEXTURE_SLOT_COUNT)
+        if (slot == 0 || slot >= GFX_TEXTURE_SLOTS)
             continue;
-        const void *header = (const void *)(uintptr_t)(TEXTURE_SLOT_TABLE + slot * TEXTURE_SLOT_SIZE);
+        const void *header = &Gfx.textures[slot];
         DescribeFontOnce(font, header);
     }
 }
