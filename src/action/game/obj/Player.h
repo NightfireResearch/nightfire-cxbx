@@ -17,7 +17,7 @@ typedef struct WeaponStatus {
     short clipOrCooldown;
     char enabled;
     // For a weapon with no alt-fire variant, Player_Weapon steps this on each alt-fire press and wraps it at
-    // weapon_data[].unk15 (a fire-mode count, it seems); PS2's field_0x3.
+    // weapon_data[].numFireModes; PS2's field_0x3.
     char fireModeIndex; // 0x3
     char pad[0xc-4];
 } WeaponStatus;

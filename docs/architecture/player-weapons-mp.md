@@ -168,9 +168,9 @@ switching-to weapon ids, `animFlags` bit 0 = scoped) is on `obj_tag`, not in BLD
 - **Built partly at run time.** Entries 0x00-0x34 are initialised data in the image. Entry 0x4a, for example, is
   all zero in the file [X]. The rest is written by the C++ static constructor `WeaponDataTableInit` 0xf5530
   (44,880 bytes of stores) before `Game_Main` [S].
-  - We hook it by overwriting its pointer in the initialiser list at 0x16313c with `ctor_WeaponDefinitionTable`,
-    which calls the original. This only works if the DLL is injected before the constructors run
-    (`src/inject_action.cpp`) [S].
+  - It is ours now: `WeaponDataTableInit` (`src/action/game/weapon_stats.cpp`) writes the whole table from
+    `WeaponTable.inc`, which `tools/weapon_table.py` generates from the XBE. Every field is named and described in
+    `docs/weapons.md`, which supersedes the field notes below.
   - Why the compiler emitted code for the later entries is not known. It may be non-constant initialisers such as
     function pointers or float expressions [I].
 - **The table is mutable global state.** `Player_Init` rewrites two fields per level [D]. Every original function
@@ -178,7 +178,8 @@ switching-to weapon ids, `animFlags` bit 0 = scoped) is on `obj_tag`, not in BLD
 - Fields whose role was settled for this document [D]:
   - `someFlags` (+0x68) bits:
     - 0x2: fires when not surfaced;
-    - 0x10: loads a clip;
+    - 0x10: when empty, switch to the alt-fire variant; picked-up ammo goes straight into an empty clip
+      (`docs/weapons.md`);
     - 0x40: a real scope;
     - 0x100: shell-by-shell reload;
     - 0x200: alternating reload animation;
@@ -198,7 +199,8 @@ switching-to weapon ids, `animFlags` bit 0 = scoped) is on `obj_tag`, not in BLD
   - `cooldownTimerIncreaseAmount` is the rounds or charge used per shot.
   - `rumble`, `cameraSwingAmt` and `maxZoom` do what their names say.
   - **+0x104 is a function pointer**, called by `Player_WeaponInitBullet` after firing when `ammoType == 0`
-    (gadgets). Its targets have not been listed.
+    (gadgets). Nothing ever sets it (nor the second callback at +0x108): both are null for the whole game
+    (`docs/weapons.md`).
 - Player-side weapon state lives in `BLData.weaponStats[114]` and `ammo[34]`. There are 114 slots for 115 table
   entries, so entry 114 has no slot. That is harmless only if variant 114 is never selected by a player [I].
 

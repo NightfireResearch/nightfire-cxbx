@@ -1,23 +1,19 @@
 #include "weapon_stats.h"
 
-// The original constructor is located at 000f5530
-void callOriginal(void) {
-    reinterpret_cast<void (*)(void)>(0x000f5530)();
-}
+#include <string.h>
 
-// On Xbox, weapon stats are set up partially in the compiled code, but partially (from 0x35 onwards) in a constructor, called before Game_Main()
-// We have a special case for injecting all the data...
-void ctor_WeaponDefinitionTable(void) {
+// The table's contents, generated from the XBE by tools/weapon_table.py: WeaponTableData, and
+// WeaponTable_ApplyFrameRate for the fields the original computes from the frame rate
+#include "WeaponTable.inc"
 
-    // Call the original constructor
-    callOriginal();
+static_assert(sizeof(WeaponTableData) == sizeof(weapon_data), "WeaponTable.inc holds the whole table");
 
-    // Apply our patches to test that it does the right thing
-
-    // Make the PP7 an instant kill
-    // weapon_data[2].damage = 2000; // PP7, regular
-    // weapon_data[3].damage = 2000; // PP7, regular, silenced
-    // weapon_data[4].damage = 2000; // PP7, gold
-    // weapon_data[5].damage = 2000; // PP7, gold, silenced
-
+// The weapon table's static constructor, run with the C runtime's other initialisers before Game_Main. The original
+// writes entries 0x35 onwards one store at a time (44 KB of code; 0-0x34 are initialised data in the image); this
+// writes the whole table from WeaponTable.inc, then the fields that depend on the frame rate, as the original did.
+// The table itself stays at 0x0018cfa0 while original code still reads it there.
+// AUTOINJECT
+void __stdcall WeaponDataTableInit(void) {
+    memcpy(&weapon_data, WeaponTableData, sizeof(WeaponTableData));
+    WeaponTable_ApplyFrameRate(weapon_data);
 }

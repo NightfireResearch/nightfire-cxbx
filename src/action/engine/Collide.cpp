@@ -115,7 +115,7 @@ float Collide_GetDamageNObjects(HITDATA_tag *hitDatas, obj_tag **objectList, ush
 //       // TODO: Some extra condition based on the flags
 //       BU_tag* bullet = (BU_tag*)hitter->extraObjectData;
 
-//       if(bullet->wpnDef->someFlags & flags) {
+//       if(bullet->wpnDef->weaponFlags & flags) {
 //         hitData->someSortField = 1e+08;
 //         needsSort = true;  
 //       }

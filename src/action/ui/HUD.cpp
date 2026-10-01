@@ -122,7 +122,7 @@ void HUD_UpdateCrossHair(BLData *player,sprite *spr) {
 	bool weaponZoomedIn = (glb_players[player->playerNum]->animState->animFlags & 1);
 	if(weaponZoomedIn) {
 		int weaponId = glb_players[player->playerNum]->animState->currentWeaponId;
-		if(weapon_data[weaponId].someFlags & 0x40) { // Custom crosshair pane?
+		if(weapon_data[weaponId].weaponFlags & 0x40) { // Custom crosshair pane?
 			switch(weaponId) {
 				case 0x1a:
 				case 0x1b:
@@ -1285,7 +1285,7 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 		BU_tag *missile = (BU_tag*)blData->remoteControlDevice->extraObjectData;
 		
 		// Max age of the missile is represented in the range field for the sentinel missile
-		lifetime = missile->maybeAgeOrLifetime / missile->wpnDef->someDistance;
+		lifetime = missile->maybeAgeOrLifetime / missile->wpnDef->range;
 		
 		// Rotate UI elements (only available if in SP)
 		if(		extraItemsAsObjList[0] != NULL

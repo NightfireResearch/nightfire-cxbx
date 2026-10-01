@@ -262,108 +262,113 @@ typedef enum WeaponBaseNum {
     NUM_WEAPONS=114,
 } WeaponBaseNum;
 
+// One entry per weapon variant; weapon_data[115] at 0x0018cfa0. Entries 0x35.. are built by
+// WeaponDataTableInit (0x000f5530). See docs/weapons.md.
 typedef struct {
-    short weaponVariantNum; /* Unique index into this array */
-    char weaponBaseNum; /* WeaponBaseNum: Upgrades/variants will have the same base number */
-    undefined field2_0x3;
-    bool isBaseWeapon;
-    uchar offsetToNextAltFireVariant;
-    undefined1 maybeFlags;
-    undefined field6_0x7;
-    float maybeExplodeRange;
-    float damage;
-    ushort field9_0x10;
-    undefined field10_0x12;
-    undefined field11_0x13;
-    float autoaimRelated;
-    undefined1 numBulletsPerShot;
-    undefined field14_0x19;
-    undefined field15_0x1a;
-    undefined field16_0x1b;
-    float someDistance;
-    float unknownPurposeMaybeFloat;
-    float maybeAccuracyRelated;
-    short indexIntoSomePlayerAmmoArray;
-    short maybeUnused;
-    short droneBulletBurstTimeRelated;
-    short unk15;
-    Action_TranslatedText fireModePrimary;
-    Action_TranslatedText fireModeSecondary;
-    Action_TranslatedText weaponNameLongSp;
-    Action_TranslatedText weaponNameShortMp;
-    int unk16;
-    uint unk17;
-    HASHCODE muzzleFlash1stPerson;
-    HASHCODE muzzleFlash3rdPerson;
-    byte animDatumRelated3;
-    undefined field33_0x51;
-    undefined field34_0x52;
-    undefined field35_0x53;
-    undefined1 muzzleFlash_b; /* Created by retype action */
-    undefined1 muzzleFlash_g; /* Created by retype action */
-    undefined1 muzzleFlash_r; /* Created by retype action */
-    undefined field39_0x57;
-    float muzzleFlashBrightness; /* Created by retype action */
-    HASHCODE projectileGfx;
-    ushort animDatumRelated2;
-    undefined field43_0x62;
-    undefined field44_0x63;
-    undefined field45_0x64;
-    undefined field46_0x65;
-    undefined field47_0x66;
-    undefined field48_0x67;
-    uint someFlags; /* Created by retype action */
-    uint flagsForSwooshAndCasing; /* Created by retype action */
-    uint someFlagsRelatedToExplosiveTimer;
-    short unk18;
-    short swooshRelated;
-    short casingDelayFrames; /* Created by retype action, size unclear */
-    short unk19;
-    HASHCODE suppressorGfx;
-    HASHCODE wpn3rdPersonGfx; /* Created by retype action */
-    uint weaponAnimationSet; /* Created by retype action */
-    float maxZoom;
-    float cameraSwingAmt; /* Created by retype action */
-    uchar ammoType; /* Created by retype action */
-    uint8_t cooldownTimerIncreaseAmount;
-    short clipSizeOrCooldown; /* Created by retype action */
-    uint8_t rumble; /* Created by retype action */
-    uint8_t _pad1;
-    uint8_t _pad2;
-    uint8_t _pad3;
-    float accuracyModifierSomehow;
-    float unk22;
-    HASHCODE animScriptTag; /* Created by retype action */
-    HASHCODE someAnimhc3;
-    HASHCODE someAnimHsh;
-    HASHCODE maybeAnAnimScript;
-    HASHCODE maybeWeaponFireAnimHashcode2;
-    HASHCODE maybeWeaponFireAnimHashcode;
-    HASHCODE someAnimHC2;
-    HASHCODE someAnimHC;
-    HASHCODE animationHashcode;
-    HASHCODE animSpeedRelated; /* Could also be a hashcode? */
-    HASHCODE field80_0xc8;
-    HASHCODE anotherAnimScriptTag; /* Created by retype action */
-    HASHCODE field82_0xd0;
-    HASHCODE field83_0xd4;
-    HASHCODE animationScript;
-    HASHCODE weaponModelHashcode;
-    float animRelated1[3];
-    float animRelated2[3];
-    float casingSpawnPos[3];
-    undefined4 multiplayerWeaponFiredCallback; /* Created by retype action */
-    undefined field90_0x108;
-    undefined field91_0x109;
-    undefined field92_0x10a;
-    undefined field93_0x10b;
+    short weaponVariantNum;           // 0x000 this entry's index
+    short weaponBaseNum;              // 0x002 base variant of the group
+    bool isBaseWeapon;                // 0x004 owns the group's inventory slot
+    int8_t offsetToNextAltFireVariant; // 0x005 entry offset to the alt-fire variant (signed)
+    uchar botWeaponClass;             // 0x006 1 handgun 2 auto 3 sniper 4 explosive
+    uchar _pad07;                     // 0x007
+    float explodeRadius;              // 0x008 explosion size, units
+    float damage;                     // 0x00c damage per hit / explosion strength
+    ushort damageClass;               // 0x010 weapon class bit, see doc
+    uchar _pad12[2];                  // 0x012
+    float autoAimStrength;            // 0x014 percent
+    uchar numBulletsPerShot;          // 0x018 projectiles per shot
+    uchar _pad19[3];                  // 0x019
+    float range;                      // 0x01c max travel / use range, units
+    float projectileSpeed;            // 0x020 units per 60 Hz frame
+    float baseSpread;                 // 0x024 x0.0014 rad
+    short shotsPerTrigger[2];         // 0x028 per fire mode, 999 = auto
+    short droneBurstLength;           // 0x02c shots per drone burst
+    char numFireModes;                // 0x02e modes the alt-fire button cycles
+    uchar _pad2f;                     // 0x02f
+    Action_TranslatedText fireModeName[2]; // 0x030 HUD text per fire mode
+    Action_TranslatedText nameLong;   // 0x038 single-player HUD name
+    Action_TranslatedText nameShort;  // 0x03c multiplayer HUD name
+    int refireDelay;                  // 0x040 frames between shots (min 1)
+    ushort bulletSpawnFrame;          // 0x044 fire-anim frame that spawns the bullet
+    uchar _pad46[2];                  // 0x046
+    HASHCODE muzzleFlash1stPerson;    // 0x048 first-person flash entity (0x02)
+    HASHCODE muzzleFlash3rdPerson;    // 0x04c third-person flash entity (0x02)
+    uchar weaponDatum;                // 0x050 first weapon datum on the skeleton, 0xff none
+    uchar muzzleFlashAlphaMin;        // 0x051 flash sprite brightness range
+    uchar muzzleFlashAlphaMax;        // 0x052
+    uchar _pad53;                     // 0x053
+    uchar muzzleFlash_b;              // 0x054 light colour, blue
+    uchar muzzleFlash_g;              // 0x055 light colour, green
+    uchar muzzleFlash_r;              // 0x056 light colour, red
+    uchar _pad57;                     // 0x057
+    float muzzleLightRadius;          // 0x058 Light_Create radius
+    HASHCODE projectileGfx;           // 0x05c projectile entity (0x02)
+    ushort fireSound3rdPerson;        // 0x060 SFX id for drones/scripts
+    uchar _pad62[2];                  // 0x062
+    uchar unk64;                      // 0x064 0/2/3, no reader found
+    uchar _pad65[3];                  // 0x065
+    uint weaponFlags;                 // 0x068 see doc
+    uint projectileFlags;             // 0x06c see doc
+    uint impactFlags;                 // 0x070 see doc
+    short swooshInterval;             // 0x074 frames between trail segments
+    short swooshLifetime;             // 0x076 trail segment lifetime, frames
+    uchar casingDelayFrames;          // 0x078 frames before the casing appears
+    uchar _pad79;                     // 0x079
+    short effectDurationFrames;       // 0x07a 15 s / 60 s, no reader found
+    HASHCODE suppressorGfx;           // 0x07c silencer entity (0x02)
+    HASHCODE worldModelGfx;           // 0x080 held/pickup entity (0x02)
+    uchar animSet;                    // 0x084 third-person AnimSet
+    uchar _pad85[3];                  // 0x085
+    float maxZoom;                    // 0x088 max scope zoom factor
+    float scopeSway;                  // 0x08c sway x (zoom - 1)
+    uchar ammoType;                   // 0x090 index into ammo_data / BLData.ammo
+    uchar ammoPerShot;                // 0x091
+    short clipSize;                   // 0x092 clip or max charge
+    uchar rumble;                     // 0x094 rumble strength 0-100
+    uchar _pad95[3];                  // 0x095
+    float spreadPerShot;              // 0x098 bloom per shot
+    float unk9c;                      // 0x09c no reader found
+    HASHCODE animIdle;                // 0x0a0
+    HASHCODE animReload;              // 0x0a4
+    HASHCODE animReloadStart;         // 0x0a8
+    HASHCODE animReloadEnd;           // 0x0ac
+    HASHCODE animFire;                // 0x0b0
+    HASHCODE animFireAlt;             // 0x0b4
+    HASHCODE animScopeIn;             // 0x0b8
+    HASHCODE animScopeOut;            // 0x0bc
+    HASHCODE animRaise;               // 0x0c0
+    HASHCODE animLower;               // 0x0c4
+    HASHCODE animModeSwitch;          // 0x0c8
+    HASHCODE animFidget;              // 0x0cc
+    HASHCODE animRelax;               // 0x0d0
+    HASHCODE animRelaxEnd;            // 0x0d4
+    HASHCODE animLowerRelaxed;        // 0x0d8
+    HASHCODE weaponModelHashcode;     // 0x0dc first-person model (0x05)
+    float viewOffset[3];              // 0x0e0 view-model offset, SP standing
+    float viewOffsetAlt[3];           // 0x0ec MP / SP crouched
+    float casingEjectVelocity[3];     // 0x0f8 bone space, units per frame
+    void (*onFired)(obj_tag *player); // 0x104 always NULL
+    void (*onImpact)(obj_tag *bullet, plane_equ_tag *plane, _VECTOR *pos); // 0x108 always NULL
 } weapon_definition_tag;
 
-static_assert(sizeof(weapon_definition_tag) == 0x10c, "Size of weapon_definition_tag not correct");
-static_assert(offsetof(weapon_definition_tag,someDistance) == 0x1c, "someDistance is in the wrong place");
-static_assert(offsetof(weapon_definition_tag, someFlags) == 0x68, "someFlags is in the wrong place");
-static_assert(offsetof(weapon_definition_tag, ammoType) == 0x90, "ammoType is in the wrong place");
-static_assert(offsetof(weapon_definition_tag, clipSizeOrCooldown) == 0x92, "clipSizeOrCooldown is in the wrong place");
+static_assert(sizeof(weapon_definition_tag) == 0x10c, "weapon_definition_tag size");
+static_assert(offsetof(weapon_definition_tag, botWeaponClass) == 0x006, "botWeaponClass");
+static_assert(offsetof(weapon_definition_tag, damageClass) == 0x010, "damageClass");
+static_assert(offsetof(weapon_definition_tag, range) == 0x01c, "range");
+static_assert(offsetof(weapon_definition_tag, shotsPerTrigger) == 0x028, "shotsPerTrigger");
+static_assert(offsetof(weapon_definition_tag, numFireModes) == 0x02e, "numFireModes");
+static_assert(offsetof(weapon_definition_tag, refireDelay) == 0x040, "refireDelay");
+static_assert(offsetof(weapon_definition_tag, weaponDatum) == 0x050, "weaponDatum");
+static_assert(offsetof(weapon_definition_tag, fireSound3rdPerson) == 0x060, "fireSound3rdPerson");
+static_assert(offsetof(weapon_definition_tag, weaponFlags) == 0x068, "weaponFlags");
+static_assert(offsetof(weapon_definition_tag, casingDelayFrames) == 0x078, "casingDelayFrames");
+static_assert(offsetof(weapon_definition_tag, animSet) == 0x084, "animSet");
+static_assert(offsetof(weapon_definition_tag, ammoType) == 0x090, "ammoType");
+static_assert(offsetof(weapon_definition_tag, clipSize) == 0x092, "clipSize");
+static_assert(offsetof(weapon_definition_tag, animIdle) == 0x0a0, "animIdle");
+static_assert(offsetof(weapon_definition_tag, weaponModelHashcode) == 0x0dc, "weaponModelHashcode");
+static_assert(offsetof(weapon_definition_tag, casingEjectVelocity) == 0x0f8, "casingEjectVelocity");
+static_assert(offsetof(weapon_definition_tag, onImpact) == 0x108, "onImpact");
 
 typedef struct {
     uint paused;

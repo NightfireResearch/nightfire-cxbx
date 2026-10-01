@@ -29,6 +29,7 @@
 #include "action/game/drone/Behaviour.h"
 #include "action/engine/Fmv.h"
 #include "action/gfx/LowLevel.h"
+#include "action/game/weapon_stats.h"
 #include "action/devtools/MenuProbe.h"
 
 #include "common/launchInfo.h"
@@ -176,11 +177,6 @@ void Inject()
   WriteJmpTo(0x000eb0fb, (size_t)&XLaunchNewImageA);
   WriteJmpTo(0x000eb050, (size_t)&XGetLaunchInfo);
 
-
-  // Special case for weapon stats
-  // This has the limitation that the DLL must be injected before the constructor is called otherwise it will have no effect
-  void *ptrCtorWeaponDefinitionTable = (void *)&ctor_WeaponDefinitionTable;
-  WriteMemory(0x0016313c, &ptrCtorWeaponDefinitionTable, 4);
 
   // Debug probes that stand in front of patched functions (off unless settings.ini asks for them)
   MenuProbe_Install();

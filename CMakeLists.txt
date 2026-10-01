@@ -97,6 +97,7 @@ add_library(actioninject SHARED
   src/action/devtools/ScoreShadow.cpp
   src/action/devtools/DroneTablesCheck.cpp
   src/action/devtools/DroneShadow.cpp
+  src/action/devtools/WeaponTableShadow.cpp
   src/action/game.cpp
   src/action/main.cpp
   src/common/launchInfo.cpp

@@ -147,10 +147,10 @@ uint Player_EquipAmmo(BLData *playerInfo, short weaponIndex, short amount) {
         return 0;
 
     short loaded = 0;
-    if ((weapon->someFlags & 0x10) && playerInfo->weaponStats[Player_AmmoIndex(weaponIndex)].clipOrCooldown == 0) {
-        loaded = (amount < weapon->clipSizeOrCooldown) ? amount : weapon->clipSizeOrCooldown;
+    if ((weapon->weaponFlags & 0x10) && playerInfo->weaponStats[Player_AmmoIndex(weaponIndex)].clipOrCooldown == 0) {
+        loaded = (amount < weapon->clipSize) ? amount : weapon->clipSize;
         playerInfo->weaponStats[Player_AmmoIndex(weaponIndex)].clipOrCooldown = loaded;
-        amount -= weapon->clipSizeOrCooldown;
+        amount -= weapon->clipSize;
         if (amount <= 0)
             return (ushort)loaded;
     }
@@ -549,10 +549,10 @@ void Player_ResetZoom(obj_tag *param_1);
 void Player_Zoom(obj_tag* player);
 
 static_assert(offsetof(weapon_definition_tag, offsetToNextAltFireVariant) == 0x05, "offsetToNextAltFireVariant");
-static_assert(offsetof(weapon_definition_tag, unk15) == 0x2e, "unk15");
-static_assert(offsetof(weapon_definition_tag, someFlags) == 0x68, "someFlags");
-static_assert(offsetof(weapon_definition_tag, someAnimHC2) == 0xb8, "someAnimHC2");
-static_assert(offsetof(weapon_definition_tag, someAnimHC) == 0xbc, "someAnimHC");
+static_assert(offsetof(weapon_definition_tag, numFireModes) == 0x2e, "numFireModes");
+static_assert(offsetof(weapon_definition_tag, weaponFlags) == 0x68, "weaponFlags");
+static_assert(offsetof(weapon_definition_tag, animScopeIn) == 0xb8, "animScopeIn");
+static_assert(offsetof(weapon_definition_tag, animScopeOut) == 0xbc, "animScopeOut");
 
 // AnimState::animFlags bits. SCOPED is what the player asked for this frame (after the weapon has had its say);
 // SCOPE_APPLIED is what the zoom was last set up for, so the edge between them runs the enter/leave code once.
@@ -619,7 +619,7 @@ void Player_Weapon(obj_tag *player) {
 
         // States in which the weapon forces the scope down (jump tables at 0x000bad0c/0x000bad28).
         bool forceDown = false;
-        uint flags = weapon_data[weaponId].someFlags;
+        uint flags = weapon_data[weaponId].weaponFlags;
         switch (blData->weaponObject->curState) {
             case 1: case 2: case 3: case 4: case 10: case 13: case 14: case 15:
                 forceDown = true;
@@ -637,12 +637,12 @@ void Player_Weapon(obj_tag *player) {
 
         AnimState *animNow = player->animState;
         char isScoped = animNow->animFlags & ANIMFLAG_SCOPED;
-        if ((isScoped != wasScoped) && (weapon_data[weaponId].someAnimHC2 != 0)) {
+        if ((isScoped != wasScoped) && (weapon_data[weaponId].animScopeIn != 0)) {
             if (isScoped) {
                 // Just asked for the scope: hold the bit off and play the bring-to-eye animation first
                 animNow->animFlags &= ~ANIMFLAG_SCOPED;
                 blData->weaponObject->curState = WEAPONSTATE_SCOPE_RAISE;
-                AnimScriptAddSpeed(blData->weaponObject, weapon_data[weaponId].someAnimHC2, 1.25f);
+                AnimScriptAddSpeed(blData->weaponObject, weapon_data[weaponId].animScopeIn, 1.25f);
             }
             else if (blData->weaponObject->curState == WEAPONSTATE_IDLE) {
                 // Lowering. The upgraded camera drops back to the plain camera as it comes down.
@@ -652,11 +652,11 @@ void Player_Weapon(obj_tag *player) {
                     player->animState->switchingToWeaponId = Weap_Camera;
                     weapon = &weapon_data[player->animState->currentWeaponId];
                 }
-                if (weapon->someAnimHC != 0) {
-                    AnimScriptAddSpeed(blData->weaponObject, weapon->someAnimHC, 1.25f);
+                if (weapon->animScopeOut != 0) {
+                    AnimScriptAddSpeed(blData->weaponObject, weapon->animScopeOut, 1.25f);
                 }
                 else {
-                    AnimScriptAddReverse(blData->weaponObject, weapon->someAnimHC2);
+                    AnimScriptAddReverse(blData->weaponObject, weapon->animScopeIn);
                 }
             }
         }
@@ -685,7 +685,7 @@ void Player_Weapon(obj_tag *player) {
     }
     AnimState *anim3 = player->animState;
     bool altFireBlocked = (anim3->animFlags & ANIMFLAG_SCOPED) &&
-                          (weapon_data[anim3->currentWeaponId].someFlags & WPNFLAG_SIGHTED_SCOPE);
+                          (weapon_data[anim3->currentWeaponId].weaponFlags & WPNFLAG_SIGHTED_SCOPE);
     if (!altFireBlocked && altFire && (blData->weaponObject->curState == WEAPONSTATE_IDLE)) {
         if (weapon->offsetToNextAltFireVariant != 0) {
             // The offset is signed: the alt-fire variant of a variant points back at it (0xff)
@@ -695,11 +695,11 @@ void Player_Weapon(obj_tag *player) {
                 Player_ResetZoom(player);
             }
         }
-        else if ((char)weapon->unk15 != 1) {
+        else if (weapon->numFireModes != 1) {
             // No alt-fire variant: step this weapon's fire-mode counter, wrapping at unk15 (byte compare)
             blData->weaponStats[anim3->currentWeaponId].fireModeIndex++;
             char cur = player->animState->currentWeaponId;
-            if (blData->weaponStats[cur].fireModeIndex == (char)weapon->unk15) {
+            if (blData->weaponStats[cur].fireModeIndex == weapon->numFireModes) {
                 blData->weaponStats[cur].fireModeIndex = 0;
             }
         }
