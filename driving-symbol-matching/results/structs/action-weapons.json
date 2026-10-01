@@ -1,0 +1,434 @@
+{
+ "program": "default.xbe",
+ "types": [
+  {
+   "name": "weapon_definition_tag",
+   "size": 268,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "short",
+     "name": "weaponVariantNum",
+     "comment": "this entry's index"
+    },
+    {
+     "offset": 2,
+     "type": "short",
+     "name": "weaponBaseNum",
+     "comment": "base variant of the group"
+    },
+    {
+     "offset": 4,
+     "type": "bool",
+     "name": "isBaseWeapon",
+     "comment": "owns the group's inventory slot"
+    },
+    {
+     "offset": 5,
+     "type": "char",
+     "name": "offsetToNextAltFireVariant",
+     "comment": "entry offset to the alt-fire variant (signed)"
+    },
+    {
+     "offset": 6,
+     "type": "uchar",
+     "name": "botWeaponClass",
+     "comment": "1 handgun 2 auto 3 sniper 4 explosive"
+    },
+    {
+     "offset": 8,
+     "type": "float",
+     "name": "explodeRadius",
+     "comment": "explosion size, units"
+    },
+    {
+     "offset": 12,
+     "type": "float",
+     "name": "damage",
+     "comment": "damage per hit / explosion strength"
+    },
+    {
+     "offset": 16,
+     "type": "ushort",
+     "name": "damageClass",
+     "comment": "weapon class bit, see doc"
+    },
+    {
+     "offset": 20,
+     "type": "float",
+     "name": "autoAimStrength",
+     "comment": "percent"
+    },
+    {
+     "offset": 24,
+     "type": "uchar",
+     "name": "numBulletsPerShot",
+     "comment": "projectiles per shot"
+    },
+    {
+     "offset": 28,
+     "type": "float",
+     "name": "range",
+     "comment": "max travel / use range, units"
+    },
+    {
+     "offset": 32,
+     "type": "float",
+     "name": "projectileSpeed",
+     "comment": "units per 60 Hz frame"
+    },
+    {
+     "offset": 36,
+     "type": "float",
+     "name": "baseSpread",
+     "comment": "x0.0014 rad"
+    },
+    {
+     "offset": 40,
+     "type": "short[2]",
+     "name": "shotsPerTrigger",
+     "comment": "per fire mode, 999 = auto"
+    },
+    {
+     "offset": 44,
+     "type": "short",
+     "name": "droneBurstLength",
+     "comment": "shots per drone burst"
+    },
+    {
+     "offset": 46,
+     "type": "char",
+     "name": "numFireModes",
+     "comment": "modes the alt-fire button cycles"
+    },
+    {
+     "offset": 48,
+     "type": "Action_TranslatedText[2]",
+     "name": "fireModeName",
+     "comment": "HUD text per fire mode"
+    },
+    {
+     "offset": 56,
+     "type": "Action_TranslatedText",
+     "name": "nameLong",
+     "comment": "single-player HUD name"
+    },
+    {
+     "offset": 60,
+     "type": "Action_TranslatedText",
+     "name": "nameShort",
+     "comment": "multiplayer HUD name"
+    },
+    {
+     "offset": 64,
+     "type": "int",
+     "name": "refireDelay",
+     "comment": "frames between shots (min 1)"
+    },
+    {
+     "offset": 68,
+     "type": "ushort",
+     "name": "bulletSpawnFrame",
+     "comment": "fire-anim frame that spawns the bullet"
+    },
+    {
+     "offset": 72,
+     "type": "HASHCODE",
+     "name": "muzzleFlash1stPerson",
+     "comment": "first-person flash entity (0x02)"
+    },
+    {
+     "offset": 76,
+     "type": "HASHCODE",
+     "name": "muzzleFlash3rdPerson",
+     "comment": "third-person flash entity (0x02)"
+    },
+    {
+     "offset": 80,
+     "type": "uchar",
+     "name": "weaponDatum",
+     "comment": "first weapon datum on the skeleton, 0xff none"
+    },
+    {
+     "offset": 81,
+     "type": "uchar",
+     "name": "muzzleFlashAlphaMin",
+     "comment": "flash sprite brightness range"
+    },
+    {
+     "offset": 82,
+     "type": "uchar",
+     "name": "muzzleFlashAlphaMax"
+    },
+    {
+     "offset": 84,
+     "type": "uchar",
+     "name": "muzzleFlash_b",
+     "comment": "light colour, blue"
+    },
+    {
+     "offset": 85,
+     "type": "uchar",
+     "name": "muzzleFlash_g",
+     "comment": "light colour, green"
+    },
+    {
+     "offset": 86,
+     "type": "uchar",
+     "name": "muzzleFlash_r",
+     "comment": "light colour, red"
+    },
+    {
+     "offset": 88,
+     "type": "float",
+     "name": "muzzleLightRadius",
+     "comment": "Light_Create radius"
+    },
+    {
+     "offset": 92,
+     "type": "HASHCODE",
+     "name": "projectileGfx",
+     "comment": "projectile entity (0x02)"
+    },
+    {
+     "offset": 96,
+     "type": "ushort",
+     "name": "fireSound3rdPerson",
+     "comment": "SFX id for drones/scripts"
+    },
+    {
+     "offset": 100,
+     "type": "uchar",
+     "name": "unk64",
+     "comment": "0/2/3, no reader found"
+    },
+    {
+     "offset": 104,
+     "type": "uint",
+     "name": "weaponFlags",
+     "comment": "see doc"
+    },
+    {
+     "offset": 108,
+     "type": "uint",
+     "name": "projectileFlags",
+     "comment": "see doc"
+    },
+    {
+     "offset": 112,
+     "type": "uint",
+     "name": "impactFlags",
+     "comment": "see doc"
+    },
+    {
+     "offset": 116,
+     "type": "short",
+     "name": "swooshInterval",
+     "comment": "frames between trail segments"
+    },
+    {
+     "offset": 118,
+     "type": "short",
+     "name": "swooshLifetime",
+     "comment": "trail segment lifetime, frames"
+    },
+    {
+     "offset": 120,
+     "type": "uchar",
+     "name": "casingDelayFrames",
+     "comment": "frames before the casing appears"
+    },
+    {
+     "offset": 122,
+     "type": "short",
+     "name": "effectDurationFrames",
+     "comment": "15 s / 60 s, no reader found"
+    },
+    {
+     "offset": 124,
+     "type": "HASHCODE",
+     "name": "suppressorGfx",
+     "comment": "silencer entity (0x02)"
+    },
+    {
+     "offset": 128,
+     "type": "HASHCODE",
+     "name": "worldModelGfx",
+     "comment": "held/pickup entity (0x02)"
+    },
+    {
+     "offset": 132,
+     "type": "uchar",
+     "name": "animSet",
+     "comment": "third-person AnimSet"
+    },
+    {
+     "offset": 136,
+     "type": "float",
+     "name": "maxZoom",
+     "comment": "max scope zoom factor"
+    },
+    {
+     "offset": 140,
+     "type": "float",
+     "name": "scopeSway",
+     "comment": "sway x (zoom - 1)"
+    },
+    {
+     "offset": 144,
+     "type": "uchar",
+     "name": "ammoType",
+     "comment": "index into ammo_data / BLData.ammo"
+    },
+    {
+     "offset": 145,
+     "type": "uchar",
+     "name": "ammoPerShot"
+    },
+    {
+     "offset": 146,
+     "type": "short",
+     "name": "clipSize",
+     "comment": "clip or max charge"
+    },
+    {
+     "offset": 148,
+     "type": "uchar",
+     "name": "rumble",
+     "comment": "rumble strength 0-100"
+    },
+    {
+     "offset": 152,
+     "type": "float",
+     "name": "spreadPerShot",
+     "comment": "bloom per shot"
+    },
+    {
+     "offset": 156,
+     "type": "float",
+     "name": "unk9c",
+     "comment": "no reader found"
+    },
+    {
+     "offset": 160,
+     "type": "HASHCODE",
+     "name": "animIdle"
+    },
+    {
+     "offset": 164,
+     "type": "HASHCODE",
+     "name": "animReload"
+    },
+    {
+     "offset": 168,
+     "type": "HASHCODE",
+     "name": "animReloadStart"
+    },
+    {
+     "offset": 172,
+     "type": "HASHCODE",
+     "name": "animReloadEnd"
+    },
+    {
+     "offset": 176,
+     "type": "HASHCODE",
+     "name": "animFire"
+    },
+    {
+     "offset": 180,
+     "type": "HASHCODE",
+     "name": "animFireAlt"
+    },
+    {
+     "offset": 184,
+     "type": "HASHCODE",
+     "name": "animScopeIn"
+    },
+    {
+     "offset": 188,
+     "type": "HASHCODE",
+     "name": "animScopeOut"
+    },
+    {
+     "offset": 192,
+     "type": "HASHCODE",
+     "name": "animRaise"
+    },
+    {
+     "offset": 196,
+     "type": "HASHCODE",
+     "name": "animLower"
+    },
+    {
+     "offset": 200,
+     "type": "HASHCODE",
+     "name": "animModeSwitch"
+    },
+    {
+     "offset": 204,
+     "type": "HASHCODE",
+     "name": "animFidget"
+    },
+    {
+     "offset": 208,
+     "type": "HASHCODE",
+     "name": "animRelax"
+    },
+    {
+     "offset": 212,
+     "type": "HASHCODE",
+     "name": "animRelaxEnd"
+    },
+    {
+     "offset": 216,
+     "type": "HASHCODE",
+     "name": "animLowerRelaxed"
+    },
+    {
+     "offset": 220,
+     "type": "HASHCODE",
+     "name": "weaponModelHashcode",
+     "comment": "first-person model (0x05)"
+    },
+    {
+     "offset": 224,
+     "type": "float[3]",
+     "name": "viewOffset",
+     "comment": "view-model offset, SP standing"
+    },
+    {
+     "offset": 236,
+     "type": "float[3]",
+     "name": "viewOffsetAlt",
+     "comment": "MP / SP crouched"
+    },
+    {
+     "offset": 248,
+     "type": "float[3]",
+     "name": "casingEjectVelocity",
+     "comment": "bone space, units per frame"
+    },
+    {
+     "offset": 260,
+     "type": "void *",
+     "name": "onFired",
+     "comment": "void (*onFired)(obj_tag *player); always NULL"
+    },
+    {
+     "offset": 264,
+     "type": "void *",
+     "name": "onImpact",
+     "comment": "void (*onImpact)(obj_tag *bullet, plane_equ_tag *plane, _VECTOR *pos); always NULL"
+    }
+   ],
+   "comment": "One weapon variant; weapon_data[115] at 0x0018cfa0. Generated from src/action/game.h by tools/weapon_table.py --ghidra; docs/weapons.md describes every field."
+  }
+ ],
+ "data": [
+  {
+   "address": "0x18cfa0",
+   "type": "weapon_definition_tag[115]",
+   "name": "weapon_data"
+  }
+ ]
+}

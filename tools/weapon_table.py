@@ -2,6 +2,8 @@
 
     python tools/weapon_table.py            write src/action/game/WeaponTable.inc
     python tools/weapon_table.py --check    fail if it is out of date
+    python tools/weapon_table.py --ghidra   write the struct for Ghidra (driving-symbol-matching/results/structs/
+                                            action-weapons.json, applied by ghidra/NightfireStructs.py)
 
 Needs disc/default.xbe. The table's contents are the game's once its static constructor WeaponDataTableInit
 (0x000f5530) has run: entries 0-0x34 are initialised data in the XBE, the rest are 44 KB of stores in the constructor,
@@ -26,6 +28,7 @@ REPO = os.path.dirname(HERE)
 XBE = os.path.join(REPO, 'disc', 'default.xbe')
 GAME_H = os.path.join(REPO, 'src', 'action', 'game.h')
 OUT = os.path.join(REPO, 'src', 'action', 'game', 'WeaponTable.inc')
+GHIDRA_JSON = os.path.join(REPO, 'driving-symbol-matching', 'results', 'structs', 'action-weapons.json')
 
 TABLE, ENTRY, COUNT = 0x0018cfa0, 0x10c, 115
 CTOR, CTOR_END = 0x000f5530, 0x00100469
@@ -242,14 +245,16 @@ TYPES = {   # C type -> (struct format, how it is written)
 }
 
 
-def struct_fields():
-    """weapon_definition_tag's fields from game.h: (offset, name, C type, count)"""
+def struct_fields(with_comments=False):
+    """weapon_definition_tag's fields from game.h: (offset, name, C type, count[, comment])"""
     h = open(GAME_H, encoding='utf-8').read()
     end = h.index('} weapon_definition_tag;')
     body = h[h.rindex('typedef struct', 0, end):end]
     body = body[body.index('{') + 1:]
     fields, off = [], 0
     for line in body.split('\n'):
+        comment = line.split('//', 1)[1].strip() if '//' in line else ''
+        comment = re.sub(r'^0x[0-9a-f]{3}\s*', '', comment)       # the offset, which Ghidra shows anyway
         line = re.sub(r'/\*.*?\*/', '', line).split('//')[0].strip()
         fp = re.match(r'\w+\s*\(\*\s*(\w+)\)\s*\(.*\);$', line)
         m = re.match(r'(\w+)\s+(\w+)(?:\[(\d+)\])?;$', line)
@@ -261,7 +266,12 @@ def struct_fields():
             continue
         if t not in TYPES:
             raise SystemExit('weapon_definition_tag.%s: type %s is not known to tools/weapon_table.py' % (name, t))
-        fields.append((off, name, t, n))
+        if with_comments:
+            if t == 'pointer':
+                comment = (line + ' ' + comment).strip()       # Ghidra gets a void *; keep the signature
+            fields.append((off, name, t, n, comment))
+        else:
+            fields.append((off, name, t, n))
         off += struct.calcsize('<' + TYPES[t][0]) * n
     assert off == ENTRY, 'weapon_definition_tag adds up to %#x bytes, not %#x' % (off, ENTRY)
     return fields
@@ -331,7 +341,35 @@ def generate():
     return '\n'.join(out) + '\n'
 
 
+GHIDRA_TYPES = {'int8_t': 'char', 'uint8_t': 'uchar', 'int16_t': 'short', 'uint16_t': 'ushort', 'int32_t': 'int',
+                'uint32_t': 'uint', 'pointer': 'void *'}
+
+
+def ghidra_json():
+    """weapon_definition_tag for ghidra/NightfireStructs.py, and the table retyped as an array of it"""
+    import json
+    fields = []
+    for o, name, t, n, comment in struct_fields(with_comments=True):
+        if name.startswith('_pad'):
+            continue                                    # left undefined, as padding is
+        gt = GHIDRA_TYPES.get(t, t) + ('[%d]' % n if n > 1 else '')
+        f = {'offset': o, 'type': gt, 'name': name}
+        if comment:
+            f['comment'] = comment
+        fields.append(f)
+    doc = {'program': 'default.xbe',
+           'types': [{'name': 'weapon_definition_tag', 'size': ENTRY, 'fields': fields,
+                      'comment': 'One weapon variant; weapon_data[115] at 0x0018cfa0. Generated from src/action/game.h '
+                                 'by tools/weapon_table.py --ghidra; docs/weapons.md describes every field.'}],
+           'data': [{'address': '0x%x' % TABLE, 'type': 'weapon_definition_tag[%d]' % COUNT, 'name': 'weapon_data'}]}
+    return json.dumps(doc, indent=1) + '\n'
+
+
 def main():
+    if '--ghidra' in sys.argv:
+        open(GHIDRA_JSON, 'w', encoding='utf-8', newline='\n').write(ghidra_json())
+        print('wrote', os.path.relpath(GHIDRA_JSON, REPO))
+        return
     text = generate()
     if '--check' in sys.argv:
         current = open(OUT, encoding='utf-8').read() if os.path.exists(OUT) else ''
