@@ -7,6 +7,10 @@ void Game_Run(void);
 void GameFlow_Main(void);
 bool movieFinished(void);
 bool Graphics_IsPalI(void);
+bool IsNotPalI(void);
+bool Graphics_IsSomeGraphicsRegion(void);
+bool Graphics_IsWidescreen(void);
+bool Graphics_IsSomeRegionBasedThing(void);
 void mainloop(void);
 void bootup_bootup(void);
 void psiInitTimeIn100ths(void);
@@ -28,6 +32,7 @@ uint GameFlow_GetState(void);
 void GameFlow_PushState(int state, float param_2, uint param_3);
 void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv);
 void psiStopBackgroundMovie(void);
+void maybeStartBackgroundMovie(void);
 void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume);
 void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate);
 void GS_PauseGame(bool pause);
@@ -69,6 +74,8 @@ typedef struct {
 static_assert(sizeof(GameState_t) == 0x58, "Bad size for GameState");
 
 #define GameState (*((GameState_t*)0x001f6580))
+// The hashcode of the background movie that is playing, 0 when none
+extern uint32_t BackgroundMovieHashcode;
 
 struct CheatInfo_t {
     undefined4 Immortal;
@@ -354,10 +361,16 @@ typedef struct {
 
 static_assert(sizeof(weapon_definition_tag) == 0x10c, "Size of weapon_definition_tag not correct");
 static_assert(offsetof(weapon_definition_tag,someDistance) == 0x1c, "someDistance is in the wrong place");
+static_assert(offsetof(weapon_definition_tag, someFlags) == 0x68, "someFlags is in the wrong place");
+static_assert(offsetof(weapon_definition_tag, ammoType) == 0x90, "ammoType is in the wrong place");
+static_assert(offsetof(weapon_definition_tag, clipSizeOrCooldown) == 0x92, "clipSizeOrCooldown is in the wrong place");
 
 typedef struct {
     uint paused;
-    char unknown_pad[0x1c-4];
+    uint victories;         // the debriefing's "Victories"
+    uint deaths;            // the debriefing's "Deaths" (Ghidra: pointsScored)
+    char unknown_pad0[0x18-0xc];
+    float points;           // the debriefing's "Points"
     obj_tag* playerObj;
     short maybeIdxOfLastInjurer; // Index of who or what last dealt me damage? -2 = environment?
     short friendlyFireLabelTimer;
@@ -373,8 +386,7 @@ typedef struct {
   // Note that PS2 and Xbox have different number of entries in MPGame! PS2 has 8, Xbox has 10
   MPGamePlayer players[10];
   // Immediately following is more state related to MP game
-  uint unknown_1; // end conditions / debriefing / objective related
-  uint unknown_2; // end conditions / debriefing
+  float teamScore[2]; // by MPTeam: Phoenix, MI6 (MP_SortOutWhoWon, the debriefing)
   uint EndGameFlowState;
   uint unknown_3; // end conditions
   uint TimeUnpaused;

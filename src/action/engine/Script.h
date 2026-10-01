@@ -68,7 +68,7 @@ enum ScriptPlaybackFlags {
 // Bits of SCRIPTINFO::fadeFlags
 enum ScriptFadeFlags {
     ScriptFade_FFwdRequested = 0x1,  // Set by Script_FFwd; cleared by Script_Update once the fade-out finishes
-    ScriptFade_FFwdAllowed = 0x10,   // Gates Script_FFwd entirely - not observed being set by anything
+    ScriptFade_FFwdAllowed = 0x10,   // Gates Script_FFwd entirely - set by Script_CameraStart
                                      // reimplemented so far, presumably comes from the script asset via Script_Load
     ScriptFade_ThresholdHit = 0x20,  // Set by Script_Update every tick once fadeElapsedFrames has passed fadeFrames
 };
@@ -132,6 +132,9 @@ static_assert(offsetof(SCRIPTINFO, playerEnableFlags) == 0xaae, "Offset of playe
 
 void Script_Free(SCRIPTINFO *param_1);
 void Script_Run(SCRIPTINFO *);
+// The register-convention entry (stream in EAX, script in ESI) and its C body (Script.cpp)
+void Script_CameraStart(void);
+void _Script_CameraStart(SCRIPTINFO *scriptInfo, SSTREAM *stream);
 void Script_RemoveObj(obj_tag *obj, SCRIPTINFO *scriptInfo);
 void Script_SetPosRot(SCRIPTINFO *param_1, _MATRIX *param_2);
 void Script_SetColour(SCRIPTINFO *param_1, undefined1 clr_r, undefined1 clr_g, undefined1 clr_b);
@@ -144,4 +147,6 @@ void Script_FFwd(SCRIPTINFO *scriptInfo, char doFFwd);
 void Script_HideObj(SCRIPTINFO *scriptInfo, char hide);
 bool Script_IsDeathNIS(HASHCODE hashcode);
 void Script_KillStream(SCRIPTINFO *scriptInfo, SSTREAM *stream);
+void Script_Init(void);
+
 #endif // SCRIPT_H_

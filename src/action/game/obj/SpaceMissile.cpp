@@ -44,7 +44,8 @@ typedef struct {
 
 // 8 one-byte bools, representing whether each has been started, found at 0x0029a28c
 // Used by the HUD
-#define MissileDeploy (*(uchar(*)[8])(0x0029a28c))
+// XBE_GLOBAL(0x0029a28c, 0x8)
+uchar MissileDeploy[8];
 
 // AUTOINJECT
 obj_tag * Create_SpaceMissile(_VECTOR *pos,_VECTOR *rot, level_tag* lvl) {

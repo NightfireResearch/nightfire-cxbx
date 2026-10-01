@@ -126,9 +126,11 @@ static_assert(sizeof(MP_skin) == 0x10, "MP_skin is wrong size");
 
 
 typedef struct {
-    char unknown[16];
-    char SkinNum;
-    char unknown2;
+    char stats[14];     // 0x00 its BOT_stats_t: the character's defaults (BOT_getDefaultStats), then P_MPBOTSETUP's
+    char isPlaying;     // 0x0e the bot is in the game (P_MPBOTSETUP's "Playing" option)
+    char isGood;        // 0x0f its character is on MI6's side (Menu_IsBotGood)
+    char SkinNum;       // 0x10 its character: an mp_characters identifier
+    char statsEdited;   // 0x11 its stats were changed on P_MPBOTSETUP, so moving the character wheel keeps them
 } MPBOT;
 
 static_assert(sizeof(MPBOT) == 18, "MPBOT is wrong size");
@@ -138,6 +140,22 @@ typedef struct {
     char NumBots;
     MPBOT bot[6]; // FIXME: How many bots are there? Platform-specific? Enough memory for 10 on Xbox
 } MPBOTS;
+
+// XBE_GLOBAL(0x00245280, 0x6e)
+#define mpbots (*(MPBOTS*)0x00245280)
+
+// The four controllers' places on the join page (P_MPJOIN)
+typedef struct {
+    char joined;        // 0x00
+    char ready;         // 0x01 finished setting up (C_RBMPSETUP)
+    char pad[2];
+    MPTeam team;        // 0x04
+    uint skin;          // 0x08 an mp_characters identifier
+    uint field_0xc;
+} MPJoinSlot;
+static_assert(sizeof(MPJoinSlot) == 0x10, "MPJoinSlot is wrong size");
+
+#define mp_join_slots (*(MPJoinSlot(*)[4])0x00245240)
 
 
 typedef struct {
@@ -216,6 +234,7 @@ void MP_SortOutWhoWon(void);
 void MP_Pickup_Process(void);
 void MP_CheckForEndCondition(void);
 void MP_RestartScenario(void);
+void MP_Init(void);
 obj_tag* MP_CreateObject(_MATRIX *mtx, unsigned short* data, celglist_tag *celgl);
 bool MP_ReSpawn(obj_tag* obj, ushort idx);
 

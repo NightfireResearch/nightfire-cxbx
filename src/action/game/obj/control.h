@@ -35,7 +35,10 @@ typedef struct {
     ObjectDeleteFunc deleteFunc;
 } ControlFunction;
 
+// XBE_GLOBAL(0x00163b98, 0x3fc)
 #define control_funcs ((ControlFunction*)0x00163b98)
 
+
+void control_init_object_lists(void);
 
 #endif // CONTROL_H_

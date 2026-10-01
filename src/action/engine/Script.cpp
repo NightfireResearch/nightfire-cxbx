@@ -1,4 +1,5 @@
 #include "Script.h"
+#include "../util/bin.h"
 #include "Anim.h"
 #include "Loader.h"
 #include "Text.h"
@@ -15,8 +16,10 @@
 #include "../gfx/Sprite.h"
 #include "../input.h"
 
-// Two persistent letterbox-bar sprites, disabled (0xff) by Script_KillStream when a camera stream ends
-#define Borders (*(sprite*(*)[2])0x00279350)
+// Two persistent letterbox-bar sprites: created and shown by Script_CameraStart, disabled (0xff) by Script_KillStream
+// when a camera stream ends
+// XBE_GLOBAL(0x00279350, 0x8)
+static sprite* Borders[2];
 
 typedef enum ScriptCmd {
     ScriptCmd_EndScript=4,
@@ -153,6 +156,78 @@ void Script_KillStream(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
 // for now.
 // AUTOGEN
 void Script_Interp(SCRIPTINFO *scriptInfo, SSTREAM *stream);
+
+// AUTOGEN
+void __stdcall Camera_PushStates(void);
+
+// The letterbox bars' sprite info (the game's data)
+#define LetterboxSprInfo ((SpriteInfo *)0x00181be4)
+#define LETTERBOX_BOTTOM_Y 0x1a0
+
+// A camera stream's own block (Mem_Malloc'd on its first start, kept in the stream's linkedGameOrSoundObject): only
+// the three words at the end are set here; the rest belongs to Script_Interp (not reimplemented).
+#define SCRIPT_CAMERA_DATA_SIZE 0x48
+
+// Starts a camera stream of a script: reads its header (a mode byte and two words), takes over the cameras (every
+// one disabled, camera 4 enabled for the script), plays the cutscene music event, and shows the letterbox bars -
+// creating them the first time. A script flagged ScriptFlag_FFwdKillsCamera only has the header read. The
+// original ends by jumping to Light_Update.
+void _Script_CameraStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
+    ScriptCam = scriptInfo->scriptHashcode;
+    Mat_IdentityT(&scriptInfo->maybeMatrix);
+    uchar mode = BIN_GetByte(&stream->streamBuffer);
+    ushort word1 = BIN_GetWord((ushort **)&stream->streamBuffer);
+    ushort word2 = BIN_GetWord((ushort **)&stream->streamBuffer);
+    if (scriptInfo->scriptFlags & ScriptFlag_FFwdKillsCamera)
+        return;
+
+    Input_ClearAllActions(-1);
+    uchar *camera = (uchar *)stream->linkedGameOrSoundObject;
+    if (camera == NULL) {
+        camera = (uchar *)Mem_Malloc(SCRIPT_CAMERA_DATA_SIZE, (MallocFlags)0x1404, 0);
+        if (camera == NULL)
+            return;
+    }
+    *(ushort *)(camera + 0x40) = word1;
+    *(ushort *)(camera + 0x42) = word2;
+    *(ushort *)(camera + 0x44) = mode ? 4 : 2;
+    stream->whatKindOfInterpolation = SStream_Camera;
+    stream->linkedGameOrSoundObject = camera;
+    Script_Interp(scriptInfo, stream);
+
+    Camera_PushStates();
+    for (ushort i = 0; i <= 6; i++)
+        Camera_Enable(i, 0, 0, NULL);
+    Camera_Enable(4, 1, 1, NULL);
+    scriptInfo->fadeFlags |= ScriptFade_FFwdAllowed;
+    Music_Event(0xb, scriptInfo->scriptHashcode);
+
+    if (Borders[0] == NULL)
+        Borders[0] = Sprite_Create2(LetterboxSprInfo);
+    if (Borders[1] == NULL) {
+        Borders[1] = Sprite_Create2(LetterboxSprInfo);
+        Borders[1]->positionY = LETTERBOX_BOTTOM_Y;   // not checked for NULL, as in the original
+    }
+    if (Borders[0] != NULL)
+        Borders[0]->maybeEnabled = 1;
+    if (Borders[1] != NULL)
+        Borders[1]->maybeEnabled = 1;
+
+    Light_Update();
+}
+
+// The original takes the stream in EAX and the script in ESI (link-time code generation; pops nothing). Only the
+// original script interpreter calls it; C callers call _Script_CameraStart.
+// AUTOLTCG
+void __declspec(naked) Script_CameraStart(void) {
+    _asm {
+        push eax
+        push esi
+        call _Script_CameraStart
+        add esp, 8
+        ret
+    }
+}
 
 // AUTOINJECT
 void Script_SetPosRot(SCRIPTINFO *scriptInfo, _MATRIX *mtx) {
@@ -458,4 +533,12 @@ void Script_Free(SCRIPTINFO *scriptInfo) {
     }
 
     Mem_Free((void**)&scriptInfo);
+}
+
+// No letterbox borders and no script camera yet.
+// AUTOINJECT
+void Script_Init(void) {
+    Borders[0] = NULL;
+    Borders[1] = NULL;
+    ScriptCam = (HASHCODE)0;
 }

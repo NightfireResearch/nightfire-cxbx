@@ -8,13 +8,177 @@
 
 #include <stdio.h>
 
-#define FailLabel U32_AT(0x0017e548)
-#define BaseMap U32_AT(0x0025fe20)
-#define ThisOrderNum U32_AT(0x0025fe24)
-#define MissionState U32_AT(0x0017e544)
+// XBE_GLOBAL(0x0017e548, 0x4)
+static uint32_t FailLabel = 0xffffffff;
+// XBE_GLOBAL(0x0025fe20, 0x4)
+static uint32_t BaseMap;
+// XBE_GLOBAL(0x0025fe24, 0x4)
+static uint32_t ThisOrderNum;
+// XBE_GLOBAL(0x0017e544, 0x4)
+static uint32_t MissionState = 0x5;
 
-#define MissionData (*(Mission(*)[24])0x0017e180)
+// The objectives each mission part points at: still the game's own arrays (their status is written at run time).
+// XBE_GLOBAL(0x0017dc58, 0x18)
+static Objective Objectives_1_CastleExterior[1] = {
+    {(Action_TranslatedText)0x04000000, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005b, 70, 0, 1, 69, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017dc70, 0x18)
+static Objective Objectives_1_CastleCourtyard[1] = {
+    {(Action_TranslatedText)0x04000001, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005c, 2, 0, 1, 70, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017dc88, 0x30)
+static Objective Objectives_2_CastleIndoors[2] = {
+    {(Action_TranslatedText)0x04000002, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005d, 72, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000003, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005e, 73, 0, 1, 72, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017dcb8, 0x30)
+static Objective Objectives_2_CastleIndoors2[2] = {
+    {(Action_TranslatedText)0x04000004, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005f, 74, 0, 1, 73, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000005, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000060, 75, 0, 1, 74, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017dce8, 0x18)
+static Objective Objectives_1_HendersonA[1] = {
+    {(Action_TranslatedText)0x04000006, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400000e, 71, 0, 0, 0, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017dd00, 0x48)
+static Objective Objectives_3_HendersonB[3] = {
+    {(Action_TranslatedText)0x04000007, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400000f, 72, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000008, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000010, 75, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000009, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000011, 77, 0, 1, 76, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017dd48, 0x48)
+static Objective Objectives_3_HendersonC[3] = {
+    {(Action_TranslatedText)0x0400000a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000012, 78, 0, 1, 77, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400000b, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000013, 81, 0, 1, 77, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400000c, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000014, 83, 0, 1, 82, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017dd90, 0x18)
+static Objective Objectives_1_HendersonD[1] = {
+    {(Action_TranslatedText)0x0400000d, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000015, 84, 0, 1, 83, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017dda8, 0x48)
+static Objective Objectives_3_TowerA[3] = {
+    {(Action_TranslatedText)0x04000016, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000021, 97, 0, 0, 0, 2, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000017, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000022, 70, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000018, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000023, 71, 0, 1, 70, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017ddf0, 0x48)
+static Objective Objectives_3_TowerB[3] = {
+    {(Action_TranslatedText)0x04000019, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000024, 72, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000025, 73, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001b, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000026, 75, 0, 1, 74, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017de38, 0x78)
+static Objective Objectives_5_TowerC[5] = {
+    {(Action_TranslatedText)0x0400001c, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000027, 76, 0, 1, 75, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001d, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000028, 77, 0, 1, 75, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001e, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000029, 78, 0, 1, 77, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001f, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400002a, 89, 0, 1, 79, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000020, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400002b, 90, 0, 1, 89, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017deb0, 0x48)
+static Objective Objectives_3_PowerStationA1[3] = {
+    {(Action_TranslatedText)0x0400002c, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000061, 27, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400002d, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000062, 28, 0, 1, 27, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400002e, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000063, 35, 0, 1, 28, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017def8, 0x48)
+static Objective Objectives_3_PowerStationA2[3] = {
+    {(Action_TranslatedText)0x0400002f, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000064, 29, 0, 1, 35, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000030, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000065, 30, 0, 1, 29, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000031, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000066, 31, 0, 1, 29, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017df40, 0x60)
+static Objective PowerStation_B1[4] = {
+    {(Action_TranslatedText)0x04000041, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 15, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000042, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 10, 0, 1, 7, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000043, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 11, 0, 1, 8, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000044, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 12, 0, 1, 9, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017dfa0, 0x18)
+static Objective PowerStation_B2[1] = {
+    {(Action_TranslatedText)0x04000045, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 0, 0, 1, 0, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017dfb8, 0x30)
+static Objective Tower_2A[2] = {
+    {(Action_TranslatedText)0x04000035, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003b, 100, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000036, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003c, 72, 0, 0, 0, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017dfe8, 0x30)
+static Objective Tower_2B[2] = {
+    {(Action_TranslatedText)0x04000037, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003d, 73, 0, 1, 72, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000038, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003e, 77, 0, 1, 73, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017e018, 0x18)
+static Objective Tower_2Elevator[1] = {
+    {(Action_TranslatedText)0x04000039, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003f, 74, 0, 1, 77, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017e030, 0x18)
+static Objective Tower_2C[1] = {
+    {(Action_TranslatedText)0x0400003a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000040, 80, 0, 1, 74, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017e048, 0x48)
+static Objective Caves[3] = {
+    {(Action_TranslatedText)0x04000046, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 0, 0, 1, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000047, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 0, 0, 1, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000048, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 0, 0, 1, 0, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017e090, 0x78)
+static Objective Evil_Base[5] = {
+    {(Action_TranslatedText)0x04000049, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000050, 71, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000051, 72, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004b, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000052, 74, 0, 1, 72, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004c, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000053, 84, 0, 1, 74, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000069, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400006a, -50, 0, 1, 84, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017e108, 0x18)
+static Objective Evil_Silo[1] = {
+    {(Action_TranslatedText)0x0400004d, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000054, -114, 0, 1, 75, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017e120, 0x30)
+static Objective EvilBase_ShuttleBay[2] = {
+    {(Action_TranslatedText)0x0400004e, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000055, -113, 0, 1, -114, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004f, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000056, -112, 0, 1, -113, 0, {0, 0, 0}, 0},
+};
+// XBE_GLOBAL(0x0017e150, 0x30)
+static Objective Space_Station_D[2] = {
+    {(Action_TranslatedText)0x04000059, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000067, 9, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400005a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000068, 11, 0, 1, 9, 0, {0, 0, 0}, 0},
+};
 
+// XBE_GLOBAL(0x0017e180, 0x3c0)
+static Mission MissionData[24] = {
+    {HT_Level_CastleExterior, HT_Level_CastleExterior, 0, Objectives_1_CastleExterior, 1, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00}},
+    {HT_Level_CastleCourtyard, HT_Level_CastleExterior, 1, Objectives_1_CastleCourtyard, 1, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_CastleIndoors1, HT_Level_CastleExterior, 2, Objectives_2_CastleIndoors, 2, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_CastleIndoors2, HT_Level_CastleExterior, 3, Objectives_2_CastleIndoors2, 2, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_HendersonA, HT_Level_HendersonA, 0, Objectives_1_HendersonA, 1, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_HendersonB, HT_Level_HendersonA, 1, Objectives_3_HendersonB, 3, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00}},
+    {HT_Level_HendersonC, HT_Level_HendersonA, 2, Objectives_3_HendersonC, 3, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00}},
+    {HT_Level_HendersonD, HT_Level_HendersonA, 3, Objectives_1_HendersonD, 1, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_TowerA, HT_Level_TowerA, 0, Objectives_3_TowerA, 3, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_TowerB, HT_Level_TowerA, 1, Objectives_3_TowerB, 3, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00}},
+    {HT_Level_TowerC, HT_Level_TowerA, 2, Objectives_5_TowerC, 5, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00}},
+    {HT_Level_PowerStationA1, HT_Level_PowerStationA1, 0, Objectives_3_PowerStationA1, 3, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_PowerStationA2, HT_Level_PowerStationA1, 1, Objectives_3_PowerStationA2, 3, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_Cut_Level1, HT_Level_Cut_Level1, 0, PowerStation_B1, 4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_Cut_Level2, HT_Level_Cut_Level1, 1, PowerStation_B2, 1, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_Tower2A, HT_Level_Tower2A, 0, Tower_2A, 2, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_Tower2B, HT_Level_Tower2A, 1, Tower_2B, 2, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_Tower2Elevator, HT_Level_Tower2A, 2, Tower_2Elevator, 1, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_Tower2C, HT_Level_Tower2A, 3, Tower_2C, 1, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_Cut_Level3, HT_Level_Cut_Level3, 0, Caves, 3, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_EvilBase, HT_Level_EvilBase, 0, Evil_Base, 5, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00}},
+    {HT_Level_EvilSilo, HT_Level_EvilBase, 1, Evil_Silo, 1, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_EvilBaseC, HT_Level_EvilBase, 2, EvilBase_ShuttleBay, 2, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {HT_Level_SpaceStationD, HT_Level_SpaceStationD, 0, Space_Station_D, 2, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+};
+
+
+// AUTOINJECT
+Action_TranslatedText Mission_FailLabel(void) {
+    return (Action_TranslatedText)FailLabel;
+}
 
 // AUTOINJECT
 void Mission_SetFailLabel(Action_TranslatedText text) {
@@ -107,15 +271,16 @@ void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum) {
 
 }
 
-#define MissionFailConditionHit U8_AT(0x001df19b)
-#define MissionWinConditionHit U8_AT(0x001df19c)
-#define MissionFailTime U32_AT(0x001df5b4)
-#define MissionWinTime U32_AT(0x001df5b8)
+// Hard-coded switch channels (docs/switch-channels.md)
+#define MissionFailConditionHit switch_channels[0x63]
+#define MissionWinConditionHit switch_channels[0x64]
+#define MissionFailTime switch_channels_time[0x63]
+#define MissionWinTime switch_channels_time[0x64]
 
-#define FailedDueToAlarm U8_AT(0x001df199)
-#define FailedDueToKilledCivilian U8_AT(0x001df198)
-#define FailedDueToKikoEscape U8_AT(0x001df1b3)
-#define FailedDueToMissileLaunch U8_AT(0x001df1ff)
+#define FailedDueToAlarm switch_channels[0x61]
+#define FailedDueToKilledCivilian switch_channels[0x60]
+#define FailedDueToKikoEscape switch_channels[0x7b]
+#define FailedDueToMissileLaunch switch_channels[0xc7]
 
 // AUTOINJECT
 void Mission_MonitorObjectives(void) {
@@ -270,11 +435,15 @@ HASHCODE Mission_GetEndTo(HASHCODE level) {
     }
 }
 
-#define InternalState U32_AT(0x0017e540)
-#define FadeClr_147 U32_AT(0x0017e550)
-#define TimeOut_148 FLOAT_AT(0x0025fe28)
-#define PlayerHasFinishedDying U8_AT(0x001df19a)
-#define LevelToEndTo (*(HASHCODE*)0x0017e54c)
+// XBE_GLOBAL(0x0017e540, 0x4)
+static uint32_t InternalState = 0x5;
+// XBE_GLOBAL(0x0017e550, 0x4)
+static uint32_t FadeClr_147 = 0xff;
+// XBE_GLOBAL(0x0025fe28, 0x4)
+static float TimeOut_148;
+#define PlayerHasFinishedDying switch_channels[0x62]
+// XBE_GLOBAL(0x0017e54c, 0x4)
+static HASHCODE LevelToEndTo = HT_Level_Menu_Pre;
 
 // AUTOINJECT
 void Mission_Update(void) {

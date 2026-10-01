@@ -3,6 +3,9 @@
 
 #include "engine/Direct3D/d3dSeam.h" // xboxInitGraphics is reimplemented there now
 #include "sound/dsndSeam.h"            // xboxInitSound is reimplemented there now
+
+// Set to silence NF_WARN (actionhelpers.h) - for the shadow tests
+int NfWarnMuted;
 // AUTOGEN
 void xboxInitTextures(void);
 // AUTOGEN

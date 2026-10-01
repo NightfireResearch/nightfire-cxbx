@@ -90,6 +90,7 @@ struct FileOperationXbox {
 
 #define FileSystem (*(FileSystem_t*)0x002b0c28)
 
+// XBE_GLOBAL(0x002c4668, 0xa00)
 #define XboxFileOperations ((FileOperationXbox*)0x002c4668)
 
 

@@ -28,6 +28,7 @@ void Copter_Delete(obj_tag *obj);
 obj_tag * Copter_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 obj_tag* Copter_GetBody(COPTER* copter);
 
+// XBE_GLOBAL(0x001fe6a8, 0xc)
 #define CopterList (*(LLISTINFO_tag*)0x001fe6a8)
 
 #endif // COPTER_H_

@@ -5,6 +5,8 @@
 #include "Drone.h"
 
 // From PS2, we can see a table of function pointers with this name, and NDrone2_ProcessStateMachine just runs one according to the drone's current state
+// Each name is that of the function in its slot of the PS2 table (NDrone2_StateFuncs at 0x0029c120; the names are the
+// developers' own, from the mangled symbols in the ELF's .strtab). The enum's own names are in no build.
 typedef enum {
     DSTATE_Global = 0,
     DSTATE_WaitSwitch,
@@ -41,11 +43,11 @@ typedef enum {
     DSTATE_AllyLeadWait,
     DSTATE_AllyLeadMissionWait,
     DSTATE_AllyLeadBondCombat,
-    DSTATE_AllyFollowDone,
+    DSTATE_AllyLeadDone, // 35
     DSTATE_AllyFollowInit,
     DSTATE_AllyFollow,
     DSTATE_AllyFollowWait,
-    DSTATE_UNKNOWN1, // AllyFollowDone duplicated?
+    DSTATE_AllyFollowDone, // 39
     DSTATE_AllyGoToGoalPosition, // 40
     DSTATE_SniperIdle,
     DSTATE_SniperAim,
@@ -145,7 +147,7 @@ typedef enum {
     DSTATE_RecoverFromScaryObject,
     DSTATE_RunToAlarm,
     DSTATE_PressAlarm,
-    DSTATE_DronePressAlarm,
+    DSTATE_DonePressAlarm, // 139
     DSTATE_RunForCover, // 140
     DSTATE_ElevatorJumper,
     DSTATE_AbseilInit,
@@ -177,7 +179,7 @@ typedef enum {
     DSTATE_NinjaAttackLongRange,
     DSTATE_NinjaAttackMidRange,
     DSTATE_NinjaAttackShortRange, // 170
-    DSTATE_NinjaGetTooCloseToPlayer,
+    DSTATE_NinjaGetCloseToPlayer, // 171
     DSTATE_NinjaSword,
     DSTATE_NinjaSomersault,
     DSTATE_NinjaBackflip,
@@ -258,10 +260,157 @@ typedef enum {
     DSTATE_BotIdle,
 } DSTATE;
 
+// A drone mode: placement key 5 when below 0x24, indexing DroneModeSettings (NDrone2_DoModeSettingsOLD). Names are the
+// PS2 build's (its init_DMODE_* functions, in table order); 31, 32, 34 and 35 have no init function to name them.
+typedef enum {
+    DMODE_Normal, // 0
+    DMODE_Guard,
+    DMODE_Retreater,
+    DMODE_Sniper,
+    DMODE_Stealth,
+    DMODE_Attacker, // 5
+    DMODE_RunToPoint,
+    DMODE_Assassin,
+    DMODE_HostageKiller,
+    DMODE_Hostage,
+    DMODE_HostageTied, // 10
+    DMODE_JustStand4Demo,
+    DMODE_DeleteMe,
+    DMODE_Civilian,
+    DMODE_CivilianScared,
+    DMODE_MissionFailer, // 15
+    DMODE_Mayhew,
+    DMODE_Ninja,
+    DMODE_AlarmRaiser,
+    DMODE_SearchLight,
+    DMODE_Ambush, // 20
+    DMODE_Zoe,
+    DMODE_PartyGirl,
+    DMODE_CivilianGuard,
+    DMODE_Interogator,
+    DMODE_CivDoorGuard, // 25
+    DMODE_TruckDriver,
+    DMODE_CastleChatGuard1,
+    DMODE_CastleChatGuard2,
+    DMODE_SniperAlert,
+    DMODE_PartyGirlLooker, // 30
+    DMODE_Unnamed31,
+    DMODE_Unnamed32,
+    DMODE_Bot,
+    DMODE_Unnamed34,
+    DMODE_Unnamed35, // 35
+    DMODE_COUNT
+} DMODE;
+
+// A drone type: Drone_tag.dtype, indexing DroneTypeSettings (initial and second state, init and control function).
+// INVENTED NAMES, not canonical: inferred from the modes that map to them and the states they start in (the PS2
+// build has no names for them). Types 31-84 are one per bot state (196..249) and look unused.
+typedef enum {
+    DTYPE_Normal, // 0
+    DTYPE_Guard,
+    DTYPE_Sniper,
+    DTYPE_Assassin,
+    DTYPE_HostageKiller,
+    DTYPE_Hostage, // 5
+    DTYPE_Attacker,
+    DTYPE_RunToPoint,
+    DTYPE_JustStand,
+    DTYPE_Civilian,
+    DTYPE_CivilianScared, // 10
+    DTYPE_MissionFailer,
+    DTYPE_Mayhew,
+    DTYPE_Ninja,
+    DTYPE_AlarmRaiser,
+    DTYPE_SearchLight, // 15
+    DTYPE_Ambush,
+    DTYPE_Zoe,
+    DTYPE_PartyGirl,
+    DTYPE_CivilianGuard,
+    DTYPE_Interogator, // 20
+    DTYPE_DeleteMe,
+    DTYPE_CivDoorGuard,
+    DTYPE_TruckDriver,
+    DTYPE_CastleChatGuard,
+    DTYPE_SniperAlert, // 25
+    DTYPE_Unnamed26,
+    DTYPE_Abseil27,
+    DTYPE_Abseil28,
+    DTYPE_Astronaut,
+    DTYPE_Bot, // 30
+    DTYPE_COUNT = 85
+} DTYPE;
+
+// State machine messages (MsgObject.msgType). INVENTED NAMES, not canonical: from what sends and handles each
+// (docs/drone/architecture/README.md 3.2). Ids not listed are tested by states but their senders were not found.
+typedef enum {
+    DRONE_MSG_Null = 0,             // every state answers "handled"; nothing sends it
+    DRONE_MSG_Enter = 1,
+    DRONE_MSG_Exit = 2,
+    DRONE_MSG_Update = 3,           // once per frame, from NDrone2_ControlSTANDARD
+    DRONE_MSG_StateTimeout = 4,     // scoped to the state that set it
+    DRONE_MSG_ImpactPunch = 6,      // extraData = the hit record
+    DRONE_MSG_ImpactTaser = 7,
+    DRONE_MSG_ImpactBullet = 8,
+    DRONE_MSG_ImpactExplosive = 9,
+    DRONE_MSG_AttackNow = 0xa,
+    DRONE_MSG_ToHostages = 0xb,     // scope = DSTATE_Hostage
+    DRONE_MSG_TimerA = 0xc,
+    DRONE_MSG_TimerB = 0xd,
+    DRONE_MSG_Enable = 0xe,         // leave WaitSwitch
+    DRONE_MSG_OpponentSighted = 0xf,
+    DRONE_MSG_HeardNoise = 0x14,
+    DRONE_MSG_DroneAlert = 0x15,    // a dead body etc.; broadcast
+    DRONE_MSG_ImpactSmoke = 0x17,
+    DRONE_MSG_ImpactStunGrenade = 0x18,
+    DRONE_MSG_ImpactStunDart = 0x19,
+    DRONE_MSG_TalkToMissionObject = 0x1a,
+    DRONE_MSG_ForceState = 0x1d,    // extraData = the DSTATE
+    DRONE_MSG_GlobalAlarm = 0x1e,   // every 30 frames while switch 0x96 is on
+    DRONE_MSG_ConsideredAlerted = 0x1f,
+    DRONE_MSG_AnimEvent = 0x20,
+    DRONE_MSG_ExplosiveSeen = 0x21, // extraData = the object
+    DRONE_MSG_ObjectHit = 0x22,     // non-damaging (inferred)
+    DRONE_MSG_BotStateChanged = 0x2e, // to BotGlobal; scope = the new state
+    // 0x2f-0x45: bot messages (docs/drone/bots-and-navigation)
+} DRONE_MSG;
+
+
+// The NPC system's globals: one block that Drone_LevelReset clears whole (0x142c bytes). Only what our code uses
+// is named so far; Ghidra also has the AI network's cover nodes at +0x288, and FUN_00030e70 and
+// Drone_PostLoad_Init clear arrays at +0xb54 (0x800 bytes) and +0x1354 (0x28).
+typedef struct {
+    char _pad0[0x4];
+    Drone_tag *NDrone2List;     // +0x4 - every live drone, linked through Drone_tag.next
+    char _pad8[0x19c - 0x8];
+    uint32_t hostagesSaved;     // +0x19c
+    char _pad1a0[0x230 - 0x1a0];
+    ushort NumDrones;           // +0x230 - drones given a state machine this level; the last id handed out
+    char _pad232[0x142c - 0x232];
+} NPCGlobals_t;
+static_assert(sizeof(NPCGlobals_t) == 0x142c, "Bad size for NPCGlobals_t");
+static_assert(offsetof(NPCGlobals_t, NDrone2List) == 0x4, "Wrong offset for NDrone2List");
+static_assert(offsetof(NPCGlobals_t, hostagesSaved) == 0x19c, "Wrong offset for hostagesSaved");
+static_assert(offsetof(NPCGlobals_t, NumDrones) == 0x230, "Wrong offset for NumDrones");
+#define NPCGlobals (*(NPCGlobals_t *)0x001e5630)
+
+// The state machine's leaf layer (DroneSM.cpp; docs/drone/architecture/README.md 3.2-3.4).
+bool Drone_SM_InitObject(obj_tag *gameObj);
+bool NDrone2_ProcessStateMachine(DCVars_tag *dcv, uint state, MsgObject *msg);
+bool Drone_SM_SetState(StateMachineInfo_tag *sm, DSTATE next, int param);
+void Drone_SM_SendMsg(uint msgType, uint scope, uint sender, int receiver);
+void Drone_SM_SendMsgSelf(uint msgType, void *extraData, uint delay, uint scope, DCVars_tag *dcVars);
+void Drone_SM_BroadcastMsg(uint msgType, void *extraData, uint delay, uint sender);
+bool Drone_Message(obj_tag *gameObj, uint msgType, void *extraData, uint delay);
+void DroneAnim_SetEndAIState(Drone_tag *drone, short newState, uint msgType);
 
 obj_tag* NDrone2_CreateFromDIVars(DIVars_tag *diVars);
 
 bool NDrone2_DSTATE_HostageDead(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 void DroneFunc_HostageSaved(DCVars_tag *dcVars);
+void DroneFunc_CheckAlarmRaised(void);
+uint DroneFunc_RecoverTime(DCVars_tag *dcv, HITDATA_tag *hit);
+uint DroneFunc_ReactionTime(Drone_tag *drone);
+void NDrone2_SetIdleTimeOut(DCVars_tag *dcv, int minSeconds, uint randSeconds);
+void Drone_AlertStatusSet(char newStatus, DCVars_tag *dcv);
 
 #endif // NDRONE2_H

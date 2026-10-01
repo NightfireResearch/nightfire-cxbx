@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 project(nightfiRE LANGUAGES CXX)
 
@@ -14,6 +14,9 @@ endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Added for developers using IDEs that get confused (e.g. Zed) without this hint
+# file while using a linter (e.g. clangd).
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # On MinGW, "lib" will get prepended to libraries which will break out ability
 # to inject our DLL.
@@ -84,6 +87,16 @@ add_library(actioninject SHARED
   src/dllmain.cpp
   src/inject_action.cpp
   src/inject.h
+  src/common/xbeOriginal.cpp
+  src/common/xbeRelocate.cpp
+  src/action/devtools/MenuProbe.cpp
+  src/action/devtools/SecretsShadow.cpp
+  src/action/devtools/UnlocksShadow.cpp
+  src/action/devtools/UpgradeShadow.cpp
+  src/action/devtools/MemShadow.cpp
+  src/action/devtools/ScoreShadow.cpp
+  src/action/devtools/DroneTablesCheck.cpp
+  src/action/devtools/DroneShadow.cpp
   src/action/game.cpp
   src/action/main.cpp
   src/common/launchInfo.cpp
@@ -116,6 +129,8 @@ add_library(actioninject SHARED
   src/action/engine/Direct3D/backendHost.cpp
   src/common/gfx/d3d9Backend.cpp
   src/common/gfx/nv2aPixelShader.cpp
+  src/common/gfx/fxaa.cpp
+  src/common/gfx/textureReplace.cpp
   src/action/game/Autoaim.cpp
   src/action/game/weapon_stats.cpp
   src/action/math/math.cpp
@@ -131,17 +146,27 @@ add_library(actioninject SHARED
   src/action/ui/ui.cpp
   src/action/ui/ui_dossier.cpp
   src/action/ui/ui_mp.cpp
+  src/action/ui/ui_credits.cpp
+  src/action/ui/ui_secrets.cpp
+  src/action/ui/ui_nightfire.cpp
+  src/action/ui/ui_codenames.cpp
+  src/action/ui/ui_cheats.cpp
+  src/action/ui/MenuUnlocks.cpp
   src/action/ui/ui_score.cpp
   src/action/ui/Menu.cpp
   src/action/autofunc.cpp
   src/action/game/Upgrade.cpp
   src/action/game/view.cpp
+  src/action/game/drone/BOT.cpp
+  src/action/game/drone/Behaviour.cpp
   src/action/game/drone/Drone.cpp
+  src/action/game/drone/DroneSM.cpp
   src/action/game/drone/NDrone2.cpp
   src/action/game/drone/NDrone2_Hostage.cpp
   src/action/game/mp/multiplayer.cpp
   src/action/game/obj/Break.cpp
   src/action/game/obj/Door.cpp
+  src/action/game/obj/Hint.cpp
   src/action/game/obj/build.cpp
   src/action/game/obj/car.cpp
   src/action/game/obj/control.cpp
@@ -345,6 +370,8 @@ add_library(drivinginject SHARED
   src/common/xbeProfiler.cpp
   src/common/gfx/d3d9Backend.cpp
   src/common/gfx/nv2aPixelShader.cpp
+  src/common/gfx/fxaa.cpp
+  src/common/gfx/textureReplace.cpp
 )
 
 
@@ -357,6 +384,11 @@ target_compile_definitions(action_cxbx PRIVATE UNICODE _UNICODE IS_ACTION)
 target_compile_definitions(driving_cxbx PRIVATE UNICODE _UNICODE IS_DRIVING)
 target_compile_definitions(actioninject PRIVATE UNICODE _UNICODE)
 target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)
+# Experimental post-process anti-aliasing on the 3D scene, before the HUD and text, in both engines. Chosen by
+# AntiAliasing in settings.ini: 0 off, 1 FXAA (src/common/gfx/fxaa.cpp, the default), 2 SMAA (not implemented
+# yet). Remove these two lines and fxaa.cpp from both source lists to take it out.
+target_compile_definitions(actioninject PRIVATE NF_ANTIALIASING)
+target_compile_definitions(drivinginject PRIVATE NF_ANTIALIASING)
 
 
 # Run preprocess.py before building actioninject and drivinginject. It writes the injection tables

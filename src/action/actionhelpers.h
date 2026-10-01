@@ -47,12 +47,17 @@ typedef struct MatrixChainNode MatrixChainNode;
 typedef struct M_CONTROL M_CONTROL;
 typedef struct M_ITEM M_ITEM;
 typedef struct M_MANAGER M_MANAGER;
+typedef struct M_PAGE M_PAGE;
+typedef unsigned int BotNum;   // Ghidra's enum of the multiplayer characters: an mp_characters identifier
+typedef struct M_MESSAGE M_MESSAGE;
+typedef struct REWARDINFO_tag REWARDINFO_tag;
 typedef struct BOT_stats_t BOT_stats_t;
 typedef struct DLISTINFO_tag DLISTINFO_tag;
 typedef struct Drone_tag Drone_tag;
 typedef struct DIVars_tag DIVars_tag;
 typedef struct DCVars_tag DCVars_tag;
 typedef struct MsgObject MsgObject;
+typedef struct StateMachineInfo_tag StateMachineInfo_tag;
 typedef struct AnimObj AnimObj;
 typedef struct block_header_tag block_header_tag;
 typedef struct TARGET_PLACEMENT TARGET_PLACEMENT;
@@ -69,6 +74,23 @@ typedef void* ScriptPlayerCallback; // FIXME: Function pointer signature
 #include "../helpers.h"
 
 typedef short MallocFlags;
+
+// QuickSort's comparison selector (Ghidra's COMP_FUNC). Only Compare_CustomFunction uses QuickSort's last argument.
+typedef enum {
+    Compare_Sprites        = 0,
+    Compare_Unknown1       = 1, // Ghidra: Unknown1 - falls to QuickSort's default, CompLight
+    Compare_HitData        = 2,
+    Compare_DrawCels       = 3,
+    Compare_AlphaObj       = 4,
+    Compare_MsgTxt         = 5,
+    Compare_TargetObj      = 6,
+    Compare_MenuCtrl       = 7,
+    Compare_Strings        = 8,
+    Compare_BoxList        = 9,
+    Compare_CustomFunction = 10,
+    Compare_Force_U32      = 0x7FFFFFFF
+} COMP_FUNC;
+static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
 
 #include "main.h"
 #include "util/bin.h"
@@ -163,9 +185,13 @@ typedef short MallocFlags;
 #define glb_blokes (*(BLData*(*)[4])(0x002774b8))
 #define glb_players (*(obj_tag*(*)[4])(0x001f6654))
 
+// XBE_GLOBAL(0x0029d71c, 0xc)
 #define CONST_UP_VECTOR (*(_VECTOR*)0x0029d71c)
+// XBE_GLOBAL(0x0029d728, 0xc)
 #define CONST_ZERO_VECTOR (*((_VECTOR*)0x0029d728))
+// XBE_GLOBAL(0x001f6648, 0xc)
 #define GRAVITY_VECTOR (*((_VECTOR*)0x001f6648))
+// XBE_GLOBAL(0x0029d6d4, 0xc)
 #define MAYBE_CONST_FORWARD_VECTOR (*((_VECTOR*)0x0029d6d4))
 #define MAT_IDENTITY (*((_MATRIX*)0x0029d6e0))
 
@@ -186,6 +212,21 @@ typedef short MallocFlags;
             __debugbreak();                                                 \
             while(1);                                                       \
         }                                                                   \
+    } while (0)
+
+// The GameCube build's debug checks, which the Xbox build compiled out: a printf and carry on, exactly as there
+// (docs/gamecube-checks.md lists them all, and which of our functions have them). The message is the GameCube's
+// own. NfWarnMuted (main.cpp) silences them, for the shadow tests that feed bad input on purpose.
+extern int NfWarnMuted;
+#define NF_WARN(...)                                                        \
+    do {                                                                    \
+        if (!NfWarnMuted)                                                   \
+            printf(__VA_ARGS__);                                            \
+    } while (0)
+#define NF_WARN_IF(cond, ...)                                               \
+    do {                                                                    \
+        if (cond)                                                           \
+            NF_WARN(__VA_ARGS__);                                           \
     } while (0)
 
 

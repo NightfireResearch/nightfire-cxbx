@@ -26,6 +26,13 @@
 
 #include "backendHost.h"   // the engine this is compiled into provides these three; see the header
 #include "nv2aPixelShader.h"
+#include "textureReplace.h"
+#ifdef NF_ANTIALIASING
+#include "fxaa.h"   // experimental - see fxaa.cpp
+// settings.ini [Settings] AntiAliasing: which post-process anti-aliasing runs over the 3D scene.
+enum AntiAliasingMethod { AA_OFF = 0, AA_FXAA = 1, AA_SMAA = 2 };
+static int g_antiAliasing = AA_FXAA;
+#endif
 
 int g_gfxBackend = GFX_BACKEND_CXBX;
 
@@ -317,6 +324,9 @@ struct HostTexture {
     bool dirty;              // CPU wrote into the pixel data since the last upload
     bool renderTarget;       // lives in D3DPOOL_DEFAULT with D3DUSAGE_RENDERTARGET; never uploaded from CPU memory
     IDirect3DSurface9 *rtSurface; // level 0 of a render-target texture
+    uint64_t hash;           // of the source data, when textureReplace.cpp needs it (hashed says whether)
+    bool hashed;
+    bool replaced;           // the texture is a file from textures\ - never uploaded from the game's data
 };
 static HostTexture g_textures[2200];
 static int g_textureCount = 0;
@@ -362,6 +372,7 @@ static void ReleaseHostTexture(HostTexture *t) {
     if (t->texture != NULL) { t->texture->Release(); t->texture = NULL; }
     t->renderTarget = false;
     t->dirty = true;
+    t->hashed = t->replaced = false;
 }
 
 static void InvalidateHostBuffers(const void *obj);
@@ -498,6 +509,8 @@ void D3D9_SetPalette(uint32_t stage, const void *entries) {
 }
 
 // (Re)creates and/or uploads the host texture for an Xbox header. Returns NULL for formats not handled yet.
+static uint8_t *ReadLevel0Bgra(IDirect3DTexture9 *texture, UINT *widthOut, UINT *heightOut);
+
 static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
     const XboxPixelContainer *h = (const XboxPixelContainer*)headerPtr;
     HostTexture *t = FindOrAddHostTexture(headerPtr);
@@ -549,6 +562,38 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
         for (int i = 0; i < warnedCount; i++) if (warned[i] == xboxFormat) seen = true;
         if (!seen && warnedCount < 64) { warned[warnedCount++] = xboxFormat; D3D9Log("[d3d9] texture format 0x%02x not handled yet (%ux%u)\n", xboxFormat, width, height); }
         return NULL;
+    }
+
+    // Replacement (textureReplace.cpp): the source data's hash names the file. A replaced texture is checked
+    // again only when the game's data may have changed, and keeps the file while the hash still matches.
+    if (TextureReplace_Active()) {
+        size_t sourceBytes = linear ? (size_t)pitch * height
+                           : dxt ? (size_t)((width + 3) / 4) * ((height + 3) / 4) * (xboxFormat == XFMT_DXT1 ? 8 : 16)
+                           : (size_t)width * height * XboxFormatBitsPerPixel(xboxFormat) / 8;
+        uint64_t hash = TextureReplace_Hash(xboxFormat, width, height, XboxDataPointer(h->Data), sourceBytes);
+        bool sameData = t->hashed && t->hash == hash;
+        t->hash = hash;
+        t->hashed = true;
+        if (t->replaced && sameData && !rebuild) {
+            t->dirty = false;
+            t->uploadedFrame = g_frameCount;
+            return t->texture;
+        }
+        // Only new data can have a new file; a texture the game rewrites unchanged is not looked up each time.
+        IDirect3DTexture9 *replacement = (!sameData || rebuild) ? TextureReplace_Load(g_device, hash) : NULL;
+        if (replacement != NULL) {
+            if (t->texture != NULL) t->texture->Release();
+            t->texture = replacement;
+            t->format = h->Format; t->size = h->Size; t->data = h->Data;
+            t->replaced = true;
+            t->dirty = false;
+            t->uploadedFrame = g_frameCount;
+            return t->texture;
+        }
+        if (t->replaced) {   // the data no longer matches the file: back to the game's own
+            t->replaced = false;
+            rebuild = true;
+        }
     }
 
     if (rebuild) {
@@ -632,6 +677,12 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
     }
     t->dirty = false;
     t->uploadedFrame = g_frameCount;
+    if (rebuild && t->hashed && TextureReplace_Dumping()) {
+        UINT dumpWidth, dumpHeight;
+        uint8_t *bgra = ReadLevel0Bgra(t->texture, &dumpWidth, &dumpHeight);
+        TextureReplace_Dump(t->hash, dumpWidth, dumpHeight, bgra);
+        free(bgra);
+    }
     return t->texture;
 }
 
@@ -730,6 +781,38 @@ static void BeginSceneIfNeeded(void) {
     }
 }
 
+#ifdef NF_ANTIALIASING
+// The method settings.ini asked for. SMAA is a placeholder until it exists: asking for it draws nothing extra.
+static void ApplyAntiAliasing(void) {
+    switch (g_antiAliasing) {
+        case AA_FXAA: Fxaa_Apply(g_device, g_backBufferSurface, D3D9Log); break;
+        case AA_SMAA: break;   // not implemented yet
+        default: break;
+    }
+}
+
+// Anti-aliasing belongs on the 3D scene, not on the text and HUD drawn over it: run over a finished frame it
+// treats every glyph edge as an aliased edge and smears it. So it runs at the first screen-space draw (the immediate
+// quads and the immediate-mode path, which carry the text and the HUD) after some of the scene has reached the
+// backbuffer, and at Swap only for a frame that drew a scene and no overlay. A frame with no scene at all - a
+// menu, a movie - is left alone.
+static bool g_aaSceneDrawn = false, g_aaApplied = false;
+static void AntiAliasBeforeOverlay(void) {
+    if (g_antiAliasing == AA_OFF || g_aaApplied || !g_aaSceneDrawn || !g_targetIsBackBuffer || g_device == NULL)
+        return;
+    g_aaApplied = true;
+    bool wasInScene = g_inScene;
+    if (wasInScene) { g_device->EndScene(); g_inScene = false; }
+    ApplyAntiAliasing();
+    if (wasInScene) BeginSceneIfNeeded();
+}
+#define AA_NOTE_SCENE_DRAW() do { if (g_targetIsBackBuffer) g_aaSceneDrawn = true; } while (0)
+#define AA_BEFORE_OVERLAY() AntiAliasBeforeOverlay()
+#else
+#define AA_NOTE_SCENE_DRAW() ((void)0)
+#define AA_BEFORE_OVERLAY() ((void)0)
+#endif
+
 uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWindow, uint32_t behaviorFlags,
                            void *pPresentationParameters, void **ppDevice) {
     (void)adapter; (void)deviceType; (void)hFocusWindow; (void)behaviorFlags;
@@ -760,6 +843,26 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
             height = (uint32_t)renderHeight;
         }
     }
+
+    TextureReplace_Init(D3D9Log);
+
+#ifdef NF_ANTIALIASING
+    g_antiAliasing = (int)GetPrivateProfileIntA("Settings", "AntiAliasing", AA_FXAA, ".\\settings.ini");
+    switch (g_antiAliasing) {
+        case AA_OFF:
+            D3D9Log("[d3d9] anti-aliasing off (AntiAliasing=0 in settings.ini)\n");
+            break;
+        case AA_FXAA:
+            break;   // fxaa.cpp says so once it is running
+        case AA_SMAA:
+            D3D9Log("[d3d9] AntiAliasing=2 asks for SMAA, which is not implemented yet - no anti-aliasing\n");
+            break;
+        default:
+            D3D9Log("[d3d9] AntiAliasing=%d is not a method (0 off, 1 FXAA, 2 SMAA) - no anti-aliasing\n", g_antiAliasing);
+            g_antiAliasing = AA_OFF;
+            break;
+    }
+#endif
 
     if (g_xboxTextureStateTable == 0 || g_xboxRenderStateTable == 0)
         D3D9Log("[d3d9] the D3D8 state table addresses were never set - see g_xboxTextureStateTable\n");
@@ -870,6 +973,14 @@ uint32_t D3D9_RequestDump(void) {
     g_dumpRequested = true;
     return g_frameCount + 1;
 }
+static char g_screenshotName[128];   // D3D9_RequestScreenshot: the next frame's backbuffer, alone, under this name
+static volatile bool g_screenshotRequested = false;
+
+uint32_t D3D9_RequestScreenshot(const char *name) {
+    snprintf(g_screenshotName, sizeof(g_screenshotName), "%s", name);
+    g_screenshotRequested = true;
+    return g_frameCount + 1;
+}
 static uint32_t DumpBurst(void);
 
 // DumpBurst=N in settings.ini: from the first frame that draws a level's worth of indexed geometry, the next
@@ -909,7 +1020,7 @@ static bool TraceBurstFrame(uint32_t burstIndex) {
 static bool g_perDrawDump = false;    // this frame's draws each dump the backbuffer
 static uint32_t g_perDrawIndex = 0;
 
-static void DumpSurface(IDirect3DSurface9 *surface, const char *name);
+static void DumpSurface(IDirect3DSurface9 *surface, const char *name, bool alpha = true);
 static void DumpAfterDraw(void) {
     if (!g_perDrawDump || g_backBufferSurface == NULL)
         return;
@@ -967,22 +1078,15 @@ static void DecodeDxtBlock(const uint8_t *block, bool dxt1, bool dxt3, uint8_t r
     }
 }
 
-static void DumpBoundTexture(const void *header, IDirect3DTexture9 *texture) {
-    static const void *seen[64]; static int seenCount = 0; static uint32_t seenFrame = 0;
-    if (texture == NULL || header == NULL)
-        return;
-    if (seenFrame != g_dumpFrame) { seenFrame = g_dumpFrame; seenCount = 0; }
-    for (int i = 0; i < seenCount; i++) if (seen[i] == header) return;
-    if (seenCount >= (int)(sizeof(seen) / sizeof(seen[0]))) return;
-    seen[seenCount++] = header;
-    const XboxPixelContainer *h = (const XboxPixelContainer*)header;
+// Level 0 of a host texture as B, G, R, A bytes (malloc'd; the caller frees), whatever its format. NULL if it
+// cannot be read. Formats not decoded here come out magenta.
+static uint8_t *ReadLevel0Bgra(IDirect3DTexture9 *texture, UINT *widthOut, UINT *heightOut) {
     D3DSURFACE_DESC desc;
     D3DLOCKED_RECT lr;
-    if (FAILED(texture->GetLevelDesc(0, &desc)) || FAILED(texture->LockRect(0, &lr, NULL, D3DLOCK_READONLY)))
-        return;
-    size_t rowBytes = (size_t)desc.Width * 3;
-    uint8_t *colour = (uint8_t*)malloc(rowBytes * desc.Height), *alpha = (uint8_t*)malloc(rowBytes * desc.Height);
-    if (colour != NULL && alpha != NULL) {
+    if (texture == NULL || FAILED(texture->GetLevelDesc(0, &desc)) || FAILED(texture->LockRect(0, &lr, NULL, D3DLOCK_READONLY)))
+        return NULL;
+    uint8_t *out = (uint8_t*)malloc((size_t)desc.Width * desc.Height * 4);
+    if (out != NULL) {
         for (UINT y = 0; y < desc.Height; y++) {
             const uint8_t *row = (const uint8_t*)lr.pBits + y * lr.Pitch;
             for (UINT x = 0; x < desc.Width; x++) {
@@ -1006,15 +1110,43 @@ static void DumpBoundTexture(const void *header, IDirect3DTexture9 *texture) {
                     }
                     default: r = 255; g = 0; b = 255; break;   // not decoded here: magenta
                 }
-                colour[y * rowBytes + x * 3] = b; colour[y * rowBytes + x * 3 + 1] = g; colour[y * rowBytes + x * 3 + 2] = r;
-                memset(alpha + y * rowBytes + x * 3, a, 3);
+                uint8_t *px = out + ((size_t)y * desc.Width + x) * 4;
+                px[0] = b; px[1] = g; px[2] = r; px[3] = a;
             }
         }
+    }
+    texture->UnlockRect(0);
+    *widthOut = desc.Width;
+    *heightOut = desc.Height;
+    return out;
+}
+
+static void DumpBoundTexture(const void *header, IDirect3DTexture9 *texture) {
+    static const void *seen[64]; static int seenCount = 0; static uint32_t seenFrame = 0;
+    if (texture == NULL || header == NULL)
+        return;
+    if (seenFrame != g_dumpFrame) { seenFrame = g_dumpFrame; seenCount = 0; }
+    for (int i = 0; i < seenCount; i++) if (seen[i] == header) return;
+    if (seenCount >= (int)(sizeof(seen) / sizeof(seen[0]))) return;
+    seen[seenCount++] = header;
+    const XboxPixelContainer *h = (const XboxPixelContainer*)header;
+    UINT width, height;
+    uint8_t *bgra = ReadLevel0Bgra(texture, &width, &height);
+    if (bgra == NULL)
+        return;
+    size_t rowBytes = (size_t)width * 3;
+    uint8_t *colour = (uint8_t*)malloc(rowBytes * height), *alpha = (uint8_t*)malloc(rowBytes * height);
+    if (colour != NULL && alpha != NULL) {
+        for (size_t i = 0; i < (size_t)width * height; i++) {
+            size_t y = i / width, x = i % width;
+            memcpy(colour + y * rowBytes + x * 3, bgra + i * 4, 3);
+            memset(alpha + y * rowBytes + x * 3, bgra[i * 4 + 3], 3);
+        }
         char path[160];
-        snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x_%ux%u.bmp", g_dumpFrame, seenCount - 1, h->Format, h->Size, (unsigned)desc.Width, (unsigned)desc.Height);
-        WriteBmp24(path, desc.Width, desc.Height, colour, rowBytes);
-        snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x_%ux%u_alpha.bmp", g_dumpFrame, seenCount - 1, h->Format, h->Size, (unsigned)desc.Width, (unsigned)desc.Height);
-        WriteBmp24(path, desc.Width, desc.Height, alpha, rowBytes);
+        snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x_%ux%u.bmp", g_dumpFrame, seenCount - 1, h->Format, h->Size, (unsigned)width, (unsigned)height);
+        WriteBmp24(path, width, height, colour, rowBytes);
+        snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x_%ux%u_alpha.bmp", g_dumpFrame, seenCount - 1, h->Format, h->Size, (unsigned)width, (unsigned)height);
+        WriteBmp24(path, width, height, alpha, rowBytes);
         if (h->Size != 0) {   // linear: the game's memory as it stands, for trying other layouts on
             uint32_t pitch = ((h->Size >> 24) + 1) * 64, rows = ((h->Size >> 12) & 0xFFF) + 1;
             snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x.raw", g_dumpFrame, seenCount - 1, h->Format, h->Size);
@@ -1022,11 +1154,10 @@ static void DumpBoundTexture(const void *header, IDirect3DTexture9 *texture) {
             if (rf != NULL) { fwrite((const void*)(uintptr_t)h->Data, 1, (size_t)pitch * rows, rf); fclose(rf); }
         }
     }
-    free(colour); free(alpha);
-    texture->UnlockRect(0);
+    free(colour); free(alpha); free(bgra);
 }
 
-static void DumpSurface(IDirect3DSurface9 *surface, const char *name) {
+static void DumpSurface(IDirect3DSurface9 *surface, const char *name, bool alpha) {
     D3DSURFACE_DESC desc;
     if (surface == NULL || FAILED(surface->GetDesc(&desc)))
         return;
@@ -1037,22 +1168,24 @@ static void DumpSurface(IDirect3DSurface9 *surface, const char *name) {
         D3DLOCKED_RECT lr;
         if (SUCCEEDED(sys->LockRect(&lr, NULL, D3DLOCK_READONLY))) {
             size_t rowBytes = (size_t)desc.Width * 3;
-            uint8_t *colour = (uint8_t*)malloc(rowBytes * desc.Height), *alpha = (uint8_t*)malloc(rowBytes * desc.Height);
-            if (colour != NULL && alpha != NULL) {
+            uint8_t *colour = (uint8_t*)malloc(rowBytes * desc.Height), *alphaBytes = (uint8_t*)malloc(rowBytes * desc.Height);
+            if (colour != NULL && alphaBytes != NULL) {
                 for (UINT y = 0; y < desc.Height; y++) {
                     const uint8_t *row = (const uint8_t*)lr.pBits + y * lr.Pitch;
                     for (UINT x = 0; x < desc.Width; x++) {
                         memcpy(colour + y * rowBytes + x * 3, row + x * 4, 3); // B, G, R as stored
-                        memset(alpha + y * rowBytes + x * 3, row[x * 4 + 3], 3);
+                        memset(alphaBytes + y * rowBytes + x * 3, row[x * 4 + 3], 3);
                     }
                 }
                 char path[128];
                 snprintf(path, sizeof(path), "%s.bmp", name);
                 WriteBmp24(path, desc.Width, desc.Height, colour, rowBytes);
-                snprintf(path, sizeof(path), "%s_alpha.bmp", name);
-                WriteBmp24(path, desc.Width, desc.Height, alpha, rowBytes);
+                if (alpha) {
+                    snprintf(path, sizeof(path), "%s_alpha.bmp", name);
+                    WriteBmp24(path, desc.Width, desc.Height, alphaBytes, rowBytes);
+                }
             }
-            free(colour); free(alpha);
+            free(colour); free(alphaBytes);
             sys->UnlockRect();
         }
     }
@@ -1090,6 +1223,10 @@ void D3D9_Swap(uint32_t type) {
         g_device->EndScene();
         g_inScene = false;
     }
+    if (g_screenshotRequested) {
+        g_screenshotRequested = false;
+        DumpSurface(g_backBufferSurface, g_screenshotName, false);
+    }
     if (g_dumpFrame != 0) {
         char name[64];
         snprintf(name, sizeof(name), "d3d9_dump_frame_%u", g_dumpFrame);
@@ -1124,6 +1261,11 @@ void D3D9_Swap(uint32_t type) {
         g_dumpFrame = g_frameCount + 1; // the next frame gets dumped
         g_dumpRtCount = 0;
     }
+#ifdef NF_ANTIALIASING
+    if (g_antiAliasing != AA_OFF && g_aaSceneDrawn && !g_aaApplied)   // a scene and no overlay; after the dumps, as ever
+        ApplyAntiAliasing();
+    g_aaSceneDrawn = g_aaApplied = false;
+#endif
     HRESULT hr = g_device->Present(NULL, NULL, NULL, NULL);
     PaceFrame();
     if (hr == D3DERR_DEVICELOST) {
@@ -1368,6 +1510,28 @@ static void DumpPixelShader(int index, const TranslatedPixelShader *ps, const ch
     fflush(f);
 }
 
+// Compiles translated HLSL at the lowest ps_2_x profile that takes it. NULL, logged, on failure.
+static IDirect3DPixelShader9 *CompileTranslatedPixelShader(const char *hlsl, int index, const char *what) {
+    static const char *profiles[3] = { "ps_2_0", "ps_2_b", "ps_2_a" };
+    ID3DBlob *code = NULL, *errors = NULL;
+    HRESULT hr = E_FAIL;
+    for (int p = 0; p < 3 && FAILED(hr); p++) {
+        if (errors != NULL) { errors->Release(); errors = NULL; }
+        hr = D3DCompile(hlsl, strlen(hlsl), NULL, NULL, NULL, "main", profiles[p], D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &code, &errors);
+    }
+    if (FAILED(hr)) {
+        D3D9Log("[d3d9] pixel shader %d%s: HLSL compile failed (0x%08lx):\n%s\n", index, what, hr, errors ? (const char*)errors->GetBufferPointer() : "(no message)");
+        if (errors) errors->Release();
+        return NULL;
+    }
+    if (errors) errors->Release();
+    IDirect3DPixelShader9 *shader = NULL;
+    hr = g_device->CreatePixelShader((const DWORD*)code->GetBufferPointer(), &shader);
+    code->Release();
+    if (FAILED(hr)) { D3D9Log("[d3d9] pixel shader %d%s: CreatePixelShader failed 0x%08lx\n", index, what, hr); return NULL; }
+    return shader;
+}
+
 static void BuildPixelShader(TranslatedPixelShader *ps, int index) {
     ps->attempted = true;
     ps->failed = true;
@@ -1382,22 +1546,9 @@ static void BuildPixelShader(TranslatedPixelShader *ps, int index) {
     DumpPixelShader(index, ps, hlsl);
     if (ps->info.unsupportedMode != 0)
         D3D9Log("[d3d9] pixel shader %d: texture mode %u is not translated; sampling it as 2D\n", index, ps->info.unsupportedMode);
-    static const char *profiles[3] = { "ps_2_0", "ps_2_b", "ps_2_a" };
-    ID3DBlob *code = NULL, *errors = NULL;
-    HRESULT hr = E_FAIL;
-    for (int p = 0; p < 3 && FAILED(hr); p++) {
-        if (errors != NULL) { errors->Release(); errors = NULL; }
-        hr = D3DCompile(hlsl, strlen(hlsl), NULL, NULL, NULL, "main", profiles[p], D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &code, &errors);
-    }
-    if (FAILED(hr)) {
-        D3D9Log("[d3d9] pixel shader %d: HLSL compile failed (0x%08lx):\n%s\n", index, hr, errors ? (const char*)errors->GetBufferPointer() : "(no message)");
-        if (errors) errors->Release();
+    ps->shader = CompileTranslatedPixelShader(hlsl, index, "");
+    if (ps->shader == NULL)
         return;
-    }
-    if (errors) errors->Release();
-    hr = g_device->CreatePixelShader((const DWORD*)code->GetBufferPointer(), &ps->shader);
-    code->Release();
-    if (FAILED(hr)) { D3D9Log("[d3d9] pixel shader %d: CreatePixelShader failed 0x%08lx\n", index, hr); return; }
     D3D9Log("[d3d9] pixel shader %d translated: %u stages, texture modes %u/%u/%u/%u%s\n", index, ps->info.stageCount,
             ps->info.textureMode[0], ps->info.textureMode[1], ps->info.textureMode[2], ps->info.textureMode[3],
             ps->info.fogByHost ? ", fog by the host" : "");
@@ -2366,6 +2517,9 @@ static void CaptureBackBufferInto(void *header) {
 
 static void ReleaseVisibilityQueries(void);
 static void ReleaseDefaultPoolResources(void) {
+#ifdef NF_ANTIALIASING
+    Fxaa_ReleaseDefaultPool();
+#endif
     if (g_readBackScaled != NULL) { g_readBackScaled->Release(); g_readBackScaled = NULL; }
     ReleaseIndexRing();
     ReleaseVertexRing();
@@ -2740,6 +2894,7 @@ void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, cons
     TraceDraw("indexed", primitiveType, vertexCount, minIndex, (uint32_t)maxIndex + 1);
     if (!PrepareShaderDraw(true, minIndex, (uint32_t)maxIndex + 1, &baseVertex))
         return;
+    AA_NOTE_SCENE_DRAW();
     g_device->SetIndices(g_indexRing);
     g_device->DrawIndexedPrimitive(type, baseVertex, minIndex, maxIndex - minIndex + 1, start, primCount);
     DumpAfterDraw();
@@ -2760,6 +2915,7 @@ void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t ve
     TraceDraw("direct", primitiveType, vertexCount, startVertex, startVertex + vertexCount);
     if (!PrepareShaderDraw(true, startVertex, startVertex + vertexCount, &baseVertex))
         return;
+    AA_NOTE_SCENE_DRAW();
     if (primitiveType == 8) {
         uint32_t start = 0;
         uint16_t *dst = startVertex + vertexCount <= 0x10000 ? LockIndexRing(primCount * 3, &start) : NULL;
@@ -2814,6 +2970,7 @@ static void DrawImmediateQuads(uint32_t vertexCount, const uint8_t *data, uint32
         g_quadIndicesBuilt = true;
     }
     if (vertexCount > 64 * 4) vertexCount = 64 * 4;
+    AA_BEFORE_OVERLAY();
     BeginSceneIfNeeded();
     ApplyTextureStageState(false); // first: it also works out the linear-texture coordinate scale used below
     const float *k = g_vertexConstants[103];
@@ -2864,6 +3021,21 @@ static bool g_immediateOpen = false;
 static uint32_t g_immediateColour = 0xFFFFFFFFu;
 static float g_immediateU = 0.0f, g_immediateV = 0.0f;
 
+bool D3D9_DumpingTextures(void) {
+    return TextureReplace_Dumping();
+}
+
+bool D3D9_DescribeFont(const void *xboxTexture, const D3D9FontGlyph *glyphs, int count) {
+    HostTexture *t = xboxTexture != NULL ? FindHostTexture(xboxTexture) : NULL;
+    if (t == NULL || !t->hashed)
+        return false;   // not uploaded yet: asked again on a later glyph
+    const XboxPixelContainer *h = (const XboxPixelContainer*)xboxTexture;
+    uint32_t width = h->Size != 0 ? (h->Size & 0xFFF) + 1 : 1u << ((h->Format >> 20) & 0xF);
+    uint32_t height = h->Size != 0 ? ((h->Size >> 12) & 0xFFF) + 1 : 1u << ((h->Format >> 24) & 0xF);
+    TextureReplace_DumpFont(t->hash, width, height, glyphs, count);
+    return true;
+}
+
 void D3D9_ImmediateBegin(uint32_t primitiveType) {
     g_immediatePrimitive = primitiveType;
     g_immediateCount = 0;
@@ -2903,6 +3075,7 @@ void D3D9_ImmediateEnd(void) {
     if (g_device == NULL || g_immediateCount == 0)
         return;
 
+    AA_BEFORE_OVERLAY();
     BeginSceneIfNeeded();
     TraceDraw("immediate", g_immediatePrimitive, g_immediateCount, 0, 0);
     ApplyTextureStageState(false);   // also fills in the coordinate scales linear textures need
@@ -2944,15 +3117,12 @@ void D3D9_ImmediateEnd(void) {
         }
         if (out >= 3)
             g_device->DrawPrimitiveUP(D3DPT_TRIANGLELIST, out / 3, triangles, sizeof(ImmediateVertex));
-        g_immediateCount = 0;
-        DumpAfterDraw();
-        return;
+    } else {
+        D3DPRIMITIVETYPE type;
+        UINT primCount;
+        if (XboxPrimitiveToD3D(g_immediatePrimitive, g_immediateCount, &type, &primCount))
+            g_device->DrawPrimitiveUP(type, primCount, g_immediateVertices, sizeof(ImmediateVertex));
     }
-
-    D3DPRIMITIVETYPE type;
-    UINT primCount;
-    if (XboxPrimitiveToD3D(g_immediatePrimitive, g_immediateCount, &type, &primCount))
-        g_device->DrawPrimitiveUP(type, primCount, g_immediateVertices, sizeof(ImmediateVertex));
     g_immediateCount = 0;
     DumpAfterDraw();
 }
@@ -2972,6 +3142,7 @@ void D3D9_DrawVerticesUP(uint32_t primitiveType, uint32_t vertexCount, void *pVe
     int baseVertex = 0;
     if (!PrepareShaderDraw(false, 0, 0, &baseVertex))
         return;
+    AA_NOTE_SCENE_DRAW();
     if (primitiveType == 8) {   // any other quad list: split into triangle pairs, as the stream paths do
         static uint16_t indices[0x4000 * 6 / 4];
         if (vertexCount > 0x4000)

@@ -100,8 +100,8 @@ void Quat_QuatTransToMat(quaternion_tag *quatIn, float *vecIn, _MATRIX *mOut) {
   mOut->m[14] = vecIn[2];
 }
 
-// AUTOINJECT
-void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
+// The body of Quat_QuatToMat - see the wrapper below for why the two are split.
+void _Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
   float fVar1;
   float fVar2;
   float fVar3;
@@ -133,6 +133,28 @@ void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
   param_2->m[8] = fVar3 + fVar7;
   param_2->m[9] = fVar8 - fVar1;
   param_2->m[10] = 1.0f - (fVar4 + fVar2);
+}
+
+// The original (0x000d5800) only ever touches EAX and the x87 stack, and the game's own callers were compiled
+// knowing that: KeyFrame_Interp and Spline_Interp keep the output matrix in ECX across the call and then write
+// the translation through it (mov [ecx+0x30], ...). Our compiled body is entitled to clobber ECX and EDX, and
+// clang leaves the quaternion pointer in ECX - so the translation went 0x30 bytes past a stack local instead,
+// onto Spline_Interp's own return address, and loading a level with a swinging door (Door_Create ->
+// Door_SetupSwing -> Spline_Interp) jumped to a float. ECX and EDX are saved here so any caller keeps what it
+// had.
+// AUTOLTCG
+void __declspec(naked) Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
+  _asm {
+    push ecx
+    push edx
+    push dword ptr [esp + 16]   // param_2
+    push dword ptr [esp + 16]   // param_1
+    call _Quat_QuatToMat
+    add esp, 8
+    pop edx
+    pop ecx
+    ret
+  }
 }
 
 // Convert a rotation matrix to a quaternion (Shepperd's method)

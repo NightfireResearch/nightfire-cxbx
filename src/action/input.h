@@ -15,7 +15,7 @@ typedef struct {
     byte inverted; /* Inverts fChannel[4,5] */
     undefined field1_0x1;
     undefined field2_0x2;
-    undefined field3_0x3;
+    undefined manualAimToggle; // 0x3 - the "aim: toggle/hold" option; non-zero = toggle
     undefined field4_0x4;
     undefined field5_0x5;
     undefined field6_0x6;
@@ -162,5 +162,8 @@ typedef struct {
 static_assert(sizeof(PlayerInput) == 0x158, "Bad size for PlayerInput");
 
 // PlayerInputs is an array of 4 PlayerInput structs, located at 001fe6d0
+// XBE_GLOBAL(0x001fe6d0, 0x560)
 #define PlayerInputs ((PlayerInput*)0x001fe6d0)
+
+void Input_ProcessEvents(void);
 

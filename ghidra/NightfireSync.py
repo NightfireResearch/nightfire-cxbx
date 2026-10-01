@@ -94,6 +94,45 @@ def export_structs(side):
         json.dump(structs, outfile, indent=1)
     print(f"Exported {len(structs)} structures")
 
+def export_xrefs(side):
+    # The references Ghidra knows that tools/global_coverage.py needs: every access to data (which instruction
+    # or data item refers to which address, and the function the instruction is in), every function whose
+    # address is taken (a pointer in a table, a callback pushed as an argument), and every call - or tail-call
+    # jump from another function - into a function's entry. From those it tells whether every function that
+    # touches a global is reimplemented, and which of the rest can still run. Destinations inside a function
+    # other than its entry (jump tables, switch cases) are left out. One line per reference, sorted, so a
+    # re-sync diffs cleanly: [to, from, function entry or "", kind] - kind R(ead), W(rite), D(ata: a pointer
+    # stored in data, or an address taken), C(all) or ? (anything else).
+    rm = currentProgram.getReferenceManager()
+    refs = []
+    dests = rm.getReferenceDestinationIterator(currentProgram.getMemory(), True)
+    while dests.hasNext():
+        to = dests.next()
+        if not to.isMemoryAddress():
+            continue
+        target = getFunctionContaining(to)
+        if target is not None and target.getEntryPoint() != to:
+            continue
+        for r in rm.getReferencesTo(to):
+            t = r.getReferenceType()
+            frm = r.getFromAddress()
+            if not frm.isMemoryAddress():
+                continue
+            f = getFunctionContaining(frm)
+            if t.isFlow():
+                # calls, and tail-call jumps from another function, into a function's entry: the call graph
+                if target is None or not (t.isCall() or t.isJump()) or f == target:
+                    continue
+                kind = "C"
+            else:
+                kind = "W" if t.isWrite() else "R" if t.isRead() else "D" if t.isData() else "?"
+            refs.append(("%08x" % to.getOffset(), "%08x" % frm.getOffset(),
+                         "%08x" % f.getEntryPoint().getOffset() if f else "", kind))
+    refs.sort()
+    with open(os.path.join(os.path.dirname(__file__), "../tools/xrefs_%s.json" % side), "w") as outfile:
+        outfile.write("[\n" + ",\n".join('["%s","%s","%s","%s"]' % r for r in refs) + "\n]\n")
+    print(f"Exported {len(refs)} references")
+
 print("Current file: " + __file__)
 structs_loc = os.path.join(os.path.dirname(__file__), "../tools/structs")
 json_loc = os.path.join(os.path.dirname(__file__), "../tools/functions")
@@ -121,3 +160,5 @@ funcs = fm.getFunctions(True)
 export_json(side)
 
 export_structs(side)
+
+export_xrefs(side)

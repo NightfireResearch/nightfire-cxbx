@@ -10,7 +10,7 @@
 #include "../../game.h"
 
 // Switches are kept in their own list, initialised (oddly) from Sensor_Init alongside CameraList - see Sensor.cpp
-#define SwitchList (*(LLISTINFO_tag*)0x0029aab0)
+extern LLISTINFO_tag SwitchList; // defined in Sensor.cpp
 
 // Stride confirmed via Switch_Create's raw disassembly; only the first byte (switchChannel) is understood so far.
 // Note this is addressed directly (index*8 + base), NOT via a +1 like Ghidra's decompiler shows for the one place
@@ -20,6 +20,7 @@ typedef struct {
     uchar unknown[7];
 } SSysItem;
 static_assert(sizeof(SSysItem) == 8, "Bad size for SSysItem");
+// XBE_GLOBAL(0x0029aad0, 0x28)
 #define SSysItems ((SSysItem*)0x0029aad0)
 
 #pragma pack(push, 1)
@@ -87,6 +88,8 @@ obj_tag* Switch_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
     switchData->scriptPlayer = scriptPlayer;
 
     if (scriptPlayer == NULL) {
+        NF_WARN("Unable to create switch at %f,%f,%f - check switch hashcodes\n", // GC check (0x800fb64c)
+                pos->x, pos->y, pos->z);
         // Matches the original exactly - it returns the object it just told control_delete_object to clean up
         control_delete_object(switchObj);
         return switchObj;

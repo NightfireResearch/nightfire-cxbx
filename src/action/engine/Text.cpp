@@ -14,14 +14,23 @@ void Text_Update(void);
 // AUTOGEN
 void __stdcall Text_FlushAllSubtitles(void);
 
-#define Bank (*(const char***)0x00215588)
-#define BankData (*(void**)0x0021558c)
-#define NumEntries U32_AT(0x00215590)
-#define CurrentLanguage U32_AT(0x00215594)
-#define NumFixups U32_AT(0x00215580)
-#define FixupTable (*(uint**)0x001fec78)
-#define StringHeapLock (*(char**)0x001fec80)
-#define StringHeapCnt U32_AT(0x00215584)
+// XBE_GLOBAL(0x00215588, 0x4)
+static const char** Bank;
+// XBE_GLOBAL(0x0021558c, 0x4)
+static void* BankData;
+// XBE_GLOBAL(0x00215590, 0x4)
+static uint32_t NumEntries;
+// XBE_GLOBAL(0x00215594, 0x4)
+static uint32_t CurrentLanguage;
+// XBE_GLOBAL(0x00215580, 0x4)
+static uint32_t NumFixups;
+// XBE_GLOBAL(0x001fec78, 0x4)
+static uint* FixupTable;
+// A lock count per heap string (Txt_LockString, Txt_UnlockString); 0 = free.
+// XBE_GLOBAL(0x001fec80, 0x100)
+static uint8_t StringHeapLock[256];
+// XBE_GLOBAL(0x00215584, 0x4)
+static uint32_t StringHeapCnt;
 
 
 // AUTOINJECT
@@ -31,6 +40,7 @@ void Txt_SetLanguage(tLANGUAGE languageId) {
 }
 
 // Order must match the order in the enum
+// XBE_GLOBAL(0x0017c1f4, 0x24)
 const char* LanguageFileNames[] = {
     "UKTxt.dat",
     "FRTxt.dat",
@@ -106,8 +116,46 @@ uint Txt_GetIndex(Action_TranslatedText tt) {
     return (int)FixupTable[(tt >> 24)] + (tt & 0xFFFFFF);
 }
 
-// AUTOGEN
-char* Txt_GetStringFromHeap(uchar index);
+// AUTOINJECT
+uint GetLanguage(void) {
+    return CurrentLanguage;
+}
+
+// 256 strings of 0x168 bytes that Txt_BindLabel and friends format into, each with a lock count
+// (StringHeapLock) - 0 means free. Handed out round-robin from StringHeapCnt; when none is free, everyone
+// shares one overflow buffer.
+#define StringHeap (*(char(*)[256][0x168])0x001fed80)
+// XBE_GLOBAL(0x00215598, 0x168)
+static char StringHeapOverflow[0x168];
+
+// Finds the next free heap string at or after StringHeapCnt, wrapping round, locks it with lockCount and
+// returns it emptied. The first scan compares only StringHeapCnt's low 16 bits against 256, the second the whole
+// value, as the original does.
+// AUTOINJECT
+char* Txt_GetStringFromHeap(uchar lockCount) {
+    uint start = StringHeapCnt;
+    uint found = 0x100;
+    for (ushort i = (ushort)start; i < 0x100; i++) {
+        if (StringHeapLock[i] == 0) {
+            found = i;
+            break;
+        }
+    }
+    if (found == 0x100) {
+        for (ushort i = 0; i < start; i++) {
+            if (StringHeapLock[i] == 0) {
+                found = i;
+                break;
+            }
+        }
+        if (found == 0x100)
+            return StringHeapOverflow;
+    }
+    StringHeapLock[found] = lockCount;
+    StringHeapCnt = found + 1;
+    StringHeap[found][0] = '\0';
+    return StringHeap[found];
+}
 
 // AUTOINJECT
 const char* Txt_BindLabel(Action_TranslatedText a, unsigned int b) {
@@ -133,7 +181,7 @@ const char* Txt_BindLabel(Action_TranslatedText a, unsigned int b) {
 
 // AUTOINJECT
 void Txt_LanguageInit(void) {
-    memset(&StringHeapLock,0,0x100);
+    memset(&StringHeapLock, 0, sizeof(StringHeapLock));
     StringHeapCnt = 0;
     BankData = NULL;
     Bank = NULL;
@@ -143,8 +191,31 @@ void Txt_LanguageInit(void) {
 // AUTOGEN
 void Text_AddMsg(char param_1,char param_2,int param_3,const char *str,int param_5,short maybeDurationFrames);
 
-// AUTOGEN
-void Txt_UnlockString(char* text);
+// Which heap string a pointer falls in: the unsigned distance from the start of the heap in whole strings, so any
+// pointer into a string - not only its start - names that string, and one below the heap wraps round to a huge
+// index. Anything that is not in the heap (the overflow buffer, a text bank string, a literal) comes out 256 or
+// more. The original divides by 0x168 with a multiply by 0x6c16c16d; this is the same unsigned division.
+static uint Txt_HeapIndex(const char* text) {
+    return ((uint32_t)(uintptr_t)text - (uint32_t)(uintptr_t)&StringHeap[0][0]) / sizeof(StringHeap[0]);
+}
 
-// AUTOGEN
-void Txt_LockString(char* text);
+// Holds a heap string against reuse by Txt_GetStringFromHeap. The count is a byte and is not checked: the 256th
+// lock wraps it to 0, freeing the string, as in the original.
+// AUTOINJECT
+void Txt_LockString(char* text) {
+    if (text == NULL)
+        return;
+    uint i = Txt_HeapIndex(text);
+    if (i < 0x100)
+        StringHeapLock[i]++;
+}
+
+// Drops one lock; never takes a free string below 0.
+// AUTOINJECT
+void Txt_UnlockString(char* text) {
+    if (text == NULL)
+        return;
+    uint i = Txt_HeapIndex(text);
+    if (i < 0x100 && StringHeapLock[i] != 0)
+        StringHeapLock[i]--;
+}

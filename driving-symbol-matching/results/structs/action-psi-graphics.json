@@ -1,0 +1,53 @@
+{
+ "program": "default.xbe",
+ "types": [
+  {
+   "name": "TextureInfo",
+   "size": 88,
+   "comment": "A texture's header in the map file. The frames' texture slots follow from baseIdx, one per frame, then the pixel data. src/action/engine/psiGraphics.h",
+   "fields": [
+    {"offset": 0, "type": "uint", "name": "magic", "comment": "0x0654584b, or 0x4454xxxx: the same frames as Tex[xxxx + 1]"},
+    {"offset": 8, "type": "uint", "name": "frameBytes"},
+    {"offset": 12, "type": "uint", "name": "width"},
+    {"offset": 16, "type": "uint", "name": "height"},
+    {"offset": 20, "type": "uint", "name": "bitsPerPixel"},
+    {"offset": 24, "type": "uint", "name": "levels"},
+    {"offset": 28, "type": "int", "name": "registerParam6"},
+    {"offset": 32, "type": "uint", "name": "formatType"},
+    {"offset": 36, "type": "int", "name": "numFrames"},
+    {"offset": 40, "type": "int", "name": "animSpeed", "comment": "a rate in the file; psiCreateMapTextures makes it 60 / rate"},
+    {"offset": 84, "type": "int", "name": "baseIdx", "comment": "the first frame's texture slot"}
+   ]
+  },
+  {
+   "name": "texDataEntry",
+   "size": 8,
+   "fields": [
+    {"offset": 0, "type": "int", "name": "texIdx", "comment": "psiCreateMapTextures: the Tex[] index, 0 if unusable"},
+    {"offset": 4, "type": "short", "name": "width"},
+    {"offset": 6, "type": "short", "name": "height"}
+   ]
+  },
+  {
+   "name": "ModelData",
+   "size": 100,
+   "comment": "An entity's geometry in the map file; vertices, indices, 12-byte primitive records, batch vertices follow at 0x60. src/action/engine/psiGraphics.h",
+   "fields": [
+    {"offset": 0, "type": "int", "name": "magicTag", "comment": "0x0645584b"},
+    {"offset": 8, "type": "int", "name": "vtxCnt"},
+    {"offset": 12, "type": "int", "name": "idxCnt"},
+    {"offset": 16, "type": "int", "name": "primitiveCnt"},
+    {"offset": 20, "type": "int", "name": "dataSize14"},
+    {"offset": 24, "type": "int", "name": "dataSize18"},
+    {"offset": 28, "type": "int", "name": "maybeSkinned"},
+    {"offset": 36, "type": "int", "name": "batchCnt"},
+    {"offset": 40, "type": "int", "name": "batchVtxCnt"},
+    {"offset": 76, "type": "int", "name": "vtxBuffers"},
+    {"offset": 80, "type": "int", "name": "idxBuffer"},
+    {"offset": 84, "type": "int", "name": "primitives", "comment": "address of the primitive records"},
+    {"offset": 88, "type": "int", "name": "afterPrimitives"},
+    {"offset": 92, "type": "int", "name": "batchVtxBuffers"}
+   ]
+  }
+ ]
+}

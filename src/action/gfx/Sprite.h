@@ -69,11 +69,14 @@ static_assert(offsetof(SpriteInfo, textureHashcode) == 0x24, "Offset of textureH
 
 
 void Sprite_SetText(sprite *param_1,char *param_2);
+void Sprite_SetFmt(sprite *spr, char *fmt); // AUTOGEN'd in Sprite.cpp: remeasures spr->text in its font
 sprite* Sprite_Create(void);
 sprite* Sprite_Create2(SpriteInfo *param_1);
 void Sprite_Link2Viewer(sprite *spr,ushort playerNum);
 sprite* Sprite_CreateAndLink2Viewer(char viewer);
 void Sprite_Delete(sprite* sprite);
 void Sprite_SetTextNFmt(sprite *param_1,char *param_2,char *param_3);
+void Sprite_InitLists(void);
+sprite** Sprite_BuildList(ushort viewer, undefined4 *startOut, uint *lastForegroundOut, uint *countOut);
 
 #endif // SPRITE_H

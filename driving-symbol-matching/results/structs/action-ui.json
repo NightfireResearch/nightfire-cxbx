@@ -1,0 +1,1127 @@
+{
+ "program": "default.xbe",
+ "comment": "Menu system (docs/ui): message and control type enums, control/page/manager layouts, prototype fixes",
+ "enums": [
+  {
+   "name": "MessageType",
+   "size": 4,
+   "comment": "Menu messages (docs/ui/messages.md); names invented",
+   "values": [
+    {
+     "name": "MessageType_TextEntryDone",
+     "value": 0,
+     "comment": "sent to the textbox's parent page, which drops it (not in Page_SendMessage's switch) - effectively dead. Args: a1 = textbox. Returns: -. Sent by: TextBox_Update ('+' key, or focus leaves while editing); Text_SendMessage(0x53)."
+    },
+    {
+     "name": "MessageType_ListAddColumn",
+     "value": 14,
+     "comment": "List. Args: a1 = width in % of the list, a2 = alignment (as 0x59). Returns: 1, or 0 if 5 columns exist. Sent by: C_GCPAUSE, P_NFSTATS, Menu_DisplayControllerStyleList."
+    },
+    {
+     "name": "MessageType_ListAddRow",
+     "value": 15,
+     "comment": "List. Args: a1 = row (5 cells of 0x8c: text or sprite), a2 = item value. Returns: 1. Sent by: Menu_AddRow, Menu_AddRowPercentage."
+    },
+    {
+     "name": "MessageType_AddItem",
+     "value": 16,
+     "comment": "List, Radio (Combo not). Args: a1 = char* text, a2 = item value (returned by 0x35). Returns: List: new item index; Radio: 1. Sent by: ~330 sites: page/control handlers, Menu_AddItemsToControl, List(0x19 word wrap)."
+    },
+    {
+     "name": "MessageType_AddItemLabel",
+     "value": 17,
+     "comment": "List, Radio. Args: a1 = text label id (Txt_BindLabel), a2 = item value. Returns: as 0x10. Sent by: menu data (setup records)."
+    },
+    {
+     "name": "MessageType_ScrollAddToMax",
+     "value": 18,
+     "comment": "Scroll. Args: a1 = delta added to max. Returns: 0. Sent by: List (item added/removed)."
+    },
+    {
+     "name": "MessageType_ListRemoveItem",
+     "value": 19,
+     "comment": "List. Args: a1 = index (probable). Returns: 1 if removed. Sent by: none found."
+    },
+    {
+     "name": "MessageType_ScriptExitLoop",
+     "value": 20,
+     "comment": "Button, Checkbox, Combo, Label, List, Radio, Scroll, Spin, Text, Window. Args: -. Returns: Script_ExitLoop result. Sent by: none in code (menu scripts)."
+    },
+    {
+     "name": "MessageType_ScrollHideBar",
+     "value": 21,
+     "comment": "Scroll. Args: - (sets +0x13c bit0: bar not drawn, input still works). Returns: 1. Sent by: none found."
+    },
+    {
+     "name": "MessageType_ScriptPlay",
+     "value": 22,
+     "comment": "Button, Checkbox, Label, List, Memo, Radio, Scroll, Spin, Text, Window. Args: a1 = script hashcode, a2 = flag. Returns: Script_Play_UISTUFF result. Sent by: none in code (menu scripts)."
+    },
+    {
+     "name": "MessageType_ClearItems",
+     "value": 23,
+     "comment": "List, Radio. Args: -. Returns: List 1, Radio 0. Sent by: handlers (P_CNOPTIONS, P_MPBOTSETUP...), Menu_AddItemsToControl, Menu_CreateOptionBox."
+    },
+    {
+     "name": "MessageType_SetText",
+     "value": 24,
+     "comment": "Label; Button/Checkbox/Radio/Spin/Text pass it to their label; Memo. Args: a1 = char* (or 0); if a1 == 0, a2 = text label id; both 0 = blank. Returns: 1. Sent by: ~315 sites; menu data."
+    },
+    {
+     "name": "MessageType_ListSetCellText",
+     "value": 25,
+     "comment": "List. Args: a1 = row<<16 | column, a2 = char* (word-wraps into extra rows). Returns: 1. Sent by: C_GCPAUSE, P_NFSTATS, List (wrap)."
+    },
+    {
+     "name": "MessageType_SetColour",
+     "value": 26,
+     "comment": "Label (+ owners). Args: a1 = colour; a2 = 0: fixed colour (auto highlight off, normal = highlight = a1); a2 != 0: tint only. Returns: 1. Sent by: Menu_UpdateWheel, handlers, Process_RunFrame (fade 0xe1)."
+    },
+    {
+     "name": "MessageType_SetHighlightColour",
+     "value": 27,
+     "comment": "Label, List, Memo. Args: a1 = colour used when focused / cursor over. Returns: 1. Sent by: menu data (every control)."
+    },
+    {
+     "name": "MessageType_SetNormalColour",
+     "value": 28,
+     "comment": "Label, List, Memo. Args: a1 = colour when not focused (faded to with process 0xe1). Returns: 1. Sent by: menu data (every control)."
+    },
+    {
+     "name": "MessageType_SelectIndex",
+     "value": 29,
+     "comment": "List, Radio. Args: a1 = index. Returns: List: result of the 0x49 sent to the parent; Radio: same. Sent by: Menu_SelectItemInControl, Menu_PutCodenamesIntoControl, C_GCPAUSE, P_PAUSE (menu data has it but MenuManager_Create skips it)."
+    },
+    {
+     "name": "MessageType_SelectItemByValue",
+     "value": 30,
+     "comment": "List, Radio. Args: a1 = item value, a2 = 1: silent (no 0x49 to the parent). Returns: 1 / result of 0x49. Sent by: ~50 sites (option pages)."
+    },
+    {
+     "name": "MessageType_ListSetCurrentItemValue",
+     "value": 31,
+     "comment": "List. Args: a1 = value. Returns: 1. Sent by: none found."
+    },
+    {
+     "name": "MessageType_SetId",
+     "value": 32,
+     "comment": "Button, Scroll: control +0x20; Radio: value of the last item. Args: a1 = id / value. Returns: 1. Sent by: C_SBCNSELECT, C_SBNFCN (to C_SBCNOPTIONS)."
+    },
+    {
+     "name": "MessageType_SetScript",
+     "value": 33,
+     "comment": "all except Page, Manager, Combo. Args: a1 = slot 0..6, a2 = script hashcode (slot table at +0x7c). Returns: 1. Sent by: menu data."
+    },
+    {
+     "name": "MessageType_SetCursor",
+     "value": 34,
+     "comment": "Manager. Args: a1 = control hashcode, or a1 = 0 and a2 = M_CONTROL*. Returns: 1 if found. Sent by: menu scripts (target manager), MenuManager_Create (0x10000002), Manager 0x5f, P_PAUSE, P_LANGUAGE...."
+    },
+    {
+     "name": "MessageType_SetFont",
+     "value": 35,
+     "comment": "Label (sprintf name+suffix), List (a1 = 1/2/3 font id), Memo (font name). Args: a1 = font name or id. Returns: 1. Sent by: menu data (record 0xfffffff8, 32-char name), P_CREDITS, P_NFRESULTS...."
+    },
+    {
+     "name": "MessageType_SetIcon",
+     "value": 36,
+     "comment": "Label (+ owners). Args: a1 = sprite hashcode (switches the label to icon mode). Returns: 1. Sent by: Menu_PlayIris, Menu_UpdateWheel, handlers; menu data."
+    },
+    {
+     "name": "MessageType_ScrollSetMax",
+     "value": 37,
+     "comment": "Scroll, Spin. Args: a1 = max. Returns: 1. Sent by: Radio, List (internal)."
+    },
+    {
+     "name": "MessageType_ScrollSetMin",
+     "value": 38,
+     "comment": "Scroll, Spin. Args: a1 = min. Returns: 1. Sent by: none found."
+    },
+    {
+     "name": "MessageType_SetRange",
+     "value": 39,
+     "comment": "Scroll, Spin. Args: a1 = min, a2 = max. Returns: 1. Sent by: C_SB* handlers on 0x51, Memo_Update, Menu_PutCodenamesIntoControl."
+    },
+    {
+     "name": "MessageType_ListSetColumnWidth",
+     "value": 40,
+     "comment": "List. Args: a1 = column, a2 = width % (max 100). Returns: 1. Sent by: C_GCPAUSE, P_NFSTATS; menu data."
+    },
+    {
+     "name": "MessageType_SetPulseColour",
+     "value": 41,
+     "comment": "Label (+0x104), List (+0x540). Args: a1 = colour used when 0x70 pulsing is on. Returns: 1. Sent by: C_GCPAUSE, P_PAUSE."
+    },
+    {
+     "name": "MessageType_ListSetOption564",
+     "value": 42,
+     "comment": "List. Args: a1 = byte stored in +0x564 (unknown). Returns: 0. Sent by: none found."
+    },
+    {
+     "name": "MessageType_SetState",
+     "value": 43,
+     "comment": "Label, Button, Checkbox, Text, Scroll, Spin, Radio, List, Memo (control +0x7a). Args: a1 = 0 visible, 1 hidden, 2 shown but not selectable. Returns: 1. Sent by: ~200 sites; menu data."
+    },
+    {
+     "name": "MessageType_ListSetTopRow",
+     "value": 44,
+     "comment": "List. Args: a1 = first visible row. Returns: 1. Sent by: List (FUN_00090f20)."
+    },
+    {
+     "name": "MessageType_SetIconRect",
+     "value": 45,
+     "comment": "Label. Args: a1 = x<<16|y, a2 = w<<16|h in the sprite sheet. Returns: 1. Sent by: Menu_PlayIris, C_RBMPSTART; menu data."
+    },
+    {
+     "name": "MessageType_SetValue",
+     "value": 46,
+     "comment": "Scroll (clamped, then 0x54 to parent), Spin (inverted), Checkbox (bool). Args: a1 = value. Returns: 1 / 0 out of range. Sent by: ~86 sites; menu data."
+    },
+    {
+     "name": "MessageType_GetText",
+     "value": 47,
+     "comment": "Label, Button, Memo. Args: -. Returns: char*. Sent by: C_KEYBOARD, C_RBMPCNAME."
+    },
+    {
+     "name": "MessageType_GetColour",
+     "value": 48,
+     "comment": "Label. Args: -. Returns: current tint. Sent by: Process_Create (fade)."
+    },
+    {
+     "name": "MessageType_GetHighlightColour",
+     "value": 49,
+     "comment": "Label, List, Memo. Args: -. Returns: colour. Sent by: none found."
+    },
+    {
+     "name": "MessageType_GetNormalColour",
+     "value": 50,
+     "comment": "Label, List, Memo. Args: -. Returns: colour. Sent by: none found."
+    },
+    {
+     "name": "MessageType_GetNumItems",
+     "value": 51,
+     "comment": "List (count), Radio (count - 1), Combo (its list). Args: -. Returns: count. Sent by: XBox_DoSaveFlow, Menu_CreateOptionBox, MenuManager_Monitor."
+    },
+    {
+     "name": "MessageType_GetSelectedIndex",
+     "value": 52,
+     "comment": "List, Radio. Args: -. Returns: index. Sent by: C_GCPAUSE, Menu_PutCodenamesIntoControl, C_RBMPCNAME."
+    },
+    {
+     "name": "MessageType_GetSelectedItemValue",
+     "value": 53,
+     "comment": "List, Radio. Args: -. Returns: value given to 0x10/0x11 (0 if nothing selected). Sent by: ~55 sites."
+    },
+    {
+     "name": "MessageType_GetMax",
+     "value": 56,
+     "comment": "Scroll, Spin. Args: -. Returns: max. Sent by: Menu_UpdateWheel, Menu_UpdateCodenameWheel."
+    },
+    {
+     "name": "MessageType_GetControl",
+     "value": 57,
+     "comment": "every control type except Page and Manager. Args: -. Returns: M_CONTROL* (self). Sent by: ~60 sites; __Menu_SendDelayed, Page_Update, Menu_PlayIris."
+    },
+    {
+     "name": "MessageType_GetMin",
+     "value": 58,
+     "comment": "Scroll, Spin. Args: -. Returns: min. Sent by: Spin."
+    },
+    {
+     "name": "MessageType_GetSelectedItemText",
+     "value": 59,
+     "comment": "Radio (item text), Text (edit buffer). Args: -. Returns: char*. Sent by: Combo_Update (to its List, which ignores it)."
+    },
+    {
+     "name": "MessageType_ListGetTopRow",
+     "value": 60,
+     "comment": "List. Args: -. Returns: row. Sent by: none found."
+    },
+    {
+     "name": "MessageType_GetId",
+     "value": 61,
+     "comment": "Button, Checkbox, Label, List, Radio, Scroll, Spin, Text. Args: -. Returns: control +0x20. Sent by: none found."
+    },
+    {
+     "name": "MessageType_GetIconSize",
+     "value": 62,
+     "comment": "Label. Args: -. Returns: w<<16|h. Sent by: none found."
+    },
+    {
+     "name": "MessageType_GetIconPos",
+     "value": 63,
+     "comment": "Label. Args: -. Returns: x<<16|y. Sent by: none found."
+    },
+    {
+     "name": "MessageType_GetValue",
+     "value": 64,
+     "comment": "Scroll (clamped), Spin, Checkbox, Radio (index). Args: -. Returns: value. Sent by: ~117 sites (P_TWEAKS, wheels, C_CHCH*)."
+    },
+    {
+     "name": "MessageType_GetVisibleRows",
+     "value": 65,
+     "comment": "List (+0x500); Combo returns +0x718. Args: -. Returns: rows. Sent by: none found."
+    },
+    {
+     "name": "MessageType_CreateObject",
+     "value": 66,
+     "comment": "Manager: allocate + init by type (NEW_CONTROL +0x21); Page: add child. Args: a1 = NEW_CONTROL* (to Manager) / M_CONTROL* (to Page). Returns: new control or 0. Sent by: MenuManager_Create (record 0xfffffff9); Manager to the page."
+    },
+    {
+     "name": "MessageType_CreatePage",
+     "value": 67,
+     "comment": "Manager (Page_Init, list add, GoPage flags 0x19). Args: a1 = page hashcode. Returns: M_PAGE*. Sent by: MenuManager_Create (record 0xfffffff0)."
+    },
+    {
+     "name": "MessageType_GoPage",
+     "value": 68,
+     "comment": "Manager. Args: a1 = page hashcode, a2 = flags (see below). Returns: 1. Sent by: ~56 sites; Menu_ChangePageCloseIris (delayed), Manager 0x5f; menu scripts."
+    },
+    {
+     "name": "MessageType_SetSidePage",
+     "value": 69,
+     "comment": "Manager (+0x1c4). Args: a1 = page hashcode or 0; sends 0x4d/0x4c to the old/new page. Returns: 1. Sent by: none found."
+    },
+    {
+     "name": "MessageType_Destroy",
+     "value": 71,
+     "comment": "all. Args: -. Returns: 0. Sent by: Manager/Page cascade, MenuManager_Delete."
+    },
+    {
+     "name": "MessageType_IsCursorOverFocused",
+     "value": 72,
+     "comment": "Page. Args: -. Returns: bool. Sent by: none found."
+    },
+    {
+     "name": "MessageType_Scroll",
+     "value": 73,
+     "comment": "List/Radio/Spin/Combo resync and forward; Page -> handlers (C_*); default script slot 3. Args: a1 = control; a2 = 0, or 1 when Radio re-announces after 0x54. Returns: handler result. Sent by: Scroll_Update (d-pad / left stick while focused), List/Rad"
+    },
+    {
+     "name": "MessageType_TextChanged",
+     "value": 74,
+     "comment": "Page -> handlers. Args: a1 = textbox. Returns: -. Sent by: TextBox_Update (character added / deleted)."
+    },
+    {
+     "name": "MessageType_Select",
+     "value": 75,
+     "comment": "Page -> P_ handler (a1 = page, a2 = control) then C_ handler (a1 = control); default script slot 2. Args: a1 = control. Returns: handler result. Sent by: Button/Checkbox/Label/Memo/Scroll updates: A pressed (START too when manager status > 3)."
+    },
+    {
+     "name": "MessageType_PageEnter",
+     "value": 76,
+     "comment": "handlers (P_*); page window script slot 0. Args: a1 = page, a2 = previous page hashcode. Returns: -. Sent by: Manager GoPage / SetSidePage."
+    },
+    {
+     "name": "MessageType_PageLeave",
+     "value": 77,
+     "comment": "handlers; page window script slot 1. Args: a1 = page, a2 = GoPage flags (or 0). Returns: -. Sent by: Manager GoPage / SetSidePage, MenuManager_Delete."
+    },
+    {
+     "name": "MessageType_GainFocus",
+     "value": 78,
+     "comment": "handlers; default script slot 1. Args: a1 = new control. Returns: -. Sent by: Page_Update (control under the cursor changed)."
+    },
+    {
+     "name": "MessageType_LoseFocus",
+     "value": 79,
+     "comment": "handlers; default script slot 4. Args: a1 = old control. Returns: -. Sent by: Page_Update."
+    },
+    {
+     "name": "MessageType_PageUpdate",
+     "value": 80,
+     "comment": "handlers (iris animation, message boxes). Args: a1 = page. Returns: -. Sent by: Page_Update, every frame while the manager takes input."
+    },
+    {
+     "name": "MessageType_ControlCreated",
+     "value": 81,
+     "comment": "handlers (init range/value); default script slot 0. Args: a1 = control. Returns: -. Sent by: MenuManager_Create after each control's records."
+    },
+    {
+     "name": "MessageType_MemoBack",
+     "value": 82,
+     "comment": "List/Radio/Spin treat it like 0x49; Page -> handlers. Args: a1 = control. Returns: -. Sent by: Memo_Update: B on a focused memo (controller 0 only)."
+    },
+    {
+     "name": "MessageType_TextEndEntry",
+     "value": 83,
+     "comment": "Text (leave edit mode, sends 0x00); Page forwards. Args: -. Returns: 1. Sent by: none found."
+    },
+    {
+     "name": "MessageType_ValueSet",
+     "value": 84,
+     "comment": "List/Radio resync (Radio re-sends 0x49 a2=1); Page -> handlers (wheels redraw without animation). Args: a1 = control. Returns: -. Sent by: Scroll after 0x2e SetValue."
+    },
+    {
+     "name": "MessageType_SetPageOption",
+     "value": 86,
+     "comment": "Manager. Args: a1 = option (only 1 = navigation mode, page +0xc0), a2 = value. Returns: 1. Sent by: menu scripts."
+    },
+    {
+     "name": "MessageType_SetAlpha",
+     "value": 88,
+     "comment": "Label (sprite alpha, +0x1c |= 4), List (+0x544), Memo (+0x27c). Args: a1 = alpha (0..0x80). Returns: 1. Sent by: none found."
+    },
+    {
+     "name": "MessageType_ListSetColumnAlign",
+     "value": 89,
+     "comment": "List (+0x51c[col]). Args: a1 = column, a2 = alignment. Returns: 1. Sent by: C_GCPAUSE, P_PAUSE, Menu_CreateOptionBox, P_ENDMISSION, XBox_DoSaveFlow."
+    },
+    {
+     "name": "MessageType_SetPlayerFocus",
+     "value": 90,
+     "comment": "Manager: page +0xb0[player] = control; 0x60 to the old, 0x5c to the new. Args: a1 = control hashcode, a2 = player 0..3. Returns: 1 if found. Sent by: P_MPJOIN, C_RBMP* (multiplayer setup)."
+    },
+    {
+     "name": "MessageType_PlayerFocusGained",
+     "value": 92,
+     "comment": "handlers (C_RBMP*). Args: a1 = control. Returns: -. Sent by: Manager 0x5a."
+    },
+    {
+     "name": "MessageType_AltSelect1",
+     "value": 93,
+     "comment": "Radio/List forward; Page -> P_ then C_ handler. Args: a1 = control. Returns: -. Sent by: Button/Label/Memo/Scroll updates: Y pressed (ACTION_MENU_ALTSELECT_1)."
+    },
+    {
+     "name": "MessageType_AltSelect2",
+     "value": 94,
+     "comment": "as 0x5d. Args: a1 = control. Returns: -. Sent by: Button/Label/Memo/Scroll updates: X pressed (ACTION_MENU_ALTSELECT_2)."
+    },
+    {
+     "name": "MessageType_Back",
+     "value": 95,
+     "comment": "Manager: 0x6b veto query, then pop the page stack (GoPage flags 5|8), or 0x63 when empty. Args: a1 = 0 normal / 1 forced (no 0x6b), a2 = player. Returns: 1. Sent by: MenuManager_Update (B / BACK), handlers, delayed."
+    },
+    {
+     "name": "MessageType_PlayerFocusLost",
+     "value": 96,
+     "comment": "handlers. Args: a1 = control. Returns: -. Sent by: Manager 0x5a."
+    },
+    {
+     "name": "MessageType_SelectRepeat",
+     "value": 97,
+     "comment": "Page -> handlers (C_KEYBOARD). Args: a1 = control. Returns: -. Sent by: Button_Update: A held (auto-repeat)."
+    },
+    {
+     "name": "MessageType_SetTextFlag2000",
+     "value": 98,
+     "comment": "Label (+0x10e -> text sprite flag 0x2000), List (+0x567). Args: a1 = bool. Returns: 1. Sent by: P_PAUSE, P_ENDMISSION, C_KEYPAD."
+    },
+    {
+     "name": "MessageType_BackAtRoot",
+     "value": 99,
+     "comment": "handlers (P_MPSCENARIO, P_NFMAP go to P_MAIN); page window script slot 2. Args: a1 = page, a2 = page hashcode. Returns: -. Sent by: Manager 0x5f with an empty page stack."
+    },
+    {
+     "name": "MessageType_MemoSetOption280",
+     "value": 100,
+     "comment": "Memo (+0x280 byte). Args: a1 = byte. Returns: 1. Sent by: P_NFRESULTS."
+    },
+    {
+     "name": "MessageType_MemoGetNumLines",
+     "value": 101,
+     "comment": "Memo (+0x281). Args: -. Returns: line count. Sent by: Menu_CreateOptionBox, XBox_DoSaveFlow, MenuManager_Monitor."
+    },
+    {
+     "name": "MessageType_MemoSetOption282",
+     "value": 102,
+     "comment": "Memo (+0x282 byte). Args: a1 = byte. Returns: 0. Sent by: same as 0x65, P_MPDEBRIEFING."
+    },
+    {
+     "name": "MessageType_LockInput",
+     "value": 104,
+     "comment": "Manager (+0x1d4; clears all actions). Args: a1 = 1 lock / 0 unlock. Returns: 1. Sent by: P_* handlers, Menu_ChangePageCloseIris, Menu_PlayMovie/StopMovie, MenuManager_Monitor, GoPage (unlocks)."
+    },
+    {
+     "name": "MessageType_ScrollNoWrap",
+     "value": 105,
+     "comment": "Scroll (+0x144 wrap = 0, +0x145 proportional bar = 1). Args: -. Returns: 1. Sent by: P_CNAVOPTIONS."
+    },
+    {
+     "name": "MessageType_SaveFlowDone",
+     "value": 106,
+     "comment": "handlers (P_CNMENU). Args: a1 = page, a2 = result. Returns: -. Sent by: XBox_DoSaveFlow, C_LBERROPTIONS."
+    },
+    {
+     "name": "MessageType_QueryBack",
+     "value": 107,
+     "comment": "handlers. Args: a1 = control/page, a2 = int*: write 0xfffffffe to keep the page. Returns: -. Sent by: Manager 0x5f (to the player's focused control, then the page)."
+    },
+    {
+     "name": "MessageType_SetIconSpriteFlags",
+     "value": 108,
+     "comment": "Label (+0xec). Args: a1 = sprite flags. Returns: 1. Sent by: P_PAUSE, P_ENDMISSION."
+    },
+    {
+     "name": "MessageType_BackOnControl",
+     "value": 109,
+     "comment": "List forwards; Page -> P_ then C_ handler (C_LB*OPTIONS). Args: a1 = control. Returns: -. Sent by: Scroll_Update: B on a focused scroll (lists/wheels)."
+    },
+    {
+     "name": "MessageType_PageResume",
+     "value": 110,
+     "comment": "handlers (P_MPBOTS...). Args: a1 = page, a2 = previous page hashcode. Returns: -. Sent by: Manager GoPage with flag 8 and not 0x10."
+    },
+    {
+     "name": "MessageType_SetInputDelay",
+     "value": 111,
+     "comment": "Page (+0xcc). Args: a1 = frames after entering before input is taken. Returns: 0. Sent by: P_START."
+    },
+    {
+     "name": "MessageType_SetPulse",
+     "value": 112,
+     "comment": "Label (+0x10f), List (+0x568). Args: a1 = bool. Returns: 0. Sent by: P_LANGUAGE, XBox_DoSaveFlow."
+    },
+    {
+     "name": "MessageType_ListSetSelectionColour",
+     "value": 115,
+     "comment": "List (+0x548). Args: a1 = colour (guess). Returns: 0. Sent by: P_NFSTATS."
+    },
+    {
+     "name": "MessageType_GetCurrentPage",
+     "value": 116,
+     "comment": "Manager. Args: -. Returns: hashcode of the current page (or of the page under an overlay). Sent by: none found."
+    },
+    {
+     "name": "MessageType_SetLineSpacing",
+     "value": 117,
+     "comment": "List, Memo. Args: a1 = row height in % of the font height (sets visible rows). Returns: 0. Sent by: C_GCPAUSE, P_PAUSE, Menu_CreateOptionBox, MenuManager_Monitor...."
+    },
+    {
+     "name": "MessageType_SetAlwaysHighlighted",
+     "value": 118,
+     "comment": "Label (+0x110). Args: a1 = bool. Returns: 0. Sent by: P_MPBOTSETUP."
+    }
+   ]
+  },
+  {
+   "name": "CONTROL_TYPE",
+   "size": 1,
+   "comment": "M_CONTROL.type (docs/ui/messages.md; ControlType in ui.h)",
+   "values": [
+    {
+     "name": "ControlType_Button",
+     "value": 1,
+     "comment": "Button_*; M_BUTTON 0x1ac; label at +0x94; prefix GO_ in handler names"
+    },
+    {
+     "name": "ControlType_Checkbox",
+     "value": 2,
+     "comment": "Checkbox_*; 0x1ac; value byte +0x1a8; prefix CH"
+    },
+    {
+     "name": "ControlType_Combo",
+     "value": 3,
+     "comment": "Combo_*; 0x71c; label + list"
+    },
+    {
+     "name": "ControlType_Label",
+     "value": 5,
+     "comment": "Label_*; M_LABEL 0x114; also the iris/wheel picture"
+    },
+    {
+     "name": "ControlType_List",
+     "value": 6,
+     "comment": "List_*; M_LIST 0x56c; scroll at +0x128; prefix LB (list box). also a target of ui.h's SCROLL_* macros"
+    },
+    {
+     "name": "ControlType_Manager",
+     "value": 7,
+     "comment": "M_MANAGER 0x1d8"
+    },
+    {
+     "name": "ControlType_Page",
+     "value": 8,
+     "comment": "M_PAGE 0xd0"
+    },
+    {
+     "name": "ControlType_Radio",
+     "value": 9,
+     "comment": "Radio_*; 0x308; label +0x94, scroll +0x1a8; prefix RB; a left/right option picker (label + embedded Scroll holding the index), the usual target of the ui.h SCROLL_* macros"
+    },
+    {
+     "name": "ControlType_Scroll",
+     "value": 10,
+     "comment": "Scroll_*; M_SCROLL 0x148; value/min/max slider; the iris wheels are Scroll controls (prefix SB)"
+    },
+    {
+     "name": "ControlType_Spin",
+     "value": 11,
+     "comment": "Spin_*; 0x318; label + scroll, value inverted"
+    },
+    {
+     "name": "ControlType_Text",
+     "value": 12,
+     "comment": "Text_*/TextBox_Update; M_TEXTBOX 0x9b0; on-screen character grid"
+    },
+    {
+     "name": "ControlType_Window",
+     "value": 13,
+     "comment": "Window_*; 0x9c; a page's background/script holder (Window_Get)"
+    },
+    {
+     "name": "ControlType_Memo",
+     "value": 200,
+     "comment": "Memo_*; 0x284; multi-line text with scroll at +0x94"
+    }
+   ]
+  }
+ ],
+ "types": [
+  {
+   "name": "M_CONTROL",
+   "size": 124,
+   "comment": "The part every control, page and the manager share",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "M_CONTROL *",
+     "name": "next"
+    },
+    {
+     "offset": 4,
+     "type": "M_CONTROL *",
+     "name": "prev"
+    },
+    {
+     "offset": 12,
+     "type": "M_CONTROL *",
+     "name": "parent",
+     "comment": "the page for a control, the manager for a page"
+    },
+    {
+     "offset": 16,
+     "type": "HASHCODE",
+     "name": "extraControlHash",
+     "comment": "page only"
+    },
+    {
+     "offset": 24,
+     "type": "HASHCODE",
+     "name": "hashcode"
+    },
+    {
+     "offset": 28,
+     "type": "uint",
+     "name": "drawState",
+     "comment": "0x10 normal, 0x20 focused, 0x40 pressed, 0x80 under the cursor"
+    },
+    {
+     "offset": 32,
+     "type": "int",
+     "name": "id",
+     "comment": "SetId/GetId; __Menu_SendEx picks controls by it"
+    },
+    {
+     "offset": 36,
+     "type": "uint",
+     "name": "framesFocused"
+    },
+    {
+     "offset": 40,
+     "type": "LINKEDLIST",
+     "name": "scripts"
+    },
+    {
+     "offset": 56,
+     "type": "void *",
+     "name": "selectedScript"
+    },
+    {
+     "offset": 60,
+     "type": "void *",
+     "name": "scriptPlaying"
+    },
+    {
+     "offset": 80,
+     "type": "int",
+     "name": "lastScriptResult"
+    },
+    {
+     "offset": 88,
+     "type": "uint",
+     "name": "scriptExecutionFlags"
+    },
+    {
+     "offset": 92,
+     "type": "LINKEDLIST",
+     "name": "processes"
+    },
+    {
+     "offset": 112,
+     "type": "short",
+     "name": "x"
+    },
+    {
+     "offset": 114,
+     "type": "short",
+     "name": "y"
+    },
+    {
+     "offset": 116,
+     "type": "short",
+     "name": "width"
+    },
+    {
+     "offset": 118,
+     "type": "short",
+     "name": "height"
+    },
+    {
+     "offset": 120,
+     "type": "ushort",
+     "name": "depth"
+    },
+    {
+     "offset": 122,
+     "type": "byte",
+     "name": "state",
+     "comment": "SetState: bit 0 hidden, bit 1 not selectable"
+    },
+    {
+     "offset": 123,
+     "type": "CONTROL_TYPE",
+     "name": "type"
+    }
+   ]
+  },
+  {
+   "name": "M_WIDGET",
+   "size": 152,
+   "comment": "An ordinary control: M_CONTROL, then its default scripts",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "M_CONTROL",
+     "name": "control"
+    },
+    {
+     "offset": 124,
+     "type": "void *[7]",
+     "name": "defaultScripts"
+    }
+   ]
+  },
+  {
+   "name": "M_PAGE",
+   "size": 208,
+   "comment": "A menu page",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "M_CONTROL",
+     "name": "control"
+    },
+    {
+     "offset": 148,
+     "type": "LINKEDLIST",
+     "name": "controls"
+    },
+    {
+     "offset": 164,
+     "type": "void *[2]",
+     "name": "pageLink"
+    },
+    {
+     "offset": 172,
+     "type": "M_CONTROL *",
+     "name": "focused"
+    },
+    {
+     "offset": 176,
+     "type": "M_CONTROL *[4]",
+     "name": "playerFocus"
+    },
+    {
+     "offset": 192,
+     "type": "int",
+     "name": "navigationMode"
+    },
+    {
+     "offset": 196,
+     "type": "HASHCODE",
+     "name": "backgroundMovie"
+    },
+    {
+     "offset": 200,
+     "type": "int",
+     "name": "framesShown"
+    },
+    {
+     "offset": 204,
+     "type": "int",
+     "name": "inputDelay"
+    }
+   ]
+  },
+  {
+   "name": "M_MANAGER",
+   "size": 472,
+   "comment": "A menu instance: manager[managerNum] at 0x25f1d0",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "M_CONTROL",
+     "name": "control"
+    },
+    {
+     "offset": 148,
+     "type": "sprite *",
+     "name": "cursorSprite"
+    },
+    {
+     "offset": 152,
+     "type": "LINKEDLIST",
+     "name": "pages"
+    },
+    {
+     "offset": 168,
+     "type": "STACKINFO",
+     "name": "stack"
+    },
+    {
+     "offset": 176,
+     "type": "int[64]",
+     "name": "stackMem"
+    },
+    {
+     "offset": 432,
+     "type": "HASHCODE",
+     "name": "currentMovie"
+    },
+    {
+     "offset": 436,
+     "type": "uint",
+     "name": "status"
+    },
+    {
+     "offset": 440,
+     "type": "HASHCODE",
+     "name": "startPage"
+    },
+    {
+     "offset": 444,
+     "type": "M_PAGE *",
+     "name": "currentPage"
+    },
+    {
+     "offset": 448,
+     "type": "M_PAGE *",
+     "name": "underPage"
+    },
+    {
+     "offset": 452,
+     "type": "M_PAGE *",
+     "name": "sidePage"
+    },
+    {
+     "offset": 456,
+     "type": "GameActions_tag",
+     "name": "closeAction"
+    },
+    {
+     "offset": 460,
+     "type": "short",
+     "name": "whichPlayer"
+    },
+    {
+     "offset": 462,
+     "type": "byte",
+     "name": "startPlayer"
+    },
+    {
+     "offset": 463,
+     "type": "byte",
+     "name": "field_0x1cf"
+    },
+    {
+     "offset": 464,
+     "type": "byte",
+     "name": "index"
+    },
+    {
+     "offset": 465,
+     "type": "bool",
+     "name": "exists"
+    },
+    {
+     "offset": 466,
+     "type": "bool",
+     "name": "takingInput"
+    },
+    {
+     "offset": 467,
+     "type": "bool",
+     "name": "overlayMode"
+    },
+    {
+     "offset": 468,
+     "type": "bool",
+     "name": "inputLocked"
+    },
+    {
+     "offset": 469,
+     "type": "bool",
+     "name": "didPauseAudio"
+    }
+   ]
+  },
+  {
+   "name": "M_MESSAGE",
+   "size": 24,
+   "comment": "A process or delayed message",
+   "fields": [
+    {
+     "offset": 12,
+     "type": "int",
+     "name": "type"
+    },
+    {
+     "offset": 16,
+     "type": "int",
+     "name": "arg1"
+    },
+    {
+     "offset": 20,
+     "type": "int",
+     "name": "arg2"
+    }
+   ]
+  },
+  {
+   "name": "MENU_LS",
+   "size": 72,
+   "comment": "The codename load/save in progress (ls, 0x17d540)",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "uint",
+     "name": "busy"
+    },
+    {
+     "offset": 4,
+     "type": "uint",
+     "name": "numCodenames"
+    },
+    {
+     "offset": 8,
+     "type": "HASHCODE",
+     "name": "returnPage"
+    },
+    {
+     "offset": 12,
+     "type": "undefined4",
+     "name": "field3_0xc"
+    },
+    {
+     "offset": 16,
+     "type": "uint",
+     "name": "slot",
+     "comment": "999 = a new codename"
+    },
+    {
+     "offset": 20,
+     "type": "undefined4",
+     "name": "field5_0x14"
+    },
+    {
+     "offset": 24,
+     "type": "char[32]",
+     "name": "codename"
+    },
+    {
+     "offset": 57,
+     "type": "byte",
+     "name": "operation",
+     "comment": "0 load, 1 save"
+    },
+    {
+     "offset": 58,
+     "type": "byte",
+     "name": "field9_0x3a"
+    },
+    {
+     "offset": 59,
+     "type": "byte",
+     "name": "field10_0x3b"
+    },
+    {
+     "offset": 61,
+     "type": "byte",
+     "name": "field12_0x3d"
+    },
+    {
+     "offset": 64,
+     "type": "byte",
+     "name": "doMiniMission"
+    },
+    {
+     "offset": 65,
+     "type": "byte",
+     "name": "relatedToMainMenuSound"
+    },
+    {
+     "offset": 66,
+     "type": "byte",
+     "name": "field17_0x42"
+    }
+   ]
+  },
+  {
+   "name": "MPJoinSlot",
+   "size": 16,
+   "comment": "A controller's place on the join page (4 at 0x245240)",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "bool",
+     "name": "joined"
+    },
+    {
+     "offset": 1,
+     "type": "bool",
+     "name": "ready"
+    },
+    {
+     "offset": 4,
+     "type": "uint",
+     "name": "team",
+     "comment": "0 Phoenix, 1 MI6"
+    },
+    {
+     "offset": 8,
+     "type": "uint",
+     "name": "skin"
+    },
+    {
+     "offset": 12,
+     "type": "uint",
+     "name": "field_0xc"
+    }
+   ]
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x757d0",
+   "calling_convention": "__cdecl",
+   "return": "void",
+   "params": [
+    {
+     "name": "managerNum",
+     "type": "uint"
+    },
+    {
+     "name": "param_2",
+     "type": "ushort"
+    },
+    {
+     "name": "param_3",
+     "type": "byte"
+    }
+   ]
+  },
+  {
+   "address": "0x8ca10",
+   "calling_convention": "__cdecl",
+   "return": "bool",
+   "params": [
+    {
+     "name": "managerNum",
+     "type": "uchar"
+    },
+    {
+     "name": "control",
+     "type": "M_CONTROL *"
+    },
+    {
+     "name": "hashcode",
+     "type": "uint"
+    },
+    {
+     "name": "message",
+     "type": "uint"
+    },
+    {
+     "name": "arg1",
+     "type": "int"
+    },
+    {
+     "name": "arg2",
+     "type": "int"
+    }
+   ]
+  },
+  {
+   "address": "0x8ded0",
+   "calling_convention": "__cdecl",
+   "return": "bool",
+   "params": [
+    {
+     "name": "managerNum",
+     "type": "uchar"
+    },
+    {
+     "name": "control",
+     "type": "M_CONTROL *"
+    },
+    {
+     "name": "hashcode",
+     "type": "uint"
+    },
+    {
+     "name": "message",
+     "type": "uint"
+    },
+    {
+     "name": "arg1",
+     "type": "int"
+    },
+    {
+     "name": "arg2",
+     "type": "int"
+    }
+   ]
+  },
+  {
+   "address": "0x76470",
+   "calling_convention": "__cdecl",
+   "return": "CreditsEntry *",
+   "params": [
+    {
+     "name": "numLines_out",
+     "type": "uint *"
+    }
+   ]
+  },
+  {
+   "address": "0x7cfb0",
+   "calling_convention": "__cdecl",
+   "return": "ulonglong",
+   "params": [
+    {
+     "name": "bonus",
+     "type": "ulonglong"
+    },
+    {
+     "name": "objId",
+     "type": "uint"
+    },
+    {
+     "name": "count",
+     "type": "byte"
+    }
+   ]
+  },
+  {
+   "address": "0x7d110",
+   "return": "ulonglong",
+   "return_only": true
+  },
+  {
+   "address": "0xc6360",
+   "return": "int",
+   "return_only": true
+  }
+ ]
+}
