@@ -62,7 +62,8 @@ because the waits are `do {} while ((reg & ~3) < 4)`.
 
 The action engine hit this through exactly one gap: the XMV decoder calls `DirectSoundCreateStream` directly
 rather than through any game function the seam had replaced, so it reached the real library. The fix was to
-hook those entry points at their own addresses (`src/action/sound/dsndStream.cpp`).
+hook those entry points at their own addresses (`src/action/sound/dsndStream.cpp`, since replaced along with the
+decoder by an FFmpeg player: `docs/fmv.md`).
 
 For the driving engine this is not an edge case but the main event: 63 DSOUND entry points under EA's `SND`
 layer. The seam has to be complete before the engine will boot standalone at all, which moves audio from

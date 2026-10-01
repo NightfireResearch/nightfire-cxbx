@@ -6,6 +6,7 @@
 #include "psiInput.h"             // controllerIsPresent, controller_maybeRumbleTimeout
 #include "../memory.h"            // Mem_Free
 #include "psiSave.h"              // psiInternalLoadingDataState
+#include "Fmv.h"
 #include "../game.h"              // GameState, timestamp(), BackgroundMovieHashcode
 #include <string.h>               // memset
 
@@ -68,9 +69,6 @@ void psiAgeParticleOverlayRing(void) {
 // maybePsiResetResources
 // ---------------------------------------------------------------------------------------------------------------
 
-// Already AUTOGEN-declared in game.cpp (its stub body is generated from there): a plain forward declaration,
-// because a second AUTOGEN would generate a colliding second body.
-void maybeBackgroundMovieCleanup(void);
 
 // AUTOGEN
 void __stdcall maybeCleanupSystem(void);

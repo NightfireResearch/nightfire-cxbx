@@ -113,7 +113,8 @@ What this does mean:
   cannot be done in cxbx mode - a `FUNC_AT` hook on a library entry point has nowhere to forward to - so it
   has to land behind the `AudioBackend` switch, and it is not needed at all until CXBX itself goes away.
 
-**CXBX has now gone away, and this is done** - see `src/action/sound/dsndStream.cpp`. It was not optional in
+**CXBX has now gone away, and this is done** - it was `src/action/sound/dsndStream.cpp`, since replaced by the
+FFmpeg movie player (`docs/fmv.md`), after which nothing calls DirectSound's stream entry points at all. It was not optional in
 the end: standalone there is nothing behind those exports but the XBE's real DirectSound, which programs the
 MCPX mixer registers at `0xfe80xxxx` and spins on them. The first FMV with an audio track faulted there, which
 is what both crashes reported against the standalone loader turned out to be - starting a mission and opening

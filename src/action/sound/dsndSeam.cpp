@@ -270,28 +270,6 @@ static inline DSoundSeamTracedCall<R, A...> DSoundSeamTraced(const char *name, R
     return { name, fn, backend };
 }
 
-// A few entry points have to keep going to the DSOUND library even in native mode, because the objects they
-// act on are not ours to own. The XMV decoder creates its streams by calling DirectSoundCreateStream directly
-// rather than through anything this seam replaced, so CXBX's emulation both owns those stream objects and -
-// while CXBX is still hosting the process - still plays them. That is why FMV audio is audible in native mode
-// at all. Routing the stream setters to a native backend, or dropping them, would leave the stream playing at
-// whatever volume and mixbin routing CXBX happened to default to, with the game's own calls going nowhere.
-//
-// This is a bridge, not an end state: when the stream entry points are hooked at their own addresses the
-// streams become ours and these go back through the normal dispatch.
-template<typename R, typename... A> struct DSoundSeamPassThroughCall {
-    const char *name;
-    R(__stdcall *fn)(A...);
-    R operator()(A... args) const {
-        DSoundSeamTraceCall(name, args...);
-        return fn(args...);
-    }
-};
-template<typename R, typename... A>
-static inline DSoundSeamPassThroughCall<R, A...> DSoundSeamPassThrough(const char *name, R(__stdcall *fn)(A...)) {
-    return { name, fn };
-}
-
 // ---------------------------------------------------------------------------------------------------------------
 // The DSOUND entry points. These are the public (I)DirectSound* wrappers at the top of the library, not its
 // internals: everything they call at 0x00112xxx-0x00119xxx (the CDirectSound*/CMcpx* classes) is inside the
@@ -413,12 +391,6 @@ typedef void(__stdcall *IDirectSoundBuffer_SetRolloffCurveFn)(DSoundBuffer *this
 
 typedef void(__stdcall *IDirectSoundBuffer_SetI3DL2SourceFn)(DSoundBuffer *thisPtr, DSI3DL2BUFFER_Xbox *pds3db, uint32_t dwApply);
 #define IDirectSoundBuffer_SetI3DL2Source (DSoundSeamTraced("IDirectSoundBuffer_SetI3DL2Source", (IDirectSoundBuffer_SetI3DL2SourceFn)0x00113d1du, XA2_IDirectSoundBuffer_SetI3DL2Source))
-
-typedef void(__stdcall *IDirectSoundStream_SetVolumeFn)(DSoundStream *pStream, int32_t lVolume);
-#define IDirectSoundStream_SetVolume (DSoundSeamPassThrough("IDirectSoundStream_SetVolume", (IDirectSoundStream_SetVolumeFn)0x001134eeu))
-
-typedef void(__stdcall *IDirectSoundStream_SetMixBinsFn)(DSoundStream *pStream, DSMIXBINS_Xbox *pMixBins);
-#define IDirectSoundStream_SetMixBins (DSoundSeamPassThrough("IDirectSoundStream_SetMixBins", (IDirectSoundStream_SetMixBinsFn)0x001134f3u))
 
 // ---------------------------------------------------------------------------------------------------------------
 // The game's own audio state, at its fixed address - "AudioSystem" in Ghidra, one 5312-byte struct. Mirrored
@@ -972,34 +944,12 @@ void __cdecl maybeXboxSFXCalculate3D(uint32_t channel, uint8_t positioned) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Streams
+// The volume table
 // ---------------------------------------------------------------------------------------------------------------
-
-// AUTOINJECT
-void __cdecl BackgroundMovieSetupMix(DSoundStream *stream) {
-    if (stream == NULL)
-        return;
-    DSMIXBINVOLUMEPAIR_Xbox pairs[6] = {
-        { DSMIXBIN_FRONT_LEFT,    0 },
-        { DSMIXBIN_FRONT_RIGHT,   0 },
-        { DSMIXBIN_FRONT_CENTER,  -10000 },
-        { DSMIXBIN_LOW_FREQUENCY, 0 },
-        { DSMIXBIN_BACK_LEFT,     0 },
-        { DSMIXBIN_BACK_RIGHT,    0 },
-    };
-    DSMIXBINS_Xbox mixBins = { 6, pairs };
-    IDirectSoundStream_SetMixBins(stream, &mixBins);
-}
 
 // The game's volume table: 0..100 to hundredths of a dB (the FMV player, engine/Fmv.cpp, uses it too)
 int32_t DSound_VolumeMillibels(int volume) {
     return AudioSys.volumeTable[volume % 101];
-}
-
-// AUTOINJECT
-void __cdecl dsndStreamSetVolume(DSoundStream *stream, int volume) {
-    if (stream != NULL)
-        IDirectSoundStream_SetVolume(stream, AudioSys.volumeTable[volume % 101]);
 }
 
 // ---------------------------------------------------------------------------------------------------------------

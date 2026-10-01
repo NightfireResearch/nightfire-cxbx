@@ -411,8 +411,7 @@ void D3D9_NotifyTextureModified(void *pTextureOrSurface) {
 
 // The CPU-visible address of a resource's Data word. The seam registers every texture, vertex and index buffer
 // with a real host pointer (RegisterTexture forces the texture Data word back to the unmasked pointer), so the
-// word is used as-is here; only surface objects carry the Xbox-style stripped address, and those are read via
-// the seam's own d3dLockSurface, not here.
+// word is used as-is here; only surface objects carry the Xbox-style stripped address.
 static const uint8_t *XboxDataPointer(uint32_t dataWord) {
     return (const uint8_t*)(uintptr_t)dataWord;
 }

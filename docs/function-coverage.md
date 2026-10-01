@@ -18,9 +18,9 @@ Every function Ghidra knows (`tools/functions_action.json`, 3,999 of them) is
   called, and library code the seams have cut off;
 - **live**: original code that still runs.
 
-**Done** is replaced plus dead: what no longer needs reimplementing. The plain replaced count, 626 of 3,999 (16%), is
-the figure quoted so far. Replaced includes the seams' own patches of XDK entry points (`WriteJump` in
-`engine/XboxStartup.cpp` and `sound/dsndStream.cpp`), which apply only when running without CXBX.
+**Done** is replaced plus dead: what no longer needs reimplementing. The plain replaced count, 612 of 3,999 (15%), is
+the figure quoted so far. Replaced includes the startup layer's own patches of XAPI entry points (`WriteJump` in
+`engine/XboxStartup.cpp`).
 
 Liveness is `tools/global_coverage.py`'s call graph (its `CallGraph` class) with one difference. A pointer to an XDK
 library function counts only when it sits in the game's own data. Pointers inside a library's own code and tables
@@ -49,17 +49,15 @@ most of it is already settled (75% done, 89% by bytes):
 - **D3D, D3DX, XGRPH (246 functions): done.** Nothing reaches them except the four D3D8 entry points the XMV decoder
   calls, which we answer ourselves (`FUNC_AT` in `d3dSeam.cpp`), and one D3DX matrix inverse.
 - **XPP (177): done.** USB peripherals (pads, memory units); input goes through our XInput layer.
-- **DSOUND (401): done.** The only DirectSound the game still reached was the XMV decoder's: it creates a stream for
-  the movie's audio. `sound/dsndStream.cpp` answers those eight entry points (`DirectSoundCreateStream`, the stream
-  methods, `SynchPlayback`, `DoWork`) with native XAudio2 streams. The four functions left live are DSOUND's static
+- **DSOUND (401): done.** The only DirectSound the game still reached was the XMV decoder's stream for the movie
+  audio, and the decoder is no longer reached (below). The four functions left live are DSOUND's static
   constructors in the C runtime's initialiser table (each stores one vtable pointer).
-- **XMV (60 functions, 157 KB): the FMV decoder, done with FFmpeg.** `BackgroundMoviePlayFile`, `maybeDecodeMpgAudio` and
-  `maybeBackgroundMovieCleanup` (`platform.movie`, five functions, all original) drive it, and its D3D and DirectSound
-  calls are answered by our seams. It was the last XDK library the game ran: with FFmpeg built (`docs/fmv.md`),
-  `engine/Fmv.cpp` replaces the five and XMV is unreachable, as the table shows. Ghidra has defined only about a fifth
+- **XMV (60 functions, 157 KB): done.** The FMV decoder, driven by the game's five movie functions
+  (`platform.movie`). Those are now `engine/Fmv.cpp`, an FFmpeg player (`docs/fmv.md`), so XMV is no longer reached.
+  It was the last XDK library the game ran. Ghidra has defined only about a fifth
   of its code. The movies are WMV2 video with Xbox IMA ADPCM audio; see the FMV notes in
   `architecture/audio-loading-saves-scripts.md`.
-- **XAPI and C runtime (343: 32 replaced, 55 dead, 256 live).** About 100 of the live ones are the C runtime
+- **XAPI and C runtime (343: 32 replaced, 59 dead, 252 live).** About 100 of the live ones are the C runtime
   (`__ftol2`, `sprintf`, `fmodf`, `memcpy`), which game code calls everywhere. Those go away by themselves as game
   functions become ours, because our compiler brings its own. About 35 are XAPI and kernel wrappers (files,
   threads, timers, memory). The rest (about 155) are unnamed.
@@ -105,22 +103,22 @@ So the work that matters is the game code above the surface: **2,500 functions, 
 | ui.frontend | 300 | 59 | 2 | 239 | 20% | 164 | 35% |
 | ui.hud | 45 | 16 | 3 | 26 | 42% | 20 | 43% |
 | **audio** | 135 | 14 | 1 | 120 | **11%** | 29 | 5% |
-| **platform** | 272 | 141 | 14 | 117 | **57%** | 51 | 68% |
+| **platform** | 272 | 139 | 16 | 117 | **57%** | 51 | 68% |
 | platform.files | 43 | 7 | 8 | 28 | 35% | 6 | 48% |
 | platform.gfx | 132 | 83 | 4 | 45 | 66% | 33 | 71% |
 | platform.input | 14 | 14 | 0 | 0 | 100% | 3 | 100% |
 | platform.movie | 5 | 5 | 0 | 0 | 100% | 1 | 100% |
-| platform.sound | 57 | 28 | 0 | 29 | 49% | 5 | 75% |
+| platform.sound | 57 | 26 | 2 | 29 | 49% | 5 | 75% |
 | platform.system | 21 | 4 | 2 | 15 | 29% | 2 | 17% |
-| **lib** | 1227 | 44 | 926 | 257 | **79%** | 419 | 92% |
-| lib.d3d | 246 | 4 | 241 | 1 | 100% | 72 | 99% |
-| lib.dsound | 401 | 8 | 389 | 4 | 99% | 118 | 100% |
+| **lib** | 1227 | 32 | 938 | 257 | **79%** | 419 | 92% |
+| lib.d3d | 246 | 0 | 245 | 1 | 100% | 72 | 99% |
+| lib.dsound | 401 | 0 | 397 | 4 | 99% | 118 | 100% |
 | lib.xapi | 343 | 32 | 59 | 252 | 27% | 48 | 32% |
 | lib.xmv | 60 | 0 | 60 | 0 | 100% | 157 | 100% |
 | lib.xpp | 177 | 0 | 177 | 0 | 100% | 23 | 100% |
 | **game code (above)** | 2500 | 441 | 25 | 2034 | **19%** | 858 | 16% |
-| **platform + libraries** | 1499 | 185 | 940 | 374 | **75%** | 470 | 89% |
-| **everything** | 3999 | 626 | 965 | 2408 | **40%** | 1328 | 42% |
+| **platform + libraries** | 1499 | 171 | 954 | 374 | **75%** | 470 | 89% |
+| **everything** | 3999 | 612 | 979 | 2408 | **40%** | 1328 | 42% |
 
 ## Where the remaining game code is
 

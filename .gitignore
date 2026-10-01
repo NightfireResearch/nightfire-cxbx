@@ -26,6 +26,3 @@ CMakeSettings.json
 /dump_levels_collision/
 /collision_export/
 /Cxbx-Reloaded/
-
-# Built by tools/fmv/build_ffmpeg.sh
-/third_party/ffmpeg/

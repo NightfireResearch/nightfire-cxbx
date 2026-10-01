@@ -195,7 +195,6 @@ add_library(actioninject SHARED
   src/action/sound/dsndSeam.cpp
   src/common/sound/xadpcm.cpp
   src/action/sound/xaudio2Backend.cpp
-  src/action/sound/dsndStream.cpp
   src/action/sound/music.cpp
   src/action/sound/SFX.cpp
   src/action/sound/Sound.cpp
@@ -215,19 +214,18 @@ endif()
 target_link_libraries(actioninject PRIVATE
   d3d9 d3dcompiler winmm ${XAUDIO2_LIB} xinput9_1_0 user32)
 
-# FMV playback through FFmpeg (src/action/engine/Fmv.cpp), when tools/fmv/build_ffmpeg.sh has built it into
-# third_party/ffmpeg. The DLLs are loaded at run time and copied beside the executables; without them the game keeps
-# the XBE's own XMV decoder.
-set(NF_FFMPEG_DIR ${CMAKE_SOURCE_DIR}/third_party/ffmpeg)
-if(EXISTS ${NF_FFMPEG_DIR}/include/libavformat/avformat.h)
-  target_include_directories(actioninject PRIVATE ${NF_FFMPEG_DIR}/include)
-  target_compile_definitions(actioninject PRIVATE NF_HAVE_FFMPEG)
-  file(GLOB NF_FFMPEG_DLLS ${NF_FFMPEG_DIR}/bin/*.dll)
-  add_custom_command(TARGET actioninject POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_DLLS} $<TARGET_FILE_DIR:actioninject>)
-else()
-  message(STATUS "FFmpeg not built (tools/fmv/build_ffmpeg.sh): movies use the XBE's XMV decoder")
+# FMV playback through FFmpeg (src/action/engine/Fmv.cpp): the third_party/ffmpeg submodule, built into build/ffmpeg
+# by tools/fmv/build_ffmpeg.sh (CI does the same). The DLLs are loaded at run time and copied beside the executables
+# with FFmpeg's licence, so the build output is complete.
+set(NF_FFMPEG_DIR ${CMAKE_SOURCE_DIR}/build/ffmpeg CACHE PATH "FFmpeg built by tools/fmv/build_ffmpeg.sh")
+if(NOT EXISTS ${NF_FFMPEG_DIR}/include/libavformat/avformat.h)
+  message(FATAL_ERROR "FFmpeg is not built: run 'git submodule update --init third_party/ffmpeg' and then "
+                      "'sh tools/fmv/build_ffmpeg.sh' (or point NF_FFMPEG_DIR at a build of it)")
 endif()
+target_include_directories(actioninject PRIVATE ${NF_FFMPEG_DIR}/include)
+file(GLOB NF_FFMPEG_FILES ${NF_FFMPEG_DIR}/bin/*.dll ${NF_FFMPEG_DIR}/FFmpeg-*.txt)
+add_custom_command(TARGET actioninject POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:actioninject>)
 
 # The standalone loader (stage B 4.2/4.3): maps the XBE itself and runs it in-process, with no emulator in
 # the process at all. This is "action.exe" - the canonical way to run the action engine - and the CXBX

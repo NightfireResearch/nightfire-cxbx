@@ -8,13 +8,51 @@ on:
   pull_request:
 
 jobs:
+  # FFmpeg for the FMV player (src/action/engine/Fmv.cpp): the third_party/ffmpeg submodule, built once as 32-bit
+  # Windows DLLs and handed to the three builds below, which copy them and FFmpeg's licence beside the executables so
+  # that every artifact is complete. Cached on the submodule's commit and the build script, so it is only rebuilt when
+  # one of them changes (the key reads the submodule's commit from the tree, without checking it out).
+  ffmpeg:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Cache key
+        id: key
+        run: echo "key=ffmpeg-$(git rev-parse HEAD:third_party/ffmpeg)-${{ hashFiles('tools/fmv/build_ffmpeg.sh') }}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: build/ffmpeg
+          key: ${{ steps.key.outputs.key }}
+
+      - name: Build FFmpeg
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          git submodule update --init --depth 1 third_party/ffmpeg
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc g++-mingw-w64-i686 make nasm
+          sh tools/fmv/build_ffmpeg.sh
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ffmpeg
+          path: build/ffmpeg
+
   # The native build, with MSVC. Pinned to the 2022 generator to match the runner image; the game is a
   # 32-bit x86 binary and the loader has to share its address space, so Win32 is not a choice. Both of
   # those live in CMakePresets.json now, so this runs the same two commands the README gives a person.
   windows:
     runs-on: windows-2022
+    needs: ffmpeg
     steps:
       - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: ffmpeg
+          path: build/ffmpeg
 
       - name: Configure
         run: cmake --preset windows
@@ -43,8 +81,14 @@ jobs:
   # is here to keep that path working rather than to ship from - see docs/macos-build.md for what differs.
   macos:
     runs-on: macos-latest
+    needs: ffmpeg
     steps:
       - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: ffmpeg
+          path: build/ffmpeg
 
       - name: Install the cross toolchain
         run: brew install mingw-w64 ninja
@@ -69,6 +113,8 @@ jobs:
             build/macos/driving.exe
             build/macos/actioninject.dll
             build/macos/drivinginject.dll
+            build/macos/av*.dll
+            build/macos/FFmpeg-*.txt
             build/macos/action_cxbx.exe
             build/macos/driving_cxbx.exe
 
@@ -77,8 +123,14 @@ jobs:
   # mingw-w64 13 or later for x3daudio.h, and ubuntu-latest is still 24.04, whose mingw-w64 is 11.
   linux:
     runs-on: ubuntu-26.04
+    needs: ffmpeg
     steps:
       - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: ffmpeg
+          path: build/ffmpeg
 
       # g++-mingw-w64-i686 rather than just the headers and CRT: the build links libstdc++ and libgcc
       # statically, and those come with the GCC cross compiler. It pulls in binutils-mingw-w64-i686 for
@@ -108,5 +160,7 @@ jobs:
             build/linux/driving.exe
             build/linux/actioninject.dll
             build/linux/drivinginject.dll
+            build/linux/av*.dll
+            build/linux/FFmpeg-*.txt
             build/linux/action_cxbx.exe
             build/linux/driving_cxbx.exe

@@ -23,15 +23,11 @@
 // ones with the game's own rolloff curve translated into an X3DAudio distance curve.
 //
 // Not here yet: the I3DL2 reverb send, which needs the reverb XAPO behind a submix voice, so 3D voices are
-// dry. Nor the stream entry points - the XMV decoder creates and drives its own streams by calling DSOUND
-// directly, so those calls never reach this seam and CXBX still services them. That is why FMV audio is
-// audible in native mode; it also means the stream setters the game does make have to be passed through to
-// DSOUND rather than handled here (see DSoundSeamPassThrough in dsndSeam.cpp), and that the streams become
-// this backend's problem only once those entry points are hooked at their own addresses.
+// dry. Movie audio does not come through here: the FMV player (engine/Fmv.cpp) makes its own voice.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The XAudio2 device itself, created on first use. The stream path (dsndStream.cpp) needs it to make its own
-// source voices, and asking here rather than making a second device keeps every voice on one mastering voice.
+// The XAudio2 device itself, created on first use. The FMV player (engine/Fmv.cpp) needs it to make its own
+// source voice, and asking here rather than making a second device keeps every voice on one mastering voice.
 // Null if audio could not start at all.
 struct IXAudio2;
 IXAudio2 *XA2_GetDevice(void);

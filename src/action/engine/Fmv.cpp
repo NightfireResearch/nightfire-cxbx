@@ -1,7 +1,5 @@
 #include "Fmv.h"
 
-#ifdef NF_HAVE_FFMPEG
-
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <xaudio2.h>
@@ -24,21 +22,18 @@ extern "C" {
 #include "../sound/xaudio2Backend.h"
 #include "../sound/dsndSeam.h"
 #include "../../common/gfx/d3d9Backend.h"
-#include "../../common/standalone.h"
 #include "../../common/xboxPath.h"
-#include "XboxSettings.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // FMV playback through FFmpeg.
 //
 // The game plays its movies (the attract loop, the menu backdrops, the mission briefings) through five functions
 // of its own, all still original, over Microsoft's XMV decoder library: 160 KB of WMV2 decoding with hand-written
-// MMX, the last XDK library the game runs. Its D3D and DirectSound calls were already answered by our seams; this
-// replaces the five functions themselves, so the library is no longer reached at all.
+// MMX, the last XDK library the game ran. These are the five functions, so the library is no longer reached at all.
 //
 // The movies are WMV2 video (640x480, 25 fps) with Xbox IMA ADPCM audio - one stereo track, or four (one per
 // language). FFmpeg's xmv demuxer and wmv2/adpcm_ima_xbox decoders read them exactly. FFmpeg is a minimal LGPL
-// build (tools/fmv/build_ffmpeg.sh), loaded at run time, so a build without the DLLs keeps the original decoder.
+// build of the third_party/ffmpeg submodule (tools/fmv/build_ffmpeg.sh, and CI), loaded at startup (Fmv_Init).
 //
 // What the game expects of the five, from the originals (0x000e8a00-0x000e8cf0):
 //   - BackgroundMoviePlayFile(name): opens d:\eurocom\25_fps\<name> (30_fps on a PAL-60 TV), insists on 640x480,
@@ -92,10 +87,8 @@ static bool LoadFFmpeg(void) {
     HMODULE avutil = LoadLibraryA("avutil-60.dll");
     HMODULE avcodec = LoadLibraryA("avcodec-62.dll");
     HMODULE avformat = LoadLibraryA("avformat-62.dll");
-    if (avutil == NULL || avcodec == NULL || avformat == NULL) {
-        printf("[fmv] FFmpeg DLLs not found - movies use the original XMV decoder\n");
+    if (avutil == NULL || avcodec == NULL || avformat == NULL)
         return false;
-    }
     bool ok = true;
 #define FF_LOAD(module, field, name) \
     if ((*(FARPROC *)&ff.field = GetProcAddress(module, name)) == NULL) { printf("[fmv] %s missing\n", name); ok = false; }
@@ -360,7 +353,8 @@ static bool OpenDecoder(int stream, AVCodecContext **out) {
     return true;
 }
 
-static void Fmv_Cleanup(void) {
+// AUTOINJECT
+void maybeBackgroundMovieCleanup(void) {
     if (M.voice != NULL) {
         M.voice->DestroyVoice();          // synchronous: no buffer is read after this returns
         M.voice = NULL;
@@ -391,14 +385,15 @@ static void Fmv_Cleanup(void) {
     M.pendingFrames = M.channels = M.sampleRate = 0;
 }
 
-static void __cdecl Fmv_PlayFile(char *filename) {
-    Fmv_Cleanup();
+// AUTOINJECT
+void BackgroundMoviePlayFile(char *filename) {
+    maybeBackgroundMovieCleanup();
 
     for (int i = 0; i < 2; i++) {
         M.frameMemory[i] = Mem_Malloc(FMV_FRAME_BYTES, (MallocFlags)0x1204, FMV_FRAME_ALIGN);
         M.texture[i] = M.frameMemory[i] ? RegisterTexture(FMV_WIDTH, FMV_HEIGHT, FMV_FORMAT_YUY2, 1, M.frameMemory[i], 0) : 0;
         if (M.frameMemory[i] == NULL || M.texture[i] == 0) {
-            Fmv_Cleanup();
+            maybeBackgroundMovieCleanup();
             return;
         }
         memset(M.frameMemory[i], 0, FMV_FRAME_BYTES);
@@ -408,7 +403,7 @@ static void __cdecl Fmv_PlayFile(char *filename) {
     snprintf(xboxPath, sizeof(xboxPath), "d:\\eurocom\\%s%s", Graphics_IsPalI() ? "30_fps\\" : "25_fps\\", filename);
     if (!Xbox_ResolvePath(xboxPath, hostPath, sizeof(hostPath)) || ff.open_input(&M.format, hostPath, NULL, NULL) < 0) {
         printf("[fmv] cannot open %s\n", xboxPath);
-        Fmv_Cleanup();
+        maybeBackgroundMovieCleanup();
         return;
     }
     ff.find_stream_info(M.format, NULL);
@@ -440,7 +435,7 @@ static void __cdecl Fmv_PlayFile(char *filename) {
     AVCodecParameters *vp = M.videoStream >= 0 ? M.format->streams[M.videoStream]->codecpar : NULL;
     if (vp == NULL || vp->width != FMV_WIDTH || vp->height != FMV_HEIGHT || !OpenDecoder(M.videoStream, &M.video)) {
         printf("[fmv] %s: no 640x480 video stream it can decode\n", xboxPath);
-        Fmv_Cleanup();
+        maybeBackgroundMovieCleanup();
         return;
     }
     AVRational tb = M.format->streams[M.videoStream]->time_base;
@@ -470,7 +465,7 @@ static void __cdecl Fmv_PlayFile(char *filename) {
     M.nextFrameTime = 0.0;
     KeepAudioFed();
     if (!DecodeVideoFrame()) {
-        Fmv_Cleanup();
+        maybeBackgroundMovieCleanup();
         return;
     }
     PresentFrame();
@@ -482,7 +477,8 @@ static void __cdecl Fmv_PlayFile(char *filename) {
     M.isPlaying = true;
 }
 
-static bool __stdcall Fmv_DecodeAndDraw(void) {
+// AUTOINJECT
+bool __stdcall maybeDecodeMpgAudio(void) {
     if (M.format == NULL)
         return false;
 
@@ -526,41 +522,23 @@ static bool __stdcall Fmv_DecodeAndDraw(void) {
     return M.isPlaying;
 }
 
-static bool __stdcall Fmv_IsPlaying(void) {
+// AUTOINJECT
+bool __stdcall maybeBackgroundMovieIsPlaying(void) {
     return M.isPlaying;
 }
 
-static void __cdecl Fmv_SetVolume(int volume) {
+// AUTOINJECT
+void BackgroundMovieSetVolume(int volume) {
     MovieVolume = volume;
     ApplyVolume();
 }
 
-static void WriteJump(uint32_t address, void *target) {
-    uint8_t *site = (uint8_t *)address;
-    DWORD previous = 0;
-    if (!VirtualProtect(site, 5, PAGE_EXECUTE_READWRITE, &previous))
+void Fmv_Init(void) {
+    if (LoadFFmpeg())
         return;
-    site[0] = 0xE9;                                                   // jmp rel32
-    *(int32_t *)(site + 1) = (int32_t)((uint8_t *)target - (site + 5));
+    printf("[fmv] the FFmpeg DLLs (avutil-60, avcodec-62, avformat-62) are missing\n");
+    MessageBoxA(NULL, "The FFmpeg DLLs (avutil-60.dll, avcodec-62.dll, avformat-62.dll) are missing from the game's "
+                "folder. They are built by tools/fmv/build_ffmpeg.sh and come with every release.",
+                "Nightfire", MB_ICONERROR | MB_OK);
+    ExitProcess(1);
 }
-
-void Fmv_InstallHooks(void) {
-    // (g_gfxBackend is only set when graphics start, after this; the setting it is set from is the same)
-    if (!Xbox_RunningStandalone() || Settings_GetGraphicsBackend() != GFX_BACKEND_D3D9)
-        return;
-    if (!LoadFFmpeg())
-        return;
-    M.audioStream = M.videoStream = -1;
-    WriteJump(0x000e8a00, (void *)Fmv_Cleanup);        // maybeBackgroundMovieCleanup
-    WriteJump(0x000e8a70, (void *)Fmv_SetVolume);      // BackgroundMovieSetVolume
-    WriteJump(0x000e8a90, (void *)Fmv_PlayFile);       // BackgroundMoviePlayFile
-    WriteJump(0x000e8ce0, (void *)Fmv_IsPlaying);      // maybeBackgroundMovieIsPlaying
-    WriteJump(0x000e8cf0, (void *)Fmv_DecodeAndDraw);  // maybeDecodeMpgAudio
-    printf("[fmv] movies play through FFmpeg\n");
-}
-
-#else
-
-void Fmv_InstallHooks(void) {}
-
-#endif // NF_HAVE_FFMPEG

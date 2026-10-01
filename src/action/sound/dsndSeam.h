@@ -37,7 +37,6 @@
 // Xbox DirectSound objects. Opaque to the seam - only the DSOUND library ever looks inside them.
 typedef struct DSoundObject DSoundObject;   // DIRECTSOUND       in Ghidra
 typedef struct DSoundBuffer DSoundBuffer;   // DIRECTSOUNDBUFFER
-typedef struct DSoundStream DSoundStream;   // DIRECTSOUNDSTREAM
 
 #pragma pack(push, 1)
 
@@ -159,10 +158,6 @@ void __cdecl dsndSetDistances(uint32_t channel, float minDist, float maxDist);
 void __cdecl dsndSetI3DL2Source(uint32_t channel, float volume); // reverb send, 0..100 into the volume table
 void __cdecl maybeXboxSFXCalculate3D(uint32_t channel, uint8_t positioned); // 0 = follow the listener
 
-// Streams (music and video audio). The streams themselves are created by the XMV decoder library and by
-// maybeSFXCreateStreamForVideo, neither of which is reimplemented yet.
-void __cdecl BackgroundMovieSetupMix(DSoundStream *stream); // 5.1 mixbins with the centre channel muted
-void __cdecl dsndStreamSetVolume(DSoundStream *stream, int volume);
 
 // Called once per frame: pushes deferred 3D settings, services DSOUND's own work queue, then starts/stops
 // voices according to the per-slot request flags and frees the slots that have finished playing.
