@@ -1,0 +1,102 @@
+# The action engine's code by subsystem, for tools/function_coverage.py.
+#
+# Each line starts a range that runs to the next line: start address, subsystem, module. The XBE lays Eurocom's
+# objects out roughly alphabetically by source file, so a module is a run of one file's functions (the names make
+# the boundaries plain: Anim..., BOT..., Break..., Bullet...). Subsystems are grouped by the part before the dot.
+# Anything below "platform" or "lib" is under the surface: Eurocom's Xbox layer (psi/xbox/d3d/dsnd - what the seams
+# replace) and the XDK libraries linked in after it.
+
+# --- Eurocom's game code (.text) ---
+00011000 engine.anim         Anim
+00019440 ai.drones           behaviour
+000197d0 engine.flow         bootup
+0001a190 mp                  MP (drone/skin helpers)
+0001a250 ai.bots             BOT, BOTSTATE, BOTWEAP
+0001f820 objects             Break, Shatter, Destroy
+00020610 engine.world        build (world, cels, portals)
+000211f0 player              Bullet
+00024000 engine.camera       Camera, Viewer, ThirdCam, CamSubject
+00026100 objects             Car, GunImp
+000288e0 engine.collision    Intersect, Coll, ASH, Collide
+0002cf00 engine.objects      control (object lists, creation, LOD)
+0002e3f0 objects             Creature
+0002ec30 objects             Door
+0002fac0 ai.drones           Drone, NDrone2, DroneMove
+000479d0 ai.nav              AINetwork, LinkCreep
+0004b420 ai.drones           NDrone2_DSTATE (the state functions), Drone_SM, DroneVision, DroneWeap
+00068020 effects             Emitter
+00068a30 objects             Env (wind, trees)
+000690a0 objects             Explode, Mine, Shooter
+00069ab0 render              Font
+0006aa70 engine.flow         GameFlow, GS (pause)
+0006b140 engine.util         BIN, hashtable
+0006b7e0 objects             Copter
+0006c530 objects             Hurt, Occlude
+0006c940 engine.input        Input
+0006d130 engine.text         Txt (string tables)
+0006d4c0 engine.lighting     Light, Lights, Searchlight
+0006e4d0 engine.util         LList, DList, Stack, CirBuf
+0006eb20 engine.savestate    LS (mission state, save blocks)
+0006fa30 effects             Effect, Particles
+000705f0 engine.util         Mem
+00070d40 ui.frontend         Menu, components, page/control handlers, MenuManager
+00099d70 objects             GT (gun turret)
+0009b6c0 objects             MiniSub
+0009bdb0 engine.mission      Mission
+0009c7e0 mp                  MP
+000a3180 effects             weather (drops, cloud, rain, lightning), corona, swoosh, DynamicObject, Apocalypse
+000a4790 loader              parsemap, parseentity
+000a6c20 ai.nav              AIPath
+000a7380 objects             Pickup, rotor
+000a8980 player              Player (movement, camera), Ladder, Wire, Grapple, CreepWall
+000b04a0 player              PlrStat (mission statistics)
+000b1a30 ui.hud              HUD
+000b6c20 player              Player (weapons, ammo, aiming, auto-aim, upgrades)
+000bd830 engine.util         Comp (sort comparators), QuickSort
+000bdcd0 loader              Loader, ResetMap, Loadable, LoadScreen
+000c0020 engine.physics      RB (rigid bodies)
+000c1190 engine.script       Script, SP (cutscene and level scripts)
+000c4b70 audio               SFX, ES, Music, UpdateMFX, Sound (the first two are unnamed sound helpers)
+000cb180 objects             SS (the path-animated "simple script" object, placement type 226)
+000cb580 audio               Sound, Music_Event, map sounds
+000cc4c0 objects             SpaceMissile, SpaceLaser
+000cccf0 effects             Debris, Bubble, Gas, Flicker, Leaf, Ripples, BodyGlow
+000ceb30 render              Sprite
+000cef20 objects             Sub, SSys, Switch, FuseBox, Locks, PCQWorm, Sensor, Monitor
+000d1c90 engine.text         Text (on-screen messages, subtitles)
+000d25d0 objects             Timer, Trigger, SoundTrigger, MusicTrigger, Hint
+000d3a30 engine.util         Inflate, EDL (decompression)
+000d4cb0 engine.math         Vec, Mat, Quat, Rand, Spline
+000d8810 engine.world        Cel
+000d8950 engine.math         Vec, KeyFrame, Spline
+000d9210 render              View, Vision (portal visibility), Game_Draw
+000dbcd0 platform.system     memory, Language_Get
+000dc0d0 platform.gfx        Graphics_Init_LowLevel, loading dots
+000dc990 platform.files      FS_AllocateAndLoadBlocking, psiFile
+000dcac0 platform.gfx        psiDraw (particles, overlays), background movie start, gamma, psiPreDraw
+000dd1d0 engine.flow         mainloop
+000dd1f0 platform.input      psiInput (rumble)
+000dd290 engine.anim         psiBuildMatrixPalette (the skinning palette)
+000dd4c0 platform.gfx        psiPostDraw, psiDraw..., psiClearZ
+000dfbe0 loader              psiLoadData, loading screen, Woman (load-screen art), psiTime
+000e04e0 platform.gfx        psiDrawShadow, psiDrawSkinObjectMatrix
+000e09c0 platform.sound      psiSFX, dsnd, xboxInitSound
+000e1e70 platform.gfx        xboxInitTextures
+000e22b0 platform.files      error screen, FS, saves
+000e3a20 platform.gfx        d3d (Eurocom's D3D wrapper), psiBlur, xboxInitGraphics
+000e75f0 platform.input      xboxInitInputDevices, psiInput
+000e81a0 platform.gfx        D3D matrix helpers
+000e89d0 platform.system     contiguous memory
+000e8a00 platform.movie      BackgroundMovie (FMV playback)
+000e8e30 platform.system     main, timestamp, crc32, launch, PTP data
+
+# --- XDK libraries ---
+000e93f0 lib.xapi            XAPI, C runtime, kernel thunks
+000f5460 engine.static       static initialisers (WeaponDataTableInit is 44 KB of them)
+00100480 lib.d3d             D3D8
+00111fc0 lib.d3d             D3DX
+00112360 lib.d3d             XGRPH
+00112600 lib.dsound          DSOUND
+0012fd60 lib.xmv             XMV (movie decoder)
+00157200 lib.xpp             XPP (USB peripherals: pads, memory units)
+0015d150 end                 -

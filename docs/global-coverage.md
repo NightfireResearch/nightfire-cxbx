@@ -52,6 +52,9 @@ holding it is itself unused: the game's copy of a table we own, or one nothing l
 game's own `PaneList` stops keeping its panes and sprite tables alive once ours replaces it. Words inside the
 vertex shader microcode and the DOLBY DSP image that Ghidra typed as pointers are ignored.
 
+The call graph and liveness live in the tool's `CallGraph` class, which `tools/function_coverage.py` (function coverage
+by subsystem, [function-coverage.md](function-coverage.md)) uses too.
+
 A global with no live references is ready to own.
 
 ## Owning one

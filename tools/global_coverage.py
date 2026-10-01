@@ -261,47 +261,68 @@ def direct_calls(funcs, read):
     return found
 
 
+class CallGraph:
+    """Every function, which are replaced, and who calls or points at whom (tools/function_coverage.py uses it too)."""
+
+    def __init__(self):
+        self.funcs = {int(f["address"], 16): f["name"] for f in json.load(open(FUNCTIONS))}
+        self.by_name = {n: a for a, n in self.funcs.items()}
+        self.replaced = set()
+        for p in PATCH_FILES:
+            for m in re.finditer(r"WriteJmpTo\(\s*(0x[0-9a-fA-F]+)", open(p, encoding="utf-8", errors="replace").read()):
+                self.replaced.add(int(m.group(1), 16))
+
+        xrefs = [(int(t, 16), int(f, 16), int(fn, 16) if fn else None, k) for t, f, fn, k in json.load(open(XREFS))]
+        self.ignored = [x for x in xrefs if x[2] is None and any(lo <= x[1] < hi for lo, hi, _ in NOT_POINTERS)]
+        self.xrefs = [x for x in xrefs if not (x[2] is None and any(lo <= x[1] < hi for lo, hi, _ in NOT_POINTERS))]
+        self.nonzero, self.read, self.entry = read_xbe()
+
+        self.edges = defaultdict(set)      # function -> functions it calls or takes the address of
+        self.pointed_at = defaultdict(set) # function -> where in data its address is stored
+        referenced = set()
+        for to, frm, fn, kind in self.xrefs:
+            if to in self.funcs:
+                referenced.add(to)
+                if fn is None:
+                    self.pointed_at[to].add(frm)
+                else:
+                    self.edges[fn].add(to)
+        for caller, callee in direct_calls(self.funcs, self.read):
+            self.edges[caller].add(callee)
+            referenced.add(callee)
+        self.no_caller = {f for f in self.funcs if f not in referenced}
+        self.ours_points_at = functions_our_code_points_at(self.funcs)   # e.g. Drone_SM_InitObject storing 0x4e180
+        self.autogen = {self.by_name[n] for n in originals_we_call() if n in self.by_name}
+
+    def live(self, counts_as_pointer=lambda function, holder: True, no_caller=None):
+        """Functions that can still run. The roots: the entry point, the originals our code calls, functions whose
+        address sits in data (where counts_as_pointer agrees), and functions with no known caller (all of them,
+        unless no_caller gives a subset) - Ghidra may have missed an indirect call, so those count as live rather
+        than risk calling a live function dead."""
+        roots = {self.entry} | self.autogen | self.ours_points_at
+        roots |= {f for f, holders in self.pointed_at.items() if any(counts_as_pointer(f, h) for h in holders)}
+        roots |= self.no_caller if no_caller is None else no_caller
+        live, work = set(), [f for f in roots if f not in self.replaced]
+        while work:
+            f = work.pop()
+            if f in live or f in self.replaced:
+                continue
+            live.add(f)
+            work.extend(self.edges[f])
+        return live
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     flags = {a for a in sys.argv[1:] if a.startswith("--")}
     if not os.path.exists(XREFS):
         sys.exit("%s is missing: run ghidra/NightfireSync.py in Ghidra on default.xbe" % rel(XREFS))
 
-    funcs = {int(f["address"], 16): f["name"] for f in json.load(open(FUNCTIONS))}
-    by_name = {n: a for a, n in funcs.items()}
-    replaced = set()
-    for p in PATCH_FILES:
-        for m in re.finditer(r"WriteJmpTo\(\s*(0x[0-9a-fA-F]+)", open(p, encoding="utf-8", errors="replace").read()):
-            replaced.add(int(m.group(1), 16))
-
-    xrefs = [(int(t, 16), int(f, 16), int(fn, 16) if fn else None, k) for t, f, fn, k in json.load(open(XREFS))]
-    ignored = [x for x in xrefs if x[2] is None and any(lo <= x[1] < hi for lo, hi, _ in NOT_POINTERS)]
-    xrefs = [x for x in xrefs if not (x[2] is None and any(lo <= x[1] < hi for lo, hi, _ in NOT_POINTERS))]
-    nonzero, read, entry = read_xbe()
-
-    # The call graph, and liveness over it.
-    edges = defaultdict(set)      # function -> functions it calls or takes the address of
-    referenced = set()
-    roots = {entry} | {by_name[n] for n in originals_we_call() if n in by_name}
-    for to, frm, fn, kind in xrefs:
-        if to in funcs:
-            referenced.add(to)
-            if fn is None:
-                roots.add(to)                                # a pointer in data
-            else:
-                edges[fn].add(to)
-    for caller, callee in direct_calls(funcs, read):
-        edges[caller].add(callee)
-        referenced.add(callee)
-    roots |= functions_our_code_points_at(funcs)            # e.g. Drone_SM_InitObject storing 0x4e180
-    roots |= {f for f in funcs if f not in referenced}       # no known caller: assume something reaches it
-    live, work = set(), [f for f in roots if f not in replaced]
-    while work:
-        f = work.pop()
-        if f in live or f in replaced:
-            continue
-        live.add(f)
-        work.extend(edges[f])
+    graph = CallGraph()
+    funcs, by_name, replaced = graph.funcs, graph.by_name, graph.replaced
+    xrefs, ignored = graph.xrefs, graph.ignored
+    nonzero, read, entry = graph.nonzero, graph.read, graph.entry
+    live = graph.live()
 
     def status(fn):
         if fn is None:

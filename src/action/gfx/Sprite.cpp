@@ -37,10 +37,12 @@ void Sprite_InitLists(void) {
 // (the original tests colourTint & 0xff, whatever that byte means - probably alpha), and has something to draw:
 // text or a texture.
 //
-// *startOut is always 0 (View_DrawSprites takes it as the first index to draw). *lastForegroundOut is left at
-// the index of the LAST sprite, from the front of the sorted list, whose maybeEnabled is at least 50 - an index,
-// not a count, and 0 both when only the first sprite qualifies and when none does; the original has this
-// ambiguity and so does this. Both callers ignore it on Xbox.
+// *startOut is always 0. *lastForegroundOut is left at the index of the LAST sprite, from the front of the sorted
+// list, whose maybeEnabled is at least 50 - an index, not a count, and 0 both when only the first sprite
+// qualifies and when none does; the original has this ambiguity and so does this. The callers differ:
+// LoadScreen_Draw passes *startOut to View_DrawSprites as the first index to draw, but Game_Draw passes
+// *lastForegroundOut (it tests *startOut only in its viewer 4-9 loop, where it is always 0), so in the game's
+// views the sprites in front of that index are not drawn.
 //
 // AUTOINJECT
 sprite** Sprite_BuildList(ushort viewer, undefined4 *startOut, uint *lastForegroundOut, uint *countOut) {
