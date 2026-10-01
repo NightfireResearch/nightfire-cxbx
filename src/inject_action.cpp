@@ -28,6 +28,7 @@
 #include "action/game/drone/BOT.h"
 #include "action/game/drone/NDrone2.h"
 #include "action/game/drone/Behaviour.h"
+#include "action/engine/Fmv.h"
 #include "action/gfx/LowLevel.h"
 #include "action/devtools/MenuProbe.h"
 
@@ -72,6 +73,9 @@ void Inject()
   // The DirectSound stream entry points, but only when no emulator is hosting this process - see
   // DSoundStream_InstallHooks. Under CXBX these addresses already carry CXBX's own patches.
   DSoundStream_InstallHooks();
+
+  // Movies through FFmpeg instead of the XBE's XMV decoder, when its DLLs are there - see engine/Fmv.cpp
+  Fmv_InstallHooks();
 
 
   // Resolution beyond the original 640x480.

@@ -991,6 +991,11 @@ void __cdecl BackgroundMovieSetupMix(DSoundStream *stream) {
     IDirectSoundStream_SetMixBins(stream, &mixBins);
 }
 
+// The game's volume table: 0..100 to hundredths of a dB (the FMV player, engine/Fmv.cpp, uses it too)
+int32_t DSound_VolumeMillibels(int volume) {
+    return AudioSys.volumeTable[volume % 101];
+}
+
 // AUTOINJECT
 void __cdecl dsndStreamSetVolume(DSoundStream *stream, int volume) {
     if (stream != NULL)

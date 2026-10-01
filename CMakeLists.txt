@@ -124,6 +124,7 @@ add_library(actioninject SHARED
   src/action/engine/XboxSettings.cpp
   src/common/xboxPath.cpp
   src/action/engine/XboxFile.cpp
+  src/action/engine/Fmv.cpp
   src/action/engine/XboxStartup.cpp
   src/action/engine/Direct3D/d3dhelpers.cpp
   src/action/engine/Direct3D/d3dSeam.cpp
@@ -213,6 +214,20 @@ else()
 endif()
 target_link_libraries(actioninject PRIVATE
   d3d9 d3dcompiler winmm ${XAUDIO2_LIB} xinput9_1_0 user32)
+
+# FMV playback through FFmpeg (src/action/engine/Fmv.cpp), when tools/fmv/build_ffmpeg.sh has built it into
+# third_party/ffmpeg. The DLLs are loaded at run time and copied beside the executables; without them the game keeps
+# the XBE's own XMV decoder.
+set(NF_FFMPEG_DIR ${CMAKE_SOURCE_DIR}/third_party/ffmpeg)
+if(EXISTS ${NF_FFMPEG_DIR}/include/libavformat/avformat.h)
+  target_include_directories(actioninject PRIVATE ${NF_FFMPEG_DIR}/include)
+  target_compile_definitions(actioninject PRIVATE NF_HAVE_FFMPEG)
+  file(GLOB NF_FFMPEG_DLLS ${NF_FFMPEG_DIR}/bin/*.dll)
+  add_custom_command(TARGET actioninject POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_DLLS} $<TARGET_FILE_DIR:actioninject>)
+else()
+  message(STATUS "FFmpeg not built (tools/fmv/build_ffmpeg.sh): movies use the XBE's XMV decoder")
+endif()
 
 # The standalone loader (stage B 4.2/4.3): maps the XBE itself and runs it in-process, with no emulator in
 # the process at all. This is "action.exe" - the canonical way to run the action engine - and the CXBX

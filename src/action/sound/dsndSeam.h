@@ -176,4 +176,7 @@ void dsndUpdateVoices(void);
 // is about to be freed), stops every voice through one last dsndUpdateVoices, and clears the voice table.
 void __cdecl maybeSoundShutdown(void);
 
+// The game's volume table: 0..100 to hundredths of a dB, -10000..0
+int32_t DSound_VolumeMillibels(int volume);
+
 #endif // DSNDSEAM_H_
