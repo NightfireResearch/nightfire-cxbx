@@ -80,7 +80,7 @@ ui_hashcodes = {
     0x100000bf: "C_SBNFDFCTY",
     0x100000c7: "C_CHCHALLOWFREEZE",
     0x100000e5: "C_SBNFCN",
-    # TODO: Default case - CHCHWEAP?
+    0x100000e7: "C_CHCHWEAP",       # the original tests it on its own, between its first two jump tables (0x8e33b)
     0x10000173: "C_SBDSWPSCROLL", # Dossier Weapon Scroll?
     0x10000174: "C_RBDSRECORDS",
     # TODO: Non-contiguous block of crap
@@ -110,6 +110,9 @@ ui_hashcodes = {
     # Default case - SBDSGTSCROLL. Confirmed against PS2.
     0x1000016f: "C_SBDSGTSCROLL", # Submenu Dossier Gadgets Scroll?
 }
+
+# Known to the original dispatcher, which returns true for them without calling anything (see the switch's end)
+empty_handlers = ["C_SBSCREEN", "P_SCREENADJUST", "P_FMV"]
 
 implemented = ["C_SBDOSSIER", "P_DOSSIER", "P_MPMAP", "C_SBMPMAP", "P_MPSCENARIO", "P_MPPLAYERMODS", "P_MPENVIROMODS", "P_DSGADGETS", "C_SBDSGTSCROLL", "C_SBDSWPSCROLL", "P_DSWEAPONS", "P_DSREWARDS", "P_DSRECORDS", "P_CREDITS", "P_CNNAME", "C_KEYBOARD", "P_NFDFCTY", "C_SBNFDFCTY", "P_NFMAP", "C_SBNFMAP", "P_MPOPTIONS", "P_MPBOTS", "C_SBBOTS", "P_CNMENU", "C_SBCNOPTIONS", "P_MPBOTCHOOSE", "C_SBMPBTCHOOSE", "C_SBMPSCEN", "C_SBMPOPTIONS", "C_RBMPSETUP", "P_MPDEBRIEFING", "P_MPCONFIRM", "C_CHCHMUSIC", "C_CHCHDRAWALL", "P_ATTRACT"]
 
@@ -144,10 +147,15 @@ bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int 
     for addr, name in ui_hashcodes.items():
         output += f"        case {name}: return {name}_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);\n"
 
-    output += """
-        default: {printf("UNHANDLED MESSAGE HANDLER FOR TYPE: 0x%08x, args: 0x%08x,  0x%08x,  0x%08x,  0x%08x,  0x%08x\\n", hashcode, param_1, param_2, param_3, param_4, param_5);}
+    # The original (0x8e320) returns true for three hashcodes whose handlers the Xbox build compiled to nothing (the
+    # PS2 build still has them), and false for everything else it does not know - the anonymous sub-controls among
+    # them, which is normal, not an error. The return value only matters to ControlCreated (0x51): false plays the
+    # control's creation script a second time (docs/ui/framework.md).
+    for name in empty_handlers:
+        output += f"        case {name}: return true;   // no handler in the Xbox build\n"
+
+    output += """        default: return false;
     }
-    return (hashcode & 0xffffff00);
 }
 """
 
@@ -157,3 +165,8 @@ bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int 
     # tracked, so the tree would come up dirty after every cross build.
     with open("src/action/ui/ui.cpp", 'w', newline='\r\n') as file:
         file.write(output)
+
+
+if __name__ == "__main__":
+    # Run from the repository root: python tools/uihandler.py
+    generate_handler_switch()

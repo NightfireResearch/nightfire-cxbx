@@ -103,6 +103,8 @@ bool C_CHCHALLOWFREEZE_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode,
 // AUTOGEN
 bool C_SBNFCN_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
+bool C_CHCHWEAP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
+// AUTOGEN
 bool C_RBDSRECORDS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_RBDSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
@@ -212,6 +214,7 @@ bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int 
         case C_SBNFDFCTY: return C_SBNFDFCTY_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
         case C_CHCHALLOWFREEZE: return C_CHCHALLOWFREEZE_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
         case C_SBNFCN: return C_SBNFCN_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
+        case C_CHCHWEAP: return C_CHCHWEAP_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
         case C_SBDSWPSCROLL: return C_SBDSWPSCROLL_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
         case C_RBDSRECORDS: return C_RBDSRECORDS_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
         case C_RBDSREWARDS: return C_RBDSREWARDS_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
@@ -236,8 +239,9 @@ bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int 
         case C_LANGUAGE: return C_LANGUAGE_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
         case C_CHCHLOCKUP: return C_CHCHLOCKUP_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
         case C_SBDSGTSCROLL: return C_SBDSGTSCROLL_Handler(param_1, param_2, hashcode, param_3, param_4, param_5);
-
-        default: {printf("UNHANDLED MESSAGE HANDLER FOR TYPE: 0x%08x, args: 0x%08x,  0x%08x,  0x%08x,  0x%08x,  0x%08x\n", hashcode, param_1, param_2, param_3, param_4, param_5);}
+        case C_SBSCREEN: return true;   // no handler in the Xbox build
+        case P_SCREENADJUST: return true;   // no handler in the Xbox build
+        case P_FMV: return true;   // no handler in the Xbox build
+        default: return false;
     }
-    return (hashcode & 0xffffff00);
 }

@@ -38,7 +38,7 @@ read the assembly for them.
 
 | Layer | Live (original) | Done (ours or dead) | Notes |
 |---|---|---|---|
-| Page/control handlers | 63 functions, 40.3 KB | 36 (35 ours + C_CHCHWEAP dead, see §14) | the subject of [rewrite.md](rewrite.md) |
+| Page/control handlers | 63 functions, 40.3 KB | 35 ours (C_CHCHWEAP, reported dead until 2 Oct 2026, now dispatched: see §14) | the subject of [rewrite.md](rewrite.md) |
 | Core: managers, pages, dispatch, input, delayed messages, sounds, alpha | 45, 15.1 KB | 6, 4.7 KB | ours: `Handler_HandleMessage` (generated), the four delayed-message functions, `Menu_ClearStack` |
 | Control types (Button ... Window, Component skins, sprite glue) | 56, 32.9 KB | 1 (`Menu_DeleteSprite`) | List_SendMessage 4 KB, List_Update 2.9 KB, Scroll_Update 2.4 KB the largest |
 | Menu scripts and processes (`Script_*`, `Process_*` at 0x96000-0x97870) | 20, 4.0 KB | 0 | keyframe animation of controls; not the engine's level scripts |
@@ -447,11 +447,14 @@ The functions that more than one handler shares, with their state. Ours marked *
 
 ## 14. Findings that correct or extend the other documents
 
-- **C_CHCHWEAP is not dispatched by our `Handler_HandleMessage`.** The original sends 0x100000e7 to
-  C_CHCHWEAP_Handler (0x81b50; the call at 0x8e68a); `tools/uihandler.py` has "TODO: Default case - CHCHWEAP?" in its
-  table and leaves it out, so `function_coverage` reports the handler DEAD and the debug page's "all weapons"
-  checkbox does nothing. Reachable only through the debug page, so no retail difference, but it belongs in the table.
-- **Default return** (§7): ours true, original false, with three ids true.
+- **C_CHCHWEAP was not dispatched by our `Handler_HandleMessage`** (fixed 2 Oct 2026). The original sends
+  0x100000e7 to C_CHCHWEAP_Handler (0x81b50; the call at 0x8e68a); `tools/uihandler.py` had "TODO: Default case -
+  CHCHWEAP?" in its table and left it out, so `function_coverage` reported the handler dead and the debug page's
+  "all weapons" checkbox did nothing. Reachable only through the debug page, so no retail difference.
+- **Default return** (§7): ours was true; the original's is false, with three ids true. Fixed 2 Oct 2026: the
+  generated switch now returns false by default and true for C_SBSCREEN, P_SCREENADJUST and P_FMV (the three, read
+  from the original's jump tables), and the "UNHANDLED MESSAGE HANDLER" printf is gone. Menu replays show the
+  handler-less sub-controls returning 0 as the original does; screenshots unchanged.
 - handlers.md's step-2 list has 70 entries; 6 of them (C_CHCHMUSIC, C_CHCHDRAWALL, P_ATTRACT, P_CNNAME, C_KEYBOARD,
   P_CREDITS) are done, leaving 64 including C_CHCHWEAP.
 - The three menu sets and five managers (§2), all pages built at creation (§3), platform-variant flags (§3), the

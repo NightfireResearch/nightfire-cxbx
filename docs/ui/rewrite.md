@@ -10,8 +10,8 @@ to go, how to check each step, and what it will cost.
 
 - 99 handlers are dispatched by the original `Handler_HandleMessage` (0x8e320). 35 are ours; **64 are left**: the
   63 that `python tools/function_coverage.py ui.frontend` lists as live (40.3 KB of original code), plus
-  C_CHCHWEAP (0.2 KB), which reports as dead only because our generated dispatcher forgets to call it
-  ([framework.md §14](framework.md#14-findings-that-correct-or-extend-the-other-documents)).
+  C_CHCHWEAP (0.2 KB), which reported as dead only because our generated dispatcher forgot to call it (fixed
+  2 Oct 2026; [framework.md §14](framework.md#14-findings-that-correct-or-extend-the-other-documents)).
 - By kind (§3): 16 checkbox toggles, 8 debug/test pages, 4 movie pages, 8 boot and main-menu pages, 7 option pages,
   6 codename/save pages, 6 multiplayer join/setup handlers, 5 results/records handlers, 4 in-game handlers.
 - Reachable on a retail disc: 40 of the 64. The other 24 - the 16 toggles, C_LBPMMAP, P_TWEAKS, P_TWEAKS2,
@@ -179,7 +179,8 @@ does not lay out yet. Statics 0x25d820 (restart vs quit) and 0x25d821 (confirmat
 
 ### 4.1 Put the dispatcher right (small, do first)
 
-In `tools/uihandler.py` (then regenerate `ui.cpp`):
+In `tools/uihandler.py` (then regenerate `ui.cpp` with `python tools/uihandler.py`). Steps 1-3 were done on 2 Oct
+2026.
 
 1. Add `0x100000e7: "C_CHCHWEAP"`.
 2. Return false for unknown hashcodes, and true for 0x100001eb (C_SBSCREEN), 0x40000047 (P_SCREENADJUST) and
