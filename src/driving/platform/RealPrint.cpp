@@ -293,8 +293,7 @@ void MOUSE_setbounds(uint32_t a, uint32_t b, uint32_t unused, uint32_t d, uint32
 // float, which a C body would do. Name invented.
 // FUNC_AT(0x00108780)
 __declspec(naked) float REAL_sqrtf(float value) {
-    (void)value;
-    __asm {
+    __asm {   // nothing but asm in a naked function: clang refuses even (void)value
         fld dword ptr [esp + 4]
         fsqrt
         ret
