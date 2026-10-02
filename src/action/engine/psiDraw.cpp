@@ -466,10 +466,12 @@ struct TriListTriangle {
     short a, b, c;
     short pad;
 };
+// The layout ShatterPolyRecurse works in: it copies three of these into a shard's vertex list, puts the texture
+// in the first word, and psiCreateShard reads the position from +4
 struct TriListVertex {
-    float pos[3];
-    float pad0;
-    float uv[2];
+    uint32_t texture;           // unused here; ShatterPolyRecurse's
+    float pos[3];               // 0x04
+    float uv[2];                // 0x10
     float colour[4];            // A, R, G, B
 };
 struct TriList {
