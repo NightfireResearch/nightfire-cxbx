@@ -42,7 +42,9 @@ logged in to the runner.
   `Release/saves` from a working machine:
 
   ```
-  tar cf - disc Release/settings.ini Release/saves | ssh -i ~/.ssh/nightfire_runner Charlie@vr-desktop 'cd /c/nightfire-cxbx && tar xf -'
+  tar cf - disc Release/settings.ini Release/saves | ssh -i ~/.ssh/nightfire_runner Charlie@vr-desktop.local 'cd /c/nightfire-cxbx && tar xf -'
   ```
+- **Name:** a Mac finds a Windows machine by its bare name only with `.local` added (mDNS). `remote.sh` asks ssh to try
+  `vr-desktop.local` first and fall back to `vr-desktop`, so the default works from either.
 - **Login and power:** log in automatically, and never sleep. A disconnected RDP session can leave Direct3D with no
   display. Log in at the console, or reconnect, before a batch of runs.

@@ -28,7 +28,10 @@ RREPO=${RUNNER_REPO:-/c/nightfire-cxbx}
 JOBS=/c/nightfire-runner
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 
-r() { ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=15 "$USER_@$HOST" "$@"; }
+# CanonicalDomains: macOS resolves a Windows machine's bare name only with ".local" (mDNS); ssh tries that first
+# and falls back to the bare name, so either works
+r() { ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=15 -o CanonicalizeHostname=yes -o CanonicalDomains=local \
+    "$USER_@$HOST" "$@"; }
 
 cmd=$1; shift || true
 case "$cmd" in
