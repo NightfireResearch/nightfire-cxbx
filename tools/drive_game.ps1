@@ -86,6 +86,10 @@ param(
     # src/driving/platform/LaunchOptions.cpp for the list and the other options.
     [string]$GameArgs = "",
 
+    # Extra environment for the game, as "NAME=value" pairs, several separated by ";" (which survives the
+    # runner's quoting, where a list does not) - "NIGHTFIRE_MEMSHADOW=1" runs a shadow test, say.
+    [string[]]$GameEnv = @(),
+
     [string]$Exe = "Release\action.exe",
     [string]$WorkingDirectory = "Release",
     [string]$LogPath = "$env:TEMP\nightfire-drive.log"
@@ -111,11 +115,14 @@ Remove-Item $LogPath -ErrorAction SilentlyContinue
 if ($Teleport -ne "") { $env:NIGHTFIRE_TELEPORT = $Teleport } else { Remove-Item Env:NIGHTFIRE_TELEPORT -ErrorAction SilentlyContinue }
 if ($GameHold -ne "") { $env:NIGHTFIRE_HOLD = $GameHold } else { Remove-Item Env:NIGHTFIRE_HOLD -ErrorAction SilentlyContinue }
 if ($DumpAfterMs -ge 0) { $env:NIGHTFIRE_DUMP_MS = "$DumpAfterMs" } else { Remove-Item Env:NIGHTFIRE_DUMP_MS -ErrorAction SilentlyContinue }
+$GameEnv = @($GameEnv | ForEach-Object { $_ -split ";" } | Where-Object { $_ -ne "" })
+foreach ($pair in $GameEnv) { $name, $value = $pair -split "=", 2; Set-Item "Env:$name" $value }
 $startArgs = @{ FilePath = $exePath; WorkingDirectory = $workDir; PassThru = $true
                 RedirectStandardOutput = $LogPath; RedirectStandardError = "$LogPath.err" }
 if ($GameArgs -ne "") { $startArgs.ArgumentList = $GameArgs }
 $proc = Start-Process @startArgs
 Remove-Item Env:NIGHTFIRE_TELEPORT, Env:NIGHTFIRE_HOLD, Env:NIGHTFIRE_DUMP_MS -ErrorAction SilentlyContinue
+foreach ($pair in $GameEnv) { Remove-Item ("Env:" + ($pair -split "=", 2)[0]) -ErrorAction SilentlyContinue }
 
 Start-Sleep -Milliseconds $StartupWaitMs
 

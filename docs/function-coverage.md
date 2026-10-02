@@ -1,8 +1,8 @@
 # Function coverage by subsystem
 
 How much of each engine's code is ours, where the rest sits, and how much of it never needs reimplementing. The
-action engine's numbers are from 1 October 2026, the [driving engine's](#the-driving-engine) from 2 October 2026;
-`tools/function_coverage.py` regenerates them.
+action engine's numbers are from 1 October 2026, the [driving engine's](#the-driving-engine) from 2 October 2026
+(after the platform files); `tools/function_coverage.py` regenerates them.
 
 ```
 python tools/function_coverage.py                 # the summary below
@@ -201,35 +201,35 @@ where to change it.
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
 | game.weapons | 178 | 0 | 0 | 178 | 0% | 43 | 0% |
-| **engine** | 4035 | 60 | 13 | 3962 | **2%** | 526 | 2% |
+| **engine** | 4031 | 60 | 12 | 3959 | **2%** | 526 | 2% |
 | engine.anim | 414 | 0 | 2 | 412 | 0% | 52 | 0% |
 | engine.audio | 270 | 0 | 0 | 270 | 0% | 35 | 0% |
 | engine.camera | 273 | 0 | 0 | 273 | 0% | 60 | 0% |
-| engine.core | 258 | 8 | 4 | 246 | 5% | 26 | 6% |
+| engine.core | 254 | 8 | 3 | 243 | 4% | 26 | 6% |
 | engine.data | 555 | 3 | 1 | 551 | 1% | 79 | 0% |
 | engine.input | 107 | 42 | 5 | 60 | 44% | 12 | 46% |
 | engine.physics | 156 | 0 | 0 | 156 | 0% | 33 | 0% |
 | engine.render | 760 | 7 | 1 | 752 | 1% | 114 | 3% |
 | engine.static | 798 | 0 | 0 | 798 | 0% | 26 | 0% |
 | engine.world | 444 | 0 | 0 | 444 | 0% | 89 | 0% |
-| **platform** | 1480 | 4 | 58 | 1418 | **4%** | 266 | 3% |
+| **platform** | 1472 | 107 | 106 | 1259 | **14%** | 265 | 10% |
 | platform.eagl | 769 | 0 | 3 | 766 | 0% | 139 | 0% |
-| platform.files | 85 | 0 | 13 | 72 | 15% | 11 | 13% |
-| platform.input | 6 | 4 | 0 | 2 | 67% | 1 | 92% |
+| platform.files | 74 | 41 | 33 | 0 | 100% | 11 | 100% |
+| platform.input | 6 | 6 | 0 | 0 | 100% | 1 | 100% |
 | platform.math | 154 | 0 | 0 | 154 | 0% | 26 | 0% |
-| platform.movie | 100 | 0 | 34 | 66 | 34% | 20 | 20% |
+| platform.movie | 103 | 0 | 37 | 66 | 36% | 21 | 24% |
 | platform.sound | 278 | 0 | 5 | 273 | 2% | 59 | 0% |
-| platform.system | 88 | 0 | 3 | 85 | 3% | 9 | 8% |
-| **sys** | 1368 | 261 | 779 | 328 | **76%** | 240 | 85% |
+| platform.system | 88 | 60 | 28 | 0 | 100% | 9 | 100% |
+| **sys** | 1380 | 264 | 788 | 328 | **76%** | 241 | 85% |
 | sys.crt | 373 | 4 | 41 | 328 | 12% | 43 | 15% |
 | sys.d3d | 414 | 142 | 272 | 0 | 100% | 118 | 100% |
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
-| sys.xapi | 95 | 42 | 53 | 0 | 100% | 19 | 100% |
+| sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6887 | 61 | 18 | 6808 | **1%** | 1001 | 1% |
-| **platform + system** | 2848 | 265 | 837 | 1746 | **39%** | 506 | 42% |
-| **  without the C runtime** | 2475 | 261 | 796 | 1418 | **43%** | 463 | 44% |
-| **everything** | 9735 | 326 | 855 | 8554 | **12%** | 1506 | 15% |
+| **game + engine** | 6883 | 61 | 17 | 6805 | **1%** | 1000 | 1% |
+| **platform + system** | 2852 | 371 | 894 | 1587 | **44%** | 506 | 46% |
+| **  without the C runtime** | 2479 | 367 | 853 | 1259 | **49%** | 463 | 48% |
+| **everything** | 9735 | 432 | 911 | 8392 | **14%** | 1506 | 16% |
 
 - **Almost nothing above the platform is ours yet: 1% of game and engine code.** What is replaced is the input
   layer (`engine.input`, 44%: `IOModule`, `XBoxPadDevice`, `ActionQueue`, the pad), the event and scheduler core,
@@ -249,8 +249,19 @@ where to change it.
     kernel shims hand out Win32 handles, so the two mix freely), and the startup's own entry point is ported.
     The process heap is a Win32 heap now: XAPI's five heap entry points go to `HeapCreate`/`HeapAlloc`/`HeapFree`/
     `HeapReAlloc`/`HeapSize`, so `malloc` and `free` reach Win32's heap through them.
-- **The platform tier is 4% done.** EAGL (139 KB) and the sound library (59 KB) are most of it. The seams replaced the
-  libraries under them, not these layers, which run as built.
+- **The platform tier is 14% done (10% by bytes): its system library, files and input are all ours.** What is left
+  is EAGL (139 KB), the sound library (59 KB), the maths (26 KB) and the movie player and streamer (21 KB).
+  - *System* (`src/driving/platform/RealSystem.cpp`, `RealPrint.cpp`, `RealMemory.cpp`): EA's portable library -
+    TIMER, THREAD, SIGNAL, SYNCTASK, MUTEX, PRINT, the exit and abort handlers, the MEM_ copy and fill helpers,
+    and the MEM block allocator itself (classes, first and largest fit, top allocation, resize, validation), which
+    `src/driving/devtools/MemShadow.cpp` drives side by side with the original (`NIGHTFIRE_MEMSHADOW=1`).
+  - *Files* (`src/driving/platform/FileSys.cpp`, docs/driving/filesys.md): the whole FILESYS layer in one piece -
+    the op queue and its worker thread, the sync wrappers, the FILE_ helpers, the open-file table and the .viv
+    archive directories, and what is left of ASYNCFILE. Its records stay where the original kept them, so the
+    game allocates exactly what it did. `src/driving/devtools/FileSysShadow.cpp` checks the archive lookup against
+    the original on every archive (`NIGHTFIRE_FSSHADOW=1`); `FileSysTrace.cpp` prints the ops (`NIGHTFIRE_FSTRACE=1`).
+  - Three of the STREAM helpers that sat among the file code are counted with STREAM (`platform.movie`) now, and
+    `XGetAVPack`/`XGetVideoFlags`, which sat there too, with XAPI (ported in `XboxXapi.cpp`).
 - **Of the 1,001 KB of game and engine code, 988 KB is still original.** By size: rendering 110 KB, AI 109 KB, world
   and collision 88 KB, data and tuning 79 KB, mission events 71 KB, front end and HUD 68 KB, vehicles 62 KB,
   cameras 60 KB, animation 51 KB, gameplay audio 50 KB, then the rest at under 45 KB each.

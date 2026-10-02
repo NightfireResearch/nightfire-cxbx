@@ -301,6 +301,17 @@ void SIGNAL_destroy(RealSignal *signal) {
     CloseHandle(signal->event);
 }
 
+// Ghidra's iFILE_maybeExecCommand: FILESYS raises its worker's signal with it, IFeedback its own.
+// FUNC_AT(0x0010a700)
+BOOL SIGNAL_post(RealSignal *signal) {
+    return SetEvent(signal->event);
+}
+
+// FUNC_AT(0x0010a710)
+DWORD SIGNAL_wait(RealSignal *signal) {
+    return WaitForSingleObject(signal->event, INFINITE);
+}
+
 // ---- MUTEX: a critical section at +4, through the kernel's imports
 
 #define KernelRtlInitializeCriticalSection (*(void (__stdcall **)(void *))0x00189cf0u)

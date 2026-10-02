@@ -24,6 +24,13 @@ Frames from the runner are not pixel-identical to ones from another machine (its
 compare a change against a baseline run on the runner itself. Two runs of the same build land a few frames
 apart: compare the ones that land on the same frame number, or allow for animation.
 
+Shadow tests and traces are switched on by environment variables, passed with `-GameEnv` (several separated by
+`;`, which survives the runner's quoting where a list does not):
+
+```
+tools/runner/remote.sh drive shadow "-Exe 'Release\driving.exe' -GameArgs '-mission 2' -GameEnv 'NIGHTFIRE_MEMSHADOW=1;NIGHTFIRE_FSSHADOW=1' -DumpAfterMs 8000 -StopPattern 'dumping frame'"
+```
+
 A driving run with `-mission` needs a valid mission (1-8). Without one the game falls back to `psiLaunch.bin`, which
 the runner does not have, and loads a track with an empty name.
 

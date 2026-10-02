@@ -100,11 +100,33 @@ static LONG __stdcall Xbox_ExQueryNonVolatileSetting(ULONG index, ULONG *type, v
     return KernelExQueryNonVolatileSetting(index, type, value, length, resultLength);
 }
 
+// HalBootSMCVideoMode (kernel ordinal 356), a data export: 1 when the console booted into an HD-capable mode.
+#define KernelHalBootSMCVideoMode (*(ULONG **)0x00189bf0u)
+
+// XGetAVPack (0x0010e002): the cable plugged in (setting 0x103, its second byte; 3 is HDTV component), 0 if the
+// setting cannot be read.
+static DWORD Xbox_XGetAVPack(void) {
+    ULONG type, value;
+    if (Xbox_ExQueryNonVolatileSetting(0x103, &type, &value, 4, NULL) < 0)
+        return 0;
+    return value >> 8 & 0xff;
+}
+
+// XGetVideoFlags (0x0010e02b): the dashboard's video settings (setting 8, bits 16..22 masked to 0x5f), without
+// the HD modes (480p, 720p, 1080i: 2, 4, 8) unless the console booted HD-capable on a component cable.
+static DWORD Xbox_XGetVideoFlags(void) {
+    ULONG type, value;
+    DWORD flags = Xbox_ExQueryNonVolatileSetting(8, &type, &value, 4, NULL) < 0 ? 0 : value >> 16 & 0x5f;
+    if (*KernelHalBootSMCVideoMode != 1 || Xbox_XGetAVPack() != 3)
+        flags &= 0xfffffff1;
+    return flags;
+}
+
 // ---- files
 
 // CreateFileA (0x0010f76c). The path is an Xbox one ("d:\driving\..."), resolved onto the host as the loader
 // resolves NtCreateFile's (src/loader/file.cpp); a share mode of zero opens shared, as there.
-static HANDLE __stdcall Xbox_CreateFileA(const char *path, DWORD access, DWORD share, SECURITY_ATTRIBUTES *security,
+HANDLE __stdcall Xbox_CreateFileA(const char *path, DWORD access, DWORD share, SECURITY_ATTRIBUTES *security,
                                          DWORD disposition, DWORD flags, HANDLE templateFile) {
     (void)security; (void)templateFile;
     char hostPath[MAX_PATH];
@@ -118,7 +140,7 @@ static HANDLE __stdcall Xbox_CreateFileA(const char *path, DWORD access, DWORD s
 }
 
 // DeleteFileA (0x0010fd88).
-static BOOL __stdcall Xbox_DeleteFileA(const char *path) {
+BOOL __stdcall Xbox_DeleteFileA(const char *path) {
     char hostPath[MAX_PATH];
     if (path == NULL || !Xbox_ResolvePath(path, hostPath, sizeof(hostPath))) {
         SetLastError(ERROR_PATH_NOT_FOUND);
@@ -283,6 +305,8 @@ void Inject_XboxXapi(void) {
     WriteJump(0x0010e7e9, (const void *)Xbox_XPhysicalAlloc);
     WriteJump(0x0010e82c, (const void *)Xbox_MmFreeContiguousMemory);
     WriteJump(0x001143e0, (const void *)Xbox_ExQueryNonVolatileSetting);
+    WriteJump(0x0010e002, (const void *)Xbox_XGetAVPack);
+    WriteJump(0x0010e02b, (const void *)Xbox_XGetVideoFlags);
     WriteJump(0x0010f76c, (const void *)Xbox_CreateFileA);
     WriteJump(0x0010fd88, (const void *)Xbox_DeleteFileA);
     WriteJump(0x0010f2c3, (const void *)Xbox_ReadFile);

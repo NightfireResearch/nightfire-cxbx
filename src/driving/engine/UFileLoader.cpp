@@ -123,8 +123,7 @@ void dumpToFile(char* gamefile, void* data, size_t len) {
     // Close the file
     fclose(file);
 }
-// AUTOGEN
-size_t MEM_size(void* data);
+#include "../platform/RealMemory.h"   // MEM_size, ours now
 
 // AUTOINJECT
 void* UFileLoader::FileLoad(char *rawPath, int param_2, bool param_3) {

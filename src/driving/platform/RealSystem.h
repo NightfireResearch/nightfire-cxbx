@@ -63,6 +63,8 @@ void THREAD_exit();
 
 int SIGNAL_create(RealSignal *signal);
 void SIGNAL_destroy(RealSignal *signal);
+BOOL SIGNAL_post(RealSignal *signal);
+DWORD SIGNAL_wait(RealSignal *signal);
 
 char MUTEX_create(RealMutex *mutex);
 void REALMUTEX_destroy(RealMutex *mutex);

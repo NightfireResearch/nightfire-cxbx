@@ -361,6 +361,10 @@ add_library(drivinginject SHARED
   src/driving/render/RGlareManager.cpp
   src/driving/render/RSceneObj.cpp
   src/driving/devtools/Teleport.cpp
+  src/driving/devtools/MemShadow.cpp
+  src/driving/devtools/FileSysShadow.cpp
+  src/driving/devtools/FileSysTrace.cpp
+  src/common/xbeOriginal.cpp
   src/driving/engine/UFileLoader.cpp
   src/driving/engine/PlayMPC.cpp
   src/common/fmv/Ffmpeg.cpp
@@ -374,6 +378,8 @@ add_library(drivinginject SHARED
   src/driving/platform/XboxXapi.cpp
   src/driving/platform/RealSystem.cpp
   src/driving/platform/RealPrint.cpp
+  src/driving/platform/RealMemory.cpp
+  src/driving/platform/FileSys.cpp
   src/driving/platform/XboxTimer.cpp
   src/driving/platform/XboxInput.cpp
   src/driving/platform/LaunchOptions.cpp
