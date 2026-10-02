@@ -7,6 +7,7 @@
 // XBE_ENTRY_UNKNOWN_STACK(name, address) - no RET found by a linear sweep, so the seam
 //   cannot substitute a stub that returns; read these by hand before replacing them.
 
+XBE_ENTRY(DSound_CRefCount_AddRef, 0x0017acb3u, 4)
 XBE_ENTRY(DSound_CRefCount_Release, 0x0017acc0u, 4)
 XBE_ENTRY(DirectSoundEnterCriticalSection, 0x0017ace7u, 0)
 XBE_ENTRY(IDirectSound_Release, 0x0017ad34u, 4)

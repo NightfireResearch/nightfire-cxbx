@@ -398,7 +398,14 @@ static uint32_t __stdcall Seam_IDirectSound_Release(void *device) {
     return 0;
 }
 
+// DirectSound's reference-counted base class: AddRef (0x0017acb3) bumps the count at +4 and returns it. It has
+// no direct callers - it is reached through a vtable - so it is ported as it is rather than left to a stub.
+static uint32_t __stdcall Seam_DSound_CRefCount_AddRef(uint32_t *object) {
+    return ++object[1];
+}
+
 static const struct { const char *name; void *replacement; unsigned stackBytes; } g_replacements[] = {
+    { "DSound_CRefCount_AddRef",               (void *)Seam_DSound_CRefCount_AddRef, 4 },
     { "DirectSoundCreate",                     (void *)Seam_DirectSoundCreate, 12 },
     { "IDirectSound_CreateSoundBuffer",        (void *)Seam_IDirectSound_CreateSoundBuffer, 16 },
     { "DirectSoundCreateBuffer",               (void *)Seam_DirectSoundCreateBuffer, 8 },

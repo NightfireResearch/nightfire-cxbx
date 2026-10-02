@@ -40,18 +40,26 @@
 //     0x000f3ec7 getptd, f3f49 free, f405e mt    0x001356f2, 0x00135774, 0x00135889
 // ---------------------------------------------------------------------------------------------------------------
 
-// XAPI internals, called by address: tools/functions_driving.json does not carry them.
-#define Xapi_rtinit     ((void (__cdecl *)(void))0x001106bbu)
-#define Xapi_cinit      ((void (__cdecl *)(void))0x00110663u)
+// The initialiser tables the C runtime's _rtinit (0x001106bb) and _cinit (0x00110663) walk, which are ported
+// below (RunInitialisers): XAPI's run-time initialisers, the C initialisers (__xi) and the C++ constructors
+// (__xc), each a run of function pointers in which null and -1 are skipped. _cinit first calls the
+// floating-point initialiser through the pointer at 0x001d87dc, when one was linked.
+#define RtInitTableBegin  ((void (**)(void))0x001b3da0u)
+#define RtInitTableEnd    ((void (**)(void))0x001b3dacu)
+#define CInitTableBegin   ((void (**)(void))0x001b4908u)
+#define CInitTableEnd     ((void (**)(void))0x001b491cu)
+#define CppInitTableBegin ((void (**)(void))0x001b3db0u)
+#define CppInitTableEnd   ((void (**)(void))0x001b4904u)
+#define FpInitPointer     (*(void (**)(void))0x001d87dcu)
+// DirectSound's static constructors, in the C++ table (0x001b48c8..0x001b48d4): each stores a vtable pointer
+// into DSOUND's own globals. Every DSOUND entry point is the sound seam's now, so nothing reads what they set,
+// and they are left out - as the action engine's startup leaves out its DSOUND constructors.
+#define DSoundSectionBegin 0x0017ac40u
+#define DSoundSectionEnd   0x00183aa4u
 
-// The XBE's own heap manager - RtlCreateHeap in all but name, and the allocator every malloc in the game
-// eventually reaches. It is left in place and simply given memory to work with: its blocks are the ones the
-// game's own free() understands.
-#define XapiCreateHeap  ((void *(__stdcall *)(unsigned flags, void *base, unsigned reserve, \
-                                              unsigned commit, void *lock, void *parameters))0x001118ddu)
-
-// Its allocator, RtlAllocateHeap(heap, flags, size): what XAPI's LocalAlloc (0x0010fe33) calls.
-#define XapiAllocateHeap ((void *(__stdcall *)(void *heap, unsigned flags, unsigned size))0x00111d01u)
+// The process heap is a Win32 heap. XAPI's heap entry points - RtlCreateHeap (0x001118dd), RtlAllocateHeap,
+// RtlFreeHeap, RtlReAllocateHeap, RtlSizeHeap - go to Win32's in XboxXapi.cpp, which is how the game's malloc and
+// free reach it, so the heap is made with HeapCreate here and its handle left where the C runtime looks.
 
 // Where XapiInitProcess leaves the process heap handle, and the table of initialisers it runs afterwards.
 #define ProcessHeapHandle (*(void **)0x0024b218u)
@@ -89,12 +97,9 @@ void __stdcall Xbox_SetLastError(DWORD error) {
 // ---------------------------------------------------------------------------------------------------------------
 
 void __stdcall Xbox_XapiInitProcess(void) {
-    // RTL_HEAP_PARAMETERS, all defaults. Only the leading length field is set, exactly as the original does.
-    unsigned parameters[12];
-    memset(parameters, 0, sizeof(parameters));
-    parameters[0] = sizeof(parameters);
-
-    ProcessHeapHandle = XapiCreateHeap(2, NULL, 0x100000, 0x1000, NULL, parameters);
+    // The original asks for a growable heap (HEAP_GROWABLE) reserving 1 MB with 4 KB committed; a Win32 heap with
+    // no maximum is growable.
+    ProcessHeapHandle = HeapCreate(0, 0x1000, 0);
     if (ProcessHeapHandle == NULL) {
         printf("[startup] the process heap could not be created - nothing can allocate\n");
         fflush(stdout);
@@ -342,10 +347,13 @@ static void WriteJump(unsigned address, void *target) {
     *(int *)(site + 1) = (int)((unsigned char *)target - (site + 5));
 }
 
+static void __cdecl Xbox_Entry(void);   // below, beside mainXapiStartup
+
 void Inject_XboxStartup(void) {
     if (!Xbox_RunningStandalone())
         return;
 
+    WriteJump(0x0010e777, (void *)Xbox_Entry);               // the entry point
     WriteJump(0x0010e703, (void *)mainXapiStartup);          // the whole of process startup
     WriteJump(0x001104aa, (void *)Xbox_XapiInitProcess);     // heap and the XAPI initialiser table
     WriteJump(0x0010f8f7, (void *)Xbox_GetLastError);
@@ -354,6 +362,7 @@ void Inject_XboxStartup(void) {
     WriteJump(0x00135774, (void *)Xbox_freeptd);
     WriteJump(0x00135889, (void *)Xbox_mtinit);
     WriteJump(0x00183dfd, (void *)Xbox_XInitDevices);   // XAPI's USB stack, which has nothing to talk to
+    WriteJump(0x00184bae, (void *)Xbox_XInitDevices);   // and the import thunk the game calls it through (a JMP to it)
     WriteJump(0x0010eed3, (void *)Xbox_timeSetEvent);   // the tick source, see XboxTimer.cpp
     WriteJump(0x0010ecd8, (void *)Xbox_GetCurrentThreadId);   // FS:[0x28] is not a KTHREAD here
     WriteJump(0x0010ea0f, (void *)Xbox_SetThreadPriority);    // no kernel thread objects to reference
@@ -396,7 +405,7 @@ static char **BuildArgvInProcessHeap(int argc, char **source) {
     for (int i = 0; i < argc; i++)
         size += (unsigned)strlen(source[i]) + 1;
 
-    char **argv = (char **)XapiAllocateHeap(ProcessHeapHandle, 0, size);
+    char **argv = (char **)HeapAlloc(ProcessHeapHandle, 0, size);
     if (argv == NULL) {
         printf("[startup] could not allocate the game's argv - starting it without arguments\n");
         return NULL;
@@ -412,6 +421,46 @@ static char **BuildArgvInProcessHeap(int argc, char **source) {
     return argv;
 }
 
+static void RunInitialisers(void (**begin)(void), void (**end)(void)) {
+    for (void (**entry)(void) = begin; entry < end; entry++) {
+        uintptr_t target = (uintptr_t)*entry;
+        if (target == 0 || target == (uintptr_t)-1)
+            continue;
+        if (target >= DSoundSectionBegin && target < DSoundSectionEnd)
+            continue;
+        (*entry)();
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The entry point (0x0010e777), as the action engine's (Xbox_Entry in src/action/engine/XboxStartup.cpp): clamp the
+// certificate's size to what the headers hold, record the per-thread TLS block's size and index, and start the
+// game's thread at mainXapiStartup. The original boots to the dashboard if the thread cannot be made.
+// ---------------------------------------------------------------------------------------------------------------
+
+#define XbeSizeOfHeaders     (*(uint32_t *)0x00010108u)
+#define XbeCertificate       (*(uint32_t **)0x00010118u)
+#define XbeStackCommit       (*(uint32_t *)0x00010130u)
+#define XbeTls               ((uint32_t *)0x001a1ddcu)   // the TLS directory: template start, end, index address, ..., zero fill
+#define XapiThreadTlsSize    (*(uint32_t *)0x0024b228u)
+
+static void __cdecl Xbox_Entry(void) {
+    uint32_t certificateLimit = XbeSizeOfHeaders - (uint32_t)(uintptr_t)XbeCertificate + 0x10000;
+    if (certificateLimit < *XbeCertificate)
+        *XbeCertificate = certificateLimit;
+    int32_t tlsSize = (int32_t)((XbeTls[4] - XbeTls[0] + XbeTls[1] + 0xf) & ~0xfu) + 4;
+    XapiThreadTlsSize = (uint32_t)tlsSize;
+    **(int32_t **)(XbeTls + 2) = tlsSize / -4;
+
+    HANDLE thread = CreateThread(NULL, XbeStackCommit, mainXapiStartup, NULL, 0, NULL);
+    if (thread == NULL) {
+        printf("[startup] the game's thread could not be created (error %lu)\n", GetLastError());
+        fflush(stdout);
+        ExitProcess(1);
+    }
+    CloseHandle(thread);
+}
+
 DWORD WINAPI mainXapiStartup(LPVOID unused) {
     (void)unused;
 
@@ -423,8 +472,11 @@ DWORD WINAPI mainXapiStartup(LPVOID unused) {
     printf("[startup] running the C runtime and C++ constructors\n");
     fflush(stdout);
 
-    Xapi_rtinit();
-    Xapi_cinit();
+    RunInitialisers(RtInitTableBegin, RtInitTableEnd);          // _rtinit
+    if (FpInitPointer != NULL)                                   // _cinit
+        FpInitPointer();
+    RunInitialisers(CInitTableBegin, CInitTableEnd);
+    RunInitialisers(CppInitTableBegin, CppInitTableEnd);
 
     printf("[startup] calling main\n");
     fflush(stdout);

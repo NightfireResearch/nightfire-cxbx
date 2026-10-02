@@ -5,6 +5,7 @@
 #include "driving/main.h"
 #include "driving/Scheduler.hpp"
 #include "driving/platform/XboxStartup.h"
+#include "driving/platform/XboxXapi.h"
 #include "driving/gfx/d3dSeam.h"
 #include "driving/platform/XboxInput.h"
 #include "driving/platform/LaunchOptions.h"
@@ -76,6 +77,10 @@ void Inject()
   // under the standalone loader it replaces the XAPI startup that reaches for a KPCR this process does
   // not have. See src/driving/platform/XboxStartup.cpp.
   Inject_XboxStartup();
+
+  // XAPI - files, events, threads, the heap - to the host's Win32, before the startup thread makes the heap.
+  // See src/driving/platform/XboxXapi.cpp.
+  Inject_XboxXapi();
 
   // The graphics seam: every D3D8 entry point in the XBE goes to the native backend instead of to
   // Microsoft's library, which standalone would be talking to an nv2a that is not there.

@@ -4,6 +4,7 @@
 #include "../../common/standalone.h"
 #include "../../common/xbeEntrySeam.h"
 #include "../../common/xbeProfiler.h"
+#include "../../common/xboxPath.h"   // XGWriteSurfaceToFile
 
 #include <windows.h>
 #include <stdint.h>
@@ -44,6 +45,7 @@ static XbeEntry g_entries[] = {
 #define XBE_ENTRY(name, address, stack)        { #name, address, stack, 0, 0, false },
 #define XBE_ENTRY_UNKNOWN_STACK(name, address) { #name, address, XBE_ENTRY_STACK_UNKNOWN, 0, 0, false },
 #include "d3d8Entries.inc"
+#include "d3d8EntriesUnnamed.inc"
 #undef XBE_ENTRY
 #undef XBE_ENTRY_UNKNOWN_STACK
 };
@@ -296,6 +298,79 @@ static void __stdcall Seam_D3DDevice_SetRenderState_StencilFail(uint32_t value) 
 
 static void __stdcall Seam_D3DDevice_SetRenderState_ShadowFunc(uint32_t value) {
     (void)value;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The deferred render states EAGL sets through their own entry points. Each original stores the value in its
+// slot of D3D8's render-state table and pushes the matching NV2A methods; the slots are read out of the
+// originals (the one store each makes into the table at 0x00175628). A few also refresh a derived slot that
+// only feeds the push buffer (139 for BackFillMode and TwoSidedLighting, 142 for FrontFace), and MultiSampleAntiAlias
+// recomputes the multisample setup; none of that has a reader here. The backend reads none of these slots
+// either - it reads only the fog states - so storing the value keeps the table as the game expects to find it
+// and changes nothing on screen, which is what running the originals did.
+// ---------------------------------------------------------------------------------------------------------------
+
+static void StoreDeferredRenderState(unsigned slot, uint32_t value) {
+    if (g_xboxRenderStateTable != 0)
+        ((uint32_t *)g_xboxRenderStateTable)[slot] = value;
+}
+
+#define DEFERRED_RENDER_STATE(name, slot)                                       \
+    static void __stdcall Seam_D3DDevice_SetRenderState_##name(uint32_t value) { \
+        StoreDeferredRenderState(slot, value);                                  \
+    }
+DEFERRED_RENDER_STATE(PSTextureModes, 136)                  // 0x001673b0
+DEFERRED_RENDER_STATE(VertexBlend, 137)                     // 0x00167bf0
+DEFERRED_RENDER_STATE(BackFillMode, 140)                    // 0x00167b20
+DEFERRED_RENDER_STATE(TwoSidedLighting, 141)                // 0x00167b80
+DEFERRED_RENDER_STATE(NormalizeNormals, 142)                // 0x00167860
+DEFERRED_RENDER_STATE(FrontFace, 146)                       // 0x00167820
+DEFERRED_RENDER_STATE(ZBias, 149)                           // 0x001679f0
+DEFERRED_RENDER_STATE(LogicOp, 150)                         // 0x00167a70
+DEFERRED_RENDER_STATE(EdgeAntiAlias, 151)                   // 0x001676e0
+DEFERRED_RENDER_STATE(MultiSampleAntiAlias, 152)            // 0x00168b70
+DEFERRED_RENDER_STATE(MultiSampleMask, 153)                 // 0x00168bf0
+DEFERRED_RENDER_STATE(MultiSampleMode, 154)                 // 0x00168af0
+DEFERRED_RENDER_STATE(MultiSampleRenderTargetMode, 155)     // 0x00168b30
+DEFERRED_RENDER_STATE(SampleAlpha, 158)                     // 0x00168c40
+DEFERRED_RENDER_STATE(OcclusionCullEnable, 161)             // 0x001689b0
+DEFERRED_RENDER_STATE(StencilCullEnable, 162)               // 0x00168a20
+DEFERRED_RENDER_STATE(RopZCmpAlwaysRead, 163)               // 0x00168a90
+DEFERRED_RENDER_STATE(RopZRead, 164)                        // 0x00168ab0
+DEFERRED_RENDER_STATE(DoNotCullUncompressed, 165)           // 0x00168ad0
+#undef DEFERRED_RENDER_STATE
+
+// The index buffer for indexed draws. The original records it (with a reference) and the base vertex index in
+// the device; this engine's draws are handed their index data directly (D3DDevice_DrawIndexedVertices), so the
+// backend's note of it is all that is needed.
+static void __stdcall Seam_D3DDevice_SetIndices(void *indexBuffer, uint32_t baseVertexIndex) {
+    D3D9_SetIndices(indexBuffer, baseVertexIndex);
+}
+
+static void __stdcall Seam_D3DDevice_SetGammaRamp(uint32_t flags, void *ramp) {
+    D3D9_SetGammaRamp(flags, ramp);
+}
+
+// Whether the GPU is still using a resource: never, here - the backend copies what it reads at the draw.
+static uint32_t __stdcall Seam_D3DResource_IsBusy(void *resource) {
+    (void)resource;
+    return 0;
+}
+
+// An index buffer: as the original (0x0016b430) makes it, one block of 12 header bytes followed by the indices -
+// Common = 0x01010001 (an index buffer, one reference), Data = the indices, Lock = 0. The original takes the
+// block from the XAPI heap; Release never frees an index buffer (the backend frees only the surfaces it made),
+// so neither did the original path.
+static void *__stdcall Seam_D3DDevice_CreateIndexBuffer2(uint32_t length) {
+    uint32_t *buffer = (uint32_t *)calloc(1, 12 + length);
+    if (buffer == NULL) {
+        printf("[d3dSeam] out of memory for a %u-byte index buffer\n", length);
+        return NULL;
+    }
+    buffer[0] = 0x01010001u;
+    buffer[1] = (uint32_t)(uintptr_t)(buffer + 3);
+    buffer[2] = 0;
+    return buffer;
 }
 
 static uint32_t __stdcall Seam_D3DDevice_CreateVertexShader(const void *declaration, const void *function,
@@ -693,6 +768,180 @@ static void __stdcall Seam_XGSwizzleRect(const void *source, uint32_t pitch, con
 }
 
 // ---------------------------------------------------------------------------------------------------------------
+// Library functions EAGL reaches that Ghidra has no name for (d3d8EntriesUnnamed.inc).
+// ---------------------------------------------------------------------------------------------------------------
+
+// 0x00169450: MOV EAX, 1 / RET 4. EAGL::Device::Init calls it with 0 and keeps the answer at 0x0023ff14. Name
+// invented: the original is a constant, so what it once asked is not recoverable from this build.
+static uint32_t __stdcall Seam_D3D_ReturnsTrue(uint32_t unused) {
+    (void)unused;
+    return 1;
+}
+
+// XGBytesPerPixelFromFormat (0x00178fb8): the original's jump table, read out of the XBE (0x00178fe2 and the
+// index bytes at 0x00178ff2). DXT3 and DXT5 count as one byte a pixel and DXT1 as none, as there.
+static uint32_t __stdcall Seam_XGBytesPerPixelFromFormat(uint32_t format) {
+    switch (format) {
+        case 0x06: case 0x07: case 0x12: case 0x1e: case 0x24: case 0x25: case 0x2a: case 0x2b: case 0x2e:
+        case 0x2f: case 0x33: case 0x3a: case 0x3b: case 0x3c: case 0x3f: case 0x40: case 0x41:
+            return 4;
+        case 0x02: case 0x03: case 0x04: case 0x05: case 0x10: case 0x11: case 0x16: case 0x17: case 0x1a:
+        case 0x1c: case 0x1d: case 0x20: case 0x27: case 0x28: case 0x29: case 0x2c: case 0x2d: case 0x30:
+        case 0x31: case 0x32: case 0x35: case 0x37: case 0x38: case 0x39: case 0x3d: case 0x3e:
+            return 2;
+        case 0x00: case 0x01: case 0x0b: case 0x0e: case 0x0f: case 0x13: case 0x19: case 0x1b: case 0x1f:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+// D3DXLoadSurfaceFromMemory (0x0015d3bd; ten arguments, D3DERR_INVALIDCALL for a missing surface, source or
+// source rectangle). EAGL's one caller (FUN_000eb910) copies a rectangle of image data into each mip level of
+// a texture: no palettes, D3DX_FILTER_NONE (1), no colour key. With no filter, D3DX copies pixel for pixel and
+// clips to the smaller rectangle, so that is what this does - into the surface's swizzled layout when its
+// format is swizzled, or block rows for a compressed one. A conversion between formats of different sizes, or
+// a filter, is what the original's sixty-odd helpers did and nothing here has needed; it is reported once.
+#define D3DERR_INVALIDCALL_ 0x8876086Cu
+
+static uint32_t __stdcall Seam_D3DXLoadSurfaceFromMemory(void *destSurface, const void *destPalette,
+                                                         const XboxRect *destRect, const void *source,
+                                                         uint32_t sourceFormat, uint32_t sourcePitch,
+                                                         const void *sourcePalette, const XboxRect *sourceRect,
+                                                         uint32_t filter, uint32_t colorKey) {
+    (void)destPalette; (void)sourcePalette; (void)colorKey;
+    if (destSurface == NULL || source == NULL || sourceRect == NULL)
+        return D3DERR_INVALIDCALL_;
+
+    XboxSurfaceDesc desc;
+    FillSurfaceDesc(destSurface, &desc);
+    static bool first = true;
+    if (first) {
+        first = false;
+        printf("[d3dSeam] D3DXLoadSurfaceFromMemory: first call, format 0x%x into a %ux%u surface of format 0x%x\n",
+               sourceFormat, desc.Width, desc.Height, desc.Format);
+    }
+    uint32_t destBits = XboxFormatBits(desc.Format), sourceBits = XboxFormatBits(sourceFormat);
+    if (destBits != sourceBits || (filter & 0xFF) > 1) {
+        static bool said = false;
+        if (!said) {
+            said = true;
+            printf("[d3dSeam] D3DXLoadSurfaceFromMemory: format 0x%x into 0x%x, filter 0x%x is not handled\n",
+                   sourceFormat, desc.Format, filter);
+        }
+        return D3DERR_INVALIDCALL_;
+    }
+
+    XboxRect dest = { 0, 0, (int32_t)desc.Width, (int32_t)desc.Height };
+    if (destRect != NULL)
+        dest = *destRect;
+    uint32_t width = (uint32_t)(sourceRect->right - sourceRect->left);
+    uint32_t height = (uint32_t)(sourceRect->bottom - sourceRect->top);
+    if ((uint32_t)(dest.right - dest.left) < width)  width = (uint32_t)(dest.right - dest.left);
+    if ((uint32_t)(dest.bottom - dest.top) < height) height = (uint32_t)(dest.bottom - dest.top);
+
+    XboxLockedRect locked;
+    LockPixels(destSurface, &locked);
+    if (locked.pBits == NULL)
+        return D3DERR_INVALIDCALL_;
+    const uint8_t *src = (const uint8_t *)source;
+    uint8_t *dst = (uint8_t *)locked.pBits;
+    uint32_t f = desc.Format & 0xFF;
+
+    if (f == 0x0c || f == 0x0e || f == 0x0f) {
+        // Compressed: 4x4 blocks, 8 bytes each for DXT1 and 16 for DXT3/5, a row of blocks at a time
+        uint32_t blockBytes = (f == 0x0c) ? 8 : 16;
+        uint32_t destPitch = ((desc.Width + 3) / 4) * blockBytes;
+        for (uint32_t by = 0; by < (height + 3) / 4; by++)
+            memcpy(dst + (size_t)(dest.top / 4 + by) * destPitch + (size_t)(dest.left / 4) * blockBytes,
+                   src + (size_t)(sourceRect->top / 4 + by) * sourcePitch + (size_t)(sourceRect->left / 4) * blockBytes,
+                   (size_t)((width + 3) / 4) * blockBytes);
+        return 0;
+    }
+
+    uint32_t bpp = destBits / 8;
+    if (!Seam_XGIsSwizzledFormat(desc.Format)) {
+        for (uint32_t y = 0; y < height; y++)
+            memcpy(dst + (size_t)(dest.top + y) * locked.Pitch + (size_t)dest.left * bpp,
+                   src + (size_t)(sourceRect->top + y) * sourcePitch + (size_t)sourceRect->left * bpp,
+                   (size_t)width * bpp);
+        return 0;
+    }
+
+    uint32_t maskX = 0, maskY = 0;
+    SwizzleMasks(desc.Width, desc.Height, &maskX, &maskY);
+    uint32_t yOffset = 0;
+    for (int32_t y = 0; y < dest.top; y++)
+        yOffset = (yOffset - maskY) & maskY;
+    for (uint32_t y = 0; y < height; y++) {
+        uint32_t xOffset = 0;
+        for (int32_t x = 0; x < dest.left; x++)
+            xOffset = (xOffset - maskX) & maskX;
+        const uint8_t *row = src + (size_t)(sourceRect->top + y) * sourcePitch + (size_t)sourceRect->left * bpp;
+        for (uint32_t x = 0; x < width; x++) {
+            memcpy(dst + (size_t)(yOffset | xOffset) * bpp, row + (size_t)x * bpp, bpp);
+            xOffset = (xOffset - maskX) & maskX;
+        }
+        yOffset = (yOffset - maskY) & maskY;
+    }
+    return 0;
+}
+
+// XGWriteSurfaceToFile (0x0017a8ee): a surface as a 24-bit BMP, for EAGL's screenshot. As the original: only
+// the four linear formats it knows (R5G6B5 0x11, A8R8G8B8 0x12, X1R5G5B5 0x1c, X8R8G8B8 0x1e), rows bottom
+// up, each pixel's bytes as it took them - and rows not padded to four bytes, nor the header's size counting
+// any padding, so a width that is not a multiple of four makes a file other programs misread, as it did.
+static uint32_t __stdcall Seam_XGWriteSurfaceToFile(void *surface, const char *xboxPath) {
+    XboxSurfaceDesc desc;
+    FillSurfaceDesc(surface, &desc);
+    uint32_t f = desc.Format;
+    if (f != 0x11 && f != 0x12 && f != 0x1c && f != 0x1e)
+        return 0x80004005u;   // E_FAIL
+
+    char hostPath[260];
+    if (xboxPath == NULL || !Xbox_ResolvePath(xboxPath, hostPath, sizeof(hostPath)))
+        return 0x80004005u;
+    FILE *file = fopen(hostPath, "wb");
+    if (file == NULL) {
+        printf("[d3dSeam] Unable to open file %s\n", hostPath);
+        return 0x80004005u;
+    }
+
+    uint32_t imageBytes = desc.Width * desc.Height * 3;
+    uint8_t header[0x36] = { 'B', 'M' };
+    uint32_t fileSize = imageBytes + 0x36;
+    memcpy(header + 2, &fileSize, 4);
+    header[10] = 0x36;
+    header[14] = 0x28;                                   // BITMAPINFOHEADER
+    memcpy(header + 18, &desc.Width, 4);
+    memcpy(header + 22, &desc.Height, 4);
+    header[26] = 1;                                      // planes
+    header[28] = 24;                                     // bits a pixel
+    memcpy(header + 34, &imageBytes, 4);
+    fwrite(header, 1, sizeof(header), file);
+
+    XboxLockedRect locked;
+    LockPixels(surface, &locked);
+    for (int32_t y = (int32_t)desc.Height - 1; y >= 0 && locked.pBits != NULL; y--) {
+        const uint8_t *row = (const uint8_t *)locked.pBits + (size_t)y * locked.Pitch;
+        for (uint32_t x = 0; x < desc.Width; x++) {
+            uint8_t out[3];
+            if (f == 0x11 || f == 0x1c) {
+                uint16_t p = ((const uint16_t *)row)[x];
+                out[0] = (uint8_t)(p << 3);
+                out[1] = (f == 0x11) ? (uint8_t)((p >> 3) & 0xfc) : (uint8_t)((p >> 2) & 0xf8);
+                out[2] = (f == 0x11) ? (uint8_t)((p >> 8) & 0xf8) : (uint8_t)((p >> 7) & 0xf8);
+            } else {
+                memcpy(out, row + (size_t)x * 4, 3);
+            }
+            fwrite(out, 1, 3, file);
+        }
+    }
+    fclose(file);
+    return 0;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // Vertex buffers.
 //
 // An Xbox vertex buffer is a resource header and a block of memory the game writes into directly: Create
@@ -980,6 +1229,33 @@ static const struct { const char *name; void *replacement; unsigned stackBytes; 
     { "D3DResource_Release",                  (void *)Seam_D3DResource_Release, 4 },
     { "D3DResource_BlockUntilNotBusy",        (void *)Seam_D3DResource_BlockUntilNotBusy, 4 },
     { "XGSetTextureHeader",                   (void *)Seam_XGSetTextureHeader, 36 },
+    { "D3DDevice_SetRenderState_PSTextureModes", (void *)Seam_D3DDevice_SetRenderState_PSTextureModes, 4 },
+    { "D3DDevice_SetRenderState_VertexBlend", (void *)Seam_D3DDevice_SetRenderState_VertexBlend, 4 },
+    { "D3DDevice_SetRenderState_BackFillMode", (void *)Seam_D3DDevice_SetRenderState_BackFillMode, 4 },
+    { "D3DDevice_SetRenderState_TwoSidedLighting", (void *)Seam_D3DDevice_SetRenderState_TwoSidedLighting, 4 },
+    { "D3DDevice_SetRenderState_NormalizeNormals", (void *)Seam_D3DDevice_SetRenderState_NormalizeNormals, 4 },
+    { "D3DDevice_SetRenderState_FrontFace",   (void *)Seam_D3DDevice_SetRenderState_FrontFace, 4 },
+    { "D3DDevice_SetRenderState_ZBias",       (void *)Seam_D3DDevice_SetRenderState_ZBias, 4 },
+    { "D3DDevice_SetRenderState_LogicOp",     (void *)Seam_D3DDevice_SetRenderState_LogicOp, 4 },
+    { "D3DDevice_SetRenderState_EdgeAntiAlias", (void *)Seam_D3DDevice_SetRenderState_EdgeAntiAlias, 4 },
+    { "D3DDevice_SetRenderState_MultiSampleAntiAlias", (void *)Seam_D3DDevice_SetRenderState_MultiSampleAntiAlias, 4 },
+    { "D3DDevice_SetRenderState_MultiSampleMask", (void *)Seam_D3DDevice_SetRenderState_MultiSampleMask, 4 },
+    { "D3DDevice_SetRenderState_MultiSampleMode", (void *)Seam_D3DDevice_SetRenderState_MultiSampleMode, 4 },
+    { "D3DDevice_SetRenderState_MultiSampleRenderTargetMode", (void *)Seam_D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 4 },
+    { "D3DDevice_SetRenderState_SampleAlpha", (void *)Seam_D3DDevice_SetRenderState_SampleAlpha, 4 },
+    { "D3DDevice_SetRenderState_OcclusionCullEnable", (void *)Seam_D3DDevice_SetRenderState_OcclusionCullEnable, 4 },
+    { "D3DDevice_SetRenderState_StencilCullEnable", (void *)Seam_D3DDevice_SetRenderState_StencilCullEnable, 4 },
+    { "D3DDevice_SetRenderState_RopZCmpAlwaysRead", (void *)Seam_D3DDevice_SetRenderState_RopZCmpAlwaysRead, 4 },
+    { "D3DDevice_SetRenderState_RopZRead",    (void *)Seam_D3DDevice_SetRenderState_RopZRead, 4 },
+    { "D3DDevice_SetRenderState_DoNotCullUncompressed", (void *)Seam_D3DDevice_SetRenderState_DoNotCullUncompressed, 4 },
+    { "D3DDevice_SetIndices",                 (void *)Seam_D3DDevice_SetIndices, 8 },
+    { "D3DDevice_SetGammaRamp",               (void *)Seam_D3DDevice_SetGammaRamp, 8 },
+    { "D3DResource_IsBusy",                   (void *)Seam_D3DResource_IsBusy, 4 },
+    { "D3DDevice_CreateIndexBuffer2",         (void *)Seam_D3DDevice_CreateIndexBuffer2, 4 },
+    { "D3DXLoadSurfaceFromMemory",            (void *)Seam_D3DXLoadSurfaceFromMemory, 40 },
+    { "D3D_ReturnsTrue",                      (void *)Seam_D3D_ReturnsTrue, 4 },
+    { "XGBytesPerPixelFromFormat",            (void *)Seam_XGBytesPerPixelFromFormat, 4 },
+    { "XGWriteSurfaceToFile",                 (void *)Seam_XGWriteSurfaceToFile, 8 },
 };
 
 // ---------------------------------------------------------------------------------------------------------------

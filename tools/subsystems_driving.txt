@@ -34,11 +34,12 @@ range 00011000 game.ai              game code (classified by class)
 range 000e4680 platform.eagl        EAGL: views, drawing, textures, EAGLAnim, FONT, SHAPE, LOCALE
 range 00108460 platform.system      EA's system layer: PAD, MOUSE, maths, MEM, TIMER, THREAD, FILESYS, FILE...
 range 0010e4d2 sys.xapi             XAPI and the kernel thunks: process and thread startup, files, launch data
-range 001135b0 platform.math        VU0 maths, MEM, UMemory, matrix helpers
+range 00113264 platform.math        EA maths (matrix helpers, VU0), MEM, UMemory
 range 00116e00 engine.data          game code again (classified by class): U* utilities, CARP, A* audio, PlayMPC
 range 00130d00 sys.crt              the Microsoft C/C++ runtime: STL locale and streams, exception handling, stdio, maths
 range 0013b7b0 platform.sound       EA's sound library: SND*, MIX, SFILTER, the DirectSound driver; MUTEX, STREAM
-range 0014c3e0 platform.movie       RCMP: the movie player and its decoders
+range 0014bee0 sys.xapi             XAPI linked late: QueryPerformanceCounter, IsBadReadPtr and their kin
+range 0014bff0 platform.movie       RCMP: the movie player and its decoders
 range 00150000 engine.core          exception-handling funclets (classified by the function they belong to)
 range 00156c00 engine.static        dynamic initialisers: constructors of global objects
 range 0015d370 end                  end of .text
@@ -94,6 +95,7 @@ class ^(EventManager|Event|RegisterEvent|Scheduler|Schedule|Schedule_OncePerGame
 class ^(GameLoop|RunTheGame|Bond|main|OptionParser|RealClock|ApplicationMemoryHeapConfig|MissionNumToString|AssertMessage)$  engine.core
 class ^(UMemory|UMemoryREALAllocCallback|UMemoryREALFreeCallback|URefCounter|USingleton|USingletonManager|UGroup|USimpleVec|std|_Rb_tree|__builtin)  engine.core
 class ^(Noise|noise|SimRandom|PlayMPC|GetLaunchInfo|ReturnToAction|SetFoundationVideoMode|GetFoundationVideoMode|GetFoundationVideoModeRate)  engine.core
+class ^dummy                             engine.core
 
 # ---- gameplay
 class ^AI                                game.ai

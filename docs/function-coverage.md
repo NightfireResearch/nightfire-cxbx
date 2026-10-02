@@ -192,54 +192,63 @@ where to change it.
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| **game** | 2853 | 1 | 5 | 2847 | **0%** | 474 | 0% |
+| **game** | 2852 | 1 | 5 | 2846 | **0%** | 474 | 0% |
 | game.ai | 522 | 0 | 0 | 522 | 0% | 109 | 0% |
 | game.audio | 366 | 0 | 0 | 366 | 0% | 51 | 0% |
 | game.effects | 195 | 0 | 0 | 195 | 0% | 36 | 0% |
 | game.events | 793 | 0 | 0 | 793 | 0% | 72 | 0% |
-| game.frontend | 333 | 1 | 5 | 327 | 2% | 69 | 1% |
+| game.frontend | 332 | 1 | 5 | 326 | 2% | 69 | 1% |
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
 | game.weapons | 178 | 0 | 0 | 178 | 0% | 43 | 0% |
-| **engine** | 4032 | 60 | 13 | 3959 | **2%** | 526 | 2% |
-| engine.anim | 416 | 0 | 2 | 414 | 0% | 52 | 0% |
+| **engine** | 4035 | 60 | 13 | 3962 | **2%** | 526 | 2% |
+| engine.anim | 414 | 0 | 2 | 412 | 0% | 52 | 0% |
 | engine.audio | 270 | 0 | 0 | 270 | 0% | 35 | 0% |
 | engine.camera | 273 | 0 | 0 | 273 | 0% | 60 | 0% |
-| engine.core | 253 | 8 | 4 | 241 | 5% | 26 | 6% |
+| engine.core | 258 | 8 | 4 | 246 | 5% | 26 | 6% |
 | engine.data | 555 | 3 | 1 | 551 | 1% | 79 | 0% |
 | engine.input | 107 | 42 | 5 | 60 | 44% | 12 | 46% |
 | engine.physics | 156 | 0 | 0 | 156 | 0% | 33 | 0% |
 | engine.render | 760 | 7 | 1 | 752 | 1% | 114 | 3% |
 | engine.static | 798 | 0 | 0 | 798 | 0% | 26 | 0% |
 | engine.world | 444 | 0 | 0 | 444 | 0% | 89 | 0% |
-| **platform** | 1479 | 4 | 52 | 1423 | **4%** | 265 | 2% |
-| platform.eagl | 770 | 0 | 3 | 767 | 0% | 139 | 0% |
-| platform.files | 85 | 0 | 9 | 76 | 11% | 11 | 10% |
+| **platform** | 1480 | 4 | 58 | 1418 | **4%** | 266 | 3% |
+| platform.eagl | 769 | 0 | 3 | 766 | 0% | 139 | 0% |
+| platform.files | 85 | 0 | 13 | 72 | 15% | 11 | 13% |
 | platform.input | 6 | 4 | 0 | 2 | 67% | 1 | 92% |
-| platform.math | 148 | 0 | 0 | 148 | 0% | 25 | 0% |
-| platform.movie | 104 | 0 | 35 | 69 | 34% | 21 | 20% |
+| platform.math | 154 | 0 | 0 | 154 | 0% | 26 | 0% |
+| platform.movie | 100 | 0 | 34 | 66 | 34% | 20 | 20% |
 | platform.sound | 278 | 0 | 5 | 273 | 2% | 59 | 0% |
-| platform.system | 88 | 0 | 0 | 88 | 0% | 9 | 0% |
-| **sys** | 1371 | 198 | 648 | 525 | **62%** | 241 | 70% |
-| sys.crt | 376 | 4 | 41 | 331 | 12% | 46 | 14% |
-| sys.d3d | 414 | 113 | 214 | 87 | 79% | 118 | 84% |
-| sys.dsound | 314 | 63 | 203 | 48 | 85% | 36 | 89% |
-| sys.xapi | 95 | 10 | 27 | 58 | 39% | 17 | 44% |
-| sys.xpp | 172 | 8 | 163 | 1 | 99% | 24 | 100% |
-| **game + engine** | 6885 | 61 | 18 | 6806 | **1%** | 1001 | 1% |
-| **platform + system** | 2850 | 202 | 700 | 1948 | **32%** | 506 | 35% |
-| **  without the C runtime** | 2474 | 198 | 659 | 1617 | **35%** | 460 | 37% |
-| **everything** | 9735 | 263 | 718 | 8754 | **10%** | 1506 | 12% |
+| platform.system | 88 | 0 | 3 | 85 | 3% | 9 | 8% |
+| **sys** | 1368 | 261 | 779 | 328 | **76%** | 240 | 85% |
+| sys.crt | 373 | 4 | 41 | 328 | 12% | 43 | 15% |
+| sys.d3d | 414 | 142 | 272 | 0 | 100% | 118 | 100% |
+| sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
+| sys.xapi | 95 | 42 | 53 | 0 | 100% | 19 | 100% |
+| sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
+| **game + engine** | 6887 | 61 | 18 | 6808 | **1%** | 1001 | 1% |
+| **platform + system** | 2848 | 265 | 837 | 1746 | **39%** | 506 | 42% |
+| **  without the C runtime** | 2475 | 261 | 796 | 1418 | **43%** | 463 | 44% |
+| **everything** | 9735 | 326 | 855 | 8554 | **12%** | 1506 | 15% |
 
 - **Almost nothing above the platform is ours yet: 1% of game and engine code.** What is replaced is the input
   layer (`engine.input`, 44%: `IOModule`, `XBoxPadDevice`, `ActionQueue`, the pad), the event and scheduler core,
   `RGlareManager`'s drawing, file loading and `PlayMPC`.
-- **The system tier is 62% done (70% by bytes)**, from the seams: XPP is gone but one function, DSOUND 85% and D3D 79%.
-  What is left of D3D is functions EAGL calls directly that are not in the seam's entry table - render-state setters
-  that write D3D8's state tables (which the backend reads back), `SetIndices`, `SetGammaRamp` - so original D3D code
-  still runs for those. Most of what is left of DSOUND is reached through pointers in `.data`, likely its COM
-  vtables: library data is merged into the game's `.data` on the Xbox, so the tool cannot tell it from game data and
-  counts it, the conservative way.
+- **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
+  The C runtime (328 live, 12%) is left to go by itself, as in the action engine: game code calls it everywhere, and
+  it goes as that code becomes ours. How the rest got there (2 October 2026):
+  - *D3D*: the seam's table gained 25 entry points EAGL calls directly (render-state setters, `SetIndices`,
+    `SetGammaRamp`, `CreateIndexBuffer2`...), named in Ghidra after the table was last generated, and a hand-kept
+    `src/driving/gfx/d3d8EntriesUnnamed.inc` covers four Ghidra has no name for (`D3DXLoadSurfaceFromMemory`,
+    `XGBytesPerPixelFromFormat`, `XGWriteSurfaceToFile` and a constant).
+  - *DSOUND*: the startup runs the C runtime's initialiser tables itself (`src/driving/platform/XboxStartup.cpp`)
+    and leaves out DSOUND's four static constructors; `CRefCount::AddRef`, reached through a vtable, is ported.
+  - *XPP*: the import thunk for `XInitDevices` is patched along with the function.
+  - *XAPI*: `src/driving/platform/XboxXapi.cpp` replaces 31 functions - files, events, waits, sleeping, threads,
+    the heap under `malloc`, contiguous memory, time, `IsBadReadPtr` - with their Win32 namesakes (the loader's
+    kernel shims hand out Win32 handles, so the two mix freely), and the startup's own entry point is ported.
+    The process heap is a Win32 heap now: XAPI's five heap entry points go to `HeapCreate`/`HeapAlloc`/`HeapFree`/
+    `HeapReAlloc`/`HeapSize`, so `malloc` and `free` reach Win32's heap through them.
 - **The platform tier is 4% done.** EAGL (139 KB) and the sound library (59 KB) are most of it. The seams replaced the
   libraries under them, not these layers, which run as built.
 - **Of the 1,001 KB of game and engine code, 988 KB is still original.** By size: rendering 110 KB, AI 109 KB, world

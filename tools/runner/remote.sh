@@ -6,6 +6,7 @@
 #   tools/runner/remote.sh build [target ...]          # default: action actioninject driving drivinginject
 #   tools/runner/remote.sh run <script.txt> [name] [timeout]   # tools/ui/run_menu.sh there; results to build/remote/<name>
 #   tools/runner/remote.sh desktop '<command>'         # any command, in the desktop session, from the checkout
+#   tools/runner/remote.sh drive <name> "<args>"       # tools/drive_game.ps1 there; log and dumped frames to build/remote/<name>
 #   tools/runner/remote.sh ssh '<command>'             # any command over SSH (no desktop: fine for builds, not for D3D)
 #
 # Settings (environment): RUNNER_HOST (vr-desktop), RUNNER_USER (Charlie), RUNNER_KEY (~/.ssh/nightfire_runner),
@@ -79,6 +80,18 @@ run)
     r "cd $RREPO/build/menurun/$name && tar cf - run.log menu.log menu_shots d3d9_trace_*.log d3d9_dump_frame_*.bmp 2>/dev/null" |
         (cd "$REPO/build/remote/$name" && rm -rf menu_shots && tar xf -)
     echo "results in build/remote/$name"
+    ;;
+drive)
+    # tools/runner/remote.sh drive <name> "<tools/drive_game.ps1 arguments>": a drive_game run in the desktop session;
+    # its log and the frames it dumped come back to build/remote/<name> (drive.log, d3d9_dump_frame_*.bmp).
+    name=$1; args=$2
+    [ -n "$name" ] && [ -n "$args" ] || { echo "drive: tools/runner/remote.sh drive <name> \"<drive_game.ps1 arguments>\""; exit 2; }
+    "$0" desktop "rm -f Release/d3d9_dump_frame_*.bmp Release/d3d9_trace_*.log; powershell -NoProfile -ExecutionPolicy Bypass -File tools/drive_game.ps1 $args -LogPath 'C:\\nightfire-runner\\drive.log' > /dev/null 2>&1; true" > /dev/null
+    mkdir -p "$REPO/build/remote/$name"
+    rm -f "$REPO/build/remote/$name"/d3d9_dump_frame_*.bmp
+    r "cp $JOBS/drive.log $RREPO/Release/drive.log; cd $RREPO/Release && tar cf - drive.log \$(ls d3d9_dump_frame_*.bmp 2>/dev/null | grep -v alpha)" |
+        (cd "$REPO/build/remote/$name" && tar xf -)
+    echo "build/remote/$name: $(ls "$REPO/build/remote/$name" | tr '\n' ' ')"
     ;;
 ssh)
     r "cd $RREPO && $*"

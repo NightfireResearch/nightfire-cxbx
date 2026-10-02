@@ -16,7 +16,16 @@ as described below, with `RUNNER_HOST`, `RUNNER_USER` and `RUNNER_KEY` pointing 
 tools/runner/remote.sh sync                          # its checkout = this working tree
 tools/runner/remote.sh build                         # action actioninject driving drivinginject
 tools/runner/remote.sh run tools/ui/scripts/weapons.txt   # results in build/remote/weapons
+tools/runner/remote.sh drive m2 "-Exe 'Release\driving.exe' -GameArgs '-mission 2' -DumpAfterMs 6000 -StopPattern 'dumping frame'"
+                                                     # a drive_game.ps1 run; log and dumped frames in build/remote/m2
 ```
+
+Frames from the runner are not pixel-identical to ones from another machine (its GPU and timing differ), so
+compare a change against a baseline run on the runner itself. Two runs of the same build land a few frames
+apart: compare the ones that land on the same frame number, or allow for animation.
+
+A driving run with `-mission` needs a valid mission (1-8). Without one the game falls back to `psiLaunch.bin`, which
+the runner does not have, and loads a track with an empty name.
 
 `sync` brings the runner's checkout (`C:\nightfire-cxbx`) to this working tree. Commits that are not pushed go
 across as a git bundle, uncommitted changes as a patch, and new files as a tar. The runner's ignored files
