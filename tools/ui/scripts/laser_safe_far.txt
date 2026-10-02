@@ -1,0 +1,79 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# laser_safe.txt from 2 units further back, about the distance of the PS2 reference video: for judging the
+# size of the laser corona (the particle sprites).
+# The laser watch on the safe's hinge pin in The Exchange (level 0x07000008, recorded with F8 in
+# devtools/Teleport.cpp). While the pin melts, the laser makes a magenta corona: particle point sprites (shader 129,
+# textured from Xbox stage 3, whose positions take w from the undeclared input v3) plus the faint "lazerhotspot"
+# gas puffs. The laserNNN shots are every 10 frames of the trigger held. Drones frozen and the player immortal.
+press A                    # NightFire
+waitpage 0x40000025        # P_NFSELECT
+wait 100
+press A                    # the codename
+waitpage 0x4000002f        # P_MESSAGEBOX
+wait 150
+press A
+waitpage 0x40000023        # P_NFDFCTY
+wait 100
+press A                    # difficulty
+waitpage 0x4000001c        # P_NFMAP
+wait 100
+press A                    # the first mission
+wait 1500
+wait 300
+level 0x07000008
+wait 1500
+press A                    # skip the cutscene, if any
+wait 300
+cheat nodrones
+cheat immortal
+teleport 159.100,43.116,-117.510,1.4513,0.0186
+press RIGHT
+wait 30
+press RIGHT                # the laser
+wait 400
+shot aimed
+hold RT 10
+shot laser010
+hold RT 10
+shot laser020
+hold RT 10
+shot laser030
+hold RT 10
+shot laser040
+hold RT 10
+shot laser050
+hold RT 10
+shot laser060
+hold RT 10
+shot laser070
+hold RT 10
+shot laser080
+hold RT 10
+shot laser090
+hold RT 10
+shot laser100
+hold RT 10
+shot laser110
+hold RT 10
+shot laser120
+hold RT 10
+shot laser130
+hold RT 10
+shot laser140
+hold RT 10
+shot laser150
+hold RT 10
+shot laser160
+hold RT 10
+shot laser170
+hold RT 10
+shot laser180
+quit

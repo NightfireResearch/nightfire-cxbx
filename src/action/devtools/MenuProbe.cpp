@@ -19,6 +19,10 @@
 //     press BTN [N]        tap BTN (held 4 frames, released 4), N times
 //     hold BTN N           hold BTN for N frames
 //     shot NAME            write the next frame to menu_shots/<step>_<NAME>.bmp
+//     dump                 dump the next frame with its draw trace and textures (d3d9_dump_frame_N.bmp, d3d9_trace_N.log)
+//     gfxinfo NAME         a live graphic's model: primitives, texture references, texture headers
+//     hidegfx NAME         stop a live graphic drawing (its geom_idx to 0), for an A/B of its draws
+//     objlog TYPE          list the live objects of that ObjectType (14 gas, 16 effect): position, scale, flags, tint
 //     log TEXT             print "[menuscript] TEXT" (a marker in the log)
 //     gopage HASH          send GoPage <page hashcode> to manager 0, as a menu script would (reaches pages
 //                          normal play cannot, such as P_FMVTEST 0x4000004f)
@@ -47,6 +51,8 @@
 #include "../../common/xbeOriginal.h"
 #include "../../common/gfx/d3d9Backend.h"
 #include "../engine/psiInput.h"
+#include "../engine/celglist.h"
+#include "../engine/psiGraphics.h"   // gfxinfo: ModelData, TextureInfo, Tex
 #include "../ui/ui.h"
 #include "../ui/Manager.h"
 #include "SecretsShadow.h"
@@ -58,6 +64,7 @@
 #include "DroneShadow.h"
 #include "WeaponTableShadow.h"
 #include "MatrixShadow.h"
+#include "Teleport.h"
 #include "../game.h"   // reload: ResetMap_LevelToLoad, GameFlow_PushState
 
 #include <stdio.h>
@@ -114,7 +121,7 @@ static const char *const kButtonNames[] = { "A", "B", "X", "Y", "BLACK", "WHITE"
 static const unsigned short kDigitalBits[] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20 };   // UP..BACK
 
 struct Step {
-    enum { WAIT, HOLD, SHOT, LOG, QUIT, GOPAGE, SECRETSTEST, FOCUS, WAITPAGE, UNLOCKSTEST, POKE, RELOAD } kind;
+    enum { WAIT, HOLD, SHOT, LOG, QUIT, GOPAGE, SECRETSTEST, FOCUS, WAITPAGE, UNLOCKSTEST, POKE, RELOAD, LEVEL, TELEPORT, DUMP, OBJLOG, GFXINFO, HIDEGFX } kind;
     int button;
     unsigned frames;
     char text[96];
@@ -167,6 +174,13 @@ static bool LoadScript(const char *path) {
                 s.kind = Step::HOLD; s.button = ParseButton(a); s.frames = press ? 4 : (unsigned)count; AddStep(s);
                 if (press) { s.kind = Step::WAIT; s.button = BTN_NONE; s.frames = 4; AddStep(s); }
             }
+        } else if (_stricmp(cmd, "objlog") == 0 && n >= 2) {
+            s.kind = Step::OBJLOG; s.button = (int)strtoul(a, NULL, 0); AddStep(s);
+        } else if ((_stricmp(cmd, "gfxinfo") == 0 || _stricmp(cmd, "hidegfx") == 0) && n >= 2) {
+            s.kind = _stricmp(cmd, "gfxinfo") == 0 ? Step::GFXINFO : Step::HIDEGFX;
+            strncpy(s.text, a, sizeof(s.text) - 1); AddStep(s);
+        } else if (_stricmp(cmd, "dump") == 0) {
+            s.kind = Step::DUMP; AddStep(s);
         } else if (_stricmp(cmd, "shot") == 0 && n >= 2) {
             s.kind = Step::SHOT; snprintf(s.text, sizeof(s.text), "%s", a); AddStep(s);
         } else if (_stricmp(cmd, "log") == 0) {
@@ -192,6 +206,31 @@ static bool LoadScript(const char *path) {
             s.kind = Step::UNLOCKSTEST; AddStep(s);
         } else if (_stricmp(cmd, "secretstest") == 0) {
             s.kind = Step::SECRETSTEST; AddStep(s);
+        } else if (_stricmp(cmd, "level") == 0 && n >= 2) {
+            // Loads a level by hashcode (as F8 in devtools/Teleport.cpp prints it)
+            s.kind = Step::LEVEL; s.frames = (unsigned)strtoul(a, NULL, 0); AddStep(s);
+        } else if (_stricmp(cmd, "teleport") == 0 && n >= 2) {
+            // Puts the player at x,y,z,yaw,pitch in the current level (F8's "Teleport=" part)
+            s.kind = Step::TELEPORT; strncpy(s.text, a, sizeof(s.text) - 1); AddStep(s);
+        } else if (_stricmp(cmd, "cheat") == 0 && n >= 2) {
+            // The debug cheat menu's switches, which the retail build still honours, by name. For unattended runs
+            // in levels with enemies: "nodrones" freezes every drone's AI (switch_NO_DRONES: Drone_InitComms marks
+            // them all disabled and skips the AI pass, every frame), "blind" leaves them running but unable to see
+            // or attack (switch_BLIND_DRONES), "immortal" stops the player taking damage (CheatInfo.Immortal). Set
+            // "immortal" after the level has loaded: loading a codename overwrites it.
+            static const struct { const char *name; unsigned address; } cheats[] = {
+                {"nodrones", 0x001df99c}, {"blind", 0x001df9a0}, {"immortal", 0x001f65dc},
+            };
+            bool known = false;
+            for (size_t i = 0; i < sizeof(cheats) / sizeof(cheats[0]); i++)
+                if (_stricmp(a, cheats[i].name) == 0) {
+                    s.kind = Step::POKE; s.frames = cheats[i].address; s.button = 1;
+                    strncpy(s.text, cheats[i].name, sizeof(s.text) - 1);
+                    AddStep(s);
+                    known = true;
+                }
+            if (!known)
+                printf("[menuscript] line %d: no cheat \"%s\" (nodrones, blind, immortal)\n", lineNo, a);
         } else if (_stricmp(cmd, "reload") == 0) {
             // Loads the current level again, as the end of a mission does: tests a level change
             s.kind = Step::RELOAD; AddStep(s);
@@ -206,7 +245,87 @@ static bool LoadScript(const char *path) {
     return g_stepCount > 0;
 }
 
+// objlog TYPE: every live object of that type in the game's dynamic object list (DynamicObjList_FirstObject,
+// 0x001df34c), with what decides how it draws. For gas (type 14) also ObjData_Gas's gasType (+0x38), lifetime
+// (+0x34) and graphic (+0x44, set for gas types 9 and 10 only).
+static void ObjLog(int type) {
+    int count = 0;
+    for (obj_tag *o = *(obj_tag **)(size_t)0x001df34c; o != NULL; o = o->nextObject) {
+        if (o->objectType != type)
+            continue;
+        const unsigned char *x = (const unsigned char *)o->extraObjectData;
+        printf("[menuscript] f=%u obj %p type %d at %.3f,%.3f,%.3f scale %.3f effectFlags %08x render %04x flags %02x "
+               "display %04x tint %02x%02x%02x%02x gfx %p", g_frame, (void *)o, type, o->position.x, o->position.y,
+               o->position.z, o->scale, (unsigned)o->effectFlags, o->renderType, (unsigned char)o->flags,
+               o->displayMask, o->tweakR, o->tweakG, o->tweakB, o->maybeBrightness, (void *)o->objGraphics);
+        if (o->objGraphics != NULL)
+            printf(" \"%s\" geom %d lod %08x apply %08x", o->objGraphics->name ? o->objGraphics->name : "",
+                   o->objGraphics->geom_idx, o->objGraphics->lodRelated, o->objGraphics->applyFlagsToObject);
+        if (type == OBJECTTYPE_GAS && x != NULL)
+            printf(" gasType %d lifetime %.1f", (int)x[0x38], *(const float *)(x + 0x34));
+        printf("\n");
+        count++;
+    }
+    printf("[menuscript] f=%u objlog type %d: %d\n", g_frame, type, count);
+}
+
+// The game's model table (psiDraw.cpp's d3dGeometryObjs, 0x002a0e68)
+#define d3dGeometryObjsProbe (*(ModelData *(*)[2048])0x002a0e68)
+
+// The graphic of that name, as some live object holds it (NULL if no live object uses it)
+static celglist_tag *FindLiveGfx(const char *name) {
+    for (obj_tag *o = *(obj_tag **)(size_t)0x001df34c; o != NULL; o = o->nextObject)
+        if (o->objGraphics != NULL && o->objGraphics->name != NULL && strcmp(o->objGraphics->name, name) == 0)
+            return o->objGraphics;
+    return NULL;
+}
+
+// gfxinfo NAME: a live graphic's model - each primitive's texture references and those textures' headers (the
+// 0x28 bytes at 0x2c printed as text too, in case they name the texture)
+static void GfxInfo(const char *name) {
+    celglist_tag *gfx = FindLiveGfx(name);
+    if (gfx == NULL || gfx->geom_idx <= 0) {
+        printf("[menuscript] f=%u gfxinfo %s: not live, or no model\n", g_frame, name);
+        return;
+    }
+    const ModelData *model = d3dGeometryObjsProbe[gfx->geom_idx];
+    printf("[menuscript] f=%u gfxinfo %s: geom %d, %d vertices, %d indices, %d primitives\n", g_frame, name,
+           gfx->geom_idx, model->vtxCnt, model->idxCnt, model->primitiveCnt);
+    for (int p = 0; p < model->primitiveCnt; p++) {
+        const unsigned short *prim = (const unsigned short *)(uintptr_t)(model->primitives + p * 12);
+        for (int t = 0; t < 2; t++) {
+            const TextureInfo *tex = Tex[prim[t]];
+            if (prim[t] == 0 || tex == NULL)
+                continue;
+            char text[0x29];
+            for (int k = 0; k < 0x28; k++) {
+                char c = ((const char *)tex)[0x2c + k];
+                text[k] = (c >= 0x20 && c < 0x7f) ? c : '.';
+            }
+            text[0x28] = 0;
+            printf("[menuscript]   prim %d stage %d: Tex[%u] magic %08x %ux%u bpp %u formatType %u levels %u frames %d "
+                   "speed %d slot %d state %04x changes %02x \"%s\"\n", p, t, prim[t], tex->magic, tex->width,
+                   tex->height, tex->bitsPerPixel, tex->formatType, tex->levels, tex->numFrames, tex->animSpeed,
+                   tex->baseIdx, prim[4], ((const unsigned char *)prim)[10], text);
+            printf("[menuscript]     header");
+            for (int k = 0; k < 0x58; k++)
+                printf("%s%02x", (k % 4) == 0 ? " " : "", ((const unsigned char *)tex)[k]);
+            printf("\n");
+        }
+    }
+}
+
+// hidegfx NAME: stops a live graphic drawing, for an A/B of what it contributes. Its geom_idx goes to 0, which the
+// game's own psiDrawObjectMatrix takes as nothing to draw; every object sharing the graphic is hidden with it.
+static void HideGfx(const char *name) {
+    celglist_tag *gfx = FindLiveGfx(name);
+    printf("[menuscript] f=%u hidegfx %s: %s\n", g_frame, name, gfx != NULL ? "hidden" : "not live");
+    if (gfx != NULL)
+        gfx->geom_idx = 0;
+}
+
 // Runs the script for one frame; returns the button to hold this frame (BTN_NONE for none).
+
 static int ScriptFrame(void) {
     while (g_stepIndex < g_stepCount) {
         Step &s = g_steps[g_stepIndex];
@@ -235,6 +354,18 @@ static int ScriptFrame(void) {
             printf("[menuscript] f=%u shot %s.bmp (render frame %u)\n", g_frame, name, frame);
             break;
         }
+        case Step::GFXINFO:
+            GfxInfo(s.text);
+            break;
+        case Step::HIDEGFX:
+            HideGfx(s.text);
+            break;
+        case Step::OBJLOG:
+            ObjLog(s.button);
+            break;
+        case Step::DUMP:   // the next frame, its draw trace and its textures (D3D9_RequestDump)
+            printf("[menuscript] f=%u dump frame %u\n", g_frame, D3D9_RequestDump());
+            break;
         case Step::LOG:
             printf("[menuscript] f=%u %s\n", g_frame, s.text);
             break;
@@ -253,10 +384,28 @@ static int ScriptFrame(void) {
             break;
         case Step::POKE:
             *(int *)(size_t)s.frames = s.button;
+            if (s.text[0] != 0)
+                printf("[menuscript] f=%u cheat %s\n", g_frame, s.text);
             break;
         case Step::UNLOCKSTEST:
             UnlocksShadow_Run();
             break;
+        case Step::LEVEL:
+            printf("[menuscript] f=%u level 0x%08x\n", g_frame, g_steps[g_stepIndex].frames);
+            fflush(stdout);
+            // ResetMap_LevelToLoad only acts from the menu and loading states; mid-level the fade (state 7)
+            // goes on to load NextLevelHashcode, so that is what to set
+            GameState.NextLevelHashcode = (HASHCODE)g_steps[g_stepIndex].frames;
+            GameFlow_PushState(7, 60.0f, 0xff);
+            break;
+        case Step::TELEPORT: {
+            ActionPlace place;
+            if (ActionTeleport_Parse(g_steps[g_stepIndex].text, &place))
+                ActionTeleport_To(&place);
+            else
+                printf("[menuscript] teleport: \"%s\" is not x,y,z,yaw,pitch\n", g_steps[g_stepIndex].text);
+            break;
+        }
         case Step::RELOAD:
             printf("[menuscript] f=%u reload level 0x%08x\n", g_frame, (unsigned)GameState.CurrentLevelHashcode);
             fflush(stdout);

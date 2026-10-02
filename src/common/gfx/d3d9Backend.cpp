@@ -1651,6 +1651,14 @@ static void BindStageTexture(uint32_t h, uint32_t s, uint32_t coordSet) {
     }
 }
 
+// Set by D3D9_DrawVertices for a point list. The NV2A gives point sprites their texture coordinates in texture
+// stage 3 only, and the game binds a point sprite's texture there (d3dDrawOverlayQuad) and leaves stage 0 as the
+// previous draw had it; D3D9 gives every stage the sprite's coordinates and runs the stages in order. So for a point
+// sprite the fixed-function path below binds Xbox stage 3 alone, as host stage 0 - as CXBX did. Without it the
+// sprites took the stale stage-0 texture first (or stopped at a disabled stage 0) and the laser's sparks and corona
+// never showed.
+static bool g_pointSpriteDraw = false;
+
 static void ApplyTextureStageState(bool shaderDraw) {
     for (int t = 0; t < 4; t++) g_texCoordScale[t][0] = g_texCoordScale[t][1] = 1.0f;
 
@@ -1675,14 +1683,20 @@ static void ApplyTextureStageState(bool shaderDraw) {
     g_device->SetPixelShader(NULL);
 
     static const uint32_t xboxStages[3] = { 0, 1, 3 };
+    static const uint32_t pointSpriteStages[1] = { 3 };
+    bool pointSprite = g_pointSpriteDraw && g_boundTexture[3] != NULL;
+    const uint32_t *stages = pointSprite ? pointSpriteStages : xboxStages;
+    int stageCount = pointSprite ? 1 : 3;
     uint32_t host = 0;
-    for (int i = 0; i < 3; i++) {
-        uint32_t s = xboxStages[i];
+    for (int i = 0; i < stageCount; i++) {
+        uint32_t s = stages[i];
         if (s != 0 && g_boundTexture[s] == NULL)
             continue;
         uint32_t h = host++;
         uint32_t tci = XBOX_TEXTURE_STATE(s, XTSS_TEXCOORDINDEX) & 0xFFFF;
         if (tci >= 4) tci = s;
+        if (pointSprite)
+            tci = 0;     // D3D9 puts the sprite's coordinates in every set; set 0 is as good as any
         BindStageTexture(h, s, tci);
         ApplySamplerState(h, s);
         uint32_t colorOp = XBOX_TEXTURE_STATE(s, XTSS_COLOROP), alphaOp = XBOX_TEXTURE_STATE(s, XTSS_ALPHAOP);
@@ -1697,7 +1711,7 @@ static void ApplyTextureStageState(bool shaderDraw) {
         g_device->SetTextureStageState(h, D3DTSS_TEXCOORDINDEX, tci);
         // Every NV2A 2D texture stage divides by q; the shaders leave q = 1 unless projecting (the character
         // shadow). Pre-transformed quads carry 2D coordinates with no q.
-        g_device->SetTextureStageState(h, D3DTSS_TEXTURETRANSFORMFLAGS, shaderDraw ? (D3DTTFF_COUNT4 | D3DTTFF_PROJECTED) : D3DTTFF_DISABLE);
+        g_device->SetTextureStageState(h, D3DTSS_TEXTURETRANSFORMFLAGS, shaderDraw && !pointSprite ? (D3DTTFF_COUNT4 | D3DTTFF_PROJECTED) : D3DTTFF_DISABLE);
     }
     for (; host < 4; host++) {
         g_device->SetTexture(host, NULL);
@@ -1911,7 +1925,8 @@ static bool TranslateVshToHlsl(const uint8_t *function, const uint32_t *normPack
     h.printf("float4 texScale23 : register(c204); // same for sets 2 and 3\n");
     h.printf("struct VS_IN {\n");
     for (int r = 0; r < 16; r++)
-        if (*inputsUsed & (1u << r)) h.printf("    float4 v%d : %s%d;\n", r, r == 0 ? "POSITION" : "TEXCOORD", r == 0 ? 0 : r);
+        if ((*inputsUsed & (1u << r)) && inputComponents[r] != 0)
+            h.printf("    float4 v%d : %s%d;\n", r, r == 0 ? "POSITION" : "TEXCOORD", r == 0 ? 0 : r);
     h.printf("};\nstruct VS_OUT {\n    float4 oPos : POSITION;\n    float4 oD0 : COLOR0;\n    float4 oD1 : COLOR1;\n");
     if (*outputsWritten & (1u << 5)) h.printf("    float oFog : FOG;\n");
     if (*outputsWritten & (1u << 6)) h.printf("    float oPts : PSIZE;\n");
@@ -1919,7 +1934,12 @@ static bool TranslateVshToHlsl(const uint8_t *function, const uint32_t *normPack
     h.printf("VS_OUT main(VS_IN vin) {\n");
     for (int r = 0; r < 16; r++) {
         if (!(*inputsUsed & (1u << r))) continue;
-        if (*normPackedInputs & (1u << r)) {
+        if (inputComponents[r] == 0) {
+            // Not in the declaration: the NV2A reads the register's default, (0, 0, 0, 1). D3D9 leaves an input
+            // with no element undefined, so it is not an input here at all. (Shader 129, the particles, takes
+            // its positions' w from v3.w, which its declaration does not supply.)
+            h.printf("    float4 v%d = float4(0, 0, 0, 1);\n", r);
+        } else if (*normPackedInputs & (1u << r)) {
             // 11:11:10 signed normalised, arriving as four raw bytes (UBYTE4): rebuild the fields with exact float maths.
             h.printf("    float4 v%d;\n    {\n        float4 b = vin.v%d;\n        float lo = b.x + 256.0 * b.y;\n", r, r);
             h.printf("        float x = fmod(lo, 2048.0);\n        float y = floor(lo / 2048.0) + 32.0 * fmod(b.z, 64.0);\n        float z = floor(b.z / 64.0) + 4.0 * b.w;\n");
@@ -2093,8 +2113,8 @@ static bool BuildVertexShader(TranslatedVertexShader *vs, int index) {
     D3DVERTEXELEMENT9 elements[24];
     int elementCount = 0;
     uint32_t normPacked = 0;
-    uint8_t inputComponents[16];
-    memset(inputComponents, 4, sizeof(inputComponents));
+    uint8_t inputComponents[16];   // 0: the declaration does not supply the register
+    memset(inputComponents, 0, sizeof(inputComponents));
     uint32_t stream = 0, offset = 0;
     vs->streamsUsed = 0;
     for (const uint32_t *tok = (const uint32_t*)vs->declaration; *tok != 0xFFFFFFFFu; tok++) {
@@ -2732,6 +2752,15 @@ static void TraceDraw(const char *kind, uint32_t primType, uint32_t count, uint3
                     }
                     const float *p0 = (const float*)(data + (size_t)first * stride);
                     fprintf(f, " pos extents x[%g,%g] y[%g,%g] z[%g,%g] first (%g %g %g)", lo[0], hi[0], lo[1], hi[1], lo[2], hi[2], p0[0], p0[1], p0[2]);
+                    fprintf(f, " then");   // the rest of the first vertex: its colours and texture coordinates
+                    for (uint32_t k = 12; k < stride && k < 36; k++) fprintf(f, " %02x", ((const uint8_t*)p0)[k]);
+                    if (limit - first <= 12) {   // a small model (a sprite, a glow): every vertex
+                        for (uint32_t v = first + 1; v < limit; v++) {
+                            const uint8_t *pv = data + (size_t)v * stride;
+                            fprintf(f, "\n    v%u (%g %g %g)", v, ((const float*)pv)[0], ((const float*)pv)[1], ((const float*)pv)[2]);
+                            for (uint32_t k = 12; k < stride && k < 36; k++) fprintf(f, " %02x", pv[k]);
+                        }
+                    }
                 } else {
                     const uint8_t *p0 = data + (size_t)first * stride;
                     fprintf(f, " first bytes");
@@ -2747,6 +2776,42 @@ static void TraceDraw(const char *kind, uint32_t primType, uint32_t count, uint3
             g_vertexConstants[27][0], g_vertexConstants[27][1], g_vertexConstants[27][2], g_vertexConstants[27][3],
             g_vertexConstants[58][0], g_vertexConstants[58][1], g_vertexConstants[58][2], g_vertexConstants[58][3],
             g_vertexConstants[59][0], g_vertexConstants[59][1], g_vertexConstants[59][2], g_vertexConstants[59][3]);
+    // the game's own shaders' transform (c[96..99]), fog (c[102]), tint (c[103]), point size (c[104]), offset (c[117])
+    static const int more[] = { 96, 97, 98, 99, 102, 103, 104, 117 };
+    for (int i = 0; i < (int)(sizeof(more) / sizeof(more[0])); i++) {
+        const float *k = g_vertexConstants[more[i]];
+        fprintf(f, "%s c[%d] = %g %g %g %g", i == 0 ? " " : "", more[i], k[0], k[1], k[2], k[3]);
+    }
+    fprintf(f, "\n");
+    fflush(f);
+}
+
+// The host state a draw went out with, after PrepareShaderDraw has applied the texture stages: blending, depth,
+// alpha test and stage 0's combiners. Traced frames only.
+static void TraceHostState(void) {
+    FILE *f = TraceFile();
+    if (f == NULL || g_device == NULL)
+        return;
+    static const D3DRENDERSTATETYPE rs[] = { D3DRS_ALPHABLENDENABLE, D3DRS_SRCBLEND, D3DRS_DESTBLEND, D3DRS_BLENDOP,
+        D3DRS_ZENABLE, D3DRS_ZWRITEENABLE, D3DRS_ZFUNC, D3DRS_ALPHATESTENABLE, D3DRS_ALPHAREF, D3DRS_CULLMODE,
+        D3DRS_TEXTUREFACTOR, D3DRS_POINTSPRITEENABLE, D3DRS_POINTSIZE, D3DRS_LIGHTING, D3DRS_FOGENABLE };
+    static const char *rsName[] = { "blend", "src", "dst", "op", "z", "zwrite", "zfunc", "atest", "aref", "cull",
+        "tfactor", "psprite", "psize", "light", "fog" };
+    fprintf(f, "  host:");
+    for (int i = 0; i < (int)(sizeof(rs) / sizeof(rs[0])); i++) {
+        DWORD v = 0;
+        g_device->GetRenderState(rs[i], &v);
+        fprintf(f, " %s=%lx", rsName[i], (unsigned long)v);
+    }
+    for (int st = 0; st < 2; st++) {
+        DWORD cop, ca1, ca2, aop, aa1, aa2;
+        g_device->GetTextureStageState(st, D3DTSS_COLOROP, &cop); g_device->GetTextureStageState(st, D3DTSS_COLORARG1, &ca1);
+        g_device->GetTextureStageState(st, D3DTSS_COLORARG2, &ca2); g_device->GetTextureStageState(st, D3DTSS_ALPHAOP, &aop);
+        g_device->GetTextureStageState(st, D3DTSS_ALPHAARG1, &aa1); g_device->GetTextureStageState(st, D3DTSS_ALPHAARG2, &aa2);
+        fprintf(f, " | ts%d color %lu(%lx,%lx) alpha %lu(%lx,%lx)", st, (unsigned long)cop, (unsigned long)ca1,
+                (unsigned long)ca2, (unsigned long)aop, (unsigned long)aa1, (unsigned long)aa2);
+    }
+    fprintf(f, "\n");
     fflush(f);
 }
 
@@ -2893,8 +2958,10 @@ void D3D9_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount, cons
     TraceDraw("indexed", primitiveType, vertexCount, minIndex, (uint32_t)maxIndex + 1);
     if (!PrepareShaderDraw(true, minIndex, (uint32_t)maxIndex + 1, &baseVertex))
         return;
+    TraceHostState();
     AA_NOTE_SCENE_DRAW();
     g_device->SetIndices(g_indexRing);
+    DWORD tz = 1, tdst = 0, tzw = 1;
     g_device->DrawIndexedPrimitive(type, baseVertex, minIndex, maxIndex - minIndex + 1, start, primCount);
     DumpAfterDraw();
 }
@@ -2912,8 +2979,12 @@ void D3D9_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t ve
     int baseVertex = 0;
     CheckDrawVertices("direct", primitiveType, vertexCount, startVertex, startVertex + vertexCount);
     TraceDraw("direct", primitiveType, vertexCount, startVertex, startVertex + vertexCount);
-    if (!PrepareShaderDraw(true, startVertex, startVertex + vertexCount, &baseVertex))
+    g_pointSpriteDraw = (type == D3DPT_POINTLIST);
+    bool prepared = PrepareShaderDraw(true, startVertex, startVertex + vertexCount, &baseVertex);
+    g_pointSpriteDraw = false;
+    if (!prepared)
         return;
+    TraceHostState();
     AA_NOTE_SCENE_DRAW();
     if (primitiveType == 8) {
         uint32_t start = 0;

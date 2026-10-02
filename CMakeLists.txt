@@ -99,6 +99,7 @@ add_library(actioninject SHARED
   src/action/devtools/DroneShadow.cpp
   src/action/devtools/WeaponTableShadow.cpp
   src/action/devtools/MatrixShadow.cpp
+  src/action/devtools/Teleport.cpp
   src/action/game.cpp
   src/action/main.cpp
   src/common/launchInfo.cpp

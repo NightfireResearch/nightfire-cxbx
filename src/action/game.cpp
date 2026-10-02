@@ -16,7 +16,8 @@
 #include <cstdio>
 
 #include <stdio.h>
-#include "engine/XboxSystem.h"
+#include "engine/XboxSystem.h"
+#include "devtools/Teleport.h"
 
 // XBE_GLOBAL(0x002ae288, 0x4)
 uint32_t BackgroundMovieHashcode;
@@ -91,6 +92,7 @@ void Game_Run(void) {
 
   psiPreGame_Run();
   Input_Update();
+  ActionTeleport_Tick();   // devtools: F8/F9 teleport, F7 frame dump
 
 
   if ((FreezeGame != '\0') && (switch_allowFreeze != '\0')) return;
