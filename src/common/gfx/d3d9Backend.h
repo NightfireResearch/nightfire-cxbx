@@ -143,6 +143,7 @@ bool D3D9_IsStandInSurface(const void *pSurface);
 // read - what a lock of the backbuffer means. Returns false if nothing could be read.
 bool D3D9_ReadBackBuffer(void *destination, uint32_t pitch, uint32_t width, uint32_t height);
 void D3D9_BlockUntilNotBusy(void *pResource);
+void D3D9_KickOffAndWaitForIdle(void);
 
 // Visibility tests: the NV2A counts the pixels that pass the depth test between Begin and End(index), and the
 // game asks for the count later. Occlusion queries, one per index. GetResult returns 0 with the count when it

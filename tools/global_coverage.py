@@ -57,9 +57,6 @@ NOT_POINTERS = [(0x0019CD08, 0x001B4D78, "vertex shader microcode (VtxShaderFunc
 # Pairs of 16-bit values Ghidra typed as a pointer because together they land inside FileSystem (0x002cxxxx) or
 # LaunchInfoData (0x0030xxxx): the menu's item tables at 0x179000-0x17c000 are runs of shorts, and 0x1d5c90 is two
 # shorts in a record. (One of them is not even word-aligned.)
-# Code Ghidra has outside any function, so its references look like data: the rest of RecurseAndDrawBoxes
-# (0x000dd4c0), whose function in Ghidra ends at its first call. Replaced as a whole, so none of it runs.
-NOT_POINTERS += [(0x000DD56D, 0x000DD8D3, "the rest of RecurseAndDrawBoxes, outside Ghidra's function")]
 # The initialiser tables _rtinit and _cinit walk (__xi/__xc). Our startup (engine/XboxStartup.cpp) calls their
 # entries by name instead, leaving out DSOUND's, so a function being listed here no longer makes it run.
 NOT_POINTERS += [(0x00163100, 0x00163170, "the C runtime's initialiser tables, which our startup no longer walks")]

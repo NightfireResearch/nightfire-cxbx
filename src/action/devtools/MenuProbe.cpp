@@ -58,6 +58,7 @@
 #include "DroneShadow.h"
 #include "WeaponTableShadow.h"
 #include "MatrixShadow.h"
+#include "../game.h"   // reload: ResetMap_LevelToLoad, GameFlow_PushState
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -113,7 +114,7 @@ static const char *const kButtonNames[] = { "A", "B", "X", "Y", "BLACK", "WHITE"
 static const unsigned short kDigitalBits[] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20 };   // UP..BACK
 
 struct Step {
-    enum { WAIT, HOLD, SHOT, LOG, QUIT, GOPAGE, SECRETSTEST, FOCUS, WAITPAGE, UNLOCKSTEST, POKE } kind;
+    enum { WAIT, HOLD, SHOT, LOG, QUIT, GOPAGE, SECRETSTEST, FOCUS, WAITPAGE, UNLOCKSTEST, POKE, RELOAD } kind;
     int button;
     unsigned frames;
     char text[96];
@@ -191,6 +192,9 @@ static bool LoadScript(const char *path) {
             s.kind = Step::UNLOCKSTEST; AddStep(s);
         } else if (_stricmp(cmd, "secretstest") == 0) {
             s.kind = Step::SECRETSTEST; AddStep(s);
+        } else if (_stricmp(cmd, "reload") == 0) {
+            // Loads the current level again, as the end of a mission does: tests a level change
+            s.kind = Step::RELOAD; AddStep(s);
         } else if (_stricmp(cmd, "quit") == 0) {
             s.kind = Step::QUIT; AddStep(s);
         } else {
@@ -252,6 +256,12 @@ static int ScriptFrame(void) {
             break;
         case Step::UNLOCKSTEST:
             UnlocksShadow_Run();
+            break;
+        case Step::RELOAD:
+            printf("[menuscript] f=%u reload level 0x%08x\n", g_frame, (unsigned)GameState.CurrentLevelHashcode);
+            fflush(stdout);
+            ResetMap_LevelToLoad(GameState.CurrentLevelHashcode, false, true);
+            GameFlow_PushState(7, 60.0f, 0xff);
             break;
         case Step::SECRETSTEST:
             SecretsShadow_Run();

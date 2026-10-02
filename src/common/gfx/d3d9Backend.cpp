@@ -3495,3 +3495,8 @@ static void ReleaseVisibilityQueries(void) {
 void D3D9_BlockUntilNotBusy(void *pResource) {
     (void)pResource; // no GPU-side ownership of CPU memory here
 }
+
+void D3D9_KickOffAndWaitForIdle(void) {
+    // Nothing to wait for: the resources the game frees after this are its own memory, which Direct3D 9 never
+    // reads directly (the backend copies what it is told has changed)
+}

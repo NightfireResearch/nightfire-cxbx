@@ -1,0 +1,68 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# Into the first mission, then the same level loaded again eight times: the D3D resource tables must be
+# emptied at every level change (maybeD3dShutdown), or textures run out on the 4th-5th load.
+press A                    # NightFire
+waitpage 0x40000025        # P_NFSELECT
+wait 100
+press A                    # the codename
+waitpage 0x4000002f        # P_MESSAGEBOX
+wait 150
+press A
+waitpage 0x40000023        # P_NFDFCTY
+wait 100
+press A                    # difficulty
+waitpage 0x4000001c        # P_NFMAP
+wait 100
+press A                    # the first mission
+wait 1500
+wait 300
+shot load1
+reload
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+shot load2
+reload
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+shot load3
+reload
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+shot load4
+reload
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+shot load5
+reload
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+shot load6
+reload
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+shot load7
+reload
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+shot load8
+reload
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+shot load9
+quit
