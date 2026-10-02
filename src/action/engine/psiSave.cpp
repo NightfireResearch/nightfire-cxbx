@@ -1,4 +1,5 @@
 #include "psiSave.h"
+#include "XboxFile.h"
 #include "../actionhelpers.h"
 
 #include <stdio.h>
@@ -95,17 +96,16 @@ undefined4 psiLoadData(void *buffer, uint32_t *sizeInOut, const char *profileNam
 //
 // The chain the menu drives is psiStartSaveEnum -> repeated psiGetNextSave -> psiEndSaveEnum. psiGetNextSave's
 // real work happens in psiGetNextSaveName (FUN_000dfce0), which walks the saves one entry at a time via
-// SaveEnum_GetNextEntry (opened by FUN_000e3850, closed by FUN_000e3430), copying each name into a fixed cache table
+// SaveEnum_GetNextEntry (between SaveDrive_Open and SaveDrive_Close), copying each name into a fixed cache table
 // at 0x002a2e68 (9 bytes - 8 chars + NUL - per entry). Once that walk reaches the end, it latches SaveGamesCached
 // to 1 and from then on every subsequent enumeration just replays that cache instead of walking again. That's a
 // sensible way to dodge Xbox hard-drive latency on real hardware; for us it would mean a Codename saved after the
 // first time the menu was opened would never appear again without restarting the whole game.
 //
-// SaveEnum_GetNextEntry below is replaced to walk our own "saves" folder instead of "u:\" (FUN_000e3850/
-// FUN_000e3430 still run either side of it and still open/close a real "u:\" handle in parallel - harmless, since
-// this ignores it entirely). psiStartSaveEnum clears SaveGamesCached every time, so psiGetNextSaveName always does
-// a fresh walk. psiGetNextSaveName and psiEndSaveEnum are ours too; psiGetNextSave, FUN_000e3850 and FUN_000e3430
-// are untouched.
+// SaveEnum_GetNextEntry below is replaced to walk our own "saves" folder instead of "u:\". The original opened
+// and closed a find handle on "u:\" either side of the walk (SaveDrive_Open / SaveDrive_Close); those are no
+// longer needed and do nothing. psiStartSaveEnum clears SaveGamesCached every time, so psiGetNextSaveName always
+// does a fresh walk. psiGetNextSaveName and psiEndSaveEnum are ours too; psiGetNextSave is untouched.
 // ---------------------------------------------------------------------------------------------------------------
 
 // Set once a walk of the saves has reached the end; from then on psiGetNextSaveName replays SaveGameCache instead
@@ -138,11 +138,14 @@ static int32_t SaveGamesReturned;
 // psiInternalLoadingDataState value psiEndSaveEnum leaves behind
 #define SAVE_STATE_ENUM_ENDED 11
 
-// Opens (FUN_000e3850) / closes (FUN_000e3430) the real "u:\" handle nothing else uses any more - still called
-// so we don't have to touch FUN_000dfce0's open/close bookkeeping around them.
-static void CallOriginal_FUN_000e3850() {
-    void(__stdcall * fn)() = (void(__stdcall *)())0x000e3850;
-    fn();
+// The original's find handle on "u:\" around a walk of the saves (0x000e3850 opens it, 0x000e3430 closes it).
+// The walk is of our own folder now (SaveEnum_GetNextEntry), so there is nothing to open.
+// FUNC_AT(000e3850)
+void SaveDrive_Open(void) {
+}
+
+// FUNC_AT(000e3430)
+void SaveDrive_Close(void) {
 }
 
 static intptr_t g_saveEnumHandle = -1;
@@ -158,7 +161,7 @@ void psiStartSaveEnum(void) {
 
     SaveGamesCached = 0; // force psiGetNextSaveName to do a fresh walk instead of ever trusting the stale cache
     NumberSaveGamesGot = 0;
-    CallOriginal_FUN_000e3850();
+    SaveDrive_Open();
 
     if (g_saveEnumHandle != -1) {
         _findclose(g_saveEnumHandle);
@@ -204,9 +207,6 @@ char* SaveEnum_GetNextEntry(void) {
     return g_saveEnumNameBuf;
 }
 
-// AUTOGEN
-void __stdcall FUN_000e3430(void);
-
 // The body of psiGetNextSave (0x000dfe60, still original, which only turns the result into its counters): the
 // next save name, (char*)-1 for an entry to skip, or NULL at the end. The PS2 build has all of this in
 // psiGetNextSave itself, without the cache.
@@ -238,7 +238,7 @@ char* psiGetNextSaveName(void) {
         // The walk is complete: replay from now on, much faster, and close the drive handle
         SaveGamesCached = 1;
         SaveEnum_EntriesPerFrame = SAVE_ENUM_ENTRIES_PER_FRAME_CACHED;
-        FUN_000e3430();
+        SaveDrive_Close();
         return NULL;
     }
 
@@ -260,6 +260,56 @@ char* psiGetNextSaveName(void) {
 void psiEndSaveEnum(void) {
     SaveGamesReturned = 0;
     if(!SaveGamesCached)
-        FUN_000e3430();
+        SaveDrive_Close();
     psiInternalLoadingDataState = SAVE_STATE_ENUM_ENDED;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The save drive. Deleting a Codename (0x000e3790, through XDeleteSaveGame on the original) removes its file;
+// the space checks (0x000e37c0, 0x000e3810) count the drive in the dashboard's 16 KB blocks, as the "not enough
+// space" message does.
+// ---------------------------------------------------------------------------------------------------------------
+
+#define SAVE_DELETED 8
+#define SAVE_DELETE_FAILED 9
+
+// FUNC_AT(000e3790)
+int SaveDrive_Delete(const char *profileName) {
+    if (profileName == NULL)
+        return SAVE_DELETE_FAILED;
+    char path[256];
+    BuildSavePath(path, sizeof(path), profileName);
+    return remove(path) == 0 ? SAVE_DELETED : SAVE_DELETE_FAILED;
+}
+
+// Free blocks on the save drive, 50000 at most (0x000e37c0)
+// FUNC_AT(000e37c0)
+uint32_t SaveDrive_FreeBlocks(void) {
+    ULARGE_INTEGER freeBytes;
+    if (!Xbox_GetDiskFreeSpaceExA("u:\\", &freeBytes, NULL, NULL))
+        return 0;
+    uint64_t blocks = freeBytes.QuadPart >> 14;
+    return blocks < 50000 ? (uint32_t)blocks : 50000;
+}
+
+// The blocks a save of size bytes takes: whole clusters, two more for the folder and its metadata, in blocks
+// rounded up (0x000e3810)
+// FUNC_AT(000e3810)
+int SaveDrive_BlocksFor(int size) {
+    int cluster = (int)Xbox_GetVolumeClusterSize("u:\\");
+    if (cluster < 1)
+        return 0;
+    int bytes = ((cluster + 0x1c + size) / cluster + 2) * cluster + 0x3fff;
+    return bytes / 0x4000;
+}
+
+// The menu code's copies of the two (0x000dfbc0, 0x000dfbd0)
+// FUNC_AT(000dfbc0)
+uint32_t SaveDrive_FreeBlocks_Thunk(void) {
+    return SaveDrive_FreeBlocks();
+}
+
+// FUNC_AT(000dfbd0)
+int SaveDrive_BlocksFor_Thunk(int size) {
+    return SaveDrive_BlocksFor(size);
 }

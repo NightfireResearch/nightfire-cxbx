@@ -4,13 +4,11 @@
 #include "engine/Direct3D/d3dSeam.h" // xboxInitGraphics is reimplemented there now
 #include "gfx/LowLevel.h"                // Graphics_Init_LowLevel
 #include "sound/dsndSeam.h"            // xboxInitSound is reimplemented there now
+#include "engine/XboxSystem.h"
+#include "engine/XboxError.h"
 
 // Set to silence NF_WARN (actionhelpers.h) - for the shadow tests
 int NfWarnMuted;
-// AUTOGEN
-void xboxInitTextures(void);
-// AUTOGEN
-void* GetPTPData(void);
 
 // The game's own main - not the entry point of any executable we build. It cannot keep that name in C++,
 // which requires main to return int: MSVC accepts "void main", clang rejects it outright. Because the name

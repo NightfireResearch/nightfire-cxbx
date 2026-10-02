@@ -98,6 +98,7 @@ add_library(actioninject SHARED
   src/action/devtools/DroneTablesCheck.cpp
   src/action/devtools/DroneShadow.cpp
   src/action/devtools/WeaponTableShadow.cpp
+  src/action/devtools/MatrixShadow.cpp
   src/action/game.cpp
   src/action/main.cpp
   src/common/launchInfo.cpp
@@ -114,9 +115,11 @@ add_library(actioninject SHARED
   src/action/engine/parsemap.cpp
   src/action/engine/psiFile.cpp
   src/action/engine/psiGraphics.cpp
+  src/action/engine/psiDraw.cpp
   src/action/engine/mouseLook.cpp
   src/action/engine/psiInput.cpp
   src/action/engine/psiLight.cpp
+  src/action/engine/psiSprite.cpp
   src/action/engine/psiSave.cpp
   src/action/engine/Script.cpp
   src/action/engine/Text.cpp
@@ -125,12 +128,15 @@ add_library(actioninject SHARED
   src/action/engine/XboxSettings.cpp
   src/common/xboxPath.cpp
   src/action/engine/XboxFile.cpp
+  src/action/engine/XboxError.cpp
+  src/action/engine/XboxSystem.cpp
   src/action/engine/Fmv.cpp
   src/common/fmv/Ffmpeg.cpp
   src/common/fmv/FmvAudio.cpp
   src/action/engine/XboxStartup.cpp
   src/action/engine/Direct3D/d3dhelpers.cpp
   src/action/engine/Direct3D/d3dSeam.cpp
+  src/action/engine/Direct3D/xboxMatrix.cpp
   src/action/engine/Direct3D/backendHost.cpp
   src/common/gfx/d3d9Backend.cpp
   src/common/gfx/nv2aPixelShader.cpp
@@ -196,6 +202,7 @@ add_library(actioninject SHARED
   src/action/game/sp/PlayerStats.cpp
   src/action/game/sp/SwitchChannels.cpp
   src/action/sound/dsndSeam.cpp
+  src/action/sound/psiSound.cpp
   src/common/sound/xadpcm.cpp
   src/action/sound/xaudio2Backend.cpp
   src/action/sound/music.cpp

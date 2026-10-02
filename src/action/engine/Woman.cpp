@@ -3,31 +3,30 @@
 #include "psiGraphics.h"
 
 #include "../memory.h"
+#include "FS.h"
 #include "../util/hashtable.h"
 
 #define pWoman (*(void**)0x002ae2e0) // Current point in the buffer to which we have decoded
 #define WomanFrame U32_AT(0x002ae2e4) // Frame number
 
-#define FILELOADER_COMPLETE 0
 
-// NOAUTOINJECT
-// void LoadWoman(void) {
+// Loads the pause menu background's RLE file whole and rewinds the decoder to its first frame
+// AUTOINJECT
+void LoadWoman(void) {
+    int sizeBytes = FS_GetFileSize((char *)"woman.rle");
+    MemoryForWoman = Mem_Malloc(sizeBytes, 0x1204, 4);
+    FS_LoadFileIfReady((char *)"woman.rle", MemoryForWoman);
+    while (FS_StateMachineIterate())
+        ;
+    pWoman = MemoryForWoman;
+    WomanFrame = 0;
+}
 
-//     int sizeBytes = fileGetSize(0x161da8); // Unclear what this represents so far
-
-//     MemoryForWoman = Mem_Malloc(sizeBytes, 0x1204, 4);
-//     LoadFromFileWithinArchive("woman.rle", MemoryForWoman);
-
-//     int result;
-//     do {
-//         result = FileLoaderStateMachineIterate();
-//     } while (result != FILELOADER_COMPLETE);
-
-
-//     pWoman = MemoryForWoman;
-//     WomanFrame = 0;
-
-// }
+// The Xbox layer's thunk to it (0x000dc860), which ResetMap_Load calls
+// FUNC_AT(000dc860)
+void LoadWoman_Thunk(void) {
+    LoadWoman();
+}
 
 void* Texture_GetRawDataPtr(int texIdx); // reimplemented in Direct3D/d3dSeam.cpp
 

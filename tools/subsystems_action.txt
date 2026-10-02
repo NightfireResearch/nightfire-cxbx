@@ -91,7 +91,9 @@
 000e8e30 platform.system     main, timestamp, crc32, launch, PTP data
 
 # --- XDK libraries ---
-000e93f0 lib.xapi            XAPI, C runtime, kernel thunks
+000e93f0 lib.xapi            XAPI, kernel thunks
+000ee24c lib.crt             C runtime
+000f53d0 lib.xapi            XAPI: QueryPerformanceCounter, OutputDebugStringA, RtlUnwind
 000f5460 engine.static       static initialisers (WeaponDataTableInit is 44 KB of them)
 00100480 lib.d3d             D3D8
 00111fc0 lib.d3d             D3DX

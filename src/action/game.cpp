@@ -16,6 +16,7 @@
 #include <cstdio>
 
 #include <stdio.h>
+#include "engine/XboxSystem.h"
 
 // XBE_GLOBAL(0x002ae288, 0x4)
 uint32_t BackgroundMovieHashcode;
@@ -167,8 +168,6 @@ uint32_t SoundInfo;
 
 
 // AUTOGEN
-void __cdecl psiLaunchDriving(void* a, uint b);
-// AUTOGEN
 void __stdcall Game_Draw(void);
 // AUTOGEN
 void __stdcall Boot_LoadPTPData(void);
@@ -183,8 +182,6 @@ void psiStopBackgroundMovie(void) {
     BackgroundMovieHashcode = 0;
 }
 
-// AUTOGEN
-int Language_Get(void);
 
 
 

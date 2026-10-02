@@ -6,5 +6,7 @@
 #define MemoryForWoman (*(void**)0x002ae2dc)
 
 void psiDecompressWoman(void);
+void LoadWoman(void);
+void LoadWoman_Thunk(void);
 
 #endif // WOMAN_H_

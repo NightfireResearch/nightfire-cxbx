@@ -452,27 +452,8 @@ typedef void(__stdcall *D3DDevice_DrawVerticesFn)(uint32_t primitiveType, uint32
 typedef void(__stdcall *D3DDevice_SetRenderState_ZBiasFn)(int zBias);
 #define D3DDevice_SetRenderState_ZBias (D3DSeamTraced("D3DDevice_SetRenderState_ZBias", (D3DDevice_SetRenderState_ZBiasFn)D3DDevice_SetRenderState_ZBias_ADDR, D3D9_SetZBias))
 
-// ---------------------------------------------------------------------------------------------------------------
-// Pure-math Eurocom matrix helpers (Global namespace, not D3D8::) - never previously declared/called from any
-// reimplemented code in this project, so first-time AUTOGEN forward declarations rather than plain ones (see
-// timestamp() above for the contrast - that one already had a body generated elsewhere). All confirmed via raw
-// disassembly to be plain __cdecl, stack-only arguments, no register-convention surprises. We call these but
-// deliberately don't reimplement or need to understand their internals - they remain completely untouched.
-// ---------------------------------------------------------------------------------------------------------------
-// AUTOGEN
-void maybeD3DMATRIXcopy(undefined4 *dest, undefined4 *src);
-// AUTOGEN
-void d3dMatrixIdentity(D3DMATRIX *mtx);
-// AUTOGEN
-void maybeMultiplyMatrixChain(D3DMATRIX *mtxOut, D3DMATRIX *base, MatrixChainNode *mtxChain);
-// AUTOGEN
-void maybeTransposeRotationPart(D3DMATRIX *mtx);
-// AUTOGEN
-void maybeInvertRigidTransform(D3DMATRIX *mtx);
-// AUTOGEN
-void maybeMtxApplyTransform(D3DMATRIX *mtx, float dx, float dy, float dz);
-// AUTOGEN
-void maybeMtxInverse(D3DMATRIX *mtx);
+// Eurocom's matrix helpers: ours, in xboxMatrix.cpp.
+#include "xboxMatrix.h"
 // Already AUTOGEN-declared (and its stub body generated) elsewhere - plain forward declaration here, same
 // pattern as timestamp() above, so this file can call it too without a colliding second body.
 void* allocateAligned0x1000(int numBytes);

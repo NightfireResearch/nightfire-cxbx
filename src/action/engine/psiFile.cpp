@@ -2,12 +2,22 @@
 #include <windows.h>
 #include "../actionhelpers.h"
 #include "Loader.h"
+#include "FS.h"
+#include "psiFile.h"
 
 
-int allocateAndLoadFileWithinArchive(char* a, unsigned short b, int* c) {
-	int (*funcPtr)(char*, unsigned short, int*) = (int (*)(char*, unsigned short, int*))(0x000dc990);
-	return funcPtr(a, b, c);
+static int allocateAndLoadFileWithinArchive(char* a, unsigned short b, int* c) {
+	return (int)(uintptr_t)FS_AllocateAndLoadBlocking(a, (MallocFlags)b, c);
 }
+
+// The open file: psiFileOpen loads the whole of it, and reads walk through it
+struct PsiOpenFile {
+    uint32_t data;       // where it was loaded, 0 when none is open
+    uint32_t size;
+    uint32_t position;   // how far reads have got
+};
+// XBE_GLOBAL(0x002adf74, 0xc)
+static PsiOpenFile CurrentFile;
 
 // AUTOGEN
 void psiFileLoadForParse(char *param_1);
@@ -17,12 +27,33 @@ int psiFileOpen(char* param_1)
 {
   printf("hooked psiFileOpen: %s\n", param_1);
 
-  U32_AT(0x002adf74) = 0;
-  U32_AT(0x002adf78) = 0;
-  U32_AT(0x002adf7c) = 0;
-  U32_AT(0x002adf74) = allocateAndLoadFileWithinArchive(param_1,0x1204,(int*)0x002adf78);
-  U32_AT(0x002adf7c) = 0;
-  return (((uint32_t)U32_AT(0x002adf74) >> 8) << 8 | 1);
+  CurrentFile.data = 0;
+  CurrentFile.size = 0;
+  CurrentFile.position = 0;
+  CurrentFile.data = allocateAndLoadFileWithinArchive(param_1,0x1204,(int*)&CurrentFile.size);
+  CurrentFile.position = 0;
+  return ((CurrentFile.data >> 8) << 8 | 1);
+}
+
+// AUTOINJECT
+int psiFileClose(void) {
+    CurrentFile.data = 0;
+    CurrentFile.size = 0;
+    CurrentFile.position = 0;
+    return 1;
+}
+
+// Reads the file's current position and advances it; there is no allocation or copy, since psiFileOpen has
+// already loaded the whole archive. The original passes three more arguments (0x20 or the size, 0x4004 or
+// 0x4104, 0x80, and 0 or LoaderLoad's fourth argument - allocation flags, from the look of them), which this
+// function never reads.
+// AUTOINJECT
+int maybePsiFileRead(int length) {
+    if (CurrentFile.data == 0)
+        return 0;
+    uint32_t at = CurrentFile.position;
+    CurrentFile.position += length;
+    return (int)(CurrentFile.data + at);
 }
 
 void dumpToFile(char* gamefile, void* data, size_t len) {

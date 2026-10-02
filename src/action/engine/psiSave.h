@@ -31,4 +31,12 @@ char* SaveEnum_GetNextEntry(void);
 char* psiGetNextSaveName(void);
 void psiEndSaveEnum(void);
 
+void SaveDrive_Open(void);
+void SaveDrive_Close(void);
+int SaveDrive_Delete(const char *profileName);   // 8 deleted, 9 not
+uint32_t SaveDrive_FreeBlocks(void);              // 16 KB blocks free on the save drive
+int SaveDrive_BlocksFor(int size);                // 16 KB blocks a save of size bytes takes
+uint32_t SaveDrive_FreeBlocks_Thunk(void);
+int SaveDrive_BlocksFor_Thunk(int size);
+
 #endif // PSISAVE_H_

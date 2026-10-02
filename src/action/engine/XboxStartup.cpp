@@ -1,4 +1,7 @@
 #include "XboxStartup.h"
+#include "../actionhelpers.h"
+#include "../game/weapon_stats.h"   // WeaponDataTableInit
+#include "../ui/HUD.h"              // the HUD panes' static initialisers
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
@@ -31,10 +34,28 @@
 // exactly the same shape. So this is an ordinary LPTHREAD_START_ROUTINE and the stack works out on its own.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The originals, called by address rather than by Ghidra name: these are XAPI internals that
-// tools/functions_action.json does not carry.
-#define Xapi_rtinit     ((void (__cdecl *)(void))0x000eddd3u)
-#define Xapi_cinit      ((void (__cdecl *)(void))0x000edd7bu)
+// The C runtime's own initialisers, which the original _rtinit and _cinit found in the XBE's initialiser tables
+// (0x00163100-0x00163160). The C runtime stays the game's until the code calling it is ours, so these still run.
+#define CrtInitFloatingPoint ((void (__cdecl *)(void))0x000f3178u)   // _rtinit's second entry
+#define CrtSetupLibs         ((void (__cdecl *)(void))0x000ee285u)   // _cinit's library hook
+#define CrtInitStdio         ((void (__cdecl *)(void))0x000f0e37u)   // ___initstdio
+#define CrtInitAtExit        ((void (__cdecl *)(void))0x000f4f52u)
+
+// The game's own static initialisers (C++ constructors of globals) that are not ours yet
+// AUTOGEN
+undefined FUN_000f5460(void);
+// AUTOGEN
+undefined FUN_000f5470(void);
+// AUTOGEN
+undefined FUN_000f5480(void);
+// AUTOGEN
+void __stdcall FUN_000f5490(void);
+// AUTOGEN
+undefined FUN_000f54c0(void);
+// AUTOGEN
+undefined FUN_000f54f0(void);
+// AUTOGEN
+undefined FUN_000f5520(void);
 
 // The XBE's own heap manager - RtlCreateHeap in all but name, and the allocator every malloc in the game
 // eventually reaches. It is left in place and simply given memory to work with: its heap blocks are the ones
@@ -257,6 +278,69 @@ static const unsigned WBINVD_SITES[] = {
 static const unsigned char WBINVD_BYTES[2] = { 0x0f, 0x09 };
 
 // ---------------------------------------------------------------------------------------------------------------
+// The C runtime's and the C++ constructors' initialisers, in place of _rtinit (0x000eddd3) and _cinit
+// (0x000edd7b). Those walk the XBE's initialiser tables; these call the same entries, in the same order, by
+// name - except the four DSOUND ones at the end of the constructor table (0x00114b94, 0x00114b9f, 0x0011a230,
+// 0x0011a23b), which only point DSOUND's internal globals at its own data. DSOUND is never entered now.
+// ---------------------------------------------------------------------------------------------------------------
+
+static void Xbox_rtinit(void) {
+    Xbox_mtinit();          // the table's first entry, 0x000f405e, already ours
+    CrtInitFloatingPoint();
+}
+
+static void Xbox_cinit(void) {
+    CrtSetupLibs();
+    // The C initialisers
+    CrtInitStdio();
+    CrtInitAtExit();
+    // The C++ constructors
+    FUN_000f5460();
+    FUN_000f5470();
+    FUN_000f5480();
+    FUN_000f5490();
+    HUD_InitObjectiveStatusPaneWidth();
+    FUN_000f54c0();
+    HUD_InitInfoStatusPaneWidth();
+    FUN_000f54f0();
+    HUD_InitPickupStatusPaneWidth();
+    FUN_000f5520();
+    WeaponDataTableInit();
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The XBE's entry point (0x000eb2ac), which the loader calls. Like the original it starts the game on a thread of
+// its own, with the XBE header's default stack size, and returns; the original rebooted to the dashboard if the
+// thread could not be made.
+// ---------------------------------------------------------------------------------------------------------------
+
+#define XbeSizeOfHeaders     (*(uint32_t *)0x00010108u)
+#define XbeCertificate       (*(uint32_t **)0x00010118u)   // its first word is the certificate's size
+#define XbeDefaultStackSize  (*(uint32_t *)0x00010130u)
+#define XbeTls               ((const uint32_t *)0x00162400u)   // the TLS directory
+#define XapiThreadTlsSize    (*(uint32_t *)0x00300934u)
+
+static void __cdecl Xbox_Entry(void) {
+    // The certificate's size, clamped to what the headers hold, and the per-thread TLS block's size: its
+    // template (end - start), the zero fill, rounded to 16, and a word for the pointer; the TLS index is minus
+    // that in words. Both as the original, though nothing of ours reads them.
+    uint32_t certificateLimit = XbeSizeOfHeaders - (uint32_t)(uintptr_t)XbeCertificate + 0x10000;
+    if (certificateLimit < *XbeCertificate)
+        *XbeCertificate = certificateLimit;
+    int32_t tlsSize = (int32_t)((XbeTls[4] - XbeTls[0] + XbeTls[1] + 0xf) & ~0xfu) + 4;
+    XapiThreadTlsSize = (uint32_t)tlsSize;
+    **(int32_t **)(XbeTls + 2) = tlsSize / -4;
+
+    HANDLE thread = CreateThread(NULL, XbeDefaultStackSize, mainXapiStartup, NULL, 0, NULL);
+    if (thread == NULL) {
+        printf("[startup] the game's thread could not be created (error %lu)\n", GetLastError());
+        fflush(stdout);
+        ExitProcess(1);
+    }
+    CloseHandle(thread);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // Installing all of it
 //
 // Deliberately not AUTOINJECT or FUNC_AT. Those patch unconditionally, and every replacement in this file
@@ -280,6 +364,7 @@ void Inject_XboxStartup(void) {
     if (!Xbox_RunningStandalone())
         return;
 
+    WriteJump(0x000eb2ac, (void *)Xbox_Entry);               // the entry point
     WriteJump(0x000eb238, (void *)mainXapiStartup);          // the whole of process startup
     WriteJump(0x000ed8ac, (void *)Xbox_XapiInitProcess);     // heap and the XAPI initialiser table
     WriteJump(0x000e9a24, (void *)Xbox_GetLastError);
@@ -324,8 +409,8 @@ DWORD WINAPI mainXapiStartup(LPVOID unused) {
     printf("[startup] running the C runtime and C++ constructors\n");
     fflush(stdout);
 
-    Xapi_rtinit();
-    Xapi_cinit();
+    Xbox_rtinit();
+    Xbox_cinit();
 
     printf("[startup] calling main\n");
     fflush(stdout);

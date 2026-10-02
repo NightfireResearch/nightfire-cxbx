@@ -22,6 +22,9 @@ fi
 grep -v -i -E '^(DiscPath|MenuLog|MenuLogSkip|MenuScript|MenuOriginal|MenuCheckLists)=' "$REPO/Release/settings.ini" > "$RUN/settings.ini"
 printf '\nMenuCheckLists=on\nMenuLog=on\nMenuLogSkip=0x50,0x51\nMenuScript=%s\nMenuOriginal=%s\n' "$(cygpath -m "$SCRIPT")" "${ORIGINAL:-}" >> "$RUN/settings.ini"
 rm -f "$RUN/psiLaunch.bin" "$RUN"/menu_shots/*.png
+# The language marker a previous run left on t:\ (tdata/lang*.dat) skips the language page and shifts every
+# frame after it, so each run starts without one.
+rm -rf "$RUN/tdata"
 # A copy of the codename saves (Release/saves), so the start page leads to codename select and the main menu
 # rather than straight into the first mission; the run changes the copy, never the originals.
 rm -rf "$RUN/saves"

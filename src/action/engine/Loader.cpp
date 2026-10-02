@@ -108,16 +108,6 @@ static uint LoaderFilesPerBatch = 0xffffffff;
 // MALLOC_LOW_END (memory.cpp): the batch goes at the low end of a free block
 #define LOADER_BATCH_MALLOC_METHOD 2
 
-// Reads the file's current position and advances it; there is no allocation or copy, since psiFileOpen has
-// already loaded the whole archive. The original passes three more arguments (0x20 or the size, 0x4004 or
-// 0x4104, 0x80, and 0 or LoaderLoad's fourth argument - allocation flags, from the look of them), which this
-// function never reads.
-// AUTOGEN
-int __cdecl maybePsiFileRead(int param_1);
-
-// AUTOGEN
-undefined4 __stdcall psiFileClose(void);
-
 // The game's CRT toupper (locale-aware, through _pctype). Called rather than our CRT's so the names come out
 // byte for byte as the original's, even for bytes above 0x7f (passed sign-extended, as the original does).
 // AUTOGEN

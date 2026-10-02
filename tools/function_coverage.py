@@ -17,9 +17,17 @@ global wants.
 Subsystems come from tools/subsystems_action.txt (address ranges). Sizes are bytes to the next function, so they
 include padding; Ghidra also leaves large stretches of DSOUND and XMV undefined, so those are undercounted.
 
+The C runtime (lib.crt) is the one library not worked on directly: game code calls sprintf, memcpy and malloc
+everywhere, and it goes away by itself as that code becomes ours, which our compiler's runtime then serves. XAPI
+code that only the C runtime reaches (the heap under malloc, RaiseException under the exception handling) is
+counted with it, under the module "XAPI under the C runtime".
+
     python tools/function_coverage.py                 # summary by subsystem
     python tools/function_coverage.py ai.drones       # that subsystem's live functions, largest first
     python tools/function_coverage.py --markdown      # the summary as markdown tables (docs/function-coverage.md)
+    python tools/function_coverage.py --why platform  # each live function there, what keeps it live: the live
+                                                      # functions calling it, and any root (our code calls it,
+                                                      # our code or data holds its address, the XBE entry point)
 """
 
 import os
@@ -60,7 +68,7 @@ def read_subsystems():
     return ranges
 
 
-def analyse():
+def analyse(want_graph=False):
     graph = gc.CallGraph()
     ranges = read_subsystems()
     lib_lo = min(a for a, s, _ in ranges if s.startswith("lib."))
@@ -73,7 +81,16 @@ def analyse():
 
     def counts(function, holder):
         return not (in_lib(function) and (in_lib(holder) or rdata[0] <= holder < rdata[1]))
-    live = graph.live(counts, {f for f in graph.no_caller if not in_lib(f)})
+    no_caller = {f for f in graph.no_caller if not in_lib(f)}
+    live = graph.live(counts, no_caller)
+
+    # What is live without passing through the C runtime: XAPI functions outside it belong with the C runtime
+    crt = [(lo, hi) for (lo, s, _), (hi, _, _) in zip(ranges, ranges[1:]) if s == "lib.crt"]
+    in_crt = lambda a: any(lo <= a < hi for lo, hi in crt)
+    saved = graph.replaced
+    graph.replaced = saved | {a for a in graph.funcs if in_crt(a)}
+    live_without_crt = graph.live(counts, no_caller)
+    graph.replaced = saved
 
     addrs = sorted(graph.funcs)
     out = []
@@ -85,9 +102,41 @@ def analyse():
             continue
         nxt = min(addrs[i + 1] if i + 1 < len(addrs) else a + 16, ranges[r + 1][0])
         status = "REPLACED" if a in graph.replaced else "LIVE" if a in live else "DEAD"
-        out.append({"address": a, "name": graph.funcs[a], "subsystem": ranges[r][1], "module": ranges[r][2],
+        subsystem, module = ranges[r][1], ranges[r][2]
+        if subsystem == "lib.xapi" and status == "LIVE" and a not in live_without_crt:
+            subsystem, module = "lib.crt", "XAPI under the C runtime"
+        out.append({"address": a, "name": graph.funcs[a], "subsystem": subsystem, "module": module,
                     "size": nxt - a, "status": status})
+    if want_graph:
+        return out, graph
     return out
+
+
+def why(fs, graph, subsystem):
+    """Each live function in a subsystem, and what keeps it live"""
+    by = {f["address"]: f for f in fs}
+    callers = defaultdict(set)
+    for a, cs in graph.edges.items():
+        for c in cs:
+            callers[c].add(a)
+    sel = sorted((f for f in fs if f["status"] == "LIVE" and
+                  (f["subsystem"] == subsystem or f["subsystem"].split(".")[0] == subsystem)), key=lambda f: f["address"])
+    if not sel:
+        sys.exit("nothing live in %s" % subsystem)
+    for f in sel:
+        a = f["address"]
+        roots = []
+        if a == graph.entry:
+            roots.append("XBE entry point")
+        if a in graph.autogen:
+            roots.append("our code calls it")
+        if a in graph.ours_points_at:
+            roots.append("our code holds its address")
+        if graph.pointed_at.get(a):
+            roots.append("data at " + ", ".join("%08x" % h for h in sorted(graph.pointed_at[a])[:3]))
+        live_callers = sorted(c for c in callers[a] if c in by and by[c]["status"] == "LIVE")
+        names = ["%s (%s)" % (by[c]["name"], by[c]["subsystem"]) for c in live_callers]
+        print("%08x %5d  %-36s %s" % (a, f["size"], f["name"], "; ".join(roots + names) or "no known caller"))
 
 
 def tally(fs):
@@ -136,6 +185,7 @@ def summary(fs, markdown):
     below = [f for f in fs if f["subsystem"].split(".")[0] in SURFACE]
     lines.append(row("game code (above)", tally(above), True))
     lines.append(row("platform + libraries", tally(below), True))
+    lines.append(row("  without the C runtime", tally([f for f in below if f["subsystem"] != "lib.crt"]), True))
     lines.append(row("everything", tally(fs), True))
     print("\n".join(lines))
 
@@ -159,6 +209,11 @@ def detail(fs, subsystem):
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if "--why" in sys.argv:
+        fs, graph = analyse(want_graph=True)
+        for a in args:
+            why(fs, graph, a)
+        return
     fs = analyse()
     if args:
         for a in args:

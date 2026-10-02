@@ -54,6 +54,18 @@ RETAIL_ENTRY_KEY = 0xA8FC57AB
 # not references.
 NOT_POINTERS = [(0x0019CD08, 0x001B4D78, "vertex shader microcode (VtxShaderFunctionTokenTable's programs)"),
                 (0x00300CE0, 0x00307E60, "the DOLBY section's DSP image")]
+# Pairs of 16-bit values Ghidra typed as a pointer because together they land inside FileSystem (0x002cxxxx) or
+# LaunchInfoData (0x0030xxxx): the menu's item tables at 0x179000-0x17c000 are runs of shorts, and 0x1d5c90 is two
+# shorts in a record. (One of them is not even word-aligned.)
+# Code Ghidra has outside any function, so its references look like data: the rest of RecurseAndDrawBoxes
+# (0x000dd4c0), whose function in Ghidra ends at its first call. Replaced as a whole, so none of it runs.
+NOT_POINTERS += [(0x000DD56D, 0x000DD8D3, "the rest of RecurseAndDrawBoxes, outside Ghidra's function")]
+# The initialiser tables _rtinit and _cinit walk (__xi/__xc). Our startup (engine/XboxStartup.cpp) calls their
+# entries by name instead, leaving out DSOUND's, so a function being listed here no longer makes it run.
+NOT_POINTERS += [(0x00163100, 0x00163170, "the C runtime's initialiser tables, which our startup no longer walks")]
+NOT_POINTERS += [(a, a + 4, "two 16-bit values, not a pointer") for a in
+                 (0x00179050, 0x00179224, 0x0017929C, 0x00179320, 0x0017A8E4, 0x0017AAFA, 0x0017BEBC, 0x0017BF4C,
+                  0x001D5C90)]
 
 AT_SIZES = {"U8": 1, "I8": 1, "BOOL8": 1, "U16": 2, "I16": 2, "U32": 4, "I32": 4, "FLOAT": 4, "PTR": 4,
             "DOUBLE": 8}

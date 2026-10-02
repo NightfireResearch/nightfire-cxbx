@@ -9,9 +9,9 @@
 #include "Fmv.h"
 #include "../game.h"              // GameState, timestamp(), BackgroundMovieHashcode
 #include <string.h>               // memset
+#include "XboxSystem.h"
+#include "psiDraw.h"
 
-// AUTOGEN
-void RecurseAndDrawBoxes(int geom_idx);
 
 
 // AUTOINJECT
@@ -70,8 +70,6 @@ void psiAgeParticleOverlayRing(void) {
 // ---------------------------------------------------------------------------------------------------------------
 
 
-// AUTOGEN
-void __stdcall maybeCleanupSystem(void);
 
 // Set here and consumed by the first psiPreDraw after the reset: it calls ConfigureGammaForLevel, turns
 // LevelLoadTime from the reset's timestamp into the load's duration, and zeroes TimeSpentLoadingFiles.
@@ -204,8 +202,6 @@ void maybePsiResetResources(void) {
 // psiPreDraw, psiCreateMapTextures, psiCreateEntityGfx
 // ---------------------------------------------------------------------------------------------------------------
 
-// AUTOGEN
-void __stdcall ConfigureGammaForLevel(void);
 
 // The start of every frame's drawing (from mainloop). The first frame after a level load sets the level's gamma and
 // turns LevelLoadTime into how long the load took. The cache flush psiCreateMapTextures and psiCreateEntityGfx ask

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "actionhelpers.h"
 #include "memory.h"
+#include "engine/XboxSystem.h"
 
 // XBE_GLOBAL(0x00223a60, 0x1c)
 uint32_t MemStats[7];
@@ -55,8 +56,6 @@ static inline MemBlock* Mem_NextBlock(MemBlock *block) { return (MemBlock *)((ch
 static inline uint Mem_Distance(const void *from, const void *to) { return (uint)((const char *)to - (const char *)from); }
 static inline MemBlock* Mem_AlignDown(uintptr_t address, uint mask) { return (MemBlock *)(address & ~(uintptr_t)mask); }
 
-// AUTOGEN
-void* allocateAligned0x1000(int a);
 
 // 49MB of heap allocation from the Xbox kernel, then using an internal allocator
 // This is very similar to what Halo does
@@ -522,4 +521,16 @@ void* Mem_Info(void) {
     for (int i = 0; i < 7; i++)
         MemInfo.unused[i] = 0;
     return &MemInfo;
+}
+
+// The Xbox layer's own pair (0x000dbcd0, 0x000dbcf0): the sound buffers' allocations, always of type 0x1204.
+// AUTOINJECT
+void* allocateXboxSpecialMemory(int size, uint32_t alignment) {
+    return Mem_Malloc(size, 0x1204, alignment);
+}
+
+// AUTOINJECT
+void FreeMemory(void *data) {
+    if (data != NULL)
+        Mem_Free(&data);
 }

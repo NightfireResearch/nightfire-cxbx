@@ -57,6 +57,7 @@
 #include "DroneTablesCheck.h"
 #include "DroneShadow.h"
 #include "WeaponTableShadow.h"
+#include "MatrixShadow.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,6 +66,7 @@
 
 static const unsigned kHandlerHandleMessage = 0x0008e320;
 static const unsigned kPollDevices = 0x000e76a0;
+static const unsigned kPollDevicesThunk = 0x000de5c0;   // Input_Update calls the poll through this
 
 static unsigned g_frame = 0;
 
@@ -354,6 +356,7 @@ void MenuProbe_Install(void) {
         ScoreShadow_Run();
         DroneShadow_Run();
         WeaponTableShadow_Run();
+        MatrixShadow_Run();
     }
     g_logging = SettingOn("MenuLog");
     if (g_logging) {
@@ -384,5 +387,6 @@ void MenuProbe_Install(void) {
     if (script[0] != 0 && LoadScript(script)) {
         CreateDirectoryA("menu_shots", NULL);
         XbeOriginal_Redirect(kPollDevices, (const void *)&ScriptedPollDevices);
+        XbeOriginal_Redirect(kPollDevicesThunk, (const void *)&ScriptedPollDevices);
     }
 }
