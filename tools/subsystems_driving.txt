@@ -1,0 +1,112 @@
+# The driving engine's functions (Driving.xbe) by subsystem, for tools/function_coverage.py --driving.
+#
+# Four tiers, from the bottom up:
+#   sys       system APIs: Microsoft's XDK libraries (D3D, DSOUND, XPP), XAPI and the kernel thunks, the C/C++ runtime
+#   platform  EA's platform layer: EAGL (graphics), the sound library, files, memory, threads, timers, maths, movies
+#   engine    the game engine: animation, rendering, cameras, physics, world and collision, audio framework, input,
+#             data and tuning, the game loop, scheduler and event framework, utilities
+#   game      gameplay: AI, mission script events, missions and rules, vehicles, weapons and objects, the HUD and front
+#             end (the G* classes), gameplay audio and effects
+#
+# The binary is laid out by source file, and the game's files are named after their classes, which carry a prefix:
+# Act (animation), AI, A (audio), D (data), E (events, and EAGL), G (graphics: HUD and front end), I (input),
+# P (vehicle physics), R (rendering), S (simulation and missions), U (utilities), W (world). So classification is by
+# name, with address ranges for the libraries and for each area's default.
+#
+# RANGES: "range <address> <subsystem> <description>". A range runs to the next one. A sys.* range is fixed: every
+# function in it is that subsystem. In any other range each named function is classified by the first class rule
+# its class matches; one that matches none, and each unnamed function (FUN_...), takes the subsystem of the nearest
+# named function before it in the same range, or the range's own subsystem if there is none. Only "anchors" count
+# as that neighbour: a class whose functions sit close together, not one whose inline copies are scattered through
+# the binary (EAGL, std, VU0, URefCounter...: a class whose functions span more than 0x8000 bytes, unless the
+# function's neighbour is of the same class).
+#
+# FLOAT: "float <regex>": classes that never count as the neighbour, however close together their functions sit -
+# templates and library helpers instantiated wherever they are used (URefCounter<AStream> inside the audio code).
+#
+# CLASSES: "class <regex> <subsystem>", matched (first match wins) against a function's class: the first component
+# of a "A::B::f" name, the part before "__" of an exception-handling funclet ("PBondCar__ControlTyreTracks_Unwind_0"),
+# or else the name up to its first underscore ("VU0_v4sub" -> "VU0", "MEM_size" -> "MEM").
+#
+# `python tools/function_coverage.py --driving --unclassified` lists named functions no rule matches.
+
+range 00011000 game.ai              game code (classified by class)
+range 000e4680 platform.eagl        EAGL: views, drawing, textures, EAGLAnim, FONT, SHAPE, LOCALE
+range 00108460 platform.system      EA's system layer: PAD, MOUSE, maths, MEM, TIMER, THREAD, FILESYS, FILE...
+range 0010e4d2 sys.xapi             XAPI and the kernel thunks: process and thread startup, files, launch data
+range 001135b0 platform.math        VU0 maths, MEM, UMemory, matrix helpers
+range 00116e00 engine.data          game code again (classified by class): U* utilities, CARP, A* audio, PlayMPC
+range 00130d00 sys.crt              the Microsoft C/C++ runtime: STL locale and streams, exception handling, stdio, maths
+range 0013b7b0 platform.sound       EA's sound library: SND*, MIX, SFILTER, the DirectSound driver; MUTEX, STREAM
+range 0014c3e0 platform.movie       RCMP: the movie player and its decoders
+range 00150000 engine.core          exception-handling funclets (classified by the function they belong to)
+range 00156c00 engine.static        dynamic initialisers: constructors of global objects
+range 0015d370 end                  end of .text
+range 0015d380 sys.d3d              D3DX section
+range 00165dc0 sys.d3d              D3D section
+range 00178840 sys.d3d              XGRPH section
+range 0017ac40 sys.dsound           DSOUND section
+range 00183ac0 sys.xpp              XPP section: the USB input stack
+range 00189be0 end                  .rdata
+
+# ---- system APIs that turn up outside their ranges
+class ^XAPILIB$                          sys.xapi
+class ^xboxkrnl                          sys.xapi
+
+# ---- platform: EAGL and the other EA libraries
+class ^EAGL                              platform.eagl
+class ^D3D8$                             sys.d3d
+class ^(FONT|SHAPE|LOCALE|PrintMessage|changeFogState|eagl_)  platform.eagl
+class ^(VU0|VU|MATRIX4|VEC3|v3|vec3|sin|cos|atan|random|seedrandom|rrandom)  platform.math
+class ^(BuildScale|BuildTranslate|BuildRotate|ExtractRotTrans|ExtractQuatTrans|TransformPoint|OrthoInverse)$  platform.math
+class ^(Determinant4x4|Inverse|MatrixCopy|BytesToCoord|FindOBBIntersect|QuatMultXxYxZ|maybeExtract)$  platform.math
+class ^(PAD|MOUSE)$                      platform.input
+class ^(FILESYS|ASYNCFILE|FILE|iFILE)    platform.files
+class ^(MEM|TIMER|SIGNAL|THREAD|SYNCTASK|PRINT|CPU|REAL|SYSTEM|MUTEX|REALMUTEX|SleepMs|SleepMilliseconds|getTickCount|millisToKern|checksentinel|memclr)$  platform.system
+class ^(SND|iSND|MIX|SFILTER|dsnd|DirectSound|mixc|stretch|readsamples|initmut|decodemut|decode16x87|findprime|randrange)  platform.sound
+class ^(RCMP|unpacksizez|freerequest|STREAM)$  platform.movie
+
+# ---- engine
+class ^Action(Queue|QueueRing|QueueManager|Data)$  engine.input
+class ^(getActionID|IFeedback|IOModule|InputConfigManager|InputTable|InputToAction|InputDevice|DeviceScalar|XBoxPadDevice)$  engine.input
+class ^ActionRef$                        engine.render
+class ^Act                               engine.anim
+class ^(AnimationController|StandardAnimationController|CrossFadeAnimationController|QuaternionStreamAnimation)$  engine.anim
+class ^(SetProcAnimXFormList|SetProcAnimParamList|GetInstanceMatrix|RAnimEngine)$  engine.anim
+class ^(RCARPFile|RCARPFileLoader|GlobalSymbolTable|RegisterCallback|ResolveEAGLReferences)$  engine.data
+class ^(RCamera|RCameraIniLoader|RCameraMath|RCameraSpline|RPlayerCamera|RPlayerCamState|RPlayerViewCamera)$  engine.camera
+class ^(RWorldCamera|RViewCamera|RRenderWorldCamera|RDirectorQueue|RDirectorQueueData|PointDir|PointInTriangle|FindPointInList)$  engine.camera
+class ^(RVehicle|RVehicleParticle|RTyreTrack|RMissileStreak|RBulletStreak|REmp|REmpBolts|RSniperZoom|RMissileCam|RMuzzleFlash|RDebris|RDebrisType|RScorchWorld)$  game.effects
+class ^R[A-Z]                            engine.render
+class ^(DrawGroupDrawEffects|DrawGroupDrawModel|DrawGroupDrawInstance|DrawInstance|QuickDrawInstance|DrawInstanceList|DrawIndexedInstanceList)$  engine.render
+class ^(GetArticleViewDistance|GetInstanceViewDistance|GetTextureVal|Render|Draw|SimpleDraw|ColourConvertXBoxToPS2|ApplyPerspectiveFunction)$  engine.render
+class ^(GlareBlinkBrightness|AddGlareToRender|Add2DGlareToRender|CylinderSection|FeatureManager|TextureRenderContext)$  engine.render
+class ^(USimpleMaterial|USimpleTexturedMaterial|UVolatileMaterial|InitAllSimpleMaterials|ShutdownAllSimpleMaterials)$  engine.render
+class ^(PhysicsObject|Newton|RigidBody|SimpleRigidBody|OBB|ComputeInverseInertia|PhysicsNamespace|Util)$  engine.physics
+class ^W[A-Z]                            engine.world
+class ^(InitActiveCurtainList|IsVisibleAgainstCurtains|FasterSegmentIntersect|DistanceCheck2d|GetAttachedDirectionalSegment)$  engine.world
+class ^A(BaseSound|Mix|Stream|StreamPriv|SoundManager|Voice|FX|Fader|Bank|Index|Sound|System|Listener|Basic|MenuSound|MenuSoundPriv|OneShotSound|LimitedSound|ZoomObj)$  engine.audio
+class ^list<AVoice                       engine.audio
+class ^(DTuningDBManager|DTuningDBMgr|DTuningFile|DebugVariable|DebugData|db|Attribute|AttributeSet|AttributeSystem|AttributeValue)  engine.data
+class ^(CARP|DAFI|UCarpNamespace|UCharNamespace|USymbolTable|UData|UDataGroupDecodeTag|TextFile|IniFiles|FileNameList|UFileLoader)$  engine.data
+class ^(WorldMapResolver|CompareByString|CompareByNumber|StringToNumber|EncryptDecrypt|Bool|Int|UInt|Float|Vector|Matrix|String)$  engine.data
+class ^(EventManager|Event|RegisterEvent|Scheduler|Schedule|Schedule_OncePerGameLoop|Schedule_HalfSimRate|Schedule_QuarterSimRate|Vector_Schedule)$  engine.core
+class ^(GameLoop|RunTheGame|Bond|main|OptionParser|RealClock|ApplicationMemoryHeapConfig|MissionNumToString|AssertMessage)$  engine.core
+class ^(UMemory|UMemoryREALAllocCallback|UMemoryREALFreeCallback|URefCounter|USingleton|USingletonManager|UGroup|USimpleVec|std|_Rb_tree|__builtin)  engine.core
+class ^(Noise|noise|SimRandom|PlayMPC|GetLaunchInfo|ReturnToAction|SetFoundationVideoMode|GetFoundationVideoMode|GetFoundationVideoModeRate)  engine.core
+
+# ---- gameplay
+class ^AI                                game.ai
+class ^(TestForCollision|GetCollisionStopPoint|InCollisionRange|ClearShot|IsBumping)$  game.ai
+class ^DAudio$                           game.audio
+class ^A[A-Z]                            game.audio
+class ^E[A-Z0-9]                         game.events
+class ^SomeGenericEventProcess$          game.events
+class ^(Simulation|SMission|SRule|StubError|CompareWithinDegrees)  game.missions
+class ^(PBondCar|PVehicle|PHelicopter|GetCarColourVariation)$  game.vehicles
+class ^(Explosion|Grenade|Human|Mine|Missile|RayShell|Sentry|Shell|Smackable|SWeaponManager)$  game.weapons
+class ^G[A-Z]                            game.frontend
+class ^(WordWrap|GetParticFileForMission|CURATOR)$  game.frontend
+
+# ---- never the neighbour: templates and helpers instantiated where they are used
+float ^(URefCounter|USimpleVec|USingleton|std|_Rb_tree|list|__lower_bound|__builtin|dummy|maybe|strcat|eagl|EAGL|VU0|MATRIX4)
