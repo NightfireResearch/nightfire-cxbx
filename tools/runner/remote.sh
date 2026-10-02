@@ -29,9 +29,10 @@ JOBS=/c/nightfire-runner
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 
 # CanonicalDomains: macOS resolves a Windows machine's bare name only with ".local" (mDNS); ssh tries that first
-# and falls back to the bare name, so either works
+# and falls back to the bare name, so either works. HostKeyAlias checks the host key under the configured name
+# whichever of the two it connected by, so one known_hosts entry serves both (BatchMode cannot ask about a new one).
 r() { ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=15 -o CanonicalizeHostname=yes -o CanonicalDomains=local \
-    "$USER_@$HOST" "$@"; }
+    -o HostKeyAlias="$HOST" "$USER_@$HOST" "$@"; }
 
 cmd=$1; shift || true
 case "$cmd" in
