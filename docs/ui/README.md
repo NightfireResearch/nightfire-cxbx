@@ -5,6 +5,8 @@ reimplementation against the original. The plan and its state: [PLAN.md](PLAN.md
 
 | Document | Covers |
 |---|---|
+| [framework.md](framework.md) | the framework under the handlers: managers and menu sets, the menu data, finding controls, the frame loop, input and focus, dispatch and return values, the page stack, drawing, timers, text, sounds, shared helpers; what is ours |
+| [rewrite.md](rewrite.md) | plan for rewriting the 64 remaining handlers: classification, table-driven patterns, infrastructure first, order, verification and replay coverage, size, risks |
 | [messages.md](messages.md) (+ `messages.json`) | every menu message (97), who sends it, which controls handle it, its arguments; control types; the control, page and manager layouts |
 | [handlers.md](handlers.md) | every page/control handler: size, messages, lists, sub-controls, difficulty, a proposed order |
 | [items.md](items.md) (+ `items.json`) | the 12 M_ITEM lists entry by entry, with the text of every label |
