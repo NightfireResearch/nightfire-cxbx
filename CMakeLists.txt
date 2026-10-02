@@ -372,6 +372,8 @@ add_library(drivinginject SHARED
   src/common/xboxPath.cpp
   src/driving/platform/XboxStartup.cpp
   src/driving/platform/XboxXapi.cpp
+  src/driving/platform/RealSystem.cpp
+  src/driving/platform/RealPrint.cpp
   src/driving/platform/XboxTimer.cpp
   src/driving/platform/XboxInput.cpp
   src/driving/platform/LaunchOptions.cpp

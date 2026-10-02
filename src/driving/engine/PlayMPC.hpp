@@ -37,8 +37,5 @@ public:
 static_assert(sizeof(PlayMPC) == 0x20, "PlayMPC is 0x20 bytes");
 
 // EA's task and thread services, which the original's wait loop keeps running while it waits for the next frame
-// (0x0010ac40, 0x0010a7e0)
-// AUTOGEN
-uint32_t SYNCTASK_run(int flags);
-// AUTOGEN
-void THREAD_yield(int flags);
+// (SYNCTASK_run, THREAD_yield: ours now, platform/RealSystem.cpp)
+#include "../platform/RealSystem.h"
