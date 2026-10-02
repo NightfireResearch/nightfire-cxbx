@@ -97,6 +97,7 @@ struct CheatInfo_t {
     undefined field38_0x2f;
 };
 
+#define CheatInfo (*((CheatInfo_t*)0x001f65dc))
 
 typedef struct {
     char unknown[560]; // 464 bytes on PS2

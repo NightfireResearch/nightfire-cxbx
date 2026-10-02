@@ -138,7 +138,6 @@ LAB_0006aafe:
 #define SkipCodeFrame U8_AT(0x001f6564)
 #define GameStateStack (*(uint (*)[64])0x0017bff0) // Not zero-initialised - first entry must be 1
 
-#define CheatInfo (*((CheatInfo_t*)0x001f65dc))
 #define GlobalVars (*((GlobalVars_t*)0x001f6568))
 #define PTPDATA (*((sNightFireShared_tag*)0x001d7e90))
 
