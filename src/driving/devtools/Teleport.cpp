@@ -149,6 +149,33 @@ void Teleport_Tick(void) {
         }
     }
 
+    // NIGHTFIRE_LOCKSTEP=1: exactly one simulation tick per rendered frame (the scheduler's own oneTickPerRun, set
+    // here because this runs every call that simulates), so that a run's Nth frame is the same whatever the host's
+    // timing - the frame dumps and traces of two builds can then be compared exactly. With NIGHTFIRE_DUMP_TICKS=N
+    // (or a comma-separated list) the frame N ticks after the car appears is dumped, the same frame in every run.
+    static int lockstep = -1, ticksSinceCar = 0;
+    static int dumpTicks[16], dumpTickCount = 0;
+    if (lockstep < 0) {
+        char text[32] = "";
+        lockstep = GetEnvironmentVariableA("NIGHTFIRE_LOCKSTEP", text, sizeof(text)) && text[0] != '0' ? 1 : 0;
+        char list[256] = "";
+        if (GetEnvironmentVariableA("NIGHTFIRE_DUMP_TICKS", list, sizeof(list)))
+            for (char *p = list; *p != 0 && dumpTickCount < 16; p++) {
+                dumpTicks[dumpTickCount++] = atoi(p);
+                while (*p != 0 && *p != ',')
+                    p++;
+                if (*p == 0)
+                    break;
+            }
+        if (lockstep)
+            printf("[lockstep] one simulation tick per frame\n");
+    }
+    if (lockstep) {
+        uint8_t *scheduler = *(uint8_t **)0x001e520cu;   // RunTheGame's Scheduler
+        if (scheduler != NULL)
+            scheduler[28] = 1;                           // oneTickPerRun
+    }
+
     uint8_t *car = PlayerCar();
     if (car == NULL) {
         carSeenAt = 0;
@@ -157,6 +184,13 @@ void Teleport_Tick(void) {
     DWORD now = GetTickCount();
     if (carSeenAt == 0)
         carSeenAt = now;
+    for (int i = 0; i < dumpTickCount; i++)
+        if (ticksSinceCar == dumpTicks[i]) {
+            uint32_t frame = D3D9_RequestDump();
+            printf("[teleport] dumping frame %u (d3d9_dump_frame_%u.bmp), %d ticks after the car appeared%s\n",
+                   frame, frame, dumpTicks[i], i == dumpTickCount - 1 ? " - the last" : "");
+        }
+    ticksSinceCar++;
 
     if (KeyPressed(VK_F8_, &f8Down)) {
         ReadPlace(car, &recorded);
