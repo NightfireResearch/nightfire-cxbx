@@ -363,6 +363,7 @@ void BankSide(bool original, const Bank &bank, std::vector<uint8_t> &image, Snap
     ArenaReset();
     memcpy(image.data(), bank.data.data(), image.size());
     LoadedTables = NULL;
+    memset((void *)0x00241ba0u, 0, 0x24);   // the three scratch buffers: each side starts without them
     {
         Originals scope(original);
         ((void (*)(uint32_t))0x000f7d00)(0x400000);   // MemoryPoolManager::Init

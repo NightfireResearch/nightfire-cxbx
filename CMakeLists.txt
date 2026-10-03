@@ -394,6 +394,9 @@ add_library(drivinginject SHARED
   src/driving/eagl/RuntimeAlloc.cpp
   src/driving/eagl/anim/AnimObjects.cpp
   src/driving/eagl/anim/EventTarget.cpp
+  src/driving/eagl/anim/AnimDecode.cpp
+  src/driving/eagl/anim/AnimChannels.cpp
+  src/driving/eagl/anim/AnimDeltaF.cpp
   src/driving/platform/XboxTimer.cpp
   src/driving/platform/XboxInput.cpp
   src/driving/platform/LaunchOptions.cpp

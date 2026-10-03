@@ -222,8 +222,8 @@ where to change it.
 | engine.render | 760 | 7 | 1 | 752 | 1% | 114 | 3% |
 | engine.static | 798 | 0 | 0 | 798 | 0% | 26 | 0% |
 | engine.world | 444 | 0 | 0 | 444 | 0% | 89 | 0% |
-| **platform** | 1459 | 437 | 168 | 854 | **41%** | 262 | 35% |
-| platform.eagl | 807 | 233 | 15 | 559 | 31% | 146 | 27% |
+| **platform** | 1459 | 480 | 168 | 811 | **44%** | 262 | 41% |
+| platform.eagl | 807 | 276 | 15 | 516 | 36% | 146 | 38% |
 | platform.files | 77 | 44 | 33 | 0 | 100% | 12 | 100% |
 | platform.input | 6 | 6 | 0 | 0 | 100% | 1 | 100% |
 | platform.math | 104 | 94 | 10 | 0 | 100% | 16 | 100% |
@@ -237,9 +237,9 @@ where to change it.
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
 | **game + engine** | 6883 | 65 | 23 | 6795 | **1%** | 1001 | 1% |
-| **platform + system** | 2852 | 710 | 961 | 1181 | **59%** | 505 | 59% |
-| **  without the C runtime** | 2479 | 706 | 919 | 854 | **66%** | 462 | 63% |
-| **everything** | 9735 | 775 | 984 | 7976 | **18%** | 1506 | 21% |
+| **platform + system** | 2852 | 753 | 961 | 1138 | **60%** | 505 | 62% |
+| **  without the C runtime** | 2479 | 749 | 919 | 811 | **67%** | 462 | 67% |
+| **everything** | 9735 | 818 | 984 | 7933 | **19%** | 1506 | 22% |
 
 - **Almost nothing above the platform is ours yet: 1% of game and engine code.** What is replaced is the input
   layer (`engine.input`, 44%: `IOModule`, `XBoxPadDevice`, `ActionQueue`, the pad), the event and scheduler core,
@@ -259,14 +259,14 @@ where to change it.
     kernel shims hand out Win32 handles, so the two mix freely), and the startup's own entry point is ported.
     The process heap is a Win32 heap now: XAPI's five heap entry points go to `HeapCreate`/`HeapAlloc`/`HeapFree`/
     `HeapReAlloc`/`HeapSize`, so `malloc` and `free` reach Win32's heap through them.
-- **The platform tier is 41% done (35% by bytes): its system library, files, input, maths and movie player are
-  done, and EAGL is under way (31%, 27% by bytes).** What is left is the rest of EAGL (about 107 KB) and the sound library with
+- **The platform tier is 44% done (41% by bytes): its system library, files, input, maths and movie player are
+  done, and EAGL is under way (36%, 38% by bytes).** What is left is the rest of EAGL (about 90 KB) and the sound library with
   its streamer (64 KB).
   - *EAGL* (docs/driving/eagl.md, its plan in 9.2): realgraph FONT/SHAPE/LOCALE (`src/driving/eagl/Realgraph.cpp`)
     `EAGL::Transform` (`src/driving/eagl/Transform.cpp`) and the loader (`src/driving/eagl/Loader.cpp`) are ported
     and shadow-tested, and the RUNTIME_ALLOC property parsers (`RuntimeAlloc.cpp`) ported provisionally (no data
-    reaches them); EAGLAnim is under way (its object layer, `eagl/anim/`), then the frame-level modules
-    together.
+    reaches them); EAGLAnim is under way (its object layer and every channel type the disc uses, `eagl/anim/`),
+    then the frame-level modules together.
   - *System* (`src/driving/platform/RealSystem.cpp`, `RealPrint.cpp`, `RealMemory.cpp`): EA's portable library -
     TIMER, THREAD, SIGNAL, SYNCTASK, MUTEX, PRINT, the exit and abort handlers, the MEM_ copy and fill helpers,
     and the MEM block allocator itself (classes, first and largest fit, top allocation, resize, validation), which

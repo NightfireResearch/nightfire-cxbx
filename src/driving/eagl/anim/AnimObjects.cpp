@@ -676,7 +676,7 @@ bool FnRawPoseChannel::EvalSQT(float time, float *sqt, void *mask) {
 FnRawEventChannel* FnRawEventChannel::Construct() {
     FnAnimMemoryMap::Construct();
     lastIndex = 0;
-    lastCount = 0;
+    lastTime = 0;
     vtable = VtRawEvent;
     type = kRawEvent;
     return this;
@@ -700,13 +700,13 @@ FnRawEventChannel* FnRawEventChannel::ScalarDelete(unsigned flags) {
 void FnRawEventChannel::SetAnimMemoryMap(uint8_t *data) {
     anim = data;
     lastIndex = 0;
-    lastCount = 0;
+    lastTime = 0;
 }
 
 // FUNC_AT(0x000f7430)
 bool FnRawEventChannel::EvalEvent(float previous, float time, void **handlers, void *data) {
-    ((void (__fastcall *)(uint8_t *, int, float, float, int32_t *, int32_t *, void **, void *))0x000fb170)(
-        anim, 0, previous, time, &lastIndex, &lastCount, handlers, data);   // RawEventChannel::Eval
+    ((void (__fastcall *)(uint8_t *, int, float, float, int32_t *, float *, void **, void *))0x000fb170)(
+        anim, 0, previous, time, &lastIndex, &lastTime, handlers, data);   // RawEventChannel::Eval
     return true;
 }
 

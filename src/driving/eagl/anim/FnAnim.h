@@ -101,7 +101,7 @@ struct FnRawPoseChannel : FnAnimMemoryMap {    // 0x14, type 0
 
 struct FnRawEventChannel : FnAnimMemoryMap {   // 0x18, type 1
     int32_t lastIndex;               // +0x10
-    int32_t lastCount;               // +0x14
+    float lastTime;                  // +0x14
 
     FnRawEventChannel* Construct();                              // 0x000f73e0
     void Destruct();                                             // 0x000f74b0
@@ -141,6 +141,10 @@ struct FnKeyDeltaChan : FnAnimMemoryMap {      // 0x18: KeyLerp 12, KeyQuat 13
     FnKeyDeltaChan* ConstructQuat();                             // 0x000f7710
     void SetAnimMemoryMap(uint8_t *data);                        // 0x000fb8c0
     void EvalToPrevValues(int key);                              // 0x000fb930
+    int FindLowerKey(float time);                                // 0x000fb960
+    bool GetLength(float *length);                               // 0x000fbe10
+    void EvalQuat(float previous, float time, float *out);       // 0x000fbb40 (FnKeyQuatChan::Eval)
+    bool EvalSQTQuat(float time, float *sqt, void *mask);        // 0x000fbb60 (FnKeyQuatChan::EvalSQT)
 };
 
 struct FnDeltaChan : FnAnimMemoryMap {         // 0x18: DeltaLerp 10, DeltaQuat 11
@@ -156,6 +160,8 @@ struct FnDeltaChan : FnAnimMemoryMap {         // 0x18: DeltaLerp 10, DeltaQuat 
     bool GetLength(float *length);                               // 0x000f7770
     void SetAnimMemoryMap(uint8_t *data);                        // 0x000fb390
     void DecodeFrame(int frame);                                 // 0x000fb400
+    void EvalQuat(float previous, float time, float *out);       // 0x000fb670 (FnDeltaQuatChan::Eval)
+    bool EvalSQTQuat(float time, float *sqt, void *mask);        // 0x000fb780 (FnDeltaQuatChan::EvalSQT)
 };
 
 struct FnGraft : FnAnim {            // 0x14, type 5: Eval runs every sub-anim

@@ -26,8 +26,11 @@ the property tokenizer, the TAR and GeoPrimState runtime constructors, their set
 functions), is a provisional port without a test - nothing on the disc reaches it - and prints a loud warning the
 first time it runs. In step 5 the object layer is ported (`src/driving/eagl/anim/AnimObjects.cpp`,
 `EventTarget.cpp`: the pool and factory, every constructor and destructor, the trivial virtuals, the compound
-channel, the cycle and graft wrappers, raw linear decoding, AnimationBank, EventTarget; 124 functions), checked
-by `src/driving/devtools/AnimShadow.cpp` on every anim in every bank (3.4). The D3D8 library underneath is ours already
+channel, the cycle and graft wrappers, raw linear decoding, AnimationBank, EventTarget; 124 functions), and so is the evaluation of every channel type the disc uses:
+raw event, DeltaQuat, KeyQuat (`AnimChannels.cpp`), DeltaF1 and DeltaF3 (`AnimDeltaF.cpp`), the delta decoding,
+scratch buffers and attribute blocks (`AnimDecode.cpp`), 66 functions more - all checked by
+`src/driving/devtools/AnimShadow.cpp` on every anim in every bank (3.4), bit for bit. Left in step 5: the
+Skeleton functions the engine calls, and the never-built types (provisionally). The D3D8 library underneath is ours already
 (the seam, `src/driving/gfx/`), and so are the maths, files, memory and threads EAGL calls (section 5).
 
 Conventions:
@@ -545,7 +548,12 @@ and the compounds' channels are only raw event (1), DeltaQuat (11), KeyQuat (13)
 (69, 75, 195, 215 and 64 of them across the distinct banks). So the blenders (pose, run, turn, event), mirror,
 cycle, graft, raw pose, raw linear, DeltaLerp, KeyLerp, phase, raw state, DeltaQ, DeltaQFast and DeltaSingleQ are
 never built with the shipped data - including the three biggest evaluators (`FnDeltaSingleQ::EvalSQTMasked`,
-`FnDeltaQ::EvalSQTMasked`, `FnDeltaQFast::EvalSQT(Mask)`).
+`FnDeltaQ::EvalSQTMasked`, `FnDeltaQFast::EvalSQT(Mask)`). Of DeltaCompressedData only the 8-bit deltas occur
+(98,536 plain and 1,248 indexed decodes in the shadow test's sweep); the 16- and 4-bit paths are ported from the
+listing untested. The F1/F3 data keeps keys in blocks of 2^shift (u16 base values, then a row of u8 deltas a key);
+the global byte at `0x001ceb4c` (FnAnim::SetReverseDeltaSumEnabled) lets a channel step back by subtracting rows
+instead of decoding the block again. F3 rounds its z delta to float before adding it (x and y are added
+unrounded), and builds its dequantisation with x as (offset * scale) * K and y, z as (offset * K) * scale.
 
 ---------------------------------------------------------------------------------------------------------------
 
