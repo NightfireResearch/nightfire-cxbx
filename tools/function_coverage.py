@@ -36,11 +36,15 @@ entry tables count as replaced, and its AUTOGEN bodies give the originals it sti
     python tools/function_coverage.py --driving                  # summary by tier and subsystem
     python tools/function_coverage.py --driving game.ai          # one subsystem's live functions, by class
     python tools/function_coverage.py --driving --unclassified   # named functions no class rule matches
+    python tools/function_coverage.py --driving --statics        # who still uses what the static initialisers set
+    python tools/function_coverage.py --driving --statics engine.render   # what that subsystem keeps needed
 """
 
+import bisect
 import json
 import os
 import re
+import struct
 import sys
 from collections import defaultdict
 
@@ -359,9 +363,159 @@ def unclassified():
         print("%4d  %-40s e.g. %08x -> %s" % (len(items), k, items[0][0], items[0][1]))
 
 
+STATIC_INIT_TABLE = os.path.join(gc.ROOT, "src", "driving", "engine", "StaticInitTable.cpp")
+STATIC_INIT_CODE = (0x00156C00, 0x0015D370)   # the original initialisers and their destructors
+
+
+def static_targets():
+    """What each statement of RunStaticInitialisers writes, as (start, end, kind, statement). A constructed object's
+    size is not known: it is taken to run to the next global the list writes (at most 8 KB)."""
+    targets = []
+    for line in open(STATIC_INIT_TABLE, encoding="utf-8"):
+        code = line.split("//")[0].strip()
+        if "CrtAtExit" in code:
+            continue
+        m = re.match(r"(FLOAT|DOUBLE|U32|I32|PTR)_AT\((0x[0-9a-f]+)\) =", code)
+        if m:
+            a = int(m.group(2), 16)
+            targets.append((a, a + (8 if m.group(1) == "DOUBLE" else 4), "value", code))
+            continue
+        m = re.match(r"mem(?:set|cpy)\(\(void \*\)(0x[0-9a-f]+), .*, (0x[0-9a-f]+)\);", code)
+        if m:
+            a = int(m.group(1), 16)
+            targets.append((a, a + int(m.group(2), 16), "block", code))
+            continue
+        m = re.match(r"for \(int i = 0; i < (\d+); i\+\+\) .*\(0x([0-9a-f]+) \+ i \* 0x([0-9a-f]+)\)", code)
+        if m:
+            a = int(m.group(2), 16)
+            targets.append((a, a + int(m.group(1)) * int(m.group(3), 16), "array", code))
+            continue
+        m = re.match(r"(?:\w+\(\(void \*\)|\(\([\w:]+ \*\))(0x[0-9a-f]+)", code)
+        if m:
+            targets.append((int(m.group(1), 16), None, "object", code))
+            continue
+        if code.startswith("InitWeaponDefinitions"):
+            targets.append((0x001C94D8, 0x001C94D8 + 32 * 0x54, "block", code))
+    starts = sorted(set(t[0] for t in targets))
+    out = []
+    for a, e, k, c in targets:
+        if e is None:
+            i = bisect.bisect_right(starts, a)
+            e = min(starts[i] if i < len(starts) else a + 0x400, a + 0x2000)
+        out.append((a, e, k, c))
+    return out
+
+
+def statics(fs, graph, subsystems):
+    """Each global the static initialisers write, and which functions reference it: Ghidra's references, and for a
+    global with none, a scan of the whole XBE for a dword pointing into it. Live original users keep a global
+    needed; once only our code or nothing references it, porting its users has freed it. Not seen: an object
+    reached only through a pointer stored at run time (a list its constructor links it into)."""
+    by = {f["address"]: f for f in fs}
+    addrs = sorted(graph.funcs)
+    owner = lambda a: addrs[bisect.bisect_right(addrs, a) - 1]
+    targets = static_targets()
+    order = sorted(range(len(targets)), key=lambda i: targets[i][0])
+    lows = [targets[i][0] for i in order]
+
+    def containing(v):
+        out, j = [], bisect.bisect_right(lows, v) - 1
+        while j >= 0 and lows[j] > v - 0x2000:
+            if v < targets[order[j]][1]:
+                out.append(order[j])
+            j -= 1
+        return out
+    users = defaultdict(set)
+    for to, frm, _, _ in json.load(open(gc.XREFS)):   # [target, from, from's function, kind]
+        if not to or not frm or STATIC_INIT_CODE[0] <= int(frm, 16) < STATIC_INIT_CODE[1]:
+            continue
+        for i in containing(int(to, 16)):
+            users[i].add(owner(int(frm, 16)))
+    raw = defaultdict(set)
+    data = open(gc.XBE, "rb").read()
+    base = struct.unpack_from("<I", data, 0x104)[0]
+    headers = struct.unpack_from("<I", data, 0x120)[0] - base
+    for k in range(struct.unpack_from("<I", data, 0x11C)[0]):
+        flags, va, vs, ra, rs = struct.unpack_from("<IIIII", data, headers + k * 0x38)
+        step = 1 if flags & 4 else 4   # an instruction holds an address at any offset, data aligned
+        for off in range(0, rs - 3, step):
+            v = struct.unpack_from("<I", data, ra + off)[0]
+            if not 0x001B3DA0 <= v < 0x0024B5BC or STATIC_INIT_CODE[0] <= va + off < STATIC_INIT_CODE[1]:
+                continue
+            for i in containing(v):
+                if not users[i]:
+                    raw[i].add(va + off)
+
+    def category(i):
+        status = {by[f]["status"] for f in users[i] if f in by}
+        return ("live" if "LIVE" in status else "ours" if "REPLACED" in status else "dead" if status else
+                "raw" if raw[i] else "unreferenced")
+    cats = {i: category(i) for i in range(len(targets))}
+    live_users = lambda i: sorted(f for f in users[i] if f in by and by[f]["status"] == "LIVE")
+
+    if subsystems:
+        for sub in subsystems:
+            print("Globals the static initialisers set that live code in %s uses:" % sub)
+            for i in order:
+                here = [f for f in live_users(i) if by[f]["subsystem"] == sub or by[f]["subsystem"].split(".")[0] == sub]
+                if not here:
+                    continue
+                elsewhere = len(live_users(i)) - len(here)
+                print("  %08x %-6s %-58s %s  (%s)" % (targets[i][0], targets[i][2], targets[i][3][:58],
+                      ", ".join(by[f]["name"] for f in here[:3]),
+                      "also %d live elsewhere" % elsewhere if elsewhere else "only here"))
+        return
+    names = {"live": "still used by live original code", "ours": "used only by code we own",
+             "dead": "used only by dead code", "raw": "no reference Ghidra knows, but a dword in the XBE points into it",
+             "unreferenced": "not referenced at all"}
+
+    def kind(i):
+        k = targets[i][2]
+        if k == "value":
+            return ("colour" if "Colour" in targets[i][3] else
+                    "float" if re.match(r"(FLOAT|DOUBLE)_AT", targets[i][3]) else "value")
+        return k
+    print("%d statements in RunStaticInitialisers write globals:" % len(targets))
+    for c in names:
+        kinds = defaultdict(int)
+        for i in cats:
+            if cats[i] == c:
+                kinds[kind(i)] += 1
+        if kinds:
+            print("  %4d %s (%s)" % (sum(kinds.values()), names[c],
+                                     ", ".join("%d %s" % (n, k) for k, n in sorted(kinds.items(), key=lambda kv: -kv[1]))))
+    by_sub = defaultdict(set)
+    for i in order:
+        for f in live_users(i):
+            by_sub[by[f]["subsystem"]].add(i)
+    print("\nLive users by subsystem: the globals each keeps needed (--statics <subsystem> lists them)")
+    for sub, items in sorted(by_sub.items(), key=lambda kv: -len(kv[1])):
+        print("  %-18s %4d" % (sub, len(items)))
+    for c in ("ours", "dead", "raw"):
+        rows = [i for i in order if cats[i] == c]
+        if rows:
+            print("\n%s:" % (names[c][0].upper() + names[c][1:]))
+            for i in rows:
+                who = [graph.funcs.get(f, "%08x" % f) for f in sorted(users[i])] if c != "raw" else \
+                      ["%08x" % a for a in sorted(raw[i])]
+                print("  %08x %-6s %-58s %s" % (targets[i][0], targets[i][2], targets[i][3][:58], ", ".join(who[:3])))
+    rows = [i for i in order if cats[i] == "unreferenced" and kind(i) not in ("float", "colour", "value")]
+    if rows:
+        print("\nNot referenced at all, apart from plain values (an object may still be reached through a pointer "
+              "stored at run time):")
+        for i in rows:
+            print("  %08x %-6s %s" % (targets[i][0], targets[i][2], targets[i][3][:80]))
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     driving = "--driving" in sys.argv
+    if "--statics" in sys.argv:
+        if not driving:
+            sys.exit("--statics is for the driving engine (--driving): it reads its generated initialiser list")
+        fs, graph = analyse(want_graph=True, driving=True)
+        statics(fs, graph, args)
+        return
     if "--unclassified" in sys.argv:
         unclassified()
         return
