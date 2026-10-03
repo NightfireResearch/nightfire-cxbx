@@ -202,28 +202,28 @@ where to change it.
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| **game** | 2852 | 1 | 11 | 2840 | **0%** | 474 | 0% |
+| **game** | 2852 | 2 | 38 | 2812 | **1%** | 474 | 0% |
 | game.ai | 522 | 0 | 0 | 522 | 0% | 109 | 0% |
 | game.audio | 366 | 0 | 0 | 366 | 0% | 51 | 0% |
-| game.effects | 195 | 0 | 0 | 195 | 0% | 36 | 0% |
-| game.events | 793 | 0 | 0 | 793 | 0% | 72 | 0% |
-| game.frontend | 332 | 1 | 11 | 320 | 4% | 69 | 1% |
+| game.effects | 195 | 1 | 0 | 194 | 1% | 36 | 0% |
+| game.events | 793 | 0 | 2 | 791 | 0% | 72 | 0% |
+| game.frontend | 332 | 1 | 36 | 295 | 11% | 69 | 2% |
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
 | game.weapons | 178 | 0 | 0 | 178 | 0% | 43 | 0% |
-| **engine** | 4031 | 64 | 12 | 3955 | **2%** | 527 | 2% |
-| engine.anim | 415 | 2 | 2 | 411 | 1% | 54 | 0% |
+| **engine** | 4031 | 64 | 20 | 3947 | **2%** | 527 | 2% |
+| engine.anim | 415 | 2 | 3 | 410 | 1% | 54 | 0% |
 | engine.audio | 270 | 0 | 0 | 270 | 0% | 35 | 0% |
 | engine.camera | 273 | 0 | 0 | 273 | 0% | 60 | 0% |
-| engine.core | 254 | 10 | 3 | 241 | 5% | 26 | 6% |
+| engine.core | 254 | 10 | 7 | 237 | 7% | 26 | 6% |
 | engine.data | 554 | 3 | 1 | 550 | 1% | 79 | 0% |
-| engine.input | 107 | 42 | 5 | 60 | 44% | 12 | 46% |
+| engine.input | 107 | 42 | 8 | 57 | 47% | 12 | 46% |
 | engine.physics | 156 | 0 | 0 | 156 | 0% | 33 | 0% |
 | engine.render | 760 | 7 | 1 | 752 | 1% | 114 | 3% |
 | engine.static | 798 | 0 | 0 | 798 | 0% | 26 | 0% |
 | engine.world | 444 | 0 | 0 | 444 | 0% | 89 | 0% |
-| **platform** | 1459 | 480 | 168 | 811 | **44%** | 262 | 41% |
-| platform.eagl | 807 | 276 | 15 | 516 | 36% | 146 | 38% |
+| **platform** | 1459 | 955 | 209 | 295 | **80%** | 262 | 76% |
+| platform.eagl | 807 | 751 | 56 | 0 | 100% | 146 | 100% |
 | platform.files | 77 | 44 | 33 | 0 | 100% | 12 | 100% |
 | platform.input | 6 | 6 | 0 | 0 | 100% | 1 | 100% |
 | platform.math | 104 | 94 | 10 | 0 | 100% | 16 | 100% |
@@ -236,10 +236,10 @@ where to change it.
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6883 | 65 | 23 | 6795 | **1%** | 1001 | 1% |
-| **platform + system** | 2852 | 753 | 961 | 1138 | **60%** | 505 | 62% |
-| **  without the C runtime** | 2479 | 749 | 919 | 811 | **67%** | 462 | 67% |
-| **everything** | 9735 | 818 | 984 | 7933 | **19%** | 1506 | 22% |
+| **game + engine** | 6883 | 66 | 58 | 6759 | **2%** | 1001 | 1% |
+| **platform + system** | 2852 | 1228 | 1002 | 622 | **78%** | 505 | 80% |
+| **  without the C runtime** | 2479 | 1224 | 960 | 295 | **88%** | 462 | 86% |
+| **everything** | 9735 | 1294 | 1060 | 7381 | **24%** | 1506 | 28% |
 
 - **Almost nothing above the platform is ours yet: 1% of game and engine code.** What is replaced is the input
   layer (`engine.input`, 44%: `IOModule`, `XBoxPadDevice`, `ActionQueue`, the pad), the event and scheduler core,
@@ -259,14 +259,14 @@ where to change it.
     kernel shims hand out Win32 handles, so the two mix freely), and the startup's own entry point is ported.
     The process heap is a Win32 heap now: XAPI's five heap entry points go to `HeapCreate`/`HeapAlloc`/`HeapFree`/
     `HeapReAlloc`/`HeapSize`, so `malloc` and `free` reach Win32's heap through them.
-- **The platform tier is 44% done (41% by bytes): its system library, files, input, maths and movie player are
-  done, and EAGL is under way (36%, 38% by bytes).** What is left is the rest of EAGL (about 90 KB) and the sound library with
-  its streamer (64 KB).
-  - *EAGL* (docs/driving/eagl.md, its plan in 9.2): realgraph FONT/SHAPE/LOCALE (`src/driving/eagl/Realgraph.cpp`)
-    `EAGL::Transform` (`src/driving/eagl/Transform.cpp`) and the loader (`src/driving/eagl/Loader.cpp`) are ported
-    and shadow-tested, and the RUNTIME_ALLOC property parsers (`RuntimeAlloc.cpp`) ported provisionally (no data
-    reaches them); EAGLAnim is under way (its object layer and every channel type the disc uses, `eagl/anim/`),
-    then the frame-level modules together.
+- **The platform tier is 80% done (76% by bytes): its system library, files, input, maths, movie player and EAGL
+  are done.** What is left is the sound library with its streamer (64 KB, docs/driving/sound.md).
+  - *EAGL* (docs/driving/eagl.md): all 807 functions. realgraph FONT/SHAPE/LOCALE, `EAGL::Transform` and the loader
+    are shadow-tested at injection time; EAGLAnim's live types (`eagl/anim/`) by `AnimShadow.cpp` over every anim
+    on the disc and its Skeleton by `SkelShadow.cpp` live; the render core (GeoPrimState, TAR, render methods,
+    viewports and contexts, the font driver, models, the profiler) by lockstep runs of all eight missions against a
+    baseline, every frame identical. The RUNTIME_ALLOC parsers and the animation types no shipped data builds are
+    provisional, with a one-time untested warning.
   - *System* (`src/driving/platform/RealSystem.cpp`, `RealPrint.cpp`, `RealMemory.cpp`): EA's portable library -
     TIMER, THREAD, SIGNAL, SYNCTASK, MUTEX, PRINT, the exit and abort handlers, the MEM_ copy and fill helpers,
     and the MEM block allocator itself (classes, first and largest fit, top allocation, resize, validation), which
