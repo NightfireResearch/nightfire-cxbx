@@ -9,7 +9,7 @@ cross over. *MW: X* means a name or layout from the Need for Speed Most Wanted (
 than this build; every MW item used here was checked against Driving.xbe, and section 1.4 says how far each one
 holds.
 
-**Status (3 October 2026): steps 0-2 of 9.2 done.** The classification fixes of 1.3 are in
+**Status (3 October 2026): steps 0-3 of 9.2 done.** The classification fixes of 1.3 are in
 `tools/subsystems_driving.txt`; realgraph FONT/SHAPE/LOCALE is ported (`src/driving/eagl/Realgraph.cpp`, checked
 by `src/driving/devtools/RealgraphShadow.cpp` on every font, image container and string table in the archives:
 606,458 comparisons, all the same), and so is `EAGL::Transform` (`src/driving/eagl/Transform.cpp`, bit for bit,
@@ -17,7 +17,11 @@ checked by `MathShadow.cpp`). Found on the way: `FONT_getrectx` keeps the kerned
 x87 through the glyph's rectangle and advance (Ghidra's decompilation rounds it); a character below 0x20 makes
 FONT index 0x20 glyphs before the table; SHAPE's loader would read `SHAPE_version(NULL)` for a file that is not
 SHPX (left out); `Transform::Invert` returns the determinant to its callers, as the maths library's does;
-`0x000f13b0` is the same code as `Determinant4x4`, and `0x000f3160` the same as `0x00115440`. The D3D8 library underneath is ours already
+`0x000f13b0` is the same code as `Determinant4x4`, and `0x000f3160` the same as `0x00115440`. The loader is ported
+too (`src/driving/eagl/Loader.cpp`: SymbolPool, both ConstructorPools, DynamicLoader, RegisterShapes, 41
+functions), checked by `src/driving/devtools/LoaderShadow.cpp` - every object in the archives loaded by both on the
+same addresses, the images, symbol tables, allocations, messages and callbacks compared byte for byte, the same.
+What the data never does is in 3.1. The D3D8 library underneath is ours already
 (the seam, `src/driving/gfx/`), and so are the maths, files, memory and threads EAGL calls (section 5).
 
 Conventions:
@@ -317,7 +321,7 @@ static pieces (6.3).
 | +0x00 | symbol table (0x428 bytes, `EAGL::HashPointer`: a 256-bucket ELF-hash table over the object's symbols, linked into the list at `0x0023fb88`; +0x424 an optional resolver callback the game installs, `EAGLNamespace::NameLookup` from `RCARPFile::Resolve`) |
 | +0x04, +0x08 | constructor and destructor records run for this object |
 | +0x10, +0x14 | the ELF image and its size |
-| +0x18 | the second half of a split object (`.rel` after `.dat`): offsets past +0x14 resolve into it |
+| +0x18 | the second half of a split object (`.rel` after `.dat`): offsets past +0x14 resolve into it (on this disc every `.rel` is a byte-for-byte copy of its `.dat`, so nothing ever resolves into it) |
 
 `gSymbolPool` (`0x0023fb8c`) is a global name -> address pool: `RegisterVar`/`UnRegisterVar`/`GetRegisteredVar`
 (EAGL's matrices, the game's globals registered by `ActManager` and `ActSkeleton`) and `RegisterShapes` (every image
@@ -409,14 +413,16 @@ and `0x000f7310` fill the unimplemented slots. `NewFnAnim` calls slot 15 on ever
 EAGL opens no files of its own except SHAPE's loader (5.4). The game reads a file into memory and hands it to a
 `DynamicLoader` (`0x000e62f0` one buffer, `0x000e6330` split `.dat` + `.rel`), whose constructor runs:
 
-1. `Initialize` (`0x000e52a0`): parses the ELF section table (`.symtab`, `.strtab`, `SHT_REL`; anything else is
-   reported through `PrintMessage("dlopen: ...")`), rewrites `__X__Y` style names, and hashes every symbol into a
-   new 256-bucket table (ELF hash, `FUN_000e51d0`, string in EDX).
+1. `Initialize` (`0x000e52a0`): turns every section's file offset into a pointer in place, parses the section
+   table (`.symtab`, `.strtab`, `SHT_REL`; anything else is reported through `PrintMessage("dlopen: ...")`),
+   rewrites each `__Class:::Name` string as `Name`, a NUL, 0x7f and `Class` (the class is what the pools are
+   searched by), and hashes every symbol into a new 256-bucket table (ELF hash, `FUN_000e51d0`, string in EDX).
 2. `Resolve` (`0x000e5e80`): applies relocations. The objects are **MIPS** ELF (machine 8), the PS2 tool chain's
    format reused as a data container: types 2 (`R_MIPS_32`), 4 (`R_MIPS_26`), 5/6 (`HI16`/`LO16`) are handled, GP
-   and GOT relocations rejected. Undefined symbols are looked up in the global pools, then in every loaded object,
-   then through the game's resolver callback; a symbol `RUNTIME_ALLOC::<type>::<properties>` is *built*: its
-   constructor is found by type in the RuntimeAllocConstructorPool and given the property text.
+   and GOT relocations rejected. Undefined symbols are looked up in every other loaded object, then through the
+   game's resolver callback, then in `gSymbolPool`; failing those, a symbol `RUNTIME_ALLOC::<properties>` (class
+   `<type>`) is *built*: its constructor is found by type in the RuntimeAllocConstructorPool and given the property
+   text. A symbol nothing resolves keeps its own value (with a message).
 3. `RunConstructors` (`0x000e5d70`): for each symbol whose type is in the ConstructorPool (`EAGL::TAR`,
    `RenderMethod`, `Model`, `VertexBuffer`, and `AnimBank` which the game registers), call its constructor on the
    symbol's data.
@@ -427,6 +433,18 @@ data, no CPU code), `data\render\bondrm.o` (the game's render methods), `data\ac
 `.dat`/`.rel` pairs for models and animation banks in the mission archives (212 `.dat`, 204 `.rel`, entries usually
 refpack-compressed, `10 FB`). CARP files (`.crp`) carry their own EAGL references through `RCARPFile::Resolve` /
 `LoadEAGLMaterials`.
+
+What the disc's 278 objects actually use (found porting the loader): only `R_MIPS_32` relocations (37,605 of
+them), only section types 0-3 and 9, and **no `RUNTIME_ALLOC::` symbol anywhere** - the string occurs nowhere in
+the archives, and in the binary only `Resolve` refers to it. So the RuntimeAllocConstructorPool's constructors (the
+property parsers of step 4) are registered but never called with the shipped data; the `.rel` half of a split
+object is never reached either. `LoaderShadow.cpp` perturbs its copies of the objects to cover those paths.
+Quirks kept: `UnRegisterShapes` looks every name up by the image's directory name padded with spaces, so a name
+`RegisterShapes` took from the long name or cut short is never removed; `SymbolPool::Search` walks the whole table
+on a miss, and its fallback resolvers can only run when a matched slot empties under it, which cannot happen;
+`GetSymbol` returns its record by value (EAX = the output); the original `Search` relies on `HashFunction` leaving
+ECX alone (both are ours now, and no caller we have not ported relies on a scratch register surviving a call into
+any of the driving engine's 379 replaced functions).
 
 The property parsers (`RuntimeAllocGeoPrimStateConstructor` `0x000ef4c0` with `FUN_000ef7a0`/`FUN_000f04d0`, and
 `RuntimeAllocTARConstructor` `0x000ecbe0` with `FUN_000ed390`/`FUN_000ed700`/`FUN_000edb30`) turn text such as
@@ -524,9 +542,10 @@ what each is for and the ones that matter.
 ### 4.1 A loader (42 functions, 7.7 KB)
 
 DynamicLoader (`0x000e51d0..0x000e6390`): ELF hash `FUN_000e51d0` (EDX), `RunDestructors`, `Initialize`, `GetAddr`
-(`0x000e57e0`, 4 anim callers), `GetSymbol`, `GetElfData` (`0x000e5ae0`, accepted *PS2: GetElfData*), `strncasecmp`
-copy `FUN_000e5af0`, `GetNextSymbol`/`GetNextAddr`, `RegisterVar`/`UnRegisterVar`/`GetRegisteredVar`, `Release`,
-`RunConstructors`, `Resolve`, two ctors and the dtor. `FUN_000e6390` is the static initialiser of the pools.
+(`0x000e57e0`, 4 anim callers), `GetSymbol`, `GetElfData` (`0x000e5ae0`, accepted *PS2: GetElfData*), the lookup
+in another loaded object `FUN_000e5af0` (dlsym-like), `GetNextSymbol`/`GetNextAddr`, `RegisterVar`/`UnRegisterVar`/`GetRegisteredVar`, `Release`,
+`RunConstructors`, `Resolve`, two ctors and the dtor. `FUN_000e6390` is ConstructorPool's constructor (the static
+initialisers use it for both pools).
 `RegisterShapes`/`UnRegisterShapes` (`0x000ede60`, `0x000edf50`). SymbolPool (`0x000f3c70..0x000f41d0`: hash
 insert/search/remove), ConstructorPool and RuntimeAllocConstructorPool (`0x000f3a20..0x000f3bf0`), `SymbolInit`.
 Pure functions on memory: the best shadow-test candidate in EAGL proper.
@@ -903,7 +922,7 @@ straight to the backend, so each step can be compared against the original runni
 | 1 | realgraph LOCALE, SHAPE, FONT text measurement (`LOCALE_getstr`, `SHAPE_*`, `FONT_getrectx`, `getkern`, `bsearch`) | ~28 / 4 | shadow: every `.loc`, `.xsh`, `.xfn` in the archives, every id/name, compare outputs |
 | 2 | `EAGL::Transform` (live 11 + `BuildSQT` + `TransformPoint`) | 13 / 4 | shadow, bit-exact (classes D, A for `BuildRotate`); random and recorded inputs |
 | 3 | loader: SymbolPool, ConstructorPools, DynamicLoader, RegisterShapes | 40 / 8 | shadow: load every `.o` and `.dat`+`.rel` pair with both, compare the relocated images, symbol tables and the sequence of constructor callbacks byte for byte |
-| 4 | property parsers (GeoPrimState and TAR runtime constructors) | ~10 / 9 | shadow: every `RUNTIME_ALLOC::` symbol on the disc, compare the built structs |
+| 4 | property parsers (GeoPrimState and TAR runtime constructors) | ~10 / 9 | none: no `RUNTIME_ALLOC::` symbol exists on this disc (3.1), so the shipped game never calls them. Port provisionally with a loud untested warning (or an assert) beside them; a synthetic test is not worth the effort (the user, 3 Oct 2026). The loader already prints a one-time warning if a RUNTIME_ALLOC symbol ever turns up |
 | 5 | EAGLAnim, inside out: pool, scratch, attributes, bitsets; `DeltaCompressedData`; raw and key channels; delta families; phase, compound, blenders, mirror; Skeleton | 260 / 57 | shadow per FnAnim type: every anim in every bank, evaluated by both at a sweep of times and masks, `EvalSQT`/`Vel2D`/`Event`/`Phase` outputs compared bit for bit; then the driving replays that reach characters (peds, sniper) |
 | 6 | GeoPrimState setters and apply | 32 / 8 | in-game: runner frame dumps against the original; state-call trace comparison through the seam |
 | 7 | TAR and the texture commit (retires the seam's byte patch) | 28 / 11 | in-game frame dumps; the pause-menu girl; car colour swaps |

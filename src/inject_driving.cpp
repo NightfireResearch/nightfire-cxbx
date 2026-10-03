@@ -11,6 +11,7 @@
 #include "driving/devtools/FileSysTrace.h"
 #include "driving/devtools/MathShadow.h"
 #include "driving/devtools/RealgraphShadow.h"
+#include "driving/devtools/LoaderShadow.h"
 #include "common/xbeOriginal.h"
 #include "driving/gfx/d3dSeam.h"
 #include "driving/platform/XboxInput.h"
@@ -189,4 +190,5 @@ void Inject()
   FileSysTrace_Install();   // NIGHTFIRE_FSTRACE=1 only
   MathShadow_Run();   // NIGHTFIRE_MATHSHADOW=1 only
   RealgraphShadow_Run();   // NIGHTFIRE_RGSHADOW=1 only
+  LoaderShadow_Run();   // NIGHTFIRE_LDSHADOW=1 only
 }

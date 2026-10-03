@@ -26,6 +26,8 @@
 // Originals run with their entry swapped back in (common/xbeOriginal.h).
 // ---------------------------------------------------------------------------------------------------------------
 
+namespace {   // this file's own types: another test's of the same name must not merge with them
+
 static int g_checks, g_failures;
 
 static void Report(const char *what, const char *detail) {
@@ -404,6 +406,8 @@ static void CheckCreate() {
         }
     }
 }
+
+}   // namespace
 
 void RealgraphShadow_Run(void) {
     if (getenv("NIGHTFIRE_RGSHADOW") == NULL)
