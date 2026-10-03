@@ -368,6 +368,7 @@ add_library(drivinginject SHARED
   src/driving/devtools/RealgraphShadow.cpp
   src/driving/devtools/LoaderShadow.cpp
   src/driving/devtools/AnimShadow.cpp
+  src/driving/devtools/SkelShadow.cpp
   src/common/xbeOriginal.cpp
   src/driving/engine/UFileLoader.cpp
   src/driving/engine/PlayMPC.cpp
@@ -397,6 +398,7 @@ add_library(drivinginject SHARED
   src/driving/eagl/anim/AnimDecode.cpp
   src/driving/eagl/anim/AnimChannels.cpp
   src/driving/eagl/anim/AnimDeltaF.cpp
+  src/driving/eagl/anim/Skeleton.cpp
   src/driving/platform/XboxTimer.cpp
   src/driving/platform/XboxInput.cpp
   src/driving/platform/LaunchOptions.cpp

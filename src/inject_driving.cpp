@@ -13,6 +13,7 @@
 #include "driving/devtools/RealgraphShadow.h"
 #include "driving/devtools/LoaderShadow.h"
 #include "driving/devtools/AnimShadow.h"
+#include "driving/devtools/SkelShadow.h"
 #include "common/xbeOriginal.h"
 #include "driving/gfx/d3dSeam.h"
 #include "driving/platform/XboxInput.h"
@@ -193,4 +194,5 @@ void Inject()
   RealgraphShadow_Run();   // NIGHTFIRE_RGSHADOW=1 only
   LoaderShadow_Run();   // NIGHTFIRE_LDSHADOW=1 only
   AnimShadow_Run();   // NIGHTFIRE_ANIMSHADOW=1 only
+  SkelShadow_Install();   // NIGHTFIRE_SKELSHADOW=1 only: stays in front of the Skeleton entries while the game runs
 }
