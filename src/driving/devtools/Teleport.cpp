@@ -1,4 +1,7 @@
 #include "Teleport.h"
+#include "CarpShadow.h"
+#include "DebugVarShadow.h"
+#include "AttribShadow.h"
 
 #include <windows.h>
 #include <stdio.h>
@@ -129,6 +132,11 @@ void Teleport_Tick(void) {
 
     if (!loaded) {
         loaded = true;
+        // The data-layer shadows need the game started (UMemory, the static initialisers, a mounted archive):
+        // the first simulation tick is the first point after GameLoop_StartUp that devtools code sees.
+        CarpShadow_Run();   // NIGHTFIRE_CARPSHADOW=1 only
+        DebugVarShadow_Run();   // NIGHTFIRE_DBVARSHADOW=1 only
+        AttribShadow_Run();   // NIGHTFIRE_ATTRIBSHADOW=1 only
         char text[256] = "";
         DWORD fromEnv = GetEnvironmentVariableA("NIGHTFIRE_TELEPORT", text, sizeof(text));
         if (fromEnv == 0 || fromEnv >= sizeof(text))

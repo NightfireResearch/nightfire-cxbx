@@ -344,6 +344,36 @@ add_library(drivinginject SHARED
   src/driving/engine/PlayMPC.cpp
   src/driving/engine/StaticInit.cpp
   src/driving/engine/StaticInitTable.cpp
+  src/driving/engine/UMemory.cpp
+  src/driving/engine/URefCounter.cpp
+  src/driving/engine/USingleton.cpp
+  src/driving/engine/CoreContainers.cpp
+  src/driving/engine/CoreFoundation.cpp
+  src/driving/engine/GameLoop.cpp
+  src/driving/engine/SimRandom.cpp
+  src/driving/devtools/CoreLoopShadow.cpp
+  src/driving/devtools/CoreUtilShadow.cpp
+  src/driving/devtools/RestoreRanges.cpp
+  src/driving/devtools/CarpShadow.cpp
+  src/driving/engine/UGroup.cpp
+  src/driving/data/UData.cpp
+  src/driving/data/SymbolTable.cpp
+  src/driving/data/Dafi.cpp
+  src/driving/data/Carp.cpp
+  src/driving/data/RCARPFile.cpp
+  src/driving/data/SingletonVector.cpp
+  src/driving/data/DebugVariables.cpp
+  src/driving/data/Tuning.cpp
+  src/driving/data/IniFiles.cpp
+  src/driving/data/StdStreams.cpp
+  src/driving/data/CoordConvert.cpp
+  src/driving/devtools/DebugVarShadow.cpp
+  src/driving/data/AttributeValue.cpp
+  src/driving/data/AttributeParsers.cpp
+  src/driving/data/AttributeContainers.cpp
+  src/driving/data/AttributeSystem.cpp
+  src/driving/data/AttributeSet.cpp
+  src/driving/devtools/AttribShadow.cpp
   src/common/fmv/Ffmpeg.cpp
   src/common/fmv/FmvAudio.cpp
   src/driving/engine/ActionQueue.cpp

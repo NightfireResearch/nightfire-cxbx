@@ -1,9 +1,6 @@
 #include <cstdio>
 
-int game_main(int argc, char** argv) {
-	int (*funcPtr)(int, char**) = (int (*)(int, char**))(0x0005a1b0);
-	return funcPtr(argc, argv);
-}
+#include "engine/GameLoop.h"
 
 int preMain(int argc, char *argv[]) {
 
@@ -13,5 +10,6 @@ int preMain(int argc, char *argv[]) {
 	}
 	printf("\n");
 
-	return game_main(argc, argv);
+	// The game's main (0x0005a1b0), ours (src/driving/engine/GameLoop.cpp).
+	return GameMain(argc, argv);
 }
