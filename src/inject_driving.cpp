@@ -14,6 +14,10 @@
 #include "driving/devtools/LoaderShadow.h"
 #include "driving/devtools/AnimShadow.h"
 #include "driving/devtools/SkelShadow.h"
+#include "driving/devtools/SndTagShadow.h"
+#include "driving/devtools/SndDecodeShadow.h"
+#include "driving/devtools/SndFilterShadow.h"
+#include "driving/devtools/SndMixShadow.h"
 #include "common/xbeOriginal.h"
 #include "driving/gfx/d3dSeam.h"
 #include "driving/platform/XboxInput.h"
@@ -195,4 +199,8 @@ void Inject()
   LoaderShadow_Run();   // NIGHTFIRE_LDSHADOW=1 only
   AnimShadow_Run();   // NIGHTFIRE_ANIMSHADOW=1 only
   SkelShadow_Install();   // NIGHTFIRE_SKELSHADOW=1 only: stays in front of the Skeleton entries while the game runs
+  SndTagShadow_Run();   // NIGHTFIRE_SNDTAGSHADOW=1 only
+  SndDecodeShadow_Run();   // NIGHTFIRE_SNDDECSHADOW=1 only
+  SndFilterShadow_Run();   // NIGHTFIRE_SNDFILTERSHADOW=1 only
+  SndMixShadow_Run();   // NIGHTFIRE_SNDMIXSHADOW=1 only
 }
