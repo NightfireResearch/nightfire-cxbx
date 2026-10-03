@@ -3,6 +3,7 @@
 #include "RealMemory.h"
 #include "RealPrint.h"
 #include "RealSystem.h"
+#include "RefPack.h"
 #include "XboxXapi.h"
 
 #include <windows.h>
@@ -139,10 +140,6 @@ enum FsMode { MODE_READ = 1, MODE_CREATE = 2, MODE_TRUNCATE = 4 };
 #define SlotCount          (*(int *)0x00242a30u)
 #define Slots              (*(FileSlot **)0x00242a34u)
 
-typedef unsigned (*UnpackSizeFn)(const void *packed);
-typedef int (*UnpackFn)(const void *packed, void *out);
-#define unpacksizez        ((UnpackSizeFn)0x0014c0e0u)     // EA's packer (platform.movie), still the original
-#define unpack             ((UnpackFn)0x0014bff0u)
 
 static const int kChunk = 0x2000;   // a sync read or write goes as ops of this size
 
@@ -1461,7 +1458,7 @@ void* FILE_loadpackz(char *path, int flags) {
         MEM_copy(packed, data, size);
         pFILE_mfree(data);
         data = (uint8_t *)pFILE_malloc(path, (int)unpacked, flags);
-        if (data != NULL && !unpack(packed, data)) {
+        if (data != NULL && !UNPACK_unpack((const uint8_t *)packed, data)) {
             pFILE_mfree(data);
             data = NULL;
         }

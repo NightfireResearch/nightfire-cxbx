@@ -9,9 +9,9 @@ typedef void (*SubtitleCallback)(int frame);
 
 // EA's movie player object (Ghidra: PlayMPC; 0x20 bytes, on its caller's stack). Its two callers - the level intro
 // and outro runner (FUN_0005a6b0, called from RunTheGame) and ESetVideo's destructor (a movie a mission event plays) -
-// construct it, Init it with the file, Play it (one blocking call that runs the whole movie) and destroy it. Init and
-// Play are ours (PlayMPC.cpp, on FFmpeg); the constructor and destructor stay original, as our Init never creates the
-// EA player object the destructor would free. docs/driving-fmv.md maps the original.
+// construct it, Init it with the file, Play it (one blocking call that runs the whole movie) and destroy it. All four
+// are ours (PlayMPC.cpp, on FFmpeg), so nothing reaches EA's RCMP player any more. docs/driving-fmv.md maps the
+// original.
 class PlayMPC {
 public:
     void *device;                   // +0x00 the EAGL device
@@ -24,6 +24,13 @@ public:
     void *player;                   // +0x14 EA's RCMP::AV_PLAYER; always null with our Init
     int32_t padPort;                // +0x18 the pad whose buttons skip the movie
     int32_t volume;                 // +0x1c 0-127
+
+    // The constructor (0x00130780): the device, context and skipping pad, and the allocation flags EA's player
+    // library would have used, which go to its settings as the original's do.
+    PlayMPC* Construct(void *device_, RenderContext *context_, int32_t padPort_, int32_t allocFlags);
+
+    // The destructor (0x00130b50).
+    void Destruct();
 
     // Opens the movie at `path` (the locale's directory, e.g. "pal\eng\paris_intro.mad") at `volume` 0-127. The
     // last argument picked between two EA player modes, which ours does not have (0x001307d0).

@@ -28,6 +28,8 @@
 # of a "A::B::f" name, the part before "__" of an exception-handling funclet ("PBondCar__ControlTyreTracks_Unwind_0"),
 # or else the name up to its first underscore ("VU0_v4sub" -> "VU0", "MEM_size" -> "MEM").
 #
+# FUNC: "func <address> <subsystem>": one function, whatever the rules say - a copy compiled into another unit.
+#
 # `python tools/function_coverage.py --driving --unclassified` lists named functions no rule matches.
 
 range 00011000 game.ai              game code (classified by class)
@@ -35,13 +37,15 @@ range 000e4680 platform.eagl        EAGL: views, drawing, textures, EAGLAnim, FO
 range 00108460 platform.system      EA's system layer: PAD, MOUSE, maths, MEM, TIMER, THREAD, FILESYS, FILE...
 range 0010dfe0 sys.xapi             XAPI linked early: XQueryValue, XGetAVPack, XGetVideoFlags
 range 0010e4d2 sys.xapi             XAPI and the kernel thunks: process and thread startup, files, launch data
-range 00113264 platform.math        EA maths (matrix helpers, VU0), MEM, UMemory
+range 00113264 sys.d3d              D3DX maths linked into .text (matrix multiply, quaternions, projections; docs/driving/maths.md)
+range 00113a50 platform.math        EA maths (matrix helpers, VU0), MEM, UMemory
 range 00116e00 engine.data          game code again (classified by class): U* utilities, CARP, A* audio, PlayMPC
 range 00130d00 sys.crt              the Microsoft C/C++ runtime: STL locale and streams, exception handling, stdio, maths
 range 0013b7b0 platform.sound       EA's sound library: SND*, MIX, SFILTER, the DirectSound driver; MUTEX, STREAM
-range 0014aba0 platform.movie       STREAM (the sound streamer's file side), from its register-argument helpers
+range 0014aba0 platform.sound       STREAM: the sound streamer's file side (music and speech through FILESYS)
 range 0014bee0 sys.xapi             XAPI linked late: QueryPerformanceCounter, IsBadReadPtr and their kin
-range 0014bff0 platform.movie       RCMP: the movie player and its decoders
+range 0014bff0 platform.files       EA's packer: unpacksizez and the unpacker FILE_loadpackz and the sound banks use
+range 0014c3e0 platform.movie       RCMP: the movie player and its decoders
 range 00150000 engine.core          exception-handling funclets (classified by the function they belong to)
 range 001500f0 platform.system      linked late: MEM class setup (0x1500f0, 0x1502b0, 0x150300), RtlUnwind, SNDSTRM helpers
 range 001503e0 engine.core          exception-handling funclets again
@@ -64,12 +68,14 @@ class ^D3D8$                             sys.d3d
 class ^(FONT|SHAPE|LOCALE|PrintMessage|changeFogState|eagl_)  platform.eagl
 class ^(VU0|VU|MATRIX4|VEC3|v3|vec3|sin|cos|atan|random|seedrandom|rrandom)  platform.math
 class ^(BuildScale|BuildTranslate|BuildRotate|ExtractRotTrans|ExtractQuatTrans|TransformPoint|OrthoInverse)$  platform.math
-class ^(Determinant4x4|Inverse|MatrixCopy|BytesToCoord|FindOBBIntersect|QuatMultXxYxZ|maybeExtract)$  platform.math
+class ^(Determinant4x4|Inverse|MatrixCopy|BytesToCoord|FindOBBIntersect|maybeExtract)$  platform.math
 class ^(PAD|MOUSE)$                      platform.input
 class ^(FILESYS|ASYNCFILE|FILE|iFILE)    platform.files
 class ^(MEM|TIMER|SIGNAL|THREAD|SYNCTASK|PRINT|CPU|REAL|SYSTEM|MUTEX|REALMUTEX|SleepMs|SleepMilliseconds|getTickCount|millisToKern|checksentinel|memclr)$  platform.system
 class ^(SND|iSND|MIX|SFILTER|dsnd|DirectSound|mixc|stretch|readsamples|initmut|decodemut|decode16x87|findprime|randrange)  platform.sound
-class ^(RCMP|unpacksizez|freerequest|STREAM)$  platform.movie
+class ^(STREAM|freerequest)$               platform.sound
+class ^unpacksizez$                        platform.files
+class ^RCMP$                               platform.movie
 
 # ---- engine
 class ^Action(Queue|QueueRing|QueueManager|Data)$  engine.input
@@ -116,3 +122,6 @@ class ^(WordWrap|GetParticFileForMission|CURATOR)$  game.frontend
 
 # ---- never the neighbour: templates and helpers instantiated where they are used
 float ^(URefCounter|USimpleVec|USingleton|std|_Rb_tree|list|__lower_bound|__builtin|dummy|maybe|strcat|eagl|EAGL|VU0|MATRIX4)
+
+# ---- single functions
+func 00011930 engine.anim    VU0_quatstoangvel: a file-local copy compiled into ActActor's unit

@@ -30,6 +30,16 @@ library function counts only when it sits in the game's own data. Pointers insid
 outside, and the call edges already cover that. Counted naively, most of D3D and DSOUND would look live.
 `global_coverage.py` keeps the naive count, which is the safe one for owning globals.
 
+Two kinds of reference are traced to the functions that own them rather than counted as roots (both in
+`CallGraph`, so the globals report sees them too):
+- **a vtable slot**: a method is reached through the constructors and destructors that install its vtable (a
+  `MOV [reg+disp], vtable` store is every reference to the vtable's start), so once they are dead or replaced, so
+  is a method only that vtable holds. A table referenced any other way, or whose address our source names, stays
+  a root.
+- **code outside any function**: an instruction Ghidra left out of every function (a body it cut short, a method
+  it never made a function) belongs to the function before it, as for direct calls; a table of addresses among
+  the code belongs to the functions that index it. A function's reference to itself is not a caller.
+
 Subsystems are address ranges in `tools/subsystems_action.txt`. The XBE lays Eurocom's objects out roughly
 alphabetically by source file, so a module is one run of names (Anim..., BOT..., Break..., Bullet...).
 
@@ -201,35 +211,35 @@ where to change it.
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
 | game.weapons | 178 | 0 | 0 | 178 | 0% | 43 | 0% |
-| **engine** | 4031 | 60 | 12 | 3959 | **2%** | 526 | 2% |
-| engine.anim | 414 | 0 | 2 | 412 | 0% | 52 | 0% |
+| **engine** | 4032 | 62 | 12 | 3958 | **2%** | 527 | 2% |
+| engine.anim | 415 | 0 | 2 | 413 | 0% | 54 | 0% |
 | engine.audio | 270 | 0 | 0 | 270 | 0% | 35 | 0% |
 | engine.camera | 273 | 0 | 0 | 273 | 0% | 60 | 0% |
-| engine.core | 254 | 8 | 3 | 243 | 4% | 26 | 6% |
+| engine.core | 254 | 10 | 3 | 241 | 5% | 26 | 6% |
 | engine.data | 555 | 3 | 1 | 551 | 1% | 79 | 0% |
 | engine.input | 107 | 42 | 5 | 60 | 44% | 12 | 46% |
 | engine.physics | 156 | 0 | 0 | 156 | 0% | 33 | 0% |
 | engine.render | 760 | 7 | 1 | 752 | 1% | 114 | 3% |
 | engine.static | 798 | 0 | 0 | 798 | 0% | 26 | 0% |
 | engine.world | 444 | 0 | 0 | 444 | 0% | 89 | 0% |
-| **platform** | 1472 | 107 | 106 | 1259 | **14%** | 265 | 10% |
-| platform.eagl | 769 | 0 | 3 | 766 | 0% | 139 | 0% |
-| platform.files | 74 | 41 | 33 | 0 | 100% | 11 | 100% |
+| **platform** | 1458 | 204 | 159 | 1095 | **25%** | 261 | 21% |
+| platform.eagl | 805 | 0 | 6 | 799 | 1% | 145 | 0% |
+| platform.files | 77 | 44 | 33 | 0 | 100% | 12 | 100% |
 | platform.input | 6 | 6 | 0 | 0 | 100% | 1 | 100% |
-| platform.math | 154 | 0 | 0 | 154 | 0% | 26 | 0% |
-| platform.movie | 103 | 0 | 37 | 66 | 36% | 21 | 24% |
-| platform.sound | 278 | 0 | 5 | 273 | 2% | 59 | 0% |
+| platform.math | 104 | 94 | 10 | 0 | 100% | 16 | 100% |
+| platform.movie | 72 | 0 | 72 | 0 | 100% | 15 | 100% |
+| platform.sound | 306 | 0 | 10 | 296 | 3% | 64 | 1% |
 | platform.system | 88 | 60 | 28 | 0 | 100% | 9 | 100% |
-| **sys** | 1380 | 264 | 788 | 328 | **76%** | 241 | 85% |
+| **sys** | 1393 | 273 | 792 | 328 | **76%** | 243 | 85% |
 | sys.crt | 373 | 4 | 41 | 328 | 12% | 43 | 15% |
-| sys.d3d | 414 | 142 | 272 | 0 | 100% | 118 | 100% |
+| sys.d3d | 427 | 151 | 276 | 0 | 100% | 120 | 100% |
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6883 | 61 | 17 | 6805 | **1%** | 1000 | 1% |
-| **platform + system** | 2852 | 371 | 894 | 1587 | **44%** | 506 | 46% |
-| **  without the C runtime** | 2479 | 367 | 853 | 1259 | **49%** | 463 | 48% |
-| **everything** | 9735 | 432 | 911 | 8392 | **14%** | 1506 | 16% |
+| **game + engine** | 6884 | 63 | 17 | 6804 | **1%** | 1002 | 1% |
+| **platform + system** | 2851 | 477 | 951 | 1423 | **50%** | 504 | 52% |
+| **  without the C runtime** | 2478 | 473 | 910 | 1095 | **56%** | 462 | 55% |
+| **everything** | 9735 | 540 | 968 | 8227 | **15%** | 1506 | 18% |
 
 - **Almost nothing above the platform is ours yet: 1% of game and engine code.** What is replaced is the input
   layer (`engine.input`, 44%: `IOModule`, `XBoxPadDevice`, `ActionQueue`, the pad), the event and scheduler core,
@@ -249,8 +259,8 @@ where to change it.
     kernel shims hand out Win32 handles, so the two mix freely), and the startup's own entry point is ported.
     The process heap is a Win32 heap now: XAPI's five heap entry points go to `HeapCreate`/`HeapAlloc`/`HeapFree`/
     `HeapReAlloc`/`HeapSize`, so `malloc` and `free` reach Win32's heap through them.
-- **The platform tier is 14% done (10% by bytes): its system library, files and input are all ours.** What is left
-  is EAGL (139 KB), the sound library (59 KB), the maths (26 KB) and the movie player and streamer (21 KB).
+- **The platform tier is 25% done (21% by bytes): its system library, files, input, maths and movie player are
+  done.** What is left is EAGL (145 KB) and the sound library with its streamer (64 KB).
   - *System* (`src/driving/platform/RealSystem.cpp`, `RealPrint.cpp`, `RealMemory.cpp`): EA's portable library -
     TIMER, THREAD, SIGNAL, SYNCTASK, MUTEX, PRINT, the exit and abort handlers, the MEM_ copy and fill helpers,
     and the MEM block allocator itself (classes, first and largest fit, top allocation, resize, validation), which
@@ -260,8 +270,17 @@ where to change it.
     archive directories, and what is left of ASYNCFILE. Its records stay where the original kept them, so the
     game allocates exactly what it did. `src/driving/devtools/FileSysShadow.cpp` checks the archive lookup against
     the original on every archive (`NIGHTFIRE_FSSHADOW=1`); `FileSysTrace.cpp` prints the ops (`NIGHTFIRE_FSTRACE=1`).
-  - Three of the STREAM helpers that sat among the file code are counted with STREAM (`platform.movie`) now, and
-    `XGetAVPack`/`XGetVideoFlags`, which sat there too, with XAPI (ported in `XboxXapi.cpp`).
+  - *Maths* (`src/driving/platform/RealMath.cpp`, `VU0Math.cpp`, `D3DXMath.cpp`, docs/driving/maths.md): EA's x87
+    library, the SSE VU0 layer and the D3DX routines linked beside them, ported bit for bit - double in the
+    original's order where it used the x87, intrinsics lane for lane where it used SSE, the original instructions
+    where FSIN and its kin keep 64 bits. `src/driving/devtools/MathShadow.cpp` checks all of it against the
+    originals (`NIGHTFIRE_MATHSHADOW=1`). The 36 EAGLAnim helpers that were filed as maths are counted with EAGL
+    now, the D3DX routines with D3D, and a dead software-transform library behind unreferenced tables as dead.
+  - *Movies*: playback is FFmpeg (`src/driving/engine/PlayMPC.cpp`, now including `PlayMPC`'s constructor and
+    destructor), so EA's RCMP player is all dead. STREAM, which shares its library but is the sound streamer's file
+    side, is counted with the sound library; EA's packer (`src/driving/platform/RefPack.cpp`, checked against the
+    original on every packed file in the archives) with the files. `XGetAVPack`/`XGetVideoFlags`, which sat among
+    the file code, are counted with XAPI (ported in `XboxXapi.cpp`).
 - **Of the 1,001 KB of game and engine code, 988 KB is still original.** By size: rendering 110 KB, AI 109 KB, world
   and collision 88 KB, data and tuning 79 KB, mission events 71 KB, front end and HUD 68 KB, vehicles 62 KB,
   cameras 60 KB, animation 51 KB, gameplay audio 50 KB, then the rest at under 45 KB each.

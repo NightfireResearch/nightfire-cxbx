@@ -117,11 +117,15 @@ def read_driving_map():
             rules.append((re.compile(regex), subsystem))
         elif kind == "float":
             FLOATING.append(re.compile(rest))
+        elif kind == "func":
+            address, subsystem = rest.split()[:2]
+            FUNC_OVERRIDES[int(address, 16)] = subsystem
     ranges.sort()
     return ranges, rules
 
 
 FLOATING = []   # classes that never set the neighbour (subsystems_driving.txt's "float" lines)
+FUNC_OVERRIDES = {}   # address -> subsystem, for one function no rule can single out ("func" lines)
 
 
 def classify_driving(funcs):
@@ -168,7 +172,7 @@ def classify_driving(funcs):
             anchor = subsystem
         if subsystem is None:
             subsystem = anchor or rs
-        out.append((a, subsystem, k or "(unnamed)", r))
+        out.append((a, FUNC_OVERRIDES.get(a, subsystem), k or "(unnamed)", r))
     return out, ranges
 
 

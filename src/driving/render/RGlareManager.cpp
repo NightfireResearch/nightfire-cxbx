@@ -10,15 +10,10 @@
 #define GlareTick        U32_AT(0x001f2a4c)
 #define RRendererInstance (*(uint8_t **)0x001ebff4)
 
-// The three maths helpers AddModelGlare calls, all __cdecl with stack arguments: a point through a matrix
-// (0x00114e20, a wrapper of VU0_MATRIX4_vect3mult), a direction through its rotation (0x00114e60), and a dot
-// product (0x001089e0). Not reimplemented; these reach the originals.
-// AUTOGEN
-void MATRIX4_TransformPoint(MATRIX4 *m, const Glare *in, Glare *out);
-// AUTOGEN
-void MATRIX4_RotateVector(MATRIX4 *m, const _VEC3 *in, _VEC3 *out);
-// AUTOGEN
-float VEC3_Dot(const _VEC3 *a, const _VEC3 *b);
+// The three maths helpers AddModelGlare calls - a point through a matrix (0x00114e20, a wrapper of
+// VU0_MATRIX4_vect3mult), a direction through its rotation (0x00114e60) and a dot product (0x001089e0) - are ours
+// (platform/RealMath.h, through VectorMaths.hpp). The dot product comes back unrounded, as the original leaves it
+// on the x87 stack, and AddModelGlare multiplies it so.
 
 // GlareBlinkBrightness (0x000a99a0). The original takes the glare in ESI - a register argument no C++
 // convention can receive - and its only caller is AddModelGlare, so it is reimplemented here as an ordinary
@@ -96,7 +91,7 @@ void RGlareManager::AddModelGlare(Glare *node, MATRIX4 *transform, float distanc
         MATRIX4_RotateVector(transform, &node->direction, &glare->direction);
         uint8_t *camera = *(uint8_t **)(RRendererInstance + 4);
         const _VEC3 *forward = (const _VEC3 *)(*(uint8_t **)(camera + 4) + 0x30);
-        glare->rangeOrIntensity = -(VEC3_Dot(forward, &glare->direction) * glare->rangeOrIntensity);
+        glare->rangeOrIntensity = (float)-(VEC3_Dot(forward, &glare->direction) * glare->rangeOrIntensity);
         glare->rangeOrIntensity = glare->rangeOrIntensity - 0.5f;
         if (glare->rangeOrIntensity <= 0.0f)
             return;
