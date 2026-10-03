@@ -40,6 +40,7 @@ range 0010e4d2 sys.xapi             XAPI and the kernel thunks: process and thre
 range 00113264 sys.d3d              D3DX maths linked into .text (matrix multiply, quaternions, projections; docs/driving/maths.md)
 range 00113a50 platform.math        EA maths (matrix helpers, VU0), MEM, UMemory
 range 00116e00 engine.data          game code again (classified by class): U* utilities, CARP, A* audio, PlayMPC
+range 00130b80 sys.crt              the C++ runtime begins early: std::_Xran/_Xlen, tolower, the iostream/locale init
 range 00130d00 sys.crt              the Microsoft C/C++ runtime: STL locale and streams, exception handling, stdio, maths
 range 0013b7b0 platform.sound       EA's sound library: SND*, MIX, SFILTER, the DirectSound driver; MUTEX, STREAM
 range 0014aba0 platform.sound       STREAM: the sound streamer's file side (music and speech through FILESYS)
@@ -49,6 +50,7 @@ range 0014c3e0 platform.movie       RCMP: the movie player and its decoders
 range 00150000 engine.core          exception-handling funclets (classified by the function they belong to)
 range 001500f0 platform.system      linked late: MEM class setup (0x1500f0, 0x1502b0, 0x150300), RtlUnwind, SNDSTRM helpers
 range 001503e0 engine.core          exception-handling funclets again
+range 00156a35 sys.crt              exception funclets of the C++ runtime (locale, ios_base, strstream, runtime_error)
 range 00156c00 engine.static        dynamic initialisers: constructors of global objects
 range 0015d370 end                  end of .text
 range 0015d380 sys.d3d              D3DX section
