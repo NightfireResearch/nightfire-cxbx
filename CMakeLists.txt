@@ -395,6 +395,13 @@ add_library(drivinginject SHARED
   src/driving/eagl/RuntimeAlloc.cpp
   src/driving/eagl/GeoPrimState.cpp
   src/driving/eagl/GameCallbacks.cpp
+  src/driving/eagl/Tar.cpp
+  src/driving/eagl/View.cpp
+  src/driving/eagl/RenderContext.cpp
+  src/driving/eagl/EaglFont.cpp
+  src/driving/eagl/RenderMethod.cpp
+  src/driving/eagl/Model.cpp
+  src/driving/eagl/Profiler.cpp
   src/driving/eagl/anim/AnimObjects.cpp
   src/driving/eagl/anim/EventTarget.cpp
   src/driving/eagl/anim/AnimDecode.cpp

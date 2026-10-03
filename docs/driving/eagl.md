@@ -9,29 +9,49 @@ cross over. *MW: X* means a name or layout from the Need for Speed Most Wanted (
 than this build; every MW item used here was checked against Driving.xbe, and section 1.4 says how far each one
 holds.
 
-**Status (3 October 2026): steps 0-4 of 9.2 done, step 5 (EAGLAnim) under way.** The classification fixes of 1.3 are in
-`tools/subsystems_driving.txt`; realgraph FONT/SHAPE/LOCALE is ported (`src/driving/eagl/Realgraph.cpp`, checked
-by `src/driving/devtools/RealgraphShadow.cpp` on every font, image container and string table in the archives:
-606,458 comparisons, all the same), and so is `EAGL::Transform` (`src/driving/eagl/Transform.cpp`, bit for bit,
-checked by `MathShadow.cpp`). Found on the way: `FONT_getrectx` keeps the kerned pen position unrounded on the
-x87 through the glyph's rectangle and advance (Ghidra's decompilation rounds it); a character below 0x20 makes
-FONT index 0x20 glyphs before the table; SHAPE's loader would read `SHAPE_version(NULL)` for a file that is not
-SHPX (left out); `Transform::Invert` returns the determinant to its callers, as the maths library's does;
-`0x000f13b0` is the same code as `Determinant4x4`, and `0x000f3160` the same as `0x00115440`. The loader is ported
-too (`src/driving/eagl/Loader.cpp`: SymbolPool, both ConstructorPools, DynamicLoader, RegisterShapes, 41
-functions), checked by `src/driving/devtools/LoaderShadow.cpp` - every object in the archives loaded by both on the
-same addresses, the images, symbol tables, allocations, messages and callbacks compared byte for byte, the same.
-What the data never does is in 3.1. Step 4, the RUNTIME_ALLOC property parsers (`src/driving/eagl/RuntimeAlloc.cpp`:
-the property tokenizer, the TAR and GeoPrimState runtime constructors, their setters and value tables, 14
-functions), is a provisional port without a test - nothing on the disc reaches it - and prints a loud warning the
-first time it runs. In step 5 the object layer is ported (`src/driving/eagl/anim/AnimObjects.cpp`,
-`EventTarget.cpp`: the pool and factory, every constructor and destructor, the trivial virtuals, the compound
-channel, the cycle and graft wrappers, raw linear decoding, AnimationBank, EventTarget; 124 functions), and so is the evaluation of every channel type the disc uses:
-raw event, DeltaQuat, KeyQuat (`AnimChannels.cpp`), DeltaF1 and DeltaF3 (`AnimDeltaF.cpp`), the delta decoding,
-scratch buffers and attribute blocks (`AnimDecode.cpp`), 66 functions more - all checked by
-`src/driving/devtools/AnimShadow.cpp` on every anim in every bank (3.4), bit for bit. Left in step 5: the
-Skeleton functions the engine calls, and the never-built types (provisionally). The D3D8 library underneath is ours already
-(the seam, `src/driving/gfx/`), and so are the maths, files, memory and threads EAGL calls (section 5).
+**Status (3 October 2026): every EAGL function is ported - all 807 of the coverage tool's, plus the entry points
+Ghidra never made functions.** By file under `src/driving/eagl/`:
+
+- realgraph FONT/SHAPE/LOCALE (`Realgraph.cpp`, checked by `devtools/RealgraphShadow.cpp` on every font, image
+  container and string table in the archives: 606,458 comparisons, all the same) and `EAGL::Transform`
+  (`Transform.cpp`, bit for bit, checked by `MathShadow.cpp`). Found on the way: `FONT_getrectx` keeps the kerned pen
+  position unrounded on the x87 through the glyph's rectangle and advance (Ghidra's decompilation rounds it); a
+  character below 0x20 makes FONT index 0x20 glyphs before the table; SHAPE's loader would read
+  `SHAPE_version(NULL)` for a file that is not SHPX (left out); `Transform::Invert` returns the determinant to its
+  callers, as the maths library's does; `0x000f13b0` is the same code as `Determinant4x4`, and `0x000f3160` the same
+  as `0x00115440`.
+- The loader (`Loader.cpp`: SymbolPool, both ConstructorPools, DynamicLoader, RegisterShapes), checked by
+  `devtools/LoaderShadow.cpp`: every object in the archives loaded by both on the same addresses, images, symbol
+  tables, allocations, messages and callbacks compared byte for byte. What the data never does is in 3.1.
+- The RUNTIME_ALLOC property parsers (`RuntimeAlloc.cpp`): provisional, nothing on the disc reaches them; a loud
+  warning the first time one runs.
+- EAGLAnim (`anim/`): the object layer (`AnimObjects.cpp`, `EventTarget.cpp`) and every channel type the disc uses
+  (`AnimChannels.cpp`, `AnimDeltaF.cpp`, `AnimDecode.cpp`), checked by `devtools/AnimShadow.cpp` on every anim in
+  every bank, bit for bit; the Skeleton functions the engine calls (`Skeleton.cpp`, 4.11), checked live by
+  `devtools/SkelShadow.cpp`; and the types no shipped data builds (`AnimMisc.cpp` DeltaLerp/KeyLerp/phase/raw
+  state/raw pose, `AnimPoseBlend.cpp` the pose and event blenders, `AnimDeltaQ.cpp` DeltaSingleQ/DeltaQFast/DeltaQ,
+  `AnimLocoBlend.cpp` the turn and run blenders, and Skeleton's masks and mirroring): provisional, ported from the
+  listings, each with a one-time untested warning (`anim/AnimUntested.h`).
+- The render core: `GeoPrimState.cpp` (2.5), `Tar.cpp` (2.6, 4.4; it does what the D3D seam's old byte patch of the
+  texture commit did - every texture registered in place - and the patch is gone), `RenderMethod.cpp` (2.8, 2.9,
+  3.3: the interpreter through the opcode table, all handlers, the D3D wrappers, vertex/index buffers, SSE
+  skinning, DrawArray/DrawGouraud/DrawTextured), `View.cpp` (ViewPort, Device, TextureRenderContext; the
+  perspective's frustum planes keep the original x87 transcendentals in an `__asm` block, 8.7),
+  `RenderContext.cpp` (2.2, 3.2: BeginFrame/EndFrame/SetupFrameBuffers statement for statement with their direct
+  writes into D3D8's tables), `EaglFont.cpp` (the FONT driver, module H), `Model.cpp` (Model, DynamicModel),
+  `Profiler.cpp` (module I), and `GameCallbacks.cpp` (the game's allocator hooks and `EAGLNamespace::NameLookup`).
+  Checked by lockstep runs (`NIGHTFIRE_LOCKSTEP`, frames dumped at fixed ticks after the car appears) of all eight
+  missions against a baseline built before the port: every frame the same, pixel for pixel.
+
+Corrections to the layouts below, found porting (the code is the authority): RenderContext's SetSize stores ints
+(through `__ftol2`) and GetSize reads +0xfc/+0x100, what SetupFrameBuffers last set up; its present parameters start
+at +0xb8; +0x00 and +0x04 are the extension and private views, each with a back pointer; +0x90..+0xa9 are the
+point-sprite states (D3D slots 116-123) and `0x00175824` is slot 127. TextureRenderContext's width and height are
+ints. `0x000f3990` returns the view matrix (+0x80), not the projection. `D3D_ReturnsTrue` is stdcall. Opcode 14
+stores the index-data pointer (`0x00240500`), not a stream source; a copied packet block's leading dword is its size
+in bytes; `0x0023ff20` lists the statically constructed render methods. `Model::GetChild` compares +0xb4 as the
+name. GeoPrimState's `0x000eec90` (Ghidra: SetTransparencyMethod) sets the shading at +0x04; the transparency
+method is +0x28 (`0x000eee60`).
 
 Conventions:
 
