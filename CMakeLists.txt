@@ -338,9 +338,12 @@ add_library(drivinginject SHARED
   src/driving/devtools/SndStreamShadow.cpp
   src/driving/devtools/SndPlatformShadow.cpp
   src/driving/devtools/SndStreamFileShadow.cpp
+  src/driving/devtools/StaticInitDump.cpp
   src/common/xbeOriginal.cpp
   src/driving/engine/UFileLoader.cpp
   src/driving/engine/PlayMPC.cpp
+  src/driving/engine/StaticInit.cpp
+  src/driving/engine/StaticInitTable.cpp
   src/common/fmv/Ffmpeg.cpp
   src/common/fmv/FmvAudio.cpp
   src/driving/engine/ActionQueue.cpp

@@ -2,7 +2,7 @@
 
 How much of each engine's code is ours, where the rest sits, and how much of it never needs reimplementing. The
 action engine's numbers are from 1 October 2026, the [driving engine's](#the-driving-engine) from 3 October 2026
-(after the sound library); `tools/function_coverage.py` regenerates them.
+(after the static initialisers); `tools/function_coverage.py` regenerates them.
 
 ```
 python tools/function_coverage.py                 # the summary below
@@ -211,7 +211,7 @@ where to change it.
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
 | game.weapons | 178 | 0 | 0 | 178 | 0% | 43 | 0% |
-| **engine** | 4031 | 64 | 20 | 3947 | **2%** | 527 | 2% |
+| **engine** | 4031 | 86 | 796 | 3149 | **22%** | 527 | 7% |
 | engine.anim | 415 | 2 | 3 | 410 | 1% | 54 | 0% |
 | engine.audio | 270 | 0 | 0 | 270 | 0% | 35 | 0% |
 | engine.camera | 273 | 0 | 0 | 273 | 0% | 60 | 0% |
@@ -220,7 +220,7 @@ where to change it.
 | engine.input | 107 | 42 | 8 | 57 | 47% | 12 | 46% |
 | engine.physics | 156 | 0 | 0 | 156 | 0% | 33 | 0% |
 | engine.render | 760 | 7 | 1 | 752 | 1% | 114 | 3% |
-| engine.static | 798 | 0 | 0 | 798 | 0% | 26 | 0% |
+| engine.static | 798 | 22 | 776 | 0 | 100% | 26 | 100% |
 | engine.world | 444 | 0 | 0 | 444 | 0% | 89 | 0% |
 | **platform** | 1459 | 1254 | 205 | 0 | **100%** | 262 | 100% |
 | platform.eagl | 807 | 751 | 56 | 0 | 100% | 146 | 100% |
@@ -236,14 +236,14 @@ where to change it.
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6883 | 66 | 58 | 6759 | **2%** | 1001 | 1% |
+| **game + engine** | 6883 | 88 | 834 | 5961 | **13%** | 1001 | 4% |
 | **platform + system** | 2852 | 1527 | 998 | 327 | **89%** | 505 | 93% |
 | **  without the C runtime** | 2479 | 1523 | 956 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 1593 | 1056 | 7086 | **27%** | 1506 | 32% |
+| **everything** | 9735 | 1615 | 1832 | 6288 | **35%** | 1506 | 34% |
 
-- **Almost nothing above the platform is ours yet: 1% of game and engine code.** What is replaced is the input
-  layer (`engine.input`, 44%: `IOModule`, `XBoxPadDevice`, `ActionQueue`, the pad), the event and scheduler core,
-  `RGlareManager`'s drawing, file loading and `PlayMPC`.
+- **Little above the platform is ours yet: 13% of game and engine functions, 4% by bytes.** Most of that is the
+  static initialisers (below); the rest is the input layer (`engine.input`, 47%: `IOModule`, `XBoxPadDevice`,
+  `ActionQueue`, the pad), the event and scheduler core, `RGlareManager`'s drawing, file loading and `PlayMPC`.
 - **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
   The C runtime (327 live, 12%) is left to go by itself, as in the action engine: game code calls it everywhere, and
   it goes as that code becomes ours. How the rest got there (2 October 2026):
@@ -293,12 +293,20 @@ where to change it.
     side, is counted with the sound library; EA's packer (`src/driving/platform/RefPack.cpp`, checked against the
     original on every packed file in the archives) with the files. `XGetAVPack`/`XGetVideoFlags`, which sat among
     the file code, are counted with XAPI (ported in `XboxXapi.cpp`).
-- **Of the 1,001 KB of game and engine code, 988 KB is still original.** By size: rendering 110 KB, AI 109 KB, world
+- **Of the 1,001 KB of game and engine code, about 960 KB is still original.** By size: rendering 110 KB, AI 109 KB, world
   and collision 88 KB, data and tuning 79 KB, mission events 71 KB, front end and HUD 68 KB, vehicles 62 KB,
   cameras 60 KB, animation 51 KB, gameplay audio 50 KB, then the rest at under 45 KB each.
-- **The static initialisers (798, 26 KB) all count as live**, because our driving startup still calls the C runtime's
-  own `_cinit` (0x00110663, `src/driving/platform/XboxStartup.cpp`), which walks the C++ initialiser table. The
-  action engine's startup calls its initialisers by name instead.
+- **The static initialisers are done: `engine.static`, 798 functions, 100%.** The C++ initialiser table
+  (0x001b3db0) is no longer walked: `RunStaticInitialisers` (`src/driving/engine/StaticInitTable.cpp`, generated
+  from the XBE by `tools/static_init_driving.py`) does all 720 entries' work in table order - 585 float and double
+  constants computed at startup (`1/FLT_MIN`, `pi+pi`, `180/pi`...: one exact rounding each, so plain C++ gives the
+  same bits), fills and copies, 52 colours through `ColourConvertXBoxToPS2`, the global objects' constructors (ours
+  called directly) with their destructors registered with the runtime's `atexit` as before, and the driving
+  weapon table, which a 4.4 KB initialiser built a store at a time, as a typed table (`WeaponDefinition`,
+  `src/driving/engine/StaticInit.h`). The 22 destructor thunks game code registers for its function-local statics
+  are ported in `StaticInit.cpp`. `src/driving/devtools/StaticInitDump.cpp` checked it: `.data`, `.bss` and the
+  atexit list after our list and after the XBE's own table differ only in the weapon names (our string literals),
+  heap pointers (one base offset apart, so the same allocations) and the profiler timer's start time.
 
 **How sure the split is.** Gameplay is nearly all named (under 5% of bytes unnamed in AI, events, vehicles,
 weapons, front end), so its numbers are firm. The data, core, EAGL, files, maths and movie subsystems are 35-70%

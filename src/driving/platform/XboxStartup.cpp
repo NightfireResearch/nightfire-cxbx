@@ -7,6 +7,8 @@
 #include "../main.h"
 #include "XboxTimer.h"
 #include "LaunchOptions.h"
+#include "../engine/StaticInit.h"
+#include "../devtools/StaticInitDump.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The driving engine's process startup, as run by the loader - step 2 of docs/driving-engine-plan.md
@@ -40,22 +42,18 @@
 //     0x000f3ec7 getptd, f3f49 free, f405e mt    0x001356f2, 0x00135774, 0x00135889
 // ---------------------------------------------------------------------------------------------------------------
 
-// The initialiser tables the C runtime's _rtinit (0x001106bb) and _cinit (0x00110663) walk, which are ported
-// below (RunInitialisers): XAPI's run-time initialisers, the C initialisers (__xi) and the C++ constructors
-// (__xc), each a run of function pointers in which null and -1 are skipped. _cinit first calls the
-// floating-point initialiser through the pointer at 0x001d87dc, when one was linked.
+// The initialiser tables the C runtime's _rtinit (0x001106bb) and _cinit (0x00110663) walk: XAPI's run-time
+// initialisers and the C initialisers (__xi), each a run of function pointers in which null and -1 are skipped,
+// which RunInitialisers below still walks. _cinit first calls the floating-point initialiser through the pointer
+// at 0x001d87dc, when one was linked. The third table, the C++ constructors (__xc, 0x001b3db0), is ours:
+// RunStaticInitialisers (src/driving/engine/StaticInitTable.cpp) does each entry's work in table order, and
+// leaves out DirectSound's four static constructors, which only point DSOUND's own globals at its vtables - every
+// DSOUND entry point is the sound seam's, so nothing reads them.
 #define RtInitTableBegin  ((void (**)(void))0x001b3da0u)
 #define RtInitTableEnd    ((void (**)(void))0x001b3dacu)
 #define CInitTableBegin   ((void (**)(void))0x001b4908u)
 #define CInitTableEnd     ((void (**)(void))0x001b491cu)
-#define CppInitTableBegin ((void (**)(void))0x001b3db0u)
-#define CppInitTableEnd   ((void (**)(void))0x001b4904u)
 #define FpInitPointer     (*(void (**)(void))0x001d87dcu)
-// DirectSound's static constructors, in the C++ table (0x001b48c8..0x001b48d4): each stores a vtable pointer
-// into DSOUND's own globals. Every DSOUND entry point is the sound seam's now, so nothing reads what they set,
-// and they are left out - as the action engine's startup leaves out its DSOUND constructors.
-#define DSoundSectionBegin 0x0017ac40u
-#define DSoundSectionEnd   0x00183aa4u
 
 // The process heap is a Win32 heap. XAPI's heap entry points - RtlCreateHeap (0x001118dd), RtlAllocateHeap,
 // RtlFreeHeap, RtlReAllocateHeap, RtlSizeHeap - go to Win32's in XboxXapi.cpp, which is how the game's malloc and
@@ -421,8 +419,6 @@ static void RunInitialisers(void (**begin)(void), void (**end)(void)) {
         uintptr_t target = (uintptr_t)*entry;
         if (target == 0 || target == (uintptr_t)-1)
             continue;
-        if (target >= DSoundSectionBegin && target < DSoundSectionEnd)
-            continue;
         (*entry)();
     }
 }
@@ -471,7 +467,9 @@ DWORD WINAPI mainXapiStartup(LPVOID unused) {
     if (FpInitPointer != NULL)                                   // _cinit
         FpInitPointer();
     RunInitialisers(CInitTableBegin, CInitTableEnd);
-    RunInitialisers(CppInitTableBegin, CppInitTableEnd);
+    if (!StaticInitDump_RunOriginalTable())                      // the C++ constructors
+        RunStaticInitialisers();
+    StaticInitDump_Write();
 
     printf("[startup] calling main\n");
     fflush(stdout);
