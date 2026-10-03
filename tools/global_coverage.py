@@ -383,6 +383,17 @@ class CallGraph:
         for caller, callee in direct_calls(self.funcs, self.read):
             self.edges[caller].add(callee)
             referenced.add(callee)
+        # MSVC's exception funclets - "<owner>_Unwind_<n>" and "<owner>_Frame_Handler", the owner's name with "::" as
+        # "__" - are reached only through their owner's prologue and the unwind map it hands __CxxFrameHandler, which
+        # sits in data. They belong to their owner: live with it and dead with it, not roots of their own.
+        by_flat = {n.replace("::", "__"): a for a, n in self.funcs.items()}
+        for f, name in self.funcs.items():
+            m = re.match(r"(.+?)_(?:Unwind_\d+|Frame_Handler)$", name)
+            owner = by_flat.get(m.group(1)) if m else None
+            if owner is not None and owner != f:
+                self.edges[owner].add(f)
+                self.pointed_at.pop(f, None)
+                referenced.add(f)
         self.no_caller = {f for f in self.funcs if f not in referenced and
                           not any(lo <= f < hi for lo, hi, _ in KNOWN_UNCALLED)}
         self.ours_points_at = functions_our_code_points_at(self.funcs)   # e.g. Drone_SM_InitObject storing 0x4e180

@@ -393,12 +393,18 @@ add_library(drivinginject SHARED
   src/driving/eagl/Transform.cpp
   src/driving/eagl/Loader.cpp
   src/driving/eagl/RuntimeAlloc.cpp
+  src/driving/eagl/GeoPrimState.cpp
+  src/driving/eagl/GameCallbacks.cpp
   src/driving/eagl/anim/AnimObjects.cpp
   src/driving/eagl/anim/EventTarget.cpp
   src/driving/eagl/anim/AnimDecode.cpp
   src/driving/eagl/anim/AnimChannels.cpp
   src/driving/eagl/anim/AnimDeltaF.cpp
   src/driving/eagl/anim/Skeleton.cpp
+  src/driving/eagl/anim/AnimMisc.cpp
+  src/driving/eagl/anim/AnimPoseBlend.cpp
+  src/driving/eagl/anim/AnimDeltaQ.cpp
+  src/driving/eagl/anim/AnimLocoBlend.cpp
   src/driving/platform/XboxTimer.cpp
   src/driving/platform/XboxInput.cpp
   src/driving/platform/LaunchOptions.cpp

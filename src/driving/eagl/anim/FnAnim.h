@@ -145,6 +145,8 @@ struct FnKeyDeltaChan : FnAnimMemoryMap {      // 0x18: KeyLerp 12, KeyQuat 13
     bool GetLength(float *length);                               // 0x000fbe10
     void EvalQuat(float previous, float time, float *out);       // 0x000fbb40 (FnKeyQuatChan::Eval)
     bool EvalSQTQuat(float time, float *sqt, void *mask);        // 0x000fbb60 (FnKeyQuatChan::EvalSQT)
+    void EvalLerp(float previous, float time, float *out);       // 0x000fba00 (FnKeyLerpChan::Eval)
+    bool EvalSQTLerp(float time, float *sqt, void *mask);        // 0x000fba20 (FnKeyLerpChan::EvalSQT)
 };
 
 struct FnDeltaChan : FnAnimMemoryMap {         // 0x18: DeltaLerp 10, DeltaQuat 11
@@ -162,6 +164,10 @@ struct FnDeltaChan : FnAnimMemoryMap {         // 0x18: DeltaLerp 10, DeltaQuat 
     void DecodeFrame(int frame);                                 // 0x000fb400
     void EvalQuat(float previous, float time, float *out);       // 0x000fb670 (FnDeltaQuatChan::Eval)
     bool EvalSQTQuat(float time, float *sqt, void *mask);        // 0x000fb780 (FnDeltaQuatChan::EvalSQT)
+    void EvalLerp(float previous, float time, float *out);       // 0x000fb440 (FnDeltaLerpChan::Eval)
+    bool EvalSQTLerp(float time, float *sqt, void *mask);        // 0x000fb530 (FnDeltaLerpChan::EvalSQT)
+    bool EvalWeightsLerp(float time, float *weights);            // 0x000fb630 (FnDeltaLerpChan::EvalWeights)
+    bool EvalVel2DLerp(float time, float *velocity);             // 0x000fb650 (FnDeltaLerpChan::EvalVel2D)
 };
 
 struct FnGraft : FnAnim {            // 0x14, type 5: Eval runs every sub-anim
@@ -185,9 +191,34 @@ struct FnCycle : FnAnim {            // 0x1c, type 3: time wrapped into [start, 
     bool EvalPhase(float time, void *phase);                     // 0x000f7ac0
 };
 
-struct FnPoseBlender : FnAnim {      // 0x80, type 6 (the blending itself is in module L)
+struct FnPoseBlender : FnAnim {      // 0x80, type 6 (the blending: AnimPoseBlend.cpp)
+    struct Skeleton *skeleton;       // +0x0c for the still poses
+    float *poseA;                    // +0x10 pose buffers the two anims evaluate into while blending
+    float *poseB;                    // +0x14
+    FnAnim *animA;                   // +0x18 up to start
+    FnAnim *animB;                   // +0x1c from end
+    float offsetA;                   // +0x20 taken off the time for animA
+    float offsetB;                   // +0x24
+    int32_t bone;                    // +0x28 the bone animB is aligned on, -1 none
+    uint32_t unknown2c;              // +0x2c
+    float align[16];                 // +0x30 the Transform applied to animB's bone
+    float start;                     // +0x70
+    float duration;                  // +0x74
+    float end;                       // +0x78 start + duration
+    uint8_t stillA;                  // +0x7c fill poseA with the still pose first
+    uint8_t stillB;                  // +0x7d
+    uint8_t pad7e[2];
+
     FnPoseBlender* Construct();                                  // 0x000f7810
     FnPoseBlender* ScalarDelete(unsigned flags);                 // 0x000f7840
+    void SetAligned(FnAnim *a, float offA, FnAnim *b, float offB, const class Transform *transform, int alignBone,
+                    float startTime, float length);              // 0x000fc4c0
+    void SetUnaligned(FnAnim *a, float offA, FnAnim *b, float offB, float startTime, float length);   // 0x000fc520
+    bool EvalSQT(float time, float *sqt, void *mask);            // 0x000fc560
+    void Eval(float previous, float time, float *out);           // 0x000fca70
+    static void XZProjectAlign(const class Transform *a, const class Transform *b, class Transform *out);  // 0x000fcde0
+    void Set(FnAnim *a, float offA, FnAnim *b, float offB, int alignBone, float previous, float startTime,
+             float length);                                      // 0x000fce70
 };
 
 struct FnPoseMirror : FnAnim {       // 0x1c, type 7
@@ -203,18 +234,42 @@ struct FnPoseMirror : FnAnim {       // 0x1c, type 7
     bool EvalSQT(float time, float *sqt, void *mask);            // 0x000f78f0
 };
 
-struct FnEventBlender : FnAnim {     // 0x2c, type 4 (its Eval is in module L)
+struct FnEventBlender : FnAnim {     // 0x2c, type 4 (Set/Eval: AnimPoseBlend.cpp)
+    FnAnim *animA;                   // +0x0c up to start
+    FnAnim *animB;                   // +0x10 from end
+    float offsetA;                   // +0x14
+    float offsetB;                   // +0x18
+    float start;                     // +0x1c
+    float end;                       // +0x20 start + duration
+    float duration;                  // +0x24
+    int32_t mode;                    // +0x28 between start and end: 0 A, 1 B, else both
+
     FnEventBlender* ScalarDelete(unsigned flags);                // 0x000f7af0
+    void Set(FnAnim *a, FnAnim *b, float offA, float offB, float startTime, float length, int blendMode);  // 0x000fcfa0
+    void Eval(float previous, float time, float *out);           // 0x000fcfe0
 };
 
 struct FnPhaseChan : FnAnimMemoryMap {         // 0x18, type 14
+    uint16_t index;                  // +0x10, 0 (constructor, SetAnimMemoryMap)
+    uint16_t count;                  // +0x12, the data's u16 at +6
+    uint8_t notFlag1;                // +0x14, !(data flags & 1)
+    uint8_t step;                    // +0x15, frames a sample: 1, 2, 4 or 8 from the data flags
+
     FnPhaseChan* Construct();                                    // 0x000f7b20
     void* GetPhaseChan();                                        // 0x000f7b50
     void Destruct();                                             // 0x000f8300
     FnPhaseChan* ScalarDelete(unsigned flags);                   // 0x000f82d0
+    bool GetLength(float *length);                               // 0x000fd4a0
+    void Eval(float previous, float time, float *out);           // 0x000fd4c0
+    void SetAnimMemoryMap(uint8_t *data);                        // 0x000fd670
 };
 
 struct FnRawStateChan : FnAnimMemoryMap {      // 0x14, type 16
+    int32_t frame;                   // +0x10 the frame last decoded
+
+    void Decode(uint8_t *data, uint8_t *out);                    // 0x000fd730
+    bool EvalState(float time, void *state);                     // 0x000fd840
+    bool FindTime(void *test, float from, float *time);          // 0x000fd9c0 (vtable slot 12)
     FnRawStateChan* Construct();                                 // 0x000f7b60
     bool GetLength(float *length);                               // 0x000f7b80
     void Eval(float previous, float time, float *out);           // 0x000f7ba0

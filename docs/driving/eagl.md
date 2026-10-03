@@ -665,15 +665,28 @@ constructor/destructor (the loader's callback), `MemoryPoolManager` (`NewBlock` 
 `NewBlockByIdx`, `ResetPool`, `Init`, `Cleanup`, `InitAnimMemoryMap`), the factory `FUN_000f7de0`, `EventTarget`
 (dtor, `ResolveEventId`, `GetEventId`).
 
-### 4.11 K EAGLAnim Skeleton and BoneMask (21 functions, 8.3 KB, all unnamed)
+### 4.11 K EAGLAnim Skeleton and BoneMask (21 functions, 8.3 KB, all unnamed in Ghidra)
 
-Called from `ActPoser::DoMainPose`, `DoIK`, `DoSkeletonPose`, `CalcSnapAndCorrectionMatrices`, `Skin`,
-`ActSkeleton::GetStillPose`, `ActIK::Init`, and `FnPoseMirror`. By call shape against the sheet's 22
-`EAGLAnim::Skeleton` and 12 `BoneMask` names *(candidates, unconfirmed)*: `0x000f9df0` PoseSQTToGlobal,
-`0x000f9f10` PoseLocalToGlobal, `0x000fa290` PoseGlobalToSkin, `0x000fa340` GetStillPose, `0x000f8be0` (3184
-bytes) and `0x000f9850` MirrorPose, `0x000f88a0..0x000f8b30` BoneMask operators over the 256-bit bitset helpers at
-`0x00106330`/`0x00106350`/`0x00106380` (copy, fill, set bit; `docs/driving/maths.md` 5.1). The skeleton
-hierarchy multiplies go through the pointer at `0x001cec7c`.
+Ported in `src/driving/eagl/anim/Skeleton.cpp`, names from the PS2 symbol sheet matched by argument count and
+order. A Skeleton is {+0x08 bone count, +0x0c per-bone length scales or NULL, +0x10 bones of 0x70 bytes: scale xyz,
+parent (-1 root), quaternion, translation, mirror bone, the inverse bind matrix at +0x30}; a pose is 12 floats a
+bone (scale, a scale applied to the matrix's first column, quaternion, translation, 1). Hierarchy products go
+through the hook at `0x001cec7c` (default `0x001066f0`: out = child * parent by `VU0_MATRIX4_mult`).
+
+The engine calls six, every frame a character is posed (`ActPoser::DoMainPose`, `DoIK`, `DoSkeletonPose`,
+`CalcSnapAndCorrectionMatrices`, `Skin`, `ActSkeleton::GetStillPose`/ctor, `ActIK::Init`): `PoseSQTToLocal`
+`0x000f9df0`, `PoseLocalToGlobal` `0x000f9f10`, `PoseSQTToGlobal` `0x000fa130`, `PoseGlobalToSkin` `0x000fa290`,
+`GetStillPose(float *, BoneMask *)` `0x000fa340`, `GetStillPose(int, float *)` `0x000fa560`. These are bit for
+bit and checked live by `src/driving/devtools/SkelShadow.cpp` (`NIGHTFIRE_SKELSHADOW=1`: every call the game
+makes runs both and compares; 20,000 calls on missions 2 and 6, no difference, and a mutation of each is caught).
+The rest only the never-built FnAnim types or nothing call, and are provisional with a one-time untested warning:
+`BuildBoneMask` `0x000f88c0`, `BuildMirrorBoneMask` `0x000f8940`, `BuildSymmetricBoneMask` `0x000f8a10`,
+`GetBoneLengthScale`/`RestoreBoneLengthScale`/`ScaleBoneLength` `0x000f8ad0..0x000f8b30`, the two `MirrorPose`
+`0x000f8be0`/`0x000f9850` (sign flips and swaps only), `OrthoScaleBone` `0x000fa5c0`, `GetStillTrans`
+`0x000fa5e0`, `PoseBoneSQTToGlobal` `0x000fa610`, `PoseQTToGlobal`/`PoseTToGlobal`/`PoseQTToSkin`
+`0x000fa6f0..0x000fa7e0`, `PoseSQTToSkin` `0x000fa850`, `PoseTrans` `0x000fa900`, and BoneMask
+(`0x000f88a0` GetBone, `0x00106330..0x001066c0`: the copy constructor, SetAll, SetBone, the operators; the shipped
+`operator~` returns a copy without inverting anything).
 
 ### 4.12 L EAGLAnim evaluation (203 functions, 50.5 KB)
 
