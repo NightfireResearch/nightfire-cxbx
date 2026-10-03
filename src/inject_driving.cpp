@@ -18,6 +18,10 @@
 #include "driving/devtools/SndDecodeShadow.h"
 #include "driving/devtools/SndFilterShadow.h"
 #include "driving/devtools/SndMixShadow.h"
+#include "driving/devtools/SndSystemShadow.h"
+#include "driving/devtools/SndStreamShadow.h"
+#include "driving/devtools/SndPlatformShadow.h"
+#include "driving/devtools/SndStreamFileShadow.h"
 #include "common/xbeOriginal.h"
 #include "driving/gfx/d3dSeam.h"
 #include "driving/platform/XboxInput.h"
@@ -203,4 +207,8 @@ void Inject()
   SndDecodeShadow_Run();   // NIGHTFIRE_SNDDECSHADOW=1 only
   SndFilterShadow_Run();   // NIGHTFIRE_SNDFILTERSHADOW=1 only
   SndMixShadow_Run();   // NIGHTFIRE_SNDMIXSHADOW=1 only
+  SndSystemShadow_Run();   // NIGHTFIRE_SNDSYSSHADOW=1 only
+  SndStreamShadow_Run();   // NIGHTFIRE_SNDSTREAMSHADOW=1 only
+  SndPlatformShadow_Run();   // NIGHTFIRE_SNDPLATFORMSHADOW=1 only
+  SndStreamFileShadow_Run();   // NIGHTFIRE_SNDSTREAMFILESHADOW=1 only
 }

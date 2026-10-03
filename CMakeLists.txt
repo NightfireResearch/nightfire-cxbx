@@ -373,6 +373,10 @@ add_library(drivinginject SHARED
   src/driving/devtools/SndDecodeShadow.cpp
   src/driving/devtools/SndFilterShadow.cpp
   src/driving/devtools/SndMixShadow.cpp
+  src/driving/devtools/SndSystemShadow.cpp
+  src/driving/devtools/SndStreamShadow.cpp
+  src/driving/devtools/SndPlatformShadow.cpp
+  src/driving/devtools/SndStreamFileShadow.cpp
   src/common/xbeOriginal.cpp
   src/driving/engine/UFileLoader.cpp
   src/driving/engine/PlayMPC.cpp
@@ -429,6 +433,10 @@ add_library(drivinginject SHARED
   src/driving/sound/snd/FiltersUnused.cpp
   src/driving/sound/snd/Mixer.cpp
   src/driving/sound/snd/Reverb.cpp
+  src/driving/sound/snd/System.cpp
+  src/driving/sound/snd/Streams.cpp
+  src/driving/sound/snd/Platform.cpp
+  src/driving/sound/snd/Stream.cpp
   src/driving/sound/dsndSeam.cpp
   src/driving/sound/xaudio2Driving.cpp
   src/common/sound/xadpcm.cpp

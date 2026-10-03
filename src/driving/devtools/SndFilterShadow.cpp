@@ -3,6 +3,7 @@
 #endif
 
 #include "SndFilterShadow.h"
+#include "FpControl.h"
 
 #include "../sound/snd/Filters.h"
 #include "../sound/snd/FiltersUnused.h"
@@ -938,9 +939,8 @@ unsigned g_x87, g_sse;
 
 void ResetFpu() {
     _fpreset();
-    unsigned dummy;
-    __control87_2(g_x87, 0xffffffffu, &dummy, NULL);
-    __control87_2(g_sse, 0xffffffffu, NULL, &dummy);
+    FpControlSetX87(g_x87);
+    FpControlSetSse(g_sse);
 }
 
 bool Guarded(RunFn run, bool original) {
@@ -1230,7 +1230,7 @@ void SndFilterShadow_Run(void) {
     const char *env = getenv("NIGHTFIRE_SNDFILTERSHADOW");
     if (env == NULL || atoi(env) == 0)
         return;
-    __control87_2(0, 0, &g_x87, &g_sse);
+    FpControlGet(&g_x87, &g_sse);
 
     W = (Workspace *)VirtualAlloc(NULL, sizeof(Workspace), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     g_snapshot = (Workspace *)VirtualAlloc(NULL, sizeof(Workspace), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
