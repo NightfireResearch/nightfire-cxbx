@@ -26,6 +26,9 @@ bool XbeOriginal_Restore(unsigned at, bool original);
 // False if 'at' was never patched.
 bool XbeOriginal_Redirect(unsigned at, const void *to);
 
+// Every patched address in [lo, hi) swapped at once; the number swapped.
+int XbeOriginal_RestoreRange(unsigned lo, unsigned hi, bool original);
+
 struct XbeOriginalScope {
     unsigned at;
     bool ok;

@@ -9,7 +9,7 @@ cross over. *MW: X* means a name or layout from the Need for Speed Most Wanted (
 than this build; every MW item used here was checked against Driving.xbe, and section 1.4 says how far each one
 holds.
 
-**Status (3 October 2026): steps 0-4 of 9.2 done.** The classification fixes of 1.3 are in
+**Status (3 October 2026): steps 0-4 of 9.2 done, step 5 (EAGLAnim) under way.** The classification fixes of 1.3 are in
 `tools/subsystems_driving.txt`; realgraph FONT/SHAPE/LOCALE is ported (`src/driving/eagl/Realgraph.cpp`, checked
 by `src/driving/devtools/RealgraphShadow.cpp` on every font, image container and string table in the archives:
 606,458 comparisons, all the same), and so is `EAGL::Transform` (`src/driving/eagl/Transform.cpp`, bit for bit,
@@ -24,7 +24,10 @@ same addresses, the images, symbol tables, allocations, messages and callbacks c
 What the data never does is in 3.1. Step 4, the RUNTIME_ALLOC property parsers (`src/driving/eagl/RuntimeAlloc.cpp`:
 the property tokenizer, the TAR and GeoPrimState runtime constructors, their setters and value tables, 14
 functions), is a provisional port without a test - nothing on the disc reaches it - and prints a loud warning the
-first time it runs. The D3D8 library underneath is ours already
+first time it runs. In step 5 the object layer is ported (`src/driving/eagl/anim/AnimObjects.cpp`,
+`EventTarget.cpp`: the pool and factory, every constructor and destructor, the trivial virtuals, the compound
+channel, the cycle and graft wrappers, raw linear decoding, AnimationBank, EventTarget; 124 functions), checked
+by `src/driving/devtools/AnimShadow.cpp` on every anim in every bank (3.4). The D3D8 library underneath is ours already
 (the seam, `src/driving/gfx/`), and so are the maths, files, memory and threads EAGL calls (section 5).
 
 Conventions:
@@ -534,6 +537,15 @@ for the F1/F3 families; the Q families unquantise 48-bit quaternions (`DeltaQFas
 `0x00102e30`, `DeltaQFastPhysical::UnQuantize` `0x00102f00`). `RawPoseChannel` stores per-channel decoder function
 pointers at run time (`EulF3` `0x000fdec0`, `TranF3` `0x000fdf20`, `QuatF4` `0x000fdf60` and their `*Interp`
 versions `0x000fdf90`, `0x000fdfd0`, `0x000fe060`, written from `0x000fda70`, `0x000fdc20`, `0x000fe110`).
+
+**What the data builds** (found porting the object layer, 3 October 2026): every FnAnim comes from `NewFnAnim`
+on anim data (the factory has no other caller, and each type's vtable is written only by its constructor), and all
+anim data is in the 89 AnimationBank symbols (18 distinct files). Every bank entry is a compound channel (type 15),
+and the compounds' channels are only raw event (1), DeltaQuat (11), KeyQuat (13), DeltaF3 (20) and DeltaF1 (21)
+(69, 75, 195, 215 and 64 of them across the distinct banks). So the blenders (pose, run, turn, event), mirror,
+cycle, graft, raw pose, raw linear, DeltaLerp, KeyLerp, phase, raw state, DeltaQ, DeltaQFast and DeltaSingleQ are
+never built with the shipped data - including the three biggest evaluators (`FnDeltaSingleQ::EvalSQTMasked`,
+`FnDeltaQ::EvalSQTMasked`, `FnDeltaQFast::EvalSQT(Mask)`).
 
 ---------------------------------------------------------------------------------------------------------------
 

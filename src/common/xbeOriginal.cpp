@@ -49,6 +49,14 @@ bool XbeOriginal_Restore(unsigned at, bool original) {
     return true;
 }
 
+int XbeOriginal_RestoreRange(unsigned lo, unsigned hi, bool original) {
+    int n = 0;
+    for (int i = 0; i < g_numPatches; i++)
+        if (g_patches[i].at >= lo && g_patches[i].at < hi && XbeOriginal_Restore(g_patches[i].at, original))
+            n++;
+    return n;
+}
+
 bool XbeOriginal_Redirect(unsigned at, const void *to) {
     if (Find(at) == NULL)
         return false;

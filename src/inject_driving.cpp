@@ -12,6 +12,7 @@
 #include "driving/devtools/MathShadow.h"
 #include "driving/devtools/RealgraphShadow.h"
 #include "driving/devtools/LoaderShadow.h"
+#include "driving/devtools/AnimShadow.h"
 #include "common/xbeOriginal.h"
 #include "driving/gfx/d3dSeam.h"
 #include "driving/platform/XboxInput.h"
@@ -191,4 +192,5 @@ void Inject()
   MathShadow_Run();   // NIGHTFIRE_MATHSHADOW=1 only
   RealgraphShadow_Run();   // NIGHTFIRE_RGSHADOW=1 only
   LoaderShadow_Run();   // NIGHTFIRE_LDSHADOW=1 only
+  AnimShadow_Run();   // NIGHTFIRE_ANIMSHADOW=1 only
 }
