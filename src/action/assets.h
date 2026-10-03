@@ -514,6 +514,7 @@ typedef enum {
 
     MP_TEAM_PHOENIX = 0x1c7,
     MP_TEAM_MI6 = 0x1c8,
+    MP_PRESS_START = 0x1c9,
 
     DOSSIER_RECORDS_NAME = 0x00000280,
     DOSSIER_REWARDS_NAME = 0x00000281,
@@ -727,6 +728,11 @@ typedef enum {
     MP_SCENARIO_LOCKED = 0x010000ab, // "This scenario is locked." (0x1ab, which this used to be, is MP_GUN_EMPLACEMENTS)
     MP_GUN_EMPLACEMENTS = 0x000001ab, // "Fixed Gun Emplacements"
 
+    MP_RESULT_TOP_AGENT = 0x02000022,         // "Player %s Won"
+    MP_RESULT_DRAW = 0x02000023,              // "A Draw"
+    MP_RESULT_HEADING = 0x02000024,           // "Game Over :"
+    MP_RESULT_MI6 = 0x02000025,               // "MI6 Team Won"
+    MP_RESULT_WON = 0x02000027,               // "Won"
     MP_TIME_UP = 0x02000028,
     NOTIF_RESTARTING = 0x02000049,
 
