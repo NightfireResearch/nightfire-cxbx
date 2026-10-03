@@ -1,8 +1,8 @@
 # Function coverage by subsystem
 
 How much of each engine's code is ours, where the rest sits, and how much of it never needs reimplementing. The
-action engine's numbers are from 1 October 2026, the [driving engine's](#the-driving-engine) from 2 October 2026
-(after the platform files); `tools/function_coverage.py` regenerates them.
+action engine's numbers are from 1 October 2026, the [driving engine's](#the-driving-engine) from 3 October 2026
+(after the sound library); `tools/function_coverage.py` regenerates them.
 
 ```
 python tools/function_coverage.py                 # the summary below
@@ -198,7 +198,7 @@ funclets at 0x150000 are named after the function they belong to and go with it.
 W world); where a class could sit in either of two tiers the choice is a judgement, and the rules in the file are
 where to change it.
 
-### By subsystem (2 October 2026)
+### By subsystem (3 October 2026)
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
@@ -222,13 +222,13 @@ where to change it.
 | engine.render | 760 | 7 | 1 | 752 | 1% | 114 | 3% |
 | engine.static | 798 | 0 | 0 | 798 | 0% | 26 | 0% |
 | engine.world | 444 | 0 | 0 | 444 | 0% | 89 | 0% |
-| **platform** | 1459 | 955 | 209 | 295 | **80%** | 262 | 76% |
+| **platform** | 1459 | 1254 | 205 | 0 | **100%** | 262 | 100% |
 | platform.eagl | 807 | 751 | 56 | 0 | 100% | 146 | 100% |
 | platform.files | 77 | 44 | 33 | 0 | 100% | 12 | 100% |
 | platform.input | 6 | 6 | 0 | 0 | 100% | 1 | 100% |
 | platform.math | 104 | 94 | 10 | 0 | 100% | 16 | 100% |
 | platform.movie | 72 | 0 | 72 | 0 | 100% | 15 | 100% |
-| platform.sound | 305 | 0 | 10 | 295 | 3% | 64 | 1% |
+| platform.sound | 305 | 299 | 6 | 0 | 100% | 64 | 100% |
 | platform.system | 88 | 60 | 28 | 0 | 100% | 9 | 100% |
 | **sys** | 1393 | 273 | 793 | 327 | **77%** | 243 | 85% |
 | sys.crt | 373 | 4 | 42 | 327 | 12% | 43 | 16% |
@@ -237,9 +237,9 @@ where to change it.
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
 | **game + engine** | 6883 | 66 | 58 | 6759 | **2%** | 1001 | 1% |
-| **platform + system** | 2852 | 1228 | 1002 | 622 | **78%** | 505 | 80% |
-| **  without the C runtime** | 2479 | 1224 | 960 | 295 | **88%** | 462 | 86% |
-| **everything** | 9735 | 1294 | 1060 | 7381 | **24%** | 1506 | 28% |
+| **platform + system** | 2852 | 1527 | 998 | 327 | **89%** | 505 | 93% |
+| **  without the C runtime** | 2479 | 1523 | 956 | 0 | **100%** | 462 | 100% |
+| **everything** | 9735 | 1593 | 1056 | 7086 | **27%** | 1506 | 32% |
 
 - **Almost nothing above the platform is ours yet: 1% of game and engine code.** What is replaced is the input
   layer (`engine.input`, 44%: `IOModule`, `XBoxPadDevice`, `ActionQueue`, the pad), the event and scheduler core,
@@ -259,8 +259,14 @@ where to change it.
     kernel shims hand out Win32 handles, so the two mix freely), and the startup's own entry point is ported.
     The process heap is a Win32 heap now: XAPI's five heap entry points go to `HeapCreate`/`HeapAlloc`/`HeapFree`/
     `HeapReAlloc`/`HeapSize`, so `malloc` and `free` reach Win32's heap through them.
-- **The platform tier is 80% done (76% by bytes): its system library, files, input, maths, movie player and EAGL
-  are done.** What is left is the sound library with its streamer (64 KB, docs/driving/sound.md).
+- **The platform tier is done: all 1,459 functions, 100% by functions and by bytes.** With the system libraries
+  but the C runtime, everything below the game is ours. The last piece was the sound library.
+  - *Sound* (`src/driving/sound/snd/`, docs/driving/sound.md): all 305 functions - banks and voices, the EA-XA,
+    MicroTalk and PCM decoders, the SFILTER graph, the mixer and reverb, the system and its server thread, the
+    streams and the STREAM file side, and the platform driver over DirectSound (`src/driving/sound/dsndSeam.cpp`).
+    Shadow tests in `src/driving/devtools/Snd*Shadow.cpp` drive each part beside the original (tags, decoders,
+    filters, mixer, system, streams, platform, stream files), all with no differences, and lockstep runs of the
+    eight missions match the baseline.
   - *EAGL* (docs/driving/eagl.md): all 807 functions. realgraph FONT/SHAPE/LOCALE, `EAGL::Transform` and the loader
     are shadow-tested at injection time; EAGLAnim's live types (`eagl/anim/`) by `AnimShadow.cpp` over every anim
     on the disc and its Skeleton by `SkelShadow.cpp` live; the render core (GeoPrimState, TAR, render methods,
